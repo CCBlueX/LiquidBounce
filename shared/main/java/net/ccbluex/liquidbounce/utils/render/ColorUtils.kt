@@ -18,7 +18,9 @@ import net.ccbluex.liquidbounce.utils.WorkerUtils
 import java.awt.Color
 import java.text.NumberFormat
 import java.util.regex.Pattern
+import kotlin.math.abs
 import kotlin.math.pow
+import kotlin.math.sqrt
 import kotlin.random.Random
 
 object ColorUtils : MinecraftInstance()
@@ -227,4 +229,14 @@ object ColorUtils : MinecraftInstance()
 
 	@JvmStatic
 	fun createRGB(red: Int, green: Int, blue: Int, alpha: Int): Int = (alpha.coerceIn(0, 255) and 0xFF shl 24) or (red.coerceIn(0, 255) and 0xFF shl 16) or (green.coerceIn(0, 255) and 0xFF shl 8) or (blue.coerceIn(0, 255) and 0xFF shl 0)
+
+	@JvmStatic
+	fun compareColor(color1: Int, color2: Int): Double
+	{
+		val redDelta = abs(((color1 shr 16) and 0xFF) - ((color2 shr 16) and 0xFF)).toDouble()
+		val greenDelta = abs(((color1 shr 8) and 0xFF) - ((color2 shr 8) and 0xFF)).toDouble()
+		val blueDelta = abs(((color1 shr 0) and 0xFF) - ((color2 shr 0) and 0xFF)).toDouble()
+
+		return sqrt(redDelta * redDelta + greenDelta * greenDelta + blueDelta * blueDelta)
+	}
 }

@@ -22,7 +22,7 @@ class FastStairs : Module()
 {
 
 	private val modeValue = ListValue("Mode", arrayOf("Step", "NCP", "AAC3.1.0", "AAC3.3.6", "AAC3.3.13"), "NCP")
-	private val longJumpValue = BoolValue("LongJump", false)
+	private val longJumpValue = BoolValue("LongJump", false) // AAC LongJump
 
 	private var canJump = false
 

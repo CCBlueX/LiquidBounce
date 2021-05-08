@@ -13,4 +13,6 @@ interface IItemArmor : IItem
 	val damageReduceAmount: Int
 	val armorMaterial: IArmorMaterial
 	val armorType: Int
+
+	fun getColor(item: IItemStack): Int
 }
