@@ -31,9 +31,7 @@ import net.minecraft.item.ItemStack;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(PlayerEntity.class)
@@ -44,15 +42,27 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
     /**
      * Hook player stride event
      */
-    @Redirect(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerEntity;onGround:Z"),
-            require = 1, allow = 1)
-    private boolean hookStrideGround(PlayerEntity playerEntity) {
-        final PlayerStrideEvent event = new PlayerStrideEvent(false);
+    @ModifyVariable(
+            method = "tickMovement",
+            at = @At(
+                    value = "FIELD",
+                    target = "Lnet/minecraft/entity/player/PlayerEntity;strideDistance:F",
+                    shift = At.Shift.BEFORE,
+                    ordinal = 0
+            ),
+            slice = @Slice(
+                    from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setMovementSpeed(F)V"),
+                    to = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;isSpectator()Z")
+            ),
+            index = 1,
+            ordinal = 0,
+            require = 1,
+            allow = 1
+    )
+    private float hookStrideForce(float strideForce) {
+        final PlayerStrideEvent event = new PlayerStrideEvent(strideForce);
         EventManager.INSTANCE.callEvent(event);
-        if (event.getStrideOnAir()) {
-            return true;
-        }
-        return playerEntity.isOnGround();
+        return event.getStrideForce();
     }
 
     @Redirect(method = "getEquippedStack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerInventory;getMainHandStack()Lnet/minecraft/item/ItemStack;"))
