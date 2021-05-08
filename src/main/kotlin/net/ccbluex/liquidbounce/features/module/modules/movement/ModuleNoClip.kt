@@ -40,9 +40,7 @@ object ModuleNoClip : Module("NoClip", Category.MOVEMENT) {
         player.isOnGround = false
 
         val speed = speed.toDouble()
-        if (player.moving) {
-            player.strafe(speed = speed)
-        }
+        player.strafe(speed = speed)
 
         player.velocity.y = when {
             mc.options.keyJump.isPressed -> speed
@@ -60,7 +58,7 @@ object ModuleNoClip : Module("NoClip", Category.MOVEMENT) {
     }
 
     override fun disable() {
-        mc.player?.noClip = false
+        player.noClip = false
     }
 
 }
