@@ -33,9 +33,6 @@ object Fonts : MinecraftInstance()
 	@FontDetails(fontName = "Roboto Medium", fontSize = 40)
 	lateinit var font40: IFontRenderer
 
-	@FontDetails(fontName = "Roboto Medium", fontSize = 60)
-	lateinit var font60: IFontRenderer
-
 	@FontDetails(fontName = "Roboto Bold", fontSize = 180)
 	lateinit var fontBold180: IFontRenderer
 
@@ -51,7 +48,6 @@ object Fonts : MinecraftInstance()
 
 		font35 = provider.wrapFontRenderer(GameFontRenderer(getFont("Roboto-Medium.ttf", 35)))
 		font40 = provider.wrapFontRenderer(GameFontRenderer(getFont("Roboto-Medium.ttf", 40)))
-		font60 = provider.wrapFontRenderer(GameFontRenderer(getFont("Roboto-Medium.ttf", 60)))
 		fontBold180 = provider.wrapFontRenderer(GameFontRenderer(getFont("Roboto-Bold.ttf", 180)))
 
 		try
