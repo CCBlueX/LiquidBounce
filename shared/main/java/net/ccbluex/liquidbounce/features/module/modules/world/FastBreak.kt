@@ -20,9 +20,11 @@ class FastBreak : Module()
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
-		mc.playerController.blockHitDelay = 0
+		val playerController = mc.playerController
 
-		if (mc.playerController.curBlockDamageMP > breakDamage.get()) mc.playerController.curBlockDamageMP = 1F
+		playerController.blockHitDelay = 0
+
+		if (playerController.curBlockDamageMP > breakDamage.get()) playerController.curBlockDamageMP = 1F
 
 		if (Fucker.currentDamage > breakDamage.get()) Fucker.currentDamage = 1F
 		if (Nuker.currentDamage > breakDamage.get()) Nuker.currentDamage = 1F

@@ -160,7 +160,7 @@ object ColorUtils : MinecraftInstance()
 	fun rainbowRGB(alpha: Int = 255, offset: Long = 400000L, speed: Int = 10, saturation: Float = 1F, brightness: Float = 1F): Int = applyAlphaChannel(Color.HSBtoRGB((System.nanoTime() + offset) / 10F.pow(9 + (11 - speed.coerceIn(1, 10))) % 1, saturation, brightness), alpha)
 
 	@JvmStatic
-	fun rainbow(alpha: Int = 255, offset: Long = 400000L, speed: Int = 10, saturation: Float = 1F, brightness: Float = 1F): Color = Color(rainbowRGB(alpha, offset, speed, saturation, brightness))
+	fun rainbow(alpha: Int = 255, offset: Long = 400000L, speed: Int = 10, saturation: Float = 1F, brightness: Float = 1F): Color = Color(rainbowRGB(alpha, offset, speed, saturation, brightness), true)
 
 	@JvmStatic
 	fun blendColors(fractions: FloatArray, colors: Array<Color>, progress: Float): Color

@@ -69,7 +69,7 @@ class BlockOverlay : Module()
 
 		val alpha = colorAlphaValue.get()
 		val rainbowSpeed = rainbowSpeedValue.get()
-		val color = if (colorRainbow.get()) rainbow(alpha, speed = rainbowSpeed, saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), alpha)
+		val color = if (colorRainbow.get()) rainbow(alpha = alpha, speed = rainbowSpeed, saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), alpha)
 
 		val glStateManager = classProvider.glStateManager
 

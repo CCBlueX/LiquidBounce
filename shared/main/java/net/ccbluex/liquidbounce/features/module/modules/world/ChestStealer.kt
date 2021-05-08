@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import kotlin.math.max
 import kotlin.random.Random
 
+// TODO: Silent option (Steal without opening GUI)
 @ModuleInfo(name = "ChestStealer", description = "Automatically steals all items from a chest.", category = ModuleCategory.WORLD)
 class ChestStealer : Module()
 {
