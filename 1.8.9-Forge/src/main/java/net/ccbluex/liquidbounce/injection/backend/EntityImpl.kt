@@ -118,6 +118,10 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 		}
 	override val isInLava: Boolean
 		get() = wrapped.isInLava
+	override val isEating: Boolean
+		get() = wrapped.isEating
+	override val isSilent: Boolean
+		get() = wrapped.isSilent
 
 	override val width: Float
 		get() = wrapped.width
@@ -152,6 +156,10 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 		{
 			wrapped.motionZ = value
 		}
+
+	override val air: Int
+		get() = wrapped.air
+
 	override val eyeHeight: Float
 		get() = wrapped.eyeHeight
 	override var entityBoundingBox: IAxisAlignedBB

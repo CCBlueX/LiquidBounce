@@ -44,6 +44,8 @@ interface IEntity
 	val isInWater: Boolean
 	var isInWeb: Boolean
 	val isInLava: Boolean
+	val isEating: Boolean
+	val isSilent: Boolean
 	val width: Float
 	val height: Float
 	var onGround: Boolean
@@ -52,6 +54,8 @@ interface IEntity
 	var motionX: Double
 	var motionY: Double
 	var motionZ: Double
+
+	val air: Int
 
 	val eyeHeight: Float
 	var entityBoundingBox: IAxisAlignedBB

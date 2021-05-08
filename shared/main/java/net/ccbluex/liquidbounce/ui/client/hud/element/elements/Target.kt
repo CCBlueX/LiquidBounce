@@ -126,21 +126,16 @@ class Target : Element()
 				val dataWatcherBuilder = StringJoiner("\u00A7r | ", " | ", "\u00A7r").setEmptyValue("")
 
 				if (targetEntity.invisible) dataWatcherBuilder.add("\u00A77\u00A7oInvisible")
-
 				if (targetEntity.burning) dataWatcherBuilder.add("\u00A7cBurning")
-
-				if (targetEntity.isInWeb) dataWatcherBuilder.add("\u00A77In Web")
-
-				if (targetEntity.isInWater) dataWatcherBuilder.add("\u00A79In Water")
-
-				if (targetEntity.isInLava) dataWatcherBuilder.add("\u00A7cIn Lava")
+				if (targetEntity.isEating) dataWatcherBuilder.add("\u00A7eEating")
+				if (targetEntity.isSilent) dataWatcherBuilder.add("\u00A78Silent")
 
 				val headBoxYSize = headRenderSize + 6F
 
 				var textXOffset = 2
 				var healthBarYOffset = height - 3F /*107F*/
 
-				var name = targetEntity.customNameTag.ifBlank(targetEntity::name)
+				val name = targetEntity.displayName.formattedText
 				val targetHealthPercentage = targetHealth / targetMaxHealth
 
 				if (isPlayer)
@@ -151,7 +146,6 @@ class Target : Element()
 					if (healthMethod.equals("Mineplex", ignoreCase = true) || healthMethod.equals("Hive", ignoreCase = true)) targetHealth = EntityUtils.getPlayerHealthFromScoreboard(targetPlayer.gameProfile.name, isMineplex = healthTypeValue.get().equals("Mineplex", true)).toFloat()
 
 					targetArmor = targetPlayer.totalArmorValue
-					name = targetPlayer.customNameTag.ifBlank(targetPlayer.displayName::formattedText)
 
 					textXOffset = headRenderSize + 10
 					healthBarYOffset = height - 6F /*104F*/
@@ -301,20 +295,23 @@ class Target : Element()
 
 				GL11.glScalef(scale, scale, scale)
 
+				// Draw CustomNameTag
+				textFont.drawString("(${targetEntity.customNameTag})", textXOffset * reverseScale, (nameFont.fontHeight + 5) * reverseScale, Color.gray.rgb)
+
 				// Health/Armor-related
 				textFont.drawString("Health: $healthText | Absorption: ${if (targetAbsorption > 0) "\u00A7e" else "\u00A77"}${decimalFormat1.format(targetAbsorption.toLong())}\u00A7r | Armor: $armorText", scaledXPos, scaledYPos, 0xffffff)
 
 				// Movement/Position-related
-				textFont.drawString("Distance: ${distanceText}m | ${if (targetEntity.onGround) "\u00A7a" else "\u00A7c"}Ground\u00A7r | ${if (targetEntity.isAirBorne) "\u00A7a" else "\u00A7c"}AirBorne\u00A7r | ${if (!targetEntity.sprinting) "\u00A7c" else "\u00A7a"}Sprinting\u00A7r | ${if (!targetEntity.sneaking) "\u00A7c" else "\u00A7a"}Sneaking\u00A7r", scaledXPos, scaledYPos + 12, 0xffffff)
+				textFont.drawString("Distance: ${distanceText}m | ${if (targetEntity.onGround) "\u00A7a" else "\u00A7c"}Ground\u00A7r | ${if (!targetEntity.sprinting) "\u00A7c" else "\u00A7a"}Sprinting\u00A7r | ${if (!targetEntity.sneaking) "\u00A7c" else "\u00A7a"}Sneaking\u00A7r", scaledXPos, scaledYPos + 12, 0xffffff)
 
 				// Rotation-related
 				textFont.drawString("Yaw: $yawText | Pitch: $pitchText | Velocity: [$velocityText]", scaledXPos, scaledYPos + 24, 0xffffff)
 
 				// Hurt-related
-				textFont.drawString("Hurt: ${if (targetEntity.hurtTime > 0) "\u00A7c" else "\u00A7a"}${targetEntity.hurtTime}\u00A7r | HurtResistantTime: ${if (targetEntity.hurtResistantTime > 0) "\u00A7c" else "\u00A7a"}${targetEntity.hurtResistantTime}\u00A7r ", scaledXPos, scaledYPos + 34, 0xffffff)
+				textFont.drawString("Hurt: ${if (targetEntity.hurtTime > 0) "\u00A7c" else "\u00A7a"}${targetEntity.hurtTime}\u00A7r | HurtResis: ${if (targetEntity.hurtResistantTime > 0) "\u00A7c" else "\u00A7a"}${targetEntity.hurtResistantTime}\u00A7r | Air: ${if (targetEntity.air > 0) "\u00A7c" else "\u00A7a"}${targetEntity.air}\u00A7r ", scaledXPos, scaledYPos + 34, 0xffffff)
 
 				// Datawatcher-related
-				textFont.drawString("EntityID: ${targetEntity.entityId}$dataWatcherBuilder ", scaledXPos, scaledYPos + 44, 0xffffff)
+				textFont.drawString("EntityID: ${targetEntity.entityId}$dataWatcherBuilder", scaledXPos, scaledYPos + 44, 0xffffff)
 
 				GL11.glScalef(reverseScale, reverseScale, reverseScale)
 			}
