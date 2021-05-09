@@ -127,9 +127,13 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
      */
     @Redirect(method = "tickMovement",
             slice = @Slice(
-                    from = @At(value = "FIELD", target = "Lnet/minecraft/client/network/ClientPlayerEntity;noClip:Z")
+                    from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/HungerManager;getFoodLevel()I"),
+                    to = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isFallFlying()Z")
             ),
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z"),
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z"
+            ),
             require = 2,
             allow = 2
     )
