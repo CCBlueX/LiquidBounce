@@ -25,9 +25,9 @@
 <div class="button" on:mouseenter={handleMouseEnter} on:mouseleave={handleMouseLeave} on:click={handleClick}>
     <div class="icon">
         {#if hovered}
-            <img transition:fade="{{ duration: 200 }}" src="../img/icons/{icon}-hover.svg" alt="icon"> 
+            <img transition:fade="{{ duration: 200 }}" src="img/icons/{icon}-hover.svg" alt="icon"> 
         {:else}
-            <img transition:fade="{{ duration: 200 }}" src="../img/icons/{icon}.svg" alt="icon"> 
+            <img transition:fade="{{ duration: 200 }}" src="img/icons/{icon}.svg" alt="icon"> 
         {/if}
     </div>
     <div class="text">{text}</div>

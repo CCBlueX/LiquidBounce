@@ -5,9 +5,8 @@
 <style>
     .buttons {
         background-color: rgba(0, 0, 0, .68);
-        padding: 15px 35px;
+        padding: 15px 25px;
         border-radius: 6px;
         display: flex;
-        column-gap: 20px;
     }
 </style>

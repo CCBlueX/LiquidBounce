@@ -14,7 +14,7 @@
 
 <div class="button" on:click={handleClick}>
     <div class="icon">
-        <img src="../img/icons/{icon}.svg" alt="icon"> 
+        <img src="img/icons/{icon}.svg" alt="icon"> 
     </div>
     <div class="text">{text}</div>
 </div>
@@ -27,12 +27,12 @@
         align-items: center;
         column-gap: 30px;
         overflow: hidden;
-
         background: linear-gradient(to left, rgba(0, 0, 0, .36) 50%, #4677ff 50%);
         background-size: 200% 100%;
         background-position: right bottom;
         will-change: background-position;
         transition: background-position .2s ease-out;
+        margin: 0 10px;
     }
 
     .button:hover {

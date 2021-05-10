@@ -19,9 +19,9 @@
 
     <div class="icon" class:hovered>
         {#if hovered}
-            <img transition:fade="{{ duration: 200 }}" src="../img/icons/{icon}-hover.svg" alt="icon"> 
+            <img transition:fade="{{ duration: 200 }}" src="img/icons/{icon}-hover.svg" alt="icon"> 
         {:else}
-            <img transition:fade="{{ duration: 200 }}" src="../img/icons/{icon}.svg" alt="icon"> 
+            <img transition:fade="{{ duration: 200 }}" src="img/icons/{icon}.svg" alt="icon"> 
         {/if}
     </div>
 </div>

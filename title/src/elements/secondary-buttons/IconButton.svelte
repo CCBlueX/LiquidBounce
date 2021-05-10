@@ -16,7 +16,7 @@
     <ToolTip {text} />
 
     <div class="icon">
-        <img src="../img/icons/{icon}.svg" alt="icon"> 
+        <img src="img/icons/{icon}.svg" alt="icon"> 
     </div>
 </div>
 
@@ -25,6 +25,7 @@
         background-color: rgba(0, 0, 0, .36);
         border-radius: 6px;
         position: relative;
+        margin: 0 10px;
     }
 
     .icon {
