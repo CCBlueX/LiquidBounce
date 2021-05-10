@@ -55,8 +55,9 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
             player.inventory.getStack(it).item == Items.LAVA_BUCKET
         }
 
-        if (slot == null)
+        if (slot == null) {
             return@repeatable
+        }
 
         for (enemy in targetTracker.enemies()) {
             if (enemy.squaredBoxedDistanceTo(player) > 6.0 * 6.0) {
@@ -67,21 +68,24 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
 
             val state = pos.getState()
 
-            if (state?.block == Blocks.LAVA)
+            if (state?.block == Blocks.LAVA) {
                 continue
+            }
 
             val currentTarget = updateTarget(pos, true) ?: continue
 
             val rotation = currentTarget.rotation.fixedSensitivity() ?: continue
             val rayTraceResult = raycast(4.5, rotation) ?: return@repeatable
 
-            if (rayTraceResult.type != HitResult.Type.BLOCK)
+            if (rayTraceResult.type != HitResult.Type.BLOCK) {
                 continue
+            }
 
             player.networkHandler.sendPacket(PlayerMoveC2SPacket.LookOnly(rotation.yaw, rotation.pitch, player.isOnGround))
 
-            if (slot != player.inventory.selectedSlot)
+            if (slot != player.inventory.selectedSlot) {
                 player.networkHandler.sendPacket(UpdateSelectedSlotC2SPacket(slot))
+            }
 
             player.networkHandler.sendPacket(PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, rayTraceResult))
             val itemUsageContext = ItemUsageContext(player, Hand.MAIN_HAND, rayTraceResult)
@@ -98,11 +102,13 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
                 actionResult = itemStack.useOnBlock(itemUsageContext)
             }
 
-            if (actionResult.shouldSwingHand())
+            if (actionResult.shouldSwingHand()) {
                 player.swingHand(Hand.MAIN_HAND)
+            }
 
-            if (slot != player.inventory.selectedSlot)
+            if (slot != player.inventory.selectedSlot) {
                 player.networkHandler.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
+            }
 
             break
         }

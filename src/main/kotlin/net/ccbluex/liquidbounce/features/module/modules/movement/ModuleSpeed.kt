@@ -53,8 +53,9 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
     private object LegitHop : Choice("LegitHop", modes) {
 
         val repeatable = repeatable {
-            if (optimizeForCriticals && ModuleCriticals.shouldWaitForJump(0.42f))
+            if (optimizeForCriticals && ModuleCriticals.shouldWaitForJump(0.42f)) {
                 return@repeatable
+            }
 
             if (player.isOnGround && player.moving) {
                 player.jump()

@@ -62,8 +62,9 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
             val landingPosition = drawTrajectoryForProjectile(it.velocity, TrajectoryInfo(0.05F, 0.3F), it.pos, world, player, Vec3(0.0, 0.0, 0.0))
 
             if (landingPosition is EntityHitResult) {
-                if (landingPosition.entity != player)
+                if (landingPosition.entity != player) {
                     return@forEach
+                }
 
                 val task = ColoredPrimitiveRenderTask(2, PrimitiveType.Triangles)
 
@@ -77,8 +78,9 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
             val landingPosition = drawTrajectory(otherPlayer, event)
 
             if (landingPosition is EntityHitResult) {
-                if (landingPosition.entity != player)
+                if (landingPosition.entity != player) {
                     continue
+                }
 
                 val task = ColoredPrimitiveRenderTask(2, PrimitiveType.Triangles)
 
@@ -148,7 +150,6 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
         var motionY = -sin((pitch - trajectoryInfo.pitchSubtrahend).toRadians()).toDouble()
         var motionZ = cos(yawRadians) * cos(pitchRadians).toDouble()
 
-
         val length = sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ)
 
         motionX /= length
@@ -160,7 +161,12 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
         motionZ *= trajectoryInfo.motionFactor
 
         return drawTrajectoryForProjectile(
-            Vec3d(motionX, motionY, motionZ), trajectoryInfo, Vec3d(posX, posY, posZ), world, otherPlayer, interpolatedOffset
+            Vec3d(motionX, motionY, motionZ),
+            trajectoryInfo,
+            Vec3d(posX, posY, posZ),
+            world,
+            otherPlayer,
+            interpolatedOffset
         )
     }
 
@@ -198,12 +204,20 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
             // Get landing position
             val blockHitResult = theWorld.raycast(
                 RaycastContext(
-                    posBefore, posAfter, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, player
+                    posBefore,
+                    posAfter,
+                    RaycastContext.ShapeType.COLLIDER,
+                    RaycastContext.FluidHandling.NONE,
+                    player
                 )
             )
 
             val entityHitResult = ProjectileUtil.getEntityCollision(
-                world, player, posBefore, posAfter, Box(
+                world,
+                player,
+                posBefore,
+                posAfter,
+                Box(
                     -trajectoryInfo.size.toDouble(),
                     -trajectoryInfo.size.toDouble(),
                     -trajectoryInfo.size.toDouble(),
@@ -217,7 +231,6 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                 } else {
                     return@getEntityCollision false
                 }
-
 
                 return@getEntityCollision true
             }
@@ -271,8 +284,9 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                 var power = player.itemUseTime / 20f
                 power = (power * power + power * 2F) / 3F
 
-                if (power < 0.1F)
+                if (power < 0.1F) {
                     return null
+                }
 
                 return TrajectoryInfo(
                     0.05F,
