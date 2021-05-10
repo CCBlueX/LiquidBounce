@@ -14,11 +14,11 @@
     }
 
     function handleLocationClick(e) {
-        dispatch("altManagerClick");
+        dispatch("proxyManagerClick");
     }
 </script>
 
-<div class="account" on:click={handleAccountClick}>
+<div class="account">
     <div class="icon">
         <div class="location-wrapper">
             <ToolTip text="Change location" />
@@ -28,7 +28,7 @@
     </div>
     <div class="username">{username}</div>
     <div class="last-used">{lastUsed}</div>
-    <div class="change-account">
+    <div class="change-account" on:click={handleAccountClick}>
         <img src="img/icons/pen.svg" alt="pen">
     </div>
 </div>
