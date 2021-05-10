@@ -89,71 +89,74 @@ object ColorUtils : MinecraftInstance()
 	{
 		val provider = classProvider
 
-		if (entity != null && provider.isEntityLivingBase(entity))
-		{
-			val entityLiving = entity.asEntityLivingBase()
-
-			val moduleManager = LiquidBounce.moduleManager
-
-			val aimBot = moduleManager[Aimbot::class.java] as Aimbot
-			val killAura = moduleManager[KillAura::class.java] as KillAura
-			val tpAura = moduleManager[TpAura::class.java] as TpAura
-			val murderDetector = moduleManager[MurderDetector::class.java] as MurderDetector
-
-			// Indicate Hurt
-			if (indicateHurt && entityLiving.hurtTime > 0 || indicateTarget && (entity == aimBot.target || entity == killAura.target || tpAura.isTarget(entityLiving))) return Color.RED
-
-			// Indicate Friend
-			if (indicateFriend && EntityUtils.isFriend(entityLiving)) return Color.BLUE
-
-			// Indicate Murder
-			if (murderDetector.state && murderDetector.murders.contains(entity)) return Color(153, 0, 153)
-
-			when (colorMode.toLowerCase())
+		return applyAlphaChannel(run {
+			if (entity != null && provider.isEntityLivingBase(entity))
 			{
-				"rainbow" -> return rainbow(saturation = rainbowSaturation, brightness = rainbowBrightness)
+				val entityLiving = entity.asEntityLivingBase()
 
-				"team" ->
+				val moduleManager = LiquidBounce.moduleManager
+
+				val aimBot = moduleManager[Aimbot::class.java] as Aimbot
+				val killAura = moduleManager[KillAura::class.java] as KillAura
+				val tpAura = moduleManager[TpAura::class.java] as TpAura
+				val murderDetector = moduleManager[MurderDetector::class.java] as MurderDetector
+
+				// Indicate Hurt
+				if (indicateHurt && entityLiving.hurtTime > 0 || indicateTarget && (entity == aimBot.target || entity == killAura.target || tpAura.isTarget(entityLiving))) return@run Color.RED
+
+				// Indicate Friend
+				if (indicateFriend && EntityUtils.isFriend(entityLiving)) return@run Color.BLUE
+
+				// Indicate Murder
+				if (murderDetector.state && murderDetector.murders.contains(entity)) return@run Color(153, 0, 153)
+
+				when (colorMode.toLowerCase())
 				{
-					val chars = entity.displayName.formattedText.toCharArray()
-					val charsSize = chars.size
+					"rainbow" -> return@run rainbow(saturation = rainbowSaturation, brightness = rainbowBrightness)
 
-					var color = Int.MAX_VALUE
-					var i = 0
-					while (i < charsSize)
+					"team" ->
 					{
-						if (chars[i] != '\u00A7' || i + 1 >= charsSize)
+						val chars = entity.displayName.formattedText.toCharArray()
+						val charsSize = chars.size
+
+						var color = Int.MAX_VALUE
+						var i = 0
+						while (i < charsSize)
 						{
-							i++
-							continue
+							if (chars[i] != '\u00A7' || i + 1 >= charsSize)
+							{
+								i++
+								continue
+							}
+
+							val index = GameFontRenderer.getColorIndex(chars[i + 1])
+							if (index < 0 || index > 15)
+							{
+								i++
+								continue
+							}
+
+							color = hexColors[index]
+							break
 						}
 
-						val index = GameFontRenderer.getColorIndex(chars[i + 1])
-						if (index < 0 || index > 15)
-						{
-							i++
-							continue
-						}
-
-						color = hexColors[index]
-						break
+						return@run Color(color)
 					}
-					return Color(applyAlphaChannel(color, alpha))
-				}
 
-				"health" ->
-				{
-					var health = entityLiving.health
-					val maxHealth = entityLiving.maxHealth
+					"health" ->
+					{
+						var health = entityLiving.health
+						val maxHealth = entityLiving.maxHealth
 
-					if (provider.isEntityPlayer(entity) && (healthMode.equals("Mineplex", ignoreCase = true) || healthMode.equals("Hive", ignoreCase = true))) health = EntityUtils.getPlayerHealthFromScoreboard(entity.asEntityPlayer().gameProfile.name, isMineplex = healthMode.equals("mineplex", ignoreCase = true)).toFloat()
+						if (provider.isEntityPlayer(entity) && (healthMode.equals("Mineplex", ignoreCase = true) || healthMode.equals("Hive", ignoreCase = true))) health = EntityUtils.getPlayerHealthFromScoreboard(entity.asEntityPlayer().gameProfile.name, isMineplex = healthMode.equals("mineplex", ignoreCase = true)).toFloat()
 
-					return applyAlphaChannel(getHealthColor(health, maxHealth), alpha)
+						return@run getHealthColor(health, maxHealth)
+					}
 				}
 			}
-		}
 
-		return applyAlphaChannel(if (colorMode.equals("Rainbow", ignoreCase = true)) rainbow(saturation = rainbowSaturation, brightness = rainbowBrightness) else customStaticColor, alpha)
+			return@run if (colorMode.equals("Rainbow", ignoreCase = true)) rainbow(saturation = rainbowSaturation, brightness = rainbowBrightness) else customStaticColor
+		}, alpha)
 	}
 
 	@JvmStatic
@@ -219,16 +222,14 @@ object ColorUtils : MinecraftInstance()
 	@JvmStatic
 	fun getHealthColor(health: Float, maxHealth: Float): Color = blendColors(floatArrayOf(0f, 0.5f, 1f), arrayOf(Color.RED, Color.YELLOW, Color.GREEN), health / maxHealth).brighter()
 
-	// val color = Color(rgb)
-	// return Color(color.red, color.green, color.blue, alpha).rgb
 	@JvmStatic
-	fun applyAlphaChannel(rgb: Int, alpha: Int): Int = alpha and 0xFF shl 24 or rgb
+	fun applyAlphaChannel(rgb: Int, newAlpha: Int): Int = newAlpha and 0xFF shl 24 or 0x00FFFFFF and rgb
 
 	@JvmStatic
-	fun applyAlphaChannel(color: Color, alpha: Int): Color = Color(applyAlphaChannel(color.rgb, alpha))
+	fun applyAlphaChannel(color: Color, newAlpha: Int): Color = Color(applyAlphaChannel(color.rgb, newAlpha), true)
 
 	@JvmStatic
-	fun createRGB(red: Int, green: Int, blue: Int, alpha: Int): Int = (alpha.coerceIn(0, 255) and 0xFF shl 24) or (red.coerceIn(0, 255) and 0xFF shl 16) or (green.coerceIn(0, 255) and 0xFF shl 8) or (blue.coerceIn(0, 255) and 0xFF shl 0)
+	fun createRGB(red: Int, green: Int, blue: Int, alpha: Int = 255): Int = (alpha.coerceIn(0, 255) and 0xFF shl 24) or (red.coerceIn(0, 255) and 0xFF shl 16) or (green.coerceIn(0, 255) and 0xFF shl 8) or (blue.coerceIn(0, 255) and 0xFF shl 0)
 
 	@JvmStatic
 	fun compareColor(color1: Int, color2: Int): Double

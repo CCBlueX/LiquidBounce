@@ -120,8 +120,8 @@ class Target : Element()
 				val targetMaxHealth = targetEntity.maxHealth + targetAbsorption
 
 				// Damage/Heal animation color
-				val damageColor = createRGB(damageAnimationColorRedValue.get(), damageAnimationColorGreenValue.get(), damageAnimationColorBlueValue.get(), 255)
-				val healColor = createRGB(healAnimationColorRedValue.get(), healAnimationColorGreenValue.get(), healAnimationColorBlueValue.get(), 255)
+				val damageColor = createRGB(damageAnimationColorRedValue.get(), damageAnimationColorGreenValue.get(), damageAnimationColorBlueValue.get())
+				val healColor = createRGB(healAnimationColorRedValue.get(), healAnimationColorGreenValue.get(), healAnimationColorBlueValue.get())
 
 				val dataWatcherBuilder = StringJoiner("\u00A7r | ", " | ", "\u00A7r").setEmptyValue("")
 
@@ -173,7 +173,7 @@ class Target : Element()
 				val width = (textXOffset.toFloat() + nameFont.getStringWidth(name) + 10).coerceAtLeast(minWidth)
 
 				// Draw Body Rect
-				RenderUtils.drawBorderedRect(0F, 0F, width, height, borderWidthValue.get(), createRGB(borderColorRedValue.get(), borderColorGreenValue.get(), borderColorBlueValue.get(), 255), -16777216)
+				RenderUtils.drawBorderedRect(0F, 0F, width, height, borderWidthValue.get(), createRGB(borderColorRedValue.get(), borderColorGreenValue.get(), borderColorBlueValue.get()), -16777216)
 
 				val barWidthSubtractor = barWidthSubtractorValue.get().toFloat()
 				val barWidth = width - barWidthSubtractor

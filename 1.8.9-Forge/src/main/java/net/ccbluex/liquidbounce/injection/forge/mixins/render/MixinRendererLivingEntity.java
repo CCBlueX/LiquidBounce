@@ -204,7 +204,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 			}
 			else
 			{
-				final boolean flag = setDoRenderBrightness(entity, partialTicks);
+				final boolean resetBrightness = setDoRenderBrightness(entity, partialTicks);
 				renderModel(entity, reverseinterpolatedLimbSwingDelta, interpolatedLimbSwingAmount, f8, yawDelta, interpolatedPitch, 0.0625F);
 
 				final ESP esp = (ESP) LiquidBounce.moduleManager.get(ESP.class);
@@ -217,7 +217,9 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 					GL11.glPushMatrix();
 					GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 					GL11.glDisable(GL11.GL_TEXTURE_2D);
-					if (!"CSGO".equalsIgnoreCase(mode))
+
+					final boolean disableLighting = !"CSGO".equalsIgnoreCase(mode);
+					if (disableLighting)
 						RenderHelper.disableStandardItemLighting();
 
 					GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);
@@ -226,7 +228,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 					GL11.glEnable(GL11.GL_TEXTURE_2D);
 					GL11.glEnable(GL11.GL_LIGHTING);
 					GL11.glEnable(GL11.GL_DEPTH_TEST);
-					if (!"CSGO".equalsIgnoreCase(mode))
+					if (disableLighting)
 					{
 						GlStateManager.enableLighting();
 						GlStateManager.enableLight(0);
@@ -238,7 +240,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 					RenderUtils.glColor(-1);
 				}
 
-				if (flag)
+				if (resetBrightness)
 					unsetBrightness();
 
 				GlStateManager.depthMask(true);
@@ -290,7 +292,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 		final TrueSight trueSight = (TrueSight) LiquidBounce.moduleManager.get(TrueSight.class);
 
 		final boolean trueSightEntities = trueSight.getState() && trueSight.getEntitiesValue().get();
-		final boolean semiVisible = !visible && (!entitylivingbaseIn.isInvisibleToPlayer(Minecraft.getMinecraft().thePlayer) || trueSightEntities);
+		final boolean semiVisible = !visible && (!entitylivingbaseIn.isInvisibleToPlayer(Minecraft.getMinecraft().thePlayer) || trueSightEntities) || entitylivingbaseIn.getEntityId() == -1337 /* Blink FakePlayer */;
 
 		if (visible || semiVisible)
 		{

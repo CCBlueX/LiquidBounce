@@ -126,7 +126,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 
 		// Color
 		val colorMode = colorModeValue.get()
-		val customColor = createRGB(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), 255)
+		val customColor = createRGB(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
 
 		// Rect Mode & Color
 		val rectMode = rectValue.get()
@@ -141,7 +141,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 
 		// Tag Mode & Color
 		val tagColorMode = tagColorModeValue.get()
-		val customTagColor = createRGB(tagColorRedValue.get(), tagColorGreenValue.get(), tagColorBlueValue.get(), 1)
+		val customTagColor = createRGB(tagColorRedValue.get(), tagColorGreenValue.get(), tagColorBlueValue.get())
 
 		// Text Shadow
 		val textShadow = shadow.get()

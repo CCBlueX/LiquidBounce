@@ -17,13 +17,13 @@ import net.ccbluex.liquidbounce.injection.backend.Backend
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.canBeClicked
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
-import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
+import net.ccbluex.liquidbounce.utils.render.ColorUtils.createRGB
+import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbowRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import org.lwjgl.opengl.GL11
-import java.awt.Color
 
 @ModuleInfo(name = "BlockOverlay", description = "Allows you to change the design of the block overlay.", category = ModuleCategory.RENDER)
 class BlockOverlay : Module()
@@ -69,7 +69,7 @@ class BlockOverlay : Module()
 
 		val alpha = colorAlphaValue.get()
 		val rainbowSpeed = rainbowSpeedValue.get()
-		val color = if (colorRainbow.get()) rainbow(alpha = alpha, speed = rainbowSpeed, saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), alpha)
+		val color = if (colorRainbow.get()) rainbowRGB(alpha = alpha, speed = rainbowSpeed, saturation = saturationValue.get(), brightness = brightnessValue.get()) else createRGB(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), alpha)
 
 		val glStateManager = classProvider.glStateManager
 

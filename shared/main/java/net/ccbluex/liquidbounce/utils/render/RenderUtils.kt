@@ -201,19 +201,15 @@ object RenderUtils : MinecraftInstance()
 
 		val axisAlignedBB = classProvider.createAxisAlignedBB(entityBox.minX - posX + x - 0.05, entityBox.minY - posY + y, entityBox.minZ - posZ + z - 0.05, entityBox.maxX - posX + x + 0.05, entityBox.maxY - posY + y + 0.15, entityBox.maxZ - posZ + z + 0.05)
 
-		val red = color.red
-		val green = color.green
-		val blue = color.blue
-
 		if (outline)
 		{
 			GL11.glLineWidth(1.00f)
 			enableGlCap(GL11.GL_LINE_SMOOTH)
-			glColor(red, green, blue, 95)
+			glColor(ColorUtils.applyAlphaChannel(color, (color.alpha + 60).coerceAtMost(255)))
 			drawSelectionBoundingBox(axisAlignedBB, drawHydraESP)
 		}
 
-		glColor(red, green, blue, if (outline) 26 else 35)
+		glColor(color)
 
 		drawFilledBox(axisAlignedBB)
 

@@ -12,7 +12,6 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer.Companion.assumeNonVolatile
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.applyAlphaChannel
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.createRGB
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbowRGB
@@ -84,11 +83,11 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F, side: Side =
 		val fontRenderer = fontValue.get()
 
 		val colorMode = colorModeValue.get()
-		val customColor = createRGB(redValue.get(), greenValue.get(), blueValue.get(), 1)
+		val customColor = createRGB(redValue.get(), greenValue.get(), blueValue.get())
 
 		val timeDistance = timeSpaceValue.get()
 		val timeColorMode = timeColorModeValue.get()
-		val timeCustomColor = createRGB(timeRedValue.get(), timeGreenValue.get(), timeBlueValue.get(), 1)
+		val timeCustomColor = createRGB(timeRedValue.get(), timeGreenValue.get(), timeBlueValue.get())
 
 		val backgroundColorMode = backgroundColorModeValue.get()
 		val backgroundColorAlpha = backgroundColorAlphaValue.get()

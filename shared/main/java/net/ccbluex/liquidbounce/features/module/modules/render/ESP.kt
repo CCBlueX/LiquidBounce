@@ -214,7 +214,7 @@ class ESP : Module()
 		shader.stopDraw(getColor(null), if (mode.equals("ShaderOutline", ignoreCase = true)) shaderOutlineRadius.get() else if (mode.equals("ShaderGlow", ignoreCase = true)) shaderGlowRadius.get() else 1f, 1f)
 	}
 
-	fun getColor(entity: IEntity?): Color = ColorUtils.getESPColor(entity = entity, colorMode = colorValue.get(), customStaticColor = Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get()), healthMode = healthModeValue.get(), indicateHurt = hurtValue.get(), indicateTarget = targetValue.get(), indicateFriend = friendValue.get(), rainbowSaturation = saturationValue.get(), rainbowBrightness = brightnessValue.get(), alpha = colorAlphaValue.get())
+	fun getColor(entity: IEntity?): Color = ColorUtils.getESPColor(entity = entity, colorMode = colorValue.get(), customStaticColor = Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), colorAlphaValue.get()), healthMode = healthModeValue.get(), indicateHurt = hurtValue.get(), indicateTarget = targetValue.get(), indicateFriend = friendValue.get(), rainbowSaturation = saturationValue.get(), rainbowBrightness = brightnessValue.get(), alpha = colorAlphaValue.get())
 
 	override val tag: String
 		get() = modeValue.get()

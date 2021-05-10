@@ -17,7 +17,6 @@ import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.createRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.*
-import org.lwjgl.opengl.GL11
 import kotlin.math.min
 
 /**
@@ -63,7 +62,7 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F, sid
 		val fontRenderer = fontValue.get()
 		val fontHeight = fontRenderer.fontHeight
 
-		val textColor = createRGB(textRedValue.get(), textGreenValue.get(), textBlueValue.get(), 255)
+		val textColor = createRGB(textRedValue.get(), textGreenValue.get(), textBlueValue.get())
 		val backColor = createRGB(backgroundColorRedValue.get(), backgroundColorGreenValue.get(), backgroundColorBlueValue.get(), backgroundColorAlphaValue.get())
 
 		val rectColorMode = rectColorModeValue.get()
