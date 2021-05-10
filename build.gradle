@@ -51,7 +51,7 @@ minecraft {
 
 repositories {
     mavenCentral()
-    maven { url = "http://maven.fabricmc.net/" }
+    maven { url = "https://maven.fabricmc.net/" }
     maven { url = "https://jitpack.io" }
     maven { url = "https://maven.terraformersmc.com/" }
 }
