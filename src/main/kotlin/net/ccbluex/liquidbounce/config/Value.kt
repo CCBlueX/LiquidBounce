@@ -215,7 +215,6 @@ class ChooseListValue<T : NamedChoice>(
 }
 
 interface NamedChoice {
-
     val choiceName: String
 }
 

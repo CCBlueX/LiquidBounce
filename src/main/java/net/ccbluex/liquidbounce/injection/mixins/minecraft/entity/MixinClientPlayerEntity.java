@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePortalMenu
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoSlow;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
+import net.ccbluex.liquidbounce.utils.client.TickStateManager;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.input.Input;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -33,6 +34,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ClientPlayerEntity.class)
 public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
@@ -173,6 +175,17 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
 
             this.lastYaw = currRotation.getYaw();
             this.lastPitch = currRotation.getPitch();
+        }
+    }
+
+
+    @Inject(method = "isSneaking", at = @At("HEAD"), cancellable = true)
+    private void injectForcedState(CallbackInfoReturnable<Boolean> cir) {
+        Boolean enforceEagle = TickStateManager.INSTANCE.getEnforcedState().getEnforceEagle();
+
+        if (enforceEagle != null) {
+            cir.setReturnValue(enforceEagle);
+            cir.cancel();
         }
     }
 

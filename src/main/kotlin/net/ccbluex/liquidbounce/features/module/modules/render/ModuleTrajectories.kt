@@ -166,7 +166,8 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
             Vec3d(posX, posY, posZ),
             world,
             otherPlayer,
-            interpolatedOffset
+            interpolatedOffset,
+            Color4b.WHITE
         )
     }
 

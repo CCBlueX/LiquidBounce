@@ -18,10 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.client.StateUpdateEvent
 import net.minecraft.block.SideShapeType
 import net.minecraft.util.math.Direction
 
@@ -32,18 +33,14 @@ import net.minecraft.util.math.Direction
  */
 object ModuleEagle : Module("Eagle", Category.PLAYER) {
 
-    val repeatable = repeatable {
+    val repeatable = handler<StateUpdateEvent> {
         // Check if player is on the edge and is NOT flying
         val pos = player.blockPos.down()
-        val nothing = !pos.getState()!!.isSideSolid(mc.world!!, pos, Direction.UP, SideShapeType.CENTER) && player.canFly()
+        val isAir = !pos.getState()!!.isSideSolid(mc.world!!, pos, Direction.UP, SideShapeType.CENTER) && player.canFly()
 
-        // Sneak when player is at the edge
-        mc.options.keySneak.isPressed = nothing
-    }
-
-    override fun disable() {
-        mc.options.keySneak.isPressed = false // Default back to off
-        super.disable()
+        if (isAir) {
+            it.state.enforceEagle = true
+        }
     }
 
 }
