@@ -8,5 +8,8 @@
         padding: 15px 25px;
         border-radius: 6px;
         display: flex;
+        position: absolute;
+        bottom: 0;
+        right: 0;
     }
 </style>
