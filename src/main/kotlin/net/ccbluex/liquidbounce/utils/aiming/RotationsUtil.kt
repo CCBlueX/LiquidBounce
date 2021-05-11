@@ -278,7 +278,7 @@ object RotationManager : Listenable {
     /**
      * Fix velocity
      */
-    fun fixVelocity(currVelocity: Vec3d, movementInput: Vec3d, speed: Float): Vec3d {
+    private fun fixVelocity(currVelocity: Vec3d, movementInput: Vec3d, speed: Float): Vec3d {
         currentRotation?.fixedSensitivity()?.let { rotation ->
             val yaw = rotation.yaw
             val d = movementInput.lengthSquared()

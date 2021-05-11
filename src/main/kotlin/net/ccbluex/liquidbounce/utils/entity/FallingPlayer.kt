@@ -135,6 +135,7 @@ class FallingPlayer(
             val end = Vec3d(x, y, z)
             var raytracedBlock: BlockPos?
             val w = player.width / 2.0
+
             if (rayTrace(start, end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock, i)
             if (rayTrace(start.add(w, 0.0, w), end).also { raytracedBlock = it } != null) return CollisionResult(
                 raytracedBlock,

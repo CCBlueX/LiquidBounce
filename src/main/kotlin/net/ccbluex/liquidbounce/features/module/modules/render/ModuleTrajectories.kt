@@ -59,7 +59,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
         val theWorld = mc.world ?: return@handler
 
         theWorld.entities.filter { it is ArrowEntity && !it.inGround }.forEach {
-            val landingPosition = drawTrajectoryForProjectile(it.velocity, TrajectoryInfo(0.05F, 0.3F), it.pos, world, player, Vec3(0.0, 0.0, 0.0))
+            val landingPosition = drawTrajectoryForProjectile(it.velocity, TrajectoryInfo(0.05F, 0.3F), it.pos, world, player, Vec3(0.0, 0.0, 0.0) , Color4b(255, 0, 0, 200))
 
             if (landingPosition is EntityHitResult) {
                 if (landingPosition.entity != player)
@@ -160,7 +160,13 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
         motionZ *= trajectoryInfo.motionFactor
 
         return drawTrajectoryForProjectile(
-            Vec3d(motionX, motionY, motionZ), trajectoryInfo, Vec3d(posX, posY, posZ), world, otherPlayer, interpolatedOffset
+            Vec3d(motionX, motionY, motionZ),
+            trajectoryInfo,
+            Vec3d(posX, posY, posZ),
+            world,
+            otherPlayer,
+            interpolatedOffset,
+            Color4b(255, 255, 255, 255)
         )
     }
 
@@ -170,7 +176,8 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
         pos: Vec3d,
         theWorld: ClientWorld,
         player: PlayerEntity,
-        interpolatedOffset: Vec3
+        interpolatedOffset: Vec3,
+        color: Color4b
     ): HitResult? { // Normalize the motion vector
         var motionX = motion.x
         var motionY = motion.y
@@ -184,8 +191,6 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
         var hasLanded = false
 
         // Start drawing of path
-
-        val color = Color4b.WHITE // TODO: Get this color in a nice way
 
         val renderTask = ColoredPrimitiveRenderTask(MAX_SIMULATED_TICKS + 1, PrimitiveType.LineStrip)
 

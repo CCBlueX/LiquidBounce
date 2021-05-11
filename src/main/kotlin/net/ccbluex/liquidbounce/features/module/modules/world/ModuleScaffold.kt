@@ -42,6 +42,7 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.*
+import kotlin.math.abs
 import kotlin.math.absoluteValue
 
 /**
@@ -87,6 +88,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     // Rotation
     val rotationsConfigurable = tree(RotationsConfigurable())
 
+    val minDist by float("MinDist", 0.2f, 0.0f..0.25f)
+
     var currentTarget: Target? = null
 
     val networkTickHandler = repeatable { event ->
@@ -99,7 +102,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         val serverRotation = RotationManager.serverRotation ?: return@repeatable
         val rayTraceResult = raycast(4.0, serverRotation) ?: return@repeatable
 
-        if (rayTraceResult.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != target.blockPos || rayTraceResult.pos.y < target.minY) {
+        if (rayTraceResult.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != target.blockPos || rayTraceResult.pos.y < target.minY || !isValidTarget(rayTraceResult)) {
             return@repeatable
         }
 
@@ -137,6 +140,25 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             currentTarget = null
             wait(delay.random())
         }
+    }
+
+    private fun isValidTarget(rayTraceResult: BlockHitResult): Boolean {
+        val eyesPos = player.eyesPos
+        val hitVec = rayTraceResult.pos
+
+        val diffX = hitVec.x - eyesPos.x
+        val diffZ = hitVec.z - eyesPos.z
+
+        val side = rayTraceResult.side
+
+        if (side != Direction.UP && side != Direction.DOWN) {
+            val diff: Double = abs(if (side == Direction.NORTH || side == Direction.SOUTH) diffZ else diffX)
+
+            if (diff < minDist)
+                return false
+        }
+
+        return true
     }
 
     override fun disable() {
@@ -207,7 +229,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 }.maxByOrNull { it.second }
             } else {
                 val directionsToInvestigate = arrayOf(
-                    Direction.DOWN,
+                    Direction.UP,
                     Direction.NORTH,
                     Direction.EAST,
                     Direction.SOUTH,
@@ -215,8 +237,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 )
 
                 directionsToInvestigate.mapNotNull { direction ->
-                    val normalVector = direction.opposite.vector
-                    val currPos = posToInvestigate.add(direction.vector)
+                    val normalVector = direction.vector
+                    val currPos = posToInvestigate.add(direction.opposite.vector)
                     val currState = currPos.getState() ?: return@mapNotNull null
 
                     if (currState.isAir || currState.material.isReplaceable) {
@@ -286,6 +308,18 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     data class Face(val from: Vec3d, val to: Vec3d) {
+
+        val area: Double
+            get() {
+                val l = to.x - from.x
+                val b = to.y - from.y
+                val h = to.z - from.z
+
+                return (l*b + b*h + l*h) * 2.0
+            }
+
+        val center: Vec3d
+            get() = Vec3d(from.x + (to.x - from.x) * 0.5, from.y + (to.y - from.y) * 0.5, from.z + (to.z - from.z) * 0.5)
 
         fun truncate(minY: Double): Face? {
             val newFace = Face(
