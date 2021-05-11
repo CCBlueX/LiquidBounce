@@ -92,4 +92,34 @@
         position: relative;
         height: 100%;
     }
+
+    @media screen and (max-width: 1366px) {
+        .wrapper {
+            zoom: .7;
+        }
+    }
+
+    @media screen and (max-height: 1000px) {
+        .wrapper {
+            zoom: .7;
+        }
+    }
+
+    @media screen and (max-height: 700px) {
+        .wrapper {
+            zoom: .5;
+        }
+    }
+
+    @media screen and (max-width: 1024px) {
+        .wrapper {
+            zoom: .5;
+        }
+    }
+
+    @media screen and (max-height: 540px) {
+        .wrapper {
+            zoom: .4;
+        }
+    }
 </style>

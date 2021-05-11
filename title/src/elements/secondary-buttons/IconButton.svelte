@@ -22,8 +22,6 @@
 
 <style>
     .button {
-        background-color: rgba(0, 0, 0, .36);
-        border-radius: 6px;
         position: relative;
         margin: 0 10px;
     }

@@ -36,7 +36,6 @@
 
 <style>
     .button {
-/*         background-color: rgba(0, 0, 0, .68); */
         width: 590px;
         display: grid;
         grid-template-columns: max-content auto max-content;
