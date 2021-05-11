@@ -20,13 +20,10 @@ package net.ccbluex.liquidbounce.render.ultralight
 
 import com.labymedia.ultralight.UltralightView
 import com.labymedia.ultralight.config.UltralightViewConfig
-import com.labymedia.ultralight.databind.Databind
-import com.labymedia.ultralight.databind.DatabindConfiguration
 import com.labymedia.ultralight.input.UltralightKeyEvent
 import com.labymedia.ultralight.input.UltralightMouseEvent
 import com.labymedia.ultralight.input.UltralightScrollEvent
-import net.ccbluex.liquidbounce.render.ultralight.js.ViewContextProvider
-import net.ccbluex.liquidbounce.render.ultralight.js.bindings.UltralightJsEvents
+import net.ccbluex.liquidbounce.render.ultralight.js.UltralightJsContext
 import net.ccbluex.liquidbounce.render.ultralight.listener.ViewListener
 import net.ccbluex.liquidbounce.render.ultralight.listener.ViewLoadListener
 import net.ccbluex.liquidbounce.render.ultralight.renderer.ViewRenderer
@@ -40,10 +37,10 @@ import net.minecraft.client.gui.screen.Screen
 open class View(val layer: RenderLayer, private val viewRenderer: ViewRenderer) {
 
     val ultralightView = ThreadLock<UltralightView>()
-    val jsEvents: UltralightJsEvents
-    val databind: Databind
 
-    var viewPage: Page? = null
+    val context: UltralightJsContext
+
+    var viewingPage: Page? = null
 
     private var jsGarbageCollected = 0L
 
@@ -62,14 +59,9 @@ open class View(val layer: RenderLayer, private val viewRenderer: ViewRenderer) 
         ultralightView.get().setLoadListener(ViewLoadListener(this))
 
         // Setup JS bindings
-        databind = Databind(
-            DatabindConfiguration
-                .builder()
-                .contextProviderFactory(ViewContextProvider.Factory(ultralightView))
-                .build()
-        )
-        jsEvents = UltralightJsEvents(ViewContextProvider(ultralightView), this)
-        logger.debug("Created new view")
+        context = UltralightJsContext(this, ultralightView)
+
+        logger.debug("Successfully created new view")
     }
 
     /**
@@ -77,16 +69,15 @@ open class View(val layer: RenderLayer, private val viewRenderer: ViewRenderer) 
      */
     fun loadPage(page: Page) {
         // Unregiste listeners
-        jsEvents._unregisterEvents()
+        context.events._unregisterEvents()
 
-        if (viewPage != page && viewPage != null) {
+        if (viewingPage != page && viewingPage != null) {
             page.close()
         }
 
         ultralightView.get().loadURL(page.viewableFile)
-        viewPage = page
-
-        logger.debug("Loaded page")
+        viewingPage = page
+        logger.debug("Successfully loaded page ${page.name} from ${page.viewableFile}")
     }
 
     /**
@@ -94,7 +85,7 @@ open class View(val layer: RenderLayer, private val viewRenderer: ViewRenderer) 
      */
     fun update() {
         // Check if page has new update
-        val page = viewPage
+        val page = viewingPage
 
         if (page?.hasUpdate() == true) {
             loadPage(page)
@@ -116,7 +107,7 @@ open class View(val layer: RenderLayer, private val viewRenderer: ViewRenderer) 
      */
     fun resize(width: Long, height: Long) {
         ultralightView.get().resize(width, height)
-        logger.debug("Resized to (w: $width h: $height)")
+        logger.debug("Successfully resized to $width:$height")
     }
 
     /**
@@ -138,13 +129,11 @@ open class View(val layer: RenderLayer, private val viewRenderer: ViewRenderer) 
      * Free view
      */
     fun free() {
-        // todo: figure out how to remove it from the ultralight renderer
-
         ultralightView.get().unfocus()
         ultralightView.get().stop()
-        viewPage?.close()
+        viewingPage?.close()
         viewRenderer.delete()
-        jsEvents._unregisterEvents()
+        context.events._unregisterEvents()
     }
 
     fun focus() {
