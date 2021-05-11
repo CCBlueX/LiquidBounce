@@ -16,21 +16,11 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.script.bindings.global
-
-import net.ccbluex.liquidbounce.utils.client.chat
+package net.ccbluex.liquidbounce.script.bindings.features
 
 /**
- * Object used by the script API to provide an easier way of calling chat-related methods.
+ * Object used by the script API to provide an idiomatic way of creating module values.
  */
-object Chat {
-
-    /**
-     * Prints a message to the chat (client-side)
-     * @param message Message to be printed
-     */
-    @Suppress("unused")
-    @JvmStatic
-    fun print(message: String) = chat(message)
+object JsSetting {
 
 }

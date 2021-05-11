@@ -1,4 +1,4 @@
-package net.ccbluex.liquidbounce.script.bindings
+package net.ccbluex.liquidbounce.script.bindings.globals
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventManager

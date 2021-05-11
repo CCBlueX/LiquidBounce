@@ -16,9 +16,9 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.script.bindings
+package net.ccbluex.liquidbounce.script.bindings.features
 
-import jdk.nashorn.api.scripting.JSObject
+import com.oracle.truffle.api.`object`.DynamicObject
 import net.ccbluex.liquidbounce.config.Value
 import net.ccbluex.liquidbounce.event.EventHook
 import net.ccbluex.liquidbounce.event.EventManager
@@ -27,16 +27,20 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.logger
 
 @Suppress("unused")
-class JsModule(private val moduleObject: JSObject) : Module(
-    name = moduleObject.getMember("name") as String,
-    category = Category.fromReadableName(moduleObject.getMember("category") as String)!!
+class JsModule(private val moduleObject: Map<String, Any>) : Module(
+    name = moduleObject["name"] as String,
+    category = Category.fromReadableName(moduleObject["category"] as String)!!
 ) {
 
-    private val events = HashMap<String, JSObject>()
+    private val events = HashMap<String, DynamicObject>()
 
     private var _tag: String? = null
     override val tag: String?
         get() = _tag
+
+    private var _description: String? = null
+    override val description: String
+        get() = _description ?: ""
 
     /**
      * Allows the user to access values by typing module.settings.<valuename>
@@ -44,15 +48,19 @@ class JsModule(private val moduleObject: JSObject) : Module(
     val settings by lazy { value }
 
     init {
-        if (moduleObject.hasMember("settings")) {
-            val settings = moduleObject.getMember("settings") as JSObject
+        if (moduleObject.containsKey("settings")) {
+            val settingsObject = moduleObject["settings"] as Map<String, Value<*>>
 
-            for (settingName in settings.keySet())
-                value.add(settings.getMember(settingName) as Value<*>)
+            for ((_, value) in settingsObject)
+                settings.add(value)
         }
 
-        if (moduleObject.hasMember("tag")) {
-            _tag = moduleObject.getMember("tag") as String
+        if (moduleObject.containsKey("tag")) {
+            _tag = moduleObject["tag"] as String
+        }
+
+        if (moduleObject.containsKey("description")) {
+            _description = moduleObject["description"] as String
         }
     }
 
@@ -61,8 +69,10 @@ class JsModule(private val moduleObject: JSObject) : Module(
      * @param eventName Name of the event.
      * @param handler JavaScript function used to handle the event.
      */
-    fun on(eventName: String, handler: JSObject) {
-        events[eventName] = handler
+    fun on(eventName: String, handler: Any) {
+        println("$eventName $handler " + handler.javaClass.name)
+
+        events[eventName] = handler as DynamicObject
         hookHandler(eventName)
     }
 
@@ -71,16 +81,13 @@ class JsModule(private val moduleObject: JSObject) : Module(
     override fun disable() = callEvent("disable")
 
     /**
-     * Calls the handler of a registered event.
-     *
-     * @param eventName Name of the event to be called.
-     * @param payload Event data passed to the handler function.
+     * Calls the function of the [event]  with the [payload] of the event.
      */
-    private fun callEvent(eventName: String, payload: Any? = null) {
+    private fun callEvent(event: String, payload: Any? = null) {
         try {
-            events[eventName]?.call(moduleObject, payload)
+            // events[event]?.call(moduleObject, payload)
         } catch (throwable: Throwable) {
-            logger.error("Script caused exception in module $name on $eventName event!", throwable)
+            logger.error("Script caused exception in module $name on $event event!", throwable)
         }
     }
 

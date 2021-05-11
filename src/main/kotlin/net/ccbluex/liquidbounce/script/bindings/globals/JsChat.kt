@@ -16,20 +16,19 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.script.bindings.global
+package net.ccbluex.liquidbounce.script.bindings.globals
 
-import net.ccbluex.liquidbounce.utils.item.createItem
-import net.minecraft.item.ItemStack
+import net.ccbluex.liquidbounce.utils.client.chat
 
 /**
- * Object used by the script API to provide an easier way of creating items.
+ * Object used by the script API to provide an easier way of calling chat-related methods.
  */
-object Item {
+object JsChat {
 
     /**
-     * Create [ItemStack] from [arguments]
+     * Shows [message] in the client-chat
      */
-    @JvmStatic
-    fun create(arguments: String, amount: Int): ItemStack = createItem(arguments, amount)
+    @Suppress("unused")
+    fun print(message: String) = chat(message)
 
 }

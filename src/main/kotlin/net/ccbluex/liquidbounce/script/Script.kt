@@ -18,27 +18,27 @@
  */
 package net.ccbluex.liquidbounce.script
 
-import jdk.internal.dynalink.beans.StaticClass
-import jdk.nashorn.api.scripting.JSObject
-import jdk.nashorn.api.scripting.NashornScriptEngineFactory
-import jdk.nashorn.api.scripting.ScriptUtils
+import com.oracle.truffle.js.runtime.builtins.JSFunction
+import com.oracle.truffle.js.runtime.objects.JSObject
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.script.bindings.JsClient
-import net.ccbluex.liquidbounce.script.bindings.JsModule
-import net.ccbluex.liquidbounce.script.bindings.global.Chat
-import net.ccbluex.liquidbounce.script.bindings.global.Item
-import net.ccbluex.liquidbounce.script.bindings.global.Setting
+import net.ccbluex.liquidbounce.script.bindings.features.JsModule
+import net.ccbluex.liquidbounce.script.bindings.features.JsSetting
+import net.ccbluex.liquidbounce.script.bindings.globals.JsChat
+import net.ccbluex.liquidbounce.script.bindings.globals.JsClient
+import net.ccbluex.liquidbounce.script.bindings.globals.JsItem
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
+import org.graalvm.polyglot.Context
+import org.graalvm.polyglot.HostAccess
 import java.io.File
 import java.util.function.Function
-import javax.script.ScriptEngine
 
 class Script(val scriptFile: File) {
 
-    private val scriptEngine: ScriptEngine
+    private val context: Context
+
     private val scriptText: String = scriptFile.readText()
 
     // Script information
@@ -54,43 +54,53 @@ class Script(val scriptFile: File) {
     private val registeredCommands = mutableListOf<Command>()
 
     init {
-        val engineFlags = getMagicComment("engine_flags")?.split(",")?.toTypedArray() ?: emptyArray()
-        scriptEngine = NashornScriptEngineFactory().getScriptEngine(*engineFlags)
-
-        // Global classes
-        scriptEngine.put("Chat", StaticClass.forClass(Chat::class.java))
-        scriptEngine.put("Setting", StaticClass.forClass(Setting::class.java))
-        scriptEngine.put("Item", StaticClass.forClass(Item::class.java))
+        context = Context.newBuilder("js")
+            .allowHostAccess(HostAccess.ALL)
+            .allowExperimentalOptions(true)
+            .option("js.nashorn-compat", "true")
+            .option("js.ecmascript-version", "2021")
+            .build()
 
         // Global instances
-        scriptEngine.put("mc", mc)
-        scriptEngine.put("client", JsClient)
+        val jsBindings = context.getBindings("js")
+        jsBindings.putMember("Chat", JsChat)
+        jsBindings.putMember("Setting", JsSetting)
+        jsBindings.putMember("Item", JsItem)
+
+        jsBindings.putMember("mc", mc)
+        jsBindings.putMember("client", JsClient)
 
         // Global functions
-        scriptEngine.put("registerScript", RegisterScript())
+        jsBindings.putMember("registerScript", RegisterScript())
     }
 
     /**
      * Initialization of script
      */
     fun initScript() {
-        scriptEngine.eval(scriptText)
+        context.eval("js", scriptText)
         callEvent("load")
         logger.info("[ScriptAPI] Successfully loaded script '${scriptFile.name}'.")
     }
 
     @Suppress("UNCHECKED_CAST")
-    inner class RegisterScript : Function<JSObject, Script> {
+    inner class RegisterScript : Function<Map<String, Any>, Script> {
 
         /**
          * Global function 'registerScript' which is called to register a script.
          * @param scriptObject JavaScript object containing information about the script.
          * @return The instance of this script.
          */
-        override fun apply(scriptObject: JSObject): Script {
-            scriptName = scriptObject.getMember("name") as String
-            scriptVersion = scriptObject.getMember("version") as String
-            scriptAuthors = ScriptUtils.convert(scriptObject.getMember("authors"), Array<String>::class.java) as Array<String>
+        override fun apply(scriptObject: Map<String, Any>): Script {
+            scriptName = scriptObject["name"] as String
+            scriptVersion = scriptObject["version"] as String
+
+            val authors = scriptObject["authors"]
+            scriptAuthors = when (authors) {
+                is String -> arrayOf(authors)
+                is Array<*> -> authors as Array<String>
+                else -> error("Not valid authors type")
+            }
 
             return this@Script
         }
@@ -105,11 +115,13 @@ class Script(val scriptFile: File) {
      * @see JsModule
      */
     @Suppress("unused")
-    fun registerModule(moduleObject: JSObject, callback: JSObject) {
+    fun registerModule(moduleObject: Map<String, Any>, callback: JSFunction) {
+        println(moduleObject)
+        println(callback)
         val module = JsModule(moduleObject)
         ModuleManager.addModule(module)
         registeredModules += module
-        callback.call(moduleObject, module)
+        // callback.(moduleObject, module)
     }
 
     /**
@@ -171,7 +183,7 @@ class Script(val scriptFile: File) {
     fun import(scriptFile: String) {
         val scriptText = File(ScriptManager.scriptsRoot, scriptFile).readText()
 
-        scriptEngine.eval(scriptText)
+        context.eval("js", scriptText)
     }
 
     /**
@@ -180,7 +192,7 @@ class Script(val scriptFile: File) {
      */
     private fun callEvent(eventName: String) {
         try {
-            events[eventName]?.call(null)
+            // events[eventName]?.call(null)
         } catch (throwable: Throwable) {
             logger.error("[ScriptAPI] Exception in script '$scriptName'!", throwable)
         }

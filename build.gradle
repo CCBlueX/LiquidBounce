@@ -100,7 +100,12 @@ dependencies {
     implementation "com.labymedia:ultralight-java-base:0.4.4"
     implementation "com.labymedia:ultralight-java-databind:0.4.4"
 
-    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "org.graalvm.sdk:graal-sdk:21.0.0.2"
+    implementation "org.graalvm.truffle:truffle-api:21.0.0.2"
+    implementation "org.graalvm.js:js:21.0.0.2"
+
+    runtimeOnly "org.graalvm.tools:profiler:21.0.0.2"
+    runtimeOnly "org.graalvm.tools:chromeinspector:21.0.0.2"
 
     implementation project(":theme")
 
