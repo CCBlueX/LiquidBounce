@@ -52,35 +52,41 @@ import kotlin.math.absoluteValue
  */
 object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
-    private val BLOCK_COMPARATOR = ComparatorChain<ItemStack>({ o1, o2 ->
-                                                                  compareByCondition(
-                                                                      o1, o2
-                                                                  ) { (it.item as BlockItem).block.defaultState.material.isSolid }
-                                                              },
-                                                              { o1, o2 ->
-                                                                  compareByCondition(
-                                                                      o1, o2
-                                                                  ) {
-                                                                      (it.item as BlockItem).block.defaultState.isFullCube(
-                                                                          world,
-                                                                          BlockPos(
-                                                                              0,
-                                                                              0,
-                                                                              0
-                                                                          )
-                                                                      )
-                                                                  }
-                                                              },
-                                                              { o1, o2 ->
-                                                                  (o2.item as BlockItem).block.slipperiness.compareTo((o1.item as BlockItem).block.slipperiness)
-                                                              },
-                                                              Comparator.comparingDouble {
-                                                                  (1.5 - (it.item as BlockItem).block.defaultState.getHardness(
-                                                                      world,
-                                                                      BlockPos(0, 0, 0)
-                                                                  )).absoluteValue
-                                                              },
-                                                              { o1, o2 -> o2.count.compareTo(o1.count) })
+    private val BLOCK_COMPARATOR = ComparatorChain<ItemStack>(
+        { o1, o2 ->
+            compareByCondition(
+                o1,
+                o2
+            ) { (it.item as BlockItem).block.defaultState.material.isSolid }
+        },
+        { o1, o2 ->
+            compareByCondition(
+                o1,
+                o2
+            ) {
+                (it.item as BlockItem).block.defaultState.isFullCube(
+                    world,
+                    BlockPos(
+                        0,
+                        0,
+                        0
+                    )
+                )
+            }
+        },
+        { o1, o2 ->
+            (o2.item as BlockItem).block.slipperiness.compareTo((o1.item as BlockItem).block.slipperiness)
+        },
+        Comparator.comparingDouble {
+            (
+                1.5 - (it.item as BlockItem).block.defaultState.getHardness(
+                    world,
+                    BlockPos(0, 0, 0)
+                )
+                ).absoluteValue
+        },
+        { o1, o2 -> o2.count.compareTo(o1.count) }
+    )
 
     val silent by boolean("Silent", true)
     var delay by intRange("Delay", 3..5, 0..40)
@@ -129,7 +135,10 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         if (!hasBlockInHand) return@repeatable
 
         val result = interaction.interactBlock(
-            player, world, Hand.MAIN_HAND, rayTraceResult
+            player,
+            world,
+            Hand.MAIN_HAND,
+            rayTraceResult
         )
 
         if (result.isAccepted) {
@@ -210,10 +219,16 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
             val first = if (!blockStateToInvestigate.isAir && blockStateToInvestigate.canReplace(
                     ItemPlacementContext(
-                        player, Hand.MAIN_HAND, player.inventory.getStack(SilentHotbar.serversideSlot), BlockHitResult(
-                            Vec3d.of(posToInvestigate), Direction.UP, posToInvestigate, false
+                            player,
+                            Hand.MAIN_HAND,
+                            player.inventory.getStack(SilentHotbar.serversideSlot),
+                            BlockHitResult(
+                                    Vec3d.of(posToInvestigate),
+                                    Direction.UP,
+                                    posToInvestigate,
+                                    false
+                                )
                         )
-                    )
                 )
             ) {
                 Direction.values().mapNotNull { direction ->
@@ -265,7 +280,9 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 val currState = currPos.getState()
 
                 val face = currState!!.getOutlineShape(
-                    mc.world, currPos, ShapeContext.of(player)
+                    mc.world,
+                    currPos,
+                    ShapeContext.of(player)
                 ).boundingBoxes.mapNotNull {
                     var face = it.getFace(first.first)
 
@@ -281,15 +298,17 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                             face.from.z + (face.to.z - face.from.z) * 0.5
                         )
                     )
-                }.maxWithOrNull(Comparator.comparingDouble<Pair<Face, Vec3d>> {
-                    it.second.subtract(
-                        Vec3d(
-                            0.5,
-                            0.5,
-                            0.5
-                        )
-                    ).multiply(Vec3d.of(first.first.vector)).lengthSquared()
-                }.thenComparingDouble { it.second.y }) ?: continue
+                }.maxWithOrNull(
+                    Comparator.comparingDouble<Pair<Face, Vec3d>> {
+                        it.second.subtract(
+                            Vec3d(
+                                0.5,
+                                0.5,
+                                0.5
+                            )
+                        ).multiply(Vec3d.of(first.first.vector)).lengthSquared()
+                    }.thenComparingDouble { it.second.y }
+                ) ?: continue
 
                 return Target(
                     currPos,

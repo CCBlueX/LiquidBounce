@@ -88,11 +88,13 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         val tickHandler = handler<PlayerTickEvent> {
             if (!ActiveOption.enabled) return@handler
 
-            if (!canCrit(player, true))
+            if (!canCrit(player, true)) {
                 return@handler
+            }
 
-            if (optimizeForCooldown && shouldWaitForJump())
+            if (optimizeForCooldown && shouldWaitForJump()) {
                 return@handler
+            }
 
             val (_, _) = world.findEnemy(range) ?: return@handler
 
@@ -105,8 +107,9 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
     }
 
     fun shouldWaitForJump(initialMotion: Float = 0.42f): Boolean {
-        if (!canCrit(player, true))
+        if (!canCrit(player, true)) {
             return false
+        }
 
         val ticksTillFall = initialMotion / 0.08f
 
@@ -124,11 +127,13 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
             player.yaw
         ).findCollision((ticksTillFall * 2.25f).toInt())?.tick
 
-        if (ticksTillNextOnGround == null)
+        if (ticksTillNextOnGround == null) {
             ticksTillNextOnGround = ticksTillFall.toInt() * 2
+        }
 
-        if (ticksTillNextOnGround + ticksTillFall < nextPossibleCrit)
+        if (ticksTillNextOnGround + ticksTillFall < nextPossibleCrit) {
             return false
+        }
 
         return ticksTillFall + 1.0f < nextPossibleCrit
     }
@@ -160,10 +165,11 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
     var ticksOnGround = 0
 
     val repeatable = repeatable {
-        if (player.isOnGround)
+        if (player.isOnGround) {
             ticksOnGround++
-        else
+        } else {
             ticksOnGround = 0
+        }
     }
 
     init {
@@ -181,8 +187,9 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
         val player = player
 
-        if (!canCrit(player) || player.velocity.y < -0.08)
+        if (!canCrit(player) || player.velocity.y < -0.08) {
             return false
+        }
 
         val nextPossibleCrit = (player.attackCooldownProgressPerTick - 0.5f - player.lastAttackedTicks.toFloat()).coerceAtLeast(0.0f)
 
@@ -199,8 +206,9 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         val damageLostWaiting = getCooldownDamageFactor(player, ticksTillCrit)
 
         if (damageOnCrit > damageLostWaiting) {
-            if (FallingPlayer.fromPlayer(player).findCollision((ticksTillCrit * 1.3f).toInt()) == null)
+            if (FallingPlayer.fromPlayer(player).findCollision((ticksTillCrit * 1.3f).toInt()) == null) {
                 return true
+            }
         }
 
         return false

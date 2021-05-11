@@ -144,11 +144,19 @@ fun ColoredPrimitiveRenderTask.indexLine(p0: Int, p1: Int) {
 fun ColoredPrimitiveRenderTask.rect(p1: Vec3, p2: Vec3, color: Color4b, outline: Boolean = false) {
     if (outline) {
         this.outlineQuad(
-            Vec3(p1.x, p1.y, p1.z), Vec3(p1.x, p2.y, p1.z), Vec3(p2.x, p2.y, p1.z), Vec3(p2.x, p1.y, p1.z), color
+            Vec3(p1.x, p1.y, p1.z),
+            Vec3(p1.x, p2.y, p1.z),
+            Vec3(p2.x, p2.y, p1.z),
+            Vec3(p2.x, p1.y, p1.z),
+            color
         )
     } else {
         this.quad(
-            Vec3(p1.x, p1.y, p1.z), Vec3(p1.x, p2.y, p1.z), Vec3(p2.x, p2.y, p1.z), Vec3(p2.x, p1.y, p1.z), color
+            Vec3(p1.x, p1.y, p1.z),
+            Vec3(p1.x, p2.y, p1.z),
+            Vec3(p2.x, p2.y, p1.z),
+            Vec3(p2.x, p1.y, p1.z),
+            color
         )
     }
 }

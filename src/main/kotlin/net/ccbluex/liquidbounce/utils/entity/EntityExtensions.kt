@@ -156,8 +156,9 @@ fun getNearestPoint(eyes: Vec3d, box: Box): Vec3d {
 }
 
 fun PlayerEntity.wouldBlockHit(source: PlayerEntity): Boolean {
-    if (!this.isBlocking)
+    if (!this.isBlocking) {
         return false
+    }
 
     val vec3d = source.pos
 

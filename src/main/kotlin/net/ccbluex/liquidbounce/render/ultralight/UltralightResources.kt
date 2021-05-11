@@ -36,7 +36,7 @@ class UltralightResources {
         /**
          * Exact library version of the LabyMod Ultralight Bindings.
          */
-        private const val LIBRARY_VERSION = 0.43
+        private const val LIBRARY_VERSION = 0.44
 
     }
 
