@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.render.ultralight.js.bindings
 
 import net.ccbluex.liquidbounce.render.screen.EmptyScreen
 import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
-import net.ccbluex.liquidbounce.render.ultralight.hooks.UltralightScreenHook
 import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.screen.Screen
@@ -56,7 +55,7 @@ object UltralightJsUi {
     fun get(clazz: Class<*>?) = _jsScreens.find { it.clazz == clazz }
 
     fun open(name: String, parent: Screen?) {
-        UltralightScreenHook.nextScreen = QueuedScreen(get(name), parent)
+        get(name).open(parent)
     }
 
 }
