@@ -159,6 +159,10 @@
   "liquidbounce.command.chat.description": "Sends a message into LiquidChat.",
   "liquidbounce.command.chat.parameter.message.description": "Message to send.",
 
+  "liquidbounce.command.value.description": "Allows you to change a value",
+  "liquidbounce.command.value.result.success": "Successfully changed value.",
+  "liquidbounce.command.value.result.valueNotFound": "Unable to find value %s!",
+
   "liquidbounce.liquidchat.states.connecting": "Connecting to chat server...",
   "liquidbounce.liquidchat.states.connected": "Connected to chat server!",
   "liquidbounce.liquidchat.states.disconnected": "Disconnected from chat server!",

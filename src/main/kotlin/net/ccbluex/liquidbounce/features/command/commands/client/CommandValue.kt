@@ -65,10 +65,10 @@ object CommandValue {
                 try {
                     value.setByString(valueString)
                 } catch (e: Exception) {
-                    throw CommandException(command.result("valueError", e.message!!))
+                    throw CommandException(command.result("valueError", e.message ?: ""))
                 }
 
-                chat(regular("Value updated"))
+                chat(regular(command.result("success")))
             }
             .build()
     }
