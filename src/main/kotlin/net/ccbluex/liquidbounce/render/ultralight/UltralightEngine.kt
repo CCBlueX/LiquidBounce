@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.render.ultralight.hooks.UltralightIntegrationHoo
 import net.ccbluex.liquidbounce.render.ultralight.hooks.UltralightScreenHook
 import net.ccbluex.liquidbounce.render.ultralight.renderer.CpuViewRenderer
 import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
+import net.ccbluex.liquidbounce.utils.client.ThreadLock
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.screen.Screen
@@ -52,8 +53,8 @@ object UltralightEngine {
     /**
      * Ultralight platform and renderer
      */
-    lateinit var platform: UltralightPlatform
-    lateinit var renderer: UltralightRenderer
+    var platform = ThreadLock<UltralightPlatform>()
+    var renderer = ThreadLock<UltralightRenderer>()
 
     /**
      * Glfw
@@ -64,8 +65,6 @@ object UltralightEngine {
 
     /**
      * Views
-     *
-     * todo: might cache views instead of creating new ones
      */
     val activeView: View?
         get() = views.find { it is ScreenView && mc.currentScreen == it.screen }
@@ -90,8 +89,8 @@ object UltralightEngine {
 
         // Setup platform
         logger.debug("Setting up ultralight platform")
-        platform = UltralightPlatform.instance()
-        platform.setConfig(
+        platform.lock(UltralightPlatform.instance())
+        platform.get().setConfig(
             UltralightConfig()
                 .animationTimerDelay(1.0 / refreshRate)
                 .scrollTimerDelay(1.0 / refreshRate)
@@ -99,10 +98,10 @@ object UltralightEngine {
                 .cachePath(resources.cacheRoot.absolutePath)
                 .fontHinting(FontHinting.SMOOTH)
         )
-        platform.usePlatformFontLoader()
-        platform.usePlatformFileSystem(ThemeManager.themesFolder.absolutePath)
-        platform.setClipboard(GlfwClipboardAdapter())
-        platform.setLogger { level, message ->
+        platform.get().usePlatformFontLoader()
+        platform.get().usePlatformFileSystem(ThemeManager.themesFolder.absolutePath)
+        platform.get().setClipboard(GlfwClipboardAdapter())
+        platform.get().setLogger { level, message ->
             @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
             when (level) {
                 UltralightLogLevel.ERROR -> logger.debug("[Ultralight/ERR] $message")
@@ -113,7 +112,7 @@ object UltralightEngine {
 
         // Setup renderer
         logger.debug("Setting up ultralight renderer")
-        renderer = UltralightRenderer.create()
+        renderer.lock(UltralightRenderer.create())
 
         // Setup hooks
         UltralightIntegrationHook
@@ -132,14 +131,12 @@ object UltralightEngine {
     }
 
     fun update() {
-        UltralightScreenHook.update()
-
         views.forEach(View::update)
-        renderer.update()
+        renderer.get().update()
     }
 
     fun render(layer: RenderLayer) {
-        renderer.render()
+        renderer.get().render()
 
         views.filter { it.layer == layer }
             .forEach(View::render)
@@ -150,13 +147,13 @@ object UltralightEngine {
     }
 
     fun newSplashView() =
-        View(RenderLayer.SPLASH_LAYER, renderer, newViewRenderer()).also { views += it }
+        View(RenderLayer.SPLASH_LAYER, newViewRenderer()).also { views += it }
 
     fun newOverlayView() =
-        View(RenderLayer.OVERLAY_LAYER, renderer, newViewRenderer()).also { views += it }
+        View(RenderLayer.OVERLAY_LAYER, newViewRenderer()).also { views += it }
 
     fun newScreenView(screen: Screen, adaptedScreen: Screen? = null, parentScreen: Screen? = null) =
-        ScreenView(renderer, newViewRenderer(), screen, adaptedScreen, parentScreen).also { views += it }
+        ScreenView(newViewRenderer(), screen, adaptedScreen, parentScreen).also { views += it }
 
     fun removeView(view: View) {
         view.free()

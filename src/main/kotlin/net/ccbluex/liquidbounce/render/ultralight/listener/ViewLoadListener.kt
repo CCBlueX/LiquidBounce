@@ -39,7 +39,6 @@ package net.ccbluex.liquidbounce.render.ultralight.listener
 
 import com.labymedia.ultralight.plugin.loading.UltralightLoadListener
 import net.ccbluex.liquidbounce.render.ultralight.View
-import net.ccbluex.liquidbounce.render.ultralight.js.ContextSetup
 import net.ccbluex.liquidbounce.utils.client.logger
 
 class ViewLoadListener(private val view: View) : UltralightLoadListener {
@@ -112,9 +111,9 @@ class ViewLoadListener(private val view: View) : UltralightLoadListener {
      * @param url         The url that the frame currently contains
      */
     override fun onWindowObjectReady(frameId: Long, isMainFrame: Boolean, url: String) {
-        view.ultralightView.lockJavascriptContext().use { lock ->
+        view.ultralightView.get().lockJavascriptContext().use { lock ->
             val context = lock.context
-            ContextSetup.setupContext(view, context)
+            view.context.setupContext(view, context)
         }
     }
 

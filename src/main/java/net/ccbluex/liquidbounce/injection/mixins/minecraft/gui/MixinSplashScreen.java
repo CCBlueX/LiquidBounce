@@ -67,7 +67,7 @@ public class MixinSplashScreen {
 
                 if (!closing) {
                     closing = true;
-                    if (view.getJsEvents()._fireViewClose()) {
+                    if (view.getContext().getEvents()._fireViewClose()) {
                         UltralightEngine.INSTANCE.removeView(view);
                         this.client.setOverlay(null);
                     }

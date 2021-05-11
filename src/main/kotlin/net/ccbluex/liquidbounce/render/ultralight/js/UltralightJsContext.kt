@@ -37,71 +37,89 @@
  */
 package net.ccbluex.liquidbounce.render.ultralight.js
 
+import com.labymedia.ultralight.UltralightView
+import com.labymedia.ultralight.databind.Databind
+import com.labymedia.ultralight.databind.DatabindConfiguration
 import com.labymedia.ultralight.javascript.JavascriptContext
 import net.ccbluex.liquidbounce.render.ultralight.ScreenView
 import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
 import net.ccbluex.liquidbounce.render.ultralight.View
 import net.ccbluex.liquidbounce.render.ultralight.js.bindings.UltralightJsClient
+import net.ccbluex.liquidbounce.render.ultralight.js.bindings.UltralightJsEvents
 import net.ccbluex.liquidbounce.render.ultralight.js.bindings.UltralightJsKotlin
 import net.ccbluex.liquidbounce.render.ultralight.js.bindings.UltralightJsUi
+import net.ccbluex.liquidbounce.utils.client.ThreadLock
 import net.ccbluex.liquidbounce.utils.client.mc
 
 /**
  * Context setup
  */
-object ContextSetup {
+class UltralightJsContext(view: View, ulView: ThreadLock<UltralightView>) {
+
+    val contextProvider = ViewContextProvider(ulView)
+    val databind = Databind(
+        DatabindConfiguration
+            .builder()
+            .contextProviderFactory(ViewContextProvider.Factory(ulView))
+            .build()
+    )
+
+    var events = UltralightJsEvents(contextProvider, view)
 
     fun setupContext(view: View, context: JavascriptContext) {
+
+
+
         val globalContext = context.globalContext
         val globalObject = globalContext.globalObject
 
         globalObject.setProperty(
             "engine",
-            view.databind.conversionUtils.toJavascript(context, UltralightEngine),
+            databind.conversionUtils.toJavascript(context, UltralightEngine),
             0
         )
 
         globalObject.setProperty(
             "view",
-            view.databind.conversionUtils.toJavascript(context, view),
+            databind.conversionUtils.toJavascript(context, view),
             0
         )
 
         globalObject.setProperty(
             "client",
-            view.databind.conversionUtils.toJavascript(context, UltralightJsClient),
+            databind.conversionUtils.toJavascript(context, UltralightJsClient),
             0
         )
 
         globalObject.setProperty(
             "events",
-            view.databind.conversionUtils.toJavascript(context, view.jsEvents),
+            databind.conversionUtils.toJavascript(context, events),
             0
         )
 
         // todo: minecraft has to be remapped
         globalObject.setProperty(
             "minecraft",
-            view.databind.conversionUtils.toJavascript(context, mc),
+            databind.conversionUtils.toJavascript(context, mc),
             0
         )
 
         globalObject.setProperty(
             "ui",
-            view.databind.conversionUtils.toJavascript(context, UltralightJsUi),
+            databind.conversionUtils.toJavascript(context, UltralightJsUi),
             0
         )
 
         globalObject.setProperty(
             "kotlin",
-            view.databind.conversionUtils.toJavascript(context, UltralightJsKotlin),
+            databind.conversionUtils.toJavascript(context, UltralightJsKotlin),
             0
         )
 
         if (view is ScreenView) {
             globalObject.setProperty(
                 "screen",
-                view.databind.conversionUtils.toJavascript(context, view.adaptedScreen ?: view.screen),
+                databind.conversionUtils.toJavascript(context, view.adaptedScreen ?: view.screen),
                 0
             )
 
@@ -110,7 +128,7 @@ object ContextSetup {
             if (parentScreen != null) {
                 globalObject.setProperty(
                     "parentScreen",
-                    view.databind.conversionUtils.toJavascript(context, view.parentScreen),
+                    databind.conversionUtils.toJavascript(context, view.parentScreen),
                     0
                 )
             }

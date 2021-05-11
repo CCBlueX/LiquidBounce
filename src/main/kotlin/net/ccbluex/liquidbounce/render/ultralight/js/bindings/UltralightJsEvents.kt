@@ -79,10 +79,12 @@ class UltralightJsEvents(private val viewContextProvider: ContextProvider, val v
         val eventHook = EventHook<Event>(
             this,
             { event ->
+                // todo: fix unsafe thread issue
+
                 viewContextProvider.syncWithJavascript {
                     it.context.globalObject.getProperty(propertyName).toObject().callAsFunction(
                         it.context.globalObject,
-                        view.databind.conversionUtils.toJavascript(it.context, event)
+                        view.context.databind.conversionUtils.toJavascript(it.context, event)
                     )
                 }
 

@@ -42,18 +42,19 @@ import com.labymedia.ultralight.databind.context.ContextProvider
 import com.labymedia.ultralight.databind.context.ContextProviderFactory
 import com.labymedia.ultralight.javascript.JavascriptContextLock
 import com.labymedia.ultralight.javascript.JavascriptValue
+import net.ccbluex.liquidbounce.utils.client.ThreadLock
 import java.util.function.Consumer
 
 /**
  * This class is used in case Ultralight needs a Javascript context.
  */
-class ViewContextProvider(private val view: UltralightView) : ContextProvider {
+class ViewContextProvider(private val view: ThreadLock<UltralightView>) : ContextProvider {
 
     override fun syncWithJavascript(callback: Consumer<JavascriptContextLock>) {
-        view.lockJavascriptContext().use { lock -> callback.accept(lock) }
+        view.get().lockJavascriptContext().use { lock -> callback.accept(lock) }
     }
 
-    class Factory(private val view: UltralightView) : ContextProviderFactory {
+    class Factory(private val view: ThreadLock<UltralightView>) : ContextProviderFactory {
 
         override fun bindProvider(value: JavascriptValue): ContextProvider {
             // We only have one view, so we can ignore the value.
