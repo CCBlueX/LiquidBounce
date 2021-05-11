@@ -149,7 +149,7 @@
         font-family: "Montserrat", sans-serif;
 
         position: absolute;
-        top: 80px;
+        top: 90px;
         left: 15px;
         display: flex;
         flex-direction: row;
@@ -161,7 +161,6 @@
         flex-direction: column;
         border-radius: 5px;
         overflow: hidden;
-        border: solid 1px rgba(0, 0, 0, 0.68);
     }
 
     .modules {
@@ -173,7 +172,6 @@
         min-width: 100px;
         display: flex;
         flex-direction: column;
-        border: solid 1px rgba(0, 0, 0, 0.68);
         overflow: auto;
     }
 
