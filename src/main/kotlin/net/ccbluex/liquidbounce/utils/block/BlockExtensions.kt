@@ -20,7 +20,9 @@ package net.ccbluex.liquidbounce.utils.block
 
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.block.BlockState
+import net.minecraft.block.SideShapeType
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 
 fun Vec3d.toBlockPos() = BlockPos(this)
@@ -55,4 +57,8 @@ inline fun searchBlocks(radius: Int, filter: (BlockPos, BlockState) -> Boolean):
     }
 
     return blocks
+}
+
+fun BlockPos.canStandOn(): Boolean {
+    return this.getState()!!.isSideSolid(mc.world!!, this, Direction.UP, SideShapeType.CENTER)
 }
