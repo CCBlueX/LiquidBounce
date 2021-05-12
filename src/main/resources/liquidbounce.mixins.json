@@ -21,6 +21,7 @@
     "minecraft.entity.MixinEntity",
     "minecraft.entity.MixinLivingEntity",
     "minecraft.entity.MixinPlayerEntity",
+    "minecraft.gui.MixinChatScreen",
     "minecraft.gui.MixinCommandSuggestor",
     "minecraft.gui.MixinInGameHud",
     "minecraft.gui.MixinRealmsMainScreen",

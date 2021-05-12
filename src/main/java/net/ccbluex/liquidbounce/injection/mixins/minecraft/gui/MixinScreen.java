@@ -31,10 +31,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import javax.annotation.Nullable;
 
 @Mixin(Screen.class)
-public class MixinScreen {
+public abstract class MixinScreen {
 
     @Shadow @Nullable
     protected MinecraftClient client;
+
+    @Shadow public abstract void sendMessage(String message);
 
     /**
      * Handle user chat messages
