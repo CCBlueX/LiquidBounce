@@ -1,6 +1,6 @@
-import MainMenu from './MainMenu.svelte';
+import Title from "./Title.svelte";
 
-const app = new MainMenu({
+const app = new Title({
 	target: document.body,
 	props: {}
 });

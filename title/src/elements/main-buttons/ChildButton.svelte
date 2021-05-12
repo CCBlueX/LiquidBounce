@@ -14,7 +14,7 @@
     }
 </script>
 
-<div class="button" on:click={handleClick}>
+<div class="button" on:click|stopPropagation={handleClick}>
     <ToolTip {text} />
 
     <div class="icon" class:hovered>

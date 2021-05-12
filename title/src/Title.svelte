@@ -25,12 +25,40 @@
         ui.open("multiplayer", screen);
     }
 
+    function openRealms() {
+        ui.open("multiplayer_realms", screen);
+    }
+
     function openOptions() {
         ui.open("options", screen);
     }
 
     function scheduleStop() {
         minecraft.scheduleStop()
+    }
+
+    function browseForum() {
+        utils.browse("https://forums.ccbluex.net"); 
+    }
+
+    function browseGitHub() {
+        utils.browse("https://github.com/CCBlueX");  
+    }
+
+    function browseGuilded() {
+        utils.browse("https://guilded.gg/CCBlueX?r=pmbDp7K4");
+    }
+
+    function browseTwitter() {
+        utils.browse("https://twitter.com/CCBlueX");
+    }
+
+    function browseYouTube() {
+        utils.browse("https://youtube.com/CCBlueX");
+    }
+
+    function browseWebsite() {
+        utils.browse("https://liquidbounce.net");
     }
 </script>
 
@@ -42,7 +70,7 @@
             <MainButtons>
                 <MainButton text="Singleplayer" icon="singleplayer" on:click={openSingleplayer} />
                 <MainButton text="Multiplayer" icon="multiplayer" on:click={openMultiplayer} let:hovered>
-                    <ChildButton text="Realms" icon="realms" {hovered} />
+                    <ChildButton text="Realms" icon="realms" {hovered} on:click={openRealms} />
                 </MainButton>
                 <MainButton text="Customize" icon="customize" />
                 <MainButton text="Options" icon="options" on:click={openOptions} />
@@ -55,12 +83,12 @@
 
 
             <SecondaryButtonsRight>
-                <IconButton text="Forum" icon="nodebb" />
-                <IconButton text="GitHub" icon="github" />
-                <IconButton text="Guilded" icon="guilded" />
-                <IconButton text="Twitter" icon="twitter" />
-                <IconButton text="YouTube" icon="youtube" />
-                <IconTextButton text="liquidbounce.net" icon="liquidbounce.net" />
+                <IconButton text="Forum" icon="nodebb" on:click={browseForum} />
+                <IconButton text="GitHub" icon="github" on:click={browseGitHub} />
+                <IconButton text="Guilded" icon="guilded" on:click={browseGuilded} />
+                <IconButton text="Twitter" icon="twitter" on:click={browseTwitter} />
+                <IconButton text="YouTube" icon="youtube" on:click={browseYouTube} />
+                <IconTextButton text="liquidbounce.net" icon="liquidbounce.net" on:click={browseWebsite} />
             </SecondaryButtonsRight>
         </div>
     </div>
