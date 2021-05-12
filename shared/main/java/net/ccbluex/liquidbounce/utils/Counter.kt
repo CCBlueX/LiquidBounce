@@ -46,3 +46,41 @@ object CPSCounter
 		for (i in TIMESTAMP_BUFFERS.indices) TIMESTAMP_BUFFERS[i] = RollingArrayLongBuffer(MAX_CPS)
 	}
 }
+
+object PacketCounter
+{
+	private const val MAX_PPS = 2048
+	private val TIMESTAMP_BUFFERS = arrayOfNulls<RollingArrayLongBuffer>(PacketType.values().size)
+
+	/**
+	 * Registers a mouse button click
+	 *
+	 * @param packetType
+	 * The packet type
+	 */
+	@JvmStatic
+	fun registerPacket(packetType: PacketType)
+	{
+		TIMESTAMP_BUFFERS[packetType.index]?.add()
+	}
+
+	/**
+	 * Gets the count of packets that have occurrence since the last 1000ms
+	 *
+	 * @param  packetType
+	 * The packet type
+	 * @return        The PPT
+	 */
+	fun getPacketCount(packetType: PacketType, time: Long): Int = TIMESTAMP_BUFFERS[packetType.index]?.getTimestampsSince(System.currentTimeMillis() - time) ?: 0
+
+	enum class PacketType(val index: Int)
+	{
+		INBOUND(0),
+		OUTBOUND(1);
+	}
+
+	init
+	{
+		for (i in TIMESTAMP_BUFFERS.indices) TIMESTAMP_BUFFERS[i] = RollingArrayLongBuffer(MAX_PPS)
+	}
+}

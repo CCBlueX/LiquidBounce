@@ -106,7 +106,6 @@ class ProphuntESP : Module()
 
 		try
 		{
-
 			theWorld.loadedEntityList.filter(provider::isEntityFallingBlock).forEach { renderManager.renderEntityStatic(it, renderPartialTicks, true) }
 		}
 		catch (ex: Exception)

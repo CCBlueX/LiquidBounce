@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
@@ -18,7 +19,6 @@ import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.extensions.getFullName
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
-import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -31,6 +31,7 @@ import kotlin.math.sqrt
 @ModuleInfo(name = "AntiBot", description = "Prevents KillAura from attacking AntiCheat bots.", category = ModuleCategory.MISC)
 object AntiBot : Module()
 {
+	private val notificationValue = BoolValue("DetectionNotification", false)
 
 	// Tab
 	private val tabValue = BoolValue("Tab", true)
@@ -44,9 +45,9 @@ object AntiBot : Module()
 
 	// Static EntityID
 	private val staticEntityIDValue = IntegerValue("StaticEntityIDs", 0, 0, 3)
-	private val staticEntityID1 = IntegerValue("STaticEntityID-1", 99999999, 0, 1000000000)
-	private val staticEntityID2 = IntegerValue("STaticEntityID-2", 0, 0, 1000000000)
-	private val staticEntityID3 = IntegerValue("STaticEntityID-3", 0, 0, 1000000000)
+	private val staticEntityID1 = IntegerValue("StaticEntityID-1", 99999999, 0, 1000000000)
+	private val staticEntityID2 = IntegerValue("StaticEntityID-2", 0, 0, 1000000000)
+	private val staticEntityID3 = IntegerValue("StaticEntityID-3", 0, 0, 1000000000)
 
 	// NoColor
 	private val colorValue = BoolValue("Color", false)
@@ -147,33 +148,28 @@ object AntiBot : Module()
 	private val bedWarsNPCValue = BoolValue("BedWarsNPC", false)
 	private val gwenValue = BoolValue("GWEN", false)
 	private val watchdogValue = BoolValue("Watchdog", false)
-	private val watchdogRemoveValue = BoolValue("RemoveWatchdogBot", false)
 
 	private val drawExpectedPosValue = BoolValue("MarkExpectedPosition", false)
 
-	private val ground = mutableListOf<Int>()
-	private val air = mutableListOf<Int>()
+	// .contains() performance -> Set >>> List
+
+	private val ground = mutableSetOf<Int>()
+	private val air = mutableSetOf<Int>()
+	private val swing = mutableSetOf<Int>()
+	private val invisible = mutableSetOf<Int>()
+	private val hitted = mutableSetOf<Int>()
+	private val notAlwaysInRadius = mutableSetOf<Int>()
+	private val spawnedPosition = mutableSetOf<Int>()
+	private val gwen = mutableSetOf<Int>()
+	private val watchdog = mutableSetOf<Int>()
+
 	private val invalidGround = mutableMapOf<Int, Int>()
-	private val swing = mutableListOf<Int>()
-	private val invisible = mutableListOf<Int>()
-	private val hitted = mutableListOf<Int>()
-	private val notAlwaysInRadius = mutableListOf<Int>()
-
-	private val spawnedposition = mutableListOf<Int>()
-	private val gwenBots = mutableListOf<Int>()
-	private val watchdogBots = mutableListOf<Int>()
-
-	private val xzspeed = mutableMapOf<Int, Int>()
-	private val yspeed = mutableMapOf<Int, Int>()
-
-	private val position_violation = mutableMapOf<Int, Int>()
-	private val position_consistency_lastdistancedelta = mutableMapOf<Int, Double>()
-	private val position_consistency_violation = mutableMapOf<Int, Int>()
-
+	private val hspeed = mutableMapOf<Int, Int>()
+	private val vspeed = mutableMapOf<Int, Int>()
+	private val positionVL = mutableMapOf<Int, Int>()
+	private val positionConsistencyLastDistanceDelta = mutableMapOf<Int, Double>()
+	private val positionConsistencyVL = mutableMapOf<Int, Int>()
 	private val teleportpacket_violation = mutableMapOf<Int, Int>()
-	private val removedBots = mutableListOf<Int>()
-
-	private val lastRemoved = MSTimer()
 
 	@JvmStatic
 	fun checkTabList(targetName: String, displayName: Boolean, equals: Boolean, stripColors: Boolean): Boolean = mc.netHandler.playerInfoMap.map { networkPlayerInfo ->
@@ -283,18 +279,18 @@ object AntiBot : Module()
 		if (alwaysInRadiusValue.get() && !notAlwaysInRadius.contains(entityID)) return true
 
 		// XZ Speed
-		if (speedValue.get() && xzspeed.containsKey(entityID) && (!speedCountingSysValue.get() || xzspeed[entityID] ?: 0 >= speedCountLimitValue.get())) return true
+		if (speedValue.get() && hspeed.containsKey(entityID) && (!speedCountingSysValue.get() || hspeed[entityID] ?: 0 >= speedCountLimitValue.get())) return true
 
 		// Y Speed
-		if (ySpeedValue.get() && yspeed.containsKey(entityID) && (!ySpeedCountingSysValue.get() || yspeed[entityID] ?: 0 >= ySpeedCountLimitValue.get())) return true
+		if (ySpeedValue.get() && vspeed.containsKey(entityID) && (!ySpeedCountingSysValue.get() || vspeed[entityID] ?: 0 >= ySpeedCountLimitValue.get())) return true
 
 		// Teleport Packet
 		if (teleportPacketValue.get() && teleportpacket_violation.containsKey(entityID) && (!teleportPacketCountingSysValue.get() || teleportpacket_violation[entityID] ?: 0 >= teleportPacketCountLimitValue.get())) return true
 
 		// Spawned Position
-		if (spawnedpositionValue.get() && spawnedposition.contains(entityID)) return true
+		if (spawnedpositionValue.get() && spawnedPosition.contains(entityID)) return true
 
-		if (positionValue.get() && (position_violation.getOrDefault(entityID, 0) >= positionExpectationDeltaCountLimitValue.get() || positionExpectationDeltaConsistencyValue.get() && position_consistency_violation.getOrDefault(entityID, 0) >= positionExpectationDeltaConsistencyCountLimitValue.get())) return true
+		if (positionValue.get() && (positionVL.getOrDefault(entityID, 0) >= positionExpectationDeltaCountLimitValue.get() || positionExpectationDeltaConsistencyValue.get() && positionConsistencyVL.getOrDefault(entityID, 0) >= positionExpectationDeltaConsistencyCountLimitValue.get())) return true
 
 		if (customNameValue.get() && entity.customNameTag == "") return true
 
@@ -302,9 +298,9 @@ object AntiBot : Module()
 
 		if (bedWarsNPCValue.get() && (displayName.isEmpty() || displayName[0] != '\u00A7') && displayName.endsWith("\u00A7r")) return true
 
-		if (gwenValue.get() && gwenBots.contains(entityID)) return true
+		if (gwenValue.get() && gwen.contains(entityID)) return true
 
-		if (watchdogValue.get() && watchdogBots.contains(entityID)) return true
+		if (watchdogValue.get() && watchdog.contains(entityID)) return true
 
 		return entity.name.isEmpty() || entity.name == thePlayer.name
 	}
@@ -320,6 +316,8 @@ object AntiBot : Module()
 	{
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
+
+		val notify = notificationValue.get()
 
 		val packet = event.packet
 
@@ -344,6 +342,8 @@ object AntiBot : Module()
 				// Invalid-Ground
 				if (packetEntity.onGround)
 				{
+					if (notify && invalidGroundValue.get()) notification("InvalidGround", "Suspicious onGround flag: $displayName")
+
 					if (entity.prevPosY != entity.posY) invalidGround[entity.entityId] = invalidGround.getOrDefault(entity.entityId, 0) + 1
 				}
 				else
@@ -359,18 +359,28 @@ object AntiBot : Module()
 				// Always in radius
 				if (!notAlwaysInRadius.contains(entity.entityId) && thePlayer.getDistanceToEntity(entity) > alwaysRadiusValue.get()) notAlwaysInRadius.add(entity.entityId)
 
-				if (hypot(abs(entity.prevPosX - entity.posX), abs(entity.prevPosZ - entity.posZ)) > speedLimitValue.get()) xzspeed[entity.entityId] = xzspeed.getOrDefault(entity.entityId, 0) + 1
+				val hspeed = hypot(abs(entity.prevPosX - entity.posX), abs(entity.prevPosZ - entity.posZ))
+				if (hspeed > speedLimitValue.get())
+				{
+					if (notify && speedValue.get()) notification("HSpeed", "Moved too fast (horizontally): $displayName ($hspeed blocks/tick)")
+					this.hspeed[entity.entityId] = this.hspeed.getOrDefault(entity.entityId, 0) + 1
+				}
 				else if (speedCountDecremSysValue.get())
 				{
-					val currentVL: Int = xzspeed.getOrDefault(entity.entityId, 0) shr 1
-					if (currentVL <= 0) xzspeed.remove(entity.entityId) else xzspeed[entity.entityId] = currentVL
+					val currentVL: Int = this.hspeed.getOrDefault(entity.entityId, 0) shr 1
+					if (currentVL <= 0) this.hspeed.remove(entity.entityId) else this.hspeed[entity.entityId] = currentVL
 				}
 
-				if (abs(entity.prevPosY - entity.posY) > ySpeedLimitValue.get()) yspeed[entity.entityId] = yspeed.getOrDefault(entity.entityId, 0) + 1
+				val vspeed = abs(entity.prevPosY - entity.posY)
+				if (vspeed > ySpeedLimitValue.get())
+				{
+					if (notify && ySpeedValue.get()) notification("VSpeed", "Moved too fast (vertically): $displayName ($vspeed blocks/tick)")
+					this.vspeed[entity.entityId] = this.vspeed.getOrDefault(entity.entityId, 0) + 1
+				}
 				else if (ySpeedCountDecremSysValue.get())
 				{
-					val currentVL = yspeed.getOrDefault(entity.entityId, 0) shr 1
-					if (currentVL <= 0) yspeed.remove(entity.entityId) else yspeed[entity.entityId] = currentVL
+					val currentVL = this.vspeed.getOrDefault(entity.entityId, 0) shr 1
+					if (currentVL <= 0) this.vspeed.remove(entity.entityId) else this.vspeed[entity.entityId] = currentVL
 				}
 
 				val yaw = RotationUtils.serverRotation.yaw
@@ -397,38 +407,49 @@ object AntiBot : Module()
 				for (distance in distances)
 				{
 					// Position Delta
-					if (distance <= positionExpectationDeltaLimit) position_violation[entity.entityId] = position_violation.getOrDefault(entity.entityId, 0) + 1
+					val prevVL = positionVL.getOrDefault(entity.entityId, 0)
+					if (distance <= positionExpectationDeltaLimit)
+					{
+						if (notify && positionValue.get() && (prevVL + 2) % 10 == 0) notification("Position", "Suspicious position: $displayName (VL: $prevVL)")
+						positionVL[entity.entityId] = prevVL + 1
+					}
 					else if (positionExpectationDeltaCountSys)
 					{
-						val currentVL = position_violation.getOrDefault(entity.entityId, 0) shr 1
-						if (currentVL <= 0) position_violation.remove(entity.entityId) else position_violation[entity.entityId] = currentVL
+						val currentVL = prevVL shr 1
+						if (currentVL <= 0) positionVL.remove(entity.entityId) else positionVL[entity.entityId] = currentVL
 					}
+
+					val prevConsistencyVL = positionConsistencyVL.getOrDefault(entity.entityId, 0)
 
 					// Position Delta Consistency
 					if (distance <= positionRequiredExpectationDeltaToCheckConsistency)
 					{
-						val lastdistance = position_consistency_lastdistancedelta.getOrDefault(entity.entityId, Double.MAX_VALUE)
+						val lastdistance = positionConsistencyLastDistanceDelta.getOrDefault(entity.entityId, Double.MAX_VALUE)
 						val consistency = abs(lastdistance - distance)
 
-						if (consistency <= positionExpectationDeltaConsistencyDeltaLimit) position_consistency_violation[entity.entityId] = position_consistency_violation.getOrDefault(entity.entityId, 0) + 1
+						if (consistency <= positionExpectationDeltaConsistencyDeltaLimit)
+						{
+							if (notify && positionExpectationDeltaConsistencyValue.get() && (prevConsistencyVL + 2) % 5 == 0) notification("Position-Consistency", "Suspicious position consistency: $displayName (posVL: $prevVL, posConsistencyVL: $prevConsistencyVL)")
+							positionConsistencyVL[entity.entityId] = prevConsistencyVL + 1
+						}
 						else if (positionExpectationDeltaConsistencyCountSys)
 						{
-							val currentVL = position_consistency_violation.getOrDefault(entity.entityId, 0) shr 1
-							if (currentVL <= 0) position_consistency_violation.remove(entity.entityId) else position_consistency_violation[entity.entityId] = currentVL
+							val currentVL = prevConsistencyVL shr 1
+							if (currentVL <= 0) positionConsistencyVL.remove(entity.entityId) else positionConsistencyVL[entity.entityId] = currentVL
 						}
 
-						position_consistency_lastdistancedelta[entity.entityId] = distance
+						positionConsistencyLastDistanceDelta[entity.entityId] = distance
 					}
 					else
 					{
-						val currentVL = position_consistency_violation.getOrDefault(entity.entityId, 0) shr 1
+						val currentVL = prevConsistencyVL shr 1
 
-						if (currentVL <= 0) position_consistency_violation.remove(entity.entityId) else position_consistency_violation[entity.entityId] = currentVL
+						if (currentVL <= 0) positionConsistencyVL.remove(entity.entityId) else positionConsistencyVL[entity.entityId] = currentVL
 					}
 				}
 
 				// ticksExisted > 40 && custom name tag is empty = Mineplex GWEN bot
-				if (thePlayer.ticksExisted > 40 && entity.asEntityPlayer().customNameTag == "" && !gwenBots.contains(entity.entityId)) gwenBots.add(entity.entityId)
+				if (thePlayer.ticksExisted > 40 && entity.asEntityPlayer().customNameTag == "" && !gwen.contains(entity.entityId)) gwen.add(entity.entityId)
 
 				// invisible + display name isn't red but ends with color reset char (\u00A7r) + displayname equals customname + entity is near than 3 block horizontally + y delta between entity and player is 10~13 = Watchdog Bot
 				if (entity.invisible && !displayName.startsWith("\u00A7c") && displayName.endsWith("\u00A7r") && displayName == customName)
@@ -436,35 +457,31 @@ object AntiBot : Module()
 					val deltaX = abs(entity.posX - thePlayer.posX)
 					val deltaY = abs(entity.posY - thePlayer.posY)
 					val deltaZ = abs(entity.posZ - thePlayer.posZ)
-					val horizontalDistance = hypot(deltaX, deltaZ)
-					if (deltaY < 13 && deltaY > 10 && horizontalDistance < 3 && !checkTabList(entity.asEntityPlayer().gameProfile.name, displayName = false, equals = true, stripColors = true))
+					val hDist = hypot(deltaX, deltaZ)
+					if (deltaY < 13 && deltaY > 10 && hDist < 3 && !checkTabList(entity.asEntityPlayer().gameProfile.name, displayName = false, equals = true, stripColors = true))
 					{
-						if (watchdogRemoveValue.get())
-						{
-							lastRemoved.reset()
-							removedBots.add(entity.entityId)
-							theWorld.removeEntityFromWorld(entity.entityId)
-						}
-						watchdogBots.add(entity.entityId)
+						if (notify && watchdogValue.get()) notification("Watchdog", "Detected watchdog bot: $displayName (hDist: $hDist, vDist: $deltaY)")
+						watchdog.add(entity.entityId)
 					}
 				}
 
 				// invisible + custom name is red and contains color reset char (\u00A7r) = watchdog bot
 				if (entity.invisible && customName.toLowerCase().contains("\u00A7c") && customName.toLowerCase().contains("\u00A7r"))
 				{
-					if (watchdogRemoveValue.get())
-					{
-						lastRemoved.reset()
-						removedBots.add(entity.entityId)
-						theWorld.removeEntityFromWorld(entity.entityId)
-					}
-					watchdogBots.add(entity.entityId)
+					if (notify && watchdogValue.get()) notification("Watchdog", "Detected watchdog bot: $displayName")
+					watchdog.add(entity.entityId)
 				}
 
 				// display name isn't red + custom name isn't empty = watchdog bot
-				if (!displayName.contains("\u00A7c") && customName.isNotEmpty()) watchdogBots.add(entity.entityId)
+				if (!displayName.contains("\u00A7c") && customName.isNotEmpty())
+				{
+					if (notify && watchdogValue.get()) notification("Watchdog", "Detected watchdog bot: $displayName (customName: $customName)")
+					watchdog.add(entity.entityId)
+				}
 			}
 		}
+
+
 
 		if (provider.isSPacketEntityTeleport(packet))
 		{
@@ -476,7 +493,13 @@ object AntiBot : Module()
 				val dX: Double = packetEntityTeleport.x
 				val dY: Double = packetEntityTeleport.y
 				val dZ: Double = packetEntityTeleport.z
-				if (entity.asEntityPlayer().getDistanceSq(dX, dY, dZ) <= teleportThresholdDistance.get() * teleportThresholdDistance.get()) teleportpacket_violation[entity.entityId] = teleportpacket_violation.getOrDefault(entity.entityId, 0) + 1
+				val distSq = entity.asEntityPlayer().getDistanceSq(dX, dY, dZ)
+				val distThreshold = teleportThresholdDistance.get()
+				if (distSq <= distThreshold * distThreshold)
+				{
+					if (notify && teleportPacketValue.get()) notification("TeleportPacket", "Suspicious SPacketEntityTeleport: ${entity.displayName.formattedText} (dist: ${sqrt(distSq)})")
+					teleportpacket_violation[entity.entityId] = teleportpacket_violation.getOrDefault(entity.entityId, 0) + 1
+				}
 				else if (teleportPacketCountDecremSysValue.get())
 				{
 					val currentVL = teleportpacket_violation.getOrDefault(entity.entityId, 0) shr 1
@@ -503,7 +526,13 @@ object AntiBot : Module()
 			val deltaY = thePlayer.posY - entityY
 			val deltaZ = thePlayer.posZ - entityZ
 			val distance = sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ)
-			if (distance <= 18 && entityY > thePlayer.posY + 1.0 && thePlayer.posX != entityX && thePlayer.posY != entityY && thePlayer.posZ != entityZ) spawnedposition.add(packetPlayerSpawn.entityID)
+			if (distance <= 18 && entityY > thePlayer.posY + 1.0 && thePlayer.posX != entityX && thePlayer.posY != entityY && thePlayer.posZ != entityZ)
+			{
+				val entityID = packetPlayerSpawn.entityID
+
+				if (notify && spawnedpositionValue.get()) notification("Spawn", "Suspicious spawn: Entity #$entityID (dist: $distance, vDist: ${abs(deltaY)})")
+				spawnedPosition.add(entityID)
+			}
 		}
 	}
 
@@ -588,19 +617,22 @@ object AntiBot : Module()
 		invisible.clear()
 		notAlwaysInRadius.clear()
 
-		spawnedposition.clear()
-		gwenBots.clear()
-		watchdogBots.clear()
+		spawnedPosition.clear()
+		gwen.clear()
+		watchdog.clear()
 
 		teleportpacket_violation.clear()
 
-		xzspeed.clear()
-		yspeed.clear()
+		hspeed.clear()
+		vspeed.clear()
 
-		position_violation.clear()
-		position_consistency_lastdistancedelta.clear()
-		position_consistency_violation.clear()
+		positionVL.clear()
+		positionConsistencyLastDistanceDelta.clear()
+		positionConsistencyVL.clear()
+	}
 
-		removedBots.clear()
+	private fun notification(checkName: String, message: String)
+	{
+		LiquidBounce.hud.addNotification("AntiBot: $checkName check", message, 1000L, Color.red)
 	}
 }

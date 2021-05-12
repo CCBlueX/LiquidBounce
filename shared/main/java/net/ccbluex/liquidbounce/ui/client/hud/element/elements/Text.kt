@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.CPSCounter
-import net.ccbluex.liquidbounce.utils.PPSCounter
+import net.ccbluex.liquidbounce.utils.PacketCounter
 import net.ccbluex.liquidbounce.utils.ServerUtils
 import net.ccbluex.liquidbounce.utils.extensions.getPing
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
@@ -173,8 +173,8 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 			"rcps" -> return CPSCounter.getCPS(CPSCounter.MouseButton.RIGHT).toString()
 			"timer" -> return mc.timer.timerSpeed.toString()
 			"lastpacket" -> return mc.netHandler.networkManager.lastPacket.toString()
-			"packetin", "ppsin" -> return PPSCounter.getPacketCount(PPSCounter.BoundType.INBOUND, 1000L).toString()
-			"packetout", "ppsout" -> return PPSCounter.getPacketCount(PPSCounter.BoundType.OUTBOUND, 1000L).toString()
+			"packetin", "ppsin" -> return PacketCounter.getPacketCount(PacketCounter.PacketType.INBOUND, 1000L).toString()
+			"packetout", "ppsout" -> return PacketCounter.getPacketCount(PacketCounter.PacketType.OUTBOUND, 1000L).toString()
 			else -> null // Null = don't replace
 		}
 	}

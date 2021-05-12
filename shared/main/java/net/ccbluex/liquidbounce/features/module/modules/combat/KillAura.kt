@@ -155,6 +155,7 @@ class KillAura : Module()
 	// Bypass
 	private val aacValue = BoolValue("AAC", false)
 	private val rotationsValue = BoolValue("Rotations", true)
+	private val lockValue = BoolValue("Lock", true)
 	private val silentRotationValue = BoolValue("SilentRotation", true)
 	private val jitterValue = BoolValue("Jitter", false)
 	private val jitterRateYaw = IntegerValue("YawJitterRate", 50, 0, 100)
@@ -199,8 +200,8 @@ class KillAura : Module()
 	private val randomCenterValue = BoolValue("RandomCenter", false)
 	private val outborderValue = BoolValue("Outborder", false)
 
-	private val hitboxDecrementValue = FloatValue("EnemyHitboxDecrement", 0.2f, 0.15f, 0.45f)
-	private val centerSearchSensitivityValue = FloatValue("SearchCenterSensitivity", 0.2f, 0.15f, 0.25f)
+	private val hitboxDecrementValue = FloatValue("EnemyHitboxDecrement", 0.15f, 0f, 0.3f)
+	private val centerSearchSensitivityValue = FloatValue("SearchCenterSensitivity", 0.2f, 0.1f, 0.25f)
 
 	/**
 	 * Keep Rotation
@@ -362,7 +363,7 @@ class KillAura : Module()
 	var target: IEntityLivingBase? = null
 	private var currentTarget: IEntityLivingBase? = null
 	private var hitable = false
-	private val previouslySwitchedTargets = mutableListOf<Int>()
+	private val previouslySwitchedTargets = mutableSetOf<Int>()
 
 	// Attack delay
 	private val attackTimer = MSTimer()
@@ -967,7 +968,7 @@ class KillAura : Module()
 		val maxTurnSpeed = maxTurnSpeedValue.get()
 		val minTurnSpeed = minTurnSpeedValue.get()
 
-		if (!rotationsValue.get() || maxTurnSpeed <= 0F) return true
+		if (!rotationsValue.get() || maxTurnSpeed <= 0F || (!lockValue.get() && RotationUtils.isFaced(theWorld, thePlayer, entity, aimRange.toDouble()))) return true
 
 		// Limit TurnSpeed
 		val turnSpeed = if (minTurnSpeed < 180f) minTurnSpeed + (maxTurnSpeed - minTurnSpeed) * Random.nextFloat() else 180f

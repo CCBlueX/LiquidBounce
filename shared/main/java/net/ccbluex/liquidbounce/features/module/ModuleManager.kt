@@ -27,6 +27,7 @@ import java.util.*
 // TODO: Add LightningTracker
 // TODO: Add TpFucker (like TpEggBreaker in Jigsaw)
 // TODO: Add TargetStrafe
+// TODO: HackerDetect
 class ModuleManager : Listenable
 {
 	val modules = TreeSet<Module> { module1, module2 -> module1.name.compareTo(module2.name) }

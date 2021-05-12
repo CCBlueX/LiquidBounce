@@ -96,7 +96,7 @@ class SwingAnimation : Module()
 	val slideAngleX = FloatValue("Slide-AngleX", 40f, -30f, 80f)
 	val slideAngleY = FloatValue("Slide-AngleY", 10f, 0f, 135f)
 	val slideAngleZ = FloatValue("Slide-AngleZ", 15f, 0f, 135f)
-	val slideXPos = IntegerValue("Slide-X-Pos", -10, -20, 20)
+	val slideXPos = IntegerValue("Slide-X-Pos", -10, -100, 100)
 	val slideYPos = IntegerValue("Slide-Y-Pos", 13, -5, 30)
 
 	val exhiAngleX = FloatValue("Exhibobo-SwingAngle", 15f, 0f, 30f)

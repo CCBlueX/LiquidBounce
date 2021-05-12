@@ -14,8 +14,8 @@ import net.ccbluex.liquidbounce.event.PacketEvent;
 import net.ccbluex.liquidbounce.injection.backend.PacketImplKt;
 import net.ccbluex.liquidbounce.injection.implementations.IMixinNetworkManager;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
-import net.ccbluex.liquidbounce.utils.PPSCounter;
-import net.ccbluex.liquidbounce.utils.PPSCounter.BoundType;
+import net.ccbluex.liquidbounce.utils.PacketCounter;
+import net.ccbluex.liquidbounce.utils.PacketCounter.PacketType;
 import net.ccbluex.liquidbounce.utils.timer.MSTimer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.NetworkManager;
@@ -82,7 +82,7 @@ public abstract class MixinNetworkManager implements IMixinNetworkManager
 			if (event.isCancelled())
 				callback.cancel();
 			else
-				PPSCounter.registerPacket(BoundType.INBOUND);
+				PacketCounter.registerPacket(PacketType.INBOUND);
 		}
 	}
 
@@ -98,7 +98,7 @@ public abstract class MixinNetworkManager implements IMixinNetworkManager
 			if (event.isCancelled())
 				callback.cancel();
 			else
-				PPSCounter.registerPacket(BoundType.OUTBOUND);
+				PacketCounter.registerPacket(PacketType.OUTBOUND);
 		}
 	}
 
@@ -185,7 +185,7 @@ public abstract class MixinNetworkManager implements IMixinNetworkManager
 			}
 		}
 
-		PPSCounter.registerPacket(BoundType.OUTBOUND);
+		PacketCounter.registerPacket(PacketType.OUTBOUND);
 	}
 
 	@Override

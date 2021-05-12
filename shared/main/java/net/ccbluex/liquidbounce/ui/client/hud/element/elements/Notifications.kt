@@ -25,6 +25,7 @@ import kotlin.math.max
 /**
  * CustomHUD Notification element
  */
+// TODO: Customizable slide-in and slide-out animation
 @ElementInfo(name = "Notifications", single = true)
 class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F, side: Side = Side(Side.Horizontal.RIGHT, Side.Vertical.DOWN)) : Element(x, y, scale, side)
 {
@@ -71,11 +72,12 @@ class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F, side: 
 		{
 			var index = 0
 			val itr = LiquidBounce.hud.notifications.iterator()
+
 			while (itr.hasNext() && index + 1 <= maxRendered.get())
 			{
 				val notification = itr.next()
 
-				if (index != 0) GL11.glTranslated(0.0, -35.0, 0.0)
+				if (index != 0) GL11.glTranslatef(0.0F, -35 * (notification.x / (notification.textLength + 8)), 0.0F)
 
 				notification.drawNotification()
 
@@ -208,6 +210,7 @@ class Notification(private val header: String, private val message: String, priv
 					x = AnimationUtils.easeOut(fadeStep, width) * width
 					fadeStep += delta * 0.25f
 				}
+
 				if (x >= width)
 				{
 					fadeState = FadeState.STAY

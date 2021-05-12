@@ -199,15 +199,6 @@ public abstract class MixinNetHandlerPlayClient
 
 		final float newYaw = yaw % 360.0F;
 
-		final HUD hud = (HUD) LiquidBounce.moduleManager.get(HUD.class);
-		if (hud.getTeleportAlertsValue().get())
-		{
-			final DecimalFormat coordFormat = new DecimalFormat("0.000");
-
-			if (LiquidBounce.hud.getNotifications().size() <= Notifications.Companion.getMaxRendered().get())
-				LiquidBounce.hud.addNotification("Teleport", "(" + coordFormat.format(prevPosX) + ", " + coordFormat.format(prevPosY) + ", " + coordFormat.format(prevPosZ) + ") -> (" + coordFormat.format(x) + ", " + coordFormat.format(y) + ", " + coordFormat.format(z) + ")", 2000L, Color.yellow);
-		}
-
 		if (noRotateSet.getState() && !(noRotateSet.getNoZeroValue().get() && !relativeYaw && yaw == 0.0f && !relativePitch && pitch == 0.0f))
 		{
 			thePlayer.setPosition(x, y, z);

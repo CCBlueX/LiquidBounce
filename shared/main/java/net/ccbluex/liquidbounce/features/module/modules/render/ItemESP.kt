@@ -29,6 +29,7 @@ class ItemESP : Module()
 	private val colorRedValue = IntegerValue("R", 0, 0, 255)
 	private val colorGreenValue = IntegerValue("G", 255, 0, 255)
 	private val colorBlueValue = IntegerValue("B", 0, 0, 255)
+	private val colorAlphaValue = IntegerValue("Alpha", 35, 0, 255)
 
 	private val colorRainbow = BoolValue("Rainbow", true)
 
@@ -43,7 +44,7 @@ class ItemESP : Module()
 		{
 			val theWorld = mc.theWorld ?: return
 
-			val color = if (colorRainbow.get()) rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
+			val color = if (colorRainbow.get()) rainbow(alpha = colorAlphaValue.get(), saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), colorAlphaValue.get())
 
 			val hydraESP = mode == "hydra"
 			val drawOutline = mode == "box" || hydraESP

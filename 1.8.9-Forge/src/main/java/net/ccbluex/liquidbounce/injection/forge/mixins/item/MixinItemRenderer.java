@@ -772,12 +772,12 @@ public abstract class MixinItemRenderer
 		else
 			equippedProgress += clampedDelta;
 
-		if (equippedProgress < 0.1F)
+		if (equippedProgress < 0.25F)
 		{
 			itemToRender = currentItemStack;
 			equippedItemSlot = currentItem;
 		}
-		else if (equippedProgress >= 0.999)
+		else if (equippedProgress >= 0.95)
 			equippedProgress = 1.0F;
 	}
 }
