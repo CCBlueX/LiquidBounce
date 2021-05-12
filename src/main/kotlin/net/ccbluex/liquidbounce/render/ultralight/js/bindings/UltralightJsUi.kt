@@ -26,7 +26,10 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.TitleScreen
 import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen
+import net.minecraft.client.gui.screen.options.LanguageOptionsScreen
+import net.minecraft.client.gui.screen.options.OptionsScreen
 import net.minecraft.client.gui.screen.world.SelectWorldScreen
+import net.minecraft.client.realms.gui.screen.RealmsBridgeScreen
 
 /**
  * Referenced by JS as `ui`
@@ -37,7 +40,10 @@ object UltralightJsUi {
     private val _jsScreens = arrayOf(
         JsScreen("title", TitleScreen::class.java) { mc.openScreen(TitleScreen()) },
         JsScreen("singleplayer", SelectWorldScreen::class.java) { mc.openScreen(SelectWorldScreen(it)) },
-        JsScreen("multiplayer", MultiplayerScreen::class.java) { mc.openScreen(MultiplayerScreen(it)) }
+        JsScreen("multiplayer", MultiplayerScreen::class.java) { mc.openScreen(MultiplayerScreen(it)) },
+        JsScreen("options", OptionsScreen::class.java) { mc.openScreen(OptionsScreen(it, mc.options)) },
+        JsScreen("language_options", LanguageOptionsScreen::class.java) { mc.openScreen(LanguageOptionsScreen(it, mc.options, mc.languageManager)) },
+        JsScreen("multiplayer_realms", RealmsBridgeScreen::class.java) { RealmsBridgeScreen().switchToRealms(it) }
     )
 
     fun get(name: String) = _jsScreens.find { it.name == name }
@@ -66,8 +72,3 @@ object UltralightJsUi {
 class JsScreen(val name: String, val clazz: Class<*>, private val execOpen: (Screen?) -> Unit) {
     fun open(parent: Screen?) = execOpen(parent)
 }
-
-/**
- * Queue opening screens to prevent freezing the game by locking the UI thread
- */
-data class QueuedScreen(val jsScreen: JsScreen, val parent: Screen?)
