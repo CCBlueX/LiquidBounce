@@ -23,6 +23,7 @@ import com.labymedia.ultralight.UltralightPlatform
 import com.labymedia.ultralight.UltralightRenderer
 import com.labymedia.ultralight.config.FontHinting
 import com.labymedia.ultralight.config.UltralightConfig
+import com.labymedia.ultralight.gpu.UltralightGPUDriverNativeUtil
 import com.labymedia.ultralight.plugin.logging.UltralightLogLevel
 import net.ccbluex.liquidbounce.render.ultralight.glfw.GlfwClipboardAdapter
 import net.ccbluex.liquidbounce.render.ultralight.glfw.GlfwCursorAdapter
@@ -85,7 +86,8 @@ object UltralightEngine {
 
         // Load natives from native directory inside root folder
         logger.debug("Loading ultralight natives")
-        UltralightJava.load(resources.binRoot.toPath()) // todo: fix not loading on first startup
+        UltralightJava.load(resources.binRoot.toPath())
+        UltralightGPUDriverNativeUtil.load(resources.binRoot.toPath())
 
         // Setup platform
         logger.debug("Setting up ultralight platform")
