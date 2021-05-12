@@ -44,10 +44,7 @@ import com.labymedia.ultralight.javascript.JavascriptContext
 import net.ccbluex.liquidbounce.render.ultralight.ScreenView
 import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
 import net.ccbluex.liquidbounce.render.ultralight.View
-import net.ccbluex.liquidbounce.render.ultralight.js.bindings.UltralightJsClient
-import net.ccbluex.liquidbounce.render.ultralight.js.bindings.UltralightJsEvents
-import net.ccbluex.liquidbounce.render.ultralight.js.bindings.UltralightJsKotlin
-import net.ccbluex.liquidbounce.render.ultralight.js.bindings.UltralightJsUi
+import net.ccbluex.liquidbounce.render.ultralight.js.bindings.*
 import net.ccbluex.liquidbounce.utils.client.ThreadLock
 import net.ccbluex.liquidbounce.utils.client.mc
 
@@ -67,9 +64,6 @@ class UltralightJsContext(view: View, ulView: ThreadLock<UltralightView>) {
     var events = UltralightJsEvents(contextProvider, view)
 
     fun setupContext(view: View, context: JavascriptContext) {
-
-
-
         val globalContext = context.globalContext
         val globalObject = globalContext.globalObject
 
@@ -113,6 +107,12 @@ class UltralightJsContext(view: View, ulView: ThreadLock<UltralightView>) {
         globalObject.setProperty(
             "kotlin",
             databind.conversionUtils.toJavascript(context, UltralightJsKotlin),
+            0
+        )
+
+        globalObject.setProperty(
+            "utils",
+            databind.conversionUtils.toJavascript(context, UltralightJsUtils),
             0
         )
 
