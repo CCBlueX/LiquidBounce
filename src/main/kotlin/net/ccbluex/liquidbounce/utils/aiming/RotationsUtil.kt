@@ -150,6 +150,7 @@ object RotationManager : Listenable {
         activeConfigurable = configurable
         targetRotation = rotation
         ticksUntilReset = ticks
+
         update()
     }
 

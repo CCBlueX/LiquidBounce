@@ -18,9 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.event.PlayerSafeWalkEvent
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
@@ -87,27 +85,31 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     // Rotation
     val rotationsConfigurable = tree(RotationsConfigurable())
 
-    val minDist by float("MinDist", 0.2f, 0.0f..0.25f)
+    val minDist by float("MinDist", 0.0f, 0.0f..0.25f)
 
     var currentTarget: Target? = null
 
     val shouldGoDown: Boolean
         get() = this.down && mc.options.keySneak.isPressed
 
-    val networkTickHandler = repeatable { event ->
+    val rotationUpdateHandler = handler<PlayerNetworkMovementTickEvent> {
+        if (it.state != EventState.PRE)
+            return@handler
+
         currentTarget = updateTarget(getTargetedPosition())
 
-        val target = currentTarget ?: return@repeatable
+        val target = currentTarget ?: return@handler
 
         RotationManager.aimAt(target.rotation, ticks = 30, configurable = rotationsConfigurable)
+    }
+
+    val networkTickHandler = repeatable { event ->
+        val target = currentTarget ?: return@repeatable
 
         val serverRotation = RotationManager.serverRotation ?: return@repeatable
-        val rayTraceResult = raycast(4.0, serverRotation) ?: return@repeatable
+        val rayTraceResult = raycast(4.5, serverRotation) ?: return@repeatable
 
-        if (rayTraceResult.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != target.blockPos || rayTraceResult.side != target.direction || rayTraceResult.pos.y < target.minY || !isValidTarget(
-                rayTraceResult
-            )
-        ) {
+        if (rayTraceResult.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != target.blockPos || rayTraceResult.side != target.direction || rayTraceResult.pos.y < target.minY || !isValidTarget(rayTraceResult)) {
             return@repeatable
         }
 
@@ -131,7 +133,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             SilentHotbar.resetSlot(this)
         }
 
-        if (!hasBlockInHand) return@repeatable
+        if (!hasBlockInHand)
+            return@repeatable
 
         val result = interaction.interactBlock(
             player, world, Hand.MAIN_HAND, rayTraceResult
@@ -165,9 +168,12 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         return true
     }
 
-    val repeatable = handler<StateUpdateEvent> { // Check if player is on the edge and is NOT flying
-        val isAir = !player.blockPos.add(0, -1, 0).canStandOn() && player.canFly()
+    val repeatable = handler<StateUpdateEvent> {
+        if (!eagle)
+            return@handler
 
+        // Check if player is on the edge and is NOT flying
+        val isAir = !player.blockPos.add(0, -1, 0).canStandOn() && player.canFly()
 
         if (shouldDisableSafeWalk()) {
             it.state.enforceEagle = false
@@ -343,9 +349,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         val center: Vec3d
             get() = Vec3d(
-                from.x + (to.x - from.x) * 0.5,
-                from.y + (to.y - from.y) * 0.5,
-                from.z + (to.z - from.z) * 0.5
+                from.x + (to.x - from.x) * 0.5, from.y + (to.y - from.y) * 0.5, from.z + (to.z - from.z) * 0.5
             )
 
         fun truncate(minY: Double): Face? {

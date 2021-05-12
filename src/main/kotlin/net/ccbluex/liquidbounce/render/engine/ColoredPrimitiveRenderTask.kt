@@ -270,7 +270,6 @@ class ColoredPrimitiveRenderTask(private val maxPrimitiveCount: Int, internal va
                 this.uploadIfNotUploaded()
 
                 this.vaoData.bind()
-                this.vaoData.elementBuffer.bind()
 
                 // Render the entire thing
                 GL20.glDrawElements(

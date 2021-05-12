@@ -19,7 +19,36 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.event.EngineRenderEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.render.engine.*
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.math.times
 
-object ModuleRotations : Module("Rotations", Category.RENDER)
+object ModuleRotations : Module("Rotations", Category.RENDER) {
+
+    val showRotationVector by boolean("ShowRotationVector", false)
+
+    val renderHandler = handler<EngineRenderEvent> {
+        if (!showRotationVector)
+            return@handler
+
+        val serverRotation = RotationManager.serverRotation ?: return@handler
+
+        val renderTask = ColoredPrimitiveRenderTask(1, PrimitiveType.Lines)
+
+        val camera = mc.gameRenderer.camera
+
+        val eyeVector = Vec3(0.0, 0.0, 1.0)
+            .rotatePitch((-Math.toRadians(camera.pitch.toDouble())).toFloat())
+            .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat()) + Vec3(camera.pos) + Vec3(0.0, 0.0, -1.0)
+
+        renderTask.index(renderTask.vertex(eyeVector, Color4b.WHITE))
+        renderTask.index(renderTask.vertex(eyeVector + Vec3(serverRotation.rotationVec * 2.0), Color4b.WHITE))
+
+        RenderEngine.enqueueForRendering(RenderEngine.CAMERA_VIEW_LAYER, renderTask)
+    }
+
+}
