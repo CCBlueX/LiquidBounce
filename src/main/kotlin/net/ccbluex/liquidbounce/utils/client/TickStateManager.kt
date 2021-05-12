@@ -33,7 +33,7 @@ object TickStateManager : Listenable {
     }
 }
 
-class StateUpdateEvent: Event() {
+class StateUpdateEvent : Event() {
     val state: ForcedState = ForcedState()
 }
 

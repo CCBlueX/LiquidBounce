@@ -59,7 +59,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
         val theWorld = mc.world ?: return@handler
 
         theWorld.entities.filter { it is ArrowEntity && !it.inGround }.forEach {
-            val landingPosition = drawTrajectoryForProjectile(it.velocity, TrajectoryInfo(0.05F, 0.3F), it.pos, world, player, Vec3(0.0, 0.0, 0.0) , Color4b(255, 0, 0, 200))
+            val landingPosition = drawTrajectoryForProjectile(it.velocity, TrajectoryInfo(0.05F, 0.3F), it.pos, world, player, Vec3(0.0, 0.0, 0.0), Color4b(255, 0, 0, 200))
 
             if (landingPosition is EntityHitResult) {
                 if (landingPosition.entity != player) {

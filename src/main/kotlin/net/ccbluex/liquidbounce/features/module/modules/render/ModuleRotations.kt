@@ -32,8 +32,9 @@ object ModuleRotations : Module("Rotations", Category.RENDER) {
     val showRotationVector by boolean("ShowRotationVector", false)
 
     val renderHandler = handler<EngineRenderEvent> {
-        if (!showRotationVector)
+        if (!showRotationVector) {
             return@handler
+        }
 
         val serverRotation = RotationManager.serverRotation ?: return@handler
 

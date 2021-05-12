@@ -101,6 +101,45 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         targetTracker.cleanup()
     }
 
+//    val renderHandler = handler<EngineRenderEvent> {
+//        val currentTarget = targetTracker.lockedOnTarget ?: return@handler
+//
+//        val bb = currentTarget.boundingBox
+//
+//        val renderTask = ColoredPrimitiveRenderTask(6 * 10 * 10 * 2, PrimitiveType.Lines)
+//
+//        for (direction in Direction.values()) {
+//            val maxRaysOnAxis = 10 - 1
+//            val stepFactor = 1.0 / maxRaysOnAxis;
+//
+//            val face = bb.getFace(direction)
+//
+//            val outerPoints = face.getAllPoints(Vec3d.of(direction.vector))
+//
+//            var idx = 0
+//
+//            for (outerPoint in outerPoints) {
+//                val vex = Vec3(outerPoint) - Vec3(
+//                    0.0, 0.0, 1.0
+//                )
+//                val color = Color4b(Color.getHSBColor(idx / 4.0f, 1.0f, 1.0f))
+//
+//                renderTask.index(renderTask.vertex(vex, Color4b.WHITE))
+//                renderTask.index(renderTask.vertex(vex + Vec3(direction.vector), color))
+//
+//                idx++
+//            }
+//
+//            //            for (x in (0..maxRaysOnAxis)) {
+//            //                for (y in (0..maxRaysOnAxis)) {
+//            //                    renderTask.index(renderTask.vertex(Vec3(plane.getPoint(x * stepFactor, y * stepFactor)) - Vec3(0.0, 0.0, 1.0), Color4b.WHITE))
+//            //                }
+//            //            }
+//        }
+//
+//        RenderEngine.enqueueForRendering(RenderEngine.CAMERA_VIEW_LAYER, renderTask)
+//    }
+
     val repeatable = repeatable {
         update()
     }
@@ -129,13 +168,27 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
             val predictedTicks = predict.start + (predict.endInclusive - predict.start) * Math.random()
 
-            val targetPrediction = Vec3d(target.x - target.prevX, target.y - target.prevY, target.z - target.prevZ).multiply(predictedTicks)
-            val playerPrediction = Vec3d(player.x - player.prevX, player.y - player.prevY, player.z - player.prevZ).multiply(predictedTicks)
+            val targetPrediction = Vec3d(
+                target.x - target.prevX,
+                target.y - target.prevY,
+                target.z - target.prevZ
+            ).multiply(predictedTicks)
+
+            val playerPrediction = Vec3d(
+                player.x - player.prevX,
+                player.y - player.prevY,
+                player.z - player.prevZ
+            ).multiply(predictedTicks)
 
             val box = target.boundingBox.offset(targetPrediction)
 
             // find best spot (and skip if no spot was found)
-            val (rotation, _) = RotationManager.raytraceBox(eyes.add(playerPrediction), box, throughWalls = false, range = scanRange) ?: continue
+            val (rotation, _) = RotationManager.raytraceBox(
+                eyes.add(playerPrediction),
+                box,
+                throughWalls = false,
+                range = scanRange
+            ) ?: continue
 
             // lock on target tracker
             targetTracker.lock(target)
@@ -148,11 +201,14 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         val target = targetTracker.lockedOnTarget ?: return
         val rotation = RotationManager.serverRotation ?: return
 
-        if (target.boxedDistanceTo(player) <= range && facingEnemy(target, range.toDouble(), rotation)) {
-            // Check if between enemy and player is another entity
-            val raycastedEntity = raytraceEntity(
+        if (target.boxedDistanceTo(player) <= range && facingEnemy(
+                target,
                 range.toDouble(),
-                rotation,
+                rotation
+            )
+        ) { // Check if between enemy and player is another entity
+            val raycastedEntity = raytraceEntity(
+                range.toDouble(), rotation,
                 filter = {
                     when (raycast) {
                         TRACE_NONE -> false
@@ -186,7 +242,11 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                     attackEntity(raycastedEntity)
                 },
                 condition = {
-                    !cooldown || (player.getAttackCooldownProgress(0.0f) >= 1.0f && (!ModuleCriticals.shouldWaitForCrit() || raycastedEntity.velocity.lengthSquared() > 0.25 * 0.25)) && (attackShielding || raycastedEntity !is PlayerEntity || player.mainHandStack.item is AxeItem || !raycastedEntity.wouldBlockHit(player))
+                    !cooldown || (player.getAttackCooldownProgress(0.0f) >= 1.0f && (!ModuleCriticals.shouldWaitForCrit() || raycastedEntity.velocity.lengthSquared() > 0.25 * 0.25)) && (
+                        attackShielding || raycastedEntity !is PlayerEntity || player.mainHandStack.item is AxeItem || !raycastedEntity.wouldBlockHit(
+                            player
+                        )
+                        )
                 },
                 cps
             )
@@ -244,8 +304,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     enum class RaycastMode(override val choiceName: String) : NamedChoice {
         TRACE_NONE("None"),
-        TRACE_ONLYENEMY("Enemy"),
-        TRACE_ALL("All")
+        TRACE_ONLYENEMY("Enemy"), TRACE_ALL("All")
     }
 
 }

@@ -27,7 +27,6 @@ import org.lwjgl.opengl.GL11.*
 import org.lwjgl.opengl.GL20.glUseProgram
 import org.lwjgl.opengl.GL30
 
-
 /**
  * A gpu view renderer
  *
@@ -52,9 +51,9 @@ class GpuViewRenderer : ViewRenderer {
         glPushAttrib(GL_ENABLE_BIT or GL_COLOR_BUFFER_BIT or GL_TRANSFORM_BIT)
 
         if (driver.hasCommandsPending()) {
-            //GLFW.glfwMakeContextCurrent(this.window);
+            // GLFW.glfwMakeContextCurrent(this.window);
             driver.drawCommandList()
-            //GLFW.glfwSwapBuffers(this.window);
+            // GLFW.glfwSwapBuffers(this.window);
         }
 
         glPopAttrib()
