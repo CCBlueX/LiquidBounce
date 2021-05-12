@@ -1,46 +1,190 @@
-<html>
+<html lang="en">
 <head>
-    <title>Account manager</title>
-    <style>
-        body {
-            background-color: #4285f4;
-        }
-    </style>
+  <title>Account manager</title>
+  <style>
+
+    @import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300&display=swap');
+
+    html,
+    body {
+      background-image: url("https://www.wallpapertip.com/wmimgs/46-465323_anime-landscape-forest-big-trees-water-foliage-green.jpg");
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
+    }
+
+    Input {
+      margin: 5px;
+      border-radius: 10px;
+      padding: 5px;
+      border-color: white;
+      background-color: rgba(0, 0, 0, 0.53);
+      color: white;
+      filter: blur(0px);
+    }
+
+    Button {
+      margin: 5px;
+      justify-self: center;
+      margin-top: 10px;
+      border-radius: 10px;
+      padding: 5px;
+      border-color: white;
+      background-color: rgba(0, 0, 0, 0.53);
+      color: white;
+      filter: blur(0px);
+    }
+
+    td {
+      justify-content: center;
+      text-align: center;
+      padding: 10px;
+    }
+
+    * {
+      font-family: 'Source Sans Pro', sans-serif;
+    }
+
+    .TableInit {
+      display: flex;
+      height: 35%;
+      width: 100%;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .title {
+      color: white;
+      text-align: center;
+      margin-bottom: 220px;
+      font-size: 6em;
+    }
+
+    .backg {
+      background-color: rgba(0, 0, 0, 0.43);
+      backdrop-filter: blur(2.4px);
+    }
+
+    .Cell {
+      background-color: rgba(0, 0, 0, 0.8);
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+      border-radius: 20px;
+      transform: scale(1.10098);
+      margin: 50px;
+      width: 25%;
+      height: 70%;
+      color: white;
+      transition: transform .2s;
+      backdrop-filter: blur(2.4px);
+    }
+
+    .Cell:hover {
+      transform: scale(1.2);
+      backdrop-filter: blur(2.4px);
+    }
+
+    .butto:hover {
+      text-decoration-line: underline;
+      transform: scale(1.2);
+      backdrop-filter: blur(2.4px);
+    }
+
+    .footinit {
+      display: block;
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      text-align: center;
+      height: 100px;
+    }
+
+    .butto {
+      transition: transform .2s;
+      height: 75px;
+      width: 150px;
+      font-size: 1.6em;
+      font-family: 'Source Sans Pro', sans-serif;
+      background-color: rgba(0, 0, 0, 0.75);
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+      border-radius: 20px;
+      transform: scale(1.10098);
+      border-color: transparent;
+      backdrop-filter: blur(2.4px);
+    }
+
+
+  </style>
 </head>
 
 <body>
-<h1>Alt Manager</h1>
-
 <p id="response"></p>
 
-<h2>Cracked Login</h2>
-<div>
-    <input type="text" id="username" name="username" placeholder="username"><br>
-
-    <button onclick="document.getElementById('response').innerText = client.getSessionService().loginCracked(document.getElementById('username').value);">Login</button>
+<!-- Please Change the Background Image to smth like ParticleJS.... !-->
+<div class="backg">
+  <h1 class="title">Alt Manager</h1>
 </div>
+<div class="TableInit">
+  <table class="Cell">
+    <tr>
+      <td>
+        <h2>Cracked Login</h2>
+        <div>
+          <label for="username"></label><input type="text" id="username" name="username"
+                                               placeholder="type username here..."><br>
+          <button onclick="document.getElementById('response').innerText = client.getSessionService().loginCracked(document.getElementById('username').value);">
+            Login
+          </button>
+        </div>
+      </td>
+    </tr>
+  </table>
+  <table class="Cell">
+    <tr>
+      <td>
+        <h2>Mojang Login (NOT MICROSOFT LOGIN!)</h2>
+        <div>
+          <label for="email"></label><input type="text" id="email" name="email" placeholder="email"><br>
+          <label for="password"></label><input type="text" id="password" name="password" placeholder="password"><br>
+          <button onclick="document.getElementById('response').innerText = client.getSessionService().loginMojang(document.getElementById('email').value, document.getElementById('password').value);">
+            Login
+          </button>
+        </div>
+      </td>
+    </tr>
+  </table>
+  <table class="Cell">
+    <tr>
+      <td>
+        <h2>Altening Login</h2>
+        <div>
+          <label for="token"></label><input type="text" id="token" name="token" placeholder="token"><br>
+          <button onclick="document.getElementById('response').innerText = client.getSessionService().loginAltening(document.getElementById('token').value);">
+            Login
+          </button>
+          <br>
+          <label for="apitoken"></label><input type="text" id="apitoken" name="apitoken" placeholder="API Token"><br>
+          <button onclick="document.getElementById('response').innerText = client.getSessionService().loginAltening(client.getTheAltening().generateAccount(document.getElementById('apitoken').value));">
+            Login
+          </button>
+        </div>
 
-<h2>Mojang Login (NOT MICROSOFT LOGIN!)</h2>
-<div>
-    <input type="text" id="email" name="email" placeholder="email"><br>
-    <input type="text" id="password" name="password" placeholder="password"><br>
-
-    <button onclick="document.getElementById('response').innerText = client.getSessionService().loginMojang(document.getElementById('email').value, document.getElementById('password').value);">Login</button>
+      </td>
+    </tr>
+  </table>
 </div>
-
-<h2>Altening Login</h2>
-<div>
-    <input type="text" id="token" name="token" placeholder="token"><br>
-
-    <button onclick="document.getElementById('response').innerText = client.getSessionService().loginAltening(document.getElementById('token').value);">Login</button>
-
-    <br>
-
-    <input type="text" id="apitoken" name="apitoken" placeholder="API Token"><br>
-
-    <button onclick="document.getElementById('response').innerText = client.getSessionService().loginAltening(client.getTheAltening().generateAccount(document.getElementById('apitoken').value));">Login</button>
-</div>
-
-<button onclick="ui.open('title', screen)">Back</button>
+<footer>
+  <div class="footinit">
+    <button class="butto" onclick="ui.open('title', screen)">Back</button>
+  </div>
+</footer>
 </body>
 </html>
