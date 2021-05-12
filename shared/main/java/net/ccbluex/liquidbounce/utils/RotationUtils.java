@@ -258,7 +258,7 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
      * @param b angle point
      * @return difference between angle points
      */
-    private static float getAngleDifference(final float a, final float b) {
+    public static float getAngleDifference(final float a, final float b) {
         return ((((a - b) % 360F) + 540F) % 360F) - 180F;
     }
 
