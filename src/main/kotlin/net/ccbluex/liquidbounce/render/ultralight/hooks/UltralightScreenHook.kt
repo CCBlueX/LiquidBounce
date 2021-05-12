@@ -34,6 +34,8 @@ object UltralightScreenHook : Listenable {
      * Handle opening new screens
      */
     val screenHandler = handler<ScreenEvent> { event ->
+        UltralightEngine.cursorAdapter.unfocus()
+
         val activeView = UltralightEngine.activeView
         if (activeView is ScreenView) {
             if (activeView.context.events._fireViewClose()) {

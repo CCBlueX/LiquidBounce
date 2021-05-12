@@ -80,4 +80,8 @@ class GlfwCursorAdapter {
         GLFW.glfwDestroyCursor(beamCursor)
     }
 
+    fun unfocus() {
+        GLFW.glfwSetCursor(UltralightEngine.window, 0)
+    }
+
 }
