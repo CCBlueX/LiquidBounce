@@ -68,7 +68,7 @@ open class View(val layer: RenderLayer, private val viewRenderer: ViewRenderer) 
      * Loads the specified [page]
      */
     fun loadPage(page: Page) {
-        // Unregiste listeners
+        // Unregister listeners
         context.events._unregisterEvents()
 
         if (viewingPage != page && viewingPage != null) {
@@ -78,6 +78,17 @@ open class View(val layer: RenderLayer, private val viewRenderer: ViewRenderer) 
         ultralightView.get().loadURL(page.viewableFile)
         viewingPage = page
         logger.debug("Successfully loaded page ${page.name} from ${page.viewableFile}")
+    }
+
+    /**
+     * Loads the specified [page]
+     */
+    fun loadUrl(url: String) {
+        // Unregister listeners
+        context.events._unregisterEvents()
+
+        ultralightView.get().loadURL(url)
+        logger.debug("Successfully loaded page $url")
     }
 
     /**
