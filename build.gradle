@@ -157,6 +157,7 @@ shadowJar {
     dependencies {
         include(dependency('com.labymedia:ultralight-java-base'))
         include(dependency('com.labymedia:ultralight-java-databind'))
+        include(dependency('com.labymedia:ultralight-java-gpu'))
         include(dependency('com.thealtening.api:api'))
         include(project(":theme"))
     }
