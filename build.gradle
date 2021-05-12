@@ -97,8 +97,9 @@ dependencies {
         exclude group: 'com.google.code.gson', module: 'gson'
     }
 
-    implementation "com.labymedia:ultralight-java-base:0.4.4"
-    implementation "com.labymedia:ultralight-java-databind:0.4.4"
+    implementation "com.labymedia:ultralight-java-base:0.4.6"
+    implementation "com.labymedia:ultralight-java-databind:0.4.6"
+    implementation "com.labymedia:ultralight-java-gpu:0.4.6"
 
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 
@@ -156,6 +157,7 @@ shadowJar {
     dependencies {
         include(dependency('com.labymedia:ultralight-java-base'))
         include(dependency('com.labymedia:ultralight-java-databind'))
+        include(dependency('com.labymedia:ultralight-java-gpu'))
         include(dependency('com.thealtening.api:api'))
         include(project(":theme"))
     }

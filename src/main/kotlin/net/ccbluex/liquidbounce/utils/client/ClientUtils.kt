@@ -29,6 +29,7 @@ import net.minecraft.text.BaseText
 import net.minecraft.text.LiteralText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
+import net.minecraft.util.Util
 import org.apache.logging.log4j.Logger
 import org.lwjgl.glfw.GLFW
 
@@ -105,3 +106,8 @@ fun keyName(keyCode: Int) = when (keyCode) {
         .joinToString(separator = "_")
         .toUpperCase()
 }
+
+/**
+ * Open uri in browser
+ */
+fun browseUrl(url: String) = Util.getOperatingSystem().open(url)
