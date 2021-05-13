@@ -45,9 +45,9 @@ object AntiBot : Module()
 
 	// Static EntityID
 	private val staticEntityIDValue = IntegerValue("StaticEntityIDs", 0, 0, 3)
-	private val staticEntityID1 = IntegerValue("StaticEntityID-1", 99999999, 0, 1000000000)
-	private val staticEntityID2 = IntegerValue("StaticEntityID-2", 0, 0, 1000000000)
-	private val staticEntityID3 = IntegerValue("StaticEntityID-3", 0, 0, 1000000000)
+	private val staticEntityID1 = IntegerValue("StaticEntityID-1", 99999999, 0, Int.MAX_VALUE)
+	private val staticEntityID2 = IntegerValue("StaticEntityID-2", 999999999, 0, Int.MAX_VALUE)
+	private val staticEntityID3 = IntegerValue("StaticEntityID-3", -1337, 0, Int.MAX_VALUE)
 
 	// NoColor
 	private val colorValue = BoolValue("Color", false)

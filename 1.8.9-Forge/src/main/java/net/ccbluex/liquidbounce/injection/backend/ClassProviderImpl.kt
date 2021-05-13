@@ -621,6 +621,9 @@ object ClassProviderImpl : IClassProvider
 			ItemType.SKULL -> Items.skull
 			ItemType.ARMOR_STAND -> Items.armor_stand
 			ItemType.ARROW -> Items.arrow
+			ItemType.GOLDEN_APPLE -> Items.golden_apple
+			ItemType.MILK_BUCKET -> Items.milk_bucket
+			ItemType.GLASS_BOTTLE -> Items.glass_bottle
 		})
 	}
 

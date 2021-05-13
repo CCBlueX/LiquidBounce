@@ -1032,7 +1032,7 @@ class Scaffold : Module()
 
 			if (minTurnSpeedValue.get() < 180)
 			{
-				limitedRotation = RotationUtils.limitAngleChange(RotationUtils.serverRotation, placeRotation!!.rotation, (Random.nextFloat() * (maxTurnSpeedValue.get() - minTurnSpeedValue.get()) + minTurnSpeedValue.get()), 0.0F) // TODO: Apply some settings here too
+				limitedRotation = RotationUtils.limitAngleChange(RotationUtils.serverRotation, placeRotation!!.rotation, (Random.nextFloat() * (maxTurnSpeedValue.get() - minTurnSpeedValue.get()) + minTurnSpeedValue.get()), 0.0F)
 				setRotation(thePlayer, limitedRotation!!, keepRotationTicks)
 
 				lockRotation = limitedRotation

@@ -21,12 +21,11 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 @ModuleInfo(name = "AutoWeapon", description = "Automatically selects the best weapon in your hotbar.", category = ModuleCategory.COMBAT)
 class AutoWeapon : Module()
 {
-
 	private val silentValue = BoolValue("SpoofItem", false) // Silent
-	private val ticksValue = IntegerValue("SpoofTicks", 10, 1, 20) // SilentKeepTicks
+	private val silentKeepTicksValue = IntegerValue("SpoofTicks", 10, 1, 20) // SilentKeepTicks
 	private var attackEnemy = false
 
-	private var spoofedSlot = 0
+	private var keepTicks = 0
 
 	@EventTarget
 	fun onAttack(@Suppress("UNUSED_PARAMETER") event: AttackEvent)
@@ -62,7 +61,7 @@ class AutoWeapon : Module()
 			if (silentValue.get())
 			{
 				netHandler.addToSendQueue(provider.createCPacketHeldItemChange(slot))
-				spoofedSlot = ticksValue.get()
+				keepTicks = silentKeepTicksValue.get()
 			}
 			else
 			{
@@ -80,10 +79,10 @@ class AutoWeapon : Module()
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") update: UpdateEvent)
 	{
 		// Switch back to old item after some time
-		if (spoofedSlot > 0 && --spoofedSlot <= 0)
+		if (keepTicks > 0 && --keepTicks <= 0)
 		{
 			mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange((mc.thePlayer ?: return).inventory.currentItem))
-			spoofedSlot = 0
+			keepTicks = 0
 		}
 	}
 

@@ -10,8 +10,9 @@ import net.ccbluex.liquidbounce.api.enums.ItemType
 import net.ccbluex.liquidbounce.api.enums.WEnumHand
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
+import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.UpdateEvent
+import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
@@ -31,6 +32,8 @@ import kotlin.random.Random
 class AutoSoup : Module()
 {
 	private val healthValue = FloatValue("Health", 15f, 0f, 20f)
+
+	private val silentValue = BoolValue("Silent", true)
 
 	private val maxDelayValue: IntegerValue = object : IntegerValue("MaxSoupDelay", 100, 0, 5000)
 	{
@@ -84,11 +87,13 @@ class AutoSoup : Module()
 
 	private var invDelay = TimeUtils.randomDelay(minInvDelayValue.get(), maxInvDelayValue.get())
 
+	private var soup = -1
+
 	override val tag: String
 		get() = "${healthValue.get()}"
 
 	@EventTarget
-	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
+	fun onMotion(motionEvent: MotionEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
 		val netHandler = mc.netHandler
@@ -105,77 +110,106 @@ class AutoSoup : Module()
 		val random = randomSlotValue.get()
 		val handleBowl = bowlValue.get()
 
-		if (soupDelayTimer.hasTimePassed(soupDelay) && (ignoreScreen.get() || provider.isGuiContainer(screen)))
+		when (motionEvent.eventState)
 		{
-			val soupInHotbar = InventoryUtils.findItem(inventoryContainer, 36, 45, provider.getItemEnum(ItemType.MUSHROOM_STEW), itemDelay, random)
-
-			if (thePlayer.health <= healthValue.get() && soupInHotbar != -1)
+			EventState.PRE ->
 			{
-				netHandler.addToSendQueue(provider.createCPacketHeldItemChange(soupInHotbar - 36))
-				netHandler.addToSendQueue(createUseItemPacket(inventory.getStackInSlot(soupInHotbar), WEnumHand.MAIN_HAND))
-
-				if (handleBowl.equals("Drop", true)) netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.DROP_ITEM, WBlockPos.ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
-
-				netHandler.addToSendQueue(provider.createCPacketHeldItemChange(inventory.currentItem))
-				soupDelayTimer.reset()
-				return
-			}
-		}
-
-		if (InventoryUtils.CLICK_TIMER.hasTimePassed(invDelay) && !(noMoveValue.get() && MovementUtils.isMoving(thePlayer)) && !(openContainer != null && openContainer.windowId != 0))
-		{
-			val bowl = provider.getItemEnum(ItemType.BOWL)
-
-			// Move empty bowls to inventory
-			val bowlInHotbar = InventoryUtils.findItem(inventoryContainer, 36, 45, bowl, itemDelay, random)
-
-			val isGuiInventory = provider.isGuiInventory(screen)
-			val simulateInv = simulateInventoryValue.get()
-
-			if (handleBowl.equals("Move", true) && bowlInHotbar != -1)
-			{
-				if (openInventoryValue.get() && !isGuiInventory) return
-
-				if ((9..36).map(inventory::getStackInSlot).any { it == null || it.item == bowl && it.stackSize < 64 })
+				if (soupDelayTimer.hasTimePassed(soupDelay) && (ignoreScreen.get() || provider.isGuiContainer(screen)))
 				{
-					val openInventory = !isGuiInventory && simulateInv
+					val soupInHotbar = InventoryUtils.findItem(inventoryContainer, 36, 45, provider.getItemEnum(ItemType.MUSHROOM_STEW), itemDelay, random)
 
-					if (openInventory) netHandler.addToSendQueue(createOpenInventoryPacket())
+					if (thePlayer.health <= healthValue.get() && soupInHotbar != -1)
+					{
+						soup = soupInHotbar
 
-					controller.windowClick(0, bowlInHotbar, 0, 1, thePlayer)
+						val soupInHotbarIndex = soupInHotbar - 36
 
-					invDelay = TimeUtils.randomDelay(minInvDelayValue.get(), maxInvDelayValue.get())
-					InventoryUtils.CLICK_TIMER.reset()
+						if (silentValue.get()) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(soupInHotbarIndex))
+						else
+						{
+							inventory.currentItem = soupInHotbarIndex
+							mc.playerController.updateController()
+						}
+						return
+					}
+				}
 
-					return
+				if (InventoryUtils.CLICK_TIMER.hasTimePassed(invDelay) && !(noMoveValue.get() && MovementUtils.isMoving(thePlayer)) && !(openContainer != null && openContainer.windowId != 0))
+				{
+					val bowl = provider.getItemEnum(ItemType.BOWL)
+
+					// Move empty bowls to inventory
+					val bowlInHotbar = InventoryUtils.findItem(inventoryContainer, 36, 45, bowl, itemDelay, random)
+
+					val isGuiInventory = provider.isGuiInventory(screen)
+					val simulateInv = simulateInventoryValue.get()
+
+					if (handleBowl.equals("Move", true) && bowlInHotbar != -1)
+					{
+						if (openInventoryValue.get() && !isGuiInventory) return
+
+						if ((9..36).map(inventory::getStackInSlot).any { it == null || it.item == bowl && it.stackSize < 64 })
+						{
+							val openInventory = !isGuiInventory && simulateInv
+
+							if (openInventory) netHandler.addToSendQueue(createOpenInventoryPacket())
+
+							controller.windowClick(0, bowlInHotbar, 0, 1, thePlayer)
+
+							invDelay = TimeUtils.randomDelay(minInvDelayValue.get(), maxInvDelayValue.get())
+							InventoryUtils.CLICK_TIMER.reset()
+
+							return
+						}
+					}
+
+					// Move soups to hotbar
+					var soupInInventory = InventoryUtils.findItem(inventoryContainer, 9, 36, provider.getItemEnum(ItemType.MUSHROOM_STEW), itemDelay, random)
+
+					if (soupInInventory != -1 && InventoryUtils.hasSpaceHotbar(inventory))
+					{
+
+						// OpenInventory Check
+						if (openInventoryValue.get() && !isGuiInventory) return
+
+						// Simulate Click Mistakes to bypass some anti-cheats
+						if (misClickValue.get() && misClickRateValue.get() > 0 && Random.nextInt(100) <= misClickRateValue.get())
+						{
+							val firstEmpty = InventoryUtils.firstEmpty(inventoryContainer, 9, 36, random)
+							if (firstEmpty != -1) soupInInventory = firstEmpty
+						}
+
+						val openInventory = !isGuiInventory && simulateInv
+						if (openInventory) netHandler.addToSendQueue(createOpenInventoryPacket())
+
+						controller.windowClick(0, soupInInventory, 0, 1, thePlayer)
+
+						if (openInventory) netHandler.addToSendQueue(provider.createCPacketCloseWindow())
+
+						invDelay = TimeUtils.randomDelay(minInvDelayValue.get(), maxInvDelayValue.get())
+						InventoryUtils.CLICK_TIMER.reset()
+					}
 				}
 			}
 
-			// Move soups to hotbar
-			var soupInInventory = InventoryUtils.findItem(inventoryContainer, 9, 36, provider.getItemEnum(ItemType.MUSHROOM_STEW), itemDelay, random)
-
-			if (soupInInventory != -1 && InventoryUtils.hasSpaceHotbar(inventory))
+			EventState.POST ->
 			{
-
-				// OpenInventory Check
-				if (openInventoryValue.get() && !isGuiInventory) return
-
-				// Simulate Click Mistakes to bypass some anti-cheats
-				if (misClickValue.get() && misClickRateValue.get() > 0 && Random.nextInt(100) <= misClickRateValue.get())
+				if (soup >= 0)
 				{
-					val firstEmpty = InventoryUtils.firstEmpty(inventoryContainer, 9, 36, random)
-					if (firstEmpty != -1) soupInInventory = firstEmpty
+					val itemStack = thePlayer.inventoryContainer.getSlot(soup).stack
+
+					if (itemStack != null)
+					{
+						netHandler.addToSendQueue(createUseItemPacket(itemStack, WEnumHand.MAIN_HAND))
+
+						if (handleBowl.equals("Drop", true)) netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.DROP_ITEM, WBlockPos.ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
+
+						soupDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+						soupDelayTimer.reset()
+					}
+
+					soup = -1
 				}
-
-				val openInventory = !isGuiInventory && simulateInv
-				if (openInventory) netHandler.addToSendQueue(createOpenInventoryPacket())
-
-				controller.windowClick(0, soupInInventory, 0, 1, thePlayer)
-
-				if (openInventory) netHandler.addToSendQueue(provider.createCPacketCloseWindow())
-
-				invDelay = TimeUtils.randomDelay(minInvDelayValue.get(), maxInvDelayValue.get())
-				InventoryUtils.CLICK_TIMER.reset()
 			}
 		}
 	}

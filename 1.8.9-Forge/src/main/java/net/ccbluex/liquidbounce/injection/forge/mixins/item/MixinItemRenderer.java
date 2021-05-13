@@ -85,6 +85,11 @@ public abstract class MixinItemRenderer
 	@Shadow
 	protected abstract void renderPlayerArm(AbstractClientPlayer clientPlayer, float equipProgress, float swingProgress);
 
+	/**
+	 * @author CCBlueX
+	 * @reason EatAnimation
+	 * @see    EatAnimation
+	 */
 	@Overwrite
 	private void performDrinking(final AbstractClientPlayer clientPlayer, final float partialTicks)
 	{
@@ -728,6 +733,11 @@ public abstract class MixinItemRenderer
 			callbackInfo.cancel();
 	}
 
+	/**
+	 * @author CCBlueX
+	 * @reason SwingAnimation EquipProgress Smoothing
+	 * @see    SwingAnimation
+	 */
 	@Overwrite
 	public void updateEquippedItem()
 	{

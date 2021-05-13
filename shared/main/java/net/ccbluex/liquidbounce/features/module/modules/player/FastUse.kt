@@ -5,6 +5,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
+import net.ccbluex.liquidbounce.api.minecraft.item.IItem
+import net.ccbluex.liquidbounce.api.minecraft.util.ITimer
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
@@ -17,6 +20,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import kotlin.math.ceil
 
 @ModuleInfo(name = "FastUse", description = "Allows you to use items faster.", category = ModuleCategory.PLAYER)
 class FastUse : Module()
@@ -41,11 +45,15 @@ class FastUse : Module()
 	private val msTimer = MSTimer()
 	private var usedTimer = false
 
-	@EventTarget
+	@EventTarget(ignoreCondition = true)
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
-		val thePlayer = mc.thePlayer ?: return
-		val timer = mc.timer
+		perform(mc.thePlayer ?: return, mc.timer)
+	}
+
+	fun perform(thePlayer: IEntityPlayerSP, timer: ITimer, customItem: IItem? = null): Int
+	{
+		if (!state) return 32
 
 		if (usedTimer)
 		{
@@ -53,18 +61,19 @@ class FastUse : Module()
 			usedTimer = false
 		}
 
-		if (!thePlayer.isUsingItem)
+		if (customItem == null && !thePlayer.isUsingItem)
 		{
 			msTimer.reset()
-			return
+			return -1
 		}
 
-		val usingItem = thePlayer.itemInUse?.item
-
 		val provider = classProvider
+		val itemInUse = customItem ?: thePlayer.itemInUse?.item
 
-		if (provider.isItemFood(usingItem) || provider.isItemBucketMilk(usingItem) || provider.isItemPotion(usingItem))
+		if (provider.isItemFood(itemInUse) || provider.isItemBucketMilk(itemInUse) || provider.isItemPotion(itemInUse))
 		{
+			val workers = WorkerUtils.workers
+
 			val netHandler = mc.netHandler
 			val onGround = thePlayer.onGround
 
@@ -72,43 +81,54 @@ class FastUse : Module()
 			{
 				"instant" ->
 				{
-					WorkerUtils.workers.execute {
-						repeat(35) {
-							netHandler.addToSendQueue(provider.createCPacketPlayer(onGround))
-						}
-
-						mc.playerController.onStoppedUsingItem(thePlayer)
+					repeat(35) {
+						netHandler.addToSendQueue(provider.createCPacketPlayer(onGround))
 					}
+
+					mc.playerController.onStoppedUsingItem(thePlayer)
+
+					return 0
 				}
 
 				"ncp" ->
 				{
 					timer.timerSpeed = ncpTimerValue.get()
+
+					usedTimer = true
+
 					when (ncpModeValue.get().toLowerCase())
 					{
-						"atonce" -> if (thePlayer.itemInUseDuration > ncpWaitTicksValue.get())
+						"atonce" ->
 						{
-							WorkerUtils.workers.execute {
+							if (thePlayer.itemInUseDuration > ncpWaitTicksValue.get())
+							{
 								repeat(ncpPacketsValue.get()) {
 									netHandler.addToSendQueue(provider.createCPacketPlayer(onGround))
 								}
 
 								mc.playerController.onStoppedUsingItem(thePlayer)
 							}
+
+							return ncpWaitTicksValue.get() + 1
 						}
 
-						"constant" -> repeat(ncpConstantPacketsValue.get()) {
-							netHandler.addToSendQueue(provider.createCPacketPlayer(onGround))
+						"constant" ->
+						{
+							repeat(ncpConstantPacketsValue.get()) {
+								netHandler.addToSendQueue(provider.createCPacketPlayer(onGround))
+							}
+
+							return 32 / (ncpConstantPacketsValue.get() + 1)
 						}
 					}
-
-					usedTimer = true
 				}
 
 				"aac" ->
 				{
 					timer.timerSpeed = aacTimerValue.get()
 					usedTimer = true
+
+					return ceil(32.0F / aacTimerValue.get()).toInt()
 				}
 
 				"custom" ->
@@ -116,18 +136,23 @@ class FastUse : Module()
 					timer.timerSpeed = customTimer.get()
 					usedTimer = true
 
-					if (!msTimer.hasTimePassed(delayValue.get().toLong())) return
-
-					WorkerUtils.workers.execute {
-						repeat(customSpeedValue.get()) {
-							netHandler.addToSendQueue(provider.createCPacketPlayer(onGround))
+					if (msTimer.hasTimePassed(delayValue.get().toLong()))
+					{
+						workers.execute {
+							repeat(customSpeedValue.get()) {
+								netHandler.addToSendQueue(provider.createCPacketPlayer(onGround))
+							}
 						}
+
+						msTimer.reset()
 					}
 
-					msTimer.reset()
+					return ceil(32.0F / customTimer.get() / ((customSpeedValue.get().toFloat() + 1) * (1600.0F * (delayValue.get().toFloat() / 1600.0F)))).coerceAtMost(32.0F).toInt()
 				}
 			}
 		}
+
+		return -1
 	}
 
 	@EventTarget

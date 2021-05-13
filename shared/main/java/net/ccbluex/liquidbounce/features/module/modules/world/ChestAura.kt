@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.*
 import kotlin.random.Random
 
-// TODO: Suspend KillAura option
 @ModuleInfo(name = "ChestAura", description = "Automatically opens chests around you.", category = ModuleCategory.WORLD)
 object ChestAura : Module()
 {
@@ -171,7 +170,7 @@ object ChestAura : Module()
 
 					if (minTurnSpeedValue.get() < 180)
 					{
-						val limitedRotation = RotationUtils.limitAngleChange(RotationUtils.serverRotation, rotation, (Random.nextFloat() * (maxTurnSpeedValue.get() - minTurnSpeedValue.get()) + minTurnSpeedValue.get()), 0.0F) // TODO: Apply some settings here too
+						val limitedRotation = RotationUtils.limitAngleChange(RotationUtils.serverRotation, rotation, (Random.nextFloat() * (maxTurnSpeedValue.get() - minTurnSpeedValue.get()) + minTurnSpeedValue.get()), 0.0F)
 						RotationUtils.setTargetRotation(limitedRotation, keepRotationTicks)
 						RotationUtils.setNextResetTurnSpeed(minResetTurnSpeed.get().coerceAtLeast(20F), maxResetTurnSpeed.get().coerceAtLeast(20F))
 

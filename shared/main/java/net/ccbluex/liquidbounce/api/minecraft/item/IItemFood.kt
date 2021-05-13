@@ -6,14 +6,8 @@
 
 package net.ccbluex.liquidbounce.api.minecraft.item
 
-interface IItem
+interface IItemFood : IItem
 {
-	val unlocalizedName: String
-
-	fun asItemArmor(): IItemArmor
-	fun asItemPotion(): IItemPotion
-	fun asItemBlock(): IItemBlock
-	fun asItemSword(): IItemSword
-	fun asItemBucket(): IItemBucket
-	fun asItemFood(): IItemFood
+	fun getHealAmount(stack: IItemStack): Int
+	fun getSaturationModifier(stack: IItemStack): Float
 }

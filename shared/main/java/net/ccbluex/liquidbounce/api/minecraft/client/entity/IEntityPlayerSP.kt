@@ -21,6 +21,8 @@ interface IEntityPlayerSP : IAbstractClientPlayer
 
 	var serverSprintState: Boolean
 
+	val timeInPortal: Float
+
 	fun sendChatMessage(msg: String)
 	fun respawnPlayer()
 	fun addChatMessage(component: IIChatComponent)

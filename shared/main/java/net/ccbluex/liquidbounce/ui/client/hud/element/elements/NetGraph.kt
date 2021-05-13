@@ -29,7 +29,6 @@ import java.text.DecimalFormat
  * Allows to draw custom network-activity graph
  */
 
-// TODO: Column Auto-Scaling
 @ElementInfo(name = "NetGraph")
 class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Side = Side(Side.Horizontal.MIDDLE, Side.Vertical.DOWN)) : Element(x, y, scale, side)
 {

@@ -39,6 +39,8 @@ class AutoPot : Module()
 
 	private val healthValue = FloatValue("Health", 15F, 1F, 20F)
 
+	private val silentValue = BoolValue("Silent", true)
+
 	private val maxDelayValue: IntegerValue = object : IntegerValue("MaxPotDelay", 250, 0, 5000)
 	{
 		override fun onChanged(oldValue: Int, newValue: Int)
@@ -264,8 +266,17 @@ class AutoPot : Module()
 
 						potion = if (thePlayer.health <= health && healPotionInHotbar != -1) healPotionInHotbar else buffPotionInHotbar
 
-						// Swap hotbar slot to potion slot
-						netHandler.addToSendQueue(provider.createCPacketHeldItemChange(potion - 36))
+						val potionIndex = potion - 36
+
+						if (silentValue.get()) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(potionIndex))
+						else
+						{
+							thePlayer.inventory.currentItem = potionIndex
+							controller.updateController()
+						}
+
+						// // Swap hotbar slot to potion slot
+						// netHandler.addToSendQueue(provider.createCPacketHeldItemChange(potion - 36))
 
 						val pitch = thePlayer.rotationPitch
 
@@ -341,7 +352,8 @@ class AutoPot : Module()
 					if (itemStack != null)
 					{
 						netHandler.addToSendQueue(createUseItemPacket(itemStack, WEnumHand.MAIN_HAND))
-						netHandler.addToSendQueue(provider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
+
+						if (silentValue.get()) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
 
 						potThrowDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
 						potThrowDelayTimer.reset()
@@ -353,7 +365,7 @@ class AutoPot : Module()
 		}
 	}
 
-	private fun findHealPotion(thePlayer: IEntityPlayerSP, startSlot: Int, endSlot: Int, inventoryContainer: IContainer, random: Boolean): Int
+	fun findHealPotion(thePlayer: IEntityPlayerSP, startSlot: Int, endSlot: Int, inventoryContainer: IContainer, random: Boolean, splash: Boolean = true): Int
 	{
 		val provider = classProvider
 
@@ -366,7 +378,7 @@ class AutoPot : Module()
 
 		val playerRegen = thePlayer.isPotionActive(regenPotion)
 
-		(startSlot until endSlot).mapNotNull { it to (inventoryContainer.getSlot(it).stack ?: return@mapNotNull null) }.filter { provider.isItemPotion(it.second.item) }.filter { it.second.isSplash() }.forEach { (slotIndex, stack) ->
+		(startSlot until endSlot).mapNotNull { it to (inventoryContainer.getSlot(it).stack ?: return@mapNotNull null) }.filter { provider.isItemPotion(it.second.item) }.run { if (splash) filter { it.second.isSplash() } else filterNot { it.second.isSplash() } }.forEach { (slotIndex, stack) ->
 			var heal = false
 			var regen = false
 
@@ -390,7 +402,7 @@ class AutoPot : Module()
 		}
 	}
 
-	private fun findBuffPotion(activePotionEffects: Collection<IPotionEffect>, startSlot: Int, endSlot: Int, inventoryContainer: IContainer, random: Boolean): Int
+	fun findBuffPotion(activePotionEffects: Collection<IPotionEffect>, startSlot: Int, endSlot: Int, inventoryContainer: IContainer, random: Boolean, splash: Boolean = true): Int
 	{
 		val provider = classProvider
 
@@ -441,7 +453,7 @@ class AutoPot : Module()
 
 		val candidates = mutableListOf<Int>()
 
-		(startSlot until endSlot).asSequence().mapNotNull { it to (inventoryContainer.getSlot(it).stack ?: return@mapNotNull null) }.filter { System.currentTimeMillis() - it.second.itemDelay >= itemDelay }.filter { provider.isItemPotion(it.second.item) }.filter { it.second.isSplash() }.forEach { (slotIndex, stack) ->
+		(startSlot until endSlot).asSequence().mapNotNull { it to (inventoryContainer.getSlot(it).stack ?: return@mapNotNull null) }.filter { System.currentTimeMillis() - it.second.itemDelay >= itemDelay }.filter { provider.isItemPotion(it.second.item) }.run { if (splash) filter { it.second.isSplash() } else filterNot { it.second.isSplash() } }.forEach { (slotIndex, stack) ->
 			var potionSpeed = -1
 			var potionJump = -1
 			var potionDigSpeed = -1

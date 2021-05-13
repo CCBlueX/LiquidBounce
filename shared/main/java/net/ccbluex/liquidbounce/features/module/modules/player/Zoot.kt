@@ -59,8 +59,6 @@ class Zoot : Module()
 		}
 	}
 
-	private fun isBadEffect(potionID: Int): Boolean = badEffectsArray.any { potionID == it }
-
 	companion object
 	{
 		val badEffectsArray = arrayListOf<Int>()
@@ -79,5 +77,7 @@ class Zoot : Module()
 			badEffectsArray.add(provider.getPotionEnum(PotionType.WITHER).id)
 			badEffectsArray.add(provider.getPotionEnum(PotionType.POISON).id)
 		}
+
+		fun isBadEffect(potionID: Int): Boolean = badEffectsArray.any { potionID == it }
 	}
 }

@@ -39,6 +39,9 @@ open class EntityPlayerSPImpl<out T : EntityPlayerSP>(wrapped: T) : AbstractClie
 			wrapped.serverSprintState = value
 		}
 
+	override val timeInPortal: Float
+		get() = wrapped.timeInPortal
+
 	override fun sendChatMessage(msg: String) = wrapped.sendChatMessage(msg)
 
 	override fun respawnPlayer() = wrapped.respawnPlayer()
