@@ -76,17 +76,21 @@ object CommandClient {
                                 val open: (ScreenView) -> Unit = try {
                                     val url = URL(args[0] as String)
 
-                                    ({
-                                        it.loadUrl(url.toString())
-                                    })
+                                    (
+                                        {
+                                            it.loadUrl(url.toString())
+                                        }
+                                        )
                                 } catch (_: MalformedURLException) {
                                     val name = args[0] as String
                                     val page = ThemeManager.page(name)
                                         ?: throw CommandException(command.result("pageNotFound", name))
 
-                                    ({
-                                        it.loadPage(page)
-                                    })
+                                    (
+                                        {
+                                            it.loadPage(page)
+                                        }
+                                        )
                                 }
 
                                 val emptyScreen = EmptyScreen()

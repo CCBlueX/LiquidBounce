@@ -208,7 +208,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             )
         ) { // Check if between enemy and player is another entity
             val raycastedEntity = raytraceEntity(
-                range.toDouble(), rotation,
+                range.toDouble(),
+                rotation,
                 filter = {
                     when (raycast) {
                         TRACE_NONE -> false

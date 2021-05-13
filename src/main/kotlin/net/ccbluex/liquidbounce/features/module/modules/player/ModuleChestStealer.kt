@@ -49,9 +49,10 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
         }
         if (checkTitle) {
             val titleString = screen.title.string
-            
-            if (titleString != TranslatableText("container.chest").string && titleString != TranslatableText("container.chestDouble").string)
+
+            if (titleString != TranslatableText("container.chest").string && titleString != TranslatableText("container.chestDouble").string) {
                 return@handler
+            }
         }
 
         val itemsToCollect = this.selectionMode.processor(ModuleInventoryCleaner.getUsefulItems(screen))

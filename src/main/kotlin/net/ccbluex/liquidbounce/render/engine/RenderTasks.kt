@@ -92,9 +92,9 @@ abstract class RenderTask {
     /**
      * Calls [upload] if this function hasn't been called yet
      */
-    fun uploadIfNotUploaded() {
+    fun uploadIfNotUploaded(level: OpenGLLevel) {
         if (!this.uploaded) {
-            this.upload()
+            this.upload(level)
 
             this.uploaded = true
         }
@@ -103,7 +103,7 @@ abstract class RenderTask {
     /**
      * Uploads the current state to VRAM
      */
-    open fun upload() {}
+    open fun upload(level: OpenGLLevel) {}
 
     /**
      * Sets up everything needed for rendering.

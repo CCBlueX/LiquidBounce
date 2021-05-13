@@ -132,7 +132,7 @@ class InstancedColoredPrimitiveRenderTask(
             // Use VBOs for later OpenGL versions.
             OpenGLLevel.OPENGL3_3, OpenGLLevel.OPENGL4_3 -> {
                 // Upload if not done yet
-                this.uploadIfNotUploaded()
+                this.uploadIfNotUploaded(level)
 
                 this.vaoData.bind()
 
@@ -162,7 +162,7 @@ class InstancedColoredPrimitiveRenderTask(
         }
     }
 
-    override fun upload() {
+    override fun upload(level: OpenGLLevel) {
         val vaoData = InstancedVAOData(this.storageType)
 
         vaoData.bind()
