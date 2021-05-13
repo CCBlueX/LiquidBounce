@@ -26,11 +26,13 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.screen.slot.SlotActionType
+import net.minecraft.text.TranslatableText
 
 object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
     var delay by intRange("Delay", 50..200, 0..2000)
     var selectionMode by enumChoice("SelectionMode", SelectionMode.DISTANCE, SelectionMode.values())
+    val checkTitle by boolean("CheckTitle", true)
 
     private var lastSlot = 0
     private val timer = Chronometer()
@@ -44,6 +46,12 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
         if (screen !is GenericContainerScreen) {
             return@handler
+        }
+        if (checkTitle) {
+            val titleString = screen.title.string
+            
+            if (titleString != TranslatableText("container.chest").string && titleString != TranslatableText("container.chestDouble").string)
+                return@handler
         }
 
         val itemsToCollect = this.selectionMode.processor(ModuleInventoryCleaner.getUsefulItems(screen))
