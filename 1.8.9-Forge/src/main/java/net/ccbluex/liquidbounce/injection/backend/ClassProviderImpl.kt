@@ -392,6 +392,8 @@ object ClassProviderImpl : IClassProvider
 
 	override fun isItemMap(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemMap
 
+	override fun isItemGlassBottle(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemGlassBottle
+
 	override fun isBlockAir(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockAir
 
 	override fun isBlockFence(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockFence

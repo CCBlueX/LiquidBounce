@@ -13,4 +13,5 @@ interface IKeyBinding
 	val isKeyDown: Boolean
 
 	fun onTick(keyCode: Int)
+	fun unpressKey()
 }

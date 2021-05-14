@@ -53,6 +53,7 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 	private val incomingPacketsColorBlueValue = IntegerValue("IncomingPackets-B", 0, 0, 255)
 	private val incomingPacketsAverageValue = BoolValue("IncomingPackets-Average", true)
 	private val incomingPacketsAverageThicknessValue = FloatValue("IncomingPackets-Average-Thickness", 3F, 1F, 3F)
+	private val incomingPacketsPeakValue = BoolValue("IncomingPackets-Peak", true)
 
 	private val outgoingPacketsYMultiplier = FloatValue("OutgoingPackets-MinYMultiplier", 1F, 0.001F, 50F)
 	private val outgoingPacketsThicknessValue = FloatValue("OutgoingPackets-Thickness", 2F, 1F, 3F)
@@ -61,8 +62,9 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 	private val outgoingPacketsColorBlueValue = IntegerValue("OutgoingPackets-B", 111, 0, 255)
 	private val outgoingPacketsAverageValue = BoolValue("OutgoingPackets-Average", true)
 	private val outgoingPacketsAverageThicknessValue = FloatValue("OutgoingPackets-Average-Thickness", 3F, 1F, 3F)
+	private val outgoingPacketsPeakValue = BoolValue("OutgoingPackets-Peak", true)
 
-	private val averageTextFont = FontValue("AverageTextFont", Fonts.minecraftFont)
+	private val textFont = FontValue("TextFont", Fonts.minecraftFont)
 
 	private val pingUpdateTimer = MSTimer()
 	private val packetUpdateTimer = MSTimer()
@@ -72,21 +74,28 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 	private val incomingPacketsList = ArrayList<Int>()
 	private var incomingPacketsAverage = 0.0
 	private var incomingPacketsPeak = 0
+	private var incomingPacketsPeakIndex = -1
 
 	private val outgoingPacketsList = ArrayList<Int>()
 	private var outgoingPacketsAverage = 0.0
 	private var outgoingPacketsPeak = 0
+	private var outgoingPacketsPeakIndex = -1
 
 	private var lastTick = -1
 
 	private var incomingAverageString = ""
+	private var incomingPeakString = ""
+	private var incomingPeakStringWidth = 0F
 
 	private var outgoingAverageString = ""
 	private var outgoingAverageStringWidth = 0F
 
+	private var outgoingPeakString = ""
+	private var outgoingPeakStringWidth = 0F
+
 	companion object
 	{
-		private val averageFormat = DecimalFormat("##0.0")
+		private val numberFormat = DecimalFormat("##0.0")
 	}
 
 	override fun drawElement(): Border?
@@ -113,46 +122,78 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 		val incomingPacketsAverageEnabled = incomingPacketsAverageValue.get()
 		val outgoingPacketsAverageEnabled = outgoingPacketsAverageValue.get()
 
-		val averageStringFont = averageTextFont.get()
-		val averageStringHeightHalf = averageStringFont.fontHeight * 0.5F
+		val incomingPacketsPeakEnabled = incomingPacketsPeakValue.get()
+		val outgoingPacketsPeakEnabled = outgoingPacketsPeakValue.get()
+
+		val stringFont = textFont.get()
+		val stringHeightHalf = stringFont.fontHeight * 0.5F
 
 		if (if (packetUpdatePeriod == 50L) tickChanged else packetUpdateTimer.hasTimePassed(packetUpdatePeriod))
 		{
 			incomingPacketsList.add(PacketCounter.getPacketCount(PacketCounter.PacketType.INBOUND, packetCounterBuffer))
 			while (incomingPacketsList.size > width) incomingPacketsList.removeAt(0)
 
+			var incomingSum = 0
+			var incomingPeak = 0
+			var incomingPeakIndex = -1
+			incomingPacketsList.forEachIndexed { index, i ->
+				incomingSum += i
+				if (i > incomingPeak)
+				{
+					incomingPeak = i
+					incomingPeakIndex = index
+				}
+			}
+
 			if (incomingPacketsAverageEnabled)
 			{
-				var incomingSum = 0
-				var incomingPeak = 0
-				for (i in incomingPacketsList)
-				{
-					incomingSum += i
-					if (i > incomingPeak) incomingPeak = i
-				}
 				incomingPacketsAverage = incomingSum.toDouble() / width.toDouble()
-				incomingPacketsPeak = incomingPeak
 
-				incomingAverageString = averageFormat.format(incomingPacketsAverage)
+				incomingAverageString = numberFormat.format(incomingPacketsAverage)
+			}
+
+			incomingPacketsPeak = incomingPeak
+
+			if (incomingPacketsPeakEnabled)
+			{
+				incomingPacketsPeakIndex = incomingPeakIndex
+
+				incomingPeakString = "$incomingPeak"
+				incomingPeakStringWidth = stringFont.getStringWidth(incomingPeakString) * 0.5F
 			}
 
 			outgoingPacketsList.add(PacketCounter.getPacketCount(PacketCounter.PacketType.OUTBOUND, packetCounterBuffer))
 			while (outgoingPacketsList.size > width) outgoingPacketsList.removeAt(0)
 
+			var outgoingSum = 0
+
+			var outgoingPeak = 0
+			var outgoingPeakIndex = -1
+			outgoingPacketsList.forEachIndexed { index, i ->
+				outgoingSum += i
+				if (i > outgoingPeak)
+				{
+					outgoingPeak = i
+					outgoingPeakIndex = index
+				}
+			}
+
 			if (outgoingPacketsAverageEnabled)
 			{
-				var outgoingSum = 0
-				var outgoingPeak = 0
-				for (i in outgoingPacketsList)
-				{
-					outgoingSum += i
-					if (i > outgoingPeak) outgoingPeak = i
-				}
 				outgoingPacketsAverage = outgoingSum.toDouble() / width.toDouble()
-				outgoingPacketsPeak = outgoingPeak
 
-				outgoingAverageString = averageFormat.format(outgoingPacketsAverage)
-				outgoingAverageStringWidth = averageStringFont.getStringWidth(outgoingAverageString).toFloat()
+				outgoingAverageString = numberFormat.format(outgoingPacketsAverage)
+				outgoingAverageStringWidth = stringFont.getStringWidth(outgoingAverageString).toFloat()
+			}
+
+			outgoingPacketsPeak = outgoingPeak
+
+			if (outgoingPacketsPeakEnabled)
+			{
+				outgoingPacketsPeakIndex = outgoingPeakIndex
+
+				outgoingPeakString = "$outgoingPeak"
+				outgoingPeakStringWidth = stringFont.getStringWidth(outgoingPeakString) * 0.5F
 			}
 
 			packetUpdateTimer.reset()
@@ -228,7 +269,7 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 				val ypos = height + 1.0 - (height / incomingPacketsPeak.toFloat()).coerceAtLeast(incomingPacketsMinYMul) * incomingPacketsAverage
 
 				RenderUtils.glColor(incomingPacketsColor)
-				GL11.glVertex2d(averageStringFont.getStringWidth(incomingAverageString) + 2.0, ypos)
+				GL11.glVertex2d(stringFont.getStringWidth(incomingAverageString) + 2.0, ypos)
 				GL11.glVertex2d(width.toDouble(), ypos)
 			}
 
@@ -284,10 +325,28 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 		classProvider.glStateManager.resetColor()
 
 		// Draw Inbound Packets Average
-		if (incomingPacketsAverageEnabled) averageStringFont.drawString(incomingAverageString, 0F, height + 1 - (height / incomingPacketsPeak.toFloat()).coerceAtLeast(incomingPacketsMinYMul) * incomingPacketsAverage.toFloat() - averageStringHeightHalf, incomingPacketsColor, shadow = true)
+		if (incomingPacketsAverageEnabled) stringFont.drawString(incomingAverageString, 0F, height + 1 - (height / incomingPacketsPeak.toFloat()).coerceAtLeast(incomingPacketsMinYMul) * incomingPacketsAverage.toFloat() - stringHeightHalf, incomingPacketsColor, shadow = true)
 
 		// Draw Outbound Packets Average
-		if (outgoingPacketsAverageEnabled) averageStringFont.drawString(outgoingAverageString, width - outgoingAverageStringWidth, height + 1 - (height / outgoingPacketsPeak.toFloat()).coerceAtLeast(outgoingPacketsMinYMul) * outgoingPacketsAverage.toFloat() - averageStringHeightHalf, outgoingPacketsColor, shadow = true)
+		if (outgoingPacketsAverageEnabled) stringFont.drawString(outgoingAverageString, width - outgoingAverageStringWidth, height + 1 - (height / outgoingPacketsPeak.toFloat()).coerceAtLeast(outgoingPacketsMinYMul) * outgoingPacketsAverage.toFloat() - stringHeightHalf, outgoingPacketsColor, shadow = true)
+
+		if (incomingPacketsPeakEnabled)
+		{
+			val incomingPacketsListSize = incomingPacketsList.size
+
+			val incomingPacketsListStart = if (incomingPacketsListSize > width) incomingPacketsListSize - width else 0
+
+			stringFont.drawString(incomingPeakString, incomingPacketsPeakIndex.toFloat() - incomingPeakStringWidth - incomingPacketsListStart, 0F, incomingPacketsColor, shadow = true)
+		}
+
+		if (outgoingPacketsPeakEnabled)
+		{
+			val outgoingPacketsListSize = outgoingPacketsList.size
+
+			val outgoingPacketsListStart = if (outgoingPacketsListSize > width) outgoingPacketsListSize - width else 0
+
+			stringFont.drawString(outgoingPeakString, outgoingPacketsPeakIndex.toFloat() - outgoingPeakStringWidth - outgoingPacketsListStart, 0F, outgoingPacketsColor, shadow = true)
+		}
 
 		return Border(0F, 0F, width.toFloat(), height + 2)
 	}

@@ -25,7 +25,10 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.player.FastUse
 import net.ccbluex.liquidbounce.features.module.modules.player.Zoot
-import net.ccbluex.liquidbounce.utils.*
+import net.ccbluex.liquidbounce.utils.InventoryUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.createOpenInventoryPacket
+import net.ccbluex.liquidbounce.utils.createUseItemPacket
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -103,11 +106,12 @@ class AutoUse : Module()
 
 	private var slotToUse = -1
 
+	private var lastRequiredTicks: Int? = null
 	private var waitedTicks = -1
 
 	override fun onDisable()
 	{
-		restoreToOriginalSlot(mc.thePlayer ?: return, glassBottleValue.get(), classProvider, mc.netHandler, silentValue.get())
+		endEating(mc.thePlayer ?: return, glassBottleValue.get(), classProvider, mc.netHandler, silentValue.get())
 
 		slotToUse = -1
 		waitedTicks = -1
@@ -145,8 +149,6 @@ class AutoUse : Module()
 		{
 			EventState.PRE ->
 			{
-				ClientUtils.displayChatMessage(thePlayer, "[AutoUse] waitedTicks: $waitedTicks")
-
 				if (useDelayTimer.hasTimePassed(useDelay) && (ignoreScreen.get() || provider.isGuiContainer(screen)))
 				{
 					val foodInHotbar = if (food && foodLevel <= foodLevelValue.get()) findBestFood(thePlayer) else -1
@@ -158,34 +160,32 @@ class AutoUse : Module()
 					{
 						slotToUse = arrayOf(foodInHotbar, potionInHotbar, gappleInHotbar, milkInHotbar).first { it != -1 }
 
-						if (waitedTicks <= 0)
-						{
-							val slotIndex = slotToUse - 36
+						val slotIndex = slotToUse - 36
 
-							if (silent) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(slotIndex))
-							else
-							{
-								inventory.currentItem = slotIndex
-								mc.playerController.updateController()
-							}
+						if (!silent) inventory.currentItem = slotIndex
 
-							ClientUtils.displayChatMessage(thePlayer, "[AutoUse] slot switch")
-						}
+						val isFirst = waitedTicks <= 0
+
+						if (isFirst) if (silent) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(slotIndex)) else mc.playerController.updateController()
 
 						val stack = inventoryContainer.getSlot(slotToUse).stack
 
-						if (waitedTicks <= 0) netHandler.addToSendQueue(createUseItemPacket(stack, WEnumHand.MAIN_HAND))
+						if (isFirst) netHandler.addToSendQueue(createUseItemPacket(stack, WEnumHand.MAIN_HAND))
 
 						if (silent)
 						{
-							val ticks = performFastUse(thePlayer, stack?.item) + offset.get()
+							val itemUseTicks = if (isFirst) 0 else (lastRequiredTicks?.minus(waitedTicks)) ?: 0
+							lastRequiredTicks = performFastUse(thePlayer, stack?.item, itemUseTicks) + offset.get()
 
-							if (waitedTicks <= 0) waitedTicks = ticks
+							if (isFirst) waitedTicks = lastRequiredTicks!!
 						}
 						else
 						{
-							if (waitedTicks <= 0) waitedTicks = 32
-							mc.gameSettings.keyBindUseItem.pressed = waitedTicks > 0
+							lastRequiredTicks = 32
+
+							mc.gameSettings.keyBindUseItem.pressed = true // FIXME: Change to better solution
+
+							if (isFirst) waitedTicks = lastRequiredTicks!!
 						}
 
 						return
@@ -257,24 +257,20 @@ class AutoUse : Module()
 			EventState.POST -> if (slotToUse >= 0)
 			{
 				waitedTicks = (waitedTicks - 1).coerceAtLeast(-1)
-				if (waitedTicks <= 0)
-				{
-					restoreToOriginalSlot(thePlayer, handleGlassBottle, provider, netHandler, silent)
-					ClientUtils.displayChatMessage(thePlayer, "[AutoUse] back to the original slot")
-				}
+				if (waitedTicks <= 0) endEating(thePlayer, handleGlassBottle, provider, netHandler, silent)
 			}
 		}
 	}
 
-	private fun restoreToOriginalSlot(thePlayer: IEntityPlayerSP, handleGlassBottle: String, provider: IClassProvider, netHandler: IINetHandlerPlayClient, silent: Boolean)
+	private fun endEating(thePlayer: IEntityPlayerSP, handleGlassBottle: String, provider: IClassProvider, netHandler: IINetHandlerPlayClient, silent: Boolean)
 	{
 		val itemStack = thePlayer.inventoryContainer.getSlot(slotToUse).stack
 
 		if (itemStack != null)
 		{
-			if (handleGlassBottle.equals("Drop", true) && provider.isItemPotion(itemStack.item) && !itemStack.isSplash()) netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.DROP_ITEM, WBlockPos.ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
+			if (handleGlassBottle.equals("Drop", true) && (provider.isItemGlassBottle(itemStack.item) || provider.isItemPotion(itemStack.item) && !itemStack.isSplash())) netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.DROP_ITEM, WBlockPos.ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
 
-			if (silent) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
+			if (silent) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(thePlayer.inventory.currentItem)) else mc.gameSettings.keyBindUseItem.unpressKey()
 
 			useDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
 			useDelayTimer.reset()
@@ -283,9 +279,9 @@ class AutoUse : Module()
 		}
 	}
 
-	private fun performFastUse(thePlayer: IEntityPlayerSP, item: IItem?): Int = (LiquidBounce.moduleManager[FastUse::class.java] as FastUse).perform(thePlayer, mc.timer, item)
+	private fun performFastUse(thePlayer: IEntityPlayerSP, item: IItem?, itemUseTicks: Int): Int = (LiquidBounce.moduleManager[FastUse::class.java] as FastUse).perform(thePlayer, mc.timer, item, itemUseTicks)
 
-	private fun findPotion(activePotionEffects: Collection<IPotionEffect>, inventoryContainer: IContainer, startSlot: Int = 36, endSlot: Int = 45, random: Boolean): Int = (LiquidBounce.moduleManager[AutoPot::class.java] as AutoPot).findBuffPotion(activePotionEffects, startSlot, endSlot, inventoryContainer, random) // TODO: findHealPotion() support
+	private fun findPotion(activePotionEffects: Collection<IPotionEffect>, inventoryContainer: IContainer, startSlot: Int = 36, endSlot: Int = 45, random: Boolean): Int = (LiquidBounce.moduleManager[AutoPot::class.java] as AutoPot).findBuffPotion(activePotionEffects, startSlot, endSlot, inventoryContainer, random, false) // TODO: findHealPotion() support
 
 	private fun findBestFood(thePlayer: IEntityPlayerSP, startSlot: Int = 36, endSlot: Int = 45): Int
 	{

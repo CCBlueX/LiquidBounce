@@ -31,7 +31,7 @@ class FastUse : Module()
 
 	private val noMoveValue = BoolValue("NoMove", false)
 
-	private val ncpWaitTicksValue = IntegerValue("NCP-AtOnce-WaitTicks", 14, 0, 20)
+	private val ncpWaitTicksValue = IntegerValue("NCP-AtOnce-WaitTicks", 14, 0, 25)
 	private val ncpPacketsValue = IntegerValue("NCP-AtOnce-Packets", 20, 12, 100)
 	private val ncpConstantPacketsValue = IntegerValue("NCP-Constant-Packets", 1, 1, 10)
 	private val ncpTimerValue = FloatValue("NCP-Timer", 1.0f, 0.2f, 1.5f)
@@ -51,7 +51,7 @@ class FastUse : Module()
 		perform(mc.thePlayer ?: return, mc.timer)
 	}
 
-	fun perform(thePlayer: IEntityPlayerSP, timer: ITimer, customItem: IItem? = null): Int
+	fun perform(thePlayer: IEntityPlayerSP, timer: ITimer, customItem: IItem? = null, usingItemTicks: Int? = null): Int
 	{
 		if (!state) return 32
 
@@ -69,6 +69,7 @@ class FastUse : Module()
 
 		val provider = classProvider
 		val itemInUse = customItem ?: thePlayer.itemInUse?.item
+		val itemInUseDuration = usingItemTicks ?: thePlayer.itemInUseDuration
 
 		if (provider.isItemFood(itemInUse) || provider.isItemBucketMilk(itemInUse) || provider.isItemPotion(itemInUse))
 		{
@@ -100,7 +101,7 @@ class FastUse : Module()
 					{
 						"atonce" ->
 						{
-							if (thePlayer.itemInUseDuration > ncpWaitTicksValue.get())
+							if (itemInUseDuration > ncpWaitTicksValue.get())
 							{
 								repeat(ncpPacketsValue.get()) {
 									netHandler.addToSendQueue(provider.createCPacketPlayer(onGround))
@@ -109,7 +110,7 @@ class FastUse : Module()
 								mc.playerController.onStoppedUsingItem(thePlayer)
 							}
 
-							return ncpWaitTicksValue.get() + 1
+							return ncpWaitTicksValue.get() + 2
 						}
 
 						"constant" ->
@@ -128,7 +129,7 @@ class FastUse : Module()
 					timer.timerSpeed = aacTimerValue.get()
 					usedTimer = true
 
-					return ceil(32.0F / aacTimerValue.get()).toInt()
+					return 32
 				}
 
 				"custom" ->
@@ -147,7 +148,7 @@ class FastUse : Module()
 						msTimer.reset()
 					}
 
-					return ceil(32.0F / customTimer.get() / ((customSpeedValue.get().toFloat() + 1) * (1600.0F * (delayValue.get().toFloat() / 1600.0F)))).coerceAtMost(32.0F).toInt()
+					return ceil(32.0F / ((customSpeedValue.get().toFloat() + 1) * (1600.0F * (delayValue.get().toFloat() / 1600.0F)))).coerceAtMost(32.0F).toInt()
 				}
 			}
 		}
