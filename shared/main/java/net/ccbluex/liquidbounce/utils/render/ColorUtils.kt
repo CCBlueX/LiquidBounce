@@ -223,7 +223,7 @@ object ColorUtils : MinecraftInstance()
 	fun getHealthColor(health: Float, maxHealth: Float): Color = blendColors(floatArrayOf(0f, 0.5f, 1f), arrayOf(Color.RED, Color.YELLOW, Color.GREEN), health / maxHealth).brighter()
 
 	@JvmStatic
-	fun applyAlphaChannel(rgb: Int, newAlpha: Int): Int = newAlpha and 0xFF shl 24 or 0x00FFFFFF and rgb
+	fun applyAlphaChannel(rgb: Int, newAlpha: Int): Int = newAlpha and 0xFF shl 24 or 0x00FFFFFF and (rgb or -16777216 /* 0xFF000000 */)
 
 	@JvmStatic
 	fun applyAlphaChannel(color: Color, newAlpha: Int): Color = Color(applyAlphaChannel(color.rgb, newAlpha), true)

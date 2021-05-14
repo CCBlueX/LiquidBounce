@@ -19,6 +19,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.*
 import kotlin.math.min
 
+// FIXME: Broken ScoreboardElement
 /**
  * CustomHUD scoreboard
  *
@@ -99,10 +100,10 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F, sid
 
 		val func = functions
 
-		scoreCollection.map { score ->
+		maxWidth = maxWidth.coerceAtLeast(scoreCollection.map { score ->
 			val playerName = score.playerName
-			"${func.scoreboardFormatPlayerName(scoreboard.getPlayersTeam(playerName), playerName)}: ${WEnumChatFormatting.RED}${score.scorePoints}"
-		}.forEach { maxWidth = maxWidth.coerceAtLeast(fontRenderer.getStringWidth(it)) }
+			fontRenderer.getStringWidth("${func.scoreboardFormatPlayerName(scoreboard.getPlayersTeam(playerName), playerName)}: ${WEnumChatFormatting.RED}${score.scorePoints}")
+		}.min() ?: -1)
 
 		val maxHeight = scoreCollectionSize * fontHeight
 		val backgroundXPos = -maxWidth - 3 - if (rectValue.get()) 3 else 0
@@ -130,7 +131,7 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F, sid
 
 				RenderUtils.resetColor()
 
-				fontRenderer.drawString(displayName, (backgroundXPos + (maxWidth shr 1) - (fontRenderer.getStringWidth(displayName) shr 1)).toFloat(), (height - fontHeight), textColor, shadowValue.get())
+				fontRenderer.drawString(displayName, (backgroundXPos + (maxWidth shr 1) - fontRenderer.getStringWidth(displayName) * 0.5F), (height - fontHeight), textColor, shadowValue.get())
 			}
 
 			if (rectValue.get())
