@@ -11,9 +11,7 @@ import net.ccbluex.liquidbounce.api.enums.BlockType
 import net.ccbluex.liquidbounce.api.enums.EnumFacingType
 import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
-import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketEntityAction
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketHeldItemChange
 import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.wrapAngleTo180_float
@@ -96,9 +94,10 @@ class Scaffold : Module() {
     private val keepLengthValue = IntegerValue("KeepRotationLength", 0, 0, 20)
 
     // XZ/Y range
+    private val searchMode = ListValue("XYZSearch", arrayOf("Auto", "AutoCenter", "Manual"), "AutoCenter")
     private val xzRangeValue = FloatValue("xzRange", 0.8f, 0f, 1f)
-    private val yRangeValue = FloatValue("yRange", 0.8f, 0f, 1f)
-    private val minDiffValue = FloatValue("MinDiff", 0.0f, 0.0f, 0.2f)
+    private var yRangeValue = FloatValue("yRange", 0.8f, 0f, 1f)
+    private val minDistValue = FloatValue("MinDist", 0.0f, 0.0f, 0.2f)
 
     // Search Accuracy
     private val searchAccuracyValue: IntegerValue = object : IntegerValue("SearchAccuracy", 8, 1, 16) {
@@ -305,10 +304,9 @@ class Scaffold : Module() {
     @EventTarget
     fun onPacket(event: PacketEvent) {
         if (mc.thePlayer == null) return
-        val packet: IPacket = event.packet
+        val packet = event.packet
         if (classProvider.isCPacketHeldItemChange(packet)) {
-            val packetHeldItemChange: ICPacketHeldItemChange = packet.asCPacketHeldItemChange()
-            slot = packetHeldItemChange.slotId
+            slot = packet.asCPacketHeldItemChange().slotId
         }
     }
 
@@ -630,7 +628,7 @@ class Scaffold : Module() {
         val ySSV = calcStepSize(yRV.toFloat())
         val eyesPos = WVec3(
             mc.thePlayer!!.posX,
-            mc.thePlayer!!.posY + mc.thePlayer!!.eyeHeight,
+            mc.thePlayer!!.entityBoundingBox.minY + mc.thePlayer!!.eyeHeight,
             mc.thePlayer!!.posZ
         )
         var placeRotation: PlaceRotation? = null
@@ -639,16 +637,22 @@ class Scaffold : Module() {
             val neighbor = blockPosition.offset(side)
             if (!canBeClicked(neighbor)) continue
             val dirVec = WVec3(side.directionVec)
-            var xSearch = 0.5 - xzRV / 2
-            while (xSearch <= 0.5 + xzRV / 2) {
-                var ySearch = 0.5 - yRV / 2
-                while (ySearch <= 0.5 + yRV / 2) {
-                    var zSearch = 0.5 - xzRV / 2
-                    while (zSearch <= 0.5 + xzRV / 2) {
-                        val posVec = WVec3(blockPosition).addVector(xSearch, ySearch, zSearch)
+            val auto = searchMode.get().equals("Auto", true)
+            val center = searchMode.get().equals("AutoCenter", true)
+            var xSearch = if (auto) 0.1 else 0.5 - xzRV / 2
+            while (xSearch <= if (auto) 0.9 else 0.5 + xzRV / 2) {
+                var ySearch = if (auto) 0.1 else 0.5 - yRV / 2
+                while (ySearch <= if (auto) 0.9 else 0.5 + yRV / 2) {
+                    var zSearch = if (auto) 0.1 else 0.5 - xzRV / 2
+                    while (zSearch <= if (auto) 0.9 else 0.5 + xzRV / 2) {
+                        val posVec = WVec3(blockPosition).addVector(
+                            if (center) 0.5 else xSearch,
+                            if (center) 0.5 else ySearch,
+                            if (center) 0.5 else zSearch
+                        )
                         val distanceSqPosVec = eyesPos.squareDistanceTo(posVec)
                         val hitVec = posVec.add(WVec3(dirVec.xCoord * 0.5, dirVec.yCoord * 0.5, dirVec.zCoord * 0.5))
-                        if (checks && (eyesPos.squareDistanceTo(hitVec) > 18.0625 || distanceSqPosVec > eyesPos.squareDistanceTo(
+                        if (checks && (eyesPos.squareDistanceTo(hitVec) > 18.0 || distanceSqPosVec > eyesPos.squareDistanceTo(
                                 posVec.add(dirVec)
                             ) || mc.theWorld!!.rayTraceBlocks(
                                 eyesPos, hitVec,
@@ -657,7 +661,7 @@ class Scaffold : Module() {
                                 returnLastUncollidableBlock = false
                             ) != null)
                         ) {
-                            zSearch += xzSSV
+                            zSearch += if (auto) 0.1 else xzSSV
                             continue
                         }
 
@@ -666,10 +670,10 @@ class Scaffold : Module() {
                         val diffY = hitVec.yCoord - eyesPos.yCoord
                         val diffZ = hitVec.zCoord - eyesPos.zCoord
                         val diffXZ = sqrt(diffX * diffX + diffZ * diffZ)
-                        if ((side.isNorth() || side.isEast() || side.isSouth() || side.isWest()) && minDiffValue.get() > 0) {
+                        if ((side.isNorth() || side.isEast() || side.isSouth() || side.isWest()) && minDistValue.get() > 0) {
                             val diff: Double = abs(if (side.isNorth() || side.isSouth()) diffZ else diffX)
-                            if (diff < minDiffValue.get() || diff > 0.3f) {
-                                zSearch += xzSSV
+                            if (diff < minDistValue.get() || diff > 0.3f) {
+                                zSearch += if (auto) 0.1 else xzSSV
                                 continue
                             }
                         }
@@ -690,7 +694,7 @@ class Scaffold : Module() {
                             returnLastUncollidableBlock = true
                         )
                         if (obj!!.typeOfHit != IMovingObjectPosition.WMovingObjectType.BLOCK || obj.blockPos!! != neighbor) {
-                            zSearch += xzSSV
+                            zSearch += if (auto) 0.1 else xzSSV
                             continue
                         }
                         if (placeRotation == null || RotationUtils.getRotationDifference(rotation) < RotationUtils.getRotationDifference(
@@ -700,11 +704,11 @@ class Scaffold : Module() {
                             placeRotation = PlaceRotation(PlaceInfo(neighbor, side.opposite, hitVec), rotation)
                         }
 
-                        zSearch += xzSSV
+                        zSearch += if (auto) 0.1 else xzSSV
                     }
-                    ySearch += ySSV
+                    ySearch += if (auto) 0.1 else ySSV
                 }
-                xSearch += xzSSV
+                xSearch += if (auto) 0.1 else xzSSV
             }
         }
         if (placeRotation == null) return false
