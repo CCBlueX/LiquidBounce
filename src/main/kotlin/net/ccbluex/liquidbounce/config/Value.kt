@@ -191,9 +191,9 @@ class RangedValue<T : Any>(
 
 class ChooseListValue<T : NamedChoice>(
     name: String,
-    selected: T,
+    value: T,
     @Exclude val choices: Array<T>
-) : Value<T>(name, selected, ValueType.CHOICE) {
+) : Value<T>(name, value, ValueType.CHOOSE) {
 
     override fun deserializeFrom(gson: Gson, element: JsonElement) {
         val name = element.asString
@@ -220,7 +220,7 @@ interface NamedChoice {
 
 enum class ValueType {
     BOOLEAN, FLOAT, FLOAT_RANGE, INT, INT_RANGE, TEXT, TEXT_ARRAY, CURVE, COLOR, BLOCK, BLOCKS, ITEM,
-    ITEMS, CHOICE, INVALID, CONFIGURABLE, TOGGLEABLE
+    ITEMS, CHOICE, CHOOSE, INVALID, CONFIGURABLE, TOGGLEABLE
 }
 
 enum class ListValueType(val type: Class<*>?) {
