@@ -76,7 +76,7 @@ class BugUp : Module()
 
 		val provider = classProvider
 
-		if (thePlayer.onGround && !provider.isBlockAir(BlockUtils.getBlock(theWorld, WBlockPos(posX, posY - 1.0, posZ))))
+		if (thePlayer.onGround && !provider.isBlockAir(BlockUtils.getBlock(theWorld, WBlockPos(posX, posY, posZ).down())))
 		{
 			prevX = thePlayer.prevPosX
 			prevY = thePlayer.prevPosY

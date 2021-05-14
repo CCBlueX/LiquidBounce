@@ -397,9 +397,9 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 
 		return if (originalTagString.isNotBlank()) when (tagTypeValue.get().toLowerCase())
 		{
-			"square-bracket" -> "[$originalTagString]"
-			"round-bracket" -> "($originalTagString)"
-			else -> originalTagString
+			"square-bracket" -> "[$originalTagString\u00A7r]"
+			"round-bracket" -> "($originalTagString\u00A7r)"
+			else -> "$originalTagString\u00A7r"
 		}
 		else originalTagString
 	}

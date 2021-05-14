@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.FontValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import org.lwjgl.input.Keyboard
-import org.lwjgl.opengl.GL11
 
 @ElementInfo(name = "TabGUI")
 class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
@@ -295,11 +294,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 
 		fun drawTab(x: Float, y: Float, color: Int, backgroundColor: Int, borderColor: Int, borderStrength: Float, upperCase: Boolean, fontRenderer: IFontRenderer, borderRainbow: Boolean, rectRainbow: Boolean)
 		{
-			var maxWidth = 0
-
-			modules.filter { fontRenderer.getStringWidth(if (upperCase) it.name.toUpperCase() else it.name) + 4 > maxWidth }.forEach { maxWidth = (fontRenderer.getStringWidth(if (upperCase) it.name.toUpperCase() else it.name) + 7F).toInt() }
-
-			menuWidth = maxWidth
+			menuWidth = modules.map { fontRenderer.getStringWidth(if (upperCase) it.name.toUpperCase() else it.name) }.max()?.plus(7) ?: 10
 
 			val tabHeight = tabHeight.get()
 			val menuHeight = modules.size * tabHeight

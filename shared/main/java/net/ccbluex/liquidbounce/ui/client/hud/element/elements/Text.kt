@@ -239,13 +239,33 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 		val brightness = brightnessValue.get()
 		val shadow = shadowValue.get()
 
-		val startX = -2f
-		val endX = fontRenderer.getStringWidth(displayText) + 2F
-		val startY = -2f
-		val endY = fontRenderer.fontHeight.toFloat()
+		val horizontalSide = side.horizontal
+
+		val textWidth = fontRenderer.getStringWidth(displayText)
+
+		val borderExpand = 2F
+		val rectWidth = 3F
+
+		val (borderXStart, borderXEnd) = when (horizontalSide)
+		{
+			Side.Horizontal.LEFT -> -borderExpand to textWidth + borderExpand
+			Side.Horizontal.MIDDLE -> -borderExpand - textWidth * 0.5F to borderExpand + textWidth * 0.5F
+			Side.Horizontal.RIGHT -> -borderExpand - textWidth to borderExpand
+		}
+
+		val borderYStart = -borderExpand
+		val borderYEnd = fontRenderer.fontHeight.toFloat() + borderExpand
+
+		val leftRect = rectMode.equals("Left", ignoreCase = true)
+		val rightRect = rectMode.equals("Right", ignoreCase = true)
+
+		val backgroundXStart = borderXStart + if (!leftRect) 0f else rectWidth
+		val backgroundXEnd = borderXEnd + if (rightRect) 0f else rectWidth
+
+		val textX = (if (rightRect) 0f else if (leftRect) rectWidth else rectWidth * 0.5F) + (borderXStart + borderExpand)
 
 		val backgroundRainbowShader = backgroundColorMode.equals("RainbowShader", ignoreCase = true)
-		val rectRainbowShader = rectColorMode.equals("RainbowShader", true)
+		val rectRainbowShader = rectColorMode.equals("RainbowShader", ignoreCase = true)
 		val textRainbowShader = colorMode.equals("RainbowShader", ignoreCase = true)
 
 		val backgroundColor = when
@@ -271,39 +291,29 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 
 		// Render Background
 		RainbowShader.begin(backgroundRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-			RenderUtils.drawRect(startX + if (!rectMode.equals("left", true)) 0f else 3F, startY, endX + if (rectMode.equals("right", true)) 0f else 3f, endY, backgroundColor)
+			RenderUtils.drawRect(backgroundXStart, borderYStart, backgroundXEnd, borderYEnd, backgroundColor)
 		}
 
 		// Render Rect
-		if (!rectMode.equals("none", true)) RainbowShader.begin(rectRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-			when
-			{
-				rectMode.equals("left", true) -> RenderUtils.drawRect(-2f, startY, 1f, endY, rectColor)
-				rectMode.equals("right", true) -> RenderUtils.drawRect(endX, startY, endX + 3, endY, rectColor)
-			}
+		if (leftRect || rightRect) RainbowShader.begin(rectRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
+			if (leftRect) RenderUtils.drawRect(backgroundXStart - rectWidth, borderYStart, backgroundXStart, borderYEnd, rectColor) else RenderUtils.drawRect(borderXEnd, borderYStart, borderXEnd + rectWidth, borderYEnd, rectColor)
 		}
-
-		val provider = classProvider
 
 		// Render Text
 		RainbowFontShader.begin(textRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-			fontRenderer.drawString(displayText, if (rectMode.equals("right", true)) 0f else if (rectMode.equals("left", true)) 3f else 1.5f, 0F, textColor, shadow)
+			fontRenderer.drawString(displayText, textX, 0F, textColor, shadow)
 
-			if (editMode && provider.isGuiHudDesigner(mc.currentScreen) && editTicks <= 40)
-			{
-				val xPos = if (rectMode.equals("right", true)) 0f else if (rectMode.equals("left", true)) 3f else 1.5f + fontRenderer.getStringWidth(displayText) + 2F
-				fontRenderer.drawString("_", xPos, 0F, textColor, shadow)
-			}
+			if (editMode && classProvider.isGuiHudDesigner(mc.currentScreen) && editTicks <= 40) fontRenderer.drawString("_", if (rectMode.equals("right", true)) 0f else if (rectMode.equals("left", true)) 3f else 1.5f + textWidth + 2F, 0F, textColor, shadow)
 		}
 
 		// Disable edit mode when current gui is not HUD Designer
-		if (editMode && !provider.isGuiHudDesigner(mc.currentScreen))
+		if (editMode && !classProvider.isGuiHudDesigner(mc.currentScreen))
 		{
 			editMode = false
 			updateElement()
 		}
 
-		return Border(-2F, -2F, endX + 3F, fontRenderer.fontHeight.toFloat())
+		return Border(backgroundXStart - rectWidth, -borderExpand, backgroundXEnd + rectWidth, fontRenderer.fontHeight.toFloat() + borderExpand)
 	}
 
 	override fun updateElement()

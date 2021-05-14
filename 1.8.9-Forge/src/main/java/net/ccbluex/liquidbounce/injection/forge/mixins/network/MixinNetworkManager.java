@@ -11,6 +11,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.PacketEvent;
+import net.ccbluex.liquidbounce.features.module.modules.misc.LagDetector;
 import net.ccbluex.liquidbounce.injection.backend.PacketImplKt;
 import net.ccbluex.liquidbounce.injection.implementations.IMixinNetworkManager;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
@@ -78,6 +79,8 @@ public abstract class MixinNetworkManager implements IMixinNetworkManager
 		{
 			final PacketEvent event = new PacketEvent(PacketImplKt.wrap(packet));
 			LiquidBounce.eventManager.callEvent(event);
+
+			LagDetector.Companion.onPacketReceived();
 
 			if (event.isCancelled())
 				callback.cancel();
