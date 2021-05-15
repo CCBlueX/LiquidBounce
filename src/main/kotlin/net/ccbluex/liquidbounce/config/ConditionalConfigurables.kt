@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.config
 import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.script.RequiredByScript
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayNetworkHandler
@@ -83,6 +84,11 @@ open class ChoiceConfigurable(
 
     fun setFromValueName(name: String) {
         this.activeChoice = choices.first { it.choiceName == name }
+    }
+
+    @RequiredByScript
+    fun getChoicesStrings(): Array<String> {
+        return this.choices.map { it.name }.toTypedArray()
     }
 
 }
