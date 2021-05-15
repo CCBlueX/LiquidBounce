@@ -58,7 +58,7 @@ object CommandValue {
                 val valueName = args[1] as String
                 val valueString = args[2] as String
 
-                val value = module.getContainedSettingsRecursively()
+                val value = module.getContainedValuesRecursively()
                     .firstOrNull { it.name.equals(valueName, true) }
                     ?: throw CommandException(command.result("valueNotFound", valueName))
 
