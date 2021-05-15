@@ -30,7 +30,7 @@ import net.minecraft.network.packet.c2s.play.*
 import net.minecraft.util.math.Vec3d
 import java.util.concurrent.LinkedBlockingQueue
 
-object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
+object ModuleBadWifi : Module("BadWIFI", Category.PLAYER) {
 
     val maxPacketsInBuffer by intRange("MaxPacketsInBuffer", 20..30, 5..100)
     val enemyRange by float("EnemyRange", 5.0f, 1.0f..10.0f)
