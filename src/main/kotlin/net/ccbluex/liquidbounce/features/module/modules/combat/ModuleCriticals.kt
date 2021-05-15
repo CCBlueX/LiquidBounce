@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.NoneChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.AttackEvent
@@ -49,14 +50,17 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
      */
     private object ActiveOption : ToggleableConfigurable(this, "Active", true) {
 
-        val modes = choices("Mode", "Packet") {
-            NoneChoice(it)
-            PacketCrit
-            JumpCrit
+        val modes = choices("Mode", PacketCrit) {
+            arrayOf(
+                NoneChoice(it), PacketCrit, JumpCrit
+            )
         }
     }
 
-    private object PacketCrit : Choice("Packet", ActiveOption.modes) {
+    private object PacketCrit : Choice("Packet") {
+
+        override val parent: ChoiceConfigurable
+            get() = ActiveOption.modes
 
         val attackHandler = handler<AttackEvent> { event ->
             if (!ActiveOption.enabled || event.enemy !is LivingEntity) {
@@ -69,10 +73,12 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
             network.sendPacket(PlayerMoveC2SPacket.PositionOnly(x, y + 0.1100013579, z, false))
             network.sendPacket(PlayerMoveC2SPacket.PositionOnly(x, y + 0.0000013579, z, false))
         }
-
     }
 
-    private object JumpCrit : Choice("Jump", ActiveOption.modes) {
+    private object JumpCrit : Choice("Jump") {
+
+        override val parent: ChoiceConfigurable
+            get() = ActiveOption.modes
 
         // There are diffrent possible jump heights to crit enemy
         //   Hop: 0.1 (like in Wurst-Client)
@@ -191,7 +197,8 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
             return false
         }
 
-        val nextPossibleCrit = (player.attackCooldownProgressPerTick - 0.5f - player.lastAttackedTicks.toFloat()).coerceAtLeast(0.0f)
+        val nextPossibleCrit =
+            (player.attackCooldownProgressPerTick - 0.5f - player.lastAttackedTicks.toFloat()).coerceAtLeast(0.0f)
 
         val gravity = 0.08
 

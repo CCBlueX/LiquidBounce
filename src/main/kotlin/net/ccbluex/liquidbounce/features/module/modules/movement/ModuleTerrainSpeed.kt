@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -42,16 +43,16 @@ object ModuleTerrainSpeed : Module("TerrainSpeed", Category.MOVEMENT) {
      */
     private object FastClimb : ToggleableConfigurable(this, "FastClimb", true) {
 
-        private val modes = choices("Mode", "Motion") {
-            Motion
-            Clip
-        }
+        private val modes = choices("Mode", Motion, arrayOf(Motion, Clip))
 
         /**
          * Not server or anti cheat-specific mode.
          * A basic motion fast climb, which should be configurable enough to bypass most anti-cheats.
          */
-        private object Motion : Choice("Motion", modes) {
+        private object Motion : Choice("Motion") {
+
+            override val parent: ChoiceConfigurable
+                get() = modes
 
             private val motion by float("Motion", 0.2872F, 0.1f..0.5f)
 
@@ -66,7 +67,10 @@ object ModuleTerrainSpeed : Module("TerrainSpeed", Category.MOVEMENT) {
         /**
          * A very vanilla-like fast climb. Not working on anti-cheats.
          */
-        private object Clip : Choice("Clip", modes) {
+        private object Clip : Choice("Clip") {
+
+            override val parent: ChoiceConfigurable
+                get() = modes
 
             val moveHandler = handler<PlayerMoveEvent> {
 

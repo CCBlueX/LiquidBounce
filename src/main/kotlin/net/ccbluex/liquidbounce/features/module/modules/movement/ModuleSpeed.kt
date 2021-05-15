@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -30,14 +31,18 @@ import net.ccbluex.liquidbounce.utils.entity.upwards
 
 object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
 
-    private val modes = choices("Mode", "YPort") {
-        SpeedYPort
-        LegitHop
-    }
+    private val modes = choices(
+        "Mode", SpeedYPort, arrayOf(
+            SpeedYPort, LegitHop
+        )
+    )
 
     private val optimizeForCriticals by boolean("OptimizeForCriticals", true)
 
-    private object SpeedYPort : Choice("YPort", modes) {
+    private object SpeedYPort : Choice("YPort") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
 
         val repeatable = repeatable {
             if (player.isOnGround && player.moving) {
@@ -50,7 +55,10 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
 
     }
 
-    private object LegitHop : Choice("LegitHop", modes) {
+    private object LegitHop : Choice("LegitHop") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
 
         val repeatable = repeatable {
             if (optimizeForCriticals && ModuleCriticals.shouldWaitForJump(0.42f)) {

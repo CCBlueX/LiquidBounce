@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.EngineRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -45,11 +46,12 @@ object ModuleItemESP : Module("ItemESP", Category.RENDER) {
     private val color by color("Color", Color4b(255, 179, 72, 255))
     private val colorRainbow by boolean("Rainbow", false)
 
-    private val modes = choices("Mode", "Box") {
-        BoxMode
-    }
+    private val modes = choices("Mode", BoxMode, arrayOf(BoxMode))
 
-    private object BoxMode : Choice("Box", modes) {
+    private object BoxMode : Choice("Box") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
 
         val box = drawBoxNew(Box(-0.125, 0.125, -0.125, 0.125, 0.375, 0.125), Color4b.WHITE)
 

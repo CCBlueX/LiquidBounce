@@ -102,23 +102,27 @@ open class Value<T : Any>(
         val currValue = this.value
 
         set(
-            if (currValue is List<*>) {
-                @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(
-                    mutableListOf()
-                ) { gson.fromJson(it, this.listType.type!!) } as T
-            } else if (currValue is Set<*>) {
-                @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(
-                    TreeSet()
-                ) { gson.fromJson(it, this.listType.type!!) } as T
-            } else {
-                gson.fromJson(element, currValue.javaClass)
+            when (currValue) {
+                is List<*>    -> {
+                    @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(
+                        mutableListOf()
+                    ) { gson.fromJson(it, this.listType.type!!) } as T
+                }
+                is Set<*> -> {
+                    @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(
+                        TreeSet()
+                    ) { gson.fromJson(it, this.listType.type!!) } as T
+                }
+                else  -> {
+                    gson.fromJson(element, currValue.javaClass)
+                }
             }
         )
     }
 
     open fun setByString(string: String) {
         if (this.value is Boolean) {
-            val newValue = when (string.toLowerCase(Locale.ROOT)) {
+            val newValue = when (string.lowercase(Locale.ROOT)) {
                 "true", "on" -> true
                 "false", "off" -> false
                 else -> throw IllegalArgumentException()

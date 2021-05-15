@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.EngineRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -40,9 +41,7 @@ import java.awt.Color
 object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
 //    private val modeValue = Choi("Mode", arrayOf("Box", "OtherBox", "Outline", "ShaderOutline", "ShaderGlow", "2D", "WireFrame"), "Outline")
 
-    private val modes = choices("Mode", "Box") {
-        Box
-    }
+    private val modes = choices("Mode", Box, arrayOf(Box))
 
     private val chestValue by boolean("Chest", true)
     private val enderChestValue by boolean("EnderChest", true)
@@ -51,7 +50,11 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
     private val hopperValue by boolean("Hopper", true)
     private val shulkerBoxValue by boolean("ShulkerBox", true)
 
-    private object Box : Choice("Box", modes) {
+    private object Box : Choice("Box",) {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
+
         private val outline by boolean("Outline", true)
 
         val box = drawBoxNew(Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0), Color4b.WHITE)

@@ -32,7 +32,7 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
             it.initConfigurable()
         }
     }
-    
+
     @get:JvmName("getContainedValues")
     val containedValues: Array<Value<*>>
         get() = this.value.toTypedArray()
@@ -120,7 +120,10 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
     protected fun <T : NamedChoice> enumChoice(name: String, default: T, choices: Array<T>) =
         ChooseListValue(name, default, choices).apply { this@Configurable.value.add(this) }
 
-    protected fun Module.choices(name: String, active: String, initialize: (ChoiceConfigurable) -> Unit) =
-        ChoiceConfigurable(this, name, active, initialize).apply { this@Configurable.value.add(this) }
+    protected fun Module.choices(name: String, active: Choice, choices: Array<Choice>) =
+        ChoiceConfigurable(this, name, active) { choices }.apply { this@Configurable.value.add(this) }
+
+    protected fun Module.choices(name: String, active: Choice, choicesCallback: (ChoiceConfigurable) -> Array<Choice>) =
+        ChoiceConfigurable(this, name, active, choicesCallback).apply { this@Configurable.value.add(this) }
 
 }

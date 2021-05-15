@@ -39,8 +39,10 @@ import java.io.File
 object ConfigSystem {
 
     // Config directory folder
-    val rootFolder = File(mc.runDirectory, LiquidBounce.CLIENT_NAME).apply {
-        // Check if there is already a config folder and if not create new folder (mkdirs not needed - .minecraft should always exist)
+    val rootFolder = File(
+        mc.runDirectory,
+        LiquidBounce.CLIENT_NAME
+    ).apply { // Check if there is already a config folder and if not create new folder (mkdirs not needed - .minecraft should always exist)
         if (!exists()) {
             mkdir()
         }
@@ -60,15 +62,13 @@ object ConfigSystem {
         .registerTypeAdapter(ChoiceConfigurable::class.javaObjectType, ChoiceConfigurableSerializer)
         .registerTypeHierarchyAdapter(NamedChoice::class.javaObjectType, EnumChoiceSerializer)
         .registerTypeAdapter(IntRange::class.javaObjectType, IntRangeSerializer)
-        .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer)
-        .create()
+        .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer).create()
 
     /**
      * Create a new root configurable
      */
     fun root(name: String, tree: MutableList<out Configurable> = mutableListOf()) {
-        @Suppress("UNCHECKED_CAST")
-        root(Configurable(name, tree as MutableList<Value<*>>))
+        @Suppress("UNCHECKED_CAST") root(Configurable(name, tree as MutableList<Value<*>>))
     }
 
     /**
@@ -83,8 +83,7 @@ object ConfigSystem {
      * All configurables should load now.
      */
     fun load() {
-        for (configurable in configurables) {
-            // Make a new .json file to save our root configurable
+        for (configurable in configurables) { // Make a new .json file to save our root configurable
             File(rootFolder, "${configurable.name}.json").runCatching {
                 if (!exists()) {
                     store()
@@ -111,9 +110,8 @@ object ConfigSystem {
                 throw IllegalStateException()
             }
 
-            val values = jsonObject.getAsJsonArray("value")
-                .map { it.asJsonObject }
-                .associateBy { it["name"].asString!! }
+            val values =
+                jsonObject.getAsJsonArray("value").map { it.asJsonObject }.associateBy { it["name"].asString!! }
 
             for (value in configurable.value) {
                 if (value is Configurable) {
@@ -121,18 +119,21 @@ object ConfigSystem {
 
                     runCatching {
                         if (value is ChoiceConfigurable) {
-                            val newActive = currentElement["active"].asString
 
-                            if (value.choices.any { it.name == newActive }) {
-                                value.active = newActive
-                            }
+                            runCatching {
+                                val newActive = currentElement["active"].asString
+
+                                value.setFromValueName(newActive)
+                            }.onFailure { it.printStackTrace() }
 
                             val choices = currentElement["choices"].asJsonObject
 
                             for (choice in value.choices) {
-                                val choiceElement = choices[choice.name]
+                                runCatching {
+                                    val choiceElement = choices[choice.name]
 
-                                deserializeConfigurable(choice, choiceElement)
+                                    deserializeConfigurable(choice, choiceElement)
+                                }.onFailure { it.printStackTrace() }
                             }
                         }
                     }.onFailure { it.printStackTrace() }
@@ -154,8 +155,7 @@ object ConfigSystem {
      * All configurables should store now.
      */
     fun store() {
-        for (configurable in configurables) {
-            // Make a new .json file to save our root configurable
+        for (configurable in configurables) { // Make a new .json file to save our root configurable
             File(rootFolder, "${configurable.name}.json").runCatching {
                 if (!exists()) {
                     createNewFile().let { logger.debug("Created new file (status: $it)") }

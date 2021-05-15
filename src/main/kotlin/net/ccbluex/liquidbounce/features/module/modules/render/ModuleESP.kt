@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.EngineRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.FriendManager
@@ -42,24 +43,29 @@ object ModuleESP : Module("ESP", Category.RENDER) {
     override val translationBaseKey: String
         get() = "liquidbounce.module.esp"
 
-    private val modes = choices("Mode", "Box") {
-        BoxMode
-    }
+    private val modes = choices("Mode", BoxMode, arrayOf(BoxMode))
 
-    private val colorMods = choices("ColorMode", "Static") {
-        ColorMode
-        RainbowMode
-    }
+    private val colorMods = choices("ColorMode", ColorMode, arrayOf(ColorMode, RainbowMode))
 
-    private object ColorMode : Choice("Static", modes) {
+    private object ColorMode : Choice("Static") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
+
         val color by color("Color", Color4b.WHITE)
     }
 
-    private object RainbowMode : Choice("Rainbow", modes)
+    private object RainbowMode : Choice("Rainbow") {
+        override val parent: ChoiceConfigurable
+            get() = modes
+    }
 
     val teamColor by boolean("TeamColor", true)
 
-    private object BoxMode : Choice("Box", modes) {
+    private object BoxMode : Choice("Box") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
 
         val renderHandler = handler<EngineRenderEvent> { event ->
             val base = if (RainbowMode.isActive) rainbow() else ColorMode.color

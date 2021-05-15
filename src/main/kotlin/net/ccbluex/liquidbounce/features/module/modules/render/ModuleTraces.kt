@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.EngineRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.FriendManager
@@ -38,32 +39,41 @@ import kotlin.math.sqrt
 
 object ModuleTraces : Module("Traces", Category.RENDER) {
 
-    private val modes = choices("ColorMode", "Distance") {
-        DistanceColor
-        StaticColor
-        RainbowColor
-    }
+    private val modes = choices(
+        "ColorMode", DistanceColor, arrayOf(
+            DistanceColor, StaticColor, RainbowColor
+        )
+    )
 
-    private object DistanceColor : Choice("Distance", modes) {
+    private object DistanceColor : Choice("Distance") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
 
         val useViewDistance by boolean("UseViewDistance", true)
         val customViewDistance by float("CustomViewDistance", 128.0F, 1.0F..512.0F)
     }
 
-    private object StaticColor : Choice("Static", modes) {
+    private object StaticColor : Choice("Static") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
 
         val color by color("Color", Color4b(0, 160, 255, 255))
     }
 
-    private object RainbowColor : Choice("Rainbow", modes)
+    private object RainbowColor : Choice("Rainbow") {
+        override val parent: ChoiceConfigurable
+            get() = modes
+    }
 
     val renderHandler = handler<EngineRenderEvent> { event ->
         val useDistanceColor = DistanceColor.isActive
 
         val baseColor = when {
             RainbowColor.isActive -> rainbow()
-            StaticColor.isActive -> StaticColor.color
-            else -> null
+            StaticColor.isActive  -> StaticColor.color
+            else                  -> null
         }
 
         val viewDistance =
@@ -89,9 +99,7 @@ object ModuleTraces : Module("Traces", Category.RENDER) {
             val color = if (useDistanceColor) {
                 Color4b(
                     Color.getHSBColor(
-                        (dist.coerceAtMost(viewDistance) / viewDistance).toFloat() * (120.0f / 360.0f),
-                        1.0f,
-                        1.0f
+                        (dist.coerceAtMost(viewDistance) / viewDistance).toFloat() * (120.0f / 360.0f), 1.0f, 1.0f
                     )
                 )
             } else if (entity is PlayerEntity && FriendManager.isFriend(entity)) {
@@ -114,7 +122,13 @@ object ModuleTraces : Module("Traces", Category.RENDER) {
             indexBuffer.index(v2)
         }
 
-        val renderTask = VertexFormatRenderTask(vertexFormat, PrimitiveType.Lines, ColoredPrimitiveShader, indexBuffer = indexBuffer, state = GlRenderState(lineWidth = 1.0f, lineSmooth = true))
+        val renderTask = VertexFormatRenderTask(
+            vertexFormat,
+            PrimitiveType.Lines,
+            ColoredPrimitiveShader,
+            indexBuffer = indexBuffer,
+            state = GlRenderState(lineWidth = 1.0f, lineSmooth = true)
+        )
 
         RenderEngine.enqueueForRendering(RenderEngine.CAMERA_VIEW_LAYER_WITHOUT_BOBBING, renderTask)
     }

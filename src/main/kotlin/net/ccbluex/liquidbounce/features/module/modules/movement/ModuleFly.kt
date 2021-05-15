@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
@@ -37,11 +38,7 @@ import net.minecraft.util.shape.VoxelShapes
  */
 object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
-    private val modes = choices("Mode", "Vanilla") {
-        Vanilla
-        Jetpack
-        Verus
-    }
+    private val modes = choices("Mode", Vanilla, arrayOf(Vanilla, Jetpack, Verus))
 
     private object Visuals : ToggleableConfigurable(this, "Visuals", true) {
 
@@ -56,7 +53,10 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
     }
 
-    private object Vanilla : Choice("Vanilla", modes) {
+    private object Vanilla : Choice("Vanilla") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
 
         val repeatable = repeatable {
             player.strafe(speed = 0.44)
@@ -69,7 +69,10 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
     }
 
-    private object Jetpack : Choice("Jetpack", modes) {
+    private object Jetpack : Choice("Jetpack") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
 
         val repeatable = repeatable {
             if (player.input.jumping) {
@@ -81,7 +84,11 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
     }
 
-    private object Verus : Choice("Verus", modes) {
+    private object Verus : Choice("Verus") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
+
         val packetHandler = handler<PacketEvent> { event ->
             if (event.packet is PlayerMoveC2SPacket) {
                 event.packet.onGround = true
