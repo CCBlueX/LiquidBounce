@@ -193,6 +193,7 @@ data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int) {
     }
 
     constructor(color: Color) : this(color.red, color.green, color.blue, color.alpha)
+    constructor(hex: String) : this(Color(hex.toInt(16)))
     constructor(r: Int, g: Int, b: Int) : this(r, g, b, 255)
 
     fun writeToBuffer(idx: Int, buffer: ByteBuffer) {
