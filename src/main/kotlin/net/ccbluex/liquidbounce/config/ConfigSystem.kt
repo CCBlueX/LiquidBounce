@@ -119,7 +119,6 @@ object ConfigSystem {
 
                     runCatching {
                         if (value is ChoiceConfigurable) {
-
                             runCatching {
                                 val newActive = currentElement["active"].asString
 

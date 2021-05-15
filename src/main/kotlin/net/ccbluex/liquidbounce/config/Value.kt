@@ -103,7 +103,7 @@ open class Value<T : Any>(
 
         set(
             when (currValue) {
-                is List<*>    -> {
+                is List<*> -> {
                     @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(
                         mutableListOf()
                     ) { gson.fromJson(it, this.listType.type!!) } as T
@@ -113,7 +113,7 @@ open class Value<T : Any>(
                         TreeSet()
                     ) { gson.fromJson(it, this.listType.type!!) } as T
                 }
-                else  -> {
+                else -> {
                     gson.fromJson(element, currValue.javaClass)
                 }
             }

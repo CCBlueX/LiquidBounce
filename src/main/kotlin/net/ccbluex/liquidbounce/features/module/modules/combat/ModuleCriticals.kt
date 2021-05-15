@@ -52,7 +52,9 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
         val modes = choices("Mode", PacketCrit) {
             arrayOf(
-                NoneChoice(it), PacketCrit, JumpCrit
+                NoneChoice(it),
+                PacketCrit,
+                JumpCrit
             )
         }
     }

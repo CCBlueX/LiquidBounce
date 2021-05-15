@@ -32,8 +32,11 @@ import net.ccbluex.liquidbounce.utils.entity.upwards
 object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
 
     private val modes = choices(
-        "Mode", SpeedYPort, arrayOf(
-            SpeedYPort, LegitHop
+        "Mode",
+        SpeedYPort,
+        arrayOf(
+            SpeedYPort,
+            LegitHop
         )
     )
 
