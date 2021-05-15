@@ -33,36 +33,9 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
         }
     }
 
-    fun getContainedSettingsRecursively(): Array<Value<*>> {
-        val output = mutableListOf<Value<*>>()
-
-        this.getContainedSettingsRecursivelyInternal(output)
-
-        return output.toTypedArray()
-    }
-
-    fun getContainedSettingsRecursivelyInternal(output: MutableList<Value<*>>) {
-        for (currentValue in this.value) {
-            if (currentValue is ToggleableConfigurable) {
-                output.add(currentValue)
-                output.addAll(currentValue.value.filter { it.name.equals("Enabled", true) })
-            } else {
-                if (currentValue is Configurable) {
-                    currentValue.getContainedSettingsRecursivelyInternal(output)
-                } else {
-                    output.add(currentValue)
-                }
-            }
-
-            if (currentValue is ChoiceConfigurable) {
-                output.add(currentValue)
-
-                currentValue.choices.filter { it.isActive }.forEach {
-                    it.getContainedSettingsRecursivelyInternal(output)
-                }
-            }
-        }
-    }
+    @get:JvmName("getContainedValues")
+    val containedValues: Array<Value<*>>
+        get() = this.value.toTypedArray()
 
     // Common value types
 
