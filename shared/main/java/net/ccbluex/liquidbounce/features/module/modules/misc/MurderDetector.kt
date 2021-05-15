@@ -22,7 +22,7 @@ import java.awt.Color
 @ModuleInfo(name = "MurderDetector", description = "Detects murder in murder mystery.", category = ModuleCategory.MISC)
 class MurderDetector : Module()
 {
-	val murders = mutableListOf<IEntityPlayer>()
+	val murders = mutableSetOf<IEntityPlayer>()
 
 	override fun onEnable()
 	{
@@ -51,7 +51,7 @@ class MurderDetector : Module()
 	}
 
 	override val tag: String?
-		get() = if (murders.isEmpty()) null else murders[0].name
+		get() = murders.firstOrNull()?.name
 
 	companion object
 	{

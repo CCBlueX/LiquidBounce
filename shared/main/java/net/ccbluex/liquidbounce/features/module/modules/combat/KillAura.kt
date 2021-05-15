@@ -1010,11 +1010,11 @@ class KillAura : Module()
 	private fun updateHitable(theWorld: IWorldClient, thePlayer: IEntityPlayerSP)
 	{
 		val currentTarget = currentTarget
-		val reach = min(maxAttackRange.toDouble(), thePlayer.getDistanceToEntityBox(target ?: return)) + 1
+		val reach = min(maxAttackRange.toDouble(), thePlayer.getDistanceToEntityBox(target ?: return) + 1)
 
 		if (!rotationsValue.get() || maxTurnSpeedValue.get() <= 0F || targetModeValue.get().equals("Multi", ignoreCase = true)) // Disable hitable check if turn speed is zero
 		{
-			hitable = if (currentTarget != null) thePlayer.getDistanceToEntityBox(currentTarget) <= (reach - 1) else false
+			hitable = if (currentTarget != null) thePlayer.getDistanceToEntityBox(currentTarget) <= reach else false
 			return
 		}
 
@@ -1026,7 +1026,7 @@ class KillAura : Module()
 		{
 			val provider = classProvider
 
-			val raycastedEntity = RaycastUtils.raycastEntity(theWorld, thePlayer, reach, fakeYaw, fakePitch) { entity -> entity != null && (!livingRaycast || (provider.isEntityLivingBase(entity) && !provider.isEntityArmorStand(entity))) && (EntityUtils.isEnemy(entity, aac) || raycastIgnored || aac && theWorld.getEntitiesWithinAABBExcludingEntity(entity, entity.entityBoundingBox).isNotEmpty()) }
+			val raycastedEntity = RaycastUtils.raycastEntity(theWorld, thePlayer, reach + 1.0, fakeYaw, fakePitch) { entity -> entity != null && (!livingRaycast || (provider.isEntityLivingBase(entity) && !provider.isEntityArmorStand(entity))) && (EntityUtils.isEnemy(entity, aac) || raycastIgnored || aac && theWorld.getEntitiesWithinAABBExcludingEntity(entity, entity.entityBoundingBox).isNotEmpty()) }
 
 			if (raycastedEntity != null && provider.isEntityLivingBase(raycastedEntity) && (LiquidBounce.moduleManager[NoFriends::class.java].state || !provider.isEntityPlayer(raycastedEntity) || !raycastedEntity.asEntityPlayer().isClientFriend())) this.currentTarget = raycastedEntity.asEntityLivingBase()
 
