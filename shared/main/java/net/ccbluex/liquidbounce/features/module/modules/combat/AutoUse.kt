@@ -47,7 +47,7 @@ class AutoUse : Module()
 	private val potionValue = BoolValue("Potion", true)
 
 	private val gappleValue = BoolValue("Gapple", true)
-	private val gappleHealthValue = FloatValue("Gapple-Health", 18F, 1F, 20F)
+	private val gappleHealthValue = FloatValue("Gapple-Health", 12F, 1F, 20F)
 
 	private val milkValue = BoolValue("Milk", true)
 
@@ -55,7 +55,7 @@ class AutoUse : Module()
 
 	private val offset = IntegerValue("Offset", 1, 0, 10)
 
-	private val maxDelayValue: IntegerValue = object : IntegerValue("MaxUseDelay", 100, 0, 5000)
+	private val maxDelayValue: IntegerValue = object : IntegerValue("MaxUseDelay", 2000, 0, 5000)
 	{
 		override fun onChanged(oldValue: Int, newValue: Int)
 		{
@@ -64,7 +64,7 @@ class AutoUse : Module()
 		}
 	}
 
-	private val minDelayValue: IntegerValue = object : IntegerValue("MinUseDelay", 100, 0, 5000)
+	private val minDelayValue: IntegerValue = object : IntegerValue("MinUseDelay", 2000, 0, 5000)
 	{
 		override fun onChanged(oldValue: Int, newValue: Int)
 		{
@@ -159,12 +159,14 @@ class AutoUse : Module()
 				{
 					val foodInHotbar = if (food && foodLevel <= foodLevelValue.get()) findBestFood(thePlayer) else -1
 					val potionInHotbar = if (potion) findPotion(activePotionEffects, inventoryContainer, random = random) else -1
-					val gappleInHotbar = if (gapple && health <= gappleHealth) InventoryUtils.findItem(inventoryContainer, 36, 45, provider.getItemEnum(ItemType.GOLDEN_APPLE), itemDelay, random) else -1
+					val gappleInHotbar = if (gapple && if (gappleHealth < 20) health <= gappleHealth else thePlayer.absorptionAmount <= 0) InventoryUtils.findItem(inventoryContainer, 36, 45, provider.getItemEnum(ItemType.GOLDEN_APPLE), itemDelay, random) else -1
 					val milkInHotbar = if (milk && activePotionEffects.map(IPotionEffect::potionID).any(Zoot.badEffectsArray::contains)) InventoryUtils.findItem(inventoryContainer, 36, 45, provider.getItemEnum(ItemType.MILK_BUCKET), itemDelay, random) else -1
 
-					if (foodInHotbar != -1 || potionInHotbar != -1 || gappleInHotbar != -1 || milkInHotbar != -1)
+					val slot = arrayOf(foodInHotbar, potionInHotbar, gappleInHotbar, milkInHotbar).firstOrNull { it != -1 }
+
+					if (slot != null)
 					{
-						slotToUse = arrayOf(foodInHotbar, potionInHotbar, gappleInHotbar, milkInHotbar).first { it != -1 }
+						slotToUse = slot
 
 						val slotIndex = slotToUse - 36
 
@@ -230,13 +232,13 @@ class AutoUse : Module()
 					// Move foods to hotbar
 					val foodInInventory = if (food && foodLevel <= foodLevelValue.get()) findBestFood(thePlayer, startSlot = 9, endSlot = 36) else -1
 					val potionInInventory = if (potion) findPotion(activePotionEffects, inventoryContainer, startSlot = 9, endSlot = 36, random = random) else -1
-					val gappleInInventory = if (gapple && health <= gappleHealth) InventoryUtils.findItem(inventoryContainer, 9, 36, provider.getItemEnum(ItemType.GOLDEN_APPLE), itemDelay, random) else -1
+					val gappleInInventory = if (gapple && if (gappleHealth < 20) health <= gappleHealth else thePlayer.absorptionAmount <= 0) InventoryUtils.findItem(inventoryContainer, 9, 36, provider.getItemEnum(ItemType.GOLDEN_APPLE), itemDelay, random) else -1
 					val milkInInventory = if (milk && activePotionEffects.map(IPotionEffect::potionID).any(Zoot.badEffectsArray::contains)) InventoryUtils.findItem(inventoryContainer, 9, 36, provider.getItemEnum(ItemType.MILK_BUCKET), itemDelay, random) else -1
 
-					if ((foodInInventory != -1 || potionInInventory != -1 || gappleInInventory != -1 || milkInInventory != -1) && InventoryUtils.hasSpaceHotbar(inventory))
-					{
-						var slot = arrayOf(foodInInventory, potionInInventory, gappleInInventory, milkInInventory).first { it != -1 }
+					var slot = arrayOf(foodInInventory, potionInInventory, gappleInInventory, milkInInventory).firstOrNull { it != -1 }
 
+					if (slot != null && InventoryUtils.hasSpaceHotbar(inventory))
+					{
 						// OpenInventory Check
 						if (openInventoryValue.get() && !isGuiInventory) return
 

@@ -86,11 +86,8 @@ class AutoClicker : Module()
 
 			if (Random.nextBoolean())
 			{
-				thePlayer.rotationPitch += if (Random.nextBoolean()) -RandomUtils.nextFloat(0F, 1F) else RandomUtils.nextFloat(0F, 1F)
-
 				// Make sure pitch is not going into unlegit values
-				if (thePlayer.rotationPitch > 90) thePlayer.rotationPitch = 90F
-				else if (thePlayer.rotationPitch < -90) thePlayer.rotationPitch = -90F
+				thePlayer.rotationPitch = (thePlayer.rotationPitch + if (Random.nextBoolean()) -RandomUtils.nextFloat(0F, 1F) else RandomUtils.nextFloat(0F, 1F)).coerceIn(-90F, 90F)
 			}
 		}
 	}

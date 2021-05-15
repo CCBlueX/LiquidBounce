@@ -151,7 +151,7 @@ class Target : Element()
 					healthBarYOffset = height - 6F /*104F*/
 				}
 
-				var textYOffset = 0
+				var textYOffset = 10
 
 				// Reset easing
 				val targetChanged = targetEntity != lastTarget
@@ -296,7 +296,7 @@ class Target : Element()
 				GL11.glScalef(scale, scale, scale)
 
 				// Draw CustomNameTag
-				textFont.drawString("(${targetEntity.customNameTag})", textXOffset * reverseScale, (nameFont.fontHeight + 5) * reverseScale, Color.gray.rgb)
+				if (targetEntity.customNameTag.isNotBlank()) textFont.drawString("(${targetEntity.customNameTag})", textXOffset * reverseScale, (nameFont.fontHeight + 5) * reverseScale, Color.gray.rgb)
 
 				// Health/Armor-related
 				textFont.drawString("Health: $healthText | Absorption: ${if (targetAbsorption > 0) "\u00A7e" else "\u00A77"}${decimalFormat1.format(targetAbsorption.toLong())}\u00A7r | Armor: $armorText", scaledXPos, scaledYPos, 0xffffff)

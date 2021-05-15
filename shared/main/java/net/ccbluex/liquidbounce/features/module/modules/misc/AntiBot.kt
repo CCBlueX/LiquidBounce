@@ -11,12 +11,15 @@ import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
+import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.extensions.getFullName
+import net.ccbluex.liquidbounce.utils.extensions.getPing
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -24,10 +27,9 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import java.awt.Color
-import kotlin.math.abs
-import kotlin.math.hypot
-import kotlin.math.sqrt
+import kotlin.math.*
 
+// TODO: Rename Option Names
 @ModuleInfo(name = "AntiBot", description = "Prevents KillAura from attacking AntiCheat bots.", category = ModuleCategory.MISC)
 object AntiBot : Module()
 {
@@ -121,11 +123,11 @@ object AntiBot : Module()
 	// Position Consistency
 	private val positionValue = BoolValue("PositionConsistency", true)
 
-	private val positionBackValue = FloatValue("PositionBackDistance", 3.0f, 2.0f, 10.0f)
-	private val positionYValue = FloatValue("PositionYDistance", 3.0f, 2.0f, 10.0f)
+	private val positionBackValue = FloatValue("PositionBackDistance", 3.0f, 1.0f, 10.0f)
+	private val positionYValue = FloatValue("PositionYDistance", 3.0f, 0.0f, 10.0f)
 
-	private val positionBack2Value = FloatValue("PositionBackDistance2", 6.0f, 2.0f, 10.0f)
-	private val positionY2Value = FloatValue("PositionYDistance2", 6.0f, 2.0f, 10.0f)
+	private val positionBack2Value = FloatValue("PositionBackDistance2", 6.0f, 1.0f, 10.0f)
+	private val positionY2Value = FloatValue("PositionYDistance2", 6.0f, 0.0f, 10.0f)
 
 	// Position Consistency - Delta
 	private val positionExpectationDeltaLimitValue = FloatValue("PositionConsistencyDeltaLimit", 1.0f, 0.1f, 3.0f)
@@ -170,6 +172,26 @@ object AntiBot : Module()
 	private val positionConsistencyLastDistanceDelta = mutableMapOf<Int, Double>()
 	private val positionConsistencyVL = mutableMapOf<Int, Int>()
 	private val teleportpacket_violation = mutableMapOf<Int, Int>()
+
+	private val locationList = mutableListOf<Location>()
+	private const val yawListSize = 20
+
+	@EventTarget
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
+	{
+		val thePlayer = mc.thePlayer ?: return
+
+		while (locationList.size >= yawListSize - 1) locationList.removeAt(0)
+
+		locationList.add(Location(WVec3(thePlayer.posX, thePlayer.posY, thePlayer.posZ), RotationUtils.serverRotation))
+	}
+
+	private fun getServersideLocation(ping: Int, offset: Int = 0): Location
+	{
+		val indexLimit = locationList.size - 1
+		val ticksBefore = ceil(ping / 50F).toInt() + offset
+		return locationList[(indexLimit - ticksBefore).coerceIn(0, indexLimit)]
+	}
 
 	@JvmStatic
 	fun checkTabList(targetName: String, displayName: Boolean, equals: Boolean, stripColors: Boolean): Boolean = mc.netHandler.playerInfoMap.map { networkPlayerInfo ->
@@ -340,15 +362,16 @@ object AntiBot : Module()
 				if (!packetEntity.onGround && !air.contains(entity.entityId)) air.add(entity.entityId)
 
 				// Invalid-Ground
+				val invalidGroundPrevVL = invalidGround.getOrDefault(entity.entityId, 0)
 				if (packetEntity.onGround)
 				{
-					if (notify && invalidGroundValue.get()) notification("InvalidGround", "Suspicious onGround flag: $displayName")
+					if (notify && invalidGroundValue.get() && (invalidGroundPrevVL + 5) % 10 == 0) notification("InvalidGround", "Suspicious onGround flag: $displayName")
 
-					if (entity.prevPosY != entity.posY) invalidGround[entity.entityId] = invalidGround.getOrDefault(entity.entityId, 0) + 1
+					if (entity.prevPosY != entity.posY) invalidGround[entity.entityId] = invalidGroundPrevVL + 2
 				}
 				else
 				{
-					val currentVL = invalidGround.getOrDefault(entity.entityId, 0) shr 1
+					val currentVL = invalidGroundPrevVL shr 1
 					if (currentVL <= 0) invalidGround.remove(entity.entityId)
 					else invalidGround[entity.entityId] = currentVL
 				}
@@ -383,18 +406,23 @@ object AntiBot : Module()
 					if (currentVL <= 0) this.vspeed.remove(entity.entityId) else this.vspeed[entity.entityId] = currentVL
 				}
 
-				val yaw = RotationUtils.serverRotation.yaw
-				val dir = WMathHelper.toRadians(yaw - 180.0F)
+				val serverLocation = getServersideLocation(thePlayer.getPing())
+				val lastServerLocation = getServersideLocation(thePlayer.getPing(), 1)
+				val lastServerLocation2 = getServersideLocation(thePlayer.getPing(), 2)
+
+				val serverYaw = serverLocation.rotation.yaw
+
+				val dir = WMathHelper.toRadians(serverYaw - 180.0F)
 
 				val func = functions
 
-				val expectedX = thePlayer.posX - func.sin(dir) * positionBackValue.get()
-				val expectedY = thePlayer.posY + positionYValue.get()
-				val expectedZ = thePlayer.posZ + func.cos(dir) * positionBackValue.get()
+				val expectedX = serverLocation.pos.xCoord - func.sin(dir) * positionBackValue.get()
+				val expectedY = serverLocation.pos.yCoord + positionYValue.get()
+				val expectedZ = serverLocation.pos.zCoord + func.cos(dir) * positionBackValue.get()
 
-				val expectedX2 = thePlayer.posX - func.sin(dir) * positionBack2Value.get()
-				val expectedY2 = thePlayer.posY + positionY2Value.get()
-				val expectedZ2 = thePlayer.posZ + func.cos(dir) * positionBack2Value.get()
+				val expectedX2 = serverLocation.pos.xCoord - func.sin(dir) * positionBack2Value.get()
+				val expectedY2 = serverLocation.pos.yCoord + positionY2Value.get()
+				val expectedZ2 = serverLocation.pos.zCoord + func.cos(dir) * positionBack2Value.get()
 
 				val positionExpectationDeltaLimit = positionExpectationDeltaLimitValue.get()
 				val positionExpectationDeltaCountSys = positionExpectationDeltaCountSysValue.get()
@@ -410,12 +438,14 @@ object AntiBot : Module()
 					val prevVL = positionVL.getOrDefault(entity.entityId, 0)
 					if (distance <= positionExpectationDeltaLimit)
 					{
-						if (notify && positionValue.get() && (prevVL + 2) % 10 == 0) notification("Position", "Suspicious position: $displayName (VL: $prevVL)")
-						positionVL[entity.entityId] = prevVL + 1
+						val vl = ceil(max(abs(lastServerLocation.rotation.yaw - serverYaw), abs(lastServerLocation2.rotation.yaw - serverYaw)) / 15F).toInt() + 1
+
+						if (notify && positionValue.get() && ((prevVL + 5) % 20 == 0) || (vl > 4)) notification("Position", "Suspicious position: $displayName (+$vl) (dist: $distance, VL: ${prevVL + vl})")
+						positionVL[entity.entityId] = prevVL + vl
 					}
 					else if (positionExpectationDeltaCountSys)
 					{
-						val currentVL = prevVL shr 1
+						val currentVL = prevVL - 1
 						if (currentVL <= 0) positionVL.remove(entity.entityId) else positionVL[entity.entityId] = currentVL
 					}
 
@@ -429,12 +459,12 @@ object AntiBot : Module()
 
 						if (consistency <= positionExpectationDeltaConsistencyDeltaLimit)
 						{
-							if (notify && positionExpectationDeltaConsistencyValue.get() && (prevConsistencyVL + 2) % 5 == 0) notification("Position-Consistency", "Suspicious position consistency: $displayName (posVL: $prevVL, posConsistencyVL: $prevConsistencyVL)")
-							positionConsistencyVL[entity.entityId] = prevConsistencyVL + 1
+							if (notify && positionExpectationDeltaConsistencyValue.get() && (prevVL + 5) % 10 == 0) notification("Position Consistency", "Suspicious position consistency: $displayName (delta: $consistency,posVL: $prevVL, posConsistencyVL: $prevConsistencyVL)")
+							positionConsistencyVL[entity.entityId] = prevConsistencyVL + 2
 						}
 						else if (positionExpectationDeltaConsistencyCountSys)
 						{
-							val currentVL = prevConsistencyVL shr 1
+							val currentVL = prevConsistencyVL - 1
 							if (currentVL <= 0) positionConsistencyVL.remove(entity.entityId) else positionConsistencyVL[entity.entityId] = currentVL
 						}
 
@@ -481,8 +511,6 @@ object AntiBot : Module()
 			}
 		}
 
-
-
 		if (provider.isSPacketEntityTeleport(packet))
 		{
 			val packetEntityTeleport = packet.asSPacketEntityTeleport()
@@ -495,14 +523,16 @@ object AntiBot : Module()
 				val dZ: Double = packetEntityTeleport.z
 				val distSq = entity.asEntityPlayer().getDistanceSq(dX, dY, dZ)
 				val distThreshold = teleportThresholdDistance.get()
+				val prevVL = teleportpacket_violation.getOrDefault(entity.entityId, 0)
+
 				if (distSq <= distThreshold * distThreshold)
 				{
-					if (notify && teleportPacketValue.get()) notification("TeleportPacket", "Suspicious SPacketEntityTeleport: ${entity.displayName.formattedText} (dist: ${sqrt(distSq)})")
-					teleportpacket_violation[entity.entityId] = teleportpacket_violation.getOrDefault(entity.entityId, 0) + 1
+					if (notify && teleportPacketValue.get() && (prevVL + 5) % 10 == 0) notification("TeleportPacket", "Suspicious SPacketEntityTeleport: ${entity.displayName.formattedText} (dist: ${sqrt(distSq)}, VL: $prevVL)")
+					teleportpacket_violation[entity.entityId] = prevVL + 1
 				}
 				else if (teleportPacketCountDecremSysValue.get())
 				{
-					val currentVL = teleportpacket_violation.getOrDefault(entity.entityId, 0) shr 1
+					val currentVL = prevVL shr 1
 					if (currentVL <= 0) teleportpacket_violation.remove(entity.entityId) else teleportpacket_violation[entity.entityId] = currentVL
 				}
 			}
@@ -542,15 +572,19 @@ object AntiBot : Module()
 		if (positionValue.get() && drawExpectedPosValue.get())
 		{
 			val thePlayer = mc.thePlayer ?: return
+			val ping = thePlayer.getPing()
 
 			val partialTicks = e.partialTicks
 
-			val yaw = run {
-				val serverYaw = RotationUtils.serverRotation.yaw
-				val lastServerYaw = RotationUtils.lastServerRotation.yaw
+			val serverLocation = getServersideLocation(ping)
+			val lastServerLocation = getServersideLocation(ping, 1)
 
-				lastServerYaw + (serverYaw - lastServerYaw) * partialTicks
-			}
+			val lastServerYaw = lastServerLocation.rotation.yaw
+
+			val serverPos = serverLocation.pos
+			val lastServerPos = lastServerLocation.pos
+
+			val yaw = lastServerYaw + (serverLocation.rotation.yaw - lastServerYaw) * partialTicks
 
 			val dir = WMathHelper.toRadians(yaw - 180.0F)
 
@@ -565,9 +599,9 @@ object AntiBot : Module()
 			val sin = -func.sin(dir)
 			val cos = func.cos(dir)
 
-			val posX = thePlayer.lastTickPosX + (thePlayer.posX - thePlayer.lastTickPosX) * partialTicks
-			val posY = thePlayer.lastTickPosY + (thePlayer.posY - thePlayer.lastTickPosY) * partialTicks
-			val posZ = thePlayer.lastTickPosZ + (thePlayer.posZ - thePlayer.lastTickPosZ) * partialTicks
+			val posX = lastServerPos.xCoord + (serverPos.xCoord - lastServerPos.xCoord) * partialTicks
+			val posY = lastServerPos.yCoord + (serverPos.yCoord - lastServerPos.yCoord) * partialTicks
+			val posZ = lastServerPos.zCoord + (serverPos.zCoord - lastServerPos.zCoord) * partialTicks
 
 			val expectedX = posX + sin * back1
 			val expectedY = posY + y1
@@ -633,6 +667,8 @@ object AntiBot : Module()
 
 	private fun notification(checkName: String, message: String)
 	{
-		LiquidBounce.hud.addNotification("AntiBot: $checkName check", message, 1000L, Color.red)
+		LiquidBounce.hud.addNotification("AntiBot: $checkName check", message, 10000L, Color.red)
 	}
 }
+
+private data class Location(val pos: WVec3, val rotation: Rotation)

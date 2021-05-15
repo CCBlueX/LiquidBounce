@@ -20,6 +20,7 @@ import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11
 import java.awt.Color
+import java.text.DecimalFormat
 import kotlin.math.max
 
 /**
@@ -46,6 +47,9 @@ class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F, side: 
 
 		val maxRendered = IntegerValue("MaxRendered", 6, 3, 15)
 
+		val fadeSpeedValue = FloatValue("FadeSpeed", 0.25F, 0.1F, 0.95F)
+		val deploySpeedValue = FloatValue("DeploySpeed", 0.65F, 0.40F, 0.95F)
+
 		val saturationValue = FloatValue("HSB-Saturation", 1F, 0F, 1F)
 		val brightnessValue = FloatValue("HSB-Brightness", 1F, 0F, 1F)
 
@@ -56,6 +60,8 @@ class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F, side: 
 
 		val headerFontValue = FontValue("HeaderFont", Fonts.font40)
 		val messageFontValue = FontValue("MessageFont", Fonts.font35)
+
+		val DECIMAL_FORMAT = DecimalFormat("##0.0")
 	}
 
 	/**
@@ -70,20 +76,33 @@ class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F, side: 
 	{
 		if (LiquidBounce.hud.notifications.size > 0)
 		{
-			var index = 0
-			val itr = LiquidBounce.hud.notifications.iterator()
+			val maxRendered = maxRendered.get()
 
-			while (itr.hasNext() && index + 1 <= maxRendered.get())
+			var index = 0
+			val itr = LiquidBounce.hud.notifications.asReversed().iterator()
+
+			var deployingNotification: Notification? = null
+
+			while (itr.hasNext())
 			{
 				val notification = itr.next()
 
-				if (index != 0) GL11.glTranslatef(0.0F, -35 * (notification.x / (notification.textLength + 8)), 0.0F)
+				if (index + 1 <= maxRendered)
+				{
+					when (index)
+					{
+						0 -> deployingNotification = notification
+						1 -> GL11.glTranslatef(0.0F, deployingNotification?.yDeploy ?: -35.0F, 0.0F)
+						else -> GL11.glTranslatef(0.0F, -35.0F, 0.0F)
+					}
 
-				notification.drawNotification()
+					notification.drawNotification()
 
-				if (notification.fadeState == Notification.FadeState.END) itr.remove()
+					if (notification.fadeState == Notification.FadeState.END) itr.remove()
 
-				index++
+					index++
+				}
+				else itr.remove()
 			}
 		}
 
@@ -110,6 +129,14 @@ class Notification(private val header: String, private val message: String, priv
 	private var fadeStep = 0F
 	var fadeState = FadeState.IN
 
+	private var yDeployProgress = 0F
+	private var yDeployStep = 0F
+	private val yDeployProgressMax = 100F
+	private var yDeploying = true
+
+	internal val yDeploy: Float
+		get() = yDeployProgress * -0.35F
+
 	/**
 	 * Fade state for animation
 	 */
@@ -134,7 +161,6 @@ class Notification(private val header: String, private val message: String, priv
 	 */
 	fun drawNotification()
 	{
-
 		val headerFont = Notifications.headerFontValue.get()
 		val messageFont = Notifications.messageFontValue.get()
 
@@ -169,9 +195,9 @@ class Notification(private val header: String, private val message: String, priv
 		}
 
 		// Draw remaining time line
-		val remainingTimePercentage = stayTimer.hasTimeLeft(stayTime).coerceAtLeast(0).toFloat() / stayTime.toFloat()
+		val remainingTimePercentage = if (fadeState != FadeState.IN) stayTimer.hasTimeLeft(stayTime).coerceAtLeast(0).toFloat() / stayTime.toFloat() else if (stayTime == 0L) 0F else 1F
 		val color = ColorUtils.blendColors(floatArrayOf(0f, 0.5f, 1f), arrayOf(Color.RED, Color.YELLOW, Color.GREEN), remainingTimePercentage).brighter()
-		RenderUtils.drawRect(-x + 8 + textLength, -28F, -x - 2 + (10 + textLength) * (1 - remainingTimePercentage), -30F, color)
+		RenderUtils.drawRect(-x + 8 + textLength, -28F, -x/* - 2*/ + (10 + textLength) * (1 - remainingTimePercentage), -30F, color)
 
 
 		headerFont.drawString(header, -x.toInt() + 4, -25, Int.MAX_VALUE)
@@ -201,6 +227,25 @@ class Notification(private val header: String, private val message: String, priv
 		val delta = RenderUtils.deltaTime
 		val width = textLength + 8F
 
+		val fadeSpeed = Notifications.fadeSpeedValue.get()
+		val deploySpeed = Notifications.deploySpeedValue.get()
+
+		if (yDeploying)
+		{
+			if (yDeployProgress < yDeployProgressMax)
+			{
+				yDeployProgress = AnimationUtils.easeOut(yDeployStep, yDeployProgressMax) * yDeployProgressMax
+				yDeployStep += delta * deploySpeed
+			}
+
+			if (yDeployProgress >= yDeployProgressMax)
+			{
+				yDeployProgress = yDeployProgressMax
+				yDeployStep = yDeployProgressMax
+				yDeploying = false
+			}
+		}
+
 		@Suppress("NON_EXHAUSTIVE_WHEN") when (fadeState)
 		{
 			FadeState.IN ->
@@ -208,17 +253,17 @@ class Notification(private val header: String, private val message: String, priv
 				if (x < width)
 				{
 					x = AnimationUtils.easeOut(fadeStep, width) * width
-					fadeStep += delta * 0.25f
+					fadeStep += delta * fadeSpeed
 				}
 
 				if (x >= width)
 				{
+					stayTimer.reset()
 					fadeState = FadeState.STAY
+
 					x = width
 					fadeStep = width
 				}
-
-				stayTimer.reset()
 			}
 
 			FadeState.STAY -> if (stayTimer.hasTimePassed(stayTime)) fadeState = FadeState.OUT
@@ -226,7 +271,7 @@ class Notification(private val header: String, private val message: String, priv
 			FadeState.OUT -> if (x > 0)
 			{
 				x = AnimationUtils.easeOut(fadeStep, width) * width
-				fadeStep -= delta * 0.25f
+				fadeStep -= delta * fadeSpeed
 			}
 			else fadeState = FadeState.END
 

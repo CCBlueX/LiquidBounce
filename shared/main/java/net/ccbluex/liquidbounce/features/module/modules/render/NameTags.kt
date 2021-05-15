@@ -143,7 +143,7 @@ class NameTags : Module()
 
 		val nameColor = when
 		{
-			isBot -> "\u00A74\u00A7m" // DARK_RED + BOLD
+			isBot -> "\u00A74\u00A7l" // DARK_RED + STRIKETHROUGH
 			entity.invisible -> "\u00A78\u00A7o" // DARK_GRAY + ITALIC
 			entity.sneaking -> "\u00A7o" // ITALIC
 			else -> ""
@@ -161,11 +161,11 @@ class NameTags : Module()
 					ping <= 0 -> "\u00A77" // ping is lower than zero (unknown) -> GRAY
 					else -> "\u00A7a" // ping is 0 ~ 100 -> GREEN
 				}
-			} $ping ms "
+			} $ping ms\u00A7r "
 		}
 		else ""
 
-		val distanceText = if (distanceEnabled) "\u00A77${DECIMAL_FORMAT.format(thePlayer.getDistanceToEntityBox(entity))}m " else ""
+		val distanceText = if (distanceEnabled) "\u00A77${DECIMAL_FORMAT.format(thePlayer.getDistanceToEntityBox(entity))}m\u00A7r " else ""
 
 		val healthText = if (healthEnabled)
 		{
@@ -182,14 +182,14 @@ class NameTags : Module()
 				else -> "\u00A7a"
 			}
 
-			"\u00A77 $healthColor${DECIMAL_FORMAT.format(health)}${if (absorption > 0) "\u00A76+${DECIMAL_FORMAT.format(absorption)}$healthColor" else ""} HP \u00A77(${if (absorption > 0) "\u00A76" else healthColor}${DECIMAL_FORMAT.format(healthPercentage)}%\u00A77)"
+			"\u00A77 $healthColor${DECIMAL_FORMAT.format(health)}${if (absorption > 0) "\u00A76+${DECIMAL_FORMAT.format(absorption)}$healthColor" else ""} HP \u00A77(${if (absorption > 0) "\u00A76" else healthColor}${DECIMAL_FORMAT.format(healthPercentage)}%\u00A77)\u00A7r"
 		}
 		else ""
 
-		val botText = if (isBot) " \u00A7c\u00A7l[BOT]" else ""
+		val botText = if (isBot) " \u00A7c\u00A7l[BOT]\u00A7r" else ""
 		val murderText = if (murderDetector.state && murderDetector.murders.contains(entity)) "\u00A75\u00A7l[MURDER]\u00A7r " else ""
 
-		var text = "$murderText$entityIDText$distanceText$pingText\u00A77$nameColor$name$healthText$botText"
+		var text = "$murderText$entityIDText$distanceText$pingText\u00A77$nameColor$name\u00A7r$healthText$botText"
 		if (stripColors) text = ColorUtils.stripColor(text)
 
 		// Push
