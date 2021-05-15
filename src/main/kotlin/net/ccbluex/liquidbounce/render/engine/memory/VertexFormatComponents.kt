@@ -33,7 +33,7 @@ class VertexFormatComponent(
         get() = this.type.length * this.count
 }
 
-class AttributeInfo(val attribIndex: Int, val attributeType: AttributeType, val attribName: String? = null)
+class AttributeInfo(val attributeType: AttributeType)
 
 enum class AttributeType(val openGlClientState: Int) {
     Position(GL11.GL_VERTEX_ARRAY),

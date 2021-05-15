@@ -23,15 +23,22 @@ import net.ccbluex.liquidbounce.event.EngineRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.engine.*
-import net.ccbluex.liquidbounce.render.utils.drawBox
-import net.ccbluex.liquidbounce.render.utils.drawBoxOutline
+import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.RenderEngine
+import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.render.engine.memory.PositionColorVertexFormat
+import net.ccbluex.liquidbounce.render.engine.memory.putVertex
+import net.ccbluex.liquidbounce.render.utils.drawBoxNew
+import net.ccbluex.liquidbounce.render.utils.drawBoxOutlineNew
 import net.ccbluex.liquidbounce.render.utils.rainbow
+import net.ccbluex.liquidbounce.utils.render.espBoxInstancedOutlineRenderTask
+import net.ccbluex.liquidbounce.utils.render.espBoxInstancedRenderTask
 import net.minecraft.entity.ItemEntity
 import net.minecraft.entity.projectile.ArrowEntity
 import net.minecraft.util.math.Box
 
 object ModuleItemESP : Module("ItemESP", Category.RENDER) {
+
     override val translationBaseKey: String
         get() = "liquidbounce.module.itemEsp"
 
@@ -44,21 +51,9 @@ object ModuleItemESP : Module("ItemESP", Category.RENDER) {
 
     private object BoxMode : Choice("Box", modes) {
 
-        val box = run {
-            val task = drawBox(Box(-0.125, 0.125, -0.125, 0.125, 0.375, 0.125), Color4b.WHITE)
+        val box = drawBoxNew(Box(-0.125, 0.125, -0.125, 0.125, 0.375, 0.125), Color4b.WHITE)
 
-            task.storageType = VBOStorageType.Static
-
-            task
-        }
-
-        val boxOutline = run {
-            val task = drawBoxOutline(Box(-0.125, 0.125, -0.125, 0.125, 0.375, 0.125), Color4b.WHITE)
-
-            task.storageType = VBOStorageType.Static
-
-            task
-        }
+        val boxOutline = drawBoxOutlineNew(Box(-0.125, 0.125, -0.125, 0.125, 0.375, 0.125), Color4b.WHITE)
 
         val renderHandler = handler<EngineRenderEvent> { event ->
             val base = if (colorRainbow) rainbow() else color
@@ -67,8 +62,11 @@ object ModuleItemESP : Module("ItemESP", Category.RENDER) {
 
             val filtered = world.entities.filter { it is ItemEntity || it is ArrowEntity }
 
-            val renderTask = InstancedColoredPrimitiveRenderTask(filtered.size, box)
-            val outlineRenderTask = InstancedColoredPrimitiveRenderTask(filtered.size, boxOutline)
+            val instanceBuffer = PositionColorVertexFormat()
+            val instanceBufferOutline = PositionColorVertexFormat()
+
+            instanceBuffer.initBuffer(filtered.size)
+            instanceBufferOutline.initBuffer(filtered.size)
 
             for (entity in filtered) {
                 val pos = Vec3(
@@ -77,12 +75,18 @@ object ModuleItemESP : Module("ItemESP", Category.RENDER) {
                     entity.lastRenderZ + (entity.z - entity.lastRenderZ) * event.tickDelta
                 )
 
-                renderTask.instance(pos, baseColor)
-                outlineRenderTask.instance(pos, outlineColor)
+                instanceBuffer.putVertex { this.position = pos; this.color = baseColor }
+                instanceBufferOutline.putVertex { this.position = pos; this.color = outlineColor }
             }
 
-            RenderEngine.enqueueForRendering(RenderEngine.CAMERA_VIEW_LAYER, renderTask)
-            RenderEngine.enqueueForRendering(RenderEngine.CAMERA_VIEW_LAYER, outlineRenderTask)
+            RenderEngine.enqueueForRendering(
+                RenderEngine.CAMERA_VIEW_LAYER,
+                espBoxInstancedRenderTask(instanceBuffer, box.first, box.second)
+            )
+            RenderEngine.enqueueForRendering(
+                RenderEngine.CAMERA_VIEW_LAYER,
+                espBoxInstancedOutlineRenderTask(instanceBufferOutline, boxOutline.first, boxOutline.second)
+            )
         }
 
     }

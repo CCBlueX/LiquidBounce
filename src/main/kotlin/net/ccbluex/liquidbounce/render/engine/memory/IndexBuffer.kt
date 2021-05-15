@@ -47,4 +47,19 @@ class IndexBuffer(capacity: Int, val indexType: VertexFormatComponentDataType) {
 
         size++
     }
+
+    fun indexQuad(p0: Int, p1: Int, p2: Int, p3: Int) {
+        index(p0)
+        index(p1)
+        index(p3)
+
+        index(p1)
+        index(p2)
+        index(p3)
+    }
+
+    fun indexLine(p0: Int, p1: Int) {
+        index(p0)
+        index(p1)
+    }
 }

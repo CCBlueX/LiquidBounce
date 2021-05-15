@@ -19,6 +19,8 @@
 
 package net.ccbluex.liquidbounce.render.engine
 
+import net.ccbluex.liquidbounce.render.engine.memory.PositionColorUVVertexFormat
+import net.ccbluex.liquidbounce.render.engine.memory.PositionColorVertexFormat
 import net.ccbluex.liquidbounce.utils.io.resourceToString
 import net.ccbluex.liquidbounce.utils.math.Mat4
 
@@ -48,10 +50,19 @@ object Shaders {
     }
 }
 
+abstract class ShaderHandler {
+    /**
+     * Binds the shader
+     *
+     * @param mvpMatrix The model-view-projection matrix to use
+     */
+    abstract fun bind(mvpMatrix: Mat4)
+}
+
 /**
- * Used for [ColoredPrimitiveRenderTask]
+ * Compatible with [PositionColorVertexFormat]
  */
-object ColoredPrimitiveShader {
+object ColoredPrimitiveShader : ShaderHandler() {
     private var shaderProgram: ShaderProgram
     private val mvpMatrixUniformLocation: Int
 
@@ -69,12 +80,7 @@ object ColoredPrimitiveShader {
         this.shaderProgram = shaderProgram
     }
 
-    /**
-     * Binds the shader
-     *
-     * @param mvpMatrix The model-view-projection matrix to use
-     */
-    fun bind(mvpMatrix: Mat4) {
+    override fun bind(mvpMatrix: Mat4) {
         this.shaderProgram.use()
 
         mvpMatrix.putToUniform(this.mvpMatrixUniformLocation)
@@ -82,9 +88,9 @@ object ColoredPrimitiveShader {
 }
 
 /**
- * Used for [TexturedPrimitiveRenderTask]
+ * Compatible with [PositionColorUVVertexFormat]
  */
-object TexturedPrimitiveShader {
+object TexturedPrimitiveShader : ShaderHandler() {
     private var shaderProgram: ShaderProgram
     private val mvpMatrixUniformLocation: Int
 
@@ -103,12 +109,7 @@ object TexturedPrimitiveShader {
         this.shaderProgram = shaderProgram
     }
 
-    /**
-     * Binds the shader
-     *
-     * @param mvpMatrix The model-view-projection matrix to use
-     */
-    fun bind(mvpMatrix: Mat4) {
+    override fun bind(mvpMatrix: Mat4) {
         this.shaderProgram.use()
 
         mvpMatrix.putToUniform(this.mvpMatrixUniformLocation)
@@ -116,9 +117,9 @@ object TexturedPrimitiveShader {
 }
 
 /**
- * Used for [InstancedColoredPrimitiveRenderTask]
+ * Used for instanced rendering of [PositionColorVertexFormat]
  */
-object InstancedColoredPrimitiveShader {
+object InstancedColoredPrimitiveShader : ShaderHandler() {
     private var shaderProgram: ShaderProgram
     private val mvpMatrixUniformLocation: Int
 
@@ -138,12 +139,7 @@ object InstancedColoredPrimitiveShader {
         this.shaderProgram = shaderProgram
     }
 
-    /**
-     * Binds the shader
-     *
-     * @param mvpMatrix The model-view-projection matrix to use
-     */
-    fun bind(mvpMatrix: Mat4) {
+    override fun bind(mvpMatrix: Mat4) {
         this.shaderProgram.use()
 
         mvpMatrix.putToUniform(this.mvpMatrixUniformLocation)

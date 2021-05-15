@@ -156,7 +156,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         val eyes = player.eyesPos
 
         val scanRange = if (targetTracker.maxDistanceSquared > rangeSquared) {
-            (rangeSquared + scanExtraRange * scanExtraRange).toDouble()
+            ((range + scanExtraRange) * (range + scanExtraRange)).toDouble()
         } else {
             rangeSquared.toDouble()
         }

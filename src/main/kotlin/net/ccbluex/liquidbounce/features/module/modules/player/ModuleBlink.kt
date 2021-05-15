@@ -94,7 +94,7 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
             if (BreadcrumbsOption.enabled) {
                 RenderEngine.enqueueForRendering(
                     RenderEngine.CAMERA_VIEW_LAYER,
-                    ModuleBreadcrumbs.createBreadcrumbsRenderTask(color, this.positions)
+                    ModuleBreadcrumbs.createBreadcrumbsRenderTask(color, this.positions, it.tickDelta)
                 )
             }
         }

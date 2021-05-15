@@ -21,6 +21,8 @@ package net.ccbluex.liquidbounce.render.engine.font
 
 import net.ccbluex.liquidbounce.render.AbstractFontRenderer
 import net.ccbluex.liquidbounce.render.engine.*
+import net.ccbluex.liquidbounce.render.engine.memory.*
+import net.ccbluex.liquidbounce.utils.render.quad
 import java.awt.Font
 import java.util.*
 import kotlin.collections.ArrayList
@@ -420,39 +422,61 @@ class FontRenderer(
         val renderTasks = this.cache.renderedGlyphs.groupByTo(TreeMap<Int, MutableList<RenderedGlyph>>()) { it.style }
 
         for ((style, glyphs) in renderTasks) {
-            val renderTask = TexturedPrimitiveRenderTask(glyphs.size * 2, this.glyphPages[style]!!.texture)
+            val vertexFormat = PositionColorUVVertexFormat()
+
+            vertexFormat.initBuffer(glyphs.size * 4)
+
+            val indexBuffer = IndexBuffer(glyphs.size * 3 * 2, VertexFormatComponentDataType.GlUnsignedShort)
 
             for (glyph in glyphs) {
                 val color = glyph.color
                 val atlasLocation = glyph.glyph.atlasLocation!!
 
-                renderTask.quad(
-                    Vec3(glyph.x1, glyph.y1, glyph.z),
-                    color,
-                    UV2s(atlasLocation.min.u, atlasLocation.min.v),
-                    Vec3(glyph.x1, glyph.y2, glyph.z),
-                    color,
-                    UV2s(atlasLocation.min.u, atlasLocation.max.v),
-                    Vec3(glyph.x2, glyph.y2, glyph.z),
-                    color,
-                    UV2s(atlasLocation.max.u, atlasLocation.max.v),
-                    Vec3(glyph.x2, glyph.y1, glyph.z),
-                    color,
-                    UV2s(atlasLocation.max.u, atlasLocation.min.v)
+                vertexFormat.quad(
+                    indexBuffer,
+                    {
+                        this.position = Vec3(glyph.x1, glyph.y1, glyph.z)
+                        this.color = color
+                        this.texturePosition = UV2s(atlasLocation.min.u, atlasLocation.min.v)
+                    },
+                    {
+                        this.position = Vec3(glyph.x1, glyph.y2, glyph.z)
+                        this.color = color
+                        this.texturePosition = UV2s(atlasLocation.min.u, atlasLocation.max.v)
+                    },
+                    {
+                        this.position = Vec3(glyph.x2, glyph.y2, glyph.z)
+                        this.color = color
+                        this.texturePosition = UV2s(atlasLocation.max.u, atlasLocation.max.v)
+                    },
+                    {
+                        this.position = Vec3(glyph.x2, glyph.y1, glyph.z)
+                        this.color = color
+                        this.texturePosition = UV2s(atlasLocation.max.u, atlasLocation.min.v)
+                    }
                 )
             }
 
-            tasks.add(renderTask)
+            tasks.add(VertexFormatRenderTask(vertexFormat, PrimitiveType.Triangles, TexturedPrimitiveShader, indexBuffer = indexBuffer, texture = glyphPages[style]!!.texture, state = GlRenderState(texture2d = true, depthTest = false)))
         }
 
         if (this.cache.lines.isNotEmpty()) {
-            val renderTask = ColoredPrimitiveRenderTask(this.cache.lines.size * 2, PrimitiveType.Lines)
+            val vertexFormat = PositionColorVertexFormat()
+
+            vertexFormat.initBuffer(this.cache.lines.size * 2)
 
             for (line in this.cache.lines) {
-                renderTask.line(line.p1, line.p2, line.color)
+                vertexFormat.putVertex {
+                    this.position = line.p1
+                    this.color = line.color
+                }
+                vertexFormat.putVertex {
+                    this.position = line.p2
+                    this.color = line.color
+                }
             }
 
-            tasks.add(renderTask)
+            tasks.add(VertexFormatRenderTask(vertexFormat, PrimitiveType.Lines, ColoredPrimitiveShader))
         }
 
         this.cache.lines.clear()

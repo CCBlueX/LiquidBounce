@@ -29,7 +29,7 @@ abstract class VertexFormat() {
     /**
      * How many vertices are in this buffer?
      */
-    var vertexCount: Int = 0
+    var elementCount: Int = 0
         private set
 
     /**
@@ -43,19 +43,19 @@ abstract class VertexFormat() {
     val components = mutableListOf<VertexFormatComponent>()
 
     fun vec3(attributeType: AttributeType): DelegatedVertexFormatComponent<Vec3> {
-        val component = VertexFormatComponent(VertexFormatComponentDataType.GlFloat, this.length, 3, false, AttributeInfo(this.components.size, attributeType))
+        val component = VertexFormatComponent(VertexFormatComponentDataType.GlFloat, this.length, 3, false, AttributeInfo(attributeType))
 
         return DelegatedVertexFormatComponent(this, registerComponent(component))
     }
 
     fun uv(attributeType: AttributeType): DelegatedVertexFormatComponent<UV2s> {
-        val component = VertexFormatComponent(VertexFormatComponentDataType.GlUnsignedShort, length, 2, true, AttributeInfo(this.components.size, attributeType))
+        val component = VertexFormatComponent(VertexFormatComponentDataType.GlUnsignedShort, length, 2, true, AttributeInfo(attributeType))
 
         return DelegatedVertexFormatComponent(this, registerComponent(component))
     }
 
     fun color4b(attributeType: AttributeType): DelegatedVertexFormatComponent<Color4b> {
-        val component = VertexFormatComponent(VertexFormatComponentDataType.GlUnsignedByte, this.length, 4, true, AttributeInfo(this.components.size, attributeType))
+        val component = VertexFormatComponent(VertexFormatComponentDataType.GlUnsignedByte, this.length, 4, true, AttributeInfo(attributeType))
 
         return DelegatedVertexFormatComponent(this, registerComponent(component))
     }
@@ -69,7 +69,7 @@ abstract class VertexFormat() {
 
     fun nextVertex() {
         this.bufferBuilder.pos += this.length
-        this.vertexCount++
+        this.elementCount++
     }
 
     fun initBuffer(capacity: Int) {
@@ -82,7 +82,7 @@ inline fun <T : VertexFormat> T.putVertex(function: T.() -> Unit): Int {
 
     nextVertex()
 
-    return this.vertexCount - 1
+    return this.elementCount - 1
 }
 
 class DelegatedVertexFormatComponent<T>(val vertexFormat: VertexFormat, val vertexFormatComponent: VertexFormatComponent) {
@@ -105,7 +105,13 @@ class DelegatedVertexFormatComponent<T>(val vertexFormat: VertexFormat, val vert
                 }
             }
             VertexFormatComponentDataType.GlShort -> bufferBuilder.buffer.putShort(offset, value as Short)
-            VertexFormatComponentDataType.GlUnsignedShort -> bufferBuilder.buffer.putShort(offset, value as Short)
+            VertexFormatComponentDataType.GlUnsignedShort -> {
+                when (vertexFormatComponent.count) {
+                    2 -> (value as UV2s).writeToBuffer(offset, bufferBuilder.buffer)
+                    1 -> bufferBuilder.buffer.putShort(offset, value as Short)
+                    else -> throw IllegalStateException()
+                }
+            }
             VertexFormatComponentDataType.GlInt -> bufferBuilder.buffer.putInt(offset, value as Int)
             VertexFormatComponentDataType.GlUnsignedInt -> bufferBuilder.buffer.putInt(offset, value as Int)
             VertexFormatComponentDataType.GlFloat -> {

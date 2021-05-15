@@ -24,7 +24,10 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.engine.*
+import net.ccbluex.liquidbounce.render.engine.memory.PositionColorVertexFormat
+import net.ccbluex.liquidbounce.render.engine.memory.putVertex
 import net.ccbluex.liquidbounce.render.utils.rainbow
+import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import org.lwjgl.opengl.GL11.*
 
 object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
@@ -39,8 +42,8 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
 
     override fun enable() {
         synchronized(positions) {
-            positions.addAll(listOf(player.x, player.eyeY, player.z - 1.0))
-            positions.addAll(listOf(player.x, player.y, player.z - 1.0))
+            positions.addAll(listOf(player.x, player.eyeY, player.z))
+            positions.addAll(listOf(player.x, player.y, player.z))
         }
     }
 
@@ -58,26 +61,32 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
                 RenderEngine.CAMERA_VIEW_LAYER_WITHOUT_BOBBING,
                 createBreadcrumbsRenderTask(
                     color,
-                    positions
+                    positions,
+                    it.tickDelta
                 )
             )
         }
     }
 
     @JvmStatic
-    internal fun createBreadcrumbsRenderTask(color: Color4b, positions: List<Double>): ColoredPrimitiveRenderTask {
-        val renderTask = ColoredPrimitiveRenderTask(positions.size, PrimitiveType.LineStrip)
+    internal fun createBreadcrumbsRenderTask(color: Color4b, positions: List<Double>, tickDelta: Float): RenderTask {
+        val vertexFormat = PositionColorVertexFormat()
+
+        vertexFormat.initBuffer(this.positions.size + 1)
 
         for (i in 0 until positions.size / 3) {
-            renderTask.index(
-                renderTask.vertex(
-                    Vec3(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]),
-                    color
-                )
-            )
+            vertexFormat.putVertex {
+                this.position = Vec3(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2])
+                this.color = color
+            }
         }
 
-        return renderTask
+        vertexFormat.putVertex {
+            this.position = player.interpolateCurrentPosition(tickDelta)
+            this.color = color
+        }
+
+        return VertexFormatRenderTask(vertexFormat, PrimitiveType.LineStrip, ColoredPrimitiveShader, state = GlRenderState(lineWidth = 2.0f, lineSmooth = true))
     }
 
     val updateHandler = handler<PlayerTickEvent> {
@@ -90,7 +99,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
         lastPosZ = player.z
 
         synchronized(positions) {
-            positions.addAll(listOf(player.x, player.y, player.z - 1.0))
+            positions.addAll(listOf(player.x, player.y, player.z))
         }
     }
 

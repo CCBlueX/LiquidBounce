@@ -114,7 +114,7 @@ object ModuleTraces : Module("Traces", Category.RENDER) {
             indexBuffer.index(v2)
         }
 
-        val renderTask = VertexFormatRenderTask(vertexFormat, PrimitiveType.Lines, indexBuffer)
+        val renderTask = VertexFormatRenderTask(vertexFormat, PrimitiveType.Lines, ColoredPrimitiveShader, indexBuffer = indexBuffer, state = GlRenderState(lineWidth = 1.0f, lineSmooth = true))
 
         RenderEngine.enqueueForRendering(RenderEngine.CAMERA_VIEW_LAYER_WITHOUT_BOBBING, renderTask)
     }
