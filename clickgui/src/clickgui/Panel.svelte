@@ -1,12 +1,13 @@
 <script>
-    import {sineInOut} from "svelte/easing";
-    import {slide} from "svelte/transition";
+    import { sineInOut } from "svelte/easing";
+    import { slide } from "svelte/transition";
     import Module from "./Module.svelte";
 
     export let category;
     export let modules;
 
-    let expanded = localStorage.getItem(`clickgui.panel.${category}.expanded`) === "true" || localStorage.getItem(`clickgui.panel.${category}.expanded`) === null;
+    let expanded = localStorage.getItem(`clickgui.panel.${category}.expanded`) === "true" 
+        || localStorage.getItem(`clickgui.panel.${category}.expanded`) === null;
 
     let renderedModules = modules;
 
@@ -36,7 +37,7 @@
         localStorage.setItem(`clickgui.panel.${category}.left`, left);
 	}
 
-    function toggleExpanded() {
+    function toggleExpanded(e) {
         if (expanded) {
             expanded = false;
             renderedModules = [];
@@ -51,7 +52,8 @@
     window.addEventListener("mousemove", onMouseMove);
 
     function handleToggleModule(event) {
-        modules.find(m => m.name === event.getModule().getName()).enabled = event.getNewState();
+        const targetModule = event.getModule().getName();
+        modules.find(m => m.name === targetModule).enabled = event.getNewState();
         if (expanded) {
             renderedModules = modules;
         }
@@ -70,18 +72,16 @@
     }
 </script>
 
-<div on:mousedown={handleToggleClick} class="panel" style="left: {left}px; top: {top}px;">
-    <div on:mousedown={onMouseDown} class="title-wrapper">
+<div class="panel" style="left: {left}px; top: {top}px;">
+    <div on:mousedown={handleToggleClick} on:mousedown={onMouseDown} class="title-wrapper">
         <img class="icon" src="img/{category.toLowerCase()}.svg" alt="icon" />
         <div class="title">{category}</div>
-        <div on:click={toggleExpanded} class="visibility-toggle" class:expanded={expanded}>
-
-        </div>
+        <div on:click={toggleExpanded} class="visibility-toggle" class:expanded={expanded}></div>
     </div>
     <div class="modules">
         {#each renderedModules as m}
-            <div transition:slide|local={{duration: 200, easing: sineInOut}}>
-                <Module name={m.name} enabled={m.enabled} setEnabled={m.setEnabled} />
+            <div transition:slide={{duration: 400, easing: sineInOut}}>
+                <Module instance={m.instance} enabled={m.enabled} />
             </div>
         {/each}
     </div>
@@ -92,7 +92,6 @@
         border-radius: 5px;
         overflow: hidden;
         width: 225px;
-        border: solid 1px rgba(0, 0, 0, 0.68);
         position: absolute;
     }
 
@@ -129,7 +128,7 @@
         content: "";
         position: absolute;
         background-color: white;
-        transition: transform 0.25s ease-out;
+        transition: transform 0.4s ease-out;
     }
 
     .visibility-toggle::before {
