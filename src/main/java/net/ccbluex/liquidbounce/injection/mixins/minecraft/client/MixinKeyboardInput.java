@@ -48,7 +48,7 @@ public class MixinKeyboardInput extends MixinInput {
 
     @Inject(method = "tick", at = @At("RETURN"))
     private void injectStrafing(boolean slowDown, CallbackInfo ci) {
-        if (RotationManager.INSTANCE.getActiveConfigurable() == null || !RotationManager.INSTANCE.getActiveConfigurable().getStrafe())
+        if (RotationManager.INSTANCE.getActiveConfigurable() == null || !RotationManager.INSTANCE.getActiveConfigurable().getFixVelocity())
             return;
 
         Rotation currentRotation = RotationManager.INSTANCE.getCurrentRotation();

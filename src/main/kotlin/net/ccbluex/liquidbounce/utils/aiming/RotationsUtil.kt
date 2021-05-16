@@ -43,8 +43,7 @@ import kotlin.math.sqrt
  */
 class RotationsConfigurable : Configurable("rotations") {
     val turnSpeed by curve("TurnSpeed", arrayOf(4f, 7f, 10f, 3f, 2f, 0.7f))
-    val predict by boolean("Predict", true)
-    val strafe by boolean("Strafe", true)
+    val fixVelocity by boolean("FixVelocity", true)
 }
 
 /**
@@ -271,7 +270,7 @@ object RotationManager : Listenable {
     }
 
     val velocity = handler<PlayerVelocityStrafe> { event ->
-        if (activeConfigurable?.strafe == true) {
+        if (activeConfigurable?.fixVelocity == true) {
             event.velocity = fixVelocity(event.velocity, event.movementInput, event.speed)
         }
     }

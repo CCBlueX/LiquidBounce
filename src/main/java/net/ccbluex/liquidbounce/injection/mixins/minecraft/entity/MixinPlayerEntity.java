@@ -22,6 +22,8 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.PlayerSafeWalkEvent;
 import net.ccbluex.liquidbounce.event.PlayerStrideEvent;
+import net.ccbluex.liquidbounce.utils.aiming.Rotation;
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -65,6 +67,9 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
         return event.getStrideForce();
     }
 
+    /**
+     * Hook silent inventory feature
+     */
     @Redirect(method = "getEquippedStack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerInventory;getMainHandStack()Lnet/minecraft/item/ItemStack;"))
     private ItemStack hookMainHandStack(PlayerInventory playerInventory) {
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
@@ -77,6 +82,9 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
         return PlayerInventory.isValidHotbarIndex(slot) ? player.inventory.main.get(slot) : ItemStack.EMPTY;
     }
 
+    /**
+     * Hook safe walk event
+     */
     @Inject(method = "clipAtLedge", at = @At("HEAD"), cancellable = true)
     private void hookSafeWalk(CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
         final PlayerSafeWalkEvent event = EventManager.INSTANCE.callEvent(new PlayerSafeWalkEvent());
@@ -84,6 +92,26 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
         if (event.isSafeWalk()) {
             callbackInfoReturnable.setReturnValue(true);
         }
+    }
+
+    /**
+     * Hook velocity rotation modification
+     *
+     * There are a few velocity changes when attacking an entity, which could be easily detected by anti-cheats when a different server-side rotation is applied.
+     */
+    @Redirect(method = "attack", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerEntity;yaw:F"))
+    private float hookFixRotation(PlayerEntity entity) {
+        if (RotationManager.INSTANCE.getActiveConfigurable() == null || !RotationManager.INSTANCE.getActiveConfigurable().getFixVelocity())
+            return entity.yaw;
+
+        Rotation currentRotation = RotationManager.INSTANCE.getCurrentRotation();
+
+        if (currentRotation == null)
+            return entity.yaw;
+
+        currentRotation = currentRotation.fixedSensitivity();
+
+        return currentRotation.getYaw();
     }
 
 }
