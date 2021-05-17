@@ -19,6 +19,7 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.features.module.modules.combat.AutoUse
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.render.BlockOverlay
 import net.ccbluex.liquidbounce.ui.font.Fonts
@@ -383,6 +384,8 @@ class Tower : Module()
 		var itemStack = thePlayer.heldItem
 
 		val provider = classProvider
+
+		(LiquidBounce.moduleManager[AutoUse::class.java] as AutoUse).endEating(thePlayer, classProvider, netHandler)
 
 		if (itemStack == null || !provider.isItemBlock(itemStack.item) || provider.isBlockBush(itemStack.item?.asItemBlock()?.block))
 		{

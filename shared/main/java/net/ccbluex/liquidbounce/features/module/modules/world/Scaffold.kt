@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.features.module.modules.combat.AutoUse
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.render.BlockOverlay
 import net.ccbluex.liquidbounce.ui.font.Fonts
@@ -749,7 +750,9 @@ class Scaffold : Module()
 
 		val provider = classProvider
 
-		if (itemStack == null || !provider.isItemBlock(itemStack.item) || !InventoryUtils.canAutoBlock(itemStack.item?.asItemBlock()?.block) || thePlayer.heldItem?.stackSize ?: 0 <= 0)
+		(LiquidBounce.moduleManager[AutoUse::class.java] as AutoUse).endEating(thePlayer, classProvider, netHandler)
+
+		if (itemStack == null || !provider.isItemBlock(itemStack.item) || !InventoryUtils.canAutoBlock(itemStack.item?.asItemBlock()?.block) || itemStack.stackSize <= 0)
 		{
 			if (autoBlockValue.get().equals("Off", true)) return
 

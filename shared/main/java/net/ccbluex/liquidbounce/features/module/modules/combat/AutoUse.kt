@@ -102,6 +102,9 @@ class AutoUse : Module()
 
 	private val ignoreScreen = BoolValue("IgnoreScreen", true)
 
+	private val killauraBypassValue = ListValue("KillauraBypassMode", arrayOf("None", "SuspendKillaura", "WaitForKillauraEnd"), "SuspendKillaura")
+	private val suspendKillauraDuration = IntegerValue("SuspendKillauraDuration", 100, 100, 1000)
+
 	private val useDelayTimer = MSTimer()
 	private var useDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
 
@@ -114,7 +117,7 @@ class AutoUse : Module()
 
 	override fun onDisable()
 	{
-		endEating(mc.thePlayer ?: return, glassBottleValue.get(), classProvider, mc.netHandler, silentValue.get())
+		endEating(mc.thePlayer ?: return, classProvider, mc.netHandler, glassBottleValue.get(), silentValue.get())
 
 		slotToUse = -1
 		waitedTicks = -1
@@ -125,9 +128,13 @@ class AutoUse : Module()
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		val netHandler = mc.netHandler
-
 		val controller = mc.playerController
+		if (controller.isInCreativeMode) return
+
+		val killAura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
+		if (killauraBypassValue.get().equals("WaitForKillauraEnd", true) && killAura.state && killAura.target != null) return
+
+		val netHandler = mc.netHandler
 		val screen = mc.currentScreen
 
 		val openContainer = thePlayer.openContainer
@@ -179,6 +186,10 @@ class AutoUse : Module()
 						val stack = inventoryContainer.getSlot(slotToUse).stack
 
 						if (isFirst) netHandler.addToSendQueue(createUseItemPacket(stack, WEnumHand.MAIN_HAND))
+
+						// Suspend killaura if option is present
+						if (killauraBypassValue.get().equals("SuspendKillaura", true)) killAura.suspend(suspendKillauraDuration.get().toLong())
+
 
 						if (silent)
 						{
@@ -265,23 +276,28 @@ class AutoUse : Module()
 			EventState.POST -> if (slotToUse >= 0)
 			{
 				waitedTicks = (waitedTicks - 1).coerceAtLeast(-1)
-				if (waitedTicks <= 0) endEating(thePlayer, handleGlassBottle, provider, netHandler, silent)
+				if (waitedTicks <= 0) endEating(thePlayer, provider, netHandler, handleGlassBottle, silent, wasSuccessful = true)
 			}
 		}
 	}
 
-	private fun endEating(thePlayer: IEntityPlayerSP, handleGlassBottle: String, provider: IClassProvider, netHandler: IINetHandlerPlayClient, silent: Boolean)
+	fun endEating(thePlayer: IEntityPlayerSP, provider: IClassProvider, netHandler: IINetHandlerPlayClient, handleGlassBottle: String = glassBottleValue.get(), silent: Boolean = silentValue.get(), wasSuccessful: Boolean = false)
 	{
+		if (slotToUse == -1) return
+
 		val itemStack = thePlayer.inventoryContainer.getSlot(slotToUse).stack
 
 		if (itemStack != null)
 		{
-			if (handleGlassBottle.equals("Drop", true) && (provider.isItemGlassBottle(itemStack.item) || provider.isItemPotion(itemStack.item) && !itemStack.isSplash())) netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.DROP_ITEM, WBlockPos.ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
+			if (wasSuccessful)
+			{
+				if (handleGlassBottle.equals("Drop", true) && (provider.isItemGlassBottle(itemStack.item) || provider.isItemPotion(itemStack.item) && !itemStack.isSplash())) netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.DROP_ITEM, WBlockPos.ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
+
+				useDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+				useDelayTimer.reset()
+			}
 
 			if (silent) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(thePlayer.inventory.currentItem)) else mc.gameSettings.keyBindUseItem.unpressKey()
-
-			useDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
-			useDelayTimer.reset()
 
 			slotToUse = -1
 		}

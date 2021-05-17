@@ -380,8 +380,8 @@ class KillAura : Module()
 	private var swingRange = 0f
 	private var blockRange = 0f
 
-	private var fakeYaw = 0f
-	private var fakePitch = 0f
+	private var lastYaw = 0f
+	private var lastPitch = 0f
 
 	// Container Delay
 	private var containerOpen = -1L
@@ -960,15 +960,15 @@ class KillAura : Module()
 		if (thePlayer.getDistanceToEntityBox(entity) <= throughWallsRangeValue.get()) flags = flags or RotationUtils.SKIP_VISIBLE_CHECK
 
 		// Search
-		val (_, rotation) = RotationUtils.searchCenter(theWorld, thePlayer, targetBox, flags, jitterData, minPlayerPredictSizeValue.get(), maxPlayerPredictSizeValue.get(), if (isAttackRotation) attackRange else aimRange, hitboxDecrement, searchSensitivity) ?: return false
+		val rotation = if (!lockValue.get() && RotationUtils.isFaced(theWorld, thePlayer, entity, aimRange.toDouble())) Rotation(lastYaw, lastPitch) else RotationUtils.searchCenter(theWorld, thePlayer, targetBox, flags, jitterData, minPlayerPredictSizeValue.get(), maxPlayerPredictSizeValue.get(), if (isAttackRotation) attackRange else aimRange, hitboxDecrement, searchSensitivity)?.rotation ?: return false
 
-		fakeYaw = rotation.yaw
-		fakePitch = rotation.pitch
+		lastYaw = rotation.yaw
+		lastPitch = rotation.pitch
 
 		val maxTurnSpeed = maxTurnSpeedValue.get()
 		val minTurnSpeed = minTurnSpeedValue.get()
 
-		if (!rotationsValue.get() || maxTurnSpeed <= 0F || (!lockValue.get() && RotationUtils.isFaced(theWorld, thePlayer, entity, aimRange.toDouble()))) return true
+		if (!rotationsValue.get() || maxTurnSpeed <= 0F) return true
 
 		// Limit TurnSpeed
 		val turnSpeed = if (minTurnSpeed < 180f) minTurnSpeed + (maxTurnSpeed - minTurnSpeed) * Random.nextFloat() else 180f
@@ -980,8 +980,8 @@ class KillAura : Module()
 
 		val limitedRotation = RotationUtils.limitAngleChange(RotationUtils.serverRotation, rotation, turnSpeed, acceleration)
 
-		fakeYaw = limitedRotation.yaw
-		fakePitch = limitedRotation.pitch
+		lastYaw = limitedRotation.yaw
+		lastPitch = limitedRotation.pitch
 
 		if (silentRotationValue.get())
 		{
@@ -1026,7 +1026,7 @@ class KillAura : Module()
 		{
 			val provider = classProvider
 
-			val raycastedEntity = RaycastUtils.raycastEntity(theWorld, thePlayer, reach + 1.0, fakeYaw, fakePitch) { entity -> entity != null && (!livingRaycast || (provider.isEntityLivingBase(entity) && !provider.isEntityArmorStand(entity))) && (EntityUtils.isEnemy(entity, aac) || raycastIgnored || aac && theWorld.getEntitiesWithinAABBExcludingEntity(entity, entity.entityBoundingBox).isNotEmpty()) }
+			val raycastedEntity = RaycastUtils.raycastEntity(theWorld, thePlayer, reach + 1.0, lastYaw, lastPitch) { entity -> entity != null && (!livingRaycast || (provider.isEntityLivingBase(entity) && !provider.isEntityArmorStand(entity))) && (EntityUtils.isEnemy(entity, aac) || raycastIgnored || aac && theWorld.getEntitiesWithinAABBExcludingEntity(entity, entity.entityBoundingBox).isNotEmpty()) }
 
 			if (raycastedEntity != null && provider.isEntityLivingBase(raycastedEntity) && (LiquidBounce.moduleManager[NoFriends::class.java].state || !provider.isEntityPlayer(raycastedEntity) || !raycastedEntity.asEntityPlayer().isClientFriend())) this.currentTarget = raycastedEntity.asEntityLivingBase()
 
