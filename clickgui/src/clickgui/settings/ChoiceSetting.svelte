@@ -41,14 +41,16 @@
 </script>
 
 <div class="setting">
-    <div on:click={handleToggleExpand} class:expanded={expanded} class="name">{name} - {value}</div>
-    {#if expanded}
-        <div class="values" transition:slide|local={{duration: 200, easing: sineInOut}}>
-            {#each values as v}
-                <div class="value" on:click={() => handleValueChange(v)} class:enabled={v === value}>{v}</div>
-            {/each}
-        </div>
-    {/if}
+    <div class="choice">
+        <div on:click={handleToggleExpand} class:expanded={expanded} class="name">{name} - {value}</div>
+        {#if expanded}
+            <div class="values" transition:slide|local={{duration: 200, easing: sineInOut}}>
+                {#each values as v}
+                    <div class="value" on:click={() => handleValueChange(v)} class:enabled={v === value}>{v}</div>
+                {/each}
+            </div>
+        {/if}
+    </div>
 
     {#if settings.length > 0}
         <div class="settings" transition:fade|local={{duration: 200, easing: sineInOut}}>
@@ -68,8 +70,11 @@
     }
 
     .setting {
-        padding: 7px 10px;
         overflow: hidden;
+    }
+
+    .choice {
+        padding: 7px 10px;
     }
 
     .name {
