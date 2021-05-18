@@ -15,6 +15,7 @@
     "client.MixinProfiler",
     "client.MixinResourcePackRepository",
     "client.MixinScreenShotHelper",
+    "client.MixinMovementInputFromOptions",
 
     "entity.MixinAbstractClientPlayer",
     "entity.MixinEntity",

@@ -12,7 +12,11 @@ import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 
 interface ISPacketEntity : IPacket
 {
+	val rotating: Boolean
+
 	val onGround: Boolean
+	val yaw: Byte
+	val pitch: Byte
 
 	fun getEntity(world: IWorld): IEntity?
 }

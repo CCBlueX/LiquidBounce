@@ -39,12 +39,16 @@ class NoSlow : Module()
 	private val bowForwardMultiplier = FloatValue("BowForwardMultiplier", 1.0F, 0.2F, 1.0F)
 	private val bowStrafeMultiplier = FloatValue("BowStrafeMultiplier", 1.0F, 0.2F, 1.0F)
 
+	val sneakForwardMultiplier = FloatValue("SneakForwardMultiplier", 0.3F, 0.3F, 1.0F)
+	val sneakStrafeMultiplier = FloatValue("SneakStrafeMultiplier", 0.3F, 0.3F, 1.0F)
+
+	val soulSandForwardMultiplier = FloatValue("SoulSandMultiplier", 0.4F, 0.4F, 1.0F)
+
 	// Bypass for NCP
 	private val packetValue = BoolValue("Packet", true)
 	private val packetSpamDelayValue = IntegerValue("Packet-PacketsDelay", 0, 0, 3)
 
 	// Blocks
-	val soulsandValue = BoolValue("Soulsand", true)
 	val liquidPushValue = BoolValue("LiquidPush", true)
 
 	private var ncpDelay = TickTimer()

@@ -252,7 +252,7 @@ class Aimbot : Module()
 		if (playerPredict) flags = flags or RotationUtils.PLAYER_PREDICT
 		if (predictValue.get()) flags = flags or RotationUtils.ENEMY_PREDICT
 
-		val targetRotation = (RotationUtils.searchCenter(theWorld, thePlayer, targetBB, flags, jitterData, minPlayerPredictSize, maxPlayerPredictSize, range, hitboxDecrement, searchSensitivity) ?: return).rotation
+		val targetRotation = (RotationUtils.searchCenter(theWorld, thePlayer, targetBB, flags, jitterData, minPlayerPredictSize, maxPlayerPredictSize, range, hitboxDecrement, searchSensitivity, 0.0) ?: return).rotation
 
 		// TurnSpeed
 		val maxTurnSpeed = maxTurnSpeedValue.get()

@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import kotlin.random.Random
 
+// TODO: DelayAfterBreakBlock option (Bypass AAC, Matrix and etc.)
 @ModuleInfo(name = "AutoClicker", description = "Constantly clicks when holding down a mouse button.", category = ModuleCategory.COMBAT)
 class AutoClicker : Module()
 {

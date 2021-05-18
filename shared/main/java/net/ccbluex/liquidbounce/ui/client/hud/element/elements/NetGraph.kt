@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.PacketCounter
 import net.ccbluex.liquidbounce.utils.extensions.getPing
+import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_1
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
@@ -21,7 +22,6 @@ import net.ccbluex.liquidbounce.value.FontValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import org.lwjgl.opengl.GL11
 import java.awt.Color
-import java.text.DecimalFormat
 
 /**
  * CustomHUD network-activity graph element
@@ -93,11 +93,6 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 	private var outgoingPeakString = ""
 	private var outgoingPeakStringWidth = 0F
 
-	companion object
-	{
-		private val numberFormat = DecimalFormat("##0.0")
-	}
-
 	override fun drawElement(): Border?
 	{
 		val thePlayer = mc.thePlayer ?: return null
@@ -149,7 +144,7 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 			{
 				incomingPacketsAverage = incomingSum.toDouble() / width.toDouble()
 
-				incomingAverageString = numberFormat.format(incomingPacketsAverage)
+				incomingAverageString = DECIMALFORMAT_1.format(incomingPacketsAverage)
 			}
 
 			incomingPacketsPeak = incomingPeak
@@ -182,7 +177,7 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 			{
 				outgoingPacketsAverage = outgoingSum.toDouble() / width.toDouble()
 
-				outgoingAverageString = numberFormat.format(outgoingPacketsAverage)
+				outgoingAverageString = DECIMALFORMAT_1.format(outgoingPacketsAverage)
 				outgoingAverageStringWidth = stringFont.getStringWidth(outgoingAverageString).toFloat()
 			}
 

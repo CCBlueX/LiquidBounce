@@ -22,7 +22,7 @@ import org.lwjgl.input.Keyboard
 @ModuleInfo(name = "LiquidWalk", description = "Allows you to walk on water.", category = ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_J)
 class LiquidWalk : Module()
 {
-	val modeValue = ListValue("Mode", arrayOf("Vanilla", "NCP", "AAC3.1.0", "AAC3.3.5", "AAC3.3.11", "Spartan146", "Dolphin"), "NCP")
+	val modeValue = ListValue("Mode", arrayOf("Vanilla", "NCP", "AAC3.1.0", "AAC3.3.5", "AAC3.3.11", "Spartan146", "Dolphin"), "NCP") // AAC3.3.5 Mode = AAC WaterFly
 	private val noJumpValue = BoolValue("NoJump", false)
 	private val aacFlyValue = FloatValue("AAC3.3.5-Motion", 0.5f, 0.1f, 1f)
 

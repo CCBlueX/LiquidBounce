@@ -20,7 +20,6 @@ import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11
 import java.awt.Color
-import java.text.DecimalFormat
 import kotlin.math.max
 
 /**
@@ -60,8 +59,6 @@ class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F, side: 
 
 		val headerFontValue = FontValue("HeaderFont", Fonts.font40)
 		val messageFontValue = FontValue("MessageFont", Fonts.font35)
-
-		val DECIMAL_FORMAT = DecimalFormat("##0.0")
 	}
 
 	/**

@@ -8,6 +8,9 @@ package net.ccbluex.liquidbounce.utils.misc
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
 import org.jetbrains.annotations.Contract
+import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
+import java.util.*
 import java.util.regex.Pattern
 import kotlin.math.abs
 import kotlin.math.floor
@@ -16,6 +19,10 @@ import kotlin.math.floor
 object StringUtils
 {
 	private val patternControlCode = Pattern.compile("(?i)\\u00A7[0-9A-FK-OR]")
+
+	val DECIMALFORMAT_1 = DecimalFormat("##0.0", DecimalFormatSymbols(Locale.ENGLISH))
+	val DECIMALFORMAT_2 = DecimalFormat("##0.00", DecimalFormatSymbols(Locale.ENGLISH))
+	val DECIMALFORMAT_6 = DecimalFormat("##0.000000", DecimalFormatSymbols(Locale.ENGLISH))
 
 	@JvmStatic
 	fun toCompleteString(args: Array<String>, start: Int): String = if (args.size <= start) "" else args.copyOfRange(start, args.size).joinToString(separator = " ")

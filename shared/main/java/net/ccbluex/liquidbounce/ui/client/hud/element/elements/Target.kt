@@ -22,14 +22,14 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
+import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_1
+import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_2
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.createRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11
 import java.awt.Color
-import java.text.DecimalFormat
-import java.text.DecimalFormatSymbols
 import java.util.*
 import kotlin.math.*
 
@@ -39,12 +39,6 @@ import kotlin.math.*
 @ElementInfo(name = "Target")
 class Target : Element()
 {
-	companion object
-	{
-		private val decimalFormat1 = DecimalFormat("##0.0", DecimalFormatSymbols(Locale.ENGLISH))
-		private val decimalFormat2 = DecimalFormat("##0.00", DecimalFormatSymbols(Locale.ENGLISH))
-	}
-
 	private val minWidthValue = IntegerValue("MinWidth", 180, 160, 300)
 	private val heightValue = IntegerValue("Height", 100, 90, 150)
 
@@ -159,14 +153,14 @@ class Target : Element()
 				if (targetChanged || easingAbsorption < 0 || easingAbsorption > targetAbsorption || abs(easingAbsorption - targetAbsorption) < 0.01) easingAbsorption = targetAbsorption
 				if (isPlayer && (targetChanged || easingArmor < 0 || easingArmor > 20 || abs(easingArmor - targetArmor) < 0.01)) easingArmor = targetArmor.toFloat()
 
-				val healthText = "${if (targetHealthPercentage < 0.25) "\u00A7c" else if (targetHealthPercentage < 0.5) "\u00A7e" else "\u00A7a"}${decimalFormat2.format(targetHealth.toDouble())} (${decimalFormat1.format(targetHealthPercentage * 100.0)}%)\u00A7r"
-				val armorText = "${if (targetArmor > 0) "\u00A7b" else "\u00A77"}$targetArmor (${decimalFormat2.format(targetArmor / 20.0 * 100.0)}%)\u00A7r"
+				val healthText = "${if (targetHealthPercentage < 0.25) "\u00A7c" else if (targetHealthPercentage < 0.5) "\u00A7e" else "\u00A7a"}${DECIMALFORMAT_2.format(targetHealth.toDouble())} (${DECIMALFORMAT_1.format(targetHealthPercentage * 100.0)}%)\u00A7r"
+				val armorText = "${if (targetArmor > 0) "\u00A7b" else "\u00A77"}$targetArmor (${DECIMALFORMAT_2.format(targetArmor / 20.0 * 100.0)}%)\u00A7r"
 
-				val distanceText = decimalFormat2.format(thePlayer.getDistanceToEntityBox(targetEntity))
-				val yawText = "${decimalFormat2.format(targetEntity.rotationYaw % 360f)} (${StringUtils.getHorizontalFacingAdv(targetEntity.rotationYaw)})"
-				val pitchText = decimalFormat2.format(targetEntity.rotationPitch)
+				val distanceText = DECIMALFORMAT_2.format(thePlayer.getDistanceToEntityBox(targetEntity))
+				val yawText = "${DECIMALFORMAT_2.format(targetEntity.rotationYaw % 360f)} (${StringUtils.getHorizontalFacingAdv(targetEntity.rotationYaw)})"
+				val pitchText = DECIMALFORMAT_2.format(targetEntity.rotationPitch)
 
-				val velocityText = "${decimalFormat2.format(targetEntity.motionX)}, ${decimalFormat2.format(targetEntity.motionY)}, ${decimalFormat2.format(targetEntity.motionZ)}"
+				val velocityText = "${DECIMALFORMAT_2.format(targetEntity.motionX)}, ${DECIMALFORMAT_2.format(targetEntity.motionY)}, ${DECIMALFORMAT_2.format(targetEntity.motionZ)}"
 
 				val healthColor = ColorUtils.getHealthColor(easingHealth, targetMaxHealth)
 
@@ -299,7 +293,7 @@ class Target : Element()
 				if (targetEntity.customNameTag.isNotBlank()) textFont.drawString("(${targetEntity.customNameTag})", textXOffset * reverseScale, (nameFont.fontHeight + 5) * reverseScale, Color.gray.rgb)
 
 				// Health/Armor-related
-				textFont.drawString("Health: $healthText | Absorption: ${if (targetAbsorption > 0) "\u00A7e" else "\u00A77"}${decimalFormat1.format(targetAbsorption.toLong())}\u00A7r | Armor: $armorText", scaledXPos, scaledYPos, 0xffffff)
+				textFont.drawString("Health: $healthText | Absorption: ${if (targetAbsorption > 0) "\u00A7e" else "\u00A77"}${DECIMALFORMAT_1.format(targetAbsorption.toLong())}\u00A7r | Armor: $armorText", scaledXPos, scaledYPos, 0xffffff)
 
 				// Movement/Position-related
 				textFont.drawString("Distance: ${distanceText}m | ${if (targetEntity.onGround) "\u00A7a" else "\u00A7c"}Ground\u00A7r | ${if (!targetEntity.sprinting) "\u00A7c" else "\u00A7a"}Sprinting\u00A7r | ${if (!targetEntity.sneaking) "\u00A7c" else "\u00A7a"}Sneaking\u00A7r", scaledXPos, scaledYPos + 12, 0xffffff)

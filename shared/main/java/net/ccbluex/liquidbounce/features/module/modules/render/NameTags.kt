@@ -25,24 +25,19 @@ import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
+import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_2
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.quickDrawBorderedRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.quickDrawRect
 import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11.*
-import java.text.DecimalFormat
 import kotlin.math.ceil
 
 // TODO: Customizable color & Rainbow support
 @ModuleInfo(name = "NameTags", description = "Changes the scale of the nametags so you can always read them.", category = ModuleCategory.RENDER)
 class NameTags : Module()
 {
-	companion object
-	{
-		private val DECIMAL_FORMAT = DecimalFormat("0.00")
-	}
-
 	private val healthValue = BoolValue("Health", true)
 	private val pingValue = BoolValue("Ping", true)
 	private val distanceValue = BoolValue("Distance", false)
@@ -165,7 +160,7 @@ class NameTags : Module()
 		}
 		else ""
 
-		val distanceText = if (distanceEnabled) "\u00A77${DECIMAL_FORMAT.format(thePlayer.getDistanceToEntityBox(entity))}m\u00A7r " else ""
+		val distanceText = if (distanceEnabled) "\u00A77${DECIMALFORMAT_2.format(thePlayer.getDistanceToEntityBox(entity))}m\u00A7r " else ""
 
 		val healthText = if (healthEnabled)
 		{
@@ -182,7 +177,7 @@ class NameTags : Module()
 				else -> "\u00A7a"
 			}
 
-			"\u00A77 $healthColor${DECIMAL_FORMAT.format(health)}${if (absorption > 0) "\u00A76+${DECIMAL_FORMAT.format(absorption)}$healthColor" else ""} HP \u00A77(${if (absorption > 0) "\u00A76" else healthColor}${DECIMAL_FORMAT.format(healthPercentage)}%\u00A77)\u00A7r"
+			"\u00A77 $healthColor${DECIMALFORMAT_2.format(health)}${if (absorption > 0) "\u00A76+${DECIMALFORMAT_2.format(absorption)}$healthColor" else ""} HP \u00A77(${if (absorption > 0) "\u00A76" else healthColor}${DECIMALFORMAT_2.format(healthPercentage)}%\u00A77)\u00A7r"
 		}
 		else ""
 

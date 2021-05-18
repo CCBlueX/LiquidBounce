@@ -262,7 +262,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * your box
 		 * @return     center of box
 		 */
-		private fun getCenter(box: IAxisAlignedBB): WVec3 = WVec3(box.minX + (box.maxX - box.minX) * 0.5, box.minY + (box.maxY - box.minY) * 0.5, box.minZ + (box.maxZ - box.minZ) * 0.5)
+		fun getCenter(box: IAxisAlignedBB): WVec3 = WVec3(box.minX + (box.maxX - box.minX) * 0.5, box.minY + (box.maxY - box.minY) * 0.5, box.minZ + (box.maxZ - box.minZ) * 0.5)
 
 		/**
 		 * Search good center
@@ -287,7 +287,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * count of step to search the good center. (*Warning If you set this value too low, it will make your minecraft SO SLOW AND SLOW.*) default is 0.2D
 		 * @return                   center
 		 */
-		fun searchCenter(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, targetBox: IAxisAlignedBB, flags: Int, jitterData: JitterData?, minPlayerPredict: Float, maxPlayerPredict: Float, distance: Float, hitboxDecrement: Double, searchSensitivity: Double): VecRotation?
+		fun searchCenter(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, targetBox: IAxisAlignedBB, flags: Int, jitterData: JitterData?, minPlayerPredict: Float, maxPlayerPredict: Float, distance: Float, hitboxDecrement: Double, searchSensitivity: Double, randomCenterSize: Double): VecRotation?
 		{
 			val randomVec: WVec3
 			val eyes = thePlayer.getPositionEyes(1.0f)
@@ -321,7 +321,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 				}
 			}
 
-			randomVec = WVec3(minX + (maxX - minX) * x * 0.8, minY + (maxY - minY) * y * 0.8, minZ + (maxZ - minZ) * z * 0.8)
+			randomVec = WVec3(minX + (maxX - minX) * x * randomCenterSize, minY + (maxY - minY) * y * randomCenterSize, minZ + (maxZ - minZ) * z * randomCenterSize)
 
 			val randomRotation = toRotation(thePlayer, randomVec, minPlayerPredict, maxPlayerPredict, playerPredict)
 			var yawJitterAmount = 0f
@@ -539,12 +539,12 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * your reach
 		 * @return                    if crosshair is over target
 		 */
-		fun isFaced(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, targetEntity: IEntity?, reachDistance: Double): Boolean = raycastEntity(theWorld, thePlayer, reachDistance) { entity -> targetEntity != null && targetEntity == entity } != null
+		fun isFaced(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, targetEntity: IEntity?, reachDistance: Double, aabbGetter: (IEntity) -> IAxisAlignedBB = IEntity::entityBoundingBox): Boolean = raycastEntity(theWorld, thePlayer, reachDistance, { entity -> targetEntity != null && targetEntity == entity }, aabbGetter) != null
 
 		/**
 		 * Allows you to check if your enemy is behind a wall
 		 */
-		private fun isVisible(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, vec3: WVec3): Boolean = theWorld.rayTraceBlocks(WVec3(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, thePlayer.posZ), vec3) == null
+		fun isVisible(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, vec3: WVec3): Boolean = theWorld.rayTraceBlocks(WVec3(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, thePlayer.posZ), vec3) == null
 
 		/**
 		 * Set your target rotation

@@ -13,8 +13,15 @@ import net.minecraft.network.play.server.S14PacketEntity
 
 class SPacketEntityImpl<out T : S14PacketEntity>(wrapped: T) : PacketImpl<T>(wrapped), ISPacketEntity
 {
+	override val rotating: Boolean
+		get() = wrapped.func_149060_h() // isRotating()
+
 	override val onGround: Boolean
 		get() = wrapped.onGround
+	override val yaw: Byte
+		get() = wrapped.func_149066_f() // getYaw()
+	override val pitch: Byte
+		get() = wrapped.func_149063_g() // getPitch()
 
 	override fun getEntity(world: IWorld): IEntity? = wrapped.getEntity(world.unwrap())?.wrap()
 }

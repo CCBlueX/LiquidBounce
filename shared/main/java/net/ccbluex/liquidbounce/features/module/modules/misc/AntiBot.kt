@@ -11,16 +11,15 @@ import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
-import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.ClientUtils
-import net.ccbluex.liquidbounce.utils.Rotation
-import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.LocationCache
 import net.ccbluex.liquidbounce.utils.extensions.getFullName
 import net.ccbluex.liquidbounce.utils.extensions.getPing
+import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_6
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -99,9 +98,20 @@ object AntiBot : Module()
 	private val healthValue = BoolValue("Health", false)
 
 	/**
+	 * Yaw Movements
+	 */
+	private val yawValue = BoolValue("YawMovements", false)
+
+	/**
+	 * Pitch Movements
+	 */
+	private val pitchValue = BoolValue("PitchMovements", false)
+
+	/**
 	 * Invalid-Pitch (a.k.a. Derp)
 	 */
 	private val invalidPitchValue = BoolValue("Derp", true)
+	private val invalidPitchKeepVLValue = BoolValue("Derp-KeepVL", true)
 
 	/**
 	 * Was Invisible
@@ -214,6 +224,11 @@ object AntiBot : Module()
 	private val customNameCompareToValue = ListValue("CustomName-Equality-CompareTo", arrayOf("DisplayName", "GameProfileName"), "DisplayName")
 
 	/**
+	 * TODO: Check if the player is inside one or more solid blocks (정상적인 플레이어라면 (Phase를 사용하지 않는 한)블럭을 뚫고 움직일 수 없지만 Anti-cheat NPC(봇)은 그 자리에 블럭이 있건 없건 씹고 그냥 자유롭게 움직이는 경우가 매우 많다)
+	 */
+	// TODO: private val collisionValue = BoolValue("Collision", true)
+
+	/**
 	 * "\u00A78[NPC] " prefix on name
 	 */
 	private val npcValue = BoolValue("NPC", true)
@@ -242,6 +257,9 @@ object AntiBot : Module()
 	private val spawnPosition = mutableSetOf<Int>()
 	private val gwen = mutableSetOf<Int>()
 	private val watchdog = mutableSetOf<Int>()
+	private val derp = mutableSetOf<Int>()
+	private val yawMovement = mutableSetOf<Int>()
+	private val pitchMovement = mutableSetOf<Int>()
 
 	private val spawnPositionSuspects = mutableSetOf<Int>()
 
@@ -252,32 +270,10 @@ object AntiBot : Module()
 	private val positionConsistencyLastDistanceDelta = mutableMapOf<Int, Double>()
 	private val positionConsistencyVL = mutableMapOf<Int, Int>()
 	private val teleportpacket_violation = mutableMapOf<Int, Int>()
+	// TODO: private val collision_violation = mutableMapOf<Int, Int>()
 
-	private val locationList = mutableListOf<Location>()
-	private const val yawListSize = 50
 
-	private val DECIMAL_FORMAT = DecimalFormat("##0.000000")
-
-	@EventTarget
-	fun onMotion(event: MotionEvent)
-	{
-		if (event.eventState == EventState.POST)
-		{
-			val thePlayer = mc.thePlayer ?: return
-
-			while (locationList.size >= yawListSize - 1) locationList.removeAt(0)
-
-			locationList.add(Location(WVec3(thePlayer.posX, thePlayer.entityBoundingBox.minY, thePlayer.posZ), RotationUtils.serverRotation))
-		}
-	}
-
-	private fun getPingCorrectionAppliedLocation(ping: Int, offset: Int = 0): Location
-	{
-		val correction = ceil(ping / 50F).toInt() + offset + positionPingCorrectionOffsetValue.get()
-
-		val indexLimit = locationList.size - 1
-		return locationList[(indexLimit - correction).coerceIn(0, indexLimit)]
-	}
+	private fun getPingCorrectionAppliedLocation(ping: Int, offset: Int = 0) = LocationCache.getPlayerLocationBeforeNTicks(ceil(ping / 50F).toInt() + offset + positionPingCorrectionOffsetValue.get())
 
 	@JvmStatic
 	fun checkTabList(targetName: String, displayName: Boolean, equals: Boolean, stripColors: Boolean): Boolean = mc.netHandler.playerInfoMap.map { networkPlayerInfo ->
@@ -333,8 +329,12 @@ object AntiBot : Module()
 			if ((0 until staticEntityIDValue.get()).map(ids::get).any { entityId == it }) return true
 		}
 
+		// Yaw & Pitch movements
+		if (yawValue.get() && !yawMovement.contains(entityId)) return true
+		if (pitchValue.get() && !pitchMovement.contains(entityId)) return true
+
 		// Invalid pitch (Derp)
-		if (invalidPitchValue.get() && (entity.rotationPitch > 90F || entity.rotationPitch < -90F)) return true
+		if (invalidPitchValue.get() && if (invalidPitchKeepVLValue.get()) derp.contains(entityId) else (entity.rotationPitch > 90F || entity.rotationPitch < -90F)) return true
 
 		// Was Invisible
 		if (wasInvisibleValue.get() && invisible.contains(entityId)) return true
@@ -401,9 +401,10 @@ object AntiBot : Module()
 
 		if (positionValue.get() && positionVL[entityId] ?: 0 >= positionDeltaVLLimitValue.get() || positionDeltaConsistencyValue.get() && positionConsistencyVL[entityId] ?: 0 >= positionDeltaConsistencyVLLimitValue.get()) return true
 
-		val customName = entity.customNameTag
 		if (customNameValue.get())
 		{
+			val customName = entity.customNameTag.let { if (customNameStripColorsValue.get()) stripColor(it) else it }
+
 			if (customName.isBlank()) return emptyCustomNameValue.get()
 
 			val compareTo = if (customNameCompareToValue.get().equals("DisplayName", ignoreCase = true)) displayName else profileName
@@ -453,6 +454,8 @@ object AntiBot : Module()
 				val customName: String = entity.asEntityPlayer().customNameTag
 
 				val packetGround = movePacket.onGround
+				val packetYaw = if (movePacket.rotating) movePacket.yaw * 360.0F / 256.0F else entity.rotationYaw
+				val packetPitch = if (movePacket.rotating) movePacket.pitch * 360.0F / 256.0F else entity.rotationPitch
 
 				// Ground
 				if (packetGround && !ground.contains(entityId)) ground.add(entityId)
@@ -475,6 +478,16 @@ object AntiBot : Module()
 					else invalidGround[entityId] = currentVL
 				}
 
+				// Yaw & Pitch movements
+				if (movePacket.rotating)
+				{
+					if (packetYaw != entity.rotationYaw % 360.0F && !yawMovement.contains(entityId)) yawMovement.add(entityId)
+					if (packetPitch != entity.rotationPitch % 360.0F && !pitchMovement.contains(entityId)) pitchMovement.add(entityId)
+				}
+
+				// Invalid Pitch
+				if ((packetPitch > 90.0F || packetPitch < -90.0F) && !derp.contains(entityId)) derp.add(entityId)
+
 				// Was Invisible
 				if (entity.invisible && !invisible.contains(entityId)) invisible.add(entityId)
 
@@ -485,7 +498,7 @@ object AntiBot : Module()
 				val hspeed = hypot(abs(entity.prevPosX - entity.posX), abs(entity.prevPosZ - entity.posZ))
 				if (hspeed > hspeedLimitValue.get())
 				{
-					if (notify && hspeedValue.get()) notification("HSpeed", "Moved too fast (horizontally): $displayName (${DECIMAL_FORMAT.format(hspeed)} blocks/tick)")
+					if (notify && hspeedValue.get()) notification("HSpeed", "Moved too fast (horizontally): $displayName (${DECIMALFORMAT_6.format(hspeed)} blocks/tick)")
 					this.hspeed[entityId] = this.hspeed[entityId] ?: 0 + 2
 				}
 				else if (hspeedVLDecValue.get())
@@ -498,7 +511,7 @@ object AntiBot : Module()
 				val vspeed = abs(entity.prevPosY - entity.posY)
 				if (vspeed > vspeedLimitValue.get())
 				{
-					if (notify && vspeedValue.get()) notification("VSpeed", "Moved too fast (vertically): $displayName (${DECIMAL_FORMAT.format(vspeed)} blocks/tick)")
+					if (notify && vspeedValue.get()) notification("VSpeed", "Moved too fast (vertically): $displayName (${DECIMALFORMAT_6.format(vspeed)} blocks/tick)")
 					this.vspeed[entityId] = (this.vspeed[entityId] ?: 0) + 2
 				}
 				else if (vspeedVLDecValue.get())
@@ -513,7 +526,7 @@ object AntiBot : Module()
 				val lastServerYaw = getPingCorrectionAppliedLocation(playerPing, 1).rotation.yaw
 				val lastServerYaw2 = getPingCorrectionAppliedLocation(playerPing, 2).rotation.yaw
 
-				val serverPos = serverLocation.pos
+				val serverPos = serverLocation.position
 				val serverYaw = serverLocation.rotation.yaw
 
 				val yawRadians = WMathHelper.toRadians(serverYaw - 180.0F)
@@ -556,7 +569,7 @@ object AntiBot : Module()
 							else -> 1
 						} + if (isSuspectedForSpawnPosition) 5 else 0
 
-						if (notify && positionValue.get() && ((prevVL + 5) % 20 == 0) || (vlIncrement >= 5)) notification("Position(Expect)", "Suspicious position: $displayName (+$vlIncrement) (dist: ${DECIMAL_FORMAT.format(distance)}, VL: ${prevVL + vlIncrement})")
+						if (notify && positionValue.get() && ((prevVL + 5) % 20 == 0) || (vlIncrement >= 5)) notification("Position(Expect)", "Suspicious position: $displayName (+$vlIncrement) (dist: ${DECIMALFORMAT_6.format(distance)}, VL: ${prevVL + vlIncrement})")
 						positionVL[entityId] = prevVL + vlIncrement
 					}
 					else if (positionDeltaVLDec)
@@ -584,7 +597,7 @@ object AntiBot : Module()
 								else -> 1
 							} + if (isSuspectedForSpawnPosition) 10 else 0
 
-							if (notify && positionDeltaConsistencyValue.get() && ((prevVL + 5) % 10 == 0 || vlIncrement >= 5)) notification("Position(Expect-Consistency)", "Suspicious position consistency: $displayName (delta: ${DECIMAL_FORMAT.format(consistency)}, posVL: $prevVL, posConsistencyVL: $prevConsistencyVL)")
+							if (notify && positionDeltaConsistencyValue.get() && ((prevVL + 5) % 10 == 0 || vlIncrement >= 5)) notification("Position(Expect-Consistency)", "Suspicious position consistency: $displayName (delta: ${DECIMALFORMAT_6.format(consistency)}, posVL: $prevVL, posConsistencyVL: $prevConsistencyVL)")
 							positionConsistencyVL[entityId] = prevConsistencyVL + vlIncrement
 						}
 						else if (positionDeltaConsistencyVLDec)
@@ -614,7 +627,7 @@ object AntiBot : Module()
 
 					if (vDist > 10 && vDist < 13 && hDist < 3 && !checkTabList(entity.asEntityPlayer().gameProfile.name, displayName = false, equals = true, stripColors = true))
 					{
-						if (notify && watchdogValue.get()) notification("Watchdog(Distance)", "Detected watchdog bot: $displayName (hDist: ${DECIMAL_FORMAT.format(hDist)}, vDist: ${DECIMAL_FORMAT.format(vDist)})")
+						if (notify && watchdogValue.get()) notification("Watchdog(Distance)", "Detected watchdog bot: $displayName (hDist: ${DECIMALFORMAT_6.format(hDist)}, vDist: ${DECIMALFORMAT_6.format(vDist)})")
 						watchdog.add(entityId)
 					}
 				}
@@ -679,7 +692,7 @@ object AntiBot : Module()
 
 			val serverLocation = getPingCorrectionAppliedLocation(playerPing)
 
-			val serverPos = serverLocation.pos
+			val serverPos = serverLocation.position
 			val serverYaw = serverLocation.rotation.yaw
 
 			if (hypot(serverPos.xCoord - entityX, serverPos.zCoord - entityZ) <= 10 && entityY >= serverPos.yCoord) spawnPositionSuspects.add(entityId)
@@ -707,7 +720,7 @@ object AntiBot : Module()
 			// Position Delta
 			if (expectDelta <= positionDeltaLimit)
 			{
-				if (notify && spawnPositionValue.get()) notification("Spawn(Expect)", "Suspicious spawn: Entity #$entityId (dist: ${DECIMAL_FORMAT.format(expectDelta)})")
+				if (notify && spawnPositionValue.get()) notification("Spawn(Expect)", "Suspicious spawn: Entity #$entityId (dist: ${DECIMALFORMAT_6.format(expectDelta)})")
 				spawnPosition.add(entityId)
 			}
 		}
@@ -728,8 +741,8 @@ object AntiBot : Module()
 
 		val lastServerYaw = lastServerLocation.rotation.yaw
 
-		val serverPos = serverLocation.pos
-		val lastServerPos = lastServerLocation.pos
+		val serverPos = serverLocation.position
+		val lastServerPos = lastServerLocation.position
 
 		val yaw = lastServerYaw + (serverLocation.rotation.yaw - lastServerYaw) * partialTicks
 
@@ -835,5 +848,3 @@ object AntiBot : Module()
 		LiquidBounce.hud.addNotification("AntiBot: $checkName check", message, 10000L, Color.red)
 	}
 }
-
-private data class Location(val pos: WVec3, val rotation: Rotation)

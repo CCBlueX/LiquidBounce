@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.utils.PacketCounter
 import net.ccbluex.liquidbounce.utils.ServerUtils
 import net.ccbluex.liquidbounce.utils.extensions.getPing
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
+import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_2
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.createRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
@@ -24,7 +25,6 @@ import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.input.Keyboard
 import java.awt.Color
-import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import kotlin.math.hypot
 
@@ -42,8 +42,6 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 
 		val DATE_FORMAT = SimpleDateFormat("yyyy-MM-dd")
 		val HOUR_FORMAT = SimpleDateFormat("HH:mm")
-
-		val DECIMAL_FORMAT = DecimalFormat("0.00")
 
 		/**
 		 * Create default element
@@ -118,20 +116,20 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 
 			when (str.toLowerCase())
 			{
-				"x" -> return DECIMAL_FORMAT.format(thePlayer.posX)
-				"y" -> return DECIMAL_FORMAT.format(thePlayer.posY)
-				"z" -> return DECIMAL_FORMAT.format(thePlayer.posZ)
+				"x" -> return DECIMALFORMAT_2.format(thePlayer.posX)
+				"y" -> return DECIMALFORMAT_2.format(thePlayer.posY)
+				"z" -> return DECIMALFORMAT_2.format(thePlayer.posZ)
 				"xdp" -> return thePlayer.posX.toString()
 				"ydp" -> return thePlayer.posY.toString()
 				"zdp" -> return thePlayer.posZ.toString()
 
-				"mx" -> return DECIMAL_FORMAT.format(thePlayer.motionX)
-				"my" -> return DECIMAL_FORMAT.format(thePlayer.motionY)
-				"mz" -> return DECIMAL_FORMAT.format(thePlayer.motionZ)
+				"mx" -> return DECIMALFORMAT_2.format(thePlayer.motionX)
+				"my" -> return DECIMALFORMAT_2.format(thePlayer.motionY)
+				"mz" -> return DECIMALFORMAT_2.format(thePlayer.motionZ)
 
-				"mxpersec" -> return DECIMAL_FORMAT.format(thePlayer.motionX * defaultTPS)
-				"mypersec" -> return DECIMAL_FORMAT.format(thePlayer.motionY * defaultTPS)
-				"mzpersec" -> return DECIMAL_FORMAT.format(thePlayer.motionZ * defaultTPS)
+				"mxpersec" -> return DECIMALFORMAT_2.format(thePlayer.motionX * defaultTPS)
+				"mypersec" -> return DECIMALFORMAT_2.format(thePlayer.motionY * defaultTPS)
+				"mzpersec" -> return DECIMALFORMAT_2.format(thePlayer.motionZ * defaultTPS)
 
 				"mxdp" -> return thePlayer.motionX.toString()
 				"mydp" -> return thePlayer.motionY.toString()
@@ -141,15 +139,15 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 				"mydppersec" -> return (thePlayer.motionY * defaultTPS).toString()
 				"mzdppersec" -> return (thePlayer.motionZ * defaultTPS).toString()
 
-				"velocity" -> return DECIMAL_FORMAT.format(hypot(thePlayer.motionX, thePlayer.motionZ))
-				"velocitypersec" -> return DECIMAL_FORMAT.format(hypot(thePlayer.motionX, thePlayer.motionZ) * defaultTPS)
+				"velocity" -> return DECIMALFORMAT_2.format(hypot(thePlayer.motionX, thePlayer.motionZ))
+				"velocitypersec" -> return DECIMALFORMAT_2.format(hypot(thePlayer.motionX, thePlayer.motionZ) * defaultTPS)
 
 				"velocitydp" -> return "${hypot(thePlayer.motionX, thePlayer.motionZ)}"
 				"velocitydppersec" -> return "${hypot(thePlayer.motionX, thePlayer.motionZ) * defaultTPS}"
 
 				"ping" -> return thePlayer.getPing().toString()
-				"health" -> return DECIMAL_FORMAT.format(thePlayer.health)
-				"maxhealth" -> return DECIMAL_FORMAT.format(thePlayer.maxHealth)
+				"health" -> return DECIMALFORMAT_2.format(thePlayer.health)
+				"maxhealth" -> return DECIMALFORMAT_2.format(thePlayer.maxHealth)
 				"food" -> return thePlayer.foodStats.foodLevel.toString()
 
 				"facing" -> return StringUtils.getHorizontalFacing(thePlayer.rotationYaw)
