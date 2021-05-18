@@ -288,7 +288,7 @@ class ChestStealer : Module()
 		if (classProvider.isSPacketWindowItems(packet)) contentReceived = packet.asSPacketWindowItems().windowId
 	}
 
-	private fun shouldTake(thePlayer: IEntityPlayerSP, stack: IItemStack?, slot: Int, inventoryCleaner: InventoryCleaner, end: Int, container: IContainer): Boolean = stack != null && (!onlyItemsValue.get() || !classProvider.isItemBlock(stack.item)) && (!inventoryCleaner.state || inventoryCleaner.isUseful(thePlayer, slot, stack, end = end, container = container) && inventoryCleaner.isUseful(thePlayer, -1, stack, container = thePlayer.inventoryContainer) /* 상자 안에서 가장 좋은 템이랑 인벤 안의 가장 좋은 템이랑 비교한 후, 상자 안의 것이 더 좋을 경우에만 가져가기 */) && (System.currentTimeMillis() - stack.itemDelay >= itemDelayValue.get())
+	private fun shouldTake(thePlayer: IEntityPlayerSP, stack: IItemStack?, slot: Int, inventoryCleaner: InventoryCleaner, end: Int, container: IContainer): Boolean = stack != null && (!onlyItemsValue.get() || !classProvider.isItemBlock(stack.item)) && (System.currentTimeMillis() - stack.itemDelay >= itemDelayValue.get() && (!inventoryCleaner.state || inventoryCleaner.isUseful(thePlayer, slot, stack, end = end, container = container) && inventoryCleaner.isUseful(thePlayer, -1, stack, container = thePlayer.inventoryContainer) /* 상자 안에서 가장 좋은 템이랑 인벤 안의 가장 좋은 템이랑 비교한 후, 상자 안의 것이 더 좋을 경우에만 가져가기 */))
 
 	private fun move(screen: IGuiChest, slot: ISlot, misclick: Boolean)
 	{

@@ -60,6 +60,9 @@ object Fucker : Module()
 	private val switchTimer = MSTimer()
 	var currentDamage = 0F
 
+	@JvmStatic
+	private val facings = EnumFacingType.values().map(classProvider::getEnumFacing)
+
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
@@ -267,7 +270,7 @@ object Fucker : Module()
 				movingObjectPosition != null && movingObjectPosition.blockPos == blockPos
 			}
 
-			"around" -> !isFullBlock(theWorld, blockPos.down()) || !isFullBlock(theWorld, blockPos.up()) || !isFullBlock(theWorld, blockPos.north()) || !isFullBlock(theWorld, blockPos.east()) || !isFullBlock(theWorld, blockPos.south()) || !isFullBlock(theWorld, blockPos.west())
+			"around" -> facings.any { !isFullBlock(theWorld, blockPos.offset(it)) }
 			else -> true
 		}
 	}

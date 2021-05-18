@@ -53,6 +53,7 @@ class XrayCommand : Command("xray")
 							}
 
 							xRay.xrayBlocks.add(block)
+							if (xRay.state) mc.renderGlobal.loadRenderers()
 							FileManager.saveConfig(LiquidBounce.fileManager.xrayConfig)
 							chat(thePlayer, "\u00A77Added block \u00A78${block.localizedName}\u00A77.")
 							playEdit()
@@ -99,6 +100,7 @@ class XrayCommand : Command("xray")
 							}
 
 							xRay.xrayBlocks.remove(block)
+							if (xRay.state) mc.renderGlobal.loadRenderers()
 							FileManager.saveConfig(LiquidBounce.fileManager.xrayConfig)
 							chat(thePlayer, "\u00A77Removed block \u00A78${block.localizedName}\u00A77.")
 							playEdit()
@@ -120,9 +122,20 @@ class XrayCommand : Command("xray")
 					xRay.xrayBlocks.forEach { chat(thePlayer, "\u00A78${it.localizedName} \u00A77-\u00A7c ${func.getIdFromBlock(it)}") }
 					return
 				}
+
+				"orbfuscatorbypass" ->
+				{
+					xRay.orbfuscatorBypass = !xRay.orbfuscatorBypass
+					if (xRay.state) mc.renderGlobal.loadRenderers()
+					FileManager.saveConfig(LiquidBounce.fileManager.xrayConfig)
+					chat(thePlayer, "\u00A78Xray orbfuscator bypass has been ${if (xRay.orbfuscatorBypass) "enabled" else "disabled"}")
+					playEdit()
+					return
+				}
 			}
 		}
-		chatSyntax(thePlayer, "xray <add, remove, list>")
+
+		chatSyntax(thePlayer, "xray <add, remove, list, orbfuscatorBypass>")
 	}
 
 	override fun tabComplete(args: Array<String>): List<String>
@@ -133,7 +146,7 @@ class XrayCommand : Command("xray")
 
 		return when (args.size)
 		{
-			1 -> arrayOf("add", "remove", "list").filter { it.startsWith(args[0], ignoreCase = true) }
+			1 -> arrayOf("add", "remove", "list", "orbfuscatorBypass").filter { it.startsWith(args[0], ignoreCase = true) }
 
 			2 ->
 			{

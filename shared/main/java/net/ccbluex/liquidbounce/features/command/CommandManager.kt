@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.utils.ClientUtils
 class CommandManager
 {
 	val commands = mutableListOf<Command>()
+	val commandNameSet = mutableSetOf<String>()
 	var latestAutoComplete: Array<String> = emptyArray()
 
 	var prefix = '.'
@@ -119,24 +120,26 @@ class CommandManager
 	/**
 	 * Register [command] by just adding it to the commands registry
 	 */
-	fun registerCommand(command: Command) = commands.add(command)
+	fun registerCommand(command: Command)
+	{
+		if (!commandNameSet.contains(command.command))
+		{
+			commands.add(command)
+			commandNameSet.add(command.command)
+		}
+	}
 
 	fun registerShortcut(name: String, script: String)
 	{
-		if (getCommand(name) == null)
-		{
-			registerCommand(Shortcut(name, ShortcutParser.parse(script).map {
-				val command = getCommand(it[0]) ?: throw IllegalArgumentException("Command ${it[0]} not found!")
+		require(!commandNameSet.contains(name)) { "Command already exists!" }
 
-				command to it.toTypedArray()
-			}))
+		registerCommand(Shortcut(name, ShortcutParser.parse(script).map {
+			val command = getCommand(it[0]) ?: throw IllegalArgumentException("Command ${it[0]} not found!")
 
-			FileManager.saveConfig(LiquidBounce.fileManager.shortcutsConfig)
-		}
-		else
-		{
-			throw IllegalArgumentException("Command already exists!")
-		}
+			command to it.toTypedArray()
+		}))
+
+		FileManager.saveConfig(LiquidBounce.fileManager.shortcutsConfig)
 	}
 
 	fun unregisterShortcut(name: String): Boolean
@@ -144,6 +147,8 @@ class CommandManager
 		val removed = commands.removeIf {
 			it is Shortcut && it.command.equals(name, ignoreCase = true)
 		}
+
+		if (removed) commandNameSet.remove(name)
 
 		FileManager.saveConfig(LiquidBounce.fileManager.shortcutsConfig)
 
@@ -153,5 +158,9 @@ class CommandManager
 	/**
 	 * Unregister [command] by just removing it from the commands registry
 	 */
-	fun unregisterCommand(command: Command?) = commands.remove(command)
+	fun unregisterCommand(command: Command?)
+	{
+		commands.remove(command)
+		command?.command?.let(commandNameSet::remove)
+	}
 }

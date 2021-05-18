@@ -280,6 +280,20 @@ class Scaffold : Module()
 	// Falling Started On YPosition
 	private var fallStartY = 0.0
 
+	companion object
+	{
+		val xzOffsets = arrayOf(Triple(0, 0, 0), Triple(0, 0, -1), Triple(0, 0, 1), Triple(-1, 0, 0), Triple(1, 0, 0), Triple(-1, 0, 1), Triple(1, 0, 1), Triple(-1, 0, -1), Triple(1, 0, -1))
+		private val yoffsets = arrayOf(0, -1, 1)
+
+		val xyzOffsets = Array(27) { Triple(0, 0, 0) }
+
+		init
+		{
+			var index = 0
+			for (y in yoffsets) for ((x, _, z) in xzOffsets) xyzOffsets[index++] = Triple(x, y, z)
+		}
+	}
+
 	// ENABLING MODULE
 	override fun onEnable()
 	{
@@ -650,12 +664,8 @@ class Scaffold : Module()
 		var clutching = false
 		if (fallStartY - thePlayer.posY > 2) // Clutch while falling
 		{
-			val mx = thePlayer.motionX.coerceIn(-2.5, 2.5)
-			val my = thePlayer.motionY.coerceIn(-2.5, 0.0)
-			val mz = thePlayer.motionZ.coerceIn(-2.5, 2.5)
-
-			searchPosition = WBlockPos(thePlayer.posX + mx, thePlayer.entityBoundingBox.minY + my, thePlayer.posZ + mz).down() // Predict position and clutch
-			state = "Clutch based at motion $mx $my $mz"
+			searchPosition = WBlockPos(thePlayer).down(2)
+			state = "Clutch"
 			clutching = true
 		}
 		else if (!sameY && abCollisionBB.maxY - abCollisionBB.minY < 1.0 && groundMaxY < 1.0 && abCollisionBB.maxY - abCollisionBB.minY < groundMaxY - groundMinY)
@@ -700,9 +710,10 @@ class Scaffold : Module()
 		if (!expand && (!isReplaceable(searchPosition) || search(theWorld, thePlayer, searchPosition, checkVisible, searchBounds))) return
 
 		val ySearch = ySearchValue.get() || clutching
+		val directionDegrees = MovementUtils.getDirectionDegrees(thePlayer)
 		if (expand)
 		{
-			val horizontalFacing = func.getHorizontalFacing(MovementUtils.getDirectionDegrees(thePlayer))
+			val horizontalFacing = func.getHorizontalFacing(directionDegrees)
 			repeat(expandLengthValue.get()) { i ->
 				if (search(theWorld, thePlayer, searchPosition.add(when (horizontalFacing)
 					{
@@ -717,10 +728,19 @@ class Scaffold : Module()
 					}), false, searchBounds)) return@findBlock
 			}
 		}
-		else if (searchValue.get()) (-1..1).forEach { x ->
-			(if (ySearch) -1..1 else 0..0).forEach { y ->
-				if ((-1..1).any { z -> search(theWorld, thePlayer, searchPosition.add(x, y, z), !shouldGoDown, searchBounds) }) return@findBlock
-			}
+		else if (searchValue.get())
+		{
+			val xFacing = func.getHorizontalFacing(directionDegrees - 90.0F)
+			val yFacing = classProvider.getEnumFacing(EnumFacingType.UP)
+			val zFacing = func.getHorizontalFacing(directionDegrees)
+
+			if ((if (ySearch) xyzOffsets else xzOffsets).map { (x, y, z) -> searchPosition.offset(xFacing, x).offset(yFacing, y).offset(zFacing, z) }.any { search(theWorld, thePlayer, it, !shouldGoDown, searchBounds) }) return
+
+			// (-1..1).forEach { x ->
+			// 	(if (ySearch) -1..1 else 0..0).forEach { y ->
+			// 		if ((-1..1).any { z -> search(theWorld, thePlayer, searchPosition.add(x, y, z), !shouldGoDown, searchBounds) }) return@findBlock
+			// 	}
+			// }
 		}
 	}
 

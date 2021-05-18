@@ -22,7 +22,10 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.AutoArmor
 import net.ccbluex.liquidbounce.features.module.modules.combat.AutoPot
-import net.ccbluex.liquidbounce.utils.*
+import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.InventoryUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.createOpenInventoryPacket
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
 import net.ccbluex.liquidbounce.utils.timer.Cooldown
@@ -121,6 +124,7 @@ class InventoryCleaner : Module()
 	private val foodValue = BoolValue("Food", true)
 
 	private val ignoreVehiclesValue = BoolValue("IgnoreVehicles", false)
+	private val noDuplicateValue = BoolValue("NoDuplicate", false)
 
 	// Visuals
 	private val indicateClick = BoolValue("ClickIndicationh", false)
@@ -299,47 +303,74 @@ class InventoryCleaner : Module()
 
 			val provider = classProvider
 
+			val containerItems = items(start, end, container)
+
+			val noDup = noDuplicateValue.get()
+
+			// FIXME: Replace ItemStack equality check (itemStack != otherStack) with something better idea.
+
 			when
 			{
 				provider.isItemSword(item) || provider.isItemTool(item) ->
 				{
 					if ((provider.isItemSword(item) && keepOldSwordValue.get()) || (provider.isItemTool(item) && keepOldToolsValue.get())) return true
 
-					if (slot >= 36 && findBetterItem(thePlayer, slot - 36, thePlayer.inventory.getStackInSlot(slot - 36)) == slot - 36) return true
+					val hotbarSlot = slot - 36
+					if (hotbarSlot >= 0 && findBetterItem(thePlayer, hotbarSlot, thePlayer.inventory.getStackInSlot(hotbarSlot)) == hotbarSlot) return true
 
-					repeat(9) { if ((type(it).equals("sword", true) && provider.isItemSword(item) || type(it).equals("pickaxe", true) && provider.isItemPickaxe(item) || type(it).equals("axe", true) && provider.isItemAxe(item)) && findBetterItem(thePlayer, it, thePlayer.inventory.getStackInSlot(it)) == null) return@isUseful true }
+					repeat(9) {
+						val type = type(it)
+						if ((type.equals("sword", true) && provider.isItemSword(item) || type.equals("pickaxe", true) && provider.isItemPickaxe(item) || type.equals("axe", true) && provider.isItemAxe(item)) && findBetterItem(thePlayer, it, thePlayer.inventory.getStackInSlot(it)) == null) return@isUseful true
+					}
 
-					val damage = (itemStack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount ?: 0.0) + 1.25 * ItemUtils.getEnchantment(itemStack, provider.getEnchantmentEnum(EnchantmentType.SHARPNESS))
+					val getAttackDamage = { stack: IItemStack -> stack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount ?: 0.0 + 1.25 * ItemUtils.getEnchantment(itemStack, provider.getEnchantmentEnum(EnchantmentType.SHARPNESS)) }
 
-					items(start, end, container = container).none { (otherSlot, stack) -> otherSlot != slot && stack != itemStack && stack.javaClass == itemStack.javaClass && damage < (stack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount ?: 0.0) + 1.25 * ItemUtils.getEnchantment(stack, provider.getEnchantmentEnum(EnchantmentType.SHARPNESS)) }
+					val attackDamage = getAttackDamage(itemStack)
+
+					containerItems.none { (otherSlot, otherStack) -> otherSlot != slot && otherStack != itemStack && otherStack.javaClass == itemStack.javaClass && attackDamage.compareTo(getAttackDamage(otherStack)) < if (noDup) 1 else 0 }
 				}
 
 				bowAndArrowValue.get() && provider.isItemBow(item) ->
 				{
-					val currentPower = ItemUtils.getEnchantment(itemStack, provider.getEnchantmentEnum(EnchantmentType.POWER))
+					val powerEnch = provider.getEnchantmentEnum(EnchantmentType.POWER)
+					val currentPower = ItemUtils.getEnchantment(itemStack, powerEnch)
 
-					items(start, end, container = container).none { (otherSlot, stack) -> otherSlot != slot && itemStack != stack && provider.isItemBow(stack.item) && currentPower < ItemUtils.getEnchantment(stack, provider.getEnchantmentEnum(EnchantmentType.POWER)) }
+					containerItems.none { (otherSlot, otherStack) -> otherSlot != slot && otherStack != itemStack && provider.isItemBow(otherStack.item) && currentPower.compareTo(ItemUtils.getEnchantment(otherStack, powerEnch)) < if (noDup) 1 else 0 }
 				}
 
 				provider.isItemArmor(item) ->
 				{
 					val currentArmor = ArmorPiece(itemStack, slot)
 
-					items(start, end, container = container).none { (otherSlot, otherStack) ->
+					containerItems.none { (otherSlot, otherStack) ->
 						if (otherSlot != slot && otherStack != itemStack && provider.isItemArmor(otherStack.item))
 						{
 							val armor = ArmorPiece(otherStack, otherSlot)
 
-							if (armor.armorType != currentArmor.armorType) false
-							else AutoArmor.ARMOR_COMPARATOR.compare(currentArmor, armor) <= 0
+							armor.armorType == currentArmor.armorType && AutoArmor.ARMOR_COMPARATOR.compare(currentArmor, armor) < if (noDup) 1 else 0
 						}
 						else false
 					}
 				}
 
-				compassValue.get() && itemStack.unlocalizedName == "item.compass" -> items(start, end, container = container).none { (otherSlot, stack) -> otherSlot != slot && itemStack != stack && stack.unlocalizedName == "item.compass" }
+				compassValue.get() && itemStack.unlocalizedName == "item.compass" -> !noDup || containerItems.none { (otherSlot, otherStack) -> otherSlot != slot && itemStack != otherStack && otherStack.unlocalizedName == "item.compass" }
 
-				else -> foodValue.get() && provider.isItemFood(item) || bowAndArrowValue.get() && itemStack.unlocalizedName == "item.arrow" || provider.isItemBlock(item) && !provider.isBlockBush(item?.asItemBlock()?.block) || bedValue.get() && provider.isItemBed(item) || diamondValue.get() && itemStack.unlocalizedName == "item.diamond" || ironIngotValue.get() && itemStack.unlocalizedName == "item.ingotIron" || potionValue.get() && provider.isItemPotion(item) && AutoPot.isPotionUseful(itemStack) || enderPearlValue.get() && provider.isItemEnderPearl(item) || provider.isItemEnchantedBook(item) || bucketValue.get() && provider.isItemBucket(item) || itemStack.unlocalizedName == "item.stick" || ignoreVehiclesValue.get() && (provider.isItemBoat(item) || provider.isItemMinecart(item))
+				bedValue.get() && provider.isItemBed(item) -> !noDup || run {
+					val name = itemStack.unlocalizedName
+					containerItems.none { (otherSlot, otherStack) -> otherSlot != slot && itemStack != otherStack && otherStack.unlocalizedName == name }
+				}
+
+				else -> foodValue.get() && provider.isItemFood(item) // Food
+					|| bowAndArrowValue.get() && itemStack.unlocalizedName == "item.arrow" // Arrow
+					|| provider.isItemBlock(item) && !provider.isBlockBush(item?.asItemBlock()?.block) // Block
+					|| diamondValue.get() && itemStack.unlocalizedName == "item.diamond" // Diamond
+					|| ironIngotValue.get() && itemStack.unlocalizedName == "item.ingotIron" // Iron
+					|| potionValue.get() && provider.isItemPotion(item) && AutoPot.isPotionUseful(itemStack) // Potion
+					|| enderPearlValue.get() && provider.isItemEnderPearl(item) // Ender Pearl
+					|| provider.isItemEnchantedBook(item) // Enchanted Book
+					|| bucketValue.get() && provider.isItemBucket(item) // Bucket
+					|| itemStack.unlocalizedName == "item.stick" // Stick
+					|| ignoreVehiclesValue.get() && (provider.isItemBoat(item) || provider.isItemMinecart(item)) // Vehicles
 			}
 		}
 		catch (ex: Exception)
@@ -385,7 +416,7 @@ class InventoryCleaner : Module()
 		{
 			"sword", "pickaxe", "axe" ->
 			{
-				// Supressed by kotlin compiler bug
+				// Kotlin compiler bug
 				// https://youtrack.jetbrains.com/issue/KT-17018
 				// https://youtrack.jetbrains.com/issue/KT-38704
 				@Suppress("ConvertLambdaToReference")
@@ -397,8 +428,7 @@ class InventoryCleaner : Module()
 					else -> return null
 				}
 
-				var bestWeapon = if (currentTypeChecker(slotStack?.item)) targetSlot
-				else -1
+				var bestWeapon = if (currentTypeChecker(slotStack?.item)) targetSlot else -1
 
 				thePlayer.inventory.mainInventory.asSequence().withIndex().filter { currentTypeChecker(it.value?.item) }.map { it.index to it.value as IItemStack }.filter { !type(it.first).equals(type, ignoreCase = true) }.forEach { (index, stack) ->
 					if (bestWeapon == -1) bestWeapon = index
@@ -475,8 +505,8 @@ class InventoryCleaner : Module()
 
 		val emptySlots = mutableListOf<Int>()
 
-		slots.forEach { map: Map.Entry<Int, IItemStack?> ->
-			if (map.value == null) emptySlots.add(map.key)
+		slots.forEach { (key, value) ->
+			if (value == null) emptySlots.add(key)
 		}
 
 		if (emptySlots.isEmpty()) return -1

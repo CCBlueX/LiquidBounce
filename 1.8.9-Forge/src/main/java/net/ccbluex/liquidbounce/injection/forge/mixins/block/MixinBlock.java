@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.XRay;
 import net.ccbluex.liquidbounce.features.module.modules.world.NoSlowBreak;
 import net.ccbluex.liquidbounce.injection.backend.AxisAlignedBBImplKt;
 import net.ccbluex.liquidbounce.injection.backend.BlockImplKt;
+import net.ccbluex.liquidbounce.injection.backend.EnumFacingImplKt;
 import net.ccbluex.liquidbounce.injection.backend.utils.BackendExtentionsKt;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -29,6 +30,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -81,13 +83,13 @@ public abstract class MixinBlock
 	}
 
 	@Inject(method = "shouldSideBeRendered", at = @At("HEAD"), cancellable = true)
-	private void shouldSideBeRendered(final CallbackInfoReturnable<? super Boolean> callbackInfoReturnable)
+	private void shouldSideBeRendered(final IBlockAccess worldIn, final BlockPos pos, final EnumFacing side, final CallbackInfoReturnable<? super Boolean> callbackInfoReturnable)
 	{
 		final XRay xray = (XRay) LiquidBounce.moduleManager.get(XRay.class);
 
 		if (xray.getState())
 			// noinspection ConstantConditions
-			callbackInfoReturnable.setReturnValue(xray.getXrayBlocks().contains(BlockImplKt.wrap((Block) (Object) this))); // #298 Bugfix
+			callbackInfoReturnable.setReturnValue(xray.canBeRendered(BackendExtentionsKt.wrap(pos), BlockImplKt.wrap((Block) (Object) this))); // #298 Bugfix
 	}
 
 	@Inject(method = "isCollidable", at = @At("HEAD"), cancellable = true)

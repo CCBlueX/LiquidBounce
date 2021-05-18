@@ -54,6 +54,8 @@ class BlockImpl(val wrapped: Block) : IBlock
 	override fun getUnlocalizedName(): String = wrapped.unlocalizedName
 
 	override fun equals(other: Any?): Boolean = other is BlockImpl && other.wrapped == wrapped
+
+	override fun hashCode(): Int = wrapped.hashCode()
 }
 
 fun IBlock.unwrap(): Block = (this as BlockImpl).wrapped

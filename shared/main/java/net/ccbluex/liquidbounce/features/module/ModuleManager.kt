@@ -27,6 +27,7 @@ import java.util.*
 // TODO: Add TpFucker (like TpEggBreaker in Jigsaw)
 // TODO: Add TargetStrafe
 // TODO: Add HackerDetect
+// TODO: ProjectileAimbot (https://github.com/CCBlueX/Old-LiquidBounce-Issues/issues/3496)
 class ModuleManager : Listenable
 {
 	val modules = TreeSet<Module> { module1, module2 -> module1.name.compareTo(module2.name) }

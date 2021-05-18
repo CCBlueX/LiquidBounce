@@ -23,6 +23,9 @@ class AutoWeapon : Module()
 {
 	private val silentValue = BoolValue("SpoofItem", false) // Silent
 	private val silentKeepTicksValue = IntegerValue("SpoofTicks", 10, 1, 20) // SilentKeepTicks
+	private val itemDelayValue = IntegerValue("ItemDelay", 0, 0, 1000)
+	private val onlySwordValue = BoolValue("OnlySword", false)
+
 	private var attackEnemy = false
 
 	private var keepTicks = 0
@@ -51,8 +54,11 @@ class AutoWeapon : Module()
 
 			attackEnemy = false
 
+			val itemDelay = itemDelayValue.get()
+			val onlySword = onlySwordValue.get()
+
 			// Find best weapon in hotbar (#Kotlin Style)
-			val (slot, _) = (0..8).asSequence().mapNotNull { it to (inventory.getStackInSlot(it) ?: return@mapNotNull null) }.filter { (_, stack) -> provider.isItemSword(stack.item) || provider.isItemTool(stack.item) }.maxBy { (_, stack) -> (stack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount ?: 2.0) + 1.25 * ItemUtils.getEnchantment(stack, provider.getEnchantmentEnum(EnchantmentType.SHARPNESS)) } ?: return
+			val (slot, _) = (0..8).asSequence().mapNotNull { it to (inventory.getStackInSlot(it) ?: return@mapNotNull null) }.filter { (_, stack) -> (provider.isItemSword(stack.item) || !onlySword && provider.isItemTool(stack.item)) && System.currentTimeMillis() - stack.itemDelay >= itemDelay }.maxBy { (_, stack) -> (stack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount ?: 2.0) + 1.25 * ItemUtils.getEnchantment(stack, provider.getEnchantmentEnum(EnchantmentType.SHARPNESS)) } ?: return
 
 			if (slot == inventory.currentItem) // If in hand no need to swap
 				return
