@@ -309,12 +309,14 @@ class InventoryCleaner : Module()
 			val provider = classProvider
 
 			val containerItems = items(start, end, container)
+			val inventoryItems = items(0, 45, container = thePlayer.inventoryContainer)
 
 			val noDup = noDuplicateValue.get()
 
 			// FIXME: Replace ItemStack equality check (itemStack != otherStack) with something better idea.
 
 			val bowAndArrow = bowAndArrowValue.get()
+			val comparator = if (noDup) 1 else 0
 
 			when
 			{
@@ -334,25 +336,25 @@ class InventoryCleaner : Module()
 
 					val attackDamage = getAttackDamage(itemStack)
 
-					containerItems.none { (otherSlot, otherStack) -> otherSlot != slot && otherStack != itemStack && otherStack.javaClass == itemStack.javaClass && attackDamage.compareTo(getAttackDamage(otherStack)) < if (noDup) 1 else 0 }
+					containerItems.none { (otherSlot, otherStack) -> otherSlot != slot && otherStack != itemStack && otherStack.javaClass == itemStack.javaClass && attackDamage.compareTo(getAttackDamage(otherStack)) < comparator }
 				}
 
-				bowAndArrow ->
+				bowAndArrow && provider.isItemBow(item) ->
 				{
-					when
-					{
-						provider.isItemBow(item) ->
-						{
-							val powerEnch = provider.getEnchantmentEnum(EnchantmentType.POWER)
-							val currentPower = ItemUtils.getEnchantment(itemStack, powerEnch)
 
-							containerItems.none { (otherSlot, otherStack) -> otherSlot != slot && otherStack != itemStack && provider.isItemBow(otherStack.item) && currentPower.compareTo(ItemUtils.getEnchantment(otherStack, powerEnch)) < if (noDup) 1 else 0 }
-						}
+					val powerEnch = provider.getEnchantmentEnum(EnchantmentType.POWER)
+					val currentPower = ItemUtils.getEnchantment(itemStack, powerEnch)
 
-						itemStack.unlocalizedName == "item.arrow" -> containerItems.count { (otherSlot, otherStack) -> otherSlot != slot && otherStack.unlocalizedName == "item.arrow" } <= arrowCountValue.get()
+					containerItems.none { (otherSlot, otherStack) -> otherSlot != slot && otherStack != itemStack && provider.isItemBow(otherStack.item) && currentPower.compareTo(ItemUtils.getEnchantment(otherStack, powerEnch)) < comparator }
+				}
 
-						else -> false
-					}
+				bowAndArrow && itemStack.unlocalizedName == "item.arrow" ->
+				{
+					val arrowCount = inventoryItems.filter { (otherSlot, otherStack) -> otherSlot != slot && otherStack.unlocalizedName == "item.arrow" }.values.sumBy(IItemStack::stackSize) + itemStack.stackSize
+
+					ClientUtils.displayChatMessage(thePlayer, "arrowCount: $arrowCount")
+
+					arrowCount <= arrowCountValue.get()
 				}
 
 				provider.isItemArmor(item) ->
@@ -364,31 +366,42 @@ class InventoryCleaner : Module()
 						{
 							val armor = ArmorPiece(otherStack, otherSlot)
 
-							armor.armorType == currentArmor.armorType && AutoArmor.ARMOR_COMPARATOR.compare(currentArmor, armor) < if (noDup) 1 else 0
+							armor.armorType == currentArmor.armorType && AutoArmor.ARMOR_COMPARATOR.compare(currentArmor, armor) < comparator
 						}
 						else false
 					}
 				}
 
-				compassValue.get() && itemStack.unlocalizedName == "item.compass" -> !noDup || containerItems.none { (otherSlot, otherStack) -> otherSlot != slot && itemStack != otherStack && otherStack.unlocalizedName == "item.compass" }
+				compassValue.get() && itemStack.unlocalizedName == "item.compass" -> !noDup || inventoryItems.none { (_, otherStack) -> itemStack != otherStack && otherStack.unlocalizedName == "item.compass" }
 
 				bedValue.get() && provider.isItemBed(item) -> !noDup || run {
 					val name = itemStack.unlocalizedName
-					containerItems.none { (otherSlot, otherStack) -> otherSlot != slot && itemStack != otherStack && otherStack.unlocalizedName == name }
+					inventoryItems.none { (_, otherStack) -> itemStack != otherStack && otherStack.unlocalizedName == name }
 				}
 
-				provider.isItemBlock(item) && !provider.isBlockBush(item?.asItemBlock()?.block) -> containerItems.count { (otherSlot, otherStack) ->
-					val otherItem = otherStack.item
-					otherSlot != slot && provider.isItemBlock(otherItem) && !provider.isBlockBush(otherItem?.asItemBlock()?.block)
-				} <= blockCountValue.get()
+				provider.isItemBlock(item) && !provider.isBlockBush(item?.asItemBlock()?.block) && !provider.isBlockChest(item?.asItemBlock()?.block) ->
+				{
+					val blockCount = inventoryItems.filter { (otherSlot, otherStack) ->
+						val otherItem = otherStack.item
+						otherSlot != slot && provider.isItemBlock(otherItem) && !provider.isBlockBush(otherItem?.asItemBlock()?.block) && !provider.isBlockChest(item?.asItemBlock()?.block)
+					}.values.sumBy(IItemStack::stackSize) + itemStack.stackSize
+
+					ClientUtils.displayChatMessage(thePlayer, "blockCount: $blockCount")
+
+					blockCount <= blockCountValue.get()
+				}
 
 				foodValue.get() && provider.isItemFood(item) ->
 				{
 					val itemID = functions.getIdFromItem(item!!)
 
-					containerItems.count { (otherSlot, otherStack) ->
+					val foodCount = inventoryItems.filter { (otherSlot, otherStack) ->
 						otherSlot != slot && provider.isItemFood(otherStack.item) && (!noDup || functions.getIdFromItem(otherStack.item!!) == itemID)
-					} <= foodCountValue.get()
+					}.values.sumBy(IItemStack::stackSize) + itemStack.stackSize
+
+					ClientUtils.displayChatMessage(thePlayer, "foodCount: $foodCount")
+
+					foodCount <= foodCountValue.get()
 				}
 
 				else -> diamondValue.get() && itemStack.unlocalizedName == "item.diamond" // Diamond

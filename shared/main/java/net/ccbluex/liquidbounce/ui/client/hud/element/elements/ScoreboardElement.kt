@@ -19,7 +19,6 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.*
 import kotlin.math.min
 
-// FIXME: Broken ScoreboardElement
 /**
  * CustomHUD scoreboard
  *
@@ -110,6 +109,8 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F, sid
 
 		RenderUtils.drawRect(backgroundXPos - 2, -2, 5, (maxHeight + fontHeight), backColor)
 
+		val shadow = shadowValue.get()
+
 		scoreCollection.forEachIndexed { index, score ->
 			val playerName = score.playerName
 			val team = scoreboard.getPlayersTeam(playerName)
@@ -122,8 +123,8 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F, sid
 
 			RenderUtils.resetColor()
 
-			fontRenderer.drawString(formattedPlayerName, backgroundXPos.toFloat(), height, textColor, shadowValue.get())
-			fontRenderer.drawString(scorePoints, (width - fontRenderer.getStringWidth(scorePoints)).toFloat(), height, textColor, shadowValue.get())
+			fontRenderer.drawString(formattedPlayerName, backgroundXPos.toFloat(), height, textColor, shadow)
+			fontRenderer.drawString(scorePoints, (width - fontRenderer.getStringWidth(scorePoints)).toFloat(), height, textColor, shadow)
 
 			if (index == scoreCollectionSize - 1)
 			{
@@ -131,7 +132,7 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F, sid
 
 				RenderUtils.resetColor()
 
-				fontRenderer.drawString(displayName, (backgroundXPos + (maxWidth shr 1) - fontRenderer.getStringWidth(displayName) * 0.5F), (height - fontHeight), textColor, shadowValue.get())
+				fontRenderer.drawString(displayName, (backgroundXPos + (maxWidth shr 1) - fontRenderer.getStringWidth(displayName) * 0.5F), (height - fontHeight), textColor, shadow)
 			}
 
 			if (rectValue.get())
