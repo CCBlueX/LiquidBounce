@@ -47,6 +47,7 @@ class FileManager : MinecraftInstance()
 	val xrayConfig: FileConfig = XRayConfig(File(dir, "xray-blocks.json"))
 	val hudConfig: FileConfig = HudConfig(File(dir, "hud.json"))
 	val shortcutsConfig: FileConfig = ShortcutsConfig(File(dir, "shortcuts.json"))
+	val targetsConfig = TargetsConfig(File(dir, "targets.json"))
 	val backgroundFile = File(dir, "userbackground.png")
 
 	@JvmField

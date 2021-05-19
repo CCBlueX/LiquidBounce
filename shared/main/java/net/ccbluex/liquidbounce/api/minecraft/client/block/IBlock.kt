@@ -23,6 +23,8 @@ interface IBlock
 	val defaultState: IIBlockState?
 	val localizedName: String
 
+	val isOpaqueCube: Boolean
+
 	fun getSelectedBoundingBox(world: IWorld, blockState: IIBlockState, blockPos: WBlockPos): IAxisAlignedBB
 	fun getCollisionBoundingBox(world: IWorld, pos: WBlockPos, state: IIBlockState): IAxisAlignedBB?
 	fun canCollideCheck(state: IIBlockState?, hitIfLiquid: Boolean): Boolean

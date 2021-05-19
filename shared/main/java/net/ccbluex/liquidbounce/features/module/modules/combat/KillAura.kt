@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.injection.backend.Backend
 import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
+import net.ccbluex.liquidbounce.utils.extensions.isClientTarget
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_1
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
@@ -880,42 +881,54 @@ class KillAura : Module()
 		// If there is no attackable entities found, search about pre-aimable entities and pre-swingable entities instead.
 		if (targets.isEmpty()) entityList.filter { it.second <= maxTargetRange }.forEach { targets.add(it.first) }
 
+		val checkIsClientTarget = { entity: IEntity -> if (entity.isClientTarget()) -1000000.0 else 0.0 }
+
 		// Sort targets by priority
 		when (priorityValue.get().toLowerCase())
 		{
 			"distance" ->
 			{
 				// Sort by distance
-				targets.sortBy(thePlayer::getDistanceToEntityBox)
-				abTargets.sortBy(thePlayer::getDistanceToEntityBox)
+				val selector = { entity: IEntity -> thePlayer.getDistanceToEntityBox(entity) + checkIsClientTarget(entity) }
+
+				targets.sortBy(selector)
+				abTargets.sortBy(selector)
 			}
 
 			"health" ->
 			{
 				// Sort by health
-				targets.sortBy(IEntityLivingBase::health)
-				abTargets.sortBy(IEntityLivingBase::health)
+				val selector = { entity: IEntityLivingBase -> entity.health + checkIsClientTarget(entity) }
+
+				targets.sortBy(selector)
+				abTargets.sortBy(selector)
 			}
 
 			"serverdirection" ->
 			{
 				// Sort by server-sided rotation difference
-				targets.sortBy { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) }
-				abTargets.sortBy { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) }
+				val selector = { entity: IEntityLivingBase -> RotationUtils.getServerRotationDifference(thePlayer, entity, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) + checkIsClientTarget(entity) }
+
+				targets.sortBy(selector)
+				abTargets.sortBy(selector)
 			}
 
 			"clientdirection" ->
 			{
 				// Sort by client-sided rotation difference
-				targets.sortBy { RotationUtils.getClientRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) }
-				abTargets.sortBy { RotationUtils.getClientRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) }
+				val selector = { entity: IEntityLivingBase -> RotationUtils.getClientRotationDifference(thePlayer, entity, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) + checkIsClientTarget(entity) }
+
+				targets.sortBy(selector)
+				abTargets.sortBy(selector)
 			}
 
 			"livingtime" ->
 			{
 				// Sort by existence
-				targets.sortBy { -it.ticksExisted }
-				abTargets.sortBy { -it.ticksExisted }
+				val selector = { entity: IEntityLivingBase -> -entity.ticksExisted + checkIsClientTarget(entity) }
+
+				targets.sortBy(selector)
+				abTargets.sortBy(selector)
 			}
 		}
 

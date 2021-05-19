@@ -269,6 +269,7 @@ interface IClassProvider
 	fun isItemAir(obj: Any?): Boolean
 	fun isItemMap(obj: Any?): Boolean
 	fun isItemGlassBottle(obj: Any?): Boolean
+	fun isItemSkull(obj: Any?): Boolean
 
 	/* instanceof checks (GUI) */
 	fun isGuiInventory(obj: Any?): Boolean

@@ -224,6 +224,5 @@ class Side(var horizontal: Horizontal, var vertical: Vertical)
  */
 data class Border(val x: Float, val y: Float, val x2: Float, val y2: Float)
 {
-
 	fun draw() = RenderUtils.drawBorderedRect(x, y, x2, y2, 3F, Int.MIN_VALUE, 0)
 }

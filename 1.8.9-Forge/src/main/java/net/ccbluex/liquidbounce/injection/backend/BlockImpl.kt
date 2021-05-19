@@ -32,6 +32,9 @@ class BlockImpl(val wrapped: Block) : IBlock
 	override val localizedName: String
 		get() = wrapped.localizedName
 
+	override val isOpaqueCube: Boolean
+		get() = wrapped.isOpaqueCube
+
 	override fun getSelectedBoundingBox(world: IWorld, blockState: IIBlockState, blockPos: WBlockPos): IAxisAlignedBB = AxisAlignedBBImpl(wrapped.getSelectedBoundingBox(world.unwrap(), blockPos.unwrap()))
 
 	override fun getCollisionBoundingBox(world: IWorld, pos: WBlockPos, state: IIBlockState): IAxisAlignedBB? = wrapped.getCollisionBoundingBox(world.unwrap(), pos.unwrap(), state.unwrap())?.wrap()

@@ -113,7 +113,10 @@ class InventoryCleaner : Module()
 	private val keepOldSwordValue = BoolValue("KeepOldSword", false)
 	private val keepOldToolsValue = BoolValue("KeepOldTools", false)
 
+	private val blockCountValue = IntegerValue("MaxBlocks", 2304, 64, 2304)
+
 	private val bowAndArrowValue = BoolValue("BowAndArrow", true)
+	private val arrowCountValue = IntegerValue("MaxArrows", 2304, 64, 2304)
 	private val bucketValue = BoolValue("Bucket", true)
 	private val compassValue = BoolValue("Compass", true)
 	private val enderPearlValue = BoolValue("EnderPearl", true)
@@ -121,13 +124,15 @@ class InventoryCleaner : Module()
 	private val ironIngotValue = BoolValue("IronIngot", true)
 	private val diamondValue = BoolValue("Diamond", true)
 	private val potionValue = BoolValue("Potion", true)
+	private val skullValue = BoolValue("Skull", false)
 	private val foodValue = BoolValue("Food", true)
+	private val foodCountValue = IntegerValue("MaxFoods", 2304, 64, 2304)
 
 	private val ignoreVehiclesValue = BoolValue("IgnoreVehicles", false)
 	private val noDuplicateValue = BoolValue("NoDuplicate", false)
 
 	// Visuals
-	private val indicateClick = BoolValue("ClickIndicationh", false)
+	private val indicateClick = BoolValue("ClickIndication", false)
 	private val indicateLength = IntegerValue("ClickIndicationLength", 100, 50, 200)
 
 	/**
@@ -309,6 +314,8 @@ class InventoryCleaner : Module()
 
 			// FIXME: Replace ItemStack equality check (itemStack != otherStack) with something better idea.
 
+			val bowAndArrow = bowAndArrowValue.get()
+
 			when
 			{
 				provider.isItemSword(item) || provider.isItemTool(item) ->
@@ -330,12 +337,22 @@ class InventoryCleaner : Module()
 					containerItems.none { (otherSlot, otherStack) -> otherSlot != slot && otherStack != itemStack && otherStack.javaClass == itemStack.javaClass && attackDamage.compareTo(getAttackDamage(otherStack)) < if (noDup) 1 else 0 }
 				}
 
-				bowAndArrowValue.get() && provider.isItemBow(item) ->
+				bowAndArrow ->
 				{
-					val powerEnch = provider.getEnchantmentEnum(EnchantmentType.POWER)
-					val currentPower = ItemUtils.getEnchantment(itemStack, powerEnch)
+					when
+					{
+						provider.isItemBow(item) ->
+						{
+							val powerEnch = provider.getEnchantmentEnum(EnchantmentType.POWER)
+							val currentPower = ItemUtils.getEnchantment(itemStack, powerEnch)
 
-					containerItems.none { (otherSlot, otherStack) -> otherSlot != slot && otherStack != itemStack && provider.isItemBow(otherStack.item) && currentPower.compareTo(ItemUtils.getEnchantment(otherStack, powerEnch)) < if (noDup) 1 else 0 }
+							containerItems.none { (otherSlot, otherStack) -> otherSlot != slot && otherStack != itemStack && provider.isItemBow(otherStack.item) && currentPower.compareTo(ItemUtils.getEnchantment(otherStack, powerEnch)) < if (noDup) 1 else 0 }
+						}
+
+						itemStack.unlocalizedName == "item.arrow" -> containerItems.count { (otherSlot, otherStack) -> otherSlot != slot && otherStack.unlocalizedName == "item.arrow" } <= arrowCountValue.get()
+
+						else -> false
+					}
 				}
 
 				provider.isItemArmor(item) ->
@@ -360,10 +377,21 @@ class InventoryCleaner : Module()
 					containerItems.none { (otherSlot, otherStack) -> otherSlot != slot && itemStack != otherStack && otherStack.unlocalizedName == name }
 				}
 
-				else -> foodValue.get() && provider.isItemFood(item) // Food
-					|| bowAndArrowValue.get() && itemStack.unlocalizedName == "item.arrow" // Arrow
-					|| provider.isItemBlock(item) && !provider.isBlockBush(item?.asItemBlock()?.block) // Block
-					|| diamondValue.get() && itemStack.unlocalizedName == "item.diamond" // Diamond
+				provider.isItemBlock(item) && !provider.isBlockBush(item?.asItemBlock()?.block) -> containerItems.count { (otherSlot, otherStack) ->
+					val otherItem = otherStack.item
+					otherSlot != slot && provider.isItemBlock(otherItem) && !provider.isBlockBush(otherItem?.asItemBlock()?.block)
+				} <= blockCountValue.get()
+
+				foodValue.get() && provider.isItemFood(item) ->
+				{
+					val itemID = functions.getIdFromItem(item!!)
+
+					containerItems.count { (otherSlot, otherStack) ->
+						otherSlot != slot && provider.isItemFood(otherStack.item) && (!noDup || functions.getIdFromItem(otherStack.item!!) == itemID)
+					} <= foodCountValue.get()
+				}
+
+				else -> diamondValue.get() && itemStack.unlocalizedName == "item.diamond" // Diamond
 					|| ironIngotValue.get() && itemStack.unlocalizedName == "item.ingotIron" // Iron
 					|| potionValue.get() && provider.isItemPotion(item) && AutoPot.isPotionUseful(itemStack) // Potion
 					|| enderPearlValue.get() && provider.isItemEnderPearl(item) // Ender Pearl
@@ -371,6 +399,7 @@ class InventoryCleaner : Module()
 					|| bucketValue.get() && provider.isItemBucket(item) // Bucket
 					|| itemStack.unlocalizedName == "item.stick" // Stick
 					|| ignoreVehiclesValue.get() && (provider.isItemBoat(item) || provider.isItemMinecart(item)) // Vehicles
+					|| skullValue.get() && provider.isItemSkull(item)
 			}
 		}
 		catch (ex: Exception)

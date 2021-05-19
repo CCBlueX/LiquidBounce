@@ -89,7 +89,7 @@ public abstract class MixinBlock
 
 		if (xray.getState())
 			// noinspection ConstantConditions
-			callbackInfoReturnable.setReturnValue(xray.canBeRendered(BackendExtentionsKt.wrap(pos), BlockImplKt.wrap((Block) (Object) this))); // #298 Bugfix
+			callbackInfoReturnable.setReturnValue(xray.canBeRendered(BlockImplKt.wrap((Block) (Object) this), BackendExtentionsKt.wrap(pos))); // #298 Bugfix
 	}
 
 	@Inject(method = "isCollidable", at = @At("HEAD"), cancellable = true)

@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.elements.*
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Target
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 import kotlin.math.max
@@ -59,6 +60,8 @@ open class HUD : MinecraftInstance()
 			{
 				ClientUtils.logger.error("Something went wrong while drawing ${it.name} element in HUD.", ex)
 			}
+
+			RenderUtils.resetColor() // Fix (https://github.com/CCBlueX/Old-LiquidBounce-Issues/issues/3209)
 
 			GL11.glPopMatrix()
 		}

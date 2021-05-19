@@ -8,7 +8,6 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.render;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.modules.render.XRay;
 import net.ccbluex.liquidbounce.injection.backend.BlockImplKt;
-import net.ccbluex.liquidbounce.injection.backend.utils.BackendExtentionsKt;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.tileentity.TileEntity;
 
@@ -26,7 +25,7 @@ public class MixinTileEntityRendererDispatcher
 	{
 		final XRay xray = (XRay) LiquidBounce.moduleManager.get(XRay.class);
 
-		if (xray.getState() && !xray.canBeRendered(BackendExtentionsKt.wrap(tileentityIn.getPos()), BlockImplKt.wrap(tileentityIn.getBlockType()))) // #298 Bugfix
+		if (xray.getState() && !xray.canBeRendered(BlockImplKt.wrap(tileentityIn.getBlockType()), null)) // #298 Bugfix
 			callbackInfo.cancel();
 	}
 }
