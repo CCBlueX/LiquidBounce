@@ -186,8 +186,9 @@ class Target : Element()
 				if (easingHealth < targetHealth) RenderUtils.drawRect((easingHealth / targetMaxHealth) * barWidth, healthBarYOffset, targetHealthPercentage * barWidth, healthBarYOffset + 2, healColor)
 
 				// Draw Health Gradations
-				val healthGradationGap = gradationWidth / targetMaxHealth
-				for (index in 1 until targetMaxHealth.roundToInt()) RenderUtils.drawRect(healthGradationGap * index + barWidthSubtractor, healthBarYOffset - 2, healthGradationGap * index + 1 + barWidthSubtractor, healthBarYOffset + 2, -16777216)
+				val limitedMaxHealth = targetMaxHealth.coerceAtMost(50F)
+				val healthGradationGap = gradationWidth / limitedMaxHealth
+				for (index in 1 until limitedMaxHealth.roundToInt()) RenderUtils.drawRect(healthGradationGap * index + barWidthSubtractor, healthBarYOffset - 2, healthGradationGap * index + 1 + barWidthSubtractor, healthBarYOffset + 2, -16777216)
 
 				if (isPlayer)
 				{

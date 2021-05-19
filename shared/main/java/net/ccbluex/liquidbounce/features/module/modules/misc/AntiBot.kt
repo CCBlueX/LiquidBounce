@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import java.awt.Color
-import java.text.DecimalFormat
 import kotlin.math.*
 
 // TODO: Rename Option Names
@@ -271,7 +270,6 @@ object AntiBot : Module()
 	private val positionConsistencyVL = mutableMapOf<Int, Int>()
 	private val teleportpacket_violation = mutableMapOf<Int, Int>()
 	// TODO: private val collision_violation = mutableMapOf<Int, Int>()
-
 
 	private fun getPingCorrectionAppliedLocation(ping: Int, offset: Int = 0) = LocationCache.getPlayerLocationBeforeNTicks(ceil(ping / 50F).toInt() + offset + positionPingCorrectionOffsetValue.get())
 
@@ -714,8 +712,6 @@ object AntiBot : Module()
 			val expectDeltaZ = expectedZ - entityZ
 
 			val expectDelta = sqrt(expectDeltaX * expectDeltaX + expectDeltaY * expectDeltaY + expectDeltaZ * expectDeltaZ)
-
-			ClientUtils.displayChatMessage(thePlayer, "$expectDelta")
 
 			// Position Delta
 			if (expectDelta <= positionDeltaLimit)

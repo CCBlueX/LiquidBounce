@@ -69,7 +69,7 @@ object StringUtils
 	@JvmStatic
 	fun getHorizontalFacingTowards(yaw: Float): String
 	{
-		val facings = arrayOf("+Z", "+X +Z", "+X", "+X -Z", "-Z", "-X -Z", "-Z", "-X +Z")
+		val facings = arrayOf("+Z", "+X +Z", "+X", "+X -Z", "-Z", "-X -Z", "-X", "-X +Z")
 
 		return facings[abs(floor(yaw * facings.size / 360 + 0.5)).toInt() and facings.size - 1]
 	}

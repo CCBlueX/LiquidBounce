@@ -166,6 +166,7 @@ class Scaffold : Module()
 
 	// Search
 	private val searchValue = BoolValue("Search", true)
+	private val ySearchValue = BoolValue("YSearch", false)
 
 	// Search Accuracy
 	private val searchAccuracyValue: IntegerValue = object : IntegerValue("SearchAccuracy", 8, 1, 16)
@@ -177,7 +178,6 @@ class Scaffold : Module()
 	}
 
 	private val checkVisibleValue = BoolValue("CheckVisible", true)
-	private val ySearchValue = BoolValue("YSearch", false)
 
 	// Turn Speed
 	private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 180f, 1f, 180f)
@@ -202,7 +202,7 @@ class Scaffold : Module()
 	// Zitter
 	private val zitterValue = BoolValue("Zitter", false)
 	private val zitterModeValue = ListValue("ZitterMode", arrayOf("Teleport", "Smooth"), "Teleport")
-	private val zitterSpeed = FloatValue("ZitterSpeed", 0.13f, 0.1f, 2f)
+	private val zitterSpeed = FloatValue("ZitterSpeed", 0.13f, 0.05f, 0.4f)
 	private val zitterStrength = FloatValue("ZitterStrength", 0.05f, 0f, 0.2f)
 
 	// Game
@@ -279,20 +279,6 @@ class Scaffold : Module()
 
 	// Falling Started On YPosition
 	private var fallStartY = 0.0
-
-	companion object
-	{
-		val xzOffsets = arrayOf(Triple(0, 0, 0), Triple(0, 0, -1), Triple(0, 0, 1), Triple(-1, 0, 0), Triple(1, 0, 0), Triple(-1, 0, 1), Triple(1, 0, 1), Triple(-1, 0, -1), Triple(1, 0, -1))
-		private val yoffsets = arrayOf(0, -1, 1)
-
-		val xyzOffsets = Array(27) { Triple(0, 0, 0) }
-
-		init
-		{
-			var index = 0
-			for (y in yoffsets) for ((x, _, z) in xzOffsets) xyzOffsets[index++] = Triple(x, y, z)
-		}
-	}
 
 	// ENABLING MODULE
 	override fun onEnable()
@@ -705,15 +691,24 @@ class Scaffold : Module()
 
 		lastSearchPosition = searchPosition
 
-		val checkVisible = checkVisibleValue.get() && !shouldGoDown
+		val hFacing = functions.getHorizontalFacing(MovementUtils.getDirectionDegrees(thePlayer))
 
-		if (!expand && (!isReplaceable(searchPosition) || search(theWorld, thePlayer, searchPosition, checkVisible, searchBounds))) return
+		val facings = EnumFacingType.values().map(provider::getEnumFacing).sortedBy {
+			when
+			{
+				it == hFacing -> -2
+				it.axisOrdinal == 1 /* Y_AXIS */ -> -1
+				it == hFacing.opposite -> 1
+				else -> 0
+			}
+		}
+
+		if (!expand && (!isReplaceable(searchPosition) || search(theWorld, thePlayer, searchPosition, checkVisibleValue.get() && !shouldGoDown, searchBounds, facings))) return
 
 		val ySearch = ySearchValue.get() || clutching
-		val directionDegrees = MovementUtils.getDirectionDegrees(thePlayer)
 		if (expand)
 		{
-			val horizontalFacing = func.getHorizontalFacing(directionDegrees)
+			val horizontalFacing = func.getHorizontalFacing(MovementUtils.getDirectionDegrees(thePlayer))
 			repeat(expandLengthValue.get()) { i ->
 				if (search(theWorld, thePlayer, searchPosition.add(when (horizontalFacing)
 					{
@@ -725,22 +720,16 @@ class Scaffold : Module()
 						provider.getEnumFacing(EnumFacingType.NORTH) -> -i
 						provider.getEnumFacing(EnumFacingType.SOUTH) -> i
 						else -> 0
-					}), false, searchBounds)) return@findBlock
+					}), false, searchBounds, facings)) return@findBlock
 			}
 		}
 		else if (searchValue.get())
 		{
-			val xFacing = func.getHorizontalFacing(directionDegrees - 90.0F)
-			val yFacing = classProvider.getEnumFacing(EnumFacingType.UP)
-			val zFacing = func.getHorizontalFacing(directionDegrees)
-
-			if ((if (ySearch) xyzOffsets else xzOffsets).map { (x, y, z) -> searchPosition.offset(xFacing, x).offset(yFacing, y).offset(zFacing, z) }.any { search(theWorld, thePlayer, it, !shouldGoDown, searchBounds) }) return
-
-			// (-1..1).forEach { x ->
-			// 	(if (ySearch) -1..1 else 0..0).forEach { y ->
-			// 		if ((-1..1).any { z -> search(theWorld, thePlayer, searchPosition.add(x, y, z), !shouldGoDown, searchBounds) }) return@findBlock
-			// 	}
-			// }
+			(-1..1).forEach { x ->
+				(if (ySearch) -1..1 else 0..0).forEach { y ->
+					if ((-1..1).any { z -> search(theWorld, thePlayer, searchPosition.add(x, y, z), !shouldGoDown, searchBounds, facings) }) return@findBlock
+				}
+			}
 		}
 	}
 
@@ -955,7 +944,7 @@ class Scaffold : Module()
 	 * @return
 	 */
 
-	private fun search(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, blockPosition: WBlockPos, checkVisible: Boolean, data: SearchBounds): Boolean
+	private fun search(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, blockPosition: WBlockPos, checkVisible: Boolean, data: SearchBounds, facings: List<IEnumFacing>): Boolean
 	{
 		if (!isReplaceable(blockPosition)) return false
 
@@ -973,8 +962,6 @@ class Scaffold : Module()
 		val eyesPos = WVec3(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, thePlayer.posZ)
 		var placeRotation: PlaceRotation? = null
 
-		val provider = classProvider
-
 		val searchMinX = data.minX
 		val searchMaxX = data.maxX
 		val searchMinY = data.minY
@@ -982,7 +969,7 @@ class Scaffold : Module()
 		val searchMinZ = data.minZ
 		val searchMaxZ = data.maxZ
 
-		EnumFacingType.values().map(provider::getEnumFacing).forEach { side ->
+		facings.forEach { side ->
 			val neighbor = blockPosition.offset(side)
 
 			if (!canBeClicked(theWorld, neighbor)) return@forEach
@@ -1004,7 +991,9 @@ class Scaffold : Module()
 						val posVec = WVec3(blockPosition).addVector(xSearch, ySearch, zSearch)
 						val distanceSqPosVec = eyesPos.squareDistanceTo(posVec)
 						val hitVec = posVec.add(WVec3(dirX * 0.5, dirY * 0.5, dirZ * 0.5))
-						if (checkVisible && (eyesPos.squareDistanceTo(hitVec) > 18.0 || distanceSqPosVec > eyesPos.squareDistanceTo(posVec.add(dirVec)) || theWorld.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null))
+						if (checkVisible && (eyesPos.squareDistanceTo(hitVec) > 18.0 // distance > 3√2 blocks
+								|| distanceSqPosVec > eyesPos.squareDistanceTo(posVec.add(dirVec)) // distance to Block > distance to Block SIDE
+								|| theWorld.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null)) // rayTrace hit between eye position and block side
 						{
 							zSearch += data.zSteps
 							continue
@@ -1062,7 +1051,7 @@ class Scaffold : Module()
 				facesBlock = false
 
 				run searchLoop@{
-					EnumFacingType.values().map(provider::getEnumFacing).forEach sideLoop@{ side ->
+					facings.forEach sideLoop@{ side ->
 						val neighbor = blockPosition.offset(side)
 
 						if (!canBeClicked(theWorld, neighbor)) return@sideLoop

@@ -12,12 +12,12 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
+import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import kotlin.random.Random
 
-// TODO: DelayAfterBreakBlock option (Bypass AAC, Matrix and etc.)
 @ModuleInfo(name = "AutoClicker", description = "Constantly clicks when holding down a mouse button.", category = ModuleCategory.COMBAT)
 class AutoClicker : Module()
 {
@@ -45,10 +45,35 @@ class AutoClicker : Module()
 	private val leftValue = BoolValue("Left", true)
 	private val jitterValue = BoolValue("Jitter", false)
 
+	private val maxDelayAfterBreakBlockValue: IntegerValue = object : IntegerValue("MaxDelayAfterBreakBlock", 100, 0, 1000)
+	{
+		override fun onChanged(oldValue: Int, newValue: Int)
+		{
+			val minDelayAfterBreakBlock = minDelayAfterBreakBlockValue.get()
+			if (minDelayAfterBreakBlock > newValue) set(minDelayAfterBreakBlock)
+
+			delayAfterBlockBreak = TimeUtils.randomDelay(minDelayAfterBreakBlockValue.get(), get())
+		}
+	}
+
+	private val minDelayAfterBreakBlockValue: IntegerValue = object : IntegerValue("MinDelayAfterBreakBlock", 100, 0, 1000)
+	{
+		override fun onChanged(oldValue: Int, newValue: Int)
+		{
+			val maxDelayAfterBreakBlock = maxDelayAfterBreakBlockValue.get()
+			if (maxDelayAfterBreakBlock < newValue) set(maxDelayAfterBreakBlock)
+
+			delayAfterBlockBreak = TimeUtils.randomDelay(get(), maxDelayAfterBreakBlockValue.get())
+		}
+	}
+
 	private var rightDelay = TimeUtils.randomClickDelay(minCPSValue.get(), maxCPSValue.get())
 	private var rightLastSwing = 0L
 	private var leftDelay = TimeUtils.randomClickDelay(minCPSValue.get(), maxCPSValue.get())
 	private var leftLastSwing = 0L
+
+	private val delayAfterBlockBreakTimer = MSTimer()
+	private var delayAfterBlockBreak = TimeUtils.randomDelay(minDelayAfterBreakBlockValue.get(), maxDelayAfterBreakBlockValue.get())
 
 	@EventTarget
 	fun onRender(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
@@ -57,7 +82,7 @@ class AutoClicker : Module()
 		val gameSettings = mc.gameSettings
 
 		// Left click
-		if (gameSettings.keyBindAttack.isKeyDown && leftValue.get() && System.currentTimeMillis() - leftLastSwing >= leftDelay && mc.playerController.curBlockDamageMP == 0F)
+		if (gameSettings.keyBindAttack.isKeyDown && leftValue.get() && System.currentTimeMillis() - leftLastSwing >= leftDelay && mc.playerController.curBlockDamageMP == 0F && delayAfterBlockBreakTimer.hasTimePassed(delayAfterBlockBreak))
 		{
 			gameSettings.keyBindAttack.onTick(gameSettings.keyBindAttack.keyCode) // Minecraft Click Handling
 
@@ -81,7 +106,14 @@ class AutoClicker : Module()
 		val thePlayer = mc.thePlayer ?: return
 		val gameSettings = mc.gameSettings
 
-		if (jitterValue.get() && (leftValue.get() && gameSettings.keyBindAttack.isKeyDown && mc.playerController.curBlockDamageMP == 0F || rightValue.get() && gameSettings.keyBindUseItem.isKeyDown && !thePlayer.isUsingItem))
+		val breakingBlock = mc.playerController.curBlockDamageMP > 0F
+		if (breakingBlock)
+		{
+			delayAfterBlockBreak = TimeUtils.randomDelay(minDelayAfterBreakBlockValue.get(), maxDelayAfterBreakBlockValue.get())
+			delayAfterBlockBreakTimer.reset()
+		}
+
+		if (jitterValue.get() && (leftValue.get() && gameSettings.keyBindAttack.isKeyDown && !breakingBlock && delayAfterBlockBreakTimer.hasTimePassed(delayAfterBlockBreak) || rightValue.get() && gameSettings.keyBindUseItem.isKeyDown && !thePlayer.isUsingItem))
 		{
 			if (Random.nextBoolean()) thePlayer.rotationYaw += if (Random.nextBoolean()) -RandomUtils.nextFloat(0F, 1F) else RandomUtils.nextFloat(0F, 1F)
 
