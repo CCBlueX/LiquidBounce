@@ -79,7 +79,9 @@ class InventoryUtils : MinecraftInstance(), Listenable
 		{
 			val candidates: MutableList<Int> = ArrayList(endSlot - startSlot)
 
-			(startSlot until endSlot).mapNotNull { it to (container.getSlot(it).stack ?: return@mapNotNull null) }.filter { it.second.item == item }.filter { it.second.itemDelay >= itemDelay }.forEach { candidates.add(it.first) }
+			val currentTime = System.currentTimeMillis()
+
+			(startSlot until endSlot).mapNotNull { it to (container.getSlot(it).stack ?: return@mapNotNull null) }.filter { it.second.item == item }.filter { currentTime - it.second.itemDelay >= itemDelay }.forEach { candidates.add(it.first) }
 
 			return when
 			{

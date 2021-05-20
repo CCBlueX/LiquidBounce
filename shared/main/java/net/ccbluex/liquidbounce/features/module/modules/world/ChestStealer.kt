@@ -176,12 +176,14 @@ class ChestStealer : Module()
 
 		val provider = classProvider
 
+		val itemDelay = itemDelayValue.get().toLong()
+
 		if (!provider.isGuiChest(mc.currentScreen))
 		{
-			if (delayOnFirstValue.get() || itemDelayValue.get() > 0)
+			if (delayOnFirstValue.get() || itemDelay > 0L)
 			{
 				delayTimer.reset()
-				if (nextDelay < minStartDelay.get()) nextDelay = max(TimeUtils.randomDelay(minStartDelay.get(), maxStartDelay.get()), itemDelayValue.get().toLong())
+				if (nextDelay < minStartDelay.get()) nextDelay = max(TimeUtils.randomDelay(minStartDelay.get(), maxStartDelay.get()), itemDelay)
 			}
 			autoCloseTimer.reset()
 			return
@@ -206,7 +208,7 @@ class ChestStealer : Module()
 		val inventoryCleaner = LiquidBounce.moduleManager[InventoryCleaner::class.java] as InventoryCleaner
 
 		// Is empty?
-		val notEmpty = !this.isEmpty(thePlayer, screen)
+		val notEmpty = !this.isEmpty(thePlayer, screen, itemDelay)
 
 		val container = screen.inventorySlots ?: return
 		val end = screen.inventoryRows * 9
@@ -230,7 +232,7 @@ class ChestStealer : Module()
 			{
 				do
 				{
-					val items = (0 until end).map(container::getSlot).filter { shouldTake(thePlayer, it.stack, it.slotNumber, inventoryCleaner, end, container) }.toList()
+					val items = (0 until end).map(container::getSlot).filter { shouldTake(thePlayer, it.stack, it.slotNumber, inventoryCleaner, end, container, itemDelay) }.toList()
 
 					val randomSlot = Random.nextInt(items.size)
 					var slot = items[randomSlot]
@@ -260,7 +262,7 @@ class ChestStealer : Module()
 				var slot = container.getSlot(slotIndex)
 				val stack = slot.stack
 
-				if (delayTimer.hasTimePassed(nextDelay) && shouldTake(thePlayer, stack, slot.slotNumber, inventoryCleaner, end, container))
+				if (delayTimer.hasTimePassed(nextDelay) && shouldTake(thePlayer, stack, slot.slotNumber, inventoryCleaner, end, container, itemDelay))
 				{
 					var misclick = false
 
@@ -294,7 +296,12 @@ class ChestStealer : Module()
 		if (classProvider.isSPacketWindowItems(packet)) contentReceived = packet.asSPacketWindowItems().windowId
 	}
 
-	private fun shouldTake(thePlayer: IEntityPlayerSP, stack: IItemStack?, slot: Int, inventoryCleaner: InventoryCleaner, end: Int, container: IContainer): Boolean = stack != null && (!onlyItemsValue.get() || !classProvider.isItemBlock(stack.item)) && (System.currentTimeMillis() - stack.itemDelay >= itemDelayValue.get() && (!inventoryCleaner.state || inventoryCleaner.isUseful(thePlayer, slot, stack, end = end, container = container) && inventoryCleaner.isUseful(thePlayer, -1, stack, container = thePlayer.inventoryContainer) /* 상자 안에서 가장 좋은 템이랑 인벤 안의 가장 좋은 템이랑 비교한 후, 상자 안의 것이 더 좋을 경우에만 가져가기 */))
+	private fun shouldTake(thePlayer: IEntityPlayerSP, stack: IItemStack?, slot: Int, inventoryCleaner: InventoryCleaner, end: Int, container: IContainer, itemDelay: Long): Boolean
+	{
+		val currentTime = System.currentTimeMillis()
+
+		return stack != null && (!onlyItemsValue.get() || !classProvider.isItemBlock(stack.item)) && (currentTime - stack.itemDelay >= itemDelay && (!inventoryCleaner.state || inventoryCleaner.isUseful(thePlayer, slot, stack, end = end, container = container) && inventoryCleaner.isUseful(thePlayer, -1, stack, container = thePlayer.inventoryContainer) /* 상자 안에서 가장 좋은 템이랑 인벤 안의 가장 좋은 템이랑 비교한 후, 상자 안의 것이 더 좋을 경우에만 가져가기 */))
+	}
 
 	private fun move(screen: IGuiChest, slot: ISlot, misclick: Boolean)
 	{
@@ -304,13 +311,13 @@ class ChestStealer : Module()
 		nextDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
 	}
 
-	private fun isEmpty(thePlayer: IEntityPlayerSP, chest: IGuiChest): Boolean
+	private fun isEmpty(thePlayer: IEntityPlayerSP, chest: IGuiChest, itemDelay: Long): Boolean
 	{
 		val inventoryCleaner = LiquidBounce.moduleManager[InventoryCleaner::class.java] as InventoryCleaner
 		val container = chest.inventorySlots ?: return false
 		val end = chest.inventoryRows * 9
 
-		return (0 until end).map(container::getSlot).none { shouldTake(thePlayer, it.stack, it.slotNumber, inventoryCleaner, end, container) }
+		return (0 until end).map(container::getSlot).none { shouldTake(thePlayer, it.stack, it.slotNumber, inventoryCleaner, end, container, itemDelay) }
 	}
 
 	private fun firstEmpty(slots: List<ISlot>?, length: Int, random: Boolean): ISlot?

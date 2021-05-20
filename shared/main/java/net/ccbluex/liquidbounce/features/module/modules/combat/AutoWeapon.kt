@@ -57,8 +57,10 @@ class AutoWeapon : Module()
 			val itemDelay = itemDelayValue.get()
 			val onlySword = onlySwordValue.get()
 
+			val currentTime = System.currentTimeMillis()
+
 			// Find best weapon in hotbar (#Kotlin Style)
-			val (slot, _) = (0..8).asSequence().mapNotNull { it to (inventory.getStackInSlot(it) ?: return@mapNotNull null) }.filter { (_, stack) -> (provider.isItemSword(stack.item) || !onlySword && provider.isItemTool(stack.item)) && System.currentTimeMillis() - stack.itemDelay >= itemDelay }.maxBy { (_, stack) -> (stack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount ?: 2.0) + 1.25 * ItemUtils.getEnchantment(stack, provider.getEnchantmentEnum(EnchantmentType.SHARPNESS)) } ?: return
+			val (slot, _) = (0..8).asSequence().mapNotNull { it to (inventory.getStackInSlot(it) ?: return@mapNotNull null) }.filter { (_, stack) -> (provider.isItemSword(stack.item) || !onlySword && provider.isItemTool(stack.item)) && currentTime - stack.itemDelay >= itemDelay }.maxBy { (_, stack) -> (stack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount ?: 2.0) + 1.25 * ItemUtils.getEnchantment(stack, provider.getEnchantmentEnum(EnchantmentType.SHARPNESS)) } ?: return
 
 			if (slot == inventory.currentItem) // If in hand no need to swap
 				return

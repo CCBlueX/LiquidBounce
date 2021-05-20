@@ -402,13 +402,12 @@ class AutoPot : Module()
 		}
 	}
 
-	fun findBuffPotion(activePotionEffects: Collection<IPotionEffect>, startSlot: Int, endSlot: Int, inventoryContainer: IContainer, random: Boolean, splash: Boolean = true): Int
+	fun findBuffPotion(activePotionEffects: Collection<IPotionEffect>, startSlot: Int, endSlot: Int, inventoryContainer: IContainer, random: Boolean, splash: Boolean = true, itemDelay: Long = itemDelayValue.get().toLong()): Int
 	{
 		val provider = classProvider
 
 		val jumpPot = jumpBoostPotValue.get()
 		val invisPot = invisPotValue.get()
-		val itemDelay = itemDelayValue.get()
 		val jumpPotionAmplifierLimit = jumpPotAmpLimitValue.get()
 
 		var playerSpeed = -1
@@ -453,7 +452,9 @@ class AutoPot : Module()
 
 		val candidates = mutableListOf<Int>()
 
-		(startSlot until endSlot).asSequence().mapNotNull { it to (inventoryContainer.getSlot(it).stack ?: return@mapNotNull null) }.filter { System.currentTimeMillis() - it.second.itemDelay >= itemDelay }.filter { provider.isItemPotion(it.second.item) }.run { if (splash) filter { it.second.isSplash() } else filterNot { it.second.isSplash() } }.forEach { (slotIndex, stack) ->
+		val currentTime = System.currentTimeMillis()
+
+		(startSlot until endSlot).asSequence().mapNotNull { it to (inventoryContainer.getSlot(it).stack ?: return@mapNotNull null) }.filter { currentTime - it.second.itemDelay >= itemDelay }.filter { provider.isItemPotion(it.second.item) }.run { if (splash) filter { it.second.isSplash() } else filterNot { it.second.isSplash() } }.forEach { (slotIndex, stack) ->
 			var potionSpeed = -1
 			var potionJump = -1
 			var potionDigSpeed = -1

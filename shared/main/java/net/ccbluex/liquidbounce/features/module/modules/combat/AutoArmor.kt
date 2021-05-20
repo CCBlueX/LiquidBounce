@@ -96,8 +96,10 @@ class AutoArmor : Module()
 
 		val itemDelay = itemDelayValue.get()
 
+		val currentTime = System.currentTimeMillis()
+
 		// Find best armor
-		val armorPieces = (0 until 36).mapNotNull { it to (inventory.getStackInSlot(it) ?: return@mapNotNull null) }.filter { (slot, stack) -> provider.isItemArmor(stack.item) && (slot < 9 || System.currentTimeMillis() - stack.itemDelay >= itemDelay) }.map { (slot, stack) -> ArmorPiece(stack, slot) }.groupBy(ArmorPiece::armorType)
+		val armorPieces = (0 until 36).mapNotNull { it to (inventory.getStackInSlot(it) ?: return@mapNotNull null) }.filter { (slot, stack) -> provider.isItemArmor(stack.item) && (slot < 9 || currentTime - stack.itemDelay >= itemDelay) }.map { (slot, stack) -> ArmorPiece(stack, slot) }.groupBy(ArmorPiece::armorType)
 
 		val bestArmor = arrayOfNulls<ArmorPiece>(4)
 		for ((armorType, candidates) in armorPieces) bestArmor[armorType] = candidates.maxWith(ARMOR_COMPARATOR)
