@@ -7,10 +7,7 @@
 package net.ccbluex.liquidbounce.injection.backend
 
 import net.ccbluex.liquidbounce.api.minecraft.block.material.IMaterial
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityTNTPrimed
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.*
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.util.*
 import net.ccbluex.liquidbounce.injection.backend.utils.unwrap
@@ -19,6 +16,8 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.item.EntityTNTPrimed
 import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.entity.projectile.EntityArrow
+import net.minecraft.entity.projectile.EntityPotion
 import java.util.*
 
 open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
@@ -237,6 +236,10 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 	override fun asEntityLivingBase(): IEntityLivingBase = EntityLivingBaseImpl(wrapped as EntityLivingBase)
 
 	override fun asEntityTNTPrimed(): IEntityTNTPrimed = EntityTNTPrimedImpl(wrapped as EntityTNTPrimed)
+
+	override fun asEntityArrow(): IEntityArrow = EntityArrowImpl(wrapped as EntityArrow)
+
+	override fun asEntityPotion(): IEntityPotion = EntityPotionImpl(wrapped as EntityPotion)
 
 	/* Position-related */
 	override fun getPositionEyes(partialTicks: Float): WVec3 = wrapped.getPositionEyes(partialTicks).wrap()

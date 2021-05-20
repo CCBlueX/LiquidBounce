@@ -78,7 +78,7 @@ import net.minecraft.entity.passive.EntityBat
 import net.minecraft.entity.passive.EntitySquid
 import net.minecraft.entity.passive.EntityVillager
 import net.minecraft.entity.player.EntityPlayer
-import net.minecraft.entity.projectile.EntityArrow
+import net.minecraft.entity.projectile.*
 import net.minecraft.event.ClickEvent
 import net.minecraft.init.Blocks
 import net.minecraft.init.Items
@@ -275,6 +275,18 @@ object ClassProviderImpl : IClassProvider
 
 	override fun isEntityShulker(obj: Any?): Boolean = false
 
+	override fun isEntityPotion(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityPotion
+
+	override fun isEntityEgg(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityEgg
+
+	override fun isEntityFishHook(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityFishHook
+
+	override fun isEntityExpBottle(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityExpBottle
+
+	override fun isEntitySnowball(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntitySnowball
+
+	override fun isEntityEnderPearl(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityEnderPearl
+
 	override fun isTileEntityChest(obj: Any?): Boolean = obj is TileEntityImpl && obj.wrapped is TileEntityChest
 
 	override fun isTileEntityEnderChest(obj: Any?): Boolean = obj is TileEntityImpl && obj.wrapped is TileEntityEnderChest
@@ -395,6 +407,8 @@ object ClassProviderImpl : IClassProvider
 	override fun isItemGlassBottle(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemGlassBottle
 
 	override fun isItemSkull(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemSkull
+
+	override fun isItemExpBottle(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemExpBottle
 
 	override fun isBlockAir(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockAir
 

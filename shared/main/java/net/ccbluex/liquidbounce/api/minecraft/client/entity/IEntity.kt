@@ -100,6 +100,8 @@ interface IEntity
 	fun asEntityPlayer(): IEntityPlayer
 	fun asEntityLivingBase(): IEntityLivingBase
 	fun asEntityTNTPrimed(): IEntityTNTPrimed
+	fun asEntityArrow(): IEntityArrow
+	fun asEntityPotion(): IEntityPotion
 
 	fun getDistance(x: Double, y: Double, z: Double): Double
 	fun setPosition(x: Double, y: Double, z: Double)

@@ -171,6 +171,12 @@ interface IClassProvider
 	fun isEntityMinecartFurnace(obj: Any?): Boolean
 	fun isEntityMinecartHopper(obj: Any?): Boolean
 	fun isEntityShulker(obj: Any?): Boolean
+	fun isEntityPotion(obj: Any?): Boolean
+	fun isEntitySnowball(obj: Any?): Boolean
+	fun isEntityEnderPearl(obj: Any?): Boolean
+	fun isEntityEgg(obj: Any?): Boolean
+	fun isEntityFishHook(obj: Any?): Boolean
+	fun isEntityExpBottle(obj: Any?): Boolean
 
 	/* instanceof checks (TileEntity) */
 	fun isTileEntityChest(obj: Any?): Boolean
@@ -270,6 +276,7 @@ interface IClassProvider
 	fun isItemMap(obj: Any?): Boolean
 	fun isItemGlassBottle(obj: Any?): Boolean
 	fun isItemSkull(obj: Any?): Boolean
+	fun isItemExpBottle(obj: Any?): Boolean
 
 	/* instanceof checks (GUI) */
 	fun isGuiInventory(obj: Any?): Boolean

@@ -33,6 +33,7 @@ import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.init.Items
 import net.minecraft.item.Item
 import net.minecraft.potion.Potion
+import net.minecraft.potion.PotionHelper
 import net.minecraft.scoreboard.ScorePlayerTeam
 import net.minecraft.util.*
 import java.lang.reflect.Field
@@ -139,4 +140,6 @@ object ExtractedFunctionsImpl : IExtractedFunctions
 	/* Delegate to MathHelper */
 	override fun cos(radians: Float): Float = MathHelper.cos(radians)
 	override fun sin(radians: Float): Float = MathHelper.sin(radians)
+
+	override fun getLiquidColor(potionDamage: Int, bypassCache: Boolean): Int = PotionHelper.getLiquidColor(potionDamage, bypassCache)
 }

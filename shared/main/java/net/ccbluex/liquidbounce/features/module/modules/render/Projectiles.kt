@@ -6,9 +6,14 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.IClassProvider
+import net.ccbluex.liquidbounce.api.IExtractedFunctions
 import net.ccbluex.liquidbounce.api.enums.MaterialType
 import net.ccbluex.liquidbounce.api.enums.WDefaultVertexFormats
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
+import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
+import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
@@ -34,6 +39,7 @@ import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.sqrt
 
+// TODO: All Projectiles Option (like Vape, see https://www.youtube.com/watch?v=PQmRsF9GMkY)
 @ModuleInfo(name = "Projectiles", description = "Allows you to see where arrows will land. (a.k.a. Trajectories)", category = ModuleCategory.RENDER)
 class Projectiles : Module()
 {
@@ -48,6 +54,8 @@ class Projectiles : Module()
 	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
 	private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
 
+	private val allProjectilesValue = BoolValue("AllProjectiles", false)
+
 	private var lastBowChargeDuration: Int = 0
 
 	@EventTarget
@@ -55,118 +63,77 @@ class Projectiles : Module()
 	{
 		val thePlayer = mc.thePlayer ?: return
 		val theWorld = mc.theWorld ?: return
+
 		val renderManager = mc.renderManager
-
-		val partialTicks = event.partialTicks
-
-		val heldItem = thePlayer.heldItem ?: return
-
-		val item = heldItem.item
-
-		var isSplash = false
-
-		var motionMultiplier = 0.4
-		var motionFactor = 1.5F
-		var motionSlowdown = 0.99F
-
-		val gravity: Float
-		val size: Float
-
-		val provider = classProvider
-
-		// Check items
-		when
-		{
-			provider.isItemBow(item) -> // Bow
-			{
-				val fastBow = LiquidBounce.moduleManager[FastBow::class.java] as FastBow
-				val fastBowEnabled = fastBow.state
-
-				if (!fastBowEnabled && !thePlayer.isUsingItem)
-				{
-					lastBowChargeDuration = 0 // Reset bow charge duration
-					return
-				}
-
-				motionMultiplier = 1.0
-				gravity = 0.05F
-				size = 0.3F
-
-				// Interpolate and calculate power of bow
-				val bowChargeDuration = if (fastBowEnabled) fastBow.packetsValue.get() else thePlayer.itemInUseDuration
-				var power = (lastBowChargeDuration + (bowChargeDuration - lastBowChargeDuration) * partialTicks) * 0.05f
-				lastBowChargeDuration = bowChargeDuration
-
-				power = ((power * power + power * 2F) / 3F).coerceAtMost(1F)
-
-				if (power < 0.1F) return
-
-				motionFactor = power * 3F
-			}
-
-			provider.isItemFishingRod(item) -> // Fishing Rod
-			{
-				gravity = 0.04F
-				size = 0.25F
-				motionSlowdown = 0.92F
-			}
-
-			provider.isItemPotion(item) && heldItem.isSplash() -> // Splash potion
-			{
-				isSplash = true
-				gravity = 0.05F
-				size = 0.25F
-				motionFactor = 0.5F
-			}
-
-			else -> // Snowball, Ender Pearl, Egg
-			{
-				if (!provider.isItemSnowball(item) && !provider.isItemEnderPearl(item) && !provider.isItemEgg(item)) return
-
-				gravity = 0.03F
-				size = 0.25F
-			}
-		}
-
-		val (serverYaw, serverPitch) = RotationUtils.serverRotation
-		val (lastServerYaw, lastServerPitch) = RotationUtils.lastServerRotation
-
-		val yaw = lastServerYaw + (serverYaw - lastServerYaw) * partialTicks
-		val pitch = lastServerPitch + (serverPitch - lastServerPitch) * partialTicks
-
 		val renderPosX = renderManager.renderPosX
 		val renderPosY = renderManager.renderPosY
 		val renderPosZ = renderManager.renderPosZ
 
-		val yawRadians = WMathHelper.toRadians(yaw)
-		val pitchRadians = WMathHelper.toRadians(pitch)
+		val partialTicks = event.partialTicks
 
+		val provider = classProvider
 		val func = functions
 
-		val yawSin = func.sin(yawRadians)
-		val yawCos = func.cos(yawRadians)
-		val pitchCos = func.cos(pitchRadians)
+		run {
+			val (motionMultiplier, motionFactor, motionSlowdown, gravity, size, inaccuracy) = getProjectileInfo(thePlayer, thePlayer.heldItem ?: return@run, partialTicks) ?: return@run
 
-		// Positions
-		var posX = renderPosX - yawCos * 0.16F
-		var posY = renderPosY + thePlayer.eyeHeight - 0.10000000149011612
-		var posZ = renderPosZ - yawSin * 0.16F
+			val color = when (colorMode.get().toLowerCase())
+			{
+				"bowpower" -> ColorUtils.blendColors(floatArrayOf(0f, 0.5f, 1f), arrayOf(Color.RED, Color.YELLOW, Color.GREEN), (motionFactor / 30) * 10).rgb
+				"rainbow" -> ColorUtils.rainbowRGB(saturation = saturationValue.get(), brightness = brightnessValue.get())
+				else -> ColorUtils.createRGB(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), 255)
+			}
 
-		// Motions
-		var motionX = -yawSin * pitchCos * motionMultiplier
-		var motionY = -func.sin(WMathHelper.toRadians(pitch + if (isSplash) -20 else 0)) * motionMultiplier
-		var motionZ = yawCos * pitchCos * motionMultiplier
+			val (serverYaw, serverPitch) = RotationUtils.serverRotation
+			val (lastServerYaw, lastServerPitch) = RotationUtils.lastServerRotation
 
-		val distance = sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ)
+			val yaw = lastServerYaw + (serverYaw - lastServerYaw) * partialTicks
+			val pitch = lastServerPitch + (serverPitch - lastServerPitch) * partialTicks
 
-		motionX /= distance
-		motionY /= distance
-		motionZ /= distance
+			val yawRadians = WMathHelper.toRadians(yaw)
+			val pitchRadians = WMathHelper.toRadians(pitch)
 
-		motionX *= motionFactor
-		motionY *= motionFactor
-		motionZ *= motionFactor
+			val yawSin = func.sin(yawRadians)
+			val yawCos = func.cos(yawRadians)
+			val pitchCos = func.cos(pitchRadians)
 
+			// Positions
+			val posX = renderPosX - yawCos * 0.16F
+			val posY = renderPosY + thePlayer.eyeHeight - 0.10000000149011612
+			val posZ = renderPosZ - yawSin * 0.16F
+
+			// Motions
+			var motionX = -yawSin * pitchCos * motionMultiplier
+			var motionY = -func.sin(WMathHelper.toRadians(pitch + inaccuracy)) * motionMultiplier
+			var motionZ = yawCos * pitchCos * motionMultiplier
+
+			val distance = sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ)
+
+			motionX /= distance
+			motionY /= distance
+			motionZ /= distance
+
+			motionX *= motionFactor
+			motionY *= motionFactor
+			motionZ *= motionFactor
+
+			renderTrajectory(theWorld, thePlayer, provider, func, renderPosX, renderPosY, renderPosZ, color, posX, posY, posZ, motionX, motionY, motionZ, motionSlowdown, gravity, size)
+		}
+
+		if (allProjectilesValue.get())
+		{
+			theWorld.loadedEntityList.asSequence().mapNotNull {
+				it to (getProjectileInfo(it) ?: return@mapNotNull null)
+			}.forEach { (proj, pair) ->
+				val (info, color) = pair
+
+				renderTrajectory(theWorld, thePlayer, provider, func, renderPosX, renderPosY, renderPosZ, color, proj.posX, proj.posY, proj.posZ, proj.motionX, proj.motionY, proj.motionZ, info.motionSlowdown, info.gravity, info.size)
+			}
+		}
+	}
+
+	private fun renderTrajectory(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, provider: IClassProvider, func: IExtractedFunctions, renderPosX: Double, renderPosY: Double, renderPosZ: Double, color: Int, defaultPosX: Double, defaultPosY: Double, defaultPosZ: Double, defaultMotionX: Double, defaultMotionY: Double, defaultMotionZ: Double, motionSlowdown: Float, gravity: Float, size: Float)
+	{
 		// Landing
 		var landingPosition: IMovingObjectPosition? = null
 		var hasLanded = false
@@ -175,6 +142,14 @@ class Projectiles : Module()
 		val tessellator = provider.tessellatorInstance
 		val worldRenderer = tessellator.worldRenderer
 
+		var posX = defaultPosX
+		var posY = defaultPosY
+		var posZ = defaultPosZ
+
+		var motionX = defaultMotionX
+		var motionY = defaultMotionY
+		var motionZ = defaultMotionZ
+
 		// Start drawing of path
 		GL11.glDepthMask(false)
 		RenderUtils.enableGlCap(GL11.GL_BLEND, GL11.GL_LINE_SMOOTH)
@@ -182,12 +157,7 @@ class Projectiles : Module()
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
 		GL11.glHint(GL11.GL_LINE_SMOOTH_HINT, GL11.GL_NICEST)
 
-		when (colorMode.get().toLowerCase())
-		{
-			"custom" -> RenderUtils.glColor(Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), 255))
-			"bowpower" -> RenderUtils.glColor(ColorUtils.blendColors(floatArrayOf(0f, 0.5f, 1f), arrayOf(Color.RED, Color.YELLOW, Color.GREEN), (motionFactor / 30) * 10))
-			"rainbow" -> RenderUtils.glColor(ColorUtils.rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get()))
-		}
+		RenderUtils.glColor(color)
 
 		GL11.glLineWidth(lineWidthValue.get())
 
@@ -206,26 +176,26 @@ class Projectiles : Module()
 			posBefore = WVec3(posX, posY, posZ)
 			posAfter = WVec3(posX + motionX, posY + motionY, posZ + motionZ)
 
-			// Check if arrow is landing
+			// Check if projectile is landing
 			if (landingPosition != null)
 			{
 				hasLanded = true
 				posAfter = WVec3(landingPosition.hitVec.xCoord, landingPosition.hitVec.yCoord, landingPosition.hitVec.zCoord)
 			}
 
-			// Set arrow box
-			val arrowBox = provider.createAxisAlignedBB(posX - size, posY - size, posZ - size, posX + size, posY + size, posZ + size).addCoord(motionX, motionY, motionZ).expand(1.0, 1.0, 1.0)
+			// Set projectile box
+			val projBox = provider.createAxisAlignedBB(posX - size, posY - size, posZ - size, posX + size, posY + size, posZ + size).addCoord(motionX, motionY, motionZ).expand(1.0, 1.0, 1.0)
 
-			val chunkMinX = floor((arrowBox.minX - 2) * 0.0625).toInt()
-			val chunkMaxX = ceil((arrowBox.maxX + 2) * 0.0625).toInt()
+			val chunkMinX = floor((projBox.minX - 2) * 0.0625).toInt()
+			val chunkMaxX = ceil((projBox.maxX + 2) * 0.0625).toInt()
 
-			val chunkMinZ = floor((arrowBox.minZ - 2) * 0.0625).toInt()
-			val chunkMaxZ = ceil((arrowBox.maxZ + 2) * 0.0625).toInt()
+			val chunkMinZ = floor((projBox.minZ - 2) * 0.0625).toInt()
+			val chunkMaxZ = ceil((projBox.maxZ + 2) * 0.0625).toInt()
 
 			// Check which entities colliding with the arrow
 			val collidedEntities = mutableListOf<IEntity>()
 
-			for (x in chunkMinX..chunkMaxX) for (z in chunkMinZ..chunkMaxZ) theWorld.getChunkFromChunkCoords(x, z).getEntitiesWithinAABBForEntity(thePlayer, arrowBox, collidedEntities, null)
+			for (x in chunkMinX..chunkMaxX) for (z in chunkMinZ..chunkMaxZ) theWorld.getChunkFromChunkCoords(x, z).getEntitiesWithinAABBForEntity(thePlayer, projBox, collidedEntities, null)
 
 			val sizeDouble = size.toDouble()
 
@@ -240,7 +210,7 @@ class Projectiles : Module()
 				landingPosition = possibleEntityLanding
 			}
 
-			// Affect motions of arrow
+			// Affect motions of projectile
 			posX += motionX
 			posY += motionY
 			posZ += motionZ
@@ -305,4 +275,79 @@ class Projectiles : Module()
 		RenderUtils.resetCaps()
 		RenderUtils.resetColor()
 	}
+
+	private fun getProjectileInfo(thePlayer: IEntityPlayerSP, itemStack: IItemStack, partialTicks: Float): ProjectileInfo?
+	{
+		val item = itemStack.item
+
+		return when
+		{
+			classProvider.isItemBow(item) ->
+			{
+				val fastBow = LiquidBounce.moduleManager[FastBow::class.java] as FastBow
+				val fastBowEnabled = fastBow.state
+
+				if (!fastBowEnabled && !thePlayer.isUsingItem)
+				{
+					lastBowChargeDuration = 0 // Reset bow charge duration
+					return null
+				}
+
+				// Interpolate and calculate power of bow
+				val bowChargeDuration = if (fastBowEnabled) fastBow.packetsValue.get() else thePlayer.itemInUseDuration
+				var power = (lastBowChargeDuration + (bowChargeDuration - lastBowChargeDuration) * partialTicks) * 0.05f
+				lastBowChargeDuration = bowChargeDuration
+
+				power = ((power * power + power * 2F) / 3F).coerceAtMost(1F)
+
+				if (power < 0.1F) return null
+
+				ProjectileInfo(motionMultiplier = 1.0, motionFactor = power * 3F, gravity = 0.05F, size = 0.3F)
+			}
+
+			classProvider.isItemFishingRod(item) -> ProjectileInfo(motionSlowdown = 0.92F, gravity = 0.04F, size = 0.25F)
+
+			classProvider.isItemPotion(item) && itemStack.isSplash() -> ProjectileInfo(motionFactor = 0.5F, gravity = 0.05F, size = 0.25F, inaccuracy = -20.0F)
+
+			classProvider.isItemExpBottle(item) -> ProjectileInfo(motionFactor = 0.7F, gravity = 0.07F, size = 0.25F, inaccuracy = -20.0F)
+
+			else ->
+			{
+				if (!classProvider.isItemSnowball(item) && !classProvider.isItemEnderPearl(item) && !classProvider.isItemEgg(item)) return null
+
+				ProjectileInfo(gravity = 0.03F, size = 0.25F)
+			}
+		}
+	}
+
+	private fun getProjectileInfo(projectile: IEntity): Pair<ProjectileInfo, Int>?
+	{
+		if (projectile.isDead) return null
+
+		return when
+		{
+			classProvider.isEntityArrow(projectile) && !projectile.asEntityArrow().inGround -> ProjectileInfo(motionMultiplier = 1.0, gravity = 0.05F, size = 0.3F) to -65536
+
+			classProvider.isEntityFishHook(projectile) -> ProjectileInfo(motionSlowdown = 0.92F, gravity = 0.04F, size = 0.25F) to -7829368
+
+			classProvider.isEntityPotion(projectile) -> ProjectileInfo(motionFactor = 0.5F, gravity = 0.05F, size = 0.25F, inaccuracy = -20.0F) to ColorUtils.applyAlphaChannel(functions.getLiquidColor(projectile.asEntityPotion().potionDamage, false), 255)
+
+			classProvider.isEntityExpBottle(projectile) -> ProjectileInfo(motionFactor = 0.7F, gravity = 0.07F, size = 0.25F, inaccuracy = -20.0F) to -3539055
+
+			else ->
+			{
+				val color = when
+				{
+					classProvider.isEntitySnowball(projectile) -> -1
+					classProvider.isEntityEgg(projectile) -> -2109797
+					classProvider.isEntityEnderPearl(projectile) -> -6750004
+					else -> return null
+				}
+
+				ProjectileInfo(gravity = 0.03F, size = 0.25F) to color
+			}
+		}
+	}
 }
+
+data class ProjectileInfo(val motionMultiplier: Double = 0.4, val motionFactor: Float = 1.5F, val motionSlowdown: Float = 0.99F, val gravity: Float, val size: Float, val inaccuracy: Float = 0F)

@@ -61,4 +61,6 @@ interface IExtractedFunctions
 	// MathHelper's sin and cos algorithm is faster than StrictMath's (Because MathHelper uses better algorithm and it is compatible with BetterFps mod)
 	fun cos(radians: Float): Float
 	fun sin(radians: Float): Float
+
+	fun getLiquidColor(potionDamage: Int, bypassCache: Boolean): Int
 }
