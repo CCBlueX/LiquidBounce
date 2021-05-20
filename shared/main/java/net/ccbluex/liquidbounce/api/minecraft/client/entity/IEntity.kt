@@ -102,6 +102,7 @@ interface IEntity
 	fun asEntityTNTPrimed(): IEntityTNTPrimed
 	fun asEntityArrow(): IEntityArrow
 	fun asEntityPotion(): IEntityPotion
+	fun asEntityFishHook(): IEntityFishHook
 
 	fun getDistance(x: Double, y: Double, z: Double): Double
 	fun setPosition(x: Double, y: Double, z: Double)

@@ -17,6 +17,7 @@ import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.item.EntityTNTPrimed
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.entity.projectile.EntityArrow
+import net.minecraft.entity.projectile.EntityFishHook
 import net.minecraft.entity.projectile.EntityPotion
 import java.util.*
 
@@ -240,6 +241,8 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 	override fun asEntityArrow(): IEntityArrow = EntityArrowImpl(wrapped as EntityArrow)
 
 	override fun asEntityPotion(): IEntityPotion = EntityPotionImpl(wrapped as EntityPotion)
+
+	override fun asEntityFishHook(): IEntityFishHook = EntityFishHookImpl(wrapped as EntityFishHook)
 
 	/* Position-related */
 	override fun getPositionEyes(partialTicks: Float): WVec3 = wrapped.getPositionEyes(partialTicks).wrap()

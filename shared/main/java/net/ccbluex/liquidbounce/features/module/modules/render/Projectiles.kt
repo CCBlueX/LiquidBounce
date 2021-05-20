@@ -127,7 +127,11 @@ class Projectiles : Module()
 			}.forEach { (proj, pair) ->
 				val (info, color) = pair
 
-				renderTrajectory(theWorld, thePlayer, provider, func, renderPosX, renderPosY, renderPosZ, color, proj.posX, proj.posY, proj.posZ, proj.motionX, proj.motionY, proj.motionZ, info.motionSlowdown, info.gravity, info.size)
+				val lastPosX = proj.lastTickPosX
+				val lastPosY = proj.lastTickPosY
+				val lastPosZ = proj.lastTickPosZ
+
+				renderTrajectory(theWorld, thePlayer, provider, func, renderPosX, renderPosY, renderPosZ, color, lastPosX + (proj.posX - lastPosX) * partialTicks, lastPosY + (proj.posY - lastPosY) * partialTicks, lastPosZ + (proj.posZ - lastPosZ) * partialTicks, proj.motionX, proj.motionY, proj.motionZ, info.motionSlowdown, info.gravity, info.size)
 			}
 		}
 	}
@@ -328,7 +332,7 @@ class Projectiles : Module()
 		{
 			classProvider.isEntityArrow(projectile) && !projectile.asEntityArrow().inGround -> ProjectileInfo(motionMultiplier = 1.0, gravity = 0.05F, size = 0.3F) to -65536
 
-			classProvider.isEntityFishHook(projectile) -> ProjectileInfo(motionSlowdown = 0.92F, gravity = 0.04F, size = 0.25F) to -7829368
+			classProvider.isEntityFishHook(projectile) && !projectile.asEntityFishHook().inGround && projectile.asEntityFishHook().caughtEntity == null -> ProjectileInfo(motionSlowdown = 0.92F, gravity = 0.04F, size = 0.25F) to -7829368
 
 			classProvider.isEntityPotion(projectile) -> ProjectileInfo(motionFactor = 0.5F, gravity = 0.05F, size = 0.25F, inaccuracy = -20.0F) to ColorUtils.applyAlphaChannel(functions.getLiquidColor(projectile.asEntityPotion().potionDamage, false), 255)
 
