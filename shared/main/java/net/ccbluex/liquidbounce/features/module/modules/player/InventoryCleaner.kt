@@ -348,14 +348,7 @@ class InventoryCleaner : Module()
 					containerItems.none { (otherSlot, otherStack) -> otherSlot != slot && otherStack != itemStack && provider.isItemBow(otherStack.item) && currentPower.compareTo(ItemUtils.getEnchantment(otherStack, powerEnch)) < comparator }
 				}
 
-				bowAndArrow && itemStack.unlocalizedName == "item.arrow" ->
-				{
-					val arrowCount = inventoryItems.filter { (otherSlot, otherStack) -> otherSlot != slot && otherStack.unlocalizedName == "item.arrow" }.values.sumBy(IItemStack::stackSize) + itemStack.stackSize
-
-					ClientUtils.displayChatMessage(thePlayer, "arrowCount: $arrowCount")
-
-					arrowCount <= arrowCountValue.get()
-				}
+				bowAndArrow && itemStack.unlocalizedName == "item.arrow" -> inventoryItems.filter { (otherSlot, otherStack) -> otherSlot != slot && otherStack.unlocalizedName == "item.arrow" }.values.sumBy(IItemStack::stackSize) + itemStack.stackSize <= arrowCountValue.get()
 
 				provider.isItemArmor(item) ->
 				{
@@ -383,27 +376,19 @@ class InventoryCleaner : Module()
 
 				provider.isItemBlock(item) && !provider.isBlockBush(item?.asItemBlock()?.block) && !provider.isBlockChest(item?.asItemBlock()?.block) ->
 				{
-					val blockCount = inventoryItems.filter { (otherSlot, otherStack) ->
+					inventoryItems.filter { (otherSlot, otherStack) ->
 						val otherItem = otherStack.item
 						otherSlot != slot && provider.isItemBlock(otherItem) && !provider.isBlockBush(otherItem?.asItemBlock()?.block) && !provider.isBlockChest(item?.asItemBlock()?.block)
-					}.values.sumBy(IItemStack::stackSize) + itemStack.stackSize
-
-					ClientUtils.displayChatMessage(thePlayer, "blockCount: $blockCount")
-
-					blockCount <= blockCountValue.get()
+					}.values.sumBy(IItemStack::stackSize) + itemStack.stackSize <= blockCountValue.get()
 				}
 
 				foodValue.get() && provider.isItemFood(item) ->
 				{
 					val itemID = functions.getIdFromItem(item!!)
 
-					val foodCount = inventoryItems.filter { (otherSlot, otherStack) ->
+					inventoryItems.filter { (otherSlot, otherStack) ->
 						otherSlot != slot && provider.isItemFood(otherStack.item) && (!noDup || functions.getIdFromItem(otherStack.item!!) == itemID)
-					}.values.sumBy(IItemStack::stackSize) + itemStack.stackSize
-
-					ClientUtils.displayChatMessage(thePlayer, "foodCount: $foodCount")
-
-					foodCount <= foodCountValue.get()
+					}.values.sumBy(IItemStack::stackSize) + itemStack.stackSize <= foodCountValue.get()
 				}
 
 				else -> diamondValue.get() && itemStack.unlocalizedName == "item.diamond" // Diamond
