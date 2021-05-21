@@ -499,8 +499,7 @@ class KillAura : Module()
 
 			return
 		}
-
-		if (rotationStrafeValue.get().equals("Off", true)) update(theWorld, thePlayer)
+		else if (rotationStrafeValue.get().equals("Off", true)) update(theWorld, thePlayer)
 	}
 
 	/**

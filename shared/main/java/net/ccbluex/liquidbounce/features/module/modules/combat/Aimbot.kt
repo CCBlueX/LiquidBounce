@@ -188,7 +188,7 @@ class Aimbot : Module()
 	var target: IEntityLivingBase? = null
 
 	@EventTarget
-	fun onStrafe(@Suppress("UNUSED_PARAMETER") event: MotionEvent)
+	fun onMotion(@Suppress("UNUSED_PARAMETER") event: MotionEvent)
 	{
 		if (event.eventState != EventState.PRE) return
 

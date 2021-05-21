@@ -22,7 +22,10 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import org.lwjgl.opengl.GL11
-import kotlin.math.*
+import kotlin.math.ceil
+import kotlin.math.floor
+import kotlin.math.pow
+import kotlin.math.roundToLong
 
 @ModuleInfo(name = "ExtendedTooltips", description = "Display more tooltip informations on hotbar. (From Vanilla Enhancements mod)", category = ModuleCategory.RENDER)
 class ExtendedTooltips : Module()
@@ -167,7 +170,7 @@ class ExtendedTooltips : Module()
 
 		potionItem.item?.asItemPotion()?.getEffects(potionItem)?.forEach { effect ->
 			val durationInSeconds: Int = effect.duration / 20
-			potionBuilder.append("\u00A7l${Maps.POTION_SHORT_NAME[effect.potionID]}*${effect.amplifier + 1}(${durationInSeconds / 60}${String.format(":%02d", durationInSeconds % 60)}) ")
+			potionBuilder.append("\u00A7l${Maps.POTION_SHORT_NAME[effect.potionID]} ${effect.amplifier + 1} (${durationInSeconds / 60}${String.format(":%02d", durationInSeconds % 60)})  ")
 		}
 
 		return "$potionBuilder".trim { it <= ' ' }
@@ -177,7 +180,7 @@ class ExtendedTooltips : Module()
 	{
 		val enchantBuilder = StringBuilder()
 
-		functions.getEnchantments(itemStack).forEach { (enchID, amplifier) -> enchantBuilder.append("\u00A7l${Maps.ENCHANTMENT_SHORT_NAME[enchID]}*$amplifier ") }
+		functions.getEnchantments(itemStack).forEach { (enchID, amplifier) -> enchantBuilder.append("\u00A7l${Maps.ENCHANTMENT_SHORT_NAME[enchID]?.first} $amplifier  ") }
 
 		return "$enchantBuilder".trim { it <= ' ' }
 	}
