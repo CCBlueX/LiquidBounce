@@ -71,3 +71,11 @@ accessible field net/minecraft/entity/projectile/PersistentProjectileEntity inGr
 accessible method net/minecraft/entity/player/PlayerEntity getVelocityMultiplier ()F
 accessible method net/minecraft/entity/Entity movementInputToVelocity (Lnet/minecraft/util/math/Vec3d;FF)Lnet/minecraft/util/math/Vec3d;
 accessible method net/minecraft/util/math/Box traceCollisionSide (Lnet/minecraft/util/math/Box;Lnet/minecraft/util/math/Vec3d;[DLnet/minecraft/util/math/Direction;DDD)Lnet/minecraft/util/math/Direction;
+
+accessible field net/minecraft/network/packet/s2c/play/EntityVelocityUpdateS2CPacket velocityX I
+accessible field net/minecraft/network/packet/s2c/play/EntityVelocityUpdateS2CPacket velocityY I
+accessible field net/minecraft/network/packet/s2c/play/EntityVelocityUpdateS2CPacket velocityZ I
+
+accessible field net/minecraft/network/packet/s2c/play/ExplosionS2CPacket playerVelocityX F
+accessible field net/minecraft/network/packet/s2c/play/ExplosionS2CPacket playerVelocityY F
+accessible field net/minecraft/network/packet/s2c/play/ExplosionS2CPacket playerVelocityZ F
