@@ -17,11 +17,12 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.player
+package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
@@ -144,6 +145,6 @@ object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
     }
 
     private fun refreshMaxPackets() {
-        this.currentMaxPackets = this.maxPacketsInBuffer.random()
+        currentMaxPackets = maxPacketsInBuffer.random()
     }
 }
