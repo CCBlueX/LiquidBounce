@@ -12,7 +12,7 @@ import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 
 object ModuleSneak : Module("Sneak", Category.MOVEMENT) {
 
-    var modes = choices("Mode", MineSecure, arrayOf(Legit, Vanilla, Switch, MineSecure))
+    var modes = choices("Mode", Vanilla, arrayOf(Legit, Vanilla, Switch))
     var stopMove by boolean("StopMove", false)
     var sneaking = false
 
@@ -78,28 +78,6 @@ object ModuleSneak : Module("Sneak", Category.MOVEMENT) {
                     network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY))
                     network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY))
                 }
-            }
-        }
-
-        override fun disable() {
-            network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY))
-            sneaking = false
-        }
-    }
-
-    private object MineSecure : Choice("MineSecure") {
-
-        override val parent: ChoiceConfigurable
-            get() = modes
-
-        val networkTick = handler<PlayerNetworkMovementTickEvent> { event ->
-            if(stopMove && player.moving) {
-                if(sneaking) {
-                    disable()
-                } else return@handler
-            }
-            if(event.state != EventState.PRE) {
-                network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY))
             }
         }
 
