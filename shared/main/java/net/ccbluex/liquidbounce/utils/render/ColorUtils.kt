@@ -85,7 +85,7 @@ object ColorUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun getESPColor(entity: IEntity?, colorMode: String, customStaticColor: Color, healthMode: String, indicateHurt: Boolean, indicateTarget: Boolean, indicateFriend: Boolean, rainbowSaturation: Float, rainbowBrightness: Float, alpha: Int = 255): Color
+	fun getESPColor(entity: IEntity?, colorMode: String, customStaticColor: Int, healthMode: String, indicateHurt: Boolean, indicateTarget: Boolean, indicateFriend: Boolean, rainbowSaturation: Float, rainbowBrightness: Float, alpha: Int = 255): Int
 	{
 		val provider = classProvider
 
@@ -102,17 +102,17 @@ object ColorUtils : MinecraftInstance()
 				val murderDetector = moduleManager[MurderDetector::class.java] as MurderDetector
 
 				// Indicate Hurt
-				if (indicateHurt && entityLiving.hurtTime > 0 || indicateTarget && (entity == aimBot.target || entity == killAura.target || tpAura.isTarget(entityLiving))) return@run Color.RED
+				if (indicateHurt && entityLiving.hurtTime > 0 || indicateTarget && (entity == aimBot.target || entity == killAura.target || tpAura.isTarget(entityLiving))) return@run -65536
 
 				// Indicate Friend
-				if (indicateFriend && EntityUtils.isFriend(entityLiving)) return@run Color.BLUE
+				if (indicateFriend && EntityUtils.isFriend(entityLiving)) return@run -16776961
 
 				// Indicate Murder
-				if (murderDetector.state && murderDetector.murders.contains(entity)) return@run Color(153, 0, 153)
+				if (murderDetector.state && murderDetector.murders.contains(entity)) return@run -6750055
 
 				when (colorMode.toLowerCase())
 				{
-					"rainbow" -> return@run rainbow(saturation = rainbowSaturation, brightness = rainbowBrightness)
+					"rainbow" -> return@run rainbowRGB(saturation = rainbowSaturation, brightness = rainbowBrightness)
 
 					"team" ->
 					{
@@ -140,7 +140,7 @@ object ColorUtils : MinecraftInstance()
 							break
 						}
 
-						return@run Color(color)
+						return@run color
 					}
 
 					"health" ->
@@ -150,12 +150,12 @@ object ColorUtils : MinecraftInstance()
 
 						if (provider.isEntityPlayer(entity) && (healthMode.equals("Mineplex", ignoreCase = true) || healthMode.equals("Hive", ignoreCase = true))) health = EntityUtils.getPlayerHealthFromScoreboard(entity.asEntityPlayer().gameProfile.name, isMineplex = healthMode.equals("mineplex", ignoreCase = true)).toFloat()
 
-						return@run getHealthColor(health, maxHealth)
+						return@run getHealthColor(health, maxHealth).rgb
 					}
 				}
 			}
 
-			return@run if (colorMode.equals("Rainbow", ignoreCase = true)) rainbow(saturation = rainbowSaturation, brightness = rainbowBrightness) else customStaticColor
+			return@run if (colorMode.equals("Rainbow", ignoreCase = true)) rainbowRGB(saturation = rainbowSaturation, brightness = rainbowBrightness) else customStaticColor
 		}, alpha)
 	}
 

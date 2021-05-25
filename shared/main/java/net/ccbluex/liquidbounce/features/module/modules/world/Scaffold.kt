@@ -43,7 +43,6 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
-import java.awt.Color
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.floor
@@ -929,7 +928,7 @@ class Scaffold : Module()
 				val placeInfo: PlaceInfo? = PlaceInfo[theWorld, blockPos]
 				if (isReplaceable(blockPos) && placeInfo != null)
 				{
-					RenderUtils.drawBlockBox(theWorld, thePlayer, blockPos, Color(68, 117, 255, 100), outline = false, hydraESP = false)
+					RenderUtils.drawBlockBox(theWorld, thePlayer, blockPos, 1682208255, 0, hydraESP = false)
 					return@searchLoop
 				}
 			}

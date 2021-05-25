@@ -32,7 +32,7 @@ public abstract class MixinGuiMultiplayer extends MixinGuiScreen
 	@Inject(method = "initGui", at = @At("RETURN"))
 	private void initGui(final CallbackInfo callbackInfo)
 	{
-		buttonList.add(new GuiButton(997, 5, 8, 98, 20, "AntiForge"));
+		buttonList.add(new GuiButton(997, 5, 8, 98, 20, "AntiModDisable"));
 		buttonList.add(bungeeCordSpoofButton = new GuiButton(998, 108, 8, 98, 20, "BungeeCord Spoof: " + (BungeeCordSpoof.enabled ? "On" : "Off")));
 		buttonList.add(new GuiButton(999, width - 104, 8, 98, 20, "Tools"));
 	}

@@ -8,7 +8,6 @@ package net.ccbluex.liquidbounce.utils.render.shader
 import net.ccbluex.liquidbounce.api.minecraft.client.shader.IFramebuffer
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL20
-import java.awt.Color
 
 /**
  * @author TheSlowly
@@ -43,7 +42,7 @@ abstract class FramebufferShader(fragmentShader: String) : Shader(fragmentShader
 		mc.entityRenderer.setupCameraTransform(partialTicks, 0)
 	}
 
-	fun stopDraw(color: Color, radius: Float, quality: Float)
+	fun stopDraw(color: Int, radius: Float, quality: Float)
 	{
 		mc.gameSettings.entityShadows = entityShadows
 
@@ -52,10 +51,10 @@ abstract class FramebufferShader(fragmentShader: String) : Shader(fragmentShader
 
 		mc.framebuffer?.bindFramebuffer(true)
 
-		red = color.red / 255.0f
-		green = color.green / 255.0f
-		blue = color.blue / 255.0f
-		alpha = color.alpha / 255.0f
+		red = (color shr 16 and 0xFF) / 255.0F
+		green = (color shr 8 and 0xFF) / 255.0F
+		blue = (color and 0xFF) / 255.0F
+		alpha = (color shr 24 and 0xFF) / 255.0F
 
 		this.radius = radius
 		this.quality = quality

@@ -19,10 +19,16 @@ import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.MiniMapRegister
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
-import net.ccbluex.liquidbounce.value.*
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.util.vector.Vector2f
-import kotlin.math.*
+import kotlin.math.ceil
+import kotlin.math.floor
+import kotlin.math.max
+import kotlin.math.sqrt
 
 @ElementInfo(name = "Radar", disableScale = true, priority = 1)
 class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
@@ -246,7 +252,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 			{
 				val color = esp.getColor(entity)
 
-				worldRenderer.pos(((relX / viewDistance) * size).toDouble(), ((relY / viewDistance) * size).toDouble(), 0.0).color(color.red / 255.0f, color.green / 255.0f, color.blue / 255.0f, 1.0f).endVertex()
+				worldRenderer.pos(((relX / viewDistance) * size).toDouble(), ((relY / viewDistance) * size).toDouble(), 0.0).color(color shr 16 and 0xFF, color shr 8 and 0xFF, color and 0xFF, 255).endVertex()
 			}
 
 			if (transform) glPopMatrix()

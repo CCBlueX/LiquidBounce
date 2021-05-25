@@ -13,7 +13,8 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.ClientUtils
-import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
+import net.ccbluex.liquidbounce.utils.render.ColorUtils
+import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbowRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.GlowShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.OutlineShader
@@ -21,7 +22,6 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import java.awt.Color
 
 @ModuleInfo(name = "ProphuntESP", description = "Allows you to see disguised players in PropHunt.", category = ModuleCategory.RENDER)
 class ProphuntESP : Module()
@@ -29,7 +29,7 @@ class ProphuntESP : Module()
 	/**
 	 * Options
 	 */
-	private val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "Hydra", "ShaderOutline", "ShaderGlow"), "OtherBox")
+	private val modeValue = ListValue("Mode", arrayOf("Box", "Hydra", "ShaderOutline", "ShaderGlow"), "OtherBox")
 
 	private val shaderOutlineRadius = FloatValue("ShaderOutline-Radius", 1.35f, 1f, 2f)
 	private val shaderGlowRadius = FloatValue("ShaderGlow-Radius", 2.3f, 2f, 3f)
@@ -37,6 +37,12 @@ class ProphuntESP : Module()
 	private val colorRedValue = IntegerValue("R", 0, 0, 255)
 	private val colorGreenValue = IntegerValue("G", 90, 0, 255)
 	private val colorBlueValue = IntegerValue("B", 255, 0, 255)
+	private val colorAlphaValue = IntegerValue("Alpha", 255, 0, 255)
+
+	private val boxOutlineRedValue = IntegerValue("Box-Outline-Red", 255, 0, 255)
+	private val boxOutlineGreenValue = IntegerValue("Box-Outline-Green", 255, 0, 255)
+	private val boxOutlineBlueValue = IntegerValue("Box-Outline-Blue", 255, 0, 255)
+	private val boxOutlineAlphaValue = IntegerValue("Box-Outline-Alpha", 90, 0, 255)
 
 	private val colorRainbow = BoolValue("Rainbow", false)
 	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
@@ -61,11 +67,12 @@ class ProphuntESP : Module()
 		val mode = modeValue.get().toLowerCase()
 
 		val hydraESP = mode == "hydra"
-		val drawOutline = mode == "box" || hydraESP
 
-		val color = if (colorRainbow.get()) rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
+		val color = if (colorRainbow.get()) rainbowRGB(saturation = saturationValue.get(), brightness = brightnessValue.get()) else ColorUtils.createRGB(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), colorAlphaValue.get())
 
-		if (drawOutline || mode == "otherbox") theWorld.loadedEntityList.filter(classProvider::isEntityFallingBlock).forEach { RenderUtils.drawEntityBox(it, color, drawOutline, hydraESP) }
+		val boxOutlineColor = ColorUtils.createRGB(boxOutlineRedValue.get(), boxOutlineGreenValue.get(), boxOutlineBlueValue.get(), boxOutlineAlphaValue.get())
+
+		if (mode == "box" || hydraESP) theWorld.loadedEntityList.filter(classProvider::isEntityFallingBlock).forEach { RenderUtils.drawEntityBox(it, color, boxOutlineColor, hydraESP) }
 
 		synchronized(blocks) {
 			val iterator: MutableIterator<Map.Entry<WBlockPos, Long>> = blocks.entries.iterator()
@@ -80,7 +87,7 @@ class ProphuntESP : Module()
 					continue
 				}
 
-				RenderUtils.drawBlockBox(theWorld, thePlayer, entry.key, color, drawOutline, hydraESP)
+				RenderUtils.drawBlockBox(theWorld, thePlayer, entry.key, color, boxOutlineColor, hydraESP)
 			}
 		}
 	}
@@ -113,15 +120,12 @@ class ProphuntESP : Module()
 			ClientUtils.logger.error("An error occurred while rendering all entities for shader esp", ex)
 		}
 
-		val color = if (colorRainbow.get()) rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
-		val radius = when (mode)
+		shader.stopDraw(if (colorRainbow.get()) rainbowRGB(saturation = saturationValue.get(), brightness = brightnessValue.get()) else ColorUtils.createRGB(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get()), when (mode)
 		{
 			"shadowoutline" -> shaderOutlineRadius.get()
 			"shaderglow" -> shaderGlowRadius.get()
 			else -> 1f
-		}
-
-		shader.stopDraw(color, radius, 1f)
+		}, 1f)
 	}
 
 	override val tag: String

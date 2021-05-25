@@ -19,6 +19,7 @@ interface IWorldRenderer
 	fun endVertex()
 	fun tex(u: Double, v: Double): IWorldRenderer
 	fun color(red: Float, green: Float, blue: Float, alpha: Float): IWorldRenderer
+	fun color(red: Int, green: Int, blue: Int, alpha: Int): IWorldRenderer
 	fun finishDrawing()
 	fun reset()
 }

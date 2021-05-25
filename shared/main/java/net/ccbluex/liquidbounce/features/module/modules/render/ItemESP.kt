@@ -12,24 +12,29 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.ClientUtils
-import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
+import net.ccbluex.liquidbounce.utils.render.ColorUtils
+import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbowRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.OutlineShader
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import java.awt.Color
 
 @ModuleInfo(name = "ItemESP", description = "Allows you to see items through walls.", category = ModuleCategory.RENDER)
 class ItemESP : Module()
 {
-	private val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "Hydra", "ShaderOutline"), "Box")
+	private val modeValue = ListValue("Mode", arrayOf("Box", "Hydra", "ShaderOutline"), "Box")
 	private val shaderRadiusValue = FloatValue("ShaderRadius", 2f, 0.5f, 5f)
 	private val colorRedValue = IntegerValue("R", 0, 0, 255)
 	private val colorGreenValue = IntegerValue("G", 255, 0, 255)
 	private val colorBlueValue = IntegerValue("B", 0, 0, 255)
 	private val colorAlphaValue = IntegerValue("Alpha", 35, 0, 255)
+
+	private val boxOutlineRedValue = IntegerValue("Box-Outline-Red", 255, 0, 255)
+	private val boxOutlineGreenValue = IntegerValue("Box-Outline-Green", 255, 0, 255)
+	private val boxOutlineBlueValue = IntegerValue("Box-Outline-Blue", 255, 0, 255)
+	private val boxOutlineAlphaValue = IntegerValue("Box-Outline-Alpha", 90, 0, 255)
 
 	private val colorRainbow = BoolValue("Rainbow", true)
 
@@ -44,15 +49,15 @@ class ItemESP : Module()
 		{
 			val theWorld = mc.theWorld ?: return
 
-			val color = if (colorRainbow.get()) rainbow(alpha = colorAlphaValue.get(), saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), colorAlphaValue.get())
+			val color = if (colorRainbow.get()) rainbowRGB(alpha = colorAlphaValue.get(), saturation = saturationValue.get(), brightness = brightnessValue.get()) else ColorUtils.createRGB(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), colorAlphaValue.get())
 
 			val hydraESP = mode == "hydra"
-			val drawOutline = mode == "box" || hydraESP
 
 			val provider = classProvider
 
+			val boxOutlineColor = ColorUtils.createRGB(boxOutlineRedValue.get(), boxOutlineGreenValue.get(), boxOutlineBlueValue.get(), boxOutlineAlphaValue.get())
 
-			theWorld.loadedEntityList.filter { provider.isEntityItem(it) || provider.isEntityArrow(it) }.forEach { RenderUtils.drawEntityBox(it, color, drawOutline, hydraESP) }
+			theWorld.loadedEntityList.filter { provider.isEntityItem(it) || provider.isEntityArrow(it) }.forEach { RenderUtils.drawEntityBox(it, color, boxOutlineColor, hydraESP) }
 		}
 	}
 
@@ -79,7 +84,7 @@ class ItemESP : Module()
 				ClientUtils.logger.error("An error occurred while rendering all item entities for shader esp", ex)
 			}
 
-			OutlineShader.INSTANCE.stopDraw(if (colorRainbow.get()) rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get()), shaderRadiusValue.get(), 1f)
+			OutlineShader.INSTANCE.stopDraw(if (colorRainbow.get()) rainbowRGB(saturation = saturationValue.get(), brightness = brightnessValue.get()) else ColorUtils.createRGB(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get()), shaderRadiusValue.get(), 1f)
 		}
 	}
 

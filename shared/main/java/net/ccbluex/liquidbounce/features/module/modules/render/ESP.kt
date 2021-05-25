@@ -27,30 +27,58 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import org.lwjgl.opengl.GL11
 import org.lwjgl.util.vector.Vector3f
-import java.awt.Color
 import kotlin.math.max
 import kotlin.math.min
 
 @ModuleInfo(name = "ESP", description = "Allows you to see targets through walls.", category = ModuleCategory.RENDER)
 class ESP : Module()
 {
-	val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "WireFrame", "2D", "Real2D", "Outline", "ShaderOutline", "ShaderGlow", "Fill", "CSGO"), "Box")
+	/**
+	 * Mode
+	 */
+	val modeValue = ListValue("Mode", arrayOf("Box", "WireFrame", "2D", "Real2D", "Outline", "ShaderOutline", "ShaderGlow", "Fill", "CSGO"), "Box")
 
-	private val real2DWidth = FloatValue("Real2D-Width", 1f, 0.5f, 5f)
-
-	val outlineWidth = FloatValue("Outline-Width", 3f, 0.5f, 5f)
-
-	val wireframeWidth = FloatValue("WireFrame-Width", 2f, 0.5f, 5f)
-
-	private val shaderOutlineRadius = FloatValue("ShaderOutline-Radius", 1.35f, 1f, 2f)
-
-	private val shaderGlowRadius = FloatValue("ShaderGlow-Radius", 2.3f, 2f, 3f)
-
+	/**
+	 * Color options
+	 */
 	private val colorValue = ListValue("Color", arrayOf("Static", "Rainbow", "Team", "Health"), "Static")
 	private val colorRedValue = IntegerValue("R", 255, 0, 255)
 	private val colorGreenValue = IntegerValue("G", 255, 0, 255)
 	private val colorBlueValue = IntegerValue("B", 255, 0, 255)
-	private val colorAlphaValue = IntegerValue("Alpha", 255, 0, 255)
+	private val colorAlphaValue = IntegerValue("Alpha", 30, 0, 255)
+
+	/**
+	 * Box mode box outline alpha
+	 */
+	private val boxOutlineRedValue = IntegerValue("Box-Outline-Red", 255, 0, 255)
+	private val boxOutlineGreenValue = IntegerValue("Box-Outline-Green", 255, 0, 255)
+	private val boxOutlineBlueValue = IntegerValue("Box-Outline-Blue", 255, 0, 255)
+	private val boxOutlineAlphaValue = IntegerValue("Box-Outline-Alpha", 90, 0, 255)
+
+	/**
+	 * Real2D mode box width
+	 */
+	private val real2DWidth = FloatValue("Real2D-Width", 1f, 0.5f, 5f)
+
+	/**
+	 * Outline mode outline width
+	 */
+	val outlineWidth = FloatValue("Outline-Width", 3f, 0.5f, 5f)
+
+	/**
+	 * WireFrame mode wire width
+	 */
+	val wireframeWidth = FloatValue("WireFrame-Width", 2f, 0.5f, 5f)
+
+	/**
+	 * ShaderGlow mode shader radius
+	 */
+	private val shaderOutlineRadius = FloatValue("ShaderOutline-Radius", 1.35f, 1f, 2f)
+
+	/**
+	 * ShaderGlow mode shader radius
+	 */
+	private val shaderGlowRadius = FloatValue("ShaderGlow-Radius", 2.3f, 2f, 3f)
 
 	private val botValue = BoolValue("Bots", true)
 	private val friendValue = BoolValue("Friends", true)
@@ -104,7 +132,9 @@ class ESP : Module()
 			GL11.glLineWidth(real2DWidth.get())
 		}
 
-		val draw: (entity: IEntityLivingBase, color: Color) -> Unit = { entityLiving, color ->
+		val boxOutlineColor = ColorUtils.createRGB(boxOutlineRedValue.get(), boxOutlineGreenValue.get(), boxOutlineBlueValue.get(), boxOutlineAlphaValue.get())
+
+		val draw: (entity: IEntityLivingBase, color: Int) -> Unit = { entityLiving, color ->
 			val lastTickPosX = entityLiving.lastTickPosX
 			val lastTickPosY = entityLiving.lastTickPosY
 			val lastTickPosZ = entityLiving.lastTickPosZ
@@ -115,7 +145,7 @@ class ESP : Module()
 
 			when (mode)
 			{
-				"box", "otherbox" -> RenderUtils.drawEntityBox(entityLiving, color, mode == "box", false)
+				"box" -> RenderUtils.drawEntityBox(entityLiving, color, boxOutlineColor, false)
 
 				"2d" ->
 				{
@@ -123,7 +153,7 @@ class ESP : Module()
 					val y = lastTickPosY + (posY - lastTickPosY) * renderPartialTicks - renderPosY
 					val z = lastTickPosZ + (posZ - lastTickPosZ) * renderPartialTicks - renderPosZ
 
-					RenderUtils.draw2D(entityLiving, x, y, z, color.rgb, -16777216)
+					RenderUtils.draw2D(entityLiving, x, y, z, color, -16777216)
 				}
 
 				"real2d" ->
@@ -214,7 +244,7 @@ class ESP : Module()
 		shader.stopDraw(getColor(null), if (mode.equals("ShaderOutline", ignoreCase = true)) shaderOutlineRadius.get() else if (mode.equals("ShaderGlow", ignoreCase = true)) shaderGlowRadius.get() else 1f, 1f)
 	}
 
-	fun getColor(entity: IEntity?): Color = ColorUtils.getESPColor(entity = entity, colorMode = colorValue.get(), customStaticColor = Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), colorAlphaValue.get()), healthMode = healthModeValue.get(), indicateHurt = hurtValue.get(), indicateTarget = targetValue.get(), indicateFriend = friendValue.get(), rainbowSaturation = saturationValue.get(), rainbowBrightness = brightnessValue.get(), alpha = colorAlphaValue.get())
+	fun getColor(entity: IEntity?): Int = ColorUtils.getESPColor(entity = entity, colorMode = colorValue.get(), customStaticColor = ColorUtils.createRGB(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), colorAlphaValue.get()), healthMode = healthModeValue.get(), indicateHurt = hurtValue.get(), indicateTarget = targetValue.get(), indicateFriend = friendValue.get(), rainbowSaturation = saturationValue.get(), rainbowBrightness = brightnessValue.get(), alpha = colorAlphaValue.get())
 
 	override val tag: String
 		get() = modeValue.get()

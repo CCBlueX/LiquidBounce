@@ -342,7 +342,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 						ClientUtils.disableFastRender();
 						GlStateManager.resetColor();
 
-						final Color color = esp.getColor(EntityLivingBaseImplKt.wrap(entitylivingbaseIn));
+						final int color = esp.getColor(EntityLivingBaseImplKt.wrap(entitylivingbaseIn));
 						RenderUtils.glColor(color);
 						OutlineUtils.renderOne(esp.getOutlineWidth().get());
 						mainModel.render(entitylivingbaseIn, p_77036_2_, p_77036_3_, p_77036_4_, p_77036_5_, p_77036_6_, scaleFactor);

@@ -10,7 +10,6 @@ import net.minecraftforge.fml.relauncher.SideOnly
 import org.lwjgl.opengl.EXTFramebufferObject
 import org.lwjgl.opengl.EXTPackedDepthStencil
 import org.lwjgl.opengl.GL11
-import java.awt.Color
 
 /**
  * Outline ESP
@@ -57,7 +56,7 @@ object OutlineUtils
 	}
 
 	@JvmStatic
-	fun renderFour(color: Color)
+	fun renderFour(color: Int)
 	{
 		val functions: IExtractedFunctions = wrapper.functions
 

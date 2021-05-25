@@ -15,11 +15,11 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
-import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
+import net.ccbluex.liquidbounce.utils.render.ColorUtils
+import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbowRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.*
-import java.awt.Color
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
@@ -46,6 +46,8 @@ class BlockESP : Module()
 	private val colorGreenValue = IntegerValue("G", 179, 0, 255)
 	private val colorBlueValue = IntegerValue("B", 72, 0, 255)
 	private val colorAlphaValue = IntegerValue("Alpha", 72, 0, 255)
+
+	private val outlineAlphaValue = IntegerValue("Outline-Alpha", 102, 0, 255)
 
 	private val colorRainbow = BoolValue("Rainbow", false)
 	private val rainbowSpeedValue = IntegerValue("Rainbow-Speed", 10, 1, 10)
@@ -130,16 +132,16 @@ class BlockESP : Module()
 		val mode = modeValue.get().toLowerCase()
 
 		val hydraESP = mode == "hydra"
-		val drawOutline = mode == "box" || hydraESP
 
-		val color = if (colorRainbow.get()) rainbow(alpha, speed = rainbowSpeedValue.get(), saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), alpha)
+		val color = if (colorRainbow.get()) rainbowRGB(alpha, speed = rainbowSpeedValue.get(), saturation = saturationValue.get(), brightness = brightnessValue.get()) else ColorUtils.createRGB(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), alpha)
+		val outlineColor = ColorUtils.applyAlphaChannel(color, outlineAlphaValue.get())
 
 		for (blockPos in posList)
 		{
 			when (mode)
 			{
-				"box", "otherbox", "hydra" -> RenderUtils.drawBlockBox(theWorld, thePlayer, blockPos, color, drawOutline, hydraESP)
-				"2d" -> RenderUtils.draw2D(blockPos, color.rgb, -16777216)
+				"box", "otherbox", "hydra" -> RenderUtils.drawBlockBox(theWorld, thePlayer, blockPos, color, outlineColor, hydraESP)
+				"2d" -> RenderUtils.draw2D(blockPos, color, -16777216)
 			}
 		}
 	}

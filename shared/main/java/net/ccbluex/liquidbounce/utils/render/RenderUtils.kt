@@ -36,7 +36,7 @@ object RenderUtils : MinecraftInstance()
 	var deltaTime = 0
 
 	@JvmStatic
-	fun drawBlockBox(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, blockPos: WBlockPos, color: Color, outline: Boolean, hydraESP: Boolean)
+	fun drawBlockBox(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, blockPos: WBlockPos, color: Int, outlineColor: Int, hydraESP: Boolean)
 	{
 		val renderPartialTicks = mc.timer.renderPartialTicks
 
@@ -59,15 +59,15 @@ object RenderUtils : MinecraftInstance()
 		disableGlCap(GL11.GL_TEXTURE_2D, GL11.GL_DEPTH_TEST)
 		GL11.glDepthMask(false)
 
-		glColor(color.red, color.green, color.blue, if (color.alpha == 255) if (outline) 26 else 35 else color.alpha)
+		glColor(color)
 
 		drawFilledBox(axisAlignedBB)
 
-		if (outline)
+		if (outlineColor shr 24 > 0)
 		{
 			GL11.glLineWidth(1.00f)
 			enableGlCap(GL11.GL_LINE_SMOOTH)
-			glColor(color)
+			glColor(outlineColor)
 			drawSelectionBoundingBox(axisAlignedBB, hydraESP)
 		}
 
@@ -175,7 +175,7 @@ object RenderUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun drawEntityBox(entity: IEntity, color: Color, outline: Boolean, drawHydraESP: Boolean)
+	fun drawEntityBox(entity: IEntity, boxColor: Int, outlineColor: Int, drawHydraESP: Boolean)
 	{
 		val renderManager = mc.renderManager
 		val renderPartialTicks = mc.timer.renderPartialTicks
@@ -201,15 +201,15 @@ object RenderUtils : MinecraftInstance()
 
 		val axisAlignedBB = classProvider.createAxisAlignedBB(entityBox.minX - posX + x - 0.05, entityBox.minY - posY + y, entityBox.minZ - posZ + z - 0.05, entityBox.maxX - posX + x + 0.05, entityBox.maxY - posY + y + 0.15, entityBox.maxZ - posZ + z + 0.05)
 
-		if (outline)
+		if (outlineColor shr 24 > 0) // outlineColor.alpha > 0
 		{
 			GL11.glLineWidth(1.00f)
 			enableGlCap(GL11.GL_LINE_SMOOTH)
-			glColor(ColorUtils.applyAlphaChannel(color, (color.alpha + 60).coerceAtMost(255)))
+			glColor(outlineColor)
 			drawSelectionBoundingBox(axisAlignedBB, drawHydraESP)
 		}
 
-		glColor(color)
+		glColor(boxColor)
 
 		drawFilledBox(axisAlignedBB)
 

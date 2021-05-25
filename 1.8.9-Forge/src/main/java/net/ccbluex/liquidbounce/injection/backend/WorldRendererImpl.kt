@@ -43,6 +43,13 @@ class WorldRendererImpl(val wrapped: WorldRenderer) : IWorldRenderer
 		return this
 	}
 
+	override fun color(red: Int, green: Int, blue: Int, alpha: Int): IWorldRenderer
+	{
+		wrapped.color(red, green, blue, alpha)
+
+		return this
+	}
+
 	override fun finishDrawing() = wrapped.finishDrawing()
 
 	override fun reset() = wrapped.reset()
