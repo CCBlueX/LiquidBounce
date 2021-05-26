@@ -31,7 +31,8 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 object ModuleNoFall : Module("NoFall", Category.PLAYER) {
 
     private val modes = choices(
-        "Mode", SpoofGround,
+        "Mode",
+        SpoofGround,
         arrayOf(
             SpoofGround,
             NoGround,

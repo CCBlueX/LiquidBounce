@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
 import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
 import org.apache.logging.log4j.LogManager
 
@@ -74,6 +75,8 @@ object LiquidBounce : Listenable {
 
         RotationManager
 
+        ChunkScanner
+
         // Features
         ModuleManager
         CommandManager
@@ -114,6 +117,8 @@ object LiquidBounce : Listenable {
         logger.info("Shutting down client...")
         ConfigSystem.store()
         UltralightEngine.shutdown()
+
+        ChunkScanner.ChunkScannerThread.stopThread()
     }
 
 }

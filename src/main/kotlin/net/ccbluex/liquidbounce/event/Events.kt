@@ -40,6 +40,18 @@ class GameTickEvent : Event()
 
 // Render events
 
+@Nameable("blockChangeEvent")
+class BlockChangeEvent(val blockPos: BlockPos, val newState: BlockState) : Event()
+
+@Nameable("chunkLoadEvent")
+class ChunkLoadEvent(val x: Int, val z: Int) : Event()
+
+@Nameable("chunkUnloadEvent")
+class ChunkUnloadEvent(val x: Int, val z: Int) : Event()
+
+@Nameable("worldDisconnectEvent")
+class WorldDisconnectEvent() : Event()
+
 @Nameable("gameRender")
 class GameRenderEvent : Event()
 

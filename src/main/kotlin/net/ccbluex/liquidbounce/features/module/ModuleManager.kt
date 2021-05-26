@@ -138,7 +138,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleFreeCam,
             ModulePlugins,
             ModuleTrajectories,
-            ModuleSneak
+            ModuleSneak,
+            ModuleBlockESP
         )
 
         builtin.apply {
