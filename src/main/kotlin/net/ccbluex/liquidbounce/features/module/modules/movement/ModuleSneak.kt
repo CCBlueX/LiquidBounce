@@ -26,7 +26,9 @@ import net.ccbluex.liquidbounce.event.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoWalk
 import net.ccbluex.liquidbounce.utils.entity.moving
+import net.minecraft.client.util.InputUtil
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 
 object ModuleSneak : Module("Sneak", Category.MOVEMENT) {
@@ -50,8 +52,10 @@ object ModuleSneak : Module("Sneak", Category.MOVEMENT) {
         }
 
         override fun disable() {
-            mc.options.keySneak.isPressed = false
-            sneaking = false
+            if(!InputUtil.isKeyPressed(mc.window.handle, mc.options.keySneak.boundKey.code)) {
+                mc.options.keySneak.isPressed = false
+                sneaking = false
+            }
         }
     }
 
