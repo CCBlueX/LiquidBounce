@@ -7,7 +7,7 @@
   "liquidbounce.generic.disabled": "Disabled",
 
   "liquidbounce.commandManager.exceptionOccurred": "Failed to execute command. %s",
-  "liquidbounce.commandManager.unknownCommand": "Command \"%s\" not found.",
+  "liquidbounce.commandManager.unknownCommand": "Command \"%s\" was not found.",
   "liquidbounce.commandManager.invalidUsage": "Invalid usage of command \"%s\".",
   "liquidbounce.commandManager.commandTakesNoParameters": "Command does not take any arguments.",
   "liquidbounce.commandManager.parameterRequired": "Parameter \"%s\" is required.",
@@ -18,7 +18,7 @@
   "liquidbounce.command.bind.description": "Binds a module to a key.",
   "liquidbounce.command.bind.parameter.name.description": "Name of the module.",
   "liquidbounce.command.bind.parameter.key.description": "Key to which the module should be bound.",
-  "liquidbounce.command.bind.result.moduleNotFound": "Module \"%s\" not found.",
+  "liquidbounce.command.bind.result.moduleNotFound": "Module \"%s\" was not found.",
   "liquidbounce.command.bind.result.moduleBound": "Bound module \"%s\" to key \"%s\".",
 
   "liquidbounce.command.binds.description": "Binds a module to a key.",
@@ -26,13 +26,13 @@
   "liquidbounce.command.binds.subcommand.add.description": "Adds a new bind.",
   "liquidbounce.command.binds.subcommand.add.parameter.name.description": "Name of the module.",
   "liquidbounce.command.binds.subcommand.add.parameter.key.description": "Key to which the module should be bound.",
-  "liquidbounce.command.binds.subcommand.add.result.moduleNotFound": "Module \"%s\" not found.",
+  "liquidbounce.command.binds.subcommand.add.result.moduleNotFound": "Module \"%s\" was not found.",
   "liquidbounce.command.binds.subcommand.add.result.unknownKey": "Unknown key.",
   "liquidbounce.command.binds.subcommand.add.result.moduleBound": "Bound module \"%s\" to key \"%s\".",
 
   "liquidbounce.command.binds.subcommand.remove.description": "Removes an existing bind.",
   "liquidbounce.command.binds.subcommand.remove.parameter.name.description": "Name of the module.",
-  "liquidbounce.command.binds.subcommand.remove.result.moduleNotFound": "Module \"%s\" not found.",
+  "liquidbounce.command.binds.subcommand.remove.result.moduleNotFound": "Module \"%s\" was not found.",
   "liquidbounce.command.binds.subcommand.remove.result.moduleNotBound": "Module is not bound to any key.",
   "liquidbounce.command.binds.subcommand.remove.result.bindRemoved": "Removed bind of module \"%s\".",
 
@@ -95,12 +95,12 @@
 
   "liquidbounce.command.hide.subcommand.hide.description": "Hides a module.",
   "liquidbounce.command.hide.subcommand.hide.parameter.name.description": "Name of the module.",
-  "liquidbounce.command.hide.subcommand.hide.result.moduleNotFound": "Module \"%s\" not found.",
+  "liquidbounce.command.hide.subcommand.hide.result.moduleNotFound": "Module \"%s\" was not found.",
   "liquidbounce.command.hide.subcommand.hide.result.moduleHidden": "Module \"%s\" is now hidden.",
 
   "liquidbounce.command.hide.subcommand.unhide.description": "Unhides a module.",
   "liquidbounce.command.hide.subcommand.unhide.parameter.name.description": "Name of the module.",
-  "liquidbounce.command.hide.subcommand.unhide.result.moduleNotFound": "Module \"%s\" not found.",
+  "liquidbounce.command.hide.subcommand.unhide.result.moduleNotFound": "Module \"%s\" was not found.",
   "liquidbounce.command.hide.subcommand.unhide.result.moduleUnhidden": "Module \"%s\" is no longer hidden.",
 
   "liquidbounce.command.hide.subcommand.list.description": "Lists all hidden modules.",
@@ -115,9 +115,9 @@
 
   "liquidbounce.command.panic.description": "Turns off all modules.",
   "liquidbounce.command.panic.parameter.category.description": "Only disables modules in a specific category.",
-  "liquidbounce.command.panic.result.categoryNotFound": "Category \"%s\" not found.",
+  "liquidbounce.command.panic.result.categoryNotFound": "Category \"%s\" was not found.",
   "liquidbounce.command.panic.result.disabledAllModules": "Disabled all modules.",
-  "liquidbounce.command.panic.result.disabledAllCategoryModules": "Disabled all modules from category \"%s\".",
+  "liquidbounce.command.panic.result.disabledAllCategoryModules": "Disabled all %s modules.",
   "liquidbounce.command.panic.result.nonRender": "non-render",
 
   "liquidbounce.command.prefix.description": "Changes the command prefix.",
@@ -126,7 +126,7 @@
 
   "liquidbounce.command.toggle.description": "Toggles a module.",
   "liquidbounce.command.toggle.parameter.name.description": "Name of the module.",
-  "liquidbounce.command.toggle.result.moduleNotFound": "Module \"%s\" not found.",
+  "liquidbounce.command.toggle.result.moduleNotFound": "Module \"%s\" was not found.",
   "liquidbounce.command.toggle.result.moduleToggled": "%s has been %s.",
   "liquidbounce.command.toggle.result.enabled": "enabled",
   "liquidbounce.command.toggle.result.disabled": "disabled",
@@ -156,7 +156,7 @@
   "liquidbounce.command.username.description": "Copies your username to the clipboard.",
   "liquidbounce.command.username.result.username": "Username: %s",
 
-  "liquidbounce.command.chat.description": "Sends a message into LiquidChat.",
+  "liquidbounce.command.chat.description": "Sends a message on LiquidChat.",
   "liquidbounce.command.chat.parameter.message.description": "Message to send.",
 
   "liquidbounce.command.value.description": "Allows you to change a value",
@@ -169,8 +169,8 @@
   "liquidbounce.liquidchat.states.loggingIn": "Authenticating...",
   "liquidbounce.liquidchat.states.loggedIn": "Authenticated!",
 
-  "liquidbounce.liquidchat.writeMessage": "Send message: %s",
-  "liquidbounce.liquidchat.writePrivateMessage": "Send private message: %s",
+  "liquidbounce.liquidchat.writeMessage": "To send a message: %s",
+  "liquidbounce.liquidchat.writePrivateMessage": "To send a private message: %s",
 
   "liquidbounce.module.autoArmor.description": "Automatically equips the best armor.",
   "liquidbounce.module.autoArmor.value.delay.description": "Time to wait between equipping multiple items.",
@@ -203,7 +203,7 @@
 
   "liquidbounce.module.damage.description": "Deals the specified amount of damage to yourself.",
 
-  "liquidbounce.module.disabler.description": "Disables certain AntiCheats.",
+  "liquidbounce.module.disabler.description": "Disables either a specific AntiCheat or server.",
 
   "liquidbounce.module.forceUnicodeChat.description": "Translates all chat messages you send to Unicode.",
 
@@ -217,6 +217,10 @@
   "liquidbounce.module.noPitchLimit.description": "Allows you to rotate your head beyond the regular pitch limit.",
 
   "liquidbounce.module.pingSpoof.description": "Spoofs your ping to a specified value.",
+
+  "liquidbounce.module.plugins.description": "Allows you to see a server's plugins.",
+  "liquidbounce.module.plugins.messages.timeOut": "Plugins check timed out.",
+  "liquidbounce.module.plugins.messages.noPluginsFound": "No plugins were found.",
 
   "liquidbounce.module.portalMenu.description": "Allows you to open menus while standing inside a portal.",
 
