@@ -117,7 +117,7 @@
   "liquidbounce.command.panic.parameter.category.description": "Only disables modules in a specific category.",
   "liquidbounce.command.panic.result.categoryNotFound": "Category \"%s\" was not found.",
   "liquidbounce.command.panic.result.disabledAllModules": "Disabled all modules.",
-  "liquidbounce.command.panic.result.disabledAllCategoryModules": "Disabled all \"%s\" modules.",
+  "liquidbounce.command.panic.result.disabledAllCategoryModules": "Disabled all %s modules.",
   "liquidbounce.command.panic.result.nonRender": "non-render",
 
   "liquidbounce.command.prefix.description": "Changes the command prefix.",
