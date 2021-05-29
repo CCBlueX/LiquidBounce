@@ -61,7 +61,7 @@ public abstract class MixinThreadDownloadImageData
 	{
 		downloaders.execute(() ->
 		{
-			logger.debug("Downloading http texture from url \"{}\" to cache file \"{}\"", imageUrl, cacheFile);
+			logger.debug("Downloading texture from url \"{}\" to cache file \"{}\"", imageUrl, cacheFile);
 
 			URLConnection urlconnection = null;
 

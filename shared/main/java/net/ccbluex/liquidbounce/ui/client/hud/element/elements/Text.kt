@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.CPSCounter
+import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.PacketCounter
 import net.ccbluex.liquidbounce.utils.ServerUtils
 import net.ccbluex.liquidbounce.utils.extensions.getPing
@@ -68,6 +69,8 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 	private val alphaValue = IntegerValue("Alpha", 255, 0, 255)
 
 	private val rectValue = ListValue("Rect", arrayOf("None", "Left", "Right"), "None")
+	private val rectWidthValue = FloatValue("Rect-Width", 3F, 1.5F, 5F)
+
 	private val rectColorModeValue = ListValue("Rect-Color", arrayOf("Custom", "Rainbow", "RainbowShader"), "Rainbow")
 	private val rectColorRedValue = IntegerValue("Rect-R", 255, 0, 255)
 	private val rectColorGreenValue = IntegerValue("Rect-G", 255, 0, 255)
@@ -87,6 +90,8 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 
 	private val rainbowShaderXValue = FloatValue("RainbowShader-X", -1000F, -2000F, 2000F)
 	private val rainbowShaderYValue = FloatValue("RainbowShader-Y", -1000F, -2000F, 2000F)
+
+	private val borderExpandValue = FloatValue("BorderExpand", 2F, 0.5F, 4F)
 
 	private val shadowValue = BoolValue("Shadow", true)
 
@@ -110,11 +115,13 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 	{
 		val thePlayer = mc.thePlayer
 
+		val s = str.toLowerCase()
+
 		if (thePlayer != null)
 		{
 			val defaultTPS = 20.0
 
-			when (str.toLowerCase())
+			when (s)
 			{
 				"x" -> return DECIMALFORMAT_2.format(thePlayer.posX)
 				"y" -> return DECIMALFORMAT_2.format(thePlayer.posY)
@@ -153,62 +160,69 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 				"facing" -> return StringUtils.getHorizontalFacing(thePlayer.rotationYaw)
 				"facingadv" -> return StringUtils.getHorizontalFacingAdv(thePlayer.rotationYaw)
 				"facingvector" -> return StringUtils.getHorizontalFacingTowards(thePlayer.rotationYaw)
+
+				"movingdir" -> return if (MovementUtils.isMoving(thePlayer)) StringUtils.getHorizontalFacing(MovementUtils.getDirectionDegrees(thePlayer)) else "NONE"
+				"movingdirvector" -> return if (MovementUtils.isMoving(thePlayer)) StringUtils.getHorizontalFacingTowards(MovementUtils.getDirectionDegrees(thePlayer)) else "NONE"
 			}
 		}
 
-		return when (str.toLowerCase())
+		return when (s)
 		{
 			"username" -> mc.session.username
+
 			"clientname" -> LiquidBounce.CLIENT_NAME
 			"clientversion" -> "b${LiquidBounce.CLIENT_VERSION}"
 			"clientcreator" -> LiquidBounce.CLIENT_CREATOR
+
 			"fps" -> mc.debugFPS.toString()
+
 			"date" -> DATE_FORMAT.format(System.currentTimeMillis())
 			"time" -> HOUR_FORMAT.format(System.currentTimeMillis())
+
 			"serverip" -> ServerUtils.remoteIp
-			"cps", "lcps" -> return CPSCounter.getCPS(CPSCounter.MouseButton.LEFT).toString()
-			"mcps" -> return CPSCounter.getCPS(CPSCounter.MouseButton.MIDDLE).toString()
-			"rcps" -> return CPSCounter.getCPS(CPSCounter.MouseButton.RIGHT).toString()
+
+			"lcs", "cps", "lcps" -> return CPSCounter.getCPS(CPSCounter.MouseButton.LEFT).toString()
+			"mcs", "mcps" -> return CPSCounter.getCPS(CPSCounter.MouseButton.MIDDLE).toString()
+			"rcs", "rcps" -> return CPSCounter.getCPS(CPSCounter.MouseButton.RIGHT).toString()
+
 			"timer" -> return mc.timer.timerSpeed.toString()
-			"lastpacket" -> return mc.netHandler.networkManager.lastPacket.toString()
+
 			"packetin", "ppsin" -> return PacketCounter.getPacketCount(PacketCounter.PacketType.INBOUND, 1000L).toString()
 			"packetout", "ppsout" -> return PacketCounter.getPacketCount(PacketCounter.PacketType.OUTBOUND, 1000L).toString()
+
 			else -> null // Null = don't replace
 		}
 	}
 
 	private fun multiReplace(str: String): String
 	{
-		var lastPercent = -1
+		var lastReplacementChar = -1
 		val result = StringBuilder()
 		for (i in str.indices)
 		{
 			if (str[i] == '%')
 			{
-				if (lastPercent != -1)
+				if (lastReplacementChar != -1)
 				{
-					if (lastPercent + 1 != i)
+					if (lastReplacementChar + 1 != i)
 					{
-						val replacement = getReplacement(str.substring(lastPercent + 1, i))
+						val replacement = getReplacement(str.substring(lastReplacementChar + 1, i))
 
 						if (replacement != null)
 						{
 							result.append(replacement)
-							lastPercent = -1
+							lastReplacementChar = -1
 							continue
 						}
 					}
-					result.append(str, lastPercent, i)
+					result.append(str, lastReplacementChar, i)
 				}
-				lastPercent = i
+				lastReplacementChar = i
 			}
-			else if (lastPercent == -1) result.append(str[i])
+			else if (lastReplacementChar == -1) result.append(str[i])
 		}
 
-		if (lastPercent != -1)
-		{
-			result.append(str, lastPercent, str.length)
-		}
+		if (lastReplacementChar != -1) result.append(str, lastReplacementChar, str.length)
 
 		return "$result"
 	}
@@ -241,8 +255,8 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 
 		val textWidth = fontRenderer.getStringWidth(displayText)
 
-		val borderExpand = 2F
-		val rectWidth = 3F
+		val borderExpand = borderExpandValue.get()
+		val rectWidth = rectWidthValue.get()
 
 		val (borderXStart, borderXEnd) = when (horizontalSide)
 		{
@@ -301,7 +315,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 		RainbowFontShader.begin(textRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
 			fontRenderer.drawString(displayText, textX, 0F, textColor, shadow)
 
-			if (editMode && classProvider.isGuiHudDesigner(mc.currentScreen) && editTicks <= 40) fontRenderer.drawString("_", if (rectMode.equals("right", true)) 0f else if (rectMode.equals("left", true)) 3f else 1.5f + textWidth + 2F, 0F, textColor, shadow)
+			if (editMode && classProvider.isGuiHudDesigner(mc.currentScreen) && editTicks <= 40) fontRenderer.drawString("_", if (rightRect) 0f else if (leftRect) 3f else 1.5f + textWidth + 2F, 0F, textColor, shadow)
 		}
 
 		// Disable edit mode when current gui is not HUD Designer
@@ -311,7 +325,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 			updateElement()
 		}
 
-		return Border(backgroundXStart - rectWidth, -borderExpand, backgroundXEnd + rectWidth, fontRenderer.fontHeight.toFloat() + borderExpand)
+		return Border(backgroundXStart - if (leftRect) rectWidth else 0F, -borderExpand, backgroundXEnd + if (rightRect) rectWidth else 0F, fontRenderer.fontHeight.toFloat() + borderExpand)
 	}
 
 	override fun updateElement()

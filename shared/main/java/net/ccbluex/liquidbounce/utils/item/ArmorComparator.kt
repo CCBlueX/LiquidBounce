@@ -11,7 +11,6 @@ import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import java.io.Serializable
 import java.math.BigDecimal
 import java.math.RoundingMode
-import java.util.*
 import kotlin.math.max
 import kotlin.math.min
 
@@ -25,12 +24,12 @@ class ArmorComparator : MinecraftInstance(), Comparator<ArmorPiece>, Serializabl
 		val stack = armor.itemStack ?: throw IllegalArgumentException("armor.itemStack is null")
 		val otherStack = otherArmor.itemStack ?: throw IllegalArgumentException("otherArmor.itemStack is null")
 
-		val compare = round(getThresholdedDamageReduction(otherStack).toDouble(), 3).compareTo(round(getThresholdedDamageReduction(stack).toDouble(), 3))
+		val compare = round(getThresholdedDamageReduction(otherStack)).compareTo(round(getThresholdedDamageReduction(stack)))
 
 		// If both armor pieces have the exact same damage, compare enchantments
 		if (compare == 0)
 		{
-			val otherEnchantmentCmp = round(getEnchantmentThreshold(stack).toDouble(), 3).compareTo(round(getEnchantmentThreshold(otherStack).toDouble(), 3))
+			val otherEnchantmentCmp = round(getEnchantmentThreshold(stack)).compareTo(round(getEnchantmentThreshold(otherStack)))
 
 			// If both have the same enchantment threshold, prefer the item with more enchantments
 			if (otherEnchantmentCmp == 0)
@@ -59,29 +58,38 @@ class ArmorComparator : MinecraftInstance(), Comparator<ArmorPiece>, Serializabl
 		private val DAMAGE_REDUCTION_ENCHANTMENTS = run {
 			val provider = classProvider
 
-			arrayOf(provider.getEnchantmentEnum(EnchantmentType.PROTECTION), // PROTECTION
+			arrayOf(
+
+				provider.getEnchantmentEnum(EnchantmentType.PROTECTION), // PROTECTION
 				provider.getEnchantmentEnum(EnchantmentType.PROJECTILE_PROTECTION), // PROJECTILE_PROTECTION
 				provider.getEnchantmentEnum(EnchantmentType.FIRE_PROTECTION), // FIRE_PROTECTION
 				provider.getEnchantmentEnum(EnchantmentType.BLAST_PROTECTION) // BLAST_PROTECTION
+
 			)
 		}
 
 		/**
 		 * Enchantments factor
 		 */
-		private val ENCHANTMENT_FACTORS = floatArrayOf(1.5f,  // PROTECTION
+		private val ENCHANTMENT_FACTORS = floatArrayOf(
+
+			1.5f,  // PROTECTION
 			0.4f,  // PROJECTILE_PROTECTION
 			0.39f,  // FIRE_PROTECTION
 			0.38f // BLAST_PROTECTION
+
 		)
 
 		/**
 		 * Damage-reduction Enchantments factor
 		 */
-		private val ENCHANTMENT_DAMAGE_REDUCTION_FACTOR = floatArrayOf(0.04f,  // PROTECTION
+		private val ENCHANTMENT_DAMAGE_REDUCTION_FACTOR = floatArrayOf(
+
+			0.04f,  // PROTECTION
 			0.08f,  // PROJECTILE_PROTECTION
 			0.15f,  // FIRE_PROTECTION
 			0.08f // BLAST_PROTECTION
+
 		)
 
 		/**
@@ -90,22 +98,28 @@ class ArmorComparator : MinecraftInstance(), Comparator<ArmorPiece>, Serializabl
 		private val OTHER_ENCHANTMENTS = run {
 			val provider = classProvider
 
-			arrayOf(provider.getEnchantmentEnum(EnchantmentType.FEATHER_FALLING), //FEATHER_FALLING
+			arrayOf(
+
+				provider.getEnchantmentEnum(EnchantmentType.FEATHER_FALLING), //FEATHER_FALLING
 				provider.getEnchantmentEnum(EnchantmentType.THORNS), // THORNS
 				provider.getEnchantmentEnum(EnchantmentType.RESPIRATION), // RESPIRATION
 				provider.getEnchantmentEnum(EnchantmentType.AQUA_AFFINITY), // AQUA_AFFINITY
 				provider.getEnchantmentEnum(EnchantmentType.UNBREAKING) // UNBREAKING
+
 			)
 		}
 
 		/**
 		 * Other Enchantments factor
 		 */
-		private val OTHER_ENCHANTMENT_FACTORS = floatArrayOf(3.0f,  // FEATHER_FALLING
+		private val OTHER_ENCHANTMENT_FACTORS = floatArrayOf(
+
+			3.0f,  // FEATHER_FALLING
 			1.0f,  // THORNS
 			0.1f,  // RESPIRATION
 			0.05f,  // AQUA_AFFINITY
 			0.01f // UNBREAKING
+
 		)
 
 		/**
@@ -117,11 +131,11 @@ class ArmorComparator : MinecraftInstance(), Comparator<ArmorPiece>, Serializabl
 		 * Decimal places
 		 * @return        The rounded value
 		 */
-		private fun round(value: Double, places: Int): Double
+		private fun round(value: Float, places: Int = 3): Float
 		{
 			require(places >= 0) { "places" }
 
-			return BigDecimal.valueOf(value).setScale(places, RoundingMode.HALF_UP).toDouble()
+			return BigDecimal.valueOf(value.toDouble()).setScale(places, RoundingMode.HALF_UP).toFloat()
 		}
 
 		private fun getThresholdedDamageReduction(itemStack: IItemStack): Float

@@ -7,7 +7,6 @@ package net.ccbluex.liquidbounce.utils.misc
 
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
-import org.jetbrains.annotations.Contract
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.*
@@ -74,7 +73,6 @@ object StringUtils
 		return facings[abs(floor(yaw * facings.size / 360 + 0.5)).toInt() and facings.size - 1]
 	}
 
-	@Contract("null -> null; !null ->!null")
 	@JvmStatic
 	fun stripControlCodes(text: String): String = patternControlCode.matcher(text).replaceAll("")
 }

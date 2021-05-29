@@ -40,6 +40,8 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 	private val shadow = BoolValue("ShadowText", true)
 
 	private val rectValue = ListValue("Rect", arrayOf("None", "Left", "Right"), "None")
+	private val rectWidthValue = FloatValue("Rect-Width", 3F, 1.5F, 5F)
+
 	private val rectColorModeValue = ListValue("Rect-Color", arrayOf("Custom", "Random", "Rainbow", "RainbowShader"), "Rainbow")
 	private val rectColorRedValue = IntegerValue("Rect-R", 255, 0, 255)
 	private val rectColorGreenValue = IntegerValue("Rect-G", 255, 0, 255)
@@ -130,6 +132,11 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 
 		// Rect Mode & Color
 		val rectMode = rectValue.get()
+		val rightRect = rectMode.equals("Right", ignoreCase = true)
+		val leftRect = rectMode.equals("Left", ignoreCase = true)
+
+		val rectWidth = rectWidthValue.get()
+
 		val rectColorMode = rectColorModeValue.get()
 		val rectColorAlpha = rectColorBlueAlpha.get()
 		val rectCustomColor = createRGB(rectColorRedValue.get(), rectColorGreenValue.get(), rectColorBlueValue.get(), rectColorAlpha)
@@ -193,8 +200,8 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 					// Draw Background
 					val backgroundRainbowShader = backgroundColorMode.equals("RainbowShader", ignoreCase = true)
 					RainbowShader.begin(backgroundRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-						val xPosCorrection = if (rectMode.equals("right", true)) 5 else 2
-						val x2Pos = if (rectMode.equals("right", true)) -3F else 0F
+						val xPosCorrection = 2F + if (rightRect) rectWidth else 0F
+						val x2Pos = if (rightRect) -rectWidth else 0F
 						val color = when
 						{
 							backgroundRainbowShader -> -16777216
@@ -211,7 +218,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 					// Draw Module Name
 					val textRainbowShader = colorMode.equals("RainbowShader", ignoreCase = true)
 					RainbowFontShader.begin(textRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-						val xPosCorrection = if (rectMode.equals("right", true)) 3 else 0
+						val xPosCorrection = if (rightRect) rectWidth else 0F
 						val color = when
 						{
 							textRainbowShader -> 0
@@ -228,7 +235,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 					{
 						val tagRainbowShader = tagColorMode.equals("RainbowShader", ignoreCase = true)
 						RainbowFontShader.begin(tagRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-							val xPosCorrection = fontRenderer.getStringWidth(moduleName) + tagSpace - if (rectMode.equals("right", true)) 3 else 0
+							val xPosCorrection = fontRenderer.getStringWidth(moduleName) + tagSpace - if (rightRect) rectWidth else 0F
 							val color = when
 							{
 								tagRainbowShader -> 0
@@ -242,7 +249,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 					}
 
 					// Draw Rect
-					if (!rectMode.equals("none", true))
+					if (rightRect || leftRect)
 					{
 						val rectRainbowShader = rectColorMode.equals("RainbowShader", ignoreCase = true)
 						RainbowShader.begin(rectRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
@@ -256,8 +263,8 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 
 							when
 							{
-								rectMode.equals("left", true) -> RenderUtils.drawRect(xPos - 5, yPos, xPos - 2, yPos + textHeight, rectColor)
-								rectMode.equals("right", true) -> RenderUtils.drawRect(-3F, yPos, 0F, yPos + textHeight, rectColor)
+								leftRect -> RenderUtils.drawRect(xPos - 2F - rectWidth, yPos, xPos - 2F, yPos + textHeight, rectColor)
+								rightRect -> RenderUtils.drawRect(-rectWidth, yPos, 0F, yPos + textHeight, rectColor)
 							}
 						}
 					}
@@ -277,7 +284,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 					}
 
 					val width = fontRenderer.getStringWidth(moduleName) + if (moduleTag.isBlank()) 0f else tagSpace + fontRenderer.getStringWidth(moduleTag)
-					val xPos = -(width - module.slide) + if (rectMode.equals("left", true)) 5 else 2
+					val xPos = -(width - module.slide) + 2F + if (leftRect) rectWidth else 0F
 					val yPos = (if (verticalSide == Vertical.DOWN) -textSpacer else textSpacer) * if (verticalSide == Vertical.DOWN) index + 1 else index
 					val moduleRandomColor = Color.getHSBColor(module.hue, saturation, brightness).rgb
 					val currentRainbowOffset = index * rainbowOffset
@@ -285,7 +292,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 					// Draw Background
 					val backgroundRainbowShader = backgroundColorMode.equals("RainbowShader", ignoreCase = true)
 					RainbowShader.begin(backgroundRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-						val xPosCorrection = if (rectMode.equals("right", true)) 5 else 2
+						val xPosCorrection = 2F + if (rightRect) rectWidth else 0F
 						val color = when
 						{
 							backgroundRainbowShader -> 0
@@ -334,7 +341,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 					val rectColorRainbowShader = rectColorMode.equals("RainbowShader", ignoreCase = true)
 
 					RainbowShader.begin(rectColorRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-						if (!rectMode.equals("none", true))
+						if (rightRect || leftRect)
 						{
 							val rectColor = when
 							{
@@ -346,8 +353,8 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 
 							when
 							{
-								rectMode.equals("left", true) -> RenderUtils.drawRect(0F, yPos - 1, 3F, yPos + textHeight, rectColor)
-								rectMode.equals("right", true) -> RenderUtils.drawRect(xPos + width + 2, yPos, xPos + width + 2 + 3, yPos + textHeight, rectColor)
+								leftRect -> RenderUtils.drawRect(0F, yPos - 1, rectWidth, yPos + textHeight, rectColor)
+								rightRect -> RenderUtils.drawRect(xPos + width + 2F, yPos, xPos + width + 2F + rectWidth, yPos + textHeight, rectColor)
 							}
 						}
 					}

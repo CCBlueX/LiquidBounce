@@ -80,7 +80,7 @@ class TargetCommand : Command("target")
 						else chat(thePlayer, "The name is already in the list.")
 						return
 					}
-					chatSyntax(thePlayer, "target add <name> [alias]")
+					chatSyntax(thePlayer, "target add <name>")
 					return
 				}
 

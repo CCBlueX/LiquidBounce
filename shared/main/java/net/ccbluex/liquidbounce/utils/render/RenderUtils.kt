@@ -201,7 +201,7 @@ object RenderUtils : MinecraftInstance()
 
 		val axisAlignedBB = classProvider.createAxisAlignedBB(entityBox.minX - posX + x - 0.05, entityBox.minY - posY + y, entityBox.minZ - posZ + z - 0.05, entityBox.maxX - posX + x + 0.05, entityBox.maxY - posY + y + 0.15, entityBox.maxZ - posZ + z + 0.05)
 
-		if (outlineColor shr 24 > 0) // outlineColor.alpha > 0
+		if (outlineColor shr 24 and 0xFF > 0) // outlineColor.alpha > 0
 		{
 			GL11.glLineWidth(1.00f)
 			enableGlCap(GL11.GL_LINE_SMOOTH)

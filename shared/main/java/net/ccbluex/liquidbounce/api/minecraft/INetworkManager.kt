@@ -11,7 +11,6 @@ import javax.crypto.SecretKey
 
 interface INetworkManager
 {
-	val lastPacket: Long
 	val channelOpen: Boolean
 
 	fun sendPacket(packet: IPacket)

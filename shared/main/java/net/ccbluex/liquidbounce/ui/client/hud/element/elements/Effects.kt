@@ -43,6 +43,8 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F, side: Side =
 	private val timeHighlightValue = BoolValue("HighlightTimeWhenReachesEnd", true)
 
 	private val rectValue = ListValue("Rect", arrayOf("None", "Left", "Right"), "None")
+	private val rectWidthValue = FloatValue("Rect-Width", 3F, 1.5F, 5F)
+
 	private val rectColorModeValue = ListValue("Rect-Color", arrayOf("PotionColor", "Custom", "Rainbow", "RainbowShader"), "PotionColor")
 	private val rectColorRedValue = IntegerValue("Rect-R", 255, 0, 255)
 	private val rectColorGreenValue = IntegerValue("Rect-G", 255, 0, 255)
@@ -94,6 +96,11 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F, side: Side =
 		val backgroundCustomColor = createRGB(backgroundColorRedValue.get(), backgroundColorGreenValue.get(), backgroundColorBlueValue.get(), backgroundColorAlpha)
 
 		val rectMode = rectValue.get()
+		val rightRect = rectMode.equals("right", true)
+		val leftRect = rectMode.equals("left", true)
+
+		val rectWidth = rectWidthValue.get()
+
 		val rectColorMode = rectColorModeValue.get()
 		val rectColorAlpha = rectColorBlueAlpha.get()
 		val rectCustomColor = createRGB(rectColorRedValue.get(), rectColorGreenValue.get(), rectColorBlueValue.get(), rectColorAlpha)
@@ -172,44 +179,44 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F, side: Side =
 
 					// Draw Background
 					RainbowShader.begin(backgroundRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-						val xPosCorrection = if (rectMode.equals("right", true)) 5 else 2
-						val x2Pos = if (rectMode.equals("right", true)) -3F else 0F
+						val xPosCorrection = 2F + if (rightRect) rectWidth else 0F
+						val x2Pos = if (rightRect) -3F else 0F
 
 						RenderUtils.drawRect(xPos - xPosCorrection, yPos, x2Pos, yPos + textHeight, backgroundColor)
 					}
 
 					// Draw String
 					RainbowFontShader.begin(textRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-						val xPosCorrection = if (rectMode.equals("right", true)) 3 else 0
+						val xPosCorrection = if (rightRect) rectWidth else 0F
 
 						fontRenderer.drawString(string, xPos - xPosCorrection, yPos + textY, textColor, shadow)
 					}
 
 					// Draw remaining time
 					RainbowFontShader.begin(timeRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-						val xPosCorrection = fontRenderer.getStringWidth(string) + timeDistance - if (rectMode.equals("right", true)) 3 else 0
+						val xPosCorrection = fontRenderer.getStringWidth(string) + timeDistance - if (rightRect) rectWidth else 0F
 
 						fontRenderer.drawString(timeString, xPos + xPosCorrection, yPos + textY, timeColor, shadow)
 					}
 
 					// Draw Rect
-					if (!rectMode.equals("none", true)) RainbowShader.begin(rectRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
+					if (leftRect || rightRect) RainbowShader.begin(rectRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
 						when
 						{
-							rectMode.equals("left", true) -> RenderUtils.drawRect(xPos - 5, yPos, xPos - 2, yPos + textHeight, rectColor)
-							rectMode.equals("right", true) -> RenderUtils.drawRect(-3F, yPos, 0F, yPos + textHeight, rectColor)
+							leftRect -> RenderUtils.drawRect(xPos - 2F - rectWidth, yPos, xPos - 2F, yPos + textHeight, rectColor)
+							rightRect -> RenderUtils.drawRect(-rectWidth, yPos, 0F, yPos + textHeight, rectColor)
 						}
 					}
 				}
 
 				Side.Horizontal.LEFT ->
 				{
-					val xPos = (if (rectMode.equals("left", true)) 5f else 2f)
+					val xPos = (if (leftRect) 5f else 2f)
 					val yPos = (if (side.vertical == Side.Vertical.DOWN) -textSpacer else textSpacer) * if (side.vertical == Side.Vertical.DOWN) index + 1 else index
 
 					// Draw Background
 					RainbowShader.begin(backgroundRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-						val xPosCorrection = if (rectMode.equals("right", true)) 5 else 2
+						val xPosCorrection = 2F + if (rightRect) rectWidth else 0F
 
 						RenderUtils.drawRect(0F, yPos, xPos + width + xPosCorrection, yPos + textHeight, backgroundColor)
 					}
@@ -227,11 +234,11 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F, side: Side =
 					}
 
 					// Draw Rect
-					if (!rectMode.equals("none", true)) RainbowShader.begin(rectRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
+					if (leftRect || rightRect) RainbowShader.begin(rectRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
 						when
 						{
-							rectMode.equals("left", true) -> RenderUtils.drawRect(0F, yPos - 1, 3F, yPos + textHeight, rectColor)
-							rectMode.equals("right", true) -> RenderUtils.drawRect(xPos + width + 2, yPos, xPos + width + 2 + 3, yPos + textHeight, rectColor)
+							leftRect -> RenderUtils.drawRect(0F, yPos - 1, rectWidth, yPos + textHeight, rectColor)
+							rightRect -> RenderUtils.drawRect(xPos + width + 2F, yPos, xPos + width + 2F + rectWidth, yPos + textHeight, rectColor)
 						}
 					}
 				}

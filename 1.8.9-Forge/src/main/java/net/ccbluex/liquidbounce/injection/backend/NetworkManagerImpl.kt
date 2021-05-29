@@ -15,9 +15,6 @@ import javax.crypto.SecretKey
 
 class NetworkManagerImpl(val wrapped: NetworkManager) : INetworkManager
 {
-	override val lastPacket: Long
-		get() = (wrapped as IMixinNetworkManager).lastPacket()
-
 	override val channelOpen: Boolean
 		get() = wrapped.isChannelOpen
 

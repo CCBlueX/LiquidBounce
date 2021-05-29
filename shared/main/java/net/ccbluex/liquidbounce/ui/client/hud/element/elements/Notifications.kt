@@ -38,6 +38,8 @@ class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F, side: 
 		val bodyAlphaValue = IntegerValue("Body-Alpha", 255, 0, 255)
 
 		val rectValue = BoolValue("Rect", true)
+		val rectWidthValue = FloatValue("Rect-Width", 5F, 1.5F, 8F)
+
 		val rectColorModeValue = ListValue("Rect-Color", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom")
 		val rectRedValue = IntegerValue("Rect-R", 0, 0, 255)
 		val rectGreenValue = IntegerValue("Rect-G", 111, 0, 255)
@@ -165,6 +167,8 @@ class Notification(private val header: String, private val message: String, priv
 		val bodyCustomColor = createRGB(Notifications.bodyRedValue.get(), Notifications.bodyGreenValue.get(), Notifications.bodyBlueValue.get(), Notifications.bodyAlphaValue.get())
 
 		val rect = Notifications.rectValue.get()
+		val rectWidth = Notifications.rectWidthValue.get()
+
 		val rectColorMode = Notifications.rectColorModeValue.get()
 		val rectColorAlpha = Notifications.rectAlphaValue.get()
 		val rectCustomColor = createRGB(Notifications.rectRedValue.get(), Notifications.rectGreenValue.get(), Notifications.rectBlueValue.get(), rectColorAlpha)
@@ -213,7 +217,7 @@ class Notification(private val header: String, private val message: String, priv
 					else -> rectCustomColor
 				}
 
-				RenderUtils.drawRect(-x, 0F, -x - 5, -30F, rectColor)
+				RenderUtils.drawRect(-x, 0F, -x - rectWidth, -30F, rectColor)
 			}
 		}
 

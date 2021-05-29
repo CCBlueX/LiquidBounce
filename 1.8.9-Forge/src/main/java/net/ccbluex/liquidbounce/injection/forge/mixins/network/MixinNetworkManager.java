@@ -69,8 +69,6 @@ public abstract class MixinNetworkManager implements IMixinNetworkManager
 	@Shadow
 	protected abstract void dispatchPacket(Packet<?> inPacket, GenericFutureListener<? extends Future<? super Void>>[] futureListeners);
 
-	private final MSTimer lastRead = new MSTimer();
-
 	@Inject(method = "channelRead0", at = @At("HEAD"), cancellable = true)
 	private void read(final ChannelHandlerContext context, final Packet<?> packet, final CallbackInfo callback)
 	{
@@ -189,11 +187,5 @@ public abstract class MixinNetworkManager implements IMixinNetworkManager
 		}
 
 		PacketCounter.registerPacket(PacketType.OUTBOUND);
-	}
-
-	@Override
-	public long lastPacket()
-	{
-		return lastRead.getTime();
 	}
 }
