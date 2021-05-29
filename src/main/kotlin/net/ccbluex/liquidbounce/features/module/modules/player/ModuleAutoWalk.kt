@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.minecraft.client.util.InputUtil
 
 /**
  * A autowalk module
@@ -34,7 +35,9 @@ object ModuleAutoWalk : Module("AutoWalk", Category.PLAYER) {
     }
 
     override fun disable() {
-        mc.options.keyForward.isPressed = false
+        if(!InputUtil.isKeyPressed(mc.window.handle, mc.options.keyForward.boundKey.code)) {
+            mc.options.keyForward.isPressed = false
+        }
     }
 
 }
