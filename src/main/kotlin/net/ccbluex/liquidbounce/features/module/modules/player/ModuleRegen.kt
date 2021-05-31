@@ -14,11 +14,18 @@ object ModuleRegen : Module("Regen", Category.PLAYER) {
     private val noAir by boolean("NoAir", false)
     private val potionEffect by boolean("PotionEffect", false)
 
+    var resetTimer = false
+
     override fun disable() {
-        mc.timer.timerSpeed = 1f
+        mc.timer.timerSpeed = 1F
+        resetTimer = false
     }
 
     val repeatable = repeatable {
+        if (resetTimer) {
+            mc.timer.timerSpeed = 1F
+            resetTimer = false
+        }
 
         if ((!noAir && player.isOnGround) && !player.abilities.creativeMode && player.health >= 0 && player.health < health) {
             if (potionEffect && !player.hasStatusEffect(StatusEffects.REGENERATION)) {
@@ -29,13 +36,12 @@ object ModuleRegen : Module("Regen", Category.PLAYER) {
                 return@repeatable
             }
 
-            mc.timer.timerSpeed = timer
-
             repeat(speed) {
                 network.sendPacket(PlayerMoveC2SPacket(player.isOnGround))
             }
 
-            mc.timer.timerSpeed = 1f
+            mc.timer.timerSpeed = timer
+            resetTimer = true
         }
     }
 }
