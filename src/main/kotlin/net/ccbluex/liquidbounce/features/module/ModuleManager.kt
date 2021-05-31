@@ -139,7 +139,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModulePlugins,
             ModuleTrajectories,
             ModuleSneak,
-            ModuleBlockESP
+            ModuleBlockESP,
+            ModuleZoot
         )
 
         builtin.apply {
