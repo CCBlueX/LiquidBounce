@@ -141,6 +141,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleSneak,
             ModuleBlockESP,
             ModuleFastUse,
+            ModuleRegen,
             ModuleZoot
         )
 
