@@ -23,7 +23,7 @@ object ModuleZoot : Module("Zoot", Category.PLAYER) {
                             network.sendPacket(PlayerMoveC2SPacket(player.isOnGround))
                         }
                     }
-                    if (effect.value.isPermanent) {
+                    if (!effect.key.isBeneficial && effect.value.isPermanent) {
                         player.statusEffects.remove(effect.value)
                         network.sendPacket(RemoveEntityStatusEffectS2CPacket(player.entityId, effect.key))
                     }
