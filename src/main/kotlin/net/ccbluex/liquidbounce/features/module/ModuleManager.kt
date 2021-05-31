@@ -140,6 +140,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleTrajectories,
             ModuleSneak,
             ModuleBlockESP,
+            ModuleRegen,
             ModuleZoot
         )
 
