@@ -140,7 +140,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleTrajectories,
             ModuleSneak,
             ModuleBlockESP,
-            ModuleFastUse
+            ModuleFastUse,
+            ModuleZoot
         )
 
         builtin.apply {
