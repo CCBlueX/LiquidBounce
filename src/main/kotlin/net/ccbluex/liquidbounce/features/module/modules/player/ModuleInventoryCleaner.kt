@@ -1,4 +1,3 @@
-
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
@@ -24,6 +23,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoArmor
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.item.*
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
@@ -334,346 +334,341 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
             }
         )
     }
+}
 
-    val HOTBAR_PREDICATE: (o1: WeightedItem, o2: WeightedItem) -> Int =
-        { o1, o2 -> compareByCondition(o1, o2, WeightedItem::isInHotbar) }
-    val IDENTITY_PREDICATE: (o1: WeightedItem, o2: WeightedItem) -> Int =
-        { o1, o2 -> o1.itemStack.hashCode().compareTo(o2.itemStack.hashCode()) }
+val HOTBAR_PREDICATE: (o1: WeightedItem, o2: WeightedItem) -> Int =
+    { o1, o2 -> compareByCondition(o1, o2, WeightedItem::isInHotbar) }
+val IDENTITY_PREDICATE: (o1: WeightedItem, o2: WeightedItem) -> Int =
+    { o1, o2 -> o1.itemStack.hashCode().compareTo(o2.itemStack.hashCode()) }
 
-    open class WeightedItem(val itemStack: ItemStack, val slot: Int) : Comparable<WeightedItem> {
-        open val category: ItemCategory
-            get() = ItemCategory(ItemType.NONE, 0)
+open class WeightedItem(val itemStack: ItemStack, val slot: Int) : Comparable<WeightedItem> {
+    open val category: ItemCategory
+        get() = ItemCategory(ItemType.NONE, 0)
 
-        val isInHotbar: Boolean
-            get() = isInHotbar(slot)
+    val isInHotbar: Boolean
+        get() = isInHotbar(slot)
 
-        open fun isSignificantlyBetter(other: WeightedItem): Boolean {
-            return false
-        }
-
-        override fun compareTo(other: WeightedItem): Int = compareByCondition(this, other, WeightedItem::isInHotbar)
+    open fun isSignificantlyBetter(other: WeightedItem): Boolean {
+        return false
     }
 
-    class WeightedPrimitiveItem(
-        itemStack: ItemStack,
-        slot: Int,
-        override val category: ItemCategory,
-        val worth: Int = 0
-    ) :
-        WeightedItem(itemStack, slot) {
-        companion object {
-            private val COMPARATOR = ComparatorChain<WeightedPrimitiveItem>(
-                { o1, o2 -> o1.worth.compareTo(o2.worth) },
-                { o1, o2 -> o1.itemStack.count.compareTo(o2.itemStack.count) },
-                HOTBAR_PREDICATE,
-                IDENTITY_PREDICATE
-            )
-        }
+    override fun compareTo(other: WeightedItem): Int = compareByCondition(this, other, WeightedItem::isInHotbar)
+}
 
-        override fun compareTo(other: WeightedItem): Int = COMPARATOR.compare(this, other as WeightedPrimitiveItem)
+class WeightedPrimitiveItem(itemStack: ItemStack, slot: Int, override val category: ItemCategory, val worth: Int = 0) :
+    WeightedItem(itemStack, slot) {
+    companion object {
+        private val COMPARATOR = ComparatorChain<WeightedPrimitiveItem>(
+            { o1, o2 -> o1.worth.compareTo(o2.worth) },
+            { o1, o2 -> o1.itemStack.count.compareTo(o2.itemStack.count) },
+            HOTBAR_PREDICATE,
+            IDENTITY_PREDICATE
+        )
     }
 
-    class WeightedArmorItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
-        private val armorPiece = ArmorPiece(itemStack, slot)
+    override fun compareTo(other: WeightedItem): Int = COMPARATOR.compare(this, other as WeightedPrimitiveItem)
+}
 
-        override val category: ItemCategory
-            get() = ItemCategory(ItemType.ARMOR, armorPiece.entitySlotId)
+class WeightedArmorItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
+    private val armorPiece = ArmorPiece(itemStack, slot)
 
-        override fun compareTo(other: WeightedItem): Int =
-            ArmorComparator.compare(this.armorPiece, (other as WeightedArmorItem).armorPiece)
-    }
+    override val category: ItemCategory
+        get() = ItemCategory(ItemType.ARMOR, armorPiece.entitySlotId)
 
-    class WeightedSwordItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
-        companion object {
-            val DAMAGE_ESTIMATOR = EnchantmentValueEstimator(
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SHARPNESS, 0.5f),
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SMITE, 2.0f * 0.05f),
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.BANE_OF_ARTHROPODS, 2.0f * 0.05f),
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.KNOCKBACK, 0.75f),
-            )
-            val SECONDARY_VALUE_ESTIMATOR = EnchantmentValueEstimator(
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.LOOTING, 0.05f),
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.05f),
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.VANISHING_CURSE, -0.1f),
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SWEEPING, 0.2f),
-            )
-            private val COMPARATOR = ComparatorChain<WeightedSwordItem>(
-                { o1, o2 ->
-                    (
-                        // TODO: Attack Speed
-                        o1.itemStack.item.attackDamage * (1.0f + DAMAGE_ESTIMATOR.estimateValue(o1.itemStack)) + o1.itemStack.getEnchantment(
-                            Enchantments.FIRE_ASPECT
-                        ) * 4.0f * 0.625f * 0.9f
-                        ).compareTo(
-                            o2.itemStack.item.attackDamage * (
-                                1.0f + DAMAGE_ESTIMATOR.estimateValue(
-                                    o2.itemStack
-                                ) + o2.itemStack.getEnchantment(Enchantments.FIRE_ASPECT) * 4.0f * 0.625f * 0.9f
-                                )
-                        )
-                },
-                { o1, o2 ->
-                    SECONDARY_VALUE_ESTIMATOR.estimateValue(o1.itemStack)
-                        .compareTo(SECONDARY_VALUE_ESTIMATOR.estimateValue(o2.itemStack))
-                },
-                { o1, o2 -> compareByCondition(o1, o2) { it.itemStack.item is SwordItem } },
-                { o1, o2 -> o1.itemStack.item.enchantability },
-                HOTBAR_PREDICATE,
-                IDENTITY_PREDICATE
-            )
-        }
+    override fun compareTo(other: WeightedItem): Int =
+        ArmorComparator.compare(this.armorPiece, (other as WeightedArmorItem).armorPiece)
+}
 
-        override val category: ItemCategory
-            get() = ItemCategory(ItemType.SWORD, 0)
-
-        override fun compareTo(other: WeightedItem): Int {
-            return COMPARATOR.compare(this, other as WeightedSwordItem)
-        }
-    }
-
-    class WeightedBowItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
-        companion object {
-            val VALUE_ESTIMATOR = EnchantmentValueEstimator(
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.POWER, 0.25f),
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.PUNCH, 0.33f),
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.FLAME, 4.0f * 0.9f),
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.INFINITY, 4.0f),
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.1f),
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.VANISHING_CURSE, -0.1f),
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.MENDING, -0.2f),
-            )
-            private val COMPARATOR = ComparatorChain<WeightedBowItem>(
-                { o1, o2 ->
-                    (VALUE_ESTIMATOR.estimateValue(o1.itemStack)).compareTo(
-                        VALUE_ESTIMATOR.estimateValue(o2.itemStack)
+class WeightedSwordItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
+    companion object {
+        val DAMAGE_ESTIMATOR = EnchantmentValueEstimator(
+            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SHARPNESS, 0.5f),
+            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SMITE, 2.0f * 0.05f),
+            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.BANE_OF_ARTHROPODS, 2.0f * 0.05f),
+            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.KNOCKBACK, 0.75f),
+        )
+        val SECONDARY_VALUE_ESTIMATOR = EnchantmentValueEstimator(
+            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.LOOTING, 0.05f),
+            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.05f),
+            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.VANISHING_CURSE, -0.1f),
+            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SWEEPING, 0.2f),
+        )
+        private val COMPARATOR = ComparatorChain<WeightedSwordItem>(
+            { o1, o2 ->
+                (
+                    // TODO: Attack Speed
+                    o1.itemStack.item.attackDamage * (1.0f + DAMAGE_ESTIMATOR.estimateValue(o1.itemStack)) + o1.itemStack.getEnchantment(
+                        Enchantments.FIRE_ASPECT
+                    ) * 4.0f * 0.625f * 0.9f
+                    ).compareTo(
+                        o2.itemStack.item.attackDamage * (
+                            1.0f + DAMAGE_ESTIMATOR.estimateValue(
+                                o2.itemStack
+                            ) + o2.itemStack.getEnchantment(Enchantments.FIRE_ASPECT) * 4.0f * 0.625f * 0.9f
+                            )
                     )
-                },
-                HOTBAR_PREDICATE,
-                IDENTITY_PREDICATE
-            )
-        }
-
-        override val category: ItemCategory
-            get() = ItemCategory(ItemType.BOW, 0)
-
-        override fun compareTo(other: WeightedItem): Int {
-            return COMPARATOR.compare(this, other as WeightedBowItem)
-        }
+            },
+            { o1, o2 ->
+                SECONDARY_VALUE_ESTIMATOR.estimateValue(o1.itemStack)
+                    .compareTo(SECONDARY_VALUE_ESTIMATOR.estimateValue(o2.itemStack))
+            },
+            { o1, o2 -> compareByCondition(o1, o2) { it.itemStack.item is SwordItem } },
+            { o1, o2 -> o1.itemStack.item.enchantability },
+            HOTBAR_PREDICATE,
+            IDENTITY_PREDICATE
+        )
     }
 
-    class WeightedCrossbowItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
-        companion object {
-            val VALUE_ESTIMATOR = EnchantmentValueEstimator(
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.QUICK_CHARGE, 0.2f),
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.MULTISHOT, 1.5f),
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.PIERCING, 1.0f),
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.MENDING, 0.2f),
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.1f),
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.VANISHING_CURSE, -0.25f),
-            )
-            private val COMPARATOR = ComparatorChain<WeightedCrossbowItem>(
-                { o1, o2 ->
-                    (VALUE_ESTIMATOR.estimateValue(o1.itemStack)).compareTo(
-                        VALUE_ESTIMATOR.estimateValue(o2.itemStack)
-                    )
-                },
-                HOTBAR_PREDICATE,
-                IDENTITY_PREDICATE
-            )
-        }
+    override val category: ItemCategory
+        get() = ItemCategory(ItemType.SWORD, 0)
 
-        override val category: ItemCategory
-            get() = ItemCategory(ItemType.CROSSBOW, 0)
+    override fun compareTo(other: WeightedItem): Int {
+        return COMPARATOR.compare(this, other as WeightedSwordItem)
+    }
+}
 
-        override fun compareTo(other: WeightedItem): Int {
-            return COMPARATOR.compare(this, other as WeightedCrossbowItem)
-        }
+class WeightedBowItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
+    companion object {
+        val VALUE_ESTIMATOR = EnchantmentValueEstimator(
+            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.POWER, 0.25f),
+            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.PUNCH, 0.33f),
+            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.FLAME, 4.0f * 0.9f),
+            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.INFINITY, 4.0f),
+            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.1f),
+            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.VANISHING_CURSE, -0.1f),
+            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.MENDING, -0.2f),
+        )
+        private val COMPARATOR = ComparatorChain<WeightedBowItem>(
+            { o1, o2 ->
+                (VALUE_ESTIMATOR.estimateValue(o1.itemStack)).compareTo(
+                    VALUE_ESTIMATOR.estimateValue(o2.itemStack)
+                )
+            },
+            HOTBAR_PREDICATE,
+            IDENTITY_PREDICATE
+        )
     }
 
-    class WeightedArrowItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
-        companion object {
-            private val COMPARATOR = ComparatorChain<WeightedArrowItem>(
-                { o1, o2 ->
-                    o1.itemStack.count.compareTo(o2.itemStack.count)
-                },
-                HOTBAR_PREDICATE,
-                IDENTITY_PREDICATE
-            )
-        }
+    override val category: ItemCategory
+        get() = ItemCategory(ItemType.BOW, 0)
 
-        override val category: ItemCategory
-            get() = ItemCategory(ItemType.ARROW, 0)
+    override fun compareTo(other: WeightedItem): Int {
+        return COMPARATOR.compare(this, other as WeightedBowItem)
+    }
+}
 
-        override fun compareTo(other: WeightedItem): Int {
-            return COMPARATOR.compare(this, other as WeightedArrowItem)
-        }
+class WeightedCrossbowItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
+    companion object {
+        val VALUE_ESTIMATOR = EnchantmentValueEstimator(
+            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.QUICK_CHARGE, 0.2f),
+            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.MULTISHOT, 1.5f),
+            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.PIERCING, 1.0f),
+            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.MENDING, 0.2f),
+            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.1f),
+            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.VANISHING_CURSE, -0.25f),
+        )
+        private val COMPARATOR = ComparatorChain<WeightedCrossbowItem>(
+            { o1, o2 ->
+                (VALUE_ESTIMATOR.estimateValue(o1.itemStack)).compareTo(
+                    VALUE_ESTIMATOR.estimateValue(o2.itemStack)
+                )
+            },
+            HOTBAR_PREDICATE,
+            IDENTITY_PREDICATE
+        )
     }
 
-    class WeightedToolItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
-        companion object {
-            val VALUE_ESTIMATOR = EnchantmentValueEstimator(
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SILK_TOUCH, 1.0f),
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.2f),
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.FORTUNE, 0.33f),
-            )
-            private val COMPARATOR = ComparatorChain<WeightedToolItem>(
-                { o1, o2 ->
-                    (o1.itemStack.item as ToolItem).material.miningLevel.compareTo((o2.itemStack.item as ToolItem).material.miningLevel)
-                },
-                { o1, o2 ->
-                    VALUE_ESTIMATOR.estimateValue(o1.itemStack).compareTo(VALUE_ESTIMATOR.estimateValue(o2.itemStack))
-                },
-                HOTBAR_PREDICATE,
-                IDENTITY_PREDICATE
-            )
-        }
+    override val category: ItemCategory
+        get() = ItemCategory(ItemType.CROSSBOW, 0)
 
-        override val category: ItemCategory
-            get() = ItemCategory(ItemType.TOOL, (this.itemStack.item as ToolItem).type)
+    override fun compareTo(other: WeightedItem): Int {
+        return COMPARATOR.compare(this, other as WeightedCrossbowItem)
+    }
+}
 
-        override fun compareTo(other: WeightedItem): Int {
-            return COMPARATOR.compare(this, other as WeightedToolItem)
-        }
+class WeightedArrowItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
+    companion object {
+        private val COMPARATOR = ComparatorChain<WeightedArrowItem>(
+            { o1, o2 ->
+                o1.itemStack.count.compareTo(o2.itemStack.count)
+            },
+            HOTBAR_PREDICATE,
+            IDENTITY_PREDICATE
+        )
     }
 
-    class WeightedRodItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
-        companion object {
-            val VALUE_ESTIMATOR = EnchantmentValueEstimator(
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.4f),
-            )
-            private val COMPARATOR = ComparatorChain<WeightedRodItem>(
-                { o1, o2 ->
-                    VALUE_ESTIMATOR.estimateValue(o1.itemStack).compareTo(VALUE_ESTIMATOR.estimateValue(o2.itemStack))
-                },
-                HOTBAR_PREDICATE,
-                IDENTITY_PREDICATE
-            )
-        }
+    override val category: ItemCategory
+        get() = ItemCategory(ItemType.ARROW, 0)
 
-        override val category: ItemCategory
-            get() = ItemCategory(ItemType.ROD, 0)
+    override fun compareTo(other: WeightedItem): Int {
+        return COMPARATOR.compare(this, other as WeightedArrowItem)
+    }
+}
 
-        override fun compareTo(other: WeightedItem): Int {
-            return COMPARATOR.compare(this, other as WeightedRodItem)
-        }
+class WeightedToolItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
+    companion object {
+        val VALUE_ESTIMATOR = EnchantmentValueEstimator(
+            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SILK_TOUCH, 1.0f),
+            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.2f),
+            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.FORTUNE, 0.33f),
+        )
+        private val COMPARATOR = ComparatorChain<WeightedToolItem>(
+            { o1, o2 ->
+                (o1.itemStack.item as ToolItem).material.miningLevel.compareTo((o2.itemStack.item as ToolItem).material.miningLevel)
+            },
+            { o1, o2 ->
+                VALUE_ESTIMATOR.estimateValue(o1.itemStack).compareTo(VALUE_ESTIMATOR.estimateValue(o2.itemStack))
+            },
+            HOTBAR_PREDICATE,
+            IDENTITY_PREDICATE
+        )
     }
 
-    class WeightedShieldItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
-        companion object {
-            val VALUE_ESTIMATOR = EnchantmentValueEstimator(
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.4f),
-            )
-            private val COMPARATOR = ComparatorChain<WeightedShieldItem>(
-                { o1, o2 ->
-                    VALUE_ESTIMATOR.estimateValue(o1.itemStack).compareTo(VALUE_ESTIMATOR.estimateValue(o2.itemStack))
-                },
-                HOTBAR_PREDICATE,
-                IDENTITY_PREDICATE
-            )
-        }
+    override val category: ItemCategory
+        get() = ItemCategory(ItemType.TOOL, (this.itemStack.item as ToolItem).type)
 
-        override val category: ItemCategory
-            get() = ItemCategory(ItemType.SHIELD, 0)
+    override fun compareTo(other: WeightedItem): Int {
+        return COMPARATOR.compare(this, other as WeightedToolItem)
+    }
+}
 
-        override fun compareTo(other: WeightedItem): Int {
-            return COMPARATOR.compare(this, other as WeightedShieldItem)
-        }
+class WeightedRodItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
+    companion object {
+        val VALUE_ESTIMATOR = EnchantmentValueEstimator(
+            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.4f),
+        )
+        private val COMPARATOR = ComparatorChain<WeightedRodItem>(
+            { o1, o2 ->
+                VALUE_ESTIMATOR.estimateValue(o1.itemStack).compareTo(VALUE_ESTIMATOR.estimateValue(o2.itemStack))
+            },
+            HOTBAR_PREDICATE,
+            IDENTITY_PREDICATE
+        )
     }
 
-    class WeightedFoodItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
-        companion object {
-            private val COMPARATOR = ComparatorChain<WeightedFoodItem>(
-                { o1, o2 -> compareByCondition(o1, o2) { it.itemStack.item == Items.ENCHANTED_GOLDEN_APPLE } },
-                { o1, o2 -> compareByCondition(o1, o2) { it.itemStack.item == Items.GOLDEN_APPLE } },
-                { o1, o2 -> o1.itemStack.item.foodComponent!!.hunger.compareTo(o2.itemStack.item.foodComponent!!.hunger) },
-                { o1, o2 -> o1.itemStack.item.foodComponent!!.saturationModifier.compareTo(o2.itemStack.item.foodComponent!!.saturationModifier) },
-                { o1, o2 ->
-                    o1.itemStack.count.compareTo(o2.itemStack.count)
-                },
-                HOTBAR_PREDICATE,
-                IDENTITY_PREDICATE
-            )
-        }
+    override val category: ItemCategory
+        get() = ItemCategory(ItemType.ROD, 0)
 
-        override val category: ItemCategory
-            get() = ItemCategory(ItemType.FOOD, 0)
+    override fun compareTo(other: WeightedItem): Int {
+        return COMPARATOR.compare(this, other as WeightedRodItem)
+    }
+}
 
-        override fun compareTo(other: WeightedItem): Int {
-            return COMPARATOR.compare(this, other as WeightedFoodItem)
-        }
+class WeightedShieldItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
+    companion object {
+        val VALUE_ESTIMATOR = EnchantmentValueEstimator(
+            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.4f),
+        )
+        private val COMPARATOR = ComparatorChain<WeightedShieldItem>(
+            { o1, o2 ->
+                VALUE_ESTIMATOR.estimateValue(o1.itemStack).compareTo(VALUE_ESTIMATOR.estimateValue(o2.itemStack))
+            },
+            HOTBAR_PREDICATE,
+            IDENTITY_PREDICATE
+        )
     }
 
-    class WeightedBlockItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
-        companion object {
-            private val COMPARATOR = ComparatorChain<WeightedBlockItem>(
-                { o1, o2 ->
-                    compareByCondition(
-                        o1,
-                        o2
-                    ) { (it.itemStack.item as BlockItem).block.defaultState.material.isSolid }
-                },
-                { o1, o2 ->
-                    compareByCondition(
-                        o1,
-                        o2
-                    ) { (it.itemStack.item as BlockItem).block.defaultState.isFullCube(mc.world, BlockPos(0, 0, 0)) }
-                },
-                { o1, o2 -> o1.itemStack.count.compareTo(o2.itemStack.count) },
-                HOTBAR_PREDICATE,
-                IDENTITY_PREDICATE
-            )
-        }
+    override val category: ItemCategory
+        get() = ItemCategory(ItemType.SHIELD, 0)
 
-        override val category: ItemCategory
-            get() = ItemCategory(ItemType.BLOCK, 0)
+    override fun compareTo(other: WeightedItem): Int {
+        return COMPARATOR.compare(this, other as WeightedShieldItem)
+    }
+}
 
-        override fun compareTo(other: WeightedItem): Int {
-            return COMPARATOR.compare(this, other as WeightedBlockItem)
-        }
+class WeightedFoodItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
+    companion object {
+        private val COMPARATOR = ComparatorChain<WeightedFoodItem>(
+            { o1, o2 -> compareByCondition(o1, o2) { it.itemStack.item == Items.ENCHANTED_GOLDEN_APPLE } },
+            { o1, o2 -> compareByCondition(o1, o2) { it.itemStack.item == Items.GOLDEN_APPLE } },
+            { o1, o2 -> o1.itemStack.item.foodComponent!!.hunger.compareTo(o2.itemStack.item.foodComponent!!.hunger) },
+            { o1, o2 -> o1.itemStack.item.foodComponent!!.saturationModifier.compareTo(o2.itemStack.item.foodComponent!!.saturationModifier) },
+            { o1, o2 ->
+                o1.itemStack.count.compareTo(o2.itemStack.count)
+            },
+            HOTBAR_PREDICATE,
+            IDENTITY_PREDICATE
+        )
     }
 
-    data class ItemCategory(val type: ItemType, val subtype: Int)
+    override val category: ItemCategory
+        get() = ItemCategory(ItemType.FOOD, 0)
 
-    enum class ItemType(val allowOnlyOne: Boolean) {
-        ARMOR(true),
-        SWORD(true),
-        BOW(true),
-        CROSSBOW(true),
-        ARROW(true),
-        TOOL(true),
-        ROD(true),
-        SHIELD(true),
-        FOOD(false),
-        BUCKET(false),
-        PEARL(false),
-        GAPPLE(false),
-        BLOCK(false),
-        NONE(false)
+    override fun compareTo(other: WeightedItem): Int {
+        return COMPARATOR.compare(this, other as WeightedFoodItem)
+    }
+}
+
+class WeightedBlockItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
+    companion object {
+        private val COMPARATOR = ComparatorChain<WeightedBlockItem>(
+            { o1, o2 ->
+                compareByCondition(
+                    o1,
+                    o2
+                ) { (it.itemStack.item as BlockItem).block.defaultState.material.isSolid }
+            },
+            { o1, o2 ->
+                compareByCondition(
+                    o1,
+                    o2
+                ) { (it.itemStack.item as BlockItem).block.defaultState.isFullCube(mc.world, BlockPos(0, 0, 0)) }
+            },
+            { o1, o2 -> o1.itemStack.count.compareTo(o2.itemStack.count) },
+            HOTBAR_PREDICATE,
+            IDENTITY_PREDICATE
+        )
     }
 
-    enum class ItemSortChoice(
-        override val choiceName: String,
-        val category: ItemCategory?,
-        val satisfactionCheck: ((ItemStack) -> Boolean)? = null
-    ) : NamedChoice {
-        SWORD("Sword", ItemCategory(ItemType.SWORD, 0)),
-        BOW("Bow", ItemCategory(ItemType.BOW, 0)),
-        CROSSBOW("Crossbow", ItemCategory(ItemType.CROSSBOW, 0)),
-        AXE("Axe", ItemCategory(ItemType.TOOL, 0)),
-        PICKAXE("Pickaxe", ItemCategory(ItemType.TOOL, 1)),
-        ROD("Rod", ItemCategory(ItemType.ROD, 0)),
-        SHIELD("Shield", ItemCategory(ItemType.SHIELD, 0)),
-        WATER("Water", ItemCategory(ItemType.BUCKET, 0)),
-        LAVA("Lava", ItemCategory(ItemType.BUCKET, 1)),
-        MILK("Milk", ItemCategory(ItemType.BUCKET, 2)),
-        PEARL("Pearl", ItemCategory(ItemType.PEARL, 0), { it.item == Items.ENDER_PEARL }),
-        GAPPLE(
-            "Gapple",
-            ItemCategory(ItemType.GAPPLE, 0),
-            { it.item == Items.GOLDEN_APPLE || it.item == Items.ENCHANTED_GOLDEN_APPLE }),
-        FOOD("Food", ItemCategory(ItemType.FOOD, 0), { it.item.foodComponent != null }),
-        BLOCK("Block", ItemCategory(ItemType.BLOCK, 0), { it.item is BlockItem }),
-        IGNORE("Ignore", null),
-        NONE("None", null)
+    override val category: ItemCategory
+        get() = ItemCategory(ItemType.BLOCK, 0)
+
+    override fun compareTo(other: WeightedItem): Int {
+        return COMPARATOR.compare(this, other as WeightedBlockItem)
     }
+}
+
+data class ItemCategory(val type: ItemType, val subtype: Int)
+
+enum class ItemType(val allowOnlyOne: Boolean) {
+    ARMOR(true),
+    SWORD(true),
+    BOW(true),
+    CROSSBOW(true),
+    ARROW(true),
+    TOOL(true),
+    ROD(true),
+    SHIELD(true),
+    FOOD(false),
+    BUCKET(false),
+    PEARL(false),
+    GAPPLE(false),
+    BLOCK(false),
+    NONE(false)
+}
+
+enum class ItemSortChoice(
+    override val choiceName: String,
+    val category: ItemCategory?,
+    val satisfactionCheck: ((ItemStack) -> Boolean)? = null
+) : NamedChoice {
+    SWORD("Sword", ItemCategory(ItemType.SWORD, 0)),
+    BOW("Bow", ItemCategory(ItemType.BOW, 0)),
+    CROSSBOW("Crossbow", ItemCategory(ItemType.CROSSBOW, 0)),
+    AXE("Axe", ItemCategory(ItemType.TOOL, 0)),
+    PICKAXE("Pickaxe", ItemCategory(ItemType.TOOL, 1)),
+    ROD("Rod", ItemCategory(ItemType.ROD, 0)),
+    SHIELD("Shield", ItemCategory(ItemType.SHIELD, 0)),
+    WATER("Water", ItemCategory(ItemType.BUCKET, 0)),
+    LAVA("Lava", ItemCategory(ItemType.BUCKET, 1)),
+    MILK("Milk", ItemCategory(ItemType.BUCKET, 2)),
+    PEARL("Pearl", ItemCategory(ItemType.PEARL, 0), { it.item == Items.ENDER_PEARL }),
+    GAPPLE(
+        "Gapple",
+        ItemCategory(ItemType.GAPPLE, 0),
+        { it.item == Items.GOLDEN_APPLE || it.item == Items.ENCHANTED_GOLDEN_APPLE }),
+    FOOD("Food", ItemCategory(ItemType.FOOD, 0), { it.item.foodComponent != null }),
+    BLOCK("Block", ItemCategory(ItemType.BLOCK, 0), { it.item is BlockItem }),
+    IGNORE("Ignore", null),
+    NONE("None", null)
 }
