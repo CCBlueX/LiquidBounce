@@ -34,6 +34,8 @@ object ModuleRegen : Module("Regen", Category.PLAYER) {
             repeat(speed) {
                 network.sendPacket(PlayerMoveC2SPacket(player.isOnGround))
             }
+
+            mc.timer.timerSpeed = 1f
         }
     }
 }
