@@ -22,13 +22,17 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePortalMenu;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoSlow;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.client.TickStateManager;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.input.Input;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.MovementType;
+import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -186,6 +190,18 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
         if (enforceEagle != null) {
             cir.setReturnValue(enforceEagle);
             cir.cancel();
+        }
+    }
+
+    @Inject(method = "swingHand", at = @At("HEAD"), cancellable = true)
+    private void swingHand(Hand hand, CallbackInfo callbackInfo) {
+        if (ModuleNoSwing.INSTANCE.getEnabled()) {
+            if (ModuleNoSwing.INSTANCE.getEnabled()) {
+                callbackInfo.cancel();
+
+                if (ModuleNoSwing.INSTANCE.getServerSide())
+                    MinecraftClient.getInstance().getNetworkHandler().sendPacket(new HandSwingC2SPacket(hand));
+            }
         }
     }
 
