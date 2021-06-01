@@ -20,8 +20,10 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.OverlayRenderEvent;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoScoreboard;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.scoreboard.ScoreboardObjective;
 import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -39,6 +41,13 @@ public class MixinInGameHud {
         GL11.glPushAttrib(GL11.GL_TEXTURE_BIT);
         EventManager.INSTANCE.callEvent(new OverlayRenderEvent(matrices, tickDelta));
         GL11.glPopAttrib();
+    }
+
+    @Inject(method = "renderScoreboardSidebar", at = @At("HEAD"), cancellable = true)
+    private void injectScoreboardSidebar(MatrixStack matrices, ScoreboardObjective objective, CallbackInfo callbackInfo) {
+        if(ModuleNoScoreboard.INSTANCE.getEnabled()) {
+            callbackInfo.cancel();
+        }
     }
 
 }
