@@ -142,7 +142,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleBlockESP,
             ModuleFastUse,
             ModuleRegen,
-            ModuleZoot
+            ModuleZoot,
+            ModuleNoHurtCam
         )
 
         builtin.apply {
