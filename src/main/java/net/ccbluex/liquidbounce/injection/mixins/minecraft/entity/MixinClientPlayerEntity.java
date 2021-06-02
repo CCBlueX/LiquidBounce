@@ -43,11 +43,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(ClientPlayerEntity.class)
 public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
 
-    @Shadow private float lastYaw;
+    @Shadow
+    private float lastYaw;
 
-    @Shadow private float lastPitch;
+    @Shadow
+    private float lastPitch;
 
-    @Shadow public Input input;
+    @Shadow
+    public Input input;
 
     /**
      * Hook entity tick event
@@ -196,13 +199,10 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     @Inject(method = "swingHand", at = @At("HEAD"), cancellable = true)
     private void swingHand(Hand hand, CallbackInfo callbackInfo) {
         if (ModuleNoSwing.INSTANCE.getEnabled()) {
-            if (ModuleNoSwing.INSTANCE.getEnabled()) {
-                callbackInfo.cancel();
+            callbackInfo.cancel();
 
-                if (ModuleNoSwing.INSTANCE.getServerSide())
-                    MinecraftClient.getInstance().getNetworkHandler().sendPacket(new HandSwingC2SPacket(hand));
-            }
+            if (ModuleNoSwing.INSTANCE.getServerSide())
+                MinecraftClient.getInstance().getNetworkHandler().sendPacket(new HandSwingC2SPacket(hand));
         }
     }
-
 }
