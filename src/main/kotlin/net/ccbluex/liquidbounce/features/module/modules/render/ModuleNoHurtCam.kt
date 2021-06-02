@@ -16,28 +16,9 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.player
+package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.minecraft.client.util.InputUtil
 
-/**
- * A autowalk module
- *
- * Automatically makes you walk.
- */
-object ModuleAutoWalk : Module("AutoWalk", Category.PLAYER) {
-
-    val repeatable = repeatable {
-        mc.options.keyForward.isPressed = true
-    }
-
-    override fun disable() {
-        if (!InputUtil.isKeyPressed(mc.window.handle, mc.options.keyForward.boundKey.code)) {
-            mc.options.keyForward.isPressed = false
-        }
-    }
-
-}
+object ModuleNoHurtCam : Module("NoHurtCam", Category.RENDER)

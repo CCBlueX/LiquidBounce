@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.GameRenderEvent;
 import net.ccbluex.liquidbounce.event.ScreenRenderEvent;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoHurtCam;
 import net.ccbluex.liquidbounce.interfaces.IMixinGameRenderer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
@@ -123,5 +124,12 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
         model.multiply(Matrix4f.translate(-(float) pos.x, -(float) pos.y, -(float) pos.z));
 
         return model;
+    }
+
+    @Inject(method = "bobViewWhenHurt", at = @At("HEAD"), cancellable = true)
+    private void injectHurtCam(MatrixStack matrixStack, float f, CallbackInfo callbackInfo) {
+        if(ModuleNoHurtCam.INSTANCE.getEnabled()) {
+            callbackInfo.cancel();
+        }
     }
 }
