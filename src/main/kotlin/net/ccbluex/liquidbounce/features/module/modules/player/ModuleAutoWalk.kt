@@ -35,7 +35,7 @@ object ModuleAutoWalk : Module("AutoWalk", Category.PLAYER) {
     }
 
     override fun disable() {
-        if(!InputUtil.isKeyPressed(mc.window.handle, mc.options.keyForward.boundKey.code)) {
+        if (!InputUtil.isKeyPressed(mc.window.handle, mc.options.keyForward.boundKey.code)) {
             mc.options.keyForward.isPressed = false
         }
     }

@@ -143,11 +143,13 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
                 if (hotbarSlotsToFill != null && currentStackCount < hotbarSlotsToFill.size && weightedItem.slot !in itemsUsedInHotbar) {
                     val hotbarSlotToFill = hotbarSlotsToFill[currentStackCount]
 
-                    if ((isGreedy || hotbarSlotToFill.first.satisfactionCheck?.invoke(
-                            inventory.getStack(
-                                hotbarSlotToFill.second
-                            )
-                        ) != true) && weightedItem.slot != hotbarSlotToFill.second
+                    if ((
+                        isGreedy || hotbarSlotToFill.first.satisfactionCheck?.invoke(
+                                inventory.getStack(
+                                        hotbarSlotToFill.second
+                                    )
+                            ) != true
+                        ) && weightedItem.slot != hotbarSlotToFill.second
                     ) {
                         if (executeAction(weightedItem.slot, hotbarSlotToFill.second, SlotActionType.SWAP)) {
                             wait(inventoryConstraints.delay.random())
@@ -401,12 +403,12 @@ class WeightedSwordItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStac
                         Enchantments.FIRE_ASPECT
                     ) * 4.0f * 0.625f * 0.9f
                     ).compareTo(
-                        o2.itemStack.item.attackDamage * (
-                            1.0f + DAMAGE_ESTIMATOR.estimateValue(
-                                o2.itemStack
-                            ) + o2.itemStack.getEnchantment(Enchantments.FIRE_ASPECT) * 4.0f * 0.625f * 0.9f
-                            )
-                    )
+                    o2.itemStack.item.attackDamage * (
+                        1.0f + DAMAGE_ESTIMATOR.estimateValue(
+                            o2.itemStack
+                        ) + o2.itemStack.getEnchantment(Enchantments.FIRE_ASPECT) * 4.0f * 0.625f * 0.9f
+                        )
+                )
             },
             { o1, o2 ->
                 SECONDARY_VALUE_ESTIMATOR.estimateValue(o1.itemStack)
@@ -666,7 +668,8 @@ enum class ItemSortChoice(
     GAPPLE(
         "Gapple",
         ItemCategory(ItemType.GAPPLE, 0),
-        { it.item == Items.GOLDEN_APPLE || it.item == Items.ENCHANTED_GOLDEN_APPLE }),
+        { it.item == Items.GOLDEN_APPLE || it.item == Items.ENCHANTED_GOLDEN_APPLE }
+    ),
     FOOD("Food", ItemCategory(ItemType.FOOD, 0), { it.item.foodComponent != null }),
     BLOCK("Block", ItemCategory(ItemType.BLOCK, 0), { it.item is BlockItem }),
     IGNORE("Ignore", null),

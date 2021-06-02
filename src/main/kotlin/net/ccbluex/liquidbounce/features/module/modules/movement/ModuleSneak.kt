@@ -51,7 +51,7 @@ object ModuleSneak : Module("Sneak", Category.MOVEMENT) {
         }
 
         override fun disable() {
-            if(!InputUtil.isKeyPressed(mc.window.handle, mc.options.keySneak.boundKey.code)) {
+            if (!InputUtil.isKeyPressed(mc.window.handle, mc.options.keySneak.boundKey.code)) {
                 mc.options.keySneak.isPressed = false
                 sneaking = false
             }
