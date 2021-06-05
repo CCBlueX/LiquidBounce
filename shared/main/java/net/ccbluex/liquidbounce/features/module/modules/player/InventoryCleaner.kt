@@ -437,13 +437,13 @@ class InventoryCleaner : Module()
 
 	private fun findBetterItem(thePlayer: IEntityPlayerSP, hotbarSlot: Int, slotStack: IItemStack?): Int?
 	{
-		val type = type(hotbarSlot)
+		val type = type(hotbarSlot).toLowerCase()
 
 		val provider = classProvider
 
 		val mainInventory = thePlayer.inventory.mainInventory.asSequence().withIndex()
 
-		when (type.toLowerCase())
+		when (type)
 		{
 			"sword", "pickaxe", "axe" ->
 			{
@@ -451,10 +451,10 @@ class InventoryCleaner : Module()
 				// https://youtrack.jetbrains.com/issue/KT-17018
 				// https://youtrack.jetbrains.com/issue/KT-38704
 				@Suppress("ConvertLambdaToReference")
-				val currentTypeChecker: ((IItem?) -> Boolean) = when
+				val currentTypeChecker: ((IItem?) -> Boolean) = when (type)
 				{
-					type.equals("Pickaxe", ignoreCase = true) -> { item: IItem? -> provider.isItemPickaxe(item) }
-					type.equals("Axe", ignoreCase = true) -> { item: IItem? -> provider.isItemAxe(item) }
+					"pickaxe" -> { item: IItem? -> provider.isItemPickaxe(item) }
+					"axe" -> { item: IItem? -> provider.isItemAxe(item) }
 					else -> { item: IItem? -> provider.isItemSword(item) }
 				}
 
@@ -547,7 +547,7 @@ class InventoryCleaner : Module()
 
 		if (emptySlots.isEmpty()) return -1
 
-		return if (random) emptySlots[Random.nextInt(emptySlots.size)] else emptySlots.first()
+		return if (random) emptySlots.random() else emptySlots.first()
 	}
 
 	private fun getAmount(slot: Int, container: IContainer): Int

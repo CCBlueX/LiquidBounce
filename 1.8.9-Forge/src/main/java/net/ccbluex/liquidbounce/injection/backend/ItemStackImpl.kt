@@ -23,6 +23,8 @@ import net.minecraft.item.ItemStack
 
 class ItemStackImpl(val wrapped: ItemStack) : IItemStack
 {
+	override val animationsToGo: Int
+		get() = wrapped.animationsToGo
 	override val isItemEnchanted: Boolean
 		get() = wrapped.isItemEnchanted
 	override val displayName: String

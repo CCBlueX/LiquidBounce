@@ -12,7 +12,7 @@ import net.vitox.ParticleGenerator
 @SideOnly(Side.CLIENT)
 object ParticleUtils
 {
-	private val particleGenerator = ParticleGenerator(100)
+	private val particleGenerator = ParticleGenerator(100, 50)
 
 	@JvmStatic
 	fun drawParticles(mouseX: Int, mouseY: Int)

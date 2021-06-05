@@ -175,7 +175,9 @@ class TpAura : Module()
 					}
 
 					// Travel to the target
-					for (path in currentPath) networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(path.xCoord, path.yCoord, path.zCoord, true))
+					currentPath.forEach { path ->
+						networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(path.xCoord, path.yCoord, path.zCoord, true))
+					}
 
 					LiquidBounce.eventManager.callEvent(AttackEvent(currentTarget))
 
@@ -205,7 +207,9 @@ class TpAura : Module()
 
 					// Travel back to the original position
 					currentPath.reverse()
-					for (path in currentPath) networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(path.xCoord, path.yCoord, path.zCoord, true))
+					currentPath.forEach { path ->
+						networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(path.xCoord, path.yCoord, path.zCoord, true))
+					}
 					targetIndex++
 				}
 
@@ -260,7 +264,9 @@ class TpAura : Module()
 				glBegin(GL_LINE_STRIP)
 				RenderUtils.glColor(color)
 
-				for (path in targetPath) glVertex3d(path.xCoord - viewerPosX, path.yCoord - viewerPosY, path.zCoord - viewerPosZ)
+				targetPath.forEach { path ->
+					glVertex3d(path.xCoord - viewerPosX, path.yCoord - viewerPosY, path.zCoord - viewerPosZ)
+				}
 
 				RenderUtils.resetColor()
 				glEnd()
@@ -348,6 +354,7 @@ class TpAura : Module()
 			}
 			lastPath = currentPathFinderPath
 		}
+
 		return path
 	}
 

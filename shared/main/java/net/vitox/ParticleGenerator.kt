@@ -14,35 +14,51 @@ import java.util.*
  * @version 3.0
  */
 @SideOnly(Side.CLIENT)
-class ParticleGenerator(amount: Int)
+class ParticleGenerator(private val amount: Int, private val mouseOverRange: Int)
 {
 	private val particles: MutableCollection<Particle>
-	private val amount: Int
+
 	private var prevWidth = 0
 	private var prevHeight = 0
+
 	fun draw(mouseX: Int, mouseY: Int)
 	{
 		val mc: IMinecraft = wrapper.minecraft
+
 		val displayWidth = mc.displayWidth
 		val displayHeight = mc.displayHeight
+
+		val displayWidthF = displayWidth.toFloat()
+		val displayHeightF = displayHeight.toFloat()
+
+		val resolution = wrapper.classProvider.createScaledResolution(mc)
+		val scaledWidth = resolution.scaledWidth.toFloat()
+		val scaledHeight = resolution.scaledHeight.toFloat()
+
 		if (particles.isEmpty() || prevWidth != displayWidth || prevHeight != displayHeight)
 		{
 			particles.clear()
 			create()
 		}
+
 		prevWidth = displayWidth
 		prevHeight = displayHeight
-		particles.forEach { particle: Particle ->
-			particle.fall()
-			particle.interpolation()
 
-			val range = 50
-			val mouseOver = mouseX >= particle.x - range && mouseY >= particle.y - range && mouseX <= particle.x + range && mouseY <= particle.y + range
+		particles.forEach { particle: Particle ->
+			particle.fall(displayWidthF, displayHeightF, scaledWidth, scaledHeight)
+			particle.interpolation()
 
 			val particleX = particle.x
 			val particleY = particle.y
 
-			if (mouseOver) particles.filter { it.x > particleX }.filter { it.x - particleX < range }.filter { particleX - it.x < range }.filter { it.y > particleY && it.y - particleY < range || particleY > it.y && particleY - it.y < range }.forEach { particle.connect(it.x, it.y) }
+			val mouseOver = mouseX >= particleX - mouseOverRange && mouseY >= particleY - mouseOverRange && mouseX <= particleX + mouseOverRange && mouseY <= particleY + mouseOverRange
+
+			if (mouseOver) particles.filter {
+				val x = it.x
+				val y = it.y
+
+				(x > particleX && x - particleX < mouseOverRange && particleX - x < mouseOverRange) && (y > particleY && y - particleY < mouseOverRange || particleY > y && particleY - y < mouseOverRange)
+			}.forEach { particle.connect(it.x, it.y) }
 
 			RenderUtils.drawCircle(particleX, particleY, particle.size, -0x1)
 		}
@@ -60,7 +76,6 @@ class ParticleGenerator(amount: Int)
 
 	init
 	{
-		particles = ArrayList(amount)
-		this.amount = amount
+		particles = ArrayDeque(amount)
 	}
 }

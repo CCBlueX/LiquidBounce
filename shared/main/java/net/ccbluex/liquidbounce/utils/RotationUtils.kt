@@ -26,8 +26,6 @@ import net.ccbluex.liquidbounce.event.TickEvent
 import net.ccbluex.liquidbounce.features.module.modules.combat.FastBow
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
-import net.minecraft.util.EnumFacing
-import net.minecraft.util.MathHelper
 import java.lang.Double.isNaN
 import java.util.*
 import kotlin.math.max
@@ -498,11 +496,13 @@ class RotationUtils : MinecraftInstance(), Listenable
 		{
 			var yawDelta = getAngleDifference(targetRotation.yaw, currentRotation.yaw)
 			var pitchDelta = getAngleDifference(targetRotation.pitch, currentRotation.pitch)
-			val accel = acceleration.coerceAtMost(1.0f)
 
+			// Apply Acceleration
+			val accel = acceleration.coerceAtMost(1.0f)
 			yawDelta -= yawDelta * accel
 			pitchDelta -= pitchDelta * accel
 
+			// Apply TurnSpeed limit
 			return Rotation(currentRotation.yaw + if (yawDelta > turnSpeed) turnSpeed else max(yawDelta, -turnSpeed), currentRotation.pitch + if (pitchDelta > turnSpeed) turnSpeed else max(pitchDelta, -turnSpeed))
 		}
 

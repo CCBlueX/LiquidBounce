@@ -1,8 +1,5 @@
 package net.vitox
 
-import net.ccbluex.liquidbounce.LiquidBounce.wrapper
-import net.ccbluex.liquidbounce.api.minecraft.client.IMinecraft
-import net.ccbluex.liquidbounce.api.minecraft.util.IScaledResolution
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
 import net.vitox.particle.util.RenderUtils
@@ -44,19 +41,16 @@ internal class Particle(var x: Float, var y: Float)
 		}
 	}
 
-	fun fall()
+	fun fall(displayWidth: Float, displayHeight: Float, scaledWidth: Float, scaledHeight: Float)
 	{
-		val mc: IMinecraft = wrapper.minecraft
-		val resolution: IScaledResolution = wrapper.classProvider.createScaledResolution(mc)
-
 		y += ySpeed
 		x += xSpeed
 
-		if (y > mc.displayHeight) y = 1f
-		if (x > mc.displayWidth) x = 1f
+		if (y > displayHeight) y = 1f
+		if (x > displayWidth) x = 1f
 
-		if (x < 1) x = resolution.scaledWidth.toFloat()
-		if (y < 1) y = resolution.scaledHeight.toFloat()
+		if (x < 1) x = scaledWidth
+		if (y < 1) y = scaledHeight
 	}
 
 	companion object

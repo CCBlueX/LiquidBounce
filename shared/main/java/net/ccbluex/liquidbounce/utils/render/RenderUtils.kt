@@ -9,6 +9,8 @@ import net.ccbluex.liquidbounce.api.enums.WDefaultVertexFormats
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
+import net.ccbluex.liquidbounce.api.minecraft.client.render.entity.IRenderItem
+import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
 import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
@@ -840,6 +842,19 @@ object RenderUtils : MinecraftInstance()
 		}
 
 		Gui.drawRect(_startX, y, _endX + 1, y + 1, color)
+	}
+
+	@JvmStatic
+	fun drawItemStack(renderItem: IRenderItem, itemStack: IItemStack, posX: Int, posY: Int)
+	{
+		GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS)
+
+		renderItem.renderItemAndEffectIntoGUI(itemStack, posX, posY)
+
+		renderItem.renderItemOverlays(mc.fontRendererObj, itemStack, posX, posY)
+		functions.disableStandardItemLighting()
+
+		GL11.glPopAttrib()
 	}
 
 	init

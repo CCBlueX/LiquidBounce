@@ -78,8 +78,8 @@ interface IEntity
 	val uniqueID: UUID
 	val name: String
 
-	val prevRotationYaw: Float
-	val prevRotationPitch: Float
+	var prevRotationYaw: Float
+	var prevRotationPitch: Float
 
 	val ticksExisted: Int
 

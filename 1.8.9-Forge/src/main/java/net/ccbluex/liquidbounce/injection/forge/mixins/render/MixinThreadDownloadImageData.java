@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.UnknownServiceException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -93,6 +94,11 @@ public abstract class MixinThreadDownloadImageData
 
 				// Update the image
 				setBufferedImage(image);
+			}
+			catch (final UnknownServiceException e)
+			{
+				// noinspection StringConcatenationArgumentToLogCall
+				logger.error("URL " + imageUrl + " doesn't support input stream.", e);
 			}
 			catch (final IOException e)
 			{

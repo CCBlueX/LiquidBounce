@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
@@ -23,6 +24,8 @@ import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
+import kotlin.math.abs
 import kotlin.random.Random
 
 @ModuleInfo(name = "Aimbot", description = "Automatically faces selected entities around you.", category = ModuleCategory.COMBAT)
@@ -183,25 +186,33 @@ class Aimbot : Module()
 	private val hitboxDecrementValue = FloatValue("EnemyHitboxDecrement", 0.2f, 0.15f, 0.45f)
 	private val centerSearchSensitivityValue = FloatValue("SearchCenterSensitivity", 0.2f, 0.15f, 0.25f)
 
+	private val aimFrictionValue = FloatValue("AimFriction", 0.6F, 0.3F, 1F)
+	private val aimFrictionTimingValue = ListValue("AimFrictionTiming", arrayOf("Before", "After"), "Before")
+	private val resetThresoldValue = FloatValue("AimUnlockThresholdSpeed", 0.8F, 0.5F, 2F)
+
 	private val clickTimer = MSTimer()
 
 	var target: IEntityLivingBase? = null
+
+	private var yawMovement = 0F
+	private var pitchMovement = 0F
 
 	@EventTarget
 	fun onMotion(@Suppress("UNUSED_PARAMETER") event: MotionEvent)
 	{
 		if (event.eventState != EventState.PRE) return
 
+		val theWorld = mc.theWorld ?: return
+		val thePlayer = mc.thePlayer ?: return
+
 		if (mc.gameSettings.keyBindAttack.isKeyDown) clickTimer.reset()
 
 		if (onClickValue.get() && clickTimer.hasTimePassed(onClickKeepValue.get().toLong()))
 		{
 			target = null
+			fadeRotations(thePlayer)
 			return
 		}
-
-		val theWorld = mc.theWorld ?: return
-		val thePlayer = mc.thePlayer ?: return
 
 		val range = rangeValue.get()
 		val fov = fovValue.get()
@@ -215,9 +226,16 @@ class Aimbot : Module()
 
 		target = EntityUtils.getEntitiesInRadius(theWorld, thePlayer, range + 2.0).asSequence().filter { EntityUtils.isSelected(it, true) }.filter { thePlayer.getDistanceToEntityBox(it) <= range }.run { if (fov < 180F) filter { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) <= fov } else this }.run { if (throughWalls) this else filter(thePlayer::canEntityBeSeen) }.minBy { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) }?.asEntityLivingBase()
 
-		val entity = target ?: return
+		val entity = target ?: run {
+			fadeRotations(thePlayer)
+			return@onMotion
+		}
 
-		if (!lockValue.get() && RotationUtils.isFaced(theWorld, thePlayer, target, range.toDouble())) return
+		if (!lockValue.get() && RotationUtils.isFaced(theWorld, thePlayer, target, range.toDouble()))
+		{
+			fadeRotations(thePlayer)
+			return
+		}
 
 		// Jitter
 		val jitterData = if (jitter) RotationUtils.JitterData(jitterRateYaw.get(), jitterRatePitch.get(), minYawJitterStrengthValue.get(), maxYawJitterStrengthValue.get(), minPitchJitterStrengthValue.get(), maxPitchJitterStrengthValue.get()) else null
@@ -265,7 +283,43 @@ class Aimbot : Module()
 		val acceleration = if (maxAcceleration > 0f) minAcceleration + (maxAcceleration - minAcceleration) * Random.nextFloat() else 0f
 
 		// Limit by TurnSpeed any apply
-		RotationUtils.limitAngleChange(currentRotation, targetRotation, turnSpeed, acceleration).applyRotationToPlayer(thePlayer)
+		val limitedRotation = RotationUtils.limitAngleChange(currentRotation, targetRotation, turnSpeed, acceleration)
+
+		yawMovement = limitedRotation.yaw - currentRotation.yaw
+		pitchMovement = limitedRotation.pitch - currentRotation.pitch
+
+		// Re-use local variable 'currentRotation'
+		currentRotation.yaw += yawMovement
+		currentRotation.pitch += pitchMovement
+
+		currentRotation.applyRotationToPlayer(thePlayer)
+	}
+
+	private fun fadeRotations(thePlayer: IEntityPlayerSP)
+	{
+
+		val friction = aimFrictionValue.get()
+
+		val unlockThr = resetThresoldValue.get()
+		val before = aimFrictionTimingValue.get().equals("Before", ignoreCase = true)
+
+		if (before && friction >= 1F) return
+
+		if (before)
+		{
+			yawMovement = if (abs(yawMovement) <= unlockThr) 0F else yawMovement - yawMovement * friction
+			pitchMovement = if (abs(pitchMovement) <= unlockThr) 0F else pitchMovement - pitchMovement * friction
+		}
+
+		if (yawMovement <= 0F && pitchMovement <= 0F) return
+
+		Rotation(thePlayer.rotationYaw + yawMovement, thePlayer.rotationPitch + pitchMovement).applyRotationToPlayer(thePlayer)
+
+		if (!before)
+		{
+			yawMovement = if (abs(yawMovement) <= unlockThr) 0F else yawMovement - yawMovement * friction
+			pitchMovement = if (abs(pitchMovement) <= unlockThr) 0F else pitchMovement - pitchMovement * friction
+		}
 	}
 
 	override fun onDisable()

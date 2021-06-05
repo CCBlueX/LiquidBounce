@@ -67,6 +67,8 @@ class NameTags : Module()
 	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
 	private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
 
+	private val b = BoolValue("B", false)
+
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
@@ -233,14 +235,19 @@ class NameTags : Module()
 
 		if (armorValue.get() && isPlayer)
 		{
+			val prevZLevel = renderItem.zLevel
+
 			renderItem.zLevel = -147F
 
-			// Used workaround because of IntArray doesn't have .mapNotNull() extension
-			equipmentArrangement.map { it to (entity.getEquipmentInSlot(it) ?: return@map null) }.filterNotNull().forEach { (index, equipment) -> renderItem.renderItemAndEffectIntoGUI(equipment, -50 + index * 20, -22) }
+			equipmentArrangement.map { it to (entity.getEquipmentInSlot(it) ?: return@map null) }.filterNotNull().forEach { (index, equipment) ->
+				RenderUtils.drawItemStack(renderItem, equipment, -50 + index * 20, -22)
+			}
 
 			glStateManager.enableAlpha()
 			glStateManager.disableBlend()
 			glStateManager.enableTexture2D()
+
+			renderItem.zLevel = prevZLevel
 		}
 
 		// Pop

@@ -11,7 +11,6 @@ import org.apache.commons.io.IOUtils
 import org.lwjgl.opengl.*
 import java.io.IOException
 import java.nio.charset.StandardCharsets
-import java.util.*
 
 abstract class Shader(fragmentShader: String) : MinecraftInstance()
 {

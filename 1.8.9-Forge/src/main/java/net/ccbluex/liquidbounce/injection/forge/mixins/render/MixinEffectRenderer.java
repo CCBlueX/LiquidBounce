@@ -33,7 +33,7 @@ public abstract class MixinEffectRenderer
 	/**
 	 * @author Mojang
 	 * @author Marco
-	 * @reason
+	 * @reason Fix ConcurrentModificationException
 	 */
 	@Overwrite
 	public void updateEffects()

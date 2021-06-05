@@ -255,6 +255,9 @@ class Target : Element()
 				{
 					textYOffset += 15
 
+					val prevZLevel = renderItem.zLevel
+					renderItem.zLevel = -147F
+
 					repeat(5) { index ->
 						val isHeldItem = index == 0
 
@@ -265,9 +268,11 @@ class Target : Element()
 						val armor = targetEntity.getEquipmentInSlot(index) ?: return@repeat
 
 						RenderUtils.glColor(Color.white) // Reset Color
-						renderItem.zLevel = -147F
-						renderItem.renderItemAndEffectIntoGUI(armor, equipmentX, textYOffset)
+
+						RenderUtils.drawItemStack(renderItem, armor, equipmentX, textYOffset)
 					}
+
+					renderItem.zLevel = prevZLevel
 				}
 
 				RenderUtils.glColor(Color.white) // Reset Color

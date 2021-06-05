@@ -45,6 +45,10 @@ public class MixinRenderEntityItem
 	public double rotation;
 	public final Random random = new Random();
 
+	/**
+	 * @reason ItemPhysics
+	 * @see ItemPhysics
+	 */
 	@Inject(method = "doRender", at = @At("HEAD"), cancellable = true)
 	private void injectItemPhysicsAndChams(final EntityItem entity, final double x, final double y, final double z, final float entityYaw, final float partialTicks, final CallbackInfo callbackInfo)
 	{

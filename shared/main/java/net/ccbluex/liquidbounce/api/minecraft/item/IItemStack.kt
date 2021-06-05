@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.api.minecraft.nbt.INBTTagList
 
 interface IItemStack
 {
+	val animationsToGo: Int
 	val isItemEnchanted: Boolean
 	val displayName: String
 	val unlocalizedName: String

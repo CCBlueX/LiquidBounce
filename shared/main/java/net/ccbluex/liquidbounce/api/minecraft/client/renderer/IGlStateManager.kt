@@ -13,6 +13,7 @@ interface IGlStateManager
 	fun disableLighting()
 	fun disableCull()
 	fun enableColorMaterial()
+	fun enableRescaleNormal()
 	fun disableRescaleNormal()
 	fun pushMatrix()
 	fun pushAttrib()

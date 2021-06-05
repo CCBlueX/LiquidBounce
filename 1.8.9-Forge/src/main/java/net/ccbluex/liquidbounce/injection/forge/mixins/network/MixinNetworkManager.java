@@ -17,9 +17,9 @@ import net.ccbluex.liquidbounce.injection.implementations.IMixinNetworkManager;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.PacketCounter;
 import net.ccbluex.liquidbounce.utils.PacketCounter.PacketType;
-import net.ccbluex.liquidbounce.utils.timer.MSTimer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.NetworkManager;
+import net.minecraft.network.NetworkManager.InboundHandlerTuplePacketListener;
 import net.minecraft.network.Packet;
 import net.minecraft.util.LazyLoadBase;
 
@@ -58,7 +58,7 @@ public abstract class MixinNetworkManager implements IMixinNetworkManager
 
 	@Shadow
 	@Final
-	private Queue outboundPacketsQueue;
+	private Queue<InboundHandlerTuplePacketListener> outboundPacketsQueue;
 
 	@Shadow
 	public abstract boolean isChannelOpen();
@@ -158,12 +158,12 @@ public abstract class MixinNetworkManager implements IMixinNetworkManager
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public void sendPacketWithoutEvent(final Packet<?> packet)
+	public void sendPacketWithoutEvent(final Packet<?> packetIn)
 	{
 		if (isChannelOpen())
 		{
 			flushOutboundQueue();
-			dispatchPacket(packet, null);
+			dispatchPacket(packetIn, null);
 		}
 		else
 		{
@@ -171,14 +171,7 @@ public abstract class MixinNetworkManager implements IMixinNetworkManager
 
 			try
 			{
-				// I used java reflection api because of InboundHandlerTuplePacketListener is private inner class inside NetworkManager class.
-				for (final Class nwmanInnerClasses : NetworkManager.class.getDeclaredClasses())
-					if ("InboundHandlerTuplePacketListener".equalsIgnoreCase(nwmanInnerClasses.getSimpleName()))
-						outboundPacketsQueue.add(nwmanInnerClasses.getConstructor(Packet.class, GenericFutureListener[].class).newInstance(packet, null));
-			}
-			catch (final InstantiationException | IllegalAccessException | NoSuchMethodException | SecurityException | IllegalArgumentException | InvocationTargetException e)
-			{
-				ClientUtils.getLogger().error("[NetworkManager] InboundHandlerTuplePacketListener reflection failed: {}", e, e);
+				outboundPacketsQueue.add(new InboundHandlerTuplePacketListener(packetIn, (GenericFutureListener[]) null));
 			}
 			finally
 			{

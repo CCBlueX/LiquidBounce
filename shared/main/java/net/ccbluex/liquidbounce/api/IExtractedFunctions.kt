@@ -42,6 +42,7 @@ interface IExtractedFunctions
 
 	fun enableStandardItemLighting()
 
+	fun enableGUIStandardItemLighting()
 	fun disableStandardItemLighting()
 	fun disableFastRender()
 	fun setActiveTextureLightMapTexUnit()

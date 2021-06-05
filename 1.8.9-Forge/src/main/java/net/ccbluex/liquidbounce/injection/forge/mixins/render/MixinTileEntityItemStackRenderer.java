@@ -72,8 +72,8 @@ public class MixinTileEntityItemStackRenderer
 						gameprofile = NBTUtil.readGameProfileFromNBT(nbttagcompound.getCompoundTag("SkullOwner"));
 					else if (nbttagcompound.hasKey("SkullOwner", 8) && !nbttagcompound.getString("SkullOwner").isEmpty())
 					{
-						final GameProfile lvt_2_2_ = new GameProfile(null, nbttagcompound.getString("SkullOwner"));
-						gameprofile = TileEntitySkull.updateGameprofile(lvt_2_2_);
+						final GameProfile skullOwnerProfile = new GameProfile(null, nbttagcompound.getString("SkullOwner"));
+						gameprofile = TileEntitySkull.updateGameprofile(skullOwnerProfile);
 						nbttagcompound.removeTag("SkullOwner");
 						nbttagcompound.setTag("SkullOwner", NBTUtil.writeGameProfile(new NBTTagCompound(), gameprofile));
 					}

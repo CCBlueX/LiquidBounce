@@ -27,6 +27,9 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance()
 
 		fixedSensitivity(mc.gameSettings.mouseSensitivity)
 
+		player.prevRotationYaw = player.rotationYaw
+		player.prevRotationPitch = player.rotationPitch
+
 		player.rotationYaw = yaw
 		player.rotationPitch = pitch
 	}

@@ -92,6 +92,7 @@ object ExtractedFunctionsImpl : IExtractedFunctions
 
 	/* Rendering-related */
 	override fun enableStandardItemLighting() = RenderHelper.enableStandardItemLighting()
+	override fun enableGUIStandardItemLighting() = RenderHelper.enableGUIStandardItemLighting()
 	override fun disableStandardItemLighting() = RenderHelper.disableStandardItemLighting()
 
 	override fun setActiveTextureLightMapTexUnit() = GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit)

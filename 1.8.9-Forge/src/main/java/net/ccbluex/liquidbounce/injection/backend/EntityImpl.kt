@@ -226,10 +226,18 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 	override val invisible: Boolean
 		get() = wrapped.isInvisible
 
-	override val prevRotationYaw: Float
+	override var prevRotationYaw: Float
 		get() = wrapped.prevRotationYaw
-	override val prevRotationPitch: Float
+		set(value)
+		{
+			wrapped.prevRotationYaw = value
+		}
+	override var prevRotationPitch: Float
 		get() = wrapped.prevRotationPitch
+		set(value)
+		{
+			wrapped.prevRotationPitch = value
+		}
 
 	/* Type casting */
 	override fun asEntityPlayer(): IEntityPlayer = EntityPlayerImpl(wrapped as EntityPlayer)
