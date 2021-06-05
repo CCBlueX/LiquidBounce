@@ -97,7 +97,7 @@ public class AutoArmor extends Module {
 
             if (ItemUtils.isStackEmpty(oldArmor.getItemStack()) || !classProvider.isItemArmor(oldArmor.getItemStack().getItem()) ||
                     ARMOR_COMPARATOR.compare(oldArmor, armorPiece) < 0) {
-                if (!ItemUtils.isStackEmpty(oldArmor.getItemStack()) && move(8 - (3 - armorSlot), true)) {
+                if (!ItemUtils.isStackEmpty(oldArmor.getItemStack()) && move(8 - armorSlot, true)) {
                     locked = true;
                     return;
                 }
