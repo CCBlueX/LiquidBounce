@@ -13,7 +13,7 @@ buildscript {
 
     dependencies {
         classpath group: 'org.jetbrains.kotlin', name: 'kotlin-gradle-plugin', version: kotlin_version
-        classpath group: 'com.github.asbyth', name: 'ForgeGradle', version: 'f6500bf402'
+        classpath group: 'com.github.liulihaocai', name: 'ForgeGradle', version: 'd974a94268'
         classpath group: 'org.spongepowered', name: 'mixingradle', version: '0.6-SNAPSHOT'
         classpath group: 'com.github.jengelman.gradle.plugins', name: 'shadow', version: '4.0.4'
     }
