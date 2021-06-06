@@ -34,16 +34,36 @@ class GiveCommand : Command("give", "item", "i", "get")
 				return
 			}
 
+			val totalSize = itemStack.stackSize
+
 			val inventoryContainer = thePlayer.inventoryContainer
 
-			var emptySlot = (36..44).firstOrNull { inventoryContainer.getSlot(it).stack == null } ?: -1
+			var emptySlots = (36..44).filter { inventoryContainer.getSlot(it).stack == null }
 
-			if (emptySlot == -1) emptySlot = (9..44).firstOrNull { inventoryContainer.getSlot(it).stack == null } ?: -1
+			if (emptySlots.isEmpty() || emptySlots.size * 64 < totalSize) emptySlots = (9..44).filter { inventoryContainer.getSlot(it).stack == null }
 
-			if (emptySlot != -1)
+			if (emptySlots.isNotEmpty())
 			{
-				mc.netHandler.addToSendQueue(classProvider.createCPacketCreativeInventoryAction(emptySlot, itemStack))
-				chat(thePlayer, "\u00A77Given [\u00A78${itemStack.displayName}\u00A77] * \u00A78${itemStack.stackSize}\u00A77 to \u00A78${mc.session.username}\u00A77.")
+				emptySlots = emptySlots.toMutableList()
+
+				var remaining = totalSize
+
+				while (remaining > 0)
+				{
+					if (emptySlots.isEmpty()) break
+
+					mc.netHandler.addToSendQueue(classProvider.createCPacketCreativeInventoryAction(emptySlots.removeAt(0), itemStack.apply {
+						val count = remaining.coerceAtMost(64)
+
+						stackSize = count
+
+						remaining -= count
+					}))
+				}
+
+				chat(thePlayer, "\u00A77Given [\u00A78${itemStack.displayName}\u00A77] * \u00A78$totalSize\u00A77 to \u00A78${mc.session.username}\u00A77.")
+
+				if (remaining > 0) chat(thePlayer, "\u00A77Insufficient empty slots! [\u00A78${itemStack.displayName}\u00A77] * \u00A78$remaining\u00A77 are lost\u00A77.")
 			}
 			else chat(thePlayer, "Your inventory is full.")
 

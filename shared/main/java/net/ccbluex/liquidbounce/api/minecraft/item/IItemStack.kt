@@ -23,7 +23,7 @@ interface IItemStack
 	val maxItemUseDuration: Int
 	val enchantmentTagList: INBTTagList?
 	var tagCompound: INBTTagCompound?
-	val stackSize: Int
+	var stackSize: Int
 	var itemDamage: Int
 	val item: IItem?
 	val itemDelay: Long

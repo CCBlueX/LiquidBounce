@@ -39,8 +39,9 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 	private val colorBlueValue = IntegerValue("Text-B", 255, 0, 255)
 	private val shadow = BoolValue("ShadowText", true)
 
-	private val rectValue = ListValue("Rect", arrayOf("None", "Left", "Right"), "None")
+	private val rectValue = ListValue("Rect", arrayOf("None", "Left", "Right", "Frame"), "None")
 	private val rectWidthValue = FloatValue("Rect-Width", 3F, 1.5F, 5F)
+	private val rectFrameWidthValue = FloatValue("Rect-Frame-Width", 3F, 1.5F, 5F)
 
 	private val rectColorModeValue = ListValue("Rect-Color", arrayOf("Custom", "Random", "Rainbow", "RainbowShader"), "Rainbow")
 	private val rectColorRedValue = IntegerValue("Rect-R", 255, 0, 255)
@@ -96,11 +97,14 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 		// Slide animation - update every render
 		val slideAnimationSpeed = 21F - animationSpeedValue.get().coerceIn(0.01f, 20f)
 		val deltaTime = RenderUtils.deltaTime
+
+		val uppercase = upperCaseValue.get()
+
 		LiquidBounce.moduleManager.modules.filter(Module::array).filter { it.state || it.slide != 0F }.forEach { module ->
 			var moduleName = module.name
 			var moduleTag = formatTag(module)
 
-			if (upperCaseValue.get())
+			if (uppercase)
 			{
 				moduleName = moduleName.toUpperCase()
 				moduleTag = moduleTag.toUpperCase()
@@ -132,10 +136,12 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 
 		// Rect Mode & Color
 		val rectMode = rectValue.get()
+		val frame = rectMode.equals("Frame", ignoreCase = true)
 		val rightRect = rectMode.equals("Right", ignoreCase = true)
 		val leftRect = rectMode.equals("Left", ignoreCase = true)
 
 		val rectWidth = rectWidthValue.get()
+		val frameWidth = rectFrameWidthValue.get()
 
 		val rectColorMode = rectColorModeValue.get()
 		val rectColorAlpha = rectColorBlueAlpha.get()
@@ -186,16 +192,19 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 					var moduleName = module.name
 					var moduleTag = formatTag(module)
 
-					if (upperCaseValue.get())
+					if (uppercase)
 					{
 						moduleName = moduleName.toUpperCase()
 						moduleTag = moduleTag.toUpperCase()
 					}
 
-					val xPos = -module.slide - 2
+					val xPos = -module.slide - 2f
 					val yPos = (if (verticalSide == Vertical.DOWN) -textSpacer else textSpacer) * if (verticalSide == Vertical.DOWN) index + 1 else index
 					val moduleRandomColor = Color.getHSBColor(module.hue, saturation, brightness).rgb
 					val currentRainbowOffset = index * rainbowOffset
+
+					val nextModuleIndex = if (verticalSide == Vertical.DOWN) -1 else 1
+					val nextModuleXPos = if (index + nextModuleIndex == modules.size) 0F else -modules[(index + nextModuleIndex).coerceIn(0, modules.size - 1)].slide - 2F
 
 					// Draw Background
 					val backgroundRainbowShader = backgroundColorMode.equals("RainbowShader", ignoreCase = true)
@@ -249,7 +258,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 					}
 
 					// Draw Rect
-					if (rightRect || leftRect)
+					if (rightRect || leftRect || frame)
 					{
 						val rectRainbowShader = rectColorMode.equals("RainbowShader", ignoreCase = true)
 						RainbowShader.begin(rectRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
@@ -261,10 +270,19 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 								else -> rectCustomColor
 							}
 
+							val frameStartX = xPos - 2F - rectWidth
 							when
 							{
-								leftRect -> RenderUtils.drawRect(xPos - 2F - rectWidth, yPos, xPos - 2F, yPos + textHeight, rectColor)
+								leftRect || frame -> RenderUtils.drawRect(frameStartX, yPos, xPos - 2F, yPos + textHeight, rectColor)
 								rightRect -> RenderUtils.drawRect(-rectWidth, yPos, 0F, yPos + textHeight, rectColor)
+							}
+
+							if (frame)
+							{
+								val frameEndX = if (nextModuleXPos == 0F) 0F else nextModuleXPos - 2F - rectWidth
+								val frameEndY = yPos + textHeight + if (frameStartX > frameEndX) -frameWidth else frameWidth
+
+								RenderUtils.drawRect(frameStartX, yPos + textHeight, frameEndX, frameEndY, rectColor)
 							}
 						}
 					}
@@ -277,10 +295,20 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 					var moduleName = module.name
 					var moduleTag = formatTag(module)
 
-					if (upperCaseValue.get())
+					val nextModuleIndex = if (verticalSide == Vertical.DOWN) -1 else 1
+					val isLastModule = index + nextModuleIndex == modules.size
+					val nextModule = modules[(index + nextModuleIndex).coerceIn(0, modules.size - 1)]
+
+					var nextModuleName = nextModule.name
+					var nextModuleTag = formatTag(nextModule)
+
+					if (uppercase)
 					{
 						moduleName = moduleName.toUpperCase()
 						moduleTag = moduleTag.toUpperCase()
+
+						nextModuleName = nextModuleName.toUpperCase()
+						nextModuleTag = nextModuleTag.toUpperCase()
 					}
 
 					val width = fontRenderer.getStringWidth(moduleName) + if (moduleTag.isBlank()) 0f else tagSpace + fontRenderer.getStringWidth(moduleTag)
@@ -288,6 +316,9 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 					val yPos = (if (verticalSide == Vertical.DOWN) -textSpacer else textSpacer) * if (verticalSide == Vertical.DOWN) index + 1 else index
 					val moduleRandomColor = Color.getHSBColor(module.hue, saturation, brightness).rgb
 					val currentRainbowOffset = index * rainbowOffset
+
+					val nextModuleWidth = if (isLastModule) 0F else fontRenderer.getStringWidth(nextModuleName) + if (nextModuleTag.isBlank()) 0f else tagSpace + fontRenderer.getStringWidth(nextModuleTag)
+					val nextModuleXPos = if (isLastModule) 0F else -(nextModuleWidth - nextModule.slide) + 2F
 
 					// Draw Background
 					val backgroundRainbowShader = backgroundColorMode.equals("RainbowShader", ignoreCase = true)
@@ -341,7 +372,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 					val rectColorRainbowShader = rectColorMode.equals("RainbowShader", ignoreCase = true)
 
 					RainbowShader.begin(rectColorRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-						if (rightRect || leftRect)
+						if (rightRect || leftRect || frame)
 						{
 							val rectColor = when
 							{
@@ -351,10 +382,18 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 								else -> rectCustomColor
 							}
 
+							val frameEndX = xPos + width + 2F + rectWidth
 							when
 							{
-								leftRect -> RenderUtils.drawRect(0F, yPos - 1, rectWidth, yPos + textHeight, rectColor)
-								rightRect -> RenderUtils.drawRect(xPos + width + 2F, yPos, xPos + width + 2F + rectWidth, yPos + textHeight, rectColor)
+								leftRect -> RenderUtils.drawRect(0F, yPos - 1F, rectWidth, yPos + textHeight, rectColor)
+								rightRect || frame -> RenderUtils.drawRect(xPos + width + 2F, yPos, frameEndX, yPos + textHeight, rectColor)
+							}
+
+							if (frame)
+							{
+								val frameStartX = if (nextModuleXPos == 0F) 0F else (nextModuleXPos + nextModuleWidth + rectWidth + 2F)
+
+								RenderUtils.drawRect(frameStartX, yPos + textHeight, frameEndX, yPos + textHeight + if (frameEndX < frameStartX) -frameWidth else frameWidth, rectColor)
 							}
 						}
 					}

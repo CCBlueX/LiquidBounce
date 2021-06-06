@@ -42,8 +42,12 @@ class ItemStackImpl(val wrapped: ItemStack) : IItemStack
 		{
 			wrapped.tagCompound = value?.unwrap()
 		}
-	override val stackSize: Int
+	override var stackSize: Int
 		get() = wrapped.stackSize
+		set(value)
+		{
+			wrapped.stackSize = value
+		}
 	override var itemDamage: Int
 		get() = wrapped.itemDamage
 		set(value)
