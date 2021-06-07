@@ -7,6 +7,7 @@ import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.MotionEvent
+import java.lang.ref.WeakReference
 
 class LocationCache : MinecraftInstance(), Listenable
 {
@@ -24,20 +25,20 @@ class LocationCache : MinecraftInstance(), Listenable
 
 			val entities = EntityUtils.getEntitiesInRadius(theWorld, thePlayer, 64.0)
 
-			// Garbage collect
+			// Manual garbage collect
 			aabbList.keys.filterNot(entities.map(IEntity::entityId)::contains).forEach { aabbList.remove(it) }
 
 			for (entity in entities)
 			{
 				val entityId = entity.entityId
 
-				val list = aabbList[entityId] ?: mutableListOf()
+				val list = aabbList[entityId]?.get() ?: mutableListOf()
 
 				while (list.size >= listSize - 1) list.removeAt(0)
 
 				list.add(entity.entityBoundingBox)
 
-				aabbList[entityId] = list
+				aabbList[entityId] = WeakReference(list)
 			}
 		}
 	}
@@ -48,12 +49,13 @@ class LocationCache : MinecraftInstance(), Listenable
 	{
 		private const val listSize = 50
 
-		private val aabbList = HashMap<Int, MutableList<IAxisAlignedBB>>(listSize)
+		// Automated garbage collect by WeakReference
+		private val aabbList = HashMap<Int, WeakReference<MutableList<IAxisAlignedBB>>>(listSize)
 		private val playerLocationList = ArrayList<Location>(listSize)
 
 		fun getAABBBeforeNTicks(entityId: Int, n: Int, default: IAxisAlignedBB): IAxisAlignedBB
 		{
-			return aabbList[entityId]?.run {
+			return aabbList[entityId]?.get()?.run {
 				val indexLimit = size - 1
 				get((indexLimit - n).coerceIn(0, indexLimit))
 			} ?: default

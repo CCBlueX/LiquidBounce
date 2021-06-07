@@ -26,6 +26,12 @@ class WorldClientImpl(wrapped: WorldClient) : WorldImpl<WorldClient>(wrapped), I
 		get() = WrappedCollection(wrapped.loadedEntityList, IEntity::unwrap, Entity::wrap)
 	override val loadedTileEntityList: Collection<ITileEntity>
 		get() = WrappedCollection(wrapped.loadedTileEntityList, ITileEntity::unwrap, TileEntity::wrap)
+	override var worldTime: Long
+		get() = wrapped.worldTime
+		set(value)
+		{
+			wrapped.worldTime = value
+		}
 
 	override fun sendQuittingDisconnectingPacket() = wrapped.sendQuittingDisconnectingPacket()
 
@@ -37,6 +43,10 @@ class WorldClientImpl(wrapped: WorldClient) : WorldImpl<WorldClient>(wrapped), I
 	{
 		wrapped.removeEntityFromWorld(entityId)
 	}
+
+	override fun setRainStrength(strength: Float) = wrapped.setRainStrength(strength)
+
+	override fun setThunderingStrength(strength: Float) = wrapped.setThunderStrength(strength)
 }
 
 fun IWorldClient.unwrap(): WorldClient = (this as WorldClientImpl).wrapped

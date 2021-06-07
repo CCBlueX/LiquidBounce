@@ -17,9 +17,13 @@ interface IWorldClient : IWorld
 	val playerEntities: Collection<IEntityPlayer>
 	val loadedEntityList: Collection<IEntity>
 	val loadedTileEntityList: Collection<ITileEntity>
+	var worldTime: Long
 
 	fun sendQuittingDisconnectingPacket()
 	fun sendBlockBreakProgress(entityId: Int, blockPos: WBlockPos, damage: Int)
 	fun addEntityToWorld(entityId: Int, entity: IEntity)
 	fun removeEntityFromWorld(entityId: Int)
+
+	fun setRainStrength(strength: Float)
+	fun setThunderingStrength(strength: Float)
 }
