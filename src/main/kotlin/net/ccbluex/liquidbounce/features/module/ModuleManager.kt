@@ -143,6 +143,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleFastUse,
             ModuleRegen,
             ModuleZoot,
+            ModuleNoSwing,
             ModuleNoHurtCam
         )
 
