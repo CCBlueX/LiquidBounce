@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
+import net.ccbluex.liquidbounce.utils.mappings.McMappings
 import org.apache.logging.log4j.LogManager
 
 /**
@@ -65,6 +66,9 @@ object LiquidBounce : Listenable {
     val startHandler = handler<ClientStartEvent> {
         logger.info("Launching $CLIENT_NAME v$CLIENT_VERSION by $CLIENT_AUTHOR")
         logger.debug("Loading from cloud: '$CLIENT_CLOUD'")
+
+        // Load mappings
+        McMappings.load()
 
         // Initialize client features
         EventManager
