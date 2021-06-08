@@ -70,9 +70,9 @@ val ClientPlayerEntity.directionYaw: Float
 val PlayerEntity.sqrtSpeed: Double
     get() = velocity.sqrtSpeed
 
-fun ClientPlayerEntity.upwards(height: Float) {
+fun ClientPlayerEntity.upwards(height: Float, increment: Boolean = true) {
     // Might be a jump
-    if (isOnGround) {
+    if (isOnGround && increment) {
         // Allows to bypass modern anti cheat techniques
         incrementStat(Stats.JUMP)
     }
