@@ -19,10 +19,15 @@
 
 package net.ccbluex.liquidbounce.utils.render
 
-import net.ccbluex.liquidbounce.render.engine.*
+import net.ccbluex.liquidbounce.render.engine.CullingMode
+import net.ccbluex.liquidbounce.render.engine.GlRenderState
+import net.ccbluex.liquidbounce.render.engine.PrimitiveType
+import net.ccbluex.liquidbounce.render.engine.VertexFormatRenderTask
 import net.ccbluex.liquidbounce.render.engine.memory.IndexBuffer
 import net.ccbluex.liquidbounce.render.engine.memory.PositionColorVertexFormat
 import net.ccbluex.liquidbounce.render.engine.memory.VertexFormat
+import net.ccbluex.liquidbounce.render.shaders.ColoredPrimitiveShader
+import net.ccbluex.liquidbounce.render.shaders.InstancedColoredPrimitiveShader
 
 fun espBoxInstancedRenderTask(
     instanceBuffer: PositionColorVertexFormat,

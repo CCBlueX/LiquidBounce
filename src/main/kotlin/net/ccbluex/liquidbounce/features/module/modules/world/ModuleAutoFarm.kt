@@ -18,23 +18,20 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
+import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.searchBlocks
 import net.ccbluex.liquidbounce.utils.entity.eyesPos
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
-import net.minecraft.block.Block
-import net.minecraft.block.Blocks
+import net.minecraft.block.*
 import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
@@ -43,28 +40,22 @@ import net.minecraft.util.math.Vec3d
 import net.minecraft.world.RaycastContext
 
 /**
- * ChestAura module
+ * AutoFarm module
  *
- * Automatically opens chests around you.
+ * Automatically farms stuff for you
  */
-object ModuleFucker : Module("Fucker", Category.WORLD) {
-
+object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
+// TODO Fix this entire module-
     private val range by float("Range", 5F, 1F..6F)
-    private val visualSwing by boolean("VisualSwing", true)
-    private val chest by blocks("Target", mutableListOf(Blocks.DRAGON_EGG))
-    private val action by enumChoice("Action", DestroyAction.USE, DestroyAction.values())
     private val throughWalls by boolean("ThroughWalls", false)
-//    private val instant by boolean("Instant", false) // TODO: Instant option
-    private val delay by int("SwitchDelay", 0, 0..20)
 
     // Rotation
     private val rotations = RotationsConfigurable()
 
-    private var currentTarget: DestroyerTarget? = null
+    private var currentTarget: BlockPos? = null
 
     val networkTickHandler = repeatable { event ->
         if (mc.currentScreen is HandledScreen<*>) {
-            wait { delay }
             return@repeatable
         }
 
@@ -77,40 +68,27 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         val curr = currentTarget ?: return@repeatable
         val serverRotation = RotationManager.serverRotation ?: return@repeatable
 
-        val rayTraceResult = raytraceBlock(
-            range.toDouble(),
-            serverRotation,
-            curr.pos,
-            curr.pos.getState() ?: return@repeatable
+        val rayTraceResult = mc.world?.raycast(
+            RaycastContext(
+                player.eyesPos,
+                player.eyesPos.add(serverRotation.rotationVec.multiply(range.toDouble())),
+                RaycastContext.ShapeType.COLLIDER,
+                RaycastContext.FluidHandling.NONE,
+                player
+            )
         )
 
-        if (rayTraceResult?.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != curr.pos) {
+        if (rayTraceResult?.type != HitResult.Type.BLOCK || !isTargeted(rayTraceResult.blockPos.getState()!!, rayTraceResult.blockPos)) {
             return@repeatable
         }
 
-        if (curr.action == DestroyAction.USE) {
-            if (interaction.interactBlock(
-                    player,
-                    mc.world!!,
-                    Hand.MAIN_HAND,
-                    rayTraceResult
-                ) == ActionResult.SUCCESS
-            ) {
+        val blockPos = rayTraceResult.blockPos
+
+        if (!blockPos.getState()!!.isAir) {
+            val direction = rayTraceResult.side
+
+            if (mc.interactionManager!!.updateBlockBreakingProgress(blockPos, direction)) {
                 player.swingHand(Hand.MAIN_HAND)
-            }
-
-            wait { delay }
-
-            return@repeatable
-        } else {
-            val blockPos = rayTraceResult.blockPos
-
-            if (!blockPos.getState()!!.isAir) {
-                val direction = rayTraceResult.side
-
-                if (mc.interactionManager!!.updateBlockBreakingProgress(blockPos, direction)) {
-                    player.swingHand(Hand.MAIN_HAND)
-                }
             }
         }
     }
@@ -118,19 +96,15 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     private fun updateTarget() {
         this.currentTarget = null
 
-        val targetedBlocks = hashSetOf<Block>()
-
-        targetedBlocks.addAll(chest)
-
         val radius = range + 1
         val radiusSquared = radius * radius
         val eyesPos = mc.player!!.eyesPos
 
         val blockToProcess = searchBlocks(radius.toInt()) { pos, state ->
-            targetedBlocks.contains(state.block) && getNearestPoint(
+            !state.isAir && getNearestPoint(
                 eyesPos,
                 Box(pos, pos.add(1, 1, 1))
-            ).squaredDistanceTo(eyesPos) <= radiusSquared
+            ).squaredDistanceTo(eyesPos) <= radiusSquared && isTargeted(state, pos)
         }.minByOrNull { it.first.getCenterDistanceSquared() } ?: return
 
         val (pos, state) = blockToProcess
@@ -139,7 +113,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
             player.eyesPos,
             pos,
             state,
-            throughWalls = throughWalls,
+            throughWalls = this.throughWalls,
             range = range.toDouble()
         )
 
@@ -148,7 +122,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
             val (rotation, _) = rt
             RotationManager.aimAt(rotation, configurable = rotations)
 
-            this.currentTarget = DestroyerTarget(pos, this.action)
+            this.currentTarget = pos
             return
         }
 
@@ -165,12 +139,27 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         // Failsafe. Should not trigger
         if (raytraceResult.type != HitResult.Type.BLOCK) return
 
-        this.currentTarget = DestroyerTarget(raytraceResult.blockPos, DestroyAction.DESTROY)
+        this.currentTarget = raytraceResult.blockPos
     }
 
-    data class DestroyerTarget(val pos: BlockPos, val action: DestroyAction)
+    private fun isTargeted(state: BlockState, pos: BlockPos): Boolean {
+        val block = state.block
 
-    enum class DestroyAction(override val choiceName: String) : NamedChoice {
-        DESTROY("Destroy"), USE("Use")
+        return when (block) {
+            is GourdBlock -> true
+            is CropBlock -> block.isMature(state)
+            is NetherWartBlock -> state.get(NetherWartBlock.AGE) >= 3
+            is CocoaBlock -> state.get(CocoaBlock.AGE) >= 2
+            is SugarCaneBlock -> isAboveLast<SugarCaneBlock>(pos)
+            is CactusBlock -> isAboveLast<CactusBlock>(pos)
+            is KelpPlantBlock -> isAboveLast<KelpPlantBlock>(pos)
+            is BambooBlock -> isAboveLast<BambooBlock>(pos)
+            else -> false
+        }
     }
+
+    private inline fun <reified T: Block> isAboveLast(pos: BlockPos): Boolean {
+        return pos.down().getBlock() is T && pos.down(2).getBlock() !is T
+    }
+
 }

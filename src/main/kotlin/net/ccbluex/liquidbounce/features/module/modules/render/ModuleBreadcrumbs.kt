@@ -26,9 +26,9 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.engine.*
 import net.ccbluex.liquidbounce.render.engine.memory.PositionColorVertexFormat
 import net.ccbluex.liquidbounce.render.engine.memory.putVertex
+import net.ccbluex.liquidbounce.render.shaders.ColoredPrimitiveShader
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import org.lwjgl.opengl.GL11.*
 
 object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
 

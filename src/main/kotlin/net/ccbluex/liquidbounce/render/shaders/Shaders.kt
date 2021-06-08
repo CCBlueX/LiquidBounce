@@ -17,8 +17,10 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.render.engine
+package net.ccbluex.liquidbounce.render.shaders
 
+import net.ccbluex.liquidbounce.render.engine.RenderEngine
+import net.ccbluex.liquidbounce.render.engine.ShaderProgram
 import net.ccbluex.liquidbounce.render.engine.memory.PositionColorUVVertexFormat
 import net.ccbluex.liquidbounce.render.engine.memory.PositionColorVertexFormat
 import net.ccbluex.liquidbounce.utils.io.resourceToString
@@ -77,13 +79,13 @@ object ColoredPrimitiveShader : ShaderHandler() {
 
         mvpMatrixUniformLocation = shaderProgram.getUniformLocation("mvp_matrix")
 
-        this.shaderProgram = shaderProgram
+        ColoredPrimitiveShader.shaderProgram = shaderProgram
     }
 
     override fun bind(mvpMatrix: Mat4) {
-        this.shaderProgram.use()
+        shaderProgram.use()
 
-        mvpMatrix.putToUniform(this.mvpMatrixUniformLocation)
+        mvpMatrix.putToUniform(mvpMatrixUniformLocation)
     }
 }
 
@@ -106,13 +108,13 @@ object TexturedPrimitiveShader : ShaderHandler() {
 
         mvpMatrixUniformLocation = shaderProgram.getUniformLocation("mvp_matrix")
 
-        this.shaderProgram = shaderProgram
+        TexturedPrimitiveShader.shaderProgram = shaderProgram
     }
 
     override fun bind(mvpMatrix: Mat4) {
-        this.shaderProgram.use()
+        shaderProgram.use()
 
-        mvpMatrix.putToUniform(this.mvpMatrixUniformLocation)
+        mvpMatrix.putToUniform(mvpMatrixUniformLocation)
     }
 }
 
@@ -136,12 +138,12 @@ object InstancedColoredPrimitiveShader : ShaderHandler() {
 
         mvpMatrixUniformLocation = shaderProgram.getUniformLocation("mvp_matrix")
 
-        this.shaderProgram = shaderProgram
+        InstancedColoredPrimitiveShader.shaderProgram = shaderProgram
     }
 
     override fun bind(mvpMatrix: Mat4) {
-        this.shaderProgram.use()
+        shaderProgram.use()
 
-        mvpMatrix.putToUniform(this.mvpMatrixUniformLocation)
+        mvpMatrix.putToUniform(mvpMatrixUniformLocation)
     }
 }

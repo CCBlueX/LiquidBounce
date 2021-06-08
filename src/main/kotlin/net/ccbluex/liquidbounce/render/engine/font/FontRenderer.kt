@@ -22,10 +22,11 @@ package net.ccbluex.liquidbounce.render.engine.font
 import net.ccbluex.liquidbounce.render.AbstractFontRenderer
 import net.ccbluex.liquidbounce.render.engine.*
 import net.ccbluex.liquidbounce.render.engine.memory.*
+import net.ccbluex.liquidbounce.render.shaders.ColoredPrimitiveShader
+import net.ccbluex.liquidbounce.render.shaders.TexturedPrimitiveShader
 import net.ccbluex.liquidbounce.utils.render.quad
 import java.awt.Font
 import java.util.*
-import kotlin.collections.ArrayList
 import kotlin.math.max
 import kotlin.random.Random
 

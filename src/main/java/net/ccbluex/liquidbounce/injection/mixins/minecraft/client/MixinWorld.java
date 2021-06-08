@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import net.ccbluex.liquidbounce.event.BlockChangeEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoWeather;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
@@ -40,6 +41,15 @@ public class MixinWorld {
         }
 
         EventManager.INSTANCE.callEvent(new BlockChangeEvent(pos, state));
+    }
+
+
+    @Inject(method = "getRainGradient", cancellable = true, at = @At("HEAD"))
+    private void injectNoWeather(float delta, CallbackInfoReturnable<Float> cir) {
+        if (ModuleNoWeather.INSTANCE.getEnabled()) {
+            cir.setReturnValue(0.0f);
+            cir.cancel();
+        }
     }
 
 }

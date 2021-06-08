@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.render.engine.memory.IndexBuffer
 import net.ccbluex.liquidbounce.render.engine.memory.VertexFormat
 import net.ccbluex.liquidbounce.render.engine.utils.popMVP
 import net.ccbluex.liquidbounce.render.engine.utils.pushMVP
+import net.ccbluex.liquidbounce.render.shaders.ShaderHandler
 import net.ccbluex.liquidbounce.utils.math.Mat4
 import org.lwjgl.opengl.*
 

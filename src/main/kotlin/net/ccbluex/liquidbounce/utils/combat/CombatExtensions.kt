@@ -126,6 +126,7 @@ class EnemyConfigurable : Configurable("enemies") {
 
 // Extensions
 
+@JvmOverloads
 fun Entity.shouldBeShown(enemyConf: EnemyConfigurable = globalEnemyConfigurable) = enemyConf.isTargeted(this)
 
 fun Entity.shouldBeAttacked(enemyConf: EnemyConfigurable = globalEnemyConfigurable) = enemyConf.isTargeted(

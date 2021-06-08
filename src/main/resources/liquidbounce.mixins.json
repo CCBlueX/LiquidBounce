@@ -38,7 +38,8 @@
     "minecraft.render.MixinInGameOverlayRenderer",
     "minecraft.render.MixinLivingEntityRenderer",
     "minecraft.render.MixinRenderTickCounter",
-    "minecraft.render.MixinTextRenderer"
+    "minecraft.render.MixinTextRenderer",
+    "minecraft.render.MixinWorldRenderer"
   ],
   "server": [],
   "injectors": {

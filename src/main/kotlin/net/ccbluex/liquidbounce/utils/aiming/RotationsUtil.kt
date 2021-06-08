@@ -72,7 +72,7 @@ object RotationManager : Listenable {
         range: Double
     ): VecRotation? {
         val offset = Vec3d(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
-        val shape = state.getVisualShape(mc.world, pos, ShapeContext.of(mc.player))
+        val shape = state.getOutlineShape(mc.world, pos, ShapeContext.of(mc.player))
 
         for (box in shape.boundingBoxes.sortedBy { -(it.maxX - it.minX) * (it.maxY - it.minY) * (it.maxZ - it.minZ) }) {
             return raytraceBox(eyes, box.offset(offset), throughWalls, range, pos) ?: continue

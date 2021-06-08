@@ -16,26 +16,17 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.event.BlockShapeEvent
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.minecraft.block.CactusBlock
-import net.minecraft.util.shape.VoxelShapes
+package net.ccbluex.liquidbounce.render.shaders
 
-/**
- * Anti cactus module
- *
- * Prevents taking damage from cacti
- */
-object ModuleAntiCactus : Module("AntiCactus", Category.WORLD) {
+import net.ccbluex.liquidbounce.render.engine.MinecraftFramebufferShader
 
-    val shapeHandler = handler<BlockShapeEvent> { event ->
-        if (event.state.block is CactusBlock) {
-            event.shape = VoxelShapes.fullCube()
-        }
+object DitheringShader : MinecraftFramebufferShader("dithering_shader") {
+
+    fun begin(ditherAmount: Float) {
+        this.setUniform1f("ditherAmount", ditherAmount)
+//        this.vertexConsumerProvider!!.setColor(255, 255, 255, 255)
+        this.beginInternal()
     }
 
 }

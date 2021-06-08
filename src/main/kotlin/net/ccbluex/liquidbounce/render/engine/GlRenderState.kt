@@ -36,11 +36,14 @@ enum class CullingMode(val face: Int?, val enableCulling: Boolean) {
     }
 }
 
+
+
 data class GlRenderState(
     val lineWidth: Float? = null,
     val depthTest: Boolean? = null,
     val lineSmooth: Boolean? = null,
     val texture2d: Boolean? = null,
+    val blending: Boolean? = null,
     val culling: CullingMode? = null,
     val mvpMatrix: Mat4? = null,
 ) {
@@ -49,6 +52,7 @@ data class GlRenderState(
 
         applyCap(GL11.GL_DEPTH_TEST, this.depthTest)
         applyCap(GL11.GL_LINE_SMOOTH, this.lineSmooth)
+        applyCap(GL11.GL_BLEND, this.blending)
         applyCap(GL11.GL_TEXTURE_2D, this.texture2d)
 
         this.culling?.applyState()

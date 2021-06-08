@@ -1,0 +1,65 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2016 - 2021 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+package net.ccbluex.liquidbounce.features.module.modules.player
+
+import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.item.convertClientSlotToServerSlot
+import net.minecraft.client.gui.screen.ingame.InventoryScreen
+import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
+import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
+import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
+import net.minecraft.screen.slot.SlotActionType
+
+object ModuleAutoTotem : Module("AutoTotem", Category.PLAYER) {
+
+    val repeatable = repeatable {
+        val offHandStack = player.offHandStack
+
+        if (isItemValid(offHandStack))
+            return@repeatable
+
+        val inventory = player.inventory
+
+        val slot = (0..40).find {
+            isItemValid(inventory.getStack(it))
+        } ?: return@repeatable
+
+        val serverSlot = convertClientSlotToServerSlot(slot)
+
+        val openInventory = mc.currentScreen !is InventoryScreen
+
+        if (openInventory) {
+            network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.OPEN_INVENTORY))
+        }
+
+        interaction.clickSlot(0, serverSlot, 40, SlotActionType.SWAP, player)
+
+        if (openInventory) {
+            network.sendPacket(CloseHandledScreenC2SPacket(0))
+        }
+    }
+
+    private fun isItemValid(stack: ItemStack): Boolean {
+        return !stack.isEmpty && stack.item == Items.TOTEM_OF_UNDYING
+    }
+
+}

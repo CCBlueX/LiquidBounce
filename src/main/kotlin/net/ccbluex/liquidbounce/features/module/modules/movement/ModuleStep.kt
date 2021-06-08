@@ -19,26 +19,30 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.PlayerTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.minecraft.client.gui.screen.ChatScreen
-import net.minecraft.client.gui.screen.ingame.CreativeInventoryScreen
-import net.minecraft.client.gui.screen.ingame.HandledScreen
-import net.minecraft.client.options.KeyBinding
-import net.minecraft.item.ItemGroup
 
-object ModuleInventoryMove : Module("InventoryMove", Category.MOVEMENT) {
+object ModuleStep : Module("Step", Category.MOVEMENT) {
 
-    val undetectable by boolean("Undetectable", false)
-    val passthroughSneak by boolean("PassthroughSneak", false)
+    var modes = choices("Mode", Instant, arrayOf(Instant, Legit))
 
-    fun shouldHandleInputs(keyBinding: KeyBinding) = enabled && mc.currentScreen !is ChatScreen && !isInCreativeSearchField() &&
-        (!undetectable || mc.currentScreen !is HandledScreen<*>) && (passthroughSneak || keyBinding != mc.options.keySneak)
-
-    private fun isInCreativeSearchField(): Boolean {
-        val currentScreen = mc.currentScreen
-
-        return currentScreen is CreativeInventoryScreen && currentScreen.selectedTab == ItemGroup.SEARCH.index
+    object Legit : Choice("Legit") {
+        override val parent: ChoiceConfigurable
+            get() = modes
     }
 
+    object Instant : Choice("Instant") {
+        private val stepHeight by float("StepHeight", 1.0F, 0.6F..5.0F)
+
+        val movementHandler = handler<PlayerTickEvent> {
+            player.stepHeight = this.stepHeight
+        }
+
+        override val parent: ChoiceConfigurable
+            get() = modes
+    }
 }

@@ -19,15 +19,16 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.*
-import net.ccbluex.liquidbounce.features.module.*
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.searchBlocks
+import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.entity.eyesPos
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.minecraft.block.Block
@@ -57,10 +58,16 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
         val timeout by int("Timeout", 10, 1..80)
         val maxRetrys by int("MaxRetries", 4, 1..10)
     }
+    private object CloseInstantlyOptions : ToggleableConfigurable(this, "CloseInstantly", false) { // FIXME: Close instantly
+        val timeout by int("Timeout", 2500, 100..10000)
+    }
 
     init {
         tree(AwaitContainerOptions)
+        tree(CloseInstantlyOptions)
     }
+
+    private val closeInstantlyTimeout = Chronometer()
 
     // Rotation
     private val rotations = RotationsConfigurable()
@@ -71,6 +78,14 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
     var currentRetries = 0
 
     val networkTickHandler = repeatable { event ->
+//        if (mc.currentScreen is HandledScreen<*>) {
+//            if (CloseInstantlyOptions.enabled && !closeInstantlyTimeout.hasElapsed(CloseInstantlyOptions.timeout.toLong())) {
+//                player.closeHandledScreen()
+//            }
+//
+//            wait { delay }
+//        }
+
         if (mc.currentScreen != null) {
             return@repeatable
         }
@@ -102,6 +117,8 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
                 rayTraceResult
             ) == ActionResult.SUCCESS
         ) {
+            closeInstantlyTimeout.reset()
+
             if (visualSwing) {
                 player.swingHand(Hand.MAIN_HAND)
             } else {
@@ -121,7 +138,7 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
                     }
                 }
             } else {
-                clickedBlocks.add(currentBlock!!)
+                clickedBlocks.add(curr)
                 currentBlock = null
                 success = true
 
@@ -129,7 +146,7 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
             }
 
             if (success || currentRetries >= AwaitContainerOptions.maxRetrys) {
-                clickedBlocks.add(currentBlock!!)
+                clickedBlocks.add(curr)
                 currentBlock = null
             } else {
                 currentRetries++

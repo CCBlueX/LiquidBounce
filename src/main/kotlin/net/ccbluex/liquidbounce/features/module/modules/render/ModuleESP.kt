@@ -25,10 +25,15 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.engine.*
+import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.RenderEngine
+import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.engine.memory.PositionColorVertexFormat
 import net.ccbluex.liquidbounce.render.engine.memory.putVertex
-import net.ccbluex.liquidbounce.render.utils.*
+import net.ccbluex.liquidbounce.render.utils.ColorUtils
+import net.ccbluex.liquidbounce.render.utils.drawBoxNew
+import net.ccbluex.liquidbounce.render.utils.drawBoxOutlineNew
+import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.render.espBoxInstancedOutlineRenderTask
 import net.ccbluex.liquidbounce.utils.render.espBoxInstancedRenderTask
@@ -43,7 +48,7 @@ object ModuleESP : Module("ESP", Category.RENDER) {
     override val translationBaseKey: String
         get() = "liquidbounce.module.esp"
 
-    private val modes = choices("Mode", BoxMode, arrayOf(BoxMode))
+    private val modes = choices("Mode", OutlineMode, arrayOf(OutlineMode, BoxMode))
 
     private val colorMods = choices("ColorMode", ColorMode, arrayOf(ColorMode, RainbowMode))
 
@@ -68,7 +73,7 @@ object ModuleESP : Module("ESP", Category.RENDER) {
             get() = modes
 
         val renderHandler = handler<EngineRenderEvent> { event ->
-            val base = if (RainbowMode.isActive) rainbow() else ColorMode.color
+            val base = getBaseColor()
 
             val filteredEntities = world.entities.filter { it.shouldBeShown() }
 
@@ -115,6 +120,17 @@ object ModuleESP : Module("ESP", Category.RENDER) {
             }
         }
 
+    }
+
+    object OutlineMode : Choice("Outline") {
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val width by float("Width", 3F, 0.5F..5F)
+    }
+
+    fun getBaseColor(): Color4b {
+        return if (RainbowMode.isActive) rainbow() else ColorMode.color
     }
 
     fun getColor(entity: Entity): Color4b? {

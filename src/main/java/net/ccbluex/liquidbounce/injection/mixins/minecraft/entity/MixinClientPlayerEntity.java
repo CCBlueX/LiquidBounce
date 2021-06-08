@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePortalMenu;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoSlow;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleStep;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.client.TickStateManager;
@@ -192,6 +193,14 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
 
         if (enforceEagle != null) {
             cir.setReturnValue(enforceEagle);
+            cir.cancel();
+        }
+    }
+
+    @Inject(method = "isAutoJumpEnabled", cancellable = true, at = @At("HEAD"))
+    private void injectLegitStep(CallbackInfoReturnable<Boolean> cir) {
+        if (ModuleStep.Legit.INSTANCE.isActive()) {
+            cir.setReturnValue(true);
             cir.cancel();
         }
     }

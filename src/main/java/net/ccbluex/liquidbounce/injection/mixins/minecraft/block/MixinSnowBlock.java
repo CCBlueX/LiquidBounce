@@ -39,6 +39,9 @@ public abstract class MixinSnowBlock {
      */
     @Inject(method = "getCollisionShape", at = @At("RETURN"), cancellable = true)
     private void hookCollisionShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context, CallbackInfoReturnable<VoxelShape> callback) {
+        if (pos == null)
+            return;
+
         final BlockShapeEvent shapeEvent = new BlockShapeEvent(state, pos, callback.getReturnValue());
         EventManager.INSTANCE.callEvent(shapeEvent);
         callback.setReturnValue(shapeEvent.getShape());

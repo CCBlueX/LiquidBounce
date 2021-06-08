@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.render.engine.memory.IndexBuffer
 import net.ccbluex.liquidbounce.render.engine.memory.PositionColorVertexFormat
 import net.ccbluex.liquidbounce.render.engine.memory.VertexFormatComponentDataType
 import net.ccbluex.liquidbounce.render.engine.memory.putVertex
+import net.ccbluex.liquidbounce.render.shaders.ColoredPrimitiveShader
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.minecraft.entity.Entity

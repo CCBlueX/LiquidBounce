@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.render.engine.memory.IndexBuffer
 import net.ccbluex.liquidbounce.render.engine.memory.PositionColorVertexFormat
 import net.ccbluex.liquidbounce.render.engine.memory.VertexFormatComponentDataType
 import net.ccbluex.liquidbounce.render.engine.memory.putVertex
+import net.ccbluex.liquidbounce.render.shaders.ColoredPrimitiveShader
 import net.ccbluex.liquidbounce.render.utils.drawBoxNew
 import net.ccbluex.liquidbounce.render.utils.drawBoxSide
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -47,7 +48,6 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.RaycastContext
-import org.lwjgl.opengl.GL11.*
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt

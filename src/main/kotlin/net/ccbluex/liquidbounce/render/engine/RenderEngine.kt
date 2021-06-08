@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.interfaces.IMixinGameRenderer
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.font.GlyphPage
+import net.ccbluex.liquidbounce.render.shaders.Shaders
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.math.Mat4
