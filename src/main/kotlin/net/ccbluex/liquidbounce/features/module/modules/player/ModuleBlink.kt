@@ -68,7 +68,7 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
 
     override fun enable() {
         if (ModuleBadWifi.enabled) {
-            this.enabled = false
+            enabled = false
 
             notification("Compatibility error", "Blink is incompatible with BadWIFI", NotificationEvent.Severity.ERROR)
         }

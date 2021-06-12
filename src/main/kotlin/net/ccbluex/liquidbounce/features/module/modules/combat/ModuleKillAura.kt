@@ -21,15 +21,18 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.AttackEvent
 import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.NotificationEvent
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKillAura.RaycastMode.*
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
 import net.ccbluex.liquidbounce.utils.aiming.raytraceEntity
 import net.ccbluex.liquidbounce.utils.client.MC_1_8
+import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import net.ccbluex.liquidbounce.utils.combat.CpsScheduler
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
@@ -95,6 +98,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     private val checkableInventory by boolean("CheckableInventory", false) // todo:
 
+    val blink by enumChoice("IfBlinkOn", BlinkMode.SUSPEND_KILLAURA, BlinkMode.values())
+
     private val cpsTimer = CpsScheduler()
 
     override fun disable() {
@@ -147,6 +152,30 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private fun update() {
         if (player.isSpectator) {
             return
+        }
+
+        if (ModuleBlink.enabled) {
+            when (blink) {
+                BlinkMode.SUSPEND_KILLAURA -> return
+                BlinkMode.DISABLE_KILLAURA -> {
+                    ModuleKillAura.enabled = false
+                    notification(
+                        "Compatibility error",
+                        "KillAura is incompatible with Blink, therefore disabling KillAura.",
+                        NotificationEvent.Severity.ERROR
+                    )
+                }
+                BlinkMode.DISABLE_BLINK -> {
+                    ModuleBlink.enabled = false
+                    notification(
+                        "Compatibility error",
+                        "KillAura is incompatible with Blink, therefore disabling Blink.",
+                        NotificationEvent.Severity.ERROR
+                    )
+                }
+                else -> {
+                }
+            }
         }
 
         val rangeSquared = range * range
@@ -306,6 +335,13 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     enum class RaycastMode(override val choiceName: String) : NamedChoice {
         TRACE_NONE("None"),
         TRACE_ONLYENEMY("Enemy"), TRACE_ALL("All")
+    }
+
+    enum class BlinkMode(override val choiceName: String) : NamedChoice {
+        SUSPEND_KILLAURA("SuspendKillAura"),
+        SUSPEND_BLINK("SuspendBlink"),
+        DISABLE_KILLAURA("DisableKillAura"),
+        DISABLE_BLINK("DisableBlink")
     }
 
 }
