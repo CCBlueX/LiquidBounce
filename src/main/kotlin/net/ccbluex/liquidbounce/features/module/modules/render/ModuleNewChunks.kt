@@ -41,9 +41,9 @@ object ModuleNewChunks : Module("NewChunks", Category.RENDER) {
             return@handler
         }
 
-        if (!event.packet.isFullChunk) {
-            this.newlyLoadedChunks.add(ChunkPos(event.packet.x, event.packet.z))
-        }
+//        if (!event.packet.isFullChunk) {
+//            this.newlyLoadedChunks.add(ChunkPos(event.packet.x, event.packet.z))
+//        }
     }
 
     val renderHandler = handler<EngineRenderEvent> {

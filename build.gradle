@@ -38,9 +38,6 @@ ktlint {
 
 }
 
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
-
 archivesBaseName = project.archives_base_name
 version = project.mod_version
 group = project.maven_group
@@ -71,22 +68,22 @@ dependencies {
     modImplementation "net.earthcomputer.multiconnect:multiconnect-api:${project.multiconnect_version}"
 
     // Recommended mods (on IDE)
-    modRuntime "net.earthcomputer.multiconnect:multiconnect-slim:${project.multiconnect_version}"
-    modRuntime "com.terraformersmc:modmenu:${project.mod_menu_version}"
-    modRuntime "com.github.jellysquid3:sodium-fabric:${project.sodium_version}"
-    modRuntime "com.github.jellysquid3:lithium-fabric:${project.lithium_version}"
-    modRuntime "com.github.jellysquid3:phosphor-fabric:${project.phosphor_version}"
-    modRuntime ("com.github.CCBlueX:baritone:${project.minecraft_version}-SNAPSHOT") {
-        exclude group: "org.ow2.asm", module: "asm-debug-all"
-
-        exclude group: "org.lwjgl.lwjgl", module: "lwjgl"
-        exclude group: "org.lwjgl.lwjgl", module: "lwjgl-platform"
-
-        exclude group: "net.java.jinput", module: "jinput"
-        exclude group: "net.java.jinput", module: "jinput-platform"
-
-        exclude group: "net.sf.jopt-simple", module: "jopt-simple"
-    }
+//    modRuntime "net.earthcomputer.multiconnect:multiconnect-slim:${project.multiconnect_version}"
+//    modRuntime "com.terraformersmc:modmenu:${project.mod_menu_version}"
+//    modRuntime "com.github.jellysquid3:sodium-fabric:${project.sodium_version}"
+//    modRuntime "com.github.jellysquid3:lithium-fabric:${project.lithium_version}"
+//    modRuntime "com.github.jellysquid3:phosphor-fabric:${project.phosphor_version}"
+//    modRuntime ("com.github.CCBlueX:baritone:${project.minecraft_version}-SNAPSHOT") {
+//        exclude group: "org.ow2.asm", module: "asm-debug-all"
+//
+//        exclude group: "org.lwjgl.lwjgl", module: "lwjgl"
+//        exclude group: "org.lwjgl.lwjgl", module: "lwjgl-platform"
+//
+//        exclude group: "net.java.jinput", module: "jinput"
+//        exclude group: "net.java.jinput", module: "jinput-platform"
+//
+//        exclude group: "net.sf.jopt-simple", module: "jopt-simple"
+//    }
 
     // Ignore in export
     implementation "com.google.code.findbugs:jsr305:3.0.2" // to fix nullable imports
@@ -136,7 +133,6 @@ tasks.withType(Test) {
 
 compileKotlin {
     kotlinOptions.suppressWarnings = true
-    kotlinOptions.jvmTarget = "1.8"
     kotlinOptions.useIR = true
 }
 

@@ -50,7 +50,7 @@ class ChunkLoadEvent(val x: Int, val z: Int) : Event()
 class ChunkUnloadEvent(val x: Int, val z: Int) : Event()
 
 @Nameable("worldDisconnectEvent")
-class WorldDisconnectEvent() : Event()
+class WorldDisconnectEvent : Event()
 
 @Nameable("gameRender")
 class GameRenderEvent : Event()

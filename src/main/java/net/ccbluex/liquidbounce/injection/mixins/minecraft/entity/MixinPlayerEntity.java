@@ -22,8 +22,6 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.PlayerSafeWalkEvent;
 import net.ccbluex.liquidbounce.event.PlayerStrideEvent;
-import net.ccbluex.liquidbounce.utils.aiming.Rotation;
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -79,7 +77,7 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
 
         int slot = SilentHotbar.INSTANCE.getServersideSlot();
 
-        return PlayerInventory.isValidHotbarIndex(slot) ? player.inventory.main.get(slot) : ItemStack.EMPTY;
+        return PlayerInventory.isValidHotbarIndex(slot) ? player.getInventory().main.get(slot) : ItemStack.EMPTY;
     }
 
     /**
@@ -99,19 +97,19 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
      *
      * There are a few velocity changes when attacking an entity, which could be easily detected by anti-cheats when a different server-side rotation is applied.
      */
-    @Redirect(method = "attack", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerEntity;yaw:F"))
-    private float hookFixRotation(PlayerEntity entity) {
-        if (RotationManager.INSTANCE.getActiveConfigurable() == null || !RotationManager.INSTANCE.getActiveConfigurable().getFixVelocity())
-            return entity.yaw;
-
-        Rotation currentRotation = RotationManager.INSTANCE.getCurrentRotation();
-
-        if (currentRotation == null)
-            return entity.yaw;
-
-        currentRotation = currentRotation.fixedSensitivity();
-
-        return currentRotation.getYaw();
-    }
+//    @Redirect(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getYaw()F"))
+//    private float hookFixRotation(Entity entity) {
+//        if (RotationManager.INSTANCE.getActiveConfigurable() == null || !RotationManager.INSTANCE.getActiveConfigurable().getFixVelocity())
+//            return entity.getYaw();
+//
+//        Rotation currentRotation = RotationManager.INSTANCE.getCurrentRotation();
+//
+//        if (currentRotation == null)
+//            return entity.getYaw();
+//
+//        currentRotation = currentRotation.fixedSensitivity();
+//
+//        return currentRotation.getYaw();
+//    }
 
 }

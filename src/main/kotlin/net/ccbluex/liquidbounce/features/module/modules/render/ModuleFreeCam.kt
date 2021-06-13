@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.minecraft.client.network.OtherClientPlayerEntity
+import net.minecraft.entity.Entity
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
@@ -61,7 +62,7 @@ object ModuleFreeCam : Module("FreeCam", Category.RENDER) {
 
         faker.headYaw = player.headYaw
         faker.copyPositionAndRotation(player)
-        world.addEntity(faker.entityId, faker)
+        world.addEntity(faker.id, faker)
         fakePlayer = faker
 
         if (!collision) {
@@ -71,7 +72,7 @@ object ModuleFreeCam : Module("FreeCam", Category.RENDER) {
 
     override fun disable() {
         player.updatePositionAndAngles(fakePlayer!!.x, fakePlayer!!.y, fakePlayer!!.z, player.yaw, player.pitch)
-        world.removeEntity(fakePlayer!!.entityId)
+        world.removeEntity(fakePlayer!!.id, Entity.RemovalReason.UNLOADED_TO_CHUNK)
         fakePlayer = null
         player.setVelocity(x, y, z)
     }

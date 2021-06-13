@@ -55,7 +55,7 @@ object ModuleRegen : Module("Regen", Category.PLAYER) {
             }
 
             repeat(speed) {
-                network.sendPacket(PlayerMoveC2SPacket(player.isOnGround))
+                network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(player.isOnGround))
             }
 
             mc.timer.timerSpeed = timer

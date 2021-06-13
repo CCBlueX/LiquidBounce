@@ -271,7 +271,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             player.swingHand(Hand.MAIN_HAND)
         }
 
-        network.sendPacket(PlayerInteractEntityC2SPacket(entity, player.isSneaking))
+        network.sendPacket(PlayerInteractEntityC2SPacket.attack(entity, player.isSneaking))
 
         // Swing after attacking (on 1.9+)
         if (swing && protocolVersion != MC_1_8) {

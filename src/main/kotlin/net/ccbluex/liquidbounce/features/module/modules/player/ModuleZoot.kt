@@ -40,7 +40,7 @@ object ModuleZoot : Module("Zoot", Category.PLAYER) {
             if (fire && !player.abilities.creativeMode && player.isOnFire) {
                 // Accelerate game time (1.8.X)
                 repeat(9) {
-                    network.sendPacket(PlayerMoveC2SPacket(player.isOnGround))
+                    network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(player.isOnGround))
                 }
 
                 // Skip to next tick
@@ -54,7 +54,7 @@ object ModuleZoot : Module("Zoot", Category.PLAYER) {
                 if (!effect.isBeneficial && !status.isPermanent) {
                     // Accelerate game time (1.8.X)
                     repeat(status.duration / 20) {
-                        network.sendPacket(PlayerMoveC2SPacket(player.isOnGround))
+                        network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(player.isOnGround))
                     }
                 }
             }

@@ -26,10 +26,10 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.TitleScreen
 import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen
-import net.minecraft.client.gui.screen.options.LanguageOptionsScreen
-import net.minecraft.client.gui.screen.options.OptionsScreen
+import net.minecraft.client.gui.screen.option.LanguageOptionsScreen
+import net.minecraft.client.gui.screen.option.OptionsScreen
 import net.minecraft.client.gui.screen.world.SelectWorldScreen
-import net.minecraft.client.realms.gui.screen.RealmsBridgeScreen
+import net.minecraft.client.realms.gui.screen.RealmsMainScreen
 
 /**
  * Referenced by JS as `ui`
@@ -43,7 +43,7 @@ object UltralightJsUi {
         JsScreen("multiplayer", MultiplayerScreen::class.java) { mc.openScreen(MultiplayerScreen(it)) },
         JsScreen("options", OptionsScreen::class.java) { mc.openScreen(OptionsScreen(it, mc.options)) },
         JsScreen("language_options", LanguageOptionsScreen::class.java) { mc.openScreen(LanguageOptionsScreen(it, mc.options, mc.languageManager)) },
-        JsScreen("multiplayer_realms", RealmsBridgeScreen::class.java) { RealmsBridgeScreen().switchToRealms(it) }
+        JsScreen("multiplayer_realms", RealmsMainScreen::class.java) { mc.openScreen(RealmsMainScreen(it)) }
     )
 
     fun get(name: String) = _jsScreens.find { it.name == name }

@@ -29,9 +29,6 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.util.math.Vector3f;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Final;
@@ -53,9 +50,6 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
     private MinecraftClient client;
     @Shadow
     private int ticks;
-
-    @Shadow
-    public abstract Matrix4f getBasicProjectionMatrix(Camera camera, float f, boolean bl);
 
     @Shadow
     protected abstract void bobViewWhenHurt(MatrixStack matrixStack, float f);
@@ -84,38 +78,39 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
     public Matrix4f getCameraMVPMatrix(float tickDelta, boolean bobbing) {
         MatrixStack matrixStack = new MatrixStack();
 
-        matrixStack.peek().getModel().multiply(this.getBasicProjectionMatrix(this.camera, tickDelta, true));
+        // todo: fix
+//        matrixStack.peek().getModel().multiply(this.getBasicProjectionMatrix(this.camera, tickDelta, true));
 
-        if (bobbing) {
-            this.bobViewWhenHurt(matrixStack, tickDelta);
-
-            if (this.client.options.bobView) {
-                this.bobView(matrixStack, tickDelta);
-            }
-
-            float f = MathHelper.lerp(tickDelta,
-                                      this.client.player.lastNauseaStrength,
-                                      this.client.player.nextNauseaStrength) * this.client.options.distortionEffectScale * this.client.options.distortionEffectScale;
-
-            if (f > 0.0F) {
-                int i = this.client.player.hasStatusEffect(StatusEffects.NAUSEA) ? 7 : 20;
-
-                float g = 5.0F / (f * f + 5.0F) - f * 0.04F;
-
-                g *= g;
-
-                Vector3f vector3f = new Vector3f(0.0F,
-                                                 MathHelper.SQUARE_ROOT_OF_TWO / 2.0F,
-                                                 MathHelper.SQUARE_ROOT_OF_TWO / 2.0F);
-                matrixStack.multiply(vector3f.getDegreesQuaternion(((float) this.ticks + tickDelta) * (float) i));
-                matrixStack.scale(1.0F / g, 1.0F, 1.0F);
-                float h = -((float) this.ticks + tickDelta) * (float) i;
-                matrixStack.multiply(vector3f.getDegreesQuaternion(h));
-            }
-        }
-
-        matrixStack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(camera.getPitch()));
-        matrixStack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(camera.getYaw() + 180.0F));
+//        if (bobbing) {
+//            this.bobViewWhenHurt(matrixStack, tickDelta);
+//
+//            if (this.client.options.bobView) {
+//                this.bobView(matrixStack, tickDelta);
+//            }
+//
+//            float f = MathHelper.lerp(tickDelta,
+//                                      this.client.player.lastNauseaStrength,
+//                                      this.client.player.nextNauseaStrength) * this.client.options.distortionEffectScale * this.client.options.distortionEffectScale;
+//
+//            if (f > 0.0F) {
+//                int i = this.client.player.hasStatusEffect(StatusEffects.NAUSEA) ? 7 : 20;
+//
+//                float g = 5.0F / (f * f + 5.0F) - f * 0.04F;
+//
+//                g *= g;
+//
+//                Vector3f vector3f = new Vector3f(0.0F,
+//                                                 MathHelper.SQUARE_ROOT_OF_TWO / 2.0F,
+//                                                 MathHelper.SQUARE_ROOT_OF_TWO / 2.0F);
+//                matrixStack.multiply(vector3f.getDegreesQuaternion(((float) this.ticks + tickDelta) * (float) i));
+//                matrixStack.scale(1.0F / g, 1.0F, 1.0F);
+//                float h = -((float) this.ticks + tickDelta) * (float) i;
+//                matrixStack.multiply(vector3f.getDegreesQuaternion(h));
+//            }
+//        }
+//
+//        matrixStack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(camera.getPitch()));
+//        matrixStack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(camera.getYaw() + 180.0F));
 
         Vec3d pos = this.camera.getPos();
 
