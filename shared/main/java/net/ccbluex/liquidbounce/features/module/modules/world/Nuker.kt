@@ -236,11 +236,11 @@ class Nuker : Module()
 		{
 			val safePos = WBlockPos(thePlayer.posX, thePlayer.posY - 1, thePlayer.posZ)
 			val safeBlock = BlockUtils.getBlock(theWorld, safePos)
-			if (validBlock(safeBlock)) RenderUtils.drawBlockBox(theWorld, thePlayer, safePos, -16711936, 0, hydraESP = false)
+			if (validBlock(safeBlock)) RenderUtils.drawBlockBox(theWorld, thePlayer, safePos, 536936192, 0, hydraESP = false)
 		}
 
 		// Just draw all blocks
-		for (blockPos in attackedBlocks) RenderUtils.drawBlockBox(theWorld, thePlayer, blockPos, -65536, 0, hydraESP = false)
+		for (blockPos in attackedBlocks) RenderUtils.drawBlockBox(theWorld, thePlayer, blockPos, 553582592, 0, hydraESP = false)
 	}
 
 	/**

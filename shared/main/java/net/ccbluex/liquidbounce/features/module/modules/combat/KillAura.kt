@@ -384,6 +384,8 @@ class KillAura : Module()
 	private var hitable = false
 	private val previouslySwitchedTargets = mutableSetOf<Int>()
 
+	private var lastTargetID: Int = 0
+
 	// Attack delay
 	private val attackTimer = MSTimer()
 	private var attackDelay = 0L
@@ -452,6 +454,7 @@ class KillAura : Module()
 		previouslySwitchedTargets.clear()
 		attackTimer.reset()
 		clicks = 0
+		comboReach = 0.0F
 		stopBlocking()
 	}
 
@@ -593,6 +596,7 @@ class KillAura : Module()
 			target = null
 			currentTarget = null
 			hitable = false
+			comboReach = 0.0F
 			stopBlocking()
 			return
 		}
@@ -611,7 +615,10 @@ class KillAura : Module()
 			target = null
 			currentTarget = null
 			hitable = false
+			comboReach = 0.0F
+
 			if (provider.isGuiContainer(screen)) containerOpen = System.currentTimeMillis()
+
 			return
 		}
 
@@ -638,6 +645,7 @@ class KillAura : Module()
 			target = null
 			currentTarget = null
 			hitable = false
+			comboReach = 0.0F
 			stopBlocking()
 			return
 		}
@@ -652,6 +660,7 @@ class KillAura : Module()
 			target = null
 			currentTarget = null
 			hitable = false
+			comboReach = 0.0F
 			if (provider.isGuiContainer(screen)) containerOpen = System.currentTimeMillis()
 			return
 		}
@@ -764,9 +773,10 @@ class KillAura : Module()
 
 		val provider = classProvider
 
-		val currentTarget = currentTarget ?: return
+		val theTarget = target ?: return
+		val theCurrentTarget = currentTarget ?: return
 
-		val distance = thePlayer.getDistanceToEntityBox(currentTarget)
+		val distance = thePlayer.getDistanceToEntityBox(theCurrentTarget)
 
 		// Settings
 		val failRate = failRateValue.get()
@@ -802,7 +812,7 @@ class KillAura : Module()
 				thePlayer.swingItem()
 
 				// Start blocking after FAKE attack
-				if ((isBlocking || (getCanBlock(thePlayer) && distance <= blockRange)) && !autoBlockValue.get().equals("AfterTick", true)) startBlocking(thePlayer, currentTarget, interactAutoBlockValue.get())
+				if ((isBlocking || (getCanBlock(thePlayer) && distance <= blockRange)) && !autoBlockValue.get().equals("AfterTick", true)) startBlocking(thePlayer, theCurrentTarget, interactAutoBlockValue.get())
 			}
 		}
 		else
@@ -823,18 +833,22 @@ class KillAura : Module()
 					}
 				}
 			}
-			else attackEntity(currentTarget)
+			else attackEntity(theCurrentTarget)
 		}
 
 		if (switchDelayTimer.hasTimePassed(switchDelay))
 		{
-			previouslySwitchedTargets.add(if (aac) (target ?: return).entityId else currentTarget.entityId)
+			previouslySwitchedTargets.add(if (aac) theTarget.entityId else theCurrentTarget.entityId)
 
 			switchDelayTimer.reset()
 			switchDelay = TimeUtils.randomDelay(minSwitchDelayValue.get(), maxSwitchDelayValue.get())
 		}
 
-		if (!fakeAttack && target == currentTarget) target = null
+		if (!fakeAttack && theTarget == theCurrentTarget)
+		{
+			lastTargetID = theTarget.entityId
+			target = null
+		}
 
 		// Open inventory
 		if (openInventory) netHandler.addToSendQueue(createOpenInventoryPacket())
@@ -845,7 +859,7 @@ class KillAura : Module()
 	 */
 	private fun updateTarget(theWorld: IWorldClient, thePlayer: IEntityPlayerSP)
 	{
-		val lastTarget = target
+		if (target != null) lastTargetID = target!!.entityId
 
 		// Reset fixed target to null
 		target = null
@@ -942,7 +956,8 @@ class KillAura : Module()
 			// Set target to current entity
 			target = entity
 
-			if (entity.entityId != lastTarget?.entityId) comboReach = 0f
+			if (entity.entityId != lastTargetID) comboReach = 0f
+
 			return@updateTarget
 		}
 
