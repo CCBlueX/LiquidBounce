@@ -54,11 +54,6 @@ def zipGui = tasks.register("zipGui", Zip) {
     from file("$buildDir/tmp/theme")
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
-}
-
 sourceSets {
     java {
         main {
