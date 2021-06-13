@@ -72,7 +72,9 @@ public abstract class MixinEntityRenderer
 	@Inject(method = "renderWorldPass", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/EntityRenderer;renderHand:Z", shift = Shift.BEFORE))
 	private void callRender3DEvent(final int pass, final float partialTicks, final long finishTimeNano, final CallbackInfo callbackInfo)
 	{
+		mc.mcProfiler.endStartSection("LiquidBounce-Render3DEvent");
 		LiquidBounce.eventManager.callEvent(new Render3DEvent(partialTicks));
+		mc.mcProfiler.endStartSection("hand");
 	}
 
 	@Inject(method = "hurtCameraEffect", at = @At("HEAD"), cancellable = true)

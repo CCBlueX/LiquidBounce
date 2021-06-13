@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.client;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.Render2DEvent;
 import net.ccbluex.liquidbounce.utils.ClassUtils;
+import net.minecraft.client.Minecraft;
 import net.minecraft.profiler.Profiler;
 
 import org.spongepowered.asm.mixin.Mixin;
@@ -22,6 +23,10 @@ public class MixinProfiler
 	private void startSection(final String name, final CallbackInfo callbackInfo)
 	{
 		if ("bossHealth".equals(name) && ClassUtils.hasLabyMod())
+		{
+			Minecraft.getMinecraft().mcProfiler.startSection("LiquidBounce-Render2DEvent");
 			LiquidBounce.eventManager.callEvent(new Render2DEvent(0.0F));
+			Minecraft.getMinecraft().mcProfiler.endStartSection(name);
+		}
 	}
 }

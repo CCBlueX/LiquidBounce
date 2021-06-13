@@ -150,7 +150,9 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 			if (thePlayer == null)
 				return;
 
+			mc.mcProfiler.startSection("LiquidBounce-MotionEvent-PRE");
 			LiquidBounce.eventManager.callEvent(new MotionEvent(EventState.PRE));
+			mc.mcProfiler.endStartSection("onUpdateWalkingPlayer");
 
 			final InventoryMove inventoryMove = (InventoryMove) LiquidBounce.moduleManager.get(InventoryMove.class);
 			final Sneak sneak = (Sneak) LiquidBounce.moduleManager.get(Sneak.class);
@@ -162,7 +164,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 			{
 				final Action action = sprinting ? Action.START_SPRINTING : Action.STOP_SPRINTING;
 
-				//noinspection ConstantConditions
+				// noinspection ConstantConditions
 				sendQueue.addToSendQueue(new C0BPacketEntityAction((Entity) (Object) this, action));
 
 				serverSprintState = sprinting;
@@ -174,7 +176,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 			{
 				final Action action = sneaking ? Action.START_SNEAKING : Action.STOP_SNEAKING;
 
-				//noinspection ConstantConditions
+				// noinspection ConstantConditions
 				sendQueue.addToSendQueue(new C0BPacketEntityAction((Entity) (Object) this, action));
 
 				serverSneakState = sneaking;
@@ -239,7 +241,9 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				}
 			}
 
+			mc.mcProfiler.endStartSection("LiquidBounce-MotionEvent-POST");
 			LiquidBounce.eventManager.callEvent(new MotionEvent(EventState.POST));
+			mc.mcProfiler.endSection();
 		}
 		catch (final Exception e)
 		{
@@ -280,7 +284,9 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 	@Overwrite
 	public void onLivingUpdate()
 	{
+		worldObj.theProfiler.startSection("LiquidBounce-UpdateEvent");
 		LiquidBounce.eventManager.callEvent(new UpdateEvent());
+		worldObj.theProfiler.endSection();
 
 		if (sprintingTicksLeft > 0)
 		{

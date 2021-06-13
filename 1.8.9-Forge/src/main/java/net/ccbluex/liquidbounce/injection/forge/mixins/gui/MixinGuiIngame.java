@@ -25,6 +25,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
 import org.lwjgl.opengl.GL11;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -35,6 +36,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @SideOnly(Side.CLIENT)
 public abstract class MixinGuiIngame
 {
+	@Shadow
+	@Final
+	protected Minecraft mc;
+
 	@Shadow
 	protected abstract void renderHotbarItem(int index, int xPos, int yPos, float partialTicks, EntityPlayer player);
 
@@ -77,8 +82,14 @@ public abstract class MixinGuiIngame
 			GlStateManager.disableRescaleNormal();
 			GlStateManager.disableBlend();
 
+			mc.mcProfiler.startSection("LiquidBounce-Render2DEvent");
 			LiquidBounce.eventManager.callEvent(new Render2DEvent(partialTicks));
+
+			mc.mcProfiler.endStartSection("LiquidBounce-FontRendererGC");
 			AWTFontRenderer.Companion.garbageCollectionTick();
+
+			mc.mcProfiler.endSection();
+
 			callbackInfo.cancel();
 		}
 	}
@@ -88,8 +99,13 @@ public abstract class MixinGuiIngame
 	{
 		if (!ClassUtils.hasLabyMod())
 		{
+			mc.mcProfiler.startSection("LiquidBounce-Render2DEvent");
 			LiquidBounce.eventManager.callEvent(new Render2DEvent(partialTicks));
+
+			mc.mcProfiler.endStartSection("LiquidBounce-FontRendererGC");
 			AWTFontRenderer.Companion.garbageCollectionTick();
+
+			mc.mcProfiler.endSection();
 		}
 	}
 

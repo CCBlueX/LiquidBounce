@@ -845,16 +845,19 @@ object RenderUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun drawItemStack(renderItem: IRenderItem, itemStack: IItemStack, posX: Int, posY: Int)
+	fun drawItemStack(renderItem: IRenderItem, itemStack: IItemStack, posX: Int, posY: Int, renderOverlays: Boolean)
 	{
-		GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS)
+		val glStateManager = classProvider.glStateManager
+		glStateManager.enableRescaleNormal()
+		glStateManager.enableBlend()
+		glStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
+		functions.enableGUIStandardItemLighting()
 
 		renderItem.renderItemAndEffectIntoGUI(itemStack, posX, posY)
 
-		renderItem.renderItemOverlays(mc.fontRendererObj, itemStack, posX, posY)
-		functions.disableStandardItemLighting()
+		if (renderOverlays) renderItem.renderItemOverlays(mc.fontRendererObj, itemStack, posX, posY)
 
-		GL11.glPopAttrib()
+		functions.disableStandardItemLighting()
 	}
 
 	init

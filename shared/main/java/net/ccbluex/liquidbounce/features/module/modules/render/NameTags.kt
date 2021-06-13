@@ -51,6 +51,8 @@ class NameTags : Module()
 	private val healthModeValue = ListValue("PlayerHealthGetMethod", arrayOf("Datawatcher", "Mineplex", "Hive"), "Datawatcher")
 	private val stripColorsValue = BoolValue("StripColors", false)
 
+	private val renderItemOverlaysValue = BoolValue("RenderItemOverlays", false)
+
 	private val bodyRedValue = IntegerValue("BodyRed", 0, 0, 255)
 	private val bodyGreenValue = IntegerValue("BodyGreen", 0, 0, 255)
 	private val bodyBlueValue = IntegerValue("BodyBlue", 0, 0, 255)
@@ -70,7 +72,8 @@ class NameTags : Module()
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
-		glPushAttrib(GL_ENABLE_BIT)
+		glPushClientAttrib(GL_ALL_CLIENT_ATTRIB_BITS)
+		glPushAttrib(GL_ALL_ATTRIB_BITS)
 		glPushMatrix()
 
 		// Disable lightning and depth test
@@ -97,20 +100,22 @@ class NameTags : Module()
 		val equipmentArrangement = if (Backend.MINECRAFT_VERSION_MINOR == 8) (0..4).toList().toIntArray() else intArrayOf(0, 1, 2, 3, 5, 4)
 
 		val bot = botValue.get()
+		val renderItemOverlays = renderItemOverlaysValue.get()
 
 		theWorld.loadedEntityList.asSequence().filter { EntityUtils.isSelected(it, false) }.map(IEntity::asEntityLivingBase).map { it to AntiBot.isBot(theWorld, thePlayer, it) }.run { if (bot) this else filterNot(Pair<IEntityLivingBase, Boolean>::second) }.forEach { (entity, isBot) ->
 			val name = entity.displayName.unformattedText
-			renderNameTag(provider, renderManager, renderItem, glStateManager, murderDetector, thePlayer, entity, if (clearNamesValue.get()) ColorUtils.stripColor(name) else name, equipmentArrangement, isBot, partialTicks)
+			renderNameTag(provider, renderManager, renderItem, glStateManager, murderDetector, thePlayer, entity, if (clearNamesValue.get()) ColorUtils.stripColor(name) else name, equipmentArrangement, isBot, partialTicks, renderItemOverlays)
 		}
 
 		glPopMatrix()
 		glPopAttrib()
+		glPopClientAttrib()
 
 		// Reset color
 		RenderUtils.resetColor()
 	}
 
-	private fun renderNameTag(provider: IClassProvider, renderManager: IRenderManager, renderItem: IRenderItem, glStateManager: IGlStateManager, murderDetector: MurderDetector, thePlayer: IEntityPlayerSP, entity: IEntityLivingBase, name: String, equipmentArrangement: IntArray, isBot: Boolean, partialTicks: Float)
+	private fun renderNameTag(provider: IClassProvider, renderManager: IRenderManager, renderItem: IRenderItem, glStateManager: IGlStateManager, murderDetector: MurderDetector, thePlayer: IEntityPlayerSP, entity: IEntityLivingBase, name: String, equipmentArrangement: IntArray, isBot: Boolean, partialTicks: Float, renderItemOverlays: Boolean)
 	{
 		val fontRenderer = fontValue.get()
 
@@ -238,7 +243,7 @@ class NameTags : Module()
 			renderItem.zLevel = -147F
 
 			equipmentArrangement.map { it to (entity.getEquipmentInSlot(it) ?: return@map null) }.filterNotNull().forEach { (index, equipment) ->
-				RenderUtils.drawItemStack(renderItem, equipment, -50 + index * 20, -22)
+				RenderUtils.drawItemStack(renderItem, equipment, -50 + index * 20, -22, renderItemOverlays)
 			}
 
 			glStateManager.enableAlpha()
