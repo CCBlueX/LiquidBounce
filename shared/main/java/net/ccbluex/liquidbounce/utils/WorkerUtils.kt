@@ -1,6 +1,9 @@
 package net.ccbluex.liquidbounce.utils
 
-import java.util.concurrent.*
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadFactory
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
 object WorkerUtils
@@ -15,7 +18,6 @@ object WorkerUtils
 
 	private class LiquidBounceThreadFactory : ThreadFactory
 	{
-		private val poolNumber = AtomicInteger()
 		private var group: ThreadGroup
 		private val threadNumber = AtomicInteger()
 		private var namePrefix: String? = null
@@ -24,7 +26,7 @@ object WorkerUtils
 		{
 			val s = System.getSecurityManager()
 			group = if (s != null) s.threadGroup else Thread.currentThread().threadGroup
-			namePrefix = "LiquidBounceWorker-pool-" + poolNumber.getAndIncrement() + "-thread-"
+			namePrefix = "LiquidBounce_Worker #"
 		}
 
 		override fun newThread(task: Runnable): Thread

@@ -34,7 +34,7 @@ import kotlin.math.*
 class TargetStrafe : Module()
 {
 	private val targetModeValue = ListValue("TargetMode", arrayOf("KillAuraTarget", "Distance", "Health", "LivingTime"), "Distance")
-	private val detectRangeValue = FloatValue("TargetRange", 3F, 1F, 8.0F)
+	private val detectRangeValue = FloatValue("TargetRange", 6F, 1F, 16.0F)
 	private val strafeRangeValue = FloatValue("StrafeRange", 3F, 0.5F, 8.0F)
 	private val fovValue = FloatValue("FoV", 180F, 30F, 180F)
 
@@ -49,6 +49,8 @@ class TargetStrafe : Module()
 	private var direction = -1F
 
 	private var lastStrafeDir = 0F
+
+	// TODO: Adaptive path
 
 	@EventTarget
 	fun onMove(event: MoveEvent)
@@ -187,4 +189,7 @@ class TargetStrafe : Module()
 
 		return false
 	}
+
+	override val tag: String
+		get() = targetModeValue.get()
 }

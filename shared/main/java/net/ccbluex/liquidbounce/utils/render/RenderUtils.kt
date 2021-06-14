@@ -662,7 +662,7 @@ object RenderUtils : MinecraftInstance()
 
 		GL11.glPushMatrix()
 		GL11.glTranslated(posX, posY, posZ)
-		GL11.glRotated(-mc.renderManager.playerViewY.toDouble(), 0.00, 1.00, 0.00)
+		GL11.glRotated(-renderManager.playerViewY.toDouble(), 0.00, 1.00, 0.00)
 		GL11.glScaled(-0.1, -0.1, 0.1)
 		GL11.glDisable(GL11.GL_DEPTH_TEST)
 		GL11.glEnable(GL11.GL_BLEND)
