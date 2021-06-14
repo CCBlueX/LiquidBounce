@@ -16,9 +16,7 @@ import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
-import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketEntityAction
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketHeldItemChange
 import net.ccbluex.liquidbounce.api.minecraft.util.*
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.wrapAngleTo180_float
 import net.ccbluex.liquidbounce.event.*
@@ -79,7 +77,9 @@ class Scaffold : Module()
 
 	// Autoblock
 	private val autoBlockValue = ListValue("AutoBlock", arrayOf("Off", "Pick", "Spoof", "Switch"), "Spoof")
+	private val autoBlockSwitchKeepTimeValue = IntegerValue("AutoBlockSwitchKeepTime", -1, -1, 10)
 	private val autoBlockFullCubeOnlyValue = BoolValue("AutoBlockFullCubeOnly", false)
+
 	private val maxSwitchDelayValue: IntegerValue = object : IntegerValue("MaxSwitchSlotDelay", 0, 0, 1000)
 	{
 		override fun onChanged(oldValue: Int, newValue: Int)
@@ -249,9 +249,6 @@ class Scaffold : Module()
 	private var launchY = 0
 	private var facesBlock = false
 
-	// AutoBlock
-	private var slot = 0 //private var oldslot = 0
-
 	// Zitter Direction
 	private var zitterDirection = false
 
@@ -286,7 +283,6 @@ class Scaffold : Module()
 
 		launchY = thePlayer.posY.toInt()
 		fallStartY = 0.0
-		slot = thePlayer.inventory.currentItem //oldslot = mc.thePlayer!!.inventory.currentItem
 	}
 
 	// UPDATE EVENTS
@@ -479,17 +475,6 @@ class Scaffold : Module()
 				thePlayer.motionZ = thePlayer.motionZ + func.cos(yaw) * zitterStrength.get()
 				zitterDirection = !zitterDirection
 			}
-		}
-	}
-
-	@EventTarget
-	fun onPacket(event: PacketEvent)
-	{
-		val packet: IPacket = event.packet
-		if (classProvider.isCPacketHeldItemChange(packet))
-		{
-			val packetHeldItemChange: ICPacketHeldItemChange = packet.asCPacketHeldItemChange()
-			slot = packetHeldItemChange.slotId
 		}
 	}
 
@@ -760,6 +745,10 @@ class Scaffold : Module()
 
 		(LiquidBounce.moduleManager[AutoUse::class.java] as AutoUse).endEating(thePlayer, classProvider, netHandler)
 
+		val slot = InventoryUtils.serverHeldItemSlot ?: thePlayer.inventory.currentItem
+
+		val switchKeepTime = autoBlockSwitchKeepTimeValue.get()
+
 		if (itemStack == null || !provider.isItemBlock(itemStack.item) || !InventoryUtils.canAutoBlock(itemStack.item?.asItemBlock()?.block) || itemStack.stackSize <= 0)
 		{
 			if (autoBlockValue.get().equals("Off", true)) return
@@ -771,17 +760,16 @@ class Scaffold : Module()
 			if (blockSlot == -1) return
 
 			switched = slot + 36 != blockSlot
-			when (autoBlockValue.get())
+
+			when (val autoBlockMode = autoBlockValue.get().toLowerCase())
 			{
-				"Pick" ->
+				"pick" ->
 				{
 					thePlayer.inventory.currentItem = blockSlot - 36
 					controller.updateController()
 				}
 
-				"Spoof" -> if (blockSlot - 36 != slot) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(blockSlot - 36))
-
-				"Switch" -> if (blockSlot - 36 != slot) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(blockSlot - 36))
+				"spoof", "switch" -> if (blockSlot - 36 != slot && InventoryUtils.setHeldItemSlot(blockSlot - 36, if (autoBlockMode.equals("spoof", ignoreCase = true)) -1 else switchKeepTime, true)) return
 			}
 
 			itemStack = thePlayer.inventoryContainer.getSlot(blockSlot).stack
@@ -824,7 +812,7 @@ class Scaffold : Module()
 		}
 
 		// Switch back to original slot after place on AutoBlock-Switch mode
-		if (autoBlockValue.get().equals("Switch", true) && slot != thePlayer.inventory.currentItem) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
+		if (autoBlockValue.get().equals("Switch", true) && switchKeepTime < 0) InventoryUtils.reset()
 
 		this.targetPlace = null
 	}
@@ -856,7 +844,7 @@ class Scaffold : Module()
 		mc.timer.timerSpeed = 1f
 		shouldGoDown = false
 
-		if (slot != thePlayer.inventory.currentItem) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
+		if (InventoryUtils.serverHeldItemSlot != thePlayer.inventory.currentItem) InventoryUtils.reset()
 	}
 
 	@EventTarget

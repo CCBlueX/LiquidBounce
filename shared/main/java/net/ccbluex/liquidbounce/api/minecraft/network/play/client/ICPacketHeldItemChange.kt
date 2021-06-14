@@ -10,5 +10,5 @@ import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
 
 interface ICPacketHeldItemChange : IPacket
 {
-	val slotId: Int
+	var slotId: Int
 }

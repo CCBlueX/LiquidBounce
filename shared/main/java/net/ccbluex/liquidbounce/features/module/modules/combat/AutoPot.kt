@@ -268,7 +268,10 @@ class AutoPot : Module()
 
 						val potionIndex = potion - 36
 
-						if (silentValue.get()) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(potionIndex))
+						if (silentValue.get())
+						{
+							if (InventoryUtils.setHeldItemSlot(potionIndex, -1, true)) return
+						}
 						else
 						{
 							thePlayer.inventory.currentItem = potionIndex
@@ -353,7 +356,7 @@ class AutoPot : Module()
 					{
 						netHandler.addToSendQueue(createUseItemPacket(itemStack, WEnumHand.MAIN_HAND))
 
-						if (silentValue.get()) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
+						if (silentValue.get()) InventoryUtils.reset()
 
 						potThrowDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
 						potThrowDelayTimer.reset()

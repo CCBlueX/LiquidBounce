@@ -14,10 +14,7 @@ import net.ccbluex.liquidbounce.api.minecraft.inventory.IContainer
 import net.ccbluex.liquidbounce.api.minecraft.item.IItem
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos.Companion.ORIGIN
-import net.ccbluex.liquidbounce.event.ClickWindowEvent
-import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 
@@ -27,6 +24,16 @@ class InventoryUtils : MinecraftInstance(), Listenable
 	fun onClick(@Suppress("UNUSED_PARAMETER") event: ClickWindowEvent?)
 	{
 		CLICK_TIMER.reset()
+	}
+
+	@EventTarget
+	fun onTick(@Suppress("UNUSED_PARAMETER") event: TickEvent?)
+	{
+		if (serverHeldItemSlot != null && keepLength >= 0)
+		{
+			keepLength--
+			if (keepLength <= 0) reset()
+		}
 	}
 
 	@EventTarget
@@ -44,6 +51,15 @@ class InventoryUtils : MinecraftInstance(), Listenable
 		}
 
 		if (provider.isCPacketPlayerBlockPlacement(packet)) CLICK_TIMER.reset()
+
+
+		if (provider.isCPacketHeldItemChange(packet))
+		{
+			val packetSlot = packet.asCPacketHeldItemChange().slotId
+			val slot = serverHeldItemSlot
+
+			if (slot != null && slot != packetSlot) event.cancelEvent()
+		}
 	}
 
 	override fun handleEvents(): Boolean = true
@@ -73,7 +89,14 @@ class InventoryUtils : MinecraftInstance(), Listenable
 				provider.getBlockEnum(BlockType.SAND), provider.getBlockEnum(BlockType.GRAVEL), provider.getBlockEnum(BlockType.TNT), provider.getBlockEnum(BlockType.STANDING_BANNER), provider.getBlockEnum(BlockType.WALL_BANNER))
 		}
 
+		@JvmField
 		val CLICK_TIMER = MSTimer()
+
+		@JvmField
+		var serverHeldItemSlot: Int? = null
+
+		private var keepLength = 0
+		private var lock = false
 
 		fun findItem(container: IContainer, startSlot: Int, endSlot: Int, item: IItem?, itemDelay: Long, random: Boolean): Int
 		{
@@ -167,6 +190,43 @@ class InventoryUtils : MinecraftInstance(), Listenable
 				emptySlots.isEmpty() -> -1
 				randomSlot -> emptySlots.random()
 				else -> emptySlots.first()
+			}
+		}
+
+		fun setHeldItemSlot(slot: Int, keepLength: Int = 0, lock: Boolean = false): Boolean
+		{
+			if (Companion.lock) return true
+
+			val needSwap = slot != serverHeldItemSlot
+
+			serverHeldItemSlot = slot
+			Companion.keepLength = keepLength
+			Companion.lock = lock
+
+			if (needSwap)
+			{
+				mc.thePlayer?.let { thePlayer -> if (thePlayer.isUsingItem) mc.playerController.onStoppedUsingItem(thePlayer) } // Stop using item before swap the slot
+
+				mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(slot))
+			}
+
+			return false
+		}
+
+		fun reset()
+		{
+			keepLength = 0
+			lock = false
+
+			val slot = serverHeldItemSlot ?: return
+
+			val thePlayer = mc.thePlayer ?: return
+			val currentSlot = thePlayer.inventory.currentItem
+
+			if (slot != currentSlot)
+			{
+				serverHeldItemSlot = currentSlot
+				mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(currentSlot))
 			}
 		}
 	}

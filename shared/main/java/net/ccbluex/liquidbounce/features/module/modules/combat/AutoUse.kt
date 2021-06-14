@@ -181,7 +181,11 @@ class AutoUse : Module()
 
 						val isFirst = waitedTicks <= 0
 
-						if (isFirst) if (silent) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(slotIndex)) else mc.playerController.updateController()
+						if (isFirst) if (silent)
+						{
+							if (InventoryUtils.setHeldItemSlot(slotIndex, -1, slot == gappleInHotbar)) return
+						}
+						else mc.playerController.updateController()
 
 						val stack = inventoryContainer.getSlot(slotToUse).stack
 
@@ -189,7 +193,6 @@ class AutoUse : Module()
 
 						// Suspend killaura if option is present
 						if (killauraBypassValue.get().equals("SuspendKillaura", true)) killAura.suspend(suspendKillauraDuration.get().toLong())
-
 
 						if (silent)
 						{
@@ -200,7 +203,7 @@ class AutoUse : Module()
 						}
 						else
 						{
-							lastRequiredTicks = 32
+							lastRequiredTicks = 32 // FIXME
 
 							mc.gameSettings.keyBindUseItem.pressed = true // FIXME: Change to better solution
 
@@ -210,6 +213,7 @@ class AutoUse : Module()
 						return
 					}
 				}
+				else endEating(thePlayer, provider, netHandler)
 
 				if (InventoryUtils.CLICK_TIMER.hasTimePassed(invDelay) && !(noMoveValue.get() && MovementUtils.isMoving(thePlayer)) && !(openContainer != null && openContainer.windowId != 0))
 				{
@@ -297,7 +301,8 @@ class AutoUse : Module()
 				useDelayTimer.reset()
 			}
 
-			if (silent) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(thePlayer.inventory.currentItem)) else mc.gameSettings.keyBindUseItem.unpressKey()
+			val gameSettings = mc.gameSettings
+			if (silent) InventoryUtils.reset() else if (!gameSettings.isKeyDown(gameSettings.keyBindUseItem)) gameSettings.keyBindUseItem.unpressKey()
 
 			slotToUse = -1
 		}

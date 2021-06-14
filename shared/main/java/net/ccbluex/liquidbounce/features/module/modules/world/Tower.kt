@@ -53,6 +53,7 @@ class Tower : Module()
 
 	// AutoBlock
 	private val autoBlockValue = ListValue("AutoBlock", arrayOf("Off", "Pick", "Spoof", "Switch"), "Spoof")
+	private val autoBlockSwitchKeepTimeValue = IntegerValue("AutoBlockSwitchKeepTime", -1, -1, 10)
 	private val autoBlockFullCubeOnlyValue = BoolValue("AutoBlockFullCubeOnly", false)
 
 	private val swingValue = BoolValue("Swing", true)
@@ -150,15 +151,6 @@ class Tower : Module()
 	private val onJumpTimer = MSTimer()
 	private var jumpGround = 0.0
 
-	// AutoBlock
-	private var slot = 0
-
-	//private var oldslot = 0
-	override fun onEnable()
-	{
-		slot = (mc.thePlayer ?: return).inventory.currentItem //oldslot = thePlayer.inventory.currentItem
-	}
-
 	override fun onDisable()
 	{
 		val thePlayer = mc.thePlayer ?: return
@@ -168,7 +160,7 @@ class Tower : Module()
 		active = false
 
 		// Restore to original slot
-		if (slot != thePlayer.inventory.currentItem) mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
+		if (InventoryUtils.serverHeldItemSlot != thePlayer.inventory.currentItem) InventoryUtils.reset()
 	}
 
 	@EventTarget
@@ -387,6 +379,10 @@ class Tower : Module()
 
 		(LiquidBounce.moduleManager[AutoUse::class.java] as AutoUse).endEating(thePlayer, classProvider, netHandler)
 
+		val slot = InventoryUtils.serverHeldItemSlot ?: thePlayer.inventory.currentItem
+
+		val switchKeepTime = autoBlockSwitchKeepTimeValue.get()
+
 		if (itemStack == null || !provider.isItemBlock(itemStack.item) || provider.isBlockBush(itemStack.item?.asItemBlock()?.block))
 		{
 			if (autoBlockValue.get().equals("Off", true)) return
@@ -394,15 +390,15 @@ class Tower : Module()
 			val blockSlot = InventoryUtils.findAutoBlockBlock(theWorld, thePlayer.inventoryContainer, autoBlockFullCubeOnlyValue.get())
 			if (blockSlot == -1) return
 
-			when (autoBlockValue.get())
+			when (val autoBlockMode = autoBlockValue.get().toLowerCase())
 			{
-				"Pick" ->
+				"pick" ->
 				{
 					thePlayer.inventory.currentItem = blockSlot - 36
 					controller.updateController()
 				}
 
-				"Spoof", "Switch" -> if (blockSlot - 36 != slot) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(blockSlot - 36))
+				"spoof", "switch" -> if (blockSlot - 36 != slot && InventoryUtils.setHeldItemSlot(blockSlot - 36, if (autoBlockMode.equals("spoof", ignoreCase = true)) -1 else switchKeepTime, true)) return
 			}
 
 			itemStack = thePlayer.inventoryContainer.getSlot(blockSlot).stack
@@ -417,7 +413,7 @@ class Tower : Module()
 		if (controller.onPlayerRightClick(thePlayer, theWorld, itemStack, placeInfo.blockPos, placeInfo.enumFacing, placeInfo.vec3)) if (swingValue.get()) thePlayer.swingItem() else netHandler.addToSendQueue(provider.createCPacketAnimation())
 
 		// Switch back to original slot after place on AutoBlock-Switch mode
-		if (autoBlockValue.get().equals("Switch", true) && slot != thePlayer.inventory.currentItem) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
+		if (autoBlockValue.get().equals("Switch", true) && switchKeepTime < 0) InventoryUtils.reset()
 
 		this.placeInfo = null
 	}
@@ -506,13 +502,6 @@ class Tower : Module()
 		placeInfo = placeRotation!!.placeInfo
 
 		return true
-	}
-
-	@EventTarget
-	fun onPacket(event: PacketEvent)
-	{
-		val packet = event.packet
-		if (classProvider.isCPacketHeldItemChange(packet)) slot = packet.asCPacketHeldItemChange().slotId
 	}
 
 	/**

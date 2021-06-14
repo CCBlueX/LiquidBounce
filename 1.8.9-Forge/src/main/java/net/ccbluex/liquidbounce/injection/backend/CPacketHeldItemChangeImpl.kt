@@ -11,8 +11,12 @@ import net.minecraft.network.play.client.C09PacketHeldItemChange
 
 class CPacketHeldItemChangeImpl<out T : C09PacketHeldItemChange>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketHeldItemChange
 {
-	override val slotId: Int
+	override var slotId: Int
 		get() = wrapped.slotId
+		set(value)
+		{
+			wrapped.slotId = value
+		}
 }
 
 fun ICPacketHeldItemChange.unwrap(): C09PacketHeldItemChange = (this as CPacketHeldItemChangeImpl<*>).wrapped

@@ -72,7 +72,7 @@ public abstract class MixinNetworkManager implements IMixinNetworkManager
 	@Inject(method = "channelRead0", at = @At("HEAD"), cancellable = true)
 	private void read(final ChannelHandlerContext context, final Packet<?> packet, final CallbackInfo callback)
 	{
-		// In-bound(Coming from server) packet name starts with 'S' (Server) (example: S00PacketKeepAlive)
+		// In-coming(Received from the server) packet name starts with 'S' (Server) (example: S00PacketKeepAlive)
 		if (!Minecraft.getMinecraft().isIntegratedServerRunning() || packet.getClass().getSimpleName().charAt(0) == 'S')
 		{
 			final PacketEvent event = new PacketEvent(PacketImplKt.wrap(packet));
@@ -90,7 +90,7 @@ public abstract class MixinNetworkManager implements IMixinNetworkManager
 	@Inject(method = "sendPacket(Lnet/minecraft/network/Packet;)V", at = @At("HEAD"), cancellable = true)
 	private void send(final Packet<?> packet, final CallbackInfo callback)
 	{
-		// Out-bound(Outgoing to server) packet name starts with 'C' (Client) (example: C00PacketKeepAlive)
+		// Out-going(Sent to the server) packet name starts with 'C' (Client) (example: C00PacketKeepAlive)
 		if (!Minecraft.getMinecraft().isIntegratedServerRunning() || packet.getClass().getSimpleName().charAt(0) == 'C')
 		{
 			final PacketEvent event = new PacketEvent(PacketImplKt.wrap(packet));

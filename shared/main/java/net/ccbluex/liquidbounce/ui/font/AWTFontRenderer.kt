@@ -124,13 +124,12 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
 
 		GL11.glBegin(GL11.GL_QUADS)
 
-		for (char in text.toCharArray())
-		{
+		val mcfont = mc.fontRendererObj
+
+		text.forEach { char ->
 			if (char.toInt() >= charLocations.size)
 			{
 				GL11.glEnd()
-
-				val mcfont = mc.fontRendererObj
 
 				// Ugly solution, because floating point numbers, but I think that shouldn't be that much of a problem
 				GL11.glScalef(reverse, reverse, reverse)
@@ -148,7 +147,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
 			}
 			else
 			{
-				val fontChar = charLocations[char.toInt()] ?: continue
+				val fontChar = charLocations[char.toInt()] ?: return@forEach
 
 				drawChar(fontChar, currX, 0.0f)
 				currX += fontChar.width - 8.0F
@@ -281,9 +280,8 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
 	 */
 	fun getStringWidth(text: String): Int
 	{
-		return text.toCharArray().map {
-			charLocations[if (it.toInt() < charLocations.size) it.toInt()
-			else '\u0003'.toInt()]
+		return text.map {
+			charLocations[if (it.toInt() < charLocations.size) it.toInt() else 3]
 		}.sumBy { it?.width?.minus(8) ?: 0 } shr 1
 	}
 

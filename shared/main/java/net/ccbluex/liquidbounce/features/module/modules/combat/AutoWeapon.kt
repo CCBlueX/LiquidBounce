@@ -10,10 +10,10 @@ import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketUseEnt
 import net.ccbluex.liquidbounce.event.AttackEvent
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
-import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -22,13 +22,11 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 class AutoWeapon : Module()
 {
 	private val silentValue = BoolValue("SpoofItem", false) // Silent
-	private val silentKeepTicksValue = IntegerValue("SpoofTicks", 10, 1, 20) // SilentKeepTicks
+	private val silentKeepTicksValue = IntegerValue("SpoofTicks", 10, 0, 20) // SilentKeepTicks
 	private val itemDelayValue = IntegerValue("ItemDelay", 0, 0, 1000)
 	private val onlySwordValue = BoolValue("OnlySword", false)
 
 	private var attackEnemy = false
-
-	private var keepTicks = 0
 
 	@EventTarget
 	fun onAttack(@Suppress("UNUSED_PARAMETER") event: AttackEvent)
@@ -68,8 +66,7 @@ class AutoWeapon : Module()
 			// Switch to best weapon
 			if (silentValue.get())
 			{
-				netHandler.addToSendQueue(provider.createCPacketHeldItemChange(slot))
-				keepTicks = silentKeepTicksValue.get()
+				if (InventoryUtils.setHeldItemSlot(slot, silentKeepTicksValue.get())) return
 			}
 			else
 			{
@@ -80,17 +77,6 @@ class AutoWeapon : Module()
 			// Resend attack packet
 			netHandler.addToSendQueue(packet)
 			event.cancelEvent()
-		}
-	}
-
-	@EventTarget
-	fun onUpdate(@Suppress("UNUSED_PARAMETER") update: UpdateEvent)
-	{
-		// Switch back to old item after some time
-		if (keepTicks > 0 && --keepTicks <= 0)
-		{
-			mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange((mc.thePlayer ?: return).inventory.currentItem))
-			keepTicks = 0
 		}
 	}
 

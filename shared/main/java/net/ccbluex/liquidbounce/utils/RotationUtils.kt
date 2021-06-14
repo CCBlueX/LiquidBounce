@@ -79,8 +79,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 				packetPlayer.rotating = true
 			}
 
-			lastServerRotation = Rotation(serverRotation.yaw, serverRotation.pitch)
-
+			if (serverRotation != lastServerRotation) lastServerRotation = serverRotation
 			if (packetPlayer.rotating) serverRotation = Rotation(packetPlayer.yaw, packetPlayer.pitch)
 		}
 	}
@@ -111,7 +110,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		var targetRotation: Rotation? = null
 
 		@JvmField
-		var serverRotation: Rotation = Rotation(0.0f, 0.0f)
+		var serverRotation = Rotation(0.0f, 0.0f)
 
 		@JvmField
 		var lastServerRotation = Rotation(0.0f, 0.0f)
@@ -517,7 +516,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * angle point
 		 * @return   difference between angle points
 		 */
-		private fun getAngleDifference(angle: Float, otherAngle: Float): Float = ((angle - otherAngle) % 360.0f + 540.0f) % 360.0f - 180.0f
+		fun getAngleDifference(angle: Float, otherAngle: Float): Float = ((angle - otherAngle) % 360.0f + 540.0f) % 360.0f - 180.0f
 
 		/**
 		 * Calculate rotation to vector
@@ -558,7 +557,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * @param rotation
 		 * your target rotation
 		 */
-		fun setTargetRotation(rotation: Rotation?, keepLength: Int)
+		fun setTargetRotation(rotation: Rotation?, keepLength: Int = 0)
 		{
 			if (rotation != null && (isNaN(rotation.yaw.toDouble()) || isNaN(rotation.pitch.toDouble()) || rotation.pitch > 90 || rotation.pitch < -90)) return
 
@@ -571,17 +570,6 @@ class RotationUtils : MinecraftInstance(), Listenable
 		{
 			minResetTurnSpeed = min
 			maxResetTurnSpeed = max
-		}
-
-		/**
-		 * Set your target rotation
-		 *
-		 * @param rotation
-		 * your target rotation
-		 */
-		fun setTargetRotation(rotation: Rotation?)
-		{
-			setTargetRotation(rotation, 0)
 		}
 
 		/**

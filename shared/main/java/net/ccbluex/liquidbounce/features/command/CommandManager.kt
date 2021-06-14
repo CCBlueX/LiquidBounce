@@ -91,7 +91,7 @@ class CommandManager
 	 */
 	private fun getCompletions(input: String): Array<String>?
 	{
-		if (input.isNotEmpty() && input.toCharArray()[0] == prefix)
+		if (input.isNotEmpty() && input[0] == prefix)
 		{
 			val args = input.split(" ")
 

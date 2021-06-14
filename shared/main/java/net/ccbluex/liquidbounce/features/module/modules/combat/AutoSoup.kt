@@ -124,7 +124,10 @@ class AutoSoup : Module()
 
 						val soupInHotbarIndex = soupInHotbar - 36
 
-						if (silentValue.get()) netHandler.addToSendQueue(provider.createCPacketHeldItemChange(soupInHotbarIndex))
+						if (silentValue.get())
+						{
+							if (InventoryUtils.setHeldItemSlot(soupInHotbarIndex, -1, true)) return
+						}
 						else
 						{
 							inventory.currentItem = soupInHotbarIndex
@@ -203,6 +206,8 @@ class AutoSoup : Module()
 						netHandler.addToSendQueue(createUseItemPacket(itemStack, WEnumHand.MAIN_HAND))
 
 						if (handleBowl.equals("Drop", true)) netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.DROP_ITEM, WBlockPos.ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
+
+						if (silentValue.get()) InventoryUtils.reset()
 
 						soupDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
 						soupDelayTimer.reset()

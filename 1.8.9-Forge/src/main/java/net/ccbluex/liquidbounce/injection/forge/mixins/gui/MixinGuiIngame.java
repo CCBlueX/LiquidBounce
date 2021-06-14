@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.HUD;
 import net.ccbluex.liquidbounce.features.module.modules.render.NoScoreboard;
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer;
 import net.ccbluex.liquidbounce.utils.ClassUtils;
+import net.ccbluex.liquidbounce.utils.InventoryUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiIngame;
@@ -63,7 +64,16 @@ public abstract class MixinGuiIngame
 
 			GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
 			Gui.drawRect(middleScreen - 91, sr.getScaledHeight() - 24, middleScreen + 90, sr.getScaledHeight(), Integer.MIN_VALUE);
-			Gui.drawRect(middleScreen - 91 - 1 + entityPlayer.inventory.currentItem * 20 + 1, sr.getScaledHeight() - 24, middleScreen - 91 - 1 + entityPlayer.inventory.currentItem * 20 + 22, sr.getScaledHeight() - 22 - 1 + 24, Integer.MAX_VALUE);
+
+			final int currentHeldItem = entityPlayer.inventory.currentItem;
+
+			Gui.drawRect(middleScreen - 91 - 1 + currentHeldItem * 20 + 1, sr.getScaledHeight() - 24, middleScreen - 91 - 1 + currentHeldItem * 20 + 22, sr.getScaledHeight() - 22 - 1 + 24, Integer.MAX_VALUE);
+			if (InventoryUtils.serverHeldItemSlot != null && InventoryUtils.serverHeldItemSlot != currentHeldItem)
+			{
+				final int serverSlot = InventoryUtils.serverHeldItemSlot;
+				Gui.drawRect(middleScreen - 91 - 1 + serverSlot * 20 + 1, sr.getScaledHeight() - 24, middleScreen - 91 - 1 + serverSlot * 20 + 22, sr.getScaledHeight() - 22 - 1 + 24, -16776961);
+			}
+
 			GlStateManager.enableRescaleNormal();
 			GL11.glEnable(GL11.GL_BLEND);
 			GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
