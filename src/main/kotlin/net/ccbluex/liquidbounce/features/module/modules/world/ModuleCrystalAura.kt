@@ -159,7 +159,7 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
 
         val targetedBlocks = hashSetOf<Block>()
 
-        targetedBlocks.addAll(listOf(Blocks.OBSIDIAN))
+        targetedBlocks.addAll(listOf(Blocks.OBSIDIAN, Blocks.BEDROCK))
 
         val radius = range + 1
         val radiusSquared = radius * radius
