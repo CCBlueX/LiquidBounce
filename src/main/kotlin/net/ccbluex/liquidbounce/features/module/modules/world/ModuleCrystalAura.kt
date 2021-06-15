@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.eyesPos
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
+import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.minecraft.block.Block
 import net.minecraft.block.Blocks
 import net.minecraft.entity.Entity
@@ -36,7 +37,7 @@ import net.minecraft.world.RaycastContext
 object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
 
     private val swing by boolean("Swing", true)
-    private val range by float("Range", 3f, 0.1f..8f)
+    private val range by float("Range", 4f, 3f..8f)
 
     var functioning = false
 
@@ -61,47 +62,53 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
             player.inventory.getStack(it).item == Items.END_CRYSTAL
         } ?: return@repeatable
 
-        functioning = true
-        updateTarget()
-        val curr = currentBlock ?: return@repeatable
-        val serverRotation = RotationManager.serverRotation ?: return@repeatable
-
-        val rayTraceResult = raytraceBlock(
-            range.toDouble(),
-            serverRotation,
-            curr,
-            curr.getState() ?: return@repeatable
-        )
-
-        if (rayTraceResult?.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != curr) {
-            return@repeatable
-        }
-
-        if (slot != player.inventory.selectedSlot) {
-            network.sendPacket(UpdateSelectedSlotC2SPacket(slot))
-        }
-
-        if (interaction.interactBlock(
-                player,
-                world,
-                Hand.MAIN_HAND,
-                rayTraceResult
-            ) == ActionResult.SUCCESS
-        ) {
-            if (swing) {
-                player.swingHand(Hand.MAIN_HAND)
-            } else {
-                network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
+        for (enemy in targetTracker.enemies()) {
+            if (player.squaredBoxedDistanceTo(enemy) > range) {
+                return@repeatable
             }
+
+            functioning = true
+            updateTarget()
+            val curr = currentBlock ?: return@repeatable
+            val serverRotation = RotationManager.serverRotation ?: return@repeatable
+
+            val rayTraceResult = raytraceBlock(
+                range.toDouble(),
+                serverRotation,
+                curr,
+                curr.getState() ?: return@repeatable
+            )
+
+            if (rayTraceResult?.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != curr) {
+                return@repeatable
+            }
+
+            if (slot != player.inventory.selectedSlot) {
+                network.sendPacket(UpdateSelectedSlotC2SPacket(slot))
+            }
+
+            if (interaction.interactBlock(
+                    player,
+                    world,
+                    Hand.MAIN_HAND,
+                    rayTraceResult
+                ) == ActionResult.SUCCESS
+            ) {
+                if (swing) {
+                    player.swingHand(Hand.MAIN_HAND)
+                } else {
+                    network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
+                }
+            }
+
+            if (slot != player.inventory.selectedSlot) {
+                network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
+            }
+
+            destroy()
+
+            functioning = false
         }
-
-        if (slot != player.inventory.selectedSlot) {
-            network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
-        }
-
-        destroy()
-
-        functioning = false
     }
 
     private fun destroy() {
