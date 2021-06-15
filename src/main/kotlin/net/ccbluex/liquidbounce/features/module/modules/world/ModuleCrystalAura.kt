@@ -17,7 +17,6 @@ import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.eyesPos
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
-import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.minecraft.block.Block
 import net.minecraft.block.Blocks
 import net.minecraft.entity.Entity
@@ -63,7 +62,7 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
         } ?: return@repeatable
 
         for (enemy in targetTracker.enemies()) {
-            if (player.distanceTo(enemy) > range || enemy == player) {
+            if (player.distanceTo(enemy) > range) {
                 return@repeatable
             }
 
