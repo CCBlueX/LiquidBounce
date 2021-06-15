@@ -63,7 +63,7 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
         } ?: return@repeatable
 
         for (enemy in targetTracker.enemies()) {
-            if (player.distanceTo(enemy) > range) {
+            if (player.distanceTo(enemy) > range || enemy == player) {
                 return@repeatable
             }
 
