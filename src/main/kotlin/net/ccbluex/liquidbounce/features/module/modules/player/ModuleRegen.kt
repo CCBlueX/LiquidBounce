@@ -40,12 +40,17 @@ object ModuleRegen : Module("Regen", Category.PLAYER) {
     }
 
     val repeatable = repeatable {
+
         if (resetTimer) {
             mc.timer.timerSpeed = 1F
             resetTimer = false
         }
 
-        if ((!noAir && player.isOnGround) && !player.abilities.creativeMode && player.health >= 0 && player.health < health) {
+        if ((!noAir && player.isOnGround) && !player.abilities.creativeMode && player.health < health) {
+            if(player.isDead) {
+                return@repeatable
+            }
+
             if (potionEffect && !player.hasStatusEffect(StatusEffects.REGENERATION)) {
                 return@repeatable
             }
