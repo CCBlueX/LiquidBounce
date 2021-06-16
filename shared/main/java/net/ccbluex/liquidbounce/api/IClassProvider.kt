@@ -201,6 +201,7 @@ interface IClassProvider
 	fun isSPacketSpawnPlayer(obj: Any?): Boolean
 	fun isSPacketEntityTeleport(obj: Any?): Boolean
 	fun isSPacketTitle(obj: Any?): Boolean
+	fun isSPacketPlayerListItem(obj: Any?): Boolean
 
 	/* instanceof checks (Client-side packet) */
 	fun isCPacketPlayer(obj: Any?): Boolean

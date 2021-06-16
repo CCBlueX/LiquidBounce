@@ -28,25 +28,36 @@ object MovementUtils : MinecraftInstance()
 
 	@JvmStatic
 	@JvmOverloads
-	fun strafe(thePlayer: IEntityPlayerSP, speed: Float = getSpeed(thePlayer))
+	fun strafe(thePlayer: IEntityPlayerSP, speed: Float = getSpeed(thePlayer), directionDegrees: Float = getDirectionDegrees(thePlayer))
 	{
 		if (!isMoving(thePlayer)) return
 
 		val func = functions
 
-		val dir = getDirection(thePlayer)
+		val dir = WMathHelper.toRadians(directionDegrees)
 		thePlayer.motionX = (-func.sin(dir) * speed).toDouble()
 		thePlayer.motionZ = (func.cos(dir) * speed).toDouble()
 	}
 
 	@JvmStatic
-	fun forward(thePlayer: IEntityPlayerSP, length: Double)
+	@JvmOverloads
+	fun addMotion(thePlayer: IEntityPlayerSP, motion: Float = getSpeed(thePlayer), directionDegrees: Float = getDirectionDegrees(thePlayer))
 	{
 		val func = functions
 
-		val yaw = WMathHelper.toRadians(thePlayer.rotationYaw)
+		val dir = WMathHelper.toRadians(directionDegrees)
+		thePlayer.motionX -= func.sin(dir) * motion
+		thePlayer.motionZ += func.cos(dir) * motion
+	}
 
-		thePlayer.setPosition(thePlayer.posX + -func.sin(yaw) * length, thePlayer.posY, thePlayer.posZ + func.cos(yaw) * length)
+	@JvmStatic
+	fun forward(thePlayer: IEntityPlayerSP, length: Double, directionDegrees: Float = thePlayer.rotationYaw)
+	{
+		val func = functions
+
+		val yaw = WMathHelper.toRadians(directionDegrees)
+
+		thePlayer.setPosition(thePlayer.posX - func.sin(yaw) * length, thePlayer.posY, thePlayer.posZ + func.cos(yaw) * length)
 	}
 
 	@JvmStatic

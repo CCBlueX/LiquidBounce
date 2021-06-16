@@ -25,6 +25,7 @@ interface IPacket
 	fun asSPacketSpawnPlayer(): ISPacketPlayerSpawn
 	fun asSPacketEntityTeleport(): ISPacketEntityTeleport
 	fun asSPacketTitle(): ISPacketTitle
+	fun asSPacketPlayerListItem(): ISPacketPlayerListItem
 
 	fun asCPacketPlayer(): ICPacketPlayer
 	fun asCPacketUseEntity(): ICPacketUseEntity

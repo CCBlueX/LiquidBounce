@@ -376,8 +376,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 
 		final Scaffold scaffold = (Scaffold) LiquidBounce.moduleManager.get(Scaffold.class);
 
-		final boolean groundCheck = onGround || !sprint.getCheckServerSideGround().get();
-		if (scaffold.getState() && !scaffold.getSprintValue().get() || sprint.getState() && sprint.getCheckServerSide().get() && groundCheck && !sprint.getAllDirectionsValue().get() && RotationUtils.targetRotation != null && RotationUtils.Companion.getRotationDifference(new Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)) > 30)
+		if (scaffold.getState() && !scaffold.getSprintValue().get() || sprint.getState() && sprint.getCheckServerSide().get() && (onGround || !sprint.getCheckServerSideGround().get()) && !sprint.getAllDirectionsValue().get() && RotationUtils.Companion.getRotationDifference(RotationUtils.Companion.getClientRotation()) > 30)
 			setSprinting(false);
 
 		final boolean allDirection = sprint.getState() && sprint.getAllDirectionsValue().get();

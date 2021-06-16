@@ -91,6 +91,8 @@ class RotationUtils : MinecraftInstance(), Listenable
 
 	companion object
 	{
+		private val DEFAULT_ROTATION = Rotation(0F, 0F)
+
 		// Flag constants for searchCenter() and faceBow()
 		const val LOCK_CENTER = 0b1
 		const val OUT_BORDER = 0b10
@@ -110,10 +112,13 @@ class RotationUtils : MinecraftInstance(), Listenable
 		var targetRotation: Rotation? = null
 
 		@JvmField
-		var serverRotation = Rotation(0.0f, 0.0f)
+		var serverRotation = DEFAULT_ROTATION.copy()
 
 		@JvmField
-		var lastServerRotation = Rotation(0.0f, 0.0f)
+		var lastServerRotation = DEFAULT_ROTATION.copy()
+
+		val clientRotation: Rotation
+			get() = mc.thePlayer?.let { Rotation(it.rotationYaw, it.rotationPitch) } ?: DEFAULT_ROTATION.copy()
 
 		var keepCurrentRotation = false
 
@@ -210,7 +215,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 			// Calculate Rotation
 			val posSqrt = StrictMath.hypot(posX, posZ)
 			val rotation = Rotation(toDegrees(StrictMath.atan2(posZ, posX).toFloat()) - 90, -toDegrees(StrictMath.atan((velocity * velocity - sqrt(velocity * velocity * velocity * velocity - 0.006f * (0.006f * (posSqrt * posSqrt) + 2 * posY * (velocity * velocity)))) / (0.006f * posSqrt)).toFloat()))
-			val limitedRotation = limitAngleChange(Rotation(thePlayer.rotationYaw, thePlayer.rotationPitch), rotation, nextFloat(min(minTurnSpeed, maxTurnSpeed), max(minTurnSpeed, maxTurnSpeed)), nextFloat(min(minSmoothingRatio, maxSmoothingRatio), max(minSmoothingRatio, maxSmoothingRatio)))
+			val limitedRotation = limitAngleChange(clientRotation, rotation, nextFloat(min(minTurnSpeed, maxTurnSpeed), max(minTurnSpeed, maxTurnSpeed)), nextFloat(min(minSmoothingRatio, maxSmoothingRatio), max(minSmoothingRatio, maxSmoothingRatio)))
 
 			// Apply Rotation
 			if (flags and SILENT_ROTATION != 0)
@@ -234,7 +239,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * maximum predict size of your body
 		 * @return               rotation
 		 */
-		private fun toRotation(thePlayer: IEntityPlayerSP, vec: WVec3, minPlayerPredictSize: Float, maxPlayerPredictSize: Float, playerPredict: Boolean): Rotation
+		fun toRotation(thePlayer: IEntityPlayerSP, vec: WVec3, minPlayerPredictSize: Float, maxPlayerPredictSize: Float, playerPredict: Boolean): Rotation
 		{
 			val posX = thePlayer.posX
 			val posZ = thePlayer.posZ
@@ -418,7 +423,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * your entity
 		 * @return        difference between rotation
 		 */
-		fun getClientRotationDifference(thePlayer: IEntityPlayerSP, entity: IEntity, playerPredict: Boolean, minPlayerPredictSize: Float, maxPlayerPredictSize: Float): Double = getRotationDifference(toRotation(thePlayer, getCenter(entity.entityBoundingBox), minPlayerPredictSize, maxPlayerPredictSize, playerPredict), Rotation(thePlayer.rotationYaw, thePlayer.rotationPitch))
+		fun getClientRotationDifference(thePlayer: IEntityPlayerSP, entity: IEntity, playerPredict: Boolean, minPlayerPredictSize: Float, maxPlayerPredictSize: Float): Double = getRotationDifference(toRotation(thePlayer, getCenter(entity.entityBoundingBox), minPlayerPredictSize, maxPlayerPredictSize, playerPredict), clientRotation)
 
 		/**
 		 * Calculate difference between the "client-sided rotation" and your block position
@@ -427,7 +432,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * your block position
 		 * @return        difference between rotation
 		 */
-		fun getClientRotationDifference(thePlayer: IEntityPlayerSP, blockPos: WBlockPos, playerPredict: Boolean, minPlayerPredictSize: Float, maxPlayerPredictSize: Float): Double = getRotationDifference(toRotation(thePlayer, WVec3(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5), minPlayerPredictSize, maxPlayerPredictSize, playerPredict), Rotation(thePlayer.rotationYaw, thePlayer.rotationPitch))
+		fun getClientRotationDifference(thePlayer: IEntityPlayerSP, blockPos: WBlockPos, playerPredict: Boolean, minPlayerPredictSize: Float, maxPlayerPredictSize: Float): Double = getRotationDifference(toRotation(thePlayer, WVec3(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5), minPlayerPredictSize, maxPlayerPredictSize, playerPredict), clientRotation)
 
 		/**
 		 * Calculate difference between the "server-sided rotation" and your entity
@@ -579,9 +584,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		{
 			keepLength = 0
 
-			val thePlayer = mc.thePlayer ?: return
-
-			val goalRotation = Rotation(thePlayer.rotationYaw, thePlayer.rotationPitch)
+			val goalRotation = clientRotation
 
 			val targetRotation = targetRotation ?: return
 

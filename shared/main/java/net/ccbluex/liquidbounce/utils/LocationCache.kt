@@ -25,7 +25,7 @@ class LocationCache : MinecraftInstance(), Listenable
 
 			val entities = EntityUtils.getEntitiesInRadius(theWorld, thePlayer, 64.0)
 
-			// Manual garbage collect
+			// Manual garbage collect by distance check
 			aabbList.keys.filterNot(entities.map(IEntity::entityId)::contains).forEach { aabbList.remove(it) }
 
 			for (entity in entities)
@@ -55,14 +55,18 @@ class LocationCache : MinecraftInstance(), Listenable
 
 		fun getAABBBeforeNTicks(entityId: Int, n: Int, default: IAxisAlignedBB): IAxisAlignedBB
 		{
+			if (aabbList.isEmpty()) return default
+
 			return aabbList[entityId]?.get()?.run {
 				val indexLimit = size - 1
 				get((indexLimit - n).coerceIn(0, indexLimit))
 			} ?: default
 		}
 
-		fun getPlayerLocationBeforeNTicks(n: Int): Location
+		fun getPlayerLocationBeforeNTicks(n: Int, default: Location): Location
 		{
+			if(playerLocationList.isNotEmpty()) return default
+
 			val indexLimit = playerLocationList.size - 1
 
 			return playerLocationList[(indexLimit - n).coerceIn(0, indexLimit)]

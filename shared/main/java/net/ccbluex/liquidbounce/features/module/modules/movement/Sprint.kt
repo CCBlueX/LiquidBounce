@@ -12,7 +12,6 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
-import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 
@@ -36,7 +35,7 @@ class Sprint : Module()
 
 		val blindCheck = blindnessValue.get() && thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.BLINDNESS))
 		val foodCheck = foodValue.get() && thePlayer.foodStats.foodLevel <= 6.0f && !thePlayer.capabilities.allowFlying
-		val serversideCheck = checkServerSide.get() && (thePlayer.onGround || !checkServerSideGround.get()) && !allDirectionsValue.get() && RotationUtils.targetRotation != null && RotationUtils.getRotationDifference(Rotation(thePlayer.rotationYaw, thePlayer.rotationPitch)) > 30
+		val serversideCheck = checkServerSide.get() && (thePlayer.onGround || !checkServerSideGround.get()) && !allDirectionsValue.get() && RotationUtils.getRotationDifference(RotationUtils.clientRotation) > 30
 
 		if (!isMoving(thePlayer) || thePlayer.sneaking || blindCheck || foodCheck || serversideCheck)
 		{

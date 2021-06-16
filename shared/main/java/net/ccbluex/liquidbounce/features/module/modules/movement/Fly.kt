@@ -329,7 +329,7 @@ class Fly : Module()
 		val thePlayer = mc.thePlayer ?: return
 
 		val isRedeSkyMode = modeValue.get().equals("Redesky", ignoreCase = true)
-		if (isRedeSkyMode) redeskySpeed(thePlayer, 0)
+		if (isRedeSkyMode) MovementUtils.zeroXZ(thePlayer)
 
 		aac3_1_6_touchedVoid = false
 
@@ -522,11 +522,8 @@ class Fly : Module()
 						networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(posX, posY + 5, posZ, false))
 						networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(0.5, -1000.0, 0.5, false))
 
-						val dir = WMathHelper.toRadians(rotationYaw)
-						val x = -func.sin(dir) * 0.4
-						val z = func.cos(dir) * 0.4
+						MovementUtils.forward(thePlayer, 0.4)
 
-						thePlayer.setPosition(posX + x, posY, posZ + z)
 						mineSecureVClipTimer.reset()
 					}
 				}
@@ -826,9 +823,9 @@ class Fly : Module()
 					redeskyPacketVClip(thePlayer, 10.0)
 
 					redeskyVClip(thePlayer, -0.5f)
-					redeskyHClip(thePlayer, 2.0)
+					MovementUtils.forward(thePlayer, 2.0)
 
-					redeskySpeed(thePlayer, 1)
+					MovementUtils.strafe(thePlayer, 1F)
 
 					thePlayer.motionY = -0.01
 				}
@@ -1129,15 +1126,6 @@ class Fly : Module()
 	}
 
 	//<editor-fold desc="Redesky Fly">
-	private fun redeskyHClip(thePlayer: IEntityPlayerSP, horizontal: Double)
-	{
-		val func = functions
-
-		val playerYaw = WMathHelper.toRadians(thePlayer.rotationYaw)
-
-		thePlayer.setPosition(thePlayer.posX + horizontal * -func.sin(playerYaw), thePlayer.posY, thePlayer.posZ + horizontal * func.cos(playerYaw))
-	}
-
 	private fun redeskyPacketHClip(thePlayer: IEntityPlayerSP, horizontal: Double)
 	{
 		val func = functions
@@ -1155,15 +1143,6 @@ class Fly : Module()
 	private fun redeskyPacketVClip(thePlayer: IEntityPlayerSP, vertical: Double)
 	{
 		mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY + vertical, thePlayer.posZ, false))
-	}
-
-	private fun redeskySpeed(thePlayer: IEntityPlayerSP, speed: Int)
-	{
-		val func = functions
-
-		val playerYaw = WMathHelper.toRadians(thePlayer.rotationYaw)
-		thePlayer.motionX = (speed * -func.sin(playerYaw)).toDouble()
-		thePlayer.motionZ = (speed * func.cos(playerYaw)).toDouble()
 	}
 
 	//</editor-fold>

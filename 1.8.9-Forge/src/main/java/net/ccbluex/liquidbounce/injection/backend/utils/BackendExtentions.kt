@@ -9,11 +9,15 @@ package net.ccbluex.liquidbounce.injection.backend.utils
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.WEnumPlayerModelParts
 import net.ccbluex.liquidbounce.api.minecraft.event.IClickEvent
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.*
+import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ISPacketPlayerListItem
 import net.ccbluex.liquidbounce.api.minecraft.util.*
 import net.ccbluex.liquidbounce.api.minecraft.world.IWorldSettings
+import net.ccbluex.liquidbounce.injection.backend.unwrap
+import net.ccbluex.liquidbounce.injection.backend.wrap
 import net.minecraft.entity.player.EnumPlayerModelParts
 import net.minecraft.event.ClickEvent
 import net.minecraft.network.play.client.*
+import net.minecraft.network.play.server.S38PacketPlayerListItem
 import net.minecraft.util.*
 import net.minecraft.world.WorldSettings
 
@@ -232,3 +236,31 @@ fun C07PacketPlayerDigging.Action.wrap(): ICPacketPlayerDigging.WAction
 		C07PacketPlayerDigging.Action.RELEASE_USE_ITEM -> ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM
 	}
 }
+
+fun ISPacketPlayerListItem.WAction.unwrap(): S38PacketPlayerListItem.Action
+{
+	return when (this)
+	{
+		ISPacketPlayerListItem.WAction.ADD_PLAYER -> S38PacketPlayerListItem.Action.ADD_PLAYER
+		ISPacketPlayerListItem.WAction.UPDATE_GAME_MODE -> S38PacketPlayerListItem.Action.UPDATE_GAME_MODE
+		ISPacketPlayerListItem.WAction.UPDATE_LATENCY -> S38PacketPlayerListItem.Action.UPDATE_LATENCY
+		ISPacketPlayerListItem.WAction.UPDATE_DISPLAY_NAME -> S38PacketPlayerListItem.Action.UPDATE_DISPLAY_NAME
+		ISPacketPlayerListItem.WAction.REMOVE_PLAYER -> S38PacketPlayerListItem.Action.REMOVE_PLAYER
+	}
+}
+
+fun S38PacketPlayerListItem.Action.wrap(): ISPacketPlayerListItem.WAction
+{
+	return when (this)
+	{
+		S38PacketPlayerListItem.Action.ADD_PLAYER -> ISPacketPlayerListItem.WAction.ADD_PLAYER
+		S38PacketPlayerListItem.Action.UPDATE_GAME_MODE -> ISPacketPlayerListItem.WAction.UPDATE_GAME_MODE
+		S38PacketPlayerListItem.Action.UPDATE_LATENCY -> ISPacketPlayerListItem.WAction.UPDATE_LATENCY
+		S38PacketPlayerListItem.Action.UPDATE_DISPLAY_NAME -> ISPacketPlayerListItem.WAction.UPDATE_DISPLAY_NAME
+		S38PacketPlayerListItem.Action.REMOVE_PLAYER -> ISPacketPlayerListItem.WAction.REMOVE_PLAYER
+	}
+}
+
+fun ISPacketPlayerListItem.WAddPlayerData.unwrap(): S38PacketPlayerListItem.AddPlayerData = S38PacketPlayerListItem().AddPlayerData(profile, ping, gameMode?.unwrap(), displayName?.unwrap())
+
+fun S38PacketPlayerListItem.AddPlayerData.wrap(): ISPacketPlayerListItem.WAddPlayerData = ISPacketPlayerListItem.WAddPlayerData(profile, ping, gameMode?.wrap(), displayName?.wrap())

@@ -70,7 +70,7 @@ class StorageESP : Module()
 	private val shulkerBoxBlueValue = IntegerValue("ShulkerBox-B", 110, 0, 255)
 	private val shulkerBoxRainbowValue = BoolValue("ShulkerBox-Rainbow", false)
 
-	private val alphaValue = IntegerValue("Alpha", 30, 0, 255)
+	private val alphaValue = IntegerValue("Alpha", 60, 0, 255)
 
 	private val boxOutlineAlphaValue = IntegerValue("Box-Outline-Alpha", 90, 0, 255)
 

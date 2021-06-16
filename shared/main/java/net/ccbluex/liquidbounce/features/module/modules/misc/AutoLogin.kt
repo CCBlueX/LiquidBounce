@@ -30,7 +30,7 @@ class AutoLogin : Module()
 		}
 		else if (provider.isSPacketTitle(event.packet))
 		{
-			val title = event.packet.asSPacketTitle().message.unformattedText
+			val title = event.packet.asSPacketTitle().message?.unformattedText ?: return
 			if (loginPattern.matcher(title).find()) thePlayer.sendChatMessage("/login $pw")
 			if (registerPattern.matcher(title).find()) thePlayer.sendChatMessage("/register $pw")
 			if (registerPattern2.matcher(title).find()) thePlayer.sendChatMessage("/register $pw $pw")

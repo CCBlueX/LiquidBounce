@@ -10,13 +10,16 @@ import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
+import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ISPacketPlayerListItem
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
+import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.Location
 import net.ccbluex.liquidbounce.utils.LocationCache
+import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.extensions.getFullName
 import net.ccbluex.liquidbounce.utils.extensions.getPing
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_6
@@ -27,6 +30,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import java.awt.Color
+import java.util.*
 import kotlin.math.*
 
 // TODO: Rename Option Names
@@ -60,10 +64,29 @@ object AntiBot : Module()
 	private val staticEntityID2 = IntegerValue("StaticEntityID-2", 999999999, 0, Int.MAX_VALUE)
 	private val staticEntityID3 = IntegerValue("StaticEntityID-3", -1337, 0, Int.MAX_VALUE)
 
+	private val invalidProfileNameValue = BoolValue("InvalidProfileName", false)
+
 	/**
-	 * NoColor
+	 * Color (The player who have colored-name is a bot)
 	 */
-	private val colorValue = BoolValue("Color", false)
+	private val colorValue: BoolValue = object : BoolValue("Color", false)
+	{
+		override fun onChange(oldValue: Boolean, newValue: Boolean)
+		{
+			if (noColorValue.get()) noColorValue.set(false)
+		}
+	}
+
+	/**
+	 * NoColor (The player who havn't colored-name is a bot)
+	 */
+	private val noColorValue: BoolValue = object : BoolValue("NoColor", false)
+	{
+		override fun onChange(oldValue: Boolean, newValue: Boolean)
+		{
+			if (colorValue.get()) colorValue.set(false)
+		}
+	}
 
 	/**
 	 * LivingTime (ticksExisted)
@@ -123,9 +146,14 @@ object AntiBot : Module()
 	private val armorValue = BoolValue("Armor", false)
 
 	/**
-	 * Invalid Ping
+	 * Fixed Ping
 	 */
 	private val pingValue = BoolValue("Ping", false)
+
+	/**
+	 * Ping update presence
+	 */
+	private val pingUpdateValue = BoolValue("PingUpdate", false)
 
 	/**
 	 * Needs to got damaged
@@ -135,14 +163,25 @@ object AntiBot : Module()
 	/**
 	 * Duplicate entity in the world
 	 */
-	private val duplicateInWorldValue = BoolValue("DuplicateInWorld", false)
+	private val duplicateInWorldValue = BoolValue("DuplicateName-World", false)
+	private val duplicateInWorldNameModeValue = ListValue("DuplicateName-World-NameMode", arrayOf("DisplayName", "CustomNameTag", "GameProfileName"), "DisplayName")
+	private val duplicateInWorldStripColorsValue = BoolValue("DuplicateName-World-StripColorsInName", true)
+
+	private val attemptToAddDuplicatesWorldValue = BoolValue("AttemptToAddDuplicate-World", false)
+	private val attemptToAddDuplicatesWorldModeValue = ListValue("AttemptToAddDuplicate-World-NameMode", arrayOf("DisplayName", "GameProfileName"), "DisplayName")
+	private val attemptToAddDuplicatesWorldStripColorsValue = BoolValue("AttemptToAddDuplicate-World-StripColorsInName", false)
 
 	/**
 	 * Duplicate player in tab
 	 */
-	private val duplicateInTabValue = BoolValue("DuplicateInTab", false)
-	private val duplicateInTabNameModeValue = ListValue("DuplicateInTabNameMode", arrayOf("DisplayName", "GameProfileName"), "DisplayName")
-	private val duplicateInTabStripColorsValue = BoolValue("DuplicateInTabStripColorsInDisplayname", true)
+	private val duplicateInTabValue = BoolValue("DuplicateName-Tab", false)
+	private val duplicateInTabWorldNameModeValue = ListValue("DuplicateName-Tab-WorldNameMode", arrayOf("DisplayName", "CustomNameTag", "GameProfileName"), "DisplayName")
+	private val duplicateInTabNameModeValue = ListValue("DuplicateName-Tab-NameMode", arrayOf("DisplayName", "GameProfileName"), "DisplayName")
+	private val duplicateInTabStripColorsValue = BoolValue("DuplicateName-Tab-StripColorsInDisplayName", true)
+
+	private val attemptToAddDuplicatesTabValue = BoolValue("AttemptToAddDuplicate-Tab", false)
+	private val attemptToAddDuplicatesTabModeValue = ListValue("AttemptToAddDuplicate-Tab-NameMode", arrayOf("DisplayName", "GameProfileName"), "GameProfileName")
+	private val attemptToAddDuplicatesTabStripColorsValue = BoolValue("AttemptToAddDuplicate-Tab-StripColorsInDisplayName", false)
 
 	/**
 	 * Always In Radius
@@ -190,6 +229,8 @@ object AntiBot : Module()
 	 * Position Consistency
 	 */
 	private val positionValue = BoolValue("Position", true)
+	private val positionRemoveValue = BoolValue("Position-RemoveDetected", true)
+	private val positionRemoveVLValue = IntegerValue("Position-RemoveDetected-VL", 25, 10, 200)
 
 	private val positionBack1Value = FloatValue("Position-Back-1", 3.0f, 1.0f, 10.0f)
 	private val positionY1Value = FloatValue("Position-Y-1", 3.0f, 0.0f, 10.0f)
@@ -245,7 +286,9 @@ object AntiBot : Module()
 	/**
 	 * Player position ping-correction offset
 	 */
-	private val positionPingCorrectionOffsetValue = IntegerValue("Position-PingCorrection-Offset", 1, 0, 5)
+	private val positionPingCorrectionOffsetValue = IntegerValue("Position-PingCorrection-Offset", 1, -2, 5)
+
+	private val invalidProfileNameRegex = Regex("[\\W]*")
 
 	private val ground = mutableSetOf<Int>()
 	private val air = mutableSetOf<Int>()
@@ -259,6 +302,7 @@ object AntiBot : Module()
 	private val derp = mutableSetOf<Int>()
 	private val yawMovement = mutableSetOf<Int>()
 	private val pitchMovement = mutableSetOf<Int>()
+	private val pingNotUpdated = mutableSetOf<UUID>()
 
 	private val spawnPositionSuspects = mutableSetOf<Int>()
 
@@ -271,7 +315,7 @@ object AntiBot : Module()
 	private val teleportpacket_violation = mutableMapOf<Int, Int>()
 	// TODO: private val collision_violation = mutableMapOf<Int, Int>()
 
-	private fun getPingCorrectionAppliedLocation(ping: Int, offset: Int = 0) = LocationCache.getPlayerLocationBeforeNTicks(ceil(ping / 50F).toInt() + offset + positionPingCorrectionOffsetValue.get())
+	private fun getPingCorrectionAppliedLocation(thePlayer: IEntityPlayerSP, offset: Int = 0) = LocationCache.getPlayerLocationBeforeNTicks((ceil(thePlayer.getPing() / 50F).toInt() + offset + positionPingCorrectionOffsetValue.get()).coerceAtLeast(0), Location(WVec3( thePlayer.posX, thePlayer.entityBoundingBox.minY, thePlayer.posZ), RotationUtils.serverRotation))
 
 	@JvmStatic
 	fun checkTabList(targetName: String, displayName: Boolean, equals: Boolean, stripColors: Boolean): Boolean = mc.netHandler.playerInfoMap.map { networkPlayerInfo ->
@@ -282,7 +326,7 @@ object AntiBot : Module()
 		networkName
 	}.any { networkName -> if (equals) targetName == networkName else targetName.contains(networkName) }
 
-	fun isBot(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, entity: IEntityLivingBase): Boolean
+	fun isBot(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, target: IEntityLivingBase): Boolean
 	{
 		// Check if anti bot is enabled
 		if (!state) return false
@@ -290,20 +334,32 @@ object AntiBot : Module()
 		// Check if entity is a player
 		val provider = classProvider
 
-		if (!provider.isEntityPlayer(entity)) return false
+		if (!provider.isEntityPlayer(target)) return false
+		val entity = target.asEntityPlayer()
 
 		val displayName: String = entity.displayName.formattedText
-		val profileName = entity.asEntityPlayer().gameProfile.name
+		val profileName = entity.gameProfile.name
+
+		val customNameTag = entity.customNameTag
+		val customNameTagFailsafe = customNameTag.ifBlank { profileName }
+
+		// Invalid Profile Name
+		if (invalidProfileNameValue.get() && invalidProfileNameRegex.containsMatchIn(profileName)) return true
 
 		// Anti Bot checks
 
-		// NoColor
-		if (colorValue.get() && !displayName.replace("\u00A7r", "").contains("\u00A7")) return true
+		val hasColor = displayName.replace("\u00A7r", "").contains("\u00A7")
+
+		// Color
+		if (colorValue.get() && hasColor || noColorValue.get() && !hasColor) return true
 
 		// LivingTime
 		if (livingTimeValue.get() && entity.ticksExisted < livingTimeTicksValue.get()) return true
 
 		val entityId = entity.entityId
+
+		val netHandler = mc.netHandler
+		val uuid = entity.uniqueID
 
 		// Ground
 		if (groundValue.get() && !ground.contains(entityId)) return true
@@ -338,12 +394,12 @@ object AntiBot : Module()
 		if (wasInvisibleValue.get() && invisible.contains(entityId)) return true
 
 		// Armor
-		if (armorValue.get() && entity.asEntityPlayer().inventory.armorInventory.all { it == null }) return true
-
-		val netHandler = mc.netHandler
+		if (armorValue.get() && entity.inventory.armorInventory.all { it == null }) return true
 
 		// Ping
-		if (pingValue.get() && netHandler.getPlayerInfo(entity.asEntityPlayer().uniqueID)?.responseTime == 0) return true
+		if (pingValue.get() && netHandler.getPlayerInfo(uuid)?.responseTime == 0) return true
+
+		if (pingUpdateValue.get() && pingNotUpdated.contains(uuid)) return true
 
 		// NeedHit
 		if (needHitValue.get() && !hitted.contains(entityId)) return true
@@ -366,16 +422,37 @@ object AntiBot : Module()
 			}
 		}
 
+		var dupInWorldTargetName = when (duplicateInWorldNameModeValue.get().toLowerCase())
+		{
+			"displayname" -> displayName
+			"customnametag" -> customNameTagFailsafe
+			else -> profileName
+		}
+
+		if (duplicateInWorldStripColorsValue.get()) dupInWorldTargetName = stripColor(dupInWorldTargetName)
+
 		// Duplicate in the world
-		if (duplicateInWorldValue.get() && theWorld.loadedEntityList.count { provider.isEntityPlayer(it) && it.asEntityPlayer().displayNameString == it.asEntityPlayer().displayNameString } > 1) return true
+		if (duplicateInWorldValue.get() && theWorld.loadedEntityList.filter(provider::isEntityPlayer).map(IEntity::asEntityPlayer).count {
+				dupInWorldTargetName == when (duplicateInWorldNameModeValue.get().toLowerCase())
+				{
+					"displayname" -> it.displayName.formattedText
+					"customnametag" -> it.customNameTag.ifBlank { it.gameProfile.name }
+					else -> it.gameProfile.name
+				}
+			} > 1) return true
 
 		// Duplicate in the tab
 		if (duplicateInTabValue.get() && netHandler.playerInfoMap.count {
-				var entityName = entity.name
+				var entityName = when (duplicateInTabWorldNameModeValue.get().toLowerCase())
+				{
+					"displayname" -> displayName
+					"customnametag" -> customNameTagFailsafe
+					else -> profileName
+				}
 
 				if (duplicateInTabStripColorsValue.get()) entityName = stripColor(entityName)
 
-				var itName = it.getFullName(duplicateInTabNameModeValue.get().equals("DisplayName", true))
+				var itName = it.getFullName(duplicateInTabNameModeValue.get().equals("DisplayName", ignoreCase = true))
 
 				if (duplicateInTabStripColorsValue.get()) itName = stripColor(itName)
 
@@ -401,7 +478,7 @@ object AntiBot : Module()
 
 		if (customNameValue.get())
 		{
-			val customName = entity.customNameTag.let { if (customNameStripColorsValue.get()) stripColor(it) else it }
+			val customName = customNameTag.let { if (customNameStripColorsValue.get()) stripColor(it) else it }
 
 			if (customName.isBlank()) return emptyCustomNameValue.get()
 
@@ -431,7 +508,6 @@ object AntiBot : Module()
 	{
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
-		val playerPing = thePlayer.getPing()
 
 		val notify = notificationValue.get()
 
@@ -442,14 +518,17 @@ object AntiBot : Module()
 		if (provider.isSPacketEntity(packet))
 		{
 			val movePacket = packet.asSPacketEntity()
-			val entity = movePacket.getEntity(theWorld)
+			val target = movePacket.getEntity(theWorld)
 
-			if (entity != null && provider.isEntityPlayer(entity))
+			if (target != null && provider.isEntityPlayer(target))
 			{
+				val entity = target.asEntityPlayer()
+
 				val entityId = entity.entityId
 
 				val displayName: String = entity.displayName.formattedText
-				val customName: String = entity.asEntityPlayer().customNameTag
+				val customName: String = entity.customNameTag
+				val profileName = entity.gameProfile.name
 
 				val packetGround = movePacket.onGround
 				val packetYaw = if (movePacket.rotating) movePacket.yaw * 360.0F / 256.0F else entity.rotationYaw
@@ -493,7 +572,7 @@ object AntiBot : Module()
 				if (!notAlwaysInRadius.contains(entityId) && thePlayer.getDistanceToEntity(entity) > alwaysRadiusValue.get()) notAlwaysInRadius.add(entityId)
 
 				// Horizontal Speed
-				val hspeed = hypot(abs(entity.prevPosX - entity.posX), abs(entity.prevPosZ - entity.posZ))
+				val hspeed = hypot(entity.prevPosX - entity.posX, entity.prevPosZ - entity.posZ)
 				if (hspeed > hspeedLimitValue.get())
 				{
 					if (notify && hspeedValue.get()) notification("HSpeed", "Moved too fast (horizontally): $displayName (${DECIMALFORMAT_6.format(hspeed)} blocks/tick)")
@@ -520,9 +599,9 @@ object AntiBot : Module()
 
 				val isSuspectedForSpawnPosition = spawnPositionSuspects.contains(entityId)
 
-				val serverLocation = getPingCorrectionAppliedLocation(playerPing)
-				val lastServerYaw = getPingCorrectionAppliedLocation(playerPing, 1).rotation.yaw
-				val lastServerYaw2 = getPingCorrectionAppliedLocation(playerPing, 2).rotation.yaw
+				val serverLocation = getPingCorrectionAppliedLocation(thePlayer)
+				val lastServerYaw = getPingCorrectionAppliedLocation(thePlayer, 1).rotation.yaw
+				val lastServerYaw2 = getPingCorrectionAppliedLocation(thePlayer, 2).rotation.yaw
 
 				val serverPos = serverLocation.position
 				val serverYaw = serverLocation.rotation.yaw
@@ -556,7 +635,7 @@ object AntiBot : Module()
 					val prevVL = positionVL[entityId] ?: 0
 
 					// Position Delta
-					if (distance <= positionDeltaLimit)
+					if (positionValue.get() && distance <= positionDeltaLimit)
 					{
 						val vlIncrement = ceil(max(abs(lastServerYaw - serverYaw), abs(lastServerYaw2 - serverYaw)) / 15F).toInt() + when
 						{
@@ -565,10 +644,22 @@ object AntiBot : Module()
 							distance <= positionDeltaLimit * 0.5F -> 5
 							distance <= positionDeltaLimit * 0.75F -> 2
 							else -> 1
-						} + if (isSuspectedForSpawnPosition) 5 else 0
+						} + (if (isSuspectedForSpawnPosition) 5 else 0) + if (hspeed >= 2) 10 else 0
 
-						if (notify && positionValue.get() && ((prevVL + 5) % 20 == 0) || (vlIncrement >= 5)) notification("Position(Expect)", "Suspicious position: $displayName (+$vlIncrement) (dist: ${DECIMALFORMAT_6.format(distance)}, VL: ${prevVL + vlIncrement})")
-						positionVL[entityId] = prevVL + vlIncrement
+						val newVL = prevVL + vlIncrement
+
+						if (positionRemoveValue.get() && newVL > positionRemoveVLValue.get())
+						{
+							// Remove bot from the game
+							remove(theWorld, entityId, profileName, displayName, "Position(Expect)")
+							positionVL.remove(entityId)
+						}
+						else
+						{
+							if (notify && ((prevVL + 5) % 20 == 0) || (vlIncrement >= 5)) notification("Position(Expect)", "Suspicious position: $displayName (+$vlIncrement) (dist: ${DECIMALFORMAT_6.format(distance)}, VL: $newVL)")
+
+							positionVL[entityId] = newVL
+						}
 					}
 					else if (positionDeltaVLDec)
 					{
@@ -615,7 +706,7 @@ object AntiBot : Module()
 				}
 
 				// ticksExisted > 40 && custom name tag is empty = Mineplex GWEN bot
-				if (thePlayer.ticksExisted > 40 && entity.asEntityPlayer().customNameTag.isBlank() && !gwen.contains(entityId)) gwen.add(entityId)
+				if (thePlayer.ticksExisted > 40 && entity.customNameTag.isBlank() && !gwen.contains(entityId)) gwen.add(entityId)
 
 				// invisible + display name isn't red but ends with color reset char (\u00A7r) + displayname equals customname + entity is near than 3 block horizontally + y delta between entity and player is 10~13 = Watchdog Bot
 				if (entity.invisible && !displayName.startsWith("\u00A7c") && displayName.endsWith("\u00A7r") && displayName.equals(customName, ignoreCase = true))
@@ -623,7 +714,7 @@ object AntiBot : Module()
 					val hDist = hypot(abs(entity.posX - thePlayer.posX), abs(entity.posZ - thePlayer.posZ))
 					val vDist = abs(entity.posY - thePlayer.posY)
 
-					if (vDist > 10 && vDist < 13 && hDist < 3 && !checkTabList(entity.asEntityPlayer().gameProfile.name, displayName = false, equals = true, stripColors = true))
+					if (vDist > 10 && vDist < 13 && hDist < 3 && !checkTabList(entity.gameProfile.name, displayName = false, equals = true, stripColors = true))
 					{
 						if (notify && watchdogValue.get()) notification("Watchdog(Distance)", "Detected watchdog bot: $displayName (hDist: ${DECIMALFORMAT_6.format(hDist)}, vDist: ${DECIMALFORMAT_6.format(vDist)})")
 						watchdog.add(entityId)
@@ -646,6 +737,8 @@ object AntiBot : Module()
 
 			if (entity != null && provider.isEntityPlayer(entity))
 			{
+				val entityId = entity.entityId
+
 				val newX: Double = entityTeleportPacket.x
 				val newY: Double = entityTeleportPacket.y
 				val newZ: Double = entityTeleportPacket.z
@@ -653,17 +746,17 @@ object AntiBot : Module()
 				val distSq = entity.asEntityPlayer().getDistanceSq(newX, newY, newZ)
 				val distThreshold = teleportThresholdDistance.get()
 
-				val prevVL = teleportpacket_violation[entity.entityId] ?: 0
+				val prevVL = teleportpacket_violation[entityId] ?: 0
 
 				if (distSq <= distThreshold * distThreshold)
 				{
 					if (notify && teleportPacketValue.get() && (prevVL + 5) % 10 == 0) notification("Teleport Packet", "Suspicious SPacketEntityTeleport: ${entity.displayName.formattedText} (dist: ${sqrt(distSq)}, VL: $prevVL)")
-					teleportpacket_violation[entity.entityId] = prevVL + 2
+					teleportpacket_violation[entityId] = prevVL + 2
 				}
 				else if (teleportPacketVLDecValue.get())
 				{
 					val currentVL = prevVL - 1
-					if (currentVL <= 0) teleportpacket_violation.remove(entity.entityId) else teleportpacket_violation[entity.entityId] = currentVL
+					if (currentVL <= 0) teleportpacket_violation.remove(entityId) else teleportpacket_violation[entityId] = currentVL
 				}
 			}
 		}
@@ -683,12 +776,15 @@ object AntiBot : Module()
 			val playerSpawnPacket = packet.asSPacketSpawnPlayer()
 
 			val entityId = playerSpawnPacket.entityID
+			val uuid = playerSpawnPacket.uuid
+
+			val playerInfo = mc.netHandler.playerInfoMap.firstOrNull { it.gameProfile.id == uuid }
 
 			val entityX: Double = playerSpawnPacket.x.toDouble() / 32.0
 			val entityY: Double = playerSpawnPacket.y.toDouble() / 32.0
 			val entityZ: Double = playerSpawnPacket.z.toDouble() / 32.0
 
-			val serverLocation = getPingCorrectionAppliedLocation(playerPing)
+			val serverLocation = getPingCorrectionAppliedLocation(thePlayer)
 
 			val serverPos = serverLocation.position
 			val serverYaw = serverLocation.rotation.yaw
@@ -719,6 +815,85 @@ object AntiBot : Module()
 				if (notify && spawnPositionValue.get()) notification("Spawn(Expect)", "Suspicious spawn: Entity #$entityId (dist: ${DECIMALFORMAT_6.format(expectDelta)})")
 				spawnPosition.add(entityId)
 			}
+
+			// Duplicate In World
+			if (attemptToAddDuplicatesWorldValue.get() && playerInfo != null)
+			{
+				val stripColors = attemptToAddDuplicatesWorldStripColorsValue.get()
+				val useDisplayName = attemptToAddDuplicatesWorldModeValue.get().equals("DisplayName", ignoreCase = true)
+
+				val profileName = playerInfo.gameProfile.name
+				val displayName = playerInfo.displayName?.formattedText
+
+				var playerName = (if (useDisplayName) displayName else profileName) ?: ""
+
+				if (stripColors) playerName = stripColor(playerName)
+
+				if (theWorld.loadedEntityList.filter(classProvider::isEntityPlayer).map(IEntity::asEntityPlayer).any {
+						var itName = (if (useDisplayName) it.displayName.formattedText else it.gameProfile.name) ?: return@any false
+
+						if (stripColors) itName = stripColor(itName)
+
+						playerName == itName
+					})
+				{
+					event.cancelEvent()
+					remove(theWorld, entityId, profileName, displayName, "AttemptToAddDuplicate(World)")
+				}
+			}
+		}
+
+		if (provider.isSPacketPlayerListItem(packet))
+		{
+			val playerListItem = packet.asSPacketPlayerListItem()
+			val players = playerListItem.players
+
+			val playerInfoMap = mc.netHandler.playerInfoMap
+
+			when (playerListItem.action)
+			{
+				ISPacketPlayerListItem.WAction.ADD_PLAYER ->
+				{
+					val useDisplayName = attemptToAddDuplicatesTabModeValue.get().equals("DisplayName", ignoreCase = true)
+
+					val tryStripColors = { name: String -> if (attemptToAddDuplicatesTabStripColorsValue.get()) stripColor(name) else name }
+
+					val currentPlayerList = playerInfoMap.map { tryStripColors((if (useDisplayName) it.displayName?.formattedText else it.gameProfile.name) ?: "") }
+
+					val itr = players.listIterator()
+					while (itr.hasNext())
+					{
+						val player = itr.next()
+
+						if (attemptToAddDuplicatesTabValue.get())
+						{
+							if (currentPlayerList.contains(tryStripColors((if (useDisplayName) player.displayName?.formattedText else player.profile.name) ?: continue)))
+							{
+								itr.remove()
+
+								if (notificationValue.get()) LiquidBounce.hud.addNotification("AntiBot", "Removed ${player.profile.name}(${player.displayName?.formattedText}\u00A7r) from the tab list -[AttemptToAddDuplicate(Tab)]", 10000L, Color.red)
+							}
+						}
+
+						pingNotUpdated.add(player.profile.id)
+					}
+
+					if (players.isEmpty()) event.cancelEvent()
+				}
+
+				ISPacketPlayerListItem.WAction.UPDATE_LATENCY ->
+				{
+					val pingUpdatedPlayerUUIDList = players.map { it.profile.id }
+					val allPlayerUUIDList = playerInfoMap.map { it.gameProfile.id }
+
+					if (pingNotUpdated.isEmpty()) pingNotUpdated.addAll(allPlayerUUIDList.filterNot(pingUpdatedPlayerUUIDList::contains))
+					else pingNotUpdated.removeAll(allPlayerUUIDList.filter(pingUpdatedPlayerUUIDList::contains).filter(pingNotUpdated::contains))
+
+					if (pingUpdateValue.get() && notificationValue.get() && pingNotUpdated.isNotEmpty()) notification("PingUpdate", "Ping not updated: ${pingNotUpdated.joinToString(prefix = "[", postfix = "]", transform = { id -> playerInfoMap.firstOrNull { it.gameProfile.id == id }?.gameProfile?.name ?: "$id" })}")
+				}
+
+				ISPacketPlayerListItem.WAction.REMOVE_PLAYER -> pingNotUpdated.removeAll(players.map { it.profile.id })
+			}
 		}
 	}
 
@@ -728,12 +903,11 @@ object AntiBot : Module()
 		if (!drawExpectedPosValue.get()) return
 
 		val thePlayer = mc.thePlayer ?: return
-		val ping = thePlayer.getPing()
 
 		val partialTicks = e.partialTicks
 
-		val serverLocation = getPingCorrectionAppliedLocation(ping)
-		val lastServerLocation = getPingCorrectionAppliedLocation(ping, 1)
+		val serverLocation = getPingCorrectionAppliedLocation(thePlayer)
+		val lastServerLocation = getPingCorrectionAppliedLocation(thePlayer, 1)
 
 		val lastServerYaw = lastServerLocation.rotation.yaw
 
@@ -829,6 +1003,7 @@ object AntiBot : Module()
 		spawnPosition.clear()
 		gwen.clear()
 		watchdog.clear()
+		pingNotUpdated.clear()
 
 		invalidGround.clear()
 		hspeed.clear()
@@ -841,6 +1016,12 @@ object AntiBot : Module()
 
 	private fun notification(checkName: String, message: String)
 	{
-		LiquidBounce.hud.addNotification("AntiBot: $checkName check", message, 10000L, Color.red)
+		LiquidBounce.hud.addNotification("AntiBot - [$checkName]", message, 10000L, Color.red)
+	}
+
+	private fun remove(theWorld: IWorldClient, entityId: Int?, profileName: String, displayName: String?, reason: String)
+	{
+		entityId?.let(theWorld::removeEntityFromWorld)
+		if (notificationValue.get()) LiquidBounce.hud.addNotification("AntiBot", "Removed $profileName($displayName\u00A7r) from the game -[$reason]", 10000L, Color.red)
 	}
 }

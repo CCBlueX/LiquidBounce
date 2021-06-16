@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 import java.awt.Color
-import java.util.*
 
 @ModuleInfo(name = "Speed", description = "Allows you to move faster.", category = ModuleCategory.MOVEMENT)
 class Speed : Module()
@@ -53,7 +52,13 @@ class Speed : Module()
 		SpectreLowHop(), SpectreBHop(), SpectreOnGround(), TeleportCubeCraft(),
 
 		// Server
-		HiveHop(), HypixelHop(), MineplexGround(), MineplexBHop(), MineplexBHop2(),
+		HiveHop(), HypixelHop(),
+
+		// Mineplex
+		MineplexGround(), MineplexBHop(), MineplexBHop2(),
+
+		// RedeSky
+		RedeSkyBoostHop(), RedeSkySlowHop(),
 
 		// Other
 		SlowHop(), CustomSpeed()

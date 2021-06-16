@@ -47,6 +47,8 @@ class NoSlow : Module()
 	// Bypass for NCP
 	private val packetValue = BoolValue("Packet", true)
 	private val packetSpamDelayValue = IntegerValue("Packet-PacketsDelay", 0, 0, 3)
+	private val packetBlock = BoolValue("Packet-Block", true)
+	private val packetUnblock = BoolValue("Packet-Unblock", true)
 
 	// Blocks
 	val liquidPushValue = BoolValue("LiquidPush", true)
@@ -76,8 +78,8 @@ class NoSlow : Module()
 
 			when (event.eventState)
 			{
-				EventState.PRE -> netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos(0, 0, 0), provider.getEnumFacing(EnumFacingType.DOWN)))
-				EventState.POST -> netHandler.addToSendQueue(provider.createCPacketPlayerBlockPlacement(WBlockPos(-1, -1, -1), 255, thePlayer.inventory.getCurrentItemInHand(), 0.0F, 0.0F, 0.0F))
+				EventState.PRE -> if (packetUnblock.get()) netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos(0, 0, 0), provider.getEnumFacing(EnumFacingType.DOWN))) // Un-block
+				EventState.POST -> if (packetBlock.get()) netHandler.addToSendQueue(provider.createCPacketPlayerBlockPlacement(WBlockPos(-1, -1, -1), 255, thePlayer.inventory.getCurrentItemInHand(), 0.0F, 0.0F, 0.0F)) // (Re-)Block
 			}
 
 			ncpDelay.reset()

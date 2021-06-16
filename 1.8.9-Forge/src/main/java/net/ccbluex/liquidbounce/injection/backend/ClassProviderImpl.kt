@@ -103,6 +103,8 @@ import java.io.File
 import java.security.PublicKey
 import javax.crypto.SecretKey
 
+// TODO: Sort methods
+
 object ClassProviderImpl : IClassProvider
 {
 	override val tessellatorInstance: ITessellator
@@ -322,6 +324,8 @@ object ClassProviderImpl : IClassProvider
 	override fun isSPacketEntityTeleport(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S18PacketEntityTeleport
 
 	override fun isSPacketTitle(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S45PacketTitle
+
+	override fun isSPacketPlayerListItem(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S38PacketPlayerListItem
 
 	override fun isCPacketPlayer(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C03PacketPlayer
 

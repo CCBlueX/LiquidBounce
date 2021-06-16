@@ -6,8 +6,8 @@ import net.minecraft.network.play.server.S45PacketTitle
 
 class SPacketTitleImpl<out T : S45PacketTitle>(wrapped: T) : PacketImpl<T>(wrapped), ISPacketTitle
 {
-	override val message: IIChatComponent
-		get() = wrapped.message.wrap()
+	override val message: IIChatComponent?
+		get() = wrapped.message?.wrap()
 }
 
 fun ISPacketTitle.unwrap(): S45PacketTitle = (this as SPacketTitleImpl<*>).wrapped

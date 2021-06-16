@@ -7,7 +7,6 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketEntityAction
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketUseEntity
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.event.AttackEvent
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
@@ -24,8 +23,6 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import org.lwjgl.input.Keyboard
-import kotlin.math.cos
-import kotlin.math.sin
 
 // I'm not an author of this TargetStrafe code. Original author: turtl (Converted from JS https://github.com/chocopie69/Liquidbounce-Scripts/blob/main/combat/superKB.js)
 @ModuleInfo(name = "SuperKnockback", description = "Increases knockback dealt to other entities.", category = ModuleCategory.COMBAT)
@@ -173,8 +170,7 @@ class SuperKnockback : Module()
 							{
 								if (!thePlayer.sprinting) thePlayer.sprinting = true
 
-								thePlayer.motionX += -sin(WMathHelper.toRadians(thePlayer.rotationYaw)) * 1E-5
-								thePlayer.motionZ += cos(WMathHelper.toRadians(thePlayer.rotationYaw)) * 1E-5
+								MovementUtils.addMotion(thePlayer, 1.0E-5F)
 							}
 
 							netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SPRINTING))

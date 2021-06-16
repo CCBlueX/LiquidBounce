@@ -15,7 +15,6 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.EntityUtils
-import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
@@ -257,7 +256,7 @@ class Aimbot : Module()
 		}
 
 		// Search rotation
-		val currentRotation = Rotation(thePlayer.rotationYaw, thePlayer.rotationPitch)
+		val currentRotation = RotationUtils.clientRotation
 		val hitboxDecrement = hitboxDecrementValue.get().toDouble()
 		val searchSensitivity = centerSearchSensitivityValue.get().toDouble()
 
@@ -313,7 +312,7 @@ class Aimbot : Module()
 
 		if (yawMovement <= 0F && pitchMovement <= 0F) return
 
-		Rotation(thePlayer.rotationYaw + yawMovement, thePlayer.rotationPitch + pitchMovement).applyRotationToPlayer(thePlayer)
+		RotationUtils.clientRotation.apply { yaw += yawMovement; pitch += pitchMovement }.applyRotationToPlayer(thePlayer)
 
 		if (!before)
 		{

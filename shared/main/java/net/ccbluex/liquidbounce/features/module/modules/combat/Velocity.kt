@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.PacketEvent
@@ -73,12 +72,7 @@ class Velocity : Module()
 			{
 				thePlayer.motionY = 0.42
 
-				val yaw = WMathHelper.toRadians(thePlayer.rotationYaw)
-
-				val func = functions
-
-				thePlayer.motionX -= func.sin(yaw) * 0.2
-				thePlayer.motionZ += func.cos(yaw) * 0.2
+				MovementUtils.addMotion(thePlayer, 0.2F)
 			}
 
 			"glitch" ->

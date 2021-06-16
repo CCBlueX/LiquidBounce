@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
+import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
@@ -35,6 +36,7 @@ class TargetStrafe : Module()
 {
 	private val targetModeValue = ListValue("TargetMode", arrayOf("KillAuraTarget", "Distance", "Health", "LivingTime"), "Distance")
 	private val detectRangeValue = FloatValue("TargetRange", 6F, 1F, 16.0F)
+	private val strafeStartRangeValue = FloatValue("StrafeStartRange", 0F, 0F, 3F)
 	private val strafeRangeValue = FloatValue("StrafeRange", 3F, 0.5F, 8.0F)
 	private val fovValue = FloatValue("FoV", 180F, 30F, 180F)
 
@@ -42,6 +44,9 @@ class TargetStrafe : Module()
 
 	private val drawPathValue = BoolValue("DrawPath", true)
 	private val pathRenderAccuracyValue = FloatValue("DrawPathAccuracy", 5F, 0.5F, 20F)
+
+	private val test = BoolValue("DecreaseSpeed", false)
+	private val debug = BoolValue("Debug-Mode", false)
 
 	private var target: IEntityLivingBase? = null
 
@@ -71,31 +76,53 @@ class TargetStrafe : Module()
 
 		if (thePlayer.moveForward > 0F && !mc.gameSettings.keyBindSneak.pressed)
 		{
+			val strafeRange = strafeRangeValue.get()
+
+			// Movement speed
+			val moveSpeed = hypot(event.x, event.z)
+
+			// Positions of the player
+			val playerPosX = thePlayer.posX
+			val playerPosZ = thePlayer.posZ
+
+			// Positions of the strafe target
 			val targetPosX = target.posX
 			val targetPosY = target.posY
 			val targetPosZ = target.posZ
 
-			val targetLastTickPosX = target.lastTickPosX
-			val targetLastTickPosZ = target.lastTickPosZ
+			// Distance between the player and the strafe target
+			val xDelta = targetPosX - playerPosX
+			val zDelta = targetPosZ - playerPosZ
+			val distance = hypot(xDelta, zDelta)
 
-			val strafeRange = strafeRangeValue.get()
+			// If the
+			if (distance - moveSpeed > strafeRange + strafeStartRangeValue.get()) return
 
-			val speed = hypot(event.x, event.z)
+			// Strafe yaw radians
+			val strafeYawRadians = atan2(zDelta, xDelta).toFloat()
 
-			val distance = hypot(thePlayer.posX - targetPosX, thePlayer.posZ - targetPosZ)
-			val strafeYawRadians = atan2(targetPosZ - thePlayer.posZ, targetPosX - thePlayer.posX).toFloat()
-			val yawRadians = strafeYawRadians - WMathHelper.PI * 0.5F
-			val predict = targetPosX + (targetPosX - targetLastTickPosX) * 2.0 to targetPosZ + (targetPosZ - targetLastTickPosZ) * 2.0
+			// Encirclement yaw radians
+			val encirclementYawRadians = strafeYawRadians - WMathHelper.PI * 0.5F
 
-			if ((distance - speed) > strafeRange || abs(RotationUtils.getAngleDifference(WMathHelper.toDegrees(yawRadians), thePlayer.rotationYaw)) > fovValue.get() || !isAboveGround(theWorld, predict.first, targetPosY, predict.second)) return
+			// FoV check
+			if (abs(RotationUtils.getAngleDifference(WMathHelper.toDegrees(encirclementYawRadians), thePlayer.rotationYaw)) > fovValue.get()) return
 
-			val encirclement = max(distance - strafeRange, -speed)
-			val encirclementX = -sin(yawRadians) * encirclement
-			val encirclementZ = cos(yawRadians) * encirclement
-			var strafeX = -sin(strafeYawRadians) * speed * direction
-			var strafeZ = cos(strafeYawRadians) * speed * direction
+			// Predict next position of the target and check it is safe
+			val predict = targetPosX + (targetPosX - target.lastTickPosX) * 2.0 to targetPosZ + (targetPosZ - target.lastTickPosZ) * 2.0
+			if (!isAboveGround(theWorld, predict.first, targetPosY, predict.second)) return
 
-			if (thePlayer.onGround && (!isAboveGround(theWorld, thePlayer.posX + encirclementX + (2 * strafeX), thePlayer.posY, thePlayer.posZ + encirclementZ + (2 * strafeZ)) || thePlayer.isCollidedHorizontally))
+			// Setup encirclement movements
+			val encirclementSpeed = distance - strafeRange
+			val encirclementSpeedLimited = sign(encirclementSpeed) * min(abs(encirclementSpeed), moveSpeed)
+			val encirclementX = -WMathHelper.sin(encirclementYawRadians) * encirclementSpeedLimited
+			val encirclementZ = WMathHelper.cos(encirclementYawRadians) * encirclementSpeedLimited
+
+			// Setup strafe movements
+			val strafeSpeed = moveSpeed - if (test.get()) hypot(encirclementX, encirclementZ) else 0.0
+			var strafeX = -WMathHelper.sin(strafeYawRadians) * strafeSpeed * direction
+			var strafeZ = WMathHelper.cos(strafeYawRadians) * strafeSpeed * direction
+
+			if (thePlayer.onGround && (thePlayer.isCollidedHorizontally || !isAboveGround(theWorld, playerPosX + encirclementX + strafeX * 2, thePlayer.posY, playerPosZ + encirclementZ + strafeZ * 2)))
 			{
 				direction *= -1F
 				strafeX *= -1
@@ -104,6 +131,15 @@ class TargetStrafe : Module()
 
 			event.x = encirclementX + strafeX
 			event.z = encirclementZ + strafeZ
+
+			if (debug.get())
+			{
+				val new = hypot(event.x, event.z)
+				val delta = new - moveSpeed
+
+				if (abs(delta) > 0.01F) ClientUtils.displayChatMessage(thePlayer, "before: $moveSpeed -($delta)-> after: $new    [enc: $encirclementSpeedLimited , strafe: $strafeSpeed] || d: ${if (test.get()) hypot(encirclementX, encirclementZ) else 0.0}")
+			}
+
 			strafing = true
 		}
 	}
@@ -161,7 +197,7 @@ class TargetStrafe : Module()
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
 		glLineWidth(1F)
-		RenderUtils.glColor(-1)
+		RenderUtils.glColor(if (strafing) -40864 else -1)
 		glRotatef(90F, 1F, 0F, 0F)
 		glBegin(GL_LINE_STRIP)
 
@@ -174,6 +210,7 @@ class TargetStrafe : Module()
 
 		glEnd()
 
+		RenderUtils.resetColor()
 		glDisable(GL_BLEND)
 		glEnable(GL_TEXTURE_2D)
 		glEnable(GL_DEPTH_TEST)

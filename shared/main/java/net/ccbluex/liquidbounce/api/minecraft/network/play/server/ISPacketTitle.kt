@@ -5,5 +5,5 @@ import net.ccbluex.liquidbounce.api.minecraft.util.IIChatComponent
 
 interface ISPacketTitle : IPacket
 {
-	val message: IIChatComponent
+	val message: IIChatComponent?
 }
