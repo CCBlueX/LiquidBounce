@@ -134,8 +134,10 @@ interface IClassProvider
 	fun createCPacketTabComplete(text: String): IPacket
 	fun createCPacketAnimation(): ICPacketAnimation
 	fun createCPacketKeepAlive(): ICPacketKeepAlive
+	fun createCPacketKeepAlive(key: Int): ICPacketKeepAlive
 	fun createCPacketEncryptionResponse(secretKey: SecretKey, publicKey: PublicKey, verifyToken: ByteArray): IPacket
 	fun createCPacketChatMessage(message: String): ICPacketChatMessage
+	fun createCPacketInput(): IPacket
 
 	/**
 	 * Only available for 1.8.9, can be replaced with [createCPacketTryUseItem] in later versions

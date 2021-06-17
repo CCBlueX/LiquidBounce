@@ -23,6 +23,8 @@ class Frame : SpeedMode("Frame")
 
 		val thePlayer = mc.thePlayer ?: return
 
+		if (MovementUtils.cantBoostUp(thePlayer)) return
+
 		if (MovementUtils.isMoving(thePlayer))
 		{
 			val speed = 4.25

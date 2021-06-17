@@ -29,6 +29,8 @@ class TeleportCubeCraft : SpeedMode("TeleportCubeCraft")
 	{
 		val thePlayer = mc.thePlayer ?: return
 
+		if (MovementUtils.cantBoostUp(thePlayer)) return
+
 		if (MovementUtils.isMoving(thePlayer) && thePlayer.onGround && timer.hasTimePassed(300L))
 		{
 			val func = functions

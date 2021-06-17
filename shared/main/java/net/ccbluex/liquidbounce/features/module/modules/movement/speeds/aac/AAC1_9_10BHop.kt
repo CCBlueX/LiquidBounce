@@ -20,6 +20,8 @@ class AAC1_9_10BHop : SpeedMode("AAC1.9.10-BHop") // Was OldAACBHop
 
 		val thePlayer = mc.thePlayer ?: return
 
+		if (MovementUtils.cantBoostUp(thePlayer)) return
+
 		if (MovementUtils.isMoving(thePlayer))
 		{
 			if (thePlayer.onGround)

@@ -33,6 +33,8 @@ class NCPBHop : SpeedMode("NCPBHop")
 	{
 		val thePlayer = mc.thePlayer ?: return
 
+		if (MovementUtils.cantBoostUp(thePlayer)) return
+
 		if (MovementUtils.isMoving(thePlayer))
 		{
 			if (thePlayer.onGround)

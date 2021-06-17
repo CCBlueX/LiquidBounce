@@ -20,6 +20,8 @@ class AAC3_1_0YPort : SpeedMode("AAC3.1.0-YPort") // Was AACYPort
 
 		val thePlayer = mc.thePlayer ?: return
 
+		if (MovementUtils.cantBoostUp(thePlayer)) return
+
 		if (MovementUtils.isMoving(thePlayer) && !thePlayer.sneaking)
 		{
 			if (thePlayer.onGround)

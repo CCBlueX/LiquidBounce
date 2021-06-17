@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.injection.backend.Backend
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
-import net.minecraft.client.gui.Gui
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL14
 import java.awt.Color
@@ -841,7 +840,7 @@ object RenderUtils : MinecraftInstance()
 			_endX = i
 		}
 
-		Gui.drawRect(_startX, y, _endX + 1, y + 1, color)
+		drawRect(_startX, y, _endX + 1, y + 1, color)
 	}
 
 	@JvmStatic

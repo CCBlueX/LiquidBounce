@@ -222,7 +222,11 @@ object ClassProviderImpl : IClassProvider
 
 	override fun createCPacketKeepAlive(): ICPacketKeepAlive = CPacketKeepAliveImpl(C00PacketKeepAlive())
 
+	override fun createCPacketKeepAlive(key: Int): ICPacketKeepAlive = CPacketKeepAliveImpl(C00PacketKeepAlive(key))
+
 	override fun createCPacketChatMessage(message: String): ICPacketChatMessage = CPacketChatMessageImpl(C01PacketChatMessage(message))
+
+	override fun createCPacketInput(): IPacket = PacketImpl(C0CPacketInput())
 
 	override fun createFramebuffer(displayWidth: Int, displayHeight: Int, useDepth: Boolean): IFramebuffer = FramebufferImpl(Framebuffer(displayWidth, displayHeight, useDepth))
 

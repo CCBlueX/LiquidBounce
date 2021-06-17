@@ -18,7 +18,7 @@ class YPort2 : SpeedMode("YPort2")
 
 		val thePlayer = mc.thePlayer ?: return
 
-		if (thePlayer.isOnLadder || thePlayer.isInWater || thePlayer.isInLava || thePlayer.isInWeb || !MovementUtils.isMoving(thePlayer)) return
+		if (!MovementUtils.isMoving(thePlayer) || MovementUtils.cantBoostUp(thePlayer)) return
 
 		if (thePlayer.onGround) jump(thePlayer) else thePlayer.motionY = -1.0
 

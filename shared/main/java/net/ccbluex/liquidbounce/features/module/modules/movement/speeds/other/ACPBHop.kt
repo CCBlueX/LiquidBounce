@@ -17,6 +17,8 @@ class ACPBHop : SpeedMode("ACP-BHop")
 	{
 		val thePlayer = mc.thePlayer ?: return
 
+		if (MovementUtils.cantBoostUp(thePlayer)) return
+
 		if (MovementUtils.isMoving(thePlayer))
 		{
 			val moveSpeed = when (MovementUtils.getSpeedEffectAmplifier(thePlayer))

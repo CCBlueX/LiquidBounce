@@ -21,7 +21,7 @@ class RedeSkySlowHop : SpeedMode("RedeSky-SlowHop")
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (!MovementUtils.isMoving(thePlayer)) return
+		if (!MovementUtils.isMoving(thePlayer) || MovementUtils.cantBoostUp(thePlayer)) return
 
 		if (thePlayer.onGround)
 		{

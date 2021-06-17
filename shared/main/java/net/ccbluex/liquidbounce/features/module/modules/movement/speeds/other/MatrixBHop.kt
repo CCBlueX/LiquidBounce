@@ -21,6 +21,8 @@ class MatrixBHop : SpeedMode("Matrix-BHop")
 
 		val timer = mc.timer
 
+		if (MovementUtils.cantBoostUp(thePlayer)) return
+
 		if (MovementUtils.isMoving(thePlayer))
 		{
 			if (thePlayer.onGround)

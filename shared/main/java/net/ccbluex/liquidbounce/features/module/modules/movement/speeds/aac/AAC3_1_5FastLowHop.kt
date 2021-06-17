@@ -36,7 +36,7 @@ class AAC3_1_5FastLowHop : SpeedMode("AAC3.1.5-FastLowHop") // Was AACLowHop2
 
 		timer.timerSpeed = 1f
 
-		if (thePlayer.isInWater) return
+		if (MovementUtils.cantBoostUp(thePlayer)) return
 
 		if (MovementUtils.isMoving(thePlayer))
 		{

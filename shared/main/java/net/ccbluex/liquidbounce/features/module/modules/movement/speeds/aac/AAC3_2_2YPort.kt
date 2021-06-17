@@ -20,6 +20,8 @@ class AAC3_2_2YPort : SpeedMode("AAC3.2.2-YPort") // Was AACYPort2
 
 		val thePlayer = mc.thePlayer ?: return
 
+		if (MovementUtils.cantBoostUp(thePlayer)) return
+
 		if (MovementUtils.isMoving(thePlayer))
 		{
 			if (thePlayer.onGround)

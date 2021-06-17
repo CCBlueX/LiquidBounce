@@ -56,7 +56,7 @@ class OldNCPBHop : SpeedMode("OldNCPBHop")
 		val thePlayer = mc.thePlayer ?: return
 
 		val timer = mc.timer
-		val moving = MovementUtils.isMoving(thePlayer)
+		val moving = MovementUtils.isMoving(thePlayer) && !MovementUtils.cantBoostUp(thePlayer)
 
 		++timerDelay
 		timerDelay %= 5

@@ -35,4 +35,5 @@ interface IPacket
 	fun asCPacketHandshake(): ICPacketHandshake
 	fun asCPacketPlayerDigging(): ICPacketPlayerDigging
 	fun asCPacketPlayerBlockPlacement(): ICPacketPlayerBlockPlacement
+	fun asCPacketKeepAlive(): ICPacketKeepAlive
 }

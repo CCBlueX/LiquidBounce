@@ -21,6 +21,8 @@ class CustomSpeed : SpeedMode("Custom")
 
 		val thePlayer = mc.thePlayer ?: return
 
+		if (MovementUtils.cantBoostUp(thePlayer)) return
+
 		if (MovementUtils.isMoving(thePlayer))
 		{
 			val speed = LiquidBounce.moduleManager[Speed::class.java] as Speed? ?: return
@@ -40,11 +42,7 @@ class CustomSpeed : SpeedMode("Custom")
 				else -> MovementUtils.strafe(thePlayer)
 			}
 		}
-		else
-		{
-			thePlayer.motionZ = 0.0
-			thePlayer.motionX = thePlayer.motionZ
-		}
+		else MovementUtils.zeroXZ(thePlayer)
 	}
 
 	override fun onEnable()

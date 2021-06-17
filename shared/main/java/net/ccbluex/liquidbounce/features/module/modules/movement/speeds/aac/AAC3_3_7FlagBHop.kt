@@ -18,6 +18,8 @@ class AAC3_3_7FlagBHop : SpeedMode("AAC3.3.7-FlagBHop") // Was AAC4BHop
 	{
 		val thePlayer = mc.thePlayer ?: return
 
+		if (MovementUtils.cantBoostUp(thePlayer)) return
+
 		if (MovementUtils.isMoving(thePlayer))
 		{
 			if (firstLegitJump)

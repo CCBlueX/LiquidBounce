@@ -24,7 +24,7 @@ class AAC3_3_13LowHop : SpeedMode("AAC3.3.13-LowHop") // Was AACHop3.3.13
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		if (!MovementUtils.isMoving(thePlayer) || thePlayer.isInWater || thePlayer.isInLava || thePlayer.isOnLadder || thePlayer.isRiding || thePlayer.hurtTime > 0) return
+		if (!MovementUtils.isMoving(thePlayer) || MovementUtils.cantBoostUp(thePlayer) || thePlayer.hurtTime > 0) return
 		if (thePlayer.onGround && thePlayer.isCollidedVertically)
 		{
 			val func = functions

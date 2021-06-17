@@ -187,6 +187,14 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 		{
 			wrapped.posZ = value
 		}
+
+	override val serverPosX: Int
+		get() = wrapped.serverPosX
+	override val serverPosY: Int
+		get() = wrapped.serverPosY
+	override val serverPosZ: Int
+		get() = wrapped.serverPosZ
+
 	override val lastTickPosX: Double
 		get() = wrapped.lastTickPosX
 	override val lastTickPosY: Double
@@ -263,7 +271,7 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 
 	override fun setPosition(x: Double, y: Double, z: Double) = wrapped.setPosition(x, y, z)
 	override fun setPositionAndUpdate(posX: Double, posY: Double, posZ: Double) = wrapped.setPositionAndUpdate(posX, posY, posZ)
-	override fun setPositionAndRotation(oldX: Double, oldY: Double, oldZ: Double, rotationYaw: Float, rotationPitch: Float) = wrapped.setPositionAndRotation(oldX, oldY, oldZ, rotationYaw, rotationPitch)
+	override fun setPositionAndRotation(posX: Double, posY: Double, posZ: Double, rotationYaw: Float, rotationPitch: Float) = wrapped.setPositionAndRotation(posX, posY, posZ, rotationYaw, rotationPitch)
 
 	/* Distance */
 	override fun getDistanceToEntity(it: IEntity): Float = wrapped.getDistanceToEntity(it.unwrap())

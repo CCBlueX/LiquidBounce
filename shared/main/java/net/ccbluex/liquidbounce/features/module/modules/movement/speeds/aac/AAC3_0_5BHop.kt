@@ -18,7 +18,7 @@ class AAC3_0_5BHop : SpeedMode("AAC3.0.5-BHop") // Was AAC2BHop
 
 		val thePlayer = mc.thePlayer ?: return
 
-		if (thePlayer.isInWater) return
+		if (MovementUtils.cantBoostUp(thePlayer)) return
 
 		if (MovementUtils.isMoving(thePlayer))
 		{

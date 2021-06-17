@@ -18,6 +18,7 @@ class ACRBHop : SpeedMode("ACR-BHop")
 	{
 		val thePlayer = mc.thePlayer ?: return
 
+		if (MovementUtils.cantBoostUp(thePlayer)) return
 
 		if (isMoving(thePlayer))
 		{

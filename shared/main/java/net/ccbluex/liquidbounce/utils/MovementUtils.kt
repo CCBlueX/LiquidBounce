@@ -24,6 +24,9 @@ object MovementUtils : MinecraftInstance()
 	fun isMoving(thePlayer: IEntityPlayerSP): Boolean = thePlayer.movementInput.moveForward != 0f || thePlayer.movementInput.moveStrafe != 0f
 
 	@JvmStatic
+	fun cantBoostUp(thePlayer: IEntityPlayerSP): Boolean = thePlayer.isInWater || thePlayer.isInLava || thePlayer.isInWeb || thePlayer.isOnLadder || thePlayer.isRiding
+
+	@JvmStatic
 	fun hasMotion(thePlayer: IEntityPlayerSP): Boolean = thePlayer.motionX != 0.0 && thePlayer.motionZ != 0.0 && thePlayer.motionY != 0.0
 
 	@JvmStatic

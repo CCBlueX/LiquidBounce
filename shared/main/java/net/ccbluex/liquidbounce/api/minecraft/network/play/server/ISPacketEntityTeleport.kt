@@ -9,4 +9,9 @@ interface ISPacketEntityTeleport : IPacket
 	val x: Double
 	val y: Double
 	val z: Double
+
+	val yaw: Byte
+	val pitch: Byte
+
+	val onGround: Boolean
 }

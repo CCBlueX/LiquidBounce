@@ -7,9 +7,9 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.enums.StatType
+import net.ccbluex.liquidbounce.api.minecraft.INetworkManager
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -18,7 +18,10 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.Phase
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
-import net.ccbluex.liquidbounce.value.*
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
 
 @ModuleInfo(name = "Step", description = "Allows you to step up blocks.", category = ModuleCategory.MOVEMENT)
 class Step : Module()
@@ -35,6 +38,7 @@ class Step : Module()
 	private val jumpHeightValue = FloatValue("JumpHeight", 0.42F, 0.37F, 0.42F)
 	private val maxDelayValue = IntegerValue("MaxDelay", 0, 0, 500)
 	private val minDelayValue = IntegerValue("MinDelay", 0, 0, 500)
+	private val resetSpeedAfterStepConfirmValue = BoolValue("ResetXZAfterStep", false)
 	private val motionNCPBoostValue = FloatValue("MotionNCP-Boost", 0.7F, 0F, 0.7F)
 
 	/**
@@ -42,7 +46,7 @@ class Step : Module()
 	 */
 
 	private var isStep = false
-	private var isAAC3_3_4Step = false
+	private var aac334step = false
 
 	private var stepX = 0.0
 	private var stepY = 0.0
@@ -85,11 +89,7 @@ class Step : Module()
 					fakeJump(thePlayer)
 					thePlayer.motionY += 0.620000001490116
 
-					val func = functions
-
-					val f = WMathHelper.toRadians(thePlayer.rotationYaw)
-					thePlayer.motionX -= func.sin(f) * 0.2
-					thePlayer.motionZ += func.cos(f) * 0.2
+					MovementUtils.addMotion(thePlayer, 0.2F)
 					resetTimer()
 				}
 
@@ -104,17 +104,17 @@ class Step : Module()
 					thePlayer.motionX *= 1.26
 					thePlayer.motionZ *= 1.26
 					thePlayer.jump()
-					isAAC3_3_4Step = true
+					aac334step = true
 				}
 
-				if (isAAC3_3_4Step)
+				if (aac334step)
 				{
 					thePlayer.motionY -= 0.015
 
 					if (!thePlayer.isUsingItem && thePlayer.movementInput.moveStrafe == 0F) thePlayer.jumpMovementFactor = 0.3F
 				}
 			}
-			else isAAC3_3_4Step = false
+			else aac334step = false
 		}
 	}
 
@@ -225,7 +225,8 @@ class Step : Module()
 		if (!isStep) // Check if step
 			return
 
-		if (thePlayer.entityBoundingBox.minY - stepY > 0.5)
+		val stepHeight = thePlayer.entityBoundingBox.minY - stepY
+		if (stepHeight > 0.5)
 		{
 
 			// Check if full block step
@@ -241,8 +242,10 @@ class Step : Module()
 					fakeJump(thePlayer)
 
 					// Half legit step (1 packet missing) [COULD TRIGGER TOO MANY PACKETS]
-					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(stepX, stepY + 0.41999998688698, stepZ, false)) // 0.42
-					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(stepX, stepY + 0.7531999805212, stepZ, false)) // 0.333
+					// networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(stepX, stepY + 0.41999998688698, stepZ, false)) // 0.42
+					// networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(stepX, stepY + 0.7531999805212, stepZ, false)) // 0.333
+
+					performNCPPacketStep(networkManager, thePlayer, stepX, stepY, stepZ, stepHeight)
 					resetTimer()
 				}
 
@@ -280,12 +283,34 @@ class Step : Module()
 					resetTimer()
 				}
 			}
+
+			if (resetSpeedAfterStepConfirmValue.get()) MovementUtils.zeroXZ(thePlayer)
 		}
 
 		isStep = false
 		stepX = 0.0
 		stepY = 0.0
 		stepZ = 0.0
+	}
+
+	private fun performNCPPacketStep(networkManager: INetworkManager, thePlayer: IEntityPlayerSP, stepX: Double, stepY: Double, stepZ: Double, stepHeight: Double)
+	{
+		// Values from NCPStep v1.0 by york
+
+		val (motions, resetXZ) = when
+		{
+			stepHeight > 2.019 -> arrayOf(0.425, 0.821, 0.699, 0.599, 1.022, 1.372, 1.652, 1.869, 2.019, 1.919) to true
+			stepHeight > 1.869 -> arrayOf(0.425, 0.821, 0.699, 0.599, 1.022, 1.372, 1.652, 1.869) to true
+			stepHeight > 1.5 -> arrayOf(0.425, 0.821, 0.699, 0.599, 1.022, 1.372, 1.652) to true
+			stepHeight > 1.015 -> arrayOf(0.425, 0.821, 0.699, 0.599, 1.022, 1.372, 1.652) to true
+			stepHeight > 0.875 -> arrayOf(0.41999998688698, 0.7531999805212) to false
+			stepHeight > 0.6 -> arrayOf(0.39, 0.6938) to false
+			else -> return
+		}
+
+		motions.map { classProvider.createCPacketPlayerPosition(stepX, stepY + it, stepZ, false) }.forEach(networkManager::sendPacketWithoutEvent)
+
+		if (resetXZ) MovementUtils.zeroXZ(thePlayer)
 	}
 
 	private fun resetTimer()

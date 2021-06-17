@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
+import org.intellij.lang.annotations.MagicConstant
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.util.*
@@ -60,20 +61,7 @@ class Blink : Module()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		if (displayPreviousPos.get())
-		{
-			val faker: IEntityOtherPlayerMP = classProvider.createEntityOtherPlayerMP(theWorld, thePlayer.gameProfile)
-
-
-			faker.rotationYawHead = thePlayer.rotationYawHead
-			faker.renderYawOffset = thePlayer.renderYawOffset
-			faker.copyLocationAndAnglesFrom(thePlayer)
-			faker.rotationYawHead = thePlayer.rotationYawHead
-			theWorld.addEntityToWorld(-1337, faker)
-
-
-			fakePlayer = faker
-		}
+		blink(theWorld, thePlayer, displayPreviousPos.get(), 0)
 
 		synchronized(positions) {
 			positions.add(doubleArrayOf(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight * 0.5, thePlayer.posZ))
@@ -88,7 +76,7 @@ class Blink : Module()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		blink(theWorld, thePlayer, displayPreviousPos.get(), false)
+		blink(theWorld, thePlayer, displayPreviousPos.get(), 2)
 	}
 
 	@EventTarget
@@ -117,14 +105,15 @@ class Blink : Module()
 
 		if (pulseValue.get() && pulseTimer.hasTimePassed(pulseDelay))
 		{
-			blink(theWorld, thePlayer, displayPreviousPos.get(), true)
+			blink(theWorld, thePlayer, displayPreviousPos.get(), 1)
+
 			pulseTimer.reset()
 			pulseDelay = TimeUtils.randomDelay(minPulseDelayValue.get(), maxPulseDelayValue.get())
 		}
 	}
 
 	@EventTarget
-	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
+	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
 		// The color settings are depended on BreadCrumb's
 		val breadcrumbs = LiquidBounce.moduleManager[Breadcrumbs::class.java] as Breadcrumbs
@@ -166,28 +155,43 @@ class Blink : Module()
 	override val tag: String
 		get() = packets.size.toString()
 
-	private fun blink(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, displayPrevPos: Boolean, canCreateFaker: Boolean)
+	/**
+	 * @param blinkMode
+	 * 0 - Just create the faker
+	 * 1 - Send all queued packets and update the faker
+	 * 2 - Send all queued packets and remove the faker from the world
+	 */
+	private fun blink(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, displayPrevPos: Boolean, @MagicConstant(intValues = [0, 1, 2]) blinkMode: Int)
 	{
-		if (displayPrevPos || !canCreateFaker)
+		when (blinkMode)
 		{
-			var faker = fakePlayer
-			if (faker != null)
+			// Just create the faker
+			0 -> if (displayPrevPos)
 			{
-				theWorld.removeEntityFromWorld(faker.entityId)
-				fakePlayer = null
-			}
-
-			if (canCreateFaker)
-			{
-				faker = classProvider.createEntityOtherPlayerMP(theWorld, thePlayer.gameProfile)
+				val faker = classProvider.createEntityOtherPlayerMP(theWorld, thePlayer.gameProfile)
 
 				faker.rotationYawHead = thePlayer.rotationYawHead
 				faker.renderYawOffset = thePlayer.renderYawOffset
 				faker.copyLocationAndAnglesFrom(thePlayer)
-				faker.rotationYawHead = thePlayer.rotationYawHead
+
 				theWorld.addEntityToWorld(-1337, faker)
 
 				fakePlayer = faker
+
+				return
+			}
+
+			// Update the faker
+			1 -> fakePlayer?.let {
+				it.rotationYawHead = thePlayer.rotationYawHead
+				it.renderYawOffset = thePlayer.renderYawOffset
+				it.copyLocationAndAnglesFrom(thePlayer)
+			}
+
+			// Remove the faker
+			2 -> fakePlayer?.let {
+				theWorld.removeEntityFromWorld(it.entityId)
+				fakePlayer = null
 			}
 		}
 

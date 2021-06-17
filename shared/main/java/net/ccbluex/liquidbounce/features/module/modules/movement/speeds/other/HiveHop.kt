@@ -34,6 +34,8 @@ class HiveHop : SpeedMode("HiveHop")
 
 		val timer = mc.timer
 
+		if (MovementUtils.cantBoostUp(thePlayer)) return
+
 		if (MovementUtils.isMoving(thePlayer))
 		{
 			if (thePlayer.onGround) thePlayer.motionY = 0.3

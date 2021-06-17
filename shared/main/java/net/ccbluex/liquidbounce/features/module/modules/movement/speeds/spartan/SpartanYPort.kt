@@ -20,6 +20,8 @@ class SpartanYPort : SpeedMode("Spartan-YPort")
 
 		val thePlayer = mc.thePlayer ?: return
 
+		if (MovementUtils.cantBoostUp(thePlayer)) return
+
 		if (MovementUtils.isMoving(thePlayer) && !thePlayer.movementInput.jump)
 		{
 			if (thePlayer.onGround)

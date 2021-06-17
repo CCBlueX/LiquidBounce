@@ -27,6 +27,8 @@ class AAC3_1_5LowHop : SpeedMode("AAC3.1.5-LowHop") // Was AACLowHop
 
 		val thePlayer = mc.thePlayer ?: return
 
+		if (MovementUtils.cantBoostUp(thePlayer)) return
+
 		if (MovementUtils.isMoving(thePlayer))
 		{
 			if (thePlayer.onGround)

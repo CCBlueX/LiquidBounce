@@ -23,7 +23,7 @@ class AAC3_3_9BHop : SpeedMode("AAC3.3.9-BHop") // Was AAC5BHop
 
 		timer.timerSpeed = 1f
 
-		if (thePlayer.isInWater) return
+		if (MovementUtils.cantBoostUp(thePlayer)) return
 
 		if (MovementUtils.isMoving(thePlayer))
 		{

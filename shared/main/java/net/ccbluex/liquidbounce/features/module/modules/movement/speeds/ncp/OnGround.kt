@@ -18,7 +18,7 @@ class OnGround : SpeedMode("OnGround")
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (eventState != EventState.PRE || !MovementUtils.isMoving(thePlayer) || thePlayer.fallDistance > 3.994 || thePlayer.isInWater || thePlayer.isOnLadder || thePlayer.isCollidedHorizontally) return
+		if (eventState != EventState.PRE || !MovementUtils.isMoving(thePlayer) || thePlayer.fallDistance > 3.994 || MovementUtils.cantBoostUp(thePlayer) || thePlayer.isCollidedHorizontally) return
 
 		val timer = mc.timer
 

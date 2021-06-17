@@ -35,7 +35,7 @@ class YPort : SpeedMode("YPort")
 
 		val provider = classProvider
 
-		if (!safeJump && !thePlayer.movementInput.jump && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isInLava && (!provider.isBlockAir(this.getBlock(thePlayer, -1.1)) && !provider.isBlockAir(this.getBlock(thePlayer, -1.1)) || !provider.isBlockAir(this.getBlock(thePlayer, -0.1)) && thePlayer.motionX != 0.0 && thePlayer.motionZ != 0.0 && !thePlayer.onGround && thePlayer.fallDistance < 3.0f && thePlayer.fallDistance > 0.05) && step == 3) thePlayer.motionY = -0.3994
+		if (!safeJump && !thePlayer.movementInput.jump && !MovementUtils.cantBoostUp(thePlayer) && (!provider.isBlockAir(this.getBlock(thePlayer, -1.1)) && !provider.isBlockAir(this.getBlock(thePlayer, -1.1)) || !provider.isBlockAir(this.getBlock(thePlayer, -0.1)) && thePlayer.motionX != 0.0 && thePlayer.motionZ != 0.0 && !thePlayer.onGround && thePlayer.fallDistance < 3.0f && thePlayer.fallDistance > 0.05) && step == 3) thePlayer.motionY = -0.3994
 
 		lastSpeed = hypot(thePlayer.posX - thePlayer.prevPosX, thePlayer.posZ - thePlayer.prevPosZ)
 

@@ -20,7 +20,7 @@ class AAC3_0_3LowHop : SpeedMode("AAC3.0.3-LowHop") // Was AACBHop
 
 		val thePlayer = mc.thePlayer ?: return
 
-		if (thePlayer.isInWater) return
+		if (MovementUtils.cantBoostUp(thePlayer)) return
 
 		val timer = mc.timer
 

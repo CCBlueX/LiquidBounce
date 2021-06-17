@@ -22,7 +22,7 @@ class AAC3_3_11Ground2 : SpeedMode("AAC3.3.11-Ground2") // Was AACGround2
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (!MovementUtils.isMoving(thePlayer)) return
+		if (!MovementUtils.isMoving(thePlayer) || MovementUtils.cantBoostUp(thePlayer)) return
 
 		mc.timer.timerSpeed = (LiquidBounce.moduleManager[Speed::class.java] as Speed).aacGroundTimerValue.get()
 		MovementUtils.strafe(thePlayer, 0.02f)

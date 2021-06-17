@@ -14,6 +14,10 @@ interface ISPacketEntity : IPacket
 {
 	val rotating: Boolean
 
+	val posX: Byte
+	val posY: Byte
+	val posZ: Byte
+
 	val onGround: Boolean
 	val yaw: Byte
 	val pitch: Byte

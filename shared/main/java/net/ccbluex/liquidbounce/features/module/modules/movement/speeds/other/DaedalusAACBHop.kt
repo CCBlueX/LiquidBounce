@@ -19,6 +19,8 @@ class DaedalusAACBHop : SpeedMode("DaedalusAAC-BHop")
 	{
 		val thePlayer = mc.thePlayer ?: return
 
+		if (MovementUtils.cantBoostUp(thePlayer)) return
+
 		if (isMoving(thePlayer))
 		{
 			strafe(thePlayer, 0.3f)

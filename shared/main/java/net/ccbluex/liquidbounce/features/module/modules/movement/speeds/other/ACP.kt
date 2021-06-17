@@ -19,6 +19,8 @@ class ACP : SpeedMode("ACP")
 	{
 		val thePlayer = mc.thePlayer ?: return
 
+		if (MovementUtils.cantBoostUp(thePlayer)) return
+
 		if (isMoving(thePlayer))
 		{
 			val amplifier = MovementUtils.getSpeedEffectAmplifier(thePlayer)

@@ -65,7 +65,7 @@ class LocationCache : MinecraftInstance(), Listenable
 
 		fun getPlayerLocationBeforeNTicks(n: Int, default: Location): Location
 		{
-			if(playerLocationList.isNotEmpty()) return default
+			if (playerLocationList.isEmpty()) return default
 
 			val indexLimit = playerLocationList.size - 1
 

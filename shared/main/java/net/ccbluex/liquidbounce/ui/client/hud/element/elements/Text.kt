@@ -77,11 +77,20 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 	private val rectColorBlueValue = IntegerValue("Rect-B", 255, 0, 255)
 	private val rectColorAlphaValue = IntegerValue("Rect-Alpha", 255, 0, 255)
 
-	private val backgroundColorModeValue = ListValue("Background-Color", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom")
+	private val backgroundColorModeValue = ListValue("Background-Color", arrayOf("None", "Custom", "Rainbow", "RainbowShader"), "Custom")
 	private val backgroundColorRedValue = IntegerValue("Background-R", 0, 0, 255)
 	private val backgroundColorGreenValue = IntegerValue("Background-G", 0, 0, 255)
 	private val backgroundColorBlueValue = IntegerValue("Background-B", 0, 0, 255)
 	private val backgroundColorAlphaValue = IntegerValue("Background-Alpha", 0, 0, 255)
+
+	private val backgroundRainbowCeilValue = BoolValue("Background-RainbowCeil", false)
+
+	private val background2ExpandValue = FloatValue("SecondBackground-Expand", 3F, 1.5F, 5F)
+	private val background2ColorModeValue = ListValue("SecondBackground-Color", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom")
+	private val background2ColorRedValue = IntegerValue("SecondBackground-R", 32, 0, 255)
+	private val background2ColorGreenValue = IntegerValue("SecondBackground-G", 32, 0, 255)
+	private val background2ColorBlueValue = IntegerValue("SecondBackground-B", 32, 0, 255)
+	private val background2ColorAlphaValue = IntegerValue("SecondBackground-Alpha", 0, 0, 255)
 
 	private val saturationValue = FloatValue("HSB-Saturation", 0.9f, 0f, 1f)
 	private val brightnessValue = FloatValue("HSB-Brightness", 1f, 0f, 1f)
@@ -233,31 +242,50 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 	override fun drawElement(): Border
 	{
 		val colorMode = colorModeValue.get()
-		val rectMode = rectValue.get()
-		val rectColorMode = rectColorModeValue.get()
-		val backgroundColorMode = backgroundColorModeValue.get()
+
+		// Text
 		val colorAlpha = alphaValue.get()
 		val customColor = createRGB(redValue.get(), greenValue.get(), blueValue.get(), colorAlpha)
+
+		val shadow = shadowValue.get()
+
+		// Rect
+		val rectMode = rectValue.get()
+		val rectColorMode = rectColorModeValue.get()
 		val rectColorAlpha = rectColorAlphaValue.get()
 		val rectCustomColor = createRGB(rectColorRedValue.get(), rectColorGreenValue.get(), rectColorBlueValue.get(), rectColorAlpha)
+
+		val rectWidth = rectWidthValue.get()
+
+		// Background
+		val backgroundColorMode = backgroundColorModeValue.get()
 		val backgroundColorAlpha = backgroundColorAlphaValue.get()
 		val backgroundCustomColor = createRGB(backgroundColorRedValue.get(), backgroundColorGreenValue.get(), backgroundColorBlueValue.get(), backgroundColorAlpha)
+
+		val backgroundRainbowCeil = backgroundRainbowCeilValue.get()
+
+		val background2Expand = background2ExpandValue.get()
+		val background2ColorMode = background2ColorModeValue.get()
+		val background2ColorAlpha = background2ColorAlphaValue.get()
+		val background2CustomColor = createRGB(background2ColorRedValue.get(), background2ColorGreenValue.get(), background2ColorBlueValue.get(), background2ColorAlpha)
+
 		val fontRenderer = fontValue.get()
+
+		// Rainbow
 		val rainbowSpeed = rainbowSpeedValue.get()
 		val rainbowShaderX = if (rainbowShaderXValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderXValue.get()
 		val rainbowShaderY = if (rainbowShaderYValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderYValue.get()
 		val rainbowShaderOffset = System.currentTimeMillis() % 10000 * 0.0001f
+
 		val saturation = saturationValue.get()
 		val brightness = brightnessValue.get()
-		val shadow = shadowValue.get()
 
 		val horizontalSide = side.horizontal
 
 		val textWidth = fontRenderer.getStringWidth(displayText)
 
+		// Border
 		val borderExpand = borderExpandValue.get()
-		val rectWidth = rectWidthValue.get()
-
 		val (borderXStart, borderXEnd) = when (horizontalSide)
 		{
 			Side.Horizontal.LEFT -> -borderExpand to textWidth + borderExpand
@@ -268,6 +296,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 		val borderYStart = -borderExpand
 		val borderYEnd = fontRenderer.fontHeight.toFloat() + borderExpand
 
+		// Rect mode
 		val leftRect = rectMode.equals("Left", ignoreCase = true)
 		val rightRect = rectMode.equals("Right", ignoreCase = true)
 
@@ -276,24 +305,44 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 
 		val textX = (if (rightRect) 0f else if (leftRect) rectWidth else rectWidth * 0.5F) + (borderXStart + borderExpand)
 
-		val backgroundRainbowShader = backgroundColorMode.equals("RainbowShader", ignoreCase = true)
-		val rectRainbowShader = rectColorMode.equals("RainbowShader", ignoreCase = true)
-		val textRainbowShader = colorMode.equals("RainbowShader", ignoreCase = true)
+		val rainbowRGB = ColorUtils.rainbowRGB(speed = rainbowSpeed, saturation = saturation, brightness = brightness)
 
-		val backgroundColor = when
+		// Background Color
+		val backgroundRainbowShader = backgroundColorMode.equals("RainbowShader", ignoreCase = true)
+		val backgroundColor = if (backgroundColorAlpha > 0) when
 		{
 			backgroundRainbowShader -> 0
-			backgroundColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbowRGB(alpha = backgroundColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness)
+			backgroundColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.applyAlphaChannel(rainbowRGB, backgroundColorAlpha)
 			else -> backgroundCustomColor
 		}
+		else 0
 
-		val rectColor = when
+		// Second Background Color
+		val background2RainbowShader = background2ColorMode.equals("RainbowShader", ignoreCase = true)
+		val shouldDrawBackground2 = backgroundColorAlpha > 0 && background2ColorAlpha > 0
+		val background2Color = if (shouldDrawBackground2)
+		{
+			when
+			{
+				background2RainbowShader -> 0
+				background2ColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.applyAlphaChannel(rainbowRGB, background2ColorAlpha)
+				else -> background2CustomColor
+			}
+		}
+		else 0
+
+		// Rect Color
+		val rectRainbowShader = rectColorMode.equals("RainbowShader", ignoreCase = true)
+		val rectColor = if (rectColorAlpha > 0) when
 		{
 			rectRainbowShader -> 0
-			rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbowRGB(alpha = rectColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness)
+			rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.applyAlphaChannel(rainbowRGB, rectColorAlpha)
 			else -> rectCustomColor
 		}
+		else 0
 
+		// Text Color
+		val textRainbowShader = colorMode.equals("RainbowShader", ignoreCase = true)
 		val textColor = when
 		{
 			textRainbowShader -> 0
@@ -302,8 +351,22 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 		}
 
 		// Render Background
-		RainbowShader.begin(backgroundRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-			RenderUtils.drawRect(backgroundXStart, borderYStart, backgroundXEnd, borderYEnd, backgroundColor)
+		if (backgroundColorAlpha > 0)
+		{
+			if (background2ColorAlpha > 0)
+			{
+				RainbowShader.begin(background2RainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
+					RenderUtils.drawRect(backgroundXStart - background2Expand, borderYStart - background2Expand, backgroundXEnd + background2Expand, borderYEnd + background2Expand, background2Color)
+				}
+			}
+
+			RainbowShader.begin(backgroundRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
+				RenderUtils.drawRect(backgroundXStart, borderYStart, backgroundXEnd, borderYEnd, backgroundColor)
+			}
+
+			if (backgroundRainbowCeil) RainbowShader.begin(true, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
+				RenderUtils.drawRect(backgroundXStart, borderYStart - 1, backgroundXEnd, borderYStart, 0)
+			}
 		}
 
 		// Render Rect
@@ -325,7 +388,8 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 			updateElement()
 		}
 
-		return Border(backgroundXStart - if (leftRect) rectWidth else 0F, -borderExpand, backgroundXEnd + if (rightRect) rectWidth else 0F, fontRenderer.fontHeight.toFloat() + borderExpand)
+		val background2Affect = if (shouldDrawBackground2) background2Expand else 0F
+		return Border(backgroundXStart - (if (leftRect) rectWidth else 0F) - background2Affect, -borderExpand - background2Affect, backgroundXEnd + (if (rightRect) rectWidth else 0F) + background2Affect, fontRenderer.fontHeight.toFloat() + borderExpand + background2Affect)
 	}
 
 	override fun updateElement()

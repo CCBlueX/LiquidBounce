@@ -18,7 +18,7 @@ class MiJump : SpeedMode("MiJump")
 
 		val thePlayer = mc.thePlayer ?: return
 
-		if (!MovementUtils.isMoving(thePlayer)) return
+		if (!MovementUtils.isMoving(thePlayer) || MovementUtils.cantBoostUp(thePlayer)) return
 
 		if (thePlayer.onGround && !thePlayer.movementInput.jump)
 		{

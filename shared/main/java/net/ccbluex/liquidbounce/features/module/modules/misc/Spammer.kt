@@ -7,7 +7,9 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.TickEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
+import net.ccbluex.liquidbounce.event.WorldEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
@@ -67,6 +69,18 @@ class Spammer : Module()
 			msTimer.reset()
 			delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
 		}
+	}
+
+	@EventTarget
+	fun onWorld(event: WorldEvent)
+	{
+		if (event.worldClient == null) state = false // Disable module in case you left (or kicked) from the server
+	}
+
+	@EventTarget
+	fun onTick(@Suppress("UNUSED_PARAMETER") event: TickEvent?)
+	{
+		if (mc.thePlayer == null || mc.theWorld == null) state = false // Disable module in case you left (or kicked) from the server
 	}
 
 	companion object

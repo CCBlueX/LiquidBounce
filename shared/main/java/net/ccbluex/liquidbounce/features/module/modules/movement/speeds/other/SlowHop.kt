@@ -18,7 +18,8 @@ class SlowHop : SpeedMode("SlowHop")
 
 		val thePlayer = mc.thePlayer ?: return
 
-		if (thePlayer.isInWater) return
+		if (MovementUtils.cantBoostUp(thePlayer)) return
+
 		if (MovementUtils.isMoving(thePlayer))
 		{
 			if (thePlayer.onGround) jump(thePlayer) else MovementUtils.strafe(thePlayer, MovementUtils.getSpeed(thePlayer) * 1.011f)

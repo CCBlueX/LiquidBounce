@@ -66,10 +66,27 @@ class Target : Element()
 
 	private val renderEquipmentsValue = BoolValue("Armor", true)
 
-	private val borderWidthValue = FloatValue("BorderWidth", 3F, 2F, 5F)
-	private val borderColorRedValue = IntegerValue("BorderColorRed", 0, 0, 255)
-	private val borderColorGreenValue = IntegerValue("BorderColorGreen", 0, 0, 255)
-	private val borderColorBlueValue = IntegerValue("BorderColorBlue", 0, 0, 255)
+	private val borderWidthValue = FloatValue("Border-Width", 3F, 2F, 5F)
+	private val borderColorRedValue = IntegerValue("Border-R", 0, 0, 255)
+	private val borderColorGreenValue = IntegerValue("Border-G", 0, 0, 255)
+	private val borderColorBlueValue = IntegerValue("Border-B", 0, 0, 255)
+
+	// TODO
+	private val backgroundColorModeValue = ListValue("Background-Color", arrayOf("None", "Custom", "Rainbow", "RainbowShader"), "Custom")
+	private val backgroundColorRedValue = IntegerValue("Background-R", 0, 0, 255)
+	private val backgroundColorGreenValue = IntegerValue("Background-G", 0, 0, 255)
+	private val backgroundColorBlueValue = IntegerValue("Background-B", 0, 0, 255)
+	private val backgroundColorAlphaValue = IntegerValue("Background-Alpha", 0, 0, 255)
+
+	private val backgroundRainbowCeilValue = BoolValue("Background-RainbowCeil", false)
+
+	private val background2ExpandValue = FloatValue("SecondBackground-Expand", 3F, 1.5F, 5F)
+	private val background2ColorModeValue = ListValue("SecondBackground-Color", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom")
+	private val background2ColorRedValue = IntegerValue("SecondBackground-R", 32, 0, 255)
+	private val background2ColorGreenValue = IntegerValue("SecondBackground-G", 32, 0, 255)
+	private val background2ColorBlueValue = IntegerValue("SecondBackground-B", 32, 0, 255)
+	private val background2ColorAlphaValue = IntegerValue("SecondBackground-Alpha", 0, 0, 255)
+
 
 	private val nameFontValue = FontValue("NameFont", Fonts.font40)
 	private val textFontValue = FontValue("TextFont", Fonts.font35)

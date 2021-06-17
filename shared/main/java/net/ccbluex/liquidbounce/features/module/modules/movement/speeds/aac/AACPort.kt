@@ -25,7 +25,7 @@ class AACPort : SpeedMode("AACPort")
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		if (!MovementUtils.isMoving(thePlayer)) return
+		if (!MovementUtils.isMoving(thePlayer) || MovementUtils.cantBoostUp(thePlayer)) return
 
 		val dir = MovementUtils.getDirection(thePlayer)
 		var speed = 0.2

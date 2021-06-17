@@ -63,6 +63,10 @@ interface IEntity
 	var posY: Double
 	var posZ: Double
 
+	val serverPosX: Int
+	val serverPosY: Int
+	val serverPosZ: Int
+
 	val lastTickPosX: Double
 	val lastTickPosY: Double
 	val lastTickPosZ: Double
@@ -114,7 +118,7 @@ interface IEntity
 	fun getLook(partialTicks: Float): WVec3
 	fun isInsideOfMaterial(material: IMaterial): Boolean
 	fun copyLocationAndAnglesFrom(player: IEntityPlayerSP)
-	fun setPositionAndRotation(oldX: Double, oldY: Double, oldZ: Double, rotationYaw: Float, rotationPitch: Float)
+	fun setPositionAndRotation(posX: Double, posY: Double, posZ: Double, rotationYaw: Float, rotationPitch: Float)
 
 	override operator fun equals(other: Any?): Boolean
 }

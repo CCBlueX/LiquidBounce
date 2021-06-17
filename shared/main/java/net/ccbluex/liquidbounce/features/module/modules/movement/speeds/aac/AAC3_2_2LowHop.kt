@@ -22,7 +22,7 @@ class AAC3_2_2LowHop : SpeedMode("AAC3.2.2-LowHop") // Was AAC3BHop
 
 		mc.timer.timerSpeed = 1f
 
-		if (thePlayer.isInWater) return
+		if (MovementUtils.cantBoostUp(thePlayer)) return
 
 		if (MovementUtils.isMoving(thePlayer))
 		{

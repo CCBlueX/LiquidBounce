@@ -19,6 +19,8 @@ class SpectreBHop : SpeedMode("Spectre-BHop")
 		val thePlayer = mc.thePlayer ?: return
 		if (thePlayer.movementInput.jump) return
 
+		if (MovementUtils.cantBoostUp(thePlayer)) return
+
 		if (MovementUtils.isMoving(thePlayer))
 		{
 			if (thePlayer.onGround)

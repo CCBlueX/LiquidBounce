@@ -14,26 +14,27 @@ class AAC3_5_0BHop : SpeedMode("AAC3.5.0-BHop") // Was AACHop3.5.0
 {
 	override fun onMotion(eventState: EventState)
 	{
+		if (eventState != EventState.POST) return
+
 		val thePlayer = mc.thePlayer ?: return
 
-		if (eventState == EventState.POST && MovementUtils.isMoving(thePlayer) && !thePlayer.isInWater && !thePlayer.isInLava)
-		{
-			thePlayer.jumpMovementFactor += 0.00208f
-			if (thePlayer.fallDistance <= 1f)
-			{
-				if (thePlayer.onGround)
-				{
-					jump(thePlayer)
+		if (!MovementUtils.isMoving(thePlayer) || MovementUtils.cantBoostUp(thePlayer)) return
 
-					thePlayer.motionX *= 1.0118f
-					thePlayer.motionZ *= 1.0118f
-				}
-				else
-				{
-					thePlayer.motionX *= 1.00138f
-					thePlayer.motionY -= 0.0147f
-					thePlayer.motionZ *= 1.00138f
-				}
+		thePlayer.jumpMovementFactor += 0.00208f
+		if (thePlayer.fallDistance <= 1f)
+		{
+			if (thePlayer.onGround)
+			{
+				jump(thePlayer)
+
+				thePlayer.motionX *= 1.0118f
+				thePlayer.motionZ *= 1.0118f
+			}
+			else
+			{
+				thePlayer.motionX *= 1.00138f
+				thePlayer.motionY -= 0.0147f
+				thePlayer.motionZ *= 1.00138f
 			}
 		}
 	}

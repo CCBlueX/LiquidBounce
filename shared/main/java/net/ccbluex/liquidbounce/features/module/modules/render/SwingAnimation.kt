@@ -19,6 +19,7 @@ class SwingAnimation : Module()
 {
 	val equipProgressSmoothingValue = BoolValue("EquipProgressSmoothing", true)
 	val equipProgressSmoothingReverseValue = BoolValue("EquipProgressSmoothingReverse", false)
+	val equipProgressSmoothingTestValue = IntegerValue("EquipProgressSmoothingSpeedModifier", 1, 0, 2)
 	val equipProgressDownSpeedValue = IntegerValue("EquipProgressSmoothDownSpeed", 6, 1, 10)
 	val equipProgressUpSpeedValue = IntegerValue("EquipProgressSmoothUpSpeed", 3, 1, 10)
 
@@ -100,11 +101,12 @@ class SwingAnimation : Module()
 	val slideYPos = IntegerValue("Slide-Y-Pos", 13, -5, 30)
 
 	val exhiAngleX = FloatValue("Exhibobo-SwingAngle", 15f, 0f, 30f)
-	val exhiAngleY = FloatValue("Exhibobo-PushDepth", 0f, 0f, 20f)
+	val exhiAngleY = FloatValue("Exhibobo-PushDepth", 0f, -10f, 20f)
+	val exhiAngleZ = FloatValue("Exhibobo-Slope", 0f, -10f, 15f)
+
 	val exhiYPushPos = IntegerValue("Exhibobo-Y-PushPos", 20, 0, 100)
 	val exhiZPushPos = IntegerValue("Exhibobo-Z-PushPos", 50, 0, 100)
 
-	val exhiAngleZ = FloatValue("Exhibobo-Slope", 0f, 0f, 15f)
 	val exhiSmooth = IntegerValue("Exhibobo-Smooth", 5, -25, 25)
 
 	val smoothSwing = BoolValue("SmoothSwing", false)

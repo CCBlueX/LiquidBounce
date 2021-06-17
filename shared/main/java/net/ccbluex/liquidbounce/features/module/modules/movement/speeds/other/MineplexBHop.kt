@@ -23,6 +23,8 @@ class MineplexBHop : SpeedMode("Mineplex-BHop")
 	{
 		val thePlayer = mc.thePlayer ?: return
 
+		if (MovementUtils.cantBoostUp(thePlayer)) return
+
 		val speed = hypot(thePlayer.posX - thePlayer.prevPosX, thePlayer.posZ - thePlayer.prevPosZ).toFloat()
 
 		if (MovementUtils.isMoving(thePlayer) && thePlayer.onGround)
