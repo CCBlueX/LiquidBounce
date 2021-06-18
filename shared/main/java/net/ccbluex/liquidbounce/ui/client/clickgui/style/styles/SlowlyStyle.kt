@@ -93,10 +93,8 @@ class SlowlyStyle : Style()
 
 			if (moduleElement.isShowSettings)
 			{
-				if (moduleElement.settingsWidth > 0.0f && moduleElement.slowlySettingsYPos > moduleElement.y + 6) drawBorderedRect((moduleElement.x + moduleElement.width + 4).toFloat(), (moduleElement.y + 6).toFloat(), moduleElement.x + moduleElement.width + moduleElement.settingsWidth, (moduleElement.slowlySettingsYPos + 2).toFloat(), 3.0f, -13220000,-13220000)
+				if (moduleElement.settingsWidth > 0.0f && moduleElement.slowlySettingsYPos > moduleElement.y + 6) drawBorderedRect((moduleElement.x + moduleElement.width + 4).toFloat(), (moduleElement.y + 6).toFloat(), moduleElement.x + moduleElement.width + moduleElement.settingsWidth, (moduleElement.slowlySettingsYPos + 2).toFloat(), 3.0f, -13220000, -13220000)
 				moduleElement.slowlySettingsYPos = moduleElement.y + 6
-
-				val sliderColor = Color(7, 152, 252)
 
 				for (value in moduleValues)
 				{
@@ -167,7 +165,7 @@ class SlowlyStyle : Style()
 
 						if (moduleElement.settingsWidth < textWidth + 8) moduleElement.settingsWidth = textWidth + 8
 
-						val valueOfSlide = drawSlider(value.get(), value.minimum, value.maximum, moduleElement.x + moduleElement.width + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, sliderColor)
+						val valueOfSlide = drawSlider(value.get(), value.minimum, value.maximum, moduleElement.x + moduleElement.width + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, -16279300 /* 0xFF0798FC */)
 
 						if (valueOfSlide != value.get()) value.set(valueOfSlide)
 
@@ -182,7 +180,7 @@ class SlowlyStyle : Style()
 
 						if (moduleElement.settingsWidth < textWidth + 8) moduleElement.settingsWidth = textWidth + 8
 
-						val valueOfSlide = drawSlider(value.get().toFloat(), value.minimum.toFloat(), value.maximum.toFloat(), moduleElement.x + moduleElement.width + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, sliderColor)
+						val valueOfSlide = drawSlider(value.get().toFloat(), value.minimum.toFloat(), value.maximum.toFloat(), moduleElement.x + moduleElement.width + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, -16279300 /* 0xFF0798FC */)
 
 						if (valueOfSlide != value.get().toFloat()) value.set(valueOfSlide.toInt())
 
@@ -281,7 +279,7 @@ class SlowlyStyle : Style()
 
 	companion object
 	{
-		fun drawSlider(value: Float, min: Float, max: Float, x: Int, y: Int, width: Int, mouseX: Int, mouseY: Int, color: Color): Float
+		fun drawSlider(value: Float, min: Float, max: Float, x: Int, y: Int, width: Int, mouseX: Int, mouseY: Int, color: Int): Float
 		{
 			val displayValue = value.coerceIn(min, max)
 

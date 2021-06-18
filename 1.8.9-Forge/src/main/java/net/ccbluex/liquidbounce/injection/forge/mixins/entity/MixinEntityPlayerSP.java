@@ -19,7 +19,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.Bobbing;
 import net.ccbluex.liquidbounce.features.module.modules.render.NoSwing;
 import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold;
 import net.ccbluex.liquidbounce.utils.MovementUtils;
-import net.ccbluex.liquidbounce.utils.Rotation;
 import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFence;
@@ -509,7 +508,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				// TODO: Please fold these triple-iterations into one if can
 
 				// X
-				// noinspection ConstantConditions
+				// noinspection ConstantConditions, MethodCallInLoopCondition
 				while (moveX != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(moveX, -1.0D, 0.0D)).isEmpty())
 				{
 					if (moveX < collisionCheckRange && moveX >= -collisionCheckRange)
@@ -521,7 +520,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				}
 
 				// Z
-				// noinspection ConstantConditions
+				// noinspection ConstantConditions, MethodCallInLoopCondition
 				while (moveZ != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(0.0D, -1.0D, moveZ)).isEmpty())
 				{
 					if (moveZ < collisionCheckRange && moveZ >= -collisionCheckRange)
@@ -533,7 +532,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				}
 
 				// X, Z
-				// noinspection ConstantConditions
+				// noinspection ConstantConditions, MethodCallInLoopCondition
 				while (moveX != 0.0D && moveZ != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(moveX, -1.0D, moveZ)).isEmpty())
 				{
 					if (moveX < collisionCheckRange && moveX >= -collisionCheckRange)
@@ -555,8 +554,6 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 			// noinspection ConstantConditions
 			final List<AxisAlignedBB> collidedBoxList = worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().addCoord(moveX, moveY, moveZ));
 			final AxisAlignedBB entityBox = getEntityBoundingBox();
-
-			// TODO: Please fold these triple-iterations into one if can
 
 			// Calculate Y Offset
 			for (final AxisAlignedBB collidedBox : collidedBoxList)
@@ -580,11 +577,9 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 			setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, 0.0D, moveZ));
 
 			final Step step = (Step) LiquidBounce.moduleManager.get(Step.class);
-			final boolean airStep = step.getState() && step.getAirStepValue().get() && step.canAirStep();
-			final boolean steppable = onGround || airStep || safewalkAppliedY != moveY && safewalkAppliedY < 0.0D;
 
 			// Stepping
-			if (stepHeight > 0.0F && steppable && (safewalkAppliedX != moveX || safewalkAppliedZ != moveZ))
+			if (stepHeight > 0.0F && (onGround || step.getState() && step.getAirStepValue().get() && step.canAirStep() || safewalkAppliedY != moveY && safewalkAppliedY < 0.0D) && (safewalkAppliedX != moveX || safewalkAppliedZ != moveZ))
 			{
 				// Call StepEvent
 				final StepEvent stepEvent = new StepEvent(stepHeight);
@@ -606,8 +601,6 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				AxisAlignedBB offsetAppliedBB = getEntityBoundingBox();
 
 				final AxisAlignedBB safewalkAppliedBB = offsetAppliedBB.addCoord(safewalkAppliedX, 0.0D, safewalkAppliedZ);
-
-				// TODO: Please fold these triple-iterations into one if can
 
 				double offsetY = moveY;
 

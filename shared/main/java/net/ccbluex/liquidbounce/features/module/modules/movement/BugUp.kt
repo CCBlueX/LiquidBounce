@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
+import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
@@ -32,13 +33,20 @@ import kotlin.math.max
 @ModuleInfo(name = "BugUp", description = "Automatically setbacks you after falling a certain distance.", category = ModuleCategory.MOVEMENT)
 class BugUp : Module()
 {
-	private val modeValue = ListValue("Mode", arrayOf("TeleportBack", "FlyFlag", "OnGroundSpoof", "MotionTeleport-Flag"), "FlyFlag")
+	private val modeValue = ListValue("Mode", arrayOf("TeleportBack", "FlyFlag", "OnGroundSpoof", "MotionTeleport-Flag", "Packet", "SpeedFlag"), "FlyFlag")
 	private val maxFallDistance = IntegerValue("MaxFallDistance", 10, 2, 255)
 	private val maxVoidFallDistance = IntegerValue("MaxVoidFallDistance", 3, 1, 255)
 	private val maxDistanceWithoutGround = FloatValue("MaxDistanceToSetback", 2.5f, 1f, 30f)
 
-	private val flagYMotion = FloatValue("YMotion", 1f, -10f, 10f)
-	private val motionTPYMotion = FloatValue("YTeleportMotion", 1f, -10f, 10f)
+	private val flyFlagYMotionValue = FloatValue("YMotion", 1f, -10f, 10f)
+	private val motionTeleportFlagYTeleportValue = FloatValue("YTeleport", 1f, -10f, 10f)
+
+	private val speedFlagMotionValue = FloatValue("XZMotion", 1F, -10F, 10F)
+
+	private val packetHValue = FloatValue("Packet-H", 1F, -10F, 10F)
+	private val packetHBobValue = BoolValue("Packet-H-Bob", true)
+	private val packetVValue = FloatValue("Packet-V", 11F, -10F, 10F)
+	private val packetVBobValue = BoolValue("Packet-V-Bob", false)
 
 	private val flagTryTicks = IntegerValue("FlagTryTicks", 10, 5, 20)
 
@@ -54,6 +62,8 @@ class BugUp : Module()
 	private val flagTimer = TickTimer()
 	private var tryingFlag = false
 	private var alreadyTriedFlag = false
+	private var packetHBob = false
+	private var packetVBob = false
 
 	override fun onDisable()
 	{
@@ -128,7 +138,7 @@ class BugUp : Module()
 				{
 					"flyflag" ->
 					{
-						thePlayer.motionY = flagYMotion.get().toDouble()
+						thePlayer.motionY = flyFlagYMotionValue.get().toDouble()
 						thePlayer.fallDistance = 0F
 					}
 
@@ -136,12 +146,27 @@ class BugUp : Module()
 
 					"motionteleport-flag" ->
 					{
-						thePlayer.setPositionAndUpdate(posX, posY + motionTPYMotion.get(), posZ)
+						thePlayer.setPositionAndUpdate(posX, posY + motionTeleportFlagYTeleportValue.get(), posZ)
 						networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(posX, posY, posZ, true))
-						thePlayer.motionY = flagYMotion.get().toDouble()
+						thePlayer.motionY = flyFlagYMotionValue.get().toDouble()
 
 						MovementUtils.strafe(thePlayer)
 						thePlayer.fallDistance = 0f
+					}
+
+					"speedflag" -> MovementUtils.addMotion(thePlayer, speedFlagMotionValue.get(), thePlayer.rotationYaw)
+
+					"packet" ->
+					{
+						val dir = WMathHelper.toRadians(thePlayer.rotationYaw)
+						val length = if (packetHBob) packetHValue.get() else -packetHValue.get()
+						val x = WMathHelper.sin(dir) * length
+						val z = WMathHelper.cos(dir) * length
+
+						networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(posX - x, posY + if (packetVBob) packetVValue.get() else -packetVValue.get(), posZ + z, true))
+
+						if (packetHBobValue.get()) packetHBob = !packetHBob
+						if (packetVBobValue.get()) packetVBob = !packetVBob
 					}
 				}
 			}

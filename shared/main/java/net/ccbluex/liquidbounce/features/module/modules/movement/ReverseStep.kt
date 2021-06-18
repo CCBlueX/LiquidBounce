@@ -32,9 +32,8 @@ class ReverseStep : Module()
 
 		if (!state) return
 
-		val entityBoundingBox = thePlayer.entityBoundingBox
-
-		if (collideBlock(theWorld, thePlayer, entityBoundingBox, classProvider::isBlockLiquid) || collideBlock(theWorld, thePlayer, classProvider.createAxisAlignedBB(entityBoundingBox.maxX, entityBoundingBox.maxY, entityBoundingBox.maxZ, entityBoundingBox.minX, entityBoundingBox.minY - 0.01, entityBoundingBox.minZ), classProvider::isBlockLiquid)) return
+		val bb = thePlayer.entityBoundingBox
+		if (collideBlock(theWorld, bb, classProvider::isBlockLiquid) || collideBlock(theWorld, classProvider.createAxisAlignedBB(bb.minX, bb.minY - 0.01, bb.minZ, bb.maxX, bb.maxY, bb.maxZ), classProvider::isBlockLiquid)) return
 
 		if (!mc.gameSettings.keyBindJump.isKeyDown && !thePlayer.onGround && !thePlayer.movementInput.jump && thePlayer.motionY <= 0.0 && thePlayer.fallDistance <= 1f && !jumped) thePlayer.motionY = (-motionValue.get()).toDouble()
 	}

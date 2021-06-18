@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
-import java.awt.Color
 
 @ModuleInfo(name = "BowAimbot", description = "Automatically aims at players when using a bow.", category = ModuleCategory.COMBAT)
 class BowAimbot : Module()
@@ -132,15 +131,13 @@ class BowAimbot : Module()
 			if (predictValue.get()) flags = flags or RotationUtils.ENEMY_PREDICT
 			if (playerPredictValue.get()) flags = flags or RotationUtils.PLAYER_PREDICT
 			if (silentRotationValue.get()) flags = flags or RotationUtils.SILENT_ROTATION
+			val playerPredictSize = RotationUtils.MinMaxPair(minPlayerPredictSizeValue.get(), maxPlayerPredictSizeValue.get())
 
-			val minPlayerPredictSize = minPlayerPredictSizeValue.get()
-			val maxPlayerPredictSize = maxPlayerPredictSizeValue.get()
-
-			val entity = getTarget(theWorld, thePlayer, priorityValue.get(), minPlayerPredictSize, maxPlayerPredictSize, flags) ?: return
+			val entity = getTarget(theWorld, thePlayer, priorityValue.get(), playerPredictSize, flags) ?: return
 
 			target = entity
 
-			RotationUtils.faceBow(thePlayer, entity, minTurnSpeedValue.get(), maxTurnSpeedValue.get(), minAccelerationRatioValue.get(), maxAccelerationRatioValue.get(), minPlayerPredictSize, maxPlayerPredictSize, flags)
+			RotationUtils.faceBow(thePlayer, entity, RotationUtils.MinMaxPair(minTurnSpeedValue.get(), maxTurnSpeedValue.get()), RotationUtils.MinMaxPair(minAccelerationRatioValue.get(), maxAccelerationRatioValue.get()), playerPredictSize, flags)
 		}
 	}
 
@@ -149,10 +146,10 @@ class BowAimbot : Module()
 	{
 		val currentTarget = target
 
-		if (currentTarget != null && !priorityValue.get().equals("Multi", ignoreCase = true) && markValue.get()) RenderUtils.drawPlatform(currentTarget, Color(37, 126, 255, 70))
+		if (currentTarget != null && !priorityValue.get().equals("Multi", ignoreCase = true) && markValue.get()) RenderUtils.drawPlatform(currentTarget, 0x46257EFF)
 	}
 
-	private fun getTarget(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, priorityMode: String, minPlayerPredictSize: Float, maxPlayerPredictSize: Float, flags: Int): IEntityLivingBase?
+	private fun getTarget(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, priorityMode: String, playerPredictSize: RotationUtils.MinMaxPair, flags: Int): IEntityLivingBase?
 	{
 		val ignoreVisibleCheck = flags and RotationUtils.SKIP_VISIBLE_CHECK != 0
 
@@ -164,8 +161,8 @@ class BowAimbot : Module()
 		return when (priorityMode.toLowerCase())
 		{
 			"distance" -> targetCandidates.minBy(thePlayer::getDistanceToEntity)
-			"serverdirection" -> targetCandidates.minBy { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) }
-			"clientdirection" -> targetCandidates.minBy { RotationUtils.getClientRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) }
+			"serverdirection" -> targetCandidates.minBy { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, playerPredictSize) }
+			"clientdirection" -> targetCandidates.minBy { RotationUtils.getClientRotationDifference(thePlayer, it, playerPredict, playerPredictSize) }
 			"health" -> targetCandidates.minBy { it.asEntityLivingBase().health }
 			else -> null
 		}

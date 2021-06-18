@@ -218,12 +218,11 @@ class Aimbot : Module()
 		val throughWalls = throughWallsValue.get()
 
 		val playerPredict = playerPredictValue.get()
-		val minPlayerPredictSize = minPlayerPredictSizeValue.get()
-		val maxPlayerPredictSize = maxPlayerPredictSizeValue.get()
+		val playerPredictSize = RotationUtils.MinMaxPair(minPlayerPredictSizeValue.get(), maxPlayerPredictSizeValue.get())
 
 		val jitter = jitterValue.get()
 
-		target = EntityUtils.getEntitiesInRadius(theWorld, thePlayer, range + 2.0).asSequence().filter { EntityUtils.isSelected(it, true) }.filter { thePlayer.getDistanceToEntityBox(it) <= range }.run { if (fov < 180F) filter { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) <= fov } else this }.run { if (throughWalls) this else filter(thePlayer::canEntityBeSeen) }.minBy { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) }?.asEntityLivingBase()
+		target = EntityUtils.getEntitiesInRadius(theWorld, thePlayer, range + 2.0).asSequence().filter { EntityUtils.isSelected(it, true) }.filter { thePlayer.getDistanceToEntityBox(it) <= range }.run { if (fov < 180F) filter { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, playerPredictSize) <= fov } else this }.run { if (throughWalls) this else filter(thePlayer::canEntityBeSeen) }.minBy { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, playerPredictSize) }?.asEntityLivingBase()
 
 		val entity = target ?: run {
 			fadeRotations(thePlayer)
@@ -269,7 +268,7 @@ class Aimbot : Module()
 		if (playerPredict) flags = flags or RotationUtils.PLAYER_PREDICT
 		if (predictValue.get()) flags = flags or RotationUtils.ENEMY_PREDICT
 
-		val targetRotation = (RotationUtils.searchCenter(theWorld, thePlayer, targetBB, flags, jitterData, minPlayerPredictSize, maxPlayerPredictSize, range, hitboxDecrement, searchSensitivity, 0.0) ?: return).rotation
+		val targetRotation = (RotationUtils.searchCenter(theWorld, thePlayer, targetBB, flags, jitterData, playerPredictSize, range, hitboxDecrement, searchSensitivity, 0.0) ?: return).rotation
 
 		// TurnSpeed
 		val maxTurnSpeed = maxTurnSpeedValue.get()

@@ -6,4 +6,5 @@
 package net.ccbluex.liquidbounce.ui.font
 
 @Retention(AnnotationRetention.RUNTIME)
+@Target(AnnotationTarget.FIELD)
 annotation class FontDetails(val fontName: String, val fontSize: Int = -1)

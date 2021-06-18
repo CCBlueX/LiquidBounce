@@ -221,7 +221,7 @@ object RenderUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun drawAxisAlignedBB(axisAlignedBB: IAxisAlignedBB, color: Color)
+	fun drawAxisAlignedBB(axisAlignedBB: IAxisAlignedBB, color: Int)
 	{
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
 		GL11.glEnable(GL11.GL_BLEND)
@@ -241,7 +241,7 @@ object RenderUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun drawPlatform(y: Double, color: Color, size: Double)
+	fun drawPlatform(y: Double, color: Int, size: Double)
 	{
 		val renderManager = mc.renderManager
 		val renderY = y - renderManager.renderPosY
@@ -250,7 +250,7 @@ object RenderUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun drawPlatform(entity: IEntity, color: Color)
+	fun drawPlatform(entity: IEntity, color: Int)
 	{
 		val renderManager = mc.renderManager
 		val renderPartialTicks = mc.timer.renderPartialTicks
@@ -510,7 +510,7 @@ object RenderUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun drawFilledCircle(x: Int, y: Int, radius: Float, color: Color)
+	fun drawFilledCircle(x: Int, y: Int, radius: Float, color: Int)
 	{
 		GL11.glPushAttrib(GL11.GL_ENABLE_BIT)
 		GL11.glEnable(GL11.GL_BLEND)

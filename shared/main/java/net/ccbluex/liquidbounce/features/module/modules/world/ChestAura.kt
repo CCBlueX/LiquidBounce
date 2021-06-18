@@ -149,8 +149,8 @@ object ChestAura : Module()
 				val prioritySelector = { blockPos: WBlockPos ->
 					when (priorityValue.get().toLowerCase())
 					{
-						"serverdirection" -> RotationUtils.getServerRotationDifference(thePlayer, blockPos, false, 0f, 0f)
-						"clientdirection" -> RotationUtils.getClientRotationDifference(thePlayer, blockPos, false, 0f, 0f)
+						"serverdirection" -> RotationUtils.getServerRotationDifference(thePlayer, blockPos, false, RotationUtils.MinMaxPair.ZERO)
+						"clientdirection" -> RotationUtils.getClientRotationDifference(thePlayer, blockPos, false, RotationUtils.MinMaxPair.ZERO)
 						else -> BlockUtils.getCenterDistance(thePlayer, blockPos)
 					}
 				}

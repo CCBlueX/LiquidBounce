@@ -108,8 +108,9 @@ class Fly : Module()
 	 */
 	private val aacSpeedValue = FloatValue("AAC1.9.10-Speed", 0.3f, 0f, 5f)
 	private val aacFast = BoolValue("AAC3.0.5-Fast", true)
-	private val aac3_3_12_motion = FloatValue("AAC3.3.12-Motion", 10f, 0.1f, 10f)
-	private val aac3_3_13_motion = FloatValue("AAC3.3.13-Motion", 10f, 0.1f, 10f)
+	private val aac3_3_12_YValue = FloatValue("AAC3.3.12-BoostYPos", -70F, -90F, 0F)
+	private val aac3_3_12_MotionValue = FloatValue("AAC3.3.12-Motion", 10f, 0.1f, 10f)
+	private val aac3_3_13_MotionValue = FloatValue("AAC3.3.13-Motion", 10f, 0.1f, 10f)
 
 	/**
 	 * Hypixel
@@ -636,7 +637,7 @@ class Fly : Module()
 
 				"aac3.3.12" ->
 				{
-					if (posY < -70) thePlayer.motionY = aac3_3_12_motion.get().toDouble()
+					if (posY < -70) thePlayer.motionY = aac3_3_12_MotionValue.get().toDouble()
 
 					timer.timerSpeed = 1f
 
@@ -673,7 +674,7 @@ class Fly : Module()
 					if (wasDead || onGround)
 					{
 						wasDead = false
-						thePlayer.motionY = aac3_3_13_motion.get().toDouble()
+						thePlayer.motionY = aac3_3_13_MotionValue.get().toDouble()
 						thePlayer.onGround = false
 					}
 
@@ -907,12 +908,12 @@ class Fly : Module()
 		if (!markValue.get() || mode.equals("Vanilla", ignoreCase = true) || mode.equals("SmoothVanilla", ignoreCase = true) || mode.equals("Hypixel", ignoreCase = true) && !hypixelFlyStarted) return
 		val y = markStartY + 2.0
 
-		RenderUtils.drawPlatform(y, if ((mc.thePlayer ?: return).entityBoundingBox.maxY < y) Color(0, 255, 0, 90) else Color(255, 0, 0, 90), 1.0)
+		RenderUtils.drawPlatform(y, if ((mc.thePlayer ?: return).entityBoundingBox.maxY < y) 0x5A00FF00 else 0x5AFF0000, 1.0)
 
 		when (mode.toLowerCase())
 		{
-			"aac1.9.10" -> RenderUtils.drawPlatform(startY + aacJump, Color(0, 0, 255, 90), 1.0)
-			"aac3.3.12" -> RenderUtils.drawPlatform(-70.0, Color(0, 0, 255, 90), 1.0)
+			"aac1.9.10" -> RenderUtils.drawPlatform(startY + aacJump, 0x5A0000FF, 1.0)
+			"aac3.3.12" -> RenderUtils.drawPlatform(aac3_3_12_YValue.get().toDouble(), 0x5A0000FF, 1.0)
 		}
 	}
 

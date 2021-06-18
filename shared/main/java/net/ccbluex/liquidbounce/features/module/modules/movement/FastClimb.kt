@@ -75,7 +75,7 @@ class FastClimb : Module()
 				}
 			}
 
-			"aac3.0.5" -> if (gameSettings.keyBindForward.isKeyDown && collideBlockIntersects(theWorld, thePlayer, thePlayer.entityBoundingBox) {
+			"aac3.0.5" -> if (gameSettings.keyBindForward.isKeyDown && collideBlockIntersects(theWorld, thePlayer.entityBoundingBox) {
 					provider.isBlockLadder(it) || provider.isBlockVine(it)
 				})
 			{

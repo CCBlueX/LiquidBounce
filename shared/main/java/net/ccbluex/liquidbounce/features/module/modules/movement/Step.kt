@@ -60,8 +60,8 @@ class Step : Module()
 
 	override fun onDisable()
 	{
-		// Change step height back to default (0.5 is default)
-		(mc.thePlayer ?: return).stepHeight = 0.5F
+		// Change step height back to default (0.6 is default)
+		(mc.thePlayer ?: return).stepHeight = 0.6F
 		motionNCPNextStep = 0
 	}
 
@@ -71,16 +71,18 @@ class Step : Module()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
+		val canStep = !mc.gameSettings.keyBindJump.isKeyDown && MovementUtils.isMoving(thePlayer)
+
 		// Motion steps
 		when (modeValue.get().toLowerCase())
 		{
-			"jump" -> if (thePlayer.isCollidedHorizontally && thePlayer.onGround && !mc.gameSettings.keyBindJump.isKeyDown)
+			"jump" -> if (thePlayer.isCollidedHorizontally && thePlayer.onGround && canStep)
 			{
 				fakeJump(thePlayer)
 				thePlayer.motionY = jumpHeightValue.get().toDouble()
 			}
 
-			"aac3.2.0" -> if (thePlayer.isCollidedHorizontally && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isInLava && !thePlayer.isInWeb)
+			"aac3.2.0" -> if (thePlayer.isCollidedHorizontally && !MovementUtils.cantBoostUp(thePlayer) && canStep)
 			{
 				if (thePlayer.onGround && timer.hasTimePassed(delay))
 				{
@@ -97,7 +99,7 @@ class Step : Module()
 			}
 			else isStep = false
 
-			"aac3.3.4" -> if (thePlayer.isCollidedHorizontally && MovementUtils.isMoving(thePlayer))
+			"aac3.3.4" -> if (thePlayer.isCollidedHorizontally && canStep)
 			{
 				if (thePlayer.onGround && couldStep(theWorld, thePlayer))
 				{
@@ -128,7 +130,7 @@ class Step : Module()
 		val motionNCPBoost = motionNCPBoostValue.get()
 
 		// NCP Motion steps
-		if (mode.equals("MotionNCP", ignoreCase = true) && thePlayer.isCollidedHorizontally && !mc.gameSettings.keyBindJump.isKeyDown) when
+		if (mode.equals("MotionNCP", ignoreCase = true) && thePlayer.isCollidedHorizontally && !mc.gameSettings.keyBindJump.isKeyDown && MovementUtils.isMoving(thePlayer)) when
 		{
 			thePlayer.onGround && couldStep(theWorld, thePlayer) ->
 			{
@@ -196,8 +198,8 @@ class Step : Module()
 		// Set step to default in some cases
 		if ((!thePlayer.onGround && !airStepValue.get()) || !timer.hasTimePassed(delay) || sequenceOf("Jump", "MotionNCP", "AAC3.2.0", "AAC3.3.4").any { mode.equals(it, ignoreCase = true) })
 		{
-			thePlayer.stepHeight = 0.5F
-			event.stepHeight = 0.5F
+			thePlayer.stepHeight = 0.6F
+			event.stepHeight = 0.6F
 			return
 		}
 
@@ -208,7 +210,7 @@ class Step : Module()
 		event.stepHeight = height
 
 		// Detect possible step
-		if (event.stepHeight > 0.5F)
+		if (event.stepHeight > 0.6F)
 		{
 			isStep = true
 			stepX = thePlayer.posX
@@ -226,7 +228,7 @@ class Step : Module()
 			return
 
 		val stepHeight = thePlayer.entityBoundingBox.minY - stepY
-		if (stepHeight > 0.5)
+		if (stepHeight > 0.6)
 		{
 
 			// Check if full block step

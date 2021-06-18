@@ -46,7 +46,7 @@ class LiquidWalk : Module()
 
 		when (modeValue.get().toLowerCase())
 		{
-			"ncp", "vanilla" -> if (collideBlock(theWorld, thePlayer, thePlayer.entityBoundingBox, provider::isBlockLiquid) && thePlayer.isInsideOfMaterial(provider.getMaterialEnum(MaterialType.AIR)) && !thePlayer.sneaking) thePlayer.motionY = 0.08
+			"ncp", "vanilla" -> if (collideBlock(theWorld, thePlayer.entityBoundingBox, provider::isBlockLiquid) && thePlayer.isInsideOfMaterial(provider.getMaterialEnum(MaterialType.AIR)) && !thePlayer.sneaking) thePlayer.motionY = 0.08
 
 			"aac3.1.0" ->
 			{
@@ -124,7 +124,7 @@ class LiquidWalk : Module()
 
 		val provider = classProvider
 
-		if (provider.isBlockLiquid(event.block) && !collideBlock(theWorld, thePlayer, thePlayer.entityBoundingBox, provider::isBlockLiquid) && !thePlayer.sneaking) when (modeValue.get().toLowerCase())
+		if (provider.isBlockLiquid(event.block) && !collideBlock(theWorld, thePlayer.entityBoundingBox, provider::isBlockLiquid) && !thePlayer.sneaking) when (modeValue.get().toLowerCase())
 		{
 			"ncp", "vanilla" ->
 			{
@@ -147,11 +147,13 @@ class LiquidWalk : Module()
 
 		val provider = classProvider
 
+		// Bypass NCP Jesus checks
 		if (provider.isCPacketPlayer(event.packet))
 		{
 			val packetPlayer = event.packet.asCPacketPlayer()
 
-			if (collideBlock(theWorld, thePlayer, provider.createAxisAlignedBB(thePlayer.entityBoundingBox.maxX, thePlayer.entityBoundingBox.maxY, thePlayer.entityBoundingBox.maxZ, thePlayer.entityBoundingBox.minX, thePlayer.entityBoundingBox.minY - 0.01, thePlayer.entityBoundingBox.minZ), provider::isBlockLiquid))
+			val bb = thePlayer.entityBoundingBox
+			if (collideBlock(theWorld, provider.createAxisAlignedBB(bb.minX, bb.minY - 0.01, bb.minZ, bb.maxX, bb.maxY, bb.maxZ), provider::isBlockLiquid))
 			{
 				nextTick = !nextTick
 				if (nextTick) packetPlayer.y -= 0.001

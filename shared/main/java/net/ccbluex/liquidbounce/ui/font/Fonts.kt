@@ -25,8 +25,6 @@ object Fonts : MinecraftInstance()
 	@FontDetails(fontName = "Minecraft Font")
 	val minecraftFont = mc.fontRendererObj
 
-	private val CUSTOM_FONT_RENDERERS = HashMap<FontInfo, IFontRenderer>()
-
 	@FontDetails(fontName = "Roboto Medium", fontSize = 35)
 	lateinit var font35: IFontRenderer
 
@@ -35,6 +33,8 @@ object Fonts : MinecraftInstance()
 
 	@FontDetails(fontName = "Roboto Bold", fontSize = 180)
 	lateinit var fontBold180: IFontRenderer
+
+	private val CUSTOM_FONT_RENDERERS = HashMap<FontInfo, IFontRenderer>()
 
 	fun loadFonts()
 	{
@@ -143,7 +143,7 @@ object Fonts : MinecraftInstance()
 
 			val fieldValue = field[null]
 
-			if (fieldValue == fontRenderer)
+			if (fontRenderer == fieldValue)
 			{
 				val fontDetails = field.getAnnotation(FontDetails::class.java) ?: continue
 
@@ -155,7 +155,7 @@ object Fonts : MinecraftInstance()
 			logger.error("Unexpected exception occurred while reading details about default fonts declared in Fonts.class", e)
 		}
 
-		return CUSTOM_FONT_RENDERERS.entries.firstOrNull { fontRenderer == it.value }?.run { key }
+		return CUSTOM_FONT_RENDERERS.entries.firstOrNull { fontRenderer == it.value }?.key
 	}
 
 	val fonts: List<IFontRenderer>

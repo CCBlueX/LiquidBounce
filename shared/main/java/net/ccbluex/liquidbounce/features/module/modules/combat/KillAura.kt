@@ -421,6 +421,8 @@ class KillAura : Module()
 	 */
 	private var failedToHit = false
 
+	private var failedToRotate = false
+
 	/**
 	 * Target of auto-block
 	 */
@@ -672,12 +674,12 @@ class KillAura : Module()
 
 		if (markMode != "none" && !targetModeValue.get().equals("Multi", ignoreCase = true))
 		{
-			val markColor = if (hitable)
+			val markColor = when
 			{
-				if (failedToHit) Color(0, 0, 255, 70)
-				else Color(0, 255, 0, 70)
+				failedToHit -> 0x460000FF
+				hitable -> 0x4600FF00
+				else -> 0x46FF0000
 			}
-			else Color(255, 0, 0, 70)
 
 			val renderManager = mc.renderManager
 			val renderPosX = renderManager.renderPosX
@@ -792,7 +794,7 @@ class KillAura : Module()
 		if (openInventory) netHandler.addToSendQueue(provider.createCPacketCloseWindow())
 
 		// Check is not hitable or check failrate
-		val fakeAttack = !hitable || failedToHit
+		val fakeAttack = !hitable || failedToHit || failedToRotate
 
 		if (fakeAttack)
 		{
@@ -869,8 +871,7 @@ class KillAura : Module()
 		val fov = fovValue.get()
 		val switchMode = targetModeValue.get().equals("Switch", ignoreCase = true)
 		val playerPredict = playerPredictValue.get()
-		val minPlayerPredictSize = minPlayerPredictSizeValue.get()
-		val maxPlayerPredictSize = maxPlayerPredictSizeValue.get()
+		val playerPredictSize = RotationUtils.MinMaxPair(minPlayerPredictSizeValue.get(), maxPlayerPredictSizeValue.get())
 
 		// Find possible targets
 		val targets = mutableListOf<IEntityLivingBase>()
@@ -882,7 +883,7 @@ class KillAura : Module()
 		val autoBlockHurtTimeCheck = autoBlockHurtTimeCheckValue.get()
 		val smartBlock = autoBlockWallCheckValue.get()
 
-		val entityList = EntityUtils.getEntitiesInRadius(theWorld, thePlayer, maxTargetRange + 2.0).filter { EntityUtils.isEnemy(it, aac) }.filterNot { switchMode && previouslySwitchedTargets.contains(it.entityId) }.run { if (fov < 180f) filter { (if (fovMode == "ServerRotation") RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) else RotationUtils.getClientRotationDifference(thePlayer, it, playerPredict, minPlayerPredictSize, maxPlayerPredictSize)) <= fov } else this }.map { it.asEntityLivingBase() to thePlayer.getDistanceToEntityBox(it) }
+		val entityList = EntityUtils.getEntitiesInRadius(theWorld, thePlayer, maxTargetRange + 2.0).filter { EntityUtils.isEnemy(it, aac) }.filterNot { switchMode && previouslySwitchedTargets.contains(it.entityId) }.run { if (fov < 180f) filter { (if (fovMode == "ServerRotation") RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, playerPredictSize) else RotationUtils.getClientRotationDifference(thePlayer, it, playerPredict, playerPredictSize)) <= fov } else this }.map { it.asEntityLivingBase() to thePlayer.getDistanceToEntityBox(it) }
 
 		entityList.forEach { (entity, distance) ->
 			val entityHurtTime = entity.hurtTime
@@ -920,7 +921,7 @@ class KillAura : Module()
 			"serverdirection" ->
 			{
 				// Sort by server-sided rotation difference
-				val selector = { entity: IEntityLivingBase -> RotationUtils.getServerRotationDifference(thePlayer, entity, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) + checkIsClientTarget(entity) }
+				val selector = { entity: IEntityLivingBase -> RotationUtils.getServerRotationDifference(thePlayer, entity, playerPredict, playerPredictSize) + checkIsClientTarget(entity) }
 
 				targets.sortBy(selector)
 				abTargets.sortBy(selector)
@@ -929,7 +930,7 @@ class KillAura : Module()
 			"clientdirection" ->
 			{
 				// Sort by client-sided rotation difference
-				val selector = { entity: IEntityLivingBase -> RotationUtils.getClientRotationDifference(thePlayer, entity, playerPredict, minPlayerPredictSize, maxPlayerPredictSize) + checkIsClientTarget(entity) }
+				val selector = { entity: IEntityLivingBase -> RotationUtils.getClientRotationDifference(thePlayer, entity, playerPredict, playerPredictSize) + checkIsClientTarget(entity) }
 
 				targets.sortBy(selector)
 				abTargets.sortBy(selector)
@@ -1056,8 +1057,19 @@ class KillAura : Module()
 		if (playerPredictValue.get()) flags = flags or RotationUtils.PLAYER_PREDICT
 		if (thePlayer.getDistanceToEntityBox(entity) <= throughWallsRangeValue.get()) flags = flags or RotationUtils.SKIP_VISIBLE_CHECK
 
+		failedToRotate = false
+
+		val searchCenter = { distance: Float, distanceOutOfRangeCallback: (() -> Unit)? -> RotationUtils.searchCenter(theWorld, thePlayer, targetBox, flags, jitterData, RotationUtils.MinMaxPair(minPlayerPredictSizeValue.get(), maxPlayerPredictSizeValue.get()), distance, hitboxDecrement, searchSensitivity, randomCenterSizeValue.get().toDouble(), distanceOutOfRangeCallback) }
+
 		// Search
-		val rotation = if (!lockValue.get() && RotationUtils.isFaced(theWorld, thePlayer, entity, aimRange.toDouble(), aabbGetter)) Rotation(lastYaw, lastPitch) else RotationUtils.searchCenter(theWorld, thePlayer, targetBox, flags, jitterData, minPlayerPredictSizeValue.get(), maxPlayerPredictSizeValue.get(), if (isAttackRotation) attackRange else aimRange, hitboxDecrement, searchSensitivity, randomCenterSizeValue.get().toDouble())?.rotation ?: return false
+		var fallBackRotation: VecRotation? = null
+		val rotation = if (!lockValue.get() && RotationUtils.isFaced(theWorld, thePlayer, entity, aimRange.toDouble(), aabbGetter)) Rotation(lastYaw, lastPitch)
+		else (searchCenter(if (isAttackRotation) attackRange else aimRange) {
+			failedToRotate = true
+
+			// TODO: Make better fallback
+			fallBackRotation = searchCenter(aimRange, null)
+		} ?: fallBackRotation ?: return false).rotation
 
 		lastYaw = rotation.yaw
 		lastPitch = rotation.pitch
