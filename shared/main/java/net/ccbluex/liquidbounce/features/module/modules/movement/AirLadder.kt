@@ -13,10 +13,13 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
+import net.ccbluex.liquidbounce.value.FloatValue
 
 @ModuleInfo(name = "AirLadder", description = "Allows you to climb up ladders/vines without touching them.", category = ModuleCategory.MOVEMENT)
 class AirLadder : Module()
 {
+	private val motionValue = FloatValue("Motion", 0.118F, 0.118F, 0.6F)
+
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
@@ -27,7 +30,7 @@ class AirLadder : Module()
 
 		if (provider.isBlockLadder(BlockUtils.getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ))) && thePlayer.isCollidedHorizontally || provider.isBlockVine(BlockUtils.getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ))) || provider.isBlockVine(BlockUtils.getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ))))
 		{
-			thePlayer.motionY = 0.15
+			thePlayer.motionY = motionValue.get().toDouble()
 			MovementUtils.zeroXZ(thePlayer)
 		}
 	}

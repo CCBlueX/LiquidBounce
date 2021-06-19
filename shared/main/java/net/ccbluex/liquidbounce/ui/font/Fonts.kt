@@ -42,6 +42,8 @@ object Fonts : MinecraftInstance()
 
 		logger.info("Loading Fonts.")
 
+		// TODO:Asynchronize
+
 		downloadFonts()
 
 		val provider = classProvider

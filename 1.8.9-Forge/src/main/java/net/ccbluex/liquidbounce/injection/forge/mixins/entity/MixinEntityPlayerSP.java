@@ -315,7 +315,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 
 			inPortal = false;
 		}
-		else if (isPotionActive(Potion.confusion) && getActivePotionEffect(Potion.confusion).getDuration() > 60)
+		else if (isPotionActive(Potion.confusion) && getActivePotionEffect(Potion.confusion).getDuration() > 60) // AntiBlind compatible
 		{
 			timeInPortal += 0.006666667F;
 
@@ -362,7 +362,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 
 		final boolean foodCheck = !sprint.getFoodValue().get() || getFoodStats().getFoodLevel() > 6.0F || capabilities.allowFlying;
 
-		final boolean blindCheck = !isPotionActive(Potion.blindness);
+		final boolean blindCheck = !isPotionActive(Potion.blindness.id); // isPotionActive(Potion.blindness) // AntiBlind compatible (AntiBlind only blocks isPotionActive(Potion), not isPotionActive(int))
 		if (onGround && !sneak && !forward && movementInput.moveForward >= sprintForwardThreshold && !isSprinting() && foodCheck && !isUsingItem() && blindCheck)
 			if (sprintToggleTimer <= 0 && !mc.gameSettings.keyBindSprint.isKeyDown())
 				sprintToggleTimer = 7;

@@ -72,6 +72,9 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 	@Shadow
 	public abstract boolean isPotionActive(Potion potionIn);
 
+	@Shadow
+	public abstract boolean isPotionActive(int potionId);
+
 	@SuppressWarnings("NoopMethodInAbstractClass")
 	@Shadow
 	public void onLivingUpdate()

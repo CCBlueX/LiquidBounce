@@ -34,6 +34,7 @@ interface IEntityLivingBase : IEntity
 
 	fun canEntityBeSeen(it: IEntity): Boolean
 	fun isPotionActive(potion: IPotion): Boolean
+	fun isPotionActive(potionId: Int): Boolean
 	fun swingItem()
 	fun getActivePotionEffect(potion: IPotion): IPotionEffect?
 	fun removePotionEffectClient(id: Int)

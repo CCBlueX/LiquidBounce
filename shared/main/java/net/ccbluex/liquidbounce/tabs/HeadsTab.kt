@@ -16,7 +16,6 @@ import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
-import java.util.*
 
 class HeadsTab : WrappedCreativeTabs("Heads")
 {
@@ -31,7 +30,7 @@ class HeadsTab : WrappedCreativeTabs("Heads")
 	{
 		representedType.backgroundImageName = "item_search.png"
 
-		loadHeads()
+		loadHeads() // TODO: Asynchronize
 	}
 
 	/**

@@ -88,6 +88,8 @@ open class EntityLivingBaseImpl<out T : EntityLivingBase>(wrapped: T) : EntityIm
 
 	override fun isPotionActive(potion: IPotion): Boolean = wrapped.isPotionActive(potion.unwrap())
 
+	override fun isPotionActive(potionId: Int): Boolean = wrapped.isPotionActive(potionId)
+
 	override fun swingItem() = wrapped.swingItem()
 
 	override fun getActivePotionEffect(potion: IPotion): IPotionEffect? = wrapped.getActivePotionEffect(potion.unwrap())?.wrap()
