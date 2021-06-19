@@ -39,7 +39,6 @@ import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.sqrt
 
-// TODO: All Projectiles Option (like Vape, see https://www.youtube.com/watch?v=PQmRsF9GMkY)
 @ModuleInfo(name = "Projectiles", description = "Allows you to see where arrows will land. (a.k.a. Trajectories)", category = ModuleCategory.RENDER)
 class Projectiles : Module()
 {

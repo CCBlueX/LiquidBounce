@@ -25,11 +25,9 @@ import java.util.*
 
 // TODO: Add LightningTracker
 // TODO: Add TpFucker (like TpEggBreaker in Jigsaw)
-// TODO: Add TargetStrafe
 // TODO: Add HackerDetect
 // TODO: ProjectileAimbot (https://github.com/CCBlueX/Old-LiquidBounce-Issues/issues/3496)
-
-// TODO: Integrate many scripts into modules (to improve speed) (example: BetterSuperKnock)
+// TODO: AutoEnchant
 class ModuleManager : Listenable
 {
 	val modules = TreeSet<Module> { module1, module2 -> module1.name.compareTo(module2.name) }

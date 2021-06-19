@@ -307,13 +307,13 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * throughWalls option
 		 * @param  distance
 		 * vec3 distance limit
-		 * @param  entityBoxShrink
+		 * @param  boxShrink
 		 * decrement of the entity hitbox size. default is 0.2D
-		 * @param  searchSensitivity
+		 * @param  steps
 		 * count of step to search the good center. (*Warning If you set this value too low, it will make your minecraft SO SLOW AND SLOW.*) default is 0.2D
 		 * @return                   center
 		 */
-		fun searchCenter(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, targetBox: IAxisAlignedBB, flags: Int, jitterData: JitterData?, playerPredictSize: MinMaxPair, distance: Float, entityBoxShrink: Double, searchSensitivity: Double, randomCenterSize: Double, distanceOutOfRangeCallback: (() -> Unit)? = null): VecRotation?
+		fun searchCenter(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, targetBox: IAxisAlignedBB, flags: Int, jitterData: JitterData?, playerPredictSize: MinMaxPair, distance: Float, boxShrink: Double, steps: Int, randomCenterSize: Double, distanceOutOfRangeCallback: (() -> Unit)? = null): VecRotation?
 		{
 			val randomVec: WVec3
 			val eyes = thePlayer.getPositionEyes(1.0f)
@@ -384,8 +384,8 @@ class RotationUtils : MinecraftInstance(), Listenable
 			// Search boundingbox center
 			var vecRotation: VecRotation? = null
 
-			val boxShrink = entityBoxShrink.coerceIn(0.0, 1.0) // The final failsafe
-			val boxEnd = 1 - boxShrink
+			val shrink = boxShrink.coerceIn(0.0, 1.0) // The final failsafe
+			val boxEnd = 1 - shrink
 
 			// Parse flags
 			val skipVisibleCheck = flags and SKIP_VISIBLE_CHECK != 0
@@ -393,13 +393,15 @@ class RotationUtils : MinecraftInstance(), Listenable
 
 			var distanceCheckPassed = false
 
-			var xSearch = boxShrink
+			val increment = 1.0 / steps.toDouble()
+
+			var xSearch = shrink
 			while (xSearch < boxEnd)
 			{
-				var ySearch = boxShrink
+				var ySearch = shrink
 				while (ySearch < boxEnd)
 				{
-					var zSearch = boxShrink
+					var zSearch = shrink
 					while (zSearch < boxEnd)
 					{
 						val vec3 = WVec3(minX + (maxX - minX) * xSearch, minY + (maxY - minY) * ySearch, minZ + (maxZ - minZ) * zSearch)
@@ -408,7 +410,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 						// Distance check
 						if (vecDist > distance)
 						{
-							zSearch += searchSensitivity
+							zSearch += increment
 							continue
 						}
 						if (!distanceCheckPassed) distanceCheckPassed = true
@@ -425,11 +427,11 @@ class RotationUtils : MinecraftInstance(), Listenable
 									getRotationDifference(newRotation, second) < getRotationDifference(vecRotation!!.rotation, second)
 								}) vecRotation = newVecRotation
 						}
-						zSearch += searchSensitivity
+						zSearch += increment
 					}
-					ySearch += searchSensitivity
+					ySearch += increment
 				}
-				xSearch += searchSensitivity
+				xSearch += increment
 			}
 
 			if (!distanceCheckPassed) distanceOutOfRangeCallback?.invoke()

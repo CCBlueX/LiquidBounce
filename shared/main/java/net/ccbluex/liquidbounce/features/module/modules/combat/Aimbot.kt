@@ -182,8 +182,8 @@ class Aimbot : Module()
 		}
 	}
 
-	private val hitboxDecrementValue = FloatValue("EnemyHitboxDecrement", 0.2f, 0.15f, 0.45f)
-	private val centerSearchSensitivityValue = FloatValue("SearchCenterSensitivity", 0.2f, 0.15f, 0.25f)
+	private val hitboxDecrementValue = FloatValue("SearchCenter-HitboxShrink", 0.1f, 0.15f, 0.45f)
+	private val centerSearchSensitivityValue = IntegerValue("SearchCenter-Steps", 8, 4, 20)
 
 	private val aimFrictionValue = FloatValue("AimFriction", 0.6F, 0.3F, 1F)
 	private val aimFrictionTimingValue = ListValue("AimFrictionTiming", arrayOf("Before", "After"), "Before")
@@ -256,8 +256,6 @@ class Aimbot : Module()
 
 		// Search rotation
 		val currentRotation = RotationUtils.clientRotation
-		val hitboxDecrement = hitboxDecrementValue.get().toDouble()
-		val searchSensitivity = centerSearchSensitivityValue.get().toDouble()
 
 		// Build the bit mask
 		var flags = 0
@@ -268,7 +266,7 @@ class Aimbot : Module()
 		if (playerPredict) flags = flags or RotationUtils.PLAYER_PREDICT
 		if (predictValue.get()) flags = flags or RotationUtils.ENEMY_PREDICT
 
-		val targetRotation = (RotationUtils.searchCenter(theWorld, thePlayer, targetBB, flags, jitterData, playerPredictSize, range, hitboxDecrement, searchSensitivity, 0.0) ?: return).rotation
+		val targetRotation = (RotationUtils.searchCenter(theWorld, thePlayer, targetBB, flags, jitterData, playerPredictSize, range, hitboxDecrementValue.get().toDouble(), centerSearchSensitivityValue.get(), 0.0) ?: return).rotation
 
 		// TurnSpeed
 		val maxTurnSpeed = maxTurnSpeedValue.get()

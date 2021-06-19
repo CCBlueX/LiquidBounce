@@ -166,9 +166,14 @@ class KillAura : Module()
 
 	// Bypass
 	private val aacValue = BoolValue("AAC", false)
-	private val rotationsValue = BoolValue("Rotations", true)
-	private val lockValue = BoolValue("Lock", true)
+	private val rotationMode = ListValue("Rotation", arrayOf("Off", "SearchCenter", "LockCenter", "RandomCenter", "Outborder"), "Search")
+	private val randomCenterSizeValue = FloatValue("Rotation-RandomCenter-RandomSize", 0.8F, 0.1F, 1.0F)
+	private val searchCenterHitboxShrinkValue = FloatValue("Rotation-SearchCenter-HitboxShrink", 0.15f, 0f, 0.3f)
+	private val searchCenterSensitivityValue = IntegerValue("Rotation-SearchCenter-Steps", 7, 4, 20)
+	private val rotationLockValue = BoolValue("Rotation-Lock", true)
 	private val silentRotationValue = BoolValue("SilentRotation", true)
+
+	// Jitter
 	private val jitterValue = BoolValue("Jitter", false)
 	private val jitterRateYaw = IntegerValue("YawJitterRate", 50, 0, 100)
 	private val jitterRatePitch = IntegerValue("PitchJitterRate", 50, 0, 100)
@@ -207,14 +212,6 @@ class KillAura : Module()
 			if (i < newValue) this.set(i)
 		}
 	}
-
-	private val lockCenterValue = BoolValue("LockCenter", false)
-	private val randomCenterValue = BoolValue("RandomCenter", false)
-	private val randomCenterSizeValue = FloatValue("RandomCenterSize", 0.8F, 0.1F, 1.0F)
-	private val outborderValue = BoolValue("Outborder", false)
-
-	private val hitboxDecrementValue = FloatValue("EnemyHitboxDecrement", 0.15f, 0f, 0.3f)
-	private val centerSearchSensitivityValue = FloatValue("SearchCenterSensitivity", 0.2f, 0.1f, 0.25f)
 
 	/**
 	 * Keep Rotation
@@ -1038,18 +1035,16 @@ class KillAura : Module()
 		// Jitter
 		val jitterData = if (jitter) RotationUtils.JitterData(jitterRateYaw.get(), jitterRatePitch.get(), minYawJitterStrengthValue.get(), maxYawJitterStrengthValue.get(), minPitchJitterStrengthValue.get(), maxPitchJitterStrengthValue.get()) else null
 
-		val hitboxDecrement = hitboxDecrementValue.get().toDouble()
-		val searchSensitivity = centerSearchSensitivityValue.get().toDouble()
-
-		// Build the bit mask
 		var flags = 0
 
+		val rotationMode = rotationMode.get()
+
 		// Apply rotation mode to flags
-		flags = flags or when
+		flags = flags or when (rotationMode.toLowerCase())
 		{
-			lockCenterValue.get() -> RotationUtils.LOCK_CENTER
-			outborderValue.get() && !attackTimer.hasTimePassed(attackDelay shr 1) -> RotationUtils.OUT_BORDER
-			randomCenterValue.get() -> RotationUtils.RANDOM_CENTER
+			"lockcenter" -> RotationUtils.LOCK_CENTER
+			"outborder" -> if (!attackTimer.hasTimePassed(attackDelay shr 1)) RotationUtils.OUT_BORDER else RotationUtils.RANDOM_CENTER
+			"randomcenter" -> RotationUtils.RANDOM_CENTER
 			else -> 0
 		}
 
@@ -1059,11 +1054,11 @@ class KillAura : Module()
 
 		failedToRotate = false
 
-		val searchCenter = { distance: Float, distanceOutOfRangeCallback: (() -> Unit)? -> RotationUtils.searchCenter(theWorld, thePlayer, targetBox, flags, jitterData, RotationUtils.MinMaxPair(minPlayerPredictSizeValue.get(), maxPlayerPredictSizeValue.get()), distance, hitboxDecrement, searchSensitivity, randomCenterSizeValue.get().toDouble(), distanceOutOfRangeCallback) }
+		val searchCenter = { distance: Float, distanceOutOfRangeCallback: (() -> Unit)? -> RotationUtils.searchCenter(theWorld, thePlayer, targetBox, flags, jitterData, RotationUtils.MinMaxPair(minPlayerPredictSizeValue.get(), maxPlayerPredictSizeValue.get()), distance, searchCenterHitboxShrinkValue.get().toDouble(), searchCenterSensitivityValue.get(), randomCenterSizeValue.get().toDouble(), distanceOutOfRangeCallback) }
 
 		// Search
 		var fallBackRotation: VecRotation? = null
-		val rotation = if (!lockValue.get() && RotationUtils.isFaced(theWorld, thePlayer, entity, aimRange.toDouble(), aabbGetter)) Rotation(lastYaw, lastPitch)
+		val rotation = if (!rotationLockValue.get() && RotationUtils.isFaced(theWorld, thePlayer, entity, aimRange.toDouble(), aabbGetter)) Rotation(lastYaw, lastPitch)
 		else (searchCenter(if (isAttackRotation) attackRange else aimRange) {
 			failedToRotate = true
 
@@ -1077,7 +1072,7 @@ class KillAura : Module()
 		val maxTurnSpeed = maxTurnSpeedValue.get()
 		val minTurnSpeed = minTurnSpeedValue.get()
 
-		if (!rotationsValue.get() || maxTurnSpeed <= 0F) return true
+		if (rotationMode.equals("Off", ignoreCase = true) || maxTurnSpeed <= 0F) return true
 
 		// Limit TurnSpeed
 		val turnSpeed = if (minTurnSpeed < 180f) minTurnSpeed + (maxTurnSpeed - minTurnSpeed) * Random.nextFloat() else 180f
@@ -1144,7 +1139,7 @@ class KillAura : Module()
 		val currentTarget = currentTarget
 		val reach = min(maxAttackRange.toDouble(), thePlayer.getDistanceToEntityBox(target ?: return) + 1)
 
-		if (!rotationsValue.get() || maxTurnSpeedValue.get() <= 0F || targetModeValue.get().equals("Multi", ignoreCase = true)) // Disable hitable check if turn speed is zero
+		if (!rotationMode.get().equals("Off", ignoreCase = true) || maxTurnSpeedValue.get() <= 0F || targetModeValue.get().equals("Multi", ignoreCase = true)) // Disable hitable check if turn speed is zero
 		{
 			hitable = if (currentTarget != null) thePlayer.getDistanceToEntityBox(currentTarget) <= reach else false
 			return
