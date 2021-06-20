@@ -223,6 +223,7 @@ interface IClassProvider
 	fun isCPacketHandshake(obj: Any?): Boolean
 	fun isCPacketPlayerDigging(obj: Any?): Boolean
 	fun isCPacketConfirmTransaction(obj: Any?): Boolean
+	fun isCPacketAbilities(obj: Any?): Boolean
 
 	/* instanceof checks (Block) */
 	fun isBlockAir(obj: Any?): Boolean

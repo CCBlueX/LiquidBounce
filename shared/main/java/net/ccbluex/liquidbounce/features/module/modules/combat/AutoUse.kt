@@ -35,7 +35,6 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import kotlin.math.abs
 import kotlin.random.Random
 
 @ModuleInfo(name = "AutoUse", description = "Automatically eat/drink foods/potions in your hotbar)", category = ModuleCategory.COMBAT)
@@ -164,7 +163,7 @@ class AutoUse : Module()
 			{
 				if (useDelayTimer.hasTimePassed(useDelay) && (ignoreScreen.get() || provider.isGuiContainer(screen)))
 				{
-					val foodInHotbar = if (food && foodLevel <= foodLevelValue.get()) findBestFood(thePlayer, itemDelay = itemDelay) else -1
+					val foodInHotbar = if (food && foodLevel <= foodLevelValue.get()) InventoryUtils.findBestFood(thePlayer, itemDelay = itemDelay) else -1
 					val potionInHotbar = if (potion) findPotion(activePotionEffects, inventoryContainer, random = random, itemDelay = itemDelay) else -1
 					val gappleInHotbar = if (gapple && if (gappleHealth < 20) health <= gappleHealth else thePlayer.absorptionAmount <= 0) InventoryUtils.findItem(inventoryContainer, 36, 45, provider.getItemEnum(ItemType.GOLDEN_APPLE), itemDelay, random) else -1
 					val milkInHotbar = if (milk && activePotionEffects.map(IPotionEffect::potionID).any(Zoot.badEffectsArray::contains)) InventoryUtils.findItem(inventoryContainer, 36, 45, provider.getItemEnum(ItemType.MILK_BUCKET), itemDelay, random) else -1
@@ -245,7 +244,7 @@ class AutoUse : Module()
 					}
 
 					// Move foods to hotbar
-					val foodInInventory = if (food && foodLevel <= foodLevelValue.get()) findBestFood(thePlayer, startSlot = 9, endSlot = 36, itemDelay = itemDelay) else -1
+					val foodInInventory = if (food && foodLevel <= foodLevelValue.get()) InventoryUtils.findBestFood(thePlayer, startSlot = 9, endSlot = 36, itemDelay = itemDelay) else -1
 					val potionInInventory = if (potion) findPotion(activePotionEffects, inventoryContainer, startSlot = 9, endSlot = 36, random = random, itemDelay = itemDelay) else -1
 					val gappleInInventory = if (gapple && if (gappleHealth < 20) health <= gappleHealth else thePlayer.absorptionAmount <= 0) InventoryUtils.findItem(inventoryContainer, 9, 36, provider.getItemEnum(ItemType.GOLDEN_APPLE), itemDelay, random) else -1
 					val milkInInventory = if (milk && activePotionEffects.map(IPotionEffect::potionID).any(Zoot.badEffectsArray::contains)) InventoryUtils.findItem(inventoryContainer, 9, 36, provider.getItemEnum(ItemType.MILK_BUCKET), itemDelay, random) else -1
@@ -311,19 +310,6 @@ class AutoUse : Module()
 	private fun performFastUse(thePlayer: IEntityPlayerSP, item: IItem?, itemUseTicks: Int): Int = (LiquidBounce.moduleManager[FastUse::class.java] as FastUse).perform(thePlayer, mc.timer, item, itemUseTicks)
 
 	private fun findPotion(activePotionEffects: Collection<IPotionEffect>, inventoryContainer: IContainer, startSlot: Int = 36, endSlot: Int = 45, random: Boolean, itemDelay: Long): Int = (LiquidBounce.moduleManager[AutoPot::class.java] as AutoPot).findBuffPotion(activePotionEffects, startSlot, endSlot, inventoryContainer, random, false, itemDelay) // TODO: findHealPotion() support
-
-	private fun findBestFood(thePlayer: IEntityPlayerSP, startSlot: Int = 36, endSlot: Int = 45, itemDelay: Long): Int
-	{
-		val inventoryContainer = thePlayer.inventoryContainer
-		val currentFoodLevel = thePlayer.foodStats.foodLevel
-
-		val currentTime = System.currentTimeMillis()
-
-		return (startSlot until endSlot).mapNotNull { it to (inventoryContainer.getSlot(it).stack ?: return@mapNotNull null) }.filter { classProvider.isItemFood(it.second.item) }.filter { currentTime - it.second.itemDelay >= itemDelay }.maxBy { (_, stack) ->
-			val foodStack = stack.item!!.asItemFood()
-			20 - abs(currentFoodLevel - foodStack.getHealAmount(stack)) + foodStack.getSaturationModifier(stack)
-		}?.first ?: -1
-	}
 
 	override val tag: String?
 		get() = if (silentValue.get()) "Silent" else null

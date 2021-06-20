@@ -76,7 +76,7 @@ class Step : Module()
 		// Motion steps
 		when (modeValue.get().toLowerCase())
 		{
-			"jump" -> if (thePlayer.isCollidedHorizontally && thePlayer.onGround && canStep)
+			"jump" -> if (thePlayer.isCollidedHorizontally && thePlayer.onGround && canStep && couldStep(theWorld, thePlayer))
 			{
 				fakeJump(thePlayer)
 				thePlayer.motionY = jumpHeightValue.get().toDouble()
@@ -84,7 +84,7 @@ class Step : Module()
 
 			"aac3.2.0" -> if (thePlayer.isCollidedHorizontally && !MovementUtils.cantBoostUp(thePlayer) && canStep)
 			{
-				if (thePlayer.onGround && timer.hasTimePassed(delay))
+				if (thePlayer.onGround && timer.hasTimePassed(delay) && couldStep(theWorld, thePlayer))
 				{
 					isStep = true
 

@@ -159,17 +159,28 @@ class FileManager : MinecraftInstance()
 
 			// To minimize overheads caused by saving config, use workers instead of directly saving it
 			WorkerUtils.workers.execute {
+				var backupFile: File? = null
 				try
 				{
 					val nanoTime = System.nanoTime()
 
+					if (config.hasConfig())
+					{
+						// Create the backup
+						backupFile = File(config.file.parentFile, "${config.file.name}.loadBak")
+
+						config.file.copyTo(backupFile, overwrite = true)
+					}
+
 					config.loadConfig()
 
 					logger.info("[FileManager] Loaded config: {}. Took {}.", config.file.name, TimeUtils.nanosecondsToString(System.nanoTime() - nanoTime))
+
+					backupFile?.delete()
 				}
 				catch (t: Throwable)
 				{
-					logger.error("[FileManager] Failed to load config file: {}.", config.file.name, t)
+					logger.error("[FileManager] Failed to load config file: \"${config.file.name}\".${if (backupFile != null) " Back-up file created \"${backupFile.name}\"." else ""}", t)
 				}
 			}
 		}
@@ -211,20 +222,29 @@ class FileManager : MinecraftInstance()
 
 			// To minimize overheads caused by saving config, use workers instead of directly saving it
 			WorkerUtils.workers.execute {
+				var backupFile: File? = null
 				try
 				{
 					val nanoTime = System.nanoTime()
 
-					if (!config.hasConfig()) config.createConfig()
+					if (config.hasConfig())
+					{
+						// Create the backup
+						backupFile = File(config.file.parentFile, "${config.file.name}.saveBak")
+
+						config.file.copyTo(backupFile, overwrite = true)
+					}
+					else config.createConfig()
 
 					config.saveConfig()
 
 					logger.info("[FileManager] Saved config: \"{}\". Took {}.", config.file.name, TimeUtils.nanosecondsToString(System.nanoTime() - nanoTime))
+
+					backupFile?.delete()
 				}
 				catch (t: Throwable)
 				{
-					// TODO: Create Back-up
-					logger.error("[FileManager] Failed to save config file: \"{}\".", config.file.name, t)
+					logger.error("[FileManager] Failed to save config file: \"${config.file.name}\".${if (backupFile != null) " Back-up file created \"${backupFile.name}\"." else ""}", t)
 				}
 			}
 		}

@@ -7,7 +7,9 @@ package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.api.enums.BlockType
 import net.ccbluex.liquidbounce.api.enums.EnumFacingType
+import net.ccbluex.liquidbounce.api.enums.ItemType
 import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.entity.player.IInventoryPlayer
 import net.ccbluex.liquidbounce.api.minecraft.inventory.IContainer
@@ -87,6 +89,11 @@ class InventoryUtils : MinecraftInstance(), Listenable
 
 				// Falling blocks
 				provider.getBlockEnum(BlockType.SAND), provider.getBlockEnum(BlockType.GRAVEL), provider.getBlockEnum(BlockType.TNT), provider.getBlockEnum(BlockType.STANDING_BANNER), provider.getBlockEnum(BlockType.WALL_BANNER))
+		}
+
+		private val avoidedFoods = run {
+			val provider = classProvider
+			arrayOf(provider.getItemEnum(ItemType.ROTTEN_FLESH), provider.getItemEnum(ItemType.SPIDER_EYE), provider.getItemEnum(ItemType.POISONOUS_POTATO))
 		}
 
 		@JvmField
@@ -228,6 +235,22 @@ class InventoryUtils : MinecraftInstance(), Listenable
 				serverHeldItemSlot = currentSlot
 				mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(currentSlot))
 			}
+		}
+
+		fun findBestFood(thePlayer: IEntityPlayerSP, startSlot: Int = 36, endSlot: Int = 45, itemDelay: Long): Int
+		{
+			val inventoryContainer = thePlayer.inventoryContainer
+			val currentFoodLevel = thePlayer.foodStats.foodLevel
+
+			val currentTime = System.currentTimeMillis()
+
+			return (startSlot until endSlot).mapNotNull { it to (inventoryContainer.getSlot(it).stack ?: return@mapNotNull null) }.filter { classProvider.isItemFood(it.second.item) }.filterNot { it.second.item in avoidedFoods }.filter { currentTime - it.second.itemDelay >= itemDelay }.maxBy { (_, stack) ->
+				val foodStack = stack.item!!.asItemFood()
+				val healAmount = foodStack.getHealAmount(stack)
+
+				val exactness = currentFoodLevel + healAmount - 20
+				(if (exactness > 3) 0 else (4 - exactness) * 10) + healAmount + foodStack.getSaturationModifier(stack)
+			}?.first ?: -1
 		}
 	}
 }

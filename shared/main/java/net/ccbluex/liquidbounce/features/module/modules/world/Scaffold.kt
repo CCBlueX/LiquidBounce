@@ -246,7 +246,7 @@ class Scaffold : Module()
 	private var limitedRotation: Rotation? = null
 
 	// Launch position
-	private var launchY = 0
+	private var launchY = -999
 	private var facesBlock = false
 
 	// Zitter Direction
@@ -490,11 +490,16 @@ class Scaffold : Module()
 	fun onMotion(event: MotionEvent)
 	{
 		val eventState: EventState = event.eventState
-		val tower = LiquidBounce.moduleManager[Tower::class.java] as Tower
-		if (disableWhileTowering.get() && tower.active) return
 
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
+
+		val tower = LiquidBounce.moduleManager[Tower::class.java] as Tower
+		if (disableWhileTowering.get() && tower.active)
+		{
+			launchY = thePlayer.posY.toInt() // Compatibility between SameY and Tower
+			return
+		}
 
 		val currentLockRotation = lockRotation
 

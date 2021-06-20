@@ -879,10 +879,10 @@ object AntiBot : Module()
 				{
 					val baseScore = when
 					{
-						distanceSq <= positionDeltaLimitSq * 0.0005F -> 40
-						distanceSq <= positionDeltaLimitSq * 0.02F -> 20
-						distanceSq <= positionDeltaLimitSq * 0.05F -> 7
-						distanceSq <= positionDeltaLimitSq * 0.1F -> 4
+						distanceSq <= positionDeltaLimitSq * 0.0005F -> 15
+						distanceSq <= positionDeltaLimitSq * 0.02F -> 8
+						distanceSq <= positionDeltaLimitSq * 0.05F -> 4
+						distanceSq <= positionDeltaLimitSq * 0.1F -> 3
 						distanceSq <= positionDeltaLimitSq * 0.2F -> 2
 						else -> 1
 					}

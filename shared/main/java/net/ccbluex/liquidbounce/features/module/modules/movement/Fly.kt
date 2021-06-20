@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.api.enums.EnumFacingType
 import net.ccbluex.liquidbounce.api.enums.StatType
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
+import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ICPacketAbilities
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
@@ -136,6 +137,7 @@ class Fly : Module()
 	 * Mineplex
 	 */
 	private val mineplexSpeedValue = FloatValue("MineplexSpeed", 1f, 0.5f, 10f)
+
 	private val neruxVaceTicks = IntegerValue("NeruxVace-Ticks", 6, 0, 20)
 	private val redeskyVClipHeight = FloatValue("RedeSky-Height", 4f, 1f, 7f)
 	private val mccTimerSpeedValue = FloatValue("MCCentral-Timer", 2.0f, 1.0f, 5.0f)
@@ -144,6 +146,8 @@ class Fly : Module()
 	 * Reset Motions On Disable
 	 */
 	private val resetMotionOnDisable = BoolValue("ResetMotionOnDisable", false)
+
+	private val bypassAbilitiesValue = BoolValue("BlockFlyingAbilities", false)
 
 	/**
 	 * Visuals
@@ -345,6 +349,8 @@ class Fly : Module()
 		thePlayer.capabilities.isFlying = false
 		mc.timer.timerSpeed = 1f
 		thePlayer.speedInAir = 0.02f
+
+		lastAbilitiesPacket = null
 	}
 
 	@EventTarget
@@ -950,26 +956,47 @@ class Fly : Module()
 		}
 	}
 
+	private var lastAbilitiesPacket: ICPacketAbilities? = null
+
 	@EventTarget
 	fun onPacket(event: PacketEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
+		val packet = event.packet
 
 		val mode = modeValue.get()
 
 		val provider = classProvider
 
-		if (provider.isCPacketPlayer(event.packet))
+		if (provider.isCPacketPlayer(packet))
 		{
-			val packetPlayer = event.packet.asCPacketPlayer()
+			val packetPlayer = packet.asCPacketPlayer()
 
 			if (mode.equals("NCP", ignoreCase = true) || mode.equals("Rewinside", ignoreCase = true) || mode.equals("Mineplex", ignoreCase = true) && thePlayer.inventory.getCurrentItemInHand() == null) packetPlayer.onGround = true
 			if (mode.equals("Hypixel", ignoreCase = true) && hypixelFlyStarted) packetPlayer.onGround = hypixelOnGroundValue.get()
 		}
-		else if (provider.isSPacketPlayerPosLook(event.packet) && mode.equals("Hypixel", ignoreCase = true) && canPerformHypixelDamageFly && hypixelFlyStarted && !hypixelDamageBoostFailed)
+
+		if (provider.isSPacketPlayerPosLook(packet) && mode.equals("Hypixel", ignoreCase = true) && canPerformHypixelDamageFly && hypixelFlyStarted && !hypixelDamageBoostFailed)
 		{
 			hypixelDamageBoostFailed = true
 			LiquidBounce.hud.addNotification("Hypixel Damage-Boost Fly", "A teleport has been detected. Disabled Damage-Boost to prevent more flags.", 1000L, Color.red)
+		}
+
+		if (provider.isCPacketAbilities(packet))
+		{
+			val abilities = packet.asCPacketAbilities()
+
+			ClientUtils.displayChatMessage(thePlayer, "PRE flying: [$abilities]")
+
+			if (bypassAbilitiesValue.get()) abilities.flying = false
+
+			if (bypassAbilitiesValue.get() && lastAbilitiesPacket != null && lastAbilitiesPacket == abilities) event.cancelEvent()
+			else
+			{
+				lastAbilitiesPacket = abilities
+
+				ClientUtils.displayChatMessage(thePlayer, "POST: [$abilities]")
+			}
 		}
 	}
 

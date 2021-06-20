@@ -102,16 +102,16 @@ object BlockUtils : MinecraftInstance()
 	}
 
 	/**
-	 * Check if [aabb] has collidable blocks using custom [collide] check
+	 * Check if [bb] has collidable blocks using custom [collide] check
 	 */
 	@JvmStatic
-	fun collideBlock(theWorld: IWorldClient, aabb: IAxisAlignedBB, collide: Collidable): Boolean
+	fun collideBlock(theWorld: IWorldClient, bb: IAxisAlignedBB, collide: Collidable): Boolean
 	{
-		val minX = floor(aabb.minX).toInt()
-		val maxX = floor(aabb.maxX).toInt() + 1
-		val minY = aabb.minY
-		val minZ = floor(aabb.minZ).toInt()
-		val maxZ = floor(aabb.maxZ).toInt() + 1
+		val minX = floor(bb.minX).toInt()
+		val maxX = floor(bb.maxX).toInt() + 1
+		val minY = bb.minY
+		val minZ = floor(bb.minZ).toInt()
+		val maxZ = floor(bb.maxZ).toInt() + 1
 
 		return (minX until maxX).firstOrNull()?.let { x -> (minZ until maxZ).none { z -> !collide(getBlock(theWorld, WBlockPos(x.toDouble(), minY, z.toDouble()))) } } ?: true
 	}

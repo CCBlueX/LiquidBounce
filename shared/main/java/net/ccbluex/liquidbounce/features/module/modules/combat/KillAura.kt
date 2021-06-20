@@ -108,7 +108,7 @@ class KillAura : Module()
 			if (i > newValue) this.set(i)
 
 			val i2 = aimRangeValue.get()
-			if (i < newValue) this.set(i2)
+			if (i2 < newValue) this.set(i2)
 		}
 	}
 

@@ -367,6 +367,8 @@ object ClassProviderImpl : IClassProvider
 
 	override fun isCPacketConfirmTransaction(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C0FPacketConfirmTransaction
 
+	override fun isCPacketAbilities(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C13PacketPlayerAbilities
+
 	override fun isItemSword(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemSword
 
 	override fun isItemTool(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemTool
@@ -650,6 +652,9 @@ object ClassProviderImpl : IClassProvider
 			ItemType.GOLDEN_APPLE -> Items.golden_apple
 			ItemType.MILK_BUCKET -> Items.milk_bucket
 			ItemType.GLASS_BOTTLE -> Items.glass_bottle
+			ItemType.ROTTEN_FLESH -> Items.rotten_flesh
+			ItemType.POISONOUS_POTATO -> Items.poisonous_potato
+			ItemType.SPIDER_EYE -> Items.spider_eye
 		})
 	}
 
