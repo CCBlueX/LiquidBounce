@@ -17,13 +17,14 @@ jobs:
       - name: Set up JDK 1.8
         uses: actions/setup-java@v1
         with:
-          java-version: 1.8
+          distribution: 'adopt'
+          java-version: '11'
       - name: Grant all permissions for theme
         run: sudo chmod -R 777 theme
       - uses: burrunan/gradle-cache-action@v1
         name: Build
         with:
-          job-id: jdk8
+          job-id: jdk11
           arguments: genSources build
           gradle-version: wrapper
       - name: Upload artifact
