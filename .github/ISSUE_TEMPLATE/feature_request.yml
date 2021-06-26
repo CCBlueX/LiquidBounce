@@ -1,0 +1,29 @@
+name: ✨ Feature request
+description: Suggest an idea for this project
+title: "[FEATURE]"
+
+body:
+- type: markdown
+  attributes:
+    value: |
+      🧐 **Guidelines:**
+
+      - Search through [existing issues](https://github.com/CCBlueX/LiquidBounce/issues?q=is%3Aopen+is%3Aissue) first to ensure that this feature has not been requested before.
+      - Write a descriptive title for your issue. Avoid generic or vague titles such as "Some suggestions" or "Ideas for improvement".
+      - Keep your issue focused on one single problem. If you have multiple feature requests, please create separate issues for each of them.
+      - Provide as much context as possible in the details section. Include screenshots, screen recordings, links, references, or anything else you may consider relevant.
+      - If you want to ask a question instead of requesting a feature, please use the [forum](https://forums.ccbluex.net/) instead.
+
+- type: textarea
+  attributes:
+    label: Describe your feature request.
+    description: A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+  validations:
+    required: true
+
+- type: textarea
+  attributes:
+    label: Additional context
+    description: Add any other context or screenshots about the feature request here.
+  validations:
+    required: false
