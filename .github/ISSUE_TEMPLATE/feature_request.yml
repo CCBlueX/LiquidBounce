@@ -12,7 +12,7 @@ body:
       - Write a descriptive title for your issue. Avoid generic or vague titles such as "Some suggestions" or "Ideas for improvement".
       - Keep your issue focused on one single problem. If you have multiple feature requests, please create separate issues for each of them.
       - Provide as much context as possible in the details section. Include screenshots, screen recordings, links, references, or anything else you may consider relevant.
-      - If you want to ask a question instead of requesting a feature, please use [discussions](https://github.com/CCBlueX/LiquidBounce/discussions/new) instead.
+      - If you want to ask a question instead of requesting a feature, please use the [forum](https://forums.ccbluex.net/) instead.
 
 - type: textarea
   attributes:
