@@ -52,7 +52,7 @@ class AutoClicker : Module() {
     fun onRender(event: Render3DEvent) {
         // Left click
         if (mc.gameSettings.keyBindAttack.isKeyDown && leftValue.get() &&
-                System.currentTimeMillis() - leftLastSwing >= leftDelay && mc.playerController.curBlockDamageMP == 0F) {
+                System.currentTimeMillis() - leftLastSwing >= leftDelay) {
             mc.gameSettings.keyBindAttack.onTick(mc.gameSettings.keyBindAttack.keyCode) // Minecraft Click Handling
 
             leftLastSwing = System.currentTimeMillis()
