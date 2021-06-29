@@ -46,7 +46,8 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
         val strideHandler = handler<PlayerStrideEvent> { event ->
             if (stride) {
-                event.strideForce = 0.1f.coerceAtMost(MathHelper.sqrt(PlayerEntity.squaredHorizontalLength(player.velocity)))
+                event.strideForce =
+                    0.1f.coerceAtMost(MathHelper.sqrt(PlayerEntity.squaredHorizontalLength(player.velocity)))
             }
 
         }

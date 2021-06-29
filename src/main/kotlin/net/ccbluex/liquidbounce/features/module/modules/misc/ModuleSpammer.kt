@@ -47,7 +47,7 @@ object ModuleSpammer : Module("Spammer", Category.MISC) {
             format(messages.random())
         } else {
             "[${RandomStringUtils.randomAlphabetic(Random.nextInt(4) + 1)}] " + messages.random().toCharArray()
-                .map { if (Random.nextBoolean()) it.toUpperCase() else it.toLowerCase() }.joinToString("")
+                .map { if (Random.nextBoolean()) it.uppercaseChar() else it.lowercaseChar() }.joinToString("")
         }
 
         player.sendChatMessage(text)
@@ -58,15 +58,36 @@ object ModuleSpammer : Module("Spammer", Category.MISC) {
         var formattedText = text
 
         while (formattedText.contains("%f"))
-            formattedText = formattedText.substring(0, formattedText.indexOf("%f")) + Random.nextFloat() + formattedText.substring(formattedText.indexOf("%f") + "%f".length)
+            formattedText =
+                formattedText.substring(0, formattedText.indexOf("%f")) + Random.nextFloat() + formattedText.substring(
+                    formattedText.indexOf("%f") + "%f".length
+                )
         while (formattedText.contains("%i"))
-            formattedText = formattedText.substring(0, formattedText.indexOf("%i")) + Random.nextInt(10000) + formattedText.substring(formattedText.indexOf("%i") + "%i".length)
+            formattedText = formattedText.substring(
+                0,
+                formattedText.indexOf("%i")
+            ) + Random.nextInt(10000) + formattedText.substring(formattedText.indexOf("%i") + "%i".length)
         while (formattedText.contains("%s"))
-            formattedText = formattedText.substring(0, formattedText.indexOf("%s")) + RandomStringUtils.randomAlphabetic(Random.nextInt(8) + 1).toString() + formattedText.substring(formattedText.indexOf("%s") + "%s".length)
+            formattedText = formattedText.substring(
+                0,
+                formattedText.indexOf("%s")
+            ) + RandomStringUtils.randomAlphabetic(Random.nextInt(8) + 1).toString() + formattedText.substring(
+                formattedText.indexOf("%s") + "%s".length
+            )
         while (formattedText.contains("%ss"))
-            formattedText = formattedText.substring(0, formattedText.indexOf("%ss")) + RandomStringUtils.randomAlphabetic(Random.nextInt(8) + 1).toString() + formattedText.substring(formattedText.indexOf("%ss") + "%ss".length)
+            formattedText = formattedText.substring(
+                0,
+                formattedText.indexOf("%ss")
+            ) + RandomStringUtils.randomAlphabetic(Random.nextInt(8) + 1).toString() + formattedText.substring(
+                formattedText.indexOf("%ss") + "%ss".length
+            )
         while (formattedText.contains("%ls"))
-            formattedText = formattedText.substring(0, formattedText.indexOf("%ls")) + RandomStringUtils.randomAlphabetic(Random.nextInt(8) + 1).toString() + formattedText.substring(formattedText.indexOf("%ls") + "%ls".length)
+            formattedText = formattedText.substring(
+                0,
+                formattedText.indexOf("%ls")
+            ) + RandomStringUtils.randomAlphabetic(Random.nextInt(8) + 1).toString() + formattedText.substring(
+                formattedText.indexOf("%ls") + "%ls".length
+            )
 
         return formattedText
     }

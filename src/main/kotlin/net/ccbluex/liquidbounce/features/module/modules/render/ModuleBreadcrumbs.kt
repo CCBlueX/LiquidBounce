@@ -86,7 +86,12 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
             this.color = color
         }
 
-        return VertexFormatRenderTask(vertexFormat, PrimitiveType.LineStrip, ColoredPrimitiveShader, state = GlRenderState(lineWidth = 2.0f, lineSmooth = true))
+        return VertexFormatRenderTask(
+            vertexFormat,
+            PrimitiveType.LineStrip,
+            ColoredPrimitiveShader,
+            state = GlRenderState(lineWidth = 2.0f, lineSmooth = true)
+        )
     }
 
     val updateHandler = handler<PlayerTickEvent> {

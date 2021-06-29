@@ -50,7 +50,7 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
     private val hopperValue by boolean("Hopper", true)
     private val shulkerBoxValue by boolean("ShulkerBox", true)
 
-    private object Box : Choice("Box",) {
+    private object Box : Choice("Box") {
 
         override val parent: ChoiceConfigurable
             get() = modes

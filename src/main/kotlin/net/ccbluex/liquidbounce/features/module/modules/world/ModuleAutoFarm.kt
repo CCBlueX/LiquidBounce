@@ -45,7 +45,7 @@ import net.minecraft.world.RaycastContext
  * Automatically farms stuff for you
  */
 object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
-// TODO Fix this entire module-
+    // TODO Fix this entire module-
     private val range by float("Range", 5F, 1F..6F)
     private val throughWalls by boolean("ThroughWalls", false)
 
@@ -78,7 +78,11 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             )
         )
 
-        if (rayTraceResult?.type != HitResult.Type.BLOCK || !isTargeted(rayTraceResult.blockPos.getState()!!, rayTraceResult.blockPos)) {
+        if (rayTraceResult?.type != HitResult.Type.BLOCK || !isTargeted(
+                rayTraceResult.blockPos.getState()!!,
+                rayTraceResult.blockPos
+            )
+        ) {
             return@repeatable
         }
 
@@ -158,7 +162,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         }
     }
 
-    private inline fun <reified T: Block> isAboveLast(pos: BlockPos): Boolean {
+    private inline fun <reified T : Block> isAboveLast(pos: BlockPos): Boolean {
         return pos.down().getBlock() is T && pos.down(2).getBlock() !is T
     }
 

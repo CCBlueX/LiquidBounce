@@ -115,8 +115,14 @@ object ModuleESP : Module("ESP", Category.RENDER) {
                     outlineInstanceBuffer.putVertex { this.position = pos; this.color = outlineColor }
                 }
 
-                RenderEngine.enqueueForRendering(RenderEngine.CAMERA_VIEW_LAYER_WITHOUT_BOBBING, espBoxInstancedRenderTask(instanceBuffer, box.first, box.second))
-                RenderEngine.enqueueForRendering(RenderEngine.CAMERA_VIEW_LAYER_WITHOUT_BOBBING, espBoxInstancedOutlineRenderTask(outlineInstanceBuffer, boxOutline.first, boxOutline.second))
+                RenderEngine.enqueueForRendering(
+                    RenderEngine.CAMERA_VIEW_LAYER_WITHOUT_BOBBING,
+                    espBoxInstancedRenderTask(instanceBuffer, box.first, box.second)
+                )
+                RenderEngine.enqueueForRendering(
+                    RenderEngine.CAMERA_VIEW_LAYER_WITHOUT_BOBBING,
+                    espBoxInstancedOutlineRenderTask(outlineInstanceBuffer, boxOutline.first, boxOutline.second)
+                )
             }
         }
 

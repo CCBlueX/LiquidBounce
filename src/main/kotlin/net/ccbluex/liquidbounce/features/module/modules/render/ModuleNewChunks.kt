@@ -61,16 +61,22 @@ object ModuleNewChunks : Module("NewChunks", Category.RENDER) {
         instanceBuffer.initBuffer(newlyLoadedChunks.size)
 
         for (newlyLoadedChunk in newlyLoadedChunks) {
-            instanceBuffer.putVertex { this.position = Vec3(newlyLoadedChunk.startX.toDouble(), 0.0, newlyLoadedChunk.startZ.toDouble()); this.color = color }
+            instanceBuffer.putVertex {
+                this.position =
+                    Vec3(newlyLoadedChunk.startX.toDouble(), 0.0, newlyLoadedChunk.startZ.toDouble()); this.color =
+                color
+            }
         }
 
-        RenderEngine.enqueueForRendering(RenderEngine.CAMERA_VIEW_LAYER_WITHOUT_BOBBING, VertexFormatRenderTask(
-            vertexFormat,
-            PrimitiveType.LineLoop,
-            InstancedColoredPrimitiveShader,
-            perInstance = instanceBuffer,
-            state = GlRenderState(lineWidth = 1.0F, lineSmooth = true)
-        ))
+        RenderEngine.enqueueForRendering(
+            RenderEngine.CAMERA_VIEW_LAYER_WITHOUT_BOBBING, VertexFormatRenderTask(
+                vertexFormat,
+                PrimitiveType.LineLoop,
+                InstancedColoredPrimitiveShader,
+                perInstance = instanceBuffer,
+                state = GlRenderState(lineWidth = 1.0F, lineSmooth = true)
+            )
+        )
     }
 
     override fun disable() {
