@@ -27,7 +27,7 @@ body:
     description: On which OS is LiquidBounce running?
     multiple: true
     options:
-    - iOS
+    - macOS
     - Linux
     - Windows 10
     - Windows 8
