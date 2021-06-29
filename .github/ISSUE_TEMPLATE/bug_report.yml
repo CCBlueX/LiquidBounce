@@ -31,7 +31,6 @@ body:
     - Linux
     - Windows 10
     - Windows 8
-    - Windows Vista
     - Windows 7
   validations:
     required: true
