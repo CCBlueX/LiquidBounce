@@ -15,7 +15,7 @@ body:
 
 - type: input
   attributes:
-    label: LiquidBounce Build Version
+    label: LiquidBounce Build/Version
     description: Which version of LiquidBounce does this bug affect?
     placeholder: e.g. b61
   validations:
