@@ -163,6 +163,9 @@
   "liquidbounce.command.value.result.success": "Successfully changed value.",
   "liquidbounce.command.value.result.valueNotFound": "Unable to find value %s!",
 
+  "liquidbounce.command.ping.description": "Checks your ping.",
+  "liquidbounce.command.ping.result.pingCheck": "Your ping is %sms.",
+
   "liquidbounce.liquidchat.states.connecting": "Connecting to chat server...",
   "liquidbounce.liquidchat.states.connected": "Connected to chat server!",
   "liquidbounce.liquidchat.states.disconnected": "Disconnected from chat server!",
