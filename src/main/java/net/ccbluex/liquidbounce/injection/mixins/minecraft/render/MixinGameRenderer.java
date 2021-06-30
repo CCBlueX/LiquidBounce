@@ -132,4 +132,10 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
             callbackInfo.cancel();
         }
     }
+    @Inject(method = "bobView", at = @At("HEAD"), cancellable = true)
+    private void injectBobView(MatrixStack matrixStack, float f, CallbackInfo callbackInfo) {
+        if(ModuleNoBob.INSTANCE.getEnabled()) {
+            callbackInfo.cancel();
+        }
+    }
 }
