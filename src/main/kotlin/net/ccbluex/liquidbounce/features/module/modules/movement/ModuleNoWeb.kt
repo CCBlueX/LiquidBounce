@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -26,16 +28,35 @@ import net.minecraft.block.CobwebBlock
 import net.minecraft.util.shape.VoxelShapes
 
 /**
- * Anti hazards module
+ * NoWeb module
  *
- * Prevents you walking into blocks that might be malicious for you
+ * Prevents you from walking into webs in different ways.
  */
 object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
 
-    val shapeHandler = handler<BlockShapeEvent> { event ->
-        if (event.state.block is CobwebBlock) {
-            event.shape = VoxelShapes.fullCube()
-        }
+    val modes = choices("Mode", Air) {
+        arrayOf(
+            Air,
+            Block
+        )
     }
 
+    object Air : Choice("Air") {
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        // Mixins take care of this mode
+    }
+
+    object Block : Choice("Block") {
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val shapeHandler = handler<BlockShapeEvent> { event ->
+            if (event.state.block is CobwebBlock) {
+                event.shape = VoxelShapes.fullCube()
+            }
+        }
+    }
 }
+
