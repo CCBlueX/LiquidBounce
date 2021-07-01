@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
 import net.ccbluex.liquidbounce.api.minecraft.util.WDefaultPlayerSkin
@@ -27,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_2
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.createRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11
 import java.awt.Color
@@ -40,7 +42,7 @@ import kotlin.math.*
 class Target : Element()
 {
 	private val minWidthValue = IntegerValue("MinWidth", 180, 160, 300)
-	private val heightValue = IntegerValue("Height", 100, 90, 150)
+	private val heightValue = IntegerValue("Height", 100, 100, 150)
 
 	private val headSizeValue = IntegerValue("HeadSize", 90, 30, 90)
 
@@ -66,27 +68,26 @@ class Target : Element()
 
 	private val renderEquipmentsValue = BoolValue("Armor", true)
 
-	private val borderWidthValue = FloatValue("Border-Width", 3F, 2F, 5F)
-	private val borderColorRedValue = IntegerValue("Border-R", 0, 0, 255)
-	private val borderColorGreenValue = IntegerValue("Border-G", 0, 0, 255)
-	private val borderColorBlueValue = IntegerValue("Border-B", 0, 0, 255)
-
-	// TODO
 	private val backgroundColorModeValue = ListValue("Background-Color", arrayOf("None", "Custom", "Rainbow", "RainbowShader"), "Custom")
 	private val backgroundColorRedValue = IntegerValue("Background-R", 0, 0, 255)
 	private val backgroundColorGreenValue = IntegerValue("Background-G", 0, 0, 255)
 	private val backgroundColorBlueValue = IntegerValue("Background-B", 0, 0, 255)
-	private val backgroundColorAlphaValue = IntegerValue("Background-Alpha", 0, 0, 255)
-
 	private val backgroundRainbowCeilValue = BoolValue("Background-RainbowCeil", false)
 
-	private val background2ExpandValue = FloatValue("SecondBackground-Expand", 3F, 1.5F, 5F)
-	private val background2ColorModeValue = ListValue("SecondBackground-Color", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom")
-	private val background2ColorRedValue = IntegerValue("SecondBackground-R", 32, 0, 255)
-	private val background2ColorGreenValue = IntegerValue("SecondBackground-G", 32, 0, 255)
-	private val background2ColorBlueValue = IntegerValue("SecondBackground-B", 32, 0, 255)
-	private val background2ColorAlphaValue = IntegerValue("SecondBackground-Alpha", 0, 0, 255)
+	private val borderColorModeValue = ListValue("Border-Color", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom")
+	private val borderWidthValue = FloatValue("Border-Width", 3F, 2F, 5F)
+	private val borderColorRedValue = IntegerValue("Border-R", 0, 0, 255)
+	private val borderColorGreenValue = IntegerValue("Border-G", 0, 0, 255)
+	private val borderColorBlueValue = IntegerValue("Border-B", 0, 0, 255)
+	private val borderColorAlphaValue = IntegerValue("Border-Alpha", 0, 0, 255)
 
+	private val saturationValue = FloatValue("HSB-Saturation", 0.9f, 0f, 1f)
+	private val brightnessValue = FloatValue("HSB-Brightness", 1f, 0f, 1f)
+
+	private val rainbowSpeedValue = IntegerValue("Rainbow-Speed", 10, 1, 10)
+
+	private val rainbowShaderXValue = FloatValue("RainbowShader-X", -1000F, -2000F, 2000F)
+	private val rainbowShaderYValue = FloatValue("RainbowShader-Y", -1000F, -2000F, 2000F)
 
 	private val nameFontValue = FontValue("NameFont", Fonts.font40)
 	private val textFontValue = FontValue("TextFont", Fonts.font35)
@@ -103,19 +104,51 @@ class Target : Element()
 		val netHandler = mc.netHandler
 		val textureManager = mc.textureManager
 
-		val moduleManager = LiquidBounce.moduleManager
+		val targetInfo = queryTarget()
+		var target = targetInfo?.first
+		val debug = targetInfo?.second
 
-		val tpAura = moduleManager[TpAura::class.java] as TpAura
-		var targetEntity = if (tpAura.state && tpAura.maxTargetsValue.get() == 1 && tpAura.currentTarget != null) tpAura.currentTarget else ((moduleManager[KillAura::class.java] as KillAura).target ?: (moduleManager[Aimbot::class.java] as Aimbot).target) ?: (moduleManager[BowAimbot::class.java] as BowAimbot).target
-
-		if (targetEntity == null && classProvider.isGuiHudDesigner(mc.currentScreen)) targetEntity = mc.thePlayer
+		if (targetInfo == null && classProvider.isGuiHudDesigner(mc.currentScreen)) target = thePlayer
 
 		val minWidth = minWidthValue.get().toFloat()
 		val height = heightValue.get().toFloat()
 
-		if (targetEntity != null && targetEntity.entityAlive)
+		val rainbowSpeed = rainbowSpeedValue.get()
+		val saturation = saturationValue.get()
+		val brightness = brightnessValue.get()
+
+		val rainbowShaderX = if (rainbowShaderXValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderXValue.get()
+		val rainbowShaderY = if (rainbowShaderYValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderYValue.get()
+		val rainbowShaderOffset = System.currentTimeMillis() % 10000 * 0.0001f
+
+		val rainbowRGB = ColorUtils.rainbowRGB(speed = rainbowSpeed, saturation = saturation, brightness = brightness)
+
+		val backgroundColorMode = backgroundColorModeValue.get()
+		val backgroundRainbowCeil = backgroundRainbowCeilValue.get()
+		val backgroundRainbowShader = backgroundColorMode.equals("RainbowShader", ignoreCase = true)
+		val backgroundColor = when
 		{
-			val isPlayer = classProvider.isEntityPlayer(targetEntity)
+			backgroundRainbowShader -> 0
+			backgroundColorMode.equals("Rainbow", ignoreCase = true) -> rainbowRGB
+			else -> createRGB(backgroundColorRedValue.get(), backgroundColorGreenValue.get(), backgroundColorBlueValue.get())
+		}
+
+		val borderWidth = borderWidthValue.get()
+		val borderColorMode = borderColorModeValue.get()
+		val borderColorAlpha = borderColorAlphaValue.get()
+		val borderRainbowShader = borderColorMode.equals("RainbowShader", ignoreCase = true)
+		val shouldDrawBorder = borderColorAlpha > 0
+		val borderColor = if (shouldDrawBorder) when
+		{
+			borderRainbowShader -> 0
+			borderColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.applyAlphaChannel(rainbowRGB, borderColorAlpha)
+			else -> createRGB(borderColorRedValue.get(), borderColorGreenValue.get(), borderColorBlueValue.get(), borderColorAlpha)
+		}
+		else 0
+
+		if (target != null && target.entityAlive)
+		{
+			val isPlayer = classProvider.isEntityPlayer(target)
 
 			if (isPlayer || !playerOnlyValue.get())
 			{
@@ -124,11 +157,11 @@ class Target : Element()
 				val nameFont = nameFontValue.get()
 				val textFont = textFontValue.get()
 
-				val targetAbsorption = targetEntity.absorptionAmount
-				var targetHealth = targetEntity.health + targetAbsorption
+				val targetAbsorption = target.absorptionAmount
+				var targetHealth = target.health + targetAbsorption
 				var targetArmor = 0
 
-				val targetMaxHealth = targetEntity.maxHealth + targetAbsorption
+				val targetMaxHealth = target.maxHealth + targetAbsorption
 
 				// Damage/Heal animation color
 				val damageColor = createRGB(damageAnimationColorRedValue.get(), damageAnimationColorGreenValue.get(), damageAnimationColorBlueValue.get())
@@ -136,22 +169,22 @@ class Target : Element()
 
 				val dataWatcherBuilder = StringJoiner("\u00A7r | ", " | ", "\u00A7r").setEmptyValue("")
 
-				if (targetEntity.invisible) dataWatcherBuilder.add("\u00A77\u00A7oInvisible")
-				if (targetEntity.burning) dataWatcherBuilder.add("\u00A7cBurning")
-				if (targetEntity.isEating) dataWatcherBuilder.add("\u00A7eEating")
-				if (targetEntity.isSilent) dataWatcherBuilder.add("\u00A78Silent")
+				if (target.invisible) dataWatcherBuilder.add("\u00A77\u00A7oInvisible")
+				if (target.burning) dataWatcherBuilder.add("\u00A7cBurning")
+				if (target.isEating) dataWatcherBuilder.add("\u00A7eEating")
+				if (target.isSilent) dataWatcherBuilder.add("\u00A78Silent")
 
 				val headBoxYSize = headRenderSize + 6F
 
 				var textXOffset = 2
 				var healthBarYOffset = height - 3F /*107F*/
 
-				val name = targetEntity.displayName.formattedText
+				val name = target.displayName.formattedText
 				val targetHealthPercentage = targetHealth / targetMaxHealth
 
 				if (isPlayer)
 				{
-					val targetPlayer: IEntityPlayer = targetEntity.asEntityPlayer()
+					val targetPlayer: IEntityPlayer = target.asEntityPlayer()
 
 					val healthMethod = healthTypeValue.get().toLowerCase()
 					if (healthMethod.equals("Mineplex", ignoreCase = true) || healthMethod.equals("Hive", ignoreCase = true)) targetHealth = EntityUtils.getPlayerHealthFromScoreboard(targetPlayer.gameProfile.name, isMineplex = healthTypeValue.get().equals("Mineplex", true)).toFloat()
@@ -165,7 +198,7 @@ class Target : Element()
 				var textYOffset = 10
 
 				// Reset easing
-				val targetChanged = targetEntity != lastTarget
+				val targetChanged = target != lastTarget
 				if (targetChanged || easingHealth < 0 || easingHealth > targetMaxHealth || abs(easingHealth - targetHealth) < 0.01) easingHealth = targetHealth
 				if (targetChanged || easingAbsorption < 0 || easingAbsorption > targetAbsorption || abs(easingAbsorption - targetAbsorption) < 0.01) easingAbsorption = targetAbsorption
 				if (isPlayer && (targetChanged || easingArmor < 0 || easingArmor > 20 || abs(easingArmor - targetArmor) < 0.01)) easingArmor = targetArmor.toFloat()
@@ -173,18 +206,31 @@ class Target : Element()
 				val healthText = "${if (targetHealthPercentage < 0.25) "\u00A7c" else if (targetHealthPercentage < 0.5) "\u00A7e" else "\u00A7a"}${DECIMALFORMAT_2.format(targetHealth.toDouble())} (${DECIMALFORMAT_1.format(targetHealthPercentage * 100.0)}%)\u00A7r"
 				val armorText = "${if (targetArmor > 0) "\u00A7b" else "\u00A77"}$targetArmor (${DECIMALFORMAT_2.format(targetArmor / 20.0 * 100.0)}%)\u00A7r"
 
-				val distanceText = DECIMALFORMAT_2.format(thePlayer.getDistanceToEntityBox(targetEntity))
-				val yawText = "${DECIMALFORMAT_2.format(targetEntity.rotationYaw % 360f)} (${StringUtils.getHorizontalFacingAdv(targetEntity.rotationYaw)})"
-				val pitchText = DECIMALFORMAT_2.format(targetEntity.rotationPitch)
+				val distanceText = DECIMALFORMAT_2.format(thePlayer.getDistanceToEntityBox(target))
+				val yawText = "${DECIMALFORMAT_2.format(target.rotationYaw % 360f)} (${StringUtils.getHorizontalFacingAdv(target.rotationYaw)})"
+				val pitchText = DECIMALFORMAT_2.format(target.rotationPitch)
 
-				val velocityText = "${DECIMALFORMAT_2.format(targetEntity.motionX)}, ${DECIMALFORMAT_2.format(targetEntity.motionY)}, ${DECIMALFORMAT_2.format(targetEntity.motionZ)}"
+				val velocityText = "${DECIMALFORMAT_2.format(target.motionX)}, ${DECIMALFORMAT_2.format(target.motionY)}, ${DECIMALFORMAT_2.format(target.motionZ)}"
 
 				val healthColor = ColorUtils.getHealthColor(easingHealth, targetMaxHealth)
 
 				val width = (textXOffset.toFloat() + nameFont.getStringWidth(name) + 10).coerceAtLeast(minWidth)
 
 				// Draw Body Rect
-				RenderUtils.drawBorderedRect(0F, 0F, width, height, borderWidthValue.get(), createRGB(borderColorRedValue.get(), borderColorGreenValue.get(), borderColorBlueValue.get()), -16777216)
+				if (shouldDrawBorder)
+				{
+					RainbowShader.begin(borderRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
+						RenderUtils.drawRect(-borderWidth, -borderWidth, width + borderWidth, height + borderWidth, borderColor)
+					}
+				}
+
+				RainbowShader.begin(backgroundRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
+					RenderUtils.drawRect(0F, 0F, width, height, backgroundColor)
+				}
+
+				if (backgroundRainbowCeil) RainbowShader.begin(true, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
+					RenderUtils.drawRect(0F, -1F, width, 0F, 0)
+				}
 
 				val barWidthSubtractor = barWidthSubtractorValue.get().toFloat()
 				val barWidth = width - barWidthSubtractor
@@ -223,7 +269,7 @@ class Target : Element()
 					val ping: Int
 					val pingTextColor: Int
 
-					val playerInfo = netHandler.getPlayerInfo(targetEntity.uniqueID)
+					val playerInfo = netHandler.getPlayerInfo(target.uniqueID)
 					if (playerInfo != null)
 					{
 						ping = playerInfo.responseTime.coerceAtLeast(0)
@@ -234,7 +280,7 @@ class Target : Element()
 					{
 						ping = -1
 						pingTextColor = 0x808080
-						skinResource = WDefaultPlayerSkin.getDefaultSkin(targetEntity.uniqueID)
+						skinResource = WDefaultPlayerSkin.getDefaultSkin(target.uniqueID)
 					}
 
 					// Draw head
@@ -282,7 +328,7 @@ class Target : Element()
 
 						RenderUtils.drawRect(equipmentX, textYOffset, equipmentX + 16, textYOffset + 16, -12566464)
 
-						val armor = targetEntity.getEquipmentInSlot(index) ?: return@repeat
+						val armor = target.getEquipmentInSlot(index) ?: return@repeat
 
 						RenderUtils.glColor(Color.white) // Reset Color
 
@@ -313,28 +359,56 @@ class Target : Element()
 				GL11.glScalef(scale, scale, scale)
 
 				// Draw CustomNameTag
-				if (targetEntity.customNameTag.isNotBlank()) textFont.drawString("(${targetEntity.customNameTag})", textXOffset * reverseScale, (nameFont.fontHeight + 5) * reverseScale, Color.gray.rgb)
+				if (target.customNameTag.isNotBlank()) textFont.drawString("(${target.customNameTag})", textXOffset * reverseScale, (nameFont.fontHeight + 5) * reverseScale, Color.gray.rgb)
 
 				// Health/Armor-related
 				textFont.drawString("Health: $healthText | Absorption: ${if (targetAbsorption > 0) "\u00A7e" else "\u00A77"}${DECIMALFORMAT_1.format(targetAbsorption.toLong())}\u00A7r | Armor: $armorText", scaledXPos, scaledYPos, 0xffffff)
 
 				// Movement/Position-related
-				textFont.drawString("Distance: ${distanceText}m | ${if (targetEntity.onGround) "\u00A7a" else "\u00A7c"}Ground\u00A7r | ${if (!targetEntity.sprinting) "\u00A7c" else "\u00A7a"}Sprinting\u00A7r | ${if (!targetEntity.sneaking) "\u00A7c" else "\u00A7a"}Sneaking\u00A7r", scaledXPos, scaledYPos + 12, 0xffffff)
+				textFont.drawString("Distance: ${distanceText}m | ${if (target.onGround) "\u00A7a" else "\u00A7c"}Ground\u00A7r | ${if (!target.sprinting) "\u00A7c" else "\u00A7a"}Sprinting\u00A7r | ${if (!target.sneaking) "\u00A7c" else "\u00A7a"}Sneaking\u00A7r", scaledXPos, scaledYPos + 12, 0xffffff)
 
 				// Rotation-related
 				textFont.drawString("Yaw: $yawText | Pitch: $pitchText | Velocity: [$velocityText]", scaledXPos, scaledYPos + 24, 0xffffff)
 
 				// Hurt-related
-				textFont.drawString("Hurt: ${if (targetEntity.hurtTime > 0) "\u00A7c" else "\u00A7a"}${targetEntity.hurtTime}\u00A7r | HurtResis: ${if (targetEntity.hurtResistantTime > 0) "\u00A7c" else "\u00A7a"}${targetEntity.hurtResistantTime}\u00A7r | Air: ${if (targetEntity.air > 0) "\u00A7c" else "\u00A7a"}${targetEntity.air}\u00A7r ", scaledXPos, scaledYPos + 34, 0xffffff)
+				textFont.drawString("Hurt: ${if (target.hurtTime > 0) "\u00A7c" else "\u00A7a"}${target.hurtTime}\u00A7r | HurtResis: ${if (target.hurtResistantTime > 0) "\u00A7c" else "\u00A7a"}${target.hurtResistantTime}\u00A7r | Air: ${if (target.air > 0) "\u00A7c" else "\u00A7a"}${target.air}\u00A7r ", scaledXPos, scaledYPos + 34, 0xffffff)
 
 				// Datawatcher-related
-				textFont.drawString("EntityID: ${targetEntity.entityId}$dataWatcherBuilder", scaledXPos, scaledYPos + 44, 0xffffff)
+				textFont.drawString("EntityID: ${target.entityId}$dataWatcherBuilder", scaledXPos, scaledYPos + 44, 0xffffff)
+
+				// debug data
+				if (debug != null) textFont.drawString(debug, scaledXPos, scaledYPos + 54, 0xffffff)
 
 				GL11.glScalef(reverseScale, reverseScale, reverseScale)
 			}
 		}
 
-		lastTarget = targetEntity
-		return Border(0F, 0F, minWidth, height)
+		lastTarget = target
+
+		val borderExpanded = if (shouldDrawBorder) borderWidth else 0F
+		return Border(0F - borderExpanded, 0F - borderExpanded, minWidth + borderExpanded, height + borderExpanded)
+	}
+
+	private fun queryTarget(): Pair<IEntityLivingBase?, String?>?
+	{
+		val moduleManager = LiquidBounce.moduleManager
+
+		val tpAura = moduleManager[TpAura::class.java] as TpAura
+		val killAura = moduleManager[KillAura::class.java] as KillAura
+		val aimbot = moduleManager[Aimbot::class.java] as Aimbot
+		val bowAimbot = moduleManager[BowAimbot::class.java] as BowAimbot
+
+		val killAuraTarget = killAura.target
+		val aimbotTarget = aimbot.target
+		val bowAimbotTarget = bowAimbot.target
+
+		return when
+		{
+			tpAura.state && tpAura.maxTargetsValue.get() == 1 && tpAura.currentTarget != null -> tpAura.currentTarget to "TpAura[${tpAura.debug}]"
+			killAuraTarget != null -> killAuraTarget to "KillAura[${killAura.debug}]"
+			aimbotTarget != null -> aimbotTarget to "Aimbot"
+			bowAimbotTarget != null -> bowAimbotTarget to "BowAimbot"
+			else -> null
+		}
 	}
 }

@@ -112,6 +112,8 @@ class TpAura : Module()
 	var clientSideBlockingStatus = false
 	var serverSideBlockingStatus = false
 
+	var debug: String? = null
+
 	override fun onEnable()
 	{
 		currentTargets.clear()
@@ -155,6 +157,7 @@ class TpAura : Module()
 				var targetIndex = 0
 
 				val targetCount = if (currentTargets.size > maxTargetsValue.get()) maxTargetsValue.get() else currentTargets.size
+				val single = targetCount == 1
 
 				while (targetIndex < targetCount)
 				{
@@ -166,6 +169,8 @@ class TpAura : Module()
 
 					currentPath = computePath(from, to)
 					targetPaths.add(currentPath) // Used for path esp
+
+					debug = "pathCount: ${currentPath.size}"
 
 					// Unblock before attack
 					if (thePlayer.isBlocking || autoBlockValue.get().equals("Packet", ignoreCase = true) || serverSideBlockingStatus)

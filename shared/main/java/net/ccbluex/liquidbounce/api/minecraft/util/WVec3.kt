@@ -6,6 +6,7 @@
 
 package net.ccbluex.liquidbounce.api.minecraft.util
 
+import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_2
 import kotlin.math.floor
 import kotlin.math.sqrt
 
@@ -76,6 +77,8 @@ class WVec3(val xCoord: Double, val yCoord: Double, val zCoord: Double)
 		result = 31 * result + zCoord.hashCode()
 		return result
 	}
+
+	override fun toString(): String = "(${DECIMALFORMAT_2.format(xCoord)}, ${DECIMALFORMAT_2.format(yCoord)}, ${DECIMALFORMAT_2.format(zCoord)}"
 
 	constructor(blockPos: WVec3i) : this(blockPos.x.toDouble(), blockPos.y.toDouble(), blockPos.z.toDouble())
 }

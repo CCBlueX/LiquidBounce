@@ -35,6 +35,8 @@ import kotlin.math.*
 class TargetStrafe : Module()
 {
 	private val targetModeValue = ListValue("TargetMode", arrayOf("KillAuraTarget", "Distance", "Health", "LivingTime"), "Distance")
+	private val speedModeValue = ListValue("SpeedMode", arrayOf("Static", "Adaptive"), "Adaptive")
+	private val staticSpeedValue = FloatValue("StaticSpeed", 0.24F, 0.21F, 1.0F) // TODO
 	private val detectRangeValue = FloatValue("TargetRange", 6F, 1F, 16.0F)
 	private val strafeStartRangeValue = FloatValue("StrafeStartRange", 0F, 0F, 3F)
 	private val strafeRangeValue = FloatValue("StrafeRange", 3F, 0.5F, 8.0F)
@@ -185,37 +187,9 @@ class TargetStrafe : Module()
 		val partialTicks = event.partialTicks
 		val renderManager = mc.renderManager
 
-		val range = strafeRangeValue.get()
-		val circleAccuracy = pathRenderAccuracyValue.get()
-
 		glPushMatrix()
 		glTranslated(target.lastTickPosX + (target.posX - target.lastTickPosX) * partialTicks - renderManager.renderPosX, target.lastTickPosY + (target.posY - target.lastTickPosY) * partialTicks - renderManager.renderPosY, target.lastTickPosZ + (target.posZ - target.lastTickPosZ) * partialTicks - renderManager.renderPosZ)
-		glEnable(GL_BLEND)
-		glEnable(GL_LINE_SMOOTH)
-		glDisable(GL_TEXTURE_2D)
-		glDisable(GL_DEPTH_TEST)
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
-		glLineWidth(1F)
-		RenderUtils.glColor(if (strafing) -40864 else -1)
-		glRotatef(90F, 1F, 0F, 0F)
-		glBegin(GL_LINE_STRIP)
-
-		var i = 0F
-		while (i <= 360F)
-		{
-			glVertex2f(WMathHelper.cos(WMathHelper.toRadians(i)) * range, (WMathHelper.sin(WMathHelper.toRadians(i)) * range))
-			i += circleAccuracy
-		}
-
-		glEnd()
-
-		RenderUtils.resetColor()
-		glDisable(GL_BLEND)
-		glEnable(GL_TEXTURE_2D)
-		glEnable(GL_DEPTH_TEST)
-		glDisable(GL_LINE_SMOOTH)
-
+		RenderUtils.drawRadius(strafeRangeValue.get(), pathRenderAccuracyValue.get(), if (strafing) -40864 else -1)
 		glPopMatrix()
 	}
 

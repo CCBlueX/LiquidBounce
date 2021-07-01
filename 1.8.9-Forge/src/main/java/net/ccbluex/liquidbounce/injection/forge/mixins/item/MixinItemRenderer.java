@@ -773,17 +773,37 @@ public abstract class MixinItemRenderer
 
 		final float unclampedDelta = MathHelper.clamp_float((shouldCauseReequipAnimation ? 0.0F/* Going DOWN */ : 1.0F/* Going UP */) - equippedProgress, -1.0F, 1.0F);
 		final float clampedDelta = MathHelper.clamp_float(unclampedDelta, -deltaLimit, deltaLimit);
+		final String smoothMode = swingAnimation.getEquipProgressSmoothingModeValue().get().toLowerCase(Locale.ENGLISH);
+		final int downSpeed = swingAnimation.getEquipProgressDownSpeedValue().get();
+		final int upSpeed = swingAnimation.getEquipProgressUpSpeedValue().get();
+		final float speed = (clampedDelta < 0 ? downSpeed : upSpeed) * 0.4f;
+		switch (smoothMode)
+		{
+			case "linear":
+				equippedProgress += clampedDelta * speed;
+				break;
 
-		if (swingAnimation.getEquipProgressSmoothingValue().get())
-			if (swingAnimation.getEquipProgressSmoothingReverseValue().get())
-				equippedProgress += clampedDelta < 0 ? -StrictMath.pow(-clampedDelta, 1.0f + swingAnimation.getEquipProgressDownSpeedValue().get() * 0.1f) : MathHelper.clamp_double(MathHelper.sqrt_double((1.0 - unclampedDelta) / swingAnimation.getEquipProgressUpSpeedValue().get().doubleValue()), 0.0, 1.0);
-			else
-			{
-				final double v = 0.001 * StrictMath.pow(10.0, swingAnimation.getEquipProgressSmoothingTestValue().get());
-				equippedProgress += clampedDelta < 0 ? -MathHelper.clamp_double(MathHelper.sqrt_double((unclampedDelta + 1.0 + v) / swingAnimation.getEquipProgressDownSpeedValue().get().doubleValue()), 0.0, 1.0) : StrictMath.pow(clampedDelta, 1.0f + swingAnimation.getEquipProgressUpSpeedValue().get() * 0.1f);
-			}
-		else
-			equippedProgress += clampedDelta;
+			case "square":
+				equippedProgress += Math.signum(clampedDelta) * clampedDelta * clampedDelta * speed;
+				break;
+
+			case "cube":
+				equippedProgress += clampedDelta * clampedDelta * clampedDelta * speed;
+				break;
+
+			case "quadratic-function":
+				equippedProgress += clampedDelta < 0 ? -StrictMath.pow(-clampedDelta, 1.0f + downSpeed * 0.1f) : MathHelper.clamp_double(MathHelper.sqrt_double((1.0 - unclampedDelta) / upSpeed), 0.0, 1.0);
+				break;
+
+			case "reverse-quadratic-function":
+				final double v = 0.001 * StrictMath.pow(10.0, swingAnimation.getEquipProgressSmoothingSpeedModifierValue().get());
+				equippedProgress += clampedDelta < 0 ? -MathHelper.clamp_double(MathHelper.sqrt_double((unclampedDelta + 1.0 + v) / downSpeed), 0.0, 1.0) : StrictMath.pow(clampedDelta, 1.0f + upSpeed * 0.1f);
+				break;
+
+			default:
+				equippedProgress += clampedDelta;
+				break;
+		}
 
 		if (equippedProgress < 0.1F)
 		{

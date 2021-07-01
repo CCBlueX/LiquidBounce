@@ -79,6 +79,7 @@ class AutoPot : Module()
 	private val openInventoryValue = BoolValue("OpenInv", false)
 	private val simulateInventory = BoolValue("SimulateInventory", true)
 	private val noMoveValue = BoolValue("NoMove", false)
+	private val noMoveThrowValue = BoolValue("NoMove-Throw", false)
 	private val randomSlotValue = BoolValue("RandomSlot", false)
 	private val misClickValue = BoolValue("ClickMistakes", false)
 	private val misClickRateValue = IntegerValue("ClickMistakeRate", 5, 0, 100)
@@ -235,7 +236,7 @@ class AutoPot : Module()
 		{
 			PRE ->
 			{
-				if (potThrowDelayTimer.hasTimePassed(potThrowDelay) && (ignoreScreen || containerOpen))
+				if (potThrowDelayTimer.hasTimePassed(potThrowDelay) && (ignoreScreen || containerOpen) && !(noMoveThrowValue.get() && MovementUtils.isMoving(thePlayer)))
 				{
 					// Hotbar Potion
 					val healPotionInHotbar = findHealPotion(thePlayer, 36, 45, inventoryContainer, randomSlot)

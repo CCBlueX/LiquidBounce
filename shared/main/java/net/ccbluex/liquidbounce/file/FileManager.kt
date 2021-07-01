@@ -20,6 +20,8 @@ import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
 import java.io.File
 import java.io.FileInputStream
+import java.text.SimpleDateFormat
+import java.util.*
 import javax.imageio.ImageIO
 
 @SideOnly(Side.CLIENT)
@@ -130,6 +132,8 @@ class FileManager : MinecraftInstance()
 	{
 		val PRETTY_GSON: Gson = GsonBuilder().setPrettyPrinting().create()
 
+		private val dateFormat = SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS")
+
 		/**
 		 * Load a list of configs
 		 *
@@ -167,7 +171,7 @@ class FileManager : MinecraftInstance()
 					if (config.hasConfig())
 					{
 						// Create the backup
-						backupFile = File(config.file.parentFile, "${config.file.name}.loadBak")
+						backupFile = File(config.file.parentFile, "${config.file.name}.${dateFormat.format(Date())}.loadBak")
 
 						config.file.copyTo(backupFile, overwrite = true)
 					}
@@ -230,7 +234,7 @@ class FileManager : MinecraftInstance()
 					if (config.hasConfig())
 					{
 						// Create the backup
-						backupFile = File(config.file.parentFile, "${config.file.name}.saveBak")
+						backupFile = File(config.file.parentFile, "${config.file.name}.${dateFormat.format(Date())}.saveBak")
 
 						config.file.copyTo(backupFile, overwrite = true)
 					}

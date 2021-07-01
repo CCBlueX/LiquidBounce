@@ -85,12 +85,12 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 
 	private val backgroundRainbowCeilValue = BoolValue("Background-RainbowCeil", false)
 
-	private val background2ExpandValue = FloatValue("SecondBackground-Expand", 3F, 1.5F, 5F)
-	private val background2ColorModeValue = ListValue("SecondBackground-Color", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom")
-	private val background2ColorRedValue = IntegerValue("SecondBackground-R", 32, 0, 255)
-	private val background2ColorGreenValue = IntegerValue("SecondBackground-G", 32, 0, 255)
-	private val background2ColorBlueValue = IntegerValue("SecondBackground-B", 32, 0, 255)
-	private val background2ColorAlphaValue = IntegerValue("SecondBackground-Alpha", 0, 0, 255)
+	private val borderWidthValue = FloatValue("Border-Width", 3F, 1.5F, 5F)
+	private val borderColorModeValue = ListValue("Border-Color", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom")
+	private val borderColorRedValue = IntegerValue("Border-R", 32, 0, 255)
+	private val borderColorGreenValue = IntegerValue("Border-G", 32, 0, 255)
+	private val borderColorBlueValue = IntegerValue("Border-B", 32, 0, 255)
+	private val borderColorAlphaValue = IntegerValue("Border-Alpha", 0, 0, 255)
 
 	private val saturationValue = FloatValue("HSB-Saturation", 0.9f, 0f, 1f)
 	private val brightnessValue = FloatValue("HSB-Brightness", 1f, 0f, 1f)
@@ -253,21 +253,18 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 		val rectMode = rectValue.get()
 		val rectColorMode = rectColorModeValue.get()
 		val rectColorAlpha = rectColorAlphaValue.get()
-		val rectCustomColor = createRGB(rectColorRedValue.get(), rectColorGreenValue.get(), rectColorBlueValue.get(), rectColorAlpha)
 
 		val rectWidth = rectWidthValue.get()
 
 		// Background
 		val backgroundColorMode = backgroundColorModeValue.get()
 		val backgroundColorAlpha = backgroundColorAlphaValue.get()
-		val backgroundCustomColor = createRGB(backgroundColorRedValue.get(), backgroundColorGreenValue.get(), backgroundColorBlueValue.get(), backgroundColorAlpha)
 
 		val backgroundRainbowCeil = backgroundRainbowCeilValue.get()
 
-		val background2Expand = background2ExpandValue.get()
-		val background2ColorMode = background2ColorModeValue.get()
-		val background2ColorAlpha = background2ColorAlphaValue.get()
-		val background2CustomColor = createRGB(background2ColorRedValue.get(), background2ColorGreenValue.get(), background2ColorBlueValue.get(), background2ColorAlpha)
+		val borderWidth = borderWidthValue.get()
+		val borderColorMode = borderColorModeValue.get()
+		val borderColorAlpha = borderColorAlphaValue.get()
 
 		val fontRenderer = fontValue.get()
 
@@ -313,20 +310,20 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 		{
 			backgroundRainbowShader -> 0
 			backgroundColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.applyAlphaChannel(rainbowRGB, backgroundColorAlpha)
-			else -> backgroundCustomColor
+			else -> createRGB(backgroundColorRedValue.get(), backgroundColorGreenValue.get(), backgroundColorBlueValue.get(), backgroundColorAlpha)
 		}
 		else 0
 
 		// Second Background Color
-		val background2RainbowShader = background2ColorMode.equals("RainbowShader", ignoreCase = true)
-		val shouldDrawBackground2 = backgroundColorAlpha > 0 && background2ColorAlpha > 0
-		val background2Color = if (shouldDrawBackground2)
+		val borderRainbowShader = borderColorMode.equals("RainbowShader", ignoreCase = true)
+		val shouldDrawBorder = backgroundColorAlpha > 0 && borderColorAlpha > 0
+		val borderColor = if (shouldDrawBorder)
 		{
 			when
 			{
-				background2RainbowShader -> 0
-				background2ColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.applyAlphaChannel(rainbowRGB, background2ColorAlpha)
-				else -> background2CustomColor
+				borderRainbowShader -> 0
+				borderColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.applyAlphaChannel(rainbowRGB, borderColorAlpha)
+				else -> createRGB(borderColorRedValue.get(), borderColorGreenValue.get(), borderColorBlueValue.get(), borderColorAlpha)
 			}
 		}
 		else 0
@@ -337,7 +334,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 		{
 			rectRainbowShader -> 0
 			rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.applyAlphaChannel(rainbowRGB, rectColorAlpha)
-			else -> rectCustomColor
+			else -> createRGB(rectColorRedValue.get(), rectColorGreenValue.get(), rectColorBlueValue.get(), rectColorAlpha)
 		}
 		else 0
 
@@ -353,10 +350,10 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 		// Render Background
 		if (backgroundColorAlpha > 0)
 		{
-			if (background2ColorAlpha > 0)
+			if (shouldDrawBorder)
 			{
-				RainbowShader.begin(background2RainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-					RenderUtils.drawRect(backgroundXStart - background2Expand, borderYStart - background2Expand, backgroundXEnd + background2Expand, borderYEnd + background2Expand, background2Color)
+				RainbowShader.begin(borderRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
+					RenderUtils.drawRect(backgroundXStart - borderWidth, borderYStart - borderWidth, backgroundXEnd + borderWidth, borderYEnd + borderWidth, borderColor)
 				}
 			}
 
@@ -388,8 +385,8 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 			updateElement()
 		}
 
-		val background2Affect = if (shouldDrawBackground2) background2Expand else 0F
-		return Border(backgroundXStart - (if (leftRect) rectWidth else 0F) - background2Affect, -borderExpand - background2Affect, backgroundXEnd + (if (rightRect) rectWidth else 0F) + background2Affect, fontRenderer.fontHeight.toFloat() + borderExpand + background2Affect)
+		val borderExpanded = if (shouldDrawBorder) borderWidth else 0F
+		return Border(backgroundXStart - (if (leftRect) rectWidth else 0F) - borderExpanded, -borderExpand - borderExpanded, backgroundXEnd + (if (rightRect) rectWidth else 0F) + borderExpanded, fontRenderer.fontHeight.toFloat() + borderExpand + borderExpanded)
 	}
 
 	override fun updateElement()

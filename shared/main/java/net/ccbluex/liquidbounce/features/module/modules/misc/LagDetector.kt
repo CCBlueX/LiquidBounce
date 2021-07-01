@@ -13,12 +13,14 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
+import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 
 @ModuleInfo(name = "LagDetector", description = "Detects network issues and notify it visually.", category = ModuleCategory.MISC)
 class LagDetector : Module()
 {
+	private val alwaysDisplayOnTagValue = BoolValue("AlwaysDisplayLagOnTag", false)
 	private val thresholdMSValue = IntegerValue("ThresholdMS", 1000, 200, 2000)
 
 	private val notificationYOffsetValue = FloatValue("NotificationYOffset", -14F, -50F, 50F)
@@ -55,5 +57,9 @@ class LagDetector : Module()
 	}
 
 	override val tag: String?
-		get() = if (packetTimer.hasTimePassed(thresholdMSValue.get().toLong())) "\u00A74\u00A7o${packetTimer.getTime()}" else null
+		get()
+		{
+			val passed = packetTimer.hasTimePassed(thresholdMSValue.get().toLong())
+			return if (alwaysDisplayOnTagValue.get() || passed) "${if (passed) "\u00A74\u00A7o" else ""}${packetTimer.getTime()}" else null
+		}
 }

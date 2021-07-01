@@ -65,7 +65,9 @@ class Speed : Module()
 
 	)
 
-	val modeValue: ListValue = object : ListValue("Mode", modes, "NCPBHop")
+	private val speedModeMap = hashMapOf(*speedModes.map { it.modeName to it }.toTypedArray())
+
+	val modeValue: ListValue = object : ListValue("Mode", speedModeMap.keys.toTypedArray(), "NCPBHop")
 	{
 		override fun onChange(oldValue: String, newValue: String)
 		{
@@ -102,6 +104,12 @@ class Speed : Module()
 	val mineplexGroundSpeedValue = FloatValue("MineplexGround-Speed", 0.5f, 0.1f, 1f)
 
 	private val disableOnFlagValue = BoolValue("DisableOnFlag", true)
+
+	private val mode: SpeedMode?
+		get() = speedModeMap[modeValue.get()]
+
+	override val tag: String
+		get() = modeValue.get()
 
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
@@ -179,22 +187,4 @@ class Speed : Module()
 		val mode = modeValue.get()
 		return sequenceOf("AAC3.3.11-Ground", "AAC3.3.11-Ground2", "AACPort", "ACP").any { mode.equals(it, ignoreCase = true) }
 	}
-
-	override val tag: String
-		get() = modeValue.get()
-
-	private val mode: SpeedMode?
-		get()
-		{
-			val mode = modeValue.get()
-
-			return speedModes.firstOrNull { it.modeName.equals(mode, ignoreCase = true) }
-		}
-
-	private val modes: Array<String>
-		get()
-		{
-			val list: MutableList<String> = speedModes.mapTo(ArrayList(), SpeedMode::modeName)
-			return list.toTypedArray()
-		}
 }

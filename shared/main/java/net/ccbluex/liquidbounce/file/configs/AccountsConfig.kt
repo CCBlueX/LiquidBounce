@@ -27,6 +27,8 @@ class AccountsConfig(file: File) : FileConfig(file)
 {
 	val accounts: MutableList<MinecraftAccount> = ArrayList()
 
+	// TODO: private val lock = ReentrantReadWriteLock()
+
 	private val slashPattern: Pattern = Pattern.compile("/", Pattern.LITERAL)
 
 	/**
@@ -66,7 +68,9 @@ class AccountsConfig(file: File) : FileConfig(file)
 
 				if (bannedServers?.isJsonNull == false) account.bannedServers = bannedServers.asJsonArray.mapTo(ArrayList()) { it.asString }
 
+				// lock.readLock().lock()
 				addAccount(account)
+				// lock.readLock().unlock()
 			}
 		}
 		catch (ex: JsonSyntaxException)
@@ -121,6 +125,8 @@ class AccountsConfig(file: File) : FileConfig(file)
 	override fun saveConfig()
 	{
 		val jsonArray = JsonArray()
+
+		// lock.writeLock().lock()
 		for (minecraftAccount in accounts)
 		{
 			val accountObject = JsonObject()
@@ -138,6 +144,7 @@ class AccountsConfig(file: File) : FileConfig(file)
 
 			jsonArray.add(accountObject)
 		}
+		// lock.writeLock().lock()
 
 		val writer = MiscUtils.createBufferedFileWriter(file)
 		writer.write(FileManager.PRETTY_GSON.toJson(jsonArray) + System.lineSeparator())

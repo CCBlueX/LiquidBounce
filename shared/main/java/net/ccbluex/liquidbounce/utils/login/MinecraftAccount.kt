@@ -76,6 +76,7 @@ class MinecraftAccount
 		THEALTENING("TheAltening", null),
 		THEALTENING_INVALID("TheAltening(Invalid)", THEALTENING);
 
+		@Suppress("CovariantEquals")
 		fun equals(other: AltServiceType?): Boolean = other != null && (this == other || parent != null && other == parent || this == other.parent)
 
 		companion object

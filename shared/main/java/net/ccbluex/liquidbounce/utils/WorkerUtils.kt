@@ -1,22 +1,22 @@
 package net.ccbluex.liquidbounce.utils
 
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.ThreadFactory
-import java.util.concurrent.ThreadPoolExecutor
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.*
 import java.util.concurrent.atomic.AtomicInteger
 
 object WorkerUtils
 {
 	@JvmStatic
-	val workers: ThreadPoolExecutor
+	val workers: ThreadPoolExecutor = ThreadPoolExecutor(1, Runtime.getRuntime().availableProcessors(), 30L, TimeUnit.SECONDS, LinkedBlockingQueue(), LiquidBounceThreadFactory())
+
+	@JvmStatic
+	val scheduledWorkers: ScheduledThreadPoolExecutor = ScheduledThreadPoolExecutor(1, LiquidBounceThreadFactory("Scheduled"))
 
 	init
 	{
-		workers = ThreadPoolExecutor(1, Runtime.getRuntime().availableProcessors(), 30L, TimeUnit.SECONDS, LinkedBlockingQueue(), LiquidBounceThreadFactory())
+		scheduledWorkers.setKeepAliveTime(5L, TimeUnit.SECONDS)
 	}
 
-	private class LiquidBounceThreadFactory : ThreadFactory
+	private class LiquidBounceThreadFactory(prefix: String = "") : ThreadFactory
 	{
 		private var group: ThreadGroup
 		private val threadNumber = AtomicInteger()
@@ -26,7 +26,7 @@ object WorkerUtils
 		{
 			val s = System.getSecurityManager()
 			group = if (s != null) s.threadGroup else Thread.currentThread().threadGroup
-			namePrefix = "LiquidBounce_Worker #"
+			namePrefix = "LiquidBounce_${prefix}Worker #"
 		}
 
 		override fun newThread(task: Runnable): Thread

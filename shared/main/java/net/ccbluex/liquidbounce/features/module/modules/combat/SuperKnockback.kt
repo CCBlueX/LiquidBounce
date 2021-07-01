@@ -15,63 +15,80 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.WorkerUtils
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils.scheduleDelayedTask
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import org.lwjgl.input.Keyboard
+import java.util.concurrent.TimeUnit
 
-// I'm not an author of this TargetStrafe code. Original author: turtl (Converted from JS https://github.com/chocopie69/Liquidbounce-Scripts/blob/main/combat/superKB.js)
+// Original author: turtl (https://github.com/chocopie69/Liquidbounce-Scripts/blob/main/combat/superKB.js and https://github.com/CzechHek/Core/blob/master/Scripts/SuperKnock.js)
 @ModuleInfo(name = "SuperKnockback", description = "Increases knockback dealt to other entities.", category = ModuleCategory.COMBAT)
 class SuperKnockback : Module()
 {
-	private val modeValue = ListValue("Mode", arrayOf("Packet", "Packet-WTap", "WTap", "SuperPacket", "Deprecated"), "Packet")
+	/**
+	 * Mode
+	 */
+	private val modeValue = ListValue("Mode", arrayOf("Packet", "Packet_W-Tap", "W-Tap", "SuperPacket", "Deprecated"), "Packet")
+
+	/**
+	 * Hurt-time
+	 */
 	private val hurtTimeValue = IntegerValue("HurtTime", 10, 0, 10)
+
+	/**
+	 * Delay in ticks
+	 */
 	private val ticksDelayValue = IntegerValue("TicksDelay", 0, 0, 60)
 
 	/**
 	 * Exploits
 	 */
-
-	private val noMoveExploitValue = BoolValue("NoMoveExploit", true)
-	private val wtapNoMoveExploitValue = BoolValue("WTap-NoMoveExploit", true)
+	private val noMoveExploitValue = BoolValue("NoMoveExploit", true) // NoMove is not applicable with W-Tap mode
+	private val wtapNoMoveExploitValue = BoolValue("NoMoveExploit_W-Tap", true)
 	private val noSprintExploitValue = BoolValue("NoSprintExploit", true)
 	private val notSprintingSlowdownValue = BoolValue("NotSprintingSlowdown", true)
 
+	/**
+	 * Delay
+	 */
 	private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 55, 1, 1000)
 	{
 		override fun onChanged(oldValue: Int, newValue: Int)
 		{
-			val v = minDelayValue.get()
-			if (v > newValue) set(v)
+			val i = minDelayValue.get()
+			if (i > newValue) set(i)
 		}
 	}
 	private val minDelayValue: IntegerValue = object : IntegerValue("MinDelay", 45, 1, 1000)
 	{
 		override fun onChanged(oldValue: Int, newValue: Int)
 		{
-			val v = maxDelayValue.get()
-			if (v < newValue) set(v)
+			val i = maxDelayValue.get()
+			if (i < newValue) set(i)
 		}
 	}
 
-	private val maxDelayMultiplierValue: FloatValue = object : FloatValue("MaxDelayMultiplier", 2.3F, 1.1F, 3F)
+	/**
+	 * Multiplier
+	 */
+	private val maxMultiplierValue: FloatValue = object : FloatValue("MaxMultiplier", 2.3F, 1.1F, 3F)
 	{
 		override fun onChanged(oldValue: Float, newValue: Float)
 		{
-			val v = minDelayMultiplierValue.get()
-			if (v > newValue) set(v)
+			val i = minMultiplierValue.get()
+			if (i > newValue) set(i)
 		}
 	}
-	private val minDelayMultiplierValue: FloatValue = object : FloatValue("MinDelayMultiplier", 2F, 1.1F, 3F)
+	private val minMultiplierValue: FloatValue = object : FloatValue("MinMultiplier", 2F, 1.1F, 3F)
 	{
 		override fun onChanged(oldValue: Float, newValue: Float)
 		{
-			val v = maxDelayMultiplierValue.get()
-			if (v < newValue) set(v)
+			val i = maxMultiplierValue.get()
+			if (i < newValue) set(i)
 		}
 	}
 
@@ -79,7 +96,7 @@ class SuperKnockback : Module()
 
 	private var knockTicks = 0
 	private var superKnockback = false
-	private var needSprint = false
+	private var sprinting = false
 
 	@EventTarget
 	fun onAttack(event: AttackEvent)
@@ -110,7 +127,7 @@ class SuperKnockback : Module()
 	{
 		knockTicks = 0
 		superKnockback = false
-		needSprint = false
+		sprinting = false
 	}
 
 	@EventTarget
@@ -138,35 +155,42 @@ class SuperKnockback : Module()
 		else if (classProvider.isCPacketUseEntity(packet))
 		{
 			val mode = modeValue.get().toLowerCase()
-
 			if (mode.equals("deprecated", ignoreCase = true)) return
 
 			val attackPacket = packet.asCPacketUseEntity()
 			if (attackPacket.action == ICPacketUseEntity.WAction.ATTACK)
 			{
-				val victim = attackPacket.getEntityFromWorld(theWorld)?.asEntityLivingBase() ?: return
+				val target = attackPacket.getEntityFromWorld(theWorld)?.asEntityLivingBase() ?: return
 
 				val gameSettings = mc.gameSettings
 
 				val noMoveExploit = noMoveExploitValue.get()
 
-				val playerMove = MovementUtils.isMoving(thePlayer)
-				val playerMove2 = thePlayer.posX - thePlayer.lastTickPosX + thePlayer.posZ - thePlayer.lastTickPosZ == 0.0
-				needSprint = thePlayer.sprinting
-				superKnockback = (needSprint || noSprintExploitValue.get()) && (playerMove || noMoveExploit)
+				val movementInput = MovementUtils.isMoving(thePlayer)
+				val positionChanged = thePlayer.posX - thePlayer.lastTickPosX + thePlayer.posZ - thePlayer.lastTickPosZ == 0.0
 
-				if (victim.hurtTime <= hurtTimeValue.get() && knockTicks <= ticksDelayValue.get() && superKnockback)
+				sprinting = thePlayer.sprinting
+				superKnockback = (sprinting || noSprintExploitValue.get()) && (movementInput || noMoveExploit)
+
+				if (target.hurtTime <= hurtTimeValue.get() && knockTicks <= ticksDelayValue.get() && superKnockback)
 				{
 					val minDelay = minDelayValue.get()
 					val maxDelay = maxDelayValue.get()
-					val minDelayMultiplier = minDelayMultiplierValue.get()
-					val maxDelayMultiplier = maxDelayMultiplierValue.get()
+
+					val minDelayMultiplier = minMultiplierValue.get()
+					val maxDelayMultiplier = maxMultiplierValue.get()
+
+					val notSprintingSlowdown = notSprintingSlowdownValue.get()
+
+					val scheduleDelayedTask = { delayMillis: Long, task: () -> Unit -> WorkerUtils.scheduledWorkers.schedule(task, delayMillis, TimeUnit.MILLISECONDS) }
+
 					when (mode)
 					{
 						"packet" ->
 						{
 							// NoMove exploit
-							if (!playerMove && noMoveExploit)
+
+							if (!movementInput && noMoveExploit)
 							{
 								if (!thePlayer.sprinting) thePlayer.sprinting = true
 
@@ -176,67 +200,10 @@ class SuperKnockback : Module()
 							netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SPRINTING))
 							netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
 
-							if (!needSprint)
-							{
-								scheduleDelayedTask({
-									netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SPRINTING))
-									thePlayer.sprinting = false
-								}, 1L)
-							}
-						}
-
-						"packet-wtap" ->
-						{
-							if (!needSprint) netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
-
-							scheduleDelayedTask({
+							// Restore the original sprinting state
+							if (!sprinting) scheduleDelayedTask(1L) {
 								netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SPRINTING))
-
-								if (notSprintingSlowdownValue.get() && thePlayer.sprinting) thePlayer.sprinting = false
-
-							}, TimeUtils.randomDelay(minDelay, maxDelay))
-
-							if (needSprint) scheduleDelayedTask({
-								netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
-
-								if (notSprintingSlowdownValue.get() && !thePlayer.sprinting) thePlayer.sprinting = true
-
-							}, (TimeUtils.randomDelay(minDelay, maxDelay) * RandomUtils.nextFloat(minDelayMultiplier, maxDelayMultiplier)).toLong())
-						}
-
-						"wtap" ->
-						{
-							if ((!playerMove || !playerMove2) && wtapNoMoveExploitValue.get())
-							{
-								if (!needSprint) netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
-
-								scheduleDelayedTask({
-									netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SPRINTING))
-
-									if (notSprintingSlowdownValue.get() && !thePlayer.sprinting) thePlayer.sprinting = false
-
-								}, TimeUtils.randomDelay(minDelay, maxDelay))
-
-								if (needSprint) scheduleDelayedTask({
-									netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
-
-									if (notSprintingSlowdownValue.get()) thePlayer.sprinting = true
-
-								}, (TimeUtils.randomDelay(minDelay, maxDelay) * RandomUtils.nextFloat(minDelayMultiplier, maxDelayMultiplier)).toLong())
-							}
-							else
-							{
-								if (!needSprint && !thePlayer.sprinting) thePlayer.sprinting = true
-
-								if (gameSettings.keyBindForward.pressed) gameSettings.keyBindForward.pressed = false
-
-								scheduleDelayedTask({
-									gameSettings.keyBindForward.pressed = Keyboard.isKeyDown(gameSettings.keyBindForward.keyCode)
-								}, TimeUtils.randomDelay(minDelay, maxDelay))
-
-								if (!needSprint) scheduleDelayedTask({
-									if (thePlayer.sprinting) thePlayer.sprinting = false
-								}, (TimeUtils.randomDelay(minDelay, maxDelay) * RandomUtils.nextFloat(minDelayMultiplier, maxDelayMultiplier)).toLong())
+								thePlayer.sprinting = false
 							}
 						}
 
@@ -247,10 +214,71 @@ class SuperKnockback : Module()
 							netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SPRINTING))
 							netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
 
-							if (!needSprint)
+							// Restore the original sprinting state
+							if (!sprinting)
 							{
 								thePlayer.sprinting = false
-								scheduleDelayedTask({ netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SPRINTING)) }, 1)
+								scheduleDelayedTask(1L) { netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SPRINTING)) }
+							}
+						}
+
+						"w-tap" ->
+						{
+							if ((!movementInput || !positionChanged) && wtapNoMoveExploitValue.get())
+							{
+								// NoMove exploit for W-Tap
+
+								if (!sprinting) netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
+
+								scheduleDelayedTask(TimeUtils.randomDelay(minDelay, maxDelay)) {
+									netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SPRINTING))
+
+									if (notSprintingSlowdown && !thePlayer.sprinting) thePlayer.sprinting = false
+								}
+
+								// Restore the original sprinting state
+								if (sprinting) scheduleDelayedTask((TimeUtils.randomDelay(minDelay, maxDelay) * RandomUtils.nextFloat(minDelayMultiplier, maxDelayMultiplier)).toLong()) {
+									netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
+
+									if (notSprintingSlowdown) thePlayer.sprinting = true
+								}
+							}
+							else
+							{
+								// A legit W-Tap
+								if (!sprinting && !thePlayer.sprinting) thePlayer.sprinting = true
+
+								// Stop sprinting
+								if (gameSettings.keyBindForward.pressed) gameSettings.keyBindForward.pressed = false
+
+								// Start sprinting after some delay
+								scheduleDelayedTask(TimeUtils.randomDelay(minDelay, maxDelay)) {
+									gameSettings.keyBindForward.pressed = Keyboard.isKeyDown(gameSettings.keyBindForward.keyCode)
+								}
+
+								// Restore the original sprinting state
+								if (!sprinting) scheduleDelayedTask((TimeUtils.randomDelay(minDelay, maxDelay) * RandomUtils.nextFloat(minDelayMultiplier, maxDelayMultiplier)).toLong()) {
+									if (thePlayer.sprinting) thePlayer.sprinting = false
+								}
+							}
+						}
+
+						"packet_w-tap" ->
+						{
+							// Start sprinting
+							if (!sprinting) netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
+
+							// Stop sprinting after some delay
+							scheduleDelayedTask(TimeUtils.randomDelay(minDelay, maxDelay)) {
+								netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SPRINTING))
+								if (notSprintingSlowdown && thePlayer.sprinting) thePlayer.sprinting = false
+							}
+
+							// Restore the original sprinting state
+							if (sprinting) scheduleDelayedTask((TimeUtils.randomDelay(minDelay, maxDelay) * RandomUtils.nextFloat(minDelayMultiplier, maxDelayMultiplier)).toLong()) {
+								netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
+
+								if (notSprintingSlowdown && !thePlayer.sprinting) thePlayer.sprinting = true
 							}
 						}
 					}

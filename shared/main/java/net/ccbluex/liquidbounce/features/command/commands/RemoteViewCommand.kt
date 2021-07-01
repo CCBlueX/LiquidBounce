@@ -33,11 +33,11 @@ class RemoteViewCommand : Command("remoteview", "rv")
 
 		val targetName = args[1]
 
-		(mc.theWorld ?: return).loadedEntityList.firstOrNull { targetName == it.name }?.let {
+		(mc.theWorld ?: return).loadedEntityList.firstOrNull { it.name.equals(targetName, ignoreCase = true) }?.let {
 			mc.renderViewEntity = it
 			chat(thePlayer, "Now viewing perspective of \u00A78${it.name}\u00A73.")
 			chat(thePlayer, "Execute \u00A78${LiquidBounce.commandManager.prefix}remoteview \u00A73again to go back to yours.")
-		}
+		} ?: run { chat(thePlayer, "Player \u00A78$targetName\u00A73 not found.") }
 	}
 
 	override fun tabComplete(args: Array<String>): List<String>

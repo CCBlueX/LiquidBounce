@@ -15,7 +15,6 @@ import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
-import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
 
 @ModuleInfo(name = "AtAllProvider", description = "Automatically mentions everyone on the server when using '@a' in your message.", category = ModuleCategory.MISC)
@@ -99,7 +98,7 @@ class AtAllProvider : Module()
 					{
 						synchronized(retryQueue) {
 							retryQueue.clear()
-							retryQueue.addAll(listOf(*sendQueue.toTypedArray()))
+							retryQueue += sendQueue
 						}
 					}
 				}

@@ -19,12 +19,7 @@ class PathFinder(startVec: WVec3, endVec: WVec3) : MinecraftInstance()
 	var path: MutableList<WVec3> = ArrayList()
 		private set
 
-	fun compute()
-	{
-		compute(1000, 4)
-	}
-
-	fun compute(loops: Int, depth: Int)
+	fun compute(loops: Int = 1000, depth: Int = 4)
 	{
 		path.clear()
 		hubsToWork.clear()
@@ -47,13 +42,13 @@ class PathFinder(startVec: WVec3, endVec: WVec3) : MinecraftInstance()
 						hubsToWork.remove(hub)
 						hubs.add(hub)
 
-						flatCardinalDirections.map { hub.position.add(it).floor() }.forEach { if (checkPositionValidity(it, false) && addHub(hub, it, 0.0)) return@findLoop }
+						flatCardinalDirections.map { hub.position.add(it).floor() }.forEach { if (checkPositionValidity(it) && addHub(hub, it)) return@findLoop }
 
 						val up = hub.position.addVector(0.0, 1.0, 0.0).floor()
-						if (checkPositionValidity(up, false) && addHub(hub, up, 0.0)) return@findLoop
+						if (checkPositionValidity(up) && addHub(hub, up)) return@findLoop
 
 						val down = hub.position.addVector(0.0, -1.0, 0.0).floor()
-						if (checkPositionValidity(down, false) && addHub(hub, down, 0.0)) return@findLoop
+						if (checkPositionValidity(down) && addHub(hub, down)) return@findLoop
 					}
 				}
 			}
@@ -62,9 +57,9 @@ class PathFinder(startVec: WVec3, endVec: WVec3) : MinecraftInstance()
 		path = hubs[0].path
 	}
 
-	private fun isHubExisting(pos: WVec3): Hub? = hubs.firstOrNull { it.position.xCoord == pos.xCoord && it.position.yCoord == pos.yCoord && it.position.zCoord == pos.zCoord } ?: hubsToWork.firstOrNull { hub -> hub.position.xCoord == pos.xCoord && hub.position.yCoord == pos.yCoord && hub.position.zCoord == pos.zCoord }
+	private fun isHubExisting(pos: WVec3): Hub? = hubs.firstOrNull { it.position == pos } ?: hubsToWork.firstOrNull { hub -> hub.position == pos }
 
-	private fun addHub(parent: Hub?, loc: WVec3, cost: Double): Boolean
+	private fun addHub(parent: Hub?, loc: WVec3, cost: Double = 0.0): Boolean
 	{
 		val existingHub = isHubExisting(loc)
 		var totalCost = cost
@@ -122,7 +117,7 @@ class PathFinder(startVec: WVec3, endVec: WVec3) : MinecraftInstance()
 	{
 		private val flatCardinalDirections = arrayOf(WVec3(1.0, 0.0, 0.0), WVec3(-1.0, 0.0, 0.0), WVec3(0.0, 0.0, 1.0), WVec3(0.0, 0.0, -1.0))
 
-		private fun checkPositionValidity(loc: WVec3, checkGround: Boolean): Boolean = checkPositionValidity(loc.xCoord.toInt(), loc.yCoord.toInt(), loc.zCoord.toInt(), checkGround)
+		private fun checkPositionValidity(loc: WVec3, checkGround: Boolean = false): Boolean = checkPositionValidity(loc.xCoord.toInt(), loc.yCoord.toInt(), loc.zCoord.toInt(), checkGround)
 
 		fun checkPositionValidity(x: Int, y: Int, z: Int, checkGround: Boolean): Boolean
 		{

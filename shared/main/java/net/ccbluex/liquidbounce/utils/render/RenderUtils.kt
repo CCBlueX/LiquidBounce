@@ -859,6 +859,34 @@ object RenderUtils : MinecraftInstance()
 		functions.disableStandardItemLighting()
 	}
 
+	@JvmStatic
+	fun drawRadius(radius: Float, loops: Float, color: Int)
+	{
+		GL11.glEnable(GL11.GL_BLEND)
+		GL11.glEnable(GL11.GL_LINE_SMOOTH)
+		GL11.glDisable(GL11.GL_TEXTURE_2D)
+		GL11.glDisable(GL11.GL_DEPTH_TEST)
+		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
+		GL11.glLineWidth(1F)
+		glColor(color)
+		GL11.glRotatef(90F, 1F, 0F, 0F)
+		GL11.glBegin(GL11.GL_LINE_STRIP)
+
+		var i = 0F
+		while (i <= 360F)
+		{
+			GL11.glVertex2f(cos(toRadians(i)) * radius, (sin(toRadians(i)) * radius))
+			i += loops
+		}
+
+		GL11.glEnd()
+		resetColor()
+		GL11.glDisable(GL11.GL_BLEND)
+		GL11.glEnable(GL11.GL_TEXTURE_2D)
+		GL11.glEnable(GL11.GL_DEPTH_TEST)
+		GL11.glDisable(GL11.GL_LINE_SMOOTH)
+	}
+
 	init
 	{
 		for (i in DISPLAY_LISTS_2D.indices) DISPLAY_LISTS_2D[i] = GL11.glGenLists(1)
