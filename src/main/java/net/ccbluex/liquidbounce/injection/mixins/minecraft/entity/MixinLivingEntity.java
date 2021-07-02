@@ -44,15 +44,21 @@ import javax.annotation.Nullable;
 @Mixin(LivingEntity.class)
 public abstract class MixinLivingEntity extends MixinEntity {
 
-    @Shadow protected abstract float getJumpVelocity();
+    @Shadow
+    protected abstract float getJumpVelocity();
 
-    @Shadow public abstract boolean hasStatusEffect(StatusEffect effect);
+    @Shadow
+    public abstract boolean hasStatusEffect(StatusEffect effect);
 
-    @Shadow @Nullable public abstract StatusEffectInstance getStatusEffect(StatusEffect effect);
+    @Shadow
+    @Nullable
+    public abstract StatusEffectInstance getStatusEffect(StatusEffect effect);
 
-    @Shadow public abstract ItemStack getMainHandStack();
+    @Shadow
+    public abstract ItemStack getMainHandStack();
 
-    @Shadow private int jumpingCooldown;
+    @Shadow
+    private int jumpingCooldown;
 
     /**
      * Hook anti levitation module
