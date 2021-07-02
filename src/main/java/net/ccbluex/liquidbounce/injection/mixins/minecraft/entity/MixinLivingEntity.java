@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.PlayerJumpEvent;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAntiLevitation;
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoJumpDelay;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPush;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.minecraft.client.MinecraftClient;
@@ -50,6 +51,8 @@ public abstract class MixinLivingEntity extends MixinEntity {
     @Shadow @Nullable public abstract StatusEffectInstance getStatusEffect(StatusEffect effect);
 
     @Shadow public abstract ItemStack getMainHandStack();
+
+    @Shadow private int jumpingCooldown;
 
     /**
      * Hook anti levitation module
@@ -92,6 +95,13 @@ public abstract class MixinLivingEntity extends MixinEntity {
     private void hookNoPush(CallbackInfo callbackInfo) {
         if (ModuleNoPush.INSTANCE.getEnabled()) {
             callbackInfo.cancel();
+        }
+    }
+
+    @Inject(method = "tickMovement", at = @At("HEAD"), cancellable = true)
+    private void hookTickMovement(CallbackInfo callbackInfo) {
+        if (ModuleNoJumpDelay.INSTANCE.getEnabled()) {
+            jumpingCooldown = 0;
         }
     }
 
