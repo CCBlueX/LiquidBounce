@@ -188,6 +188,8 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 		if (sa.getState() && sa.getCustomSwingSpeed().get())
 			swingAnimationEnd += sa.getSwingSpeed().get();
 
+		swingAnimationEnd += sa.swingSpeedBoost;
+
 		return swingAnimationEnd;
 	}
 

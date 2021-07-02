@@ -16,7 +16,6 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
-import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
@@ -31,12 +30,12 @@ import kotlin.math.*
 
 // I'm not an author of this TargetStrafe code. Original author: CzechHek (Converted from JS https://github.com/CzechHek/Core/blob/master/Scripts/TargetStrafe.js)
 // I'm not an author of this 'Circle' code. Original author: Auto-reply bot (https://forums.ccbluex.net/topic/1574/script-circle/2?_=1623645819000)
+
+// TODO: Adaptive path
 @ModuleInfo(name = "TargetStrafe", description = "", category = ModuleCategory.MOVEMENT)
 class TargetStrafe : Module()
 {
 	private val targetModeValue = ListValue("TargetMode", arrayOf("KillAuraTarget", "Distance", "Health", "LivingTime"), "Distance")
-	private val speedModeValue = ListValue("SpeedMode", arrayOf("Static", "Adaptive"), "Adaptive")
-	private val staticSpeedValue = FloatValue("StaticSpeed", 0.24F, 0.21F, 1.0F) // TODO
 	private val detectRangeValue = FloatValue("TargetRange", 6F, 1F, 16.0F)
 	private val strafeStartRangeValue = FloatValue("StrafeStartRange", 0F, 0F, 3F)
 	private val strafeRangeValue = FloatValue("StrafeRange", 3F, 0.5F, 8.0F)
@@ -46,9 +45,6 @@ class TargetStrafe : Module()
 
 	private val drawPathValue = BoolValue("DrawPath", true)
 	private val pathRenderAccuracyValue = FloatValue("DrawPathAccuracy", 5F, 0.5F, 20F)
-
-	private val test = BoolValue("DecreaseSpeed", false)
-	private val debug = BoolValue("Debug-Mode", false)
 
 	private var target: IEntityLivingBase? = null
 
@@ -68,6 +64,8 @@ class TargetStrafe : Module()
 		strafing = false
 
 		val target = target ?: return
+
+		val func = functions
 
 		// Change direction
 		if (thePlayer.moveStrafing != 0F && sign(thePlayer.moveStrafing) != lastStrafeDir)
@@ -116,13 +114,12 @@ class TargetStrafe : Module()
 			// Setup encirclement movements
 			val encirclementSpeed = distance - strafeRange
 			val encirclementSpeedLimited = sign(encirclementSpeed) * min(abs(encirclementSpeed), moveSpeed)
-			val encirclementX = -WMathHelper.sin(encirclementYawRadians) * encirclementSpeedLimited
-			val encirclementZ = WMathHelper.cos(encirclementYawRadians) * encirclementSpeedLimited
+			val encirclementX = -func.sin(encirclementYawRadians) * encirclementSpeedLimited
+			val encirclementZ = func.cos(encirclementYawRadians) * encirclementSpeedLimited
 
 			// Setup strafe movements
-			val strafeSpeed = moveSpeed - if (test.get()) hypot(encirclementX, encirclementZ) else 0.0
-			var strafeX = -WMathHelper.sin(strafeYawRadians) * strafeSpeed * direction
-			var strafeZ = WMathHelper.cos(strafeYawRadians) * strafeSpeed * direction
+			var strafeX = -func.sin(strafeYawRadians) * moveSpeed * direction
+			var strafeZ = func.cos(strafeYawRadians) * moveSpeed * direction
 
 			if (thePlayer.onGround && (thePlayer.isCollidedHorizontally || !isAboveGround(theWorld, playerPosX + encirclementX + strafeX * 2, thePlayer.posY, playerPosZ + encirclementZ + strafeZ * 2)))
 			{
@@ -131,16 +128,10 @@ class TargetStrafe : Module()
 				strafeZ *= -1
 			}
 
-			event.x = encirclementX + strafeX
-			event.z = encirclementZ + strafeZ
-
-			if (debug.get())
-			{
-				val new = hypot(event.x, event.z)
-				val delta = new - moveSpeed
-
-				if (abs(delta) > 0.01F) ClientUtils.displayChatMessage(thePlayer, "before: $moveSpeed -($delta)-> after: $new    [enc: $encirclementSpeedLimited , strafe: $strafeSpeed] || d: ${if (test.get()) hypot(encirclementX, encirclementZ) else 0.0}")
-			}
+			// TODO: Better calculation algorithm (current one is the ugliest one)
+			val resultYawRadians = WMathHelper.toRadians(WMathHelper.wrapAngleTo180_float(WMathHelper.toDegrees(StrictMath.atan2(encirclementZ + strafeZ, encirclementX + strafeX).toFloat()) - 90.0f))
+			event.x = -func.sin(resultYawRadians) * moveSpeed
+			event.z = func.cos(resultYawRadians) * moveSpeed
 
 			strafing = true
 		}

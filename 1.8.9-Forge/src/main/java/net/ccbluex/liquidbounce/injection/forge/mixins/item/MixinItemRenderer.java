@@ -771,33 +771,35 @@ public abstract class MixinItemRenderer
 
 		final float deltaLimit = 0.4F;
 
-		final float unclampedDelta = MathHelper.clamp_float((shouldCauseReequipAnimation ? 0.0F/* Going DOWN */ : 1.0F/* Going UP */) - equippedProgress, -1.0F, 1.0F);
+		final float unclampedDelta = MathHelper.clamp_float((shouldCauseReequipAnimation ? 0.0F /* Going DOWN */ : 1.0F /* Going UP */) - equippedProgress, -1.0F, 1.0F);
 		final float clampedDelta = MathHelper.clamp_float(unclampedDelta, -deltaLimit, deltaLimit);
 		final String smoothMode = swingAnimation.getEquipProgressSmoothingModeValue().get().toLowerCase(Locale.ENGLISH);
 		final int downSpeed = swingAnimation.getEquipProgressDownSpeedValue().get();
 		final int upSpeed = swingAnimation.getEquipProgressUpSpeedValue().get();
-		final float speed = (clampedDelta < 0 ? downSpeed : upSpeed) * 0.4f;
+		final float downSpeedMultiplier = swingAnimation.getEquipProgressDownSpeedMultiplierValue().get();
+		final float upSpeedMultiplier = swingAnimation.getEquipProgressUpSpeedMultiplierValue().get();
+		final float multiplier = clampedDelta < 0 ? downSpeedMultiplier : upSpeedMultiplier;
 		switch (smoothMode)
 		{
 			case "linear":
-				equippedProgress += clampedDelta * speed;
+				equippedProgress += clampedDelta * multiplier;
 				break;
 
 			case "square":
-				equippedProgress += Math.signum(clampedDelta) * clampedDelta * clampedDelta * speed;
+				equippedProgress += Math.signum(clampedDelta) * clampedDelta * clampedDelta * multiplier;
 				break;
 
 			case "cube":
-				equippedProgress += clampedDelta * clampedDelta * clampedDelta * speed;
+				equippedProgress += clampedDelta * clampedDelta * clampedDelta * multiplier;
 				break;
 
 			case "quadratic-function":
-				equippedProgress += clampedDelta < 0 ? -StrictMath.pow(-clampedDelta, 1.0f + downSpeed * 0.1f) : MathHelper.clamp_double(MathHelper.sqrt_double((1.0 - unclampedDelta) / upSpeed), 0.0, 1.0);
+				equippedProgress += clampedDelta < 0 ? -StrictMath.pow(-clampedDelta, 1.0f + downSpeed * 0.1f) * downSpeedMultiplier : MathHelper.clamp_double(MathHelper.sqrt_double((1.0 - unclampedDelta) / upSpeed), 0.0, 1.0) * upSpeedMultiplier;
 				break;
 
 			case "reverse-quadratic-function":
 				final double v = 0.001 * StrictMath.pow(10.0, swingAnimation.getEquipProgressSmoothingSpeedModifierValue().get());
-				equippedProgress += clampedDelta < 0 ? -MathHelper.clamp_double(MathHelper.sqrt_double((unclampedDelta + 1.0 + v) / downSpeed), 0.0, 1.0) : StrictMath.pow(clampedDelta, 1.0f + upSpeed * 0.1f);
+				equippedProgress += clampedDelta < 0 ? -MathHelper.clamp_double(MathHelper.sqrt_double((unclampedDelta + 1.0 + v) / downSpeed), 0.0, 1.0) * downSpeedMultiplier : StrictMath.pow(clampedDelta, 1.0f + upSpeed * 0.1f) * upSpeedMultiplier;
 				break;
 
 			default:
@@ -809,8 +811,17 @@ public abstract class MixinItemRenderer
 		{
 			itemToRender = currentItemStack;
 			equippedItemSlot = currentItem;
+
+			swingAnimation.swingSpeedBoost = swingAnimation.getSwingSpeedBoostAfterReequipValue().get();
 		}
-		else if (equippedProgress >= 0.998)
+		else if (equippedProgress >= 0.995)
 			equippedProgress = 1.0F;
+
+		// TODO: Better fade-out algorithm
+		if (mc.thePlayer.ticksExisted % swingAnimation.getSwingSpeedBoostFadeTicksValue().get() == 0)
+			if (swingAnimation.swingSpeedBoost < 0)
+				swingAnimation.swingSpeedBoost++;
+			else
+				swingAnimation.swingSpeedBoost--;
 	}
 }

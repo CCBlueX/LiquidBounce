@@ -362,7 +362,7 @@ class KillAura : Module()
 	 */
 	private val failRateValue = FloatValue("FailRate", 0f, 0f, 100f)
 	private val noInventoryAttackValue = BoolValue("NoInvAttack", false)
-	private val noInventoryDelayValue = IntegerValue("NoInvDelay", 200, -0, 500)
+	private val noInventoryDelayValue = IntegerValue("NoInvDelay", 200, 0, 500)
 	private val limitedMultiTargetsValue = IntegerValue("LimitedMultiTargets", 0, 0, 50)
 
 	/**

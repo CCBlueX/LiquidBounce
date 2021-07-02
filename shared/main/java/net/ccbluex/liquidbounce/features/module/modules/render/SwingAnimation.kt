@@ -19,6 +19,8 @@ class SwingAnimation : Module()
 {
 	val equipProgressSmoothingModeValue = ListValue("EquipProgressSmoothing", arrayOf("None", "Linear", "Square", "Cube", "Quadratic-Function", "Reverse-Quadratic-Function"), "None")
 	val equipProgressSmoothingSpeedModifierValue = IntegerValue("EquipProgressSmoothingSpeedModifier", 1, 0, 2)
+	val equipProgressDownSpeedMultiplierValue = FloatValue("EquipProgressSmoothDownSpeedMultiplier", 2.4F, 0.2F, 5F)
+	val equipProgressUpSpeedMultiplierValue = FloatValue("EquipProgressSmoothUpSpeedMultiplier", 1.2F, 0.2F, 5F)
 	val equipProgressDownSpeedValue = IntegerValue("EquipProgressSmoothDownSpeed", 6, 1, 10)
 	val equipProgressUpSpeedValue = IntegerValue("EquipProgressSmoothUpSpeed", 3, 1, 10)
 
@@ -26,6 +28,9 @@ class SwingAnimation : Module()
 	val equipProgressAffectMultiplier = FloatValue("EquipProgressMultiplier", 1f, 0f, 2f)
 	val equipProgressAffectsAnimation = BoolValue("EquipProgressAffectsBlockSwingAnimationIntensity", false)
 	val equipProgressAnimationAffectness = IntegerValue("EquipProgressBlockSwingAnimationAffect", 100, 1, 100)
+
+	val swingSpeedBoostAfterReequipValue = IntegerValue("SwingSpeedBoostAfterReequip", 0, -5, 6)
+	val swingSpeedBoostFadeTicksValue = IntegerValue("SwingSpeedBoostAfterReequip-FadeTicks", 4, 2, 20)
 
 	val equipProgressAffectsAnimationTranslation = BoolValue("EquipProgressAffectsBlockSwingAnimationTranslation", false)
 	val equipProgressAnimationTranslationAffectnessX = FloatValue("EquipProgressAnimationTranslationAffectnessX", 0f, 0f, 1f)
@@ -115,6 +120,9 @@ class SwingAnimation : Module()
 
 	val blockStaticSwingProgress = BoolValue("Block-StaticSwingProgress", false)
 	val blockStaticSwingProgressValue = FloatValue("Block-StaticSwingProgress", .64f, .11f, .99f)
+
+	@JvmField
+	var swingSpeedBoost = 0
 
 	override val tag: String
 		get() = "${animationMode.get()}${if (staticSwingProgress.get()) " static_" + staticSwingProgressValue.get() else ""}${if (blockStaticSwingProgress.get()) " blockstatic_" + blockStaticSwingProgressValue.get() else ""}"

@@ -49,6 +49,7 @@ class NoSlow : Module()
 	private val packetSpamDelayValue = IntegerValue("Packet-PacketsDelay", 0, 0, 3)
 	private val packetBlock = BoolValue("Packet-Block", true)
 	private val packetUnblock = BoolValue("Packet-Unblock", true)
+	private val packetTimerValue = FloatValue("Packet-Timer", 1.0F, 0.1F, 1.0F) // Set this 0.8 to bypass AAC NoSlowdown check
 
 	// Blocks
 	val liquidPushValue = BoolValue("LiquidPush", true)
@@ -70,19 +71,28 @@ class NoSlow : Module()
 		val aura = moduleManager[KillAura::class.java] as KillAura
 		val tpaura = moduleManager[TpAura::class.java] as TpAura
 
+		val timer = mc.timer
+		val packetTimer = packetTimerValue.get()
+
+		if (timer.timerSpeed == packetTimer) timer.timerSpeed = 1.0F
 		if (!thePlayer.isBlocking && !aura.serverSideBlockingStatus && !tpaura.serverSideBlockingStatus) return
 
-		if (packetValue.get() && Backend.MINECRAFT_VERSION_MINOR == 8 && ncpDelay.hasTimePassed(packetSpamDelayValue.get()))
+		if (packetValue.get() && Backend.MINECRAFT_VERSION_MINOR == 8)
 		{
-			val netHandler = mc.netHandler
+			if (timer.timerSpeed != packetTimer) timer.timerSpeed = packetTimer
 
-			when (event.eventState)
+			if (ncpDelay.hasTimePassed(packetSpamDelayValue.get()))
 			{
-				EventState.PRE -> if (packetUnblock.get()) netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos(0, 0, 0), provider.getEnumFacing(EnumFacingType.DOWN))) // Un-block
-				EventState.POST -> if (packetBlock.get()) netHandler.addToSendQueue(provider.createCPacketPlayerBlockPlacement(WBlockPos(-1, -1, -1), 255, thePlayer.inventory.getCurrentItemInHand(), 0.0F, 0.0F, 0.0F)) // (Re-)Block
-			}
+				val netHandler = mc.netHandler
 
-			ncpDelay.reset()
+				when (event.eventState)
+				{
+					EventState.PRE -> if (packetUnblock.get()) netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos(0, 0, 0), provider.getEnumFacing(EnumFacingType.DOWN))) // Un-block
+					EventState.POST -> if (packetBlock.get()) netHandler.addToSendQueue(provider.createCPacketPlayerBlockPlacement(WBlockPos(-1, -1, -1), 255, thePlayer.inventory.getCurrentItemInHand(), 0.0F, 0.0F, 0.0F)) // (Re-)Block
+				}
+
+				ncpDelay.reset()
+			}
 		}
 		ncpDelay.update()
 	}
