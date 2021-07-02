@@ -46,6 +46,8 @@ class TargetStrafe : Module()
 	private val drawPathValue = BoolValue("DrawPath", true)
 	private val pathRenderAccuracyValue = FloatValue("DrawPathAccuracy", 5F, 0.5F, 20F)
 
+	private val priorityValue = ListValue("Priority", arrayOf("Encirclement", "Strafe"), "Encirclement")
+
 	private var target: IEntityLivingBase? = null
 
 	private var strafing = false
@@ -118,8 +120,9 @@ class TargetStrafe : Module()
 			val encirclementZ = func.cos(encirclementYawRadians) * encirclementSpeedLimited
 
 			// Setup strafe movements
-			var strafeX = -func.sin(strafeYawRadians) * moveSpeed * direction
-			var strafeZ = func.cos(strafeYawRadians) * moveSpeed * direction
+			val strafeSpeed = moveSpeed - if (priorityValue.get().equals("Encirclement", ignoreCase = true)) hypot(encirclementX, encirclementZ) else 0.0
+			var strafeX = -func.sin(strafeYawRadians) * strafeSpeed * direction
+			var strafeZ = func.cos(strafeYawRadians) * strafeSpeed * direction
 
 			if (thePlayer.onGround && (thePlayer.isCollidedHorizontally || !isAboveGround(theWorld, playerPosX + encirclementX + strafeX * 2, thePlayer.posY, playerPosZ + encirclementZ + strafeZ * 2)))
 			{
