@@ -38,7 +38,7 @@ public class MixinKeyboardInput extends MixinInput {
     /**
      * Hook inventory move module
      */
-    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/options/KeyBinding;isPressed()Z"))
+    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z"))
     private boolean hookInventoryMove(KeyBinding keyBinding) {
         return ModuleInventoryMove.INSTANCE.shouldHandleInputs(keyBinding) ?
                 InputUtil.isKeyPressed(MinecraftClient.getInstance().getWindow().getHandle(),
