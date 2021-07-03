@@ -28,7 +28,7 @@
     "minecraft.gui.MixinInGameHud",
     "minecraft.gui.MixinRealmsMainScreen",
     "minecraft.gui.MixinScreen",
-    "minecraft.gui.MixinSplashScreen",
+    "minecraft.gui.MixinSplashOverlay",
     "minecraft.network.MixinClientConnection",
     "minecraft.network.MixinClientPlayerInteractionManager",
     "minecraft.network.MixinClientPlayNetworkHandler",

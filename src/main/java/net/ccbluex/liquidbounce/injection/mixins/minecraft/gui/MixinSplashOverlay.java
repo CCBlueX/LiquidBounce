@@ -19,14 +19,14 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
-import net.minecraft.client.gui.screen.SplashScreen;
+import net.minecraft.client.gui.screen.SplashOverlay;
 import org.spongepowered.asm.mixin.Mixin;
 
 /**
  * Custom ultralight splash screen
  */
-@Mixin(SplashScreen.class)
-public class MixinSplashScreen {
+@Mixin(SplashOverlay.class)
+public class MixinSplashOverlay {
 
 //    @Shadow @Final private MinecraftClient client;
 //
