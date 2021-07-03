@@ -50,7 +50,7 @@ repositories {
     mavenCentral()
     maven { url = "https://maven.fabricmc.net/" }
     maven { url = "https://jitpack.io" }
-    maven { url = "https://maven.terraformersmc.com/" }
+    maven { url = "https://maven.terraformersmc.com/releases/" }
 }
 
 dependencies {
@@ -68,11 +68,12 @@ dependencies {
     modImplementation "net.earthcomputer.multiconnect:multiconnect-api:${project.multiconnect_version}"
 
     // Recommended mods (on IDE)
-//    modRuntime "net.earthcomputer.multiconnect:multiconnect-slim:${project.multiconnect_version}"
-//    modRuntime "com.terraformersmc:modmenu:${project.mod_menu_version}"
-//    modRuntime "com.github.jellysquid3:sodium-fabric:${project.sodium_version}"
-//    modRuntime "com.github.jellysquid3:lithium-fabric:${project.lithium_version}"
-//    modRuntime "com.github.jellysquid3:phosphor-fabric:${project.phosphor_version}"
+    modRuntime "net.earthcomputer.multiconnect:multiconnect-slim:${project.multiconnect_version}"
+    modRuntime "com.terraformersmc:modmenu:${project.mod_menu_version}"
+
+//    modRuntime "com.github.CaffeineMC:sodium-fabric:${project.sodium_version}"
+//    modRuntime "com.github.CaffeineMC:lithium-fabric:${project.lithium_version}"
+//    modRuntime "com.github.CaffeineMC:phosphor-fabric:${project.phosphor_version}"
 //    modRuntime ("com.github.CCBlueX:baritone:${project.minecraft_version}-SNAPSHOT") {
 //        exclude group: "org.ow2.asm", module: "asm-debug-all"
 //
