@@ -39,7 +39,9 @@ public class MixinCobwebBlock {
     @Inject(method = "onEntityCollision", at = @At("HEAD"), cancellable = true)
     private void hookEntityCollision(BlockState state, World world, BlockPos pos, Entity entity, CallbackInfo callback) {
         if (ModuleNoWeb.INSTANCE.getEnabled()) {
-            callback.cancel();
+            // Add any mode which has to do with no web slowdown.
+            if (ModuleNoWeb.Air.INSTANCE.isActive())
+                callback.cancel();
         }
     }
 }

@@ -31,7 +31,7 @@ import net.minecraft.util.Formatting
 /**
  * NoWeb module
  *
- * Disables web slowness.
+ * Disables web slowdown.
  */
 object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
 
