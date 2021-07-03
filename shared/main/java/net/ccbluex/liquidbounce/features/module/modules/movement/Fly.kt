@@ -47,6 +47,7 @@ import java.math.RoundingMode
 import kotlin.math.hypot
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.random.Random
 
 @ModuleInfo(name = "Fly", description = "Allows you to fly in survival mode.", category = ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_F)
 class Fly : Module()
@@ -77,7 +78,7 @@ class Fly : Module()
 		// RedeSky (https://github.com/Project-EZ4H/FDPClient/blob/master/src/main/java/net/ccbluex/liquidbounce/features/module/modules/movement/Fly.java)
 		"RedeSky-Collide", "RedeSky-Smooth", "RedeSky-Glide",
 
-		// RedeSky (https://github.com/Project-EZ4H/FDPClient/blob/master/src/main/java/net/ccbluex/liquidbounce/features/module/modules/movement/Fly.java)
+		// MushMC (https://github.com/Project-EZ4H/FDPClient/blob/master/src/main/java/net/ccbluex/liquidbounce/features/module/modules/movement/Fly.java)
 		"MushMC",
 
 		// Spartan
@@ -87,7 +88,7 @@ class Fly : Module()
 		"MineSecure", "HawkEye", "HAC", "WatchCat", "ACP",
 
 		// Other
-		"Jetpack", "KeepAlive", "Flag"), "Vanilla")
+		"Jetpack", "KeepAlive", "Flag", "BlockWalk"), "Vanilla")
 
 	/**
 	 * Damage on start
@@ -981,6 +982,8 @@ class Fly : Module()
 
 					thePlayer.motionY = 0.0
 				}
+
+				"blockwalk" -> if (Random.nextFloat() > 0.5) mc.netHandler.addToSendQueue(provider.createCPacketPlayerBlockPlacement(WBlockPos(0, -1, 0), 0, thePlayer.inventory.getCurrentItemInHand(), 0F, 0F, 0F))
 			}
 		}
 	}
