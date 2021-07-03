@@ -143,8 +143,6 @@ class CpuViewRenderer : ViewRenderer {
             .next()
 
         tessellator.draw()
-
-        matrices.pop()
     }
 
     /**
