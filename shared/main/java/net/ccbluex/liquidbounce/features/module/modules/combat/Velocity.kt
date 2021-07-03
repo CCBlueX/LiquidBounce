@@ -6,19 +6,21 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.JumpEvent
-import net.ccbluex.liquidbounce.event.PacketEvent
-import net.ccbluex.liquidbounce.event.UpdateEvent
+import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
+import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
+import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
+import kotlin.math.sqrt
 
 @ModuleInfo(name = "Velocity", description = "Allows you to modify the amount of knockback you take. (a.k.a. AntiKnockback)", category = ModuleCategory.COMBAT)
 class Velocity : Module()
@@ -29,7 +31,7 @@ class Velocity : Module()
 	 */
 	val horizontalValue = FloatValue("Horizontal", 0F, 0F, 1F)
 	val verticalValue = FloatValue("Vertical", 0F, 0F, 1F)
-	val modeValue = ListValue("Mode", arrayOf("Simple", "AAC3.1.2", "AACPush", "AAC3.2.0-Reverse", "AAC3.3.4-Reverse", "AAC3.5.0-Zero", "Jump", "Glitch"), "Simple")
+	val modeValue = ListValue("Mode", arrayOf("Simple", "AAC3.1.2", "AACPush", "AAC3.2.0-Reverse", "AAC3.3.4-Reverse", "AAC3.5.0-Zero", "Jump", "Glitch", "Phase", "PacketPhase", "Legit"), "Simple")
 
 	// AAC Reverse
 	private val reverseStrengthValue = FloatValue("AAC3.2.0-Reverse-Strength", 1F, 0.1F, 1F)
@@ -38,6 +40,14 @@ class Velocity : Module()
 	// AAC Push
 	private val aacPushXZReducerValue = FloatValue("AACPushXZReducer", 2F, 1F, 3F)
 	private val aacPushYReducerValue = BoolValue("AACPushYReducer", true)
+
+	// Phase
+	private val phaseHeightValue = FloatValue("PhaseHeight", 0.5F, 0F, 1F)
+	private val phaseOnlyGround = BoolValue("PhaseOnlyGround", true)
+
+	// Legit
+	private val legitStrafeValue = BoolValue("LegitStrafe", false)
+	private val legitFaceValue = BoolValue("LegitFace", true)
 
 	/**
 	 * VALUES
@@ -50,6 +60,9 @@ class Velocity : Module()
 
 	// AACPush
 	private var jump = false
+
+	// Legit
+	private var pos: WBlockPos? = null
 
 	override val tag: String
 		get() = modeValue.get()
@@ -173,7 +186,6 @@ class Velocity : Module()
 		{
 			val packetEntityVelocity = packet.asSPacketEntityVelocity()
 
-
 			if ((mc.theWorld?.getEntityByID(packetEntityVelocity.entityID) ?: return) != thePlayer) return
 
 			velocityTimer.reset()
@@ -201,6 +213,27 @@ class Velocity : Module()
 					velocityInput = true
 					event.cancelEvent()
 				}
+
+				"phase" ->
+				{
+					if (!thePlayer.onGround && phaseOnlyGround.get()) return
+
+					velocityInput = true
+					thePlayer.setPositionAndUpdate(thePlayer.posX, thePlayer.posY - phaseHeightValue.get(), thePlayer.posZ)
+					event.cancelEvent()
+				}
+
+				"packetphase" ->
+				{
+					if (!thePlayer.onGround && phaseOnlyGround.get()) return
+
+					if (packetEntityVelocity.motionX < 500 && packetEntityVelocity.motionY < 500) return
+
+					mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY - phaseHeightValue.get(), thePlayer.posZ, false))
+					event.cancelEvent()
+				}
+
+				"legit" -> pos = WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)
 			}
 		}
 
@@ -224,6 +257,52 @@ class Velocity : Module()
 			}
 
 			"aac3.5.0-zero" -> if (thePlayer.hurtTime > 0) event.cancelEvent()
+		}
+	}
+
+	@EventTarget
+	fun onStrafe(event: StrafeEvent)
+	{
+		if (modeValue.get().equals("Legit", ignoreCase = true)) return
+
+		val thePlayer = mc.thePlayer ?: return
+		if (pos == null || thePlayer.hurtTime <= 0) return
+
+		val rotation = RotationUtils.toRotation(thePlayer, WVec3(pos!!.x.toDouble(), pos!!.y.toDouble(), pos!!.z.toDouble()), false, RotationUtils.MinMaxPair.ZERO)
+		if (legitFaceValue.get()) RotationUtils.setTargetRotation(rotation)
+
+		val yaw = WMathHelper.toRadians(rotation.yaw)
+
+		if (legitStrafeValue.get())
+		{
+			val speed = MovementUtils.getSpeed(thePlayer)
+			thePlayer.motionX = (-functions.sin(yaw) * speed).toDouble()
+			thePlayer.motionZ = (functions.cos(yaw) * speed).toDouble()
+		}
+		else
+		{
+			var strafe = event.strafe
+			var forward = event.forward
+			val friction = event.friction
+
+			var f = strafe * strafe + forward * forward
+
+			if (f >= 1.0E-4F)
+			{
+				f = sqrt(f)
+
+				if (f < 1.0F) f = 1.0F
+
+				f = friction / f
+				strafe *= f
+				forward *= f
+
+				val yawSin = functions.sin(yaw)
+				val yawCos = functions.cos(yaw)
+
+				thePlayer.motionX += strafe * yawCos - forward * yawSin
+				thePlayer.motionZ += forward * yawCos + strafe * yawSin
+			}
 		}
 	}
 }

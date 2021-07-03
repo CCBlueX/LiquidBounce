@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac.*
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.minorACs.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spartan.SpartanYPort

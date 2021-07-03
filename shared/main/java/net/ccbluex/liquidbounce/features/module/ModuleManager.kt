@@ -200,7 +200,9 @@ class ModuleManager : Listenable
 			TimeChanger::class.java, //
 			WeatherChanger::class.java, //
 			TargetStrafe::class.java, //
-			Disabler::class.java
+			Disabler::class.java, //
+			DamageParticle::class.java, //
+			AntiVanish::class.java
 
 		)
 

@@ -37,4 +37,10 @@ object GlStateManagerImpl : IGlStateManager
 	override fun popMatrix() = GlStateManager.popMatrix()
 
 	override fun popAttrib() = GlStateManager.popAttrib()
+
+	override fun enablePolygonOffset() = GlStateManager.enablePolygonOffset()
+
+	override fun doPolygonOffset(factor: Float, units: Float) = GlStateManager.doPolygonOffset(factor, units)
+
+	override fun disablePolygonOffset() = GlStateManager.disablePolygonOffset()
 }

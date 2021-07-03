@@ -16,7 +16,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 class NoWeb : Module()
 {
 
-	private val modeValue = ListValue("Mode", arrayOf("None", "AAC3.1.5", "AAC3.3.6-WebWalk", "Rewinside"), "None")
+	private val modeValue = ListValue("Mode", arrayOf("None", "AAC3.1.5", "AAC3.3.6-WebWalk", "Rewinside", "AAC4", "OldMatrix"), "None")
 
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
@@ -51,6 +51,32 @@ class NoWeb : Module()
 				thePlayer.jumpMovementFactor = 0.42f
 
 				if (thePlayer.onGround) thePlayer.jump()
+			}
+
+			"aac4" ->
+			{
+				mc.timer.timerSpeed = 0.99F
+				thePlayer.jumpMovementFactor = 0.02958f
+				thePlayer.motionY -= 0.00775
+
+				if (thePlayer.onGround)
+				{
+					thePlayer.jump()
+					thePlayer.motionY = 0.4050
+					mc.timer.timerSpeed = 1.35F
+				}
+			}
+
+			"oldmemetrix" ->
+			{
+				thePlayer.jumpMovementFactor = 0.124133333f
+				thePlayer.motionY = -0.0125
+				if (mc.gameSettings.keyBindSneak.isKeyDown) thePlayer.motionY = -0.1625
+				if (thePlayer.onGround)
+				{
+					thePlayer.jump()
+					thePlayer.motionY = 0.2425
+				}
 			}
 		}
 	}

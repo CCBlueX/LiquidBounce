@@ -17,7 +17,7 @@ interface IPacket
 	fun asSPacketEntityVelocity(): ISPacketEntityVelocity
 	fun asSPacketCloseWindow(): ISPacketCloseWindow
 	fun asSPacketTabComplete(): ISPacketTabComplete
-	fun asSPacketPosLook(): ISPacketPosLook
+	fun asSPacketPlayerPosLook(): ISPacketPlayerPosLook
 	fun asSPacketResourcePackSend(): ISPacketResourcePackSend
 	fun asSPacketWindowItems(): ISPacketWindowItems
 	fun asSPacketChat(): ISPacketChat
@@ -26,6 +26,8 @@ interface IPacket
 	fun asSPacketEntityTeleport(): ISPacketEntityTeleport
 	fun asSPacketTitle(): ISPacketTitle
 	fun asSPacketPlayerListItem(): ISPacketPlayerListItem
+	fun asSPacketChangeGameState(): ISPacketChangeGameState
+	fun asSPacketEntityEffect(): ISPacketEntityEffect
 
 	fun asCPacketPlayer(): ICPacketPlayer
 	fun asCPacketUseEntity(): ICPacketUseEntity

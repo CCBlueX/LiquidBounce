@@ -27,7 +27,7 @@ open class PacketImpl<out T : Packet<*>>(val wrapped: T) : IPacket
 
 	override fun asSPacketTabComplete(): ISPacketTabComplete = SPacketTabCompleteImpl(wrapped as S3APacketTabComplete)
 
-	override fun asSPacketPosLook(): ISPacketPosLook = SPacketPosLookImpl(wrapped as S08PacketPlayerPosLook)
+	override fun asSPacketPlayerPosLook(): ISPacketPlayerPosLook = SPacketPlayerPosLookImpl(wrapped as S08PacketPlayerPosLook)
 
 	override fun asSPacketResourcePackSend(): ISPacketResourcePackSend = SPacketResourcePackSendImpl(wrapped as S48PacketResourcePackSend)
 
@@ -44,6 +44,10 @@ open class PacketImpl<out T : Packet<*>>(val wrapped: T) : IPacket
 	override fun asSPacketTitle(): ISPacketTitle = SPacketTitleImpl(wrapped as S45PacketTitle)
 
 	override fun asSPacketPlayerListItem(): ISPacketPlayerListItem = SPacketPlayerListItemImpl(wrapped as S38PacketPlayerListItem)
+
+	override fun asSPacketChangeGameState(): ISPacketChangeGameState = SPacketChangeGameStateImpl(wrapped as S2BPacketChangeGameState)
+
+	override fun asSPacketEntityEffect(): ISPacketEntityEffect = SPacketEntityEffectImpl(wrapped as S1DPacketEntityEffect)
 
 	override fun asCPacketAbilities(): ICPacketAbilities = CPacketAbilitiesImpl(wrapped as C13PacketPlayerAbilities)
 

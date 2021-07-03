@@ -331,6 +331,12 @@ object ClassProviderImpl : IClassProvider
 
 	override fun isSPacketPlayerListItem(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S38PacketPlayerListItem
 
+	override fun isSPacketTimeUpdate(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S03PacketTimeUpdate
+
+	override fun isSPacketChangeGameState(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S2BPacketChangeGameState
+
+	override fun isSPacketEntityEffect(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S1DPacketEntityEffect
+
 	override fun isCPacketPlayer(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C03PacketPlayer
 
 	override fun isCPacketPlayerBlockPlacement(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C08PacketPlayerBlockPlacement

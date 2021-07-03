@@ -256,7 +256,7 @@ class AutoPot : Module()
 						val posY = thePlayer.posY
 
 						// Prevent throwing potions into the void
-						val fallingPlayer = FallingPlayer(theWorld, thePlayer, thePlayer.posX, posY, thePlayer.posZ, thePlayer.motionX, thePlayer.motionY, thePlayer.motionZ, thePlayer.rotationYaw, thePlayer.moveStrafing, thePlayer.moveForward)
+						val fallingPlayer = FallingPlayer(theWorld, thePlayer, thePlayer.posX + thePlayer.motionX * 2, posY, thePlayer.posZ + thePlayer.motionZ * 2, thePlayer.motionX, thePlayer.motionY, thePlayer.motionZ, thePlayer.rotationYaw, thePlayer.moveStrafing, thePlayer.moveForward)
 
 						val collisionBlock = fallingPlayer.findCollision(20)?.pos
 

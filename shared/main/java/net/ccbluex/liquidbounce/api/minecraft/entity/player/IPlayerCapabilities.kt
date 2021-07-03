@@ -11,4 +11,6 @@ interface IPlayerCapabilities
 	val allowFlying: Boolean
 	var isFlying: Boolean
 	val isCreativeMode: Boolean
+
+	var flySpeed: Float
 }

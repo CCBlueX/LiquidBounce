@@ -98,6 +98,15 @@ class Criticals : Module()
 					thePlayer.onCriticalHit(targetEntity)
 				}
 
+				"aacpacket" ->
+				{
+					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(x, y + 0.05250000001304, z, true))
+					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(x, y + 0.00150000001304, z, false))
+					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(x, y + 0.01400000001304, z, false))
+					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(x, y + 0.00150000001304, z, false))
+					thePlayer.onCriticalHit(entity)
+				}
+
 				"tphop" ->
 				{
 					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(x, y + 0.02, z, false))

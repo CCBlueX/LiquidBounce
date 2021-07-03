@@ -302,6 +302,7 @@ class KillAura : Module()
 	 * Rotation strafe (to bypass AAC4)
 	 */
 	private val rotationStrafeValue = ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off")
+	private val rotationStrafeOnlyGroundValue = BoolValue("StrafeOnlyGround", false)
 
 	/**
 	 * Field of View
@@ -540,7 +541,7 @@ class KillAura : Module()
 
 		update(theWorld, thePlayer)
 
-		if (currentTarget != null && RotationUtils.targetRotation != null)
+		if (currentTarget != null && RotationUtils.targetRotation != null && (thePlayer.onGround || !rotationStrafeOnlyGroundValue.get()))
 		{
 			when (rotationStrafeValue.get().toLowerCase())
 			{

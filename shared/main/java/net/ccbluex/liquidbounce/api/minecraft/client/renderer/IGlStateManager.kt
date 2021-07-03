@@ -19,4 +19,7 @@ interface IGlStateManager
 	fun pushAttrib()
 	fun popMatrix()
 	fun popAttrib()
+	fun enablePolygonOffset()
+	fun doPolygonOffset(factor: Float, units: Float)
+	fun disablePolygonOffset()
 }

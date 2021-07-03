@@ -18,11 +18,11 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.login.UserUtils
+import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import java.net.URI
 import java.net.URISyntaxException
-import java.util.regex.Pattern
 import kotlin.concurrent.thread
 
 @ModuleInfo(name = "LiquidChat", description = "Allows you to chat with other LiquidBounce users.", category = ModuleCategory.MISC)
@@ -254,12 +254,10 @@ class LiquidChat : Module()
 	 * @author Forge
 	 */
 
-	private val urlPattern = Pattern.compile("((?:[a-z0-9]{2,}://)?(?:(?:[0-9]{1,3}\\.){3}[0-9]{1,3}|(?:[-\\w_.]+\\.[a-z]{2,}?))(?::[0-9]{1,5})?.*?(?=[!\"\u00A7 \n]|$))", Pattern.CASE_INSENSITIVE)
-
 	private fun toChatComponent(string: String): IIChatComponent
 	{
 		var component: IIChatComponent? = null
-		val matcher = urlPattern.matcher(string)
+		val matcher = StringUtils.URL_PATTERN.matcher(string)
 		var lastEnd = 0
 
 		val provider = classProvider

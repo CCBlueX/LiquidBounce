@@ -259,7 +259,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * maximum predict size of your body
 		 * @return               rotation
 		 */
-		private fun toRotation(thePlayer: IEntityPlayerSP, vec: WVec3, playerPredict: Boolean, playerPredictSize: MinMaxPair): Rotation
+		fun toRotation(thePlayer: IEntityPlayerSP, vec: WVec3, playerPredict: Boolean, playerPredictSize: MinMaxPair): Rotation
 		{
 			val posX = thePlayer.posX
 			val posZ = thePlayer.posZ

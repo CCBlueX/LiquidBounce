@@ -37,7 +37,7 @@ class AntiModDisable : MinecraftInstance(), Listenable
 				val channelName = customPayload.channelName
 
 				// Block ClientBrandRetriever packets
-				if (blockClientBrandRetrieverPackets && "MC|Brand".equals(customPayload.channelName, ignoreCase = true))
+				if (blockClientBrandRetrieverPackets && customPayload.channelName.equals("MC|Brand", ignoreCase = true))
 				{
 					customPayload.data = provider.createPacketBuffer(Unpooled.buffer()).writeString("vanilla")
 					action(event, "ClientBrandRetriever", cancelEvent = false)

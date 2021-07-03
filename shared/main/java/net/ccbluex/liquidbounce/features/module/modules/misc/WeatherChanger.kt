@@ -1,6 +1,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -26,5 +27,11 @@ class WeatherChanger : Module()
 
 		theWorld.setRainStrength(rainStrength.get())
 		theWorld.setThunderingStrength(thunderingStrength.get())
+	}
+
+	@EventTarget
+	fun onPacket(event: PacketEvent)
+	{
+		if (classProvider.isSPacketChangeGameState(event.packet) && event.packet.asSPacketChangeGameState().gameState in arrayOf(1, 2, 7, 8)) event.cancelEvent()
 	}
 }

@@ -44,7 +44,7 @@ import java.util.*
 import java.util.function.Consumer
 import javax.swing.JOptionPane
 
-class GuiAltManager(private val prevGui: IGuiScreen) : WrappedGuiScreen()
+class GuiAltManager(private val prevGui: IGuiScreen?) : WrappedGuiScreen()
 {
 	@JvmField
 	var status = "\u00A77Idle..."
