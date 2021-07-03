@@ -285,6 +285,5 @@
 
   "liquidbounce.module.timer.description": "Changes the speed the game is running at.",
 
-  "liquidbounce.module.noWeb.description": "Disables web slowness.",
-  "liquidbounce.module.noWeb.disableAvoidHazards": "%s is incompatible with NoWeb."
+  "liquidbounce.module.noWeb.description": "Disables web slowdown."
 }
