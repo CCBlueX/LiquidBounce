@@ -202,7 +202,8 @@ class ModuleManager : Listenable
 			TargetStrafe::class.java, //
 			Disabler::class.java, //
 			DamageParticle::class.java, //
-			AntiVanish::class.java
+			AntiVanish::class.java, //
+			LightningDetector::class.java
 
 		)
 

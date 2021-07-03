@@ -337,6 +337,8 @@ object ClassProviderImpl : IClassProvider
 
 	override fun isSPacketEntityEffect(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S1DPacketEntityEffect
 
+	override fun isSPacketSpawnGlobalEntity(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S2CPacketSpawnGlobalEntity
+
 	override fun isCPacketPlayer(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C03PacketPlayer
 
 	override fun isCPacketPlayerBlockPlacement(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C08PacketPlayerBlockPlacement

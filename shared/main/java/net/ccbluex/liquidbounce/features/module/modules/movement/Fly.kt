@@ -983,7 +983,7 @@ class Fly : Module()
 					thePlayer.motionY = 0.0
 				}
 
-				"blockwalk" -> if (Random.nextFloat() > 0.5) mc.netHandler.addToSendQueue(provider.createCPacketPlayerBlockPlacement(WBlockPos(0, -1, 0), 0, thePlayer.inventory.getCurrentItemInHand(), 0F, 0F, 0F))
+				"blockwalk" -> if (Random.nextBoolean()) mc.netHandler.addToSendQueue(provider.createCPacketPlayerBlockPlacement(WBlockPos(0, -1, 0), 0, thePlayer.inventory.getCurrentItemInHand(), 0F, 0F, 0F))
 			}
 		}
 	}

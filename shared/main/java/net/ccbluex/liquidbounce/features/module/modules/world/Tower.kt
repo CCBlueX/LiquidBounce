@@ -49,7 +49,7 @@ class Tower : Module()
 	/**
 	 * OPTIONS
 	 */
-	private val modeValue = ListValue("Mode", arrayOf("Jump", "Motion", "ConstantMotion", "MotionTP", "Packet", "Teleport", "AAC3.3.9", "AAC3.6.4"), "Motion")
+	private val modeValue = ListValue("Mode", arrayOf("Jump", "Motion", "ConstantMotion", "MotionTP", "Packet", "Teleport", "AAC3.3.9", "AAC3.6.4", "AAC4.4-Constant", "AAC4-Jump"), "Motion")
 
 	// AutoBlock
 	private val autoBlockValue = ListValue("AutoBlock", arrayOf("Off", "Pick", "Spoof", "Switch"), "Spoof")
@@ -136,6 +136,8 @@ class Tower : Module()
 	// Render
 	val counterDisplayValue = BoolValue("Counter", true)
 
+	private val noCustomTimer = arrayOf("aac3.3.9", "aac4.4-constant", "aac4-jump")
+
 	/**
 	 * MODULE
 	 */
@@ -189,7 +191,7 @@ class Tower : Module()
 
 		active = true
 
-		if (!modeValue.get().equals("AAC3.3.9", ignoreCase = true)) timer.timerSpeed = timerValue.get()
+		if (modeValue.get().toLowerCase() !in noCustomTimer) timer.timerSpeed = timerValue.get()
 
 		val eventState = event.eventState
 
@@ -350,6 +352,42 @@ class Tower : Module()
 				{
 					thePlayer.motionY = 0.4195464
 					thePlayer.setPosition(posX - 0.035, posY, posZ)
+				}
+			}
+
+			"aac4.4-constant" ->
+			{
+				if (thePlayer.onGround)
+				{
+					fakeJump()
+					jumpGround = thePlayer.posY
+					thePlayer.motionY = 0.42
+				}
+
+				thePlayer.motionX = 0.0
+				thePlayer.motionZ = -0.00000001
+				thePlayer.jumpMovementFactor = 0.000F
+				timer.timerSpeed = 0.60f
+
+				if (thePlayer.posY > jumpGround + 0.99)
+				{
+					fakeJump()
+					thePlayer.setPosition(thePlayer.posX, thePlayer.posY - 0.001335979112146, thePlayer.posZ)
+					thePlayer.motionY = 0.42
+					jumpGround = thePlayer.posY
+					timer.timerSpeed = 0.75f
+				}
+			}
+
+			"aac4-jump" ->
+			{
+				timer.timerSpeed = 0.97f
+
+				if (thePlayer.onGround)
+				{
+					fakeJump()
+					thePlayer.motionY = 0.387565
+					timer.timerSpeed = 1.05f
 				}
 			}
 		}

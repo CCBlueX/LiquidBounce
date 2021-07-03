@@ -28,6 +28,7 @@ interface IPacket
 	fun asSPacketPlayerListItem(): ISPacketPlayerListItem
 	fun asSPacketChangeGameState(): ISPacketChangeGameState
 	fun asSPacketEntityEffect(): ISPacketEntityEffect
+	fun asSPacketSpawnGlobalEntity(): ISPacketSpawnGlobalEntity
 
 	fun asCPacketPlayer(): ICPacketPlayer
 	fun asCPacketUseEntity(): ICPacketUseEntity

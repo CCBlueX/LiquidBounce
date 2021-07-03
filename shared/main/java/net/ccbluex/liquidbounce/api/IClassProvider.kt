@@ -207,6 +207,7 @@ interface IClassProvider
 	fun isSPacketTimeUpdate(obj: Any?): Boolean
 	fun isSPacketChangeGameState(obj: Any?): Boolean
 	fun isSPacketEntityEffect(obj: Any?): Boolean
+	fun isSPacketSpawnGlobalEntity(obj: Any?): Boolean
 
 	/* instanceof checks (Client-side packet) */
 	fun isCPacketPlayer(obj: Any?): Boolean

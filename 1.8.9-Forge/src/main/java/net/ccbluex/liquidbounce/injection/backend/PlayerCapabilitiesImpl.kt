@@ -22,6 +22,9 @@ class PlayerCapabilitiesImpl(val wrapped: PlayerCapabilities) : IPlayerCapabilit
 	override val isCreativeMode: Boolean
 		get() = wrapped.isCreativeMode
 
+	override val disableDamage: Boolean
+		get() = wrapped.disableDamage
+
 	override var flySpeed: Float
 		get() = wrapped.flySpeed
 		set(value)

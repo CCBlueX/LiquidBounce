@@ -80,13 +80,10 @@ class NoFall : Module()
 		}
 
 		val moduleManager = LiquidBounce.moduleManager
-
-		val fly = moduleManager[Fly::class.java] as Fly
-		if (!state || moduleManager[FreeCam::class.java].state || fly.state && fly.shouldDisableNoFall) return
-
 		val provider = classProvider
 
-		if (collideBlock(theWorld, playerBB, provider::isBlockLiquid) || collideBlock(theWorld, provider.createAxisAlignedBB(playerBB.minX, playerBB.minY - 0.01, playerBB.minZ, playerBB.maxX, playerBB.maxY, playerBB.maxZ), provider::isBlockLiquid))
+		val fly = moduleManager[Fly::class.java] as Fly
+		if (!state || moduleManager[FreeCam::class.java].state || fly.state && fly.shouldDisableNoFall || thePlayer.spectator || thePlayer.capabilities.allowFlying || thePlayer.capabilities.disableDamage || collideBlock(theWorld, playerBB, provider::isBlockLiquid) || collideBlock(theWorld, provider.createAxisAlignedBB(playerBB.minX, playerBB.minY - 0.01, playerBB.minZ, playerBB.maxX, playerBB.maxY, playerBB.maxZ), provider::isBlockLiquid))
 		{
 			noSpoof = 0
 			return

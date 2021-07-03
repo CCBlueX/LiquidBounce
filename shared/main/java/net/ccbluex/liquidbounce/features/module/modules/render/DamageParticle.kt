@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
+import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import org.lwjgl.opengl.GL11
 import java.util.*
@@ -25,6 +26,7 @@ class DamageParticle : Module()
 
 	private val aliveTicks = IntegerValue("AliveTicks", 20, 10, 50)
 	private val sizeValue = IntegerValue("Size", 3, 1, 7)
+	private val particleAnimationSpeedValue = FloatValue("AnimationSpeed", 0.1F, -0.5F, 0.5F)
 
 	private val damageAnimationColorRedValue = IntegerValue("DamageAnimationColorRed", 252, 0, 255)
 	private val damageAnimationColorGreenValue = IntegerValue("DamageAnimationColorGreen", 185, 0, 255)
@@ -64,13 +66,14 @@ class DamageParticle : Module()
 			val xRotate = if (mc.gameSettings.thirdPersonView == 2) -1.0f else 1.0f
 
 			val size = sizeValue.get() * 0.01F
+			val particleAnimationSpeed = particleAnimationSpeedValue.get()
 
 			for (particle in particles)
 			{
 				glStateManager.pushMatrix()
 				glStateManager.enablePolygonOffset()
 				glStateManager.doPolygonOffset(1.0f, -1500000.0f)
-				GL11.glTranslated(particle.posX - renderManager.renderPosX, particle.posY - renderManager.renderPosY, particle.posZ - renderManager.renderPosZ)
+				GL11.glTranslated(particle.posX - renderManager.renderPosX, (particle.posY + particle.ticks * particleAnimationSpeed) - renderManager.renderPosY, particle.posZ - renderManager.renderPosZ)
 				GL11.glRotatef(-renderManager.playerViewY, 0.0f, 1.0f, 0.0f)
 				GL11.glRotatef(renderManager.playerViewX, xRotate, 0.0f, 0.0f)
 				GL11.glScalef(-size, -size, size)

@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.enums.StatType
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.event.AttackEvent
 import net.ccbluex.liquidbounce.event.EventTarget
@@ -14,6 +15,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
+import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -27,7 +29,7 @@ class Criticals : Module()
 	/**
 	 * Options
 	 */
-	val modeValue = ListValue("Mode", arrayOf("Packet", "NCPPacket", "NoGround", "Hop", "TPHop", "Jump", "LowJump", "Custom", "Visual"), "Packet")
+	val modeValue = ListValue("Mode", arrayOf("Packet", "NCPPacket", "NoGround", "Hop", "TPHop", "Jump", "LowJump", "FakeCollide", "TpCollide", "Custom", "Visual"), "Packet")
 
 	private val maxDelayValue = IntegerValue("MaxDelay", 0, 0, 500)
 	private val minDelayValue = IntegerValue("MinDelay", 0, 0, 500)
@@ -79,6 +81,8 @@ class Criticals : Module()
 			val y = thePlayer.posY
 			val z = thePlayer.posZ
 
+			val motion = (if (MovementUtils.isMoving(thePlayer)) thePlayer.motionX to thePlayer.motionZ else 0.0 to 0.0)
+
 			when (modeValue.get().toLowerCase())
 			{
 				"packet" ->
@@ -113,6 +117,22 @@ class Criticals : Module()
 					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(x, y + 0.01, z, false))
 					thePlayer.setPosition(x, y + 0.01, z)
 					thePlayer.onCriticalHit(targetEntity)
+				}
+
+				"fakecollide" ->
+				{
+					thePlayer.triggerAchievement(provider.getStatEnum(StatType.JUMP_STAT))
+					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(x + motion.first / 3, y + 0.20, z + motion.second / 3, false))
+					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(x + motion.first / 1.5, y + 0.121600000013, z + motion.second / 1.5, false))
+					thePlayer.onCriticalHit(entity)
+				}
+
+				"tpcollide" ->
+				{
+					thePlayer.triggerAchievement(provider.getStatEnum(StatType.JUMP_STAT))
+					thePlayer.isAirBorne = true
+					thePlayer.motionY = 0.0
+					thePlayer.setPosition(x, y + 0.2, z)
 				}
 
 				"custom" ->
