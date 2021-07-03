@@ -20,43 +20,47 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.BlockShapeEvent
-import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.minecraft.block.CobwebBlock
-import net.minecraft.util.shape.VoxelShapes
+import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.minecraft.text.TranslatableText
+import net.minecraft.util.Formatting
 
 /**
  * NoWeb module
  *
- * Prevents you from walking into webs in different ways.
+ * Disables web slowness.
  */
 object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
 
     val modes = choices("Mode", Air) {
         arrayOf(
-            Air,
-            Block
+            Air
         )
+    }
+
+    val repeatable = repeatable {
+        if (ModuleAvoidHazards.enabled) {
+            if (ModuleAvoidHazards.cobWebs) {
+                ModuleAvoidHazards.enabled = false
+                chat(
+                    "${TranslatableText("liquidbounce.generic.error")}: ".asText().styled { it.withColor(Formatting.RED).withBold(true) },
+                    message(
+                        "disableAvoidHazards",
+                        "'AvoidHazards'".asText().styled { it.withColor(Formatting.RED).withBold(true) }
+                    ).styled { it.withColor(Formatting.GREEN) }
+                )
+            }
+        }
     }
 
     object Air : Choice("Air") {
         override val parent: ChoiceConfigurable
             get() = modes
 
-        // Mixins take care of this mode
-    }
-
-    object Block : Choice("Block") {
-        override val parent: ChoiceConfigurable
-            get() = modes
-
-        val shapeHandler = handler<BlockShapeEvent> { event ->
-            if (event.state.block is CobwebBlock) {
-                event.shape = VoxelShapes.fullCube()
-            }
-        }
+        // Mixins take care of anti web slowdown.
     }
 }
 
