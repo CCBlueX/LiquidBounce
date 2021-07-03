@@ -59,7 +59,7 @@ class GameRenderEvent : Event()
 class EngineRenderEvent(val tickDelta: Float) : Event()
 
 @Nameable("overlayRender")
-class OverlayRenderEvent(val matrixStack: MatrixStack, val tickDelta: Float) : Event()
+class OverlayRenderEvent(val matrices: MatrixStack, val tickDelta: Float) : Event()
 
 @Nameable("screenRender")
 class ScreenRenderEvent(val screen: Screen, val matrices: MatrixStack, mouseX: Int, mouseY: Int, delta: Float) : Event()
