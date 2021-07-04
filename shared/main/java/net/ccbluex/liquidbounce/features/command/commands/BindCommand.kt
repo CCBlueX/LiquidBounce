@@ -8,7 +8,6 @@ package net.ccbluex.liquidbounce.features.command.commands
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import org.lwjgl.input.Keyboard
 
 class BindCommand : Command("bind")
@@ -20,7 +19,7 @@ class BindCommand : Command("bind")
 	{
 		val thePlayer = mc.thePlayer
 
-		if (args.size > 2)
+		if (args.size > 1)
 		{
 			// Get module by name
 			val module = LiquidBounce.moduleManager.getModule(args[1])
@@ -31,18 +30,46 @@ class BindCommand : Command("bind")
 				return
 			}
 
-			// Find key by name and change
-			val key = Keyboard.getKeyIndex(args[2].toUpperCase())
-			module.keyBind = key
+			if (args.size > 2)
+			{
+				when (args[2].toLowerCase())
+				{
+					"add" -> if (args.size > 3)
+					{
+						val key = Keyboard.getKeyIndex(args[3].toUpperCase())
+						if (key != Keyboard.KEY_NONE) module.keyBind.add(key)
 
-			// Response to user
-			chat(thePlayer, "Bound module \u00A7a\u00A7l${module.name}\u00A73 to key \u00A7a\u00A7l${Keyboard.getKeyName(key)}\u00A73.")
-			LiquidBounce.hud.addNotification(Notification("Key Binding", "Bound ${module.name} to ${Keyboard.getKeyName(key)}", null))
-			playEdit()
-			return
+						chat(thePlayer, "Bound module \u00A7a\u00A7l${module.name}\u00A73 to key(s) \u00A7a\u00A7l${module.keyBind.joinToString { Keyboard.getKeyName(it) }}\u00A73.")
+						playEdit()
+						return
+					}
+
+					"remove" -> if (args.size > 3)
+					{
+						val key = Keyboard.getKeyIndex(args[3].toUpperCase())
+						if (!module.keyBind.remove(key))
+						{
+							chat(thePlayer, "Module \u00A7a\u00A7l${module.name}\u00A73 hadn't bound to key \u00A7a\u00A7l${Keyboard.getKeyName(key)}\u00A73.")
+							return
+						}
+
+						if (module.keyBind.isEmpty()) chat(thePlayer, "Took all bounds from module \u00A7a\u00A7l${module.name}\u00A73.") else chat(thePlayer, "Bound module \u00A7a\u00A7l${module.name}\u00A73 to key(s) \u00A7a\u00A7l${module.keyBind.joinToString { Keyboard.getKeyName(it) }}\u00A73.")
+						playEdit()
+					}
+
+					"clear", "reset", "none" ->
+					{
+						module.keyBind.clear()
+						chat(thePlayer, "Took all bounds from module \u00A7a\u00A7l${module.name}\u00A73.")
+						playEdit()
+						return
+					}
+				}
+			}
+			else chat(thePlayer, "Module \u00A7a\u00A7l${module.name}\u00A73 is bound to key(s) \u00A7a\u00A7l${module.keyBind.joinToString { Keyboard.getKeyName(it) }}\u00A73.")
 		}
 
-		chatSyntax(thePlayer, arrayOf("<module> <key>", "<module> none"))
+		chatSyntax(thePlayer, arrayOf("<module> <add/remove> <key>", "<module> <clear/reset/none>"))
 	}
 
 	override fun tabComplete(args: Array<String>): List<String>
@@ -54,6 +81,7 @@ class BindCommand : Command("bind")
 		return when (args.size)
 		{
 			1 -> LiquidBounce.moduleManager.modules.map(Module::name).filter { it.startsWith(moduleName, true) }.toList()
+			2 -> listOf("add", "remove", "clear").filter { it.startsWith(args[0], ignoreCase = true) }
 			else -> emptyList()
 		}
 	}

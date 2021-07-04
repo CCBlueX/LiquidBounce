@@ -13,7 +13,6 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.value.Value
-import org.lwjgl.input.Keyboard
 import kotlin.random.Random
 
 open class Module : MinecraftInstance(), Listenable
@@ -25,7 +24,7 @@ open class Module : MinecraftInstance(), Listenable
 	var name: String
 	var description: String
 	var category: ModuleCategory
-	var keyBind = Keyboard.CHAR_NONE
+	var keyBind = mutableSetOf<Int>()
 		set(keyBind)
 		{
 			field = keyBind
@@ -50,7 +49,7 @@ open class Module : MinecraftInstance(), Listenable
 		name = moduleInfo.name
 		description = moduleInfo.description
 		category = moduleInfo.category
-		keyBind = moduleInfo.keyBind
+		keyBind = moduleInfo.keyBind.toMutableSet()
 		array = moduleInfo.array
 		canEnable = moduleInfo.canEnable
 		isSupported = Backend.REPRESENTED_BACKEND_VERSION in moduleInfo.supportedVersions

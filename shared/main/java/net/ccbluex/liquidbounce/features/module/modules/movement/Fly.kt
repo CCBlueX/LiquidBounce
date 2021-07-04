@@ -49,7 +49,7 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
 
-@ModuleInfo(name = "Fly", description = "Allows you to fly in survival mode.", category = ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_F)
+@ModuleInfo(name = "Fly", description = "Allows you to fly in survival mode.", category = ModuleCategory.MOVEMENT, keyBind = [Keyboard.KEY_F])
 class Fly : Module()
 {
 	/**

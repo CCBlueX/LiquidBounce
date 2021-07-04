@@ -231,7 +231,7 @@ class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 			val middleScreen = (representedScreen.width shr 1).toFloat()
 
 			Fonts.font40.drawCenteredString("\u00A79" + script.scriptName + " \u00A77v" + script.scriptVersion, middleScreen, y + 2.0f, -4144960)
-			Fonts.font40.drawCenteredString("by \u00A7c" + script.scriptAuthors.joinToString(", "), middleScreen, y + 15.0f, -4144960).coerceAtLeast(x)
+			Fonts.font40.drawCenteredString("by \u00A7c" + script.scriptAuthors.joinToString(), middleScreen, y + 15.0f, -4144960).coerceAtLeast(x)
 		}
 
 		override fun drawBackground()

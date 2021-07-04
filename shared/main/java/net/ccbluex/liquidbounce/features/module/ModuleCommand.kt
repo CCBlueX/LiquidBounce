@@ -49,16 +49,22 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
 
 		if (value is BoolValue)
 		{
-			val newValue = !value.get()
+			var newValue = !value.get()
+			if (args.size > 2) when (args[2].toLowerCase())
+			{
+				"on", "true", "1" -> newValue = true
+				"off", "false", "0" -> newValue = false
+			}
 			value.set(newValue)
 
-			chat(thePlayer, "\u00A77${module.name} \u00A78${args[1]}\u00A77 was toggled ${if (newValue) "\u00A78on\u00A77" else "\u00A78off\u00A77" + "."}")
+			chat(thePlayer, "\u00A77${module.name} \u00A78${args[1]}\u00A77 was toggled ${if (newValue) "\u00A78on" else "\u00A78off"}\u00A77.")
 			playEdit()
 		}
 		else
 		{
 			if (args.size < 3)
 			{
+				chat(thePlayer, "\u00A77${module.name} \u00A78${args[1]}\u00A77 = ${value.get()}\u00A77.") // Print current state
 				if (value is IntegerValue || value is FloatValue || value is TextValue) chatSyntax(thePlayer, "$moduleName ${args[1].toLowerCase()} <value>")
 				else if (value is ListValue) chatSyntax(thePlayer, "$moduleName ${args[1].toLowerCase()} <${value.values.joinToString(separator = "/").toLowerCase()}>")
 				return
@@ -70,7 +76,6 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
 				{
 					is BlockValue ->
 					{
-
 						val id: Int = try
 						{
 							args[2].toInt()

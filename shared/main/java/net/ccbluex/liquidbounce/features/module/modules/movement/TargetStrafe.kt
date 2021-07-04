@@ -35,25 +35,59 @@ import kotlin.math.*
 @ModuleInfo(name = "TargetStrafe", description = "", category = ModuleCategory.MOVEMENT)
 class TargetStrafe : Module()
 {
+	/**
+	 * Strafe target
+	 */
 	private val targetModeValue = ListValue("TargetMode", arrayOf("KillAuraTarget", "Distance", "Health", "LivingTime"), "Distance")
 	private val detectRangeValue = FloatValue("TargetRange", 6F, 1F, 16.0F)
+
+	/**
+	 * Strafe range
+	 */
 	private val strafeStartRangeValue = FloatValue("StrafeStartRange", 0F, 0F, 3F)
 	private val strafeRangeValue = FloatValue("StrafeRange", 3F, 0.5F, 8.0F)
+
+	/**
+	 * Strafe target FoV
+	 */
 	private val fovValue = FloatValue("FoV", 180F, 30F, 180F)
 
+	/**
+	 * Should automatically jump while strafing?
+	 */
 	private val autoJumpValue = BoolValue("AutoJump", true)
 
+	/**
+	 * Strafe when player is on ground (bypass Strafe checks)
+	 */
+	private val onlyGroundValue = BoolValue("OnlyGround", false)
+
+	/**
+	 * Draw the strafe path
+	 */
 	private val drawPathValue = BoolValue("DrawPath", true)
 	private val pathRenderAccuracyValue = FloatValue("DrawPathAccuracy", 5F, 0.5F, 20F)
 
+	/**
+	 * Strafe target priority
+	 */
 	private val priorityValue = ListValue("Priority", arrayOf("Encirclement", "Strafe"), "Encirclement")
 
+	/**
+	 * The strafe target
+	 */
 	private var target: IEntityLivingBase? = null
 
+	/**
+	 * Is targetstrafe active?
+	 */
 	private var strafing = false
-	private var direction = -1F
 
-	private var lastStrafeDir = 0F
+	/**
+	 * Strafe direction
+	 */
+	private var direction = -1F
+	private var lastStrafeDirection = 0F
 
 	// TODO: Adaptive path
 
@@ -70,13 +104,13 @@ class TargetStrafe : Module()
 		val func = functions
 
 		// Change direction
-		if (thePlayer.moveStrafing != 0F && sign(thePlayer.moveStrafing) != lastStrafeDir)
+		if (thePlayer.moveStrafing != 0F && sign(thePlayer.moveStrafing) != lastStrafeDirection)
 		{
 			direction *= -1F
-			lastStrafeDir = sign(thePlayer.moveStrafing)
+			lastStrafeDirection = sign(thePlayer.moveStrafing)
 		}
 
-		if (thePlayer.moveForward > 0F && !mc.gameSettings.keyBindSneak.pressed)
+		if (thePlayer.moveForward > 0F && !mc.gameSettings.keyBindSneak.pressed && (thePlayer.onGround || !onlyGroundValue.get()))
 		{
 			val strafeRange = strafeRangeValue.get()
 

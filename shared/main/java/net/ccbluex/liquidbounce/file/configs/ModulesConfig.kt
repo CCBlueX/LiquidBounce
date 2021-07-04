@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.file.configs
 
+import com.google.gson.JsonArray
 import com.google.gson.JsonNull
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
@@ -12,6 +13,7 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.file.FileConfig
 import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
+import org.lwjgl.input.Keyboard
 import java.io.File
 import java.io.IOException
 
@@ -41,7 +43,18 @@ class ModulesConfig(file: File) : FileConfig(file)
 			val jsonModule = jsonObj as JsonObject
 
 			module.state = jsonModule["State"].asBoolean
-			module.keyBind = jsonModule["KeyBind"].asInt
+
+			if (jsonModule.has("KeyBind")) try
+			{
+				module.keyBind = jsonModule["KeyBind"].asJsonArray.map { it.asInt }.filterTo(HashSet()) { it != Keyboard.KEY_NONE }
+			}
+			catch (e: IllegalStateException)
+			{
+				// Backward-compatibility
+
+				val singleBind = jsonModule["KeyBind"].asInt
+				if (singleBind != Keyboard.KEY_NONE) module.keyBind = mutableSetOf(singleBind)
+			}
 			if (jsonModule.has("Array")) module.array = jsonModule["Array"].asBoolean
 		}
 	}
@@ -59,7 +72,15 @@ class ModulesConfig(file: File) : FileConfig(file)
 		{
 			val jsonMod = JsonObject()
 			jsonMod.addProperty("State", module.state)
-			jsonMod.addProperty("KeyBind", module.keyBind)
+
+			val keyBindCount = module.keyBind.size
+			if (keyBindCount > 0)
+			{
+				val keybindArray = JsonArray(keyBindCount)
+				module.keyBind.forEach(keybindArray::add)
+				jsonMod.add("KeyBind", keybindArray)
+			}
+
 			jsonMod.addProperty("Array", module.array)
 			jsonObject.add(module.name, jsonMod)
 		}

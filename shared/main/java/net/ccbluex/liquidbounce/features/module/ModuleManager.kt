@@ -23,11 +23,10 @@ import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import java.util.*
 
-// TODO: Add LightningTracker
 // TODO: Add TpFucker (like TpEggBreaker in Jigsaw)
-// TODO: Add HackerDetect
 // TODO: ProjectileAimbot (https://github.com/CCBlueX/Old-LiquidBounce-Issues/issues/3496)
 // TODO: AutoEnchant
+// TODO: FarmBot (Wheat Nuker + Automatically plants seeds)
 class ModuleManager : Listenable
 {
 	val modules = TreeSet<Module> { module1, module2 -> module1.name.compareTo(module2.name) }
@@ -299,7 +298,7 @@ class ModuleManager : Listenable
 	 * Handle incoming key presses
 	 */
 	@EventTarget
-	private fun onKey(event: KeyEvent) = modules.filter { it.keyBind == event.key }.forEach(Module::toggle)
+	private fun onKey(event: KeyEvent) = modules.filter { event.key in it.keyBind }.forEach(Module::toggle)
 
 	override fun handleEvents() = true
 }

@@ -16,7 +16,6 @@ import org.apache.commons.io.IOUtils
 import java.awt.Desktop
 import java.io.File
 import java.io.FileOutputStream
-import java.util.*
 import java.util.zip.ZipFile
 
 class ScriptManagerCommand : Command("scriptmanager", "scripts")
@@ -188,7 +187,7 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts")
 		if (scriptManager.scripts.isNotEmpty())
 		{
 			chat(thePlayer, "\u00A7c\u00A7lScripts")
-			scriptManager.scripts.forEachIndexed { index, script -> chat(thePlayer, "$index: \u00A7a\u00A7l${script.scriptName} \u00A7a\u00A7lv${script.scriptVersion} \u00A73by \u00A7a\u00A7l${script.scriptAuthors.joinToString(", ")}") }
+			scriptManager.scripts.forEachIndexed { index, script -> chat(thePlayer, "$index: \u00A7a\u00A7l${script.scriptName} \u00A7a\u00A7lv${script.scriptVersion} \u00A73by \u00A7a\u00A7l${script.scriptAuthors.joinToString()}") }
 		}
 
 		chatSyntax(thePlayer, "scriptmanager <import/delete/reload/folder>")

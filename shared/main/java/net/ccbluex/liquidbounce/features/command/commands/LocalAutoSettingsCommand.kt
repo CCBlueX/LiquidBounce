@@ -73,13 +73,19 @@ class LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "l
 							scriptFile.createNewFile()
 
 							val option = if (args.size > 3) StringUtils.toCompleteString(args, 3).toLowerCase() else "values"
-							val values = option.contains("all") || option.contains("values")
-							val binds = option.contains("all") || option.contains("binds")
-							val states = option.contains("all") || option.contains("states")
-							if (!values && !binds && !states)
+							val (values, binds, states) = when (option)
 							{
-								chatSyntaxError(thePlayer)
-								return
+								"all" -> Triple(first = true, second = true, third = true)
+								"values" -> Triple(first = true, second = false, third = false)
+								"binds" -> Triple(false, second = true, third = false)
+								"states" -> Triple(first = true, second = true, third = true)
+								"exceptbinds" -> Triple(first = true, second = false, third = true)
+
+								else ->
+								{
+									chatSyntaxError(thePlayer)
+									return
+								}
 							}
 
 							chat(thePlayer, "\u00A79Creating settings...")
@@ -96,7 +102,7 @@ class LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "l
 						return
 					}
 
-					chatSyntax(thePlayer, "localsettings save <name> [all/values/binds/states]...")
+					chatSyntax(thePlayer, "localsettings save <name> [all/values/binds/states/exceptbinds]...")
 					return
 				}
 

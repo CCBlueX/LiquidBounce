@@ -129,8 +129,9 @@ object SettingsUtils
 
 					if (valueName.equals("bind", ignoreCase = true))
 					{
-						module.keyBind = Keyboard.getKeyIndex(value)
-						ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${module.name} \u00A77was bound to \u00A7c\u00A7l${Keyboard.getKeyName(module.keyBind)}\u00A77.")
+						val binds = value.split(';')
+						module.keyBind = binds.mapTo(HashSet()) { Keyboard.getKeyIndex(it) }
+						ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${module.name} \u00A77was bound to \u00A7c\u00A7l${binds.joinToString()}\u00A77.")
 						return@forEachIndexed
 					}
 
@@ -172,12 +173,12 @@ object SettingsUtils
 	{
 		val stringBuilder = StringBuilder()
 
-		LiquidBounce.moduleManager.modules.filter { it.category != ModuleCategory.RENDER }.filter { it !is NameProtect }.filter { it !is Spammer }.forEach {
-			if (values) it.values.forEach { value -> stringBuilder.append(it.name).append(" ").append(value.name).append(" ").append(value.get()).append("\n") }
+		LiquidBounce.moduleManager.modules.filter { it.category != ModuleCategory.RENDER }.filter { it !is NameProtect }.filter { it !is Spammer }.forEach { module ->
+			if (values) module.values.forEach { value -> stringBuilder.append(module.name).append(" ").append(value.name).append(" ").append(value.get()).append("\n") }
 
-			if (states) stringBuilder.append(it.name).append(" toggle ").append(it.state).append("\n")
+			if (states) stringBuilder.append(module.name).append(" toggle ").append(module.state).append("\n")
 
-			if (binds) stringBuilder.append(it.name).append(" bind ").append(Keyboard.getKeyName(it.keyBind)).append("\n")
+			if (binds) stringBuilder.append(module.name).append(" bind ").append(module.keyBind.joinToString(separator = ";") { Keyboard.getKeyName(it) }).append("\n")
 		}
 
 		return "$stringBuilder"

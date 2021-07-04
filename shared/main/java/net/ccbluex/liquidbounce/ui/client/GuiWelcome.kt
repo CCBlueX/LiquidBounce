@@ -36,7 +36,8 @@ class GuiWelcome : WrappedGuiScreen()
 		font.drawCenteredString("Here is some information you might find useful if you are using LiquidBounce for the first time.", middleScreen, y + 70f + fontHeight, 0xffffff, true)
 
 		font.drawCenteredString("\u00A7lClickGUI:", middleScreen, y2 + fontHeight * 3, 0xffffff, true)
-		font.drawCenteredString("Press ${Keyboard.getKeyName(LiquidBounce.moduleManager[ClickGUI::class.java].keyBind)} to open up the ClickGUI", middleScreen, (representedScreen.height shr 3) + 80F + fontHeight * 4, 0xffffff, true)
+		val clickGuiBinds = LiquidBounce.moduleManager[ClickGUI::class.java].keyBind
+		if (clickGuiBinds.size > 0) font.drawCenteredString("Press ${Keyboard.getKeyName(clickGuiBinds.first())} to open up the ClickGUI", middleScreen, (representedScreen.height shr 3) + 80F + fontHeight * 4, 0xffffff, true)
 		font.drawCenteredString("Right-click modules with a '+' next to them to edit their settings.", middleScreen, y2 + fontHeight * 5, 0xffffff, true)
 		font.drawCenteredString("Hover a module to see it's description.", middleScreen, y2 + fontHeight * 6, 0xffffff, true)
 

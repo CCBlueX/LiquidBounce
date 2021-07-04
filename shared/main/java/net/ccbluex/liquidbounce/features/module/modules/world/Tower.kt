@@ -43,7 +43,7 @@ import kotlin.math.hypot
 import kotlin.math.truncate
 import kotlin.random.Random
 
-@ModuleInfo(name = "Tower", description = "Automatically builds a tower beneath you.", category = ModuleCategory.WORLD, keyBind = Keyboard.KEY_O)
+@ModuleInfo(name = "Tower", description = "Automatically builds a tower beneath you.", category = ModuleCategory.WORLD, keyBind = [Keyboard.KEY_O])
 class Tower : Module()
 {
 	/**

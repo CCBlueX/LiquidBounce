@@ -15,8 +15,9 @@ import net.ccbluex.liquidbounce.value.ListValue
 @ModuleInfo(name = "NoWeb", description = "Prevents you from getting slowed down in webs.", category = ModuleCategory.MOVEMENT)
 class NoWeb : Module()
 {
-
 	private val modeValue = ListValue("Mode", arrayOf("None", "AAC3.1.5", "AAC3.3.6-WebWalk", "Rewinside", "AAC4", "OldMatrix"), "None")
+
+	private var wasInWeb = false
 
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
@@ -24,7 +25,18 @@ class NoWeb : Module()
 		val thePlayer = mc.thePlayer ?: return
 		val gameSettings = mc.gameSettings
 
-		if (!thePlayer.isInWeb) return
+		if (!thePlayer.isInWeb)
+		{
+			if (wasInWeb)
+			{
+				mc.timer.timerSpeed = 1.0F // Reset timer speed
+				wasInWeb = false
+			}
+
+			return
+		}
+
+		wasInWeb = true
 
 		when (modeValue.get().toLowerCase())
 		{

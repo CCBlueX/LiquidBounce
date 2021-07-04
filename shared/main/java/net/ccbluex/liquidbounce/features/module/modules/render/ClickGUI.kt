@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import org.lwjgl.input.Keyboard
 import java.awt.Color
 
-@ModuleInfo(name = "ClickGUI", description = "Opens the ClickGUI.", category = ModuleCategory.RENDER, keyBind = Keyboard.KEY_RSHIFT, canEnable = false)
+@ModuleInfo(name = "ClickGUI", description = "Opens the ClickGUI.", category = ModuleCategory.RENDER, keyBind = [Keyboard.KEY_RSHIFT], canEnable = false)
 class ClickGUI : Module()
 {
 	/**
