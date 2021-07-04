@@ -50,7 +50,7 @@ class TargetsConfig(file: File) : FileConfig(file)
 	{
 		val jsonArray = JsonArray()
 
-		for (target in targets) jsonArray.add(target)
+		for (target in targets) jsonArray.add(JsonPrimitive(target))
 
 		val writer = MiscUtils.createBufferedFileWriter(file)
 		writer.write(FileManager.PRETTY_GSON.toJson(jsonArray) + System.lineSeparator())

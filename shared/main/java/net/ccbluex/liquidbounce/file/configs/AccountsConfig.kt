@@ -139,7 +139,7 @@ class AccountsConfig(file: File) : FileConfig(file)
 			if (bannedServers.isNotEmpty())
 			{
 				val arr = JsonArray()
-				bannedServers.forEach(arr::add)
+				bannedServers.forEach { arr.add(JsonPrimitive(it)) }
 				accountObject.add("bannedServers", arr)
 			}
 

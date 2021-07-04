@@ -4,6 +4,7 @@ var script = registerScript({
     authors: ["Please Update Script"]
 });
 
+// Redirect onEnable()
 script.on("enable", function () {
     try {
         onEnable();
@@ -11,6 +12,7 @@ script.on("enable", function () {
     }
 });
 
+// Redirect onDisable()
 script.on("disable", function () {
     try {
         onDisable();
@@ -32,6 +34,7 @@ script.on("load", function () {
     }
 });
 
+// Adapted Value
 var _ValueAdapter = function () {
 
     this.values = [];
@@ -53,6 +56,7 @@ var _ValueAdapter = function () {
     }
 }
 
+// Adapted Item
 var _ItemAdaptar = function () {
 
     this.items = [];
@@ -66,6 +70,7 @@ var _ItemAdaptar = function () {
     }
 }
 
+// Adapted Value
 var _AdaptedValue = function (value) {
 
     this.get = function () {
@@ -85,6 +90,7 @@ var _AdaptedValue = function (value) {
     }
 }
 
+// Adapted Module
 var _AdaptedModule = function (module) {
 
     this.module = module;
@@ -136,6 +142,7 @@ var _AdaptedModule = function (module) {
     }
 }
 
+// Redirect AdaptedModule.state
 Object.defineProperty(_AdaptedModule.prototype, "state", {
     get: function() {
         return this.module.getState();
@@ -145,15 +152,20 @@ Object.defineProperty(_AdaptedModule.prototype, "state", {
     }
 });
 
+// Redirect AdaptedModule.bind
 Object.defineProperty(_AdaptedModule.prototype, "bind", {
     get: function() {
-        return this.module.keyBind;
+        return this.module.keyBinds.get(0);
     },
     set: function (newBind) {
-        this.module.keyBind = newBind;
+        if (this.module.keyBinds.isEmpty())
+            this.module.keyBinds.add(newBind);
+        else
+            this.module.keyBinds.set(0, newBind);
     }
 });
 
+// ModuleManager Adapter
 var _ModuleManager = function () {
 
     this.moduleManager = Java.type("net.ccbluex.liquidbounce.LiquidBounce").moduleManager;
@@ -247,6 +259,7 @@ var _ModuleManager = function () {
     }
 }
 
+// CommandManager Adapter
 var _CommandManager = function () {
 
     this.Command = Java.type("net.ccbluex.liquidbounce.features.command.Command");
@@ -278,6 +291,7 @@ var _CommandManager = function () {
     }
 }
 
+// CreativeTabs Adapter
 var _CreativeTabs = function () {
 
     this.registerTab = function (scriptTab) {
@@ -292,6 +306,7 @@ var _CreativeTabs = function () {
     }
 }
 
+// ItemUtils Adapter
 var _Item = function () {
 
     this.createItem = function (args) {
@@ -299,6 +314,7 @@ var _Item = function () {
     }
 }
 
+// Value Adapter
 var _Value = function () {
 
     this.createBlock = function (name, value) {
@@ -349,6 +365,7 @@ var _Value = function () {
     }
 }
 
+// Define global adapter instances
 var moduleManager = new _ModuleManager();
 var commandManager = new _CommandManager();
 var creativeTabs = new _CreativeTabs();

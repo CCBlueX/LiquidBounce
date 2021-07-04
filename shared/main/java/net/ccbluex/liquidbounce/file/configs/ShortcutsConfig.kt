@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.file.configs
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import com.google.gson.JsonPrimitive
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.shortcuts.Shortcut
@@ -72,7 +73,7 @@ class ShortcutsConfig(file: File) : FileConfig(file)
 				pairObject.addProperty("name", cmd.command)
 
 				val argumentsObject = JsonArray()
-				for (argument in args) argumentsObject.add(argument)
+				for (argument in args) argumentsObject.add(JsonPrimitive(argument))
 
 				pairObject.add("arguments", argumentsObject)
 
