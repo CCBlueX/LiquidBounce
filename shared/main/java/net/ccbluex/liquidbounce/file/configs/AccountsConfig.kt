@@ -135,10 +135,11 @@ class AccountsConfig(file: File) : FileConfig(file)
 			accountObject.addProperty("password", minecraftAccount.password)
 			accountObject.addProperty("inGameName", minecraftAccount.accountName)
 
-			if (minecraftAccount.bannedServers.isNotEmpty())
+			val bannedServers = minecraftAccount.bannedServers
+			if (bannedServers.isNotEmpty())
 			{
 				val arr = JsonArray()
-				for (server in minecraftAccount.bannedServers) arr.add(JsonPrimitive(server))
+				bannedServers.forEach(arr::add)
 				accountObject.add("bannedServers", arr)
 			}
 

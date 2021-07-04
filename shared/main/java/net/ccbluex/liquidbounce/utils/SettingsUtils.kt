@@ -130,7 +130,7 @@ object SettingsUtils
 					if (valueName.equals("bind", ignoreCase = true))
 					{
 						val binds = value.split(';')
-						module.keyBind = binds.mapTo(HashSet()) { Keyboard.getKeyIndex(it) }
+						module.keyBinds = binds.mapTo(HashSet()) { Keyboard.getKeyIndex(it) }
 						ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${module.name} \u00A77was bound to \u00A7c\u00A7l${binds.joinToString()}\u00A77.")
 						return@forEachIndexed
 					}
@@ -178,7 +178,7 @@ object SettingsUtils
 
 			if (states) stringBuilder.append(module.name).append(" toggle ").append(module.state).append("\n")
 
-			if (binds) stringBuilder.append(module.name).append(" bind ").append(module.keyBind.joinToString(separator = ";") { Keyboard.getKeyName(it) }).append("\n")
+			if (binds) stringBuilder.append(module.name).append(" bind ").append(module.keyBinds.joinToString(separator = ";") { Keyboard.getKeyName(it) }).append("\n")
 		}
 
 		return "$stringBuilder"

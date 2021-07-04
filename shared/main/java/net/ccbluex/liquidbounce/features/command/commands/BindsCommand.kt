@@ -25,7 +25,7 @@ class BindsCommand : Command("binds")
 		{
 			if (args[1].equals("clear", true))
 			{
-				for (module in modules) module.keyBind = mutableSetOf()
+				for (module in modules) module.keyBinds = mutableSetOf()
 
 				chat(thePlayer, "Removed all binds.")
 				return
@@ -34,7 +34,7 @@ class BindsCommand : Command("binds")
 
 		chat(thePlayer, "\u00A7c\u00A7lBinds")
 
-		modules.filterNot { it.keyBind.isEmpty() }.forEach { ClientUtils.displayChatMessage(thePlayer, "\u00A76> \u00A7c${it.name}: \u00A7a\u00A7l${it.keyBind.joinToString { bind -> Keyboard.getKeyName(bind) }}") }
+		modules.filterNot { it.keyBinds.isEmpty() }.forEach { ClientUtils.displayChatMessage(thePlayer, "\u00A76> \u00A7c${it.name}: \u00A7a\u00A7l${it.keyBinds.joinToString { bind -> Keyboard.getKeyName(bind) }}") }
 
 		chatSyntax(thePlayer, "binds clear")
 	}

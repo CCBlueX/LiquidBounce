@@ -46,14 +46,14 @@ class ModulesConfig(file: File) : FileConfig(file)
 
 			if (jsonModule.has("KeyBind")) try
 			{
-				module.keyBind = jsonModule["KeyBind"].asJsonArray.map { it.asInt }.filterTo(HashSet()) { it != Keyboard.KEY_NONE }
+				module.keyBinds = jsonModule["KeyBind"].asJsonArray.map { it.asInt }.filterTo(HashSet()) { it != Keyboard.KEY_NONE }
 			}
 			catch (e: IllegalStateException)
 			{
 				// Backward-compatibility
 
 				val singleBind = jsonModule["KeyBind"].asInt
-				if (singleBind != Keyboard.KEY_NONE) module.keyBind = mutableSetOf(singleBind)
+				if (singleBind != Keyboard.KEY_NONE) module.keyBinds = mutableSetOf(singleBind)
 			}
 			if (jsonModule.has("Array")) module.array = jsonModule["Array"].asBoolean
 		}
@@ -73,11 +73,11 @@ class ModulesConfig(file: File) : FileConfig(file)
 			val jsonMod = JsonObject()
 			jsonMod.addProperty("State", module.state)
 
-			val keyBindCount = module.keyBind.size
-			if (keyBindCount > 0)
+			val keyBinds = module.keyBinds
+			if (keyBinds.isNotEmpty())
 			{
-				val keybindArray = JsonArray(keyBindCount)
-				module.keyBind.forEach(keybindArray::add)
+				val keybindArray = JsonArray()
+				keyBinds.forEach(keybindArray::add)
 				jsonMod.add("KeyBind", keybindArray)
 			}
 

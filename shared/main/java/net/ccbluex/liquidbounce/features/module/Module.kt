@@ -24,7 +24,7 @@ open class Module : MinecraftInstance(), Listenable
 	var name: String
 	var description: String
 	var category: ModuleCategory
-	var keyBind = mutableSetOf<Int>()
+	var keyBinds = mutableSetOf<Int>()
 		set(keyBind)
 		{
 			field = keyBind
@@ -49,7 +49,7 @@ open class Module : MinecraftInstance(), Listenable
 		name = moduleInfo.name
 		description = moduleInfo.description
 		category = moduleInfo.category
-		keyBind = moduleInfo.keyBind.toMutableSet()
+		keyBinds = moduleInfo.defaultKeyBinds.toMutableSet()
 		array = moduleInfo.array
 		canEnable = moduleInfo.canEnable
 		isSupported = Backend.REPRESENTED_BACKEND_VERSION in moduleInfo.supportedVersions

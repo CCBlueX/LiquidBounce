@@ -47,7 +47,7 @@ import kotlin.math.floor
 import kotlin.math.hypot
 import kotlin.random.Random
 
-@ModuleInfo(name = "Scaffold", description = "Automatically places blocks beneath your feet.", category = ModuleCategory.WORLD, keyBind = [Keyboard.KEY_I])
+@ModuleInfo(name = "Scaffold", description = "Automatically places blocks beneath your feet.", category = ModuleCategory.WORLD, defaultKeyBinds = [Keyboard.KEY_I])
 class Scaffold : Module()
 {
 
