@@ -30,6 +30,8 @@ accessible field net/minecraft/client/network/ClientPlayerEntity ticksSinceLastP
 accessible field net/minecraft/client/network/ClientPlayerEntity usingItem Z
 accessible field net/minecraft/client/network/ClientPlayerEntity riding Z
 accessible field net/minecraft/client/network/ClientPlayerEntity activeHand Lnet/minecraft/util/Hand;
+accessible field net/minecraft/client/network/ClientPlayerEntity field_3938 I
+accessible field net/minecraft/client/network/ClientPlayerEntity field_3922 F
 
 accessible field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket x D
 accessible field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket y D
