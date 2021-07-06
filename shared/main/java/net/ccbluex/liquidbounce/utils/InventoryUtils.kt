@@ -200,9 +200,7 @@ class InventoryUtils : MinecraftInstance(), Listenable
 		{
 			if (Companion.lock) return true
 
-			val prevSlot = if (targetHeldItemSlot == null) thePlayer.inventory.currentItem else targetHeldItemSlot
-			ClientUtils.displayChatMessage(thePlayer, "Tried to change held item slot from $prevSlot to $slot (keep: $keepLength, lock: $lock)")
-			if (slot != prevSlot)
+			if (slot != (if (targetHeldItemSlot == null) thePlayer.inventory.currentItem else targetHeldItemSlot))
 			{
 				targetHeldItemSlot = null
 
@@ -227,7 +225,6 @@ class InventoryUtils : MinecraftInstance(), Listenable
 
 			targetHeldItemSlot = null
 
-			ClientUtils.displayChatMessage(mc.thePlayer, "Reset held item slot from $slot to $currentSlot")
 			if (slot != currentSlot) mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(currentSlot))
 		}
 
