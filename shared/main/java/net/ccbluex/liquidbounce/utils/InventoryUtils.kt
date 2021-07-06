@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.api.enums.BlockType
 import net.ccbluex.liquidbounce.api.enums.EnumFacingType
 import net.ccbluex.liquidbounce.api.enums.ItemType
 import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.entity.player.IInventoryPlayer
 import net.ccbluex.liquidbounce.api.minecraft.inventory.IContainer
@@ -31,10 +32,12 @@ class InventoryUtils : MinecraftInstance(), Listenable
 	@EventTarget
 	fun onTick(@Suppress("UNUSED_PARAMETER") event: TickEvent?)
 	{
-		if (serverHeldItemSlot != null && keepLength >= 0)
+		val thePlayer = mc.thePlayer ?: return
+
+		if (targetHeldItemSlot != null && keepLength >= 0)
 		{
 			keepLength--
-			if (keepLength <= 0) reset()
+			if (keepLength <= 0) reset(thePlayer)
 		}
 	}
 
@@ -54,7 +57,7 @@ class InventoryUtils : MinecraftInstance(), Listenable
 
 		if (provider.isCPacketPlayerBlockPlacement(packet)) CLICK_TIMER.reset()
 
-		if (provider.isCPacketHeldItemChange(packet) && serverHeldItemSlot != null) event.cancelEvent()
+		if (provider.isCPacketHeldItemChange(packet) && targetHeldItemSlot != null) event.cancelEvent()
 	}
 
 	override fun handleEvents(): Boolean = true
@@ -93,7 +96,7 @@ class InventoryUtils : MinecraftInstance(), Listenable
 		val CLICK_TIMER = MSTimer()
 
 		@JvmField
-		var serverHeldItemSlot: Int? = null
+		var targetHeldItemSlot: Int? = null
 
 		private var keepLength = 0
 		private var lock = false
@@ -193,40 +196,39 @@ class InventoryUtils : MinecraftInstance(), Listenable
 			}
 		}
 
-		fun setHeldItemSlot(slot: Int, keepLength: Int = 0, lock: Boolean = false): Boolean
+		fun setHeldItemSlot(thePlayer: IEntityPlayerSP, slot: Int, keepLength: Int = 0, lock: Boolean = false): Boolean
 		{
 			if (Companion.lock) return true
 
-			if (slot != serverHeldItemSlot)
+			val prevSlot = if (targetHeldItemSlot == null) thePlayer.inventory.currentItem else targetHeldItemSlot
+			ClientUtils.displayChatMessage(thePlayer, "Tried to change held item slot from $prevSlot to $slot (keep: $keepLength, lock: $lock)")
+			if (slot != prevSlot)
 			{
-				mc.thePlayer?.let { thePlayer -> if (thePlayer.isUsingItem) mc.playerController.onStoppedUsingItem(thePlayer) } // Stop using item before swap the slot
+				targetHeldItemSlot = null
 
+				mc.playerController.onStoppedUsingItem(thePlayer) // Stop using item before swap the slot
 				mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(slot))
 			}
 
-			serverHeldItemSlot = slot
+			targetHeldItemSlot = slot
 			Companion.keepLength = keepLength
 			Companion.lock = lock
-
 
 			return false
 		}
 
-		fun reset()
+		fun reset(thePlayer: IEntityPlayer)
 		{
+			val currentSlot = thePlayer.inventory.currentItem
+
+			val slot = targetHeldItemSlot ?: return
 			keepLength = 0
 			lock = false
 
-			val slot = serverHeldItemSlot ?: return
+			targetHeldItemSlot = null
 
-			val thePlayer = mc.thePlayer ?: return
-			val currentSlot = thePlayer.inventory.currentItem
-
-			if (slot != currentSlot)
-			{
-				serverHeldItemSlot = currentSlot
-				mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(currentSlot))
-			}
+			ClientUtils.displayChatMessage(mc.thePlayer, "Reset held item slot from $slot to $currentSlot")
+			if (slot != currentSlot) mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(currentSlot))
 		}
 
 		fun findBestFood(thePlayer: IEntityPlayer, startSlot: Int = 36, endSlot: Int = 45, itemDelay: Long): Int

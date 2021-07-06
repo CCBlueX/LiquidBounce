@@ -271,7 +271,7 @@ class AutoPot : Module()
 
 						if (silentValue.get())
 						{
-							if (InventoryUtils.setHeldItemSlot(potionIndex, -1, true)) return
+							if (InventoryUtils.setHeldItemSlot(thePlayer, potionIndex, -1, true)) return
 						}
 						else
 						{
@@ -357,7 +357,7 @@ class AutoPot : Module()
 					{
 						netHandler.addToSendQueue(createUseItemPacket(itemStack, WEnumHand.MAIN_HAND))
 
-						if (silentValue.get()) InventoryUtils.reset()
+						if (silentValue.get()) InventoryUtils.reset(thePlayer)
 
 						potThrowDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
 						potThrowDelayTimer.reset()

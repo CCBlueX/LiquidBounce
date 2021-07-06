@@ -106,7 +106,7 @@ class Scaffold : Module()
 	private val placeModeValue = ListValue("PlaceTiming", arrayOf("Pre", "Post"), "Post")
 
 	// Eagle
-	private val eagleValue = ListValue("Eagle", arrayOf("Normal", "EdgeDistance", "Silent", "Off"), "Normal")
+	private val eagleValue = ListValue("Eagle", arrayOf("Normal", "EdgeDistance", "Silent", "SilentEdgeDistance", "Off"), "Normal")
 	private val blocksToEagleValue = IntegerValue("BlocksToEagle", 0, 0, 10)
 	private val edgeDistanceValue = FloatValue("EagleEdgeDistance", 0.2f, 0f, 0.5f)
 
@@ -360,7 +360,9 @@ class Scaffold : Module()
 			if (!eagleValue.get().equals("Off", true) && !shouldGoDown)
 			{
 				var dif = 0.5
-				if (eagleValue.get().equals("EdgeDistance", true) && !shouldGoDown)
+
+				// Caldulate edge distance
+				if (eagleValue.get().endsWith("EdgeDistance", true) && !shouldGoDown)
 				{
 					repeat(4) {
 						when (it)
@@ -453,8 +455,8 @@ class Scaffold : Module()
 				{
 					val provider = classProvider
 
-					val shouldEagle: Boolean = theWorld.getBlockState(WBlockPos(thePlayer.posX, thePlayer.posY - 1.0, thePlayer.posZ)).block == (provider.getBlockEnum(BlockType.AIR)) || (dif < edgeDistanceValue.get() && eagleValue.get().equals("EdgeDistance", true))
-					if (eagleValue.get().equals("Silent", true) && !shouldGoDown)
+					val shouldEagle: Boolean = theWorld.getBlockState(WBlockPos(thePlayer.posX, thePlayer.posY - 1.0, thePlayer.posZ)).block == (provider.getBlockEnum(BlockType.AIR)) || (dif < edgeDistanceValue.get() && eagleValue.get().endsWith("EdgeDistance", true))
+					if (eagleValue.get().startsWith("Silent", true) && !shouldGoDown)
 					{
 						if (eagleSneaking != shouldEagle) mc.netHandler.addToSendQueue(provider.createCPacketEntityAction(thePlayer, if (shouldEagle) ICPacketEntityAction.WAction.START_SNEAKING else ICPacketEntityAction.WAction.STOP_SNEAKING))
 						eagleSneaking = shouldEagle
@@ -469,7 +471,7 @@ class Scaffold : Module()
 			}
 
 			// Teleport Zitter
-			if (zitterValue.get() && zitterModeValue.get().equals("teleport", true))
+			if (zitterValue.get() && zitterModeValue.get().equals("Teleport", true))
 			{
 				MovementUtils.strafe(thePlayer, zitterSpeed.get())
 
@@ -753,7 +755,7 @@ class Scaffold : Module()
 		(LiquidBounce.moduleManager[AutoUse::class.java] as AutoUse).endEating(thePlayer, classProvider, netHandler)
 
 		// Check if the player is holding block
-		val slot = InventoryUtils.serverHeldItemSlot ?: inventory.currentItem
+		val slot = InventoryUtils.targetHeldItemSlot ?: inventory.currentItem
 		var itemStack = inventory.mainInventory[slot]
 		var switched = false
 		val switchKeepTime = autoBlockSwitchKeepTimeValue.get()
@@ -780,9 +782,9 @@ class Scaffold : Module()
 
 				"spoof", "switch" -> if (blockSlot - 36 != slot)
 				{
-					if (InventoryUtils.setHeldItemSlot(blockSlot - 36, if (autoBlockMode.equals("spoof", ignoreCase = true)) -1 else switchKeepTime, false)) return
+					if (InventoryUtils.setHeldItemSlot(thePlayer, blockSlot - 36, if (autoBlockMode.equals("spoof", ignoreCase = true)) -1 else switchKeepTime, false)) return
 				}
-				else InventoryUtils.reset()
+				else InventoryUtils.reset(thePlayer)
 			}
 
 			itemStack = thePlayer.inventoryContainer.getSlot(blockSlot).stack
@@ -825,7 +827,7 @@ class Scaffold : Module()
 		}
 
 		// Switch back to original slot after place on AutoBlock-Switch mode
-		if (autoBlockValue.get().equals("Switch", true) && switchKeepTime < 0) InventoryUtils.reset()
+		if (autoBlockValue.get().equals("Switch", true) && switchKeepTime < 0) InventoryUtils.reset(thePlayer)
 
 		this.targetPlace = null
 	}
@@ -857,7 +859,7 @@ class Scaffold : Module()
 		mc.timer.timerSpeed = 1f
 		shouldGoDown = false
 
-		if (InventoryUtils.serverHeldItemSlot != thePlayer.inventory.currentItem) InventoryUtils.reset()
+		InventoryUtils.reset(thePlayer)
 	}
 
 	@EventTarget

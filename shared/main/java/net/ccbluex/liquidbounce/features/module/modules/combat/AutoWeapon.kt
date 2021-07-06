@@ -66,7 +66,7 @@ class AutoWeapon : Module()
 			// Switch to best weapon
 			if (silentValue.get())
 			{
-				if (InventoryUtils.setHeldItemSlot(slot, silentKeepTicksValue.get())) return
+				if (InventoryUtils.setHeldItemSlot(thePlayer, slot, silentKeepTicksValue.get())) return
 			}
 			else
 			{

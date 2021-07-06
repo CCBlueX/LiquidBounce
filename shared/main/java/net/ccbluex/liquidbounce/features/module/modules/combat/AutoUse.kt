@@ -183,7 +183,7 @@ class AutoUse : Module()
 
 						if (isFirst) if (silent)
 						{
-							if (InventoryUtils.setHeldItemSlot(slotIndex, -1, slot == gappleInHotbar)) return
+							if (InventoryUtils.setHeldItemSlot(thePlayer, slotIndex, -1, slot == gappleInHotbar)) return
 						}
 						else mc.playerController.updateController()
 
@@ -302,7 +302,7 @@ class AutoUse : Module()
 			}
 
 			val gameSettings = mc.gameSettings
-			if (silent) InventoryUtils.reset() else if (!gameSettings.isKeyDown(gameSettings.keyBindUseItem)) gameSettings.keyBindUseItem.unpressKey()
+			if (silent) InventoryUtils.reset(thePlayer) else if (!gameSettings.isKeyDown(gameSettings.keyBindUseItem)) gameSettings.keyBindUseItem.unpressKey()
 
 			slotToUse = -1
 		}

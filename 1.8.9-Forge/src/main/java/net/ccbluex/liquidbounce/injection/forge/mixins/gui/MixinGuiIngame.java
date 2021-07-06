@@ -68,10 +68,10 @@ public abstract class MixinGuiIngame
 			final int currentHeldItem = entityPlayer.inventory.currentItem;
 
 			Gui.drawRect(middleScreen - 91 - 1 + currentHeldItem * 20 + 1, sr.getScaledHeight() - 24, middleScreen - 91 - 1 + currentHeldItem * 20 + 22, sr.getScaledHeight() - 22 - 1 + 24, Integer.MAX_VALUE);
-			if (InventoryUtils.serverHeldItemSlot != null && InventoryUtils.serverHeldItemSlot != currentHeldItem)
+			if (InventoryUtils.targetHeldItemSlot != null)
 			{
-				final int serverSlot = InventoryUtils.serverHeldItemSlot;
-				Gui.drawRect(middleScreen - 91 - 1 + serverSlot * 20 + 1, sr.getScaledHeight() - 24, middleScreen - 91 - 1 + serverSlot * 20 + 22, sr.getScaledHeight() - 22 - 1 + 24, -16776961);
+				final int serverSlot = InventoryUtils.targetHeldItemSlot;
+				Gui.drawRect(middleScreen - 91 - 1 + serverSlot * 20 + 1, sr.getScaledHeight() - 24, middleScreen - 91 - 1 + serverSlot * 20 + 22, sr.getScaledHeight() - 22 - 1 + 24, InventoryUtils.targetHeldItemSlot == currentHeldItem ? -65536 : -16776961);
 			}
 
 			GlStateManager.enableRescaleNormal();
