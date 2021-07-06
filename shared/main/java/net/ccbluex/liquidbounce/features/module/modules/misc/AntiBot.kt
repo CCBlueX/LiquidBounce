@@ -8,7 +8,6 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ISPacketPlayerListItem
@@ -329,7 +328,7 @@ object AntiBot : Module()
 	private val teleportpacket_violation = mutableMapOf<Int, Int>()
 	// TODO: private val collision_violation = mutableMapOf<Int, Int>()
 
-	private fun getPingCorrectionAppliedLocation(thePlayer: IEntityPlayerSP, offset: Int = 0) = LocationCache.getPlayerLocationBeforeNTicks((ceil(thePlayer.getPing() / 50F).toInt() + offset + positionPingCorrectionOffsetValue.get()).coerceAtLeast(0), Location(WVec3(thePlayer.posX, thePlayer.entityBoundingBox.minY, thePlayer.posZ), RotationUtils.serverRotation))
+	private fun getPingCorrectionAppliedLocation(thePlayer: IEntityPlayer, offset: Int = 0) = LocationCache.getPlayerLocationBeforeNTicks((ceil(thePlayer.getPing() / 50F).toInt() + offset + positionPingCorrectionOffsetValue.get()).coerceAtLeast(0), Location(WVec3(thePlayer.posX, thePlayer.entityBoundingBox.minY, thePlayer.posZ), RotationUtils.serverRotation))
 
 	@JvmStatic
 	fun checkTabList(targetName: String, displayName: Boolean, equals: Boolean, stripColors: Boolean): Boolean = mc.netHandler.playerInfoMap.map { networkPlayerInfo ->
@@ -340,7 +339,7 @@ object AntiBot : Module()
 		networkName
 	}.any { networkName -> if (equals) targetName == networkName else networkName in targetName }
 
-	fun isBot(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, target: IEntityLivingBase): Boolean
+	fun isBot(theWorld: IWorldClient, thePlayer: IEntity, target: IEntityLivingBase): Boolean
 	{
 		// Check if anti bot is enabled
 		if (!state) return false
@@ -773,7 +772,7 @@ object AntiBot : Module()
 		}
 	}
 
-	private fun checkEntityMovements(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, target: IEntityPlayer, newPos: WVec3, rotating: Boolean, encodedYaw: Byte, encodedPitch: Byte, onGround: Boolean, shouldNotify: Boolean)
+	private fun checkEntityMovements(theWorld: IWorldClient, thePlayer: IEntityPlayer, target: IEntityPlayer, newPos: WVec3, rotating: Boolean, encodedYaw: Byte, encodedPitch: Byte, onGround: Boolean, shouldNotify: Boolean)
 	{
 		val entityId = target.entityId
 

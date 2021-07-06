@@ -5,16 +5,16 @@
  */
 package net.ccbluex.liquidbounce.utils.misc
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
 import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition.WMovingObjectType
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.toRadians
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
+import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import kotlin.math.sqrt
 
-class FallingPlayer(private val theWorld: IWorldClient, private val thePlayer: IEntityPlayerSP, private var x: Double, private var y: Double, private var z: Double, private var motionX: Double, private var motionY: Double, private var motionZ: Double, private val yaw: Float, private var strafe: Float, private var forward: Float) : MinecraftInstance()
+class FallingPlayer(private val theWorld: IWorld, private val thePlayer: IEntityLivingBase, private var x: Double, private var y: Double, private var z: Double, private var motionX: Double, private var motionY: Double, private var motionZ: Double, private val yaw: Float, private var strafe: Float, private var forward: Float) : MinecraftInstance()
 {
 	private fun calculateForTick()
 	{
@@ -93,7 +93,7 @@ class FallingPlayer(private val theWorld: IWorldClient, private val thePlayer: I
 
 	companion object
 	{
-		private fun rayTrace(theWorld: IWorldClient, start: WVec3, end: WVec3): WBlockPos?
+		private fun rayTrace(theWorld: IWorld, start: WVec3, end: WVec3): WBlockPos?
 		{
 			val result = theWorld.rayTraceBlocks(start, end, true)
 			return if (result != null && result.typeOfHit == WMovingObjectType.BLOCK && result.sideHit?.isUp() == true) result.blockPos else null

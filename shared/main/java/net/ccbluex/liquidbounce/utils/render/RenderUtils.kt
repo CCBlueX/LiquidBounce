@@ -7,8 +7,6 @@ package net.ccbluex.liquidbounce.utils.render
 
 import net.ccbluex.liquidbounce.api.enums.WDefaultVertexFormats
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.client.render.entity.IRenderItem
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
@@ -18,6 +16,7 @@ import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.cos
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.sin
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.toRadians
+import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.injection.backend.Backend
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
@@ -37,7 +36,7 @@ object RenderUtils : MinecraftInstance()
 	var deltaTime = 0
 
 	@JvmStatic
-	fun drawBlockBox(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, blockPos: WBlockPos, color: Int, outlineColor: Int, hydraESP: Boolean)
+	fun drawBlockBox(theWorld: IWorld, thePlayer: IEntity, blockPos: WBlockPos, color: Int, outlineColor: Int, hydraESP: Boolean)
 	{
 		val renderPartialTicks = mc.timer.renderPartialTicks
 

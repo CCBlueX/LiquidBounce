@@ -7,9 +7,9 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.enums.BlockType
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
+import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
@@ -286,7 +286,7 @@ class BufferSpeed : Module()
 		}
 	}
 
-	private fun boost(thePlayer: IEntityPlayerSP, boost: Float)
+	private fun boost(thePlayer: IEntity, boost: Float)
 	{
 		thePlayer.motionX *= boost
 		thePlayer.motionZ *= boost
@@ -296,7 +296,7 @@ class BufferSpeed : Module()
 		if (speedLimitValue.get() && speed > maxSpeed) speed = maxSpeed
 	}
 
-	private fun isNearBlock(theWorld: IWorldClient, thePlayer: IEntityPlayerSP): Boolean
+	private fun isNearBlock(theWorld: IWorld, thePlayer: IEntity): Boolean
 	{
 		val blocks = ArrayDeque<WBlockPos>(4)
 

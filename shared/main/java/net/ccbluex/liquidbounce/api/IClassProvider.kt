@@ -42,6 +42,7 @@ import net.ccbluex.liquidbounce.api.minecraft.potion.IPotionEffect
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.api.minecraft.stats.IStatBase
 import net.ccbluex.liquidbounce.api.minecraft.util.*
+import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.api.network.IPacketBuffer
 import net.ccbluex.liquidbounce.api.util.IWrappedFontRenderer
 import net.ccbluex.liquidbounce.api.util.WrappedCreativeTabs
@@ -91,7 +92,7 @@ interface IClassProvider
 	fun createDynamicTexture(width: Int, height: Int): IDynamicTexture
 	fun createAxisAlignedBB(minX: Double, minY: Double, minZ: Double, maxX: Double, maxY: Double, maxZ: Double): IAxisAlignedBB
 	fun createScaledResolution(mc: IMinecraft): IScaledResolution
-	fun createEntityOtherPlayerMP(world: IWorldClient, gameProfile: GameProfile): IEntityOtherPlayerMP
+	fun createEntityOtherPlayerMP(world: IWorld, gameProfile: GameProfile): IEntityOtherPlayerMP
 	fun createPotionEffect(id: Int, time: Int, strength: Int): IPotionEffect
 	fun createSafeVertexBuffer(vertexFormat: IVertexFormat): IVertexBuffer
 

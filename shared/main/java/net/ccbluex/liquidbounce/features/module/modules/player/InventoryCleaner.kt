@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.api.enums.BlockType
 import net.ccbluex.liquidbounce.api.enums.EnchantmentType
 import net.ccbluex.liquidbounce.api.enums.EnumFacingType
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.inventory.IContainer
 import net.ccbluex.liquidbounce.api.minecraft.item.IItem
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
@@ -301,7 +302,7 @@ class InventoryCleaner : Module()
 	 * @param slot Slot id of the item.
 	 * @return Returns true when the item is useful
 	 */
-	fun isUseful(thePlayer: IEntityPlayerSP, slot: Int, itemStack: IItemStack, start: Int = 0, end: Int = 45, container: IContainer): Boolean
+	fun isUseful(thePlayer: IEntityPlayer, slot: Int, itemStack: IItemStack, start: Int = 0, end: Int = 45, container: IContainer): Boolean
 	{
 		return try
 		{
@@ -435,7 +436,7 @@ class InventoryCleaner : Module()
 		}
 	}
 
-	private fun findBetterItem(thePlayer: IEntityPlayerSP, hotbarSlot: Int, slotStack: IItemStack?): Int?
+	private fun findBetterItem(thePlayer: IEntityPlayer, hotbarSlot: Int, slotStack: IItemStack?): Int?
 	{
 		val type = type(hotbarSlot).toLowerCase()
 

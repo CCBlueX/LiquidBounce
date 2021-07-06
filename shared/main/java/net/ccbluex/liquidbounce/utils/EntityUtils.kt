@@ -8,11 +8,10 @@ package net.ccbluex.liquidbounce.utils
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.client.network.INetworkPlayerInfo
 import net.ccbluex.liquidbounce.api.minecraft.scoreboard.IScoreboard
 import net.ccbluex.liquidbounce.api.minecraft.world.IChunk
+import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.features.module.modules.combat.NoFriends
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
@@ -146,7 +145,7 @@ object EntityUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun getEntitiesInRadius(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, radius: Double = 16.0): List<IEntity>
+	fun getEntitiesInRadius(theWorld: IWorld, thePlayer: IEntity, radius: Double = 16.0): List<IEntity>
 	{
 		val box = thePlayer.entityBoundingBox.expand(radius, radius, radius)
 

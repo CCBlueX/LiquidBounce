@@ -7,7 +7,6 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
@@ -149,7 +148,7 @@ class BowAimbot : Module()
 		if (currentTarget != null && !priorityValue.get().equals("Multi", ignoreCase = true) && markValue.get()) RenderUtils.drawPlatform(currentTarget, 0x46257EFF)
 	}
 
-	private fun getTarget(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, priorityMode: String, playerPredictSize: RotationUtils.MinMaxPair, flags: Int): IEntityLivingBase?
+	private fun getTarget(theWorld: IWorldClient, thePlayer: IEntityLivingBase, priorityMode: String, playerPredictSize: RotationUtils.MinMaxPair, flags: Int): IEntityLivingBase?
 	{
 		val ignoreVisibleCheck = flags and RotationUtils.SKIP_VISIBLE_CHECK != 0
 
@@ -168,7 +167,7 @@ class BowAimbot : Module()
 		}
 	}
 
-	fun hasTarget(thePlayer: IEntityPlayerSP): Boolean
+	fun hasTarget(thePlayer: IEntityLivingBase): Boolean
 	{
 		val currentTarget = target
 

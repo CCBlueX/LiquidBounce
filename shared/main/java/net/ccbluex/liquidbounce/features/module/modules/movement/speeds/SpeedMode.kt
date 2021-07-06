@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
@@ -38,7 +38,7 @@ abstract class SpeedMode(val modeName: String) : MinecraftInstance()
 	{
 	}
 
-	protected fun jump(thePlayer: IEntityPlayerSP)
+	protected fun jump(thePlayer: IEntityPlayer)
 	{
 		thePlayer.jump() // Jump without sprint-jump boost
 

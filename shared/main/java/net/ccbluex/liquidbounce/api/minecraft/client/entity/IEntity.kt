@@ -117,7 +117,7 @@ interface IEntity
 	fun rayTrace(range: Double, partialTicks: Float): IMovingObjectPosition?
 	fun getLook(partialTicks: Float): WVec3
 	fun isInsideOfMaterial(material: IMaterial): Boolean
-	fun copyLocationAndAnglesFrom(player: IEntityPlayerSP)
+	fun copyLocationAndAnglesFrom(player: IEntity)
 	fun setPositionAndRotation(posX: Double, posY: Double, posZ: Double, rotationYaw: Float, rotationPitch: Float)
 
 	override operator fun equals(other: Any?): Boolean

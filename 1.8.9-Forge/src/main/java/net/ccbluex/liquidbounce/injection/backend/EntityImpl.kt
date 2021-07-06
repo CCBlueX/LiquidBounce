@@ -265,7 +265,7 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 
 	override fun moveEntity(x: Double, y: Double, z: Double) = wrapped.moveEntity(x, y, z)
 
-	override fun copyLocationAndAnglesFrom(player: IEntityPlayerSP) = wrapped.copyLocationAndAnglesFrom(player.unwrap())
+	override fun copyLocationAndAnglesFrom(player: IEntity) = wrapped.copyLocationAndAnglesFrom(player.unwrap())
 
 	override fun getLook(partialTicks: Float): WVec3 = wrapped.getLook(partialTicks).wrap()
 

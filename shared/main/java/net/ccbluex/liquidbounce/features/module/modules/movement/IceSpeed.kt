@@ -58,7 +58,7 @@ class IceSpeed : Module()
 		{
 			when (mode.toLowerCase())
 			{
-				"aac3.2.0" -> getMaterial(thePlayer.position.down()).let {
+				"aac3.2.0" -> getMaterial(theWorld, thePlayer.position.down()).let {
 					if (it == provider.getBlockEnum(BlockType.ICE) || it == provider.getBlockEnum(BlockType.ICE_PACKED))
 					{
 						thePlayer.motionX *= 1.342
@@ -69,7 +69,7 @@ class IceSpeed : Module()
 					}
 				}
 
-				"spartan146" -> getMaterial(thePlayer.position.down()).let {
+				"spartan146" -> getMaterial(theWorld, thePlayer.position.down()).let {
 					if (it == provider.getBlockEnum(BlockType.ICE) || it == provider.getBlockEnum(BlockType.ICE_PACKED))
 					{
 						val blockAbove: IBlock = BlockUtils.getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY + 2.0, thePlayer.posZ))

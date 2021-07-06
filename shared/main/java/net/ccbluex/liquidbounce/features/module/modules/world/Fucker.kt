@@ -7,11 +7,11 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.enums.EnumFacingType
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
+import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
@@ -54,7 +54,6 @@ object Fucker : Module()
 	 */
 
 	var currentPos: WBlockPos? = null
-	private var oldPos: WBlockPos? = null
 	private var blockHitDelay = 0
 	private val switchTimer = MSTimer()
 	var currentDamage = 0F
@@ -226,7 +225,7 @@ object Fucker : Module()
 	/**
 	 * Find new target block by [targetID]
 	 */
-	private fun find(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, targetID: Int): WBlockPos?
+	private fun find(theWorld: IWorld, thePlayer: IEntity, targetID: Int): WBlockPos?
 	{
 		val func = functions
 
@@ -257,7 +256,7 @@ object Fucker : Module()
 	/**
 	 * Check if block is hitable (or allowed to hit through walls)
 	 */
-	private fun isHitable(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, blockPos: WBlockPos): Boolean
+	private fun isHitable(theWorld: IWorld, thePlayer: IEntity, blockPos: WBlockPos): Boolean
 	{
 		return when (throughWallsValue.get().toLowerCase())
 		{

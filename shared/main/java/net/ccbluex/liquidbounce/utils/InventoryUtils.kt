@@ -9,13 +9,13 @@ import net.ccbluex.liquidbounce.api.enums.BlockType
 import net.ccbluex.liquidbounce.api.enums.EnumFacingType
 import net.ccbluex.liquidbounce.api.enums.ItemType
 import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.entity.player.IInventoryPlayer
 import net.ccbluex.liquidbounce.api.minecraft.inventory.IContainer
 import net.ccbluex.liquidbounce.api.minecraft.item.IItem
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos.Companion.ORIGIN
+import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
@@ -54,14 +54,7 @@ class InventoryUtils : MinecraftInstance(), Listenable
 
 		if (provider.isCPacketPlayerBlockPlacement(packet)) CLICK_TIMER.reset()
 
-
-		if (provider.isCPacketHeldItemChange(packet))
-		{
-			val packetSlot = packet.asCPacketHeldItemChange().slotId
-			val slot = serverHeldItemSlot
-
-			if (slot != null && slot != packetSlot) event.cancelEvent()
-		}
+		if (provider.isCPacketHeldItemChange(packet) && serverHeldItemSlot != null) event.cancelEvent()
 	}
 
 	override fun handleEvents(): Boolean = true
@@ -123,7 +116,7 @@ class InventoryUtils : MinecraftInstance(), Listenable
 
 		fun hasSpaceHotbar(inventory: IInventoryPlayer): Boolean = (0 until 9).map(inventory::getStackInSlot).any { it == null }
 
-		fun findAutoBlockBlock(theWorld: IWorldClient, container: IContainer, autoblockFullcubeOnly: Boolean, boundingBoxYLimit: Double = 0.0): Int
+		fun findAutoBlockBlock(theWorld: IWorld, container: IContainer, autoblockFullcubeOnly: Boolean, boundingBoxYLimit: Double = 0.0): Int
 		{
 			val hotbarSlots: MutableList<Int> = ArrayList(9)
 
@@ -204,18 +197,17 @@ class InventoryUtils : MinecraftInstance(), Listenable
 		{
 			if (Companion.lock) return true
 
-			val needSwap = slot != serverHeldItemSlot
-
-			serverHeldItemSlot = slot
-			Companion.keepLength = keepLength
-			Companion.lock = lock
-
-			if (needSwap)
+			if (slot != serverHeldItemSlot)
 			{
 				mc.thePlayer?.let { thePlayer -> if (thePlayer.isUsingItem) mc.playerController.onStoppedUsingItem(thePlayer) } // Stop using item before swap the slot
 
 				mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(slot))
 			}
+
+			serverHeldItemSlot = slot
+			Companion.keepLength = keepLength
+			Companion.lock = lock
+
 
 			return false
 		}
@@ -237,7 +229,7 @@ class InventoryUtils : MinecraftInstance(), Listenable
 			}
 		}
 
-		fun findBestFood(thePlayer: IEntityPlayerSP, startSlot: Int = 36, endSlot: Int = 45, itemDelay: Long): Int
+		fun findBestFood(thePlayer: IEntityPlayer, startSlot: Int = 36, endSlot: Int = 45, itemDelay: Long): Int
 		{
 			val inventoryContainer = thePlayer.inventoryContainer
 			val currentFoodLevel = thePlayer.foodStats.foodLevel

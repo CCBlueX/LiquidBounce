@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
@@ -160,7 +160,7 @@ class SNCPBHop : SpeedMode("SNCPBHop")
 		else event.zeroXZ()
 	}
 
-	private fun getBaseMoveSpeed(thePlayer: IEntityPlayerSP): Double = 0.2873 * (1.0 + 0.2 * MovementUtils.getSpeedEffectAmplifier(thePlayer))
+	private fun getBaseMoveSpeed(thePlayer: IEntityLivingBase): Double = 0.2873 * (1.0 + 0.2 * MovementUtils.getSpeedEffectAmplifier(thePlayer))
 
 	private fun round(value: Double): Double = BigDecimal(value).setScale(3, RoundingMode.HALF_UP).toDouble()
 }

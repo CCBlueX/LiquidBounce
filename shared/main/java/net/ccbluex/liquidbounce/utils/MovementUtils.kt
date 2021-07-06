@@ -5,7 +5,10 @@
  */
 package net.ccbluex.liquidbounce.utils
 
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import kotlin.math.hypot
@@ -13,7 +16,7 @@ import kotlin.math.hypot
 object MovementUtils : MinecraftInstance()
 {
 	@JvmStatic
-	fun getSpeed(thePlayer: IEntityPlayerSP): Float
+	fun getSpeed(thePlayer: IEntity): Float
 	{
 		val mX = thePlayer.motionX
 		val mZ = thePlayer.motionZ
@@ -24,10 +27,10 @@ object MovementUtils : MinecraftInstance()
 	fun isMoving(thePlayer: IEntityPlayerSP): Boolean = thePlayer.movementInput.moveForward != 0f || thePlayer.movementInput.moveStrafe != 0f
 
 	@JvmStatic
-	fun cantBoostUp(thePlayer: IEntityPlayerSP): Boolean = thePlayer.isInWater || thePlayer.isInLava || thePlayer.isInWeb || thePlayer.isOnLadder || thePlayer.isRiding
+	fun cantBoostUp(thePlayer: IEntityPlayer): Boolean = thePlayer.isInWater || thePlayer.isInLava || thePlayer.isInWeb || thePlayer.isOnLadder || thePlayer.isRiding
 
 	@JvmStatic
-	fun hasMotion(thePlayer: IEntityPlayerSP): Boolean = thePlayer.motionX != 0.0 && thePlayer.motionZ != 0.0 && thePlayer.motionY != 0.0
+	fun hasMotion(thePlayer: IEntity): Boolean = thePlayer.motionX != 0.0 && thePlayer.motionZ != 0.0 && thePlayer.motionY != 0.0
 
 	@JvmStatic
 	@JvmOverloads
@@ -44,7 +47,7 @@ object MovementUtils : MinecraftInstance()
 
 	@JvmStatic
 	@JvmOverloads
-	fun addMotion(thePlayer: IEntityPlayerSP, motion: Float = getSpeed(thePlayer), directionDegrees: Float = getDirectionDegrees(thePlayer))
+	fun addMotion(thePlayer: IEntityPlayer, motion: Float = getSpeed(thePlayer), directionDegrees: Float = getDirectionDegrees(thePlayer))
 	{
 		val func = functions
 
@@ -54,7 +57,7 @@ object MovementUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun forward(thePlayer: IEntityPlayerSP, length: Double, directionDegrees: Float = thePlayer.rotationYaw)
+	fun forward(thePlayer: IEntity, length: Double, directionDegrees: Float = thePlayer.rotationYaw)
 	{
 		val func = functions
 
@@ -64,10 +67,10 @@ object MovementUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun getDirection(thePlayer: IEntityPlayerSP): Float = WMathHelper.toRadians(getDirectionDegrees(thePlayer))
+	fun getDirection(thePlayer: IEntityPlayer): Float = WMathHelper.toRadians(getDirectionDegrees(thePlayer))
 
 	@JvmStatic
-	fun getDirectionDegrees(thePlayer: IEntityPlayerSP): Float
+	fun getDirectionDegrees(thePlayer: IEntityPlayer): Float
 	{
 		var yaw = thePlayer.rotationYaw % 360f
 
@@ -93,20 +96,20 @@ object MovementUtils : MinecraftInstance()
 	 * @return The amplifier of Speed potion effect which applied on thePlayer (1~) (If thePlayer doesn't have Speed potion effect, it returns 0)
 	 */
 	@JvmStatic
-	fun getSpeedEffectAmplifier(thePlayer: IEntityPlayerSP) = getEffectAmplifier(thePlayer, PotionType.MOVE_SPEED)
+	fun getSpeedEffectAmplifier(thePlayer: IEntityLivingBase) = getEffectAmplifier(thePlayer, PotionType.MOVE_SPEED)
 
 	@JvmStatic
-	fun getEffectAmplifier(thePlayer: IEntityPlayerSP, potionType: PotionType) = thePlayer.getActivePotionEffect(classProvider.getPotionEnum(potionType))?.amplifier?.plus(1) ?: 0
+	fun getEffectAmplifier(thePlayer: IEntityLivingBase, potionType: PotionType) = thePlayer.getActivePotionEffect(classProvider.getPotionEnum(potionType))?.amplifier?.plus(1) ?: 0
 
 	@JvmStatic
-	fun zeroXZ(thePlayer: IEntityPlayerSP)
+	fun zeroXZ(thePlayer: IEntity)
 	{
 		thePlayer.motionX = 0.0
 		thePlayer.motionZ = 0.0
 	}
 
 	@JvmStatic
-	fun zeroXYZ(thePlayer: IEntityPlayerSP)
+	fun zeroXYZ(thePlayer: IEntity)
 	{
 		zeroXZ(thePlayer)
 		thePlayer.motionY = 0.0

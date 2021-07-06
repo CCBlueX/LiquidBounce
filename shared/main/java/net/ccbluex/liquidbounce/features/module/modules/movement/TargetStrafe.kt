@@ -8,9 +8,9 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
+import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -89,8 +89,6 @@ class TargetStrafe : Module()
 	private var direction = -1F
 	private var lastStrafeDirection = 0F
 
-	// TODO: Adaptive path
-
 	@EventTarget
 	fun onMove(event: MoveEvent)
 	{
@@ -131,7 +129,6 @@ class TargetStrafe : Module()
 			val zDelta = targetPosZ - playerPosZ
 			val distance = hypot(xDelta, zDelta)
 
-			// If the
 			if (distance - moveSpeed > strafeRange + strafeStartRangeValue.get()) return
 
 			// Strafe yaw radians
@@ -154,11 +151,12 @@ class TargetStrafe : Module()
 			val encirclementZ = func.cos(encirclementYawRadians) * encirclementSpeedLimited
 
 			// Setup strafe movements
-			val strafeSpeed = moveSpeed - if (priorityValue.get().equals("Encirclement", ignoreCase = true)) hypot(encirclementX, encirclementZ) else 0.0
-			var strafeX = -func.sin(strafeYawRadians) * strafeSpeed * direction
-			var strafeZ = func.cos(strafeYawRadians) * strafeSpeed * direction
+			val strafeSpeed = (moveSpeed - if (priorityValue.get().equals("Encirclement", ignoreCase = true)) hypot(encirclementX, encirclementZ) else 0.0) * direction
+			var strafeX = -func.sin(strafeYawRadians) * strafeSpeed
+			var strafeZ = func.cos(strafeYawRadians) * strafeSpeed
 
-			if (thePlayer.onGround && (thePlayer.isCollidedHorizontally || !isAboveGround(theWorld, playerPosX + encirclementX + strafeX * 2, thePlayer.posY, playerPosZ + encirclementZ + strafeZ * 2)))
+			val provider = classProvider
+			if (thePlayer.onGround && (thePlayer.isCollidedHorizontally || !isAboveGround(theWorld, playerPosX + encirclementX + strafeX * 2, thePlayer.posY, playerPosZ + encirclementZ + strafeZ * 2)) || BlockUtils.collideBlockIntersects(theWorld, thePlayer.entityBoundingBox.offset(encirclementX + strafeX, 0.0, encirclementZ + strafeZ)) { !provider.isBlockAir(it.block) && !BlockUtils.isReplaceable(theWorld, it) })
 			{
 				direction *= -1F
 				strafeX *= -1
@@ -221,7 +219,7 @@ class TargetStrafe : Module()
 		glPopMatrix()
 	}
 
-	private fun isAboveGround(theWorld: IWorldClient, x: Double, y: Double, z: Double): Boolean
+	private fun isAboveGround(theWorld: IWorld, x: Double, y: Double, z: Double): Boolean
 	{
 		var i = ceil(y)
 		while ((y - 5) < i--) if (!classProvider.isBlockAir(BlockUtils.getBlock(theWorld, WBlockPos(x, i, z)))) return true

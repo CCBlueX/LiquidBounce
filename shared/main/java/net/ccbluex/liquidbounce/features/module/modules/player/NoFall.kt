@@ -83,7 +83,7 @@ class NoFall : Module()
 		val provider = classProvider
 
 		val fly = moduleManager[Fly::class.java] as Fly
-		if (!state || moduleManager[FreeCam::class.java].state || fly.state && fly.shouldDisableNoFall || thePlayer.spectator || thePlayer.capabilities.allowFlying || thePlayer.capabilities.disableDamage || collideBlock(theWorld, playerBB, provider::isBlockLiquid) || collideBlock(theWorld, provider.createAxisAlignedBB(playerBB.minX, playerBB.minY - 0.01, playerBB.minZ, playerBB.maxX, playerBB.maxY, playerBB.maxZ), provider::isBlockLiquid))
+		if (!state || moduleManager[FreeCam::class.java].state || fly.state && fly.shouldDisableNoFall || thePlayer.spectator || thePlayer.capabilities.allowFlying || thePlayer.capabilities.disableDamage || collideBlock(theWorld, playerBB) { provider.isBlockLiquid(it.block) } || collideBlock(theWorld, provider.createAxisAlignedBB(playerBB.minX, playerBB.minY - 0.01, playerBB.minZ, playerBB.maxX, playerBB.maxY, playerBB.maxZ)) { provider.isBlockLiquid(it.block) })
 		{
 			noSpoof = 0
 			return
@@ -228,7 +228,7 @@ class NoFall : Module()
 
 		val playerBB = thePlayer.entityBoundingBox
 		val fly = LiquidBounce.moduleManager[Fly::class.java] as Fly
-		if (fly.state && fly.shouldDisableNoFall || collideBlock(theWorld, playerBB, classProvider::isBlockLiquid) || collideBlock(theWorld, classProvider.createAxisAlignedBB(playerBB.minX, playerBB.minY - 0.01, playerBB.minZ, playerBB.maxX, playerBB.maxY, playerBB.maxZ), classProvider::isBlockLiquid)) return
+		if (fly.state && fly.shouldDisableNoFall || collideBlock(theWorld, playerBB) { classProvider.isBlockLiquid(it.block) } || collideBlock(theWorld, classProvider.createAxisAlignedBB(playerBB.minX, playerBB.minY - 0.01, playerBB.minZ, playerBB.maxX, playerBB.maxY, playerBB.maxZ)) { classProvider.isBlockLiquid(it.block) }) return
 
 		if (modeValue.get().equals("AAC3.3.4", ignoreCase = true))
 		{

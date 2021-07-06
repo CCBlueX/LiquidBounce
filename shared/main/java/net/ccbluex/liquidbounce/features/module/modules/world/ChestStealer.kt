@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.inventory.IGuiChest
 import net.ccbluex.liquidbounce.api.minecraft.inventory.IContainer
 import net.ccbluex.liquidbounce.api.minecraft.inventory.ISlot
@@ -296,7 +296,7 @@ class ChestStealer : Module()
 		if (classProvider.isSPacketWindowItems(packet)) contentReceived = packet.asSPacketWindowItems().windowId
 	}
 
-	private fun shouldTake(thePlayer: IEntityPlayerSP, stack: IItemStack?, slot: Int, inventoryCleaner: InventoryCleaner, end: Int, container: IContainer, itemDelay: Long): Boolean
+	private fun shouldTake(thePlayer: IEntityPlayer, stack: IItemStack?, slot: Int, inventoryCleaner: InventoryCleaner, end: Int, container: IContainer, itemDelay: Long): Boolean
 	{
 		val currentTime = System.currentTimeMillis()
 
@@ -311,7 +311,7 @@ class ChestStealer : Module()
 		nextDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
 	}
 
-	private fun isEmpty(thePlayer: IEntityPlayerSP, chest: IGuiChest, itemDelay: Long): Boolean
+	private fun isEmpty(thePlayer: IEntityPlayer, chest: IGuiChest, itemDelay: Long): Boolean
 	{
 		val inventoryCleaner = LiquidBounce.moduleManager[InventoryCleaner::class.java] as InventoryCleaner
 		val container = chest.inventorySlots ?: return false
@@ -330,7 +330,7 @@ class ChestStealer : Module()
 		return if (random) emptySlots[Random.nextInt(emptySlots.size)] else emptySlots.first()
 	}
 
-	private fun getFullInventory(thePlayer: IEntityPlayerSP): Boolean = thePlayer.inventory.mainInventory.none(ItemUtils::isStackEmpty)
+	private fun getFullInventory(thePlayer: IEntityPlayer): Boolean = thePlayer.inventory.mainInventory.none(ItemUtils::isStackEmpty)
 
 	override val tag: String
 		get() = "${minDelayValue.get()} ~ ${maxDelayValue.get()}"

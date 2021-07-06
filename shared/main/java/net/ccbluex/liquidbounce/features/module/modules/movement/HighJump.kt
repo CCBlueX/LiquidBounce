@@ -6,10 +6,11 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
+import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -105,7 +106,7 @@ class HighJump : Module()
 		}
 	}
 
-	private fun mineplexHighJump(theWorld: IWorldClient, thePlayer: IEntityPlayerSP)
+	private fun mineplexHighJump(theWorld: IWorld, thePlayer: IEntityPlayerSP)
 	{
 		val networkManager = mc.netHandler.networkManager
 
@@ -191,7 +192,7 @@ class HighJump : Module()
 		}
 	}
 
-	private fun findNoCollisionYOffset(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, x: Double, y: Double, z: Double): Double
+	private fun findNoCollisionYOffset(theWorld: IWorld, thePlayer: IEntity, x: Double, y: Double, z: Double): Double
 	{
 		var yOff = -1.5
 		var bb: IAxisAlignedBB

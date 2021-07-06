@@ -6,7 +6,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp
 
 import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
 import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.event.EventState
@@ -129,7 +130,7 @@ class YPort : SpeedMode("YPort")
 		else event.zeroXZ()
 	}
 
-	private fun getBaseMoveSpeed(thePlayer: IEntityPlayerSP): Double = 0.2873 * (1.0 + 0.2 * MovementUtils.getSpeedEffectAmplifier(thePlayer))
+	private fun getBaseMoveSpeed(thePlayer: IEntityLivingBase): Double = 0.2873 * (1.0 + 0.2 * MovementUtils.getSpeedEffectAmplifier(thePlayer))
 
 	private fun getBlock(axisAlignedBB: IAxisAlignedBB): IBlock?
 	{
@@ -150,7 +151,7 @@ class YPort : SpeedMode("YPort")
 		return null
 	}
 
-	private fun getBlock(thePlayer: IEntityPlayerSP, offset: Double): IBlock? = this.getBlock((thePlayer).entityBoundingBox.offset(0.0, offset, 0.0))
+	private fun getBlock(thePlayer: IEntity, offset: Double): IBlock? = this.getBlock(thePlayer.entityBoundingBox.offset(0.0, offset, 0.0))
 
 	private fun round(value: Double): Double = BigDecimal(value).setScale(3, RoundingMode.HALF_UP).toDouble()
 }

@@ -6,19 +6,18 @@
 package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
+import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 
 object RaycastUtils : MinecraftInstance()
 {
 
 	@JvmStatic
-	fun raycastEntity(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, range: Double, entityFilter: (IEntity?) -> Boolean, aabbGetter: (IEntity) -> IAxisAlignedBB = IEntity::entityBoundingBox) = raycastEntity(theWorld, thePlayer, range, RotationUtils.serverRotation.yaw, RotationUtils.serverRotation.pitch, aabbGetter, entityFilter)
+	fun raycastEntity(theWorld: IWorld, thePlayer: IEntity, range: Double, entityFilter: (IEntity?) -> Boolean, aabbGetter: (IEntity) -> IAxisAlignedBB = IEntity::entityBoundingBox) = raycastEntity(theWorld, thePlayer, range, RotationUtils.serverRotation.yaw, RotationUtils.serverRotation.pitch, aabbGetter, entityFilter)
 
 	@JvmStatic
-	fun raycastEntity(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, range: Double, yaw: Float, pitch: Float, aabbGetter: (IEntity) -> IAxisAlignedBB = IEntity::entityBoundingBox, entityFilter: (IEntity?) -> Boolean): IEntity?
+	fun raycastEntity(theWorld: IWorld, thePlayer: IEntity, range: Double, yaw: Float, pitch: Float, aabbGetter: (IEntity) -> IAxisAlignedBB = IEntity::entityBoundingBox, entityFilter: (IEntity?) -> Boolean): IEntity?
 	{
 		val func = functions
 

@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayer
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketUseEntity
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
+import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -26,7 +27,6 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
-import java.util.*
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sqrt
@@ -112,6 +112,7 @@ class ExtendedReach : Module()
 	@EventTarget
 	fun onPacket(event: PacketEvent)
 	{
+		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 		val playerPosVec = WVec3(thePlayer.posX, thePlayer.posY, thePlayer.posZ)
 
@@ -127,10 +128,10 @@ class ExtendedReach : Module()
 			val stack = blockPlacement.stack
 			val distance = sqrt(thePlayer.getDistanceSq(pos))
 
-			if (distance > 6.0 && pos.y != -1 && (stack != null || provider.isBlockContainer(getState(pos)?.block)))
+			if (distance > 6.0 && pos.y != -1 && (stack != null || provider.isBlockContainer(getState(theWorld, pos).block)))
 			{
 				val to = WVec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
-				path = computePath(playerPosVec, to)
+				path = computePath(theWorld, playerPosVec, to)
 
 				// Travel to the target block.
 				for (pathElm in path) networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
@@ -155,7 +156,7 @@ class ExtendedReach : Module()
 			if (distance > 6 && action == ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK)
 			{
 				val to = WVec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
-				path = computePath(playerPosVec, to)
+				path = computePath(theWorld, playerPosVec, to)
 
 				// Travel to the target.
 				for (pathElm in path) networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
@@ -198,7 +199,7 @@ class ExtendedReach : Module()
 				val to = WVec3(targetEntity.posX, targetEntity.posY, targetEntity.posZ)
 
 				// Compute the path
-				path = computePath(from, to)
+				path = computePath(theWorld, from, to)
 
 				// Travel to the target entity.
 				for (pathElm in path) networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
@@ -230,14 +231,14 @@ class ExtendedReach : Module()
 		}
 	}
 
-	private fun computePath(topFrom: WVec3, to: WVec3): MutableList<WVec3>
+	private fun computePath(theWorld: IWorld, topFrom: WVec3, to: WVec3): MutableList<WVec3>
 	{
 		var topFromPos = topFrom
 
-		if (!canPassThrough(WBlockPos(topFromPos.xCoord, topFromPos.yCoord, topFromPos.zCoord))) topFromPos = topFromPos.addVector(0.0, 1.0, 0.0)
+		if (!canPassThrough(theWorld, WBlockPos(topFromPos.xCoord, topFromPos.yCoord, topFromPos.zCoord))) topFromPos = topFromPos.addVector(0.0, 1.0, 0.0)
 
 		val pathfinder = PathFinder(topFromPos, to)
-		pathfinder.compute()
+		pathfinder.compute(theWorld)
 
 		var lastPos: WVec3? = null
 		var lastDashPos: WVec3? = null
@@ -277,7 +278,7 @@ class ExtendedReach : Module()
 							var z = minZ.toInt()
 							while (z <= maxZ)
 							{
-								if (!PathFinder.checkPositionValidity(x, y, z, false))
+								if (!PathFinder.checkPositionValidity(theWorld, x, y, z, false))
 								{
 									stop = true
 									break@coordsLoop
@@ -307,9 +308,9 @@ class ExtendedReach : Module()
 
 	companion object
 	{
-		private fun canPassThrough(pos: WBlockPos): Boolean
+		private fun canPassThrough(theWorld: IWorld, pos: WBlockPos): Boolean
 		{
-			val state = getState(WBlockPos(pos.x, pos.y, pos.z)) ?: return true
+			val state = getState(theWorld, WBlockPos(pos.x, pos.y, pos.z))
 			val block = state.block
 
 			val provider = classProvider

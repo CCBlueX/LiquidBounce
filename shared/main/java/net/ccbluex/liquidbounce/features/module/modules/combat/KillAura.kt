@@ -10,8 +10,7 @@ import net.ccbluex.liquidbounce.api.MinecraftVersion
 import net.ccbluex.liquidbounce.api.enums.EnumFacingType
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketUseEntity
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
@@ -19,6 +18,7 @@ import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
+import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.api.minecraft.world.IWorldSettings
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
@@ -411,7 +411,9 @@ class KillAura : Module()
 	private var lastYaw = 0f
 	private var lastPitch = 0f
 
-	private var predict = 1f
+	private var predictX = 1F
+	private var predictY = 1F
+	private var predictZ = 1F
 
 	// Container Delay
 	private var containerOpen = -1L
@@ -587,7 +589,7 @@ class KillAura : Module()
 		}
 	}
 
-	fun update(theWorld: IWorldClient, thePlayer: IEntityPlayerSP)
+	fun update(theWorld: IWorld, thePlayer: IEntityPlayer)
 	{
 		// CancelRun & NoInventory
 		if (shouldCancelRun(thePlayer) || (noInventoryAttackValue.get() && (classProvider.isGuiContainer(mc.currentScreen) || System.currentTimeMillis() - containerOpen < noInventoryDelayValue.get()))) return
@@ -772,9 +774,9 @@ class KillAura : Module()
 			// Entity movement predict
 			if (predictValue.get())
 			{
-				val xPredict = (target.posX - target.prevPosX) * predict
-				val yPredict = (target.posY - target.prevPosY) * predict
-				val zPredict = (target.posZ - target.prevPosZ) * predict
+				val xPredict = (target.posX - target.lastTickPosX) * predictX
+				val yPredict = (target.posY - target.lastTickPosY) * predictY
+				val zPredict = (target.posZ - target.lastTickPosZ) * predictZ
 
 				targetBB = targetBB.offset(xPredict, yPredict, zPredict)
 			}
@@ -911,7 +913,7 @@ class KillAura : Module()
 	/**
 	 * Update current target
 	 */
-	private fun updateTarget(theWorld: IWorldClient, thePlayer: IEntityPlayerSP)
+	private fun updateTarget(theWorld: IWorld, thePlayer: IEntityPlayer)
 	{
 		if (target != null) lastTargetID = target!!.entityId
 
@@ -1079,11 +1081,16 @@ class KillAura : Module()
 	/**
 	 * Update killaura rotations to enemy
 	 */
-	private fun updateRotations(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, entity: IEntity, isAttackRotation: Boolean): Boolean
+	private fun updateRotations(theWorld: IWorld, thePlayer: IEntityPlayer, entity: IEntity, isAttackRotation: Boolean): Boolean
 	{
-		if (predictValue.get()) predict = RandomUtils.nextFloat(minPredictSizeValue.get(), maxPredictSizeValue.get())
+		if (predictValue.get())
+		{
+			predictX = RandomUtils.nextFloat(minPredictSizeValue.get(), maxPredictSizeValue.get())
+			predictY = RandomUtils.nextFloat(minPredictSizeValue.get(), maxPredictSizeValue.get())
+			predictZ = RandomUtils.nextFloat(minPredictSizeValue.get(), maxPredictSizeValue.get())
+		}
 
-		val targetBox = aabbGetter(entity)
+		val targetBox = getHitbox(entity)
 
 		val jitter = jitterValue.get()
 
@@ -1113,7 +1120,7 @@ class KillAura : Module()
 
 		// Search
 		var fallBackRotation: VecRotation? = null
-		val rotation = if (!rotationLockValue.get() && RotationUtils.isFaced(theWorld, thePlayer, entity, aimRange.toDouble(), aabbGetter)) Rotation(lastYaw, lastPitch)
+		val rotation = if (!rotationLockValue.get() && RotationUtils.isFaced(theWorld, thePlayer, entity, aimRange.toDouble(), getHitbox)) Rotation(lastYaw, lastPitch)
 		else (searchCenter(if (isAttackRotation) attackRange else aimRange) {
 			// Because of '.getDistanceToEntityBox()' is not perfect. (searchCenter() >>> 넘사벽 >>> getDistanceToEntityBox())
 			failedToRotate = true
@@ -1164,20 +1171,14 @@ class KillAura : Module()
 		return true
 	}
 
-	private val aabbGetter: (IEntity) -> IAxisAlignedBB = {
+	private val getHitbox: (IEntity) -> IAxisAlignedBB = {
 		var bb = it.entityBoundingBox
 
-		bb = if (backtraceValue.get()) LocationCache.getAABBBeforeNTicks(it.entityId, backtraceTicksValue.get(), bb) else bb
+		// Backtrace
+		if (backtraceValue.get()) bb = LocationCache.getAABBBeforeNTicks(it.entityId, backtraceTicksValue.get(), bb)
 
 		// Entity movement predict
-		if (predictValue.get())
-		{
-			val xPredict = (it.posX - it.prevPosX) * predict
-			val yPredict = (it.posY - it.prevPosY) * predict
-			val zPredict = (it.posZ - it.prevPosZ) * predict
-
-			bb = bb.offset(xPredict, yPredict, zPredict)
-		}
+		if (predictValue.get()) bb = bb.offset((it.posX - it.lastTickPosX) * predictX, (it.posY - it.lastTickPosY) * predictY, (it.posZ - it.lastTickPosZ) * predictZ)
 
 		bb
 	}
@@ -1190,7 +1191,7 @@ class KillAura : Module()
 	/**
 	 * Check if enemy is hitable with current rotations
 	 */
-	private fun updateHitable(theWorld: IWorldClient, thePlayer: IEntityPlayerSP)
+	private fun updateHitable(theWorld: IWorld, thePlayer: IEntity)
 	{
 		val currentTarget = currentTarget
 		val reach = min(maxAttackRange.toDouble(), thePlayer.getDistanceToEntityBox(target ?: return) + 1)
@@ -1210,7 +1211,7 @@ class KillAura : Module()
 			val provider = classProvider
 
 			val distanceToTarget = currentTarget?.let(thePlayer::getDistanceToEntityBox)
-			val raycastedEntity = RaycastUtils.raycastEntity(theWorld, thePlayer, reach + 1.0, lastYaw, lastPitch, aabbGetter) { entity -> entity != null && (!livingRaycast || (provider.isEntityLivingBase(entity) && !provider.isEntityArmorStand(entity))) && (raycastIgnored || EntityUtils.isEnemy(entity, aac) || aac && theWorld.getEntitiesWithinAABBExcludingEntity(entity, entity.entityBoundingBox).isNotEmpty()) }
+			val raycastedEntity = RaycastUtils.raycastEntity(theWorld, thePlayer, reach + 1.0, lastYaw, lastPitch, getHitbox) { entity -> entity != null && (!livingRaycast || (provider.isEntityLivingBase(entity) && !provider.isEntityArmorStand(entity))) && (raycastIgnored || EntityUtils.isEnemy(entity, aac) || aac && theWorld.getEntitiesWithinAABBExcludingEntity(entity, entity.entityBoundingBox).isNotEmpty()) }
 			val distanceToRaycasted = raycastedEntity?.let(thePlayer::getDistanceToEntityBox)
 
 			if (raycastedEntity != null && provider.isEntityLivingBase(raycastedEntity) && (LiquidBounce.moduleManager[NoFriends::class.java].state || !provider.isEntityPlayer(raycastedEntity) || !raycastedEntity.asEntityPlayer().isClientFriend())) this.currentTarget = raycastedEntity.asEntityLivingBase()
@@ -1219,13 +1220,13 @@ class KillAura : Module()
 
 			hitable = (distanceToTarget == null || distanceToTarget <= reach) && (distanceToRaycasted == null || distanceToRaycasted <= reach) && this.currentTarget == raycastedEntity
 		}
-		else hitable = if (currentTarget != null) RotationUtils.isFaced(theWorld, thePlayer, currentTarget, reach, aabbGetter) else false
+		else hitable = if (currentTarget != null) RotationUtils.isFaced(theWorld, thePlayer, currentTarget, reach, getHitbox) else false
 	}
 
 	/**
 	 * Start blocking
 	 */
-	private fun startBlocking(thePlayer: IEntityPlayerSP, interactEntity: IEntity?, interact: Boolean)
+	private fun startBlocking(thePlayer: IEntity, interactEntity: IEntity?, interact: Boolean)
 	{
 		val autoBlockMode = autoBlockValue.get()
 		val blockRate = blockRate.get()
@@ -1299,7 +1300,7 @@ class KillAura : Module()
 	/**
 	 * Check if run should be cancelled
 	 */
-	private fun shouldCancelRun(thePlayer: IEntityPlayerSP): Boolean
+	private fun shouldCancelRun(thePlayer: IEntityPlayer): Boolean
 	{
 		val moduleManager = LiquidBounce.moduleManager
 
@@ -1317,7 +1318,7 @@ class KillAura : Module()
 	/**
 	 * Check if player is able to block
 	 */
-	private fun getCanBlock(thePlayer: IEntityPlayerSP): Boolean = thePlayer.heldItem != null && classProvider.isItemSword(thePlayer.heldItem?.item) && Backend.MINECRAFT_VERSION_MINOR == 8
+	private fun getCanBlock(thePlayer: IEntityPlayer): Boolean = thePlayer.heldItem != null && classProvider.isItemSword(thePlayer.heldItem?.item) && Backend.MINECRAFT_VERSION_MINOR == 8
 
 	/**
 	 * Range
@@ -1328,7 +1329,7 @@ class KillAura : Module()
 	private val maxTargetRange: Float
 		get() = max(aimRange, max(maxAttackRange, if (fakeSwingValue.get()) swingRange else 0f))
 
-	private fun getAttackRange(thePlayer: IEntityPlayerSP, entity: IEntity): Float
+	private fun getAttackRange(thePlayer: IEntity, entity: IEntity): Float
 	{
 		val throughWallsRange = throughWallsRangeValue.get()
 		return (if (thePlayer.getDistanceToEntityBox(entity) >= throughWallsRange) attackRange else throughWallsRange) - if (thePlayer.sprinting) rangeSprintReducementValue.get() else 0F + comboReach

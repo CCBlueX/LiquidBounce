@@ -8,14 +8,14 @@ package net.ccbluex.liquidbounce.utils.block
 import net.ccbluex.liquidbounce.api.minecraft.block.material.IMaterial
 import net.ccbluex.liquidbounce.api.minecraft.block.state.IIBlockState
 import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
+import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import kotlin.math.floor
 
-typealias Collidable = (IBlock?) -> Boolean
+typealias Collidable = (IIBlockState) -> Boolean
 
 object BlockUtils : MinecraftInstance()
 {
@@ -23,21 +23,21 @@ object BlockUtils : MinecraftInstance()
 	 * Get block from [blockPos]
 	 */
 	@JvmStatic
-	fun getBlock(theWorld: IWorldClient, blockPos: WBlockPos): IBlock = theWorld.getBlockState(blockPos).block
+	fun getBlock(theWorld: IWorld, blockPos: WBlockPos): IBlock = getState(theWorld, blockPos).block
 
 	/**
 	 * Get material from [blockPos]
 	 */
 	@JvmStatic
-	fun getMaterial(blockPos: WBlockPos): IMaterial?
+	fun getMaterial(theWorld: IWorld, blockPos: WBlockPos): IMaterial?
 	{
-		val state = getState(blockPos)
+		val state = getState(theWorld, blockPos)
 
-		return state?.block?.getMaterial(state)
+		return state.block.getMaterial(state)
 	}
 
 	@JvmStatic
-	fun isReplaceable(theWorld: IWorldClient, bs: IIBlockState?): Boolean
+	fun isReplaceable(theWorld: IWorld, bs: IIBlockState?): Boolean
 	{
 		bs ?: return true
 		return (bs.block.getMaterial(bs)?.isReplaceable ?: return false) && !(classProvider.isBlockSnow(bs.block) && getBlockCollisionBox(theWorld, bs)!!.maxY > .125)
@@ -47,19 +47,19 @@ object BlockUtils : MinecraftInstance()
 	 * Check [blockPos] is replaceable
 	 */
 	@JvmStatic
-	fun isReplaceable(blockPos: WBlockPos) = getMaterial(blockPos)?.isReplaceable ?: false
+	fun isReplaceable(theWorld: IWorld, blockPos: WBlockPos) = getMaterial(theWorld, blockPos)?.isReplaceable ?: false
 
 	/**
 	 * Get state from [blockPos]
 	 */
 	@JvmStatic
-	fun getState(blockPos: WBlockPos): IIBlockState? = mc.theWorld?.getBlockState(blockPos)
+	fun getState(theWorld: IWorld, blockPos: WBlockPos): IIBlockState = theWorld.getBlockState(blockPos)
 
 	/**
 	 * Check if [blockPos] is clickable
 	 */
 	@JvmStatic
-	fun canBeClicked(theWorld: IWorldClient, blockPos: WBlockPos) = getBlock(theWorld, blockPos).canCollideCheck(getState(blockPos), false) && blockPos in theWorld.worldBorder
+	fun canBeClicked(theWorld: IWorld, blockPos: WBlockPos) = getBlock(theWorld, blockPos).canCollideCheck(getState(theWorld, blockPos), false) && blockPos in theWorld.worldBorder
 
 	/**
 	 * Get block name by [id]
@@ -71,9 +71,9 @@ object BlockUtils : MinecraftInstance()
 	 * Check if block is full block
 	 */
 	@JvmStatic
-	fun isFullBlock(theWorld: IWorldClient, blockPos: WBlockPos): Boolean
+	fun isFullBlock(theWorld: IWorld, blockPos: WBlockPos): Boolean
 	{
-		val bb = getBlock(theWorld, blockPos).getCollisionBoundingBox(theWorld, blockPos, getState(blockPos) ?: return false) ?: return false
+		val bb = getBlock(theWorld, blockPos).getCollisionBoundingBox(theWorld, blockPos, getState(theWorld, blockPos)) ?: return false
 
 		return bb.maxX - bb.minX == 1.0 && bb.maxY - bb.minY == 1.0 && bb.maxZ - bb.minZ == 1.0
 	}
@@ -82,13 +82,13 @@ object BlockUtils : MinecraftInstance()
 	 * Get distance to center of [blockPos]
 	 */
 	@JvmStatic
-	fun getCenterDistance(thePlayer: IEntityPlayerSP, blockPos: WBlockPos) = thePlayer.getDistance(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5)
+	fun getCenterDistance(thePlayer: IEntity, blockPos: WBlockPos) = thePlayer.getDistance(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5)
 
 	/**
 	 * Search blocks around the player in a specific [radius]
 	 */
 	@JvmStatic
-	fun searchBlocks(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, radius: Int): Map<WBlockPos, IBlock>
+	fun searchBlocks(theWorld: IWorld, thePlayer: IEntity, radius: Int): Map<WBlockPos, IBlock>
 	{
 		val blocks = mutableMapOf<WBlockPos, IBlock>()
 
@@ -105,7 +105,7 @@ object BlockUtils : MinecraftInstance()
 	 * Check if [bb] has collidable blocks using custom [collide] check
 	 */
 	@JvmStatic
-	fun collideBlock(theWorld: IWorldClient, bb: IAxisAlignedBB, collide: Collidable): Boolean
+	fun collideBlock(theWorld: IWorld, bb: IAxisAlignedBB, collide: Collidable): Boolean
 	{
 		val minX = floor(bb.minX).toInt()
 		val maxX = floor(bb.maxX).toInt() + 1
@@ -113,14 +113,14 @@ object BlockUtils : MinecraftInstance()
 		val minZ = floor(bb.minZ).toInt()
 		val maxZ = floor(bb.maxZ).toInt() + 1
 
-		return (minX until maxX).firstOrNull()?.let { x -> (minZ until maxZ).none { z -> !collide(getBlock(theWorld, WBlockPos(x.toDouble(), minY, z.toDouble()))) } } ?: true
+		return (minX until maxX).none { x -> (minZ until maxZ).any { z -> !collide(getState(theWorld, WBlockPos(x.toDouble(), minY, z.toDouble()))) } }
 	}
 
 	/**
 	 * Check if [bb] has collidable blocks using custom [collide] check
 	 */
 	@JvmStatic
-	fun collideBlockIntersects(theWorld: IWorldClient, bb: IAxisAlignedBB, collide: Collidable): Boolean
+	fun collideBlockIntersects(theWorld: IWorld, bb: IAxisAlignedBB, collide: Collidable): Boolean
 	{
 		val minX = floor(bb.minX).toInt()
 		val maxX = floor(bb.maxX).toInt() + 1
@@ -129,19 +129,15 @@ object BlockUtils : MinecraftInstance()
 		val maxZ = floor(bb.maxZ).toInt() + 1
 
 		return (minX until maxX).any { x ->
-			(minZ until maxZ).map { z ->
-				WBlockPos(x.toDouble(), minY, z.toDouble()).let { it to getBlock(theWorld, it) }
-			}.filter {
-				collide(it.second)
-			}.any intersectCheck@{ (blockPos, block) ->
-				bb.intersectsWith(getState(blockPos)?.let { block.getCollisionBoundingBox(theWorld, blockPos, it) } ?: return@intersectCheck false)
+			(minZ until maxZ).map { z -> WBlockPos(x.toDouble(), minY, z.toDouble()).let { it to getState(theWorld, it) } }.filter { collide(it.second) }.any intersectCheck@{ (blockPos, state) ->
+				bb.intersectsWith(state.let { state.block.getCollisionBoundingBox(theWorld, blockPos, it) } ?: return@intersectCheck false)
 			}
 		}
 	}
 
 	@JvmStatic
-	fun getBlockCollisionBox(theWorld: IWorldClient, state: IIBlockState): IAxisAlignedBB? = state.block.getCollisionBoundingBox(theWorld, WBlockPos.ORIGIN, state)
+	fun getBlockCollisionBox(theWorld: IWorld, state: IIBlockState): IAxisAlignedBB? = state.block.getCollisionBoundingBox(theWorld, WBlockPos.ORIGIN, state)
 
 	@JvmStatic
-	fun getBlockDefaultCollisionBox(theWorld: IWorldClient, block: IBlock): IAxisAlignedBB? = block.defaultState?.let { block.getCollisionBoundingBox(theWorld, WBlockPos.ORIGIN, it) }
+	fun getBlockDefaultCollisionBox(theWorld: IWorld, block: IBlock): IAxisAlignedBB? = block.defaultState?.let { block.getCollisionBoundingBox(theWorld, WBlockPos.ORIGIN, it) }
 }

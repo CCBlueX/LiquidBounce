@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.api.enums.ItemType
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
@@ -149,7 +149,7 @@ class ExtendedTooltips : Module()
 		if (durabilityWarning.get() && isArmorDurabilityLow(thePlayer)) printArmorWarning(resolution, font)
 	}
 
-	private fun getAttackDamageString(thePlayer: IEntityPlayerSP, stack: IItemStack): String
+	private fun getAttackDamageString(thePlayer: IEntityPlayer, stack: IItemStack): String
 	{
 		val tooltipIterator: Iterator<String> = stack.getTooltip(thePlayer, true).iterator()
 		var attackDamageEntry: String
@@ -185,7 +185,7 @@ class ExtendedTooltips : Module()
 		return "$enchantBuilder".trim { it <= ' ' }
 	}
 
-	private fun getArmorPotential(thePlayer: IEntityPlayerSP): String
+	private fun getArmorPotential(thePlayer: IEntityPlayer): String
 	{
 		return if (!armorPotentialCooldown.attemptReset()) lastArmorPotential
 		else
@@ -196,7 +196,7 @@ class ExtendedTooltips : Module()
 		}
 	}
 
-	private fun getArmorPotential(thePlayer: IEntityPlayerSP, projectileProtection: Boolean): Double
+	private fun getArmorPotential(thePlayer: IEntityPlayer, projectileProtection: Boolean): Double
 	{
 		var armor = 0.0
 		var epf = 0
@@ -236,7 +236,7 @@ class ExtendedTooltips : Module()
 
 	private fun roundDouble(number: Double): Double = (number * 10000.0).roundToLong().toDouble() * 0.0001f
 
-	private fun getHeldItemCount(thePlayer: IEntityPlayerSP, currentEquippedItem: IItemStack, bow: Boolean): Int
+	private fun getHeldItemCount(thePlayer: IEntityPlayer, currentEquippedItem: IItemStack, bow: Boolean): Int
 	{
 		val provider = classProvider
 		val func = functions
@@ -263,7 +263,7 @@ class ExtendedTooltips : Module()
 		font.drawString(text, resolution.scaledWidth - font.getStringWidth(text) - 1f, resolution.scaledHeight - 3 * font.fontHeight - 1f, 16724804, true)
 	}
 
-	private fun isArmorDurabilityLow(thePlayer: IEntityPlayerSP): Boolean
+	private fun isArmorDurabilityLow(thePlayer: IEntityPlayer): Boolean
 	{
 		return if (!armorDurabilityWarningCooldown.attemptReset()) showArmorDurabilityWarning
 		else

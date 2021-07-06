@@ -7,8 +7,7 @@ package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
 import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition.WMovingObjectType
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
@@ -19,6 +18,7 @@ import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.toDegrees
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.toRadians
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.wrapAngleTo180_float
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
+import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.PacketEvent
@@ -150,7 +150,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * @param blockPos
 		 * target block
 		 */
-		fun faceBlock(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, blockPos: WBlockPos): VecRotation?
+		fun faceBlock(theWorld: IWorld, thePlayer: IEntity, blockPos: WBlockPos): VecRotation?
 		{
 			var vecRotation: VecRotation? = null
 			val eyesPos = WVec3(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, thePlayer.posZ)
@@ -201,7 +201,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * @param playerPrediction
 		 * enemyPrediction new player position
 		 */
-		fun faceBow(thePlayer: IEntityPlayerSP, target: IEntity, turnSpeed: MinMaxPair, smoothingRatio: MinMaxPair, playerPredictSize: MinMaxPair, flags: Int)
+		fun faceBow(thePlayer: IEntityPlayer, target: IEntity, turnSpeed: MinMaxPair, smoothingRatio: MinMaxPair, playerPredictSize: MinMaxPair, flags: Int)
 		{
 			val targetPosX = target.posX
 			val targetPosY = target.posY
@@ -259,7 +259,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * maximum predict size of your body
 		 * @return               rotation
 		 */
-		fun toRotation(thePlayer: IEntityPlayerSP, vec: WVec3, playerPredict: Boolean, playerPredictSize: MinMaxPair): Rotation
+		fun toRotation(thePlayer: IEntity, vec: WVec3, playerPredict: Boolean, playerPredictSize: MinMaxPair): Rotation
 		{
 			val posX = thePlayer.posX
 			val posZ = thePlayer.posZ
@@ -313,7 +313,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * count of step to search the good center. (*Warning If you set this value too low, it will make your minecraft SO SLOW AND SLOW.*) default is 0.2D
 		 * @return                   center
 		 */
-		fun searchCenter(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, targetBox: IAxisAlignedBB, flags: Int, jitterData: JitterData?, playerPredictSize: MinMaxPair, distance: Float, boxShrink: Double, steps: Int, randomCenterSize: Double, distanceOutOfRangeCallback: (() -> Unit)? = null): VecRotation?
+		fun searchCenter(theWorld: IWorld, thePlayer: IEntity, targetBox: IAxisAlignedBB, flags: Int, jitterData: JitterData?, playerPredictSize: MinMaxPair, distance: Float, boxShrink: Double, steps: Int, randomCenterSize: Double, distanceOutOfRangeCallback: (() -> Unit)? = null): VecRotation?
 		{
 			val randomVec: WVec3
 			val eyes = thePlayer.getPositionEyes(1.0f)
@@ -455,7 +455,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * your entity
 		 * @return        difference between rotation
 		 */
-		fun getClientRotationDifference(thePlayer: IEntityPlayerSP, entity: IEntity, playerPredict: Boolean, playerPredictSize: MinMaxPair): Double = getRotationDifference(toRotation(thePlayer, getCenter(entity.entityBoundingBox), playerPredict, playerPredictSize), clientRotation)
+		fun getClientRotationDifference(thePlayer: IEntity, entity: IEntity, playerPredict: Boolean, playerPredictSize: MinMaxPair): Double = getRotationDifference(toRotation(thePlayer, getCenter(entity.entityBoundingBox), playerPredict, playerPredictSize), clientRotation)
 
 		/**
 		 * Calculate difference between the "client-sided rotation" and your block position
@@ -464,7 +464,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * your block position
 		 * @return        difference between rotation
 		 */
-		fun getClientRotationDifference(thePlayer: IEntityPlayerSP, blockPos: WBlockPos, playerPredict: Boolean, playerPredictSize: MinMaxPair): Double = getRotationDifference(toRotation(thePlayer, WVec3(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5), playerPredict, playerPredictSize), clientRotation)
+		fun getClientRotationDifference(thePlayer: IEntity, blockPos: WBlockPos, playerPredict: Boolean, playerPredictSize: MinMaxPair): Double = getRotationDifference(toRotation(thePlayer, WVec3(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5), playerPredict, playerPredictSize), clientRotation)
 
 		/**
 		 * Calculate difference between the "server-sided rotation" and your entity
@@ -473,7 +473,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * your entity
 		 * @return        difference between rotation
 		 */
-		fun getServerRotationDifference(thePlayer: IEntityPlayerSP, entity: IEntity, playerPredict: Boolean, playerPredictSize: MinMaxPair): Double = getRotationDifference(toRotation(thePlayer, getCenter(entity.entityBoundingBox), playerPredict, playerPredictSize), serverRotation)
+		fun getServerRotationDifference(thePlayer: IEntity, entity: IEntity, playerPredict: Boolean, playerPredictSize: MinMaxPair): Double = getRotationDifference(toRotation(thePlayer, getCenter(entity.entityBoundingBox), playerPredict, playerPredictSize), serverRotation)
 
 		/**
 		 * Calculate difference between the "server-sided rotation" and your block position
@@ -482,7 +482,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * your block position
 		 * @return        difference between rotation
 		 */
-		fun getServerRotationDifference(thePlayer: IEntityPlayerSP, blockPos: WBlockPos, playerPredict: Boolean, playerPredictSize: MinMaxPair): Double = getRotationDifference(toRotation(thePlayer, WVec3(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5), playerPredict, playerPredictSize), serverRotation)
+		fun getServerRotationDifference(thePlayer: IEntity, blockPos: WBlockPos, playerPredict: Boolean, playerPredictSize: MinMaxPair): Double = getRotationDifference(toRotation(thePlayer, WVec3(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5), playerPredict, playerPredictSize), serverRotation)
 
 		// /**
 		//  * Calculate difference between the client rotation and your entity
@@ -491,7 +491,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		//  * your entity
 		//  * @return        difference between rotation
 		//  */
-		// fun getRotationDifference(thePlayer: IEntityPlayerSP, entity: IEntity): Double
+		// fun getRotationDifference(thePlayer: IEntity, entity: IEntity): Double
 		// {
 		// 	val rotation = toRotation(thePlayer, getCenter(entity.entityBoundingBox), true)
 		// 	return getRotationDifference(rotation, Rotation(mc.thePlayer!!.rotationYaw, mc.thePlayer!!.rotationPitch))
@@ -581,12 +581,12 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * your reach
 		 * @return                    if crosshair is over target
 		 */
-		fun isFaced(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, targetEntity: IEntity?, reachDistance: Double, aabbGetter: (IEntity) -> IAxisAlignedBB = IEntity::entityBoundingBox): Boolean = raycastEntity(theWorld, thePlayer, reachDistance, { entity -> targetEntity != null && targetEntity == entity }, aabbGetter) != null
+		fun isFaced(theWorld: IWorld, thePlayer: IEntity, targetEntity: IEntity?, reachDistance: Double, aabbGetter: (IEntity) -> IAxisAlignedBB = IEntity::entityBoundingBox): Boolean = raycastEntity(theWorld, thePlayer, reachDistance, { entity -> targetEntity != null && targetEntity == entity }, aabbGetter) != null
 
 		/**
 		 * Allows you to check if your enemy is behind a wall
 		 */
-		fun isVisible(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, vec3: WVec3): Boolean = theWorld.rayTraceBlocks(WVec3(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, thePlayer.posZ), vec3) == null
+		fun isVisible(theWorld: IWorld, thePlayer: IEntity, vec3: WVec3): Boolean = theWorld.rayTraceBlocks(WVec3(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, thePlayer.posZ), vec3) == null
 
 		/**
 		 * Set your target rotation

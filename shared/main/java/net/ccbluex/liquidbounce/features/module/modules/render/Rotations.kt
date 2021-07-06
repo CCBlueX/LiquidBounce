@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -43,7 +43,7 @@ class Rotations : Module()
 
 	private fun getState(module: Class<*>) = LiquidBounce.moduleManager[module].state
 
-	fun isRotating(thePlayer: IEntityPlayerSP): Boolean
+	fun isRotating(thePlayer: IEntityLivingBase): Boolean
 	{
 		if (!onlyWhileRotatingValue.get()) return true
 

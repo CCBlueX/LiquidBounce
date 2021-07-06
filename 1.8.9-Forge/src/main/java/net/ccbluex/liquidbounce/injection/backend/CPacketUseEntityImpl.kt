@@ -7,8 +7,8 @@
 package net.ccbluex.liquidbounce.injection.backend
 
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketUseEntity
+import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.injection.backend.utils.wrap
 import net.minecraft.network.play.client.C02PacketUseEntity
 
@@ -17,7 +17,7 @@ class CPacketUseEntityImpl<out T : C02PacketUseEntity>(wrapped: T) : PacketImpl<
 	override val action: ICPacketUseEntity.WAction
 		get() = wrapped.action.wrap()
 
-	override fun getEntityFromWorld(theWorld: IWorldClient): IEntity? = wrapped.getEntityFromWorld(theWorld.unwrap())?.wrap()
+	override fun getEntityFromWorld(theWorld: IWorld): IEntity? = wrapped.getEntityFromWorld(theWorld.unwrap())?.wrap()
 }
 
 fun ICPacketUseEntity.unwrap(): C02PacketUseEntity = (this as CPacketUseEntityImpl<*>).wrapped

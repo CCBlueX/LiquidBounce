@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.api.enums.EnumFacingType
 import net.ccbluex.liquidbounce.api.enums.ItemType
 import net.ccbluex.liquidbounce.api.enums.WEnumHand
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.client.network.IINetHandlerPlayClient
 import net.ccbluex.liquidbounce.api.minecraft.inventory.IContainer
 import net.ccbluex.liquidbounce.api.minecraft.item.IItem
@@ -284,7 +285,7 @@ class AutoUse : Module()
 		}
 	}
 
-	fun endEating(thePlayer: IEntityPlayerSP, provider: IClassProvider, netHandler: IINetHandlerPlayClient, handleGlassBottle: String = glassBottleValue.get(), silent: Boolean = silentValue.get(), wasSuccessful: Boolean = false)
+	fun endEating(thePlayer: IEntityPlayer, provider: IClassProvider, netHandler: IINetHandlerPlayClient, handleGlassBottle: String = glassBottleValue.get(), silent: Boolean = silentValue.get(), wasSuccessful: Boolean = false)
 	{
 		if (slotToUse == -1) return
 

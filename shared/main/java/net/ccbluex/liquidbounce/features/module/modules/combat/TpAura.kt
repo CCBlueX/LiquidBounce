@@ -6,14 +6,14 @@ import net.ccbluex.liquidbounce.api.enums.EnumFacingType
 import net.ccbluex.liquidbounce.api.enums.MaterialType
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketUseEntity
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos.Companion.ORIGIN
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
+import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -167,7 +167,7 @@ class TpAura : Module()
 
 					val to = WVec3(currentTarget.posX, currentTarget.posY, currentTarget.posZ)
 
-					currentPath = computePath(from, to)
+					currentPath = computePath(theWorld, from, to)
 					targetPaths.add(currentPath) // Used for path esp
 
 					if (single) debug = "pathCount: ${currentPath.size}"
@@ -291,14 +291,14 @@ class TpAura : Module()
 		}
 	}
 
-	private fun computePath(from: WVec3, to: WVec3): MutableList<WVec3>
+	private fun computePath(theWorld: IWorld, from: WVec3, to: WVec3): MutableList<WVec3>
 	{
 		var fromPos = from
 
-		if (!canPassThrough(WBlockPos(fromPos.xCoord, fromPos.yCoord, fromPos.zCoord))) fromPos = fromPos.addVector(0.0, 1.0, 0.0)
+		if (!canPassThrough(theWorld, WBlockPos(fromPos.xCoord, fromPos.yCoord, fromPos.zCoord))) fromPos = fromPos.addVector(0.0, 1.0, 0.0)
 
 		val pathfinder = PathFinder(fromPos, to)
-		pathfinder.compute()
+		pathfinder.compute(theWorld)
 
 		var lastPath: WVec3? = null
 		var lastEndPath: WVec3? = null
@@ -338,7 +338,7 @@ class TpAura : Module()
 							var z = minZ.toInt()
 							while (z <= maxZ)
 							{
-								if (!PathFinder.checkPositionValidity(x, y, z, false))
+								if (!PathFinder.checkPositionValidity(theWorld, x, y, z, false))
 								{
 									canContinueSearching = false
 									break@cordsLoop
@@ -363,7 +363,7 @@ class TpAura : Module()
 		return path
 	}
 
-	private fun getTargets(theWorld: IWorldClient, thePlayer: IEntityPlayerSP): MutableList<IEntityLivingBase>
+	private fun getTargets(theWorld: IWorld, thePlayer: IEntity): MutableList<IEntityLivingBase>
 	{
 		val range = rangeValue.get().toDouble()
 		val hurtTime = hurtTimeValue.get()
@@ -377,11 +377,11 @@ class TpAura : Module()
 
 	companion object
 	{
-		private fun canBlock(thePlayer: IEntityPlayerSP): Boolean = thePlayer.heldItem != null && classProvider.isItemSword(thePlayer.heldItem?.item)
+		private fun canBlock(thePlayer: IEntityPlayer): Boolean = thePlayer.heldItem != null && classProvider.isItemSword(thePlayer.heldItem?.item)
 
-		private fun canPassThrough(pos: WBlockPos): Boolean
+		private fun canPassThrough(theWorld: IWorld, pos: WBlockPos): Boolean
 		{
-			val state = getState(WBlockPos(pos.x, pos.y, pos.z)) ?: return true
+			val state = getState(theWorld, WBlockPos(pos.x, pos.y, pos.z))
 			val block = state.block
 
 			val provider = classProvider

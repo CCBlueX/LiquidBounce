@@ -8,14 +8,15 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.enums.EnumFacingType
 import net.ccbluex.liquidbounce.api.enums.StatType
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ICPacketAbilities
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
+import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -1279,7 +1280,7 @@ class Fly : Module()
 		if (mode.equals("Hypixel", ignoreCase = true) && hypixelFlyStarted || mode.equals("Rewinside", ignoreCase = true) || mode.equals("MCCentral", ignoreCase = true) || mode.equals("Mineplex", ignoreCase = true) && thePlayer.inventory.getCurrentItemInHand() == null) e.stepHeight = 0f
 	}
 
-	private fun handleVanillaKickBypass(theWorld: IWorldClient, thePlayer: IEntityPlayerSP)
+	private fun handleVanillaKickBypass(theWorld: IWorld, thePlayer: IEntity)
 	{
 		if (!vanillaKickBypassValue.get() || !groundTimer.hasTimePassed(1000)) return
 
@@ -1318,7 +1319,7 @@ class Fly : Module()
 	}
 
 	//<editor-fold desc="Redesky Fly">
-	private fun redeskyPacketHClip(thePlayer: IEntityPlayerSP, horizontal: Double)
+	private fun redeskyPacketHClip(thePlayer: IEntity, horizontal: Double)
 	{
 		val func = functions
 
@@ -1327,12 +1328,12 @@ class Fly : Module()
 		mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX + horizontal * -func.sin(playerYaw), thePlayer.posY, thePlayer.posZ + horizontal * func.cos(playerYaw), false))
 	}
 
-	private fun redeskyVClip(thePlayer: IEntityPlayerSP, vertical: Float)
+	private fun redeskyVClip(thePlayer: IEntity, vertical: Float)
 	{
 		thePlayer.setPosition(thePlayer.posX, thePlayer.posY + vertical, thePlayer.posZ)
 	}
 
-	private fun redeskyPacketVClip(thePlayer: IEntityPlayerSP, vertical: Double)
+	private fun redeskyPacketVClip(thePlayer: IEntity, vertical: Double)
 	{
 		mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY + vertical, thePlayer.posZ, false))
 	}
@@ -1340,7 +1341,7 @@ class Fly : Module()
 	//</editor-fold>
 
 	// TODO: Make better and faster calculation lol
-	private fun calculateGround(theWorld: IWorldClient, thePlayer: IEntityPlayerSP): Double
+	private fun calculateGround(theWorld: IWorld, thePlayer: IEntity): Double
 	{
 		val playerBoundingBox: IAxisAlignedBB = thePlayer.entityBoundingBox
 		var blockHeight = 1.0
@@ -1360,14 +1361,14 @@ class Fly : Module()
 		return 0.0
 	}
 
-	private fun jump(theWorld: IWorldClient, thePlayer: IEntityPlayerSP)
+	private fun jump(theWorld: IWorld, thePlayer: IEntityPlayer)
 	{
 		val provider = classProvider
 
-		val blockAboveState = BlockUtils.getState(WBlockPos(thePlayer.posX, thePlayer.posY + 2, thePlayer.posZ))
-		val blockAbove = blockAboveState?.block
+		val blockAboveState = BlockUtils.getState(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY + 2, thePlayer.posZ))
+		val blockAbove = blockAboveState.block
 		val normalJumpY = 0.42 + MovementUtils.getEffectAmplifier(thePlayer, PotionType.JUMP) * 0.1f
-		val jumpY = if (provider.isBlockAir(blockAbove)) normalJumpY else min(blockAboveState?.let { BlockUtils.getBlockCollisionBox(theWorld, it)?.minY?.plus(0.2) } ?: normalJumpY, normalJumpY)
+		val jumpY = if (provider.isBlockAir(blockAbove)) normalJumpY else min(blockAboveState.let { BlockUtils.getBlockCollisionBox(theWorld, it)?.minY?.plus(0.2) } ?: normalJumpY, normalJumpY)
 
 		// Simulate Vanilla Player Jump
 		thePlayer.setPosition(thePlayer.posX, thePlayer.posY + jumpY, thePlayer.posZ)

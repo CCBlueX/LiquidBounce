@@ -11,13 +11,13 @@ import net.ccbluex.liquidbounce.api.IExtractedFunctions
 import net.ccbluex.liquidbounce.api.enums.MaterialType
 import net.ccbluex.liquidbounce.api.enums.WDefaultVertexFormats
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
+import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -135,7 +135,7 @@ class Projectiles : Module()
 		}
 	}
 
-	private fun renderTrajectory(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, provider: IClassProvider, func: IExtractedFunctions, renderPosX: Double, renderPosY: Double, renderPosZ: Double, color: Int, defaultPosX: Double, defaultPosY: Double, defaultPosZ: Double, defaultMotionX: Double, defaultMotionY: Double, defaultMotionZ: Double, motionSlowdown: Float, gravity: Float, size: Float)
+	private fun renderTrajectory(theWorld: IWorld, thePlayer: IEntity, provider: IClassProvider, func: IExtractedFunctions, renderPosX: Double, renderPosY: Double, renderPosZ: Double, color: Int, defaultPosX: Double, defaultPosY: Double, defaultPosZ: Double, defaultMotionX: Double, defaultMotionY: Double, defaultMotionZ: Double, motionSlowdown: Float, gravity: Float, size: Float)
 	{
 		// Landing
 		var landingPosition: IMovingObjectPosition? = null
@@ -279,7 +279,7 @@ class Projectiles : Module()
 		RenderUtils.resetColor()
 	}
 
-	private fun getProjectileInfo(thePlayer: IEntityPlayerSP, itemStack: IItemStack, partialTicks: Float): ProjectileInfo?
+	private fun getProjectileInfo(thePlayer: IEntityPlayer, itemStack: IItemStack, partialTicks: Float): ProjectileInfo?
 	{
 		val item = itemStack.item
 

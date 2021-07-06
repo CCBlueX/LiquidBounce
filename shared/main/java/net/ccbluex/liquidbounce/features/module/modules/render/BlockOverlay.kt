@@ -5,8 +5,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
+import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render2DEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
@@ -42,7 +42,7 @@ class BlockOverlay : Module()
 
 	val infoValue = BoolValue("Info", false)
 
-	fun getCurrentBlock(theWorld: IWorldClient): WBlockPos?
+	fun getCurrentBlock(theWorld: IWorld): WBlockPos?
 	{
 		val blockPos = mc.objectMouseOver?.blockPos ?: return null
 

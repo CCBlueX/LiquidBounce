@@ -9,12 +9,13 @@ package net.ccbluex.liquidbounce.api.minecraft.network.play.client
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
+import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 
 interface ICPacketUseEntity : IPacket
 {
 	val action: WAction
 
-	fun getEntityFromWorld(theWorld: IWorldClient): IEntity?
+	fun getEntityFromWorld(theWorld: IWorld): IEntity?
 
 	enum class WAction
 	{

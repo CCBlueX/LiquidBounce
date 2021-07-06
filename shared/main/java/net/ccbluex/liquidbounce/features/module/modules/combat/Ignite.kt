@@ -70,7 +70,7 @@ class Ignite : Module()
 
 		val fireInHotbar = if (lighterInHotbar == -1) lavaInHotbar else lighterInHotbar
 
-		EntityUtils.getEntitiesInRadius(theWorld, thePlayer, 8.0).asSequence().filterNot(IEntity::burning).filter { isSelected(it, true) }.map(IEntity::position).filter { thePlayer.getDistanceSq(it) < 22.3 }.filter(::isReplaceable).firstOrNull { provider.isBlockAir(getBlock(theWorld, it)) }?.let { blockPos ->
+		EntityUtils.getEntitiesInRadius(theWorld, thePlayer, 8.0).asSequence().filterNot(IEntity::burning).filter { isSelected(it, true) }.map(IEntity::position).filter { thePlayer.getDistanceSq(it) < 22.3 }.filter { isReplaceable(theWorld, it) }.firstOrNull { provider.isBlockAir(getBlock(theWorld, it)) }?.let { blockPos ->
 			RotationUtils.keepCurrentRotation = true
 			netHandler.addToSendQueue(provider.createCPacketHeldItemChange(fireInHotbar - 36))
 

@@ -8,13 +8,16 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.enums.EnumFacingType
 import net.ccbluex.liquidbounce.api.enums.StatType
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
+import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -213,7 +216,7 @@ class Tower : Module()
 				if (!stopWhenBlockAbove.get() || provider.isBlockAir(getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY + 2, thePlayer.posZ)))) move()
 
 				val blockPos = WBlockPos(thePlayer.posX, thePlayer.posY - 1.0, thePlayer.posZ)
-				if (provider.isBlockAir(theWorld.getBlockState(blockPos).block) && search(theWorld, blockPos) && rotationsValue.get())
+				if (provider.isBlockAir(theWorld.getBlockState(blockPos).block) && search(theWorld, thePlayer, blockPos) && rotationsValue.get())
 				{
 					val vecRotation = RotationUtils.faceBlock(theWorld, thePlayer, blockPos)
 					if (vecRotation != null)
@@ -409,15 +412,15 @@ class Tower : Module()
 
 		val netHandler = mc.netHandler
 		val controller = mc.playerController
-
-		// AutoBlock
-		var itemStack = thePlayer.heldItem
+		val inventory = thePlayer.inventory
 
 		val provider = classProvider
 
 		(LiquidBounce.moduleManager[AutoUse::class.java] as AutoUse).endEating(thePlayer, classProvider, netHandler)
 
-		val slot = InventoryUtils.serverHeldItemSlot ?: thePlayer.inventory.currentItem
+		// AutoBlock
+		val slot = InventoryUtils.serverHeldItemSlot ?: inventory.currentItem
+		var itemStack = inventory.mainInventory[slot]
 
 		val switchKeepTime = autoBlockSwitchKeepTimeValue.get()
 
@@ -432,11 +435,15 @@ class Tower : Module()
 			{
 				"pick" ->
 				{
-					thePlayer.inventory.currentItem = blockSlot - 36
+					inventory.currentItem = blockSlot - 36
 					controller.updateController()
 				}
 
-				"spoof", "switch" -> if (blockSlot - 36 != slot && InventoryUtils.setHeldItemSlot(blockSlot - 36, if (autoBlockMode.equals("spoof", ignoreCase = true)) -1 else switchKeepTime, true)) return
+				"spoof", "switch" -> if (blockSlot - 36 != slot)
+				{
+					if (InventoryUtils.setHeldItemSlot(blockSlot - 36, if (autoBlockMode.equals("spoof", ignoreCase = true)) -1 else switchKeepTime, false)) return
+				}
+				else InventoryUtils.reset()
 			}
 
 			itemStack = thePlayer.inventoryContainer.getSlot(blockSlot).stack
@@ -462,10 +469,9 @@ class Tower : Module()
 	 * @param blockPosition pos
 	 * @return
 	 */
-	private fun search(theWorld: IWorldClient, blockPosition: WBlockPos): Boolean
+	private fun search(theWorld: IWorld, thePlayer: IEntity, blockPosition: WBlockPos): Boolean
 	{
-		val thePlayer = mc.thePlayer ?: return false
-		if (!isReplaceable(blockPosition)) return false
+		if (!isReplaceable(theWorld, blockPosition)) return false
 
 		val eyesPos = WVec3(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, thePlayer.posZ)
 		var placeRotation: PlaceRotation? = null
@@ -590,7 +596,7 @@ class Tower : Module()
 	/**
 	 * @return hotbar blocks amount
 	 */
-	private fun getBlocksAmount(thePlayer: IEntityPlayerSP): Int
+	private fun getBlocksAmount(thePlayer: IEntityPlayer): Int
 	{
 		val provider = classProvider
 

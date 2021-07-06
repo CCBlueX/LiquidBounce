@@ -2,6 +2,7 @@ package net.ccbluex.liquidbounce.utils.pathfinding
 
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
+import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getState
 import java.io.Serializable
@@ -19,7 +20,7 @@ class PathFinder(startVec: WVec3, endVec: WVec3) : MinecraftInstance()
 	var path: MutableList<WVec3> = ArrayList()
 		private set
 
-	fun compute(loops: Int = 1000, depth: Int = 4)
+	fun compute(theWorld: IWorld, loops: Int = 1000, depth: Int = 4)
 	{
 		path.clear()
 		hubsToWork.clear()
@@ -42,13 +43,13 @@ class PathFinder(startVec: WVec3, endVec: WVec3) : MinecraftInstance()
 						hubsToWork.remove(hub)
 						hubs.add(hub)
 
-						flatCardinalDirections.map { hub.position.add(it).floor() }.forEach { if (checkPositionValidity(it) && addHub(hub, it)) return@findLoop }
+						flatCardinalDirections.map { hub.position.add(it).floor() }.forEach { if (checkPositionValidity(theWorld, it) && addHub(hub, it)) return@findLoop }
 
 						val up = hub.position.addVector(0.0, 1.0, 0.0).floor()
-						if (checkPositionValidity(up) && addHub(hub, up)) return@findLoop
+						if (checkPositionValidity(theWorld, up) && addHub(hub, up)) return@findLoop
 
 						val down = hub.position.addVector(0.0, -1.0, 0.0).floor()
-						if (checkPositionValidity(down) && addHub(hub, down)) return@findLoop
+						if (checkPositionValidity(theWorld, down) && addHub(hub, down)) return@findLoop
 					}
 				}
 			}
@@ -117,20 +118,20 @@ class PathFinder(startVec: WVec3, endVec: WVec3) : MinecraftInstance()
 	{
 		private val flatCardinalDirections = arrayOf(WVec3(1.0, 0.0, 0.0), WVec3(-1.0, 0.0, 0.0), WVec3(0.0, 0.0, 1.0), WVec3(0.0, 0.0, -1.0))
 
-		private fun checkPositionValidity(loc: WVec3, checkGround: Boolean = false): Boolean = checkPositionValidity(loc.xCoord.toInt(), loc.yCoord.toInt(), loc.zCoord.toInt(), checkGround)
+		private fun checkPositionValidity(theWorld: IWorld, loc: WVec3, checkGround: Boolean = false): Boolean = checkPositionValidity(theWorld, loc.xCoord.toInt(), loc.yCoord.toInt(), loc.zCoord.toInt(), checkGround)
 
-		fun checkPositionValidity(x: Int, y: Int, z: Int, checkGround: Boolean): Boolean
+		fun checkPositionValidity(theWorld: IWorld, x: Int, y: Int, z: Int, checkGround: Boolean): Boolean
 		{
 			val block1 = WBlockPos(x, y, z)
 			val block2 = WBlockPos(x, y + 1, z)
 			val block3 = WBlockPos(x, y - 1, z)
 
-			return !isBlockSolid(block1) && !isBlockSolid(block2) && (isBlockSolid(block3) || !checkGround) && isSafeToWalkOn(block3)
+			return !isBlockSolid(theWorld, block1) && !isBlockSolid(theWorld, block2) && (isBlockSolid(theWorld, block3) || !checkGround) && isSafeToWalkOn(theWorld, block3)
 		}
 
-		private fun isBlockSolid(blockpos: WBlockPos): Boolean
+		private fun isBlockSolid(theWorld: IWorld, blockpos: WBlockPos): Boolean
 		{
-			val state = getState(blockpos) ?: return true
+			val state = getState(theWorld, blockpos)
 			val block = state.block
 
 			val provider = classProvider
@@ -138,9 +139,9 @@ class PathFinder(startVec: WVec3, endVec: WVec3) : MinecraftInstance()
 			return (block.getMaterial(state)?.blocksMovement() ?: true) && block.isFullCube(state) || provider.isBlockSlab(block) || provider.isBlockStairs(block) || provider.isBlockCactus(block) || provider.isBlockChest(block) || provider.isBlockEnderChest(block) || provider.isBlockSkull(block) || provider.isBlockPane(block) || provider.isBlockFence(block) || provider.isBlockWall(block) || provider.isBlockGlass(block) || provider.isBlockPistonBase(block) || provider.isBlockPistonExtension(block) || provider.isBlockPistonMoving(block) || provider.isBlockStainedGlass(block) || provider.isBlockTrapDoor(block)
 		}
 
-		private fun isSafeToWalkOn(blockpos: WBlockPos): Boolean
+		private fun isSafeToWalkOn(theWorld: IWorld, blockpos: WBlockPos): Boolean
 		{
-			val block = getState(blockpos)?.block
+			val block = getState(theWorld, blockpos).block
 
 			val provider = classProvider
 

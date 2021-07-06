@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.enums.StatType
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.event.AttackEvent
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
@@ -29,7 +29,7 @@ class Criticals : Module()
 	/**
 	 * Options
 	 */
-	val modeValue = ListValue("Mode", arrayOf("Packet", "NCPPacket", "NoGround", "Hop", "TPHop", "Jump", "LowJump", "FakeCollide", "TpCollide", "Custom", "Visual"), "Packet")
+	val modeValue = ListValue("Mode", arrayOf("Packet", "NCPPacket", "AACPacket", "NoGround", "Hop", "TPHop", "Jump", "LowJump", "FakeCollide", "TpCollide", "Custom", "Visual"), "Packet")
 
 	private val maxDelayValue = IntegerValue("MaxDelay", 0, 0, 500)
 	private val minDelayValue = IntegerValue("MinDelay", 0, 0, 500)
@@ -161,7 +161,7 @@ class Criticals : Module()
 		}
 	}
 
-	fun canCritical(thePlayer: IEntityPlayerSP): Boolean = !thePlayer.isInWeb && !thePlayer.isInWater && !thePlayer.isInLava && delayTimer.hasTimePassed(nextDelay)
+	fun canCritical(thePlayer: IEntity): Boolean = !thePlayer.isInWeb && !thePlayer.isInWater && !thePlayer.isInLava && delayTimer.hasTimePassed(nextDelay)
 
 	@EventTarget
 	fun onPacket(event: PacketEvent)

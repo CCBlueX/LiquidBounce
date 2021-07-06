@@ -14,11 +14,13 @@ import net.ccbluex.liquidbounce.api.enums.EnumFacingType
 import net.ccbluex.liquidbounce.api.minecraft.block.state.IIBlockState
 import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketEntityAction
 import net.ccbluex.liquidbounce.api.minecraft.util.*
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.wrapAngleTo180_float
+import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -283,6 +285,9 @@ class Scaffold : Module()
 
 		launchY = thePlayer.posY.toInt()
 		fallStartY = 0.0
+
+		val rotationMode = rotationModeValue.get()
+		if (modeValue.get().equals("Expand", ignoreCase = true) && (rotationMode.equals("Static", ignoreCase = true) || rotationMode.equals("StaticPitch", ignoreCase = true))) ClientUtils.displayChatMessage(thePlayer, "\u00A78[\u00A7aScaffold\u00A78] \u00A7aUsing Expand scaffold with Static/StaticPitch rotation mode can decrease your expand length!")
 	}
 
 	// UPDATE EVENTS
@@ -364,7 +369,7 @@ class Scaffold : Module()
 							{
 								val blockPos = WBlockPos(thePlayer.posX - 1.0, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ)
 								val placeInfo: PlaceInfo? = PlaceInfo[theWorld, blockPos]
-								if (isReplaceable(blockPos) && placeInfo != null)
+								if (isReplaceable(theWorld, blockPos) && placeInfo != null)
 								{
 									var calcDif: Double = thePlayer.posX - blockPos.x
 									calcDif -= 0.5
@@ -386,7 +391,7 @@ class Scaffold : Module()
 								val blockPos = WBlockPos(thePlayer.posX + 1.0, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ)
 								val placeInfo: PlaceInfo? = PlaceInfo[theWorld, blockPos]
 
-								if (isReplaceable(blockPos) && placeInfo != null)
+								if (isReplaceable(theWorld, blockPos) && placeInfo != null)
 								{
 									var calcDif: Double = thePlayer.posX - blockPos.x
 									calcDif -= 0.5
@@ -406,7 +411,7 @@ class Scaffold : Module()
 								val blockPos = WBlockPos(thePlayer.posX, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ - 1.0)
 								val placeInfo: PlaceInfo? = PlaceInfo[theWorld, blockPos]
 
-								if (isReplaceable(blockPos) && placeInfo != null)
+								if (isReplaceable(theWorld, blockPos) && placeInfo != null)
 								{
 									var calcDif: Double = thePlayer.posZ - blockPos.z
 									calcDif -= 0.5
@@ -426,7 +431,7 @@ class Scaffold : Module()
 								val blockPos = WBlockPos(thePlayer.posX, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ + 1.0)
 								val placeInfo: PlaceInfo? = PlaceInfo[theWorld, blockPos]
 
-								if (isReplaceable(blockPos) && placeInfo != null)
+								if (isReplaceable(theWorld, blockPos) && placeInfo != null)
 								{
 									var calcDif: Double = thePlayer.posZ - blockPos.z
 									calcDif -= 0.5
@@ -516,7 +521,7 @@ class Scaffold : Module()
 		if (targetPlace == null && placeableDelay.get()) delayTimer.reset()
 	}
 
-	fun update(theWorld: IWorldClient, thePlayer: IEntityPlayerSP)
+	fun update(theWorld: IWorld, thePlayer: IEntityPlayerSP)
 	{
 		val provider = classProvider
 
@@ -545,7 +550,7 @@ class Scaffold : Module()
 		findBlock(theWorld, thePlayer, modeValue.get().equals("expand", true))
 	}
 
-	private fun setRotation(thePlayer: IEntityPlayerSP, rotation: Rotation, keepRotation: Int)
+	private fun setRotation(thePlayer: IEntityPlayer, rotation: Rotation, keepRotation: Int)
 	{
 		if (silentRotationValue.get())
 		{
@@ -559,13 +564,13 @@ class Scaffold : Module()
 		}
 	}
 
-	private fun setRotation(thePlayer: IEntityPlayerSP, rotation: Rotation)
+	private fun setRotation(thePlayer: IEntityPlayer, rotation: Rotation)
 	{
 		setRotation(thePlayer, rotation, 0)
 	}
 
 	// Search for new target block
-	private fun findBlock(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, expand: Boolean)
+	private fun findBlock(theWorld: IWorld, thePlayer: IEntityPlayerSP, expand: Boolean)
 	{
 		val groundBlockState = lastGroundBlockState ?: return
 		val groundBlockBB = lastGroundBlockBB ?: return
@@ -674,8 +679,8 @@ class Scaffold : Module()
 
 		if (searchDebug.get())
 		{
-			ClientUtils.displayChatMessage(thePlayer, "$state - $searchBounds")
-			ClientUtils.displayChatMessage(thePlayer, "AutoBlock: $abCollisionBB, Ground: $lastGroundBlockBB")
+			ClientUtils.displayChatMessage(thePlayer, "[Scaffold] $state - $searchBounds")
+			ClientUtils.displayChatMessage(thePlayer, "[Scaffold] AutoBlock: $abCollisionBB, Ground: $lastGroundBlockBB")
 		}
 
 		lastSearchPosition = searchPosition
@@ -692,7 +697,7 @@ class Scaffold : Module()
 			}
 		}
 
-		if (!expand && (!isReplaceable(searchPosition) || search(theWorld, thePlayer, searchPosition, checkVisibleValue.get() && !shouldGoDown, searchBounds, facings))) return
+		if (!expand && (!isReplaceable(theWorld, searchPosition) || search(theWorld, thePlayer, searchPosition, checkVisibleValue.get() && !shouldGoDown, searchBounds, facings))) return
 
 		val ySearch = ySearchValue.get() || clutching
 		if (expand)
@@ -739,19 +744,18 @@ class Scaffold : Module()
 
 		if (killauraBypassValue.get().equals("SuspendKillaura", true)) killAura.suspend(suspendKillauraDuration.get().toLong())
 
-		// Check if the player is holding block
-		var itemStack: IItemStack? = thePlayer.heldItem
-		var switched = false
-
 		val controller = mc.playerController
 		val netHandler = mc.netHandler
+		val inventory = thePlayer.inventory
 
 		val provider = classProvider
 
 		(LiquidBounce.moduleManager[AutoUse::class.java] as AutoUse).endEating(thePlayer, classProvider, netHandler)
 
-		val slot = InventoryUtils.serverHeldItemSlot ?: thePlayer.inventory.currentItem
-
+		// Check if the player is holding block
+		val slot = InventoryUtils.serverHeldItemSlot ?: inventory.currentItem
+		var itemStack = inventory.mainInventory[slot]
+		var switched = false
 		val switchKeepTime = autoBlockSwitchKeepTimeValue.get()
 
 		if (itemStack == null || !provider.isItemBlock(itemStack.item) || !InventoryUtils.canAutoBlock(itemStack.item?.asItemBlock()?.block) || itemStack.stackSize <= 0)
@@ -759,7 +763,7 @@ class Scaffold : Module()
 			if (autoBlockValue.get().equals("Off", true)) return
 
 			// Auto-Block
-			val blockSlot = InventoryUtils.findAutoBlockBlock(theWorld, thePlayer.inventoryContainer, autoBlockFullCubeOnlyValue.get(), lastSearchPosition?.let(BlockUtils::getState)?.let { state -> BlockUtils.getBlockCollisionBox(theWorld, state)?.maxY } ?: 0.0) // Default boundingBoxYLimit it 0.0
+			val blockSlot = InventoryUtils.findAutoBlockBlock(theWorld, thePlayer.inventoryContainer, autoBlockFullCubeOnlyValue.get(), lastSearchPosition?.let { BlockUtils.getState(theWorld, it) }?.let { state -> BlockUtils.getBlockCollisionBox(theWorld, state)?.maxY } ?: 0.0) // Default boundingBoxYLimit it 0.0
 
 			// If there is no autoblock-able blocks in your inventory, we can't continue.
 			if (blockSlot == -1) return
@@ -770,11 +774,15 @@ class Scaffold : Module()
 			{
 				"pick" ->
 				{
-					thePlayer.inventory.currentItem = blockSlot - 36
+					inventory.currentItem = blockSlot - 36
 					controller.updateController()
 				}
 
-				"spoof", "switch" -> if (blockSlot - 36 != slot && InventoryUtils.setHeldItemSlot(blockSlot - 36, if (autoBlockMode.equals("spoof", ignoreCase = true)) -1 else switchKeepTime, true)) return
+				"spoof", "switch" -> if (blockSlot - 36 != slot)
+				{
+					if (InventoryUtils.setHeldItemSlot(blockSlot - 36, if (autoBlockMode.equals("spoof", ignoreCase = true)) -1 else switchKeepTime, false)) return
+				}
+				else InventoryUtils.reset()
 			}
 
 			itemStack = thePlayer.inventoryContainer.getSlot(blockSlot).stack
@@ -919,7 +927,7 @@ class Scaffold : Module()
 				})
 
 				val placeInfo: PlaceInfo? = PlaceInfo[theWorld, blockPos]
-				if (isReplaceable(blockPos) && placeInfo != null)
+				if (isReplaceable(theWorld, blockPos) && placeInfo != null)
 				{
 					RenderUtils.drawBlockBox(theWorld, thePlayer, blockPos, 1682208255, 0, hydraESP = false)
 					return@searchLoop
@@ -936,9 +944,9 @@ class Scaffold : Module()
 	 * @return
 	 */
 
-	private fun search(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, blockPosition: WBlockPos, checkVisible: Boolean, data: SearchBounds, facings: List<IEnumFacing>): Boolean
+	private fun search(theWorld: IWorld, thePlayer: IEntityPlayer, blockPosition: WBlockPos, checkVisible: Boolean, data: SearchBounds, facings: List<IEnumFacing>): Boolean
 	{
-		if (!isReplaceable(blockPosition)) return false
+		if (!isReplaceable(theWorld, blockPosition)) return false
 
 		// Static Modes
 		val staticMode = rotationModeValue.get().equals("Static", ignoreCase = true)
@@ -983,13 +991,18 @@ class Scaffold : Module()
 						val posVec = WVec3(blockPosition).addVector(xSearch, ySearch, zSearch)
 						val distanceSqPosVec = eyesPos.squareDistanceTo(posVec)
 						val hitVec = posVec.add(WVec3(dirX * 0.5, dirY * 0.5, dirZ * 0.5))
-						if (checkVisible && (eyesPos.squareDistanceTo(hitVec) > 18.0 // distance > 3√2 blocks
-								|| distanceSqPosVec > eyesPos.squareDistanceTo(posVec.add(dirVec)) // distance to Block > distance to Block SIDE
-								|| theWorld.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null)) // rayTrace hit between eye position and block side
+
+						// Visible check
+						if (checkVisible && (eyesPos.squareDistanceTo(hitVec) > 18.0 // Distance Check - distance > 3√2 blocks
+								|| distanceSqPosVec > eyesPos.squareDistanceTo(posVec.add(dirVec)) // Against Distance Check - distance to Block > distance to Block SIDE
+								|| theWorld.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null)) // Raytrace Check - rayTrace hit between eye position and block side
 						{
+							// Skip
 							zSearch += data.zSteps
 							continue
 						}
+
+						val minDiff = minDiffValue.get()
 
 						// Face block
 						repeat(if (staticYaw) 2 else 1) { i ->
@@ -998,21 +1011,23 @@ class Scaffold : Module()
 							val diffZ: Double = if (staticYaw && i == 1) 0.0 else hitVec.zCoord - eyesPos.zCoord
 							val diffXZ = hypot(diffX, diffZ)
 
-							if (!side.isUp() && minDiffValue.get() > 0)
+							if (!side.isUp() && minDiff > 0)
 							{
 								val diff: Double = abs(if (side.isNorth() || side.isSouth()) diffZ else diffX)
-
-								if (diff < minDiffValue.get() || diff > 0.3f) return@repeat
+								if (diff < minDiff || diff > 0.3f) return@repeat
 							}
 
-							val pitch = if (staticPitch) staticPitchOffset else wrapAngleTo180_float((-WMathHelper.toDegrees(atan2(diffY, diffXZ).toFloat())))
-							val rotation = Rotation(wrapAngleTo180_float(WMathHelper.toDegrees(atan2(diffZ, diffX).toFloat()) - 90f + if (staticYaw) staticYawOffset else 0f), pitch)
+							// Calculate the rotation from vector
+							val rotation = Rotation(wrapAngleTo180_float(WMathHelper.toDegrees(atan2(diffZ, diffX).toFloat()) - 90f + if (staticYaw) staticYawOffset else 0f), if (staticPitch) staticPitchOffset else wrapAngleTo180_float((-WMathHelper.toDegrees(atan2(diffY, diffXZ).toFloat()))))
 							val rotationVector = RotationUtils.getVectorForRotation(rotation)
-							val vector = eyesPos.addVector(rotationVector.xCoord * 4, rotationVector.yCoord * 4, rotationVector.zCoord * 4)
-							val rayTrace = theWorld.rayTraceBlocks(eyesPos, vector, false, false, true)
+							val blockReachPos = eyesPos.addVector(rotationVector.xCoord * 4, rotationVector.yCoord * 4, rotationVector.zCoord * 4)
 
-							if (rayTrace != null && (rayTrace.typeOfHit != IMovingObjectPosition.WMovingObjectType.BLOCK || rayTrace.blockPos != neighbor)) return@repeat
-							if (placeRotation == null || RotationUtils.getRotationDifference(rotation) < RotationUtils.getRotationDifference(placeRotation!!.rotation)) placeRotation = PlaceRotation(PlaceInfo(neighbor, side.opposite, hitVec), rotation)
+							val rayTrace = theWorld.rayTraceBlocks(eyesPos, blockReachPos, false, false, true)
+							if (rayTrace != null && (rayTrace.typeOfHit != IMovingObjectPosition.WMovingObjectType.BLOCK || rayTrace.blockPos != neighbor)) return@repeat // Raytrace Check - rayTrace hit between eye position and block reach position
+
+							if (placeRotation == null // If this is the first try
+								|| RotationUtils.getRotationDifference(rotation) < RotationUtils.getRotationDifference(placeRotation!!.rotation) // If the current rotation is better than the previous one
+							) placeRotation = PlaceRotation(PlaceInfo(neighbor, side.opposite, hitVec), rotation)
 
 							xSearchFace = xSearch
 							ySearchFace = ySearch
@@ -1036,12 +1051,15 @@ class Scaffold : Module()
 
 			if (minTurnSpeedValue.get() < 180)
 			{
+				// Limit rotation speed
+
 				limitedRotation = RotationUtils.limitAngleChange(RotationUtils.serverRotation, placeRotation!!.rotation, (Random.nextFloat() * (maxTurnSpeedValue.get() - minTurnSpeedValue.get()) + minTurnSpeedValue.get()), 0.0F)
 				setRotation(thePlayer, limitedRotation!!, keepRotationTicks)
 
 				lockRotation = limitedRotation
 				facesBlock = false
 
+				// Check player is faced the target block
 				run searchLoop@{
 					facings.forEach sideLoop@{ side ->
 						val neighbor = blockPosition.offset(side)
@@ -1090,7 +1108,7 @@ class Scaffold : Module()
 	}
 
 	// RETURN HOTBAR AMOUNT
-	private fun getBlocksAmount(thePlayer: IEntityPlayerSP): Int
+	private fun getBlocksAmount(thePlayer: IEntityPlayer): Int
 	{
 		var amount = 0
 

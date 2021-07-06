@@ -8,8 +8,9 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.enums.StatType
 import net.ccbluex.liquidbounce.api.minecraft.INetworkManager
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
+import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -295,7 +296,7 @@ class Step : Module()
 		stepZ = 0.0
 	}
 
-	private fun performNCPPacketStep(networkManager: INetworkManager, thePlayer: IEntityPlayerSP, stepX: Double, stepY: Double, stepZ: Double, stepHeight: Double)
+	private fun performNCPPacketStep(networkManager: INetworkManager, thePlayer: IEntity, stepX: Double, stepY: Double, stepZ: Double, stepHeight: Double)
 	{
 		// Values from NCPStep v1.0 by york
 
@@ -334,13 +335,13 @@ class Step : Module()
 	}
 
 	// There could be some anti cheats which tries to detect step by checking for achievements and stuff
-	private fun fakeJump(thePlayer: IEntityPlayerSP)
+	private fun fakeJump(thePlayer: IEntityPlayer)
 	{
 		thePlayer.isAirBorne = true
 		thePlayer.triggerAchievement(classProvider.getStatEnum(StatType.JUMP_STAT))
 	}
 
-	private fun couldStep(theWorld: IWorldClient, thePlayer: IEntityPlayerSP): Boolean
+	private fun couldStep(theWorld: IWorld, thePlayer: IEntityPlayer): Boolean
 	{
 		val func = functions
 

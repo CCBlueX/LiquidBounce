@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
@@ -247,9 +247,9 @@ class Aimbot : Module()
 			val minPredictSize = minPredictSizeValue.get()
 			val maxPredictSize = maxPredictSizeValue.get()
 
-			val xPredict = (entity.posX - entity.prevPosX) * RandomUtils.nextFloat(minPredictSize, maxPredictSize)
-			val yPredict = (entity.posY - entity.prevPosY) * RandomUtils.nextFloat(minPredictSize, maxPredictSize)
-			val zPredict = (entity.posZ - entity.prevPosZ) * RandomUtils.nextFloat(minPredictSize, maxPredictSize)
+			val xPredict = (entity.posX - entity.lastTickPosX) * RandomUtils.nextFloat(minPredictSize, maxPredictSize)
+			val yPredict = (entity.posY - entity.lastTickPosY) * RandomUtils.nextFloat(minPredictSize, maxPredictSize)
+			val zPredict = (entity.posZ - entity.lastTickPosZ) * RandomUtils.nextFloat(minPredictSize, maxPredictSize)
 
 			targetBB = targetBB.offset(xPredict, yPredict, zPredict)
 		}
@@ -291,7 +291,7 @@ class Aimbot : Module()
 		currentRotation.applyRotationToPlayer(thePlayer)
 	}
 
-	private fun fadeRotations(thePlayer: IEntityPlayerSP)
+	private fun fadeRotations(thePlayer: IEntityPlayer)
 	{
 
 		val friction = aimFrictionValue.get()

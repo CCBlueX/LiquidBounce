@@ -5,15 +5,18 @@
  */
 package net.ccbluex.liquidbounce.utils
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import java.util.*
 import javax.vecmath.Vector3d
-import kotlin.math.*
+import kotlin.math.abs
+import kotlin.math.ceil
+import kotlin.math.min
+import kotlin.math.sqrt
 
 object PathUtils : MinecraftInstance()
 {
 	@JvmStatic
-	fun findBlinkPath(thePlayer: IEntityPlayerSP, tpX: Double, tpY: Double, tpZ: Double, xzoffset: Double, yoffset: Double): Iterable<Vector3d>
+	fun findBlinkPath(thePlayer: IEntity, tpX: Double, tpY: Double, tpZ: Double, xzoffset: Double, yoffset: Double): Iterable<Vector3d>
 	{
 		var curX = thePlayer.posX
 		var curY = thePlayer.posY
@@ -54,7 +57,7 @@ object PathUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun findPath(thePlayer: IEntityPlayerSP, tpX: Double, tpY: Double, tpZ: Double, offset: Double): Iterable<Vector3d>
+	fun findPath(thePlayer: IEntity, tpX: Double, tpY: Double, tpZ: Double, offset: Double): Iterable<Vector3d>
 	{
 		val steps = ceil(getDistance(thePlayer.posX, thePlayer.posY, thePlayer.posZ, tpX, tpY, tpZ) / offset)
 		val stepsInt = steps.toInt()
