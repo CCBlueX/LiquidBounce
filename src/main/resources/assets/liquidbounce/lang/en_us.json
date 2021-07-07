@@ -284,5 +284,7 @@
 
   "liquidbounce.module.fastPlace.description": "Allows you to place blocks faster.",
 
-  "liquidbounce.module.timer.description": "Changes the speed the game is running at."
+  "liquidbounce.module.timer.description": "Changes the speed the game is running at.",
+
+  "liquidbounce.module.noWeb.description": "Disables web slowdown."
 }
