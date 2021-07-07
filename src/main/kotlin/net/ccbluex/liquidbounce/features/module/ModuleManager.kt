@@ -152,6 +152,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleZoot,
             ModuleNoSwing,
             ModuleNoHurtCam,
+            ModuleNoJumpDelay,
             ModuleCrystalAura
         )
 
