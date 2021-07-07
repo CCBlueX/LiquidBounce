@@ -45,7 +45,7 @@ object ModuleRegen : Module("Regen", Category.PLAYER) {
             resetTimer = false
         }
 
-        if ((!noAir && player.isOnGround) && !player.abilities.creativeMode && player.health >= 0 && player.health < health) {
+        if ((!noAir && player.isOnGround) && !player.abilities.creativeMode && player.health > 0 && player.health < health) {
             if (potionEffect && !player.hasStatusEffect(StatusEffects.REGENERATION)) {
                 return@repeatable
             }

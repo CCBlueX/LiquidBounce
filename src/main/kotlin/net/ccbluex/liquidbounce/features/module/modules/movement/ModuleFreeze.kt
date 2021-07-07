@@ -35,7 +35,7 @@ import net.minecraft.network.packet.c2s.play.TeleportConfirmC2SPacket
 object ModuleFreeze : Module("Freeze", Category.MOVEMENT) {
 
     val moveHandler = handler<PlayerMoveEvent> { event ->
-        // Just set motion to zero
+        // Set motion to zero
         event.movement.x = 0.0
         event.movement.y = 0.0
         event.movement.z = 0.0
