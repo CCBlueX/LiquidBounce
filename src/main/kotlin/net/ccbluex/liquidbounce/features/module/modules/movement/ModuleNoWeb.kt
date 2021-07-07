@@ -18,24 +18,45 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.event.BlockShapeEvent
-import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.NotificationEvent
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.minecraft.block.CobwebBlock
-import net.minecraft.util.shape.VoxelShapes
+import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.notification
+import net.minecraft.text.TranslatableText
+import net.minecraft.util.Formatting
 
 /**
- * Anti hazards module
+ * NoWeb module
  *
- * Prevents you walking into blocks that might be malicious for you
+ * Disables web slowdown.
  */
 object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
 
-    val shapeHandler = handler<BlockShapeEvent> { event ->
-        if (event.state.block is CobwebBlock) {
-            event.shape = VoxelShapes.fullCube()
+    val modes = choices("Mode", Air) {
+        arrayOf(
+            Air
+        )
+    }
+
+    val repeatable = repeatable {
+        if (ModuleAvoidHazards.enabled) {
+            if (ModuleAvoidHazards.cobWebs) {
+                ModuleAvoidHazards.enabled = false
+                notification("Compatibility error", "NoWeb is incompatible with AvoidHazards", NotificationEvent.Severity.ERROR)
+            }
         }
     }
 
+    object Air : Choice("Air") {
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        // Mixins take care of anti web slowdown.
+    }
 }
+
