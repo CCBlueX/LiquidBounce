@@ -153,6 +153,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNoSwing,
             ModuleNoHurtCam,
             ModuleAntiAFK
+            ModuleCrystalAura
         )
 
         builtin.apply {

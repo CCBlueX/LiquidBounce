@@ -15,7 +15,7 @@ body:
 
 - type: input
   attributes:
-    label: LiquidBounce Build Version
+    label: LiquidBounce Build/Version
     description: Which version of LiquidBounce does this bug affect?
     placeholder: e.g. b61
   validations:
@@ -27,11 +27,11 @@ body:
     description: On which OS is LiquidBounce running?
     multiple: true
     options:
-    - iOS
+    - macOS
     - Linux
     - Windows 10
+    - Windows 8.1
     - Windows 8
-    - Windows Vista
     - Windows 7
   validations:
     required: true
