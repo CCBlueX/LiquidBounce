@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKillAura.RaycastMode.*
+import net.ccbluex.liquidbounce.features.module.modules.world.ModuleCrystalAura
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
@@ -146,6 +147,10 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     private fun update() {
         if (player.isSpectator) {
+            return
+        }
+
+        if (ModuleCrystalAura.enabled && ModuleCrystalAura.functioning) {
             return
         }
 

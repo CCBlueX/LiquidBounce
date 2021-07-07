@@ -1,0 +1,80 @@
+name: 🐞 Bug report
+description: Create a report to help us improve
+title: "[BUG]"
+
+body:
+- type: markdown
+  attributes:
+    value: |
+      🧐 **Guidelines:**
+
+      - Search through [existing issues](https://github.com/CCBlueX/LiquidBounce/issues?q=is%3Aopen+is%3Aissue) first to ensure that this bug has not been reported before.
+      - Write a descriptive title for your issue. Avoid generic or vague titles such as "Something's not working" or "A couple of problems".
+      - Keep your issue focused on one single problem. If you have multiple bug reports, please create separate issues for each of them.
+      - Provide as much context as possible in the details section. Include screenshots, screen recordings, links, references, or anything else you may consider relevant.
+
+- type: input
+  attributes:
+    label: LiquidBounce Build/Version
+    description: Which version of LiquidBounce does this bug affect?
+    placeholder: e.g. b61
+  validations:
+    required: true
+    
+- type: dropdown
+  attributes:
+    label: Operating System
+    description: On which OS is LiquidBounce running?
+    multiple: true
+    options:
+    - macOS
+    - Linux
+    - Windows 10
+    - Windows 8.1
+    - Windows 8
+    - Windows 7
+  validations:
+    required: true
+
+- type: input
+  attributes:
+    label: Minecraft Version
+    description: Which Minecraft-Version does this bug affect?
+    placeholder: e.g. 1.16.5
+  validations:
+    required: true
+
+- type: textarea
+  attributes:
+    label: Describe the bug
+    description: Clear and thorough explanation of the bug.
+    placeholder: I was doing X expecting Y to happen, but Z happened instead.
+  validations:
+    required: true
+
+- type: textarea
+  attributes:
+    label: Steps to reproduce
+    description: Minimum steps required to reproduce the bug.
+    placeholder: |
+      - Go to '...'
+      - Click on '....'
+      - Scroll down to '....'
+      - See error
+  validations:
+    required: true
+    
+- type: textarea
+  attributes:
+    label: Client Log
+    description: Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
+    render: shell
+  validations:
+    required: true
+
+- type: textarea
+  attributes:
+    label: Screenshots
+    description: If applicable, add screenshots to help explain your problem.
+  validations:
+    required: false
