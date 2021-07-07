@@ -152,7 +152,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleZoot,
             ModuleNoSwing,
             ModuleNoHurtCam,
-            ModulePerfectHorseJump
+            ModulePerfectHorseJump,
+            ModuleCrystalAura
         )
 
         builtin.apply {
