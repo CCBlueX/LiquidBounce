@@ -154,7 +154,7 @@ object ModuleNameProtect : Module("NameProtect", Category.MISC) {
                         for ((replacementIdx, c) in replacement.originalName.toCharArray().withIndex()) {
                             val origIndex = index + replacementIdx
 
-                            if (originalCharacters.lastIndex < origIndex || originalCharacters[origIndex].codePoint != c.toInt()) {
+                            if (originalCharacters.lastIndex < origIndex || originalCharacters[origIndex].codePoint != c.code) {
                                 canReplace = false
                                 break
                             }
@@ -167,7 +167,7 @@ object ModuleNameProtect : Module("NameProtect", Category.MISC) {
                                         originalChar.style.withColor(
                                             Formatting.RED
                                         ),
-                                        it.toInt()
+                                        it.code
                                     )
                                 }
                             )

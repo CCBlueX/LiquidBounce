@@ -64,7 +64,15 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
         val theWorld = mc.world ?: return@handler
 
         theWorld.entities.filter { it is ArrowEntity && !it.inGround }.forEach {
-            val landingPosition = drawTrajectoryForProjectile(it.velocity, TrajectoryInfo(0.05F, 0.3F), it.pos, world, player, Vec3(0.0, 0.0, 0.0), Color4b(255, 0, 0, 200))
+            val landingPosition = drawTrajectoryForProjectile(
+                it.velocity,
+                TrajectoryInfo(0.05F, 0.3F),
+                it.pos,
+                world,
+                player,
+                Vec3(0.0, 0.0, 0.0),
+                Color4b(255, 0, 0, 200)
+            )
 
             if (landingPosition is EntityHitResult) {
                 if (landingPosition.entity != player) {
@@ -79,7 +87,10 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
 
                 vertexFormat.rect(indexBuffer, Vec3(-2.0, -1.0, 0.0), Vec3(2.0, 1.0, 0.0), Color4b(255, 0, 0, 120))
 
-                RenderEngine.enqueueForRendering(RenderEngine.SCREEN_SPACE_LAYER, VertexFormatRenderTask(vertexFormat, PrimitiveType.Triangles, ColoredPrimitiveShader))
+                RenderEngine.enqueueForRendering(
+                    RenderEngine.SCREEN_SPACE_LAYER,
+                    VertexFormatRenderTask(vertexFormat, PrimitiveType.Triangles, ColoredPrimitiveShader)
+                )
             }
         }
 
@@ -99,7 +110,10 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
 
                 vertexFormat.rect(indexBuffer, Vec3(-2.0, -1.0, 0.0), Vec3(2.0, 1.0, 0.0), Color4b(255, 0, 0, 50))
 
-                RenderEngine.enqueueForRendering(RenderEngine.SCREEN_SPACE_LAYER, VertexFormatRenderTask(vertexFormat, PrimitiveType.Triangles, ColoredPrimitiveShader))
+                RenderEngine.enqueueForRendering(
+                    RenderEngine.SCREEN_SPACE_LAYER,
+                    VertexFormatRenderTask(vertexFormat, PrimitiveType.Triangles, ColoredPrimitiveShader)
+                )
             }
         }
 
@@ -116,7 +130,10 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                     .minByOrNull { it.center.squaredDistanceTo(landingPosition.pos) }
 
                 if (bestBB != null) {
-                    RenderEngine.enqueueForRendering(RenderEngine.CAMERA_VIEW_LAYER, espBoxRenderTask(drawBoxSide(bestBB, landingPosition.side, Color4b(0, 160, 255, 150))))
+                    RenderEngine.enqueueForRendering(
+                        RenderEngine.CAMERA_VIEW_LAYER,
+                        espBoxRenderTask(drawBoxSide(bestBB, landingPosition.side, Color4b(0, 160, 255, 150)))
+                    )
                 }
             } else if (landingPosition is EntityHitResult) {
 
@@ -299,7 +316,15 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
             currTicks++
         }
 
-        RenderEngine.enqueueForRendering(RenderEngine.CAMERA_VIEW_LAYER, VertexFormatRenderTask(vertexFormat, PrimitiveType.LineStrip, ColoredPrimitiveShader, state = GlRenderState(lineWidth = 2.0f, lineSmooth = true)))
+        RenderEngine.enqueueForRendering(
+            RenderEngine.CAMERA_VIEW_LAYER,
+            VertexFormatRenderTask(
+                vertexFormat,
+                PrimitiveType.LineStrip,
+                ColoredPrimitiveShader,
+                state = GlRenderState(lineWidth = 2.0f, lineSmooth = true)
+            )
+        )
 
         return landingPosition
     }

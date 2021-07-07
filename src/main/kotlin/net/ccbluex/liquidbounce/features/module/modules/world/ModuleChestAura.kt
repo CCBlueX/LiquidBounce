@@ -58,7 +58,9 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
         val timeout by int("Timeout", 10, 1..80)
         val maxRetrys by int("MaxRetries", 4, 1..10)
     }
-    private object CloseInstantlyOptions : ToggleableConfigurable(this, "CloseInstantly", false) { // FIXME: Close instantly
+
+    private object CloseInstantlyOptions :
+        ToggleableConfigurable(this, "CloseInstantly", false) { // FIXME: Close instantly
         val timeout by int("Timeout", 2500, 100..10000)
     }
 

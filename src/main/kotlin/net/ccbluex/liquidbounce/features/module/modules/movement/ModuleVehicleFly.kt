@@ -43,7 +43,10 @@ object ModuleVehicleFly : Module("VehicleFly", Category.MOVEMENT) {
             mc.options.keyJump.isPressed -> speedVertical.toDouble()
             else -> 0.0
         }
-        vehicle.velocity.strafe(yaw = player.directionYaw, speed = if (player.moving) speedHorizontal.toDouble() else 0.0)
+        vehicle.velocity.strafe(
+            yaw = player.directionYaw,
+            speed = if (player.moving) speedHorizontal.toDouble() else 0.0
+        )
     }
 
 }
