@@ -3,7 +3,28 @@
 <head>
     <style>
         body {
-            background-color: #1e1e1e;
+            background: linear-gradient(227deg, #1e1e1e, #525050);
+            background-size: 400% 400%;
+
+            -webkit-animation: gradient 8s ease infinite;
+            -moz-animation: gradient 8s ease infinite;
+            animation: gradient 8s ease infinite;
+        }
+
+        @-webkit-keyframes gradient {
+            0%{background-position:0% 50%}
+            50%{background-position:100% 50%}
+            100%{background-position:0% 50%}
+        }
+        @-moz-keyframes gradient {
+            0%{background-position:0% 50%}
+            50%{background-position:100% 50%}
+            100%{background-position:0% 50%}
+        }
+        @keyframes gradient {
+            0%{background-position:0% 50%}
+            50%{background-position:100% 50%}
+            100%{background-position:0% 50%}
         }
 
 /*        .fade-out {
@@ -117,6 +138,17 @@
             left: 12px;
         }
 
+        #text {
+            position: absolute;
+            top: 57%;
+            left: 50%;
+            margin-right: -50%;
+            transform: translate(-50%, -50%);
+            font-size: 40px;
+            color: white;
+            font-family: Helvetica, sans-serif;
+        }
+
         @keyframes lds-roller {
             0% {
                 transform: rotate(0deg);
@@ -177,6 +209,7 @@
         <div></div>
     </div>
 </div>
+<p id="text">Loading Liquidbounce...</p>
 </body>
 
 </html>
