@@ -34,7 +34,7 @@ public class MixinMouse {
     /**
      * Hook mouse button event
      */
-    @Inject(method = "onMouseButton", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;overlay:Lnet/minecraft/client/gui/screen/Overlay;", shift = At.Shift.BEFORE))
+    @Inject(method = "onMouseButton", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getOverlay()Lnet/minecraft/client/gui/screen/Overlay;", shift = At.Shift.BEFORE))
     private void hookMouseButton(long window, int button, int action, int mods, CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new MouseButtonEvent(window, button, action, mods));
     }
@@ -42,7 +42,7 @@ public class MixinMouse {
     /**
      * Hook mouse scroll event
      */
-    @Inject(method = "onMouseScroll", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;overlay:Lnet/minecraft/client/gui/screen/Overlay;", shift = At.Shift.BEFORE))
+    @Inject(method = "onMouseScroll", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getOverlay()Lnet/minecraft/client/gui/screen/Overlay;", shift = At.Shift.BEFORE))
     private void hookMouseScroll(long window, double horizontal, double vertical, CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new MouseScrollEvent(window, horizontal, vertical));
     }
@@ -50,7 +50,7 @@ public class MixinMouse {
     /**
      * Hook mouse cursor event
      */
-    @Inject(method = "onCursorPos", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;overlay:Lnet/minecraft/client/gui/screen/Overlay;", shift = At.Shift.BEFORE))
+    @Inject(method = "onCursorPos", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getOverlay()Lnet/minecraft/client/gui/screen/Overlay;", shift = At.Shift.BEFORE))
     private void hookCursorPos(long window, double x, double y, CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new MouseCursorEvent(window, x, y));
     }

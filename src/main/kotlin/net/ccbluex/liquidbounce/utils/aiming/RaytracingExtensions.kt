@@ -62,7 +62,7 @@ fun raytraceBlock(range: Double, rotation: Rotation, pos: BlockPos, state: Block
         start,
         end,
         pos,
-        state.getVisualShape(mc.world, pos, ShapeContext.of(mc.player)),
+        state.getOutlineShape(mc.world, pos, ShapeContext.of(mc.player)),
         state
     )
 }

@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
 import net.ccbluex.liquidbounce.event.ChunkLoadEvent;
+import net.ccbluex.liquidbounce.event.ChunkUnloadEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
@@ -38,8 +39,8 @@ public class MixinClientPlayNetworkHandler {
     }
 
     @Inject(method = "onUnloadChunk", at = @At("RETURN"))
-    private void injectChunkLoadEvent(UnloadChunkS2CPacket packet, CallbackInfo ci) {
-        EventManager.INSTANCE.callEvent(new ChunkLoadEvent(packet.getX(), packet.getZ()));
+    private void injectUnloadEvent(UnloadChunkS2CPacket packet, CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new ChunkUnloadEvent(packet.getX(), packet.getZ()));
     }
 
 }

@@ -79,7 +79,7 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
 
         int slot = SilentHotbar.INSTANCE.getServersideSlot();
 
-        return PlayerInventory.isValidHotbarIndex(slot) ? player.inventory.main.get(slot) : ItemStack.EMPTY;
+        return PlayerInventory.isValidHotbarIndex(slot) ? player.getInventory().main.get(slot) : ItemStack.EMPTY;
     }
 
     /**
@@ -99,15 +99,15 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
      *
      * There are a few velocity changes when attacking an entity, which could be easily detected by anti-cheats when a different server-side rotation is applied.
      */
-    @Redirect(method = "attack", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerEntity;yaw:F"))
+    @Redirect(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getYaw()F"))
     private float hookFixRotation(PlayerEntity entity) {
         if (RotationManager.INSTANCE.getActiveConfigurable() == null || !RotationManager.INSTANCE.getActiveConfigurable().getFixVelocity())
-            return entity.yaw;
+            return entity.getYaw();
 
         Rotation currentRotation = RotationManager.INSTANCE.getCurrentRotation();
 
         if (currentRotation == null)
-            return entity.yaw;
+            return entity.getYaw();
 
         currentRotation = currentRotation.fixedSensitivity();
 

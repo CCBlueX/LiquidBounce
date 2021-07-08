@@ -44,12 +44,12 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.net.InetAddress;
+import java.net.InetSocketAddress;
 
 @Mixin(ClientConnection.class)
 public class MixinClientConnection {
 
-    @Shadow @Final public static Lazy<EpollEventLoopGroup> CLIENT_IO_GROUP_EPOLL;
+    @Shadow @Final public static Lazy<EpollEventLoopGroup> EPOLL_CLIENT_IO_GROUP;
 
     @Shadow @Final public static Lazy<NioEventLoopGroup> CLIENT_IO_GROUP;
 
@@ -92,14 +92,13 @@ public class MixinClientConnection {
      */
     @Overwrite
     @Environment(EnvType.CLIENT)
-    public static ClientConnection connect(InetAddress address, int port, boolean shouldUseNativeTransport) {
+    public static ClientConnection connect(InetSocketAddress address, boolean useEpoll) {
         final ClientConnection clientConnection = new ClientConnection(NetworkSide.CLIENTBOUND);
-
         Class class2;
         Lazy lazy2;
-        if (Epoll.isAvailable() && shouldUseNativeTransport) {
+        if (Epoll.isAvailable() && useEpoll) {
             class2 = EpollSocketChannel.class;
-            lazy2 = CLIENT_IO_GROUP_EPOLL;
+            lazy2 = EPOLL_CLIENT_IO_GROUP;
         } else {
             class2 = NioSocketChannel.class;
             lazy2 = CLIENT_IO_GROUP;
@@ -109,7 +108,7 @@ public class MixinClientConnection {
                 .group((EventLoopGroup)lazy2.get())
                 .handler(ProxyManager.INSTANCE.setupConnect(clientConnection))
                 .channel(class2)
-                .connect(address, port)
+                .connect(address.getAddress(), address.getPort())
                 .syncUninterruptibly();
         return clientConnection;
     }

@@ -24,7 +24,7 @@ import net.minecraft.command.argument.ItemStackArgument
 import net.minecraft.command.argument.ItemStringReader
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.item.*
-import net.minecraft.nbt.CompoundTag
+import net.minecraft.nbt.NbtCompound
 import net.minecraft.util.Identifier
 import net.minecraft.util.registry.Registry
 
@@ -34,7 +34,7 @@ import net.minecraft.util.registry.Registry
  * @docs https://minecraft.gamepedia.com/Commands/give
  */
 fun createItem(stack: String, amount: Int = 1): ItemStack = ItemStringReader(StringReader(stack), true).consume().let {
-    ItemStackArgument(it.item, it.tag).createStack(amount, false)
+    ItemStackArgument(it.item, it.nbt).createStack(amount, false)
 }
 
 /**
@@ -48,7 +48,7 @@ fun ItemStack?.getEnchantmentCount(): Int {
     var c = 0
 
     for (enchantment in enchantments) {
-        if (enchantment !is CompoundTag) {
+        if (enchantment !is NbtCompound) {
             continue
         }
 
@@ -65,7 +65,7 @@ fun ItemStack?.getEnchantment(enchantment: Enchantment): Int {
     val enchId = Registry.ENCHANTMENT.getId(enchantment)
 
     for (enchantmentEntry in enchantments) {
-        if (enchantmentEntry !is CompoundTag) {
+        if (enchantmentEntry !is NbtCompound) {
             continue
         }
 

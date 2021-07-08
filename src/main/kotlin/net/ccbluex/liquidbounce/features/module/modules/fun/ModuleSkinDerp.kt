@@ -50,37 +50,37 @@ object ModuleSkinDerp : Module("SkinDerp", Category.FUN) {
     override fun disable() {
         // Disable all current model parts
         for (modelPart in PlayerModelPart.values()) {
-            mc.options.setPlayerModelPart(modelPart, false)
+            mc.options.togglePlayerModelPart(modelPart, false)
         }
 
         // Enable all old model parts
         for (modelPart in prevModelParts) {
-            mc.options.setPlayerModelPart(modelPart, true)
+            mc.options.togglePlayerModelPart(modelPart, true)
         }
     }
 
     val repeatable = repeatable {
         wait(delay)
         if (hat) {
-            mc.options.setPlayerModelPart(PlayerModelPart.HAT, Random.nextBoolean())
+            mc.options.togglePlayerModelPart(PlayerModelPart.HAT, Random.nextBoolean())
         }
         if (jacket) {
-            mc.options.setPlayerModelPart(PlayerModelPart.JACKET, Random.nextBoolean())
+            mc.options.togglePlayerModelPart(PlayerModelPart.JACKET, Random.nextBoolean())
         }
         if (leftPants) {
-            mc.options.setPlayerModelPart(PlayerModelPart.LEFT_PANTS_LEG, Random.nextBoolean())
+            mc.options.togglePlayerModelPart(PlayerModelPart.LEFT_PANTS_LEG, Random.nextBoolean())
         }
         if (rightPants) {
-            mc.options.setPlayerModelPart(PlayerModelPart.RIGHT_PANTS_LEG, Random.nextBoolean())
+            mc.options.togglePlayerModelPart(PlayerModelPart.RIGHT_PANTS_LEG, Random.nextBoolean())
         }
         if (leftSleeve) {
-            mc.options.setPlayerModelPart(PlayerModelPart.LEFT_SLEEVE, Random.nextBoolean())
+            mc.options.togglePlayerModelPart(PlayerModelPart.LEFT_SLEEVE, Random.nextBoolean())
         }
         if (rightSleeve) {
-            mc.options.setPlayerModelPart(PlayerModelPart.RIGHT_SLEEVE, Random.nextBoolean())
+            mc.options.togglePlayerModelPart(PlayerModelPart.RIGHT_SLEEVE, Random.nextBoolean())
         }
         if (cape) {
-            mc.options.setPlayerModelPart(PlayerModelPart.CAPE, Random.nextBoolean())
+            mc.options.togglePlayerModelPart(PlayerModelPart.CAPE, Random.nextBoolean())
         }
     }
 }

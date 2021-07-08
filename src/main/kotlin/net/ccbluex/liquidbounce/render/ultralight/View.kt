@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.longedSize
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.screen.Screen
+import net.minecraft.client.util.math.MatrixStack
 
 open class View(val layer: RenderLayer, private val viewRenderer: ViewRenderer) {
 
@@ -109,8 +110,8 @@ open class View(val layer: RenderLayer, private val viewRenderer: ViewRenderer) 
     /**
      * Render view
      */
-    open fun render() {
-        viewRenderer.render(ultralightView.get())
+    open fun render(matrices: MatrixStack) {
+        viewRenderer.render(ultralightView.get(), matrices)
     }
 
     /**

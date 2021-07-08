@@ -81,7 +81,7 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
                 continue
             }
 
-            player.networkHandler.sendPacket(PlayerMoveC2SPacket.LookOnly(rotation.yaw, rotation.pitch, player.isOnGround))
+            player.networkHandler.sendPacket(PlayerMoveC2SPacket.LookAndOnGround(rotation.yaw, rotation.pitch, player.isOnGround))
 
             if (slot != player.inventory.selectedSlot) {
                 player.networkHandler.sendPacket(UpdateSelectedSlotC2SPacket(slot))

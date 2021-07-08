@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.render.ultralight.renderer
 
 import com.labymedia.ultralight.UltralightView
 import com.labymedia.ultralight.config.UltralightViewConfig
+import net.minecraft.client.util.math.MatrixStack
 
 /**
  * Render Views
@@ -34,7 +35,7 @@ interface ViewRenderer {
     /**
      * Render view
      */
-    fun render(view: UltralightView)
+    fun render(view: UltralightView, matrices: MatrixStack)
 
     /**
      * Delete

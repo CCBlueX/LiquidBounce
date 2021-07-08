@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.OverlayRenderEvent;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.util.math.MatrixStack;
-import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -36,9 +35,7 @@ public class MixinInGameHud {
      */
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/InGameHud;renderStatusEffectOverlay(Lnet/minecraft/client/util/math/MatrixStack;)V", shift = At.Shift.AFTER))
     private void hookRenderEvent(MatrixStack matrices, float tickDelta, CallbackInfo callbackInfo) {
-        GL11.glPushAttrib(GL11.GL_TEXTURE_BIT);
         EventManager.INSTANCE.callEvent(new OverlayRenderEvent(matrices, tickDelta));
-        GL11.glPopAttrib();
     }
 
 }

@@ -41,9 +41,8 @@ object ModuleNewChunks : Module("NewChunks", Category.RENDER) {
             return@handler
         }
 
-        if (!event.packet.isFullChunk) {
-            this.newlyLoadedChunks.add(ChunkPos(event.packet.x, event.packet.z))
-        }
+        // todo: check if full chunk is required (has been removed in 1.17)
+        this.newlyLoadedChunks.add(ChunkPos(event.packet.x, event.packet.z))
     }
 
     val renderHandler = handler<EngineRenderEvent> {

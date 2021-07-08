@@ -279,7 +279,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             // Should accelerated game ticks when using bow
             if (currentItem?.item is BowItem) {
                 repeat(packets) { // Send movement packet to simulate ticks (has been patched in 1.19)
-                    network.sendPacket(PlayerMoveC2SPacket(true)) // Just show visual effect (not required to work - but looks better)
+                    network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(true)) // Just show visual effect (not required to work - but looks better)
                     player.tickActiveItemStack()
                 }
 

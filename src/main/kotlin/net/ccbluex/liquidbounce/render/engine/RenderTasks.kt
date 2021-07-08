@@ -31,7 +31,8 @@ import kotlin.math.sin
 enum class OpenGLLevel(val minor: Int, val major: Int, val backendInfo: String) {
     OPENGL4_3(4, 3, "OpenGL 4.3+ (Multi rendering)"),
     OPENGL3_3(3, 3, "OpenGL 3.3+ (VAOs, VBOs, Instancing, Shaders)"),
-    OPENGL1_2(1, 2, "OpenGL 1.2+ (Immediate mode, Display Lists)");
+    // TODO: OPENGL 1.2 is broken right now on Minecraft 1.17+ and should be removed.
+    OPENGL1_2(999, 999, "OpenGL 1.2+ (Immediate mode, Display Lists)");
 
     /**
      * Determines if an OpenGL level is supported
@@ -50,8 +51,8 @@ enum class OpenGLLevel(val minor: Int, val major: Int, val backendInfo: String) 
         /**
          * Determines the best backend level for the given arguments
          */
-        fun getBestLevelFor(major: Int, minor: Int): OpenGLLevel {
-            return enumValues<OpenGLLevel>().first { it.isSupported(major, minor) }
+        fun getBestLevelFor(major: Int, minor: Int): OpenGLLevel? {
+            return enumValues<OpenGLLevel>().firstOrNull { it.isSupported(major, minor) }
         }
     }
 }
