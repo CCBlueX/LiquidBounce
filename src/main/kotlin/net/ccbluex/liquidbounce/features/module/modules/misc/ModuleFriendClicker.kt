@@ -44,6 +44,8 @@ object ModuleFriendClicker : Module("FriendClicker", Category.MISC) {
                 FriendManager.friends.add(FriendManager.Friend(name, null))
                 chat("§8$name §7was successfully added to the friend list.")
             }
+        } else if (((crosshair !is EntityHitResult || crosshair is EntityHitResult && crosshair.entity !is PlayerEntity)) && mc.options.keyPickItem.isPressed && !clicked) {
+            chat("§cYou need to select a player.")
         }
         clicked = mc.options.keyPickItem.isPressed
     }
