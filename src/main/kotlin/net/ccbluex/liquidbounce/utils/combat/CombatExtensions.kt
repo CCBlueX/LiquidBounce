@@ -101,7 +101,7 @@ class EnemyConfigurable : Configurable("enemies") {
 
                 // Check if enemy is a player and should be considered as enemy
                 if (suspect is PlayerEntity && suspect != mc.player) {
-                    if (attackable && !friends && FriendManager.isFriend(suspect)) {
+                    if (attackable && !friends && FriendManager.isFriend(suspect.toString())) {
                         return false
                     }
 
