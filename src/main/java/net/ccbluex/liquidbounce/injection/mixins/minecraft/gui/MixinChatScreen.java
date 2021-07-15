@@ -18,7 +18,7 @@ public abstract class MixinChatScreen extends MixinScreen {
      */
     @Inject(method = "keyPressed", at = @At(value = "INVOKE", target = "Ljava/lang/String;trim()Ljava/lang/String;", shift = At.Shift.BEFORE), cancellable = true)
     private void fixOrder(CallbackInfoReturnable<Boolean> callbackInfo) {
-        this.client.openScreen(null);
+        this.client.setScreen(null);
 
         String string = this.chatField.getText().trim();
         if (!string.isEmpty()) {

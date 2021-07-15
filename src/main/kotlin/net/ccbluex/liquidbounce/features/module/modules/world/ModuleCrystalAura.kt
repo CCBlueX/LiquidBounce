@@ -72,9 +72,6 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
     }
 
     val networkTickHandler = repeatable {
-
-        val player = mc.player ?: return@repeatable
-
         val slot = (0..8).firstOrNull {
             player.inventory.getStack(it).item == Items.END_CRYSTAL
         } ?: return@repeatable
@@ -84,7 +81,6 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
                 return@repeatable
             }
 
-            functioning = true
             updateTarget()
             val curr = currentBlock ?: return@repeatable
             val serverRotation = RotationManager.serverRotation ?: return@repeatable
@@ -123,8 +119,6 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
             }
 
             destroy()
-
-            functioning = false
         }
     }
 
@@ -167,7 +161,7 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
             player.swingHand(Hand.MAIN_HAND)
         }
 
-        network.sendPacket(PlayerInteractEntityC2SPacket(entity, player.isSneaking))
+        network.sendPacket(PlayerInteractEntityC2SPacket.attack(entity, player.isSneaking))
 
         // Swing after attacking (on 1.9+)
         if (swing && protocolVersion != MC_1_8) {

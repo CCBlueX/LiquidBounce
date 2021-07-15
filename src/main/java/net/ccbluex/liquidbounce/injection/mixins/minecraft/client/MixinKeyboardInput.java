@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.input.KeyboardInput;
-import net.minecraft.client.options.KeyBinding;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Mixin;
@@ -38,7 +38,7 @@ public class MixinKeyboardInput extends MixinInput {
     /**
      * Hook inventory move module
      */
-    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/options/KeyBinding;isPressed()Z"))
+    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z"))
     private boolean hookInventoryMove(KeyBinding keyBinding) {
         return ModuleInventoryMove.INSTANCE.shouldHandleInputs(keyBinding) ?
                 InputUtil.isKeyPressed(MinecraftClient.getInstance().getWindow().getHandle(),
@@ -58,7 +58,7 @@ public class MixinKeyboardInput extends MixinInput {
 
         currentRotation = currentRotation.fixedSensitivity();
 
-        float deltaYaw = MinecraftClient.getInstance().player.yaw - currentRotation.getYaw();
+        float deltaYaw = MinecraftClient.getInstance().player.getYaw() - currentRotation.getYaw();
 
         float x = this.movementSideways;
         float z = this.movementForward;
