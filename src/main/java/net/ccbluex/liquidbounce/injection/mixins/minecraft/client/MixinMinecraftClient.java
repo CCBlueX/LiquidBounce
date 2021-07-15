@@ -149,7 +149,7 @@ public abstract class MixinMinecraftClient {
      * @param screen to be opened (null = no screen at all)
      * @param callbackInfo          callback
      */
-    @Inject(method = "openScreen", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)
     private void hookScreen(Screen screen, CallbackInfo callbackInfo) {
         final ScreenEvent event = new ScreenEvent(screen);
         EventManager.INSTANCE.callEvent(event);

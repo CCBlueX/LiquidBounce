@@ -52,7 +52,7 @@ object UltralightScreenHook : Listenable {
             loadPage(page)
         }
 
-        mc.openScreen(emptyScreen)
+        mc.setScreen(emptyScreen)
         event.cancelEvent()
     }
 

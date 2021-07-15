@@ -38,12 +38,12 @@ object UltralightJsUi {
 
     // A collection of minecraft screens
     private val _jsScreens = arrayOf(
-        JsScreen("title", TitleScreen::class.java) { mc.openScreen(TitleScreen()) },
-        JsScreen("singleplayer", SelectWorldScreen::class.java) { mc.openScreen(SelectWorldScreen(it)) },
-        JsScreen("multiplayer", MultiplayerScreen::class.java) { mc.openScreen(MultiplayerScreen(it)) },
-        JsScreen("options", OptionsScreen::class.java) { mc.openScreen(OptionsScreen(it, mc.options)) },
-        JsScreen("language_options", LanguageOptionsScreen::class.java) { mc.openScreen(LanguageOptionsScreen(it, mc.options, mc.languageManager)) },
-        JsScreen("multiplayer_realms", RealmsMainScreen::class.java) { mc.openScreen(RealmsMainScreen(it)) }
+        JsScreen("title", TitleScreen::class.java) { mc.setScreen(TitleScreen()) },
+        JsScreen("singleplayer", SelectWorldScreen::class.java) { mc.setScreen(SelectWorldScreen(it)) },
+        JsScreen("multiplayer", MultiplayerScreen::class.java) { mc.setScreen(MultiplayerScreen(it)) },
+        JsScreen("options", OptionsScreen::class.java) { mc.setScreen(OptionsScreen(it, mc.options)) },
+        JsScreen("language_options", LanguageOptionsScreen::class.java) { mc.setScreen(LanguageOptionsScreen(it, mc.options, mc.languageManager)) },
+        JsScreen("multiplayer_realms", RealmsMainScreen::class.java) { mc.setScreen(RealmsMainScreen(it)) }
     )
 
     fun get(name: String) = _jsScreens.find { it.name == name }
@@ -53,7 +53,7 @@ object UltralightJsUi {
             UltralightEngine.newScreenView(emptyScreen, mc.currentScreen).apply {
                 loadPage(page)
             }
-            mc.openScreen(emptyScreen)
+            mc.setScreen(emptyScreen)
         }
 
     fun get(screen: Screen?) = get(screen?.javaClass)
