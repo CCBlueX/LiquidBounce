@@ -38,8 +38,8 @@ ktlint {
 
 }
 
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
+sourceCompatibility = JavaVersion.VERSION_16
+targetCompatibility = JavaVersion.VERSION_16
 
 archivesBaseName = project.archives_base_name
 version = project.mod_version
@@ -53,7 +53,6 @@ repositories {
     mavenCentral()
     maven { url = "https://maven.fabricmc.net/" }
     maven { url = "https://jitpack.io" }
-    maven { url = "https://maven.terraformersmc.com/" }
 }
 
 dependencies {
@@ -72,21 +71,22 @@ dependencies {
 
     // Recommended mods (on IDE)
     modRuntime "net.earthcomputer.multiconnect:multiconnect-slim:${project.multiconnect_version}"
-    modRuntime "com.terraformersmc:modmenu:${project.mod_menu_version}"
-    modRuntime "com.github.jellysquid3:sodium-fabric:${project.sodium_version}"
-    modRuntime "com.github.jellysquid3:lithium-fabric:${project.lithium_version}"
-    modRuntime "com.github.jellysquid3:phosphor-fabric:${project.phosphor_version}"
-    modRuntime ("com.github.CCBlueX:baritone:${project.minecraft_version}-SNAPSHOT") {
-        exclude group: "org.ow2.asm", module: "asm-debug-all"
+//    modRuntime "com.terraformersmc:modmenu:${project.mod_menu_version}"
 
-        exclude group: "org.lwjgl.lwjgl", module: "lwjgl"
-        exclude group: "org.lwjgl.lwjgl", module: "lwjgl-platform"
-
-        exclude group: "net.java.jinput", module: "jinput"
-        exclude group: "net.java.jinput", module: "jinput-platform"
-
-        exclude group: "net.sf.jopt-simple", module: "jopt-simple"
-    }
+//    modRuntime "com.github.CaffeineMC:sodium-fabric:${project.sodium_version}"
+//    modRuntime "com.github.CaffeineMC:lithium-fabric:${project.lithium_version}"
+//    modRuntime "com.github.CaffeineMC:phosphor-fabric:${project.phosphor_version}"
+//    modRuntime ("com.github.CCBlueX:baritone:${project.minecraft_version}-SNAPSHOT") {
+//        exclude group: "org.ow2.asm", module: "asm-debug-all"
+//
+//        exclude group: "org.lwjgl.lwjgl", module: "lwjgl"
+//        exclude group: "org.lwjgl.lwjgl", module: "lwjgl-platform"
+//
+//        exclude group: "net.java.jinput", module: "jinput"
+//        exclude group: "net.java.jinput", module: "jinput-platform"
+//
+//        exclude group: "net.sf.jopt-simple", module: "jopt-simple"
+//    }
 
     // Ignore in export
     implementation "com.google.code.findbugs:jsr305:3.0.2" // to fix nullable imports
@@ -113,21 +113,23 @@ dependencies {
 processResources {
     inputs.property "version", project.version
 
-    from(sourceSets.main.resources.srcDirs) {
-        include "fabric.mod.json"
+    filesMatching("fabric.mod.json") {
         expand "version": project.version
-    }
-
-    from(sourceSets.main.resources.srcDirs) {
-        exclude "fabric.mod.json"
     }
 }
 
 // ensure that the encoding is set to UTF-8, no matter what the system default is
 // this fixes some edge cases with special characters not displaying correctly
 // see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
-tasks.withType(JavaCompile) {
-    options.encoding = "UTF-8"
+tasks.withType(JavaCompile).configureEach {
+    // ensure that the encoding is set to UTF-8, no matter what the system default is
+    // this fixes some edge cases with special characters not displaying correctly
+    // see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
+    // If Javadoc is generated, this must be specified in that task too.
+    it.options.encoding = "UTF-8"
+
+    // Minecraft 1.17 (21w19a) upwards uses Java 16.
+    it.options.release = 16
 }
 
 tasks.withType(Test) {
@@ -136,7 +138,6 @@ tasks.withType(Test) {
 
 compileKotlin {
     kotlinOptions.suppressWarnings = true
-    kotlinOptions.jvmTarget = "1.8"
     kotlinOptions.useIR = true
 }
 

@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.client.ThreadLock
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.screen.Screen
+import net.minecraft.client.util.math.MatrixStack
 
 object UltralightEngine {
 
@@ -137,11 +138,13 @@ object UltralightEngine {
         renderer.get().update()
     }
 
-    fun render(layer: RenderLayer) {
+    fun render(layer: RenderLayer, matrices: MatrixStack) {
         renderer.get().render()
 
         views.filter { it.layer == layer }
-            .forEach(View::render)
+            .forEach {
+                it.render(matrices)
+            }
     }
 
     fun resize(width: Long, height: Long) {
