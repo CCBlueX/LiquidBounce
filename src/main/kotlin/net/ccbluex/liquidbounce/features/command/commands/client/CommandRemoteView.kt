@@ -45,7 +45,7 @@ object CommandRemoteView {
                     .handler { command, args ->
                         val name = args[0] as String
                         for (entity in mc.world!!.entities) {
-                            if (name == entity.entityName.lowercase()) {
+                            if (name.equals(entity.entityName, true)) {
                                 if (mc.getCameraEntity() == entity) {
                                     chat(regular(command.result("alreadyViewing", variable(entity.entityName))))
                                     return@handler
