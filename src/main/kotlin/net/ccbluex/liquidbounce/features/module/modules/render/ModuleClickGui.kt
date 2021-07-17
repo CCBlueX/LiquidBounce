@@ -34,7 +34,7 @@ object ModuleClickGui : Module("ClickGUI", Category.RENDER, disableActivation = 
         UltralightEngine.newScreenView(emptyScreen).apply {
             loadPage(page)
         }
-        mc.openScreen(emptyScreen)
+        mc.setScreen(emptyScreen)
     }
 
 }

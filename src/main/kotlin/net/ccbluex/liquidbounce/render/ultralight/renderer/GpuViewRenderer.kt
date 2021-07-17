@@ -22,6 +22,7 @@ import com.labymedia.ultralight.UltralightView
 import com.labymedia.ultralight.config.UltralightViewConfig
 import com.labymedia.ultralight.gpu.UltralightOpenGLGPUDriverNative
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.client.util.math.MatrixStack
 import org.lwjgl.glfw.GLFW.glfwMakeContextCurrent
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.opengl.GL20.glUseProgram
@@ -45,7 +46,7 @@ class GpuViewRenderer : ViewRenderer {
         driver = UltralightOpenGLGPUDriverNative(window, true)
     }
 
-    override fun render(view: UltralightView) {
+    override fun render(view: UltralightView, matrices: MatrixStack) {
         driver.setActiveWindow(window)
         glfwMakeContextCurrent(window)
         glPushAttrib(GL_ENABLE_BIT or GL_COLOR_BUFFER_BIT or GL_TRANSFORM_BIT)

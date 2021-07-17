@@ -41,7 +41,7 @@ object ModuleAutoRespawn : Module("AutoRespawn", Category.PLAYER) {
             }
 
             player.requestRespawn()
-            mc.openScreen(null)
+            mc.setScreen(null)
         }
     }
 

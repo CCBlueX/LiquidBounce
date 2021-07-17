@@ -153,8 +153,10 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleZoot,
             ModuleNoSwing,
             ModuleNoHurtCam,
-            ModuleFriendClicker,
-            ModuleCrystalAura
+            ModuleCrystalAura,
+            ModuleAutoGapple,
+            ModuleIgnite,
+            ModuleFriendClicker
         )
 
         builtin.apply {
