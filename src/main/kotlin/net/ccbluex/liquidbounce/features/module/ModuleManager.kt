@@ -135,7 +135,6 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleSafeWalk,
             ModuleAutoTool,
             ModuleNoPush,
-            ModuleAntiBerryBush,
             ModuleFreeCam,
             ModulePlugins,
             ModuleTrajectories,
