@@ -26,10 +26,10 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.TitleScreen
 import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen
-import net.minecraft.client.gui.screen.options.LanguageOptionsScreen
-import net.minecraft.client.gui.screen.options.OptionsScreen
+import net.minecraft.client.gui.screen.option.LanguageOptionsScreen
+import net.minecraft.client.gui.screen.option.OptionsScreen
 import net.minecraft.client.gui.screen.world.SelectWorldScreen
-import net.minecraft.client.realms.gui.screen.RealmsBridgeScreen
+import net.minecraft.client.realms.gui.screen.RealmsMainScreen
 
 /**
  * Referenced by JS as `ui`
@@ -38,12 +38,12 @@ object UltralightJsUi {
 
     // A collection of minecraft screens
     private val _jsScreens = arrayOf(
-        JsScreen("title", TitleScreen::class.java) { mc.openScreen(TitleScreen()) },
-        JsScreen("singleplayer", SelectWorldScreen::class.java) { mc.openScreen(SelectWorldScreen(it)) },
-        JsScreen("multiplayer", MultiplayerScreen::class.java) { mc.openScreen(MultiplayerScreen(it)) },
-        JsScreen("options", OptionsScreen::class.java) { mc.openScreen(OptionsScreen(it, mc.options)) },
-        JsScreen("language_options", LanguageOptionsScreen::class.java) { mc.openScreen(LanguageOptionsScreen(it, mc.options, mc.languageManager)) },
-        JsScreen("multiplayer_realms", RealmsBridgeScreen::class.java) { RealmsBridgeScreen().switchToRealms(it) }
+        JsScreen("title", TitleScreen::class.java) { mc.setScreen(TitleScreen()) },
+        JsScreen("singleplayer", SelectWorldScreen::class.java) { mc.setScreen(SelectWorldScreen(it)) },
+        JsScreen("multiplayer", MultiplayerScreen::class.java) { mc.setScreen(MultiplayerScreen(it)) },
+        JsScreen("options", OptionsScreen::class.java) { mc.setScreen(OptionsScreen(it, mc.options)) },
+        JsScreen("language_options", LanguageOptionsScreen::class.java) { mc.setScreen(LanguageOptionsScreen(it, mc.options, mc.languageManager)) },
+        JsScreen("multiplayer_realms", RealmsMainScreen::class.java) { mc.setScreen(RealmsMainScreen(it)) }
     )
 
     fun get(name: String) = _jsScreens.find { it.name == name }
@@ -53,7 +53,7 @@ object UltralightJsUi {
             UltralightEngine.newScreenView(emptyScreen, mc.currentScreen).apply {
                 loadPage(page)
             }
-            mc.openScreen(emptyScreen)
+            mc.setScreen(emptyScreen)
         }
 
     fun get(screen: Screen?) = get(screen?.javaClass)

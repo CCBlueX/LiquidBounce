@@ -81,6 +81,9 @@ fun chat(text: String) = chat(text.asText())
 fun notification(title: Text, message: String, severity: NotificationEvent.Severity) =
     EventManager.callEvent(NotificationEvent(title.string, message, severity))
 
+fun notification(title: String, message: Text, severity: NotificationEvent.Severity) =
+    EventManager.callEvent(NotificationEvent(title, message.string, severity))
+
 fun notification(title: String, message: String, severity: NotificationEvent.Severity) =
     EventManager.callEvent(NotificationEvent(title, message, severity))
 

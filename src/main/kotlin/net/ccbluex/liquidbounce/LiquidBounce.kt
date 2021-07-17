@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
 import net.ccbluex.liquidbounce.utils.mappings.McMappings
 import org.apache.logging.log4j.LogManager
+import kotlin.system.exitProcess
 
 /**
  * LiquidBounce
@@ -64,54 +65,61 @@ object LiquidBounce : Listenable {
      * Should be executed to start the client.
      */
     val startHandler = handler<ClientStartEvent> {
-        logger.info("Launching $CLIENT_NAME v$CLIENT_VERSION by $CLIENT_AUTHOR")
-        logger.debug("Loading from cloud: '$CLIENT_CLOUD'")
+        runCatching {
+            logger.info("Launching $CLIENT_NAME v$CLIENT_VERSION by $CLIENT_AUTHOR")
+            logger.debug("Loading from cloud: '$CLIENT_CLOUD'")
 
-        // Load mappings
-        McMappings.load()
+            // Load mappings
+            McMappings.load()
 
-        // Initialize client features
-        EventManager
+            // Initialize client features
+            EventManager
 
-        // Config
-        ConfigSystem
-        globalEnemyConfigurable
+            // Config
+            ConfigSystem
+            globalEnemyConfigurable
 
-        RotationManager
+            RotationManager
 
-        ChunkScanner
+            ChunkScanner
 
-        // Features
-        ModuleManager
-        CommandManager
-        ThemeManager
-        ScriptManager
-        RotationManager
-        FriendManager
-        ProxyManager
-        Tabs
-        Chat
+            // Features
+            ModuleManager
+            CommandManager
+            ThemeManager
+            ScriptManager
+            RotationManager
+            FriendManager
+            ProxyManager
+            Tabs
+            Chat
 
-        // Initialize the render engine
-        RenderEngine.init()
+            // Initialize the render engine
+            RenderEngine.init()
 
-        // Load up web platform
-        UltralightEngine.init()
+            // Load up web platform
+            UltralightEngine.init()
 
-        // Register commands and modules
-        CommandManager.registerInbuilt()
-        ModuleManager.registerInbuilt()
+            // Register commands and modules
+            CommandManager.registerInbuilt()
+            ModuleManager.registerInbuilt()
 
-        // Load user scripts
-        ScriptManager.loadScripts()
+            // Load user scripts
+            ScriptManager.loadScripts()
 
-        // Load config system from disk
-        ConfigSystem.load()
+            // Load config system from disk
+            ConfigSystem.load()
 
-        // Connect to chat server
-        Chat.connect()
+            // Connect to chat server
+            Chat.connect()
 
-        logger.info("Successfully loaded client!")
+
+        }.onSuccess {
+            logger.info("Successfully loaded client!")
+        }.onFailure {
+            logger.error("Unable to load client.", it)
+            exitProcess(1)
+        }
     }
 
     /**
