@@ -68,7 +68,7 @@ class Theme(val name: String) {
     fun page(name: String): Page? {
         val page = Page(this, name)
 
-        if (page.exist) {
+        if (page.exists) {
             return page
         }
         return null
@@ -79,13 +79,12 @@ class Theme(val name: String) {
 class Page(theme: Theme, val name: String) {
 
     private val pageFolder = File(theme.themeFolder, name)
-    private val htmlFile = File(pageFolder, "index.html")
 
     val viewableFile: String
-        get() = htmlFile.toURI().toString()
+        get() = "file:///${File(pageFolder, "index.html").absolutePath}"
 
-    val exist: Boolean
-        get() = htmlFile.exists()
+    val exists: Boolean
+        get() = pageFolder.exists()
 
     private val watcher by lazy {
         val path = pageFolder.toPath()

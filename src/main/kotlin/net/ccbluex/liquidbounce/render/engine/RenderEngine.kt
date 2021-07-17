@@ -85,7 +85,7 @@ object RenderEngine : Listenable {
     /**
      * What OpenGL level is this client supposed to use? Determined when initialized
      */
-    var openglLevel: OpenGLLevel = OpenGLLevel.OPENGL1_2
+    var openglLevel: OpenGLLevel = OpenGLLevel.OPENGL3_3
 
     /**
      * Used to recognize what GL version we are on
@@ -143,7 +143,8 @@ object RenderEngine : Listenable {
         val minorVersion = matcher.group(2).toInt()
         val patchVersion = if (matcher.groupCount() >= 5) matcher.group(4)?.toInt() else null
 
-        openglLevel = OpenGLLevel.getBestLevelFor(majorVersion, minorVersion)
+        // At the moment there is only one GL backend to be used and most graphic cards do not support 3.3+. So yeah, try it. If it doesn't work. I don't care.
+        // openglLevel = OpenGLLevel.getBestLevelFor(majorVersion, minorVersion) ?: error("Not supported graphics card")
 
         logger.info("Found out OpenGL version to be $majorVersion.$minorVersion${if (patchVersion != null) ".$patchVersion" else ""}. Using backend for ${openglLevel.backendInfo}")
     }

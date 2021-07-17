@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.minecraft.client.network.OtherClientPlayerEntity
+import net.minecraft.entity.Entity
 import net.minecraft.network.Packet
 import net.minecraft.network.packet.c2s.play.*
 import net.minecraft.util.math.Vec3d
@@ -78,7 +79,7 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
 
             faker.headYaw = player.headYaw
             faker.copyPositionAndRotation(player)
-            world.addEntity(faker.entityId, faker)
+            world.addEntity(faker.id, faker)
 
             fakeplayer = faker
         }
@@ -117,7 +118,7 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
         val faker = this.fakeplayer
 
         if (faker != null) {
-            world.removeEntity(faker.entityId)
+            world.removeEntity(faker.id, Entity.RemovalReason.UNLOADED_TO_CHUNK)
 
             this.fakeplayer = null
         }

@@ -62,7 +62,7 @@ public abstract class MixinWorldRenderer {
     @Inject(method = "renderEntity", at = @At("HEAD"))
     private void injectOutlineESP(Entity entity, double cameraX, double cameraY, double cameraZ, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, CallbackInfo info) {
         // Prevent stack overflow
-        if (!ModuleESP.OutlineMode.INSTANCE.isActive() || isCurrentlyRenderingEntityOutline.get())
+        if (!ModuleESP.INSTANCE.getEnabled() || !ModuleESP.OutlineMode.INSTANCE.isActive() || isCurrentlyRenderingEntityOutline.get())
             return;
 
         if (CombatExtensionsKt.shouldBeShown(entity)) {
