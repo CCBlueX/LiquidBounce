@@ -58,7 +58,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
             val packet = event.packet
 
             // Check if this is a regular velocity update
-            if (packet is EntityVelocityUpdateS2CPacket && packet.id == ModuleVelocity.player.entityId) {
+            if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id) {
                 // It should just block the packet
                 if (horizontal == 0f && vertical == 0f) {
                     event.cancelEvent()
@@ -101,7 +101,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
             val packet = event.packet
 
             // Check if this is a regular velocity update
-            if (packet is EntityVelocityUpdateS2CPacket && packet.id == ModuleVelocity.player.entityId) {
+            if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id) {
 
             } else if (packet is ExplosionS2CPacket) { // Check if velocity is affected by explosion
 
@@ -128,7 +128,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
             val packet = event.packet
 
             // Check if this is a regular velocity update
-            if ((packet is EntityVelocityUpdateS2CPacket && packet.id == ModuleVelocity.player.entityId) || packet is ExplosionS2CPacket) {
+            if ((packet is EntityVelocityUpdateS2CPacket && packet.id == player.id) || packet is ExplosionS2CPacket) {
                 // A few anti-cheats can be easily tricked by applying the velocity a few ticks after being damaged
                 wait(delay)
 
