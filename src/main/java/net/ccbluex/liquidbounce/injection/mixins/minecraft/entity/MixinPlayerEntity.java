@@ -117,7 +117,7 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
         return currentRotation.getYaw();
     }
 
-    @Inject(method = "getReducedDebugInfo", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "hasReducedDebugInfo", at = @At("HEAD"), cancellable = true)
     private void injectReducedDebugInfo(CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
         if (ModuleAntiReducedDebugInfo.INSTANCE.getEnabled()) {
             callbackInfoReturnable.setReturnValue(false);
