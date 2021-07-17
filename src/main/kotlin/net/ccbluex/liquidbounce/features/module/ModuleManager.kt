@@ -156,7 +156,11 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleCrystalAura,
             ModuleAutoGapple,
             ModuleIgnite,
-            ModuleFriendClicker
+            ModuleFriendClicker,
+            ModulePerfectHorseJump,
+            ModuleAntiAFK,
+            ModuleNoJumpDelay,
+            ModuleNoBob
         )
 
         builtin.apply {

@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePortalMenu;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoSlow;
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModulePerfectHorseJump;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleStep;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
@@ -212,6 +213,12 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
 
             if (ModuleNoSwing.INSTANCE.getServerSide())
                 MinecraftClient.getInstance().getNetworkHandler().sendPacket(new HandSwingC2SPacket(hand));
+        }
+    }
+    @Inject(method = "getMountJumpStrength", at = @At("HEAD"), cancellable = true)
+    private void hookMountJumpStrength(CallbackInfoReturnable<Float> callbackInfoReturnable) {
+        if (ModulePerfectHorseJump.INSTANCE.getEnabled()) {
+            callbackInfoReturnable.setReturnValue(1f);
         }
     }
 }
