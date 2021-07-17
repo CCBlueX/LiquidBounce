@@ -25,17 +25,18 @@ import com.labymedia.ultralight.config.FontHinting
 import com.labymedia.ultralight.config.UltralightConfig
 import com.labymedia.ultralight.gpu.UltralightGPUDriverNativeUtil
 import com.labymedia.ultralight.plugin.logging.UltralightLogLevel
+import net.ccbluex.liquidbounce.render.ultralight.filesystem.BrowserFileSystem
 import net.ccbluex.liquidbounce.render.ultralight.glfw.GlfwClipboardAdapter
 import net.ccbluex.liquidbounce.render.ultralight.glfw.GlfwCursorAdapter
 import net.ccbluex.liquidbounce.render.ultralight.glfw.GlfwInputAdapter
 import net.ccbluex.liquidbounce.render.ultralight.hooks.UltralightIntegrationHook
 import net.ccbluex.liquidbounce.render.ultralight.hooks.UltralightScreenHook
 import net.ccbluex.liquidbounce.render.ultralight.renderer.CpuViewRenderer
-import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.ThreadLock
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.screen.Screen
+import net.minecraft.client.util.math.MatrixStack
 
 object UltralightEngine {
 
@@ -101,7 +102,7 @@ object UltralightEngine {
                 .fontHinting(FontHinting.SMOOTH)
         )
         platform.get().usePlatformFontLoader()
-        platform.get().usePlatformFileSystem(ThemeManager.themesFolder.absolutePath)
+        platform.get().setFileSystem(BrowserFileSystem())
         platform.get().setClipboard(GlfwClipboardAdapter())
         platform.get().setLogger { level, message ->
             @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
@@ -137,11 +138,13 @@ object UltralightEngine {
         renderer.get().update()
     }
 
-    fun render(layer: RenderLayer) {
+    fun render(layer: RenderLayer, matrices: MatrixStack) {
         renderer.get().render()
 
         views.filter { it.layer == layer }
-            .forEach(View::render)
+            .forEach {
+                it.render(matrices)
+            }
     }
 
     fun resize(width: Long, height: Long) {

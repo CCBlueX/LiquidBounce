@@ -195,7 +195,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     val repeatable = handler<StateUpdateEvent> {
         // Check if player is on the edge and is NOT flying
-        val isAir = !player.blockPos.add(0, -1, 0).canStandOn() && player.canFly()
+        val isAir = !player.blockPos.add(0, -1, 0).canStandOn() && !player.abilities.flying
 
         if (shouldDisableSafeWalk()) {
             it.state.enforceEagle = false

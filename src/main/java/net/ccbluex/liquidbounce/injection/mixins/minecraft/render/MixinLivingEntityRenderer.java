@@ -27,6 +27,7 @@ import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -35,6 +36,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LivingEntityRenderer.class)
 public class MixinLivingEntityRenderer<T extends LivingEntity> {
+
     private final ThreadLocal<Rotation> currentRotation = ThreadLocal.withInitial(() -> null);
 
     @Inject(method = "render", at = @At("HEAD"))
@@ -43,70 +45,57 @@ public class MixinLivingEntityRenderer<T extends LivingEntity> {
 
         if (!ModuleRotations.INSTANCE.getEnabled() || livingEntity != MinecraftClient.getInstance().player || currentRotation == null) {
             this.currentRotation.set(null);
-
             return;
         }
 
         this.currentRotation.set(currentRotation);
     }
 
-    @Redirect(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;prevBodyYaw:F"))
-    private float injectRotationsA(T entity) {
+    /**
+     * Yaw injection hook
+     *
+     * float h = MathHelper.lerpAngleDegrees(g, livingEntity.prevBodyYaw, livingEntity.bodyYaw);
+     * float j = MathHelper.lerpAngleDegrees(g, livingEntity.prevHeadYaw, livingEntity.headYaw);
+     */
+    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;lerpAngleDegrees(FFF)F", ordinal = 0))
+    private float injectRotationsA(float g, float f, float s) {
         Rotation rot = currentRotation.get();
-
-        if (rot != null)
-            return rot.getYaw();
-
-        return entity.prevBodyYaw;
+        if (rot != null) {
+            return MathHelper.lerpAngleDegrees(g, rot.getYaw(), rot.getYaw());
+        } else {
+            return MathHelper.lerpAngleDegrees(g, f, s);
+        }
     }
 
-    @Redirect(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;bodyYaw:F"))
-    private float injectRotationsB(T entity) {
+    /**
+     * Yaw injection hook
+     *
+     * float h = MathHelper.lerpAngleDegrees(g, livingEntity.prevBodyYaw, livingEntity.bodyYaw);
+     * float j = MathHelper.lerpAngleDegrees(g, livingEntity.prevHeadYaw, livingEntity.headYaw);
+     */
+    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;lerpAngleDegrees(FFF)F", ordinal = 1))
+    private float injectRotationsB(float g, float f, float s) {
         Rotation rot = currentRotation.get();
-
-        if (rot != null)
-            return rot.getYaw();
-
-        return entity.bodyYaw;
+        if (rot != null) {
+            return MathHelper.lerpAngleDegrees(g, rot.getYaw(), rot.getYaw());
+        } else {
+            return MathHelper.lerpAngleDegrees(g, f, s);
+        }
     }
 
-    @Redirect(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;prevHeadYaw:F"))
-    private float injectRotationsC(T entity) {
+    /**
+     * Pitch injection hook
+     *
+     * float m = MathHelper.lerp(g, livingEntity.prevPitch, livingEntity.getPitch());
+     */
+    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;lerp(FFF)F", ordinal = 0))
+    private float injectRotationsC(float g, float f, float s) {
         Rotation rot = currentRotation.get();
-
-        if (rot != null)
-            return rot.getYaw();
-
-        return entity.prevHeadYaw;
+        if (rot != null) {
+            return MathHelper.lerp(g, rot.getPitch(), rot.getPitch());
+        } else {
+            return MathHelper.lerp(g, f, s);
+        }
     }
 
-    @Redirect(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;headYaw:F"))
-    private float injectRotationsD(T entity) {
-        Rotation rot = currentRotation.get();
-
-        if (rot != null)
-            return rot.getYaw();
-
-        return entity.headYaw;
-    }
-
-    @Redirect(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;pitch:F"))
-    private float injectRotationsE(T entity) {
-        Rotation rot = currentRotation.get();
-
-        if (rot != null)
-            return rot.getPitch();
-
-        return entity.pitch;
-    }
-
-    @Redirect(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;prevPitch:F"))
-    private float injectRotationsF(T entity) {
-        Rotation rot = currentRotation.get();
-
-        if (rot != null)
-            return rot.getPitch();
-
-        return entity.prevPitch;
-    }
 }

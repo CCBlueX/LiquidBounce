@@ -53,7 +53,11 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
 
         val slot = (0..8).firstOrNull {
             player.inventory.getStack(it).item == Items.LAVA_BUCKET
-        } ?: return@repeatable
+        }
+
+        if (slot == null) {
+            return@repeatable
+        }
 
         for (enemy in targetTracker.enemies()) {
             if (enemy.squaredBoxedDistanceTo(player) > 6.0 * 6.0) {
@@ -77,13 +81,7 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
                 continue
             }
 
-            player.networkHandler.sendPacket(
-                PlayerMoveC2SPacket.LookOnly(
-                    rotation.yaw,
-                    rotation.pitch,
-                    player.isOnGround
-                )
-            )
+            player.networkHandler.sendPacket(PlayerMoveC2SPacket.LookAndOnGround(rotation.yaw, rotation.pitch, player.isOnGround))
 
             if (slot != player.inventory.selectedSlot) {
                 player.networkHandler.sendPacket(UpdateSelectedSlotC2SPacket(slot))
