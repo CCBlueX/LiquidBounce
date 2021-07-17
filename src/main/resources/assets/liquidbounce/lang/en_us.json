@@ -166,6 +166,13 @@
   "liquidbounce.command.ping.description": "Checks your ping.",
   "liquidbounce.command.ping.result.pingCheck": "Your ping is %sms.",
 
+  "liquidbounce.command.remoteview.description": "Allows you to view the perspective of another player.",
+  "liquidbounce.command.remoteview.subcommand.view.result.viewPlayer": "You are now viewing the perspective of %s.",
+  "liquidbounce.command.remoteview.subcommand.view.result.caseOff": "To stop remote viewing %s, execute the command \".rv off\"",
+  "liquidbounce.command.remoteview.subcommand.view.result.alreadyViewing": "You are already viewing %s.",
+  "liquidbounce.command.remoteview.subcommand.off.result.off": "Successfully stopped remote viewing %s.",
+  "liquidbounce.command.remoteview.subcommand.off.result.alreadyOff": "You are not remote viewing anyone.",
+
   "liquidbounce.liquidchat.states.connecting": "Connecting to chat server...",
   "liquidbounce.liquidchat.states.connected": "Connected to chat server!",
   "liquidbounce.liquidchat.states.disconnected": "Disconnected from chat server!",
