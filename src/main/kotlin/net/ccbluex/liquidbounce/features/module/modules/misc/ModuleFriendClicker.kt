@@ -19,34 +19,45 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import net.ccbluex.liquidbounce.event.NotificationEvent
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.notification
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.text.TranslatableText
 import net.minecraft.util.hit.EntityHitResult
 
 object ModuleFriendClicker : Module("FriendClicker", Category.MISC) {
 
-    var clicked = false
+    private var clicked = false
 
     val repeatable = repeatable {
         val crosshair = mc.crosshairTarget
+        val pickup = mc.options.keyPickItem.isPressed
 
-        if (crosshair is EntityHitResult && crosshair.entity is PlayerEntity && mc.options.keyPickItem.isPressed && !clicked) {
+        if (crosshair is EntityHitResult && crosshair.entity is PlayerEntity && pickup && !clicked) {
             val name = (crosshair.entity as PlayerEntity).gameProfile.name
 
             if (FriendManager.isFriend(name)) {
                 FriendManager.friends.remove(FriendManager.Friend(name, null))
-                chat("§8$name §7was successfully removed from the friend list.")
+                notification(
+                    "Friend Clicker",
+                    TranslatableText("$translationBaseKey.removedFriend", name),
+                    NotificationEvent.Severity.INFO
+                )
             } else {
                 FriendManager.friends.add(FriendManager.Friend(name, null))
-                chat("§8$name §7was successfully added to the friend list.")
+
+                notification(
+                    "Friend Clicker",
+                    TranslatableText("$translationBaseKey.addedFriend", name),
+                    NotificationEvent.Severity.INFO
+                )
             }
-        } else if (((crosshair !is EntityHitResult || crosshair is EntityHitResult && crosshair.entity !is PlayerEntity)) && mc.options.keyPickItem.isPressed && !clicked) {
-            chat("§cYou need to select a player.")
         }
-        clicked = mc.options.keyPickItem.isPressed
+
+        clicked = pickup
     }
 }
