@@ -153,7 +153,6 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNoSwing,
             ModuleNoHurtCam,
             ModuleAntiReducedDebugInfo,
-            ModuleCrystalAura
             ModuleCrystalAura,
             ModuleAutoGapple,
             ModuleIgnite,
