@@ -289,5 +289,9 @@
 
   "liquidbounce.module.timer.description": "Changes the speed the game is running at.",
 
-  "liquidbounce.module.noWeb.description": "Disables web slowdown."
+  "liquidbounce.module.noWeb.description": "Disables web slowdown.",
+
+  "liquidbounce.module.friendClicker.description": "Allows you to make friends by clicking on them.",
+  "liquidbounce.module.friendClicker.addedFriend": "%s was successfully added to the friend list.",
+  "liquidbounce.module.friendClicker.removedFriend": "%s was successfully removed from the friend list."
 }
