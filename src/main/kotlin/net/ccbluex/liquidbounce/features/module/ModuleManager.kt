@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleSkinDerp
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleFriendClicker
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleNameProtect
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleSpammer
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleTeams
@@ -154,6 +155,10 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNoHurtCam,
             ModuleAntiAFK,
             ModuleCrystalAura
+            ModuleCrystalAura,
+            ModuleAutoGapple,
+            ModuleIgnite,
+            ModuleFriendClicker
         )
 
         builtin.apply {
