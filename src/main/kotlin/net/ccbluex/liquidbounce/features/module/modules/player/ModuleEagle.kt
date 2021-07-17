@@ -36,7 +36,7 @@ object ModuleEagle : Module("Eagle", Category.PLAYER) {
     val repeatable = handler<StateUpdateEvent> {
         // Check if player is on the edge and is NOT flying
         val pos = player.blockPos.down()
-        val isAir = !pos.getState()!!.isSideSolid(mc.world!!, pos, Direction.UP, SideShapeType.CENTER) && player.canFly()
+        val isAir = !pos.getState()!!.isSideSolid(mc.world!!, pos, Direction.UP, SideShapeType.CENTER) && !player.abilities.flying
 
         if (isAir) {
             it.state.enforceEagle = true

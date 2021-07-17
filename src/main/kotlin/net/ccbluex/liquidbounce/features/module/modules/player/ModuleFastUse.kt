@@ -28,7 +28,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
             if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem || player.activeItem.item is PotionItem) {
                 if (player.isUsingItem) {
                     repeat(35) {
-                        network.sendPacket(PlayerMoveC2SPacket(player.isOnGround))
+                        network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(player.isOnGround))
                     }
                     player.stopUsingItem()
                 }
@@ -59,7 +59,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
             if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem || player.activeItem.item is PotionItem) {
                 if (player.itemUseTime > 14) {
                     repeat(20) {
-                        network.sendPacket(PlayerMoveC2SPacket(player.isOnGround))
+                        network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(player.isOnGround))
                     }
                     player.stopUsingItem()
                 }
@@ -148,7 +148,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
                 if (player.isUsingItem) {
                     wait(delay)
                     repeat(speed) {
-                        network.sendPacket(PlayerMoveC2SPacket(player.isOnGround))
+                        network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(player.isOnGround))
                     }
                     player.stopUsingItem()
                 }

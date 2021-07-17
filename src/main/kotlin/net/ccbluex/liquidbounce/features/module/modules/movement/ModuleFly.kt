@@ -26,9 +26,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.minecraft.block.Blocks
-import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.util.math.MathHelper
 import net.minecraft.util.shape.VoxelShapes
 
 /**
@@ -46,7 +44,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
         val strideHandler = handler<PlayerStrideEvent> { event ->
             if (stride) {
-                event.strideForce = 0.1f.coerceAtMost(MathHelper.sqrt(PlayerEntity.squaredHorizontalLength(player.velocity)))
+                event.strideForce = 0.1.coerceAtMost(player.velocity.horizontalLength()).toFloat()
             }
 
         }
@@ -95,7 +93,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
             }
         }
         val shapeHandler = handler<BlockShapeEvent> { event ->
-            if (event.state.block.`is`(Blocks.AIR) && event.pos.y < player.y) {
+            if (event.state.block == Blocks.AIR && event.pos.y < player.y) {
                 event.shape = VoxelShapes.fullCube()
             }
         }
