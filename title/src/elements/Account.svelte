@@ -1,13 +1,13 @@
 <script>
-    import { createEventDispatcher } from "svelte";
+    import {createEventDispatcher} from "svelte";
+    import ToolTip from "../elements/ToolTip.svelte";
 
     const dispatch = createEventDispatcher();
-
-    import ToolTip from "../elements/ToolTip.svelte";
 
     export let username;
     export let lastUsed;
     export let location;
+    export let faceUrl;
 
     function handleAccountClick(e) {
         dispatch("altManagerClick");
@@ -24,7 +24,7 @@
             <ToolTip text="Change location" />
             <img on:click={handleLocationClick} class="location" src="img/flags/{location}.svg" alt={location}>
         </div>
-        <img class="head" src="https://crafatar.com/avatars/3aa1c8378f4948e9ab4d7a7c36679748" alt="head">
+        <img class="head" src={faceUrl} alt="head">
     </div>
     <div class="username">{username}</div>
     <div class="last-used">{lastUsed}</div>
