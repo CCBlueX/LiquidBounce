@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.PlayerSafeWalkEvent;
 import net.ccbluex.liquidbounce.event.PlayerStrideEvent;
+import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAntiReducedDebugInfo;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar;
@@ -39,7 +40,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(PlayerEntity.class)
 public abstract class MixinPlayerEntity extends MixinLivingEntity {
 
-    @Shadow @Final public PlayerInventory inventory;
+    @Shadow
+    @Final
+    public PlayerInventory inventory;
 
     /**
      * Hook player stride event
@@ -96,7 +99,7 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
 
     /**
      * Hook velocity rotation modification
-     *
+     * <p>
      * There are a few velocity changes when attacking an entity, which could be easily detected by anti-cheats when a different server-side rotation is applied.
      */
     @Redirect(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getYaw()F"))
@@ -112,6 +115,13 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
         currentRotation = currentRotation.fixedSensitivity();
 
         return currentRotation.getYaw();
+    }
+
+    @Inject(method = "getReducedDebugInfo", at = @At("HEAD"), cancellable = true)
+    private void injectReducedDebugInfo(CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
+        if (ModuleAntiReducedDebugInfo.INSTANCE.getEnabled()) {
+            callbackInfoReturnable.setReturnValue(false);
+        }
     }
 
 }
