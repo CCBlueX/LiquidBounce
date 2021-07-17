@@ -118,6 +118,7 @@ class CpuViewRenderer : ViewRenderer {
         RenderSystem.setShader { GameRenderer.getPositionTexColorShader() }
         RenderSystem.setShaderTexture(0, glTexture)
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f)
+        RenderSystem.enableBlend()
         bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR)
 
         bufferBuilder
@@ -143,6 +144,7 @@ class CpuViewRenderer : ViewRenderer {
             .next()
 
         tessellator.draw()
+        RenderSystem.disableBlend()
     }
 
     /**
