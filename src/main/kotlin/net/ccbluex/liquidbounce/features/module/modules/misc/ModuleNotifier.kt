@@ -19,11 +19,13 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import net.ccbluex.liquidbounce.event.NotificationEvent
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.minecraft.client.MinecraftClient
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket
@@ -40,6 +42,8 @@ object ModuleNotifier : Module("Notifier", Category.MISC) {
 
     private val leaveMessages by boolean("Leave Messages", true)
     private val leaveMessageFormat by text("Leave Message Format", "%s left")
+
+    private val useNotification by boolean("Use Notification", false)
 
     private val uuidNameCache = hashMapOf<UUID, String>()
 
@@ -63,14 +67,26 @@ object ModuleNotifier : Module("Notifier", Category.MISC) {
                         uuidNameCache[entry.profile.id] = entry.profile.name
 
                         if (joinMessages) {
-                            chat(regular(joinMessageFormat.format(entry.profile.name)))
+                            val message = joinMessageFormat.format(entry.profile.name)
+
+                            if (useNotification) {
+                                notification("Notifier", message, NotificationEvent.Severity.INFO)
+                            } else {
+                                chat(regular(message))
+                            }
                         }
                     }
                 }
                 PlayerListS2CPacket.Action.REMOVE_PLAYER -> {
                     for (entry in packet.entries) {
                         if (leaveMessages) {
-                            chat(regular(leaveMessageFormat.format(uuidNameCache[entry.profile.id])))
+                            val message = leaveMessageFormat.format(uuidNameCache[entry.profile.id])
+
+                            if (useNotification) {
+                                notification("Notifier", message, NotificationEvent.Severity.INFO)
+                            } else {
+                                chat(regular(message))
+                            }
                         }
 
                         uuidNameCache.remove(entry.profile.id)
