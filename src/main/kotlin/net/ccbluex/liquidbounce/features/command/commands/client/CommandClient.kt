@@ -95,7 +95,7 @@ object CommandClient {
 
                                 val emptyScreen = EmptyScreen()
                                 open(UltralightEngine.newScreenView(emptyScreen))
-                                mc.openScreen(emptyScreen)
+                                mc.setScreen(emptyScreen)
                             }
                             .build()
                     )

@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.render.ultralight.js.bindings
 import com.labymedia.ultralight.databind.context.ContextProvider
 import com.labymedia.ultralight.javascript.JavascriptObject
 import com.labymedia.ultralight.javascript.JavascriptPropertyAttributes
+import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.render.ultralight.View
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -79,15 +80,14 @@ class UltralightJsEvents(private val viewContextProvider: ContextProvider, val v
         val eventHook = EventHook<Event>(
             this,
             { event ->
-                // todo: fix unsafe thread issue
-
-                viewContextProvider.syncWithJavascript {
-                    it.context.globalObject.getProperty(propertyName).toObject().callAsFunction(
-                        it.context.globalObject,
-                        view.context.databind.conversionUtils.toJavascript(it.context, event)
-                    )
+                RenderSystem.recordRenderCall {
+                    viewContextProvider.syncWithJavascript {
+                        it.context.globalObject.getProperty(propertyName).toObject().callAsFunction(
+                            it.context.globalObject,
+                            view.context.databind.conversionUtils.toJavascript(it.context, event)
+                        )
+                    }
                 }
-
             },
             false,
         )

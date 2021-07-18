@@ -51,4 +51,4 @@ fun String.translateColorCodes(): String {
     return String(chars)
 }
 
-fun String.toLowerCamelCase() = this.replaceFirst(this.toCharArray()[0], this.toCharArray()[0].toUpperCase())
+fun String.toLowerCamelCase() = this.replaceFirst(this.toCharArray()[0], this.toCharArray()[0].lowercaseChar())

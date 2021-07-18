@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKillAura.RaycastMode.*
-import net.ccbluex.liquidbounce.features.module.modules.world.ModuleCrystalAura
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
@@ -147,10 +146,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     private fun update() {
         if (player.isSpectator) {
-            return
-        }
-
-        if (ModuleCrystalAura.enabled && ModuleCrystalAura.functioning) {
             return
         }
 
@@ -276,7 +271,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             player.swingHand(Hand.MAIN_HAND)
         }
 
-        network.sendPacket(PlayerInteractEntityC2SPacket(entity, player.isSneaking))
+        network.sendPacket(PlayerInteractEntityC2SPacket.attack(entity, player.isSneaking))
 
         // Swing after attacking (on 1.9+)
         if (swing && protocolVersion != MC_1_8) {

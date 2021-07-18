@@ -21,6 +21,13 @@ package net.ccbluex.liquidbounce.render.ultralight.renderer
 import com.labymedia.ultralight.UltralightView
 import com.labymedia.ultralight.bitmap.UltralightBitmapSurface
 import com.labymedia.ultralight.config.UltralightViewConfig
+import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.client.render.GameRenderer
+import net.minecraft.client.render.Tessellator
+import net.minecraft.client.render.VertexFormat
+import net.minecraft.client.render.VertexFormats
+import net.minecraft.client.util.math.MatrixStack
 import org.lwjgl.opengl.GL12.*
 import java.nio.ByteBuffer
 
@@ -44,7 +51,7 @@ class CpuViewRenderer : ViewRenderer {
     /**
      * Render the current view
      */
-    override fun render(view: UltralightView) {
+    override fun render(view: UltralightView, matrices: MatrixStack) {
         if (glTexture == -1) {
             createGlTexture()
         }
@@ -56,8 +63,8 @@ class CpuViewRenderer : ViewRenderer {
         val height = view.height().toInt()
 
         // Prepare OpenGL for 2D textures and bind our texture
-        glEnable(GL_TEXTURE_2D)
-        glBindTexture(GL_TEXTURE_2D, glTexture)
+        RenderSystem.enableTexture()
+        RenderSystem.bindTexture(glTexture)
 
         val dirtyBounds = surface.dirtyBounds()
 
@@ -104,53 +111,40 @@ class CpuViewRenderer : ViewRenderer {
             surface.clearDirtyBounds()
         }
 
-        // Set up the OpenGL state for rendering of a fullscreen quad
-        glPushAttrib(GL_ENABLE_BIT or GL_COLOR_BUFFER_BIT or GL_TRANSFORM_BIT)
-        glMatrixMode(GL_PROJECTION)
-        glPushMatrix()
-        glLoadIdentity()
-        glOrtho(0.0, view.width().toDouble(), view.height().toDouble(), 0.0, -1.0, 1.0)
-        glMatrixMode(GL_MODELVIEW)
-        glPushMatrix()
+        val tessellator = Tessellator.getInstance()
+        val bufferBuilder = tessellator.buffer
+        val scaleFactor = mc.window.scaleFactor.toFloat()
 
-        // Disable lighting and scissoring, they could mess up th renderer
-        glLoadIdentity()
-        glDisable(GL_LIGHTING)
-        glDisable(GL_SCISSOR_TEST)
-        glEnable(GL_BLEND)
-        glEnable(GL_TEXTURE_2D)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        RenderSystem.setShader { GameRenderer.getPositionTexColorShader() }
+        RenderSystem.setShaderTexture(0, glTexture)
+        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f)
+        RenderSystem.enableBlend()
+        bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR)
 
-        // Make sure we draw with a neutral color
-        // (so we don't mess with the color channels of the image)
-        glColor4f(1f, 1f, 1f, 1f)
-        glBegin(GL_QUADS)
+        bufferBuilder
+            .vertex(0.0, height.toDouble(), 0.0)
+            .texture(0f, scaleFactor)
+            .color(255, 255, 255, 255)
+            .next()
+        bufferBuilder
+            .vertex(width.toDouble(), height.toDouble(), 0.0)
+            .texture(scaleFactor , scaleFactor)
+            .color(255, 255, 255, 255)
+            .next()
+        bufferBuilder
+            .vertex(width.toDouble(), 0.0, 0.0)
+            .texture(scaleFactor, 0.0f)
+            .color(255, 255, 255, 255)
+            .next()
 
-        // Lower left corner, 0/0 on the screen space, and 0/0 of the image UV
-        glTexCoord2i(0, 0)
-        glVertex2f(0f, 0f)
+        bufferBuilder
+            .vertex(0.0, 0.0, 0.0)
+            .texture(0.0f, 0.0f)
+            .color(255, 255, 255, 255)
+            .next()
 
-        // Upper left corner
-        glTexCoord2f(0f, 1f)
-        glVertex2i(0, height)
-
-        // Upper right corner
-        glTexCoord2f(1f, 1f)
-        glVertex2i(width, height)
-
-        // Lower right corner
-        glTexCoord2f(1f, 0f)
-        glVertex2i(width, 0)
-        glEnd()
-        glBindTexture(GL_TEXTURE_2D, 0)
-
-        // Restore OpenGL state
-        glPopMatrix()
-        glMatrixMode(GL_PROJECTION)
-        glPopMatrix()
-        glMatrixMode(GL_MODELVIEW)
-        glDisable(GL_TEXTURE_2D)
-        glPopAttrib()
+        tessellator.draw()
+        RenderSystem.disableBlend()
     }
 
     /**

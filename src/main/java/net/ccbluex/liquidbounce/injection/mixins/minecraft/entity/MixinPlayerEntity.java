@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.PlayerSafeWalkEvent;
 import net.ccbluex.liquidbounce.event.PlayerStrideEvent;
+import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAntiReducedDebugInfo;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar;
@@ -39,7 +40,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(PlayerEntity.class)
 public abstract class MixinPlayerEntity extends MixinLivingEntity {
 
-    @Shadow @Final public PlayerInventory inventory;
+    @Shadow
+    @Final
+    public PlayerInventory inventory;
 
     /**
      * Hook player stride event
@@ -79,7 +82,7 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
 
         int slot = SilentHotbar.INSTANCE.getServersideSlot();
 
-        return PlayerInventory.isValidHotbarIndex(slot) ? player.inventory.main.get(slot) : ItemStack.EMPTY;
+        return PlayerInventory.isValidHotbarIndex(slot) ? player.getInventory().main.get(slot) : ItemStack.EMPTY;
     }
 
     /**
@@ -96,22 +99,29 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
 
     /**
      * Hook velocity rotation modification
-     *
+     * <p>
      * There are a few velocity changes when attacking an entity, which could be easily detected by anti-cheats when a different server-side rotation is applied.
      */
-    @Redirect(method = "attack", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerEntity;yaw:F"))
+    @Redirect(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getYaw()F"))
     private float hookFixRotation(PlayerEntity entity) {
         if (RotationManager.INSTANCE.getActiveConfigurable() == null || !RotationManager.INSTANCE.getActiveConfigurable().getFixVelocity())
-            return entity.yaw;
+            return entity.getYaw();
 
         Rotation currentRotation = RotationManager.INSTANCE.getCurrentRotation();
 
         if (currentRotation == null)
-            return entity.yaw;
+            return entity.getYaw();
 
         currentRotation = currentRotation.fixedSensitivity();
 
         return currentRotation.getYaw();
+    }
+
+    @Inject(method = "hasReducedDebugInfo", at = @At("HEAD"), cancellable = true)
+    private void injectReducedDebugInfo(CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
+        if (ModuleAntiReducedDebugInfo.INSTANCE.getEnabled()) {
+            callbackInfoReturnable.setReturnValue(false);
+        }
     }
 
 }

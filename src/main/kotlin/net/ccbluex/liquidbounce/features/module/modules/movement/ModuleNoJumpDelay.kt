@@ -16,26 +16,9 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.world
+package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.event.BlockShapeEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.minecraft.block.SweetBerryBushBlock
-import net.minecraft.util.shape.VoxelShapes
 
-/**
- * Anti berry bush module
- *
- * Prevents taking damage from berry bushes
- */
-object ModuleAntiBerryBush : Module("AntiBerryBush", Category.WORLD) {
-
-    val shapeHandler = handler<BlockShapeEvent> { event ->
-        if (event.state.block is SweetBerryBushBlock) {
-            event.shape = VoxelShapes.fullCube()
-        }
-    }
-
-}
+object ModuleNoJumpDelay : Module("NoJumpDelay", Category.MOVEMENT)

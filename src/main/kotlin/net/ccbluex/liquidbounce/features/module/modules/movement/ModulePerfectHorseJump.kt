@@ -16,33 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.player
+package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.event.ScreenEvent
-import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.minecraft.client.gui.screen.DeathScreen
 
-/**
- * A auto respawn module
- *
- * Automatically respawns the player after dying
- */
-object ModuleAutoRespawn : Module("AutoRespawn", Category.PLAYER) {
-
-    // There is a delay until the button is clickable on the death screen (20 ticks)
-    private val delay by int("Delay", 0, 0..20)
-
-    val screenHandler = sequenceHandler<ScreenEvent> {
-        if (it.screen is DeathScreen) {
-            if (delay > 0) {
-                wait(delay)
-            }
-
-            player.requestRespawn()
-            mc.setScreen(null)
-        }
+object ModulePerfectHorseJump : Module("PerfectHorseJump", Category.MOVEMENT) {
+    val repeatable = repeatable {
+        player.field_3938 = 9
     }
-
 }

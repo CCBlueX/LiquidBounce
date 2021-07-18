@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleSkinDerp
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleFriendClicker
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleNameProtect
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleSpammer
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleTeams
@@ -134,7 +135,6 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleSafeWalk,
             ModuleAutoTool,
             ModuleNoPush,
-            ModuleAntiBerryBush,
             ModuleFreeCam,
             ModulePlugins,
             ModuleTrajectories,
@@ -152,7 +152,15 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleZoot,
             ModuleNoSwing,
             ModuleNoHurtCam,
-            ModuleCrystalAura
+            ModuleAntiReducedDebugInfo,
+            ModuleCrystalAura,
+            ModuleAutoGapple,
+            ModuleIgnite,
+            ModuleFriendClicker,
+            ModulePerfectHorseJump,
+            ModuleAntiAFK,
+            ModuleNoJumpDelay,
+            ModuleNoBob
         )
 
         builtin.apply {

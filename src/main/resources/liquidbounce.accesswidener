@@ -30,6 +30,7 @@ accessible field net/minecraft/client/network/ClientPlayerEntity ticksSinceLastP
 accessible field net/minecraft/client/network/ClientPlayerEntity usingItem Z
 accessible field net/minecraft/client/network/ClientPlayerEntity riding Z
 accessible field net/minecraft/client/network/ClientPlayerEntity activeHand Lnet/minecraft/util/Hand;
+accessible field net/minecraft/client/network/ClientPlayerEntity field_3938 I
 
 accessible field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket x D
 accessible field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket y D
@@ -39,6 +40,15 @@ accessible field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket pitch
 accessible field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket onGround Z
 accessible field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket changePosition Z
 accessible field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket changeLook Z
+
+mutable field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket x D
+mutable field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket y D
+mutable field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket z D
+mutable field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket yaw F
+mutable field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket pitch F
+mutable field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket onGround Z
+mutable field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket changePosition Z
+mutable field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket changeLook Z
 
 accessible field net/minecraft/client/network/ClientPlayerInteractionManager currentBreakingProgress F
 accessible field net/minecraft/client/network/ClientPlayerInteractionManager blockBreakingCooldown I
@@ -64,9 +74,13 @@ accessible field net/minecraft/network/packet/c2s/play/ResourcePackStatusC2SPack
 
 accessible field net/minecraft/item/BucketItem fluid Lnet/minecraft/fluid/Fluid;
 
-accessible field net/minecraft/client/options/KeyBinding boundKey Lnet/minecraft/client/util/InputUtil$Key;
+accessible field net/minecraft/client/option/KeyBinding boundKey Lnet/minecraft/client/util/InputUtil$Key;
 accessible field net/minecraft/entity/LivingEntity lastAttackedTicks I
 accessible field net/minecraft/entity/projectile/PersistentProjectileEntity inGround Z
+
+accessible field net/minecraft/client/option/GameOptions enabledPlayerModelParts Ljava/util/Set;
+
+mutable field net/minecraft/network/packet/c2s/play/KeepAliveC2SPacket id J
 
 accessible method net/minecraft/entity/player/PlayerEntity getVelocityMultiplier ()F
 accessible method net/minecraft/entity/Entity movementInputToVelocity (Lnet/minecraft/util/math/Vec3d;FF)Lnet/minecraft/util/math/Vec3d;
@@ -76,9 +90,19 @@ accessible field net/minecraft/network/packet/s2c/play/EntityVelocityUpdateS2CPa
 accessible field net/minecraft/network/packet/s2c/play/EntityVelocityUpdateS2CPacket velocityY I
 accessible field net/minecraft/network/packet/s2c/play/EntityVelocityUpdateS2CPacket velocityZ I
 
+mutable field net/minecraft/network/packet/s2c/play/EntityVelocityUpdateS2CPacket velocityX I
+mutable field net/minecraft/network/packet/s2c/play/EntityVelocityUpdateS2CPacket velocityY I
+mutable field net/minecraft/network/packet/s2c/play/EntityVelocityUpdateS2CPacket velocityZ I
+
 accessible field net/minecraft/network/packet/s2c/play/ExplosionS2CPacket playerVelocityX F
 accessible field net/minecraft/network/packet/s2c/play/ExplosionS2CPacket playerVelocityY F
 accessible field net/minecraft/network/packet/s2c/play/ExplosionS2CPacket playerVelocityZ F
+
+mutable field net/minecraft/network/packet/s2c/play/ExplosionS2CPacket playerVelocityX F
+mutable field net/minecraft/network/packet/s2c/play/ExplosionS2CPacket playerVelocityY F
+mutable field net/minecraft/network/packet/s2c/play/ExplosionS2CPacket playerVelocityZ F
+
+mutable field net/minecraft/network/packet/c2s/play/ChatMessageC2SPacket chatMessage Ljava/lang/String;
 
 accessible field net/minecraft/client/world/ClientChunkManager chunks Lnet/minecraft/client/world/ClientChunkManager$ClientChunkMap;
 accessible field net/minecraft/world/chunk/WorldChunk loadedToWorld Z

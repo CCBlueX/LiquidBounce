@@ -47,6 +47,9 @@ object UltralightJsClient {
         fun loginMojang(email: String, password: String) = mc.sessionService.loginMojang(email, password).readable
         fun loginAltening(token: String) = mc.sessionService.loginAltening(token).readable
 
+        fun getFaceUrl() = "https://visage.surgeplay.com/face/${mc.session.uuid}"
+        fun getUsername(): String = mc.session.username
+
     }
 
     /**
