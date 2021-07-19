@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 
-object ModuleDankBobbing : Module("DankBobbing", Category.RENDER){
+object ModuleDankBobbing : Module("DankBobbing", Category.FUN){
 
     val motion by float("ExtraBob", 5f, 0f..50f)
 
