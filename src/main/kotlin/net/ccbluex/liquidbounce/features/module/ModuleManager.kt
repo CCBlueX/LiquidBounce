@@ -160,7 +160,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModulePerfectHorseJump,
             ModuleAntiAFK,
             ModuleNoJumpDelay,
-            ModuleNoBob
+            ModuleNoBob,
+            ModuleAutoSoup
         )
 
         builtin.apply {
