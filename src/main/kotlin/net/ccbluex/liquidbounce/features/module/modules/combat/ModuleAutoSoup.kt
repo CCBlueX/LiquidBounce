@@ -28,15 +28,20 @@ import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.screen.slot.SlotActionType
+import net.minecraft.util.Hand
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Direction
 
 object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
 
     private val bowl by enumChoice("Bowl", BowlMode.DROP, BowlMode.values())
     private val health by int("Health", 18, 1..20)
 
-    var lastSlot = -1
-    var saveSlot = false
+    private var lastSlot = -1
+    private var saveSlot = false
 
     val repeatable = repeatable {
         val hotBarSlot = (0..8).firstOrNull {
@@ -59,27 +64,18 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
             return@repeatable
         }
 
-        if (player.health < health) {
-            if (hotBarSlot != null) {
-                if (!saveSlot) {
-                    lastSlot = player.inventory.selectedSlot
-                    saveSlot = true
-                }
-                player.inventory.selectedSlot = hotBarSlot
-                mc.options.keyUse.isPressed = true
-            } else {
-                // Search for the specific item in inventory and quick move it to hotbar
-                if (invSlot != null) {
-                    utilizeInventory(invSlot, 0, SlotActionType.QUICK_MOVE, false)
-                }
-                return@repeatable
-            }
-        }
-
         if (bowlSlot != null) {
-            saveSlot = false
-            mc.options.keyUse.isPressed = false
-            player.inventory.selectedSlot = lastSlot
+            network.sendPacket(
+                PlayerActionC2SPacket(
+                    PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
+                    BlockPos.ORIGIN,
+                    Direction.DOWN
+                )
+            )
+            if (saveSlot) {
+                player.inventory.selectedSlot = lastSlot
+                saveSlot = false
+            }
             when (bowl) {
                 BowlMode.DROP -> {
                     utilizeInventory(bowlSlot, 1, SlotActionType.THROW, false)
@@ -105,6 +101,26 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
                         network.sendPacket(CloseHandledScreenC2SPacket(0))
                     }
                 }
+            }
+        }
+
+        if (player.health < health) {
+            if (hotBarSlot != null) {
+                if (!saveSlot) {
+                    lastSlot = player.inventory.selectedSlot
+                    saveSlot = true
+                }
+                player.inventory.selectedSlot = hotBarSlot
+                // Using timer so as to avoid sword shield
+                wait(2)
+                network.sendPacket(PlayerInteractItemC2SPacket(Hand.MAIN_HAND))
+                return@repeatable
+            } else {
+                // Search for the specific item in inventory and quick move it to hotbar
+                if (invSlot != null) {
+                    utilizeInventory(invSlot, 0, SlotActionType.QUICK_MOVE, false)
+                }
+                return@repeatable
             }
         }
     }
