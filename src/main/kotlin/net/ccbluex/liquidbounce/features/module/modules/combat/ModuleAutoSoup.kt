@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.item.convertClientSlotToServerSlot
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.item.Item
@@ -94,13 +93,11 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
 
                     // If there is neither an empty slot nor an empty bowl, then replace whatever there is on slot 9
                     if (!player.inventory.getStack(9).isEmpty || player.inventory.getStack(9).item != Items.BOWL) {
-                        chat("hi yo look theres no empty slot start replacing")
                         utilizeInventory(bowlSlot, 0, SlotActionType.PICKUP, true)
                         utilizeInventory(9, 0, SlotActionType.PICKUP, true)
                         utilizeInventory(bowlSlot, 0, SlotActionType.PICKUP, true)
                     } else {
                         // If there is, simply shift + click the empty bowl from hotbar
-                        chat("hellooo ee look empty slot go e")
                         utilizeInventory(bowlSlot, 0, SlotActionType.QUICK_MOVE, true)
                     }
 
