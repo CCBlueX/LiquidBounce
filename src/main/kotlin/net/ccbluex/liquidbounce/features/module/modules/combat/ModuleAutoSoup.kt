@@ -18,29 +18,38 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.item.convertClientSlotToServerSlot
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
+import net.minecraft.item.Item
 import net.minecraft.item.Items
-import net.minecraft.network.packet.c2s.play.*
+import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
+import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.screen.slot.SlotActionType
-import net.minecraft.util.Hand
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
 
 object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
 
-    val health by int("Health", 18, 1..20)
+    private val bowl by enumChoice("Bowl", BowlMode.DROP, BowlMode.values())
+    private val health by int("Health", 18, 1..20)
+
+    var lastSlot = -1
+    var saveSlot = false
 
     val repeatable = repeatable {
         val hotBarSlot = (0..8).firstOrNull {
-            player.inventory.getStack(it).item == Items.MUSHROOM_STEW
+            hasItem(it, Items.MUSHROOM_STEW)
         }
 
-        val invSlot = (0..40).find {
-            !player.inventory.isEmpty && player.inventory.getStack(it).item == Items.MUSHROOM_STEW
+        val bowlSlot = (0..8).firstOrNull {
+            hasItem(it, Items.BOWL)
+        }
+
+        val invSlot = (9..35).find {
+            hasItem(it, Items.MUSHROOM_STEW)
         }
 
         if (hotBarSlot == null && invSlot == null) {
@@ -53,27 +62,80 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
 
         if (player.health < health) {
             if (hotBarSlot != null) {
-                network.sendPacket(UpdateSelectedSlotC2SPacket(hotBarSlot))
-                network.sendPacket(PlayerInteractItemC2SPacket(Hand.MAIN_HAND))
-                network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.DROP_ITEM, BlockPos.ORIGIN, Direction.DOWN))
-                network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
+                if (!saveSlot) {
+                    lastSlot = player.inventory.selectedSlot
+                    saveSlot = true
+                }
+                player.inventory.selectedSlot = hotBarSlot
+                mc.options.keyUse.isPressed = true
             } else {
-                val serverSlot = convertClientSlotToServerSlot(invSlot!!)
-
-                val openInventory = mc.currentScreen !is InventoryScreen
-
-                if (openInventory) {
-                    network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.OPEN_INVENTORY))
+                // Search for the specific item in inventory and quick move it to hotbar
+                if (invSlot != null) {
+                    utilizeInventory(invSlot, 0, SlotActionType.QUICK_MOVE, false)
                 }
-
-                interaction.clickSlot(0, serverSlot, 0, SlotActionType.QUICK_MOVE, player)
-
-                if (openInventory) {
-                    network.sendPacket(CloseHandledScreenC2SPacket(0))
-                }
-
                 return@repeatable
             }
         }
+
+        if (bowlSlot != null) {
+            saveSlot = false
+            mc.options.keyUse.isPressed = false
+            player.inventory.selectedSlot = lastSlot
+            when (bowl) {
+                BowlMode.DROP -> {
+                    utilizeInventory(bowlSlot, 1, SlotActionType.THROW, false)
+                }
+                BowlMode.MOVE -> {
+                    val openInventory = mc.currentScreen !is InventoryScreen
+
+                    if (openInventory) {
+                        network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.OPEN_INVENTORY))
+                    }
+
+                    // If there is neither an empty slot nor an empty bowl, then replace whatever there is on slot 9
+                    if (!player.inventory.getStack(9).isEmpty || player.inventory.getStack(9).item != Items.BOWL) {
+                        chat("hi yo look theres no empty slot start replacing")
+                        utilizeInventory(bowlSlot, 0, SlotActionType.PICKUP, true)
+                        utilizeInventory(9, 0, SlotActionType.PICKUP, true)
+                        utilizeInventory(bowlSlot, 0, SlotActionType.PICKUP, true)
+                    } else {
+                        // If there is, simply shift + click the empty bowl from hotbar
+                        chat("hellooo ee look empty slot go e")
+                        utilizeInventory(bowlSlot, 0, SlotActionType.QUICK_MOVE, true)
+                    }
+
+                    if (openInventory) {
+                        network.sendPacket(CloseHandledScreenC2SPacket(0))
+                    }
+                }
+            }
+        }
+    }
+
+    private fun utilizeInventory(slot: Int, button: Int, slotActionType: SlotActionType, onlyActions: Boolean) {
+        val serverSlot = convertClientSlotToServerSlot(slot)
+        val openInventory = mc.currentScreen !is InventoryScreen
+
+        if (!onlyActions) {
+            if (openInventory) {
+                network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.OPEN_INVENTORY))
+            }
+        }
+
+        interaction.clickSlot(0, serverSlot, button, slotActionType, player)
+
+        if (!onlyActions) {
+            if (openInventory) {
+                network.sendPacket(CloseHandledScreenC2SPacket(0))
+            }
+        }
+    }
+
+    private fun hasItem(slot: Int, item: Item): Boolean {
+        return player.inventory.getStack(slot).item == item
+    }
+
+    enum class BowlMode(override val choiceName: String) : NamedChoice {
+        DROP("Drop"), MOVE("Move")
     }
 }
