@@ -56,7 +56,7 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
             hasItem(it, Items.MUSHROOM_STEW)
         }
 
-        if (hotBarSlot == null && invSlot == null) {
+        if (hotBarSlot == null && invSlot == null && bowlSlot == null) {
             return@repeatable
         }
 
@@ -102,6 +102,7 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
                     }
                 }
             }
+            return@repeatable
         }
 
         if (player.health < health) {
