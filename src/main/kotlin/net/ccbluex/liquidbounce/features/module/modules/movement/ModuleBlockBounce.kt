@@ -18,27 +18,31 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.PlayerJumpEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.block.getBlock
-import net.ccbluex.liquidbounce.utils.block.toBlockPos
+import net.ccbluex.liquidbounce.utils.block.getState
 import net.minecraft.block.BedBlock
 import net.minecraft.block.Block
-import net.minecraft.block.Blocks
+import net.minecraft.block.HoneyBlock
+import net.minecraft.block.SlimeBlock
 
 object ModuleBlockBounce : Module("BlockBounce", Category.MOVEMENT) {
 
-    private val motion by float("Motion", 0.42f, 0.2f..1f)
+    private val motion by float("Motion", 0.42f, 0.2f..2f)
 
-    val repeatable = repeatable {
-        val block = player.pos.toBlockPos().down().getBlock() ?: return@repeatable
+    val jumpHandler = handler<PlayerJumpEvent> { event ->
+        val bouncingBlock = player.blockPos.down().getBlock() ?: return@handler
+        val block = player.blockPos.getState()?.block ?: return@handler
 
-        if (isBouncingBlock(block) && mc.options.keyJump.isPressed) {
-            player.velocity.y += motion
+        if (bouncingBlock is SlimeBlock || isBouncingBlock(block)) {
+            event.motion += motion
         }
     }
 
-    private fun isBouncingBlock(block: Block) = block == Blocks.SLIME_BLOCK || block is BedBlock
-
+    private fun isBouncingBlock(block: Block): Boolean {
+        return block is BedBlock || block is HoneyBlock
+    }
 }
