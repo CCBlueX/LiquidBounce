@@ -20,7 +20,10 @@
 package net.ccbluex.liquidbounce.render.engine
 
 import net.ccbluex.liquidbounce.utils.math.Mat4
+import net.ccbluex.liquidbounce.utils.render.getGlFloatRange
 import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL12.GL_ALIASED_LINE_WIDTH_RANGE
+import org.lwjgl.opengl.GL12.GL_SMOOTH_LINE_WIDTH_RANGE
 
 enum class CullingMode(val face: Int?, val enableCulling: Boolean) {
     BACKFACE_CULLING(GL11.GL_BACK, true),
@@ -36,8 +39,6 @@ enum class CullingMode(val face: Int?, val enableCulling: Boolean) {
     }
 }
 
-
-
 data class GlRenderState(
     val lineWidth: Float? = null,
     val depthTest: Boolean? = null,
@@ -47,13 +48,26 @@ data class GlRenderState(
     val culling: CullingMode? = null,
     val mvpMatrix: Mat4? = null,
 ) {
+    companion object {
+        val aliasedLineWidthRange = lazy { getGlFloatRange(GL_ALIASED_LINE_WIDTH_RANGE) }
+        val smoothLineWidthRange = lazy { getGlFloatRange(GL_SMOOTH_LINE_WIDTH_RANGE) }
+    }
+
     fun applyFlags() {
-        this.lineWidth?.let(GL11::glLineWidth)
+        this.lineWidth?.let {
+            val applicableRange = if (this.lineSmooth == true) {
+                smoothLineWidthRange.value
+            } else {
+                aliasedLineWidthRange.value
+            }
+
+            GL11.glLineWidth(it.coerceIn(applicableRange))
+        }
 
         applyCap(GL11.GL_DEPTH_TEST, this.depthTest)
         applyCap(GL11.GL_LINE_SMOOTH, this.lineSmooth)
         applyCap(GL11.GL_BLEND, this.blending)
-        applyCap(GL11.GL_TEXTURE_2D, this.texture2d)
+//        applyCap(GL11.GL_TEXTURE_2D, this.texture2d) // FIXME
 
         this.culling?.applyState()
     }

@@ -181,7 +181,6 @@ object RenderEngine : Listenable {
     fun render(tickDelta: Float) {
         val lvl = this.openglLevel
 
-        GL11.glEnable(GL11.GL_ALPHA_TEST)
         GL11.glEnable(GL11.GL_BLEND)
 
         for ((idx, layer) in renderTaskTable.withIndex()) {

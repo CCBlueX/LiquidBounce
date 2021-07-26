@@ -146,7 +146,6 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNoWeather,
             ModuleAutoFarm,
             ModuleNoWeb,
-            ModuleNewChunks,
             ModuleFastUse,
             ModuleRegen,
             ModuleZoot,

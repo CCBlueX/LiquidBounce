@@ -128,7 +128,7 @@ class CpuViewRenderer : ViewRenderer {
             .next()
         bufferBuilder
             .vertex(width.toDouble(), height.toDouble(), 0.0)
-            .texture(scaleFactor , scaleFactor)
+            .texture(scaleFactor, scaleFactor)
             .color(255, 255, 255, 255)
             .next()
         bufferBuilder
@@ -151,7 +151,6 @@ class CpuViewRenderer : ViewRenderer {
      * Sets up the OpenGL texture for rendering
      */
     private fun createGlTexture() {
-        glEnable(GL_TEXTURE_2D)
         glTexture = glGenTextures()
         glBindTexture(GL_TEXTURE_2D, glTexture)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
@@ -159,7 +158,6 @@ class CpuViewRenderer : ViewRenderer {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
         glBindTexture(GL_TEXTURE_2D, 0)
-        glDisable(GL_TEXTURE_2D)
     }
 
 }

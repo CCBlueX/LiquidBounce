@@ -34,8 +34,9 @@ object ModuleAutoTotem : Module("AutoTotem", Category.PLAYER) {
     val repeatable = repeatable {
         val offHandStack = player.offHandStack
 
-        if (isItemValid(offHandStack))
+        if (isItemValid(offHandStack)) {
             return@repeatable
+        }
 
         val inventory = player.inventory
 

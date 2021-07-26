@@ -46,7 +46,7 @@ object ModuleAvoidHazards : Module("AvoidHazards", Category.MOVEMENT) {
             event.shape = VoxelShapes.fullCube()
         } else if (berryBush && event.state.block is SweetBerryBushBlock) {
             event.shape = VoxelShapes.fullCube()
-        }else if (fire && event.state.block is FireBlock) {
+        } else if (fire && event.state.block is FireBlock) {
             event.shape = VoxelShapes.fullCube()
         } else if (cobWebs && event.state.block is CobwebBlock) {
             event.shape = VoxelShapes.fullCube()
