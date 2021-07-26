@@ -17,9 +17,17 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.render
+package net.ccbluex.liquidbounce.utils.render
 
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
+import org.lwjgl.opengl.GL11.glGetFloatv
 
-object ModuleNoWeather : Module("NoWeather", Category.RENDER)
+/**
+ * Gets a range (i.e. GL_ALIASED_LINE_WIDTH_RANGE) from OpenGL as a kotlin range
+ */
+fun getGlFloatRange(key: Int): ClosedFloatingPointRange<Float> {
+    val floats = floatArrayOf(0.0f, 0.0f)
+
+    glGetFloatv(key, floats)
+
+    return floats[0]..floats[1]
+}

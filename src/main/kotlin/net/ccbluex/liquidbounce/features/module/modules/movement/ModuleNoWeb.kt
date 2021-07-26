@@ -24,11 +24,7 @@ import net.ccbluex.liquidbounce.event.NotificationEvent
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.client.asText
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.minecraft.text.TranslatableText
-import net.minecraft.util.Formatting
 
 /**
  * NoWeb module
@@ -59,4 +55,3 @@ object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
         // Mixins take care of anti web slowdown.
     }
 }
-

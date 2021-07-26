@@ -51,7 +51,6 @@ object ModuleZoot : Module("Zoot", Category.PLAYER) {
             resetTimer = false
         }
 
-
         if (player.isOnGround || !noAir) {
             if (fire && !player.abilities.creativeMode && player.isOnFire) {
                 // Accelerate game time (1.8.X)

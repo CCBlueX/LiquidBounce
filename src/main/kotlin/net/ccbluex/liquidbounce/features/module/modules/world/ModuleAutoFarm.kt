@@ -158,7 +158,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         }
     }
 
-    private inline fun <reified T: Block> isAboveLast(pos: BlockPos): Boolean {
+    private inline fun <reified T : Block> isAboveLast(pos: BlockPos): Boolean {
         return pos.down().getBlock() is T && pos.down(2).getBlock() !is T
     }
 

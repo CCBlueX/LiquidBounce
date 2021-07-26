@@ -73,7 +73,6 @@ class GpuViewRenderer : ViewRenderer {
         val width = view.width().toInt()
         val height = view.height().toInt()
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
-        glEnable(GL_TEXTURE_2D)
         // Set up the OpenGL state for rendering of a fullscreen quad
         glPushAttrib(GL_ENABLE_BIT or GL_COLOR_BUFFER_BIT or GL_TRANSFORM_BIT)
         driver.bindTexture(0, text)
@@ -86,10 +85,8 @@ class GpuViewRenderer : ViewRenderer {
         glPushMatrix()
         // Disable lighting and scissoring, they could mess up th renderer
         glLoadIdentity()
-        glDisable(GL_LIGHTING)
         glDisable(GL_SCISSOR_TEST)
         glEnable(GL_BLEND)
-        glEnable(GL_TEXTURE_2D)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
         // Make sure we draw with a neutral color
@@ -120,7 +117,6 @@ class GpuViewRenderer : ViewRenderer {
         glMatrixMode(GL_PROJECTION)
         glPopMatrix()
         glMatrixMode(GL_MODELVIEW)
-        glDisable(GL_TEXTURE_2D)
         glPopAttrib()
     }
 

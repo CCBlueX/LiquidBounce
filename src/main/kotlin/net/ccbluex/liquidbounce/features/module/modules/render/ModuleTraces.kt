@@ -89,6 +89,10 @@ object ModuleTraces : Module("Traces", Category.RENDER) {
         val filteredEntities = world.entities.filter(this::shouldRenderTrace)
         val camera = mc.gameRenderer.camera
 
+        if (filteredEntities.isEmpty()) {
+            return@handler
+        }
+
         val vertexFormat = PositionColorVertexFormat()
 
         vertexFormat.initBuffer(filteredEntities.size * 3)

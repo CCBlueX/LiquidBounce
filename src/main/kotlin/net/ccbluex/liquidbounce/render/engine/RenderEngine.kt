@@ -30,7 +30,9 @@ import net.ccbluex.liquidbounce.utils.math.Mat4
 import net.ccbluex.liquidbounce.utils.math.toMat4
 import net.minecraft.client.MinecraftClient
 import org.lwjgl.opengl.GL11
+import java.text.DecimalFormat
 import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.atomic.AtomicLong
 import java.util.regex.Pattern
 
 class Layer(val renderTasks: ArrayList<RenderTask> = ArrayList(200))
@@ -97,11 +99,19 @@ object RenderEngine : Listenable {
      */
     lateinit var cameraMvp: Mat4
 
+    val TIME_WASTED_ON_TEXTRENDERING = AtomicLong(0)
+
     val renderHandler = handler<OverlayRenderEvent> {
         this.cameraMvp = (MinecraftClient.getInstance().gameRenderer as IMixinGameRenderer).getCameraMVPMatrix(
             it.tickDelta,
             true
         ).toMat4()
+
+        val a = TIME_WASTED_ON_TEXTRENDERING.getAndSet(0)
+
+        if (a > 0) {
+            println(DecimalFormat("0.000").format(a / 1000000.0) + "ms")
+        }
 
         EventManager.callEvent(EngineRenderEvent(it.tickDelta))
 
@@ -181,7 +191,6 @@ object RenderEngine : Listenable {
     fun render(tickDelta: Float) {
         val lvl = this.openglLevel
 
-        GL11.glEnable(GL11.GL_ALPHA_TEST)
         GL11.glEnable(GL11.GL_BLEND)
 
         for ((idx, layer) in renderTaskTable.withIndex()) {
