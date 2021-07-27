@@ -46,7 +46,7 @@ version = project.mod_version
 group = project.maven_group
 
 minecraft {
-    accessWidener "src/main/resources/liquidbounce.accesswidener"
+    accessWidenerPath = file("src/main/resources/liquidbounce.accesswidener")
 }
 
 repositories {
