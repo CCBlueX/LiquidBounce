@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.minecraft.block.Block
 import net.minecraft.block.Blocks
 import net.minecraft.client.gui.screen.ingame.HandledScreen
+import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.HitResult
@@ -117,7 +118,11 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
                 val direction = rayTraceResult.side
 
                 if (mc.interactionManager!!.updateBlockBreakingProgress(blockPos, direction)) {
-                    player.swingHand(Hand.MAIN_HAND)
+                    if (visualSwing) {
+                        player.swingHand(Hand.MAIN_HAND)
+                    } else {
+                        network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
+                    }
                 }
             }
         }
