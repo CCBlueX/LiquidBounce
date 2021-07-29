@@ -81,11 +81,15 @@ class UltralightJsEvents(private val viewContextProvider: ContextProvider, val v
             this,
             { event ->
                 RenderSystem.recordRenderCall {
-                    viewContextProvider.syncWithJavascript {
-                        it.context.globalObject.getProperty(propertyName).toObject().callAsFunction(
-                            it.context.globalObject,
-                            view.context.databind.conversionUtils.toJavascript(it.context, event)
-                        )
+                    runCatching {
+                        viewContextProvider.syncWithJavascript {
+                            it.context.globalObject.getProperty(propertyName).toObject().callAsFunction(
+                                it.context.globalObject,
+                                view.context.databind.conversionUtils.toJavascript(it.context, event)
+                            )
+                        }
+                    }.onFailure {
+                        logger.error("Ultralight JS Engine", it)
                     }
                 }
             },
