@@ -113,8 +113,8 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             player.eyesPos,
             pos,
             state,
-            throughWalls = this.throughWalls,
-            range = range.toDouble()
+            range = range.toDouble(),
+            wallsRange = if (throughWalls) range.toDouble() else 0.0
         )
 
         // We got a free angle at the block? Cool.

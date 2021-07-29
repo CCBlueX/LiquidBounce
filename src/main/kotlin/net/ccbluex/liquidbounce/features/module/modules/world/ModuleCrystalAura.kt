@@ -136,8 +136,8 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
                 val (rotation, _) = RotationManager.raytraceBox(
                     player.eyesPos,
                     block.boundingBox,
-                    throughWalls = false,
-                    range = range.toDouble()
+                    range = range.toDouble(),
+                    wallsRange = 0.0
                 ) ?: continue
 
                 // lock on target tracker
@@ -196,8 +196,8 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
             player.eyesPos,
             pos,
             state,
-            throughWalls = false,
-            range = range.toDouble()
+            range = range.toDouble(),
+            wallsRange = 0.0
         )
 
         // We got a free angle at the block? Cool.

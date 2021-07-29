@@ -50,6 +50,13 @@ import net.minecraft.world.RaycastContext
 object ModuleFucker : Module("Fucker", Category.WORLD) {
 
     private val range by float("Range", 5F, 1F..6F)
+    private val wallRange by float("WallRange", 0f, 1F..6F).listen {
+        if (it > range) {
+            range
+        } else {
+            it
+        }
+    }
     private val visualSwing by boolean("VisualSwing", true)
     private val chest by blocks("Target", mutableListOf(Blocks.DRAGON_EGG))
     private val action by enumChoice("Action", DestroyAction.USE, DestroyAction.values())
@@ -140,8 +147,8 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
             player.eyesPos,
             pos,
             state,
-            throughWalls = throughWalls,
-            range = range.toDouble()
+            range = range.toDouble(),
+            wallsRange = wallRange.toDouble()
         )
 
         // We got a free angle at the block? Cool.

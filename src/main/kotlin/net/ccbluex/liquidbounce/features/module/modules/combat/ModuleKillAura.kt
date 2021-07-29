@@ -70,7 +70,13 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private val range by float("Range", 4.2f, 1f..8f)
     private val scanExtraRange by float("ScanExtraRange", 3.0f, 0.0f..7.0f)
 
-    private val wallRange by float("WallRange", 3f, 0f..8f) // todo:
+    private val wallRange by float("WallRange", 3f, 0f..8f).listen {
+        if (it > range) {
+            range
+        } else {
+            it
+        }
+    }
 
     // Target
     private val targetTracker = tree(TargetTracker())
@@ -79,7 +85,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private val rotations = tree(RotationsConfigurable())
 
     // Predict
-    private val predict by floatRange("Predict", 0f..0f, 0f..5f) // todo:
+    private val predict by floatRange("Predict", 0f..0f, 0f..5f)
 
     // Bypass techniques
     private val swing by boolean("Swing", true)
@@ -186,8 +192,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             val (rotation, _) = RotationManager.raytraceBox(
                 eyes.add(playerPrediction),
                 box,
-                throughWalls = false,
-                range = scanRange
+                range = scanRange,
+                wallsRange = wallRange.toDouble()
             ) ?: continue
 
             // lock on target tracker
