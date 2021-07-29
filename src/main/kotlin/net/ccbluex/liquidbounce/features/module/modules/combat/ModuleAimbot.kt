@@ -18,7 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.MouseRotationEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
@@ -54,7 +56,7 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
             val box = target.boundingBox
 
             if (fov >= RotationManager.rotationDifference(RotationManager.makeRotation(box.center, eyes), Rotation(player.yaw, player.pitch))) {
-                val (rotation, _) = RotationManager.raytraceBox(eyes, box, throughWalls = false, range = range.toDouble()) ?: continue
+                val (rotation, _) = RotationManager.raytraceBox(eyes, box, range = range.toDouble(), wallsRange = 0.0) ?: continue
 
                 currentRotation = rotation
                 return@repeatable

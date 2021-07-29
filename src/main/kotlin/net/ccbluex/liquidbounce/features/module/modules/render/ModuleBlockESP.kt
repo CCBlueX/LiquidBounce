@@ -41,6 +41,7 @@ import net.minecraft.util.math.Box
 
 object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
 
+    private val targetedBlocksSetting by blocks("Targets", hashSetOf(Blocks.DRAGON_EGG, Blocks.RED_BED))
     private val color by color("Color", Color4b(255, 179, 72, 255))
     private val colorRainbow by boolean("Rainbow", false)
 
@@ -91,7 +92,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
 
     private object BlockTracker : AbstractBlockLocationTracker<TrackedState>() {
         override fun getStateFor(pos: BlockPos, state: BlockState): TrackedState? {
-            return if (state.block == Blocks.DRAGON_EGG) {
+            return if (targetedBlocksSetting.contains(state.block)) {
                 TrackedState
             } else {
                 null

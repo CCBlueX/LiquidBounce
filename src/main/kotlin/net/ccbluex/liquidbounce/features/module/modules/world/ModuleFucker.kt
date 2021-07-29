@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.minecraft.block.Block
 import net.minecraft.block.Blocks
 import net.minecraft.client.gui.screen.ingame.HandledScreen
+import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.HitResult
@@ -50,8 +51,15 @@ import net.minecraft.world.RaycastContext
 object ModuleFucker : Module("Fucker", Category.WORLD) {
 
     private val range by float("Range", 5F, 1F..6F)
+    private val wallRange by float("WallRange", 0f, 1F..6F).listen {
+        if (it > range) {
+            range
+        } else {
+            it
+        }
+    }
     private val visualSwing by boolean("VisualSwing", true)
-    private val chest by blocks("Target", mutableListOf(Blocks.DRAGON_EGG))
+    private val targets by blocks("Target", hashSetOf(Blocks.DRAGON_EGG))
     private val action by enumChoice("Action", DestroyAction.USE, DestroyAction.values())
     private val throughWalls by boolean("ThroughWalls", false)
 
@@ -110,7 +118,11 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
                 val direction = rayTraceResult.side
 
                 if (mc.interactionManager!!.updateBlockBreakingProgress(blockPos, direction)) {
-                    player.swingHand(Hand.MAIN_HAND)
+                    if (visualSwing) {
+                        player.swingHand(Hand.MAIN_HAND)
+                    } else {
+                        network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
+                    }
                 }
             }
         }
@@ -121,7 +133,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
 
         val targetedBlocks = hashSetOf<Block>()
 
-        targetedBlocks.addAll(chest)
+        targetedBlocks.addAll(targets)
 
         val radius = range + 1
         val radiusSquared = radius * radius
@@ -140,8 +152,8 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
             player.eyesPos,
             pos,
             state,
-            throughWalls = throughWalls,
-            range = range.toDouble()
+            range = range.toDouble(),
+            wallsRange = wallRange.toDouble()
         )
 
         // We got a free angle at the block? Cool.

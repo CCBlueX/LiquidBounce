@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
+import net.ccbluex.liquidbounce.common.RenderingFlags;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleESP;
 import net.ccbluex.liquidbounce.render.engine.Color4b;
 import net.ccbluex.liquidbounce.render.shaders.OutlineShader;
@@ -37,12 +38,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(WorldRenderer.class)
 public abstract class MixinWorldRenderer {
-    /**
-     * Because mods like sodium might rely on multiple threads to render entities, it might be unstable to use a non-sync
-     * flag for this
-     */
-    private static final ThreadLocal<Boolean> isCurrentlyRenderingEntityOutline = ThreadLocal.withInitial(() -> false);
-
     @Shadow
     @Nullable
     public Framebuffer entityOutlinesFramebuffer;
@@ -62,7 +57,7 @@ public abstract class MixinWorldRenderer {
     @Inject(method = "renderEntity", at = @At("HEAD"))
     private void injectOutlineESP(Entity entity, double cameraX, double cameraY, double cameraZ, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, CallbackInfo info) {
         // Prevent stack overflow
-        if (!ModuleESP.INSTANCE.getEnabled() || !ModuleESP.OutlineMode.INSTANCE.isActive() || isCurrentlyRenderingEntityOutline.get())
+        if (!ModuleESP.INSTANCE.getEnabled() || !ModuleESP.OutlineMode.INSTANCE.isActive() || RenderingFlags.isCurrentlyRenderingEntityOutline().get())
             return;
 
         if (CombatExtensionsKt.shouldBeShown(entity)) {
@@ -75,12 +70,12 @@ public abstract class MixinWorldRenderer {
             outlineShader.begin(ModuleESP.OutlineMode.INSTANCE.getWidth(), color != null ? color : ModuleESP.INSTANCE.getBaseColor());
             outlineShader.setDirty();
 
-            isCurrentlyRenderingEntityOutline.set(true);
+            RenderingFlags.isCurrentlyRenderingEntityOutline().set(true);
 
             try {
                 renderEntity(entity, cameraX, cameraY, cameraZ, tickDelta, matrices, outlineShader.getVertexConsumerProvider());
             } finally {
-                isCurrentlyRenderingEntityOutline.set(false);
+                RenderingFlags.isCurrentlyRenderingEntityOutline().set(false);
             }
 
             this.entityOutlinesFramebuffer = originalBuffer;

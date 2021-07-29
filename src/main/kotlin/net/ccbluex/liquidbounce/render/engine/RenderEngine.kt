@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.math.toMat4
 import net.minecraft.client.MinecraftClient
 import org.lwjgl.opengl.GL11
 import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.regex.Pattern
 
 class Layer(val renderTasks: ArrayList<RenderTask> = ArrayList(200))
@@ -97,11 +98,19 @@ object RenderEngine : Listenable {
      */
     lateinit var cameraMvp: Mat4
 
+    val RENDERED_OUTLINES = AtomicInteger(0)
+
     val renderHandler = handler<OverlayRenderEvent> {
         this.cameraMvp = (MinecraftClient.getInstance().gameRenderer as IMixinGameRenderer).getCameraMVPMatrix(
             it.tickDelta,
             true
         ).toMat4()
+
+        val outlines = RENDERED_OUTLINES.getAndSet(0)
+
+        if (outlines > 0) {
+            println(outlines)
+        }
 
         EventManager.callEvent(EngineRenderEvent(it.tickDelta))
 

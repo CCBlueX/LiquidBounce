@@ -108,7 +108,7 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
 
     protected fun block(name: String, default: Block) = value(name, default, ValueType.BLOCK)
 
-    protected fun blocks(name: String, default: MutableList<Block>) = value(name, default, ValueType.BLOCKS, ListValueType.Block)
+    protected fun blocks(name: String, default: MutableSet<Block>) = value(name, default, ValueType.BLOCKS, ListValueType.Block)
 
     protected fun item(name: String, default: Item) = value(name, default, ValueType.ITEM)
 

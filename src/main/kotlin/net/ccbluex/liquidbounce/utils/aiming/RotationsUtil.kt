@@ -68,14 +68,14 @@ object RotationManager : Listenable {
         eyes: Vec3d,
         pos: BlockPos,
         state: BlockState,
-        throughWalls: Boolean,
-        range: Double
+        range: Double,
+        wallsRange: Double
     ): VecRotation? {
         val offset = Vec3d(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
         val shape = state.getOutlineShape(mc.world, pos, ShapeContext.of(mc.player))
 
         for (box in shape.boundingBoxes.sortedBy { -(it.maxX - it.minX) * (it.maxY - it.minY) * (it.maxZ - it.minZ) }) {
-            return raytraceBox(eyes, box.offset(offset), throughWalls, range, pos) ?: continue
+            return raytraceBox(eyes, box.offset(offset), range, wallsRange, expectedTarget = pos) ?: continue
         }
 
         return null
@@ -87,8 +87,8 @@ object RotationManager : Listenable {
     fun raytraceBox(
         eyes: Vec3d,
         box: Box,
-        throughWalls: Boolean,
         range: Double,
+        wallsRange: Double,
         expectedTarget: BlockPos? = null,
         pattern: Pattern = GaussianPattern
     ): VecRotation? {
@@ -96,6 +96,7 @@ object RotationManager : Listenable {
         val preferredRotation = makeRotation(preferredSpot, eyes)
 
         val rangeSquared = range * range
+        val wallsRangeSquared = wallsRange * wallsRange
 
         var visibleRot: VecRotation? = null
         var notVisibleRot: VecRotation? = null
@@ -110,29 +111,35 @@ object RotationManager : Listenable {
                     )
 
                     // skip because of out of range
-                    if (eyes.squaredDistanceTo(vec3) > rangeSquared) {
+                    val distance = eyes.squaredDistanceTo(vec3)
+
+                    if (distance > rangeSquared) {
                         continue
                     }
 
+                    // check if target is visible to eyes
                     val visible = if (expectedTarget != null) {
                         facingBlock(eyes, vec3, expectedTarget)
                     } else {
                         isVisible(eyes, vec3)
                     }
 
-                    if (visible || throughWalls) {
-                        val rotation = makeRotation(vec3, eyes)
+                    // skip because not visible in range
+                    if (!visible && distance > wallsRangeSquared) {
+                        continue
+                    }
 
-                        if (visible) {
-                            // Calculate next spot to preferred spot
-                            if (visibleRot == null || rotationDifference(rotation, preferredRotation) < rotationDifference(visibleRot.rotation, preferredRotation)) {
-                                visibleRot = VecRotation(rotation, vec3)
-                            }
-                        } else if (throughWalls) {
-                            // Calculate next spot to preferred spot
-                            if (notVisibleRot == null || rotationDifference(rotation, preferredRotation) < rotationDifference(notVisibleRot.rotation, preferredRotation)) {
-                                notVisibleRot = VecRotation(rotation, vec3)
-                            }
+                    val rotation = makeRotation(vec3, eyes)
+
+                    if (visible) {
+                        // Calculate next spot to preferred spot
+                        if (visibleRot == null || rotationDifference(rotation, preferredRotation) < rotationDifference(visibleRot.rotation, preferredRotation)) {
+                            visibleRot = VecRotation(rotation, vec3)
+                        }
+                    } else {
+                        // Calculate next spot to preferred spot
+                        if (notVisibleRot == null || rotationDifference(rotation, preferredRotation) < rotationDifference(notVisibleRot.rotation, preferredRotation)) {
+                            notVisibleRot = VecRotation(rotation, vec3)
                         }
                     }
                 }
