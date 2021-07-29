@@ -20,13 +20,9 @@
 package net.ccbluex.liquidbounce.render.engine
 
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNametags
-import net.ccbluex.liquidbounce.render.engine.utils.popMVP
-import net.ccbluex.liquidbounce.render.engine.utils.pushMVP
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.math.Mat4
 import net.minecraft.item.ItemStack
-import org.lwjgl.opengl.GL11.GL_ALPHA_TEST
-import org.lwjgl.opengl.GL11.glEnable
 
 /**
  * Renders an [ItemStack] to the screen. Primarily used by [ModuleNametags]
@@ -37,7 +33,7 @@ class ItemModelRenderTask(val stack: ItemStack, val x: Int, val y: Int) : Render
     override fun initRendering(level: OpenGLLevel, mvpMatrix: Mat4) {
         mc.itemRenderer.zOffset = -147F
 
-        pushMVP(mvpMatrix)
+//        pushMVP(mvpMatrix)
     }
 
     override fun draw(level: OpenGLLevel) {
@@ -45,8 +41,6 @@ class ItemModelRenderTask(val stack: ItemStack, val x: Int, val y: Int) : Render
     }
 
     override fun cleanupRendering(level: OpenGLLevel) {
-        popMVP()
-
-        glEnable(GL_ALPHA_TEST)
+//        popMVP()
     }
 }

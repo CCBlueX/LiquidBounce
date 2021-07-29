@@ -88,7 +88,7 @@ inline fun <T : VertexFormat> T.putVertex(function: T.() -> Unit): Int {
 class DelegatedVertexFormatComponent<T>(val vertexFormat: VertexFormat, val vertexFormatComponent: VertexFormatComponent) {
 
     operator fun getValue(thisRef: Any?, property: KProperty<*>): T {
-        throw IllegalStateException("Not implemented")
+        throw IllegalStateException("This property shall not be read from!")
     }
 
     operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {

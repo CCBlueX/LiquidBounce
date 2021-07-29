@@ -72,11 +72,13 @@ object CommandExecutor : Listenable {
                     }
                 }
             } catch (e: Exception) {
-                chat(TranslatableText("liquidbounce.commandManager.exceptionOccurred", e).styled {
-                    it.withColor(
-                        Formatting.RED
-                    )
-                })
+                chat(
+                    TranslatableText("liquidbounce.commandManager.exceptionOccurred", e).styled {
+                        it.withColor(
+                            Formatting.RED
+                        )
+                    }
+                )
             }
 
             it.cancelEvent()

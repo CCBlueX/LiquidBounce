@@ -53,6 +53,10 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
     val renderHandler = handler<EngineRenderEvent> { event ->
         val filteredEntities = world.entities.filter(ModuleNametags::shouldRenderNametag)
 
+        if (filteredEntities.isEmpty()) {
+            return@handler
+        }
+
         val fontRenderer = Fonts.bodyFont
 
         fontRenderer.begin()

@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.render.shaders.ShaderHandler
 import net.ccbluex.liquidbounce.utils.math.Mat4
 import org.lwjgl.opengl.*
 
-class VertexFormatRenderTask(private val vertexFormat: VertexFormat, internal val type: PrimitiveType, val shaderHandler: ShaderHandler, private val indexBuffer: IndexBuffer? = null, private val perInstance: VertexFormat? = null, private val texture: Texture? = null, private val state: GlRenderState = GlRenderState()) : RenderTask() {
+class VertexFormatRenderTask<T>(private val vertexFormat: VertexFormat, internal val type: PrimitiveType, val shaderHandler: ShaderHandler<T>, private val indexBuffer: IndexBuffer? = null, private val perInstance: VertexFormat? = null, private val texture: Texture? = null, private val state: GlRenderState = GlRenderState(), private val shaderData: T? = null) : RenderTask() {
     var arrayBuffer: VertexBufferObject? = null
     var perInstanceBuffer: VertexBufferObject? = null
     var elementBuffer: VertexBufferObject? = null
@@ -37,10 +37,7 @@ class VertexFormatRenderTask(private val vertexFormat: VertexFormat, internal va
     override fun getBatchRenderer(): BatchRenderer? = null
 
     override fun initRendering(level: OpenGLLevel, mvpMatrix: Mat4) {
-        GL12.glDisable(GL12.GL_LIGHTING)
         GL12.glDisable(GL12.GL_SCISSOR_TEST)
-        GL12.glDisable(GL12.GL_TEXTURE_2D)
-        GL12.glEnable(GL12.GL_BLEND)
         GL12.glEnable(GL12.GL_BLEND)
         GL12.glBlendFunc(GL12.GL_SRC_ALPHA, GL12.GL_ONE_MINUS_SRC_ALPHA)
 
@@ -48,7 +45,7 @@ class VertexFormatRenderTask(private val vertexFormat: VertexFormat, internal va
 
         when (level) {
             OpenGLLevel.OPENGL3_3, OpenGLLevel.OPENGL4_3 -> {
-                shaderHandler.bind(mvpMatrix)
+                shaderHandler.bind(mvpMatrix, this.shaderData)
             }
             else -> {
                 this.vertexFormat.components.forEach {
