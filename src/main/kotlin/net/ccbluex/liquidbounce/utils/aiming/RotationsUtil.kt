@@ -125,13 +125,9 @@ object RotationManager : Listenable {
                     }
 
                     // skip because not visible in range
-                    println("$visible $distance > $wallsRangeSquared")
                     if (!visible && distance > wallsRangeSquared) {
-                        println("skip")
                         continue
                     }
-
-                    println("gone")
 
                     val rotation = makeRotation(vec3, eyes)
 
