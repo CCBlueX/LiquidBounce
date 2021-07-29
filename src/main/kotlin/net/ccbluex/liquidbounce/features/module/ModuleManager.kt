@@ -157,6 +157,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAntiAFK,
             ModuleNoJumpDelay,
             ModuleNoBob,
+            ModuleAutoSoup,
             ModuleNotifier
         )
 
