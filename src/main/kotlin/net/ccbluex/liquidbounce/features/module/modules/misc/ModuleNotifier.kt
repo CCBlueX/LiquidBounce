@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.minecraft.client.MinecraftClient
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket
 import java.util.*
 
@@ -37,6 +36,7 @@ import java.util.*
  * Notifies you about all kinds of events.
  */
 object ModuleNotifier : Module("Notifier", Category.MISC) {
+
     private val joinMessages by boolean("Join Messages", true)
     private val joinMessageFormat by text("Join Message Format", "%s joined")
 
@@ -48,7 +48,7 @@ object ModuleNotifier : Module("Notifier", Category.MISC) {
     private val uuidNameCache = hashMapOf<UUID, String>()
 
     override fun enable() {
-        for (entry in MinecraftClient.getInstance().networkHandler!!.playerList) {
+        for (entry in network.playerList) {
             uuidNameCache[entry.profile.id] = entry.profile.name
         }
     }
@@ -97,4 +97,5 @@ object ModuleNotifier : Module("Notifier", Category.MISC) {
             }
         }
     }
+
 }
