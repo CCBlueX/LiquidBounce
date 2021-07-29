@@ -59,7 +59,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         }
     }
     private val visualSwing by boolean("VisualSwing", true)
-    private val chest by blocks("Target", mutableListOf(Blocks.DRAGON_EGG))
+    private val targets by blocks("Target", hashSetOf(Blocks.DRAGON_EGG))
     private val action by enumChoice("Action", DestroyAction.USE, DestroyAction.values())
     private val throughWalls by boolean("ThroughWalls", false)
 
@@ -133,7 +133,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
 
         val targetedBlocks = hashSetOf<Block>()
 
-        targetedBlocks.addAll(chest)
+        targetedBlocks.addAll(targets)
 
         val radius = range + 1
         val radiusSquared = radius * radius

@@ -16,22 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.event.BlockShapeEvent
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.minecraft.block.Blocks
-import net.minecraft.util.shape.VoxelShapes
+package net.ccbluex.liquidbounce.common
 
-object ModuleBlockWalk : Module("BlockWalk", Category.MOVEMENT) {
-
-    private val blocks by blocks("Blocks", hashSetOf(Blocks.COBWEB, Blocks.SNOW))
-
-    val shapeHandler = handler<BlockShapeEvent> { event ->
-        if (event.state.block in blocks) {
-            event.shape = VoxelShapes.fullCube()
-        }
-    }
+object RenderingFlags {
+    /**
+     * Because newer versions or mods like sodium might rely on multiple threads to render entities, it might be unstable to use a non-sync
+     * flag for this
+     */
+    @JvmStatic
+    val isCurrentlyRenderingEntityOutline = ThreadLocal.withInitial { false }
 }

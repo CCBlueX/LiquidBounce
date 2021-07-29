@@ -58,7 +58,7 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
     }
     private val delay by int("Delay", 5, 1..80)
     private val visualSwing by boolean("VisualSwing", true)
-    private val chest by blocks("Chest", mutableListOf(Blocks.CHEST))
+    private val chest by blocks("Chest", hashSetOf(Blocks.CHEST))
 
 
     private object AwaitContainerOptions : ToggleableConfigurable(this, "AwaitContainer", true) {
