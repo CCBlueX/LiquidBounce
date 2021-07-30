@@ -64,9 +64,9 @@ object ChunkScanner : Listenable {
             throw IllegalStateException("Subscriber already registered")
         }
 
-        val world = mc.world ?: return
-
         this.subscriber.add(newSubscriber)
+
+        val world = mc.world ?: return
 
         logger.debug("Scanning ${this.loadedChunks.size} chunks for ${newSubscriber.javaClass.simpleName}")
 
