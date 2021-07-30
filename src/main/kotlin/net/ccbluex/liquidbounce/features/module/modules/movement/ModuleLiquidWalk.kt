@@ -85,7 +85,7 @@ object ModuleLiquidWalk : Module("LiquidWalk", Category.MOVEMENT) {
                 val detectionBox = boundingBox.withMinY(boundingBox.minY - 0.5)
 
                 // todo: fix moving passable flags on edges
-                if (!player.input.sneaking && !player.isTouchingWater && isBlockAtPosition(detectionBox) { it is FluidBlock } && !collideBlockIntersects(detectionBox) { it !is FluidBlock }) {
+                if (!player.input.sneaking && !player.isTouchingWater && standingOnWater() && !collideBlockIntersects(detectionBox) { it !is FluidBlock }) {
                     if (tick) {
                         packet.y -= 0.001
                     }
@@ -102,6 +102,16 @@ object ModuleLiquidWalk : Module("LiquidWalk", Category.MOVEMENT) {
             }
         }
 
+    }
+
+    /**
+     * Check if player is standing on water
+     */
+    fun standingOnWater(): Boolean {
+        val boundingBox = player.boundingBox
+        val detectionBox = boundingBox.withMinY(boundingBox.minY - 0.01)
+
+        return isBlockAtPosition(detectionBox) { it is FluidBlock }
     }
 
 }

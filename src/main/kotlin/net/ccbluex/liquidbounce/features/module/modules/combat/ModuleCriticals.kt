@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFly
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleLiquidWalk
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.exactPosition
@@ -234,7 +235,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         !player.isInLava && !player.isTouchingWater && !player.isClimbing && !player.hasNoGravity() &&
             !player.hasStatusEffect(StatusEffects.LEVITATION) && !player.hasStatusEffect(StatusEffects.BLINDNESS) &&
             !player.hasStatusEffect(StatusEffects.SLOW_FALLING) && !player.isRiding && (!player.isOnGround || ignoreOnGround) &&
-            !ModuleFly.enabled
+            !ModuleFly.enabled && !(ModuleLiquidWalk.enabled && ModuleLiquidWalk.standingOnWater())
 
     fun getCooldownDamageFactorWithCurrentTickDelta(player: PlayerEntity, tickDelta: Float): Float {
         val base = ((player.lastAttackedTicks.toFloat() + tickDelta + 0.5f) / player.attackCooldownProgressPerTick)
