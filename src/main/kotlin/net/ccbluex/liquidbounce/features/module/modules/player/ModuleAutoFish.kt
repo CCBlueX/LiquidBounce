@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.minecraft.item.FishingRodItem
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket
@@ -34,7 +33,6 @@ object ModuleAutoFish : Module("AutoFish", Category.PLAYER) {
     val packetHandler = handler<PacketEvent> { event ->
         if (event.packet is PlaySoundS2CPacket) {
             if (event.packet.sound == SoundEvents.ENTITY_FISHING_BOBBER_SPLASH) {
-                chat("ey test u listen to this ?")
                 if (player.mainHandStack.item is FishingRodItem) {
                     repeat(2) {
                         network.sendPacket(PlayerInteractItemC2SPacket(Hand.MAIN_HAND))
