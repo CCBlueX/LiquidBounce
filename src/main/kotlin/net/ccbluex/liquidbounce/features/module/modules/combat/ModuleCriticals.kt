@@ -159,11 +159,17 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
      */
     private object VisualsConfigurable : ToggleableConfigurable(this, "Visuals", true) {
 
+        val fake by boolean("Fake", false)
+
         val critParticles by int("CritParticles", 1, 0..20)
         val magicParticles by int("MagicParticles", 0, 0..20)
 
         val attackHandler = handler<AttackEvent> { event ->
             if (event.enemy !is LivingEntity) {
+                return@handler
+            }
+
+            if (!fake && !canCrit(player, ignoreOnGround = true)) {
                 return@handler
             }
 
