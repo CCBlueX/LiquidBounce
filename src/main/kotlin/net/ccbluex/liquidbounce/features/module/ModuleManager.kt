@@ -159,7 +159,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNoBob,
             ModuleAutoSoup,
             ModuleNotifier,
-            ModuleHoleESP
+            ModuleHoleESP,
+            ModuleNoSignRender
         )
 
         builtin.apply {
