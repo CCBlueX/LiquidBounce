@@ -19,11 +19,10 @@
 package net.ccbluex.liquidbounce.utils.block
 
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.SideShapeType
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Vec3d
+import net.minecraft.util.math.*
 
 fun Vec3d.toBlockPos() = BlockPos(this)
 
@@ -61,4 +60,49 @@ inline fun searchBlocks(radius: Int, filter: (BlockPos, BlockState) -> Boolean):
 
 fun BlockPos.canStandOn(): Boolean {
     return this.getState()!!.isSideSolid(mc.world!!, this, Direction.UP, SideShapeType.CENTER)
+}
+
+/**
+ * Check if [box] is reaching of specified blocks
+ */
+fun isBlockAtPosition(box: Box, isCorrectBlock: (Block?) -> Boolean): Boolean {
+    for (x in MathHelper.floor(box.minX) until MathHelper.floor(box.maxX) + 1) {
+        for (z in MathHelper.floor(box.minZ) until MathHelper.floor(box.maxZ) + 1) {
+            val block = BlockPos(x.toDouble(), box.minY, z.toDouble()).getBlock()
+
+            if (isCorrectBlock(block)) {
+                return true
+            }
+        }
+    }
+
+    return false
+}
+
+/**
+ * Check if [box] intersects with bounding box of specified blocks
+ */
+fun collideBlockIntersects(box: Box, isCorrectBlock: (Block?) -> Boolean): Boolean {
+    for (x in MathHelper.floor(box.minX) until MathHelper.floor(box.maxX) + 1) {
+        for (z in MathHelper.floor(box.minZ) until MathHelper.floor(box.maxZ) + 1) {
+            val blockPos = BlockPos(x.toDouble(), box.minY, z.toDouble())
+            val blockState = blockPos.getState() ?: continue
+            val block = blockPos.getBlock() ?: continue
+
+            if (isCorrectBlock(block)) {
+                val shape = blockState.getCollisionShape(mc.world, blockPos)
+
+                if (shape.isEmpty) {
+                    continue
+                }
+
+                val boundingBox = shape.boundingBox
+
+                if (box.intersects(boundingBox))
+                    return true
+            }
+        }
+    }
+
+    return false
 }
