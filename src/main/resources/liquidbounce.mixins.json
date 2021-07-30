@@ -3,14 +3,13 @@
   "minVersion": "0.8",
   "package": "net.ccbluex.liquidbounce.injection.mixins",
   "compatibilityLevel": "JAVA_8",
-  "mixins": [],
   "client": [
     "minecraft.block.MixinAbstractBlock",
     "minecraft.block.MixinBlock",
     "minecraft.block.MixinCactusBlock",
+    "minecraft.block.MixinCobwebBlock",
     "minecraft.block.MixinFluidBlock",
     "minecraft.block.MixinSnowBlock",
-    "minecraft.block.MixinCobwebBlock",
     "minecraft.client.MixinClientWorld",
     "minecraft.client.MixinInput",
     "minecraft.client.MixinKeyboard",
@@ -39,6 +38,7 @@
     "minecraft.render.MixinInGameOverlayRenderer",
     "minecraft.render.MixinLivingEntityRenderer",
     "minecraft.render.MixinRenderTickCounter",
+    "minecraft.render.MixinSignBlockEntityRenderer",
     "minecraft.render.MixinTextRenderer",
     "minecraft.render.MixinWorldRenderer"
   ],
