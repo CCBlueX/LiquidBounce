@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.event.BlockShapeEvent
+import net.ccbluex.liquidbounce.event.WorldDisconnectEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -41,6 +42,10 @@ object ModuleAvoidHazards : Module("AvoidHazards", Category.MOVEMENT) {
     val magmaBlocks by boolean("MagmaBlocks", true)
     val cobWebs by boolean("Cobwebs", true)
 
+    val disconnectHandler = handler<WorldDisconnectEvent> {
+        enabled = false
+    }
+
     val shapeHandler = handler<BlockShapeEvent> { event ->
         if (cacti && event.state.block is CactusBlock) {
             event.shape = VoxelShapes.fullCube()
@@ -52,7 +57,13 @@ object ModuleAvoidHazards : Module("AvoidHazards", Category.MOVEMENT) {
             event.shape = VoxelShapes.fullCube()
         } else if (pressurePlates && event.state.block is PressurePlateBlock) {
             event.shape = Block.createCuboidShape(0.0, 0.0, 0.0, 16.0, 4.0, 16.0)
-        } else if (magmaBlocks && !event.state.isSideSolid(world, event.pos, Direction.UP, SideShapeType.CENTER) && event.pos.down().getBlock() is MagmaBlock) {
+        } else if (magmaBlocks && !event.state.isSideSolid(
+                world,
+                event.pos,
+                Direction.UP,
+                SideShapeType.CENTER
+            ) && event.pos.down().getBlock() is MagmaBlock
+        ) {
             event.shape = Block.createCuboidShape(0.0, 0.0, 0.0, 16.0, 4.0, 16.0)
         }
     }
