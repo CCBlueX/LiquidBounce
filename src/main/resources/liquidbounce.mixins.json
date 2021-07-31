@@ -32,6 +32,7 @@
     "minecraft.network.MixinClientConnection",
     "minecraft.network.MixinClientPlayerInteractionManager",
     "minecraft.network.MixinClientPlayNetworkHandler",
+    "minecraft.network.MixinPlayerListEntry",
     "minecraft.render.MixinBackgroundRenderer",
     "minecraft.render.MixinEntityRenderer",
     "minecraft.render.MixinGameRenderer",
