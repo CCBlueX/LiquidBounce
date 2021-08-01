@@ -161,7 +161,9 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNotifier,
             ModuleHoleESP,
             ModuleNoSignRender,
-            ModuleAutoFish
+            ModuleAutoFish,
+            ModuleMobOwners,
+            ModuleGhostHand
         )
 
         builtin.apply {

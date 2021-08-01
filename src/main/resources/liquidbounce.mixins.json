@@ -6,6 +6,7 @@
   "client": [
     "minecraft.block.MixinAbstractBlock",
     "minecraft.block.MixinBlock",
+    "minecraft.block.MixinBlockView",
     "minecraft.block.MixinCactusBlock",
     "minecraft.block.MixinCobwebBlock",
     "minecraft.block.MixinFluidBlock",
