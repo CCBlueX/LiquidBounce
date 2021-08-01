@@ -29,6 +29,12 @@ import net.minecraft.block.Block
 import net.minecraft.block.HoneyBlock
 import net.minecraft.block.SlimeBlock
 
+/**
+ * BlockBounce module
+ *
+ * Allows you to bounce higher on bouncy blocks.
+ */
+
 object ModuleBlockBounce : Module("BlockBounce", Category.MOVEMENT) {
 
     private val motion by float("Motion", 0.42f, 0.2f..2f)

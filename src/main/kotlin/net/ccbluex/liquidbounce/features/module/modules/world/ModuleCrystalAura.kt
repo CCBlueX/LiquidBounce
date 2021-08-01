@@ -51,6 +51,12 @@ import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.RaycastContext
 
+/**
+ * CrystalAura module
+ *
+ * Automatically places and destroys End Crystals.
+ */
+
 object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
 
     private val swing by boolean("Swing", true)

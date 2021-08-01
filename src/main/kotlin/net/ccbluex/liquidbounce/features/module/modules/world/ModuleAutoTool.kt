@@ -24,6 +24,12 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 
+/**
+ * AutoTool module
+ *
+ * Automatically chooses the best tool in your inventory to mine a block.
+ */
+
 object ModuleAutoTool : Module("AutoTool", Category.WORLD) {
 
     val handler = handler<BlockAttackEvent> { event ->

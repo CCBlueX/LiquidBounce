@@ -38,6 +38,12 @@ import net.minecraft.entity.ItemEntity
 import net.minecraft.entity.projectile.ArrowEntity
 import net.minecraft.util.math.Box
 
+/**
+ * ItemESP module
+ *
+ * Allows you to see dropped items through walls.
+ */
+
 object ModuleItemESP : Module("ItemESP", Category.RENDER) {
 
     override val translationBaseKey: String

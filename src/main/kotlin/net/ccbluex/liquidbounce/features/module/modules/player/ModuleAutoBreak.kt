@@ -28,7 +28,7 @@ import net.minecraft.util.hit.HitResult
 /**
  * AutoBreak module
  *
- * Automatically breaks blocks
+ * Automatically breaks blocks.
  */
 object ModuleAutoBreak : Module("AutoBreak", Category.PLAYER) {
 

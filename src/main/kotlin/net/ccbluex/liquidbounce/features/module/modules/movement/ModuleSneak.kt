@@ -30,6 +30,12 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 import net.minecraft.client.util.InputUtil
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 
+/**
+ * Sneak module
+ *
+ * Automatically sneaks all the time.
+ */
+
 object ModuleSneak : Module("Sneak", Category.MOVEMENT) {
 
     var modes = choices("Mode", Vanilla, arrayOf(Legit, Vanilla, Switch))

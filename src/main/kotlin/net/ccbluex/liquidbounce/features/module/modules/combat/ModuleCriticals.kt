@@ -43,7 +43,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 /**
  * Criticals module
  *
- * Automatically crits every time you attack someone
+ * Automatically crits every time you attack someone.
  */
 object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 

@@ -25,9 +25,9 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.client.gui.screen.DeathScreen
 
 /**
- * A auto respawn module
+ * AutoRespawn module
  *
- * Automatically respawns the player after dying
+ * Automatically respawns the player after dying.
  */
 object ModuleAutoRespawn : Module("AutoRespawn", Category.PLAYER) {
 

@@ -30,7 +30,7 @@ import net.minecraft.util.shape.VoxelShapes
 /**
  * Anti hazards module
  *
- * Prevents you walking into blocks that might be malicious for you
+ * Prevents you walking into blocks that might be malicious for you.
  */
 object ModuleAvoidHazards : Module("AvoidHazards", Category.MOVEMENT) {
 

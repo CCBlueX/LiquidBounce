@@ -39,6 +39,12 @@ import net.minecraft.block.Blocks
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 
+/**
+ * BlockESP module
+ *
+ * Allows you to see selected blocks through walls.
+ */
+
 object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
 
     private val targetedBlocksSetting by blocks("Targets", hashSetOf(Blocks.DRAGON_EGG, Blocks.RED_BED))
