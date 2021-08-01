@@ -30,20 +30,24 @@ import net.minecraft.util.Hand
 
 object ModuleAutoFish : Module("AutoFish", Category.PLAYER) {
 
-    val packetHandler = handler<PacketEvent> { event ->
-        if (event.packet is PlaySoundS2CPacket) {
-            if (event.packet.sound == SoundEvents.ENTITY_FISHING_BOBBER_SPLASH) {
-                if (player.mainHandStack.item is FishingRodItem) {
-                    repeat(2) {
-                        network.sendPacket(PlayerInteractItemC2SPacket(Hand.MAIN_HAND))
-                        player.swingHand(Hand.MAIN_HAND)
-                    }
-                }
+    val recastRod by boolean("RecastRod", true)
 
-                if (player.offHandStack.item is FishingRodItem) {
-                    repeat(2) {
-                        network.sendPacket(PlayerInteractItemC2SPacket(Hand.OFF_HAND))
-                        player.swingHand(Hand.OFF_HAND)
+    val packetHandler = handler<PacketEvent> { event ->
+        if (player.fishHook != null) {
+            if (event.packet is PlaySoundS2CPacket) {
+                if (event.packet.sound == SoundEvents.ENTITY_FISHING_BOBBER_SPLASH) {
+                    if (player.mainHandStack.item is FishingRodItem) {
+                        repeat(1 + if (recastRod) 1 else 0) {
+                            network.sendPacket(PlayerInteractItemC2SPacket(Hand.MAIN_HAND))
+                            player.swingHand(Hand.MAIN_HAND)
+                        }
+                    }
+
+                    if (player.offHandStack.item is FishingRodItem) {
+                        repeat(1 + if (recastRod) 1 else 0) {
+                            network.sendPacket(PlayerInteractItemC2SPacket(Hand.OFF_HAND))
+                            player.swingHand(Hand.OFF_HAND)
+                        }
                     }
                 }
             }
