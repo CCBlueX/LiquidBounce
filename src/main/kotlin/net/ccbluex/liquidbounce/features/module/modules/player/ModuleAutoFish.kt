@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.minecraft.entity.EquipmentSlot
 import net.minecraft.item.FishingRodItem
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket
@@ -33,24 +34,27 @@ object ModuleAutoFish : Module("AutoFish", Category.PLAYER) {
     val recastRod by boolean("RecastRod", true)
 
     val packetHandler = handler<PacketEvent> { event ->
-        if (player.fishHook != null) {
-            if (event.packet is PlaySoundS2CPacket) {
-                if (event.packet.sound == SoundEvents.ENTITY_FISHING_BOBBER_SPLASH) {
-                    if (player.mainHandStack.item is FishingRodItem) {
-                        repeat(1 + if (recastRod) 1 else 0) {
-                            network.sendPacket(PlayerInteractItemC2SPacket(Hand.MAIN_HAND))
-                            player.swingHand(Hand.MAIN_HAND)
-                        }
-                    }
+        if (player.fishHook == null)
+            return@handler
 
-                    if (player.offHandStack.item is FishingRodItem) {
-                        repeat(1 + if (recastRod) 1 else 0) {
-                            network.sendPacket(PlayerInteractItemC2SPacket(Hand.OFF_HAND))
-                            player.swingHand(Hand.OFF_HAND)
-                        }
-                    }
-                }
+        if (event.packet !is PlaySoundS2CPacket || event.packet.sound != SoundEvents.ENTITY_FISHING_BOBBER_SPLASH)
+            return@handler
+
+        for (hand in arrayOf(Hand.MAIN_HAND, Hand.OFF_HAND)) {
+            if (player.getEquippedStack(hand.equipmentSlot).item !is FishingRodItem)
+                continue
+
+            repeat(1 + if (recastRod) 1 else 0) {
+                network.sendPacket(PlayerInteractItemC2SPacket(hand))
+                player.swingHand(hand)
             }
         }
     }
+
+    private val Hand.equipmentSlot: EquipmentSlot
+        get() = when (this) {
+            Hand.MAIN_HAND -> EquipmentSlot.MAINHAND
+            Hand.OFF_HAND -> EquipmentSlot.OFFHAND
+        }
+
 }
