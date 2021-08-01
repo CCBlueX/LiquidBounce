@@ -27,19 +27,28 @@ object WorldChangeNotifier : Listenable {
     val chunkLoadHandler = handler<ChunkLoadEvent> { event ->
         val region = Region.fromChunkPosition(event.x, event.z)
 
-        notifyAllSubscribers { it.invalidate(region, true) }
+        notifyAllSubscribers {
+            it.invalidateChunk(event.x, event.z, true)
+            it.invalidate(region, true)
+        }
     }
 
     val chunkUnloadHandler = handler<ChunkUnloadEvent> { event ->
         val region = Region.fromChunkPosition(event.x, event.z)
 
-        notifyAllSubscribers { it.invalidate(region, false) }
+        notifyAllSubscribers {
+            it.invalidateChunk(event.x, event.z, false)
+            it.invalidate(region, false)
+        }
     }
 
     val blockChangeEvent = handler<BlockChangeEvent> { event ->
         val region = Region.fromBlockPos(event.blockPos)
 
-        notifyAllSubscribers { it.invalidate(region, true) }
+        notifyAllSubscribers {
+            it.invalidateChunk(event.blockPos.x shr 4, event.blockPos.z shr 4, true)
+            it.invalidate(region, true)
+        }
     }
 
     val disconnectHandler = handler<WorldDisconnectEvent> { event ->
@@ -75,6 +84,8 @@ object WorldChangeNotifier : Listenable {
          * @param rescan false if the area was unloaded
          */
         fun invalidate(region: Region, rescan: Boolean)
+
+        fun invalidateChunk(x: Int, z: Int, rescan: Boolean) {}
 
         /**
          * Unloads the world; no rescanning required
