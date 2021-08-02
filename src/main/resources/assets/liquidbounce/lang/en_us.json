@@ -217,7 +217,7 @@
 
   "liquidbounce.module.forceUnicodeChat.description": "Translates all chat messages you send to Unicode.",
 
-  "liquidbounce.module.godMode.description": "Freezes you in your current position and thereby makes you invincible.",
+  "liquidbounce.module.godMode.description": "Freezes you in your current position, therefore makes you invincible.",
 
   "liquidbounce.module.kick.description": "Kicks yourself from the server.",
   "liquidbounce.module.kick.messages.cantEnableInSingleplayer": "Cannot enable %s in singleplayer.",
@@ -266,7 +266,7 @@
 
   "liquidbounce.module.autoWalk.description": "Automatically makes you walk in the direction you are facing.",
 
-  "liquidbounce.module.blink.description": "Makes it look like you are teleporting to other players.",
+  "liquidbounce.module.blink.description": "Makes it look as if you were teleporting to other players.",
 
   "liquidbounce.module.eagle.description": "Automatically sneaks at the edge of a block (aka. FastBridge).",
 
@@ -300,5 +300,112 @@
 
   "liquidbounce.module.friendClicker.description": "Allows you to make friends by clicking on them.",
   "liquidbounce.module.friendClicker.addedFriend": "%s was successfully added to the friend list.",
-  "liquidbounce.module.friendClicker.removedFriend": "%s was successfully removed from the friend list."
+  "liquidbounce.module.friendClicker.removedFriend": "%s was successfully removed from the friend list.",
+
+  "liquidbounce.module.autoGapple.description": "Automatically eats apples whenever your health is low.",
+
+  "liquidbounce.module.autoSoup.description": "Automatically eats soup whenever your health is low.",
+
+  "liquidbounce.module.badWifi.description": "Holds back packets so as to prevent you from being hit by an enemy.",
+
+  "liquidbounce.module.aimbot.description": "Automatically faces selected entities around you.",
+
+  "liquidbounce.module.antiReducedDebugInfo.description": "Allows you to see extended debug information.",
+
+  "liquidbounce.module.ghostHand.description": "Allows you to interact with selected blocks through walls.",
+
+  "liquidbounce.module.notifier.description": "Notifies you about all kinds of events.",
+
+  "liquidbounce.module.nameProtect.description": "Changes players names clientside.",
+
+  "liquidbounce.module.teams.description": "Prevents KillAura from attacking teammates.",
+
+  "liquidbounce.module.avoidHazards.description": "Prevents you from walking into blocks that might be malicious.",
+
+  "liquidbounce.module.blockBounce.description": "Allows you to bounce higher on bouncy blocks.",
+
+  "liquidbounce.module.blockWalk.description": "Allows you to walk on non-fullblock blocks.",
+
+  "liquidbounce.module.bugUp.description": "Automatically setbacks you after falling a certain distance.",
+
+  "liquidbounce.module.elytraFly.description": "Makes you fly faster on Elytra.",
+
+  "liquidbounce.module.inventoryMove.description": "Allows you to walk while an inventory is opened.",
+
+  "liquidbounce.module.liquidWalk.description": "Allows you to walk on water.",
+
+  "liquidbounce.module.noJumpDelay.description": "Removes the delay between jumps.",
+
+  "liquidbounce.module.noPush.description": "Prevents you from being pushed by other players.",
+
+  "liquidbounce.module.perfectHorseJump.description": "Automatically jumps when the jump bar of a horse is fully filled up.",
+
+  "liquidbounce.module.safeWalk.description": "Prevents you from falling down as if you were sneaking.",
+
+  "liquidbounce.module.sneak.description": "Automatically sneaks all the time.",
+
+  "liquidbounce.module.step.description": "Allows you to step up blocks.",
+
+  "liquidbounce.module.terrainSpeed.description": "Allows you to move faster on specific surfaces.",
+
+  "liquidbounce.module.antiAfk.description": "Prevents you from being kicked for AFK.",
+
+  "liquidbounce.module.autoFish.description": "Automatically catches fish when using a rod.",
+
+  "liquidbounce.module.autoTotem.description": "Automatically places a totem in off-hand.",
+
+  "liquidbounce.module.chestStealer.description": "Automatically steals all items from a chest.",
+
+  "liquidbounce.module.regen.description": "Regenerates your health much faster.",
+
+  "liquidbounce.module.zoot.description": "Removes all bad effects/fire.",
+
+  "liquidbounce.module.inventoryCleaner.description": "Automatically throws away useless items and sorts them.",
+
+  "liquidbounce.module.blockEsp.description": "Allows you to see selected blocks through walls.",
+
+  "liquidbounce.module.ESP.description": "Allows you to see targets through walls.",
+
+  "liquidbounce.module.freeCam.description": "Allows you to move out of your body.",
+
+  "liquidbounce.module.holeEsp.description": "Detects and displays safe spots for Crystal PvP.",
+
+  "liquidbounce.module.mobOwners.description": "Shows you from which player a tamable entity or projectile belongs to.",
+
+  "liquidbounce.module.noBob.description": "Disables the view bobbing effect.",
+
+  "liquidbounce.module.noHurtCam.description": "Disables the hurt cam effect when getting hurt.",
+
+  "liquidbounce.module.noSignRender.description": "Prevents the sign text from being rendered.",
+
+  "liquidbounce.module.noSwing.description": "Disables the swing effect.",
+
+  "liquidbounce.module.noWeather.description": "Disables the rain effect.",
+
+  "liquidbounce.module.rotations.description": "Allows you to see server-sided rotations.",
+
+  "liquidbounce.module.storageEsp.description": "Allows you to see chests, dispensers, etc. through walls.",
+
+  "liquidbounce.module.trajectories.description": "Allows you to see where arrows, pearls, etc. will land.",
+
+  "liquidbounce.module.autoFarm.description": "Automatically farms stuff.",
+
+  "liquidbounce.module.autoTool.description": "Automatically chooses the best tool in your inventory to mine a block.",
+
+  "liquidbounce.module.crystalAura.description": "Automatically places and destroys End Crystals.",
+
+  "liquidbounce.module.fucker.description": "Destroys/Uses selected blocks around you.",
+
+  "liquidbounce.module.ignite.description": "Automatically sets targets around you on fire.",
+
+  "liquidbounce.module.scaffold.description": "Automatically places blocks underneath you.",
+
+  "liquidbounce.module.fastUse.description": "Allows you to use items faster.",
+
+  "liquidbounce.module.noSlow.description": "Cancels slowness effects caused by soulsand and using items.",
+
+  "liquidbounce.module.highJump.description": "Allows you to jump higher.",
+
+  "liquidbounce.module.sleepWalker.description": "Allows you to walk while sleeping, also makes your hitbox small."
+
 }

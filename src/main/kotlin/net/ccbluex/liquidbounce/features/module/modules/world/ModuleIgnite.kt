@@ -37,9 +37,9 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.HitResult
 
 /**
- * Scaffold module
+ * Ignite module
  *
- * Places blocks under you.
+ * Automatically sets targets around you on fire.
  */
 object ModuleIgnite : Module("Ignite", Category.WORLD) {
 
@@ -53,11 +53,7 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
 
         val slot = (0..8).firstOrNull {
             player.inventory.getStack(it).item == Items.LAVA_BUCKET
-        }
-
-        if (slot == null) {
-            return@repeatable
-        }
+        } ?: return@repeatable
 
         for (enemy in targetTracker.enemies()) {
             if (enemy.squaredBoxedDistanceTo(player) > 6.0 * 6.0) {

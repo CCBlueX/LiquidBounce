@@ -37,7 +37,7 @@ import net.minecraft.util.Hand
 /**
  * AutoArmor module
  *
- * Automatically put on the best armor
+ * Automatically put on the best armor.
  */
 object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
 

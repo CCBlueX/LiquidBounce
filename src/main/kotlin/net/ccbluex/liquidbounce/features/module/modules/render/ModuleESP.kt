@@ -43,6 +43,12 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.Box
 import java.awt.Color
 
+/**
+ * ESP module
+ *
+ * Allows you to see targets through walls.
+ */
+
 object ModuleESP : Module("ESP", Category.RENDER) {
 
     override val translationBaseKey: String

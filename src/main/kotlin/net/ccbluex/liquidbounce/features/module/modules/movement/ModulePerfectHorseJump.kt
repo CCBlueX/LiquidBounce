@@ -22,6 +22,12 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 
+/**
+ * PerfectHorseJump module
+ *
+ * Automatically jumps when the jump bar of a horse is fully filled up.
+ */
+
 object ModulePerfectHorseJump : Module("PerfectHorseJump", Category.MOVEMENT) {
     val repeatable = repeatable {
         player.field_3938 = 9

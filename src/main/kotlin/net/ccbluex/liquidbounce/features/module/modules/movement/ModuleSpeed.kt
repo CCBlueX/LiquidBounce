@@ -30,6 +30,12 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.entity.upwards
 
+/**
+ * Speed module
+ *
+ * Allows you to move faster.
+ */
+
 object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
 
     private val modes = choices(

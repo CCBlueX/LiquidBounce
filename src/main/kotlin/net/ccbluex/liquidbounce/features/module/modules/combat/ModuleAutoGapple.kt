@@ -30,6 +30,12 @@ import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.screen.slot.SlotActionType
 
+/**
+ * AutoGapple module
+ *
+ * Automatically eats apples whenever your health is low.
+ */
+
 object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
 
     val health by int("Health", 18, 1..20)

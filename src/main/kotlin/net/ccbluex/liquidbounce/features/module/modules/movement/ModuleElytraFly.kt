@@ -29,6 +29,12 @@ import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.item.Items
 
+/**
+ * ElytraFly module
+ *
+ * Makes you fly faster on Elytra.
+ */
+
 object ModuleElytraFly : Module("ElytraFly", Category.MOVEMENT) {
 
     private val instant by boolean("Instant", true)

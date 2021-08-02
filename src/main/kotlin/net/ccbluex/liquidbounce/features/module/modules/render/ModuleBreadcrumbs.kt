@@ -30,6 +30,12 @@ import net.ccbluex.liquidbounce.render.shaders.SmoothLineShader
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 
+/**
+ * Breadcrumbs module
+ *
+ * Leaves a trace behind you.
+ */
+
 object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
 
     private val color by color("Color", Color4b(255, 179, 72, 255))

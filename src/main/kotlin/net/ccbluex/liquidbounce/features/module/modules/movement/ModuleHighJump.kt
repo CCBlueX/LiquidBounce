@@ -23,6 +23,12 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 
+/**
+ * HighJump module
+ *
+ * Allows you to jump higher.
+ */
+
 object ModuleHighJump : Module("HighJump", Category.MOVEMENT) {
 
     private val motion by float("Motion", 0.8f, 0.2f..1f)
