@@ -36,6 +36,7 @@
     "minecraft.network.MixinClientPlayNetworkHandler",
     "minecraft.network.MixinPlayerListEntry",
     "minecraft.render.MixinBackgroundRenderer",
+    "minecraft.render.MixinBuiltinModelItemRenderer",
     "minecraft.render.MixinEntityRenderer",
     "minecraft.render.MixinGameRenderer",
     "minecraft.render.MixinInGameOverlayRenderer",

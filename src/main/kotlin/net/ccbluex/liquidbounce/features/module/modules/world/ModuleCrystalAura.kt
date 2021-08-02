@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.block.searchBlocks
+import net.ccbluex.liquidbounce.utils.block.searchBlocksInRadius
 import net.ccbluex.liquidbounce.utils.client.MC_1_8
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
@@ -189,7 +189,7 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
         val radiusSquared = radius * radius
         val eyesPos = player.eyesPos
 
-        val blockToProcess = searchBlocks(radius.toInt()) { pos, state ->
+        val blockToProcess = searchBlocksInRadius(radius) { pos, state ->
             targetedBlocks.contains(state.block) && getNearestPoint(
                 eyesPos,
                 Box(pos, pos.add(1, 1, 1))

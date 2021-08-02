@@ -29,10 +29,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.step
 import net.minecraft.block.BlockState
 import net.minecraft.block.ShapeContext
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.MathHelper
-import net.minecraft.util.math.Vec3d
+import net.minecraft.util.math.*
 import org.apache.commons.lang3.RandomUtils
 import kotlin.math.atan2
 import kotlin.math.hypot
@@ -133,12 +130,20 @@ object RotationManager : Listenable {
 
                     if (visible) {
                         // Calculate next spot to preferred spot
-                        if (visibleRot == null || rotationDifference(rotation, preferredRotation) < rotationDifference(visibleRot.rotation, preferredRotation)) {
+                        if (visibleRot == null || rotationDifference(rotation, preferredRotation) < rotationDifference(
+                                visibleRot.rotation,
+                                preferredRotation
+                            )
+                        ) {
                             visibleRot = VecRotation(rotation, vec3)
                         }
                     } else {
                         // Calculate next spot to preferred spot
-                        if (notVisibleRot == null || rotationDifference(rotation, preferredRotation) < rotationDifference(notVisibleRot.rotation, preferredRotation)) {
+                        if (notVisibleRot == null || rotationDifference(
+                                rotation,
+                                preferredRotation
+                            ) < rotationDifference(notVisibleRot.rotation, preferredRotation)
+                        ) {
                             notVisibleRot = VecRotation(rotation, vec3)
                         }
                     }
@@ -148,6 +153,103 @@ object RotationManager : Listenable {
 
         return visibleRot ?: notVisibleRot
     }
+
+    /**
+     * Find the best spot of the upper side of the block
+     */
+    fun canSeeBlockTop(
+        eyes: Vec3d,
+        pos: BlockPos,
+        range: Double,
+        wallsRange: Double
+    ): Boolean {
+        val rangeSquared = range * range
+        val wallsRangeSquared = wallsRange * wallsRange
+
+        val minX = pos.x.toDouble()
+        val y = pos.y + 0.9
+        val minZ = pos.z.toDouble()
+
+        for (x in 0.1..0.9 step 0.4) {
+            for (z in 0.1..0.9 step 0.4) {
+                val vec3 = Vec3d(
+                    minX + x,
+                    y,
+                    minZ + z
+                )
+
+                // skip because of out of range
+                val distance = eyes.squaredDistanceTo(vec3)
+
+                if (distance > rangeSquared) {
+                    continue
+                }
+
+                // check if target is visible to eyes
+                val visible = facingBlock(eyes, vec3, pos, Direction.UP)
+
+                // skip because not visible in range
+                if (!visible && distance > wallsRangeSquared) {
+                    continue
+                }
+
+                return true
+            }
+
+        }
+
+        return false
+    }
+
+//    /**
+//     * Find the best spot of the upper side of the block
+//     */
+//    fun canSeeBlockTop(
+//        eyes: Vec3d,
+//        pos: BlockPos,
+//        range: Double,
+//        wallsRange: Double
+//    ): VecRotation? {
+//        val rangeSquared = range * range
+//        val wallsRangeSquared = wallsRange * wallsRange
+//
+//        var visibleRot: VecRotation? = null
+//        val notVisibleRot: VecRotation? = null
+//
+//        val minX = pos.x.toDouble()
+//        val y = pos.y.toDouble()
+//        val minZ = pos.z.toDouble()
+//
+//        for (x in 0.1..0.9 step 0.1) {
+//            for (z in 0.1..0.9 step 0.1) {
+//                val vec3 = Vec3d(
+//                    minX + x,
+//                    y,
+//                    minZ + z
+//                )
+//
+//                // skip because of out of range
+//                val distance = eyes.squaredDistanceTo(vec3)
+//
+//                if (distance > rangeSquared) {
+//                    continue
+//                }
+//
+//                // check if target is visible to eyes
+//                val visible = facingBlock(eyes, vec3, pos)
+//
+//                // skip because not visible in range
+//                if (!visible && distance > wallsRangeSquared) {
+//                    continue
+//                }
+//
+//                visibleRot = VecRotation(makeRotation(vec3, eyes), vec3)
+//            }
+//
+//        }
+//
+//        return visibleRot ?: notVisibleRot
+//    }
 
     fun aimAt(vec: Vec3d, eyes: Vec3d, ticks: Int = 5, configurable: RotationsConfigurable) =
         aimAt(makeRotation(vec, eyes), ticks, configurable)
@@ -201,10 +303,12 @@ object RotationManager : Listenable {
                 return
             }
 
-            this.currentRotation = limitAngleChange(this.currentRotation ?: serverRotation ?: return, playerRotation, turnSpeed)
+            this.currentRotation =
+                limitAngleChange(this.currentRotation ?: serverRotation ?: return, playerRotation, turnSpeed)
         } else if (targetRotation != null) {
             targetRotation?.let { targetRotation ->
-                this.currentRotation = limitAngleChange(this.currentRotation ?: playerRotation, targetRotation, turnSpeed)
+                this.currentRotation =
+                    limitAngleChange(this.currentRotation ?: playerRotation, targetRotation, turnSpeed)
             }
         }
     }
