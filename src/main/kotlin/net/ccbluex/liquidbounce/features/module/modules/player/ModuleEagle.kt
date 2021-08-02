@@ -29,7 +29,7 @@ import net.minecraft.util.math.Direction
 /**
  * A eagle module
  *
- * Legit trick to build faster
+ * Legit trick to build faster.
  */
 object ModuleEagle : Module("Eagle", Category.PLAYER) {
 

@@ -37,6 +37,12 @@ import net.minecraft.util.Hand
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 
+/**
+ * AutoSoup module
+ *
+ * Automatically eats soup whenever your health is low.
+ */
+
 object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
 
     private val bowl by enumChoice("Bowl", BowlMode.DROP, BowlMode.values())

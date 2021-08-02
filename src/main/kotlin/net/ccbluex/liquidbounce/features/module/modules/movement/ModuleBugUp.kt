@@ -28,6 +28,12 @@ import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.minecraft.util.math.BlockPos
 import kotlin.math.abs
 
+/**
+ * BugUp module
+ *
+ * Automatically setbacks you after falling a certain distance.
+ */
+
 object ModuleBugUp : Module("BugUp", Category.MOVEMENT) {
     private val maxFallDistance by int("MaxFallDistance", 10, 2..255)
     private val maxDistanceWithoutGround by float("MaxDistanceToSetback", 2.5f, 1f..30f)

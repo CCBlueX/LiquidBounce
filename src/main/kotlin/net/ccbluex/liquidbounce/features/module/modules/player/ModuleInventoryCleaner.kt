@@ -40,10 +40,11 @@ import net.minecraft.screen.slot.SlotActionType
 import net.minecraft.util.math.BlockPos
 
 /**
- * A anti cactus module
+ * InventoryCleaner module
  *
- * Prevents taking damage from cactus
+ * Automatically throws away useless items and sorts them.
  */
+
 object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
 
     val inventoryConstraints = InventoryConstraintsConfigurable()

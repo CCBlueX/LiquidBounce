@@ -28,6 +28,12 @@ import net.minecraft.text.OrderedText
 import net.minecraft.text.Style
 import net.minecraft.util.Formatting
 
+/**
+ * NameProtect module
+ *
+ * Changes players names clientside.
+ */
+
 object ModuleNameProtect : Module("NameProtect", Category.MISC) {
 
     val replacement by text("Replacement", "You")

@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.client.util.InputUtil
 
 /**
- * A autowalk module
+ * AutoWalk module
  *
  * Automatically makes you walk.
  */

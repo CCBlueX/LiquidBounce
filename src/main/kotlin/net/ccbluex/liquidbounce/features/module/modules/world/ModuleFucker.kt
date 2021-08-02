@@ -44,9 +44,9 @@ import net.minecraft.util.math.Vec3d
 import net.minecraft.world.RaycastContext
 
 /**
- * ChestAura module
+ * Fucker module
  *
- * Automatically opens chests around you.
+ * Destroys/Uses selected blocks around you.
  */
 object ModuleFucker : Module("Fucker", Category.WORLD) {
 

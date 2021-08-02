@@ -42,7 +42,7 @@ import net.minecraft.world.RaycastContext
 /**
  * AutoFarm module
  *
- * Automatically farms stuff for you
+ * Automatically farms stuff for you.
  */
 object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 // TODO Fix this entire module-

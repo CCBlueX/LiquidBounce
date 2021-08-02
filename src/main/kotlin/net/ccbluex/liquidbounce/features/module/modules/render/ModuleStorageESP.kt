@@ -40,6 +40,12 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import java.awt.Color
 
+/**
+ * StorageESP module
+ *
+ * Allows you to see chests, dispensers, etc. through walls.
+ */
+
 object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
 //    private val modeValue = Choi("Mode", arrayOf("Box", "OtherBox", "Outline", "ShaderOutline", "ShaderGlow", "2D", "WireFrame"), "Outline")
 

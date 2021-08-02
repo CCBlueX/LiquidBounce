@@ -25,6 +25,12 @@ import net.ccbluex.liquidbounce.utils.client.timer
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
+/**
+ * Regen module
+ *
+ * Regenerates your health much faster.
+ */
+
 object ModuleRegen : Module("Regen", Category.PLAYER) {
     private val health by int("Health", 18, 0..20)
     private val speed by int("Speed", 100, 1..100)

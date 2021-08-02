@@ -29,6 +29,12 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.text.TranslatableText
 import net.minecraft.util.hit.EntityHitResult
 
+/**
+ * FriendClicker module
+ *
+ * Allows you to make friends by clicking on them.
+ */
+
 object ModuleFriendClicker : Module("FriendClicker", Category.MISC) {
 
     private var clicked = false

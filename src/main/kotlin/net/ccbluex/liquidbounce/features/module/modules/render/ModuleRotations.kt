@@ -30,6 +30,12 @@ import net.ccbluex.liquidbounce.render.shaders.ColoredPrimitiveShader
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.math.times
 
+/**
+ * Rotations module
+ *
+ * Allows you to see server-sided rotations.
+ */
+
 object ModuleRotations : Module("Rotations", Category.RENDER) {
 
     val showRotationVector by boolean("ShowRotationVector", false)

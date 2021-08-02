@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 /**
  * A anti levitation module
  *
- * Stops the levitation and slow falling effect
+ * Stops the levitation and slow falling effect.
  */
 object ModuleAntiLevitation : Module("AntiLevitation", Category.MOVEMENT) {
     // @see net/ccbluex/liquidbounce/injection/mixins/minecraft/entity/MixinLivingEntity hookTravelStatusEffect

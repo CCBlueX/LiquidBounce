@@ -32,6 +32,12 @@ import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
 
+/**
+ * Velocity module
+ *
+ * Modifies the amount of velocity you take.
+ */
+
 object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     val modes = choices("Mode", Modify) {

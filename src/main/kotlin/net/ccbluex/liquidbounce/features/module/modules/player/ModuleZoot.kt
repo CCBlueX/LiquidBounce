@@ -28,7 +28,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 /**
  * Zoot module
  *
- * Accelerate game time to stop bad effects and fire faster
+ * Accelerate game time to stop bad effects and fire faster.
  */
 object ModuleZoot : Module("Zoot", Category.PLAYER) {
 

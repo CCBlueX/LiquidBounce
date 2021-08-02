@@ -34,9 +34,9 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.util.hit.HitResult
 
 /**
- * Scaffold module
+ * Ignite module
  *
- * Places blocks under you.
+ * Automatically sets targets around you on fire.
  */
 object ModuleIgnite : Module("Ignite", Category.WORLD) {
 

@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 /**
  * Hitbox module
  *
- * Modify enemy box margin, which makes it easier to aim.
+ * Enlarges the hitbox of other entities.
  */
 object ModuleHitbox : Module("Hitbox", Category.COMBAT) {
 

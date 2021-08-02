@@ -29,7 +29,7 @@ import net.minecraft.util.hit.EntityHitResult
 /**
  * Trigger module
  *
- * Automatically attacks enemy on your crosshair
+ * Automatically attacks enemy on your crosshair.
  */
 object ModuleTrigger : Module("Trigger", Category.COMBAT) {
 

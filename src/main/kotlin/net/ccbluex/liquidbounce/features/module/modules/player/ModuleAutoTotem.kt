@@ -29,6 +29,12 @@ import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.screen.slot.SlotActionType
 
+/**
+ * AutoTotem module
+ *
+ * Automatically places a totem in off-hand.
+ */
+
 object ModuleAutoTotem : Module("AutoTotem", Category.PLAYER) {
 
     val repeatable = repeatable {
