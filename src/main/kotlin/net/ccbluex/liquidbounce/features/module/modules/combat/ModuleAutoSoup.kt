@@ -23,6 +23,8 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.item.convertClientSlotToServerSlot
+import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
+import net.ccbluex.liquidbounce.utils.item.findInventorySlot
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.item.Item
 import net.minecraft.item.Items
@@ -44,19 +46,13 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
     private var saveSlot = false
 
     val repeatable = repeatable {
-        val hotBarSlot = (0..8).firstOrNull {
-            hasItem(it, Items.MUSHROOM_STEW)
-        }
+        val mushroomStewSlot = findHotbarSlot(Items.MUSHROOM_STEW)
 
-        val bowlSlot = (0..8).firstOrNull {
-            hasItem(it, Items.BOWL)
-        }
+        val bowlHotbarSlot = findHotbarSlot(Items.BOWL)
 
-        val invSlot = (9..35).find {
-            hasItem(it, Items.MUSHROOM_STEW)
-        }
+        val bowlInvSlot = findInventorySlot(Items.MUSHROOM_STEW)
 
-        if (hotBarSlot == null && invSlot == null && bowlSlot == null) {
+        if (mushroomStewSlot == null && bowlInvSlot == null && bowlHotbarSlot == null) {
             return@repeatable
         }
 
@@ -64,7 +60,7 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
             return@repeatable
         }
 
-        if (bowlSlot != null) {
+        if (bowlHotbarSlot != null) {
             network.sendPacket(
                 PlayerActionC2SPacket(
                     PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
@@ -78,7 +74,7 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
             }
             when (bowl) {
                 BowlMode.DROP -> {
-                    utilizeInventory(bowlSlot, 1, SlotActionType.THROW, false)
+                    utilizeInventory(bowlHotbarSlot, 1, SlotActionType.THROW, false)
                 }
                 BowlMode.MOVE -> {
                     val openInventory = mc.currentScreen !is InventoryScreen
@@ -89,12 +85,12 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
 
                     // If there is neither an empty slot nor an empty bowl, then replace whatever there is on slot 9
                     if (!player.inventory.getStack(9).isEmpty || player.inventory.getStack(9).item != Items.BOWL) {
-                        utilizeInventory(bowlSlot, 0, SlotActionType.PICKUP, true)
+                        utilizeInventory(bowlHotbarSlot, 0, SlotActionType.PICKUP, true)
                         utilizeInventory(9, 0, SlotActionType.PICKUP, true)
-                        utilizeInventory(bowlSlot, 0, SlotActionType.PICKUP, true)
+                        utilizeInventory(bowlHotbarSlot, 0, SlotActionType.PICKUP, true)
                     } else {
                         // If there is, simply shift + click the empty bowl from hotbar
-                        utilizeInventory(bowlSlot, 0, SlotActionType.QUICK_MOVE, true)
+                        utilizeInventory(bowlHotbarSlot, 0, SlotActionType.QUICK_MOVE, true)
                     }
 
                     if (openInventory) {
@@ -106,20 +102,20 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
         }
 
         if (player.health < health) {
-            if (hotBarSlot != null) {
+            if (mushroomStewSlot != null) {
                 if (!saveSlot) {
                     lastSlot = player.inventory.selectedSlot
                     saveSlot = true
                 }
-                player.inventory.selectedSlot = hotBarSlot
+                player.inventory.selectedSlot = mushroomStewSlot
                 // Using timer so as to avoid sword shield
                 wait(2)
                 network.sendPacket(PlayerInteractItemC2SPacket(Hand.MAIN_HAND))
                 return@repeatable
             } else {
                 // Search for the specific item in inventory and quick move it to hotbar
-                if (invSlot != null) {
-                    utilizeInventory(invSlot, 0, SlotActionType.QUICK_MOVE, false)
+                if (bowlInvSlot != null) {
+                    utilizeInventory(bowlInvSlot, 0, SlotActionType.QUICK_MOVE, false)
                 }
                 return@repeatable
             }
