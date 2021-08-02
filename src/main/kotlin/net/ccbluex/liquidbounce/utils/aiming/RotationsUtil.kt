@@ -167,7 +167,7 @@ object RotationManager : Listenable {
         val wallsRangeSquared = wallsRange * wallsRange
 
         val minX = pos.x.toDouble()
-        val y = pos.y + 0.9
+        val y = pos.y + 0.99
         val minZ = pos.z.toDouble()
 
         for (x in 0.1..0.9 step 0.4) {

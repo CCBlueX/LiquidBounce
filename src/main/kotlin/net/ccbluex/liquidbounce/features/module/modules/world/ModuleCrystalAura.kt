@@ -143,7 +143,7 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
         }
 
         val bestTarget = possibleTargets
-            .map { Pair(it, approximateExplosionDamage(world, Vec3d.of(it.first.add(0, 1, 0)))) }
+            .map { Pair(it, approximateExplosionDamage(world, Vec3d.of(it.first).add(0.5, 1.0, 0.5))) }
             .maxByOrNull { it.second }
 
         // Is the target good enough?
@@ -170,7 +170,7 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
                 pos.add(maxDistance, maxDistance, maxDistance)
             ),
             EntityPredicates.EXCEPT_SPECTATOR.and {
-                it.shouldBeAttacked() && it.squaredDistanceTo(pos) <= maxDistanceSquared && it.boundingBox.maxY > pos.y + 1.0
+                it.shouldBeAttacked() && it.squaredDistanceTo(pos) <= maxDistanceSquared && it.boundingBox.maxY > pos.y
             }
         )
 
