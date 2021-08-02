@@ -22,16 +22,23 @@ import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager.canSeeBlockTop
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager.canSeeUpperBlockSide
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager.raytraceUpperBlockSide
+import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
 import net.ccbluex.liquidbounce.utils.block.forEachCollidingBlock
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInRadius
+import net.ccbluex.liquidbounce.utils.client.clickBlockWithSlot
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
 import net.minecraft.block.Blocks
 import net.minecraft.client.world.ClientWorld
+import net.minecraft.entity.decoration.EndCrystalEntity
 import net.minecraft.item.Items
 import net.minecraft.predicate.entity.EntityPredicates
+import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
@@ -47,14 +54,40 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
         val minEfficiency by float("MinEfficiency", 0.1F, 0.0F..5.0F)
     }
 
+    // Rotation
+    private val rotations = RotationsConfigurable()
+
     private var currentTarget: BlockPos? = null
 
+    init {
+        tree(PlaceOptions)
+    }
+
     val networkTickHandler = repeatable {
-        val slot = findHotbarSlot(Items.END_CRYSTAL) ?: return@repeatable
+        val crystalSlot = findHotbarSlot(Items.END_CRYSTAL) ?: return@repeatable
 
         updateTarget()
 
+        val target = currentTarget ?: return@repeatable
 
+        val rotation = raytraceUpperBlockSide(player.eyePos, PlaceOptions.range.toDouble(), 0.0, target) ?: return@repeatable
+
+        RotationManager.aimAt(rotation.rotation, configurable = rotations)
+
+        val serverRotation = RotationManager.serverRotation ?: return@repeatable
+
+        val rayTraceResult = raytraceBlock(
+            PlaceOptions.range.toDouble(),
+            serverRotation,
+            target,
+            target.getState() ?: return@repeatable
+        )
+
+        if (rayTraceResult?.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != target) {
+            return@repeatable
+        }
+
+        clickBlockWithSlot(player, rayTraceResult, crystalSlot)
     }
 
     private fun updateTarget() {
@@ -80,6 +113,9 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
         if (entitiesInRange.isEmpty())
             return
 
+        if (entitiesInRange.any { it is EndCrystalEntity })
+            return
+
         // The bounding box where entities are in that might body block a crystal placement
         val bodyBlockingBoundingBox = Box(
             playerPos.subtract(range + 0.1, range + 0.1, range + 0.1),
@@ -103,7 +139,7 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
             return@searchBlocksInRadius (state.block == Blocks.OBSIDIAN || state.block == Blocks.BEDROCK)
                     && pos !in blockedPositions
                     && pos.up().getState()?.isAir == true
-                    && canSeeBlockTop(playerEyePos, pos, range, 0.0)
+                    && canSeeUpperBlockSide(playerEyePos, pos, range, 0.0)
         }
 
         val bestTarget = possibleTargets

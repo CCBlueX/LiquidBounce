@@ -24,17 +24,13 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold.updateTarget
 import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.client.clickBlockWithSlot
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
 import net.minecraft.block.Blocks
-import net.minecraft.item.ItemUsageContext
 import net.minecraft.item.Items
-import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Hand
 import net.minecraft.util.hit.HitResult
 
 /**
@@ -78,35 +74,11 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
 
             player.networkHandler.sendPacket(PlayerMoveC2SPacket.LookAndOnGround(rotation.yaw, rotation.pitch, player.isOnGround))
 
-            if (slot != player.inventory.selectedSlot) {
-                player.networkHandler.sendPacket(UpdateSelectedSlotC2SPacket(slot))
-            }
-
-            player.networkHandler.sendPacket(PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, rayTraceResult))
-            val itemUsageContext = ItemUsageContext(player, Hand.MAIN_HAND, rayTraceResult)
-
-            val itemStack = player.inventory.getStack(slot)
-
-            val actionResult: ActionResult
-
-            if (player.isCreative) {
-                val i = itemStack.count
-                actionResult = itemStack.useOnBlock(itemUsageContext)
-                itemStack.count = i
-            } else {
-                actionResult = itemStack.useOnBlock(itemUsageContext)
-            }
-
-            if (actionResult.shouldSwingHand()) {
-                player.swingHand(Hand.MAIN_HAND)
-            }
-
-            if (slot != player.inventory.selectedSlot) {
-                player.networkHandler.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
-            }
+            clickBlockWithSlot(player, rayTraceResult, slot)
 
             break
         }
 
     }
+
 }
