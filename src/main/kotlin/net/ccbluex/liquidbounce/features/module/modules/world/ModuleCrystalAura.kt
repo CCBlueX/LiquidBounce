@@ -18,209 +18,137 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.event.AttackEvent
-import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
-import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager.canSeeBlockTop
+import net.ccbluex.liquidbounce.utils.block.forEachCollidingBlock
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.block.searchBlocks
-import net.ccbluex.liquidbounce.utils.client.MC_1_8
-import net.ccbluex.liquidbounce.utils.client.protocolVersion
-import net.ccbluex.liquidbounce.utils.combat.TargetTracker
-import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
-import net.ccbluex.liquidbounce.utils.entity.eyesPos
-import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
-import net.minecraft.block.Block
+import net.ccbluex.liquidbounce.utils.block.searchBlocksInRadius
+import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
+import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
 import net.minecraft.block.Blocks
-import net.minecraft.entity.Entity
-import net.minecraft.entity.decoration.EndCrystalEntity
+import net.minecraft.client.world.ClientWorld
 import net.minecraft.item.Items
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Hand
-import net.minecraft.util.hit.HitResult
+import net.minecraft.predicate.entity.EntityPredicates
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
-import net.minecraft.world.RaycastContext
+import net.minecraft.world.explosion.Explosion
+import kotlin.math.sqrt
 
 object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
 
     private val swing by boolean("Swing", true)
-    private val range by float("Range", 4f, 3f..8f)
 
-    var functioning = false
-
-    // Target
-    private val targetTracker = tree(TargetTracker())
-
-    // Rotation
-    private val rotations = RotationsConfigurable()
-
-    private var currentBlock: BlockPos? = null
-
-    override fun disable() {
-        targetTracker.cleanup()
-        functioning = false
+    private object PlaceOptions : ToggleableConfigurable(this, "Place", true) {
+        val range by float("Range", 4.5F, 1.0F..5.0F)
+        val minEfficiency by float("MinEfficiency", 0.1F, 0.0F..5.0F)
     }
+
+    private var currentTarget: BlockPos? = null
 
     val networkTickHandler = repeatable {
-        val slot = (0..8).firstOrNull {
-            player.inventory.getStack(it).item == Items.END_CRYSTAL
-        } ?: return@repeatable
+        val slot = findHotbarSlot(Items.END_CRYSTAL) ?: return@repeatable
 
-        for (enemy in targetTracker.enemies()) {
-            if (player.distanceTo(enemy) > range) {
-                return@repeatable
-            }
+        updateTarget()
 
-            updateTarget()
-            val curr = currentBlock ?: return@repeatable
-            val serverRotation = RotationManager.serverRotation ?: return@repeatable
 
-            val rayTraceResult = raytraceBlock(
-                range.toDouble(),
-                serverRotation,
-                curr,
-                curr.getState() ?: return@repeatable
-            )
-
-            if (rayTraceResult?.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != curr) {
-                return@repeatable
-            }
-
-            if (slot != player.inventory.selectedSlot) {
-                network.sendPacket(UpdateSelectedSlotC2SPacket(slot))
-            }
-
-            if (interaction.interactBlock(
-                    player,
-                    world,
-                    Hand.MAIN_HAND,
-                    rayTraceResult
-                ) == ActionResult.SUCCESS
-            ) {
-                if (swing) {
-                    player.swingHand(Hand.MAIN_HAND)
-                } else {
-                    network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
-                }
-            }
-
-            if (slot != player.inventory.selectedSlot) {
-                network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
-            }
-
-            destroy()
-        }
-    }
-
-    private fun destroy() {
-        if (player.isSpectator) {
-            return
-        }
-        targetTracker.validateLock { it.boxedDistanceTo(player) <= range }
-        for (block in world.entities) {
-            if (block is EndCrystalEntity) {
-                if (block.boxedDistanceTo(player) > range) {
-                    return
-                }
-                // find best spot (and skip if no spot was found)
-                val (rotation, _) = RotationManager.raytraceBox(
-                    player.eyesPos,
-                    block.boundingBox,
-                    range = range.toDouble(),
-                    wallsRange = 0.0
-                ) ?: continue
-
-                // lock on target tracker
-                targetTracker.lock(block)
-
-                // aim on target
-                RotationManager.aimAt(rotation, configurable = rotations)
-                break
-            }
-        }
-
-        val entity = targetTracker.lockedOnTarget ?: return
-        attackEntity(entity)
-    }
-
-    private fun attackEntity(entity: Entity) {
-        EventManager.callEvent(AttackEvent(entity))
-
-        // Swing before attacking (on 1.8)
-        if (swing && protocolVersion == MC_1_8) {
-            player.swingHand(Hand.MAIN_HAND)
-        }
-
-        network.sendPacket(PlayerInteractEntityC2SPacket.attack(entity, player.isSneaking))
-
-        // Swing after attacking (on 1.9+)
-        if (swing && protocolVersion != MC_1_8) {
-            player.swingHand(Hand.MAIN_HAND)
-        }
-
-        // Reset cooldown
-        player.resetLastAttackedTicks()
     }
 
     private fun updateTarget() {
-        currentBlock = null
+        // Reset current target
+        currentTarget = null
 
-        val targetedBlocks = hashSetOf<Block>()
+        val player = player
+        val world = world
 
-        targetedBlocks.addAll(listOf(Blocks.OBSIDIAN, Blocks.BEDROCK))
+        val playerEyePos = player.eyePos
+        val playerPos = Vec3d.of(player.blockPos)
+        val range = PlaceOptions.range.toDouble()
 
-        val radius = range + 1
-        val radiusSquared = radius * radius
-        val eyesPos = player.eyesPos
-
-        val blockToProcess = searchBlocks(radius.toInt()) { pos, state ->
-            targetedBlocks.contains(state.block) && getNearestPoint(
-                eyesPos,
-                Box(pos, pos.add(1, 1, 1))
-            ).squaredDistanceTo(eyesPos) <= radiusSquared
-        }.minByOrNull { it.first.getCenterDistanceSquared() } ?: return
-
-        val (pos, state) = blockToProcess
-
-        val rt = RotationManager.raytraceBlock(
-            player.eyesPos,
-            pos,
-            state,
-            range = range.toDouble(),
-            wallsRange = 0.0
+        // The bounding box where every considered target is in
+        val targetBoundingBox = Box(
+            playerPos.subtract(range + 6.0, range + 6.0, range + 6.0),
+            playerPos.add(range + 6.0, range + 6.0, range + 6.0)
         )
 
-        // We got a free angle at the block? Cool.
-        if (rt != null) {
-            val (rotation, _) = rt
-            RotationManager.aimAt(rotation, configurable = rotations)
-            currentBlock = pos
+        val entitiesInRange = world.getOtherEntities(null, targetBoundingBox)
+
+        // No targets to consider? Why bother?
+        if (entitiesInRange.isEmpty())
             return
+
+        // The bounding box where entities are in that might body block a crystal placement
+        val bodyBlockingBoundingBox = Box(
+            playerPos.subtract(range + 0.1, range + 0.1, range + 0.1),
+            playerPos.add(range + 0.1, range + 0.1, range + 0.1)
+        )
+
+        val blockedPositions = HashSet<BlockPos>()
+
+        // Disallow all positions where entities body-block them
+        for (entity in entitiesInRange) {
+            if (!entity.boundingBox.intersects(bodyBlockingBoundingBox))
+                continue
+
+            entity.boundingBox.forEachCollidingBlock { x, y, z ->
+                blockedPositions.add(BlockPos(x, y - 1, z))
+            }
         }
 
-        val raytraceResult = world.raycast(
-            RaycastContext(
-                player.eyesPos,
-                Vec3d.of(pos).add(0.5, 0.5, 0.5),
-                RaycastContext.ShapeType.COLLIDER,
-                RaycastContext.FluidHandling.NONE,
-                player
-            )
-        ) ?: return
+        // Search for blocks that are either obsidian or bedrock, not disallowed and which do not have other blocks on top
+        val possibleTargets = searchBlocksInRadius(PlaceOptions.range) { pos, state ->
+            return@searchBlocksInRadius (state.block == Blocks.OBSIDIAN || state.block == Blocks.BEDROCK)
+                    && pos !in blockedPositions
+                    && pos.up().getState()?.isAir == true
+                    && canSeeBlockTop(playerEyePos, pos, range, 0.0)
+        }
 
-        // Failsafe. Should not trigger
-        if (raytraceResult.type != HitResult.Type.BLOCK) return
+        val bestTarget = possibleTargets
+            .map { Pair(it, approximateExplosionDamage(world, Vec3d.of(it.first.add(0, 1, 0)))) }
+            .maxByOrNull { it.second }
 
-        currentBlock = raytraceResult.blockPos
+        // Is the target good enough?
+        if (bestTarget == null || bestTarget.second < PlaceOptions.minEfficiency)
+            return
+
+        currentTarget = bestTarget.first.first
     }
+
+    /**
+     * Approximates how favorable an explosion of a crystal at [pos] in a given [world] would be
+     */
+    private fun approximateExplosionDamage(
+        world: ClientWorld,
+        pos: Vec3d
+    ): Double {
+        val maxDistance = 6.0
+        val maxDistanceSquared = maxDistance * maxDistance
+
+        val possibleVictims = world.getOtherEntities(
+            null,
+            Box(
+                pos.subtract(maxDistance, maxDistance, maxDistance),
+                pos.add(maxDistance, maxDistance, maxDistance)
+            ),
+            EntityPredicates.EXCEPT_SPECTATOR.and {
+                it.shouldBeAttacked() && it.squaredDistanceTo(pos) <= maxDistanceSquared && it.boundingBox.maxY > pos.y + 1.0
+            }
+        )
+
+        var totalDamage = 0.0
+
+        for (possibleVictim in possibleVictims) {
+            val pre = Explosion.getExposure(pos, possibleVictim) * (1.0 - sqrt(
+                possibleVictim.squaredDistanceTo(pos)
+            ) / 12.0)
+
+            totalDamage += pre * pre
+        }
+
+        return totalDamage
+    }
+
 }
