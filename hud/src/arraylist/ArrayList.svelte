@@ -1,6 +1,6 @@
 <script>
-    import {flip} from "svelte/animate";
-    import {fly} from "svelte/transition";
+    import { flip } from "svelte/animate";
+    import { fly } from "svelte/transition";
     import Module from "./Module.svelte";
 
     function getTextWidth(s) {
@@ -15,7 +15,9 @@
     }
 
     function sortModules() {
-        modules = modules.sort((a, b) => getTextWidth(b.name) - getTextWidth(a.name));
+        modules = modules.sort(
+            (a, b) => getTextWidth(b.name) - getTextWidth(a.name)
+        );
     }
 
     function handleToggleModule(event) {
@@ -23,10 +25,10 @@
 
         if (event.getNewState()) {
             modules.push({
-                name: m
+                name: m,
             });
         } else {
-            modules = modules.filter(c => c.name != m);
+            modules = modules.filter((c) => c.name != m);
         }
 
         sortModules();
@@ -39,11 +41,13 @@
 
         while (moduleIterator.hasNext()) {
             const m = moduleIterator.next();
+
             if (!m.getEnabled()) {
                 continue;
             }
+
             modules.push({
-                name: m.getName()
+                name: m.getName(),
             });
         }
 
@@ -59,11 +63,10 @@
     }
 </script>
 
-
 <div class="arraylist">
     {#each modules as aModule (aModule)}
-        <div animate:flip={{ duration: 200 }} in:fly={{ x: 10, duration: 200 }} out:fly={{ x: 10, duration: 200 }}>
-            <Module name={aModule.name} /> 
+        <div animate:flip={{ duration: 200 }} transition:fly={{ x: 10, duration: 200 }}>
+            <Module name={aModule.name} />
         </div>
     {/each}
 </div>
@@ -71,7 +74,6 @@
 <style>
     .arraylist {
         font-family: "Montserrat", sans-serif;
-        
         position: fixed;
         top: 0;
         right: -10px;

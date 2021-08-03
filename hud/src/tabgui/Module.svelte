@@ -14,7 +14,7 @@
     });
 </script>
 
-<div bind:this={el} class="module {active ? 'active' : ''} {enabled ? 'enabled' : ''}">
+<div bind:this={el} class="module" class:active class:enabled>
     <div class="name">{name}</div>
 </div>
 

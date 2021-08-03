@@ -8,9 +8,9 @@
 <div class="category {active ? 'active' : ''}">
     <div class="category-icon">
         {#if (active)}
-            <img in:fade="{{ duration: 200 }}" out:fade="{{ duration: 200 }}" src="img/tabgui/{name.toLowerCase()}-active.svg" alt="icon">
+            <img transition:fade="{{ duration: 200 }}" src="img/tabgui/{name.toLowerCase()}-active.svg" alt="icon">
         {:else}
-            <img in:fade="{{ duration: 200 }}" out:fade="{{ duration: 200 }}" src="img/tabgui/{name.toLowerCase()}.svg" alt="icon">
+            <img transition:fade="{{ duration: 200 }}" src="img/tabgui/{name.toLowerCase()}.svg" alt="icon">
         {/if}
     </div>
     <div class="category-name">

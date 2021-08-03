@@ -1,6 +1,6 @@
 <script>
-    import {flip} from "svelte/animate";
-    import {fly} from "svelte/transition";
+    import { flip } from "svelte/animate";
+    import { fly } from "svelte/transition";
     import Notification from "./Notification.svelte";
 
     let notifications = [];
@@ -24,7 +24,7 @@
 
 <div class="notifications">
     {#each notifications as n (n)}
-        <div animate:flip={{ duration: 200 }} in:fly={{ x: 15, duration: 200 }} out:fly={{ x: 15, duration: 200 }}>
+        <div animate:flip={{ duration: 200 }} transition:fly={{ x: 15, duration: 200 }}>
             <Notification title={n.title} content={n.content} severity={n.severity} />
         </div>
     {/each}

@@ -1,5 +1,5 @@
 <script>
-    import {fly} from "svelte/transition";
+    import { fly } from "svelte/transition";
     import Category from "./Category.svelte";
     import Module from "./Module.svelte";
 
@@ -127,12 +127,7 @@
     </div>
 
     {#if activeModules.length > 0}
-        <div
-            style="height: {elCategories.offsetHeight}px"
-            class="modules"
-            in:fly={{ x: -10, duration: 200 }}
-            out:fly={{ x: -10, duration: 200 }}
-        >
+        <div style="height: {elCategories.offsetHeight}px" class="modules" transition:fly={{ x: -10, duration: 200 }}>
             {#each activeModules as aModule, i}
                 <Module
                     name={aModule.name}
