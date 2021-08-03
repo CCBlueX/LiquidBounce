@@ -4,9 +4,8 @@
     export let severity;
 </script>
 
-
 <div class="notification">
-    <div class="icon {severity.toLowerCase()}"></div>
+    <div class="icon {severity.toString().toLowerCase()}"></div>
     <div class="title">{title}</div>
     <div class="content">{content}</div>
 </div>
