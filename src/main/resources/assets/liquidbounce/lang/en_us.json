@@ -6,6 +6,8 @@
   "liquidbounce.generic.enabled": "Enabled",
   "liquidbounce.generic.disabled": "Disabled",
 
+  "liquidbounce.generic.notifyDeveloper": "Check your game log and notify us.",
+
   "liquidbounce.commandManager.exceptionOccurred": "Failed to execute command. %s",
   "liquidbounce.commandManager.unknownCommand": "Command \"%s\" was not found.",
   "liquidbounce.commandManager.invalidUsage": "Invalid usage of command \"%s\".",
@@ -178,6 +180,8 @@
   "liquidbounce.liquidchat.states.disconnected": "Disconnected from chat server!",
   "liquidbounce.liquidchat.states.loggingIn": "Authenticating...",
   "liquidbounce.liquidchat.states.loggedIn": "Authenticated!",
+
+  "liquidbounce.liquidchat.jwtTokenReceived": "Received JWT token! Relogging...",
 
   "liquidbounce.liquidchat.writeMessage": "To send a message: %s",
   "liquidbounce.liquidchat.writePrivateMessage": "To send a private message: %s",
