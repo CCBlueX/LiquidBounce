@@ -26,7 +26,7 @@
     </div>
 </div>
 
-<style>
+<style lang="scss">
     .button {
         position: relative;
     }
@@ -38,16 +38,16 @@
         height: 66px;
         transition: ease background-color .2s;
         position: relative;
-    }
 
-    .icon > img {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-    }
+        > img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
 
-    .icon.hovered {
-        background-color: white;
+        &.hovered {
+            background-color: white;
+        }
     }
 </style>

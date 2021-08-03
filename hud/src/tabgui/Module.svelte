@@ -18,28 +18,28 @@
     <div class="name">{name}</div>
 </div>
 
-<style>
+<style lang="scss">
     .module {
         font-weight: 600;
         color: #CBD1E3;
         font-size: 12px;
         padding: 6px 15px 6px 10px;
         transition: ease color .2s;
-    }
 
-    .module.active {
-        background-color: rgba(0, 0, 0, 0.36);
-    }
+        .name {
+            transition: ease transform .2s;   
+        }
 
-    .name {
-        transition: ease transform .2s;
-    }
+        &.active {
+            background-color: rgba(0, 0, 0, 0.36);
 
-    .module.active .name {
-        transform: translateX(5px);
-    }
+            .name {
+                transform: translateX(5px); 
+            }
+        }
 
-    .module.enabled {
-        color: white;
+        &.enabled {
+            color: white;  
+        }
     }
 </style>

@@ -61,7 +61,7 @@
     {/if}
 </div>
 
-<style>
+<style lang="scss">
     .settings {
         background-color: rgba(0, 0, 0, 0.36);
         border-right: solid 4px #4677FF;
@@ -86,47 +86,47 @@
         font-size: 12px;
         border-radius: 5px;
         transition: ease border-radius .2s;
-    }
-    
-    .name.expanded {
-        border-radius: 5px 5px 0px 0px;
-    }
 
-    .name::after {
-        content: "";
-        display: block;
-        position: absolute;
-        height: 10px;
-        width: 10px;
-        right: 10px;
-        top: 50%;
-        transition: ease transform .2s;
-        transform: translateY(-50%);
-        background-image: url("../img/settings-expand.svg");
-        background-position: center;
-        background-repeat: no-repeat;
-    }
+        &.expanded {
+            border-radius: 5px 5px 0px 0px;
 
-    .name.expanded::after {
-        transform: translateY(-50%) rotate(180deg);   
+            &::after {
+                transform: translateY(-50%) rotate(180deg);  
+            }
+        }
+
+        &::after {
+            content: "";
+            display: block;
+            position: absolute;
+            height: 10px;
+            width: 10px;
+            right: 10px;
+            top: 50%;
+            transition: ease transform .2s;
+            transform: translateY(-50%);
+            background-image: url("../img/settings-expand.svg");
+            background-position: center;
+            background-repeat: no-repeat;
+        }
     }
 
     .values {
         background-color: rgba(0, 0, 0, 0.5);
         border-radius: 0px 0px 5px 5px;
         overflow: hidden;
-    }
 
-    .values .value {
-        color: rgba(255, 255, 255, 0.5);
-        font-weight: 500;
-        font-size: 12px;
-        text-align: center;
-        padding: 7px;
-        transition: ease color .2s;
-    }
+        .value {
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 500;
+            font-size: 12px;
+            text-align: center;
+            padding: 7px;
+            transition: ease color .2s;
 
-    .values .value.enabled {
-        color: #4677ff;
+            &.enabled {
+                color: #4677ff;
+            }
+        }
     }
 </style>

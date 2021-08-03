@@ -14,7 +14,7 @@
     <input type="text" bind:value={value} on:change={handleTextChange} placeholder={name} />
 </div>
 
-<style>
+<style lang="scss">
     .setting {
         padding: 7px 10px;
     }
@@ -38,9 +38,9 @@
         color: white;
         transition: ease border-bottom 0.2s;
         border: solid 2px transparent;
-    }
 
-    input:focus {
-        border: solid 2px #4677ff;
+        &:focus {
+            border: solid 2px #4677ff;   
+        }
     }
 </style>

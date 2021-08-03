@@ -87,7 +87,7 @@
     </div>
 </div>
 
-<style>
+<style lang="scss">
     .panel {
         border-radius: 5px;
         overflow: hidden;
@@ -121,38 +121,40 @@
         height: 12px;
         width: 12px;
         position: relative;
-    }
 
-    .visibility-toggle::before,
-    .visibility-toggle::after {
-        content: "";
-        position: absolute;
-        background-color: white;
-        transition: transform 0.4s ease-out;
-    }
+        &::before {
+            content: "";
+            position: absolute;
+            background-color: white;
+            transition: transform 0.4s ease-out;
+            top: 0;
+            left: 50%;
+            width: 2px;
+            height: 100%;
+            margin-left: -1px;
+        }
 
-    .visibility-toggle::before {
-        top: 0;
-        left: 50%;
-        width: 2px;
-        height: 100%;
-        margin-left: -1px;
-    }
+        &::after {
+            content: "";
+            position: absolute;
+            background-color: white;
+            transition: transform 0.4s ease-out; 
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            margin-top: -1px; 
+        }
 
-    .visibility-toggle::after {
-        top: 50%;
-        left: 0;
-        width: 100%;
-        height: 2px;
-        margin-top: -1px;
-    }
+        &.expanded {
+            &::before {
+                transform: rotate(90deg);
+            }
 
-    .visibility-toggle.expanded::before {
-        transform: rotate(90deg);
-    }
-
-    .visibility-toggle.expanded::after {
-        transform: rotate(180deg);
+            &::after {
+                transform: rotate(180deg);
+            }
+        }
     }
 
     ::-webkit-scrollbar {

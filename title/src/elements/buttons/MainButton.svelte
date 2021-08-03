@@ -34,7 +34,7 @@
     <slot {hovered} />
 </div>
 
-<style>
+<style lang="scss">
     .button {
         width: 590px;
         display: grid;
@@ -48,10 +48,10 @@
         background-position: right bottom;
         will-change: background-position;
         transition: background-position .2s ease-out;
-    }
 
-    .button:hover {
-        background-position: left bottom;
+        &:hover {
+            background-position: left bottom;
+        }
     }
 
     .icon {
@@ -61,13 +61,13 @@
         border-radius: 50%;
         position: relative;
         transition: ease background-color .2s;
-    }
 
-    .icon > img {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
+        > img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);   
+        }
     }
 
     .button:hover .icon {

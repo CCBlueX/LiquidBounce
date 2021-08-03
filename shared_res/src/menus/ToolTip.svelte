@@ -24,7 +24,7 @@
     {/if}
 </div>
 
-<style>
+<style lang="scss">
     .tooltip {
         background-color: black;
         color: white;
@@ -38,16 +38,16 @@
         top: 0;
         transform: translate(-50%, -45px);
         z-index: 1000;
-    }
 
-    .tooltip::after {
-        content: "";
-        display: block;
-        height: 12px;
-        width: 12px;
-        background-color: black;
-        position: absolute;
-        left: 50%;
-        transform: translate(-50%, 2px) rotate(45deg);
+        &::after {
+            content: "";
+            display: block;
+            height: 12px;
+            width: 12px;
+            background-color: black;
+            position: absolute;
+            left: 50%;
+            transform: translate(-50%, 2px) rotate(45deg);
+        }
     }
 </style>

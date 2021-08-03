@@ -10,7 +10,7 @@
     <div class="content">{content}</div>
 </div>
 
-<style>
+<style lang="scss">
     .notification {
         font-family: "Montserrat", sans-serif;
         display: grid;
@@ -32,25 +32,22 @@
         background-position: center;
         background-repeat: no-repeat;
         border-radius: 4px;
-    }
-
-    .icon.success {
-        background-color: #4DAC68;
-        background-image: url("../img/notification/success.svg");
-    }
-
-    .icon.error {
-        background-color: #FC4130;
-        background-image: url("../img/notification/error.svg");
-    }
-
-    .icon.info {
-        background-color: #4677FF;
-        background-image: url("../img/notification/info.svg");
-    }
-
-    .icon {
         grid-area: a;
+
+        &.success {
+            background-color: #4DAC68;
+            background-image: url("../img/notification/success.svg");
+        }
+
+        &.error {
+            background-color: #FC4130;
+            background-image: url("../img/notification/error.svg");     
+        }
+
+        &.info {
+            background-color: #4677FF;
+            background-image: url("../img/notification/info.svg");            
+        }
     }
 
     .title {

@@ -18,7 +18,7 @@
     </label>
 </div>
 
-<style>
+<style lang="scss">
     .setting {
         padding: 7px 10px;
         display: grid;
@@ -34,17 +34,6 @@
         margin-left: 30px;
     }
 
-    .switch {
-        position: relative;
-        display: inline-block;
-        width: 22px;
-        height: 12px;
-    }
-
-    .switch input {
-        display: none;
-    }
-
     .slider {
         position: absolute;
         top: 2px;
@@ -55,18 +44,29 @@
         transition: ease 0.4s;
         height: 8px;
         border-radius: 4px;
+        
+        &::before {
+            position: absolute;
+            content: "";
+            height: 12px;
+            width: 12px;
+            top: -2px;
+            left: 0px;
+            background-color: white;
+            transition: ease 0.4s;
+            border-radius: 50%;
+        }
     }
 
-    .slider:before {
-        position: absolute;
-        content: "";
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 22px;
         height: 12px;
-        width: 12px;
-        top: -2px;
-        left: 0px;
-        background-color: white;
-        transition: ease 0.4s;
-        border-radius: 50%;
+    }
+
+    .switch input {
+        display: none;
     }
 
     .switch input:checked + .slider {

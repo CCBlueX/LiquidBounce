@@ -52,7 +52,7 @@
     {/if}
 </div>
 
-<style>
+<style lang="scss">
     .module {
         color: #CBD1E3;
         text-align: center;
@@ -61,41 +61,44 @@
         padding: 10px;
         transition: ease background-color 0.2s, ease color 0.2s;
         position: relative;
+
+        &.enabled {
+            color: white;   
+        }
+
+        &:hover {
+            background-color: rgba(0, 0, 0, 0.36);    
+        }
+
+        &.has-settings {
+            &::after {
+                content: "";
+                display: block;
+                position: absolute;
+                height: 10px;
+                width: 10px;
+                right: 15px;
+                top: 50%;
+                background-image: url("../img/settings-expand.svg");
+                background-position: center;
+                background-repeat: no-repeat;
+                opacity: 0.5;
+                transform-origin: 50% 50%;
+                transform: translateY(-50%) rotate(-90deg);
+                transition: ease opacity 0.2s, ease transform 0.4s;
+            }
+            
+            &.expanded::after {
+                transform: translateY(-50%) rotate(0);
+                opacity: 1;   
+            }
+        }
     }
 
-    .module.enabled {
-        color: white;
-    }
-
-    .module:hover {
-        background-color: rgba(0, 0, 0, 0.36);
-    }
-
-    .module.has-settings::after {
-        content: "";
-        display: block;
-        position: absolute;
-        height: 10px;
-        width: 10px;
-        right: 15px;
-        top: 50%;
-        background-image: url("../img/settings-expand.svg");
-        background-position: center;
-        background-repeat: no-repeat;
-        opacity: 0.5;
-        transform-origin: 50% 50%;
-        transform: translateY(-50%) rotate(-90deg);
-        transition: ease opacity 0.2s, ease transform 0.4s;
-    }
 
     .settings {
         background-color: rgba(0, 0, 0, 0.36);
         border-left: solid 4px #4677FF;
         overflow: hidden;
-    }
-
-    .module.has-settings.expanded::after {
-        transform: translateY(-50%) rotate(0);
-        opacity: 1;
     }
 </style>
