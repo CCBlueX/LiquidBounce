@@ -1,6 +1,6 @@
 <script>
     import {createEventDispatcher} from "svelte";
-    import ToolTip from "../elements/ToolTip.svelte";
+    import ToolTip from "../../../shared_res/src/menus/buttons/ButtonWrapperLeft.svelte";
 
     const dispatch = createEventDispatcher();
 
