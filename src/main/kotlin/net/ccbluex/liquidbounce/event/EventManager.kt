@@ -48,6 +48,8 @@ object EventManager {
         ClientShutdownEvent::class,
         ToggleModuleEvent::class,
         NotificationEvent::class,
+        ClientChatMessageEvent::class,
+        ClientChatErrorEvent::class
     ).map { Pair(it.findAnnotation<Nameable>()!!.name, it) }
 
     init {

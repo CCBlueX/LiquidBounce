@@ -113,8 +113,7 @@ object LiquidBounce : Listenable {
             ConfigSystem.load()
 
             // Connect to chat server
-//            Chat.connect()
-
+            Chat.connectAsync()
         }.onSuccess {
             logger.info("Successfully loaded client!")
         }.onFailure {
