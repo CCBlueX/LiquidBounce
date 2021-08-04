@@ -16,11 +16,17 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.render
+package net.ccbluex.liquidbounce.features.module.modules.`fun`
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 
+/**
+ * Dank bobbing module
+ *
+ * It adds more bobbing, so it's pretty much the opposite of no bobbing (which is in the no bobbing module and even a vanilla setting).
+ * Bobbing is the "shaking" of the camera when you move the player.
+ */
 object ModuleDankBobbing : Module("DankBobbing", Category.FUN){
 
     val motion by float("ExtraBob", 5f, 0f..50f)
