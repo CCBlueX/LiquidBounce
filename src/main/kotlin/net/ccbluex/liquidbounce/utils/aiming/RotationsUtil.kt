@@ -155,6 +155,55 @@ object RotationManager : Listenable {
     }
 
     /**
+     * Determines if the player is able to see a box
+     */
+    fun canSeeBox(
+        eyes: Vec3d,
+        box: Box,
+        range: Double,
+        wallsRange: Double,
+        expectedTarget: BlockPos? = null
+    ): Boolean {
+        val rangeSquared = range * range
+        val wallsRangeSquared = wallsRange * wallsRange
+
+        for (x in 0.1..0.9 step 0.1) {
+            for (y in 0.1..0.9 step 0.1) {
+                for (z in 0.1..0.9 step 0.1) {
+                    val vec3 = Vec3d(
+                        box.minX + (box.maxX - box.minX) * x,
+                        box.minY + (box.maxY - box.minY) * y,
+                        box.minZ + (box.maxZ - box.minZ) * z
+                    )
+
+                    // skip because of out of range
+                    val distance = eyes.squaredDistanceTo(vec3)
+
+                    if (distance > rangeSquared) {
+                        continue
+                    }
+
+                    // check if target is visible to eyes
+                    val visible = if (expectedTarget != null) {
+                        facingBlock(eyes, vec3, expectedTarget)
+                    } else {
+                        isVisible(eyes, vec3)
+                    }
+
+                    // skip because not visible in range
+                    if (!visible && distance > wallsRangeSquared) {
+                        continue
+                    }
+
+                    return true
+                }
+            }
+        }
+
+        return false
+    }
+
+    /**
      * Find the best spot of the upper side of the block
      */
     fun canSeeUpperBlockSide(

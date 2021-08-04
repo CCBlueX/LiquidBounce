@@ -22,10 +22,14 @@ import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
+import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.damage.DamageSource
+import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.stat.Stats
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
+import net.minecraft.world.Difficulty
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -118,12 +122,15 @@ fun Entity.boxedDistanceTo(entity: Entity): Double {
 }
 
 fun Entity.squaredBoxedDistanceTo(entity: Entity): Double {
-    val eyes = entity.getCameraPosVec(1F)
-    val pos = getNearestPoint(eyes, boundingBox)
+    return this.squaredBoxedDistanceTo(entity.getCameraPosVec(1.0F))
+}
 
-    val xDist = pos.x - eyes.x
-    val yDist = pos.y - eyes.y
-    val zDist = pos.z - eyes.z
+fun Entity.squaredBoxedDistanceTo(otherPos: Vec3d): Double {
+    val pos = getNearestPoint(otherPos, boundingBox)
+
+    val xDist = pos.x - otherPos.x
+    val yDist = pos.y - otherPos.y
+    val zDist = pos.z - otherPos.z
 
     return xDist * xDist + yDist * yDist + zDist * zDist
 }
@@ -169,4 +176,57 @@ fun PlayerEntity.wouldBlockHit(source: PlayerEntity): Boolean {
     deltaPos = Vec3d(deltaPos.x, 0.0, deltaPos.z)
 
     return deltaPos.dotProduct(facingVec) < 0.0
+}
+
+/**
+ * Applies armor, enchantments, effects, etc. to the damage and returns the damage
+ * that is actually applied.
+ */
+fun LivingEntity.getEffectiveDamage(source: DamageSource, damage: Float, ignoreShield: Boolean = false): Float {
+    val world = this.world
+
+    if (this.isInvulnerableTo(source))
+        return 0.0F
+
+    // EDGE CASE!!! Might cause weird bugs
+    if (this.isDead)
+        return 0.0F
+
+    var amount = damage
+
+    if (this is PlayerEntity) {
+        if (this.abilities.invulnerable && !source.isOutOfWorld)
+            return 0.0F
+
+        if (source.isScaledWithDifficulty) {
+            if (world.difficulty == Difficulty.PEACEFUL) {
+                amount = 0.0f
+            }
+
+            if (world.difficulty == Difficulty.EASY) {
+                amount = (amount / 2.0f + 1.0f).coerceAtMost(amount)
+            }
+
+            if (world.difficulty == Difficulty.HARD) {
+                amount = amount * 3.0f / 2.0f
+            }
+        }
+    }
+
+    if (amount == 0.0F)
+        return 0.0F
+
+    if (source.isFire && this.hasStatusEffect(StatusEffects.FIRE_RESISTANCE))
+        return 0.0F
+
+
+    if (!ignoreShield && blockedByShield(source))
+        return 0.0F
+
+    // FIXME: Do we need to take the timeUntilRegen mechanic into account?
+
+    amount = this.applyArmorToDamage(source, amount)
+    amount = this.applyEnchantmentsToDamage(source, amount)
+
+    return amount
 }

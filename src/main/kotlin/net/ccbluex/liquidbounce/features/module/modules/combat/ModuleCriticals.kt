@@ -110,7 +110,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
                 return@handler
             }
 
-            val (_, _) = world.findEnemy(range) ?: return@handler
+            world.findEnemy(range) ?: return@handler
 
             if (player.isOnGround) {
                 // Simulate player jumping and send jump stat increment

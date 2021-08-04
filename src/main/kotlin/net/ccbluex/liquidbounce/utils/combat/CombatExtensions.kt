@@ -20,10 +20,14 @@ package net.ccbluex.liquidbounce.utils.combat
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
+import net.ccbluex.liquidbounce.event.AttackEvent
+import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleTeams
+import net.ccbluex.liquidbounce.utils.client.MC_1_8
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
+import net.ccbluex.liquidbounce.utils.client.protocolVersion
+import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.Entity
@@ -31,6 +35,10 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.mob.MobEntity
 import net.minecraft.entity.passive.PassiveEntity
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
+import net.minecraft.util.Hand
+import net.minecraft.util.math.Box
+import net.minecraft.util.math.Vec3d
 
 val globalEnemyConfigurable = EnemyConfigurable()
 
@@ -101,7 +109,7 @@ class EnemyConfigurable : Configurable("enemies") {
 
                 // Check if enemy is a player and should be considered as enemy
                 if (suspect is PlayerEntity && suspect != mc.player) {
-                    if (attackable && !friends && FriendManager.isFriend(suspect.toString())) {
+                    if (attackable && !friends && FriendManager.isFriend(suspect)) {
                         return false
                     }
 
@@ -135,13 +143,60 @@ fun Entity.shouldBeAttacked(enemyConf: EnemyConfigurable = globalEnemyConfigurab
 )
 
 /**
- * Find the best emeny in current world in a specific range.
+ * Find the best enemy in current world in a specific range.
  */
 fun ClientWorld.findEnemy(
     range: Float,
     player: Entity = mc.player!!,
     enemyConf: EnemyConfigurable = globalEnemyConfigurable
-) = entities.filter { it.shouldBeAttacked(enemyConf) }
-    .map { Pair(it, it.boxedDistanceTo(player)) }
-    .filter { (_, distance) -> distance <= range }
-    .minByOrNull { (_, distance) -> distance }
+): Entity? {
+    val squaredRange = (range * range).toDouble()
+
+    val (bestTarget, bestDistance) = getEntitiesInCuboid(player.eyePos, range.toDouble())
+        .filter { it.shouldBeAttacked(enemyConf) }
+        .map { Pair(it, it.squaredBoxedDistanceTo(player)) }
+        .minByOrNull { (_, distance) -> distance } ?: return null
+
+    if (bestDistance > squaredRange) {
+        return null
+    }
+
+    return bestTarget
+}
+
+fun ClientWorld.getEntitiesInCuboid(
+    midPos: Vec3d,
+    range: Double,
+    predicate: (Entity) -> Boolean = { true }
+): MutableList<Entity> {
+    return getOtherEntities(null, Box(midPos.subtract(range, range, range), midPos.add(range, range, range)), predicate)
+}
+
+inline fun ClientWorld.getEntitiesBoxInRange(
+    midPos: Vec3d,
+    range: Double,
+    crossinline predicate: (Entity) -> Boolean = { true }
+): MutableList<Entity> {
+    val rangeSquared = range * range
+
+    return getEntitiesInCuboid(midPos, range) { predicate(it) && it.squaredBoxedDistanceTo(midPos) <= rangeSquared }
+}
+
+fun Entity.attack(swing: Boolean) {
+    val player = mc.player ?: return
+    val network = mc.networkHandler ?: return
+
+    EventManager.callEvent(AttackEvent(this))
+
+    // Swing before attacking (on 1.8)
+    if (swing && protocolVersion == MC_1_8) {
+        player.swingHand(Hand.MAIN_HAND)
+    }
+
+    network.sendPacket(PlayerInteractEntityC2SPacket.attack(this, player.isSneaking))
+
+    // Swing after attacking (on 1.9+)
+    if (swing && protocolVersion != MC_1_8) {
+        player.swingHand(Hand.MAIN_HAND)
+    }
+}

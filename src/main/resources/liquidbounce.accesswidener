@@ -114,3 +114,6 @@ accessible field net/minecraft/client/render/WorldRenderer entityOutlinesFramebu
 accessible field net/minecraft/client/gl/ShaderEffect passes Ljava/util/List;
 
 accessible field net/minecraft/entity/projectile/ProjectileEntity ownerUuid Ljava/util/UUID;
+
+accessible method net/minecraft/entity/LivingEntity applyArmorToDamage (Lnet/minecraft/entity/damage/DamageSource;F)F
+accessible method net/minecraft/entity/LivingEntity applyEnchantmentsToDamage (Lnet/minecraft/entity/damage/DamageSource;F)F

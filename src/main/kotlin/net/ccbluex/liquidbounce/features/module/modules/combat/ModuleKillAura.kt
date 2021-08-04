@@ -19,8 +19,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.NamedChoice
-import net.ccbluex.liquidbounce.event.AttackEvent
-import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -29,10 +27,9 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
 import net.ccbluex.liquidbounce.utils.aiming.raytraceEntity
-import net.ccbluex.liquidbounce.utils.client.MC_1_8
-import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import net.ccbluex.liquidbounce.utils.combat.CpsScheduler
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
+import net.ccbluex.liquidbounce.utils.combat.attack
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.eyesPos
@@ -47,9 +44,7 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.AxeItem
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
-import net.minecraft.util.Hand
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
@@ -270,19 +265,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             player.isSprinting = false
         }
 
-        EventManager.callEvent(AttackEvent(entity))
-
-        // Swing before attacking (on 1.8)
-        if (swing && protocolVersion == MC_1_8) {
-            player.swingHand(Hand.MAIN_HAND)
-        }
-
-        network.sendPacket(PlayerInteractEntityC2SPacket.attack(entity, player.isSneaking))
-
-        // Swing after attacking (on 1.9+)
-        if (swing && protocolVersion != MC_1_8) {
-            player.swingHand(Hand.MAIN_HAND)
-        }
+        entity.attack(swing)
 
         if (keepSprint) {
             var genericAttackDamage = player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE).toFloat()

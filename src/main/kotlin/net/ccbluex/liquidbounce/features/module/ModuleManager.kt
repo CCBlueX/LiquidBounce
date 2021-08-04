@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.*
 import net.ccbluex.liquidbounce.features.module.modules.player.*
 import net.ccbluex.liquidbounce.features.module.modules.render.*
 import net.ccbluex.liquidbounce.features.module.modules.world.*
+import net.ccbluex.liquidbounce.features.module.modules.world.crystalAura.ModuleCrystalAura
 import org.lwjgl.glfw.GLFW
 
 private val modules = mutableListOf<Module>()

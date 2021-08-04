@@ -119,7 +119,7 @@ object ModuleTraces : Module("Traces", Category.RENDER) {
                         1.0f
                     )
                 )
-            } else if (entity is PlayerEntity && FriendManager.isFriend(entity.toString())) {
+            } else if (entity is PlayerEntity && FriendManager.isFriend(entity)) {
                 Color4b(0, 0, 255)
             } else {
                 baseColor!!
