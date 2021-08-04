@@ -149,9 +149,9 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
         float g = playerEntity.horizontalSpeed - playerEntity.prevHorizontalSpeed;
         float h = -(playerEntity.horizontalSpeed + g * f);
         float i = MathHelper.lerp(f, playerEntity.prevStrideDistance, playerEntity.strideDistance);
-        matrixStack.translate((MathHelper.sin(h * MathHelper.field_29844) * i * 0.5F), -Math.abs(MathHelper.cos(h * MathHelper.field_29844) * i), 0.0D);
-        matrixStack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(MathHelper.sin(h * MathHelper.field_29844) * i * (3.0F + additionalBobbing)));
-        matrixStack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(Math.abs(MathHelper.cos(h * MathHelper.field_29844 - (0.2F + additionalBobbing)) * i) * 5.0F));
+        matrixStack.translate((MathHelper.sin(h * MathHelper.PI) * i * 0.5F), -Math.abs(MathHelper.cos(h * MathHelper.PI) * i), 0.0D);
+        matrixStack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(MathHelper.sin(h * MathHelper.PI) * i * (3.0F + additionalBobbing)));
+        matrixStack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(Math.abs(MathHelper.cos(h * MathHelper.PI - (0.2F + additionalBobbing)) * i) * 5.0F));
 
         callbackInfo.cancel();
     }
