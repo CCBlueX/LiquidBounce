@@ -112,3 +112,5 @@ accessible field net/minecraft/client/gui/screen/ingame/CreativeInventoryScreen 
 
 accessible field net/minecraft/client/render/WorldRenderer entityOutlinesFramebuffer Lnet/minecraft/client/gl/Framebuffer;
 accessible field net/minecraft/client/gl/ShaderEffect passes Ljava/util/List;
+
+accessible field net/minecraft/entity/projectile/ProjectileEntity ownerUuid Ljava/util/UUID;

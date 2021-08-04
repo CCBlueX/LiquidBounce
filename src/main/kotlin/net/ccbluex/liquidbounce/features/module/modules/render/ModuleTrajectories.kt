@@ -52,6 +52,12 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
+/**
+ * Trajectories module
+ *
+ * Allows you to see where arrows, pearls, etc. will land.
+ */
+
 object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
     const val MAX_SIMULATED_TICKS = 240
 

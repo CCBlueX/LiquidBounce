@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
+import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
 import net.minecraft.block.Blocks
 import net.minecraft.item.ItemUsageContext
 import net.minecraft.item.Items
@@ -37,9 +38,9 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.HitResult
 
 /**
- * Scaffold module
+ * Ignite module
  *
- * Places blocks under you.
+ * Automatically sets targets around you on fire.
  */
 object ModuleIgnite : Module("Ignite", Category.WORLD) {
 
@@ -51,13 +52,7 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
     val networkTickHandler = repeatable { event ->
         val player = mc.player ?: return@repeatable
 
-        val slot = (0..8).firstOrNull {
-            player.inventory.getStack(it).item == Items.LAVA_BUCKET
-        }
-
-        if (slot == null) {
-            return@repeatable
-        }
+        val slot = findHotbarSlot(Items.LAVA_BUCKET) ?: return@repeatable
 
         for (enemy in targetTracker.enemies()) {
             if (enemy.squaredBoxedDistanceTo(player) > 6.0 * 6.0) {

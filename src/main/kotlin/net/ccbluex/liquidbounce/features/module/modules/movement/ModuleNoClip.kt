@@ -29,6 +29,12 @@ import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
+/**
+ * NoClip module
+ *
+ * Allows you to fly through blocks.
+ */
+
 object ModuleNoClip : Module("NoClip", Category.MOVEMENT) {
 
     val speed by float("Speed", 0.32f, 0.1f..0.4f)

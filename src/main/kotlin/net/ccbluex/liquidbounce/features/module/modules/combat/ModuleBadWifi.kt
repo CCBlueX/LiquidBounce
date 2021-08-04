@@ -31,6 +31,12 @@ import net.minecraft.network.packet.c2s.play.*
 import net.minecraft.util.math.Vec3d
 import java.util.concurrent.LinkedBlockingQueue
 
+/**
+ * BadWifi module
+ *
+ * Holds back packets so as to prevent you from being hit by an enemy.
+ */
+
 object ModuleBadWifi : Module("BadWIFI", Category.COMBAT) {
 
     val maxPacketsInBuffer by intRange("MaxPacketsInBuffer", 20..30, 5..100)

@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.block.searchBlocks
+import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.entity.eyesPos
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
@@ -49,10 +49,17 @@ import net.minecraft.util.math.Box
 object ModuleChestAura : Module("ChestAura", Category.WORLD) {
 
     private val range by float("Range", 5F, 1F..6F)
+    private val wallRange by float("WallRange", 0f, 1F..6F).listen {
+        if (it > range) {
+            range
+        } else {
+            it
+        }
+    }
     private val delay by int("Delay", 5, 1..80)
     private val visualSwing by boolean("VisualSwing", true)
-    private val chest by blocks("Chest", mutableListOf(Blocks.CHEST))
-    private val throughWalls by boolean("ThroughWalls", false)
+    private val chest by blocks("Chest", hashSetOf(Blocks.CHEST))
+
 
     private object AwaitContainerOptions : ToggleableConfigurable(this, "AwaitContainer", true) {
         val timeout by int("Timeout", 10, 1..80)
@@ -164,7 +171,7 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
         val radiusSquared = radius * radius
         val eyesPos = mc.player!!.eyesPos
 
-        val blocksToProcess = searchBlocks(radius.toInt()) { pos, state ->
+        val blocksToProcess = searchBlocksInCuboid(radius.toInt()) { pos, state ->
             targetedBlocks.contains(state.block) && pos !in clickedBlocks && getNearestPoint(
                 eyesPos,
                 Box(pos, pos.add(1, 1, 1))
@@ -178,8 +185,8 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
                 player.eyesPos,
                 pos,
                 state,
-                throughWalls = throughWalls,
-                range = range.toDouble()
+                range = range.toDouble(),
+                wallsRange = wallRange.toDouble()
             ) ?: continue
 
             // aim on target

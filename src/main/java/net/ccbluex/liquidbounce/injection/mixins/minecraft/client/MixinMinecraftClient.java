@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.common.RenderingFlags;
 import net.ccbluex.liquidbounce.event.*;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
@@ -27,6 +28,7 @@ import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ServerInfo;
 import net.minecraft.client.resource.ClientBuiltinResourcePackProvider;
 import net.minecraft.client.resource.language.I18n;
+import net.minecraft.entity.Entity;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.util.Identifier;
@@ -181,6 +183,13 @@ public abstract class MixinMinecraftClient {
         final UseCooldownEvent useCooldownEvent = new UseCooldownEvent(itemUseCooldown);
         EventManager.INSTANCE.callEvent(useCooldownEvent);
         itemUseCooldown = useCooldownEvent.getCooldown();
+    }
+
+    @Inject(method = "hasOutline", cancellable = true, at = @At("HEAD"))
+    private void injectOutlineESPFix(Entity entity, CallbackInfoReturnable<Boolean> cir) {
+        if (RenderingFlags.isCurrentlyRenderingEntityOutline().get()) {
+            cir.setReturnValue(true);
+        }
     }
 
 }

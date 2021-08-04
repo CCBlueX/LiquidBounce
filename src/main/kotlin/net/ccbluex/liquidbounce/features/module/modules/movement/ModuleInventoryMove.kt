@@ -25,8 +25,13 @@ import net.minecraft.client.gui.screen.ChatScreen
 import net.minecraft.client.gui.screen.ingame.CreativeInventoryScreen
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.client.option.KeyBinding
-
 import net.minecraft.item.ItemGroup
+
+/**
+ * InventoryMove module
+ *
+ * Allows you to walk while an inventory is opened.
+ */
 
 object ModuleInventoryMove : Module("InventoryMove", Category.MOVEMENT) {
 

@@ -31,6 +31,12 @@ import net.minecraft.client.util.InputUtil
 import net.minecraft.util.Hand
 import org.apache.commons.lang3.RandomUtils
 
+/**
+ * AntiAFK module
+ *
+ * Prevents you from being kicked for AFK.
+ */
+
 object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
 
     private val modes = choices(

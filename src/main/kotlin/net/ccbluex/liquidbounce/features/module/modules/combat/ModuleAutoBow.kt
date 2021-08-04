@@ -209,8 +209,6 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
 
         positions.add(targetPos)
 
-        println(positions.size)
-
         for (i in 0 until positions.lastIndex) {
             val raycast = world.raycast(
                 RaycastContext(

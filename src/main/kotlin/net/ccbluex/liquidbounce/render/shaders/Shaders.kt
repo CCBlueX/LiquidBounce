@@ -23,8 +23,11 @@ import net.ccbluex.liquidbounce.render.engine.RenderEngine
 import net.ccbluex.liquidbounce.render.engine.ShaderProgram
 import net.ccbluex.liquidbounce.render.engine.memory.PositionColorUVVertexFormat
 import net.ccbluex.liquidbounce.render.engine.memory.PositionColorVertexFormat
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.io.resourceToString
 import net.ccbluex.liquidbounce.utils.math.Mat4
+import org.lwjgl.opengl.GL20.glUniform1f
+import org.lwjgl.opengl.GL20.glUniform2f
 
 /**
  * Here, all common shaders are controlled.
@@ -52,19 +55,19 @@ object Shaders {
     }
 }
 
-abstract class ShaderHandler {
+abstract class ShaderHandler<T> {
     /**
      * Binds the shader
      *
      * @param mvpMatrix The model-view-projection matrix to use
      */
-    abstract fun bind(mvpMatrix: Mat4)
+    abstract fun bind(mvpMatrix: Mat4, shaderData: T?)
 }
 
 /**
  * Compatible with [PositionColorVertexFormat]
  */
-object ColoredPrimitiveShader : ShaderHandler() {
+object ColoredPrimitiveShader : ShaderHandler<Nothing>() {
     private var shaderProgram: ShaderProgram
     private val mvpMatrixUniformLocation: Int
 
@@ -82,7 +85,7 @@ object ColoredPrimitiveShader : ShaderHandler() {
         ColoredPrimitiveShader.shaderProgram = shaderProgram
     }
 
-    override fun bind(mvpMatrix: Mat4) {
+    override fun bind(mvpMatrix: Mat4, shaderData: Nothing?) {
         shaderProgram.use()
 
         mvpMatrix.putToUniform(mvpMatrixUniformLocation)
@@ -90,9 +93,49 @@ object ColoredPrimitiveShader : ShaderHandler() {
 }
 
 /**
+ * Compatible with [PositionColorVertexFormat]
+ */
+object SmoothLineShader : ShaderHandler<SmoothLineShader.SmoothLineShaderUniforms>() {
+    private var shaderProgram: ShaderProgram
+    private val mvpMatrixUniformLocation: Int
+    private val lineWidthUniformLocation: Int
+    private val viewportUniformLocation: Int
+
+    init {
+        val shaderProgram = ShaderProgram(
+            resourceToString("/assets/liquidbounce/shaders/smooth_lines3d.vert"),
+            resourceToString("/assets/liquidbounce/shaders/smooth_lines3d.frag")
+        )
+
+        shaderProgram.bindAttribLocation("in_pos", 0)
+        shaderProgram.bindAttribLocation("in_color", 1)
+
+        mvpMatrixUniformLocation = shaderProgram.getUniformLocation("mvp_matrix")
+        lineWidthUniformLocation = shaderProgram.getUniformLocation("line_width")
+        viewportUniformLocation = shaderProgram.getUniformLocation("view_port")
+
+        this.shaderProgram = shaderProgram
+    }
+
+    override fun bind(mvpMatrix: Mat4, shaderData: SmoothLineShaderUniforms?) {
+        shaderProgram.use()
+
+        shaderData?.let { glUniform1f(this.lineWidthUniformLocation, it.lineWidth) }
+
+        val window = mc.window
+
+        glUniform2f(this.viewportUniformLocation, window.framebufferWidth.toFloat(), window.framebufferHeight.toFloat())
+
+        mvpMatrix.putToUniform(mvpMatrixUniformLocation)
+    }
+
+    class SmoothLineShaderUniforms(val lineWidth: Float)
+}
+
+/**
  * Compatible with [PositionColorUVVertexFormat]
  */
-object TexturedPrimitiveShader : ShaderHandler() {
+object TexturedPrimitiveShader : ShaderHandler<Nothing>() {
     private var shaderProgram: ShaderProgram
     private val mvpMatrixUniformLocation: Int
 
@@ -111,7 +154,7 @@ object TexturedPrimitiveShader : ShaderHandler() {
         TexturedPrimitiveShader.shaderProgram = shaderProgram
     }
 
-    override fun bind(mvpMatrix: Mat4) {
+    override fun bind(mvpMatrix: Mat4, shaderData: Nothing?) {
         shaderProgram.use()
 
         mvpMatrix.putToUniform(mvpMatrixUniformLocation)
@@ -121,7 +164,7 @@ object TexturedPrimitiveShader : ShaderHandler() {
 /**
  * Used for instanced rendering of [PositionColorVertexFormat]
  */
-object InstancedColoredPrimitiveShader : ShaderHandler() {
+object InstancedColoredPrimitiveShader : ShaderHandler<Nothing>() {
     private var shaderProgram: ShaderProgram
     private val mvpMatrixUniformLocation: Int
 
@@ -141,7 +184,7 @@ object InstancedColoredPrimitiveShader : ShaderHandler() {
         InstancedColoredPrimitiveShader.shaderProgram = shaderProgram
     }
 
-    override fun bind(mvpMatrix: Mat4) {
+    override fun bind(mvpMatrix: Mat4, shaderData: Nothing?) {
         shaderProgram.use()
 
         mvpMatrix.putToUniform(mvpMatrixUniformLocation)

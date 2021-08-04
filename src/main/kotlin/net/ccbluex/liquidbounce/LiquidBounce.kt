@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
+import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
 import net.ccbluex.liquidbounce.utils.mappings.McMappings
 import org.apache.logging.log4j.LogManager
@@ -82,6 +83,7 @@ object LiquidBounce : Listenable {
             RotationManager
 
             ChunkScanner
+            WorldChangeNotifier
 
             // Features
             ModuleManager
@@ -111,9 +113,7 @@ object LiquidBounce : Listenable {
             ConfigSystem.load()
 
             // Connect to chat server
-            Chat.connect()
-
-
+            Chat.connectAsync()
         }.onSuccess {
             logger.info("Successfully loaded client!")
         }.onFailure {

@@ -36,7 +36,7 @@ class TargetTracker(defaultPriority: PriorityEnum = PriorityEnum.HEALTH) : Confi
     var lockedOnTarget: Entity? = null
     var maxDistanceSquared: Double = 0.0
 
-    val priority by enumChoice("Priority", PriorityEnum.HEALTH, PriorityEnum.values())
+    val priority by enumChoice("Priority", defaultPriority, PriorityEnum.values())
     val lockOnTarget by boolean("LockOnTarget", false)
     val sortOut by boolean("SortOut", true)
     val delayableSwitch by intRange("DelayableSwitch", 10..20, 0..40)

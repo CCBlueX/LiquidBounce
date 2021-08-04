@@ -28,6 +28,12 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
+/**
+ * NoFall module
+ *
+ * Protects you from taking fall damage.
+ */
+
 object ModuleNoFall : Module("NoFall", Category.PLAYER) {
 
     private val modes = choices(

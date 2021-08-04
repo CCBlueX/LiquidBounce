@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.block.searchBlocks
+import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.entity.eyesPos
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.minecraft.block.*
@@ -42,7 +42,7 @@ import net.minecraft.world.RaycastContext
 /**
  * AutoFarm module
  *
- * Automatically farms stuff for you
+ * Automatically farms stuff for you.
  */
 object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 // TODO Fix this entire module-
@@ -100,7 +100,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         val radiusSquared = radius * radius
         val eyesPos = mc.player!!.eyesPos
 
-        val blockToProcess = searchBlocks(radius.toInt()) { pos, state ->
+        val blockToProcess = searchBlocksInCuboid(radius.toInt()) { pos, state ->
             !state.isAir && getNearestPoint(
                 eyesPos,
                 Box(pos, pos.add(1, 1, 1))
@@ -113,8 +113,8 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             player.eyesPos,
             pos,
             state,
-            throughWalls = this.throughWalls,
-            range = range.toDouble()
+            range = range.toDouble(),
+            wallsRange = if (throughWalls) range.toDouble() else 0.0
         )
 
         // We got a free angle at the block? Cool.
@@ -158,7 +158,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         }
     }
 
-    private inline fun <reified T: Block> isAboveLast(pos: BlockPos): Boolean {
+    private inline fun <reified T : Block> isAboveLast(pos: BlockPos): Boolean {
         return pos.down().getBlock() is T && pos.down(2).getBlock() !is T
     }
 

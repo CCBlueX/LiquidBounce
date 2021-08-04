@@ -38,6 +38,12 @@ import net.minecraft.entity.player.PlayerEntity
 import java.awt.Color
 import kotlin.math.sqrt
 
+/**
+ * Traces module
+ *
+ * Draws a line to every entity a certain radius.
+ */
+
 object ModuleTraces : Module("Traces", Category.RENDER) {
 
     private val modes = choices(
@@ -88,6 +94,10 @@ object ModuleTraces : Module("Traces", Category.RENDER) {
         val player = mc.player!!
         val filteredEntities = world.entities.filter(this::shouldRenderTrace)
         val camera = mc.gameRenderer.camera
+
+        if (filteredEntities.isEmpty()) {
+            return@handler
+        }
 
         val vertexFormat = PositionColorVertexFormat()
 

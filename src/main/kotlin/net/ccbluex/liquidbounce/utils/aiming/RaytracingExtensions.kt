@@ -26,6 +26,7 @@ import net.minecraft.entity.projectile.ProjectileUtil
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.RaycastContext
 
@@ -109,7 +110,7 @@ fun facingEnemy(enemy: Entity, range: Double, rotation: Rotation): Boolean {
 /**
  * Allows you to check if a point is behind a wall
  */
-fun facingBlock(eyes: Vec3d, vec3: Vec3d, blockPos: BlockPos): Boolean {
+fun facingBlock(eyes: Vec3d, vec3: Vec3d, blockPos: BlockPos, expectedSide: Direction? = null): Boolean {
     val searchedPos = mc.world?.raycast(
         RaycastContext(
             eyes,
@@ -120,7 +121,7 @@ fun facingBlock(eyes: Vec3d, vec3: Vec3d, blockPos: BlockPos): Boolean {
         )
     ) ?: return false
 
-    if (searchedPos.type != HitResult.Type.BLOCK) {
+    if (searchedPos.type != HitResult.Type.BLOCK || (expectedSide != null && searchedPos.side != expectedSide)) {
         return false
     }
 

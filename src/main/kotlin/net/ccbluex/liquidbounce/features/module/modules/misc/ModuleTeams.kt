@@ -23,6 +23,12 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.entity.LivingEntity
 
+/**
+ * Teams module
+ *
+ * Prevents KillAura from attacking teammates.
+ */
+
 object ModuleTeams : Module("Teams", Category.MISC) {
 
     private val scoreboard by boolean("ScoreboardTeam", true)

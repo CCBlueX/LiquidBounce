@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2020 CCBlueX
+ * Copyright (c) 2016 - 2021 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +20,7 @@
 plugins {
     id "fabric-loom"
     id "org.jetbrains.kotlin.jvm"
-    id "com.github.johnrengelman.shadow" version "6.1.0"
+    id "com.github.johnrengelman.shadow" version "7.0.0"
     id "org.jlleitschuh.gradle.ktlint" version "10.1.0"
 }
 
@@ -45,8 +45,8 @@ archivesBaseName = project.archives_base_name
 version = project.mod_version
 group = project.maven_group
 
-minecraft {
-    accessWidener "src/main/resources/liquidbounce.accesswidener"
+loom {
+    accessWidenerPath = file("src/main/resources/liquidbounce.accesswidener")
 }
 
 repositories {

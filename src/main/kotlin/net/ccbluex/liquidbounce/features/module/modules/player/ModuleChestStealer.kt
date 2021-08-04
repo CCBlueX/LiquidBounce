@@ -28,6 +28,12 @@ import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.screen.slot.SlotActionType
 import net.minecraft.text.TranslatableText
 
+/**
+ * ChestStealer module
+ *
+ * Automatically steals all items from a chest.
+ */
+
 object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
     var delay by intRange("Delay", 50..200, 0..2000)

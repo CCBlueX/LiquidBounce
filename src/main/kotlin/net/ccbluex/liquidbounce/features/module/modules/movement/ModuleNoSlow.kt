@@ -30,6 +30,12 @@ import net.minecraft.util.UseAction
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 
+/**
+ * NoSlow module
+ *
+ * Cancels slowness effects caused by soulsand and using items.
+ */
+
 object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
 
     private object Block : ToggleableConfigurable(this, "Blocking", true) {

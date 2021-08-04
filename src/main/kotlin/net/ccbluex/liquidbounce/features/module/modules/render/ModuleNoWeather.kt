@@ -22,5 +22,10 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 
-object ModuleNoWeather : Module("NoWeather", Category.RENDER) {
-}
+/**
+ * NoWeather module
+ *
+ * Disables the rain effect.
+ */
+
+object ModuleNoWeather : Module("NoWeather", Category.RENDER)

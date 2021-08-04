@@ -31,6 +31,12 @@ import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
+/**
+ * FreeCam module
+ *
+ * Allows you to move out of your body.
+ */
+
 object ModuleFreeCam : Module("FreeCam", Category.RENDER) {
 
     private val speed by float("Speed", 1f, 0.1f..2f)

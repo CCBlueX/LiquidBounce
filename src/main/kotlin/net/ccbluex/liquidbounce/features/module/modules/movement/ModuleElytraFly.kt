@@ -18,20 +18,34 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleElytraFly.Speed.horizontal
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleElytraFly.Speed.vertical
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.item.Items
 
+/**
+ * ElytraFly module
+ *
+ * Makes you fly faster on Elytra.
+ */
+
 object ModuleElytraFly : Module("ElytraFly", Category.MOVEMENT) {
 
     private val instant by boolean("Instant", true)
-    private val speed by boolean("Speed", true)
-    private val vertical by float("Vertical", 0.5f, 0.1f..2f)
-    private val horizontal by float("Horizontal", 1f, 0.1f..2f)
+    private object Speed : ToggleableConfigurable(this, "Speed", true) {
+        val vertical by float("Vertical", 0.5f, 0.1f..2f)
+        val horizontal by float("Horizontal", 1f, 0.1f..2f)
+    }
+
+    init {
+        tree(Speed)
+    }
 
     val repeatable = repeatable {
         // Find the chest slot
@@ -46,9 +60,9 @@ object ModuleElytraFly : Module("ElytraFly", Category.MOVEMENT) {
             return@repeatable
         }
 
-        // If dude's flying
+        // If player is flying
         if (player.isFallFlying) {
-            if (speed) {
+            if (Speed.enabled) {
                 if (player.moving) {
                     player.strafe(speed = horizontal.toDouble())
                 }
@@ -59,14 +73,13 @@ object ModuleElytraFly : Module("ElytraFly", Category.MOVEMENT) {
                 }
             }
             // If the player has an elytra and wants to fly instead
-        } else if (chestSlot.item == Items.ELYTRA && mc.options.keyJump.isPressed) {
+        } else if (chestSlot.item == Items.ELYTRA && player.input.jumping) {
             if (instant) {
-                player.isSprinting = true
                 // Jump must be off due to abnormal speed boosts
+                player.input.jumping = true
                 player.input.jumping = false
-                player.jump()
-                player.lastSprinting = true
             }
         }
     }
+
 }

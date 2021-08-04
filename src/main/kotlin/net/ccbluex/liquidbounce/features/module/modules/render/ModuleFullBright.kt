@@ -30,8 +30,9 @@ import net.minecraft.entity.effect.StatusEffects
 /**
  * A full bright module
  *
- * Allows you to see in the dark
+ * Allows you to see in the dark.
  */
+
 object ModuleFullBright : Module("FullBright", Category.RENDER) {
 
     private val modes = choices(

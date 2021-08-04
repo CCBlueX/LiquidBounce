@@ -108,6 +108,11 @@ open class Value<T : Any>(
                         mutableListOf()
                     ) { gson.fromJson(it, this.listType.type!!) } as T
                 }
+                is HashSet<*> -> {
+                    @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(
+                        HashSet()
+                    ) { gson.fromJson(it, this.listType.type!!) } as T
+                }
                 is Set<*> -> {
                     @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(
                         TreeSet()

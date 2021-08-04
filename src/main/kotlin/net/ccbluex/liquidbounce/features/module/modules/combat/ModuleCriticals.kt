@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFly
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleLiquidWalk
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.exactPosition
@@ -42,7 +43,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 /**
  * Criticals module
  *
- * Automatically crits every time you attack someone
+ * Automatically crits every time you attack someone.
  */
 object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
@@ -158,11 +159,17 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
      */
     private object VisualsConfigurable : ToggleableConfigurable(this, "Visuals", true) {
 
+        val fake by boolean("Fake", false)
+
         val critParticles by int("CritParticles", 1, 0..20)
         val magicParticles by int("MagicParticles", 0, 0..20)
 
         val attackHandler = handler<AttackEvent> { event ->
             if (event.enemy !is LivingEntity) {
+                return@handler
+            }
+
+            if (!fake && !canCrit(player, ignoreOnGround = true)) {
                 return@handler
             }
 
@@ -231,10 +238,10 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
     }
 
     fun canCrit(player: ClientPlayerEntity, ignoreOnGround: Boolean = false) =
-        !player.isInLava && !player.isTouchingWater && !player.isClimbing && !player.hasNoGravity()
-            && !player.hasStatusEffect(StatusEffects.LEVITATION) && !player.hasStatusEffect(StatusEffects.BLINDNESS)
-            && !player.hasStatusEffect(StatusEffects.SLOW_FALLING) && !player.isRiding && (!player.isOnGround || ignoreOnGround)
-            && !ModuleFly.enabled
+        !player.isInLava && !player.isTouchingWater && !player.isClimbing && !player.hasNoGravity() &&
+            !player.hasStatusEffect(StatusEffects.LEVITATION) && !player.hasStatusEffect(StatusEffects.BLINDNESS) &&
+            !player.hasStatusEffect(StatusEffects.SLOW_FALLING) && !player.isRiding && (!player.isOnGround || ignoreOnGround) &&
+            !ModuleFly.enabled && !(ModuleLiquidWalk.enabled && ModuleLiquidWalk.standingOnWater())
 
     fun getCooldownDamageFactorWithCurrentTickDelta(player: PlayerEntity, tickDelta: Float): Float {
         val base = ((player.lastAttackedTicks.toFloat() + tickDelta + 0.5f) / player.attackCooldownProgressPerTick)

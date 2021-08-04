@@ -39,6 +39,12 @@ import net.minecraft.util.math.Vec3d
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.atomic.AtomicInteger
 
+/**
+ * Blink module
+ *
+ * Makes it look as if you were teleporting to other players.
+ */
+
 object ModuleBlink : Module("Blink", Category.PLAYER) {
     private val pulse by boolean("Pulse", false)
     private val dummy by boolean("Dummy", false)

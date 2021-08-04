@@ -25,9 +25,9 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 
 /**
- * Freeze module
+ * SafeWalk module
  *
- * Allows you to freeze yourself without the server knowing.
+ * Prevents you from falling down as if you were sneaking.
  */
 object ModuleSafeWalk : Module("SafeWalk", Category.MOVEMENT) {
 

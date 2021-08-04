@@ -1,8 +1,22 @@
 /*
- * LiquidBounce Hacked Client
- * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
- * https://github.com/CCBlueX/LiquidBounce/
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2016 - 2021 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+
 package net.ccbluex.liquidbounce.features.chat.client
 
 import com.google.gson.GsonBuilder
@@ -20,20 +34,14 @@ import io.netty.handler.codec.http.websocketx.WebSocketClientHandshakerFactory
 import io.netty.handler.codec.http.websocketx.WebSocketVersion
 import io.netty.handler.ssl.SslContext
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory
+import net.ccbluex.liquidbounce.features.chat.Chat
 import net.ccbluex.liquidbounce.features.chat.client.packet.*
-import net.ccbluex.liquidbounce.utils.client.MojangApi
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.mc
+
 import java.net.URI
-import java.util.*
 
-class Client(val listener: ClientListener) {
+class Client {
 
-    internal var channel: Channel? = null
-
-    var username = ""
-    var jwt = false
-    var loggedIn = false
+    var channel: Channel? = null
 
     private val serializer = PacketSerializer().apply {
         registerPacket("RequestMojangInfo", ServerRequestMojangInfoPacket::class.java)
@@ -55,11 +63,18 @@ class Client(val listener: ClientListener) {
         registerPacket("Success", ClientSuccessPacket::class.java)
     }
 
+    val connected: Boolean
+        get() = channel != null && channel!!.isOpen
+
     /**
      * Connect to chat server
      */
     fun connect() {
-        listener.onConnect()
+        if (!Chat.enabled) {
+            return
+        }
+
+        Chat.onConnect()
 
         val uri = URI("wss://chat.liquidbounce.net:7886/ws")
 
@@ -68,7 +83,6 @@ class Client(val listener: ClientListener) {
 
         val group = NioEventLoopGroup()
         val handler = ChannelHandler(
-            this,
             WebSocketClientHandshakerFactory.newHandshaker(
                 uri,
                 WebSocketVersion.V13,
@@ -106,36 +120,22 @@ class Client(val listener: ClientListener) {
         channel = bootstrap.connect(uri.host, uri.port).sync().channel()
         handler.handshakeFuture.sync()
 
-        if (isConnected()) {
-            listener.onConnected()
+        if (connected) {
+            Chat.onConnected()
         }
     }
 
     /**
-     * Disconnect from chat server
+     * Send packet to server
      */
-    fun disconnect() {
-        channel?.close()
-        channel = null
-        username = ""
-        jwt = false
+    internal fun sendPacket(packet: Packet) {
+        val gson = GsonBuilder()
+            .registerTypeAdapter(Packet::class.java, serializer)
+            .create()
+
+        channel?.writeAndFlush(TextWebSocketFrame(gson.toJson(packet, Packet::class.java)))
     }
 
-    /**
-     * Login to web socket
-     */
-    fun loginMojang() = sendPacket(ServerRequestMojangInfoPacket())
-
-    /**
-     * Login to web socket
-     */
-    fun loginJWT(token: String) {
-        listener.onLogon()
-        sendPacket(ServerLoginJWTPacket(token, allowMessages = true))
-        jwt = true
-    }
-
-    fun isConnected() = channel != null && channel!!.isOpen
 
     /**
      * Handle incoming message of websocket
@@ -146,126 +146,7 @@ class Client(val listener: ClientListener) {
             .create()
 
         val packet = gson.fromJson(message, Packet::class.java)
-        when (packet) {
-            is ClientMojangInfoPacket -> {
-                listener.onLogon()
-
-                try {
-                    val sessionHash = packet.sessionHash
-
-                    mc.sessionService.joinServer(mc.session.profile, mc.session.accessToken, sessionHash)
-                    username = mc.session.username
-                    jwt = false
-
-                    sendPacket(ServerLoginMojangPacket(mc.session.username, mc.session.profile.id, allowMessages = true))
-                } catch (throwable: Throwable) {
-                    listener.onError(throwable)
-                }
-                return
-            }
-            is ClientMessagePacket -> listener.onMessage(packet.user, packet.content)
-            is ClientPrivateMessagePacket -> listener.onPrivateMessage(packet.user, packet.content)
-            is ClientErrorPacket -> {
-                val message = when (packet.message) {
-                    "NotSupported" -> "This method is not supported!"
-                    "LoginFailed" -> "Login Failed!"
-                    "NotLoggedIn" -> "You must be logged in to use the chat! Enable LiquidChat."
-                    "AlreadyLoggedIn" -> "You are already logged in!"
-                    "MojangRequestMissing" -> "Mojang request missing!"
-                    "NotPermitted" -> "You are missing the required permissions!"
-                    "NotBanned" -> "You are not banned!"
-                    "Banned" -> "You are banned!"
-                    "RateLimited" -> "You have been rate limited. Please try again later."
-                    "PrivateMessageNotAccepted" -> "Private message not accepted!"
-                    "EmptyMessage" -> "You are trying to send an empty message!"
-                    "MessageTooLong" -> "Message is too long!"
-                    "InvalidCharacter" -> "Message contains a non-ASCII character!"
-                    "InvalidId" -> "The given ID is invalid!"
-                    "Internal" -> "An internal server error occurred!"
-                    else -> packet.message
-                }
-
-                chat("§7[§a§lChat§7] §cError: §7$message")
-            }
-            is ClientSuccessPacket -> {
-                when (packet.reason) {
-                    "Login" -> {
-                        listener.onLoggedIn()
-                        loggedIn = true
-                    }
-                    "Ban" -> chat("§7[§a§lChat§7] §9Successfully banned user!")
-                    "Unban" -> chat("§7[§a§lChat§7] §9Successfully unbanned user!")
-                }
-            }
-
-            is ClientNewJWTPacket -> {
-            }
-        }
+        Chat.onPacket(packet)
     }
 
-    /**
-     * Send packet to server
-     */
-    fun sendPacket(packet: Packet) {
-        val gson = GsonBuilder()
-            .registerTypeAdapter(Packet::class.java, serializer)
-            .create()
-
-        channel?.writeAndFlush(TextWebSocketFrame(gson.toJson(packet, Packet::class.java)))
-    }
-
-    /**
-     * Send chat message to server
-     */
-    fun sendMessage(message: String) = sendPacket(ServerMessagePacket(message))
-
-    /**
-     * Send private chat message to server
-     */
-    fun sendPrivateMessage(username: String, message: String) = sendPacket(ServerPrivateMessagePacket(username, message))
-
-    /**
-     * Ban user from server
-     */
-    fun banUser(target: String) = sendPacket(ServerBanUserPacket(toUUID(target)))
-
-    /**
-     * Unban user from server
-     */
-    fun unbanUser(target: String) = sendPacket(ServerUnbanUserPacket(toUUID(target)))
-
-    /**
-     * Convert username or uuid to UUID
-     */
-    private fun toUUID(target: String): String {
-        return try {
-            UUID.fromString(target)
-
-            target
-        } catch (_: IllegalArgumentException) {
-            val incomingUUID = MojangApi.getUUID(target)
-
-            if (incomingUUID.isBlank()) return ""
-
-            val uuid = StringBuffer(incomingUUID)
-                .insert(20, '-')
-                .insert(16, '-')
-                .insert(12, '-')
-                .insert(8, '-')
-
-            uuid.toString()
-        }
-    }
-
-}
-
-interface ClientListener {
-    fun onConnect()
-    fun onConnected()
-    fun onDisconnect()
-    fun onLogon()
-    fun onLoggedIn()
-    fun onMessage(user: User, message: String)
-    fun onPrivateMessage(user: User, message: String)
-    fun onError(cause: Throwable)
 }
