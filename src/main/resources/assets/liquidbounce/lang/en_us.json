@@ -221,7 +221,7 @@
 
   "liquidbounce.module.forceUnicodeChat.description": "Translates all chat messages you send to Unicode.",
 
-  "liquidbounce.module.godMode.description": "Freezes you in your current position, therefore makes you invincible.",
+  "liquidbounce.module.godMode.description": "Allows you to be invulnerable.",
 
   "liquidbounce.module.kick.description": "Kicks yourself from the server.",
   "liquidbounce.module.kick.messages.cantEnableInSingleplayer": "Cannot enable %s in singleplayer.",
@@ -410,6 +410,8 @@
 
   "liquidbounce.module.highJump.description": "Allows you to jump higher.",
 
-  "liquidbounce.module.sleepWalker.description": "Allows you to walk while sleeping, also makes your hitbox small."
+  "liquidbounce.module.sleepWalker.description": "Allows you to walk while sleeping, also makes your hitbox small.",
+
+  "liquidbounce.module.dankBobbing.description": "Adds more bobbing effect."
 
 }
