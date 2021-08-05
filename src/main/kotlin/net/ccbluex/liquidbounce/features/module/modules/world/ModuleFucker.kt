@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.block.searchBlocks
+import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.entity.eyesPos
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.minecraft.block.Block
@@ -44,9 +44,9 @@ import net.minecraft.util.math.Vec3d
 import net.minecraft.world.RaycastContext
 
 /**
- * ChestAura module
+ * Fucker module
  *
- * Automatically opens chests around you.
+ * Destroys/Uses selected blocks around you.
  */
 object ModuleFucker : Module("Fucker", Category.WORLD) {
 
@@ -139,7 +139,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         val radiusSquared = radius * radius
         val eyesPos = mc.player!!.eyesPos
 
-        val blockToProcess = searchBlocks(radius.toInt()) { pos, state ->
+        val blockToProcess = searchBlocksInCuboid(radius.toInt()) { pos, state ->
             targetedBlocks.contains(state.block) && getNearestPoint(
                 eyesPos,
                 Box(pos, pos.add(1, 1, 1))

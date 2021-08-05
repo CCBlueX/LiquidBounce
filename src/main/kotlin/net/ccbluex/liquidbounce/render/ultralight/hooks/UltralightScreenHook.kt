@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
 import net.ccbluex.liquidbounce.render.ultralight.js.bindings.UltralightJsUi
 import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.client.gui.screen.TitleScreen
 
 object UltralightScreenHook : Listenable {
 
@@ -43,7 +44,7 @@ object UltralightScreenHook : Listenable {
             }
         }
 
-        val screen = event.screen ?: return@handler
+        val screen = event.screen ?: if (mc.world != null) return@handler else TitleScreen()
         val name = UltralightJsUi.get(screen)?.name ?: return@handler
         val page = ThemeManager.page(name) ?: return@handler
 

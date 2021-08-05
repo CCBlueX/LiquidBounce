@@ -40,6 +40,12 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3i
 
+/**
+ * HoleESP module
+ *
+ * Detects and displays safe spots for Crystal PvP.
+ */
+
 object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
 
     var horizontalDistance by int("HorizontalScanDistance", 16, 4..100)

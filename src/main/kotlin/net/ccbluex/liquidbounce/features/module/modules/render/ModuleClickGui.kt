@@ -25,6 +25,12 @@ import net.ccbluex.liquidbounce.render.screen.EmptyScreen
 import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
 import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
 
+/**
+ * ClickGUI module
+ *
+ * Shows you an easy-to-use menu to toggle and configure modules.
+ */
+
 object ModuleClickGui : Module("ClickGUI", Category.RENDER, disableActivation = true) {
 
     override fun enable() {

@@ -23,6 +23,7 @@ import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.SideShapeType
 import net.minecraft.util.math.*
+import kotlin.math.ceil
 
 fun Vec3d.toBlockPos() = BlockPos(this)
 
@@ -33,22 +34,54 @@ fun BlockPos.getBlock() = getState()?.block
 fun BlockPos.getCenterDistanceSquared() = mc.player!!.squaredDistanceTo(this.x + 0.5, this.y + 0.5, this.z + 0.5)
 
 /**
- * Search blocks around the player in a specific [radius]
+ * Search blocks around the player in a cuboid
  */
-inline fun searchBlocks(radius: Int, filter: (BlockPos, BlockState) -> Boolean): List<Pair<BlockPos, BlockState>> {
+inline fun searchBlocksInCuboid(a: Int, filter: (BlockPos, BlockState) -> Boolean): List<Pair<BlockPos, BlockState>> {
     val blocks = mutableListOf<Pair<BlockPos, BlockState>>()
 
     val thePlayer = mc.player ?: return blocks
 
-    for (x in radius downTo -radius + 1) {
-        for (y in radius downTo -radius + 1) {
-            for (z in radius downTo -radius + 1) {
+    for (x in a downTo -a + 1) {
+        for (y in a downTo -a + 1) {
+            for (z in a downTo -a + 1) {
                 val blockPos = BlockPos(thePlayer.x.toInt() + x, thePlayer.y.toInt() + y, thePlayer.z.toInt() + z)
                 val state = blockPos.getState() ?: continue
 
                 if (!filter(blockPos, state)) {
                     continue
                 }
+
+                blocks.add(Pair(blockPos, state))
+            }
+        }
+    }
+
+    return blocks
+}
+
+/**
+ * Search blocks around the player in a specific [radius]
+ */
+inline fun searchBlocksInRadius(radius: Float, filter: (BlockPos, BlockState) -> Boolean): List<Pair<BlockPos, BlockState>> {
+    val blocks = mutableListOf<Pair<BlockPos, BlockState>>()
+
+    val thePlayer = mc.player ?: return blocks
+
+    val playerPos = thePlayer.pos
+    val radiusSquared = radius * radius
+    val radiusInt = radius.toInt()
+
+    for (x in radiusInt downTo -radiusInt + 1) {
+        for (y in radiusInt downTo -radiusInt + 1) {
+            for (z in radiusInt downTo -radiusInt + 1) {
+                val blockPos = BlockPos(thePlayer.x.toInt() + x, thePlayer.y.toInt() + y, thePlayer.z.toInt() + z)
+                val state = blockPos.getState() ?: continue
+
+                if (!filter(blockPos, state)) {
+                    continue
+                }
+                if (Vec3d.of(blockPos).squaredDistanceTo(playerPos) > radiusSquared)
+                    continue
 
                 blocks.add(Pair(blockPos, state))
             }
@@ -105,4 +138,17 @@ fun collideBlockIntersects(box: Box, isCorrectBlock: (Block?) -> Boolean): Boole
     }
 
     return false
+}
+
+fun Box.forEachCollidingBlock(function: (x: Int, y: Int, z: Int) -> Unit) {
+    val from = BlockPos(this.minX.toInt(), this.minY.toInt(), this.minZ.toInt())
+    val to = BlockPos(ceil(this.maxX).toInt(), ceil(this.maxY).toInt(), ceil(this.maxZ).toInt())
+
+    for (x in from.x..to.x) {
+        for (y in from.y..to.y) {
+            for (z in from.z..to.z) {
+                function(x, y, z)
+            }
+        }
+    }
 }

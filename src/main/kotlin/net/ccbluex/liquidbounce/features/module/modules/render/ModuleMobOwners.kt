@@ -34,6 +34,12 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 
+/**
+ * MobOwners module
+ *
+ * Shows you from which player a tamable entity or projectile belongs to.
+ */
+
 object ModuleMobOwners : Module("MobOwners", Category.RENDER) {
 
     val projectiles by boolean("Projectiles", false)

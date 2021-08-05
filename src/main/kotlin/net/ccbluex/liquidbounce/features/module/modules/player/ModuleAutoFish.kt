@@ -29,6 +29,12 @@ import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket
 import net.minecraft.sound.SoundEvents
 import net.minecraft.util.Hand
 
+/**
+ * AutoFish module
+ *
+ * Automatically catches fish when using a rod.
+ */
+
 object ModuleAutoFish : Module("AutoFish", Category.PLAYER) {
 
     val recastRod by boolean("RecastRod", true)

@@ -39,6 +39,12 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import kotlin.math.roundToInt
 
+/**
+ * Nametags module
+ *
+ * Makes player name tags more visible and adds useful information.
+ */
+
 object ModuleNametags : Module("Nametags", Category.RENDER) {
 
     private val healthValue by boolean("Health", true)

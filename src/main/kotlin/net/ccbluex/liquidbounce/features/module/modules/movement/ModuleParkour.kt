@@ -24,6 +24,12 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.entity.moving
 
+/**
+ * Parkour module
+ *
+ * Automatically jumps at the very edge of a block.
+ */
+
 object ModuleParkour : Module("Parkour", Category.MOVEMENT) {
 
     val repeatable = repeatable {

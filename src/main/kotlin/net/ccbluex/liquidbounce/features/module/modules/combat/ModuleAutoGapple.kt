@@ -23,12 +23,20 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.item.convertClientSlotToServerSlot
+import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
+import net.ccbluex.liquidbounce.utils.item.findInventorySlot
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.client.util.InputUtil
 import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.screen.slot.SlotActionType
+
+/**
+ * AutoGapple module
+ *
+ * Automatically eats apples whenever your health is low.
+ */
 
 object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
 
@@ -46,13 +54,9 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
 
     val repeatable = repeatable {
         // Check first with Hotbar and see if it has any apples
-        val slot = (0..8).firstOrNull {
-            player.inventory.getStack(it).item == Items.GOLDEN_APPLE
-        }
+        val slot = findHotbarSlot(Items.GOLDEN_APPLE)
 
-        val invSlot = (0..40).find {
-            !player.inventory.getStack(it).isEmpty && player.inventory.getStack(it).item == Items.GOLDEN_APPLE
-        }
+        val invSlot = findInventorySlot(Items.GOLDEN_APPLE)
 
         // If both have been checked but neither of these provide any result
         if (slot == null && invSlot == null) {

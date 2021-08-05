@@ -58,7 +58,7 @@ import net.minecraft.world.GameMode
 /**
  * KillAura module
  *
- * Automatically attacks enemies
+ * Automatically attacks enemies.
  */
 object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 

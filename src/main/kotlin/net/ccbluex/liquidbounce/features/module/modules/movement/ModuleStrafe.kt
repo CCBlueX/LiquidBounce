@@ -28,9 +28,9 @@ import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.minecraft.entity.MovementType
 
 /**
- * A strafe module
+ * Strafe module
  *
- * Strafe into different directions while your mid-air
+ * Strafe into different directions while your mid-air.
  */
 object ModuleStrafe : Module("Strafe", Category.MOVEMENT) {
 
