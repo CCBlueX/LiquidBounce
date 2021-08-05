@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.KeyEvent
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDankBobbing
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleSkinDerp
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
@@ -158,6 +159,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAntiAFK,
             ModuleNoJumpDelay,
             ModuleNoBob,
+            ModuleDankBobbing,
             ModuleAutoSoup,
             ModuleNotifier,
             ModuleHoleESP,

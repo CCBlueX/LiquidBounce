@@ -44,7 +44,7 @@ object UltralightScreenHook : Listenable {
             }
         }
 
-        val screen = event.screen ?: TitleScreen()
+        val screen = event.screen ?: if (mc.world != null) return@handler else TitleScreen()
         val name = UltralightJsUi.get(screen)?.name ?: return@handler
         val page = ThemeManager.page(name) ?: return@handler
 
