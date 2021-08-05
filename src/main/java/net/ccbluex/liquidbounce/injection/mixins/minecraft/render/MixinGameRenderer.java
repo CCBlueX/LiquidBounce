@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.GameRenderEvent;
 import net.ccbluex.liquidbounce.event.ScreenRenderEvent;
+import net.ccbluex.liquidbounce.features.module.modules.fun.ModuleDankBobbing;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoBob;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoHurtCam;
 import net.ccbluex.liquidbounce.interfaces.IMixinGameRenderer;
@@ -31,6 +32,7 @@ import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vec3d;
@@ -131,6 +133,26 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
     private void injectBobView(MatrixStack matrixStack, float f, CallbackInfo callbackInfo) {
         if(ModuleNoBob.INSTANCE.getEnabled()) {
             callbackInfo.cancel();
+            return;
         }
+
+        if(!ModuleDankBobbing.INSTANCE.getEnabled()) {
+            return;
+        }
+
+        if (!(this.client.getCameraEntity() instanceof PlayerEntity playerEntity)) {
+            return;
+        }
+
+        float additionalBobbing = ModuleDankBobbing.INSTANCE.getMotion();
+
+        float g = playerEntity.horizontalSpeed - playerEntity.prevHorizontalSpeed;
+        float h = -(playerEntity.horizontalSpeed + g * f);
+        float i = MathHelper.lerp(f, playerEntity.prevStrideDistance, playerEntity.strideDistance);
+        matrixStack.translate((MathHelper.sin(h * MathHelper.PI) * i * 0.5F), -Math.abs(MathHelper.cos(h * MathHelper.PI) * i), 0.0D);
+        matrixStack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(MathHelper.sin(h * MathHelper.PI) * i * (3.0F + additionalBobbing)));
+        matrixStack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(Math.abs(MathHelper.cos(h * MathHelper.PI - (0.2F + additionalBobbing)) * i) * 5.0F));
+
+        callbackInfo.cancel();
     }
 }
