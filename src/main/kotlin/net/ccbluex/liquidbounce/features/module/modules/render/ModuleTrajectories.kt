@@ -55,7 +55,7 @@ import kotlin.math.sqrt
 /**
  * Trajectories module
  *
- * Allows you to see where arrows, pearls, etc. will land.
+ * Allows you to see where projectile items will land.
  */
 
 object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
