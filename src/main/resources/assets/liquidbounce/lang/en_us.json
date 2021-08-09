@@ -412,6 +412,8 @@
 
   "liquidbounce.module.sleepWalker.description": "Allows you to walk while sleeping, also makes your hitbox small.",
 
-  "liquidbounce.module.dankBobbing.description": "Adds more bobbing effect."
+  "liquidbounce.module.dankBobbing.description": "Adds more bobbing effect.",
+
+  "liquidbounce.module.derp.description": "Makes it look as if you were derping around."
 
 }
