@@ -22,9 +22,9 @@ import net.ccbluex.liquidbounce.event.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.minecraft.entity.MovementType
+import net.minecraft.entity.effect.StatusEffects
 
 /*
  * Sprint Module
@@ -36,7 +36,7 @@ object ModuleSprint : Module("Sprint", Category.MOVEMENT) {
 
     val moveHandler = handler<PlayerMoveEvent> { event ->
 
-        if ((event.type == MovementType.SELF) && player.moving && !player.input.sneaking && player.input.hasForwardMovement()){
+        if ((event.type == MovementType.SELF) && player.moving && !player.input.sneaking && player.input.hasForwardMovement() && !player.horizontalCollision && !player.hasStatusEffect(StatusEffects.BLINDNESS) && player.hungerManager.foodLevel > 6){
             player.isSprinting = true
         }
     }
