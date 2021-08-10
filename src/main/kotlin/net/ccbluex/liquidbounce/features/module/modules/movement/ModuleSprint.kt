@@ -35,10 +35,9 @@ import net.minecraft.entity.MovementType
 object ModuleSprint : Module("Sprint", Category.MOVEMENT) {
 
     val moveHandler = handler<PlayerMoveEvent> { event ->
-        // Might just strafe when player controls itself
+
         if ((event.type == MovementType.SELF) && player.moving && !player.input.sneaking && player.input.hasForwardMovement()){
-            val movement = event.movement
-            player.isSprinting = true;
+            player.isSprinting = true
         }
     }
 
