@@ -22,10 +22,10 @@ import net.ccbluex.liquidbounce.event.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.block.getBlock
-import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
-import net.minecraft.block.*
+import net.minecraft.block.BedBlock
+import net.minecraft.block.HoneyBlock
+import net.minecraft.block.SlimeBlock
 
 /**
  * BlockBounce module
