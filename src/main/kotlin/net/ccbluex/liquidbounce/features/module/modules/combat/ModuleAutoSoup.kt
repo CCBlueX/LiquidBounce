@@ -147,10 +147,6 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
         }
     }
 
-    private fun hasItem(slot: Int, item: Item): Boolean {
-        return player.inventory.getStack(slot).item == item
-    }
-
     enum class BowlMode(override val choiceName: String) : NamedChoice {
         DROP("Drop"), MOVE("Move")
     }
