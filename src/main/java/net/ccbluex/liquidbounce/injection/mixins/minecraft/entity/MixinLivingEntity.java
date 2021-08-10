@@ -31,7 +31,10 @@ import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -82,19 +85,26 @@ public abstract class MixinLivingEntity extends MixinEntity {
         }
     }
 
-    @Redirect(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getJumpVelocity()F"))
-    private float hookJumpEvent(LivingEntity entity) {
-        // Check if entity is client user
-        if ((Object) this == MinecraftClient.getInstance().player) {
-            // Hook player jump event
-            final PlayerJumpEvent jumpEvent = new PlayerJumpEvent(getJumpVelocity());
-            EventManager.INSTANCE.callEvent(jumpEvent);
-            if (jumpEvent.isCancelled()) {
-                return 0f;
-            }
-            return jumpEvent.getMotion();
+    /**
+     * @author mems01
+     */
+    @Overwrite
+    public void jump() {
+        final PlayerJumpEvent jumpEvent = new PlayerJumpEvent(getJumpVelocity());
+        EventManager.INSTANCE.callEvent(jumpEvent);
+        if (jumpEvent.isCancelled()) {
+            return;
         }
-        return getJumpVelocity();
+
+        double d = jumpEvent.getMotion();
+        Vec3d vec3d = this.getVelocity();
+        this.setVelocity(vec3d.x, d, vec3d.z);
+        if (this.isSprinting()) {
+            float f = this.getYaw() * 0.017453292F;
+            this.setVelocity(this.getVelocity().add((double)(-MathHelper.sin(f) * 0.2F), 0.0D, (double)(MathHelper.cos(f) * 0.2F)));
+        }
+
+        this.velocityDirty = true;
     }
 
     @Inject(method = "pushAwayFrom", at = @At("HEAD"), cancellable = true)

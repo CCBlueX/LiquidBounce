@@ -93,7 +93,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
             }
         }
         val shapeHandler = handler<BlockShapeEvent> { event ->
-            if (event.state.block == Blocks.AIR && event.pos.y < player.y) {
+            if (event.pos.y < player.y) {
                 event.shape = VoxelShapes.fullCube()
             }
         }
