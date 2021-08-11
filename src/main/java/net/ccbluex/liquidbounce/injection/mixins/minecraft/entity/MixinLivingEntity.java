@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAntiLevit
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoJumpDelay;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPush;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -48,6 +47,9 @@ import javax.annotation.Nullable;
 public abstract class MixinLivingEntity extends MixinEntity {
 
     @Shadow
+    private int jumpingCooldown;
+
+    @Shadow
     protected abstract float getJumpVelocity();
 
     @Shadow
@@ -61,7 +63,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
     public abstract ItemStack getMainHandStack();
 
     @Shadow
-    private int jumpingCooldown;
+    public abstract double getJumpBoostVelocityModifier();
 
     /**
      * Hook anti levitation module
@@ -96,12 +98,12 @@ public abstract class MixinLivingEntity extends MixinEntity {
             return;
         }
 
-        double d = jumpEvent.getMotion();
+        double d = jumpEvent.getMotion() + getJumpBoostVelocityModifier();
         Vec3d vec3d = this.getVelocity();
         this.setVelocity(vec3d.x, d, vec3d.z);
         if (this.isSprinting()) {
             float f = this.getYaw() * 0.017453292F;
-            this.setVelocity(this.getVelocity().add((double)(-MathHelper.sin(f) * 0.2F), 0.0D, (double)(MathHelper.cos(f) * 0.2F)));
+            this.setVelocity(this.getVelocity().add(-MathHelper.sin(f) * 0.2F, 0.0D, MathHelper.cos(f) * 0.2F));
         }
 
         this.velocityDirty = true;
