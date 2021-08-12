@@ -45,6 +45,7 @@ class ReloadCommand : Command("reload", "configreload") {
         chat("§c§lReloading ClickGUI...")
         LiquidBounce.clickGui = ClickGui()
         LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.clickGuiConfig)
+        LiquidBounce.isStarting = false
         chat("Reloaded.")
     }
 }

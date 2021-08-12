@@ -142,6 +142,18 @@ public abstract class MixinItemRenderer {
     private void renderFireInFirstPerson(final CallbackInfo callbackInfo) {
         final AntiBlind antiBlind = (AntiBlind) LiquidBounce.moduleManager.getModule(AntiBlind.class);
 
-        if(antiBlind.getState() && antiBlind.getFireEffect().get()) callbackInfo.cancel();
+        if(antiBlind.getState() && antiBlind.getFireEffect().get()) {
+            //vanilla's method
+            GlStateManager.color(1.0F, 1.0F, 1.0F, 0.9F);
+            GlStateManager.depthFunc(519);
+            GlStateManager.depthMask(false);
+            GlStateManager.enableBlend();
+            GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
+            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+            GlStateManager.disableBlend();
+            GlStateManager.depthMask(true);
+            GlStateManager.depthFunc(515);
+            callbackInfo.cancel();
+        }
     }
 }
