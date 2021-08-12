@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.PlayerJumpEvent;
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAirJump;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAntiLevitation;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoJumpDelay;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPush;
@@ -59,6 +60,10 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
     @Shadow
     private int jumpingCooldown;
+
+    @Shadow protected abstract void jump();
+
+    @Shadow protected boolean jumping;
 
     /**
      * Hook anti levitation module
@@ -107,7 +112,15 @@ public abstract class MixinLivingEntity extends MixinEntity {
     @Inject(method = "tickMovement", at = @At("HEAD"), cancellable = true)
     private void hookTickMovement(CallbackInfo callbackInfo) {
         if (ModuleNoJumpDelay.INSTANCE.getEnabled()) {
-            jumpingCooldown = 0;
+            jumpingCooldown = ModuleAirJump.INSTANCE.getEnabled() ? 10 : 0;
+        }
+    }
+
+    @Inject(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;jumping:Z"))
+    private void hookJump(CallbackInfo callbackInfo) {
+        if (ModuleAirJump.INSTANCE.getEnabled() && jumping && jumpingCooldown == 0) {
+            this.jump();
+            jumpingCooldown = 10;
         }
     }
 
