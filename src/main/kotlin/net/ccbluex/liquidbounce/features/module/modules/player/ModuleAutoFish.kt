@@ -61,8 +61,9 @@ object ModuleAutoFish : Module("AutoFish", Category.PLAYER) {
                     wait(10)
                     network.sendPacket(PlayerInteractItemC2SPacket(hand))
                     player.swingHand(hand)
-                    caughtFish = false
                 }
+
+                caughtFish = false
             }
         }
     }
