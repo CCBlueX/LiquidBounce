@@ -167,7 +167,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleMobOwners,
             ModuleGhostHand,
             ModuleAirJump,
-            ModuleFireBallKicker
+            ModuleProjectilePuncher
         )
 
         builtin.apply {

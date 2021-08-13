@@ -33,10 +33,11 @@ import net.ccbluex.liquidbounce.utils.entity.eyesPos
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.minecraft.entity.Entity
 import net.minecraft.entity.projectile.FireballEntity
+import net.minecraft.entity.projectile.ShulkerBulletEntity
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
 import net.minecraft.util.Hand
 
-object ModuleFireBallKicker : Module("FireballKicker", Category.WORLD) {
+object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
 
     private val swing by boolean("Swing", true)
 
@@ -59,13 +60,13 @@ object ModuleFireBallKicker : Module("FireballKicker", Category.WORLD) {
             return
         }
 
-        val squareRange = 6.0 * 6.0
+        val squaredRange = 6.0 * 6.0
 
-        targetTracker.validateLock { it.squaredBoxedDistanceTo(player) <= squareRange }
+        targetTracker.validateLock { it.squaredBoxedDistanceTo(player) <= squaredRange }
 
         for (entity in world.entities) {
-            if (entity is FireballEntity) {
-                if (entity.squaredBoxedDistanceTo(player) > squareRange) {
+            if (entity is FireballEntity || entity is ShulkerBulletEntity) {
+                if (entity.squaredBoxedDistanceTo(player) > squaredRange) {
                     continue
                 }
 
@@ -73,7 +74,7 @@ object ModuleFireBallKicker : Module("FireballKicker", Category.WORLD) {
                 val (rotation, _) = RotationManager.raytraceBox(
                     player.eyesPos,
                     entity.boundingBox,
-                    range = squareRange,
+                    range = squaredRange,
                     wallsRange = 0.0
                 ) ?: continue
 
