@@ -29,8 +29,8 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.client.MC_1_8
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
-import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.eyesPos
+import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.minecraft.entity.Entity
 import net.minecraft.entity.projectile.FireballEntity
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
@@ -46,12 +46,12 @@ object ModuleFireBallKicker : Module("FireballKicker", Category.WORLD) {
     // Rotation
     private val rotations = RotationsConfigurable()
 
-    val repeatable = repeatable {
-        attack()
-    }
-
     override fun disable() {
         targetTracker.cleanup()
+    }
+
+    val repeatable = repeatable {
+        attack()
     }
 
     private fun attack() {
@@ -59,19 +59,21 @@ object ModuleFireBallKicker : Module("FireballKicker", Category.WORLD) {
             return
         }
 
-        targetTracker.validateLock { it.boxedDistanceTo(player) <= 6.0 }
+        val squareRange = 6.0 * 6.0
+
+        targetTracker.validateLock { it.squaredBoxedDistanceTo(player) <= squareRange }
 
         for (entity in world.entities) {
             if (entity is FireballEntity) {
-                if (entity.boxedDistanceTo(player) > 6.0) {
-                    return
+                if (entity.squaredBoxedDistanceTo(player) > squareRange) {
+                    continue
                 }
 
                 // find best spot (and skip if no spot was found)
                 val (rotation, _) = RotationManager.raytraceBox(
                     player.eyesPos,
                     entity.boundingBox,
-                    range = 6.0,
+                    range = squareRange,
                     wallsRange = 0.0
                 ) ?: continue
 
