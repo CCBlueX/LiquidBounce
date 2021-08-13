@@ -89,6 +89,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
 
         val entity = targetTracker.lockedOnTarget ?: return
         attackEntity(entity)
+        targetTracker.cleanup()
     }
 
     private fun attackEntity(entity: Entity) {
