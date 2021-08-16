@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.minecraft.block.Blocks
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
@@ -37,6 +38,12 @@ import net.minecraft.util.shape.VoxelShapes
 object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
     private val modes = choices("Mode", Vanilla, arrayOf(Vanilla, Jetpack, Verus))
+
+    var startY: Double = 0.0
+
+    override fun enable() {
+        startY = mc.player?.y ?: 0.0
+    }
 
     private object Visuals : ToggleableConfigurable(this, "Visuals", true) {
 
@@ -87,19 +94,32 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
         override val parent: ChoiceConfigurable
             get() = modes
 
-        val packetHandler = handler<PacketEvent> { event ->
-            if (event.packet is PlayerMoveC2SPacket) {
-                event.packet.onGround = true
+        val tickHandler = handler<PlayerTickEvent> {
+            val player = mc.player ?: return@handler
+            val world = mc.world ?: return@handler
+
+            /* Updates the startPosition if the player lands on higher ground */
+            if(player.isOnGround && player.y > startY && !world.isAir(player.blockPos.down())) {
+                startY = player.y
             }
+
+            if(player.moving){
+                player.strafe(speed = 0.31)
+                if(player.isOnGround){
+                    player.jump()
+                }
+            } else {
+                player.strafe()
+            }
+
         }
+
         val shapeHandler = handler<BlockShapeEvent> { event ->
-            if (event.state.block == Blocks.AIR && event.pos.y < player.y) {
+            if (event.state.block == Blocks.AIR && event.pos.y < startY) {
                 event.shape = VoxelShapes.fullCube()
             }
         }
-        val jumpEvent = handler<PlayerJumpEvent> { event ->
-            event.cancelEvent()
-        }
+
     }
 
     init {
