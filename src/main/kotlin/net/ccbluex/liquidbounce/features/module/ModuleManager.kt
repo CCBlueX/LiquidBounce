@@ -68,6 +68,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleTrigger,
             ModuleAutoBow,
             ModuleNametags,
+            ModuleSprint,
             ModuleBreadcrumbs,
             ModuleItemESP,
             ModuleCriticals,
