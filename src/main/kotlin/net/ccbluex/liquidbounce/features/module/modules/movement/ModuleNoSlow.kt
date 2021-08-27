@@ -23,6 +23,8 @@ import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.minecraft.block.HoneyBlock
+import net.minecraft.block.SlimeBlock
 import net.minecraft.block.SoulSandBlock
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
@@ -75,7 +77,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
 
         val multiplier by float("Multiplier", 1f, 0.4f..2f)
 
-        val blockVecocityHandler = handler<BlockVelocityMultiplierEvent> { event ->
+        val blockVelocityHandler = handler<BlockVelocityMultiplierEvent> { event ->
             if (event.block is SoulSandBlock) {
                 event.multiplier = multiplier
             }
@@ -83,11 +85,45 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
 
     }
 
+    object Slime : ToggleableConfigurable(this, "SlimeBlock", true) {
+        val multiplier by float("Multiplier", 1f, 0.4f..2f)
+
+        val blockSlipperinessMultiplierHandler = handler<BlockSlipperinessMultiplierEvent> { event ->
+            if (event.block is SlimeBlock) {
+                event.slipperiness = 0.6f
+            }
+        }
+
+        val blockVelocityHandler = handler<BlockVelocityMultiplierEvent> { event ->
+            if (event.block is SlimeBlock) {
+                event.multiplier = multiplier
+            }
+        }
+    }
+
+    private object Honey : ToggleableConfigurable(this, "HoneyBlock", true) {
+        val multiplier by float("Multiplier", 1f, 0.4f..2f)
+
+        val blockVelocityHandler = handler<BlockVelocityMultiplierEvent> { event ->
+            if (event.block is HoneyBlock) {
+                event.multiplier = multiplier
+            }
+        }
+    }
+
+    object PowderSnow : ToggleableConfigurable(this, "PowderSnow", true) {
+        val multiplier by float("Multiplier", 1f, 0.4f..2f)
+    }
+
+
     init {
         tree(Block)
         tree(Consume)
         tree(Bow)
         tree(Soulsand)
+        tree(Slime)
+        tree(Honey)
+        tree(PowderSnow)
     }
 
     val multiplierHandler = handler<PlayerUseMultiplier> { event ->
