@@ -37,6 +37,12 @@ import net.minecraft.entity.projectile.ShulkerBulletEntity
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
 import net.minecraft.util.Hand
 
+/**
+ * ProjectilePuncher module
+ *
+ * Shoots back incoming projectiles around you.
+ */
+
 object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
 
     private val swing by boolean("Swing", true)
