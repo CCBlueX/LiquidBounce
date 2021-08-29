@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce
 
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import jdk.nashorn.internal.runtime.Version
 import net.ccbluex.liquidbounce.api.Wrapper
 import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
 import net.ccbluex.liquidbounce.cape.CapeAPI.registerCapeService
@@ -33,7 +34,16 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.ClassUtils.hasForge
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
+import net.minecraftforge.common.ForgeVersion
+import org.spongepowered.asm.mixin.MixinEnvironment
+import org.spongepowered.asm.util.VersionNumber
 
+/**
+ * <p>
+ * TODO: Improve ClickGUI, Value system
+ * ex: Add ValueGroup, ColorValue, RangeSliderValue(see Vape) and 'Show/Hide values by Mode' feature
+ * </p>
+ */
 object LiquidBounce
 {
 	// Client information
@@ -70,7 +80,11 @@ object LiquidBounce
 	lateinit var wrapper: Wrapper
 
 	@JvmStatic
-	val title: String = "$CLIENT_NAME b$CLIENT_VERSION by $CLIENT_CREATOR | Backend version $MINECRAFT_VERSION | Forked version | Repo: github.com/hsheric0210/LiquidBounce${if (IN_DEV) " | DEVELOPMENT BUILD" else ""}"
+	val title: String = run {
+		val arr = mutableListOf("$CLIENT_NAME b$CLIENT_VERSION by $CLIENT_CREATOR", "Kotlin ${KotlinVersion.CURRENT}", "Nashorn ${Version.version()}", "Backend $MINECRAFT_VERSION", "Source https://github.com/hsheric0210/LiquidBounce")
+		if (IN_DEV) arr += "DEVELOPMENT BUILD"
+		arr.joinToString(" | ")
+	}
 
 	/**
 	 * Execute if client will be started
@@ -80,6 +94,15 @@ object LiquidBounce
 		isStarting = true
 
 		ClientUtils.logger.info("Starting $CLIENT_NAME for $MINECRAFT_VERSION b$CLIENT_VERSION, by $CLIENT_CREATOR")
+		ClientUtils.logger.info("Java: ${System.getProperty("java.vm.name")} ${System.getProperty("java.vm.version")}")
+		ClientUtils.logger.info("Kotlin: ${KotlinVersion.CURRENT}")
+		ClientUtils.logger.info("MinecraftForge: ${ForgeVersion.getVersion()}")
+		ClientUtils.logger.info("Mixin: ${VersionNumber.parse(MixinEnvironment.getCurrentEnvironment().version)}")
+		ClientUtils.logger.info("Backend: $MINECRAFT_VERSION")
+		ClientUtils.logger.info("Nashorn: ${Version.fullVersion()}")
+		for (ver in io.netty.util.Version.identify().values) ClientUtils.logger.info("Netty: $ver")
+		ClientUtils.logger.info("Jinput: ${net.java.games.util.Version.getVersion()}")
+		ClientUtils.logger.info("Jutils: ${net.java.games.util.Version.getVersion()}")
 
 		// Create file manager
 		fileManager = FileManager()

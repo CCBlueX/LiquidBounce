@@ -1216,7 +1216,7 @@ class KillAura : Module()
 
 			if (raycastedEntity != null && provider.isEntityLivingBase(raycastedEntity) && (LiquidBounce.moduleManager[NoFriends::class.java].state || !provider.isEntityPlayer(raycastedEntity) || !raycastedEntity.asEntityPlayer().isClientFriend())) this.currentTarget = raycastedEntity.asEntityLivingBase()
 
-			if (distanceToTarget != null && distanceToRaycasted != null && currentTarget != raycastedEntity) debug = "[RayCast] Switched from {n: ${currentTarget.name}, id: ${currentTarget.entityId}}} to {n: ${raycastedEntity.name}, id: ${raycastedEntity.entityId}}} (d_delta: ${DECIMALFORMAT_6.format(distanceToTarget - distanceToRaycasted)})"
+			if (distanceToTarget != null && distanceToRaycasted != null && currentTarget != raycastedEntity) debug = "[n: ${currentTarget.name}, id: ${currentTarget.entityId}] -> [n: ${raycastedEntity.name}, id: ${raycastedEntity.entityId}] (d_delta: ${DECIMALFORMAT_6.format(distanceToTarget - distanceToRaycasted)})"
 
 			hitable = (distanceToTarget == null || distanceToTarget <= reach) && (distanceToRaycasted == null || distanceToRaycasted <= reach) && this.currentTarget == raycastedEntity
 		}
