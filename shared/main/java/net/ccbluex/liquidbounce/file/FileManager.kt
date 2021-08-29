@@ -16,15 +16,12 @@ import net.ccbluex.liquidbounce.utils.ClientUtils.logger
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.WorkerUtils
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
-import net.minecraftforge.fml.relauncher.Side
-import net.minecraftforge.fml.relauncher.SideOnly
 import java.io.File
 import java.io.FileInputStream
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.imageio.ImageIO
 
-@SideOnly(Side.CLIENT)
 class FileManager : MinecraftInstance()
 {
 	val dir = File(mc.dataDir, LiquidBounce.CLIENT_NAME + "-" + Backend.MINECRAFT_VERSION_MAJOR + "." + Backend.MINECRAFT_VERSION_MINOR)

@@ -6,10 +6,7 @@
 package net.ccbluex.liquidbounce.ui.client.clickgui.elements
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.minecraftforge.fml.relauncher.Side
-import net.minecraftforge.fml.relauncher.SideOnly
 
-@SideOnly(Side.CLIENT)
 open class ButtonElement(displayName: String) : Element()
 {
 	open lateinit var displayName: String

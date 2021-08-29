@@ -5,11 +5,8 @@
  */
 package net.ccbluex.liquidbounce.utils.render
 
-import net.minecraftforge.fml.relauncher.Side
-import net.minecraftforge.fml.relauncher.SideOnly
 import net.vitox.ParticleGenerator
 
-@SideOnly(Side.CLIENT)
 object ParticleUtils
 {
 	private val particleGenerator = ParticleGenerator(100, 50)

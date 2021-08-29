@@ -5,8 +5,6 @@ import net.ccbluex.liquidbounce.api.IExtractedFunctions
 import net.ccbluex.liquidbounce.api.minecraft.client.IMinecraft
 import net.ccbluex.liquidbounce.api.minecraft.client.shader.IFramebuffer
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
-import net.minecraftforge.fml.relauncher.Side
-import net.minecraftforge.fml.relauncher.SideOnly
 import org.lwjgl.opengl.EXTFramebufferObject
 import org.lwjgl.opengl.EXTPackedDepthStencil
 import org.lwjgl.opengl.GL11
@@ -16,7 +14,6 @@ import org.lwjgl.opengl.GL11
  *
  * @author Hexeption
  */
-@SideOnly(Side.CLIENT)
 object OutlineUtils
 {
 	@JvmStatic

@@ -60,6 +60,7 @@ class Target : Element()
 	private val healAnimationColorGreenValue = IntegerValue("HealAnimationColorGreen", 201, 0, 255)
 	private val healAnimationColorBlueValue = IntegerValue("HealAnimationColorBlue", 144, 0, 255)
 
+	private val healthFadeStartDelayValue = IntegerValue("HealthFadeStartDelay", 2, 0, 5) // TODO: See Apex Legends Health Bar
 	private val healthFadeSpeedValue = IntegerValue("HealthFadeSpeed", 2, 1, 9)
 	private val absorptionFadeSpeedValue = IntegerValue("AbsorptionFadeSpeed", 2, 1, 9)
 	private val armorFadeSpeedValue = IntegerValue("ArmorFadeSpeed", 2, 1, 9)
@@ -93,6 +94,7 @@ class Target : Element()
 	private val textFontValue = FontValue("TextFont", Fonts.font35)
 
 	private var easingHealth: Float = 0F
+	private var healthAnimationDelay = 0
 	private var easingAbsorption: Float = 0F
 	private var easingArmor: Float = 0F
 	private var lastTarget: IEntity? = null
@@ -197,11 +199,15 @@ class Target : Element()
 
 				var textYOffset = 10
 
+				val healthFadeSpeed = healthFadeSpeedValue.get()
+
 				// Reset easing
 				val targetChanged = target != lastTarget
 				if (targetChanged || easingHealth < 0 || easingHealth > targetMaxHealth || abs(easingHealth - targetHealth) < 0.01) easingHealth = targetHealth
 				if (targetChanged || easingAbsorption < 0 || easingAbsorption > targetAbsorption || abs(easingAbsorption - targetAbsorption) < 0.01) easingAbsorption = targetAbsorption
 				if (isPlayer && (targetChanged || easingArmor < 0 || easingArmor > 20 || abs(easingArmor - targetArmor) < 0.01)) easingArmor = targetArmor.toFloat()
+				val waitAnimation = healthFadeSpeed > 0 || healthAnimationDelay > 0
+				if (waitAnimation && thePlayer.ticksExisted % healthFadeSpeed == 0) healthAnimationDelay = (healthAnimationDelay - 1).coerceAtLeast(0)
 
 				val healthText = "${if (targetHealthPercentage < 0.25) "\u00A7c" else if (targetHealthPercentage < 0.5) "\u00A7e" else "\u00A7a"}${DECIMALFORMAT_2.format(targetHealth.toDouble())} (${DECIMALFORMAT_1.format(targetHealthPercentage * 100.0)}%)\u00A7r"
 				val armorText = "${if (targetArmor > 0) "\u00A7b" else "\u00A77"}$targetArmor (${DECIMALFORMAT_2.format(targetArmor / 20.0 * 100.0)}%)\u00A7r"
@@ -340,7 +346,7 @@ class Target : Element()
 
 				RenderUtils.glColor(Color.white) // Reset Color
 
-				easingHealth += ((targetHealth - easingHealth) / 2.0F.pow(10.0F - healthFadeSpeedValue.get())) * RenderUtils.deltaTime
+				if (!waitAnimation) easingHealth += ((targetHealth - easingHealth) / 2.0F.pow(10.0F - healthFadeSpeed)) * RenderUtils.deltaTime
 				easingAbsorption += ((targetAbsorption - easingAbsorption) / 2.0F.pow(10.0F - absorptionFadeSpeedValue.get())) * RenderUtils.deltaTime
 
 				// Draw Target Name

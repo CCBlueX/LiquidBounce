@@ -20,13 +20,10 @@ import net.ccbluex.liquidbounce.utils.misc.StringUtils.stripControlCodes
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.ccbluex.liquidbounce.value.*
-import net.minecraftforge.fml.relauncher.Side
-import net.minecraftforge.fml.relauncher.SideOnly
 import org.lwjgl.input.Mouse
 import java.math.BigDecimal
 import java.math.RoundingMode
 
-@SideOnly(Side.CLIENT)
 class LiquidBounceStyle : Style()
 {
 	private var mouseDown = false

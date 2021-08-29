@@ -5,8 +5,6 @@
  */
 package net.ccbluex.liquidbounce.utils.misc
 
-import net.minecraftforge.fml.relauncher.Side
-import net.minecraftforge.fml.relauncher.SideOnly
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.*
@@ -14,7 +12,6 @@ import java.util.regex.Pattern
 import kotlin.math.abs
 import kotlin.math.floor
 
-@SideOnly(Side.CLIENT)
 object StringUtils
 {
 	val URL_PATTERN: Pattern = Pattern.compile("((?:[a-z0-9]{2,}://)?(?:(?:[0-9]{1,3}\\.){3}[0-9]{1,3}|(?:[-\\w_.]+\\.[a-z]{2,}?))(?::[0-9]{1,5})?.*?(?=[!\"\u00A7 \n]|$))", Pattern.CASE_INSENSITIVE)

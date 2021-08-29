@@ -7,10 +7,7 @@ package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IServerData
 import net.ccbluex.liquidbounce.ui.client.GuiMainMenu
-import net.minecraftforge.fml.relauncher.Side
-import net.minecraftforge.fml.relauncher.SideOnly
 
-@SideOnly(Side.CLIENT)
 object ServerUtils : MinecraftInstance()
 {
 	@JvmStatic

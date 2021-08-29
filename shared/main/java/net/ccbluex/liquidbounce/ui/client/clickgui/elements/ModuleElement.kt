@@ -7,11 +7,8 @@ package net.ccbluex.liquidbounce.ui.client.clickgui.elements
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.module.Module
-import net.minecraftforge.fml.relauncher.Side
-import net.minecraftforge.fml.relauncher.SideOnly
 import org.lwjgl.input.Mouse
 
-@SideOnly(Side.CLIENT)
 class ModuleElement(val module: Module) : ButtonElement(module.name)
 {
 	var isShowSettings = false

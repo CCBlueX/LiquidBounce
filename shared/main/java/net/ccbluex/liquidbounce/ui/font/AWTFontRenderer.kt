@@ -7,8 +7,6 @@ package net.ccbluex.liquidbounce.ui.font
 
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
-import net.minecraftforge.fml.relauncher.Side
-import net.minecraftforge.fml.relauncher.SideOnly
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 import java.awt.Font
@@ -19,7 +17,6 @@ import java.awt.image.BufferedImage
 /**
  * Generate new bitmap based font renderer
  */
-@SideOnly(Side.CLIENT)
 class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, private var loadingScreen: Boolean = false) : MinecraftInstance()
 {
 	companion object

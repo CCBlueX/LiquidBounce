@@ -10,10 +10,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.Element
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.stripControlCodes
-import net.minecraftforge.fml.relauncher.Side
-import net.minecraftforge.fml.relauncher.SideOnly
 
-@SideOnly(Side.CLIENT)
 abstract class Panel(val name: String, x: Int, y: Int, width: Int, height: Int, open: Boolean) : MinecraftInstance()
 {
 	var x: Int

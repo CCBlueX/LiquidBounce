@@ -27,7 +27,7 @@ class AntiModDisable : MinecraftInstance(), Listenable
 
 		if (enabled && !mc.isIntegratedServerRunning) try
 		{
-			if (blockFMLProxyPackets && "net.minecraftforge.fml.common.network.internal.FMLProxyPacket" == packet.javaClass.name) action(event, "FMLProxyPacket")
+			if (blockFMLProxyPackets && packet.javaClass.name.equals("net.minecraftforge.fml.common.network.internal.FMLProxyPacket", ignoreCase = true)) action(event, "FMLProxyPacket")
 
 			val provider = classProvider
 

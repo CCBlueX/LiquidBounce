@@ -2,8 +2,6 @@ package net.vitox
 
 import net.ccbluex.liquidbounce.LiquidBounce.wrapper
 import net.ccbluex.liquidbounce.api.minecraft.client.IMinecraft
-import net.minecraftforge.fml.relauncher.Side
-import net.minecraftforge.fml.relauncher.SideOnly
 import net.vitox.particle.util.RenderUtils
 import java.util.*
 
@@ -13,7 +11,6 @@ import java.util.*
  * @author  Vitox
  * @version 3.0
  */
-@SideOnly(Side.CLIENT)
 class ParticleGenerator(private val amount: Int, private val mouseOverRange: Int)
 {
 	private val particles: MutableCollection<Particle>

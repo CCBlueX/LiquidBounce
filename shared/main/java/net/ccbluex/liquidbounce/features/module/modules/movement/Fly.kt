@@ -39,7 +39,6 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.util.MathHelper
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
 import java.awt.Color
@@ -1225,8 +1224,8 @@ class Fly : Module()
 					val maxSpeed = rscMaxSpeedValue.get() / 100f
 					if (speed > maxSpeed) speed = maxSpeed
 					val f = thePlayer.rotationYaw * 0.017453292f
-					thePlayer.motionX -= MathHelper.sin(f) * speed
-					thePlayer.motionZ += MathHelper.cos(f) * speed
+					thePlayer.motionX -= func.sin(f) * speed
+					thePlayer.motionZ += func.cos(f) * speed
 
 					event.x = thePlayer.motionX
 					event.z = thePlayer.motionZ

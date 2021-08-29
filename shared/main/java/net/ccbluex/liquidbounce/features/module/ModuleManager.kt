@@ -27,6 +27,7 @@ import java.util.*
 // TODO: ProjectileAimbot (https://github.com/CCBlueX/Old-LiquidBounce-Issues/issues/3496)
 // TODO: AutoEnchant
 // TODO: FarmBot (Wheat Nuker + Automatically plants seeds)
+// TODO: AutoFishHook + FishHookAimbot(or integrate FishHook support to ProjectileAimbot)
 class ModuleManager : Listenable
 {
 	val modules = TreeSet<Module> { module1, module2 -> module1.name.compareTo(module2.name) }

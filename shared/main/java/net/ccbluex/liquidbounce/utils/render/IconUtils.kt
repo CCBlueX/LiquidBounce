@@ -7,14 +7,11 @@ package net.ccbluex.liquidbounce.utils.render
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.ClientUtils.logger
-import net.minecraftforge.fml.relauncher.Side
-import net.minecraftforge.fml.relauncher.SideOnly
 import java.io.IOException
 import java.io.InputStream
 import java.nio.ByteBuffer
 import javax.imageio.ImageIO
 
-@SideOnly(Side.CLIENT)
 object IconUtils
 {
 	@JvmStatic

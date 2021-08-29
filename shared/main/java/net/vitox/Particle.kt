@@ -1,7 +1,5 @@
 package net.vitox
 
-import net.minecraftforge.fml.relauncher.Side
-import net.minecraftforge.fml.relauncher.SideOnly
 import net.vitox.particle.util.RenderUtils
 import kotlin.random.Random
 
@@ -11,7 +9,6 @@ import kotlin.random.Random
  * @author  Vitox
  * @version 3.0
  */
-@SideOnly(Side.CLIENT)
 internal class Particle(var x: Float, var y: Float)
 {
 	private val ySpeed = Random.nextInt(5).toFloat()

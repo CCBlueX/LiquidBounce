@@ -11,14 +11,11 @@ import net.ccbluex.liquidbounce.LiquidBounce.wrapper
 import net.ccbluex.liquidbounce.api.minecraft.INetworkManager
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.network.login.server.ISPacketEncryptionRequest
-import net.minecraftforge.fml.relauncher.Side
-import net.minecraftforge.fml.relauncher.SideOnly
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import java.security.PublicKey
 import javax.crypto.SecretKey
 
-@SideOnly(Side.CLIENT)
 object ClientUtils : MinecraftInstance()
 {
 	@JvmStatic
