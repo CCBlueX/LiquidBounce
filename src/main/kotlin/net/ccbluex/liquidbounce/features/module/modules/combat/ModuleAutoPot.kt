@@ -48,7 +48,7 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
 
     val delay by int("Delay", 10, 10..20)
     val health by int("Health", 18, 1..20)
-    val groundDistance by float("GroundDistance", 2f, 0.1f..5f)
+    val tillGroundDistance by float("TillGroundDistance", 2f, 1f..5f)
 
     val rotations = tree(RotationsConfigurable())
 
@@ -74,7 +74,7 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
             if (potHotBar != null) {
                 val collisionBlock = FallingPlayer.fromPlayer(player).findCollision(20)?.pos
 
-                if ((player.y - 1.0) - collisionBlock!!.y >= groundDistance) {
+                if (player.y - (collisionBlock?.y ?: 0) > tillGroundDistance) {
                     return@repeatable
                 }
 
