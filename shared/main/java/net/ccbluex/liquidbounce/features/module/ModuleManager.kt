@@ -268,7 +268,7 @@ class ModuleManager : Listenable
 	 */
 	internal fun generateCommand(module: Module)
 	{
-		val values = module.values
+		val values = module.flatValues
 
 		if (values.isEmpty()) return
 

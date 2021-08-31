@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.ClassUtils.hasForge
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import net.minecraftforge.common.ForgeVersion
+import org.lwjgl.opengl.Display
 import org.spongepowered.asm.mixin.MixinEnvironment
 import org.spongepowered.asm.util.VersionNumber
 
@@ -74,6 +75,8 @@ object LiquidBounce
 	// Menu Background
 	var background: IResourceLocation? = null
 
+	var currentProgress: String? = null
+
 	// Discord RPC
 	lateinit var clientRichPresence: ClientRichPresence
 
@@ -83,7 +86,14 @@ object LiquidBounce
 	val title: String = run {
 		val arr = mutableListOf("$CLIENT_NAME b$CLIENT_VERSION by $CLIENT_CREATOR", "Kotlin ${KotlinVersion.CURRENT}", "Nashorn ${Version.version()}", "Backend $MINECRAFT_VERSION", "Source https://github.com/hsheric0210/LiquidBounce")
 		if (IN_DEV) arr += "DEVELOPMENT BUILD"
+		if (currentProgress != null) arr += currentProgress!!
 		arr.joinToString(" | ")
+	}
+
+	fun updateProgress(progress: String?)
+	{
+		currentProgress = "$progress"
+		Display.setTitle(title)
 	}
 
 	/**
@@ -104,11 +114,17 @@ object LiquidBounce
 		ClientUtils.logger.info("Jinput: ${net.java.games.util.Version.getVersion()}")
 		ClientUtils.logger.info("Jutils: ${net.java.games.util.Version.getVersion()}")
 
+		updateProgress("Initializing FileManager")
+
 		// Create file manager
 		fileManager = FileManager()
 
+		updateProgress("Initializing EventManager")
+
 		// Crate event manager
 		eventManager = EventManager()
+
+		updateProgress("Initializing Special Event Listeners")
 
 		// Register listeners
 		eventManager.registerListener(RotationUtils())
@@ -118,18 +134,28 @@ object LiquidBounce
 		eventManager.registerListener(InventoryUtils())
 		eventManager.registerListener(LocationCache())
 
+		updateProgress("Initializing Discord RPC")
+
 		// Init Discord RPC
 		clientRichPresence = ClientRichPresence()
+
+		updateProgress("Initializing CommandManager")
 
 		// Create command manager
 		commandManager = CommandManager()
 
+		updateProgress("Loading Fonts")
+
 		// Load client fonts
 		Fonts.loadFonts()
+
+		updateProgress("Initializing ModuleManager")
 
 		// Setup module manager and register modules
 		moduleManager = ModuleManager()
 		moduleManager.registerModules()
+
+		updateProgress("Loading Scripts")
 
 		try
 		{
@@ -146,15 +172,23 @@ object LiquidBounce
 			ClientUtils.logger.error("Failed to load scripts.", throwable)
 		}
 
+		updateProgress("Registering Commands")
+
 		// Register commands
 		commandManager.registerCommands()
+
+		updateProgress("Loading configs")
 
 		// Load configs
 		FileManager.loadConfigs(fileManager.modulesConfig, fileManager.valuesConfig, fileManager.accountsConfig, fileManager.friendsConfig, fileManager.xrayConfig, fileManager.shortcutsConfig)
 
+		updateProgress("Initializing ClickGUI")
+
 		// ClickGUI
 		clickGui = ClickGui()
 		FileManager.loadConfig(fileManager.clickGuiConfig)
+
+		updateProgress("Registering Tabs")
 
 		// Tabs (Only for Forge!)
 		if (hasForge())
@@ -163,6 +197,8 @@ object LiquidBounce
 			ExploitsTab()
 			HeadsTab()
 		}
+
+		updateProgress("Registering Cape Service")
 
 		// Register capes service
 		try
@@ -174,12 +210,16 @@ object LiquidBounce
 			ClientUtils.logger.error("Failed to register cape service", throwable)
 		}
 
+		updateProgress("Creating HUD")
+
 		// Set HUD
 		hud = createDefault()
 		FileManager.loadConfig(fileManager.hudConfig)
 
 		// Disable optifine fastrender
 		// ClientUtils.disableFastRender()
+
+		updateProgress("Checking for updates")
 
 		try
 		{
@@ -197,8 +237,12 @@ object LiquidBounce
 			ClientUtils.logger.error("Failed to check for updates.", exception)
 		}
 
+		updateProgress("Loading Alt Generators")
+
 		// Load generators
 		GuiAltManager.loadGenerators()
+
+		updateProgress("Establishing Discord RPC")
 
 		// Setup Discord RPC
 		if (clientRichPresence.showRichPresenceValue)
@@ -217,6 +261,8 @@ object LiquidBounce
 
 		// Set is starting status
 		isStarting = false
+
+		updateProgress(null) // Done
 	}
 
 	/**

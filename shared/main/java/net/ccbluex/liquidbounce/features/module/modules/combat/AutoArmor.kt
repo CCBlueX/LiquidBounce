@@ -121,7 +121,7 @@ class AutoArmor : Module()
 	}
 
 	val isLocked: Boolean
-		get() = !state || locked
+		get() = state && locked // TODO: Check this workaround really works
 
 	/**
 	 * Shift+Left clicks the specified item
@@ -129,7 +129,7 @@ class AutoArmor : Module()
 	 * @param  item
 	 * Slot of the item to click
 	 * @param  isArmorSlot
-	 * @return             True if it is unable to move the item
+	 * @return             False if it is unable to move the item
 	 */
 	private fun move(thePlayer: IEntityPlayerSP, netHandler: IINetHandlerPlayClient, item: Int, isArmorSlot: Boolean): Boolean
 	{

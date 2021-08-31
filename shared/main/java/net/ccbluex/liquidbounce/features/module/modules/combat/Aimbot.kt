@@ -20,25 +20,17 @@ import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
 import kotlin.math.abs
 import kotlin.random.Random
 
 @ModuleInfo(name = "Aimbot", description = "Automatically faces selected entities around you.", category = ModuleCategory.COMBAT)
 class Aimbot : Module()
 {
-	/**
-	 * Target Range
-	 */
 	private val rangeValue = FloatValue("Range", 4.4F, 1F, 8F)
 
-	/**
-	 * Acceleration
-	 */
-	private val maxAccelerationRatioValue: FloatValue = object : FloatValue("MaxAccelerationRatio", 0f, 0f, .99f)
+	private val accelerationGroup = ValueGroup("Acceleration")
+	private val maxAccelerationRatioValue: FloatValue = object : FloatValue("Max", 0f, 0f, .99f, "MaxAccelerationRatio")
 	{
 		override fun onChanged(oldValue: Float, newValue: Float)
 		{
@@ -46,7 +38,7 @@ class Aimbot : Module()
 			if (v > newValue) this.set(v)
 		}
 	}
-	private val minAccelerationRatioValue: FloatValue = object : FloatValue("MinAccelerationRatio", 0f, 0f, .99f)
+	private val minAccelerationRatioValue: FloatValue = object : FloatValue("Min", 0f, 0f, .99f, "MinAccelerationRatio")
 	{
 		override fun onChanged(oldValue: Float, newValue: Float)
 		{
@@ -55,10 +47,8 @@ class Aimbot : Module()
 		}
 	}
 
-	/**
-	 * TurnSpeed
-	 */
-	private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 2f, 1f, 180f)
+	private val turnSpeedGroup = ValueGroup("TurnSpeed")
+	private val maxTurnSpeedValue: FloatValue = object : FloatValue("Max", 2f, 1f, 180f, "MaxTurnSpeed")
 	{
 		override fun onChanged(oldValue: Float, newValue: Float)
 		{
@@ -66,7 +56,7 @@ class Aimbot : Module()
 			if (v > newValue) this.set(v)
 		}
 	}
-	private val minTurnSpeedValue: FloatValue = object : FloatValue("MinTurnSpeed", 1f, 1f, 180f)
+	private val minTurnSpeedValue: FloatValue = object : FloatValue("Min", 1f, 1f, 180f, "MinTurnSpeed")
 	{
 		override fun onChanged(oldValue: Float, newValue: Float)
 		{
@@ -75,37 +65,31 @@ class Aimbot : Module()
 		}
 	}
 
-	/**
-	 * Field of View
-	 */
 	private val fovValue = FloatValue("FoV", 30F, 1F, 180F)
 
-	/**
-	 * Target Predict
-	 */
-	private val predictValue = BoolValue("Predict", true)
-	private val maxPredictSizeValue: FloatValue = object : FloatValue("MaxPredictSize", 1f, -2f, 2f)
+	private val predictGroup = ValueGroup("Predict")
+	private val predictEnemyGroup = ValueGroup("Enemy")
+	private val predictEnemyValue = BoolValue("Enabled", true)
+	private val maxEnemyPredictSizeValue: FloatValue = object : FloatValue("Max", 1f, -2f, 2f, "MaxPredictSize")
 	{
 		override fun onChanged(oldValue: Float, newValue: Float)
 		{
-			val v = minPredictSizeValue.get()
+			val v = minEnemyPredictSizeValue.get()
 			if (v > newValue) set(v)
 		}
 	}
-	private val minPredictSizeValue: FloatValue = object : FloatValue("MinPredictSize", 1f, -2f, 2f)
+	private val minEnemyPredictSizeValue: FloatValue = object : FloatValue("Min", 1f, -2f, 2f, "MinPredictSize")
 	{
 		override fun onChanged(oldValue: Float, newValue: Float)
 		{
-			val v = maxPredictSizeValue.get()
+			val v = maxEnemyPredictSizeValue.get()
 			if (v < newValue) set(v)
 		}
 	}
 
-	/**
-	 * Player Predict
-	 */
-	private val playerPredictValue = BoolValue("PlayerPredict", true)
-	private val maxPlayerPredictSizeValue: FloatValue = object : FloatValue("MaxPlayerPredictSize", 1f, -2f, 2f)
+	private val predictPlayerGroup = ValueGroup("Player")
+	private val playerPredictValue = BoolValue("Enabled", true)
+	private val maxPlayerPredictSizeValue: FloatValue = object : FloatValue("Max", 1f, -2f, 2f, "MaxPlayerPredictSize")
 	{
 		override fun onChanged(oldValue: Float, newValue: Float)
 		{
@@ -113,7 +97,7 @@ class Aimbot : Module()
 			if (v > newValue) set(v)
 		}
 	}
-	private val minPlayerPredictSizeValue: FloatValue = object : FloatValue("MinPlayerPredictSize", 1f, -2f, 2f)
+	private val minPlayerPredictSizeValue: FloatValue = object : FloatValue("Min", 1f, -2f, 2f, "MinPlayerPredictSize")
 	{
 		override fun onChanged(oldValue: Float, newValue: Float)
 		{
@@ -137,35 +121,15 @@ class Aimbot : Module()
 	 */
 	private val lockValue = BoolValue("Lock", true)
 
-	/**
-	 * OnClick
-	 */
-	private val onClickValue = BoolValue("OnClick", false)
-	private val onClickKeepValue = IntegerValue("OnClickKeepTime", 500, 0, 1000)
+	private val onClickGroup = ValueGroup("OnClick")
+	private val onClickValue = BoolValue("Enabled", false)
+	private val onClickKeepValue = IntegerValue("KeepTime", 500, 0, 1000)
 
-	/**
-	 * Jitter
-	 */
-	private val jitterValue = BoolValue("Jitter", false)
-	private val jitterRateYaw = IntegerValue("YawJitterRate", 50, 1, 100)
-	private val jitterRatePitch = IntegerValue("PitchJitterRate", 50, 1, 100)
-	private val minYawJitterStrengthValue: FloatValue = object : FloatValue("MinYawJitterStrength", 0f, 0f, 5f)
-	{
-		override fun onChanged(oldValue: Float, newValue: Float)
-		{
-			val i = maxYawJitterStrengthValue.get()
-			if (i < newValue) this.set(i)
-		}
-	}
-	private val maxPitchJitterStrengthValue: FloatValue = object : FloatValue("MaxPitchJitterStrength", 1f, 0f, 5f)
-	{
-		override fun onChanged(oldValue: Float, newValue: Float)
-		{
-			val i = minPitchJitterStrengthValue.get()
-			if (i > newValue) this.set(i)
-		}
-	}
-	private val maxYawJitterStrengthValue: FloatValue = object : FloatValue("MaxYawJitterStrength", 1f, 0f, 5f)
+	private val jitterGroup = ValueGroup("Jitter")
+	private val jitterValue = BoolValue("Enabled", false)
+	private val jitterRateYaw = IntegerValue("YawRate", 50, 1, 100)
+	private val jitterRatePitch = IntegerValue("PitchRate", 50, 1, 100)
+	private val maxYawJitterStrengthValue: FloatValue = object : FloatValue("MaxYawStrength", 1f, 0f, 5f)
 	{
 		override fun onChanged(oldValue: Float, newValue: Float)
 		{
@@ -173,7 +137,23 @@ class Aimbot : Module()
 			if (i > newValue) this.set(i)
 		}
 	}
-	private val minPitchJitterStrengthValue: FloatValue = object : FloatValue("MinPitchJitterStrength", 0f, 0f, 5f)
+	private val minYawJitterStrengthValue: FloatValue = object : FloatValue("MinYawStrength", 0f, 0f, 5f)
+	{
+		override fun onChanged(oldValue: Float, newValue: Float)
+		{
+			val i = maxYawJitterStrengthValue.get()
+			if (i < newValue) this.set(i)
+		}
+	}
+	private val maxPitchJitterStrengthValue: FloatValue = object : FloatValue("MaxPitchStrength", 1f, 0f, 5f)
+	{
+		override fun onChanged(oldValue: Float, newValue: Float)
+		{
+			val i = minPitchJitterStrengthValue.get()
+			if (i > newValue) this.set(i)
+		}
+	}
+	private val minPitchJitterStrengthValue: FloatValue = object : FloatValue("MinPitchStrength", 0f, 0f, 5f)
 	{
 		override fun onChanged(oldValue: Float, newValue: Float)
 		{
@@ -182,12 +162,14 @@ class Aimbot : Module()
 		}
 	}
 
-	private val hitboxDecrementValue = FloatValue("SearchCenter-HitboxShrink", 0.1f, 0.15f, 0.45f)
-	private val centerSearchSensitivityValue = IntegerValue("SearchCenter-Steps", 8, 4, 20)
+	private val searchCenterGroup = ValueGroup("SearchCenter")
+	private val hitboxDecrementValue = FloatValue("Shrink", 0.1f, 0.15f, 0.45f)
+	private val centerSearchSensitivityValue = IntegerValue("Steps", 8, 4, 20)
 
-	private val aimFrictionValue = FloatValue("AimFriction", 0.6F, 0.3F, 1F)
-	private val aimFrictionTimingValue = ListValue("AimFrictionTiming", arrayOf("Before", "After"), "Before")
-	private val resetThresoldValue = FloatValue("AimUnlockThresholdSpeed", 0.8F, 0.5F, 2F)
+	private val frictionGroup = ValueGroup("Friction")
+	private val aimFrictionValue = FloatValue("Friction", 0.6F, 0.3F, 1F)
+	private val aimFrictionTimingValue = ListValue("Timing", arrayOf("Before", "After"), "Before")
+	private val resetThresoldValue = FloatValue("UnlockThreshold", 0.8F, 0.5F, 2F)
 
 	private val clickTimer = MSTimer()
 
@@ -195,6 +177,19 @@ class Aimbot : Module()
 
 	private var yawMovement = 0F
 	private var pitchMovement = 0F
+
+	init
+	{
+		accelerationGroup.addAll(maxAccelerationRatioValue, minAccelerationRatioValue)
+		turnSpeedGroup.addAll(maxTurnSpeedValue, minTurnSpeedValue)
+		predictEnemyGroup.addAll(predictEnemyValue, maxEnemyPredictSizeValue, minEnemyPredictSizeValue)
+		predictPlayerGroup.addAll(playerPredictValue, maxPlayerPredictSizeValue, minPlayerPredictSizeValue)
+		predictGroup.addAll(predictEnemyGroup, predictPlayerGroup)
+		onClickGroup.addAll(onClickValue, onClickKeepValue)
+		jitterGroup.addAll(jitterValue, jitterRateYaw, jitterRatePitch, maxYawJitterStrengthValue, minYawJitterStrengthValue, maxPitchJitterStrengthValue, minPitchJitterStrengthValue)
+		searchCenterGroup.addAll(hitboxDecrementValue, centerSearchSensitivityValue)
+		frictionGroup.addAll(aimFrictionValue, aimFrictionTimingValue, resetThresoldValue)
+	}
 
 	@EventTarget
 	fun onMotion(@Suppress("UNUSED_PARAMETER") event: MotionEvent)
@@ -242,10 +237,10 @@ class Aimbot : Module()
 
 		var targetBB = entity.entityBoundingBox
 
-		if (predictValue.get())
+		if (predictEnemyValue.get())
 		{
-			val minPredictSize = minPredictSizeValue.get()
-			val maxPredictSize = maxPredictSizeValue.get()
+			val minPredictSize = minEnemyPredictSizeValue.get()
+			val maxPredictSize = maxEnemyPredictSizeValue.get()
 
 			val xPredict = (entity.posX - entity.lastTickPosX) * RandomUtils.nextFloat(minPredictSize, maxPredictSize)
 			val yPredict = (entity.posY - entity.lastTickPosY) * RandomUtils.nextFloat(minPredictSize, maxPredictSize)
@@ -264,7 +259,7 @@ class Aimbot : Module()
 		if (jitter) flags = flags or RotationUtils.JITTER
 		if (throughWalls) flags = flags or RotationUtils.SKIP_VISIBLE_CHECK
 		if (playerPredict) flags = flags or RotationUtils.PLAYER_PREDICT
-		if (predictValue.get()) flags = flags or RotationUtils.ENEMY_PREDICT
+		if (predictEnemyValue.get()) flags = flags or RotationUtils.ENEMY_PREDICT
 
 		val targetRotation = (RotationUtils.searchCenter(theWorld, thePlayer, targetBB, flags, jitterData, playerPredictSize, range, hitboxDecrementValue.get().toDouble(), centerSearchSensitivityValue.get(), 0.0) ?: return).rotation
 

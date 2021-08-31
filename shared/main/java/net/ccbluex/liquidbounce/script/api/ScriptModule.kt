@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.value.AbstractValue
 import net.ccbluex.liquidbounce.value.Value
 
 @Suppress("unused")
@@ -47,6 +48,9 @@ class ScriptModule(private val moduleObject: JSObject) : Module()
 
 	override val values: List<Value<*>>
 		get() = _values.values.toList()
+
+	override val flatValues: List<AbstractValue>
+		get() = values
 
 	override var tag: String?
 		get() = _tag

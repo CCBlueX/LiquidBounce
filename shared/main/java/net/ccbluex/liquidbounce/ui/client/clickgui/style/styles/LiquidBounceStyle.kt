@@ -88,6 +88,7 @@ class LiquidBounceStyle : Style()
 				var yPos = elementY + 4
 				for (value in moduleValues)
 				{
+					if (value !is Value<*>) continue // FIXME
 					val isNumber = value.get() is Number
 					if (isNumber) assumeNonVolatile = false
 					if (value is BoolValue)

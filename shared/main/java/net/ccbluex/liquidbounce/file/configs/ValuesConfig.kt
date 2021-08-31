@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.ui.client.altmanager.sub.GuiDonatorCape.Companio
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.altgenerator.GuiTheAltening.Companion.apiKey
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
-import net.ccbluex.liquidbounce.value.Value
+import net.ccbluex.liquidbounce.value.AbstractValue
 import java.io.File
 import java.io.IOException
 import java.util.function.Consumer
@@ -119,6 +119,8 @@ class ValuesConfig(file: File) : FileConfig(file)
 						val element = jsonModule[moduleValue.name]
 						if (element != null) moduleValue.fromJson(element)
 					}
+
+					module.flatValues.filter { it.otherName != null && jsonModule.has(it.otherName) }.forEach { it.fromJson(jsonModule[it.otherName]) }
 				}
 			}
 		}
@@ -182,7 +184,7 @@ class ValuesConfig(file: File) : FileConfig(file)
 
 		LiquidBounce.moduleManager.modules.filter { it.values.isNotEmpty() }.forEach { module: Module ->
 			val jsonModule = JsonObject()
-			module.values.forEach(Consumer { value: Value<*> -> jsonModule.add(value.name, value.toJson()) })
+			module.values.forEach(Consumer { value: AbstractValue -> jsonModule.add(value.name, value.toJson()) })
 			jsonObject.add(module.name, jsonModule)
 		}
 

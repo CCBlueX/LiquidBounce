@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import co.uk.hexeption.utils.OutlineUtils
+import net.ccbluex.liquidbounce.api.MinecraftVersion
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render2DEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
@@ -13,15 +14,13 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.world.ChestAura.clickedBlocks
+import net.ccbluex.liquidbounce.injection.backend.Backend
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.GlowShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.OutlineShader
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
@@ -30,40 +29,48 @@ class StorageESP : Module()
 {
 	private val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "Hydra", "Outline", "ShaderOutline", "ShaderGlow", "2D", "WireFrame"), "Outline")
 
-	private val chestValue = BoolValue("Chest", true)
-	private val chestRedValue = IntegerValue("Chest-R", 0, 0, 255)
-	private val chestGreenValue = IntegerValue("Chest-G", 66, 0, 255)
-	private val chestBlueValue = IntegerValue("Chest-B", 255, 0, 255)
-	private val chestRainbowValue = BoolValue("Chest-Rainbow", false)
+	private val chestGroup = ValueGroup("Chest")
+	private val chestValue = BoolValue("Enabled", true)
+	private val chestRedValue = IntegerValue("Red", 0, 0, 255)
+	private val chestGreenValue = IntegerValue("Green", 66, 0, 255)
+	private val chestBlueValue = IntegerValue("Blue", 255, 0, 255)
+	private val chestRainbowValue = BoolValue("Rainbow", false)
+
+	private val trappedChestGroup = ValueGroup("TrappedChest")
 	private val trappedChestRedValue = IntegerValue("TrappedChest-R", 0, 0, 255)
 	private val trappedChestGreenValue = IntegerValue("TrappedChest-G", 66, 0, 255)
 	private val trappedChestBlueValue = IntegerValue("TrappedChest-B", 255, 0, 255)
 	private val trappedChestRainbowValue = BoolValue("TrappedChest-Rainbow", false)
 
+	private val enderChestGroup = ValueGroup("EnderChest")
 	private val enderChestValue = BoolValue("EnderChest", true)
 	private val enderChestRedValue = IntegerValue("EnderChest-R", 255, 0, 255)
 	private val enderChestGreenValue = IntegerValue("EnderChest-G", 0, 0, 255)
 	private val enderChestBlueValue = IntegerValue("EnderChest-B", 255, 0, 255)
 	private val enderChestRainbowValue = BoolValue("EnderChest-Rainbow", false)
 
+	private val furnaceGroup = ValueGroup("Furnace")
 	private val furnaceValue = BoolValue("Furnace", true)
 	private val furnaceRedValue = IntegerValue("Furnace-R", 0, 0, 255)
 	private val furnaceGreenValue = IntegerValue("Furnace-G", 0, 0, 255)
 	private val furnaceBlueValue = IntegerValue("Furnace-B", 0, 0, 255)
 	private val furnaceRainbowValue = BoolValue("Furnace-Rainbow", false)
 
+	private val dispenserGroup = ValueGroup("Dispenser")
 	private val dispenserValue = BoolValue("Dispenser", true)
 	private val dispenserRedValue = IntegerValue("Dispenser-R", 0, 0, 255)
 	private val dispenserGreenValue = IntegerValue("Dispenser-G", 0, 0, 255)
 	private val dispenserBlueValue = IntegerValue("Dispenser-B", 0, 0, 255)
 	private val dispenserRainbowValue = BoolValue("Dispenser-Rainbow", false)
 
+	private val hopperGroup = ValueGroup("Hopper")
 	private val hopperValue = BoolValue("Hopper", true)
 	private val hopperRedValue = IntegerValue("Hopper-R", 128, 0, 255)
 	private val hopperGreenValue = IntegerValue("Hopper-G", 128, 0, 255)
 	private val hopperBlueValue = IntegerValue("Hopper-B", 128, 0, 255)
 	private val hopperRainbowValue = BoolValue("Hopper-Rainbow", false)
 
+	private val shulkerBoxGroup = ValueGroup("ShulkerBox")
 	private val shulkerBoxValue = BoolValue("ShulkerBox", true)
 	private val shulkerBoxRedValue = IntegerValue("ShulkerBox-R", 110, 0, 255)
 	private val shulkerBoxGreenValue = IntegerValue("ShulkerBox-G", 77, 0, 255)
@@ -72,15 +79,39 @@ class StorageESP : Module()
 
 	private val alphaValue = IntegerValue("Alpha", 60, 0, 255)
 
-	private val boxOutlineAlphaValue = IntegerValue("Box-Outline-Alpha", 90, 0, 255)
+	private val boxOutlineAlphaValue = object : IntegerValue("Box-Outline-Alpha", 90, 0, 255)
+	{
+		override fun showCondition(): Boolean = modeValue.get().equals("Box", ignoreCase = true)
+	}
 
-	private val outlineWidthValue = FloatValue("Outline-Width", 3F, 0.5F, 3F)
-	private val wireFrameWidthValue = FloatValue("WireFrame-Width", 1.5F, 0.5F, 3F)
+	private val outlineWidthValue = object : FloatValue("Outline-Width", 3F, 0.5F, 3F)
+	{
+		override fun showCondition(): Boolean = modeValue.get().equals("Outline", ignoreCase = true)
+	}
+
+	private val wireFrameWidthValue = object : FloatValue("WireFrame-Width", 1.5F, 0.5F, 3F)
+	{
+		override fun showCondition(): Boolean = modeValue.get().equals("WireFrame", ignoreCase = true)
+	}
 
 	private val rainbowSpeedValue = IntegerValue("Rainbow-Speed", 10, 1, 10)
 
 	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
 	private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
+
+	init
+	{
+		trappedChestGroup.addAll(trappedChestRedValue, trappedChestGreenValue, trappedChestBlueValue, trappedChestRainbowValue)
+		chestGroup.addAll(chestValue, chestRedValue, chestGreenValue, chestBlueValue, chestRainbowValue, trappedChestGroup)
+
+		enderChestGroup.addAll(enderChestValue, enderChestRedValue, enderChestGreenValue, enderChestBlueValue, enderChestRainbowValue)
+		furnaceGroup.addAll(furnaceValue, furnaceRedValue, furnaceGreenValue, furnaceBlueValue, furnaceRainbowValue)
+		dispenserGroup.addAll(dispenserValue, dispenserRedValue, dispenserGreenValue, dispenserBlueValue, dispenserRainbowValue)
+		hopperGroup.addAll(hopperValue, hopperRedValue, hopperGreenValue, hopperBlueValue, hopperRainbowValue)
+		shulkerBoxGroup.addAll(shulkerBoxValue, shulkerBoxRedValue, shulkerBoxGreenValue, shulkerBoxBlueValue, shulkerBoxRainbowValue)
+
+		shulkerBoxGroup.isSupported = Backend.REPRESENTED_BACKEND_VERSION != MinecraftVersion.MC_1_8
+	}
 
 	@EventTarget
 	fun onRender3D(event: Render3DEvent)

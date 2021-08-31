@@ -290,7 +290,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 			Side.Horizontal.RIGHT -> -borderExpand - textWidth to borderExpand
 		}
 
-		val borderYStart = -borderExpand
+		var borderYStart = -borderExpand
 		val borderYEnd = fontRenderer.fontHeight.toFloat() + borderExpand
 
 		// Rect mode
@@ -363,6 +363,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 
 			if (backgroundRainbowCeil) RainbowShader.begin(true, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
 				RenderUtils.drawRect(backgroundXStart, borderYStart - 1, backgroundXEnd, borderYStart, 0)
+				borderYStart--
 			}
 		}
 

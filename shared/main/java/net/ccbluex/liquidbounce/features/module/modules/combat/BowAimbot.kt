@@ -21,19 +21,20 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.ValueGroup
 
 @ModuleInfo(name = "BowAimbot", description = "Automatically aims at players when using a bow.", category = ModuleCategory.COMBAT)
 class BowAimbot : Module()
 {
 	private val silentRotationValue = BoolValue("SilentRotation", true)
 
-	private val predictValue = BoolValue("Predict", true)
+	private val predictGroup = ValueGroup("Predict")
 
-	/**
-	 * Player Predict
-	 */
-	private val playerPredictValue = BoolValue("PlayerPredict", true)
-	private val maxPlayerPredictSizeValue: FloatValue = object : FloatValue("MaxPlayerPredictSize", 1f, -2f, 2f)
+	private val predictEnemyValue = BoolValue("Enemy", true, "Predict")
+
+	private val predictPlayerGroup = ValueGroup("Player")
+	private val playerPredictValue = BoolValue("Enabled", true, "PlayerPredict")
+	private val maxPlayerPredictSizeValue: FloatValue = object : FloatValue("Max", 1f, -2f, 2f, "MaxPlayerPredictSize")
 	{
 		override fun onChanged(oldValue: Float, newValue: Float)
 		{
@@ -41,7 +42,7 @@ class BowAimbot : Module()
 			if (v > newValue) set(v)
 		}
 	}
-	private val minPlayerPredictSizeValue: FloatValue = object : FloatValue("MinPlayerPredictSize", 1f, -2f, 2f)
+	private val minPlayerPredictSizeValue: FloatValue = object : FloatValue("Min", 1f, -2f, 2f, "MinPlayerPredictSize")
 	{
 		override fun onChanged(oldValue: Float, newValue: Float)
 		{
@@ -60,10 +61,8 @@ class BowAimbot : Module()
 	 */
 	private val priorityValue = ListValue("Priority", arrayOf("Health", "Distance", "ServerDirection", "ClientDirection"), "ServerDirection")
 
-	/**
-	 * Limit TurnSpeed
-	 */
-	private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 180f, 1f, 180f)
+	private val turnSpeedGroup = ValueGroup("TurnSpeed")
+	private val maxTurnSpeedValue: FloatValue = object : FloatValue("Max", 180f, 1f, 180f, "MaxTurnSpeed")
 	{
 		override fun onChanged(oldValue: Float, newValue: Float)
 		{
@@ -71,7 +70,7 @@ class BowAimbot : Module()
 			if (v > newValue) this.set(v)
 		}
 	}
-	private val minTurnSpeedValue: FloatValue = object : FloatValue("MinTurnSpeed", 180f, 1f, 180f)
+	private val minTurnSpeedValue: FloatValue = object : FloatValue("Min", 180f, 1f, 180f, "MinTurnSpeed")
 	{
 		override fun onChanged(oldValue: Float, newValue: Float)
 		{
@@ -80,10 +79,8 @@ class BowAimbot : Module()
 		}
 	}
 
-	/**
-	 * Acceleration
-	 */
-	private val maxAccelerationRatioValue: FloatValue = object : FloatValue("MaxAccelerationRatio", 0f, 0f, .99f)
+	private val accelerationGroup = ValueGroup("Acceleration")
+	private val maxAccelerationRatioValue: FloatValue = object : FloatValue("Max", 0f, 0f, .99f, "MaxAccelerationRatio")
 	{
 		override fun onChanged(oldValue: Float, newValue: Float)
 		{
@@ -91,7 +88,7 @@ class BowAimbot : Module()
 			if (v > newValue) this.set(v)
 		}
 	}
-	private val minAccelerationRatioValue: FloatValue = object : FloatValue("MinAccelerationRatio", 0f, 0f, .99f)
+	private val minAccelerationRatioValue: FloatValue = object : FloatValue("Min", 0f, 0f, .99f, "MinAccelerationRatio")
 	{
 		override fun onChanged(oldValue: Float, newValue: Float)
 		{
@@ -106,6 +103,14 @@ class BowAimbot : Module()
 	private val markValue = BoolValue("Mark", true)
 
 	var target: IEntityLivingBase? = null
+
+	init
+	{
+		predictGroup.addAll(predictEnemyValue, predictPlayerGroup)
+		predictPlayerGroup.addAll(playerPredictValue, maxPlayerPredictSizeValue, minPlayerPredictSizeValue)
+		turnSpeedGroup.addAll(maxTurnSpeedValue, minTurnSpeedValue)
+		accelerationGroup.addAll(maxAccelerationRatioValue, minAccelerationRatioValue)
+	}
 
 	override fun onDisable()
 	{
@@ -127,7 +132,7 @@ class BowAimbot : Module()
 			var flags = 0
 
 			if (throughWallsValue.get()) flags = flags or RotationUtils.SKIP_VISIBLE_CHECK
-			if (predictValue.get()) flags = flags or RotationUtils.ENEMY_PREDICT
+			if (predictEnemyValue.get()) flags = flags or RotationUtils.ENEMY_PREDICT
 			if (playerPredictValue.get()) flags = flags or RotationUtils.PLAYER_PREDICT
 			if (silentRotationValue.get()) flags = flags or RotationUtils.SILENT_ROTATION
 			val playerPredictSize = RotationUtils.MinMaxPair(minPlayerPredictSizeValue.get(), maxPlayerPredictSizeValue.get())

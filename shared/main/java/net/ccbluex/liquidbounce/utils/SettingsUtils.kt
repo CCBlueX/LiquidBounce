@@ -147,8 +147,24 @@ object SettingsUtils
 						when (moduleValue)
 						{
 							is BoolValue -> moduleValue.changeValue(value.toBoolean())
-							is FloatValue -> moduleValue.changeValue(value.toFloat())
 							is IntegerValue -> moduleValue.changeValue(value.toInt())
+
+							is IntegerRangeValue ->
+							{
+								val pieces = value.split('-', limit = 2)
+								moduleValue.changeMinValue(pieces[0].toInt())
+								moduleValue.changeMinValue(pieces[1].toInt())
+							}
+
+							is FloatValue -> moduleValue.changeValue(value.toFloat())
+
+							is FloatRangeValue ->
+							{
+								val pieces = value.split('-', limit = 2)
+								moduleValue.changeMinValue(pieces[0].toFloat())
+								moduleValue.changeMinValue(pieces[1].toFloat())
+							}
+
 							is TextValue -> moduleValue.changeValue(value)
 							is ListValue -> moduleValue.changeValue(value)
 						}
@@ -174,7 +190,12 @@ object SettingsUtils
 		val stringBuilder = StringBuilder()
 
 		LiquidBounce.moduleManager.modules.filter { it.category != ModuleCategory.RENDER }.filter { it !is NameProtect }.filter { it !is Spammer }.forEach { module ->
-			if (values) module.values.forEach { value -> stringBuilder.append(module.name).append(" ").append(value.name).append(" ").append(value.get()).append("\n") }
+			if (values)
+			{
+				val flatValues = module.flatValues
+				flatValues.filterIsInstance<Value<*>>().forEach { value -> stringBuilder.append(module.name).append(" ").append(value.name).append(" ").append(value.get()).append("\n") }
+				flatValues.filterIsInstance<RangeValue<*>>().forEach { value -> stringBuilder.append(module.name).append(" ").append(value.name).append(" ").append(value.getMin()).append("-").append(value.getMax()).append("\n") }
+			}
 
 			if (states) stringBuilder.append(module.name).append(" toggle ").append(module.state).append("\n")
 

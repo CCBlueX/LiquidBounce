@@ -95,6 +95,7 @@ class SlowlyStyle : Style()
 
 				for (value in moduleValues)
 				{
+					if (value !is Value<*>) continue // FIXME
 					val isNumber = value.get() is Number
 
 					if (isNumber) assumeNonVolatile = false

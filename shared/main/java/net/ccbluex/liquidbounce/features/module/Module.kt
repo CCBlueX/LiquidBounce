@@ -12,7 +12,8 @@ import net.ccbluex.liquidbounce.injection.backend.Backend
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
-import net.ccbluex.liquidbounce.value.Value
+import net.ccbluex.liquidbounce.value.AbstractValue
+import net.ccbluex.liquidbounce.value.ValueGroup
 import kotlin.random.Random
 
 open class Module : MinecraftInstance(), Listenable
@@ -148,16 +149,20 @@ open class Module : MinecraftInstance(), Listenable
 	/**
 	 * Get module by [valueName]
 	 */
-	open fun getValue(valueName: String) = values.find { it.name.equals(valueName, ignoreCase = true) }
+	open fun getValue(valueName: String) = flatValues.find { it.name.equals(valueName, ignoreCase = true) || (it.otherName != null && it.otherName.equals(valueName, ignoreCase = true)) }
 
 	/**
 	 * Get all values of module
 	 */
-	open val values: List<Value<*>>
-		get() = javaClass.declaredFields.asSequence().map { valueField ->
-			valueField.isAccessible = true
-			valueField[this]
-		}.filterIsInstance<Value<*>>().filter(Value<*>::isSupported).toList()
+	open val values: List<AbstractValue> by lazy(LazyThreadSafetyMode.NONE, javaClass.declaredFields.asSequence().map { valueField ->
+		valueField.isAccessible = true
+		valueField[this]
+	}.filterIsInstance<AbstractValue>().filter(AbstractValue::isSupported).filterNot(AbstractValue::isBelongsToGroup)::toList)
+
+	open val flatValues: List<AbstractValue> by lazy(LazyThreadSafetyMode.NONE, javaClass.declaredFields.asSequence().map { valueField ->
+		valueField.isAccessible = true
+		valueField[this]
+	}.filterIsInstance<AbstractValue>().filter(AbstractValue::isSupported).filterNot { it is ValueGroup }::toList)
 
 	/**
 	 * Events should be handled when module is enabled
