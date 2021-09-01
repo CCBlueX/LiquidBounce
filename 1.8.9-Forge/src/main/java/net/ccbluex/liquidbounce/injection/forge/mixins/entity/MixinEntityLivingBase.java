@@ -185,8 +185,8 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 		final SwingAnimation sa = (SwingAnimation) LiquidBounce.moduleManager.get(SwingAnimation.class);
 		int swingAnimationEnd = isPotionActive(Potion.digSpeed) ? 6 - (1 + getActivePotionEffect(Potion.digSpeed).getAmplifier()) : isPotionActive(Potion.digSlowdown) ? 6 + (1 + getActivePotionEffect(Potion.digSlowdown).getAmplifier() << 1) : 6;
 
-		if (sa.getState() && sa.getEnableCustomSwingSpeed().get())
-			swingAnimationEnd += sa.getSwingSpeed().get();
+		if (sa.getState() && sa.getSwingSpeedEnabled().get())
+			swingAnimationEnd += sa.getSwingSpeedSwingSpeed().get();
 
 		swingAnimationEnd += sa.swingSpeedBoost;
 
@@ -205,7 +205,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 		if (stack == null || stack.getItem() == null || !stack.getItem().onEntitySwing((EntityLivingBase) (Object) this, stack))
 		{
 			final SwingAnimation sa = (SwingAnimation) LiquidBounce.moduleManager.get(SwingAnimation.class);
-			if (!isSwingInProgress || swingProgressInt >= (sa.getState() ? sa.getSwingProgressLimit().get() : getArmSwingAnimationEnd() >> 1) || swingProgressInt < 0)
+			if (!isSwingInProgress || swingProgressInt >= (sa.getState() ? sa.getSwingSpeedSwingProgressLimit().get() : getArmSwingAnimationEnd() >> 1) || swingProgressInt < 0)
 			{
 				swingProgressInt = -1;
 				isSwingInProgress = true;
