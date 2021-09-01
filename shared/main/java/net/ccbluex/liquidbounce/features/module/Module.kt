@@ -149,7 +149,7 @@ open class Module : MinecraftInstance(), Listenable
 	/**
 	 * Get module by [valueName]
 	 */
-	open fun getValue(valueName: String) = flatValues.find { it.name.equals(valueName, ignoreCase = true) || (it.otherName != null && it.otherName.equals(valueName, ignoreCase = true)) }
+	open fun getValue(valueName: String) = flatValues.find { it.name.equals(valueName, ignoreCase = true) } ?: flatValues.find { it.aliasMatches(valueName) }?.adaptToValue(valueName) // Backward compatibility
 
 	/**
 	 * Get all values of module

@@ -21,6 +21,7 @@ import net.ccbluex.liquidbounce.ui.client.GuiBackground.Companion.particles
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.GuiDonatorCape.Companion.capeEnabled
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.GuiDonatorCape.Companion.transferCode
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.altgenerator.GuiTheAltening.Companion.apiKey
+import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.value.AbstractValue
@@ -44,6 +45,8 @@ class ValuesConfig(file: File) : FileConfig(file)
 	@Throws(IOException::class)
 	override fun loadConfig()
 	{
+		var backwardCompatibility = false
+
 		val jsonElement = JsonParser().parse(MiscUtils.createBufferedFileReader(file))
 		if (jsonElement is JsonNull) return
 		val jsonObject = jsonElement as JsonObject
@@ -113,16 +116,26 @@ class ValuesConfig(file: File) : FileConfig(file)
 				val module = LiquidBounce.moduleManager.getModule(key)
 				if (module != null)
 				{
-					val jsonModule = value as JsonObject
+					val jsonModule = value.asJsonObject
 					for (moduleValue in module.values)
 					{
 						val element = jsonModule[moduleValue.name]
 						if (element != null) moduleValue.fromJson(element)
 					}
 
-					module.flatValues.filter { it.otherName != null && jsonModule.has(it.otherName) }.forEach { it.fromJson(jsonModule[it.otherName]) }
+					for (moduleValue in module.flatValues) if (moduleValue.isAliasPresent(jsonModule))
+					{
+						moduleValue.fromJsonAlias(jsonModule)
+						backwardCompatibility = true
+					}
 				}
 			}
+		}
+
+		if (backwardCompatibility)
+		{
+			ClientUtils.logger.info("[FileManager] Loaded old values config.")
+			saveConfig()
 		}
 	}
 

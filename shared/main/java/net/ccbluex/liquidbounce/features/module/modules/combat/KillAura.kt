@@ -55,6 +55,14 @@ class KillAura : Module()
 	 * OPTIONS
 	 */
 
+	private val cpsValue = object : IntegerRangeValue("CPS", 5, 8, 1, 10, "MaxCPS" to "MinCPS")
+	{
+		override fun onMaxValueChanged(oldValue: Int, newValue: Int)
+		{
+			attackDelay = TimeUtils.randomClickDelay(getMin(), newValue)
+		}
+	}
+
 	private val cpsGroup = ValueGroup("CPS")
 	private val maxCPS: IntegerValue = object : IntegerValue("Max", 8, 1, 20, "MaxCPS")
 	{
@@ -364,7 +372,7 @@ class KillAura : Module()
 	private val markRangeValue = ListValue("Range", arrayOf("None", "AttackRange", "ExceptBlockRange", "All"), "AttackRange", "Mark-Range")
 	private val markRangeAccuracyValue = FloatValue("Range-Accuracy", 10F, 0.5F, 20F, "Mark-Range-Accuracy")
 
-	private val disableOnDeathValue = BoolValue("DisableOnDeath", true, "DisableOnDeath")
+	private val disableOnDeathValue = BoolValue("DisableOnDeath", true)
 
 	/**
 	 * MODULE

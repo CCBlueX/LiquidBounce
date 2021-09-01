@@ -16,7 +16,7 @@ import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import java.awt.Color
 
-abstract class AbstractValue(var name: String, val otherName: String? = null) // For backward compatibility
+abstract class AbstractValue(var name: String)
 {
 	val displayName = name
 	var isSupported = true
@@ -24,6 +24,12 @@ abstract class AbstractValue(var name: String, val otherName: String? = null) //
 
 	abstract fun toJson(): JsonElement?
 	abstract fun fromJson(element: JsonElement)
+
+	// Backward compatibility
+	abstract fun isAliasPresent(jsonModule: JsonObject): Boolean
+	abstract fun fromJsonAlias(jsonModule: JsonObject)
+	abstract fun aliasMatches(name: String): Boolean
+	abstract fun adaptToValue(name: String): Value<*>?
 
 	open fun showCondition(): Boolean = true
 }
@@ -58,6 +64,16 @@ open class ValueGroup(name: String) : AbstractValue(name)
 		return jsonObject
 	}
 
+	override fun isAliasPresent(jsonModule: JsonObject) = false
+
+	override fun fromJsonAlias(jsonModule: JsonObject)
+	{
+	}
+
+	override fun aliasMatches(name: String) = false
+
+	override fun adaptToValue(name: String): Value<*>? = null
+
 	override fun fromJson(element: JsonElement)
 	{
 		if (!element.isJsonObject) return
@@ -66,7 +82,7 @@ open class ValueGroup(name: String) : AbstractValue(name)
 	}
 }
 
-abstract class Value<T>(name: String, protected var value: T, otherName: String? = null) : AbstractValue(name, otherName)
+abstract class Value<T>(name: String, protected var value: T, private val alias: String? = null) : AbstractValue(name)
 {
 	fun set(newValue: T)
 	{
@@ -94,6 +110,17 @@ abstract class Value<T>(name: String, protected var value: T, otherName: String?
 		this.value = value
 	}
 
+	override fun isAliasPresent(jsonModule: JsonObject) = alias != null && jsonModule.has(alias) && jsonModule[alias].isJsonPrimitive
+
+	override fun fromJsonAlias(jsonModule: JsonObject)
+	{
+		fromJson(jsonModule[alias])
+	}
+
+	override fun aliasMatches(name: String) = alias != null && alias.equals(name, ignoreCase = true)
+
+	override fun adaptToValue(name: String): Value<*>? = this
+
 	protected open fun onChange(oldValue: T, newValue: T)
 	{
 	}
@@ -103,7 +130,7 @@ abstract class Value<T>(name: String, protected var value: T, otherName: String?
 	}
 }
 
-abstract class RangeValue<T : Comparable<T>>(name: String, protected var minValue: T, protected var maxValue: T) : AbstractValue(name)
+abstract class RangeValue<T : Comparable<T>>(name: String, protected var minValue: T, protected var maxValue: T, protected val aliases: Pair<String, String>? = null) : AbstractValue(name)
 {
 	fun setMin(newValue: T)
 	{
@@ -156,6 +183,10 @@ abstract class RangeValue<T : Comparable<T>>(name: String, protected var minValu
 		maxValue = value
 	}
 
+	override fun isAliasPresent(jsonModule: JsonObject) = aliases != null && aliases.toList().all { jsonModule.has(it) && jsonModule[it].isJsonPrimitive && jsonModule[it].asJsonPrimitive.isNumber }
+
+	override fun aliasMatches(name: String) = aliases != null && aliases.toList().any { it.equals(name, ignoreCase = true) }
+
 	protected open fun onMinValueChange(oldValue: T, newValue: T)
 	{
 	}
@@ -173,7 +204,7 @@ abstract class RangeValue<T : Comparable<T>>(name: String, protected var minValu
 	}
 }
 
-open class ColorValue(name: String, protected var r: Int, protected var g: Int, protected var b: Int) : AbstractValue(name)
+open class ColorValue(name: String, protected var r: Int, protected var g: Int, protected var b: Int, private val aliases: Triple<String, String, String>? = null) : AbstractValue(name)
 {
 	fun set(newRed: Int, newGreen: Int, newBlue: Int)
 	{
@@ -229,14 +260,69 @@ open class ColorValue(name: String, protected var r: Int, protected var g: Int, 
 		{
 			val jsonObject = element.asJsonObject
 
-			val redElement = jsonObject.get("red")
+			val redElement = jsonObject["red"]
 			if (redElement.isJsonPrimitive) r = redElement.asInt
 
-			val greenElement = jsonObject.get("green")
+			val greenElement = jsonObject["green"]
 			if (greenElement.isJsonPrimitive) g = greenElement.asInt
 
-			val blueElement = jsonObject.get("blue")
+			val blueElement = jsonObject["blue"]
 			if (blueElement.isJsonPrimitive) b = blueElement.asInt
+		}
+	}
+
+	override fun isAliasPresent(jsonModule: JsonObject) = aliases != null && aliases.toList().all { jsonModule.has(it) && jsonModule[it].isJsonPrimitive && jsonModule[it].asJsonPrimitive.isNumber }
+
+	override fun fromJsonAlias(jsonModule: JsonObject)
+	{
+		val checkedAliases = aliases ?: return
+
+		val redElement = jsonModule[checkedAliases.first]
+		if (redElement.isJsonPrimitive) r = redElement.asInt
+
+		val greenElement = jsonModule[checkedAliases.second]
+		if (greenElement.isJsonPrimitive) g = greenElement.asInt
+
+		val blueElement = jsonModule[checkedAliases.third]
+		if (blueElement.isJsonPrimitive) b = blueElement.asInt
+	}
+
+	override fun aliasMatches(name: String) = aliases != null && aliases.toList().any { it.equals(name, ignoreCase = true) }
+
+	override fun adaptToValue(name: String): Value<*>?
+	{
+		val checkedAliases = aliases?.toList()?.map(String::toLowerCase) ?: return null
+
+		return when (name)
+		{
+			checkedAliases[0] -> object : IntegerValue(checkedAliases[0], r, 0, 255)
+			{
+				override fun changeValue(value: Int)
+				{
+					super.changeValue(value)
+					r = value
+				}
+			}
+
+			checkedAliases[1] -> object : IntegerValue(checkedAliases[1], g, 0, 255)
+			{
+				override fun changeValue(value: Int)
+				{
+					super.changeValue(value)
+					g = value
+				}
+			}
+
+			checkedAliases[2] -> object : IntegerValue(checkedAliases[2], b, 0, 255)
+			{
+				override fun changeValue(value: Int)
+				{
+					super.changeValue(value)
+					b = value
+				}
+			}
+
+			else -> null
 		}
 	}
 
@@ -252,7 +338,7 @@ open class ColorValue(name: String, protected var r: Int, protected var g: Int, 
 /**
  * Bool value represents a value with a boolean
  */
-open class BoolValue(name: String, value: Boolean, otherName: String? = null) : Value<Boolean>(name, value, otherName)
+open class BoolValue(name: String, value: Boolean, alias: String? = null) : Value<Boolean>(name, value, alias)
 {
 	override fun toJson() = JsonPrimitive(value)
 
@@ -265,7 +351,7 @@ open class BoolValue(name: String, value: Boolean, otherName: String? = null) : 
 /**
  * Integer value represents a value with a integer
  */
-open class IntegerValue(name: String, value: Int, val minimum: Int = 0, val maximum: Int = Int.MAX_VALUE, otherName: String? = null) : Value<Int>(name, value, otherName)
+open class IntegerValue(name: String, value: Int, val minimum: Int = 0, val maximum: Int = Int.MAX_VALUE, alias: String? = null) : Value<Int>(name, value, alias)
 {
 
 	fun set(newValue: Number)
@@ -281,7 +367,7 @@ open class IntegerValue(name: String, value: Int, val minimum: Int = 0, val maxi
 	}
 }
 
-open class IntegerRangeValue(name: String, minValue: Int, maxValue: Int, val minimum: Int = 0, val maximum: Int = Int.MAX_VALUE) : RangeValue<Int>(name, minValue, maxValue)
+open class IntegerRangeValue(name: String, minValue: Int, maxValue: Int, val minimum: Int = 0, val maximum: Int = Int.MAX_VALUE, aliases: Pair<String, String>? = null) : RangeValue<Int>(name, minValue, maxValue, aliases)
 {
 	fun setMin(newValue: Number)
 	{
@@ -307,11 +393,50 @@ open class IntegerRangeValue(name: String, minValue: Int, maxValue: Int, val min
 		{
 			val jsonObject = element.asJsonObject
 
-			val minElement = jsonObject.get("min")
+			val minElement = jsonObject["min"]
 			if (minElement.isJsonPrimitive) minValue = minElement.asInt
 
-			val maxElement = jsonObject.get("max")
+			val maxElement = jsonObject["max"]
 			if (maxElement.isJsonPrimitive) maxValue = maxElement.asInt
+		}
+	}
+
+	override fun fromJsonAlias(jsonModule: JsonObject)
+	{
+		val checkedAliases = aliases ?: return
+
+		val maxElement = jsonModule[checkedAliases.first]
+		if (maxElement.isJsonPrimitive) maxValue = maxElement.asInt
+
+		val minElement = jsonModule[checkedAliases.second]
+		if (minElement.isJsonPrimitive) minValue = minElement.asInt
+	}
+
+	override fun adaptToValue(name: String): Value<*>?
+	{
+		val checkedAliases = aliases?.toList()?.map(String::toLowerCase) ?: return null
+
+		return when (name)
+		{
+			checkedAliases[0] -> object : IntegerValue(checkedAliases[0], maxValue, minimum, maximum)
+			{
+				override fun changeValue(value: Int)
+				{
+					super.changeValue(value)
+					maxValue = value
+				}
+			}
+
+			checkedAliases[1] -> object : IntegerValue(checkedAliases[1], minValue, minimum, maximum)
+			{
+				override fun changeValue(value: Int)
+				{
+					super.changeValue(value)
+					minValue = value
+				}
+			}
+
+			else -> null
 		}
 	}
 }
@@ -319,7 +444,7 @@ open class IntegerRangeValue(name: String, minValue: Int, maxValue: Int, val min
 /**
  * Float value represents a value with a float
  */
-open class FloatValue(name: String, value: Float, val minimum: Float = 0F, val maximum: Float = Float.MAX_VALUE, otherName: String? = null) : Value<Float>(name, value, otherName)
+open class FloatValue(name: String, value: Float, val minimum: Float = 0F, val maximum: Float = Float.MAX_VALUE, alias: String? = null) : Value<Float>(name, value, alias)
 {
 
 	fun set(newValue: Number)
@@ -335,7 +460,7 @@ open class FloatValue(name: String, value: Float, val minimum: Float = 0F, val m
 	}
 }
 
-open class FloatRangeValue(name: String, minValue: Float, maxValue: Float, val minimum: Float = 0F, val maximum: Float = Float.MAX_VALUE) : RangeValue<Float>(name, minValue, maxValue)
+open class FloatRangeValue(name: String, minValue: Float, maxValue: Float, val minimum: Float = 0F, val maximum: Float = Float.MAX_VALUE, aliases: Pair<String, String>? = null) : RangeValue<Float>(name, minValue, maxValue, aliases)
 {
 	fun setMin(newValue: Number)
 	{
@@ -368,12 +493,51 @@ open class FloatRangeValue(name: String, minValue: Float, maxValue: Float, val m
 			if (maxElement.isJsonPrimitive) maxValue = maxElement.asFloat
 		}
 	}
+
+	override fun fromJsonAlias(jsonModule: JsonObject)
+	{
+		val checkedAliases = aliases ?: return
+
+		val maxElement = jsonModule[checkedAliases.first]
+		if (maxElement.isJsonPrimitive) maxValue = maxElement.asFloat
+
+		val minElement = jsonModule[checkedAliases.second]
+		if (minElement.isJsonPrimitive) minValue = minElement.asFloat
+	}
+
+	override fun adaptToValue(name: String): Value<*>?
+	{
+		val checkedAliases = aliases?.toList()?.map(String::toLowerCase) ?: return null
+
+		return when (name)
+		{
+			checkedAliases[0] -> object : FloatValue(checkedAliases[0], maxValue, minimum, maximum)
+			{
+				override fun changeValue(value: Float)
+				{
+					super.changeValue(value)
+					maxValue = value
+				}
+			}
+
+			checkedAliases[1] -> object : FloatValue(checkedAliases[1], minValue, minimum, maximum)
+			{
+				override fun changeValue(value: Float)
+				{
+					super.changeValue(value)
+					minValue = value
+				}
+			}
+
+			else -> null
+		}
+	}
 }
 
 /**
  * Text value represents a value with a string
  */
-open class TextValue(name: String, value: String, otherName: String? = null) : Value<String>(name, value, otherName)
+open class TextValue(name: String, value: String, alias: String? = null) : Value<String>(name, value, alias)
 {
 
 	override fun toJson() = JsonPrimitive(value)
@@ -416,7 +580,7 @@ class BlockValue(name: String, value: Int) : IntegerValue(name, value, 1, 197)
 /**
  * List value represents a selectable list of values
  */
-open class ListValue(name: String, val values: Array<String>, value: String, otherName: String? = null) : Value<String>(name, value, otherName)
+open class ListValue(name: String, val values: Array<String>, value: String, alias: String? = null) : Value<String>(name, value, alias)
 {
 
 	@JvmField

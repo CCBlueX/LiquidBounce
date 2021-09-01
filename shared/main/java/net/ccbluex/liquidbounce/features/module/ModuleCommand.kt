@@ -69,6 +69,7 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
 			return
 		}
 
+		val valueName = value.name.toLowerCase()
 		if (value is BoolValue)
 		{
 			var newValue = !value.get()
@@ -79,18 +80,18 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
 			}
 			value.set(newValue)
 
-			chat(thePlayer, "\u00A77${module.name} \u00A78${args[1]}\u00A77 was toggled ${if (newValue) "\u00A7aON" else "\u00A7cOFF"}\u00A77.")
+			chat(thePlayer, "\u00A77${module.name} \u00A78$valueName\u00A77 was toggled ${if (newValue) "\u00A7aON" else "\u00A7cOFF"}\u00A77.")
 			playEdit()
 		}
 		else
 		{
-			if (value is RangeValue<*> && args.size < 4) chatSyntax(thePlayer, "$moduleName ${args[1].toLowerCase()} <min/max> <value>")
+			if (value is RangeValue<*> && args.size < 4) chatSyntax(thePlayer, "$moduleName $valueName <min/max> <value>")
 			if (args.size < 3)
 			{
 
-				chat(thePlayer, "\u00A77${module.name} \u00A78${args[1]}\u00A77 = ${if (value is RangeValue<*>) "${value.getMin()}-${value.getMax()}" else (value as Value<*>).get()}\u00A77.") // Print current state
-				if (value is IntegerValue || value is FloatValue || value is TextValue) chatSyntax(thePlayer, "$moduleName ${args[1].toLowerCase()} <value>")
-				else if (value is ListValue) chatSyntax(thePlayer, "$moduleName ${args[1].toLowerCase()} <${value.values.joinToString(separator = "/").toLowerCase()}>")
+				chat(thePlayer, "\u00A77${module.name} \u00A78$valueName\u00A77 = ${if (value is RangeValue<*>) "${value.getMin()}-${value.getMax()}" else (value as Value<*>).get()}\u00A77.") // Print current state
+				if (value is IntegerValue || value is FloatValue || value is TextValue) chatSyntax(thePlayer, "$moduleName $valueName <value>")
+				else if (value is ListValue) chatSyntax(thePlayer, "$moduleName $valueName <${value.values.joinToString(separator = "/").toLowerCase()}>")
 				return
 			}
 
@@ -98,6 +99,17 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
 			{
 				when (value)
 				{
+					is ColorValue ->
+					{
+						when (args[2].toLowerCase())
+						{
+							"r", "red" -> value.set(args[3].toInt(), value.getGreen(), value.getBlue())
+							"g", "green" -> value.set(value.getRed(), args[3].toInt(), value.getBlue())
+							"b", "blue" -> value.set(value.getRed(), value.getGreen(), args[3].toInt())
+							else -> chatSyntax(thePlayer, "$moduleName $valueName <red/green/blue> <value>")
+						}
+					}
+
 					is BlockValue ->
 					{
 						val id: Int = try
@@ -118,7 +130,7 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
 						}
 
 						value.set(id)
-						chat(thePlayer, "\u00A77${module.name} \u00A78${args[1].toLowerCase()}\u00A77 was set to \u00A78${BlockUtils.getBlockName(id)}\u00A77.")
+						chat(thePlayer, "\u00A77${module.name} \u00A78$valueName\u00A77 was set to \u00A78${BlockUtils.getBlockName(id)}\u00A77.")
 						playEdit()
 						return
 					}
@@ -131,7 +143,7 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
 						{
 							"min" -> value.setMin(args[3].toInt())
 							"max" -> value.setMax(args[3].toInt())
-							else -> chatSyntax(thePlayer, "$moduleName ${args[1].toLowerCase()} <min/max> <value>")
+							else -> chatSyntax(thePlayer, "$moduleName $valueName <min/max> <value>")
 						}
 					}
 
@@ -143,7 +155,7 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
 						{
 							"min" -> value.setMin(args[3].toFloat())
 							"max" -> value.setMax(args[3].toFloat())
-							else -> chatSyntax(thePlayer, "$moduleName ${args[1].toLowerCase()} <min/max> <value>")
+							else -> chatSyntax(thePlayer, "$moduleName $valueName <min/max> <value>")
 						}
 					}
 
@@ -151,7 +163,7 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
 					{
 						if (!value.contains(args[2]))
 						{
-							chatSyntax(thePlayer, "$moduleName ${args[1].toLowerCase()} <${value.values.joinToString(separator = "/").toLowerCase()}>")
+							chatSyntax(thePlayer, "$moduleName $valueName <${value.values.joinToString(separator = "/").toLowerCase()}>")
 							return
 						}
 
@@ -161,7 +173,7 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
 					is TextValue -> value.set(StringUtils.toCompleteString(args, 2))
 				}
 
-				chat(thePlayer, "\u00A77${module.name} \u00A78${args[1]}\u00A77 was set to \u00A78${if (value is RangeValue<*>) "${value.getMin()}-${value.getMax()}" else (value as Value<*>).get()}\u00A77.")
+				chat(thePlayer, "\u00A77${module.name} \u00A78$valueName\u00A77 was set to \u00A78${if (value is RangeValue<*>) "${value.getMin()}-${value.getMax()}" else (value as Value<*>).get()}\u00A77.")
 				playEdit()
 			}
 			catch (e: NumberFormatException)
