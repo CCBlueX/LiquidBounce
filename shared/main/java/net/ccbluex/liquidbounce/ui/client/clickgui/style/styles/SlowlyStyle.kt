@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles
 
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IGlStateManager
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.clamp_double
 import net.ccbluex.liquidbounce.ui.client.clickgui.Panel
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ButtonElement
@@ -23,6 +24,12 @@ import java.awt.Color
 import java.math.BigDecimal
 import java.math.RoundingMode
 
+private const val WHITE = -1
+private const val LIGHT_GRAY = Int.MAX_VALUE
+
+private const val BACKGROUND = -14010033
+private const val BACKGROUND_BORDER = -13220000
+
 class SlowlyStyle : Style()
 {
 	private var mouseDown = false
@@ -30,28 +37,28 @@ class SlowlyStyle : Style()
 
 	override fun drawPanel(mouseX: Int, mouseY: Int, panel: Panel)
 	{
-		drawBorderedRect(panel.x.toFloat(), panel.y.toFloat() - 3, panel.x.toFloat() + panel.width, panel.y.toFloat() + 17, 3f, -14010033, -14010033)
+		drawBorderedRect(panel.x.toFloat(), panel.y.toFloat() - 3, panel.x.toFloat() + panel.width, panel.y.toFloat() + 17, 3f, BACKGROUND, BACKGROUND)
 
 		if (panel.fade > 0)
 		{
-			drawBorderedRect(panel.x.toFloat(), panel.y.toFloat() + 17, panel.x.toFloat() + panel.width, (panel.y + 19 + panel.fade), 3f, -13220000, -13220000)
-			drawBorderedRect(panel.x.toFloat(), (panel.y + 17 + panel.fade), panel.x.toFloat() + panel.width, (panel.y + 19 + panel.fade + 5), 3f, -14010033, -14010033)
+			drawBorderedRect(panel.x.toFloat(), panel.y.toFloat() + 17, panel.x.toFloat() + panel.width, panel.y + 19 + panel.fade, 3f, BACKGROUND_BORDER, BACKGROUND_BORDER)
+			drawBorderedRect(panel.x.toFloat(), panel.y + panel.fade + 17, panel.x.toFloat() + panel.width, panel.y + 19 + panel.fade + 5, 3f, BACKGROUND, BACKGROUND)
 		}
 
 		classProvider.glStateManager.resetColor()
 
 		val textWidth = Fonts.font35.getStringWidth("\u00A7f" + stripControlCodes(panel.name)).toFloat()
-		Fonts.font35.drawString(panel.name, (panel.x - (textWidth - 100.0f) * 0.5).toInt(), panel.y + 7 - 3, -1)
+		Fonts.font35.drawString(panel.name, (panel.x - (textWidth - 100.0f) * 0.5).toInt(), panel.y + 7 - 3, WHITE)
 	}
 
 	override fun drawDescription(mouseX: Int, mouseY: Int, text: String)
 	{
 		val textWidth = Fonts.font35.getStringWidth(text)
-		drawBorderedRect((mouseX + 9).toFloat(), mouseY.toFloat(), (mouseX + textWidth + 14).toFloat(), (mouseY + Fonts.font35.fontHeight + 3).toFloat(), 3.0f, -14010033, -14010033)
+		drawBorderedRect((mouseX + 9).toFloat(), mouseY.toFloat(), (mouseX + textWidth + 14).toFloat(), (mouseY + Fonts.font35.fontHeight + 3).toFloat(), 3.0f, BACKGROUND, BACKGROUND)
 
 		classProvider.glStateManager.resetColor()
 
-		Fonts.font35.drawString(text, mouseX + 12, mouseY + (Fonts.font35.fontHeight shr 1), -1)
+		Fonts.font35.drawString(text, mouseX + 12, mouseY + (Fonts.font35.fontHeight shr 1), WHITE)
 	}
 
 	override fun drawButtonElement(mouseX: Int, mouseY: Int, buttonElement: ButtonElement)
@@ -60,7 +67,7 @@ class SlowlyStyle : Style()
 
 		classProvider.glStateManager.resetColor()
 
-		Fonts.font35.drawString(buttonElement.displayName, buttonElement.x + 5, buttonElement.y + 5, -1)
+		Fonts.font35.drawString(buttonElement.displayName, buttonElement.x + 5, buttonElement.y + 5, WHITE)
 	}
 
 	/*
@@ -80,192 +87,20 @@ class SlowlyStyle : Style()
 		val glStateManager = classProvider.glStateManager
 		glStateManager.resetColor()
 
-		Fonts.font35.drawString(moduleElement.displayName, moduleElement.x + 5, moduleElement.y + 5, -1)
+		Fonts.font35.drawString(moduleElement.displayName, moduleElement.x + 5, moduleElement.y + 5, WHITE)
 
 		// Draw settings
 		val moduleValues = moduleElement.module.values
 		if (moduleValues.isNotEmpty())
 		{
-			Fonts.font35.drawString(">", moduleElement.x + moduleElement.width - 8, moduleElement.y + 5, -1)
+			Fonts.font35.drawString(">", moduleElement.x + moduleElement.width - 8, moduleElement.y + 5, WHITE)
 
 			if (moduleElement.isShowSettings)
 			{
-				if (moduleElement.settingsWidth > 0.0f && moduleElement.slowlySettingsYPos > moduleElement.y + 6) drawBorderedRect((moduleElement.x + moduleElement.width + 4).toFloat(), (moduleElement.y + 6).toFloat(), moduleElement.x + moduleElement.width + moduleElement.settingsWidth, (moduleElement.slowlySettingsYPos + 2).toFloat(), 3.0f, -13220000, -13220000)
+				if (moduleElement.settingsWidth > 0.0f && moduleElement.slowlySettingsYPos > moduleElement.y + 6) drawBorderedRect((moduleElement.x + moduleElement.width + 4).toFloat(), moduleElement.y + 6f, moduleElement.x + moduleElement.width + moduleElement.settingsWidth, moduleElement.slowlySettingsYPos + 2f, 3.0f, BACKGROUND_BORDER, BACKGROUND_BORDER)
 				moduleElement.slowlySettingsYPos = moduleElement.y + 6
 
-				for (value in moduleValues)
-				{
-					if (value !is Value<*>) continue // FIXME
-					val isNumber = value.get() is Number
-
-					if (isNumber) assumeNonVolatile = false
-
-					if (value is BoolValue)
-					{
-						val text = value.name
-						val textWidth = Fonts.font35.getStringWidth(text).toFloat()
-
-						if (moduleElement.settingsWidth < textWidth + 8) moduleElement.settingsWidth = textWidth + 8
-
-						if (mouseX >= moduleElement.x + moduleElement.width + 4 && mouseX <= moduleElement.x + moduleElement.width + moduleElement.settingsWidth && mouseY >= moduleElement.slowlySettingsYPos && mouseY <= moduleElement.slowlySettingsYPos + 12 && Mouse.isButtonDown(0) && moduleElement.isntPressed())
-						{
-							value.set(!value.get())
-							mc.soundHandler.playSound("gui.button.press", 1.0f)
-						}
-
-						Fonts.font35.drawString(text, moduleElement.x + moduleElement.width + 6, moduleElement.slowlySettingsYPos + 2, if (value.get()) -1 else Int.MAX_VALUE)
-
-						moduleElement.slowlySettingsYPos += 11
-					}
-					else if (value is ListValue)
-					{
-						val text = value.name
-						val textWidth = Fonts.font35.getStringWidth(text).toFloat()
-
-						if (moduleElement.settingsWidth < textWidth + 16) moduleElement.settingsWidth = textWidth + 16
-
-						Fonts.font35.drawString(text, moduleElement.x + moduleElement.width + 6, moduleElement.slowlySettingsYPos + 2, 0xffffff)
-						Fonts.font35.drawString(if (value.openList) "-" else "+", (moduleElement.x + moduleElement.width + moduleElement.settingsWidth - if (value.openList) 5 else 6).toInt(), moduleElement.slowlySettingsYPos + 2, 0xffffff)
-
-						if (mouseX >= moduleElement.x + moduleElement.width + 4 && mouseX <= moduleElement.x + moduleElement.width + moduleElement.settingsWidth && mouseY >= moduleElement.slowlySettingsYPos && mouseY <= moduleElement.slowlySettingsYPos + Fonts.font35.fontHeight && Mouse.isButtonDown(0) && moduleElement.isntPressed())
-						{
-							value.openList = !value.openList
-							mc.soundHandler.playSound("gui.button.press", 1.0f)
-						}
-
-						moduleElement.slowlySettingsYPos += Fonts.font35.fontHeight + 1
-
-						for (valueOfList in value.values)
-						{
-							val textWidth2 = Fonts.font35.getStringWidth("> $valueOfList").toFloat()
-
-							if (moduleElement.settingsWidth < textWidth2 + 12) moduleElement.settingsWidth = textWidth2 + 12
-
-							if (value.openList)
-							{
-								if (mouseX >= moduleElement.x + moduleElement.width + 4 && mouseX <= moduleElement.x + moduleElement.width + moduleElement.settingsWidth && mouseY >= moduleElement.slowlySettingsYPos + 2 && mouseY <= moduleElement.slowlySettingsYPos + 14 && Mouse.isButtonDown(0) && moduleElement.isntPressed())
-								{
-									value.set(valueOfList)
-									mc.soundHandler.playSound("gui.button.press", 1.0f)
-								}
-								glStateManager.resetColor()
-								Fonts.font35.drawString("> $valueOfList", moduleElement.x + moduleElement.width + 6, moduleElement.slowlySettingsYPos + 2, if (value.get().equals(valueOfList, ignoreCase = true)) -1 else Int.MAX_VALUE)
-								moduleElement.slowlySettingsYPos += Fonts.font35.fontHeight + 1
-							}
-						}
-
-						if (!value.openList) moduleElement.slowlySettingsYPos += 1
-					}
-					else if (value is FloatValue)
-					{
-						val text = value.name + "\u00A7f: " + round(value.get())
-						val textWidth = Fonts.font35.getStringWidth(text).toFloat()
-
-						if (moduleElement.settingsWidth < textWidth + 8) moduleElement.settingsWidth = textWidth + 8
-
-						val valueOfSlide = drawSlider(value.get(), value.minimum, value.maximum, moduleElement.x + moduleElement.width + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, -16279300 /* 0xFF0798FC */)
-
-						if (valueOfSlide != value.get()) value.set(valueOfSlide)
-
-						Fonts.font35.drawString(text, moduleElement.x + moduleElement.width + 6, moduleElement.slowlySettingsYPos + 3, 0xffffff)
-
-						moduleElement.slowlySettingsYPos += 19
-					}
-					else if (value is IntegerValue)
-					{
-						val text = value.name + "\u00A7f: " + if (value is BlockValue) getBlockName(value.get()) + " (" + value.get() + ")" else value.get()
-						val textWidth = Fonts.font35.getStringWidth(text).toFloat()
-
-						if (moduleElement.settingsWidth < textWidth + 8) moduleElement.settingsWidth = textWidth + 8
-
-						val valueOfSlide = drawSlider(value.get().toFloat(), value.minimum.toFloat(), value.maximum.toFloat(), moduleElement.x + moduleElement.width + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, -16279300 /* 0xFF0798FC */)
-
-						if (valueOfSlide != value.get().toFloat()) value.set(valueOfSlide.toInt())
-
-						Fonts.font35.drawString(text, moduleElement.x + moduleElement.width + 6, moduleElement.slowlySettingsYPos + 3, 0xffffff)
-
-						moduleElement.slowlySettingsYPos += 19
-					}
-					else if (value is FontValue)
-					{
-						val fontRenderer = value.get()
-						var displayString = "Font: Unknown"
-
-						if (fontRenderer.isGameFontRenderer())
-						{
-							val liquidFontRenderer = fontRenderer.getGameFontRenderer()
-							displayString = "Font: " + liquidFontRenderer.defaultFont.font.name + " - " + liquidFontRenderer.defaultFont.font.size
-						}
-						else if (fontRenderer == Fonts.minecraftFont) displayString = "Font: Minecraft"
-						else
-						{
-							val objects = Fonts.getFontDetails(fontRenderer)
-							if (objects != null) displayString = objects.name + if (objects.fontSize == -1) "" else " - " + objects.fontSize
-						}
-
-						Fonts.font35.drawString(displayString, moduleElement.x + moduleElement.width + 6, moduleElement.slowlySettingsYPos + 2, -1)
-
-						val stringWidth = Fonts.font35.getStringWidth(displayString)
-
-						if (moduleElement.settingsWidth < stringWidth + 8) moduleElement.settingsWidth = (stringWidth + 8).toFloat()
-
-						if ((Mouse.isButtonDown(0) && !mouseDown || Mouse.isButtonDown(1) && !rightMouseDown) && mouseX >= moduleElement.x + moduleElement.width + 4 && mouseX <= moduleElement.x + moduleElement.width + moduleElement.settingsWidth && mouseY >= moduleElement.slowlySettingsYPos && mouseY <= moduleElement.slowlySettingsYPos + 12)
-						{
-							val fonts = Fonts.fonts
-							if (Mouse.isButtonDown(0))
-							{
-								var i = 0
-								val j = fonts.size
-								while (i < j)
-								{
-									val font = fonts[i]
-									if (font == fontRenderer)
-									{
-										i++
-										if (i >= fonts.size) i = 0
-										value.set(fonts[i])
-										break
-									}
-									i++
-								}
-							}
-							else
-							{
-								var i = fonts.size - 1
-								while (i >= 0)
-								{
-									val font = fonts[i]
-									if (font == fontRenderer)
-									{
-										i--
-										if (i >= fonts.size) i = 0
-										if (i < 0) i = fonts.size - 1
-										value.set(fonts[i])
-										break
-									}
-									i--
-								}
-							}
-						}
-
-						moduleElement.slowlySettingsYPos += 11
-					}
-					else
-					{
-						val text = value.name + "\u00A7f: " + value.get()
-						val textWidth = Fonts.font35.getStringWidth(text).toFloat()
-
-						if (moduleElement.settingsWidth < textWidth + 8) moduleElement.settingsWidth = textWidth + 8
-
-						glStateManager.resetColor()
-
-						Fonts.font35.drawString(text, moduleElement.x + moduleElement.width + 6, moduleElement.slowlySettingsYPos + 4, 0xffffff)
-
-						moduleElement.slowlySettingsYPos += 12
-					}
-
-					if (isNumber) assumeNonVolatile = true
-				}
+				for (value in moduleValues) drawAbstractValue(glStateManager, moduleElement, value, mouseX, mouseY)
 
 				moduleElement.updatePressed()
 
@@ -275,30 +110,387 @@ class SlowlyStyle : Style()
 		}
 	}
 
+	private fun drawAbstractValue(glStateManager: IGlStateManager, moduleElement: ModuleElement, value: AbstractValue, mouseX: Int, mouseY: Int, indent: Int = 0)
+	{
+		when (value)
+		{
+			is ValueGroup ->
+			{
+				val text = value.displayName
+				val textWidth = Fonts.font35.getStringWidth(text) + indent + 16f
+				val textHeight = Fonts.font35.fontHeight
+
+				if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
+
+				val moduleX = moduleElement.x + moduleElement.width
+				val moduleIndentX = moduleX + indent
+
+				Fonts.font35.drawString("\u00A7c$text", moduleIndentX + 6, moduleElement.slowlySettingsYPos + 2, WHITE)
+				Fonts.font35.drawString(if (value.foldState) "-" else "+", (moduleX + moduleElement.settingsWidth - if (value.foldState) 5 else 6).toInt(), moduleElement.slowlySettingsYPos + 2, WHITE)
+
+				if (mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= moduleElement.slowlySettingsYPos && mouseY <= moduleElement.slowlySettingsYPos + textHeight && Mouse.isButtonDown(0) && moduleElement.isntPressed())
+				{
+					value.foldState = !value.foldState
+					mc.soundHandler.playSound("gui.button.press", 1.0f)
+				}
+
+				moduleElement.slowlySettingsYPos += textHeight + 1
+
+				if (value.foldState)
+				{
+					val cachedYPos = moduleElement.slowlySettingsYPos
+					val valuesInGroup = value.values.filter(AbstractValue::showCondition)
+					var i = 0
+					val j = valuesInGroup.size
+					while (i < j)
+					{
+						val valueOfGroup = valuesInGroup[i]
+
+						val textWidth2 = Fonts.font35.getStringWidth(valueOfGroup.displayName) + 12f
+						if (moduleElement.settingsWidth < textWidth2) moduleElement.settingsWidth = textWidth2
+						glStateManager.resetColor()
+						drawAbstractValue(glStateManager, moduleElement, valueOfGroup, mouseX, mouseY, indent + 10)
+
+						if (i == j - 1) // Last Index
+						{
+							drawRect(moduleIndentX + 7, cachedYPos, moduleIndentX + 8, moduleElement.slowlySettingsYPos, LIGHT_GRAY)
+							drawRect(moduleIndentX + 7, moduleElement.slowlySettingsYPos, moduleIndentX + 12, moduleElement.slowlySettingsYPos + 1, LIGHT_GRAY)
+						}
+						i++
+					}
+				}
+				else moduleElement.slowlySettingsYPos++
+			}
+
+			is ColorValue -> drawColorValue(glStateManager, moduleElement, value, mouseX, mouseY, indent)
+			is RangeValue<*> -> drawRangeValue(glStateManager, moduleElement, value, mouseX, mouseY)
+			else -> drawValue(glStateManager, moduleElement, value as Value<*>, mouseX, mouseY, indent)
+		}
+	}
+
+	private fun drawColorValue(glStateManager: IGlStateManager, moduleElement: ModuleElement, value: ColorValue, mouseX: Int, mouseY: Int, indent: Int = 0)
+	{
+		val moduleX = moduleElement.x + moduleElement.width
+		val moduleIndentX = moduleX + indent
+
+		val text = "${value.displayName}\u00A7f: \u00A7c${value.getRed()} \u00A7a${value.getGreen()} \u00A79${value.getBlue()}\u00A7r "
+		val colorText = "(#${encodeToHex(value.getRed())}${encodeToHex(value.getGreen())}${encodeToHex(value.getBlue())})"
+		val displayTextWidth = Fonts.font35.getStringWidth(text)
+		val textWidth = displayTextWidth + Fonts.font35.getStringWidth(colorText) + indent + 8f
+
+		if (moduleElement.settingsWidth < textWidth + 20f) moduleElement.settingsWidth = textWidth + 20f
+		val moduleXEnd = moduleX + moduleElement.settingsWidth
+
+		drawRect(moduleIndentX + textWidth, moduleElement.slowlySettingsYPos + 2f, moduleXEnd - 4f, moduleElement.slowlySettingsYPos + 10f, value.get(255))
+
+		glStateManager.resetColor()
+		Fonts.font35.drawString(text, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 4, WHITE)
+		Fonts.font35.drawString(colorText, moduleIndentX + displayTextWidth + 6, moduleElement.slowlySettingsYPos + 4, value.get())
+
+		val redSlider = drawSlider(value.getRed().toFloat(), 0f, 255f, moduleX + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, indent, -65536 /* 0xFFFF0000 */)
+
+		if (redSlider != value.getRed().toFloat()) value.set(redSlider.toInt(), value.getGreen(), value.getBlue())
+
+		moduleElement.slowlySettingsYPos += 9
+
+		val greenSlider = drawSlider(value.getGreen().toFloat(), 0f, 255f, moduleX + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, indent, -16711936 /* 0xFF00FF00 */)
+
+		if (greenSlider != value.getGreen().toFloat()) value.set(value.getRed(), greenSlider.toInt(), value.getBlue())
+
+		moduleElement.slowlySettingsYPos += 9
+
+		val blueSlider = drawSlider(value.getBlue().toFloat(), 0f, 255f, moduleX + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, indent, -16776961 /* 0xFF0000FF */)
+
+		if (blueSlider != value.getBlue().toFloat()) value.set(value.getRed(), value.getGreen(), blueSlider.toInt())
+
+		moduleElement.slowlySettingsYPos += 19
+	}
+
+	private fun drawRangeValue(glStateManager: IGlStateManager, moduleElement: ModuleElement, value: RangeValue<*>, mouseX: Int, mouseY: Int, indent: Int = 0)
+	{
+		val moduleX = moduleElement.x + moduleElement.width
+		val moduleIndentX = moduleX + indent
+		assumeNonVolatile = false
+
+		when (value)
+		{
+			is IntegerRangeValue ->
+			{
+				val text = "${value.displayName}\u00A7f: \u00A7c${value.getMin()}-${value.getMax()}"
+				val textWidth = Fonts.font35.getStringWidth(text) + indent + 8f
+
+				if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
+
+				val valueOfSlide = drawRangeSlider(value.getMin().toFloat(), value.getMax().toFloat(), value.minimum.toFloat(), value.maximum.toFloat(), moduleX + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, indent, -16279300 /* 0xFF0798FC */)
+
+				if (valueOfSlide.first != value.getMin().toFloat()) value.setMin(valueOfSlide.first)
+				if (valueOfSlide.second != value.getMax().toFloat()) value.setMax(valueOfSlide.second)
+
+				glStateManager.resetColor()
+				Fonts.font35.drawString(text, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 4, WHITE)
+
+				moduleElement.slowlySettingsYPos += 19
+			}
+
+			is FloatRangeValue ->
+			{
+				val text = "${value.displayName}\u00A7f: \u00A7c${round(value.getMin())}-${round(value.getMax())}"
+				val textWidth = Fonts.font35.getStringWidth(text) + indent + 8f
+
+				if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
+
+				val valueOfSlide = drawRangeSlider(value.getMin(), value.getMax(), value.minimum, value.maximum, moduleX + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, indent, -16279300 /* 0xFF0798FC */)
+
+				if (valueOfSlide.first != value.getMin()) value.setMin(valueOfSlide.first)
+				if (valueOfSlide.second != value.getMax()) value.setMax(valueOfSlide.second)
+
+				glStateManager.resetColor()
+
+				Fonts.font35.drawString(text, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 4, WHITE)
+
+				moduleElement.slowlySettingsYPos += 19
+			}
+		}
+
+		// This state is cleaned up in ClickGUI
+		assumeNonVolatile = true
+	}
+
+	private fun drawValue(glStateManager: IGlStateManager, moduleElement: ModuleElement, value: Value<*>, mouseX: Int, mouseY: Int, indent: Int = 0)
+	{
+		val moduleX = moduleElement.x + moduleElement.width
+		val moduleIndentX = moduleElement.x + moduleElement.width + indent
+		val isNumber = value.get() is Number
+
+		if (isNumber) assumeNonVolatile = false
+
+		when (value)
+		{
+			is BoolValue ->
+			{
+				val text = value.displayName
+				val textWidth = Fonts.font35.getStringWidth(text) + indent + 8f
+
+				if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
+
+				if (mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= moduleElement.slowlySettingsYPos && mouseY <= moduleElement.slowlySettingsYPos + 12 && Mouse.isButtonDown(0) && moduleElement.isntPressed())
+				{
+					value.set(!value.get())
+					mc.soundHandler.playSound("gui.button.press", 1.0f)
+				}
+
+				Fonts.font35.drawString(text, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 2, if (value.get()) WHITE else LIGHT_GRAY)
+
+				moduleElement.slowlySettingsYPos += 11
+			}
+
+			is ListValue ->
+			{
+				val text = value.displayName
+				val textWidth = Fonts.font35.getStringWidth(text) + indent + 16f
+
+				if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
+
+				Fonts.font35.drawString(text, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 2, WHITE)
+				Fonts.font35.drawString(if (value.openList) "-" else "+", (moduleX + moduleElement.settingsWidth - if (value.openList) 5 else 6).toInt(), moduleElement.slowlySettingsYPos + 2, WHITE)
+
+				if (mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= moduleElement.slowlySettingsYPos && mouseY <= moduleElement.slowlySettingsYPos + Fonts.font35.fontHeight && Mouse.isButtonDown(0) && moduleElement.isntPressed())
+				{
+					value.openList = !value.openList
+					mc.soundHandler.playSound("gui.button.press", 1.0f)
+				}
+
+				moduleElement.slowlySettingsYPos += Fonts.font35.fontHeight + 1
+
+				for (valueOfList in value.values)
+				{
+					val textWidth2 = Fonts.font35.getStringWidth("> $valueOfList").toFloat()
+
+					if (moduleElement.settingsWidth < textWidth2 + 12) moduleElement.settingsWidth = textWidth2 + 12
+
+					if (value.openList)
+					{
+						if (mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= moduleElement.slowlySettingsYPos + 2 && mouseY <= moduleElement.slowlySettingsYPos + 14 && Mouse.isButtonDown(0) && moduleElement.isntPressed())
+						{
+							value.set(valueOfList)
+							mc.soundHandler.playSound("gui.button.press", 1.0f)
+						}
+						glStateManager.resetColor()
+						Fonts.font35.drawString("> $valueOfList", moduleIndentX + 6, moduleElement.slowlySettingsYPos + 2, if (value.get().equals(valueOfList, ignoreCase = true)) WHITE else LIGHT_GRAY)
+						moduleElement.slowlySettingsYPos += Fonts.font35.fontHeight + 1
+					}
+				}
+
+				if (!value.openList) moduleElement.slowlySettingsYPos += 1
+			}
+
+			is IntegerValue ->
+			{
+				val text = value.displayName + "\u00A7f: " + if (value is BlockValue) getBlockName(value.get()) + " (" + value.get() + ")" else value.get()
+				val textWidth = Fonts.font35.getStringWidth(text) + indent + 8f
+
+				if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
+
+				val valueOfSlide = drawSlider(value.get().toFloat(), value.minimum.toFloat(), value.maximum.toFloat(), moduleX + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, indent, -16279300 /* 0xFF0798FC */)
+
+				if (valueOfSlide != value.get().toFloat()) value.set(valueOfSlide.toInt())
+
+				Fonts.font35.drawString(text, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 3, WHITE)
+
+				moduleElement.slowlySettingsYPos += 19
+			}
+
+			is FloatValue ->
+			{
+				val text = value.displayName + "\u00A7f: " + round(value.get())
+				val textWidth = Fonts.font35.getStringWidth(text) + indent + 8f
+
+				if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
+
+				val valueOfSlide = drawSlider(value.get(), value.minimum, value.maximum, moduleX + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, indent, -16279300 /* 0xFF0798FC */)
+
+				if (valueOfSlide != value.get()) value.set(valueOfSlide)
+
+				Fonts.font35.drawString(text, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 3, WHITE)
+
+				moduleElement.slowlySettingsYPos += 19
+			}
+
+			is FontValue ->
+			{
+				val fontRenderer = value.get()
+				var displayString = "Font: Unknown"
+
+				if (fontRenderer.isGameFontRenderer())
+				{
+					val liquidFontRenderer = fontRenderer.getGameFontRenderer()
+					displayString = "Font: " + liquidFontRenderer.defaultFont.font.name + " - " + liquidFontRenderer.defaultFont.font.size
+				}
+				else if (fontRenderer == Fonts.minecraftFont) displayString = "Font: Minecraft"
+				else
+				{
+					val objects = Fonts.getFontDetails(fontRenderer)
+					if (objects != null) displayString = objects.name + if (objects.fontSize == -1) "" else " - " + objects.fontSize
+				}
+
+				Fonts.font35.drawString(displayString, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 2, WHITE)
+
+				val stringWidth = Fonts.font35.getStringWidth(displayString) + indent + 8f
+
+				if (moduleElement.settingsWidth < stringWidth) moduleElement.settingsWidth = stringWidth
+
+				if ((Mouse.isButtonDown(0) && !mouseDown || Mouse.isButtonDown(1) && !rightMouseDown) && mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= moduleElement.slowlySettingsYPos && mouseY <= moduleElement.slowlySettingsYPos + 12)
+				{
+					val fonts = Fonts.fonts
+					if (Mouse.isButtonDown(0))
+					{
+						var i = 0
+						val j = fonts.size
+						while (i < j)
+						{
+							val font = fonts[i]
+							if (font == fontRenderer)
+							{
+								i++
+								if (i >= fonts.size) i = 0
+								value.set(fonts[i])
+								break
+							}
+							i++
+						}
+					}
+					else
+					{
+						var i = fonts.size - 1
+						while (i >= 0)
+						{
+							val font = fonts[i]
+							if (font == fontRenderer)
+							{
+								i--
+								if (i >= fonts.size) i = 0
+								if (i < 0) i = fonts.size - 1
+								value.set(fonts[i])
+								break
+							}
+							i--
+						}
+					}
+				}
+
+				moduleElement.slowlySettingsYPos += 11
+			}
+
+			else ->
+			{
+				val text = value.displayName + "\u00A7f: " + value.get()
+				val textWidth = Fonts.font35.getStringWidth(text) + indent + 8f
+
+				if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
+
+				glStateManager.resetColor()
+
+				Fonts.font35.drawString(text, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 4, WHITE)
+
+				moduleElement.slowlySettingsYPos += 12
+			}
+		}
+
+		if (isNumber) assumeNonVolatile = true
+	}
+
 	companion object
 	{
-		fun drawSlider(value: Float, min: Float, max: Float, x: Int, y: Int, width: Int, mouseX: Int, mouseY: Int, color: Int): Float
+		private fun encodeToHex(hex: Int) = hex.toString(16).toUpperCase().padStart(2, '0')
+
+		private fun drawSlider(value: Float, min: Float, max: Float, x: Int, y: Int, width: Int, mouseX: Int, mouseY: Int, indent: Int, color: Int): Float
 		{
 			val displayValue = value.coerceIn(min, max)
 
-			drawRect(x, y, x + width, y + 2, Int.MAX_VALUE)
+			val indentX = x + indent
+			val xEnd = x + width
+			drawRect(indentX, y, xEnd, y + 2, Int.MAX_VALUE)
 
-			val sliderValue = x + width * (displayValue - min) / (max - min)
+			val sliderValue = indentX + (width - indent) * (displayValue - min) / (max - min)
 
-			drawRect(x.toFloat(), y.toFloat(), sliderValue, (y + 2).toFloat(), color)
+			drawRect(indentX.toFloat(), y.toFloat(), sliderValue, y + 2f, color)
 			drawFilledCircle(sliderValue.toInt(), y + 1, 3f, color)
 
-			if (mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + 3 && Mouse.isButtonDown(0))
+			if (mouseX in indentX..xEnd && mouseY >= y && mouseY <= y + 3 && Mouse.isButtonDown(0))
 			{
-				val d = clamp_double((mouseX.toDouble() - x) / (width.toDouble() - 3), 0.0, 1.0)
-				var bigDecimal = BigDecimal("${(min + (max - min) * d)}")
-
-				bigDecimal = bigDecimal.setScale(2, RoundingMode.HALF_UP)
-
-				return bigDecimal.toFloat()
+				val perc = width.toDouble() - indent - 3
+				return BigDecimal("${(min + (max - min) * clamp_double((mouseX.toDouble() - indentX) / perc, 0.0, 1.0))}").setScale(2, RoundingMode.HALF_UP).toFloat()
 			}
 
 			return value
+		}
+
+		private fun drawRangeSlider(minValue: Float, maxValue: Float, min: Float, max: Float, x: Int, y: Int, width: Int, mouseX: Int, mouseY: Int, indent: Int, color: Int): Pair<Float, Float>
+		{
+			val minDisplayValue = minValue.coerceIn(min, max)
+			val maxDisplayValue = maxValue.coerceIn(min, max)
+
+			val indentX = x + indent
+			val perc = width.toDouble() - indent - 3
+			drawRect(indentX, y, x + width, y + 2, Int.MAX_VALUE)
+
+			val minSliderValue = x + width * (minDisplayValue - min) / (max - min)
+			drawFilledCircle(minSliderValue.toInt(), y + 1, 3f, color)
+
+			val maxSliderValue = x + width * (maxDisplayValue - min) / (max - min)
+			drawFilledCircle(maxSliderValue.toInt(), y + 1, 3f, color)
+
+			drawRect(minSliderValue, y.toFloat(), maxSliderValue, y + 2f, color)
+
+			val center = minSliderValue + (maxSliderValue - minSliderValue) * 0.5f
+
+			if (mouseX >= indentX && mouseX <= x + width && mouseY >= y && mouseY <= y + 3 && Mouse.isButtonDown(0))
+			{
+				val newValue = BigDecimal("${(min + (max - min) * clamp_double((mouseX.toDouble() - indentX) / perc, 0.0, 1.0))}").setScale(2, RoundingMode.HALF_UP).toFloat()
+				return if (mouseX > center) minValue to newValue else newValue to maxValue
+			}
+
+			return minValue to maxValue
 		}
 
 		private fun round(v: Float): BigDecimal = BigDecimal("$v").setScale(2, RoundingMode.HALF_UP)
