@@ -19,7 +19,7 @@ import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.FloatRangeValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.ccbluex.liquidbounce.value.ValueGroup
 
@@ -30,26 +30,11 @@ class BowAimbot : Module()
 
 	private val predictGroup = ValueGroup("Predict")
 
-	private val predictEnemyValue = BoolValue("Enemy", true, "Predict")
+	private val predictEnemyEnabledValue = BoolValue("Enemy", true, "Predict")
 
 	private val predictPlayerGroup = ValueGroup("Player")
-	private val playerPredictValue = BoolValue("Enabled", true, "PlayerPredict")
-	private val maxPlayerPredictSizeValue: FloatValue = object : FloatValue("Max", 1f, -2f, 2f, "MaxPlayerPredictSize")
-	{
-		override fun onChanged(oldValue: Float, newValue: Float)
-		{
-			val v = minPlayerPredictSizeValue.get()
-			if (v > newValue) set(v)
-		}
-	}
-	private val minPlayerPredictSizeValue: FloatValue = object : FloatValue("Min", 1f, -2f, 2f, "MinPlayerPredictSize")
-	{
-		override fun onChanged(oldValue: Float, newValue: Float)
-		{
-			val v = maxPlayerPredictSizeValue.get()
-			if (v < newValue) set(v)
-		}
-	}
+	private val predictPlayerEnabledValue = BoolValue("Enabled", true, "PlayerPredict")
+	private val predictPlayerIntensityValue = FloatRangeValue("Intensity", 1f, 1f, -2f, 2f, "MaxPlayerPredictSize" to "MinPlayerPredictSize")
 
 	/**
 	 * Should we aim through walls
@@ -61,40 +46,11 @@ class BowAimbot : Module()
 	 */
 	private val priorityValue = ListValue("Priority", arrayOf("Health", "Distance", "ServerDirection", "ClientDirection"), "ServerDirection")
 
-	private val turnSpeedGroup = ValueGroup("TurnSpeed")
-	private val maxTurnSpeedValue: FloatValue = object : FloatValue("Max", 180f, 1f, 180f, "MaxTurnSpeed")
+	private val accelerationRatioValue = FloatRangeValue("Acceleration", 0f, 0f, 0f, .99f, "MaxAccelerationRatio" to "MinAccelerationRatio")
+	private val turnSpeedValue = FloatRangeValue("TurnSpeed", 180f, 180f, 1f, 180f, "MaxTurnSpeed" to "MinTurnSpeed")
+	private val resetSpeedValue = object : FloatRangeValue("RotationResetSpeed", 180f, 180f, 10f, 180f, "MaxRotationResetSpeed" to "MinRotationResetSpeed")
 	{
-		override fun onChanged(oldValue: Float, newValue: Float)
-		{
-			val v = minTurnSpeedValue.get()
-			if (v > newValue) this.set(v)
-		}
-	}
-	private val minTurnSpeedValue: FloatValue = object : FloatValue("Min", 180f, 1f, 180f, "MinTurnSpeed")
-	{
-		override fun onChanged(oldValue: Float, newValue: Float)
-		{
-			val v = maxTurnSpeedValue.get()
-			if (v < newValue) this.set(v)
-		}
-	}
-
-	private val accelerationGroup = ValueGroup("Acceleration")
-	private val maxAccelerationRatioValue: FloatValue = object : FloatValue("Max", 0f, 0f, .99f, "MaxAccelerationRatio")
-	{
-		override fun onChanged(oldValue: Float, newValue: Float)
-		{
-			val v = minAccelerationRatioValue.get()
-			if (v > newValue) this.set(v)
-		}
-	}
-	private val minAccelerationRatioValue: FloatValue = object : FloatValue("Min", 0f, 0f, .99f, "MinAccelerationRatio")
-	{
-		override fun onChanged(oldValue: Float, newValue: Float)
-		{
-			val v = maxAccelerationRatioValue.get()
-			if (v < newValue) this.set(v)
-		}
+		override fun showCondition() = silentRotationValue.get()
 	}
 
 	/**
@@ -106,10 +62,8 @@ class BowAimbot : Module()
 
 	init
 	{
-		predictGroup.addAll(predictEnemyValue, predictPlayerGroup)
-		predictPlayerGroup.addAll(playerPredictValue, maxPlayerPredictSizeValue, minPlayerPredictSizeValue)
-		turnSpeedGroup.addAll(maxTurnSpeedValue, minTurnSpeedValue)
-		accelerationGroup.addAll(maxAccelerationRatioValue, minAccelerationRatioValue)
+		predictGroup.addAll(predictEnemyEnabledValue, predictPlayerGroup)
+		predictPlayerGroup.addAll(predictPlayerEnabledValue, predictPlayerIntensityValue)
 	}
 
 	override fun onDisable()
@@ -132,16 +86,16 @@ class BowAimbot : Module()
 			var flags = 0
 
 			if (throughWallsValue.get()) flags = flags or RotationUtils.SKIP_VISIBLE_CHECK
-			if (predictEnemyValue.get()) flags = flags or RotationUtils.ENEMY_PREDICT
-			if (playerPredictValue.get()) flags = flags or RotationUtils.PLAYER_PREDICT
+			if (predictEnemyEnabledValue.get()) flags = flags or RotationUtils.ENEMY_PREDICT
+			if (predictPlayerEnabledValue.get()) flags = flags or RotationUtils.PLAYER_PREDICT
 			if (silentRotationValue.get()) flags = flags or RotationUtils.SILENT_ROTATION
-			val playerPredictSize = RotationUtils.MinMaxPair(minPlayerPredictSizeValue.get(), maxPlayerPredictSizeValue.get())
+			val playerPredictSize = RotationUtils.MinMaxPair(predictPlayerIntensityValue.getMin(), predictPlayerIntensityValue.getMax())
 
 			val entity = getTarget(theWorld, thePlayer, priorityValue.get(), playerPredictSize, flags) ?: return
 
 			target = entity
 
-			RotationUtils.faceBow(thePlayer, entity, RotationUtils.MinMaxPair(minTurnSpeedValue.get(), maxTurnSpeedValue.get()), RotationUtils.MinMaxPair(minAccelerationRatioValue.get(), maxAccelerationRatioValue.get()), playerPredictSize, flags)
+			RotationUtils.faceBow(thePlayer, entity, RotationUtils.MinMaxPair(turnSpeedValue.getMin(), turnSpeedValue.getMax()), RotationUtils.MinMaxPair(accelerationRatioValue.getMin(), accelerationRatioValue.getMax())/*, RotationUtils.MinMaxPair(resetSpeedValue.getMin(), resetSpeedValue.getMax())*/, playerPredictSize, flags)
 		}
 	}
 
@@ -150,7 +104,7 @@ class BowAimbot : Module()
 	{
 		val currentTarget = target
 
-		if (currentTarget != null && !priorityValue.get().equals("Multi", ignoreCase = true) && markValue.get()) RenderUtils.drawPlatform(currentTarget, 0x46257EFF)
+		if (currentTarget != null && markValue.get()) RenderUtils.drawPlatform(currentTarget, 0x46257EFF)
 	}
 
 	private fun getTarget(theWorld: IWorldClient, thePlayer: IEntityLivingBase, priorityMode: String, playerPredictSize: RotationUtils.MinMaxPair, flags: Int): IEntityLivingBase?
@@ -176,6 +130,6 @@ class BowAimbot : Module()
 	{
 		val currentTarget = target
 
-		return currentTarget != null && thePlayer.canEntityBeSeen(currentTarget)
+		return currentTarget != null && (throughWallsValue.get() || thePlayer.canEntityBeSeen(currentTarget))
 	}
 }

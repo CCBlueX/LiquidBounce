@@ -12,36 +12,20 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.IntegerRangeValue
 import java.util.concurrent.LinkedBlockingQueue
 
 @ModuleInfo(name = "AtAllProvider", description = "Automatically mentions everyone on the server when using '@a' in your message.", category = ModuleCategory.MISC)
 class AtAllProvider : Module()
 {
-	private val minDelayValue: IntegerValue = object : IntegerValue("MinDelay", 500, 0, 20000)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val i = maxDelayValue.get()
-			if (i < newValue) set(i)
-		}
-	}
-	private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 1000, 0, 20000)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val i = minDelayValue.get()
-			if (i > newValue) set(i)
-		}
-	}
+	private val delayValue = IntegerRangeValue("Delay", 500, 1000, 0, 20000, "MaxDelay" to "MinDelay")
 
 	private val retryValue = BoolValue("Retry", false)
 	private val sendQueue = LinkedBlockingQueue<String>()
 	private val retryQueue: MutableList<String> = ArrayList()
 	private val msTimer = MSTimer()
-	private var delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+	private var delay = delayValue.getRandomDelay()
 
 	override fun onDisable()
 	{
@@ -70,7 +54,7 @@ class AtAllProvider : Module()
 				thePlayer.sendChatMessage(sendQueue.take())
 				msTimer.reset()
 
-				delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+				delay = delayValue.getRandomDelay()
 			}
 		}
 		catch (e: InterruptedException)

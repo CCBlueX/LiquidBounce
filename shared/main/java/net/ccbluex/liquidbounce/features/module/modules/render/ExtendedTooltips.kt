@@ -21,6 +21,7 @@ import net.ccbluex.liquidbounce.utils.timer.Cooldown
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ValueGroup
 import org.lwjgl.opengl.GL11
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -30,22 +31,26 @@ import kotlin.math.roundToLong
 @ModuleInfo(name = "ExtendedTooltips", description = "Display more tooltip informations on hotbar. (From Vanilla Enhancements mod)", category = ModuleCategory.RENDER)
 class ExtendedTooltips : Module()
 {
-	/**
-	 * Options
-	 */
-	private val attackDamageValue = BoolValue("AttackDamage", true)
-	private val attackDamageShadowValue = BoolValue("AttackDamageShadow", false)
-	private val attackDamageScaleValue = FloatValue("AttackDamageScale", 0.5F, 0.5F, 1F)
+	private val attackDamageGroup = ValueGroup("AttackDamage")
+	private val attackDamageEnabledValue = BoolValue("Enabled", true, "AttackDamage")
+	private val attackDamageShadowValue = BoolValue("Shadow", false, "AttackDamageShadow")
+	private val attackDamageScaleValue = FloatValue("Scale", 0.5F, 0.5F, 1F, "AttackDamageScale")
 
-	private val enchantmentsValue = BoolValue("Enchantments", true)
-	private val enchantmentsShadowValue = BoolValue("EnchantmentsShadow", false)
-	private val enchantmentsScaleValue = FloatValue("EnchantmentsScale", 0.5F, 0.5F, 1F)
-	private val itemDamageAndEnchantmentYPosValue = IntegerValue("AttackDamageAndEnchantYPos", 75, 50, 100)
+	private val enchantmentsGroup = ValueGroup("Enchantments")
+	private val enchantmentsEnabledValue = BoolValue("Enabled", true, "Enchantments")
+	private val enchantmentsShadowValue = BoolValue("Shadow", false, "EnchantmentsShadow")
+	private val enchantmentsScaleValue = FloatValue("Scale", 0.5F, 0.5F, 1F, "EnchantmentsScale")
 
-	private val heldItemCountValue = BoolValue("HeldItemCount", true)
-	private val heldItemCountShadowValue = BoolValue("HeldItemCountShadow", true)
-	private val heldItemCountScaleValue = FloatValue("HeldItemCountScale", 1F, 0.5F, 1F)
-	private val heldItemCountYPosValue = IntegerValue("HeldItemCountYPos", 46, 20, 100)
+	private val itemDamageAndEnchantmentYPosValue = object : IntegerValue("AttackDamageAndEnchantYPos", 75, 50, 100, "AttackDamageAndEnchantYPos")
+	{
+		override fun showCondition() = attackDamageEnabledValue.get() || enchantmentsEnabledValue.get()
+	}
+
+	private val heldItemCountGroup = ValueGroup("HeldItemCount")
+	private val heldItemCountEnabledValue = BoolValue("Enabled", true, "HeldItemCount")
+	private val heldItemCountShadowValue = BoolValue("Shadow", true, "HeldItemCountShadow")
+	private val heldItemCountScaleValue = FloatValue("Scale", 1F, 0.5F, 1F, "HeldItemCountScale")
+	private val heldItemCountYPosValue = IntegerValue("YPos", 46, 20, 100, "HeldItemCountYPos")
 
 	private val armorPotential = BoolValue("ArmorPotential", true)
 	private val durabilityWarning = BoolValue("DurabilityWarning", true)
@@ -59,6 +64,13 @@ class ExtendedTooltips : Module()
 	private val armorDurabilityWarningCooldown: Cooldown = Cooldown.getNewCooldownMiliseconds(1000)
 
 	private var showArmorDurabilityWarning = false
+
+	init
+	{
+		attackDamageGroup.addAll(attackDamageEnabledValue, attackDamageShadowValue, attackDamageScaleValue)
+		enchantmentsGroup.addAll(enchantmentsEnabledValue, enchantmentsShadowValue, enchantmentsScaleValue)
+		heldItemCountGroup.addAll(heldItemCountEnabledValue, heldItemCountShadowValue, heldItemCountScaleValue, heldItemCountYPosValue)
+	}
 
 	@EventTarget
 	fun onRender2D(@Suppress("UNUSED_PARAMETER") event: Render2DEvent)
@@ -91,7 +103,7 @@ class ExtendedTooltips : Module()
 
 		if (heldItemStack != null)
 		{
-			if (attackDamageValue.get())
+			if (attackDamageEnabledValue.get())
 			{
 				val scale = attackDamageScaleValue.get()
 				val reverseScale = 1 / scale
@@ -107,7 +119,7 @@ class ExtendedTooltips : Module()
 				GL11.glPopMatrix()
 			}
 
-			if (enchantmentsValue.get())
+			if (enchantmentsEnabledValue.get())
 			{
 				val toDraw: String = if (provider.isItemPotion(heldItemStack.item)) getPotionEffectString(heldItemStack) else getEnchantmentString(heldItemStack)
 				val scale = enchantmentsScaleValue.get()
@@ -125,7 +137,7 @@ class ExtendedTooltips : Module()
 
 		val currentEquippedItem = thePlayer.currentEquippedItem
 
-		if (heldItemCountValue.get() && currentEquippedItem != null)
+		if (heldItemCountEnabledValue.get() && currentEquippedItem != null)
 		{
 			val scale = heldItemCountScaleValue.get()
 			val reverseScale = 1 / scale

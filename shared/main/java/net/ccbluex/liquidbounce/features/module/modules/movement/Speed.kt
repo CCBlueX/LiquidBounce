@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.ValueGroup
 import java.awt.Color
 
 @ModuleInfo(name = "Speed", description = "Allows you to move faster.", category = ModuleCategory.MOVEMENT)
@@ -82,27 +83,46 @@ class Speed : Module()
 	}
 
 	// Vanilla Speed
-	val vanillaSpeedValue = FloatValue("VanillaSpeed", 0.5f, 0.2f, 10.0f)
+	val vanillaSpeedValue = object : FloatValue("VanillaSpeed", 0.5f, 0.2f, 10.0f)
+	{
+		override fun showCondition() = modeValue.get().equals("Vanilla", ignoreCase = true)
+	}
 
 	// Custom Speed
+	val customGroup = object : ValueGroup("Custom")
+	{
+		override fun showCondition() = modeValue.get().equals("Custom", ignoreCase = true)
+	}
 	val customSpeedValue = FloatValue("CustomSpeed", 1.6f, 0.2f, 2f)
 	val customYValue = FloatValue("CustomY", 0f, 0f, 4f)
 	val customTimerValue = FloatValue("CustomTimer", 1f, 0.1f, 2f)
 	val customStrafeValue = BoolValue("CustomStrafe", true)
-	val resetXZValue = BoolValue("CustomResetXZ", false)
-	val resetYValue = BoolValue("CustomResetY", false)
+	val customResetXZValue = BoolValue("CustomResetXZ", false)
+	val customResetYValue = BoolValue("CustomResetY", false)
 
 	// AAC Port length
-	val portMax = FloatValue("AAC-PortLength", 1f, 1f, 20f)
+	val portMax = object : FloatValue("AAC-PortLength", 1f, 1f, 20f)
+	{
+		override fun showCondition() = modeValue.get().equals("AACPort", ignoreCase = true)
+	}
 
 	// AAC Ground timer
-	val aacGroundTimerValue = FloatValue("AACGround-Timer", 3f, 1.1f, 10f)
+	val aacGroundTimerValue = object : FloatValue("AACGround-Timer", 3f, 1.1f, 10f)
+	{
+		override fun showCondition() = modeValue.get().equals("AAC3.3.11-Ground", ignoreCase = true) || modeValue.get().equals("AAC3.3.11-Ground2", ignoreCase = true)
+	}
 
 	// Cubecraft Port length
-	val cubecraftPortLengthValue = FloatValue("CubeCraft-PortLength", 1f, 0.1f, 2f)
+	val cubecraftPortLengthValue = object : FloatValue("CubeCraft-PortLength", 1f, 0.1f, 2f)
+	{
+		override fun showCondition() = modeValue.get().equals("CubeCraft", ignoreCase = true)
+	}
 
 	// Mineplex Ground speed
-	val mineplexGroundSpeedValue = FloatValue("MineplexGround-Speed", 0.5f, 0.1f, 1f)
+	val mineplexGroundSpeedValue = object : FloatValue("MineplexGround-Speed", 0.5f, 0.1f, 1f)
+	{
+		override fun showCondition() = modeValue.get().equals("Mineplex-Ground", ignoreCase = true)
+	}
 
 	private val disableOnFlagValue = BoolValue("DisableOnFlag", true)
 
@@ -111,6 +131,11 @@ class Speed : Module()
 
 	override val tag: String
 		get() = modeValue.get()
+
+	init
+	{
+		customGroup.addAll(customSpeedValue, customYValue, customTimerValue, customStrafeValue, customResetXZValue, customResetYValue)
+	}
 
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)

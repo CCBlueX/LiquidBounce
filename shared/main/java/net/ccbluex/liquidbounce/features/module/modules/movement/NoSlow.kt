@@ -25,11 +25,11 @@ import net.ccbluex.liquidbounce.utils.timer.TickTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ValueGroup
 
 @ModuleInfo(name = "NoSlow", description = "Cancels slowness effects caused by soulsand and using items.", category = ModuleCategory.MOVEMENT)
 class NoSlow : Module()
 {
-	// Highly customizable values
 	private val blockForwardMultiplier = FloatValue("BlockForwardMultiplier", 1.0F, 0.2F, 1.0F)
 	private val blockStrafeMultiplier = FloatValue("BlockStrafeMultiplier", 1.0F, 0.2F, 1.0F)
 
@@ -44,17 +44,22 @@ class NoSlow : Module()
 
 	val soulSandForwardMultiplier = FloatValue("SoulSandMultiplier", 0.4F, 0.4F, 1.0F)
 
-	// Bypass for NCP
-	private val packetValue = BoolValue("Packet", true)
-	private val packetSpamDelayValue = IntegerValue("Packet-PacketsDelay", 0, 0, 3)
-	private val packetBlock = BoolValue("Packet-Block", true)
-	private val packetUnblock = BoolValue("Packet-Unblock", true)
-	private val packetTimerValue = FloatValue("Packet-Timer", 1.0F, 0.1F, 1.0F) // Set this 0.8 to bypass AAC NoSlowdown check
+	private val packetGroup = ValueGroup("Packet")
+	private val packetEnabledValue = BoolValue("Enabled", true, "Packet")
+	private val packetDelayValue = IntegerValue("Delay", 0, 0, 3, "Packet-PacketsDelay")
+	private val packetBlockValue = BoolValue("Block", true, "Packet-Block")
+	private val packetUnblock = BoolValue("Unblock", true, "Packet-Unblock")
+	private val packetTimerValue = FloatValue("Timer", 1.0F, 0.1F, 1.0F, "Packet-Timer") // Set this 0.8 to bypass AAC NoSlowdown check
 
 	// Blocks
 	val liquidPushValue = BoolValue("LiquidPush", true)
 
 	private var ncpDelay = TickTimer()
+
+	init
+	{
+		packetGroup.addAll(packetEnabledValue, packetDelayValue, packetBlockValue, packetUnblock, packetTimerValue)
+	}
 
 	@EventTarget
 	fun onMotion(event: MotionEvent)
@@ -77,18 +82,18 @@ class NoSlow : Module()
 		if (timer.timerSpeed == packetTimer) timer.timerSpeed = 1.0F
 		if (!thePlayer.isBlocking && !aura.serverSideBlockingStatus && !tpaura.serverSideBlockingStatus) return
 
-		if (packetValue.get() && Backend.MINECRAFT_VERSION_MINOR == 8)
+		if (packetEnabledValue.get() && Backend.MINECRAFT_VERSION_MINOR == 8)
 		{
 			if (timer.timerSpeed != packetTimer) timer.timerSpeed = packetTimer
 
-			if (ncpDelay.hasTimePassed(packetSpamDelayValue.get()))
+			if (ncpDelay.hasTimePassed(packetDelayValue.get()))
 			{
 				val netHandler = mc.netHandler
 
 				when (event.eventState)
 				{
 					EventState.PRE -> if (packetUnblock.get()) netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos(0, 0, 0), provider.getEnumFacing(EnumFacingType.DOWN))) // Un-block
-					EventState.POST -> if (packetBlock.get()) netHandler.addToSendQueue(provider.createCPacketPlayerBlockPlacement(WBlockPos(-1, -1, -1), 255, thePlayer.inventory.getCurrentItemInHand(), 0.0F, 0.0F, 0.0F)) // (Re-)Block
+					EventState.POST -> if (packetBlockValue.get()) netHandler.addToSendQueue(provider.createCPacketPlayerBlockPlacement(WBlockPos(-1, -1, -1), 255, thePlayer.inventory.getCurrentItemInHand(), 0.0F, 0.0F, 0.0F)) // (Re-)Block
 				}
 
 				ncpDelay.reset()
@@ -120,5 +125,5 @@ class NoSlow : Module()
 	}
 
 	override val tag: String?
-		get() = if (packetValue.get()) "Packet" else null
+		get() = if (packetEnabledValue.get()) "Packet" else null
 }

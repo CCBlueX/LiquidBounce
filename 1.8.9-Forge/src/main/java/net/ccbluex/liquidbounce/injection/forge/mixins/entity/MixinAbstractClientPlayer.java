@@ -85,7 +85,7 @@ public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer
 
 		if (nameProtect.getState() && nameProtect.getSkinProtectValue().get())
 		{
-			if (!nameProtect.getAllPlayersValue().get() && !Objects.equals(getGameProfile().getName(), Minecraft.getMinecraft().thePlayer.getGameProfile().getName()))
+			if (!nameProtect.getAllPlayerEnabledValue().get() && !Objects.equals(getGameProfile().getName(), Minecraft.getMinecraft().thePlayer.getGameProfile().getName()))
 				return;
 
 			callbackInfoReturnable.setReturnValue(DefaultPlayerSkin.getDefaultSkin(getUniqueID()));

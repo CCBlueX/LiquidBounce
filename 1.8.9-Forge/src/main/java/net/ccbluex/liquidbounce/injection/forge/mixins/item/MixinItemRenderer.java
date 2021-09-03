@@ -99,10 +99,10 @@ public abstract class MixinItemRenderer
 		final float interpolatedItemInUse = clientPlayer.getItemInUseCount() - partialTicks + 1.0F;
 		final float itemInUseUnfinishedPercentage = interpolatedItemInUse / itemToRender.getMaxItemUseDuration();
 		float xTranslation = 0.0f;
-		float yTranslation = MathHelper.abs(MathHelper.cos(interpolatedItemInUse / (eaState ? ea.getVerticalShakeSpeedValue().get() : 4.0F) * WMathHelper.PI) * (eaState ? ea.getVerticalShakeIntensityValue().get() : 0.1F));
+		float yTranslation = MathHelper.abs(MathHelper.cos(interpolatedItemInUse / (eaState ? ea.getVerticalSpeedValue().get() : 4.0F) * WMathHelper.PI) * (eaState ? ea.getVerticalIntensityValue().get() : 0.1F));
 
-		if (eaState && ea.getHorizontalShakeValue().get())
-			xTranslation = MathHelper.abs(MathHelper.cos(interpolatedItemInUse / ea.getHorizontalShakeSpeedValue().get() * WMathHelper.PI) * ea.getHorizontalShakeIntensityValue().get());
+		if (eaState && ea.getHorizontalEnabledValue().get())
+			xTranslation = MathHelper.abs(MathHelper.cos(interpolatedItemInUse / ea.getHorizontalSpeedValue().get() * WMathHelper.PI) * ea.getHorizontalIntensityValue().get());
 
 		// Don't start shaking animation way too fast
 		if (itemInUseUnfinishedPercentage >= (eaState ? ea.getShakeStartTime().get() : 0.8F))

@@ -22,6 +22,8 @@ import net.ccbluex.liquidbounce.value.ListValue
 import org.lwjgl.input.Keyboard
 import java.awt.Color
 
+// TODO: Separated color support
+// TODO: Customizable font
 @ModuleInfo(name = "ClickGUI", description = "Opens the ClickGUI.", category = ModuleCategory.RENDER, defaultKeyBinds = [Keyboard.KEY_RSHIFT], canEnable = false)
 class ClickGUI : Module()
 {

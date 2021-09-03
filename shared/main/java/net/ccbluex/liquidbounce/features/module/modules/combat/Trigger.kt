@@ -12,33 +12,25 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
-import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.IntegerRangeValue
 
 @ModuleInfo(name = "Trigger", description = "Automatically attacks the entity you are looking at.", category = ModuleCategory.COMBAT)
 class Trigger : Module()
 {
-
-	private val maxCPS: IntegerValue = object : IntegerValue("MaxCPS", 8, 1, 20)
+	private val cpsValue: IntegerRangeValue = object : IntegerRangeValue("CPS", 7, 8, 1, 20, "MaxCPS" to "MinCPS")
 	{
-		override fun onChanged(oldValue: Int, newValue: Int)
+		override fun onMaxValueChanged(oldValue: Int, newValue: Int)
 		{
-			val i = minCPS.get()
-			if (i > newValue) set(i)
-			delay = TimeUtils.randomClickDelay(minCPS.get(), this.get())
+			delay = TimeUtils.randomClickDelay(getMin(), newValue)
+		}
+
+		override fun onMinValueChanged(oldValue: Int, newValue: Int)
+		{
+			delay = TimeUtils.randomClickDelay(newValue, getMax())
 		}
 	}
 
-	private val minCPS: IntegerValue = object : IntegerValue("MinCPS", 5, 1, 20)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val i = maxCPS.get()
-			if (i < newValue) set(i)
-			delay = TimeUtils.randomClickDelay(this.get(), maxCPS.get())
-		}
-	}
-
-	private var delay = TimeUtils.randomClickDelay(minCPS.get(), maxCPS.get())
+	private var delay = cpsValue.getRandomClickDelay()
 	private var lastSwing = 0L
 
 	@EventTarget
@@ -52,7 +44,7 @@ class Trigger : Module()
 			gameSettings.keyBindAttack.onTick(gameSettings.keyBindAttack.keyCode) // Minecraft Click handling
 
 			lastSwing = System.currentTimeMillis()
-			delay = TimeUtils.randomClickDelay(minCPS.get(), maxCPS.get())
+			delay = cpsValue.getRandomClickDelay()
 		}
 	}
 }

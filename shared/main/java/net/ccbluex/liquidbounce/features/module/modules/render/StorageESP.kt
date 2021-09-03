@@ -30,52 +30,59 @@ class StorageESP : Module()
 	private val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "Hydra", "Outline", "ShaderOutline", "ShaderGlow", "2D", "WireFrame"), "Outline")
 
 	private val chestGroup = ValueGroup("Chest")
-	private val chestValue = BoolValue("Enabled", true)
-	private val chestRedValue = IntegerValue("Red", 0, 0, 255)
-	private val chestGreenValue = IntegerValue("Green", 66, 0, 255)
-	private val chestBlueValue = IntegerValue("Blue", 255, 0, 255)
-	private val chestRainbowValue = BoolValue("Rainbow", false)
+	private val chestEnabledValue = BoolValue("Enabled", true, "Chest")
+	private val chestRainbowValue = BoolValue("Rainbow", false, "Rainbow")
+	private val chestColorValue = object : RGBColorValue("Color", 0, 66, 255, Triple("Red", "Green", "Blue"))
+	{
+		override fun showCondition() = !chestRainbowValue.get()
+	}
 
 	private val trappedChestGroup = ValueGroup("TrappedChest")
-	private val trappedChestRedValue = IntegerValue("TrappedChest-R", 0, 0, 255)
-	private val trappedChestGreenValue = IntegerValue("TrappedChest-G", 66, 0, 255)
-	private val trappedChestBlueValue = IntegerValue("TrappedChest-B", 255, 0, 255)
-	private val trappedChestRainbowValue = BoolValue("TrappedChest-Rainbow", false)
+	private val trappedChestRainbowValue = BoolValue("Rainbow", false, "TrappedChest-Rainbow")
+	private val trappedChestColorValue = object : RGBColorValue("Color", 0, 66, 255, Triple("TrappedChest-R", "TrappedChest-G", "TrappedChest-B"))
+	{
+		override fun showCondition() = !trappedChestRainbowValue.get()
+	}
 
 	private val enderChestGroup = ValueGroup("EnderChest")
-	private val enderChestValue = BoolValue("EnderChest", true)
-	private val enderChestRedValue = IntegerValue("EnderChest-R", 255, 0, 255)
-	private val enderChestGreenValue = IntegerValue("EnderChest-G", 0, 0, 255)
-	private val enderChestBlueValue = IntegerValue("EnderChest-B", 255, 0, 255)
-	private val enderChestRainbowValue = BoolValue("EnderChest-Rainbow", false)
+	private val enderChestEnabledValue = BoolValue("Enabled", true, "EnderChest")
+	private val enderChestRainbowValue = BoolValue("Rainbow", false, "EnderChest-Rainbow")
+	private val enderChestColorValue = object : RGBColorValue("Color", 255, 0, 255, Triple("EnderChest-R", "EnderChest-G", "EnderChest-B"))
+	{
+		override fun showCondition() = !enderChestRainbowValue.get()
+	}
 
 	private val furnaceGroup = ValueGroup("Furnace")
-	private val furnaceValue = BoolValue("Furnace", true)
-	private val furnaceRedValue = IntegerValue("Furnace-R", 0, 0, 255)
-	private val furnaceGreenValue = IntegerValue("Furnace-G", 0, 0, 255)
-	private val furnaceBlueValue = IntegerValue("Furnace-B", 0, 0, 255)
-	private val furnaceRainbowValue = BoolValue("Furnace-Rainbow", false)
+	private val furnaceEnabledValue = BoolValue("Enabled", true, "Furnace")
+	private val furnaceRainbowValue = BoolValue("Rainbow", false, "Furnace-Rainbow")
+	private val furnaceColorValue = object : RGBColorValue("Color", 0, 0, 0, Triple("Furnace-R", "Furnace-G", "Furnace-B"))
+	{
+		override fun showCondition() = !furnaceRainbowValue.get()
+	}
 
 	private val dispenserGroup = ValueGroup("Dispenser")
-	private val dispenserValue = BoolValue("Dispenser", true)
-	private val dispenserRedValue = IntegerValue("Dispenser-R", 0, 0, 255)
-	private val dispenserGreenValue = IntegerValue("Dispenser-G", 0, 0, 255)
-	private val dispenserBlueValue = IntegerValue("Dispenser-B", 0, 0, 255)
-	private val dispenserRainbowValue = BoolValue("Dispenser-Rainbow", false)
+	private val dispenserEnabledValue = BoolValue("Enabled", true, "Dispenser")
+	private val dispenserRainbowValue = BoolValue("Rainbow", false, "Dispenser-Rainbow")
+	private val dispenserColorValue = object : RGBColorValue("Color", 0, 0, 0, Triple("Dispenser-R", "Dispenser-G", "Dispenser-B"))
+	{
+		override fun showCondition() = !dispenserRainbowValue.get()
+	}
 
 	private val hopperGroup = ValueGroup("Hopper")
-	private val hopperValue = BoolValue("Hopper", true)
-	private val hopperRedValue = IntegerValue("Hopper-R", 128, 0, 255)
-	private val hopperGreenValue = IntegerValue("Hopper-G", 128, 0, 255)
-	private val hopperBlueValue = IntegerValue("Hopper-B", 128, 0, 255)
-	private val hopperRainbowValue = BoolValue("Hopper-Rainbow", false)
+	private val hopperEnabledValue = BoolValue("Enabled", true, "Hopper")
+	private val hopperRainbowValue = BoolValue("Rainbow", false, "Hopper-Rainbow")
+	private val hopperColorValue = object : RGBColorValue("Color", 0, 0, 0, Triple("Hopper-R", "Hopper-G", "Hopper-B"))
+	{
+		override fun showCondition() = !hopperRainbowValue.get()
+	}
 
 	private val shulkerBoxGroup = ValueGroup("ShulkerBox")
-	private val shulkerBoxValue = BoolValue("ShulkerBox", true)
-	private val shulkerBoxRedValue = IntegerValue("ShulkerBox-R", 110, 0, 255)
-	private val shulkerBoxGreenValue = IntegerValue("ShulkerBox-G", 77, 0, 255)
-	private val shulkerBoxBlueValue = IntegerValue("ShulkerBox-B", 110, 0, 255)
-	private val shulkerBoxRainbowValue = BoolValue("ShulkerBox-Rainbow", false)
+	private val shulkerBoxEnabledValue = BoolValue("Enabled", true, "ShulkerBox")
+	private val shulkerBoxRainbowValue = BoolValue("Rainbow", false, "ShulkerBox-Rainbow")
+	private val shulkerBoxColorValue = object : RGBColorValue("Color", 0, 0, 0, Triple("ShulkerBox-R", "ShulkerBox-G", "ShulkerBox-B"))
+	{
+		override fun showCondition() = !shulkerBoxRainbowValue.get()
+	}
 
 	private val alphaValue = IntegerValue("Alpha", 60, 0, 255)
 
@@ -94,21 +101,23 @@ class StorageESP : Module()
 		override fun showCondition(): Boolean = modeValue.get().equals("WireFrame", ignoreCase = true)
 	}
 
-	private val rainbowSpeedValue = IntegerValue("Rainbow-Speed", 10, 1, 10)
-
-	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
-	private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
+	private val rainbowGroup = ValueGroup("Rainbow")
+	private val rainbowSpeedValue = IntegerValue("Speed", 10, 1, 10, "Rainbow-Speed")
+	private val rainbowSaturationValue = FloatValue("Saturation", 1.0f, 0.0f, 1.0f, "HSB-Saturation")
+	private val rainbowBrightnessValue = FloatValue("Brightness", 1.0f, 0.0f, 1.0f, "HSB-Brightness")
 
 	init
 	{
-		trappedChestGroup.addAll(trappedChestRedValue, trappedChestGreenValue, trappedChestBlueValue, trappedChestRainbowValue)
-		chestGroup.addAll(chestValue, chestRedValue, chestGreenValue, chestBlueValue, chestRainbowValue, trappedChestGroup)
+		trappedChestGroup.addAll(trappedChestColorValue, trappedChestRainbowValue)
+		chestGroup.addAll(chestEnabledValue, chestColorValue, chestRainbowValue, trappedChestGroup)
 
-		enderChestGroup.addAll(enderChestValue, enderChestRedValue, enderChestGreenValue, enderChestBlueValue, enderChestRainbowValue)
-		furnaceGroup.addAll(furnaceValue, furnaceRedValue, furnaceGreenValue, furnaceBlueValue, furnaceRainbowValue)
-		dispenserGroup.addAll(dispenserValue, dispenserRedValue, dispenserGreenValue, dispenserBlueValue, dispenserRainbowValue)
-		hopperGroup.addAll(hopperValue, hopperRedValue, hopperGreenValue, hopperBlueValue, hopperRainbowValue)
-		shulkerBoxGroup.addAll(shulkerBoxValue, shulkerBoxRedValue, shulkerBoxGreenValue, shulkerBoxBlueValue, shulkerBoxRainbowValue)
+		enderChestGroup.addAll(enderChestEnabledValue, enderChestColorValue, enderChestRainbowValue)
+		furnaceGroup.addAll(furnaceEnabledValue, furnaceColorValue, furnaceRainbowValue)
+		dispenserGroup.addAll(dispenserEnabledValue, dispenserColorValue, dispenserRainbowValue)
+		hopperGroup.addAll(hopperEnabledValue, hopperColorValue, hopperRainbowValue)
+		shulkerBoxGroup.addAll(shulkerBoxEnabledValue, shulkerBoxColorValue, shulkerBoxRainbowValue)
+
+		rainbowGroup.addAll(rainbowSpeedValue, rainbowSaturationValue, rainbowBrightnessValue)
 
 		shulkerBoxGroup.isSupported = Backend.REPRESENTED_BACKEND_VERSION != MinecraftVersion.MC_1_8
 	}
@@ -124,24 +133,24 @@ class StorageESP : Module()
 		try
 		{
 			val mode = modeValue.get().toLowerCase()
-			val chest = chestValue.get()
-			val enderChest = enderChestValue.get()
-			val furnace = furnaceValue.get()
-			val dispenser = dispenserValue.get()
-			val hopper = hopperValue.get()
-			val shulkerBox = shulkerBoxValue.get()
+			val chest = chestEnabledValue.get()
+			val enderChest = enderChestEnabledValue.get()
+			val furnace = furnaceEnabledValue.get()
+			val dispenser = dispenserEnabledValue.get()
+			val hopper = hopperEnabledValue.get()
+			val shulkerBox = shulkerBoxEnabledValue.get()
 
 			val alpha = alphaValue.get()
 
-			val rainbow = ColorUtils.rainbowRGB(alpha = alpha, speed = rainbowSpeedValue.get(), saturation = saturationValue.get(), brightness = brightnessValue.get())
+			val rainbow = ColorUtils.rainbowRGB(alpha = alpha, speed = rainbowSpeedValue.get(), saturation = rainbowSaturationValue.get(), brightness = rainbowBrightnessValue.get())
 
-			val chestColor = if (chestRainbowValue.get()) rainbow else ColorUtils.createRGB(chestRedValue.get(), chestGreenValue.get(), chestBlueValue.get(), alpha)
-			val trappedChestColor = if (trappedChestRainbowValue.get()) rainbow else ColorUtils.createRGB(trappedChestRedValue.get(), trappedChestGreenValue.get(), trappedChestBlueValue.get(), alpha)
-			val enderChestColor = if (enderChestRainbowValue.get()) rainbow else ColorUtils.createRGB(enderChestRedValue.get(), enderChestGreenValue.get(), enderChestBlueValue.get(), alpha)
-			val furnaceColor = if (furnaceRainbowValue.get()) rainbow else ColorUtils.createRGB(furnaceRedValue.get(), furnaceGreenValue.get(), furnaceBlueValue.get(), alpha)
-			val dispenserColor = if (dispenserRainbowValue.get()) rainbow else ColorUtils.createRGB(dispenserRedValue.get(), dispenserGreenValue.get(), dispenserBlueValue.get(), alpha)
-			val hopperColor = if (hopperRainbowValue.get()) rainbow else ColorUtils.createRGB(hopperRedValue.get(), hopperGreenValue.get(), hopperBlueValue.get(), alpha)
-			val shulkerBoxColor = if (shulkerBoxRainbowValue.get()) rainbow else ColorUtils.createRGB(shulkerBoxRedValue.get(), shulkerBoxGreenValue.get(), shulkerBoxBlueValue.get(), alpha)
+			val chestColor = if (chestRainbowValue.get()) rainbow else chestColorValue.get(alpha)
+			val trappedChestColor = if (trappedChestRainbowValue.get()) rainbow else trappedChestColorValue.get(alpha)
+			val enderChestColor = if (enderChestRainbowValue.get()) rainbow else enderChestColorValue.get(alpha)
+			val furnaceColor = if (furnaceRainbowValue.get()) rainbow else furnaceColorValue.get(alpha)
+			val dispenserColor = if (dispenserRainbowValue.get()) rainbow else dispenserColorValue.get(alpha)
+			val hopperColor = if (hopperRainbowValue.get()) rainbow else hopperColorValue.get(alpha)
+			val shulkerBoxColor = if (shulkerBoxRainbowValue.get()) rainbow else shulkerBoxColorValue.get(alpha)
 
 			val outlineAlpha = boxOutlineAlphaValue.get()
 
@@ -335,21 +344,21 @@ class StorageESP : Module()
 
 		val mode = modeValue.get()
 
-		val chest = chestValue.get()
-		val enderChest = enderChestValue.get()
-		val furnace = furnaceValue.get()
-		val dispenser = dispenserValue.get()
-		val hopper = hopperValue.get()
-		val shulkerBox = shulkerBoxValue.get()
+		val chest = chestEnabledValue.get()
+		val enderChest = enderChestEnabledValue.get()
+		val furnace = furnaceEnabledValue.get()
+		val dispenser = dispenserEnabledValue.get()
+		val hopper = hopperEnabledValue.get()
+		val shulkerBox = shulkerBoxEnabledValue.get()
 
-		val rainbow = ColorUtils.rainbowRGB(speed = rainbowSpeedValue.get(), saturation = saturationValue.get(), brightness = brightnessValue.get())
-		val chestColor = if (chestRainbowValue.get()) rainbow else ColorUtils.createRGB(chestRedValue.get(), chestGreenValue.get(), chestBlueValue.get())
-		val trappedChestColor = if (trappedChestRainbowValue.get()) rainbow else ColorUtils.createRGB(trappedChestRedValue.get(), trappedChestGreenValue.get(), trappedChestBlueValue.get())
-		val enderChestColor = if (enderChestRainbowValue.get()) rainbow else ColorUtils.createRGB(enderChestRedValue.get(), enderChestGreenValue.get(), enderChestBlueValue.get())
-		val furnaceColor = if (furnaceRainbowValue.get()) rainbow else ColorUtils.createRGB(furnaceRedValue.get(), furnaceGreenValue.get(), furnaceBlueValue.get())
-		val dispenserColor = if (dispenserRainbowValue.get()) rainbow else ColorUtils.createRGB(dispenserRedValue.get(), dispenserGreenValue.get(), dispenserBlueValue.get())
-		val hopperColor = if (hopperRainbowValue.get()) rainbow else ColorUtils.createRGB(hopperRedValue.get(), hopperGreenValue.get(), hopperBlueValue.get())
-		val shulkerBoxColor = if (shulkerBoxRainbowValue.get()) rainbow else ColorUtils.createRGB(shulkerBoxRedValue.get(), shulkerBoxGreenValue.get(), shulkerBoxBlueValue.get())
+		val rainbow = ColorUtils.rainbowRGB(speed = rainbowSpeedValue.get(), saturation = rainbowSaturationValue.get(), brightness = rainbowBrightnessValue.get())
+		val chestColor = if (chestRainbowValue.get()) rainbow else chestColorValue.get()
+		val trappedChestColor = if (trappedChestRainbowValue.get()) rainbow else trappedChestColorValue.get()
+		val enderChestColor = if (enderChestRainbowValue.get()) rainbow else enderChestColorValue.get()
+		val furnaceColor = if (furnaceRainbowValue.get()) rainbow else furnaceColorValue.get()
+		val dispenserColor = if (dispenserRainbowValue.get()) rainbow else dispenserColorValue.get()
+		val hopperColor = if (hopperRainbowValue.get()) rainbow else hopperColorValue.get()
+		val shulkerBoxColor = if (shulkerBoxRainbowValue.get()) rainbow else shulkerBoxColorValue.get()
 
 		val shader = (if (mode.equals("shaderoutline", ignoreCase = true)) OutlineShader.INSTANCE else if (mode.equals("shaderglow", ignoreCase = true)) GlowShader.INSTANCE else null) ?: return
 		val radius = if (mode.equals("shaderglow", ignoreCase = true)) 2.5f else 1.5f

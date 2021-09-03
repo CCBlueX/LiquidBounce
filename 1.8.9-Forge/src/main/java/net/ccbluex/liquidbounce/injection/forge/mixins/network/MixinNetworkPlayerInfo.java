@@ -31,7 +31,7 @@ public class MixinNetworkPlayerInfo
 		final NameProtect nameProtect = (NameProtect) LiquidBounce.moduleManager.get(NameProtect.class);
 
 		if (nameProtect.getState() && nameProtect.getSkinProtectValue().get())
-			if (nameProtect.getAllPlayersValue().get() || Objects.equals(gameProfile.getId(), Minecraft.getMinecraft().getSession().getProfile().getId())) {
+			if (nameProtect.getAllPlayerEnabledValue().get() || Objects.equals(gameProfile.getId(), Minecraft.getMinecraft().getSession().getProfile().getId())) {
 				cir.setReturnValue(DefaultPlayerSkin.getDefaultSkin(gameProfile.getId()));
 				cir.cancel();
 			}

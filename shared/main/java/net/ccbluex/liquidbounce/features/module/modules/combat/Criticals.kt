@@ -17,10 +17,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
 import kotlin.random.Random
 
 @ModuleInfo(name = "Criticals", description = "Automatically deals critical hits.", category = ModuleCategory.COMBAT)
@@ -31,29 +28,52 @@ class Criticals : Module()
 	 */
 	val modeValue = ListValue("Mode", arrayOf("Packet", "NCPPacket", "AACPacket", "NoGround", "Hop", "TPHop", "Jump", "LowJump", "FakeCollide", "TpCollide", "Custom", "Visual"), "Packet")
 
-	private val maxDelayValue = IntegerValue("MaxDelay", 0, 0, 500)
-	private val minDelayValue = IntegerValue("MinDelay", 0, 0, 500)
+	private val delayValue = IntegerRangeValue("Delay", 0, 0, 0, 1000, "MaxDelay" to "MinDelay")
 
 	private val hurtTimeValue = IntegerValue("HurtTime", 10, 0, 10)
 	private val hitChanceValue = IntegerValue("Chance", 100, 0, 100)
 
-	/**
-	 * Custom Criticals Options
-	 */
-	private val customStepsValue = IntegerValue("Custom-Steps", 3, 2, 6)
+	private val customGroup = object : ValueGroup("Custom")
+	{
+		override fun showCondition() = modeValue.get().equals("Custom", ignoreCase = true)
+	}
+	private val customStepsValue = IntegerValue("Steps", 3, 2, 6, "Custom-Steps")
 
-	private val customYStep1Value = FloatValue("Custom-Step1", 0.11F, 0f, 2.9f)
-	private val customYStep2Value = FloatValue("Custom-Step2", 0.1100013579F, 0f, 2.9f)
-	private val customYStep3Value = FloatValue("Custom-Step3", 0.0000013579F, 0f, 2.9f)
-	private val customYStep4Value = FloatValue("Custom-Step4", 0f, 0f, 2.9f)
-	private val customYStep5Value = FloatValue("Custom-Step5", 0f, 0f, 2.9f)
-	private val customYStep6Value = FloatValue("Custom-Step6", 0f, 0f, 2.9f)
+	private val customYStep1Value = object : FloatValue("Step1", 0.11F, 0f, 2.9f, "Custom-Step1")
+	{
+		override fun showCondition() = customStepsValue.get() >= 1
+	}
+	private val customYStep2Value = object : FloatValue("Step2", 0.1100013579F, 0f, 2.9f, "Custom-Step2")
+	{
+		override fun showCondition() = customStepsValue.get() >= 2
+	}
+	private val customYStep3Value = object : FloatValue("Step3", 0.0000013579F, 0f, 2.9f, "Custom-Step3")
+	{
+		override fun showCondition() = customStepsValue.get() >= 3
+	}
+	private val customYStep4Value = object : FloatValue("Step4", 0f, 0f, 2.9f, "Custom-Step4")
+	{
+		override fun showCondition() = customStepsValue.get() >= 4
+	}
+	private val customYStep5Value = object : FloatValue("Step5", 0f, 0f, 2.9f, "Custom-Step5")
+	{
+		override fun showCondition() = customStepsValue.get() >= 5
+	}
+	private val customYStep6Value = object : FloatValue("Step6", 0f, 0f, 2.9f, "Custom-Step6")
+	{
+		override fun showCondition() = customStepsValue.get() >= 6
+	}
 
 	/**
 	 * Delay Timer
 	 */
 	private val delayTimer = MSTimer()
-	private var nextDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+	private var nextDelay = delayValue.getRandomDelay()
+
+	init
+	{
+		customGroup.addAll(customStepsValue, customYStep1Value, customYStep2Value, customYStep3Value, customYStep4Value, customYStep5Value, customYStep6Value)
+	}
 
 	override fun onEnable()
 	{
@@ -157,7 +177,7 @@ class Criticals : Module()
 			}
 
 			delayTimer.reset()
-			nextDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+			nextDelay = delayValue.getRandomDelay()
 		}
 	}
 

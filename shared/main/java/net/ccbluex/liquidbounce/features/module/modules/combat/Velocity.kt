@@ -20,6 +20,7 @@ import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.ValueGroup
 import kotlin.math.sqrt
 
 @ModuleInfo(name = "Velocity", description = "Allows you to modify the amount of knockback you take. (a.k.a. AntiKnockback)", category = ModuleCategory.COMBAT)
@@ -34,20 +35,43 @@ class Velocity : Module()
 	val modeValue = ListValue("Mode", arrayOf("Simple", "AAC3.1.2", "AACPush", "AAC3.2.0-Reverse", "AAC3.3.4-Reverse", "AAC3.5.0-Zero", "Jump", "Glitch", "Phase", "PacketPhase", "Legit"), "Simple")
 
 	// AAC Reverse
-	private val reverseStrengthValue = FloatValue("AAC3.2.0-Reverse-Strength", 1F, 0.1F, 1F)
-	private val reverse2StrengthValue = FloatValue("AAC3.3.4-Reverse-Strength", 0.05F, 0.02F, 0.1F)
+	private val reverseStrengthValue = object : FloatValue("AAC3.2.0-ReverseStrength", 1F, 0.1F, 1F, "AAC3.2.0-Reverse-Strength")
+	{
+		override fun showCondition() = modeValue.get().endsWith("AAC3.2.0-Reverse", ignoreCase = true)
+	}
 
-	// AAC Push
-	private val aacPushXZReducerValue = FloatValue("AACPushXZReducer", 2F, 1F, 3F)
-	private val aacPushYReducerValue = BoolValue("AACPushYReducer", true)
+	private val reverse2StrengthValue = object : FloatValue("AAC3.3.4-ReverseStrength", 0.05F, 0.02F, 0.1F, "AAC3.3.4-Reverse-Strength")
+	{
+		override fun showCondition() = modeValue.get().endsWith("AAC3.3.4-Reverse", ignoreCase = true)
+	}
 
-	// Phase
-	private val phaseHeightValue = FloatValue("PhaseHeight", 0.5F, 0F, 1F)
-	private val phaseOnlyGround = BoolValue("PhaseOnlyGround", true)
+	private val aacPushGroup = object : ValueGroup("AACPush")
+	{
+		override fun showCondition() = modeValue.get().equals("AACPush", ignoreCase = true)
+	}
+	private val aacPushXZReducerValue = FloatValue("XZReducer", 2F, 1F, 3F, "AACPushXZReducer")
+	private val aacPushYReducerValue = BoolValue("YReducer", true, "AACPushYReducer")
 
-	// Legit
-	private val legitStrafeValue = BoolValue("LegitStrafe", false)
-	private val legitFaceValue = BoolValue("LegitFace", true)
+	private val phaseGroup = object : ValueGroup("Phase")
+	{
+		override fun showCondition() = modeValue.get().endsWith("Phase", ignoreCase = true)
+	}
+	private val phaseHeightValue = FloatValue("Height", 0.5F, 0F, 1F, "PhaseHeight")
+	private val phaseOnlyGround = BoolValue("OnlyGround", true, "PhaseOnlyGround")
+
+	private val legitGroup = object : ValueGroup("Legit")
+	{
+		override fun showCondition() = modeValue.get().equals("Legiot", ignoreCase = true)
+	}
+	private val legitStrafeValue = BoolValue("Strafe", false, "LegitStrafe")
+	private val legitFaceValue = BoolValue("Face", true, "LegitFace")
+
+	init
+	{
+		aacPushGroup.addAll(aacPushXZReducerValue, aacPushYReducerValue)
+		phaseGroup.addAll(phaseHeightValue, phaseOnlyGround)
+		legitGroup.addAll(legitStrafeValue, legitFaceValue)
+	}
 
 	/**
 	 * VALUES

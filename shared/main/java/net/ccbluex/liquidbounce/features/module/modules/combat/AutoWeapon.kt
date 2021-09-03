@@ -17,16 +17,24 @@ import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ValueGroup
 
 @ModuleInfo(name = "AutoWeapon", description = "Automatically selects the best weapon in your hotbar.", category = ModuleCategory.COMBAT)
 class AutoWeapon : Module()
 {
-	private val silentValue = BoolValue("SpoofItem", false) // Silent
-	private val silentKeepTicksValue = IntegerValue("SpoofTicks", 10, 0, 20) // SilentKeepTicks
 	private val itemDelayValue = IntegerValue("ItemDelay", 0, 0, 1000)
 	private val onlySwordValue = BoolValue("OnlySword", false)
 
+	private val silentGroup = ValueGroup("Silent")
+	private val silentEnabledValue = BoolValue("Enabled", false, "SpoofItem")
+	private val silentKeepTicksValue = IntegerValue("KeepTicks", 10, 0, 20, "SpoofTicks")
+
 	private var attackEnemy = false
+
+	init
+	{
+		silentGroup.addAll(silentEnabledValue, silentKeepTicksValue)
+	}
 
 	@EventTarget
 	fun onAttack(@Suppress("UNUSED_PARAMETER") event: AttackEvent)
@@ -64,7 +72,7 @@ class AutoWeapon : Module()
 				return
 
 			// Switch to best weapon
-			if (silentValue.get())
+			if (silentEnabledValue.get())
 			{
 				if (InventoryUtils.setHeldItemSlot(thePlayer, slot, silentKeepTicksValue.get())) return
 			}
@@ -81,5 +89,5 @@ class AutoWeapon : Module()
 	}
 
 	override val tag: String?
-		get() = if (silentValue.get()) "Silent" else null
+		get() = if (silentEnabledValue.get()) "Silent" else null
 }

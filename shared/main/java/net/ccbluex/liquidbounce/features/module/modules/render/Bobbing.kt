@@ -10,16 +10,21 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.ValueGroup
 
 @ModuleInfo(name = "Bobbing", description = "Modify the view bobbing effect multiplier.", category = ModuleCategory.RENDER)
 class Bobbing : Module()
 {
 	val multiplierValue = FloatValue("Multiplier", .6F, 0F, 10F)
-	val cameraYawIncMultiplierValue = FloatValue("CameraYawIncrementMultiplier", 1F, 0.2F, 5F)
-	val cameraPitchIncMultiplierValue = FloatValue("CameraPitchIncrementMultiplier", 1F, 0.2F, 5F)
-	val cameraYawMultiplierValue = FloatValue("CameraYawMultiplier", .4F, 0F, 2F)
-	val cameraPitchMultiplierValue = FloatValue("CameraPitchMultiplier", .8F, 0F, 2F)
 	val checkGroundValue = BoolValue("CheckGround", true)
+
+	val cameraMultiplierGroup = ValueGroup("Camera")
+	val cameraMultiplierYawValue = FloatValue("Yaw", .4F, 0F, 2F, "CameraYawMultiplier")
+	val cameraMultiplierPitchValue = FloatValue("Pitch", .8F, 0F, 2F, "CameraPitchMultiplier")
+
+	val cameraIncrementMultiplierGroup = ValueGroup("Increment")
+	val cameraIncrementMultiplierYawValue = FloatValue("Yaw", 1F, 0.2F, 5F, "CameraYawIncrementMultiplier")
+	val cameraIncrementMultiplierPitchValue = FloatValue("Pitch", 1F, 0.2F, 5F, "CameraPitchIncrementMultiplier")
 
 	override val tag: String
 		get() = "${multiplierValue.get()}${if (checkGroundValue.get()) "" else ", Always"}"

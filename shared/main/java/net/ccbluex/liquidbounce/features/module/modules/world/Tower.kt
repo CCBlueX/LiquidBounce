@@ -35,16 +35,12 @@ import net.ccbluex.liquidbounce.utils.block.PlaceInfo
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
 import kotlin.math.atan2
 import kotlin.math.hypot
 import kotlin.math.truncate
-import kotlin.random.Random
 
 @ModuleInfo(name = "Tower", description = "Automatically builds a tower beneath you.", category = ModuleCategory.WORLD, defaultKeyBinds = [Keyboard.KEY_O])
 class Tower : Module()
@@ -54,82 +50,69 @@ class Tower : Module()
 	 */
 	private val modeValue = ListValue("Mode", arrayOf("Jump", "Motion", "ConstantMotion", "MotionTP", "Packet", "Teleport", "AAC3.3.9", "AAC3.6.4", "AAC4.4-Constant", "AAC4-Jump"), "Motion")
 
-	// AutoBlock
-	private val autoBlockValue = ListValue("AutoBlock", arrayOf("Off", "Pick", "Spoof", "Switch"), "Spoof")
-	private val autoBlockSwitchKeepTimeValue = IntegerValue("AutoBlockSwitchKeepTime", -1, -1, 10)
-	private val autoBlockFullCubeOnlyValue = BoolValue("AutoBlockFullCubeOnly", false)
+	private val autoBlockGroup = ValueGroup("AutoBlock")
+	private val autoBlockModeValue = ListValue("Mode", arrayOf("Off", "Pick", "Spoof", "Switch"), "Spoof", "AutoBlock")
+	private val autoBlockSwitchKeepTimeValue = object : IntegerValue("SwitchKeepTime", -1, -1, 10, "AutoBlockSwitchKeepTime")
+	{
+		override fun showCondition() = !autoBlockModeValue.get().equals("None", ignoreCase = true)
+	}
+	private val autoBlockFullCubeOnlyValue = object : BoolValue("FullCubeOnly", false, "AutoBlockFullCubeOnly")
+	{
+		override fun showCondition() = !autoBlockModeValue.get().equals("None", ignoreCase = true)
+	}
 
 	private val swingValue = BoolValue("Swing", true)
 	private val stopWhenBlockAbove = BoolValue("StopWhenBlockAbove", false)
 
 	// Rotation
-	private val rotationsValue = BoolValue("Rotations", true)
-	private val keepRotationValue = BoolValue("KeepRotation", false)
-	private val minKeepRotationTicksValue: IntegerValue = object : IntegerValue("MinKeepRotationTicks", 20, 0, 50)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val i = maxKeepRotationTicksValue.get()
-			if (i < newValue) this.set(i)
-		}
-	}
+	private val rotationGroup = ValueGroup("Rotation")
+	private val rotationEnabledValue = BoolValue("Enabled", true, "Rotations")
+	private val rotationResetSpeedValue = FloatRangeValue("RotationResetSpeed", 180f, 180f, 10f, 180f, "MaxRotationResetSpeed" to "MinRotationResetSpeed")
 
-	private val maxKeepRotationTicksValue: IntegerValue = object : IntegerValue("MaxKeepRotationTicks", 30, 0, 50)
+	private val rotationKeepRotationGroup = ValueGroup("KeepRotation")
+	private val rotationKeepRotationEnabledValue = BoolValue("Enabled", false, "KeepRotation")
+	private val rotationKeepRotationLockValue = BoolValue("Lock", false, "LockRotation")
+	private val rotationKeepRotationTicksValue = object : IntegerRangeValue("Ticks", 20, 30, 0, 60, "MinKeepRotationTicks" to "MaxKeepRotationTicks")
 	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val i = minKeepRotationTicksValue.get()
-			if (i > newValue) this.set(i)
-		}
-	}
-	private val lockRotationValue = BoolValue("LockRotation", false)
-
-	// Reset Turn Speed
-	private val maxResetTurnSpeed: FloatValue = object : FloatValue("MaxRotationResetSpeed", 180f, 20f, 180f)
-	{
-		override fun onChanged(oldValue: Float, newValue: Float)
-		{
-			val v = minResetTurnSpeed.get()
-			if (v > newValue) this.set(v)
-		}
-	}
-	private val minResetTurnSpeed: FloatValue = object : FloatValue("MinRotationResetSpeed", 180f, 20f, 180f)
-	{
-		override fun onChanged(oldValue: Float, newValue: Float)
-		{
-			val v = maxResetTurnSpeed.get()
-			if (v < newValue) this.set(v)
-		}
+		override fun showCondition() = !rotationKeepRotationLockValue.get()
 	}
 
 	// OnJump
-	private val onJumpValue = BoolValue("OnJump", false)
-	private val onJumpDelayValue = IntegerValue("OnJumpDelay", 500, 0, 1000)
-	private val onJumpNoDelayIfNotMovingValue = BoolValue("OnJumpNoDelayIfNotMoving", true)
-	private val disableOnJumpWhileMoving: BoolValue = object : BoolValue("DisableOnJumpWhileMoving", true)
+	private val onJumpGroup = ValueGroup("OnJump")
+	private val onJumpValue = BoolValue("Enabled", false, "OnJump")
+	private val onJumpDelayValue = object : IntegerValue("Delay", 500, 0, 1000, "OnJumpDelay")
 	{
-		override fun onChanged(oldValue: Boolean, newValue: Boolean)
-		{
-			if (newValue && !onJumpNoDelayIfNotMovingValue.get()) onJumpNoDelayIfNotMovingValue.set(true)
-		}
+		override fun showCondition() = !(onJumpNoDelayIfNotMovingValue.get() && onJumpDisableWhileMoving.get())
 	}
+	private val onJumpNoDelayIfNotMovingValue = BoolValue("NoDelayIfNotMoving", true, "OnJumpNoDelayIfNotMoving")
+	private val onJumpDisableWhileMoving: BoolValue = BoolValue("DisableWhileMoving", true, "DisableOnJumpWhileMoving")
+
 	private val placeModeValue = ListValue("PlaceTiming", arrayOf("Pre", "Post"), "Post")
 
 	private val timerValue = FloatValue("Timer", 1f, 0.01f, 10f)
 
-	// Jump mode
-	private val jumpMotionValue = FloatValue("JumpMotion", 0.42f, 0.3681289f, 0.79f)
-	private val jumpDelayValue = IntegerValue("JumpDelay", 0, 0, 20)
+	private val jumpGroup = object : ValueGroup("Jump")
+	{
+		override fun showCondition() = modeValue.get().equals("Jump", ignoreCase = true)
+	}
+	private val jumpMotionValue = FloatValue("Motion", 0.42f, 0.3681289f, 0.79f, "JumpMotion")
+	private val jumpDelayValue = IntegerValue("Delay", 0, 0, 20, "JumpDelay")
 
-	// ConstantMotion mode
-	private val constantMotionValue = FloatValue("ConstantMotion", 0.42f, 0.1f, 1f)
-	private val constantMotionJumpGroundValue = FloatValue("ConstantMotionJumpGround", 0.79f, 0.76f, 1f)
+	private val constantMotionGroup = object : ValueGroup("ConstantMotion")
+	{
+		override fun showCondition() = modeValue.get().equals("ConstantMotion", ignoreCase = true)
+	}
+	private val constantMotionMotionValue = FloatValue("Motion", 0.42f, 0.1f, 1f, "ConstantMotion")
+	private val constantMotionJumpGroundValue = FloatValue("JumpGround", 0.79f, 0.76f, 1f, "ConstantMotionJumpGround")
 
-	// Teleport mode
-	private val teleportHeightValue = FloatValue("TeleportHeight", 1.15f, 0.1f, 5f)
-	private val teleportDelayValue = IntegerValue("TeleportDelay", 0, 0, 20)
-	private val teleportGroundValue = BoolValue("TeleportGround", true)
-	private val teleportNoMotionValue = BoolValue("TeleportNoMotion", false)
+	private val teleportGroup = object : ValueGroup("Teleport")
+	{
+		override fun showCondition() = modeValue.get().equals("Teleport", ignoreCase = true)
+	}
+	private val teleportHeightValue = FloatValue("Height", 1.15f, 0.1f, 5f, "TeleportHeight")
+	private val teleportDelayValue = IntegerValue("Delay", 0, 0, 20, "TeleportDelay")
+	private val teleportGroundValue = BoolValue("Ground", true, "TeleportGround")
+	private val teleportNoMotionValue = BoolValue("NoMotion", false, "TeleportNoMotion")
 
 	// Killaura bypass (Other settings are same as scaffold's)
 	private val suspendKillauraDuration = IntegerValue("SuspendKillauraDuration", 500, 250, 1000)
@@ -138,6 +121,18 @@ class Tower : Module()
 
 	// Render
 	val counterDisplayValue = BoolValue("Counter", true)
+
+	init
+	{
+		autoBlockGroup.addAll(autoBlockModeValue, autoBlockSwitchKeepTimeValue, autoBlockFullCubeOnlyValue)
+		rotationKeepRotationGroup.addAll(rotationKeepRotationEnabledValue, rotationKeepRotationLockValue, rotationKeepRotationTicksValue)
+		rotationGroup.addAll(rotationEnabledValue, rotationResetSpeedValue, rotationKeepRotationGroup)
+
+		onJumpGroup.addAll(onJumpValue, onJumpDelayValue, onJumpNoDelayIfNotMovingValue, onJumpDisableWhileMoving)
+		jumpGroup.addAll(jumpMotionValue, jumpDelayValue)
+		constantMotionGroup.addAll(constantMotionMotionValue, constantMotionJumpGroundValue)
+		teleportGroup.addAll(teleportHeightValue, teleportDelayValue, teleportGroundValue, teleportNoMotionValue)
+	}
 
 	private val noCustomTimer = arrayOf("aac3.3.9", "aac4.4-constant", "aac4-jump")
 
@@ -173,7 +168,7 @@ class Tower : Module()
 	{
 
 		// Lock Rotation
-		if (rotationsValue.get() && keepRotationValue.get() && lockRotationValue.get() && lockRotation != null) RotationUtils.setTargetRotation(lockRotation)
+		if (rotationEnabledValue.get() && rotationKeepRotationEnabledValue.get() && rotationKeepRotationLockValue.get() && lockRotation != null) RotationUtils.setTargetRotation(lockRotation)
 
 		active = false
 
@@ -189,7 +184,7 @@ class Tower : Module()
 
 			return
 		}
-		else if (onJumpValue.get() && onJumpDelayValue.get() > 0 && (!onJumpTimer.hasTimePassed(onJumpDelayValue.get().toLong()) || disableOnJumpWhileMoving.get()) && (isMoving(thePlayer) || !onJumpNoDelayIfNotMovingValue.get())) // Skip if onjump delay aren't over yet.
+		else if (onJumpValue.get() && onJumpDelayValue.get() > 0 && (!onJumpTimer.hasTimePassed(onJumpDelayValue.get().toLong()) || onJumpDisableWhileMoving.get()) && (isMoving(thePlayer) || !onJumpNoDelayIfNotMovingValue.get())) // Skip if onjump delay aren't over yet.
 			return
 
 		active = true
@@ -211,18 +206,18 @@ class Tower : Module()
 
 			val heldItem = thePlayer.heldItem
 
-			if (if (!autoBlockValue.get().equals("Off", ignoreCase = true)) InventoryUtils.findAutoBlockBlock(theWorld, thePlayer.inventoryContainer, autoBlockFullCubeOnlyValue.get()) != -1 || heldItem != null && provider.isItemBlock(heldItem.item) else heldItem != null && provider.isItemBlock(heldItem.item))
+			if (if (!autoBlockModeValue.get().equals("Off", ignoreCase = true)) InventoryUtils.findAutoBlockBlock(theWorld, thePlayer.inventoryContainer, autoBlockFullCubeOnlyValue.get()) != -1 || heldItem != null && provider.isItemBlock(heldItem.item) else heldItem != null && provider.isItemBlock(heldItem.item))
 			{
 				if (!stopWhenBlockAbove.get() || provider.isBlockAir(getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY + 2, thePlayer.posZ)))) move()
 
 				val blockPos = WBlockPos(thePlayer.posX, thePlayer.posY - 1.0, thePlayer.posZ)
-				if (provider.isBlockAir(theWorld.getBlockState(blockPos).block) && search(theWorld, thePlayer, blockPos) && rotationsValue.get())
+				if (provider.isBlockAir(theWorld.getBlockState(blockPos).block) && search(theWorld, thePlayer, blockPos) && rotationEnabledValue.get())
 				{
 					val vecRotation = RotationUtils.faceBlock(theWorld, thePlayer, blockPos)
 					if (vecRotation != null)
 					{
 						RotationUtils.setTargetRotation(vecRotation.rotation, keepRotationTicks)
-						RotationUtils.setNextResetTurnSpeed(minResetTurnSpeed.get().coerceAtLeast(20F), maxResetTurnSpeed.get().coerceAtLeast(20F))
+						RotationUtils.setNextResetTurnSpeed(rotationResetSpeedValue.getMin().coerceAtLeast(10F), rotationResetSpeedValue.getMax().coerceAtLeast(10F))
 
 						placeInfo!!.vec3 = vecRotation.vec // Is this redundant?
 					}
@@ -307,7 +302,7 @@ class Tower : Module()
 
 			"constantmotion" ->
 			{
-				val constantMotion = constantMotionValue.get().toDouble()
+				val constantMotion = constantMotionMotionValue.get().toDouble()
 
 				if (onGround)
 				{
@@ -408,7 +403,7 @@ class Tower : Module()
 		val killAura = moduleManager[KillAura::class.java] as KillAura
 		val scaffold = moduleManager[Scaffold::class.java] as Scaffold
 
-		if (scaffold.killauraBypassValue.get().equals("SuspendKillaura", true)) killAura.suspend(suspendKillauraDuration.get().toLong())
+		if (scaffold.killauraBypassModeValue.get().equals("SuspendKillaura", true)) killAura.suspend(suspendKillauraDuration.get().toLong())
 
 		val netHandler = mc.netHandler
 		val controller = mc.playerController
@@ -426,12 +421,12 @@ class Tower : Module()
 
 		if (itemStack == null || !provider.isItemBlock(itemStack.item) || provider.isBlockBush(itemStack.item?.asItemBlock()?.block))
 		{
-			if (autoBlockValue.get().equals("Off", true)) return
+			if (autoBlockModeValue.get().equals("Off", true)) return
 
 			val blockSlot = InventoryUtils.findAutoBlockBlock(theWorld, thePlayer.inventoryContainer, autoBlockFullCubeOnlyValue.get())
 			if (blockSlot == -1) return
 
-			when (val autoBlockMode = autoBlockValue.get().toLowerCase())
+			when (val autoBlockMode = autoBlockModeValue.get().toLowerCase())
 			{
 				"pick" ->
 				{
@@ -458,7 +453,7 @@ class Tower : Module()
 		if (controller.onPlayerRightClick(thePlayer, theWorld, itemStack, placeInfo.blockPos, placeInfo.enumFacing, placeInfo.vec3)) if (swingValue.get()) thePlayer.swingItem() else netHandler.addToSendQueue(provider.createCPacketAnimation())
 
 		// Switch back to original slot after place on AutoBlock-Switch mode
-		if (autoBlockValue.get().equals("Switch", true) && switchKeepTime < 0) InventoryUtils.reset(thePlayer)
+		if (autoBlockModeValue.get().equals("Switch", true) && switchKeepTime < 0) InventoryUtils.reset(thePlayer)
 
 		this.placeInfo = null
 	}
@@ -532,11 +527,11 @@ class Tower : Module()
 
 		if (placeRotation == null) return false
 
-		if (rotationsValue.get())
+		if (rotationEnabledValue.get())
 		{
 			// Rotate
 			RotationUtils.setTargetRotation(placeRotation!!.rotation, keepRotationTicks)
-			RotationUtils.setNextResetTurnSpeed(minResetTurnSpeed.get().coerceAtLeast(20F), maxResetTurnSpeed.get().coerceAtLeast(20F))
+			RotationUtils.setNextResetTurnSpeed(rotationResetSpeedValue.getMin().coerceAtLeast(10F), rotationResetSpeedValue.getMax().coerceAtLeast(10F))
 
 			// Lock Rotation
 			(LiquidBounce.moduleManager[Scaffold::class.java] as Scaffold).lockRotation = null // Prevent to lockRotation confliction
@@ -590,7 +585,7 @@ class Tower : Module()
 
 		val onJumpDelay = onJumpDelayValue.get()
 
-		if (onJumpDelay > 0 && onJumpTimer.hasTimePassed(onJumpDelay.toLong()) && !disableOnJumpWhileMoving.get() || !isMoving(thePlayer) && onJumpNoDelayIfNotMovingValue.get()) event.cancelEvent()
+		if (onJumpDelay > 0 && onJumpTimer.hasTimePassed(onJumpDelay.toLong()) && !onJumpDisableWhileMoving.get() || !isMoving(thePlayer) && onJumpNoDelayIfNotMovingValue.get()) event.cancelEvent()
 	}
 
 	/**
@@ -611,5 +606,5 @@ class Tower : Module()
 	var active = false
 
 	private val keepRotationTicks: Int
-		get() = if (keepRotationValue.get()) if (maxKeepRotationTicksValue.get() == minKeepRotationTicksValue.get()) maxKeepRotationTicksValue.get() else minKeepRotationTicksValue.get() + Random.nextInt(maxKeepRotationTicksValue.get() - minKeepRotationTicksValue.get()) else 0
+		get() = if (rotationKeepRotationEnabledValue.get()) rotationKeepRotationTicksValue.getRandom() else 0
 }

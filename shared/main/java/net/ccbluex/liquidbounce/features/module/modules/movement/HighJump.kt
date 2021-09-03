@@ -25,20 +25,35 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.ValueGroup
 import java.awt.Color
 
 @ModuleInfo(name = "HighJump", description = "Allows you to jump higher.", category = ModuleCategory.MOVEMENT)
 class HighJump : Module()
 {
 	private val modeValue = ListValue("Mode", arrayOf("Vanilla", "Damage", "AAC3.0.1", "DAC", "Mineplex", "OldMineplex"), "Vanilla")
-	private val heightValue = FloatValue("Height", 2f, 1.1f, 5f)
-	private val mineplexHeightValue = FloatValue("MineplexHeight", 0.1f, 5.0f, 10.0f)
-	private val glassValue = BoolValue("OnlyGlassPane", false)
+
+	private val vanillaGroup = object : ValueGroup("Vanilla")
+	{
+		override fun showCondition() = modeValue.get().equals("Vanilla", ignoreCase = true)
+	}
+	private val vanillaHeightValue = FloatValue("Height", 2f, 1.1f, 5f, "Height")
+	private val vanillaGlassValue = BoolValue("OnlyGlassPane", false, "OnlyGlassPane")
+
+	private val mineplexHeightValue = object : FloatValue("MineplexHeight", 0.1f, 5.0f, 10.0f)
+	{
+		override fun showCondition() = modeValue.get().equals("Mineplex", ignoreCase = true)
+	}
 	private val autodisable = BoolValue("AutoDisable", true)
 	private val autoDisableScaffoldValue = BoolValue("DisableScaffoldAndTower", true)
 
 	private var jumped = false
 	private var mineplexStage = 0
+
+	init
+	{
+		vanillaGroup.addAll(vanillaHeightValue, vanillaGlassValue)
+	}
 
 	override fun onEnable()
 	{
@@ -78,13 +93,13 @@ class HighJump : Module()
 			if (autodisable.get()) state = false
 		}
 
-		if (glassValue.get() && !classProvider.isBlockPane(getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)))) return // 'AAC Ground-check always returns true when player is collided with glass pane or iron bars, etc.' bug exploit
+		if (vanillaGlassValue.get() && !classProvider.isBlockPane(getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)))) return // 'AAC Ground-check always returns true when player is collided with glass pane or iron bars, etc.' bug exploit
 
 		when (modeValue.get().toLowerCase())
 		{
 			"damage" -> if (thePlayer.hurtTime > 0 && onGround)
 			{
-				thePlayer.motionY += 0.42f * heightValue.get()
+				thePlayer.motionY += 0.42f * vanillaHeightValue.get()
 				jumped = true
 			}
 
@@ -156,7 +171,7 @@ class HighJump : Module()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		if (glassValue.get() && !classProvider.isBlockPane(getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)))) return
+		if (vanillaGlassValue.get() && !classProvider.isBlockPane(getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)))) return
 
 		if (!thePlayer.onGround && modeValue.get().equals("oldmineplex", ignoreCase = true)) thePlayer.motionY += if (thePlayer.fallDistance == 0.0f) 0.0499 else 0.05
 	}
@@ -167,11 +182,11 @@ class HighJump : Module()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		if (glassValue.get() && !classProvider.isBlockPane(getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)))) return
+		if (vanillaGlassValue.get() && !classProvider.isBlockPane(getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)))) return
 
 		when (modeValue.get().toLowerCase())
 		{
-			"vanilla" -> event.motion *= heightValue.get()
+			"vanilla" -> event.motion *= vanillaHeightValue.get()
 			"oldmineplex" -> event.motion = 0.47f
 		}
 	}

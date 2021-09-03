@@ -51,7 +51,7 @@ class FreeCam : Module()
 		playerMP.rotationYawHead = thePlayer.rotationYawHead
 		playerMP.copyLocationAndAnglesFrom(thePlayer)
 
-		theWorld.addEntityToWorld(-1000, playerMP)
+		theWorld.addEntityToWorld(-1337, playerMP)
 
 		if (noClipValue.get()) thePlayer.noClip = true
 

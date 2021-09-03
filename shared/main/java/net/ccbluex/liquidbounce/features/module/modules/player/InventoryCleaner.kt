@@ -30,10 +30,7 @@ import net.ccbluex.liquidbounce.utils.createOpenInventoryPacket
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
 import net.ccbluex.liquidbounce.utils.timer.Cooldown
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
 import kotlin.random.Random
 
 @ModuleInfo(name = "InventoryCleaner", description = "Automatically throws away useless items.", category = ModuleCategory.PLAYER)
@@ -44,41 +41,9 @@ class InventoryCleaner : Module()
 	 * OPTIONS
 	 */
 
-	val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 600, 0, 1000)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val minCPS = minDelayValue.get()
-			if (minCPS > newValue) set(minCPS)
-		}
-	}
-
-	val minDelayValue: IntegerValue = object : IntegerValue("MinDelay", 400, 0, 1000)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val maxDelay = maxDelayValue.get()
-			if (maxDelay < newValue) set(maxDelay)
-		}
-	}
-
-	private val maxHotbarDelayValue: IntegerValue = object : IntegerValue("MaxHotbarDelay", 250, 0, 1000)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val minDelay = minHotbarDelayValue.get()
-			if (minDelay > newValue) this.set(minDelay)
-		}
-	}
-
-	private val minHotbarDelayValue: IntegerValue = object : IntegerValue("MinHotbarDelay", 200, 0, 1000)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val maxDelay = maxHotbarDelayValue.get()
-			if (maxDelay < newValue) this.set(maxDelay)
-		}
-	}
+	val delayValue = IntegerRangeValue("Delay", 400, 600, 0, 5000, "MaxDelay" to "MinDelay")
+	val hotbarDelayValue = IntegerRangeValue("HotbarDelay", 200, 250, 0, 5000, "MaxHotbarDelay" to "MinHotbarDelay")
+	private val itemDelayValue = IntegerValue("ItemDelay", 0, 0, 5000)
 
 	// Bypass
 	private val invOpenValue = BoolValue("InvOpen", false)
@@ -90,16 +55,15 @@ class InventoryCleaner : Module()
 
 	// Bypass
 	private val randomSlotValue = BoolValue("RandomSlot", false)
-	private val itemDelayValue = IntegerValue("ItemDelay", 0, 0, 5000)
 
-	private val allowMisclicksValue = BoolValue("ClickMistakes", false)
-	private val misclicksRateValue = IntegerValue("ClickMistakeRate", 5, 0, 100)
+	private val misclickGroup = ValueGroup("ClickMistakes")
+	private val misclickEnabledValue = BoolValue("Enabled", false, "ClickMistakes")
+	private val misclickRateValue = IntegerValue("Rate", 5, 0, 100, "ClickMistakeRate")
 
 	// Sort
 	private val items = arrayOf("None", "Ignore", "Sword", "Bow", "Pickaxe", "Axe", "Food", "Block", "Water", "Gapple", "Pearl")
-
-	private val sortValue = BoolValue("Sort", true)
-
+	private val sortGroup = ValueGroup("Sort")
+	private val sortValue = BoolValue("Enabled", true, "Sort")
 	private val slot1Value = ListValue("Slot-1", items, "Sword")
 	private val slot2Value = ListValue("Slot-2", items, "Bow")
 	private val slot3Value = ListValue("Slot-3", items, "Pickaxe")
@@ -110,32 +74,37 @@ class InventoryCleaner : Module()
 	private val slot8Value = ListValue("Slot-8", items, "Block")
 	private val slot9Value = ListValue("Slot-9", items, "Block")
 
-	// Item Filter Options
-	private val keepOldSwordValue = BoolValue("KeepOldSword", false)
-	private val keepOldToolsValue = BoolValue("KeepOldTools", false)
-	private val keepOldArmorsValue = BoolValue("KeepOldArmors", false)
+	private val filterGroup = ValueGroup("Filter")
+	private val filterKeepOldSwordValue = BoolValue("KeepOldSword", false, "KeepOldSword")
+	private val filterKeepOldToolsValue = BoolValue("KeepOldTools", false, "KeepOldTools")
+	private val filterKeepOldArmorsValue = BoolValue("KeepOldArmors", false, "KeepOldArmors")
 
-	private val blockCountValue = IntegerValue("MaxBlocks", 2304, 64, 2304)
+	private val bowAndArrowGroup = ValueGroup("BowAndArrow")
+	private val bowAndArrowKeepValue = BoolValue("Keep", true, "BowAndArrow")
+	private val bowAndArrowArrowCountValue = IntegerValue("MaxArrows", 2304, 64, 2304, "MaxArrows")
 
-	private val bowAndArrowValue = BoolValue("BowAndArrow", true)
-	private val arrowCountValue = IntegerValue("MaxArrows", 2304, 64, 2304)
-	private val bucketValue = BoolValue("Bucket", true)
-	private val compassValue = BoolValue("Compass", true)
-	private val enderPearlValue = BoolValue("EnderPearl", true)
-	private val bedValue = BoolValue("Bed", true)
-	private val ironIngotValue = BoolValue("IronIngot", true)
-	private val diamondValue = BoolValue("Diamond", true)
-	private val potionValue = BoolValue("Potion", true)
-	private val skullValue = BoolValue("Skull", false)
-	private val foodValue = BoolValue("Food", true)
-	private val foodCountValue = IntegerValue("MaxFoods", 2304, 64, 2304)
+	private val foodGroup = ValueGroup("Food")
+	private val foodKeepValue = BoolValue("Keep", true, "Food")
+	private val foodCountValue = IntegerValue("MaxFoods", 2304, 64, 2304, "MaxFoods")
 
-	private val ignoreVehiclesValue = BoolValue("IgnoreVehicles", false)
-	private val noDuplicateValue = BoolValue("NoDuplicate", false)
+	private val blockCountValue = IntegerValue("MaxBlocks", 2304, 64, 2304, "MaxBlocks")
+
+	private val bucketValue = BoolValue("Bucket", true, "Bucket")
+	private val compassValue = BoolValue("Compass", true, "Compass")
+	private val enderPearlValue = BoolValue("EnderPearl", true, "EnderPearl")
+	private val bedValue = BoolValue("Bed", true, "Bed")
+	private val skullValue = BoolValue("Skull", false, "Skull")
+	private val potionValue = BoolValue("Potion", true, "Potion")
+	private val ironIngotValue = BoolValue("IronIngot", true, "IronIngot")
+	private val diamondValue = BoolValue("Diamond", true, "Diamond")
+
+	private val ignoreVehiclesValue = BoolValue("IgnoreVehicles", false, "IgnoreVehicles")
+	private val noDuplicateValue = BoolValue("NoDuplicate", false, "NoDuplicate")
 
 	// Visuals
-	private val indicateClick = BoolValue("ClickIndication", false)
-	private val indicateLength = IntegerValue("ClickIndicationLength", 100, 50, 200)
+	private val clickIndicationGroup = ValueGroup("ClickIndication")
+	private val clickIndicationEnabledValue = BoolValue("Enabled", false, "ClickIndication")
+	private val clickIndicationLengthValue = IntegerValue("Length", 100, 50, 1000, "ClickIndicationLength")
 
 	/**
 	 * VALUES
@@ -155,19 +124,31 @@ class InventoryCleaner : Module()
 			return if (cache == null || infoUpdateCooldown.attemptReset()) (if (!state) "InventoryCleaner is not active"
 			else
 			{
-				val minDelay = minDelayValue.get()
-				val maxDelay = maxDelayValue.get()
+				val minDelay = delayValue.getMin()
+				val maxDelay = delayValue.getMax()
 				val random = randomSlotValue.get()
 				val noMove = noMoveValue.get()
 				val hotbar = hotbarValue.get()
 				val itemDelay = itemDelayValue.get()
-				val misclick = allowMisclicksValue.get()
-				val misclickRate = misclicksRateValue.get()
+				val misclick = misclickEnabledValue.get()
+				val misclickRate = misclickRateValue.get()
 
 				"InventoryCleaner active [delay: ($minDelay ~ $maxDelay), itemdelay: $itemDelay, random: $random, nomove: $noMove, hotbar: $hotbar${if (misclick) ", misclick($misclickRate%)" else ""}]"
 			}).apply { cachedInfo = this }
 			else cache
 		}
+
+	init
+	{
+		misclickGroup.addAll(misclickEnabledValue, misclickRateValue)
+		sortGroup.addAll(sortValue, slot1Value, slot2Value, slot2Value, slot3Value, slot4Value, slot5Value, slot6Value, slot7Value, slot8Value, slot9Value)
+
+		bowAndArrowGroup.addAll(bowAndArrowKeepValue, bowAndArrowArrowCountValue)
+		foodGroup.addAll(foodKeepValue, foodCountValue)
+		filterGroup.addAll(bowAndArrowGroup, foodGroup, blockCountValue, filterKeepOldSwordValue, filterKeepOldToolsValue, filterKeepOldArmorsValue, bucketValue, compassValue, enderPearlValue, bedValue, skullValue, potionValue, ironIngotValue, diamondValue)
+
+		clickIndicationGroup.addAll(clickIndicationEnabledValue, clickIndicationLengthValue)
+	}
 
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
@@ -201,10 +182,10 @@ class InventoryCleaner : Module()
 
 				var misclick = false
 
-				val misclickRate = misclicksRateValue.get()
+				val misclickRate = misclickRateValue.get()
 
 				// Simulate Click Mistakes to bypass some anti-cheats
-				if (allowMisclicksValue.get() && misclickRate > 0 && Random.nextInt(100) <= misclickRate)
+				if (misclickEnabledValue.get() && misclickRate > 0 && Random.nextInt(100) <= misclickRate)
 				{
 					val firstEmpty: Int = firstEmpty(hotbarItems, randomSlot)
 					if (firstEmpty != -1) garbageHotbarItem = firstEmpty
@@ -220,12 +201,12 @@ class InventoryCleaner : Module()
 				val action = if (amount > 1 || (amount == 1 && Math.random() > 0.8)) ICPacketPlayerDigging.WAction.DROP_ALL_ITEMS else ICPacketPlayerDigging.WAction.DROP_ITEM
 				netHandler.addToSendQueue(provider.createCPacketPlayerDigging(action, WBlockPos.ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
 
-				if (indicateClick.get() && screen != null && provider.isGuiContainer(screen)) screen.asGuiContainer().highlight(garbageHotbarItem, indicateLength.get().toLong(), if (misclick) -2130771968 else -2147418368)
+				if (clickIndicationEnabledValue.get() && screen != null && provider.isGuiContainer(screen)) screen.asGuiContainer().highlight(garbageHotbarItem, clickIndicationLengthValue.get().toLong(), if (misclick) -2130771968 else -2147418368)
 
 				// Back to the original holding slot
 				netHandler.addToSendQueue(provider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
 
-				delay = TimeUtils.randomDelay(minHotbarDelayValue.get(), maxHotbarDelayValue.get())
+				delay = hotbarDelayValue.getRandomDelay()
 			}
 		}
 
@@ -258,14 +239,14 @@ class InventoryCleaner : Module()
 			if (garbageItems.isEmpty()) return
 
 			val randomSlot = randomSlotValue.get()
-			val misclickRate = misclicksRateValue.get()
+			val misclickRate = misclickRateValue.get()
 
 			var garbageItem = if (randomSlot) garbageItems[Random.nextInt(garbageItems.size)] else garbageItems.first()
 
 			var misclick = false
 
 			// Simulate Click Mistakes to bypass some anti-cheats
-			if (allowMisclicksValue.get() && misclickRate > 0 && Random.nextInt(100) <= misclickRate)
+			if (misclickEnabledValue.get() && misclickRate > 0 && Random.nextInt(100) <= misclickRate)
 			{
 				val firstEmpty: Int = firstEmpty(items, randomSlot)
 				if (firstEmpty != -1) garbageItem = firstEmpty
@@ -283,14 +264,14 @@ class InventoryCleaner : Module()
 
 			if (amount > 1 || /* Mistake simulation */ Random.nextBoolean()) controller.windowClick(container.windowId, garbageItem, 1, 4, thePlayer) else controller.windowClick(container.windowId, garbageItem, 0, 4, thePlayer)
 
-			if (indicateClick.get() && screen != null && provider.isGuiContainer(screen)) screen.asGuiContainer().highlight(garbageItem, indicateLength.get().toLong(), if (misclick) -2130771968 else -2147418368)
+			if (clickIndicationEnabledValue.get() && screen != null && provider.isGuiContainer(screen)) screen.asGuiContainer().highlight(garbageItem, clickIndicationLengthValue.get().toLong(), if (misclick) -2130771968 else -2147418368)
 
 			clickTimer.reset() // For more compatibility with custom MSTimer(s)
 
 			// SimulateInventory
 			if (openInventory) netHandler.addToSendQueue(provider.createCPacketCloseWindow())
 
-			delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+			delay = delayValue.getRandomDelay()
 		}
 
 		return
@@ -317,14 +298,14 @@ class InventoryCleaner : Module()
 
 			// FIXME: Replace ItemStack equality check (itemStack != otherStack) with something better idea.
 
-			val bowAndArrow = bowAndArrowValue.get()
+			val bowAndArrow = bowAndArrowKeepValue.get()
 			val comparator = if (noDup) 1 else 0
 
 			when
 			{
 				provider.isItemSword(item) || provider.isItemTool(item) ->
 				{
-					if ((provider.isItemSword(item) && keepOldSwordValue.get()) || (provider.isItemTool(item) && keepOldToolsValue.get())) return true
+					if ((provider.isItemSword(item) && filterKeepOldSwordValue.get()) || (provider.isItemTool(item) && filterKeepOldToolsValue.get())) return true
 
 					val hotbarSlot = slot - 36
 					if (hotbarSlot >= 0 && findBetterItem(thePlayer, hotbarSlot, thePlayer.inventory.getStackInSlot(hotbarSlot)) == hotbarSlot) return true
@@ -349,11 +330,11 @@ class InventoryCleaner : Module()
 					containerItems.none { (otherSlot, otherStack) -> otherSlot != slot && otherStack != itemStack && provider.isItemBow(otherStack.item) && currentPower.compareTo(ItemUtils.getEnchantment(otherStack, powerEnch)) < comparator }
 				}
 
-				bowAndArrow && itemStack.unlocalizedName == "item.arrow" -> inventoryItems.filter { (otherSlot, otherStack) -> otherSlot != slot && otherStack.unlocalizedName == "item.arrow" }.values.sumBy(IItemStack::stackSize) + itemStack.stackSize <= arrowCountValue.get()
+				bowAndArrow && itemStack.unlocalizedName == "item.arrow" -> inventoryItems.filter { (otherSlot, otherStack) -> otherSlot != slot && otherStack.unlocalizedName == "item.arrow" }.values.sumBy(IItemStack::stackSize) + itemStack.stackSize <= bowAndArrowArrowCountValue.get()
 
 				provider.isItemArmor(item) ->
 				{
-					if (keepOldArmorsValue.get()) return true
+					if (filterKeepOldArmorsValue.get()) return true
 
 					val currentArmor = ArmorPiece(itemStack, slot)
 
@@ -383,7 +364,7 @@ class InventoryCleaner : Module()
 					}.values.sumBy(IItemStack::stackSize) + itemStack.stackSize <= blockCountValue.get()
 				}
 
-				foodValue.get() && provider.isItemFood(item) ->
+				foodKeepValue.get() && provider.isItemFood(item) ->
 				{
 					val itemID = functions.getIdFromItem(item!!)
 
@@ -432,7 +413,7 @@ class InventoryCleaner : Module()
 
 			if (openInventory) netHandler.addToSendQueue(provider.createCPacketCloseWindow())
 
-			delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+			delay = delayValue.getRandomDelay()
 		}
 	}
 
@@ -480,7 +461,7 @@ class InventoryCleaner : Module()
 				return if (bestWeapon != -1 || bestWeapon == hotbarSlot) bestWeapon else null
 			}
 
-			"bow" -> if (bowAndArrowValue.get())
+			"bow" -> if (bowAndArrowKeepValue.get())
 			{
 				var bestBow = if (provider.isItemBow(slotStack?.item)) hotbarSlot else -1
 
@@ -505,7 +486,7 @@ class InventoryCleaner : Module()
 				return if (bestBow != -1) bestBow else null
 			}
 
-			"food" -> if (foodValue.get()) mainInventory.filter { provider.isItemFood(it.value?.item) }.map { it.index to it.value as IItemStack }.filter { !provider.isItemAppleGold(it.second) }.filter { !type(it.first).equals("Food", ignoreCase = true) }.toList().forEach { (index, stack) -> return@findBetterItem if (ItemUtils.isStackEmpty(slotStack) || !provider.isItemFood(stack.item)) index else null }
+			"food" -> if (foodKeepValue.get()) mainInventory.filter { provider.isItemFood(it.value?.item) }.map { it.index to it.value as IItemStack }.filter { !provider.isItemAppleGold(it.second) }.filter { !type(it.first).equals("Food", ignoreCase = true) }.toList().forEach { (index, stack) -> return@findBetterItem if (ItemUtils.isStackEmpty(slotStack) || !provider.isItemFood(stack.item)) index else null }
 			"block" -> mainInventory.filter { provider.isItemBlock(it.value?.item) }.mapNotNull { it.index to (it.value?.item?.asItemBlock() ?: return@mapNotNull null) }.filter { !InventoryUtils.AUTOBLOCK_BLACKLIST.contains(it.second.block) }.filter { !type(it.first).equals("Block", ignoreCase = true) }.forEach { (index, item) -> return@findBetterItem if (ItemUtils.isStackEmpty(slotStack) || !provider.isItemBlock(item)) index else null }
 
 			"water" -> if (bucketValue.get())
@@ -514,7 +495,7 @@ class InventoryCleaner : Module()
 				mainInventory.filter { provider.isItemBucket(it.value?.item) }.mapNotNull { it.index to (it.value?.item?.asItemBucket() ?: return@mapNotNull null) }.filter { it.second.isFull == flowingWater }.filter { !type(it.first).equals("Water", ignoreCase = true) }.toList().forEach { (index, item) -> return@findBetterItem if (ItemUtils.isStackEmpty(slotStack) || !provider.isItemBucket(item) || (item.asItemBucket()).isFull != flowingWater) index else null }
 			}
 
-			"gapple" -> if (foodValue.get()) mainInventory.filter { provider.isItemAppleGold(it.value?.item) }.filter { !type(it.index).equals("Gapple", ignoreCase = true) }.forEach { return@findBetterItem if (ItemUtils.isStackEmpty(slotStack) || !provider.isItemAppleGold(slotStack?.item)) it.index else null }
+			"gapple" -> if (foodKeepValue.get()) mainInventory.filter { provider.isItemAppleGold(it.value?.item) }.filter { !type(it.index).equals("Gapple", ignoreCase = true) }.forEach { return@findBetterItem if (ItemUtils.isStackEmpty(slotStack) || !provider.isItemAppleGold(slotStack?.item)) it.index else null }
 			"pearl" -> if (enderPearlValue.get()) mainInventory.filter { provider.isItemEnderPearl(it.value?.item) }.filter { !type(it.index).equals("Pearl", ignoreCase = true) }.forEach { return@findBetterItem if (ItemUtils.isStackEmpty(slotStack) || !provider.isItemEnderPearl(slotStack?.item)) it.index else null }
 		}
 
@@ -576,5 +557,5 @@ class InventoryCleaner : Module()
 	}
 
 	override val tag: String
-		get() = "${minDelayValue.get()} ~ ${maxDelayValue.get()}"
+		get() = "${delayValue.getMin()} ~ ${delayValue.getMax()}"
 }

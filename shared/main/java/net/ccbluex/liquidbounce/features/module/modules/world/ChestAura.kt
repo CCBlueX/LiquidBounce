@@ -24,9 +24,7 @@ import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.extensions.getVec
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.*
-import kotlin.random.Random
 
 @ModuleInfo(name = "ChestAura", description = "Automatically opens chests around you.", category = ModuleCategory.WORLD)
 object ChestAura : Module()
@@ -34,92 +32,35 @@ object ChestAura : Module()
 	private val chestValue = BlockValue("Chest", functions.getIdFromBlock(classProvider.getBlockEnum(BlockType.CHEST)))
 	private val rangeValue = FloatValue("Range", 5F, 1F, 6F)
 	private val priorityValue = ListValue("Priority", arrayOf("Distance", "ServerDirection", "ClientDirection"), "Distance")
-	private val maxDelayValue = IntegerValue("MaxDelay", 100, 50, 200)
-	private val minDelayValue = IntegerValue("MinDelay", 100, 50, 200)
-	private val rotationsValue = BoolValue("Rotations", true)
-	private val keepRotationValue = BoolValue("KeepRotation", true)
+	private val delayValue = IntegerRangeValue("Delay", 100, 100, 50, 200, "MaxDelay" to "MinDelay")
 
-	private val minKeepRotationTicksValue: IntegerValue = object : IntegerValue("MinKeepRotationTicks", 20, 0, 50)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val i = maxKeepRotationTicksValue.get()
-			if (i < newValue) this.set(i)
-		}
-	}
-	private val maxKeepRotationTicksValue: IntegerValue = object : IntegerValue("MaxKeepRotationTicks", 30, 0, 50)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val i = minKeepRotationTicksValue.get()
-			if (i > newValue) this.set(i)
-		}
-	}
+	private val rotationGroup = ValueGroup("Rotation")
+	private val rotationEnabledValue = BoolValue("Enabled", true, "Rotations")
+	private val rotationTurnSpeedValue = FloatRangeValue("TurnSpeed", 180f, 180f, 1f, 180f, "MaxTurnSpeed" to "MinTurnSpeed")
+	private val rotationResetSpeedValue = FloatRangeValue("RotationResetSpeed", 180f, 180f, 10f, 180f, "MaxRotationResetSpeed" to "MinRotationResetSpeed")
 
-	// Reset Turn Speed
-	private val maxResetTurnSpeed: FloatValue = object : FloatValue("MaxRotationResetSpeed", 180f, 20f, 180f)
-	{
-		override fun onChanged(oldValue: Float, newValue: Float)
-		{
-			val v = minResetTurnSpeed.get()
-			if (v > newValue) this.set(v)
-		}
-	}
-	private val minResetTurnSpeed: FloatValue = object : FloatValue("MinRotationResetSpeed", 180f, 20f, 180f)
-	{
-		override fun onChanged(oldValue: Float, newValue: Float)
-		{
-			val v = maxResetTurnSpeed.get()
-			if (v < newValue) this.set(v)
-		}
-	}
-
-	// Turn Speed
-	private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 180f, 1f, 180f)
-	{
-		override fun onChanged(oldValue: Float, newValue: Float)
-		{
-			val v = minTurnSpeedValue.get()
-			if (v > newValue) set(v)
-			if (maximum < newValue)
-			{
-				set(maximum)
-			}
-			else if (minimum > newValue)
-			{
-				set(minimum)
-			}
-		}
-	}
-	private val minTurnSpeedValue: FloatValue = object : FloatValue("MinTurnSpeed", 180f, 1f, 180f)
-	{
-		override fun onChanged(oldValue: Float, newValue: Float)
-		{
-			val v = maxTurnSpeedValue.get()
-			if (v < newValue) set(v)
-			if (maximum < newValue)
-			{
-				set(maximum)
-			}
-			else if (minimum > newValue)
-			{
-				set(minimum)
-			}
-		}
-	}
+	private val rotationKeepRotationGroup = ValueGroup("KeepRotation")
+	private val rotationKeepRotationEnabledValue = BoolValue("Enabled", true, "KeepRotation")
+	private val rotationKeepRotationTicksValue = IntegerRangeValue("Ticks", 20, 30, 0, 60, "MaxKeepRotationTicks" to "MinKeepRotationTicks")
 
 	private val throughWallsValue = BoolValue("ThroughWalls", true)
 	private val visualSwing = BoolValue("VisualSwing", true)
-	private val noHitValue = BoolValue("NoHit", true)
+	private val noHitValue = BoolValue("KillAuraBypass", true, "NoHit")
 
 	var currentBlock: WBlockPos? = null
 
 	private val timer = MSTimer()
-	private var delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+	private var delay = delayValue.getRandomDelay()
 
 	val clickedBlocks = mutableListOf<WBlockPos>()
 
 	private var facesBlock = false
+
+	init
+	{
+		rotationKeepRotationGroup.addAll(rotationKeepRotationEnabledValue, rotationKeepRotationTicksValue)
+		rotationGroup.addAll(rotationEnabledValue, rotationTurnSpeedValue, rotationResetSpeedValue, rotationKeepRotationGroup)
+	}
 
 	@EventTarget
 	fun onMotion(event: MotionEvent)
@@ -159,20 +100,20 @@ object ChestAura : Module()
 					if (throughWalls) this else filter { (pos, _) -> (theWorld.rayTraceBlocks(eyesPos, pos.getVec(), stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false) ?: return@filter false).blockPos == pos }
 				}.minBy { prioritySelector(it.key) }?.key
 
-				if (rotationsValue.get())
+				if (rotationEnabledValue.get())
 				{
 					val currentBlock = currentBlock ?: return
 					val vecRotation = RotationUtils.faceBlock(theWorld, thePlayer, currentBlock) ?: return
 					val rotation = vecRotation.rotation
 					val posVec = vecRotation.vec
 
-					val keepRotationTicks = if (keepRotationValue.get()) if (maxKeepRotationTicksValue.get() == minKeepRotationTicksValue.get()) maxKeepRotationTicksValue.get() else minKeepRotationTicksValue.get() + Random.nextInt(maxKeepRotationTicksValue.get() - minKeepRotationTicksValue.get()) else 0
+					val keepRotationTicks = if (rotationKeepRotationEnabledValue.get()) rotationKeepRotationTicksValue.getRandom() else 0
 
-					if (minTurnSpeedValue.get() < 180)
+					if (rotationTurnSpeedValue.getMin() < 180)
 					{
-						val limitedRotation = RotationUtils.limitAngleChange(RotationUtils.serverRotation, rotation, (Random.nextFloat() * (maxTurnSpeedValue.get() - minTurnSpeedValue.get()) + minTurnSpeedValue.get()), 0.0F)
+						val limitedRotation = RotationUtils.limitAngleChange(RotationUtils.serverRotation, rotation, rotationTurnSpeedValue.getRandomStrict(), 0.0F)
 						RotationUtils.setTargetRotation(limitedRotation, keepRotationTicks)
-						RotationUtils.setNextResetTurnSpeed(minResetTurnSpeed.get().coerceAtLeast(20F), maxResetTurnSpeed.get().coerceAtLeast(20F))
+						RotationUtils.setNextResetTurnSpeed(rotationResetSpeedValue.getMin().coerceAtLeast(10F), rotationResetSpeedValue.getMax().coerceAtLeast(10F))
 
 						facesBlock = false
 
@@ -195,14 +136,14 @@ object ChestAura : Module()
 					else
 					{
 						RotationUtils.setTargetRotation(rotation, keepRotationTicks)
-						RotationUtils.setNextResetTurnSpeed(minResetTurnSpeed.get().coerceAtLeast(20F), maxResetTurnSpeed.get().coerceAtLeast(20F))
+						RotationUtils.setNextResetTurnSpeed(rotationResetSpeedValue.getMin().coerceAtLeast(10F), rotationResetSpeedValue.getMax().coerceAtLeast(10F))
 
 						facesBlock = true
 					}
 				}
 			}
 
-			EventState.POST -> if (currentBlock != null && (!rotationsValue.get() || facesBlock) && timer.hasTimePassed(delay))
+			EventState.POST -> if (currentBlock != null && (!rotationEnabledValue.get() || facesBlock) && timer.hasTimePassed(delay))
 			{
 				val currentBlock = currentBlock ?: return
 
@@ -215,7 +156,7 @@ object ChestAura : Module()
 					clickedBlocks.add(currentBlock)
 					this.currentBlock = null
 					timer.reset()
-					delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+					delay = delayValue.getRandomDelay()
 				}
 			}
 		}

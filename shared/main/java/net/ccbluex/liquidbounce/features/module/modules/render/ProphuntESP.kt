@@ -13,45 +13,51 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.ClientUtils
-import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbowRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.GlowShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.OutlineShader
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
 
 @ModuleInfo(name = "ProphuntESP", description = "Allows you to see disguised players in PropHunt.", category = ModuleCategory.RENDER)
 class ProphuntESP : Module()
 {
-	/**
-	 * Options
-	 */
+	private val modeGroup = ValueGroup("Mode")
 	private val modeValue = ListValue("Mode", arrayOf("Box", "Hydra", "ShaderOutline", "ShaderGlow"), "OtherBox")
+	private val modeBoxOutlineColorValue = object : RGBAColorValue("BoxOutlineColor", 255, 255, 255, 90, listOf("Box-Outline-Red", "Box-Outline-Green", "Box-Outline-Blue", "Box-Outline-Alpha"))
+	{
+		override fun showCondition() = !modeValue.get().startsWith("Shader", ignoreCase = true)
+	}
+	private val shaderOutlineRadius = object : FloatValue("ShaderOutlineRadius", 1.35f, 1f, 2f)
+	{
+		override fun showCondition() = modeValue.get().equals("ShaderOutline", ignoreCase = true)
+	}
+	private val shaderGlowRadius = object : FloatValue("ShaderGlowRadius", 2.3f, 2f, 3f)
+	{
+		override fun showCondition() = modeValue.get().equals("ShaderGlow", ignoreCase = true)
+	}
 
-	private val shaderOutlineRadius = FloatValue("ShaderOutline-Radius", 1.35f, 1f, 2f)
-	private val shaderGlowRadius = FloatValue("ShaderGlow-Radius", 2.3f, 2f, 3f)
+	private val colorGroup = ValueGroup("Color")
+	private val colorValue = RGBAColorValue("Color", 0, 90, 255, 255, listOf("R", "G", "B", "Alpha"))
 
-	private val colorRedValue = IntegerValue("R", 0, 0, 255)
-	private val colorGreenValue = IntegerValue("G", 90, 0, 255)
-	private val colorBlueValue = IntegerValue("B", 255, 0, 255)
-	private val colorAlphaValue = IntegerValue("Alpha", 255, 0, 255)
-
-	private val boxOutlineRedValue = IntegerValue("Box-Outline-Red", 255, 0, 255)
-	private val boxOutlineGreenValue = IntegerValue("Box-Outline-Green", 255, 0, 255)
-	private val boxOutlineBlueValue = IntegerValue("Box-Outline-Blue", 255, 0, 255)
-	private val boxOutlineAlphaValue = IntegerValue("Box-Outline-Alpha", 90, 0, 255)
-
-	private val colorRainbow = BoolValue("Rainbow", false)
-	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
-	private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
+	private val colorRainbowGroup = ValueGroup("Rainbow")
+	private val colorRainbowEnabledValue = BoolValue("Enabled", true, "Rainbow")
+	private val colorRainbowSpeedValue = IntegerValue("Speed", 10, 1, 10, "Rainbow-Speed")
+	private val colorRainbowSaturationValue = FloatValue("Saturation", 1.0f, 0.0f, 1.0f, "HSB-Saturation")
+	private val colorRainbowBrightnessValue = FloatValue("Brightness", 1.0f, 0.0f, 1.0f, "HSB-Brightness")
 
 	/**
 	 * Variables
 	 */
 	val blocks = hashMapOf<WBlockPos, Long>()
+
+	init
+	{
+		modeGroup.addAll(modeValue, modeBoxOutlineColorValue, shaderOutlineRadius, shaderGlowRadius)
+
+		colorRainbowGroup.addAll(colorRainbowEnabledValue, colorRainbowSpeedValue, colorRainbowSaturationValue, colorRainbowBrightnessValue)
+		colorGroup.addAll(colorValue, colorRainbowGroup)
+	}
 
 	override fun onDisable()
 	{
@@ -68,9 +74,9 @@ class ProphuntESP : Module()
 
 		val hydraESP = mode == "hydra"
 
-		val color = if (colorRainbow.get()) rainbowRGB(saturation = saturationValue.get(), brightness = brightnessValue.get()) else ColorUtils.createRGB(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), colorAlphaValue.get())
+		val color = if (colorRainbowEnabledValue.get()) rainbowRGB(alpha = colorValue.getAlpha(), speed = colorRainbowSpeedValue.get(), saturation = colorRainbowSaturationValue.get(), brightness = colorRainbowBrightnessValue.get()) else colorValue.get()
 
-		val boxOutlineColor = ColorUtils.createRGB(boxOutlineRedValue.get(), boxOutlineGreenValue.get(), boxOutlineBlueValue.get(), boxOutlineAlphaValue.get())
+		val boxOutlineColor = modeBoxOutlineColorValue.get()
 
 		if (mode == "box" || hydraESP) theWorld.loadedEntityList.filter(classProvider::isEntityFallingBlock).forEach { RenderUtils.drawEntityBox(it, color, boxOutlineColor, hydraESP) }
 
@@ -120,7 +126,7 @@ class ProphuntESP : Module()
 			ClientUtils.logger.error("An error occurred while rendering all entities for shader esp", ex)
 		}
 
-		shader.stopDraw(if (colorRainbow.get()) rainbowRGB(saturation = saturationValue.get(), brightness = brightnessValue.get()) else ColorUtils.createRGB(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get()), when (mode)
+		shader.stopDraw(if (colorRainbowEnabledValue.get()) rainbowRGB(alpha = colorValue.getAlpha(), speed = colorRainbowSpeedValue.get(), saturation = colorRainbowSaturationValue.get(), brightness = colorRainbowBrightnessValue.get()) else colorValue.get(), when (mode)
 		{
 			"shadowoutline" -> shaderOutlineRadius.get()
 			"shaderglow" -> shaderGlowRadius.get()

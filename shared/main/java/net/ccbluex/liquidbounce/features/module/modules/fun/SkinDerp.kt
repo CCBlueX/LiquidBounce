@@ -12,16 +12,14 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.IntegerRangeValue
 import kotlin.random.Random
 
 @ModuleInfo(name = "SkinDerp", description = "Makes your skin blink (Requires multi-layer skin).", category = ModuleCategory.FUN)
 class SkinDerp : Module()
 {
-	private val maxDelayValue = IntegerValue("MaxDelay", 0, 0, 10000)
-	private val minDelayValue = IntegerValue("MinDelay", 0, 0, 10000)
+	private val delayValue = IntegerRangeValue("Delay", 0, 0, 0, 1000, "MaxDelay" to "MinDelay")
 
 	private val hatValue = BoolValue("Hat", true)
 	private val jacketValue = BoolValue("Jacket", true)
@@ -33,7 +31,7 @@ class SkinDerp : Module()
 	private var prevModelParts = emptySet<WEnumPlayerModelParts>()
 
 	private val timer = MSTimer()
-	private var delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+	private var delay = delayValue.getRandomDelay()
 
 	override fun onEnable()
 	{
@@ -70,7 +68,7 @@ class SkinDerp : Module()
 			if (rightSleeveValue.get()) gameSettings.setModelPartEnabled(WEnumPlayerModelParts.RIGHT_SLEEVE, Random.nextBoolean())
 
 			timer.reset()
-			delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+			delay = delayValue.getRandomDelay()
 		}
 	}
 }

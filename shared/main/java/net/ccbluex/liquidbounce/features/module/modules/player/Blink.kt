@@ -18,32 +18,33 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.render.Breadcrumbs
-import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
+import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbowRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.IntegerRangeValue
+import net.ccbluex.liquidbounce.value.ValueGroup
 import org.intellij.lang.annotations.MagicConstant
 import org.lwjgl.opengl.GL11.*
-import java.awt.Color
 import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
 
 @ModuleInfo(name = "Blink", description = "Suspends all movement packets. (If you enable Pulse option, you can use this module as FakeLag)", category = ModuleCategory.PLAYER)
 class Blink : Module()
 {
-	/**
-	 * Options
-	 */
-	private val pulseValue = BoolValue("Pulse", false)
-	private val minPulseDelayValue = IntegerValue("MaxPulseDelay", 1000, 500, 5000)
-	private val maxPulseDelayValue = IntegerValue("MinPulseDelay", 500, 500, 5000)
+	private var packetGroup = ValueGroup("Packets")
+	private val packetBlockPlaceValue = BoolValue("BlockPlace", true, "BlockPlace-Packets")
+	private val packetSwingValue = BoolValue("Swing", true, "Swing-Packets")
+	private val packetEntityActionValue = BoolValue("EntityAction", true, "EntityAction-Packets")
+	private val packetUseEntityValue = BoolValue("UseEntity", true, "UseEntity-Packets")
+
+	private val pulseGroup = ValueGroup("Pulse")
+	private val pulseEnabledValue = BoolValue("Enabled", false, "Pulse")
+	private val pulseDelayValue = object : IntegerRangeValue("PulseDelay", 500, 1000, 10, 10000, "MaxPulseDelay" to "MinPulseDelay")
+	{
+		override fun showCondition() = pulseEnabledValue.get()
+	}
 	private val displayPreviousPos = BoolValue("DisplayPreviousPos", false)
-	private val blockPlacePackets = BoolValue("BlockPlace-Packets", true)
-	private val swingPackets = BoolValue("Swing-Packets", true)
-	private val entityActionPackets = BoolValue("EntityAction-Packets", true)
-	private val useEntityPackets = BoolValue("UseEntity-Packets", true)
 
 	/**
 	 * Variables
@@ -52,9 +53,15 @@ class Blink : Module()
 	private val positions = LinkedList<DoubleArray>()
 
 	private val pulseTimer = MSTimer()
-	private var pulseDelay = TimeUtils.randomDelay(minPulseDelayValue.get(), maxPulseDelayValue.get())
+	private var pulseDelay = pulseDelayValue.getRandomDelay()
 
 	private var fakePlayer: IEntityOtherPlayerMP? = null
+
+	init
+	{
+		packetGroup.addAll(packetBlockPlaceValue, packetSwingValue, packetEntityActionValue, packetUseEntityValue)
+		pulseGroup.addAll(pulseEnabledValue, pulseDelayValue)
+	}
 
 	override fun onEnable()
 	{
@@ -88,7 +95,7 @@ class Blink : Module()
 
 		val provider = classProvider
 
-		if (provider.isCPacketPlayer(packet) || provider.isCPacketPlayerPosition(packet) || provider.isCPacketPlayerPosLook(packet) || blockPlacePackets.get() && provider.isCPacketPlayerBlockPlacement(packet) || swingPackets.get() && provider.isCPacketAnimation(packet) || entityActionPackets.get() && provider.isCPacketEntityAction(packet) || useEntityPackets.get() && provider.isCPacketUseEntity(packet))
+		if (provider.isCPacketPlayer(packet) || provider.isCPacketPlayerPosition(packet) || provider.isCPacketPlayerPosLook(packet) || packetBlockPlaceValue.get() && provider.isCPacketPlayerBlockPlacement(packet) || packetSwingValue.get() && provider.isCPacketAnimation(packet) || packetEntityActionValue.get() && provider.isCPacketEntityAction(packet) || packetUseEntityValue.get() && provider.isCPacketUseEntity(packet))
 		{
 			event.cancelEvent()
 			packets.add(packet)
@@ -103,12 +110,12 @@ class Blink : Module()
 
 		synchronized(positions) { positions.add(doubleArrayOf(thePlayer.posX, thePlayer.entityBoundingBox.minY, thePlayer.posZ)) }
 
-		if (pulseValue.get() && pulseTimer.hasTimePassed(pulseDelay))
+		if (pulseEnabledValue.get() && pulseTimer.hasTimePassed(pulseDelay))
 		{
 			blink(theWorld, thePlayer, displayPreviousPos.get(), 1)
 
 			pulseTimer.reset()
-			pulseDelay = TimeUtils.randomDelay(minPulseDelayValue.get(), maxPulseDelayValue.get())
+			pulseDelay = pulseDelayValue.getRandomDelay()
 		}
 	}
 
@@ -117,7 +124,7 @@ class Blink : Module()
 	{
 		// The color settings are depended on BreadCrumb's
 		val breadcrumbs = LiquidBounce.moduleManager[Breadcrumbs::class.java] as Breadcrumbs
-		val color = if (breadcrumbs.colorRainbow.get()) rainbow(breadcrumbs.colorAlphaValue.get(), saturation = breadcrumbs.saturationValue.get(), brightness = breadcrumbs.brightnessValue.get()) else Color(breadcrumbs.colorRedValue.get(), breadcrumbs.colorGreenValue.get(), breadcrumbs.colorBlueValue.get())
+		val color = if (breadcrumbs.colorRainbowEnabledValue.get()) rainbowRGB(breadcrumbs.colorValue.getAlpha(), speed = breadcrumbs.colorRainbowSpeedValue.get(), saturation = breadcrumbs.colorRainbowSaturationValue.get(), brightness = breadcrumbs.colorRainbowBrightnessValue.get()) else breadcrumbs.colorValue.get()
 
 		// Draw the positions
 		val renderManager = mc.renderManager

@@ -11,33 +11,34 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
+import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbowRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11.*
-import java.awt.Color
 import java.util.*
 
 @ModuleInfo(name = "Breadcrumbs", description = "Leaves a trail behind you.", category = ModuleCategory.RENDER)
 class Breadcrumbs : Module()
 {
-	val colorRedValue = IntegerValue("R", 255, 0, 255)
-	val colorGreenValue = IntegerValue("G", 179, 0, 255)
-	val colorBlueValue = IntegerValue("B", 72, 0, 255)
-	val colorAlphaValue = IntegerValue("Alpha", 255, 0, 255)
+	val colorValue = RGBAColorValue("Color", 255, 255, 255, 30, listOf("R", "G", "B", "Alpha"))
 
-	val colorRainbow = BoolValue("Rainbow", false)
-	val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
-	val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
+	private val colorRainbowGroup = ValueGroup("Rainbow")
+	val colorRainbowEnabledValue = BoolValue("Enabled", true, "Rainbow")
+	val colorRainbowSpeedValue = IntegerValue("Speed", 10, 1, 10, "Rainbow-Speed")
+	val colorRainbowSaturationValue = FloatValue("Saturation", 1.0f, 0.0f, 1.0f, "HSB-Saturation")
+	val colorRainbowBrightnessValue = FloatValue("Brightness", 1.0f, 0.0f, 1.0f, "HSB-Brightness")
 
 	private val positions = LinkedList<DoubleArray>()
+
+	init
+	{
+		colorRainbowGroup.addAll(colorRainbowEnabledValue, colorRainbowSpeedValue, colorRainbowSaturationValue, colorRainbowBrightnessValue)
+	}
 
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
 	{
-		val color = if (colorRainbow.get()) rainbow(colorAlphaValue.get(), saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
+		val color = if (colorRainbowEnabledValue.get()) rainbowRGB(colorValue.getAlpha(), speed = colorRainbowSpeedValue.get(), saturation = colorRainbowSaturationValue.get(), brightness = colorRainbowBrightnessValue.get()) else colorValue.get()
 
 		val renderManager = mc.renderManager
 		val renderPosX = renderManager.viewerPosX

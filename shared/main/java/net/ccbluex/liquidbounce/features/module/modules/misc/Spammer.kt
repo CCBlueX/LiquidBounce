@@ -17,7 +17,7 @@ import net.ccbluex.liquidbounce.utils.misc.RandomUtils.randomString
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.IntegerRangeValue
 import net.ccbluex.liquidbounce.value.TextValue
 
 import kotlin.random.Random
@@ -28,22 +28,16 @@ class Spammer : Module()
 	/**
 	 * Options
 	 */
-	val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 1000, 0, 5000)
+	private val delayValue: IntegerRangeValue = object : IntegerRangeValue("SwitchDelay", 500, 1000, 0, 5000, "MaxDelay" to "MinDelay")
 	{
-		override fun onChanged(oldValue: Int, newValue: Int)
+		override fun onMaxValueChanged(oldValue: Int, newValue: Int)
 		{
-			val minDelayValueObject = minDelayValue.get()
-			if (minDelayValueObject > newValue) set(minDelayValueObject)
-			delay = TimeUtils.randomDelay(minDelayValue.get(), this.get())
+			delay = TimeUtils.randomDelay(getMin(), newValue)
 		}
-	}
-	val minDelayValue: IntegerValue = object : IntegerValue("MinDelay", 500, 0, 5000)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
+
+		override fun onMinValueChanged(oldValue: Int, newValue: Int)
 		{
-			val maxDelayValueObject = maxDelayValue.get()
-			if (maxDelayValueObject < newValue) set(maxDelayValueObject)
-			delay = TimeUtils.randomDelay(this.get(), maxDelayValue.get())
+			delay = TimeUtils.randomDelay(newValue, getMax())
 		}
 	}
 	private val messageValue = TextValue("Message", LiquidBounce.CLIENT_NAME + " Client | liquidbounce(.net) | CCBlueX on yt")
@@ -53,7 +47,7 @@ class Spammer : Module()
 	 * Variables
 	 */
 	private val msTimer = MSTimer()
-	var delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+	var delay = delayValue.getRandomDelay()
 
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
@@ -67,7 +61,7 @@ class Spammer : Module()
 			thePlayer.sendChatMessage(if (customValue.get()) replace(message) else message + " >" + randomString(5 + Random.nextInt(5)) + "<")
 
 			msTimer.reset()
-			delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+			delay = delayValue.getRandomDelay()
 		}
 	}
 

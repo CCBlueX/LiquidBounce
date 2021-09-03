@@ -17,30 +17,30 @@ import net.ccbluex.liquidbounce.injection.backend.Backend
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.canBeClicked
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
-import net.ccbluex.liquidbounce.utils.render.ColorUtils.createRGB
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbowRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11
 
 @ModuleInfo(name = "BlockOverlay", description = "Allows you to change the design of the block overlay.", category = ModuleCategory.RENDER)
 class BlockOverlay : Module()
 {
-	private val colorRedValue = IntegerValue("R", 68, 0, 255)
-	private val colorGreenValue = IntegerValue("G", 117, 0, 255)
-	private val colorBlueValue = IntegerValue("B", 255, 0, 255)
-	private val colorAlphaValue = IntegerValue("Alpha", 102, 0, 255)
+	private val colorValue = RGBAColorValue("Color", 255, 255, 255, 30, listOf("R", "G", "B", "Alpha"))
 
-	private val colorRainbow = BoolValue("Rainbow", false)
-	private val rainbowSpeedValue = IntegerValue("Rainbow-Speed", 10, 1, 10)
-	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
-	private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
+	private val colorRainbowGroup = ValueGroup("Rainbow")
+	private val colorRainbowEnabledValue = BoolValue("Enabled", true, "Rainbow")
+	private val colorRainbowSpeedValue = IntegerValue("Speed", 10, 1, 10, "Rainbow-Speed")
+	private val colorRainbowSaturationValue = FloatValue("Saturation", 1.0f, 0.0f, 1.0f, "HSB-Saturation")
+	private val colorRainbowBrightnessValue = FloatValue("Brightness", 1.0f, 0.0f, 1.0f, "HSB-Brightness")
 
 	private val drawHydraESPValue = BoolValue("Hydra", false)
 
 	val infoValue = BoolValue("Info", false)
+
+	init
+	{
+		colorRainbowGroup.addAll(colorRainbowEnabledValue, colorRainbowSpeedValue, colorRainbowSaturationValue, colorRainbowBrightnessValue)
+	}
 
 	fun getCurrentBlock(theWorld: IWorld): WBlockPos?
 	{
@@ -67,9 +67,8 @@ class BlockOverlay : Module()
 
 		val partialTicks = event.partialTicks
 
-		val alpha = colorAlphaValue.get()
-		val rainbowSpeed = rainbowSpeedValue.get()
-		val color = if (colorRainbow.get()) rainbowRGB(alpha = alpha, speed = rainbowSpeed, saturation = saturationValue.get(), brightness = brightnessValue.get()) else createRGB(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), alpha)
+		val rainbowSpeed = colorRainbowSpeedValue.get()
+		val color = if (colorRainbowEnabledValue.get()) rainbowRGB(alpha = colorValue.getAlpha(), speed = rainbowSpeed, saturation = colorRainbowSaturationValue.get(), brightness = colorRainbowBrightnessValue.get()) else colorValue.get()
 
 		val glStateManager = classProvider.glStateManager
 

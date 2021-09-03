@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.isReplaceable
 import net.ccbluex.liquidbounce.utils.block.PlaceInfo
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
@@ -53,7 +52,7 @@ class Scaffold : Module()
 
 	private val delayGroup = ValueGroup("Delay")
 	private val delayValue = IntegerRangeValue("Delay", 0, 0, 0, 1000, "MaxDelay" to "MinDelay")
-	private val delaySwitchValue = IntegerRangeValue("SwitchSlowDelay", 0, 0, 0, 1000, "MaxSwitchSlotDelay" to "MinSwitchSlotDelay")
+	private val delaySwitchValue = IntegerRangeValue("SwitchSlotDelay", 0, 0, 0, 1000, "MaxSwitchSlotDelay" to "MinSwitchSlotDelay")
 	private val delayPlaceableDelayValue = BoolValue("PlaceableDelay", true)
 
 	private val placeModeValue = ListValue("PlaceTiming", arrayOf("Pre", "Post"), "Post")
@@ -114,7 +113,7 @@ class Scaffold : Module()
 	}
 
 	private val rotationTurnSpeedValue = FloatRangeValue("TurnSpeed", 180f, 180f, 1f, 180f, "MaxTurnSpeed" to "MinTurnSpeed")
-	private val rotationResetSpeedValue = FloatRangeValue("RotationResetSpeed", 180f, 180f, 20f, 180f, "MaxRotationResetSpeed" to "MinRotationResetSpeed")
+	private val rotationResetSpeedValue = FloatRangeValue("RotationResetSpeed", 180f, 180f, 10f, 180f, "MaxRotationResetSpeed" to "MinRotationResetSpeed")
 
 	private val rotationSilentValue = BoolValue("SilentRotation", true, "SilentRotation")
 	private val rotationStrafeValue = BoolValue("Strafe", false, "RotationStrafe")
@@ -166,12 +165,11 @@ class Scaffold : Module()
 	private val sameYValue = BoolValue("SameY", false)
 	private val downValue = BoolValue("Downward", true, "Down")
 
-	// Killaura bypass
 	private val killAuraBypassGroup = ValueGroup("KillAuraBypass")
-	val killauraBypassValue = ListValue("KillauraBypassMode", arrayOf("None", "SuspendKillAura", "WaitForKillauraEnd"), "SuspendKillAura", "KillauraBypassMode")
-	private val killAuraBypassKillAuraSuspendDuration = object : IntegerValue("Duration", 300, 300, 1000, "SuspendKillauraDuration")
+	val killauraBypassModeValue = ListValue("Mode", arrayOf("None", "SuspendKillAura", "WaitForKillauraEnd"), "SuspendKillAura", "KillauraBypassMode")
+	private val killAuraBypassKillAuraSuspendDurationValue = object : IntegerValue("Duration", 300, 100, 1000, "SuspendKillauraDuration")
 	{
-		override fun showCondition() = killauraBypassValue.get().equals("SuspendKillAura", ignoreCase = true)
+		override fun showCondition() = killauraBypassModeValue.get().equals("SuspendKillAura", ignoreCase = true)
 	}
 
 	private val stopConsumingBeforePlaceValue = BoolValue("StopConsumingBeforePlace", true)
@@ -233,7 +231,7 @@ class Scaffold : Module()
 		movementZitterGroup.addAll(movementZitterEnabledValue, movementZitterModeValue, movementZitterIntensityValue, movementZitterSpeedValue)
 		movementSlowGroup.addAll(movementSlowEnabledValue, movementSlowSpeedValue)
 		movementGroup.addAll(movementSprintValue, movementEagleGroup, movementZitterGroup, movementSlowGroup, movementSafeWalkValue, movementAirSafeValue)
-		killAuraBypassGroup.addAll(killauraBypassValue, killAuraBypassKillAuraSuspendDuration)
+		killAuraBypassGroup.addAll(killauraBypassModeValue, killAuraBypassKillAuraSuspendDurationValue)
 	}
 
 	// ENABLING MODULE
@@ -515,7 +513,7 @@ class Scaffold : Module()
 		if (rotationSilentValue.get())
 		{
 			RotationUtils.setTargetRotation(rotation, keepRotation)
-			RotationUtils.setNextResetTurnSpeed(rotationResetSpeedValue.getMin().coerceAtLeast(20F), rotationResetSpeedValue.getMax().coerceAtLeast(20F))
+			RotationUtils.setNextResetTurnSpeed(rotationResetSpeedValue.getMin().coerceAtLeast(10F), rotationResetSpeedValue.getMax().coerceAtLeast(10F))
 		}
 		else
 		{
@@ -652,8 +650,8 @@ class Scaffold : Module()
 			{
 				it == hFacing -> -2
 				it.axisOrdinal == 1 /* Y_AXIS */ -> -1
-				it == hFacing.opposite -> 1
-				else -> 0
+				it == hFacing.opposite -> 0
+				else -> 1
 			}
 		}
 
@@ -690,7 +688,7 @@ class Scaffold : Module()
 	private fun place(theWorld: IWorldClient, thePlayer: IEntityPlayerSP)
 	{
 		val killAura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
-		val waitForKillauraEnd = killauraBypassValue.get().equals("WaitForKillauraEnd", true) && killAura.hasTarget        // targetPlace, Blacklist, killauraWait check
+		val waitForKillauraEnd = killauraBypassModeValue.get().equals("WaitForKillauraEnd", true) && killAura.hasTarget        // targetPlace, Blacklist, killauraWait check
 		if (targetPlace == null || InventoryUtils.AUTOBLOCK_BLACKLIST.contains(BlockUtils.getBlock(theWorld, (targetPlace ?: return).blockPos)) || waitForKillauraEnd)
 		{
 			if (delayPlaceableDelayValue.get()) delayTimer.reset()
@@ -702,7 +700,7 @@ class Scaffold : Module()
 		// Delay & SameY check
 		if (!delayTimer.hasTimePassed(delay) || sameYValue.get() && launchY - 1 != targetPlace.vec3.yCoord.toInt()) return
 
-		if (killauraBypassValue.get().equals("SuspendKillaura", true)) killAura.suspend(killAuraBypassKillAuraSuspendDuration.get().toLong())
+		if (killauraBypassModeValue.get().equals("SuspendKillaura", true)) killAura.suspend(killAuraBypassKillAuraSuspendDurationValue.get().toLong())
 
 		val controller = mc.playerController
 		val netHandler = mc.netHandler
@@ -752,7 +750,7 @@ class Scaffold : Module()
 		if (switched)
 		{
 			switchTimer.reset()
-			switchDelay = TimeUtils.randomDelay(delaySwitchValue.getMin(), delaySwitchValue.getMax())
+			switchDelay = delaySwitchValue.getRandomDelay()
 			if (switchDelay > 0) return
 		}
 
@@ -770,7 +768,7 @@ class Scaffold : Module()
 
 			// Reset delay
 			delayTimer.reset()
-			delay = TimeUtils.randomDelay(delayValue.getMin(), delayValue.getMax())
+			delay = delayValue.getRandomDelay()
 
 			// Apply SpeedModifier
 			if (thePlayer.onGround)

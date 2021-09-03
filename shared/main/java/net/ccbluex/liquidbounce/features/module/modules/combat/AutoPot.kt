@@ -23,149 +23,77 @@ import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
 import kotlin.random.Random
 
 @ModuleInfo(name = "AutoPot", description = "Automatically throws healing potions.", category = ModuleCategory.COMBAT)
 class AutoPot : Module()
 {
-
 	private val modeValue = ListValue("Mode", arrayOf("Normal", "Jump", "Port"), "Normal")
 	private val throwDirValue = ListValue("ThrowDirection", arrayOf("Up", "Down"), "Down")
-
 	private val healthValue = FloatValue("Health", 15F, 1F, 20F)
-
+	private val potDelayValue = IntegerRangeValue("Delay", 250, 250, 0, 2000, "MaxPotDelay" to "MinPotDelay")
 	private val silentValue = BoolValue("Silent", true)
-
-	private val maxDelayValue: IntegerValue = object : IntegerValue("MaxPotDelay", 250, 0, 5000)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val i = minDelayValue.get()
-			if (i > newValue) this.set(i)
-		}
-	}
-
-	private val minDelayValue: IntegerValue = object : IntegerValue("MinPotDelay", 250, 0, 5000)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val i = maxDelayValue.get()
-			if (i < newValue) this.set(i)
-		}
-	}
-
-	private val maxInvDelayValue: IntegerValue = object : IntegerValue("MaxInvDelay", 200, 0, 1000)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val i = minInvDelayValue.get()
-			if (i > newValue) this.set(i)
-		}
-	}
-
-	private val minInvDelayValue: IntegerValue = object : IntegerValue("MinInvDelay", 100, 0, 1000)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val i = maxInvDelayValue.get()
-			if (i < newValue) this.set(i)
-		}
-	}
-	private val openInventoryValue = BoolValue("OpenInv", false)
-	private val simulateInventory = BoolValue("SimulateInventory", true)
-	private val noMoveValue = BoolValue("NoMove", false)
-	private val noMoveThrowValue = BoolValue("NoMove-Throw", false)
-	private val randomSlotValue = BoolValue("RandomSlot", false)
-	private val misClickValue = BoolValue("ClickMistakes", false)
-	private val misClickRateValue = IntegerValue("ClickMistakeRate", 5, 0, 100)
 	private val itemDelayValue = IntegerValue("ItemDelay", 0, 0, 5000)
-
+	private val noMoveThrowValue = BoolValue("NoMove", false, "NoMove-Throw")
+	private val randomSlotValue = BoolValue("RandomSlot", false)
 	private val groundDistanceValue = FloatValue("GroundDistance", 2F, 0.72F, 5F)
-
 	private val ignoreScreen = BoolValue("IgnoreScreen", true)
 
-	private val rotationsValue = BoolValue("Rotations", true)
+	private val inventoryGroup = ValueGroup("Inventory")
+	private val inventoryDelayValue = IntegerRangeValue("Delay", 100, 200, 0, 5000, "MaxInvDelay" to "MinInvDelay")
+	private val inventoryOpenInventoryValue = BoolValue("OpenInventory", false, "OpenInv")
+	private val inventorySimulateInventoryValue = BoolValue("SimulateInventory", true, "SimulateInventory")
+	private val inventoryNoMoveValue = BoolValue("NoMove", false, "NoMove")
+	private val inventoryRandomSlotValue = BoolValue("RandomSlot", false)
 
-	/**
-	 * Acceleration
-	 */
-	private val maxAccelerationRatioValue: FloatValue = object : FloatValue("MaxAccelerationRatio", 0f, 0f, .99f)
-	{
-		override fun onChanged(oldValue: Float, newValue: Float)
-		{
-			val v = minAccelerationRatioValue.get()
-			if (v > newValue) this.set(v)
-		}
-	}
-	private val minAccelerationRatioValue: FloatValue = object : FloatValue("MinAccelerationRatio", 0f, 0f, .99f)
-	{
-		override fun onChanged(oldValue: Float, newValue: Float)
-		{
-			val v = maxAccelerationRatioValue.get()
-			if (v < newValue) this.set(v)
-		}
-	}
+	private val inventoryMisclickGroup = ValueGroup("ClickMistakes")
+	private val inventoryMisclickEnabledValue = BoolValue("Enabled", false, "ClickMistakes")
+	private val inventoryMisclickRateValue = IntegerValue("Rate", 5, 0, 100, "ClickMistakeRate")
 
-	/**
-	 * TurnSpeed
-	 */
-	private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 180f, 0f, 180f)
+	private val rotationGroup = ValueGroup("Rotation")
+	private val rotationEnabledValue = BoolValue("Enabled", true, "Rotations")
+	private val rotationAccelerationRatioValue = FloatRangeValue("Acceleration", 0f, 0f, 0f, .99f, "MaxAccelerationRatio" to "MinAccelerationRatio")
+	private val rotationTurnSpeedValue = FloatRangeValue("TurnSpeed", 180f, 180f, 1f, 180f, "MaxTurnSpeed" to "MinTurnSpeed")
+	private val rotationResetSpeedValue = FloatRangeValue("RotationResetSpeed", 180f, 180f, 10f, 180f, "MaxRotationResetSpeed" to "MinRotationResetSpeed")
+
+	private val rotationKeepRotationGroup = ValueGroup("KeepRotation")
+	private val rotationKeepRotationEnabledValue = BoolValue("Enabled", false, "KeepRotation")
+	private val rotationKeepRotationTicksValue = IntegerValue("Ticks", 1, 1, 40, "KeepRotationLength")
+
+	private val killAuraBypassGroup = ValueGroup("KillAuraBypass")
+	private val killauraBypassModeValue = ListValue("Mode", arrayOf("None", "SuspendKillAura", "WaitForKillauraEnd"), "SuspendKillAura", "KillauraBypassMode")
+	private val killAuraBypassKillAuraSuspendDurationValue = object : IntegerValue("Duration", 300, 100, 1000, "SuspendKillauraDuration")
 	{
-		override fun onChanged(oldValue: Float, newValue: Float)
-		{
-			val v = minTurnSpeedValue.get()
-			if (v > newValue) set(v)
-		}
-	}
-	private val minTurnSpeedValue: FloatValue = object : FloatValue("MinTurnSpeed", 180f, 0f, 180f)
-	{
-		override fun onChanged(oldValue: Float, newValue: Float)
-		{
-			val v = maxTurnSpeedValue.get()
-			if (v < newValue) set(v)
-		}
+		override fun showCondition() = killauraBypassModeValue.get().equals("SuspendKillAura", ignoreCase = true)
 	}
 
-	/**
-	 * Rotation Reset TurnSpeed
-	 */
-	private val maxResetTurnSpeed: FloatValue = object : FloatValue("MaxRotationResetSpeed", 180f, 20f, 180f)
-	{
-		override fun onChanged(oldValue: Float, newValue: Float)
-		{
-			val v = minResetTurnSpeed.get()
-			if (v > newValue) this.set(v)
-		}
-	}
-	private val minResetTurnSpeed: FloatValue = object : FloatValue("MinRotationResetSpeed", 180f, 20f, 180f)
-	{
-		override fun onChanged(oldValue: Float, newValue: Float)
-		{
-			val v = maxResetTurnSpeed.get()
-			if (v < newValue) this.set(v)
-		}
-	}
+	private val potionFilterGroup = ValueGroup("PotionFilter") // TODO: Add potions
+	private val potionFilterInvisibleValue = BoolValue("InvisibilityPot", false, "InvisibilityPot")
 
-	private val keepRotationValue = BoolValue("KeepRotation", false)
-	private val keepRotationLengthValue = IntegerValue("KeepRotationLength", 1, 1, 40)
-
-	private val killauraBypassValue = ListValue("KillauraBypassMode", arrayOf("None", "SuspendKillaura", "WaitForKillauraEnd"), "SuspendKillaura")
-	private val suspendKillauraDuration: IntegerValue = IntegerValue("SuspendKillauraDuration", 250, 0, 1000)
-
-	private val invisPotValue = BoolValue("InvisibilityPot", false)
-	private val jumpBoostPotValue = BoolValue("JumpBoostPot", true)
-	private val jumpPotAmpLimitValue = IntegerValue("JumpPotAmplifierLimit", 5, 2, 127)
+	private val potionFilterJumpBoostGroup = ValueGroup("JumpBoost")
+	private val potionFilterJumpBoostEnabledValue = BoolValue("Enabled", true, "JumpBoostPot")
+	private val potionFilterJumpBoostAmpLimitValue = IntegerValue("AmplifierLimit", 5, 2, 127, "JumpPotAmplifierLimit")
 
 	private val potThrowDelayTimer = MSTimer()
-	private var potThrowDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
-	private var invDelay = TimeUtils.randomDelay(minInvDelayValue.get(), maxInvDelayValue.get())
+	private var potThrowDelay = potDelayValue.getRandomDelay()
+	private var invDelay = inventoryDelayValue.getRandomDelay()
 
 	private var potion = -1
+
+	init
+	{
+		inventoryMisclickGroup.addAll(inventoryMisclickEnabledValue, inventoryMisclickRateValue)
+		inventoryGroup.addAll(inventoryDelayValue, inventoryOpenInventoryValue, inventorySimulateInventoryValue, inventoryNoMoveValue, inventoryRandomSlotValue, inventoryMisclickGroup)
+
+		rotationKeepRotationGroup.addAll(rotationKeepRotationEnabledValue, rotationKeepRotationTicksValue)
+		rotationGroup.addAll(rotationEnabledValue, rotationAccelerationRatioValue, rotationTurnSpeedValue, rotationResetSpeedValue, rotationKeepRotationGroup)
+
+		killAuraBypassGroup.addAll(killauraBypassModeValue, killAuraBypassKillAuraSuspendDurationValue)
+
+		potionFilterJumpBoostGroup.addAll(potionFilterJumpBoostEnabledValue, potionFilterJumpBoostAmpLimitValue)
+		potionFilterGroup.addAll(potionFilterInvisibleValue, potionFilterJumpBoostGroup)
+	}
 
 	companion object
 	{
@@ -210,7 +138,7 @@ class AutoPot : Module()
 		if (controller.isInCreativeMode) return
 
 		val killAura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
-		if (killauraBypassValue.get().equals("WaitForKillauraEnd", true) && killAura.state && killAura.target != null) return
+		if (killauraBypassModeValue.get().equals("WaitForKillauraEnd", true) && killAura.state && killAura.target != null) return
 
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
@@ -221,6 +149,7 @@ class AutoPot : Module()
 		val activePotionEffects = thePlayer.activePotionEffects
 
 		val randomSlot = randomSlotValue.get()
+		val invRandomSlot = inventoryRandomSlotValue.get()
 		val throwDirection = throwDirValue.get().toLowerCase()
 		val health = healthValue.get()
 
@@ -263,7 +192,7 @@ class AutoPot : Module()
 						if (posY - (collisionBlock?.y ?: 0) >= groundDistanceValue.get()) return
 
 						// Suspend killaura if option is present
-						if (killauraBypassValue.get().equals("SuspendKillaura", true)) killAura.suspend(suspendKillauraDuration.get().toLong())
+						if (killauraBypassModeValue.get().equals("SuspendKillaura", true)) killAura.suspend(killAuraBypassKillAuraSuspendDurationValue.get().toLong())
 
 						potion = if (thePlayer.health <= health && healPotionInHotbar != -1) healPotionInHotbar else buffPotionInHotbar
 
@@ -284,24 +213,23 @@ class AutoPot : Module()
 
 						val pitch = thePlayer.rotationPitch
 
-						val maxTurnSpeed = maxTurnSpeedValue.get()
-						val minTurnSpeed = minTurnSpeedValue.get()
-
-						if (!rotationsValue.get() || maxTurnSpeed <= 0F) return
+						if (!rotationEnabledValue.get() || rotationTurnSpeedValue.getMax() <= 0F) return
 
 						if (if (throwDirection == "up") pitch > -80F else pitch < 80F)
 						{
 							// Limit TurnSpeed
-							val turnSpeed = if (minTurnSpeed < 180f) minTurnSpeed + (maxTurnSpeed - minTurnSpeed) * Random.nextFloat() else 180f
+							val turnSpeed = rotationTurnSpeedValue.getRandomStrict()
 
 							// Acceleration
-							val maxAcceleration = maxAccelerationRatioValue.get()
-							val minAcceleration = minAccelerationRatioValue.get()
-							val acceleration = if (maxAcceleration > 0f) minAcceleration + (maxAcceleration - minAcceleration) * Random.nextFloat() else 0f
+							val acceleration = rotationAccelerationRatioValue.getRandomStrict()
 
 							val targetRotation = Rotation(thePlayer.rotationYaw, RandomUtils.nextFloat(if (throwDirection == "up") -80F else 80F, if (throwDirection == "up") -90F else 90F))
 
-							RotationUtils.setTargetRotation(RotationUtils.limitAngleChange(serverRotation, targetRotation, turnSpeed, acceleration), if (keepRotationValue.get()) keepRotationLengthValue.get() else 0)
+							RotationUtils.setTargetRotation(RotationUtils.limitAngleChange(serverRotation, targetRotation, turnSpeed, acceleration), if (rotationKeepRotationEnabledValue.get()) rotationKeepRotationTicksValue.get() else 0)
+
+							val maxResetSpeed = rotationResetSpeedValue.getMax().coerceAtLeast(10F)
+							val minResetSpeed = rotationResetSpeedValue.getMin().coerceAtLeast(10F)
+							if (maxResetSpeed < 180) RotationUtils.setNextResetTurnSpeed(minResetSpeed, maxResetSpeed)
 						}
 
 						return
@@ -309,28 +237,28 @@ class AutoPot : Module()
 				}
 
 				val currentContainer = thePlayer.openContainer
-				if (InventoryUtils.CLICK_TIMER.hasTimePassed(invDelay) && !(noMoveValue.get() && MovementUtils.isMoving(thePlayer)) && !(currentContainer != null && currentContainer.windowId != 0))
+				if (InventoryUtils.CLICK_TIMER.hasTimePassed(invDelay) && !(inventoryNoMoveValue.get() && MovementUtils.isMoving(thePlayer)) && !(currentContainer != null && currentContainer.windowId != 0))
 				{
 					// Move Potion Inventory -> Hotbar
-					val healPotionInInventory = findHealPotion(thePlayer, 9, 36, inventoryContainer, randomSlot)
-					val buffPotionInInventory = findBuffPotion(activePotionEffects, 9, 36, inventoryContainer, randomSlot)
+					val healPotionInInventory = findHealPotion(thePlayer, 9, 36, inventoryContainer, invRandomSlot)
+					val buffPotionInInventory = findBuffPotion(activePotionEffects, 9, 36, inventoryContainer, invRandomSlot)
 
 					if ((healPotionInInventory != -1 || buffPotionInInventory != -1) && InventoryUtils.hasSpaceHotbar(thePlayer.inventory))
 					{
-						if (openInventoryValue.get() && isNotInventory) return
+						if (inventoryOpenInventoryValue.get() && isNotInventory) return
 
 						var slot = if (healPotionInInventory != -1) healPotionInInventory else buffPotionInInventory
 
-						val misclickRate = misClickRateValue.get()
+						val misclickRate = inventoryMisclickRateValue.get()
 
 						// Simulate Click Mistakes to bypass some (geek) anti-cheat's click accuracy checks
-						if (misClickValue.get() && misclickRate > 0 && Random.nextInt(100) <= misclickRate)
+						if (inventoryMisclickEnabledValue.get() && misclickRate > 0 && Random.nextInt(100) <= misclickRate)
 						{
-							val firstEmpty = InventoryUtils.firstEmpty(thePlayer.inventoryContainer, 9, 36, randomSlot)
+							val firstEmpty = InventoryUtils.firstEmpty(thePlayer.inventoryContainer, 9, 36, invRandomSlot)
 							if (firstEmpty != -1) slot = firstEmpty
 						}
 
-						val openInventory = isNotInventory && simulateInventory.get()
+						val openInventory = isNotInventory && inventorySimulateInventoryValue.get()
 
 						if (openInventory) netHandler.addToSendQueue(createOpenInventoryPacket())
 
@@ -338,7 +266,7 @@ class AutoPot : Module()
 
 						if (openInventory) netHandler.addToSendQueue(provider.createCPacketCloseWindow())
 
-						invDelay = TimeUtils.randomDelay(minInvDelayValue.get(), maxInvDelayValue.get())
+						invDelay = inventoryDelayValue.getRandomDelay()
 						InventoryUtils.CLICK_TIMER.reset()
 					}
 				}
@@ -359,7 +287,7 @@ class AutoPot : Module()
 
 						if (silentValue.get()) InventoryUtils.reset(thePlayer)
 
-						potThrowDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+						potThrowDelay = potDelayValue.getRandomDelay()
 						potThrowDelayTimer.reset()
 					}
 
@@ -410,9 +338,9 @@ class AutoPot : Module()
 	{
 		val provider = classProvider
 
-		val jumpPot = jumpBoostPotValue.get()
-		val invisPot = invisPotValue.get()
-		val jumpPotionAmplifierLimit = jumpPotAmpLimitValue.get()
+		val jumpPot = potionFilterJumpBoostEnabledValue.get()
+		val invisPot = potionFilterInvisibleValue.get()
+		val jumpPotionAmplifierLimit = potionFilterJumpBoostAmpLimitValue.get()
 
 		var playerSpeed = -1
 		var playerJump = -1

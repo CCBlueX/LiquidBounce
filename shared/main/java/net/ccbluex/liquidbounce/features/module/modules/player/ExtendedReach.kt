@@ -22,11 +22,8 @@ import net.ccbluex.liquidbounce.utils.pathfinding.PathFinder
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11.*
-import java.awt.Color
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sqrt
@@ -43,24 +40,28 @@ class ExtendedReach : Module()
 	val buildReach = FloatValue("BuildReach", 100F, 6F, 128F)
 	private val maxDashDistanceValue = IntegerValue("DashDistance", 5, 1, 10)
 
-	private val pathEspValue = BoolValue("PathESP", true)
-	private val pathEspTime = IntegerValue("PathESPTime", 1000, 100, 3000)
+	private val pathEspGroup = ValueGroup("PathESP")
+	private val pathEspEnabledValue = BoolValue("Enabled", true, "PathESP")
+	private val pathEspTimeValue = IntegerValue("KeepLength", 1000, 100, 3000, "PathESPTime")
+	private val pathEspColorValue = RGBAColorValue("Color", 255, 179, 72, 255, listOf("PathESP-Red", "PathESP-Green", "PathESP-Blue", "PathESP-Alpha"))
 
-	private val colorRedValue = IntegerValue("PathESP-Red", 255, 0, 255)
-	private val colorGreenValue = IntegerValue("PathESP-Green", 179, 0, 255)
-	private val colorBlueValue = IntegerValue("PathESP-Blue", 72, 0, 255)
-
-	private val colorRainbow = BoolValue("PathESP-Rainbow", false)
-	private val rainbowSpeedValue = IntegerValue("PathESP-RainbowSpeed", 10, 1, 10)
-	private val pathEspAlphaValue = IntegerValue("PathESP-Alpha", 255, 0, 255)
-	private val saturationValue = FloatValue("PathESP-RainbowHSB-Saturation", 1.0f, 0.0f, 1.0f)
-	private val brightnessValue = FloatValue("PathESP-RainbowHSB-Brightness", 1.0f, 0.0f, 1.0f)
+	private val pathEspColorRainbowGroup = ValueGroup("Rainbow")
+	private val pathEspColorRainbowEnabledValue = BoolValue("Enabled", false, "PathESP-Rainbow")
+	private val pathEspColorRainbowSpeedValue = IntegerValue("Speed", 10, 1, 10, "PathESP-RainbowSpeed")
+	private val pathEspColorRainbowSaturationValue = FloatValue("Saturation", 1.0f, 0.0f, 1.0f, "PathESP-RainbowHSB-Saturation")
+	private val pathEspColorRainbowBrightnessValue = FloatValue("Brightness", 1.0f, 0.0f, 1.0f, "PathESP-RainbowHSB-Brightness")
 
 	/**
 	 * Variables
 	 */
 	private val pathESPTimer = MSTimer()
 	private var path = mutableListOf<WVec3>()
+
+	init
+	{
+		pathEspColorRainbowGroup.addAll(pathEspColorRainbowEnabledValue, pathEspColorRainbowSpeedValue, pathEspColorRainbowSaturationValue, pathEspColorRainbowBrightnessValue)
+		pathEspGroup.addAll(pathEspEnabledValue, pathEspTimeValue, pathEspColorValue, pathEspColorRainbowGroup)
+	}
 
 	override fun onEnable()
 	{
@@ -80,10 +81,10 @@ class ExtendedReach : Module()
 		val viewerPosY = renderManager.viewerPosY
 		val viewerPosZ = renderManager.viewerPosZ
 
-		if (pathEspValue.get() && path.isNotEmpty() && !pathESPTimer.hasTimePassed(pathEspTime.get().toLong()))
+		if (pathEspEnabledValue.get() && path.isNotEmpty() && !pathESPTimer.hasTimePassed(pathEspTimeValue.get().toLong()))
 		{
-			val customColor = Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
-			val color = if (colorRainbow.get()) ColorUtils.rainbow(pathEspAlphaValue.get(), speed = rainbowSpeedValue.get(), saturation = saturationValue.get(), brightness = brightnessValue.get()) else customColor
+			val customColor = pathEspColorValue.getColor()
+			val color = if (pathEspColorRainbowEnabledValue.get()) ColorUtils.rainbow(pathEspColorValue.getAlpha(), speed = pathEspColorRainbowSpeedValue.get(), saturation = pathEspColorRainbowSaturationValue.get(), brightness = pathEspColorRainbowBrightnessValue.get()) else customColor
 
 			glPushMatrix()
 			glDisable(GL_TEXTURE_2D)

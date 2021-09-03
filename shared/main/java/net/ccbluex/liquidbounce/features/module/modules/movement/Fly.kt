@@ -35,10 +35,7 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
 import java.awt.Color
@@ -93,84 +90,134 @@ class Fly : Module()
 	/**
 	 * Damage on start
 	 */
-	private val damageOnStartValue = BoolValue("DamageOnStart", false)
-	private val damageModeValue = ListValue("DamageMode", arrayOf("NCP", "Hypixel"), "NCP")
+	private val damageOnStartModeValue = ListValue("DamageOnStart", arrayOf("Off", "NCP", "Hypixel"), "Off")
 
 	/**
 	 * Vanilla
 	 */
-	val vanillaSpeedValue = FloatValue("VanillaSpeed", 2f, 0f, 5f)
-	private val vanillaKickBypassValue = BoolValue("VanillaKickBypass", false)
+	val baseSpeedValue = FloatValue("Speed", 2f, 0f, 5f, "VanillaSpeed")
+	private val vanillaKickBypassValue = object : BoolValue("VanillaKickBypass", false)
+	{
+		override fun showCondition() = modeValue.get().endsWith("Vanilla", ignoreCase = true)
+	}
 
 	/**
 	 * Teleport
 	 */
-	private val teleportDistanceValue = FloatValue("TeleportDistance", 1.0f, 1.0f, 5.0f)
-	private val teleportDelayValue = IntegerValue("TeleportDelay", 100, 0, 1000)
+	private val teleportGroup = object : ValueGroup("Teleport")
+	{
+		override fun showCondition() = modeValue.get().equals("Teleport", ignoreCase = true)
+	}
+	private val teleportDistanceValue = FloatValue("Distance", 1.0f, 1.0f, 5.0f, "TeleportDistance")
+	private val teleportDelayValue = IntegerValue("Delay", 100, 0, 1000, "TeleportDelay")
 
 	/**
 	 * NCP
 	 */
-	private val ncpMotionValue = FloatValue("NCPMotion", 0f, 0f, 1f)
+	private val ncpMotionValue = object : FloatValue("NCPMotion", 0f, 0f, 1f)
+	{
+		override fun showCondition() = modeValue.get().equals("NCP", ignoreCase = true)
+	}
 
 	/**
 	 * AAC
 	 */
-	private val aacSpeedValue = FloatValue("AAC1.9.10-Speed", 0.3f, 0f, 5f)
-	private val aacFast = BoolValue("AAC3.0.5-Fast", true)
-	private val aac3_3_12_YValue = FloatValue("AAC3.3.12-BoostYPos", -70F, -90F, 0F)
-	private val aac3_3_12_MotionValue = FloatValue("AAC3.3.12-Motion", 10f, 0.1f, 10f)
-	private val aac3_3_13_MotionValue = FloatValue("AAC3.3.13-Motion", 10f, 0.1f, 10f)
+	private val aacSpeedValue = object : FloatValue("AAC1.9.10-Speed", 0.3f, 0f, 5f, "AAC1.9.10-Speed")
+	{
+		override fun showCondition() = modeValue.get().equals("AAC1.9.10", ignoreCase = true)
+	}
+
+	private val aacFast = object : BoolValue("AAC3.0.5-Fast", true)
+	{
+		override fun showCondition() = modeValue.get().equals("AAC3.0.5", ignoreCase = true)
+	}
+
+	private val aac3_3_12Group = object : ValueGroup("AAC3.3.12")
+	{
+		override fun showCondition() = modeValue.get().equals("AAC3.3.12", ignoreCase = true)
+	}
+	private val aac3_3_12YValue = FloatValue("BoostYPos", -70F, -90F, 0F, "AAC3.3.12-BoostYPos")
+	private val aac3_3_12MotionValue = FloatValue("Motion", 10f, 0.1f, 10f, "AAC3.3.12-Motion")
+
+	private val aac3_3_13_MotionValue = object : FloatValue("AAC3.3.13-Motion", 10f, 0.1f, 10f)
+	{
+		override fun showCondition() = modeValue.get().equals("AAC3.3.13", ignoreCase = true)
+	}
 
 	/**
 	 * Hypixel
 	 */
-	private val hypixelDMGBoost: BoolValue = object : BoolValue("Hypixel-DamageBoost", false)
+	private val hypixelGroup = object : ValueGroup("Hypixel")
 	{
-		override fun onChanged(oldValue: Boolean, newValue: Boolean)
-		{
-			if (modeValue.get().equals("Hypixel", ignoreCase = true) && newValue) damageOnStartValue.set(true)
-		}
+		override fun showCondition() = modeValue.get().equals("Hypixel", ignoreCase = true)
 	}
-	private val hypixelDMGBoostStartTiming = ListValue("Hypixel-DamageBoost-BoostTiming", arrayOf("Immediately", "AfterDamage"), "Immediately")
-	private val hypixelDMGBoostAirStartMode = ListValue("Hypixel-DamageBoost-AirStartMode", arrayOf("WaitForDamage", "JustFlyWithoutDamageBoost"), "WaitForDamage")
-	private val hypixelOnGroundValue = BoolValue("Hypixel-OnGround", false)
-	private val hypixelYchIncValue = BoolValue("Hypixel-ychinc", true)
-	private val hypixelJumpValue = BoolValue("Hypixel-Jump", false)
 
-	private val hypixelTimerBoost = BoolValue("Hypixel-TimerBoost", true)
-	private val hypixelTimerBoostDelay = IntegerValue("Hypixel-TimerBoost-BoostDelay", 1200, 0, 2000)
-	private val hypixelTimerBoostTimer = FloatValue("Hypixel-TimerBoost-BoostTimer", 1f, 0f, 5f)
+	private val hypixelDamageBoostGroup = ValueGroup("DamageBoost")
+	private val hypixelDamageBoostEnabledValue: BoolValue = BoolValue("Enabled", false, "Hypixel-DamageBoost")
+	private val hypixelDamageBoostStartTimingValue = ListValue("BoostTiming", arrayOf("Immediately", "AfterDamage"), "Immediately", "Hypixel-DamageBoost-BoostTiming")
+	private val hypixelDamageBoostAirStartModeValue = ListValue("AirStartMode", arrayOf("WaitForDamage", "JustFlyWithoutDamageBoost"), "WaitForDamage", "Hypixel-DamageBoost-AirStartMode")
+
+	private val hypixelTimerBoostGroup = ValueGroup("TimerBoost")
+	private val hypixelTimerBoostEnabledValue = BoolValue("Enabled", true, "Hypixel-TimerBoost")
+	private val hypixelTimerBoostTimerValue = FloatValue("Timer", 1f, 0f, 5f, "Hypixel-TimerBoost-BoostTimer")
+	private val hypixelTimerBoostDelayValue = IntegerValue("Duration", 1200, 0, 2000, "Hypixel-TimerBoost-BoostDelay")
+
+	private val hypixelOnGroundValue = BoolValue("OnGround", false, "Hypixel-OnGround")
+	private val hypixelYchIncValue = BoolValue("ychinc", true, "Hypixel-ychinc")
+	private val hypixelJumpValue = BoolValue("Jump", false, "Hypixel-Jump")
 
 	/**
 	 * Mineplex
 	 */
-	private val mineplexSpeedValue = FloatValue("MineplexSpeed", 1f, 0.5f, 10f)
+	private val mineplexSpeedValue = object : FloatValue("MineplexSpeed", 1f, 0.5f, 10f)
+	{
+		override fun showCondition() = modeValue.get().equals("Mineplex", ignoreCase = true)
+	}
 
 	/**
 	 * MushMC
 	 */
-	private val msSpeedValue = FloatValue("MushSpeed", 3f, 1f, 5f)
-	private val msBoostDelay = IntegerValue("MushBoostDelay", 10, 0, 20)
+	private val mushMCGroup = ValueGroup("MushMC")
+	private val mushMCSpeedValue = FloatValue("Speed", 3f, 1f, 5f, "MushSpeed")
+	private val mushMCBoostDelay = IntegerValue("BoostDelay", 10, 0, 20, "MushBoostDelay")
 
 	/**
 	 * RedeSky
 	 */
-	// TODO: Rename variables
-	private val rscSpeedValue: FloatValue = FloatValue("RSCollideSpeed", 15.5f, 0f, 30f)
-	private val rscBoostValue = FloatValue("RSCollideBoost", 0.3f, 0.0f, 1f)
-	private val rscMaxSpeedValue = FloatValue("RSCollideMaxSpeed", 20f, 7f, 30f)
-	private val rscTimerValue = FloatValue("RSCollideTimer", 0.8f, 0.1f, 1f)
-	private val rssSpeedValue = FloatValue("RSSmoothSpeed", 0.9f, 0.05f, 1f)
-	private val rssSpeedChangeValue = FloatValue("RSSmoothChangeSpeed", 0.1f, -1f, 1f)
-	private val rssMotionValue = FloatValue("RSSmoothMotion", 0.2f, 0f, 0.5f)
-	private val rssTimerValue = FloatValue("RSSmoothTimer", 0.3f, 0.1f, 1f)
-	private val rssDropoffValue = FloatValue("RSSmoothDropoff", 1f, 0f, 5f)
-	private val rssDropoff = BoolValue("RSSmoothDropoffA", true)
+	private val redeSkyCollideGroup = object : ValueGroup("RedeSkyCollide")
+	{
+		override fun showCondition() = modeValue.get().equals("RedeSky-Collide", ignoreCase = true)
+	}
+	private val redeSkyCollideSpeedValue: FloatValue = FloatValue("Speed", 15.5f, 0f, 30f, "RSCollideSpeed")
+	private val redeSkyCollideBoostValue = FloatValue("Boost", 0.3f, 0.0f, 1f, "RSCollideBoost")
+	private val redeSkyCollideMaxSpeedValue = FloatValue("MaxSpeed", 20f, 7f, 30f, "RSCollideMaxSpeed")
+	private val redeSkyCollideTimerValue = FloatValue("Timer", 0.8f, 0.1f, 1f, "RSCollideTimer")
 
-	private val neruxVaceTicks = IntegerValue("NeruxVace-Ticks", 6, 0, 20)
-	private val redeskyVClipHeight = FloatValue("RedeSky-Height", 4f, 1f, 7f)
-	private val mccTimerSpeedValue = FloatValue("MCCentral-Timer", 2.0f, 1.0f, 5.0f)
+	private val redeSkySmoothGroup = object : ValueGroup("RedeSkySmooth")
+	{
+		override fun showCondition() = modeValue.get().equals("RedeSky-Smooth", ignoreCase = true)
+	}
+	private val redeSkySmoothSpeedValue = FloatValue("Speed", 0.9f, 0.05f, 1f, "RSSmoothSpeed")
+	private val redeSkySmoothSpeedChangeValue = FloatValue("ChangeSpeed", 0.1f, -1f, 1f, "RSSmoothChangeSpeed")
+	private val redeSkySmoothMotionValue = FloatValue("Motion", 0.2f, 0f, 0.5f, "RSSmoothMotion")
+	private val redeSkySmoothTimerValue = FloatValue("Timer", 0.3f, 0.1f, 1f, "RSSmoothTimer")
+	private val redeSkySmoothDropoffValue = FloatValue("Dropoff", 1f, 0f, 5f, "RSSmoothDropoff")
+	private val redeSkySmoothDropoffAValue = BoolValue("DropoffA", true, "RSSmoothDropoffA")
+
+	private val neruxVaceTicks = object : IntegerValue("NeruxVace-Ticks", 6, 0, 20)
+	{
+		override fun showCondition() = modeValue.get().equals("NeruxVace", ignoreCase = true)
+	}
+
+	private val redeskyVClipHeight = object : FloatValue("RedeSkyGlideHeight", 4f, 1f, 7f, "RedeSky-Height")
+	{
+		override fun showCondition() = modeValue.get().equals("RedeSky-Glide", ignoreCase = true)
+	}
+
+	private val mccTimerSpeedValue = object : FloatValue("MCCentral-Timer", 2.0f, 1.0f, 5.0f)
+	{
+		override fun showCondition() = modeValue.get().equals("MCCentral", ignoreCase = true)
+	}
 
 	/**
 	 * Reset Motions On Disable
@@ -184,7 +231,10 @@ class Fly : Module()
 	 */
 	private val bobValue = BoolValue("Bob", true)
 	private val markValue = BoolValue("Mark", true)
-	private val vanillaFlightRemainingTimeValue = BoolValue("VanillaFlightRemainingTimeCounter", false)
+	private val vanillaFlightRemainingTimeValue = object : BoolValue("VanillaFlightRemainingTimeCounter", false)
+	{
+		override fun showCondition() = modeValue.get().endsWith("Vanilla", ignoreCase = true)
+	}
 
 	/**
 	 * Timers
@@ -247,6 +297,18 @@ class Fly : Module()
 	 */
 	private var mushAfterJump = false
 
+	init
+	{
+		teleportGroup.addAll(teleportDistanceValue, teleportDelayValue)
+		aac3_3_12Group.addAll(aac3_3_12YValue, aac3_3_12MotionValue)
+		hypixelGroup.addAll(hypixelDamageBoostGroup, hypixelTimerBoostGroup, hypixelOnGroundValue, hypixelYchIncValue, hypixelJumpValue)
+		hypixelDamageBoostGroup.addAll(hypixelDamageBoostEnabledValue, hypixelDamageBoostStartTimingValue, hypixelDamageBoostAirStartModeValue)
+		hypixelTimerBoostGroup.addAll(hypixelTimerBoostEnabledValue, hypixelTimerBoostTimerValue, hypixelTimerBoostDelayValue)
+		mushMCGroup.addAll(mushMCSpeedValue, mushMCBoostDelay)
+		redeSkyCollideGroup.addAll(redeSkyCollideSpeedValue, redeSkyCollideBoostValue, redeSkyCollideMaxSpeedValue, redeSkyCollideTimerValue)
+		redeSkySmoothGroup.addAll(redeSkySmoothSpeedValue, redeSkySmoothSpeedChangeValue, redeSkySmoothMotionValue, redeSkySmoothTimerValue, redeSkySmoothDropoffValue, redeSkySmoothDropoffAValue)
+	}
+
 	override fun onEnable()
 	{
 		val theWorld = mc.theWorld ?: return
@@ -261,18 +323,15 @@ class Fly : Module()
 		val onGround = thePlayer.onGround
 
 		val mode = modeValue.get()
-		val damageOnStart = damageOnStartValue.get()
+		val noDamageOnStart = damageOnStartModeValue.get().equals("Off", ignoreCase = true)
 
 		val netHandler = mc.netHandler
 		val networkManager = netHandler.networkManager
 
-		if (damageOnStart && onGround)
+		if (onGround) when (damageOnStartModeValue.get().toLowerCase())
 		{
-			when (damageModeValue.get().toLowerCase())
-			{
-				"ncp" -> Damage.ncpDamage()
-				"hypixel" -> Damage.hypixelDamage()
-			}
+			"ncp" -> Damage.ncpDamage()
+			"hypixel" -> Damage.hypixelDamage()
 		}
 
 		run {
@@ -282,7 +341,7 @@ class Fly : Module()
 				{
 					if (!onGround) return@run
 
-					if (!damageOnStart) Damage.ncpDamage()
+					if (noDamageOnStart) Damage.ncpDamage()
 
 					thePlayer.motionX *= 0.1
 					thePlayer.motionZ *= 0.1
@@ -294,7 +353,7 @@ class Fly : Module()
 				{
 					if (!onGround) return@run
 
-					if (!damageOnStart) Damage.ncpDamage(motionSize = 1.01)
+					if (noDamageOnStart) Damage.ncpDamage(motionSize = 1.01)
 
 					// for (i in 0..3)
 					// {
@@ -308,7 +367,7 @@ class Fly : Module()
 
 				"bugspartan" ->
 				{
-					if (!damageOnStart) Damage.ncpDamage()
+					if (noDamageOnStart) Damage.ncpDamage()
 
 					thePlayer.motionX *= 0.1
 					thePlayer.motionZ *= 0.1
@@ -327,11 +386,11 @@ class Fly : Module()
 				"hypixel" ->
 				{
 					val hypixelJump = hypixelJumpValue.get()
-					if ((hypixelDMGBoost.get() && (hypixelDMGBoostAirStartMode.get().equals("WaitForDamage", ignoreCase = true) || onGround)).also { canPerformHypixelDamageFly = it })
+					if ((hypixelDamageBoostEnabledValue.get() && (hypixelDamageBoostAirStartModeValue.get().equals("WaitForDamage", ignoreCase = true) || onGround)).also { canPerformHypixelDamageFly = it })
 					{
 						if (onGround) // If player is on ground, try to damage.
 						{
-							if (!hypixelFlyStarted) if (hypixelDMGBoostStartTiming.get().equals("Immediately", ignoreCase = true))
+							if (!hypixelFlyStarted) if (hypixelDamageBoostStartTimingValue.get().equals("Immediately", ignoreCase = true))
 							{
 								if (hypixelJump) jump(theWorld, thePlayer)
 
@@ -367,7 +426,7 @@ class Fly : Module()
 
 				"redesky-smooth" ->
 				{
-					thePlayer.motionY += rssMotionValue.get()
+					thePlayer.motionY += redeSkySmoothMotionValue.get()
 					thePlayer.isAirBorne = true
 				}
 
@@ -446,7 +505,7 @@ class Fly : Module()
 		val jumpKeyDown = gameSettings.keyBindJump.isKeyDown
 		val sneakKeyDown = gameSettings.keyBindSneak.isKeyDown
 
-		val vanillaSpeed = vanillaSpeedValue.get()
+		val vanillaSpeed = baseSpeedValue.get()
 
 		vanillaRemainingTime.update()
 
@@ -717,7 +776,7 @@ class Fly : Module()
 
 				"aac3.3.12" ->
 				{
-					if (posY < -70) thePlayer.motionY = aac3_3_12_MotionValue.get().toDouble()
+					if (posY < -70) thePlayer.motionY = aac3_3_12MotionValue.get().toDouble()
 
 					timer.timerSpeed = 1f
 
@@ -841,8 +900,8 @@ class Fly : Module()
 
 				"hypixel" ->
 				{
-					val boostDelay = hypixelTimerBoostDelay.get().toLong()
-					val boostTimer = hypixelTimerBoostTimer.get()
+					val boostDelay = hypixelTimerBoostDelayValue.get().toLong()
+					val boostTimer = hypixelTimerBoostTimerValue.get()
 
 					when
 					{
@@ -850,7 +909,7 @@ class Fly : Module()
 						{
 
 							// Timer Boost
-							if (hypixelTimerBoost.get())
+							if (hypixelTimerBoostEnabledValue.get())
 							{
 								if (hypixelFlyTimer.hasTimePassed(boostDelay)) timer.timerSpeed = 1.0F
 								else timer.timerSpeed = 1.0F + boostTimer * (hypixelFlyTimer.hasTimeLeft(boostDelay).toFloat() / boostDelay.toFloat())
@@ -965,8 +1024,8 @@ class Fly : Module()
 
 					MovementUtils.zeroXYZ(thePlayer)
 
-					if (mc.gameSettings.keyBindForward.isKeyDown) strafe(thePlayer, msSpeedValue.get())
-					if (msBoostDelay.get() != 0 && mushTimer.hasTimePassed((msBoostDelay.get() * 300).toLong()))
+					if (mc.gameSettings.keyBindForward.isKeyDown) strafe(thePlayer, mushMCSpeedValue.get())
+					if (mushMCBoostDelay.get() != 0 && mushTimer.hasTimePassed((mushMCBoostDelay.get() * 300).toLong()))
 					{
 						repeat(3) {
 							mc.netHandler.addToSendQueue(provider.createCPacketPlayerPosition(posX, posY + 1.01, posZ, false))
@@ -1050,7 +1109,7 @@ class Fly : Module()
 		when (mode.toLowerCase())
 		{
 			"aac1.9.10" -> RenderUtils.drawPlatform(startY + aacJump, 0x5A0000FF, 1.0)
-			"aac3.3.12" -> RenderUtils.drawPlatform(aac3_3_12_YValue.get().toDouble(), 0x5A0000FF, 1.0)
+			"aac3.3.12" -> RenderUtils.drawPlatform(aac3_3_12YValue.get().toDouble(), 0x5A0000FF, 1.0)
 		}
 	}
 
@@ -1216,12 +1275,12 @@ class Fly : Module()
 
 			"redesky-collide" ->
 			{
-				mc.timer.timerSpeed = rscTimerValue.get()
+				mc.timer.timerSpeed = redeSkyCollideTimerValue.get()
 				RotationUtils.reset()
 				if (mc.gameSettings.keyBindForward.isKeyDown)
 				{
-					var speed = rscSpeedValue.get() / 100f + flyTick * (rscBoostValue.get() / 100f)
-					val maxSpeed = rscMaxSpeedValue.get() / 100f
+					var speed = redeSkyCollideSpeedValue.get() / 100f + flyTick * (redeSkyCollideBoostValue.get() / 100f)
+					val maxSpeed = redeSkyCollideMaxSpeedValue.get() / 100f
 					if (speed > maxSpeed) speed = maxSpeed
 					val f = thePlayer.rotationYaw * 0.017453292f
 					thePlayer.motionX -= func.sin(f) * speed
@@ -1240,11 +1299,11 @@ class Fly : Module()
 					return
 				}
 
-				val speed = rssSpeedValue.get() / 10f + flyTick * (rssSpeedChangeValue.get() / 1000f)
-				mc.timer.timerSpeed = rssTimerValue.get()
+				val speed = redeSkySmoothSpeedValue.get() / 10f + flyTick * (redeSkySmoothSpeedChangeValue.get() / 1000f)
+				mc.timer.timerSpeed = redeSkySmoothTimerValue.get()
 				thePlayer.capabilities.flySpeed = speed
 				thePlayer.capabilities.isFlying = true
-				thePlayer.setPosition(thePlayer.posX, thePlayer.posY - if (rssDropoff.get()) rssDropoffValue.get() / 1000f * flyTick else rssDropoffValue.get() / 300f, thePlayer.posZ)
+				thePlayer.setPosition(thePlayer.posX, thePlayer.posY - if (redeSkySmoothDropoffAValue.get()) redeSkySmoothDropoffValue.get() / 1000f * flyTick else redeSkySmoothDropoffValue.get() / 300f, thePlayer.posZ)
 			}
 		}
 	}

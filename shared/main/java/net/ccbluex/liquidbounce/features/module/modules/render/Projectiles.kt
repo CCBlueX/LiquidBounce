@@ -27,10 +27,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.FastBow
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11
 import org.lwjgl.util.glu.Cylinder
 import org.lwjgl.util.glu.GLU
@@ -42,20 +39,27 @@ import kotlin.math.sqrt
 @ModuleInfo(name = "Projectiles", description = "Allows you to see where arrows will land. (a.k.a. Trajectories)", category = ModuleCategory.RENDER)
 class Projectiles : Module()
 {
-	private val colorMode = ListValue("Color", arrayOf("Custom", "BowPower", "Rainbow"), "Custom")
+	private val colorGroup = ValueGroup("Color")
+	private val colorModeValue = ListValue("Mode", arrayOf("Custom", "BowPower", "Rainbow"), "Custom", "Color")
+	private val colorValue = RGBAColorValue("Color", 255, 255, 255, 30, listOf("R", "G", "B", "Alpha"))
 
-	private val colorRedValue = IntegerValue("R", 0, 0, 255)
-	private val colorGreenValue = IntegerValue("G", 160, 0, 255)
-	private val colorBlueValue = IntegerValue("B", 255, 0, 255)
+	private val colorRainbowGroup = ValueGroup("Rainbow")
+	private val colorRainbowEnabledValue = BoolValue("Enabled", true, "Rainbow")
+	private val colorRainbowSpeedValue = IntegerValue("Speed", 10, 1, 10, "Rainbow-Speed")
+	private val colorRainbowSaturationValue = FloatValue("Saturation", 1.0f, 0.0f, 1.0f, "HSB-Saturation")
+	private val colorRainbowBrightnessValue = FloatValue("Brightness", 1.0f, 0.0f, 1.0f, "HSB-Brightness")
 
 	private val lineWidthValue = FloatValue("LineWidth", 2.0f, 1.0f, 3.0f)
-
-	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
-	private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
 
 	private val allProjectilesValue = BoolValue("AllProjectiles", false)
 
 	private var lastBowChargeDuration: Int = 0
+
+	init
+	{
+		colorRainbowGroup.addAll(colorRainbowEnabledValue, colorRainbowSpeedValue, colorRainbowSaturationValue, colorRainbowBrightnessValue)
+		colorGroup.addAll(colorModeValue, colorValue, colorRainbowGroup)
+	}
 
 	@EventTarget
 	fun onRender3D(event: Render3DEvent)
@@ -76,11 +80,12 @@ class Projectiles : Module()
 		run {
 			val (motionMultiplier, motionFactor, motionSlowdown, gravity, size, inaccuracy) = getProjectileInfo(thePlayer, thePlayer.heldItem ?: return@run, partialTicks) ?: return@run
 
-			val color = when (colorMode.get().toLowerCase())
+			val alpha = colorValue.getAlpha()
+			val color = when (colorModeValue.get().toLowerCase())
 			{
-				"bowpower" -> ColorUtils.blendColors(floatArrayOf(0f, 0.5f, 1f), arrayOf(Color.RED, Color.YELLOW, Color.GREEN), (motionFactor / 30) * 10).rgb
-				"rainbow" -> ColorUtils.rainbowRGB(saturation = saturationValue.get(), brightness = brightnessValue.get())
-				else -> ColorUtils.createRGB(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), 255)
+				"bowpower" -> ColorUtils.applyAlphaChannel(ColorUtils.blendColors(floatArrayOf(0f, 0.5f, 1f), arrayOf(Color.RED, Color.YELLOW, Color.GREEN), (motionFactor / 30) * 10).rgb, alpha)
+				"rainbow" -> ColorUtils.rainbowRGB(alpha = alpha, speed = colorRainbowSpeedValue.get(), saturation = colorRainbowSaturationValue.get(), brightness = colorRainbowBrightnessValue.get())
+				else -> colorValue.get()
 			}
 
 			val (serverYaw, serverPitch) = RotationUtils.serverRotation

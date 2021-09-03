@@ -31,23 +31,21 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.createOpenInventoryPacket
 import net.ccbluex.liquidbounce.utils.createUseItemPacket
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
 import kotlin.random.Random
 
-@ModuleInfo(name = "AutoUse", description = "Automatically eat/drink foods/potions in your hotbar)", category = ModuleCategory.COMBAT)
+@ModuleInfo(name = "AutoUse", description = "Automatically eat/drink foods/potions in your hotbar (WARNING: WIP)", category = ModuleCategory.COMBAT)
 class AutoUse : Module()
 {
-	private val foodValue = BoolValue("Food", true)
-	private val foodLevelValue = IntegerValue("FoodLevel", 18, 1, 20)
+	private val foodGroup = ValueGroup("Food")
+	private val foodEnabledValue = BoolValue("Enabled", true, "Food")
+	private val foodLevelValue = IntegerValue("Level", 18, 1, 20, "FoodLevel")
 
 	private val potionValue = BoolValue("Potion", true)
 
-	private val gappleValue = BoolValue("Gapple", true)
-	private val gappleHealthValue = FloatValue("Gapple-Health", 12F, 1F, 20F)
+	private val gappleGroup = ValueGroup("GApple")
+	private val gappleEnabledValue = BoolValue("Enabled", true, "Gapple")
+	private val gappleHealthValue = FloatValue("Health", 12F, 1F, 20F, "Gapple-Health")
 
 	private val milkValue = BoolValue("Milk", true)
 
@@ -55,65 +53,52 @@ class AutoUse : Module()
 
 	private val offset = IntegerValue("Offset", 1, 0, 10)
 
-	private val maxDelayValue: IntegerValue = object : IntegerValue("MaxUseDelay", 2000, 0, 5000)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val i = minDelayValue.get()
-			if (i > newValue) this.set(i)
-		}
-	}
-
-	private val minDelayValue: IntegerValue = object : IntegerValue("MinUseDelay", 2000, 0, 5000)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val i = maxDelayValue.get()
-			if (i < newValue) this.set(i)
-		}
-	}
-
-	private val maxInvDelayValue: IntegerValue = object : IntegerValue("MaxInvDelay", 200, 0, 1000)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val i = minInvDelayValue.get()
-			if (i > newValue) this.set(i)
-		}
-	}
-
-	private val minInvDelayValue: IntegerValue = object : IntegerValue("MinInvDelay", 100, 0, 1000)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val i = maxInvDelayValue.get()
-			if (i < newValue) this.set(i)
-		}
-	}
-	private val openInventoryValue = BoolValue("OpenInv", false)
-	private val simulateInventoryValue = BoolValue("SimulateInventory", true)
-	private val noMoveValue = BoolValue("NoMove", false)
-	private val randomSlotValue = BoolValue("RandomSlot", false)
-	private val misClickValue = BoolValue("ClickMistakes", false)
-	private val misClickRateValue = IntegerValue("ClickMistakeRate", 5, 0, 100)
+	private val delayValue = IntegerRangeValue("Delay", 2000, 2000, 0, 2000, "MaxUseDelay" to "MinUseDelay")
 	private val itemDelayValue = IntegerValue("ItemDelay", 0, 0, 5000)
 
 	private val glassBottleValue = ListValue("GlassBottle", arrayOf("Drop", "Move", "Stay"), "Drop")
 
 	private val ignoreScreen = BoolValue("IgnoreScreen", true)
 
-	private val killauraBypassValue = ListValue("KillauraBypassMode", arrayOf("None", "SuspendKillaura", "WaitForKillauraEnd"), "SuspendKillaura")
-	private val suspendKillauraDuration = IntegerValue("SuspendKillauraDuration", 100, 100, 1000)
+	private val inventoryGroup = ValueGroup("Inventory")
+	private val inventoryDelayValue = IntegerRangeValue("Delay", 100, 200, 0, 2000, "MaxInvDelay" to "MinInvDelay")
+	private val inventoryOpenInventoryValue = BoolValue("OpenInventory", false, "OpenInv")
+	private val inventorySimulateInventoryValue = BoolValue("SimulateInventory", true, "SimulateInventory")
+	private val inventoryNoMoveValue = BoolValue("NoMove", false, "NoMove")
+	private val inventoryRandomSlotValue = BoolValue("RandomSlot", false, "RandomSlot")
+
+	private val inventoryMisclickGroup = ValueGroup("ClickMistakes")
+	private val inventoryMisclickEnabledValue = BoolValue("Enabled", false, "ClickMistakes")
+	private val inventoryMisclickRateValue = IntegerValue("Rate", 5, 0, 100, "ClickMistakeRate")
+
+	private val killAuraBypassGroup = ValueGroup("KillAuraBypass")
+	private val killauraBypassModeValue = ListValue("Mode", arrayOf("None", "SuspendKillAura", "WaitForKillauraEnd"), "SuspendKillAura", "KillauraBypassMode")
+	private val killAuraBypassKillAuraSuspendDurationValue = object : IntegerValue("Duration", 300, 100, 1000, "SuspendKillauraDuration")
+	{
+		override fun showCondition() = killauraBypassModeValue.get().equals("SuspendKillAura", ignoreCase = true)
+	}
 
 	private val useDelayTimer = MSTimer()
-	private var useDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+	private var useDelay = delayValue.getRandomDelay()
 
-	private var invDelay = TimeUtils.randomDelay(minInvDelayValue.get(), maxInvDelayValue.get())
+	private var invDelay = inventoryDelayValue.getRandomDelay()
 
 	private var slotToUse = -1
 
 	private var lastRequiredTicks: Int? = null
 	private var waitedTicks = -1
+
+	init
+	{
+		foodGroup.addAll(foodEnabledValue, foodLevelValue)
+
+		gappleGroup.addAll(gappleEnabledValue, gappleHealthValue)
+
+		inventoryMisclickGroup.addAll(inventoryMisclickEnabledValue, inventoryMisclickRateValue)
+		inventoryGroup.addAll(inventoryDelayValue, inventoryOpenInventoryValue, inventorySimulateInventoryValue, inventoryNoMoveValue, inventoryRandomSlotValue, inventoryMisclickGroup)
+
+		killAuraBypassGroup.addAll(killauraBypassModeValue, killAuraBypassKillAuraSuspendDurationValue)
+	}
 
 	override fun onDisable()
 	{
@@ -132,7 +117,7 @@ class AutoUse : Module()
 		if (controller.isInCreativeMode) return
 
 		val killAura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
-		if (killauraBypassValue.get().equals("WaitForKillauraEnd", true) && killAura.state && killAura.target != null) return
+		if (killauraBypassModeValue.get().equals("WaitForKillauraEnd", true) && killAura.state && killAura.target != null) return
 
 		val netHandler = mc.netHandler
 		val screen = mc.currentScreen
@@ -146,15 +131,15 @@ class AutoUse : Module()
 
 		val provider = classProvider
 
-		val food = foodValue.get()
+		val food = foodEnabledValue.get()
 		val potion = potionValue.get()
-		val gapple = gappleValue.get()
+		val gapple = gappleEnabledValue.get()
 		val milk = milkValue.get()
 
 		val gappleHealth = gappleHealthValue.get()
 
 		val itemDelay = itemDelayValue.get().toLong()
-		val random = randomSlotValue.get()
+		val random = inventoryRandomSlotValue.get()
 		val handleGlassBottle = glassBottleValue.get()
 		val silent = silentValue.get()
 
@@ -192,7 +177,7 @@ class AutoUse : Module()
 						if (isFirst) netHandler.addToSendQueue(createUseItemPacket(stack, WEnumHand.MAIN_HAND))
 
 						// Suspend killaura if option is present
-						if (killauraBypassValue.get().equals("SuspendKillaura", true)) killAura.suspend(suspendKillauraDuration.get().toLong())
+						if (killauraBypassModeValue.get().equals("SuspendKillaura", true)) killAura.suspend(killAuraBypassKillAuraSuspendDurationValue.get().toLong())
 
 						if (silent)
 						{
@@ -215,7 +200,7 @@ class AutoUse : Module()
 				}
 				else endEating(thePlayer, provider, netHandler)
 
-				if (InventoryUtils.CLICK_TIMER.hasTimePassed(invDelay) && !(noMoveValue.get() && MovementUtils.isMoving(thePlayer)) && !(openContainer != null && openContainer.windowId != 0))
+				if (InventoryUtils.CLICK_TIMER.hasTimePassed(invDelay) && !(inventoryNoMoveValue.get() && MovementUtils.isMoving(thePlayer)) && !(openContainer != null && openContainer.windowId != 0))
 				{
 					val glassBottle = provider.getItemEnum(ItemType.GLASS_BOTTLE)
 
@@ -223,11 +208,11 @@ class AutoUse : Module()
 					val glassBottleInHotbar = InventoryUtils.findItem(inventoryContainer, 36, 45, glassBottle, itemDelay, random)
 
 					val isGuiInventory = provider.isGuiInventory(screen)
-					val simulateInv = simulateInventoryValue.get()
+					val simulateInv = inventorySimulateInventoryValue.get()
 
 					if (handleGlassBottle.equals("Move", true) && glassBottleInHotbar != -1)
 					{
-						if (openInventoryValue.get() && !isGuiInventory) return
+						if (inventoryOpenInventoryValue.get() && !isGuiInventory) return
 
 						if ((9..36).map(inventory::getStackInSlot).any { it == null || it.item == glassBottle && it.stackSize < 16 })
 						{
@@ -237,7 +222,7 @@ class AutoUse : Module()
 
 							controller.windowClick(0, glassBottleInHotbar, 0, 1, thePlayer)
 
-							invDelay = TimeUtils.randomDelay(minInvDelayValue.get(), maxInvDelayValue.get())
+							invDelay = inventoryDelayValue.getRandomDelay()
 							InventoryUtils.CLICK_TIMER.reset()
 
 							return
@@ -255,10 +240,10 @@ class AutoUse : Module()
 					if (slot != null && InventoryUtils.hasSpaceHotbar(inventory))
 					{
 						// OpenInventory Check
-						if (openInventoryValue.get() && !isGuiInventory) return
+						if (inventoryOpenInventoryValue.get() && !isGuiInventory) return
 
 						// Simulate Click Mistakes to bypass some anti-cheats
-						if (misClickValue.get() && misClickRateValue.get() > 0 && Random.nextInt(100) <= misClickRateValue.get())
+						if (inventoryMisclickEnabledValue.get() && inventoryMisclickRateValue.get() > 0 && Random.nextInt(100) <= inventoryMisclickRateValue.get())
 						{
 							val firstEmpty = InventoryUtils.firstEmpty(inventoryContainer, 9, 36, random)
 							if (firstEmpty != -1) slot = firstEmpty
@@ -271,7 +256,7 @@ class AutoUse : Module()
 
 						if (openInventory) netHandler.addToSendQueue(provider.createCPacketCloseWindow())
 
-						invDelay = TimeUtils.randomDelay(minInvDelayValue.get(), maxInvDelayValue.get())
+						invDelay = inventoryDelayValue.getRandomDelay()
 						InventoryUtils.CLICK_TIMER.reset()
 					}
 				}
@@ -297,7 +282,7 @@ class AutoUse : Module()
 			{
 				if (handleGlassBottle.equals("Drop", true) && (provider.isItemGlassBottle(itemStack.item) || provider.isItemPotion(itemStack.item) && !itemStack.isSplash())) netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.DROP_ITEM, WBlockPos.ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
 
-				useDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+				useDelay = delayValue.getRandomDelay()
 				useDelayTimer.reset()
 			}
 

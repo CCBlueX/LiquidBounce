@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.value.*
@@ -29,13 +28,9 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
 	 */
 	override fun execute(args: Array<String>)
 	{
-		ClientUtils.logger.info("Values in module ${module.name}: ${module.values.joinToString { it.name.toLowerCase() }}")
-		ClientUtils.logger.info("(Float) Values in module ${module.name}: ${module.flatValues.joinToString { it.name.toLowerCase() }}")
-		ClientUtils.logger.info("(Current) Values in module ${module.name}: ${values.joinToString { it.name.toLowerCase() }}")
-
 		val valueNames = lazy(LazyThreadSafetyMode.NONE) {
 			values.map {
-				val newValueParameters = when(it)
+				val newValueParameters = when (it)
 				{
 					is BoolValue -> "<on/off>"
 					is RangeValue<*> -> "<min/max> <new value>"
@@ -85,11 +80,37 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
 		}
 		else
 		{
-			if (value is RangeValue<*> && args.size < 4) chatSyntax(thePlayer, "$moduleName $valueName <min/max> <value>")
+			if (args.size < 4) when (value)
+			{
+				is RangeValue<*> ->
+				{
+					chatSyntax(thePlayer, "$moduleName $valueName <min/max> <value>")
+					return
+				}
+
+				is RGBColorValue ->
+				{
+					chatSyntax(thePlayer, "$moduleName $valueName <red/green/blue> <value>")
+					return
+				}
+
+				is RGBAColorValue ->
+				{
+					chatSyntax(thePlayer, "$moduleName $valueName <red/green/blue/alpha> <value>")
+					return
+				}
+			}
+
 			if (args.size < 3)
 			{
-
-				chat(thePlayer, "\u00A77${module.name} \u00A78$valueName\u00A77 = ${if (value is RangeValue<*>) "${value.getMin()}-${value.getMax()}" else (value as Value<*>).get()}\u00A77.") // Print current state
+				chat(thePlayer, "\u00A77${module.name} \u00A78$valueName\u00A77 = ${
+					when (value)
+					{
+						is RangeValue<*> -> "${value.getMin()}-${value.getMax()}"
+						is ColorValue -> "\u00A7cRed: ${value.getRed()} \u00A7aGreen: ${value.getGreen()} \u00A79Blue: ${value.getBlue()}${if (value is RGBAColorValue) " \u00A77Alpha: ${value.getAlpha()}" else ""}"
+						else -> (value as Value<*>).get()
+					}
+				}\u00A77.") // Print current state
 				if (value is IntegerValue || value is FloatValue || value is TextValue) chatSyntax(thePlayer, "$moduleName $valueName <value>")
 				else if (value is ListValue) chatSyntax(thePlayer, "$moduleName $valueName <${value.values.joinToString(separator = "/").toLowerCase()}>")
 				return
@@ -99,14 +120,26 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
 			{
 				when (value)
 				{
-					is ColorValue ->
+					is RGBColorValue ->
 					{
 						when (args[2].toLowerCase())
 						{
-							"r", "red" -> value.set(args[3].toInt(), value.getGreen(), value.getBlue())
-							"g", "green" -> value.set(value.getRed(), args[3].toInt(), value.getBlue())
-							"b", "blue" -> value.set(value.getRed(), value.getGreen(), args[3].toInt())
+							"r", "red" -> value.set(args[3].toInt(), value.getGreen(), value.getBlue(), value.getAlpha())
+							"g", "green" -> value.set(value.getRed(), args[3].toInt(), value.getBlue(), value.getAlpha())
+							"b", "blue" -> value.set(value.getRed(), value.getGreen(), args[3].toInt(), value.getAlpha())
 							else -> chatSyntax(thePlayer, "$moduleName $valueName <red/green/blue> <value>")
+						}
+					}
+
+					is RGBAColorValue ->
+					{
+						when (args[2].toLowerCase())
+						{
+							"r", "red" -> value.set(args[3].toInt(), value.getGreen(), value.getBlue(), value.getAlpha())
+							"g", "green" -> value.set(value.getRed(), args[3].toInt(), value.getBlue(), value.getAlpha())
+							"b", "blue" -> value.set(value.getRed(), value.getGreen(), args[3].toInt(), value.getAlpha())
+							"a", "alpha", "opacity" -> value.set(value.getRed(), value.getGreen(), value.getBlue(), args[3].toInt())
+							else -> chatSyntax(thePlayer, "$moduleName $valueName <red/green/blue/alpha> <value>")
 						}
 					}
 
@@ -173,7 +206,14 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
 					is TextValue -> value.set(StringUtils.toCompleteString(args, 2))
 				}
 
-				chat(thePlayer, "\u00A77${module.name} \u00A78$valueName\u00A77 was set to \u00A78${if (value is RangeValue<*>) "${value.getMin()}-${value.getMax()}" else (value as Value<*>).get()}\u00A77.")
+				chat(thePlayer, "\u00A77${module.name} \u00A78$valueName\u00A77 was set to \u00A78${
+					when (value)
+					{
+						is RangeValue<*> -> "${value.getMin()}-${value.getMax()}"
+						is ColorValue -> "\u00A7cRed: ${value.getRed()} \u00A7aGreen: ${value.getGreen()} \u00A79Blue: ${value.getBlue()}${if (value is RGBAColorValue) " \u00A77Alpha: ${value.getAlpha()}" else ""}"
+						else -> (value as Value<*>).get()
+					}
+				}\u00A77.")
 				playEdit()
 			}
 			catch (e: NumberFormatException)

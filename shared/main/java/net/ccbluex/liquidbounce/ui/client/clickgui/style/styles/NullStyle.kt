@@ -163,22 +163,23 @@ class NullStyle : Style()
 		val moduleX = moduleElement.x + moduleElement.width
 		val moduleIndentX = moduleX + indent
 
-		val text = "${value.displayName}\u00A7f: \u00A7c${value.getRed()} \u00A7a${value.getGreen()} \u00A79${value.getBlue()}\u00A7r "
-		val colorText = "(#${encodeToHex(value.getRed())}${encodeToHex(value.getGreen())}${encodeToHex(value.getBlue())})"
+		val alphaPresent = value is RGBAColorValue
+		val text = "${value.displayName}\u00A7f: \u00A7c${value.getRed()} \u00A7a${value.getGreen()} \u00A79${value.getBlue()}${if (alphaPresent) " \u00A77${value.getAlpha()}" else ""}\u00A7r "
+		val colorText = "(#${if (alphaPresent) encodeToHex(value.getAlpha()) else ""}${encodeToHex(value.getRed())}${encodeToHex(value.getGreen())}${encodeToHex(value.getBlue())})"
 		val displayTextWidth = Fonts.font35.getStringWidth(text)
-		val textWidth = displayTextWidth + Fonts.font35.getStringWidth(colorText) + indent + 8f
+		val textWidth = displayTextWidth + Fonts.font35.getStringWidth(colorText) + indent + 2f
 
 		if (moduleElement.settingsWidth < textWidth + 20f) moduleElement.settingsWidth = textWidth + 20f
 		val moduleXEnd = moduleX + moduleElement.settingsWidth
 		val perc = moduleElement.settingsWidth - indent - 12
 
-		drawRect(moduleIndentX + textWidth, yPos + 2f, moduleXEnd - 4f, yPos + 10f, value.get(255))
+		drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 24f, BACKGROUND)
 
 		glStateManager.resetColor()
 		Fonts.font35.drawString(text, moduleIndentX + 6, yPos + 4, WHITE)
-		Fonts.font35.drawString(colorText, moduleIndentX + displayTextWidth + 6, yPos + 4, value.get())
+		Fonts.font35.drawString(colorText, moduleIndentX + displayTextWidth + 6, yPos + 4, value.get(255))
+		drawRect(moduleIndentX + textWidth, yPos + 4f, moduleXEnd - 4f, yPos + 10f, value.get())
 
-		drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 24f, BACKGROUND)
 		drawRect(moduleIndentX + 8f, yPos + 18f, moduleXEnd - 4, yPos + 19f, LIGHT_GRAY)
 		val redSliderValue = (moduleIndentX + perc * (value.getRed()) / 255) + 8
 		drawRect(redSliderValue, yPos + 15f, redSliderValue + 3, yPos + 21f, Color.RED)
@@ -187,7 +188,7 @@ class NullStyle : Style()
 		if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= yPos + 15 && mouseY <= yPos + 21 && Mouse.isButtonDown(0))
 		{
 			val newRed = (255 * clamp_double((slideX / perc).toDouble(), 0.0, 1.0)).toInt()
-			value.set(newRed, value.getGreen(), value.getBlue())
+			value.set(newRed, value.getGreen(), value.getBlue(), value.getAlpha())
 		}
 
 		yPos += 22
@@ -200,7 +201,7 @@ class NullStyle : Style()
 		if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= yPos + 5 && mouseY <= yPos + 11 && Mouse.isButtonDown(0))
 		{
 			val newGreen = (255 * clamp_double((slideX / perc).toDouble(), 0.0, 1.0)).toInt()
-			value.set(value.getRed(), newGreen, value.getBlue())
+			value.set(value.getRed(), newGreen, value.getBlue(), value.getAlpha())
 		}
 
 		yPos += 12
@@ -213,10 +214,26 @@ class NullStyle : Style()
 		if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= yPos + 5 && mouseY <= yPos + 11 && Mouse.isButtonDown(0))
 		{
 			val newBlue = (255 * clamp_double((slideX / perc).toDouble(), 0.0, 1.0)).toInt()
-			value.set(value.getRed(), value.getGreen(), newBlue)
+			value.set(value.getRed(), value.getGreen(), newBlue, value.getAlpha())
 		}
 
 		yPos += 12
+
+		if (alphaPresent)
+		{
+			drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 14f, BACKGROUND)
+			drawRect(moduleIndentX + 8f, yPos + 8f, moduleXEnd - 4, yPos + 9f, LIGHT_GRAY)
+			val alphaSliderValue = (moduleIndentX + perc * (value.getAlpha()) / 255) + 8
+			drawRect(alphaSliderValue, yPos + 5f, alphaSliderValue + 3, yPos + 11f, LIGHT_GRAY)
+
+			if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= yPos + 5 && mouseY <= yPos + 11 && Mouse.isButtonDown(0))
+			{
+				val newAlpha = (255 * clamp_double((slideX / perc).toDouble(), 0.0, 1.0)).toInt()
+				value.set(value.getRed(), value.getGreen(), value.getBlue(), newAlpha)
+			}
+
+			yPos += 12
+		}
 
 		return yPos
 	}
@@ -242,10 +259,10 @@ class NullStyle : Style()
 				drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 24f, BACKGROUND)
 				drawRect(moduleIndentX + 8f, yPos + 18f, moduleXEnd - 4, yPos + 19f, LIGHT_GRAY)
 
-				val minSliderValue = (moduleIndentX + perc * (value.getMin() - value.minimum) / (value.maximum - value.minimum)) + 8
+				val minSliderValue = moduleIndentX + perc * (value.getMin() - value.minimum) / (value.maximum - value.minimum) + 8
 				drawRect(minSliderValue, yPos + 15f, minSliderValue + 3, yPos + 21f, guiColor)
 
-				val maxSliderValue = (moduleIndentX + perc * (value.getMax() - value.minimum) / (value.maximum - value.minimum)) + 8
+				val maxSliderValue = moduleIndentX + perc * (value.getMax() - value.minimum) / (value.maximum - value.minimum) + 8
 				drawRect(maxSliderValue, yPos + 15f, maxSliderValue + 3, yPos + 21f, guiColor)
 
 				drawRect(minSliderValue + 3, yPos + 18f, maxSliderValue, yPos + 19f, guiColor)
@@ -277,11 +294,11 @@ class NullStyle : Style()
 				drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 24f, BACKGROUND)
 				drawRect(moduleIndentX + 8f, yPos + 18f, moduleXEnd - 4, yPos + 19f, LIGHT_GRAY)
 
-				val minSliderValue = moduleIndentX + perc * (value.getMin() - value.minimum) / (value.maximum - value.minimum)
-				drawRect(8 + minSliderValue, yPos + 15f, minSliderValue + 11, yPos + 21f, guiColor)
+				val minSliderValue = moduleIndentX + perc * (value.getMin() - value.minimum) / (value.maximum - value.minimum) + 8
+				drawRect(minSliderValue, yPos + 15f, minSliderValue + 3, yPos + 21f, guiColor)
 
-				val maxSliderValue = moduleIndentX + perc * (value.getMax() - value.minimum) / (value.maximum - value.minimum)
-				drawRect(8 + maxSliderValue, yPos + 15f, maxSliderValue + 11, yPos + 21f, guiColor)
+				val maxSliderValue = moduleIndentX + perc * (value.getMax() - value.minimum) / (value.maximum - value.minimum) + 8
+				drawRect(maxSliderValue, yPos + 15f, maxSliderValue + 3, yPos + 21f, guiColor)
 
 				drawRect(minSliderValue + 3, yPos + 18f, maxSliderValue, yPos + 19f, guiColor)
 

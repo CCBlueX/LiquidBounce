@@ -28,12 +28,8 @@ import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11.*
-import java.awt.Color
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.math.max
 import kotlin.math.min
@@ -52,22 +48,16 @@ class TpAura : Module()
 	/**
 	 * Options
 	 */
-	val maxCPS: IntegerValue = object : IntegerValue("MaxCPS", 6, 1, 20)
+	private val cpsValue: IntegerRangeValue = object : IntegerRangeValue("CPS", 3, 5, 1, 20, "MaxCPS" to "MinCPS")
 	{
-		public override fun onChanged(oldValue: Int, newValue: Int)
+		override fun onMaxValueChanged(oldValue: Int, newValue: Int)
 		{
-			val i = minCPS.get()
-			if (i > newValue) set(i)
-			attackDelay = TimeUtils.randomClickDelay(i, get())
+			attackDelay = TimeUtils.randomClickDelay(getMin(), newValue)
 		}
-	}
-	val minCPS: IntegerValue = object : IntegerValue("MinCPS", 6, 1, 20)
-	{
-		public override fun onChanged(oldValue: Int, newValue: Int)
+
+		override fun onMinValueChanged(oldValue: Int, newValue: Int)
 		{
-			val i = maxCPS.get()
-			if (i < newValue) set(i)
-			attackDelay = TimeUtils.randomClickDelay(get(), i)
+			attackDelay = TimeUtils.randomClickDelay(newValue, getMax())
 		}
 	}
 
@@ -78,19 +68,17 @@ class TpAura : Module()
 	private val autoBlockValue = ListValue("AutoBlock", arrayOf("Off", "Fake", "Packet", "AfterTick"), "Packet")
 	private val swingValue = BoolValue("Swing", true)
 
-	private val pathEspValue = BoolValue("PathESP", true)
-	private val pathEspTime = IntegerValue("PathESPTime", 1000, 100, 3000)
+	private val pathEspGroup = ValueGroup("PathESP")
+	private val pathEspEnabledValue = BoolValue("Enabled", true, "PathESP")
+	private val pathEspTimeValue = IntegerValue("KeepLength", 1000, 100, 3000, "PathESPTime")
+	private val pathEspColorValue = RGBAColorValue("Color", 255, 179, 72, 255, listOf("PathESP-Red", "PathESP-Green", "PathESP-Blue", "PathESP-Alpha"))
 
-	private val colorRedValue = IntegerValue("PathESP-Red", 255, 0, 255)
-	private val colorGreenValue = IntegerValue("PathESP-Green", 179, 0, 255)
-	private val colorBlueValue = IntegerValue("PathESP-Blue", 72, 0, 255)
-
-	private val colorRainbow = BoolValue("PathESP-Rainbow", false)
-	private val rainbowSpeedValue = IntegerValue("PathESP-RainbowSpeed", 10, 1, 10)
-	private val rainbowOffsetValue = IntegerValue("PathESP-RainbowIndexOffset", 0, -100, 100)
-	private val pathEspAlphaValue = IntegerValue("PathESP-Alpha", 255, 0, 255)
-	private val saturationValue = FloatValue("PathESP-RainbowHSB-Saturation", 1.0f, 0.0f, 1.0f)
-	private val brightnessValue = FloatValue("PathESP-RainbowHSB-Brightness", 1.0f, 0.0f, 1.0f)
+	private val pathEspColorRainbowGroup = ValueGroup("Rainbow")
+	private val pathEspColorRainbowEnabledValue = BoolValue("Enabled", false, "PathESP-Rainbow")
+	private val pathEspColorRainbowSpeedValue = IntegerValue("Speed", 10, 1, 10, "PathESP-RainbowSpeed")
+	private val pathEspColorRainbowOffsetValue = IntegerValue("IndexOffset", 0, -100, 100, "PathESP-RainbowIndexOffset")
+	private val pathEspColorRainbowSaturationValue = FloatValue("Saturation", 1.0f, 0.0f, 1.0f, "PathESP-RainbowHSB-Saturation")
+	private val pathEspColorRainbowBrightnessValue = FloatValue("Brightness", 1.0f, 0.0f, 1.0f, "PathESP-RainbowHSB-Brightness")
 
 	/**
 	 * Variables
@@ -98,7 +86,7 @@ class TpAura : Module()
 
 	// Attack Delay
 	private val attackTimer = MSTimer()
-	var attackDelay = TimeUtils.randomClickDelay(minCPS.get(), maxCPS.get())
+	var attackDelay = cpsValue.getRandomClickDelay()
 
 	// Paths
 	private val targetPaths = mutableListOf<List<WVec3>>()
@@ -113,6 +101,12 @@ class TpAura : Module()
 	var serverSideBlockingStatus = false
 
 	var debug: String? = null
+
+	init
+	{
+		pathEspColorRainbowGroup.addAll(pathEspColorRainbowEnabledValue, pathEspColorRainbowSpeedValue, pathEspColorRainbowSaturationValue, pathEspColorRainbowBrightnessValue)
+		pathEspGroup.addAll(pathEspEnabledValue, pathEspTimeValue, pathEspColorValue, pathEspColorRainbowGroup)
+	}
 
 	override fun onEnable()
 	{
@@ -219,7 +213,7 @@ class TpAura : Module()
 				}
 
 				attackTimer.reset()
-				attackDelay = TimeUtils.randomClickDelay(minCPS.get(), maxCPS.get())
+				attackDelay = cpsValue.getRandomClickDelay()
 			}
 			else
 			{
@@ -243,20 +237,20 @@ class TpAura : Module()
 		val viewerPosY = renderManager.viewerPosY
 		val viewerPosZ = renderManager.viewerPosZ
 
-		if (currentPath.isNotEmpty() && pathEspValue.get())
+		if (currentPath.isNotEmpty() && pathEspEnabledValue.get())
 		{
-			val rainbow = colorRainbow.get()
-			val saturation = saturationValue.get()
-			val brightness = brightnessValue.get()
-			val pathEspAlpha = pathEspAlphaValue.get()
-			val rainbowOffsetVal = 400000000L + 40000000L * rainbowOffsetValue.get()
-			val rainbowSpeed = rainbowSpeedValue.get()
-			val customColor = Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
+			val rainbow = pathEspColorRainbowEnabledValue.get()
+			val saturation = pathEspColorRainbowSaturationValue.get()
+			val brightness = pathEspColorRainbowBrightnessValue.get()
+			val pathEspAlpha = pathEspColorValue.getAlpha()
+			val rainbowOffsetVal = 400000000L + 40000000L * pathEspColorRainbowOffsetValue.get()
+			val rainbowSpeed = pathEspColorRainbowSpeedValue.get()
+			val customColor = pathEspColorValue.get()
 
 			val entityRenderer = mc.entityRenderer
 
 			targetPaths.forEachIndexed { index, targetPath ->
-				val color = if (rainbow) ColorUtils.rainbow(pathEspAlpha, index * rainbowOffsetVal, rainbowSpeed, saturation, brightness) else customColor
+				val color = if (rainbow) ColorUtils.rainbowRGB(pathEspAlpha, index * rainbowOffsetVal, rainbowSpeed, saturation, brightness) else customColor
 
 				glPushMatrix()
 				glDisable(GL_TEXTURE_2D)
@@ -283,7 +277,7 @@ class TpAura : Module()
 				glPopMatrix()
 			}
 
-			if (attackTimer.hasTimePassed(pathEspTime.get().toLong()))
+			if (attackTimer.hasTimePassed(pathEspTimeValue.get().toLong()))
 			{
 				targetPaths.clear()
 				currentPath.clear()

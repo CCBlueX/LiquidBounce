@@ -23,7 +23,9 @@ import net.ccbluex.liquidbounce.utils.timer.Cooldown
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.IntegerRangeValue
 import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ValueGroup
 import kotlin.math.max
 import kotlin.random.Random
 
@@ -35,108 +37,70 @@ class ChestStealer : Module()
 	 * OPTIONS
 	 */
 
-	// Pick Delay
-	private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 200, 0, 400)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val i = minDelayValue.get()
-			if (i > newValue) set(i)
-		}
-	}
+	private val delayValue = IntegerRangeValue("Delay", 150, 200, 0, 2000, "MaxDelay" to "MinDelay")
+	private val itemDelayValue = IntegerValue("ItemDelay", 0, 0, 5000)
 
-	private val minDelayValue: IntegerValue = object : IntegerValue("MinDelay", 150, 0, 400)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val i = maxDelayValue.get()
-			if (i < newValue) set(i)
-		}
-	}
-
-	// Bypass: Delay on Pick first item
-	private val delayOnFirstValue = BoolValue("DelayOnFirst", false)
-	private val maxStartDelay: IntegerValue = object : IntegerValue("MaxFirstDelay", 0, 0, 1000)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val i = minStartDelay.get()
-			if (i > newValue) this.set(i)
-			nextDelay = TimeUtils.randomDelay(minStartDelay.get(), this.get())
-		}
-	}
-
-	private val minStartDelay: IntegerValue = object : IntegerValue("MinFirstDelay", 0, 0, 1000)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val i = maxStartDelay.get()
-			if (i < newValue) this.set(i)
-
-			nextDelay = TimeUtils.randomDelay(this.get(), maxStartDelay.get())
-		}
-	}
-
-	// Bypass: Take items with randomized order
 	private val takeRandomizedValue = BoolValue("TakeRandomized", false)
-
-	// Bypass: Add some click mistakes
-	private val allowMisclicksValue = BoolValue("ClickMistakes", false)
-	private val misclicksRateValue = IntegerValue("ClickMistakeRate", 5, 1, 100)
-	private val maxAllowedMisclicksPerChestValue = IntegerValue("MaxClickMistakesPerChest", 5, 1, 10)
-
-	// Pick Options
 	private val onlyItemsValue = BoolValue("OnlyItems", false)
 	private val noCompassValue = BoolValue("NoCompass", false)
 	// private val invCleanBeforeSteal = BoolValue("PerformInvCleanBeforeSteal", true) // Disabled due bug
 
-	// AutoClose
-	private val autoCloseValue = BoolValue("AutoClose", true)
-	private val autoCloseMaxDelayValue: IntegerValue = object : IntegerValue("AutoCloseMaxDelay", 0, 0, 400)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val i = autoCloseMinDelayValue.get()
-			if (i > newValue) set(i)
-			nextCloseDelay = TimeUtils.randomDelay(autoCloseMinDelayValue.get(), this.get())
-		}
-	}
-
-	private val autoCloseMinDelayValue: IntegerValue = object : IntegerValue("AutoCloseMinDelay", 0, 0, 400)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val i = autoCloseMaxDelayValue.get()
-			if (i < newValue) set(i)
-			nextCloseDelay = TimeUtils.randomDelay(this.get(), autoCloseMaxDelayValue.get())
-		}
-	}
-
-	// Close Condition Options
-	private val closeOnFullValue = BoolValue("CloseOnFull", true)
-
-	// Bypass
 	private val chestTitleValue = BoolValue("ChestTitle", false)
-	private val itemDelayValue = IntegerValue("ItemDelay", 0, 0, 5000)
 
-	// Visible
-	private val indicateClick = BoolValue("ClickIndication", true)
-	private val indicateLength = IntegerValue("ClickIndicationLength", 100, 50, 200)
+	private val delayOnFirstGroup = ValueGroup("DelayOnFirst")
+	private val delayOnFirstEnabledValue = BoolValue("Enabled", false, "DelayOnFirst")
+	private val delayOnFirstDelayValue: IntegerRangeValue = object : IntegerRangeValue("Delay", 0, 0, 0, 2000, "MaxFirstDelay" to "MinFirstDelay")
+	{
+		override fun onMaxValueChanged(oldValue: Int, newValue: Int)
+		{
+			nextDelay = TimeUtils.randomDelay(getMin(), newValue)
+		}
+
+		override fun onMinValueChanged(oldValue: Int, newValue: Int)
+		{
+			nextDelay = TimeUtils.randomDelay(newValue, getMax())
+		}
+	}
+
+	private val misclickGroup = ValueGroup("ClickMistakes")
+	private val misclickEnabledValue = BoolValue("Enabled", false, "ClickMistakes")
+	private val misclickRateValue = IntegerValue("Rate", 5, 1, 100, "ClickMistakeRate")
+	private val misclickMaxPerChestValue = IntegerValue("MaxPerChest", 5, 1, 10, "MaxClickMistakesPerChest")
+
+	private val autoCloseGroup = ValueGroup("AutoClose")
+	private val autoCloseEnabledValue = BoolValue("Enabled", true, "AutoClose")
+	private val autoCloseOnFullValue = BoolValue("CloseOnFull", true, "CloseOnFull")
+	private val autoCloseDelayValue: IntegerRangeValue = object : IntegerRangeValue("Delay", 0, 0, 0, 2000, "AutoCloseMaxDelay" to "AutoCloseMinDelay")
+	{
+		override fun onMaxValueChanged(oldValue: Int, newValue: Int)
+		{
+			nextCloseDelay = TimeUtils.randomDelay(getMin(), newValue)
+		}
+
+		override fun onMinValueChanged(oldValue: Int, newValue: Int)
+		{
+			nextCloseDelay = TimeUtils.randomDelay(newValue, getMax())
+		}
+	}
+
+	private val clickIndicationGroup = ValueGroup("ClickIndication")
+	private val clickIndicationEnabledValue = BoolValue("Enabled", true, "ClickIndication")
+	private val clickIndicationLengthValue = IntegerValue("Length", 100, 50, 1000, "ClickIndicationLength")
 
 	/**
 	 * VALUES
 	 */
 
 	private val delayTimer = MSTimer()
-	private var nextDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+	private var nextDelay = delayValue.getRandomDelay()
 
 	private val autoCloseTimer = MSTimer()
-	private var nextCloseDelay = TimeUtils.randomDelay(autoCloseMinDelayValue.get(), autoCloseMaxDelayValue.get())
+	private var nextCloseDelay = autoCloseDelayValue.getRandomDelay()
 
 	private var contentReceived = 0
 
 	// Remaining Misclicks count
-	private var remainingMisclickCount = maxAllowedMisclicksPerChestValue.get()
+	private var remainingMisclickCount = misclickMaxPerChestValue.get()
 
 	private val infoUpdateCooldown = Cooldown.getNewCooldownMiliseconds(100)
 
@@ -150,24 +114,32 @@ class ChestStealer : Module()
 			return if (cache == null || infoUpdateCooldown.attemptReset()) (if (!state) "ChestStealer is not active"
 			else
 			{
-				val minStartDelay = minStartDelay.get()
-				val maxStartDelay = maxStartDelay.get()
-				val minDelay = minDelayValue.get()
-				val maxDelay = maxDelayValue.get()
+				val minStartDelay = delayOnFirstDelayValue.getMin()
+				val maxStartDelay = delayOnFirstDelayValue.getMax()
+				val minDelay = delayValue.getMin()
+				val maxDelay = delayValue.getMax()
 				val invCleanerState = LiquidBounce.moduleManager[InventoryCleaner::class.java].state
 				val random = takeRandomizedValue.get()
-				val autoClose = autoCloseValue.get()
-				val minAutoClose = autoCloseMinDelayValue.get()
-				val maxAutoClose = autoCloseMaxDelayValue.get()
+				val autoClose = autoCloseEnabledValue.get()
+				val minAutoClose = autoCloseDelayValue.getMin()
+				val maxAutoClose = autoCloseDelayValue.getMax()
 				val itemDelay = itemDelayValue.get()
-				val misclick = allowMisclicksValue.get()
-				val misclickRate = misclicksRateValue.get()
-				val maxmisclick = maxAllowedMisclicksPerChestValue.get()
+				val misclick = misclickEnabledValue.get()
+				val misclickRate = misclickRateValue.get()
+				val maxmisclick = misclickMaxPerChestValue.get()
 
 				"ChestStealer active [startdelay: ($minStartDelay ~ $maxStartDelay), delay: ($minDelay ~ $maxDelay), itemdelay: $itemDelay, random: $random, onlyuseful: $invCleanerState${if (misclick) ", misclick($misclickRate%, max $maxmisclick per chest)" else ""}${if (autoClose) ", autoclose($minAutoClose ~ $maxAutoClose)" else ""}]"
 			}).apply { cachedInfo = this }
 			else cache
 		}
+
+	init
+	{
+		delayOnFirstGroup.addAll(delayOnFirstEnabledValue, delayOnFirstDelayValue)
+		misclickGroup.addAll(misclickEnabledValue, misclickRateValue, misclickMaxPerChestValue)
+		autoCloseGroup.addAll(autoCloseEnabledValue, autoCloseEnabledValue, autoCloseOnFullValue, autoCloseDelayValue)
+		clickIndicationGroup.addAll(clickIndicationEnabledValue, clickIndicationLengthValue)
+	}
 
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
@@ -180,10 +152,10 @@ class ChestStealer : Module()
 
 		if (!provider.isGuiChest(mc.currentScreen))
 		{
-			if (delayOnFirstValue.get() || itemDelay > 0L)
+			if (delayOnFirstEnabledValue.get() || itemDelay > 0L)
 			{
 				delayTimer.reset()
-				if (nextDelay < minStartDelay.get()) nextDelay = max(TimeUtils.randomDelay(minStartDelay.get(), maxStartDelay.get()), itemDelay)
+				if (nextDelay < delayOnFirstDelayValue.getMin()) nextDelay = max(delayOnFirstDelayValue.getRandomDelay(), itemDelay)
 			}
 			autoCloseTimer.reset()
 			return
@@ -223,7 +195,7 @@ class ChestStealer : Module()
 		// // Perform the InventoryCleaner before start stealing if option is present and InventoryCleaner is enabled. This will be helpful if player's inventory is nearly fucked up with tons of garbage. The settings of InventoryCleaner is depends on InventoryCleaner's official settings.
 		// if (notEmpty && invCleanBeforeSteal.get() && inventoryCleaner.state && !inventoryCleaner.cleanInventory(start = end, end = end + if (inventoryCleaner.hotbarValue.get()) 36 else 27, timer = InventoryUtils.CLICK_TIMER, container = container, delayResetFunc = Runnable { nextDelay = TimeUtils.randomDelay(inventoryCleaner.minDelayValue.get(), inventoryCleaner.maxDelayValue.get()) })) return
 
-		if (notEmpty && (!closeOnFullValue.get() || !getFullInventory(thePlayer)))
+		if (notEmpty && (!autoCloseOnFullValue.get() || !getFullInventory(thePlayer)))
 		{
 			autoCloseTimer.reset()
 
@@ -240,7 +212,7 @@ class ChestStealer : Module()
 					var misclick = false
 
 					// Simulate Click Mistakes to bypass some anti-cheats
-					if (allowMisclicksValue.get() && remainingMisclickCount > 0 && misclicksRateValue.get() > 0 && Random.nextInt(100) <= misclicksRateValue.get())
+					if (misclickEnabledValue.get() && remainingMisclickCount > 0 && misclickRateValue.get() > 0 && Random.nextInt(100) <= misclickRateValue.get())
 					{
 						val firstEmpty: ISlot? = firstEmpty(container.inventorySlots, end, true)
 						if (firstEmpty != null)
@@ -266,7 +238,7 @@ class ChestStealer : Module()
 				{
 					var misclick = false
 
-					if (allowMisclicksValue.get() && remainingMisclickCount > 0 && misclicksRateValue.get() > 0 && Random.nextInt(100) <= misclicksRateValue.get())
+					if (misclickEnabledValue.get() && remainingMisclickCount > 0 && misclickRateValue.get() > 0 && Random.nextInt(100) <= misclickRateValue.get())
 					{
 						val firstEmpty: ISlot? = firstEmpty(container.inventorySlots, end, false)
 						if (firstEmpty != null)
@@ -281,10 +253,10 @@ class ChestStealer : Module()
 				}
 			}
 		}
-		else if (autoCloseValue.get() && autoCloseTimer.hasTimePassed(nextCloseDelay))
+		else if (autoCloseEnabledValue.get() && autoCloseTimer.hasTimePassed(nextCloseDelay))
 		{
 			thePlayer.closeScreen()
-			nextCloseDelay = TimeUtils.randomDelay(autoCloseMinDelayValue.get(), autoCloseMaxDelayValue.get())
+			nextCloseDelay = autoCloseDelayValue.getRandomDelay()
 		}
 	}
 
@@ -306,9 +278,9 @@ class ChestStealer : Module()
 	private fun move(screen: IGuiChest, slot: ISlot, misclick: Boolean)
 	{
 		screen.handleMouseClick(slot, slot.slotNumber, 0, 1)
-		if (indicateClick.get()) screen.asGuiContainer().highlight(slot.slotNumber, indicateLength.get().toLong(), if (misclick) -2130771968 /* 0x80FF0000 */ else -2147418368 /* 0x8000FF00 */)
+		if (clickIndicationEnabledValue.get()) screen.asGuiContainer().highlight(slot.slotNumber, clickIndicationLengthValue.get().toLong(), if (misclick) -2130771968 /* 0x80FF0000 */ else -2147418368 /* 0x8000FF00 */)
 		delayTimer.reset()
-		nextDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+		nextDelay = delayValue.getRandomDelay()
 	}
 
 	private fun isEmpty(thePlayer: IEntityPlayer, chest: IGuiChest, itemDelay: Long): Boolean
@@ -333,5 +305,5 @@ class ChestStealer : Module()
 	private fun getFullInventory(thePlayer: IEntityPlayer): Boolean = thePlayer.inventory.mainInventory.none(ItemUtils::isStackEmpty)
 
 	override val tag: String
-		get() = "${minDelayValue.get()} ~ ${maxDelayValue.get()}"
+		get() = "${delayValue.getMin()} ~ ${delayValue.getMax()}"
 }

@@ -21,11 +21,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.createOpenInventoryPacket
 import net.ccbluex.liquidbounce.utils.createUseItemPacket
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
 import kotlin.random.Random
 
 @ModuleInfo(name = "AutoSoup", description = "Makes you automatically eat soup whenever your health is low.", category = ModuleCategory.COMBAT)
@@ -33,64 +29,38 @@ class AutoSoup : Module()
 {
 	private val healthValue = FloatValue("Health", 15f, 0f, 20f)
 
+	private val delayValue = IntegerRangeValue("Delay", 100, 100, 0, 2000, "MaxSoupDelay" to "MinSoupDelay")
 	private val silentValue = BoolValue("Silent", true)
-
-	private val maxDelayValue: IntegerValue = object : IntegerValue("MaxSoupDelay", 100, 0, 5000)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val i = minDelayValue.get()
-			if (i > newValue) this.set(i)
-		}
-	}
-
-	private val minDelayValue: IntegerValue = object : IntegerValue("MinSoupDelay", 100, 0, 5000)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val i = maxDelayValue.get()
-			if (i < newValue) this.set(i)
-		}
-	}
-
-	private val maxInvDelayValue: IntegerValue = object : IntegerValue("MaxInvDelay", 200, 0, 1000)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val i = minInvDelayValue.get()
-			if (i > newValue) this.set(i)
-		}
-	}
-
-	private val minInvDelayValue: IntegerValue = object : IntegerValue("MinInvDelay", 100, 0, 1000)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val i = maxInvDelayValue.get()
-			if (i < newValue) this.set(i)
-		}
-	}
-	private val openInventoryValue = BoolValue("OpenInv", false)
-	private val simulateInventoryValue = BoolValue("SimulateInventory", true)
-	private val noMoveValue = BoolValue("NoMove", false)
-	private val randomSlotValue = BoolValue("RandomSlot", false)
-	private val misClickValue = BoolValue("ClickMistakes", false)
-	private val misClickRateValue = IntegerValue("ClickMistakeRate", 5, 0, 100)
 	private val itemDelayValue = IntegerValue("ItemDelay", 0, 0, 5000)
-
 	private val bowlValue = ListValue("Bowl", arrayOf("Drop", "Move", "Stay"), "Drop")
-
 	private val ignoreScreen = BoolValue("IgnoreScreen", true)
 
-	private val soupDelayTimer = MSTimer()
-	private var soupDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+	private val inventoryGroup = ValueGroup("Inventory")
+	private val inventoryDelayValue = IntegerRangeValue("Delay", 100, 200, 0, 5000, "MaxInvDelay" to "MinInvDelay")
+	private val inventoryOpenInventoryValue = BoolValue("OpenInventory", false, "OpenInv")
+	private val inventorySimulateInventoryValue = BoolValue("SimulateInventory", true, "SimulateInventory")
+	private val inventoryNoMoveValue = BoolValue("NoMove", false, "NoMove")
+	private val inventoryRandomSlotValue = BoolValue("RandomSlot", false, "RandomSlot")
 
-	private var invDelay = TimeUtils.randomDelay(minInvDelayValue.get(), maxInvDelayValue.get())
+	private val inventoryMisclickGroup = ValueGroup("ClickMistakes")
+	private val inventoryMisclickEnabledValue = BoolValue("Enabled", false, "ClickMistakes")
+	private val inventoryMisclickRateValue = IntegerValue("Rate", 5, 0, 100, "ClickMistakeRate")
+
+	private val soupDelayTimer = MSTimer()
+	private var soupDelay = delayValue.getRandomDelay()
+
+	private var invDelay = inventoryDelayValue.getRandomDelay()
 
 	private var soup = -1
 
 	override val tag: String
 		get() = "${healthValue.get()}"
+
+	init
+	{
+		inventoryMisclickGroup.addAll(inventoryMisclickEnabledValue, inventoryMisclickRateValue)
+		inventoryGroup.addAll(inventoryDelayValue, inventoryOpenInventoryValue, inventorySimulateInventoryValue, inventoryNoMoveValue, inventoryRandomSlotValue, inventoryMisclickGroup)
+	}
 
 	@EventTarget
 	fun onMotion(motionEvent: MotionEvent)
@@ -107,7 +77,7 @@ class AutoSoup : Module()
 		val provider = classProvider
 
 		val itemDelay = itemDelayValue.get().toLong()
-		val random = randomSlotValue.get()
+		val random = inventoryRandomSlotValue.get()
 		val handleBowl = bowlValue.get()
 
 		when (motionEvent.eventState)
@@ -137,7 +107,7 @@ class AutoSoup : Module()
 					}
 				}
 
-				if (InventoryUtils.CLICK_TIMER.hasTimePassed(invDelay) && !(noMoveValue.get() && MovementUtils.isMoving(thePlayer)) && !(openContainer != null && openContainer.windowId != 0))
+				if (InventoryUtils.CLICK_TIMER.hasTimePassed(invDelay) && !(inventoryNoMoveValue.get() && MovementUtils.isMoving(thePlayer)) && !(openContainer != null && openContainer.windowId != 0))
 				{
 					val bowl = provider.getItemEnum(ItemType.BOWL)
 
@@ -145,11 +115,11 @@ class AutoSoup : Module()
 					val bowlInHotbar = InventoryUtils.findItem(inventoryContainer, 36, 45, bowl, itemDelay, random)
 
 					val isGuiInventory = provider.isGuiInventory(screen)
-					val simulateInv = simulateInventoryValue.get()
+					val simulateInv = inventorySimulateInventoryValue.get()
 
 					if (handleBowl.equals("Move", true) && bowlInHotbar != -1)
 					{
-						if (openInventoryValue.get() && !isGuiInventory) return
+						if (inventoryOpenInventoryValue.get() && !isGuiInventory) return
 
 						if ((9..36).map(inventory::getStackInSlot).any { it == null || it.item == bowl && it.stackSize < 64 })
 						{
@@ -159,7 +129,7 @@ class AutoSoup : Module()
 
 							controller.windowClick(0, bowlInHotbar, 0, 1, thePlayer)
 
-							invDelay = TimeUtils.randomDelay(minInvDelayValue.get(), maxInvDelayValue.get())
+							invDelay = inventoryDelayValue.getRandomDelay()
 							InventoryUtils.CLICK_TIMER.reset()
 
 							return
@@ -173,10 +143,10 @@ class AutoSoup : Module()
 					{
 
 						// OpenInventory Check
-						if (openInventoryValue.get() && !isGuiInventory) return
+						if (inventoryOpenInventoryValue.get() && !isGuiInventory) return
 
 						// Simulate Click Mistakes to bypass some anti-cheats
-						if (misClickValue.get() && misClickRateValue.get() > 0 && Random.nextInt(100) <= misClickRateValue.get())
+						if (inventoryMisclickEnabledValue.get() && inventoryMisclickRateValue.get() > 0 && Random.nextInt(100) <= inventoryMisclickRateValue.get())
 						{
 							val firstEmpty = InventoryUtils.firstEmpty(inventoryContainer, 9, 36, random)
 							if (firstEmpty != -1) soupInInventory = firstEmpty
@@ -189,7 +159,7 @@ class AutoSoup : Module()
 
 						if (openInventory) netHandler.addToSendQueue(provider.createCPacketCloseWindow())
 
-						invDelay = TimeUtils.randomDelay(minInvDelayValue.get(), maxInvDelayValue.get())
+						invDelay = inventoryDelayValue.getRandomDelay()
 						InventoryUtils.CLICK_TIMER.reset()
 					}
 				}
@@ -209,7 +179,7 @@ class AutoSoup : Module()
 
 						if (silentValue.get()) InventoryUtils.reset(thePlayer)
 
-						soupDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+						soupDelay = delayValue.getRandomDelay()
 						soupDelayTimer.reset()
 					}
 

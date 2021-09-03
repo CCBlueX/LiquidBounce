@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
 import net.ccbluex.liquidbounce.utils.extensions.isClientTarget
-import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_1
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_6
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
@@ -55,7 +54,7 @@ class KillAura : Module()
 	 * OPTIONS
 	 */
 
-	private val cpsValue = object : IntegerRangeValue("CPS", 5, 8, 1, 10, "MaxCPS" to "MinCPS")
+	private val cpsValue: IntegerRangeValue = object : IntegerRangeValue("CPS", 5, 8, 1, 20, "MaxCPS" to "MinCPS")
 	{
 		override fun onMaxValueChanged(oldValue: Int, newValue: Int)
 		{
@@ -181,7 +180,10 @@ class KillAura : Module()
 
 	private val rotationAccelerationRatioValue = FloatRangeValue("Acceleration", 0f, 0f, 0f, .99f, "MaxAccelerationRatio" to "MinAccelerationRatio")
 	private val rotationTurnSpeedValue = FloatRangeValue("TurnSpeed", 180f, 180f, 0f, 180f, "MaxTurnSpeed" to "MinTurnSpeed")
-	private val rotationResetSpeedValue = FloatRangeValue("RotationResetSpeed", 180f, 180f, 20f, 180f, "MaxRotationResetSpeed" to "MinRotationResetSpeed")
+	private val rotationResetSpeedValue = object : FloatRangeValue("RotationResetSpeed", 180f, 180f, 10f, 180f, "MaxRotationResetSpeed" to "MinRotationResetSpeed")
+	{
+		override fun showCondition() = rotationSilentValue.get()
+	}
 
 	private val rotationStrafeGroup = ValueGroup("Strafe")
 	private val rotationStrafeValue = ListValue("Mode", arrayOf("Off", "Strict", "Silent"), "Off", "Strafe")
@@ -190,11 +192,11 @@ class KillAura : Module()
 	private val rotationPredictGroup = ValueGroup("Predict")
 	private val rotationPredictEnemyGroup = ValueGroup("Enemy")
 	private val rotationPredictEnemyEnabledValue = BoolValue("Enabled", true, "Predict")
-	private val rotationPredictEnemyIntensityValue = FloatRangeValue("Intensity", 1f, 1f, -2f, -2f, "MaxPredictSize" to "MinPredictSize")
+	private val rotationPredictEnemyIntensityValue = FloatRangeValue("Intensity", 1f, 1f, -2f, 2f, "MaxPredictSize" to "MinPredictSize")
 
 	private val rotationPredictPlayerGroup = ValueGroup("Player")
 	private val rotationPredictPlayerEnabledValue = BoolValue("Enabled", true, "PlayerPredict")
-	private val rotationPredictPlayerIntensityValue = FloatRangeValue("Intensity", 1f, 1f, -2f, -2f, "MaxPlayerPredictSize" to "MinPlayerPredictSize")
+	private val rotationPredictPlayerIntensityValue = FloatRangeValue("Intensity", 1f, 1f, -2f, 2f, "MaxPlayerPredictSize" to "MinPlayerPredictSize")
 
 	private val rotationBacktrackGroup = ValueGroup("Backtrack")
 	private val rotationBacktrackEnabledValue = BoolValue("Enabled", false, "Backtrace")
@@ -261,7 +263,7 @@ class KillAura : Module()
 	// Client-side(= visual) block status
 	var clientSideBlockingStatus: Boolean = false
 
-	private var switchDelay = TimeUtils.randomDelay(switchDelayValue.getMin(), switchDelayValue.getMax())
+	private var switchDelay = switchDelayValue.getRandomDelay()
 	private val switchDelayTimer = MSTimer()
 
 	var debug: String? = null
@@ -299,7 +301,7 @@ class KillAura : Module()
 		interactAutoBlockGroup.addAll(interactAutoBlockEnabledValue, interactAutoBlockRangeValue)
 		autoBlockGroup.addAll(autoBlockValue, autoBlockRangeValue, autoBlockRate, autoBlockHitableCheckValue, autoBlockHurtTimeCheckValue, autoBlockWallCheckValue, interactAutoBlockGroup)
 		rayCastGroup.addAll(rayCastEnabledValue, rayCastIgnoredValue, rayCastLivingValue)
-		bypassGroup.addAll(bypassKeepSprintValue, bypassAACValue, bypassFailRateValue, bypassSuspendWhileConsumingValue, noInventoryGroup, rayCastEnabledValue)
+		bypassGroup.addAll(bypassKeepSprintValue, bypassAACValue, bypassFailRateValue, bypassSuspendWhileConsumingValue, noInventoryGroup, rayCastGroup)
 		noInventoryGroup.addAll(noInventoryAttackEnabledValue, noInventoryDelayValue)
 		rotationSearchCenterGroup.addAll(rotationSearchCenterHitboxShrinkValue, rotationSearchCenterSensitivityValue)
 		rotationJitterGroup.addAll(rotationJitterEnabledValue, rotationJitterYawRate, rotationJitterPitchRate, rotationJitterYawIntensityValue, rotationJitterPitchIntensityValue)
@@ -651,7 +653,7 @@ class KillAura : Module()
 		{
 			clicks++
 			attackTimer.reset()
-			attackDelay = TimeUtils.randomClickDelay(cpsValue.getMin(), cpsValue.getMax())
+			attackDelay = cpsValue.getRandomClickDelay()
 		}
 	}
 
@@ -755,7 +757,7 @@ class KillAura : Module()
 			previouslySwitchedTargets.add(if (aac) theTarget.entityId else theCurrentTarget.entityId)
 
 			switchDelayTimer.reset()
-			switchDelay = TimeUtils.randomDelay(switchDelayValue.getMin(), switchDelayValue.getMax())
+			switchDelay = switchDelayValue.getRandomDelay()
 		}
 
 		if (!fakeAttack && theTarget == theCurrentTarget)
@@ -943,12 +945,9 @@ class KillAura : Module()
 	{
 		if (rotationPredictEnemyEnabledValue.get())
 		{
-			val min = rotationPredictEnemyIntensityValue.getMin()
-			val max = rotationPredictEnemyIntensityValue.getMax()
-
-			predictX = RandomUtils.nextFloat(min, max)
-			predictY = RandomUtils.nextFloat(min, max)
-			predictZ = RandomUtils.nextFloat(min, max)
+			predictX = rotationPredictEnemyIntensityValue.getRandom()
+			predictY = rotationPredictEnemyIntensityValue.getRandom()
+			predictZ = rotationPredictEnemyIntensityValue.getRandom()
 		}
 
 		val targetBox = getHitbox(entity)
@@ -993,18 +992,13 @@ class KillAura : Module()
 		lastYaw = rotation.yaw
 		lastPitch = rotation.pitch
 
-		val maxTurnSpeed = rotationTurnSpeedValue.getMax()
-		val minTurnSpeed = rotationTurnSpeedValue.getMin()
-
-		if (rotationMode.equals("Off", ignoreCase = true) || maxTurnSpeed <= 0F) return true
+		if (rotationMode.equals("Off", ignoreCase = true) || rotationTurnSpeedValue.getMax() <= 0F) return true
 
 		// Limit TurnSpeed
-		val turnSpeed = if (minTurnSpeed < 180f) minTurnSpeed + (maxTurnSpeed - minTurnSpeed) * Random.nextFloat() else 180f
+		val turnSpeed = rotationTurnSpeedValue.getRandomStrict()
 
 		// Acceleration
-		val maxAcceleration = rotationAccelerationRatioValue.getMax()
-		val minAcceleration = rotationAccelerationRatioValue.getMin()
-		val acceleration = if (maxAcceleration > 0f) minAcceleration + (maxAcceleration - minAcceleration) * Random.nextFloat() else 0f
+		val acceleration = rotationAccelerationRatioValue.getRandomStrict()
 
 		val limitedRotation = RotationUtils.limitAngleChange(RotationUtils.serverRotation, rotation, turnSpeed, acceleration)
 
@@ -1014,19 +1008,13 @@ class KillAura : Module()
 		if (rotationSilentValue.get())
 		{
 			val maxKeepLength = rotationKeepRotationTicks.getMax()
-			val keepLength = if (rotationKeepRotationEnabledValue.get() && maxKeepLength > 0)
-			{
-				val minKeepLength = rotationKeepRotationTicks.getMin()
-				if (maxKeepLength == minKeepLength) maxKeepLength else minKeepLength + Random.nextInt(maxKeepLength - minKeepLength)
-			}
-			else 0
-
+			val keepLength = if (rotationKeepRotationEnabledValue.get() && maxKeepLength > 0) rotationKeepRotationTicks.getRandom() else 0
 			RotationUtils.setTargetRotation(limitedRotation, keepLength)
 		}
 		else limitedRotation.applyRotationToPlayer(thePlayer)
 
-		val maxResetSpeed = rotationResetSpeedValue.getMax().coerceAtLeast(20F)
-		val minResetSpeed = rotationResetSpeedValue.getMin().coerceAtLeast(20F)
+		val maxResetSpeed = rotationResetSpeedValue.getMax().coerceAtLeast(10F)
+		val minResetSpeed = rotationResetSpeedValue.getMin().coerceAtLeast(10F)
 		if (maxResetSpeed < 180) RotationUtils.setNextResetTurnSpeed(minResetSpeed, maxResetSpeed)
 
 		return true

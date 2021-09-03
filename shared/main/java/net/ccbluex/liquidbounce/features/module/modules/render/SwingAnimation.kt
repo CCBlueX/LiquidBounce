@@ -116,7 +116,7 @@ class SwingAnimation : Module()
 	val blockStaticSwingProgressProgress = FloatValue("Progress", .64f, .11f, .99f, "Block-StaticSwingProgress")
 
 	private val blockAnimationGroup = ValueGroup("Animation")
-	val blockAnimationMode = ListValue("Mode", arrayOf("LiquidBounce", "1.8", "1.7", "Push", "Tap", "Tap2", "Avatar", "Sigma", "Slide", "Exhibobo", "Lucid", "Luna", "Hooded", "Bump", "Slap"), "LiquidBounce", "BlockSwingAnimation")
+	val blockAnimationMode = ListValue("Mode", arrayOf("LiquidBounce", "1.8", "1.7", "Push", "Tap", "Tap2", "Avatar", "Sigma", "Slide", "Exhibobo", "Lucid", "Luna", "Hooded", "Bump", "Slap", "Eat"), "LiquidBounce", "BlockSwingAnimation")
 
 	// Sword Block Animation Options
 	private val blockAnimationSlideGroup: ValueGroup = object : ValueGroup("Slide")

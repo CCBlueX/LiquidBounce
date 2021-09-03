@@ -118,8 +118,8 @@ public abstract class MixinEntityPlayer extends MixinEntityLivingBase
 		final Bobbing bobbing = (Bobbing) LiquidBounce.moduleManager.get(Bobbing.class);
 		final boolean bobbingState = bobbing.getState();
 
-		final float yawIncMultiplier = bobbing.getCameraYawIncMultiplierValue().get();
-		final float pitchIncMultiplier = bobbing.getCameraPitchIncMultiplierValue().get();
+		final float yawIncMultiplier = bobbing.getCameraIncrementMultiplierYawValue().get();
+		final float pitchIncMultiplier = bobbing.getCameraIncrementMultiplierPitchValue().get();
 
 		float cameraYawInc = Math.min(MathHelper.sqrt_double(motionX * motionX + motionZ * motionZ), 0.1f) * yawIncMultiplier;
 		float cameraPitchInc = (float) (StrictMath.atan(-motionY * 0.20000000298023224D) * 15.0D) * pitchIncMultiplier;
@@ -132,10 +132,10 @@ public abstract class MixinEntityPlayer extends MixinEntityLivingBase
 		if (groundCheck || getHealth() <= 0.0F)
 			cameraPitchInc = 0.0F;
 
-		final float yawMultiplier = bobbingState ? bobbing.getCameraYawMultiplierValue().get() : 0.4F;
+		final float yawMultiplier = bobbingState ? bobbing.getCameraMultiplierYawValue().get() : 0.4F;
 		cameraYaw += (cameraYawInc - cameraYaw) * yawMultiplier;
 
-		final float pitchMultiplier = bobbingState ? bobbing.getCameraPitchMultiplierValue().get() : 0.8F;
+		final float pitchMultiplier = bobbingState ? bobbing.getCameraMultiplierPitchValue().get() : 0.8F;
 		cameraPitch += (cameraPitchInc - cameraPitch) * pitchMultiplier;
 
 		if (getHealth() > 0.0F && !isSpectator())

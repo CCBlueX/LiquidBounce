@@ -19,6 +19,7 @@ import net.ccbluex.liquidbounce.utils.EntityUtils;
 import net.ccbluex.liquidbounce.utils.Rotation;
 import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
+import net.ccbluex.liquidbounce.value.RGBAColorValue;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.model.ModelBase;
@@ -333,7 +334,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 						GL11.glEnable(GL11.GL_BLEND);
 						GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 						RenderUtils.glColor(esp.getColor(EntityLivingBaseImplKt.wrap(entitylivingbaseIn)));
-						GL11.glLineWidth(esp.getWireframeWidth().get());
+						GL11.glLineWidth(esp.getModeWireFrameWidth().get());
 						mainModel.render(entitylivingbaseIn, p_77036_2_, p_77036_3_, p_77036_4_, p_77036_5_, p_77036_6_, scaleFactor);
 						GL11.glPopAttrib();
 						GL11.glPopMatrix();
@@ -344,7 +345,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 
 						final int color = esp.getColor(EntityLivingBaseImplKt.wrap(entitylivingbaseIn));
 						RenderUtils.glColor(color);
-						OutlineUtils.renderOne(esp.getOutlineWidth().get());
+						OutlineUtils.renderOne(esp.getModeOutlineWidth().get());
 						mainModel.render(entitylivingbaseIn, p_77036_2_, p_77036_3_, p_77036_4_, p_77036_5_, p_77036_6_, scaleFactor);
 						RenderUtils.glColor(color);
 						OutlineUtils.renderTwo();
@@ -422,12 +423,13 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 		brightnessBuffer.position(0);
 
 		if (hurtEffect)
-			if (hurtCam.getState() && hurtCam.getCustomHurtEffect().get())
+			if (hurtCam.getState() && hurtCam.getCustomHurtEffectEnabledValue().get())
 			{
-				brightnessBuffer.put(hurtCam.getCustomHurtEffectR().get() / 255.0F);
-				brightnessBuffer.put(hurtCam.getCustomHurtEffectG().get() / 255.0F);
-				brightnessBuffer.put(hurtCam.getCustomHurtEffectB().get() / 255.0F);
-				brightnessBuffer.put(hurtCam.getCustomHurtEffectAlpha().get() / 255.0F);
+				final RGBAColorValue color = hurtCam.getCustomHurtEffectColorValue();
+				brightnessBuffer.put(color.getRed() / 255.0F);
+				brightnessBuffer.put(color.getGreen() / 255.0F);
+				brightnessBuffer.put(color.getBlue() / 255.0F);
+				brightnessBuffer.put(color.getAlpha() / 255.0F);
 			}
 			else
 			{

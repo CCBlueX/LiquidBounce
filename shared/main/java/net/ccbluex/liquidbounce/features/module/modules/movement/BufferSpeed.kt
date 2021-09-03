@@ -21,6 +21,7 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.ValueGroup
 import java.util.*
 
 @ModuleInfo(name = "BufferSpeed", description = "Allows you to walk faster on slabs, stairs, ice and more. (a.k.a. TerrainSpeed)", category = ModuleCategory.MOVEMENT)
@@ -30,33 +31,33 @@ class BufferSpeed : Module()
 	private val maxSpeedValue = FloatValue("MaxSpeed", 2.0f, 1.0f, 5f)
 	private val bufferValue = BoolValue("Buffer", true)
 
-	// Stairs boost
-	private val stairsValue = BoolValue("Stairs", true)
-	private val stairsBoostValue = FloatValue("StairsBoost", 1.87f, 1f, 2f)
-	private val stairsModeValue = ListValue("StairsMode", arrayOf("Old", "New"), "New")
+	private val stairsGroup = ValueGroup("Stairs")
+	private val stairsEnabledValue = BoolValue("Enabled", true, "Stairs")
+	private val stairsModeValue = ListValue("Mode", arrayOf("Old", "New"), "New", "StairsMode")
+	private val stairsBoostValue = FloatValue("Boost", 1.87f, 1f, 2f, "StairsBoost")
 
-	// Slabs boost
-	private val slabsValue = BoolValue("Slabs", true)
-	private val slabsBoostValue = FloatValue("SlabsBoost", 1.87f, 1f, 2f)
-	private val slabsModeValue = ListValue("SlabsMode", arrayOf("Old", "New"), "New")
+	private val slabsGroup = ValueGroup("Slabs")
+	private val slabsEnabledValue = BoolValue("Enabled", true, "Slabs")
+	private val slabsModeValue = ListValue("Mode", arrayOf("Old", "New"), "New", "SlabsMode")
+	private val slabsBoostValue = FloatValue("Boost", 1.87f, 1f, 2f, "SlabsBoost")
 
-	// Ice boost (AAC3.3.6)
-	private val iceValue = BoolValue("Ice", false)
-	private val iceBoostValue = FloatValue("IceBoost", 1.342f, 1f, 2f)
+	private val iceGroup = ValueGroup("Ice")
+	private val iceEnabledValue = BoolValue("Enabled", false, "Ice")
+	private val iceBoostValue = FloatValue("Boost", 1.342f, 1f, 2f, "IceBoost")
 
-	// Snow boost
-	private val snowValue = BoolValue("Snow", true)
-	private val snowBoostValue = FloatValue("SnowBoost", 1.87f, 1f, 2f)
-	private val snowPortValue = BoolValue("SnowPort", true)
+	private val snowGroup = ValueGroup("Snow")
+	private val snowEnabledValue = BoolValue("Enabled", true, "Snow")
+	private val snowBoostValue = FloatValue("Boost", 1.87f, 1f, 2f, "SnowBoost")
+	private val snowPortValue = BoolValue("Port", true, "SnowPort")
 
-	// Wall boost
-	private val wallValue = BoolValue("Wall", true)
-	private val wallBoostValue = FloatValue("WallBoost", 1.87f, 1f, 2f)
-	private val wallModeValue = ListValue("WallMode", arrayOf("AAC3.2.1", "AAC3.3.8"), "AAC3.3.8")
+	private val wallGroup = ValueGroup("Wall")
+	private val wallEnabledValue = BoolValue("Enabled", true, "Wall")
+	private val wallModeValue = ListValue("Mode", arrayOf("AAC3.2.1", "AAC3.3.8"), "AAC3.3.8", "WallMode")
+	private val wallBoostValue = FloatValue("Boost", 1.87f, 1f, 2f, "WallBoost")
 
-	// HeadBlock(BlockAbove) boost
-	private val headBlockValue = BoolValue("HeadBlock", true)
-	private val headBlockBoostValue = FloatValue("HeadBlockBoost", 1.87f, 1f, 2f)
+	private val headBlockGroup = ValueGroup("HeadBlock")
+	private val headBlockEnabledValue = BoolValue("Enabled", true, "HeadBlock")
+	private val headBlockBoostValue = FloatValue("Boost", 1.87f, 1f, 2f, "HeadBlockBoost")
 
 	private val slimeValue = BoolValue("Slime", true)
 
@@ -69,6 +70,16 @@ class BufferSpeed : Module()
 	private var fastHop = false
 	private var hadFastHop = false
 	private var legitHop = false
+
+	init
+	{
+		stairsGroup.addAll(stairsEnabledValue, stairsModeValue, stairsBoostValue)
+		slabsGroup.addAll(slabsEnabledValue, slabsModeValue, slabsBoostValue)
+		iceGroup.addAll(iceEnabledValue, iceBoostValue)
+		snowGroup.addAll(snowEnabledValue, snowBoostValue, snowPortValue)
+		wallGroup.addAll(wallEnabledValue, wallModeValue, wallBoostValue)
+		headBlockGroup.addAll(headBlockEnabledValue, headBlockBoostValue)
+	}
 
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
@@ -126,7 +137,7 @@ class BufferSpeed : Module()
 				return
 			}
 
-			if (slabsValue.get() && provider.isBlockSlab(getBlock(theWorld, blockPos)))
+			if (slabsEnabledValue.get() && provider.isBlockSlab(getBlock(theWorld, blockPos)))
 			{
 				when (slabsModeValue.get().toLowerCase())
 				{
@@ -157,7 +168,7 @@ class BufferSpeed : Module()
 				}
 			}
 
-			if (stairsValue.get() && (provider.isBlockStairs(getBlock(theWorld, blockPos.down())) || provider.isBlockStairs(getBlock(theWorld, blockPos))))
+			if (stairsEnabledValue.get() && (provider.isBlockStairs(getBlock(theWorld, blockPos.down())) || provider.isBlockStairs(getBlock(theWorld, blockPos))))
 			{
 				when (stairsModeValue.get().toLowerCase())
 				{
@@ -189,19 +200,19 @@ class BufferSpeed : Module()
 			}
 			legitHop = true
 
-			if (headBlockValue.get() && getBlock(theWorld, blockPos.up(2)) != provider.getBlockEnum(BlockType.AIR))
+			if (headBlockEnabledValue.get() && getBlock(theWorld, blockPos.up(2)) != provider.getBlockEnum(BlockType.AIR))
 			{
 				boost(thePlayer, headBlockBoostValue.get())
 				return
 			}
 
-			if (iceValue.get() && (getBlock(theWorld, blockPos.down()) == provider.getBlockEnum(BlockType.ICE) || getBlock(theWorld, blockPos.down()) == provider.getBlockEnum(BlockType.ICE_PACKED)))
+			if (iceEnabledValue.get() && (getBlock(theWorld, blockPos.down()) == provider.getBlockEnum(BlockType.ICE) || getBlock(theWorld, blockPos.down()) == provider.getBlockEnum(BlockType.ICE_PACKED)))
 			{
 				boost(thePlayer, iceBoostValue.get())
 				return
 			}
 
-			if (snowValue.get() && getBlock(theWorld, blockPos) == provider.getBlockEnum(BlockType.SNOW_LAYER) && (snowPortValue.get() || thePlayer.posY - thePlayer.posY.toInt() >= 0.12500))
+			if (snowEnabledValue.get() && getBlock(theWorld, blockPos) == provider.getBlockEnum(BlockType.SNOW_LAYER) && (snowPortValue.get() || thePlayer.posY - thePlayer.posY.toInt() >= 0.12500))
 			{
 				if (thePlayer.posY - thePlayer.posY.toInt() >= 0.12500) boost(thePlayer, snowBoostValue.get())
 				else
@@ -212,7 +223,7 @@ class BufferSpeed : Module()
 				return
 			}
 
-			if (wallValue.get())
+			if (wallEnabledValue.get())
 			{
 				when (wallModeValue.get().toLowerCase())
 				{

@@ -19,10 +19,7 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.Phase
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
 
 @ModuleInfo(name = "Step", description = "Allows you to step up blocks.", category = ModuleCategory.MOVEMENT)
 class Step : Module()
@@ -34,13 +31,15 @@ class Step : Module()
 
 	private val modeValue = ListValue("Mode", arrayOf("Vanilla", "Jump", "NCP", "MotionNCP", "OldNCP", "AAC3.1.5", "AAC3.2.0", "AAC3.3.4", "Spartan127", "Rewinside"), "NCP")
 
+	private val motionNCPBoostValue = object : FloatValue("MotionNCPBoost", 0.7F, 0F, 0.7F, "MotionNCP-Boost")
+	{
+		override fun showCondition() = modeValue.get().equals("MotionNCP", ignoreCase = true)
+	}
 	val airStepValue = BoolValue("AirStep", false)
 	private val heightValue = FloatValue("Height", 1F, 0.6F, 10F)
 	private val jumpHeightValue = FloatValue("JumpHeight", 0.42F, 0.37F, 0.42F)
-	private val maxDelayValue = IntegerValue("MaxDelay", 0, 0, 500)
-	private val minDelayValue = IntegerValue("MinDelay", 0, 0, 500)
+	private val delayValue = IntegerRangeValue("Delay", 0, 0, 0, 1000, "MaxDelay" to "MinDelay")
 	private val resetSpeedAfterStepConfirmValue = BoolValue("ResetXZAfterStep", false)
-	private val motionNCPBoostValue = FloatValue("MotionNCP-Boost", 0.7F, 0F, 0.7F)
 
 	/**
 	 * VALUES
@@ -57,7 +56,7 @@ class Step : Module()
 	private var spartanSwitch = false
 
 	private val timer = MSTimer()
-	private var delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+	private var delay = delayValue.getRandomDelay()
 
 	override fun onDisable()
 	{
@@ -319,7 +318,7 @@ class Step : Module()
 	private fun resetTimer()
 	{
 		timer.reset()
-		delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+		delay = delayValue.getRandomDelay()
 	}
 
 	@EventTarget(ignoreCondition = true)

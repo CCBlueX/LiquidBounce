@@ -37,7 +37,7 @@ class NoClip : Module()
 		MovementUtils.zeroXYZ(thePlayer)
 
 		val fly = LiquidBounce.moduleManager[Fly::class.java] as Fly
-		val speed = fly.vanillaSpeedValue.get()
+		val speed = fly.baseSpeedValue.get()
 
 		thePlayer.jumpMovementFactor = speed
 

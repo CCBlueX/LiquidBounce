@@ -15,7 +15,6 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
-import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbowRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
@@ -34,7 +33,12 @@ class BlockESP : Module()
 		private val workerPool: ThreadPoolExecutor = ThreadPoolExecutor(1, 1, 1L, TimeUnit.MINUTES, LinkedBlockingQueue()) // To re-use worker thread
 	}
 
+	private val modeGroup = ValueGroup("Mode")
 	private val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "Hydra", "2D"), "Box")
+	private val modeBoxOutlineColorValue = object : RGBAColorValue("BoxOutlineColor", 255, 255, 255, 90, listOf(null, null, null, "Outline-Alpha"))
+	{
+		override fun showCondition() = modeValue.get().equals("Box", ignoreCase = true)
+	}
 
 	private val blockValue = BlockValue("Block", 168)
 	private val radiusValue = IntegerValue("Radius", 40, 5, 120)
@@ -42,17 +46,14 @@ class BlockESP : Module()
 
 	private val updateDelayValue = IntegerValue("UpdateDelay", 1000, 500, 2000)
 
-	private val colorRedValue = IntegerValue("R", 255, 0, 255)
-	private val colorGreenValue = IntegerValue("G", 179, 0, 255)
-	private val colorBlueValue = IntegerValue("B", 72, 0, 255)
-	private val colorAlphaValue = IntegerValue("Alpha", 72, 0, 255)
+	private val colorGroup = ValueGroup("Color")
+	private val colorValue = RGBAColorValue("Color", 255, 255, 255, 30, listOf("R", "G", "B", "Alpha"))
 
-	private val outlineAlphaValue = IntegerValue("Outline-Alpha", 102, 0, 255)
-
-	private val colorRainbow = BoolValue("Rainbow", false)
-	private val rainbowSpeedValue = IntegerValue("Rainbow-Speed", 10, 1, 10)
-	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
-	private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
+	private val colorRainbowGroup = ValueGroup("Rainbow")
+	private val colorRainbowEnabledValue = BoolValue("Enabled", true, "Rainbow")
+	private val colorRainbowSpeedValue = IntegerValue("Speed", 10, 1, 10, "Rainbow-Speed")
+	private val colorRainbowSaturationValue = FloatValue("Saturation", 1.0f, 0.0f, 1.0f, "HSB-Saturation")
+	private val colorRainbowBrightnessValue = FloatValue("Brightness", 1.0f, 0.0f, 1.0f, "HSB-Brightness")
 
 	private val searchTimer = MSTimer()
 	private val posList: MutableCollection<WBlockPos> = ConcurrentLinkedQueue()
@@ -63,13 +64,21 @@ class BlockESP : Module()
 	@Volatile
 	private var moduleState = false
 
+	init
+	{
+		modeGroup.addAll(modeValue, modeBoxOutlineColorValue)
+
+		colorRainbowGroup.addAll(colorRainbowEnabledValue, colorRainbowSpeedValue, colorRainbowSaturationValue, colorRainbowBrightnessValue)
+		colorGroup.addAll(colorValue, colorRainbowGroup)
+	}
+
 	override fun onEnable()
 	{
 		moduleState = true
 
 		if (workerPool.queue.isEmpty())
 		{
-			workerPool.submit {
+			workerPool.execute {
 				while (moduleState)
 				{
 					val currentTask = task
@@ -128,13 +137,12 @@ class BlockESP : Module()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		val alpha = colorAlphaValue.get()
 		val mode = modeValue.get().toLowerCase()
 
 		val hydraESP = mode == "hydra"
 
-		val color = if (colorRainbow.get()) rainbowRGB(alpha, speed = rainbowSpeedValue.get(), saturation = saturationValue.get(), brightness = brightnessValue.get()) else ColorUtils.createRGB(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), alpha)
-		val outlineColor = ColorUtils.applyAlphaChannel(color, outlineAlphaValue.get())
+		val color = if (colorRainbowEnabledValue.get()) rainbowRGB(colorValue.getAlpha(), speed = colorRainbowSpeedValue.get(), saturation = colorRainbowSaturationValue.get(), brightness = colorRainbowBrightnessValue.get()) else colorValue.get()
+		val outlineColor = modeBoxOutlineColorValue.get()
 
 		for (blockPos in posList)
 		{

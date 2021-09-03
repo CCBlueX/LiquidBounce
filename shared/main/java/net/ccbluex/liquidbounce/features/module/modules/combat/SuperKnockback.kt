@@ -16,12 +16,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.WorkerUtils
-import net.ccbluex.liquidbounce.utils.misc.RandomUtils
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.input.Keyboard
 import java.util.concurrent.TimeUnit
 
@@ -55,42 +50,12 @@ class SuperKnockback : Module()
 	/**
 	 * Delay
 	 */
-	private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 55, 1, 1000)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val i = minDelayValue.get()
-			if (i > newValue) set(i)
-		}
-	}
-	private val minDelayValue: IntegerValue = object : IntegerValue("MinDelay", 45, 1, 1000)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val i = maxDelayValue.get()
-			if (i < newValue) set(i)
-		}
-	}
+	private val delayValue = IntegerRangeValue("Delay", 45, 55, 1, 1000, "MaxDelay" to "MinDelay")
 
 	/**
 	 * Multiplier
 	 */
-	private val maxMultiplierValue: FloatValue = object : FloatValue("MaxMultiplier", 2.3F, 1.1F, 3F)
-	{
-		override fun onChanged(oldValue: Float, newValue: Float)
-		{
-			val i = minMultiplierValue.get()
-			if (i > newValue) set(i)
-		}
-	}
-	private val minMultiplierValue: FloatValue = object : FloatValue("MinMultiplier", 2F, 1.1F, 3F)
-	{
-		override fun onChanged(oldValue: Float, newValue: Float)
-		{
-			val i = maxMultiplierValue.get()
-			if (i < newValue) set(i)
-		}
-	}
+	private val multiplierValue = FloatRangeValue("Multiplier", 2f, 2.3f, 1.1f, 3f, "MaxMultiplier" to "MinMultiplier")
 
 	private val packetOverride = BoolValue("PacketOverride", true)
 
@@ -150,7 +115,13 @@ class SuperKnockback : Module()
 		if ((classProvider.isCPacketPlayerPosition(packet) || classProvider.isCPacketPlayerLook(packet) || classProvider.isCPacketPlayerPosLook(packet)) && packetOverride.get())
 		{
 			val movePacket = packet.asCPacketPlayer()
-			if (!movePacket.moving && (thePlayer.onGround || movePacket.onGround)) movePacket.moving = true
+			if (!movePacket.moving && (thePlayer.onGround || movePacket.onGround))
+			{
+				movePacket.x = thePlayer.posX
+				movePacket.y = thePlayer.posY
+				movePacket.z = thePlayer.posZ
+				movePacket.moving = true
+			}
 		}
 		else if (classProvider.isCPacketUseEntity(packet))
 		{
@@ -174,15 +145,12 @@ class SuperKnockback : Module()
 
 				if (target.hurtTime <= hurtTimeValue.get() && knockTicks <= ticksDelayValue.get() && superKnockback)
 				{
-					val minDelay = minDelayValue.get()
-					val maxDelay = maxDelayValue.get()
-
-					val minDelayMultiplier = minMultiplierValue.get()
-					val maxDelayMultiplier = maxMultiplierValue.get()
-
 					val notSprintingSlowdown = notSprintingSlowdownValue.get()
 
 					val scheduleDelayedTask = { delayMillis: Long, task: () -> Unit -> WorkerUtils.scheduledWorkers.schedule(task, delayMillis, TimeUnit.MILLISECONDS) }
+
+					val delay = delayValue.getRandomDelay()
+					val multipliedDelay = (delay * multiplierValue.getRandom()).toLong()
 
 					when (mode)
 					{
@@ -230,14 +198,14 @@ class SuperKnockback : Module()
 
 								if (!sprinting) netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
 
-								scheduleDelayedTask(TimeUtils.randomDelay(minDelay, maxDelay)) {
+								scheduleDelayedTask(delay) {
 									netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SPRINTING))
 
 									if (notSprintingSlowdown && !thePlayer.sprinting) thePlayer.sprinting = false
 								}
 
 								// Restore the original sprinting state
-								if (sprinting) scheduleDelayedTask((TimeUtils.randomDelay(minDelay, maxDelay) * RandomUtils.nextFloat(minDelayMultiplier, maxDelayMultiplier)).toLong()) {
+								if (sprinting) scheduleDelayedTask(multipliedDelay) {
 									netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
 
 									if (notSprintingSlowdown) thePlayer.sprinting = true
@@ -252,12 +220,12 @@ class SuperKnockback : Module()
 								if (gameSettings.keyBindForward.pressed) gameSettings.keyBindForward.pressed = false
 
 								// Start sprinting after some delay
-								scheduleDelayedTask(TimeUtils.randomDelay(minDelay, maxDelay)) {
+								scheduleDelayedTask(delay) {
 									gameSettings.keyBindForward.pressed = Keyboard.isKeyDown(gameSettings.keyBindForward.keyCode)
 								}
 
 								// Restore the original sprinting state
-								if (!sprinting) scheduleDelayedTask((TimeUtils.randomDelay(minDelay, maxDelay) * RandomUtils.nextFloat(minDelayMultiplier, maxDelayMultiplier)).toLong()) {
+								if (!sprinting) scheduleDelayedTask(multipliedDelay) {
 									if (thePlayer.sprinting) thePlayer.sprinting = false
 								}
 							}
@@ -269,13 +237,13 @@ class SuperKnockback : Module()
 							if (!sprinting) netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
 
 							// Stop sprinting after some delay
-							scheduleDelayedTask(TimeUtils.randomDelay(minDelay, maxDelay)) {
+							scheduleDelayedTask(delay) {
 								netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SPRINTING))
 								if (notSprintingSlowdown && thePlayer.sprinting) thePlayer.sprinting = false
 							}
 
 							// Restore the original sprinting state
-							if (sprinting) scheduleDelayedTask((TimeUtils.randomDelay(minDelay, maxDelay) * RandomUtils.nextFloat(minDelayMultiplier, maxDelayMultiplier)).toLong()) {
+							if (sprinting) scheduleDelayedTask(multipliedDelay) {
 								netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
 
 								if (notSprintingSlowdown && !thePlayer.sprinting) thePlayer.sprinting = true

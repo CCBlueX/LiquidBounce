@@ -18,12 +18,8 @@ import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11
-import java.awt.Color
 
 @ModuleInfo(name = "Tracers", description = "Draws a line to targets around you.", category = ModuleCategory.RENDER)
 class Tracers : Module()
@@ -33,14 +29,22 @@ class Tracers : Module()
 
 	private val thicknessValue = FloatValue("Thickness", 2F, 1F, 5F)
 
-	private val colorRedValue = IntegerValue("R", 0, 0, 255)
-	private val colorGreenValue = IntegerValue("G", 160, 0, 255)
-	private val colorBlueValue = IntegerValue("B", 255, 0, 255)
+	private val colorGroup = ValueGroup("Color")
+	private val colorValue = RGBAColorValue("Color", 0, 160, 255, 150, listOf("R", "G", "B", null))
+
+	private val colorRainbowGroup = ValueGroup("Rainbow")
+	private val colorRainbowEnabledValue = BoolValue("Enabled", true, "Rainbow")
+	private val colorRainbowSpeedValue = IntegerValue("Speed", 10, 1, 10, "Rainbow-Speed")
+	private val colorRainbowSaturationValue = FloatValue("Saturation", 1.0f, 0.0f, 1.0f, "HSB-Saturation")
+	private val colorRainbowBrightnessValue = FloatValue("Brightness", 1.0f, 0.0f, 1.0f, "HSB-Brightness")
 
 	private val botValue = BoolValue("Bots", true)
 
-	private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
-	private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
+	init
+	{
+		colorRainbowGroup.addAll(colorRainbowEnabledValue, colorRainbowSpeedValue, colorRainbowSaturationValue, colorRainbowBrightnessValue)
+		colorGroup.addAll(colorValue, colorRainbowGroup)
+	}
 
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
@@ -57,10 +61,6 @@ class Tracers : Module()
 		GL11.glDepthMask(false)
 
 		GL11.glBegin(GL11.GL_LINES)
-
-		val colorRed = colorRedValue.get()
-		val colorGreen = colorGreenValue.get()
-		val greenBlue = colorBlueValue.get()
 
 		val colorMode = colorMode.get().toLowerCase()
 
@@ -80,11 +80,12 @@ class Tracers : Module()
 		val eyeY = eyeVector.yCoord
 		val eyeZ = eyeVector.zCoord
 
+		val alpha = colorValue.getAlpha()
 		val color = when
 		{
-			colorMode.equals("Custom", ignoreCase = true) -> Color(colorRed, colorGreen, greenBlue, 150)
-			colorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbow(saturation = saturationValue.get(), brightness = brightnessValue.get())
-			else -> Color(255, 255, 255, 150)
+			colorMode.equals("Custom", ignoreCase = true) -> colorValue.get()
+			colorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbowRGB(alpha = alpha, speed = colorRainbowSpeedValue.get(), saturation = colorRainbowSaturationValue.get(), brightness = colorRainbowBrightnessValue.get())
+			else -> ColorUtils.applyAlphaChannel(-1, alpha)
 		}
 
 		val bot = botValue.get()
@@ -103,8 +104,8 @@ class Tracers : Module()
 
 			RenderUtils.glColor(when
 			{
-				provider.isEntityPlayer(entity) && entity.asEntityPlayer().isClientFriend() -> Color(0, 0, 255, 150)
-				colorMode.equals("DistanceColor", ignoreCase = true) -> Color(255 - distance, distance, 0, 150)
+				provider.isEntityPlayer(entity) && entity.asEntityPlayer().isClientFriend() -> ColorUtils.createRGB(0, 0, 255, alpha)
+				colorMode.equals("DistanceColor", ignoreCase = true) -> ColorUtils.createRGB(255 - distance, distance, 0, alpha)
 				else -> color
 			})
 

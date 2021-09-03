@@ -20,10 +20,7 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 import kotlin.math.abs
@@ -38,17 +35,31 @@ class BugUp : Module()
 	private val maxVoidFallDistance = IntegerValue("MaxVoidFallDistance", 3, 1, 255)
 	private val maxDistanceWithoutGround = FloatValue("MaxDistanceToSetback", 2.5f, 1f, 30f)
 
-	private val flyFlagYMotionValue = FloatValue("YMotion", 1f, -10f, 10f)
-	private val motionTeleportFlagYTeleportValue = FloatValue("YTeleport", 1f, -10f, 10f)
-
-	private val speedFlagMotionValue = FloatValue("XZMotion", 1F, -10F, 10F)
-
-	private val packetHValue = FloatValue("Packet-H", 1F, -10F, 10F)
-	private val packetHBobValue = BoolValue("Packet-H-Bob", true)
-	private val packetVValue = FloatValue("Packet-V", 11F, -10F, 10F)
-	private val packetVBobValue = BoolValue("Packet-V-Bob", false)
-
 	private val flagTryTicks = IntegerValue("FlagTryTicks", 10, 5, 20)
+
+	private val flyFlagYMotionValue = object : FloatValue("YMotion", 1f, -10f, 10f)
+	{
+		override fun showCondition() = modeValue.get().equals("FlyFlag", ignoreCase = true)
+	}
+
+	private val motionTeleportFlagYTeleportValue = object : FloatValue("YTeleport", 1f, -10f, 10f)
+	{
+		override fun showCondition() = modeValue.get().equals("MotionTeleport-Flag", ignoreCase = true)
+	}
+
+	private val speedFlagMotionValue = object : FloatValue("XZMotion", 1F, -10F, 10F)
+	{
+		override fun showCondition() = modeValue.get().equals("SpeedFlag", ignoreCase = true)
+	}
+
+	private val packetGroup = object : ValueGroup("Packet")
+	{
+		override fun showCondition() = modeValue.get().equals("Packet", ignoreCase = true)
+	}
+	private val packetHValue = FloatValue("Horizontal", 1F, -10F, 10F, "Packet-H")
+	private val packetHBobValue = BoolValue("Horizontal-Shake", true, "Packet-H-Bob")
+	private val packetVValue = FloatValue("Vertical", 11F, -10F, 10F, "Packet-V")
+	private val packetVBobValue = BoolValue("Vertical-Shake", false, "Packet-V-Bob")
 
 	private val onlyCatchVoid = BoolValue("OnlyVoid", true)
 	private val indicator = BoolValue("Indicator", true)
@@ -64,6 +75,11 @@ class BugUp : Module()
 	private var alreadyTriedFlag = false
 	private var packetHBob = false
 	private var packetVBob = false
+
+	init
+	{
+		packetGroup.addAll(packetHValue, packetHBobValue, packetVValue, packetVBobValue)
+	}
 
 	override fun onDisable()
 	{

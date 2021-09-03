@@ -10,9 +10,9 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
-import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.RGBColorValue
 import org.lwjgl.opengl.GL11
 import java.util.*
 
@@ -28,13 +28,8 @@ class DamageParticle : Module()
 	private val sizeValue = IntegerValue("Size", 3, 1, 7)
 	private val particleAnimationSpeedValue = FloatValue("AnimationSpeed", 0.1F, -0.5F, 0.5F)
 
-	private val damageAnimationColorRedValue = IntegerValue("DamageAnimationColorRed", 252, 0, 255)
-	private val damageAnimationColorGreenValue = IntegerValue("DamageAnimationColorGreen", 185, 0, 255)
-	private val damageAnimationColorBlueValue = IntegerValue("DamageAnimationColorBlue", 65, 0, 255)
-
-	private val healAnimationColorRedValue = IntegerValue("HealAnimationColorRed", 44, 0, 255)
-	private val healAnimationColorGreenValue = IntegerValue("HealAnimationColorGreen", 201, 0, 255)
-	private val healAnimationColorBlueValue = IntegerValue("HealAnimationColorBlue", 144, 0, 255)
+	private val damageAnimationColorValue = RGBColorValue("DamageAnimationColor", 252, 185, 65, Triple("DamageAnimationColorRed", "DamageAnimationColorGreen", "DamageAnimationColorBlue"))
+	private val healAnimationColorValue = RGBColorValue("DamageAnimationColor", 44, 201, 144, Triple("HealAnimationColorRed", "HealAnimationColorGreen", "HealAnimationColorBlue"))
 
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
@@ -49,7 +44,7 @@ class DamageParticle : Module()
 
 				val delta = lastHealth - entity.health
 				if (delta == 0.0F) null else entity to delta
-			}.forEach { (entity, delta) -> particles.add(SingleParticle(StringUtils.DECIMALFORMAT_1.format(delta), entity.posX - 0.5 + Random(System.currentTimeMillis()).nextInt(5).toDouble() * 0.1, entity.entityBoundingBox.minY + (entity.entityBoundingBox.maxY - entity.entityBoundingBox.minY) / 2.0, entity.posZ - 0.5 + Random(System.currentTimeMillis() + 1L).nextInt(5).toDouble() * 0.1, if (delta > 0) ColorUtils.createRGB(damageAnimationColorRedValue.get(), damageAnimationColorGreenValue.get(), damageAnimationColorBlueValue.get()) else ColorUtils.createRGB(healAnimationColorRedValue.get(), healAnimationColorGreenValue.get(), healAnimationColorBlueValue.get()))) }
+			}.forEach { (entity, delta) -> particles.add(SingleParticle(StringUtils.DECIMALFORMAT_1.format(delta), entity.posX - 0.5 + Random(System.currentTimeMillis()).nextInt(5).toDouble() * 0.1, entity.entityBoundingBox.minY + (entity.entityBoundingBox.maxY - entity.entityBoundingBox.minY) / 2.0, entity.posZ - 0.5 + Random(System.currentTimeMillis() + 1L).nextInt(5).toDouble() * 0.1, if (delta > 0) damageAnimationColorValue.get() else healAnimationColorValue.get())) }
 
 			val itr = particles.iterator()
 			while (itr.hasNext()) if (itr.next().ticks++ > aliveTicks.get()) itr.remove()

@@ -15,65 +15,38 @@ import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.IntegerRangeValue
 import kotlin.random.Random
 
 @ModuleInfo(name = "AutoClicker", description = "Constantly clicks when holding down a mouse button.", category = ModuleCategory.COMBAT)
 class AutoClicker : Module()
 {
-	private val maxCPSValue: IntegerValue = object : IntegerValue("MaxCPS", 8, 1, 20)
-	{
-
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val minCPS = minCPSValue.get()
-			if (minCPS > newValue) set(minCPS)
-		}
-	}
-
-	private val minCPSValue: IntegerValue = object : IntegerValue("MinCPS", 5, 1, 20)
-	{
-
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val maxCPS = maxCPSValue.get()
-			if (maxCPS < newValue) set(maxCPS)
-		}
-	}
+	private val cpsValue = IntegerRangeValue("CPS", 5, 8, 1, 20, "MaxCPS" to "MinCPS")
 
 	private val rightValue = BoolValue("Right", true)
 	private val leftValue = BoolValue("Left", true)
 	private val jitterValue = BoolValue("Jitter", false)
 
-	private val maxDelayAfterBreakBlockValue: IntegerValue = object : IntegerValue("MaxDelayAfterBreakBlock", 100, 0, 1000)
+	private val delayAfterBreakBlockValue: IntegerRangeValue = object : IntegerRangeValue("DelayAfterBlockBreak", 100, 100, 0, 1000, "MaxDelayAfterBreakBlock" to "MinDelayAfterBreakBlock")
 	{
-		override fun onChanged(oldValue: Int, newValue: Int)
+		override fun onMaxValueChanged(oldValue: Int, newValue: Int)
 		{
-			val minDelayAfterBreakBlock = minDelayAfterBreakBlockValue.get()
-			if (minDelayAfterBreakBlock > newValue) set(minDelayAfterBreakBlock)
+			delayAfterBlockBreak = TimeUtils.randomDelay(getMin(), newValue)
+		}
 
-			delayAfterBlockBreak = TimeUtils.randomDelay(minDelayAfterBreakBlockValue.get(), get())
+		override fun onMinValueChanged(oldValue: Int, newValue: Int)
+		{
+			delayAfterBlockBreak = TimeUtils.randomDelay(newValue, getMax())
 		}
 	}
 
-	private val minDelayAfterBreakBlockValue: IntegerValue = object : IntegerValue("MinDelayAfterBreakBlock", 100, 0, 1000)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val maxDelayAfterBreakBlock = maxDelayAfterBreakBlockValue.get()
-			if (maxDelayAfterBreakBlock < newValue) set(maxDelayAfterBreakBlock)
-
-			delayAfterBlockBreak = TimeUtils.randomDelay(get(), maxDelayAfterBreakBlockValue.get())
-		}
-	}
-
-	private var rightDelay = TimeUtils.randomClickDelay(minCPSValue.get(), maxCPSValue.get())
+	private var rightDelay = cpsValue.getRandomClickDelay()
 	private var rightLastSwing = 0L
-	private var leftDelay = TimeUtils.randomClickDelay(minCPSValue.get(), maxCPSValue.get())
+	private var leftDelay = cpsValue.getRandomClickDelay()
 	private var leftLastSwing = 0L
 
 	private val delayAfterBlockBreakTimer = MSTimer()
-	private var delayAfterBlockBreak = TimeUtils.randomDelay(minDelayAfterBreakBlockValue.get(), maxDelayAfterBreakBlockValue.get())
+	private var delayAfterBlockBreak = delayAfterBreakBlockValue.getRandomDelay()
 
 	@EventTarget
 	fun onRender(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
@@ -87,7 +60,7 @@ class AutoClicker : Module()
 			gameSettings.keyBindAttack.onTick(gameSettings.keyBindAttack.keyCode) // Minecraft Click Handling
 
 			leftLastSwing = System.currentTimeMillis()
-			leftDelay = TimeUtils.randomClickDelay(minCPSValue.get(), maxCPSValue.get())
+			leftDelay = cpsValue.getRandomClickDelay()
 		}
 
 		// Right click
@@ -96,7 +69,7 @@ class AutoClicker : Module()
 			gameSettings.keyBindAttack.onTick(gameSettings.keyBindUseItem.keyCode) // Minecraft Click Handling
 
 			rightLastSwing = System.currentTimeMillis()
-			rightDelay = TimeUtils.randomClickDelay(minCPSValue.get(), maxCPSValue.get())
+			rightDelay = cpsValue.getRandomClickDelay()
 		}
 	}
 
@@ -109,7 +82,7 @@ class AutoClicker : Module()
 		val breakingBlock = mc.playerController.curBlockDamageMP > 0F
 		if (breakingBlock)
 		{
-			delayAfterBlockBreak = TimeUtils.randomDelay(minDelayAfterBreakBlockValue.get(), maxDelayAfterBreakBlockValue.get())
+			delayAfterBlockBreak = delayAfterBreakBlockValue.getRandomDelay()
 			delayAfterBlockBreakTimer.reset()
 		}
 
@@ -126,5 +99,5 @@ class AutoClicker : Module()
 	}
 
 	override val tag: String
-		get() = "${minCPSValue.get()} ~ ${maxCPSValue.get()}"
+		get() = "${cpsValue.getMin()} ~ ${cpsValue.getMax()}"
 }

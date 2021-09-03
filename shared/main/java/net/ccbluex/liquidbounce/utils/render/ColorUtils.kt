@@ -18,7 +18,6 @@ import net.ccbluex.liquidbounce.utils.WorkerUtils
 import java.awt.Color
 import java.text.NumberFormat
 import java.util.regex.Pattern
-import kotlin.math.abs
 import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlin.random.Random
@@ -86,7 +85,7 @@ object ColorUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun getESPColor(entity: IEntity?, colorMode: String, customStaticColor: Int, healthMode: String, indicateHurt: Boolean, indicateTarget: Boolean, indicateFriend: Boolean, rainbowSaturation: Float, rainbowBrightness: Float, alpha: Int = 255): Int
+	fun getESPColor(entity: IEntity?, colorMode: String, customStaticColor: Int, healthMode: String, indicateHurt: Boolean, indicateTarget: Boolean, indicateFriend: Boolean, rainbowSpeed: Int, rainbowSaturation: Float, rainbowBrightness: Float, alpha: Int = 255): Int
 	{
 		val provider = classProvider
 
@@ -113,7 +112,7 @@ object ColorUtils : MinecraftInstance()
 
 				when (colorMode.toLowerCase())
 				{
-					"rainbow" -> return@run rainbowRGB(saturation = rainbowSaturation, brightness = rainbowBrightness)
+					"rainbow" -> return@run rainbowRGB(speed = rainbowSpeed, saturation = rainbowSaturation, brightness = rainbowBrightness)
 
 					"team" ->
 					{
@@ -156,7 +155,7 @@ object ColorUtils : MinecraftInstance()
 				}
 			}
 
-			return@run if (colorMode.equals("Rainbow", ignoreCase = true)) rainbowRGB(saturation = rainbowSaturation, brightness = rainbowBrightness) else customStaticColor
+			return@run if (colorMode.equals("Rainbow", ignoreCase = true)) rainbowRGB(speed = rainbowSpeed, saturation = rainbowSaturation, brightness = rainbowBrightness) else customStaticColor
 		}, alpha)
 	}
 
@@ -235,9 +234,9 @@ object ColorUtils : MinecraftInstance()
 	@JvmStatic
 	fun compareColor(color1: Int, color2: Int): Double
 	{
-		val redDelta = abs(((color1 shr 16) and 0xFF) - ((color2 shr 16) and 0xFF)).toDouble()
-		val greenDelta = abs(((color1 shr 8) and 0xFF) - ((color2 shr 8) and 0xFF)).toDouble()
-		val blueDelta = abs(((color1 shr 0) and 0xFF) - ((color2 shr 0) and 0xFF)).toDouble()
+		val redDelta = ((color1 shr 16) and 0xFF).toDouble() - ((color2 shr 16) and 0xFF).toDouble()
+		val greenDelta = ((color1 shr 8) and 0xFF).toDouble() - ((color2 shr 8) and 0xFF).toDouble()
+		val blueDelta = ((color1 shr 0) and 0xFF).toDouble() - ((color2 shr 0) and 0xFF).toDouble()
 
 		return sqrt(redDelta * redDelta + greenDelta * greenDelta + blueDelta * blueDelta)
 	}

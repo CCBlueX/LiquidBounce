@@ -21,8 +21,8 @@ import net.ccbluex.liquidbounce.utils.item.ArmorComparator
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
 import net.ccbluex.liquidbounce.utils.timer.Cooldown
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.IntegerRangeValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 
 @ModuleInfo(name = "AutoArmor", description = "Automatically equips the best armor in your inventory.", category = ModuleCategory.COMBAT)
@@ -31,22 +31,7 @@ class AutoArmor : Module()
 	/**
 	 * Options
 	 */
-	val minDelayValue: IntegerValue = object : IntegerValue("MinDelay", 100, 0, 400)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val maxDelay = maxDelayValue.get()
-			if (maxDelay < newValue) set(maxDelay)
-		}
-	}
-	val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 200, 0, 400)
-	{
-		override fun onChanged(oldValue: Int, newValue: Int)
-		{
-			val minDelay = minDelayValue.get()
-			if (minDelay > newValue) set(minDelay)
-		}
-	}
+	private val delayValue = IntegerRangeValue("Delay", 100, 200, 0, 1000, "MaxDelay" to "MinDelay")
 	private val invOpenValue = BoolValue("InvOpen", false)
 	private val simulateInventory = BoolValue("SimulateInventory", true)
 	private val noMoveValue = BoolValue("NoMove", false)
@@ -71,8 +56,8 @@ class AutoArmor : Module()
 			return if (cache == null || infoUpdateCooldown.attemptReset()) (if (!state) "AutoArmor is not active"
 			else
 			{
-				val minDelay = minDelayValue.get()
-				val maxDelay = maxDelayValue.get()
+				val minDelay = delayValue.getMin()
+				val maxDelay = delayValue.getMax()
 				val noMove = noMoveValue.get()
 				val hotbar = hotbarValue.get()
 				val itemDelay = itemDelayValue.get()
@@ -144,7 +129,7 @@ class AutoArmor : Module()
 			netHandler.addToSendQueue(createUseItemPacket(thePlayer.inventoryContainer.getSlot(item).stack, WEnumHand.MAIN_HAND))
 			netHandler.addToSendQueue(provider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
 
-			nextDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+			nextDelay = delayValue.getRandomDelay()
 
 			return true
 		}
@@ -161,7 +146,7 @@ class AutoArmor : Module()
 
 			if (full) controller.windowClick(thePlayer.inventoryContainer.windowId, item, 1, 4, thePlayer) else controller.windowClick(thePlayer.inventoryContainer.windowId, if (isArmorSlot) item else if (item < 9) item + 36 else item, 0, 1, thePlayer)
 
-			nextDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+			nextDelay = delayValue.getRandomDelay()
 
 			if (openInventory) netHandler.addToSendQueue(provider.createCPacketCloseWindow())
 
@@ -171,7 +156,7 @@ class AutoArmor : Module()
 	}
 
 	override val tag: String
-		get() = "${minDelayValue.get()} ~ ${maxDelayValue.get()}"
+		get() = "${delayValue.getMin()} ~ ${delayValue.getMax()}"
 
 	companion object
 	{

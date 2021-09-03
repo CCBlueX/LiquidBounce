@@ -26,7 +26,7 @@ import java.util.*
 // TODO: Add TpFucker (like TpEggBreaker in Jigsaw)
 // TODO: ProjectileAimbot (https://github.com/CCBlueX/Old-LiquidBounce-Issues/issues/3496)
 // TODO: AutoEnchant
-// TODO: FarmBot (Wheat Nuker + Automatically plants seeds)
+// TODO: FarmBot (Wheat Nuker + Automatically plant seeds)
 // TODO: AutoFishHook + FishHookAimbot(or integrate FishHook support to ProjectileAimbot)
 class ModuleManager : Listenable
 {

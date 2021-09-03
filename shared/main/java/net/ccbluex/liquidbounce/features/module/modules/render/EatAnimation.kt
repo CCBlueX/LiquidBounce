@@ -10,16 +10,25 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.ValueGroup
 
 @ModuleInfo(name = "EatAnimation", description = "Customize eat/drink animation.", category = ModuleCategory.RENDER)
 class EatAnimation : Module()
 {
-	val verticalShakeSpeedValue = FloatValue("VerticalShakeSpeed", 4F, 0.1F, 10F)
-	val verticalShakeIntensityValue = FloatValue("VerticalShakeIntensity", 0.1F, 0.02F, 1F)
+	private val verticalGroup = ValueGroup("Vertical")
+	val verticalSpeedValue = FloatValue("Speed", 4F, 0.1F, 10F, "VerticalShakeSpeed")
+	val verticalIntensityValue = FloatValue("Intensity", 0.1F, 0.02F, 1F, "VerticalShakeIntensity")
+
+	private val horizontalGroup = ValueGroup("Horizontal")
+	val horizontalEnabledValue = BoolValue("Enabled", false, "HorizontalShake")
+	val horizontalSpeedValue = FloatValue("Speed", 8F, 0.1F, 10F, "HorizontalShakeSpeed")
+	val horizontalIntensityValue = FloatValue("Intensity", 0.05F, 0.02F, 1F, "HorizontalShakeIntensity")
 
 	val shakeStartTime = FloatValue("ShakeStartTime", 0.8F, 0.4F, 0.8F)
 
-	val horizontalShakeValue = BoolValue("HorizontalShake", false)
-	val horizontalShakeSpeedValue = FloatValue("HorizontalShakeSpeed", 8F, 0.1F, 10F)
-	val horizontalShakeIntensityValue = FloatValue("HorizontalShakeIntensity", 0.05F, 0.02F, 1F)
+	init
+	{
+		verticalGroup.addAll(verticalSpeedValue, verticalIntensityValue)
+		horizontalGroup.addAll(horizontalEnabledValue, horizontalSpeedValue, horizontalIntensityValue)
+	}
 }

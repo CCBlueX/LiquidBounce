@@ -21,10 +21,7 @@ import net.ccbluex.liquidbounce.utils.VecRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlock
 import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
 import kotlin.math.ceil
 import kotlin.math.sqrt
 
@@ -34,14 +31,23 @@ class NoFall : Module()
 	@JvmField
 	val modeValue = ListValue("Mode", arrayOf("SpoofGround", "NoGround", "Packet", "MLG", "AAC3.1.0", "AAC3.3.4", "AAC3.3.11", "AAC3.3.15", "Spartan194", "CubeCraft", "Hypixel", "ACP"), "SpoofGround")
 
-	private val noSpoofTicks = IntegerValue("NoSpoofTicks", 0, 0, 5)
+	private val noSpoofTicks = object : IntegerValue("NoSpoofTicks", 0, 0, 5)
+	{
+		override fun showCondition() = modeValue.get().equals("SpoofGround", ignoreCase = true) || modeValue.get().equals("Packet", ignoreCase = true)
+	}
+
 	private val thresholdFallDistanceValue = FloatValue("ThresholdFallDistance", 1.5f, 0f, 2.9f)
 
-	private val minFallDistance = FloatValue("MinMLGHeight", 5f, 2f, 50f)
+	private val mlgGroup = object : ValueGroup("MLG")
+	{
+		override fun showCondition() = modeValue.get().equals("MLG", ignoreCase = true)
+	}
+	private val mlgMinFallDistance = FloatValue("MinHeight", 5f, 2f, 50f, "MinMLGHeight")
+	private val mlgSilentRotationValue = BoolValue("SilentRotation", true, "SilentRotation")
 
-	private val silentRotationValue = BoolValue("SilentRotation", true)
-	private val keepRotationValue = BoolValue("KeepRotation", false)
-	private val keepRotationLengthValue = IntegerValue("KeepRotationLength", 1, 1, 40)
+	private val mlgKeepRotationGroup = ValueGroup("KeepRotation")
+	private val mlgKeepRotationEnabledValue = BoolValue("Enabled", false, "KeepRotation")
+	private val mlgKeepRotationTicksValue = IntegerValue("Ticks", 1, 1, 40, "KeepRotationLength")
 
 	private val spartanTimer = TickTimer()
 	private val mlgTimer = TickTimer()
@@ -53,6 +59,12 @@ class NoFall : Module()
 	private var currentMlgRotation: VecRotation? = null
 	private var currentMlgItemIndex = 0
 	private var currentMlgBlock: WBlockPos? = null
+
+	init
+	{
+		mlgKeepRotationGroup.addAll(mlgKeepRotationEnabledValue, mlgKeepRotationTicksValue)
+		mlgGroup.addAll(mlgMinFallDistance, mlgSilentRotationValue, mlgKeepRotationGroup)
+	}
 
 	@EventTarget(ignoreCondition = true)
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
@@ -249,7 +261,7 @@ class NoFall : Module()
 		val thePlayer = mc.thePlayer ?: return
 		val controller = mc.playerController
 
-		val silentRotation = silentRotationValue.get()
+		val silentRotation = mlgSilentRotationValue.get()
 
 		val provider = classProvider
 
@@ -261,7 +273,7 @@ class NoFall : Module()
 
 			if (!mlgTimer.hasTimePassed(10)) return
 
-			if (thePlayer.fallDistance > minFallDistance.get())
+			if (thePlayer.fallDistance > mlgMinFallDistance.get())
 			{
 				val fallingPlayer = FallingPlayer(theWorld, thePlayer, thePlayer.posX, thePlayer.posY, thePlayer.posZ, thePlayer.motionX, thePlayer.motionY, thePlayer.motionZ, thePlayer.rotationYaw, thePlayer.moveStrafing, thePlayer.moveForward)
 
@@ -299,7 +311,7 @@ class NoFall : Module()
 
 				if (currentMlgRotation != null)
 				{
-					if (silentRotation) RotationUtils.setTargetRotation(currentMlgRotation.rotation, if (keepRotationValue.get()) keepRotationLengthValue.get() else 0)
+					if (silentRotation) RotationUtils.setTargetRotation(currentMlgRotation.rotation, if (mlgKeepRotationEnabledValue.get()) mlgKeepRotationTicksValue.get() else 0)
 					else currentMlgRotation.rotation.applyRotationToPlayer(thePlayer)
 				}
 			}

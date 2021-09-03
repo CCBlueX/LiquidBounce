@@ -16,34 +16,64 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.WorkerUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
 import kotlin.math.ceil
 
 @ModuleInfo(name = "FastUse", description = "Allows you to use items faster.", category = ModuleCategory.PLAYER)
 class FastUse : Module()
 {
-
 	private val modeValue = ListValue("Mode", arrayOf("Instant", "NCP", "AAC", "Custom"), "NCP")
-	private val ncpModeValue = ListValue("NCP-Mode", arrayOf("AtOnce", "Constant"), "AtOnce")
+
+	private val ncpGroup = object : ValueGroup("NCP")
+	{
+		override fun showCondition() = modeValue.get().equals("NCP", ignoreCase = true)
+	}
+	private val ncpModeValue = ListValue("Mode", arrayOf("AtOnce", "Constant"), "AtOnce", "NCP-Mode")
+
+	private val ncpAtOnceGroup = object : ValueGroup("AtOnce")
+	{
+		override fun showCondition() = ncpModeValue.get().equals("AtOnce", ignoreCase = true)
+	}
+	private val ncpAtOnceWaitTicksValue = IntegerValue("WaitTicks", 14, 0, 25, "NCP-AtOnce-WaitTicks")
+	private val ncpAtOncePacketsValue = IntegerValue("Packets", 20, 12, 100, "NCP-AtOnce-Packets")
+
+	private val ncpConstantGroup = object : ValueGroup("Constant")
+	{
+		override fun showCondition() = ncpModeValue.get().equals("Constant", ignoreCase = true)
+	}
+	private val ncpConstantPacketsValue = IntegerValue("Packets", 1, 1, 10, "NCP-Constant-Packets")
+
+	private val ncpTimerValue = FloatValue("Timer", 1.0f, 0.2f, 1.5f, "NCP-Timer")
+
+	private val aacGroup = object : ValueGroup("AAC")
+	{
+		override fun showCondition() = modeValue.get().equals("AAC", ignoreCase = true)
+	}
+	private val aacTimerValue = FloatValue("Timer", 1.22f, 1.1f, 1.5f, "AAC-Timer")
+
+	private val customGroup = object : ValueGroup("Custom")
+	{
+		override fun showCondition() = modeValue.get().equals("Custom", ignoreCase = true)
+	}
+	private val customDelayValue = IntegerValue("Delay", 0, 0, 300, "CustomDelay")
+	private val customSpeedValue = IntegerValue("Speed", 2, 1, 35, "CustomSpeed")
+	private val customTimer = FloatValue("Timer", 1.1f, 0.5f, 2f, "CustomTimer")
 
 	private val noMoveValue = BoolValue("NoMove", false)
 
-	private val ncpWaitTicksValue = IntegerValue("NCP-AtOnce-WaitTicks", 14, 0, 25)
-	private val ncpPacketsValue = IntegerValue("NCP-AtOnce-Packets", 20, 12, 100)
-	private val ncpConstantPacketsValue = IntegerValue("NCP-Constant-Packets", 1, 1, 10)
-	private val ncpTimerValue = FloatValue("NCP-Timer", 1.0f, 0.2f, 1.5f)
-
-	private val aacTimerValue = FloatValue("AAC-Timer", 1.22f, 1.1f, 1.5f)
-
-	private val delayValue = IntegerValue("CustomDelay", 0, 0, 300)
-	private val customSpeedValue = IntegerValue("CustomSpeed", 2, 1, 35)
-	private val customTimer = FloatValue("CustomTimer", 1.1f, 0.5f, 2f)
-
 	private val msTimer = MSTimer()
 	private var usedTimer = false
+
+	init
+	{
+		ncpAtOnceGroup.addAll(ncpAtOnceWaitTicksValue, ncpAtOncePacketsValue)
+		ncpConstantGroup.add(ncpConstantPacketsValue)
+		ncpGroup.addAll(ncpAtOnceGroup, ncpConstantGroup, ncpTimerValue)
+
+		aacGroup.add(aacTimerValue)
+
+		customGroup.addAll(customDelayValue, customSpeedValue, customTimer)
+	}
 
 	@EventTarget(ignoreCondition = true)
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
@@ -101,16 +131,16 @@ class FastUse : Module()
 					{
 						"atonce" ->
 						{
-							if (itemInUseDuration > ncpWaitTicksValue.get())
+							if (itemInUseDuration > ncpAtOnceWaitTicksValue.get())
 							{
-								repeat(ncpPacketsValue.get()) {
+								repeat(ncpAtOncePacketsValue.get()) {
 									netHandler.addToSendQueue(provider.createCPacketPlayer(onGround))
 								}
 
 								mc.playerController.onStoppedUsingItem(thePlayer)
 							}
 
-							return ncpWaitTicksValue.get() + 2
+							return ncpAtOnceWaitTicksValue.get() + 2
 						}
 
 						"constant" ->
@@ -137,7 +167,7 @@ class FastUse : Module()
 					timer.timerSpeed = customTimer.get()
 					usedTimer = true
 
-					if (msTimer.hasTimePassed(delayValue.get().toLong()))
+					if (msTimer.hasTimePassed(customDelayValue.get().toLong()))
 					{
 						workers.execute {
 							repeat(customSpeedValue.get()) {
@@ -148,7 +178,7 @@ class FastUse : Module()
 						msTimer.reset()
 					}
 
-					return ceil(32.0F / ((customSpeedValue.get().toFloat() + 1) * (1600.0F * (delayValue.get().toFloat() / 1600.0F)))).coerceAtMost(32.0F).toInt()
+					return ceil(32.0F / ((customSpeedValue.get().toFloat() + 1) * (1600.0F * (customDelayValue.get().toFloat() / 1600.0F)))).coerceAtMost(32.0F).toInt()
 				}
 			}
 		}

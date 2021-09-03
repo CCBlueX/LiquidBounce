@@ -16,15 +16,21 @@ import net.ccbluex.liquidbounce.utils.render.ColorUtils.translateAlternateColorC
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.ccbluex.liquidbounce.value.TextValue
+import net.ccbluex.liquidbounce.value.ValueGroup
 
 @ModuleInfo(name = "NameProtect", description = "Changes playernames clientside.", category = ModuleCategory.MISC)
 class NameProtect : Module()
 {
-	val allPlayersValue = BoolValue("AllPlayers", false)
 	val skinProtectValue = BoolValue("SkinProtect", true)
 	private val fakeNameValue = TextValue("FakeName", "&cMe")
-	private val allPlayersModeValue = ListValue("AllPlayers-Mode", arrayOf("Custom", "Obfuscate", "Empty"), "Custom")
-	private val allPlayersCustomFakeNameValue = TextValue("AllPlayers-CustomName", "Protected User")
+
+	private val allPlayerGroup = ValueGroup("AllPlayer")
+	val allPlayerEnabledValue = BoolValue("Enabled", false, "AllPlayers")
+	private val allPlayerModeValue = ListValue("Mode", arrayOf("Custom", "Obfuscate", "Empty"), "Custom", "AllPlayers-Mode")
+	private val allPlayerCustomFakeNameValue = object : TextValue("CustomName", "Protected User", "AllPlayers-CustomName")
+	{
+		override fun showCondition() = allPlayerModeValue.get().equals("Custom", ignoreCase = true)
+	}
 
 	@EventTarget(ignoreCondition = true)
 	fun onText(event: TextEvent)
@@ -38,12 +44,12 @@ class NameProtect : Module()
 		if (!state) return
 		event.text = StringUtils.replace(event.text, thePlayer.name, translateAlternateColorCodes(fakeNameValue.get()) + "\u00A7f")
 
-		if (allPlayersValue.get())
+		if (allPlayerEnabledValue.get())
 		{
-			val customFakeName = allPlayersCustomFakeNameValue.get()
+			val customFakeName = allPlayerCustomFakeNameValue.get()
 
 			mc.netHandler.playerInfoMap.asSequence().map { it.gameProfile.name }.forEach {
-				event.text = StringUtils.replace(event.text, it, when (allPlayersModeValue.get().toLowerCase())
+				event.text = StringUtils.replace(event.text, it, when (allPlayerModeValue.get().toLowerCase())
 				{
 					"obfuscate" -> "\u00A7k$it"
 					"empty" -> ""
