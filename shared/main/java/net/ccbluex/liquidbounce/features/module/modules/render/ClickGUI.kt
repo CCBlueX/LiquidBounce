@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -14,13 +15,10 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.LiquidBounceStyle
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.NullStyle
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.SlowlyStyle
-import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbowRGB
+import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.input.Keyboard
-import java.awt.Color
 
 // TODO: Separated color support
 // TODO: Customizable font
@@ -68,15 +66,87 @@ class ClickGUI : Module()
 
 	companion object
 	{
-		private val colorRedValue = IntegerValue("R", 0, 0, 255)
-		private val colorGreenValue = IntegerValue("G", 160, 0, 255)
-		private val colorBlueValue = IntegerValue("B", 255, 0, 255)
-		private val colorRainbowValue = BoolValue("Rainbow", false)
-		private val rainbowSpeedValue = IntegerValue("Rainbow-Speed", 10, 1, 10)
-		private val saturationValue = FloatValue("HSB-Saturation", 1.0f, 0.0f, 1.0f)
-		private val brightnessValue = FloatValue("HSB-Brightness", 1.0f, 0.0f, 1.0f)
+		private val panelGroup = ValueGroup("Panel")
+		private val panelColorValue = RGBColorValue("Color", 0, 160, 255, Triple("R", "G", "B"))
+
+		private val panelColorRainbowGroup = ValueGroup("Rainbow")
+		private val panelColorRainbowEnabledValue = BoolValue("Enabled", false, "Rainbow")
+		private val panelColorRainbowSpeedValue = IntegerValue("Speed", 10, 1, 10, "Rainbow-Speed")
+		private val panelColorRainbowSaturationValue = FloatValue("Saturation", 1.0f, 0.0f, 1.0f, "HSB-Saturation")
+		private val panelColorRainbowBrightnessValue = FloatValue("Brightness", 1.0f, 0.0f, 1.0f, "HSB-Brightness")
+
+		private val panelFontValue = FontValue("Font", Fonts.font35)
+
+		private val descriptionGroup = ValueGroup("Description")
+		private val descriptionColorValue = RGBColorValue("Color", 0, 160, 255)
+
+		private val descriptionColorRainbowGroup = ValueGroup("Rainbow")
+		private val descriptionColorRainbowEnabledValue = BoolValue("Enabled", false)
+		private val descriptionColorRainbowSpeedValue = IntegerValue("Speed", 10, 1, 10)
+		private val descriptionColorRainbowSaturationValue = FloatValue("Saturation", 1.0f, 0.0f, 1.0f)
+		private val descriptionColorRainbowBrightnessValue = FloatValue("Brightness", 1.0f, 0.0f, 1.0f)
+
+		private val descriptionFontValue = FontValue("Font", Fonts.font35)
+
+		private val buttonGroup = ValueGroup("Button")
+		private val buttonColorValue = RGBColorValue("Color", 0, 160, 255)
+
+		private val buttonColorRainbowGroup = ValueGroup("Rainbow")
+		private val buttonColorRainbowEnabledValue = BoolValue("Enabled", false)
+		private val buttonColorRainbowSpeedValue = IntegerValue("Speed", 10, 1, 10)
+		private val buttonColorRainbowSaturationValue = FloatValue("Saturation", 1.0f, 0.0f, 1.0f)
+		private val buttonColorRainbowBrightnessValue = FloatValue("Brightness", 1.0f, 0.0f, 1.0f)
+
+		private val buttonFontValue = FontValue("Font", Fonts.font35)
+
+		private val valueGroup = ValueGroup("Value")
+		private val valueColorValue = RGBColorValue("Color", 0, 160, 255)
+
+		private val valueColorRainbowGroup = ValueGroup("Rainbow")
+		private val valueColorRainbowEnabledValue = BoolValue("Enabled", false)
+		private val valueColorRainbowSpeedValue = IntegerValue("Speed", 10, 1, 10)
+		private val valueColorRainbowSaturationValue = FloatValue("Saturation", 1.0f, 0.0f, 1.0f)
+		private val valueColorRainbowBrightnessValue = FloatValue("Brightness", 1.0f, 0.0f, 1.0f)
+
+		private val valueFontValue = FontValue("Font", Fonts.font35)
+
+		init
+		{
+			panelColorRainbowGroup.addAll(panelColorRainbowEnabledValue, panelColorRainbowSpeedValue, panelColorRainbowSaturationValue, panelColorRainbowBrightnessValue)
+			panelGroup.addAll(panelColorValue, panelColorRainbowGroup, panelFontValue)
+
+			descriptionColorRainbowGroup.addAll(descriptionColorRainbowEnabledValue, descriptionColorRainbowSpeedValue, descriptionColorRainbowSaturationValue, descriptionColorRainbowBrightnessValue)
+			descriptionGroup.addAll(descriptionColorValue, descriptionColorRainbowGroup, descriptionFontValue)
+
+			buttonColorRainbowGroup.addAll(buttonColorRainbowEnabledValue, buttonColorRainbowSpeedValue, buttonColorRainbowSaturationValue, buttonColorRainbowBrightnessValue)
+			buttonGroup.addAll(buttonColorValue, buttonColorRainbowGroup, buttonFontValue)
+
+			valueColorRainbowGroup.addAll(valueColorRainbowEnabledValue, valueColorRainbowSpeedValue, valueColorRainbowSaturationValue, valueColorRainbowBrightnessValue)
+			valueGroup.addAll(valueColorValue, valueColorRainbowGroup, valueFontValue)
+		}
 
 		@JvmStatic
-		fun generateColor(): Color = if (colorRainbowValue.get()) rainbow(speed = rainbowSpeedValue.get(), saturation = saturationValue.get(), brightness = brightnessValue.get()) else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
+		fun generatePanelColor(): Int = if (panelColorRainbowEnabledValue.get()) rainbowRGB(speed = panelColorRainbowSpeedValue.get(), saturation = panelColorRainbowSaturationValue.get(), brightness = panelColorRainbowBrightnessValue.get()) else panelColorValue.get()
+
+		@JvmStatic
+		fun generateDescriptionColor(): Int = if (descriptionColorRainbowEnabledValue.get()) rainbowRGB(speed = descriptionColorRainbowSpeedValue.get(), saturation = descriptionColorRainbowSaturationValue.get(), brightness = descriptionColorRainbowBrightnessValue.get()) else descriptionColorValue.get()
+
+		@JvmStatic
+		fun generateButtonColor(): Int = if (buttonColorRainbowEnabledValue.get()) rainbowRGB(speed = buttonColorRainbowSpeedValue.get(), saturation = buttonColorRainbowSaturationValue.get(), brightness = buttonColorRainbowBrightnessValue.get()) else buttonColorValue.get()
+
+		@JvmStatic
+		fun generateValueColor(): Int = if (valueColorRainbowEnabledValue.get()) rainbowRGB(speed = valueColorRainbowSpeedValue.get(), saturation = valueColorRainbowSaturationValue.get(), brightness = valueColorRainbowBrightnessValue.get()) else valueColorValue.get()
+
+		@JvmStatic
+		fun getPanelFont(): IFontRenderer = panelFontValue.get()
+
+		@JvmStatic
+		fun getDescriptionFont(): IFontRenderer = descriptionFontValue.get()
+
+		@JvmStatic
+		fun getButtonFont(): IFontRenderer = buttonFontValue.get()
+
+		@JvmStatic
+		fun getValueFont(): IFontRenderer = valueFontValue.get()
 	}
 }

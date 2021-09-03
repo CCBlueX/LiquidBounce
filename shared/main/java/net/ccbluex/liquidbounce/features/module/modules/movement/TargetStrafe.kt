@@ -53,11 +53,6 @@ class TargetStrafe : Module()
 	private val fovValue = FloatValue("FoV", 180F, 30F, 180F)
 
 	/**
-	 * Should automatically jump while strafing?
-	 */
-	private val autoJumpValue = BoolValue("AutoJump", true)
-
-	/**
 	 * Strafe when player is on ground (bypass Strafe checks)
 	 */
 	private val onlyGroundValue = BoolValue("OnlyGround", false)
@@ -170,14 +165,6 @@ class TargetStrafe : Module()
 
 			strafing = true
 		}
-	}
-
-	@EventTarget
-	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
-	{
-		val thePlayer = mc.thePlayer ?: return
-
-		if (strafing && thePlayer.onGround && autoJumpValue.get()) thePlayer.jump()
 	}
 
 	@EventTarget

@@ -5,8 +5,13 @@
  */
 package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles
 
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IGlStateManager
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.clamp_double
+import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.Companion.getButtonFont
+import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.Companion.getDescriptionFont
+import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.Companion.getPanelFont
+import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.Companion.getValueFont
 import net.ccbluex.liquidbounce.ui.client.clickgui.Panel
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ButtonElement
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ModuleElement
@@ -37,6 +42,7 @@ class SlowlyStyle : Style()
 
 	override fun drawPanel(mouseX: Int, mouseY: Int, panel: Panel)
 	{
+		val font = getPanelFont()
 		drawBorderedRect(panel.x.toFloat(), panel.y.toFloat() - 3, panel.x.toFloat() + panel.width, panel.y.toFloat() + 17, 3f, BACKGROUND, BACKGROUND)
 
 		if (panel.fade > 0)
@@ -47,18 +53,20 @@ class SlowlyStyle : Style()
 
 		classProvider.glStateManager.resetColor()
 
-		val textWidth = Fonts.font35.getStringWidth("\u00A7f" + stripControlCodes(panel.name)).toFloat()
-		Fonts.font35.drawString(panel.name, (panel.x - (textWidth - 100.0f) * 0.5).toInt(), panel.y + 7 - 3, WHITE)
+		val textWidth = font.getStringWidth("\u00A7f" + stripControlCodes(panel.name)).toFloat()
+		font.drawString(panel.name, (panel.x - (textWidth - 100.0f) * 0.5).toInt(), panel.y + 7 - 3, WHITE)
 	}
 
 	override fun drawDescription(mouseX: Int, mouseY: Int, text: String)
 	{
-		val textWidth = Fonts.font35.getStringWidth(text)
-		drawBorderedRect((mouseX + 9).toFloat(), mouseY.toFloat(), (mouseX + textWidth + 14).toFloat(), (mouseY + Fonts.font35.fontHeight + 3).toFloat(), 3.0f, BACKGROUND, BACKGROUND)
+		val font = getDescriptionFont()
+		val fontHeight = font.fontHeight
+		val textWidth = font.getStringWidth(text)
+		drawBorderedRect((mouseX + 9).toFloat(), mouseY.toFloat(), (mouseX + textWidth + 14).toFloat(), (mouseY + fontHeight + 3).toFloat(), 3.0f, BACKGROUND, BACKGROUND)
 
 		classProvider.glStateManager.resetColor()
 
-		Fonts.font35.drawString(text, mouseX + 12, mouseY + (Fonts.font35.fontHeight shr 1), WHITE)
+		font.drawString(text, mouseX + 12, mouseY + (fontHeight shr 1), WHITE)
 	}
 
 	override fun drawButtonElement(mouseX: Int, mouseY: Int, buttonElement: ButtonElement)
@@ -67,7 +75,7 @@ class SlowlyStyle : Style()
 
 		classProvider.glStateManager.resetColor()
 
-		Fonts.font35.drawString(buttonElement.displayName, buttonElement.x + 5, buttonElement.y + 5, WHITE)
+		getButtonFont().drawString(buttonElement.displayName, buttonElement.x + 5, buttonElement.y + 5, WHITE)
 	}
 
 	/*
@@ -81,26 +89,29 @@ class SlowlyStyle : Style()
 
 	override fun drawModuleElement(mouseX: Int, mouseY: Int, moduleElement: ModuleElement)
 	{
+		val buttonFont = getButtonFont()
+		val valueFont = getValueFont()
+
 		drawRect(moduleElement.x - 1, moduleElement.y - 1, moduleElement.x + moduleElement.width + 1, moduleElement.y + moduleElement.height + 1, hoverColor(Color(54, 71, 96), moduleElement.hoverTime).rgb)
 		drawRect(moduleElement.x - 1, moduleElement.y - 1, moduleElement.x + moduleElement.width + 1, moduleElement.y + moduleElement.height + 1, hoverColor(Color(7, 152, 252, moduleElement.slowlyFade), moduleElement.hoverTime).rgb)
 
 		val glStateManager = classProvider.glStateManager
 		glStateManager.resetColor()
 
-		Fonts.font35.drawString(moduleElement.displayName, moduleElement.x + 5, moduleElement.y + 5, WHITE)
+		buttonFont.drawString(moduleElement.displayName, moduleElement.x + 5, moduleElement.y + 5, WHITE)
 
 		// Draw settings
 		val moduleValues = moduleElement.module.values
 		if (moduleValues.isNotEmpty())
 		{
-			Fonts.font35.drawString(">", moduleElement.x + moduleElement.width - 8, moduleElement.y + 5, WHITE)
+			buttonFont.drawString(">", moduleElement.x + moduleElement.width - 8, moduleElement.y + 5, WHITE)
 
 			if (moduleElement.isShowSettings)
 			{
 				if (moduleElement.settingsWidth > 0.0f && moduleElement.slowlySettingsYPos > moduleElement.y + 6) drawBorderedRect((moduleElement.x + moduleElement.width + 4).toFloat(), moduleElement.y + 6f, moduleElement.x + moduleElement.width + moduleElement.settingsWidth, moduleElement.slowlySettingsYPos + 2f, 3.0f, BACKGROUND_BORDER, BACKGROUND_BORDER)
 				moduleElement.slowlySettingsYPos = moduleElement.y + 6
 
-				for (value in moduleValues) drawAbstractValue(glStateManager, moduleElement, value, mouseX, mouseY)
+				for (value in moduleValues) drawAbstractValue(valueFont, glStateManager, moduleElement, value, mouseX, mouseY)
 
 				moduleElement.updatePressed()
 
@@ -110,23 +121,23 @@ class SlowlyStyle : Style()
 		}
 	}
 
-	private fun drawAbstractValue(glStateManager: IGlStateManager, moduleElement: ModuleElement, value: AbstractValue, mouseX: Int, mouseY: Int, indent: Int = 0)
+	private fun drawAbstractValue(font: IFontRenderer, glStateManager: IGlStateManager, moduleElement: ModuleElement, value: AbstractValue, mouseX: Int, mouseY: Int, indent: Int = 0)
 	{
 		when (value)
 		{
 			is ValueGroup ->
 			{
 				val text = value.displayName
-				val textWidth = Fonts.font35.getStringWidth(text) + indent + 16f
-				val textHeight = Fonts.font35.fontHeight
+				val textWidth = font.getStringWidth(text) + indent + 16f
+				val textHeight = font.fontHeight
 
 				if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
 
 				val moduleX = moduleElement.x + moduleElement.width
 				val moduleIndentX = moduleX + indent
 
-				Fonts.font35.drawString("\u00A7c$text", moduleIndentX + 6, moduleElement.slowlySettingsYPos + 2, WHITE)
-				Fonts.font35.drawString(if (value.foldState) "-" else "+", (moduleX + moduleElement.settingsWidth - if (value.foldState) 5 else 6).toInt(), moduleElement.slowlySettingsYPos + 2, WHITE)
+				font.drawString("\u00A7c$text", moduleIndentX + 6, moduleElement.slowlySettingsYPos + 2, WHITE)
+				font.drawString(if (value.foldState) "-" else "+", (moduleX + moduleElement.settingsWidth - if (value.foldState) 5 else 6).toInt(), moduleElement.slowlySettingsYPos + 2, WHITE)
 
 				if (mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= moduleElement.slowlySettingsYPos && mouseY <= moduleElement.slowlySettingsYPos + textHeight && Mouse.isButtonDown(0) && moduleElement.isntPressed())
 				{
@@ -146,10 +157,10 @@ class SlowlyStyle : Style()
 					{
 						val valueOfGroup = valuesInGroup[i]
 
-						val textWidth2 = Fonts.font35.getStringWidth(valueOfGroup.displayName) + 12f
+						val textWidth2 = font.getStringWidth(valueOfGroup.displayName) + 12f
 						if (moduleElement.settingsWidth < textWidth2) moduleElement.settingsWidth = textWidth2
 						glStateManager.resetColor()
-						drawAbstractValue(glStateManager, moduleElement, valueOfGroup, mouseX, mouseY, indent + 10)
+						drawAbstractValue(font, glStateManager, moduleElement, valueOfGroup, mouseX, mouseY, indent + 10)
 
 						if (i == j - 1) // Last Index
 						{
@@ -162,13 +173,13 @@ class SlowlyStyle : Style()
 				else moduleElement.slowlySettingsYPos++
 			}
 
-			is ColorValue -> drawColorValue(glStateManager, moduleElement, value, mouseX, mouseY, indent)
-			is RangeValue<*> -> drawRangeValue(glStateManager, moduleElement, value, mouseX, mouseY, indent)
-			else -> drawValue(glStateManager, moduleElement, value as Value<*>, mouseX, mouseY, indent)
+			is ColorValue -> drawColorValue(font, glStateManager, moduleElement, value, mouseX, mouseY, indent)
+			is RangeValue<*> -> drawRangeValue(font, glStateManager, moduleElement, value, mouseX, mouseY, indent)
+			else -> drawValue(font, glStateManager, moduleElement, value as Value<*>, mouseX, mouseY, indent)
 		}
 	}
 
-	private fun drawColorValue(glStateManager: IGlStateManager, moduleElement: ModuleElement, value: ColorValue, mouseX: Int, mouseY: Int, indent: Int = 0)
+	private fun drawColorValue(font: IFontRenderer, glStateManager: IGlStateManager, moduleElement: ModuleElement, value: ColorValue, mouseX: Int, mouseY: Int, indent: Int = 0)
 	{
 		val moduleX = moduleElement.x + moduleElement.width
 		val moduleIndentX = moduleX + indent
@@ -176,8 +187,8 @@ class SlowlyStyle : Style()
 		val alphaPresent = value is RGBAColorValue
 		val text = "${value.displayName}\u00A7f: \u00A7c${value.getRed()} \u00A7a${value.getGreen()} \u00A79${value.getBlue()}${if (alphaPresent) " \u00A77${value.getAlpha()}" else ""}\u00A7r "
 		val colorText = "(#${if (alphaPresent) encodeToHex(value.getAlpha()) else ""}${encodeToHex(value.getRed())}${encodeToHex(value.getGreen())}${encodeToHex(value.getBlue())})"
-		val displayTextWidth = Fonts.font35.getStringWidth(text)
-		val textWidth = displayTextWidth + Fonts.font35.getStringWidth(colorText) + indent + 2f
+		val displayTextWidth = font.getStringWidth(text)
+		val textWidth = displayTextWidth + font.getStringWidth(colorText) + indent + 2f
 
 		if (moduleElement.settingsWidth < textWidth + 20f) moduleElement.settingsWidth = textWidth + 20f
 		val moduleXEnd = moduleX + moduleElement.settingsWidth
@@ -185,8 +196,8 @@ class SlowlyStyle : Style()
 		drawRect(moduleIndentX + textWidth, moduleElement.slowlySettingsYPos.toFloat(), moduleXEnd - 4f, moduleElement.slowlySettingsYPos + 10f, value.get())
 
 		glStateManager.resetColor()
-		Fonts.font35.drawString(text, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 4, WHITE)
-		Fonts.font35.drawString(colorText, moduleIndentX + displayTextWidth + 6, moduleElement.slowlySettingsYPos + 4, value.get(255))
+		font.drawString(text, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 4, WHITE)
+		font.drawString(colorText, moduleIndentX + displayTextWidth + 6, moduleElement.slowlySettingsYPos + 4, value.get(255))
 
 		val redSlider = drawSlider(value.getRed().toFloat(), 0f, 255f, moduleX + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, indent, -65536 /* 0xFFFF0000 */)
 
@@ -216,7 +227,7 @@ class SlowlyStyle : Style()
 		moduleElement.slowlySettingsYPos += 19
 	}
 
-	private fun drawRangeValue(glStateManager: IGlStateManager, moduleElement: ModuleElement, value: RangeValue<*>, mouseX: Int, mouseY: Int, indent: Int = 0)
+	private fun drawRangeValue(font: IFontRenderer, glStateManager: IGlStateManager, moduleElement: ModuleElement, value: RangeValue<*>, mouseX: Int, mouseY: Int, indent: Int = 0)
 	{
 		val moduleX = moduleElement.x + moduleElement.width
 		val moduleIndentX = moduleX + indent
@@ -227,7 +238,7 @@ class SlowlyStyle : Style()
 			is IntegerRangeValue ->
 			{
 				val text = "${value.displayName}\u00A7f: \u00A7c${value.getMin()}-${value.getMax()}"
-				val textWidth = Fonts.font35.getStringWidth(text) + indent + 8f
+				val textWidth = font.getStringWidth(text) + indent + 8f
 
 				if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
 
@@ -237,7 +248,7 @@ class SlowlyStyle : Style()
 				if (valueOfSlide.second != value.getMax().toFloat()) value.setMax(valueOfSlide.second)
 
 				glStateManager.resetColor()
-				Fonts.font35.drawString(text, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 4, WHITE)
+				font.drawString(text, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 4, WHITE)
 
 				moduleElement.slowlySettingsYPos += 19
 			}
@@ -245,7 +256,7 @@ class SlowlyStyle : Style()
 			is FloatRangeValue ->
 			{
 				val text = "${value.displayName}\u00A7f: \u00A7c${round(value.getMin())}-${round(value.getMax())}"
-				val textWidth = Fonts.font35.getStringWidth(text) + indent + 8f
+				val textWidth = font.getStringWidth(text) + indent + 8f
 
 				if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
 
@@ -256,7 +267,7 @@ class SlowlyStyle : Style()
 
 				glStateManager.resetColor()
 
-				Fonts.font35.drawString(text, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 4, WHITE)
+				font.drawString(text, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 4, WHITE)
 
 				moduleElement.slowlySettingsYPos += 19
 			}
@@ -266,7 +277,7 @@ class SlowlyStyle : Style()
 		assumeNonVolatile = true
 	}
 
-	private fun drawValue(glStateManager: IGlStateManager, moduleElement: ModuleElement, value: Value<*>, mouseX: Int, mouseY: Int, indent: Int = 0)
+	private fun drawValue(valueFont: IFontRenderer, glStateManager: IGlStateManager, moduleElement: ModuleElement, value: Value<*>, mouseX: Int, mouseY: Int, indent: Int = 0)
 	{
 		val moduleX = moduleElement.x + moduleElement.width
 		val moduleIndentX = moduleElement.x + moduleElement.width + indent
@@ -279,7 +290,7 @@ class SlowlyStyle : Style()
 			is BoolValue ->
 			{
 				val text = value.displayName
-				val textWidth = Fonts.font35.getStringWidth(text) + indent + 8f
+				val textWidth = valueFont.getStringWidth(text) + indent + 8f
 
 				if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
 
@@ -289,7 +300,7 @@ class SlowlyStyle : Style()
 					mc.soundHandler.playSound("gui.button.press", 1.0f)
 				}
 
-				Fonts.font35.drawString(text, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 2, if (value.get()) WHITE else LIGHT_GRAY)
+				valueFont.drawString(text, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 2, if (value.get()) WHITE else LIGHT_GRAY)
 
 				moduleElement.slowlySettingsYPos += 11
 			}
@@ -297,24 +308,24 @@ class SlowlyStyle : Style()
 			is ListValue ->
 			{
 				val text = value.displayName
-				val textWidth = Fonts.font35.getStringWidth(text) + indent + 16f
+				val textWidth = valueFont.getStringWidth(text) + indent + 16f
 
 				if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
 
-				Fonts.font35.drawString(text, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 2, WHITE)
-				Fonts.font35.drawString(if (value.openList) "-" else "+", (moduleX + moduleElement.settingsWidth - if (value.openList) 5 else 6).toInt(), moduleElement.slowlySettingsYPos + 2, WHITE)
+				valueFont.drawString(text, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 2, WHITE)
+				valueFont.drawString(if (value.openList) "-" else "+", (moduleX + moduleElement.settingsWidth - if (value.openList) 5 else 6).toInt(), moduleElement.slowlySettingsYPos + 2, WHITE)
 
-				if (mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= moduleElement.slowlySettingsYPos && mouseY <= moduleElement.slowlySettingsYPos + Fonts.font35.fontHeight && Mouse.isButtonDown(0) && moduleElement.isntPressed())
+				if (mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= moduleElement.slowlySettingsYPos && mouseY <= moduleElement.slowlySettingsYPos + valueFont.fontHeight && Mouse.isButtonDown(0) && moduleElement.isntPressed())
 				{
 					value.openList = !value.openList
 					mc.soundHandler.playSound("gui.button.press", 1.0f)
 				}
 
-				moduleElement.slowlySettingsYPos += Fonts.font35.fontHeight + 1
+				moduleElement.slowlySettingsYPos += valueFont.fontHeight + 1
 
 				for (valueOfList in value.values)
 				{
-					val textWidth2 = Fonts.font35.getStringWidth("> $valueOfList").toFloat()
+					val textWidth2 = valueFont.getStringWidth("> $valueOfList").toFloat()
 
 					if (moduleElement.settingsWidth < textWidth2 + 12) moduleElement.settingsWidth = textWidth2 + 12
 
@@ -326,8 +337,8 @@ class SlowlyStyle : Style()
 							mc.soundHandler.playSound("gui.button.press", 1.0f)
 						}
 						glStateManager.resetColor()
-						Fonts.font35.drawString("> $valueOfList", moduleIndentX + 6, moduleElement.slowlySettingsYPos + 2, if (value.get().equals(valueOfList, ignoreCase = true)) WHITE else LIGHT_GRAY)
-						moduleElement.slowlySettingsYPos += Fonts.font35.fontHeight + 1
+						valueFont.drawString("> $valueOfList", moduleIndentX + 6, moduleElement.slowlySettingsYPos + 2, if (value.get().equals(valueOfList, ignoreCase = true)) WHITE else LIGHT_GRAY)
+						moduleElement.slowlySettingsYPos += valueFont.fontHeight + 1
 					}
 				}
 
@@ -337,7 +348,7 @@ class SlowlyStyle : Style()
 			is IntegerValue ->
 			{
 				val text = value.displayName + "\u00A7f: " + if (value is BlockValue) getBlockName(value.get()) + " (" + value.get() + ")" else value.get()
-				val textWidth = Fonts.font35.getStringWidth(text) + indent + 8f
+				val textWidth = valueFont.getStringWidth(text) + indent + 8f
 
 				if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
 
@@ -345,7 +356,7 @@ class SlowlyStyle : Style()
 
 				if (valueOfSlide != value.get().toFloat()) value.set(valueOfSlide.toInt())
 
-				Fonts.font35.drawString(text, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 3, WHITE)
+				valueFont.drawString(text, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 3, WHITE)
 
 				moduleElement.slowlySettingsYPos += 19
 			}
@@ -353,7 +364,7 @@ class SlowlyStyle : Style()
 			is FloatValue ->
 			{
 				val text = value.displayName + "\u00A7f: " + round(value.get())
-				val textWidth = Fonts.font35.getStringWidth(text) + indent + 8f
+				val textWidth = valueFont.getStringWidth(text) + indent + 8f
 
 				if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
 
@@ -361,7 +372,7 @@ class SlowlyStyle : Style()
 
 				if (valueOfSlide != value.get()) value.set(valueOfSlide)
 
-				Fonts.font35.drawString(text, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 3, WHITE)
+				valueFont.drawString(text, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 3, WHITE)
 
 				moduleElement.slowlySettingsYPos += 19
 			}
@@ -383,9 +394,9 @@ class SlowlyStyle : Style()
 					if (objects != null) displayString = objects.name + if (objects.fontSize == -1) "" else " - " + objects.fontSize
 				}
 
-				Fonts.font35.drawString(displayString, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 2, WHITE)
+				valueFont.drawString(displayString, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 2, WHITE)
 
-				val stringWidth = Fonts.font35.getStringWidth(displayString) + indent + 8f
+				val stringWidth = valueFont.getStringWidth(displayString) + indent + 8f
 
 				if (moduleElement.settingsWidth < stringWidth) moduleElement.settingsWidth = stringWidth
 
@@ -434,13 +445,13 @@ class SlowlyStyle : Style()
 			else ->
 			{
 				val text = value.displayName + "\u00A7f: " + value.get()
-				val textWidth = Fonts.font35.getStringWidth(text) + indent + 8f
+				val textWidth = valueFont.getStringWidth(text) + indent + 8f
 
 				if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
 
 				glStateManager.resetColor()
 
-				Fonts.font35.drawString(text, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 4, WHITE)
+				valueFont.drawString(text, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 4, WHITE)
 
 				moduleElement.slowlySettingsYPos += 12
 			}

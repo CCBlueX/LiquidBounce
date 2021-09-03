@@ -153,7 +153,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 			realHeight += 10
 		}
 
-		RenderUtils.drawRect(x, y, x + width, y + 12, ClickGUI.generateColor().rgb)
+		RenderUtils.drawRect(x, y, x + width, y + 12, ClickGUI.generatePanelColor())
 		Fonts.font35.drawString("\u00A7lCreate element", x + 2F, y + 3.5F, -1)
 	}
 
@@ -195,7 +195,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 			realHeight += 10
 		}
 
-		RenderUtils.drawRect(x, y, x + width, y + 12, ClickGUI.generateColor().rgb)
+		RenderUtils.drawRect(x, y, x + width, y + 12, ClickGUI.generatePanelColor())
 		RenderUtils.resetColor()
 		Fonts.font35.drawString("\u00A7lEditor", x + 2F, y + 3.5f, -1)
 	}
@@ -422,7 +422,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 		}
 
 		// Header
-		RenderUtils.drawRect(x, y, x + width, y + 12, ClickGUI.generateColor().rgb)
+		RenderUtils.drawRect(x, y, x + width, y + 12, ClickGUI.generatePanelColor())
 		Fonts.font35.drawString("\u00A7l${element.name}", x + 2F, y + 3.5F, -1)
 
 		// Delete button

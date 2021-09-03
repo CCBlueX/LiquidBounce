@@ -72,8 +72,8 @@ class AutoUse : Module()
 	private val inventoryMisclickRateValue = IntegerValue("Rate", 5, 0, 100, "ClickMistakeRate")
 
 	private val killAuraBypassGroup = ValueGroup("KillAuraBypass")
-	private val killauraBypassModeValue = ListValue("Mode", arrayOf("None", "SuspendKillAura", "WaitForKillauraEnd"), "SuspendKillAura", "KillauraBypassMode")
-	private val killAuraBypassKillAuraSuspendDurationValue = object : IntegerValue("Duration", 300, 100, 1000, "SuspendKillauraDuration")
+	private val killauraBypassModeValue = ListValue("Mode", arrayOf("None", "SuspendKillAura", "WaitForKillAuraEnd"), "SuspendKillAura", "KillAuraBypassMode")
+	private val killAuraBypassKillAuraSuspendDurationValue = object : IntegerValue("Duration", 300, 100, 1000, "SuspendKillAuraDuration")
 	{
 		override fun showCondition() = killauraBypassModeValue.get().equals("SuspendKillAura", ignoreCase = true)
 	}
@@ -117,7 +117,7 @@ class AutoUse : Module()
 		if (controller.isInCreativeMode) return
 
 		val killAura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
-		if (killauraBypassModeValue.get().equals("WaitForKillauraEnd", true) && killAura.state && killAura.target != null) return
+		if (killauraBypassModeValue.get().equals("WaitForKillAuraEnd", true) && killAura.state && killAura.target != null) return
 
 		val netHandler = mc.netHandler
 		val screen = mc.currentScreen
@@ -177,7 +177,7 @@ class AutoUse : Module()
 						if (isFirst) netHandler.addToSendQueue(createUseItemPacket(stack, WEnumHand.MAIN_HAND))
 
 						// Suspend killaura if option is present
-						if (killauraBypassModeValue.get().equals("SuspendKillaura", true)) killAura.suspend(killAuraBypassKillAuraSuspendDurationValue.get().toLong())
+						if (killauraBypassModeValue.get().equals("SuspendKillAura", true)) killAura.suspend(killAuraBypassKillAuraSuspendDurationValue.get().toLong())
 
 						if (silent)
 						{

@@ -79,16 +79,11 @@ class Scaffold : Module()
 
 	private val rotationModeValue = ListValue("Mode", arrayOf("Off", "Normal", "Static", "StaticPitch", "StaticYaw"), "Normal", "RotationMode")
 
-	private val rotationSearchGroup = object : ValueGroup("Search")
-	{
-		override fun showCondition(): Boolean
-		{
-			val rotationMode = rotationModeValue.get()
-			return !(rotationMode.equals("Off", ignoreCase = true) || rotationMode.equals("Static", ignoreCase = true))
-		}
-	}
+	private val rotationSearchGroup = ValueGroup("Search")
 	private val rotationSearchSearchValue = BoolValue("Search", true, "Search")
+	private val rotationSearchSearchRangeValue = IntegerValue("SearchRange", 1, 1, 3)
 	private val rotationSearchYSearchValue = BoolValue("YSearch", false, "YSearch")
+	private val rotationSearchYSearchRangeValue = IntegerValue("YSearchRange", 1, 1, 3)
 	private val rotationSearchXZRangeValue = FloatValue("XZRange", 0.8f, 0f, 1f, "XZRange")
 	private val rotationSearchYRangeValue = FloatValue("YRange", 0.8f, 0f, 1f, "YRange")
 	private val rotationSearchMinDiffValue = FloatValue("MinDiff", 0.0f, 0.0f, 0.2f, "MinDiff")
@@ -166,8 +161,8 @@ class Scaffold : Module()
 	private val downValue = BoolValue("Downward", true, "Down")
 
 	private val killAuraBypassGroup = ValueGroup("KillAuraBypass")
-	val killauraBypassModeValue = ListValue("Mode", arrayOf("None", "SuspendKillAura", "WaitForKillauraEnd"), "SuspendKillAura", "KillauraBypassMode")
-	private val killAuraBypassKillAuraSuspendDurationValue = object : IntegerValue("Duration", 300, 100, 1000, "SuspendKillauraDuration")
+	val killauraBypassModeValue = ListValue("Mode", arrayOf("None", "SuspendKillAura", "WaitForKillAuraEnd"), "SuspendKillAura", "KillAuraBypassMode")
+	private val killAuraBypassKillAuraSuspendDurationValue = object : IntegerValue("Duration", 300, 100, 1000, "SuspendKillAuraDuration")
 	{
 		override fun showCondition() = killauraBypassModeValue.get().equals("SuspendKillAura", ignoreCase = true)
 	}
@@ -224,7 +219,7 @@ class Scaffold : Module()
 	{
 		delayGroup.addAll(delayValue, delaySwitchValue, delayPlaceableDelayValue)
 		autoBlockGroup.addAll(autoBlockModeValue, autoBlockSwitchKeepTimeValue, autoBlockFullCubeOnlyValue)
-		rotationSearchGroup.addAll(rotationSearchSearchValue, rotationSearchYSearchValue, rotationSearchXZRangeValue, rotationSearchYRangeValue, rotationSearchMinDiffValue, rotationSearchStepsValue, rotationSearchCheckVisibleValue)
+		rotationSearchGroup.addAll(rotationSearchSearchValue, rotationSearchSearchRangeValue, rotationSearchYSearchValue, rotationSearchYSearchRangeValue, rotationSearchXZRangeValue, rotationSearchYRangeValue, rotationSearchMinDiffValue, rotationSearchStepsValue, rotationSearchCheckVisibleValue)
 		rotationKeepRotationGroup.addAll(rotationKeepRotationEnabledValue, rotationKeepRotationLockValue, rotationKeepRotationTicksValue)
 		rotationGroup.addAll(rotationModeValue, rotationSearchGroup, rotationSearchStaticYawValue, rotationSearchStaticPitchValue, rotationTurnSpeedValue, rotationResetSpeedValue, rotationSilentValue, rotationStrafeValue, rotationKeepRotationGroup)
 		movementEagleGroup.addAll(movementEagleModeValue, movementEagleBlocksToEagleValue, movementEagleEdgeDistanceValue)
@@ -643,31 +638,21 @@ class Scaffold : Module()
 
 		lastSearchPosition = searchPosition
 
-		val hFacing = functions.getHorizontalFacing(MovementUtils.getDirectionDegrees(thePlayer))
-
-		val facings = EnumFacingType.values().map(provider::getEnumFacing).sortedBy {
-			when
-			{
-				it == hFacing -> -2
-				it.axisOrdinal == 1 /* Y_AXIS */ -> -1
-				it == hFacing.opposite -> 0
-				else -> 1
-			}
-		}
-
+		val facings = EnumFacingType.values().map(provider::getEnumFacing)
 		if (!expand && (!isReplaceable(theWorld, searchPosition) || search(theWorld, thePlayer, searchPosition, rotationSearchCheckVisibleValue.get() && !shouldGoDown, searchBounds, facings))) return
 
 		val ySearch = rotationSearchYSearchValue.get() || clutching
 		if (expand)
 		{
-			val horizontalFacing = func.getHorizontalFacing(MovementUtils.getDirectionDegrees(thePlayer))
+			val hFacing = func.getHorizontalFacing(MovementUtils.getDirectionDegrees(thePlayer))
+
 			repeat(expandLengthValue.get()) { i ->
-				if (search(theWorld, thePlayer, searchPosition.add(when (horizontalFacing)
+				if (search(theWorld, thePlayer, searchPosition.add(when (hFacing)
 					{
 						provider.getEnumFacing(EnumFacingType.WEST) -> -i
 						provider.getEnumFacing(EnumFacingType.EAST) -> i
 						else -> 0
-					}, 0, when (horizontalFacing)
+					}, 0, when (hFacing)
 					{
 						provider.getEnumFacing(EnumFacingType.NORTH) -> -i
 						provider.getEnumFacing(EnumFacingType.SOUTH) -> i
@@ -677,9 +662,15 @@ class Scaffold : Module()
 		}
 		else if (rotationSearchSearchValue.get())
 		{
-			(-1..1).forEach { x ->
-				(if (ySearch) -1..1 else 0..0).forEach { y ->
-					if ((-1..1).any { z -> search(theWorld, thePlayer, searchPosition.add(x, y, z), !shouldGoDown, searchBounds, facings) }) return@findBlock
+			val rangeValue = rotationSearchSearchRangeValue.get()
+			val yrangeValue = rotationSearchYSearchRangeValue.get()
+
+			val range = -rangeValue..rangeValue
+			val yrange = if (ySearch) -yrangeValue..yrangeValue else 0..0
+
+			range.forEach { x ->
+				yrange.forEach { y ->
+					if (range.any { z -> search(theWorld, thePlayer, searchPosition.add(x, y, z), !shouldGoDown, searchBounds, facings) }) return@findBlock
 				}
 			}
 		}
@@ -688,8 +679,8 @@ class Scaffold : Module()
 	private fun place(theWorld: IWorldClient, thePlayer: IEntityPlayerSP)
 	{
 		val killAura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
-		val waitForKillauraEnd = killauraBypassModeValue.get().equals("WaitForKillauraEnd", true) && killAura.hasTarget        // targetPlace, Blacklist, killauraWait check
-		if (targetPlace == null || InventoryUtils.AUTOBLOCK_BLACKLIST.contains(BlockUtils.getBlock(theWorld, (targetPlace ?: return).blockPos)) || waitForKillauraEnd)
+		val waitForKillAuraEnd = killauraBypassModeValue.get().equals("WaitForKillAuraEnd", true) && killAura.hasTarget        // targetPlace, Blacklist, killauraWait check
+		if (targetPlace == null || InventoryUtils.AUTOBLOCK_BLACKLIST.contains(BlockUtils.getBlock(theWorld, (targetPlace ?: return).blockPos)) || waitForKillAuraEnd)
 		{
 			if (delayPlaceableDelayValue.get()) delayTimer.reset()
 			return
@@ -700,7 +691,7 @@ class Scaffold : Module()
 		// Delay & SameY check
 		if (!delayTimer.hasTimePassed(delay) || sameYValue.get() && launchY - 1 != targetPlace.vec3.yCoord.toInt()) return
 
-		if (killauraBypassModeValue.get().equals("SuspendKillaura", true)) killAura.suspend(killAuraBypassKillAuraSuspendDurationValue.get().toLong())
+		if (killauraBypassModeValue.get().equals("SuspendKillAura", true)) killAura.suspend(killAuraBypassKillAuraSuspendDurationValue.get().toLong())
 
 		val controller = mc.playerController
 		val netHandler = mc.netHandler

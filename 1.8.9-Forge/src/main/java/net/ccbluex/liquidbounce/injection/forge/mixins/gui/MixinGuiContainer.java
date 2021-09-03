@@ -126,7 +126,7 @@ public abstract class MixinGuiContainer extends MixinGuiScreen implements IMixin
 		if ((Object) this instanceof GuiInventory)
 			return;
 
-		// Disable Killaura button
+		// Disable KillAura button
 		if (button.id == 996)
 		{
 			final KillAura killAura = (KillAura) LiquidBounce.moduleManager.get(KillAura.class);

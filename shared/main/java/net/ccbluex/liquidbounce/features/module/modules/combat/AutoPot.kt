@@ -62,13 +62,13 @@ class AutoPot : Module()
 	private val rotationKeepRotationTicksValue = IntegerValue("Ticks", 1, 1, 40, "KeepRotationLength")
 
 	private val killAuraBypassGroup = ValueGroup("KillAuraBypass")
-	private val killauraBypassModeValue = ListValue("Mode", arrayOf("None", "SuspendKillAura", "WaitForKillauraEnd"), "SuspendKillAura", "KillauraBypassMode")
-	private val killAuraBypassKillAuraSuspendDurationValue = object : IntegerValue("Duration", 300, 100, 1000, "SuspendKillauraDuration")
+	private val killauraBypassModeValue = ListValue("Mode", arrayOf("None", "SuspendKillAura", "WaitForKillAuraEnd"), "SuspendKillAura", "KillAuraBypassMode")
+	private val killAuraBypassKillAuraSuspendDurationValue = object : IntegerValue("Duration", 300, 100, 1000, "SuspendKillAuraDuration")
 	{
 		override fun showCondition() = killauraBypassModeValue.get().equals("SuspendKillAura", ignoreCase = true)
 	}
 
-	private val potionFilterGroup = ValueGroup("PotionFilter") // TODO: Add potions
+	private val potionFilterGroup = ValueGroup("PotionFilter")
 	private val potionFilterInvisibleValue = BoolValue("InvisibilityPot", false, "InvisibilityPot")
 
 	private val potionFilterJumpBoostGroup = ValueGroup("JumpBoost")
@@ -98,25 +98,9 @@ class AutoPot : Module()
 	companion object
 	{
 		@JvmField
-		val goodEffects = arrayListOf<Int>()
-
-		init
-		{
+		val goodEffects = run {
 			val provider = classProvider
-
-			goodEffects.add(provider.getPotionEnum(PotionType.ABSORPTION).id)
-			goodEffects.add(provider.getPotionEnum(PotionType.DAMAGE_BOOST).id)
-			goodEffects.add(provider.getPotionEnum(PotionType.DIG_SPEED).id)
-			goodEffects.add(provider.getPotionEnum(PotionType.HEAL).id)
-			goodEffects.add(provider.getPotionEnum(PotionType.HEALTH_BOOST).id)
-			goodEffects.add(provider.getPotionEnum(PotionType.INVISIBILITY).id)
-			goodEffects.add(provider.getPotionEnum(PotionType.JUMP).id)
-			goodEffects.add(provider.getPotionEnum(PotionType.MOVE_SPEED).id)
-			goodEffects.add(provider.getPotionEnum(PotionType.NIGHT_VISION).id)
-			goodEffects.add(provider.getPotionEnum(PotionType.REGENERATION).id)
-			goodEffects.add(provider.getPotionEnum(PotionType.RESISTANCE).id)
-			goodEffects.add(provider.getPotionEnum(PotionType.WATER_BREATHING).id)
-			goodEffects.add(provider.getPotionEnum(PotionType.FIRE_RESISTANCE).id)
+			hashSetOf(provider.getPotionEnum(PotionType.ABSORPTION).id, provider.getPotionEnum(PotionType.DAMAGE_BOOST).id, provider.getPotionEnum(PotionType.DIG_SPEED).id, provider.getPotionEnum(PotionType.HEAL).id, provider.getPotionEnum(PotionType.HEALTH_BOOST).id, provider.getPotionEnum(PotionType.INVISIBILITY).id, provider.getPotionEnum(PotionType.JUMP).id, provider.getPotionEnum(PotionType.MOVE_SPEED).id, provider.getPotionEnum(PotionType.NIGHT_VISION).id, provider.getPotionEnum(PotionType.REGENERATION).id, provider.getPotionEnum(PotionType.RESISTANCE).id, provider.getPotionEnum(PotionType.WATER_BREATHING).id, provider.getPotionEnum(PotionType.FIRE_RESISTANCE).id)
 		}
 
 		@JvmStatic
@@ -138,7 +122,7 @@ class AutoPot : Module()
 		if (controller.isInCreativeMode) return
 
 		val killAura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
-		if (killauraBypassModeValue.get().equals("WaitForKillauraEnd", true) && killAura.state && killAura.target != null) return
+		if (killauraBypassModeValue.get().equals("WaitForKillAuraEnd", true) && killAura.state && killAura.target != null) return
 
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
@@ -192,7 +176,7 @@ class AutoPot : Module()
 						if (posY - (collisionBlock?.y ?: 0) >= groundDistanceValue.get()) return
 
 						// Suspend killaura if option is present
-						if (killauraBypassModeValue.get().equals("SuspendKillaura", true)) killAura.suspend(killAuraBypassKillAuraSuspendDurationValue.get().toLong())
+						if (killauraBypassModeValue.get().equals("SuspendKillAura", true)) killAura.suspend(killAuraBypassKillAuraSuspendDurationValue.get().toLong())
 
 						potion = if (thePlayer.health <= health && healPotionInHotbar != -1) healPotionInHotbar else buffPotionInHotbar
 

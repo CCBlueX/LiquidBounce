@@ -60,7 +60,7 @@ class Target : Element()
 	private val healAnimationColorGreenValue = IntegerValue("HealAnimationColorGreen", 201, 0, 255)
 	private val healAnimationColorBlueValue = IntegerValue("HealAnimationColorBlue", 144, 0, 255)
 
-	private val healthFadeStartDelayValue = IntegerValue("HealthFadeStartDelay", 2, 0, 40) // TODO: See Apex Legends Health Bar
+	private val healthFadeStartDelayValue = IntegerValue("HealthFadeStartDelay", 2, 0, 40)
 	private val healthFadeSpeedValue = IntegerValue("HealthFadeSpeed", 2, 1, 9)
 	private val absorptionFadeSpeedValue = IntegerValue("AbsorptionFadeSpeed", 2, 1, 9)
 	private val armorFadeSpeedValue = IntegerValue("ArmorFadeSpeed", 2, 1, 9)

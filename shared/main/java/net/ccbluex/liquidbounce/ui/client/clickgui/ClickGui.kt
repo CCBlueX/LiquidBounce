@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI
-import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.Companion.generateColor
+import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.Companion.generateButtonColor
 import net.ccbluex.liquidbounce.file.FileManager.Companion.saveConfig
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ButtonElement
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ModuleElement
@@ -204,13 +204,13 @@ class ClickGui : WrappedGuiScreen()
 					override var displayName: String = "Players"
 						get()
 						{
-							color = if (EntityUtils.targetPlayer) generateColor().rgb else i
+							color = if (EntityUtils.targetPlayer) generateButtonColor() else i
 							return field
 						}
 
 					override fun createButton(displayName: String)
 					{
-						color = if (EntityUtils.targetPlayer) generateColor().rgb else i
+						color = if (EntityUtils.targetPlayer) generateButtonColor() else i
 						super.createButton(displayName)
 					}
 
@@ -220,7 +220,7 @@ class ClickGui : WrappedGuiScreen()
 						{
 							EntityUtils.targetPlayer = !EntityUtils.targetPlayer
 							displayName = "Players"
-							color = if (EntityUtils.targetPlayer) generateColor().rgb else i
+							color = if (EntityUtils.targetPlayer) generateButtonColor() else i
 							mc.soundHandler.playSound("gui.button.press", 1.0f)
 						}
 					}
@@ -231,13 +231,13 @@ class ClickGui : WrappedGuiScreen()
 					override var displayName: String = "Mobs"
 						get()
 						{
-							color = if (EntityUtils.targetMobs) generateColor().rgb else i
+							color = if (EntityUtils.targetMobs) generateButtonColor() else i
 							return field
 						}
 
 					override fun createButton(displayName: String)
 					{
-						color = if (EntityUtils.targetMobs) generateColor().rgb else i
+						color = if (EntityUtils.targetMobs) generateButtonColor() else i
 						super.createButton(displayName)
 					}
 
@@ -247,7 +247,7 @@ class ClickGui : WrappedGuiScreen()
 						{
 							EntityUtils.targetMobs = !EntityUtils.targetMobs
 							displayName = "Mobs"
-							color = if (EntityUtils.targetMobs) generateColor().rgb else i
+							color = if (EntityUtils.targetMobs) generateButtonColor() else i
 							mc.soundHandler.playSound("gui.button.press", 1.0f)
 						}
 					}
@@ -258,13 +258,13 @@ class ClickGui : WrappedGuiScreen()
 					override var displayName: String = "Animals"
 						get()
 						{
-							color = if (EntityUtils.targetAnimals) generateColor().rgb else i
+							color = if (EntityUtils.targetAnimals) generateButtonColor() else i
 							return field
 						}
 
 					override fun createButton(displayName: String)
 					{
-						color = if (EntityUtils.targetAnimals) generateColor().rgb else i
+						color = if (EntityUtils.targetAnimals) generateButtonColor() else i
 						super.createButton(displayName)
 					}
 
@@ -274,7 +274,7 @@ class ClickGui : WrappedGuiScreen()
 						{
 							EntityUtils.targetAnimals = !EntityUtils.targetAnimals
 							displayName = "Animals"
-							color = if (EntityUtils.targetAnimals) generateColor().rgb else i
+							color = if (EntityUtils.targetAnimals) generateButtonColor() else i
 							mc.soundHandler.playSound("gui.button.press", 1.0f)
 						}
 					}
@@ -285,13 +285,13 @@ class ClickGui : WrappedGuiScreen()
 					override var displayName: String = "Armor-Stand"
 						get()
 						{
-							color = if (EntityUtils.targetArmorStand) generateColor().rgb else i
+							color = if (EntityUtils.targetArmorStand) generateButtonColor() else i
 							return field
 						}
 
 					override fun createButton(displayName: String)
 					{
-						color = if (EntityUtils.targetArmorStand) generateColor().rgb else i
+						color = if (EntityUtils.targetArmorStand) generateButtonColor() else i
 						super.createButton(displayName)
 					}
 
@@ -301,7 +301,7 @@ class ClickGui : WrappedGuiScreen()
 						{
 							EntityUtils.targetArmorStand = !EntityUtils.targetArmorStand
 							displayName = "Armor-Stand"
-							color = if (EntityUtils.targetArmorStand) generateColor().rgb else i
+							color = if (EntityUtils.targetArmorStand) generateButtonColor() else i
 							mc.soundHandler.playSound("gui.button.press", 1.0f)
 						}
 					}
@@ -312,13 +312,13 @@ class ClickGui : WrappedGuiScreen()
 					override var displayName: String = "Invisible"
 						get()
 						{
-							color = if (EntityUtils.targetInvisible) generateColor().rgb else i
+							color = if (EntityUtils.targetInvisible) generateButtonColor() else i
 							return field
 						}
 
 					override fun createButton(displayName: String)
 					{
-						color = if (EntityUtils.targetInvisible) generateColor().rgb else i
+						color = if (EntityUtils.targetInvisible) generateButtonColor() else i
 						super.createButton(displayName)
 					}
 
@@ -328,7 +328,7 @@ class ClickGui : WrappedGuiScreen()
 						{
 							EntityUtils.targetInvisible = !EntityUtils.targetInvisible
 							displayName = "Invisible"
-							color = if (EntityUtils.targetInvisible) generateColor().rgb else i
+							color = if (EntityUtils.targetInvisible) generateButtonColor() else i
 							mc.soundHandler.playSound("gui.button.press", 1.0f)
 						}
 					}
@@ -339,13 +339,13 @@ class ClickGui : WrappedGuiScreen()
 					override var displayName: String = "Dead"
 						get()
 						{
-							color = if (EntityUtils.targetDead) generateColor().rgb else i
+							color = if (EntityUtils.targetDead) generateButtonColor() else i
 							return field
 						}
 
 					override fun createButton(displayName: String)
 					{
-						color = if (EntityUtils.targetDead) generateColor().rgb else i
+						color = if (EntityUtils.targetDead) generateButtonColor() else i
 						super.createButton(displayName)
 					}
 
@@ -355,7 +355,7 @@ class ClickGui : WrappedGuiScreen()
 						{
 							EntityUtils.targetDead = !EntityUtils.targetDead
 							displayName = "Dead"
-							color = if (EntityUtils.targetDead) generateColor().rgb else i
+							color = if (EntityUtils.targetDead) generateButtonColor() else i
 							mc.soundHandler.playSound("gui.button.press", 1.0f)
 						}
 					}

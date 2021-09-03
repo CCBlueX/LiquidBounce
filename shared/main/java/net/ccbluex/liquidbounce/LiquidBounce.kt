@@ -41,7 +41,6 @@ import org.spongepowered.asm.util.VersionNumber
 
 /**
  * <p>
- * TODO: Improve ClickGUI, Value system
  * ex: Add ValueGroup, ColorValue, RangeSliderValue(see Vape) and 'Show/Hide values by Mode' feature
  * </p>
  */

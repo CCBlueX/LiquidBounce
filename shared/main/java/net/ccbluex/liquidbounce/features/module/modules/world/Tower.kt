@@ -114,8 +114,8 @@ class Tower : Module()
 	private val teleportGroundValue = BoolValue("Ground", true, "TeleportGround")
 	private val teleportNoMotionValue = BoolValue("NoMotion", false, "TeleportNoMotion")
 
-	// Killaura bypass (Other settings are same as scaffold's)
-	private val suspendKillauraDuration = IntegerValue("SuspendKillauraDuration", 500, 250, 1000)
+	// KillAura bypass (Other settings are same as scaffold's)
+	private val suspendKillAuraDuration = IntegerValue("SuspendKillAuraDuration", 500, 250, 1000)
 
 	private val stopConsumingBeforePlaceValue = BoolValue("StopConsumingBeforePlace", true)
 
@@ -403,7 +403,7 @@ class Tower : Module()
 		val killAura = moduleManager[KillAura::class.java] as KillAura
 		val scaffold = moduleManager[Scaffold::class.java] as Scaffold
 
-		if (scaffold.killauraBypassModeValue.get().equals("SuspendKillaura", true)) killAura.suspend(suspendKillauraDuration.get().toLong())
+		if (scaffold.killauraBypassModeValue.get().equals("SuspendKillAura", true)) killAura.suspend(suspendKillAuraDuration.get().toLong())
 
 		val netHandler = mc.netHandler
 		val controller = mc.playerController

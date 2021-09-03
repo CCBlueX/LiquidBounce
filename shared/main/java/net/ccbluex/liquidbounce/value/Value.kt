@@ -56,7 +56,7 @@ open class ValueGroup(name: String) : AbstractValue(name)
 
 	private fun renameSubvalues(newName: String)
 	{
-		values.forEach { it.name = "$newName.${it.name}" }
+		values.forEach { if (it is ValueGroup) it.renameSubvalues(newName) else it.name = "$newName.${it.name}" }
 	}
 
 	override fun toJson(): JsonElement?
