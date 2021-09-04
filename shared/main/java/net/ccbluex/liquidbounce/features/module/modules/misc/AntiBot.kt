@@ -26,10 +26,7 @@ import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_6
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
 import java.awt.Color
 import java.util.*
 import kotlin.math.*
@@ -46,24 +43,36 @@ object AntiBot : Module()
 	/**
 	 * Tab
 	 */
-	private val tabValue = BoolValue("Tab", true)
-	private val tabModeValue = ListValue("TabMode", arrayOf("Equals", "Contains"), "Contains")
-	private val tabStripColorsValue = BoolValue("TabStripColorsInDisplayname", true)
-	private val tabNameModeValue = ListValue("TabNameMode", arrayOf("DisplayName", "GameProfileName"), "DisplayName")
+	private val tabGroup = ValueGroup("Tab")
+	private val tabEnabledValue = BoolValue("Enabled", true, "Tab")
+	private val tabModeValue = ListValue("Mode", arrayOf("Equals", "Contains"), "Contains", "TabMode")
+	private val tabNameModeValue = ListValue("NameMode", arrayOf("DisplayName", "GameProfileName"), "DisplayName", "TabNameMode")
+	private val tabStripColorsValue = BoolValue("StripColorsInName", true, "TabStripColorsInDisplayname")
 
 	/**
 	 *  Entity-ID
 	 */
-	private val entityIDValue = BoolValue("EntityID", true)
-	private val entityIDLimitValue = IntegerValue("EntityIDLimit", 1000000000, 100000, 1000000000)
+	private val entityIDGroup = ValueGroup("EntityID")
+	private val entityIDEnabledValue = BoolValue("Enabled", true, "EntityID")
+	private val entityIDLimitValue = IntegerValue("Limit", 1000000000, 100000, 1000000000, "EntityIDLimit")
 
 	/**
 	 * Static Entity-ID
 	 */
-	private val staticEntityIDValue = IntegerValue("StaticEntityIDs", 0, 0, 3)
-	private val staticEntityID1 = IntegerValue("StaticEntityID-1", 99999999, 0, Int.MAX_VALUE)
-	private val staticEntityID2 = IntegerValue("StaticEntityID-2", 999999999, 0, Int.MAX_VALUE)
-	private val staticEntityID3 = IntegerValue("StaticEntityID-3", -1337, 0, Int.MAX_VALUE)
+	private val entityIDStaticEntityIDGroup = ValueGroup("Static")
+	private val entityIDStaticEntityIDEntityIDCountValue = IntegerValue("Count", 0, 0, 3, "StaticEntityIDs")
+	private val entityIDStaticEntityIDEntityID1Value = object : IntegerValue("ID1", 99999999, Int.MIN_VALUE, Int.MAX_VALUE, "StaticEntityID-1")
+	{
+		override fun showCondition() = entityIDStaticEntityIDEntityIDCountValue.get() >= 1
+	}
+	private val entityIDStaticEntityIDEntityID2Value = object : IntegerValue("ID2", 999999999, Int.MIN_VALUE, Int.MAX_VALUE, "StaticEntityID-2")
+	{
+		override fun showCondition() = entityIDStaticEntityIDEntityIDCountValue.get() >= 2
+	}
+	private val entityIDStaticEntityIDEntityID3Value = object : IntegerValue("ID3", -1337, Int.MIN_VALUE, Int.MAX_VALUE, "StaticEntityID-3")
+	{
+		override fun showCondition() = entityIDStaticEntityIDEntityIDCountValue.get() >= 3
+	}
 
 	private val invalidProfileNameValue = BoolValue("InvalidProfileName", false)
 
@@ -92,8 +101,9 @@ object AntiBot : Module()
 	/**
 	 * LivingTime (ticksExisted)
 	 */
-	private val livingTimeValue = BoolValue("LivingTime", false)
-	private val livingTimeTicksValue = IntegerValue("LivingTimeTicks", 40, 1, 200)
+	private val livingTimeGroup = ValueGroup("LivingTime")
+	private val livingTimeEnabledValue = BoolValue("Enabled", false, "LivingTime")
+	private val livingTimeTicksValue = IntegerValue("Ticks", 40, 1, 200, "LivingTimeTicks")
 
 	/**
 	 * Ground
@@ -120,21 +130,16 @@ object AntiBot : Module()
 	 */
 	private val healthValue = BoolValue("Health", false)
 
-	/**
-	 * Yaw Movements
-	 */
-	private val yawValue = BoolValue("YawMovements", false)
-
-	/**
-	 * Pitch Movements
-	 */
-	private val pitchValue = BoolValue("PitchMovements", false)
+	private val rotationGroup = ValueGroup("Rotation")
+	private val rotationYawValue = BoolValue("Yaw", false, "YawMovements")
+	private val rotationPitchValue = BoolValue("Pitch", false, "PitchMovements")
 
 	/**
 	 * Invalid-Pitch (a.k.a. Derp)
 	 */
-	private val invalidPitchValue = BoolValue("Derp", true)
-	private val invalidPitchKeepVLValue = BoolValue("Derp-KeepVL", true)
+	private val rotationInvalidPitchGroup = ValueGroup("Derp")
+	private val rotationInvalidPitchEnabledValue = BoolValue("Enabled", true, "Derp")
+	private val rotationInvalidPitchKeepVLValue = BoolValue("KeepVL", true, "Derp-KeepVL")
 
 	/**
 	 * Was Invisible
@@ -149,14 +154,18 @@ object AntiBot : Module()
 	/**
 	 * Fixed Ping
 	 */
-	private val pingValue = BoolValue("Ping", false)
+	private val pingGroup = ValueGroup("Ping")
+	private val pingZeroValue = BoolValue("NotZero", false, "Ping")
 
 	/**
 	 * Ping update presence
 	 */
-	private val pingUpdateValue = BoolValue("PingUpdate", false)
-	private val pingUpdateValidationValue = BoolValue("PingUpdate-Validation", false)
-	private val pingUpdateValidationModeValue = ListValue("PingUpdate-Validation-Mode", arrayOf("AnyMatches", "AllMatches"), "AnyMatches")
+	private val pingUpdatePresenceGroup = ValueGroup("UpdatePresence")
+	private val pingUpdatePresenceEnabledValue = BoolValue("Enabled", false, "PingUpdate")
+
+	private val pingUpdatePresenceValidateGroup = ValueGroup("Validate")
+	private val pingUpdatePresenceValidateEnabledValue = BoolValue("Enabled", false, "PingUpdate-Validation")
+	private val pingUpdatePresenceValidateModeValue = ListValue("Mode", arrayOf("AnyMatches", "AllMatches"), "AnyMatches", "PingUpdate-Validation-Mode")
 
 	/**
 	 * Needs to got damaged
@@ -166,115 +175,160 @@ object AntiBot : Module()
 	/**
 	 * Duplicate entity in the world
 	 */
-	private val duplicateInWorldValue = BoolValue("DuplicateName-World", false)
-	private val duplicateInWorldNameModeValue = ListValue("DuplicateName-World-NameMode", arrayOf("DisplayName", "CustomNameTag", "GameProfileName"), "DisplayName")
-	private val duplicateInWorldStripColorsValue = BoolValue("DuplicateName-World-StripColorsInName", true)
+	private val duplicateInWorldGroup = ValueGroup("DuplicateInWorld")
 
-	private val attemptToAddDuplicatesWorldValue = BoolValue("AttemptToAddDuplicate-World", false)
-	private val attemptToAddDuplicatesWorldModeValue = ListValue("AttemptToAddDuplicate-World-NameMode", arrayOf("DisplayName", "GameProfileName"), "DisplayName")
-	private val attemptToAddDuplicatesWorldStripColorsValue = BoolValue("AttemptToAddDuplicate-World-StripColorsInName", false)
+	private val duplicateInWorldExistenceGroup = ValueGroup("Existence")
+	private val duplicateInWorldExistenceEnabledValue = BoolValue("Enabled", false, "DuplicateName-World")
+	private val duplicateInWorldExistenceNameModeValue = ListValue("Mode", arrayOf("DisplayName", "CustomNameTag", "GameProfileName"), "DisplayName", "DuplicateName-World-NameMode")
+	private val duplicateInWorldExistenceStripColorsValue = BoolValue("StripColorsInName", true, "DuplicateName-World-StripColorsInName")
+
+	private val duplicateInWorldAdditionGroup = ValueGroup("Addition")
+	private val duplicateInWorldAdditionEnabledValue = BoolValue("AttemptToAddDuplicate-World", false, "AttemptToAddDuplicate-World")
+	private val duplicateInWorldAdditionModeValue = ListValue("AttemptToAddDuplicate-World-NameMode", arrayOf("DisplayName", "GameProfileName"), "DisplayName", "AttemptToAddDuplicate-World-NameMode")
+	private val duplicateInWorldAdditionStripColorsValue = BoolValue("AttemptToAddDuplicate-World-StripColorsInName", false, "AttemptToAddDuplicate-World-StripColorsInName")
 
 	/**
 	 * Duplicate player in tab
 	 */
-	private val duplicateInTabValue = BoolValue("DuplicateName-Tab", false)
-	private val duplicateInTabWorldNameModeValue = ListValue("DuplicateName-Tab-WorldNameMode", arrayOf("DisplayName", "CustomNameTag", "GameProfileName"), "DisplayName")
-	private val duplicateInTabNameModeValue = ListValue("DuplicateName-Tab-NameMode", arrayOf("DisplayName", "GameProfileName"), "DisplayName")
-	private val duplicateInTabStripColorsValue = BoolValue("DuplicateName-Tab-StripColorsInDisplayName", true)
+	private val duplicateInTab = ValueGroup("DuplicateInTab")
 
-	private val attemptToAddDuplicatesTabValue = BoolValue("AttemptToAddDuplicate-Tab", false)
-	private val attemptToAddDuplicatesTabModeValue = ListValue("AttemptToAddDuplicate-Tab-NameMode", arrayOf("DisplayName", "GameProfileName"), "GameProfileName")
-	private val attemptToAddDuplicatesTabStripColorsValue = BoolValue("AttemptToAddDuplicate-Tab-StripColorsInDisplayName", false)
+	private val duplicateInTabExistenceGroup = ValueGroup("Existence")
+	private val duplicateInTabExistenceEnabledValue = BoolValue("Enabled", false, "DuplicateName-Tab")
+	private val duplicateInTabExistenceModeValue = ListValue("Mode", arrayOf("DisplayName", "CustomNameTag", "GameProfileName"), "DisplayName", "DuplicateName-Tab-WorldNameMode")
+	private val duplicateInTabExistenceNameModeValue = ListValue("NameMode", arrayOf("DisplayName", "GameProfileName"), "DisplayName", "DuplicateName-Tab-NameMode")
+	private val duplicateInTabExistenceStripColorsValue = BoolValue("StripColorsInName", true, "DuplicateName-Tab-StripColorsInDisplayName")
+
+	private val duplicateInTabAdditionGroup = ValueGroup("Addition")
+	private val duplicateInTabAdditionEnabledValue = BoolValue("Enabled", false, "AttemptToAddDuplicate-Tab")
+	private val duplicateInTabAdditionNameModeValue = ListValue("NameMode", arrayOf("DisplayName", "GameProfileName"), "GameProfileName", "AttemptToAddDuplicate-Tab-NameMode")
+	private val duplicateInTabAdditionStripColorsValue = BoolValue("StripColorsInName", false, "AttemptToAddDuplicate-Tab-StripColorsInDisplayName")
 
 	/**
 	 * Always In Radius
 	 */
-	private val alwaysInRadiusValue = BoolValue("AlwaysInRadius", false)
-	private val alwaysRadiusValue = FloatValue("AlwaysInRadiusBlocks", 20F, 5F, 30F)
+	private val alwaysInRadiusGroup = ValueGroup("AlwaysInRadius")
+	private val alwaysInRadiusEnabledValue = BoolValue("Enabled", false, "AlwaysInRadius")
+	private val alwaysInRadiusRadiusValue = FloatValue("Radius", 20F, 5F, 30F, "AlwaysInRadiusBlocks")
 
 	/**
 	 * Unusual Teleport Packet (In vanilla minecraft, SPacketEntityTeleport is only used on the entity movements further than 8 blocks)
 	 */
-	private val teleportPacketValue = BoolValue("TeleportPacket", false)
-	private val teleportThresholdDistance = FloatValue("TeleportPacket-ThresholdDistance", 8.0f, 0.3125f, 16.0f)
-	private val teleportPacketVLValue = BoolValue("TeleportPacket-VL", true)
-	private val teleportPacketVLLimitValue = IntegerValue("TeleportPacket-VL-Threshold", 15, 1, 40)
-	private val teleportPacketVLDecValue = BoolValue("TeleportPacket-VL-DecreaseIfNormal", true)
+	private val teleportPacketGroup = ValueGroup("TeleportPacket")
+	private val teleportPacketEnabledValue = BoolValue("Enabled", false, "TeleportPacket")
+	private val teleportPacketThresholdDistanceValue = FloatValue("ThresholdDistance", 8.0f, 0.3125f, 16.0f, "TeleportPacket-ThresholdDistance")
+
+	private val teleportPacketVLGroup = ValueGroup("Violation")
+	private val teleportPacketVLEnabledValue = BoolValue("Enabled", true, "TeleportPacket-VL")
+	private val teleportPacketVLLimitValue = IntegerValue("Threshold", 15, 1, 40, "TeleportPacket-VL-Threshold")
+	private val teleportPacketVLDecValue = BoolValue("DecreaseIfNormal", true, "TeleportPacket-VL-DecreaseIfNormal")
 
 	/**
 	 * Horizontal Speed
 	 */
-	private val hspeedValue = BoolValue("HSpeed", false)
-	private val hspeedLimitValue = FloatValue("HSpeed-Limit", 4.0f, 1.0f, 255.0f)
-	private val hspeedVLValue = BoolValue("HSpeed-VL", true)
-	private val hspeedVLLimitValue = IntegerValue("HSpeed-VL-Threshold", 5, 1, 10)
-	private val hspeedVLDecValue = BoolValue("HSpeed-VL-DecreaseIfNormal", true)
+	private val hspeedGroup = ValueGroup("HSpeed")
+	private val hspeedEnabledValue = BoolValue("Enabled", false, "HSpeed")
+	private val hspeedLimitValue = FloatValue("Limit", 4.0f, 1.0f, 255.0f, "HSpeed-Limit")
+
+	private val hspeedVLGroup = ValueGroup("Violation")
+	private val hspeedVLEnabledValue = BoolValue("Enabled", true, "HSpeed-VL")
+	private val hspeedVLLimitValue = IntegerValue("Threshold", 5, 1, 10, "HSpeed-VL-Threshold")
+	private val hspeedVLDecValue = BoolValue("DecreaseIfNormal", true, "HSpeed-VL-DecreaseIfNormal")
 
 	/**
 	 * Vertical Speed
 	 */
-	private val vspeedValue = BoolValue("VSpeed", false)
-	private val vspeedLimitValue = FloatValue("VSpeed-Limit", 4.0f, 1.0f, 255.0f)
-	private val vspeedVLValue = BoolValue("VSpeed-VL", true)
-	private val vspeedVLLimitValue = IntegerValue("VSpeed-VL-Threshold", 2, 1, 10)
-	private val vspeedVLDecValue = BoolValue("VSpeed-VL-DecreaseIfNormal", true)
+	private val vspeedGroup = ValueGroup("VSpeed")
+	private val vspeedEnabledValue = BoolValue("Enabled", false, "VSpeed")
+	private val vspeedLimitValue = FloatValue("Limit", 4.0f, 1.0f, 255.0f, "VSpeed-Limit")
 
-	/**
-	 * Spawn Position
-	 */
-	private val spawnPositionValue = BoolValue("SpawnPosition", true)
-
-	private val spawnPositionBack1Value = FloatValue("SpawnPosition-Back-1", 3.0f, 1.0f, 16.0f)
-	private val spawnPositionY1Value = FloatValue("SpawnPosition-Y-1", 3.0f, 0.0f, 16.0f)
-
-	private val spawnPositionBack2Value = FloatValue("SpawnPosition-Back-2", 6.0f, 1.0f, 16.0f)
-	private val spawnPositionY2Value = FloatValue("SpawnPosition-Y-2", 6.0f, 0.0f, 16.0f)
-
-	private val spawnPositionExpectLimitValue = FloatValue("SpawnPosition-DeltaLimit", 2F, 0.5F, 4F)
+	private val vspeedVLGroup = ValueGroup("Violation")
+	private val vspeedVLValue = BoolValue("Enabled", true, "VSpeed-VL")
+	private val vspeedVLLimitValue = IntegerValue("Threshold", 2, 1, 10, "VSpeed-VL-Threshold")
+	private val vspeedVLDecValue = BoolValue("DecreaseIfNormal", true, "VSpeed-VL-DecreaseIfNormal")
 
 	/**
 	 * Position Consistency
 	 */
-	private val positionValue = BoolValue("Position", true)
-	private val positionRemoveValue = BoolValue("Position-RemoveDetected", true)
-	private val positionRemoveVLValue = IntegerValue("Position-RemoveDetected-VL", 25, 10, 200)
+	private val positionGroup = ValueGroup("Position")
+	private val positionEnabledValue = BoolValue("Enabled", true, "Position")
 
-	private val positionBack1Value = FloatValue("Position-Back-1", 3.0f, 1.0f, 16.0f)
-	private val positionY1Value = FloatValue("Position-Y-1", 0.0f, 0.0f, 16.0f)
+	private val positionRemoveDetectedGroup = ValueGroup("RemoveDetected")
+	private val positionRemoveDetectedEnabledValue = BoolValue("Enabled", true, "Position-RemoveDetected")
+	private val positionRemoveDetectedVLValue = IntegerValue("VL", 25, 10, 200, "Position-RemoveDetected-VL")
 
-	private val positionBack2Value = FloatValue("Position-Back-2", 3.0f, 1.0f, 16.0f)
-	private val positionY2Value = FloatValue("Position-Y-2", 3.0f, 0.0f, 16.0f)
+	private val positionPosition1Group = ValueGroup("Position1")
+	private val positionPosition1BackValue = FloatValue("Back", 3.0f, 1.0f, 16.0f, "Position-Back-1")
+	private val positionPosition1YValue = FloatValue("Y", 0.0f, 0.0f, 16.0f, "Position-Y-1")
 
-	private val positionBack3Value = FloatValue("Position-Back-3", 6.0f, 1.0f, 16.0f)
-	private val positionY3Value = FloatValue("Position-Y-3", 0.0f, 0.0f, 16.0f)
+	private val positionPosition2Group = ValueGroup("Position2")
+	private val positionPosition2BackValue = FloatValue("Back", 3.0f, 1.0f, 16.0f, "Position-Back-2")
+	private val positionPosition2YValue = FloatValue("Y", 3.0f, 0.0f, 16.0f, "Position-Y-2")
 
-	private val positionBack4Value = FloatValue("Position-Back-4", 6.0f, 1.0f, 16.0f)
-	private val positionY4Value = FloatValue("Position-Y-4", 6.0f, 0.0f, 16.0f)
+	private val positionPosition3Group = ValueGroup("Position3")
+	private val positionPosition3BackValue = FloatValue("Back", 6.0f, 1.0f, 16.0f, "Position-Back-3")
+	private val positionPosition3YValue = FloatValue("Y", 0.0f, 0.0f, 16.0f, "Position-Y-3")
+
+	private val positionPosition4Group = ValueGroup("Position4")
+	private val positionPosition4BackValue = FloatValue("Back", 6.0f, 1.0f, 16.0f, "Position-Back-4")
+	private val positionPosition4YValue = FloatValue("Y", 6.0f, 0.0f, 16.0f, "Position-Y-4")
 
 	/**
 	 * Position Threshold
 	 */
-	private val positionDeltaLimitValue = FloatValue("Position-DeltaLimit", 1.0f, 0.1f, 3.0f)
-	private val positionDeltaVLLimitValue = IntegerValue("Position-VL-Limit", 10, 2, 100)
-	private val positionDeltaVLDecValue = BoolValue("Position-VL-DecreaseIfNormal", false)
+	private val positionDeltaThresholdValue = FloatValue("DeltaThreshold", 1.0f, 0.1f, 3.0f, "Position-DeltaLimit")
+
+	private val positionDeltaVLGroup = ValueGroup("Violation")
+	private val positionDeltaVLLimitValue = IntegerValue("Limit", 10, 2, 100, "Position-VL-Limit")
+	private val positionDeltaVLDecValue = BoolValue("DecreaseIfNormal", false, "Position-VL-DecreaseIfNormal")
+
+	/**
+	 * Spawn Position
+	 */
+	private val positionSpawnedPositionGroup = ValueGroup("SpawnedPosition")
+	private val positionSpawnedPositionEnabledValue = BoolValue("Enabled", true, "SpawnPosition")
+	private val positionSpawnedPositionDeltaThresholdValue = FloatValue("DeltaThreshold", 2F, 0.5F, 4F, "SpawnPosition-DeltaLimit")
+
+	private val positionSpawnedPositionPosition1Group = ValueGroup("Position1") //
+	private val positionSpawnedPositionPosition1BackValue = FloatValue("Back", 3.0f, 1.0f, 16.0f, "SpawnPosition-Back-1")
+	private val positionSpawnedPositionPosition1YValue = FloatValue("Y", 3.0f, 0.0f, 16.0f, "SpawnPosition-Y-1")
+
+	private val positionSpawnedPositionPosition2Group = ValueGroup("Position2") //
+	private val positionSpawnedPositionPosition2BackValue = FloatValue("Back", 6.0f, 1.0f, 16.0f, "SpawnPosition-Back-2")
+	private val positionSpawnedPositionPosition2YValue = FloatValue("Y", 6.0f, 0.0f, 16.0f, "SpawnPosition-Y-2")
 
 	/**
 	 * Position Consistency Delta Consistency (xd)
 	 */
-	private val positionDeltaConsistencyValue = BoolValue("Position-DeltaConsistency", false)
-	private val positionRequiredExpectationDeltaToCheckConsistencyValue = FloatValue("Position-DeltaConsistency-RequiredDeltaToCheck", 1.0f, 0.1f, 3.0f)
-	private val positionDeltaConsistencyLimitValue = FloatValue("Position-DeltaConsistency-ConsistencyLimit", 0.1f, 0.0f, 1f)
-	private val positionDeltaConsistencyVLLimitValue = IntegerValue("Position-DeltaConsistency-VL-Limit", 10, 1, 100)
-	private val positionDeltaConsistencyVLDecValue = BoolValue("Position-DeltaConsistency-VL-DecreaseIfNormal", false)
+	private val positionDeltaConsistencyGroup = ValueGroup("DeltaConsistency")
+	private val positionDeltaConsistencyEnabledValue = BoolValue("Enabled", false, "Position-DeltaConsistency")
+	private val positionDeltaConsistencyRequiredDeltaToCheckValue = FloatValue("RequiredDeltaToCheck", 1.0f, 0.1f, 3.0f, "Position-DeltaConsistency-RequiredDeltaToCheck")
+	private val positionDeltaConsistencyConsistencyThresholdValue = FloatValue("ConsistencyThreshold", 0.1f, 0.0f, 1f, "Position-DeltaConsistency-ConsistencyLimit")
+
+	private val positionDeltaConsitencyVLGroup = ValueGroup("Violation")
+	private val positionDeltaConsistencyVLLimitValue = IntegerValue("Limit", 10, 1, 100, "Position-DeltaConsistency-VL-Limit")
+	private val positionDeltaConsistencyVLDecValue = BoolValue("DecreaseIfNormal", false, "Position-DeltaConsistency-VL-DecreaseIfNormal")
+
+	/**
+	 * Mark the expected positions of Position check
+	 */
+	private val positionMarkGroup = ValueGroup("Mark")
+	private val positionMarkEnabledValue = BoolValue("Enabled", false, "Position-Mark")
+	private val positionMarkAlphaValue = IntegerValue("Alpha", 40, 5, 255, "Position-Mark-Alpha")
+
+	/**
+	 * Player position ping-correction offset
+	 */
+	private val positionPingCorrectionOffsetValue = IntegerValue("PingCorrectionOffset", 1, -2, 5, "Position-PingCorrection-Offset")
 
 	/**
 	 * CustomNameTag presence
 	 */
-	private val customNameValue = BoolValue("CustomName", false)
-	private val emptyCustomNameValue = BoolValue("CustomName-Blank", false)
-	private val customNameModeValue = ListValue("CustomName-Equality-Mode", arrayOf("Equals", "Contains"), "Contains")
-	private val customNameStripColorsValue = BoolValue("CustomName-Equality-StripColorsInCustomName", true)
-	private val customNameCompareToValue = ListValue("CustomName-Equality-CompareTo", arrayOf("DisplayName", "GameProfileName"), "DisplayName")
+	private val customNameGroup = ValueGroup("CustomName")
+	private val customNameEnabledValue = BoolValue("Enabled", false, "CustomName")
+	private val customNameBlankValue = BoolValue("Blank", false, "CustomName-Blank")
+	private val customNameModeValue = ListValue("Mode", arrayOf("Equals", "Contains"), "Contains", "CustomName-Equality-Mode")
+	private val customNameStripColorsValue = BoolValue("StripColorsInName", true, "CustomName-Equality-StripColorsInCustomName")
+	private val customNameCompareToValue = ListValue("CompareTo", arrayOf("DisplayName", "GameProfileName"), "DisplayName", "CustomName-Equality-CompareTo")
 
 	/**
 	 * TODO: Check if the player is inside one or more solid blocks (정상적인 플레이어라면 (Phase를 사용하지 않는 한)블럭을 뚫고 움직일 수 없지만 Anti-cheat NPC(봇)은 그 자리에 블럭이 있건 없건 씹고 그냥 자유롭게 움직이는 경우가 매우 많다)
@@ -289,17 +343,6 @@ object AntiBot : Module()
 	private val bedWarsNPCValue = BoolValue("BedWarsNPC", false)
 	private val gwenValue = BoolValue("GWEN", false)
 	private val watchdogValue = BoolValue("Watchdog", false)
-
-	/**
-	 * Mark the expected positions of Position check
-	 */
-	private val drawExpectedPosValue = BoolValue("Position-Mark", false)
-	private val drawExpectedPosAlphaValue = IntegerValue("Position-Mark-Alpha", 40, 5, 255)
-
-	/**
-	 * Player position ping-correction offset
-	 */
-	private val positionPingCorrectionOffsetValue = IntegerValue("Position-PingCorrection-Offset", 1, -2, 5)
 
 	private val invalidProfileNameRegex = Regex("[^a-zA-Z0-9_]*")
 
@@ -327,6 +370,63 @@ object AntiBot : Module()
 	private val positionConsistencyVL = mutableMapOf<Int, Int>()
 	private val teleportpacket_violation = mutableMapOf<Int, Int>()
 	// TODO: private val collision_violation = mutableMapOf<Int, Int>()
+
+	init
+	{
+		tabGroup.addAll(tabEnabledValue, tabModeValue, tabNameModeValue, tabStripColorsValue)
+
+		entityIDStaticEntityIDGroup.addAll(entityIDStaticEntityIDEntityIDCountValue, entityIDStaticEntityIDEntityID1Value, entityIDStaticEntityIDEntityID2Value, entityIDStaticEntityIDEntityID3Value)
+		entityIDGroup.addAll(entityIDEnabledValue, entityIDLimitValue, entityIDStaticEntityIDGroup)
+
+		livingTimeGroup.addAll(livingTimeEnabledValue, livingTimeTicksValue)
+
+		rotationInvalidPitchGroup.addAll(rotationInvalidPitchEnabledValue, rotationInvalidPitchKeepVLValue)
+		rotationGroup.addAll(rotationYawValue, rotationPitchValue, rotationInvalidPitchGroup)
+
+		pingUpdatePresenceValidateGroup.addAll(pingUpdatePresenceValidateEnabledValue, pingUpdatePresenceValidateModeValue)
+		pingUpdatePresenceGroup.addAll(pingUpdatePresenceEnabledValue, pingUpdatePresenceValidateGroup)
+		pingGroup.addAll(pingZeroValue, pingUpdatePresenceGroup)
+
+		duplicateInWorldExistenceGroup.addAll(duplicateInWorldExistenceEnabledValue, duplicateInWorldExistenceNameModeValue, duplicateInWorldExistenceStripColorsValue)
+		duplicateInWorldAdditionGroup.addAll(duplicateInWorldAdditionEnabledValue, duplicateInWorldAdditionModeValue, duplicateInWorldAdditionStripColorsValue)
+		duplicateInWorldGroup.addAll(duplicateInWorldExistenceGroup, duplicateInWorldAdditionGroup)
+
+		duplicateInTabExistenceGroup.addAll(duplicateInTabExistenceEnabledValue, duplicateInTabExistenceModeValue, duplicateInTabExistenceNameModeValue, duplicateInTabExistenceStripColorsValue)
+		duplicateInTabAdditionGroup.addAll(duplicateInTabAdditionEnabledValue, duplicateInTabAdditionNameModeValue, duplicateInTabAdditionStripColorsValue)
+		duplicateInTab.addAll(duplicateInTabExistenceGroup, duplicateInTabAdditionGroup)
+
+		alwaysInRadiusGroup.addAll(alwaysInRadiusEnabledValue, alwaysInRadiusRadiusValue)
+
+		teleportPacketVLGroup.addAll(teleportPacketVLEnabledValue, teleportPacketVLLimitValue, teleportPacketVLDecValue)
+		teleportPacketGroup.addAll(teleportPacketEnabledValue, teleportPacketThresholdDistanceValue, teleportPacketVLGroup)
+
+		hspeedVLGroup.addAll(hspeedVLEnabledValue, hspeedVLLimitValue, hspeedVLDecValue)
+		hspeedGroup.addAll(hspeedEnabledValue, hspeedLimitValue, hspeedVLGroup)
+
+		vspeedVLGroup.addAll(vspeedVLValue, vspeedVLLimitValue, vspeedVLDecValue)
+		vspeedGroup.addAll(vspeedEnabledValue, vspeedLimitValue, vspeedVLGroup)
+
+		positionRemoveDetectedGroup.addAll(positionRemoveDetectedEnabledValue, positionRemoveDetectedVLValue)
+		positionPosition1Group.addAll(positionPosition1BackValue, positionPosition1YValue)
+		positionPosition2Group.addAll(positionPosition2BackValue, positionPosition2YValue)
+		positionPosition3Group.addAll(positionPosition3BackValue, positionPosition3YValue)
+		positionPosition4Group.addAll(positionPosition4BackValue, positionPosition4YValue)
+
+		positionDeltaVLGroup.addAll(positionDeltaVLLimitValue, positionDeltaVLDecValue)
+
+		positionSpawnedPositionGroup.addAll(positionSpawnedPositionEnabledValue, positionSpawnedPositionDeltaThresholdValue, positionSpawnedPositionPosition1Group, positionSpawnedPositionPosition2Group)
+		positionSpawnedPositionPosition1Group.addAll(positionSpawnedPositionPosition1BackValue, positionSpawnedPositionPosition1YValue)
+		positionSpawnedPositionPosition2Group.addAll(positionSpawnedPositionPosition2BackValue, positionSpawnedPositionPosition2YValue)
+
+		positionDeltaConsitencyVLGroup.addAll(positionDeltaConsistencyVLLimitValue, positionDeltaConsistencyVLDecValue)
+		positionDeltaConsistencyGroup.addAll(positionDeltaConsistencyEnabledValue, positionDeltaConsistencyRequiredDeltaToCheckValue, positionDeltaConsistencyConsistencyThresholdValue, positionDeltaConsitencyVLGroup)
+
+		positionMarkGroup.addAll(positionMarkEnabledValue, positionMarkAlphaValue)
+
+		positionGroup.addAll(positionEnabledValue, positionRemoveDetectedGroup, positionPosition1Group, positionPosition2Group, positionPosition3Group, positionPosition4Group, positionDeltaThresholdValue, positionSpawnedPositionGroup, positionDeltaVLGroup, positionDeltaConsistencyGroup, positionMarkGroup, positionPingCorrectionOffsetValue)
+
+		customNameGroup.addAll(customNameEnabledValue, customNameBlankValue, customNameModeValue, customNameStripColorsValue, customNameCompareToValue)
+	}
 
 	private fun getPingCorrectionAppliedLocation(thePlayer: IEntityPlayer, offset: Int = 0) = LocationCache.getPlayerLocationBeforeNTicks((ceil(thePlayer.getPing() / 50F).toInt() + offset + positionPingCorrectionOffsetValue.get()).coerceAtLeast(0), Location(WVec3(thePlayer.posX, thePlayer.entityBoundingBox.minY, thePlayer.posZ), RotationUtils.serverRotation))
 
@@ -367,7 +467,7 @@ object AntiBot : Module()
 		if (colorValue.get() && hasColor || noColorValue.get() && !hasColor) return true
 
 		// LivingTime
-		if (livingTimeValue.get() && entity.ticksExisted < livingTimeTicksValue.get()) return true
+		if (livingTimeEnabledValue.get() && entity.ticksExisted < livingTimeTicksValue.get()) return true
 
 		val entityId = entity.entityId
 
@@ -387,21 +487,21 @@ object AntiBot : Module()
 		if (healthValue.get() && entity.health > 20F) return true
 
 		// EntityID
-		if (entityIDValue.get() && (entityId >= entityIDLimitValue.get() || entityId <= -1)) return true
+		if (entityIDEnabledValue.get() && (entityId >= entityIDLimitValue.get() || entityId <= -1)) return true
 
 		// StaticEntityID
-		if (staticEntityIDValue.get() > 0)
+		if (entityIDStaticEntityIDEntityIDCountValue.get() > 0)
 		{
-			val ids = arrayOf(staticEntityID1.get(), staticEntityID2.get(), staticEntityID3.get())
-			if ((0 until staticEntityIDValue.get()).map(ids::get).any { entityId == it }) return true
+			val ids = arrayOf(entityIDStaticEntityIDEntityID1Value.get(), entityIDStaticEntityIDEntityID2Value.get(), entityIDStaticEntityIDEntityID3Value.get())
+			if ((0 until entityIDStaticEntityIDEntityIDCountValue.get()).map(ids::get).any { entityId == it }) return true
 		}
 
 		// Yaw & Pitch movements
-		if (yawValue.get() && entityId !in yawMovement) return true
-		if (pitchValue.get() && entityId !in pitchMovement) return true
+		if (rotationYawValue.get() && entityId !in yawMovement) return true
+		if (rotationPitchValue.get() && entityId !in pitchMovement) return true
 
 		// Invalid pitch (Derp)
-		if (invalidPitchValue.get() && if (invalidPitchKeepVLValue.get()) entityId in derp else (entity.rotationPitch > 90F || entity.rotationPitch < -90F)) return true
+		if (rotationInvalidPitchEnabledValue.get() && if (rotationInvalidPitchKeepVLValue.get()) entityId in derp else (entity.rotationPitch > 90F || entity.rotationPitch < -90F)) return true
 
 		// Was Invisible
 		if (wasInvisibleValue.get() && entityId in invisible) return true
@@ -410,9 +510,9 @@ object AntiBot : Module()
 		if (armorValue.get() && entity.inventory.armorInventory.all { it == null }) return true
 
 		// Ping
-		if (pingValue.get() && netHandler.getPlayerInfo(uuid)?.responseTime == 0) return true
+		if (pingZeroValue.get() && netHandler.getPlayerInfo(uuid)?.responseTime == 0) return true
 
-		if (pingUpdateValue.get() && uuid in pingNotUpdated) return true
+		if (pingUpdatePresenceEnabledValue.get() && uuid in pingNotUpdated) return true
 
 		// NeedHit
 		if (needHitValue.get() && entityId !in hitted) return true
@@ -421,7 +521,7 @@ object AntiBot : Module()
 		if (invalidGroundValue.get() && invalidGround[entityId] ?: 0 >= 10) return true
 
 		// Tab
-		if (tabValue.get())
+		if (tabEnabledValue.get())
 		{
 			val equals = tabModeValue.get().equals("Equals", ignoreCase = true)
 			val displayNameMode: Boolean = tabNameModeValue.get().equals("DisplayName", ignoreCase = true)
@@ -435,18 +535,18 @@ object AntiBot : Module()
 			}
 		}
 
-		var dupInWorldTargetName = when (duplicateInWorldNameModeValue.get().toLowerCase())
+		var dupInWorldTargetName = when (duplicateInWorldExistenceNameModeValue.get().toLowerCase())
 		{
 			"displayname" -> displayName
 			"customnametag" -> customNameTagFailsafe
 			else -> profileName
 		}
 
-		if (duplicateInWorldStripColorsValue.get()) dupInWorldTargetName = stripColor(dupInWorldTargetName)
+		if (duplicateInWorldExistenceStripColorsValue.get()) dupInWorldTargetName = stripColor(dupInWorldTargetName)
 
 		// Duplicate in the world
-		if (duplicateInWorldValue.get() && theWorld.loadedEntityList.filter(provider::isEntityPlayer).map(IEntity::asEntityPlayer).count {
-				dupInWorldTargetName == when (duplicateInWorldNameModeValue.get().toLowerCase())
+		if (duplicateInWorldExistenceEnabledValue.get() && theWorld.loadedEntityList.filter(provider::isEntityPlayer).map(IEntity::asEntityPlayer).count {
+				dupInWorldTargetName == when (duplicateInWorldExistenceNameModeValue.get().toLowerCase())
 				{
 					"displayname" -> it.displayName.formattedText
 					"customnametag" -> it.customNameTag.ifBlank { it.gameProfile.name }
@@ -455,45 +555,45 @@ object AntiBot : Module()
 			} > 1) return true
 
 		// Duplicate in the tab
-		if (duplicateInTabValue.get() && netHandler.playerInfoMap.count {
-				var entityName = when (duplicateInTabWorldNameModeValue.get().toLowerCase())
+		if (duplicateInTabExistenceEnabledValue.get() && netHandler.playerInfoMap.count {
+				var entityName = when (duplicateInTabExistenceModeValue.get().toLowerCase())
 				{
 					"displayname" -> displayName
 					"customnametag" -> customNameTagFailsafe
 					else -> profileName
 				}
 
-				if (duplicateInTabStripColorsValue.get()) entityName = stripColor(entityName)
+				if (duplicateInTabExistenceStripColorsValue.get()) entityName = stripColor(entityName)
 
-				var itName = it.getFullName(duplicateInTabNameModeValue.get().equals("DisplayName", ignoreCase = true))
+				var itName = it.getFullName(duplicateInTabExistenceNameModeValue.get().equals("DisplayName", ignoreCase = true))
 
-				if (duplicateInTabStripColorsValue.get()) itName = stripColor(itName)
+				if (duplicateInTabExistenceStripColorsValue.get()) itName = stripColor(itName)
 
 				entityName == itName
 			} > 1) return true
 
 		// Always in radius
-		if (alwaysInRadiusValue.get() && entityId !in notAlwaysInRadius) return true
+		if (alwaysInRadiusEnabledValue.get() && entityId !in notAlwaysInRadius) return true
 
 		// XZ Speed
-		if (hspeedValue.get() && entityId in hspeed && (!hspeedVLValue.get() || hspeed[entityId] ?: 0 >= hspeedVLLimitValue.get())) return true
+		if (hspeedEnabledValue.get() && entityId in hspeed && (!hspeedVLEnabledValue.get() || hspeed[entityId] ?: 0 >= hspeedVLLimitValue.get())) return true
 
 		// Y Speed
-		if (vspeedValue.get() && entityId in vspeed && (!vspeedVLValue.get() || vspeed[entityId] ?: 0 >= vspeedVLLimitValue.get())) return true
+		if (vspeedEnabledValue.get() && entityId in vspeed && (!vspeedVLValue.get() || vspeed[entityId] ?: 0 >= vspeedVLLimitValue.get())) return true
 
 		// Teleport Packet
-		if (teleportPacketValue.get() && entityId in teleportpacket_violation && (!teleportPacketVLValue.get() || teleportpacket_violation[entityId] ?: 0 >= teleportPacketVLLimitValue.get())) return true
+		if (teleportPacketEnabledValue.get() && entityId in teleportpacket_violation && (!teleportPacketVLEnabledValue.get() || teleportpacket_violation[entityId] ?: 0 >= teleportPacketVLLimitValue.get())) return true
 
 		// Spawned Position
-		if (spawnPositionValue.get() && entityId in spawnPosition) return true
+		if (positionSpawnedPositionEnabledValue.get() && entityId in spawnPosition) return true
 
-		if (positionValue.get() && positionVL[entityId] ?: 0 >= positionDeltaVLLimitValue.get() || positionDeltaConsistencyValue.get() && positionConsistencyVL[entityId] ?: 0 >= positionDeltaConsistencyVLLimitValue.get()) return true
+		if (positionEnabledValue.get() && positionVL[entityId] ?: 0 >= positionDeltaVLLimitValue.get() || positionDeltaConsistencyEnabledValue.get() && positionConsistencyVL[entityId] ?: 0 >= positionDeltaConsistencyVLLimitValue.get()) return true
 
-		if (customNameValue.get())
+		if (customNameEnabledValue.get())
 		{
 			val customName = customNameTag.let { if (customNameStripColorsValue.get()) stripColor(it) else it }
 
-			if (customName.isBlank()) return emptyCustomNameValue.get()
+			if (customName.isBlank()) return customNameBlankValue.get()
 
 			val compareTo = if (customNameCompareToValue.get().equals("DisplayName", ignoreCase = true)) displayName else profileName
 			if (compareTo != null && !(if (customNameModeValue.get().equals("Equals", ignoreCase = true)) compareTo == customName else customName in compareTo)) return true
@@ -605,11 +705,11 @@ object AntiBot : Module()
 				val prevVL = teleportpacket_violation[entityId] ?: 0
 
 				val distSq = entity.asEntityPlayer().getDistanceSq(newPos.xCoord, newPos.yCoord, newPos.zCoord)
-				val distThreshold = teleportThresholdDistance.get()
+				val distThreshold = teleportPacketThresholdDistanceValue.get()
 
 				if (distSq <= distThreshold * distThreshold)
 				{
-					if (shouldNotify && teleportPacketValue.get() && (prevVL + 5) % 10 == 0) notification("Teleport Packet", "Suspicious SPacketEntityTeleport: ${entity.displayName.formattedText} (dist: ${sqrt(distSq)}, VL: $prevVL)")
+					if (shouldNotify && teleportPacketEnabledValue.get() && (prevVL + 5) % 10 == 0) notification("Teleport Packet", "Suspicious SPacketEntityTeleport: ${entity.displayName.formattedText} (dist: ${sqrt(distSq)}, VL: $prevVL)")
 					teleportpacket_violation[entityId] = prevVL + 2
 				}
 				else if (teleportPacketVLDecValue.get())
@@ -656,9 +756,9 @@ object AntiBot : Module()
 
 			val func = functions
 
-			val positionDeltaLimit = spawnPositionExpectLimitValue.get()
+			val positionDeltaLimit = positionSpawnedPositionDeltaThresholdValue.get()
 
-			for ((posIndex, back, y) in arrayOf(Triple(1, spawnPositionBack1Value.get(), spawnPositionY1Value.get()), Triple(2, spawnPositionBack2Value.get(), spawnPositionY2Value.get())))
+			for ((posIndex, back, y) in arrayOf(Triple(1, positionSpawnedPositionPosition1BackValue.get(), positionSpawnedPositionPosition1YValue.get()), Triple(2, positionPosition2BackValue.get(), positionSpawnedPositionPosition2YValue.get())))
 			{
 				val expectDeltaX = serverPos.xCoord - func.sin(yawRadians) * back - entityX
 				val expectDeltaY = serverPos.yCoord + y - entityY
@@ -669,16 +769,16 @@ object AntiBot : Module()
 				// Position Delta
 				if (expectSqrt <= positionDeltaLimit * positionDeltaLimit)
 				{
-					if (shouldNotify && spawnPositionValue.get()) notification("Spawn(Expect)", "Suspicious spawn: Entity #$entityId (posIndex: $posIndex, dist: ${DECIMALFORMAT_6.format(expectSqrt)})")
+					if (shouldNotify && positionSpawnedPositionEnabledValue.get()) notification("Spawn(Expect)", "Suspicious spawn: Entity #$entityId (posIndex: $posIndex, dist: ${DECIMALFORMAT_6.format(expectSqrt)})")
 					spawnPosition.add(entityId)
 				}
 			}
 
 			// Duplicate In World
-			if (attemptToAddDuplicatesWorldValue.get() && playerInfo != null)
+			if (duplicateInWorldAdditionEnabledValue.get() && playerInfo != null)
 			{
-				val stripColors = attemptToAddDuplicatesWorldStripColorsValue.get()
-				val useDisplayName = attemptToAddDuplicatesWorldModeValue.get().equals("DisplayName", ignoreCase = true)
+				val stripColors = duplicateInWorldAdditionStripColorsValue.get()
+				val useDisplayName = duplicateInWorldAdditionModeValue.get().equals("DisplayName", ignoreCase = true)
 
 				val profileName = playerInfo.gameProfile.name
 				val displayName = playerInfo.displayName?.formattedText
@@ -712,9 +812,9 @@ object AntiBot : Module()
 			{
 				ISPacketPlayerListItem.WAction.ADD_PLAYER ->
 				{
-					val useDisplayName = attemptToAddDuplicatesTabModeValue.get().equals("DisplayName", ignoreCase = true)
+					val useDisplayName = duplicateInTabAdditionNameModeValue.get().equals("DisplayName", ignoreCase = true)
 
-					val tryStripColors = { name: String -> if (attemptToAddDuplicatesTabStripColorsValue.get()) stripColor(name) else name }
+					val tryStripColors = { name: String -> if (duplicateInTabAdditionStripColorsValue.get()) stripColor(name) else name }
 
 					val currentPlayerList = playerInfoMap.map { tryStripColors((if (useDisplayName) it.displayName?.formattedText else it.gameProfile.name) ?: "") }
 
@@ -723,7 +823,7 @@ object AntiBot : Module()
 					{
 						val player = itr.next()
 
-						if (attemptToAddDuplicatesTabValue.get())
+						if (duplicateInTabAdditionEnabledValue.get())
 						{
 							if (tryStripColors((if (useDisplayName) player.displayName?.formattedText else player.profile.name) ?: continue) in currentPlayerList)
 							{
@@ -746,9 +846,9 @@ object AntiBot : Module()
 
 					val toString = { uuidList: Collection<UUID> -> uuidList.joinToString(prefix = "[", postfix = "]") { uuid -> playerInfoMap.firstOrNull { it.gameProfile.id == uuid }?.gameProfile?.name ?: "$uuid" } }
 
-					if (pingUpdateValidationValue.get())
+					if (pingUpdatePresenceValidateEnabledValue.get())
 					{
-						val allMatches = pingUpdateValidationModeValue.get().equals("AllMatches", ignoreCase = true)
+						val allMatches = pingUpdatePresenceValidateModeValue.get().equals("AllMatches", ignoreCase = true)
 						val prevPingUpdatedPlayerUUIDList = allPlayerUUIDList.filterNot(pingNotUpdated::contains)
 						if (if (allMatches) !pingUpdatedPlayerUUIDList.all(prevPingUpdatedPlayerUUIDList::contains) else pingUpdatedPlayerUUIDList.none(prevPingUpdatedPlayerUUIDList::contains))
 						{
@@ -760,7 +860,7 @@ object AntiBot : Module()
 					if (pingNotUpdated.isEmpty()) pingNotUpdated.addAll(allPlayerUUIDList.filterNot(pingUpdatedPlayerUUIDList::contains))
 					else pingNotUpdated.removeAll(allPlayerUUIDList.filter(pingUpdatedPlayerUUIDList::contains).filter(pingNotUpdated::contains))
 
-					if (pingUpdateValue.get() && notificationValue.get() && pingNotUpdated.isNotEmpty()) notification("PingUpdate", "Ping not updated: ${toString(pingNotUpdated)}")
+					if (pingUpdatePresenceEnabledValue.get() && notificationValue.get() && pingNotUpdated.isNotEmpty()) notification("PingUpdate", "Ping not updated: ${toString(pingNotUpdated)}")
 				}
 
 				ISPacketPlayerListItem.WAction.REMOVE_PLAYER -> pingNotUpdated.removeAll(players.map { it.profile.id })
@@ -804,13 +904,13 @@ object AntiBot : Module()
 		if (target.invisible && entityId !in invisible) invisible.add(entityId)
 
 		// Always in radius
-		if (entityId !in notAlwaysInRadius && thePlayer.getDistanceToEntity(target) > alwaysRadiusValue.get()) notAlwaysInRadius.add(entityId)
+		if (entityId !in notAlwaysInRadius && thePlayer.getDistanceToEntity(target) > alwaysInRadiusRadiusValue.get()) notAlwaysInRadius.add(entityId)
 
 		// Horizontal Speed
 		val hspeed = hypot(target.posX - newPos.xCoord, target.posZ - newPos.zCoord)
 		if (hspeed > hspeedLimitValue.get())
 		{
-			if (shouldNotify && hspeedValue.get()) notification("HSpeed", "Moved too fast (horizontally): $displayName (${DECIMALFORMAT_6.format(hspeed)} blocks/tick)")
+			if (shouldNotify && hspeedEnabledValue.get()) notification("HSpeed", "Moved too fast (horizontally): $displayName (${DECIMALFORMAT_6.format(hspeed)} blocks/tick)")
 			this.hspeed[entityId] = this.hspeed[entityId] ?: 0 + 2
 		}
 		else if (hspeedVLDecValue.get())
@@ -823,7 +923,7 @@ object AntiBot : Module()
 		val vspeed = abs(target.posY - newPos.yCoord)
 		if (vspeed > vspeedLimitValue.get())
 		{
-			if (shouldNotify && vspeedValue.get()) notification("VSpeed", "Moved too fast (vertically): $displayName (${DECIMALFORMAT_6.format(vspeed)} blocks/tick)")
+			if (shouldNotify && vspeedEnabledValue.get()) notification("VSpeed", "Moved too fast (vertically): $displayName (${DECIMALFORMAT_6.format(vspeed)} blocks/tick)")
 			this.vspeed[entityId] = (this.vspeed[entityId] ?: 0) + 2
 		}
 		else if (vspeedVLDecValue.get())
@@ -834,9 +934,9 @@ object AntiBot : Module()
 
 		// <editor-fold desc="Position Checks">
 
-		if (positionValue.get())
+		if (positionEnabledValue.get())
 		{
-			val isSuspectedForSpawnPosition = spawnPositionValue.get() && entityId in spawnPositionSuspects
+			val isSuspectedForSpawnPosition = positionSpawnedPositionEnabledValue.get() && entityId in spawnPositionSuspects
 
 			val serverLocation = getPingCorrectionAppliedLocation(thePlayer)
 
@@ -851,19 +951,19 @@ object AntiBot : Module()
 			val func = functions
 
 			// Position delta limit
-			val positionDeltaLimitSq = positionDeltaLimitValue.get().pow(2)
+			val positionDeltaLimitSq = positionDeltaThresholdValue.get().pow(2)
 			val positionDeltaVLDec = positionDeltaVLDecValue.get()
 
 			// Position delta consistency
-			val positionRequiredDeltaToCheckConsistency = positionRequiredExpectationDeltaToCheckConsistencyValue.get()
-			val positionDeltaConsistencyLimit = positionDeltaConsistencyLimitValue.get()
+			val positionRequiredDeltaToCheckConsistency = positionDeltaConsistencyRequiredDeltaToCheckValue.get()
+			val positionDeltaConsistencyLimit = positionDeltaConsistencyConsistencyThresholdValue.get()
 			val positionDeltaConsistencyVLDec = positionDeltaConsistencyVLDecValue.get()
 
 			// Remove on caught
-			val removeOnCaught = positionRemoveValue.get()
-			val removeOnVL = positionRemoveVLValue.get()
+			val removeOnCaught = positionRemoveDetectedEnabledValue.get()
+			val removeOnVL = positionRemoveDetectedVLValue.get()
 
-			for ((posIndex, back, y) in arrayOf(Triple(1, positionBack1Value.get(), positionY1Value.get()), Triple(2, positionBack2Value.get(), positionY2Value.get()), Triple(3, positionBack3Value.get(), positionY3Value.get()), Triple(4, positionBack4Value.get(), positionY4Value.get())))
+			for ((posIndex, back, y) in arrayOf(Triple(1, positionPosition1BackValue.get(), positionPosition1YValue.get()), Triple(2, positionPosition2BackValue.get(), positionPosition2YValue.get()), Triple(3, positionPosition3BackValue.get(), positionPosition3YValue.get()), Triple(4, positionPosition4BackValue.get(), positionPosition4YValue.get())))
 			{
 				val deltaX = newPos.xCoord - (serverPos.xCoord - func.sin(yawRadians) * back)
 				val deltaY = newPos.yCoord - (serverPos.yCoord + y)
@@ -935,7 +1035,7 @@ object AntiBot : Module()
 									else -> 1
 								} + if (isSuspectedForSpawnPosition) 10 else 0
 
-								if (shouldNotify && positionDeltaConsistencyValue.get() && ((prevVL + 5) % 10 == 0 || vlIncrement >= 5)) notification("Position(Expect-Consistency)", "Suspicious position consistency: $displayName (posIndex: $posIndex,delta: ${DECIMALFORMAT_6.format(consistency)}, posVL: $prevVL, posConsistencyVL: $prevConsistencyVL)")
+								if (shouldNotify && positionDeltaConsistencyEnabledValue.get() && ((prevVL + 5) % 10 == 0 || vlIncrement >= 5)) notification("Position(Expect-Consistency)", "Suspicious position consistency: $displayName (posIndex: $posIndex,delta: ${DECIMALFORMAT_6.format(consistency)}, posVL: $prevVL, posConsistencyVL: $prevConsistencyVL)")
 								positionConsistencyVL[entityId] = prevConsistencyVL + vlIncrement
 							}
 							else if (positionDeltaConsistencyVLDec)
@@ -961,7 +1061,7 @@ object AntiBot : Module()
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") e: Render3DEvent)
 	{
-		if (!drawExpectedPosValue.get()) return
+		if (!positionMarkEnabledValue.get()) return
 
 		val thePlayer = mc.thePlayer ?: return
 
@@ -995,30 +1095,30 @@ object AntiBot : Module()
 		val renderPosY = renderManager.renderPosY
 		val renderPosZ = renderManager.renderPosZ
 
-		val alpha = drawExpectedPosAlphaValue.get()
+		val alpha = positionMarkAlphaValue.get()
 
-		if (positionValue.get())
+		if (positionEnabledValue.get())
 		{
-			val deltaLimit = positionDeltaLimitValue.get()
+			val deltaLimit = positionDeltaThresholdValue.get()
 
 			val width = thePlayer.width + deltaLimit
 			val height = thePlayer.height + deltaLimit
 
 			val bb = provider.createAxisAlignedBB(-width - renderPosX, -renderPosY, -width - renderPosZ, width - renderPosX, height - renderPosY, width - renderPosZ)
 
-			for ((back, y, color) in arrayOf(Triple(positionBack1Value.get(), positionY1Value.get(), 0xFF0000), Triple(positionBack2Value.get(), positionY2Value.get(), 0xFF8800), Triple(positionBack3Value.get(), positionY3Value.get(), 0x88FF00), Triple(positionBack4Value.get(), positionY4Value.get(), 0x00FF00))) RenderUtils.drawAxisAlignedBB(bb.offset(posX + sin * back, posY + y, posZ + cos * back), ColorUtils.applyAlphaChannel(color, alpha))
+			for ((back, y, color) in arrayOf(Triple(positionPosition1BackValue.get(), positionPosition1YValue.get(), 0xFF0000), Triple(positionPosition2BackValue.get(), positionPosition2YValue.get(), 0xFF8800), Triple(positionPosition3BackValue.get(), positionPosition3YValue.get(), 0x88FF00), Triple(positionPosition4BackValue.get(), positionPosition4YValue.get(), 0x00FF00))) RenderUtils.drawAxisAlignedBB(bb.offset(posX + sin * back, posY + y, posZ + cos * back), ColorUtils.applyAlphaChannel(color, alpha))
 		}
 
-		if (spawnPositionValue.get())
+		if (positionSpawnedPositionEnabledValue.get())
 		{
-			val deltaLimit = spawnPositionExpectLimitValue.get()
+			val deltaLimit = positionSpawnedPositionDeltaThresholdValue.get()
 
 			val width = thePlayer.width + deltaLimit
 			val height = thePlayer.height + deltaLimit
 
 			val bb = provider.createAxisAlignedBB(-width - renderPosX, -renderPosY, -width - renderPosZ, width - renderPosX, height - renderPosY, width - renderPosZ)
 
-			for ((back, y, color) in arrayOf(Triple(spawnPositionBack1Value.get(), spawnPositionY1Value.get(), 0x0088FF), Triple(spawnPositionBack2Value.get(), spawnPositionY2Value.get(), 0x0000FF))) RenderUtils.drawAxisAlignedBB(bb.offset(posX + sin * back, posY + y, posZ + cos * back), ColorUtils.applyAlphaChannel(color, alpha))
+			for ((back, y, color) in arrayOf(Triple(positionSpawnedPositionPosition1BackValue.get(), positionSpawnedPositionPosition1YValue.get(), 0x0088FF), Triple(positionSpawnedPositionPosition2BackValue.get(), positionSpawnedPositionPosition2YValue.get(), 0x0000FF))) RenderUtils.drawAxisAlignedBB(bb.offset(posX + sin * back, posY + y, posZ + cos * back), ColorUtils.applyAlphaChannel(color, alpha))
 		}
 	}
 

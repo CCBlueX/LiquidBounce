@@ -26,6 +26,12 @@ class Bobbing : Module()
 	val cameraIncrementMultiplierYawValue = FloatValue("Yaw", 1F, 0.2F, 5F, "CameraYawIncrementMultiplier")
 	val cameraIncrementMultiplierPitchValue = FloatValue("Pitch", 1F, 0.2F, 5F, "CameraPitchIncrementMultiplier")
 
+	init
+	{
+		cameraIncrementMultiplierGroup.addAll(cameraIncrementMultiplierYawValue, cameraIncrementMultiplierPitchValue)
+		cameraMultiplierGroup.addAll(cameraMultiplierYawValue, cameraMultiplierPitchValue, cameraIncrementMultiplierGroup)
+	}
+
 	override val tag: String
 		get() = "${multiplierValue.get()}${if (checkGroundValue.get()) "" else ", Always"}"
 }
