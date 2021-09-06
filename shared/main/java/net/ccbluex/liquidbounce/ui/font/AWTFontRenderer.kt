@@ -303,3 +303,45 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
 	 */
 	private data class CharLocation(var x: Int, var y: Int, var width: Int, var height: Int)
 }
+
+// TODO: Replace all AWTFontRenderer.assumeNonVolatile calls to these
+
+inline fun <T, R> T.assumeNonVolatile(block: T.() -> R): R
+{
+	val prev = AWTFontRenderer.assumeNonVolatile
+	AWTFontRenderer.assumeNonVolatile = true
+	val `return` = block()
+	AWTFontRenderer.assumeNonVolatile = prev
+
+	return `return`
+}
+
+inline fun <T, R> T.assumeVolatile(block: T.() -> R): R
+{
+	val prev = AWTFontRenderer.assumeNonVolatile
+	AWTFontRenderer.assumeNonVolatile = false
+	val `return` = block()
+	AWTFontRenderer.assumeNonVolatile = prev
+
+	return `return`
+}
+
+inline fun <T, R> T.assumeNonVolatileIf(assumeNonVolatile: Boolean, block: T.() -> R): R
+{
+	val prev = AWTFontRenderer.assumeNonVolatile
+	if (assumeNonVolatile) AWTFontRenderer.assumeNonVolatile = true
+	val `return` = block()
+	if (assumeNonVolatile) AWTFontRenderer.assumeNonVolatile = prev
+
+	return `return`
+}
+
+inline fun <T, R> T.assumeVolatileIf(assumeVolatile: Boolean, block: T.() -> R): R
+{
+	val prev = AWTFontRenderer.assumeNonVolatile
+	if (assumeVolatile) AWTFontRenderer.assumeNonVolatile = true
+	val `return` = block()
+	if (assumeVolatile) AWTFontRenderer.assumeNonVolatile = prev
+
+	return `return`
+}

@@ -42,7 +42,7 @@ object Fonts : MinecraftInstance()
 
 		logger.info("Loading Fonts.")
 
-		// TODO:Asynchronize
+		// TODO: Asynchronize
 
 		downloadFonts()
 

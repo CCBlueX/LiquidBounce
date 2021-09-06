@@ -76,7 +76,7 @@ class ValuesConfig(file: File) : FileConfig(file)
 				if (jsonValue.has("AntiModDisableBlockWDLPayloads")) AntiModDisable.blockWDLPayloads = jsonValue["AntiModDisableBlockWDLPayloads"].asBoolean
 				if (jsonValue.has("AntiModDisableBlockBetterSprintingPayloads")) AntiModDisable.blockBetterSprintingPayloads = jsonValue["AntiModDisableBlockBetterSprintingPayloads"].asBoolean
 				if (jsonValue.has("AntiModDisableBlock5zigPayloads")) AntiModDisable.block5zigsmodPayloads = jsonValue["AntiModDisableBlock5zigPayloads"].asBoolean
-				if (jsonValue.has("AntiModDisableBlockPermsReplPayloads")) AntiModDisable.blockPermissionsReplPayloads = jsonValue["AntiModDisableBlockPermsReplPayloads"].asBoolean
+				if (jsonValue.has("AntiModDisableBlockPermsReplPayloads")) AntiModDisable.blockReplicatedPermissionsPayloads = jsonValue["AntiModDisableBlockPermsReplPayloads"].asBoolean
 				if (jsonValue.has("AntiModDisableBlockDIPermsPayloads")) AntiModDisable.blockDIPermissionsPayloads = jsonValue["AntiModDisableBlockDIPermsPayloads"].asBoolean
 				if (jsonValue.has("AntiModDisableBlockCrackedVapeSabotages")) AntiModDisable.blockCrackedVapeSabotages = jsonValue["AntiModDisableBlockCrackedVapeSabotages"].asBoolean
 				if (jsonValue.has("AntiModDisableBlockSchematicaPayloads")) AntiModDisable.blockSchematicaPayloads = jsonValue["AntiModDisableBlockSchematicaPayloads"].asBoolean
@@ -168,7 +168,7 @@ class ValuesConfig(file: File) : FileConfig(file)
 		jsonFeatures.addProperty("AntiModDisableBlockWDLPayloads", AntiModDisable.blockWDLPayloads)
 		jsonFeatures.addProperty("AntiModDisableBlockBetterSprintingPayloads", AntiModDisable.blockBetterSprintingPayloads)
 		jsonFeatures.addProperty("AntiModDisableBlock5zigPayloads", AntiModDisable.block5zigsmodPayloads)
-		jsonFeatures.addProperty("AntiModDisableBlockPermsReplPayloads", AntiModDisable.blockPermissionsReplPayloads)
+		jsonFeatures.addProperty("AntiModDisableBlockPermsReplPayloads", AntiModDisable.blockReplicatedPermissionsPayloads)
 		jsonFeatures.addProperty("AntiModDisableBlockDIPermsPayloads", AntiModDisable.blockDIPermissionsPayloads)
 		jsonFeatures.addProperty("AntiModDisableBlockCrackedVapeSabotages", AntiModDisable.blockCrackedVapeSabotages)
 		jsonFeatures.addProperty("AntiModDisableBlockSchematicaPayloads", AntiModDisable.blockSchematicaPayloads)

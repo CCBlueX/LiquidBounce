@@ -13,13 +13,14 @@ import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
 import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
 import net.ccbluex.liquidbounce.api.minecraft.util.IEnumFacing
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
+import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 
 /**
  * Called when player attacks other entity
  *
  * @param targetEntity Attacked entity
  */
-class AttackEvent(val targetEntity: IEntity?) : Event()
+class AttackEvent(val targetEntity: IEntity?, val attackPos: WVec3) : Event()
 
 /**
  * Called when minecraft get bounding box of block

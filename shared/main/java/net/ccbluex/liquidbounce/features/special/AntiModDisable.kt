@@ -16,6 +16,8 @@ import java.util.regex.Matcher
 import java.util.regex.Pattern
 
 /**
+ * TODO: <p>https://github.com/amata1219/KerisuteGomen/blob/master/src/amata1219/kerisute/gomen/KerisuteGomen.java</p>
+ *
  * @author UnstoppableLeaks @ blackspigot.com
  */
 class AntiModDisable : MinecraftInstance(), Listenable
@@ -55,7 +57,7 @@ class AntiModDisable : MinecraftInstance(), Listenable
 					blockWDLPayloads && channelName.contains("WDL", ignoreCase = true) -> action(event, "World Downloader ($channelName)")
 					blockBetterSprintingPayloads && channelName.equals("BSprint", ignoreCase = true) -> action(event, "Better Sprinting mod ($channelName)")
 					block5zigsmodPayloads && channelName.startsWith("5ZIG", ignoreCase = true) -> action(event, "The 5zig's mod ($channelName)")
-					blockPermissionsReplPayloads && channelName.equals("PERMISSIONSREPL", ignoreCase = true) -> action(event, "(?) ($channelName)")
+					blockReplicatedPermissionsPayloads && channelName.equals("PERMISSIONSREPL", ignoreCase = true) -> action(event, "(?) ($channelName)")
 				}
 			}
 			else if (provider.isSPacketChat(packet))
@@ -84,7 +86,7 @@ class AntiModDisable : MinecraftInstance(), Listenable
 					blockWDLPayloads && channelName.contains("WDL", ignoreCase = true) -> action(event, "World Downloader ($channelName)")
 					blockBetterSprintingPayloads && channelName.equals("BSM", ignoreCase = true) -> action(event, "Better Sprinting mod ($channelName)")
 					block5zigsmodPayloads && channelName.startsWith("5ZIG", ignoreCase = true) -> action(event, "The 5zig's mod ($channelName)")
-					blockPermissionsReplPayloads && channelName.equals("PERMISSIONSREPL", ignoreCase = true) -> action(event, "(?) ($channelName)")
+					blockReplicatedPermissionsPayloads && channelName.equals("PERMISSIONSREPL", ignoreCase = true) -> action(event, "(?) ($channelName)")
 					blockDIPermissionsPayloads && channelName.equals("DIPermissions", ignoreCase = true) -> action(event, "(?) ($channelName)")
 					blockCrackedVapeSabotages && channelName.contains("LOLIMAHCKER", ignoreCase = true) -> action(event, "CrackedVape Type H(type: Custom payload channel \"$channelName\")")
 					blockSchematicaPayloads && channelName.equals("Schematica", ignoreCase = true) -> action(event, "Schematica mod ($channelName)")
@@ -111,8 +113,12 @@ class AntiModDisable : MinecraftInstance(), Listenable
 		var blockClientBrandRetrieverPackets = true
 		var blockWDLPayloads = true
 		var blockBetterSprintingPayloads = true
+
 		var block5zigsmodPayloads = true
-		var blockPermissionsReplPayloads = true
+
+		// https://github.com/svn2github/liteloaderclone/blob/master/java/common/net/eq2online/permissions/ReplicatedPermissionsContainer.java
+		var blockReplicatedPermissionsPayloads = true
+
 		var blockDIPermissionsPayloads = true
 		var blockCrackedVapeSabotages = true
 		var blockSchematicaPayloads = true
@@ -143,7 +149,7 @@ class AntiModDisable : MinecraftInstance(), Listenable
 						return true
 					}
 
-					blockPermissionsReplPayloads && channelName.equals("PERMISSIONSREPL", ignoreCase = true) ->
+					blockReplicatedPermissionsPayloads && channelName.equals("PERMISSIONSREPL", ignoreCase = true) ->
 					{
 						action(null, "ForgeChannelPacket - (?) ($channelName)")
 						return true

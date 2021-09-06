@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.style.Style
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer.Companion.assumeNonVolatile
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
+import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_2
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.stripControlCodes
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
@@ -44,12 +45,13 @@ class NullStyle : Style()
 	override fun drawPanel(mouseX: Int, mouseY: Int, panel: Panel)
 	{
 		val font = getPanelFont()
+		val fontHeight = font.fontHeight
 		val xF = panel.x.toFloat()
 		val yF = panel.y.toFloat()
 
-		drawRect(xF - 3, yF, xF + panel.width + 3, yF + 19, generatePanelColor())
+		drawRect(xF - 3, yF, xF + panel.width + 3, yF + fontHeight + 10, generatePanelColor())
 
-		if (panel.fade > 0) drawBorderedRect(xF, yF + 19, xF + panel.width, panel.y + 19f + panel.fade, 1f, BACKGROUND, BACKGROUND)
+		if (panel.fade > 0) drawBorderedRect(xF, yF + fontHeight + 10, xF + panel.width, panel.y + 19f + panel.fade, 1f, BACKGROUND, BACKGROUND)
 
 		classProvider.glStateManager.resetColor()
 
@@ -301,7 +303,7 @@ class NullStyle : Style()
 
 			is FloatRangeValue ->
 			{
-				val text = "${value.displayName}\u00A7f: \u00A7c${round(value.getMin())}-${round(value.getMax())}"
+				val text = "${value.displayName}\u00A7f: \u00A7c${DECIMALFORMAT_2.format(value.getMin())}-${DECIMALFORMAT_2.format(value.getMax())}"
 				val textWidth = font.getStringWidth(text) + indent + 8f
 
 				if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
@@ -358,12 +360,12 @@ class NullStyle : Style()
 				val textWidth = valueFont.getStringWidth(text) + indent + 8f
 
 				if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
+				val moduleXEnd = moduleX + moduleElement.settingsWidth
 
-				drawRect(moduleX + 4f, yPos + 2f, moduleX + moduleElement.settingsWidth, yPos + 14f, BACKGROUND)
+				drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 14f, BACKGROUND)
 
-				if (mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= yPos + 2 && mouseY <= yPos + 14) if (Mouse.isButtonDown(0) && moduleElement.isntPressed())
+				if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= yPos + 2 && mouseY <= yPos + 14 && Mouse.isButtonDown(0) && moduleElement.isntPressed())
 				{
-
 					value.set(!value.get())
 					mc.soundHandler.playSound("gui.button.press", 1.0f)
 				}
@@ -449,7 +451,7 @@ class NullStyle : Style()
 
 			is FloatValue ->
 			{
-				val text = "${value.displayName}\u00A7f: \u00A7c${round(value.get())}"
+				val text = "${value.displayName}\u00A7f: \u00A7c${DECIMALFORMAT_2.format(value.get())}"
 				val textWidth = valueFont.getStringWidth(text) + indent + 8f
 
 				if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth

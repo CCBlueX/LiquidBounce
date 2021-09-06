@@ -103,8 +103,6 @@ import java.io.File
 import java.security.PublicKey
 import javax.crypto.SecretKey
 
-// TODO: Sort methods
-
 object ClassProviderImpl : IClassProvider
 {
 	override val tessellatorInstance: ITessellator

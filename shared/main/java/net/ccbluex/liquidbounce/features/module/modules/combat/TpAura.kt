@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.EntityUtils.isEnemy
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getState
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
+import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.pathfinding.PathFinder
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
@@ -70,9 +71,11 @@ class TpAura : Module()
 
 	private val pathEspGroup = ValueGroup("PathESP")
 	private val pathEspEnabledValue = BoolValue("Enabled", true, "PathESP")
+	private val pathEspTagValue = BoolValue("Tag", false)
+	private val pathEspLineWidthValue = FloatValue("LineWidth", 1f, 0.5f, 2f)
 	private val pathEspTimeValue = IntegerValue("KeepLength", 1000, 100, 3000, "PathESPTime")
-	private val pathEspColorValue = RGBAColorValue("Color", 255, 179, 72, 255, listOf("PathESP-Red", "PathESP-Green", "PathESP-Blue", "PathESP-Alpha"))
 
+	private val pathEspColorValue = RGBAColorValue("Color", 255, 179, 72, 255, listOf("PathESP-Red", "PathESP-Green", "PathESP-Blue", "PathESP-Alpha"))
 	private val pathEspColorRainbowGroup = ValueGroup("Rainbow")
 	private val pathEspColorRainbowEnabledValue = BoolValue("Enabled", false, "PathESP-Rainbow")
 	private val pathEspColorRainbowSpeedValue = IntegerValue("Speed", 10, 1, 10, "PathESP-RainbowSpeed")
@@ -104,8 +107,8 @@ class TpAura : Module()
 
 	init
 	{
-		pathEspColorRainbowGroup.addAll(pathEspColorRainbowEnabledValue, pathEspColorRainbowSpeedValue, pathEspColorRainbowSaturationValue, pathEspColorRainbowBrightnessValue)
-		pathEspGroup.addAll(pathEspEnabledValue, pathEspTimeValue, pathEspColorValue, pathEspColorRainbowGroup)
+		pathEspColorRainbowGroup.addAll(pathEspColorRainbowEnabledValue, pathEspColorRainbowSpeedValue, pathEspColorRainbowOffsetValue, pathEspColorRainbowSaturationValue, pathEspColorRainbowBrightnessValue)
+		pathEspGroup.addAll(pathEspEnabledValue, pathEspTagValue, pathEspLineWidthValue, pathEspTimeValue, pathEspColorValue, pathEspColorRainbowGroup)
 	}
 
 	override fun onEnable()
@@ -178,7 +181,9 @@ class TpAura : Module()
 						networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(path.xCoord, path.yCoord, path.zCoord, true))
 					}
 
-					LiquidBounce.eventManager.callEvent(AttackEvent(currentTarget))
+					currentPath.reverse()
+
+					LiquidBounce.eventManager.callEvent(AttackEvent(currentTarget, currentPath.firstOrNull() ?: from))
 
 					CPSCounter.registerClick(CPSCounter.MouseButton.LEFT)
 
@@ -205,7 +210,6 @@ class TpAura : Module()
 					}
 
 					// Travel back to the original position
-					currentPath.reverse()
 					currentPath.forEach { path ->
 						networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(path.xCoord, path.yCoord, path.zCoord, true))
 					}
@@ -232,6 +236,8 @@ class TpAura : Module()
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
 	{
+		val thePlayer = mc.thePlayer ?: return
+
 		val renderManager = mc.renderManager
 		val viewerPosX = renderManager.viewerPosX
 		val viewerPosY = renderManager.viewerPosY
@@ -260,8 +266,9 @@ class TpAura : Module()
 				glDisable(GL_DEPTH_TEST)
 				entityRenderer.disableLightmap()
 
-				glBegin(GL_LINE_STRIP)
 				RenderUtils.glColor(color)
+				glLineWidth(pathEspLineWidthValue.get())
+				glBegin(GL_LINE_STRIP)
 
 				targetPath.forEach { path ->
 					glVertex3d(path.xCoord - viewerPosX, path.yCoord - viewerPosY, path.zCoord - viewerPosZ)
@@ -275,13 +282,19 @@ class TpAura : Module()
 				glDisable(GL_BLEND)
 				glEnable(GL_TEXTURE_2D)
 				glPopMatrix()
-			}
 
-			if (attackTimer.hasTimePassed(pathEspTimeValue.get().toLong()))
-			{
-				targetPaths.clear()
-				currentPath.clear()
+				if (pathEspTagValue.get()) targetPath.firstOrNull()?.let { path ->
+					targetPath.lastOrNull()?.let { lastPath ->
+						RenderUtils.renderNameTag("${StringUtils.DECIMALFORMAT_2.format(WVec3(lastPath.xCoord, lastPath.yCoord, lastPath.zCoord).distanceTo(WVec3(path.xCoord, path.yCoord, path.zCoord)))}m in ${targetPath.size} moves", path.xCoord + 0.5, path.yCoord + 0.2, path.zCoord + 0.5)
+					}
+				}
 			}
+		}
+
+		if (attackTimer.hasTimePassed(pathEspTimeValue.get().toLong()))
+		{
+			targetPaths.clear()
+			currentPath.clear()
 		}
 	}
 

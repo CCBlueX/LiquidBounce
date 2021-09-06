@@ -80,8 +80,10 @@ public abstract class MixinEntityPlayer extends MixinEntityLivingBase
 	}
 
 	/**
+	 * Called frequently so the entity can update its state every tick as required. For example, zombies and skeletons use this to react to sunlight and start to burn.
+	 *
 	 * @reason Bobbing Camera Yaw/Pitch multiplier & Ignore ground check
-	 * @author eric0210 Called frequently so the entity can update its state every tick as required. For example, zombies and skeletons use this to react to sunlight and start to burn.
+	 * @author eric0210
 	 */
 	@Overwrite
 	public void onLivingUpdate()

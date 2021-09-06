@@ -18,6 +18,8 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.ccbluex.liquidbounce.value.TextValue
 import net.ccbluex.liquidbounce.value.ValueGroup
 
+// TODO: Hide GameID (rewinside)
+// TODO: Hide other things that can be used to recognize you
 @ModuleInfo(name = "NameProtect", description = "Changes playernames clientside.", category = ModuleCategory.MISC)
 class NameProtect : Module()
 {

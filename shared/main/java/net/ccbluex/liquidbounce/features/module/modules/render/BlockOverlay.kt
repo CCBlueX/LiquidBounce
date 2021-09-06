@@ -35,11 +35,14 @@ class BlockOverlay : Module()
 
 	private val drawHydraESPValue = BoolValue("Hydra", false)
 
-	val infoValue = BoolValue("Info", false)
+	private val infoGroup = ValueGroup("Info")
+	val infoEnabledValue = BoolValue("Enabled", false, "Info")
+	private val infoFontValue = FontValue("Font", Fonts.font40)
 
 	init
 	{
 		colorRainbowGroup.addAll(colorRainbowEnabledValue, colorRainbowSpeedValue, colorRainbowSaturationValue, colorRainbowBrightnessValue)
+		infoGroup.addAll(infoEnabledValue, infoFontValue)
 	}
 
 	fun getCurrentBlock(theWorld: IWorld): WBlockPos?
@@ -100,7 +103,7 @@ class BlockOverlay : Module()
 	@EventTarget
 	fun onRender2D(@Suppress("UNUSED_PARAMETER") event: Render2DEvent)
 	{
-		if (infoValue.get())
+		if (infoEnabledValue.get())
 		{
 			val theWorld = mc.theWorld ?: return
 
@@ -113,13 +116,14 @@ class BlockOverlay : Module()
 
 			val scaledResolution = provider.createScaledResolution(mc)
 
+			val font = infoFontValue.get()
 			val middleScreenX = scaledResolution.scaledWidth shr 1
 			val middleScreenY = scaledResolution.scaledHeight shr 1
 
-			RenderUtils.drawBorderedRect(middleScreenX - 2F, middleScreenY + 5F, (middleScreenX + Fonts.font40.getStringWidth(info)) + 2F, middleScreenY + 16F, 3F, -16777216, -16777216)
+			RenderUtils.drawBorderedRect(middleScreenX - 2F, middleScreenY + 5F, (middleScreenX + font.getStringWidth(info)) + 2F, middleScreenY + 16F, 3F, -16777216, -16777216)
 
 			provider.glStateManager.resetColor()
-			Fonts.font40.drawString(info, middleScreenX.toFloat(), middleScreenY + 7f, 0xffffff, false)
+			font.drawString(info, middleScreenX.toFloat(), middleScreenY + 7f, 0xffffff, false)
 		}
 	}
 }

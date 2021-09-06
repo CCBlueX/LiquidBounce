@@ -75,6 +75,9 @@ class Config
 
 							element.values.filter { jsonObject.has(it.name) }.forEach { it.fromJson(jsonObject[it.name]) }
 
+							// Backward compatibility
+							element.flatValues.filter { it.isAliasPresent(jsonObject) }.forEach { it.fromJsonAlias(jsonObject) }
+
 							// Support for old HUD files
 							if (jsonObject.has("font")) element.values.find { it is FontValue }?.fromJson(jsonObject["font"])
 

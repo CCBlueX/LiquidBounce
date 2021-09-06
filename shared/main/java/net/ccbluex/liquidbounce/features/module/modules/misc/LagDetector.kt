@@ -15,6 +15,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.FontValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 
 @ModuleInfo(name = "LagDetector", description = "Detects network issues and notify it visually.", category = ModuleCategory.MISC)
@@ -24,6 +25,7 @@ class LagDetector : Module()
 	private val thresholdMSValue = IntegerValue("ThresholdMS", 1000, 200, 2000)
 
 	private val notificationYOffsetValue = FloatValue("NotificationYOffset", -14F, -50F, 50F)
+	private val fontValue = FontValue("Font", Fonts.font40)
 
 	companion object
 	{
@@ -44,16 +46,17 @@ class LagDetector : Module()
 
 		val scaledResolution = classProvider.createScaledResolution(mc)
 
+		val font = fontValue.get()
 		val middleScreenX = scaledResolution.scaledWidth shr 1
 		val middleScreenY = scaledResolution.scaledHeight shr 1
 
-		val stringWidthHalf = Fonts.font40.getStringWidth(info) * 0.5F
+		val stringWidthHalf = font.getStringWidth(info) * 0.5F
 		val yoffset = notificationYOffsetValue.get()
 
-		RenderUtils.drawBorderedRect(middleScreenX - stringWidthHalf - 2F, middleScreenY + yoffset - 2F, middleScreenX + stringWidthHalf + 2F, middleScreenY + yoffset + 9F, 3F, -16777216, -16777216)
+		RenderUtils.drawBorderedRect(middleScreenX - stringWidthHalf - 2F, middleScreenY + yoffset - 2F, middleScreenX + stringWidthHalf + 2F, middleScreenY + yoffset + font.fontHeight, 3F, -16777216, -16777216)
 
 		classProvider.glStateManager.resetColor()
-		Fonts.font40.drawString(info, middleScreenX - stringWidthHalf, middleScreenY + yoffset, 0xFF0000, false)
+		font.drawString(info, middleScreenX - stringWidthHalf, middleScreenY + yoffset, 0xFF0000, false)
 	}
 
 	override val tag: String?

@@ -119,8 +119,9 @@ class Tower : Module()
 
 	private val stopConsumingBeforePlaceValue = BoolValue("StopConsumingBeforePlace", true)
 
-	// Render
-	val counterDisplayValue = BoolValue("Counter", true)
+	private val counterGroup = ValueGroup("Counter")
+	val counterEnabledValue = BoolValue("Enabled", true, "Counter")
+	private val counterFontValue = FontValue("Font", Fonts.font40)
 
 	init
 	{
@@ -132,6 +133,8 @@ class Tower : Module()
 		jumpGroup.addAll(jumpMotionValue, jumpDelayValue)
 		constantMotionGroup.addAll(constantMotionMotionValue, constantMotionJumpGroundValue)
 		teleportGroup.addAll(teleportHeightValue, teleportDelayValue, teleportGroundValue, teleportNoMotionValue)
+
+		counterGroup.addAll(counterEnabledValue, counterFontValue)
 	}
 
 	private val noCustomTimer = arrayOf("aac3.3.9", "aac4.4-constant", "aac4-jump")
@@ -549,14 +552,14 @@ class Tower : Module()
 	@EventTarget
 	fun onRender2D(@Suppress("UNUSED_PARAMETER") event: Render2DEvent)
 	{
-		if (counterDisplayValue.get())
+		if (counterEnabledValue.get())
 		{
 			val theWorld = mc.theWorld ?: return
 			val thePlayer = mc.thePlayer ?: return
 
 			GL11.glPushMatrix()
 			val blockOverlay = LiquidBounce.moduleManager[BlockOverlay::class.java] as BlockOverlay
-			if (blockOverlay.state && blockOverlay.infoValue.get() && blockOverlay.getCurrentBlock(theWorld) != null) GL11.glTranslatef(0f, 15f, 0f)
+			if (blockOverlay.state && blockOverlay.infoEnabledValue.get() && blockOverlay.getCurrentBlock(theWorld) != null) GL11.glTranslatef(0f, 15f, 0f)
 
 			val blocksAmount = getBlocksAmount(thePlayer)
 			val info = "Blocks: \u00A7${if (blocksAmount <= 10) "c" else "7"}$blocksAmount"
@@ -567,11 +570,13 @@ class Tower : Module()
 
 			val middleScreenX = scaledResolution.scaledWidth shr 1
 			val middleScreenY = scaledResolution.scaledHeight shr 1
-			RenderUtils.drawBorderedRect(middleScreenX - 2.0f, middleScreenY + 5.0f, ((scaledResolution.scaledWidth shr 1) + Fonts.font40.getStringWidth(info)) + 2.0f, middleScreenY + 16.0f, 3f, -16777216, -16777216)
+			val font = counterFontValue.get()
+
+			RenderUtils.drawBorderedRect(middleScreenX - 2.0f, middleScreenY + 5.0f, ((scaledResolution.scaledWidth shr 1) + font.getStringWidth(info)) + 2.0f, middleScreenY + font.fontHeight + 7.0f, 3f, -16777216, -16777216)
 
 			provider.glStateManager.resetColor()
 
-			Fonts.font40.drawString(info, middleScreenX.toFloat(), middleScreenY + 7.0f, 0xffffff)
+			font.drawString(info, middleScreenX.toFloat(), middleScreenY + 7.0f, 0xffffff)
 			GL11.glPopMatrix()
 		}
 	}

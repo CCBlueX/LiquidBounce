@@ -31,7 +31,6 @@ import java.awt.Color
 import java.util.*
 import kotlin.math.*
 
-// TODO: Rename Option Names
 @ModuleInfo(name = "AntiBot", description = "Prevents KillAura from attacking AntiCheat bots.", category = ModuleCategory.MISC)
 object AntiBot : Module()
 {

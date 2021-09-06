@@ -80,6 +80,21 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
 		}
 		else
 		{
+			if (args.size < 3)
+			{
+				chat(thePlayer, "\u00A77${module.name} \u00A78$valueName\u00A77 = ${
+					when (value)
+					{
+						is RangeValue<*> -> "${value.getMin()}-${value.getMax()}"
+						is ColorValue -> "\u00A7cRed: ${value.getRed()} \u00A7aGreen: ${value.getGreen()} \u00A79Blue: ${value.getBlue()}${if (value is RGBAColorValue) " \u00A77Alpha: ${value.getAlpha()}" else ""}"
+						else -> (value as Value<*>).get()
+					}
+				}\u00A77.") // Print current state
+				if (value is IntegerValue || value is FloatValue || value is TextValue) chatSyntax(thePlayer, "$moduleName $valueName <value>")
+				else if (value is ListValue) chatSyntax(thePlayer, "$moduleName $valueName <${value.values.joinToString(separator = "/").toLowerCase()}>")
+				return
+			}
+
 			if (args.size < 4) when (value)
 			{
 				is RangeValue<*> ->
@@ -101,20 +116,6 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
 				}
 			}
 
-			if (args.size < 3)
-			{
-				chat(thePlayer, "\u00A77${module.name} \u00A78$valueName\u00A77 = ${
-					when (value)
-					{
-						is RangeValue<*> -> "${value.getMin()}-${value.getMax()}"
-						is ColorValue -> "\u00A7cRed: ${value.getRed()} \u00A7aGreen: ${value.getGreen()} \u00A79Blue: ${value.getBlue()}${if (value is RGBAColorValue) " \u00A77Alpha: ${value.getAlpha()}" else ""}"
-						else -> (value as Value<*>).get()
-					}
-				}\u00A77.") // Print current state
-				if (value is IntegerValue || value is FloatValue || value is TextValue) chatSyntax(thePlayer, "$moduleName $valueName <value>")
-				else if (value is ListValue) chatSyntax(thePlayer, "$moduleName $valueName <${value.values.joinToString(separator = "/").toLowerCase()}>")
-				return
-			}
 
 			try
 			{

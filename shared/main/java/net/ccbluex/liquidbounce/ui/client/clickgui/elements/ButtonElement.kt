@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.ui.client.clickgui.elements
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.Companion.getButtonFont
 
 open class ButtonElement(displayName: String) : Element()
 {
@@ -25,12 +26,8 @@ open class ButtonElement(displayName: String) : Element()
 		super.drawScreen(mouseX, mouseY, button)
 	}
 
-	override var height: Int
-		get() = 16
-		set(height)
-		{
-			super.height = height
-		}
+	override val height: Int
+		get() = getButtonFont().fontHeight + 7
 
 	fun isHovering(mouseX: Int, mouseY: Int): Boolean = mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + 16
 

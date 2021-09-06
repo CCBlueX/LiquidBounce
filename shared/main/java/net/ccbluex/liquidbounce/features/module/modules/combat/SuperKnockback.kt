@@ -42,9 +42,17 @@ class SuperKnockback : Module()
 	/**
 	 * Exploits
 	 */
-	private val noMoveExploitValue = BoolValue("NoMoveExploit", true) // NoMove is not applicable with W-Tap mode
-	private val wtapNoMoveExploitValue = BoolValue("NoMoveExploit_W-Tap", true)
-	private val noSprintExploitValue = BoolValue("NoSprintExploit", true)
+	private val exploitGroup = ValueGroup("Exploits")
+	private val exploitNoMoveValue = object : BoolValue("NoMove", true, "NoMoveExploit") // NoMove is not applicable with W-Tap mode
+	{
+		override fun showCondition() = !modeValue.get().equals("W-Tap", ignoreCase = true)
+	}
+	private val exploitWTapNoMoveValue = object : BoolValue("NoMove_W-Tap", true, "NoMoveExploit_W-Tap")
+	{
+		override fun showCondition() = modeValue.get().equals("W-Tap", ignoreCase = true)
+	}
+	private val exploitNoSprintValue = BoolValue("NoSprint", true, "NoSprintExploit")
+
 	private val notSprintingSlowdownValue = BoolValue("NotSprintingSlowdown", true)
 
 	/**
@@ -62,6 +70,11 @@ class SuperKnockback : Module()
 	private var knockTicks = 0
 	private var superKnockback = false
 	private var sprinting = false
+
+	init
+	{
+		exploitGroup.addAll(exploitNoMoveValue, exploitWTapNoMoveValue, exploitNoSprintValue)
+	}
 
 	@EventTarget
 	fun onAttack(event: AttackEvent)
@@ -135,13 +148,13 @@ class SuperKnockback : Module()
 
 				val gameSettings = mc.gameSettings
 
-				val noMoveExploit = noMoveExploitValue.get()
+				val noMoveExploit = exploitNoMoveValue.get()
 
 				val movementInput = MovementUtils.isMoving(thePlayer)
 				val positionChanged = thePlayer.posX - thePlayer.lastTickPosX + thePlayer.posZ - thePlayer.lastTickPosZ == 0.0
 
 				sprinting = thePlayer.sprinting
-				superKnockback = (sprinting || noSprintExploitValue.get()) && (movementInput || noMoveExploit)
+				superKnockback = (sprinting || exploitNoSprintValue.get()) && (movementInput || noMoveExploit)
 
 				if (target.hurtTime <= hurtTimeValue.get() && knockTicks <= ticksDelayValue.get() && superKnockback)
 				{
@@ -192,7 +205,7 @@ class SuperKnockback : Module()
 
 						"w-tap" ->
 						{
-							if ((!movementInput || !positionChanged) && wtapNoMoveExploitValue.get())
+							if ((!movementInput || !positionChanged) && exploitWTapNoMoveValue.get())
 							{
 								// NoMove exploit for W-Tap
 

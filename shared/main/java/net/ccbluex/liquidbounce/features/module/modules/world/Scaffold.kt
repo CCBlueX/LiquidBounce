@@ -169,10 +169,14 @@ class Scaffold : Module()
 
 	private val stopConsumingBeforePlaceValue = BoolValue("StopConsumingBeforePlace", true)
 
-	// Visuals
-	val counterDisplayValue = BoolValue("Counter", true)
-	private val markValue = BoolValue("Mark", false)
-	private val searchDebug = BoolValue("SearchDebugChat", false)
+	private val visualGroup = ValueGroup("Visual")
+
+	private val visualCounterGroup = ValueGroup("Counter")
+	val visualCounterEnabledValue = BoolValue("Enabled", true, "Counter")
+	private val visualCounterFontValue = FontValue("Font", Fonts.font40)
+
+	private val visualMarkValue = BoolValue("Mark", false, "Mark")
+	private val visualSearchDebugValue = BoolValue("SearchDebug", false, "SearchDebugChat")
 
 	// MODULE
 
@@ -227,6 +231,8 @@ class Scaffold : Module()
 		movementSlowGroup.addAll(movementSlowEnabledValue, movementSlowSpeedValue)
 		movementGroup.addAll(movementSprintValue, movementEagleGroup, movementZitterGroup, movementSlowGroup, movementSafeWalkValue, movementAirSafeValue)
 		killAuraBypassGroup.addAll(killauraBypassModeValue, killAuraBypassKillAuraSuspendDurationValue)
+		visualCounterGroup.addAll(visualCounterEnabledValue, visualCounterFontValue)
+		visualGroup.addAll(visualCounterGroup, visualMarkValue, visualSearchDebugValue)
 	}
 
 	// ENABLING MODULE
@@ -630,7 +636,7 @@ class Scaffold : Module()
 			state = "Default"
 		}
 
-		if (searchDebug.get())
+		if (visualSearchDebugValue.get())
 		{
 			ClientUtils.displayChatMessage(thePlayer, "[Scaffold] $state - $searchBounds")
 			ClientUtils.displayChatMessage(thePlayer, "[Scaffold] AutoBlock: $abCollisionBB, Ground: $lastGroundBlockBB")
@@ -822,14 +828,14 @@ class Scaffold : Module()
 	@EventTarget
 	fun onRender2D(@Suppress("UNUSED_PARAMETER") event: Render2DEvent)
 	{
-		if (counterDisplayValue.get())
+		if (visualCounterEnabledValue.get())
 		{
 			val theWorld = mc.theWorld ?: return
 			val thePlayer = mc.thePlayer ?: return
 
 			GL11.glPushMatrix()
 			val blockOverlay = LiquidBounce.moduleManager[BlockOverlay::class.java] as BlockOverlay
-			if (blockOverlay.state && blockOverlay.infoValue.get() && blockOverlay.getCurrentBlock(theWorld) != null) GL11.glTranslatef(0f, 15f, 0f)
+			if (blockOverlay.state && blockOverlay.infoEnabledValue.get() && blockOverlay.getCurrentBlock(theWorld) != null) GL11.glTranslatef(0f, 15f, 0f)
 
 			val blocksAmount = getBlocksAmount(thePlayer)
 			val info = "Blocks: \u00A7${if (blocksAmount <= 10) "c" else "7"}$blocksAmount${if (downValue.get() && blocksAmount <= 1) " (You need at least 2 blocks to go down)" else ""}"
@@ -838,14 +844,15 @@ class Scaffold : Module()
 
 			val scaledResolution = provider.createScaledResolution(mc)
 
+			val font = visualCounterFontValue.get()
 			val middleScreenX = scaledResolution.scaledWidth shr 1
 			val middleScreenY = scaledResolution.scaledHeight shr 1
 
-			RenderUtils.drawBorderedRect(middleScreenX - 2.0f, middleScreenY + 5.0f, middleScreenX + Fonts.font40.getStringWidth(info) + 2.0f, middleScreenY + 16.0f, 3f, -16777216, -16777216)
+			RenderUtils.drawBorderedRect(middleScreenX - 2.0f, middleScreenY + 5.0f, middleScreenX + font.getStringWidth(info) + 2.0f, middleScreenY + font.fontHeight + 7f, 3f, -16777216, -16777216)
 
 			provider.glStateManager.resetColor()
 
-			Fonts.font40.drawString(info, (scaledResolution.scaledWidth shr 1).toFloat(), middleScreenY + 7.0f, 0xffffff)
+			font.drawString(info, (scaledResolution.scaledWidth shr 1).toFloat(), middleScreenY + 7.0f, 0xffffff)
 			GL11.glPopMatrix()
 		}
 	}
@@ -853,7 +860,7 @@ class Scaffold : Module()
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
-		if (!markValue.get()) return
+		if (!visualMarkValue.get()) return
 
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return

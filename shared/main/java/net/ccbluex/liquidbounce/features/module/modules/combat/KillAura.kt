@@ -33,7 +33,6 @@ import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
 import net.ccbluex.liquidbounce.utils.extensions.isClientTarget
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_1
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_6
-import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
@@ -210,10 +209,38 @@ class KillAura : Module()
 	private val visualFakeSharpValue = BoolValue("FakeSharp", true, "FakeSharp")
 	private val visualParticles = IntegerValue("Particles", 1, 0, 10, "Particles")
 
-	private val markGroup = ValueGroup("Mark")
-	private val markTargetValue = ListValue("Target", arrayOf("None", "Platform", "Box"), "Platform", "Mark")
-	private val markRangeValue = ListValue("Range", arrayOf("None", "AttackRange", "ExceptBlockRange", "All"), "AttackRange", "Mark-Range")
-	private val markRangeAccuracyValue = FloatValue("Range-Accuracy", 10F, 0.5F, 20F, "Mark-Range-Accuracy")
+	private val visualMarkGroup = ValueGroup("Mark")
+	private val visualMarkTargetValue = ListValue("Target", arrayOf("None", "Platform", "Box"), "Platform", "Mark")
+
+	private val visualMarkRangeGroup = ValueGroup("Range")
+	private val visualMarkRangeModeValue = ListValue("Mode", arrayOf("None", "AttackRange", "ExceptBlockRange", "All"), "AttackRange", "Mark-Range")
+	private val visualMarkRangeLineWidthValue = FloatValue("LineWidth", 1f, 0.5f, 2f)
+	private val visualMarkRangeAccuracyValue = FloatValue("Accuracy", 10F, 0.5F, 20F, "Mark-Range-Accuracy")
+
+	private val visualMarkRangeColorGroup = object : ValueGroup("Color")
+	{
+		override fun showCondition() = !visualMarkRangeModeValue.get().equals("None", ignoreCase = true)
+	}
+	private val visualMarkRangeColorAttackValue = RGBColorValue("Attack", 0, 255, 0)
+	private val visualMarkRangeColorThroughWallsAttackValue = RGBColorValue("ThroughWallsAttack", 200, 128, 0)
+
+	private val visualMarkRangeColorAimValue = object : RGBColorValue("Aim", 255, 0, 0)
+	{
+		override fun showCondition() = !rotationMode.get().equals("Off", ignoreCase = true) && !visualMarkRangeModeValue.get().equals("AttackRange", ignoreCase = true)
+	}
+	private val visualMarkRangeColorSwingValue = object : RGBColorValue("Swing", 0, 0, 255)
+	{
+		override fun showCondition() = swingEnabledValue.get() && !visualMarkRangeModeValue.get().equals("AttackRange", ignoreCase = true)
+	}
+
+	private val visualMarkRangeColorBlockValue = object : RGBColorValue("Block", 255, 0, 255)
+	{
+		override fun showCondition() = !autoBlockValue.get().equals("Off", ignoreCase = true) && arrayOf("None", "AttackRange", "ExceptBlockRange").none { visualMarkRangeModeValue.get().equals(it, ignoreCase = true) }
+	}
+	private val visualMarkRangeColorInteractBlockValue = object : RGBColorValue("InteractBlock", 255, 64, 255)
+	{
+		override fun showCondition() = !autoBlockValue.get().equals("Off", ignoreCase = true) && arrayOf("None", "AttackRange", "ExceptBlockRange").none { visualMarkRangeModeValue.get().equals(it, ignoreCase = true) }
+	}
 
 	private val disableOnDeathValue = BoolValue("DisableOnDeath", true)
 
@@ -281,17 +308,6 @@ class KillAura : Module()
 	private var autoBlockTarget: IEntityLivingBase? = null
 	private var rangeMarks: List<Pair<Float, Int>>? = null
 
-	// HARDCODED RANGE COLORS //
-
-	private val attackRangeColor = ColorUtils.createRGB(0, 255, 0)
-	private val throughWallsColor = ColorUtils.createRGB(200, 128, 0)
-	private val aimRangeColor = ColorUtils.createRGB(255, 0, 0)
-	private val swingRangeColor = ColorUtils.createRGB(0, 0, 255)
-	private val blockRangeColor = ColorUtils.createRGB(255, 0, 255)
-	private val interactBlockRangeColor = ColorUtils.createRGB(255, 64, 255)
-
-	// HARDCODED RANGE COLORS //
-
 	init
 	{
 		comboReachGroup.addAll(comboReachEnabledValue, comboReachIncrementValue, comboReachLimitValue)
@@ -313,8 +329,10 @@ class KillAura : Module()
 		rotationBacktrackGroup.addAll(rotationBacktrackEnabledValue, rotationBacktrackTicksValue)
 		rotationGroup.addAll(rotationMode, rotationLockValue, rotationSilentValue, rotationRandomCenterSizeValue, rotationSearchCenterGroup, rotationJitterGroup, rotationKeepRotationGroup, rotationAccelerationRatioValue, rotationTurnSpeedValue, rotationResetSpeedValue, rotationStrafeGroup, rotationPredictGroup, rotationBacktrackGroup)
 		fovGroup.addAll(fovModeValue, fovValue)
-		markGroup.addAll(markTargetValue, markRangeValue, markRangeAccuracyValue)
-		visualGroup.addAll(visualFakeSharpValue, visualParticles, markGroup)
+		visualMarkRangeColorGroup.addAll(visualMarkRangeColorAttackValue, visualMarkRangeColorThroughWallsAttackValue, visualMarkRangeColorAimValue, visualMarkRangeColorSwingValue, visualMarkRangeColorBlockValue, visualMarkRangeColorInteractBlockValue)
+		visualMarkRangeGroup.addAll(visualMarkRangeModeValue, visualMarkRangeLineWidthValue, visualMarkRangeAccuracyValue, visualMarkRangeColorGroup)
+		visualMarkGroup.addAll(visualMarkTargetValue, visualMarkRangeGroup)
+		visualGroup.addAll(visualFakeSharpValue, visualParticles, visualMarkGroup)
 
 		cooldownValue.isSupported = Backend.REPRESENTED_BACKEND_VERSION != MinecraftVersion.MC_1_8
 	}
@@ -495,18 +513,18 @@ class KillAura : Module()
 		blockRange = autoBlockRangeValue.get()
 		interactBlockRange = interactAutoBlockRangeValue.get()
 
-		val markRangeMode = markRangeValue.get().toLowerCase()
+		val markRangeMode = visualMarkRangeModeValue.get().toLowerCase()
 		if (markRangeMode != "none")
 		{
 			val arr = arrayOfNulls<Pair<Float, Int>?>(6)
-			arr[0] = attackRange to attackRangeColor
-			if (throughWallsRange > 0) arr[1] = throughWallsRange to throughWallsColor
-			arr[2] = aimRange to aimRangeColor
-			if (swingFakeSwingValue.get()) arr[3] = swingRange to swingRangeColor
+			arr[0] = attackRange to visualMarkRangeColorAttackValue.get()
+			if (throughWallsRange > 0) arr[1] = throughWallsRange to visualMarkRangeColorThroughWallsAttackValue.get()
+			arr[2] = aimRange to visualMarkRangeColorAimValue.get()
+			if (swingFakeSwingValue.get()) arr[3] = swingRange to visualMarkRangeColorSwingValue.get()
 			if (!autoBlockValue.get().equals("Off", ignoreCase = true))
 			{
-				arr[4] = blockRange to blockRangeColor
-				if (interactAutoBlockEnabledValue.get()) arr[5] = interactBlockRange to interactBlockRangeColor
+				arr[4] = blockRange to visualMarkRangeColorBlockValue.get()
+				if (interactAutoBlockEnabledValue.get()) arr[5] = interactBlockRange to visualMarkRangeColorInteractBlockValue.get()
 			}
 
 			rangeMarks = arr.take(when (markRangeMode)
@@ -572,13 +590,14 @@ class KillAura : Module()
 			return
 		}
 
-		if (!markRangeValue.get().equals("None", ignoreCase = true))
+		if (!visualMarkRangeModeValue.get().equals("None", ignoreCase = true))
 		{
-			val accuracy = markRangeAccuracyValue.get()
+			val lineWidth = visualMarkRangeLineWidthValue.get()
+			val accuracy = visualMarkRangeAccuracyValue.get()
 
 			rangeMarks?.forEach {
 				GL11.glPushMatrix()
-				RenderUtils.drawRadius(it.first, accuracy, it.second)
+				RenderUtils.drawRadius(it.first, accuracy, lineWidth, it.second)
 				GL11.glPopMatrix()
 			}
 		}
@@ -586,7 +605,7 @@ class KillAura : Module()
 		val target = target ?: return
 		val targetEntityId = target.entityId
 
-		val markMode = markTargetValue.get().toLowerCase()
+		val markMode = visualMarkTargetValue.get().toLowerCase()
 
 		if (markMode != "none" && !targetModeValue.get().equals("Multi", ignoreCase = true))
 		{
@@ -905,7 +924,7 @@ class KillAura : Module()
 		}
 
 		// Call attack event
-		LiquidBounce.eventManager.callEvent(AttackEvent(entity))
+		LiquidBounce.eventManager.callEvent(AttackEvent(entity, WVec3(thePlayer.posX, thePlayer.posY, thePlayer.posZ)))
 
 		// Attack target
 		if (swing && Backend.MINECRAFT_VERSION_MINOR == 8) thePlayer.swingItem()

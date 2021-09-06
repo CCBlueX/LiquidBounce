@@ -49,7 +49,7 @@ class GuiAntiModDisable(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		buttonsList.add(provider.createGuiButton(7, buttonX, buttonY + 150, "$BLOCK_BETTERSPRINTING_PACKETS${getStateString(AntiModDisable.enabled && AntiModDisable.blockBetterSprintingPayloads)}").also { betterSprintingButton = it })
 		buttonsList.add(provider.createGuiButton(8, buttonX, buttonY + 175, "$BLOCK_VAPE_SABOTAGES${getStateString(AntiModDisable.enabled && AntiModDisable.blockCrackedVapeSabotages)}").also { vapeButton = it })
 		buttonsList.add(provider.createGuiButton(9, buttonX, buttonY + 200, "$BLOCK_DIPERMISSIONS_PACKETS${getStateString(AntiModDisable.enabled && AntiModDisable.blockDIPermissionsPayloads)}").also { dipermsButton = it })
-		buttonsList.add(provider.createGuiButton(10, buttonX, buttonY + 225, "$BLOCK_PERMISSIONS_REPL_PACKETS${getStateString(AntiModDisable.enabled && AntiModDisable.blockPermissionsReplPayloads)}").also { permsreplButton = it })
+		buttonsList.add(provider.createGuiButton(10, buttonX, buttonY + 225, "$BLOCK_PERMISSIONS_REPL_PACKETS${getStateString(AntiModDisable.enabled && AntiModDisable.blockReplicatedPermissionsPayloads)}").also { permsreplButton = it })
 		buttonsList.add(provider.createGuiButton(11, buttonX, buttonY + 250, "$BLOCK_SCHEMATICA_PACKETS${getStateString(AntiModDisable.enabled && AntiModDisable.blockSchematicaPayloads)}").also { schematicaButton = it })
 		buttonsList.add(provider.createGuiButton(999, buttonX, buttonY + 275, "$PRINT_DEBUG_MESSAGES${getStateString(AntiModDisable.enabled && AntiModDisable.debug)}").also { debugmode = it })
 
@@ -119,8 +119,8 @@ class GuiAntiModDisable(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 			10 ->
 			{
-				AntiModDisable.blockPermissionsReplPayloads = !AntiModDisable.blockPermissionsReplPayloads
-				permsreplButton.displayString = "$BLOCK_PERMISSIONS_REPL_PACKETS${getStateString(AntiModDisable.enabled && AntiModDisable.blockPermissionsReplPayloads)}"
+				AntiModDisable.blockReplicatedPermissionsPayloads = !AntiModDisable.blockReplicatedPermissionsPayloads
+				permsreplButton.displayString = "$BLOCK_PERMISSIONS_REPL_PACKETS${getStateString(AntiModDisable.enabled && AntiModDisable.blockReplicatedPermissionsPayloads)}"
 			}
 
 			11 ->
@@ -151,7 +151,7 @@ class GuiAntiModDisable(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		betterSprintingButton.displayString = "$BLOCK_BETTERSPRINTING_PACKETS${getStateString(AntiModDisable.enabled && AntiModDisable.blockBetterSprintingPayloads)}"
 		vapeButton.displayString = "$BLOCK_VAPE_SABOTAGES${getStateString(AntiModDisable.enabled && AntiModDisable.blockCrackedVapeSabotages)}"
 		dipermsButton.displayString = "$BLOCK_DIPERMISSIONS_PACKETS${getStateString(AntiModDisable.enabled && AntiModDisable.blockDIPermissionsPayloads)}"
-		permsreplButton.displayString = "$BLOCK_PERMISSIONS_REPL_PACKETS${getStateString(AntiModDisable.enabled && AntiModDisable.blockPermissionsReplPayloads)}"
+		permsreplButton.displayString = "$BLOCK_PERMISSIONS_REPL_PACKETS${getStateString(AntiModDisable.enabled && AntiModDisable.blockReplicatedPermissionsPayloads)}"
 		schematicaButton.displayString = "$BLOCK_SCHEMATICA_PACKETS${getStateString(AntiModDisable.enabled && AntiModDisable.blockSchematicaPayloads)}"
 		debugmode.displayString = "$PRINT_DEBUG_MESSAGES${getStateString(AntiModDisable.enabled && AntiModDisable.debug)}"
 	}

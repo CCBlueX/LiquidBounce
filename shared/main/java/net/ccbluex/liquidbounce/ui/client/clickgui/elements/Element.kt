@@ -12,7 +12,7 @@ open class Element : MinecraftInstance()
 	var x = 0
 	var y = 0
 	var width = 0
-	open var height = 0
+	open val height = 0
 	var isVisible = false
 
 	fun setLocation(x: Int, y: Int)

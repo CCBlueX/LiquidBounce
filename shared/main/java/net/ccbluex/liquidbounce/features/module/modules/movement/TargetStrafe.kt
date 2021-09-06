@@ -21,10 +21,9 @@ import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.extensions.isClientTarget
+import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbowRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11.*
 import kotlin.math.*
 
@@ -60,8 +59,27 @@ class TargetStrafe : Module()
 	/**
 	 * Draw the strafe path
 	 */
-	private val drawPathValue = BoolValue("DrawPath", true)
-	private val pathRenderAccuracyValue = FloatValue("DrawPathAccuracy", 5F, 0.5F, 20F)
+
+	private val pathEspGroup = ValueGroup("PathESP")
+	private val pathEspEnabledValue = BoolValue("Enabled", true, "DrawPath")
+	private val pathEspAccuracyValue = FloatValue("Accuracy", 5F, 0.5F, 20F, "DrawPathAccuracy")
+	private val pathEspLineWidthValue = FloatValue("LineWidth", 1f, 0.5f, 2f)
+
+	private val pathEspColorGroup = ValueGroup("Color")
+	private val pathEspColorValue = RGBAColorValue("Color", 255, 179, 72, 255)
+	private val pathEspColorRainbowGroup = ValueGroup("Rainbow")
+	private val pathEspColorRainbowEnabledValue = BoolValue("Enabled", false)
+	private val pathEspColorRainbowSpeedValue = IntegerValue("Speed", 10, 1, 10)
+	private val pathEspColorRainbowSaturationValue = FloatValue("Saturation", 1.0f, 0.0f, 1.0f)
+	private val pathEspColorRainbowBrightnessValue = FloatValue("Brightness", 1.0f, 0.0f, 1.0f)
+
+	private val pathEspStrafingColorGroup = ValueGroup("StrafingColor")
+	private val pathEspStrafingColorValue = RGBAColorValue("Color", 255, 179, 72, 255)
+	private val pathEspStrafingColorRainbowGroup = ValueGroup("Rainbow")
+	private val pathEspStrafingColorRainbowEnabledValue = BoolValue("Enabled", false)
+	private val pathEspStrafingColorRainbowSpeedValue = IntegerValue("Speed", 10, 1, 10)
+	private val pathEspStrafingColorRainbowSaturationValue = FloatValue("Saturation", 1.0f, 0.0f, 1.0f)
+	private val pathEspStrafingColorRainbowBrightnessValue = FloatValue("Brightness", 1.0f, 0.0f, 1.0f)
 
 	/**
 	 * Strafe target priority
@@ -83,6 +101,17 @@ class TargetStrafe : Module()
 	 */
 	private var direction = -1F
 	private var lastStrafeDirection = 0F
+
+	init
+	{
+		pathEspColorRainbowGroup.addAll(pathEspColorRainbowEnabledValue, pathEspColorRainbowSpeedValue, pathEspColorRainbowSaturationValue, pathEspColorRainbowBrightnessValue)
+		pathEspColorGroup.addAll(pathEspColorValue, pathEspColorRainbowGroup, pathEspColorRainbowEnabledValue, pathEspColorRainbowSpeedValue, pathEspColorRainbowSaturationValue, pathEspColorRainbowBrightnessValue)
+
+		pathEspStrafingColorRainbowGroup.addAll(pathEspStrafingColorRainbowEnabledValue, pathEspStrafingColorRainbowSpeedValue, pathEspStrafingColorRainbowSaturationValue, pathEspStrafingColorRainbowBrightnessValue)
+		pathEspStrafingColorGroup.addAll(pathEspStrafingColorValue, pathEspStrafingColorRainbowGroup, pathEspStrafingColorRainbowEnabledValue, pathEspStrafingColorRainbowSpeedValue, pathEspStrafingColorRainbowSaturationValue, pathEspStrafingColorRainbowBrightnessValue)
+
+		pathEspGroup.addAll(pathEspEnabledValue, pathEspAccuracyValue, pathEspLineWidthValue, pathEspColorValue, pathEspColorGroup, pathEspStrafingColorGroup)
+	}
 
 	@EventTarget
 	fun onMove(event: MoveEvent)
@@ -193,7 +222,7 @@ class TargetStrafe : Module()
 	@EventTarget
 	fun onRender3D(event: Render3DEvent)
 	{
-		if (!drawPathValue.get()) return
+		if (!pathEspEnabledValue.get()) return
 
 		val target = target ?: return
 
@@ -202,7 +231,7 @@ class TargetStrafe : Module()
 
 		glPushMatrix()
 		glTranslated(target.lastTickPosX + (target.posX - target.lastTickPosX) * partialTicks - renderManager.renderPosX, target.lastTickPosY + (target.posY - target.lastTickPosY) * partialTicks - renderManager.renderPosY, target.lastTickPosZ + (target.posZ - target.lastTickPosZ) * partialTicks - renderManager.renderPosZ)
-		RenderUtils.drawRadius(strafeRangeValue.get(), pathRenderAccuracyValue.get(), if (strafing) -40864 else -1)
+		RenderUtils.drawRadius(strafeRangeValue.get(), pathEspAccuracyValue.get(), pathEspLineWidthValue.get(), if (strafing) if (pathEspStrafingColorRainbowEnabledValue.get()) rainbowRGB(pathEspStrafingColorValue.get(), speed = pathEspStrafingColorRainbowSpeedValue.get(), saturation = pathEspStrafingColorRainbowSaturationValue.get(), brightness = pathEspStrafingColorRainbowBrightnessValue.get()) else pathEspStrafingColorValue.get() else if (pathEspColorRainbowEnabledValue.get()) rainbowRGB(pathEspColorValue.get(), speed = pathEspColorRainbowSpeedValue.get(), saturation = pathEspColorRainbowSaturationValue.get(), brightness = pathEspColorRainbowBrightnessValue.get()) else pathEspColorValue.get())
 		glPopMatrix()
 	}
 

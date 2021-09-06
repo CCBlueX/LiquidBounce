@@ -275,22 +275,18 @@ class AutoUse : Module()
 		if (slotToUse == -1) return
 
 		val itemStack = thePlayer.inventoryContainer.getSlot(slotToUse).stack
+		slotToUse = -1 // Reset slot
 
-		if (itemStack != null)
+		if (itemStack != null && wasSuccessful)
 		{
-			if (wasSuccessful)
-			{
-				if (handleGlassBottle.equals("Drop", true) && (provider.isItemGlassBottle(itemStack.item) || provider.isItemPotion(itemStack.item) && !itemStack.isSplash())) netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.DROP_ITEM, WBlockPos.ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
+			if (handleGlassBottle.equals("Drop", true) && (provider.isItemGlassBottle(itemStack.item) || provider.isItemPotion(itemStack.item) && !itemStack.isSplash())) netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.DROP_ITEM, WBlockPos.ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
 
-				useDelay = delayValue.getRandomDelay()
-				useDelayTimer.reset()
-			}
-
-			val gameSettings = mc.gameSettings
-			if (silent) InventoryUtils.reset(thePlayer) else if (!gameSettings.isKeyDown(gameSettings.keyBindUseItem)) gameSettings.keyBindUseItem.unpressKey()
-
-			slotToUse = -1
+			useDelay = delayValue.getRandomDelay()
+			useDelayTimer.reset()
 		}
+
+		val gameSettings = mc.gameSettings
+		if (silent) InventoryUtils.reset(thePlayer) else if (!gameSettings.isKeyDown(gameSettings.keyBindUseItem)) gameSettings.keyBindUseItem.unpressKey()
 	}
 
 	private fun performFastUse(thePlayer: IEntityPlayerSP, item: IItem?, itemUseTicks: Int): Int = (LiquidBounce.moduleManager[FastUse::class.java] as FastUse).perform(thePlayer, mc.timer, item, itemUseTicks)

@@ -7,7 +7,8 @@ package net.ccbluex.liquidbounce.ui.client.hud.element
 
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
-import net.ccbluex.liquidbounce.value.Value
+import net.ccbluex.liquidbounce.value.AbstractValue
+import net.ccbluex.liquidbounce.value.ValueGroup
 import kotlin.math.max
 import kotlin.math.min
 
@@ -98,11 +99,15 @@ abstract class Element(var x: Double = 2.0, var y: Double = 2.0, scale: Float = 
 	/**
 	 * Get all values of element
 	 */
-	open val values: List<Value<*>>
-		get() = javaClass.declaredFields.map { valueField ->
-			valueField.isAccessible = true
-			valueField[this]
-		}.filterIsInstance<Value<*>>()
+	open val values: List<AbstractValue> by lazy(LazyThreadSafetyMode.NONE, javaClass.declaredFields.asSequence().map { valueField ->
+		valueField.isAccessible = true
+		valueField[this]
+	}.filterIsInstance<AbstractValue>().filterNot(AbstractValue::isBelongsToGroup)::toList)
+
+	open val flatValues: List<AbstractValue> by lazy(LazyThreadSafetyMode.NONE, javaClass.declaredFields.asSequence().map { valueField ->
+		valueField.isAccessible = true
+		valueField[this]
+	}.filterIsInstance<AbstractValue>().filterNot { it is ValueGroup }::toList)
 
 	/**
 	 * Called when element created

@@ -19,7 +19,6 @@ import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IServerData
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.client.render.ITessellator
 import net.ccbluex.liquidbounce.api.minecraft.client.render.IThreadDownloadImageData
 import net.ccbluex.liquidbounce.api.minecraft.client.render.WIImageBuffer
@@ -77,24 +76,27 @@ interface IClassProvider
 	 */
 	val textureUtil: ITextureUtil
 
-	/* Constructors */
-	fun createResourceLocation(resourceName: String): IResourceLocation
-	fun createThreadDownloadImageData(cacheFileIn: File?, imageUrlIn: String, textureResourceLocation: IResourceLocation?, imageBufferIn: WIImageBuffer): IThreadDownloadImageData
 	fun createPacketBuffer(buffer: ByteBuf): IPacketBuffer
 	fun createChatComponentText(text: String): IIChatComponent
 	fun createClickEvent(action: IClickEvent.WAction, value: String): IClickEvent
+	fun createSession(name: String, uuid: String, accessToken: String, accountType: String): ISession
+	fun createAxisAlignedBB(minX: Double, minY: Double, minZ: Double, maxX: Double, maxY: Double, maxZ: Double): IAxisAlignedBB
+	fun createEntityOtherPlayerMP(world: IWorld, gameProfile: GameProfile): IEntityOtherPlayerMP
+	fun createPotionEffect(id: Int, time: Int, strength: Int): IPotionEffect
+
+	/* Constructors (Graphical) */
+	fun createResourceLocation(resourceName: String): IResourceLocation
+	fun createThreadDownloadImageData(cacheFileIn: File?, imageUrlIn: String, textureResourceLocation: IResourceLocation?, imageBufferIn: WIImageBuffer): IThreadDownloadImageData
+	fun createDynamicTexture(image: BufferedImage): IDynamicTexture
+	fun createDynamicTexture(width: Int, height: Int): IDynamicTexture
+	fun createScaledResolution(mc: IMinecraft): IScaledResolution
+	fun createSafeVertexBuffer(vertexFormat: IVertexFormat): IVertexBuffer
+
+	/* Constructor (GUI) */
 	fun createGuiTextField(id: Int, iFontRenderer: IFontRenderer, x: Int, y: Int, width: Int, height: Int): IGuiTextField
 	fun createGuiPasswordField(id: Int, iFontRenderer: IFontRenderer, x: Int, y: Int, width: Int, height: Int): IGuiTextField
 	fun createGuiButton(id: Int, x: Int, y: Int, width: Int, height: Int, text: String): IGuiButton
 	fun createGuiButton(id: Int, x: Int, y: Int, text: String): IGuiButton
-	fun createSession(name: String, uuid: String, accessToken: String, accountType: String): ISession
-	fun createDynamicTexture(image: BufferedImage): IDynamicTexture
-	fun createDynamicTexture(width: Int, height: Int): IDynamicTexture
-	fun createAxisAlignedBB(minX: Double, minY: Double, minZ: Double, maxX: Double, maxY: Double, maxZ: Double): IAxisAlignedBB
-	fun createScaledResolution(mc: IMinecraft): IScaledResolution
-	fun createEntityOtherPlayerMP(world: IWorld, gameProfile: GameProfile): IEntityOtherPlayerMP
-	fun createPotionEffect(id: Int, time: Int, strength: Int): IPotionEffect
-	fun createSafeVertexBuffer(vertexFormat: IVertexFormat): IVertexBuffer
 
 	/* Constructors (Item) */
 	fun createItem(): IItem
@@ -151,7 +153,7 @@ interface IClassProvider
 
 	fun createFramebuffer(displayWidth: Int, displayHeight: Int, useDepth: Boolean): IFramebuffer
 
-	/* instanceof checks (Entity) */
+	/* instance checks (Entity) */
 	fun isEntityAnimal(obj: Any?): Boolean
 	fun isEntitySquid(obj: Any?): Boolean
 	fun isEntityBat(obj: Any?): Boolean
@@ -181,7 +183,7 @@ interface IClassProvider
 	fun isEntityFishHook(obj: Any?): Boolean
 	fun isEntityExpBottle(obj: Any?): Boolean
 
-	/* instanceof checks (TileEntity) */
+	/* instance checks (TileEntity) */
 	fun isTileEntityChest(obj: Any?): Boolean
 	fun isTileEntityEnderChest(obj: Any?): Boolean
 	fun isTileEntityFurnace(obj: Any?): Boolean
@@ -189,7 +191,7 @@ interface IClassProvider
 	fun isTileEntityHopper(obj: Any?): Boolean
 	fun isTileEntityShulkerBox(obj: Any?): Boolean
 
-	/* instanceof checks (Server-side packet) */
+	/* instance checks (Server-side packet) */
 	fun isSPacketEntity(obj: Any?): Boolean
 	fun isSPacketResourcePackSend(obj: Any?): Boolean
 	fun isSPacketPlayerPosLook(obj: Any?): Boolean
@@ -210,7 +212,7 @@ interface IClassProvider
 	fun isSPacketEntityEffect(obj: Any?): Boolean
 	fun isSPacketSpawnGlobalEntity(obj: Any?): Boolean
 
-	/* instanceof checks (Client-side packet) */
+	/* instance checks (Client-side packet) */
 	fun isCPacketPlayer(obj: Any?): Boolean
 	fun isCPacketPlayerBlockPlacement(obj: Any?): Boolean
 	fun isCPacketUseEntity(obj: Any?): Boolean
@@ -230,7 +232,7 @@ interface IClassProvider
 	fun isCPacketConfirmTransaction(obj: Any?): Boolean
 	fun isCPacketAbilities(obj: Any?): Boolean
 
-	/* instanceof checks (Block) */
+	/* instance checks (Block) */
 	fun isBlockAir(obj: Any?): Boolean
 	fun isBlockFence(obj: Any?): Boolean
 	fun isBlockSnow(obj: Any?): Boolean
@@ -260,7 +262,7 @@ interface IClassProvider
 	fun isBlockTrapDoor(obj: Any?): Boolean
 	fun isBlockContainer(obj: Any?): Boolean
 
-	/* instanceof checks (Item) */
+	/* instance checks (Item) */
 	fun isItemSword(obj: Any?): Boolean
 	fun isItemTool(obj: Any?): Boolean
 	fun isItemArmor(obj: Any?): Boolean
@@ -287,7 +289,7 @@ interface IClassProvider
 	fun isItemSkull(obj: Any?): Boolean
 	fun isItemExpBottle(obj: Any?): Boolean
 
-	/* instanceof checks (GUI) */
+	/* instance checks (GUI) */
 	fun isGuiInventory(obj: Any?): Boolean
 	fun isGuiContainer(obj: Any?): Boolean
 	fun isGuiGameOver(obj: Any?): Boolean

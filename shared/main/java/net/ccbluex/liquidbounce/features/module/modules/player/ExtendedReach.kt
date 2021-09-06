@@ -18,6 +18,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.AutoWeapon
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getState
+import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.pathfinding.PathFinder
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
@@ -42,6 +43,8 @@ class ExtendedReach : Module()
 
 	private val pathEspGroup = ValueGroup("PathESP")
 	private val pathEspEnabledValue = BoolValue("Enabled", true, "PathESP")
+	private val pathEspTagValue = BoolValue("Tag", false)
+	private val pathEspLineWidthValue = FloatValue("LineWidth", 1f, 0.5f, 2f)
 	private val pathEspTimeValue = IntegerValue("KeepLength", 1000, 100, 3000, "PathESPTime")
 	private val pathEspColorValue = RGBAColorValue("Color", 255, 179, 72, 255, listOf("PathESP-Red", "PathESP-Green", "PathESP-Blue", "PathESP-Alpha"))
 
@@ -60,7 +63,7 @@ class ExtendedReach : Module()
 	init
 	{
 		pathEspColorRainbowGroup.addAll(pathEspColorRainbowEnabledValue, pathEspColorRainbowSpeedValue, pathEspColorRainbowSaturationValue, pathEspColorRainbowBrightnessValue)
-		pathEspGroup.addAll(pathEspEnabledValue, pathEspTimeValue, pathEspColorValue, pathEspColorRainbowGroup)
+		pathEspGroup.addAll(pathEspEnabledValue, pathEspTagValue, pathEspLineWidthValue, pathEspTimeValue, pathEspColorValue, pathEspColorRainbowGroup)
 	}
 
 	override fun onEnable()
@@ -76,6 +79,8 @@ class ExtendedReach : Module()
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
 	{
+		val thePlayer = mc.thePlayer ?: return
+
 		val renderManager = mc.renderManager
 		val viewerPosX = renderManager.viewerPosX
 		val viewerPosY = renderManager.viewerPosY
@@ -94,8 +99,9 @@ class ExtendedReach : Module()
 			glDisable(GL_DEPTH_TEST)
 			mc.entityRenderer.disableLightmap()
 
-			glBegin(GL_LINE_STRIP)
 			RenderUtils.glColor(color)
+			glLineWidth(pathEspLineWidthValue.get())
+			glBegin(GL_LINE_STRIP)
 
 			for (path in path) glVertex3d(path.xCoord - viewerPosX, path.yCoord - viewerPosY, path.zCoord - viewerPosZ)
 
@@ -107,6 +113,12 @@ class ExtendedReach : Module()
 			glDisable(GL_BLEND)
 			glEnable(GL_TEXTURE_2D)
 			glPopMatrix()
+
+			if (pathEspTagValue.get()) path.firstOrNull()?.let { path ->
+				this.path.lastOrNull()?.let { lastPath ->
+					RenderUtils.renderNameTag("${StringUtils.DECIMALFORMAT_2.format(WVec3(lastPath.xCoord, lastPath.yCoord, lastPath.zCoord).distanceTo(WVec3(path.xCoord, path.yCoord, path.zCoord)))}m in ${this.path.size} moves", path.xCoord + 0.5, path.yCoord + 0.2, path.zCoord + 0.5)
+				}
+			}
 		}
 	}
 

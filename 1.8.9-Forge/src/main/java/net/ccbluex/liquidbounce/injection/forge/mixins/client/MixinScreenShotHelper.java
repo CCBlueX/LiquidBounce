@@ -113,6 +113,7 @@ public abstract class MixinScreenShotHelper
 			// Get the screenshot file name
 			final File screenshotFile = Optional.ofNullable(screenshotName).map(name -> new File(screenshotsFolder, name)).orElseGet(() -> getTimestampedPNGFileForDirectory(screenshotsFolder));
 
+			// Create the BufferedImage and Save to the file ASYNCHRONOUSLY!
 			WorkerUtils.getWorkers().execute(() ->
 			{
 				// Process pixels
@@ -176,7 +177,7 @@ public abstract class MixinScreenShotHelper
 				chatGUI.printChatMessage(new ChatComponentTranslation("screenshot.success", successChat));
 			});
 
-			return new ChatComponentText("Saving screenshot as " + screenshotFile.getName() + "...");
+			return new ChatComponentText("[AsyncScreenShot] Queued taking screenshot as " + screenshotFile.getName() + "...");
 		}
 		catch (final RuntimeException e)
 		{

@@ -92,14 +92,16 @@ class Criticals : Module()
 			if (!provider.isEntityLivingBase(entity)) return
 			val targetEntity = entity.asEntityLivingBase()
 
+			val attackPos = event.attackPos
+
 			val networkManager = mc.netHandler.networkManager
 
 			val chance = hitChanceValue.get()
 			if (!thePlayer.onGround || thePlayer.isOnLadder || thePlayer.ridingEntity != null || targetEntity.hurtTime > hurtTimeValue.get() || !(chance > 0 && Random.nextInt(100) <= chance) || LiquidBounce.moduleManager[Fly::class.java].state || !canCritical(thePlayer)) return
 
-			val x = thePlayer.posX
-			val y = thePlayer.posY
-			val z = thePlayer.posZ
+			val x = attackPos.xCoord
+			val y = attackPos.yCoord
+			val z = attackPos.zCoord
 
 			val motion = (if (MovementUtils.isMoving(thePlayer)) thePlayer.motionX to thePlayer.motionZ else 0.0 to 0.0)
 

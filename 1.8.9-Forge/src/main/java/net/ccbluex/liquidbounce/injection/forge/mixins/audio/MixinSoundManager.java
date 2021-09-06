@@ -102,41 +102,46 @@ public abstract class MixinSoundManager
 	{
 		++playTime;
 
-		Iterator itr = tickableSounds.iterator();
 		String sourceName;
-		SoundPoolEntry poolEntry;
 		ISound sound;
-
-		ITickableSound tickableSound;
-		while (itr.hasNext())
+		try
 		{
-			tickableSound = (ITickableSound) itr.next();
-
-			tickableSound.update();
-
-			if (tickableSound.isDonePlaying())
-				stopSound(tickableSound);
-			else
+			final Iterator<ITickableSound> tickableSoundItr = tickableSounds.iterator();
+			SoundPoolEntry poolEntry;
+			ITickableSound tickableSound;
+			while (tickableSoundItr.hasNext())
 			{
-				sourceName = invPlayingSounds.get(tickableSound);
-				poolEntry = playingSoundPoolEntries.get(tickableSound);
+				tickableSound = tickableSoundItr.next();
 
-				sndSystem.setVolume(sourceName, getNormalizedVolume(tickableSound, poolEntry, sndHandler.getSound(tickableSound.getSoundLocation()).getSoundCategory()));
-				sndSystem.setPitch(sourceName, getNormalizedPitch(tickableSound, poolEntry));
-				sndSystem.setPosition(sourceName, tickableSound.getXPosF(), tickableSound.getYPosF(), tickableSound.getZPosF());
+				tickableSound.update();
+
+				if (tickableSound.isDonePlaying())
+					stopSound(tickableSound);
+				else
+				{
+					sourceName = invPlayingSounds.get(tickableSound);
+					poolEntry = playingSoundPoolEntries.get(tickableSound);
+
+					sndSystem.setVolume(sourceName, getNormalizedVolume(tickableSound, poolEntry, sndHandler.getSound(tickableSound.getSoundLocation()).getSoundCategory()));
+					sndSystem.setPitch(sourceName, getNormalizedPitch(tickableSound, poolEntry));
+					sndSystem.setPosition(sourceName, tickableSound.getXPosF(), tickableSound.getYPosF(), tickableSound.getZPosF());
+				}
 			}
+		}
+		catch(final ConcurrentModificationException ignored)
+		{
+			logger.debug(LOG_MARKER, "Suppressed ConcurrentModificationException in TickableSoundIteration");
 		}
 
 		try
 		{
 			Entry<String, ISound> entry;
 
-			// Re-use local variable
-			itr = playingSounds.entrySet().iterator();
+			final Iterator<Entry<String, ISound>> playingSoundItr = playingSounds.entrySet().iterator();
 
-			while (itr.hasNext())
+			while (playingSoundItr.hasNext())
 			{
-				entry = (Entry<String, ISound>) itr.next();
+				entry = playingSoundItr.next();
 
 				sourceName = entry.getKey();
 				sound = entry.getValue();
@@ -150,7 +155,7 @@ public abstract class MixinSoundManager
 						if (sound.canRepeat() && repeatDelay > 0)
 							delayedSounds.put(sound, playTime + repeatDelay);
 
-						itr.remove();
+						playingSoundItr.remove();
 
 						logger.debug(LOG_MARKER, "Removed channel {} because it's not playing anymore", sourceName);
 						sndSystem.removeSource(sourceName);
@@ -173,24 +178,30 @@ public abstract class MixinSoundManager
 		}
 		catch (final ConcurrentModificationException ignored)
 		{
-			logger.debug(LOG_MARKER, "Suppressed ConcurrentModificationException()");
+			logger.debug(LOG_MARKER, "Suppressed ConcurrentModificationException in PlayingSoundIteration");
 		}
 
-		itr = delayedSounds.entrySet().iterator();
-
-		Entry<ISound, Integer> soundEntry;
-		while (itr.hasNext())
+		try
 		{
-			soundEntry = (Entry<ISound, Integer>) itr.next();
-			if (playTime >= soundEntry.getValue())
+			final Iterator<Entry<ISound, Integer>> delayedSoundItr = delayedSounds.entrySet().iterator();
+			Entry<ISound, Integer> soundEntry;
+			while (delayedSoundItr.hasNext())
 			{
-				sound = soundEntry.getKey();
-				if (sound instanceof ITickableSound)
-					((ITickable) sound).update();
+				soundEntry = delayedSoundItr.next();
+				if (playTime >= soundEntry.getValue())
+				{
+					sound = soundEntry.getKey();
+					if (sound instanceof ITickableSound)
+						((ITickable) sound).update();
 
-				playSound(sound);
-				itr.remove();
+					playSound(sound);
+					delayedSoundItr.remove();
+				}
 			}
+		}
+		catch(final ConcurrentModificationException ignored)
+		{
+			logger.debug(LOG_MARKER, "Suppressed ConcurrentModificationException in DelayedSoundIteration");
 		}
 	}
 }

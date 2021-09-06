@@ -19,7 +19,6 @@ import net.ccbluex.liquidbounce.utils.extensions.getPing
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_2
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
-import net.ccbluex.liquidbounce.utils.render.ColorUtils.createRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
@@ -62,45 +61,42 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 
 	private val displayString = TextValue("DisplayText", "")
 
-	private val colorModeValue = ListValue("ColorMode", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom")
-	private val redValue = IntegerValue("Red", 255, 0, 255)
-	private val greenValue = IntegerValue("Green", 255, 0, 255)
-	private val blueValue = IntegerValue("Blue", 255, 0, 255)
-	private val alphaValue = IntegerValue("Alpha", 255, 0, 255)
+	private val textColorGroup = ValueGroup("TextColor") //
+	private val textColorModeValue = ListValue("Mode", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom", "ColorMode")
+	private val textColorValue = RGBAColorValue("Color", 255, 255, 255, 255, listOf("Red", "Green", "Blue", "Alpha"))
 
-	private val rectValue = ListValue("Rect", arrayOf("None", "Left", "Right"), "None")
-	private val rectWidthValue = FloatValue("Rect-Width", 3F, 1.5F, 5F)
+	private val rectGroup = ValueGroup("Rect")
+	private val rectModeValue = ListValue("Mode", arrayOf("None", "Left", "Right"), "None", "Rect")
+	private val rectWidthValue = FloatValue("Width", 3F, 1.5F, 5F, "Rect-Width")
 
-	private val rectColorModeValue = ListValue("Rect-Color", arrayOf("Custom", "Rainbow", "RainbowShader"), "Rainbow")
-	private val rectColorRedValue = IntegerValue("Rect-R", 255, 0, 255)
-	private val rectColorGreenValue = IntegerValue("Rect-G", 255, 0, 255)
-	private val rectColorBlueValue = IntegerValue("Rect-B", 255, 0, 255)
-	private val rectColorAlphaValue = IntegerValue("Rect-Alpha", 255, 0, 255)
+	private val rectColorGroup = ValueGroup("Color")
+	private val rectColorModeValue = ListValue("Mode", arrayOf("Custom", "Rainbow", "RainbowShader"), "Rainbow", "Rect-Color")
+	private val rectColorValue = RGBAColorValue("Color", 255, 255, 255, 255, listOf("Rect-R", "Rect-G", "Rect-B", "Rect-Alpha"))
 
-	private val backgroundColorModeValue = ListValue("Background-Color", arrayOf("None", "Custom", "Rainbow", "RainbowShader"), "Custom")
-	private val backgroundColorRedValue = IntegerValue("Background-R", 0, 0, 255)
-	private val backgroundColorGreenValue = IntegerValue("Background-G", 0, 0, 255)
-	private val backgroundColorBlueValue = IntegerValue("Background-B", 0, 0, 255)
-	private val backgroundColorAlphaValue = IntegerValue("Background-Alpha", 0, 0, 255)
+	private val backgroundGroup = ValueGroup("Background")
 
-	private val backgroundRainbowCeilValue = BoolValue("Background-RainbowCeil", false)
+	private val backgroundColorGroup = ValueGroup("Color")
+	private val backgroundColorModeValue = ListValue("Background-Color", arrayOf("None", "Custom", "Rainbow", "RainbowShader"), "Custom", "Background-Color")
+	private val backgroundColorValue = RGBAColorValue("Color", 0, 0, 0, 0, listOf("Background-R", "Background-G", "Background-B", "Background-Alpha"))
 
-	private val borderWidthValue = FloatValue("Border-Width", 3F, 1.5F, 5F)
-	private val borderColorModeValue = ListValue("Border-Color", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom")
-	private val borderColorRedValue = IntegerValue("Border-R", 32, 0, 255)
-	private val borderColorGreenValue = IntegerValue("Border-G", 32, 0, 255)
-	private val borderColorBlueValue = IntegerValue("Border-B", 32, 0, 255)
-	private val borderColorAlphaValue = IntegerValue("Border-Alpha", 0, 0, 255)
+	private val backgroundRainbowCeilValue = BoolValue("RainbowCeil", false, "Background-RainbowCeil")
 
-	private val saturationValue = FloatValue("HSB-Saturation", 0.9f, 0f, 1f)
-	private val brightnessValue = FloatValue("HSB-Brightness", 1f, 0f, 1f)
+	private val borderGroup = ValueGroup("Border")
+	private val borderWidthValue = FloatValue("Width", 3F, 1.5F, 5F, "Border-Width")
+	private val borderExpandValue = FloatValue("Expand", 2F, 0.5F, 4F, "BorderExpand")
 
-	private val rainbowSpeedValue = IntegerValue("Rainbow-Speed", 10, 1, 10)
+	private val borderColorGroup = ValueGroup("Color")
+	private val borderColorModeValue = ListValue("Mode", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom", "Border-Color")
+	private val borderColorValue = RGBAColorValue("Color", 32, 32, 32, 0, listOf("Border-R", "Border-G", "Border-B", "Border-Alpha"))
 
-	private val rainbowShaderXValue = FloatValue("RainbowShader-X", -1000F, -2000F, 2000F)
-	private val rainbowShaderYValue = FloatValue("RainbowShader-Y", -1000F, -2000F, 2000F)
+	private val rainbowGroup = ValueGroup("Rainbow")
+	private val rainbowSpeedValue = IntegerValue("Speed", 10, 1, 10, "Rainbow-Speed")
+	private val rainbowSaturationValue = FloatValue("Saturation", 0.9f, 0f, 1f, "HSB-Saturation")
+	private val rainbowBrightnessValue = FloatValue("Brightness", 1f, 0f, 1f, "HSB-Brightness")
 
-	private val borderExpandValue = FloatValue("BorderExpand", 2F, 0.5F, 4F)
+	private val rainbowShaderGroup = ValueGroup("RainbowShader")
+	private val rainbowShaderXValue = FloatValue("X", -1000F, -2000F, 2000F, "RainbowShader-X")
+	private val rainbowShaderYValue = FloatValue("Y", -1000F, -2000F, 2000F, "RainbowShader-Y")
 
 	private val shadowValue = BoolValue("Shadow", true)
 
@@ -119,6 +115,19 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 			else displayString.get()
 			return multiReplace(textContent)
 		}
+
+	init
+	{
+		textColorGroup.addAll(textColorModeValue, textColorValue)
+		rectGroup.addAll(rectModeValue, rectWidthValue, rectColorGroup)
+		rectColorGroup.addAll(rectColorModeValue, rectColorValue)
+		backgroundGroup.addAll(backgroundColorGroup, backgroundRainbowCeilValue)
+		backgroundColorGroup.addAll(backgroundColorModeValue, backgroundColorValue)
+		borderGroup.addAll(borderWidthValue, borderColorGroup)
+		borderColorGroup.addAll(borderColorModeValue, borderColorValue)
+		rainbowGroup.addAll(rainbowSpeedValue, rainbowSaturationValue, rainbowBrightnessValue)
+		rainbowShaderGroup.addAll(rainbowShaderXValue, rainbowShaderYValue)
+	}
 
 	private fun getReplacement(str: String): String?
 	{
@@ -241,30 +250,30 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 	 */
 	override fun drawElement(): Border
 	{
-		val colorMode = colorModeValue.get()
+		val colorMode = textColorModeValue.get()
 
 		// Text
-		val colorAlpha = alphaValue.get()
-		val customColor = createRGB(redValue.get(), greenValue.get(), blueValue.get(), colorAlpha)
+		val colorAlpha = textColorValue.getAlpha()
+		val customColor = textColorValue.get()
 
 		val shadow = shadowValue.get()
 
 		// Rect
-		val rectMode = rectValue.get()
+		val rectMode = rectModeValue.get()
 		val rectColorMode = rectColorModeValue.get()
-		val rectColorAlpha = rectColorAlphaValue.get()
+		val rectColorAlpha = rectColorValue.getAlpha()
 
 		val rectWidth = rectWidthValue.get()
 
 		// Background
 		val backgroundColorMode = backgroundColorModeValue.get()
-		val backgroundColorAlpha = backgroundColorAlphaValue.get()
+		val backgroundColorAlpha = backgroundColorValue.getAlpha()
 
 		val backgroundRainbowCeil = backgroundRainbowCeilValue.get()
 
 		val borderWidth = borderWidthValue.get()
 		val borderColorMode = borderColorModeValue.get()
-		val borderColorAlpha = borderColorAlphaValue.get()
+		val borderColorAlpha = borderColorValue.getAlpha()
 
 		val fontRenderer = fontValue.get()
 
@@ -274,8 +283,8 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 		val rainbowShaderY = if (rainbowShaderYValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderYValue.get()
 		val rainbowShaderOffset = System.currentTimeMillis() % 10000 * 0.0001f
 
-		val saturation = saturationValue.get()
-		val brightness = brightnessValue.get()
+		val saturation = rainbowSaturationValue.get()
+		val brightness = rainbowBrightnessValue.get()
 
 		val horizontalSide = side.horizontal
 
@@ -310,7 +319,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 		{
 			backgroundRainbowShader -> 0
 			backgroundColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.applyAlphaChannel(rainbowRGB, backgroundColorAlpha)
-			else -> createRGB(backgroundColorRedValue.get(), backgroundColorGreenValue.get(), backgroundColorBlueValue.get(), backgroundColorAlpha)
+			else -> backgroundColorValue.get()
 		}
 		else 0
 
@@ -323,7 +332,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 			{
 				borderRainbowShader -> 0
 				borderColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.applyAlphaChannel(rainbowRGB, borderColorAlpha)
-				else -> createRGB(borderColorRedValue.get(), borderColorGreenValue.get(), borderColorBlueValue.get(), borderColorAlpha)
+				else -> borderColorValue.get()
 			}
 		}
 		else 0
@@ -334,7 +343,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 		{
 			rectRainbowShader -> 0
 			rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.applyAlphaChannel(rainbowRGB, rectColorAlpha)
-			else -> createRGB(rectColorRedValue.get(), rectColorGreenValue.get(), rectColorBlueValue.get(), rectColorAlpha)
+			else -> rectColorValue.get()
 		}
 		else 0
 
@@ -429,9 +438,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 
 	fun setColor(c: Color): Text
 	{
-		redValue.set(c.red)
-		greenValue.set(c.green)
-		blueValue.set(c.blue)
+		textColorValue.set(c.red, c.green, c.blue, c.alpha)
 		return this
 	}
 }

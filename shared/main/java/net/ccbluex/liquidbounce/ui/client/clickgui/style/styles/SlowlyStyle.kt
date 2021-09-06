@@ -19,6 +19,7 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.style.Style
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer.Companion.assumeNonVolatile
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
+import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_2
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.stripControlCodes
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawFilledCircle
@@ -255,7 +256,7 @@ class SlowlyStyle : Style()
 
 			is FloatRangeValue ->
 			{
-				val text = "${value.displayName}\u00A7f: \u00A7c${round(value.getMin())}-${round(value.getMax())}"
+				val text = "${value.displayName}\u00A7f: \u00A7c${DECIMALFORMAT_2.format(value.getMin())}-${DECIMALFORMAT_2.format(value.getMax())}"
 				val textWidth = font.getStringWidth(text) + indent + 8f
 
 				if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
@@ -363,7 +364,7 @@ class SlowlyStyle : Style()
 
 			is FloatValue ->
 			{
-				val text = value.displayName + "\u00A7f: " + round(value.get())
+				val text = value.displayName + "\u00A7f: " + DECIMALFORMAT_2.format(value.get())
 				val textWidth = valueFont.getStringWidth(text) + indent + 8f
 
 				if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth

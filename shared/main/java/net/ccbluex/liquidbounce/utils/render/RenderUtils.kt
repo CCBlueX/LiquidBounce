@@ -859,14 +859,14 @@ object RenderUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun drawRadius(radius: Float, loops: Float, color: Int)
+	fun drawRadius(radius: Float, loops: Float, lineWidth: Float, color: Int)
 	{
 		GL11.glEnable(GL11.GL_BLEND)
 		GL11.glEnable(GL11.GL_LINE_SMOOTH)
 		GL11.glDisable(GL11.GL_TEXTURE_2D)
 		GL11.glDisable(GL11.GL_DEPTH_TEST)
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-		GL11.glLineWidth(1F)
+		GL11.glLineWidth(lineWidth)
 		glColor(color)
 		GL11.glRotatef(90F, 1F, 0F, 0F)
 		GL11.glBegin(GL11.GL_LINE_STRIP)

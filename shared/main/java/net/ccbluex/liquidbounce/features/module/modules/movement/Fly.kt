@@ -229,12 +229,16 @@ class Fly : Module()
 	/**
 	 * Visuals
 	 */
-	private val bobValue = BoolValue("Bob", true)
-	private val markValue = BoolValue("Mark", true)
-	private val vanillaFlightRemainingTimeValue = object : BoolValue("VanillaFlightRemainingTimeCounter", false)
+	private val visualGroup = ValueGroup("Visual")
+	private val visualBobValue = BoolValue("Bob", true, "Bob")
+	private val visualMarkValue = BoolValue("Mark", true, "Mark")
+
+	private val visualVanillaFlightRemainingTimeCounterGroup = object : ValueGroup("VanillaFlightRemainingTimeCounter")
 	{
 		override fun showCondition() = modeValue.get().endsWith("Vanilla", ignoreCase = true)
 	}
+	private val visualVanillaFlightRemainingTimeCounterEnabledValue = BoolValue("Enabled", false, "VanillaFlightRemainingTimeCounter")
+	private val visualVanillaFlightRemainingTimeCounterFontValue = FontValue("Font", Fonts.font40)
 
 	/**
 	 * Timers
@@ -300,13 +304,20 @@ class Fly : Module()
 	init
 	{
 		teleportGroup.addAll(teleportDistanceValue, teleportDelayValue)
+
 		aac3_3_12Group.addAll(aac3_3_12YValue, aac3_3_12MotionValue)
+
 		hypixelGroup.addAll(hypixelDamageBoostGroup, hypixelTimerBoostGroup, hypixelOnGroundValue, hypixelYchIncValue, hypixelJumpValue)
 		hypixelDamageBoostGroup.addAll(hypixelDamageBoostEnabledValue, hypixelDamageBoostStartTimingValue, hypixelDamageBoostAirStartModeValue)
 		hypixelTimerBoostGroup.addAll(hypixelTimerBoostEnabledValue, hypixelTimerBoostTimerValue, hypixelTimerBoostDelayValue)
+
 		mushMCGroup.addAll(mushMCSpeedValue, mushMCBoostDelay)
+
 		redeSkyCollideGroup.addAll(redeSkyCollideSpeedValue, redeSkyCollideBoostValue, redeSkyCollideMaxSpeedValue, redeSkyCollideTimerValue)
 		redeSkySmoothGroup.addAll(redeSkySmoothSpeedValue, redeSkySmoothSpeedChangeValue, redeSkySmoothMotionValue, redeSkySmoothTimerValue, redeSkySmoothDropoffValue, redeSkySmoothDropoffAValue)
+
+		visualVanillaFlightRemainingTimeCounterGroup.addAll(visualVanillaFlightRemainingTimeCounterEnabledValue, visualVanillaFlightRemainingTimeCounterFontValue)
+		visualGroup.addAll(visualBobValue, visualMarkValue, visualVanillaFlightRemainingTimeCounterGroup)
 	}
 
 	override fun onEnable()
@@ -1093,7 +1104,7 @@ class Fly : Module()
 			}
 		}
 
-		if (LiquidBounce.moduleManager[Bobbing::class.java].state && bobValue.get() && isMoving(thePlayer)) thePlayer.cameraYaw = 0.1f
+		if (LiquidBounce.moduleManager[Bobbing::class.java].state && visualBobValue.get() && isMoving(thePlayer)) thePlayer.cameraYaw = 0.1f
 	}
 
 	@EventTarget
@@ -1101,7 +1112,7 @@ class Fly : Module()
 	{
 		val mode = modeValue.get()
 
-		if (!markValue.get() || mode.equals("Vanilla", ignoreCase = true) || mode.equals("SmoothVanilla", ignoreCase = true) || mode.equals("Hypixel", ignoreCase = true) && !hypixelFlyStarted) return
+		if (!visualMarkValue.get() || mode.equals("Vanilla", ignoreCase = true) || mode.equals("SmoothVanilla", ignoreCase = true) || mode.equals("Hypixel", ignoreCase = true) && !hypixelFlyStarted) return
 		val y = markStartY + 2.0
 
 		RenderUtils.drawPlatform(y, if ((mc.thePlayer ?: return).entityBoundingBox.maxY < y) 0x5A00FF00 else 0x5AFF0000, 1.0)
@@ -1116,7 +1127,7 @@ class Fly : Module()
 	@EventTarget
 	fun onRender2D(@Suppress("UNUSED_PARAMETER") event: Render2DEvent)
 	{
-		if (vanillaFlightRemainingTimeValue.get())
+		if (visualVanillaFlightRemainingTimeCounterEnabledValue.get())
 		{
 			val theWorld = mc.theWorld ?: return
 			val provider = classProvider
@@ -1126,21 +1137,22 @@ class Fly : Module()
 			val moduleManager = LiquidBounce.moduleManager
 
 			val blockOverlay = moduleManager[BlockOverlay::class.java] as BlockOverlay
-			if (blockOverlay.state && blockOverlay.infoValue.get() && blockOverlay.getCurrentBlock(theWorld) != null) GL11.glTranslatef(0f, 15f, 0f)
+			if (blockOverlay.state && blockOverlay.infoEnabledValue.get() && blockOverlay.getCurrentBlock(theWorld) != null) GL11.glTranslatef(0f, 15f, 0f)
 
 			val scaffold = moduleManager[Scaffold::class.java] as Scaffold
 			val tower = moduleManager[Tower::class.java] as Tower
-			if (scaffold.state && scaffold.counterDisplayValue.get() || tower.state && tower.counterDisplayValue.get()) GL11.glTranslatef(0f, 15f, 0f)
+			if (scaffold.state && scaffold.visualCounterEnabledValue.get() || tower.state && tower.counterEnabledValue.get()) GL11.glTranslatef(0f, 15f, 0f)
 
+			val font = visualVanillaFlightRemainingTimeCounterFontValue.get()
 			val remainingTicks = 80 - vanillaRemainingTime.tick.coerceAtMost(80)
 			val info = "You can fly ${if (remainingTicks <= 10) "\u00A7c" else ""}${remainingTicks}\u00A7r more ticks"
 			val scaledResolution = provider.createScaledResolution(mc)
 
-			RenderUtils.drawBorderedRect((scaledResolution.scaledWidth shr 1) - 2.0f, (scaledResolution.scaledHeight shr 1) + 5.0f, ((scaledResolution.scaledWidth shr 1) + Fonts.font40.getStringWidth(info)) + 2.0f, (scaledResolution.scaledHeight shr 1) + 16.0f, 3f, -16777216, -16777216)
+			RenderUtils.drawBorderedRect((scaledResolution.scaledWidth shr 1) - 2.0f, (scaledResolution.scaledHeight shr 1) + 5.0f, ((scaledResolution.scaledWidth shr 1) + font.getStringWidth(info)) + 2.0f, (scaledResolution.scaledHeight shr 1) + font.fontHeight + 7f, 3f, -16777216, -16777216)
 
 			provider.glStateManager.resetColor()
 
-			Fonts.font40.drawString(info, (scaledResolution.scaledWidth shr 1).toFloat(), (scaledResolution.scaledHeight shr 1) + 7.0f, 0xffffff)
+			font.drawString(info, (scaledResolution.scaledWidth shr 1).toFloat(), (scaledResolution.scaledHeight shr 1) + 7.0f, 0xffffff)
 
 			GL11.glPopMatrix()
 		}
