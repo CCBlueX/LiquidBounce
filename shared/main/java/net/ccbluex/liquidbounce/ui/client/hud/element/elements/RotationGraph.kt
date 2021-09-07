@@ -11,11 +11,8 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11
-import java.awt.Color
 import kotlin.math.abs
 import kotlin.math.hypot
 
@@ -30,46 +27,50 @@ class RotationGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side
 	private val widthValue = IntegerValue("Width", 150, 100, 300)
 	private val heightValue = IntegerValue("Height", 50, 30, 300)
 
-	private val rotationyMultiplier = FloatValue("Rotation-yMultiplier", 2F, 0.5F, 5F)
-	private val rotationThicknessValue = FloatValue("Rotation-Thickness", 2F, 1F, 3F)
-	private val rotationColorRedValue = IntegerValue("Rotation-R", 0, 0, 255)
-	private val rotationColorGreenValue = IntegerValue("Rotation-G", 255, 0, 255)
-	private val rotationColorBlueValue = IntegerValue("Rotation-B", 72, 0, 255)
+	private val rotationGroup = ValueGroup("Rotation")
+	private val rotationMultiplier = FloatValue("Multiplier", 2F, 0.5F, 5F, "Rotation-yMultiplier")
+	private val rotationThicknessValue = FloatValue("Thickness", 2F, 1F, 3F, "Rotation-Thickness")
+	private val rotationColorValue = RGBColorValue("Color", 0, 255, 72, Triple("Rotation-R", "Rotation-G", "Rotation-B"))
 
-	private val yawMovementEnabled = BoolValue("YawMovement", false)
-	private val yawMovementYMultiplier = FloatValue("YawMovement-yMultiplier", 2F, 0.5F, 5F)
-	private val yawMovementThicknessValue = FloatValue("YawMovement-Thickness", 2F, 1F, 3F)
-	private val yawMovementColorRedValue = IntegerValue("YawMovement-R", 0, 0, 255)
-	private val yawMovementColorGreenValue = IntegerValue("YawMovement-G", 0, 0, 255)
-	private val yawMovementColorBlueValue = IntegerValue("YawMovement-B", 255, 0, 255)
+	private val yawMovementGroup = ValueGroup("YawMovement")
+	private val yawMovementEnabledValue = BoolValue("Enabled", false, "YawMovement")
+	private val yawMovementMultiplierValue = FloatValue("Multiplier", 2F, 0.5F, 5F, "YawMovement-yMultiplier")
+	private val yawMovementThicknessValue = FloatValue("Thickness", 2F, 1F, 3F, "YawMovement-Thickness")
+	private val yawMovementColorValue = RGBColorValue("Color", 0, 0, 255, Triple("YawMovement-R", "YawMovement-G", "YawMovement-B"))
 
-	private val pitchMovementEnabled = BoolValue("PitchMovement", false)
-	private val pitchMovementYMultiplier = FloatValue("PitchMovement-yMultiplier", 2F, 0.5F, 5F)
-	private val pitchMovementThicknessValue = FloatValue("PitchMovement-Thickness", 2F, 1F, 3F)
-	private val pitchMovementColorRedValue = IntegerValue("PitchMovement-R", 111, 0, 255)
-	private val pitchMovementColorGreenValue = IntegerValue("PitchMovement-G", 0, 0, 255)
-	private val pitchMovementColorBlueValue = IntegerValue("PitchMovement-B", 255, 0, 255)
+	private val pitchMovementGroup = ValueGroup("PitchMovement")
+	private val pitchMovementEnabledValue = BoolValue("Enabled", false, "PitchMovement")
+	private val pitchMovementMultiplierValue = FloatValue("Multiplier", 2F, 0.5F, 5F, "PitchMovement-yMultiplier")
+	private val pitchMovementThicknessValue = FloatValue("Thickness", 2F, 1F, 3F, "PitchMovement-Thickness")
+	private val pitchMovementColorValue = RGBColorValue("Color", 111, 0, 255, Triple("PitchMovement-R", "PitchMovement-G", "PitchMovement-B"))
 
-	private val rotationConsistencyEnabled = BoolValue("RotationConsistency", false)
-	private val rotationConsistencyyMultiplier = FloatValue("RotationConsistency-yMultiplier", 2F, 0.5F, 5F)
-	private val rotationConsistencyThicknessValue = FloatValue("RotationConsistency-Thickness", 2F, 1F, 3F)
-	private val rotationConsistencyColorRedValue = IntegerValue("RotationConsistency-R", 0, 0, 255)
-	private val rotationConsistencyColorGreenValue = IntegerValue("RotationConsistency-G", 255, 0, 255)
-	private val rotationConsistencyColorBlueValue = IntegerValue("RotationConsistency-B", 72, 0, 255)
+	private val rotationConsistencyGroup = ValueGroup("RotationConsistency")
+	private val rotationConsistencyEnabledValue = BoolValue("Enabled", false, "RotationConsistency")
+	private val rotationConsistencyMultiplierValue = FloatValue("Multiplier", 2F, 0.5F, 5F, "RotationConsistency-yMultiplier")
+	private val rotationConsistencyThicknessValue = FloatValue("Thickness", 2F, 1F, 3F, "RotationConsistency-Thickness")
+	private val rotationConsistencyColorValue = RGBColorValue("Color", 0, 255, 72, Triple("RotationConsistency-R", "RotationConsistency-G", "RotationConsistency-B"))
 
-	private val yawConsistencyEnabled = BoolValue("YawConsistency", false)
-	private val yawConsistencyyMultiplier = FloatValue("YawConsistency-yMultiplier", 2F, 0.5F, 5F)
-	private val yawConsistencyThicknessValue = FloatValue("YawConsistency-Thickness", 2F, 1F, 3F)
-	private val yawConsistencyColorRedValue = IntegerValue("YawConsistency-R", 0, 0, 255)
-	private val yawConsistencyColorGreenValue = IntegerValue("YawConsistency-G", 255, 0, 255)
-	private val yawConsistencyColorBlueValue = IntegerValue("YawConsistency-B", 180, 0, 255)
+	private val yawConsistencyGroup = ValueGroup("YawConsistency")
+	private val yawConsistencyEnabledValue = BoolValue("Enabled", false, "YawConsistency")
+	private val yawConsistencyMultiplierValue = FloatValue("Multiplier", 2F, 0.5F, 5F, "YawConsistency-yMultiplier")
+	private val yawConsistencyThicknessValue = FloatValue("Thickness", 2F, 1F, 3F, "YawConsistency-Thickness")
+	private val yawConsistencyColorValue = RGBColorValue("Color", 0, 255, 180, Triple("YawConsistency-R", "YawConsistency-G", "YawConsistency-B"))
 
-	private val pitchConsistencyEnabled = BoolValue("PitchConsistency", false)
-	private val pitchConsistencyYMultiplier = FloatValue("PitchConsistency-yMultiplier", 2F, 0.5F, 5F)
-	private val pitchConsistencyThicknessValue = FloatValue("PitchConsistency-Thickness", 2F, 1F, 3F)
-	private val pitchConsistencyColorRedValue = IntegerValue("PitchConsistency-R", 0, 0, 255)
-	private val pitchConsistencyColorGreenValue = IntegerValue("PitchConsistency-G", 180, 0, 255)
-	private val pitchConsistencyColorBlueValue = IntegerValue("PitchConsistency-B", 255, 0, 255)
+	private val pitchConsistencyGroup = ValueGroup("PitchConsistency")
+	private val pitchConsistencyEnabled = BoolValue("Enabled", false, "PitchConsistency")
+	private val pitchConsistencyMultiplier = FloatValue("Multiplier", 2F, 0.5F, 5F, "PitchConsistency-yMultiplier")
+	private val pitchConsistencyThicknessValue = FloatValue("Thickness", 2F, 1F, 3F, "PitchConsistency-Thickness")
+	private val pitchConsistencyColorValue = RGBColorValue("Color", 0, 180, 255, Triple("PitchConsistency-R", "PitchConsistency-G", "PitchConsistency-B"))
+
+	init
+	{
+		rotationGroup.addAll(rotationMultiplier, rotationThicknessValue, rotationColorValue)
+		yawMovementGroup.addAll(yawMovementEnabledValue, yawMovementMultiplierValue, yawMovementThicknessValue, yawMovementColorValue)
+		pitchMovementGroup.addAll(pitchMovementEnabledValue, pitchMovementMultiplierValue, pitchMovementThicknessValue, pitchMovementColorValue)
+		rotationConsistencyGroup.addAll(rotationConsistencyEnabledValue, rotationConsistencyMultiplierValue, rotationConsistencyThicknessValue, rotationConsistencyColorValue)
+		yawConsistencyGroup.addAll(yawConsistencyEnabledValue, yawConsistencyMultiplierValue, yawConsistencyThicknessValue, yawConsistencyColorValue)
+		pitchConsistencyGroup.addAll(pitchConsistencyEnabled, pitchConsistencyMultiplier, pitchConsistencyThicknessValue, pitchConsistencyColorValue)
+	}
 
 	private val rotationList = ArrayList<Float>()
 	private val yawMovementList = ArrayList<Float>()
@@ -91,12 +92,12 @@ class RotationGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side
 		val width = widthValue.get()
 		val height = heightValue.get().toFloat()
 
-		val yawMovementEnabled = yawMovementEnabled.get()
-		val pitchMovementEnabled = pitchMovementEnabled.get()
+		val yawMovementEnabled = yawMovementEnabledValue.get()
+		val pitchMovementEnabled = pitchMovementEnabledValue.get()
 
-		val rotationConsistencyEnabled = rotationConsistencyEnabled.get()
+		val rotationConsistencyEnabled = rotationConsistencyEnabledValue.get()
 
-		val yawConsistencyEnabled = yawConsistencyEnabled.get()
+		val yawConsistencyEnabled = yawConsistencyEnabledValue.get()
 		val pitchConsistencyEnabled = pitchConsistencyEnabled.get()
 
 		if (lastTick != thePlayer.ticksExisted)
@@ -157,19 +158,19 @@ class RotationGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side
 			lastPitchMovement = pitchMovement
 		}
 
-		val rotationYMul = rotationyMultiplier.get()
-		val yawMovementYMul = yawMovementYMultiplier.get()
-		val pitchMovementYMul = pitchMovementYMultiplier.get()
-		val rotationConsistencyYMul = rotationConsistencyyMultiplier.get()
-		val yawConsistencyYMul = yawConsistencyyMultiplier.get()
-		val pitchConsistencyYMul = pitchConsistencyYMultiplier.get()
+		val rotationYMul = rotationMultiplier.get()
+		val yawMovementYMul = yawMovementMultiplierValue.get()
+		val pitchMovementYMul = pitchMovementMultiplierValue.get()
+		val rotationConsistencyYMul = rotationConsistencyMultiplierValue.get()
+		val yawConsistencyYMul = yawConsistencyMultiplierValue.get()
+		val pitchConsistencyYMul = pitchConsistencyMultiplier.get()
 
-		val rotationColor = Color(rotationColorRedValue.get(), rotationColorGreenValue.get(), rotationColorBlueValue.get())
-		val yawMovementColor = Color(yawMovementColorRedValue.get(), yawMovementColorGreenValue.get(), yawMovementColorBlueValue.get())
-		val pitchMovementColor = Color(pitchMovementColorRedValue.get(), pitchMovementColorGreenValue.get(), pitchMovementColorBlueValue.get())
-		val rotationConsistencyColor = Color(rotationConsistencyColorRedValue.get(), rotationConsistencyColorGreenValue.get(), rotationConsistencyColorBlueValue.get())
-		val yawConsistencyColor = Color(yawConsistencyColorRedValue.get(), yawConsistencyColorGreenValue.get(), yawConsistencyColorBlueValue.get())
-		val pitchConsistencyColor = Color(pitchConsistencyColorRedValue.get(), pitchConsistencyColorGreenValue.get(), pitchConsistencyColorBlueValue.get())
+		val rotationColor = rotationColorValue.get()
+		val yawMovementColor = yawMovementColorValue.get()
+		val pitchMovementColor = pitchMovementColorValue.get()
+		val rotationConsistencyColor = rotationConsistencyColorValue.get()
+		val yawConsistencyColor = yawConsistencyColorValue.get()
+		val pitchConsistencyColor = pitchConsistencyColorValue.get()
 
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
 		GL11.glEnable(GL11.GL_BLEND)

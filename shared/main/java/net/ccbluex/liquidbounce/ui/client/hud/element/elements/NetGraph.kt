@@ -13,15 +13,10 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.PacketCounter
 import net.ccbluex.liquidbounce.utils.extensions.getPing
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_1
-import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.FontValue
-import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11
-import java.awt.Color
 
 /**
  * CustomHUD network-activity graph element
@@ -35,34 +30,35 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 	private val widthValue = IntegerValue("Width", 150, 100, 300)
 	private val heightValue = IntegerValue("Height", 50, 30, 300)
 
-	private val pingUpdatePeriodValue = IntegerValue("PingUpdatePeriod", 500, 50, 2000)
+	private val pingGroup = ValueGroup("Ping")
+	private val pingUpdatePeriodValue = IntegerValue("UpdatePeriod", 500, 50, 2000, "PingUpdatePeriod")
+	private val pingYMultiplier = FloatValue("Multiplier", 10F, 0.001F, 50F, "Ping-yMultiplier")
+	private val pingThicknessValue = FloatValue("Thickness", 2F, 1F, 3F, "Ping-Thickness")
+	private val pingColorValue = RGBColorValue("Color", 0, 111, 255, Triple("Ping-R", "Ping-G", "Ping-B"))
 
-	private val pingyMultiplier = FloatValue("Ping-yMultiplier", 10F, 0.001F, 50F)
-	private val pingThicknessValue = FloatValue("Ping-Thickness", 2F, 1F, 3F)
-	private val pingColorRedValue = IntegerValue("Ping-R", 0, 0, 255)
-	private val pingColorGreenValue = IntegerValue("Ping-G", 111, 0, 255)
-	private val pingColorBlueValue = IntegerValue("Ping-B", 255, 0, 255)
+	private val packetsGroup = ValueGroup("Packets")
+	private val packetsUpdatePeriodValue = IntegerValue("UpdatePeriod", 200, 50, 1000, "PacketsUpdatePeriod")
+	private val packetCounterBufferValue = IntegerValue("CounterBuffer", 200, 50, 1000, "PacketsCounterBuffer")
 
-	private val packetUpdatePeriodValue = IntegerValue("PacketsUpdatePeriod", 200, 50, 1000)
-	private val packetCounterBufferValue = IntegerValue("PacketsCounterBuffer", 200, 50, 1000)
+	private val packetsIncomingGroup = ValueGroup("IncomingPackets")
+	private val packetsIncomingPeakValue = BoolValue("Peak", true, "IncomingPackets-Peak")
+	private val packetsIncomingYMultiplier = FloatValue("Multiplier", 1F, 0.001F, 50F, "IncomingPackets-MinYMultiplier")
+	private val packetsIncomingThicknessValue = FloatValue("Thickness", 2F, 1F, 3F, "IncomingPackets-Thickness")
+	private val packetsIncomingColorValue = RGBColorValue("Color", 255, 111, 0, Triple("IncomingPackets-R", "IncomingPackets-G", "IncomingPackets-B"))
 
-	private val incomingPacketsYMultiplier = FloatValue("IncomingPackets-MinYMultiplier", 1F, 0.001F, 50F)
-	private val incomingPacketsThicknessValue = FloatValue("IncomingPackets-Thickness", 2F, 1F, 3F)
-	private val incomingPacketsColorRedValue = IntegerValue("IncomingPackets-R", 255, 0, 255)
-	private val incomingPacketsColorGreenValue = IntegerValue("IncomingPackets-G", 111, 0, 255)
-	private val incomingPacketsColorBlueValue = IntegerValue("IncomingPackets-B", 0, 0, 255)
-	private val incomingPacketsAverageValue = BoolValue("IncomingPackets-Average", true)
-	private val incomingPacketsAverageThicknessValue = FloatValue("IncomingPackets-Average-Thickness", 3F, 1F, 3F)
-	private val incomingPacketsPeakValue = BoolValue("IncomingPackets-Peak", true)
+	private val packetsIncomingAverageGroup = ValueGroup("Average")
+	private val packetsIncomingAverageEnabledValue = BoolValue("Enabled", true, "IncomingPackets-Average")
+	private val packetsIncomingAverageThicknessValue = FloatValue("Thickness", 3F, 1F, 3F, "IncomingPackets-Average-Thickness")
 
-	private val outgoingPacketsYMultiplier = FloatValue("OutgoingPackets-MinYMultiplier", 1F, 0.001F, 50F)
-	private val outgoingPacketsThicknessValue = FloatValue("OutgoingPackets-Thickness", 2F, 1F, 3F)
-	private val outgoingPacketsColorRedValue = IntegerValue("OutgoingPackets-R", 255, 0, 255)
-	private val outgoingPacketsColorGreenValue = IntegerValue("OutgoingPackets-G", 0, 0, 255)
-	private val outgoingPacketsColorBlueValue = IntegerValue("OutgoingPackets-B", 111, 0, 255)
-	private val outgoingPacketsAverageValue = BoolValue("OutgoingPackets-Average", true)
-	private val outgoingPacketsAverageThicknessValue = FloatValue("OutgoingPackets-Average-Thickness", 3F, 1F, 3F)
-	private val outgoingPacketsPeakValue = BoolValue("OutgoingPackets-Peak", true)
+	private val packetsOutgoingGroup = ValueGroup("OutgoingPackets")
+	private val packetsOutgoingPeakValue = BoolValue("Peak", true, "OutgoingPackets-Peak")
+	private val packetsOutgoingYMultiplier = FloatValue("YMultiplier", 1F, 0.001F, 50F, "OutgoingPackets-MinYMultiplier")
+	private val packetsOutgoingThicknessValue = FloatValue("Thickness", 2F, 1F, 3F, "OutgoingPackets-Thickness")
+	private val packetsOutgoingColorValue = RGBColorValue("Color", 255, 0, 111, Triple("OutgoingPackets-R", "OutgoingPackets-G", "OutgoingPackets-B"))
+
+	private val packetsOutgoingAverageGroup = ValueGroup("Average")
+	private val packetsOutgoingAverageEnabledValue = BoolValue("Enabled", true, "OutgoingPackets-Average")
+	private val packetsOutgoingAverageThicknessValue = FloatValue("Thickness", 3F, 1F, 3F, "OutgoingPackets-Average-Thickness")
 
 	private val textFont = FontValue("TextFont", Fonts.minecraftFont)
 
@@ -93,6 +89,19 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 	private var outgoingPeakString = ""
 	private var outgoingPeakStringWidth = 0F
 
+	init
+	{
+		pingGroup.addAll(pingUpdatePeriodValue, pingYMultiplier, pingThicknessValue, pingColorValue)
+
+		packetsIncomingAverageGroup.addAll(packetsIncomingAverageEnabledValue, packetsIncomingAverageThicknessValue)
+		packetsIncomingGroup.addAll(packetsIncomingPeakValue, packetsIncomingYMultiplier, packetsIncomingThicknessValue, packetsIncomingColorValue, packetsIncomingAverageGroup)
+
+		packetsOutgoingAverageGroup.addAll(packetsOutgoingAverageEnabledValue, packetsOutgoingAverageThicknessValue)
+		packetsOutgoingGroup.addAll(packetsOutgoingPeakValue, packetsOutgoingYMultiplier, packetsOutgoingThicknessValue, packetsOutgoingColorValue, packetsOutgoingAverageGroup)
+
+		packetsGroup.addAll(packetsUpdatePeriodValue, packetCounterBufferValue, packetsIncomingGroup, packetsOutgoingGroup)
+	}
+
 	override fun drawElement(): Border?
 	{
 		val thePlayer = mc.thePlayer ?: return null
@@ -100,7 +109,7 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 		val width = widthValue.get()
 		val height = heightValue.get().toFloat()
 		val pingUpdatePeriod = pingUpdatePeriodValue.get().toLong()
-		val packetUpdatePeriod = packetUpdatePeriodValue.get().toLong()
+		val packetUpdatePeriod = packetsUpdatePeriodValue.get().toLong()
 		val packetCounterBuffer = packetCounterBufferValue.get().toLong()
 
 		val currentTick = thePlayer.ticksExisted
@@ -114,11 +123,11 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 			pingUpdateTimer.reset()
 		}
 
-		val incomingPacketsAverageEnabled = incomingPacketsAverageValue.get()
-		val outgoingPacketsAverageEnabled = outgoingPacketsAverageValue.get()
+		val incomingPacketsAverageEnabled = packetsIncomingAverageEnabledValue.get()
+		val outgoingPacketsAverageEnabled = packetsOutgoingAverageEnabledValue.get()
 
-		val incomingPacketsPeakEnabled = incomingPacketsPeakValue.get()
-		val outgoingPacketsPeakEnabled = outgoingPacketsPeakValue.get()
+		val incomingPacketsPeakEnabled = packetsIncomingPeakValue.get()
+		val outgoingPacketsPeakEnabled = packetsOutgoingPeakValue.get()
 
 		val stringFont = textFont.get()
 		val stringHeightHalf = stringFont.fontHeight * 0.5F
@@ -196,12 +205,12 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 
 		if (tickChanged) lastTick = currentTick
 
-		val incomingPacketsColor = ColorUtils.createRGB(incomingPacketsColorRedValue.get(), incomingPacketsColorGreenValue.get(), incomingPacketsColorBlueValue.get(), 255)
-		val outgoingPacketsColor = ColorUtils.createRGB(outgoingPacketsColorRedValue.get(), outgoingPacketsColorGreenValue.get(), outgoingPacketsColorBlueValue.get(), 255)
+		val incomingPacketsColor = packetsIncomingColorValue.get()
+		val outgoingPacketsColor = packetsOutgoingColorValue.get()
 
-		val pingYMul = pingyMultiplier.get() * 0.1f
-		val incomingPacketsMinYMul = incomingPacketsYMultiplier.get() * 0.1f
-		val outgoingPacketsMinYMul = outgoingPacketsYMultiplier.get() * 0.1f
+		val pingYMul = pingYMultiplier.get() * 0.1f
+		val incomingPacketsMinYMul = packetsIncomingYMultiplier.get() * 0.1f
+		val outgoingPacketsMinYMul = packetsOutgoingYMultiplier.get() * 0.1f
 
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
 		GL11.glEnable(GL11.GL_BLEND)
@@ -223,14 +232,14 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 				val pingY = pingList[i] * pingYMul
 				val pingNextY = pingList[i + 1] * pingYMul
 
-				RenderUtils.glColor(Color(pingColorRedValue.get(), pingColorGreenValue.get(), pingColorBlueValue.get(), 255))
+				RenderUtils.glColor(pingColorValue.get())
 				GL11.glVertex2f(i.toFloat() - pingListStart, height + 1 - pingY.coerceAtMost(height))
 				GL11.glVertex2f(i + 1.0F - pingListStart, height + 1 - pingNextY.coerceAtMost(height))
 			}
 		}
 
 		GL11.glEnd()
-		GL11.glLineWidth(incomingPacketsThicknessValue.get())
+		GL11.glLineWidth(packetsIncomingThicknessValue.get())
 		GL11.glBegin(GL11.GL_LINES)
 
 		// Draw Inbound Packets
@@ -256,7 +265,7 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 
 		if (incomingPacketsAverageEnabled)
 		{
-			GL11.glLineWidth(incomingPacketsAverageThicknessValue.get())
+			GL11.glLineWidth(packetsIncomingAverageThicknessValue.get())
 			GL11.glBegin(GL11.GL_LINES)
 
 			// Draw Inbound Packets Average
@@ -271,7 +280,7 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 			GL11.glEnd()
 		}
 
-		GL11.glLineWidth(outgoingPacketsThicknessValue.get())
+		GL11.glLineWidth(packetsOutgoingThicknessValue.get())
 		GL11.glBegin(GL11.GL_LINES)
 
 		// Draw Outbound Packets
@@ -297,7 +306,7 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 
 		if (outgoingPacketsAverageEnabled)
 		{
-			GL11.glLineWidth(outgoingPacketsAverageThicknessValue.get())
+			GL11.glLineWidth(packetsOutgoingAverageThicknessValue.get())
 			GL11.glBegin(GL11.GL_LINES)
 
 			// Draw Outbound Packets Average

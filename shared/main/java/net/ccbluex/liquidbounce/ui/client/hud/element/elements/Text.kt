@@ -51,7 +51,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 			val text = Text(x = 2.0, y = 2.0, scale = 2F)
 
 			text.displayString.set("%clientName%")
-			text.shadowValue.set(true)
+			text.textShadowValue.set(true)
 			text.fontValue.set(Fonts.font40)
 			text.setColor(Color(0, 111, 255))
 
@@ -61,9 +61,13 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 
 	private val displayString = TextValue("DisplayText", "")
 
-	private val textColorGroup = ValueGroup("TextColor") //
+	private val textGroup = ValueGroup("Text")
+
+	private val textColorGroup = ValueGroup("Color")
 	private val textColorModeValue = ListValue("Mode", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom", "ColorMode")
 	private val textColorValue = RGBAColorValue("Color", 255, 255, 255, 255, listOf("Red", "Green", "Blue", "Alpha"))
+
+	private val textShadowValue = BoolValue("Shadow", true, "Shadow")
 
 	private val rectGroup = ValueGroup("Rect")
 	private val rectModeValue = ListValue("Mode", arrayOf("None", "Left", "Right"), "None", "Rect")
@@ -76,7 +80,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 	private val backgroundGroup = ValueGroup("Background")
 
 	private val backgroundColorGroup = ValueGroup("Color")
-	private val backgroundColorModeValue = ListValue("Background-Color", arrayOf("None", "Custom", "Rainbow", "RainbowShader"), "Custom", "Background-Color")
+	private val backgroundColorModeValue = ListValue("Mode", arrayOf("None", "Custom", "Rainbow", "RainbowShader"), "Custom", "Background-Color")
 	private val backgroundColorValue = RGBAColorValue("Color", 0, 0, 0, 0, listOf("Background-R", "Background-G", "Background-B", "Background-Alpha"))
 
 	private val backgroundRainbowCeilValue = BoolValue("RainbowCeil", false, "Background-RainbowCeil")
@@ -89,16 +93,20 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 	private val borderColorModeValue = ListValue("Mode", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom", "Border-Color")
 	private val borderColorValue = RGBAColorValue("Color", 32, 32, 32, 0, listOf("Border-R", "Border-G", "Border-B", "Border-Alpha"))
 
-	private val rainbowGroup = ValueGroup("Rainbow")
+	private val rainbowGroup = object : ValueGroup("Rainbow")
+	{
+		override fun showCondition() = arrayOf(textColorModeValue.get(), rectColorModeValue.get(), backgroundColorModeValue.get(), borderColorModeValue.get()).any { it.equals("Rainbow", ignoreCase = true) }
+	}
 	private val rainbowSpeedValue = IntegerValue("Speed", 10, 1, 10, "Rainbow-Speed")
 	private val rainbowSaturationValue = FloatValue("Saturation", 0.9f, 0f, 1f, "HSB-Saturation")
 	private val rainbowBrightnessValue = FloatValue("Brightness", 1f, 0f, 1f, "HSB-Brightness")
 
-	private val rainbowShaderGroup = ValueGroup("RainbowShader")
+	private val rainbowShaderGroup = object : ValueGroup("RainbowShader")
+	{
+		override fun showCondition() = arrayOf(textColorModeValue.get(), rectColorModeValue.get(), backgroundColorModeValue.get(), borderColorModeValue.get()).any { it.equals("RainbowShader", ignoreCase = true) }
+	}
 	private val rainbowShaderXValue = FloatValue("X", -1000F, -2000F, 2000F, "RainbowShader-X")
 	private val rainbowShaderYValue = FloatValue("Y", -1000F, -2000F, 2000F, "RainbowShader-Y")
-
-	private val shadowValue = BoolValue("Shadow", true)
 
 	private var fontValue = FontValue("Font", Fonts.font40)
 
@@ -119,13 +127,19 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 	init
 	{
 		textColorGroup.addAll(textColorModeValue, textColorValue)
+		textGroup.addAll(textColorGroup, textShadowValue)
+
 		rectGroup.addAll(rectModeValue, rectWidthValue, rectColorGroup)
 		rectColorGroup.addAll(rectColorModeValue, rectColorValue)
+
 		backgroundGroup.addAll(backgroundColorGroup, backgroundRainbowCeilValue)
 		backgroundColorGroup.addAll(backgroundColorModeValue, backgroundColorValue)
+
 		borderGroup.addAll(borderWidthValue, borderColorGroup)
 		borderColorGroup.addAll(borderColorModeValue, borderColorValue)
+
 		rainbowGroup.addAll(rainbowSpeedValue, rainbowSaturationValue, rainbowBrightnessValue)
+
 		rainbowShaderGroup.addAll(rainbowShaderXValue, rainbowShaderYValue)
 	}
 
@@ -253,10 +267,10 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 		val colorMode = textColorModeValue.get()
 
 		// Text
-		val colorAlpha = textColorValue.getAlpha()
-		val customColor = textColorValue.get()
+		val textColorAlpha = textColorValue.getAlpha()
+		val textCustomColor = textColorValue.get()
 
-		val shadow = shadowValue.get()
+		val shadow = textShadowValue.get()
 
 		// Rect
 		val rectMode = rectModeValue.get()
@@ -352,8 +366,8 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 		val textColor = when
 		{
 			textRainbowShader -> 0
-			colorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbowRGB(alpha = colorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness)
-			else -> customColor
+			colorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbowRGB(alpha = textColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness)
+			else -> textCustomColor
 		}
 
 		// Render Background

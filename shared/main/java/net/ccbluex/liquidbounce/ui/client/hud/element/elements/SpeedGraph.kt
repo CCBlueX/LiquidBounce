@@ -10,11 +10,8 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11
-import java.awt.Color
 import kotlin.math.hypot
 
 /**
@@ -28,40 +25,35 @@ class SpeedGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: S
 	private val widthValue = IntegerValue("Width", 150, 100, 300)
 	private val heightValue = IntegerValue("Height", 50, 30, 300)
 
-	private val speedyMultiplier = FloatValue("Speed-yMultiplier", 7F, 1F, 20F)
-	private val speedThicknessValue = FloatValue("Speed-Thickness", 2F, 1F, 3F)
-	private val speedColorRedValue = IntegerValue("Speed-R", 0, 0, 255)
-	private val speedColorGreenValue = IntegerValue("Speed-G", 255, 0, 255)
-	private val speedColorBlueValue = IntegerValue("Speed-B", 72, 0, 255)
+	private val speedGroup = ValueGroup("Speed")
+	private val speedMultiplier = FloatValue("Multiplier", 7F, 1F, 20F, "Speed-yMultiplier")
+	private val speedThicknessValue = FloatValue("Thickness", 2F, 1F, 3F, "Speed-Thickness")
+	private val speedColorValue = RGBColorValue("Color", 0, 255, 72, Triple("Speed-R", "Speed-G", "Speed-B"))
 
-	private val yspeedYMultiplier = FloatValue("YSpeed-yMultiplier", 7F, 1F, 20F)
-	private val yspeedYPos = FloatValue("YSpeed-yPos", 20F, 0F, 150F)
-	private val yspeedThicknessValue = FloatValue("YSpeed-Thickness", 2F, 1F, 3F)
-	private val yspeedColorRedValue = IntegerValue("YSpeed-R", 0, 0, 255)
-	private val yspeedColorGreenValue = IntegerValue("YSpeed-G", 0, 0, 255)
-	private val yspeedColorBlueValue = IntegerValue("YSpeed-B", 255, 0, 255)
+	private val yspeedGroup = ValueGroup("YSpeed")
+	private val yspeedMultiplier = FloatValue("Multiplier", 7F, 1F, 20F, "YSpeed-yMultiplier")
+	private val yspeedPos = FloatValue("Offset", 20F, 0F, 150F, "YSpeed-yPos")
+	private val yspeedThicknessValue = FloatValue("Thickness", 2F, 1F, 3F, "YSpeed-Thickness")
+	private val yspeedColorValue = RGBColorValue("Color", 0, 0, 255, Triple("YSpeed-R", "YSpeed-G", "YSpeed-B"))
 
-	private val timerEnabled = BoolValue("Timer", true)
-	private val timerYMultiplier = FloatValue("Timer-yMultiplier", 7F, 1F, 20F)
-	private val timerThicknessValue = FloatValue("Timer-Thickness", 2F, 1F, 3F)
-	private val timerColorRedValue = IntegerValue("Timer-R", 111, 0, 255)
-	private val timerColorGreenValue = IntegerValue("Timer-G", 0, 0, 255)
-	private val timerColorBlueValue = IntegerValue("Timer-B", 255, 0, 255)
+	private val timerGroup = ValueGroup("Timer")
+	private val timerEnabled = BoolValue("Enabled", true, "Timer")
+	private val timerYMultiplier = FloatValue("Multiplier", 7F, 1F, 20F, "Timer-yMultiplier")
+	private val timerThicknessValue = FloatValue("Thickness", 2F, 1F, 3F, "Timer-Thickness")
+	private val timerColorValue = RGBColorValue("Color", 111, 0, 255, Triple("Timer-R", "Timer-G", "Timer-B"))
 
-	private val motionEnabled = BoolValue("Motion", true)
-	private val motionyMultiplier = FloatValue("Motion-yMultiplier", 7F, 1F, 20F)
-	private val motionThicknessValue = FloatValue("Motion-Thickness", 2F, 1F, 3F)
-	private val motionColorRedValue = IntegerValue("Motion-R", 0, 0, 255)
-	private val motionColorGreenValue = IntegerValue("Motion-G", 255, 0, 255)
-	private val motionColorBlueValue = IntegerValue("Motion-B", 180, 0, 255)
+	private val motionGroup = ValueGroup("Motion")
+	private val motionEnabled = BoolValue("Enabled", true, "Motion")
+	private val motionyMultiplier = FloatValue("Multiplier", 7F, 1F, 20F, "Motion-yMultiplier")
+	private val motionThicknessValue = FloatValue("Thickness", 2F, 1F, 3F, "Motion-Thickness")
+	private val motionColorValue = RGBColorValue("Color", 0, 255, 180, Triple("Motion-R", "Motion-G", "Motion-B"))
 
-	private val ymotionEnabled = BoolValue("YMotion", true)
-	private val ymotionYMultiplier = FloatValue("YMotion-yMultiplier", 7F, 1F, 20F)
-	private val ymotionYPos = FloatValue("YMotion-yPos", 20F, 0F, 150F)
-	private val ymotionThicknessValue = FloatValue("YMotion-Thickness", 2F, 1F, 3F)
-	private val ymotionColorRedValue = IntegerValue("YMotion-R", 0, 0, 255)
-	private val ymotionColorGreenValue = IntegerValue("YMotion-G", 180, 0, 255)
-	private val ymotionColorBlueValue = IntegerValue("YMotion-B", 255, 0, 255)
+	private val ymotionGroup = ValueGroup("YMotion")
+	private val ymotionEnabled = BoolValue("Enabled", true, "YMotion")
+	private val ymotionYMultiplier = FloatValue("Multiplier", 7F, 1F, 20F, "YMotion-yMultiplier")
+	private val ymotionYPos = FloatValue("Offset", 20F, 0F, 150F, "YMotion-yPos")
+	private val ymotionThicknessValue = FloatValue("Thickness", 2F, 1F, 3F, "YMotion-Thickness")
+	private val ymotionColorValue = RGBColorValue("Color", 0, 180, 255, Triple("YMotion-R", "YMotion-G", "YMotion-B"))
 
 	private val speedList = ArrayList<Double>()
 	private val yspeedList = ArrayList<Double>()
@@ -69,6 +61,15 @@ class SpeedGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: S
 	private val motionList = ArrayList<Double>()
 	private val ymotionList = ArrayList<Double>()
 	private var lastTick = -1
+
+	init
+	{
+		speedGroup.addAll(speedMultiplier, speedThicknessValue, speedColorValue)
+		yspeedGroup.addAll(yspeedMultiplier, yspeedPos, yspeedThicknessValue, yspeedColorValue)
+		timerGroup.addAll(timerEnabled, timerYMultiplier, timerThicknessValue, timerColorValue)
+		motionGroup.addAll(motionEnabled, motionyMultiplier, motionThicknessValue, motionColorValue)
+		ymotionGroup.addAll(ymotionEnabled, ymotionYMultiplier, ymotionYPos, ymotionThicknessValue, ymotionColorValue)
+	}
 
 	override fun drawElement(): Border?
 	{
@@ -122,17 +123,17 @@ class SpeedGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: S
 			}
 		}
 
-		val speedYMul = speedyMultiplier.get()
-		val yspeedYMul = yspeedYMultiplier.get()
+		val speedYMul = speedMultiplier.get()
+		val yspeedYMul = yspeedMultiplier.get()
 		val timerYMul = timerYMultiplier.get()
 		val motionYMul = motionyMultiplier.get()
 		val ymotionYMul = ymotionYMultiplier.get()
 
-		val speedColor = Color(speedColorRedValue.get(), speedColorGreenValue.get(), speedColorBlueValue.get())
-		val yspeedColor = Color(yspeedColorRedValue.get(), yspeedColorGreenValue.get(), yspeedColorBlueValue.get())
-		val timerColor = Color(timerColorRedValue.get(), timerColorGreenValue.get(), timerColorBlueValue.get())
-		val motionColor = Color(motionColorRedValue.get(), motionColorGreenValue.get(), motionColorBlueValue.get())
-		val ymotionColor = Color(ymotionColorRedValue.get(), ymotionColorGreenValue.get(), ymotionColorBlueValue.get())
+		val speedColor = speedColorValue.get()
+		val yspeedColor = yspeedColorValue.get()
+		val timerColor = timerColorValue.get()
+		val motionColor = motionColorValue.get()
+		val ymotionColor = ymotionColorValue.get()
 
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
 		GL11.glEnable(GL11.GL_BLEND)
@@ -168,7 +169,7 @@ class SpeedGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: S
 
 		run {
 			val yspeedListSize = yspeedList.size
-			val ypos = yspeedYPos.get().toDouble()
+			val ypos = yspeedPos.get().toDouble()
 
 			val yspeedListStart = (if (yspeedListSize > width) yspeedListSize - width else 0)
 			for (i in yspeedListStart until yspeedListSize - 1)

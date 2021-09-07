@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.ValueGroup
 import org.lwjgl.opengl.GL11
 import kotlin.math.abs
 import kotlin.math.atan
@@ -24,15 +25,28 @@ import kotlin.math.atan
 @ElementInfo(name = "Model")
 class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y)
 {
+	private val yawGroup = ValueGroup("Yaw")
+	private val yawModeValue = ListValue("Mode", arrayOf("Player", "Animation", "Custom"), "Animation", "Yaw")
+	private val yawCustomYawValue = object : FloatValue("CustomYaw", 0F, -180F, 180F, "CustomYaw")
+	{
+		override fun showCondition() = yawModeValue.get().equals("Custom", ignoreCase = true)
+	}
 
-	private val yawMode = ListValue("Yaw", arrayOf("Player", "Animation", "Custom"), "Animation")
-	private val customYaw = FloatValue("CustomYaw", 0F, -180F, 180F)
-
-	private val pitchMode = ListValue("Pitch", arrayOf("Player", "Custom"), "Player")
-	private val customPitch = FloatValue("CustomPitch", 0F, -90F, 90F)
+	private val pitchGroup = ValueGroup("Pitch")
+	private val pitchModeValue = ListValue("Mode", arrayOf("Player", "Custom"), "Player", "Pitch")
+	private val pitchCustomPitchValue = object : FloatValue("CustomPitch", 0F, -90F, 90F, "CustomPitch")
+	{
+		override fun showCondition() = pitchModeValue.get().equals("Custom", ignoreCase = true)
+	}
 
 	private var rotate = 0F
 	private var rotateDirection = false
+
+	init
+	{
+		yawGroup.addAll(yawModeValue, yawCustomYawValue)
+		pitchGroup.addAll(pitchModeValue, pitchCustomPitchValue)
+	}
 
 	/**
 	 * Draw element
@@ -41,7 +55,7 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y)
 	{
 		val thePlayer = mc.thePlayer ?: return null
 
-		val yaw = when (yawMode.get().toLowerCase())
+		val yaw = when (yawModeValue.get().toLowerCase())
 		{
 			"player" -> thePlayer.rotationYaw
 
@@ -77,14 +91,14 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y)
 				rotate
 			}
 
-			"custom" -> customYaw.get()
+			"custom" -> yawCustomYawValue.get()
 			else -> 0F
 		}
 
-		var pitch = when (pitchMode.get().toLowerCase())
+		var pitch = when (pitchModeValue.get().toLowerCase())
 		{
 			"player" -> thePlayer.rotationPitch
-			"custom" -> customPitch.get()
+			"custom" -> pitchCustomPitchValue.get()
 			else -> 0F
 		}
 

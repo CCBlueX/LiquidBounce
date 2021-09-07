@@ -19,10 +19,7 @@ import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.MiniMapRegister
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.util.vector.Vector2f
 import kotlin.math.ceil
@@ -50,23 +47,31 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 
 	private val minimapValue = BoolValue("Minimap", true)
 
-	private val rainbowXValue = FloatValue("Rainbow-X", -1000F, -2000F, 2000F)
-	private val rainbowYValue = FloatValue("Rainbow-Y", -1000F, -2000F, 2000F)
+	private val backgroundColorValue = RGBAColorValue("BackgroundColor", 0, 0, 0, 50, listOf("Background Red", "Background Green", "Background Blue", "Background Alpha"))
 
-	private val backgroundRedValue = IntegerValue("Background Red", 0, 0, 255)
-	private val backgroundGreenValue = IntegerValue("Background Green", 0, 0, 255)
-	private val backgroundBlueValue = IntegerValue("Background Blue", 0, 0, 255)
-	private val backgroundAlphaValue = IntegerValue("Background Alpha", 50, 0, 255)
-
+	private val borderGroup = ValueGroup("Border")
 	private val borderStrengthValue = FloatValue("Border Strength", 2F, 1F, 5F)
-	private val borderRedValue = IntegerValue("Border Red", 0, 0, 255)
-	private val borderGreenValue = IntegerValue("Border Green", 0, 0, 255)
-	private val borderBlueValue = IntegerValue("Border Blue", 0, 0, 255)
-	private val borderAlphaValue = IntegerValue("Border Alpha", 150, 0, 255)
-	private val borderRainbowValue = BoolValue("Border Rainbow", false)
+
+	private val borderColorGroup = ValueGroup("Color")
+	private val borderColorRainbowEnabledValue = BoolValue("Rainbow", false, "Border Rainbow")
+	private val borderColorValue = RGBAColorValue("Color", 0, 0, 0, 150, listOf("Border Red", "Border Green", "Border Blue", "Border Alpha"))
+
+	private val rainbowShaderGroup = object : ValueGroup("RainbowShader")
+	{
+		override fun showCondition() = borderColorRainbowEnabledValue.get()
+	}
+	private val rainbowShaderXValue = FloatValue("X", -1000F, -2000F, 2000F, "Rainbow-X")
+	private val rainbowShaderYValue = FloatValue("Y", -1000F, -2000F, 2000F, "Rainbow-Y")
 
 	private var fovMarkerVertexBuffer: IVertexBuffer? = null
 	private var lastFov = 0f
+
+	init
+	{
+		borderGroup.addAll(borderStrengthValue, borderColorGroup)
+		borderColorGroup.addAll(borderColorRainbowEnabledValue, borderColorValue)
+		rainbowShaderGroup.addAll(rainbowShaderXValue, rainbowShaderYValue)
+	}
 
 	override fun drawElement(): Border?
 	{
@@ -75,7 +80,8 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 		val fovAngle = fovAngleValue.get()
 
 		if (lastFov != fovAngle || fovMarkerVertexBuffer == null)
-		{ // Free Memory
+		{
+			// Free Memory
 			fovMarkerVertexBuffer?.deleteGlBuffers()
 
 			fovMarkerVertexBuffer = createFovIndicator(fovAngle)
@@ -87,7 +93,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 		val size = sizeValue.get()
 
 		val minimap = minimapValue.get()
-		if (!minimap) RenderUtils.drawRect(0F, 0F, size, size, ColorUtils.createRGB(backgroundRedValue.get(), backgroundGreenValue.get(), backgroundBlueValue.get(), backgroundAlphaValue.get()))
+		if (!minimap) RenderUtils.drawRect(0F, 0F, size, size, backgroundColorValue.get())
 
 		val viewDistance = viewDistanceValue.get() * 16.0F
 		val fovSize = fovSizeValue.get()
@@ -272,19 +278,19 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 
 		glPopMatrix()
 
-		val rainbowShaderX = if (rainbowXValue.get() == 0.0F) 0.0F else 1.0F / rainbowXValue.get()
-		val rainbowShaderY = if (rainbowYValue.get() == 0.0F) 0.0F else 1.0F / rainbowYValue.get()
+		val rainbowShaderX = if (rainbowShaderXValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderXValue.get()
+		val rainbowShaderY = if (rainbowShaderYValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderYValue.get()
 		val rainbowShaderOffset = System.currentTimeMillis() % 10000 * 0.0001f
 
-		RainbowShader.begin(borderRainbowValue.get(), rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-			RenderUtils.drawBorder(0F, 0F, size, size, borderStrengthValue.get(), ColorUtils.createRGB(borderRedValue.get(), borderGreenValue.get(), borderBlueValue.get(), borderAlphaValue.get()))
+		RainbowShader.begin(borderColorRainbowEnabledValue.get(), rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
+			RenderUtils.drawBorder(0F, 0F, size, size, borderStrengthValue.get(), borderColorValue.get())
 
 			glEnable(GL_BLEND)
 			glDisable(GL_TEXTURE_2D)
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 			glEnable(GL_LINE_SMOOTH)
 
-			RenderUtils.glColor(borderRedValue.get(), borderGreenValue.get(), borderBlueValue.get(), borderAlphaValue.get())
+			RenderUtils.glColor(borderColorValue.get())
 			glLineWidth(borderStrengthValue.get())
 
 			glBegin(GL_LINES)

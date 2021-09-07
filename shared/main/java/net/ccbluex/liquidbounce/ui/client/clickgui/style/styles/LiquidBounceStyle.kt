@@ -20,8 +20,9 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.Panel
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ButtonElement
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ModuleElement
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.Style
-import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer.Companion.assumeNonVolatile
 import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.ui.font.assumeNonVolatile
+import net.ccbluex.liquidbounce.ui.font.assumeVolatileIf
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_2
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.stripControlCodes
@@ -262,84 +263,82 @@ class LiquidBounceStyle : Style()
 		var yPos = _yPos
 		val moduleX = moduleElement.x + moduleElement.width
 		val moduleIndentX = moduleX + indent
-		assumeNonVolatile = false
-
-		when (value)
-		{
-			is IntegerRangeValue ->
+		assumeNonVolatile {
+			when (value)
 			{
-				val text = "${value.displayName}\u00A7f: \u00A7c${value.getMin()}-${value.getMax()}"
-				val textWidth = font.getStringWidth(text) + indent + 8f
-
-				if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
-				val moduleXEnd = moduleX + moduleElement.settingsWidth
-				val perc = moduleElement.settingsWidth - indent - 12
-
-				drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 24f, BACKGROUND)
-				drawRect(moduleIndentX + 8f, yPos + 18f, moduleXEnd - 4, yPos + 19f, LIGHT_GRAY)
-
-				val minSliderValue = (moduleIndentX + perc * (value.getMin() - value.minimum) / (value.maximum - value.minimum)) + 8
-				drawRect(minSliderValue, yPos + 15f, minSliderValue + 3, yPos + 21f, guiColor)
-
-				val maxSliderValue = (moduleIndentX + perc * (value.getMax() - value.minimum) / (value.maximum - value.minimum)) + 8
-				drawRect(maxSliderValue, yPos + 15f, maxSliderValue + 3, yPos + 21f, guiColor)
-
-				drawRect(minSliderValue + 3, yPos + 18f, maxSliderValue, yPos + 19f, guiColor)
-
-				val center = minSliderValue + (maxSliderValue - minSliderValue) * 0.5f
-
-				if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= yPos + 15 && mouseY <= yPos + 21 && Mouse.isButtonDown(0))
+				is IntegerRangeValue ->
 				{
-					val newValue = (value.minimum + (value.maximum - value.minimum) * clamp_double(((mouseX - moduleElement.x - moduleElement.width - indent - 8) / perc).toDouble(), 0.0, 1.0)).toInt()
-					if (mouseX > center) value.setMax(newValue)
-					else value.setMin(newValue)
+					val text = "${value.displayName}\u00A7f: \u00A7c${value.getMin()}-${value.getMax()}"
+					val textWidth = font.getStringWidth(text) + indent + 8f
+
+					if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
+					val moduleXEnd = moduleX + moduleElement.settingsWidth
+					val perc = moduleElement.settingsWidth - indent - 12
+
+					drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 24f, BACKGROUND)
+					drawRect(moduleIndentX + 8f, yPos + 18f, moduleXEnd - 4, yPos + 19f, LIGHT_GRAY)
+
+					val minSliderValue = (moduleIndentX + perc * (value.getMin() - value.minimum) / (value.maximum - value.minimum)) + 8
+					drawRect(minSliderValue, yPos + 15f, minSliderValue + 3, yPos + 21f, guiColor)
+
+					val maxSliderValue = (moduleIndentX + perc * (value.getMax() - value.minimum) / (value.maximum - value.minimum)) + 8
+					drawRect(maxSliderValue, yPos + 15f, maxSliderValue + 3, yPos + 21f, guiColor)
+
+					drawRect(minSliderValue + 3, yPos + 18f, maxSliderValue, yPos + 19f, guiColor)
+
+					val center = minSliderValue + (maxSliderValue - minSliderValue) * 0.5f
+
+					if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= yPos + 15 && mouseY <= yPos + 21 && Mouse.isButtonDown(0))
+					{
+						val newValue = (value.minimum + (value.maximum - value.minimum) * clamp_double(((mouseX - moduleElement.x - moduleElement.width - indent - 8) / perc).toDouble(), 0.0, 1.0)).toInt()
+						if (mouseX > center) value.setMax(newValue)
+						else value.setMin(newValue)
+					}
+
+					glStateManager.resetColor()
+					font.drawString(text, moduleIndentX + 6, yPos + 4, WHITE)
+
+					yPos += 22
 				}
 
-				glStateManager.resetColor()
-				font.drawString(text, moduleIndentX + 6, yPos + 4, WHITE)
-
-				yPos += 22
-			}
-
-			is FloatRangeValue ->
-			{
-				val text = "${value.displayName}\u00A7f: \u00A7c${DECIMALFORMAT_2.format(value.getMin())}-${DECIMALFORMAT_2.format(value.getMax())}"
-				val textWidth = font.getStringWidth(text) + indent + 8f
-
-				if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
-				val moduleXEnd = moduleX + moduleElement.settingsWidth
-				val perc = moduleElement.settingsWidth - indent - 12
-
-				drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 24f, BACKGROUND)
-				drawRect(moduleIndentX + 8f, yPos + 18f, moduleXEnd - 4, yPos + 19f, LIGHT_GRAY)
-
-				val minSliderValue = moduleIndentX + perc * (value.getMin() - value.minimum) / (value.maximum - value.minimum) + 8
-				drawRect(minSliderValue, yPos + 15f, minSliderValue + 3, yPos + 21f, guiColor)
-
-				val maxSliderValue = moduleIndentX + perc * (value.getMax() - value.minimum) / (value.maximum - value.minimum) + 8
-				drawRect(maxSliderValue, yPos + 15f, maxSliderValue + 3, yPos + 21f, guiColor)
-
-				drawRect(minSliderValue + 3, yPos + 18f, maxSliderValue, yPos + 19f, guiColor)
-
-				val center = minSliderValue + (maxSliderValue - minSliderValue) * 0.5f
-
-				if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd - 4 && mouseY >= yPos + 15 && mouseY <= yPos + 21 && Mouse.isButtonDown(0))
+				is FloatRangeValue ->
 				{
-					val newValue = round((value.minimum + (value.maximum - value.minimum) * clamp_double(((mouseX - moduleElement.x - moduleElement.width - indent - 8) / perc).toDouble(), 0.0, 1.0)).toFloat())
-					if (mouseX > center) value.setMax(newValue.toFloat())
-					else value.setMin(newValue.toFloat())
+					val text = "${value.displayName}\u00A7f: \u00A7c${DECIMALFORMAT_2.format(value.getMin())}-${DECIMALFORMAT_2.format(value.getMax())}"
+					val textWidth = font.getStringWidth(text) + indent + 8f
+
+					if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
+					val moduleXEnd = moduleX + moduleElement.settingsWidth
+					val perc = moduleElement.settingsWidth - indent - 12
+
+					drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 24f, BACKGROUND)
+					drawRect(moduleIndentX + 8f, yPos + 18f, moduleXEnd - 4, yPos + 19f, LIGHT_GRAY)
+
+					val minSliderValue = moduleIndentX + perc * (value.getMin() - value.minimum) / (value.maximum - value.minimum) + 8
+					drawRect(minSliderValue, yPos + 15f, minSliderValue + 3, yPos + 21f, guiColor)
+
+					val maxSliderValue = moduleIndentX + perc * (value.getMax() - value.minimum) / (value.maximum - value.minimum) + 8
+					drawRect(maxSliderValue, yPos + 15f, maxSliderValue + 3, yPos + 21f, guiColor)
+
+					drawRect(minSliderValue + 3, yPos + 18f, maxSliderValue, yPos + 19f, guiColor)
+
+					val center = minSliderValue + (maxSliderValue - minSliderValue) * 0.5f
+
+					if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd - 4 && mouseY >= yPos + 15 && mouseY <= yPos + 21 && Mouse.isButtonDown(0))
+					{
+						val newValue = round((value.minimum + (value.maximum - value.minimum) * clamp_double(((mouseX - moduleElement.x - moduleElement.width - indent - 8) / perc).toDouble(), 0.0, 1.0)).toFloat())
+						if (mouseX > center) value.setMax(newValue.toFloat())
+						else value.setMin(newValue.toFloat())
+					}
+
+					glStateManager.resetColor()
+
+					font.drawString(text, moduleIndentX + 6, yPos + 4, WHITE)
+
+					yPos += 22
 				}
-
-				glStateManager.resetColor()
-
-				font.drawString(text, moduleIndentX + 6, yPos + 4, WHITE)
-
-				yPos += 22
 			}
 		}
 
-		// This state is cleaned up in ClickGUI
-		assumeNonVolatile = true
 		return yPos
 	}
 
@@ -349,222 +348,221 @@ class LiquidBounceStyle : Style()
 		val moduleX = moduleElement.x + moduleElement.width
 		val moduleIndentX = moduleX + indent
 
-		val isNumber = value.get() is Number
-		if (isNumber) assumeNonVolatile = false
-		when (value)
-		{
-			is BoolValue ->
+		assumeVolatileIf(value.get() is Number) {
+			when (value)
 			{
-				val text = value.displayName
-				val textWidth = valueFont.getStringWidth(text) + indent + 8f
-
-				if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
-
-				drawRect(moduleX + 4f, yPos + 2f, moduleX + moduleElement.settingsWidth, yPos + 14f, BACKGROUND)
-
-				if (mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= yPos + 2 && mouseY <= yPos + 14 && Mouse.isButtonDown(0) && moduleElement.isntPressed())
+				is BoolValue ->
 				{
-					value.set(!value.get())
-					mc.soundHandler.playSound("gui.button.press", 1.0f)
-				}
+					val text = value.displayName
+					val textWidth = valueFont.getStringWidth(text) + indent + 8f
 
-				glStateManager.resetColor()
+					if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
 
-				valueFont.drawString(text, moduleIndentX + 6, yPos + 4, if (value.get()) guiColor else LIGHT_GRAY)
+					drawRect(moduleX + 4f, yPos + 2f, moduleX + moduleElement.settingsWidth, yPos + 14f, BACKGROUND)
 
-				yPos += 12
-			}
-
-			is ListValue ->
-			{
-				val text = value.displayName
-				val textWidth = valueFont.getStringWidth(text) + indent + 16f
-
-				if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
-
-				drawRect(moduleX + 4f, yPos + 2f, moduleX + moduleElement.settingsWidth, yPos + 14f, BACKGROUND)
-
-				glStateManager.resetColor()
-
-				valueFont.drawString("\u00A7c$text", moduleIndentX + 6, yPos + 4, WHITE)
-				valueFont.drawString(if (value.openList) "-" else "+", (moduleX + moduleElement.settingsWidth - if (value.openList) 5 else 6).toInt(), yPos + 4, WHITE)
-
-				if (mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= yPos + 2 && mouseY <= yPos + 14 && Mouse.isButtonDown(0) && moduleElement.isntPressed())
-				{
-					value.openList = !value.openList
-					mc.soundHandler.playSound("gui.button.press", 1.0f)
-				}
-
-				yPos += 12
-
-				for (valueOfList in value.values)
-				{
-					val textWidth2 = valueFont.getStringWidth("> $valueOfList") + indent + 8f
-
-					if (moduleElement.settingsWidth < textWidth2) moduleElement.settingsWidth = textWidth2
-					if (value.openList)
+					if (mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= yPos + 2 && mouseY <= yPos + 14 && Mouse.isButtonDown(0) && moduleElement.isntPressed())
 					{
-						drawRect(moduleX + 4f, yPos + 2f, moduleX + moduleElement.settingsWidth, yPos + 14f, BACKGROUND)
-
-						if (mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= yPos + 2 && mouseY <= yPos + 14 && Mouse.isButtonDown(0) && moduleElement.isntPressed())
-						{
-							value.set(valueOfList)
-							mc.soundHandler.playSound("gui.button.press", 1.0f)
-						}
-
-						glStateManager.resetColor()
-
-						valueFont.drawString(">", moduleIndentX + 6, yPos + 4, LIGHT_GRAY)
-						valueFont.drawString(valueOfList, moduleIndentX + 14, yPos + 4, if (value.get().equals(valueOfList, ignoreCase = true)) guiColor else LIGHT_GRAY)
-
-						yPos += 12
+						value.set(!value.get())
+						mc.soundHandler.playSound("gui.button.press", 1.0f)
 					}
-				}
-			}
 
-			is IntegerValue ->
-			{
-				val text = value.displayName + "\u00A7f: \u00A7c" + if (value is BlockValue) getBlockName(value.get()) + " (" + value.get() + ")" else value.get()
-				val textWidth = valueFont.getStringWidth(text) + indent + 8f
+					glStateManager.resetColor()
 
-				if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
-				val moduleXEnd = moduleX + moduleElement.settingsWidth
-				val perc = moduleElement.settingsWidth - indent - 12
+					valueFont.drawString(text, moduleIndentX + 6, yPos + 4, if (value.get()) guiColor else LIGHT_GRAY)
 
-				drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 24f, BACKGROUND)
-				drawRect(moduleIndentX + 8f, yPos + 18f, moduleXEnd - 4, yPos + 19f, LIGHT_GRAY)
-
-				val sliderValue = moduleIndentX + perc * (value.get() - value.minimum) / (value.maximum - value.minimum)
-				drawRect(8 + sliderValue, yPos + 15f, sliderValue + 11, yPos + 21f, guiColor)
-
-				if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= yPos + 15 && mouseY <= yPos + 21 && Mouse.isButtonDown(0)) value.set((value.minimum + (value.maximum - value.minimum) * clamp_double(((mouseX - (moduleIndentX + 8)) / perc).toDouble(), 0.0, 1.0)).toInt())
-
-				glStateManager.resetColor()
-
-				valueFont.drawString(text, moduleIndentX + 6, yPos + 4, WHITE)
-
-				yPos += 22
-			}
-
-			is FloatValue ->
-			{
-				val text = value.displayName + "\u00A7f: \u00A7c" + DECIMALFORMAT_2.format(value.get())
-				val textWidth = valueFont.getStringWidth(text) + indent + 8f
-
-				if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
-				val moduleXEnd = moduleX + moduleElement.settingsWidth
-				val perc = moduleElement.settingsWidth - indent - 12
-
-				drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 24f, BACKGROUND)
-				drawRect(moduleIndentX + 8f, yPos + 18f, moduleXEnd - 4f, yPos + 19f, LIGHT_GRAY)
-
-				val sliderValue = moduleIndentX + perc * (value.get() - value.minimum) / (value.maximum - value.minimum)
-				drawRect(8 + sliderValue, yPos + 15f, sliderValue + 11, yPos + 21f, guiColor)
-
-				if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd - 4 && mouseY >= yPos + 15 && mouseY <= yPos + 21 && Mouse.isButtonDown(0)) value.set(round((value.minimum + (value.maximum - value.minimum) * clamp_double(((mouseX - (moduleIndentX + 8)) / perc).toDouble(), 0.0, 1.0)).toFloat()).toFloat())
-
-				glStateManager.resetColor()
-
-				valueFont.drawString(text, moduleIndentX + 6, yPos + 4, WHITE)
-
-				yPos += 22
-			}
-
-			is FontValue ->
-			{
-				val fontRenderer = value.get()
-
-				drawRect(moduleX + 4f, yPos + 2f, moduleX + moduleElement.settingsWidth, yPos + 14f, BACKGROUND)
-
-				var displayString = "Font: Unknown"
-
-				if (fontRenderer.isGameFontRenderer())
-				{
-					val liquidFontRenderer = fontRenderer.getGameFontRenderer()
-					displayString = "Font: " + liquidFontRenderer.defaultFont.font.name + " - " + liquidFontRenderer.defaultFont.font.size
-				}
-				else if (fontRenderer == Fonts.minecraftFont) displayString = "Font: Minecraft"
-				else
-				{
-					val fontInfo = Fonts.getFontDetails(fontRenderer)
-					if (fontInfo != null) displayString = fontInfo.name + if (fontInfo.fontSize == -1) "" else " - " + fontInfo.fontSize
+					yPos += 12
 				}
 
-				valueFont.drawString(displayString, moduleIndentX + 6, yPos + 4, WHITE)
-
-				val stringWidth = valueFont.getStringWidth(displayString)
-
-				if (moduleElement.settingsWidth < stringWidth + 8) moduleElement.settingsWidth = stringWidth + 8f
-
-				if ((Mouse.isButtonDown(0) && !mouseDown || Mouse.isButtonDown(1) && !rightMouseDown) && mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= yPos + 4 && mouseY <= yPos + 12)
+				is ListValue ->
 				{
-					val fonts = Fonts.fonts
+					val text = value.displayName
+					val textWidth = valueFont.getStringWidth(text) + indent + 16f
 
-					if (Mouse.isButtonDown(0))
+					if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
+
+					drawRect(moduleX + 4f, yPos + 2f, moduleX + moduleElement.settingsWidth, yPos + 14f, BACKGROUND)
+
+					glStateManager.resetColor()
+
+					valueFont.drawString("\u00A7c$text", moduleIndentX + 6, yPos + 4, WHITE)
+					valueFont.drawString(if (value.openList) "-" else "+", (moduleX + moduleElement.settingsWidth - if (value.openList) 5 else 6).toInt(), yPos + 4, WHITE)
+
+					if (mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= yPos + 2 && mouseY <= yPos + 14 && Mouse.isButtonDown(0) && moduleElement.isntPressed())
 					{
-						var i = 0
-						val j = fonts.size
+						value.openList = !value.openList
+						mc.soundHandler.playSound("gui.button.press", 1.0f)
+					}
 
-						while (i < j)
+					yPos += 12
+
+					for (valueOfList in value.values)
+					{
+						val textWidth2 = valueFont.getStringWidth("> $valueOfList") + indent + 8f
+
+						if (moduleElement.settingsWidth < textWidth2) moduleElement.settingsWidth = textWidth2
+						if (value.openList)
 						{
-							val font = fonts[i]
-							if (font == fontRenderer)
+							drawRect(moduleX + 4f, yPos + 2f, moduleX + moduleElement.settingsWidth, yPos + 14f, BACKGROUND)
+
+							if (mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= yPos + 2 && mouseY <= yPos + 14 && Mouse.isButtonDown(0) && moduleElement.isntPressed())
 							{
-								i++
-
-								if (i >= fonts.size) i = 0
-
-								value.set(fonts[i])
-
-								break
+								value.set(valueOfList)
+								mc.soundHandler.playSound("gui.button.press", 1.0f)
 							}
-							i++
+
+							glStateManager.resetColor()
+
+							valueFont.drawString(">", moduleIndentX + 6, yPos + 4, LIGHT_GRAY)
+							valueFont.drawString(valueOfList, moduleIndentX + 14, yPos + 4, if (value.get().equals(valueOfList, ignoreCase = true)) guiColor else LIGHT_GRAY)
+
+							yPos += 12
 						}
 					}
+				}
+
+				is IntegerValue ->
+				{
+					val text = value.displayName + "\u00A7f: \u00A7c" + if (value is BlockValue) getBlockName(value.get()) + " (" + value.get() + ")" else value.get()
+					val textWidth = valueFont.getStringWidth(text) + indent + 8f
+
+					if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
+					val moduleXEnd = moduleX + moduleElement.settingsWidth
+					val perc = moduleElement.settingsWidth - indent - 12
+
+					drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 24f, BACKGROUND)
+					drawRect(moduleIndentX + 8f, yPos + 18f, moduleXEnd - 4, yPos + 19f, LIGHT_GRAY)
+
+					val sliderValue = moduleIndentX + perc * (value.get() - value.minimum) / (value.maximum - value.minimum)
+					drawRect(8 + sliderValue, yPos + 15f, sliderValue + 11, yPos + 21f, guiColor)
+
+					if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= yPos + 15 && mouseY <= yPos + 21 && Mouse.isButtonDown(0)) value.set((value.minimum + (value.maximum - value.minimum) * clamp_double(((mouseX - (moduleIndentX + 8)) / perc).toDouble(), 0.0, 1.0)).toInt())
+
+					glStateManager.resetColor()
+
+					valueFont.drawString(text, moduleIndentX + 6, yPos + 4, WHITE)
+
+					yPos += 22
+				}
+
+				is FloatValue ->
+				{
+					val text = value.displayName + "\u00A7f: \u00A7c" + DECIMALFORMAT_2.format(value.get())
+					val textWidth = valueFont.getStringWidth(text) + indent + 8f
+
+					if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
+					val moduleXEnd = moduleX + moduleElement.settingsWidth
+					val perc = moduleElement.settingsWidth - indent - 12
+
+					drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 24f, BACKGROUND)
+					drawRect(moduleIndentX + 8f, yPos + 18f, moduleXEnd - 4f, yPos + 19f, LIGHT_GRAY)
+
+					val sliderValue = moduleIndentX + perc * (value.get() - value.minimum) / (value.maximum - value.minimum)
+					drawRect(8 + sliderValue, yPos + 15f, sliderValue + 11, yPos + 21f, guiColor)
+
+					if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd - 4 && mouseY >= yPos + 15 && mouseY <= yPos + 21 && Mouse.isButtonDown(0)) value.set(round((value.minimum + (value.maximum - value.minimum) * clamp_double(((mouseX - (moduleIndentX + 8)) / perc).toDouble(), 0.0, 1.0)).toFloat()).toFloat())
+
+					glStateManager.resetColor()
+
+					valueFont.drawString(text, moduleIndentX + 6, yPos + 4, WHITE)
+
+					yPos += 22
+				}
+
+				is FontValue ->
+				{
+					val fontRenderer = value.get()
+
+					drawRect(moduleX + 4f, yPos + 2f, moduleX + moduleElement.settingsWidth, yPos + 14f, BACKGROUND)
+
+					var displayString = "Font: Unknown"
+
+					if (fontRenderer.isGameFontRenderer())
+					{
+						val liquidFontRenderer = fontRenderer.getGameFontRenderer()
+						displayString = "Font: " + liquidFontRenderer.defaultFont.font.name + " - " + liquidFontRenderer.defaultFont.font.size
+					}
+					else if (fontRenderer == Fonts.minecraftFont) displayString = "Font: Minecraft"
 					else
 					{
-						var i = fonts.size - 1
+						val fontInfo = Fonts.getFontDetails(fontRenderer)
+						if (fontInfo != null) displayString = fontInfo.name + if (fontInfo.fontSize == -1) "" else " - " + fontInfo.fontSize
+					}
 
-						while (i >= 0)
+					valueFont.drawString(displayString, moduleIndentX + 6, yPos + 4, WHITE)
+
+					val stringWidth = valueFont.getStringWidth(displayString)
+
+					if (moduleElement.settingsWidth < stringWidth + 8) moduleElement.settingsWidth = stringWidth + 8f
+
+					if ((Mouse.isButtonDown(0) && !mouseDown || Mouse.isButtonDown(1) && !rightMouseDown) && mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= yPos + 4 && mouseY <= yPos + 12)
+					{
+						val fonts = Fonts.fonts
+
+						if (Mouse.isButtonDown(0))
 						{
-							val font = fonts[i]
-							if (font == fontRenderer)
+							var i = 0
+							val j = fonts.size
+
+							while (i < j)
 							{
-								i--
+								val font = fonts[i]
+								if (font == fontRenderer)
+								{
+									i++
 
-								if (i >= fonts.size) i = 0
-								if (i < 0) i = fonts.size - 1
+									if (i >= fonts.size) i = 0
 
-								value.set(fonts[i])
+									value.set(fonts[i])
 
-								break
+									break
+								}
+								i++
 							}
-							i--
+						}
+						else
+						{
+							var i = fonts.size - 1
+
+							while (i >= 0)
+							{
+								val font = fonts[i]
+								if (font == fontRenderer)
+								{
+									i--
+
+									if (i >= fonts.size) i = 0
+									if (i < 0) i = fonts.size - 1
+
+									value.set(fonts[i])
+
+									break
+								}
+								i--
+							}
 						}
 					}
+
+					yPos += 11
 				}
 
-				yPos += 11
-			}
+				else ->
+				{
+					val text = value.displayName + "\u00A7f: \u00A7c" + value.get()
+					val textWidth = valueFont.getStringWidth(text)
 
-			else ->
-			{
-				val text = value.displayName + "\u00A7f: \u00A7c" + value.get()
-				val textWidth = valueFont.getStringWidth(text)
+					if (moduleElement.settingsWidth < textWidth + 8) moduleElement.settingsWidth = textWidth + 8f
 
-				if (moduleElement.settingsWidth < textWidth + 8) moduleElement.settingsWidth = textWidth + 8f
+					drawRect(moduleX + 4f, yPos + 2f, moduleX + moduleElement.settingsWidth, yPos + 14f, BACKGROUND)
 
-				drawRect(moduleX + 4f, yPos + 2f, moduleX + moduleElement.settingsWidth, yPos + 14f, BACKGROUND)
+					glStateManager.resetColor()
 
-				glStateManager.resetColor()
+					valueFont.drawString(text, moduleIndentX + 6, yPos + 4, WHITE)
 
-				valueFont.drawString(text, moduleIndentX + 6, yPos + 4, WHITE)
-
-				yPos += 12
+					yPos += 12
+				}
 			}
 		}
 
-		if (isNumber) assumeNonVolatile = true
 		return yPos
 	}
 

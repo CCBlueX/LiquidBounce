@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_1
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_2
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
-import net.ccbluex.liquidbounce.utils.render.ColorUtils.createRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.*
@@ -52,13 +51,8 @@ class Target : Element()
 	private val playerOnlyValue = BoolValue("PlayerOnly", true)
 	private val barWidthSubtractorValue = IntegerValue("BarWidthSubtractor", 2, 0, 5)
 
-	private val damageAnimationColorRedValue = IntegerValue("DamageAnimationColorRed", 252, 0, 255)
-	private val damageAnimationColorGreenValue = IntegerValue("DamageAnimationColorGreen", 185, 0, 255)
-	private val damageAnimationColorBlueValue = IntegerValue("DamageAnimationColorBlue", 65, 0, 255)
-
-	private val healAnimationColorRedValue = IntegerValue("HealAnimationColorRed", 44, 0, 255)
-	private val healAnimationColorGreenValue = IntegerValue("HealAnimationColorGreen", 201, 0, 255)
-	private val healAnimationColorBlueValue = IntegerValue("HealAnimationColorBlue", 144, 0, 255)
+	private val damageAnimationColorValue = RGBColorValue("DamageAnimationColor", 252, 185, 65, Triple("DamageAnimationColorRed", "DamageAnimationColorGreen", "DamageAnimationColorBlue"))
+	private val healAnimationColorValue = RGBColorValue("HealAnimationColor", 44, 201, 144, Triple("HealAnimationColorRed", "HealAnimationColorGreen", "HealAnimationColorBlue"))
 
 	private val healthFadeStartDelayValue = IntegerValue("HealthFadeStartDelay", 2, 0, 40)
 	private val healthFadeSpeedValue = IntegerValue("HealthFadeSpeed", 2, 1, 9)
@@ -69,29 +63,49 @@ class Target : Element()
 
 	private val renderEquipmentsValue = BoolValue("Armor", true)
 
-	private val backgroundColorModeValue = ListValue("Background-Color", arrayOf("None", "Custom", "Rainbow", "RainbowShader"), "Custom")
-	private val backgroundColorRedValue = IntegerValue("Background-R", 0, 0, 255)
-	private val backgroundColorGreenValue = IntegerValue("Background-G", 0, 0, 255)
-	private val backgroundColorBlueValue = IntegerValue("Background-B", 0, 0, 255)
+	private val backgroundGroup = ValueGroup("Background")
 	private val backgroundRainbowCeilValue = BoolValue("Background-RainbowCeil", false)
 
-	private val borderColorModeValue = ListValue("Border-Color", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom")
+	private val backgroundColorGroup = ValueGroup("Color")
+	private val backgroundColorModeValue = ListValue("Mode", arrayOf("None", "Custom", "Rainbow", "RainbowShader"), "Custom", "Background-Color")
+	private val backgroundColorValue = RGBColorValue("Color", 0, 0, 0, Triple("Background-R", "Background-G", "Background-B"))
+
+	private val borderGroup = ValueGroup("Border")
 	private val borderWidthValue = FloatValue("Border-Width", 3F, 2F, 5F)
-	private val borderColorRedValue = IntegerValue("Border-R", 0, 0, 255)
-	private val borderColorGreenValue = IntegerValue("Border-G", 0, 0, 255)
-	private val borderColorBlueValue = IntegerValue("Border-B", 0, 0, 255)
-	private val borderColorAlphaValue = IntegerValue("Border-Alpha", 0, 0, 255)
 
-	private val saturationValue = FloatValue("HSB-Saturation", 0.9f, 0f, 1f)
-	private val brightnessValue = FloatValue("HSB-Brightness", 1f, 0f, 1f)
+	private val borderColorGroup = ValueGroup("Color")
+	private val borderColorModeValue = ListValue("Mode", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom", "Border-Color")
+	private val borderColorValue = RGBAColorValue("Color", 0, 0, 0, 0, listOf("Border-R", "Border-G", "Border-B", "Border-Alpha"))
 
-	private val rainbowSpeedValue = IntegerValue("Rainbow-Speed", 10, 1, 10)
+	private val rainbowGroup = object : ValueGroup("Rainbow")
+	{
+		override fun showCondition() = backgroundColorModeValue.get().equals("Rainbow", ignoreCase = true) || borderColorModeValue.get().equals("Rainbow", ignoreCase = true)
+	}
+	private val rainbowSpeedValue = IntegerValue("Speed", 10, 1, 10, "Rainbow-Speed")
+	private val rainbowSaturationValue = FloatValue("Saturation", 0.9f, 0f, 1f, "HSB-Saturation")
+	private val rainbowBrightnessValue = FloatValue("Brightness", 1f, 0f, 1f, "HSB-Brightness")
 
-	private val rainbowShaderXValue = FloatValue("RainbowShader-X", -1000F, -2000F, 2000F)
-	private val rainbowShaderYValue = FloatValue("RainbowShader-Y", -1000F, -2000F, 2000F)
+	private val rainbowShaderGroup = object : ValueGroup("RainbowShader")
+	{
+		override fun showCondition() = backgroundColorModeValue.get().equals("RainbowShader", ignoreCase = true) || borderColorModeValue.get().equals("RainbowShader", ignoreCase = true)
+	}
+	private val rainbowShaderXValue = FloatValue("X", -1000F, -2000F, 2000F, "RainbowShader-X")
+	private val rainbowShaderYValue = FloatValue("Y", -1000F, -2000F, 2000F, "RainbowShader-Y")
 
 	private val nameFontValue = FontValue("NameFont", Fonts.font40)
 	private val textFontValue = FontValue("TextFont", Fonts.font35)
+
+	init
+	{
+		backgroundColorGroup.addAll(backgroundColorModeValue, backgroundColorValue)
+		backgroundGroup.addAll(backgroundRainbowCeilValue, backgroundColorGroup)
+
+		borderColorGroup.addAll(borderColorModeValue, borderColorValue)
+		borderGroup.addAll(borderWidthValue, borderColorGroup)
+
+		rainbowGroup.addAll(rainbowSpeedValue, rainbowSaturationValue, rainbowBrightnessValue)
+		rainbowShaderGroup.addAll(rainbowShaderXValue, rainbowShaderYValue)
+	}
 
 	private var easingHealth: Float = 0F
 	private var healthAnimationDelay = 0
@@ -118,8 +132,8 @@ class Target : Element()
 		val height = heightValue.get().toFloat()
 
 		val rainbowSpeed = rainbowSpeedValue.get()
-		val saturation = saturationValue.get()
-		val brightness = brightnessValue.get()
+		val saturation = rainbowSaturationValue.get()
+		val brightness = rainbowBrightnessValue.get()
 
 		val rainbowShaderX = if (rainbowShaderXValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderXValue.get()
 		val rainbowShaderY = if (rainbowShaderYValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderYValue.get()
@@ -134,19 +148,19 @@ class Target : Element()
 		{
 			backgroundRainbowShader -> 0
 			backgroundColorMode.equals("Rainbow", ignoreCase = true) -> rainbowRGB
-			else -> createRGB(backgroundColorRedValue.get(), backgroundColorGreenValue.get(), backgroundColorBlueValue.get())
+			else -> backgroundColorValue.get()
 		}
 
 		val borderWidth = borderWidthValue.get()
 		val borderColorMode = borderColorModeValue.get()
-		val borderColorAlpha = borderColorAlphaValue.get()
+		val borderColorAlpha = borderColorValue.getAlpha()
 		val borderRainbowShader = borderColorMode.equals("RainbowShader", ignoreCase = true)
 		val shouldDrawBorder = borderColorAlpha > 0
 		val borderColor = if (shouldDrawBorder) when
 		{
 			borderRainbowShader -> 0
 			borderColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.applyAlphaChannel(rainbowRGB, borderColorAlpha)
-			else -> createRGB(borderColorRedValue.get(), borderColorGreenValue.get(), borderColorBlueValue.get(), borderColorAlpha)
+			else -> borderColorValue.get()
 		}
 		else 0
 
@@ -170,8 +184,8 @@ class Target : Element()
 				val targetMaxHealth = target.maxHealth + targetAbsorption
 
 				// Damage/Heal animation color
-				val damageColor = createRGB(damageAnimationColorRedValue.get(), damageAnimationColorGreenValue.get(), damageAnimationColorBlueValue.get())
-				val healColor = createRGB(healAnimationColorRedValue.get(), healAnimationColorGreenValue.get(), healAnimationColorBlueValue.get())
+				val damageColor = damageAnimationColorValue.get()
+				val healColor = healAnimationColorValue.get()
 
 				val dataWatcherBuilder = StringJoiner("\u00A7r | ", " | ", "\u00A7r").setEmptyValue("")
 

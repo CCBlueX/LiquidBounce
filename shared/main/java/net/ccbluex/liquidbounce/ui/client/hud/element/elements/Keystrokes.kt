@@ -14,9 +14,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FontValue
-import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.input.Keyboard
 import org.lwjgl.input.Mouse
 import org.lwjgl.opengl.GL11
@@ -30,77 +28,41 @@ import java.awt.Color
 @ElementInfo(name = "Keystrokes")
 class Keystrokes(x: Double = -8.0, y: Double = 57.0, scale: Float = 1F, side: Side = Side(Side.Horizontal.MIDDLE, Side.Vertical.DOWN)) : Element(x, y, scale, side)
 {
-	private val keyboardValue = BoolValue("Keyboard", true)
+	private val keyboardGroup = ValueGroup("Keyboard")
+	private val keyboardEnabledValue = BoolValue("Enabled", true, "Keyboard")
+	private val keyboardYPosValue = IntegerValue("YPos", 0, 0, 10, "Keyboard-YPos")
 
-	private val keyboardYPosValue = IntegerValue("Keyboard-YPos", 0, 0, 10)
+	private val keyboardPressedColor = ValueGroup("Pressed")
+	private val keyboardPressedBackgroundValue = RGBAColorValue("Background", 0, 0, 0, 192, listOf("Keyboard-Pressed-Red", "Keyboard-Pressed-Green", "Keyboard-Pressed-Blue", "Keyboard-Pressed-Alpha"))
+	private val keyboardPressedTextValue = RGBAColorValue("Text", 255, 255, 255, 192, listOf("Keyboard-Text-Pressed-Red", "Keyboard-Text-Pressed-Green", "Keyboard-Text-Pressed-Blue", "Keyboard-Text-Pressed-Alpha"))
 
-	private val keyboardPressedRedValue = IntegerValue("Keyboard-Pressed-Red", 255, 0, 255)
-	private val keyboardPressedGreenValue = IntegerValue("Keyboard-Pressed-Green", 255, 0, 255)
-	private val keyboardPressedBlueValue = IntegerValue("Keyboard-Pressed-Blue", 255, 0, 255)
-	private val keyboardPressedAlphaValue = IntegerValue("Keyboard-Pressed-Alpha", 192, 0, 255)
+	private val keyboardUnpressedColor = ValueGroup("Unpressed")
+	private val keyboardUnpressedBackgroundValue = RGBAColorValue("Background", 0, 0, 0, 192, listOf("Keyboard-Unpressed-Red", "Keyboard-Unpressed-Green", "Keyboard-Unpressed-Blue", "Keyboard-Unpressed-Alpha"))
+	private val keyboardUnpressedTextValue = RGBAColorValue("Text", 255, 255, 255, 192, listOf("Keyboard-Text-Unpressed-Red", "Keyboard-Text-Unpressed-Green", "Keyboard-Text-Unpressed-Blue", "Keyboard-Text-Unpressed-Alpha"))
 
-	private val keyboardUnpressedRedValue = IntegerValue("Keyboard-Unpressed-Red", 0, 0, 255)
-	private val keyboardUnpressedGreenValue = IntegerValue("Keyboard-Unpressed-Green", 0, 0, 255)
-	private val keyboardUnpressedBlueValue = IntegerValue("Keyboard-Unpressed-Blue", 0, 0, 255)
-	private val keyboardUnpressedAlphaValue = IntegerValue("Keyboard-Unpressed-Alpha", 192, 0, 255)
+	private val mouseGroup = ValueGroup("Mouse")
+	private val mouseEnabledValue = BoolValue("Enabled", true, "Mouse")
+	private val mouseYPosValue = IntegerValue("YPos", 0, -20, 20, "Mouse-YPos")
 
-	private val keyboardTextPressedRedValue = IntegerValue("Keyboard-Text-Pressed-Red", 255, 0, 255)
-	private val keyboardTextPressedGreenValue = IntegerValue("Keyboard-Text-Pressed-Green", 255, 0, 255)
-	private val keyboardTextPressedBlueValue = IntegerValue("Keyboard-Text-Pressed-Blue", 255, 0, 255)
-	private val keyboardTextPressedAlphaValue = IntegerValue("Keyboard-Text-Pressed-Alpha", 192, 0, 255)
+	private val mousePressedColor = ValueGroup("Pressed")
+	private val mousePressedBackgroundValue = RGBAColorValue("Background", 0, 0, 0, 192, listOf("Mouse-Pressed-Red", "Mouse-Pressed-Green", "Mouse-Pressed-Blue", "Mouse-Pressed-Alpha"))
+	private val mousePressedTextValue = RGBAColorValue("Text", 255, 255, 255, 192, listOf("Mouse-Text-Pressed-Red", "Mouse-Text-Pressed-Green", "Mouse-Text-Pressed-Blue", "Mouse-Text-Pressed-Alpha"))
 
-	private val keyboardTextUnpressedRedValue = IntegerValue("Keyboard-Text-Unpressed-Red", 255, 0, 255)
-	private val keyboardTextUnpressedGreenValue = IntegerValue("Keyboard-Text-Unpressed-Green", 255, 0, 255)
-	private val keyboardTextUnpressedBlueValue = IntegerValue("Keyboard-Text-Unpressed-Blue", 255, 0, 255)
-	private val keyboardTextUnpressedAlphaValue = IntegerValue("Keyboard-Text-Unpressed-Alpha", 192, 0, 255)
+	private val mouseUnpressedColor = ValueGroup("Unpressed")
+	private val mouseUnpressedBackgroundValue = RGBAColorValue("Background", 0, 0, 0, 192, listOf("Mouse-Unpressed-Red", "Mouse-Unpressed-Green", "Mouse-Unpressed-Blue", "Mouse-Unpressed-Alpha"))
+	private val mouseUnpressedTextValue = RGBAColorValue("Text", 255, 255, 255, 192, listOf("Mouse-Text-Unpressed-Red", "Mouse-Text-Unpressed-Green", "Mouse-Text-Unpressed-Blue", "Mouse-Text-Unpressed-Alpha"))
 
-	private val mouseValue = BoolValue("Mouse", true)
+	private val spaceGroup = ValueGroup("Space")
+	private val spaceEnabledValue = BoolValue("Enabled", true, "Space")
+	private val spaceYPosValue = IntegerValue("YPos", 0, -20, 20, "Space-YPos")
 
-	private val mouseYPosValue = IntegerValue("Mouse-YPos", 0, -20, 20)
+	private val spacePressedColor = ValueGroup("Pressed")
+	private val spacePressedBackgroundValue = RGBAColorValue("Background", 0, 0, 0, 192, listOf("Space-Pressed-Red", "Space-Pressed-Green", "Space-Pressed-Blue", "Space-Pressed-Alpha"))
+	private val spacePressedTextValue = RGBAColorValue("Text", 255, 255, 255, 192, listOf("Space-Text-Pressed-Red", "Space-Text-Pressed-Green", "Space-Text-Pressed-Blue", "Space-Text-Pressed-Alpha"))
 
-	private val mousePressedRedValue = IntegerValue("Mouse-Pressed-Red", 255, 0, 255)
-	private val mousePressedGreenValue = IntegerValue("Mouse-Pressed-Green", 255, 0, 255)
-	private val mousePressedBlueValue = IntegerValue("Mouse-Pressed-Blue", 255, 0, 255)
-	private val mousePressedAlphaValue = IntegerValue("Mouse-Pressed-Alpha", 192, 0, 255)
-
-	private val mouseUnpressedRedValue = IntegerValue("Mouse-Unpressed-Red", 0, 0, 255)
-	private val mouseUnpressedGreenValue = IntegerValue("Mouse-Unpressed-Green", 0, 0, 255)
-	private val mouseUnpressedBlueValue = IntegerValue("Mouse-Unpressed-Blue", 0, 0, 255)
-	private val mouseUnpressedAlphaValue = IntegerValue("Mouse-Unpressed-Alpha", 192, 0, 255)
-
-	private val mouseTextPressedRedValue = IntegerValue("Mouse-Text-Pressed-Red", 255, 0, 255)
-	private val mouseTextPressedGreenValue = IntegerValue("Mouse-Text-Pressed-Green", 255, 0, 255)
-	private val mouseTextPressedBlueValue = IntegerValue("Mouse-Text-Pressed-Blue", 255, 0, 255)
-	private val mouseTextPressedAlphaValue = IntegerValue("Mouse-Text-Pressed-Alpha", 192, 0, 255)
-
-	private val mouseTextUnpressedRedValue = IntegerValue("Mouse-Text-Unpressed-Red", 255, 0, 255)
-	private val mouseTextUnpressedGreenValue = IntegerValue("Mouse-Text-Unpressed-Green", 255, 0, 255)
-	private val mouseTextUnpressedBlueValue = IntegerValue("Mouse-Text-Unpressed-Blue", 255, 0, 255)
-	private val mouseTextUnpressedAlphaValue = IntegerValue("Mouse-Text-Unpressed-Alpha", 192, 0, 255)
-
-	private val spaceValue = BoolValue("Space", true)
-
-	private val spaceYPosValue = IntegerValue("Space-YPos", 0, -20, 20)
-
-	private val spacePressedRedValue = IntegerValue("Space-Pressed-Red", 255, 0, 255)
-	private val spacePressedGreenValue = IntegerValue("Space-Pressed-Green", 255, 0, 255)
-	private val spacePressedBlueValue = IntegerValue("Space-Pressed-Blue", 255, 0, 255)
-	private val spacePressedAlphaValue = IntegerValue("Space-Pressed-Alpha", 192, 0, 255)
-
-	private val spaceUnpressedRedValue = IntegerValue("Space-Unpressed-Red", 0, 0, 255)
-	private val spaceUnpressedGreenValue = IntegerValue("Space-Unpressed-Green", 0, 0, 255)
-	private val spaceUnpressedBlueValue = IntegerValue("Space-Unpressed-Blue", 0, 0, 255)
-	private val spaceUnpressedAlphaValue = IntegerValue("Space-Unpressed-Alpha", 192, 0, 255)
-
-	private val spaceTextPressedRedValue = IntegerValue("Space-Text-Pressed-Red", 255, 0, 255)
-	private val spaceTextPressedGreenValue = IntegerValue("Space-Text-Pressed-Green", 255, 0, 255)
-	private val spaceTextPressedBlueValue = IntegerValue("Space-Text-Pressed-Blue", 255, 0, 255)
-	private val spaceTextPressedAlphaValue = IntegerValue("Space-Text-Pressed-Alpha", 192, 0, 255)
-
-	private val spaceTextUnpressedRedValue = IntegerValue("Space-Text-Unpressed-Red", 255, 0, 255)
-	private val spaceTextUnpressedGreenValue = IntegerValue("Space-Text-Unpressed-Green", 255, 0, 255)
-	private val spaceTextUnpressedBlueValue = IntegerValue("Space-Text-Unpressed-Blue", 255, 0, 255)
-	private val spaceTextUnpressedAlphaValue = IntegerValue("Space-Text-Unpressed-Alpha", 192, 0, 255)
+	private val spaceUnpressedColor = ValueGroup("Unpressed")
+	private val spaceUnpressedBackgroundValue = RGBAColorValue("Background", 0, 0, 0, 192, listOf("Space-Unpressed-Red", "Space-Unpressed-Green", "Space-Unpressed-Blue", "Space-Unpressed-Alpha"))
+	private val spaceUnpressedTextValue = RGBAColorValue("Text", 255, 255, 255, 192, listOf("Space-Text-Unpressed-Red", "Space-Text-Unpressed-Green", "Space-Text-Unpressed-Blue", "Space-Text-Unpressed-Alpha"))
 
 	private val fadingTime = IntegerValue("FadingTime", 100, 0, 1000)
 
@@ -108,8 +70,8 @@ class Keystrokes(x: Double = -8.0, y: Double = 57.0, scale: Float = 1F, side: Si
 
 	private val keyboardKeys = run {
 		val gameSettings = mc.gameSettings
-		val pressed = { Color(keyboardPressedRedValue.get(), keyboardPressedGreenValue.get(), keyboardPressedBlueValue.get(), keyboardPressedAlphaValue.get()) to Color(keyboardTextPressedRedValue.get(), keyboardTextPressedGreenValue.get(), keyboardTextPressedBlueValue.get(), keyboardTextPressedAlphaValue.get()) }
-		val unpressed = { Color(keyboardUnpressedRedValue.get(), keyboardUnpressedGreenValue.get(), keyboardUnpressedBlueValue.get(), keyboardUnpressedAlphaValue.get()) to Color(keyboardTextUnpressedRedValue.get(), keyboardTextUnpressedGreenValue.get(), keyboardTextUnpressedBlueValue.get(), keyboardTextUnpressedAlphaValue.get()) }
+		val pressed = { keyboardPressedBackgroundValue.getColor() to keyboardPressedTextValue.getColor() }
+		val unpressed = { keyboardUnpressedBackgroundValue.getColor() to keyboardUnpressedTextValue.getColor() }
 		val fading = fadingTime::get
 		val yPos = { keyboardYPosValue.get() + 20 }
 
@@ -122,8 +84,8 @@ class Keystrokes(x: Double = -8.0, y: Double = 57.0, scale: Float = 1F, side: Si
 
 	private val mouseKeys = run {
 		val gameSettings = mc.gameSettings
-		val pressed = { Color(mousePressedRedValue.get(), mousePressedGreenValue.get(), mousePressedBlueValue.get(), mousePressedAlphaValue.get()) to Color(mouseTextPressedRedValue.get(), mouseTextPressedGreenValue.get(), mouseTextPressedBlueValue.get(), mouseTextPressedAlphaValue.get()) }
-		val unpressed = { Color(mouseUnpressedRedValue.get(), mouseUnpressedGreenValue.get(), mouseUnpressedBlueValue.get(), mouseUnpressedAlphaValue.get()) to Color(mouseTextUnpressedRedValue.get(), mouseTextUnpressedGreenValue.get(), mouseTextUnpressedBlueValue.get(), mouseTextUnpressedAlphaValue.get()) }
+		val pressed = { mousePressedBackgroundValue.getColor() to mousePressedTextValue.getColor() }
+		val unpressed = { mouseUnpressedBackgroundValue.getColor() to mouseUnpressedTextValue.getColor() }
 		val fading = fadingTime::get
 		val yPos = { mouseYPosValue.get() + 40 }
 
@@ -132,7 +94,22 @@ class Keystrokes(x: Double = -8.0, y: Double = 57.0, scale: Float = 1F, side: Si
 		)
 	}
 
-	private val spaceBar = KeySpace(mc.gameSettings.keyBindJump, 0, { spaceYPosValue.get() + 60 }, 59, 11, { Color(spacePressedRedValue.get(), spacePressedGreenValue.get(), spacePressedBlueValue.get(), spacePressedAlphaValue.get()) to Color(spaceTextPressedRedValue.get(), spaceTextPressedGreenValue.get(), spaceTextPressedBlueValue.get(), spaceTextPressedAlphaValue.get()) }, { Color(spaceUnpressedRedValue.get(), spaceUnpressedGreenValue.get(), spaceUnpressedBlueValue.get(), spaceUnpressedAlphaValue.get()) to Color(spaceTextUnpressedRedValue.get(), spaceTextUnpressedGreenValue.get(), spaceTextUnpressedBlueValue.get(), spaceTextUnpressedAlphaValue.get()) }, fadingTime::get)
+	private val spaceBar = KeySpace(mc.gameSettings.keyBindJump, 0, { spaceYPosValue.get() + 60 }, 59, 11, { spacePressedBackgroundValue.getColor() to spacePressedTextValue.getColor() }, { spaceUnpressedBackgroundValue.getColor() to spaceUnpressedTextValue.getColor() }, fadingTime::get)
+
+	init
+	{
+		keyboardPressedColor.addAll(keyboardPressedBackgroundValue, keyboardPressedTextValue)
+		keyboardUnpressedColor.addAll(keyboardUnpressedBackgroundValue, keyboardUnpressedTextValue)
+		keyboardGroup.addAll(keyboardEnabledValue, keyboardYPosValue, keyboardPressedColor, keyboardUnpressedColor)
+
+		mousePressedColor.addAll(mousePressedBackgroundValue, mousePressedTextValue)
+		mouseUnpressedColor.addAll(mouseUnpressedBackgroundValue, mouseUnpressedTextValue)
+		mouseGroup.addAll(mouseEnabledValue, mouseYPosValue, mousePressedColor, mouseUnpressedColor)
+
+		spacePressedColor.addAll(spacePressedBackgroundValue, spacePressedTextValue)
+		spaceUnpressedColor.addAll(spaceUnpressedBackgroundValue, spaceUnpressedTextValue)
+		spaceGroup.addAll(spaceEnabledValue, spaceYPosValue, spacePressedColor, spaceUnpressedColor)
+	}
 
 	/**
 	 * Draw element
@@ -140,9 +117,9 @@ class Keystrokes(x: Double = -8.0, y: Double = 57.0, scale: Float = 1F, side: Si
 	override fun drawElement(): Border
 	{
 		var renderQueue = arrayOfNulls<Key>(7)
-		if (keyboardValue.get()) renderQueue += keyboardKeys
-		if (mouseValue.get()) renderQueue += mouseKeys
-		if (spaceValue.get()) renderQueue += spaceBar
+		if (keyboardEnabledValue.get()) renderQueue += keyboardKeys
+		if (mouseEnabledValue.get()) renderQueue += mouseKeys
+		if (spaceEnabledValue.get()) renderQueue += spaceBar
 
 		for (key in renderQueue.filterNotNull())
 		{

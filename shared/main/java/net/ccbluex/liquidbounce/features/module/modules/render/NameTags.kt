@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.MurderDetector
 import net.ccbluex.liquidbounce.injection.backend.Backend
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer
 import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.ui.font.assumeNonVolatile
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_2
@@ -230,23 +231,21 @@ class NameTags : Module()
 
 		glScalef(-distanceScale, -distanceScale, distanceScale)
 
-		AWTFontRenderer.assumeNonVolatile = true
+		AWTFontRenderer.assumeNonVolatile {
+			// Draw NameTag
+			val width = fontRenderer.getStringWidth(text) * 0.5f
 
-		// Draw NameTag
-		val width = fontRenderer.getStringWidth(text) * 0.5f
+			glDisable(GL_TEXTURE_2D)
+			glEnable(GL_BLEND)
 
-		glDisable(GL_TEXTURE_2D)
-		glEnable(GL_BLEND)
+			val fontHeight = fontRenderer.fontHeight
 
-		val fontHeight = fontRenderer.fontHeight
+			if (borderEnabled) quickDrawBorderedRect(-width - 2F, -2F, width + 4F, fontHeight + 2F, 2F, borderColor, bodyColor) else quickDrawRect(-width - 2F, -2F, width + 4F, fontHeight + 2F, bodyColor)
 
-		if (borderEnabled) quickDrawBorderedRect(-width - 2F, -2F, width + 4F, fontHeight + 2F, 2F, borderColor, bodyColor) else quickDrawRect(-width - 2F, -2F, width + 4F, fontHeight + 2F, bodyColor)
+			glEnable(GL_TEXTURE_2D)
 
-		glEnable(GL_TEXTURE_2D)
-
-		fontRenderer.drawString(text, 1F - width, if (fontRenderer == Fonts.minecraftFont) 1F else 1.5F, 0xFFFFFF, true)
-
-		AWTFontRenderer.assumeNonVolatile = false
+			fontRenderer.drawString(text, 1F - width, if (fontRenderer == Fonts.minecraftFont) 1F else 1.5F, 0xFFFFFF, true)
+		}
 
 		if (elementArmorValue.get() && isPlayer)
 		{

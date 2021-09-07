@@ -13,7 +13,6 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.AnimationUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
-import net.ccbluex.liquidbounce.utils.render.ColorUtils.createRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
@@ -31,36 +30,52 @@ class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F, side: 
 {
 	companion object
 	{
-		val bodyColorModeValue = ListValue("Body-Color", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom")
-		val bodyRedValue = IntegerValue("Body-R", 0, 0, 255)
-		val bodyGreenValue = IntegerValue("Body-G", 0, 0, 255)
-		val bodyBlueValue = IntegerValue("Body-B", 0, 0, 255)
-		val bodyAlphaValue = IntegerValue("Body-Alpha", 255, 0, 255)
+		private val bodyColorGroup = ValueGroup("BodyColor")
+		val bodyColorModeValue = ListValue("Mode", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom", "Body-Color")
+		val bodyColorValue = RGBAColorValue("Color", 0, 0, 0, 255, listOf("Body-R", "Body-G", "Body-B", "Body-Alpha"))
 
-		val rectValue = BoolValue("Rect", true)
-		val rectWidthValue = FloatValue("Rect-Width", 5F, 1.5F, 8F)
+		private val rectGroup = ValueGroup("Rect")
+		val rectValue = BoolValue("Enabled", true, "Rect")
+		val rectWidthValue = FloatValue("Width", 5F, 1.5F, 8F, "Rect-Width")
 
-		val rectColorModeValue = ListValue("Rect-Color", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom")
-		val rectRedValue = IntegerValue("Rect-R", 0, 0, 255)
-		val rectGreenValue = IntegerValue("Rect-G", 111, 0, 255)
-		val rectBlueValue = IntegerValue("Rect-B", 255, 0, 255)
-		val rectAlphaValue = IntegerValue("Rect-Alpha", 255, 0, 255)
+		private val rectColorGroup = ValueGroup("Color")
+		val rectColorModeValue = ListValue("Mode", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom", "Rect-Color")
+		val rectColorValue = RGBAColorValue("Color", 0, 111, 255, 255, listOf("Rect-R", "Rect-G", "Rect-B", "Rect-Alpha"))
+
+		private val rainbowGroup = object : ValueGroup("Rainbow")
+		{
+			override fun showCondition() = bodyColorModeValue.get().equals("Rainbow", ignoreCase = true) || rectColorModeValue.get().equals("Rainbow", ignoreCase = true)
+		}
+		val rainbowSpeedValue = IntegerValue("Speed", 10, 1, 10, "Rainbow-Speed")
+		val rainbowSaturationValue = FloatValue("Saturation", 1F, 0F, 1F, "HSB-Saturation")
+		val rainbowBrightnessValue = FloatValue("Brightness", 1F, 0F, 1F, "HSB-Brightness")
+
+		private val rainbowShaderGroup = object : ValueGroup("RainbowShader")
+		{
+			override fun showCondition() = bodyColorModeValue.get().equals("RainbowShader", ignoreCase = true) || rectColorModeValue.get().equals("RainbowShader", ignoreCase = true)
+		}
+		val rainbowShaderXValue = FloatValue("X", -1000F, -2000F, 2000F, "RainbowShader-X")
+		val rainbowShaderYValue = FloatValue("Y", -1000F, -2000F, 2000F, "RainbowShader-Y")
 
 		val maxRendered = IntegerValue("MaxRendered", 6, 3, 15)
 
 		val fadeSpeedValue = FloatValue("FadeSpeed", 0.25F, 0.1F, 0.95F)
 		val deploySpeedValue = FloatValue("DeploySpeed", 0.65F, 0.40F, 0.95F)
 
-		val saturationValue = FloatValue("HSB-Saturation", 1F, 0F, 1F)
-		val brightnessValue = FloatValue("HSB-Brightness", 1F, 0F, 1F)
-
-		val rainbowSpeedValue = IntegerValue("Rainbow-Speed", 10, 1, 10)
-
-		val rainbowShaderXValue = FloatValue("RainbowShader-X", -1000F, -2000F, 2000F)
-		val rainbowShaderYValue = FloatValue("RainbowShader-Y", -1000F, -2000F, 2000F)
-
 		val headerFontValue = FontValue("HeaderFont", Fonts.font40)
 		val messageFontValue = FontValue("MessageFont", Fonts.font35)
+
+		init
+		{
+			bodyColorGroup.addAll(bodyColorModeValue, bodyColorValue)
+
+			rectColorGroup.addAll(rectColorModeValue, rectColorValue)
+			rectGroup.addAll(rectValue, rectWidthValue, rectColorGroup)
+
+			rainbowGroup.addAll(rainbowSpeedValue, rainbowSaturationValue, rainbowBrightnessValue)
+
+			rainbowShaderGroup.addAll(rainbowShaderXValue, rainbowShaderYValue)
+		}
 	}
 
 	/**
@@ -164,21 +179,21 @@ class Notification(private val header: String, private val message: String, priv
 		val messageFont = Notifications.messageFontValue.get()
 
 		val bodyColorMode = Notifications.bodyColorModeValue.get()
-		val bodyCustomColor = createRGB(Notifications.bodyRedValue.get(), Notifications.bodyGreenValue.get(), Notifications.bodyBlueValue.get(), Notifications.bodyAlphaValue.get())
+		val bodyCustomColor = Notifications.bodyColorValue.get()
 
 		val rect = Notifications.rectValue.get()
 		val rectWidth = Notifications.rectWidthValue.get()
 
 		val rectColorMode = Notifications.rectColorModeValue.get()
-		val rectColorAlpha = Notifications.rectAlphaValue.get()
-		val rectCustomColor = createRGB(Notifications.rectRedValue.get(), Notifications.rectGreenValue.get(), Notifications.rectBlueValue.get(), rectColorAlpha)
+		val rectColorAlpha = Notifications.rectColorValue.getAlpha()
+		val rectCustomColor = Notifications.rectColorValue.get()
 
 		val rainbowShaderX = if (Notifications.rainbowShaderXValue.get() == 0.0F) 0.0F else 1.0F / Notifications.rainbowShaderXValue.get()
 		val rainbowShaderY = if (Notifications.rainbowShaderYValue.get() == 0.0F) 0.0F else 1.0F / Notifications.rainbowShaderYValue.get()
 		val rainbowShaderOffset = System.currentTimeMillis() % 10000 * 0.0001f
 
-		val saturation = Notifications.saturationValue.get()
-		val brightness = Notifications.brightnessValue.get()
+		val saturation = Notifications.rainbowSaturationValue.get()
+		val brightness = Notifications.rainbowBrightnessValue.get()
 		val rainbowSpeed = Notifications.rainbowSpeedValue.get()
 
 		// Draw Background (Body)
@@ -276,7 +291,7 @@ class Notification(private val header: String, private val message: String, priv
 			}
 			else fadeState = FadeState.END
 
-			// FadeState.END -> LiquidBounce.hud.removeNotification(this) // It throws ConcurrentModificationException
+			// FadeState.END -> LiquidBounce.hud.removeNotification(this) It throws ConcurrentModificationException
 		}
 	}
 }

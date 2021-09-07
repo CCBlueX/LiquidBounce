@@ -14,7 +14,6 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
-import net.ccbluex.liquidbounce.utils.render.ColorUtils.createRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
@@ -29,40 +28,51 @@ import kotlin.math.min
 @ElementInfo(name = "Scoreboard", force = true)
 class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F, side: Side = Side(Side.Horizontal.RIGHT, Side.Vertical.MIDDLE)) : Element(x, y, scale, side)
 {
-	private val textRedValue = IntegerValue("Text-R", 255, 0, 255)
-	private val textGreenValue = IntegerValue("Text-G", 255, 0, 255)
-	private val textBlueValue = IntegerValue("Text-B", 255, 0, 255)
+	private val textGroup = ValueGroup("Text")
+	private val textShadowValue = BoolValue("Shadow", false)
+	private val textColorValue = RGBColorValue("Color", 255, 255, 255, Triple("Text-R", "Text-G", "Text-B"))
 
-	private val titleColorModeValue = ListValue("Title-Color", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom")
-	private val titleColorRedValue = IntegerValue("Title-R", 255, 0, 255)
-	private val titleColorGreenValue = IntegerValue("Title-G", 255, 0, 255)
-	private val titleColorBlueValue = IntegerValue("Title-B", 255, 0, 255)
+	private val titleColorGroup = ValueGroup("TitleColor")
+	private val titleColorModeValue = ListValue("Mode", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom", "Title-Color")
+	private val titleColorValue = RGBColorValue("Color", 255, 255, 255, Triple("Title-R", "Title-G", "Title-B"))
 
-	private val backgroundColorRedValue = IntegerValue("Background-R", 0, 0, 255)
-	private val backgroundColorGreenValue = IntegerValue("Background-G", 0, 0, 255)
-	private val backgroundColorBlueValue = IntegerValue("Background-B", 0, 0, 255)
-	private val backgroundColorAlphaValue = IntegerValue("Background-Alpha", 95, 0, 255)
+	private val backgroundColorValue = RGBAColorValue("BackgroundColor", 0, 0, 0, 95, listOf("Background-R", "Background-G", "Background-B", "Background-Alpha"))
 
-	private val rectValue = ListValue("Rect", arrayOf("None", "Left", "Right"), "None")
-	private val rectWidthValue = FloatValue("Rect-Width", 3F, 1.5F, 5F)
+	private val rectGroup = ValueGroup("Rect")
+	private val rectModeValue = ListValue("Mode", arrayOf("None", "Left", "Right"), "None", "Rect")
+	private val rectWidthValue = FloatValue("Width", 3F, 1.5F, 5F, "Rect-Width")
 
-	private val rectColorModeValue = ListValue("Rect-Color", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom")
-	private val rectColorRedValue = IntegerValue("Rect-R", 0, 0, 255)
-	private val rectColorGreenValue = IntegerValue("Rect-G", 111, 0, 255)
-	private val rectColorBlueValue = IntegerValue("Rect-B", 255, 0, 255)
-	private val rectColorBlueAlpha = IntegerValue("Rect-Alpha", 255, 0, 255)
+	private val rectColorGroup = ValueGroup("Color")
+	private val rectColorModeValue = ListValue("Mode", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom", "Rect-Color")
+	private val rectColorValue = RGBAColorValue("Color", 0, 111, 255, 255, listOf("Rect-R", "Rect-G", "Rect-B", "Rect-Alpha"))
 
-	private val saturationValue = FloatValue("HSB-Saturation", 0.9f, 0f, 1f)
-	private val brightnessValue = FloatValue("HSB-Brightness", 1f, 0f, 1f)
+	private val rainbowGroup = object : ValueGroup("Rainbow")
+	{
+		override fun showCondition() = rectColorModeValue.get().equals("Rainbow", ignoreCase = true) || titleColorModeValue.get().equals("Rainbow", ignoreCase = true)
+	}
+	private val rainbowSpeedValue = IntegerValue("Speed", 10, 1, 10, "Rainbow-Speed")
+	private val rainbowOffsetValue = IntegerValue("IndexOffset", 0, -100, 100, "Rainbow-IndexOffset")
+	private val rainbowSaturationValue = FloatValue("Saturation", 0.9f, 0f, 1f, "HSB-Saturation")
+	private val rainbowBrightnessValue = FloatValue("Brightness", 1f, 0f, 1f, "HSB-Brightness")
 
-	private val rainbowSpeedValue = IntegerValue("Rainbow-Speed", 10, 1, 10)
-	private val rainbowOffsetValue = IntegerValue("Rainbow-IndexOffset", 0, -100, 100)
+	private val rainbowShaderGroup = object : ValueGroup("RainbowShader")
+	{
+		override fun showCondition() = rectColorModeValue.get().equals("RainbowShader", ignoreCase = true) || titleColorModeValue.get().equals("RainbowShader", ignoreCase = true)
+	}
+	private val rainbowShaderXValue = FloatValue("X", -1000F, -2000F, 2000F, "RainbowShader-X")
+	private val rainbowShaderYValue = FloatValue("Y", -1000F, -2000F, 2000F, "RainbowShader-Y")
 
-	private val rainbowShaderXValue = FloatValue("RainbowShader-X", -1000F, -2000F, 2000F)
-	private val rainbowShaderYValue = FloatValue("RainbowShader-Y", -1000F, -2000F, 2000F)
-
-	private val shadowValue = BoolValue("Shadow", false)
 	private val fontValue = FontValue("Font", Fonts.minecraftFont)
+
+	init
+	{
+		textGroup.addAll(textShadowValue, textColorValue)
+		titleColorGroup.addAll(titleColorModeValue, titleColorValue)
+		rectGroup.addAll(rectModeValue, rectWidthValue, rectColorGroup)
+		rectColorGroup.addAll(rectColorModeValue, rectColorValue)
+		rainbowGroup.addAll(rainbowSpeedValue, rainbowOffsetValue, rainbowSaturationValue, rainbowBrightnessValue)
+		rainbowShaderGroup.addAll(rainbowShaderXValue, rainbowShaderYValue)
+	}
 
 	/**
 	 * Draw element
@@ -88,16 +98,16 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F, sid
 		val fontRenderer = fontValue.get()
 		val fontHeight = fontRenderer.fontHeight.toFloat()
 
-		val saturation = saturationValue.get()
-		val brightness = brightnessValue.get()
+		val saturation = rainbowSaturationValue.get()
+		val brightness = rainbowBrightnessValue.get()
 		val rainbowSpeed = rainbowSpeedValue.get()
 
 		val rainbowShaderX = if (rainbowShaderXValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderXValue.get()
 		val rainbowShaderY = if (rainbowShaderYValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderYValue.get()
 		val rainbowShaderOffset = System.currentTimeMillis() % 10000 * 0.0001f
 
-		val textColor = createRGB(textRedValue.get(), textGreenValue.get(), textBlueValue.get())
-		val backColor = createRGB(backgroundColorRedValue.get(), backgroundColorGreenValue.get(), backgroundColorBlueValue.get(), backgroundColorAlphaValue.get())
+		val textColor = textColorValue.get()
+		val backColor = backgroundColorValue.get()
 
 		val titleColorMode = titleColorModeValue.get()
 
@@ -107,13 +117,13 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F, sid
 		{
 			titleRainbowShader -> 0
 			titleColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbowRGB(offset = 400000000L, speed = rainbowSpeed, saturation = saturation, brightness = brightness)
-			else -> createRGB(titleColorRedValue.get(), titleColorGreenValue.get(), titleColorBlueValue.get())
+			else -> titleColorValue.get()
 		}
 
 		val rainbowOffset = 400000000L + 40000000L * rainbowOffsetValue.get()
 
 		val rectColorMode = rectColorModeValue.get()
-		val rectCustomColor = createRGB(rectColorRedValue.get(), rectColorGreenValue.get(), rectColorBlueValue.get(), rectColorBlueAlpha.get())
+		val rectCustomColor = rectColorValue.get()
 
 		val rectRainbowShader = rectColorMode.equals("RainbowShader", ignoreCase = true)
 
@@ -138,7 +148,7 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F, sid
 
 		val maxHeight = scoreCollectionSize * fontHeight
 
-		val rectMode = rectValue.get()
+		val rectMode = rectModeValue.get()
 
 		val leftRect = rectMode.equals("Left", ignoreCase = true)
 		val rightRect = rectMode.equals("Right", ignoreCase = true)
@@ -150,7 +160,7 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F, sid
 
 		RenderUtils.drawRect(backgroundXStart - 2F, -2F, backgroundXEnd, maxHeight + fontHeight, backColor)
 
-		val shadow = shadowValue.get()
+		val shadow = textShadowValue.get()
 
 		scoreCollection.forEachIndexed { index, score ->
 			val playerName = score.playerName

@@ -10,10 +10,9 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
-import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer.Companion.assumeNonVolatile
 import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.ui.font.assumeNonVolatile
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.applyAlphaChannel
-import net.ccbluex.liquidbounce.utils.render.ColorUtils.createRGB
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbowRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
@@ -29,48 +28,71 @@ import kotlin.math.roundToInt
 @ElementInfo(name = "Effects")
 class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F, side: Side = Side(Side.Horizontal.RIGHT, Side.Vertical.DOWN)) : Element(x, y, scale, side)
 {
-	private val colorModeValue = ListValue("ColorMode", arrayOf("PotionColor", "Custom", "Rainbow", "RainbowShader"), "PotionColor")
-	private val redValue = IntegerValue("Red", 255, 0, 255)
-	private val greenValue = IntegerValue("Green", 255, 0, 255)
-	private val blueValue = IntegerValue("Blue", 255, 0, 255)
+	private val textGroup = ValueGroup("Text")
 
-	private val timeTypeValue = ListValue("TimeType", arrayOf("String", "Ticks", "Both"), "String")
-	private val timeColorModeValue = ListValue("Time-Color", arrayOf("PotionColor", "Custom", "Rainbow", "RainbowShader"), "Custom")
-	private val timeRedValue = IntegerValue("Time-Red", 192, 0, 255)
-	private val timeGreenValue = IntegerValue("Time-Green", 192, 0, 255)
-	private val timeBlueValue = IntegerValue("Time-Blue", 192, 0, 255)
-	private val timeSpaceValue = FloatValue("Time-Space", 2.5F, 1F, 5F)
-	private val timeHighlightValue = BoolValue("HighlightTimeWhenReachesEnd", true)
+	private val textShadowValue = BoolValue("Shadow", true, "Shadow")
 
-	private val rectValue = ListValue("Rect", arrayOf("None", "Left", "Right"), "None")
-	private val rectWidthValue = FloatValue("Rect-Width", 3F, 1.5F, 5F)
+	private val textSpaceValue = FloatValue("Space", 0F, 0F, 5F, "Space")
+	private val textHeightValue = FloatValue("Height", 11F, 1F, 20F, "TextHeight")
+	private val textYValue = FloatValue("Y", 1F, 0F, 20F, "TextY")
 
-	private val rectColorModeValue = ListValue("Rect-Color", arrayOf("PotionColor", "Custom", "Rainbow", "RainbowShader"), "PotionColor")
-	private val rectColorRedValue = IntegerValue("Rect-R", 255, 0, 255)
-	private val rectColorGreenValue = IntegerValue("Rect-G", 255, 0, 255)
-	private val rectColorBlueValue = IntegerValue("Rect-B", 255, 0, 255)
-	private val rectColorBlueAlpha = IntegerValue("Rect-Alpha", 255, 0, 255)
+	private val textColorGroup = ValueGroup("Color")
+	private val textColorModeValue = ListValue("Mode", arrayOf("PotionColor", "Custom", "Rainbow", "RainbowShader"), "PotionColor", "ColorMode")
+	private val textColorValue = RGBColorValue("Color", 255, 255, 255, Triple("Red", "Green", "Blue"))
 
-	private val backgroundColorModeValue = ListValue("Background-Color", arrayOf("Custom", "PotionColor", "Rainbow", "RainbowShader"), "Custom")
-	private val backgroundColorRedValue = IntegerValue("Background-R", 0, 0, 255)
-	private val backgroundColorGreenValue = IntegerValue("Background-G", 0, 0, 255)
-	private val backgroundColorBlueValue = IntegerValue("Background-B", 0, 0, 255)
-	private val backgroundColorAlphaValue = IntegerValue("Background-Alpha", 255, 0, 255)
+	private val textTimeGroup = ValueGroup("Time")
+	private val textTimeModeValue = ListValue("Mode", arrayOf("String", "Ticks", "Both"), "String", "TimeType")
+	private val textTimeSpaceValue = FloatValue("Space", 2.5F, 1F, 5F, "Time-Space")
 
-	private val rainbowShaderXValue = FloatValue("RainbowShader-X", -1000F, -2000F, 2000F)
-	private val rainbowShaderYValue = FloatValue("RainbowShader-Y", -1000F, -2000F, 2000F)
+	private val textTimeColorGroup = ValueGroup("Color")
+	private val textTimeColorModeValue = ListValue("Mode", arrayOf("PotionColor", "Custom", "Rainbow", "RainbowShader"), "Custom", "Time-Color")
+	private val textTimeColorValue = RGBColorValue("Color", 192, 192, 192, Triple("Time-Red", "Time-Green", "Time-Blue"))
+	private val textTimeHighlightValue = BoolValue("HighlightTimeWhenReachesEnd", true, "HighlightTimeWhenReachesEnd")
 
-	private val saturationValue = FloatValue("HSB-Saturation", 0.9f, 0f, 1f)
-	private val brightnessValue = FloatValue("HSB-Brightness", 1f, 0f, 1f)
+	private val rectGroup = ValueGroup("Rect")
+	private val rectModeValue = ListValue("Mode", arrayOf("None", "Left", "Right"), "None", "Rect")
+	private val rectWidthValue = FloatValue("Width", 3F, 1.5F, 5F, "Rect-Width")
 
-	private val rainbowSpeedValue = IntegerValue("Rainbow-Speed", 10, 1, 10)
+	private val rectColorGroup = ValueGroup("Color")
+	private val rectColorModeValue = ListValue("Mode", arrayOf("PotionColor", "Custom", "Rainbow", "RainbowShader"), "PotionColor", "Rect-Color")
+	private val rectColorValue = RGBAColorValue("Color", 255, 255, 255, 255, listOf("Rect-R", "Rect-G", "Rect-B", "Rect-Alpha"))
 
-	private val spaceValue = FloatValue("Space", 0F, 0F, 5F)
-	private val textHeightValue = FloatValue("TextHeight", 11F, 1F, 20F)
-	private val textYValue = FloatValue("TextY", 1F, 0F, 20F)
-	private val shadowValue = BoolValue("Shadow", true)
+	private val backgroundColorGroup = ValueGroup("BackgroundColor")
+	private val backgroundColorModeValue = ListValue("Mode", arrayOf("Custom", "PotionColor", "Rainbow", "RainbowShader"), "Custom", "Background-Color")
+	private val backgroundColorValue = RGBAColorValue("Color", 0, 0, 0, 255, listOf("Background-R", "Background-G", "Background-B", "Background-Alpha"))
+
+	private val rainbowShaderGroup = object : ValueGroup("RainbowShader")
+	{
+		override fun showCondition() = arrayOf(textColorModeValue.get(), textTimeColorModeValue.get(), rectColorModeValue.get(), backgroundColorModeValue.get()).any { it.equals("RainbowShader", ignoreCase = true) }
+	}
+	private val rainbowShaderXValue = FloatValue("X", -1000F, -2000F, 2000F, "RainbowShader-X")
+	private val rainbowShaderYValue = FloatValue("Y", -1000F, -2000F, 2000F, "RainbowShader-Y")
+
+	private val rainbowGroup = object : ValueGroup("Rainbow")
+	{
+		override fun showCondition() = arrayOf(textColorModeValue.get(), textTimeColorModeValue.get(), rectColorModeValue.get(), backgroundColorModeValue.get()).any { it.equals("Rainbow", ignoreCase = true) }
+	}
+	private val rainbowSpeedValue = IntegerValue("Speed", 10, 1, 10, "Rainbow-Speed")
+	private val rainbowSaturationValue = FloatValue("Saturation", 0.9f, 0f, 1f, "HSB-Saturation")
+	private val rainbowBrightnessValue = FloatValue("Brightness", 1f, 0f, 1f, "HSB-Brightness")
 
 	private val fontValue = FontValue("Font", Fonts.font35)
+
+	init
+	{
+		textColorGroup.addAll(textColorModeValue, textColorValue)
+		textTimeColorGroup.addAll(textTimeColorModeValue, textTimeColorValue, textTimeHighlightValue)
+		textTimeGroup.addAll(textTimeModeValue, textTimeSpaceValue, textTimeColorGroup)
+		textGroup.addAll(textColorGroup, textTimeGroup, textSpaceValue, textHeightValue, textYValue)
+
+		rectColorGroup.addAll(rectColorModeValue, rectColorValue)
+		rectGroup.addAll(rectModeValue, rectWidthValue, rectColorGroup)
+
+		backgroundColorGroup.addAll(backgroundColorModeValue, backgroundColorValue)
+
+		rainbowShaderGroup.addAll(rainbowShaderXValue, rainbowShaderYValue)
+		rainbowGroup.addAll(rainbowSpeedValue, rainbowSaturationValue, rainbowBrightnessValue)
+	}
 
 	private var effects = emptyList<IPotionEffect>()
 
@@ -84,201 +106,199 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F, side: Side =
 	{
 		val fontRenderer = fontValue.get()
 
-		val colorMode = colorModeValue.get()
-		val customColor = createRGB(redValue.get(), greenValue.get(), blueValue.get())
+		val textColorMode = textColorModeValue.get()
+		val textCustomColor = textColorValue.get()
 
-		val timeDistance = timeSpaceValue.get()
-		val timeColorMode = timeColorModeValue.get()
-		val timeCustomColor = createRGB(timeRedValue.get(), timeGreenValue.get(), timeBlueValue.get())
+		val timeDistance = textTimeSpaceValue.get()
+		val timeColorMode = textTimeColorModeValue.get()
+		val timeCustomColor = textTimeColorValue.get()
 
 		val backgroundColorMode = backgroundColorModeValue.get()
-		val backgroundColorAlpha = backgroundColorAlphaValue.get()
-		val backgroundCustomColor = createRGB(backgroundColorRedValue.get(), backgroundColorGreenValue.get(), backgroundColorBlueValue.get(), backgroundColorAlpha)
+		val backgroundColorAlpha = backgroundColorValue.getAlpha()
+		val backgroundCustomColor = backgroundColorValue.get()
 
-		val rectMode = rectValue.get()
+		val rectMode = rectModeValue.get()
 		val rightRect = rectMode.equals("right", true)
 		val leftRect = rectMode.equals("left", true)
 
 		val rectWidth = rectWidthValue.get()
 
 		val rectColorMode = rectColorModeValue.get()
-		val rectColorAlpha = rectColorBlueAlpha.get()
-		val rectCustomColor = createRGB(rectColorRedValue.get(), rectColorGreenValue.get(), rectColorBlueValue.get(), rectColorAlpha)
+		val rectColorAlpha = rectColorValue.getAlpha()
+		val rectCustomColor = rectColorValue.get()
 
-		val space = spaceValue.get()
+		val space = textSpaceValue.get()
 		val textHeight = textHeightValue.get()
 		val textY = textYValue.get()
 		val textSpacer = textHeight + space
 
-		val saturation = saturationValue.get()
-		val brightness = brightnessValue.get()
+		val saturation = rainbowSaturationValue.get()
+		val brightness = rainbowBrightnessValue.get()
 		val rainbowSpeed = rainbowSpeedValue.get()
 		val rainbowShaderX = if (rainbowShaderXValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderXValue.get()
 		val rainbowShaderY = if (rainbowShaderYValue.get() == 0.0F) 0.0F else 1.0F / rainbowShaderYValue.get()
 		val rainbowShaderOffset = System.currentTimeMillis() % 10000 * 0.0001f
 
-		val shadow = shadowValue.get()
+		val shadow = textShadowValue.get()
 
 		val backgroundRainbowShader = backgroundColorMode.equals("RainbowShader", ignoreCase = true)
-		val textRainbowShader = colorMode.equals("RainbowShader", ignoreCase = true)
+		val textRainbowShader = textColorMode.equals("RainbowShader", ignoreCase = true)
 		val timeRainbowShader = timeColorMode.equals("RainbowShader", ignoreCase = true)
 		val rectRainbowShader = rectColorMode.equals("RainbowShader", ignoreCase = true)
 
-		assumeNonVolatile = true
+		assumeNonVolatile {
+			val provider = classProvider
 
-		val provider = classProvider
+			effects.forEachIndexed { index, effect ->
+				val potionID = effect.potionID
+				val potion = functions.getPotionById(potionID)
+				val potionColor = applyAlphaChannel(potion.liquidColor, 255) // Apply default alpha channel
 
-		effects.forEachIndexed { index, effect ->
-			val potionID = effect.potionID
-			val potion = functions.getPotionById(potionID)
-			val potionColor = applyAlphaChannel(potion.liquidColor, 255) // Apply default alpha channel
+				val string = formatEffect(effect)
+				val timeString = formatRemainingTime(effect)
+				val width = fontRenderer.getStringWidth(string).toFloat() + timeDistance + fontRenderer.getStringWidth(timeString)
 
-			val string = formatEffect(effect)
-			val timeString = formatRemainingTime(effect)
-			val width = fontRenderer.getStringWidth(string).toFloat() + timeDistance + fontRenderer.getStringWidth(timeString)
-
-			val backgroundColor = when
-			{
-				backgroundRainbowShader -> 0
-				backgroundColorMode.equals("Rainbow", ignoreCase = true) -> rainbowRGB(alpha = backgroundColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness)
-				backgroundColorMode.equals("PotionColor", ignoreCase = true) -> applyAlphaChannel(potionColor, backgroundColorAlpha)
-				else -> backgroundCustomColor
-			}
-
-			val textColor = when
-			{
-				textRainbowShader -> 0
-				colorMode.equals("Rainbow", ignoreCase = true) -> rainbowRGB(speed = rainbowSpeed, saturation = saturation, brightness = brightness)
-				colorMode.equals("PotionColor", ignoreCase = true) -> potionColor
-				else -> customColor
-			}
-
-			val timeColor = if (timeHighlightValue.get() && effect.duration <= 300) -65536
-			else when
-			{
-				timeRainbowShader -> 0
-				timeColorMode.equals("Rainbow", ignoreCase = true) -> rainbowRGB(speed = rainbowSpeed, saturation = saturation, brightness = brightness)
-				timeColorMode.equals("PotionColor", ignoreCase = true) -> potionColor
-				else -> timeCustomColor
-			}
-
-			val rectColor = when
-			{
-				rectRainbowShader -> 0
-				rectColorMode.equals("Rainbow", ignoreCase = true) -> rainbowRGB(alpha = rectColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness)
-				rectColorMode.equals("PotionColor", ignoreCase = true) -> applyAlphaChannel(potionColor, rectColorAlpha)
-				else -> rectCustomColor
-			}
-
-			when (side.horizontal)
-			{
-				Side.Horizontal.MIDDLE, Side.Horizontal.RIGHT ->
+				val backgroundColor = when
 				{
-					val xPos = -width - 2
-					val yPos = (if (side.vertical == Side.Vertical.DOWN) -textSpacer else textSpacer) * if (side.vertical == Side.Vertical.DOWN) index + 1 else index
-
-					// Draw Background
-					RainbowShader.begin(backgroundRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-						val xPosCorrection = 2F + if (rightRect) rectWidth else 0F
-						val x2Pos = if (rightRect) -3F else 0F
-
-						RenderUtils.drawRect(xPos - xPosCorrection, yPos, x2Pos, yPos + textHeight, backgroundColor)
-					}
-
-					// Draw String
-					RainbowFontShader.begin(textRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-						val xPosCorrection = if (rightRect) rectWidth else 0F
-
-						fontRenderer.drawString(string, xPos - xPosCorrection, yPos + textY, textColor, shadow)
-					}
-
-					// Draw remaining time
-					RainbowFontShader.begin(timeRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-						val xPosCorrection = fontRenderer.getStringWidth(string) + timeDistance - if (rightRect) rectWidth else 0F
-
-						fontRenderer.drawString(timeString, xPos + xPosCorrection, yPos + textY, timeColor, shadow)
-					}
-
-					// Draw Rect
-					if (leftRect || rightRect) RainbowShader.begin(rectRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-						when
-						{
-							leftRect -> RenderUtils.drawRect(xPos - 2F - rectWidth, yPos, xPos - 2F, yPos + textHeight, rectColor)
-							rightRect -> RenderUtils.drawRect(-rectWidth, yPos, 0F, yPos + textHeight, rectColor)
-						}
-					}
+					backgroundRainbowShader -> 0
+					backgroundColorMode.equals("Rainbow", ignoreCase = true) -> rainbowRGB(alpha = backgroundColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness)
+					backgroundColorMode.equals("PotionColor", ignoreCase = true) -> applyAlphaChannel(potionColor, backgroundColorAlpha)
+					else -> backgroundCustomColor
 				}
 
-				Side.Horizontal.LEFT ->
+				val textColor = when
 				{
-					val xPos = (if (leftRect) 5f else 2f)
-					val yPos = (if (side.vertical == Side.Vertical.DOWN) -textSpacer else textSpacer) * if (side.vertical == Side.Vertical.DOWN) index + 1 else index
-
-					// Draw Background
-					RainbowShader.begin(backgroundRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-						val xPosCorrection = 2F + if (rightRect) rectWidth else 0F
-
-						RenderUtils.drawRect(0F, yPos, xPos + width + xPosCorrection, yPos + textHeight, backgroundColor)
-					}
-
-					provider.glStateManager.resetColor()
-
-					// Draw String
-					RainbowFontShader.begin(textRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-						fontRenderer.drawString(string, xPos, yPos + textY, textColor, shadow)
-					}
-
-					// Draw remaining time
-					RainbowFontShader.begin(timeRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-						fontRenderer.drawString(timeString, xPos + fontRenderer.getStringWidth(string) + timeDistance, yPos + textY, timeColor, shadow)
-					}
-
-					// Draw Rect
-					if (leftRect || rightRect) RainbowShader.begin(rectRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-						when
-						{
-							leftRect -> RenderUtils.drawRect(0F, yPos - 1, rectWidth, yPos + textHeight, rectColor)
-							rightRect -> RenderUtils.drawRect(xPos + width + 2F, yPos, xPos + width + 2F + rectWidth, yPos + textHeight, rectColor)
-						}
-					}
+					textRainbowShader -> 0
+					textColorMode.equals("Rainbow", ignoreCase = true) -> rainbowRGB(speed = rainbowSpeed, saturation = saturation, brightness = brightness)
+					textColorMode.equals("PotionColor", ignoreCase = true) -> potionColor
+					else -> textCustomColor
 				}
-			}
-		}
 
-		// Draw border
-		if (provider.isGuiHudDesigner(mc.currentScreen))
-		{
-			x2 = Int.MIN_VALUE
+				val timeColor = if (textTimeHighlightValue.get() && effect.duration <= 300) -65536
+				else when
+				{
+					timeRainbowShader -> 0
+					timeColorMode.equals("Rainbow", ignoreCase = true) -> rainbowRGB(speed = rainbowSpeed, saturation = saturation, brightness = brightness)
+					timeColorMode.equals("PotionColor", ignoreCase = true) -> potionColor
+					else -> timeCustomColor
+				}
 
-			if (effects.isEmpty())
-			{
-				return if (side.horizontal == Side.Horizontal.LEFT) Border(0F, -1F, 20F, 20F)
-				else Border(0F, -1F, -20F, 20F)
-			}
+				val rectColor = when
+				{
+					rectRainbowShader -> 0
+					rectColorMode.equals("Rainbow", ignoreCase = true) -> rainbowRGB(alpha = rectColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness)
+					rectColorMode.equals("PotionColor", ignoreCase = true) -> applyAlphaChannel(potionColor, rectColorAlpha)
+					else -> rectCustomColor
+				}
 
-			effects.map { (fontRenderer.getStringWidth(formatEffect(it)) + timeDistance + fontRenderer.getStringWidth(formatRemainingTime(it))).roundToInt() }.forEach {
 				when (side.horizontal)
 				{
-					Side.Horizontal.RIGHT, Side.Horizontal.MIDDLE ->
+					Side.Horizontal.MIDDLE, Side.Horizontal.RIGHT ->
 					{
-						val xPos = -it - 2
-						if (x2 == Int.MIN_VALUE || xPos < x2) x2 = xPos
+						val xPos = -width - 2
+						val yPos = (if (side.vertical == Side.Vertical.DOWN) -textSpacer else textSpacer) * if (side.vertical == Side.Vertical.DOWN) index + 1 else index
+
+						// Draw Background
+						RainbowShader.begin(backgroundRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
+							val xPosCorrection = 2F + if (rightRect) rectWidth else 0F
+							val x2Pos = if (rightRect) -3F else 0F
+
+							RenderUtils.drawRect(xPos - xPosCorrection, yPos, x2Pos, yPos + textHeight, backgroundColor)
+						}
+
+						// Draw String
+						RainbowFontShader.begin(textRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
+							val xPosCorrection = if (rightRect) rectWidth else 0F
+
+							fontRenderer.drawString(string, xPos - xPosCorrection, yPos + textY, textColor, shadow)
+						}
+
+						// Draw remaining time
+						RainbowFontShader.begin(timeRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
+							val xPosCorrection = fontRenderer.getStringWidth(string) + timeDistance - if (rightRect) rectWidth else 0F
+
+							fontRenderer.drawString(timeString, xPos + xPosCorrection, yPos + textY, timeColor, shadow)
+						}
+
+						// Draw Rect
+						if (leftRect || rightRect) RainbowShader.begin(rectRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
+							when
+							{
+								leftRect -> RenderUtils.drawRect(xPos - 2F - rectWidth, yPos, xPos - 2F, yPos + textHeight, rectColor)
+								rightRect -> RenderUtils.drawRect(-rectWidth, yPos, 0F, yPos + textHeight, rectColor)
+							}
+						}
 					}
 
 					Side.Horizontal.LEFT ->
 					{
-						val xPos = it + 14
-						if (x2 == Int.MIN_VALUE || xPos > x2) x2 = xPos
+						val xPos = (if (leftRect) 5f else 2f)
+						val yPos = (if (side.vertical == Side.Vertical.DOWN) -textSpacer else textSpacer) * if (side.vertical == Side.Vertical.DOWN) index + 1 else index
+
+						// Draw Background
+						RainbowShader.begin(backgroundRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
+							val xPosCorrection = 2F + if (rightRect) rectWidth else 0F
+
+							RenderUtils.drawRect(0F, yPos, xPos + width + xPosCorrection, yPos + textHeight, backgroundColor)
+						}
+
+						provider.glStateManager.resetColor()
+
+						// Draw String
+						RainbowFontShader.begin(textRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
+							fontRenderer.drawString(string, xPos, yPos + textY, textColor, shadow)
+						}
+
+						// Draw remaining time
+						RainbowFontShader.begin(timeRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
+							fontRenderer.drawString(timeString, xPos + fontRenderer.getStringWidth(string) + timeDistance, yPos + textY, timeColor, shadow)
+						}
+
+						// Draw Rect
+						if (leftRect || rightRect) RainbowShader.begin(rectRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
+							when
+							{
+								leftRect -> RenderUtils.drawRect(0F, yPos - 1, rectWidth, yPos + textHeight, rectColor)
+								rightRect -> RenderUtils.drawRect(xPos + width + 2F, yPos, xPos + width + 2F + rectWidth, yPos + textHeight, rectColor)
+							}
+						}
 					}
 				}
 			}
 
-			y2 = (if (side.vertical == Side.Vertical.DOWN) -textSpacer else textSpacer) * effects.size
+			// Draw border
+			if (provider.isGuiHudDesigner(mc.currentScreen))
+			{
+				x2 = Int.MIN_VALUE
 
-			return Border(0F, 0F, x2 - 7F, y2 - if (side.vertical == Side.Vertical.DOWN) 1F else 0F)
+				if (effects.isEmpty())
+				{
+					return@drawElement if (side.horizontal == Side.Horizontal.LEFT) Border(0F, -1F, 20F, 20F)
+					else Border(0F, -1F, -20F, 20F)
+				}
+
+				effects.map { (fontRenderer.getStringWidth(formatEffect(it)) + timeDistance + fontRenderer.getStringWidth(formatRemainingTime(it))).roundToInt() }.forEach {
+					when (side.horizontal)
+					{
+						Side.Horizontal.RIGHT, Side.Horizontal.MIDDLE ->
+						{
+							val xPos = -it - 2
+							if (x2 == Int.MIN_VALUE || xPos < x2) x2 = xPos
+						}
+
+						Side.Horizontal.LEFT ->
+						{
+							val xPos = it + 14
+							if (x2 == Int.MIN_VALUE || xPos > x2) x2 = xPos
+						}
+					}
+				}
+
+				y2 = (if (side.vertical == Side.Vertical.DOWN) -textSpacer else textSpacer) * effects.size
+
+				return@drawElement Border(0F, 0F, x2 - 7F, y2 - if (side.vertical == Side.Vertical.DOWN) 1F else 0F)
+			}
 		}
-
-		assumeNonVolatile = false
 
 		return null
 	}
@@ -286,7 +306,7 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F, side: Side =
 	override fun updateElement()
 	{
 		val font = fontValue.get()
-		val timeDistance = timeSpaceValue.get()
+		val timeDistance = textTimeSpaceValue.get()
 
 		effects = (mc.thePlayer ?: return).activePotionEffects.sortedBy {
 			-font.getStringWidth(formatEffect(it) + timeDistance + formatRemainingTime(it))
@@ -319,7 +339,7 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F, side: Side =
 
 	private fun formatRemainingTime(effect: IPotionEffect): String
 	{
-		return when (timeTypeValue.get().toLowerCase())
+		return when (textTimeModeValue.get().toLowerCase())
 		{
 			"ticks" -> "${effect.duration} ticks"
 			"both" -> "${effect.getDurationString()} (${effect.duration} ticks)"

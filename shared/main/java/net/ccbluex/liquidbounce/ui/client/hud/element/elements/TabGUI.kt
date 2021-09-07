@@ -13,48 +13,39 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
-import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.render.ColorUtils.createRGB
+import net.ccbluex.liquidbounce.ui.font.assumeNonVolatile
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.FontValue
-import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.input.Keyboard
 
 @ElementInfo(name = "TabGUI")
 class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 {
+	private val rectGroup = ValueGroup("Rect")
+	private val rectRainbowValue = BoolValue("Rainbow", false, "Rectangle Rainbow")
+	private val rectColorValue = RGBAColorValue("Color", 0, 148, 255, 140, listOf("Rectangle Red", "Rectangle Green", "Rectangle Blue", "Rectangle Alpha"))
 
-	private val redValue = IntegerValue("Rectangle Red", 0, 0, 255)
-	private val greenValue = IntegerValue("Rectangle Green", 148, 0, 255)
-	private val blueValue = IntegerValue("Rectangle Blue", 255, 0, 255)
-	private val alphaValue = IntegerValue("Rectangle Alpha", 140, 0, 255)
-	private val rectangleRainbow = BoolValue("Rectangle Rainbow", false)
+	private val backgroundColorValue = RGBAColorValue("BackgroundColor", 0, 0, 0, 150, listOf("Background Red", "Background Green", "Background Blue", "Background Alpha"))
 
-	private val backgroundRedValue = IntegerValue("Background Red", 0, 0, 255)
-	private val backgroundGreenValue = IntegerValue("Background Green", 0, 0, 255)
-	private val backgroundBlueValue = IntegerValue("Background Blue", 0, 0, 255)
-	private val backgroundAlphaValue = IntegerValue("Background Alpha", 150, 0, 255)
+	private val borderGroup = ValueGroup("Border")
+	private val borderEnabledValue = BoolValue("Enabled", true, "Border")
+	private val borderStrengthValue = FloatValue("Strength", 2F, 1F, 5F, "Border Strength")
+	private val borderColorValue = RGBAColorValue("Color", 0, 0, 0, 150, listOf("Border Red", "Border Green", "Border Blue", "Border Alpha"))
+	private val borderRainbow = BoolValue("Rainbow", false, "Border Rainbow")
 
-	private val borderValue = BoolValue("Border", true)
-	private val borderStrength = FloatValue("Border Strength", 2F, 1F, 5F)
-	private val borderRedValue = IntegerValue("Border Red", 0, 0, 255)
-	private val borderGreenValue = IntegerValue("Border Green", 0, 0, 255)
-	private val borderBlueValue = IntegerValue("Border Blue", 0, 0, 255)
-	private val borderAlphaValue = IntegerValue("Border Alpha", 150, 0, 255)
+	private val rainbowShaderGroup = ValueGroup("RainbowShader")
+	private val rainbowShaderX = FloatValue("X", -1000F, -2000F, 2000F, "Rainbow-X")
+	private val rainbowShaderY = FloatValue("Y", -1000F, -2000F, 2000F, "Rainbow-Y")
 
-	private val borderRainbow = BoolValue("Border Rainbow", false)
+	private val width = FloatValue("Width", 60F, 55F, 100F)
+
 	private val arrowsValue = BoolValue("Arrows", true)
 	private val textShadow = BoolValue("TextShadow", false)
 
 	private val textFade = BoolValue("TextFade", true)
 	private val textPositionY = FloatValue("TextPosition-Y", 2F, 0F, 5F)
-	private val rainbowX = FloatValue("Rainbow-X", -1000F, -2000F, 2000F)
-	private val rainbowY = FloatValue("Rainbow-Y", -1000F, -2000F, 2000F)
-	private val width = FloatValue("Width", 60F, 55F, 100F)
 
 	private val tabHeight = FloatValue("TabHeight", 12F, 10F, 15F)
 	private val upperCaseValue = BoolValue("UpperCase", false)
@@ -72,6 +63,10 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 
 	init
 	{
+		rectGroup.addAll(rectRainbowValue, rectColorValue)
+		borderGroup.addAll(borderEnabledValue, borderStrengthValue, borderColorValue, borderRainbow)
+		rainbowShaderGroup.addAll(rainbowShaderX, rainbowShaderY)
+
 		for (category in ModuleCategory.values())
 		{
 			val tab = Tab(category.displayName)
@@ -84,72 +79,70 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 	{
 		updateAnimation()
 
-		AWTFontRenderer.assumeNonVolatile = true
-
 		val fontRenderer = fontValue.get()
 
-		val rectangleRainbowEnabled = rectangleRainbow.get()
+		val rectangleRainbowEnabled = rectRainbowValue.get()
 
-		val backgroundColor = createRGB(backgroundRedValue.get(), backgroundGreenValue.get(), backgroundBlueValue.get(), backgroundAlphaValue.get())
-		val borderColor = if (!borderRainbow.get()) createRGB(borderRedValue.get(), borderGreenValue.get(), borderBlueValue.get(), borderAlphaValue.get()) else -16777216
+		val backgroundColor = backgroundColorValue.get()
+		val borderColor = if (borderRainbow.get()) -16777216 else borderColorValue.get()
 
 		val width = width.get()
 		val guiHeight = tabs.size * tabHeight.get()
 
-		// Draw
-		RenderUtils.drawRect(1F, 0F, width, guiHeight, backgroundColor)
+		assumeNonVolatile {
+			// Draw
+			RenderUtils.drawRect(1F, 0F, width, guiHeight, backgroundColor)
 
-		val rainbowShaderX = if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get()
-		val rainbowShaderY = if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get()
-		val rainbowShaderOffset = System.currentTimeMillis() % 10000 * 0.0001f
+			val rainbowShaderX = if (rainbowShaderX.get() == 0.0F) 0.0F else 1.0F / rainbowShaderX.get()
+			val rainbowShaderY = if (rainbowShaderY.get() == 0.0F) 0.0F else 1.0F / rainbowShaderY.get()
+			val rainbowShaderOffset = System.currentTimeMillis() % 10000 * 0.0001f
 
-		if (borderValue.get())
-		{
-			RainbowShader.begin(borderRainbow.get(), rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-				RenderUtils.drawBorder(1F, 0F, width, guiHeight, borderStrength.get(), borderColor)
-			}
-		}
-
-		// Color
-		val rectColor = if (!rectangleRainbowEnabled) createRGB(redValue.get(), greenValue.get(), blueValue.get(), alphaValue.get()) else -16777216
-
-		RainbowShader.begin(rectangleRainbowEnabled, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-			RenderUtils.drawRect(1F, 1 + tabY - 1, width, tabY + tabHeight.get(), rectColor)
-		}
-
-		RenderUtils.resetColor()
-
-		var y = 1F
-		tabs.forEachIndexed { index, tab ->
-			val tabName = if (upperCaseValue.get()) tab.tabName.toUpperCase()
-			else tab.tabName
-
-			val textX = if (side.horizontal == Side.Horizontal.RIGHT) width - fontRenderer.getStringWidth(tabName) - tab.textFade - 3
-			else tab.textFade + 5
-			val textY = y + textPositionY.get()
-
-			val textColor = if (selectedCategory == index) 0xffffff else 13816530
-
-			fontRenderer.drawString(tabName, textX, textY, textColor, textShadow.get())
-
-			if (arrowsValue.get())
+			if (borderEnabledValue.get())
 			{
-				if (side.horizontal == Side.Horizontal.RIGHT) fontRenderer.drawString(if (!categoryMenu && selectedCategory == index) ">" else "<", 3F, y + 2F, 0xffffff, textShadow.get())
-				else fontRenderer.drawString(if (!categoryMenu && selectedCategory == index) "<" else ">", width - 8F, y + 2F, 0xffffff, textShadow.get())
+				RainbowShader.begin(borderRainbow.get(), rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
+					RenderUtils.drawBorder(1F, 0F, width, guiHeight, borderStrengthValue.get(), borderColor)
+				}
 			}
 
-			if (index == selectedCategory && !categoryMenu)
-			{
-				val tabX = if (side.horizontal == Side.Horizontal.RIGHT) 1F - tab.menuWidth
-				else width + 5
+			// Color
+			val rectColor = if (rectangleRainbowEnabled) -16777216 else rectColorValue.get()
 
-				tab.drawTab(tabX, y, rectColor, backgroundColor, borderColor, borderStrength.get(), upperCaseValue.get(), fontRenderer, borderRainbow.get(), rectangleRainbowEnabled)
+			RainbowShader.begin(rectangleRainbowEnabled, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
+				RenderUtils.drawRect(1F, 1 + tabY - 1, width, tabY + tabHeight.get(), rectColor)
 			}
 
-			y += tabHeight.get()
+			RenderUtils.resetColor()
+
+			var y = 1F
+			tabs.forEachIndexed { index, tab ->
+				val tabName = if (upperCaseValue.get()) tab.tabName.toUpperCase()
+				else tab.tabName
+
+				val textX = if (side.horizontal == Side.Horizontal.RIGHT) width - fontRenderer.getStringWidth(tabName) - tab.textFade - 3
+				else tab.textFade + 5
+				val textY = y + textPositionY.get()
+
+				val textColor = if (selectedCategory == index) 0xffffff else 13816530
+
+				fontRenderer.drawString(tabName, textX, textY, textColor, textShadow.get())
+
+				if (arrowsValue.get())
+				{
+					if (side.horizontal == Side.Horizontal.RIGHT) fontRenderer.drawString(if (!categoryMenu && selectedCategory == index) ">" else "<", 3F, y + 2F, 0xffffff, textShadow.get())
+					else fontRenderer.drawString(if (!categoryMenu && selectedCategory == index) "<" else ">", width - 8F, y + 2F, 0xffffff, textShadow.get())
+				}
+
+				if (index == selectedCategory && !categoryMenu)
+				{
+					val tabX = if (side.horizontal == Side.Horizontal.RIGHT) 1F - tab.menuWidth
+					else width + 5
+
+					tab.drawTab(tabX, y, rectColor, backgroundColor, borderColor, borderStrengthValue.get(), upperCaseValue.get(), fontRenderer, borderRainbow.get(), rectangleRainbowEnabled)
+				}
+
+				y += tabHeight.get()
+			}
 		}
-
-		AWTFontRenderer.assumeNonVolatile = false
 
 		return Border(1F, 0F, width, guiHeight)
 	}
@@ -299,11 +292,11 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 			val tabHeight = tabHeight.get()
 			val menuHeight = modules.size * tabHeight
 
-			val rainbowShaderX = if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get()
-			val rainbowShaderY = if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get()
+			val rainbowShaderX = if (rainbowShaderX.get() == 0.0F) 0.0F else 1.0F / rainbowShaderX.get()
+			val rainbowShaderY = if (rainbowShaderY.get() == 0.0F) 0.0F else 1.0F / rainbowShaderY.get()
 			val rainbowShaderOffset = System.currentTimeMillis() % 10000 * 0.0001f
 
-			if (borderValue.get())
+			if (borderEnabledValue.get())
 			{
 				RainbowShader.begin(borderRainbow, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
 					RenderUtils.drawBorder(x - 1F, y - 1F, x + menuWidth - 2F, y + menuHeight - 1F, borderStrength, borderColor)

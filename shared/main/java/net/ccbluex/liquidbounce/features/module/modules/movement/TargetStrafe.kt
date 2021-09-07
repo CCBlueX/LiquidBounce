@@ -180,7 +180,9 @@ class TargetStrafe : Module()
 			var strafeZ = func.cos(strafeYawRadians) * strafeSpeed
 
 			val provider = classProvider
-			if (thePlayer.onGround && (thePlayer.isCollidedHorizontally || !isAboveGround(theWorld, playerPosX + encirclementX + strafeX * 2, thePlayer.posY, playerPosZ + encirclementZ + strafeZ * 2)) || BlockUtils.collideBlockIntersects(theWorld, thePlayer.entityBoundingBox.offset(encirclementX + strafeX, 0.0, encirclementZ + strafeZ)) { !provider.isBlockAir(it.block) && !BlockUtils.isReplaceable(theWorld, it) })
+			if (thePlayer.onGround && (thePlayer.isCollidedHorizontally // Horizontal collision check
+					|| !isAboveGround(theWorld, playerPosX + encirclementX + strafeX * 2, thePlayer.posY, playerPosZ + encirclementZ + strafeZ * 2)) // Safewalk check
+				|| BlockUtils.collideBlockIntersects(theWorld, thePlayer.entityBoundingBox.offset(encirclementX + strafeX, 0.0, encirclementZ + strafeZ)) { !provider.isBlockAir(it.block) && !BlockUtils.isReplaceable(theWorld, it) }) // Predict-based aabb collision check
 			{
 				direction *= -1F
 				strafeX *= -1

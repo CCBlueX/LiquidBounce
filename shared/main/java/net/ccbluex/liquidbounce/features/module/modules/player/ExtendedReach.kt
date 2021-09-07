@@ -79,8 +79,6 @@ class ExtendedReach : Module()
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
 	{
-		val thePlayer = mc.thePlayer ?: return
-
 		val renderManager = mc.renderManager
 		val viewerPosX = renderManager.viewerPosX
 		val viewerPosY = renderManager.viewerPosY
@@ -216,6 +214,9 @@ class ExtendedReach : Module()
 
 				// Travel to the target entity.
 				for (pathElm in path) networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
+				path.reverse()
+
+				LiquidBounce.eventManager.callEvent(AttackEvent(targetEntity, path.firstOrNull() ?: from))
 
 				pathESPTimer.reset()
 				thePlayer.swingItem()
@@ -238,7 +239,6 @@ class ExtendedReach : Module()
 				thePlayer.onCriticalHit(targetEntity)
 
 				// Go back to the home.
-				path.reverse()
 				for (pathElm in path) networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
 			}
 		}
