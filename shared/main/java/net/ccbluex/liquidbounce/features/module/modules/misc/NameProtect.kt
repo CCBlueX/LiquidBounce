@@ -34,6 +34,11 @@ class NameProtect : Module()
 		override fun showCondition() = allPlayerModeValue.get().equals("Custom", ignoreCase = true)
 	}
 
+	init
+	{
+		allPlayerGroup.addAll(allPlayerEnabledValue, allPlayerModeValue, allPlayerCustomFakeNameValue)
+	}
+
 	@EventTarget(ignoreCondition = true)
 	fun onText(event: TextEvent)
 	{
@@ -44,7 +49,7 @@ class NameProtect : Module()
 		LiquidBounce.fileManager.friendsConfig.friends.forEach { event.text = StringUtils.replace(event.text, it.playerName, translateAlternateColorCodes(it.alias) + "\u00A7f") }
 
 		if (!state) return
-		event.text = StringUtils.replace(event.text, thePlayer.name, translateAlternateColorCodes(fakeNameValue.get()) + "\u00A7f")
+		event.text = StringUtils.replace(event.text, thePlayer.name, translateAlternateColorCodes(fakeNameValue.get()) + "\u00A7r")
 
 		if (allPlayerEnabledValue.get())
 		{

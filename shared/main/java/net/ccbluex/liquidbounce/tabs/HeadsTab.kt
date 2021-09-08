@@ -68,11 +68,16 @@ class HeadsTab : WrappedCreativeTabs("Heads")
 
 				ClientUtils.logger.info("Loaded " + heads.size + " heads from HeadDB. Took ${TimeUtils.nanosecondsToString(System.nanoTime() - nanoTime)}.")
 			}
-			else ClientUtils.logger.info("Heads are disabled.")
+			else
+			{
+				ClientUtils.logger.info("Heads are disabled.")
+				ItemUtils.createItem("skull 1 3 {display:{Name:\"\u00A7cHeads are disabled\"}}")?.let(heads::add)
+			}
 		}
 		catch (e: Exception)
 		{
 			ClientUtils.logger.error("Error while reading heads.", e)
+			ItemUtils.createItem("skull 1 3 {display:{Name:\"\u00A7cError while reading heads ($e)\"}}")?.let(heads::add)
 		}
 	}
 

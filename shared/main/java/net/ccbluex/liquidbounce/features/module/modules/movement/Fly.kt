@@ -177,7 +177,10 @@ class Fly : Module()
 	/**
 	 * MushMC
 	 */
-	private val mushMCGroup = ValueGroup("MushMC")
+	private val mushMCGroup = object : ValueGroup("MushMC")
+	{
+		override fun showCondition() = modeValue.get().equals("MushMC", ignoreCase = true)
+	}
 	private val mushMCSpeedValue = FloatValue("Speed", 3f, 1f, 5f, "MushSpeed")
 	private val mushMCBoostDelay = IntegerValue("BoostDelay", 10, 0, 20, "MushBoostDelay")
 
@@ -325,6 +328,15 @@ class Fly : Module()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
+		val mode = modeValue.get()
+
+		if (mode.equals("Flag", ignoreCase = true) && mc.isIntegratedServerRunning)
+		{
+			ClientUtils.displayChatMessage(thePlayer, "\u00A7c\u00A7lError: \u00A7aYou can't enable \u00A7c\u00A7l'Flag Fly' \u00A7ain SinglePlayer.")
+			state = false
+			return
+		}
+
 		hypixelFlyTimer.reset()
 		vanillaRemainingTime.reset()
 
@@ -333,7 +345,6 @@ class Fly : Module()
 		val posZ = thePlayer.posZ
 		val onGround = thePlayer.onGround
 
-		val mode = modeValue.get()
 		val noDamageOnStart = damageOnStartModeValue.get().equals("Off", ignoreCase = true)
 
 		val netHandler = mc.netHandler

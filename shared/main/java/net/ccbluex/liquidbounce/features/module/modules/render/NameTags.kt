@@ -20,7 +20,6 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.MurderDetector
 import net.ccbluex.liquidbounce.injection.backend.Backend
-import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.ui.font.assumeNonVolatile
 import net.ccbluex.liquidbounce.utils.EntityUtils
@@ -231,7 +230,7 @@ class NameTags : Module()
 
 		glScalef(-distanceScale, -distanceScale, distanceScale)
 
-		AWTFontRenderer.assumeNonVolatile {
+		assumeNonVolatile {
 			// Draw NameTag
 			val width = fontRenderer.getStringWidth(text) * 0.5f
 

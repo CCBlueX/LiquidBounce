@@ -16,7 +16,7 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ModuleElement
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.Style
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.SlowlyStyle
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
-import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer.Companion.assumeNonVolatile
+import net.ccbluex.liquidbounce.ui.font.assumeNonVolatile
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawImage
@@ -46,9 +46,6 @@ class ClickGui : WrappedGuiScreen()
 
 		if (Mouse.isButtonDown(0) && newMouseX >= 5 && newMouseX <= 50 && newMouseY <= representedScreen.height - 5 && newMouseY >= representedScreen.height - 50) mc.displayGuiScreen(provider.wrapGuiScreen(GuiHudDesigner()))
 
-		// Enable DisplayList optimization
-		assumeNonVolatile = true
-
 		val scale = (LiquidBounce.moduleManager[ClickGUI::class.java] as ClickGUI).scaleValue.get().toDouble()
 		newMouseX /= scale
 		newMouseY /= scale
@@ -59,33 +56,34 @@ class ClickGui : WrappedGuiScreen()
 		this.mouseX = newMouseXI
 		this.mouseY = newMouseYI
 
-		representedScreen.drawDefaultBackground()
+		// Enable DisplayList optimization
+		assumeNonVolatile {
+			representedScreen.drawDefaultBackground()
 
-		drawImage(hudIcon, 9, representedScreen.height - 41, 32, 32)
+			drawImage(hudIcon, 9, representedScreen.height - 41, 32, 32)
 
-		GL11.glScaled(scale, scale, scale)
+			GL11.glScaled(scale, scale, scale)
 
-		for (panel in panels)
-		{
-			panel.updateFade(deltaTime)
-			panel.drawScreen(newMouseXI, newMouseYI, partialTicks)
+			for (panel in panels)
+			{
+				panel.updateFade(deltaTime)
+				panel.drawScreen(newMouseXI, newMouseYI, partialTicks)
+			}
+
+			// Draw Element Description
+			panels.forEach { panel -> panel.elements.asSequence().filterIsInstance<ModuleElement>().filter { newMouseX != 0.0 && newMouseY != 0.0 }.filter { it.isHovering(newMouseXI, newMouseYI) }.filter(ModuleElement::isVisible).filter { it.y <= panel.y + panel.fade }.forEach { style.drawDescription(newMouseXI, newMouseYI, it.module.description) } }
+
+			if (Mouse.hasWheel())
+			{
+				val wheel = Mouse.getDWheel()
+				panels.any { it.handleScroll(newMouseXI, newMouseYI, wheel) }
+			}
+
+			provider.glStateManager.disableLighting()
+			functions.disableStandardItemLighting()
+
+			GL11.glScalef(1.0f, 1.0f, 1.0f)
 		}
-
-		// Draw Element Description
-		panels.forEach { panel -> panel.elements.asSequence().filterIsInstance<ModuleElement>().filter { newMouseX != 0.0 && newMouseY != 0.0 }.filter { it.isHovering(newMouseXI, newMouseYI) }.filter(ModuleElement::isVisible).filter { it.y <= panel.y + panel.fade }.forEach { style.drawDescription(newMouseXI, newMouseYI, it.module.description) } }
-
-		if (Mouse.hasWheel())
-		{
-			val wheel = Mouse.getDWheel()
-			panels.any { it.handleScroll(newMouseXI, newMouseYI, wheel) }
-		}
-
-		provider.glStateManager.disableLighting()
-		functions.disableStandardItemLighting()
-
-		GL11.glScalef(1.0f, 1.0f, 1.0f)
-
-		assumeNonVolatile = false
 
 		super.drawScreen(newMouseXI, newMouseYI, partialTicks)
 	}

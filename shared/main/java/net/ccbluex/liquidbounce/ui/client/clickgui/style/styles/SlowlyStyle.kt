@@ -129,19 +129,21 @@ class SlowlyStyle : Style()
 		{
 			is ValueGroup ->
 			{
+				val moduleX = moduleElement.x + moduleElement.width
+				val moduleIndentX = moduleX + indent
+
 				val text = value.displayName
 				val textWidth = font.getStringWidth(text) + indent + 16f
 				val textHeight = font.fontHeight
 
 				if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
+				val moduleXEnd = moduleX + moduleElement.settingsWidth
 
-				val moduleX = moduleElement.x + moduleElement.width
-				val moduleIndentX = moduleX + indent
-
+				glStateManager.resetColor()
 				font.drawString("\u00A7c$text", moduleIndentX + 6, moduleElement.slowlySettingsYPos + 2, WHITE)
-				font.drawString(if (value.foldState) "-" else "+", (moduleX + moduleElement.settingsWidth - if (value.foldState) 5 else 6).toInt(), moduleElement.slowlySettingsYPos + 2, WHITE)
+				font.drawString(if (value.foldState) "-" else "+", (moduleXEnd - if (value.foldState) 5 else 6).toInt(), moduleElement.slowlySettingsYPos + 2, WHITE)
 
-				if (mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= moduleElement.slowlySettingsYPos && mouseY <= moduleElement.slowlySettingsYPos + textHeight && Mouse.isButtonDown(0) && moduleElement.isntPressed())
+				if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= moduleElement.slowlySettingsYPos && mouseY <= moduleElement.slowlySettingsYPos + textHeight && Mouse.isButtonDown(0) && moduleElement.isntPressed())
 				{
 					value.foldState = !value.foldState
 					mc.soundHandler.playSound("gui.button.press", 1.0f)
@@ -158,9 +160,10 @@ class SlowlyStyle : Style()
 					while (i < j)
 					{
 						val valueOfGroup = valuesInGroup[i]
-
 						val textWidth2 = font.getStringWidth(valueOfGroup.displayName) + 12f
+
 						if (moduleElement.settingsWidth < textWidth2) moduleElement.settingsWidth = textWidth2
+
 						glStateManager.resetColor()
 						drawAbstractValue(font, glStateManager, moduleElement, valueOfGroup, mouseX, mouseY, indent + 10)
 
@@ -202,19 +205,16 @@ class SlowlyStyle : Style()
 		font.drawString(colorText, moduleIndentX + displayTextWidth + 6, moduleElement.slowlySettingsYPos + 4, value.get(255))
 
 		val redSlider = drawSlider(value.getRed().toFloat(), 0f, 255f, moduleX + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, indent, -65536 /* 0xFFFF0000 */)
-
 		if (redSlider != value.getRed().toFloat()) value.set(redSlider.toInt(), value.getGreen(), value.getBlue(), value.getAlpha())
 
 		moduleElement.slowlySettingsYPos += 9
 
 		val greenSlider = drawSlider(value.getGreen().toFloat(), 0f, 255f, moduleX + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, indent, -16711936 /* 0xFF00FF00 */)
-
 		if (greenSlider != value.getGreen().toFloat()) value.set(value.getRed(), greenSlider.toInt(), value.getBlue(), value.getAlpha())
 
 		moduleElement.slowlySettingsYPos += 9
 
 		val blueSlider = drawSlider(value.getBlue().toFloat(), 0f, 255f, moduleX + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, indent, -16776961 /* 0xFF0000FF */)
-
 		if (blueSlider != value.getBlue().toFloat()) value.set(value.getRed(), value.getGreen(), blueSlider.toInt(), value.getAlpha())
 
 		if (alphaPresent)
@@ -222,7 +222,6 @@ class SlowlyStyle : Style()
 			moduleElement.slowlySettingsYPos += 9
 
 			val alphaSlider = drawSlider(value.getAlpha().toFloat(), 0f, 255f, moduleX + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, indent, LIGHT_GRAY)
-
 			if (alphaSlider != value.getBlue().toFloat()) value.set(value.getRed(), value.getGreen(), value.getBlue(), alphaSlider.toInt())
 		}
 
@@ -510,8 +509,6 @@ class SlowlyStyle : Style()
 
 			return minValue to maxValue
 		}
-
-		private fun round(v: Float): BigDecimal = BigDecimal("$v").setScale(2, RoundingMode.HALF_UP)
 
 		private fun hoverColor(color: Color, hover: Int): Color
 		{

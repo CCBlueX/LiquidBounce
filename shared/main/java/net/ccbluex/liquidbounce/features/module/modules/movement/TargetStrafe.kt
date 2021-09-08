@@ -105,12 +105,12 @@ class TargetStrafe : Module()
 	init
 	{
 		pathEspColorRainbowGroup.addAll(pathEspColorRainbowEnabledValue, pathEspColorRainbowSpeedValue, pathEspColorRainbowSaturationValue, pathEspColorRainbowBrightnessValue)
-		pathEspColorGroup.addAll(pathEspColorValue, pathEspColorRainbowGroup, pathEspColorRainbowEnabledValue, pathEspColorRainbowSpeedValue, pathEspColorRainbowSaturationValue, pathEspColorRainbowBrightnessValue)
+		pathEspColorGroup.addAll(pathEspColorValue, pathEspColorRainbowEnabledValue, pathEspColorRainbowGroup, pathEspColorRainbowSpeedValue, pathEspColorRainbowSaturationValue, pathEspColorRainbowBrightnessValue)
 
 		pathEspStrafingColorRainbowGroup.addAll(pathEspStrafingColorRainbowEnabledValue, pathEspStrafingColorRainbowSpeedValue, pathEspStrafingColorRainbowSaturationValue, pathEspStrafingColorRainbowBrightnessValue)
 		pathEspStrafingColorGroup.addAll(pathEspStrafingColorValue, pathEspStrafingColorRainbowGroup, pathEspStrafingColorRainbowEnabledValue, pathEspStrafingColorRainbowSpeedValue, pathEspStrafingColorRainbowSaturationValue, pathEspStrafingColorRainbowBrightnessValue)
 
-		pathEspGroup.addAll(pathEspEnabledValue, pathEspAccuracyValue, pathEspLineWidthValue, pathEspColorValue, pathEspColorGroup, pathEspStrafingColorGroup)
+		pathEspGroup.addAll(pathEspEnabledValue, pathEspAccuracyValue, pathEspLineWidthValue, pathEspColorGroup, pathEspStrafingColorGroup)
 	}
 
 	@EventTarget
@@ -233,7 +233,7 @@ class TargetStrafe : Module()
 
 		glPushMatrix()
 		glTranslated(target.lastTickPosX + (target.posX - target.lastTickPosX) * partialTicks - renderManager.renderPosX, target.lastTickPosY + (target.posY - target.lastTickPosY) * partialTicks - renderManager.renderPosY, target.lastTickPosZ + (target.posZ - target.lastTickPosZ) * partialTicks - renderManager.renderPosZ)
-		RenderUtils.drawRadius(strafeRangeValue.get(), pathEspAccuracyValue.get(), pathEspLineWidthValue.get(), if (strafing) if (pathEspStrafingColorRainbowEnabledValue.get()) rainbowRGB(pathEspStrafingColorValue.get(), speed = pathEspStrafingColorRainbowSpeedValue.get(), saturation = pathEspStrafingColorRainbowSaturationValue.get(), brightness = pathEspStrafingColorRainbowBrightnessValue.get()) else pathEspStrafingColorValue.get() else if (pathEspColorRainbowEnabledValue.get()) rainbowRGB(pathEspColorValue.get(), speed = pathEspColorRainbowSpeedValue.get(), saturation = pathEspColorRainbowSaturationValue.get(), brightness = pathEspColorRainbowBrightnessValue.get()) else pathEspColorValue.get())
+		RenderUtils.drawRadius(strafeRangeValue.get(), pathEspAccuracyValue.get(), pathEspLineWidthValue.get(), if (strafing) if (pathEspStrafingColorRainbowEnabledValue.get()) rainbowRGB(pathEspStrafingColorValue.getAlpha(), speed = pathEspStrafingColorRainbowSpeedValue.get(), saturation = pathEspStrafingColorRainbowSaturationValue.get(), brightness = pathEspStrafingColorRainbowBrightnessValue.get()) else pathEspStrafingColorValue.get() else if (pathEspColorRainbowEnabledValue.get()) rainbowRGB(pathEspColorValue.getAlpha(), speed = pathEspColorRainbowSpeedValue.get(), saturation = pathEspColorRainbowSaturationValue.get(), brightness = pathEspColorRainbowBrightnessValue.get()) else pathEspColorValue.get())
 		glPopMatrix()
 	}
 

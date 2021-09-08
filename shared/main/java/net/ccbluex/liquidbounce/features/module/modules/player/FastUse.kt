@@ -45,11 +45,10 @@ class FastUse : Module()
 
 	private val ncpTimerValue = FloatValue("Timer", 1.0f, 0.2f, 1.5f, "NCP-Timer")
 
-	private val aacGroup = object : ValueGroup("AAC")
+	private val aacTimerValue = object : FloatValue("AACTimer", 1.22f, 1.1f, 1.5f, "AAC-Timer")
 	{
 		override fun showCondition() = modeValue.get().equals("AAC", ignoreCase = true)
 	}
-	private val aacTimerValue = FloatValue("Timer", 1.22f, 1.1f, 1.5f, "AAC-Timer")
 
 	private val customGroup = object : ValueGroup("Custom")
 	{
@@ -68,9 +67,7 @@ class FastUse : Module()
 	{
 		ncpAtOnceGroup.addAll(ncpAtOnceWaitTicksValue, ncpAtOncePacketsValue)
 		ncpConstantGroup.add(ncpConstantPacketsValue)
-		ncpGroup.addAll(ncpAtOnceGroup, ncpConstantGroup, ncpTimerValue)
-
-		aacGroup.add(aacTimerValue)
+		ncpGroup.addAll(ncpModeValue, ncpAtOnceGroup, ncpConstantGroup, ncpTimerValue)
 
 		customGroup.addAll(customDelayValue, customSpeedValue, customTimer)
 	}

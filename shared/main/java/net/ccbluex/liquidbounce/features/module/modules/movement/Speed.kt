@@ -67,7 +67,7 @@ class Speed : Module()
 
 	)
 
-	private val speedModeMap = hashMapOf(*speedModes.map { it.modeName to it }.toTypedArray())
+	private val speedModeMap = mapOf(*speedModes.map { it.modeName to it }.toTypedArray())
 
 	val modeValue: ListValue = object : ListValue("Mode", speedModeMap.keys.toTypedArray(), "NCPBHop")
 	{

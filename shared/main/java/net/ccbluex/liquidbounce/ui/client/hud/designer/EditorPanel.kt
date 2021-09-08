@@ -315,7 +315,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 
 				if (width < textWidth) width = textWidth
 				val xIndent = x + indent
-				val xEnd = x + width
+				val xEnd = x + prevWidth
 
 				// Title
 				font.drawString(text, xIndent + 2, y + height, -1)

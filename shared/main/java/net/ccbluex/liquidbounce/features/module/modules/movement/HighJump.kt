@@ -33,12 +33,22 @@ class HighJump : Module()
 {
 	private val modeValue = ListValue("Mode", arrayOf("Vanilla", "Damage", "AAC3.0.1", "DAC", "Mineplex", "OldMineplex"), "Vanilla")
 
-	private val vanillaGroup = object : ValueGroup("Vanilla")
+	private val baseHeightValue = object : FloatValue("Height", 2f, 1.1f, 5f, "Height")
+	{
+		override fun showCondition() = modeValue.get().equals("Vanilla", ignoreCase = true) || modeValue.get().equals("Damage", ignoreCase = true)
+	}
+
+	private val vanillaGlassValue = object : BoolValue("OnlyGlassPane", false, "OnlyGlassPane")
 	{
 		override fun showCondition() = modeValue.get().equals("Vanilla", ignoreCase = true)
 	}
-	private val vanillaHeightValue = FloatValue("Height", 2f, 1.1f, 5f, "Height")
-	private val vanillaGlassValue = BoolValue("OnlyGlassPane", false, "OnlyGlassPane")
+
+	private val voidGroup = object : ValueGroup("Void")
+	{
+		override fun showCondition() = modeValue.get().equals("Damage", ignoreCase = true)
+	}
+	private val voidEnabledValue = BoolValue("Enabled", true)
+	private val voidYValue = FloatValue("VoidY", -64F, 0F, -100F)
 
 	private val mineplexHeightValue = object : FloatValue("MineplexHeight", 0.1f, 5.0f, 10.0f)
 	{
@@ -52,7 +62,7 @@ class HighJump : Module()
 
 	init
 	{
-		vanillaGroup.addAll(vanillaHeightValue, vanillaGlassValue)
+		voidGroup.addAll(voidEnabledValue, voidYValue)
 	}
 
 	override fun onEnable()
@@ -97,10 +107,10 @@ class HighJump : Module()
 
 		when (modeValue.get().toLowerCase())
 		{
-			"damage" -> if (thePlayer.hurtTime > 0 && onGround)
+			"damage" -> if (thePlayer.hurtTime > 0 && onGround || voidEnabledValue.get() && thePlayer.posY <= voidYValue.get())
 			{
-				thePlayer.motionY += 0.42f * vanillaHeightValue.get()
-				jumped = true
+				thePlayer.motionY += 0.42f * baseHeightValue.get()
+				if (autodisable.get()) state = false
 			}
 
 			"aac3.0.1" -> if (!onGround)
@@ -186,7 +196,12 @@ class HighJump : Module()
 
 		when (modeValue.get().toLowerCase())
 		{
-			"vanilla" -> event.motion *= vanillaHeightValue.get()
+			"vanilla" ->
+			{
+				event.motion *= baseHeightValue.get()
+				if (autodisable.get()) state = false
+			}
+
 			"oldmineplex" -> event.motion = 0.47f
 		}
 	}
