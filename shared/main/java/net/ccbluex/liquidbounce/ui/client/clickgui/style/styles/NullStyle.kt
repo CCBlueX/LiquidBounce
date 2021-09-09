@@ -7,7 +7,6 @@ package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles
 
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IGlStateManager
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.clamp_double
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.Companion.generateButtonColor
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.Companion.generateDescriptionColor
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.Companion.generatePanelColor
@@ -194,7 +193,7 @@ class NullStyle : Style()
 		if (moduleElement.settingsWidth < textWidth + 20f) moduleElement.settingsWidth = textWidth + 20f
 		val moduleXEnd = moduleX + moduleElement.settingsWidth
 		val sliderXEnd = moduleElement.settingsWidth - indent - 12
-		val newSliderValue = lazy(LazyThreadSafetyMode.NONE, (255 * clamp_double(((mouseX - moduleElement.x - moduleElement.width - indent - 8) / sliderXEnd).toDouble(), 0.0, 1.0))::toInt)
+		val newSliderValue = lazy(LazyThreadSafetyMode.NONE, (255 * ((mouseX - moduleElement.x - moduleElement.width - indent - 8) / sliderXEnd).coerceIn(0f, 1f))::toInt)
 
 		drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 14f, BACKGROUND)
 
@@ -421,7 +420,7 @@ class NullStyle : Style()
 					val sliderValue = moduleIndentX + sliderXEnd * (value.get() - value.minimum) / (value.maximum - value.minimum)
 					drawRect(8 + sliderValue, yPos + 15f, sliderValue + 11, yPos + 21f, guiColor)
 
-					if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= yPos + 15 && mouseY <= yPos + 21 && Mouse.isButtonDown(0)) value.set((value.minimum + (value.maximum - value.minimum) * clamp_double(((mouseX - (moduleIndentX + 8)) / sliderXEnd).toDouble(), 0.0, 1.0)).toInt())
+					if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= yPos + 15 && mouseY <= yPos + 21 && Mouse.isButtonDown(0)) value.set((value.minimum + (value.maximum - value.minimum) * ((mouseX - (moduleIndentX + 8)) / sliderXEnd).coerceIn(0f, 1f)).toInt())
 
 					glStateManager.resetColor()
 
@@ -445,7 +444,7 @@ class NullStyle : Style()
 					val sliderValue = moduleIndentX + sliderXEnd * (value.get() - value.minimum) / (value.maximum - value.minimum)
 					drawRect(8 + sliderValue, yPos + 15f, sliderValue + 11, yPos + 21f, guiColor)
 
-					if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd - 4 && mouseY >= yPos + 15 && mouseY <= yPos + 21 && Mouse.isButtonDown(0)) value.set(round((value.minimum + (value.maximum - value.minimum) * clamp_double(((mouseX - (moduleIndentX + 8)) / sliderXEnd).toDouble(), 0.0, 1.0)).toFloat()).toFloat())
+					if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd - 4 && mouseY >= yPos + 15 && mouseY <= yPos + 21 && Mouse.isButtonDown(0)) value.set(round(value.minimum + (value.maximum - value.minimum) * ((mouseX - (moduleIndentX + 8)) / sliderXEnd).coerceIn(0f, 1f)).toFloat())
 
 					glStateManager.resetColor()
 

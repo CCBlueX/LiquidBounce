@@ -105,10 +105,10 @@ class TargetStrafe : Module()
 	init
 	{
 		pathEspColorRainbowGroup.addAll(pathEspColorRainbowEnabledValue, pathEspColorRainbowSpeedValue, pathEspColorRainbowSaturationValue, pathEspColorRainbowBrightnessValue)
-		pathEspColorGroup.addAll(pathEspColorValue, pathEspColorRainbowEnabledValue, pathEspColorRainbowGroup, pathEspColorRainbowSpeedValue, pathEspColorRainbowSaturationValue, pathEspColorRainbowBrightnessValue)
+		pathEspColorGroup.addAll(pathEspColorValue, pathEspColorRainbowGroup)
 
 		pathEspStrafingColorRainbowGroup.addAll(pathEspStrafingColorRainbowEnabledValue, pathEspStrafingColorRainbowSpeedValue, pathEspStrafingColorRainbowSaturationValue, pathEspStrafingColorRainbowBrightnessValue)
-		pathEspStrafingColorGroup.addAll(pathEspStrafingColorValue, pathEspStrafingColorRainbowGroup, pathEspStrafingColorRainbowEnabledValue, pathEspStrafingColorRainbowSpeedValue, pathEspStrafingColorRainbowSaturationValue, pathEspStrafingColorRainbowBrightnessValue)
+		pathEspStrafingColorGroup.addAll(pathEspStrafingColorValue, pathEspStrafingColorRainbowGroup)
 
 		pathEspGroup.addAll(pathEspEnabledValue, pathEspAccuracyValue, pathEspLineWidthValue, pathEspColorGroup, pathEspStrafingColorGroup)
 	}

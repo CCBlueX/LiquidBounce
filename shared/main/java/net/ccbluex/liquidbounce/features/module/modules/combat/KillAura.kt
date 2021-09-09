@@ -177,6 +177,10 @@ class KillAura : Module()
 	private val rotationKeepRotationEnabledValue = BoolValue("Enabled", false, "KeepRotation")
 	private val rotationKeepRotationTicks = IntegerRangeValue("Ticks", 20, 30, 0, 60, "MaxKeepRotationTicks" to "MinKeepRotationTicks")
 
+	private val rotationLockAfterTeleportGroup = ValueGroup("LockAfterTeleport")
+	private val rotationLockAfterTeleportEnabledValue = BoolValue("Enabled", false)
+	private val rotationLockAfterTeleportDelayValue = IntegerRangeValue("Delay", 100, 100, 0, 500)
+
 	private val rotationAccelerationRatioValue = FloatRangeValue("Acceleration", 0f, 0f, 0f, .99f, "MaxAccelerationRatio" to "MinAccelerationRatio")
 	private val rotationTurnSpeedValue = FloatRangeValue("TurnSpeed", 180f, 180f, 0f, 180f, "MaxTurnSpeed" to "MinTurnSpeed")
 	private val rotationResetSpeedValue = object : FloatRangeValue("RotationResetSpeed", 180f, 180f, 10f, 180f, "MaxRotationResetSpeed" to "MinRotationResetSpeed")
@@ -265,6 +269,11 @@ class KillAura : Module()
 	private val suspendTimer = MSTimer()
 	private var suspend = 0L
 
+	// Lock rotation timer
+	private val lockRotationTimer = MSTimer()
+	private var lockRotationDelay = 0L
+	private var lockRotation: Rotation? = null
+
 	// Ranges
 	private var attackRange = 0f
 	private var aimRange = 0f
@@ -322,12 +331,13 @@ class KillAura : Module()
 		rotationSearchCenterGroup.addAll(rotationSearchCenterHitboxShrinkValue, rotationSearchCenterSensitivityValue)
 		rotationJitterGroup.addAll(rotationJitterEnabledValue, rotationJitterYawRate, rotationJitterPitchRate, rotationJitterYawIntensityValue, rotationJitterPitchIntensityValue)
 		rotationKeepRotationGroup.addAll(rotationKeepRotationEnabledValue, rotationKeepRotationTicks)
+		rotationLockAfterTeleportGroup.addAll(rotationLockAfterTeleportEnabledValue, rotationLockAfterTeleportDelayValue)
 		rotationStrafeGroup.addAll(rotationStrafeValue, rotationStrafeOnlyGroundValue)
 		rotationPredictEnemyGroup.addAll(rotationPredictEnemyEnabledValue, rotationPredictEnemyIntensityValue)
 		rotationPredictPlayerGroup.addAll(rotationPredictPlayerEnabledValue, rotationPredictPlayerIntensityValue)
 		rotationPredictGroup.addAll(rotationPredictEnemyGroup, rotationPredictPlayerGroup)
 		rotationBacktrackGroup.addAll(rotationBacktrackEnabledValue, rotationBacktrackTicksValue)
-		rotationGroup.addAll(rotationMode, rotationLockValue, rotationSilentValue, rotationRandomCenterSizeValue, rotationSearchCenterGroup, rotationJitterGroup, rotationKeepRotationGroup, rotationAccelerationRatioValue, rotationTurnSpeedValue, rotationResetSpeedValue, rotationStrafeGroup, rotationPredictGroup, rotationBacktrackGroup)
+		rotationGroup.addAll(rotationMode, rotationLockValue, rotationSilentValue, rotationRandomCenterSizeValue, rotationSearchCenterGroup, rotationJitterGroup, rotationKeepRotationGroup, rotationLockAfterTeleportGroup, rotationAccelerationRatioValue, rotationTurnSpeedValue, rotationResetSpeedValue, rotationStrafeGroup, rotationPredictGroup, rotationBacktrackGroup)
 		fovGroup.addAll(fovModeValue, fovValue)
 		visualMarkRangeColorGroup.addAll(visualMarkRangeColorAttackValue, visualMarkRangeColorThroughWallsAttackValue, visualMarkRangeColorAimValue, visualMarkRangeColorSwingValue, visualMarkRangeColorBlockValue, visualMarkRangeColorInteractBlockValue)
 		visualMarkRangeGroup.addAll(visualMarkRangeModeValue, visualMarkRangeLineWidthValue, visualMarkRangeAccuracyValue, visualMarkRangeColorGroup)
@@ -697,6 +707,22 @@ class KillAura : Module()
 		updateHitable(mc.theWorld ?: return, mc.thePlayer ?: return)
 	}
 
+	@EventTarget
+	fun onPacket(event: PacketEvent)
+	{
+		if (classProvider.isSPacketPlayerPosLook(event.packet))
+		{
+			val tpPacket = event.packet.asSPacketPlayerPosLook()
+
+			if (rotationLockAfterTeleportEnabledValue.get())
+			{
+				lockRotationTimer.reset()
+				lockRotationDelay = rotationLockAfterTeleportDelayValue.getRandomDelay()
+				lockRotation = Rotation(tpPacket.yaw, tpPacket.pitch)
+			}
+		}
+	}
+
 	/**
 	 * Attack enemy
 	 */
@@ -999,7 +1025,8 @@ class KillAura : Module()
 
 		// Search
 		var fallBackRotation: VecRotation? = null
-		val rotation = if (!rotationLockValue.get() && RotationUtils.isFaced(theWorld, thePlayer, entity, aimRange.toDouble(), getHitbox)) Rotation(lastYaw, lastPitch)
+		val rotation = if (rotationLockAfterTeleportEnabledValue.get() && lockRotation != null && !lockRotationTimer.hasTimePassed(lockRotationDelay)) lockRotation!!
+		else if (!rotationLockValue.get() && RotationUtils.isFaced(theWorld, thePlayer, entity, aimRange.toDouble(), getHitbox)) Rotation(lastYaw, lastPitch)
 		else (searchCenter(if (isAttackRotation) attackRange else aimRange) {
 			// Because of '.getDistanceToEntityBox()' is not perfect. (searchCenter() >>> 넘사벽 >>> getDistanceToEntityBox())
 			failedToRotate = true

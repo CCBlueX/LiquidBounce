@@ -24,14 +24,6 @@ object WMathHelper
 		return value
 	}
 
-	@Suppress("FunctionName")
-	@JvmStatic
-	fun clamp_float(num: Float, min: Float, max: Float): Float = if (num < min) min else if (num > max) max else num // TODO: Remove and replace with .coerceIn(min, max)
-
-	@Suppress("FunctionName")
-	@JvmStatic
-	fun clamp_double(num: Double, min: Double, max: Double): Double = if (num < min) min else if (num > max) max else num // TODO: Remove and replace with .coerceIn(min, max)
-
 	@JvmStatic
 	fun sin(radians: Float): Float = wrapper.functions.sin(radians)
 

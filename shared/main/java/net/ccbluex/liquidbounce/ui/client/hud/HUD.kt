@@ -188,5 +188,5 @@ open class HUD : MinecraftInstance()
 	 */
 	fun addNotification(notification: Notification) = elements.any { it is Notifications } && notifications.add(notification)
 
-	fun addNotification(header: String, message: String, stayTime: Long, rectColor: Color? = null) = addNotification(Notification(header, message, rectColor, stayTime))
+	fun addNotification(header: String, message: String, stayTime: Long, rectColor: Color? = null) = addNotification(Notification(header, message, rectColor?.rgb, stayTime)) // TODO: Change java.awt.Color to hex color
 }

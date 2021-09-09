@@ -7,7 +7,6 @@ package net.ccbluex.liquidbounce.ui.client.hud.designer
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.Companion.getPanelFont
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.Companion.getValueFont
@@ -226,12 +225,12 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 		val valueFont = getValueFont()
 
 		// X
-		valueFont.drawString("X: ${"%.2f".format(element.renderX)} (${"%.2f".format(element.x)})", x + 2, y + height, -1)
+		valueFont.drawString("X: ${StringUtils.DECIMALFORMAT_2.format(element.renderX)} (${StringUtils.DECIMALFORMAT_2.format(element.x)})", x + 2, y + height, -1)
 		height += 10
 		realHeight += 10
 
 		// Y
-		valueFont.drawString("Y: ${"%.2f".format(element.renderY)} (${"%.2f".format(element.y)})", x + 2, y + height, -1)
+		valueFont.drawString("Y: ${StringUtils.DECIMALFORMAT_2.format(element.renderY)} (${StringUtils.DECIMALFORMAT_2.format(element.y)})", x + 2, y + height, -1)
 		height += 10
 		realHeight += 10
 
@@ -373,7 +372,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 		val displayTextWidth = font.getStringWidth(text)
 		val textWidth = displayTextWidth + font.getStringWidth(colorText) + indent + 2
 
-		val newSliderValue = (255 * WMathHelper.clamp_float((mouseX - (xIndent + 8f)) / perc, 0f, 1f)).toInt()
+		val newSliderValue = (255 * ((mouseX - (xIndent + 8f)) / perc).coerceIn(0f, 1f)).toInt()
 
 		if (width < textWidth + 20f) width = textWidth + 20
 
@@ -462,7 +461,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 
 				if (mouseX >= x + 8 && mouseX <= xEnd && mouseY >= yPos + 9 && mouseY <= yPos + 15 && Mouse.isButtonDown(0))
 				{
-					val newValue = (value.minimum + (value.maximum - value.minimum) * WMathHelper.clamp_float((mouseX - (xIndent + 8f)) / perc, 0f, 1f)).toInt()
+					val newValue = (value.minimum + (value.maximum - value.minimum) * ((mouseX - (xIndent + 8f)) / perc).coerceIn(0f, 1f)).toInt()
 					if (mouseX > center) value.setMax(newValue)
 					else value.setMin(newValue)
 				}
@@ -498,7 +497,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 
 				if (mouseX >= xIndent + 8 && mouseX <= xEnd && mouseY >= yPos + 9 && mouseY <= yPos + 15 && Mouse.isButtonDown(0))
 				{
-					val newValue = round((value.minimum + (value.maximum - value.minimum) * WMathHelper.clamp_double(((mouseX - (xIndent + 8f)) / perc).toDouble(), 0.0, 1.0)).toFloat())
+					val newValue = round(value.minimum + (value.maximum - value.minimum) * ((mouseX - (xIndent + 8f)) / perc).coerceIn(0f, 1f))
 					if (mouseX > center) value.setMax(newValue.toFloat())
 					else value.setMin(newValue.toFloat())
 				}
@@ -563,7 +562,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 				RenderUtils.drawRect(sliderValue, yPos + 9F, sliderValue + 3f, yPos + 15F, -14319873)
 
 				// Slider changer
-				if (mouseX >= xIndent + 8 && mouseX <= xEnd && mouseY >= yPos + 9 && mouseY <= yPos + 15 && Mouse.isButtonDown(0)) value.set((min + (max - min) * WMathHelper.clamp_float((mouseX - (xIndent + 8F)) / perc, 0F, 1F)).toInt())
+				if (mouseX >= xIndent + 8 && mouseX <= xEnd && mouseY >= yPos + 9 && mouseY <= yPos + 15 && Mouse.isButtonDown(0)) value.set((min + (max - min) * ((mouseX - (xIndent + 8F)) / perc).coerceIn(0f, 1f)).toInt())
 
 				// Change pos
 				height += 20
@@ -592,12 +591,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 				RenderUtils.drawRect(sliderValue, yPos + 9F, sliderValue + 3F, yPos + 15F, Color(37, 126, 255).rgb)
 
 				// Slider changer
-				if (mouseX >= xIndent + 8 && mouseX <= xEnd && mouseY >= yPos + 9 && mouseY <= yPos + 15 && Mouse.isButtonDown(0))
-				{
-					val curr = WMathHelper.clamp_float((mouseX - (xIndent + 8f)) / perc, 0F, 1F)
-
-					value.set(min + (max - min) * curr)
-				}
+				if (mouseX >= xIndent + 8 && mouseX <= xEnd && mouseY >= yPos + 9 && mouseY <= yPos + 15 && Mouse.isButtonDown(0)) value.set(min + (max - min) * ((mouseX - (xIndent + 8f)) / perc).coerceIn(0f, 1f))
 
 				// Change pos
 				height += 20

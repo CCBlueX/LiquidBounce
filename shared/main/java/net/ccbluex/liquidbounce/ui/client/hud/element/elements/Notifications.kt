@@ -23,8 +23,11 @@ import kotlin.math.max
 
 /**
  * CustomHUD Notification element
+ * - TODO: Display the type of notification (Warning/Error/Info/Exclamation icon & text)
+ * - TODO: Adjustable rect position
+ * - TODO: Adjustable remaining time bar position
+ * - TODO: Adjustable horizontal alignment & fade in/out direction (https://www.youtube.com/watch?v=tFgeCEoHsXI)
  */
-// TODO: Customizable slide-in and slide-out animation
 @ElementInfo(name = "Notifications", single = true)
 class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F, side: Side = Side(Side.Horizontal.RIGHT, Side.Vertical.DOWN)) : Element(x, y, scale, side)
 {
@@ -96,6 +99,7 @@ class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F, side: 
 			val itr = LiquidBounce.hud.notifications.asReversed().iterator()
 
 			var deployingNotification: Notification? = null
+			val cornerX = (LiquidBounce.wrapper.classProvider.createScaledResolution(LiquidBounce.wrapper.minecraft).scaledWidth - renderX).toFloat()
 
 			while (itr.hasNext())
 			{
@@ -110,7 +114,7 @@ class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F, side: 
 						else -> GL11.glTranslatef(0.0F, -35.0F, 0.0F)
 					}
 
-					notification.drawNotification()
+					notification.drawNotification(cornerX)
 
 					if (notification.fadeState == Notification.FadeState.END) itr.remove()
 
@@ -134,9 +138,9 @@ class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F, side: 
 	}
 }
 
-class Notification(private val header: String, private val message: String, private val rectColor: Color? = null, private val stayTime: Long = 0L)
+class Notification(private val header: String, private val message: String, private val rectColor: Int? = null, private val stayTime: Long = 0L)
 {
-	var x = 0F
+	var x = Float.MAX_VALUE // 0F
 	var textLength = 0
 
 	private val stayTimer = MSTimer()
@@ -173,7 +177,7 @@ class Notification(private val header: String, private val message: String, priv
 	/**
 	 * Draw notification
 	 */
-	fun drawNotification()
+	fun drawNotification(cornerX: Float)
 	{
 		val headerFont = Notifications.headerFontValue.get()
 		val messageFont = Notifications.messageFontValue.get()
@@ -199,6 +203,9 @@ class Notification(private val header: String, private val message: String, priv
 		// Draw Background (Body)
 		val bodyRainbowShader = bodyColorMode.equals("RainbowShader", ignoreCase = true)
 
+		val width = textLength + 8f
+		val bodyXStart = -x
+		val bodyXEnd = bodyXStart + width
 		RainbowShader.begin(bodyRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
 			val color = when
 			{
@@ -207,14 +214,13 @@ class Notification(private val header: String, private val message: String, priv
 				else -> bodyCustomColor
 			}
 
-			RenderUtils.drawRect(-x + 8 + textLength, 0F, -x, -30F, color)
+			RenderUtils.drawRect(bodyXStart, 0F, bodyXEnd, -30F, color)
 		}
 
 		// Draw remaining time line
 		val remainingTimePercentage = if (fadeState != FadeState.IN) stayTimer.hasTimeLeft(stayTime).coerceAtLeast(0).toFloat() / stayTime.toFloat() else if (stayTime == 0L) 0F else 1F
 		val color = ColorUtils.blendColors(floatArrayOf(0f, 0.5f, 1f), arrayOf(Color.RED, Color.YELLOW, Color.GREEN), remainingTimePercentage).brighter()
-		RenderUtils.drawRect(-x + 8 + textLength, -28F, -x/* - 2*/ + (10 + textLength) * (1 - remainingTimePercentage), -30F, color)
-
+		RenderUtils.drawRect(bodyXStart + (textLength + 8f) * (1f - remainingTimePercentage), -28F, bodyXEnd, -30F, color)
 
 		headerFont.drawString(header, -x.toInt() + 4, -25, Int.MAX_VALUE)
 		messageFont.drawString(message, -x.toInt() + 4, -12, Int.MAX_VALUE)
@@ -225,14 +231,14 @@ class Notification(private val header: String, private val message: String, priv
 			val rectRainbowShader = rectColorMode.equals("RainbowShader", ignoreCase = true)
 
 			RainbowShader.begin(rectRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-				val rectColor = rectColor?.rgb ?: when
+				val rectColor = rectColor ?: when
 				{
 					rectRainbowShader -> 0
 					rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbowRGB(alpha = rectColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness)
 					else -> rectCustomColor
 				}
 
-				RenderUtils.drawRect(-x, 0F, -x - rectWidth, -30F, rectColor)
+				RenderUtils.drawRect(bodyXStart - rectWidth, 0F, bodyXStart, -30F, rectColor)
 			}
 		}
 
@@ -241,7 +247,6 @@ class Notification(private val header: String, private val message: String, priv
 
 		// Animation
 		val delta = RenderUtils.deltaTime
-		val width = textLength + 8F
 
 		val fadeSpeed = Notifications.fadeSpeedValue.get()
 		val deploySpeed = Notifications.deploySpeedValue.get()
@@ -266,9 +271,11 @@ class Notification(private val header: String, private val message: String, priv
 		{
 			FadeState.IN ->
 			{
+				if (x == Float.MAX_VALUE) x = -cornerX
+
 				if (x < width)
 				{
-					x = AnimationUtils.easeOut(fadeStep, width) * width
+					x = AnimationUtils.easeOut(fadeStep, width) * (width + cornerX) - cornerX
 					fadeStep += delta * fadeSpeed
 				}
 
@@ -284,14 +291,17 @@ class Notification(private val header: String, private val message: String, priv
 
 			FadeState.STAY -> if (stayTimer.hasTimePassed(stayTime)) fadeState = FadeState.OUT
 
-			FadeState.OUT -> if (x > 0)
+			FadeState.OUT ->
 			{
-				x = AnimationUtils.easeOut(fadeStep, width) * width
-				fadeStep -= delta * fadeSpeed
+				if (x > -cornerX)
+				{
+					x = AnimationUtils.easeOut(fadeStep, width) * width
+					fadeStep -= delta * fadeSpeed
+				}
+				else fadeState = FadeState.END
 			}
-			else fadeState = FadeState.END
 
-			// FadeState.END -> LiquidBounce.hud.removeNotification(this) It throws ConcurrentModificationException
+			// FadeState.END -> LiquidBounce.hud.removeNotification(this) - throws ConcurrentModificationException
 		}
 	}
 }

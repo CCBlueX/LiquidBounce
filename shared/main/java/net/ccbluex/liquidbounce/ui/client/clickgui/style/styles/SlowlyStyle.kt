@@ -7,7 +7,6 @@ package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles
 
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IGlStateManager
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.clamp_double
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.Companion.getButtonFont
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.Companion.getDescriptionFont
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.Companion.getPanelFont
@@ -475,8 +474,8 @@ class SlowlyStyle : Style()
 
 			if (mouseX in indentX..xEnd && mouseY >= y && mouseY <= y + 3 && Mouse.isButtonDown(0))
 			{
-				val perc = width.toDouble() - indent - 3
-				return BigDecimal("${(min + (max - min) * clamp_double((mouseX.toDouble() - indentX) / perc, 0.0, 1.0))}").setScale(2, RoundingMode.HALF_UP).toFloat()
+				val sliderXEnd = width - indent - 3f
+				return BigDecimal("${(min + (max - min) * ((mouseX - indentX) / sliderXEnd).coerceIn(0f, 1f))}").setScale(2, RoundingMode.HALF_UP).toFloat()
 			}
 
 			return value
@@ -488,7 +487,7 @@ class SlowlyStyle : Style()
 			val maxDisplayValue = maxValue.coerceIn(min, max)
 
 			val indentX = x + indent
-			val perc = width.toDouble() - indent - 3
+			val sliderXEnd = width - indent - 3f
 			drawRect(indentX, y, x + width, y + 2, Int.MAX_VALUE)
 
 			val minSliderValue = indentX + (width - indent) * (minDisplayValue - min) / (max - min)
@@ -503,7 +502,7 @@ class SlowlyStyle : Style()
 
 			if (mouseX >= indentX && mouseX <= x + width && mouseY >= y && mouseY <= y + 3 && Mouse.isButtonDown(0))
 			{
-				val newValue = BigDecimal("${(min + (max - min) * clamp_double((mouseX.toDouble() - indentX) / perc, 0.0, 1.0))}").setScale(2, RoundingMode.HALF_UP).toFloat()
+				val newValue = BigDecimal("${(min + (max - min) * ((mouseX - indentX) / sliderXEnd).coerceIn(0f, 1f))}").setScale(2, RoundingMode.HALF_UP).toFloat()
 				return if (mouseX > center) minValue to newValue else newValue to maxValue
 			}
 

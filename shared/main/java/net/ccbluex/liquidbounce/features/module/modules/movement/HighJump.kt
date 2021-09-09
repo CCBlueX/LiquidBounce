@@ -107,9 +107,14 @@ class HighJump : Module()
 
 		when (modeValue.get().toLowerCase())
 		{
-			"damage" -> if (thePlayer.hurtTime > 0 && onGround || voidEnabledValue.get() && thePlayer.posY <= voidYValue.get())
+			"damage" -> if (thePlayer.hurtTime > 0 && onGround)
 			{
 				thePlayer.motionY += 0.42f * baseHeightValue.get()
+				if (autodisable.get()) state = false
+			}
+			else if (voidEnabledValue.get() && thePlayer.posY <= voidYValue.get())
+			{
+				thePlayer.motionY = 0.42 * baseHeightValue.get()
 				if (autodisable.get()) state = false
 			}
 
