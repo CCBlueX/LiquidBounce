@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.injection.forge.SplashProgressLock;
 import net.ccbluex.liquidbounce.ui.client.GuiMainMenu;
 import net.ccbluex.liquidbounce.ui.client.GuiUpdate;
 import net.ccbluex.liquidbounce.ui.client.GuiWelcome;
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationType;
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notifications;
 import net.ccbluex.liquidbounce.utils.CPSCounter;
 import net.ccbluex.liquidbounce.utils.CPSCounter.MouseButton;
@@ -280,7 +281,7 @@ public abstract class MixinMinecraft
 		final HUD hud = (HUD) LiquidBounce.moduleManager.get(HUD.class);
 
 		if (hud.getWorldChangeAlertsValue().get() && LiquidBounce.hud.getNotifications().size() <= Notifications.Companion.getMaxRendered().get())
-			LiquidBounce.hud.addNotification("World Change", "(" + theWorld + ") -> (" + world + ")", 2000L, Color.yellow);
+			LiquidBounce.hud.addNotification(NotificationType.WARNING, "World Change", "(" + theWorld + ") -> (" + world + ")", 2000L);
 	}
 
 	/**

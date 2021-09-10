@@ -20,12 +20,12 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre.
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre.SpectreLowHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre.SpectreOnGround
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.vanilla.Vanilla
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationType
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.ccbluex.liquidbounce.value.ValueGroup
-import java.awt.Color
 
 @ModuleInfo(name = "Speed", description = "Allows you to move faster.", category = ModuleCategory.MOVEMENT)
 class Speed : Module()
@@ -186,7 +186,7 @@ class Speed : Module()
 			MovementUtils.zeroXZ(thePlayer)
 			thePlayer.jumpMovementFactor = 0.02F
 
-			LiquidBounce.hud.addNotification("Speed", "A teleport has been detected. Disabled Speed to prevent more flags.", 1000L, Color.red)
+			LiquidBounce.hud.addNotification(NotificationType.WARNING, "Speed", "A teleport has been detected. Disabled Speed to prevent more flags.", 1000L)
 		}
 	}
 

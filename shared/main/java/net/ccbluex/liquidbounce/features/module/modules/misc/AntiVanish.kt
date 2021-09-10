@@ -11,9 +11,9 @@ import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationType
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.IntegerValue
-import java.awt.Color
 
 // Original code available in https://github.com/Project-EZ4H/FDPClient/blob/master/src/main/java/net/ccbluex/liquidbounce/features/module/modules/misc/AntiVanish.kt
 @ModuleInfo(name = "AntiVanish", description = "Anti player vanish", category = ModuleCategory.MISC)
@@ -38,7 +38,7 @@ class AntiVanish : Module()
 
 	private fun vanish()
 	{
-		if (notifyTimer.hasTimePassed(notifyDelayValue.get().toLong())) LiquidBounce.hud.addNotification("Vanished Warning", "A player is vanished!", 1000, Color.yellow)
+		if (notifyTimer.hasTimePassed(notifyDelayValue.get().toLong())) LiquidBounce.hud.addNotification(NotificationType.WARNING, name, "A player is vanished!", 1000)
 		notifyTimer.reset()
 	}
 }

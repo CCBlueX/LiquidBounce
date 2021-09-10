@@ -10,8 +10,8 @@ import net.ccbluex.liquidbounce.event.WorldEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationType
 import net.ccbluex.liquidbounce.utils.ClientUtils
-import java.awt.Color
 
 /**
  * LiquidBounce Hacked Client A minecraft forge injection client using Mixin
@@ -40,7 +40,7 @@ class MurderDetector : Module()
 		theWorld.loadedEntityList.asSequence().filter(provider::isEntityPlayer).map(IEntity::asEntityPlayer).filter { it != thePlayer }.filter { it.currentEquippedItem?.item != null }.filter { !murders.contains(it) }.filter { isMurder(it.currentEquippedItem?.item!!) }.forEach {
 			murders.add(it.asEntityPlayer())
 			ClientUtils.displayChatMessage(thePlayer, "\u00A7a\u00A7l${it.asEntityPlayer().name}\u00A7r is the \u00A74\u00A7lmurderer\u00A7r!")
-			LiquidBounce.hud.addNotification("Murder Detector", it.name, 5000L, Color(153, 0, 153))
+			LiquidBounce.hud.addNotification(NotificationType.WARNING, "Murder Detector", it.name, 5000L)
 		}
 	}
 

@@ -28,7 +28,7 @@ class Spammer : Module()
 	/**
 	 * Options
 	 */
-	private val delayValue: IntegerRangeValue = object : IntegerRangeValue("SwitchDelay", 500, 1000, 0, 5000, "MaxDelay" to "MinDelay")
+	private val delayValue: IntegerRangeValue = object : IntegerRangeValue("Delay", 500, 1000, 0, 5000, "MaxDelay" to "MinDelay")
 	{
 		override fun onMaxValueChanged(oldValue: Int, newValue: Int)
 		{

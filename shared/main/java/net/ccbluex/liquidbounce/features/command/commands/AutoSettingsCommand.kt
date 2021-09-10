@@ -10,6 +10,7 @@ import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationType
 import net.ccbluex.liquidbounce.utils.SettingsUtils
 import net.ccbluex.liquidbounce.utils.WorkerUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
@@ -60,7 +61,7 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
 						chat(thePlayer, "Applying settings...")
 						SettingsUtils.executeScript(settings)
 						chat(thePlayer, "\u00A76Settings applied successfully")
-						LiquidBounce.hud.addNotification(Notification("Autosettings", "Updated Settings", null))
+						LiquidBounce.hud.addNotification(Notification(NotificationType.INFORMATION, "Autosettings", "Updated Settings"))
 						playEdit()
 					}
 					catch (exception: Exception)

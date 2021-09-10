@@ -19,6 +19,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.NoRotateSet;
 import net.ccbluex.liquidbounce.features.module.modules.render.HUD;
 import net.ccbluex.liquidbounce.features.special.AntiModDisable;
 import net.ccbluex.liquidbounce.injection.backend.EntityImplKt;
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationType;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.ccbluex.liquidbounce.utils.WorkerUtils;
@@ -302,19 +303,19 @@ public abstract class MixinNetHandlerPlayClient
 			WorkerUtils.getWorkers().execute(() ->
 			{
 				if (isHackerChat(text))
-					LiquidBounce.hud.addNotification("Chat", "Someone called you a hacker.", 2000L, Color.yellow);
+					LiquidBounce.hud.addNotification(NotificationType.WARNING, "Chat", "Someone called you a hacker.", 2000L);
 
 				if (text.contains("ground items will be removed in"))
-					LiquidBounce.hud.addNotification("ClearLag", "ClearLag " + text.substring(text.lastIndexOf("in ")), 2000L, null);
+					LiquidBounce.hud.addNotification(NotificationType.WARNING, "ClearLag", "ClearLag " + text.substring(text.lastIndexOf("in ")), 2000L);
 
 				if (text.contains("removed ") && text.contains("entities"))
-					LiquidBounce.hud.addNotification("ClearLag", text.substring(text.lastIndexOf("removed ")), 2000L, null);
+					LiquidBounce.hud.addNotification(NotificationType.WARNING, "ClearLag", text.substring(text.lastIndexOf("removed ")), 2000L);
 
 				if (text.contains("you are now in "))
-					LiquidBounce.hud.addNotification("Faction Warning", "Chunk: " + text.substring(text.lastIndexOf("in ") + 3), 2000L, null);
+					LiquidBounce.hud.addNotification(NotificationType.WARNING, "Faction Warning", "Chunk: " + text.substring(text.lastIndexOf("in ") + 3), 2000L);
 
 				if (text.contains("now entering"))
-					LiquidBounce.hud.addNotification("Faction", "Chunk: " + text.substring(text.lastIndexOf(": ") + 4), 2000L, null);
+					LiquidBounce.hud.addNotification(NotificationType.WARNING, "Faction", "Chunk: " + text.substring(text.lastIndexOf(": ") + 4), 2000L);
 			});
 
 		final IChatComponent message = ForgeEventFactory.onClientChat(messageType, messageComponent);

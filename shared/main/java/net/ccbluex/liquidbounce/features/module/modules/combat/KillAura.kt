@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
 import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam
 import net.ccbluex.liquidbounce.injection.backend.Backend
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationType
 import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
@@ -39,7 +40,6 @@ import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
-import java.awt.Color
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sqrt
@@ -377,7 +377,7 @@ class KillAura : Module()
 		if (disableOnDeathValue.get())
 		{
 			state = false
-			LiquidBounce.hud.addNotification("KillAura", "Disabled KillAura due world change", 1000L, Color.red)
+			LiquidBounce.hud.addNotification(NotificationType.WARNING, "KillAura", "Disabled KillAura due world change", 1000L)
 		}
 	}
 
@@ -387,7 +387,7 @@ class KillAura : Module()
 		if (mc.thePlayer == null || mc.theWorld == null)
 		{
 			state = false
-			LiquidBounce.hud.addNotification("KillAura", "Disabled KillAura due world change", 1000L, Color.red)
+			LiquidBounce.hud.addNotification(NotificationType.WARNING, "KillAura", "Disabled KillAura due world change", 1000L)
 		}
 	}
 
@@ -1204,7 +1204,7 @@ class KillAura : Module()
 		if (shouldDisableOnDeath && disableOnDeathValue.get())
 		{
 			state = false
-			LiquidBounce.hud.addNotification("KillAura", "Disabled KillAura due player death", 1000L, Color.red)
+			LiquidBounce.hud.addNotification(NotificationType.WARNING, "KillAura", "Disabled KillAura due player death", 1000L)
 		}
 
 		return shouldDisableOnDeath || (bypassSuspendWhileConsumingValue.get() && thePlayer.isUsingItem && thePlayer.heldItem == thePlayer.itemInUse && (classProvider.isItemFood(thePlayer.heldItem?.item) || classProvider.isItemPotion(thePlayer.heldItem?.item))) || !suspendTimer.hasTimePassed(suspend) || (moduleManager[Blink::class.java] as Blink).state || moduleManager[FreeCam::class.java].state

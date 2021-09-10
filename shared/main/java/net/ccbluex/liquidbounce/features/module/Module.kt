@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.injection.backend.Backend
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationType
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.value.AbstractValue
@@ -71,7 +72,7 @@ open class Module : MinecraftInstance(), Listenable
 			if (!LiquidBounce.isStarting)
 			{
 				mc.soundHandler.playSound("random.click", 1.0F)
-				LiquidBounce.hud.addNotification(Notification("Module Manager", "${if (value) "Enabled " else "Disabled "}$name", null))
+				LiquidBounce.hud.addNotification(Notification(NotificationType.INFORMATION, "Module Manager", "${if (value) "Enabled " else "Disabled "}$name"))
 			}
 
 			// Call on enabled or disabled

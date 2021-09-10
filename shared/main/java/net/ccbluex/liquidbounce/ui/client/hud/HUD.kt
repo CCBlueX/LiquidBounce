@@ -12,7 +12,6 @@ import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import org.lwjgl.opengl.GL11
-import java.awt.Color
 import kotlin.math.max
 import kotlin.math.min
 
@@ -188,5 +187,5 @@ open class HUD : MinecraftInstance()
 	 */
 	fun addNotification(notification: Notification) = elements.any { it is Notifications } && notifications.add(notification)
 
-	fun addNotification(header: String, message: String, stayTime: Long, rectColor: Color? = null) = addNotification(Notification(header, message, rectColor?.rgb, stayTime)) // TODO: Change java.awt.Color to hex color
+	fun addNotification(type: NotificationType, header: String, message: String, stayTime: Long) = addNotification(Notification(type, header, message, stayTime))
 }

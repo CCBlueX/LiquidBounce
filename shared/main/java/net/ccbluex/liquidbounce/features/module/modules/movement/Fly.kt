@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.BlockOverlay
 import net.ccbluex.liquidbounce.features.module.modules.render.Bobbing
 import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.Tower
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationType
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.MovementUtils.getDirection
@@ -46,6 +47,7 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
 
+// TODO: Modulize Modes
 @ModuleInfo(name = "Fly", description = "Allows you to fly in survival mode.", category = ModuleCategory.MOVEMENT, defaultKeyBinds = [Keyboard.KEY_F])
 class Fly : Module()
 {
@@ -1192,7 +1194,7 @@ class Fly : Module()
 		if (provider.isSPacketPlayerPosLook(packet) && mode.equals("Hypixel", ignoreCase = true) && canPerformHypixelDamageFly && hypixelFlyStarted && !hypixelDamageBoostFailed)
 		{
 			hypixelDamageBoostFailed = true
-			LiquidBounce.hud.addNotification("Hypixel Damage-Boost Fly", "A teleport has been detected. Disabled Damage-Boost to prevent more flags.", 1000L, Color.red)
+			LiquidBounce.hud.addNotification(NotificationType.WARNING, "Hypixel Damage-Boost Fly", "A teleport has been detected. Disabled Damage-Boost to prevent more flags.", 1000L)
 		}
 
 		if (provider.isCPacketAbilities(packet))

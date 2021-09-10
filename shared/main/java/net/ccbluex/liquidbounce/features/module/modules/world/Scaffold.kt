@@ -39,10 +39,7 @@ import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
-import kotlin.math.abs
-import kotlin.math.atan2
-import kotlin.math.floor
-import kotlin.math.hypot
+import kotlin.math.*
 import kotlin.random.Random
 
 @ModuleInfo(name = "Scaffold", description = "Automatically places blocks beneath your feet.", category = ModuleCategory.WORLD, defaultKeyBinds = [Keyboard.KEY_I])
@@ -241,7 +238,6 @@ class Scaffold : Module()
 		val thePlayer = mc.thePlayer ?: return
 
 		launchY = thePlayer.posY.toInt()
-		fallStartY = 0.0
 
 		val rotationMode = rotationModeValue.get()
 		if (modeValue.get().equals("Expand", ignoreCase = true) && (rotationMode.equals("Static", ignoreCase = true) || rotationMode.equals("StaticPitch", ignoreCase = true))) ClientUtils.displayChatMessage(thePlayer, "\u00A78[\u00A7aScaffold\u00A78] \u00A7aUsing Expand scaffold with Static/StaticPitch rotation mode can decrease your expand length!")
@@ -450,13 +446,21 @@ class Scaffold : Module()
 		event.cancelEvent()
 	}
 
-	@EventTarget
+	@EventTarget(ignoreCondition = true)
 	fun onMotion(event: MotionEvent)
 	{
 		val eventState: EventState = event.eventState
 
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
+
+		if (!thePlayer.onGround && thePlayer.motionY < 0)
+		{
+			if (fallStartY < thePlayer.posY) fallStartY = thePlayer.posY
+		}
+		else fallStartY = 0.0
+
+		if (!state) return
 
 		val tower = LiquidBounce.moduleManager[Tower::class.java] as Tower
 		if (disableWhileTowering.get() && tower.active)
@@ -499,12 +503,6 @@ class Scaffold : Module()
 			lastGroundBlockPos = pos
 			lastGroundBlockBB = BlockUtils.getBlockCollisionBox(theWorld, bs)
 		}
-
-		if (!thePlayer.onGround && thePlayer.motionY < 0)
-		{
-			if (fallStartY < thePlayer.posY) fallStartY = thePlayer.posY
-		}
-		else fallStartY = 0.0
 
 		findBlock(theWorld, thePlayer, modeValue.get().equals("expand", true))
 	}
@@ -554,17 +552,6 @@ class Scaffold : Module()
 
 		val autoBlockBlock = (autoBlock?.item ?: return).asItemBlock().block
 
-		// Configure place-position
-		val searchPosition: WBlockPos
-		var pos = WBlockPos(thePlayer)
-
-		var sameY = false
-		if (sameYValue.get() && launchY != -999)
-		{
-			pos = WBlockPos(thePlayer.posX, launchY - 1.0, thePlayer.posZ).up()
-			sameY = true
-		}
-
 		val func = functions
 
 		val abCollisionBB = BlockUtils.getBlockCollisionBox(theWorld, if (func.isBlockEqualTo(groundBlock, autoBlockBlock)) groundBlockState else autoBlockBlock.defaultState ?: return) ?: return
@@ -599,41 +586,55 @@ class Scaffold : Module()
 		lastSearchBound = searchBounds
 
 		val state: String
-
 		var clutching = false
-		if (fallStartY - thePlayer.posY > 2) // Clutch while falling
+		val searchPosition: WBlockPos
+
+		if (fallStartY - thePlayer.posY > 2)
 		{
 			searchPosition = WBlockPos(thePlayer).down(2)
 			state = "Clutch"
 			clutching = true
 		}
-		else if (!sameY && abCollisionBB.maxY - abCollisionBB.minY < 1.0 && groundMaxY < 1.0 && abCollisionBB.maxY - abCollisionBB.minY < groundMaxY - groundMinY)
-		{
-			searchPosition = pos
-
-			// Failsafe for slab: Limits maxY to 0.5 to place slab safely.
-			if (searchBounds.maxY >= 0.5)
-			{
-				searchBounds.minY = 0.125 - yRange * 0.25
-				searchBounds.maxY = 0.125 + yRange * 0.25
-			}
-
-			state = "Non-Fullblock-SlabCorrection"
-		}
-		else if (!sameY && abCollisionBB.maxY - abCollisionBB.minY < 1.0 && groundMaxY < 1.0 && abCollisionBB.maxY - abCollisionBB.minY == groundMaxY - groundMinY)
-		{
-			searchPosition = pos
-			state = "Non-Fullblock"
-		}
-		else if (shouldGoDown)
-		{
-			searchPosition = pos.add(0.0, -0.6, 0.0).down() // Default full-block only scaffold
-			state = "Down"
-		}
 		else
 		{
-			searchPosition = pos.down() // Default full-block only scaffold
-			state = "Default"
+			var pos = WBlockPos(thePlayer)
+
+			var sameY = false
+			if (sameYValue.get() && launchY != -999)
+			{
+				pos = WBlockPos(thePlayer.posX, launchY - 1.0, thePlayer.posZ).up()
+				sameY = true
+			}
+
+			// Clutch while falling
+			if (!sameY && abCollisionBB.maxY - abCollisionBB.minY < 1.0 && groundMaxY < 1.0 && abCollisionBB.maxY - abCollisionBB.minY < groundMaxY - groundMinY)
+			{
+				searchPosition = pos
+
+				// Failsafe for slab: Limits maxY to 0.5 to place slab safely.
+				if (searchBounds.maxY >= 0.5)
+				{
+					searchBounds.minY = 0.125 - yRange * 0.25
+					searchBounds.maxY = 0.125 + yRange * 0.25
+				}
+
+				state = "Non-Fullblock-SlabCorrection"
+			}
+			else if (!sameY && abCollisionBB.maxY - abCollisionBB.minY < 1.0 && groundMaxY < 1.0 && abCollisionBB.maxY - abCollisionBB.minY == groundMaxY - groundMinY)
+			{
+				searchPosition = pos
+				state = "Non-Fullblock"
+			}
+			else if (shouldGoDown)
+			{
+				searchPosition = pos.add(0.0, -0.6, 0.0).down() // Default full-block only scaffold
+				state = "Down"
+			}
+			else
+			{
+				searchPosition = pos.down() // Default full-block only scaffold
+				state = "Default"
+			}
 		}
 
 		if (visualSearchDebugValue.get())
@@ -669,7 +670,7 @@ class Scaffold : Module()
 		else if (rotationSearchSearchValue.get())
 		{
 			val rangeValue = rotationSearchSearchRangeValue.get()
-			val yrangeValue = rotationSearchYSearchRangeValue.get()
+			val yrangeValue = if (clutching) max(2, rotationSearchYSearchRangeValue.get()) else rotationSearchYSearchRangeValue.get()
 
 			val range = -rangeValue..rangeValue
 			val yrange = if (ySearch) -yrangeValue..yrangeValue else 0..0

@@ -540,6 +540,12 @@ object RenderUtils : MinecraftInstance()
 	@JvmStatic
 	fun drawImage(image: IResourceLocation, x: Int, y: Int, width: Int, height: Int)
 	{
+		drawImage(image, x.toFloat(), y.toFloat(), width.toFloat(), height.toFloat())
+	}
+
+	@JvmStatic
+	fun drawImage(image: IResourceLocation, x: Float, y: Float, width: Float, height: Float)
+	{
 		GL11.glDisable(GL11.GL_DEPTH_TEST)
 		GL11.glEnable(GL11.GL_BLEND)
 		GL11.glDepthMask(false)
@@ -549,12 +555,7 @@ object RenderUtils : MinecraftInstance()
 
 		mc.textureManager.bindTexture(image)
 
-		val xF = x.toFloat()
-		val yF = y.toFloat()
-		val widthF = width.toFloat()
-		val heightF = height.toFloat()
-
-		drawModalRectWithCustomSizedTexture(xF, yF, 0f, 0f, widthF, heightF, widthF, heightF)
+		drawModalRectWithCustomSizedTexture(x, y, 0f, 0f, width, height, width, height)
 
 		GL11.glDepthMask(true)
 		GL11.glDisable(GL11.GL_BLEND)

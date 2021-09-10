@@ -24,9 +24,6 @@ import kotlin.math.max
 /**
  * CustomHUD Notification element
  * - TODO: Display the type of notification (Warning/Error/Info/Exclamation icon & text)
- * - TODO: Adjustable rect position
- * - TODO: Adjustable remaining time bar position
- * - TODO: Adjustable horizontal alignment & fade in/out direction (https://www.youtube.com/watch?v=tFgeCEoHsXI)
  */
 @ElementInfo(name = "Notifications", single = true)
 class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F, side: Side = Side(Side.Horizontal.RIGHT, Side.Vertical.DOWN)) : Element(x, y, scale, side)
@@ -38,16 +35,32 @@ class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F, side: 
 		val bodyColorValue = RGBAColorValue("Color", 0, 0, 0, 255, listOf("Body-R", "Body-G", "Body-B", "Body-Alpha"))
 
 		private val rectGroup = ValueGroup("Rect")
-		val rectValue = BoolValue("Enabled", true, "Rect")
+		val rectModeValue = ListValue("Mode", arrayOf("None", "Left", "Right"), "Left")
 		val rectWidthValue = FloatValue("Width", 5F, 1.5F, 8F, "Rect-Width")
 
-		private val rectColorGroup = ValueGroup("Color")
-		val rectColorModeValue = ListValue("Mode", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom", "Rect-Color")
-		val rectColorValue = RGBAColorValue("Color", 0, 111, 255, 255, listOf("Rect-R", "Rect-G", "Rect-B", "Rect-Alpha"))
+		private val rectInfoColorGroup = ValueGroup("InfoColor")
+		val rectInfoColorModeValue = ListValue("Mode", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom", "Rect-Color")
+		val rectInfoColorValue = RGBAColorValue("Color", 0, 111, 255, 255, listOf("Rect-R", "Rect-G", "Rect-B", "Rect-Alpha"))
+
+		private val rectWarnColorGroup = ValueGroup("WarnColor")
+		val rectWarnColorModeValue = ListValue("Mode", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom")
+		val rectWarnColorValue = RGBAColorValue("Color", 255, 255, 0, 255)
+
+		private val rectVerboseColorGroup = ValueGroup("VerboseColor")
+		val rectVerboseColorModeValue = ListValue("Mode", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom")
+		val rectVerboseColorValue = RGBAColorValue("Color", 128, 128, 128, 255)
+
+		private val rectErrorColorGroup = ValueGroup("ErrorColor")
+		val rectErrorColorModeValue = ListValue("Mode", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom")
+		val rectErrorColorValue = RGBAColorValue("Color", 255, 0, 0, 255)
+
+		private val remainingTimeBarGroup = ValueGroup("RemainingTime")
+		val remainingTimeBarModeValue = ListValue("Mode", arrayOf("None", "Up", "Down"), "Down")
+		val remainingTimeBarWidthValue = FloatValue("Width", 1F, 0.2F, 2F)
 
 		private val rainbowGroup = object : ValueGroup("Rainbow")
 		{
-			override fun showCondition() = bodyColorModeValue.get().equals("Rainbow", ignoreCase = true) || rectColorModeValue.get().equals("Rainbow", ignoreCase = true)
+			override fun showCondition() = bodyColorModeValue.get().equals("Rainbow", ignoreCase = true) || rectInfoColorModeValue.get().equals("Rainbow", ignoreCase = true)
 		}
 		val rainbowSpeedValue = IntegerValue("Speed", 10, 1, 10, "Rainbow-Speed")
 		val rainbowSaturationValue = FloatValue("Saturation", 1F, 0F, 1F, "HSB-Saturation")
@@ -55,7 +68,7 @@ class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F, side: 
 
 		private val rainbowShaderGroup = object : ValueGroup("RainbowShader")
 		{
-			override fun showCondition() = bodyColorModeValue.get().equals("RainbowShader", ignoreCase = true) || rectColorModeValue.get().equals("RainbowShader", ignoreCase = true)
+			override fun showCondition() = bodyColorModeValue.get().equals("RainbowShader", ignoreCase = true) || rectInfoColorModeValue.get().equals("RainbowShader", ignoreCase = true)
 		}
 		val rainbowShaderXValue = FloatValue("X", -1000F, -2000F, 2000F, "RainbowShader-X")
 		val rainbowShaderYValue = FloatValue("Y", -1000F, -2000F, 2000F, "RainbowShader-Y")
@@ -72,8 +85,13 @@ class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F, side: 
 		{
 			bodyColorGroup.addAll(bodyColorModeValue, bodyColorValue)
 
-			rectColorGroup.addAll(rectColorModeValue, rectColorValue)
-			rectGroup.addAll(rectValue, rectWidthValue, rectColorGroup)
+			rectInfoColorGroup.addAll(rectInfoColorModeValue, rectInfoColorValue)
+			rectWarnColorGroup.addAll(rectWarnColorModeValue, rectWarnColorValue)
+			rectVerboseColorGroup.addAll(rectVerboseColorModeValue, rectVerboseColorValue)
+			rectErrorColorGroup.addAll(rectErrorColorModeValue, rectErrorColorValue)
+			rectGroup.addAll(rectModeValue, rectWidthValue, rectInfoColorGroup, rectWarnColorGroup, rectVerboseColorGroup, rectErrorColorGroup)
+
+			remainingTimeBarGroup.addAll(remainingTimeBarModeValue, remainingTimeBarWidthValue)
 
 			rainbowGroup.addAll(rainbowSpeedValue, rainbowSaturationValue, rainbowBrightnessValue)
 
@@ -84,7 +102,7 @@ class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F, side: 
 	/**
 	 * Example notification for CustomHUD designer
 	 */
-	private val exampleNotification = Notification("Example Notification Header", "Example Notification Message", null)
+	private val exampleNotification = Notification(NotificationType.INFORMATION, "Example Notification Header", "Example Notification Message")
 
 	/**
 	 * Draw element
@@ -100,6 +118,7 @@ class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F, side: 
 
 			var deployingNotification: Notification? = null
 			val cornerX = (LiquidBounce.wrapper.classProvider.createScaledResolution(LiquidBounce.wrapper.minecraft).scaledWidth - renderX).toFloat()
+			val vertical = if (side.vertical == Side.Vertical.UP) 1f else -1f
 
 			while (itr.hasNext())
 			{
@@ -110,11 +129,11 @@ class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F, side: 
 					when (index)
 					{
 						0 -> deployingNotification = notification
-						1 -> GL11.glTranslatef(0.0F, deployingNotification?.yDeploy ?: -35.0F, 0.0F)
-						else -> GL11.glTranslatef(0.0F, -35.0F, 0.0F)
+						1 -> GL11.glTranslatef(0.0F, (deployingNotification?.yDeploy ?: 35.0F) * vertical, 0.0F)
+						else -> GL11.glTranslatef(0.0F, 35.0F * vertical, 0.0F)
 					}
 
-					notification.drawNotification(cornerX)
+					notification.drawNotification(side, cornerX)
 
 					if (notification.fadeState == Notification.FadeState.END) itr.remove()
 
@@ -131,14 +150,30 @@ class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F, side: 
 			exampleNotification.fadeState = Notification.FadeState.STAY
 			exampleNotification.x = exampleNotification.textLength + 8F
 
-			return Border(-120F, -30F, 0F, 0F)
+			return when (side.horizontal)
+			{
+				Side.Horizontal.RIGHT -> Border(0F, -30F, 150F, 0F)
+				Side.Horizontal.MIDDLE -> Border(-75F, -30F, 75F, 0F)
+				Side.Horizontal.LEFT -> Border(-150F, -30F, 0F, 0F)
+			}
 		}
 
 		return null
 	}
 }
 
-class Notification(private val header: String, private val message: String, private val rectColor: Int? = null, private val stayTime: Long = 0L)
+enum class NotificationType(iconPath: String, val colorMode: () -> String, val customColor: () -> Int)
+{
+	INFORMATION("/notification/info_icon.png", Notifications.rectInfoColorModeValue::get, Notifications.rectInfoColorValue::get),
+	WARNING("/notification/warn_icon.png", Notifications.rectWarnColorModeValue::get, Notifications.rectWarnColorValue::get), // TODO: Separate to WARNING_YELLOW and WARNING_RED
+	VERBOSE("/notification/verbose_icon.png", Notifications.rectVerboseColorModeValue::get, Notifications.rectVerboseColorValue::get),
+	ERROR("/notification/error_icon.png", Notifications.rectErrorColorModeValue::get, Notifications.rectErrorColorValue::get);
+	// TODO: MurderDetector exclusive icon (extract from QuickPlay mod)
+
+	val resourceLocation = LiquidBounce.wrapper.classProvider.createResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + iconPath)
+}
+
+class Notification(private val type: NotificationType, private val header: String, private val message: String, private val stayTime: Long = 0L)
 {
 	var x = Float.MAX_VALUE // 0F
 	var textLength = 0
@@ -153,7 +188,7 @@ class Notification(private val header: String, private val message: String, priv
 	private var yDeploying = true
 
 	internal val yDeploy: Float
-		get() = yDeployProgress * -0.35F
+		get() = yDeployProgress * 0.35F
 
 	/**
 	 * Fade state for animation
@@ -177,7 +212,7 @@ class Notification(private val header: String, private val message: String, priv
 	/**
 	 * Draw notification
 	 */
-	fun drawNotification(cornerX: Float)
+	fun drawNotification(side: Side, cornerX: Float)
 	{
 		val headerFont = Notifications.headerFontValue.get()
 		val messageFont = Notifications.messageFontValue.get()
@@ -185,12 +220,8 @@ class Notification(private val header: String, private val message: String, priv
 		val bodyColorMode = Notifications.bodyColorModeValue.get()
 		val bodyCustomColor = Notifications.bodyColorValue.get()
 
-		val rect = Notifications.rectValue.get()
+		val rect = Notifications.rectModeValue.get()
 		val rectWidth = Notifications.rectWidthValue.get()
-
-		val rectColorMode = Notifications.rectColorModeValue.get()
-		val rectColorAlpha = Notifications.rectColorValue.getAlpha()
-		val rectCustomColor = Notifications.rectColorValue.get()
 
 		val rainbowShaderX = if (Notifications.rainbowShaderXValue.get() == 0.0F) 0.0F else 1.0F / Notifications.rainbowShaderXValue.get()
 		val rainbowShaderY = if (Notifications.rainbowShaderYValue.get() == 0.0F) 0.0F else 1.0F / Notifications.rainbowShaderYValue.get()
@@ -203,9 +234,13 @@ class Notification(private val header: String, private val message: String, priv
 		// Draw Background (Body)
 		val bodyRainbowShader = bodyColorMode.equals("RainbowShader", ignoreCase = true)
 
-		val width = textLength + 8f
-		val bodyXStart = -x
-		val bodyXEnd = bodyXStart + width
+		val width = textLength + 38f
+		val (bodyXStart, bodyXEnd) = when (side.horizontal)
+		{
+			Side.Horizontal.LEFT -> x - width to x
+			Side.Horizontal.MIDDLE -> -x + width - width * 0.5f to -x + width + width * 0.5f
+			Side.Horizontal.RIGHT -> -x to -x + width
+		}
 		RainbowShader.begin(bodyRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
 			val color = when
 			{
@@ -220,25 +255,42 @@ class Notification(private val header: String, private val message: String, priv
 		// Draw remaining time line
 		val remainingTimePercentage = if (fadeState != FadeState.IN) stayTimer.hasTimeLeft(stayTime).coerceAtLeast(0).toFloat() / stayTime.toFloat() else if (stayTime == 0L) 0F else 1F
 		val color = ColorUtils.blendColors(floatArrayOf(0f, 0.5f, 1f), arrayOf(Color.RED, Color.YELLOW, Color.GREEN), remainingTimePercentage).brighter()
-		RenderUtils.drawRect(bodyXStart + (textLength + 8f) * (1f - remainingTimePercentage), -28F, bodyXEnd, -30F, color)
 
-		headerFont.drawString(header, -x.toInt() + 4, -25, Int.MAX_VALUE)
-		messageFont.drawString(message, -x.toInt() + 4, -12, Int.MAX_VALUE)
+		run {
+			val pair: Pair<Float, Float> = when (Notifications.remainingTimeBarModeValue.get().toLowerCase())
+			{
+				"up" -> -30f to -30f + Notifications.remainingTimeBarWidthValue.get()
+				"down" -> 0f to -Notifications.remainingTimeBarWidthValue.get()
+				else -> null
+			} ?: return@run
+			RenderUtils.drawRect(bodyXStart + width * (1f - remainingTimePercentage), pair.first, bodyXEnd, pair.second, color)
+		}
+
+		RenderUtils.drawImage(type.resourceLocation, bodyXStart + 5f, -25f, 20f, 20f)
+
+		headerFont.drawString(header, bodyXStart.toInt() + 30, -25, Int.MAX_VALUE)
+		messageFont.drawString(message, bodyXStart.toInt() + 30, -12, Int.MAX_VALUE)
 
 		// Draw Rect
-		if (rect)
+		if (!rect.equals("None", ignoreCase = true))
 		{
+			val rectColorMode = type.colorMode()
+			val rectCustomColor = type.customColor()
 			val rectRainbowShader = rectColorMode.equals("RainbowShader", ignoreCase = true)
 
 			RainbowShader.begin(rectRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-				val rectColor = rectColor ?: when
+				val rectColor = when
 				{
 					rectRainbowShader -> 0
-					rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbowRGB(alpha = rectColorAlpha, speed = rainbowSpeed, saturation = saturation, brightness = brightness)
+					rectColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbowRGB(alpha = rectCustomColor shr 24 and 0xFF, speed = rainbowSpeed, saturation = saturation, brightness = brightness)
 					else -> rectCustomColor
 				}
 
-				RenderUtils.drawRect(bodyXStart - rectWidth, 0F, bodyXStart, -30F, rectColor)
+				when (rect.toLowerCase())
+				{
+					"left" -> RenderUtils.drawRect(bodyXStart - rectWidth, 0F, bodyXStart, -30F, rectColor)
+					"right" -> RenderUtils.drawRect(bodyXEnd, 0F, bodyXEnd + rectWidth, -30F, rectColor)
+				}
 			}
 		}
 

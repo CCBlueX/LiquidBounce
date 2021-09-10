@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.Tower
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationType
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
@@ -26,7 +27,6 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.ccbluex.liquidbounce.value.ValueGroup
-import java.awt.Color
 
 @ModuleInfo(name = "HighJump", description = "Allows you to jump higher.", category = ModuleCategory.MOVEMENT)
 class HighJump : Module()
@@ -83,7 +83,7 @@ class HighJump : Module()
 			if (disableScaffold) scaffold.state = false
 			if (disableTower) tower.state = false
 
-			if (disableScaffold || disableTower) LiquidBounce.hud.addNotification("HighJump", "Disabled ${if (disableScaffold && disableTower) "Scaffold and Tower" else if (disableScaffold) "Scaffold" else "Tower"}", 1000, Color.yellow)
+			if (disableScaffold || disableTower) LiquidBounce.hud.addNotification(NotificationType.WARNING, "HighJump", "Disabled ${if (disableScaffold && disableTower) "Scaffold and Tower" else if (disableScaffold) "Scaffold" else "Tower"}", 1000)
 		}
 
 		if (modeValue.get().equals("mineplex", ignoreCase = true)) ClientUtils.displayChatMessage(mc.thePlayer, "\u00A78[\u00A7c\u00A7lMineplex Highjump\u00A78] \u00A7cWalk off an island to highjump.")
@@ -223,7 +223,7 @@ class HighJump : Module()
 			MovementUtils.zeroXZ(thePlayer)
 			thePlayer.jumpMovementFactor = 0.02F
 
-			LiquidBounce.hud.addNotification("Mineplex HighJump", "A teleport has been detected. Disabled HighJump to prevent kick.", 1000L, Color.red)
+			LiquidBounce.hud.addNotification(NotificationType.WARNING, "Mineplex HighJump", "A teleport has been detected. Disabled HighJump to prevent kick.", 1000L)
 		}
 	}
 

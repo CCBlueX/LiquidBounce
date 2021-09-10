@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.features.command.commands
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationType
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.SettingsUtils
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
@@ -42,7 +43,7 @@ class LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "l
 								chat(thePlayer, "\u00A79Set settings...")
 								SettingsUtils.executeScript(settings)
 								chat(thePlayer, "\u00A76Settings applied successfully.")
-								LiquidBounce.hud.addNotification(Notification("Local Autosettings", "Updated Settings", null))
+								LiquidBounce.hud.addNotification(Notification(NotificationType.INFORMATION, "Local Autosettings", "Updated Settings"))
 								playEdit()
 							}
 							catch (e: IOException)
