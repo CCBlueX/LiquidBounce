@@ -47,7 +47,7 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.random.Random
 
-// TODO: Modulize Modes
+// TODO: Modularize Modes
 @ModuleInfo(name = "Fly", description = "Allows you to fly in survival mode.", category = ModuleCategory.MOVEMENT, defaultKeyBinds = [Keyboard.KEY_F])
 class Fly : Module()
 {

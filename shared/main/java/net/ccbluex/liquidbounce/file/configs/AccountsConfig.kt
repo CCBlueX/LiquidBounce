@@ -27,8 +27,6 @@ class AccountsConfig(file: File) : FileConfig(file)
 {
 	val accounts: MutableList<MinecraftAccount> = ArrayList()
 
-	// TODO: private val lock = ReentrantReadWriteLock()
-
 	private val slashPattern: Pattern = Pattern.compile("/", Pattern.LITERAL)
 
 	/**

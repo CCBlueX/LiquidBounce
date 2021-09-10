@@ -138,8 +138,9 @@ class KillAura : Module()
 
 	private val rayCastGroup = ValueGroup("RayCast")
 	private val rayCastEnabledValue = BoolValue("Enabled", true, "RayCast")
-	private val rayCastIgnoredValue = BoolValue("Ignored", false, "RayCastIgnored")
-	private val rayCastLivingValue = BoolValue("Living", true, "LivingRayCast")
+	private val rayCastSkipEnemyCheckValue = BoolValue("SkipEnemyCheck", false, "RayCastIgnored")
+	private val rayCastLivingOnlyValue = BoolValue("LivingOnly", true, "LivingRayCast")
+	private val rayCastIncludeCollidedValue = BoolValue("IncludeCollided", true, "AAC")
 
 	private val bypassGroup = ValueGroup("Bypass")
 	private val bypassKeepSprintValue = BoolValue("KeepSprint", true, "KeepSprint")
@@ -325,7 +326,7 @@ class KillAura : Module()
 		targetGroup.addAll(targetPriorityValue, targetModeValue, targetLimitedMultiTargetsValue)
 		interactAutoBlockGroup.addAll(interactAutoBlockEnabledValue, interactAutoBlockRangeValue)
 		autoBlockGroup.addAll(autoBlockValue, autoBlockRangeValue, autoBlockRate, autoBlockHitableCheckValue, autoBlockHurtTimeCheckValue, autoBlockWallCheckValue, interactAutoBlockGroup)
-		rayCastGroup.addAll(rayCastEnabledValue, rayCastIgnoredValue, rayCastLivingValue)
+		rayCastGroup.addAll(rayCastEnabledValue, rayCastSkipEnemyCheckValue, rayCastLivingOnlyValue, rayCastIncludeCollidedValue)
 		bypassGroup.addAll(bypassKeepSprintValue, bypassAACValue, bypassFailRateValue, bypassSuspendWhileConsumingValue, noInventoryGroup, rayCastGroup)
 		noInventoryGroup.addAll(noInventoryAttackEnabledValue, noInventoryDelayValue)
 		rotationSearchCenterGroup.addAll(rotationSearchCenterHitboxShrinkValue, rotationSearchCenterSensitivityValue)
@@ -1094,24 +1095,35 @@ class KillAura : Module()
 		if (rotationMode.get().equals("Off", ignoreCase = true) || rotationTurnSpeedValue.getMax() <= 0F || targetModeValue.get().equals("Multi", ignoreCase = true)) // Disable hitable check if turn speed is zero
 		{
 			hitable = currentTarget != null && thePlayer.getDistanceToEntityBox(currentTarget) <= reach
+			debug = "MultiAura mode or Rotation disabled"
 			return
 		}
 
 		val aac = bypassAACValue.get()
-		val livingRaycast = rayCastLivingValue.get()
-		val raycastIgnored = rayCastIgnoredValue.get()
+		val livingOnly = rayCastLivingOnlyValue.get()
+		val skipEnemyCheck = rayCastSkipEnemyCheckValue.get()
+		val includeCollidedWithTarget = rayCastIncludeCollidedValue.get()
 
 		if (rayCastEnabledValue.get())
 		{
 			val provider = classProvider
 
 			val distanceToTarget = currentTarget?.let(thePlayer::getDistanceToEntityBox)
-			val raycastedEntity = RaycastUtils.raycastEntity(theWorld, thePlayer, reach + 1.0, lastYaw, lastPitch, getHitbox) { entity -> entity != null && (!livingRaycast || (provider.isEntityLivingBase(entity) && !provider.isEntityArmorStand(entity))) && (raycastIgnored || EntityUtils.isEnemy(entity, aac) || aac && theWorld.getEntitiesWithinAABBExcludingEntity(entity, entity.entityBoundingBox).isNotEmpty()) }
+			val raycastedEntity = RaycastUtils.raycastEntity(theWorld, thePlayer, reach + 1.0, lastYaw, lastPitch, getHitbox) { entity -> entity != null && (!livingOnly || (provider.isEntityLivingBase(entity) && !provider.isEntityArmorStand(entity))) && (skipEnemyCheck || EntityUtils.isEnemy(entity, aac) || includeCollidedWithTarget && theWorld.getEntitiesWithinAABBExcludingEntity(entity, entity.entityBoundingBox).isNotEmpty()) }
 			val distanceToRaycasted = raycastedEntity?.let(thePlayer::getDistanceToEntityBox)
 
 			if (raycastedEntity != null && provider.isEntityLivingBase(raycastedEntity) && (LiquidBounce.moduleManager[NoFriends::class.java].state || !provider.isEntityPlayer(raycastedEntity) || !raycastedEntity.asEntityPlayer().isClientFriend())) this.currentTarget = raycastedEntity.asEntityLivingBase()
 
-			if (distanceToTarget != null && distanceToRaycasted != null && currentTarget != raycastedEntity) debug = "[n: ${currentTarget.name}, id: ${currentTarget.entityId}] -> [n: ${raycastedEntity.name}, id: ${raycastedEntity.entityId}] (d_delta: ${DECIMALFORMAT_6.format(distanceToTarget - distanceToRaycasted)})"
+			debug = if (distanceToTarget != null)
+			{
+				if (distanceToRaycasted != null)
+				{
+					if (currentTarget != raycastedEntity) "Switched from [n=${currentTarget.name} id=${currentTarget.entityId}] to [n=${raycastedEntity.name} id=${raycastedEntity.entityId}] (dist=${DECIMALFORMAT_6.format(distanceToTarget - distanceToRaycasted)})"
+					else "currentTarget = raycastedTarget"
+				}
+				else "raycastedTarget is null"
+			}
+			else "currentTarget is null"
 
 			hitable = (distanceToTarget == null || distanceToTarget <= reach) && (distanceToRaycasted == null || distanceToRaycasted <= reach) && this.currentTarget == raycastedEntity
 		}

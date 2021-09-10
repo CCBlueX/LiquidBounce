@@ -32,7 +32,6 @@ import net.ccbluex.liquidbounce.value.*
 import java.util.*
 import kotlin.math.*
 
-// TODO: Modulize checks
 @ModuleInfo(name = "AntiBot", description = "Prevents KillAura from attacking AntiCheat bots.", category = ModuleCategory.MISC)
 object AntiBot : Module()
 {

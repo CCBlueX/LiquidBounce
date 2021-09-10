@@ -46,7 +46,7 @@ abstract class BotCheck(val modeName: String) : MinecraftInstance()
 
 	fun notification(message: () -> String)
 	{
-		if (AntiBot.notificationValue.get()) LiquidBounce.hud.addNotification(Notification(NotificationType.WARNING, "AntiBot.$modeName", message(), 10000L))
+		if (AntiBot.notificationValue.get()) LiquidBounce.hud.addNotification(Notification(NotificationType.ROBOT, "AntiBot.$modeName", message(), 6000L))
 	}
 
 	fun remove(theWorld: IWorldClient, entityId: Int?, profileName: String, displayName: String?, reason: String)

@@ -38,7 +38,7 @@ class AntiVanish : Module()
 
 	private fun vanish()
 	{
-		if (notifyTimer.hasTimePassed(notifyDelayValue.get().toLong())) LiquidBounce.hud.addNotification(NotificationType.WARNING, name, "A player is vanished!", 1000)
+		if (notifyTimer.hasTimePassed(notifyDelayValue.get().toLong())) LiquidBounce.hud.addNotification(NotificationType.VANISH, name, "A player is vanished!", 1000)
 		notifyTimer.reset()
 	}
 }

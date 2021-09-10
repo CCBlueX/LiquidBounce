@@ -164,11 +164,13 @@ class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F, side: 
 
 enum class NotificationType(iconPath: String, val colorMode: () -> String, val customColor: () -> Int)
 {
-	INFORMATION("/notification/info_icon.png", Notifications.rectInfoColorModeValue::get, Notifications.rectInfoColorValue::get),
-	WARNING("/notification/warn_icon.png", Notifications.rectWarnColorModeValue::get, Notifications.rectWarnColorValue::get), // TODO: Separate to WARNING_YELLOW and WARNING_RED
-	VERBOSE("/notification/verbose_icon.png", Notifications.rectVerboseColorModeValue::get, Notifications.rectVerboseColorValue::get),
-	ERROR("/notification/error_icon.png", Notifications.rectErrorColorModeValue::get, Notifications.rectErrorColorValue::get);
-	// TODO: MurderDetector exclusive icon (extract from QuickPlay mod)
+	INFORMATION("/notification/information.png", Notifications.rectInfoColorModeValue::get, Notifications.rectInfoColorValue::get),
+	WARNING("/notification/warning.png", Notifications.rectWarnColorModeValue::get, Notifications.rectWarnColorValue::get), // TODO: Separate to WARNING_YELLOW and WARNING_RED
+	VERBOSE("/notification/verbose.png", Notifications.rectVerboseColorModeValue::get, Notifications.rectVerboseColorValue::get),
+	VANISH("/notification/vanish.png", Notifications.rectWarnColorModeValue::get, Notifications.rectWarnColorValue::get),
+	MURDER_MYSTERY("/notification/murder_mystery.png", Notifications.rectErrorColorModeValue::get, Notifications.rectErrorColorValue::get),
+	ROBOT("/notification/robot.png", Notifications.rectErrorColorModeValue::get, Notifications.rectErrorColorValue::get),
+	ERROR("/notification/error.png", Notifications.rectErrorColorModeValue::get, Notifications.rectErrorColorValue::get);
 
 	val resourceLocation = LiquidBounce.wrapper.classProvider.createResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + iconPath)
 }
