@@ -18,13 +18,18 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.BotCheck
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.misc.*
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.movement.*
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.name.*
-import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ping.PingUpdatePresenceCheck
-import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ping.PingZeroCheck
+import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.position.AlwaysInRadiusCheck
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.position.PositionCheck
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.position.SpawnedPositionCheck
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.rotation.InvalidPitchCheck
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.rotation.PitchMovementCheck
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.rotation.YawMovementCheck
+import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.status.*
+import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.status.equipment.EquipmentChangeFrequencyCheck
+import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.status.equipment.EquipmentEmptyCheck
+import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.status.HealthCheck
+import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.status.ping.PingUpdatePresenceCheck
+import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.status.ping.PingZeroCheck
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.tab.DuplicateInTabAdditionCheck
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.tab.DuplicateInTabExistenceCheck
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.tab.TabCheck
@@ -149,7 +154,21 @@ object AntiBot : Module()
 	/**
 	 * NoArmor
 	 */
-	val armorValue = BoolValue("Armor", false)
+	private val equipmentGroup = ValueGroup("Equipment")
+	val equipmentValue = BoolValue("Enabled", false, "Armor")
+	val equipmentHelmetValue = BoolValue("Helmet", true)
+	val equipmentChestplateValue = BoolValue("Chestplate", true)
+	val equipmentLeggingsValue = BoolValue("Leggings", true)
+	val equipmentBootsValue = BoolValue("Boots", true)
+
+	private val equipmentChangeFrequencyGroup = ValueGroup("ChangeFrequency")
+	val equipmentChangeFrequencyEnabledValue = BoolValue("Enabled", false)
+	val equipmentChangeFrequencyOverallDelayValue = IntegerValue("OverallDelayLimit", 100, 5, 200)
+	val equipmentChangeFrequencyPerSlotDelayValue = IntegerValue("PerSlotDelayLimit", 50, 10, 100)
+
+	private val equipmentChangeFrequencyVLGroup = ValueGroup("Violation")
+	val equipmentChangeFrequencyVLLimitValue = IntegerValue("Threshold", 10, 1, 10)
+	val equipmentChangeFrequencyVLDecValue = BoolValue("DecreaseIfNormal", true)
 
 	/**
 	 * Fixed Ping
@@ -353,19 +372,25 @@ object AntiBot : Module()
 		YawMovementCheck(), PitchMovementCheck(), InvalidPitchCheck(),
 
 		// Position
-		PositionCheck(), SpawnedPositionCheck(),
-
-		// Ping
-		PingZeroCheck(), PingUpdatePresenceCheck(),
+		AlwaysInRadiusCheck(), PositionCheck(), SpawnedPositionCheck(),
 
 		// Name
 		DuplicateInWorldExistenceCheck(), DuplicateInWorldAdditionCheck(), CustomNameCheck(), InvalidNameCheck(), NPCCheck(), BedwarsNPCCheck(),
 
 		// Movement
-		AirCheck(), GroundCheck(), InvalidGroundCheck(), AlwaysInRadiusCheck(), HorizontalSpeedCheck(), VerticalSpeedCheck(), TeleportPacketCheck(),
+		HorizontalSpeedCheck(), VerticalSpeedCheck(), TeleportPacketCheck(),
+
+		// Status
+		AirCheck(), GroundCheck(), InvalidGroundCheck(), EquipmentEmptyCheck(), EquipmentChangeFrequencyCheck(), WasInvisibleCheck(),
+
+		// Health
+		HealthCheck(),
+
+		// Ping
+		PingZeroCheck(), PingUpdatePresenceCheck(),
 
 		// Misc.
-		ColorCheck(), NoColorCheck(), EntityIDCheck(), HealthCheck(), LivingTimeCheck(), SwingCheck(), WasInvisibleCheck(), NeedHitCheck()
+		ColorCheck(), NoColorCheck(), EntityIDCheck(), LivingTimeCheck(), SwingCheck(), NeedHitCheck()
 
 	)
 
@@ -380,6 +405,10 @@ object AntiBot : Module()
 
 		rotationInvalidPitchGroup.addAll(rotationInvalidPitchEnabledValue, rotationInvalidPitchKeepVLValue)
 		rotationGroup.addAll(rotationYawValue, rotationPitchValue, rotationInvalidPitchGroup)
+
+		equipmentChangeFrequencyVLGroup.addAll(equipmentChangeFrequencyVLLimitValue, equipmentChangeFrequencyVLDecValue)
+		equipmentChangeFrequencyGroup.addAll(equipmentChangeFrequencyEnabledValue, equipmentChangeFrequencyOverallDelayValue, equipmentChangeFrequencyPerSlotDelayValue, equipmentChangeFrequencyVLGroup)
+		equipmentGroup.addAll(equipmentValue, equipmentHelmetValue, equipmentChestplateValue, equipmentLeggingsValue, equipmentBootsValue, equipmentChangeFrequencyGroup)
 
 		pingUpdatePresenceValidateGroup.addAll(pingUpdatePresenceValidateEnabledValue, pingUpdatePresenceValidateModeValue)
 		pingUpdatePresenceGroup.addAll(pingUpdatePresenceEnabledValue, pingUpdatePresenceValidateGroup)

@@ -6,7 +6,7 @@
 
 package net.ccbluex.liquidbounce.injection.backend
 
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ISPacketCloseWindow
+import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ISPacketCloseWindow
 import net.minecraft.network.play.server.S2EPacketCloseWindow
 
 class SPacketCloseWindowImpl<out T : S2EPacketCloseWindow>(wrapped: T) : PacketImpl<T>(wrapped), ISPacketCloseWindow

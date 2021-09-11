@@ -1,4 +1,4 @@
-package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ping
+package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.status.ping
 
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.BotCheck
 import java.util.*
 
-class PingUpdatePresenceCheck : BotCheck("ping.updatePresence")
+class PingUpdatePresenceCheck : BotCheck("status.ping.updatePresence")
 {
 	override val isActive: Boolean
 		get() = AntiBot.pingUpdatePresenceEnabledValue.get()
@@ -44,7 +44,7 @@ class PingUpdatePresenceCheck : BotCheck("ping.updatePresence")
 						val prevPingUpdatedPlayerUUIDList = tabPlayerUUIDs.filterNot(notUpdated::contains)
 						if (if (allMatches) !updatesPlayerUUIDs.all(prevPingUpdatedPlayerUUIDList::contains) else updatesPlayerUUIDs.none(prevPingUpdatedPlayerUUIDList::contains))
 						{
-							notification { "Suspicious ping update (${if (allMatches) "Missing: ${uuidListToString(updatesPlayerUUIDs.filterNot(prevPingUpdatedPlayerUUIDList::contains))}" else "None matches"})" }
+							notification { "Suspicious ping update packet: [${if (allMatches) "Missing: ${uuidListToString(updatesPlayerUUIDs.filterNot(prevPingUpdatedPlayerUUIDList::contains))}" else "None matches"}]" }
 							return
 						}
 					}

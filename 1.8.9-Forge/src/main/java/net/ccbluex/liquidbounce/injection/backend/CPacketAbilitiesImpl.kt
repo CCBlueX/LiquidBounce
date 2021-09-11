@@ -1,6 +1,6 @@
 package net.ccbluex.liquidbounce.injection.backend
 
-import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ICPacketAbilities
+import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketAbilities
 import net.minecraft.network.play.client.C13PacketPlayerAbilities
 
 class CPacketAbilitiesImpl<out T : C13PacketPlayerAbilities>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketAbilities

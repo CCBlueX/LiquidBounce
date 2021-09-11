@@ -11,7 +11,6 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.BotCheck
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
-import kotlin.math.hypot
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -19,11 +18,6 @@ class SpawnedPositionCheck : BotCheck("position.spawnedPosition")
 {
 	override val isActive: Boolean
 		get() = AntiBot.positionSpawnedPositionEnabledValue.get()
-
-	companion object
-	{
-		val spawnPositionSuspects = mutableSetOf<Int>()
-	}
 
 	private val spawnPosition = mutableSetOf<Int>()
 
@@ -56,8 +50,6 @@ class SpawnedPositionCheck : BotCheck("position.spawnedPosition")
 
 			val deltaLimit = AntiBot.positionSpawnedPositionDeltaThresholdValue.get().pow(2)
 
-			if (hypot(serverPos.xCoord - entityX, serverPos.zCoord - entityZ) <= 10 && entityY >= serverPos.yCoord) spawnPositionSuspects.add(entityId)
-
 			for ((posIndex, back, y) in arrayOf(Triple(1, AntiBot.positionSpawnedPositionPosition1BackValue.get(), AntiBot.positionSpawnedPositionPosition1YValue.get()), Triple(2, AntiBot.positionPosition2BackValue.get(), AntiBot.positionSpawnedPositionPosition2YValue.get())))
 			{
 				val expectDeltaX = serverPos.xCoord - func.sin(yawRadians) * back - entityX
@@ -69,7 +61,7 @@ class SpawnedPositionCheck : BotCheck("position.spawnedPosition")
 				// Position Delta
 				if (delta <= deltaLimit)
 				{
-					notification { "Suspicious spawn #$entityId (posIndex: $posIndex, dist: ${StringUtils.DECIMALFORMAT_6.format(sqrt(delta))})" }
+					notification { "Suspicious spawn: (posIndex: $posIndex, dist: ${StringUtils.DECIMALFORMAT_6.format(sqrt(delta))}) Entity #$entityId " }
 					spawnPosition.add(entityId)
 				}
 			}
@@ -126,7 +118,6 @@ class SpawnedPositionCheck : BotCheck("position.spawnedPosition")
 
 	override fun clear()
 	{
-		spawnPositionSuspects.clear()
 		spawnPosition.clear()
 	}
 }

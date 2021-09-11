@@ -43,4 +43,10 @@ object GlStateManagerImpl : IGlStateManager
 	override fun doPolygonOffset(factor: Float, units: Float) = GlStateManager.doPolygonOffset(factor, units)
 
 	override fun disablePolygonOffset() = GlStateManager.disablePolygonOffset()
+
+	override fun disableDepth() = GlStateManager.disableDepth()
+
+	override fun enableDepth() = GlStateManager.enableDepth()
+
+	override fun enableLighting() = GlStateManager.enableLighting()
 }

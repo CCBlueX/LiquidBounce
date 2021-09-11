@@ -33,7 +33,7 @@ class TeleportPacketCheck : BotCheck("move.teleportPacket")
 		val distSq = target.getDistanceSq(newPos.xCoord, newPos.yCoord, newPos.zCoord)
 		if (distSq <= AntiBot.teleportPacketThresholdDistanceValue.get().pow(2))
 		{
-			if ((previousVL + 5) % 10 == 0) notification { "Suspicious teleport ${target.gameProfile.name} (${target.displayName.formattedText}\u00A7r) (${sqrt(distSq)} blocks)" }
+			if ((previousVL + 5) % 10 == 0) notification(target) { "Suspicious teleport: ${sqrt(distSq)} blocks" }
 			vl[entityId] = previousVL + 2
 		}
 		else if (AntiBot.teleportPacketVLDecValue.get())

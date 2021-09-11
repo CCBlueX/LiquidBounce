@@ -1,4 +1,4 @@
-package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.movement
+package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.position
 
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
@@ -7,23 +7,23 @@ import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.BotCheck
 
-class GroundCheck : BotCheck("move.ground")
+class AlwaysInRadiusCheck : BotCheck("position.alwaysInRadius")
 {
 	override val isActive: Boolean
-		get() = AntiBot.groundValue.get()
+		get() = AntiBot.alwaysInRadiusEnabledValue.get()
 
-	private val ground = mutableSetOf<Int>()
+	private val outOfRadius = mutableSetOf<Int>()
 
-	override fun isBot(theWorld: IWorldClient, thePlayer: IEntity, target: IEntityPlayer): Boolean = target.entityId !in ground
+	override fun isBot(theWorld: IWorldClient, thePlayer: IEntity, target: IEntityPlayer): Boolean = target.entityId !in outOfRadius
 
 	override fun onEntityMove(theWorld: IWorldClient, thePlayer: IEntityPlayer, target: IEntityPlayer, isTeleport: Boolean, newPos: WVec3, rotating: Boolean, newYaw: Float, newPitch: Float, onGround: Boolean)
 	{
 		val entityId = target.entityId
-		if (onGround && entityId !in ground) ground.add(entityId)
+		if (entityId !in outOfRadius && thePlayer.getDistanceToEntity(target) > AntiBot.alwaysInRadiusRadiusValue.get()) outOfRadius.add(entityId)
 	}
 
 	override fun clear()
 	{
-		ground.clear()
+		outOfRadius.clear()
 	}
 }

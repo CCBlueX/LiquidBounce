@@ -32,6 +32,7 @@ class ModuleManager : Listenable
 {
 	val modules = TreeSet<Module> { module1, module2 -> module1.name.compareTo(module2.name) }
 	private val moduleClassMap = hashMapOf<Class<*>, Module>()
+	private val moduleNameMap = hashMapOf<String, Module>()
 
 	init
 	{
@@ -224,6 +225,7 @@ class ModuleManager : Listenable
 
 		modules += module
 		moduleClassMap[module.javaClass] = module
+		moduleNameMap[module.name.toLowerCase()] = module
 
 		generateCommand(module)
 		LiquidBounce.eventManager.registerListener(module)
@@ -260,6 +262,7 @@ class ModuleManager : Listenable
 	{
 		modules.remove(module)
 		moduleClassMap.remove(module::class.java)
+		moduleNameMap.remove(module.name.toLowerCase())
 		LiquidBounce.eventManager.unregisterListener(module)
 	}
 
@@ -289,7 +292,7 @@ class ModuleManager : Listenable
 	/**
 	 * Get module by [moduleName]
 	 */
-	fun getModule(moduleName: String?) = modules.find { it.name.equals(moduleName, ignoreCase = true) }
+	fun getModule(moduleName: String?) = moduleName?.let { moduleNameMap[it.toLowerCase()] }
 
 	/**
 	 * Module related events

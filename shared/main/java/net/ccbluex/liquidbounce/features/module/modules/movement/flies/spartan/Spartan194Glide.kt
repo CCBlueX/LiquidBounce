@@ -2,12 +2,9 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.flies.spartan
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
-import net.ccbluex.liquidbounce.utils.timer.TickTimer
 
 class Spartan194Glide : FlyMode("Spartan194Glide")
 {
-	val spartanTimer = TickTimer()
-
 	override fun onUpdate()
 	{
 		val thePlayer = mc.thePlayer ?: return

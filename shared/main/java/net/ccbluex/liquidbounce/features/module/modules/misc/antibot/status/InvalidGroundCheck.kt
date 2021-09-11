@@ -1,4 +1,4 @@
-package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.movement
+package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.status
 
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
@@ -7,7 +7,7 @@ import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.BotCheck
 
-class InvalidGroundCheck : BotCheck("move.invalidGround")
+class InvalidGroundCheck : BotCheck("status.invalidGround")
 {
 	override val isActive: Boolean
 		get() = AntiBot.invalidGroundValue.get()
@@ -25,7 +25,7 @@ class InvalidGroundCheck : BotCheck("move.invalidGround")
 		val previousVL = vl[entityId] ?: 0
 		if (onGround)
 		{
-			if ((previousVL + 5) % 10 == 0) notification { "Suspicious ground ${target.gameProfile.name} (${target.displayName.formattedText}\u00A7r)" }
+			if ((previousVL + 5) % 10 == 0) notification(target) { "Suspicious ground" }
 			if (target.prevPosY != target.posY) vl[entityId] = previousVL + 2
 		}
 		else

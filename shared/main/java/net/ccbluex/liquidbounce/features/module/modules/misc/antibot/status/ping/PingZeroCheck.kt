@@ -1,4 +1,4 @@
-package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ping
+package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.status.ping
 
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
@@ -6,7 +6,7 @@ import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.BotCheck
 
-class PingZeroCheck : BotCheck("ping.zero")
+class PingZeroCheck : BotCheck("status.ping.zero")
 {
 	override val isActive: Boolean
 		get() = AntiBot.pingZeroValue.get()

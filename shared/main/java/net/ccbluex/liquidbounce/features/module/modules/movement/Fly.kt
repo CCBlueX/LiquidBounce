@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ICPacketAbilities
+import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketAbilities
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.flies.redesky.R
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.redesky.RedeSkySmoothFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.rewinside.RewinsideFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.rewinside.TeleportRewinsideFly
+import net.ccbluex.liquidbounce.features.module.modules.movement.flies.spartan.BugSpartan
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.spartan.Spartan185Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.spartan.Spartan194Glide
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.vanilla.SmoothVanillaFly
@@ -60,7 +61,7 @@ object Fly : Module()
 		AAC1_9_10Fly(), AAC3_0_5Fly(), AAC3_1_6GommeFly(), AAC3_3_12HighJump(), AAC3_3_12Glide(), AAC3_3_13HighJump(), AAC4_xGlide(),
 
 		// Spartan
-		Spartan185Fly(), Spartan194Glide(),
+		Spartan185Fly(), Spartan194Glide(), BugSpartan(),
 
 		// Minor anticheats
 		ACPFly(), HACFly(), HawkEyeFly(), MineSecureGlide(), WatchCatFly(),

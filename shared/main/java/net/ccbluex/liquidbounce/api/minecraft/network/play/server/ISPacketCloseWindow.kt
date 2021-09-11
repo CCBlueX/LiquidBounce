@@ -4,7 +4,7 @@
  * https://github.com/CCBlueX/LiquidBounce/
  */
 
-package net.ccbluex.liquidbounce.api.minecraft.network.play.client
+package net.ccbluex.liquidbounce.api.minecraft.network.play.server
 
 interface ISPacketCloseWindow
 {

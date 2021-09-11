@@ -75,6 +75,8 @@ class ItemStackImpl(val wrapped: ItemStack) : IItemStack
 	override fun getTooltip(thePlayer: IEntityPlayer, advanced: Boolean): List<String> = wrapped.getTooltip(thePlayer.unwrap(), advanced)
 
 	override fun getStrVsBlock(block: IIBlockState): Float = wrapped.getStrVsBlock(block.block.unwrap())
+
+	override fun equals(other: Any?): Boolean = other is ItemStackImpl && wrapped.isItemEqual(other.wrapped)
 }
 
 fun IItemStack.unwrap(): ItemStack = (this as ItemStackImpl).wrapped

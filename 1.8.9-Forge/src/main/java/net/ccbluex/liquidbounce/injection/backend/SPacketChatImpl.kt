@@ -1,6 +1,6 @@
 package net.ccbluex.liquidbounce.injection.backend
 
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ISPacketChat
+import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ISPacketChat
 import net.ccbluex.liquidbounce.api.minecraft.util.IIChatComponent
 import net.minecraft.network.play.server.S02PacketChat
 

@@ -38,7 +38,7 @@ import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.nbt.*
 import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.*
-import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ICPacketAbilities
+import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketAbilities
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotion
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotionEffect
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
@@ -340,6 +340,8 @@ object ClassProviderImpl : IClassProvider
 	override fun isSPacketEntityEffect(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S1DPacketEntityEffect
 
 	override fun isSPacketSpawnGlobalEntity(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S2CPacketSpawnGlobalEntity
+
+	override fun isSPacketEntityEquipment(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S04PacketEntityEquipment
 
 	override fun isCPacketPlayer(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C03PacketPlayer
 

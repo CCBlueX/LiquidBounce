@@ -155,7 +155,7 @@ class KillAura : Module()
 	private val rotationGroup = ValueGroup("Rotation")
 	private val rotationMode = ListValue("Mode", arrayOf("Off", "SearchCenter", "LockCenter", "RandomCenter", "Outborder"), "SearchCenter", "Rotation")
 	private val rotationLockValue = BoolValue("Lock", true, "Rotation-Lock")
-	private val rotationLockExpandRangeValue = object:FloatValue("FacedCheckBoxExpand", 0.0f, 0.0F, 2.0F)
+	private val rotationLockExpandRangeValue = object : FloatValue("FacedCheckBoxExpand", 0.0f, 0.0F, 2.0F)
 	{
 		override fun showCondition() = !rotationLockValue.get()
 	}
@@ -718,6 +718,8 @@ class KillAura : Module()
 	{
 		if (classProvider.isSPacketPlayerPosLook(event.packet))
 		{
+			val thePlayer = mc.thePlayer ?: return
+
 			val tpPacket = event.packet.asSPacketPlayerPosLook()
 
 			if (rotationLockAfterTeleportEnabledValue.get())
@@ -725,6 +727,8 @@ class KillAura : Module()
 				lockRotation = Rotation(tpPacket.yaw, tpPacket.pitch)
 				lockRotationTimer.reset()
 				lockRotationDelay = rotationLockAfterTeleportDelayValue.getRandomDelay()
+
+				if (rotationSilentValue.get()) RotationUtils.setTargetRotation(lockRotation, 0) else lockRotation?.applyRotationToPlayer(thePlayer)
 			}
 		}
 	}

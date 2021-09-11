@@ -36,4 +36,6 @@ interface IItemStack
 	fun getAttributeModifier(key: String): Collection<IAttributeModifier>
 	fun isSplash(): Boolean
 	fun getTooltip(thePlayer: IEntityPlayer, advanced: Boolean): List<String>
+
+	override fun equals(other: Any?): Boolean
 }

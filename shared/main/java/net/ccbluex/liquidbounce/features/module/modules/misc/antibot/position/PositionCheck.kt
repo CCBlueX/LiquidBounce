@@ -5,6 +5,7 @@ import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
+import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.BotCheck
@@ -21,6 +22,7 @@ class PositionCheck : BotCheck("position.position")
 	private val positionVL = mutableMapOf<Int, Int>()
 	private val positionConsistencyLastDistanceDelta = mutableMapOf<Int, MutableMap<Int, Double>>()
 	private val positionConsistencyVL = mutableMapOf<Int, Int>()
+	private val spawnPositionSuspects = mutableSetOf<Int>()
 
 	override fun isBot(theWorld: IWorldClient, thePlayer: IEntity, target: IEntityPlayer): Boolean
 	{
@@ -33,7 +35,7 @@ class PositionCheck : BotCheck("position.position")
 		val entityId = target.entityId
 
 		val serverLocation = getPingCorrectionAppliedLocation(thePlayer)
-		val isSuspectedForSpawnPosition = AntiBot.positionSpawnedPositionEnabledValue.get() && entityId in SpawnedPositionCheck.spawnPositionSuspects
+		val isSuspectedForSpawnPosition = AntiBot.positionSpawnedPositionEnabledValue.get() && entityId in spawnPositionSuspects
 
 		val serverPos = serverLocation.position
 		val serverYaw = serverLocation.rotation.yaw
@@ -80,20 +82,21 @@ class PositionCheck : BotCheck("position.position")
 					distanceSq <= positionDeltaLimitSq * 0.2F -> 2
 					else -> 1
 				}
-				val spawnPosScore = if (isSuspectedForSpawnPosition) 5 else 0
+				val spawnPosScore = if (isSuspectedForSpawnPosition) if (speed >= 3) 100 else 10 else 0
 				val speedScore = if (speed >= 2) ceil(speed * 2).toInt() else 0
-				val vlIncrement = baseScore + yawMovementScore + spawnPosScore + speedScore
+				val extraScore = if (y >= 2) 10 else 0
+				val vlIncrement = baseScore + yawMovementScore + spawnPosScore + speedScore + extraScore
 
 				val newVL = previousVL + vlIncrement
 
 				if (removeOnCaught && newVL > removeOnVL)
 				{
-					remove(theWorld, entityId, target.gameProfile.name, target.displayName.formattedText, "Position(Expect)")
+					remove(theWorld, entityId, target.gameProfile.name, target.displayName.formattedText, "position")
 					positionVL.remove(entityId)
 				}
 				else
 				{
-					if (((previousVL + 5) % 20 == 0) || (vlIncrement >= 5)) notification { "Suspicious position ${target.gameProfile.name} (${target.displayName.formattedText}\u00A7r) (+$baseScore(base) +$yawMovementScore(yaw) +$spawnPosScore(spawnPos) +$speedScore(speed)) (posIndex: $posIndex, dist: ${StringUtils.DECIMALFORMAT_6.format(distanceSq)}, VL: $newVL)" }
+					if (((previousVL + 5) % 20 == 0) || (vlIncrement >= 5)) notification(target) { "Suspicious position: [posIndex: $posIndex, dist: ${StringUtils.DECIMALFORMAT_6.format(distanceSq)}, vl: (+$baseScore(base) +$yawMovementScore(yaw) +$spawnPosScore(spawnPos) +$speedScore(speed) +$extraScore(extra))]" }
 					positionVL[entityId] = newVL
 				}
 			}
@@ -128,7 +131,7 @@ class PositionCheck : BotCheck("position.position")
 								else -> 1
 							} + if (isSuspectedForSpawnPosition) 10 else 0
 
-							if (((previousVL + 5) % 10 == 0 || vlIncrement >= 5)) notification { "Suspicious position consistency ${target.gameProfile.name} (${target.displayName.formattedText}\u00A7r) (posIndex: $posIndex, delta: ${StringUtils.DECIMALFORMAT_6.format(consistency)}, posVL: $previousVL, posConsistencyVL: $prevConsistencyVL)" }
+							if (((previousVL + 5) % 10 == 0 || vlIncrement >= 5)) notification(target) { "Suspicious position consistency: [posIndex: $posIndex, delta: ${StringUtils.DECIMALFORMAT_6.format(consistency)}, posVL: $previousVL, posConsistencyVL: $prevConsistencyVL)]" }
 							positionConsistencyVL[entityId] = prevConsistencyVL + vlIncrement
 						}
 						else if (positionDeltaConsistencyVLDec)
@@ -146,6 +149,28 @@ class PositionCheck : BotCheck("position.position")
 				val currentVL = prevConsistencyVL - 1
 				if (currentVL <= 0) positionConsistencyVL.remove(entityId) else positionConsistencyVL[entityId] = currentVL
 			}
+		}
+	}
+
+	override fun onPacket(event: PacketEvent)
+	{
+		val thePlayer = mc.thePlayer ?: return
+
+		val packet = event.packet
+
+		if (classProvider.isSPacketSpawnPlayer(packet))
+		{
+			val playerSpawnPacket = packet.asSPacketSpawnPlayer()
+
+			val entityId = playerSpawnPacket.entityID
+
+			val entityX: Double = playerSpawnPacket.x.toDouble() / 32.0
+			val entityZ: Double = playerSpawnPacket.z.toDouble() / 32.0
+
+			val serverLocation = getPingCorrectionAppliedLocation(thePlayer)
+			val serverPos = serverLocation.position
+
+			if (hypot(serverPos.xCoord - entityX, serverPos.zCoord - entityZ) >= 6) spawnPositionSuspects.add(entityId)
 		}
 	}
 
@@ -202,5 +227,6 @@ class PositionCheck : BotCheck("position.position")
 		positionVL.clear()
 		positionConsistencyLastDistanceDelta.clear()
 		positionConsistencyVL.clear()
+		spawnPositionSuspects.clear()
 	}
 }

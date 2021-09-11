@@ -42,6 +42,8 @@ import org.lwjgl.opengl.GL11
 import kotlin.math.*
 import kotlin.random.Random
 
+private val ZERO_RANGE = 0..0
+
 @ModuleInfo(name = "Scaffold", description = "Automatically places blocks beneath your feet.", category = ModuleCategory.WORLD, defaultKeyBinds = [Keyboard.KEY_I])
 class Scaffold : Module()
 {
@@ -122,7 +124,13 @@ class Scaffold : Module()
 
 	private val movementGroup = ValueGroup("Movement")
 
-	val movementSprintValue: BoolValue = BoolValue("Sprint", false, "Sprint")
+	val movementSprintValue: BoolValue = object : BoolValue("Sprint", false, "Sprint")
+	{
+		override fun onChanged(oldValue: Boolean, newValue: Boolean)
+		{
+			if (newValue) movementSlowEnabledValue.set(false)
+		}
+	}
 
 	private val movementEagleGroup = ValueGroup("Eagle")
 	private val movementEagleModeValue = ListValue("Mode", arrayOf("Normal", "EdgeDistance", "Silent", "SilentEdgeDistance", "Off"), "Normal", "Eagle")
@@ -196,6 +204,7 @@ class Scaffold : Module()
 	private val delayTimer = MSTimer()
 	private val zitterTimer = MSTimer()
 	private val switchTimer = MSTimer()
+	private val flagTimer = MSTimer()
 	private var delay = 0L
 	private var switchDelay = 0L
 
@@ -484,6 +493,20 @@ class Scaffold : Module()
 		if (targetPlace == null && delayPlaceableDelayValue.get()) delayTimer.reset()
 	}
 
+	@EventTarget
+	fun onPacket(event: PacketEvent)
+	{
+		val packet = event.packet
+
+		if (classProvider.isSPacketPlayerPosLook(packet))
+		{
+			val tpPacket = packet.asSPacketPlayerPosLook()
+
+			flagTimer.reset()
+			launchY = tpPacket.y.toInt()
+		}
+	}
+
 	fun update(theWorld: IWorld, thePlayer: IEntityPlayerSP)
 	{
 		val provider = classProvider
@@ -587,13 +610,17 @@ class Scaffold : Module()
 
 		val state: String
 		var clutching = false
+		val flagged = !flagTimer.hasTimePassed(500L)
 		val searchPosition: WBlockPos
+
+		if (flagged) launchY = thePlayer.posY.toInt()
 
 		if (fallStartY - thePlayer.posY > 2)
 		{
 			searchPosition = WBlockPos(thePlayer).down(2)
 			state = "Clutch"
 			clutching = true
+			launchY = thePlayer.posY.toInt()
 		}
 		else
 		{
@@ -606,7 +633,6 @@ class Scaffold : Module()
 				sameY = true
 			}
 
-			// Clutch while falling
 			if (!sameY && abCollisionBB.maxY - abCollisionBB.minY < 1.0 && groundMaxY < 1.0 && abCollisionBB.maxY - abCollisionBB.minY < groundMaxY - groundMinY)
 			{
 				searchPosition = pos
@@ -639,7 +665,7 @@ class Scaffold : Module()
 
 		if (visualSearchDebugValue.get())
 		{
-			ClientUtils.displayChatMessage(thePlayer, "[Scaffold] $state - $searchBounds")
+			ClientUtils.displayChatMessage(thePlayer, "[Scaffold] $state ${if (flagged) " (FLAGGED)" else ""} - $searchBounds")
 			ClientUtils.displayChatMessage(thePlayer, "[Scaffold] AutoBlock: $abCollisionBB, Ground: $lastGroundBlockBB")
 		}
 
@@ -648,7 +674,7 @@ class Scaffold : Module()
 		val facings = EnumFacingType.values().map(provider::getEnumFacing)
 		if (!expand && (!isReplaceable(theWorld, searchPosition) || search(theWorld, thePlayer, searchPosition, rotationSearchCheckVisibleValue.get() && !shouldGoDown, searchBounds, facings))) return
 
-		val ySearch = rotationSearchYSearchValue.get() || clutching
+		val ySearch = rotationSearchYSearchValue.get() || clutching || flagged
 		if (expand)
 		{
 			val hFacing = func.getHorizontalFacing(MovementUtils.getDirectionDegrees(thePlayer))
@@ -669,11 +695,11 @@ class Scaffold : Module()
 		}
 		else if (rotationSearchSearchValue.get())
 		{
-			val rangeValue = rotationSearchSearchRangeValue.get()
-			val yrangeValue = if (clutching) max(2, rotationSearchYSearchRangeValue.get()) else rotationSearchYSearchRangeValue.get()
+			val rangeValue = if (flagged) max(3, rotationSearchSearchRangeValue.get()) else rotationSearchSearchRangeValue.get()
+			val yrangeValue = if (clutching || flagged) max(3, rotationSearchYSearchRangeValue.get()) else rotationSearchYSearchRangeValue.get()
 
 			val range = -rangeValue..rangeValue
-			val yrange = if (ySearch) -yrangeValue..yrangeValue else 0..0
+			val yrange = if (ySearch) -yrangeValue..yrangeValue else ZERO_RANGE
 
 			range.forEach { x ->
 				yrange.forEach { y ->
@@ -696,7 +722,7 @@ class Scaffold : Module()
 		val targetPlace = targetPlace ?: return
 
 		// Delay & SameY check
-		if (!delayTimer.hasTimePassed(delay) || sameYValue.get() && launchY - 1 != targetPlace.vec3.yCoord.toInt()) return
+		if (!delayTimer.hasTimePassed(delay) || sameYValue.get() && launchY - 1 != targetPlace.vec3.yCoord.toInt() && !(fallStartY - thePlayer.posY > 2)) return
 
 		if (killauraBypassModeValue.get().equals("SuspendKillAura", true)) killAura.suspend(killAuraBypassKillAuraSuspendDurationValue.get().toLong())
 
@@ -839,7 +865,7 @@ class Scaffold : Module()
 			if (blockOverlay.state && blockOverlay.infoEnabledValue.get() && blockOverlay.getCurrentBlock(theWorld) != null) GL11.glTranslatef(0f, 15f, 0f)
 
 			val blocksAmount = getBlocksAmount(thePlayer)
-			val info = "Blocks: \u00A7${if (blocksAmount <= 10) "c" else "7"}$blocksAmount${if (downValue.get() && blocksAmount <= 1) " (You need at least 2 blocks to go down)" else ""}"
+			val info = "Blocks: \u00A7${if (blocksAmount <= 16) "c" else if (blocksAmount <= 64) "e" else "7"}$blocksAmount${if (downValue.get() && blocksAmount <= 1) " (You need at least 2 blocks to go down)" else ""}"
 
 			val provider = classProvider
 
@@ -876,7 +902,7 @@ class Scaffold : Module()
 					provider.getEnumFacing(EnumFacingType.WEST) -> -it.toDouble()
 					provider.getEnumFacing(EnumFacingType.EAST) -> it.toDouble()
 					else -> 0.0
-				}, if (sameYValue.get() && launchY <= thePlayer.posY) launchY - 1.0 else thePlayer.posY - (if (thePlayer.posY > floor(thePlayer.posY).toInt()) 0.0 else 1.0) - if (shouldGoDown) 1.0 else 0.0, thePlayer.posZ + when (horizontalFacing)
+				}, if (sameYValue.get() && launchY <= thePlayer.posY && !(fallStartY - thePlayer.posY > 2)) launchY - 1.0 else thePlayer.posY - (if (thePlayer.posY > floor(thePlayer.posY).toInt()) 0.0 else 1.0) - if (shouldGoDown) 1.0 else 0.0, thePlayer.posZ + when (horizontalFacing)
 				{
 					provider.getEnumFacing(EnumFacingType.NORTH) -> -it.toDouble()
 					provider.getEnumFacing(EnumFacingType.SOUTH) -> it.toDouble()
@@ -1087,8 +1113,12 @@ class Scaffold : Module()
 		return amount
 	}
 
-	override val tag: String
-		get() = "${modeValue.get()}${if (sameYValue.get()) ", Y Fixed At ${launchY - 1.0}" else ""}"
+	override val tag: String?
+		get()
+		{
+			val thePlayer = mc.thePlayer ?: return null
+			return "${modeValue.get()}${if (fallStartY - thePlayer.posY > 2) " CLUTCH" else if (sameYValue.get()) " SameY=${launchY - 1.0}" else ""}"
+		}
 
 	class SearchBounds(x: Double, x2: Double, xsteps: Double, y: Double, y2: Double, ysteps: Double, z: Double, z2: Double, zsteps: Double)
 	{

@@ -355,7 +355,7 @@ class Target : Element()
 
 						RenderUtils.glColor(Color.white) // Reset Color
 
-						RenderUtils.drawItemStack(renderItem, armor, equipmentX, textYOffset, true)
+						RenderUtils.drawItemStack(renderItem, armor, equipmentX, textYOffset)
 					}
 
 					renderItem.zLevel = prevZLevel

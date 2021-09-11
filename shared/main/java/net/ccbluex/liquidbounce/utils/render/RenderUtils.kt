@@ -7,7 +7,9 @@ package net.ccbluex.liquidbounce.utils.render
 
 import net.ccbluex.liquidbounce.api.enums.WDefaultVertexFormats
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer
 import net.ccbluex.liquidbounce.api.minecraft.client.render.entity.IRenderItem
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IGlStateManager
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
 import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
@@ -19,6 +21,7 @@ import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.toRadians
 import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.injection.backend.Backend
 import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.utils.Maps
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import org.lwjgl.opengl.GL11
@@ -844,7 +847,7 @@ object RenderUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun drawItemStack(renderItem: IRenderItem, itemStack: IItemStack, posX: Int, posY: Int, renderOverlays: Boolean)
+	fun drawItemStack(renderItem: IRenderItem, itemStack: IItemStack, posX: Int, posY: Int)
 	{
 		val glStateManager = classProvider.glStateManager
 		glStateManager.enableRescaleNormal()
@@ -853,8 +856,7 @@ object RenderUtils : MinecraftInstance()
 		functions.enableGUIStandardItemLighting()
 
 		renderItem.renderItemAndEffectIntoGUI(itemStack, posX, posY)
-
-		if (renderOverlays) renderItem.renderItemOverlays(mc.fontRendererObj, itemStack, posX, posY)
+		renderItemEnchantments(glStateManager, Fonts.minecraftFont, itemStack, posX, posY)
 
 		functions.disableStandardItemLighting()
 	}
@@ -885,6 +887,26 @@ object RenderUtils : MinecraftInstance()
 		GL11.glEnable(GL11.GL_TEXTURE_2D)
 		GL11.glEnable(GL11.GL_DEPTH_TEST)
 		GL11.glDisable(GL11.GL_LINE_SMOOTH)
+	}
+
+	@JvmStatic
+	fun renderItemEnchantments(glStateManager: IGlStateManager, font: IFontRenderer, stack: IItemStack?, x: Int, y: Int)
+	{
+		if (stack != null)
+		{
+			val text = functions.getEnchantments(stack).map { (key) -> Maps.ENCHANTMENT_SHORT_NAME[key]?.let { it.second ?: "" } ?: "" }.joinToString(separator = "")
+
+			glStateManager.disableLighting()
+			glStateManager.disableDepth()
+			glStateManager.disableBlend()
+
+			GL11.glScalef(0.5f, 0.5f, 0.5f)
+			font.drawString(text, x * 0.5f, y * 0.5f, 16777215, false)
+			GL11.glScalef(2f, 2f, 2f)
+
+			glStateManager.enableLighting()
+			glStateManager.enableDepth()
+		}
 	}
 
 	init

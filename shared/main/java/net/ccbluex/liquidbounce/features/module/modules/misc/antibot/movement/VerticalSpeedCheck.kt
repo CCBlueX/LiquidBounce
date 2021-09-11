@@ -28,7 +28,7 @@ class VerticalSpeedCheck : BotCheck("move.vspeed")
 		val speed = abs(target.posY - newPos.yCoord)
 		if (speed > AntiBot.vspeedLimitValue.get())
 		{
-			notification { "Suspicious vspeed ${target.gameProfile.name} ${target.displayName.formattedText} (${StringUtils.DECIMALFORMAT_6.format(speed)} blocks/tick)" }
+			notification(target) { "Suspicious vertical speed: ${StringUtils.DECIMALFORMAT_6.format(speed)} blocks/tick" }
 			vl[entityId] = (vl[entityId] ?: 0) + 2
 		}
 		else if (AntiBot.vspeedVLDecValue.get())

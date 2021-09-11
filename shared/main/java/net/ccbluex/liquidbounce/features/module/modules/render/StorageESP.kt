@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import co.uk.hexeption.utils.OutlineUtils
 import net.ccbluex.liquidbounce.api.MinecraftVersion
+import net.ccbluex.liquidbounce.api.minecraft.util.WEnumChestType
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render2DEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
@@ -176,7 +177,7 @@ class StorageESP : Module()
 			theWorld.loadedTileEntityList.mapNotNull {
 				val type = when
 				{
-					chest && provider.isTileEntityChest(it) && !clickedBlocks.contains(it.pos) -> if (it.asTileEntityChest().chestType == 1) 2 else 1
+					chest && provider.isTileEntityChest(it) && !clickedBlocks.contains(it.pos) -> if (it.asTileEntityChest().chestType == WEnumChestType.TRAPPED) 2 else 1
 					enderChest && provider.isTileEntityEnderChest(it) && !clickedBlocks.contains(it.pos) -> 3
 					furnace && provider.isTileEntityFurnace(it) -> 4
 					dispenser && provider.isTileEntityDispenser(it) -> 5
@@ -375,7 +376,7 @@ class StorageESP : Module()
 			val tileEntityGroup = theWorld.loadedTileEntityList.groupBy {
 				when
 				{
-					provider.isTileEntityChest(it) -> if (it.asTileEntityChest().chestType == 1) 2 else 1 // Chest or Trapped Chest
+					provider.isTileEntityChest(it) -> if (it.asTileEntityChest().chestType == WEnumChestType.TRAPPED) 2 else 1 // Chest or Trapped Chest
 					provider.isTileEntityEnderChest(it) -> 3 // Ender Chest
 					provider.isTileEntityFurnace(it) -> 4 // Furnace
 					provider.isTileEntityDispenser(it) -> 5 // Dispenser (and Dropper)

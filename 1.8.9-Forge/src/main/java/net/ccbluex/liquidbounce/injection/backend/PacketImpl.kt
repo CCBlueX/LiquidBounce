@@ -51,6 +51,8 @@ open class PacketImpl<out T : Packet<*>>(val wrapped: T) : IPacket
 
 	override fun asSPacketSpawnGlobalEntity(): ISPacketSpawnGlobalEntity = SPacketSpawnGlobalEntityImpl(wrapped as S2CPacketSpawnGlobalEntity)
 
+	override fun asSPacketEntityEquipment(): ISPacketEntityEquipment = SPacketEntityEquipmentImpl(wrapped as S04PacketEntityEquipment)
+
 	override fun asCPacketAbilities(): ICPacketAbilities = CPacketAbilitiesImpl(wrapped as C13PacketPlayerAbilities)
 
 	override fun asCPacketChatMessage(): ICPacketChatMessage = CPacketChatMessageImpl(wrapped as C01PacketChatMessage)

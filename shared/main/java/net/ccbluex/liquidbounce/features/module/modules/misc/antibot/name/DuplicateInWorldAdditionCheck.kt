@@ -42,7 +42,7 @@ class DuplicateInWorldAdditionCheck : BotCheck("name.duplicateInWorld.addition")
 				if (theWorld.loadedEntityList.filter(classProvider::isEntityPlayer).map(IEntity::asEntityPlayer).any { playerName == tryStripColors((if (useDisplayName) it.displayName.formattedText else it.gameProfile.name) ?: return@any false) })
 				{
 					event.cancelEvent()
-					remove(theWorld, entityId, profileName, displayName, "AttemptToAddDuplicate(World)")
+					remove(theWorld, entityId, profileName, displayName, "duplicateInWorld.addition")
 				}
 			}
 		}

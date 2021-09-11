@@ -37,7 +37,7 @@ import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.nbt.*
 import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.*
-import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ICPacketAbilities
+import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketAbilities
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotion
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotionEffect
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
@@ -214,6 +214,7 @@ interface IClassProvider
 	fun isSPacketChangeGameState(obj: Any?): Boolean
 	fun isSPacketEntityEffect(obj: Any?): Boolean
 	fun isSPacketSpawnGlobalEntity(obj: Any?): Boolean
+	fun isSPacketEntityEquipment(obj: Any?): Boolean
 
 	/* instance checks (Client-side packet) */
 	fun isCPacketPlayer(obj: Any?): Boolean
