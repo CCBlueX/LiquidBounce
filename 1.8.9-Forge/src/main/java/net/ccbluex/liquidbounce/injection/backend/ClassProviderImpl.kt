@@ -31,12 +31,14 @@ import net.ccbluex.liquidbounce.api.minecraft.client.renderer.vertex.IVertexBuff
 import net.ccbluex.liquidbounce.api.minecraft.client.settings.IGameSettings
 import net.ccbluex.liquidbounce.api.minecraft.client.shader.IFramebuffer
 import net.ccbluex.liquidbounce.api.minecraft.enchantments.IEnchantment
+import net.ccbluex.liquidbounce.api.minecraft.entity.player.IPlayerCapabilities
 import net.ccbluex.liquidbounce.api.minecraft.event.IClickEvent
 import net.ccbluex.liquidbounce.api.minecraft.item.IItem
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.nbt.*
 import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.*
+import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ICPacketAbilities
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotion
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotionEffect
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
@@ -225,6 +227,8 @@ object ClassProviderImpl : IClassProvider
 	override fun createCPacketChatMessage(message: String): ICPacketChatMessage = CPacketChatMessageImpl(C01PacketChatMessage(message))
 
 	override fun createCPacketInput(): IPacket = PacketImpl(C0CPacketInput())
+
+	override fun createCPacketAbilities(capabilities: IPlayerCapabilities): ICPacketAbilities = CPacketAbilitiesImpl(C13PacketPlayerAbilities(capabilities.unwrap()))
 
 	override fun createFramebuffer(displayWidth: Int, displayHeight: Int, useDepth: Boolean): IFramebuffer = FramebufferImpl(Framebuffer(displayWidth, displayHeight, useDepth))
 

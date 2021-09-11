@@ -155,6 +155,10 @@ class KillAura : Module()
 	private val rotationGroup = ValueGroup("Rotation")
 	private val rotationMode = ListValue("Mode", arrayOf("Off", "SearchCenter", "LockCenter", "RandomCenter", "Outborder"), "SearchCenter", "Rotation")
 	private val rotationLockValue = BoolValue("Lock", true, "Rotation-Lock")
+	private val rotationLockExpandRangeValue = object:FloatValue("FacedCheckBoxExpand", 0.0f, 0.0F, 2.0F)
+	{
+		override fun showCondition() = !rotationLockValue.get()
+	}
 	private val rotationSilentValue = BoolValue("Silent", true, "SilentRotation")
 	private val rotationRandomCenterSizeValue = object : FloatValue("RandomCenterSize", 0.8F, 0.1F, 1.0F, "Rotation-RandomCenter-RandomSize")
 	{
@@ -303,7 +307,8 @@ class KillAura : Module()
 	private var switchDelay = switchDelayValue.getRandomDelay()
 	private val switchDelayTimer = MSTimer()
 
-	var debug: String? = null
+	var updateTargetDebug: String? = null
+	var updateRotationsDebug: String? = null
 
 	/**
 	 * Did last attack failed
@@ -338,7 +343,7 @@ class KillAura : Module()
 		rotationPredictPlayerGroup.addAll(rotationPredictPlayerEnabledValue, rotationPredictPlayerIntensityValue)
 		rotationPredictGroup.addAll(rotationPredictEnemyGroup, rotationPredictPlayerGroup)
 		rotationBacktrackGroup.addAll(rotationBacktrackEnabledValue, rotationBacktrackTicksValue)
-		rotationGroup.addAll(rotationMode, rotationLockValue, rotationSilentValue, rotationRandomCenterSizeValue, rotationSearchCenterGroup, rotationJitterGroup, rotationKeepRotationGroup, rotationLockAfterTeleportGroup, rotationAccelerationRatioValue, rotationTurnSpeedValue, rotationResetSpeedValue, rotationStrafeGroup, rotationPredictGroup, rotationBacktrackGroup)
+		rotationGroup.addAll(rotationMode, rotationLockValue, rotationLockExpandRangeValue, rotationSilentValue, rotationRandomCenterSizeValue, rotationSearchCenterGroup, rotationJitterGroup, rotationKeepRotationGroup, rotationLockAfterTeleportGroup, rotationAccelerationRatioValue, rotationTurnSpeedValue, rotationResetSpeedValue, rotationStrafeGroup, rotationPredictGroup, rotationBacktrackGroup)
 		fovGroup.addAll(fovModeValue, fovValue)
 		visualMarkRangeColorGroup.addAll(visualMarkRangeColorAttackValue, visualMarkRangeColorThroughWallsAttackValue, visualMarkRangeColorAimValue, visualMarkRangeColorSwingValue, visualMarkRangeColorBlockValue, visualMarkRangeColorInteractBlockValue)
 		visualMarkRangeGroup.addAll(visualMarkRangeModeValue, visualMarkRangeLineWidthValue, visualMarkRangeAccuracyValue, visualMarkRangeColorGroup)
@@ -717,9 +722,9 @@ class KillAura : Module()
 
 			if (rotationLockAfterTeleportEnabledValue.get())
 			{
+				lockRotation = Rotation(tpPacket.yaw, tpPacket.pitch)
 				lockRotationTimer.reset()
 				lockRotationDelay = rotationLockAfterTeleportDelayValue.getRandomDelay()
-				lockRotation = Rotation(tpPacket.yaw, tpPacket.pitch)
 			}
 		}
 	}
@@ -996,7 +1001,7 @@ class KillAura : Module()
 			predictZ = rotationPredictEnemyIntensityValue.getRandom()
 		}
 
-		val targetBox = getHitbox(entity)
+		val targetBox = getHitbox(entity, 0.0)
 
 		val jitter = rotationJitterEnabledValue.get()
 
@@ -1027,7 +1032,7 @@ class KillAura : Module()
 		// Search
 		var fallBackRotation: VecRotation? = null
 		val rotation = if (rotationLockAfterTeleportEnabledValue.get() && lockRotation != null && !lockRotationTimer.hasTimePassed(lockRotationDelay)) lockRotation!!
-		else if (!rotationLockValue.get() && RotationUtils.isFaced(theWorld, thePlayer, entity, aimRange.toDouble(), getHitbox)) Rotation(lastYaw, lastPitch)
+		else if (!rotationLockValue.get() && RotationUtils.isFaced(theWorld, thePlayer, entity, aimRange.toDouble()) { getHitbox(entity, rotationLockExpandRangeValue.get().toDouble()) }) Rotation(lastYaw, lastPitch)
 		else (searchCenter(if (isAttackRotation) attackRange else aimRange) {
 			// Because of '.getDistanceToEntityBox()' is not perfect. (searchCenter() >>> 넘사벽 >>> getDistanceToEntityBox())
 			failedToRotate = true
@@ -1067,16 +1072,19 @@ class KillAura : Module()
 		return true
 	}
 
-	private val getHitbox: (IEntity) -> IAxisAlignedBB = {
-		var bb = it.entityBoundingBox
+	private val getHitbox: (IEntity, Double) -> IAxisAlignedBB = { target: IEntity, expand: Double ->
+		var bb = target.entityBoundingBox
+
+		val collisionExpand = target.collisionBorderSize.toDouble()
+		bb = bb.expand(collisionExpand, collisionExpand, collisionExpand)
 
 		// Backtrace
-		if (rotationBacktrackEnabledValue.get()) bb = LocationCache.getAABBBeforeNTicks(it.entityId, rotationBacktrackTicksValue.get(), bb)
+		if (rotationBacktrackEnabledValue.get()) bb = LocationCache.getAABBBeforeNTicks(target.entityId, rotationBacktrackTicksValue.get(), bb)
 
 		// Entity movement predict
-		if (rotationPredictEnemyEnabledValue.get()) bb = bb.offset((it.posX - it.lastTickPosX) * predictX, (it.posY - it.lastTickPosY) * predictY, (it.posZ - it.lastTickPosZ) * predictZ)
+		if (rotationPredictEnemyEnabledValue.get()) bb = bb.offset((target.posX - target.lastTickPosX) * predictX, (target.posY - target.lastTickPosY) * predictY, (target.posZ - target.lastTickPosZ) * predictZ)
 
-		bb
+		bb.expand(expand, expand, expand)
 	}
 
 	private fun updateComboReach()
@@ -1095,7 +1103,7 @@ class KillAura : Module()
 		if (rotationMode.get().equals("Off", ignoreCase = true) || rotationTurnSpeedValue.getMax() <= 0F || targetModeValue.get().equals("Multi", ignoreCase = true)) // Disable hitable check if turn speed is zero
 		{
 			hitable = currentTarget != null && thePlayer.getDistanceToEntityBox(currentTarget) <= reach
-			debug = "MultiAura mode or Rotation disabled"
+			updateTargetDebug = "rangeCheck=$hitable (MultiAura mode or Rotation disabled)"
 			return
 		}
 
@@ -1109,25 +1117,29 @@ class KillAura : Module()
 			val provider = classProvider
 
 			val distanceToTarget = currentTarget?.let(thePlayer::getDistanceToEntityBox)
-			val raycastedEntity = RaycastUtils.raycastEntity(theWorld, thePlayer, reach + 1.0, lastYaw, lastPitch, getHitbox) { entity -> entity != null && (!livingOnly || (provider.isEntityLivingBase(entity) && !provider.isEntityArmorStand(entity))) && (skipEnemyCheck || EntityUtils.isEnemy(entity, aac) || includeCollidedWithTarget && theWorld.getEntitiesWithinAABBExcludingEntity(entity, entity.entityBoundingBox).isNotEmpty()) }
+			val raycastedEntity = RaycastUtils.raycastEntity(theWorld, thePlayer, reach + 1.0, lastYaw, lastPitch, { getHitbox(it, if (rotationLockValue.get()) 0.0 else rotationLockExpandRangeValue.get().toDouble()) }) { entity -> entity != null && (!livingOnly || (provider.isEntityLivingBase(entity) && !provider.isEntityArmorStand(entity))) && (skipEnemyCheck || EntityUtils.isEnemy(entity, aac) || includeCollidedWithTarget && theWorld.getEntitiesWithinAABBExcludingEntity(entity, entity.entityBoundingBox).isNotEmpty()) }
 			val distanceToRaycasted = raycastedEntity?.let(thePlayer::getDistanceToEntityBox)
 
 			if (raycastedEntity != null && provider.isEntityLivingBase(raycastedEntity) && (LiquidBounce.moduleManager[NoFriends::class.java].state || !provider.isEntityPlayer(raycastedEntity) || !raycastedEntity.asEntityPlayer().isClientFriend())) this.currentTarget = raycastedEntity.asEntityLivingBase()
 
-			debug = if (distanceToTarget != null)
+			updateTargetDebug = if (distanceToTarget != null)
 			{
 				if (distanceToRaycasted != null)
 				{
-					if (currentTarget != raycastedEntity) "Switched from [n=${currentTarget.name} id=${currentTarget.entityId}] to [n=${raycastedEntity.name} id=${raycastedEntity.entityId}] (dist=${DECIMALFORMAT_6.format(distanceToTarget - distanceToRaycasted)})"
-					else "currentTarget = raycastedTarget"
+					if (currentTarget != raycastedEntity) "[Raycast] Switched from [n=${currentTarget.name} id=${currentTarget.entityId}] to [n=${raycastedEntity.name} id=${raycastedEntity.entityId}] (dist=${DECIMALFORMAT_6.format(distanceToTarget - distanceToRaycasted)})"
+					else "[Raycast] currentTarget = raycastedTarget"
 				}
-				else "raycastedTarget is null"
+				else "[Raycast] raycastedTarget is null"
 			}
-			else "currentTarget is null"
+			else "[Raycast] currentTarget is null"
 
 			hitable = (distanceToTarget == null || distanceToTarget <= reach) && (distanceToRaycasted == null || distanceToRaycasted <= reach) && this.currentTarget == raycastedEntity
 		}
-		else hitable = if (currentTarget != null) RotationUtils.isFaced(theWorld, thePlayer, currentTarget, reach, getHitbox) else false
+		else
+		{
+			hitable = if (currentTarget != null) RotationUtils.isFaced(theWorld, thePlayer, currentTarget, reach) { getHitbox(it, if (rotationLockValue.get()) 0.0 else rotationLockExpandRangeValue.get().toDouble()) } else false
+			updateTargetDebug = "faced=$hitable"
+		}
 	}
 
 	/**
@@ -1155,8 +1167,7 @@ class KillAura : Module()
 			{
 				val positionEye = thePlayer.getPositionEyes(1F)
 
-				val expandSize = interactEntity.collisionBorderSize.toDouble()
-				val boundingBox = interactEntity.entityBoundingBox.expand(expandSize, expandSize, expandSize)
+				val boundingBox = getHitbox(interactEntity, 0.0)
 
 				val (yaw, pitch) = RotationUtils.targetRotation ?: RotationUtils.clientRotation
 				val yawRadians = WMathHelper.toRadians(yaw)

@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other
 
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
@@ -35,7 +34,7 @@ class TeleportCubeCraft : SpeedMode("TeleportCubeCraft")
 		{
 			val func = functions
 
-			val distance = ((LiquidBounce.moduleManager[Speed::class.java] as Speed?) ?: return).cubecraftPortLengthValue.get()
+			val distance = Speed.cubecraftPortLengthValue.get()
 
 			val dir = MovementUtils.getDirection(thePlayer)
 			event.x = (-func.sin(dir) * distance).toDouble()

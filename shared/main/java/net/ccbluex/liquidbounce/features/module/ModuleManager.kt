@@ -60,7 +60,6 @@ class ModuleManager : Listenable
 			KillAura::class.java, //
 			Trigger::class.java, //
 			Velocity::class.java, //
-			Fly::class.java, //
 			ClickGUI::class.java, //
 			HighJump::class.java, //
 			InventoryMove::class.java, //
@@ -79,7 +78,6 @@ class ModuleManager : Listenable
 			FastBreak::class.java, //
 			FastPlace::class.java, //
 			ESP::class.java, //
-			Speed::class.java, //
 			Tracers::class.java, //
 			NameTags::class.java, //
 			FastUse::class.java, //
@@ -211,6 +209,8 @@ class ModuleManager : Listenable
 		registerModule(Fucker)
 		registerModule(ChestAura)
 		registerModule(AntiBot)
+		registerModule(Fly)
+		registerModule(Speed)
 
 		ClientUtils.logger.info("[ModuleManager] Loaded ${modules.size} modules. Took ${TimeUtils.nanosecondsToString(System.nanoTime() - nanoTime)}.")
 	}

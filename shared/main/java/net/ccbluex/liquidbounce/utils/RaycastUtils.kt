@@ -45,8 +45,7 @@ object RaycastUtils : MinecraftInstance()
 		var pointedEntity: IEntity? = null
 
 		entityList.filter(entityFilter::invoke).forEach { entity ->
-			val collisionBorderSize = entity.collisionBorderSize.toDouble()
-			val collisionBorder = aabbGetter(entity).expand(collisionBorderSize, collisionBorderSize, collisionBorderSize)
+			val collisionBorder = aabbGetter(entity)
 
 			val rayIntercept = collisionBorder.calculateIntercept(rayStartPos, rayEndPos)
 

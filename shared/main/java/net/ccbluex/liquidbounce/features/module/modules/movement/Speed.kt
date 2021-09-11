@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.ccbluex.liquidbounce.value.ValueGroup
 
 @ModuleInfo(name = "Speed", description = "Allows you to move faster.", category = ModuleCategory.MOVEMENT)
-class Speed : Module()
+object Speed : Module()
 {
 	private val speedModes = arrayOf(
 
@@ -89,7 +89,7 @@ class Speed : Module()
 	}
 
 	// Custom Speed
-	val customGroup = object : ValueGroup("Custom")
+	private val customGroup = object : ValueGroup("Custom")
 	{
 		override fun showCondition() = modeValue.get().equals("Custom", ignoreCase = true)
 	}
@@ -126,8 +126,7 @@ class Speed : Module()
 
 	private val disableOnFlagValue = BoolValue("DisableOnFlag", true)
 
-	private val mode: SpeedMode?
-		get() = speedModeMap[modeValue.get()]
+	private var mode: SpeedMode? = null
 
 	override val tag: String
 		get() = modeValue.get()
@@ -192,6 +191,8 @@ class Speed : Module()
 
 	override fun onEnable()
 	{
+		mode = speedModeMap[modeValue.get()]
+
 		mc.thePlayer ?: return
 
 		mc.timer.timerSpeed = 1f

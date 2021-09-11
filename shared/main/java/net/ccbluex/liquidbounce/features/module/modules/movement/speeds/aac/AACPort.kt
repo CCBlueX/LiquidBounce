@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
@@ -29,7 +28,7 @@ class AACPort : SpeedMode("AACPort")
 
 		val dir = MovementUtils.getDirection(thePlayer)
 		var speed = 0.2
-		val maxSpeed = (LiquidBounce.moduleManager[Speed::class.java] as Speed).portMax.get()
+		val maxSpeed = Speed.portMax.get()
 
 		while (speed <= maxSpeed)
 		{

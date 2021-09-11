@@ -25,20 +25,19 @@ class CustomSpeed : SpeedMode("Custom")
 
 		if (MovementUtils.isMoving(thePlayer))
 		{
-			val speed = LiquidBounce.moduleManager[Speed::class.java] as Speed? ?: return
-			mc.timer.timerSpeed = speed.customTimerValue.get()
+			mc.timer.timerSpeed = Speed.customTimerValue.get()
 			when
 			{
 				thePlayer.onGround ->
 				{
-					val customY = speed.customYValue.get()
+					val customY = Speed.customYValue.get()
 
-					MovementUtils.strafe(thePlayer, speed.customSpeedValue.get())
+					MovementUtils.strafe(thePlayer, Speed.customSpeedValue.get())
 					thePlayer.motionY = customY.toDouble()
 					LiquidBounce.eventManager.callEvent(JumpEvent(customY))
 				}
 
-				speed.customStrafeValue.get() -> MovementUtils.strafe(thePlayer, speed.customSpeedValue.get())
+				Speed.customStrafeValue.get() -> MovementUtils.strafe(thePlayer, Speed.customSpeedValue.get())
 				else -> MovementUtils.strafe(thePlayer)
 			}
 		}
@@ -49,15 +48,13 @@ class CustomSpeed : SpeedMode("Custom")
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		val speed = LiquidBounce.moduleManager[Speed::class.java] as Speed? ?: return
-
-		if (speed.customResetXZValue.get())
+		if (Speed.customResetXZValue.get())
 		{
 			thePlayer.motionZ = 0.0
 			thePlayer.motionX = thePlayer.motionZ
 		}
 
-		if (speed.customResetYValue.get()) thePlayer.motionY = 0.0
+		if (Speed.customResetYValue.get()) thePlayer.motionY = 0.0
 	}
 
 	override fun onDisable()
@@ -66,15 +63,13 @@ class CustomSpeed : SpeedMode("Custom")
 
 		val thePlayer = mc.thePlayer ?: return
 
-		val speed = LiquidBounce.moduleManager[Speed::class.java] as Speed? ?: return
-
-		if (speed.customResetXZValue.get())
+		if (Speed.customResetXZValue.get())
 		{
 			thePlayer.motionZ = 0.0
 			thePlayer.motionX = thePlayer.motionZ
 		}
 
-		if (speed.customResetYValue.get()) thePlayer.motionY = 0.0
+		if (Speed.customResetYValue.get()) thePlayer.motionY = 0.0
 	}
 
 	override fun onUpdate()

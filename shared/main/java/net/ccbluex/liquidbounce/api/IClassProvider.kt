@@ -30,12 +30,14 @@ import net.ccbluex.liquidbounce.api.minecraft.client.renderer.vertex.IVertexBuff
 import net.ccbluex.liquidbounce.api.minecraft.client.settings.IGameSettings
 import net.ccbluex.liquidbounce.api.minecraft.client.shader.IFramebuffer
 import net.ccbluex.liquidbounce.api.minecraft.enchantments.IEnchantment
+import net.ccbluex.liquidbounce.api.minecraft.entity.player.IPlayerCapabilities
 import net.ccbluex.liquidbounce.api.minecraft.event.IClickEvent
 import net.ccbluex.liquidbounce.api.minecraft.item.IItem
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.nbt.*
 import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.*
+import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ICPacketAbilities
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotion
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotionEffect
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
@@ -141,6 +143,7 @@ interface IClassProvider
 	fun createCPacketEncryptionResponse(secretKey: SecretKey, publicKey: PublicKey, verifyToken: ByteArray): IPacket
 	fun createCPacketChatMessage(message: String): ICPacketChatMessage
 	fun createCPacketInput(): IPacket
+	fun createCPacketAbilities(capabilities: IPlayerCapabilities): ICPacketAbilities
 
 	/**
 	 * Only available for 1.8.9, can be replaced with [createCPacketTryUseItem] in later versions

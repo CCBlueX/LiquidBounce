@@ -13,8 +13,8 @@ class CPacketAbilitiesImpl<out T : C13PacketPlayerAbilities>(wrapped: T) : Packe
 		}
 
 	override fun equals(other: Any?): Boolean = other is CPacketAbilitiesImpl<C13PacketPlayerAbilities> && run {
-		val other = other.unwrap()
-		wrapped.isInvulnerable == other.isInvulnerable && wrapped.isFlying == other.isFlying && wrapped.isAllowFlying == other.isAllowFlying && wrapped.isCreativeMode == other.isCreativeMode && wrapped.flySpeed == other.flySpeed && wrapped.walkSpeed == other.walkSpeed
+		val unwrappedOther = other.unwrap()
+		wrapped.isInvulnerable == unwrappedOther.isInvulnerable && wrapped.isFlying == unwrappedOther.isFlying && wrapped.isAllowFlying == unwrappedOther.isAllowFlying && wrapped.isCreativeMode == unwrappedOther.isCreativeMode && wrapped.flySpeed == unwrappedOther.flySpeed && wrapped.walkSpeed == unwrappedOther.walkSpeed
 	}
 
 	override fun toString(): String = "CPacketAbilitiesImpl[invulnerable=${wrapped.isInvulnerable}, flying=${wrapped.isFlying}, allowFlying=${wrapped.isAllowFlying}, creativeMode=${wrapped.isCreativeMode}, flySpeed=${wrapped.flySpeed}, walkSpeed=${wrapped.walkSpeed}]"

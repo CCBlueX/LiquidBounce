@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other
 
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.enums.EnumFacingType
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
@@ -66,7 +65,7 @@ class MineplexGround : SpeedMode("Mineplex-Ground")
 
 		mc.playerController.onPlayerRightClick(thePlayer, theWorld, null, blockPos, provider.getEnumFacing(EnumFacingType.UP), WVec3(vec.xCoord * 0.4f, vec.yCoord * 0.4f, vec.zCoord * 0.4f))
 
-		val targetSpeed = (LiquidBounce.moduleManager[Speed::class.java] as Speed).mineplexGroundSpeedValue.get()
+		val targetSpeed = Speed.mineplexGroundSpeedValue.get()
 
 		if (targetSpeed > moveSpeed) moveSpeed += targetSpeed * 0.125f
 		if (moveSpeed >= targetSpeed) moveSpeed = targetSpeed

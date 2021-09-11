@@ -428,7 +428,7 @@ class Target : Element()
 		return when
 		{
 			tpAura.state && tpAura.maxTargetsValue.get() == 1 && tpAura.currentTarget != null -> tpAura.currentTarget to "TpAura[${tpAura.debug}]"
-			killAuraTarget != null -> killAuraTarget to "KillAura[${killAura.debug}]"
+			killAuraTarget != null -> killAuraTarget to "KillAura[${killAura.updateTargetDebug}]"
 			aimbotTarget != null -> aimbotTarget to "Aimbot"
 			bowAimbotTarget != null -> bowAimbotTarget to "BowAimbot"
 			else -> null

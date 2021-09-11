@@ -65,7 +65,7 @@ class Rotations : Module()
 		val civBreakState = civBreak.state && civBreak.blockPos != null
 		val nukerState = nuker.state && nuker.currentBlock != null
 		val chestAuraState = chestAura.state && chestAura.currentBlock != null
-		val flyState = fly.state && fly.modeValue.get().equals("FreeHypixel", ignoreCase = true) && !fly.freeHypixelTimer.hasTimePassed(10)
+		val flyState = fly.state && fly.modeValue.get().equals("FreeHypixel", ignoreCase = true)
 
 		return scaffoldState || towerState || killauraState || derpState || bowAimbotState || fuckerState || civBreakState || nukerState || chestAuraState || flyState
 	}

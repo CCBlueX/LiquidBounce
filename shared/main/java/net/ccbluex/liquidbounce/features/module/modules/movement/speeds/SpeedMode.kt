@@ -5,23 +5,14 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds
 
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
-import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.MovementUtils
 
 abstract class SpeedMode(val modeName: String) : MinecraftInstance()
 {
-	val isActive: Boolean
-		get()
-		{
-			val speed = LiquidBounce.moduleManager[Speed::class.java] as Speed?
-			return speed != null && !(mc.thePlayer ?: return false).sneaking && speed.state && speed.modeValue.get() == modeName
-		}
-
 	abstract fun onMotion(eventState: EventState)
 	abstract fun onUpdate()
 	abstract fun onMove(event: MoveEvent)
