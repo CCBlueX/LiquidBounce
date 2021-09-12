@@ -17,4 +17,6 @@ interface IEnumFacing
 	fun isEast(): Boolean
 	fun isWest(): Boolean
 	fun isUp(): Boolean
+
+	override fun toString(): String
 }

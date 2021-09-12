@@ -46,19 +46,22 @@ abstract class BotCheck(private val modeName: String) : MinecraftInstance()
 
 	fun notification(message: () -> String)
 	{
-		if (AntiBot.notificationValue.get()) LiquidBounce.hud.addNotification(Notification(NotificationIcon.ROBOT, "AntiBot.$modeName", message(), 6000L))
+		if (AntiBot.notificationValue.get()) LiquidBounce.hud.addNotification(Notification(NotificationIcon.ROBOT, modeName, message(), 6000L))
 	}
 
 	fun notification(target: IEntityPlayer, message: () -> String)
 	{
-		notification { "$message ${target.gameProfile.name} (${target.displayName.formattedText}§\u00A7r)" }
+		notification { "$message ${target.gameProfile.name} (${target.displayName.formattedText}\u00A7r)" }
 	}
 
 	fun remove(theWorld: IWorldClient, entityId: Int?, profileName: String, displayName: String?, reason: String)
 	{
 		entityId?.let(theWorld::removeEntityFromWorld)
-		notification { "Removed $profileName($displayName\u00A7r) from the game ($reason)" }
+		notification { "Removed $profileName ($displayName\u00A7r) from the game ($reason)" }
 	}
 
-	fun getPingCorrectionAppliedLocation(thePlayer: IEntityPlayer, offset: Int = 0) = LocationCache.getPlayerLocationBeforeNTicks((ceil(thePlayer.getPing() / 50F).toInt() + offset + AntiBot.positionPingCorrectionOffsetValue.get()).coerceAtLeast(0), Location(WVec3(thePlayer.posX, thePlayer.entityBoundingBox.minY, thePlayer.posZ), RotationUtils.serverRotation))
+	companion object
+	{
+		fun getPingCorrectionAppliedLocation(thePlayer: IEntityPlayer, offset: Int = 0) = LocationCache.getPlayerLocationBeforeNTicks((ceil(thePlayer.getPing() / 50F).toInt() + offset + AntiBot.positionPingCorrectionOffsetValue.get()).coerceAtLeast(0), Location(WVec3(thePlayer.posX, thePlayer.entityBoundingBox.minY, thePlayer.posZ), RotationUtils.serverRotation))
+	}
 }

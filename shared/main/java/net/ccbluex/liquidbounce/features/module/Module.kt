@@ -81,11 +81,12 @@ open class Module : MinecraftInstance(), Listenable
 			{
 				try
 				{
-					onEnable()
 					if (canEnable) field = true
+					onEnable()
 				}
 				catch (e: Exception)
 				{
+					field = false
 					ClientUtils.logger.error("Uncaught exception '$e' occurred while onEnable() in module $name", e)
 					LiquidBounce.hud.addNotification(Notification(NotificationIcon.ERROR, "Module Manager", "Something went wrong while enabling module $name"))
 				}

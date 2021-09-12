@@ -62,4 +62,6 @@ class WBlockPos(x: Int, y: Int, z: Int) : WVec3i(x, y, z)
 	private fun south(n: Int): WBlockPos = offset(classProvider.getEnumFacing(EnumFacingType.SOUTH), n)
 
 	fun getBlock(theWorld: IWorldClient) = BlockUtils.getBlock(theWorld, this)
+
+	override fun toString() = "($x, $y, $z)"
 }
