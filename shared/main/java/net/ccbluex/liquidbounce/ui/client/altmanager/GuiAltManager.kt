@@ -459,7 +459,7 @@ class GuiAltManager(private val prevGui: IGuiScreen?) : WrappedGuiScreen()
 				{
 					// Get json object of element
 					val jsonObject = jsonElement.asJsonObject
-					jsonObject.entrySet().forEach(Consumer { stringJsonElementEntry: Map.Entry<String, JsonElement> -> GENERATORS[stringJsonElementEntry.key] = stringJsonElementEntry.value.asBoolean })
+					jsonObject.entrySet().forEach(Consumer { (key, value): Map.Entry<String, JsonElement> -> GENERATORS[key] = value.asBoolean })
 				}
 			}
 			catch (throwable: Throwable)

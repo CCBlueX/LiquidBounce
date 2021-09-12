@@ -722,7 +722,7 @@ class Scaffold : Module()
 		val targetPlace = targetPlace ?: return
 
 		// Delay & SameY check
-		if (!delayTimer.hasTimePassed(delay) || sameYValue.get() && launchY - 1 != targetPlace.vec3.yCoord.toInt() && !(fallStartY - thePlayer.posY > 2)) return
+		if (!delayTimer.hasTimePassed(delay) || sameYValue.get() && launchY - 1 != targetPlace.vec3.yCoord.toInt() && fallStartY - thePlayer.posY <= 2) return
 
 		if (killauraBypassModeValue.get().equals("SuspendKillAura", true)) killAura.suspend(killAuraBypassKillAuraSuspendDurationValue.get().toLong())
 
@@ -735,7 +735,7 @@ class Scaffold : Module()
 		(LiquidBounce.moduleManager[AutoUse::class.java] as AutoUse).endEating(thePlayer, classProvider, netHandler)
 
 		// Check if the player is holding block
-		val slot = InventoryUtils.targetHeldItemSlot ?: inventory.currentItem
+		val slot = InventoryUtils.targetSlot ?: inventory.currentItem
 		var itemStack = inventory.mainInventory[slot]
 		var switched = false
 		val switchKeepTime = autoBlockSwitchKeepTimeValue.get()
@@ -762,9 +762,9 @@ class Scaffold : Module()
 
 				"spoof", "switch" -> if (blockSlot - 36 != slot)
 				{
-					if (InventoryUtils.setHeldItemSlot(thePlayer, blockSlot - 36, if (autoBlockMode.equals("spoof", ignoreCase = true)) -1 else switchKeepTime, false)) return
+					if (!InventoryUtils.tryHoldSlot(thePlayer, blockSlot - 36, if (autoBlockMode.equals("spoof", ignoreCase = true)) -1 else switchKeepTime, false)) return
 				}
-				else InventoryUtils.reset(thePlayer)
+				else InventoryUtils.resetSlot(thePlayer)
 			}
 
 			itemStack = thePlayer.inventoryContainer.getSlot(blockSlot).stack
@@ -807,7 +807,7 @@ class Scaffold : Module()
 		}
 
 		// Switch back to original slot after place on AutoBlock-Switch mode
-		if (autoBlockModeValue.get().equals("Switch", true) && switchKeepTime < 0) InventoryUtils.reset(thePlayer)
+		if (autoBlockModeValue.get().equals("Switch", true) && switchKeepTime < 0) InventoryUtils.resetSlot(thePlayer)
 
 		this.targetPlace = null
 	}
@@ -839,7 +839,7 @@ class Scaffold : Module()
 		mc.timer.timerSpeed = 1f
 		shouldGoDown = false
 
-		InventoryUtils.reset(thePlayer)
+		InventoryUtils.resetSlot(thePlayer)
 	}
 
 	@EventTarget
@@ -902,7 +902,7 @@ class Scaffold : Module()
 					provider.getEnumFacing(EnumFacingType.WEST) -> -it.toDouble()
 					provider.getEnumFacing(EnumFacingType.EAST) -> it.toDouble()
 					else -> 0.0
-				}, if (sameYValue.get() && launchY <= thePlayer.posY && !(fallStartY - thePlayer.posY > 2)) launchY - 1.0 else thePlayer.posY - (if (thePlayer.posY > floor(thePlayer.posY).toInt()) 0.0 else 1.0) - if (shouldGoDown) 1.0 else 0.0, thePlayer.posZ + when (horizontalFacing)
+				}, if (sameYValue.get() && launchY <= thePlayer.posY && fallStartY - thePlayer.posY <= 2) launchY - 1.0 else thePlayer.posY - (if (thePlayer.posY > floor(thePlayer.posY).toInt()) 0.0 else 1.0) - if (shouldGoDown) 1.0 else 0.0, thePlayer.posZ + when (horizontalFacing)
 				{
 					provider.getEnumFacing(EnumFacingType.NORTH) -> -it.toDouble()
 					provider.getEnumFacing(EnumFacingType.SOUTH) -> it.toDouble()

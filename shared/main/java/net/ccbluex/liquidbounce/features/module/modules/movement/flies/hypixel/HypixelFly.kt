@@ -6,7 +6,7 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.DamageOnStart
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
-import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationType
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationIcon
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
@@ -172,7 +172,7 @@ class HypixelFly : FlyMode("Hypixel")
 		if (classProvider.isSPacketPlayerPosLook(packet) && canPerformHypixelDamageFly && hypixelFlyStarted && !hypixelDamageBoostFailed)
 		{
 			hypixelDamageBoostFailed = true
-			LiquidBounce.hud.addNotification(NotificationType.WARNING, "Hypixel Damage-Boost Fly", "A teleport has been detected. Disabled Damage-Boost to prevent more flags.", 1000L)
+			LiquidBounce.hud.addNotification(NotificationIcon.WARNING_RED, "Hypixel Damage-Boost Fly", "A teleport has been detected. Disabled Damage-Boost to prevent more flags.", 1000L)
 		}
 	}
 

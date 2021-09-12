@@ -28,7 +28,6 @@ import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.UnsupportedFlavorException
 import java.io.IOException
 import java.net.Proxy
-import java.util.*
 
 class GuiAdd(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 {
@@ -194,7 +193,7 @@ class GuiAdd(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 		addButton.enabled = false
 		clipboardButton.enabled = false
 
-		val account = MinecraftAccount(AltServiceType.MOJANG, name, if (password.isEmpty()) null else password)
+		val account = MinecraftAccount(AltServiceType.MOJANG, name, password.ifEmpty { null })
 
 		workers.execute {
 			if (!account.isCracked)

@@ -42,7 +42,7 @@ class InventoryCleaner : Module()
 	 */
 
 	val delayValue = IntegerRangeValue("Delay", 400, 600, 0, 5000, "MaxDelay" to "MinDelay")
-	val hotbarDelayValue = IntegerRangeValue("HotbarDelay", 200, 250, 0, 5000, "MaxHotbarDelay" to "MinHotbarDelay")
+	private val hotbarDelayValue = IntegerRangeValue("HotbarDelay", 200, 250, 0, 5000, "MaxHotbarDelay" to "MinHotbarDelay")
 	private val itemDelayValue = IntegerValue("ItemDelay", 0, 0, 5000)
 
 	// Bypass

@@ -204,7 +204,7 @@ class Script(val scriptFile: File) : MinecraftInstance()
 		if (!state) return
 
 		registeredModules.forEach(LiquidBounce.moduleManager::unregisterModule)
-		registeredCommands.forEach { LiquidBounce.commandManager.unregisterCommand(it) }
+		registeredCommands.forEach(LiquidBounce.commandManager::unregisterCommand)
 
 		callEvent("disable")
 		state = false

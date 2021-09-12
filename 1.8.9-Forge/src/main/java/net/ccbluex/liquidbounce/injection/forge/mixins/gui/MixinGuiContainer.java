@@ -51,27 +51,28 @@ public abstract class MixinGuiContainer extends MixinGuiScreen implements IMixin
 	@Shadow
 	protected int guiTop;
 	@Shadow
-	protected Slot theSlot;
+	private Slot theSlot;
 	@Shadow
-	protected boolean isRightMouseClick;
+	private boolean isRightMouseClick;
 	@Shadow
-	protected ItemStack draggedStack;
+	private ItemStack draggedStack;
 	@Shadow
-	protected int touchUpX;
+	private int touchUpX;
 	@Shadow
-	protected int touchUpY;
+	private int touchUpY;
 	@Shadow
-	protected Slot returningStackDestSlot;
+	private Slot returningStackDestSlot;
 	@Shadow
-	protected long returningStackTime;
+	private long returningStackTime;
 	@Shadow
-	protected ItemStack returningStack;
+	private ItemStack returningStack;
+	@Final
 	@Shadow
-	protected final Set<Slot> dragSplittingSlots = Sets.newHashSet();
+	protected Set<Slot> dragSplittingSlots;
 	@Shadow
 	protected boolean dragSplitting;
 	@Shadow
-	protected int dragSplittingRemnant;
+	private int dragSplittingRemnant;
 	@Shadow
 	protected int xSize;
 

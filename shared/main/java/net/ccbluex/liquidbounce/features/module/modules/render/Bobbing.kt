@@ -18,11 +18,11 @@ class Bobbing : Module()
 	val multiplierValue = FloatValue("Multiplier", .6F, 0F, 10F)
 	val checkGroundValue = BoolValue("CheckGround", true)
 
-	val cameraMultiplierGroup = ValueGroup("Camera")
+	private val cameraMultiplierGroup = ValueGroup("Camera")
 	val cameraMultiplierYawValue = FloatValue("Yaw", .4F, 0F, 2F, "CameraYawMultiplier")
 	val cameraMultiplierPitchValue = FloatValue("Pitch", .8F, 0F, 2F, "CameraPitchMultiplier")
 
-	val cameraIncrementMultiplierGroup = ValueGroup("Increment")
+	private val cameraIncrementMultiplierGroup = ValueGroup("Increment")
 	val cameraIncrementMultiplierYawValue = FloatValue("Yaw", 1F, 0.2F, 5F, "CameraYawIncrementMultiplier")
 	val cameraIncrementMultiplierPitchValue = FloatValue("Pitch", 1F, 0.2F, 5F, "CameraPitchIncrementMultiplier")
 

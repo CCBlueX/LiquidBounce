@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
-import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationType
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationIcon
 import net.ccbluex.liquidbounce.utils.Location
 import net.ccbluex.liquidbounce.utils.LocationCache
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
@@ -18,7 +18,7 @@ import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.extensions.getPing
 import kotlin.math.ceil
 
-abstract class BotCheck(val modeName: String) : MinecraftInstance()
+abstract class BotCheck(private val modeName: String) : MinecraftInstance()
 {
 	abstract val isActive: Boolean
 
@@ -46,7 +46,7 @@ abstract class BotCheck(val modeName: String) : MinecraftInstance()
 
 	fun notification(message: () -> String)
 	{
-		if (AntiBot.notificationValue.get()) LiquidBounce.hud.addNotification(Notification(NotificationType.ROBOT, "AntiBot.$modeName", message(), 6000L))
+		if (AntiBot.notificationValue.get()) LiquidBounce.hud.addNotification(Notification(NotificationIcon.ROBOT, "AntiBot.$modeName", message(), 6000L))
 	}
 
 	fun notification(target: IEntityPlayer, message: () -> String)

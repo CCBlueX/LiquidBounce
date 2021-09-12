@@ -27,6 +27,8 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL14
 import java.awt.Color
+import kotlin.math.max
+import kotlin.math.min
 
 object RenderUtils : MinecraftInstance()
 {
@@ -833,17 +835,7 @@ object RenderUtils : MinecraftInstance()
 	@JvmStatic
 	fun drawHorizontalLine(startX: Int, endX: Int, y: Int, color: Int)
 	{
-		var _startX = startX
-		var _endX = endX
-
-		if (_endX < _startX)
-		{
-			val i = _startX
-			_startX = _endX
-			_endX = i
-		}
-
-		drawRect(_startX, y, _endX + 1, y + 1, color)
+		drawRect(min(startX, endX), y, max(startX, endX) + 1, y + 1, color)
 	}
 
 	@JvmStatic

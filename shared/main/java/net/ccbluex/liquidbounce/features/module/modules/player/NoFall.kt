@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam
+import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.VecRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlock
@@ -23,7 +24,7 @@ import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
 import net.ccbluex.liquidbounce.value.*
 import kotlin.math.ceil
-import kotlin.math.sqrt
+import kotlin.math.pow
 
 @ModuleInfo(name = "NoFall", description = "Prevents you from taking fall damage.", category = ModuleCategory.PLAYER)
 class NoFall : Module()
@@ -281,11 +282,11 @@ class NoFall : Module()
 
 				val collision = fallingPlayer.findCollision(ceil(1.0 / thePlayer.motionY * -maxDist).toInt()) ?: return
 
-				var ok: Boolean = WVec3(thePlayer.posX, thePlayer.posY + thePlayer.eyeHeight, thePlayer.posZ).distanceTo(WVec3(collision.pos).addVector(0.5, 0.5, 0.5)) < controller.blockReachDistance + sqrt(0.75)
+				var reachCheck: Boolean = WVec3(thePlayer.posX, thePlayer.posY + thePlayer.eyeHeight, thePlayer.posZ).squareDistanceTo(WVec3(collision.pos).addVector(0.5, 0.5, 0.5)) <= (controller.blockReachDistance + 0.75).pow(2)
 
-				if (thePlayer.motionY < collision.pos.y + 1 - thePlayer.posY) ok = true
+				if (thePlayer.motionY < collision.pos.y + 1 - thePlayer.posY) reachCheck = true
 
-				if (!ok) return
+				if (!reachCheck) return
 
 				var mlgItemSlot = -1
 
@@ -303,26 +304,21 @@ class NoFall : Module()
 				currentMlgItemIndex = mlgItemSlot
 				currentMlgBlock = collision.pos
 
-				if (thePlayer.inventory.currentItem != mlgItemSlot) thePlayer.sendQueue.addToSendQueue(provider.createCPacketHeldItemChange(mlgItemSlot))
+				if (!InventoryUtils.tryHoldSlot(thePlayer, mlgItemSlot, lock = true)) return
 
 				val currentMlgRotation = RotationUtils.faceBlock(theWorld, thePlayer, collision.pos)
 
 				this.currentMlgRotation = currentMlgRotation
 
-				if (currentMlgRotation != null)
-				{
-					if (silentRotation) RotationUtils.setTargetRotation(currentMlgRotation.rotation, if (mlgKeepRotationEnabledValue.get()) mlgKeepRotationTicksValue.get() else 0)
-					else currentMlgRotation.rotation.applyRotationToPlayer(thePlayer)
-				}
+				if (currentMlgRotation != null) if (silentRotation) RotationUtils.setTargetRotation(currentMlgRotation.rotation, if (mlgKeepRotationEnabledValue.get()) mlgKeepRotationTicksValue.get() else 0) else currentMlgRotation.rotation.applyRotationToPlayer(thePlayer)
 			}
 		}
 		else if (currentMlgRotation != null)
 		{
-			val stack = thePlayer.inventory.getStackInSlot(currentMlgItemIndex + 36)
-
+			val stack = thePlayer.inventory.getStackInSlot(currentMlgItemIndex)
 			if (stack != null) if (provider.isItemBucket(stack.item)) controller.sendUseItem(thePlayer, theWorld, stack) else if (controller.sendUseItem(thePlayer, theWorld, stack)) mlgTimer.reset()
 
-			if (thePlayer.inventory.currentItem != currentMlgItemIndex) thePlayer.sendQueue.addToSendQueue(provider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
+			InventoryUtils.resetSlot(thePlayer)
 		}
 	}
 

@@ -54,7 +54,7 @@ public abstract class MixinNetworkManager implements IMixinNetworkManager
 
 	@Shadow
 	@Final
-	protected ReentrantReadWriteLock readWriteLock;
+	private ReentrantReadWriteLock readWriteLock;
 
 	@Shadow
 	@Final

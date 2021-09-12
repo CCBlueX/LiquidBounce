@@ -42,7 +42,7 @@ class TNTBlock : Module()
 			if (autoSwordValue.get())
 			{
 				val inventory = thePlayer.inventory
-				val slot = (0..8).mapNotNull { it to (inventory.getStackInSlot(it) ?: return@mapNotNull null) }.filter { provider.isItemSword(it.second.item) }.maxBy { it.second.item?.asItemSword()?.damageVsEntity ?: 0f + 4f }?.first ?: -1
+				val slot = (0..8).mapNotNull { it to (inventory.getStackInSlot(it) ?: return@mapNotNull null) }.filter { provider.isItemSword(it.second.item) }.maxBy { (it.second.item?.asItemSword()?.damageVsEntity ?: 0f) + 4f }?.first ?: -1
 
 				if (slot != -1 && slot != inventory.currentItem)
 				{

@@ -168,7 +168,7 @@ class AutoUse : Module()
 
 						if (isFirst) if (silent)
 						{
-							if (InventoryUtils.setHeldItemSlot(thePlayer, slotIndex, -1, slot == gappleInHotbar)) return
+							if (!InventoryUtils.tryHoldSlot(thePlayer, slotIndex, -1, slot == gappleInHotbar)) return
 						}
 						else mc.playerController.updateController()
 
@@ -286,7 +286,7 @@ class AutoUse : Module()
 		}
 
 		val gameSettings = mc.gameSettings
-		if (silent) InventoryUtils.reset(thePlayer) else if (!gameSettings.isKeyDown(gameSettings.keyBindUseItem)) gameSettings.keyBindUseItem.unpressKey()
+		if (silent) InventoryUtils.resetSlot(thePlayer) else if (!gameSettings.isKeyDown(gameSettings.keyBindUseItem)) gameSettings.keyBindUseItem.unpressKey()
 	}
 
 	private fun performFastUse(thePlayer: IEntityPlayerSP, item: IItem?, itemUseTicks: Int): Int = (LiquidBounce.moduleManager[FastUse::class.java] as FastUse).perform(thePlayer, mc.timer, item, itemUseTicks)

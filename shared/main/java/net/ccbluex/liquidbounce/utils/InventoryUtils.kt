@@ -34,10 +34,10 @@ class InventoryUtils : MinecraftInstance(), Listenable
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (targetHeldItemSlot != null && keepLength >= 0)
+		if (targetSlot != null && slotKeepLength >= 0)
 		{
-			keepLength--
-			if (keepLength <= 0) reset(thePlayer)
+			slotKeepLength--
+			if (slotKeepLength <= 0) resetSlot(thePlayer)
 		}
 	}
 
@@ -57,7 +57,7 @@ class InventoryUtils : MinecraftInstance(), Listenable
 
 		if (provider.isCPacketPlayerBlockPlacement(packet)) CLICK_TIMER.reset()
 
-		if (provider.isCPacketHeldItemChange(packet) && targetHeldItemSlot != null) event.cancelEvent()
+		if (provider.isCPacketHeldItemChange(packet) && targetSlot != null) event.cancelEvent()
 	}
 
 	override fun handleEvents(): Boolean = true
@@ -96,10 +96,10 @@ class InventoryUtils : MinecraftInstance(), Listenable
 		val CLICK_TIMER = MSTimer()
 
 		@JvmField
-		var targetHeldItemSlot: Int? = null
+		var targetSlot: Int? = null
 
-		private var keepLength = 0
-		private var lock = false
+		private var slotKeepLength = 0
+		private var occupied = false
 
 		fun findItem(container: IContainer, startSlot: Int, endSlot: Int, item: IItem?, itemDelay: Long, random: Boolean): Int
 		{
@@ -196,35 +196,34 @@ class InventoryUtils : MinecraftInstance(), Listenable
 			}
 		}
 
-		fun setHeldItemSlot(thePlayer: IEntityPlayerSP, slot: Int, keepLength: Int = 0, lock: Boolean = false): Boolean
+		fun tryHoldSlot(thePlayer: IEntityPlayerSP, slot: Int, keepLength: Int = 0, lock: Boolean = false): Boolean
 		{
-			if (Companion.lock) return true
+			if (occupied) return false
 
-			if (slot != (if (targetHeldItemSlot == null) thePlayer.inventory.currentItem else targetHeldItemSlot))
+			if (slot != (if (targetSlot == null) thePlayer.inventory.currentItem else targetSlot))
 			{
-				targetHeldItemSlot = null
+				targetSlot = null
 
 				mc.playerController.onStoppedUsingItem(thePlayer) // Stop using item before swap the slot
 				mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(slot))
 			}
 
-			targetHeldItemSlot = slot
-			Companion.keepLength = keepLength
-			Companion.lock = lock
+			targetSlot = slot
+			slotKeepLength = keepLength
+			occupied = lock
 
-			return false
+			return true
 		}
 
-		fun reset(thePlayer: IEntityPlayer)
+		fun resetSlot(thePlayer: IEntityPlayer)
 		{
+			val slot = targetSlot ?: return
+			slotKeepLength = 0
+			occupied = false
+
+			targetSlot = null
+
 			val currentSlot = thePlayer.inventory.currentItem
-
-			val slot = targetHeldItemSlot ?: return
-			keepLength = 0
-			lock = false
-
-			targetHeldItemSlot = null
-
 			if (slot != currentSlot) mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(currentSlot))
 		}
 

@@ -7,7 +7,7 @@ import net.ccbluex.liquidbounce.utils.timer.MSTimer
 
 class MineSecureGlide : FlyMode("MineSecureGlide")
 {
-	val mineSecureVClipTimer = MSTimer()
+	private val mineSecureVClipTimer = MSTimer()
 
 	override fun onUpdate()
 	{

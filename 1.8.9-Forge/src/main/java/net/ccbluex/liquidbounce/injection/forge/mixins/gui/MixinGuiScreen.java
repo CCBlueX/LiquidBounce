@@ -46,7 +46,7 @@ public abstract class MixinGuiScreen extends Gui
 	public Minecraft mc;
 
 	@Shadow
-	protected List<GuiButton> buttonList;
+	public List<GuiButton> buttonList;
 
 	@Shadow
 	public int width;
@@ -55,7 +55,7 @@ public abstract class MixinGuiScreen extends Gui
 	public int height;
 
 	@Shadow
-	protected FontRenderer fontRendererObj;
+	public FontRenderer fontRendererObj;
 
 	@SuppressWarnings("NoopMethodInAbstractClass")
 	@Shadow

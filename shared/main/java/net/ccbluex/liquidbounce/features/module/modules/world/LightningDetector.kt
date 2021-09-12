@@ -7,7 +7,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
-import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationType
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationIcon
 
 // Ported from FDPClient (https://github.com/Project-EZ4H/FDPClient)
 // Original code is available in https://github.com/Project-EZ4H/FDPClient/blob/master/src/main/java/net/ccbluex/liquidbounce/features/module/modules/player/HackerDetector.kt
@@ -23,7 +23,7 @@ class LightningDetector : Module()
 
 			if (packet.type != 1) return
 
-			LiquidBounce.hud.addNotification(Notification(NotificationType.INFORMATION, name, "Lightning at X:" + packet.x + " Y:" + packet.y + " Z:" + packet.z, 5000))
+			LiquidBounce.hud.addNotification(Notification(NotificationIcon.INFORMATION, name, "Lightning at X:" + packet.x + " Y:" + packet.y + " Z:" + packet.z, 5000))
 		}
 	}
 }

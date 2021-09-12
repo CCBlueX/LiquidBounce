@@ -102,7 +102,7 @@ class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F, side: 
 	/**
 	 * Example notification for CustomHUD designer
 	 */
-	private val exampleNotification = Notification(NotificationType.INFORMATION, "Example Notification Header", "Example Notification Message")
+	private val exampleNotification = Notification(NotificationIcon.INFORMATION, "Example Notification Header", "Example Notification Message")
 
 	/**
 	 * Draw element
@@ -162,10 +162,11 @@ class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F, side: 
 	}
 }
 
-enum class NotificationType(iconPath: String, val colorMode: () -> String, val customColor: () -> Int)
+enum class NotificationIcon(iconPath: String, val colorMode: () -> String, val customColor: () -> Int)
 {
 	INFORMATION("/notification/information.png", Notifications.rectInfoColorModeValue::get, Notifications.rectInfoColorValue::get),
-	WARNING("/notification/warning.png", Notifications.rectWarnColorModeValue::get, Notifications.rectWarnColorValue::get), // TODO: Separate to WARNING_YELLOW and WARNING_RED
+	WARNING_YELLOW("/notification/warning_yellow.png", Notifications.rectWarnColorModeValue::get, Notifications.rectWarnColorValue::get),
+	WARNING_RED("/notification/warning_red.png", Notifications.rectWarnColorModeValue::get, Notifications.rectWarnColorValue::get),
 	VERBOSE("/notification/verbose.png", Notifications.rectVerboseColorModeValue::get, Notifications.rectVerboseColorValue::get),
 	VANISH("/notification/vanish.png", Notifications.rectWarnColorModeValue::get, Notifications.rectWarnColorValue::get),
 	MURDER_MYSTERY("/notification/murder_mystery.png", Notifications.rectErrorColorModeValue::get, Notifications.rectErrorColorValue::get),
@@ -175,7 +176,7 @@ enum class NotificationType(iconPath: String, val colorMode: () -> String, val c
 	val resourceLocation = LiquidBounce.wrapper.classProvider.createResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + iconPath)
 }
 
-class Notification(private val type: NotificationType, private val header: String, private val message: String, private val stayTime: Long = 0L)
+class Notification(private val type: NotificationIcon, private val header: String, private val message: String, private val stayTime: Long = 0L)
 {
 	var x = Float.MAX_VALUE // 0F
 	var textLength = 0

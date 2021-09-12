@@ -187,5 +187,5 @@ open class HUD : MinecraftInstance()
 	 */
 	fun addNotification(notification: Notification) = elements.any { it is Notifications } && notifications.add(notification)
 
-	fun addNotification(type: NotificationType, header: String, message: String, stayTime: Long) = addNotification(Notification(type, header, message, stayTime))
+	fun addNotification(type: NotificationIcon, header: String, message: String, stayTime: Long) = addNotification(Notification(type, header, message, stayTime))
 }

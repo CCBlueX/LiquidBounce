@@ -96,7 +96,7 @@ class AutoSoup : Module()
 
 						if (silentValue.get())
 						{
-							if (InventoryUtils.setHeldItemSlot(thePlayer, soupInHotbarIndex, -1, true)) return
+							if (!InventoryUtils.tryHoldSlot(thePlayer, soupInHotbarIndex, -1, true)) return
 						}
 						else
 						{
@@ -177,7 +177,7 @@ class AutoSoup : Module()
 
 						if (handleBowl.equals("Drop", true)) netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.DROP_ITEM, WBlockPos.ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
 
-						if (silentValue.get()) InventoryUtils.reset(thePlayer)
+						if (silentValue.get()) InventoryUtils.resetSlot(thePlayer)
 
 						soupDelay = delayValue.getRandomDelay()
 						soupDelayTimer.reset()
