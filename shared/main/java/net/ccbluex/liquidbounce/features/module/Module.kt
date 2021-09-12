@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.features.module.modules.render.HUD
 import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.injection.backend.Backend
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
@@ -72,7 +73,7 @@ open class Module : MinecraftInstance(), Listenable
 			if (!LiquidBounce.isStarting)
 			{
 				mc.soundHandler.playSound("random.click", 1.0F)
-				LiquidBounce.hud.addNotification(Notification(NotificationIcon.INFORMATION, "Module Manager", "${if (value) "Enabled " else "Disabled "}$name"))
+				if ((LiquidBounce.moduleManager[HUD::class.java] as HUD).notificationModuleManagerValue.get()) LiquidBounce.hud.addNotification(Notification(NotificationIcon.INFORMATION, "Module Manager", "${if (value) "Enabled " else "Disabled "}$name"))
 			}
 
 			// Call on enabled or disabled
@@ -81,25 +82,26 @@ open class Module : MinecraftInstance(), Listenable
 				try
 				{
 					onEnable()
+					if (canEnable) field = true
 				}
 				catch (e: Exception)
 				{
 					ClientUtils.logger.error("Uncaught exception '$e' occurred while onEnable() in module $name", e)
+					LiquidBounce.hud.addNotification(Notification(NotificationIcon.ERROR, "Module Manager", "Something went wrong while enabling module $name"))
 				}
-
-				if (canEnable) field = true
 			}
 			else
 			{
 				try
 				{
 					onDisable()
+					field = false
 				}
 				catch (e: Exception)
 				{
 					ClientUtils.logger.error("Uncaught exception '$e' occurred while onDisable() in module $name", e)
+					LiquidBounce.hud.addNotification(Notification(NotificationIcon.ERROR, "Module Manager", "Something went wrong while disabling module $name"))
 				}
-				field = false
 			}
 
 			// Save module state

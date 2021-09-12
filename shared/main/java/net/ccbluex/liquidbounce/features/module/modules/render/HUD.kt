@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FontValue
+import net.ccbluex.liquidbounce.value.ValueGroup
 
 @ModuleInfo(name = "HUD", description = "Toggles visibility of the HUD.", category = ModuleCategory.RENDER, array = false)
 class HUD : Module()
@@ -20,10 +21,17 @@ class HUD : Module()
 	val blackHotbarValue = BoolValue("BlackHotbar", true)
 	val inventoryParticle = BoolValue("InventoryParticle", false)
 	private val blurValue = BoolValue("Blur", false)
-	val alertsValue = BoolValue("Alerts", true)
-	val worldChangeAlertsValue = BoolValue("WorldChangeAlerts", true)
+	private val notificationGroup = ValueGroup("Notification")
+	val notificationAlertsValue = BoolValue("Alerts", true, "Alerts")
+	val notificationWorldChangeValue = BoolValue("WorldChange", true, "WorldChangeAlerts")
+	val notificationModuleManagerValue = BoolValue("ModuleToggle", true)
 	val fontChatValue = BoolValue("FontChat", false)
 	val chatFontValue = FontValue("FontChatFont", Fonts.font40)
+
+	init
+	{
+		notificationGroup.addAll(notificationAlertsValue, notificationWorldChangeValue, notificationModuleManagerValue)
+	}
 
 	@EventTarget
 	fun onRender2D(@Suppress("UNUSED_PARAMETER") event: Render2DEvent?)

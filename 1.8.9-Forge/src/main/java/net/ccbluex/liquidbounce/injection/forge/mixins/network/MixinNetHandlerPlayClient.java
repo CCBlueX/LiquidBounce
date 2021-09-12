@@ -296,7 +296,7 @@ public abstract class MixinNetHandlerPlayClient
 
 		final String text = messageComponent.getUnformattedText().toLowerCase(Locale.ENGLISH);
 		final HUD hud = (HUD) LiquidBounce.moduleManager.get(HUD.class);
-		final boolean alerts = hud.getAlertsValue().get();
+		final boolean alerts = hud.getNotificationAlertsValue().get();
 
 		if (alerts)
 			WorkerUtils.getWorkers().execute(() ->

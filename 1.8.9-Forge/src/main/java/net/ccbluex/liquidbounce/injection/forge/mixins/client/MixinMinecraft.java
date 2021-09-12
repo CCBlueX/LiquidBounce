@@ -279,7 +279,7 @@ public abstract class MixinMinecraft
 
 		final HUD hud = (HUD) LiquidBounce.moduleManager.get(HUD.class);
 
-		if (hud.getWorldChangeAlertsValue().get() && LiquidBounce.hud.getNotifications().size() <= Notifications.Companion.getMaxRendered().get())
+		if (hud.getNotificationWorldChangeValue().get() && LiquidBounce.hud.getNotifications().size() <= Notifications.Companion.getMaxRendered().get())
 			LiquidBounce.hud.addNotification(NotificationIcon.INFORMATION, "World Change", "(" + theWorld + ") -> (" + world + ")", 2000L);
 	}
 
