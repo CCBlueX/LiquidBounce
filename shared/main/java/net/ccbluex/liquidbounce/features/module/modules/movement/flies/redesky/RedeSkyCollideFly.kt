@@ -4,6 +4,7 @@ import net.ccbluex.liquidbounce.event.BlockBBEvent
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
+import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
 
 class RedeSkyCollideFly : FlyMode("RedeSky-Collide")
@@ -25,9 +26,8 @@ class RedeSkyCollideFly : FlyMode("RedeSky-Collide")
 			var speed = Fly.redeSkyCollideSpeedValue.get() / 100f + ticks * (Fly.redeSkyCollideBoostValue.get() / 100f)
 			val maxSpeed = Fly.redeSkyCollideMaxSpeedValue.get() / 100f
 			if (speed > maxSpeed) speed = maxSpeed
-			val f = thePlayer.rotationYaw * 0.017453292f
-			thePlayer.motionX -= functions.sin(f) * speed
-			thePlayer.motionZ += functions.cos(f) * speed
+
+			MovementUtils.boost(thePlayer, speed, thePlayer.rotationYaw)
 
 			event.x = thePlayer.motionX
 			event.z = thePlayer.motionZ

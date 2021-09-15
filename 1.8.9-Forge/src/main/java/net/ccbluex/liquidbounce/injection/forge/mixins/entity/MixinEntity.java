@@ -33,6 +33,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+// TODO: Sort shadow members
 @Mixin(Entity.class)
 @SideOnly(Side.CLIENT)
 public abstract class MixinEntity
@@ -165,6 +166,9 @@ public abstract class MixinEntity
 
 	@Shadow
 	public int ticksExisted;
+
+	@Shadow
+	public boolean isDead;
 
 	@Shadow
 	protected abstract Vec3 getVectorForRotation(float pitch, float yaw);

@@ -19,7 +19,7 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.ui.font.assumeVolatile
 import net.ccbluex.liquidbounce.ui.font.assumeVolatileIf
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
-import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_2
+import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_4
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.stripControlCodes
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawFilledCircle
@@ -255,7 +255,7 @@ class SlowlyStyle : Style()
 
 				is FloatRangeValue ->
 				{
-					val text = "${value.displayName}\u00A7f: \u00A7c${DECIMALFORMAT_2.format(value.getMin())}-${DECIMALFORMAT_2.format(value.getMax())}"
+					val text = "${value.displayName}\u00A7f: \u00A7c${DECIMALFORMAT_4.format(value.getMin())}-${DECIMALFORMAT_4.format(value.getMax())}"
 					val textWidth = font.getStringWidth(text) + indent + 8f
 
 					if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
@@ -359,7 +359,7 @@ class SlowlyStyle : Style()
 
 				is FloatValue ->
 				{
-					val text = value.displayName + "\u00A7f: " + DECIMALFORMAT_2.format(value.get())
+					val text = value.displayName + "\u00A7f: " + DECIMALFORMAT_4.format(value.get())
 					val textWidth = valueFont.getStringWidth(text) + indent + 8f
 
 					if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
@@ -475,7 +475,7 @@ class SlowlyStyle : Style()
 			if (mouseX in indentX..xEnd && mouseY >= y && mouseY <= y + 3 && Mouse.isButtonDown(0))
 			{
 				val sliderXEnd = width - indent - 3f
-				return BigDecimal("${(min + (max - min) * ((mouseX - indentX) / sliderXEnd).coerceIn(0f, 1f))}").setScale(2, RoundingMode.HALF_UP).toFloat()
+				return BigDecimal("${(min + (max - min) * ((mouseX - indentX) / sliderXEnd).coerceIn(0f, 1f))}").setScale(4, RoundingMode.HALF_UP).toFloat()
 			}
 
 			return value
@@ -502,7 +502,7 @@ class SlowlyStyle : Style()
 
 			if (mouseX >= indentX && mouseX <= x + width && mouseY >= y && mouseY <= y + 3 && Mouse.isButtonDown(0))
 			{
-				val newValue = BigDecimal("${(min + (max - min) * ((mouseX - indentX) / sliderXEnd).coerceIn(0f, 1f))}").setScale(2, RoundingMode.HALF_UP).toFloat()
+				val newValue = BigDecimal("${(min + (max - min) * ((mouseX - indentX) / sliderXEnd).coerceIn(0f, 1f))}").setScale(4, RoundingMode.HALF_UP).toFloat()
 				return if (mouseX > center) minValue to newValue else newValue to maxValue
 			}
 

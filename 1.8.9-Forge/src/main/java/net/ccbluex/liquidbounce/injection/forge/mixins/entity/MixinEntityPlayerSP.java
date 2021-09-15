@@ -579,10 +579,11 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 			final Step step = (Step) LiquidBounce.moduleManager.get(Step.class);
 
 			// Stepping
-			if (stepHeight > 0.0F && (onGround || step.getState() && step.getAirStepValue().get() && step.canAirStep() || safewalkAppliedY != moveY && safewalkAppliedY < 0.0D) && (safewalkAppliedX != moveX || safewalkAppliedZ != moveZ))
+			final boolean airStep = step.getState() && step.getAirStepValue().get() && step.canAirStep();
+			if (stepHeight > 0.0F && (onGround || airStep || safewalkAppliedY != moveY && safewalkAppliedY < 0.0D) && (safewalkAppliedX != moveX || safewalkAppliedZ != moveZ))
 			{
 				// Call StepEvent
-				final StepEvent stepEvent = new StepEvent(stepHeight);
+				final StepEvent stepEvent = new StepEvent(!onGround && airStep ? Math.min(stepHeight, step.getAirStepHeightValue().get()) : stepHeight);
 				LiquidBounce.eventManager.callEvent(stepEvent);
 
 				final double __x = moveX;

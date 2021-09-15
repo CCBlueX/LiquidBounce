@@ -6,13 +6,13 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.api.enums.BlockType
-import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getMaterial
 import net.ccbluex.liquidbounce.value.ListValue
@@ -61,8 +61,7 @@ class IceSpeed : Module()
 				"aac3.2.0" -> getMaterial(theWorld, thePlayer.position.down()).let {
 					if (it == provider.getBlockEnum(BlockType.ICE) || it == provider.getBlockEnum(BlockType.ICE_PACKED))
 					{
-						thePlayer.motionX *= 1.342
-						thePlayer.motionZ *= 1.342
+						MovementUtils.multiply(thePlayer, 1.342)
 
 						provider.getBlockEnum(BlockType.ICE).slipperiness = 0.6f
 						provider.getBlockEnum(BlockType.ICE_PACKED).slipperiness = 0.6f
@@ -72,18 +71,7 @@ class IceSpeed : Module()
 				"spartan146" -> getMaterial(theWorld, thePlayer.position.down()).let {
 					if (it == provider.getBlockEnum(BlockType.ICE) || it == provider.getBlockEnum(BlockType.ICE_PACKED))
 					{
-						val blockAbove: IBlock = BlockUtils.getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY + 2.0, thePlayer.posZ))
-
-						if (provider.isBlockAir(blockAbove))
-						{
-							thePlayer.motionX *= 1.18
-							thePlayer.motionZ *= 1.18
-						}
-						else
-						{
-							thePlayer.motionX *= 1.342
-							thePlayer.motionZ *= 1.342
-						}
+						if (provider.isBlockAir(BlockUtils.getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY + 2.0, thePlayer.posZ)))) MovementUtils.multiply(thePlayer, 1.18) else MovementUtils.multiply(thePlayer, 1.342)
 
 						provider.getBlockEnum(BlockType.ICE).slipperiness = 0.6f
 						provider.getBlockEnum(BlockType.ICE_PACKED).slipperiness = 0.6f

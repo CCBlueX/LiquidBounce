@@ -38,7 +38,6 @@ import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.nbt.*
 import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.*
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketAbilities
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotion
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotionEffect
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
@@ -84,6 +83,7 @@ import net.minecraft.entity.projectile.*
 import net.minecraft.event.ClickEvent
 import net.minecraft.init.Blocks
 import net.minecraft.init.Items
+import net.minecraft.inventory.ContainerRepair
 import net.minecraft.item.*
 import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.nbt.NBTTagDouble
@@ -105,6 +105,7 @@ import java.io.File
 import java.security.PublicKey
 import javax.crypto.SecretKey
 
+// TODO: Sort members according to IClassProvider
 object ClassProviderImpl : IClassProvider
 {
 	override val tessellatorInstance: ITessellator
@@ -504,6 +505,8 @@ object ClassProviderImpl : IClassProvider
 
 	override fun isClickGui(obj: Any?): Boolean = obj is GuiScreenImpl<*> && obj.wrapped is GuiScreenWrapper && obj.wrapped.wrapped is ClickGui
 
+	override fun isGuiRepair(obj: Any?): Boolean = obj is GuiImpl<*> && obj.wrapped is GuiRepair
+
 	override fun isTileEntityShulkerBox(obj: Any?): Boolean = false
 
 	/* Enum constructors */
@@ -685,6 +688,8 @@ object ClassProviderImpl : IClassProvider
 			EnchantmentType.AQUA_AFFINITY -> Enchantment.aquaAffinity
 			EnchantmentType.BLAST_PROTECTION -> Enchantment.blastProtection
 			EnchantmentType.UNBREAKING -> Enchantment.unbreaking
+			EnchantmentType.KNOCKBACK -> Enchantment.knockback
+			EnchantmentType.FIRE_ASPECT -> Enchantment.fireAspect
 		})
 	}
 

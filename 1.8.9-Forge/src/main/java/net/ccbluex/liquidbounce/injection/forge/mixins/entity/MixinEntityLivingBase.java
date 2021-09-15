@@ -5,6 +5,8 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.entity;
 
+import static net.ccbluex.liquidbounce.LiquidBounce.wrapper;
+
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP;
 import net.ccbluex.liquidbounce.event.JumpEvent;
@@ -13,6 +15,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.NoJumpDelay;
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed;
 import net.ccbluex.liquidbounce.features.module.modules.render.AntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.SwingAnimation;
+import net.ccbluex.liquidbounce.injection.implementations.IMixinEntityLivingBase;
 import net.ccbluex.liquidbounce.utils.MovementUtils;
 import net.minecraft.block.Block;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -30,6 +33,7 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.WorldServer;
+import net.minecraftforge.common.ForgeHooks;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
@@ -39,10 +43,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import static net.ccbluex.liquidbounce.LiquidBounce.wrapper;
-
 @Mixin(EntityLivingBase.class)
-public abstract class MixinEntityLivingBase extends MixinEntity
+public abstract class MixinEntityLivingBase extends MixinEntity implements IMixinEntityLivingBase
 {
 	@Shadow
 	public float prevCameraPitch;
@@ -105,6 +107,28 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 	@Shadow
 	public abstract IAttributeInstance getEntityAttribute(IAttribute attribute);
 
+	@Shadow
+	public float moveForward;
+	@Shadow
+	public float moveStrafing;
+	private boolean isCanBeCollidedWith = true;
+
+	@Override
+	public void setCanBeCollidedWith(final boolean value)
+	{
+		isCanBeCollidedWith = value;
+	}
+
+	/**
+	 * @author eric0210
+	 * @reason
+	 */
+	@Overwrite
+	public boolean canBeCollidedWith()
+	{
+		return isCanBeCollidedWith && !isDead;
+	}
+
 	/**
 	 * @author CCBlueX
 	 * @reason JumpEvent
@@ -113,15 +137,18 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 	protected void jump()
 	{
 		final IEntityPlayerSP thePlayer = wrapper.getMinecraft().getThePlayer();
-		if (thePlayer == null)
-			return;
 
-		final JumpEvent jumpEvent = new JumpEvent(getJumpUpwardsMotion());
-		LiquidBounce.eventManager.callEvent(jumpEvent);
-		if (jumpEvent.isCancelled())
-			return;
+		if (thePlayer != null && thePlayer == (EntityLivingBase) (Object) this)
+		{
+			final JumpEvent jumpEvent = new JumpEvent(getJumpUpwardsMotion());
+			LiquidBounce.eventManager.callEvent(jumpEvent);
+			if (jumpEvent.isCancelled())
+				return;
 
-		motionY = jumpEvent.getMotion();
+			motionY = jumpEvent.getMotion();
+		}
+		else
+			motionY = getJumpUpwardsMotion();
 
 		if (isPotionActive(Potion.jump))
 			motionY += (getActivePotionEffect(Potion.jump).getAmplifier() + 1) * 0.1F;
@@ -129,15 +156,17 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 		// Sprint-jump with Speed module enabled will boost you too fast as get caught by anticheats.
 		final Speed speed = (Speed) LiquidBounce.moduleManager.get(Speed.class);
 
+		// Sprint-Jump Boost
 		if (isSprinting() && (!speed.getState() || speed.allowSprintBoost()))
 		{
 			// Sprint-Jump Boost
-			final float dir = MovementUtils.getDirection(thePlayer); // Compatibility with Sprint AllDirection mode
+			final float dir = MovementUtils.getDirection(rotationYaw, moveForward, moveStrafing); // Compatibility with Sprint AllDirection mode
 			motionX -= MathHelper.sin(dir) * 0.2F;
 			motionZ += MathHelper.cos(dir) * 0.2F;
 		}
 
 		isAirBorne = true;
+		ForgeHooks.onLivingJump((EntityLivingBase) (Object) this);
 	}
 
 	@Inject(method = "onLivingUpdate", at = @At("HEAD"))
@@ -160,6 +189,8 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 	@Inject(method = "getLook", at = @At("HEAD"), cancellable = true)
 	private void getLook(final CallbackInfoReturnable<? super Vec3> callbackInfoReturnable)
 	{
+		// MouseDelayFix
+
 		// noinspection ConstantConditions
 		if ((EntityLivingBase) (Object) this instanceof EntityPlayerSP)
 			callbackInfoReturnable.setReturnValue(getVectorForRotation(rotationPitch, rotationYaw));

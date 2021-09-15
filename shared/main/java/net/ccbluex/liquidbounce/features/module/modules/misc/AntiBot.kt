@@ -19,6 +19,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.misc.*
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.movement.*
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.name.*
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.position.AlwaysInRadiusCheck
+import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.position.FoVCheck
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.position.PositionCheck
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.position.SpawnedPositionCheck
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.rotation.InvalidPitchCheck
@@ -27,9 +28,10 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.rotation.Ya
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.status.*
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.status.equipment.EquipmentChangeFrequencyCheck
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.status.equipment.EquipmentEmptyCheck
-import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.status.HealthCheck
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.status.ping.PingUpdatePresenceCheck
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.status.ping.PingZeroCheck
+import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.swing.AlwaysSwingCheck
+import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.swing.SwingExistenceCheck
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.tab.DuplicateInTabAdditionCheck
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.tab.DuplicateInTabExistenceCheck
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.tab.TabCheck
@@ -125,10 +127,18 @@ object AntiBot : Module()
 	 */
 	val invalidGroundValue = BoolValue("InvalidGround", true)
 
+	private val wasMovedGroup = ValueGroup("WasMoved")
+	val wasMovedEnabledValue = BoolValue("Enabled", false)
+	val wasMovedThresholdDistanceValue = FloatValue("ThresholdDistance", 1f, 0f, 10f)
+
 	/**
 	 * Swing
 	 */
 	val swingValue = BoolValue("Swing", false)
+
+	private val alwaysSwingGroup = ValueGroup("AlwaysSwing")
+	val alwaysSwingEnabledValue = BoolValue("Enabled", false)
+	val alwaysSwingThresholdTimeValue = IntegerValue("Threshold", 1000, 500, 5000)
 
 	/**
 	 * Health
@@ -136,8 +146,14 @@ object AntiBot : Module()
 	val healthValue = BoolValue("Health", false)
 
 	private val rotationGroup = ValueGroup("Rotation")
-	val rotationYawValue = BoolValue("Yaw", false, "YawMovements")
-	val rotationPitchValue = BoolValue("Pitch", false, "PitchMovements")
+
+	private val rotationYawGroup = ValueGroup("Yaw")
+	val rotationYawEnabledValue = BoolValue("Enabled", false, "YawMovements")
+	val rotationYawThresholdValue = FloatValue("Threshold", 0f, 0f, 45f)
+
+	private val rotationPitchGroup = ValueGroup("Pitch")
+	val rotationPitchEnabledValue = BoolValue("Enabled", false, "PitchMovements")
+	val rotationPitchThresholdValue = FloatValue("Threshold", 0f, 0f, 45f)
 
 	/**
 	 * Invalid-Pitch (a.k.a. Derp)
@@ -241,6 +257,13 @@ object AntiBot : Module()
 	val teleportPacketVLLimitValue = IntegerValue("Threshold", 15, 1, 40, "TeleportPacket-VL-Threshold")
 	val teleportPacketVLDecValue = BoolValue("DecreaseIfNormal", true, "TeleportPacket-VL-DecreaseIfNormal")
 
+	private val noClipGroup = ValueGroup("NoClip")
+	val noClipEnabledValue = BoolValue("Enabled", false)
+
+	private val noClipVLGroup = ValueGroup("Violation")
+	val noClipVLLimitValue = IntegerValue("Threshold", 15, 1, 40, "TeleportPacket-VL-Threshold")
+	val noClipVLDecValue = BoolValue("DecreaseIfNormal", true, "TeleportPacket-VL-DecreaseIfNormal")
+
 	/**
 	 * Horizontal Speed
 	 */
@@ -339,6 +362,15 @@ object AntiBot : Module()
 	 */
 	val positionPingCorrectionOffsetValue = IntegerValue("PingCorrectionOffset", 1, -2, 5, "Position-PingCorrection-Offset")
 
+	private val fovGroup = ValueGroup("FoV")
+	val fovEnabledValue = BoolValue("Enabled", false)
+	val fovFoVValue = FloatValue("FoV", 120F, 0f, 170F)
+	val fovPingCorrectionOffsetValue = IntegerValue("PingCorrectionOffset", 1, -2, 5)
+
+	private val fovVLGroup = ValueGroup("Violation")
+	val fovVLLimitValue = IntegerValue("Limit", 10, 1, 100, "Position-DeltaConsistency-VL-Limit")
+	val fovVLDecValue = BoolValue("DecreaseIfNormal", false, "Position-DeltaConsistency-VL-DecreaseIfNormal")
+
 	/**
 	 * CustomNameTag presence
 	 */
@@ -349,9 +381,6 @@ object AntiBot : Module()
 	val customNameStripColorsValue = BoolValue("StripColorsInName", true, "CustomName-Equality-StripColorsInCustomName")
 	val customNameCompareToValue = ListValue("CompareTo", arrayOf("DisplayName", "GameProfileName"), "DisplayName", "CustomName-Equality-CompareTo")
 
-	/**
-	 * TODO: Check if the player is inside one or more solid blocks (정상적인 플레이어라면 (Phase를 사용하지 않는 한)블럭을 뚫고 움직일 수 없지만 Anti-cheat NPC(봇)은 그 자리에 블럭이 있건 없건 씹고 그냥 자유롭게 움직이는 경우가 매우 많다)
-	 */
 	// TODO: private val collisionValue = BoolValue("Collision", true)
 
 	/**
@@ -372,13 +401,13 @@ object AntiBot : Module()
 		YawMovementCheck(), PitchMovementCheck(), InvalidPitchCheck(),
 
 		// Position
-		AlwaysInRadiusCheck(), PositionCheck(), SpawnedPositionCheck(),
+		AlwaysInRadiusCheck(), PositionCheck(), SpawnedPositionCheck(), FoVCheck(),
 
 		// Name
 		DuplicateInWorldExistenceCheck(), DuplicateInWorldAdditionCheck(), CustomNameCheck(), InvalidNameCheck(), NPCCheck(), BedwarsNPCCheck(),
 
 		// Movement
-		HorizontalSpeedCheck(), VerticalSpeedCheck(), TeleportPacketCheck(),
+		HorizontalSpeedCheck(), VerticalSpeedCheck(), TeleportPacketCheck(), WasMovedCheck(), NoClipCheck(),
 
 		// Status
 		AirCheck(), GroundCheck(), InvalidGroundCheck(), EquipmentEmptyCheck(), EquipmentChangeFrequencyCheck(), WasInvisibleCheck(),
@@ -389,8 +418,11 @@ object AntiBot : Module()
 		// Ping
 		PingZeroCheck(), PingUpdatePresenceCheck(),
 
+		// Swing
+		SwingExistenceCheck(), AlwaysSwingCheck(),
+
 		// Misc.
-		ColorCheck(), NoColorCheck(), EntityIDCheck(), LivingTimeCheck(), SwingCheck(), NeedHitCheck()
+		ColorCheck(), NoColorCheck(), EntityIDCheck(), LivingTimeCheck(), NeedHitCheck()
 
 	)
 
@@ -403,8 +435,16 @@ object AntiBot : Module()
 
 		livingTimeGroup.addAll(livingTimeEnabledValue, livingTimeTicksValue)
 
+		wasMovedGroup.addAll(wasMovedEnabledValue, wasMovedThresholdDistanceValue)
+
+		alwaysSwingGroup.addAll(alwaysSwingEnabledValue, alwaysSwingThresholdTimeValue)
+
+		rotationPitchGroup.addAll(rotationPitchEnabledValue, rotationPitchThresholdValue)
+		rotationYawGroup.addAll(rotationYawEnabledValue, rotationYawThresholdValue)
+		rotationGroup.addAll(rotationYawGroup, rotationPitchGroup)
+
 		rotationInvalidPitchGroup.addAll(rotationInvalidPitchEnabledValue, rotationInvalidPitchKeepVLValue)
-		rotationGroup.addAll(rotationYawValue, rotationPitchValue, rotationInvalidPitchGroup)
+		rotationGroup.addAll(rotationYawEnabledValue, rotationPitchEnabledValue, rotationInvalidPitchGroup)
 
 		equipmentChangeFrequencyVLGroup.addAll(equipmentChangeFrequencyVLLimitValue, equipmentChangeFrequencyVLDecValue)
 		equipmentChangeFrequencyGroup.addAll(equipmentChangeFrequencyEnabledValue, equipmentChangeFrequencyOverallDelayValue, equipmentChangeFrequencyPerSlotDelayValue, equipmentChangeFrequencyVLGroup)
@@ -426,6 +466,9 @@ object AntiBot : Module()
 
 		teleportPacketVLGroup.addAll(teleportPacketVLEnabledValue, teleportPacketVLLimitValue, teleportPacketVLDecValue)
 		teleportPacketGroup.addAll(teleportPacketEnabledValue, teleportPacketThresholdDistanceValue, teleportPacketVLGroup)
+
+		noClipVLGroup.addAll(noClipVLLimitValue, noClipVLDecValue)
+		noClipGroup.addAll(noClipEnabledValue, noClipVLGroup)
 
 		hspeedVLGroup.addAll(hspeedVLEnabledValue, hspeedVLLimitValue, hspeedVLDecValue)
 		hspeedGroup.addAll(hspeedEnabledValue, hspeedLimitValue, hspeedVLGroup)
@@ -452,18 +495,36 @@ object AntiBot : Module()
 
 		positionGroup.addAll(positionEnabledValue, positionRemoveDetectedGroup, positionPosition1Group, positionPosition2Group, positionPosition3Group, positionPosition4Group, positionDeltaThresholdValue, positionSpawnedPositionGroup, positionDeltaVLGroup, positionDeltaConsistencyGroup, positionMarkGroup, positionPingCorrectionOffsetValue)
 
+		fovVLGroup.addAll(fovVLLimitValue, fovVLDecValue)
+		fovGroup.addAll(fovEnabledValue, fovFoVValue, fovVLGroup)
+
 		customNameGroup.addAll(customNameEnabledValue, customNameBlankValue, customNameModeValue, customNameStripColorsValue, customNameCompareToValue)
 	}
 
-	fun isBot(theWorld: IWorldClient, thePlayer: IEntity, target: IEntityLivingBase): Boolean
+	fun isBot(theWorld: IWorldClient, thePlayer: IEntityPlayer, target: IEntityLivingBase): Boolean
 	{
 		if (!state) return false
 
 		if (!classProvider.isEntityPlayer(target)) return false
 
 		val entity = target.asEntityPlayer()
-		return entity.name.isEmpty() || entity.name == thePlayer.name || checks.filter(BotCheck::isActive).any { it.isBot(theWorld, thePlayer, entity) }
+		return entity.name.isEmpty() || entity.name.equals(thePlayer.name, ignoreCase = true) || entity.gameProfile.name.equals(thePlayer.gameProfile.name, ignoreCase = true) || checks.filter(BotCheck::isActive).any { it.isBot(theWorld, thePlayer, entity) }
 	}
+
+	// TODO
+	// fun isBotReason(theWorld: IWorldClient, thePlayer: IEntityPlayer, target: IEntityLivingBase): String?
+	// {
+	// 	if (!state) return null
+	//
+	// 	if (!classProvider.isEntityPlayer(target)) return null
+	//
+	// 	val entity = target.asEntityPlayer()
+	//
+	// 	return if (entity.name.isEmpty()) "name.empty"
+	// 	else if (entity.name.equals(thePlayer.name, ignoreCase = true)) "name.equalsWithPlayer"
+	// 	else if (entity.gameProfile.name.equals(thePlayer.gameProfile.name, ignoreCase = true)) "name.profileName.equalsWithPlayer"
+	// 	else checks.filter(BotCheck::isActive).find { it.isBot(theWorld, thePlayer, entity) }?.modeName
+	// }
 
 	override fun onDisable()
 	{

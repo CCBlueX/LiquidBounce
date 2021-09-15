@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.ui.font.assumeNonVolatile
 import net.ccbluex.liquidbounce.ui.font.assumeVolatileIf
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
-import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_2
+import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_4
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.stripControlCodes
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
@@ -285,7 +285,7 @@ class LiquidBounceStyle : Style()
 
 				is FloatRangeValue ->
 				{
-					val text = "$valueDisplayName\u00A7f: \u00A7c${DECIMALFORMAT_2.format(value.getMin())}-${DECIMALFORMAT_2.format(value.getMax())}"
+					val text = "$valueDisplayName\u00A7f: \u00A7c${DECIMALFORMAT_4.format(value.getMin())}-${DECIMALFORMAT_4.format(value.getMax())}"
 					val textWidth = font.getStringWidth(text) + indent + 8f
 
 					if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
@@ -433,7 +433,7 @@ class LiquidBounceStyle : Style()
 
 				is FloatValue ->
 				{
-					val text = valueDisplayName + "\u00A7f: \u00A7c" + DECIMALFORMAT_2.format(value.get())
+					val text = valueDisplayName + "\u00A7f: \u00A7c" + DECIMALFORMAT_4.format(value.get())
 					val textWidth = valueFont.getStringWidth(text) + indent + 8f
 
 					if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
@@ -557,6 +557,6 @@ class LiquidBounceStyle : Style()
 	{
 		private fun encodeToHex(hex: Int) = hex.toString(16).toUpperCase().padStart(2, '0')
 
-		private fun round(f: Float): BigDecimal = BigDecimal("$f").setScale(2, RoundingMode.HALF_UP)
+		private fun round(f: Float): BigDecimal = BigDecimal("$f").setScale(4, RoundingMode.HALF_UP)
 	}
 }

@@ -26,17 +26,12 @@ class MiJump : SpeedMode("MiJump")
 
 			val multiplier = 1.8
 
-			thePlayer.motionX *= multiplier
-			thePlayer.motionZ *= multiplier
+			MovementUtils.multiply(thePlayer, multiplier)
 
 			val speed = MovementUtils.getSpeed(thePlayer)
 			val maxSpeed = 0.66
 
-			if (speed > maxSpeed)
-			{
-				thePlayer.motionX = thePlayer.motionX / speed * maxSpeed
-				thePlayer.motionZ = thePlayer.motionZ / speed * maxSpeed
-			}
+			if (speed > maxSpeed) MovementUtils.divide(thePlayer, speed * maxSpeed)
 		}
 
 		MovementUtils.strafe(thePlayer)

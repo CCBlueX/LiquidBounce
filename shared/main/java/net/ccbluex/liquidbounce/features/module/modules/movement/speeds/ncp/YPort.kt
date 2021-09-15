@@ -59,11 +59,9 @@ class YPort : SpeedMode("YPort")
 		if (timerDelay != 0) timer.timerSpeed = 1f
 		else if (MovementUtils.hasMotion(thePlayer))
 		{
-			val d = 1.0199999809265137
-
 			timer.timerSpeed = 1.3f
-			thePlayer.motionX *= d
-			thePlayer.motionZ *= d
+
+			MovementUtils.multiply(thePlayer, 1.0199999809265137)
 		}
 
 		if (thePlayer.onGround && MovementUtils.hasMotion(thePlayer)) step = 2

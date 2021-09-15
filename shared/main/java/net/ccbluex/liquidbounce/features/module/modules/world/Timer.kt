@@ -24,8 +24,6 @@ class Timer : Module()
 
 	override fun onDisable()
 	{
-		if (mc.thePlayer == null) return
-
 		mc.timer.timerSpeed = 1F
 	}
 

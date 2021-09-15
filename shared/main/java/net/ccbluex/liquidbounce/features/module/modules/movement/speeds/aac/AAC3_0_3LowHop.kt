@@ -30,11 +30,7 @@ class AAC3_0_3LowHop : SpeedMode("AAC3.0.3-LowHop") // Was AACBHop
 
 			if (thePlayer.onGround)
 			{
-				val func = functions
-
-				val dir = MovementUtils.getDirection(thePlayer)
-				thePlayer.motionX -= func.sin(dir) * 0.2f
-				thePlayer.motionZ += func.cos(dir) * 0.2f
+				MovementUtils.boost(thePlayer, 0.2f)
 
 				thePlayer.motionY = 0.399
 				LiquidBounce.eventManager.callEvent(JumpEvent(0.399f))
@@ -43,8 +39,7 @@ class AAC3_0_3LowHop : SpeedMode("AAC3.0.3-LowHop") // Was AACBHop
 			}
 			else
 			{
-				thePlayer.motionX *= 1.008
-				thePlayer.motionZ *= 1.008
+				MovementUtils.multiply(thePlayer, 1.008)
 
 				thePlayer.motionY *= 0.97
 			}

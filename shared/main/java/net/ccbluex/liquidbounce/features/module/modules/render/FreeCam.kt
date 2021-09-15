@@ -5,13 +5,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityOtherPlayerMP
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.utils.FakePlayer
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -23,7 +23,7 @@ class FreeCam : Module()
 	private val flyValue = BoolValue("Fly", true)
 	private val noClipValue = BoolValue("NoClip", true)
 
-	private var fakePlayer: IEntityOtherPlayerMP? = null
+	private var fakePlayer: FakePlayer? = null
 
 	private var oldX = 0.0
 	private var oldY = 0.0
@@ -44,31 +44,18 @@ class FreeCam : Module()
 		oldPitch = thePlayer.rotationPitch
 		oldGround = thePlayer.onGround
 
-		val playerMP = classProvider.createEntityOtherPlayerMP(theWorld, thePlayer.gameProfile)
-
-		playerMP.rotationYawHead = thePlayer.rotationYawHead
-		playerMP.renderYawOffset = thePlayer.renderYawOffset
-		playerMP.rotationYawHead = thePlayer.rotationYawHead
-		playerMP.copyLocationAndAnglesFrom(thePlayer)
-
-		theWorld.addEntityToWorld(-1337, playerMP)
+		fakePlayer = FakePlayer(theWorld, thePlayer, -13370)
 
 		if (noClipValue.get()) thePlayer.noClip = true
-
-		fakePlayer = playerMP
 	}
 
 	override fun onDisable()
 	{
-		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		val fakePlayer = fakePlayer ?: return
+		fakePlayer?.destroy()
 
 		thePlayer.setPositionAndRotation(oldX, oldY, oldZ, oldYaw, oldPitch)
-
-		theWorld.removeEntityFromWorld(fakePlayer.entityId)
-		this.fakePlayer = null
 
 		MovementUtils.zeroXYZ(thePlayer)
 	}
@@ -103,7 +90,7 @@ class FreeCam : Module()
 
 		val provider = classProvider
 
-		if (provider.isCPacketPlayer(packet)) // To bypass FreeCam checks, we need to keep send normal packets.
+		if (provider.isCPacketPlayer(packet)) // To bypass FreeCam checks, we need to keep sending normal packets.
 		{
 			val movePacket = packet.asCPacketPlayer()
 

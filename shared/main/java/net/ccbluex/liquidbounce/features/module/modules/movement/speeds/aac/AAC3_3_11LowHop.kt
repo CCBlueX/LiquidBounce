@@ -14,7 +14,8 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 
 class AAC3_3_11LowHop : SpeedMode("AAC3.3.11-LowHop") // Was AAC6BHop
 {
-	private var firstLegitJump = false
+	private var isFirst = false
+
 	override fun onUpdate()
 	{
 		val thePlayer = mc.thePlayer ?: return
@@ -28,9 +29,8 @@ class AAC3_3_11LowHop : SpeedMode("AAC3.3.11-LowHop") // Was AAC6BHop
 		{
 			if (thePlayer.onGround)
 			{
-				if (firstLegitJump)
+				if (isFirst)
 				{
-
 					MovementUtils.strafe(thePlayer, 0.15f)
 
 					thePlayer.onGround = false
@@ -38,8 +38,7 @@ class AAC3_3_11LowHop : SpeedMode("AAC3.3.11-LowHop") // Was AAC6BHop
 					thePlayer.motionY = 0.4
 					LiquidBounce.eventManager.callEvent(JumpEvent(0.4f))
 
-					firstLegitJump = false
-
+					isFirst = false
 					return
 				}
 
@@ -55,7 +54,7 @@ class AAC3_3_11LowHop : SpeedMode("AAC3.3.11-LowHop") // Was AAC6BHop
 		}
 		else
 		{
-			firstLegitJump = true
+			isFirst = true
 
 			MovementUtils.zeroXZ(thePlayer)
 		}
@@ -71,7 +70,7 @@ class AAC3_3_11LowHop : SpeedMode("AAC3.3.11-LowHop") // Was AAC6BHop
 
 	override fun onEnable()
 	{
-		firstLegitJump = true
+		isFirst = true
 	}
 
 	override fun onDisable()

@@ -8,10 +8,14 @@ package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.LiquidBounce.wrapper
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.misc.NameProtect
 import net.ccbluex.liquidbounce.features.module.modules.misc.Spammer
 import net.ccbluex.liquidbounce.file.FileManager
+import net.ccbluex.liquidbounce.utils.extensions.withDoubleQuotes
+import net.ccbluex.liquidbounce.utils.extensions.withParentheses
+import net.ccbluex.liquidbounce.utils.extensions.withPrefix
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.translateAlternateColorCodes
@@ -25,6 +29,7 @@ import org.lwjgl.input.Keyboard
  */
 object SettingsUtils
 {
+	private fun chat(thePlayer: IEntityPlayerSP?, colorCodes: String, message: String) = ClientUtils.displayChatMessage(thePlayer, message.withPrefix("AutoSettings", textColorCodes = colorCodes))
 
 	/**
 	 * Execute settings [script]
@@ -38,13 +43,13 @@ object SettingsUtils
 
 			if (args.size <= 1)
 			{
-				ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7cSyntax error at line '$index' in setting script.\n\u00A78\u00A7lLine: \u00A77$s")
+				chat(thePlayer, "\u00A7c", "Syntax error at \u00A7nline $index\u00A7c in setting script. ${s.withDoubleQuotes("\u00A77", "\u00A78").withParentheses("\u00A78", "\u00A78")}")
 				return@forEachIndexed
 			}
 
 			when (args[0].toLowerCase())
 			{
-				"chat" -> ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7e${translateAlternateColorCodes(StringUtils.toCompleteString(args, 1))}")
+				"chat" -> chat(thePlayer, "\u00A7e", translateAlternateColorCodes(StringUtils.toCompleteString(args, 1)))
 				"unchat" -> ClientUtils.displayChatMessage(thePlayer, translateAlternateColorCodes(StringUtils.toCompleteString(args, 1)))
 
 				"load" ->
@@ -55,57 +60,57 @@ object SettingsUtils
 
 					try
 					{
-						ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A77Loading settings from \u00A7a\u00A7l$url\u00A77...")
+						chat(thePlayer, "\u00A77", "Loading settings from ${url.withDoubleQuotes("\u00A7b\u00A7l", "\u00A78")}\u00A77...")
 						executeScript(get(url))
-						ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A77Loaded settings from \u00A7a\u00A7l$url\u00A77.")
+						chat(thePlayer, "\u00A7a", "Successfully loaded settings from ${url.withDoubleQuotes("\u00A7b\u00A7l", "\u00A78")}\u00A7a...")
 					}
 					catch (e: Exception)
 					{
-						ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A77Failed to load settings from \u00A7a\u00A7l$url\u00A77.")
+						chat(thePlayer, "\u00A7c", "Failed to load settings from ${url.withDoubleQuotes("\u00A7b\u00A7l", "\u00A78")}\u00A7c. ($e)")
 					}
 				}
 
 				"targetplayer", "targetplayers" ->
 				{
 					EntityUtils.targetPlayer = args[1].equals("true", ignoreCase = true)
-					ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${args[0]}\u00A77 set to \u00A7c\u00A7l${EntityUtils.targetPlayer}\u00A77.")
+					chat(thePlayer, "\u00A7a", "\u00A7l${args[0]}\u00A77 set to ${if (EntityUtils.targetPlayer) "\u00A7a" else "\u00A7c"}\u00A7l${EntityUtils.targetPlayer}\u00A77.")
 				}
 
 				"targetmobs" ->
 				{
 					EntityUtils.targetMobs = args[1].equals("true", ignoreCase = true)
-					ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${args[0]}\u00A77 set to \u00A7c\u00A7l${EntityUtils.targetMobs}\u00A77.")
+					chat(thePlayer, "\u00A7a", "\u00A7l${args[0]}\u00A77 set to ${if (EntityUtils.targetMobs) "\u00A7a" else "\u00A7c"}\u00A7l${EntityUtils.targetMobs}\u00A77.")
 				}
 
 				"targetanimals" ->
 				{
 					EntityUtils.targetAnimals = args[1].equals("true", ignoreCase = true)
-					ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${args[0]}\u00A77 set to \u00A7c\u00A7l${EntityUtils.targetAnimals}\u00A77.")
+					chat(thePlayer, "\u00A7a", "\u00A7l${args[0]}\u00A77 set to ${if (EntityUtils.targetAnimals) "\u00A7a" else "\u00A7c"}\u00A7l${EntityUtils.targetAnimals}\u00A77.")
 				}
 
 				"targetinvisible" ->
 				{
 					EntityUtils.targetInvisible = args[1].equals("true", ignoreCase = true)
-					ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${args[0]}\u00A77 set to \u00A7c\u00A7l${EntityUtils.targetInvisible}\u00A77.")
+					chat(thePlayer, "\u00A7a", "\u00A7l${args[0]}\u00A77 set to ${if (EntityUtils.targetInvisible) "\u00A7a" else "\u00A7c"}\u00A7l${EntityUtils.targetInvisible}\u00A77.")
 				}
 
 				"targetarmorstand" ->
 				{
 					EntityUtils.targetArmorStand = args[1].equals("true", ignoreCase = true)
-					ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${args[0]}\u00A77 set to \u00A7c\u00A7l${EntityUtils.targetArmorStand}\u00A77.")
+					chat(thePlayer, "\u00A7a", "\u00A7l${args[0]}\u00A77 set to ${if (EntityUtils.targetArmorStand) "\u00A7a" else "\u00A7c"}\u00A7l${EntityUtils.targetArmorStand}\u00A77.")
 				}
 
 				"targetdead" ->
 				{
 					EntityUtils.targetDead = args[1].equals("true", ignoreCase = true)
-					ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${args[0]}\u00A77 set to \u00A7c\u00A7l${EntityUtils.targetDead}\u00A77.")
+					chat(thePlayer, "\u00A7a", "\u00A7l${args[0]}\u00A77 set to ${if (EntityUtils.targetDead) "\u00A7a" else "\u00A7c"}\u00A7l${EntityUtils.targetDead}\u00A77.")
 				}
 
 				else ->
 				{
 					if (args.size != 3)
 					{
-						ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7cSyntax error at line '$index' in setting script.\n\u00A78\u00A7lLine: \u00A77$s")
+						chat(thePlayer, "\u00A7c", "Syntax error at line '$index' in setting script. ${s.withDoubleQuotes("\u00A77", "\u00A78").withParentheses("\u00A78", "\u00A78")}")
 						return@forEachIndexed
 					}
 
@@ -116,14 +121,16 @@ object SettingsUtils
 
 					if (module == null)
 					{
-						ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7cModule \u00A7a\u00A7l$moduleName\u00A7c was not found!")
+						chat(thePlayer, "\u00A7c", "Module ${moduleName.withDoubleQuotes("\u00A7a\u00A7l", "\u00A78")}\u00A7c was not found!")
 						return@forEachIndexed
 					}
+
+					val actualModuleName = module.name
 
 					if (valueName.equals("toggle", ignoreCase = true))
 					{
 						module.state = value.equals("true", ignoreCase = true)
-						ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${module.name} \u00A77was toggled \u00A7c\u00A7l${if (module.state) "on" else "off"}\u00A77.")
+						chat(thePlayer, "\u00A7a", "Module ${actualModuleName.withDoubleQuotes("\u00A7a\u00A7l", "\u00A78")}\u00A7a was toggled ${if (module.state) "\u00A7aON" else "\u00A7cOFF"}\u00A77.")
 						return@forEachIndexed
 					}
 
@@ -131,14 +138,14 @@ object SettingsUtils
 					{
 						val binds = value.split(';')
 						module.keyBinds = binds.mapTo(HashSet()) { Keyboard.getKeyIndex(it) }
-						ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${module.name} \u00A77was bound to \u00A7c\u00A7l${binds.joinToString()}\u00A77.")
+						chat(thePlayer, "\u00A7a", "Module ${actualModuleName.withDoubleQuotes("\u00A7a\u00A7l", "\u00A78")}\u00A7a was bound to\u00A7c\u00A7l${binds.joinToString()}\u00A77.")
 						return@forEachIndexed
 					}
 
 					val moduleValue = module.getValue(valueName)
 					if (moduleValue == null)
 					{
-						ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7cValue \u00A7a\u00A7l$valueName\u00A7c don't found in module \u00A7a\u00A7l$moduleName\u00A7c.")
+						chat(thePlayer, "\u00A7c", "Value named ${valueName.withDoubleQuotes("\u00A7a\u00A7l", "\u00A78")}\u00A7 not found in module  ${actualModuleName.withDoubleQuotes("\u00A7a\u00A7l", "\u00A78")}\u00A77.")
 						return@forEachIndexed
 					}
 
@@ -169,11 +176,11 @@ object SettingsUtils
 							is ListValue -> moduleValue.changeValue(value)
 						}
 
-						ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${module.name}\u00A77 value \u00A78\u00A7l${moduleValue.name}\u00A77 set to \u00A7c\u00A7l$value\u00A77.")
+						chat(thePlayer, "\u00A7a", "${actualModuleName.withDoubleQuotes("\u00A7a\u00A7l", "\u00A78")}\u00A77 value ${actualModuleName.withDoubleQuotes("\u00A7a\u00A7l", "\u00A78")}\u00A77 set to \u00A7b\u00A7l$value\u00A77.")
 					}
 					catch (e: Exception)
 					{
-						ClientUtils.displayChatMessage(thePlayer, "\u00A77[\u00A73\u00A7lAutoSettings\u00A77] \u00A7a\u00A7l${e.javaClass.name}\u00A77(${e.message}) \u00A7cAn Exception occurred while setting \u00A7a\u00A7l$value\u00A7c to \u00A7a\u00A7l${moduleValue.name}\u00A7c in \u00A7a\u00A7l${module.name}\u00A7c.")
+						chat(thePlayer, "\u00A74", "An Exception occurred while setting \u00A7b\u00A7l$value\u00A74 to ${actualModuleName.withDoubleQuotes("\u00A7a\u00A7l", "\u00A78")}\u00A74 in ${actualModuleName.withDoubleQuotes("\u00A7a\u00A7l", "\u00A78")}\u00A74. ${"$e".withParentheses("\u00A74\u00A7l", "\u00A78")}")
 					}
 				}
 			}

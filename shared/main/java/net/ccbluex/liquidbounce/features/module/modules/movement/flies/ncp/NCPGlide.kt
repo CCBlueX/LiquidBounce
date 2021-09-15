@@ -17,8 +17,7 @@ class NCPGlide : FlyMode("NCP")
 
 		if (!thePlayer.onGround) return
 
-		thePlayer.motionX *= 0.1
-		thePlayer.motionZ *= 0.1
+		MovementUtils.multiply(thePlayer, 0.1)
 
 		thePlayer.swingItem()
 	}

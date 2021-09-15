@@ -18,7 +18,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 class SlimeJump : Module()
 {
 	private val modeValue = ListValue("Mode", arrayOf("Set", "Add"), "Add")
-	private val motionValue = FloatValue("Motion", 0.42f, 0.2f, 1f)
+	private val motionValue = FloatValue("Motion", 0.42f, 0.2f, 5f)
 
 	@EventTarget
 	fun onJump(event: JumpEvent)

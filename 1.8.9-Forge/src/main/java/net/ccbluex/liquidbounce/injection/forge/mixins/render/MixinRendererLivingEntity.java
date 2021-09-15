@@ -293,7 +293,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 		final TrueSight trueSight = (TrueSight) LiquidBounce.moduleManager.get(TrueSight.class);
 
 		final boolean trueSightEntities = trueSight.getState() && trueSight.getEntitiesValue().get();
-		final boolean semiVisible = !visible && (!entitylivingbaseIn.isInvisibleToPlayer(Minecraft.getMinecraft().thePlayer) || trueSightEntities) || entitylivingbaseIn.getEntityId() == -1337 /* Blink FakePlayer */;
+		final boolean semiVisible = !visible && (!entitylivingbaseIn.isInvisibleToPlayer(Minecraft.getMinecraft().thePlayer) || trueSightEntities) || entitylivingbaseIn.getEntityId() < 0;
 
 		if (visible || semiVisible)
 		{

@@ -40,25 +40,28 @@ interface IEntity
 
 	@get:JvmName("isBurning")
 	val burning: Boolean
-	var fallDistance: Float
 	val isInWater: Boolean
 	var isInWeb: Boolean
 	val isInLava: Boolean
 	val isEating: Boolean
 	val isSilent: Boolean
+
+	var fallDistance: Float
 	val width: Float
 	val height: Float
-	var onGround: Boolean
-	val ridingEntity: IEntity?
+	val eyeHeight: Float
 	val collisionBorderSize: Float
-	var motionX: Double
-	var motionY: Double
-	var motionZ: Double
+	var entityBoundingBox: IAxisAlignedBB
+
+	val ridingEntity: IEntity?
 
 	val air: Int
 
-	val eyeHeight: Float
-	var entityBoundingBox: IAxisAlignedBB
+	var motionX: Double
+	var motionY: Double
+	var motionZ: Double
+	var onGround: Boolean
+
 	var posX: Double
 	var posY: Double
 	var posZ: Double
@@ -77,13 +80,14 @@ interface IEntity
 
 	var rotationYaw: Float
 	var rotationPitch: Float
+
+	var prevRotationYaw: Float
+	var prevRotationPitch: Float
+
 	val entityId: Int
 	val displayName: IIChatComponent
 	val uniqueID: UUID
 	val name: String
-
-	var prevRotationYaw: Float
-	var prevRotationPitch: Float
 
 	val ticksExisted: Int
 
@@ -96,6 +100,7 @@ interface IEntity
 	fun getPositionEyes(partialTicks: Float): WVec3
 
 	fun canBeCollidedWith(): Boolean
+	fun setCanBeCollidedWith(value: Boolean)
 	fun canRiderInteract(): Boolean
 	fun moveEntity(x: Double, y: Double, z: Double)
 	fun getDistanceToEntity(it: IEntity): Float

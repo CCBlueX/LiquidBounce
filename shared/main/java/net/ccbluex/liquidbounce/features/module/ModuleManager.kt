@@ -202,7 +202,8 @@ class ModuleManager : Listenable
 			Disabler::class.java, //
 			DamageParticle::class.java, //
 			AntiVanish::class.java, //
-			LightningDetector::class.java
+			LightningDetector::class.java, //
+			AutoEnchant::class.java
 
 		)
 

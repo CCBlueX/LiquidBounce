@@ -20,7 +20,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.*
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 
-@ModuleInfo(name = "Rotations", description = "Allows you to see server-sided head and body rotations.", category = ModuleCategory.RENDER)
+@ModuleInfo(name = "Rotations", description = "Allows you to see server-sided rotations.", category = ModuleCategory.RENDER)
 class Rotations : Module()
 {
 	val bodyValue = BoolValue("Body", true)
@@ -38,7 +38,7 @@ class Rotations : Module()
 		if (bodyValue.get() || !isRotating(thePlayer)) return
 
 		// Head Rotations
-		thePlayer.rotationYawHead = if (interpolateRotationsValue.get()) interpolateRotation(RotationUtils.lastServerRotation.yaw, RotationUtils.serverRotation.yaw, event.partialTicks) else RotationUtils.serverRotation.yaw
+		thePlayer.rotationYawHead = interpolateIf(interpolateRotationsValue.get(), RotationUtils.lastServerRotation.yaw, RotationUtils.serverRotation.yaw, event.partialTicks)
 	}
 
 	private fun getState(module: Class<*>) = LiquidBounce.moduleManager[module].state
@@ -56,30 +56,21 @@ class Rotations : Module()
 		val chestAura = moduleManager[ChestAura::class.java] as ChestAura
 		val fly = moduleManager[Fly::class.java] as Fly
 
-		val scaffoldState = getState(Scaffold::class.java)
-		val towerState = getState(Tower::class.java)
-		val killauraState = getState(KillAura::class.java)
-		val derpState = getState(Derp::class.java)
-		val bowAimbotState = bowAimbot.state && bowAimbot.hasTarget(thePlayer)
-		val fuckerState = fucker.state && fucker.currentPos != null
-		val civBreakState = civBreak.state && civBreak.blockPos != null
-		val nukerState = nuker.state && nuker.currentBlock != null
-		val chestAuraState = chestAura.state && chestAura.currentBlock != null
-		val flyState = fly.state && fly.modeValue.get().equals("FreeHypixel", ignoreCase = true)
-
-		return scaffoldState || towerState || killauraState || derpState || bowAimbotState || fuckerState || civBreakState || nukerState || chestAuraState || flyState
+		return getState(Scaffold::class.java) || getState(Tower::class.java) || getState(KillAura::class.java) || getState(Derp::class.java) || bowAimbot.state && bowAimbot.hasTarget(thePlayer) || fucker.state && fucker.currentPos != null || civBreak.state && civBreak.blockPos != null || nuker.state && nuker.currentBlock != null || chestAura.state && chestAura.currentBlock != null || fly.state && fly.modeValue.get().equals("FreeHypixel", ignoreCase = true)
 	}
 
 	companion object
 	{
-		fun interpolateRotation(prev: Float, current: Float, partialTicks: Float): Float
+		fun interpolateIf(enabled: Boolean, previous: Float, current: Float, partialTicks: Float): Float
 		{
-			var delta = current - prev
+			if (!enabled) return current
+
+			var delta = current - previous
 
 			while (delta < -180.0f) delta += 360.0f
 			while (delta >= 180.0f) delta -= 360.0f
 
-			return prev + delta * partialTicks
+			return previous + delta * partialTicks
 		}
 	}
 

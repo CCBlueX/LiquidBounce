@@ -51,7 +51,7 @@ object EntityUtils : MinecraftInstance()
 		val theWorld = mc.theWorld ?: return false
 		val thePlayer = mc.thePlayer ?: return false
 
-		if (entity != null && provider.isEntityLivingBase(entity) && (targetDead || entity.entityAlive) && entity != mc.thePlayer && entity.entityId != -1337)
+		if (entity != null && provider.isEntityLivingBase(entity) && (targetDead || entity.entityAlive) && entity != mc.thePlayer && entity.entityId >= 0)
 		{
 			if (targetInvisible || !entity.invisible)
 			{

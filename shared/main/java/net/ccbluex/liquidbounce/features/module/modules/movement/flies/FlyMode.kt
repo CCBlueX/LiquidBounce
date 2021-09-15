@@ -137,14 +137,7 @@ abstract class FlyMode(val modeName: String) : MinecraftInstance()
 			thePlayer.setPosition(thePlayer.posX, thePlayer.posY + jumpY, thePlayer.posZ)
 
 			// Jump Boost
-			if (thePlayer.sprinting)
-			{
-				val func = functions
-
-				val dir = MovementUtils.getDirection(thePlayer)
-				thePlayer.motionX -= func.sin(dir) * 0.2f
-				thePlayer.motionZ += func.cos(dir) * 0.2f
-			}
+			if (thePlayer.sprinting) MovementUtils.boost(thePlayer, 0.2f)
 			thePlayer.isAirBorne = true
 
 			// ForgeHooks.onLivingJump(thePlayer)

@@ -24,17 +24,9 @@ class ACRBHop : SpeedMode("ACR-BHop")
 		{
 			thePlayer.jumpMovementFactor = 0.1F
 
-			thePlayer.motionX /= 1.1
-			thePlayer.motionZ /= 1.1
+			MovementUtils.divide(thePlayer, 1.1)
 
-			if (thePlayer.onGround)
-			{
-
-				//				val f = direction
-				//				thePlayer.motionX -= (functions.sin(f) * 0.2f).toDouble()
-				//				thePlayer.motionZ += (functions.cos(f) * 0.2f).toDouble()
-				jump(thePlayer)
-			}
+			if (thePlayer.onGround) jump(thePlayer)
 
 			MovementUtils.strafe(thePlayer)
 		}

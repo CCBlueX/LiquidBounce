@@ -66,10 +66,7 @@ class SNCPBHop : SpeedMode("SNCPBHop")
 		{
 			timer.timerSpeed = 1.3f
 
-			val d = 1.0199999809265137
-
-			thePlayer.motionX *= d
-			thePlayer.motionZ *= d
+			MovementUtils.multiply(thePlayer, 1.0199999809265137)
 		}
 
 		if (thePlayer.onGround && move) step = 2

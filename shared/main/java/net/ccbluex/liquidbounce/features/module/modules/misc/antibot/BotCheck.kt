@@ -18,7 +18,7 @@ import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.extensions.getPing
 import kotlin.math.ceil
 
-abstract class BotCheck(private val modeName: String) : MinecraftInstance()
+abstract class BotCheck(val modeName: String) : MinecraftInstance()
 {
 	abstract val isActive: Boolean
 

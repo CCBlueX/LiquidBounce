@@ -51,6 +51,8 @@ class NoWeb : Module()
 
 			"aac3.3.6-webwalk" ->
 			{
+				// Usage: https://youtu.be/AhUljvLhFSA?t=43
+
 				thePlayer.jumpMovementFactor = if (thePlayer.movementInput.moveStrafe != 0f) 1.0f else 1.21f
 
 				if (!gameSettings.keyBindSneak.isKeyDown) thePlayer.motionY = 0.0

@@ -7,22 +7,28 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp
 
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
+import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
 
 class NCPBHop : SpeedMode("NCPBHop")
 {
+	private var shouldLegitJump = false
+	private var jumps = 0
+
 	override fun onEnable()
 	{
+		shouldLegitJump = true
+
+		jumps = 0
+
 		mc.timer.timerSpeed = 1.0865f
-		super.onEnable()
 	}
 
 	override fun onDisable()
 	{
 		(mc.thePlayer ?: return).speedInAir = 0.02f
 		mc.timer.timerSpeed = 1f
-		super.onDisable()
 	}
 
 	override fun onMotion(eventState: EventState)
@@ -41,12 +47,28 @@ class NCPBHop : SpeedMode("NCPBHop")
 			{
 				jump(thePlayer)
 
-				thePlayer.speedInAir = 0.0223f
+				jumps++
+				if (shouldLegitJump) shouldLegitJump = false
+				else
+				{
+					val boostTicks = Speed.ncphopBoostTicks.get().coerceAtLeast(1)
+					if (jumps < boostTicks) thePlayer.speedInAir = 0.0223f else thePlayer.speedInAir = 0.02f
+
+					jumps++
+
+					if (jumps >= boostTicks + Speed.ncphopNoBoostTicks.get()) jumps = 0
+				}
 			}
 
 			MovementUtils.strafe(thePlayer)
 		}
-		else MovementUtils.zeroXZ(thePlayer)
+		else
+		{
+			shouldLegitJump = true
+			jumps = 0
+
+			MovementUtils.zeroXZ(thePlayer)
+		}
 	}
 
 	override fun onMove(event: MoveEvent)

@@ -59,8 +59,7 @@ class FastStairs : Module()
 				else -> 1.0
 			}
 
-			thePlayer.motionX *= motion
-			thePlayer.motionZ *= motion
+			MovementUtils.multiply(thePlayer, motion)
 		}
 
 		if (provider.isBlockStairs(getBlock(theWorld, blockPos.down())))
@@ -85,8 +84,7 @@ class FastStairs : Module()
 				else -> 1.3
 			}
 
-			thePlayer.motionX *= motion
-			thePlayer.motionZ *= motion
+			MovementUtils.multiply(thePlayer, motion)
 			canJump = true
 		}
 		else if (mode.startsWith("aac", ignoreCase = true) && canJump)
@@ -94,8 +92,7 @@ class FastStairs : Module()
 			if (longJumpValue.get())
 			{
 				thePlayer.jump()
-				thePlayer.motionX *= 1.35
-				thePlayer.motionZ *= 1.35
+				MovementUtils.multiply(thePlayer, 1.35)
 			}
 
 			canJump = false

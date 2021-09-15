@@ -29,7 +29,7 @@ class AAC1_9_10BHop : SpeedMode("AAC1.9.10-BHop") // Was OldAACBHop
 				MovementUtils.strafe(thePlayer, 0.56f)
 
 				thePlayer.motionY = 0.41999998688697815
-				LiquidBounce.eventManager.callEvent(JumpEvent(0.42F))
+				LiquidBounce.eventManager.callEvent(JumpEvent(thePlayer.motionY.toFloat()))
 			}
 			else MovementUtils.strafe(thePlayer, MovementUtils.getSpeed(thePlayer) * if (thePlayer.fallDistance > 0.4f) 1.0f else 1.01f)
 		}

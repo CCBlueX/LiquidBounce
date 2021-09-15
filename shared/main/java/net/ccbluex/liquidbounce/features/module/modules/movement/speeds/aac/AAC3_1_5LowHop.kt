@@ -14,11 +14,11 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 
 class AAC3_1_5LowHop : SpeedMode("AAC3.1.5-LowHop") // Was AACLowHop
 {
-	private var firstLegitJump = false
+	private var shouldLegitJump = true
+
 	override fun onEnable()
 	{
-		firstLegitJump = true
-		super.onEnable()
+		shouldLegitJump = true
 	}
 
 	override fun onMotion(eventState: EventState)
@@ -33,12 +33,10 @@ class AAC3_1_5LowHop : SpeedMode("AAC3.1.5-LowHop") // Was AACLowHop
 		{
 			if (thePlayer.onGround)
 			{
-				if (firstLegitJump)
+				if (shouldLegitJump)
 				{
 					jump(thePlayer)
-
-					firstLegitJump = false
-
+					shouldLegitJump = false
 					return
 				}
 
@@ -50,7 +48,7 @@ class AAC3_1_5LowHop : SpeedMode("AAC3.1.5-LowHop") // Was AACLowHop
 		}
 		else
 		{
-			firstLegitJump = true
+			shouldLegitJump = true
 
 			MovementUtils.zeroXZ(thePlayer)
 		}

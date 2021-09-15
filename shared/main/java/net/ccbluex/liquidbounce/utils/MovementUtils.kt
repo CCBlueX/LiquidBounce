@@ -38,22 +38,18 @@ object MovementUtils : MinecraftInstance()
 	{
 		if (!isMoving(thePlayer)) return
 
-		val func = functions
-
 		val dir = WMathHelper.toRadians(directionDegrees)
-		thePlayer.motionX = (-func.sin(dir) * speed).toDouble()
-		thePlayer.motionZ = (func.cos(dir) * speed).toDouble()
+		thePlayer.motionX = (-functions.sin(dir) * speed).toDouble()
+		thePlayer.motionZ = (functions.cos(dir) * speed).toDouble()
 	}
 
 	@JvmStatic
 	@JvmOverloads
-	fun addMotion(thePlayer: IEntityPlayer, motion: Float = getSpeed(thePlayer), directionDegrees: Float = getDirectionDegrees(thePlayer))
+	fun boost(thePlayer: IEntityPlayer, motion: Float = getSpeed(thePlayer), directionDegrees: Float = getDirectionDegrees(thePlayer))
 	{
-		val func = functions
-
 		val dir = WMathHelper.toRadians(directionDegrees)
-		thePlayer.motionX -= func.sin(dir) * motion
-		thePlayer.motionZ += func.cos(dir) * motion
+		thePlayer.motionX -= functions.sin(dir) * motion
+		thePlayer.motionZ += functions.cos(dir) * motion
 	}
 
 	@JvmStatic
@@ -67,16 +63,38 @@ object MovementUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
+	fun multiply(entity: IEntity, multiplier: Float) = multiply(entity, multiplier.toDouble())
+
+	@JvmStatic
+	fun multiply(entity: IEntity, multiplier: Double)
+	{
+		entity.motionX *= multiplier
+		entity.motionZ *= multiplier
+	}
+
+	@JvmStatic
+	fun divide(entity: IEntity, divisor: Float) = divide(entity, divisor.toDouble())
+
+	@JvmStatic
+	fun divide(entity: IEntity, divisor: Double)
+	{
+		entity.motionX /= divisor
+		entity.motionZ /= divisor
+	}
+
+	@JvmStatic
 	fun getDirection(thePlayer: IEntityPlayer): Float = WMathHelper.toRadians(getDirectionDegrees(thePlayer))
 
 	@JvmStatic
-	fun getDirectionDegrees(thePlayer: IEntityPlayer): Float
+	fun getDirection(rotationYaw: Float, moveForward: Float, moveStrafing: Float): Float = WMathHelper.toRadians(getDirectionDegrees(rotationYaw, moveForward, moveStrafing))
+
+	@JvmStatic
+	fun getDirectionDegrees(thePlayer: IEntityPlayer): Float = getDirectionDegrees(thePlayer.rotationYaw, thePlayer.moveForward, thePlayer.moveStrafing)
+
+	@JvmStatic
+	fun getDirectionDegrees(rotationYaw: Float, moveForward: Float, moveStrafing: Float): Float
 	{
-		var yaw = thePlayer.rotationYaw % 360f
-
-		val moveForward = thePlayer.moveForward
-		val moveStrafing = thePlayer.moveStrafing
-
+		var yaw = rotationYaw % 360f
 		var forward = 1f
 
 		if (moveForward < 0f)

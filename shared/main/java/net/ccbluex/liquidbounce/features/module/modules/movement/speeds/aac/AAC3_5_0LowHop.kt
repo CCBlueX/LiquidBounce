@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 
 class AAC3_5_0LowHop : SpeedMode("AAC3.5.0-LowHop") // Was AACLowHop3
 {
-	private var firstJump = false
+	private var firstJump = true
 	private var waitForGround = false
 
 	override fun onEnable()
@@ -52,7 +52,7 @@ class AAC3_5_0LowHop : SpeedMode("AAC3.5.0-LowHop") // Was AACLowHop3
 					thePlayer.motionY -= 0.0149
 				}
 
-				if (!thePlayer.isCollidedHorizontally) MovementUtils.forward(thePlayer, if (firstJump) 0.0016 else 0.001799)
+				if (!thePlayer.isCollidedHorizontally) MovementUtils.forward(thePlayer, if (firstJump) 0.0016 else 0.001799, MovementUtils.getDirection(thePlayer))
 			}
 			else
 			{
@@ -60,7 +60,13 @@ class AAC3_5_0LowHop : SpeedMode("AAC3.5.0-LowHop") // Was AACLowHop3
 				waitForGround = true
 			}
 		}
-		else MovementUtils.zeroXZ(thePlayer)
+		else
+		{
+			firstJump = true
+			waitForGround = true
+
+			MovementUtils.zeroXZ(thePlayer)
+		}
 
 		MovementUtils.strafe(thePlayer)
 	}

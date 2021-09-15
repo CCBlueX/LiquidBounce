@@ -26,8 +26,7 @@ class AAC3_1_0YPort : SpeedMode("AAC3.1.0-YPort") // Was AACYPort
 		{
 			if (thePlayer.onGround)
 			{
-				thePlayer.motionX *= 1.5893
-				thePlayer.motionZ *= 1.5893
+				MovementUtils.multiply(thePlayer, 1.5893)
 
 				thePlayer.motionY = 0.3425
 				LiquidBounce.eventManager.callEvent(JumpEvent(0.3425f))

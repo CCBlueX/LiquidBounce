@@ -21,6 +21,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.EntityUtils
+import net.ccbluex.liquidbounce.utils.extensions.equalTo
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_1
@@ -47,6 +48,12 @@ class Target : Element()
 
 	private val textYOffsetValue = IntegerValue("TextYOffset", 35, 0, 50)
 	private val textScaleValue = FloatValue("TextScale", 0.5F, 0.5F, 0.75F)
+
+	private val debugPanelGroup = ValueGroup("DebugPanel")
+	private val debugPanelEnabledValue = BoolValue("Enabled", false)
+	private val debugPanelWidthValue = IntegerValue("Width", 50, 0, 150)
+	private val debugPanelTextFontValue = FontValue("TextFont", Fonts.minecraftFont)
+	private val debugPanelTextScaleValue = FloatValue("DebugTextScale", 0.75F, 0.5F, 1F)
 
 	private val playerOnlyValue = BoolValue("PlayerOnly", true)
 	private val barWidthSubtractorValue = IntegerValue("BarWidthSubtractor", 2, 0, 5)
@@ -100,6 +107,8 @@ class Target : Element()
 		backgroundColorGroup.addAll(backgroundColorModeValue, backgroundColorValue)
 		backgroundGroup.addAll(backgroundRainbowCeilValue, backgroundColorGroup)
 
+		debugPanelGroup.addAll(debugPanelEnabledValue, debugPanelWidthValue, debugPanelTextFontValue, debugPanelTextScaleValue)
+
 		borderColorGroup.addAll(borderColorModeValue, borderColorValue)
 		borderGroup.addAll(borderWidthValue, borderColorGroup)
 
@@ -125,6 +134,9 @@ class Target : Element()
 		val targetInfo = queryTarget()
 		var target = targetInfo?.first
 		val debug = targetInfo?.second
+
+		val drawDebug = debugPanelEnabledValue.get() && debug != null
+		val debugWidth = debugPanelWidthValue.get() + 150f
 
 		if (targetInfo == null && classProvider.isGuiHudDesigner(mc.currentScreen)) target = thePlayer
 
@@ -244,15 +256,21 @@ class Target : Element()
 				{
 					RainbowShader.begin(borderRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
 						RenderUtils.drawRect(-borderWidth, -borderWidth, width + borderWidth, height + borderWidth, borderColor)
+
+						if (drawDebug) RenderUtils.drawRect(width - borderWidth + 10f, -borderWidth, width + borderWidth + debugWidth, height + borderWidth, borderColor)
 					}
 				}
 
 				RainbowShader.begin(backgroundRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
 					RenderUtils.drawRect(0F, 0F, width, height, backgroundColor)
+
+					if (drawDebug) RenderUtils.drawRect(width + 10f, 0f, width + debugWidth, height, backgroundColor)
 				}
 
 				if (backgroundRainbowCeil) RainbowShader.begin(true, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
 					RenderUtils.drawRect(0F, -1F, width, 0F, 0)
+
+					if (drawDebug) RenderUtils.drawRect(width + 10f, -1f, width + debugWidth, 0f, 0)
 				}
 
 				val barWidthSubtractor = barWidthSubtractorValue.get().toFloat()
@@ -399,10 +417,22 @@ class Target : Element()
 				// Datawatcher-related
 				textFont.drawString("EntityID: ${target.entityId}$dataWatcherBuilder", scaledXPos, scaledYPos + 44, 0xffffff)
 
-				// debug data
-				if (debug != null) textFont.drawString(debug, scaledXPos, scaledYPos + 54, 0xffffff)
-
 				GL11.glScalef(reverseScale, reverseScale, reverseScale)
+
+				if (drawDebug)
+				{
+					val debugScale = debugPanelTextScaleValue.get()
+					val reverseDebugScale = 1.0F / debugScale
+
+					val debugFont = debugPanelTextFontValue.get()
+					val scaledDebugXPos = (width + borderWidth + 15f) * reverseDebugScale
+					val scaledDebugYPos = 5f * reverseDebugScale
+
+					// debug data
+					GL11.glScalef(debugScale, debugScale, debugScale)
+					debug?.forEachIndexed { i, str -> debugFont.drawString(str, scaledDebugXPos, scaledDebugYPos + (i + 1) * 10, 0xffffff) }
+					GL11.glScalef(reverseDebugScale, reverseDebugScale, reverseDebugScale)
+				}
 			}
 		}
 
@@ -412,7 +442,7 @@ class Target : Element()
 		return Border(0F - borderExpanded, 0F - borderExpanded, minWidth + borderExpanded, height + borderExpanded)
 	}
 
-	private fun queryTarget(): Pair<IEntityLivingBase?, String?>?
+	private fun queryTarget(): Pair<IEntityLivingBase?, Array<String>?>?
 	{
 		val moduleManager = LiquidBounce.moduleManager
 
@@ -427,10 +457,15 @@ class Target : Element()
 
 		return when
 		{
-			tpAura.state && tpAura.maxTargetsValue.get() == 1 && tpAura.currentTarget != null -> tpAura.currentTarget to "TpAura[${tpAura.debug}]"
-			killAuraTarget != null -> killAuraTarget to "KillAura[${killAura.updateTargetDebug}]"
-			aimbotTarget != null -> aimbotTarget to "Aimbot"
-			bowAimbotTarget != null -> bowAimbotTarget to "BowAimbot"
+			tpAura.state && tpAura.maxTargetsValue.get() == 1 && tpAura.currentTarget != null -> tpAura.currentTarget to arrayOf("type=TpAura${tpAura.debug?.let { ", $it" }}")
+			killAuraTarget != null -> killAuraTarget to run {
+				val list = mutableListOf("type" equalTo "KillAura")
+				killAura.updateTargetDebug?.asList()?.let(list::addAll)
+				killAura.updateRotationsDebug?.let(list::add)
+				list.toTypedArray()
+			}
+			aimbotTarget != null -> aimbotTarget to arrayOf("type=Aimbot")
+			bowAimbotTarget != null -> bowAimbotTarget to arrayOf("type=BowAimbot")
 			else -> null
 		}
 	}

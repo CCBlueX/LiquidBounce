@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 
 class AAC3_3_7FlagBHop : SpeedMode("AAC3.3.7-FlagBHop") // Was AAC4BHop
 {
-	private var firstLegitJump = false
+	private var shouldLegitJump = true
 
 	override fun onTick()
 	{
@@ -22,7 +22,7 @@ class AAC3_3_7FlagBHop : SpeedMode("AAC3.3.7-FlagBHop") // Was AAC4BHop
 
 		if (MovementUtils.isMoving(thePlayer))
 		{
-			if (firstLegitJump)
+			if (shouldLegitJump)
 			{
 				if (thePlayer.onGround)
 				{
@@ -30,7 +30,7 @@ class AAC3_3_7FlagBHop : SpeedMode("AAC3.3.7-FlagBHop") // Was AAC4BHop
 
 					thePlayer.onGround = false
 
-					firstLegitJump = false
+					shouldLegitJump = false
 				}
 				return
 			}
@@ -49,7 +49,7 @@ class AAC3_3_7FlagBHop : SpeedMode("AAC3.3.7-FlagBHop") // Was AAC4BHop
 		}
 		else
 		{
-			firstLegitJump = true
+			shouldLegitJump = true
 
 			MovementUtils.zeroXZ(thePlayer)
 		}
@@ -69,7 +69,7 @@ class AAC3_3_7FlagBHop : SpeedMode("AAC3.3.7-FlagBHop") // Was AAC4BHop
 
 	override fun onEnable()
 	{
-		firstLegitJump = true
+		shouldLegitJump = true
 	}
 
 	override fun onDisable()

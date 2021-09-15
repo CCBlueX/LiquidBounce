@@ -25,8 +25,7 @@ class ACP : SpeedMode("ACP")
 		{
 			val amplifier = MovementUtils.getSpeedEffectAmplifier(thePlayer)
 
-			thePlayer.motionX *= 0.8
-			thePlayer.motionZ *= 0.8
+			MovementUtils.multiply(thePlayer, 0.8)
 
 			val moveSpeed = if (thePlayer.onGround) when (amplifier)
 			{

@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.event.TextEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.utils.extensions.withClientPrefix
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.translateAlternateColorCodes
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -44,7 +45,7 @@ class NameProtect : Module()
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if ((event.text ?: return).contains("\u00A78[\u00A79\u00A7l" + LiquidBounce.CLIENT_NAME + "\u00A78] \u00A73")) return
+		if ((event.text ?: return).contains("".withClientPrefix())) return
 
 		LiquidBounce.fileManager.friendsConfig.friends.forEach { event.text = StringUtils.replace(event.text, it.playerName, translateAlternateColorCodes(it.alias) + "\u00A7f") }
 

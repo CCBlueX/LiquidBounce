@@ -27,13 +27,9 @@ class AAC3_3_13LowHop : SpeedMode("AAC3.3.13-LowHop") // Was AACHop3.3.13
 		if (!MovementUtils.isMoving(thePlayer) || MovementUtils.cantBoostUp(thePlayer) || thePlayer.hurtTime > 0) return
 		if (thePlayer.onGround && thePlayer.isCollidedVertically)
 		{
-			val func = functions
+			// boost = 0.202, y = 0.405
 
-			// Jump with y 0.405F, boost 0.202F
-
-			val dir = MovementUtils.getDirection(thePlayer)
-			thePlayer.motionX -= func.sin(dir) * 0.202f
-			thePlayer.motionZ += func.cos(dir) * 0.202f
+			MovementUtils.boost(thePlayer, 0.202f)
 
 			thePlayer.motionY = 0.405
 			LiquidBounce.eventManager.callEvent(JumpEvent(0.405f))
@@ -48,8 +44,7 @@ class AAC3_3_13LowHop : SpeedMode("AAC3.3.13-LowHop") // Was AACHop3.3.13
 			// Motion XZ
 			thePlayer.jumpMovementFactor = if (thePlayer.moveStrafing == 0f) 0.027f else 0.021f
 
-			thePlayer.motionX *= 1.001
-			thePlayer.motionZ *= 1.001
+			MovementUtils.multiply(thePlayer, 1.001)
 
 			// Motion Y
 			if (!thePlayer.isCollidedHorizontally) thePlayer.motionY -= 0.014999993f

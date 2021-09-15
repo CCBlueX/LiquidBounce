@@ -170,7 +170,7 @@ class BugUp : Module()
 						thePlayer.fallDistance = 0f
 					}
 
-					"speedflag" -> MovementUtils.addMotion(thePlayer, speedFlagMotionValue.get(), thePlayer.rotationYaw)
+					"speedflag" -> MovementUtils.boost(thePlayer, speedFlagMotionValue.get(), thePlayer.rotationYaw)
 
 					"packet" ->
 					{

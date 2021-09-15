@@ -31,13 +31,13 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 	private val heightValue = IntegerValue("Height", 50, 30, 300)
 
 	private val pingGroup = ValueGroup("Ping")
-	private val pingUpdatePeriodValue = IntegerValue("UpdatePeriod", 500, 50, 2000, "PingUpdatePeriod")
+	private val pingUpdatePeriodValue = IntegerValue("UpdatePeriod", 500, 10, 2000, "PingUpdatePeriod")
 	private val pingYMultiplier = FloatValue("Multiplier", 10F, 0.001F, 50F, "Ping-yMultiplier")
 	private val pingThicknessValue = FloatValue("Thickness", 2F, 1F, 3F, "Ping-Thickness")
 	private val pingColorValue = RGBColorValue("Color", 0, 111, 255, Triple("Ping-R", "Ping-G", "Ping-B"))
 
 	private val packetsGroup = ValueGroup("Packets")
-	private val packetsUpdatePeriodValue = IntegerValue("UpdatePeriod", 200, 50, 1000, "PacketsUpdatePeriod")
+	private val packetsUpdatePeriodValue = IntegerValue("UpdatePeriod", 200, 10, 1000, "PacketsUpdatePeriod")
 	private val packetCounterBufferValue = IntegerValue("CounterBuffer", 200, 50, 1000, "PacketsCounterBuffer")
 
 	private val packetsIncomingGroup = ValueGroup("IncomingPackets")

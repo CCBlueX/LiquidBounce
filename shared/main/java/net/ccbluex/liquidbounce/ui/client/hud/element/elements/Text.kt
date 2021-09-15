@@ -195,6 +195,9 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 
 				"movingdir" -> return if (MovementUtils.isMoving(thePlayer)) StringUtils.getHorizontalFacing(MovementUtils.getDirectionDegrees(thePlayer)) else "NONE"
 				"movingdirvector" -> return if (MovementUtils.isMoving(thePlayer)) StringUtils.getHorizontalFacingTowards(MovementUtils.getDirectionDegrees(thePlayer)) else "NONE"
+
+				"jumpmovementfactor" -> return StringUtils.DECIMALFORMAT_6.format(thePlayer.jumpMovementFactor)
+				"speedinair" -> return StringUtils.DECIMALFORMAT_6.format(thePlayer.speedInAir)
 			}
 		}
 

@@ -40,11 +40,7 @@ class SpectreOnGround : SpeedMode("Spectre-OnGround")
 
 		if (thePlayer.onGround && MovementUtils.isMoving(thePlayer))
 		{
-			val func = functions
-
-			val dir = MovementUtils.getDirection(thePlayer)
-			thePlayer.motionX -= func.sin(dir) * 0.145f
-			thePlayer.motionZ += func.cos(dir) * 0.145f
+			MovementUtils.boost(thePlayer, 0.145f)
 
 			event.x = thePlayer.motionX
 			event.y = 0.005

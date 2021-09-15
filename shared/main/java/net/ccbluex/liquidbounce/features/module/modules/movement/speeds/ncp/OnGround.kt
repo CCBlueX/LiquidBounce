@@ -32,8 +32,7 @@ class OnGround : SpeedMode("OnGround")
 		if (thePlayer.onGround)
 		{
 			thePlayer.posY += 0.3993000090122223
-			thePlayer.motionX *= 1.590000033378601
-			thePlayer.motionZ *= 1.590000033378601
+			MovementUtils.multiply(thePlayer, 1.590000033378601)
 
 			thePlayer.motionY = 0.3993000090122223
 			LiquidBounce.eventManager.callEvent(JumpEvent(0.3993000090122223f))

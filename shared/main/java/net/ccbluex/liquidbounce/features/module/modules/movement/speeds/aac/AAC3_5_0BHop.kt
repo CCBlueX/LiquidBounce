@@ -27,14 +27,13 @@ class AAC3_5_0BHop : SpeedMode("AAC3.5.0-BHop") // Was AACHop3.5.0
 			{
 				jump(thePlayer)
 
-				thePlayer.motionX *= 1.0118f
-				thePlayer.motionZ *= 1.0118f
+				MovementUtils.multiply(thePlayer, 1.0118f)
 			}
 			else
 			{
-				thePlayer.motionX *= 1.00138f
+				MovementUtils.multiply(thePlayer, 1.00138f)
+
 				thePlayer.motionY -= 0.0147f
-				thePlayer.motionZ *= 1.00138f
 			}
 		}
 	}

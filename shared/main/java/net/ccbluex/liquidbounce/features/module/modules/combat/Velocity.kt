@@ -109,7 +109,7 @@ class Velocity : Module()
 			{
 				thePlayer.motionY = 0.42
 
-				MovementUtils.addMotion(thePlayer, 0.2F)
+				MovementUtils.boost(thePlayer, 0.2F)
 			}
 
 			"glitch" ->
@@ -123,8 +123,7 @@ class Velocity : Module()
 
 			"aac3.1.2" -> if (velocityInput && velocityTimer.hasTimePassed(80L))
 			{
-				thePlayer.motionX *= horizontalValue.get()
-				thePlayer.motionZ *= horizontalValue.get()
+				MovementUtils.multiply(thePlayer, horizontalValue.get())
 
 				//mc.thePlayer.motionY *= verticalValue.get() ?
 
@@ -177,13 +176,7 @@ class Velocity : Module()
 				}
 
 				// Reduce XZ
-				if (thePlayer.hurtResistantTime >= 19)
-				{
-					val reduce = aacPushXZReducerValue.get()
-
-					thePlayer.motionX /= reduce
-					thePlayer.motionZ /= reduce
-				}
+				if (thePlayer.hurtResistantTime >= 19) MovementUtils.divide(thePlayer, aacPushXZReducerValue.get())
 			}
 
 			"aac3.5.0-zero" -> if (thePlayer.hurtTime > 0)

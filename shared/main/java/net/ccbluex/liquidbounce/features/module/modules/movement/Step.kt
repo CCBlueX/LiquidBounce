@@ -38,14 +38,21 @@ class Step : Module()
 		override fun showCondition() = modeValue.get().equals("MotionNCP", ignoreCase = true)
 	}
 	val airStepValue = BoolValue("AirStep", false)
+	val airStepHeightValue = object : FloatValue("AirStepHeight", 1F, 0.6F, 10F) // TODO
+	{
+		override fun showCondition() = airStepValue.get()
+	}
 	private val heightValue = FloatValue("Height", 1F, 0.6F, 10F)
 	private val jumpHeightValue = FloatValue("JumpHeight", 0.42F, 0.37F, 0.42F)
 	private val delayValue = IntegerRangeValue("Delay", 0, 0, 0, 1000, "MaxDelay" to "MinDelay")
 	private val resetSpeedAfterStepConfirmValue = BoolValue("ResetXZAfterStep", false)
+	private val checkLiquid = BoolValue("CheckLiquid", true)
 
 	/**
 	 * VALUES
 	 */
+
+	private val specialCases = hashSetOf("jump", "motionncp", "aac3.2.0", "aac3.3.4")
 
 	private var isStep = false
 	private var aac334step = false
@@ -93,7 +100,7 @@ class Step : Module()
 					fakeJump(thePlayer)
 					thePlayer.motionY += 0.620000001490116
 
-					MovementUtils.addMotion(thePlayer, 0.2F)
+					MovementUtils.boost(thePlayer, 0.2F)
 					resetTimer()
 				}
 
@@ -105,8 +112,7 @@ class Step : Module()
 			{
 				if (thePlayer.onGround && couldStep(theWorld, thePlayer))
 				{
-					thePlayer.motionX *= 1.26
-					thePlayer.motionZ *= 1.26
+					MovementUtils.multiply(thePlayer, 1.26)
 					thePlayer.jump()
 					aac334step = true
 				}
@@ -198,7 +204,7 @@ class Step : Module()
 		val mode = modeValue.get()
 
 		// Set step to default in some cases
-		if ((!thePlayer.onGround && !airStepValue.get()) || !timer.hasTimePassed(delay) || sequenceOf("Jump", "MotionNCP", "AAC3.2.0", "AAC3.3.4").any { mode.equals(it, ignoreCase = true) })
+		if ((!thePlayer.onGround && !airStepValue.get()) || !timer.hasTimePassed(delay) || specialCases.contains(mode.toLowerCase()) || checkLiquid.get() && (thePlayer.isInWater || thePlayer.isInLava))
 		{
 			thePlayer.stepHeight = 0.6F
 			event.stepHeight = 0.6F
@@ -350,7 +356,7 @@ class Step : Module()
 		val x = -func.sin(yaw) * 0.4
 		val z = func.cos(yaw) * 0.4
 
-		return theWorld.getCollisionBoxes(thePlayer.entityBoundingBox.offset(x, 1.001335979112147, z)).isEmpty()
+		return theWorld.getCollisionBoxes(thePlayer.entityBoundingBox.offset(x, 1.001335979112147, z)).isEmpty() && (!checkLiquid.get() || !thePlayer.isInWater && !thePlayer.isInLava)
 	}
 
 	fun canAirStep(): Boolean

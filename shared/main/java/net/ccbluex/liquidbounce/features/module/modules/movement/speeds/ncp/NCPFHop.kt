@@ -7,14 +7,19 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp
 
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
+import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
 
 class NCPFHop : SpeedMode("NCPFHop")
 {
+	private var shouldLegitJump = true
+	private var jumps = 0
+
 	override fun onEnable()
 	{
-		mc.timer.timerSpeed = 1.0866f
+		shouldLegitJump = true
+		jumps = 0
 	}
 
 	override fun onDisable()
@@ -35,21 +40,45 @@ class NCPFHop : SpeedMode("NCPFHop")
 
 		if (MovementUtils.isMoving(thePlayer))
 		{
+			val boostTicks = Speed.ncphopBoostTicks.get().coerceAtLeast(1)
+
 			if (thePlayer.onGround)
 			{
 				jump(thePlayer)
 
-				thePlayer.motionX *= 1.01
-				thePlayer.motionZ *= 1.01
+				if (shouldLegitJump) shouldLegitJump = false
+				else
+				{
+					if (jumps < boostTicks)
+					{
+						MovementUtils.multiply(thePlayer, 1.01)
 
-				thePlayer.speedInAir = 0.0223f
+						thePlayer.speedInAir = 0.0223f
+						mc.timer.timerSpeed = 1.0866f
+					}
+					else
+					{
+						thePlayer.speedInAir = 0.02f
+						mc.timer.timerSpeed = 1f
+					}
+
+					jumps++
+
+					if (jumps >= boostTicks + Speed.ncphopNoBoostTicks.get()) jumps = 0
+				}
 			}
 
-			thePlayer.motionY -= 0.00099999 // Fast Fall
+			if (jumps < boostTicks) thePlayer.motionY -= 0.00099999 // Fast-fall
 
 			MovementUtils.strafe(thePlayer)
 		}
-		else MovementUtils.zeroXZ(thePlayer)
+		else
+		{
+			shouldLegitJump = true
+			jumps = 0
+
+			MovementUtils.zeroXZ(thePlayer)
+		}
 	}
 
 	override fun onMove(event: MoveEvent)

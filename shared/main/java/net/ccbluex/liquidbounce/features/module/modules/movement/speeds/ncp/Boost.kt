@@ -47,17 +47,9 @@ class Boost : SpeedMode("Boost")
 
 			when (motionDelay++)
 			{
-				1 ->
-				{
-					thePlayer.motionX *= moveSpeed
-					thePlayer.motionZ *= moveSpeed
-				}
+				1 -> MovementUtils.multiply(thePlayer, moveSpeed)
 
-				2 ->
-				{
-					thePlayer.motionX /= 1.458
-					thePlayer.motionZ /= 1.458
-				}
+				2 -> MovementUtils.divide(thePlayer,  1.458)
 
 				4 ->
 				{

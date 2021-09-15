@@ -22,10 +22,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre.
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.vanilla.Vanilla
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationIcon
 import net.ccbluex.liquidbounce.utils.MovementUtils
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.ListValue
-import net.ccbluex.liquidbounce.value.ValueGroup
+import net.ccbluex.liquidbounce.value.*
 
 @ModuleInfo(name = "Speed", description = "Allows you to move faster.", category = ModuleCategory.MOVEMENT)
 object Speed : Module()
@@ -124,6 +121,19 @@ object Speed : Module()
 		override fun showCondition() = modeValue.get().equals("Mineplex-Ground", ignoreCase = true)
 	}
 
+	// Slowhop multiplier
+	val slowHopMultiplierValue = object : FloatValue("SlowHop-Multiplier", 1.011f, 1.001f, 1.015f)
+	{
+		override fun showCondition() = modeValue.get().equals("SlowHop", ignoreCase = true)
+	}
+
+	private val ncphopGroup = object : ValueGroup("NCPHop")
+	{
+		override fun showCondition() = modeValue.get().equals("NCPBHop", ignoreCase = true) || modeValue.get().equals("NCPFHop", ignoreCase = true)
+	}
+	val ncphopBoostTicks = IntegerValue("BoostTicks", 1, 1, 5)
+	val ncphopNoBoostTicks = IntegerValue("NoBoostTicks", 0, 0, 5)
+
 	private val disableOnFlagValue = BoolValue("DisableOnFlag", true)
 
 	private var mode: SpeedMode? = null
@@ -133,6 +143,8 @@ object Speed : Module()
 
 	init
 	{
+		ncphopGroup.addAll(ncphopBoostTicks, ncphopNoBoostTicks)
+
 		customGroup.addAll(customSpeedValue, customYValue, customTimerValue, customStrafeValue, customResetXZValue, customResetYValue)
 	}
 

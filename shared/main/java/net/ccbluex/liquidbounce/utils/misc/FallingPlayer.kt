@@ -45,12 +45,11 @@ class FallingPlayer(private val theWorld: IWorld, private val thePlayer: IEntity
 
 
 		motionX *= 0.91
+		motionZ *= 0.91
 
 		motionY -= 0.08
 		motionY *= 0.9800000190734863
 		motionY *= 0.91
-
-		motionZ *= 0.91
 
 		x += motionX
 		y += motionY

@@ -37,7 +37,6 @@ import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.nbt.*
 import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.*
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketAbilities
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotion
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotionEffect
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
@@ -302,6 +301,7 @@ interface IClassProvider
 	fun isGuiChest(obj: Any?): Boolean
 	fun isGuiHudDesigner(obj: Any?): Boolean
 	fun isClickGui(obj: Any?): Boolean
+	fun isGuiRepair(obj: Any?): Boolean
 
 	/* Enum constructors */
 	fun getPotionEnum(type: PotionType): IPotion

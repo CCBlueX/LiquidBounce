@@ -14,8 +14,7 @@ class BugSpartan : FlyMode("BugSpartan")
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		thePlayer.motionX *= 0.1
-		thePlayer.motionZ *= 0.1
+		MovementUtils.multiply(thePlayer, 0.1)
 		thePlayer.swingItem()
 	}
 

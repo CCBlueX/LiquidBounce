@@ -33,6 +33,8 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.canBeClicked
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.isReplaceable
 import net.ccbluex.liquidbounce.utils.block.PlaceInfo
+import net.ccbluex.liquidbounce.utils.extensions.equalTo
+import net.ccbluex.liquidbounce.utils.extensions.serialize
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.*
@@ -557,13 +559,17 @@ class Scaffold : Module()
 	// Search for new target block
 	private fun findBlock(theWorld: IWorld, thePlayer: IEntityPlayerSP, expand: Boolean)
 	{
+		val failedResponce = { reason: String ->
+			searchDebug = listOf("result".equalTo("FAILED", "\u00A74"), "reason".equalTo("($reason)", "\u00A74")).serialize()
+		}
+
 		val groundBlockState = lastGroundBlockState ?: run {
-			searchDebug = "\u00A74lastGroundBlockState = null\u00A7r"
+			failedResponce("lastGroundBlockState = null")
 			return@findBlock
 		}
 
 		val groundBlockBB = lastGroundBlockBB ?: run {
-			searchDebug = "\u00A74lastGroundBlockBB = null\u00A7r"
+			failedResponce("lastGroundBlockBB = null")
 			return@findBlock
 		}
 
@@ -578,7 +584,7 @@ class Scaffold : Module()
 		{
 			if (autoBlockModeValue.get().equals("Off", true))
 			{
-				searchDebug = "\u00A7c(AutoBlock) Block not found in hand\u00A7c"
+				failedResponce("(AutoBlock) Insufficient block")
 				return
 			}
 
@@ -587,7 +593,7 @@ class Scaffold : Module()
 			val autoBlockSlot = InventoryUtils.findAutoBlockBlock(theWorld, inventoryContainer, autoBlockFullCubeOnlyValue.get())
 			if (autoBlockSlot == -1)
 			{
-				searchDebug = "\u00A7c(AutoBlock) Block not found in hotbar\u00A7r"
+				failedResponce("(Hand) Insufficient block")
 				return
 			}
 
@@ -595,7 +601,7 @@ class Scaffold : Module()
 		}
 
 		val autoBlockBlock = (autoBlock?.item ?: run {
-			searchDebug = "\u00A74Block?.item = null\u00A7r"
+			failedResponce("Block?.item = null")
 			return@findBlock
 		}).asItemBlock().block
 
@@ -603,10 +609,10 @@ class Scaffold : Module()
 
 		val abCollisionBB = BlockUtils.getBlockCollisionBox(theWorld, if (func.isBlockEqualTo(groundBlock, autoBlockBlock)) groundBlockState
 		else autoBlockBlock.defaultState ?: run {
-			searchDebug = "\u00A74BlockState not available\u00A7r"
+			failedResponce("BlockState unavailable")
 			return@findBlock
 		}) ?: run {
-			searchDebug = "\u00A74BlockCollisionBox not available\u00A7r"
+			failedResponce("BlockCollisionBox unavailable")
 			return@findBlock
 		}
 
@@ -649,7 +655,7 @@ class Scaffold : Module()
 		if (fallStartY - thePlayer.posY > 2)
 		{
 			searchPosition = WBlockPos(thePlayer).down(2)
-			state = "\u00A7cClutch"
+			state = "\u00A7cCLUTCH"
 			clutching = true
 			launchY = thePlayer.posY.toInt()
 		}
@@ -675,26 +681,26 @@ class Scaffold : Module()
 					searchBounds.maxY = 0.125 + yRange * 0.25
 				}
 
-				state = "\u00A76Non-Fullblock-SlabCorrection"
+				state = "\u00A76NON-FULLBLOCK-SLAB-FAILSAFE"
 			}
 			else if (!sameY && abCollisionBB.maxY - abCollisionBB.minY < 1.0 && groundMaxY < 1.0 && abCollisionBB.maxY - abCollisionBB.minY == groundMaxY - groundMinY)
 			{
 				searchPosition = pos
-				state = "\u00A7eNon-Fullblock"
+				state = "\u00A7eNON-FULLBLOCK"
 			}
 			else if (shouldGoDown)
 			{
 				searchPosition = pos.add(0.0, -0.6, 0.0).down() // Default full-block only scaffold
-				state = "\u00A7bDownwards"
+				state = "\u00A7bDOWN"
 			}
 			else
 			{
 				searchPosition = pos.down() // Default full-block only scaffold
-				state = "\u00A7aDefault"
+				state = "\u00A7aDEFAULT"
 			}
 		}
 
-		if (visualSearchDebugValue.get()) searchDebug = "$state\u00A7r ${if (flagged) " + \u00A7cFLAGGED\u00A7r" else ""} Bounds $searchBounds AutoBlockCollisionBB $abCollisionBB GroundBlockCollisionBB $lastGroundBlockBB"
+		if (visualSearchDebugValue.get()) searchDebug = listOf("result".equalTo("SUCCESS", "\u00A7a"), "state" equalTo "$state${if (flagged) " \u00A78+ \u00A7cFLAGGED\u00A7r" else ""}", "searchRange".equalTo(searchBounds, "\u00A7b"), "autoBlockCollisionBox".equalTo("$abCollisionBB", "\u00A73"), "groundBlockCollisionBB".equalTo("$lastGroundBlockBB", "\u00A72")).serialize()
 
 		lastSearchPosition = searchPosition
 
@@ -768,17 +774,20 @@ class Scaffold : Module()
 			return
 		}
 
+		val failedResponce = { reason: String ->
+			placeDebug = listOf("result".equalTo("FAILED", "\u00A74"), "reason".equalTo("($reason)", "\u00A74")).serialize()
+		}
+
 		if (InventoryUtils.AUTOBLOCK_BLACKLIST.contains(BlockUtils.getBlock(theWorld, (targetPlace ?: return).blockPos)))
 		{
-
 			placeableDelay()
-			placeDebug = "\u00A7cBlacklisted block in targetPlace.blockPos\u00A7r"
+			failedResponce("Blacklisted block in targetPlace.blockPos")
 			return
 		}
 		if (killauraBypassModeValue.get().equals("WaitForKillAuraEnd", true) && killAura.hasTarget)
 		{
 			placeableDelay()
-			placeDebug = "\u00A7cWaiting For KillAura End\u00A7r"
+			failedResponce("Waiting for KillAura end")
 			return
 		}
 
@@ -809,7 +818,7 @@ class Scaffold : Module()
 		{
 			if (autoBlockMode == "off")
 			{
-				placeDebug = "\u00A7c(AutoBlock) Block not found in hand\u00A7c"
+				failedResponce("(Hand) Insufficient block")
 				return
 			}
 
@@ -819,7 +828,7 @@ class Scaffold : Module()
 			// If there is no autoblock-able blocks in your inventory, we can't continue.
 			if (blockSlot == -1)
 			{
-				placeDebug = "\u00A7c(AutoBlock) Block not found in hotbar\u00A7r"
+				failedResponce("(AutoBlock) Insufficient block")
 				return
 			}
 
@@ -850,7 +859,7 @@ class Scaffold : Module()
 			switchDelay = delaySwitchValue.getRandomDelay()
 			if (switchDelay > 0)
 			{
-				placeDebug = "\u00A7cSwitchDelay reset\u00A7r"
+				failedResponce("SwitchDelay reset")
 				return
 			}
 		}
@@ -858,7 +867,7 @@ class Scaffold : Module()
 		// Switch Delay wait
 		if (!switchTimer.hasTimePassed(switchDelay))
 		{
-			placeDebug = "\u00A7cSwitchDelay\u00A7r"
+			failedResponce("SwitchDelay")
 			return
 		}
 
@@ -871,7 +880,7 @@ class Scaffold : Module()
 		val pos = targetPlace.blockPos
 		if (controller.onPlayerRightClick(thePlayer, theWorld, itemStack, pos, targetPlace.enumFacing, targetPlace.vec3))
 		{
-			placeDebug = "pos= $pos, face=${targetPlace.enumFacing}, vec3=${targetPlace.vec3.addVector(-pos.x.toDouble(), -pos.y.toDouble(), -pos.z.toDouble())}"
+			placeDebug = listOf("position".equalTo(pos, "\u00A7a"), "side".equalTo(targetPlace.enumFacing, "\u00A7b"), "hitVec".equalTo(targetPlace.vec3.addVector(-pos.x.toDouble(), -pos.y.toDouble(), -pos.z.toDouble()), "\u00A7e")).serialize()
 
 			// Reset delay
 			delayTimer.reset()
@@ -888,7 +897,7 @@ class Scaffold : Module()
 			if (swingValue.get()) thePlayer.swingItem()
 			else netHandler.addToSendQueue(provider.createCPacketAnimation())
 		}
-		else placeDebug = "\u00A74Failed to place\u00A7r"
+		else placeDebug = "result".equalTo("FAILED_TO_PLACE", "\u00A74")
 
 		// Switch back to original slot after place on AutoBlock-Switch mode
 		if (autoBlockMode == "switch" && switchKeepTime < 0) InventoryUtils.resetSlot(thePlayer)

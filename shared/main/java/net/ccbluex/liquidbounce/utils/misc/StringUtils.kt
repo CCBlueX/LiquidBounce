@@ -14,12 +14,22 @@ import kotlin.math.floor
 
 object StringUtils
 {
+	@JvmStatic
 	val URL_PATTERN: Pattern = Pattern.compile("((?:[a-z0-9]{2,}://)?(?:(?:[0-9]{1,3}\\.){3}[0-9]{1,3}|(?:[-\\w_.]+\\.[a-z]{2,}?))(?::[0-9]{1,5})?.*?(?=[!\"\u00A7 \n]|$))", Pattern.CASE_INSENSITIVE)
 
+	@JvmStatic
 	private val patternControlCode = Pattern.compile("(?i)\\u00A7[0-9A-FK-OR]")
 
+	@JvmStatic
 	val DECIMALFORMAT_1 = DecimalFormat("##0.0", DecimalFormatSymbols(Locale.ENGLISH))
+
+	@JvmStatic
 	val DECIMALFORMAT_2 = DecimalFormat("##0.00", DecimalFormatSymbols(Locale.ENGLISH))
+
+	@JvmStatic
+	val DECIMALFORMAT_4 = DecimalFormat("##0.0000", DecimalFormatSymbols(Locale.ENGLISH))
+
+	@JvmStatic
 	val DECIMALFORMAT_6 = DecimalFormat("##0.000000", DecimalFormatSymbols(Locale.ENGLISH))
 
 	@JvmStatic

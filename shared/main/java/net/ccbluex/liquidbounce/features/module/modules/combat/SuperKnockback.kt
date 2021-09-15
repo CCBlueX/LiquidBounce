@@ -175,7 +175,7 @@ class SuperKnockback : Module()
 							{
 								if (!thePlayer.sprinting) thePlayer.sprinting = true
 
-								MovementUtils.addMotion(thePlayer, 1.0E-5F)
+								MovementUtils.boost(thePlayer, 1.0E-5F)
 							}
 
 							netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SPRINTING))

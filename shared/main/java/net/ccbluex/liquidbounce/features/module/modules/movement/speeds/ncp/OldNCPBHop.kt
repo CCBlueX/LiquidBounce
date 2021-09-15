@@ -65,8 +65,7 @@ class OldNCPBHop : SpeedMode("OldNCPBHop")
 		else if (moving)
 		{
 			timer.timerSpeed = 1.3f
-			thePlayer.motionX *= 1.0199999809265137
-			thePlayer.motionZ *= 1.0199999809265137
+			MovementUtils.multiply(thePlayer, 1.0199999809265137)
 		}
 
 		if (thePlayer.onGround && moving) step = 2

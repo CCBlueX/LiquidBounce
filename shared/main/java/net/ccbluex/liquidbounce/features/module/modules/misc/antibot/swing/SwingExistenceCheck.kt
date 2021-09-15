@@ -1,4 +1,4 @@
-package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.misc
+package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.swing
 
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
@@ -7,7 +7,7 @@ import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.BotCheck
 
-class SwingCheck : BotCheck("misc.swing")
+class SwingExistenceCheck : BotCheck("swing.existence")
 {
 	override val isActive: Boolean
 		get() = AntiBot.swingValue.get()

@@ -1,6 +1,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.flies.minorACs
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
+import net.ccbluex.liquidbounce.utils.MovementUtils
 
 class HACFly : FlyMode("HAC") // HAC = HeirteirsAntiCheat
 {
@@ -8,8 +9,7 @@ class HACFly : FlyMode("HAC") // HAC = HeirteirsAntiCheat
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		thePlayer.motionX *= 0.8
-		thePlayer.motionZ *= 0.8
+		MovementUtils.multiply(thePlayer, 0.8)
 		thePlayer.motionY = if (thePlayer.motionY <= -0.42) 0.42 else -0.42
 	}
 }

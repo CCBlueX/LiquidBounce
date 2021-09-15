@@ -15,7 +15,7 @@ class EntityIDCheck : BotCheck("misc.entityID")
 	{
 		val entityId = target.entityId
 
-		if (entityId <= -1 || entityId >= AntiBot.entityIDLimitValue.get()) return true
+		if (entityId < 0 || entityId >= AntiBot.entityIDLimitValue.get()) return true
 
 		if (AntiBot.entityIDStaticEntityIDEntityIDCountValue.get() > 0)
 		{

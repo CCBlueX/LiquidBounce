@@ -6,12 +6,14 @@ import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.BotCheck
+import net.ccbluex.liquidbounce.utils.RotationUtils
 
 class PitchMovementCheck : BotCheck("rotation.pitch")
 {
 	override val isActive: Boolean
-		get() = AntiBot.rotationPitchValue.get()
+		get() = AntiBot.rotationPitchEnabledValue.get()
 
+	private val previousPitchMap = mutableMapOf<Int, Float>()
 	private val pitchMovement = mutableSetOf<Int>()
 
 	override fun isBot(theWorld: IWorldClient, thePlayer: IEntity, target: IEntityPlayer): Boolean = target.entityId !in pitchMovement
@@ -21,12 +23,18 @@ class PitchMovementCheck : BotCheck("rotation.pitch")
 		if (rotating)
 		{
 			val entityId = target.entityId
-			if (newPitch != target.rotationPitch && entityId !in pitchMovement) pitchMovement.add(entityId)
+
+			val prevPitch = previousPitchMap.computeIfAbsent(entityId) { newPitch }
+
+			if (RotationUtils.getAngleDifference(newPitch, prevPitch) > AntiBot.rotationPitchThresholdValue.get() && entityId !in pitchMovement) pitchMovement.add(entityId)
+
+			previousPitchMap[entityId] = newPitch
 		}
 	}
 
 	override fun clear()
 	{
+		previousPitchMap.clear()
 		pitchMovement.clear()
 	}
 }

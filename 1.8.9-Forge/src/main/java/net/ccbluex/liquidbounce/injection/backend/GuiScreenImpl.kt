@@ -6,13 +6,18 @@
 
 package net.ccbluex.liquidbounce.injection.backend
 
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.*
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiGameOver
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.inventory.IGuiChest
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.inventory.IGuiContainer
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.inventory.IGuiRepair
 import net.ccbluex.liquidbounce.api.util.WrappedMutableList
 import net.ccbluex.liquidbounce.injection.backend.utils.GuiScreenWrapper
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiGameOver
+import net.minecraft.client.gui.GuiRepair
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.inventory.GuiChest
 import net.minecraft.client.gui.inventory.GuiContainer
@@ -29,6 +34,8 @@ open class GuiScreenImpl<out T : GuiScreen>(wrapped: T) : GuiImpl<T>(wrapped), I
 	override fun asGuiGameOver(): IGuiGameOver = GuiGameOverImpl(wrapped as GuiGameOver)
 
 	override fun asGuiChest(): IGuiChest = GuiChestImpl(wrapped as GuiChest)
+
+	override fun asGuiRepair(): IGuiRepair = GuiRepairImpl(wrapped as GuiRepair)
 
 	override fun drawString(fontRendererObj: IFontRenderer, message: String, x: Int, y: Int, color: Int)
 	{

@@ -45,7 +45,7 @@ class BufferSpeed : Module()
 	private val iceEnabledValue = BoolValue("Enabled", false, "Ice")
 	private val iceBoostValue = FloatValue("Boost", 1.342f, 1f, 2f, "IceBoost")
 
-	private val snowGroup = ValueGroup("Snow")
+	private val snowGroup = ValueGroup("Snow") // AAC3.3.6 SnowSpeed
 	private val snowEnabledValue = BoolValue("Enabled", true, "Snow")
 	private val snowBoostValue = FloatValue("Boost", 1.87f, 1f, 2f, "SnowBoost")
 	private val snowPortValue = BoolValue("Port", true, "SnowPort")
@@ -129,9 +129,8 @@ class BufferSpeed : Module()
 			{
 				thePlayer.jump()
 
-				thePlayer.motionX *= 1.132
+				MovementUtils.multiply(thePlayer, 1.132)
 				thePlayer.motionY = 0.08
-				thePlayer.motionZ *= 1.132
 
 				down = true
 				return
@@ -238,9 +237,8 @@ class BufferSpeed : Module()
 					{
 						thePlayer.jump()
 
+						MovementUtils.multiply(thePlayer, 0.99)
 						thePlayer.motionY = 0.08
-						thePlayer.motionX *= 0.99
-						thePlayer.motionZ *= 0.99
 
 						down = true
 
@@ -299,8 +297,7 @@ class BufferSpeed : Module()
 
 	private fun boost(thePlayer: IEntity, boost: Float)
 	{
-		thePlayer.motionX *= boost
-		thePlayer.motionZ *= boost
+		MovementUtils.multiply(thePlayer, boost)
 		speed = MovementUtils.getSpeed(thePlayer)
 
 		val maxSpeed = maxSpeedValue.get()

@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.api.minecraft.client.gui
 
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.inventory.IGuiChest
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.inventory.IGuiContainer
+import net.ccbluex.liquidbounce.api.minecraft.client.gui.inventory.IGuiRepair
 
 interface IGuiScreen : IGui
 {
@@ -19,6 +20,7 @@ interface IGuiScreen : IGui
 	fun asGuiContainer(): IGuiContainer
 	fun asGuiGameOver(): IGuiGameOver
 	fun asGuiChest(): IGuiChest
+	fun asGuiRepair(): IGuiRepair
 
 	fun drawString(fontRendererObj: IFontRenderer, message: String, x: Int, y: Int, color: Int)
 

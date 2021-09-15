@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.util.*
 import net.ccbluex.liquidbounce.injection.backend.utils.unwrap
 import net.ccbluex.liquidbounce.injection.backend.utils.wrap
+import net.ccbluex.liquidbounce.injection.implementations.IMixinEntityLivingBase
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.item.EntityTNTPrimed
@@ -287,6 +288,8 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 	override fun isInsideOfMaterial(material: IMaterial): Boolean = wrapped.isInsideOfMaterial(material.unwrap())
 
 	override fun canBeCollidedWith(): Boolean = wrapped.canBeCollidedWith()
+
+	override fun setCanBeCollidedWith(value: Boolean) = (wrapped as IMixinEntityLivingBase).setCanBeCollidedWith(value)
 
 	override fun canRiderInteract(): Boolean = wrapped.canRiderInteract()
 

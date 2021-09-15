@@ -14,13 +14,19 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 
 class AAC3_2_2LowHop : SpeedMode("AAC3.2.2-LowHop") // Was AAC3BHop
 {
-	private var firstLegitJump = false
+	private var shouldLegitJump = true
+
+	override fun onEnable()
+	{
+		shouldLegitJump = true
+	}
 
 	override fun onTick()
 	{
 		val thePlayer = mc.thePlayer ?: return
+		val timer = mc.timer
 
-		mc.timer.timerSpeed = 1f
+		timer.timerSpeed = 1f
 
 		if (MovementUtils.cantBoostUp(thePlayer)) return
 
@@ -32,12 +38,10 @@ class AAC3_2_2LowHop : SpeedMode("AAC3.2.2-LowHop") // Was AAC3BHop
 				thePlayer.onGround ->
 				{
 					// Legit jump on the first
-					if (firstLegitJump)
+					if (shouldLegitJump)
 					{
 						jump(thePlayer)
-
-						firstLegitJump = false
-
+						shouldLegitJump = false
 						return
 					}
 
@@ -53,15 +57,15 @@ class AAC3_2_2LowHop : SpeedMode("AAC3.2.2-LowHop") // Was AAC3BHop
 				thePlayer.motionY < 0.0 ->
 				{
 					thePlayer.speedInAir = 0.0201f
-					mc.timer.timerSpeed = 1.02f
+					timer.timerSpeed = 1.02f
 				}
 
-				else -> mc.timer.timerSpeed = 1.01f
+				else -> timer.timerSpeed = 1.01f
 			}
 		}
 		else
 		{
-			firstLegitJump = true
+			shouldLegitJump = true
 
 			MovementUtils.zeroXZ(thePlayer)
 		}

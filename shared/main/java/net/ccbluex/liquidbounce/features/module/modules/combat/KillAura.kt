@@ -29,9 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam
 import net.ccbluex.liquidbounce.injection.backend.Backend
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationIcon
 import net.ccbluex.liquidbounce.utils.*
-import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
-import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
-import net.ccbluex.liquidbounce.utils.extensions.isClientTarget
+import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_1
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_6
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
@@ -104,8 +102,8 @@ class KillAura : Module()
 	private val comboReachLimitValue = FloatValue("Limit", 0.5F, 0.02F, 3F, "ComboReachMax")
 
 	private val targetGroup = ValueGroup("Target")
-	private val targetPriorityValue = ListValue("Priority", arrayOf("Health", "Distance", "ServerDirection", "ClientDirection", "LivingTime"), "Distance")
-	private val targetModeValue = ListValue("TargetMode", arrayOf("Single", "Switch", "Multi"), "Switch")
+	private val targetPriorityValue = ListValue("Priority", arrayOf("Health", "Distance", "ServerDirection", "ClientDirection", "LivingTime"), "Distance", "Priority")
+	private val targetModeValue = ListValue("Mode", arrayOf("Single", "Switch", "Multi"), "Switch", "TargetMode")
 	private val targetLimitedMultiTargetsValue = object : IntegerValue("LimitedMultiTargets", 0, 0, 50, "LimitedMultiTargets")
 	{
 		override fun showCondition() = targetModeValue.get().equals("Multi", ignoreCase = true)
@@ -307,7 +305,7 @@ class KillAura : Module()
 	private var switchDelay = switchDelayValue.getRandomDelay()
 	private val switchDelayTimer = MSTimer()
 
-	var updateTargetDebug: String? = null
+	var updateTargetDebug: Array<String>? = null
 	var updateRotationsDebug: String? = null
 
 	/**
@@ -852,7 +850,7 @@ class KillAura : Module()
 		val autoBlockHurtTimeCheck = autoBlockHurtTimeCheckValue.get()
 		val smartBlock = autoBlockWallCheckValue.get()
 
-		val entityList = EntityUtils.getEntitiesInRadius(theWorld, thePlayer, maxTargetRange + 2.0).filter { EntityUtils.isEnemy(it, aac) }.filterNot { switchMode && previouslySwitchedTargets.contains(it.entityId) }.run { if (fov < 180f) filter { (if (fovMode == "ServerRotation") RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, playerPredictSize) else RotationUtils.getClientRotationDifference(thePlayer, it, playerPredict, playerPredictSize)) <= fov } else this }.map { it.asEntityLivingBase() to thePlayer.getDistanceToEntityBox(it) }
+		val entityList = EntityUtils.getEntitiesInRadius(theWorld, thePlayer, maxTargetRange + 2.0).filter { EntityUtils.isEnemy(it, aac) }.filterNot { switchMode && previouslySwitchedTargets.contains(it.entityId) }.run { if (fov < 180f) filter { (if (fovMode.equals("ServerRotation", ignoreCase = true)) RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, playerPredictSize) else RotationUtils.getClientRotationDifference(thePlayer, it, playerPredict, playerPredictSize)) <= fov } else this }.map { it.asEntityLivingBase() to thePlayer.getDistanceToEntityBox(it) }
 
 		entityList.forEach { (entity, distance) ->
 			val entityHurtTime = entity.hurtTime
@@ -1104,10 +1102,28 @@ class KillAura : Module()
 		val currentTarget = currentTarget
 		val reach = min(maxAttackRange.toDouble(), thePlayer.getDistanceToEntityBox(target ?: return) + 1)
 
-		if (rotationMode.get().equals("Off", ignoreCase = true) || rotationTurnSpeedValue.getMax() <= 0F || targetModeValue.get().equals("Multi", ignoreCase = true)) // Disable hitable check if turn speed is zero
-		{
+		val updateHitableByRange = {
 			hitable = currentTarget != null && thePlayer.getDistanceToEntityBox(currentTarget) <= reach
-			updateTargetDebug = "rangeCheck=$hitable (MultiAura mode or Rotation disabled)"
+		}
+
+		if (rotationMode.get().equals("Off", ignoreCase = true))
+		{
+			updateHitableByRange()
+			updateTargetDebug = arrayOf("rangeCheck".equalTo("$hitable", "\u00A7${if (hitable) "a" else "c"}"), "reason" equalTo "Rotation is turned off".withParentheses("\u00A7c"))
+			return
+		}
+
+		if (rotationTurnSpeedValue.getMax() <= 0F)
+		{
+			updateHitableByRange()
+			updateTargetDebug = arrayOf("rangeCheck".equalTo("$hitable", "\u00A7${if (hitable) "a" else "c"}"), "reason" equalTo "Turnspeed is zero or negative".withParentheses("\u00A7c"))
+			return
+		}
+
+		if (targetModeValue.get().equals("Multi", ignoreCase = true))
+		{
+			updateHitableByRange()
+			updateTargetDebug = arrayOf("rangeCheck".equalTo("$hitable", "\u00A7${if (hitable) "a" else "c"}"), "reason" equalTo "Rotation is turned off".withParentheses("\u00A7c"))
 			return
 		}
 
@@ -1130,19 +1146,19 @@ class KillAura : Module()
 			{
 				if (distanceToRaycasted != null)
 				{
-					if (currentTarget != raycastedEntity) "[Raycast] Switched from [n=${currentTarget.name} id=${currentTarget.entityId}] to [n=${raycastedEntity.name} id=${raycastedEntity.entityId}] (dist=${DECIMALFORMAT_6.format(distanceToTarget - distanceToRaycasted)})"
-					else "[Raycast] currentTarget = raycastedTarget"
+					if (currentTarget != raycastedEntity) arrayOf("raycastResult" equalTo "\u00A7aSUCCESS", "raycastFrom" equalTo listOf("name".equalTo(currentTarget.name, "\u00A7e\u00A7l"), "id".equalTo(currentTarget.entityId, "\u00A7e")).serialize().withParentheses("\u00A78"), "raycastTo" equalTo listOf("name".equalTo(raycastedEntity.name, "\u00A7e\u00A7l"), "id".equalTo(raycastedEntity.entityId, "\u00A7e")).serialize().withParentheses("\u00A78"), "distance" equalTo DECIMALFORMAT_6.format(distanceToTarget - distanceToRaycasted))
+					else arrayOf("raycastResult" equalTo "\u00A7eEQUAL", "reason" equalTo "(\u00A7ccurrentTarget = raycastedTarget\u00A77)")
 				}
-				else "[Raycast] raycastedTarget is null"
+				else arrayOf("raycastResult" equalTo "\u00A7cFAILED", "reason" equalTo "(\u00A7craycastedTarget is null\u00A77)")
 			}
-			else "[Raycast] currentTarget is null"
+			else arrayOf("raycastResult" equalTo "\u00A7cFAILED", "reason" equalTo "(\u00A7ccurrentTarget is null\u00A77)")
 
 			hitable = (distanceToTarget == null || distanceToTarget <= reach) && (distanceToRaycasted == null || distanceToRaycasted <= reach) && this.currentTarget == raycastedEntity
 		}
 		else
 		{
 			hitable = if (currentTarget != null) RotationUtils.isFaced(theWorld, thePlayer, currentTarget, reach) { getHitbox(it, if (rotationLockValue.get()) 0.0 else rotationLockExpandRangeValue.get().toDouble()) } else false
-			updateTargetDebug = "faced=$hitable"
+			updateTargetDebug = arrayOf("faced".equalTo(hitable, "\u00A7${if (hitable) "a" else "c"}"))
 		}
 	}
 

@@ -166,7 +166,7 @@ class TpAura : Module()
 					currentPath = computePath(theWorld, from, to)
 					targetPaths.add(currentPath) // Used for path esp
 
-					if (single) debug = "pathCount: ${currentPath.size}"
+					if (single) debug = "pathCount=${currentPath.size}"
 
 					// Unblock before attack
 					if (thePlayer.isBlocking || autoBlockValue.get().equals("Packet", ignoreCase = true) || serverSideBlockingStatus)

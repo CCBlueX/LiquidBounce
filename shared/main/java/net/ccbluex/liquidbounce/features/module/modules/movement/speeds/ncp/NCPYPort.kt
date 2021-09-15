@@ -28,15 +28,10 @@ class NCPYPort : SpeedMode("NCPYPort")
 
 		if (thePlayer.onGround)
 		{
-			val func = functions
+			MovementUtils.boost(thePlayer, 0.2f)
 
 			val jumpMotion = if (jumps <= 1) 0.42f else 0.4f
-			val dir = MovementUtils.getDirection(thePlayer)
-
-			thePlayer.motionX -= func.sin(dir) * 0.2f
 			thePlayer.motionY = jumpMotion.toDouble()
-			thePlayer.motionZ += func.cos(dir) * 0.2f
-
 			LiquidBounce.eventManager.callEvent(JumpEvent(jumpMotion))
 
 			jumps++

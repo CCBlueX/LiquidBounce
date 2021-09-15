@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.ccbluex.liquidbounce.utils.extensions.withClientPrefix
 
 abstract class Command(val command: String, vararg val alias: String) : MinecraftInstance()
 {
@@ -30,29 +31,29 @@ abstract class Command(val command: String, vararg val alias: String) : Minecraf
 	/**
 	 * Print [msg] to chat
 	 */
-	protected fun chat(thePlayer: IEntityPlayerSP?, msg: String) = ClientUtils.displayChatMessage(thePlayer, "\u00A78[\u00A79\u00A7l${LiquidBounce.CLIENT_NAME}\u00A78] \u00A73$msg")
+	protected fun chat(thePlayer: IEntityPlayerSP?, msg: String) = ClientUtils.displayChatMessage(thePlayer, msg.withClientPrefix())
 
 	/**
 	 * Print [syntax] of command to chat
 	 */
-	protected fun chatSyntax(thePlayer: IEntityPlayerSP?, syntax: String) = ClientUtils.displayChatMessage(thePlayer, "\u00A78[\u00A79\u00A7l${LiquidBounce.CLIENT_NAME}\u00A78] \u00A73Syntax: \u00A77${LiquidBounce.commandManager.prefix}$syntax")
+	protected fun chatSyntax(thePlayer: IEntityPlayerSP?, syntax: String) = ClientUtils.displayChatMessage(thePlayer, "\u00A73Syntax: \u00A77${LiquidBounce.commandManager.prefix}$syntax".withClientPrefix())
 
 	/**
 	 * Print [syntaxes] of command to chat
 	 */
 	protected fun chatSyntax(thePlayer: IEntityPlayerSP?, syntaxes: Array<String>)
 	{
-		ClientUtils.displayChatMessage(thePlayer, "\u00A78[\u00A79\u00A7l${LiquidBounce.CLIENT_NAME}\u00A78] \u00A73Syntax:")
+		ClientUtils.displayChatMessage(thePlayer, "Syntax: ".withClientPrefix())
 
 		val commandPrefix = LiquidBounce.commandManager.prefix
 
-		syntaxes.map(String::toLowerCase).forEach { ClientUtils.displayChatMessage(thePlayer, "\u00A78> \u00A77$commandPrefix$command $it") }
+		syntaxes.map(String::toLowerCase).forEach { ClientUtils.displayChatMessage(thePlayer, "\u00A78> \u00A77$commandPrefix$command $it".withClientPrefix()) }
 	}
 
 	/**
 	 * Print a syntax error to chat
 	 */
-	protected fun chatSyntaxError(thePlayer: IEntityPlayerSP?) = ClientUtils.displayChatMessage(thePlayer, "\u00A78[\u00A79\u00A7l${LiquidBounce.CLIENT_NAME}\u00A78] \u00A73Syntax error")
+	protected fun chatSyntaxError(thePlayer: IEntityPlayerSP?) = ClientUtils.displayChatMessage(thePlayer, "\u00A73Syntax error!".withClientPrefix())
 
 	/**
 	 * Play edit sound

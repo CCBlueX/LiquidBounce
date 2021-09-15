@@ -6,9 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityOtherPlayerMP
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
@@ -18,13 +15,13 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.render.Breadcrumbs
+import net.ccbluex.liquidbounce.utils.FakePlayer
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbowRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerRangeValue
 import net.ccbluex.liquidbounce.value.ValueGroup
-import org.intellij.lang.annotations.MagicConstant
 import org.lwjgl.opengl.GL11.*
 import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
@@ -55,7 +52,7 @@ class Blink : Module()
 	private val pulseTimer = MSTimer()
 	private var pulseDelay = pulseDelayValue.getRandomDelay()
 
-	private var fakePlayer: IEntityOtherPlayerMP? = null
+	private var fakePlayer: FakePlayer? = null
 
 	init
 	{
@@ -68,7 +65,7 @@ class Blink : Module()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		blink(theWorld, thePlayer, displayPreviousPos.get(), 0)
+		if (displayPreviousPos.get()) fakePlayer = FakePlayer(theWorld, thePlayer, -13371)
 
 		synchronized(positions) {
 			positions.add(doubleArrayOf(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight * 0.5, thePlayer.posZ))
@@ -80,10 +77,8 @@ class Blink : Module()
 
 	override fun onDisable()
 	{
-		val theWorld = mc.theWorld ?: return
-		val thePlayer = mc.thePlayer ?: return
-
-		blink(theWorld, thePlayer, displayPreviousPos.get(), 2)
+		blink()
+		fakePlayer?.destroy()
 	}
 
 	@EventTarget
@@ -105,14 +100,14 @@ class Blink : Module()
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
 	{
-		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
 		synchronized(positions) { positions.add(doubleArrayOf(thePlayer.posX, thePlayer.entityBoundingBox.minY, thePlayer.posZ)) }
 
 		if (pulseEnabledValue.get() && pulseTimer.hasTimePassed(pulseDelay))
 		{
-			blink(theWorld, thePlayer, displayPreviousPos.get(), 1)
+			blink()
+			fakePlayer?.updatePositionAndRotation(thePlayer)
 
 			pulseTimer.reset()
 			pulseDelay = pulseDelayValue.getRandomDelay()
@@ -168,40 +163,8 @@ class Blink : Module()
 	 * 1 - Send all queued packets and update the faker
 	 * 2 - Send all queued packets and remove the faker from the world
 	 */
-	private fun blink(theWorld: IWorldClient, thePlayer: IEntityPlayerSP, displayPrevPos: Boolean, @MagicConstant(intValues = [0, 1, 2]) blinkMode: Int)
+	private fun blink()
 	{
-		when (blinkMode)
-		{
-			// Just create the faker
-			0 -> if (displayPrevPos)
-			{
-				val faker = classProvider.createEntityOtherPlayerMP(theWorld, thePlayer.gameProfile)
-
-				faker.rotationYawHead = thePlayer.rotationYawHead
-				faker.renderYawOffset = thePlayer.renderYawOffset
-				faker.copyLocationAndAnglesFrom(thePlayer)
-
-				theWorld.addEntityToWorld(-1337, faker)
-
-				fakePlayer = faker
-
-				return
-			}
-
-			// Update the faker
-			1 -> fakePlayer?.let {
-				it.rotationYawHead = thePlayer.rotationYawHead
-				it.renderYawOffset = thePlayer.renderYawOffset
-				it.copyLocationAndAnglesFrom(thePlayer)
-			}
-
-			// Remove the faker
-			2 -> fakePlayer?.let {
-				theWorld.removeEntityFromWorld(it.entityId)
-				fakePlayer = null
-			}
-		}
-
 		try
 		{
 			while (packets.isNotEmpty()) mc.netHandler.networkManager.sendPacketWithoutEvent(packets.take())

@@ -473,7 +473,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * your entity
 		 * @return        difference between rotation
 		 */
-		fun getServerRotationDifference(thePlayer: IEntity, entity: IEntity, playerPredict: Boolean, playerPredictSize: MinMaxPair): Double = getRotationDifference(toRotation(thePlayer, getCenter(entity.entityBoundingBox), playerPredict, playerPredictSize), serverRotation)
+		fun getServerRotationDifference(thePlayer: IEntity, entity: IEntity, playerPredict: Boolean, playerPredictSize: MinMaxPair): Double = getServerRotationDifference(thePlayer, getCenter(entity.entityBoundingBox), playerPredict, playerPredictSize)
 
 		/**
 		 * Calculate difference between the "server-sided rotation" and your block position
@@ -482,7 +482,9 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * your block position
 		 * @return        difference between rotation
 		 */
-		fun getServerRotationDifference(thePlayer: IEntity, blockPos: WBlockPos, playerPredict: Boolean, playerPredictSize: MinMaxPair): Double = getRotationDifference(toRotation(thePlayer, WVec3(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5), playerPredict, playerPredictSize), serverRotation)
+		fun getServerRotationDifference(thePlayer: IEntity, blockPos: WBlockPos, playerPredict: Boolean, playerPredictSize: MinMaxPair): Double = getServerRotationDifference(thePlayer, WVec3(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5), playerPredict, playerPredictSize)
+
+		fun getServerRotationDifference(thePlayer: IEntity, pos: WVec3, playerPredict: Boolean, playerPredictSize: MinMaxPair): Double = getRotationDifference(toRotation(thePlayer, pos, playerPredict, playerPredictSize), serverRotation)
 
 		// /**
 		//  * Calculate difference between the client rotation and your entity
@@ -515,7 +517,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * rotation
 		 * @return        difference between rotation
 		 */
-		private fun getRotationDifference(first: Rotation, second: Rotation): Double = StrictMath.hypot(getAngleDifference(first.yaw, second.yaw).toDouble(), (first.pitch - second.pitch).toDouble())
+		fun getRotationDifference(first: Rotation, second: Rotation): Double = StrictMath.hypot(getAngleDifference(first.yaw, second.yaw).toDouble(), (first.pitch - second.pitch).toDouble())
 
 		/**
 		 * Limit your rotation using a turn speed
