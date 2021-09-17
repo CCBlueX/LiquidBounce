@@ -40,7 +40,7 @@ interface IPacket
 	fun asCPacketPlayerDigging(): ICPacketPlayerDigging
 	fun asCPacketPlayerBlockPlacement(): ICPacketPlayerBlockPlacement
 	fun asCPacketKeepAlive(): ICPacketKeepAlive
-	fun asCPacketAbilities(): ICPacketPlayerAbilities
+	fun asCPacketPlayerAbilities(): ICPacketPlayerAbilities
 	fun asCPacketConfirmTransaction(): ICPacketConfirmTransaction
 	fun asCPacketClientStatus(): ICPacketClientStatus
 	fun asCPacketCloseWindow(): ICPacketCloseWindow

@@ -11,11 +11,11 @@ import net.minecraft.network.play.client.C00PacketKeepAlive
 
 class CPacketKeepAliveImpl<out T : C00PacketKeepAlive>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketKeepAlive
 {
-	override var key: Int
-		get() = wrapped.key
+	override var key: Long
+		get() = wrapped.key.toLong()
 		set(value)
 		{
-			wrapped.key = value
+			wrapped.key = value.toInt()
 		}
 }
 

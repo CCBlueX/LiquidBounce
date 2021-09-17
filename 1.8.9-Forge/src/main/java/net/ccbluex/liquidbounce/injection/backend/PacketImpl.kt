@@ -53,7 +53,7 @@ open class PacketImpl<out T : Packet<*>>(val wrapped: T) : IPacket
 
 	override fun asSPacketEntityEquipment(): ISPacketEntityEquipment = SPacketEntityEquipmentImpl(wrapped as S04PacketEntityEquipment)
 
-	override fun asCPacketAbilities(): ICPacketAbilities = CPacketAbilitiesImpl(wrapped as C13PacketPlayerAbilities)
+	override fun asCPacketPlayerAbilities(): ICPacketPlayerAbilities = CPacketPlayerAbilitiesImpl(wrapped as C13PacketPlayerAbilities)
 
 	override fun asCPacketChatMessage(): ICPacketChatMessage = CPacketChatMessageImpl(wrapped as C01PacketChatMessage)
 

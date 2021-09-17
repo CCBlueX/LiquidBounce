@@ -228,7 +228,7 @@ object ClassProviderImpl : IClassProvider
 
 	override fun createCPacketKeepAlive(): ICPacketKeepAlive = CPacketKeepAliveImpl(C00PacketKeepAlive())
 
-	override fun createCPacketKeepAlive(key: Int): ICPacketKeepAlive = CPacketKeepAliveImpl(C00PacketKeepAlive(key))
+	override fun createCPacketKeepAlive(key: Long): ICPacketKeepAlive = CPacketKeepAliveImpl(C00PacketKeepAlive(key.toInt()))
 
 	override fun createCPacketEncryptionResponse(secretKey: SecretKey, publicKey: PublicKey, verifyToken: ByteArray): IPacket = PacketImpl(C01PacketEncryptionResponse(secretKey, publicKey, verifyToken))
 
@@ -236,11 +236,11 @@ object ClassProviderImpl : IClassProvider
 
 	override fun createCPacketInput(): IPacket = PacketImpl(C0CPacketInput())
 
-	override fun createCPacketAbilities(capabilities: IPlayerCapabilities): ICPacketAbilities = CPacketAbilitiesImpl(C13PacketPlayerAbilities(capabilities.unwrap()))
+	override fun createCPacketPlayerAbilities(capabilities: IPlayerCapabilities): ICPacketPlayerAbilities = CPacketPlayerAbilitiesImpl(C13PacketPlayerAbilities(capabilities.unwrap()))
 
 	override fun createCPacketPlayerBlockPlacement(stack: IItemStack?): ICPacketPlayerBlockPlacement = CPacketPlayerBlockPlacementImpl(C08PacketPlayerBlockPlacement(stack?.unwrap()))
 
-	override fun createCPacketTryUseItem(stack: WEnumHand): PacketImpl<*> = Backend.BACKEND_UNSUPPORTED()
+	override fun createCPacketTryUseItem(hand: WEnumHand): PacketImpl<*> = Backend.BACKEND_UNSUPPORTED()
 
 	/* instance checks (Entity) */
 	override fun isEntityAnimal(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityAnimal

@@ -410,7 +410,7 @@ object Fly : Module()
 		{
 			val thePlayer = mc.thePlayer ?: return
 
-			val abilities = packet.asCPacketAbilities()
+			val abilities = packet.asCPacketPlayerAbilities()
 			if (bypassAbilitiesValue.get())
 			{
 				if (lastAbilitiesPacket == null)
