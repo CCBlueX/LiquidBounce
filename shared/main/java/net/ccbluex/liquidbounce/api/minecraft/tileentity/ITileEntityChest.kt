@@ -1,6 +1,6 @@
 package net.ccbluex.liquidbounce.api.minecraft.tileentity
 
-import net.ccbluex.liquidbounce.api.minecraft.util.WEnumChestType
+import net.ccbluex.liquidbounce.api.enums.WEnumChestType
 
 interface ITileEntityChest : ITileEntity
 {

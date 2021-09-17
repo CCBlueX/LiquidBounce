@@ -14,10 +14,10 @@ import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
 import net.ccbluex.liquidbounce.api.util.WrappedGuiSlot
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils
-import net.ccbluex.liquidbounce.utils.WorkerUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import net.ccbluex.liquidbounce.utils.render.CustomTexture
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.runAsync
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
 import java.awt.Color
@@ -45,7 +45,7 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 		failed = false
 
-		WorkerUtils.workers.execute(::loadCredits)
+		runAsync(::loadCredits)
 	}
 
 	override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)

@@ -83,7 +83,6 @@ import net.minecraft.entity.projectile.*
 import net.minecraft.event.ClickEvent
 import net.minecraft.init.Blocks
 import net.minecraft.init.Items
-import net.minecraft.inventory.ContainerRepair
 import net.minecraft.item.*
 import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.nbt.NBTTagDouble
@@ -105,7 +104,6 @@ import java.io.File
 import java.security.PublicKey
 import javax.crypto.SecretKey
 
-// TODO: Sort members according to IClassProvider
 object ClassProviderImpl : IClassProvider
 {
 	override val tessellatorInstance: ITessellator
@@ -118,6 +116,21 @@ object ClassProviderImpl : IClassProvider
 		get() = TextureUtilImpl
 
 	/* Constructors */
+	override fun createPacketBuffer(buffer: ByteBuf): IPacketBuffer = PacketBufferImpl(PacketBuffer(buffer))
+
+	override fun createChatComponentText(text: String): IIChatComponent = IChatComponentImpl(ChatComponentText(text))
+
+	override fun createClickEvent(action: IClickEvent.WAction, value: String): IClickEvent = ClickEventImpl(ClickEvent(action.unwrap(), value))
+
+	override fun createSession(name: String, uuid: String, accessToken: String, accountType: String): ISession = SessionImpl(Session(name, uuid, accessToken, accountType))
+
+	override fun createAxisAlignedBB(minX: Double, minY: Double, minZ: Double, maxX: Double, maxY: Double, maxZ: Double): IAxisAlignedBB = AxisAlignedBBImpl(AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ))
+
+	override fun createEntityOtherPlayerMP(world: IWorld, gameProfile: GameProfile): IEntityOtherPlayerMP = EntityOtherPlayerMPImpl(EntityOtherPlayerMP(world.unwrap(), gameProfile))
+
+	override fun createPotionEffect(id: Int, time: Int, strength: Int): IPotionEffect = PotionEffectImpl(PotionEffect(id, time, strength))
+
+	/* Constructors (Graphical) */
 	override fun createResourceLocation(resourceName: String): IResourceLocation = ResourceLocationImpl(ResourceLocation(resourceName))
 
 	override fun createThreadDownloadImageData(cacheFileIn: File?, imageUrlIn: String, textureResourceLocation: IResourceLocation?, imageBufferIn: WIImageBuffer): IThreadDownloadImageData
@@ -129,12 +142,17 @@ object ClassProviderImpl : IClassProvider
 		}))
 	}
 
-	override fun createPacketBuffer(buffer: ByteBuf): IPacketBuffer = PacketBufferImpl(PacketBuffer(buffer))
+	override fun createDynamicTexture(image: BufferedImage): IDynamicTexture = DynamicTextureImpl(DynamicTexture(image))
 
-	override fun createChatComponentText(text: String): IIChatComponent = IChatComponentImpl(ChatComponentText(text))
+	override fun createDynamicTexture(width: Int, height: Int): IDynamicTexture = DynamicTextureImpl(DynamicTexture(width, height))
 
-	override fun createClickEvent(action: IClickEvent.WAction, value: String): IClickEvent = ClickEventImpl(ClickEvent(action.unwrap(), value))
+	override fun createScaledResolution(mc: IMinecraft): IScaledResolution = ScaledResolutionImpl(ScaledResolution(mc.unwrap()))
 
+	override fun createSafeVertexBuffer(vertexFormat: IVertexFormat): IVertexBuffer = SafeVertexBuffer(vertexFormat.unwrap()).wrap()
+
+	override fun createFramebuffer(displayWidth: Int, displayHeight: Int, useDepth: Boolean): IFramebuffer = FramebufferImpl(Framebuffer(displayWidth, displayHeight, useDepth))
+
+	/* Constructors (GUI) */
 	override fun createGuiTextField(id: Int, iFontRenderer: IFontRenderer, x: Int, y: Int, width: Int, height: Int): IGuiTextField = GuiTextFieldImpl(GuiTextField(id, iFontRenderer.unwrap(), x, y, width, height))
 
 	override fun createGuiPasswordField(id: Int, iFontRenderer: IFontRenderer, x: Int, y: Int, width: Int, height: Int): IGuiTextField = GuiTextFieldImpl(GuiPasswordField(id, iFontRenderer.unwrap(), x, y, width, height))
@@ -142,36 +160,6 @@ object ClassProviderImpl : IClassProvider
 	override fun createGuiButton(id: Int, x: Int, y: Int, width: Int, height: Int, text: String): IGuiButton = GuiButtonImpl(GuiButton(id, x, y, width, height, text))
 
 	override fun createGuiButton(id: Int, x: Int, y: Int, text: String): IGuiButton = GuiButtonImpl(GuiButton(id, x, y, text))
-
-	override fun createSession(name: String, uuid: String, accessToken: String, accountType: String): ISession = SessionImpl(Session(name, uuid, accessToken, accountType))
-
-	override fun createDynamicTexture(image: BufferedImage): IDynamicTexture = DynamicTextureImpl(DynamicTexture(image))
-
-	override fun createDynamicTexture(width: Int, height: Int): IDynamicTexture = DynamicTextureImpl(DynamicTexture(width, height))
-
-	override fun createItem(): IItem = ItemImpl(Item())
-
-	override fun createItemStack(item: IItem, amount: Int, meta: Int): IItemStack = ItemStackImpl(ItemStack(item.unwrap(), amount, meta))
-
-	override fun createItemStack(item: IItem): IItemStack = ItemStackImpl(ItemStack(item.unwrap()))
-
-	override fun createItemStack(blockEnum: IBlock): IItemStack = ItemStackImpl(ItemStack(blockEnum.unwrap()))
-
-	override fun createAxisAlignedBB(minX: Double, minY: Double, minZ: Double, maxX: Double, maxY: Double, maxZ: Double): IAxisAlignedBB = AxisAlignedBBImpl(AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ))
-
-	override fun createScaledResolution(mc: IMinecraft): IScaledResolution = ScaledResolutionImpl(ScaledResolution(mc.unwrap()))
-
-	override fun createNBTTagCompound(): INBTTagCompound = NBTTagCompoundImpl(NBTTagCompound())
-
-	override fun createNBTTagList(): INBTTagList = NBTTagListImpl(NBTTagList())
-
-	override fun createNBTTagString(string: String): INBTTagString = NBTTagStringImpl(NBTTagString(string))
-
-	override fun createNBTTagDouble(value: Double): INBTTagDouble = NBTTagDoubleImpl(NBTTagDouble(value))
-
-	override fun createEntityOtherPlayerMP(world: IWorld, gameProfile: GameProfile): IEntityOtherPlayerMP = EntityOtherPlayerMPImpl(EntityOtherPlayerMP(world.unwrap(), gameProfile))
-
-	override fun createPotionEffect(id: Int, time: Int, strength: Int): IPotionEffect = PotionEffectImpl(PotionEffect(id, time, strength))
 
 	override fun createGuiOptions(parentScreen: IGuiScreen, gameSettings: IGameSettings): IGuiScreen = GuiScreenImpl(GuiOptions(parentScreen.unwrap(), gameSettings.unwrap()))
 
@@ -183,9 +171,26 @@ object ClassProviderImpl : IClassProvider
 
 	override fun createGuiConnecting(parent: IGuiScreen, mc: IMinecraft, serverData: IServerData): IGuiScreen = GuiScreenImpl(GuiConnecting(parent.unwrap(), mc.unwrap(), serverData.unwrap()))
 
-	override fun createCPacketHeldItemChange(slot: Int): ICPacketHeldItemChange = CPacketHeldItemChangeImpl(C09PacketHeldItemChange(slot))
+	/* Constructors (Item) */
+	override fun createItem(): IItem = ItemImpl(Item())
 
-	override fun createCPacketPlayerBlockPlacement(stack: IItemStack?): ICPacketPlayerBlockPlacement = CPacketPlayerBlockPlacementImpl(C08PacketPlayerBlockPlacement(stack?.unwrap()))
+	override fun createItemStack(item: IItem, amount: Int, meta: Int): IItemStack = ItemStackImpl(ItemStack(item.unwrap(), amount, meta))
+
+	override fun createItemStack(item: IItem): IItemStack = ItemStackImpl(ItemStack(item.unwrap()))
+
+	override fun createItemStack(blockEnum: IBlock): IItemStack = ItemStackImpl(ItemStack(blockEnum.unwrap()))
+
+	/* Constructors (NBT) */
+	override fun createNBTTagCompound(): INBTTagCompound = NBTTagCompoundImpl(NBTTagCompound())
+
+	override fun createNBTTagList(): INBTTagList = NBTTagListImpl(NBTTagList())
+
+	override fun createNBTTagString(string: String): INBTTagString = NBTTagStringImpl(NBTTagString(string))
+
+	override fun createNBTTagDouble(value: Double): INBTTagDouble = NBTTagDoubleImpl(NBTTagDouble(value))
+
+	/* Constructors (Client-side packet) */
+	override fun createCPacketHeldItemChange(slot: Int): ICPacketHeldItemChange = CPacketHeldItemChangeImpl(C09PacketHeldItemChange(slot))
 
 	override fun createCPacketPlayerBlockPlacement(positionIn: WBlockPos, placedBlockDirectionIn: Int, stackIn: IItemStack?, facingXIn: Float, facingYIn: Float, facingZIn: Float): ICPacketPlayerBlockPlacement = CPacketPlayerBlockPlacementImpl(C08PacketPlayerBlockPlacement(positionIn.unwrap(), placedBlockDirectionIn, stackIn?.unwrap(), facingXIn, facingYIn, facingZIn))
 
@@ -225,21 +230,19 @@ object ClassProviderImpl : IClassProvider
 
 	override fun createCPacketKeepAlive(key: Int): ICPacketKeepAlive = CPacketKeepAliveImpl(C00PacketKeepAlive(key))
 
+	override fun createCPacketEncryptionResponse(secretKey: SecretKey, publicKey: PublicKey, verifyToken: ByteArray): IPacket = PacketImpl(C01PacketEncryptionResponse(secretKey, publicKey, verifyToken))
+
 	override fun createCPacketChatMessage(message: String): ICPacketChatMessage = CPacketChatMessageImpl(C01PacketChatMessage(message))
 
 	override fun createCPacketInput(): IPacket = PacketImpl(C0CPacketInput())
 
 	override fun createCPacketAbilities(capabilities: IPlayerCapabilities): ICPacketAbilities = CPacketAbilitiesImpl(C13PacketPlayerAbilities(capabilities.unwrap()))
 
-	override fun createFramebuffer(displayWidth: Int, displayHeight: Int, useDepth: Boolean): IFramebuffer = FramebufferImpl(Framebuffer(displayWidth, displayHeight, useDepth))
-
-	override fun createSafeVertexBuffer(vertexFormat: IVertexFormat): IVertexBuffer = SafeVertexBuffer(vertexFormat.unwrap()).wrap()
-
-	override fun createCPacketEncryptionResponse(secretKey: SecretKey, publicKey: PublicKey, verifyToken: ByteArray): IPacket = PacketImpl(C01PacketEncryptionResponse(secretKey, publicKey, verifyToken))
+	override fun createCPacketPlayerBlockPlacement(stack: IItemStack?): ICPacketPlayerBlockPlacement = CPacketPlayerBlockPlacementImpl(C08PacketPlayerBlockPlacement(stack?.unwrap()))
 
 	override fun createCPacketTryUseItem(stack: WEnumHand): PacketImpl<*> = Backend.BACKEND_UNSUPPORTED()
 
-	/* instanceof checks */
+	/* instance checks (Entity) */
 	override fun isEntityAnimal(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityAnimal
 
 	override fun isEntitySquid(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntitySquid
@@ -286,16 +289,17 @@ object ClassProviderImpl : IClassProvider
 
 	override fun isEntityPotion(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityPotion
 
+	override fun isEntitySnowball(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntitySnowball
+
+	override fun isEntityEnderPearl(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityEnderPearl
+
 	override fun isEntityEgg(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityEgg
 
 	override fun isEntityFishHook(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityFishHook
 
 	override fun isEntityExpBottle(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityExpBottle
 
-	override fun isEntitySnowball(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntitySnowball
-
-	override fun isEntityEnderPearl(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityEnderPearl
-
+	/* instance checks (TileEntity) */
 	override fun isTileEntityChest(obj: Any?): Boolean = obj is TileEntityImpl && obj.wrapped is TileEntityChest
 
 	override fun isTileEntityEnderChest(obj: Any?): Boolean = obj is TileEntityImpl && obj.wrapped is TileEntityEnderChest
@@ -306,6 +310,9 @@ object ClassProviderImpl : IClassProvider
 
 	override fun isTileEntityHopper(obj: Any?): Boolean = obj is TileEntityImpl && obj.wrapped is TileEntityHopper
 
+	override fun isTileEntityShulkerBox(obj: Any?): Boolean = false
+
+	/* instance checks (Server-side packet) */
 	override fun isSPacketEntity(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S14PacketEntity
 
 	override fun isSPacketResourcePackSend(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S48PacketResourcePackSend
@@ -323,6 +330,8 @@ object ClassProviderImpl : IClassProvider
 	override fun isSPacketTabComplete(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S3APacketTabComplete
 
 	override fun isSPacketChat(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S02PacketChat
+
+	override fun isSPacketWindowItems(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S30PacketWindowItems
 
 	override fun isSPacketCustomPayload(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S3FPacketCustomPayload
 
@@ -344,6 +353,7 @@ object ClassProviderImpl : IClassProvider
 
 	override fun isSPacketEntityEquipment(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S04PacketEntityEquipment
 
+	/* instance checks (Client-side packet) */
 	override fun isCPacketPlayer(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C03PacketPlayer
 
 	override fun isCPacketPlayerBlockPlacement(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C08PacketPlayerBlockPlacement
@@ -366,8 +376,6 @@ object ClassProviderImpl : IClassProvider
 
 	override fun isCPacketEntityAction(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C0BPacketEntityAction
 
-	override fun isSPacketWindowItems(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S30PacketWindowItems
-
 	override fun isCPacketHeldItemChange(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C09PacketHeldItemChange
 
 	override fun isCPacketPlayerLook(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C03PacketPlayer.C05PacketPlayerLook
@@ -382,57 +390,7 @@ object ClassProviderImpl : IClassProvider
 
 	override fun isCPacketAbilities(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C13PacketPlayerAbilities
 
-	override fun isItemSword(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemSword
-
-	override fun isItemTool(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemTool
-
-	override fun isItemArmor(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemArmor
-
-	override fun isItemPotion(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemPotion
-
-	override fun isItemBlock(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemBlock
-
-	override fun isItemBow(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemBow
-
-	override fun isItemBucket(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemBucket
-
-	override fun isItemFood(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemFood
-
-	override fun isItemBucketMilk(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemBucketMilk
-
-	override fun isItemPickaxe(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemPickaxe
-
-	override fun isItemAxe(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemAxe
-
-	override fun isItemBed(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemBed
-
-	override fun isItemEnderPearl(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemEnderPearl
-
-	override fun isItemEnchantedBook(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemEnchantedBook
-
-	override fun isItemBoat(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemBoat
-
-	override fun isItemMinecart(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemMinecart
-
-	override fun isItemAppleGold(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemAppleGold
-
-	override fun isItemSnowball(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemSnowball
-
-	override fun isItemEgg(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemEgg
-
-	override fun isItemFishingRod(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemFishingRod
-
-	// ItemAir is not a thing in 1.8.9
-	override fun isItemAir(obj: Any?): Boolean = false
-
-	override fun isItemMap(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemMap
-
-	override fun isItemGlassBottle(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemGlassBottle
-
-	override fun isItemSkull(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemSkull
-
-	override fun isItemExpBottle(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemExpBottle
-
+	/* instance checks (Block) */
 	override fun isBlockAir(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockAir
 
 	override fun isBlockFence(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockFence
@@ -489,6 +447,59 @@ object ClassProviderImpl : IClassProvider
 
 	override fun isBlockContainer(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockContainer
 
+	/* instance checks (Item) */
+	override fun isItemSword(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemSword
+
+	override fun isItemTool(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemTool
+
+	override fun isItemArmor(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemArmor
+
+	override fun isItemPotion(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemPotion
+
+	override fun isItemBlock(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemBlock
+
+	override fun isItemBow(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemBow
+
+	override fun isItemBucket(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemBucket
+
+	override fun isItemFood(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemFood
+
+	override fun isItemBucketMilk(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemBucketMilk
+
+	override fun isItemPickaxe(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemPickaxe
+
+	override fun isItemAxe(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemAxe
+
+	override fun isItemBed(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemBed
+
+	override fun isItemEnderPearl(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemEnderPearl
+
+	override fun isItemEnchantedBook(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemEnchantedBook
+
+	override fun isItemBoat(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemBoat
+
+	override fun isItemMinecart(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemMinecart
+
+	override fun isItemAppleGold(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemAppleGold
+
+	override fun isItemSnowball(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemSnowball
+
+	override fun isItemEgg(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemEgg
+
+	override fun isItemFishingRod(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemFishingRod
+
+	// ItemAir is not a thing in 1.8.9
+	override fun isItemAir(obj: Any?): Boolean = false
+
+	override fun isItemMap(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemMap
+
+	override fun isItemGlassBottle(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemGlassBottle
+
+	override fun isItemSkull(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemSkull
+
+	override fun isItemExpBottle(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemExpBottle
+
+	/* instance checkd (GUI) */
 	override fun isGuiInventory(obj: Any?): Boolean = obj is GuiImpl<*> && obj.wrapped is GuiInventory
 
 	override fun isGuiContainer(obj: Any?): Boolean = obj is GuiImpl<*> && obj.wrapped is GuiContainer
@@ -506,8 +517,6 @@ object ClassProviderImpl : IClassProvider
 	override fun isClickGui(obj: Any?): Boolean = obj is GuiScreenImpl<*> && obj.wrapped is GuiScreenWrapper && obj.wrapped.wrapped is ClickGui
 
 	override fun isGuiRepair(obj: Any?): Boolean = obj is GuiImpl<*> && obj.wrapped is GuiRepair
-
-	override fun isTileEntityShulkerBox(obj: Any?): Boolean = false
 
 	/* Enum constructors */
 	override fun getPotionEnum(type: PotionType): IPotion
@@ -554,79 +563,79 @@ object ClassProviderImpl : IClassProvider
 
 	override fun getBlockEnum(type: BlockType): IBlock
 	{
-		return when (type)
+		return BlockImpl(when (type)
 		{
-			BlockType.ENCHANTING_TABLE -> Blocks.enchanting_table.wrap()
-			BlockType.CHEST -> Blocks.chest.wrap()
-			BlockType.ENDER_CHEST -> Blocks.ender_chest.wrap()
-			BlockType.TRAPPED_CHEST -> Blocks.trapped_chest.wrap()
-			BlockType.ANVIL -> Blocks.anvil.wrap()
-			BlockType.SAND -> Blocks.sand.wrap()
-			BlockType.WEB -> Blocks.web.wrap()
-			BlockType.TORCH -> Blocks.torch.wrap()
-			BlockType.CRAFTING_TABLE -> Blocks.crafting_table.wrap()
-			BlockType.FURNACE -> Blocks.furnace.wrap()
-			BlockType.WATERLILY -> Blocks.waterlily.wrap()
-			BlockType.DISPENSER -> Blocks.dispenser.wrap()
-			BlockType.STONE_PRESSURE_PLATE -> Blocks.stone_pressure_plate.wrap()
-			BlockType.WODDEN_PRESSURE_PLATE -> Blocks.wooden_pressure_plate.wrap()
-			BlockType.TNT -> Blocks.tnt.wrap()
-			BlockType.STANDING_BANNER -> Blocks.standing_banner.wrap()
-			BlockType.WALL_BANNER -> Blocks.wall_banner.wrap()
-			BlockType.REDSTONE_TORCH -> Blocks.redstone_torch.wrap()
-			BlockType.NOTEBLOCK -> Blocks.noteblock.wrap()
-			BlockType.DROPPER -> Blocks.dropper.wrap()
-			BlockType.SNOW_LAYER -> Blocks.snow_layer.wrap()
-			BlockType.AIR -> Blocks.air.wrap()
-			BlockType.ICE_PACKED -> Blocks.packed_ice.wrap()
-			BlockType.ICE -> Blocks.ice.wrap()
-			BlockType.WATER -> Blocks.water.wrap()
-			BlockType.BARRIER -> Blocks.barrier.wrap()
-			BlockType.FLOWING_WATER -> Blocks.flowing_water.wrap()
-			BlockType.COAL_ORE -> Blocks.coal_ore.wrap()
-			BlockType.IRON_ORE -> Blocks.iron_ore.wrap()
-			BlockType.GOLD_ORE -> Blocks.gold_ore.wrap()
-			BlockType.REDSTONE_ORE -> Blocks.redstone_ore.wrap()
-			BlockType.LAPIS_ORE -> Blocks.lapis_ore.wrap()
-			BlockType.DIAMOND_ORE -> Blocks.diamond_ore.wrap()
-			BlockType.EMERALD_ORE -> Blocks.emerald_ore.wrap()
-			BlockType.QUARTZ_ORE -> Blocks.quartz_ore.wrap()
-			BlockType.CLAY -> Blocks.clay.wrap()
-			BlockType.GLOWSTONE -> Blocks.glowstone.wrap()
-			BlockType.LADDER -> Blocks.ladder.wrap()
-			BlockType.COAL_BLOCK -> Blocks.coal_block.wrap()
-			BlockType.IRON_BLOCK -> Blocks.iron_block.wrap()
-			BlockType.GOLD_BLOCK -> Blocks.gold_block.wrap()
-			BlockType.DIAMOND_BLOCK -> Blocks.diamond_block.wrap()
-			BlockType.EMERALD_BLOCK -> Blocks.emerald_block.wrap()
-			BlockType.REDSTONE_BLOCK -> Blocks.redstone_block.wrap()
-			BlockType.LAPIS_BLOCK -> Blocks.lapis_block.wrap()
-			BlockType.FIRE -> Blocks.fire.wrap()
-			BlockType.MOSSY_COBBLESTONE -> Blocks.mossy_cobblestone.wrap()
-			BlockType.MOB_SPAWNER -> Blocks.mob_spawner.wrap()
-			BlockType.END_PORTAL_FRAME -> Blocks.end_portal_frame.wrap()
-			BlockType.BOOKSHELF -> Blocks.bookshelf.wrap()
-			BlockType.COMMAND_BLOCK -> Blocks.command_block.wrap()
-			BlockType.LAVA -> Blocks.lava.wrap()
-			BlockType.FLOWING_LAVA -> Blocks.flowing_lava.wrap()
-			BlockType.LIT_FURNACE -> Blocks.lit_furnace.wrap()
-			BlockType.DRAGON_EGG -> Blocks.dragon_egg.wrap()
-			BlockType.BROWN_MUSHROOM_BLOCK -> Blocks.brown_mushroom_block.wrap()
-			BlockType.RED_MUSHROOM_BLOCK -> Blocks.red_mushroom_block.wrap()
-			BlockType.FARMLAND -> Blocks.farmland.wrap()
-			BlockType.JUKEBOX -> Blocks.jukebox.wrap()
-			BlockType.REDSTONE_WIRE -> Blocks.redstone_wire.wrap()
-			BlockType.VINE -> Blocks.vine.wrap()
-			BlockType.BED -> Blocks.bed.wrap()
-			BlockType.CACTUS -> Blocks.cactus.wrap()
-			BlockType.GLASS_PANE -> Blocks.glass_pane.wrap()
-			BlockType.IRON_BARS -> Blocks.iron_bars.wrap()
-			BlockType.LIGHT_WEIGHTED_PRESSURE_PLATE -> Blocks.light_weighted_pressure_plate.wrap()
-			BlockType.HEAVY_WEIGHTED_PRESSURE_PLATE -> Blocks.heavy_weighted_pressure_plate.wrap()
-			BlockType.GRAVEL -> Blocks.gravel.wrap()
-			BlockType.STANDING_SIGN -> Blocks.standing_sign.wrap()
-			BlockType.WALL_SIGN -> Blocks.wall_sign.wrap()
-		}
+			BlockType.ENCHANTING_TABLE -> Blocks.enchanting_table
+			BlockType.CHEST -> Blocks.chest
+			BlockType.ENDER_CHEST -> Blocks.ender_chest
+			BlockType.TRAPPED_CHEST -> Blocks.trapped_chest
+			BlockType.ANVIL -> Blocks.anvil
+			BlockType.SAND -> Blocks.sand
+			BlockType.WEB -> Blocks.web
+			BlockType.TORCH -> Blocks.torch
+			BlockType.CRAFTING_TABLE -> Blocks.crafting_table
+			BlockType.FURNACE -> Blocks.furnace
+			BlockType.WATERLILY -> Blocks.waterlily
+			BlockType.DISPENSER -> Blocks.dispenser
+			BlockType.STONE_PRESSURE_PLATE -> Blocks.stone_pressure_plate
+			BlockType.WODDEN_PRESSURE_PLATE -> Blocks.wooden_pressure_plate
+			BlockType.TNT -> Blocks.tnt
+			BlockType.STANDING_BANNER -> Blocks.standing_banner
+			BlockType.WALL_BANNER -> Blocks.wall_banner
+			BlockType.REDSTONE_TORCH -> Blocks.redstone_torch
+			BlockType.NOTEBLOCK -> Blocks.noteblock
+			BlockType.DROPPER -> Blocks.dropper
+			BlockType.SNOW_LAYER -> Blocks.snow_layer
+			BlockType.AIR -> Blocks.air
+			BlockType.ICE_PACKED -> Blocks.packed_ice
+			BlockType.ICE -> Blocks.ice
+			BlockType.WATER -> Blocks.water
+			BlockType.BARRIER -> Blocks.barrier
+			BlockType.FLOWING_WATER -> Blocks.flowing_water
+			BlockType.COAL_ORE -> Blocks.coal_ore
+			BlockType.IRON_ORE -> Blocks.iron_ore
+			BlockType.GOLD_ORE -> Blocks.gold_ore
+			BlockType.REDSTONE_ORE -> Blocks.redstone_ore
+			BlockType.LAPIS_ORE -> Blocks.lapis_ore
+			BlockType.DIAMOND_ORE -> Blocks.diamond_ore
+			BlockType.EMERALD_ORE -> Blocks.emerald_ore
+			BlockType.QUARTZ_ORE -> Blocks.quartz_ore
+			BlockType.CLAY -> Blocks.clay
+			BlockType.GLOWSTONE -> Blocks.glowstone
+			BlockType.LADDER -> Blocks.ladder
+			BlockType.COAL_BLOCK -> Blocks.coal_block
+			BlockType.IRON_BLOCK -> Blocks.iron_block
+			BlockType.GOLD_BLOCK -> Blocks.gold_block
+			BlockType.DIAMOND_BLOCK -> Blocks.diamond_block
+			BlockType.EMERALD_BLOCK -> Blocks.emerald_block
+			BlockType.REDSTONE_BLOCK -> Blocks.redstone_block
+			BlockType.LAPIS_BLOCK -> Blocks.lapis_block
+			BlockType.FIRE -> Blocks.fire
+			BlockType.MOSSY_COBBLESTONE -> Blocks.mossy_cobblestone
+			BlockType.MOB_SPAWNER -> Blocks.mob_spawner
+			BlockType.END_PORTAL_FRAME -> Blocks.end_portal_frame
+			BlockType.BOOKSHELF -> Blocks.bookshelf
+			BlockType.COMMAND_BLOCK -> Blocks.command_block
+			BlockType.LAVA -> Blocks.lava
+			BlockType.FLOWING_LAVA -> Blocks.flowing_lava
+			BlockType.LIT_FURNACE -> Blocks.lit_furnace
+			BlockType.DRAGON_EGG -> Blocks.dragon_egg
+			BlockType.BROWN_MUSHROOM_BLOCK -> Blocks.brown_mushroom_block
+			BlockType.RED_MUSHROOM_BLOCK -> Blocks.red_mushroom_block
+			BlockType.FARMLAND -> Blocks.farmland
+			BlockType.JUKEBOX -> Blocks.jukebox
+			BlockType.REDSTONE_WIRE -> Blocks.redstone_wire
+			BlockType.VINE -> Blocks.vine
+			BlockType.BED -> Blocks.bed
+			BlockType.CACTUS -> Blocks.cactus
+			BlockType.GLASS_PANE -> Blocks.glass_pane
+			BlockType.IRON_BARS -> Blocks.iron_bars
+			BlockType.LIGHT_WEIGHTED_PRESSURE_PLATE -> Blocks.light_weighted_pressure_plate
+			BlockType.HEAVY_WEIGHTED_PRESSURE_PLATE -> Blocks.heavy_weighted_pressure_plate
+			BlockType.GRAVEL -> Blocks.gravel
+			BlockType.STANDING_SIGN -> Blocks.standing_sign
+			BlockType.WALL_SIGN -> Blocks.wall_sign
+		})
 	}
 
 	override fun getMaterialEnum(type: MaterialType): IMaterial
@@ -706,14 +715,7 @@ object ClassProviderImpl : IClassProvider
 	/* Wrappers */
 	override fun wrapFontRenderer(fontRenderer: IWrappedFontRenderer): IFontRenderer = FontRendererImpl(FontRendererWrapper(fontRenderer))
 
-	override fun wrapGuiScreen(clickGui: WrappedGuiScreen): IGuiScreen
-	{
-		val instance = GuiScreenImpl(GuiScreenWrapper(clickGui))
-
-		clickGui.representedScreen = instance
-
-		return instance
-	}
+	override fun wrapGuiScreen(wrappedGui: WrappedGuiScreen): IGuiScreen = GuiScreenImpl(GuiScreenWrapper(wrappedGui)).also { wrappedGui.representedScreen = it }
 
 	override fun wrapCreativeTab(name: String, wrappedCreativeTabs: WrappedCreativeTabs)
 	{

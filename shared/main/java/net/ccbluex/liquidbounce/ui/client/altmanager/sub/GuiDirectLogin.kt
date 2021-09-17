@@ -14,11 +14,11 @@ import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager.Companion.log
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils.logger
 import net.ccbluex.liquidbounce.utils.TabUtils.tab
-import net.ccbluex.liquidbounce.utils.WorkerUtils.workers
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount.AltServiceType
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.translateAlternateColorCodes
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
+import net.ccbluex.liquidbounce.utils.runAsync
 import org.lwjgl.input.Keyboard
 import java.awt.Toolkit
 import java.awt.datatransfer.DataFlavor
@@ -97,7 +97,7 @@ class GuiDirectLogin(gui: GuiAltManager) : WrappedGuiScreen()
 				loginButton.enabled = false
 				clipboardLoginButton.enabled = false
 
-				workers.execute {
+				runAsync {
 					status = "\u00A7aLogging in..."
 					status = if (password.text.isEmpty()) login(MinecraftAccount(AltServiceType.MOJANG, translateAlternateColorCodes(username.text))) else login(MinecraftAccount(AltServiceType.MOJANG, username.text, password.text))
 
@@ -120,7 +120,7 @@ class GuiDirectLogin(gui: GuiAltManager) : WrappedGuiScreen()
 				loginButton.enabled = false
 				clipboardLoginButton.enabled = false
 
-				workers.execute {
+				runAsync {
 					status = "\u00A7aLogging in..."
 					status = login(MinecraftAccount(AltServiceType.MOJANG, args[0], args[1]))
 

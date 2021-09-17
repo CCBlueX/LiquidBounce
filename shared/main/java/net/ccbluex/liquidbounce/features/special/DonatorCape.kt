@@ -11,8 +11,8 @@ import net.ccbluex.liquidbounce.event.SessionEvent
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.GuiDonatorCape
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
-import net.ccbluex.liquidbounce.utils.WorkerUtils
 import net.ccbluex.liquidbounce.utils.login.UserUtils
+import net.ccbluex.liquidbounce.utils.runAsync
 import org.apache.http.HttpHeaders
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpPatch
@@ -30,7 +30,7 @@ class DonatorCape : Listenable, MinecraftInstance()
 		val session = mc.session
 		if (!GuiDonatorCape.capeEnabled || GuiDonatorCape.transferCode.isEmpty() || !UserUtils.isValidTokenOffline(session.token)) return
 
-		WorkerUtils.workers.execute {
+		runAsync {
 			val uuid = session.playerId
 			val username = session.username
 

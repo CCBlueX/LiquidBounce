@@ -38,7 +38,7 @@ class Step : Module()
 		override fun showCondition() = modeValue.get().equals("MotionNCP", ignoreCase = true)
 	}
 	val airStepValue = BoolValue("AirStep", false)
-	val airStepHeightValue = object : FloatValue("AirStepHeight", 1F, 0.6F, 10F) // TODO
+	val airStepHeightValue = object : FloatValue("AirStepHeight", 1F, 0.6F, 10F)
 	{
 		override fun showCondition() = airStepValue.get()
 	}

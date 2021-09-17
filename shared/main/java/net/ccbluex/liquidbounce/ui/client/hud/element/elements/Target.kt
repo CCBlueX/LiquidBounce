@@ -430,7 +430,20 @@ class Target : Element()
 
 					// debug data
 					GL11.glScalef(debugScale, debugScale, debugScale)
-					debug?.forEachIndexed { i, str -> debugFont.drawString(str, scaledDebugXPos, scaledDebugYPos + (i + 1) * 10, 0xffffff) }
+
+					debug?.let {
+						var yOffset = 10
+						for (arr in debug)
+						{
+							for (string in arr)
+							{
+								debugFont.drawString(string, scaledDebugXPos, scaledDebugYPos + yOffset, 0xffffff)
+								yOffset += 10
+							}
+							yOffset += 5
+						}
+					}
+
 					GL11.glScalef(reverseDebugScale, reverseDebugScale, reverseDebugScale)
 				}
 			}
@@ -442,7 +455,7 @@ class Target : Element()
 		return Border(0F - borderExpanded, 0F - borderExpanded, minWidth + borderExpanded, height + borderExpanded)
 	}
 
-	private fun queryTarget(): Pair<IEntityLivingBase?, Array<String>?>?
+	private fun queryTarget(): Pair<IEntityLivingBase?, Array<Array<String>>?>?
 	{
 		val moduleManager = LiquidBounce.moduleManager
 
@@ -457,15 +470,16 @@ class Target : Element()
 
 		return when
 		{
-			tpAura.state && tpAura.maxTargetsValue.get() == 1 && tpAura.currentTarget != null -> tpAura.currentTarget to arrayOf("type=TpAura${tpAura.debug?.let { ", $it" }}")
+			tpAura.state && tpAura.maxTargetsValue.get() == 1 && tpAura.currentTarget != null -> tpAura.currentTarget to arrayOf(arrayOf("type=TpAura${tpAura.debug?.let { ", $it" }}"))
 			killAuraTarget != null -> killAuraTarget to run {
-				val list = mutableListOf("type" equalTo "KillAura")
-				killAura.updateTargetDebug?.asList()?.let(list::addAll)
+				val list = mutableListOf(arrayOf("type" equalTo "KillAura"))
+				killAura.updateHitableDebug?.let(list::add)
 				killAura.updateRotationsDebug?.let(list::add)
+				killAura.startBlockingDebug?.let(list::add)
 				list.toTypedArray()
 			}
-			aimbotTarget != null -> aimbotTarget to arrayOf("type=Aimbot")
-			bowAimbotTarget != null -> bowAimbotTarget to arrayOf("type=BowAimbot")
+			aimbotTarget != null -> aimbotTarget to arrayOf(arrayOf("type=Aimbot"))
+			bowAimbotTarget != null -> bowAimbotTarget to arrayOf(arrayOf("type=BowAimbot"))
 			else -> null
 		}
 	}

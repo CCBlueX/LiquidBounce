@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.file.configs.*
 import net.ccbluex.liquidbounce.injection.backend.Backend
 import net.ccbluex.liquidbounce.utils.ClientUtils.logger
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
-import net.ccbluex.liquidbounce.utils.WorkerUtils
+import net.ccbluex.liquidbounce.utils.runAsync
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import java.io.File
 import java.io.FileInputStream
@@ -158,8 +158,7 @@ class FileManager : MinecraftInstance()
 				return
 			}
 
-			// To minimize overheads caused by saving config, use workers instead of directly saving it
-			WorkerUtils.workers.execute {
+			runAsync {
 				var backupFile: File? = null
 				try
 				{
@@ -221,8 +220,7 @@ class FileManager : MinecraftInstance()
 		{
 			if (!ignoreStarting && isStarting) return
 
-			// To minimize overheads caused by saving config, use workers instead of directly saving it
-			WorkerUtils.workers.execute {
+			runAsync {
 				var backupFile: File? = null
 				try
 				{

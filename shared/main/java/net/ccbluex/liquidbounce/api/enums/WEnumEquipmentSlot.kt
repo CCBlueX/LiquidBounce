@@ -1,4 +1,4 @@
-package net.ccbluex.liquidbounce.api.minecraft.util
+package net.ccbluex.liquidbounce.api.enums
 
 enum class WEnumEquipmentSlot
 {

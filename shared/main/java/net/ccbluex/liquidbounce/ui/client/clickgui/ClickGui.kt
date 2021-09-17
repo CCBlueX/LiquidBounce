@@ -27,7 +27,7 @@ import java.util.*
 
 class ClickGui : WrappedGuiScreen()
 {
-	val panels: MutableCollection<Panel> = ArrayDeque(9)
+	val panels: ArrayDeque<Panel> = ArrayDeque(9)
 	private val hudIcon = classProvider.createResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/custom_hud_icon.png")
 
 	@JvmField
@@ -116,7 +116,6 @@ class ClickGui : WrappedGuiScreen()
 			localClickedPanel.y2 = localClickedPanel.y - newMouseYI
 			localClickedPanel.drag = true
 
-			// TODO: Optimize this shitty workaround
 			panels.remove(localClickedPanel)
 			panels.add(localClickedPanel)
 

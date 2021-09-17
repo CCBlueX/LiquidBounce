@@ -559,24 +559,22 @@ class Tower : Module()
 
 			GL11.glPushMatrix()
 			val blockOverlay = LiquidBounce.moduleManager[BlockOverlay::class.java] as BlockOverlay
-			if (blockOverlay.state && blockOverlay.infoEnabledValue.get() && blockOverlay.getCurrentBlock(theWorld) != null) GL11.glTranslatef(0f, 15f, 0f)
 
 			val blocksAmount = getBlocksAmount(thePlayer)
 			val info = "Blocks: \u00A7${if (blocksAmount <= 16) "c" else if (blocksAmount <= 64) "e" else "7"}$blocksAmount"
 
-			val provider = classProvider
-
-			val scaledResolution = provider.createScaledResolution(mc)
+			val scaledResolution = classProvider.createScaledResolution(mc)
 
 			val middleScreenX = scaledResolution.scaledWidth shr 1
 			val middleScreenY = scaledResolution.scaledHeight shr 1
+			val yoffset = if (blockOverlay.state && blockOverlay.infoEnabledValue.get() && blockOverlay.getCurrentBlock(theWorld) != null) 15f else 0f
 			val font = counterFontValue.get()
 
-			RenderUtils.drawBorderedRect(middleScreenX - 2.0f, middleScreenY + 5.0f, ((scaledResolution.scaledWidth shr 1) + font.getStringWidth(info)) + 2.0f, middleScreenY + font.fontHeight + 7.0f, 3f, -16777216, -16777216)
+			RenderUtils.drawBorderedRect(middleScreenX - 2.0f, middleScreenY + yoffset + 5.0f, ((scaledResolution.scaledWidth shr 1) + font.getStringWidth(info)) + 2.0f, middleScreenY + yoffset + font.fontHeight + 7.0f, 3f, -16777216, -16777216)
 
-			provider.glStateManager.resetColor()
+			classProvider.glStateManager.resetColor()
 
-			font.drawString(info, middleScreenX.toFloat(), middleScreenY + 7.0f, 0xffffff)
+			font.drawString(info, middleScreenX.toFloat(), middleScreenY + yoffset + 7.0f, 0xffffff)
 			GL11.glPopMatrix()
 		}
 	}

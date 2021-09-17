@@ -18,10 +18,10 @@ import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils.logger
 import net.ccbluex.liquidbounce.utils.TabUtils.tab
-import net.ccbluex.liquidbounce.utils.WorkerUtils.workers
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount.AltServiceType
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
+import net.ccbluex.liquidbounce.utils.runAsync
 import org.lwjgl.input.Keyboard
 import java.awt.Toolkit
 import java.awt.datatransfer.DataFlavor
@@ -195,7 +195,7 @@ class GuiAdd(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 
 		val account = MinecraftAccount(AltServiceType.MOJANG, name, password.ifEmpty { null })
 
-		workers.execute {
+		runAsync {
 			if (!account.isCracked)
 			{
 				status = "\u00A7aChecking..."
@@ -222,7 +222,7 @@ class GuiAdd(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 					clipboardButton.enabled = true
 					logger.warn("The account \"${account.name}:${account.password}\" not working.", e)
 
-					return@execute
+					return@runAsync
 				}
 				catch (e: AuthenticationException)
 				{
@@ -231,7 +231,7 @@ class GuiAdd(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 					clipboardButton.enabled = true
 					logger.warn("The account \"${account.name}:${account.password}\" not working.", e)
 
-					return@execute
+					return@runAsync
 				}
 				catch (e: NoSuchFieldException)
 				{
@@ -240,7 +240,7 @@ class GuiAdd(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 					clipboardButton.enabled = true
 					logger.warn("The account \"${account.name}:${account.password}\" not working.", e)
 
-					return@execute
+					return@runAsync
 				}
 				catch (e: IllegalAccessException)
 				{
@@ -249,7 +249,7 @@ class GuiAdd(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 					clipboardButton.enabled = true
 					logger.warn("The account \"${account.name}:${account.password}\" not working.", e)
 
-					return@execute
+					return@runAsync
 				}
 			}
 

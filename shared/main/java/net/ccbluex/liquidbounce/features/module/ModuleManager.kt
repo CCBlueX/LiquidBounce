@@ -203,7 +203,8 @@ class ModuleManager : Listenable
 			DamageParticle::class.java, //
 			AntiVanish::class.java, //
 			LightningDetector::class.java, //
-			AutoEnchant::class.java
+			AutoEnchant::class.java, //
+			AntiCAPTCHA::class.java
 
 		)
 
@@ -280,9 +281,7 @@ class ModuleManager : Listenable
 	}
 
 	/**
-	 * Legacy stuff
-	 *
-	 * TODO: Remove later when everything is translated to Kotlin
+	 * Legacy stuff to support scripts
 	 */
 
 	/**

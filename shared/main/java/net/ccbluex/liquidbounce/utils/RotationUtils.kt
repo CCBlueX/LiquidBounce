@@ -484,7 +484,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 */
 		fun getServerRotationDifference(thePlayer: IEntity, blockPos: WBlockPos, playerPredict: Boolean, playerPredictSize: MinMaxPair): Double = getServerRotationDifference(thePlayer, WVec3(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5), playerPredict, playerPredictSize)
 
-		fun getServerRotationDifference(thePlayer: IEntity, pos: WVec3, playerPredict: Boolean, playerPredictSize: MinMaxPair): Double = getRotationDifference(toRotation(thePlayer, pos, playerPredict, playerPredictSize), serverRotation)
+		private fun getServerRotationDifference(thePlayer: IEntity, pos: WVec3, playerPredict: Boolean, playerPredictSize: MinMaxPair): Double = getRotationDifference(toRotation(thePlayer, pos, playerPredict, playerPredictSize), serverRotation)
 
 		// /**
 		//  * Calculate difference between the client rotation and your entity

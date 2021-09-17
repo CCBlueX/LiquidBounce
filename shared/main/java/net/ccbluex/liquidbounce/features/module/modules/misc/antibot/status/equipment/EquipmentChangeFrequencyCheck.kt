@@ -4,7 +4,7 @@ import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ISPacketEntityEquipment
-import net.ccbluex.liquidbounce.api.minecraft.util.WEnumEquipmentSlot
+import net.ccbluex.liquidbounce.api.enums.WEnumEquipmentSlot
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.BotCheck

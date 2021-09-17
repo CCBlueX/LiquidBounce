@@ -15,10 +15,9 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.MovementUtils
-import net.ccbluex.liquidbounce.utils.WorkerUtils
+import net.ccbluex.liquidbounce.utils.runAsyncDelayed
 import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.input.Keyboard
-import java.util.concurrent.TimeUnit
 
 // Original author: turtl (https://github.com/chocopie69/Liquidbounce-Scripts/blob/main/combat/superKB.js and https://github.com/CzechHek/Core/blob/master/Scripts/SuperKnock.js)
 @ModuleInfo(name = "SuperKnockback", description = "Increases knockback dealt to other entities.", category = ModuleCategory.COMBAT)
@@ -160,8 +159,6 @@ class SuperKnockback : Module()
 				{
 					val notSprintingSlowdown = notSprintingSlowdownValue.get()
 
-					val scheduleDelayedTask = { delayMillis: Long, task: () -> Unit -> WorkerUtils.scheduledWorkers.schedule(task, delayMillis, TimeUnit.MILLISECONDS) }
-
 					val delay = delayValue.getRandomDelay()
 					val multipliedDelay = (delay * multiplierValue.getRandom()).toLong()
 
@@ -182,7 +179,7 @@ class SuperKnockback : Module()
 							netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
 
 							// Restore the original sprinting state
-							if (!sprinting) scheduleDelayedTask(1L) {
+							if (!sprinting) runAsyncDelayed(1L) {
 								netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SPRINTING))
 								thePlayer.sprinting = false
 							}
@@ -199,7 +196,7 @@ class SuperKnockback : Module()
 							if (!sprinting)
 							{
 								thePlayer.sprinting = false
-								scheduleDelayedTask(1L) { netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SPRINTING)) }
+								runAsyncDelayed(1L) { netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SPRINTING)) }
 							}
 						}
 
@@ -211,14 +208,14 @@ class SuperKnockback : Module()
 
 								if (!sprinting) netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
 
-								scheduleDelayedTask(delay) {
+								runAsyncDelayed(delay) {
 									netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SPRINTING))
 
 									if (notSprintingSlowdown && !thePlayer.sprinting) thePlayer.sprinting = false
 								}
 
 								// Restore the original sprinting state
-								if (sprinting) scheduleDelayedTask(multipliedDelay) {
+								if (sprinting) runAsyncDelayed(multipliedDelay) {
 									netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
 
 									if (notSprintingSlowdown) thePlayer.sprinting = true
@@ -233,12 +230,12 @@ class SuperKnockback : Module()
 								if (gameSettings.keyBindForward.pressed) gameSettings.keyBindForward.pressed = false
 
 								// Start sprinting after some delay
-								scheduleDelayedTask(delay) {
+								runAsyncDelayed(delay) {
 									gameSettings.keyBindForward.pressed = Keyboard.isKeyDown(gameSettings.keyBindForward.keyCode)
 								}
 
 								// Restore the original sprinting state
-								if (!sprinting) scheduleDelayedTask(multipliedDelay) {
+								if (!sprinting) runAsyncDelayed(multipliedDelay) {
 									if (thePlayer.sprinting) thePlayer.sprinting = false
 								}
 							}
@@ -250,13 +247,13 @@ class SuperKnockback : Module()
 							if (!sprinting) netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
 
 							// Stop sprinting after some delay
-							scheduleDelayedTask(delay) {
+							runAsyncDelayed(delay) {
 								netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SPRINTING))
 								if (notSprintingSlowdown && thePlayer.sprinting) thePlayer.sprinting = false
 							}
 
 							// Restore the original sprinting state
-							if (sprinting) scheduleDelayedTask(multipliedDelay) {
+							if (sprinting) runAsyncDelayed(multipliedDelay) {
 								netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
 
 								if (notSprintingSlowdown && !thePlayer.sprinting) thePlayer.sprinting = true

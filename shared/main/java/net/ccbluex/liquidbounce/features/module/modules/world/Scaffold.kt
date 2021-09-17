@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.isReplaceable
 import net.ccbluex.liquidbounce.utils.block.PlaceInfo
 import net.ccbluex.liquidbounce.utils.extensions.equalTo
 import net.ccbluex.liquidbounce.utils.extensions.serialize
+import net.ccbluex.liquidbounce.utils.extensions.withParentheses
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.*
@@ -560,7 +561,7 @@ class Scaffold : Module()
 	private fun findBlock(theWorld: IWorld, thePlayer: IEntityPlayerSP, expand: Boolean)
 	{
 		val failedResponce = { reason: String ->
-			searchDebug = listOf("result".equalTo("FAILED", "\u00A74"), "reason".equalTo("($reason)", "\u00A74")).serialize()
+			searchDebug = listOf("result".equalTo("FAILED", "\u00A74"), "reason" equalTo reason.withParentheses("\u00A74")).serialize()
 		}
 
 		val groundBlockState = lastGroundBlockState ?: run {
@@ -775,7 +776,7 @@ class Scaffold : Module()
 		}
 
 		val failedResponce = { reason: String ->
-			placeDebug = listOf("result".equalTo("FAILED", "\u00A74"), "reason".equalTo("($reason)", "\u00A74")).serialize()
+			placeDebug = listOf("result".equalTo("FAILED", "\u00A74"), "reason" equalTo reason.withParentheses("\u00A74")).serialize()
 		}
 
 		if (InventoryUtils.AUTOBLOCK_BLACKLIST.contains(BlockUtils.getBlock(theWorld, (targetPlace ?: return).blockPos)))
@@ -958,7 +959,6 @@ class Scaffold : Module()
 		val thePlayer = mc.thePlayer ?: return
 
 		val blockOverlay = LiquidBounce.moduleManager[BlockOverlay::class.java] as BlockOverlay
-		if (blockOverlay.state && blockOverlay.infoEnabledValue.get() && blockOverlay.getCurrentBlock(theWorld) != null) GL11.glTranslatef(0f, 15f, 0f)
 
 		val scaledResolution = classProvider.createScaledResolution(mc)
 
@@ -972,12 +972,14 @@ class Scaffold : Module()
 			val blocksAmount = getBlocksAmount(thePlayer)
 			val info = "Blocks: \u00A7${if (blocksAmount <= 16) "c" else if (blocksAmount <= 64) "e" else "7"}$blocksAmount${if (downValue.get() && blocksAmount == 1) " (You need at least 2 blocks to go down)" else ""}"
 
+			val yoffset = if (blockOverlay.state && blockOverlay.infoEnabledValue.get() && blockOverlay.getCurrentBlock(theWorld) != null) 15f else 0f
+
 			val font = visualCounterFontValue.get()
-			RenderUtils.drawBorderedRect(middleScreenX - 2f, middleScreenY + 5f, middleScreenX + font.getStringWidth(info) + 2f, middleScreenY + font.fontHeight + 7f, 3f, -16777216, -16777216)
+			RenderUtils.drawBorderedRect(middleScreenX - 2f, middleScreenY + yoffset + 5f, middleScreenX + font.getStringWidth(info) + 2f, middleScreenY + yoffset + font.fontHeight + 7f, 3f, -16777216, -16777216)
 
 			classProvider.glStateManager.resetColor()
 
-			font.drawString(info, middleScreenX.toFloat(), middleScreenY + 7f, 0xffffff)
+			font.drawString(info, middleScreenX.toFloat(), middleScreenY + yoffset + 7f, 0xffffff)
 			GL11.glPopMatrix()
 		}
 
@@ -985,24 +987,22 @@ class Scaffold : Module()
 		{
 			val font = Fonts.minecraftFont
 
-			val info = searchDebug ?: "\u00A74null\u00A7r"
-			val infoWidth = font.getStringWidth(info) shr 2
+			val info = searchDebug
+			val infoWidth = info?.let { font.getStringWidth(it) shr 2 }
 
-			val info2 = placeDebug ?: "\u00A74null\u00A7r"
-			val info2Width = font.getStringWidth(info2) shr 2
+			val info2 = placeDebug
+			val info2Width = info2?.let { font.getStringWidth(it) shr 2 }
 
 			GL11.glPushMatrix()
 
-			if (counter) GL11.glTranslatef(0f, 15f, 0f)
-
-			RenderUtils.drawBorderedRect(middleScreenX - infoWidth - 2f, middleScreenY - 60f, middleScreenX + infoWidth + 2f, middleScreenY + font.fontHeight * 0.5f - 60f, 3f, -16777216, -16777216)
-			RenderUtils.drawBorderedRect(middleScreenX - info2Width - 2f, middleScreenY - 50f, middleScreenX + info2Width + 2f, middleScreenY + font.fontHeight * 0.5f - 50f, 3f, -16777216, -16777216)
+			infoWidth?.let { RenderUtils.drawBorderedRect(middleScreenX - it - 2f, middleScreenY - 60f, middleScreenX + it + 2f, middleScreenY + font.fontHeight * 0.5f - 60f, 3f, -16777216, -16777216) }
+			info2Width?.let { RenderUtils.drawBorderedRect(middleScreenX - it - 2f, middleScreenY - 50f, middleScreenX + it + 2f, middleScreenY + font.fontHeight * 0.5f - 50f, 3f, -16777216, -16777216) }
 
 			classProvider.glStateManager.resetColor()
 
 			GL11.glScalef(0.5f, 0.5f, 0.5f)
-			font.drawCenteredString(info, middleScreenX.toFloat() * 2f, (middleScreenY - 60f) * 2f, 0xffffff)
-			font.drawCenteredString(info2, middleScreenX.toFloat() * 2f, (middleScreenY - 50f) * 2f, 0xffffff)
+			info?.let { font.drawCenteredString(it, middleScreenX.toFloat() * 2f, (middleScreenY - 60f) * 2f, 0xffffff) }
+			info2?.let { font.drawCenteredString(it, middleScreenX.toFloat() * 2f, (middleScreenY - 50f) * 2f, 0xffffff) }
 			GL11.glScalef(2f, 2f, 2f)
 
 			GL11.glPopMatrix()

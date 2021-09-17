@@ -45,7 +45,6 @@ import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
 
-// TODO: Modularize Modes
 @ModuleInfo(name = "Fly", description = "Allows you to fly in survival mode.", category = ModuleCategory.MOVEMENT, defaultKeyBinds = [Keyboard.KEY_F])
 object Fly : Module()
 {

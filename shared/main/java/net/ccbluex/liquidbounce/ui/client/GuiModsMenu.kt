@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils
-import net.ccbluex.liquidbounce.utils.WorkerUtils
+import net.ccbluex.liquidbounce.utils.runAsync
 import org.lwjgl.input.Keyboard
 
 class GuiModsMenu(private val prevGui: IGuiScreen) : WrappedGuiScreen()
@@ -56,7 +56,7 @@ class GuiModsMenu(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 					true ->
 					{
 						var value = true
-						WorkerUtils.workers.execute {
+						runAsync {
 							value = try
 							{
 								rpc.setup()

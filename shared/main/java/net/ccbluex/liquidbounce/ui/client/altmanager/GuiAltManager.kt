@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.misc.MiscUtils.createBufferedFileWriter
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils.openFileChooser
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils.saveFileChooser
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils.showErrorPopup
+import net.ccbluex.liquidbounce.utils.runAsync
 import net.mcleaks.MCLeaks
 import org.lwjgl.input.Keyboard
 import java.awt.Toolkit
@@ -167,7 +168,7 @@ class GuiAltManager(private val prevGui: IGuiScreen?) : WrappedGuiScreen()
 			{
 				loginButton.enabled = false
 				randomButton.enabled = false
-				workers.execute {
+				runAsync {
 					try
 					{
 						val minecraftAccount = altsList.accounts[altsList.selectedSlot]
@@ -197,7 +198,7 @@ class GuiAltManager(private val prevGui: IGuiScreen?) : WrappedGuiScreen()
 				loginButton.enabled = false
 				randomButton.enabled = false
 
-				workers.execute {
+				runAsync {
 					try
 					{
 						val minecraftAccount = altsList.accounts[randomInteger]
@@ -388,7 +389,7 @@ class GuiAltManager(private val prevGui: IGuiScreen?) : WrappedGuiScreen()
 					loginButton.enabled = false
 					randomButton.enabled = false
 
-					workers.execute {
+					runAsync {
 						val minecraftAccount = accounts[selected]
 						status = "\u00A7aLogging in..."
 						status = "\u00A7c" + login(minecraftAccount)

@@ -10,6 +10,10 @@ import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketCloseW
 import net.minecraft.network.play.client.C0DPacketCloseWindow
 
 class CPacketCloseWindowImpl<out T : C0DPacketCloseWindow>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketCloseWindow
+{
+	override val windowId: Int
+		get() = wrapped.windowId
+}
 
 fun ICPacketCloseWindow.unwrap(): C0DPacketCloseWindow = (this as CPacketCloseWindowImpl<*>).wrapped
 fun C0DPacketCloseWindow.wrap(): ICPacketCloseWindow = CPacketCloseWindowImpl(this)

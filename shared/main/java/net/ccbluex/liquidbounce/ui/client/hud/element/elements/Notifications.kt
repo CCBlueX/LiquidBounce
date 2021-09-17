@@ -23,7 +23,6 @@ import kotlin.math.max
 
 /**
  * CustomHUD Notification element
- * - TODO: Display the type of notification (Warning/Error/Info/Exclamation icon & text)
  */
 @ElementInfo(name = "Notifications", single = true)
 class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F, side: Side = Side(Side.Horizontal.RIGHT, Side.Vertical.DOWN)) : Element(x, y, scale, side)

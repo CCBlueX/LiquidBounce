@@ -13,10 +13,10 @@ import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils.logger
-import net.ccbluex.liquidbounce.utils.WorkerUtils.workers
 import net.ccbluex.liquidbounce.utils.login.UserUtils.getUsername
 import net.ccbluex.liquidbounce.utils.login.UserUtils.isValidTokenStatus
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
+import net.ccbluex.liquidbounce.utils.runAsync
 import org.lwjgl.input.Keyboard
 import java.awt.Toolkit
 import java.awt.datatransfer.DataFlavor
@@ -334,7 +334,7 @@ class GuiSessionInfo(private val prevGui: IGuiScreen, private val defaultSession
 				if (payloadJson.has("yggt"))
 				{
 					val accesstoken = payloadJson["yggt"].asString.also { accesstoken = it }
-					workers.execute {
+					runAsync {
 						val status = isValidTokenStatus(accesstoken)
 						val tokenValid = status.statusCode == 204
 
@@ -354,7 +354,7 @@ class GuiSessionInfo(private val prevGui: IGuiScreen, private val defaultSession
 				if (payloadJson.has("spr"))
 				{
 					val uuid = payloadJson["spr"].asString.also { uuid = it }
-					workers.execute {
+					runAsync {
 						nickname = getUsername(uuid)
 						nicknameChecked = true
 					}

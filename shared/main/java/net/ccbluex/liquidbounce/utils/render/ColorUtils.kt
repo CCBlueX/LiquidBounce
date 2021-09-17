@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.MurderDetector
 import net.ccbluex.liquidbounce.ui.font.GameFontRenderer
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
-import net.ccbluex.liquidbounce.utils.WorkerUtils
+import net.ccbluex.liquidbounce.utils.runAsync
 import java.awt.Color
 import java.text.NumberFormat
 import java.util.regex.Pattern
@@ -41,7 +41,7 @@ object ColorUtils : MinecraftInstance()
 
 	init
 	{
-		WorkerUtils.workers.execute {
+		runAsync {
 			repeat(16) { i ->
 				val baseColor = (i shr 3 and 1) * 85
 

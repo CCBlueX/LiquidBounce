@@ -264,3 +264,13 @@ fun S38PacketPlayerListItem.Action.wrap(): ISPacketPlayerListItem.WAction
 fun ISPacketPlayerListItem.WAddPlayerData.unwrap(): S38PacketPlayerListItem.AddPlayerData = S38PacketPlayerListItem().AddPlayerData(profile, ping, gameMode?.unwrap(), displayName?.unwrap())
 
 fun S38PacketPlayerListItem.AddPlayerData.wrap(): ISPacketPlayerListItem.WAddPlayerData = ISPacketPlayerListItem.WAddPlayerData(profile, ping, gameMode?.wrap(), displayName?.wrap())
+
+fun C16PacketClientStatus.EnumState.wrap(): ICPacketClientStatus.WEnumState
+{
+	return when(this)
+	{
+		C16PacketClientStatus.EnumState.PERFORM_RESPAWN -> ICPacketClientStatus.WEnumState.PERFORM_RESPAWN
+		C16PacketClientStatus.EnumState.REQUEST_STATS -> ICPacketClientStatus.WEnumState.REQUEST_STATS
+		C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT -> ICPacketClientStatus.WEnumState.OPEN_INVENTORY_ACHIEVEMENT
+	}
+}

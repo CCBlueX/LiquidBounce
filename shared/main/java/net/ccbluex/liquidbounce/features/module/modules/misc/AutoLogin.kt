@@ -19,16 +19,14 @@ class AutoLogin : Module()
 		val thePlayer = mc.thePlayer ?: return
 		val pw = password.get()
 
-		val provider = classProvider
-
-		if (provider.isSPacketChat(event.packet))
+		if (classProvider.isSPacketChat(event.packet))
 		{
 			val chat = event.packet.asSPacketChat().chatComponent.unformattedText
 			if (loginPattern.matcher(chat).find()) thePlayer.sendChatMessage("/login $pw")
 			if (registerPattern.matcher(chat).find()) thePlayer.sendChatMessage("/register $pw")
 			if (registerPattern2.matcher(chat).find()) thePlayer.sendChatMessage("/register $pw $pw")
 		}
-		else if (provider.isSPacketTitle(event.packet))
+		else if (classProvider.isSPacketTitle(event.packet))
 		{
 			val title = event.packet.asSPacketTitle().message?.unformattedText ?: return
 			if (loginPattern.matcher(title).find()) thePlayer.sendChatMessage("/login $pw")

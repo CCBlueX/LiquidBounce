@@ -61,11 +61,16 @@ object EntityUtils : MinecraftInstance()
 
 					if (canAttackCheck)
 					{
-						if (isBot(theWorld, thePlayer, entityPlayer)) return false
+						// Spectator check
+						if (entityPlayer.spectator) return false
 
+						// Friend check
 						if (isFriend(entityPlayer)) return false
 
-						if (entityPlayer.spectator) return false
+						// Bot check
+						if (isBot(theWorld, thePlayer, entityPlayer)) return false
+
+						// Teams check
 						val teams = LiquidBounce.moduleManager[Teams::class.java] as Teams
 						return !teams.state || !teams.isInYourTeam(entityPlayer)
 					}

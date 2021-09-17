@@ -33,11 +33,16 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-// TODO: Sort shadow members
 @Mixin(Entity.class)
 @SideOnly(Side.CLIENT)
 public abstract class MixinEntity
 {
+	@Shadow
+	public Entity ridingEntity;
+
+	@Shadow
+	public World worldObj;
+
 	@Shadow
 	public double posX;
 
@@ -46,21 +51,6 @@ public abstract class MixinEntity
 
 	@Shadow
 	public double posZ;
-
-	@Shadow
-	public abstract boolean isSprinting();
-
-	@Shadow
-	public float rotationPitch;
-
-	@Shadow
-	public float rotationYaw;
-
-	@Shadow
-	public abstract AxisAlignedBB getEntityBoundingBox();
-
-	@Shadow
-	public Entity ridingEntity;
 
 	@Shadow
 	public double motionX;
@@ -72,16 +62,25 @@ public abstract class MixinEntity
 	public double motionZ;
 
 	@Shadow
-	public boolean onGround;
+	public float rotationPitch;
 
 	@Shadow
-	public boolean isAirBorne;
+	public float rotationYaw;
+
+	@Shadow
+	public boolean onGround;
 
 	@Shadow
 	public boolean noClip;
 
 	@Shadow
-	public World worldObj;
+	public boolean isAirBorne;
+
+	@Shadow
+	public abstract boolean isSprinting();
+
+	@Shadow
+	public abstract AxisAlignedBB getEntityBoundingBox();
 
 	@SuppressWarnings("NoopMethodInAbstractClass")
 	@Shadow
@@ -253,7 +252,7 @@ public abstract class MixinEntity
 		// ItemPhysics
 		final ItemPhysics itemPhysics = (ItemPhysics) LiquidBounce.moduleManager.get(ItemPhysics.class);
 
-		//noinspection ConstantConditions
+		// noinspection ConstantConditions
 		if ((Object) this instanceof EntityItem && itemPhysics.getState())
 		{
 			setPosition(x, y, z);

@@ -2,7 +2,7 @@ package net.ccbluex.liquidbounce.injection.backend
 
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ISPacketEntityEquipment
-import net.ccbluex.liquidbounce.api.minecraft.util.WEnumEquipmentSlot
+import net.ccbluex.liquidbounce.api.enums.WEnumEquipmentSlot
 import net.minecraft.network.play.server.S04PacketEntityEquipment
 
 class SPacketEntityEquipmentImpl<out T : S04PacketEntityEquipment>(wrapped: T) : PacketImpl<T>(wrapped), ISPacketEntityEquipment

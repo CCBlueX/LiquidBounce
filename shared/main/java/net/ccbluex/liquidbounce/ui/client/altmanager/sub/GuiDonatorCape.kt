@@ -11,9 +11,9 @@ import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.WorkerUtils
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.runAsync
 import org.apache.http.HttpHeaders
 import org.apache.http.HttpStatus
 import org.apache.http.client.methods.HttpDelete
@@ -131,7 +131,7 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 					status = if (capeEnabled) "\u00A7aSuccessfully enabled offline cape"
 					else "\u00A7aSuccessfully disabled offline cape"
 				}
-				else WorkerUtils.workers.execute {
+				else runAsync {
 					val httpClient = HttpClients.createDefault()
 					val headers = arrayOf(BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json"), BasicHeader(HttpHeaders.AUTHORIZATION, transferCodeField.text))
 					val request = if (capeEnabled)

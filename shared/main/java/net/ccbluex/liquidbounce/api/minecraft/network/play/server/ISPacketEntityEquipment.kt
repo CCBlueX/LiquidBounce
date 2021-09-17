@@ -7,7 +7,7 @@
 package net.ccbluex.liquidbounce.api.minecraft.network.play.server
 
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
-import net.ccbluex.liquidbounce.api.minecraft.util.WEnumEquipmentSlot
+import net.ccbluex.liquidbounce.api.enums.WEnumEquipmentSlot
 
 interface ISPacketEntityEquipment
 {

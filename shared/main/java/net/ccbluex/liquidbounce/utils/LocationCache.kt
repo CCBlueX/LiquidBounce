@@ -7,7 +7,7 @@ import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.MotionEvent
-import java.lang.ref.WeakReference
+import java.lang.ref.SoftReference
 
 class LocationCache : MinecraftInstance(), Listenable
 {
@@ -38,7 +38,7 @@ class LocationCache : MinecraftInstance(), Listenable
 
 				list.add(entity.entityBoundingBox)
 
-				aabbList[entityId] = WeakReference(list)
+				aabbList[entityId] = SoftReference(list)
 			}
 		}
 	}
@@ -49,8 +49,8 @@ class LocationCache : MinecraftInstance(), Listenable
 	{
 		private const val listSize = 50
 
-		// Automated garbage collect by WeakReference
-		private val aabbList = HashMap<Int, WeakReference<MutableList<IAxisAlignedBB>>>(listSize)
+		// Automated garbage collect by SoftReference
+		private val aabbList = HashMap<Int, SoftReference<MutableList<IAxisAlignedBB>>>(listSize)
 		private val playerLocationList = ArrayList<Location>(listSize)
 
 		fun getAABBBeforeNTicks(entityId: Int, n: Int, default: IAxisAlignedBB): IAxisAlignedBB

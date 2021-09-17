@@ -305,8 +305,9 @@ class KillAura : Module()
 	private var switchDelay = switchDelayValue.getRandomDelay()
 	private val switchDelayTimer = MSTimer()
 
-	var updateTargetDebug: Array<String>? = null
-	var updateRotationsDebug: String? = null
+	var updateHitableDebug: Array<String>? = null
+	var updateRotationsDebug: Array<String>? = null
+	var startBlockingDebug: Array<String>? = null
 
 	/**
 	 * Did last attack failed
@@ -996,7 +997,8 @@ class KillAura : Module()
 	 */
 	private fun updateRotations(theWorld: IWorld, thePlayer: IEntityPlayer, entity: IEntity, isAttackRotation: Boolean): Boolean
 	{
-		if (rotationPredictEnemyEnabledValue.get())
+		val predictEnemy = rotationPredictEnemyEnabledValue.get()
+		if (predictEnemy)
 		{
 			predictX = rotationPredictEnemyIntensityValue.getRandom()
 			predictY = rotationPredictEnemyIntensityValue.getRandom()
@@ -1012,10 +1014,10 @@ class KillAura : Module()
 
 		var flags = 0
 
-		val rotationMode = rotationMode.get()
+		val rotationMode = rotationMode.get().toLowerCase()
 
 		// Apply rotation mode to flags
-		flags = flags or when (rotationMode.toLowerCase())
+		flags = flags or when (rotationMode)
 		{
 			"lockcenter" -> RotationUtils.LOCK_CENTER
 			"outborder" -> if (!attackTimer.hasTimePassed(attackDelay shr 1)) RotationUtils.OUT_BORDER else RotationUtils.RANDOM_CENTER
@@ -1023,8 +1025,10 @@ class KillAura : Module()
 			else -> 0
 		}
 
+		val predictPlayer = rotationPredictPlayerEnabledValue.get()
+
 		if (jitter && (thePlayer.getDistanceToEntityBox(entity) <= max(maxAttackRange, if (swingFakeSwingValue.get()) swingRange else Float.MIN_VALUE))) flags = flags or RotationUtils.JITTER
-		if (rotationPredictPlayerEnabledValue.get()) flags = flags or RotationUtils.PLAYER_PREDICT
+		if (predictPlayer) flags = flags or RotationUtils.PLAYER_PREDICT
 		if (thePlayer.getDistanceToEntityBox(entity) <= rangeThroughWallsAttackValue.get()) flags = flags or RotationUtils.SKIP_VISIBLE_CHECK
 
 		failedToRotate = false
@@ -1033,6 +1037,7 @@ class KillAura : Module()
 
 		// Search
 		var fallBackRotation: VecRotation? = null
+		var useFallback = false
 		val rotation = if (rotationLockAfterTeleportEnabledValue.get() && lockRotation != null && !lockRotationTimer.hasTimePassed(lockRotationDelay)) lockRotation!!
 		else if (!rotationLockValue.get() && RotationUtils.isFaced(theWorld, thePlayer, entity, aimRange.toDouble()) { getHitbox(entity, rotationLockExpandRangeValue.get().toDouble()) }) Rotation(lastYaw, lastPitch)
 		else (searchCenter(if (isAttackRotation) attackRange else aimRange) {
@@ -1041,12 +1046,25 @@ class KillAura : Module()
 
 			// TODO: Make better fallback
 			fallBackRotation = searchCenter(aimRange, null)
-		} ?: fallBackRotation ?: return false).rotation
+		} ?: run {
+			useFallback = true
+			fallBackRotation
+		} ?: return false).rotation
 
 		lastYaw = rotation.yaw
 		lastPitch = rotation.pitch
 
-		if (rotationMode.equals("Off", ignoreCase = true) || rotationTurnSpeedValue.getMax() <= 0F) return true
+		if (rotationMode.equals("Off", ignoreCase = true))
+		{
+			updateRotationsDebug = arrayOf("rotate".equalTo("DISABLED", "\u00A74"), "reason" equalTo "Rotation is turned off".withParentheses("\u00A7c"))
+			return true
+		}
+
+		if (rotationTurnSpeedValue.getMax() <= 0F)
+		{
+			updateRotationsDebug = arrayOf("rotate".equalTo("DISABLED", "\u00A74"), "reason" equalTo "TurnSpeed is zero or negative".withParentheses("\u00A7c"))
+			return true
+		}
 
 		// Limit TurnSpeed
 		val turnSpeed = rotationTurnSpeedValue.getRandomStrict()
@@ -1059,13 +1077,29 @@ class KillAura : Module()
 		lastYaw = limitedRotation.yaw
 		lastPitch = limitedRotation.pitch
 
+		val commonDebug = arrayOf(
+
+			"rotate".equalTo("SUCCESS", "\u00A7a"), // rotationResult
+			"useFallback" equalTo useFallback, // useFallback
+			"jitter" equalTo (flags and RotationUtils.JITTER != 0), // jitter
+			"skipVisibleCheck" equalTo (flags and RotationUtils.SKIP_VISIBLE_CHECK != 0) // skipVisibleCheck
+
+		)
+
 		if (rotationSilentValue.get())
 		{
-			val maxKeepLength = rotationKeepRotationTicks.getMax()
-			val keepLength = if (rotationKeepRotationEnabledValue.get() && maxKeepLength > 0) rotationKeepRotationTicks.getRandom() else 0
+			val keepLength = if (rotationKeepRotationEnabledValue.get() && rotationKeepRotationTicks.getMax() > 0) rotationKeepRotationTicks.getRandom() else 0
+
+			updateRotationsDebug = arrayOf(*commonDebug, "applicationMode" equalTo "silent", "keepTicks" equalTo keepLength)
+
 			RotationUtils.setTargetRotation(limitedRotation, keepLength)
 		}
-		else limitedRotation.applyRotationToPlayer(thePlayer)
+		else
+		{
+			updateRotationsDebug = arrayOf(*commonDebug, "applicationMode" equalTo "direct")
+
+			limitedRotation.applyRotationToPlayer(thePlayer)
+		}
 
 		val maxResetSpeed = rotationResetSpeedValue.getMax().coerceAtLeast(10F)
 		val minResetSpeed = rotationResetSpeedValue.getMin().coerceAtLeast(10F)
@@ -1109,21 +1143,21 @@ class KillAura : Module()
 		if (rotationMode.get().equals("Off", ignoreCase = true))
 		{
 			updateHitableByRange()
-			updateTargetDebug = arrayOf("rangeCheck".equalTo("$hitable", "\u00A7${if (hitable) "a" else "c"}"), "reason" equalTo "Rotation is turned off".withParentheses("\u00A7c"))
+			updateHitableDebug = arrayOf("rangeCheck" equalTo hitable, "reason" equalTo "Rotation is turned off".withParentheses("\u00A7c"))
 			return
 		}
 
 		if (rotationTurnSpeedValue.getMax() <= 0F)
 		{
 			updateHitableByRange()
-			updateTargetDebug = arrayOf("rangeCheck".equalTo("$hitable", "\u00A7${if (hitable) "a" else "c"}"), "reason" equalTo "Turnspeed is zero or negative".withParentheses("\u00A7c"))
+			updateHitableDebug = arrayOf("rangeCheck" equalTo hitable, "reason" equalTo "TurnSpeed is zero or negative".withParentheses("\u00A7c"))
 			return
 		}
 
 		if (targetModeValue.get().equals("Multi", ignoreCase = true))
 		{
 			updateHitableByRange()
-			updateTargetDebug = arrayOf("rangeCheck".equalTo("$hitable", "\u00A7${if (hitable) "a" else "c"}"), "reason" equalTo "Rotation is turned off".withParentheses("\u00A7c"))
+			updateHitableDebug = arrayOf("rangeCheck" equalTo hitable, "reason" equalTo "Rotation is turned off".withParentheses("\u00A7c"))
 			return
 		}
 
@@ -1142,7 +1176,7 @@ class KillAura : Module()
 
 			if (raycastedEntity != null && provider.isEntityLivingBase(raycastedEntity) && (LiquidBounce.moduleManager[NoFriends::class.java].state || !provider.isEntityPlayer(raycastedEntity) || !raycastedEntity.asEntityPlayer().isClientFriend())) this.currentTarget = raycastedEntity.asEntityLivingBase()
 
-			updateTargetDebug = if (distanceToTarget != null)
+			updateHitableDebug = if (distanceToTarget != null)
 			{
 				if (distanceToRaycasted != null)
 				{
@@ -1158,7 +1192,7 @@ class KillAura : Module()
 		else
 		{
 			hitable = if (currentTarget != null) RotationUtils.isFaced(theWorld, thePlayer, currentTarget, reach) { getHitbox(it, if (rotationLockValue.get()) 0.0 else rotationLockExpandRangeValue.get().toDouble()) } else false
-			updateTargetDebug = arrayOf("faced".equalTo(hitable, "\u00A7${if (hitable) "a" else "c"}"))
+			updateHitableDebug = arrayOf("faced" equalTo hitable)
 		}
 	}
 
@@ -1204,13 +1238,16 @@ class KillAura : Module()
 				val lookAt = positionEye.addVector(yawSin * pitchCos * range, pitchSin * range, yawCos * pitchCos * range)
 
 				val movingObject = boundingBox.calculateIntercept(positionEye, lookAt)
-				if (movingObject != null)
+				startBlockingDebug = if (movingObject != null)
 				{
 					val hitVec = movingObject.hitVec
 
 					netHandler.addToSendQueue(provider.createCPacketUseEntity(interactEntity, WVec3(hitVec.xCoord - interactEntity.posX, hitVec.yCoord - interactEntity.posY, hitVec.zCoord - interactEntity.posZ)))
 					netHandler.addToSendQueue(provider.createCPacketUseEntity(interactEntity, ICPacketUseEntity.WAction.INTERACT))
+
+					arrayOf("interactAutoblockResult".equalTo("SUCCESS", "\u00A7a"), "interactAutoblockHitType" equalTo movingObject.typeOfHit.name, "interactAutoblockHitVec" equalTo hitVec)
 				}
+				else arrayOf("interactAutoblockResult".equalTo("FAILED", "\u00A7c"), "reason" equalTo "raytraceResult = null".withParentheses("\u00A74"))
 			}
 
 			netHandler.addToSendQueue(provider.createCPacketPlayerBlockPlacement(WBlockPos(-1, -1, -1), 255, (mc.thePlayer ?: return).inventory.getCurrentItemInHand(), 0.0F, 0.0F, 0.0F))

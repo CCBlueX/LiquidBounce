@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.MovementUtils
-import net.ccbluex.liquidbounce.utils.WorkerUtils
+import net.ccbluex.liquidbounce.utils.runAsync
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -50,24 +50,13 @@ class Regen : Module()
 
 			when (modeValue.get().toLowerCase())
 			{
-				"vanilla" ->
-				{
-					WorkerUtils.workers.execute {
-						repeat(speedValue.get()) {
-							netHandler.addToSendQueue(provider.createCPacketPlayer(onGround))
-						}
-					}
-				}
+				"vanilla" -> runAsync { repeat(speedValue.get()) { netHandler.addToSendQueue(provider.createCPacketPlayer(onGround)) } }
 
 				"spartan" ->
 				{
 					if (MovementUtils.isMoving(thePlayer) || !onGround) return
 
-					WorkerUtils.workers.execute {
-						repeat(9) {
-							netHandler.addToSendQueue(provider.createCPacketPlayer(onGround))
-						}
-					}
+					runAsync { repeat(9) { netHandler.addToSendQueue(provider.createCPacketPlayer(onGround)) } }
 
 					timer.timerSpeed = 0.45F
 					resetTimer = true

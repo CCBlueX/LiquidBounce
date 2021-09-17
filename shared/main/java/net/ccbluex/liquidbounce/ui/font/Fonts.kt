@@ -10,10 +10,10 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer
 import net.ccbluex.liquidbounce.utils.ClientUtils.logger
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
-import net.ccbluex.liquidbounce.utils.WorkerUtils.workers
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils.download
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils.createBufferedFileReader
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils.createBufferedFileWriter
+import net.ccbluex.liquidbounce.utils.runAsync
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils.nanosecondsToString
 import java.awt.Font
 import java.io.*
@@ -96,7 +96,7 @@ object Fonts : MinecraftInstance()
 	{
 		val outputFile = File(LiquidBounce.fileManager.fontsDir, "roboto.zip")
 
-		if (!outputFile.exists()) workers.execute {
+		if (!outputFile.exists()) runAsync {
 			try
 			{
 				logger.info("Downloading fonts...")

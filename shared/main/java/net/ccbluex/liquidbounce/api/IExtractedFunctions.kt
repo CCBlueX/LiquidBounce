@@ -21,47 +21,59 @@ import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
 
 interface IExtractedFunctions
 {
-	fun getModifierForCreature(heldItem: IItemStack?, creatureAttribute: IEnumCreatureAttribute): Float
-	fun getObjectFromItemRegistry(res: IResourceLocation): IItem?
-	fun renderTileEntity(tileEntity: ITileEntity, partialTicks: Float, destroyStage: Int)
-
+	/* Block */
 	fun getBlockById(id: Int): IBlock?
 	fun getIdFromBlock(block: IBlock): Int
 	fun getBlockFromName(name: String): IBlock?
 	fun getBlockRegistryKeys(): Collection<IResourceLocation>
+	fun isBlockEqualTo(block1: IBlock?, block2: IBlock?): Boolean
 
+	/* Item */
+	fun getModifierForCreature(heldItem: IItemStack?, creatureAttribute: IEnumCreatureAttribute): Float
 	fun getItemRegistryKeys(): Collection<IResourceLocation>
+	fun getObjectFromItemRegistry(res: IResourceLocation): IItem?
 	fun getItemByName(name: String): IItem?
 	fun getIdFromItem(item: IItem): Int
 
+	/* Encahntment */
 	fun getEnchantmentByLocation(location: String): IEnchantment?
 	fun getEnchantmentById(enchantID: Int): IEnchantment?
 	fun getEnchantments(): Collection<IResourceLocation>
 	fun getEnchantments(item: IItemStack): Map<Int, Int>
 	fun getEnchantmentLevel(enchId: Int, stack: IItemStack): Int
 
+	/* Render-related */
 	fun enableStandardItemLighting()
-
 	fun enableGUIStandardItemLighting()
 	fun disableStandardItemLighting()
-	fun disableFastRender()
 	fun setActiveTextureLightMapTexUnit()
 	fun setActiveTextureDefaultTexUnit()
 	fun getLightMapTexUnit(): Int
 	fun setLightmapTextureCoords(target: Int, x: Float, y: Float)
+	fun renderTileEntity(tileEntity: ITileEntity, partialTicks: Float, destroyStage: Int)
+	fun disableFastRender()
 
+	/* Translation */
 	fun formatI18n(key: String, vararg values: String): String
-	fun sessionServiceJoinServer(profile: GameProfile, token: String, sessionHash: String)
-	fun getPotionById(potionID: Int): IPotion
-	fun scoreboardFormatPlayerName(scorePlayerTeam: ITeam?, playerName: String): String
-	fun jsonToComponent(toString: String): IIChatComponent
-	fun getHorizontalFacing(yaw: Float): IEnumFacing
 	fun translateToLocal(key: String): String
-	fun isBlockEqualTo(block1: IBlock?, block2: IBlock?): Boolean
 
-	// MathHelper's sin and cos algorithm is faster than StrictMath's (Because MathHelper uses better algorithm and it is compatible with BetterFps mod)
+	/* Potion */
+	fun getPotionById(potionID: Int): IPotion
+	fun getLiquidColor(potionDamage: Int, bypassCache: Boolean): Int
+
+	/* Session */
+	fun sessionServiceJoinServer(profile: GameProfile, token: String, sessionHash: String)
+
+	/* Scoreboard */
+	fun scoreboardFormatPlayerName(scorePlayerTeam: ITeam?, playerName: String): String
+
+	/* JSON */
+	fun jsonToComponent(toString: String): IIChatComponent
+
+	/* Facing */
+	fun getHorizontalFacing(yaw: Float): IEnumFacing
+
+	/* Delegate to MathHelper (it's faster and compatible with BetterFps) */
 	fun cos(radians: Float): Float
 	fun sin(radians: Float): Float
-
-	fun getLiquidColor(potionDamage: Int, bypassCache: Boolean): Int
 }

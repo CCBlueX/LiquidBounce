@@ -77,6 +77,7 @@ interface IClassProvider
 	 */
 	val textureUtil: ITextureUtil
 
+	/* Constructors (Uncategorized) */
 	fun createPacketBuffer(buffer: ByteBuf): IPacketBuffer
 	fun createChatComponentText(text: String): IIChatComponent
 	fun createClickEvent(action: IClickEvent.WAction, value: String): IClickEvent
@@ -92,12 +93,18 @@ interface IClassProvider
 	fun createDynamicTexture(width: Int, height: Int): IDynamicTexture
 	fun createScaledResolution(mc: IMinecraft): IScaledResolution
 	fun createSafeVertexBuffer(vertexFormat: IVertexFormat): IVertexBuffer
+	fun createFramebuffer(displayWidth: Int, displayHeight: Int, useDepth: Boolean): IFramebuffer
 
 	/* Constructor (GUI) */
 	fun createGuiTextField(id: Int, iFontRenderer: IFontRenderer, x: Int, y: Int, width: Int, height: Int): IGuiTextField
 	fun createGuiPasswordField(id: Int, iFontRenderer: IFontRenderer, x: Int, y: Int, width: Int, height: Int): IGuiTextField
 	fun createGuiButton(id: Int, x: Int, y: Int, width: Int, height: Int, text: String): IGuiButton
 	fun createGuiButton(id: Int, x: Int, y: Int, text: String): IGuiButton
+	fun createGuiOptions(parentScreen: IGuiScreen, gameSettings: IGameSettings): IGuiScreen
+	fun createGuiSelectWorld(parentScreen: IGuiScreen): IGuiScreen
+	fun createGuiMultiplayer(parentScreen: IGuiScreen): IGuiScreen
+	fun createGuiModList(parentScreen: IGuiScreen): IGuiScreen
+	fun createGuiConnecting(parent: IGuiScreen, mc: IMinecraft, serverData: IServerData): IGuiScreen
 
 	/* Constructors (Item) */
 	fun createItem(): IItem
@@ -110,13 +117,6 @@ interface IClassProvider
 	fun createNBTTagList(): INBTTagList
 	fun createNBTTagString(string: String): INBTTagString
 	fun createNBTTagDouble(value: Double): INBTTagDouble
-
-	/* Constructors (GUI) */
-	fun createGuiOptions(parentScreen: IGuiScreen, gameSettings: IGameSettings): IGuiScreen
-	fun createGuiSelectWorld(parentScreen: IGuiScreen): IGuiScreen
-	fun createGuiMultiplayer(parentScreen: IGuiScreen): IGuiScreen
-	fun createGuiModList(parentScreen: IGuiScreen): IGuiScreen
-	fun createGuiConnecting(parent: IGuiScreen, mc: IMinecraft, serverData: IServerData): IGuiScreen
 
 	/* Constructors (Client-side packet) */
 	fun createCPacketHeldItemChange(slot: Int): ICPacketHeldItemChange
@@ -145,15 +145,13 @@ interface IClassProvider
 	fun createCPacketAbilities(capabilities: IPlayerCapabilities): ICPacketAbilities
 
 	/**
-	 * Only available for 1.8.9, can be replaced with [createCPacketTryUseItem] in later versions
+	 * Only available up to 1.8.9, replaced with [createCPacketTryUseItem] since 1.9
 	 */
 	@SupportsMinecraftVersions(MinecraftVersion.MC_1_8)
 	fun createCPacketPlayerBlockPlacement(stack: IItemStack?): ICPacketPlayerBlockPlacement
 
 	@SupportsMinecraftVersions(MinecraftVersion.MC_1_12)
 	fun createCPacketTryUseItem(stack: WEnumHand): PacketImpl<*>
-
-	fun createFramebuffer(displayWidth: Int, displayHeight: Int, useDepth: Boolean): IFramebuffer
 
 	/* instance checks (Entity) */
 	fun isEntityAnimal(obj: Any?): Boolean
@@ -315,7 +313,7 @@ interface IClassProvider
 
 	/* Wrappers */
 	fun wrapFontRenderer(fontRenderer: IWrappedFontRenderer): IFontRenderer
-	fun wrapGuiScreen(clickGui: WrappedGuiScreen): IGuiScreen
+	fun wrapGuiScreen(wrappedGui: WrappedGuiScreen): IGuiScreen
 	fun wrapCreativeTab(name: String, wrappedCreativeTabs: WrappedCreativeTabs)
 	fun wrapGuiSlot(wrappedGuiSlot: WrappedGuiSlot, mc: IMinecraft, width: Int, height: Int, top: Int, bottom: Int, slotHeight: Int)
 }

@@ -5,8 +5,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketClientStatus
 import net.ccbluex.liquidbounce.event.ClickWindowEvent
 import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -17,9 +19,9 @@ import net.ccbluex.liquidbounce.value.BoolValue
 @ModuleInfo(name = "InventoryMove", description = "Allows you to walk while an inventory is opened.", category = ModuleCategory.MOVEMENT)
 class InventoryMove : Module()
 {
-
 	private val undetectable = BoolValue("Undetectable", false)
 	val aacAdditionProValue = BoolValue("AACAdditionPro", false)
+	private val blockPacketsValue = BoolValue("BlockPackets", true)
 	private val noMoveClicksValue = BoolValue("NoMoveClicks", false)
 
 	private val affectedBindings = run {
@@ -43,6 +45,17 @@ class InventoryMove : Module()
 		val onlyInventory = undetectable.get()
 
 		if (!provider.isGuiChat(currentScreen) && !provider.isGuiIngameMenu(currentScreen) && (!onlyInventory || !provider.isGuiContainer(currentScreen))) for (affectedBinding in affectedBindings) affectedBinding.pressed = gameSettings.isKeyDown(affectedBinding)
+	}
+
+	@EventTarget
+	fun onPacket(event: PacketEvent)
+	{
+		if (!blockPacketsValue.get()) return
+
+		val packet = event.packet
+
+		if (classProvider.isCPacketClientStatus(packet) && packet.asCPacketClientStatus().status == ICPacketClientStatus.WEnumState.OPEN_INVENTORY_ACHIEVEMENT) event.cancelEvent()
+		else if (classProvider.isCPacketCloseWindow(packet) && packet.asCPacketCloseWindow().windowId == 0) event.cancelEvent()
 	}
 
 	@EventTarget

@@ -13,7 +13,7 @@ object WorkerUtils
 
 	init
 	{
-		scheduledWorkers.setKeepAliveTime(5L, TimeUnit.SECONDS)
+		scheduledWorkers.setKeepAliveTime(30L, TimeUnit.SECONDS)
 	}
 
 	private class LiquidBounceThreadFactory(prefix: String = "") : ThreadFactory
@@ -38,3 +38,38 @@ object WorkerUtils
 		}
 	}
 }
+
+fun runAsync(block: () -> Unit) = WorkerUtils.workers.execute(block)
+
+// from: https://www.baeldung.com/java-completablefuture
+// TODO: Better solution
+fun runAsyncParallel(blocks: Collection<() -> Unit>): CompletableFuture<Void>
+{
+	val futures = arrayOfNulls<CompletableFuture<*>>(blocks.size)
+	blocks.forEachIndexed { index, block ->
+		val future = CompletableFuture<Void>()
+
+		runAsync {
+			try
+			{
+				block()
+				future.complete(null)
+			}
+			catch (t: Throwable)
+			{
+				future.completeExceptionally(t)
+			}
+		}
+
+		futures[index] = future
+	}
+
+	return CompletableFuture.allOf(*futures)
+}
+
+fun <T> supplyAsync(block: () -> T): Future<T> = WorkerUtils.workers.submit(block)
+
+// delayMillis: Long, task: () -> Unit -> WorkerUtils.scheduledWorkers.schedule(task, delayMillis, TimeUnit.MILLISECONDS)
+
+fun <T> runAsyncDelayed(delayInMillis: Long, block: () -> T): ScheduledFuture<T> = WorkerUtils.scheduledWorkers.schedule(block, delayInMillis, TimeUnit.MILLISECONDS)
+

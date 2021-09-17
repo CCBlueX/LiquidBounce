@@ -63,23 +63,21 @@ object ExtractedFunctionsImpl : IExtractedFunctions
 
 	override fun getBlockFromName(name: String): IBlock? = Block.getBlockFromName(name)?.wrap()
 
-	override fun getEnchantments(item: IItemStack): Map<Int, Int> = EnchantmentHelper.getEnchantments(item.unwrap())
+	override fun getBlockRegistryKeys(): Collection<IResourceLocation> = WrappedCollection(Block.blockRegistry.keys, IResourceLocation::unwrap, ResourceLocation::wrap)
 
 	override fun isBlockEqualTo(block1: IBlock?, block2: IBlock?): Boolean = Block.isEqualTo(block1?.unwrap(), block2?.unwrap())
 
 	/* Item */
-	override fun getItemByName(name: String): IItem? = (Items::class.java.getField(name).get(null) as Item?)?.wrap()
 
 	override fun getModifierForCreature(heldItem: IItemStack?, creatureAttribute: IEnumCreatureAttribute): Float = EnchantmentHelper.getModifierForCreature(heldItem?.unwrap(), creatureAttribute.unwrap())
 
-	override fun getIdFromItem(item: IItem): Int = Item.getIdFromItem(item.unwrap())
-
-	/* Registry */
-	override fun getObjectFromItemRegistry(res: IResourceLocation): IItem? = Item.itemRegistry.getObject(res.unwrap())?.wrap()
-
 	override fun getItemRegistryKeys(): Collection<IResourceLocation> = WrappedCollection(Item.itemRegistry.keys, IResourceLocation::unwrap, ResourceLocation::wrap)
 
-	override fun getBlockRegistryKeys(): Collection<IResourceLocation> = WrappedCollection(Block.blockRegistry.keys, IResourceLocation::unwrap, ResourceLocation::wrap)
+	override fun getObjectFromItemRegistry(res: IResourceLocation): IItem? = Item.itemRegistry.getObject(res.unwrap())?.wrap()
+
+	override fun getItemByName(name: String): IItem? = (Items::class.java.getField(name).get(null) as Item?)?.wrap()
+
+	override fun getIdFromItem(item: IItem): Int = Item.getIdFromItem(item.unwrap())
 
 	/* Enchantment */
 	override fun getEnchantmentByLocation(location: String): IEnchantment? = Enchantment.getEnchantmentByLocation(location)?.wrap()
@@ -88,20 +86,19 @@ object ExtractedFunctionsImpl : IExtractedFunctions
 
 	override fun getEnchantments(): Collection<IResourceLocation> = WrappedCollection(Enchantment.func_181077_c(), IResourceLocation::unwrap, ResourceLocation::wrap)
 
+	override fun getEnchantments(item: IItemStack): Map<Int, Int> = EnchantmentHelper.getEnchantments(item.unwrap())
+
 	override fun getEnchantmentLevel(enchId: Int, stack: IItemStack): Int = EnchantmentHelper.getEnchantmentLevel(enchId, stack.unwrap())
 
 	/* Rendering-related */
 	override fun enableStandardItemLighting() = RenderHelper.enableStandardItemLighting()
+
 	override fun enableGUIStandardItemLighting() = RenderHelper.enableGUIStandardItemLighting()
 	override fun disableStandardItemLighting() = RenderHelper.disableStandardItemLighting()
-
 	override fun setActiveTextureLightMapTexUnit() = GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit)
 	override fun setActiveTextureDefaultTexUnit() = GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit)
-
-	override fun getHorizontalFacing(yaw: Float): IEnumFacing = EnumFacing.getHorizontal(MathHelper.floor_double((yaw * 4.0 / 360.0) + 0.5) and 3).wrap()
 	override fun getLightMapTexUnit(): Int = OpenGlHelper.lightmapTexUnit
 	override fun setLightmapTextureCoords(target: Int, x: Float, y: Float) = OpenGlHelper.setLightmapTextureCoords(target, x, y)
-
 	override fun renderTileEntity(tileEntity: ITileEntity, partialTicks: Float, destroyStage: Int) = TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity.unwrap(), partialTicks, destroyStage)
 
 	/**
@@ -129,6 +126,8 @@ object ExtractedFunctionsImpl : IExtractedFunctions
 	/* Potion */
 	override fun getPotionById(potionID: Int): IPotion = Potion.potionTypes[potionID].wrap()
 
+	override fun getLiquidColor(potionDamage: Int, bypassCache: Boolean): Int = PotionHelper.getLiquidColor(potionDamage, bypassCache)
+
 	/* Session */
 	override fun sessionServiceJoinServer(profile: GameProfile, token: String, sessionHash: String) = Minecraft.getMinecraft().sessionService.joinServer(profile, token, sessionHash)
 
@@ -138,9 +137,11 @@ object ExtractedFunctionsImpl : IExtractedFunctions
 	/* JSON */
 	override fun jsonToComponent(toString: String): IIChatComponent = IChatComponent.Serializer.jsonToComponent(toString).wrap()
 
+	/* Facing */
+	override fun getHorizontalFacing(yaw: Float): IEnumFacing = EnumFacing.getHorizontal(MathHelper.floor_double((yaw * 4.0 / 360.0) + 0.5) and 3).wrap()
+
 	/* Delegate to MathHelper */
 	override fun cos(radians: Float): Float = MathHelper.cos(radians)
-	override fun sin(radians: Float): Float = MathHelper.sin(radians)
 
-	override fun getLiquidColor(potionDamage: Int, bypassCache: Boolean): Int = PotionHelper.getLiquidColor(potionDamage, bypassCache)
+	override fun sin(radians: Float): Float = MathHelper.sin(radians)
 }

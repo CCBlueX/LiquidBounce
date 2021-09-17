@@ -73,6 +73,12 @@ open class PacketImpl<out T : Packet<*>>(val wrapped: T) : IPacket
 
 	override fun asCPacketKeepAlive(): ICPacketKeepAlive = CPacketKeepAliveImpl(wrapped as C00PacketKeepAlive)
 
+	override fun asCPacketConfirmTransaction(): ICPacketConfirmTransaction = CPacketConfirmTransactionImpl(wrapped as C0FPacketConfirmTransaction)
+
+	override fun asCPacketClientStatus(): ICPacketClientStatus = CPacketClientStatusImpl(wrapped as C16PacketClientStatus)
+
+	override fun asCPacketCloseWindow(): ICPacketCloseWindow = CPacketCloseWindowImpl(wrapped as C0DPacketCloseWindow)
+
 	override fun equals(other: Any?): Boolean = other is PacketImpl<*> && other.wrapped == wrapped
 }
 

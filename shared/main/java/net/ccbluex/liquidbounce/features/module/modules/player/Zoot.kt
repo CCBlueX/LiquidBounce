@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.MovementUtils
-import net.ccbluex.liquidbounce.utils.WorkerUtils
+import net.ccbluex.liquidbounce.utils.runAsync
 import net.ccbluex.liquidbounce.value.BoolValue
 
 // TODO: Max packets per tick limit
@@ -40,23 +40,9 @@ class Zoot : Module()
 
 		val provider = classProvider
 
-		if (badEffectsValue.get()) thePlayer.activePotionEffects.filter { isBadEffect(it.potionID) }.maxBy(IPotionEffect::duration)?.let { effect ->
-			WorkerUtils.workers.execute {
-				repeat(effect.duration / 20) {
-					netHandler.addToSendQueue(provider.createCPacketPlayer(onGround))
-				}
-			}
-		}
+		if (badEffectsValue.get()) thePlayer.activePotionEffects.filter { isBadEffect(it.potionID) }.maxBy(IPotionEffect::duration)?.let { effect -> runAsync { repeat(effect.duration / 20) { netHandler.addToSendQueue(provider.createCPacketPlayer(onGround)) } } }
 
-
-		if (fireValue.get() && !thePlayer.capabilities.isCreativeMode && thePlayer.burning)
-		{
-			WorkerUtils.workers.execute {
-				repeat(9) {
-					netHandler.addToSendQueue(provider.createCPacketPlayer(onGround))
-				}
-			}
-		}
+		if (fireValue.get() && !thePlayer.capabilities.isCreativeMode && thePlayer.burning) runAsync { repeat(9) { netHandler.addToSendQueue(provider.createCPacketPlayer(onGround)) } }
 	}
 
 	companion object

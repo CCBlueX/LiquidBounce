@@ -20,10 +20,10 @@ import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils
-import net.ccbluex.liquidbounce.utils.WorkerUtils
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.runAsync
 import net.mcleaks.MCLeaks
 import org.lwjgl.input.Keyboard
 import java.net.Proxy.NO_PROXY
@@ -196,7 +196,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : WrappedGuiScreen()
 
 				val account = MinecraftAccount(MinecraftAccount.AltServiceType.THEALTENING, tokenField.text, LiquidBounce.CLIENT_NAME)
 
-				WorkerUtils.workers.execute {
+				runAsync {
 					try
 					{
 						status = "\u00A7cSwitching Alt Service..."

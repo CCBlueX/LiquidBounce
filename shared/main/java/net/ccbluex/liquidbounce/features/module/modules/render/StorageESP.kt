@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import co.uk.hexeption.utils.OutlineUtils
 import net.ccbluex.liquidbounce.api.MinecraftVersion
-import net.ccbluex.liquidbounce.api.minecraft.util.WEnumChestType
+import net.ccbluex.liquidbounce.api.enums.WEnumChestType
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render2DEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent

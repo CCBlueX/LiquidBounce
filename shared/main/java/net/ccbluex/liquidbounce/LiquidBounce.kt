@@ -105,7 +105,7 @@ object LiquidBounce
 		ClientUtils.logger.info("Starting $CLIENT_NAME for $MINECRAFT_VERSION b$CLIENT_VERSION, by $CLIENT_CREATOR")
 		ClientUtils.logger.info("Java: ${System.getProperty("java.vm.name")} ${System.getProperty("java.vm.version")}")
 		ClientUtils.logger.info("Kotlin: ${KotlinVersion.CURRENT}")
-		ClientUtils.logger.info("MinecraftForge: ${ForgeVersion.getVersion()}")
+		if (hasForge()) ClientUtils.logger.info("MinecraftForge: ${ForgeVersion.getVersion()}")
 		ClientUtils.logger.info("Mixin: ${VersionNumber.parse(MixinEnvironment.getCurrentEnvironment().version)}")
 		ClientUtils.logger.info("Backend: $MINECRAFT_VERSION")
 		ClientUtils.logger.info("Nashorn: ${Version.fullVersion()}")
@@ -246,7 +246,7 @@ object LiquidBounce
 		// Setup Discord RPC
 		if (clientRichPresence.showRichPresenceValue)
 		{
-			WorkerUtils.workers.execute {
+			runAsync {
 				try
 				{
 					clientRichPresence.setup()

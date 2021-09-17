@@ -10,9 +10,9 @@ import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.WorkerUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.runAsync
 import org.lwjgl.input.Keyboard
 import java.io.IOException
 
@@ -27,7 +27,7 @@ class GuiServerStatus(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 		representedScreen.buttonList.add(classProvider.createGuiButton(1, (width shr 1) - 100, (height shr 2) + 145, "Back"))
 
-		WorkerUtils.workers.execute(::loadInformation)
+		runAsync(::loadInformation)
 	}
 
 	override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)
