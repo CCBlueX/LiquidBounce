@@ -93,6 +93,8 @@ open class EntityLivingBaseImpl<out T : EntityLivingBase>(wrapped: T) : EntityIm
 
 	override fun isPotionActive(potion: IPotion): Boolean = wrapped.isPotionActive(potion.unwrap())
 
+	override fun isPotionActive(potionId: Int): Boolean = wrapped.activePotionMap.contains(Potion.getPotionById(potionId)) // FIXME: Make better workaround
+
 	override fun swingItem() = wrapped.swingArm(EnumHand.MAIN_HAND)
 
 	override fun getActivePotionEffect(potion: IPotion): IPotionEffect? = wrapped.getActivePotionEffect(potion.unwrap())?.wrap()

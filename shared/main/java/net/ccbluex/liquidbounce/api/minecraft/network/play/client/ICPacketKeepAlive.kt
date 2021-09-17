@@ -10,5 +10,5 @@ import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
 
 interface ICPacketKeepAlive : IPacket
 {
-	var key: Int
+	var key: Long
 }

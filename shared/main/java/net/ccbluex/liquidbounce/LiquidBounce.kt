@@ -40,9 +40,7 @@ import org.spongepowered.asm.mixin.MixinEnvironment
 import org.spongepowered.asm.util.VersionNumber
 
 /**
- * <p>
- * ex: Add ValueGroup, ColorValue, RangeSliderValue(see Vape) and 'Show/Hide values by Mode' feature
- * </p>
+ * TODO: Smooth zoom animation
  */
 object LiquidBounce
 {

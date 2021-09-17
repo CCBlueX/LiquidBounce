@@ -28,7 +28,7 @@ open class PacketImpl<out T : Packet<*>>(val wrapped: T) : IPacket
 
 	override fun asSPacketTabComplete(): ISPacketTabComplete = SPacketTabCompleteImpl(wrapped as SPacketTabComplete)
 
-	override fun asSPacketPosLook(): ISPacketPosLook = SPacketPosLookImpl(wrapped as SPacketPlayerPosLook)
+	override fun asSPacketPlayerPosLook(): ISPacketPlayerPosLook = SPacketPosLookImpl(wrapped as SPacketPlayerPosLook)
 
 	override fun asSPacketResourcePackSend(): ISPacketResourcePackSend = SPacketResourcePackSendImpl(wrapped as SPacketResourcePackSend)
 
@@ -43,6 +43,16 @@ open class PacketImpl<out T : Packet<*>>(val wrapped: T) : IPacket
 	override fun asSPacketEntityTeleport(): ISPacketEntityTeleport = SPacketEntityTeleportImpl(wrapped as SPacketEntityTeleport)
 
 	override fun asSPacketTitle(): ISPacketTitle = SPacketTitleImpl(wrapped as SPacketTitle)
+
+	override fun asSPacketPlayerListItem(): ISPacketPlayerListItem = SPacketPlayerListItemImpl(wrapped as SPacketPlayerListItem)
+
+	override fun asSPacketChangeGameState(): ISPacketChangeGameState = SPacketChangeGameStateImpl(wrapped as SPacketChangeGameState)
+
+	override fun asSPacketEntityEffect(): ISPacketEntityEffect = SPacketEntityEffectImpl(wrapped as SPacketEntityEffect)
+
+	override fun asSPacketSpawnGlobalEntity(): ISPacketSpawnGlobalEntity = SPacketSpawnGlobalEntityImpl(wrapped as SPacketSpawnGlobalEntity)
+
+	override fun asSPacketEntityEquipment(): ISPacketEntityEquipment = SPacketEntityEquipmentImpl(wrapped as SPacketEntityEquipment)
 
 	// Client-sided
 	override fun asCPacketPlayer(): ICPacketPlayer = CPacketPlayerImpl(wrapped as CPacketPlayer)
@@ -59,7 +69,17 @@ open class PacketImpl<out T : Packet<*>>(val wrapped: T) : IPacket
 
 	override fun asCPacketPlayerDigging(): ICPacketPlayerDigging = CPacketPlayerDiggingImpl(wrapped as CPacketPlayerDigging)
 
-	override fun asCPacketPlayerBlockPlacement(): ICPacketPlayerBlockPlacement = CPacketPlayerBlockPlacementImpl(wrapped as net.minecraft.network.play.client.CPacketPlayerTryUseItemOnBlock)
+	override fun asCPacketPlayerBlockPlacement(): ICPacketPlayerBlockPlacement = CPacketPlayerBlockPlacementImpl(wrapped as CPacketPlayerTryUseItemOnBlock)
+
+	override fun asCPacketKeepAlive(): ICPacketKeepAlive = CPacketKeepAliveImpl(wrapped as CPacketKeepAlive)
+
+	override fun asCPacketAbilities(): ICPacketPlayerAbilities = CPacketPlayerAbilitiesImpl(wrapped as CPacketPlayerAbilities)
+
+	override fun asCPacketConfirmTransaction(): ICPacketConfirmTransaction = CPacketConfirmTransactionImpl(wrapped as CPacketConfirmTransaction)
+
+	override fun asCPacketClientStatus(): ICPacketClientStatus = CPacketClientStatusImpl(wrapped as CPacketClientStatus)
+
+	override fun asCPacketCloseWindow(): ICPacketCloseWindow = CPacketCloseWindowImpl(wrapped as CPacketCloseWindow)
 
 	override fun equals(other: Any?): Boolean = other is PacketImpl<*> && other.wrapped == wrapped
 }

@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.*
 import kotlin.random.Random
 
+// TODO: Movement prediction when throwing pot
 @ModuleInfo(name = "AutoPot", description = "Automatically throws healing potions.", category = ModuleCategory.COMBAT)
 class AutoPot : Module()
 {

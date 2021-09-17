@@ -23,6 +23,7 @@ class InventoryMove : Module()
 	val aacAdditionProValue = BoolValue("AACAdditionPro", false)
 	private val blockPacketsValue = BoolValue("BlockPackets", true)
 	private val noMoveClicksValue = BoolValue("NoMoveClicks", false)
+	// TODO: OnlyInventory option (플레이어 인벤토리를 열었을 때만 InvMove)
 
 	private val affectedBindings = run {
 		val gameSettings = mc.gameSettings

@@ -20,7 +20,6 @@ import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IServerData
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.client.render.ITessellator
 import net.ccbluex.liquidbounce.api.minecraft.client.render.IThreadDownloadImageData
 import net.ccbluex.liquidbounce.api.minecraft.client.render.WIImageBuffer
@@ -32,6 +31,7 @@ import net.ccbluex.liquidbounce.api.minecraft.client.renderer.vertex.IVertexBuff
 import net.ccbluex.liquidbounce.api.minecraft.client.settings.IGameSettings
 import net.ccbluex.liquidbounce.api.minecraft.client.shader.IFramebuffer
 import net.ccbluex.liquidbounce.api.minecraft.enchantments.IEnchantment
+import net.ccbluex.liquidbounce.api.minecraft.entity.player.IPlayerCapabilities
 import net.ccbluex.liquidbounce.api.minecraft.event.IClickEvent
 import net.ccbluex.liquidbounce.api.minecraft.item.IItem
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
@@ -43,6 +43,7 @@ import net.ccbluex.liquidbounce.api.minecraft.potion.IPotionEffect
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.api.minecraft.stats.IStatBase
 import net.ccbluex.liquidbounce.api.minecraft.util.*
+import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.api.network.IPacketBuffer
 import net.ccbluex.liquidbounce.api.util.IWrappedFontRenderer
 import net.ccbluex.liquidbounce.api.util.WrappedCreativeTabs
@@ -74,7 +75,7 @@ import net.minecraft.entity.passive.EntityBat
 import net.minecraft.entity.passive.EntitySquid
 import net.minecraft.entity.passive.EntityVillager
 import net.minecraft.entity.player.EntityPlayer
-import net.minecraft.entity.projectile.EntityArrow
+import net.minecraft.entity.projectile.*
 import net.minecraft.init.Blocks
 import net.minecraft.init.Enchantments
 import net.minecraft.init.Items
@@ -117,6 +118,22 @@ object ClassProviderImpl : IClassProvider
 	override val textureUtil: ITextureUtil
 		get() = TextureUtilImpl
 
+	/* Constructors (Uncategorized) */
+	override fun createPacketBuffer(buffer: ByteBuf): IPacketBuffer = PacketBufferImpl(PacketBuffer(buffer))
+
+	override fun createChatComponentText(text: String): IIChatComponent = IChatComponentImpl(TextComponentString(text))
+
+	override fun createClickEvent(action: IClickEvent.WAction, value: String): IClickEvent = ClickEventImpl(ClickEvent(action.unwrap(), value))
+
+	override fun createSession(name: String, uuid: String, accessToken: String, accountType: String): ISession = SessionImpl(Session(name, uuid, accessToken, accountType))
+
+	override fun createAxisAlignedBB(minX: Double, minY: Double, minZ: Double, maxX: Double, maxY: Double, maxZ: Double): IAxisAlignedBB = AxisAlignedBBImpl(AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ))
+
+	override fun createEntityOtherPlayerMP(world: IWorld, gameProfile: GameProfile): IEntityOtherPlayerMP = EntityOtherPlayerMPImpl(EntityOtherPlayerMP(world.unwrap(), gameProfile))
+
+	override fun createPotionEffect(id: Int, time: Int, strength: Int): IPotionEffect = PotionEffectImpl(PotionEffect(Potion.getPotionById(id), time, strength))
+
+	/* Constructors (Graphical) */
 	override fun createResourceLocation(resourceName: String): IResourceLocation = ResourceLocationImpl(ResourceLocation(resourceName))
 
 	override fun createThreadDownloadImageData(cacheFileIn: File?, imageUrlIn: String, textureResourceLocation: IResourceLocation?, imageBufferIn: WIImageBuffer): IThreadDownloadImageData
@@ -128,12 +145,17 @@ object ClassProviderImpl : IClassProvider
 		}))
 	}
 
-	override fun createPacketBuffer(buffer: ByteBuf): IPacketBuffer = PacketBufferImpl(PacketBuffer(buffer))
+	override fun createDynamicTexture(image: BufferedImage): IDynamicTexture = DynamicTextureImpl(DynamicTexture(image))
 
-	override fun createChatComponentText(text: String): IIChatComponent = IChatComponentImpl(TextComponentString(text))
+	override fun createDynamicTexture(width: Int, height: Int): IDynamicTexture = DynamicTextureImpl(DynamicTexture(width, height))
 
-	override fun createClickEvent(action: IClickEvent.WAction, value: String): IClickEvent = ClickEventImpl(ClickEvent(action.unwrap(), value))
+	override fun createScaledResolution(mc: IMinecraft): IScaledResolution = ScaledResolutionImpl(ScaledResolution(mc.unwrap()))
 
+	override fun createSafeVertexBuffer(vertexFormat: IVertexFormat): IVertexBuffer = SafeVertexBuffer(vertexFormat.unwrap()).wrap()
+
+	override fun createFramebuffer(displayWidth: Int, displayHeight: Int, useDepth: Boolean): IFramebuffer = FramebufferImpl(Framebuffer(displayWidth, displayHeight, useDepth))
+
+	/* Constructors (GUI) */
 	override fun createGuiTextField(id: Int, iFontRenderer: IFontRenderer, x: Int, y: Int, width: Int, height: Int): IGuiTextField = GuiTextFieldImpl(GuiTextField(id, iFontRenderer.unwrap(), x, y, width, height))
 
 	override fun createGuiPasswordField(id: Int, iFontRenderer: IFontRenderer, x: Int, y: Int, width: Int, height: Int): IGuiTextField = GuiTextFieldImpl(GuiPasswordField(id, iFontRenderer.unwrap(), x, y, width, height))
@@ -142,10 +164,17 @@ object ClassProviderImpl : IClassProvider
 
 	override fun createGuiButton(id: Int, x: Int, y: Int, text: String): IGuiButton = GuiButtonImpl(GuiButton(id, x, y, text))
 
-	override fun createSession(name: String, uuid: String, accessToken: String, accountType: String): ISession = SessionImpl(Session(name, uuid, accessToken, accountType))
+	override fun createGuiOptions(parentScreen: IGuiScreen, gameSettings: IGameSettings): IGuiScreen = GuiScreenImpl(GuiOptions(parentScreen.unwrap(), gameSettings.unwrap()))
 
-	override fun createDynamicTexture(image: BufferedImage): IDynamicTexture = DynamicTextureImpl(DynamicTexture(image))
+	override fun createGuiSelectWorld(parentScreen: IGuiScreen): IGuiScreen = GuiScreenImpl(GuiWorldSelection(parentScreen.unwrap()))
 
+	override fun createGuiMultiplayer(parentScreen: IGuiScreen): IGuiScreen = GuiScreenImpl(GuiMultiplayer(parentScreen.unwrap()))
+
+	override fun createGuiModList(parentScreen: IGuiScreen): IGuiScreen = GuiScreenImpl(GuiModList(parentScreen.unwrap()))
+
+	override fun createGuiConnecting(parent: IGuiScreen, mc: IMinecraft, serverData: IServerData): IGuiScreen = GuiScreenImpl(GuiConnecting(parent.unwrap(), mc.unwrap(), serverData.unwrap()))
+
+	/* Constructors (Item) */
 	override fun createItem(): IItem = ItemImpl(Item())
 
 	override fun createItemStack(item: IItem, amount: Int, meta: Int): IItemStack = ItemStackImpl(ItemStack(item.unwrap(), amount, meta))
@@ -154,10 +183,7 @@ object ClassProviderImpl : IClassProvider
 
 	override fun createItemStack(blockEnum: IBlock): IItemStack = ItemStackImpl(ItemStack(blockEnum.unwrap()))
 
-	override fun createAxisAlignedBB(minX: Double, minY: Double, minZ: Double, maxX: Double, maxY: Double, maxZ: Double): IAxisAlignedBB = AxisAlignedBBImpl(AxisAlignedBB(minX, minY, minZ, maxX, maxY, maxZ))
-
-	override fun createScaledResolution(mc: IMinecraft): IScaledResolution = ScaledResolutionImpl(ScaledResolution(mc.unwrap()))
-
+	/* Constructors (NBT) */
 	override fun createNBTTagCompound(): INBTTagCompound = NBTTagCompoundImpl(NBTTagCompound())
 
 	override fun createNBTTagList(): INBTTagList = NBTTagListImpl(NBTTagList())
@@ -166,19 +192,7 @@ object ClassProviderImpl : IClassProvider
 
 	override fun createNBTTagDouble(value: Double): INBTTagDouble = NBTTagDoubleImpl(NBTTagDouble(value))
 
-	override fun createEntityOtherPlayerMP(world: IWorldClient, gameProfile: GameProfile): IEntityOtherPlayerMP = EntityOtherPlayerMPImpl(EntityOtherPlayerMP(world.unwrap(), gameProfile))
-
-	override fun createPotionEffect(id: Int, time: Int, strength: Int): IPotionEffect = PotionEffectImpl(PotionEffect(Potion.getPotionById(id), time, strength))
-
-	override fun createGuiOptions(parentScreen: IGuiScreen, gameSettings: IGameSettings): IGuiScreen = GuiScreenImpl(GuiOptions(parentScreen.unwrap(), gameSettings.unwrap()))
-
-	override fun createGuiSelectWorld(parentScreen: IGuiScreen): IGuiScreen = GuiScreenImpl(GuiWorldSelection(parentScreen.unwrap()))
-
-	override fun createGuiMultiplayer(parentScreen: IGuiScreen): IGuiScreen = GuiScreenImpl(GuiMultiplayer(parentScreen.unwrap()))
-
-	override fun createGuiModList(parentScreen: IGuiScreen): IGuiScreen = GuiScreenImpl(GuiModList(parentScreen.unwrap()))
-	override fun createGuiConnecting(parent: IGuiScreen, mc: IMinecraft, serverData: IServerData): IGuiScreen = GuiScreenImpl(GuiConnecting(parent.unwrap(), mc.unwrap(), serverData.unwrap()))
-
+	/* Constructors (Cilent-side packet) */
 	override fun createCPacketHeldItemChange(slot: Int): ICPacketHeldItemChange = CPacketHeldItemChangeImpl(CPacketHeldItemChange(slot))
 
 	override fun createCPacketPlayerBlockPlacement(stack: IItemStack?): ICPacketPlayerBlockPlacement = Backend.BACKEND_UNSUPPORTED()
@@ -229,6 +243,17 @@ object ClassProviderImpl : IClassProvider
 
 	override fun createCPacketKeepAlive(): ICPacketKeepAlive = CPacketKeepAliveImpl(CPacketKeepAlive())
 
+	override fun createCPacketKeepAlive(key: Long): ICPacketKeepAlive = CPacketKeepAliveImpl(CPacketKeepAlive(key))
+
+	override fun createCPacketEncryptionResponse(secretKey: SecretKey, publicKey: PublicKey, verifyToken: ByteArray): IPacket = PacketImpl(CPacketEncryptionResponse(secretKey, publicKey, verifyToken))
+
+	override fun createCPacketChatMessage(message: String): ICPacketChatMessage = CPacketChatMessageImpl(CPacketChatMessage(message))
+
+	override fun createCPacketInput(): IPacket = CPacketInputImpl(CPacketInput())
+
+	override fun createCPacketPlayerAbilities(capabilities: IPlayerCapabilities): ICPacketPlayerAbilities = CPacketAbilitiesImpl(CPacketPlayerAbilities(capabilities.unwrap()))
+
+	/* instance checks (Entity) */
 	override fun isEntityAnimal(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityAnimal
 
 	override fun isEntitySquid(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntitySquid
@@ -266,8 +291,26 @@ object ClassProviderImpl : IClassProvider
 	override fun isEntityFallingBlock(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityFallingBlock
 
 	override fun isEntityMinecartChest(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityMinecartChest
+
 	override fun isEntityShulker(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityShulker
 
+	override fun isEntityPotion(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityPotion
+
+	override fun isEntitySnowball(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntitySnowball
+
+	override fun isEntityEnderPearl(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityEnderPearl
+
+	override fun isEntityEgg(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityEgg
+
+	override fun isEntityFishHook(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityFishHook
+
+	override fun isEntityExpBottle(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityExpBottle
+
+	override fun isEntityMinecartFurnace(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityMinecartFurnace
+
+	override fun isEntityMinecartHopper(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityMinecartHopper
+
+	/* instance checks (TileEntity) */
 	override fun isTileEntityChest(obj: Any?): Boolean = obj is TileEntityImpl && obj.wrapped is TileEntityChest
 
 	override fun isTileEntityEnderChest(obj: Any?): Boolean = obj is TileEntityImpl && obj.wrapped is TileEntityEnderChest
@@ -277,8 +320,10 @@ object ClassProviderImpl : IClassProvider
 	override fun isTileEntityDispenser(obj: Any?): Boolean = obj is TileEntityImpl && obj.wrapped is TileEntityDispenser
 
 	override fun isTileEntityHopper(obj: Any?): Boolean = obj is TileEntityImpl && obj.wrapped is TileEntityHopper
+
 	override fun isTileEntityShulkerBox(obj: Any?): Boolean = obj is TileEntityImpl && obj.wrapped is TileEntityShulkerBox
 
+	/* instance checks (Server-side packet) */
 	override fun isSPacketEntity(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is SPacketEntity
 
 	override fun isSPacketResourcePackSend(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is SPacketResourcePackSend
@@ -295,6 +340,31 @@ object ClassProviderImpl : IClassProvider
 
 	override fun isSPacketTabComplete(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is SPacketTabComplete
 
+	override fun isSPacketWindowItems(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is SPacketWindowItems
+
+	override fun isSPacketChat(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is SPacketChat
+
+	override fun isSPacketCustomPayload(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is SPacketCustomPayload
+
+	override fun isSPacketSpawnPlayer(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is SPacketSpawnPlayer
+
+	override fun isSPacketEntityTeleport(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is SPacketEntityTeleport
+
+	override fun isSPacketTitle(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is SPacketTitle
+
+	override fun isSPacketPlayerListItem(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is SPacketPlayerListItem
+
+	override fun isSPacketTimeUpdate(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is SPacketTimeUpdate
+
+	override fun isSPacketChangeGameState(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is SPacketChangeGameState
+
+	override fun isSPacketEntityEffect(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is SPacketEntityEffect
+
+	override fun isSPacketSpawnGlobalEntity(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is SPacketSpawnGlobalEntity
+
+	override fun isSPacketEntityEquipment(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is SPacketEntityEquipment
+
+	/* instance checks (Client-side packet)*/
 	override fun isCPacketPlayer(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is CPacketPlayer
 
 	override fun isCPacketPlayerBlockPlacement(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is CPacketPlayerTryUseItemOnBlock
@@ -317,8 +387,6 @@ object ClassProviderImpl : IClassProvider
 
 	override fun isCPacketEntityAction(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is CPacketEntityAction
 
-	override fun isSPacketWindowItems(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is SPacketWindowItems
-
 	override fun isCPacketHeldItemChange(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is CPacketHeldItemChange
 
 	override fun isCPacketPlayerLook(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is CPacketPlayer.Rotation
@@ -327,6 +395,70 @@ object ClassProviderImpl : IClassProvider
 
 	override fun isCPacketHandshake(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C00Handshake
 
+	override fun isCPacketPlayerDigging(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is CPacketPlayerDigging
+
+	override fun isCPacketConfirmTransaction(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is CPacketConfirmTransaction
+
+	override fun isCPacketAbilities(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is CPacketPlayerAbilities
+
+	/* instance checks (Block) */
+	override fun isBlockAir(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockAir
+
+	override fun isBlockFence(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockFence
+
+	override fun isBlockSnow(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockSnow
+
+	override fun isBlockLadder(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockLadder
+
+	override fun isBlockVine(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockVine
+
+	override fun isBlockSlime(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockSlime
+
+	override fun isBlockSlab(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockSlab
+
+	override fun isBlockStairs(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockStairs
+
+	override fun isBlockCarpet(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockCarpet
+
+	override fun isBlockPane(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockPane
+
+	override fun isBlockLiquid(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockLiquid
+
+	override fun isBlockCactus(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockCactus
+
+	override fun isBlockBedrock(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped == Blocks.BEDROCK
+
+	override fun isBlockBush(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockBush
+
+	override fun isBlockRailBase(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockRailBase
+
+	override fun isBlockSign(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockSign
+
+	override fun isBlockDoor(obj: Any?): Boolean = obj is BlockImpl && (obj.wrapped is BlockDoor || obj.wrapped is BlockTrapDoor)
+
+	override fun isBlockChest(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockChest
+
+	override fun isBlockEnderChest(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockEnderChest
+
+	override fun isBlockSkull(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockSkull
+
+	override fun isBlockWall(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockWall
+
+	override fun isBlockGlass(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockGlass
+
+	override fun isBlockPistonBase(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockPistonBase
+
+	override fun isBlockPistonExtension(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockPistonExtension
+
+	override fun isBlockPistonMoving(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockPistonMoving
+
+	override fun isBlockStainedGlass(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockStainedGlass
+
+	override fun isBlockTrapDoor(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockTrapDoor
+
+	override fun isBlockContainer(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockContainer
+
+	/* instance checks (Item) */
 	override fun isItemSword(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemSword
 
 	override fun isItemTool(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemTool
@@ -366,36 +498,18 @@ object ClassProviderImpl : IClassProvider
 	override fun isItemEgg(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemEgg
 
 	override fun isItemFishingRod(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemFishingRod
+
 	override fun isItemAir(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemAir
 
-	override fun isBlockAir(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockAir
+	override fun isItemMap(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemMap
 
-	override fun isBlockFence(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockFence
+	override fun isItemGlassBottle(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemGlassBottle
 
-	override fun isBlockSnow(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockSnow
+	override fun isItemSkull(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemSkull
 
-	override fun isBlockLadder(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockLadder
+	override fun isItemExpBottle(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemExpBottle
 
-	override fun isBlockVine(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockVine
-
-	override fun isBlockSlime(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockSlime
-
-	override fun isBlockSlab(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockSlab
-
-	override fun isBlockStairs(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockStairs
-
-	override fun isBlockCarpet(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockCarpet
-
-	override fun isBlockPane(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockPane
-
-	override fun isBlockLiquid(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockLiquid
-
-	override fun isBlockCactus(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockCactus
-
-	override fun isBlockBedrock(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped == Blocks.BEDROCK
-
-	override fun isBlockBush(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockBush
-
+	/* instance checks (GUI) */
 	override fun isGuiInventory(obj: Any?): Boolean = obj is GuiImpl<*> && obj.wrapped is GuiInventory
 
 	override fun isGuiContainer(obj: Any?): Boolean = obj is GuiImpl<*> && obj.wrapped is GuiContainer
@@ -408,9 +522,13 @@ object ClassProviderImpl : IClassProvider
 
 	override fun isGuiChest(obj: Any?): Boolean = obj is GuiImpl<*> && obj.wrapped is GuiChest
 
+	override fun isGuiRepair(obj: Any?): Boolean = obj is GuiImpl<*> && obj.wrapped is GuiRepair
+
 	override fun isGuiHudDesigner(obj: Any?): Boolean = obj is GuiScreenImpl<*> && obj.wrapped is GuiScreenWrapper && obj.wrapped.wrapped is GuiHudDesigner
 
 	override fun isClickGui(obj: Any?): Boolean = obj is GuiScreenImpl<*> && obj.wrapped is GuiScreenWrapper && obj.wrapped.wrapped is ClickGui
+
+	/* Enum constructors */
 
 	override fun getPotionEnum(type: PotionType): IPotion
 	{
@@ -566,6 +684,12 @@ object ClassProviderImpl : IClassProvider
 			ItemType.SKULL -> Items.SKULL
 			ItemType.ARMOR_STAND -> Items.ARMOR_STAND
 			ItemType.ARROW -> Items.ARROW
+			ItemType.GOLDEN_APPLE -> Items.GOLDEN_APPLE
+			ItemType.MILK_BUCKET -> Items.MILK_BUCKET
+			ItemType.GLASS_BOTTLE -> Items.GLASS_BOTTLE
+			ItemType.ROTTEN_FLESH -> Items.ROTTEN_FLESH
+			ItemType.POISONOUS_POTATO -> Items.POISONOUS_POTATO
+			ItemType.SPIDER_EYE -> Items.SPIDER_EYE
 		})
 	}
 
@@ -584,6 +708,8 @@ object ClassProviderImpl : IClassProvider
 			EnchantmentType.AQUA_AFFINITY -> Enchantments.AQUA_AFFINITY
 			EnchantmentType.BLAST_PROTECTION -> Enchantments.BLAST_PROTECTION
 			EnchantmentType.UNBREAKING -> Enchantments.UNBREAKING
+			EnchantmentType.KNOCKBACK -> Enchantments.KNOCKBACK
+			EnchantmentType.FIRE_ASPECT -> Enchantments.FIRE_ASPECT
 		})
 	}
 
@@ -597,18 +723,19 @@ object ClassProviderImpl : IClassProvider
 		})
 	}
 
+	/* Wrappers */
+
 	override fun wrapFontRenderer(fontRenderer: IWrappedFontRenderer): IFontRenderer = FontRendererImpl(FontRendererWrapper(fontRenderer))
 
-	override fun wrapGuiScreen(clickGui: WrappedGuiScreen): IGuiScreen
+	override fun wrapGuiScreen(wrappedGui: WrappedGuiScreen): IGuiScreen
 	{
-		val instance = GuiScreenImpl(GuiScreenWrapper(clickGui))
+		val instance = GuiScreenImpl(GuiScreenWrapper(wrappedGui))
 
-		clickGui.representedScreen = instance
+		wrappedGui.representedScreen = instance
 
 		return instance
 	}
 
-	override fun createSafeVertexBuffer(vertexFormat: IVertexFormat): IVertexBuffer = SafeVertexBuffer(vertexFormat.unwrap()).wrap()
 	override fun wrapCreativeTab(name: String, wrappedCreativeTabs: WrappedCreativeTabs)
 	{
 		wrappedCreativeTabs.representedType = CreativeTabsImpl(CreativeTabsWrapper(wrappedCreativeTabs, name))
@@ -618,59 +745,4 @@ object ClassProviderImpl : IClassProvider
 	{
 		GuiSlotWrapper(wrappedGuiSlot, mc, width, height, top, bottom, slotHeight)
 	}
-
-	override fun createCPacketEncryptionResponse(secretKey: SecretKey, publicKey: PublicKey, verifyToken: ByteArray): IPacket = PacketImpl(CPacketEncryptionResponse(secretKey, publicKey, verifyToken))
-
-	override fun createDynamicTexture(width: Int, height: Int): IDynamicTexture = DynamicTextureImpl(DynamicTexture(width, height))
-
-	override fun createCPacketChatMessage(message: String): ICPacketChatMessage = CPacketChatMessageImpl(CPacketChatMessage(message))
-
-	override fun createFramebuffer(displayWidth: Int, displayHeight: Int, useDepth: Boolean): IFramebuffer = FramebufferImpl(Framebuffer(displayWidth, displayHeight, useDepth))
-
-	override fun isEntityMinecartFurnace(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityMinecartFurnace
-
-	override fun isEntityMinecartHopper(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityMinecartHopper
-
-	override fun isSPacketChat(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is SPacketChat
-
-	override fun isSPacketCustomPayload(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is SPacketCustomPayload
-
-	override fun isSPacketSpawnPlayer(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is SPacketSpawnPlayer
-
-	override fun isSPacketEntityTeleport(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is SPacketEntityTeleport
-
-	override fun isSPacketTitle(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is SPacketTitle
-
-	override fun isCPacketPlayerDigging(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is CPacketPlayerDigging
-
-	override fun isCPacketConfirmTransaction(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is CPacketConfirmTransaction
-
-	override fun isItemMap(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemMap
-
-	override fun isBlockRailBase(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockRailBase
-
-	override fun isBlockSign(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockSign
-
-	override fun isBlockDoor(obj: Any?): Boolean = obj is BlockImpl && (obj.wrapped is BlockDoor || obj.wrapped is BlockTrapDoor)
-	override fun isBlockChest(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockChest
-
-	override fun isBlockEnderChest(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockEnderChest
-
-	override fun isBlockSkull(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockSkull
-
-	override fun isBlockWall(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockWall
-
-	override fun isBlockGlass(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockGlass
-
-	override fun isBlockPistonBase(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockPistonBase
-
-	override fun isBlockPistonExtension(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockPistonExtension
-
-	override fun isBlockPistonMoving(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockPistonMoving
-
-	override fun isBlockStainedGlass(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockStainedGlass
-
-	override fun isBlockTrapDoor(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockTrapDoor
-
-	override fun isBlockContainer(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockContainer
 }

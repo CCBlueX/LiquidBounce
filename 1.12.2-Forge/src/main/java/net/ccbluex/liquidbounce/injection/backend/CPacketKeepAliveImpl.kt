@@ -9,9 +9,15 @@ package net.ccbluex.liquidbounce.injection.backend
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketKeepAlive
 import net.minecraft.network.play.client.CPacketKeepAlive
 
-class CPacketKeepAliveImpl<out T : CPacketKeepAlive>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketKeepAlive {
-
+class CPacketKeepAliveImpl<out T : CPacketKeepAlive>(wrapped: T) : PacketImpl<T>(wrapped), ICPacketKeepAlive
+{
+	override var key: Long
+		get() = wrapped.key
+		set(value)
+		{
+			wrapped.key = value
+		}
 }
 
- fun ICPacketKeepAlive.unwrap(): CPacketKeepAlive = (this as CPacketKeepAliveImpl<*>).wrapped
- fun CPacketKeepAlive.wrap(): ICPacketKeepAlive = CPacketKeepAliveImpl(this)
+fun ICPacketKeepAlive.unwrap(): CPacketKeepAlive = (this as CPacketKeepAliveImpl<*>).wrapped
+fun CPacketKeepAlive.wrap(): ICPacketKeepAlive = CPacketKeepAliveImpl(this)

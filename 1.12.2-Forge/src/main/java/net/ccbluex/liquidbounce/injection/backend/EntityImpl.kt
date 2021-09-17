@@ -7,10 +7,7 @@
 package net.ccbluex.liquidbounce.injection.backend
 
 import net.ccbluex.liquidbounce.api.minecraft.block.material.IMaterial
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityTNTPrimed
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.*
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.util.*
 import net.ccbluex.liquidbounce.injection.backend.utils.unwrap
@@ -20,6 +17,9 @@ import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.MoverType
 import net.minecraft.entity.item.EntityTNTPrimed
 import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.entity.projectile.EntityArrow
+import net.minecraft.entity.projectile.EntityFishHook
+import net.minecraft.entity.projectile.EntityPotion
 import java.util.*
 
 open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
@@ -102,6 +102,10 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 		}
 	override val isInLava: Boolean
 		get() = wrapped.isInLava
+	override val isEating: Boolean
+		get() = wrapped.getFlag(4)
+	override val isSilent: Boolean
+		get() = wrapped.isSilent
 	override val width: Float
 		get() = wrapped.width
 	override val height: Float
@@ -114,6 +118,8 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 		}
 	override val ridingEntity: IEntity?
 		get() = wrapped.ridingEntity?.wrap()
+	override val air: Int
+		get() = wrapped.air
 	override val collisionBorderSize: Float
 		get() = wrapped.collisionBorderSize
 	override var motionX: Double
@@ -160,6 +166,12 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 		{
 			wrapped.posZ = value
 		}
+	override val serverPosX: Int
+		get() = wrapped.serverPosX
+	override val serverPosY: Int
+		get() = wrapped.serverPosY
+	override val serverPosZ: Int
+		get() = wrapped.serverPosZ
 	override val lastTickPosX: Double
 		get() = wrapped.lastTickPosX
 	override val lastTickPosY: Double
@@ -199,12 +211,27 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 	override val invisible: Boolean
 		get() = wrapped.isInvisible
 
-	override val prevRotationYaw: Float
+	override var prevRotationYaw: Float
 		get() = wrapped.prevRotationYaw
+		set(value)
+		{
+			wrapped.prevRotationYaw = value
+		}
+	override var prevRotationPitch: Float
+		get() = wrapped.prevRotationPitch
+		set(value)
+		{
+			wrapped.prevRotationPitch = value
+		}
 
 	override fun getPositionEyes(partialTicks: Float): WVec3 = wrapped.getPositionEyes(partialTicks).wrap()
 
 	override fun canBeCollidedWith(): Boolean = wrapped.canBeCollidedWith()
+
+	override fun setCanBeCollidedWith(value: Boolean)
+	{
+		TODO("Not yet implemented")
+	}
 
 	override fun canRiderInteract(): Boolean = wrapped.canRiderInteract()
 
@@ -219,6 +246,12 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 	override fun asEntityLivingBase(): IEntityLivingBase = EntityLivingBaseImpl(wrapped as EntityLivingBase)
 
 	override fun asEntityTNTPrimed(): IEntityTNTPrimed = EntityTNTPrimedImpl(wrapped as EntityTNTPrimed)
+
+	override fun asEntityArrow(): IEntityArrow = EntityArrowImpl(wrapped as EntityArrow)
+
+	override fun asEntityPotion(): IEntityPotion = EntityPotionImpl(wrapped as EntityPotion)
+
+	override fun asEntityFishHook(): IEntityFishHook = EntityFishHookImpl(wrapped as EntityFishHook)
 
 	override fun getDistance(x: Double, y: Double, z: Double): Double = wrapped.getDistance(x, y, z)
 
@@ -236,9 +269,9 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 
 	override fun isInsideOfMaterial(material: IMaterial): Boolean = wrapped.isInsideOfMaterial(material.unwrap())
 
-	override fun copyLocationAndAnglesFrom(player: IEntityPlayerSP) = wrapped.copyLocationAndAnglesFrom(player.unwrap())
+	override fun copyLocationAndAnglesFrom(player: IEntity) = wrapped.copyLocationAndAnglesFrom(player.unwrap())
 
-	override fun setPositionAndRotation(oldX: Double, oldY: Double, oldZ: Double, rotationYaw: Float, rotationPitch: Float) = wrapped.setPositionAndRotation(oldX, oldY, oldZ, rotationYaw, rotationPitch)
+	override fun setPositionAndRotation(posX: Double, posY: Double, posZ: Double, rotationYaw: Float, rotationPitch: Float) = wrapped.setPositionAndRotation(posX, posY, posZ, rotationYaw, rotationPitch)
 
 	override fun equals(other: Any?): Boolean = other is EntityImpl<*> && other.wrapped == wrapped
 }

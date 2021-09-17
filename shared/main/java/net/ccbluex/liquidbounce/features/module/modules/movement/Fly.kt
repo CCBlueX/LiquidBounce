@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketAbilities
+import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerAbilities
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -399,7 +399,7 @@ object Fly : Module()
 		}
 	}
 
-	private var lastAbilitiesPacket: ICPacketAbilities? = null
+	private var lastAbilitiesPacket: ICPacketPlayerAbilities? = null
 
 	@EventTarget
 	fun onPacket(event: PacketEvent)
@@ -415,7 +415,7 @@ object Fly : Module()
 			{
 				if (lastAbilitiesPacket == null)
 				{
-					lastAbilitiesPacket = classProvider.createCPacketAbilities(thePlayer.capabilities)
+					lastAbilitiesPacket = classProvider.createCPacketPlayerAbilities(thePlayer.capabilities)
 					lastAbilitiesPacket!!.flying = false
 				}
 

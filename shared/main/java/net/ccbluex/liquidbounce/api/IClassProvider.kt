@@ -138,11 +138,11 @@ interface IClassProvider
 	fun createCPacketTabComplete(text: String): IPacket
 	fun createCPacketAnimation(): ICPacketAnimation
 	fun createCPacketKeepAlive(): ICPacketKeepAlive
-	fun createCPacketKeepAlive(key: Int): ICPacketKeepAlive
+	fun createCPacketKeepAlive(key: Long): ICPacketKeepAlive
 	fun createCPacketEncryptionResponse(secretKey: SecretKey, publicKey: PublicKey, verifyToken: ByteArray): IPacket
 	fun createCPacketChatMessage(message: String): ICPacketChatMessage
 	fun createCPacketInput(): IPacket
-	fun createCPacketAbilities(capabilities: IPlayerCapabilities): ICPacketAbilities
+	fun createCPacketPlayerAbilities(capabilities: IPlayerCapabilities): ICPacketPlayerAbilities
 
 	/**
 	 * Only available up to 1.8.9, replaced with [createCPacketTryUseItem] since 1.9
@@ -151,7 +151,7 @@ interface IClassProvider
 	fun createCPacketPlayerBlockPlacement(stack: IItemStack?): ICPacketPlayerBlockPlacement
 
 	@SupportsMinecraftVersions(MinecraftVersion.MC_1_12)
-	fun createCPacketTryUseItem(stack: WEnumHand): PacketImpl<*>
+	fun createCPacketTryUseItem(hand: WEnumHand): PacketImpl<*>
 
 	/* instance checks (Entity) */
 	fun isEntityAnimal(obj: Any?): Boolean
