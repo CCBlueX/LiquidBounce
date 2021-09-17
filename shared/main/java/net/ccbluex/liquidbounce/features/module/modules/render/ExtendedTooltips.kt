@@ -41,7 +41,7 @@ class ExtendedTooltips : Module()
 	private val enchantmentsShadowValue = BoolValue("Shadow", false, "EnchantmentsShadow")
 	private val enchantmentsScaleValue = FloatValue("Scale", 0.5F, 0.5F, 1F, "EnchantmentsScale")
 
-	private val itemDamageAndEnchantmentYPosValue = object : IntegerValue("AttackDamageAndEnchantYPos", 75, 50, 100, "AttackDamageAndEnchantYPos")
+	private val itemDamageAndEnchantmentYPosValue = object : IntegerValue("AttackDamageAndEnchantYPos", 75, 50, 100)
 	{
 		override fun showCondition() = attackDamageEnabledValue.get() || enchantmentsEnabledValue.get()
 	}

@@ -29,16 +29,19 @@ import kotlin.random.Random
 @ModuleInfo(name = "AutoPot", description = "Automatically throws healing potions.", category = ModuleCategory.COMBAT)
 class AutoPot : Module()
 {
-	private val modeValue = ListValue("Mode", arrayOf("Normal", "Jump", "Port"), "Normal")
-	private val throwDirValue = ListValue("ThrowDirection", arrayOf("Up", "Down"), "Down")
 	private val healthValue = FloatValue("Health", 15F, 1F, 20F)
-	private val potDelayValue = IntegerRangeValue("Delay", 250, 250, 0, 2000, "MaxPotDelay" to "MinPotDelay")
-	private val silentValue = BoolValue("Silent", true)
+
+	private val throwGroup = ValueGroup("Throw")
+	private val throwModeValue = ListValue("Mode", arrayOf("Normal", "Jump", "Port"), "Normal")
+	private val throwDirectionValue = ListValue("ThrowDirection", arrayOf("Up", "Down"), "Down")
+	private val throwDelayValue = IntegerRangeValue("Delay", 250, 250, 0, 2000, "MaxPotDelay" to "MinPotDelay")
+	private val throwSilentValue = BoolValue("Silent", true)
+	private val throwNoMoveThrowValue = BoolValue("NoMove", false, "NoMove-Throw")
+	private val throwRandomSlotValue = BoolValue("RandomSlot", false)
+	private val throwGroundDistanceValue = FloatValue("GroundDistance", 2F, 0.72F, 5F)
+	private val throwIgnoreScreenValue = BoolValue("IgnoreScreen", true)
+
 	private val itemDelayValue = IntegerValue("ItemDelay", 0, 0, 5000)
-	private val noMoveThrowValue = BoolValue("NoMove", false, "NoMove-Throw")
-	private val randomSlotValue = BoolValue("RandomSlot", false)
-	private val groundDistanceValue = FloatValue("GroundDistance", 2F, 0.72F, 5F)
-	private val ignoreScreen = BoolValue("IgnoreScreen", true)
 
 	private val inventoryGroup = ValueGroup("Inventory")
 	private val inventoryDelayValue = IntegerRangeValue("Delay", 100, 200, 0, 5000, "MaxInvDelay" to "MinInvDelay")
@@ -76,13 +79,15 @@ class AutoPot : Module()
 	private val potionFilterJumpBoostAmpLimitValue = IntegerValue("AmplifierLimit", 5, 2, 127, "JumpPotAmplifierLimit")
 
 	private val potThrowDelayTimer = MSTimer()
-	private var potThrowDelay = potDelayValue.getRandomDelay()
+	private var potThrowDelay = throwDelayValue.getRandomDelay()
 	private var invDelay = inventoryDelayValue.getRandomDelay()
 
 	private var potion = -1
 
 	init
 	{
+		throwGroup.addAll(throwModeValue, throwDirectionValue, throwDelayValue, throwSilentValue, throwNoMoveThrowValue, throwRandomSlotValue, throwGroundDistanceValue, throwIgnoreScreenValue)
+
 		inventoryMisclickGroup.addAll(inventoryMisclickEnabledValue, inventoryMisclickRateValue)
 		inventoryGroup.addAll(inventoryDelayValue, inventoryOpenInventoryValue, inventorySimulateInventoryValue, inventoryNoMoveValue, inventoryRandomSlotValue, inventoryMisclickGroup)
 
@@ -132,9 +137,9 @@ class AutoPot : Module()
 		val inventoryContainer = thePlayer.inventoryContainer
 		val activePotionEffects = thePlayer.activePotionEffects
 
-		val randomSlot = randomSlotValue.get()
+		val randomSlot = throwRandomSlotValue.get()
 		val invRandomSlot = inventoryRandomSlotValue.get()
-		val throwDirection = throwDirValue.get().toLowerCase()
+		val throwDirection = throwDirectionValue.get().toLowerCase()
 		val health = healthValue.get()
 
 		val provider = classProvider
@@ -143,13 +148,13 @@ class AutoPot : Module()
 		val isNotInventory = !provider.isGuiInventory(screen)
 
 		val serverRotation = RotationUtils.serverRotation
-		val ignoreScreen = ignoreScreen.get()
+		val ignoreScreen = throwIgnoreScreenValue.get()
 
 		when (motionEvent.eventState)
 		{
 			PRE ->
 			{
-				if (potThrowDelayTimer.hasTimePassed(potThrowDelay) && (ignoreScreen || containerOpen) && !(noMoveThrowValue.get() && MovementUtils.isMoving(thePlayer)))
+				if (potThrowDelayTimer.hasTimePassed(potThrowDelay) && (ignoreScreen || containerOpen) && !(throwNoMoveThrowValue.get() && MovementUtils.isMoving(thePlayer)))
 				{
 					// Hotbar Potion
 					val healPotionInHotbar = findHealPotion(thePlayer, 36, 45, inventoryContainer, randomSlot)
@@ -159,7 +164,7 @@ class AutoPot : Module()
 					{
 						if (thePlayer.onGround)
 						{
-							when (modeValue.get().toLowerCase())
+							when (throwModeValue.get().toLowerCase())
 							{
 								"jump" -> thePlayer.jump()
 								"port" -> thePlayer.moveEntity(0.0, 0.42, 0.0)
@@ -173,7 +178,7 @@ class AutoPot : Module()
 
 						val collisionBlock = fallingPlayer.findCollision(20)?.pos
 
-						if (posY - (collisionBlock?.y ?: 0) >= groundDistanceValue.get()) return
+						if (posY - (collisionBlock?.y ?: 0) >= throwGroundDistanceValue.get()) return
 
 						// Suspend killaura if option is present
 						if (killauraBypassModeValue.get().equals("SuspendKillAura", true)) killAura.suspend(killAuraBypassKillAuraSuspendDurationValue.get().toLong())
@@ -182,7 +187,7 @@ class AutoPot : Module()
 
 						val potionIndex = potion - 36
 
-						if (silentValue.get())
+						if (throwSilentValue.get())
 						{
 							if (!InventoryUtils.tryHoldSlot(thePlayer, potionIndex, -1, true)) return
 						}
@@ -269,9 +274,9 @@ class AutoPot : Module()
 					{
 						netHandler.addToSendQueue(createUseItemPacket(itemStack, WEnumHand.MAIN_HAND))
 
-						if (silentValue.get()) InventoryUtils.resetSlot(thePlayer)
+						if (throwSilentValue.get()) InventoryUtils.resetSlot(thePlayer)
 
-						potThrowDelay = potDelayValue.getRandomDelay()
+						potThrowDelay = throwDelayValue.getRandomDelay()
 						potThrowDelayTimer.reset()
 					}
 

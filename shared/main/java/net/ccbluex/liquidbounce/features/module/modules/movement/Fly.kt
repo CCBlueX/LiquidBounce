@@ -142,7 +142,7 @@ object Fly : Module()
 	/**
 	 * AAC
 	 */
-	val aacSpeedValue = object : FloatValue("AAC1.9.10-Speed", 0.3f, 0f, 5f, "AAC1.9.10-Speed")
+	val aacSpeedValue = object : FloatValue("AAC1.9.10-Speed", 0.3f, 0f, 5f)
 	{
 		override fun showCondition() = modeValue.get().equals("AAC1.9.10", ignoreCase = true)
 	}

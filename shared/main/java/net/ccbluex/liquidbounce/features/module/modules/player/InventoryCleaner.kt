@@ -145,7 +145,7 @@ class InventoryCleaner : Module()
 
 		filterBowAndArrowGroup.addAll(filterBowAndArrowKeepValue, filterBowAndArrowArrowCountValue)
 		filterFoodGroup.addAll(filterFoodKeepValue, filterFoodCountValue)
-		filterGroup.addAll(filterBowAndArrowGroup, filterFoodGroup, filterMaxBlockCountValue, filterKeepOldSwordValue, filterKeepOldToolsValue, filterKeepOldArmorsValue, filterBucketValue, filterCompassValue, filterEnderPearlValue, filterBedValue, filterSkullValue, filterPotionValue, filterIronIngotValue, filterDiamondValue)
+		filterGroup.addAll(filterBowAndArrowGroup, filterFoodGroup, filterMaxBlockCountValue, filterKeepOldSwordValue, filterKeepOldToolsValue, filterKeepOldArmorsValue, filterBucketValue, filterCompassValue, filterEnderPearlValue, filterBedValue, filterSkullValue, filterPotionValue, filterIronIngotValue, filterDiamondValue, filterIgnoreVehiclesValue, filterMaxDuplicateCountValue)
 
 		clickIndicationGroup.addAll(clickIndicationEnabledValue, clickIndicationLengthValue)
 	}

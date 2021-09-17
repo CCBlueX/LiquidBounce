@@ -13,7 +13,6 @@ import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils.download
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils.createBufferedFileReader
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils.createBufferedFileWriter
-import net.ccbluex.liquidbounce.utils.runAsync
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils.nanosecondsToString
 import java.awt.Font
 import java.io.*
@@ -41,8 +40,6 @@ object Fonts : MinecraftInstance()
 		val nanoTime = System.nanoTime()
 
 		logger.info("Loading Fonts.")
-
-		// TODO: Asynchronize
 
 		downloadFonts()
 
@@ -96,21 +93,19 @@ object Fonts : MinecraftInstance()
 	{
 		val outputFile = File(LiquidBounce.fileManager.fontsDir, "roboto.zip")
 
-		if (!outputFile.exists()) runAsync {
-			try
-			{
-				logger.info("Downloading fonts...")
+		if (!outputFile.exists()) try
+		{
+			logger.info("Downloading fonts...")
 
-				download(LiquidBounce.CLIENT_CLOUD + "/fonts/Roboto.zip", outputFile)
+			download(LiquidBounce.CLIENT_CLOUD + "/fonts/Roboto.zip", outputFile)
 
-				logger.info("Extract fonts...")
+			logger.info("Extract fonts...")
 
-				extractZip(outputFile.path, LiquidBounce.fileManager.fontsDir.path)
-			}
-			catch (e: IOException)
-			{
-				logger.error("Can't download fonts fron cloud", e)
-			}
+			extractZip(outputFile.path, LiquidBounce.fileManager.fontsDir.path)
+		}
+		catch (e: IOException)
+		{
+			logger.error("Can't download fonts fron cloud", e)
 		}
 	}
 

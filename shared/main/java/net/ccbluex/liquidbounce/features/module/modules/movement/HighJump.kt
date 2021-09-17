@@ -33,12 +33,12 @@ class HighJump : Module()
 {
 	private val modeValue = ListValue("Mode", arrayOf("Vanilla", "Damage", "AAC3.0.1", "DAC", "Mineplex", "OldMineplex"), "Vanilla")
 
-	private val baseHeightValue = object : FloatValue("Height", 2f, 1.1f, 5f, "Height")
+	private val baseHeightValue = object : FloatValue("Height", 2f, 1.1f, 5f)
 	{
 		override fun showCondition() = modeValue.get().equals("Vanilla", ignoreCase = true) || modeValue.get().equals("Damage", ignoreCase = true)
 	}
 
-	private val vanillaGlassValue = object : BoolValue("OnlyGlassPane", false, "OnlyGlassPane")
+	private val vanillaGlassValue = object : BoolValue("OnlyGlassPane", false)
 	{
 		override fun showCondition() = modeValue.get().equals("Vanilla", ignoreCase = true)
 	}

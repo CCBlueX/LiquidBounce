@@ -30,7 +30,7 @@ class HeadsTab : WrappedCreativeTabs("Heads")
 	{
 		representedType.backgroundImageName = "item_search.png"
 
-		loadHeads() // TODO: Asynchronize
+		loadHeads()
 	}
 
 	/**

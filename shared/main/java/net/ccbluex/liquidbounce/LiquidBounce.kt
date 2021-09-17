@@ -110,8 +110,6 @@ object LiquidBounce
 		ClientUtils.logger.info("Backend: $MINECRAFT_VERSION")
 		ClientUtils.logger.info("Nashorn: ${Version.fullVersion()}")
 		for (ver in io.netty.util.Version.identify().values) ClientUtils.logger.info("Netty: $ver")
-		ClientUtils.logger.info("Jinput: ${net.java.games.util.Version.getVersion()}")
-		ClientUtils.logger.info("Jutils: ${net.java.games.util.Version.getVersion()}")
 
 		updateProgress("Initializing FileManager")
 

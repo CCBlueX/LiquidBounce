@@ -54,8 +54,6 @@ object Remapper
 
 	private fun parseSrg()
 	{
-		// TODO: Asynchronize
-
 		srgFile.readLines().forEach {
 			val args = it.split(" ")
 
