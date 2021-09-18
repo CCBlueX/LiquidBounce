@@ -13,8 +13,9 @@ interface INetworkManager
 {
 	val channelOpen: Boolean
 
-	fun sendPacket(packet: IPacket)
 	fun enableEncryption(secretKey: SecretKey)
+
+	fun sendPacket(packet: IPacket)
 	fun sendPacket(packet: IPacket, listener: () -> Unit)
 	fun sendPacketWithoutEvent(packet: IPacket)
 }

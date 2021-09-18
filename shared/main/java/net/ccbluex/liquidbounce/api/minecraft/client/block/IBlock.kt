@@ -25,15 +25,24 @@ interface IBlock
 
 	val isOpaqueCube: Boolean
 
+	// <editor-fold desc="Bounding Box & Collide">
+	fun canCollideCheck(state: IIBlockState?, hitIfLiquid: Boolean): Boolean
+
 	fun getSelectedBoundingBox(world: IWorld, blockState: IIBlockState, blockPos: WBlockPos): IAxisAlignedBB
 	fun getCollisionBoundingBox(world: IWorld, pos: WBlockPos, state: IIBlockState): IAxisAlignedBB?
-	fun canCollideCheck(state: IIBlockState?, hitIfLiquid: Boolean): Boolean
+
 	fun setBlockBoundsBasedOnState(world: IWorld, blockPos: WBlockPos)
+	// </editor-fold>
+
+	// <editor-fold desc="Characteristic">
+	fun isTranslucent(blockState: IIBlockState): Boolean
+	fun isFullCube(state: IIBlockState): Boolean
+	// </editor-fold>
+
 	fun getPlayerRelativeBlockHardness(thePlayer: IEntityPlayerSP, theWorld: IWorld, blockPos: WBlockPos): Float
 	fun getIdFromBlock(block: IBlock): Int
-	fun isTranslucent(blockState: IIBlockState): Boolean
 	fun getMapColor(blockState: IIBlockState, theWorld: IWorldClient, bp: WBlockPos): Int
 	fun getMaterial(state: IIBlockState): IMaterial?
-	fun isFullCube(state: IIBlockState): Boolean
+
 	fun getUnlocalizedName(): String
 }

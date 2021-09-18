@@ -135,8 +135,7 @@ class InventoryUtils : MinecraftInstance(), Listenable
 				val itemStack = container.getSlot(i).stack
 				if (itemStack != null && provider.isItemBlock(itemStack.item) && itemStack.stackSize > 0)
 				{
-					val itemBlock = itemStack.item!!.asItemBlock()
-					val block = itemBlock.block
+					val block = itemStack.item!!.asItemBlock().block
 
 					if (canAutoBlock(block) && block.isFullCube(block.defaultState!!)) hotbarSlots.add(i)
 				}
@@ -245,7 +244,7 @@ class InventoryUtils : MinecraftInstance(), Listenable
 				val healAmount = foodStack.getHealAmount(stack)
 
 				val exactness = currentFoodLevel + healAmount - 20
-				(if (exactness > 3) 0 else (4 - exactness) * 10) + healAmount + foodStack.getSaturationModifier(stack)
+				(if (exactness !in 0..2) 0 else (3 - exactness) * 10) - (if (classProvider.isItemAppleGold(foodStack)) 15 else 0) + healAmount + foodStack.getSaturationModifier(stack)
 			}?.first ?: -1
 		}
 	}

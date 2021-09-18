@@ -8,16 +8,6 @@ package net.ccbluex.liquidbounce.api.minecraft.util
 
 interface IAxisAlignedBB
 {
-	fun addCoord(x: Double, y: Double, z: Double): IAxisAlignedBB
-	fun expand(x: Double, y: Double, z: Double): IAxisAlignedBB
-	fun calculateIntercept(from: WVec3, to: WVec3): IMovingObjectPosition?
-
-	fun isVecInside(vec: WVec3): Boolean
-	fun offset(sx: Double, sy: Double, sz: Double): IAxisAlignedBB
-	fun intersectsWith(boundingBox: IAxisAlignedBB): Boolean
-
-	override fun toString(): String
-
 	val minX: Double
 	val minY: Double
 	val minZ: Double
@@ -25,4 +15,18 @@ interface IAxisAlignedBB
 	val maxX: Double
 	val maxY: Double
 	val maxZ: Double
+
+	// <editor-fold desc="Calculations">
+	fun addCoord(x: Double, y: Double, z: Double): IAxisAlignedBB
+	fun expand(x: Double, y: Double, z: Double): IAxisAlignedBB
+	fun offset(x: Double, y: Double, z: Double): IAxisAlignedBB
+	// </editor-fold>
+
+	// <editor-fold desc="Intercept checks">
+	fun isVecInside(vec: WVec3): Boolean
+	fun intersectsWith(boundingBox: IAxisAlignedBB): Boolean
+	fun calculateIntercept(from: WVec3, to: WVec3): IMovingObjectPosition?
+	// </editor-fold>
+
+	override fun toString(): String
 }

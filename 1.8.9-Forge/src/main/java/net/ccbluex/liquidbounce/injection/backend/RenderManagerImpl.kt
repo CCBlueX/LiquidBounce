@@ -21,12 +21,21 @@ class RenderManagerImpl(val wrapped: RenderManager) : IRenderManager
 		{
 			wrapped.isRenderShadow = value
 		}
+
 	override val viewerPosX: Double
 		get() = wrapped.viewerPosX
 	override val viewerPosY: Double
 		get() = wrapped.viewerPosY
 	override val viewerPosZ: Double
 		get() = wrapped.viewerPosZ
+
+	override val renderPosX: Double
+		get() = wrapped.renderPosX
+	override val renderPosY: Double
+		get() = wrapped.renderPosY
+	override val renderPosZ: Double
+		get() = wrapped.renderPosZ
+
 	override val playerViewX: Float
 		get() = wrapped.playerViewX
 	override var playerViewY: Float
@@ -35,12 +44,6 @@ class RenderManagerImpl(val wrapped: RenderManager) : IRenderManager
 		{
 			wrapped.setPlayerViewY(value)
 		}
-	override val renderPosX: Double
-		get() = wrapped.renderPosX
-	override val renderPosY: Double
-		get() = wrapped.renderPosY
-	override val renderPosZ: Double
-		get() = wrapped.renderPosZ
 
 	override fun renderEntityStatic(entity: IEntity, renderPartialTicks: Float, hideDebugBox: Boolean) = wrapped.renderEntityStatic(entity.unwrap(), renderPartialTicks, hideDebugBox)
 

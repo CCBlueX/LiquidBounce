@@ -6,7 +6,10 @@
 
 package net.ccbluex.liquidbounce.injection.backend
 
-import net.ccbluex.liquidbounce.api.minecraft.scoreboard.*
+import net.ccbluex.liquidbounce.api.minecraft.scoreboard.IScore
+import net.ccbluex.liquidbounce.api.minecraft.scoreboard.IScoreObjective
+import net.ccbluex.liquidbounce.api.minecraft.scoreboard.IScoreboard
+import net.ccbluex.liquidbounce.api.minecraft.scoreboard.ITeam
 import net.ccbluex.liquidbounce.api.util.WrappedCollection
 import net.ccbluex.liquidbounce.api.util.WrappedMap
 import net.minecraft.scoreboard.Score
@@ -15,13 +18,19 @@ import net.minecraft.scoreboard.Scoreboard
 
 class ScoreboardImpl(val wrapped: Scoreboard) : IScoreboard
 {
+	// <editor-fold desc="Team">
 	override fun getPlayersTeam(name: String?): ITeam? = wrapped.getPlayersTeam(name)?.wrap()
+	// </editor-fold>
+
+	// <editor-fold desc="Objective">
+	override fun getObjectivesForEntity(entityName: String): Map<IScoreObjective, IScore> = WrappedMap(wrapped.getObjectivesForEntity(entityName), IScoreObjective::unwrap, ScoreObjective::wrap, IScore::unwrap, Score::wrap)
 
 	override fun getObjectiveInDisplaySlot(index: Int): IScoreObjective? = wrapped.getObjectiveInDisplaySlot(index)?.wrap()
+	// </editor-fold>
 
+	// <editor-fold desc="Score">
 	override fun getSortedScores(objective: IScoreObjective): Collection<IScore> = WrappedCollection(wrapped.getSortedScores(objective.unwrap()), IScore::unwrap, Score::wrap)
-
-	override fun getObjectivesForEntity(entityName: String): Map<IScoreObjective, IScore> = WrappedMap(wrapped.getObjectivesForEntity(entityName), IScoreObjective::unwrap, ScoreObjective::wrap, IScore::unwrap, Score::wrap)
+	// </editor-fold>
 
 	override fun equals(other: Any?): Boolean = other is ScoreboardImpl && other.wrapped == wrapped
 }

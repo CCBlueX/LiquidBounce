@@ -33,7 +33,6 @@ import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11.*
 import kotlin.math.ceil
 
-// TODO: Reduce overheads caused by nametags
 @ModuleInfo(name = "NameTags", description = "Changes the scale of the nametags so you can always read them.", category = ModuleCategory.RENDER)
 class NameTags : Module()
 {
@@ -51,19 +50,19 @@ class NameTags : Module()
 
 	private val bodyColorGroup = ValueGroup("BodyColor")
 	private val bodyColorValue = RGBAColorValue("Color", 0, 0, 0, 175, listOf("BodyRed", "BodyGreen", "BodyBlue", "BodyAlpha"))
-	private val bodyRainbowValue = BoolValue("BodyRainbow", false)
+	private val bodyColorRainbowValue = BoolValue("BodyRainbow", false)
 
 	private val borderGroup = ValueGroup("Border")
 	private val borderEnabledValue = BoolValue("Enabled", true, "Border")
 	private val borderColorValue = RGBAColorValue("Color", 255, 255, 255, 80, listOf("BorderRed", "BorderGreen", "BorderBlue", "BorderAlpha"))
-	private val borderRainbowValue = BoolValue("BorderRainbow", false)
+	private val borderColorRainbowValue = BoolValue("BorderRainbow", false)
 
 	private val elementClearNamesValue = BoolValue("ClearNames", false)
 	private val stripColorsValue = BoolValue("StripColors", false)
 
 	private val rainbowGroup = object : ValueGroup("Rainbow")
 	{
-		override fun showCondition() = bodyRainbowValue.get() || borderEnabledValue.get() && borderRainbowValue.get()
+		override fun showCondition() = bodyColorRainbowValue.get() || borderEnabledValue.get() && borderColorRainbowValue.get()
 	}
 	private val rainbowSpeedValue = IntegerValue("Speed", 10, 1, 10, "Rainbow-Speed")
 	private val rainbowSaturationValue = FloatValue("Saturation", 1.0f, 0.0f, 1.0f, "HSB-Saturation")
@@ -74,37 +73,32 @@ class NameTags : Module()
 	init
 	{
 		elementGroup.addAll(elementHealthValue, elementPingValue, elementDistanceValue, elementArmorValue, elementBotValue, elementEntityIDValue)
-		bodyColorGroup.addAll(bodyColorValue, bodyRainbowValue)
-		borderGroup.addAll(borderEnabledValue, borderColorValue, borderRainbowValue)
+		bodyColorGroup.addAll(bodyColorValue, bodyColorRainbowValue)
+		borderGroup.addAll(borderEnabledValue, borderColorValue, borderColorRainbowValue)
 		rainbowGroup.addAll(rainbowSpeedValue, rainbowSaturationValue, rainbowBrightnessValue)
 	}
 
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
+		val theWorld = mc.theWorld ?: return
+		val thePlayer = mc.thePlayer ?: return
+		val renderManager = mc.renderManager
+		val renderItem = mc.renderItem
+		val partialTicks = mc.timer.renderPartialTicks
+
 		glPushClientAttrib(GL_ALL_CLIENT_ATTRIB_BITS)
 		glPushAttrib(GL_ALL_ATTRIB_BITS)
 		glPushMatrix()
 
-		// Disable lightning and depth test
 		glDisable(GL_LIGHTING)
 		glDisable(GL_DEPTH_TEST)
-
 		glEnable(GL_LINE_SMOOTH)
-
-		// Enable blend
 		glEnable(GL_BLEND)
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
-		val theWorld = mc.theWorld ?: return
-		val thePlayer = mc.thePlayer ?: return
-
 		val provider = classProvider
-		val glStateManager = classProvider.glStateManager
-
-		val renderManager = mc.renderManager
-		val renderItem = mc.renderItem
-		val partialTicks = mc.timer.renderPartialTicks
+		val glStateManager = provider.glStateManager
 
 		val murderDetector = LiquidBounce.moduleManager[MurderDetector::class.java] as MurderDetector
 		val equipmentArrangement = if (Backend.MINECRAFT_VERSION_MINOR == 8) (0..4).toList().toIntArray() else intArrayOf(0, 1, 2, 3, 5, 4)
@@ -116,12 +110,11 @@ class NameTags : Module()
 			renderNameTag(provider, renderManager, renderItem, glStateManager, murderDetector, thePlayer, entity, if (elementClearNamesValue.get()) ColorUtils.stripColor(name) else name, equipmentArrangement, isBot, partialTicks)
 		}
 
+		RenderUtils.resetColor()
+
 		glPopMatrix()
 		glPopAttrib()
 		glPopClientAttrib()
-
-		// Reset color
-		RenderUtils.resetColor()
 	}
 
 	private fun renderNameTag(provider: IClassProvider, renderManager: IRenderManager, renderItem: IRenderItem, glStateManager: IGlStateManager, murderDetector: MurderDetector, thePlayer: IEntity, entity: IEntityLivingBase, name: String, equipmentArrangement: IntArray, isBot: Boolean, partialTicks: Float)
@@ -143,8 +136,8 @@ class NameTags : Module()
 		val saturation = rainbowSaturationValue.get()
 		val brightness = rainbowBrightnessValue.get()
 
-		val bodyColor = if (bodyRainbowValue.get()) ColorUtils.rainbowRGB(alpha = bodyColorValue.getAlpha(), speed = rainbowSpeed, saturation = saturation, brightness = brightness) else bodyColorValue.get()
-		val borderColor = if (borderEnabled) if (borderRainbowValue.get()) ColorUtils.rainbowRGB(alpha = borderColorValue.getAlpha(), speed = rainbowSpeed, saturation = saturation, brightness = brightness) else borderColorValue.get() else 0
+		val bodyColor = if (bodyColorRainbowValue.get()) ColorUtils.rainbowRGB(alpha = bodyColorValue.getAlpha(), speed = rainbowSpeed, saturation = saturation, brightness = brightness) else bodyColorValue.get()
+		val borderColor = if (borderEnabled) if (borderColorRainbowValue.get()) ColorUtils.rainbowRGB(alpha = borderColorValue.getAlpha(), speed = rainbowSpeed, saturation = saturation, brightness = brightness) else borderColorValue.get() else 0
 
 		val isPlayer = provider.isEntityPlayer(entity)
 
@@ -178,7 +171,6 @@ class NameTags : Module()
 
 		val healthText = if (healthEnabled)
 		{
-
 			val health: Float = if (!isPlayer || healthMode.equals("Datawatcher", true)) entity.health
 			else EntityUtils.getPlayerHealthFromScoreboard(entity.asEntityPlayer().gameProfile.name, isMineplex = healthMode.equals("Mineplex", true)).toFloat()
 

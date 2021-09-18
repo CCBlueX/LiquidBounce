@@ -12,16 +12,16 @@ import net.minecraft.potion.PotionEffect
 
 class PotionEffectImpl(val wrapped: PotionEffect) : IPotionEffect
 {
-	override fun getDurationString(): String = Potion.getDurationString(wrapped)
-
 	override val effectName: String
 		get() = wrapped.effectName
+	override val potionID: Int
+		get() = wrapped.potionID
 	override val amplifier: Int
 		get() = wrapped.amplifier
 	override val duration: Int
 		get() = wrapped.duration
-	override val potionID: Int
-		get() = wrapped.potionID
+
+	override fun getDurationString(): String = Potion.getDurationString(wrapped)
 
 	override fun equals(other: Any?): Boolean = other is PotionEffectImpl && other.wrapped == wrapped
 }

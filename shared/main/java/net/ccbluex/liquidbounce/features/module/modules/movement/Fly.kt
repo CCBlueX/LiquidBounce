@@ -106,7 +106,7 @@ object Fly : Module()
 		}
 	}
 
-	//<editor-fold desc="Options">
+	// <editor-fold desc="Options">
 	/**
 	 * Damage on start
 	 */
@@ -262,7 +262,7 @@ object Fly : Module()
 	}
 	private val visualVanillaFlightRemainingTimeCounterEnabledValue = BoolValue("Enabled", false, "VanillaFlightRemainingTimeCounter")
 	private val visualVanillaFlightRemainingTimeCounterFontValue = FontValue("Font", Fonts.font40)
-	//</editor-fold>
+	// </editor-fold>
 
 	private var mode: FlyMode? = null
 

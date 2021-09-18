@@ -14,53 +14,53 @@ import java.util.*
 @Suppress("INAPPLICABLE_JVM_NAME")
 interface IEntity
 {
+	// <editor-fold desc="DistanceWalked">
 	var distanceWalkedOnStepModified: Float
 	var distanceWalkedModified: Float
+	// </editor-fold>
 
-	@get:JvmName("isSprinting")
-	var sprinting: Boolean
-
-	@get:JvmName("isSneaking")
-	val sneaking: Boolean
-	var stepHeight: Float
-	val horizontalFacing: IEnumFacing
-	val lookVec: WVec3?
+	// <editor-fold desc="States">
 	var isDead: Boolean
 	val isCollidedVertically: Boolean
 	val isCollidedHorizontally: Boolean
 	var isAirBorne: Boolean
-	val hurtResistantTime: Int
 	var noClip: Boolean
 
-	val positionVector: WVec3
-
-	@get:JvmName("isRiding")
-	val isRiding: Boolean
-	val position: WBlockPos
-
-	@get:JvmName("isBurning")
-	val burning: Boolean
 	val isInWater: Boolean
 	var isInWeb: Boolean
 	val isInLava: Boolean
 	val isEating: Boolean
 	val isSilent: Boolean
 
-	var fallDistance: Float
-	val width: Float
-	val height: Float
-	val eyeHeight: Float
-	val collisionBorderSize: Float
-	var entityBoundingBox: IAxisAlignedBB
+	@get:JvmName("isSprinting")
+	var sprinting: Boolean
 
-	val ridingEntity: IEntity?
+	@get:JvmName("isSneaking")
+	val sneaking: Boolean
 
-	val air: Int
+	@get:JvmName("isRiding")
+	val isRiding: Boolean
+
+	@get:JvmName("isBurning")
+	val burning: Boolean
+
+	@get:JvmName("isEntityAlive")
+	val entityAlive: Boolean
+
+	@get:JvmName("isInvisible")
+	val invisible: Boolean
+	// </editor-fold>
+
+	// <editor-fold desc="Position & Movement">
+	var stepHeight: Float
 
 	var motionX: Double
 	var motionY: Double
 	var motionZ: Double
 	var onGround: Boolean
+
+	val position: WBlockPos
+	val positionVector: WVec3
 
 	var posX: Double
 	var posY: Double
@@ -77,12 +77,26 @@ interface IEntity
 	val prevPosX: Double
 	val prevPosY: Double
 	val prevPosZ: Double
+	// </editor-fold>
 
+	// <editor-fold desc="Rotation">
 	var rotationYaw: Float
 	var rotationPitch: Float
 
 	var prevRotationYaw: Float
 	var prevRotationPitch: Float
+
+	val horizontalFacing: IEnumFacing
+	val lookVec: WVec3?
+	// </editor-fold>
+
+	// <editor-fold desc="Border">
+	val width: Float
+	val height: Float
+	val eyeHeight: Float
+	val collisionBorderSize: Float
+	var entityBoundingBox: IAxisAlignedBB
+	// </editor-fold>
 
 	val entityId: Int
 	val displayName: IIChatComponent
@@ -90,40 +104,49 @@ interface IEntity
 	val name: String
 
 	val ticksExisted: Int
+	var fallDistance: Float
+	val hurtResistantTime: Int
+	val air: Int
 
-	@get:JvmName("isEntityAlive")
-	val entityAlive: Boolean
+	val ridingEntity: IEntity?
 
-	@get:JvmName("isInvisible")
-	val invisible: Boolean
-
-	fun getPositionEyes(partialTicks: Float): WVec3
-
-	fun canBeCollidedWith(): Boolean
-	fun setCanBeCollidedWith(value: Boolean)
-	fun canRiderInteract(): Boolean
-	fun moveEntity(x: Double, y: Double, z: Double)
-	fun getDistanceToEntity(it: IEntity): Float
-	fun getDistanceSqToEntity(it: IEntity): Double
-
+	// <editor-fold desc="Type casting">
 	fun asEntityPlayer(): IEntityPlayer
 	fun asEntityLivingBase(): IEntityLivingBase
 	fun asEntityTNTPrimed(): IEntityTNTPrimed
 	fun asEntityArrow(): IEntityArrow
 	fun asEntityPotion(): IEntityPotion
 	fun asEntityFishHook(): IEntityFishHook
+	// </editor-fold>
 
-	fun getDistance(x: Double, y: Double, z: Double): Double
+	// <editor-fold desc="Position & Movement">
+	fun getPositionEyes(partialTicks: Float): WVec3
+	fun getLook(partialTicks: Float): WVec3
+
+	fun moveEntity(x: Double, y: Double, z: Double)
 	fun setPosition(x: Double, y: Double, z: Double)
+	fun setPositionAndRotation(posX: Double, posY: Double, posZ: Double, rotationYaw: Float, rotationPitch: Float)
+	fun setPositionAndUpdate(posX: Double, posY: Double, posZ: Double)
+
+	fun copyLocationAndAnglesFrom(player: IEntity)
+	// </editor-fold>
+
+	// <editor-fold desc="Distance">
+	fun getDistance(x: Double, y: Double, z: Double): Double
+	fun getDistanceToEntity(it: IEntity): Float
 
 	fun getDistanceSq(blockPos: WBlockPos): Double
 	fun getDistanceSq(x: Double, y: Double, z: Double): Double
-	fun setPositionAndUpdate(posX: Double, posY: Double, posZ: Double)
+	fun getDistanceSqToEntity(it: IEntity): Double
+	// </editor-fold>
+
+	fun canRiderInteract(): Boolean
+	fun canBeCollidedWith(): Boolean
+
+	fun setCanBeCollidedWith(value: Boolean)
+
 	fun rayTrace(range: Double, partialTicks: Float): IMovingObjectPosition?
-	fun getLook(partialTicks: Float): WVec3
 	fun isInsideOfMaterial(material: IMaterial): Boolean
-	fun copyLocationAndAnglesFrom(player: IEntity)
-	fun setPositionAndRotation(posX: Double, posY: Double, posZ: Double, rotationYaw: Float, rotationPitch: Float)
 
 	override operator fun equals(other: Any?): Boolean
 }

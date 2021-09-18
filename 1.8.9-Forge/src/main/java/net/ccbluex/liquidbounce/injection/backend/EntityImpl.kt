@@ -24,7 +24,7 @@ import java.util.*
 
 open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 {
-	// distanceWalked
+	// <editor-fold desc="DistanceWalked">
 	override var distanceWalkedOnStepModified: Float
 		get() = wrapped.distanceWalkedOnStepModified
 		set(value)
@@ -37,21 +37,9 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 		{
 			wrapped.distanceWalkedModified = value
 		}
+	// </editor-fold>
 
-	// Step Height
-	override var stepHeight: Float
-		get() = wrapped.stepHeight
-		set(value)
-		{
-			wrapped.stepHeight = value
-		}
-
-	override val horizontalFacing: IEnumFacing
-		get() = wrapped.horizontalFacing.wrap()
-
-	override val lookVec: WVec3?
-		get() = wrapped.lookVec.wrap()
-
+	// <editor-fold desc="States">
 	override var isDead: Boolean
 		get() = wrapped.isDead
 		set(value)
@@ -59,7 +47,6 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 			wrapped.isDead = value
 		}
 
-	// collision check
 	override val isCollidedVertically: Boolean
 		get() = wrapped.isCollidedVertically
 	override val isCollidedHorizontally: Boolean
@@ -72,8 +59,6 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 			wrapped.isAirBorne = value
 		}
 
-	override val hurtResistantTime: Int
-		get() = wrapped.hurtResistantTime
 	override var noClip: Boolean
 		get() = wrapped.noClip
 		set(value)
@@ -81,34 +66,6 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 			wrapped.noClip = value
 		}
 
-	override var sprinting: Boolean
-		get() = wrapped.isSprinting
-		set(value)
-		{
-			wrapped.isSprinting = value
-		}
-
-	override val sneaking: Boolean
-		get() = wrapped.isSneaking
-
-	override val positionVector: WVec3
-		get() = wrapped.positionVector.wrap()
-
-	override val isRiding: Boolean
-		get() = wrapped.isRiding
-
-	override val position: WBlockPos
-		get() = wrapped.position.wrap()
-
-	override val burning: Boolean
-		get() = wrapped.isBurning
-
-	override var fallDistance: Float
-		get() = wrapped.fallDistance
-		set(value)
-		{
-			wrapped.fallDistance = value
-		}
 	override val isInWater: Boolean
 		get() = wrapped.isInWater
 	override var isInWeb: Boolean
@@ -124,21 +81,32 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 	override val isSilent: Boolean
 		get() = wrapped.isSilent
 
-	override val width: Float
-		get() = wrapped.width
-	override val height: Float
-		get() = wrapped.height
-
-	override var onGround: Boolean
-		get() = wrapped.onGround
+	override var sprinting: Boolean
+		get() = wrapped.isSprinting
 		set(value)
 		{
-			wrapped.onGround = value
+			wrapped.isSprinting = value
 		}
-	override val ridingEntity: IEntity?
-		get() = wrapped.ridingEntity?.wrap()
-	override val collisionBorderSize: Float
-		get() = wrapped.collisionBorderSize
+	override val sneaking: Boolean
+		get() = wrapped.isSneaking
+	override val isRiding: Boolean
+		get() = wrapped.isRiding
+	override val burning: Boolean
+		get() = wrapped.isBurning
+	override val entityAlive: Boolean
+		get() = wrapped.isEntityAlive
+	override val invisible: Boolean
+		get() = wrapped.isInvisible
+	// </editor-fold>
+
+	// <editor-fold desc="Position & Movement">
+	override var stepHeight: Float
+		get() = wrapped.stepHeight
+		set(value)
+		{
+			wrapped.stepHeight = value
+		}
+
 	override var motionX: Double
 		get() = wrapped.motionX
 		set(value)
@@ -157,18 +125,18 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 		{
 			wrapped.motionZ = value
 		}
-
-	override val air: Int
-		get() = wrapped.air
-
-	override val eyeHeight: Float
-		get() = wrapped.eyeHeight
-	override var entityBoundingBox: IAxisAlignedBB
-		get() = wrapped.entityBoundingBox.wrap()
+	override var onGround: Boolean
+		get() = wrapped.onGround
 		set(value)
 		{
-			wrapped.entityBoundingBox = value.unwrap()
+			wrapped.onGround = value
 		}
+
+	override val position: WBlockPos
+		get() = wrapped.position.wrap()
+	override val positionVector: WVec3
+		get() = wrapped.positionVector.wrap()
+
 	override var posX: Double
 		get() = wrapped.posX
 		set(value)
@@ -202,12 +170,16 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 		get() = wrapped.lastTickPosY
 	override val lastTickPosZ: Double
 		get() = wrapped.lastTickPosZ
+
 	override val prevPosX: Double
 		get() = wrapped.prevPosX
 	override val prevPosY: Double
 		get() = wrapped.prevPosY
 	override val prevPosZ: Double
 		get() = wrapped.prevPosZ
+	// </editor-fold>
+
+	// <editor-fold desc="Rotation">
 	override var rotationYaw: Float
 		get() = wrapped.rotationYaw
 		set(value)
@@ -215,25 +187,11 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 			wrapped.rotationYaw = value
 		}
 	override var rotationPitch: Float
-		get() = wrapped.prevRotationPitch
+		get() = wrapped.rotationPitch
 		set(value)
 		{
 			wrapped.rotationPitch = value
 		}
-	override val entityId: Int
-		get() = wrapped.entityId
-	override val displayName: IIChatComponent
-		get() = wrapped.displayName.wrap()
-	override val uniqueID: UUID
-		get() = wrapped.uniqueID
-	override val name: String
-		get() = wrapped.name
-	override val ticksExisted: Int
-		get() = wrapped.ticksExisted
-	override val entityAlive: Boolean
-		get() = wrapped.isEntityAlive
-	override val invisible: Boolean
-		get() = wrapped.isInvisible
 
 	override var prevRotationYaw: Float
 		get() = wrapped.prevRotationYaw
@@ -248,7 +206,56 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 			wrapped.prevRotationPitch = value
 		}
 
-	/* Type casting */
+	override val horizontalFacing: IEnumFacing
+		get() = wrapped.horizontalFacing.wrap()
+	override val lookVec: WVec3?
+		get() = wrapped.lookVec.wrap()
+	// </editor-fold>
+
+	// <editor-fold desc="Border">
+	override val width: Float
+		get() = wrapped.width
+	override val height: Float
+		get() = wrapped.height
+	override val eyeHeight: Float
+		get() = wrapped.eyeHeight
+
+	override val collisionBorderSize: Float
+		get() = wrapped.collisionBorderSize
+	override var entityBoundingBox: IAxisAlignedBB
+		get() = wrapped.entityBoundingBox.wrap()
+		set(value)
+		{
+			wrapped.entityBoundingBox = value.unwrap()
+		}
+	// </editor-fold>
+
+	override val entityId: Int
+		get() = wrapped.entityId
+	override val displayName: IIChatComponent
+		get() = wrapped.displayName.wrap()
+	override val uniqueID: UUID
+		get() = wrapped.uniqueID
+	override val name: String
+		get() = wrapped.name
+
+	override val ticksExisted: Int
+		get() = wrapped.ticksExisted
+	override var fallDistance: Float
+		get() = wrapped.fallDistance
+		set(value)
+		{
+			wrapped.fallDistance = value
+		}
+	override val hurtResistantTime: Int
+		get() = wrapped.hurtResistantTime
+	override val air: Int
+		get() = wrapped.air
+
+	override val ridingEntity: IEntity?
+		get() = wrapped.ridingEntity?.wrap()
+
+	// <editor-fold desc="Type casting">
 	override fun asEntityPlayer(): IEntityPlayer = EntityPlayerImpl(wrapped as EntityPlayer)
 
 	override fun asEntityLivingBase(): IEntityLivingBase = EntityLivingBaseImpl(wrapped as EntityLivingBase)
@@ -260,28 +267,28 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 	override fun asEntityPotion(): IEntityPotion = EntityPotionImpl(wrapped as EntityPotion)
 
 	override fun asEntityFishHook(): IEntityFishHook = EntityFishHookImpl(wrapped as EntityFishHook)
+	// </editor-fold>
 
-	/* Position-related */
+	// <editor-fold desc="Position & Movement">
 	override fun getPositionEyes(partialTicks: Float): WVec3 = wrapped.getPositionEyes(partialTicks).wrap()
-
-	override fun moveEntity(x: Double, y: Double, z: Double) = wrapped.moveEntity(x, y, z)
-
-	override fun copyLocationAndAnglesFrom(player: IEntity) = wrapped.copyLocationAndAnglesFrom(player.unwrap())
-
 	override fun getLook(partialTicks: Float): WVec3 = wrapped.getLook(partialTicks).wrap()
 
+	override fun moveEntity(x: Double, y: Double, z: Double) = wrapped.moveEntity(x, y, z)
 	override fun setPosition(x: Double, y: Double, z: Double) = wrapped.setPosition(x, y, z)
 	override fun setPositionAndUpdate(posX: Double, posY: Double, posZ: Double) = wrapped.setPositionAndUpdate(posX, posY, posZ)
 	override fun setPositionAndRotation(posX: Double, posY: Double, posZ: Double, rotationYaw: Float, rotationPitch: Float) = wrapped.setPositionAndRotation(posX, posY, posZ, rotationYaw, rotationPitch)
 
-	/* Distance */
-	override fun getDistanceToEntity(it: IEntity): Float = wrapped.getDistanceToEntity(it.unwrap())
-	override fun getDistanceSqToEntity(it: IEntity): Double = wrapped.getDistanceSqToEntity(it.unwrap())
+	override fun copyLocationAndAnglesFrom(player: IEntity) = wrapped.copyLocationAndAnglesFrom(player.unwrap())
+	// </editor-fold>
 
+	// <editor-fold desc="Distance">
 	override fun getDistance(x: Double, y: Double, z: Double): Double = wrapped.getDistance(x, y, z)
+	override fun getDistanceToEntity(it: IEntity): Float = wrapped.getDistanceToEntity(it.unwrap())
 
 	override fun getDistanceSq(blockPos: WBlockPos): Double = wrapped.getDistanceSq(blockPos.unwrap())
 	override fun getDistanceSq(x: Double, y: Double, z: Double): Double = wrapped.getDistanceSq(x, y, z)
+	override fun getDistanceSqToEntity(it: IEntity): Double = wrapped.getDistanceSqToEntity(it.unwrap())
+	// </editor-fold>
 
 	override fun rayTrace(range: Double, partialTicks: Float): IMovingObjectPosition? = wrapped.rayTrace(range, partialTicks).wrap()
 

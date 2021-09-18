@@ -10,7 +10,6 @@ import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
 
 interface ICPacketEntityAction : IPacket
 {
-
 	enum class WAction
 	{
 		START_SNEAKING,

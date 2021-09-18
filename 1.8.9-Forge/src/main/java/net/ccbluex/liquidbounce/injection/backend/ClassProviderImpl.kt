@@ -115,7 +115,7 @@ object ClassProviderImpl : IClassProvider
 	override val textureUtil: ITextureUtil
 		get() = TextureUtilImpl
 
-	/* Constructors */
+	// <editor-fold desc="Constructors (Uncategorized)">
 	override fun createPacketBuffer(buffer: ByteBuf): IPacketBuffer = PacketBufferImpl(PacketBuffer(buffer))
 
 	override fun createChatComponentText(text: String): IIChatComponent = IChatComponentImpl(ChatComponentText(text))
@@ -129,8 +129,9 @@ object ClassProviderImpl : IClassProvider
 	override fun createEntityOtherPlayerMP(world: IWorld, gameProfile: GameProfile): IEntityOtherPlayerMP = EntityOtherPlayerMPImpl(EntityOtherPlayerMP(world.unwrap(), gameProfile))
 
 	override fun createPotionEffect(id: Int, time: Int, strength: Int): IPotionEffect = PotionEffectImpl(PotionEffect(id, time, strength))
+	// </editor-fold>
 
-	/* Constructors (Graphical) */
+	// <editor-fold desc="Constructors (Graphical)">
 	override fun createResourceLocation(resourceName: String): IResourceLocation = ResourceLocationImpl(ResourceLocation(resourceName))
 
 	override fun createThreadDownloadImageData(cacheFileIn: File?, imageUrlIn: String, textureResourceLocation: IResourceLocation?, imageBufferIn: WIImageBuffer): IThreadDownloadImageData
@@ -151,8 +152,9 @@ object ClassProviderImpl : IClassProvider
 	override fun createSafeVertexBuffer(vertexFormat: IVertexFormat): IVertexBuffer = SafeVertexBuffer(vertexFormat.unwrap()).wrap()
 
 	override fun createFramebuffer(displayWidth: Int, displayHeight: Int, useDepth: Boolean): IFramebuffer = FramebufferImpl(Framebuffer(displayWidth, displayHeight, useDepth))
+	// </editor-fold>
 
-	/* Constructors (GUI) */
+	// <editor-fold desc="Constructors (GUI)">
 	override fun createGuiTextField(id: Int, iFontRenderer: IFontRenderer, x: Int, y: Int, width: Int, height: Int): IGuiTextField = GuiTextFieldImpl(GuiTextField(id, iFontRenderer.unwrap(), x, y, width, height))
 
 	override fun createGuiPasswordField(id: Int, iFontRenderer: IFontRenderer, x: Int, y: Int, width: Int, height: Int): IGuiTextField = GuiTextFieldImpl(GuiPasswordField(id, iFontRenderer.unwrap(), x, y, width, height))
@@ -170,8 +172,9 @@ object ClassProviderImpl : IClassProvider
 	override fun createGuiModList(parentScreen: IGuiScreen): IGuiScreen = GuiScreenImpl(GuiModList(parentScreen.unwrap()))
 
 	override fun createGuiConnecting(parent: IGuiScreen, mc: IMinecraft, serverData: IServerData): IGuiScreen = GuiScreenImpl(GuiConnecting(parent.unwrap(), mc.unwrap(), serverData.unwrap()))
+	// </editor-fold>
 
-	/* Constructors (Item) */
+	// <editor-fold desc="Constructors (Item)">
 	override fun createItem(): IItem = ItemImpl(Item())
 
 	override fun createItemStack(item: IItem, amount: Int, meta: Int): IItemStack = ItemStackImpl(ItemStack(item.unwrap(), amount, meta))
@@ -179,8 +182,9 @@ object ClassProviderImpl : IClassProvider
 	override fun createItemStack(item: IItem): IItemStack = ItemStackImpl(ItemStack(item.unwrap()))
 
 	override fun createItemStack(blockEnum: IBlock): IItemStack = ItemStackImpl(ItemStack(blockEnum.unwrap()))
+	// </editor-fold>
 
-	/* Constructors (NBT) */
+	// <editor-fold desc="Constructors (NBT)">
 	override fun createNBTTagCompound(): INBTTagCompound = NBTTagCompoundImpl(NBTTagCompound())
 
 	override fun createNBTTagList(): INBTTagList = NBTTagListImpl(NBTTagList())
@@ -188,8 +192,9 @@ object ClassProviderImpl : IClassProvider
 	override fun createNBTTagString(string: String): INBTTagString = NBTTagStringImpl(NBTTagString(string))
 
 	override fun createNBTTagDouble(value: Double): INBTTagDouble = NBTTagDoubleImpl(NBTTagDouble(value))
+	// </editor-fold>
 
-	/* Constructors (Client-side packet) */
+	// <editor-fold desc="Constructors (Client-side packet)">
 	override fun createCPacketHeldItemChange(slot: Int): ICPacketHeldItemChange = CPacketHeldItemChangeImpl(C09PacketHeldItemChange(slot))
 
 	override fun createCPacketPlayerBlockPlacement(positionIn: WBlockPos, placedBlockDirectionIn: Int, stackIn: IItemStack?, facingXIn: Float, facingYIn: Float, facingZIn: Float): ICPacketPlayerBlockPlacement = CPacketPlayerBlockPlacementImpl(C08PacketPlayerBlockPlacement(positionIn.unwrap(), placedBlockDirectionIn, stackIn?.unwrap(), facingXIn, facingYIn, facingZIn))
@@ -241,8 +246,9 @@ object ClassProviderImpl : IClassProvider
 	override fun createCPacketPlayerBlockPlacement(stack: IItemStack?): ICPacketPlayerBlockPlacement = CPacketPlayerBlockPlacementImpl(C08PacketPlayerBlockPlacement(stack?.unwrap()))
 
 	override fun createCPacketTryUseItem(hand: WEnumHand): PacketImpl<*> = Backend.BACKEND_UNSUPPORTED()
+	// </editor-fold>
 
-	/* instance checks (Entity) */
+	// <editor-fold desc="Type checks (Entity)">
 	override fun isEntityAnimal(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityAnimal
 
 	override fun isEntitySquid(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntitySquid
@@ -298,8 +304,9 @@ object ClassProviderImpl : IClassProvider
 	override fun isEntityFishHook(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityFishHook
 
 	override fun isEntityExpBottle(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityExpBottle
+	// </editor-fold>
 
-	/* instance checks (TileEntity) */
+	// <editor-fold desc="Type checks (TileEntity)">
 	override fun isTileEntityChest(obj: Any?): Boolean = obj is TileEntityImpl && obj.wrapped is TileEntityChest
 
 	override fun isTileEntityEnderChest(obj: Any?): Boolean = obj is TileEntityImpl && obj.wrapped is TileEntityEnderChest
@@ -311,8 +318,9 @@ object ClassProviderImpl : IClassProvider
 	override fun isTileEntityHopper(obj: Any?): Boolean = obj is TileEntityImpl && obj.wrapped is TileEntityHopper
 
 	override fun isTileEntityShulkerBox(obj: Any?): Boolean = false
+	// </editor-fold>
 
-	/* instance checks (Server-side packet) */
+	// <editor-fold desc="Type checks (Server-side packet)">
 	override fun isSPacketEntity(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S14PacketEntity
 
 	override fun isSPacketResourcePackSend(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S48PacketResourcePackSend
@@ -352,8 +360,9 @@ object ClassProviderImpl : IClassProvider
 	override fun isSPacketSpawnGlobalEntity(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S2CPacketSpawnGlobalEntity
 
 	override fun isSPacketEntityEquipment(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is S04PacketEntityEquipment
+	// </editor-fold>
 
-	/* instance checks (Client-side packet) */
+	// <editor-fold desc="Type checks (Client-side packet)">
 	override fun isCPacketPlayer(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C03PacketPlayer
 
 	override fun isCPacketPlayerBlockPlacement(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C08PacketPlayerBlockPlacement
@@ -389,8 +398,9 @@ object ClassProviderImpl : IClassProvider
 	override fun isCPacketConfirmTransaction(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C0FPacketConfirmTransaction
 
 	override fun isCPacketAbilities(obj: Any?): Boolean = obj is PacketImpl<*> && obj.wrapped is C13PacketPlayerAbilities
+	// </editor-fold>
 
-	/* instance checks (Block) */
+	// <editor-fold desc="Type checks (Block)">
 	override fun isBlockAir(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockAir
 
 	override fun isBlockFence(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockFence
@@ -446,8 +456,9 @@ object ClassProviderImpl : IClassProvider
 	override fun isBlockTrapDoor(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockTrapDoor
 
 	override fun isBlockContainer(obj: Any?): Boolean = obj is BlockImpl && obj.wrapped is BlockContainer
+	// </editor-fold>
 
-	/* instance checks (Item) */
+	// <editor-fold desc="Type checks (Item)">
 	override fun isItemSword(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemSword
 
 	override fun isItemTool(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemTool
@@ -498,8 +509,9 @@ object ClassProviderImpl : IClassProvider
 	override fun isItemSkull(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemSkull
 
 	override fun isItemExpBottle(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemExpBottle
+	// </editor-fold>
 
-	/* instance checkd (GUI) */
+	// <editor-fold desc="Type checks (GUI)">
 	override fun isGuiInventory(obj: Any?): Boolean = obj is GuiImpl<*> && obj.wrapped is GuiInventory
 
 	override fun isGuiContainer(obj: Any?): Boolean = obj is GuiImpl<*> && obj.wrapped is GuiContainer
@@ -517,8 +529,9 @@ object ClassProviderImpl : IClassProvider
 	override fun isClickGui(obj: Any?): Boolean = obj is GuiScreenImpl<*> && obj.wrapped is GuiScreenWrapper && obj.wrapped.wrapped is ClickGui
 
 	override fun isGuiRepair(obj: Any?): Boolean = obj is GuiImpl<*> && obj.wrapped is GuiRepair
+	// </editor-fold>
 
-	/* Enum constructors */
+	// <editor-fold desc="Enum constructors">
 	override fun getPotionEnum(type: PotionType): IPotion
 	{
 		return PotionImpl(when (type)
@@ -711,8 +724,9 @@ object ClassProviderImpl : IClassProvider
 			WDefaultVertexFormats.POSITION_COLOR -> DefaultVertexFormats.POSITION_COLOR
 		})
 	}
+	// </editor-fold>
 
-	/* Wrappers */
+	// <editor-fold desc="Wrappers">
 	override fun wrapFontRenderer(fontRenderer: IWrappedFontRenderer): IFontRenderer = FontRendererImpl(FontRendererWrapper(fontRenderer))
 
 	override fun wrapGuiScreen(wrappedGui: WrappedGuiScreen): IGuiScreen = GuiScreenImpl(GuiScreenWrapper(wrappedGui)).also { wrappedGui.representedScreen = it }
@@ -726,4 +740,5 @@ object ClassProviderImpl : IClassProvider
 	{
 		GuiSlotWrapper(wrappedGuiSlot, mc, width, height, top, bottom, slotHeight)
 	}
+	// </editor-fold>
 }

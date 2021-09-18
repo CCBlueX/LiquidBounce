@@ -77,7 +77,7 @@ interface IClassProvider
 	 */
 	val textureUtil: ITextureUtil
 
-	/* Constructors (Uncategorized) */
+	// <editor-fold desc="Constructors (Uncategorized)">
 	fun createPacketBuffer(buffer: ByteBuf): IPacketBuffer
 	fun createChatComponentText(text: String): IIChatComponent
 	fun createClickEvent(action: IClickEvent.WAction, value: String): IClickEvent
@@ -85,8 +85,9 @@ interface IClassProvider
 	fun createAxisAlignedBB(minX: Double, minY: Double, minZ: Double, maxX: Double, maxY: Double, maxZ: Double): IAxisAlignedBB
 	fun createEntityOtherPlayerMP(world: IWorld, gameProfile: GameProfile): IEntityOtherPlayerMP
 	fun createPotionEffect(id: Int, time: Int, strength: Int): IPotionEffect
+	// </editor-fold>
 
-	/* Constructors (Graphical) */
+	// <editor-fold desc="Constructors (Graphical)">
 	fun createResourceLocation(resourceName: String): IResourceLocation
 	fun createThreadDownloadImageData(cacheFileIn: File?, imageUrlIn: String, textureResourceLocation: IResourceLocation?, imageBufferIn: WIImageBuffer): IThreadDownloadImageData
 	fun createDynamicTexture(image: BufferedImage): IDynamicTexture
@@ -94,8 +95,9 @@ interface IClassProvider
 	fun createScaledResolution(mc: IMinecraft): IScaledResolution
 	fun createSafeVertexBuffer(vertexFormat: IVertexFormat): IVertexBuffer
 	fun createFramebuffer(displayWidth: Int, displayHeight: Int, useDepth: Boolean): IFramebuffer
+	// </editor-fold>
 
-	/* Constructor (GUI) */
+	// <editor-fold desc="Constructors (GUI)">
 	fun createGuiTextField(id: Int, iFontRenderer: IFontRenderer, x: Int, y: Int, width: Int, height: Int): IGuiTextField
 	fun createGuiPasswordField(id: Int, iFontRenderer: IFontRenderer, x: Int, y: Int, width: Int, height: Int): IGuiTextField
 	fun createGuiButton(id: Int, x: Int, y: Int, width: Int, height: Int, text: String): IGuiButton
@@ -105,20 +107,23 @@ interface IClassProvider
 	fun createGuiMultiplayer(parentScreen: IGuiScreen): IGuiScreen
 	fun createGuiModList(parentScreen: IGuiScreen): IGuiScreen
 	fun createGuiConnecting(parent: IGuiScreen, mc: IMinecraft, serverData: IServerData): IGuiScreen
+	// </editor-fold>
 
-	/* Constructors (Item) */
+	// <editor-fold desc="Constructors (Item)">
 	fun createItem(): IItem
 	fun createItemStack(item: IItem, amount: Int, meta: Int): IItemStack
 	fun createItemStack(item: IItem): IItemStack
 	fun createItemStack(blockEnum: IBlock): IItemStack
+	// </editor-fold>
 
-	/* Constructors (NBT) */
+	// <editor-fold desc="Constructors (NBT)">
 	fun createNBTTagCompound(): INBTTagCompound
 	fun createNBTTagList(): INBTTagList
 	fun createNBTTagString(string: String): INBTTagString
 	fun createNBTTagDouble(value: Double): INBTTagDouble
+	// </editor-fold>
 
-	/* Constructors (Client-side packet) */
+	// <editor-fold desc="Constructors (Client-side packet)">
 	fun createCPacketHeldItemChange(slot: Int): ICPacketHeldItemChange
 	fun createCPacketPlayerBlockPlacement(positionIn: WBlockPos, placedBlockDirectionIn: Int, stackIn: IItemStack?, facingXIn: Float, facingYIn: Float, facingZIn: Float): ICPacketPlayerBlockPlacement
 	fun createCPacketPlayerPosLook(x: Double, y: Double, z: Double, yaw: Float, pitch: Float, onGround: Boolean): ICPacketPlayerPosLook
@@ -152,8 +157,9 @@ interface IClassProvider
 
 	@SupportsMinecraftVersions(MinecraftVersion.MC_1_12)
 	fun createCPacketTryUseItem(hand: WEnumHand): PacketImpl<*>
+	// </editor-fold>
 
-	/* instance checks (Entity) */
+	// <editor-fold desc="Type checks (Entity)">
 	fun isEntityAnimal(obj: Any?): Boolean
 	fun isEntitySquid(obj: Any?): Boolean
 	fun isEntityBat(obj: Any?): Boolean
@@ -182,16 +188,18 @@ interface IClassProvider
 	fun isEntityEgg(obj: Any?): Boolean
 	fun isEntityFishHook(obj: Any?): Boolean
 	fun isEntityExpBottle(obj: Any?): Boolean
+	// </editor-fold>
 
-	/* instance checks (TileEntity) */
+	// <editor-fold desc="Type checks (TileEntity)">
 	fun isTileEntityChest(obj: Any?): Boolean
 	fun isTileEntityEnderChest(obj: Any?): Boolean
 	fun isTileEntityFurnace(obj: Any?): Boolean
 	fun isTileEntityDispenser(obj: Any?): Boolean
 	fun isTileEntityHopper(obj: Any?): Boolean
 	fun isTileEntityShulkerBox(obj: Any?): Boolean
+	// </editor-fold>
 
-	/* instance checks (Server-side packet) */
+	// <editor-fold desc="Type checks (Server-side packet)">
 	fun isSPacketEntity(obj: Any?): Boolean
 	fun isSPacketResourcePackSend(obj: Any?): Boolean
 	fun isSPacketPlayerPosLook(obj: Any?): Boolean
@@ -212,8 +220,9 @@ interface IClassProvider
 	fun isSPacketEntityEffect(obj: Any?): Boolean
 	fun isSPacketSpawnGlobalEntity(obj: Any?): Boolean
 	fun isSPacketEntityEquipment(obj: Any?): Boolean
+	// </editor-fold>
 
-	/* instance checks (Client-side packet) */
+	// <editor-fold desc="Type checks (Client-side packet)">
 	fun isCPacketPlayer(obj: Any?): Boolean
 	fun isCPacketPlayerBlockPlacement(obj: Any?): Boolean
 	fun isCPacketUseEntity(obj: Any?): Boolean
@@ -232,8 +241,9 @@ interface IClassProvider
 	fun isCPacketPlayerDigging(obj: Any?): Boolean
 	fun isCPacketConfirmTransaction(obj: Any?): Boolean
 	fun isCPacketAbilities(obj: Any?): Boolean
+	// </editor-fold>
 
-	/* instance checks (Block) */
+	// <editor-fold desc="Type checks (Block)">
 	fun isBlockAir(obj: Any?): Boolean
 	fun isBlockFence(obj: Any?): Boolean
 	fun isBlockSnow(obj: Any?): Boolean
@@ -262,8 +272,9 @@ interface IClassProvider
 	fun isBlockStainedGlass(obj: Any?): Boolean
 	fun isBlockTrapDoor(obj: Any?): Boolean
 	fun isBlockContainer(obj: Any?): Boolean
+	// </editor-fold>
 
-	/* instance checks (Item) */
+	// <editor-fold desc="Type checks (Item)">
 	fun isItemSword(obj: Any?): Boolean
 	fun isItemTool(obj: Any?): Boolean
 	fun isItemArmor(obj: Any?): Boolean
@@ -289,8 +300,9 @@ interface IClassProvider
 	fun isItemGlassBottle(obj: Any?): Boolean
 	fun isItemSkull(obj: Any?): Boolean
 	fun isItemExpBottle(obj: Any?): Boolean
+	// </editor-fold>
 
-	/* instance checks (GUI) */
+	// <editor-fold desc="Type checks (GUI)">
 	fun isGuiInventory(obj: Any?): Boolean
 	fun isGuiContainer(obj: Any?): Boolean
 	fun isGuiGameOver(obj: Any?): Boolean
@@ -300,8 +312,9 @@ interface IClassProvider
 	fun isGuiHudDesigner(obj: Any?): Boolean
 	fun isClickGui(obj: Any?): Boolean
 	fun isGuiRepair(obj: Any?): Boolean
+	// </editor-fold>
 
-	/* Enum constructors */
+	// <editor-fold desc="Enum constructors">
 	fun getPotionEnum(type: PotionType): IPotion
 	fun getEnumFacing(type: EnumFacingType): IEnumFacing
 	fun getBlockEnum(type: BlockType): IBlock
@@ -310,10 +323,12 @@ interface IClassProvider
 	fun getItemEnum(type: ItemType): IItem
 	fun getEnchantmentEnum(type: EnchantmentType): IEnchantment
 	fun getVertexFormatEnum(type: WDefaultVertexFormats): IVertexFormat
+	// </editor-fold>
 
-	/* Wrappers */
+	// <editor-fold desc="Wrappers">
 	fun wrapFontRenderer(fontRenderer: IWrappedFontRenderer): IFontRenderer
 	fun wrapGuiScreen(wrappedGui: WrappedGuiScreen): IGuiScreen
 	fun wrapCreativeTab(name: String, wrappedCreativeTabs: WrappedCreativeTabs)
 	fun wrapGuiSlot(wrappedGuiSlot: WrappedGuiSlot, mc: IMinecraft, width: Int, height: Int, top: Int, bottom: Int, slotHeight: Int)
+	// </editor-fold>
 }

@@ -17,6 +17,7 @@ import net.minecraft.network.play.server.*
 
 open class PacketImpl<out T : Packet<*>>(val wrapped: T) : IPacket
 {
+	// <editor-fold desc="Type casting to server-side packet">
 	override fun asSPacketAnimation(): ISPacketAnimation = SPacketAnimationImpl(wrapped as S0BPacketAnimation)
 
 	override fun asSPacketEntity(): ISPacketEntity = SPacketEntityImpl(wrapped as S14PacketEntity)
@@ -52,7 +53,9 @@ open class PacketImpl<out T : Packet<*>>(val wrapped: T) : IPacket
 	override fun asSPacketSpawnGlobalEntity(): ISPacketSpawnGlobalEntity = SPacketSpawnGlobalEntityImpl(wrapped as S2CPacketSpawnGlobalEntity)
 
 	override fun asSPacketEntityEquipment(): ISPacketEntityEquipment = SPacketEntityEquipmentImpl(wrapped as S04PacketEntityEquipment)
+	// </editor-fold>
 
+	// <editor-fold desc="Type casting to client-side packet">
 	override fun asCPacketPlayerAbilities(): ICPacketPlayerAbilities = CPacketPlayerAbilitiesImpl(wrapped as C13PacketPlayerAbilities)
 
 	override fun asCPacketChatMessage(): ICPacketChatMessage = CPacketChatMessageImpl(wrapped as C01PacketChatMessage)
@@ -78,6 +81,7 @@ open class PacketImpl<out T : Packet<*>>(val wrapped: T) : IPacket
 	override fun asCPacketClientStatus(): ICPacketClientStatus = CPacketClientStatusImpl(wrapped as C16PacketClientStatus)
 
 	override fun asCPacketCloseWindow(): ICPacketCloseWindow = CPacketCloseWindowImpl(wrapped as C0DPacketCloseWindow)
+	// </editor-fold>
 
 	override fun equals(other: Any?): Boolean = other is PacketImpl<*> && other.wrapped == wrapped
 }

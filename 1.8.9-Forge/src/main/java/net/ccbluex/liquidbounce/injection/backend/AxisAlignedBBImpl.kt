@@ -20,6 +20,7 @@ class AxisAlignedBBImpl(val wrapped: AxisAlignedBB) : IAxisAlignedBB
 		get() = wrapped.minY
 	override val minZ: Double
 		get() = wrapped.minZ
+
 	override val maxX: Double
 		get() = wrapped.maxX
 	override val maxY: Double
@@ -27,17 +28,21 @@ class AxisAlignedBBImpl(val wrapped: AxisAlignedBB) : IAxisAlignedBB
 	override val maxZ: Double
 		get() = wrapped.maxZ
 
+	// <editor-fold desc="Calculations">
 	override fun addCoord(x: Double, y: Double, z: Double): IAxisAlignedBB = wrapped.addCoord(x, y, z).wrap()
 
 	override fun expand(x: Double, y: Double, z: Double): IAxisAlignedBB = wrapped.expand(x, y, z).wrap()
 
+	override fun offset(x: Double, y: Double, z: Double): IAxisAlignedBB = wrapped.offset(x, y, z).wrap()
+	// </editor-fold>
+
+	// <editor-fold desc="Intercept checks">
 	override fun calculateIntercept(from: WVec3, to: WVec3): IMovingObjectPosition? = wrapped.calculateIntercept(from.unwrap(), to.unwrap())?.wrap()
 
 	override fun isVecInside(vec: WVec3): Boolean = wrapped.isVecInside(vec.unwrap())
 
-	override fun offset(sx: Double, sy: Double, sz: Double): IAxisAlignedBB = wrapped.offset(sx, sy, sz).wrap()
-
 	override fun intersectsWith(boundingBox: IAxisAlignedBB): Boolean = wrapped.intersectsWith(boundingBox.unwrap())
+	// </editor-fold>
 
 	override fun toString(): String = "$wrapped"
 

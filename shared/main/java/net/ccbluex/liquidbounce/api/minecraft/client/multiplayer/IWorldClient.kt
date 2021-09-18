@@ -14,16 +14,24 @@ import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 
 interface IWorldClient : IWorld
 {
-	val playerEntities: Collection<IEntityPlayer>
-	val loadedEntityList: Collection<IEntity>
-	val loadedTileEntityList: Collection<ITileEntity>
 	var worldTime: Long
 
+	val loadedEntityList: Collection<IEntity>
+	val loadedTileEntityList: Collection<ITileEntity>
+	val playerEntities: Collection<IEntityPlayer>
+
+	// <editor-fold desc="Packet">
 	fun sendQuittingDisconnectingPacket()
 	fun sendBlockBreakProgress(entityId: Int, blockPos: WBlockPos, damage: Int)
+	// </editor-fold>
+
+	// <editor-fold desc="Entity">
 	fun addEntityToWorld(entityId: Int, entity: IEntity)
 	fun removeEntityFromWorld(entityId: Int)
+	// </editor-fold>
 
+	// <editor-fold desc="Weather">
 	fun setRainStrength(strength: Float)
 	fun setThunderingStrength(strength: Float)
+	// </editor-fold>
 }

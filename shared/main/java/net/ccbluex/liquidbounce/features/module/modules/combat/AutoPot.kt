@@ -404,7 +404,7 @@ class AutoPot : Module()
 				if (invisPot && potionID == invisID) potionInvis = true
 				if (potionID == nightVisionID) potionNightVision = true
 			}
-			//</editor-fold>
+			// </editor-fold>
 
 			if (!candidates.contains(slotIndex))
 			{

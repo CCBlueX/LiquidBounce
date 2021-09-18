@@ -8,13 +8,16 @@ import net.ccbluex.liquidbounce.event.WorldEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.EntityUtils
+import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.FontValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.RGBColorValue
 import org.lwjgl.opengl.GL11
-import java.util.*
+import kotlin.random.Random.Default.nextDouble
 
 // Ported from FDPClient (https://github.com/Project-EZ4H/FDPClient)
 // Original code is available in https://github.com/Project-EZ4H/FDPClient/blob/master/src/main/java/net/ccbluex/liquidbounce/features/module/modules/render/DamageParticle.kt
@@ -31,6 +34,8 @@ class DamageParticle : Module()
 	private val damageAnimationColorValue = RGBColorValue("DamageAnimationColor", 252, 185, 65, Triple("DamageAnimationColorRed", "DamageAnimationColorGreen", "DamageAnimationColorBlue"))
 	private val healAnimationColorValue = RGBColorValue("DamageAnimationColor", 44, 201, 144, Triple("HealAnimationColorRed", "HealAnimationColorGreen", "HealAnimationColorBlue"))
 
+	private val fontValue = FontValue("Font", Fonts.minecraftFont)
+
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
@@ -44,7 +49,12 @@ class DamageParticle : Module()
 
 				val delta = lastHealth - entity.health
 				if (delta == 0.0F) null else entity to delta
-			}.forEach { (entity, delta) -> particles.add(SingleParticle(StringUtils.DECIMALFORMAT_1.format(delta), entity.posX - 0.5 + Random(System.currentTimeMillis()).nextInt(5).toDouble() * 0.1, entity.entityBoundingBox.minY + (entity.entityBoundingBox.maxY - entity.entityBoundingBox.minY) / 2.0, entity.posZ - 0.5 + Random(System.currentTimeMillis() + 1L).nextInt(5).toDouble() * 0.1, if (delta > 0) damageAnimationColorValue.get() else healAnimationColorValue.get())) }
+			}.forEach { (entity, delta) ->
+				val width = entity.width * 0.5
+				val height = entity.height * 0.5
+				val pos = RotationUtils.getCenter(entity.entityBoundingBox)
+				particles.add(SingleParticle(StringUtils.DECIMALFORMAT_1.format(delta), pos.xCoord + nextDouble(-width, width), pos.yCoord + nextDouble(-height, height), pos.zCoord + nextDouble(-width, width), if (delta > 0) damageAnimationColorValue.get() else healAnimationColorValue.get()))
+			}
 
 			val itr = particles.iterator()
 			while (itr.hasNext()) if (itr.next().ticks++ > aliveTicks.get()) itr.remove()
@@ -55,25 +65,33 @@ class DamageParticle : Module()
 	fun onRender3d(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
 		synchronized(particles) {
-			val renderManager = mc.renderManager
 			val glStateManager = classProvider.glStateManager
-			val font = mc.fontRendererObj
 			val xRotate = if (mc.gameSettings.thirdPersonView == 2) -1.0f else 1.0f
 
-			val size = sizeValue.get() * 0.01F
+			val renderManager = mc.renderManager
+			val renderPosX = renderManager.renderPosX
+			val renderPosY = renderManager.renderPosY
+			val renderPosZ = renderManager.renderPosZ
+			val playerViewX = renderManager.playerViewX
+			val playerViewY = renderManager.playerViewY
+
+			val font = fontValue.get()
 			val particleAnimationSpeed = particleAnimationSpeedValue.get()
+			val size = sizeValue.get() * 0.01F
 
 			for (particle in particles)
 			{
 				glStateManager.pushMatrix()
 				glStateManager.enablePolygonOffset()
 				glStateManager.doPolygonOffset(1.0f, -1500000.0f)
-				GL11.glTranslated(particle.posX - renderManager.renderPosX, (particle.posY + particle.ticks * particleAnimationSpeed) - renderManager.renderPosY, particle.posZ - renderManager.renderPosZ)
-				GL11.glRotatef(-renderManager.playerViewY, 0.0f, 1.0f, 0.0f)
-				GL11.glRotatef(renderManager.playerViewX, xRotate, 0.0f, 0.0f)
+				GL11.glTranslated(particle.posX - renderPosX, (particle.posY + particle.ticks * particleAnimationSpeed) - renderPosY, particle.posZ - renderPosZ)
+				GL11.glRotatef(-playerViewY, 0.0f, 1.0f, 0.0f)
+				GL11.glRotatef(playerViewX, xRotate, 0.0f, 0.0f)
 				GL11.glScalef(-size, -size, size)
 				GL11.glDepthMask(false)
+
 				font.drawStringWithShadow(particle.str, -(font.getStringWidth(particle.str) / 2), -(font.fontHeight - 1), particle.color)
+
 				GL11.glColor4f(187.0f, 255.0f, 255.0f, 1.0f)
 				GL11.glDepthMask(true)
 				glStateManager.doPolygonOffset(1.0f, 1500000.0f)

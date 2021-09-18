@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.api.minecraft.network.play.server.*
 
 interface IPacket
 {
+	// <editor-fold desc="Type casting to server-side packet">
 	fun asSPacketAnimation(): ISPacketAnimation
 	fun asSPacketEntity(): ISPacketEntity
 	fun asSPacketEntityVelocity(): ISPacketEntityVelocity
@@ -30,7 +31,9 @@ interface IPacket
 	fun asSPacketEntityEffect(): ISPacketEntityEffect
 	fun asSPacketSpawnGlobalEntity(): ISPacketSpawnGlobalEntity
 	fun asSPacketEntityEquipment(): ISPacketEntityEquipment
+	// </editor-fold>
 
+	// <editor-fold desc="Type casting to client-side packet">
 	fun asCPacketPlayer(): ICPacketPlayer
 	fun asCPacketUseEntity(): ICPacketUseEntity
 	fun asCPacketChatMessage(): ICPacketChatMessage
@@ -44,4 +47,5 @@ interface IPacket
 	fun asCPacketConfirmTransaction(): ICPacketConfirmTransaction
 	fun asCPacketClientStatus(): ICPacketClientStatus
 	fun asCPacketCloseWindow(): ICPacketCloseWindow
+	// </editor-fold>
 }

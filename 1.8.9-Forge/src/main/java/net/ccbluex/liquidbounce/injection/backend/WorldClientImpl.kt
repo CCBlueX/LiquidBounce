@@ -20,12 +20,6 @@ import net.minecraft.tileentity.TileEntity
 
 class WorldClientImpl(wrapped: WorldClient) : WorldImpl<WorldClient>(wrapped), IWorldClient
 {
-	override val playerEntities: Collection<IEntityPlayer>
-		get() = WrappedCollection(wrapped.playerEntities, IEntityPlayer::unwrap, EntityPlayer::wrap)
-	override val loadedEntityList: Collection<IEntity>
-		get() = WrappedCollection(wrapped.loadedEntityList, IEntity::unwrap, Entity::wrap)
-	override val loadedTileEntityList: Collection<ITileEntity>
-		get() = WrappedCollection(wrapped.loadedTileEntityList, ITileEntity::unwrap, TileEntity::wrap)
 	override var worldTime: Long
 		get() = wrapped.worldTime
 		set(value)
@@ -33,20 +27,33 @@ class WorldClientImpl(wrapped: WorldClient) : WorldImpl<WorldClient>(wrapped), I
 			wrapped.worldTime = value
 		}
 
+	override val loadedEntityList: Collection<IEntity>
+		get() = WrappedCollection(wrapped.loadedEntityList, IEntity::unwrap, Entity::wrap)
+	override val loadedTileEntityList: Collection<ITileEntity>
+		get() = WrappedCollection(wrapped.loadedTileEntityList, ITileEntity::unwrap, TileEntity::wrap)
+	override val playerEntities: Collection<IEntityPlayer>
+		get() = WrappedCollection(wrapped.playerEntities, IEntityPlayer::unwrap, EntityPlayer::wrap)
+
+	// <editor-fold desc="Packet">
 	override fun sendQuittingDisconnectingPacket() = wrapped.sendQuittingDisconnectingPacket()
 
 	override fun sendBlockBreakProgress(entityId: Int, blockPos: WBlockPos, damage: Int) = wrapped.sendBlockBreakProgress(entityId, blockPos.unwrap(), damage)
+	// </editor-fold>
 
+	// <editor-fold desc="Entity">
 	override fun addEntityToWorld(entityId: Int, entity: IEntity) = wrapped.addEntityToWorld(entityId, entity.unwrap())
 
 	override fun removeEntityFromWorld(entityId: Int)
 	{
 		wrapped.removeEntityFromWorld(entityId)
 	}
+	// </editor-fold>
 
+	// <editor-fold desc="Weather">
 	override fun setRainStrength(strength: Float) = wrapped.setRainStrength(strength)
 
 	override fun setThunderingStrength(strength: Float) = wrapped.setThunderStrength(strength)
+	// </editor-fold>
 }
 
 fun IWorldClient.unwrap(): WorldClient = (this as WorldClientImpl).wrapped

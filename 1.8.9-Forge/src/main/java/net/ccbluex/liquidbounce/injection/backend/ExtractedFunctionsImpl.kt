@@ -56,7 +56,7 @@ object ExtractedFunctionsImpl : IExtractedFunctions
 		}
 	}
 
-	/* Block */
+	// <editor-fold desc="Block">
 	override fun getBlockById(id: Int): IBlock? = Block.getBlockById(id)?.let(::BlockImpl)
 
 	override fun getIdFromBlock(block: IBlock): Int = Block.getIdFromBlock(block.unwrap())
@@ -66,9 +66,9 @@ object ExtractedFunctionsImpl : IExtractedFunctions
 	override fun getBlockRegistryKeys(): Collection<IResourceLocation> = WrappedCollection(Block.blockRegistry.keys, IResourceLocation::unwrap, ResourceLocation::wrap)
 
 	override fun isBlockEqualTo(block1: IBlock?, block2: IBlock?): Boolean = Block.isEqualTo(block1?.unwrap(), block2?.unwrap())
+	// </editor-fold>
 
-	/* Item */
-
+	// <editor-fold desc="Item">
 	override fun getModifierForCreature(heldItem: IItemStack?, creatureAttribute: IEnumCreatureAttribute): Float = EnchantmentHelper.getModifierForCreature(heldItem?.unwrap(), creatureAttribute.unwrap())
 
 	override fun getItemRegistryKeys(): Collection<IResourceLocation> = WrappedCollection(Item.itemRegistry.keys, IResourceLocation::unwrap, ResourceLocation::wrap)
@@ -78,8 +78,9 @@ object ExtractedFunctionsImpl : IExtractedFunctions
 	override fun getItemByName(name: String): IItem? = (Items::class.java.getField(name).get(null) as Item?)?.wrap()
 
 	override fun getIdFromItem(item: IItem): Int = Item.getIdFromItem(item.unwrap())
+	// </editor-fold>
 
-	/* Enchantment */
+	// <editor-fold desc="Enchantment">
 	override fun getEnchantmentByLocation(location: String): IEnchantment? = Enchantment.getEnchantmentByLocation(location)?.wrap()
 
 	override fun getEnchantmentById(enchantID: Int): IEnchantment? = Enchantment.getEnchantmentById(enchantID)?.wrap()
@@ -89,10 +90,10 @@ object ExtractedFunctionsImpl : IExtractedFunctions
 	override fun getEnchantments(item: IItemStack): Map<Int, Int> = EnchantmentHelper.getEnchantments(item.unwrap())
 
 	override fun getEnchantmentLevel(enchId: Int, stack: IItemStack): Int = EnchantmentHelper.getEnchantmentLevel(enchId, stack.unwrap())
+	// </editor-fold>
 
-	/* Rendering-related */
+	// <editor-fold desc="Render">
 	override fun enableStandardItemLighting() = RenderHelper.enableStandardItemLighting()
-
 	override fun enableGUIStandardItemLighting() = RenderHelper.enableGUIStandardItemLighting()
 	override fun disableStandardItemLighting() = RenderHelper.disableStandardItemLighting()
 	override fun setActiveTextureLightMapTexUnit() = GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit)
@@ -118,30 +119,38 @@ object ExtractedFunctionsImpl : IExtractedFunctions
 		{
 		}
 	}
+	// </editor-fold>
 
-	/* Translation */
+	// <editor-fold desc="Translation">
 	override fun formatI18n(key: String, vararg values: String): String = I18n.format(key, values)
 	override fun translateToLocal(key: String): String = StatCollector.translateToLocal(key)
+	// </editor-fold>
 
-	/* Potion */
+	// <editor-fold desc="Potion">
 	override fun getPotionById(potionID: Int): IPotion = Potion.potionTypes[potionID].wrap()
 
 	override fun getLiquidColor(potionDamage: Int, bypassCache: Boolean): Int = PotionHelper.getLiquidColor(potionDamage, bypassCache)
+	// </editor-fold>
 
-	/* Session */
+	// <editor-fold desc="Session">
 	override fun sessionServiceJoinServer(profile: GameProfile, token: String, sessionHash: String) = Minecraft.getMinecraft().sessionService.joinServer(profile, token, sessionHash)
+	// </editor-fold>
 
-	/* Scoreboard */
+	// <editor-fold desc="Scoreboard">
 	override fun scoreboardFormatPlayerName(scorePlayerTeam: ITeam?, playerName: String): String = ScorePlayerTeam.formatPlayerName(scorePlayerTeam?.unwrap(), playerName)
+	// </editor-fold>
 
-	/* JSON */
+	// <editor-fold desc="JSON">
 	override fun jsonToComponent(toString: String): IIChatComponent = IChatComponent.Serializer.jsonToComponent(toString).wrap()
+	// </editor-fold>
 
-	/* Facing */
+	// <editor-fold desc="Facing">
 	override fun getHorizontalFacing(yaw: Float): IEnumFacing = EnumFacing.getHorizontal(MathHelper.floor_double((yaw * 4.0 / 360.0) + 0.5) and 3).wrap()
+	// </editor-fold>
 
-	/* Delegate to MathHelper */
+	// <editor-fold desc="Delegate to MathHelper">
 	override fun cos(radians: Float): Float = MathHelper.cos(radians)
 
 	override fun sin(radians: Float): Float = MathHelper.sin(radians)
+	// </editor-fold>
 }

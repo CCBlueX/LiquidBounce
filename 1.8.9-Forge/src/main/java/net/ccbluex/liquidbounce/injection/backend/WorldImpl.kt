@@ -32,26 +32,37 @@ open class WorldImpl<out T : World>(val wrapped: T) : IWorld
 	override val worldBorder: IWorldBorder
 		get() = wrapped.worldBorder.wrap()
 
-	override fun getEntityByID(id: Int): IEntity? = wrapped.getEntityByID(id)?.wrap()
+	// <editor-fold desc="Chunk">
+	override fun getChunkFromChunkCoords(x: Int, z: Int): IChunk = wrapped.getChunkFromChunkCoords(x, z).wrap()
+	// </editor-fold>
 
-	override fun rayTraceBlocks(start: WVec3, end: WVec3): IMovingObjectPosition? = wrapped.rayTraceBlocks(start.unwrap(), end.unwrap())?.wrap()
-
-	override fun rayTraceBlocks(start: WVec3, end: WVec3, stopOnLiquid: Boolean): IMovingObjectPosition? = wrapped.rayTraceBlocks(start.unwrap(), end.unwrap(), stopOnLiquid)?.wrap()
-
-	override fun rayTraceBlocks(start: WVec3, end: WVec3, stopOnLiquid: Boolean, ignoreBlockWithoutBoundingBox: Boolean, returnLastUncollidableBlock: Boolean): IMovingObjectPosition? = wrapped.rayTraceBlocks(start.unwrap(), end.unwrap(), stopOnLiquid, ignoreBlockWithoutBoundingBox, returnLastUncollidableBlock)?.wrap()
-
-	override fun getEntitiesInAABBexcluding(entityIn: IEntity?, boundingBox: IAxisAlignedBB, predicate: (IEntity?) -> Boolean): Collection<IEntity> = WrappedCollection(wrapped.getEntitiesInAABBexcluding(entityIn?.unwrap(), boundingBox.unwrap()) { predicate(it?.wrap()) }, IEntity::unwrap, Entity::wrap)
-
+	// <editor-fold desc="Block">
 	override fun getBlockState(blockPos: WBlockPos): IIBlockState = wrapped.getBlockState(blockPos.unwrap()).wrap()
+	// </editor-fold>
 
-	override fun getEntitiesWithinAABBExcludingEntity(entity: IEntity?, bb: IAxisAlignedBB): Collection<IEntity> = WrappedCollection(wrapped.getEntitiesWithinAABBExcludingEntity(entity?.unwrap(), bb.unwrap()), IEntity::unwrap, Entity::wrap)
-
+	// <editor-fold desc="Collision Box">
 	override fun getCollidingBoundingBoxes(entity: IEntity, bb: IAxisAlignedBB): Collection<IAxisAlignedBB> = WrappedCollection(wrapped.getCollidingBoundingBoxes(entity.unwrap(), bb.unwrap()), IAxisAlignedBB::unwrap, AxisAlignedBB::wrap)
 
 	override fun checkBlockCollision(aabb: IAxisAlignedBB): Boolean = wrapped.checkBlockCollision(aabb.unwrap())
 
 	override fun getCollisionBoxes(bb: IAxisAlignedBB): Collection<IAxisAlignedBB> = WrappedCollection(wrapped.getCollisionBoxes(bb.unwrap()), IAxisAlignedBB::unwrap, AxisAlignedBB::wrap)
-	override fun getChunkFromChunkCoords(x: Int, z: Int): IChunk = wrapped.getChunkFromChunkCoords(x, z).wrap()
+	// </editor-fold>
+
+	// <editor-fold desc="Entity">
+	override fun getEntityByID(id: Int): IEntity? = wrapped.getEntityByID(id)?.wrap()
+
+	override fun getEntitiesInAABBexcluding(entityIn: IEntity?, boundingBox: IAxisAlignedBB, predicate: (IEntity?) -> Boolean): Collection<IEntity> = WrappedCollection(wrapped.getEntitiesInAABBexcluding(entityIn?.unwrap(), boundingBox.unwrap()) { predicate(it?.wrap()) }, IEntity::unwrap, Entity::wrap)
+
+	override fun getEntitiesWithinAABBExcludingEntity(entity: IEntity?, bb: IAxisAlignedBB): Collection<IEntity> = WrappedCollection(wrapped.getEntitiesWithinAABBExcludingEntity(entity?.unwrap(), bb.unwrap()), IEntity::unwrap, Entity::wrap)
+	// </editor-fold>
+
+	// <editor-fold desc="Raytrace">
+	override fun rayTraceBlocks(start: WVec3, end: WVec3): IMovingObjectPosition? = wrapped.rayTraceBlocks(start.unwrap(), end.unwrap())?.wrap()
+
+	override fun rayTraceBlocks(start: WVec3, end: WVec3, stopOnLiquid: Boolean): IMovingObjectPosition? = wrapped.rayTraceBlocks(start.unwrap(), end.unwrap(), stopOnLiquid)?.wrap()
+
+	override fun rayTraceBlocks(start: WVec3, end: WVec3, stopOnLiquid: Boolean, ignoreBlockWithoutBoundingBox: Boolean, returnLastUncollidableBlock: Boolean): IMovingObjectPosition? = wrapped.rayTraceBlocks(start.unwrap(), end.unwrap(), stopOnLiquid, ignoreBlockWithoutBoundingBox, returnLastUncollidableBlock)?.wrap()
+	// </editor-fold>
 
 	override fun equals(other: Any?): Boolean = other is WorldImpl<*> && other.wrapped == wrapped
 }

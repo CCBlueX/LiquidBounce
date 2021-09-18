@@ -81,7 +81,7 @@ class NoWeb : Module()
 				}
 			}
 
-			"oldmemetrix" ->
+			"oldmatrix" ->
 			{
 				thePlayer.jumpMovementFactor = 0.124133333f
 				thePlayer.motionY = -0.0125
