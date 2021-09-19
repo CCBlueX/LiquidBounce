@@ -68,6 +68,8 @@ class NameTags : Module()
 	private val rainbowSaturationValue = FloatValue("Saturation", 1.0f, 0.0f, 1.0f, "HSB-Saturation")
 	private val rainbowBrightnessValue = FloatValue("Brightness", 1.0f, 0.0f, 1.0f, "HSB-Brightness")
 
+	private val interpolateValue = BoolValue("Interpolate", true)
+
 	private val elementfontValue = FontValue("Font", Fonts.font40)
 
 	init
@@ -85,7 +87,7 @@ class NameTags : Module()
 		val thePlayer = mc.thePlayer ?: return
 		val renderManager = mc.renderManager
 		val renderItem = mc.renderItem
-		val partialTicks = mc.timer.renderPartialTicks
+		val partialTicks = if (interpolateValue.get()) event.partialTicks else 1f
 
 		glPushClientAttrib(GL_ALL_CLIENT_ATTRIB_BITS)
 		glPushAttrib(GL_ALL_ATTRIB_BITS)

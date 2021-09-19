@@ -165,14 +165,7 @@ class LongJump : Module()
 					{
 						if (thePlayer.fallDistance > 0.5f && canBoost && !boosted)
 						{
-							val func = functions
-
-							val teleportDistance = 3.0
-							val dir = getDirection(thePlayer)
-							val x = (-func.sin(dir) * teleportDistance)
-							val z = (func.cos(dir) * teleportDistance)
-
-							thePlayer.setPosition(thePlayer.posX + x, thePlayer.posY, thePlayer.posZ + z)
+							MovementUtils.forward(thePlayer, 3.0, MovementUtils.getDirectionDegrees(thePlayer))
 							boosted = true
 							if (autoDisable) state = false
 						}

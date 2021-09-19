@@ -1037,7 +1037,7 @@ class Scaffold : Module()
 				val placeInfo: PlaceInfo? = PlaceInfo[theWorld, blockPos]
 				if (isReplaceable(theWorld, blockPos) && placeInfo != null)
 				{
-					RenderUtils.drawBlockBox(theWorld, thePlayer, blockPos, 1682208255, 0, hydraESP = false)
+					RenderUtils.drawBlockBox(theWorld, thePlayer, blockPos, 1682208255, 0, false, event.partialTicks)
 					return@searchLoop
 				}
 			}

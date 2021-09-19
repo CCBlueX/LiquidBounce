@@ -79,6 +79,8 @@ class ESP : Module()
 
 	private val healthModeValue = ListValue("PlayerHealthMethod", arrayOf("Datawatcher", "Mineplex", "Hive"), "Datawatcher")
 
+	private val interpolateValue = BoolValue("Interpolate", true)
+
 	init
 	{
 		modeGroup.addAll(modeValue, modeBoxOutlineColorValue, modeReal2DWidth, modeOutlineWidth, modeWireFrameWidth, modeShaderOutlineRadius, modeShaderGlowRadius)
@@ -88,7 +90,7 @@ class ESP : Module()
 	}
 
 	@EventTarget
-	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
+	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
 		val mode = modeValue.get().toLowerCase()
 		val mvMatrix = WorldToScreen.getMatrix(GL11.GL_MODELVIEW_MATRIX)
@@ -98,7 +100,7 @@ class ESP : Module()
 		val displayWidth = mc.displayWidth
 		val displayHeight = mc.displayHeight
 
-		val renderPartialTicks = mc.timer.renderPartialTicks
+		val partialTicks = if (interpolateValue.get()) event.partialTicks else 1f
 
 		val renderManager = mc.renderManager
 		val renderPosX = renderManager.renderPosX
@@ -140,20 +142,20 @@ class ESP : Module()
 
 			when (mode)
 			{
-				"box" -> RenderUtils.drawEntityBox(entityLiving, color, modeBoxOutlineColorValue.get(), false)
+				"box" -> RenderUtils.drawEntityBox(entityLiving, color, modeBoxOutlineColorValue.get(), false, partialTicks)
 
 				"2d" ->
 				{
-					val x = lastTickPosX + (posX - lastTickPosX) * renderPartialTicks - renderPosX
-					val y = lastTickPosY + (posY - lastTickPosY) * renderPartialTicks - renderPosY
-					val z = lastTickPosZ + (posZ - lastTickPosZ) * renderPartialTicks - renderPosZ
+					val x = lastTickPosX + (posX - lastTickPosX) * partialTicks - renderPosX
+					val y = lastTickPosY + (posY - lastTickPosY) * partialTicks - renderPosY
+					val z = lastTickPosZ + (posZ - lastTickPosZ) * partialTicks - renderPosZ
 
 					RenderUtils.draw2D(entityLiving, x, y, z, color, -16777216)
 				}
 
 				"real2d" ->
 				{
-					val bb = entityLiving.entityBoundingBox.offset(-posX, -posY, -posZ).offset(lastTickPosX + (posX - lastTickPosX) * renderPartialTicks, lastTickPosY + (posY - lastTickPosY) * renderPartialTicks, lastTickPosZ + (posZ - lastTickPosZ) * renderPartialTicks).offset(-renderPosX, -renderPosY, -renderPosZ)
+					val bb = entityLiving.entityBoundingBox.offset(-posX, -posY, -posZ).offset(lastTickPosX + (posX - lastTickPosX) * partialTicks, lastTickPosY + (posY - lastTickPosY) * partialTicks, lastTickPosZ + (posZ - lastTickPosZ) * partialTicks).offset(-renderPosX, -renderPosY, -renderPosZ)
 					val bbMinX = bb.minX.toFloat()
 					val bbMinY = bb.minY.toFloat()
 					val bbMinZ = bb.minZ.toFloat()
@@ -213,12 +215,12 @@ class ESP : Module()
 		val mode = modeValue.get().toLowerCase()
 		val shader = (if (mode.equals("ShaderOutline", ignoreCase = true)) OutlineShader.INSTANCE else if (mode.equals("ShaderGlow", ignoreCase = true)) GlowShader.INSTANCE else null) ?: return
 
-		val renderPartialTicks = mc.timer.renderPartialTicks
+		val partialTicks = if (interpolateValue.get()) event.partialTicks else 1f
 		val renderManager = mc.renderManager
 
 		val bot = indicateBotValue.get()
 
-		shader.startDraw(event.partialTicks)
+		shader.startDraw(partialTicks)
 
 		renderNameTags = false
 
@@ -227,7 +229,7 @@ class ESP : Module()
 			val theWorld = mc.theWorld ?: return
 			val thePlayer = mc.thePlayer ?: return
 
-			theWorld.loadedEntityList.filter { EntityUtils.isSelected(it, false) }.map(IEntity::asEntityLivingBase).run { if (bot) this else filter { AntiBot.isBot(theWorld, thePlayer, it) } }.forEach { renderManager.renderEntityStatic(it, renderPartialTicks, true) }
+			theWorld.loadedEntityList.filter { EntityUtils.isSelected(it, false) }.map(IEntity::asEntityLivingBase).run { if (bot) this else filter { AntiBot.isBot(theWorld, thePlayer, it) } }.forEach { renderManager.renderEntityStatic(it, partialTicks, true) }
 		}
 		catch (ex: Exception)
 		{

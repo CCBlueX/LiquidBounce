@@ -15,7 +15,7 @@ class ItemPhysics : Module()
 	val itemRotationSpeed = FloatValue("RotateSpeed", 1.0f, 0.0f, 10.0f)
 
 	@EventTarget
-	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
+	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
 		tick = System.nanoTime()
 	}

@@ -107,6 +107,8 @@ class StorageESP : Module()
 	private val rainbowSaturationValue = FloatValue("Saturation", 1.0f, 0.0f, 1.0f, "HSB-Saturation")
 	private val rainbowBrightnessValue = FloatValue("Brightness", 1.0f, 0.0f, 1.0f, "HSB-Brightness")
 
+	private val interpolateValue = BoolValue("Interpolate", true)
+
 	init
 	{
 		trappedChestGroup.addAll(trappedChestColorValue, trappedChestRainbowValue)
@@ -155,7 +157,7 @@ class StorageESP : Module()
 
 			val outlineAlpha = boxOutlineAlphaValue.get()
 
-			val partialTicks = event.partialTicks
+			val partialTicks = if (interpolateValue.get()) event.partialTicks else 1f
 
 			if (mode == "outline")
 			{
@@ -202,7 +204,7 @@ class StorageESP : Module()
 
 				if (type > 3) // Not chest or enderchest
 				{
-					RenderUtils.drawBlockBox(theWorld, thePlayer, tileEntity.pos, color, outlineColor, hydraESP)
+					RenderUtils.drawBlockBox(theWorld, thePlayer, tileEntity.pos, color, outlineColor, hydraESP, partialTicks)
 					return@forEach
 				}
 
@@ -210,7 +212,7 @@ class StorageESP : Module()
 
 				when (mode)
 				{
-					"otherbox", "box", "hydra" -> RenderUtils.drawBlockBox(theWorld, thePlayer, tileEntity.pos, color, outlineColor, hydraESP)
+					"otherbox", "box", "hydra" -> RenderUtils.drawBlockBox(theWorld, thePlayer, tileEntity.pos, color, outlineColor, hydraESP, partialTicks)
 
 					"2d" -> RenderUtils.draw2D(tileEntity.pos, color, -16777216)
 
@@ -268,7 +270,7 @@ class StorageESP : Module()
 			}.forEach { (entity, color) ->
 				when (mode)
 				{
-					"otherbox", "box", "hydra" -> RenderUtils.drawEntityBox(entity, color, ColorUtils.applyAlphaChannel(color, outlineAlpha), hydraESP)
+					"otherbox", "box", "hydra" -> RenderUtils.drawEntityBox(entity, color, ColorUtils.applyAlphaChannel(color, outlineAlpha), hydraESP, partialTicks)
 
 					"2d" -> RenderUtils.draw2D(entity.position, color, -16777216)
 
@@ -364,7 +366,7 @@ class StorageESP : Module()
 		val shader = (if (mode.equals("shaderoutline", ignoreCase = true)) OutlineShader.INSTANCE else if (mode.equals("shaderglow", ignoreCase = true)) GlowShader.INSTANCE else null) ?: return
 		val radius = if (mode.equals("shaderglow", ignoreCase = true)) 2.5f else 1.5f
 
-		val partialTicks = event.partialTicks
+		val partialTicks = if (interpolateValue.get()) event.partialTicks else 1f
 
 		try
 		{

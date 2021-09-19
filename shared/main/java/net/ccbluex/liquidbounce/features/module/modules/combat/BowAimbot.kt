@@ -104,7 +104,7 @@ class BowAimbot : Module()
 	{
 		val currentTarget = target
 
-		if (currentTarget != null && markValue.get()) RenderUtils.drawPlatform(currentTarget, 0x46257EFF)
+		if (currentTarget != null && markValue.get()) RenderUtils.drawPlatform(currentTarget, 0x46257EFF, event.partialTicks)
 	}
 
 	private fun getTarget(theWorld: IWorldClient, thePlayer: IEntityLivingBase, priorityMode: String, playerPredictSize: RotationUtils.MinMaxPair, flags: Int): IEntityLivingBase?

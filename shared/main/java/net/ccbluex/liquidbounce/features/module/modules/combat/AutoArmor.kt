@@ -68,7 +68,7 @@ class AutoArmor : Module()
 		}
 
 	@EventTarget
-	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
+	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
 		val netHandler = mc.netHandler

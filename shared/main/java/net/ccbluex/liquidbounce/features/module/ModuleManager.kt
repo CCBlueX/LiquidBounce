@@ -48,6 +48,9 @@ class ModuleManager : Listenable
 
 		val nanoTime = System.nanoTime()
 
+		registerModule(Fly)
+		registerModule(Speed)
+
 		registerModules(
 
 			AutoArmor::class.java, //
@@ -212,8 +215,6 @@ class ModuleManager : Listenable
 		registerModule(Fucker)
 		registerModule(ChestAura)
 		registerModule(AntiBot)
-		registerModule(Fly)
-		registerModule(Speed)
 
 		ClientUtils.logger.info("[ModuleManager] Loaded ${modules.size} modules. Took ${TimeUtils.nanosecondsToString(System.nanoTime() - nanoTime)}.")
 	}

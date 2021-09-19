@@ -41,19 +41,17 @@ object RenderUtils : MinecraftInstance()
 	var deltaTime = 0
 
 	@JvmStatic
-	fun drawBlockBox(theWorld: IWorld, thePlayer: IEntity, blockPos: WBlockPos, color: Int, outlineColor: Int, hydraESP: Boolean)
+	fun drawBlockBox(theWorld: IWorld, thePlayer: IEntity, blockPos: WBlockPos, color: Int, outlineColor: Int, hydraESP: Boolean, partialTicks: Float)
 	{
-		val renderPartialTicks = mc.timer.renderPartialTicks
-
 		val block = getBlock(theWorld, blockPos)
 
 		val lastTickPosX = thePlayer.lastTickPosX
 		val lastTickPosY = thePlayer.lastTickPosY
 		val lastTickPosZ = thePlayer.lastTickPosZ
 
-		val posX = lastTickPosX + (thePlayer.posX - lastTickPosX) * renderPartialTicks
-		val posY = lastTickPosY + (thePlayer.posY - lastTickPosY) * renderPartialTicks
-		val posZ = lastTickPosZ + (thePlayer.posZ - lastTickPosZ) * renderPartialTicks
+		val posX = lastTickPosX + (thePlayer.posX - lastTickPosX) * partialTicks
+		val posY = lastTickPosY + (thePlayer.posY - lastTickPosY) * partialTicks
+		val posZ = lastTickPosZ + (thePlayer.posZ - lastTickPosZ) * partialTicks
 
 		if (Backend.MINECRAFT_VERSION_MINOR < 12) block.setBlockBoundsBasedOnState(theWorld, blockPos)
 
@@ -180,10 +178,9 @@ object RenderUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun drawEntityBox(entity: IEntity, boxColor: Int, outlineColor: Int, drawHydraESP: Boolean)
+	fun drawEntityBox(entity: IEntity, boxColor: Int, outlineColor: Int, drawHydraESP: Boolean, partialTicks: Float)
 	{
 		val renderManager = mc.renderManager
-		val renderPartialTicks = mc.timer.renderPartialTicks
 
 		val posX = entity.posX
 		val posY = entity.posY
@@ -198,9 +195,9 @@ object RenderUtils : MinecraftInstance()
 		disableGlCap(GL11.GL_TEXTURE_2D, GL11.GL_DEPTH_TEST)
 		GL11.glDepthMask(false)
 
-		val x = lastTickPosX + (posX - lastTickPosX) * renderPartialTicks - renderManager.renderPosX
-		val y = lastTickPosY + (posY - lastTickPosY) * renderPartialTicks - renderManager.renderPosY
-		val z = lastTickPosZ + (posZ - lastTickPosZ) * renderPartialTicks - renderManager.renderPosZ
+		val x = lastTickPosX + (posX - lastTickPosX) * partialTicks - renderManager.renderPosX
+		val y = lastTickPosY + (posY - lastTickPosY) * partialTicks - renderManager.renderPosY
+		val z = lastTickPosZ + (posZ - lastTickPosZ) * partialTicks - renderManager.renderPosZ
 
 		val entityBox = entity.entityBoundingBox
 
@@ -254,10 +251,9 @@ object RenderUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun drawPlatform(entity: IEntity, color: Int)
+	fun drawPlatform(entity: IEntity, color: Int, partialTicks: Float)
 	{
 		val renderManager = mc.renderManager
-		val renderPartialTicks = mc.timer.renderPartialTicks
 
 		val posX = entity.posX
 		val posY = entity.posY
@@ -267,9 +263,9 @@ object RenderUtils : MinecraftInstance()
 		val lastTickPosY = entity.lastTickPosY
 		val lastTickPosZ = entity.lastTickPosZ
 
-		val x = lastTickPosX + (posX - lastTickPosX) * renderPartialTicks - renderManager.renderPosX
-		val y = lastTickPosY + (posY - lastTickPosY) * renderPartialTicks - renderManager.renderPosY
-		val z = lastTickPosZ + (posZ - lastTickPosZ) * renderPartialTicks - renderManager.renderPosZ
+		val x = lastTickPosX + (posX - lastTickPosX) * partialTicks - renderManager.renderPosX
+		val y = lastTickPosY + (posY - lastTickPosY) * partialTicks - renderManager.renderPosY
+		val z = lastTickPosZ + (posZ - lastTickPosZ) * partialTicks - renderManager.renderPosZ
 
 		val axisAlignedBB = entity.entityBoundingBox.offset(-posX, -posY, -posZ).offset(x, y, z)
 

@@ -46,6 +46,8 @@ class ProphuntESP : Module()
 	private val colorRainbowSaturationValue = FloatValue("Saturation", 1.0f, 0.0f, 1.0f, "HSB-Saturation")
 	private val colorRainbowBrightnessValue = FloatValue("Brightness", 1.0f, 0.0f, 1.0f, "HSB-Brightness")
 
+	private val interpolateValue = BoolValue("Interpolate", true)
+
 	/**
 	 * Variables
 	 */
@@ -65,20 +67,19 @@ class ProphuntESP : Module()
 	}
 
 	@EventTarget
-	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
+	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
 		val mode = modeValue.get().toLowerCase()
-
 		val hydraESP = mode == "hydra"
-
 		val color = if (colorRainbowEnabledValue.get()) rainbowRGB(alpha = colorValue.getAlpha(), speed = colorRainbowSpeedValue.get(), saturation = colorRainbowSaturationValue.get(), brightness = colorRainbowBrightnessValue.get()) else colorValue.get()
-
 		val boxOutlineColor = modeBoxOutlineColorValue.get()
 
-		if (mode == "box" || hydraESP) theWorld.loadedEntityList.filter(classProvider::isEntityFallingBlock).forEach { RenderUtils.drawEntityBox(it, color, boxOutlineColor, hydraESP) }
+		val partialTicks = if (interpolateValue.get()) event.partialTicks else 1f
+
+		if (mode == "box" || hydraESP) theWorld.loadedEntityList.filter(classProvider::isEntityFallingBlock).forEach { RenderUtils.drawEntityBox(it, color, boxOutlineColor, hydraESP, partialTicks) }
 
 		synchronized(blocks) {
 			val iterator: MutableIterator<Map.Entry<WBlockPos, Long>> = blocks.entries.iterator()
@@ -93,7 +94,7 @@ class ProphuntESP : Module()
 					continue
 				}
 
-				RenderUtils.drawBlockBox(theWorld, thePlayer, entry.key, color, boxOutlineColor, hydraESP)
+				RenderUtils.drawBlockBox(theWorld, thePlayer, entry.key, color, boxOutlineColor, hydraESP, partialTicks)
 			}
 		}
 	}
@@ -103,7 +104,7 @@ class ProphuntESP : Module()
 	{
 		val theWorld = mc.theWorld ?: return
 		val renderManager = mc.renderManager
-		val renderPartialTicks = mc.timer.renderPartialTicks
+		val partialTicks = if (interpolateValue.get()) event.partialTicks else 1f
 
 		val provider = classProvider
 
@@ -115,11 +116,11 @@ class ProphuntESP : Module()
 			else -> null
 		} ?: return
 
-		shader.startDraw(event.partialTicks)
+		shader.startDraw(partialTicks)
 
 		try
 		{
-			theWorld.loadedEntityList.filter(provider::isEntityFallingBlock).forEach { renderManager.renderEntityStatic(it, renderPartialTicks, true) }
+			theWorld.loadedEntityList.filter(provider::isEntityFallingBlock).forEach { renderManager.renderEntityStatic(it, partialTicks, true) }
 		}
 		catch (ex: Exception)
 		{

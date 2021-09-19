@@ -39,6 +39,8 @@ class BlockOverlay : Module()
 	val infoEnabledValue = BoolValue("Enabled", false, "Info")
 	private val infoFontValue = FontValue("Font", Fonts.font40)
 
+	private val interpolateValue = BoolValue("Interpolate", true)
+
 	init
 	{
 		colorRainbowGroup.addAll(colorRainbowEnabledValue, colorRainbowSpeedValue, colorRainbowSaturationValue, colorRainbowBrightnessValue)
@@ -68,7 +70,7 @@ class BlockOverlay : Module()
 
 		val block = theWorld.getBlockState(blockPos).block
 
-		val partialTicks = event.partialTicks
+		val partialTicks = if (interpolateValue.get()) event.partialTicks else 1f
 
 		val rainbowSpeed = colorRainbowSpeedValue.get()
 		val color = if (colorRainbowEnabledValue.get()) rainbowRGB(alpha = colorValue.getAlpha(), speed = rainbowSpeed, saturation = colorRainbowSaturationValue.get(), brightness = colorRainbowBrightnessValue.get()) else colorValue.get()

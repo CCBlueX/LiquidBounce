@@ -30,7 +30,7 @@ class AutoEnchant : Module()
 	private val delayTimer = MSTimer()
 
 	@EventTarget
-	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
+	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
 		val currentScreen = mc.currentScreen ?: return

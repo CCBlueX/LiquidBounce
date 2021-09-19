@@ -1157,7 +1157,7 @@ class KillAura : Module()
 		if (targetModeValue.get().equals("Multi", ignoreCase = true))
 		{
 			updateHitableByRange()
-			updateHitableDebug = arrayOf("rangeCheck" equalTo hitable, "reason" equalTo "Rotation is turned off".withParentheses("\u00A7c"))
+			updateHitableDebug = arrayOf("rangeCheck" equalTo hitable, "reason" equalTo "MultiAura".withParentheses("\u00A7c"))
 			return
 		}
 

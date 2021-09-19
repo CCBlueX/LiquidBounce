@@ -209,7 +209,7 @@ object Fucker : Module()
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
-		RenderUtils.drawBlockBox(mc.theWorld ?: return, mc.thePlayer ?: return, currentPos ?: return, 553582592, 0, hydraESP = false)
+		RenderUtils.drawBlockBox(mc.theWorld ?: return, mc.thePlayer ?: return, currentPos ?: return, 553582592, 0, false, event.partialTicks)
 	}
 
 	/*/**

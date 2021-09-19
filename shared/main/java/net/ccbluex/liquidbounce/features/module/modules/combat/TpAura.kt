@@ -233,7 +233,7 @@ class TpAura : Module()
 	}
 
 	@EventTarget
-	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
+	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
 		val renderManager = mc.renderManager
 		val viewerPosX = renderManager.viewerPosX

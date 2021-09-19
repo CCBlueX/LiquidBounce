@@ -40,6 +40,8 @@ class Tracers : Module()
 
 	private val botValue = BoolValue("Bots", true)
 
+	private val interpolateValue = BoolValue("Interpolate", true)
+
 	init
 	{
 		colorRainbowGroup.addAll(colorRainbowEnabledValue, colorRainbowSpeedValue, colorRainbowSaturationValue, colorRainbowBrightnessValue)
@@ -64,7 +66,7 @@ class Tracers : Module()
 
 		val colorMode = colorMode.get().toLowerCase()
 
-		val partialTicks = mc.timer.renderPartialTicks
+		val partialTicks = if (interpolateValue.get()) event.partialTicks else 1f
 
 		val renderManager = mc.renderManager
 		val renderPosX = renderManager.renderPosX

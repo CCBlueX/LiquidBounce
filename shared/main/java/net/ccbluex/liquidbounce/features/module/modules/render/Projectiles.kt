@@ -51,6 +51,8 @@ class Projectiles : Module()
 
 	private val lineWidthValue = FloatValue("LineWidth", 2.0f, 1.0f, 3.0f)
 
+	private val interpolateValue = BoolValue("Interpolate", true)
+
 	private val allProjectilesValue = BoolValue("AllProjectiles", false)
 
 	private var lastBowChargeDuration: Int = 0
@@ -72,7 +74,7 @@ class Projectiles : Module()
 		val renderPosY = renderManager.renderPosY
 		val renderPosZ = renderManager.renderPosZ
 
-		val partialTicks = event.partialTicks
+		val partialTicks = if (interpolateValue.get()) event.partialTicks else 1f
 
 		val provider = classProvider
 		val func = functions

@@ -132,15 +132,13 @@ class BlockESP : Module()
 	}
 
 	@EventTarget
-	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
+	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
 		val mode = modeValue.get().toLowerCase()
-
 		val hydraESP = mode == "hydra"
-
 		val color = if (colorRainbowEnabledValue.get()) rainbowRGB(colorValue.getAlpha(), speed = colorRainbowSpeedValue.get(), saturation = colorRainbowSaturationValue.get(), brightness = colorRainbowBrightnessValue.get()) else colorValue.get()
 		val outlineColor = modeBoxOutlineColorValue.get()
 
@@ -148,7 +146,7 @@ class BlockESP : Module()
 		{
 			when (mode)
 			{
-				"box", "otherbox", "hydra" -> RenderUtils.drawBlockBox(theWorld, thePlayer, blockPos, color, outlineColor, hydraESP)
+				"box", "otherbox", "hydra" -> RenderUtils.drawBlockBox(theWorld, thePlayer, blockPos, color, outlineColor, hydraESP, 1f)
 				"2d" -> RenderUtils.draw2D(blockPos, color, -16777216)
 			}
 		}

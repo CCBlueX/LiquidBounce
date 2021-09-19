@@ -40,6 +40,8 @@ class ItemESP : Module()
 	private val colorRainbowSaturationValue = FloatValue("Saturation", 1.0f, 0.0f, 1.0f, "HSB-Saturation")
 	private val colorRainbowBrightnessValue = FloatValue("Brightness", 1.0f, 0.0f, 1.0f, "HSB-Brightness")
 
+	private val interpolateValue = BoolValue("Interpolate", true)
+
 	init
 	{
 		modeGroup.addAll(modeValue, modeBoxOutlineColorValue, shaderRadiusValue)
@@ -49,22 +51,21 @@ class ItemESP : Module()
 	}
 
 	@EventTarget
-	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent?)
+	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
 		val mode = modeValue.get().toLowerCase()
 		if (mode != "shaderoutline")
 		{
 			val theWorld = mc.theWorld ?: return
-
-			val color = if (colorRainbowEnabledValue.get()) rainbowRGB(alpha = colorValue.getAlpha(), speed = colorRainbowSpeedValue.get(), saturation = colorRainbowSaturationValue.get(), brightness = colorRainbowBrightnessValue.get()) else colorValue.get()
-
-			val hydraESP = mode == "hydra"
-
 			val provider = classProvider
 
+			val color = if (colorRainbowEnabledValue.get()) rainbowRGB(alpha = colorValue.getAlpha(), speed = colorRainbowSpeedValue.get(), saturation = colorRainbowSaturationValue.get(), brightness = colorRainbowBrightnessValue.get()) else colorValue.get()
+			val hydraESP = mode == "hydra"
 			val boxOutlineColor = modeBoxOutlineColorValue.get()
 
-			theWorld.loadedEntityList.filter { provider.isEntityItem(it) || provider.isEntityArrow(it) }.forEach { RenderUtils.drawEntityBox(it, color, boxOutlineColor, hydraESP) }
+			val partialTicks = if (interpolateValue.get()) event.partialTicks else 1f
+
+			theWorld.loadedEntityList.filter { provider.isEntityItem(it) || provider.isEntityArrow(it) }.forEach { RenderUtils.drawEntityBox(it, color, boxOutlineColor, hydraESP, partialTicks) }
 		}
 	}
 
@@ -75,7 +76,7 @@ class ItemESP : Module()
 
 		if (modeValue.get().equals("ShaderOutline", ignoreCase = true))
 		{
-			val partialTicks = event.partialTicks
+			val partialTicks = if (interpolateValue.get()) event.partialTicks else 1f
 
 			OutlineShader.INSTANCE.startDraw(partialTicks)
 
