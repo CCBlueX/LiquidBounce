@@ -117,6 +117,7 @@ interface IEntity
 	fun asEntityArrow(): IEntityArrow
 	fun asEntityPotion(): IEntityPotion
 	fun asEntityFishHook(): IEntityFishHook
+	fun asEntityCreeper(): IEntityCreeper
 	// </editor-fold>
 
 	// <editor-fold desc="Position & Movement">

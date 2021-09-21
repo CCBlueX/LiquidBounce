@@ -94,8 +94,7 @@ object Fucker : Module()
 
 		if (surroundingsValue.get())
 		{
-			val eyes = thePlayer.getPositionEyes(1F)
-			val blockPos = theWorld.rayTraceBlocks(eyes, rotations.vec, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = false, returnLastUncollidableBlock = true)?.blockPos
+			val blockPos = theWorld.rayTraceBlocks(thePlayer.getPositionEyes(1F), rotations.vec, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = false, returnLastUncollidableBlock = true)?.blockPos
 
 			if (blockPos != null && !provider.isBlockAir(blockPos))
 			{
@@ -128,11 +127,12 @@ object Fucker : Module()
 		// Face block
 		if (rotationsValue.get()) RotationUtils.setTargetRotation(rotations.rotation)
 
+		val actionMode = actionValue.get()
 		when
 		{
 
 			// Destory block
-			actionValue.get().equals("destroy", true) || surroundings ->
+			actionMode.equals("Destroy", true) || surroundings ->
 			{
 
 				// Auto Tool
@@ -190,7 +190,7 @@ object Fucker : Module()
 			}
 
 			// Use block
-			actionValue.get().equals("use", true) ->
+			actionMode.equals("Use", true) ->
 			{
 				CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT)
 
@@ -211,16 +211,6 @@ object Fucker : Module()
 	{
 		RenderUtils.drawBlockBox(mc.theWorld ?: return, mc.thePlayer ?: return, currentPos ?: return, 553582592, 0, false, event.partialTicks)
 	}
-
-	/*/**
-	 * Find new target block by [targetID]
-	 */private fun find(targetID: Int) =
-        searchBlocks(rangeValue.get().toInt() + 1).filter {
-                    Block.getIdFromBlock(it.value) == targetID && getCenterDistance(it.key) <= rangeValue.get()
-                            && (isHitable(it.key) || surroundingsValue.get())
-                }.minBy { getCenterDistance(it.key) }?.key*/
-
-	//Removed triple iteration of blocks to improve speed
 
 	/**
 	 * Find new target block by [targetID]

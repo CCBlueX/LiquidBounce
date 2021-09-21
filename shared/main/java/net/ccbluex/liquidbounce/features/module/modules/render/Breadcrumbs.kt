@@ -73,7 +73,7 @@ class Breadcrumbs : Module()
 	}
 
 	@EventTarget
-	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
 

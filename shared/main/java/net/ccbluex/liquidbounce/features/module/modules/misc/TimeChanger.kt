@@ -23,7 +23,7 @@ class TimeChanger : Module()
 	private val timeChangeSpeedValue = IntegerValue("TimeChangeSpeed", 150, 0, 500)
 
 	@EventTarget
-	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		mc.theWorld?.run { worldTime = if (modeValue.get().equals("Normal", ignoreCase = true)) (worldTime + timeChangeSpeedValue.get()) % 24000 else timeValue.get().toLong() }
 	}

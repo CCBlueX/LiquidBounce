@@ -22,7 +22,7 @@ class MidClick : Module()
 	private var wasDown = false
 
 	@EventTarget
-	fun onRender(@Suppress("UNUSED_PARAMETER") event: Render2DEvent?)
+	fun onRender(@Suppress("UNUSED_PARAMETER") event: Render2DEvent)
 	{
 		if (mc.currentScreen != null) return
 

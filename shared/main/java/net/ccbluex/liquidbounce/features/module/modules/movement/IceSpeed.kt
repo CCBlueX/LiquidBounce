@@ -34,7 +34,7 @@ class IceSpeed : Module()
 	}
 
 	@EventTarget
-	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		val mode = modeValue.get()
 

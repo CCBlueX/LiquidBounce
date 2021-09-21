@@ -587,7 +587,7 @@ object AntiBot : Module()
 	}
 
 	@EventTarget
-	fun onWorld(@Suppress("UNUSED_PARAMETER") event: WorldEvent?)
+	fun onWorld(@Suppress("UNUSED_PARAMETER") event: WorldEvent)
 	{
 		clearAll()
 	}

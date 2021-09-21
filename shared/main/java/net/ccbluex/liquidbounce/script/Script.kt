@@ -169,8 +169,7 @@ class Script(val scriptFile: File) : MinecraftInstance()
 		{
 			ClientUtils.logger.info("[ScriptAPI] Running script '${scriptFile.name}' with legacy support.")
 
-			val legacyScriptSupport = LiquidBounce::class.java.getResource("/assets/minecraft/liquidbounce/scriptapi/legacy.js").readText()
-			scriptEngine.eval(legacyScriptSupport)
+			LiquidBounce::class.java.getResource("/assets/minecraft/liquidbounce/scriptapi/legacy.js")?.readText()?.let<String, Any?>(scriptEngine::eval)
 		}
 	}
 

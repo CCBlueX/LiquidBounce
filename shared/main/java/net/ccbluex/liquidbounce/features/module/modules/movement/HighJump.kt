@@ -90,7 +90,7 @@ class HighJump : Module()
 	}
 
 	@EventTarget
-	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
@@ -181,7 +181,7 @@ class HighJump : Module()
 	}
 
 	@EventTarget
-	fun onMove(@Suppress("UNUSED_PARAMETER") event: MoveEvent?)
+	fun onMove(@Suppress("UNUSED_PARAMETER") event: MoveEvent)
 	{
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return

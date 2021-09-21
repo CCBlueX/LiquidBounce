@@ -20,7 +20,7 @@ class WaterSpeed : Module()
 	private val speedValue = FloatValue("Speed", 1.2f, 1.1f, 1.5f)
 
 	@EventTarget
-	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return

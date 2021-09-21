@@ -39,7 +39,7 @@ class LiquidWalk : Module()
 	private fun checkLiquid(provider: IClassProvider, block: IBlock, waterOnly: Boolean) = if (waterOnly) block in waterBlocks else provider.isBlockLiquid(block)
 
 	@EventTarget
-	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return

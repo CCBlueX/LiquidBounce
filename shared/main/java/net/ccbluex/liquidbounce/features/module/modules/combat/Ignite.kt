@@ -47,7 +47,7 @@ class Ignite : Module()
 	private val msTimer = MSTimer()
 
 	@EventTarget
-	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		if (!msTimer.hasTimePassed(500L)) return
 

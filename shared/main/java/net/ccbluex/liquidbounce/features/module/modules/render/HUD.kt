@@ -34,7 +34,7 @@ class HUD : Module()
 	}
 
 	@EventTarget
-	fun onRender2D(@Suppress("UNUSED_PARAMETER") event: Render2DEvent?)
+	fun onRender2D(@Suppress("UNUSED_PARAMETER") event: Render2DEvent)
 	{
 		if (classProvider.isGuiHudDesigner(mc.currentScreen)) return
 
@@ -42,7 +42,7 @@ class HUD : Module()
 	}
 
 	@EventTarget
-	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		LiquidBounce.hud.update()
 	}

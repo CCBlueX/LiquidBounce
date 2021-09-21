@@ -16,4 +16,7 @@ interface IItem
 	fun asItemSword(): IItemSword
 	fun asItemBucket(): IItemBucket
 	fun asItemFood(): IItemFood
+
+	fun showDurabilityBar(stack: IItemStack): Boolean
+	fun getDurabilityForDisplay(stack: IItemStack): Double
 }

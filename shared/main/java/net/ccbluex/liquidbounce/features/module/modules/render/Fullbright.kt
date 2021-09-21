@@ -37,7 +37,7 @@ class Fullbright : Module()
 	}
 
 	@EventTarget(ignoreCondition = true)
-	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		val gameSettings = mc.gameSettings
 		if (state || LiquidBounce.moduleManager[XRay::class.java].state) when (modeValue.get().toLowerCase())
@@ -59,7 +59,7 @@ class Fullbright : Module()
 	}
 
 	@EventTarget(ignoreCondition = true)
-	fun onShutdown(@Suppress("UNUSED_PARAMETER") event: ClientShutdownEvent?)
+	fun onShutdown(@Suppress("UNUSED_PARAMETER") event: ClientShutdownEvent)
 	{
 		onDisable()
 	}

@@ -149,7 +149,7 @@ object Speed : Module()
 	}
 
 	@EventTarget
-	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
 
@@ -178,7 +178,7 @@ object Speed : Module()
 	}
 
 	@EventTarget
-	fun onTick(@Suppress("UNUSED_PARAMETER") event: TickEvent?)
+	fun onTick(@Suppress("UNUSED_PARAMETER") event: TickEvent)
 	{
 		if ((mc.thePlayer ?: return).sneaking) return
 

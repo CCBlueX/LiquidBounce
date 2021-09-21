@@ -68,7 +68,7 @@ class NoFall : Module()
 	}
 
 	@EventTarget(ignoreCondition = true)
-	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
@@ -323,7 +323,7 @@ class NoFall : Module()
 	}
 
 	@EventTarget(ignoreCondition = true)
-	fun onJump(@Suppress("UNUSED_PARAMETER") event: JumpEvent?)
+	fun onJump(@Suppress("UNUSED_PARAMETER") event: JumpEvent)
 	{
 		jumped = true
 	}

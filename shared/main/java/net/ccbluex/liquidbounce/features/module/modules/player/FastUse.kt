@@ -184,9 +184,8 @@ class FastUse : Module()
 	}
 
 	@EventTarget
-	fun onMove(event: MoveEvent?)
+	fun onMove(event: MoveEvent)
 	{
-		event ?: return
 		val thePlayer = mc.thePlayer ?: return
 
 		if (!state || !thePlayer.isUsingItem || !noMoveValue.get()) return

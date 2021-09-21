@@ -23,7 +23,7 @@ class InventoryMove : Module()
 	val aacAdditionProValue = BoolValue("AACAdditionPro", false)
 	private val blockPacketsValue = BoolValue("BlockPackets", true)
 	private val noMoveClicksValue = BoolValue("NoMoveClicks", false)
-	// TODO: OnlyInventory option (플레이어 인벤토리를 열었을 때만 InvMove)
+	private val onlyInventoryValue = BoolValue("OnlyInventory", false)
 
 	private val affectedBindings = run {
 		val gameSettings = mc.gameSettings
@@ -33,19 +33,9 @@ class InventoryMove : Module()
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
-		tick()
-	}
-
-	private fun tick()
-	{
-		val provider = classProvider
-
 		val currentScreen = mc.currentScreen
 		val gameSettings = mc.gameSettings
-
-		val onlyInventory = undetectable.get()
-
-		if (!provider.isGuiChat(currentScreen) && !provider.isGuiIngameMenu(currentScreen) && (!onlyInventory || !provider.isGuiContainer(currentScreen))) for (affectedBinding in affectedBindings) affectedBinding.pressed = gameSettings.isKeyDown(affectedBinding)
+		if (!classProvider.isGuiChat(currentScreen) && !classProvider.isGuiIngameMenu(currentScreen) && (!undetectable.get() || !classProvider.isGuiContainer(currentScreen)) && (!onlyInventoryValue.get() || !classProvider.isGuiContainer(currentScreen) || classProvider.isGuiInventory(currentScreen))) for (affectedBinding in affectedBindings) affectedBinding.pressed = gameSettings.isKeyDown(affectedBinding)
 	}
 
 	@EventTarget
@@ -62,7 +52,16 @@ class InventoryMove : Module()
 	@EventTarget
 	fun onClick(event: ClickWindowEvent)
 	{
-		if (noMoveClicksValue.get() && MovementUtils.isMoving(mc.thePlayer ?: return)) event.cancelEvent()
+		val cancel = noMoveClicksValue.get() && MovementUtils.isMoving(mc.thePlayer ?: return)
+		val simulateInventory = blockPacketsValue.get() && !cancel
+
+		// Open inventory
+		if (simulateInventory) mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketClientStatus(ICPacketClientStatus.WEnumState.OPEN_INVENTORY_ACHIEVEMENT))
+
+		if (cancel) event.cancelEvent()
+
+		// Close inventory
+		if (simulateInventory) mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketCloseWindow(0))
 	}
 
 	override fun onDisable()

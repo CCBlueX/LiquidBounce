@@ -50,7 +50,7 @@ class Spammer : Module()
 	var delay = delayValue.getRandomDelay()
 
 	@EventTarget
-	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
 
@@ -72,7 +72,7 @@ class Spammer : Module()
 	}
 
 	@EventTarget
-	fun onTick(@Suppress("UNUSED_PARAMETER") event: TickEvent?)
+	fun onTick(@Suppress("UNUSED_PARAMETER") event: TickEvent)
 	{
 		if (mc.thePlayer == null || mc.theWorld == null) state = false // Disable module in case you left (or kicked) from the server
 	}

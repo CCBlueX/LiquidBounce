@@ -24,11 +24,16 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.Maps
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
+import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.client.renderer.Tessellator
+import net.minecraft.client.renderer.WorldRenderer
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL14
 import java.awt.Color
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.roundToInt
 
 object RenderUtils : MinecraftInstance()
 {
@@ -844,7 +849,7 @@ object RenderUtils : MinecraftInstance()
 		functions.enableGUIStandardItemLighting()
 
 		renderItem.renderItemAndEffectIntoGUI(itemStack, posX, posY)
-		renderItemEnchantments(glStateManager, Fonts.minecraftFont, itemStack, posX, posY)
+		renderItemOverlays(glStateManager, Fonts.minecraftFont, itemStack, posX, posY)
 
 		functions.disableStandardItemLighting()
 	}
@@ -878,23 +883,85 @@ object RenderUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun renderItemEnchantments(glStateManager: IGlStateManager, font: IFontRenderer, stack: IItemStack?, x: Int, y: Int)
+	fun renderItemEnchantments(glStateManager: IGlStateManager, font: IFontRenderer, stack: IItemStack, x: Int, y: Int)
 	{
-		if (stack != null)
+		val texts = functions.getEnchantments(stack).asSequence().map { (id, lvl) -> Maps.ENCHANTMENT_SHORT_NAME[id]?.let { "${it.toLowerCase()}$lvl" } ?: "" }.chunked(2).take(3)
+
+		glStateManager.disableLighting()
+		glStateManager.disableDepth()
+		glStateManager.disableBlend()
+
+		val scale = 0.45f
+		val reverseScale = 1f / scale
+
+		val textX = x * reverseScale
+		val textY = y * reverseScale
+		val fontHeight = font.fontHeight + 2
+
+		GL11.glScalef(scale, scale, scale)
+		texts.forEachIndexed { index, text -> font.drawString(text.joinToString(separator = " "), textX, textY + index * fontHeight, 16777215, false) }
+		GL11.glScalef(reverseScale, reverseScale, reverseScale)
+
+		glStateManager.enableLighting()
+		glStateManager.enableDepth()
+	}
+
+	@JvmStatic
+	fun renderItemOverlays(glStateManager: IGlStateManager, font: IFontRenderer, stack: IItemStack, x: Int, y: Int)
+	{
+		if (stack.stackSize != 1)
 		{
-			val text = functions.getEnchantments(stack).map { (key) -> Maps.ENCHANTMENT_SHORT_NAME[key]?.let { it.second ?: "" } ?: "" }.joinToString(separator = "")
+			val text = "${if (stack.stackSize < 1) "\u00A7c" else ""}${stack.stackSize}"
 
-			glStateManager.disableLighting()
-			glStateManager.disableDepth()
-			glStateManager.disableBlend()
+			GlStateManager.disableLighting()
+			GlStateManager.disableDepth()
+			GlStateManager.disableBlend()
 
-			GL11.glScalef(0.5f, 0.5f, 0.5f)
-			font.drawString(text, x * 0.5f, y * 0.5f, 16777215, false)
-			GL11.glScalef(2f, 2f, 2f)
+			font.drawStringWithShadow(text, x + 19 - 2 - font.getStringWidth(text), y + 6 + 3, 16777215)
 
-			glStateManager.enableLighting()
-			glStateManager.enableDepth()
+			GlStateManager.enableLighting()
+			GlStateManager.enableDepth()
 		}
+
+		stack.item?.let { item ->
+			if (item.showDurabilityBar(stack))
+			{
+				val bar = item.getDurabilityForDisplay(stack)
+				val j = (13.0 - bar * 13.0).roundToInt()
+				val i = (255.0 - bar * 255.0).roundToInt()
+
+				GlStateManager.disableLighting()
+				GlStateManager.disableDepth()
+				GlStateManager.disableTexture2D()
+				GlStateManager.disableAlpha()
+				GlStateManager.disableBlend()
+
+				val tessellator = Tessellator.getInstance()
+
+				// TODO: Change to drawRect()
+				val worldrenderer = tessellator.worldRenderer
+				draw(worldrenderer, x + 2, y + 13, 13, 2, 0, 0, 0, 255)
+				draw(worldrenderer, x + 2, y + 13, 12, 1, (255 - i) / 4, 64, 0, 255)
+				draw(worldrenderer, x + 2, y + 13, j, 1, 255 - i, i, 0, 255)
+
+				GlStateManager.enableAlpha()
+				GlStateManager.enableTexture2D()
+				GlStateManager.enableLighting()
+				GlStateManager.enableDepth()
+			}
+		}
+
+		renderItemEnchantments(glStateManager, font, stack, x + 2, y + 2)
+	}
+
+	private fun draw(renderer: WorldRenderer, x: Int, y: Int, width: Int, height: Int, red: Int, green: Int, blue: Int, alpha: Int)
+	{
+		renderer.begin(7, DefaultVertexFormats.POSITION_COLOR)
+		renderer.pos(x.toDouble(), y.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
+		renderer.pos(x.toDouble(), (y + height).toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
+		renderer.pos((x + width).toDouble(), (y + height).toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
+		renderer.pos((x + width).toDouble(), y.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
+		Tessellator.getInstance().draw()
 	}
 
 	init

@@ -36,7 +36,7 @@ class AtAllProvider : Module()
 	}
 
 	@EventTarget
-	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		if (!msTimer.hasTimePassed(delay)) return
 		val thePlayer = mc.thePlayer ?: return

@@ -24,13 +24,13 @@ import net.ccbluex.liquidbounce.utils.timer.MSTimer
 class InventoryUtils : MinecraftInstance(), Listenable
 {
 	@EventTarget
-	fun onClick(@Suppress("UNUSED_PARAMETER") event: ClickWindowEvent?)
+	fun onClick(@Suppress("UNUSED_PARAMETER") event: ClickWindowEvent)
 	{
 		CLICK_TIMER.reset()
 	}
 
 	@EventTarget
-	fun onTick(@Suppress("UNUSED_PARAMETER") event: TickEvent?)
+	fun onTick(@Suppress("UNUSED_PARAMETER") event: TickEvent)
 	{
 		val thePlayer = mc.thePlayer ?: return
 

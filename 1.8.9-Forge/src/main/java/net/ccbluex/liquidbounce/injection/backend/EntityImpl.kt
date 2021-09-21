@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.injection.implementations.IMixinEntityLivingBase
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.item.EntityTNTPrimed
+import net.minecraft.entity.monster.EntityCreeper
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.entity.projectile.EntityArrow
 import net.minecraft.entity.projectile.EntityFishHook
@@ -267,6 +268,8 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 	override fun asEntityPotion(): IEntityPotion = EntityPotionImpl(wrapped as EntityPotion)
 
 	override fun asEntityFishHook(): IEntityFishHook = EntityFishHookImpl(wrapped as EntityFishHook)
+
+	override fun asEntityCreeper(): IEntityCreeper = EntityCreeperImpl(wrapped as EntityCreeper)
 	// </editor-fold>
 
 	// <editor-fold desc="Position & Movement">

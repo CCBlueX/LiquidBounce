@@ -192,7 +192,7 @@ class ExtendedTooltips : Module()
 	{
 		val enchantBuilder = StringBuilder()
 
-		functions.getEnchantments(itemStack).forEach { (enchID, amplifier) -> enchantBuilder.append("\u00A7l${Maps.ENCHANTMENT_SHORT_NAME[enchID]?.first} $amplifier  ") }
+		functions.getEnchantments(itemStack).forEach { (enchID, amplifier) -> enchantBuilder.append("\u00A7l${Maps.ENCHANTMENT_SHORT_NAME[enchID]} $amplifier  ") }
 
 		return "$enchantBuilder".trim { it <= ' ' }
 	}

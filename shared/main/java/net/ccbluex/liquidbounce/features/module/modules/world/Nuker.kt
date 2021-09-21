@@ -88,25 +88,23 @@ class Nuker : Module()
 
 		val playerController = mc.playerController
 		val netHandler = mc.netHandler
+		val provider = classProvider
 
+		val priority = priorityValue.get().toLowerCase()
 		val radius = radiusValue.get()
-		val throughWalls = throughWallsValue.get()
 		val nukeEnabled = nukeValue.get()
-		val priority = priorityValue.get()
+		val throughWalls = throughWallsValue.get()
 		val layer = layerValue.get()
 
-		val provider = classProvider
+		val radiusInt = radius.roundToInt() + 1
 
 		if (!playerController.isInCreativeMode)
 		{
-
 			// Default nuker
 
-			val validBlocks = searchBlocks(theWorld, thePlayer, radius.roundToInt() + 1).filterValues(::validBlock).filterKeys { getCenterDistance(thePlayer, it) <= radius }.run { if (layer) filterKeys { it.y >= thePlayer.posY } else this }.run {
+			val visibleBlocks = searchBlocks(theWorld, thePlayer, radiusInt).filterValues(::validBlock).filterKeys { getCenterDistance(thePlayer, it) <= radius }.run { if (layer) filterKeys { it.y >= thePlayer.posY } else this }.run {
 				if (throughWalls) this
 				else filterKeys { pos ->
-					// ThroughWalls: Just break blocks in your sight
-					// Raytrace player eyes to block position (through walls check)
 					val eyesPos = WVec3(posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, posZ)
 					val blockVec = WVec3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5)
 					val rayTrace = theWorld.rayTraceBlocks(eyesPos, blockVec, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false)
@@ -120,7 +118,7 @@ class Nuker : Module()
 			{
 				val (blockPos, block) = when (priority)
 				{
-					"Distance" -> validBlocks.minBy { (pos, _) ->
+					"distance" -> visibleBlocks.minBy { (pos, _) ->
 						val distance = getCenterDistance(thePlayer, pos)
 						val safePos = WBlockPos(posX, thePlayer.posY - 1, posZ)
 
@@ -128,7 +126,7 @@ class Nuker : Module()
 						else distance
 					}
 
-					"Hardness" -> validBlocks.maxBy { (pos, block) ->
+					"hardness" -> visibleBlocks.maxBy { (pos, block) ->
 						val hardness = block.getPlayerRelativeBlockHardness(thePlayer, theWorld, pos).toDouble()
 						val safePos = WBlockPos(posX, thePlayer.posY - 1, posZ)
 
@@ -173,7 +171,7 @@ class Nuker : Module()
 						playerController.onPlayerDestroyBlock(blockPos, provider.getEnumFacing(EnumFacingType.DOWN))
 
 						blockHitDelay = hitDelay
-						validBlocks -= blockPos
+						visibleBlocks -= blockPos
 						nuke++
 
 						continue // Next break
@@ -199,23 +197,15 @@ class Nuker : Module()
 		}
 		else
 		{
-
 			// Fast creative mode nuker (CreativeStorm option)
 
 			// Unable to break with swords in creative mode
 			if (provider.isItemSword(thePlayer.heldItem?.item)) return
 
 			// Search for new blocks to break
-			searchBlocks(theWorld, thePlayer, radius.roundToInt() + 1).filterValues(::validBlock).filterKeys { getCenterDistance(thePlayer, it) <= radius }.filterKeys { !layer || it.y >= thePlayer.posY }.run {
+			searchBlocks(theWorld, thePlayer, radiusInt).filterValues(::validBlock).filterKeys { getCenterDistance(thePlayer, it) <= radius }.filterKeys { !layer || it.y >= thePlayer.posY }.run {
 				if (throughWalls) this
-				else filterKeys { pos ->
-					// ThroughWalls: Just break blocks in your sight
-					// Raytrace player eyes to block position (through walls check)
-
-					// Check if block is visible
-
-					(theWorld.rayTraceBlocks(WVec3(posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, posZ), WVec3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5), stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false) ?: return@filterKeys false).blockPos == pos
-				}
+				else filterKeys { pos -> (theWorld.rayTraceBlocks(WVec3(posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, posZ), WVec3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5), stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false) ?: return@filterKeys false).blockPos == pos }
 			}.forEach { (pos, _) -> // Instant break block
 				netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, pos, provider.getEnumFacing(EnumFacingType.DOWN)))
 				thePlayer.swingItem()
@@ -248,12 +238,7 @@ class Nuker : Module()
 	/**
 	 * Check if [block] is a valid block to break
 	 */
-	private fun validBlock(block: IBlock): Boolean
-	{
-		val provider = classProvider
-
-		return !provider.isBlockAir(block) && !provider.isBlockLiquid(block) && !provider.isBlockBedrock(block)
-	}
+	private fun validBlock(block: IBlock): Boolean = !classProvider.isBlockAir(block) && !classProvider.isBlockLiquid(block) && !classProvider.isBlockBedrock(block)
 
 	companion object
 	{

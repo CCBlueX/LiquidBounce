@@ -61,7 +61,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 	 * Tick event
 	 */
 	@EventTarget
-	fun onTick(@Suppress("UNUSED_PARAMETER") event: TickEvent?)
+	fun onTick(@Suppress("UNUSED_PARAMETER") event: TickEvent)
 	{
 		if (targetRotation != null)
 		{

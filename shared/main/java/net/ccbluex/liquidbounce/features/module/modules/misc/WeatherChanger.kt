@@ -21,7 +21,7 @@ class WeatherChanger : Module()
 	private val thunderingStrength = FloatValue("ThunderingStrength", 0.0F, 0.0F, 1.0F)
 
 	@EventTarget
-	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent?)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		val theWorld = mc.theWorld ?: return
 
