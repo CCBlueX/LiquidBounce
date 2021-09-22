@@ -216,7 +216,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity implements IMixi
 		final SwingAnimation sa = (SwingAnimation) LiquidBounce.moduleManager.get(SwingAnimation.class);
 		int swingAnimationEnd = isPotionActive(Potion.digSpeed) ? 6 - (1 + getActivePotionEffect(Potion.digSpeed).getAmplifier()) : isPotionActive(Potion.digSlowdown) ? 6 + (1 + getActivePotionEffect(Potion.digSlowdown).getAmplifier() << 1) : 6;
 
-		if (sa.getState() && sa.getSwingSpeedEnabled().get())
+		if (sa.getState())
 			swingAnimationEnd += sa.getSwingSpeedSwingSpeed().get();
 
 		swingAnimationEnd += sa.swingSpeedBoost;

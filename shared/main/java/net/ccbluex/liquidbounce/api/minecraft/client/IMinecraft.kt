@@ -29,6 +29,7 @@ import java.io.File
 
 interface IMinecraft
 {
+	val mcProfiler: IProfiler
 	val inGameHasFocus: Boolean
 	val framebuffer: IFramebuffer?
 	val isFullScreen: Boolean

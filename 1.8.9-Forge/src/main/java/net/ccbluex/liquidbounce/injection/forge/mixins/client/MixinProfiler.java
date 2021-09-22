@@ -25,7 +25,7 @@ public class MixinProfiler
 		if ("bossHealth".equals(name) && ClassUtils.hasLabyMod())
 		{
 			Minecraft.getMinecraft().mcProfiler.startSection("LiquidBounce-Render2DEvent");
-			LiquidBounce.eventManager.callEvent(new Render2DEvent(0.0F));
+			LiquidBounce.eventManager.callEvent(new Render2DEvent(0.0F), true);
 			Minecraft.getMinecraft().mcProfiler.endStartSection(name);
 		}
 	}

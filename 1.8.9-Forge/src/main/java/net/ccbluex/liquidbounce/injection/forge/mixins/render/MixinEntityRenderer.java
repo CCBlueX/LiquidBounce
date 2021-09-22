@@ -73,7 +73,7 @@ public abstract class MixinEntityRenderer
 	private void callRender3DEvent(final int pass, final float partialTicks, final long finishTimeNano, final CallbackInfo callbackInfo)
 	{
 		mc.mcProfiler.endStartSection("LiquidBounce-Render3DEvent");
-		LiquidBounce.eventManager.callEvent(new Render3DEvent(partialTicks));
+		LiquidBounce.eventManager.callEvent(new Render3DEvent(partialTicks), true);
 		mc.mcProfiler.endStartSection("hand");
 	}
 

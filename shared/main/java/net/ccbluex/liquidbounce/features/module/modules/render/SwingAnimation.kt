@@ -42,13 +42,13 @@ class SwingAnimation : Module()
 	val swingSpeedBoostFadeTicks = IntegerValue("FadeTicks", 4, 2, 20, "SwingSpeedBoostAfterReequip")
 
 	private val swingSpeedGroup = ValueGroup("SwingSpeed")
-	val swingSpeedEnabled = BoolValue("Enabled", false, "CustomSwingSpeed")
 	val swingSpeedSwingSpeed = IntegerValue("SwingSpeed", 0, -4, 20, "SwingSpeed")
 	val swingSpeedSwingProgressLimit: IntegerValue = object : IntegerValue("SwingProgressLimit", 3, 1, 20, "SwingProgressLimit")
 	{
 		override fun onChanged(oldValue: Int, newValue: Int)
 		{
-			if (newValue > 8 + (if (swingSpeedEnabled.get()) swingSpeedSwingSpeed.get() else 0)) this.set(8 + if (swingSpeedEnabled.get()) swingSpeedSwingSpeed.get() else 0)
+			val i = swingSpeedSwingSpeed.get() + 8
+			if (newValue > i) this.set(i)
 		}
 	}
 
@@ -148,7 +148,7 @@ class SwingAnimation : Module()
 
 		equipProgress.addAll(equipProgressMultiplier, equipProgressSmoothingGroup, equipProgressSwingProgressAffectGroup, equipProgressTranslationAffectGroup)
 		swingSpeedBoostGroup.addAll(swingSpeedBoostAmount, swingSpeedBoostFadeTicks)
-		swingSpeedGroup.addAll(swingSpeedBoostGroup, swingSpeedEnabled, swingSpeedSwingSpeed, swingSpeedSwingProgressLimit)
+		swingSpeedGroup.addAll(swingSpeedBoostGroup, swingSpeedSwingSpeed, swingSpeedSwingProgressLimit)
 
 		swingTranslationGroup.addAll(swingTranslationX, swingTranslationY, swingTranslationZ)
 		swingRelTranslationGroup.addAll(swingRelTranslationX, swingRelTranslationXSmoothing, swingRelTranslationY, swingRelTranslationYSmoothing, swingRelTranslationZ, swingRelTranslationZSmoothing)

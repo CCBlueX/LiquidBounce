@@ -93,7 +93,7 @@ public abstract class MixinGuiIngame
 			GlStateManager.disableBlend();
 
 			mc.mcProfiler.startSection("LiquidBounce-Render2DEvent");
-			LiquidBounce.eventManager.callEvent(new Render2DEvent(partialTicks));
+			LiquidBounce.eventManager.callEvent(new Render2DEvent(partialTicks), true);
 
 			mc.mcProfiler.endStartSection("LiquidBounce-FontRendererGC");
 			AWTFontRenderer.Companion.garbageCollectionTick();
@@ -110,7 +110,7 @@ public abstract class MixinGuiIngame
 		if (!ClassUtils.hasLabyMod())
 		{
 			mc.mcProfiler.startSection("LiquidBounce-Render2DEvent");
-			LiquidBounce.eventManager.callEvent(new Render2DEvent(partialTicks));
+			LiquidBounce.eventManager.callEvent(new Render2DEvent(partialTicks), true);
 
 			mc.mcProfiler.endStartSection("LiquidBounce-FontRendererGC");
 			AWTFontRenderer.Companion.garbageCollectionTick();

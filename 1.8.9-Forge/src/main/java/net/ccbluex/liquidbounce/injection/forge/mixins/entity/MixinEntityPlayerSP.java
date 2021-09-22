@@ -150,7 +150,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 				return;
 
 			mc.mcProfiler.startSection("LiquidBounce-MotionEvent-PRE");
-			LiquidBounce.eventManager.callEvent(new MotionEvent(EventState.PRE));
+			LiquidBounce.eventManager.callEvent(new MotionEvent(EventState.PRE), true);
 			mc.mcProfiler.endStartSection("onUpdateWalkingPlayer");
 
 			final InventoryMove inventoryMove = (InventoryMove) LiquidBounce.moduleManager.get(InventoryMove.class);
@@ -241,7 +241,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 			}
 
 			mc.mcProfiler.endStartSection("LiquidBounce-MotionEvent-POST");
-			LiquidBounce.eventManager.callEvent(new MotionEvent(EventState.POST));
+			LiquidBounce.eventManager.callEvent(new MotionEvent(EventState.POST), true);
 			mc.mcProfiler.endSection();
 		}
 		catch (final Exception e)
@@ -284,7 +284,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 	public void onLivingUpdate()
 	{
 		worldObj.theProfiler.startSection("LiquidBounce-UpdateEvent");
-		LiquidBounce.eventManager.callEvent(new UpdateEvent());
+		LiquidBounce.eventManager.callEvent(new UpdateEvent(), true);
 		worldObj.theProfiler.endSection();
 
 		if (sprintingTicksLeft > 0)

@@ -239,7 +239,7 @@ public abstract class MixinEntity
 			return;
 
 		final StrafeEvent strafeEvent = new StrafeEvent(strafe, forward, friction);
-		LiquidBounce.eventManager.callEvent(strafeEvent);
+		LiquidBounce.eventManager.callEvent(strafeEvent, true);
 
 		if (strafeEvent.isCancelled())
 			callbackInfo.cancel();

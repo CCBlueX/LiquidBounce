@@ -7,6 +7,7 @@
 package net.ccbluex.liquidbounce.injection.backend
 
 import net.ccbluex.liquidbounce.api.minecraft.client.IMinecraft
+import net.ccbluex.liquidbounce.api.minecraft.client.IProfiler
 import net.ccbluex.liquidbounce.api.minecraft.client.audio.ISoundHandler
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
@@ -31,6 +32,8 @@ import java.io.File
 
 class MinecraftImpl(val wrapped: Minecraft) : IMinecraft
 {
+	override val mcProfiler: IProfiler
+		get() = wrapped.mcProfiler.wrap()
 	override val framebuffer: IFramebuffer?
 		get() = wrapped.framebuffer?.wrap()
 	override val isFullScreen: Boolean

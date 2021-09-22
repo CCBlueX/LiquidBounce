@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.event
 
-import java.util.*
+import net.ccbluex.liquidbounce.LiquidBounce
 
 class EventManager
 {
@@ -45,11 +45,16 @@ class EventManager
 	 *
 	 * @param event to call
 	 */
-	fun callEvent(event: Event)
+	@JvmOverloads
+	fun callEvent(event: Event, profile: Boolean = false)
 	{
+		val profiler = if (profile) LiquidBounce.wrapper.minecraft.mcProfiler else null
 		val targets = registry[event.javaClass] ?: return
 
 		targets.filter { it.isIgnoreCondition || it.eventClass.handleEvents() }.forEach {
+			val name = it.eventClass.javaClass.simpleName.ifEmpty { "anonymous" }
+			profiler?.startSection(name)
+
 			try
 			{
 				it.method.invoke(it.eventClass, event)
@@ -58,6 +63,8 @@ class EventManager
 			{
 				t.printStackTrace()
 			}
+
+			profiler?.endSection()
 		}
 	}
 }

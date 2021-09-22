@@ -204,14 +204,14 @@ public abstract class MixinMinecraft
 	@Inject(method = "runTick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;joinPlayerCounter:I", shift = Shift.BEFORE))
 	private void onTick(final CallbackInfo callbackInfo)
 	{
-		LiquidBounce.eventManager.callEvent(new TickEvent());
+		LiquidBounce.eventManager.callEvent(new TickEvent(), true);
 	}
 
 	@Inject(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;dispatchKeypresses()V", shift = Shift.AFTER))
 	private void onKey(final CallbackInfo callbackInfo)
 	{
 		if (Keyboard.getEventKeyState() && currentScreen == null)
-			LiquidBounce.eventManager.callEvent(new KeyEvent(Keyboard.getEventKey() == 0 ? Keyboard.getEventCharacter() + 256 : Keyboard.getEventKey()));
+			LiquidBounce.eventManager.callEvent(new KeyEvent(Keyboard.getEventKey() == 0 ? Keyboard.getEventCharacter() + 256 : Keyboard.getEventKey()), true);
 	}
 
 	@Inject(method = "sendClickBlockToController", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/MovingObjectPosition;getBlockPos()Lnet/minecraft/util/BlockPos;"))

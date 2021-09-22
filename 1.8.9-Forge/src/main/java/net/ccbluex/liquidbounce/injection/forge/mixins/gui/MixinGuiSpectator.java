@@ -30,7 +30,7 @@ public class MixinGuiSpectator
 	private void renderTooltipPost(final ScaledResolution scaledResolution, final float partialTicks, final CallbackInfo callbackInfo)
 	{
 		field_175268_g.mcProfiler.startSection("LiquidBounce-Render2DEvent");
-		LiquidBounce.eventManager.callEvent(new Render2DEvent(partialTicks));
+		LiquidBounce.eventManager.callEvent(new Render2DEvent(partialTicks), true);
 
 		field_175268_g.mcProfiler.endStartSection("LiquidBounce-FontRendererGC");
 		AWTFontRenderer.Companion.garbageCollectionTick();
