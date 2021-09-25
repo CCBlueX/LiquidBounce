@@ -10,7 +10,9 @@ import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.cantBoostUp
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.multiply
 
 class OnGround : SpeedMode("OnGround")
 {
@@ -18,7 +20,7 @@ class OnGround : SpeedMode("OnGround")
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (eventState != EventState.PRE || !MovementUtils.isMoving(thePlayer) || thePlayer.fallDistance > 3.994 || MovementUtils.cantBoostUp(thePlayer) || thePlayer.isCollidedHorizontally) return
+		if (eventState != EventState.PRE || !thePlayer.isMoving || thePlayer.fallDistance > 3.994 || thePlayer.cantBoostUp || thePlayer.isCollidedHorizontally) return
 
 		val timer = mc.timer
 
@@ -32,7 +34,7 @@ class OnGround : SpeedMode("OnGround")
 		if (thePlayer.onGround)
 		{
 			thePlayer.posY += 0.3993000090122223
-			MovementUtils.multiply(thePlayer, 1.590000033378601)
+			thePlayer.multiply(1.590000033378601)
 
 			thePlayer.motionY = 0.3993000090122223
 			LiquidBounce.eventManager.callEvent(JumpEvent(0.3993000090122223f))

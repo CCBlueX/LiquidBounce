@@ -8,7 +8,10 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.cantBoostUp
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.strafe
+import net.ccbluex.liquidbounce.utils.extensions.zeroXZ
 
 class SpectreBHop : SpeedMode("Spectre-BHop")
 {
@@ -19,19 +22,19 @@ class SpectreBHop : SpeedMode("Spectre-BHop")
 		val thePlayer = mc.thePlayer ?: return
 		if (thePlayer.movementInput.jump) return
 
-		if (MovementUtils.cantBoostUp(thePlayer)) return
+		if (thePlayer.cantBoostUp) return
 
-		if (MovementUtils.isMoving(thePlayer))
+		if (thePlayer.isMoving)
 		{
 			if (thePlayer.onGround)
 			{
-				MovementUtils.strafe(thePlayer, 1.1f)
+				thePlayer.strafe(1.1f)
 				thePlayer.motionY = 0.44
 			}
 
-			MovementUtils.strafe(thePlayer)
+			thePlayer.strafe()
 		}
-		else MovementUtils.zeroXZ(thePlayer)
+		else thePlayer.zeroXZ()
 	}
 
 	override fun onUpdate()

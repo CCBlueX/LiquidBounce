@@ -9,7 +9,9 @@ import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.divide
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.multiply
 
 class Boost : SpeedMode("Boost")
 {
@@ -47,9 +49,9 @@ class Boost : SpeedMode("Boost")
 
 			when (motionDelay++)
 			{
-				1 -> MovementUtils.multiply(thePlayer, moveSpeed)
+				1 -> thePlayer.multiply(moveSpeed)
 
-				2 -> MovementUtils.divide(thePlayer,  1.458)
+				2 -> thePlayer.divide(1.458)
 
 				4 ->
 				{
@@ -68,5 +70,5 @@ class Boost : SpeedMode("Boost")
 	{
 	}
 
-	private fun shouldSpeedUp(thePlayer: IEntityPlayerSP): Boolean = !thePlayer.isInLava && !thePlayer.isOnLadder && !thePlayer.sneaking && MovementUtils.isMoving(thePlayer)
+	private fun shouldSpeedUp(thePlayer: IEntityPlayerSP): Boolean = !thePlayer.isInLava && !thePlayer.isOnLadder && !thePlayer.sneaking && thePlayer.isMoving
 }

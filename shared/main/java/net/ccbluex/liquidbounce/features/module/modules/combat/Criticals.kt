@@ -15,7 +15,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.*
 import kotlin.random.Random
@@ -103,7 +103,7 @@ class Criticals : Module()
 			val y = attackPos.yCoord
 			val z = attackPos.zCoord
 
-			val motion = (if (MovementUtils.isMoving(thePlayer)) thePlayer.motionX to thePlayer.motionZ else 0.0 to 0.0)
+			val motion = (if (thePlayer.isMoving) thePlayer.motionX to thePlayer.motionZ else 0.0 to 0.0)
 
 			when (modeValue.get().toLowerCase())
 			{

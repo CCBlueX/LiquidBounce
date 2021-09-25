@@ -8,7 +8,9 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.minorAC
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.cantBoostUp
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.strafe
 
 class MatrixBHop : SpeedMode("Matrix-BHop")
 {
@@ -21,9 +23,9 @@ class MatrixBHop : SpeedMode("Matrix-BHop")
 
 		val timer = mc.timer
 
-		if (MovementUtils.cantBoostUp(thePlayer)) return
+		if (thePlayer.cantBoostUp) return
 
-		if (MovementUtils.isMoving(thePlayer))
+		if (thePlayer.isMoving)
 		{
 			if (thePlayer.onGround)
 			{
@@ -32,7 +34,7 @@ class MatrixBHop : SpeedMode("Matrix-BHop")
 				thePlayer.speedInAir = 0.02098f
 				timer.timerSpeed = 1.055f
 			}
-			else MovementUtils.strafe(thePlayer, MovementUtils.getSpeed(thePlayer))
+			else thePlayer.strafe()
 		}
 		else timer.timerSpeed = 1f
 	}

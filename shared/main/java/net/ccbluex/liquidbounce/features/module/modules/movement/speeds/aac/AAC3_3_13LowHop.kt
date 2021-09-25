@@ -10,8 +10,8 @@ import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
+import net.ccbluex.liquidbounce.utils.extensions.*
 
 class AAC3_3_13LowHop : SpeedMode("AAC3.3.13-LowHop") // Was AACHop3.3.13
 {
@@ -24,17 +24,17 @@ class AAC3_3_13LowHop : SpeedMode("AAC3.3.13-LowHop") // Was AACHop3.3.13
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		if (!MovementUtils.isMoving(thePlayer) || MovementUtils.cantBoostUp(thePlayer) || thePlayer.hurtTime > 0) return
+		if (!thePlayer.isMoving || thePlayer.cantBoostUp || thePlayer.hurtTime > 0) return
 		if (thePlayer.onGround && thePlayer.isCollidedVertically)
 		{
 			// boost = 0.202, y = 0.405
 
-			MovementUtils.boost(thePlayer, 0.202f)
+			thePlayer.boost(0.202f)
 
 			thePlayer.motionY = 0.405
 			LiquidBounce.eventManager.callEvent(JumpEvent(0.405f))
 
-			MovementUtils.strafe(thePlayer)
+			thePlayer.strafe()
 		}
 		else if (thePlayer.fallDistance < 0.31f)
 		{
@@ -44,7 +44,7 @@ class AAC3_3_13LowHop : SpeedMode("AAC3.3.13-LowHop") // Was AACHop3.3.13
 			// Motion XZ
 			thePlayer.jumpMovementFactor = if (thePlayer.moveStrafing == 0f) 0.027f else 0.021f
 
-			MovementUtils.multiply(thePlayer, 1.001)
+			thePlayer.multiply(1.001)
 
 			// Motion Y
 			if (!thePlayer.isCollidedHorizontally) thePlayer.motionY -= 0.014999993f

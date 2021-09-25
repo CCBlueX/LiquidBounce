@@ -10,7 +10,7 @@ import java.util.Optional;
 
 import javax.imageio.ImageIO;
 
-import net.ccbluex.liquidbounce.utils.WorkerUtils;
+import net.ccbluex.liquidbounce.utils.AsyncUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiNewChat;
 import net.minecraft.client.renderer.GlStateManager;
@@ -56,7 +56,7 @@ public abstract class MixinScreenShotHelper
 	 * @author OrangeMarshall & eric0210
 	 */
 	@Overwrite
-	public static IChatComponent saveScreenshot(final File gameDirectory, final String screenshotName, int widthIn, int heightIn, final Framebuffer buffer)
+	public static IChatComponent saveScreenshot(final File gameDirectory, final String screenshotName, final int widthIn, final int heightIn, final Framebuffer buffer)
 	{
 		final GuiNewChat chatGUI = Minecraft.getMinecraft().ingameGUI.getChatGUI();
 
@@ -114,7 +114,7 @@ public abstract class MixinScreenShotHelper
 			final File screenshotFile = Optional.ofNullable(screenshotName).map(name -> new File(screenshotsFolder, name)).orElseGet(() -> getTimestampedPNGFileForDirectory(screenshotsFolder));
 
 			// Create the BufferedImage and Save to the file ASYNCHRONOUSLY!
-			WorkerUtils.getWorkers().execute(() ->
+			AsyncUtils.getWorkers().execute(() ->
 			{
 				// Process pixels
 				TextureUtil.processPixelValues(pixelValues, width, height);

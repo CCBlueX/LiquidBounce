@@ -8,7 +8,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.cantBoostUp
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
 
 // Original author: RedeskySpeed v1 by noom#0681
 // https://forums.ccbluex.net/topic/2110/very-fast-speed-for-redesky
@@ -21,7 +22,7 @@ class RedeSkyBoostHop : SpeedMode("RedeSky-BoostHop")
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (!MovementUtils.isMoving(thePlayer) || MovementUtils.cantBoostUp(thePlayer)) return
+		if (!thePlayer.isMoving || thePlayer.cantBoostUp) return
 
 		if (thePlayer.onGround)
 		{

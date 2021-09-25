@@ -8,7 +8,10 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.cantBoostUp
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.strafe
+import net.ccbluex.liquidbounce.utils.extensions.zeroXZ
 
 class HiveHop : SpeedMode("HiveHop")
 {
@@ -34,20 +37,20 @@ class HiveHop : SpeedMode("HiveHop")
 
 		val timer = mc.timer
 
-		if (MovementUtils.cantBoostUp(thePlayer)) return
+		if (thePlayer.cantBoostUp) return
 
-		if (MovementUtils.isMoving(thePlayer))
+		if (thePlayer.isMoving)
 		{
 			if (thePlayer.onGround) thePlayer.motionY = 0.3
 
 			thePlayer.speedInAir = 0.0425f
 			timer.timerSpeed = 1.04f
 
-			MovementUtils.strafe(thePlayer)
+			thePlayer.strafe()
 		}
 		else
 		{
-			MovementUtils.zeroXZ(thePlayer)
+			thePlayer.zeroXZ()
 
 			thePlayer.speedInAir = 0.02f
 

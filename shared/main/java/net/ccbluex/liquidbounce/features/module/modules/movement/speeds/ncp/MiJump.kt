@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.*
 
 class MiJump : SpeedMode("MiJump")
 {
@@ -18,7 +19,7 @@ class MiJump : SpeedMode("MiJump")
 
 		val thePlayer = mc.thePlayer ?: return
 
-		if (!MovementUtils.isMoving(thePlayer) || MovementUtils.cantBoostUp(thePlayer)) return
+		if (!thePlayer.isMoving || thePlayer.cantBoostUp) return
 
 		if (thePlayer.onGround && !thePlayer.movementInput.jump)
 		{
@@ -26,15 +27,15 @@ class MiJump : SpeedMode("MiJump")
 
 			val multiplier = 1.8
 
-			MovementUtils.multiply(thePlayer, multiplier)
+			thePlayer.multiply(multiplier)
 
-			val speed = MovementUtils.getSpeed(thePlayer)
+			val speed = thePlayer.speed
 			val maxSpeed = 0.66
 
-			if (speed > maxSpeed) MovementUtils.divide(thePlayer, speed * maxSpeed)
+			if (speed > maxSpeed) thePlayer.divide(speed * maxSpeed)
 		}
 
-		MovementUtils.strafe(thePlayer)
+		thePlayer.strafe()
 	}
 
 	override fun onUpdate()

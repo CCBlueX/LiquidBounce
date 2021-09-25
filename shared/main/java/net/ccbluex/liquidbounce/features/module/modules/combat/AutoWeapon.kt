@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.InventoryUtils
-import net.ccbluex.liquidbounce.utils.item.ItemUtils
+import net.ccbluex.liquidbounce.utils.extensions.getEnchantmentLevel
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ValueGroup
@@ -65,8 +65,10 @@ class AutoWeapon : Module()
 
 			val currentTime = System.currentTimeMillis()
 
+			val sharpEnch = provider.getEnchantmentEnum(EnchantmentType.SHARPNESS)
+
 			// Find best weapon in hotbar (#Kotlin Style)
-			val (slot, _) = (0..8).asSequence().mapNotNull { it to (inventory.getStackInSlot(it) ?: return@mapNotNull null) }.filter { (_, stack) -> (provider.isItemSword(stack.item) || !onlySword && provider.isItemTool(stack.item)) && currentTime - stack.itemDelay >= itemDelay }.maxBy { (_, stack) -> (stack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount ?: 2.0) + 1.25 * ItemUtils.getEnchantment(stack, provider.getEnchantmentEnum(EnchantmentType.SHARPNESS)) } ?: return
+			val (slot, _) = (0..8).asSequence().mapNotNull { it to (inventory.getStackInSlot(it) ?: return@mapNotNull null) }.filter { (_, stack) -> (provider.isItemSword(stack.item) || !onlySword && provider.isItemTool(stack.item)) && currentTime - stack.itemDelay >= itemDelay }.maxBy { (_, stack) -> (stack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount ?: 2.0) + 1.25 * stack.getEnchantmentLevel(sharpEnch) } ?: return
 
 			if (slot == inventory.currentItem) // If in hand no need to swap
 				return

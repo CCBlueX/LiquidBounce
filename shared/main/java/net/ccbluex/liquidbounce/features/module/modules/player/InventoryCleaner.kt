@@ -25,10 +25,11 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.AutoArmor
 import net.ccbluex.liquidbounce.features.module.modules.combat.AutoPot
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.InventoryUtils
-import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.createOpenInventoryPacket
+import net.ccbluex.liquidbounce.utils.extensions.getEnchantmentLevel
+import net.ccbluex.liquidbounce.utils.extensions.isEmpty
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
-import net.ccbluex.liquidbounce.utils.item.ItemUtils
 import net.ccbluex.liquidbounce.utils.timer.Cooldown
 import net.ccbluex.liquidbounce.value.*
 import kotlin.random.Random
@@ -170,7 +171,7 @@ class InventoryCleaner : Module()
 		if (hotbar && !provider.isGuiInventory(screen))
 		{
 			val hotbarItems = items(36, 45, inventoryContainer)
-			val garbageItemsHotbarSlots = hotbarItems.filter { !isUseful(thePlayer, it.key, it.value, container = inventoryContainer) }.keys.toMutableList()
+			val garbageItemsHotbarSlots = hotbarItems.filter { !isUseful(thePlayer, it.key, it.value, container = inventoryContainer) }.keys.toList()
 
 			// Break if there is no garbage items in hotbar
 			if (garbageItemsHotbarSlots.isNotEmpty())
@@ -211,7 +212,7 @@ class InventoryCleaner : Module()
 		}
 
 		// NoMove, AutoArmorLock Check
-		if (noMoveValue.get() && MovementUtils.isMoving(thePlayer) || (LiquidBounce.moduleManager[AutoArmor::class.java] as AutoArmor).isLocked) return
+		if (noMoveValue.get() && thePlayer.isMoving || (LiquidBounce.moduleManager[AutoArmor::class.java] as AutoArmor).isLocked) return
 
 		if (!provider.isGuiInventory(screen) && invOpenValue.get()) return
 
@@ -233,7 +234,7 @@ class InventoryCleaner : Module()
 		while (clickTimer.hasTimePassed(delay))
 		{
 			val items = items(start, end, container)
-			val garbageItems = items.filterNot { isUseful(thePlayer, it.key, it.value, container = container) }.keys.toMutableList()
+			val garbageItems = items.filterNot { isUseful(thePlayer, it.key, it.value, container = container) }.keys.toList()
 
 			// Return true if there is no remaining garbage items in the inventory
 			if (garbageItems.isEmpty()) return
@@ -291,9 +292,6 @@ class InventoryCleaner : Module()
 
 			val provider = classProvider
 
-			val containerItems = items(start, end, container)
-			val inventoryItems = items(0, 45, container = thePlayer.inventoryContainer)
-
 			val maxDuplicate = filterMaxDuplicateCountValue.get()
 			val allowDuplicate = maxDuplicate >= 2304
 			val valueComparator = if (maxDuplicate > 0) 1 else 0
@@ -301,6 +299,9 @@ class InventoryCleaner : Module()
 			val bowAndArrow = filterBowAndArrowKeepValue.get()
 
 			// TODO: Replace .none { ... } checks to .filter{ ... }.map { it.value.stackSize }.sum() < maxDuplicate
+
+			val items = items(start, end, container).filter { (otherSlot, otherStack) -> otherSlot != slot && otherStack != itemStack }
+			// val inventoryItems = items(0, 45, container = thePlayer.inventoryContainer)
 
 			when
 			{
@@ -316,61 +317,54 @@ class InventoryCleaner : Module()
 						if ((type.equals("sword", true) && provider.isItemSword(item) || type.equals("pickaxe", true) && provider.isItemPickaxe(item) || type.equals("axe", true) && provider.isItemAxe(item)) && findBetterItem(thePlayer, it, thePlayer.inventory.getStackInSlot(it)) == null) return@isUseful true
 					}
 
-					val getAttackDamage = { stack: IItemStack -> (stack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount ?: 0.0) + 1.25 * ItemUtils.getEnchantment(itemStack, provider.getEnchantmentEnum(EnchantmentType.SHARPNESS)) }
+					val sharpEnch = provider.getEnchantmentEnum(EnchantmentType.SHARPNESS)
+					val getAttackDamage = { stack: IItemStack -> (stack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount ?: 0.0) + 1.25 * itemStack.getEnchantmentLevel(sharpEnch) }
 
 					val attackDamage = getAttackDamage(itemStack)
 
-					containerItems.none { (otherSlot, otherStack) -> otherSlot != slot && otherStack != itemStack && otherStack.javaClass == itemStack.javaClass && attackDamage.compareTo(getAttackDamage(otherStack)) < valueComparator }
+					items.none { (_, otherStack) -> otherStack.javaClass == itemStack.javaClass && attackDamage.compareTo(getAttackDamage(otherStack)) < valueComparator }
 				}
 
 				bowAndArrow && provider.isItemBow(item) ->
 				{
 					val powerEnch = provider.getEnchantmentEnum(EnchantmentType.POWER)
-					val currentPower = ItemUtils.getEnchantment(itemStack, powerEnch)
-
-					containerItems.none { (otherSlot, otherStack) -> otherSlot != slot && otherStack != itemStack && provider.isItemBow(otherStack.item) && currentPower.compareTo(ItemUtils.getEnchantment(otherStack, powerEnch)) < valueComparator }
+					val currentPower = itemStack.getEnchantmentLevel(powerEnch)
+					items.none { (_, otherStack) -> provider.isItemBow(otherStack.item) && currentPower.compareTo(otherStack.getEnchantmentLevel(powerEnch)) < valueComparator }
 				}
 
-				bowAndArrow && itemStack.unlocalizedName == "item.arrow" -> inventoryItems.filter { (otherSlot, otherStack) -> otherSlot != slot && otherStack.unlocalizedName == "item.arrow" }.values.sumBy(IItemStack::stackSize) + itemStack.stackSize <= filterBowAndArrowArrowCountValue.get()
+				bowAndArrow && itemStack.unlocalizedName == "item.arrow" -> items.filter { it.value.unlocalizedName == "item.arrow" }.values.sumBy(IItemStack::stackSize) + itemStack.stackSize <= filterBowAndArrowArrowCountValue.get()
 
 				provider.isItemArmor(item) ->
 				{
 					if (filterKeepOldArmorsValue.get()) return true
 
 					val currentArmor = ArmorPiece(itemStack, slot)
-
-					containerItems.none { (otherSlot, otherStack) ->
-						if (otherSlot != slot && otherStack != itemStack && provider.isItemArmor(otherStack.item))
-						{
-							val armor = ArmorPiece(otherStack, otherSlot)
-
-							armor.armorType == currentArmor.armorType && AutoArmor.ARMOR_COMPARATOR.compare(currentArmor, armor) < valueComparator
-						}
-						else false
+					items.filter { provider.isItemArmor(it.value.item) }.none { (otherSlot, otherStack) ->
+						val armor = ArmorPiece(otherStack, otherSlot)
+						armor.armorType == currentArmor.armorType && AutoArmor.ARMOR_COMPARATOR.compare(currentArmor, armor) < valueComparator
 					}
 				}
 
-				filterCompassValue.get() && itemStack.unlocalizedName == "item.compass" -> allowDuplicate || inventoryItems.filter { (_, otherStack) -> itemStack != otherStack && otherStack.unlocalizedName == "item.compass" }.map { it.value.stackSize }.sum() < maxDuplicate
+				filterCompassValue.get() && itemStack.unlocalizedName == "item.compass" -> allowDuplicate || items.filter { (_, otherStack) -> otherStack.unlocalizedName == "item.compass" }.map { it.value.stackSize }.sum() < maxDuplicate
 
 				filterBedValue.get() && provider.isItemBed(item) -> allowDuplicate || run {
 					val name = itemStack.unlocalizedName
-					inventoryItems.filter { (_, otherStack) -> itemStack != otherStack && otherStack.unlocalizedName == name }.map { it.value.stackSize }.sum() < maxDuplicate
+					items.filter { (_, otherStack) -> otherStack.unlocalizedName == name }.map { it.value.stackSize }.sum() + itemStack.stackSize < maxDuplicate
 				}
 
-				provider.isItemBlock(item) && !provider.isBlockBush(item?.asItemBlock()?.block) && !provider.isBlockChest(item?.asItemBlock()?.block) ->
+				provider.isItemBlock(item) && !provider.isBlockBush(item?.asItemBlock()?.block) && !provider.isBlockChest(item?.asItemBlock()?.block) -> // TODO: Improve block filtering
 				{
-					inventoryItems.filter { (otherSlot, otherStack) ->
+					items.filter { (_, otherStack) ->
 						val otherItem = otherStack.item
-						otherSlot != slot && provider.isItemBlock(otherItem) && !provider.isBlockBush(otherItem?.asItemBlock()?.block) && !provider.isBlockChest(item?.asItemBlock()?.block)
+						provider.isItemBlock(otherItem) && !provider.isBlockBush(otherItem?.asItemBlock()?.block) && !provider.isBlockChest(item?.asItemBlock()?.block) // TODO: Improve block filtering
 					}.values.sumBy(IItemStack::stackSize) + itemStack.stackSize <= filterMaxBlockCountValue.get()
 				}
 
 				filterFoodKeepValue.get() && provider.isItemFood(item) ->
 				{
 					val itemID = functions.getIdFromItem(item!!)
-
-					inventoryItems.filter { (otherSlot, otherStack) ->
-						otherSlot != slot && provider.isItemFood(otherStack.item) && (allowDuplicate || functions.getIdFromItem(otherStack.item!!) == itemID)
+					items.filter { (_, otherStack) ->
+						provider.isItemFood(otherStack.item) && (allowDuplicate || functions.getIdFromItem(otherStack.item!!) == itemID)
 					}.values.sumBy(IItemStack::stackSize) + itemStack.stackSize <= filterFoodCountValue.get()
 				}
 
@@ -444,9 +438,9 @@ class InventoryCleaner : Module()
 				var bestWeapon = if (currentTypeChecker(slotStack?.item)) hotbarSlot else -1
 
 				val sharpEnch = provider.getEnchantmentEnum(EnchantmentType.SHARPNESS)
-				val getAttackDamage = { stack: IItemStack -> (stack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount ?: 0.0) + 1.25 * ItemUtils.getEnchantment(stack, sharpEnch) }
+				val getAttackDamage = { stack: IItemStack -> (stack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount ?: 0.0) + 1.25 * stack.getEnchantmentLevel(sharpEnch) }
 
-				mainInventory.filter { currentTypeChecker(it.value?.item) }.map { it.index to it.value as IItemStack }.filter { !type(it.first).equals(type, ignoreCase = true) }.forEach { (index, stack) ->
+				mainInventory.filter { currentTypeChecker(it.value?.item) }.map { it.index to it.value!! }.filter { !type(it.first).equals(type, ignoreCase = true) }.forEach { (index, stack) ->
 					if (bestWeapon == -1) bestWeapon = index
 					else
 					{
@@ -468,15 +462,14 @@ class InventoryCleaner : Module()
 
 				val powerEnch = provider.getEnchantmentEnum(EnchantmentType.POWER)
 
-				var bestPower = if (bestBow != -1) ItemUtils.getEnchantment(slotStack, powerEnch) else 0
+				var bestPower = if (bestBow != -1) slotStack.getEnchantmentLevel(powerEnch) else 0
 
-				mainInventory.filter { provider.isItemBow(it.value?.item) }.map { it.index to it.value as IItemStack }.filter { !type(it.first).equals(type, ignoreCase = true) }.forEach { (index, stack) ->
+				mainInventory.filter { provider.isItemBow(it.value?.item) }.map { it.index to it.value!! }.filter { !type(it.first).equals(type, ignoreCase = true) }.forEach { (index, stack) ->
 					if (bestBow == -1) bestBow = index
 					else
 					{
-						val power = ItemUtils.getEnchantment(stack, powerEnch)
-
-						if (ItemUtils.getEnchantment(stack, powerEnch) > bestPower)
+						val power = stack.getEnchantmentLevel(powerEnch)
+						if (power > bestPower)
 						{
 							bestBow = index
 							bestPower = power
@@ -487,17 +480,17 @@ class InventoryCleaner : Module()
 				return if (bestBow != -1) bestBow else null
 			}
 
-			"food" -> if (filterFoodKeepValue.get()) mainInventory.filter { provider.isItemFood(it.value?.item) }.map { it.index to it.value as IItemStack }.filter { !provider.isItemAppleGold(it.second) }.filter { !type(it.first).equals("Food", ignoreCase = true) }.toList().forEach { (index, stack) -> return@findBetterItem if (ItemUtils.isStackEmpty(slotStack) || !provider.isItemFood(stack.item)) index else null }
-			"block" -> mainInventory.filter { provider.isItemBlock(it.value?.item) }.mapNotNull { it.index to (it.value?.item?.asItemBlock() ?: return@mapNotNull null) }.filter { !InventoryUtils.AUTOBLOCK_BLACKLIST.contains(it.second.block) }.filter { !type(it.first).equals("Block", ignoreCase = true) }.forEach { (index, item) -> return@findBetterItem if (ItemUtils.isStackEmpty(slotStack) || !provider.isItemBlock(item)) index else null }
+			"food" -> if (filterFoodKeepValue.get()) mainInventory.filter { provider.isItemFood(it.value?.item) }.map { it.index to it.value!! }.filter { !provider.isItemAppleGold(it.second) }.filter { !type(it.first).equals("Food", ignoreCase = true) }.toList().forEach { (index, stack) -> return@findBetterItem if (slotStack.isEmpty || !provider.isItemFood(stack.item)) index else null }
+			"block" -> mainInventory.filter { provider.isItemBlock(it.value?.item) }.mapNotNull { it.index to (it.value?.item?.asItemBlock() ?: return@mapNotNull null) }.filter { !InventoryUtils.AUTOBLOCK_BLACKLIST.contains(it.second.block) }.filter { !type(it.first).equals("Block", ignoreCase = true) }.forEach { (index, item) -> return@findBetterItem if (slotStack.isEmpty || !provider.isItemBlock(item)) index else null }
 
 			"water" -> if (filterBucketValue.get())
 			{
 				val flowingWater = provider.getBlockEnum(BlockType.FLOWING_WATER)
-				mainInventory.filter { provider.isItemBucket(it.value?.item) }.mapNotNull { it.index to (it.value?.item?.asItemBucket() ?: return@mapNotNull null) }.filter { it.second.isFull == flowingWater }.filter { !type(it.first).equals("Water", ignoreCase = true) }.toList().forEach { (index, item) -> return@findBetterItem if (ItemUtils.isStackEmpty(slotStack) || !provider.isItemBucket(item) || (item.asItemBucket()).isFull != flowingWater) index else null }
+				mainInventory.filter { provider.isItemBucket(it.value?.item) }.mapNotNull { it.index to (it.value?.item?.asItemBucket() ?: return@mapNotNull null) }.filter { it.second.isFull == flowingWater }.filter { !type(it.first).equals("Water", ignoreCase = true) }.toList().forEach { (index, item) -> return@findBetterItem if (slotStack.isEmpty || !provider.isItemBucket(item) || (item.asItemBucket()).isFull != flowingWater) index else null }
 			}
 
-			"gapple" -> if (filterFoodKeepValue.get()) mainInventory.filter { provider.isItemAppleGold(it.value?.item) }.filter { !type(it.index).equals("Gapple", ignoreCase = true) }.forEach { return@findBetterItem if (ItemUtils.isStackEmpty(slotStack) || !provider.isItemAppleGold(slotStack?.item)) it.index else null }
-			"pearl" -> if (filterEnderPearlValue.get()) mainInventory.filter { provider.isItemEnderPearl(it.value?.item) }.filter { !type(it.index).equals("Pearl", ignoreCase = true) }.forEach { return@findBetterItem if (ItemUtils.isStackEmpty(slotStack) || !provider.isItemEnderPearl(slotStack?.item)) it.index else null }
+			"gapple" -> if (filterFoodKeepValue.get()) mainInventory.filter { provider.isItemAppleGold(it.value?.item) }.filter { !type(it.index).equals("Gapple", ignoreCase = true) }.forEach { return@findBetterItem if (slotStack.isEmpty || !provider.isItemAppleGold(slotStack?.item)) it.index else null }
+			"pearl" -> if (filterEnderPearlValue.get()) mainInventory.filter { provider.isItemEnderPearl(it.value?.item) }.filter { !type(it.index).equals("Pearl", ignoreCase = true) }.forEach { return@findBetterItem if (slotStack.isEmpty || !provider.isItemEnderPearl(slotStack?.item)) it.index else null }
 		}
 
 		return null
@@ -513,7 +506,7 @@ class InventoryCleaner : Module()
 		val itemDelay = itemDelayValue.get()
 
 		val currentTime = System.currentTimeMillis()
-		(end - 1 downTo start).filter { it !in 36..44 || !type(it).equals("Ignore", ignoreCase = true) }.mapNotNull { it to (container.getSlot(it).stack ?: return@mapNotNull null) }.filter { (_, stack) -> !ItemUtils.isStackEmpty(stack) && currentTime - stack.itemDelay >= itemDelay }.forEach { items[it.first] = it.second }
+		(end - 1 downTo start).filter { it !in 36..44 || !type(it).equals("Ignore", ignoreCase = true) }.mapNotNull { it to (container.getSlot(it).stack ?: return@mapNotNull null) }.filter { (_, stack) -> !stack.isEmpty && currentTime - stack.itemDelay >= itemDelay }.forEach { items[it.first] = it.second }
 
 		return items
 	}

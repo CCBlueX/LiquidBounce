@@ -10,7 +10,10 @@ import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.cantBoostUp
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.strafe
+import net.ccbluex.liquidbounce.utils.extensions.zeroXZ
 
 class AAC3_3_11LowHop : SpeedMode("AAC3.3.11-LowHop") // Was AAC6BHop
 {
@@ -23,15 +26,15 @@ class AAC3_3_11LowHop : SpeedMode("AAC3.3.11-LowHop") // Was AAC6BHop
 
 		timer.timerSpeed = 1f
 
-		if (MovementUtils.cantBoostUp(thePlayer)) return
+		if (thePlayer.cantBoostUp) return
 
-		if (MovementUtils.isMoving(thePlayer))
+		if (thePlayer.isMoving)
 		{
 			if (thePlayer.onGround)
 			{
 				if (isFirst)
 				{
-					MovementUtils.strafe(thePlayer, 0.15f)
+					thePlayer.strafe(0.15f)
 
 					thePlayer.onGround = false
 
@@ -42,7 +45,7 @@ class AAC3_3_11LowHop : SpeedMode("AAC3.3.11-LowHop") // Was AAC6BHop
 					return
 				}
 
-				MovementUtils.strafe(thePlayer, 0.47458485f)
+				thePlayer.strafe(0.47458485f)
 
 				thePlayer.motionY = 0.41
 				LiquidBounce.eventManager.callEvent(JumpEvent(0.41f))
@@ -56,7 +59,7 @@ class AAC3_3_11LowHop : SpeedMode("AAC3.3.11-LowHop") // Was AAC6BHop
 		{
 			isFirst = true
 
-			MovementUtils.zeroXZ(thePlayer)
+			thePlayer.zeroXZ()
 		}
 	}
 

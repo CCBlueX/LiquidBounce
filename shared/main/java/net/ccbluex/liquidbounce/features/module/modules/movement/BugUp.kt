@@ -15,8 +15,9 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.ClientUtils
-import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
+import net.ccbluex.liquidbounce.utils.extensions.boost
+import net.ccbluex.liquidbounce.utils.extensions.strafe
 import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
@@ -166,11 +167,11 @@ class BugUp : Module()
 						networkManager.sendPacketWithoutEvent(provider.createCPacketPlayerPosition(posX, posY, posZ, true))
 						thePlayer.motionY = flyFlagYMotionValue.get().toDouble()
 
-						MovementUtils.strafe(thePlayer)
+						thePlayer.strafe()
 						thePlayer.fallDistance = 0f
 					}
 
-					"speedflag" -> MovementUtils.boost(thePlayer, speedFlagMotionValue.get(), thePlayer.rotationYaw)
+					"speedflag" -> thePlayer.boost(speedFlagMotionValue.get(), thePlayer.rotationYaw)
 
 					"packet" ->
 					{

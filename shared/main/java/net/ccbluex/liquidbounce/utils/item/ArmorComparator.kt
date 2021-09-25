@@ -8,6 +8,8 @@ package net.ccbluex.liquidbounce.utils.item
 import net.ccbluex.liquidbounce.api.enums.EnchantmentType
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.ccbluex.liquidbounce.utils.extensions.enchantmentCount
+import net.ccbluex.liquidbounce.utils.extensions.getEnchantmentLevel
 import java.io.Serializable
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -34,7 +36,7 @@ class ArmorComparator : MinecraftInstance(), Comparator<ArmorPiece>, Serializabl
 			// If both have the same enchantment threshold, prefer the item with more enchantments
 			if (otherEnchantmentCmp == 0)
 			{
-				val enchantmentCountCmp = ItemUtils.getEnchantmentCount(stack).compareTo(ItemUtils.getEnchantmentCount(otherStack))
+				val enchantmentCountCmp = stack.enchantmentCount.compareTo(otherStack.enchantmentCount)
 				if (enchantmentCountCmp != 0) return enchantmentCountCmp
 
 				// Then durability...
@@ -146,9 +148,9 @@ class ArmorComparator : MinecraftInstance(), Comparator<ArmorPiece>, Serializabl
 
 		private fun getDamageReduction(defensePoints: Int, toughness: Int = 0): Float = 1 - min(20.0f, max(defensePoints * 0.2f, defensePoints - 1 / (2 + toughness * 0.25f))) * 0.04f
 
-		private fun getThresholdedEnchantmentDamageReduction(itemStack: IItemStack): Float = DAMAGE_REDUCTION_ENCHANTMENTS.indices.map { ItemUtils.getEnchantment(itemStack, DAMAGE_REDUCTION_ENCHANTMENTS[it]) * ENCHANTMENT_FACTORS[it] * ENCHANTMENT_DAMAGE_REDUCTION_FACTOR[it] }.sum()
+		private fun getThresholdedEnchantmentDamageReduction(itemStack: IItemStack): Float = DAMAGE_REDUCTION_ENCHANTMENTS.indices.map { itemStack.getEnchantmentLevel(DAMAGE_REDUCTION_ENCHANTMENTS[it]) * ENCHANTMENT_FACTORS[it] * ENCHANTMENT_DAMAGE_REDUCTION_FACTOR[it] }.sum()
 
-		private fun getEnchantmentThreshold(itemStack: IItemStack): Float = OTHER_ENCHANTMENTS.indices.map { ItemUtils.getEnchantment(itemStack, OTHER_ENCHANTMENTS[it]) * OTHER_ENCHANTMENT_FACTORS[it] }.sum()
+		private fun getEnchantmentThreshold(itemStack: IItemStack): Float = OTHER_ENCHANTMENTS.indices.map { itemStack.getEnchantmentLevel(OTHER_ENCHANTMENTS[it]) * OTHER_ENCHANTMENT_FACTORS[it] }.sum()
 
 		private const val serialVersionUID = 5242270904486038484L
 	}

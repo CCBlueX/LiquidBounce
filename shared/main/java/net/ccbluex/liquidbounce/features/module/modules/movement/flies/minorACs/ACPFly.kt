@@ -2,7 +2,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.flies.minorACs
 
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.zeroXZ
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
 
 class ACPFly : FlyMode("ACP") // ACP = AntiCheatPlus
@@ -25,13 +25,13 @@ class ACPFly : FlyMode("ACP") // ACP = AntiCheatPlus
 
 		if (gameSettings.keyBindJump.isKeyDown)
 		{
-			MovementUtils.zeroXZ(thePlayer)
+			thePlayer.zeroXZ()
 			thePlayer.motionY = 0.42
 		}
 
 		if (gameSettings.keyBindSneak.isKeyDown)
 		{
-			MovementUtils.zeroXZ(thePlayer)
+			thePlayer.zeroXZ()
 			thePlayer.motionY = -0.42
 		}
 	}

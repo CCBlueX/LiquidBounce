@@ -10,8 +10,10 @@ import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
+import net.ccbluex.liquidbounce.utils.extensions.cantBoostUp
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.moveDirectionRadians
 
 class AACPort : SpeedMode("AACPort")
 {
@@ -24,9 +26,9 @@ class AACPort : SpeedMode("AACPort")
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		if (!MovementUtils.isMoving(thePlayer) || MovementUtils.cantBoostUp(thePlayer)) return
+		if (!thePlayer.isMoving || thePlayer.cantBoostUp) return
 
-		val dir = MovementUtils.getDirection(thePlayer)
+		val dir = thePlayer.moveDirectionRadians
 		var speed = 0.2
 		val maxSpeed = Speed.portMax.get()
 

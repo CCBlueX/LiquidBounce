@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
 
 @ModuleInfo(name = "Parkour", description = "Automatically jumps when reaching the edge of a block.", category = ModuleCategory.MOVEMENT)
 class Parkour : Module()
@@ -22,6 +22,6 @@ class Parkour : Module()
 		val thePlayer = mc.thePlayer ?: return
 		val gameSettings = mc.gameSettings
 
-		if (MovementUtils.isMoving(thePlayer) && thePlayer.onGround && !thePlayer.sneaking && !gameSettings.keyBindSneak.isKeyDown && !gameSettings.keyBindJump.isKeyDown && theWorld.getCollidingBoundingBoxes(thePlayer, thePlayer.entityBoundingBox.offset(0.0, -0.5, 0.0).expand(-0.001, 0.0, -0.001)).isEmpty()) thePlayer.jump()
+		if (thePlayer.isMoving && thePlayer.onGround && !thePlayer.sneaking && !gameSettings.keyBindSneak.isKeyDown && !gameSettings.keyBindJump.isKeyDown && theWorld.getCollidingBoundingBoxes(thePlayer, thePlayer.entityBoundingBox.offset(0.0, -0.5, 0.0).expand(-0.001, 0.0, -0.001)).isEmpty()) thePlayer.jump()
 	}
 }

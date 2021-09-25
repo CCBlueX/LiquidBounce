@@ -9,7 +9,10 @@ import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.cantBoostUp
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.strafe
+import net.ccbluex.liquidbounce.utils.extensions.zeroXZ
 
 class NCPBHop : SpeedMode("NCPBHop")
 {
@@ -39,9 +42,9 @@ class NCPBHop : SpeedMode("NCPBHop")
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (MovementUtils.cantBoostUp(thePlayer)) return
+		if (thePlayer.cantBoostUp) return
 
-		if (MovementUtils.isMoving(thePlayer))
+		if (thePlayer.isMoving)
 		{
 			if (thePlayer.onGround)
 			{
@@ -60,14 +63,14 @@ class NCPBHop : SpeedMode("NCPBHop")
 				}
 			}
 
-			MovementUtils.strafe(thePlayer)
+			thePlayer.strafe()
 		}
 		else
 		{
 			shouldLegitJump = true
 			jumps = 0
 
-			MovementUtils.zeroXZ(thePlayer)
+			thePlayer.zeroXZ()
 		}
 	}
 

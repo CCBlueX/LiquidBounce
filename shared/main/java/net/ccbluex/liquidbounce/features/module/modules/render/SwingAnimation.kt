@@ -133,9 +133,9 @@ class SwingAnimation : Module()
 	{
 		override fun showCondition(): Boolean = blockAnimationMode.get().equals("Exhibobo", ignoreCase = true)
 	}
-	val blockAnimationExhiAngleX = FloatValue("SwingAngle", 15f, 0f, 30f, "Exhibobo-SwingAngle")
-	val blockAnimationExhiAngleY = FloatValue("PushDepth", 0f, -10f, 20f, "Exhibobo-PushDepth")
-	val blockAnimationExhiAngleZ = FloatValue("Slope", 0f, -10f, 15f, "Exhibobo-Slope")
+	val blockAnimationExhiAngleX = FloatValue("SwingAngle", 15f, 0f, 45f, "Exhibobo-SwingAngle")
+	val blockAnimationExhiAngleY = FloatValue("PushDepth", 0f, -10f, 30f, "Exhibobo-PushDepth")
+	val blockAnimationExhiAngleZ = FloatValue("Slope", 0f, -10f, 30f, "Exhibobo-Slope")
 	val blockAnimationExhiYPushPos = IntegerValue("Y-PushPos", 20, 0, 100, "Exhibobo-Y-PushPos")
 	val blockAnimationExhiZPushPos = IntegerValue("Z-PushPos", 50, 0, 100, "Exhibobo-Z-PushPos")
 	val blockAnimationExhiSmooth = IntegerValue("Smooth", 5, -25, 25, "Exhibobo-Smooth")

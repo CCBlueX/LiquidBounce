@@ -8,7 +8,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.cantBoostUp
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
 
 // Original author: Co丶Dynamic
 class AAC5BHop : SpeedMode("AAC5-BHop")
@@ -34,13 +35,13 @@ class AAC5BHop : SpeedMode("AAC5-BHop")
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		if (MovementUtils.cantBoostUp(thePlayer)) return
+		if (thePlayer.cantBoostUp) return
 
 		val timer = mc.timer
 
 		if (thePlayer.onGround) timer.timerSpeed = 1F
 
-		if (thePlayer.onGround && MovementUtils.isMoving(thePlayer))
+		if (thePlayer.onGround && thePlayer.isMoving)
 		{
 			jump(thePlayer)
 			timer.timerSpeed = 1F

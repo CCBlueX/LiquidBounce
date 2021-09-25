@@ -17,14 +17,13 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.Damage
 import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.Tower
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationIcon
-import net.ccbluex.liquidbounce.utils.MovementUtils
-import net.ccbluex.liquidbounce.utils.MovementUtils.getDirection
-import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 
+// FIXME: Fix broken LongJump
 @ModuleInfo(name = "LongJump", description = "Allows you to jump further.", category = ModuleCategory.MOVEMENT)
 class LongJump : Module()
 {
@@ -114,7 +113,7 @@ class LongJump : Module()
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (LadderJump.jumped) MovementUtils.strafe(thePlayer, MovementUtils.getSpeed(thePlayer) * 1.08f)
+		if (LadderJump.jumped) thePlayer.strafe(thePlayer.speed * 1.08f)
 
 		val autoDisable = autoDisableValue.get()
 
@@ -127,7 +126,7 @@ class LongJump : Module()
 				jumped = false
 				canMineplexBoost = false
 
-				if (mode.equals("NCP", ignoreCase = true)) MovementUtils.zeroXZ(thePlayer)
+				if (mode.equals("NCP", ignoreCase = true)) thePlayer.zeroXZ()
 
 				if (boosted && autoDisable) state = false
 				return
@@ -138,7 +137,7 @@ class LongJump : Module()
 				{
 					"ncp" ->
 					{
-						MovementUtils.strafe(thePlayer, MovementUtils.getSpeed(thePlayer) * if (canBoost) ncpBoostValue.get() else 1f)
+						thePlayer.strafe(thePlayer.speed * if (canBoost) ncpBoostValue.get() else 1f)
 						canBoost = false
 						if (autoDisable) state = false
 					}
@@ -146,7 +145,7 @@ class LongJump : Module()
 					"aac3.0.1" ->
 					{
 						thePlayer.motionY += 0.05999
-						MovementUtils.strafe(thePlayer, MovementUtils.getSpeed(thePlayer) * 1.08f)
+						thePlayer.strafe(thePlayer.speed * 1.08f)
 						boosted = true
 					}
 
@@ -156,7 +155,7 @@ class LongJump : Module()
 						thePlayer.motionY += 0.0132099999999999999999999999999
 						thePlayer.jumpMovementFactor = 0.08f
 
-						MovementUtils.strafe(thePlayer)
+						thePlayer.strafe()
 
 						boosted = true
 					}
@@ -165,7 +164,7 @@ class LongJump : Module()
 					{
 						if (thePlayer.fallDistance > 0.5f && canBoost && !boosted)
 						{
-							MovementUtils.forward(thePlayer, 3.0, MovementUtils.getDirectionDegrees(thePlayer))
+							thePlayer.forward(3.0, thePlayer.moveDirectionDegrees)
 							boosted = true
 							if (autoDisable) state = false
 						}
@@ -176,7 +175,7 @@ class LongJump : Module()
 						thePlayer.motionY += 0.0132099999999999999999999999999
 						thePlayer.jumpMovementFactor = 0.08f
 						boosted = true
-						MovementUtils.strafe(thePlayer)
+						thePlayer.strafe()
 					}
 
 					"mineplex2" ->
@@ -192,7 +191,7 @@ class LongJump : Module()
 						}
 
 						boosted = true
-						MovementUtils.strafe(thePlayer)
+						thePlayer.strafe()
 					}
 
 					"redesky" ->
@@ -206,7 +205,7 @@ class LongJump : Module()
 			}
 		}
 
-		if (autoJumpValue.get() && thePlayer.onGround && isMoving(thePlayer))
+		if (autoJumpValue.get() && thePlayer.onGround && thePlayer.isMoving)
 		{
 			jumped = true
 
@@ -235,11 +234,11 @@ class LongJump : Module()
 		{
 			val isTeleportMode = mode == "teleport"
 
-			if (isTeleportMode && isMoving(thePlayer) && canBoost)
+			if (isTeleportMode && thePlayer.isMoving && canBoost)
 			{
 				if (teleportTicks >= teleportAtTicksValue.get())
 				{
-					val dir = getDirection(thePlayer)
+					val dir = thePlayer.moveDirectionRadians
 					val teleportDistance = teleportDistanceValue.get()
 
 					val func = functions
@@ -255,10 +254,10 @@ class LongJump : Module()
 				teleportTicks++
 			}
 
-			if (!isMoving(thePlayer) && mode == "ncp")
+			if (!thePlayer.isMoving && mode == "ncp")
 			{
 				event.zeroXZ()
-				MovementUtils.zeroXZ(thePlayer)
+				thePlayer.zeroXZ()
 			}
 		}
 	}

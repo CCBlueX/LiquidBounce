@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.exploit.Phase
 import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -80,7 +81,7 @@ class Step : Module()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		val canStep = !mc.gameSettings.keyBindJump.isKeyDown && MovementUtils.isMoving(thePlayer)
+		val canStep = !mc.gameSettings.keyBindJump.isKeyDown && thePlayer.isMoving
 
 		// Motion steps
 		when (modeValue.get().toLowerCase())
@@ -91,7 +92,7 @@ class Step : Module()
 				thePlayer.motionY = jumpHeightValue.get().toDouble()
 			}
 
-			"aac3.2.0" -> if (thePlayer.isCollidedHorizontally && !MovementUtils.cantBoostUp(thePlayer) && canStep)
+			"aac3.2.0" -> if (thePlayer.isCollidedHorizontally && !thePlayer.cantBoostUp && canStep)
 			{
 				if (thePlayer.onGround && timer.hasTimePassed(delay) && couldStep(theWorld, thePlayer))
 				{
@@ -100,7 +101,7 @@ class Step : Module()
 					fakeJump(thePlayer)
 					thePlayer.motionY += 0.620000001490116
 
-					MovementUtils.boost(thePlayer, 0.2F)
+					thePlayer.boost(0.2F)
 					resetTimer()
 				}
 
@@ -112,7 +113,7 @@ class Step : Module()
 			{
 				if (thePlayer.onGround && couldStep(theWorld, thePlayer))
 				{
-					MovementUtils.multiply(thePlayer, 1.26)
+					thePlayer.multiply(1.26)
 					thePlayer.jump()
 					aac334step = true
 				}
@@ -138,7 +139,7 @@ class Step : Module()
 		val motionNCPBoost = motionNCPBoostValue.get()
 
 		// NCP Motion steps
-		if (mode.equals("MotionNCP", ignoreCase = true) && thePlayer.isCollidedHorizontally && !mc.gameSettings.keyBindJump.isKeyDown && MovementUtils.isMoving(thePlayer)) when
+		if (mode.equals("MotionNCP", ignoreCase = true) && thePlayer.isCollidedHorizontally && !mc.gameSettings.keyBindJump.isKeyDown && thePlayer.isMoving) when
 		{
 			thePlayer.onGround && couldStep(theWorld, thePlayer) ->
 			{
@@ -156,7 +157,7 @@ class Step : Module()
 
 			motionNCPNextStep == 2 ->
 			{
-				val yaw = MovementUtils.getDirection(thePlayer)
+				val yaw = thePlayer.moveDirectionRadians
 
 				event.y = 0.248135998590947 // Jump step 3 (0.248)
 
@@ -294,7 +295,7 @@ class Step : Module()
 				}
 			}
 
-			if (resetSpeedAfterStepConfirmValue.get()) MovementUtils.zeroXZ(thePlayer)
+			if (resetSpeedAfterStepConfirmValue.get()) thePlayer.zeroXZ()
 		}
 
 		isStep = false
@@ -320,7 +321,7 @@ class Step : Module()
 
 		motions.map { classProvider.createCPacketPlayerPosition(stepX, stepY + it, stepZ, false) }.forEach(networkManager::sendPacketWithoutEvent)
 
-		if (resetXZ) MovementUtils.zeroXZ(thePlayer)
+		if (resetXZ) thePlayer.zeroXZ()
 	}
 
 	private fun resetTimer()
@@ -352,7 +353,7 @@ class Step : Module()
 	{
 		val func = functions
 
-		val yaw = MovementUtils.getDirection(thePlayer)
+		val yaw = thePlayer.moveDirectionRadians
 		val x = -func.sin(yaw) * 0.4
 		val z = func.cos(yaw) * 0.4
 

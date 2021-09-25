@@ -8,7 +8,9 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.cantBoostUp
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.multiply
 
 class AAC3_5_0BHop : SpeedMode("AAC3.5.0-BHop") // Was AACHop3.5.0
 {
@@ -18,7 +20,7 @@ class AAC3_5_0BHop : SpeedMode("AAC3.5.0-BHop") // Was AACHop3.5.0
 
 		val thePlayer = mc.thePlayer ?: return
 
-		if (!MovementUtils.isMoving(thePlayer) || MovementUtils.cantBoostUp(thePlayer)) return
+		if (!thePlayer.isMoving || thePlayer.cantBoostUp) return
 
 		thePlayer.jumpMovementFactor += 0.00208f
 		if (thePlayer.fallDistance <= 1f)
@@ -27,11 +29,11 @@ class AAC3_5_0BHop : SpeedMode("AAC3.5.0-BHop") // Was AACHop3.5.0
 			{
 				jump(thePlayer)
 
-				MovementUtils.multiply(thePlayer, 1.0118f)
+				thePlayer.multiply(1.0118f)
 			}
 			else
 			{
-				MovementUtils.multiply(thePlayer, 1.00138f)
+				thePlayer.multiply(1.00138f)
 
 				thePlayer.motionY -= 0.0147f
 			}

@@ -8,18 +8,19 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.api.enums.WEnumHand
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.client.network.IINetHandlerPlayClient
+import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.InventoryUtils
-import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.createOpenInventoryPacket
 import net.ccbluex.liquidbounce.utils.createUseItemPacket
+import net.ccbluex.liquidbounce.utils.extensions.isEmpty
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.item.ArmorComparator
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
-import net.ccbluex.liquidbounce.utils.item.ItemUtils
 import net.ccbluex.liquidbounce.utils.timer.Cooldown
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerRangeValue
@@ -95,8 +96,8 @@ class AutoArmor : Module()
 				Triple(bestArmor[i] ?: return@mapNotNull null, armorSlot, ArmorPiece(inventory.armorItemInSlot(armorSlot), -1))
 			}.filter { (armorPiece, _, oldArmor) ->
 				val oldArmorStack = oldArmor.itemStack
-				ItemUtils.isStackEmpty(oldArmorStack) || !provider.isItemArmor(oldArmorStack?.item) || ARMOR_COMPARATOR.compare(oldArmor, armorPiece) < 0
-			}.any { (armorPiece, armorSlot, oldArmor) -> if (ItemUtils.isStackEmpty(oldArmor.itemStack)) move(thePlayer, netHandler, armorPiece.slot, false) else move(thePlayer, netHandler, 8 - armorSlot, true) })
+				oldArmorStack.isEmpty || !provider.isItemArmor(oldArmorStack?.item) || ARMOR_COMPARATOR.compare(oldArmor, armorPiece) < 0
+			}.any { (armorPiece, armorSlot, oldArmor) -> if (oldArmor.itemStack.isEmpty) move(thePlayer, netHandler, armorPiece.slot, false) else move(thePlayer, netHandler, 8 - armorSlot, true) })
 		{
 			locked = true
 			return
@@ -134,7 +135,7 @@ class AutoArmor : Module()
 			return true
 		}
 
-		if (!(noMoveValue.get() && isMoving(thePlayer)) && (!invOpenValue.get() || provider.isGuiInventory(screen)) && item != -1)
+		if (!(noMoveValue.get() && thePlayer.isMoving) && (!invOpenValue.get() || provider.isGuiInventory(screen)) && item != -1)
 		{
 			val openInventory = simulateInventory.get() && !provider.isGuiInventory(screen)
 
@@ -142,7 +143,7 @@ class AutoArmor : Module()
 
 			var full = isArmorSlot
 
-			if (full) full = thePlayer.inventory.mainInventory.none(ItemUtils::isStackEmpty)
+			if (full) full = thePlayer.inventory.mainInventory.none(IItemStack?::isEmpty)
 
 			if (full) controller.windowClick(thePlayer.inventoryContainer.windowId, item, 1, 4, thePlayer) else controller.windowClick(thePlayer.inventoryContainer.windowId, if (isArmorSlot) item else if (item < 9) item + 36 else item, 0, 1, thePlayer)
 

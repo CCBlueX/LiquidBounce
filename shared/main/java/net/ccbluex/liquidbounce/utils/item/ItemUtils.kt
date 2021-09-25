@@ -5,10 +5,8 @@
  */
 package net.ccbluex.liquidbounce.utils.item
 
-import net.ccbluex.liquidbounce.api.minecraft.enchantments.IEnchantment
 import net.ccbluex.liquidbounce.api.minecraft.item.IItem
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
-import net.ccbluex.liquidbounce.api.minecraft.nbt.INBTTagCompound
 import net.ccbluex.liquidbounce.utils.ClientUtils.logger
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import java.util.regex.Pattern
@@ -82,22 +80,6 @@ object ItemUtils : MinecraftInstance()
 			logger.error("Can't create the item with arguments \"${itemArguments.take(64)}\"", e)
 			null
 		}
-	}
-
-	@JvmStatic
-	fun getEnchantment(itemStack: IItemStack?, enchantment: IEnchantment): Int
-	{
-		val enchTagList = itemStack?.enchantmentTagList
-
-		return if (enchTagList == null || enchTagList.hasNoTags()) 0 else (0 until enchTagList.tagCount()).map(enchTagList::getCompoundTagAt).firstOrNull { it.hasKey("ench") && it.getShort("ench").toInt() == enchantment.effectId || it.hasKey("id") && it.getShort("id").toInt() == enchantment.effectId }?.let { tagCompound: INBTTagCompound -> tagCompound.getShort("lvl").toInt() } ?: 0
-	}
-
-	@JvmStatic
-	fun getEnchantmentCount(itemStack: IItemStack?): Int
-	{
-		val enchTagList = itemStack?.enchantmentTagList
-
-		return if (enchTagList == null || enchTagList.hasNoTags()) 0 else (0 until enchTagList.tagCount()).map(enchTagList::getCompoundTagAt).count { it.hasKey("ench") || it.hasKey("id") }
 	}
 
 	@JvmStatic

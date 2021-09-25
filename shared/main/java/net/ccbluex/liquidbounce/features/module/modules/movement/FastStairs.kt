@@ -12,8 +12,9 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.multiply
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
 
@@ -34,7 +35,7 @@ class FastStairs : Module()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		if (!MovementUtils.isMoving(thePlayer) || LiquidBounce.moduleManager[Speed::class.java].state) return
+		if (!thePlayer.isMoving || LiquidBounce.moduleManager[Speed::class.java].state) return
 
 		if (thePlayer.fallDistance > 0 && !walkingDown) walkingDown = true
 		else if (thePlayer.posY > thePlayer.prevChasingPosY) walkingDown = false
@@ -51,15 +52,13 @@ class FastStairs : Module()
 		{
 			thePlayer.setPosition(thePlayer.posX, thePlayer.posY + 0.5, thePlayer.posZ)
 
-			val motion = when (mode)
+			thePlayer.multiply(when (mode)
 			{
 				"ncp" -> 1.4
 				"aac3.1.0" -> 1.5
 				"aac3.3.13" -> 1.2
 				else -> 1.0
-			}
-
-			MovementUtils.multiply(thePlayer, motion)
+			})
 		}
 
 		if (provider.isBlockStairs(getBlock(theWorld, blockPos.down())))
@@ -75,16 +74,14 @@ class FastStairs : Module()
 				return
 			}
 
-			val motion = when (mode)
+			thePlayer.multiply(when (mode)
 			{
 				"ncp" -> 1.3
 				"aac3.1.0" -> 1.3
 				"aac3.3.6" -> 1.48
 				"aac3.3.13" -> 1.52
 				else -> 1.3
-			}
-
-			MovementUtils.multiply(thePlayer, motion)
+			})
 			canJump = true
 		}
 		else if (mode.startsWith("aac", ignoreCase = true) && canJump)
@@ -92,7 +89,7 @@ class FastStairs : Module()
 			if (longJumpValue.get())
 			{
 				thePlayer.jump()
-				MovementUtils.multiply(thePlayer, 1.35)
+				thePlayer.multiply(1.35)
 			}
 
 			canJump = false

@@ -2,7 +2,9 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.flies.minorACs
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.forward
+import net.ccbluex.liquidbounce.utils.extensions.strafe
+import net.ccbluex.liquidbounce.utils.extensions.zeroXZ
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 
 class MineSecureGlide : FlyMode("MineSecureGlide")
@@ -19,16 +21,16 @@ class MineSecureGlide : FlyMode("MineSecureGlide")
 
 		if (!gameSettings.keyBindSneak.isKeyDown) thePlayer.motionY = -0.01
 
-		MovementUtils.zeroXZ(thePlayer)
+		thePlayer.zeroXZ()
 
-		MovementUtils.strafe(thePlayer, Fly.baseSpeedValue.get())
+		thePlayer.strafe(Fly.baseSpeedValue.get())
 
 		if (mineSecureVClipTimer.hasTimePassed(150) && gameSettings.keyBindJump.isKeyDown)
 		{
 			networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY + 5, thePlayer.posZ, false))
 			networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(0.5, -1000.0, 0.5, false))
 
-			MovementUtils.forward(thePlayer, 0.4)
+			thePlayer.forward(0.4)
 
 			mineSecureVClipTimer.reset()
 		}

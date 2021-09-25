@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.client;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.Render2DEvent;
 import net.ccbluex.liquidbounce.utils.ClassUtils;
+import net.ccbluex.liquidbounce.utils.ClassUtilsKt;
 import net.minecraft.client.Minecraft;
 import net.minecraft.profiler.Profiler;
 
@@ -22,7 +23,7 @@ public class MixinProfiler
 	@Inject(method = "startSection", at = @At("HEAD"))
 	private void startSection(final String name, final CallbackInfo callbackInfo)
 	{
-		if ("bossHealth".equals(name) && ClassUtils.hasLabyMod())
+		if ("bossHealth".equals(name) && ClassUtilsKt.hasLabyMod())
 		{
 			Minecraft.getMinecraft().mcProfiler.startSection("LiquidBounce-Render2DEvent");
 			LiquidBounce.eventManager.callEvent(new Render2DEvent(0.0F), true);

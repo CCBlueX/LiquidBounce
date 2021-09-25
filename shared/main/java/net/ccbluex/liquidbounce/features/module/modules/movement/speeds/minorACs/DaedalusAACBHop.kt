@@ -3,9 +3,10 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.minorAC
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
-import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
-import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
+import net.ccbluex.liquidbounce.utils.extensions.cantBoostUp
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.strafe
+import net.ccbluex.liquidbounce.utils.extensions.zeroXZ
 
 /**
  * LiquidBounce Hacked Client A minecraft forge injection client using Mixin
@@ -19,17 +20,17 @@ class DaedalusAACBHop : SpeedMode("DaedalusAAC-BHop")
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (MovementUtils.cantBoostUp(thePlayer)) return
+		if (thePlayer.cantBoostUp) return
 
-		if (isMoving(thePlayer))
+		if (thePlayer.isMoving)
 		{
-			strafe(thePlayer, 0.3f)
+			thePlayer.strafe(0.3f)
 
 			if (thePlayer.onGround) jump(thePlayer)
 
-			strafe(thePlayer)
+			thePlayer.strafe()
 		}
-		else MovementUtils.zeroXZ(thePlayer)
+		else thePlayer.zeroXZ()
 	}
 
 	override fun onUpdate()

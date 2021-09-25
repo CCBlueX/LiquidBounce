@@ -43,7 +43,8 @@ import kotlin.math.min
 import kotlin.math.sqrt
 import kotlin.random.Random
 
-// TODO: Visually start-stop blocking like as Xave
+// TODO: Asynchronously start-stop blocking as Xave
+// TODO: BlockCPS option
 @ModuleInfo(name = "KillAura", description = "Automatically attacks targets around you.", category = ModuleCategory.COMBAT, defaultKeyBinds = [Keyboard.KEY_R])
 class KillAura : Module()
 {

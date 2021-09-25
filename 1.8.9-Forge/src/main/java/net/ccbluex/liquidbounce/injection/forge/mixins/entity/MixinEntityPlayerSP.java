@@ -20,6 +20,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.NoSwing;
 import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold;
 import net.ccbluex.liquidbounce.utils.MovementUtils;
 import net.ccbluex.liquidbounce.utils.RotationUtils;
+import net.ccbluex.liquidbounce.utils.extensions.MovementExtensionKt;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFence;
 import net.minecraft.block.BlockFenceGate;
@@ -111,6 +112,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 	@Shadow
 	private boolean serverSneakState;
 
+	@Override
 	@SuppressWarnings("AbstractMethodOverridesAbstractMethod")
 	@Shadow
 	public abstract boolean isSneaking();
@@ -155,7 +157,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 
 			final InventoryMove inventoryMove = (InventoryMove) LiquidBounce.moduleManager.get(InventoryMove.class);
 			final Sneak sneak = (Sneak) LiquidBounce.moduleManager.get(Sneak.class);
-			final boolean fakeSprint = inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get() || LiquidBounce.moduleManager.get(AntiHunger.class).getState() || sneak.getState() && (!MovementUtils.isMoving(thePlayer) || !sneak.stopMoveValue.get()) && "MineSecure".equalsIgnoreCase(sneak.modeValue.get());
+			final boolean fakeSprint = inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get() || LiquidBounce.moduleManager.get(AntiHunger.class).getState() || sneak.getState() && (!MovementExtensionKt.isMoving(thePlayer) || !sneak.stopMoveValue.get()) && "MineSecure".equalsIgnoreCase(sneak.modeValue.get());
 
 			final boolean sprinting = isSprinting() && !fakeSprint;
 
@@ -280,6 +282,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 	 * @author CCBlueX
 	 * @reason Sprint
 	 */
+	@Override
 	@Overwrite
 	public void onLivingUpdate()
 	{

@@ -6,7 +6,9 @@ import net.ccbluex.liquidbounce.event.StrafeEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.moveDirectionDegrees
+import net.ccbluex.liquidbounce.utils.extensions.zeroXZ
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import kotlin.math.hypot
@@ -31,9 +33,9 @@ class Strafe : Module()
 		val motionX = thePlayer.motionX * (1 - strength)
 		val motionZ = thePlayer.motionZ * (1 - strength)
 
-		if (!MovementUtils.isMoving(thePlayer))
+		if (!thePlayer.isMoving)
 		{
-			if (noMoveStopValue.get()) MovementUtils.zeroXZ(thePlayer)
+			if (noMoveStopValue.get()) thePlayer.zeroXZ()
 			return
 		}
 
@@ -41,7 +43,7 @@ class Strafe : Module()
 		{
 			val func = functions
 
-			val yaw = WMathHelper.toRadians(MovementUtils.getDirectionDegrees(thePlayer))
+			val yaw = WMathHelper.toRadians(thePlayer.moveDirectionDegrees)
 			thePlayer.motionX = -func.sin(yaw) * speed + motionX
 			thePlayer.motionZ = func.cos(yaw) * speed + motionZ
 		}

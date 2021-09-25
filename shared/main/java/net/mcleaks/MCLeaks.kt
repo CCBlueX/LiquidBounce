@@ -3,7 +3,7 @@ package net.mcleaks
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
-import net.ccbluex.liquidbounce.utils.WorkerUtils
+import net.ccbluex.liquidbounce.utils.AsyncUtils
 import java.io.BufferedReader
 import java.io.DataOutputStream
 import java.io.InputStreamReader
@@ -42,7 +42,7 @@ object MCLeaks
 	fun redeem(token: String, callback: (Any) -> Unit)
 	{
 		// Use LiquidBounce worker instead
-		WorkerUtils.workers.execute {
+		AsyncUtils.workers.execute {
 			val connection = preparePostRequest("{\"token\":\"$token\"}")
 			if (connection == null)
 			{

@@ -3,8 +3,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.minorAC
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
-import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.*
 
 /**
  * LiquidBounce Hacked Client A minecraft forge injection client using Mixin
@@ -18,19 +17,19 @@ class ACRBHop : SpeedMode("ACR-BHop")
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (MovementUtils.cantBoostUp(thePlayer)) return
+		if (thePlayer.cantBoostUp) return
 
-		if (isMoving(thePlayer))
+		if (thePlayer.isMoving)
 		{
 			thePlayer.jumpMovementFactor = 0.1F
 
-			MovementUtils.divide(thePlayer, 1.1)
+			thePlayer.divide(1.1)
 
 			if (thePlayer.onGround) jump(thePlayer)
 
-			MovementUtils.strafe(thePlayer)
+			thePlayer.strafe()
 		}
-		else MovementUtils.zeroXZ(thePlayer)
+		else thePlayer.zeroXZ()
 	}
 
 	override fun onUpdate()

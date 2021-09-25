@@ -8,7 +8,10 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.cantBoostUp
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.strafe
+import net.ccbluex.liquidbounce.utils.extensions.zeroXZ
 
 class AAC3_3_7FlagBHop : SpeedMode("AAC3.3.7-FlagBHop") // Was AAC4BHop
 {
@@ -18,9 +21,9 @@ class AAC3_3_7FlagBHop : SpeedMode("AAC3.3.7-FlagBHop") // Was AAC4BHop
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (MovementUtils.cantBoostUp(thePlayer)) return
+		if (thePlayer.cantBoostUp) return
 
-		if (MovementUtils.isMoving(thePlayer))
+		if (thePlayer.isMoving)
 		{
 			if (shouldLegitJump)
 			{
@@ -39,7 +42,7 @@ class AAC3_3_7FlagBHop : SpeedMode("AAC3.3.7-FlagBHop") // Was AAC4BHop
 			{
 				thePlayer.onGround = false
 
-				MovementUtils.strafe(thePlayer, 0.375f)
+				thePlayer.strafe(0.375f)
 
 				jump(thePlayer)
 
@@ -51,7 +54,7 @@ class AAC3_3_7FlagBHop : SpeedMode("AAC3.3.7-FlagBHop") // Was AAC4BHop
 		{
 			shouldLegitJump = true
 
-			MovementUtils.zeroXZ(thePlayer)
+			thePlayer.zeroXZ()
 		}
 	}
 

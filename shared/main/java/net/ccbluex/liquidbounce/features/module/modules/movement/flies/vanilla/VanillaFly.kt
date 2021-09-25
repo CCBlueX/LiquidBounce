@@ -2,7 +2,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.flies.vanilla
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.strafe
+import net.ccbluex.liquidbounce.utils.extensions.zeroXYZ
 
 class VanillaFly : FlyMode("Vanilla")
 {
@@ -19,12 +20,12 @@ class VanillaFly : FlyMode("Vanilla")
 
 		thePlayer.capabilities.isFlying = false
 
-		MovementUtils.zeroXYZ(thePlayer)
+		thePlayer.zeroXYZ()
 
 		if (gameSettings.keyBindJump.isKeyDown) thePlayer.motionY += speed
 		if (gameSettings.keyBindSneak.isKeyDown) thePlayer.motionY -= speed
 
-		MovementUtils.strafe(thePlayer, speed)
+		thePlayer.strafe(speed)
 
 		handleVanillaKickBypass(theWorld, thePlayer)
 	}

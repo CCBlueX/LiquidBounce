@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.*
 
 class SlowHop : SpeedMode("SlowHop")
 {
@@ -26,9 +26,9 @@ class SlowHop : SpeedMode("SlowHop")
 
 		val thePlayer = mc.thePlayer ?: return
 
-		if (MovementUtils.cantBoostUp(thePlayer)) return
+		if (thePlayer.cantBoostUp) return
 
-		if (MovementUtils.isMoving(thePlayer))
+		if (thePlayer.isMoving)
 		{
 			if (thePlayer.onGround)
 			{
@@ -36,13 +36,13 @@ class SlowHop : SpeedMode("SlowHop")
 
 				if (requiredLegitCount > 0) requiredLegitCount--
 			}
-			else if (requiredLegitCount <= 0) MovementUtils.strafe(thePlayer, MovementUtils.getSpeed(thePlayer) * Speed.slowHopMultiplierValue.get())
+			else if (requiredLegitCount <= 0) thePlayer.strafe(thePlayer.speed * Speed.slowHopMultiplierValue.get())
 		}
 		else
 		{
 			requiredLegitCount = 2
 
-			MovementUtils.zeroXZ(thePlayer)
+			thePlayer.zeroXZ()
 		}
 	}
 

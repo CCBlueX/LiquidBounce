@@ -8,7 +8,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spartan
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.cantBoostUp
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
 
 class SpartanYPort : SpeedMode("Spartan-YPort")
 {
@@ -20,9 +21,9 @@ class SpartanYPort : SpeedMode("Spartan-YPort")
 
 		val thePlayer = mc.thePlayer ?: return
 
-		if (MovementUtils.cantBoostUp(thePlayer)) return
+		if (thePlayer.cantBoostUp) return
 
-		if (MovementUtils.isMoving(thePlayer) && !thePlayer.movementInput.jump)
+		if (thePlayer.isMoving && !thePlayer.movementInput.jump)
 		{
 			if (thePlayer.onGround)
 			{

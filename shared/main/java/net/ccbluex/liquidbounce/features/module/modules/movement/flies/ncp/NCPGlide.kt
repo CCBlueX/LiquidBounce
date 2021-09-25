@@ -4,7 +4,8 @@ import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.DamageOnStart
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.multiply
+import net.ccbluex.liquidbounce.utils.extensions.strafe
 
 class NCPGlide : FlyMode("NCP")
 {
@@ -17,7 +18,7 @@ class NCPGlide : FlyMode("NCP")
 
 		if (!thePlayer.onGround) return
 
-		MovementUtils.multiply(thePlayer, 0.1)
+		thePlayer.multiply(0.1)
 
 		thePlayer.swingItem()
 	}
@@ -28,7 +29,7 @@ class NCPGlide : FlyMode("NCP")
 
 		thePlayer.motionY = (-Fly.ncpMotionValue.get()).toDouble()
 		if (mc.gameSettings.keyBindSneak.isKeyDown) thePlayer.motionY = -0.5
-		MovementUtils.strafe(thePlayer)
+		thePlayer.strafe()
 	}
 
 	override fun onPacket(event: PacketEvent)

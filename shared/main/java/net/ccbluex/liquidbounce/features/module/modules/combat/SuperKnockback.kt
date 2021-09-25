@@ -14,7 +14,8 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.boost
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.runAsyncDelayed
 import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.input.Keyboard
@@ -149,7 +150,7 @@ class SuperKnockback : Module()
 
 				val noMoveExploit = exploitNoMoveValue.get()
 
-				val movementInput = MovementUtils.isMoving(thePlayer)
+				val movementInput = thePlayer.isMoving
 				val positionChanged = thePlayer.posX - thePlayer.lastTickPosX + thePlayer.posZ - thePlayer.lastTickPosZ == 0.0
 
 				sprinting = thePlayer.sprinting
@@ -172,7 +173,7 @@ class SuperKnockback : Module()
 							{
 								if (!thePlayer.sprinting) thePlayer.sprinting = true
 
-								MovementUtils.boost(thePlayer, 1.0E-5F)
+								thePlayer.boost(1.0E-5F)
 							}
 
 							netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SPRINTING))

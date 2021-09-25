@@ -14,9 +14,9 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
+import net.ccbluex.liquidbounce.utils.extensions.multiply
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -68,14 +68,14 @@ class LiquidWalk : Module()
 				{
 					if (!thePlayer.sprinting)
 					{
-						MovementUtils.multiply(thePlayer, 0.99999)
+						thePlayer.multiply(0.99999)
 						thePlayer.motionY = 0.0
 
 						if (thePlayer.isCollidedHorizontally) thePlayer.motionY = ((posY - (posY - 1).toInt()).toInt() * 0.125)
 					}
 					else
 					{
-						MovementUtils.multiply(thePlayer, 0.99999)
+						thePlayer.multiply(0.99999)
 						thePlayer.motionY = 0.0
 
 						if (thePlayer.isCollidedHorizontally) thePlayer.motionY = ((posY - (posY - 1).toInt()).toInt() * 0.125)
@@ -100,12 +100,12 @@ class LiquidWalk : Module()
 				if (checkLiquid(provider, blockUp, waterOnly)) thePlayer.motionY = 0.1 else if (checkLiquid(provider, block, waterOnly)) thePlayer.motionY = 0.0
 
 				thePlayer.onGround = true
-				MovementUtils.multiply(thePlayer, 1.085)
+				thePlayer.multiply(1.085)
 			}
 
 			"aac3.3.11" -> if (isInLiquid)
 			{
-				MovementUtils.multiply(thePlayer, 1.17)
+				thePlayer.multiply(1.17)
 				if (thePlayer.isCollidedHorizontally) thePlayer.motionY = 0.24 else if (theWorld.getBlockState(WBlockPos(posX, posY + 1.0, posZ)).block != provider.getBlockEnum(BlockType.AIR)) thePlayer.motionY += 0.04
 			}
 

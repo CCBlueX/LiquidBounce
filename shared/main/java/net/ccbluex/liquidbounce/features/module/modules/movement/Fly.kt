@@ -36,8 +36,8 @@ import net.ccbluex.liquidbounce.features.module.modules.render.Bobbing
 import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.Tower
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.MovementUtils
-import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.zeroXYZ
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
@@ -324,7 +324,7 @@ object Fly : Module()
 
 		mode?.onDisable()
 
-		if (resetMotionOnDisable.get()) MovementUtils.zeroXYZ(thePlayer)
+		if (resetMotionOnDisable.get()) thePlayer.zeroXYZ()
 
 		thePlayer.capabilities.isFlying = false
 		mc.timer.timerSpeed = 1f
@@ -346,7 +346,7 @@ object Fly : Module()
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (LiquidBounce.moduleManager[Bobbing::class.java].state && visualBobValue.get() && isMoving(thePlayer)) thePlayer.cameraYaw = 0.1f
+		if (LiquidBounce.moduleManager[Bobbing::class.java].state && visualBobValue.get() && thePlayer.isMoving) thePlayer.cameraYaw = 0.1f
 
 		mode?.onMotion(event.eventState)
 	}

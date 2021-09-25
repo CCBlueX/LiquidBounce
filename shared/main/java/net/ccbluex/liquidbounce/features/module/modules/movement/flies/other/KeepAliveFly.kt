@@ -2,7 +2,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.flies.other
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.strafe
+import net.ccbluex.liquidbounce.utils.extensions.zeroXYZ
 
 class KeepAliveFly : FlyMode("KeepAlive")
 {
@@ -18,13 +19,13 @@ class KeepAliveFly : FlyMode("KeepAlive")
 
 		thePlayer.capabilities.isFlying = false
 
-		MovementUtils.zeroXYZ(thePlayer)
+		thePlayer.zeroXYZ()
 
 		val speed = Fly.baseSpeedValue.get()
 
 		if (gameSettings.keyBindJump.isKeyDown) thePlayer.motionY += speed
 		if (gameSettings.keyBindSneak.isKeyDown) thePlayer.motionY -= speed
 
-		MovementUtils.strafe(thePlayer, speed)
+		thePlayer.strafe(speed)
 	}
 }

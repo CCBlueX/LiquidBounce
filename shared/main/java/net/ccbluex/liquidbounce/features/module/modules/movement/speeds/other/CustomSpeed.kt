@@ -11,7 +11,10 @@ import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.cantBoostUp
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.strafe
+import net.ccbluex.liquidbounce.utils.extensions.zeroXZ
 
 class CustomSpeed : SpeedMode("Custom")
 {
@@ -21,9 +24,9 @@ class CustomSpeed : SpeedMode("Custom")
 
 		val thePlayer = mc.thePlayer ?: return
 
-		if (MovementUtils.cantBoostUp(thePlayer)) return
+		if (thePlayer.cantBoostUp) return
 
-		if (MovementUtils.isMoving(thePlayer))
+		if (thePlayer.isMoving)
 		{
 			mc.timer.timerSpeed = Speed.customTimerValue.get()
 			when
@@ -32,16 +35,16 @@ class CustomSpeed : SpeedMode("Custom")
 				{
 					val customY = Speed.customYValue.get()
 
-					MovementUtils.strafe(thePlayer, Speed.customSpeedValue.get())
+					thePlayer.strafe(Speed.customSpeedValue.get())
 					thePlayer.motionY = customY.toDouble()
 					LiquidBounce.eventManager.callEvent(JumpEvent(customY))
 				}
 
-				Speed.customStrafeValue.get() -> MovementUtils.strafe(thePlayer, Speed.customSpeedValue.get())
-				else -> MovementUtils.strafe(thePlayer)
+				Speed.customStrafeValue.get() -> thePlayer.strafe(Speed.customSpeedValue.get())
+				else -> thePlayer.strafe()
 			}
 		}
-		else MovementUtils.zeroXZ(thePlayer)
+		else thePlayer.zeroXZ()
 	}
 
 	override fun onEnable()

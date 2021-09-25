@@ -19,10 +19,8 @@ import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.Tower
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationIcon
 import net.ccbluex.liquidbounce.utils.ClientUtils
-import net.ccbluex.liquidbounce.utils.MovementUtils
-import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
-import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
+import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -132,7 +130,7 @@ class HighJump : Module()
 
 			"mineplex" -> mineplexHighJump(theWorld, thePlayer)
 
-			"oldmineplex" -> if (!onGround) strafe(thePlayer, 0.35f)
+			"oldmineplex" -> if (!onGround) thePlayer.strafe(0.35f)
 		}
 	}
 
@@ -144,7 +142,7 @@ class HighJump : Module()
 
 		val func = functions
 
-		val dir = MovementUtils.getDirection(thePlayer)
+		val dir = thePlayer.moveDirectionRadians
 		val nextX = thePlayer.posX - func.sin(dir) * 0.45f
 		val nextZ = thePlayer.posZ + func.cos(dir) * 0.45f
 
@@ -152,9 +150,9 @@ class HighJump : Module()
 
 		if (jumped) if (!thePlayer.onGround)
 		{
-			if (!isMoving(thePlayer)) strafe(thePlayer, 0.05f)
+			if (!thePlayer.isMoving) thePlayer.strafe(0.05f)
 
-			strafe(thePlayer, (0.55f - mineplexStage / 650.0f).coerceAtLeast(MovementUtils.getSpeed(thePlayer)))
+			thePlayer.strafe((0.55f - mineplexStage / 650.0f).coerceAtLeast(thePlayer.speed))
 			mineplexStage++
 		}
 
@@ -176,7 +174,7 @@ class HighJump : Module()
 
 	override fun onDisable()
 	{
-		strafe(mc.thePlayer ?: return, 0.2f)
+		(mc.thePlayer ?: return).strafe(0.2f)
 		mc.timer.timerSpeed = 1.0f
 	}
 
@@ -220,7 +218,7 @@ class HighJump : Module()
 
 			state = false
 
-			MovementUtils.zeroXZ(thePlayer)
+			thePlayer.zeroXZ()
 			thePlayer.jumpMovementFactor = 0.02F
 
 			LiquidBounce.hud.addNotification(NotificationIcon.WARNING_RED, "Mineplex HighJump", "A teleport has been detected. Disabled HighJump to prevent kick.", 1000L)

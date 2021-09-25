@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.runAsync
 import net.ccbluex.liquidbounce.value.BoolValue
 
@@ -30,7 +30,7 @@ class Zoot : Module()
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (noMoveValue.get() && MovementUtils.isMoving(thePlayer)) return
+		if (noMoveValue.get() && thePlayer.isMoving) return
 
 		val onGround = thePlayer.onGround
 

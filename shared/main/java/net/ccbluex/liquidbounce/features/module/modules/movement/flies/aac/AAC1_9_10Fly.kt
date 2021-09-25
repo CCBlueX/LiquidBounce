@@ -2,7 +2,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.flies.aac
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.strafe
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 
 class AAC1_9_10Fly : FlyMode("AAC1.9.10")
@@ -31,10 +31,10 @@ class AAC1_9_10Fly : FlyMode("AAC1.9.10")
 		{
 			mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayer(true))
 			thePlayer.motionY = 0.8
-			MovementUtils.strafe(thePlayer, Fly.aacSpeedValue.get())
+			thePlayer.strafe(Fly.aacSpeedValue.get())
 		}
 
-		MovementUtils.strafe(thePlayer)
+		thePlayer.strafe()
 	}
 
 	override fun onRender3D(partialTicks: Float)

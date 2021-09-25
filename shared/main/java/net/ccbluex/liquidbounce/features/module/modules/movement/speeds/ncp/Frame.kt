@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
 
 class Frame : SpeedMode("Frame")
@@ -23,9 +23,9 @@ class Frame : SpeedMode("Frame")
 
 		val thePlayer = mc.thePlayer ?: return
 
-		if (MovementUtils.cantBoostUp(thePlayer)) return
+		if (thePlayer.cantBoostUp) return
 
-		if (MovementUtils.isMoving(thePlayer))
+		if (thePlayer.isMoving)
 		{
 			val speed = 4.25
 
@@ -39,7 +39,7 @@ class Frame : SpeedMode("Frame")
 
 					if (move)
 					{
-						MovementUtils.zeroXZ(thePlayer)
+						thePlayer.zeroXZ()
 						move = false
 					}
 
@@ -49,12 +49,12 @@ class Frame : SpeedMode("Frame")
 			}
 			else if (!move && motionTicks == 1 && tickTimer.hasTimePassed(5))
 			{
-				MovementUtils.multiply(thePlayer, speed)
+				thePlayer.multiply(speed)
 
 				move = true
 			}
 
-			if (!thePlayer.onGround) MovementUtils.strafe(thePlayer)
+			if (!thePlayer.onGround) thePlayer.strafe()
 
 			tickTimer.update()
 		}

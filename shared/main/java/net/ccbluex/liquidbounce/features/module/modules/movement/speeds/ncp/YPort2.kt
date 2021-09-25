@@ -8,7 +8,9 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.cantBoostUp
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.strafe
 
 class YPort2 : SpeedMode("YPort2")
 {
@@ -18,11 +20,11 @@ class YPort2 : SpeedMode("YPort2")
 
 		val thePlayer = mc.thePlayer ?: return
 
-		if (!MovementUtils.isMoving(thePlayer) || MovementUtils.cantBoostUp(thePlayer)) return
+		if (!thePlayer.isMoving || thePlayer.cantBoostUp) return
 
 		if (thePlayer.onGround) jump(thePlayer) else thePlayer.motionY = -1.0
 
-		MovementUtils.strafe(thePlayer)
+		thePlayer.strafe()
 	}
 
 	override fun onUpdate()

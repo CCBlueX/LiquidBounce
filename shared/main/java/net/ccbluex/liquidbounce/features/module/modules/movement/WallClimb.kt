@@ -9,8 +9,8 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlockIntersects
+import net.ccbluex.liquidbounce.utils.extensions.moveDirectionRadians
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 
@@ -112,7 +112,7 @@ class WallClimb : Module()
 
 				val func = functions
 
-				val dir = MovementUtils.getDirection(thePlayer)
+				val dir = thePlayer.moveDirectionRadians
 				packetPlayer.x = packetPlayer.x - func.sin(dir) * 0.00000001
 				packetPlayer.z = packetPlayer.z + func.cos(dir) * 0.00000001
 

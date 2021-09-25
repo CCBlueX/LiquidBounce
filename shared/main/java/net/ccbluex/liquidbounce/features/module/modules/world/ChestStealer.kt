@@ -18,7 +18,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.player.InventoryCleaner
-import net.ccbluex.liquidbounce.utils.item.ItemUtils
+import net.ccbluex.liquidbounce.utils.extensions.isEmpty
 import net.ccbluex.liquidbounce.utils.timer.Cooldown
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
@@ -268,12 +268,7 @@ class ChestStealer : Module()
 		if (classProvider.isSPacketWindowItems(packet)) contentReceived = packet.asSPacketWindowItems().windowId
 	}
 
-	private fun shouldTake(thePlayer: IEntityPlayer, stack: IItemStack?, slot: Int, inventoryCleaner: InventoryCleaner, end: Int, container: IContainer, itemDelay: Long): Boolean
-	{
-		val currentTime = System.currentTimeMillis()
-
-		return stack != null && (!onlyItemsValue.get() || !classProvider.isItemBlock(stack.item)) && (currentTime - stack.itemDelay >= itemDelay && (!inventoryCleaner.state || inventoryCleaner.isUseful(thePlayer, slot, stack, end = end, container = container) && inventoryCleaner.isUseful(thePlayer, -1, stack, container = thePlayer.inventoryContainer) /* 상자 안에서 가장 좋은 템이랑 인벤 안의 가장 좋은 템이랑 비교한 후, 상자 안의 것이 더 좋을 경우에만 가져가기 */))
-	}
+	private fun shouldTake(thePlayer: IEntityPlayer, stack: IItemStack?, slot: Int, inventoryCleaner: InventoryCleaner, end: Int, container: IContainer, itemDelay: Long): Boolean = stack != null && (!onlyItemsValue.get() || !classProvider.isItemBlock(stack.item)) && (System.currentTimeMillis() - stack.itemDelay >= itemDelay && (!inventoryCleaner.state || inventoryCleaner.isUseful(thePlayer, slot, stack, end = end, container = container) && inventoryCleaner.isUseful(thePlayer, -1, stack, container = thePlayer.inventoryContainer) /* 상자 안에서 가장 좋은 템이랑 인벤 안의 가장 좋은 템이랑 비교한 후, 상자 안의 것이 더 좋을 경우에만 가져가기 */))
 
 	private fun move(screen: IGuiChest, slot: ISlot, misclick: Boolean)
 	{
@@ -295,14 +290,14 @@ class ChestStealer : Module()
 	private fun firstEmpty(slots: List<ISlot>?, length: Int, random: Boolean): ISlot?
 	{
 		slots ?: return null
-		val emptySlots = (0 until length).map { slots[it] }.filter { it.stack == null }.toMutableList()
+		val emptySlots = (0 until length).map { slots[it] }.filter { it.stack == null }
 
 		if (emptySlots.isEmpty()) return null
 
 		return if (random) emptySlots[Random.nextInt(emptySlots.size)] else emptySlots.first()
 	}
 
-	private fun getFullInventory(thePlayer: IEntityPlayer): Boolean = thePlayer.inventory.mainInventory.none(ItemUtils::isStackEmpty)
+	private fun getFullInventory(thePlayer: IEntityPlayer): Boolean = thePlayer.inventory.mainInventory.none(IItemStack?::isEmpty)
 
 	override val tag: String
 		get() = "${delayValue.getMin()} ~ ${delayValue.getMax()}"

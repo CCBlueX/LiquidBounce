@@ -1,7 +1,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.flies.other
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.multiply
 
 class Jetpack : FlyMode("Jetpack")
 {
@@ -15,7 +15,7 @@ class Jetpack : FlyMode("Jetpack")
 		if (mc.gameSettings.keyBindJump.isKeyDown)
 		{
 			thePlayer.motionY += 0.15
-			MovementUtils.multiply(thePlayer, 1.1)
+			thePlayer.multiply(1.1)
 		}
 	}
 }

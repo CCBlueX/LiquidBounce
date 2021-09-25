@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.runAsync
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -54,7 +54,7 @@ class Regen : Module()
 
 				"spartan" ->
 				{
-					if (MovementUtils.isMoving(thePlayer) || !onGround) return
+					if (thePlayer.isMoving || !onGround) return
 
 					runAsync { repeat(9) { netHandler.addToSendQueue(provider.createCPacketPlayer(onGround)) } }
 

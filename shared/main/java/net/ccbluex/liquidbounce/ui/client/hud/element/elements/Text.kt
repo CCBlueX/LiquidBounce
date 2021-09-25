@@ -12,10 +12,11 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.CPSCounter
-import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.PacketCounter
 import net.ccbluex.liquidbounce.utils.ServerUtils
 import net.ccbluex.liquidbounce.utils.extensions.getPing
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.moveDirectionDegrees
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_2
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
@@ -193,8 +194,8 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 				"facingadv" -> return StringUtils.getHorizontalFacingAdv(thePlayer.rotationYaw)
 				"facingvector" -> return StringUtils.getHorizontalFacingTowards(thePlayer.rotationYaw)
 
-				"movingdir" -> return if (MovementUtils.isMoving(thePlayer)) StringUtils.getHorizontalFacing(MovementUtils.getDirectionDegrees(thePlayer)) else "NONE"
-				"movingdirvector" -> return if (MovementUtils.isMoving(thePlayer)) StringUtils.getHorizontalFacingTowards(MovementUtils.getDirectionDegrees(thePlayer)) else "NONE"
+				"movingdir" -> return if (thePlayer.isMoving) StringUtils.getHorizontalFacing(thePlayer.moveDirectionDegrees) else "NONE"
+				"movingdirvector" -> return if (thePlayer.isMoving) StringUtils.getHorizontalFacingTowards(thePlayer.moveDirectionDegrees) else "NONE"
 
 				"jumpmovementfactor" -> return StringUtils.DECIMALFORMAT_6.format(thePlayer.jumpMovementFactor)
 				"speedinair" -> return StringUtils.DECIMALFORMAT_6.format(thePlayer.speedInAir)

@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.boost
 
 abstract class SpeedMode(val modeName: String) : MinecraftInstance()
 {
@@ -34,6 +34,6 @@ abstract class SpeedMode(val modeName: String) : MinecraftInstance()
 		thePlayer.jump() // Jump without sprint-jump boost
 
 		// Apply the sprint-jump boost manually to prevent double-boost
-		MovementUtils.boost(thePlayer, 0.2f)
+		thePlayer.boost(0.2f)
 	}
 }

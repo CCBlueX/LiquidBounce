@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.ui.client.altmanager.sub.altgenerator.GuiTheAlte
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils.logger
 import net.ccbluex.liquidbounce.utils.ServerUtils.connectToLastServer
-import net.ccbluex.liquidbounce.utils.WorkerUtils.workers
 import net.ccbluex.liquidbounce.utils.login.LoginUtils.LoginResult
 import net.ccbluex.liquidbounce.utils.login.LoginUtils.login
 import net.ccbluex.liquidbounce.utils.login.LoginUtils.loginCracked

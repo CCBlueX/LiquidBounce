@@ -33,9 +33,7 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.canBeClicked
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.isReplaceable
 import net.ccbluex.liquidbounce.utils.block.PlaceInfo
-import net.ccbluex.liquidbounce.utils.extensions.equalTo
-import net.ccbluex.liquidbounce.utils.extensions.serialize
-import net.ccbluex.liquidbounce.utils.extensions.withParentheses
+import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.*
@@ -295,7 +293,7 @@ class Scaffold : Module()
 		{
 			if (modeValue.get().equals("Rewinside", ignoreCase = true))
 			{
-				MovementUtils.strafe(thePlayer, 0.2F)
+				thePlayer.strafe(0.2F)
 				thePlayer.motionY = 0.0
 			}
 
@@ -443,7 +441,7 @@ class Scaffold : Module()
 			// Teleport Zitter
 			if (movementZitterEnabledValue.get() && movementZitterModeValue.get().equals("Teleport", true))
 			{
-				MovementUtils.strafe(thePlayer, movementZitterSpeedValue.get())
+				thePlayer.strafe(movementZitterSpeedValue.get())
 
 				val func = functions
 
@@ -711,7 +709,7 @@ class Scaffold : Module()
 		val ySearch = rotationSearchYSearchValue.get() || clutching || flagged
 		if (expand)
 		{
-			val hFacing = func.getHorizontalFacing(MovementUtils.getDirectionDegrees(thePlayer))
+			val hFacing = func.getHorizontalFacing(thePlayer.moveDirectionDegrees)
 
 			repeat(expandLengthValue.get()) { i ->
 				if (search(theWorld, thePlayer, searchPosition.add(when (hFacing)
@@ -1021,7 +1019,7 @@ class Scaffold : Module()
 
 		run searchLoop@{
 			repeat(if (modeValue.get().equals("Expand", true)) expandLengthValue.get() + 1 else 2) {
-				val horizontalFacing = functions.getHorizontalFacing(MovementUtils.getDirectionDegrees(thePlayer))
+				val horizontalFacing = functions.getHorizontalFacing(thePlayer.moveDirectionDegrees)
 				val blockPos = WBlockPos(thePlayer.posX + when (horizontalFacing)
 				{
 					provider.getEnumFacing(EnumFacingType.WEST) -> -it.toDouble()

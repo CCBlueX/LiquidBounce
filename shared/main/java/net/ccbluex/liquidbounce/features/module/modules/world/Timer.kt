@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.event.WorldEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 
@@ -33,7 +33,7 @@ class Timer : Module()
 		val thePlayer = mc.thePlayer ?: return
 		val timer = mc.timer
 
-		if (MovementUtils.isMoving(thePlayer) || !onMoveValue.get())
+		if (thePlayer.isMoving || !onMoveValue.get())
 		{
 			timer.timerSpeed = speedValue.get()
 			return

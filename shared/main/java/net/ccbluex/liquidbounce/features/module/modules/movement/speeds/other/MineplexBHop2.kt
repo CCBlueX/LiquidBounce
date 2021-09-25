@@ -4,9 +4,9 @@ import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
-import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
-import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
+import net.ccbluex.liquidbounce.utils.extensions.cantBoostUp
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.strafe
 import kotlin.math.round
 
 /**
@@ -29,9 +29,9 @@ class MineplexBHop2 : SpeedMode("Mineplex-BHop2")
 		val thePlayer = mc.thePlayer ?: return
 		val timer = mc.timer
 
-		if (MovementUtils.cantBoostUp(thePlayer)) return
+		if (thePlayer.cantBoostUp) return
 
-		val move = isMoving(thePlayer)
+		val move = thePlayer.isMoving
 
 		var moveSpeed = 0.15f
 
@@ -57,7 +57,7 @@ class MineplexBHop2 : SpeedMode("Mineplex-BHop2")
 			stage++
 		}
 
-		strafe(thePlayer, moveSpeed)
+		thePlayer.strafe(moveSpeed)
 	}
 
 	override fun onMove(event: MoveEvent)

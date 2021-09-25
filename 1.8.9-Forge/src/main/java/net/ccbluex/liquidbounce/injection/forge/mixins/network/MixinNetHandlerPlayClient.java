@@ -21,7 +21,7 @@ import net.ccbluex.liquidbounce.injection.backend.EntityImplKt;
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationIcon;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.RotationUtils;
-import net.ccbluex.liquidbounce.utils.WorkerUtils;
+import net.ccbluex.liquidbounce.utils.AsyncUtils;
 import net.minecraft.client.ClientBrandRetriever;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -299,7 +299,7 @@ public abstract class MixinNetHandlerPlayClient
 		final boolean alerts = hud.getNotificationAlertsValue().get();
 
 		if (alerts)
-			WorkerUtils.getWorkers().execute(() ->
+			AsyncUtils.getWorkers().execute(() ->
 			{
 				if (isHackerChat(text))
 					LiquidBounce.hud.addNotification(NotificationIcon.WARNING_YELLOW, "Chat", "Someone called you a hacker.", 2000L);

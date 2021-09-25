@@ -11,8 +11,8 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.value.BoolValue
 
 @ModuleInfo(name = "Sprint", description = "Automatically sprints all the time.", category = ModuleCategory.MOVEMENT)
@@ -37,7 +37,7 @@ class Sprint : Module()
 		val foodCheck = foodValue.get() && thePlayer.foodStats.foodLevel <= 6.0f && !thePlayer.capabilities.allowFlying
 		val serversideCheck = checkServerSide.get() && (thePlayer.onGround || !checkServerSideGround.get()) && !allDirectionsValue.get() && RotationUtils.getRotationDifference(RotationUtils.clientRotation) > 30
 
-		if (!isMoving(thePlayer) || thePlayer.sneaking || blindCheck || foodCheck || serversideCheck)
+		if (!thePlayer.isMoving || thePlayer.sneaking || blindCheck || foodCheck || serversideCheck)
 		{
 			thePlayer.sprinting = false
 			return

@@ -4,7 +4,8 @@ import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.DamageOnStart
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.strafe
+import net.ccbluex.liquidbounce.utils.extensions.zeroXYZ
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 
 class MushMCFly : FlyMode("MushMC")
@@ -56,9 +57,9 @@ class MushMCFly : FlyMode("MushMC")
 		val y = thePlayer.posY
 		val z = thePlayer.posZ
 
-		MovementUtils.zeroXYZ(thePlayer)
+		thePlayer.zeroXYZ()
 
-		if (mc.gameSettings.keyBindForward.isKeyDown) MovementUtils.strafe(thePlayer, Fly.mushMCSpeedValue.get())
+		if (mc.gameSettings.keyBindForward.isKeyDown) thePlayer.strafe(Fly.mushMCSpeedValue.get())
 		if (Fly.mushMCBoostDelay.get() != 0 && mushTimer.hasTimePassed((Fly.mushMCBoostDelay.get() * 300).toLong()))
 		{
 			repeat(3) {

@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
 
 @ModuleInfo(name = "PotionSaver", description = "Freezes all potion effects while you are standing still.", category = ModuleCategory.PLAYER, supportedVersions = [MinecraftVersion.MC_1_8])
 class PotionSaver : Module()
@@ -26,6 +26,6 @@ class PotionSaver : Module()
 
 		val isMovePacket = provider.isCPacketPlayer(packet) && !provider.isCPacketPlayerPosition(packet) && !provider.isCPacketPlayerPosLook(packet) && !provider.isCPacketPlayerPosLook(packet)
 
-		if (!MovementUtils.isMoving(thePlayer) && isMovePacket && !thePlayer.isUsingItem) e.cancelEvent()
+		if (!thePlayer.isMoving && isMovePacket && !thePlayer.isUsingItem) e.cancelEvent()
 	}
 }

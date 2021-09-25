@@ -8,7 +8,7 @@ import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.item.ItemUtils.getEnchantment
+import net.ccbluex.liquidbounce.utils.extensions.getEnchantmentLevel
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerRangeValue
@@ -128,7 +128,7 @@ class AutoEnchant : Module()
 			if (blacklist != null && blacklist.contains(i) || itemStack == null || itemStack.item == null) continue
 			if (classProvider.isItemSword(itemStack.item) || classProvider.isItemTool(itemStack.item)) for (attributeModifier in itemStack.getAttributeModifier("generic.attackDamage"))
 			{
-				val damage = attributeModifier.amount + 1.25 * getEnchantment(itemStack, classProvider.getEnchantmentEnum(EnchantmentType.SHARPNESS))
+				val damage = attributeModifier.amount + 1.25 * itemStack.getEnchantmentLevel(classProvider.getEnchantmentEnum(EnchantmentType.SHARPNESS))
 				if (damage > bestDamage)
 				{
 					bestDamage = damage

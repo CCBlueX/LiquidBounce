@@ -7,7 +7,9 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.DamageOnStart
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationIcon
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.moveDirectionRadians
+import net.ccbluex.liquidbounce.utils.extensions.speedEffectAmplifier
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
 import kotlin.math.hypot
@@ -182,7 +184,7 @@ class HypixelFly : FlyMode("Hypixel")
 
 		if (!canPerformHypixelDamageFly || !hypixelFlyStarted) return
 
-		if (!MovementUtils.isMoving(thePlayer))
+		if (!thePlayer.isMoving)
 		{
 			event.x = 0.0
 			event.z = 0.0
@@ -196,7 +198,7 @@ class HypixelFly : FlyMode("Hypixel")
 		if (hypixelDamageBoostFailed) return
 
 		val step1Speed = if (thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.MOVE_SPEED))) 1.56 else 2.034
-		val speedEffectAffect = 1 + 0.2 * MovementUtils.getSpeedEffectAmplifier(thePlayer)
+		val speedEffectAffect = 1 + 0.2 * thePlayer.speedEffectAmplifier
 		val baseSpeed = 0.29 * speedEffectAffect
 
 		when (hypixelBoostStep)
@@ -224,7 +226,7 @@ class HypixelFly : FlyMode("Hypixel")
 
 		hypixelBoostSpeed = max(hypixelBoostSpeed, 0.3)
 
-		val dir = MovementUtils.getDirection(thePlayer)
+		val dir = thePlayer.moveDirectionRadians
 
 		event.x = -functions.sin(dir) * hypixelBoostSpeed
 		event.z = functions.cos(dir) * hypixelBoostSpeed

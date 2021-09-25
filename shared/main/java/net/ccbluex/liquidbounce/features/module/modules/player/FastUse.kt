@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.WorkerUtils
+import net.ccbluex.liquidbounce.utils.AsyncUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.*
 import kotlin.math.ceil
@@ -100,7 +100,7 @@ class FastUse : Module()
 
 		if (provider.isItemFood(itemInUse) || provider.isItemBucketMilk(itemInUse) || provider.isItemPotion(itemInUse))
 		{
-			val workers = WorkerUtils.workers
+			val workers = AsyncUtils.workers
 
 			val netHandler = mc.netHandler
 			val onGround = thePlayer.onGround

@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
 import net.ccbluex.liquidbounce.utils.CPSCounter
 import net.ccbluex.liquidbounce.utils.ClientUtils
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.strafe
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 
 class MineplexFly : FlyMode("Mineplex")
@@ -53,7 +53,7 @@ class MineplexFly : FlyMode("Mineplex")
 
 			mc.playerController.onPlayerRightClick(thePlayer, theWorld, null, blockPos, classProvider.getEnumFacing(EnumFacingType.UP), WVec3(vec.xCoord * 0.4f, vec.yCoord * 0.4f, vec.zCoord * 0.4f))
 
-			MovementUtils.strafe(thePlayer, 0.27f)
+			thePlayer.strafe(0.27f)
 
 			timer.timerSpeed = 1 + Fly.mineplexSpeedValue.get()
 		}

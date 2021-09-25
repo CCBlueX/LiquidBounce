@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.HUD;
 import net.ccbluex.liquidbounce.features.module.modules.render.NoScoreboard;
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer;
 import net.ccbluex.liquidbounce.utils.ClassUtils;
+import net.ccbluex.liquidbounce.utils.ClassUtilsKt;
 import net.ccbluex.liquidbounce.utils.InventoryUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -107,7 +108,7 @@ public abstract class MixinGuiIngame
 	@Inject(method = "renderTooltip", at = @At("RETURN"))
 	private void renderTooltipPost(final ScaledResolution sr, final float partialTicks, final CallbackInfo callbackInfo)
 	{
-		if (!ClassUtils.hasLabyMod())
+		if (!ClassUtilsKt.hasLabyMod())
 		{
 			mc.mcProfiler.startSection("LiquidBounce-Render2DEvent");
 			LiquidBounce.eventManager.callEvent(new Render2DEvent(partialTicks), true);

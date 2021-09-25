@@ -10,7 +10,10 @@ import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.boost
+import net.ccbluex.liquidbounce.utils.extensions.cantBoostUp
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.strafe
 
 class NCPYPort : SpeedMode("NCPYPort")
 {
@@ -22,13 +25,13 @@ class NCPYPort : SpeedMode("NCPYPort")
 
 		val thePlayer = mc.thePlayer ?: return
 
-		if (!MovementUtils.isMoving(thePlayer) || MovementUtils.cantBoostUp(thePlayer) || thePlayer.isInWater) return
+		if (!thePlayer.isMoving || thePlayer.cantBoostUp || thePlayer.isInWater) return
 
 		if (jumps >= 4 && thePlayer.onGround) jumps = 0
 
 		if (thePlayer.onGround)
 		{
-			MovementUtils.boost(thePlayer, 0.2f)
+			thePlayer.boost(0.2f)
 
 			val jumpMotion = if (jumps <= 1) 0.42f else 0.4f
 			thePlayer.motionY = jumpMotion.toDouble()
@@ -38,7 +41,7 @@ class NCPYPort : SpeedMode("NCPYPort")
 		}
 		else if (jumps <= 1) thePlayer.motionY = -5.0
 
-		MovementUtils.strafe(thePlayer)
+		thePlayer.strafe()
 	}
 
 	override fun onUpdate()

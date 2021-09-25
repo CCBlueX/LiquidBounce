@@ -3,7 +3,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.minorAC
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.*
 
 /**
  * LiquidBounce Hacked Client A minecraft forge injection client using Mixin
@@ -17,11 +17,11 @@ class PACBHop : SpeedMode("PAC-BHop")
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (MovementUtils.cantBoostUp(thePlayer)) return
+		if (thePlayer.cantBoostUp) return
 
-		if (MovementUtils.isMoving(thePlayer))
+		if (thePlayer.isMoving)
 		{
-			val moveSpeed = when (MovementUtils.getSpeedEffectAmplifier(thePlayer))
+			val moveSpeed = when (thePlayer.speedEffectAmplifier)
 			{
 				1 -> 0.40F // 0.31 +6 +6 +
 				2 -> 0.48F // 0.37 - previous value
@@ -32,13 +32,13 @@ class PACBHop : SpeedMode("PAC-BHop")
 				else -> 0.33F
 			}
 
-			MovementUtils.strafe(thePlayer, moveSpeed)
+			thePlayer.strafe(moveSpeed)
 
 			if (thePlayer.onGround) jump(thePlayer)
 
-			MovementUtils.strafe(thePlayer)
+			thePlayer.strafe()
 		}
-		else MovementUtils.zeroXZ(thePlayer)
+		else thePlayer.zeroXZ()
 	}
 
 	override fun onUpdate()

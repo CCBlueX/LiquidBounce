@@ -4,7 +4,9 @@ import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.forward
+import net.ccbluex.liquidbounce.utils.extensions.strafe
+import net.ccbluex.liquidbounce.utils.extensions.zeroXZ
 
 class RedeSkyGlide : FlyMode("RedeSky-Glide")
 {
@@ -25,9 +27,9 @@ class RedeSkyGlide : FlyMode("RedeSky-Glide")
 		redeskyPacketVClip(thePlayer, 10.0)
 
 		redeskyVClip(thePlayer, -0.5f)
-		MovementUtils.forward(thePlayer, 2.0)
+		thePlayer.forward(2.0)
 
-		MovementUtils.strafe(thePlayer, 1F)
+		thePlayer.strafe(1F)
 
 		thePlayer.motionY = -0.01
 	}
@@ -36,7 +38,7 @@ class RedeSkyGlide : FlyMode("RedeSky-Glide")
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		MovementUtils.zeroXZ(thePlayer)
+		thePlayer.zeroXZ()
 		redeskyPacketHClip(thePlayer, 0.0)
 	}
 

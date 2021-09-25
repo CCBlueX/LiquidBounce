@@ -20,7 +20,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.TpAura
 import net.ccbluex.liquidbounce.injection.backend.Backend
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -69,7 +69,7 @@ class NoSlow : Module()
 
 		val provider = classProvider
 
-		if (!provider.isItemSword(heldItem.item) || !MovementUtils.isMoving(thePlayer)) return
+		if (!provider.isItemSword(heldItem.item) || !thePlayer.isMoving) return
 
 		val moduleManager = LiquidBounce.moduleManager
 

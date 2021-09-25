@@ -14,7 +14,8 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.CPSCounter
 import net.ccbluex.liquidbounce.utils.ClientUtils
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.strafe
 
 class MineplexGround : SpeedMode("Mineplex-Ground")
 {
@@ -28,7 +29,7 @@ class MineplexGround : SpeedMode("Mineplex-Ground")
 		val thePlayer = mc.thePlayer ?: return
 
 		val inventory = thePlayer.inventory
-		if (!MovementUtils.isMoving(thePlayer) || !thePlayer.onGround || inventory.getCurrentItemInHand() == null || thePlayer.isUsingItem) return
+		if (!thePlayer.isMoving || !thePlayer.onGround || inventory.getCurrentItemInHand() == null || thePlayer.isUsingItem) return
 
 		spoofSlot = false
 
@@ -43,7 +44,7 @@ class MineplexGround : SpeedMode("Mineplex-Ground")
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		if (!MovementUtils.isMoving(thePlayer) || !thePlayer.onGround || thePlayer.isUsingItem)
+		if (!thePlayer.isMoving || !thePlayer.onGround || thePlayer.isUsingItem)
 		{
 			moveSpeed = 0f
 			return
@@ -70,7 +71,7 @@ class MineplexGround : SpeedMode("Mineplex-Ground")
 		if (targetSpeed > moveSpeed) moveSpeed += targetSpeed * 0.125f
 		if (moveSpeed >= targetSpeed) moveSpeed = targetSpeed
 
-		MovementUtils.strafe(thePlayer, moveSpeed)
+		thePlayer.strafe(moveSpeed)
 
 		if (!spoofSlot) mc.netHandler.addToSendQueue(provider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
 	}

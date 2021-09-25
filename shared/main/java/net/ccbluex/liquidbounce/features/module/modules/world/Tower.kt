@@ -27,11 +27,11 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.render.BlockOverlay
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.*
-import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.canBeClicked
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.isReplaceable
 import net.ccbluex.liquidbounce.utils.block.PlaceInfo
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
@@ -187,7 +187,7 @@ class Tower : Module()
 
 			return
 		}
-		else if (onJumpValue.get() && onJumpDelayValue.get() > 0 && (!onJumpTimer.hasTimePassed(onJumpDelayValue.get().toLong()) || onJumpDisableWhileMoving.get()) && (isMoving(thePlayer) || !onJumpNoDelayIfNotMovingValue.get())) // Skip if onjump delay aren't over yet.
+		else if (onJumpValue.get() && onJumpDelayValue.get() > 0 && (!onJumpTimer.hasTimePassed(onJumpDelayValue.get().toLong()) || onJumpDisableWhileMoving.get()) && (thePlayer.isMoving || !onJumpNoDelayIfNotMovingValue.get())) // Skip if onjump delay aren't over yet.
 			return
 
 		active = true
@@ -588,7 +588,7 @@ class Tower : Module()
 
 		val onJumpDelay = onJumpDelayValue.get()
 
-		if (onJumpDelay > 0 && onJumpTimer.hasTimePassed(onJumpDelay.toLong()) && !onJumpDisableWhileMoving.get() || !isMoving(thePlayer) && onJumpNoDelayIfNotMovingValue.get()) event.cancelEvent()
+		if (onJumpDelay > 0 && onJumpTimer.hasTimePassed(onJumpDelay.toLong()) && !onJumpDisableWhileMoving.get() || !thePlayer.isMoving && onJumpNoDelayIfNotMovingValue.get()) event.cancelEvent()
 	}
 
 	/**

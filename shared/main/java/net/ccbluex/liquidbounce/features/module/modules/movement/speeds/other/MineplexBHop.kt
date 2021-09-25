@@ -8,7 +8,9 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.cantBoostUp
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.strafe
 import kotlin.math.hypot
 
 class MineplexBHop : SpeedMode("Mineplex-BHop")
@@ -23,11 +25,11 @@ class MineplexBHop : SpeedMode("Mineplex-BHop")
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (MovementUtils.cantBoostUp(thePlayer)) return
+		if (thePlayer.cantBoostUp) return
 
 		val speed = hypot(thePlayer.posX - thePlayer.prevPosX, thePlayer.posZ - thePlayer.prevPosZ).toFloat()
 
-		if (MovementUtils.isMoving(thePlayer) && thePlayer.onGround)
+		if (thePlayer.isMoving && thePlayer.onGround)
 		{
 			thePlayer.motionY = 0.4052393
 
@@ -51,7 +53,7 @@ class MineplexBHop : SpeedMode("Mineplex-BHop")
 		var minimum = 0f
 		if (!wfg) minimum = 0.399900111f
 
-		MovementUtils.strafe(thePlayer, speed1.coerceIn(minimum, 2f))
+		thePlayer.strafe(speed1.coerceIn(minimum, 2f))
 	}
 
 	override fun onMotion(eventState: EventState)

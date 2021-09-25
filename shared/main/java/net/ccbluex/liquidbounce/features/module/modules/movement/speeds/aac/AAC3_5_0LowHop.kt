@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.*
 
 class AAC3_5_0LowHop : SpeedMode("AAC3.5.0-LowHop") // Was AACLowHop3
 {
@@ -26,9 +26,9 @@ class AAC3_5_0LowHop : SpeedMode("AAC3.5.0-LowHop") // Was AACLowHop3
 
 		val thePlayer = mc.thePlayer ?: return
 
-		if (MovementUtils.cantBoostUp(thePlayer)) return
+		if (thePlayer.cantBoostUp) return
 
-		if (MovementUtils.isMoving(thePlayer))
+		if (thePlayer.isMoving)
 		{
 			if (thePlayer.hurtTime <= 0)
 			{
@@ -52,7 +52,7 @@ class AAC3_5_0LowHop : SpeedMode("AAC3.5.0-LowHop") // Was AACLowHop3
 					thePlayer.motionY -= 0.0149
 				}
 
-				if (!thePlayer.isCollidedHorizontally) MovementUtils.forward(thePlayer, if (firstJump) 0.0016 else 0.001799, MovementUtils.getDirection(thePlayer))
+				if (!thePlayer.isCollidedHorizontally) thePlayer.forward(if (firstJump) 0.0016 else 0.001799, thePlayer.moveDirectionRadians)
 			}
 			else
 			{
@@ -65,10 +65,10 @@ class AAC3_5_0LowHop : SpeedMode("AAC3.5.0-LowHop") // Was AACLowHop3
 			firstJump = true
 			waitForGround = true
 
-			MovementUtils.zeroXZ(thePlayer)
+			thePlayer.zeroXZ()
 		}
 
-		MovementUtils.strafe(thePlayer)
+		thePlayer.strafe()
 	}
 
 	override fun onUpdate()

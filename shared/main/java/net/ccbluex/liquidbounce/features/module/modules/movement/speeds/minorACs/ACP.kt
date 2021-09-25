@@ -3,9 +3,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.minorAC
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
-import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
-import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
+import net.ccbluex.liquidbounce.utils.extensions.*
 
 /**
  * LiquidBounce Hacked Client A minecraft forge injection client using Mixin
@@ -19,13 +17,13 @@ class ACP : SpeedMode("ACP")
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (MovementUtils.cantBoostUp(thePlayer)) return
+		if (thePlayer.cantBoostUp) return
 
-		if (isMoving(thePlayer))
+		if (thePlayer.isMoving)
 		{
-			val amplifier = MovementUtils.getSpeedEffectAmplifier(thePlayer)
+			val amplifier = thePlayer.speedEffectAmplifier
 
-			MovementUtils.multiply(thePlayer, 0.8)
+			thePlayer.multiply(0.8)
 
 			val moveSpeed = if (thePlayer.onGround) when (amplifier)
 			{
@@ -48,9 +46,9 @@ class ACP : SpeedMode("ACP")
 				else -> 0.55F
 			}
 
-			strafe(thePlayer, moveSpeed)
+			thePlayer.strafe(moveSpeed)
 		}
-		else MovementUtils.zeroXZ(thePlayer)
+		else thePlayer.zeroXZ()
 	}
 
 	override fun onUpdate()

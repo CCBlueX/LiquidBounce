@@ -3,7 +3,9 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.flies.spartan
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.DamageOnStart
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.multiply
+import net.ccbluex.liquidbounce.utils.extensions.strafe
+import net.ccbluex.liquidbounce.utils.extensions.zeroXYZ
 
 class BugSpartan : FlyMode("BugSpartan")
 {
@@ -14,7 +16,7 @@ class BugSpartan : FlyMode("BugSpartan")
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		MovementUtils.multiply(thePlayer, 0.1)
+		thePlayer.multiply(0.1)
 		thePlayer.swingItem()
 	}
 
@@ -27,11 +29,11 @@ class BugSpartan : FlyMode("BugSpartan")
 
 		thePlayer.capabilities.isFlying = false
 
-		MovementUtils.zeroXYZ(thePlayer)
+		thePlayer.zeroXYZ()
 
 		if (gameSettings.keyBindJump.isKeyDown) thePlayer.motionY += speed
 		if (gameSettings.keyBindSneak.isKeyDown) thePlayer.motionY -= speed
 
-		MovementUtils.strafe(thePlayer, speed)
+		thePlayer.strafe(speed)
 	}
 }

@@ -12,7 +12,8 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.FakePlayer
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.strafe
+import net.ccbluex.liquidbounce.utils.extensions.zeroXYZ
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 
@@ -57,7 +58,7 @@ class FreeCam : Module()
 
 		thePlayer.setPositionAndRotation(oldX, oldY, oldZ, oldYaw, oldPitch)
 
-		MovementUtils.zeroXYZ(thePlayer)
+		thePlayer.zeroXYZ()
 	}
 
 	@EventTarget
@@ -73,13 +74,13 @@ class FreeCam : Module()
 		{
 			val value = speedValue.get()
 
-			MovementUtils.zeroXYZ(thePlayer)
+			thePlayer.zeroXYZ()
 
 			val gameSettings = mc.gameSettings
 			if (gameSettings.keyBindJump.isKeyDown) thePlayer.motionY += value
 			if (gameSettings.keyBindSneak.isKeyDown) thePlayer.motionY -= value
 
-			MovementUtils.strafe(thePlayer, value)
+			thePlayer.strafe(value)
 		}
 	}
 

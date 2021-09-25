@@ -12,9 +12,9 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getMaterial
+import net.ccbluex.liquidbounce.utils.extensions.multiply
 import net.ccbluex.liquidbounce.value.ListValue
 
 @ModuleInfo(name = "IceSpeed", description = "Allows you to walk faster on ice.", category = ModuleCategory.MOVEMENT)
@@ -61,7 +61,7 @@ class IceSpeed : Module()
 				"aac3.2.0" -> getMaterial(theWorld, thePlayer.position.down()).let {
 					if (it == provider.getBlockEnum(BlockType.ICE) || it == provider.getBlockEnum(BlockType.ICE_PACKED))
 					{
-						MovementUtils.multiply(thePlayer, 1.342)
+						thePlayer.multiply(1.342)
 
 						provider.getBlockEnum(BlockType.ICE).slipperiness = 0.6f
 						provider.getBlockEnum(BlockType.ICE_PACKED).slipperiness = 0.6f
@@ -71,7 +71,7 @@ class IceSpeed : Module()
 				"spartan146" -> getMaterial(theWorld, thePlayer.position.down()).let {
 					if (it == provider.getBlockEnum(BlockType.ICE) || it == provider.getBlockEnum(BlockType.ICE_PACKED))
 					{
-						if (provider.isBlockAir(BlockUtils.getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY + 2.0, thePlayer.posZ)))) MovementUtils.multiply(thePlayer, 1.18) else MovementUtils.multiply(thePlayer, 1.342)
+						thePlayer.multiply(if (provider.isBlockAir(BlockUtils.getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY + 2.0, thePlayer.posZ)))) 1.18 else 1.342)
 
 						provider.getBlockEnum(BlockType.ICE).slipperiness = 0.6f
 						provider.getBlockEnum(BlockType.ICE_PACKED).slipperiness = 0.6f

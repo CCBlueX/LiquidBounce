@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.*
 
 class HypixelHop : SpeedMode("HypixelHop")
 {
@@ -18,25 +18,27 @@ class HypixelHop : SpeedMode("HypixelHop")
 
 		val thePlayer = mc.thePlayer ?: return
 
-		if (MovementUtils.cantBoostUp(thePlayer)) return
+		if (thePlayer.cantBoostUp) return
 
-		if (MovementUtils.isMoving(thePlayer))
+		if (thePlayer.isMoving)
 		{
+			val speed = thePlayer.speed
+
 			if (thePlayer.onGround)
 			{
 				thePlayer.setPosition(thePlayer.posX, thePlayer.posY + 9.1314E-4, thePlayer.posZ)// #344
 
 				jump(thePlayer)
 
-				MovementUtils.strafe(thePlayer, (if (MovementUtils.getSpeed(thePlayer) < 0.56f) MovementUtils.getSpeed(thePlayer) * 1.045f else 0.56f) * (1.0F + 0.13f * MovementUtils.getSpeedEffectAmplifier(thePlayer)))
+				thePlayer.strafe((if (speed < 0.56f) speed * 1.045f else 0.56f) * (1.0F + 0.13f * thePlayer.speedEffectAmplifier))
 
 				return
 			}
 			else if (thePlayer.motionY < 0.2) thePlayer.motionY -= 0.02
 
-			MovementUtils.strafe(thePlayer, MovementUtils.getSpeed(thePlayer) * 1.01889f)
+			thePlayer.strafe(speed * 1.01889f)
 		}
-		else MovementUtils.zeroXZ(thePlayer)
+		else thePlayer.zeroXZ()
 	}
 
 	override fun onUpdate()

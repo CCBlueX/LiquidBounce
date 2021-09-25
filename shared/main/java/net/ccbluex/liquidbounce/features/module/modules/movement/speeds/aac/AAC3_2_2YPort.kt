@@ -10,7 +10,9 @@ import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.cantBoostUp
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.multiply
 
 class AAC3_2_2YPort : SpeedMode("AAC3.2.2-YPort") // Was AACYPort2
 {
@@ -20,14 +22,14 @@ class AAC3_2_2YPort : SpeedMode("AAC3.2.2-YPort") // Was AACYPort2
 
 		val thePlayer = mc.thePlayer ?: return
 
-		if (MovementUtils.cantBoostUp(thePlayer)) return
+		if (thePlayer.cantBoostUp) return
 
-		if (MovementUtils.isMoving(thePlayer))
+		if (thePlayer.isMoving)
 		{
 			if (thePlayer.onGround)
 			{
 				jump(thePlayer)
-				MovementUtils.multiply(thePlayer, 1.01)
+				thePlayer.multiply(1.01)
 
 				thePlayer.motionY = 0.3851
 				LiquidBounce.eventManager.callEvent(JumpEvent(0.3851f))

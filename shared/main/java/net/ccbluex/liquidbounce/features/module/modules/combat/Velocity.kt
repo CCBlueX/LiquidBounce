@@ -14,8 +14,8 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
-import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -109,7 +109,7 @@ class Velocity : Module()
 			{
 				thePlayer.motionY = 0.42
 
-				MovementUtils.boost(thePlayer, 0.2F)
+				thePlayer.boost(0.2F)
 			}
 
 			"glitch" ->
@@ -123,7 +123,7 @@ class Velocity : Module()
 
 			"aac3.1.2" -> if (velocityInput && velocityTimer.hasTimePassed(80L))
 			{
-				MovementUtils.multiply(thePlayer, horizontalValue.get())
+				thePlayer.multiply(horizontalValue.get())
 
 				//mc.thePlayer.motionY *= verticalValue.get() ?
 
@@ -134,7 +134,7 @@ class Velocity : Module()
 			{
 				if (!velocityInput) return
 
-				if (!thePlayer.onGround) MovementUtils.strafe(thePlayer, MovementUtils.getSpeed(thePlayer) * reverseStrengthValue.get())
+				if (!thePlayer.onGround) thePlayer.strafe(thePlayer.speed * reverseStrengthValue.get())
 				else if (velocityTimer.hasTimePassed(80L)) velocityInput = false
 			}
 
@@ -176,7 +176,7 @@ class Velocity : Module()
 				}
 
 				// Reduce XZ
-				if (thePlayer.hurtResistantTime >= 19) MovementUtils.divide(thePlayer, aacPushXZReducerValue.get())
+				if (thePlayer.hurtResistantTime >= 19) thePlayer.divide(aacPushXZReducerValue.get())
 			}
 
 			"aac3.5.0-zero" -> if (thePlayer.hurtTime > 0)
@@ -288,14 +288,7 @@ class Velocity : Module()
 		val rotation = RotationUtils.toRotation(thePlayer, WVec3(pos!!.x.toDouble(), pos!!.y.toDouble(), pos!!.z.toDouble()), false, RotationUtils.MinMaxPair.ZERO)
 		if (legitFaceValue.get()) RotationUtils.setTargetRotation(rotation)
 
-		val yaw = WMathHelper.toRadians(rotation.yaw)
-
-		if (legitStrafeValue.get())
-		{
-			val speed = MovementUtils.getSpeed(thePlayer)
-			thePlayer.motionX = (-functions.sin(yaw) * speed).toDouble()
-			thePlayer.motionZ = (functions.cos(yaw) * speed).toDouble()
-		}
+		if (legitStrafeValue.get()) thePlayer.strafe(directionDegrees = rotation.yaw)
 		else
 		{
 			var strafe = event.strafe
@@ -314,11 +307,12 @@ class Velocity : Module()
 				strafe *= f
 				forward *= f
 
-				val yawSin = functions.sin(yaw)
-				val yawCos = functions.cos(yaw)
+				val dir = WMathHelper.toRadians(rotation.yaw)
+				val sin = functions.sin(dir)
+				val cos = functions.cos(dir)
 
-				thePlayer.motionX += strafe * yawCos - forward * yawSin
-				thePlayer.motionZ += forward * yawCos + strafe * yawSin
+				thePlayer.motionX += strafe * cos - forward * sin
+				thePlayer.motionZ += forward * cos + strafe * sin
 			}
 		}
 	}

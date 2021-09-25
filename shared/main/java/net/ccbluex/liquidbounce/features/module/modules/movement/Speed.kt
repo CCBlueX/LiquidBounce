@@ -21,7 +21,8 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre.
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre.SpectreOnGround
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.vanilla.Vanilla
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationIcon
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.zeroXZ
 import net.ccbluex.liquidbounce.value.*
 
 @ModuleInfo(name = "Speed", description = "Allows you to move faster.", category = ModuleCategory.MOVEMENT)
@@ -155,7 +156,7 @@ object Speed : Module()
 
 		if (thePlayer.sneaking) return
 
-		if (MovementUtils.isMoving(thePlayer)) thePlayer.sprinting = true
+		if (thePlayer.isMoving) thePlayer.sprinting = true
 
 		mode?.onUpdate()
 	}
@@ -194,7 +195,7 @@ object Speed : Module()
 
 			state = false
 
-			MovementUtils.zeroXZ(thePlayer)
+			thePlayer.zeroXZ()
 			thePlayer.jumpMovementFactor = 0.02F
 
 			LiquidBounce.hud.addNotification(NotificationIcon.WARNING_RED, "Speed", "A teleport has been detected. Disabled Speed to prevent more flags.", 1000L)

@@ -8,7 +8,10 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.boost
+import net.ccbluex.liquidbounce.utils.extensions.cantBoostUp
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.zeroXZ
 
 class SpectreOnGround : SpeedMode("Spectre-OnGround")
 {
@@ -26,21 +29,21 @@ class SpectreOnGround : SpeedMode("Spectre-OnGround")
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (!MovementUtils.isMoving(thePlayer) || MovementUtils.cantBoostUp(thePlayer) || thePlayer.movementInput.jump) return
+		if (!thePlayer.isMoving || thePlayer.cantBoostUp || thePlayer.movementInput.jump) return
 
 		if (speedUp >= 10)
 		{
 			if (thePlayer.onGround)
 			{
-				MovementUtils.zeroXZ(thePlayer)
+				thePlayer.zeroXZ()
 				speedUp = 0
 			}
 			return
 		}
 
-		if (thePlayer.onGround && MovementUtils.isMoving(thePlayer))
+		if (thePlayer.onGround && thePlayer.isMoving)
 		{
-			MovementUtils.boost(thePlayer, 0.145f)
+			thePlayer.boost(0.145f)
 
 			event.x = thePlayer.motionX
 			event.y = 0.005

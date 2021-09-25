@@ -30,10 +30,8 @@ object ClassUtils
 			false
 		}
 	}
-
-	@JvmStatic
-	fun hasForge() = hasClass("net.minecraftforge.common.MinecraftForge")
-
-	@JvmStatic
-	fun hasLabyMod() = hasClass("net.labymod.api.LabyModAPI")
 }
+
+fun hasForge() = ClassUtils.hasClass("net.minecraftforge.common.MinecraftForge")
+
+fun hasLabyMod() = ClassUtils.hasClass("net.labymod.api.LabyModAPI")

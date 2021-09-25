@@ -20,6 +20,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.*
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
@@ -155,7 +156,7 @@ class AutoPot : Module()
 		{
 			PRE ->
 			{
-				if (potThrowDelayTimer.hasTimePassed(potThrowDelay) && (ignoreScreen || containerOpen) && !(throwNoMoveThrowValue.get() && MovementUtils.isMoving(thePlayer)))
+				if (potThrowDelayTimer.hasTimePassed(potThrowDelay) && (ignoreScreen || containerOpen) && !(throwNoMoveThrowValue.get() && thePlayer.isMoving))
 				{
 					// Hotbar Potion
 					val healPotionInHotbar = findHealPotion(thePlayer, 36, 45, inventoryContainer, randomSlot)
@@ -227,7 +228,7 @@ class AutoPot : Module()
 				}
 
 				val currentContainer = thePlayer.openContainer
-				if (InventoryUtils.CLICK_TIMER.hasTimePassed(invDelay) && !(inventoryNoMoveValue.get() && MovementUtils.isMoving(thePlayer)) && !(currentContainer != null && currentContainer.windowId != 0))
+				if (InventoryUtils.CLICK_TIMER.hasTimePassed(invDelay) && !(inventoryNoMoveValue.get() && thePlayer.isMoving) && !(currentContainer != null && currentContainer.windowId != 0))
 				{
 					// Move Potion Inventory -> Hotbar
 					val healPotionInInventory = findHealPotion(thePlayer, 9, 36, inventoryContainer, invRandomSlot)

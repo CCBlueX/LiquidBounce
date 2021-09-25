@@ -2,7 +2,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.flies.minorACs
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.strafe
 
 class WatchCatFly : FlyMode("WatchCat")
 {
@@ -12,7 +12,7 @@ class WatchCatFly : FlyMode("WatchCat")
 
 		val y = thePlayer.posY
 
-		MovementUtils.strafe(thePlayer, 0.15f)
+		thePlayer.strafe(0.15f)
 		thePlayer.sprinting = true
 
 		if (y < Fly.startY + 2)
@@ -21,6 +21,6 @@ class WatchCatFly : FlyMode("WatchCat")
 			return
 		}
 
-		if (Fly.startY > y) MovementUtils.strafe(thePlayer, 0f)
+		if (Fly.startY > y) thePlayer.strafe(0f)
 	}
 }

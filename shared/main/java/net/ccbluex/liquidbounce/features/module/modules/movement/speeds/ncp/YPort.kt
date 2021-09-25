@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.*
 import java.math.BigDecimal
 import java.math.RoundingMode
 import kotlin.math.floor
@@ -36,11 +36,11 @@ class YPort : SpeedMode("YPort")
 
 		val provider = classProvider
 
-		if (!safeJump && !thePlayer.movementInput.jump && !MovementUtils.cantBoostUp(thePlayer) && (!provider.isBlockAir(this.getBlock(thePlayer, -1.1)) && !provider.isBlockAir(this.getBlock(thePlayer, -1.1)) || !provider.isBlockAir(this.getBlock(thePlayer, -0.1)) && thePlayer.motionX != 0.0 && thePlayer.motionZ != 0.0 && !thePlayer.onGround && thePlayer.fallDistance < 3.0f && thePlayer.fallDistance > 0.05) && step == 3) thePlayer.motionY = -0.3994
+		if (!safeJump && !thePlayer.movementInput.jump && !thePlayer.cantBoostUp && (!provider.isBlockAir(this.getBlock(thePlayer, -1.1)) && !provider.isBlockAir(this.getBlock(thePlayer, -1.1)) || !provider.isBlockAir(this.getBlock(thePlayer, -0.1)) && thePlayer.motionX != 0.0 && thePlayer.motionZ != 0.0 && !thePlayer.onGround && thePlayer.fallDistance < 3.0f && thePlayer.fallDistance > 0.05) && step == 3) thePlayer.motionY = -0.3994
 
 		lastSpeed = hypot(thePlayer.posX - thePlayer.prevPosX, thePlayer.posZ - thePlayer.prevPosZ)
 
-		if (!MovementUtils.isMoving(thePlayer)) safeJump = true else if (thePlayer.onGround) safeJump = false
+		if (!thePlayer.isMoving) safeJump = true else if (thePlayer.onGround) safeJump = false
 	}
 
 	override fun onUpdate()
@@ -57,14 +57,14 @@ class YPort : SpeedMode("YPort")
 		timerDelay %= 5
 
 		if (timerDelay != 0) timer.timerSpeed = 1f
-		else if (MovementUtils.hasMotion(thePlayer))
+		else if (thePlayer.hasMotion)
 		{
 			timer.timerSpeed = 1.3f
 
-			MovementUtils.multiply(thePlayer, 1.0199999809265137)
+			thePlayer.multiply(1.0199999809265137)
 		}
 
-		if (thePlayer.onGround && MovementUtils.hasMotion(thePlayer)) step = 2
+		if (thePlayer.onGround && thePlayer.hasMotion) step = 2
 
 		if (round(thePlayer.posY - thePlayer.posY.roundToInt()) == round(0.138))
 		{
@@ -76,7 +76,7 @@ class YPort : SpeedMode("YPort")
 		}
 
 		val baseMoveSpeed = getBaseMoveSpeed(thePlayer)
-		val move = MovementUtils.isMoving(thePlayer)
+		val move = thePlayer.isMoving
 
 		when (step)
 		{
@@ -119,7 +119,7 @@ class YPort : SpeedMode("YPort")
 		{
 			val func = functions
 
-			val dir = MovementUtils.getDirection(thePlayer)
+			val dir = thePlayer.moveDirectionRadians
 			event.x = -func.sin(dir) * moveSpeed
 			event.z = func.cos(dir) * moveSpeed
 
@@ -128,7 +128,7 @@ class YPort : SpeedMode("YPort")
 		else event.zeroXZ()
 	}
 
-	private fun getBaseMoveSpeed(thePlayer: IEntityLivingBase): Double = 0.2873 * (1.0 + 0.2 * MovementUtils.getSpeedEffectAmplifier(thePlayer))
+	private fun getBaseMoveSpeed(thePlayer: IEntityLivingBase): Double = 0.2873 * (1.0 + 0.2 * thePlayer.speedEffectAmplifier)
 
 	private fun getBlock(axisAlignedBB: IAxisAlignedBB): IBlock?
 	{

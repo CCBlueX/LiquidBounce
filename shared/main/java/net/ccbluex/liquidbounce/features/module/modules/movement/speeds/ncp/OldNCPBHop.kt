@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.*
 import java.math.BigDecimal
 import java.math.RoundingMode
 import kotlin.math.hypot
@@ -56,7 +56,7 @@ class OldNCPBHop : SpeedMode("OldNCPBHop")
 		val thePlayer = mc.thePlayer ?: return
 
 		val timer = mc.timer
-		val moving = MovementUtils.isMoving(thePlayer) && !MovementUtils.cantBoostUp(thePlayer)
+		val moving = thePlayer.isMoving && !thePlayer.cantBoostUp
 
 		++timerDelay
 		timerDelay %= 5
@@ -65,7 +65,7 @@ class OldNCPBHop : SpeedMode("OldNCPBHop")
 		else if (moving)
 		{
 			timer.timerSpeed = 1.3f
-			MovementUtils.multiply(thePlayer, 1.0199999809265137)
+			thePlayer.multiply(1.0199999809265137)
 		}
 
 		if (thePlayer.onGround && moving) step = 2
@@ -121,7 +121,7 @@ class OldNCPBHop : SpeedMode("OldNCPBHop")
 		{
 			val func = functions
 
-			val dir = MovementUtils.getDirection(thePlayer)
+			val dir = thePlayer.moveDirectionRadians
 			event.x = -func.sin(dir) * moveSpeed
 			event.z = func.cos(dir) * moveSpeed
 
@@ -130,7 +130,7 @@ class OldNCPBHop : SpeedMode("OldNCPBHop")
 		else event.zeroXZ()
 	}
 
-	private fun getBaseMoveSpeed(thePlayer: IEntityLivingBase): Double = 0.2873 * (1.0 + 0.2 * (MovementUtils.getSpeedEffectAmplifier(thePlayer)))
+	private fun getBaseMoveSpeed(thePlayer: IEntityLivingBase): Double = 0.2873 * (1.0 + 0.2 * thePlayer.speedEffectAmplifier)
 
 	private fun round(value: Double): Double = BigDecimal(value).setScale(3, RoundingMode.HALF_UP).toDouble()
 }

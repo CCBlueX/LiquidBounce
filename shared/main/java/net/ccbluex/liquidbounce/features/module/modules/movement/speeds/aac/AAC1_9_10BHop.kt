@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.*
 
 class AAC1_9_10BHop : SpeedMode("AAC1.9.10-BHop") // Was OldAACBHop
 {
@@ -20,20 +20,20 @@ class AAC1_9_10BHop : SpeedMode("AAC1.9.10-BHop") // Was OldAACBHop
 
 		val thePlayer = mc.thePlayer ?: return
 
-		if (MovementUtils.cantBoostUp(thePlayer)) return
+		if (thePlayer.cantBoostUp) return
 
-		if (MovementUtils.isMoving(thePlayer))
+		if (thePlayer.isMoving)
 		{
 			if (thePlayer.onGround)
 			{
-				MovementUtils.strafe(thePlayer, 0.56f)
+				thePlayer.strafe(0.56f)
 
 				thePlayer.motionY = 0.41999998688697815
 				LiquidBounce.eventManager.callEvent(JumpEvent(thePlayer.motionY.toFloat()))
 			}
-			else MovementUtils.strafe(thePlayer, MovementUtils.getSpeed(thePlayer) * if (thePlayer.fallDistance > 0.4f) 1.0f else 1.01f)
+			else thePlayer.strafe(thePlayer.speed * if (thePlayer.fallDistance > 0.4f) 1.0f else 1.01f)
 		}
-		else MovementUtils.zeroXZ(thePlayer)
+		else thePlayer.zeroXZ()
 	}
 
 	override fun onUpdate()

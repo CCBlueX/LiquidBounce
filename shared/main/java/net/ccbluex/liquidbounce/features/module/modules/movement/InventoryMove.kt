@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.value.BoolValue
 
 @ModuleInfo(name = "InventoryMove", description = "Allows you to walk while an inventory is opened.", category = ModuleCategory.MOVEMENT)
@@ -52,7 +52,7 @@ class InventoryMove : Module()
 	@EventTarget
 	fun onClick(event: ClickWindowEvent)
 	{
-		val cancel = noMoveClicksValue.get() && MovementUtils.isMoving(mc.thePlayer ?: return)
+		val cancel = noMoveClicksValue.get() && (mc.thePlayer ?: return).isMoving
 		val simulateInventory = blockPacketsValue.get() && !cancel
 
 		// Open inventory

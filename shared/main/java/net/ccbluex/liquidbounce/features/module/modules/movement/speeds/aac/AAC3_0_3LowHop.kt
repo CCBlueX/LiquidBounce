@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.*
 
 class AAC3_0_3LowHop : SpeedMode("AAC3.0.3-LowHop") // Was AACBHop
 {
@@ -20,17 +20,17 @@ class AAC3_0_3LowHop : SpeedMode("AAC3.0.3-LowHop") // Was AACBHop
 
 		val thePlayer = mc.thePlayer ?: return
 
-		if (MovementUtils.cantBoostUp(thePlayer)) return
+		if (thePlayer.cantBoostUp) return
 
 		val timer = mc.timer
 
-		if (MovementUtils.isMoving(thePlayer))
+		if (thePlayer.isMoving)
 		{
 			timer.timerSpeed = 1.08f
 
 			if (thePlayer.onGround)
 			{
-				MovementUtils.boost(thePlayer, 0.2f)
+				thePlayer.boost(0.2f)
 
 				thePlayer.motionY = 0.399
 				LiquidBounce.eventManager.callEvent(JumpEvent(0.399f))
@@ -39,14 +39,14 @@ class AAC3_0_3LowHop : SpeedMode("AAC3.0.3-LowHop") // Was AACBHop
 			}
 			else
 			{
-				MovementUtils.multiply(thePlayer, 1.008)
+				thePlayer.multiply(1.008)
 
 				thePlayer.motionY *= 0.97
 			}
 		}
 		else
 		{
-			MovementUtils.zeroXZ(thePlayer)
+			thePlayer.zeroXZ()
 			timer.timerSpeed = 1f
 		}
 	}

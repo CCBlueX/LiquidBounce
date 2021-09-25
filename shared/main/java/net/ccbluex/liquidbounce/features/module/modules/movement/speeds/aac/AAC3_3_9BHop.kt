@@ -10,7 +10,10 @@ import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.cantBoostUp
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.strafe
+import net.ccbluex.liquidbounce.utils.extensions.zeroXZ
 
 class AAC3_3_9BHop : SpeedMode("AAC3.3.9-BHop") // Was AAC5BHop
 {
@@ -28,9 +31,9 @@ class AAC3_3_9BHop : SpeedMode("AAC3.3.9-BHop") // Was AAC5BHop
 
 		timer.timerSpeed = 1f
 
-		if (MovementUtils.cantBoostUp(thePlayer)) return
+		if (thePlayer.cantBoostUp) return
 
-		if (MovementUtils.isMoving(thePlayer))
+		if (thePlayer.isMoving)
 		{
 			when
 			{
@@ -45,7 +48,7 @@ class AAC3_3_9BHop : SpeedMode("AAC3.3.9-BHop") // Was AAC5BHop
 						return
 					}
 
-					MovementUtils.strafe(thePlayer, 0.374f)
+					thePlayer.strafe(0.374f)
 
 					thePlayer.motionY = 0.41
 					LiquidBounce.eventManager.callEvent(JumpEvent(0.41f))
@@ -67,7 +70,7 @@ class AAC3_3_9BHop : SpeedMode("AAC3.3.9-BHop") // Was AAC5BHop
 		{
 			shouldLegitJump = true
 
-			MovementUtils.zeroXZ(thePlayer)
+			thePlayer.zeroXZ()
 		}
 	}
 
