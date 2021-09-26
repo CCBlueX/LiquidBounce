@@ -14,9 +14,9 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.CPSCounter
 import net.ccbluex.liquidbounce.utils.PacketCounter
 import net.ccbluex.liquidbounce.utils.ServerUtils
-import net.ccbluex.liquidbounce.utils.extensions.getPing
 import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.extensions.moveDirectionDegrees
+import net.ccbluex.liquidbounce.utils.extensions.ping
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_2
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
@@ -185,7 +185,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 				"velocitydp" -> return "${hypot(thePlayer.motionX, thePlayer.motionZ)}"
 				"velocitydppersec" -> return "${hypot(thePlayer.motionX, thePlayer.motionZ) * defaultTPS}"
 
-				"ping" -> return thePlayer.getPing().toString()
+				"ping" -> return thePlayer.ping.toString()
 				"health" -> return DECIMALFORMAT_2.format(thePlayer.health)
 				"maxhealth" -> return DECIMALFORMAT_2.format(thePlayer.maxHealth)
 				"food" -> return thePlayer.foodStats.foodLevel.toString()

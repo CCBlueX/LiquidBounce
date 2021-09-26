@@ -12,8 +12,8 @@ import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlockIntersects
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
+import net.ccbluex.liquidbounce.utils.extensions.collideBlockIntersects
+import net.ccbluex.liquidbounce.utils.extensions.getBlock
 import net.ccbluex.liquidbounce.utils.extensions.zeroXYZ
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -66,7 +66,7 @@ class FastClimb : Module()
 					}
 				}
 
-				val block = getBlock(theWorld, WBlockPos(thePlayer.posX + x, thePlayer.posY, thePlayer.posZ + z))
+				val block = theWorld.getBlock(WBlockPos(thePlayer.posX + x, thePlayer.posY, thePlayer.posZ + z))
 
 				if (provider.isBlockLadder(block) || provider.isBlockVine(block))
 				{
@@ -75,7 +75,7 @@ class FastClimb : Module()
 				}
 			}
 
-			"aac3.0.5" -> if (gameSettings.keyBindForward.isKeyDown && collideBlockIntersects(theWorld, thePlayer.entityBoundingBox) { provider.isBlockLadder(it.block) || provider.isBlockVine(it.block) })
+			"aac3.0.5" -> if (gameSettings.keyBindForward.isKeyDown && theWorld.collideBlockIntersects(thePlayer.entityBoundingBox) { provider.isBlockLadder(it.block) || provider.isBlockVine(it.block) })
 			{
 				event.zeroXZ()
 				event.y = 0.5
@@ -98,7 +98,7 @@ class FastClimb : Module()
 			{
 				for (i in thePlayer.posY.toInt()..thePlayer.posY.toInt() + clipSearchHeight.get())
 				{
-					val block = getBlock(theWorld, WBlockPos(thePlayer.posX, i.toDouble(), thePlayer.posZ))
+					val block = theWorld.getBlock(WBlockPos(thePlayer.posX, i.toDouble(), thePlayer.posZ))
 
 					if (!provider.isBlockLadder(block))
 					{

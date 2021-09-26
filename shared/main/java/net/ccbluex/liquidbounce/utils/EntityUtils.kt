@@ -8,17 +8,13 @@ package net.ccbluex.liquidbounce.utils
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
-import net.ccbluex.liquidbounce.api.minecraft.client.network.INetworkPlayerInfo
 import net.ccbluex.liquidbounce.api.minecraft.scoreboard.IScoreboard
 import net.ccbluex.liquidbounce.api.minecraft.world.IChunk
 import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.features.module.modules.combat.NoFriends
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
-import net.ccbluex.liquidbounce.utils.extensions.isAnimal
-import net.ccbluex.liquidbounce.utils.extensions.isArmorStand
-import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
-import net.ccbluex.liquidbounce.utils.extensions.isMob
+import net.ccbluex.liquidbounce.utils.extensions.*
 import kotlin.math.ceil
 import kotlin.math.floor
 
@@ -65,7 +61,7 @@ object EntityUtils : MinecraftInstance()
 						if (entityPlayer.spectator) return false
 
 						// Friend check
-						if (isFriend(entityPlayer)) return false
+						if (entityPlayer.isFriend) return false
 
 						// Bot check
 						if (isBot(theWorld, thePlayer, entityPlayer)) return false
@@ -84,8 +80,6 @@ object EntityUtils : MinecraftInstance()
 
 		return false
 	}
-
-	fun isFriend(entity: IEntity): Boolean = classProvider.isEntityPlayer(entity) && entity.asEntityPlayer().isClientFriend() && !LiquidBounce.moduleManager[NoFriends::class.java].state
 
 	/**
 	 * Check if [entity] is alive
@@ -168,6 +162,4 @@ object EntityUtils : MinecraftInstance()
 
 		return entities
 	}
-
-	fun getPing(entityPlayer: IEntityLivingBase): Int = mc.netHandler.getPlayerInfo(entityPlayer.uniqueID)?.let(INetworkPlayerInfo::responseTime) ?: -1
 }

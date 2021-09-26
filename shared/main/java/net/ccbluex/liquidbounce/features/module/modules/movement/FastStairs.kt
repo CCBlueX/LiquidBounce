@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
+import net.ccbluex.liquidbounce.utils.extensions.getBlock
 import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.extensions.multiply
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -48,7 +48,7 @@ class FastStairs : Module()
 
 		val provider = classProvider
 
-		if (provider.isBlockStairs(getBlock(theWorld, blockPos)) && !walkingDown)
+		if (provider.isBlockStairs(theWorld.getBlock(blockPos)) && !walkingDown)
 		{
 			thePlayer.setPosition(thePlayer.posX, thePlayer.posY + 0.5, thePlayer.posZ)
 
@@ -61,7 +61,7 @@ class FastStairs : Module()
 			})
 		}
 
-		if (provider.isBlockStairs(getBlock(theWorld, blockPos.down())))
+		if (provider.isBlockStairs(theWorld.getBlock(blockPos.down())))
 		{
 			if (walkingDown)
 			{

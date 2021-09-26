@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.api.enums.EnumFacingType
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.injection.backend.WrapperImpl.classProvider
-import net.ccbluex.liquidbounce.utils.block.BlockUtils
+import net.ccbluex.liquidbounce.utils.extensions.getBlock
 import kotlin.math.floor
 
 class WBlockPos(x: Int, y: Int, z: Int) : WVec3i(x, y, z)
@@ -61,7 +61,7 @@ class WBlockPos(x: Int, y: Int, z: Int) : WVec3i(x, y, z)
 
 	private fun south(n: Int): WBlockPos = offset(classProvider.getEnumFacing(EnumFacingType.SOUTH), n)
 
-	fun getBlock(theWorld: IWorldClient) = BlockUtils.getBlock(theWorld, this)
+	fun getBlock(theWorld: IWorldClient) = theWorld.getBlock(this)
 
 	override fun toString() = "($x, $y, $z)"
 }

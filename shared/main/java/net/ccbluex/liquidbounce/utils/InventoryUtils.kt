@@ -18,7 +18,7 @@ import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayer
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos.Companion.ORIGIN
 import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.event.*
-import net.ccbluex.liquidbounce.utils.block.BlockUtils
+import net.ccbluex.liquidbounce.utils.extensions.getBlockDefaultCollisionBox
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 
 class InventoryUtils : MinecraftInstance(), Listenable
@@ -148,7 +148,7 @@ class InventoryUtils : MinecraftInstance(), Listenable
 
 				box != null && box.maxY - box.minY <= boundingBoxYLimit
 			}.maxBy {
-				val bb = BlockUtils.getBlockDefaultCollisionBox(theWorld, container.getSlot(it).stack?.item!!.asItemBlock().block)
+				val bb = theWorld.getBlockDefaultCollisionBox(container.getSlot(it).stack?.item!!.asItemBlock().block)
 				bb?.let { box -> box.maxY - box.minY } ?: 1.0
 			})?.let { return@findAutoBlockBlock it }
 
@@ -174,7 +174,7 @@ class InventoryUtils : MinecraftInstance(), Listenable
 
 					box != null && box.maxY - box.minY <= boundingBoxYLimit
 				}.maxBy {
-					val bb = BlockUtils.getBlockDefaultCollisionBox(theWorld, container.getSlot(it).stack?.item!!.asItemBlock().block)
+					val bb = theWorld.getBlockDefaultCollisionBox(container.getSlot(it).stack?.item!!.asItemBlock().block)
 					bb?.let { box -> box.maxY - box.minY } ?: 1.0
 				})?.let { return@findAutoBlockBlock it }
 			}

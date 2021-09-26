@@ -15,7 +15,7 @@ import net.ccbluex.liquidbounce.utils.Location
 import net.ccbluex.liquidbounce.utils.LocationCache
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.RotationUtils
-import net.ccbluex.liquidbounce.utils.extensions.getPing
+import net.ccbluex.liquidbounce.utils.extensions.ping
 import kotlin.math.ceil
 
 abstract class BotCheck(val modeName: String) : MinecraftInstance()
@@ -62,6 +62,6 @@ abstract class BotCheck(val modeName: String) : MinecraftInstance()
 
 	companion object
 	{
-		fun getPingCorrectionAppliedLocation(thePlayer: IEntityPlayer, offset: Int = 0) = LocationCache.getPlayerLocationBeforeNTicks((ceil(thePlayer.getPing() / 50F).toInt() + offset + AntiBot.positionPingCorrectionOffsetValue.get()).coerceAtLeast(0), Location(WVec3(thePlayer.posX, thePlayer.entityBoundingBox.minY, thePlayer.posZ), RotationUtils.serverRotation))
+		fun getPingCorrectionAppliedLocation(thePlayer: IEntityPlayer, offset: Int = 0) = LocationCache.getPlayerLocationBeforeNTicks((ceil(thePlayer.ping / 50F).toInt() + offset + AntiBot.positionPingCorrectionOffsetValue.get()).coerceAtLeast(0), Location(WVec3(thePlayer.posX, thePlayer.entityBoundingBox.minY, thePlayer.posZ), RotationUtils.serverRotation))
 	}
 }

@@ -10,8 +10,8 @@ import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.extensions.cantBoostUp
+import net.ccbluex.liquidbounce.utils.extensions.getBlock
 import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.extensions.moveDirectionRadians
 
@@ -41,7 +41,7 @@ class AACPort : SpeedMode("AACPort")
 
 			val provider = classProvider
 
-			if (thePlayer.posY < thePlayer.posY.toInt() + 0.5 && !provider.isBlockAir(getBlock(theWorld, WBlockPos(x, thePlayer.posY, z)))) break
+			if (thePlayer.posY < thePlayer.posY.toInt() + 0.5 && !provider.isBlockAir(theWorld.getBlock(WBlockPos(x, thePlayer.posY, z)))) break
 
 			thePlayer.sendQueue.addToSendQueue(provider.createCPacketPlayerPosition(x, thePlayer.posY, z, true))
 			speed += 0.2

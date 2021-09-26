@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.injection.backend.WrapperImpl.classProvider
+import net.ccbluex.liquidbounce.utils.extensions.canBeClicked
 
 class PlaceInfo(val blockPos: WBlockPos, val enumFacing: IEnumFacing, var vec3: WVec3 = WVec3(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5))
 {
@@ -26,11 +27,11 @@ class PlaceInfo(val blockPos: WBlockPos, val enumFacing: IEnumFacing, var vec3: 
 
 			return when
 			{
-				BlockUtils.canBeClicked(theWorld, blockPos.add(0, -1, 0)) -> PlaceInfo(blockPos.add(0, -1, 0), provider.getEnumFacing(EnumFacingType.UP))
-				BlockUtils.canBeClicked(theWorld, blockPos.add(0, 0, 1)) -> PlaceInfo(blockPos.add(0, 0, 1), provider.getEnumFacing(EnumFacingType.NORTH))
-				BlockUtils.canBeClicked(theWorld, blockPos.add(-1, 0, 0)) -> PlaceInfo(blockPos.add(-1, 0, 0), provider.getEnumFacing(EnumFacingType.EAST))
-				BlockUtils.canBeClicked(theWorld, blockPos.add(0, 0, -1)) -> PlaceInfo(blockPos.add(0, 0, -1), provider.getEnumFacing(EnumFacingType.SOUTH))
-				BlockUtils.canBeClicked(theWorld, blockPos.add(1, 0, 0)) -> PlaceInfo(blockPos.add(1, 0, 0), provider.getEnumFacing(EnumFacingType.WEST))
+				theWorld.canBeClicked(blockPos.add(0, -1, 0)) -> PlaceInfo(blockPos.add(0, -1, 0), provider.getEnumFacing(EnumFacingType.UP))
+				theWorld.canBeClicked(blockPos.add(0, 0, 1)) -> PlaceInfo(blockPos.add(0, 0, 1), provider.getEnumFacing(EnumFacingType.NORTH))
+				theWorld.canBeClicked(blockPos.add(-1, 0, 0)) -> PlaceInfo(blockPos.add(-1, 0, 0), provider.getEnumFacing(EnumFacingType.EAST))
+				theWorld.canBeClicked(blockPos.add(0, 0, -1)) -> PlaceInfo(blockPos.add(0, 0, -1), provider.getEnumFacing(EnumFacingType.SOUTH))
+				theWorld.canBeClicked(blockPos.add(1, 0, 0)) -> PlaceInfo(blockPos.add(1, 0, 0), provider.getEnumFacing(EnumFacingType.WEST))
 				else -> null
 			}
 		}

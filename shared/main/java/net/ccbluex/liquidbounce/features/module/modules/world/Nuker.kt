@@ -19,9 +19,9 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.player.AutoTool
 import net.ccbluex.liquidbounce.utils.RotationUtils
-import net.ccbluex.liquidbounce.utils.block.BlockUtils
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.getCenterDistance
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.searchBlocks
+import net.ccbluex.liquidbounce.utils.extensions.distanceToCenter
+import net.ccbluex.liquidbounce.utils.extensions.getBlock
+import net.ccbluex.liquidbounce.utils.extensions.searchBlocks
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -102,7 +102,7 @@ class Nuker : Module()
 		{
 			// Default nuker
 
-			val visibleBlocks = searchBlocks(theWorld, thePlayer, radiusInt).filterValues(::validBlock).filterKeys { getCenterDistance(thePlayer, it) <= radius }.run { if (layer) filterKeys { it.y >= thePlayer.posY } else this }.run {
+			val visibleBlocks = theWorld.searchBlocks(thePlayer, radiusInt).filterValues(::validBlock).filterKeys { thePlayer.distanceToCenter(it) <= radius }.run { if (layer) filterKeys { it.y >= thePlayer.posY } else this }.run {
 				if (throughWalls) this
 				else filterKeys { pos ->
 					val eyesPos = WVec3(posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, posZ)
@@ -119,7 +119,7 @@ class Nuker : Module()
 				val (blockPos, block) = when (priority)
 				{
 					"distance" -> visibleBlocks.minBy { (pos, _) ->
-						val distance = getCenterDistance(thePlayer, pos)
+						val distance = thePlayer.distanceToCenter(pos)
 						val safePos = WBlockPos(posX, thePlayer.posY - 1, posZ)
 
 						if (pos.x == safePos.x && safePos.y <= pos.y && pos.z == safePos.z) Double.MAX_VALUE - distance // Last block
@@ -203,7 +203,7 @@ class Nuker : Module()
 			if (provider.isItemSword(thePlayer.heldItem?.item)) return
 
 			// Search for new blocks to break
-			searchBlocks(theWorld, thePlayer, radiusInt).filterValues(::validBlock).filterKeys { getCenterDistance(thePlayer, it) <= radius }.filterKeys { !layer || it.y >= thePlayer.posY }.run {
+			theWorld.searchBlocks(thePlayer, radiusInt).filterValues(::validBlock).filterKeys { thePlayer.distanceToCenter(it) <= radius }.filterKeys { !layer || it.y >= thePlayer.posY }.run {
 				if (throughWalls) this
 				else filterKeys { pos -> (theWorld.rayTraceBlocks(WVec3(posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, posZ), WVec3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5), stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false) ?: return@filterKeys false).blockPos == pos }
 			}.forEach { (pos, _) -> // Instant break block
@@ -227,7 +227,7 @@ class Nuker : Module()
 		if (!layerValue.get())
 		{
 			val safePos = WBlockPos(thePlayer.posX, thePlayer.posY - 1, thePlayer.posZ)
-			val safeBlock = BlockUtils.getBlock(theWorld, safePos)
+			val safeBlock = theWorld.getBlock(safePos)
 			if (validBlock(safeBlock)) RenderUtils.drawBlockBox(theWorld, thePlayer, safePos, 536936192, 0, false, partialTicks)
 		}
 

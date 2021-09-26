@@ -21,9 +21,9 @@ import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.canBeClicked
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.isReplaceable
+import net.ccbluex.liquidbounce.utils.extensions.canBeClicked
+import net.ccbluex.liquidbounce.utils.extensions.getBlock
+import net.ccbluex.liquidbounce.utils.extensions.isReplaceable
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -70,7 +70,7 @@ class Ignite : Module()
 
 		val fireInHotbar = if (lighterInHotbar == -1) lavaInHotbar else lighterInHotbar
 
-		EntityUtils.getEntitiesInRadius(theWorld, thePlayer, 8.0).asSequence().filterNot(IEntity::burning).filter { isSelected(it, true) }.map(IEntity::position).filter { thePlayer.getDistanceSq(it) < 22.3 }.filter { isReplaceable(theWorld, it) }.firstOrNull { provider.isBlockAir(getBlock(theWorld, it)) }?.let { blockPos ->
+		EntityUtils.getEntitiesInRadius(theWorld, thePlayer, 8.0).asSequence().filterNot(IEntity::burning).filter { isSelected(it, true) }.map(IEntity::position).filter { thePlayer.getDistanceSq(it) < 22.3 }.filter(theWorld::isReplaceable).firstOrNull { provider.isBlockAir(theWorld.getBlock(it)) }?.let { blockPos ->
 			RotationUtils.keepCurrentRotation = true
 			netHandler.addToSendQueue(provider.createCPacketHeldItemChange(fireInHotbar - 36))
 
@@ -96,7 +96,7 @@ class Ignite : Module()
 				EnumFacingType.values().map(provider::getEnumFacing).forEach { side ->
 					val neighbor = blockPos.offset(side)
 
-					if (!canBeClicked(theWorld, neighbor)) return@forEach
+					if (!theWorld.canBeClicked(neighbor)) return@forEach
 
 					val diffX = neighbor.x + 0.5 - thePlayer.posX
 					val diffY = neighbor.y + 0.5 - (thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight)

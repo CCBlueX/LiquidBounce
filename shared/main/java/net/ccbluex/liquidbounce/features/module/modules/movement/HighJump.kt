@@ -19,7 +19,6 @@ import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.Tower
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationIcon
 import net.ccbluex.liquidbounce.utils.ClientUtils
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -101,7 +100,7 @@ class HighJump : Module()
 			if (autodisable.get()) state = false
 		}
 
-		if (vanillaGlassValue.get() && !classProvider.isBlockPane(getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)))) return // 'AAC Ground-check always returns true when player is collided with glass pane or iron bars, etc.' bug exploit
+		if (vanillaGlassValue.get() && !classProvider.isBlockPane(theWorld.getBlock(WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)))) return // 'AAC Ground-check always returns true when player is collided with glass pane or iron bars, etc.' bug exploit
 
 		when (modeValue.get().toLowerCase())
 		{
@@ -184,7 +183,7 @@ class HighJump : Module()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		if (vanillaGlassValue.get() && !classProvider.isBlockPane(getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)))) return
+		if (vanillaGlassValue.get() && !classProvider.isBlockPane(theWorld.getBlock(WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)))) return
 
 		if (!thePlayer.onGround && modeValue.get().equals("oldmineplex", ignoreCase = true)) thePlayer.motionY += if (thePlayer.fallDistance == 0.0f) 0.0499 else 0.05
 	}
@@ -195,7 +194,7 @@ class HighJump : Module()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		if (vanillaGlassValue.get() && !classProvider.isBlockPane(getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)))) return
+		if (vanillaGlassValue.get() && !classProvider.isBlockPane(theWorld.getBlock(WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)))) return
 
 		when (modeValue.get().toLowerCase())
 		{

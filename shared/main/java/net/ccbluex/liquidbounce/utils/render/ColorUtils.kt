@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.MurderDetector
 import net.ccbluex.liquidbounce.ui.font.GameFontRenderer
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.ccbluex.liquidbounce.utils.extensions.isFriend
 import net.ccbluex.liquidbounce.utils.runAsync
 import java.awt.Color
 import java.text.NumberFormat
@@ -105,7 +106,7 @@ object ColorUtils : MinecraftInstance()
 				if (indicateHurt && entityLiving.hurtTime > 0 || indicateTarget && (entity == aimBot.target || entity == killAura.target || tpAura.isTarget(entityLiving))) return@run -65536
 
 				// Indicate Friend
-				if (indicateFriend && EntityUtils.isFriend(entityLiving)) return@run -16776961
+				if (indicateFriend && entityLiving.isFriend) return@run -16776961
 
 				// Indicate Murder
 				if (murderDetector.state && murderDetector.murders.contains(entity)) return@run -6750055

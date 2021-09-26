@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.block.BlockUtils
+import net.ccbluex.liquidbounce.utils.extensions.getBlock
 
 @ModuleInfo(name = "XRay", description = "Allows you to see ores through walls.", category = ModuleCategory.RENDER)
 class XRay : Module()
@@ -27,7 +27,7 @@ class XRay : Module()
 	{
 		val theWorld = mc.theWorld ?: return false
 
-		return xrayBlocks.contains(block) && (pos == null || !orbfuscatorBypass || !BlockUtils.getBlock(theWorld, pos).isOpaqueCube)
+		return xrayBlocks.contains(block) && (pos == null || !orbfuscatorBypass || !theWorld.getBlock(pos).isOpaqueCube)
 	}
 
 	override fun onToggle(state: Boolean)

@@ -16,11 +16,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
-import net.ccbluex.liquidbounce.utils.extensions.isMoving
-import net.ccbluex.liquidbounce.utils.extensions.multiply
-import net.ccbluex.liquidbounce.utils.extensions.speed
-import net.ccbluex.liquidbounce.utils.extensions.strafe
+import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -128,7 +124,7 @@ class BufferSpeed : Module()
 
 			val provider = classProvider
 
-			if (slimeValue.get() && (provider.isBlockSlime(getBlock(theWorld, blockPos.down())) || provider.isBlockSlime(getBlock(theWorld, blockPos))))
+			if (slimeValue.get() && (provider.isBlockSlime(theWorld.getBlock(blockPos.down())) || provider.isBlockSlime(theWorld.getBlock(blockPos))))
 			{
 				thePlayer.jump()
 
@@ -139,7 +135,7 @@ class BufferSpeed : Module()
 				return
 			}
 
-			if (slabsEnabledValue.get() && provider.isBlockSlab(getBlock(theWorld, blockPos)))
+			if (slabsEnabledValue.get() && provider.isBlockSlab(theWorld.getBlock(blockPos)))
 			{
 				when (slabsModeValue.get().toLowerCase())
 				{
@@ -170,7 +166,7 @@ class BufferSpeed : Module()
 				}
 			}
 
-			if (stairsEnabledValue.get() && (provider.isBlockStairs(getBlock(theWorld, blockPos.down())) || provider.isBlockStairs(getBlock(theWorld, blockPos))))
+			if (stairsEnabledValue.get() && (provider.isBlockStairs(theWorld.getBlock(blockPos.down())) || provider.isBlockStairs(theWorld.getBlock(blockPos))))
 			{
 				when (stairsModeValue.get().toLowerCase())
 				{
@@ -202,19 +198,19 @@ class BufferSpeed : Module()
 			}
 			legitHop = true
 
-			if (headBlockEnabledValue.get() && getBlock(theWorld, blockPos.up(2)) != provider.getBlockEnum(BlockType.AIR))
+			if (headBlockEnabledValue.get() && theWorld.getBlock(blockPos.up(2)) != provider.getBlockEnum(BlockType.AIR))
 			{
 				boost(thePlayer, headBlockBoostValue.get())
 				return
 			}
 
-			if (iceEnabledValue.get() && (getBlock(theWorld, blockPos.down()) == provider.getBlockEnum(BlockType.ICE) || getBlock(theWorld, blockPos.down()) == provider.getBlockEnum(BlockType.ICE_PACKED)))
+			if (iceEnabledValue.get() && (theWorld.getBlock(blockPos.down()) == provider.getBlockEnum(BlockType.ICE) || theWorld.getBlock(blockPos.down()) == provider.getBlockEnum(BlockType.ICE_PACKED)))
 			{
 				boost(thePlayer, iceBoostValue.get())
 				return
 			}
 
-			if (snowEnabledValue.get() && getBlock(theWorld, blockPos) == provider.getBlockEnum(BlockType.SNOW_LAYER) && (snowPortValue.get() || thePlayer.posY - thePlayer.posY.toInt() >= 0.12500))
+			if (snowEnabledValue.get() && theWorld.getBlock(blockPos) == provider.getBlockEnum(BlockType.SNOW_LAYER) && (snowPortValue.get() || thePlayer.posY - thePlayer.posY.toInt() >= 0.12500))
 			{
 				if (thePlayer.posY - thePlayer.posY.toInt() >= 0.12500) boost(thePlayer, snowBoostValue.get())
 				else
@@ -229,7 +225,7 @@ class BufferSpeed : Module()
 			{
 				when (wallModeValue.get().toLowerCase())
 				{
-					"aac3.2.1" -> if (thePlayer.isCollidedVertically && isNearBlock(theWorld, thePlayer) || !provider.isBlockAir(getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY + 2.0, thePlayer.posZ))))
+					"aac3.2.1" -> if (thePlayer.isCollidedVertically && isNearBlock(theWorld, thePlayer) || !provider.isBlockAir(theWorld.getBlock(WBlockPos(thePlayer.posX, thePlayer.posY + 2.0, thePlayer.posZ))))
 					{
 						boost(thePlayer, wallBoostValue.get())
 

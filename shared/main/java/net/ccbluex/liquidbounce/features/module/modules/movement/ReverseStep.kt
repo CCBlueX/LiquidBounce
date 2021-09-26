@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlock
+import net.ccbluex.liquidbounce.utils.extensions.collideBlock
 import net.ccbluex.liquidbounce.value.FloatValue
 
 @ModuleInfo(name = "ReverseStep", description = "Allows you to step down blocks faster.", category = ModuleCategory.MOVEMENT)
@@ -33,7 +33,7 @@ class ReverseStep : Module()
 		if (!state) return
 
 		val bb = thePlayer.entityBoundingBox
-		if (collideBlock(theWorld, bb) { classProvider.isBlockLiquid(it.block) } || collideBlock(theWorld, classProvider.createAxisAlignedBB(bb.minX, bb.minY - 0.01, bb.minZ, bb.maxX, bb.maxY, bb.maxZ)) { classProvider.isBlockLiquid(it.block) }) return
+		if (theWorld.collideBlock(bb) { classProvider.isBlockLiquid(it.block) } || theWorld.collideBlock(classProvider.createAxisAlignedBB(bb.minX, bb.minY - 0.01, bb.minZ, bb.maxX, bb.maxY, bb.maxZ)) { classProvider.isBlockLiquid(it.block) }) return
 
 		if (!mc.gameSettings.keyBindJump.isKeyDown && !thePlayer.onGround && !thePlayer.movementInput.jump && thePlayer.motionY <= 0.0 && thePlayer.fallDistance <= 1f && !jumped) thePlayer.motionY = (-motionValue.get()).toDouble()
 	}

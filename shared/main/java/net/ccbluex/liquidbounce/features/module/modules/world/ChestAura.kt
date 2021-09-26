@@ -21,8 +21,10 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
 import net.ccbluex.liquidbounce.utils.CPSCounter
 import net.ccbluex.liquidbounce.utils.RotationUtils
-import net.ccbluex.liquidbounce.utils.block.BlockUtils
-import net.ccbluex.liquidbounce.utils.extensions.getVec
+import net.ccbluex.liquidbounce.utils.extensions.canBeClicked
+import net.ccbluex.liquidbounce.utils.extensions.distanceToCenter
+import net.ccbluex.liquidbounce.utils.extensions.searchBlocks
+import net.ccbluex.liquidbounce.utils.extensions.vec
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.*
 
@@ -92,12 +94,12 @@ object ChestAura : Module()
 					{
 						"serverdirection" -> RotationUtils.getServerRotationDifference(thePlayer, blockPos, false, RotationUtils.MinMaxPair.ZERO)
 						"clientdirection" -> RotationUtils.getClientRotationDifference(thePlayer, blockPos, false, RotationUtils.MinMaxPair.ZERO)
-						else -> BlockUtils.getCenterDistance(thePlayer, blockPos)
+						else -> thePlayer.distanceToCenter(blockPos)
 					}
 				}
 
-				currentBlock = BlockUtils.searchBlocks(theWorld, thePlayer, radius.toInt()).asSequence().filter { func.getIdFromBlock(it.value) == chestID }.filter { !clickedBlocks.contains(it.key) }.filter { BlockUtils.getCenterDistance(thePlayer, it.key) < range }.run {
-					if (throughWalls) this else filter { (pos, _) -> (theWorld.rayTraceBlocks(eyesPos, pos.getVec(), stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false) ?: return@filter false).blockPos == pos }
+				currentBlock = theWorld.searchBlocks(thePlayer, radius.toInt()).asSequence().filter { func.getIdFromBlock(it.value) == chestID }.filter { !clickedBlocks.contains(it.key) }.filter { thePlayer.distanceToCenter(it.key) < range }.run {
+					if (throughWalls) this else filter { (pos, _) -> (theWorld.rayTraceBlocks(eyesPos, pos.vec, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false) ?: return@filter false).blockPos == pos }
 				}.minBy { prioritySelector(it.key) }?.key
 
 				if (rotationEnabledValue.get())
@@ -117,7 +119,7 @@ object ChestAura : Module()
 
 						facesBlock = false
 
-						if (!BlockUtils.canBeClicked(theWorld, currentBlock)) return
+						if (!theWorld.canBeClicked(currentBlock)) return
 
 						if (!throughWalls && (eyesPos.squareDistanceTo(posVec) > 18.0 || run {
 								val rayTrace = theWorld.rayTraceBlocks(eyesPos, posVec, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false)
@@ -149,7 +151,7 @@ object ChestAura : Module()
 
 				CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT)
 
-				if (mc.playerController.onPlayerRightClick(thePlayer, theWorld, thePlayer.heldItem, currentBlock, provider.getEnumFacing(EnumFacingType.DOWN), currentBlock.getVec()))
+				if (mc.playerController.onPlayerRightClick(thePlayer, theWorld, thePlayer.heldItem, currentBlock, provider.getEnumFacing(EnumFacingType.DOWN), currentBlock.vec))
 				{
 					if (visualSwing.get()) thePlayer.swingItem() else mc.netHandler.addToSendQueue(provider.createCPacketAnimation())
 

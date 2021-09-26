@@ -17,7 +17,6 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.AutoWeapon
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.getState
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.pathfinding.PathFinder
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
@@ -139,7 +138,7 @@ class ExtendedReach : Module()
 			val stack = blockPlacement.stack
 			val distance = sqrt(thePlayer.getDistanceSq(pos))
 
-			if (distance > 6.0 && pos.y != -1 && (stack != null || provider.isBlockContainer(getState(theWorld, pos).block)))
+			if (distance > 6.0 && pos.y != -1 && (stack != null || provider.isBlockContainer(theWorld.getBlockState(pos).block)))
 			{
 				val to = WVec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
 				path = computePath(theWorld, playerPosVec, to)
@@ -323,7 +322,7 @@ class ExtendedReach : Module()
 	{
 		private fun canPassThrough(theWorld: IWorld, pos: WBlockPos): Boolean
 		{
-			val state = getState(theWorld, WBlockPos(pos.x, pos.y, pos.z))
+			val state = theWorld.getBlockState(WBlockPos(pos.x, pos.y, pos.z))
 			val block = state.block
 
 			val provider = classProvider

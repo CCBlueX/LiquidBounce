@@ -4,7 +4,6 @@ import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.getState
 import java.io.Serializable
 
 /**
@@ -131,7 +130,7 @@ class PathFinder(startVec: WVec3, endVec: WVec3) : MinecraftInstance()
 
 		private fun isBlockSolid(theWorld: IWorld, blockpos: WBlockPos): Boolean
 		{
-			val state = getState(theWorld, blockpos)
+			val state = theWorld.getBlockState(blockpos)
 			val block = state.block
 
 			val provider = classProvider
@@ -141,7 +140,7 @@ class PathFinder(startVec: WVec3, endVec: WVec3) : MinecraftInstance()
 
 		private fun isSafeToWalkOn(theWorld: IWorld, blockpos: WBlockPos): Boolean
 		{
-			val block = getState(theWorld, blockpos).block
+			val block = theWorld.getBlockState(blockpos).block
 
 			val provider = classProvider
 

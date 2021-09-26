@@ -19,6 +19,7 @@ interface IGlStateManager
 	fun disablePolygonOffset()
 	fun disableDepth()
 	fun disableCull()
+	fun disableAlpha()
 
 	// Enable
 	fun enableTexture2D()

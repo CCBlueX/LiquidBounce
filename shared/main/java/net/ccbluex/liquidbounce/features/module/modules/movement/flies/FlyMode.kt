@@ -10,8 +10,8 @@ import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
-import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.extensions.boost
+import net.ccbluex.liquidbounce.utils.extensions.getBlockCollisionBox
 import net.ccbluex.liquidbounce.utils.extensions.getEffectAmplifier
 import kotlin.math.min
 
@@ -129,10 +129,10 @@ abstract class FlyMode(val modeName: String) : MinecraftInstance()
 		{
 			val provider = classProvider
 
-			val blockAboveState = BlockUtils.getState(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY + 2, thePlayer.posZ))
+			val blockAboveState = theWorld.getBlockState(WBlockPos(thePlayer.posX, thePlayer.posY + 2, thePlayer.posZ))
 			val blockAbove = blockAboveState.block
 			val normalJumpY = 0.42 + thePlayer.getEffectAmplifier(PotionType.JUMP) * 0.1f
-			val jumpY = if (provider.isBlockAir(blockAbove)) normalJumpY else min(blockAboveState.let { BlockUtils.getBlockCollisionBox(theWorld, it)?.minY?.plus(0.2) } ?: normalJumpY, normalJumpY)
+			val jumpY = if (provider.isBlockAir(blockAbove)) normalJumpY else min(blockAboveState.let { theWorld.getBlockCollisionBox(it)?.minY?.plus(0.2) } ?: normalJumpY, normalJumpY)
 
 			// Simulate Vanilla Player Jump
 			thePlayer.setPosition(thePlayer.posX, thePlayer.posY + jumpY, thePlayer.posZ)

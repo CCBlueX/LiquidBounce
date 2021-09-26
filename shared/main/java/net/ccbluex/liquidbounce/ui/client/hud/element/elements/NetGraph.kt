@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.PacketCounter
-import net.ccbluex.liquidbounce.utils.extensions.getPing
+import net.ccbluex.liquidbounce.utils.extensions.ping
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_1
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
@@ -117,7 +117,7 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 
 		if (if (pingUpdatePeriod == 50L) tickChanged else pingUpdateTimer.hasTimePassed(pingUpdatePeriod))
 		{
-			pingList.add(thePlayer.getPing())
+			pingList.add(thePlayer.ping)
 			while (pingList.size > width) pingList.removeAt(0)
 
 			pingUpdateTimer.reset()

@@ -13,7 +13,8 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.RotationUtils
-import net.ccbluex.liquidbounce.utils.block.BlockUtils
+import net.ccbluex.liquidbounce.utils.extensions.distanceToCenter
+import net.ccbluex.liquidbounce.utils.extensions.getBlock
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -39,7 +40,7 @@ class CivBreak : Module()
 
 		val provider = classProvider
 
-		if (provider.isBlockBedrock(event.clickedBlock?.let { BlockUtils.getBlock(theWorld, it) })) return
+		if (provider.isBlockBedrock(event.clickedBlock?.let(theWorld::getBlock))) return
 
 		val netHandler = mc.netHandler
 
@@ -61,7 +62,7 @@ class CivBreak : Module()
 
 		val provider = classProvider
 
-		if (airResetValue.get() && provider.isBlockAir(BlockUtils.getBlock(theWorld, pos)) || rangeResetValue.get() && BlockUtils.getCenterDistance(thePlayer, pos) > range.get())
+		if (airResetValue.get() && provider.isBlockAir(theWorld.getBlock(pos)) || rangeResetValue.get() && thePlayer.distanceToCenter(pos) > range.get())
 		{
 			blockPos = null
 			return
@@ -69,7 +70,7 @@ class CivBreak : Module()
 
 		val netHandler = mc.netHandler
 
-		if (provider.isBlockAir(BlockUtils.getBlock(theWorld, pos)) || BlockUtils.getCenterDistance(thePlayer, pos) > range.get()) return
+		if (provider.isBlockAir(theWorld.getBlock(pos)) || thePlayer.distanceToCenter(pos) > range.get()) return
 
 		when (event.eventState)
 		{

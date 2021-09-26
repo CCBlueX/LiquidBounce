@@ -19,7 +19,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.VecRotation
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlock
+import net.ccbluex.liquidbounce.utils.extensions.collideBlock
 import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
 import net.ccbluex.liquidbounce.value.*
@@ -96,7 +96,7 @@ class NoFall : Module()
 		val provider = classProvider
 
 		val fly = moduleManager[Fly::class.java] as Fly
-		if (!state || moduleManager[FreeCam::class.java].state || fly.state && fly.shouldDisableNoFall || thePlayer.spectator || thePlayer.capabilities.allowFlying || thePlayer.capabilities.disableDamage || collideBlock(theWorld, playerBB) { provider.isBlockLiquid(it.block) } || collideBlock(theWorld, provider.createAxisAlignedBB(playerBB.minX, playerBB.minY - 0.01, playerBB.minZ, playerBB.maxX, playerBB.maxY, playerBB.maxZ)) { provider.isBlockLiquid(it.block) })
+		if (!state || moduleManager[FreeCam::class.java].state || fly.state && fly.shouldDisableNoFall || thePlayer.spectator || thePlayer.capabilities.allowFlying || thePlayer.capabilities.disableDamage || theWorld.collideBlock(playerBB) { provider.isBlockLiquid(it.block) } || theWorld.collideBlock(provider.createAxisAlignedBB(playerBB.minX, playerBB.minY - 0.01, playerBB.minZ, playerBB.maxX, playerBB.maxY, playerBB.maxZ)) { provider.isBlockLiquid(it.block) })
 		{
 			noSpoof = 0
 			return
@@ -241,7 +241,7 @@ class NoFall : Module()
 
 		val playerBB = thePlayer.entityBoundingBox
 		val fly = LiquidBounce.moduleManager[Fly::class.java] as Fly
-		if (fly.state && fly.shouldDisableNoFall || collideBlock(theWorld, playerBB) { classProvider.isBlockLiquid(it.block) } || collideBlock(theWorld, classProvider.createAxisAlignedBB(playerBB.minX, playerBB.minY - 0.01, playerBB.minZ, playerBB.maxX, playerBB.maxY, playerBB.maxZ)) { classProvider.isBlockLiquid(it.block) }) return
+		if (fly.state && fly.shouldDisableNoFall || theWorld.collideBlock(playerBB) { classProvider.isBlockLiquid(it.block) } || theWorld.collideBlock(classProvider.createAxisAlignedBB(playerBB.minX, playerBB.minY - 0.01, playerBB.minZ, playerBB.maxX, playerBB.maxY, playerBB.maxZ)) { classProvider.isBlockLiquid(it.block) }) return
 
 		if (modeValue.get().equals("AAC3.3.4", ignoreCase = true))
 		{

@@ -24,6 +24,8 @@ object GlStateManagerImpl : IGlStateManager
 
 	override fun disableCull() = GlStateManager.disableCull()
 
+	override fun disableAlpha() = GlStateManager.disableAlpha()
+
 	override fun enableColorMaterial() = GlStateManager.enableColorMaterial()
 
 	override fun enableRescaleNormal() = GlStateManager.enableRescaleNormal()

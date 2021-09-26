@@ -10,10 +10,11 @@ import net.ccbluex.liquidbounce.LiquidBounce.wrapper
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
 
-fun IEntityPlayer.getPing(): Int
-{
-	val playerInfo = wrapper.minecraft.netHandler.getPlayerInfo(uniqueID)
-	return playerInfo?.responseTime ?: 0
-}
+val IEntityPlayer.ping: Int
+	get()
+	{
+		val playerInfo = wrapper.minecraft.netHandler.getPlayerInfo(uniqueID)
+		return playerInfo?.responseTime ?: 0
+	}
 
 fun IEntityPlayer.isClientFriend(): Boolean = LiquidBounce.fileManager.friendsConfig.isFriend(stripColor(name))

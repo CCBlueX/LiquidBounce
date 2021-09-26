@@ -8,9 +8,9 @@ package net.ccbluex.liquidbounce.utils.extensions
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.LiquidBounce.wrapper
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
+import net.ccbluex.liquidbounce.features.module.modules.combat.NoFriends
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
 import kotlin.math.abs
 import kotlin.math.pow
@@ -57,3 +57,6 @@ fun IEntity.isMob(): Boolean
 fun IEntity.isArmorStand(): Boolean = wrapper.classProvider.isEntityArmorStand(this)
 
 fun IEntity.isClientTarget(): Boolean = wrapper.classProvider.isEntityPlayer(this) && LiquidBounce.fileManager.targetsConfig.isTarget(stripColor(name))
+
+val IEntity.isFriend: Boolean
+	get() = wrapper.classProvider.isEntityPlayer(this) && asEntityPlayer().isClientFriend() && !LiquidBounce.moduleManager[NoFriends::class.java].state

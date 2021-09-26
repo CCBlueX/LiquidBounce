@@ -78,7 +78,7 @@ object Maps
 			put(24, "Glow") // Glowing
 			put(25, "Lev") // Levitation
 			put(26, "Luc") // Luck
-			put(27, "UNL") // Unluck
+			put(27, "UnL") // Unluck
 		}
 	}
 }

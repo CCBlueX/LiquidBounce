@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.ui.font.assumeNonVolatile
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
+import net.ccbluex.liquidbounce.utils.extensions.ping
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_2
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
@@ -155,7 +156,7 @@ class NameTags : Module()
 
 		val pingText = if (pingEnabled && isPlayer)
 		{
-			val ping = EntityUtils.getPing(entity)
+			val ping = entity.asEntityPlayer().ping
 
 			"${
 				when

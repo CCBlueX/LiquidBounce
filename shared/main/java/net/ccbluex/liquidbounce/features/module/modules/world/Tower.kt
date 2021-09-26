@@ -27,11 +27,11 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.render.BlockOverlay
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.*
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.canBeClicked
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.isReplaceable
 import net.ccbluex.liquidbounce.utils.block.PlaceInfo
+import net.ccbluex.liquidbounce.utils.extensions.canBeClicked
+import net.ccbluex.liquidbounce.utils.extensions.getBlock
 import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.isReplaceable
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
@@ -211,7 +211,7 @@ class Tower : Module()
 
 			if (if (!autoBlockModeValue.get().equals("Off", ignoreCase = true)) InventoryUtils.findAutoBlockBlock(theWorld, thePlayer.inventoryContainer, autoBlockFullCubeOnlyValue.get()) != -1 || heldItem != null && provider.isItemBlock(heldItem.item) else heldItem != null && provider.isItemBlock(heldItem.item))
 			{
-				if (!stopWhenBlockAbove.get() || provider.isBlockAir(getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY + 2, thePlayer.posZ)))) move()
+				if (!stopWhenBlockAbove.get() || provider.isBlockAir(theWorld.getBlock(WBlockPos(thePlayer.posX, thePlayer.posY + 2, thePlayer.posZ)))) move()
 
 				val blockPos = WBlockPos(thePlayer.posX, thePlayer.posY - 1.0, thePlayer.posZ)
 				if (provider.isBlockAir(theWorld.getBlockState(blockPos).block) && search(theWorld, thePlayer, blockPos) && rotationEnabledValue.get())
@@ -469,7 +469,7 @@ class Tower : Module()
 	 */
 	private fun search(theWorld: IWorld, thePlayer: IEntity, blockPosition: WBlockPos): Boolean
 	{
-		if (!isReplaceable(theWorld, blockPosition)) return false
+		if (!theWorld.isReplaceable(blockPosition)) return false
 
 		val eyesPos = WVec3(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, thePlayer.posZ)
 		var placeRotation: PlaceRotation? = null
@@ -479,7 +479,7 @@ class Tower : Module()
 		EnumFacingType.values().map(provider::getEnumFacing).forEach { side ->
 			val neighbor = blockPosition.offset(side)
 
-			if (!canBeClicked(theWorld, neighbor)) return@forEach
+			if (!theWorld.canBeClicked(neighbor)) return@forEach
 
 			val dirVec = WVec3(side.directionVec)
 

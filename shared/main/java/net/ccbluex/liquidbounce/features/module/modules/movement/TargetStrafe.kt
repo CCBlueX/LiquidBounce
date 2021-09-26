@@ -18,9 +18,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
-import net.ccbluex.liquidbounce.utils.block.BlockUtils
-import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
-import net.ccbluex.liquidbounce.utils.extensions.isClientTarget
+import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbowRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.*
@@ -182,7 +180,7 @@ class TargetStrafe : Module()
 			val provider = classProvider
 			if (thePlayer.onGround && (thePlayer.isCollidedHorizontally // Horizontal collision check
 					|| !isAboveGround(theWorld, playerPosX + encirclementX + strafeX * 2, thePlayer.posY, playerPosZ + encirclementZ + strafeZ * 2)) // Safewalk check
-				|| BlockUtils.collideBlockIntersects(theWorld, thePlayer.entityBoundingBox.offset(encirclementX + strafeX, 0.0, encirclementZ + strafeZ)) { !provider.isBlockAir(it.block) && !BlockUtils.isReplaceable(theWorld, it) }) // Predict-based aabb collision check
+				|| theWorld.collideBlockIntersects(thePlayer.entityBoundingBox.offset(encirclementX + strafeX, 0.0, encirclementZ + strafeZ)) { !provider.isBlockAir(it.block) && !theWorld.isReplaceable(it) }) // Predict-based aabb collision check
 			{
 				direction *= -1F
 				strafeX *= -1
@@ -240,7 +238,7 @@ class TargetStrafe : Module()
 	private fun isAboveGround(theWorld: IWorld, x: Double, y: Double, z: Double): Boolean
 	{
 		var i = ceil(y)
-		while ((y - 5) < i--) if (!classProvider.isBlockAir(BlockUtils.getBlock(theWorld, WBlockPos(x, i, z)))) return true
+		while ((y - 5) < i--) if (!classProvider.isBlockAir(theWorld.getBlock(WBlockPos(x, i, z)))) return true
 
 		return false
 	}

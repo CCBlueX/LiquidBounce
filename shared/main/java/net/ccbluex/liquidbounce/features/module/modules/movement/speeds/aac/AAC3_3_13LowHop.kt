@@ -10,7 +10,6 @@ import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.extensions.*
 
 class AAC3_3_13LowHop : SpeedMode("AAC3.3.13-LowHop") // Was AACHop3.3.13
@@ -38,7 +37,7 @@ class AAC3_3_13LowHop : SpeedMode("AAC3.3.13-LowHop") // Was AACHop3.3.13
 		}
 		else if (thePlayer.fallDistance < 0.31f)
 		{
-			if (classProvider.isBlockCarpet(getBlock(theWorld, thePlayer.position))) // why?
+			if (classProvider.isBlockCarpet(theWorld.getBlock(thePlayer.position))) // why?
 				return
 
 			// Motion XZ

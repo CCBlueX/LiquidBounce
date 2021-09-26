@@ -22,10 +22,10 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.AutoTool
 import net.ccbluex.liquidbounce.utils.CPSCounter
 import net.ccbluex.liquidbounce.utils.RotationUtils
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.getCenterDistance
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.isFullBlock
+import net.ccbluex.liquidbounce.utils.extensions.distanceToCenter
+import net.ccbluex.liquidbounce.utils.extensions.getBlock
+import net.ccbluex.liquidbounce.utils.extensions.isFullBlock
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.*
@@ -75,7 +75,7 @@ object Fucker : Module()
 
 		val currentPos = currentPos
 
-		if (currentPos == null || functions.getIdFromBlock(getBlock(theWorld, currentPos)) != targetId || getCenterDistance(thePlayer, currentPos) > rangeValue.get()) this.currentPos = find(theWorld, thePlayer, targetId)
+		if (currentPos == null || functions.getIdFromBlock(theWorld.getBlock(currentPos)) != targetId || thePlayer.distanceToCenter(currentPos) > rangeValue.get()) this.currentPos = find(theWorld, thePlayer, targetId)
 
 		// Reset current breaking when there is no target block
 		if (currentPos == null)
@@ -233,7 +233,7 @@ object Fucker : Module()
 
 		(radius downTo -radius + 1).forEach { x ->
 			(radius downTo -radius + 1).forEach { y ->
-				(radius downTo -radius + 1).asSequence().map { z -> WBlockPos(posXI + x, posYI + y, posZI + z) }.filter { blockPos -> func.getIdFromBlock(getBlock(theWorld, blockPos)) == targetID }.map { it to getCenterDistance(thePlayer, it) }.filter { it.second <= range }.filter { it.second <= nearestBlockDistance }.filter { surroundings || isHitable(theWorld, thePlayer, it.first) }.toList().forEach {
+				(radius downTo -radius + 1).asSequence().map { z -> WBlockPos(posXI + x, posYI + y, posZI + z) }.filter { blockPos -> func.getIdFromBlock(theWorld.getBlock(blockPos)) == targetID }.map { it to thePlayer.distanceToCenter(it) }.filter { it.second <= range }.filter { it.second <= nearestBlockDistance }.filter { surroundings || isHitable(theWorld, thePlayer, it.first) }.toList().forEach {
 					nearestBlockDistance = it.second
 					nearestBlock = it.first
 				}
@@ -258,7 +258,7 @@ object Fucker : Module()
 				movingObjectPosition != null && movingObjectPosition.blockPos == blockPos
 			}
 
-			"around" -> facings.any { !isFullBlock(theWorld, blockPos.offset(it)) }
+			"around" -> facings.any { !theWorld.isFullBlock(blockPos.offset(it)) }
 			else -> true
 		}
 	}

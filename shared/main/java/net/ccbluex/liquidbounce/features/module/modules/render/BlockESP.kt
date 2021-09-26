@@ -13,8 +13,8 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
+import net.ccbluex.liquidbounce.utils.extensions.getBlock
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbowRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
@@ -121,7 +121,7 @@ class BlockESP : Module()
 			task = Runnable {
 				val blockList: MutableList<WBlockPos> = ArrayList()
 
-				(-radius until radius).forEach { x -> (-radius until radius).forEach { y -> (-radius until radius).map { z -> WBlockPos(playerX + x, playerY + y, playerZ + z) }.filter { blockList.size < blockLimit }.filter { getBlock(theWorld, it) == selectedBlock }.forEach { blockList.add(it) } } }
+				(-radius until radius).forEach { x -> (-radius until radius).forEach { y -> (-radius until radius).map { z -> WBlockPos(playerX + x, playerY + y, playerZ + z) }.filter { blockList.size < blockLimit }.filter { theWorld.getBlock(it) == selectedBlock }.forEach { blockList.add(it) } } }
 
 				searchTimer.reset()
 

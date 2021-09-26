@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.utils.render
 import net.ccbluex.liquidbounce.api.enums.WDefaultVertexFormats
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer
+import net.ccbluex.liquidbounce.api.minecraft.client.render.IWorldRenderer
 import net.ccbluex.liquidbounce.api.minecraft.client.render.entity.IRenderItem
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IGlStateManager
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
@@ -23,11 +24,7 @@ import net.ccbluex.liquidbounce.injection.backend.Backend
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.Maps
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
-import net.minecraft.client.renderer.GlStateManager
-import net.minecraft.client.renderer.Tessellator
-import net.minecraft.client.renderer.WorldRenderer
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats
+import net.ccbluex.liquidbounce.utils.extensions.getBlock
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL14
 import java.awt.Color
@@ -48,7 +45,7 @@ object RenderUtils : MinecraftInstance()
 	@JvmStatic
 	fun drawBlockBox(theWorld: IWorld, thePlayer: IEntity, blockPos: WBlockPos, color: Int, outlineColor: Int, hydraESP: Boolean, partialTicks: Float)
 	{
-		val block = getBlock(theWorld, blockPos)
+		val block = theWorld.getBlock(blockPos)
 
 		val lastTickPosX = thePlayer.lastTickPosX
 		val lastTickPosY = thePlayer.lastTickPosY
@@ -913,14 +910,14 @@ object RenderUtils : MinecraftInstance()
 		{
 			val text = "${if (stack.stackSize < 1) "\u00A7c" else ""}${stack.stackSize}"
 
-			GlStateManager.disableLighting()
-			GlStateManager.disableDepth()
-			GlStateManager.disableBlend()
+			glStateManager.disableLighting()
+			glStateManager.disableDepth()
+			glStateManager.disableBlend()
 
 			font.drawStringWithShadow(text, x + 19 - 2 - font.getStringWidth(text), y + 6 + 3, 16777215)
 
-			GlStateManager.enableLighting()
-			GlStateManager.enableDepth()
+			glStateManager.enableLighting()
+			glStateManager.enableDepth()
 		}
 
 		stack.item?.let { item ->
@@ -930,13 +927,13 @@ object RenderUtils : MinecraftInstance()
 				val j = (13.0 - bar * 13.0).roundToInt()
 				val i = (255.0 - bar * 255.0).roundToInt()
 
-				GlStateManager.disableLighting()
-				GlStateManager.disableDepth()
-				GlStateManager.disableTexture2D()
-				GlStateManager.disableAlpha()
-				GlStateManager.disableBlend()
+				glStateManager.disableLighting()
+				glStateManager.disableDepth()
+				glStateManager.disableTexture2D()
+				glStateManager.disableAlpha()
+				glStateManager.disableBlend()
 
-				val tessellator = Tessellator.getInstance()
+				val tessellator = classProvider.tessellatorInstance
 
 				// TODO: Change to drawRect()
 				val worldrenderer = tessellator.worldRenderer
@@ -944,24 +941,24 @@ object RenderUtils : MinecraftInstance()
 				draw(worldrenderer, x + 2, y + 13, 12, 1, (255 - i) / 4, 64, 0, 255)
 				draw(worldrenderer, x + 2, y + 13, j, 1, 255 - i, i, 0, 255)
 
-				GlStateManager.enableAlpha()
-				GlStateManager.enableTexture2D()
-				GlStateManager.enableLighting()
-				GlStateManager.enableDepth()
+				glStateManager.enableAlpha()
+				glStateManager.enableTexture2D()
+				glStateManager.enableLighting()
+				glStateManager.enableDepth()
 			}
 		}
 
 		renderItemEnchantments(glStateManager, font, stack, x + 2, y + 2)
 	}
 
-	private fun draw(renderer: WorldRenderer, x: Int, y: Int, width: Int, height: Int, red: Int, green: Int, blue: Int, alpha: Int)
+	private fun draw(renderer: IWorldRenderer, x: Int, y: Int, width: Int, height: Int, red: Int, green: Int, blue: Int, alpha: Int)
 	{
-		renderer.begin(7, DefaultVertexFormats.POSITION_COLOR)
+		renderer.begin(7, classProvider.getVertexFormatEnum(WDefaultVertexFormats.POSITION_COLOR))
 		renderer.pos(x.toDouble(), y.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
 		renderer.pos(x.toDouble(), (y + height).toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
 		renderer.pos((x + width).toDouble(), (y + height).toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
 		renderer.pos((x + width).toDouble(), y.toDouble(), 0.0).color(red, green, blue, alpha).endVertex()
-		Tessellator.getInstance().draw()
+		classProvider.tessellatorInstance.draw()
 	}
 
 	init

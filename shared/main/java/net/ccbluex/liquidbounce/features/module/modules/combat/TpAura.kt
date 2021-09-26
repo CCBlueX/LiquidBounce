@@ -21,7 +21,6 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.CPSCounter
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.EntityUtils.isEnemy
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.getState
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.pathfinding.PathFinder
@@ -385,7 +384,7 @@ class TpAura : Module()
 
 		private fun canPassThrough(theWorld: IWorld, pos: WBlockPos): Boolean
 		{
-			val state = getState(theWorld, WBlockPos(pos.x, pos.y, pos.z))
+			val state = theWorld.getBlockState(WBlockPos(pos.x, pos.y, pos.z))
 			val block = state.block
 
 			val provider = classProvider

@@ -15,8 +15,8 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.injection.backend.Backend
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.canBeClicked
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
+import net.ccbluex.liquidbounce.utils.extensions.canBeClicked
+import net.ccbluex.liquidbounce.utils.extensions.getBlock
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbowRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.*
@@ -51,7 +51,7 @@ class BlockOverlay : Module()
 	{
 		val blockPos = mc.objectMouseOver?.blockPos ?: return null
 
-		if (canBeClicked(theWorld, blockPos) && blockPos in theWorld.worldBorder) return blockPos
+		if (theWorld.canBeClicked(blockPos) && blockPos in theWorld.worldBorder) return blockPos
 
 		return null
 	}
@@ -110,7 +110,7 @@ class BlockOverlay : Module()
 			val theWorld = mc.theWorld ?: return
 
 			val blockPos = getCurrentBlock(theWorld) ?: return
-			val block = getBlock(theWorld, blockPos)
+			val block = theWorld.getBlock(blockPos)
 
 			val info = "${block.localizedName} \u00A77ID: ${functions.getIdFromBlock(block)}"
 

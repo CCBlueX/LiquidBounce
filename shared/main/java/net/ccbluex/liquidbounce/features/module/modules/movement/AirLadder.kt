@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.block.BlockUtils
+import net.ccbluex.liquidbounce.utils.extensions.getBlock
 import net.ccbluex.liquidbounce.utils.extensions.zeroXZ
 import net.ccbluex.liquidbounce.value.FloatValue
 
@@ -28,7 +28,7 @@ class AirLadder : Module()
 
 		val provider = classProvider
 
-		if (provider.isBlockLadder(BlockUtils.getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ))) && thePlayer.isCollidedHorizontally || provider.isBlockVine(BlockUtils.getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ))) || provider.isBlockVine(BlockUtils.getBlock(theWorld, WBlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ))))
+		if (provider.isBlockLadder(theWorld.getBlock(WBlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ))) && thePlayer.isCollidedHorizontally || provider.isBlockVine(theWorld.getBlock(WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ))) || provider.isBlockVine(theWorld.getBlock(WBlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ))))
 		{
 			thePlayer.motionY = motionValue.get().toDouble()
 			thePlayer.zeroXZ()

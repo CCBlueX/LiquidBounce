@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlockIntersects
+import net.ccbluex.liquidbounce.utils.extensions.collideBlockIntersects
 import net.ccbluex.liquidbounce.utils.extensions.moveDirectionRadians
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -70,7 +70,7 @@ class WallClimb : Module()
 
 			"checkerclimb" ->
 			{
-				val isInsideBlock = collideBlockIntersects(theWorld, thePlayer.entityBoundingBox) { !classProvider.isBlockAir(it) }
+				val isInsideBlock = theWorld.collideBlockIntersects(thePlayer.entityBoundingBox) { !classProvider.isBlockAir(it) }
 				val motion = checkerClimbMotionValue.get()
 
 				if (isInsideBlock && motion != 0f) thePlayer.motionY = motion.toDouble()
