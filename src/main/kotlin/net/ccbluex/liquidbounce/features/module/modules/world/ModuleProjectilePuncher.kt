@@ -46,6 +46,7 @@ import net.minecraft.util.Hand
 object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
 
     private val swing by boolean("Swing", true)
+    private val range by float("Range", 3f, 3f..6f)
 
     // Target
     private val targetTracker = tree(TargetTracker())
@@ -66,7 +67,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
             return
         }
 
-        val squaredRange = 6.0 * 6.0
+        val squaredRange = range * range
 
         targetTracker.validateLock { it.squaredBoxedDistanceTo(player) <= squaredRange }
 
@@ -80,7 +81,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
                 val (rotation, _) = RotationManager.raytraceBox(
                     player.eyesPos,
                     entity.boundingBox,
-                    range = squaredRange,
+                    range = range.toDouble(),
                     wallsRange = 0.0
                 ) ?: continue
 
@@ -113,7 +114,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
             player.swingHand(Hand.MAIN_HAND)
         }
 
-        // Reset cooldown
+        // Reset cool down
         player.resetLastAttackedTicks()
     }
 }
