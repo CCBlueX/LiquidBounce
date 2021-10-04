@@ -33,6 +33,7 @@ import net.minecraft.item.SplashPotionItem
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
+import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.potion.PotionUtil
 import net.minecraft.screen.slot.SlotActionType
 import net.minecraft.util.Hand
@@ -46,13 +47,11 @@ import org.apache.commons.lang3.RandomUtils
 
 object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
 
-    val delay by int("Delay", 10, 10..20)
-    val health by int("Health", 18, 1..20)
-    val tillGroundDistance by float("TillGroundDistance", 2f, 1f..5f)
+    private val delay by int("Delay", 10, 10..20)
+    private val health by int("Health", 18, 1..20)
+    private val tillGroundDistance by float("TillGroundDistance", 2f, 1f..5f)
 
     val rotations = tree(RotationsConfigurable())
-
-    var lastSlot = -1
 
     val repeatable = repeatable {
         if (player.isDead) {
@@ -63,10 +62,6 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
         val potInvSlot = findPotion(9, 40)
 
         if (potHotBar == null && potInvSlot == null) {
-            if (lastSlot != -1) {
-                player.inventory.selectedSlot = lastSlot
-                lastSlot = -1
-            }
             return@repeatable
         }
 
@@ -78,8 +73,9 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
                     return@repeatable
                 }
 
-                lastSlot = player.inventory.selectedSlot
-                player.inventory.selectedSlot = potHotBar
+                if (potHotBar != player.inventory.selectedSlot) {
+                    network.sendPacket(UpdateSelectedSlotC2SPacket(potHotBar))
+                }
 
                 if (player.pitch <= 80) {
                     RotationManager.aimAt(
@@ -92,7 +88,9 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
                 wait(2)
                 network.sendPacket(PlayerInteractItemC2SPacket(Hand.MAIN_HAND))
 
-                player.inventory.selectedSlot = lastSlot
+                if (potHotBar != player.inventory.selectedSlot) {
+                    network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
+                }
 
                 wait(delay)
 
@@ -122,7 +120,7 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
         }
     }
 
-    fun findPotion(startSlot: Int, endSlot: Int): Int? {
+    private fun findPotion(startSlot: Int, endSlot: Int): Int? {
         for (slot in startSlot..endSlot) {
             val stack = player.inventory.getStack(slot)
             if (stack.item is SplashPotionItem) {
