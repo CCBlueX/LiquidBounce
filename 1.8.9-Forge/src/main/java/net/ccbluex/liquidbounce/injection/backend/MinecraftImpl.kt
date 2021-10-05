@@ -106,6 +106,10 @@ class MinecraftImpl(val wrapped: Minecraft) : IMinecraft
 	override fun rightClickMouse() = wrapped.rightClickMouse()
 	override fun shutdown() = wrapped.shutdown()
 	override fun toggleFullscreen() = wrapped.toggleFullscreen()
+	override fun addScheduledTask(block: () -> Unit)
+	{
+		wrapped.addScheduledTask(block)
+	}
 
 	override fun equals(other: Any?): Boolean = other is MinecraftImpl && other.wrapped == wrapped
 }

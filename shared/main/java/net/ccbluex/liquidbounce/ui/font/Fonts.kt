@@ -11,8 +11,6 @@ import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer
 import net.ccbluex.liquidbounce.utils.ClientUtils.logger
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils.download
-import net.ccbluex.liquidbounce.utils.misc.MiscUtils.createBufferedFileReader
-import net.ccbluex.liquidbounce.utils.misc.MiscUtils.createBufferedFileWriter
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils.nanosecondsToString
 import java.awt.Font
 import java.io.*
@@ -55,7 +53,7 @@ object Fonts : MinecraftInstance()
 			val fontsFile = File(LiquidBounce.fileManager.fontsDir, "fonts.json")
 			if (fontsFile.exists())
 			{
-				val jsonElement = JsonParser().parse(createBufferedFileReader(fontsFile))
+				val jsonElement = JsonParser().parse(fontsFile.bufferedReader())
 
 				if (jsonElement is JsonNull) return
 
@@ -76,7 +74,7 @@ object Fonts : MinecraftInstance()
 			{
 				fontsFile.createNewFile()
 
-				val writer = createBufferedFileWriter(fontsFile)
+				val writer = fontsFile.bufferedWriter()
 				writer.write(GsonBuilder().setPrettyPrinting().create().toJson(JsonArray()) + System.lineSeparator())
 				writer.close()
 			}

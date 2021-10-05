@@ -29,8 +29,6 @@ import net.ccbluex.liquidbounce.utils.login.MinecraftAccount
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount.AltServiceType
 import net.ccbluex.liquidbounce.utils.login.UserUtils.isValidTokenOffline
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
-import net.ccbluex.liquidbounce.utils.misc.MiscUtils.createBufferedFileReader
-import net.ccbluex.liquidbounce.utils.misc.MiscUtils.createBufferedFileWriter
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils.openFileChooser
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils.saveFileChooser
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils.showErrorPopup
@@ -219,7 +217,7 @@ class GuiAltManager(private val prevGui: IGuiScreen?) : WrappedGuiScreen()
 			7 ->
 			{
 				val file = openFileChooser() ?: return
-				val bufferedReader = createBufferedFileReader(file)
+				val bufferedReader = file.bufferedReader()
 				var line: String
 				while (bufferedReader.readLine().also { line = it } != null)
 				{
@@ -260,7 +258,7 @@ class GuiAltManager(private val prevGui: IGuiScreen?) : WrappedGuiScreen()
 				try
 				{
 					if (!selectedFile.exists()) selectedFile.createNewFile()
-					val fileWriter = createBufferedFileWriter(selectedFile)
+					val fileWriter = selectedFile.bufferedWriter()
 					for (account in LiquidBounce.fileManager.accountsConfig.accounts) fileWriter.write(if (account.isCracked) account.name + System.lineSeparator() else account.name + ":" + account.password + System.lineSeparator())
 					fileWriter.flush()
 					fileWriter.close()

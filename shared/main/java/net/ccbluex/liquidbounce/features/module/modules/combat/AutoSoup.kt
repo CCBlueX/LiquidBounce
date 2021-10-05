@@ -19,6 +19,9 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.createOpenInventoryPacket
 import net.ccbluex.liquidbounce.utils.createUseItemPacket
+import net.ccbluex.liquidbounce.utils.extensions.findItem
+import net.ccbluex.liquidbounce.utils.extensions.firstEmpty
+import net.ccbluex.liquidbounce.utils.extensions.hasSpaceHotbar
 import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.*
@@ -86,7 +89,7 @@ class AutoSoup : Module()
 			{
 				if (soupDelayTimer.hasTimePassed(soupDelay) && (ignoreScreen.get() || provider.isGuiContainer(screen)))
 				{
-					val soupInHotbar = InventoryUtils.findItem(inventoryContainer, 36, 45, provider.getItemEnum(ItemType.MUSHROOM_STEW), itemDelay, random)
+					val soupInHotbar = inventoryContainer.findItem(36, 45, provider.getItemEnum(ItemType.MUSHROOM_STEW), itemDelay, random)
 
 					if (thePlayer.health <= healthValue.get() && soupInHotbar != -1)
 					{
@@ -112,7 +115,7 @@ class AutoSoup : Module()
 					val bowl = provider.getItemEnum(ItemType.BOWL)
 
 					// Move empty bowls to inventory
-					val bowlInHotbar = InventoryUtils.findItem(inventoryContainer, 36, 45, bowl, itemDelay, random)
+					val bowlInHotbar = inventoryContainer.findItem(36, 45, bowl, itemDelay, random)
 
 					val isGuiInventory = provider.isGuiInventory(screen)
 					val simulateInv = inventorySimulateInventoryValue.get()
@@ -137,9 +140,9 @@ class AutoSoup : Module()
 					}
 
 					// Move soups to hotbar
-					var soupInInventory = InventoryUtils.findItem(inventoryContainer, 9, 36, provider.getItemEnum(ItemType.MUSHROOM_STEW), itemDelay, random)
+					var soupInInventory = inventoryContainer.findItem(9, 36, provider.getItemEnum(ItemType.MUSHROOM_STEW), itemDelay, random)
 
-					if (soupInInventory != -1 && InventoryUtils.hasSpaceHotbar(inventory))
+					if (soupInInventory != -1 && inventory.hasSpaceHotbar)
 					{
 
 						// OpenInventory Check
@@ -148,7 +151,7 @@ class AutoSoup : Module()
 						// Simulate Click Mistakes to bypass some anti-cheats
 						if (inventoryMisclickEnabledValue.get() && inventoryMisclickRateValue.get() > 0 && Random.nextInt(100) <= inventoryMisclickRateValue.get())
 						{
-							val firstEmpty = InventoryUtils.firstEmpty(inventoryContainer, 9, 36, random)
+							val firstEmpty = inventoryContainer.firstEmpty(9, 36, random)
 							if (firstEmpty != -1) soupInInventory = firstEmpty
 						}
 

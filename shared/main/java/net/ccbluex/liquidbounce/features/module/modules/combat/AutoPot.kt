@@ -20,6 +20,8 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.*
+import net.ccbluex.liquidbounce.utils.extensions.firstEmpty
+import net.ccbluex.liquidbounce.utils.extensions.hasSpaceHotbar
 import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
@@ -234,7 +236,7 @@ class AutoPot : Module()
 					val healPotionInInventory = findHealPotion(thePlayer, 9, 36, inventoryContainer, invRandomSlot)
 					val buffPotionInInventory = findBuffPotion(activePotionEffects, 9, 36, inventoryContainer, invRandomSlot)
 
-					if ((healPotionInInventory != -1 || buffPotionInInventory != -1) && InventoryUtils.hasSpaceHotbar(thePlayer.inventory))
+					if ((healPotionInInventory != -1 || buffPotionInInventory != -1) && thePlayer.inventory.hasSpaceHotbar)
 					{
 						if (inventoryOpenInventoryValue.get() && isNotInventory) return
 
@@ -245,7 +247,7 @@ class AutoPot : Module()
 						// Simulate Click Mistakes to bypass some (geek) anti-cheat's click accuracy checks
 						if (inventoryMisclickEnabledValue.get() && misclickRate > 0 && Random.nextInt(100) <= misclickRate)
 						{
-							val firstEmpty = InventoryUtils.firstEmpty(thePlayer.inventoryContainer, 9, 36, invRandomSlot)
+							val firstEmpty = thePlayer.inventoryContainer.firstEmpty(9, 36, invRandomSlot)
 							if (firstEmpty != -1) slot = firstEmpty
 						}
 

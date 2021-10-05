@@ -37,7 +37,7 @@ class FriendsConfig(file: File) : FileConfig(file)
 		clearFriends()
 		try
 		{
-			val jsonElement = JsonParser().parse(MiscUtils.createBufferedFileReader(file))
+			val jsonElement = JsonParser().parse(file.bufferedReader())
 
 			if (jsonElement is JsonNull) return
 
@@ -49,7 +49,7 @@ class FriendsConfig(file: File) : FileConfig(file)
 
 			logger.info("[FileManager] Try to load old Friends config...")
 
-			val bufferedReader = MiscUtils.createBufferedFileReader(file)
+			val bufferedReader = file.bufferedReader()
 			val emptyReplacement = Matcher.quoteReplacement("")
 			var line: String
 
@@ -77,7 +77,7 @@ class FriendsConfig(file: File) : FileConfig(file)
 		{
 			logger.info("[FileManager] Try to load old Friends config...")
 
-			val bufferedReader = MiscUtils.createBufferedFileReader(file)
+			val bufferedReader = file.bufferedReader()
 			val emptyReplacement = Matcher.quoteReplacement("")
 			var line: String
 
@@ -122,7 +122,7 @@ class FriendsConfig(file: File) : FileConfig(file)
 			jsonArray.add(friendObject)
 		}
 
-		val writer = MiscUtils.createBufferedFileWriter(file)
+		val writer = file.bufferedWriter()
 		writer.write(FileManager.PRETTY_GSON.toJson(jsonArray) + System.lineSeparator())
 		writer.close()
 	}

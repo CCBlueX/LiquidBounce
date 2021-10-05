@@ -18,6 +18,7 @@ import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.EntityUtils;
 import net.ccbluex.liquidbounce.utils.Rotation;
 import net.ccbluex.liquidbounce.utils.RotationUtils;
+import net.ccbluex.liquidbounce.utils.extensions.EntityExtensionKt;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.ccbluex.liquidbounce.value.RGBAColorValue;
 import net.minecraft.client.Minecraft;
@@ -116,7 +117,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 		final Rotations rotations = (Rotations) LiquidBounce.moduleManager.get(Rotations.class);
 
 		// Chams Pre
-		if (chams.getState() && chams.getTargetsValue().get() && EntityUtils.isSelected(EntityLivingBaseImplKt.wrap(entity), false))
+		if (chams.getState() && chams.getTargetsValue().get() && EntityExtensionKt.isSelected(EntityLivingBaseImplKt.wrap(entity), false))
 		{
 			GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);
 			GL11.glPolygonOffset(1.0F, -1000000.0F);
@@ -210,7 +211,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 
 				final ESP esp = (ESP) LiquidBounce.moduleManager.get(ESP.class);
 				final String mode = esp.getModeValue().get();
-				if (esp.getState() && ("Fill".equalsIgnoreCase(mode) || "CSGO".equalsIgnoreCase(mode)) && EntityUtils.isSelected(EntityLivingBaseImplKt.wrap(entity), false))
+				if (esp.getState() && ("Fill".equalsIgnoreCase(mode) || "CSGO".equalsIgnoreCase(mode)) && EntityExtensionKt.isSelected(EntityLivingBaseImplKt.wrap(entity), false))
 				{
 					final Minecraft mc = Minecraft.getMinecraft();
 					mc.entityRenderer.disableLightmap();
@@ -266,7 +267,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 		if (!renderOutlines)
 			doRender(entity, x, y, z, entityYaw, partialTicks, null);
 
-		if (chams.getState() && chams.getTargetsValue().get() && EntityUtils.isSelected(EntityLivingBaseImplKt.wrap(entity), false))
+		if (chams.getState() && chams.getTargetsValue().get() && EntityExtensionKt.isSelected(EntityLivingBaseImplKt.wrap(entity), false))
 		{
 			GL11.glPolygonOffset(1.0F, 1000000.0F);
 			GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);
@@ -278,7 +279,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 	@Inject(method = "canRenderName", at = @At("HEAD"), cancellable = true)
 	private <T extends EntityLivingBase> void canRenderName(final T entity, final CallbackInfoReturnable<? super Boolean> callbackInfoReturnable)
 	{
-		if (!ESP.Companion.getRenderNameTags() || LiquidBounce.moduleManager.get(NameTags.class).getState() && EntityUtils.isSelected(EntityLivingBaseImplKt.wrap(entity), false))
+		if (!ESP.Companion.getRenderNameTags() || LiquidBounce.moduleManager.get(NameTags.class).getState() && EntityExtensionKt.isSelected(EntityLivingBaseImplKt.wrap(entity), false))
 			callbackInfoReturnable.setReturnValue(false);
 	}
 
@@ -312,7 +313,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 			}
 
 			final ESP esp = (ESP) LiquidBounce.moduleManager.get(ESP.class);
-			if (esp.getState() && EntityUtils.isSelected(EntityLivingBaseImplKt.wrap(entitylivingbaseIn), false))
+			if (esp.getState() && EntityExtensionKt.isSelected(EntityLivingBaseImplKt.wrap(entitylivingbaseIn), false))
 			{
 				final Minecraft mc = Minecraft.getMinecraft();
 				final boolean fancyGraphics = mc.gameSettings.fancyGraphics;

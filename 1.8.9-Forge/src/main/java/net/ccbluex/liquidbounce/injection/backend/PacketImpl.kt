@@ -81,6 +81,8 @@ open class PacketImpl<out T : Packet<*>>(val wrapped: T) : IPacket
 	override fun asCPacketClientStatus(): ICPacketClientStatus = CPacketClientStatusImpl(wrapped as C16PacketClientStatus)
 
 	override fun asCPacketCloseWindow(): ICPacketCloseWindow = CPacketCloseWindowImpl(wrapped as C0DPacketCloseWindow)
+
+	override fun asCPacketEntityAction(): ICPacketEntityAction = CPacketEntityActionImpl(wrapped as C0BPacketEntityAction)
 	// </editor-fold>
 
 	override fun equals(other: Any?): Boolean = other is PacketImpl<*> && other.wrapped == wrapped

@@ -23,10 +23,13 @@ import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import java.util.*
 
-// TODO: Add TpFucker (like TpEggBreaker in Jigsaw)
-// TODO: ProjectileAimbot (https://github.com/CCBlueX/Old-LiquidBounce-Issues/issues/3496)
-// TODO: FarmBot (Wheat Nuker + Automatically plant seeds)
-// TODO: AutoFishHook + FishHookAimbot(or integrate FishHook support to ProjectileAimbot)
+/**
+ * TODO
+ * * Add TpFucker (like TpEggBreaker in Jigsaw)
+ * * ProjectileAimbot (https://github.com/CCBlueX/Old-LiquidBounce-Issues/issues/3496)
+ * * FarmBot (Wheat Nuker + Automatically plant seeds)
+ * * AutoFishHook + FishHookAimbot(or integrate FishHook support to ProjectileAimbot)
+ */
 class ModuleManager : Listenable
 {
 	val modules = TreeSet<Module> { module1, module2 -> module1.name.compareTo(module2.name) }

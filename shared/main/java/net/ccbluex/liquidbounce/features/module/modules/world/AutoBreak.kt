@@ -22,7 +22,10 @@ class AutoBreak : Module()
 		val theWorld = mc.theWorld ?: return
 		val mouseOverPos = mc.objectMouseOver?.blockPos ?: return
 
-		mc.gameSettings.keyBindAttack.pressed = theWorld.getBlockState(mouseOverPos).block != classProvider.getBlockEnum(BlockType.AIR)
+		val keybindAttack = mc.gameSettings.keyBindAttack
+
+		if (keybindAttack.pressed && mc.playerController.hittingBlock) keybindAttack.pressed = false
+		else keybindAttack.pressed = theWorld.getBlockState(mouseOverPos).block != classProvider.getBlockEnum(BlockType.AIR)
 	}
 
 	override fun onDisable()

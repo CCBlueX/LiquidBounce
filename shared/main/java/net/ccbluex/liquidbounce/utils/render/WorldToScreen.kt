@@ -2,7 +2,10 @@ package net.ccbluex.liquidbounce.utils.render
 
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL11
-import org.lwjgl.util.vector.*
+import org.lwjgl.util.vector.Matrix4f
+import org.lwjgl.util.vector.Vector2f
+import org.lwjgl.util.vector.Vector3f
+import org.lwjgl.util.vector.Vector4f
 
 object WorldToScreen
 {
@@ -20,7 +23,7 @@ object WorldToScreen
 
 	fun worldToScreen(pointInWorld: Vector3f, view: Matrix4f, projection: Matrix4f, screenWidth: Int, screenHeight: Int): Vector2f?
 	{
-		val clipSpacePos = multiply(multiply(Vector4f(pointInWorld.x, pointInWorld.y, pointInWorld.z, 1.0f), view), projection)
+		val clipSpacePos = Vector4f(pointInWorld.x, pointInWorld.y, pointInWorld.z, 1.0f) * view * projection
 		val ndcSpacePos = Vector3f(clipSpacePos.x / clipSpacePos.w, clipSpacePos.y / clipSpacePos.w, clipSpacePos.z / clipSpacePos.w)
 
 //        System.out.println(pointInNdc);
@@ -31,5 +34,5 @@ object WorldToScreen
 		return if (ndcSpacePos.z < -1.0 || ndcSpacePos.z > 1.0) null else Vector2f(screenX, screenY)
 	}
 
-	private fun multiply(vec: Vector4f, mat: Matrix4f): Vector4f = Vector4f(vec.x * mat.m00 + vec.y * mat.m10 + vec.z * mat.m20 + vec.w * mat.m30, vec.x * mat.m01 + vec.y * mat.m11 + vec.z * mat.m21 + vec.w * mat.m31, vec.x * mat.m02 + vec.y * mat.m12 + vec.z * mat.m22 + vec.w * mat.m32, vec.x * mat.m03 + vec.y * mat.m13 + vec.z * mat.m23 + vec.w * mat.m33)
+	private operator fun Vector4f.times(mat: Matrix4f): Vector4f = Vector4f(x * mat.m00 + y * mat.m10 + z * mat.m20 + w * mat.m30, x * mat.m01 + y * mat.m11 + z * mat.m21 + w * mat.m31, x * mat.m02 + y * mat.m12 + z * mat.m22 + w * mat.m32, x * mat.m03 + y * mat.m13 + z * mat.m23 + w * mat.m33)
 }

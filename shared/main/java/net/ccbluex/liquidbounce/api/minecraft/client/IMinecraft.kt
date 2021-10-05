@@ -62,4 +62,5 @@ interface IMinecraft
 	fun rightClickMouse()
 	fun shutdown()
 	fun toggleFullscreen()
+	fun addScheduledTask(block: () -> Unit)
 }

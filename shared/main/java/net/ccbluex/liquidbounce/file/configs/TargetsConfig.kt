@@ -33,7 +33,7 @@ class TargetsConfig(file: File) : FileConfig(file)
 	{
 		clearTargets()
 
-		val jsonElement = JsonParser().parse(MiscUtils.createBufferedFileReader(file))
+		val jsonElement = JsonParser().parse(file.bufferedReader())
 
 		if (jsonElement is JsonNull) return
 
@@ -52,7 +52,7 @@ class TargetsConfig(file: File) : FileConfig(file)
 
 		for (target in targets) jsonArray.add(JsonPrimitive(target))
 
-		val writer = MiscUtils.createBufferedFileWriter(file)
+		val writer = file.bufferedWriter()
 		writer.write(FileManager.PRETTY_GSON.toJson(jsonArray) + System.lineSeparator())
 		writer.close()
 	}

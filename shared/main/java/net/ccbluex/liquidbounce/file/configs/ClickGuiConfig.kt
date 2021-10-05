@@ -33,7 +33,7 @@ class ClickGuiConfig(file: File) : FileConfig(file)
 	@Throws(IOException::class)
 	override fun loadConfig()
 	{
-		val jsonElement = JsonParser().parse(MiscUtils.createBufferedFileReader(file))
+		val jsonElement = JsonParser().parse(file.bufferedReader())
 
 		if (jsonElement is JsonNull) return
 
@@ -93,7 +93,7 @@ class ClickGuiConfig(file: File) : FileConfig(file)
 			jsonObject.add(panel.name, panelObject)
 		}
 
-		val writer = MiscUtils.createBufferedFileWriter(file)
+		val writer = file.bufferedWriter()
 		writer.write(FileManager.PRETTY_GSON.toJson(jsonObject) + System.lineSeparator())
 		writer.close()
 	}

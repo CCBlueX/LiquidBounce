@@ -121,7 +121,7 @@ class GuiPortScanner(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 				try
 				{
 					if (!selectedFile.exists()) selectedFile.createNewFile()
-					val fileWriter = MiscUtils.createBufferedFileWriter(selectedFile)
+					val fileWriter = selectedFile.bufferedWriter()
 					fileWriter.write("Portscan" + System.lineSeparator())
 					fileWriter.write("Host: " + host + System.lineSeparator() + System.lineSeparator())
 					fileWriter.write("Ports (" + minPort + " - " + maxPort + "): " + System.lineSeparator())

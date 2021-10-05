@@ -13,11 +13,11 @@ import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.PathUtils.findPath
-import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
 import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.extensions.isSelected
+import net.ccbluex.liquidbounce.utils.extensions.raycastEntity
 import javax.vecmath.Vector3d
 
 @ModuleInfo(name = "TeleportHit", description = "Allows to hit entities from far away.", category = ModuleCategory.COMBAT)
@@ -36,9 +36,9 @@ class TeleportHit : Module()
 
 		val provider = classProvider
 
-		val facedEntity = raycastEntity(theWorld, thePlayer, 100.0, provider::isEntityLivingBase)
+		val facedEntity = theWorld.raycastEntity(thePlayer, 100.0, provider::isEntityLivingBase)
 
-		if (mc.gameSettings.keyBindAttack.isKeyDown && isSelected(facedEntity, true) && (facedEntity?.getDistanceSqToEntity(thePlayer) ?: 0.0) >= 1.0) targetEntity = facedEntity?.asEntityLivingBase()
+		if (mc.gameSettings.keyBindAttack.isKeyDown && facedEntity.isSelected(true) && (facedEntity?.getDistanceSqToEntity(thePlayer) ?: 0.0) >= 1.0) targetEntity = facedEntity?.asEntityLivingBase()
 
 		val currentTarget = targetEntity
 		if (currentTarget != null)

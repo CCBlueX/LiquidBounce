@@ -517,7 +517,7 @@ class Scaffold : Module()
 		val heldItem = thePlayer.heldItem
 		val heldItemIsNotBlock: Boolean = heldItem == null || !provider.isItemBlock(heldItem.item)
 
-		if (if (autoBlockModeValue.get().equals("Off", true)) heldItemIsNotBlock else InventoryUtils.findAutoBlockBlock(theWorld, thePlayer.inventoryContainer, autoBlockFullCubeOnlyValue.get()) == -1 && heldItemIsNotBlock) return
+		if (if (autoBlockModeValue.get().equals("Off", true)) heldItemIsNotBlock else thePlayer.inventoryContainer.findAutoBlockBlock(theWorld, autoBlockFullCubeOnlyValue.get()) == -1 && heldItemIsNotBlock) return
 
 		val groundSearchDepth = 0.2
 
@@ -576,7 +576,7 @@ class Scaffold : Module()
 
 		val provider = classProvider
 
-		if (autoBlock == null || !provider.isItemBlock(autoBlock.item) || autoBlock.stackSize <= 0 || autoBlock.item?.let { !InventoryUtils.canAutoBlock(it.asItemBlock().block) } != false)
+		if (autoBlock == null || !provider.isItemBlock(autoBlock.item) || autoBlock.stackSize <= 0 || autoBlock.item?.let { !it.asItemBlock().block.canAutoBlock } != false)
 		{
 			if (autoBlockModeValue.get().equals("Off", true))
 			{
@@ -586,7 +586,7 @@ class Scaffold : Module()
 
 			val inventoryContainer = thePlayer.inventoryContainer
 
-			val autoBlockSlot = InventoryUtils.findAutoBlockBlock(theWorld, inventoryContainer, autoBlockFullCubeOnlyValue.get())
+			val autoBlockSlot = inventoryContainer.findAutoBlockBlock(theWorld, autoBlockFullCubeOnlyValue.get())
 			if (autoBlockSlot == -1)
 			{
 				failedResponce("(Hand) Insufficient block")
@@ -774,7 +774,7 @@ class Scaffold : Module()
 			placeDebug = listOf("result".equalTo("FAILED", "\u00A74"), "reason" equalTo reason.withParentheses("\u00A74")).serialize()
 		}
 
-		if (InventoryUtils.AUTOBLOCK_BLACKLIST.contains(theWorld.getBlock((targetPlace ?: return).blockPos)))
+		if (BLACKLISTED_BLOCKS.contains(theWorld.getBlock((targetPlace ?: return).blockPos)))
 		{
 			placeableDelay()
 			failedResponce("Blacklisted block in targetPlace.blockPos")
@@ -810,7 +810,7 @@ class Scaffold : Module()
 		var itemStack = inventory.mainInventory[slot]
 		var switched = false
 
-		if (itemStack == null || !provider.isItemBlock(itemStack.item) || !InventoryUtils.canAutoBlock(itemStack.item?.asItemBlock()?.block) || itemStack.stackSize <= 0)
+		if (itemStack == null || !provider.isItemBlock(itemStack.item) || !itemStack.item?.asItemBlock()?.block.canAutoBlock || itemStack.stackSize <= 0)
 		{
 			if (autoBlockMode == "off")
 			{
@@ -819,7 +819,7 @@ class Scaffold : Module()
 			}
 
 			// Auto-Block
-			val blockSlot = InventoryUtils.findAutoBlockBlock(theWorld, thePlayer.inventoryContainer, autoBlockFullCubeOnlyValue.get(), lastSearchPosition?.let(theWorld::getBlockState)?.let { state -> theWorld.getBlockCollisionBox(state)?.maxY } ?: 0.0) // Default boundingBoxYLimit it 0.0
+			val blockSlot = thePlayer.inventoryContainer.findAutoBlockBlock(theWorld, autoBlockFullCubeOnlyValue.get(), lastSearchPosition?.let(theWorld::getBlockState)?.let { state -> theWorld.getBlockCollisionBox(state)?.maxY } ?: 0.0) // Default boundingBoxYLimit it 0.0
 
 			// If there is no autoblock-able blocks in your inventory, we can't continue.
 			if (blockSlot == -1)
@@ -1226,7 +1226,7 @@ class Scaffold : Module()
 		val inventory = thePlayer.inventory
 		val heldItem = thePlayer.heldItem
 
-		(0..8).map(inventory::getStackInSlot).filter { provider.isItemBlock(it?.item) }.mapNotNull { it to (it?.item ?: return@mapNotNull null).asItemBlock() }.filter { heldItem == it.first || InventoryUtils.canAutoBlock(it.second.block) }.forEach { amount += (it.first ?: return@forEach).stackSize }
+		(0..8).map(inventory::getStackInSlot).filter { provider.isItemBlock(it?.item) }.mapNotNull { it to (it?.item ?: return@mapNotNull null).asItemBlock() }.filter { heldItem == it.first || it.second.block.canAutoBlock }.forEach { amount += (it.first ?: return@forEach).stackSize }
 
 		return amount
 	}

@@ -47,7 +47,7 @@ class ValuesConfig(file: File) : FileConfig(file)
 	{
 		var backwardCompatibility = false
 
-		val jsonElement = JsonParser().parse(MiscUtils.createBufferedFileReader(file))
+		val jsonElement = JsonParser().parse(file.bufferedReader())
 		if (jsonElement is JsonNull) return
 		val jsonObject = jsonElement as JsonObject
 		for ((key, value) in jsonObject.entrySet()) when (key.toLowerCase())
@@ -201,7 +201,7 @@ class ValuesConfig(file: File) : FileConfig(file)
 			jsonObject.add(module.name, jsonModule)
 		}
 
-		val writer = MiscUtils.createBufferedFileWriter(file)
+		val writer = file.bufferedWriter()
 		writer.write(FileManager.PRETTY_GSON.toJson(jsonObject) + System.lineSeparator())
 		writer.close()
 	}

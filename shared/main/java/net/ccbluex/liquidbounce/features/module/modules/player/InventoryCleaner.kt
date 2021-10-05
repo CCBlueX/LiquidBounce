@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.AutoPot
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.createOpenInventoryPacket
+import net.ccbluex.liquidbounce.utils.extensions.BLACKLISTED_BLOCKS
 import net.ccbluex.liquidbounce.utils.extensions.getEnchantmentLevel
 import net.ccbluex.liquidbounce.utils.extensions.isEmpty
 import net.ccbluex.liquidbounce.utils.extensions.isMoving
@@ -481,7 +482,7 @@ class InventoryCleaner : Module()
 			}
 
 			"food" -> if (filterFoodKeepValue.get()) mainInventory.filter { provider.isItemFood(it.value?.item) }.map { it.index to it.value!! }.filter { !provider.isItemAppleGold(it.second) }.filter { !type(it.first).equals("Food", ignoreCase = true) }.toList().forEach { (index, stack) -> return@findBetterItem if (slotStack.isEmpty || !provider.isItemFood(stack.item)) index else null }
-			"block" -> mainInventory.filter { provider.isItemBlock(it.value?.item) }.mapNotNull { it.index to (it.value?.item?.asItemBlock() ?: return@mapNotNull null) }.filter { !InventoryUtils.AUTOBLOCK_BLACKLIST.contains(it.second.block) }.filter { !type(it.first).equals("Block", ignoreCase = true) }.forEach { (index, item) -> return@findBetterItem if (slotStack.isEmpty || !provider.isItemBlock(item)) index else null }
+			"block" -> mainInventory.filter { provider.isItemBlock(it.value?.item) }.mapNotNull { it.index to (it.value?.item?.asItemBlock() ?: return@mapNotNull null) }.filter { !BLACKLISTED_BLOCKS.contains(it.second.block) }.filter { !type(it.first).equals("Block", ignoreCase = true) }.forEach { (index, item) -> return@findBetterItem if (slotStack.isEmpty || !provider.isItemBlock(item)) index else null }
 
 			"water" -> if (filterBucketValue.get())
 			{

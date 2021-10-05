@@ -15,8 +15,8 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.AutoWeapon
-import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
-import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
+import net.ccbluex.liquidbounce.utils.extensions.isSelected
+import net.ccbluex.liquidbounce.utils.extensions.raycastEntity
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.pathfinding.PathFinder
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
@@ -197,12 +197,12 @@ class ExtendedReach : Module()
 		{
 			val provider = classProvider
 
-			val facedEntity = raycastEntity(theWorld, thePlayer, combatReach.get().toDouble(), provider::isEntityLivingBase)
+			val facedEntity = theWorld.raycastEntity(thePlayer, combatReach.get().toDouble(), provider::isEntityLivingBase)
 
 			var targetEntity: IEntityLivingBase? = null
 			val from = WVec3(thePlayer.posX, thePlayer.posY, thePlayer.posZ)
 
-			if (mc.gameSettings.keyBindAttack.isKeyDown && facedEntity != null && isSelected(facedEntity, true) && thePlayer.getDistanceSqToEntity(facedEntity) >= 1) targetEntity = facedEntity.asEntityLivingBase()
+			if (mc.gameSettings.keyBindAttack.isKeyDown && facedEntity != null && facedEntity.isSelected(true) && thePlayer.getDistanceSqToEntity(facedEntity) >= 1) targetEntity = facedEntity.asEntityLivingBase()
 
 			if (targetEntity != null)
 			{

@@ -14,10 +14,7 @@ import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketUseEntity
 import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
-import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
-import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
-import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
+import net.ccbluex.liquidbounce.api.minecraft.util.*
 import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.api.minecraft.world.IWorldSettings
 import net.ccbluex.liquidbounce.event.*
@@ -497,7 +494,7 @@ class KillAura : Module()
 
 		// Target
 		currentTarget = target ?: return
-		if (!targetModeValue.get().equals("Switch", ignoreCase = true) && EntityUtils.isEnemy(currentTarget, bypassAACValue.get())) target = currentTarget
+		if (!targetModeValue.get().equals("Switch", ignoreCase = true) && currentTarget.isEnemy(bypassAACValue.get())) target = currentTarget
 	}
 
 	/**
@@ -796,7 +793,7 @@ class KillAura : Module()
 				var targets = 0
 
 				run {
-					EntityUtils.getEntitiesInRadius(theWorld, thePlayer, maxAttackRange + 2.0).filter { EntityUtils.isEnemy(it, aac) }.filter { thePlayer.getDistanceToEntityBox(it) <= getAttackRange(thePlayer, it) }.map(IEntity::asEntityLivingBase).forEach { entity ->
+					theWorld.getEntitiesInRadius(thePlayer, maxAttackRange + 2.0).filter { it.isEnemy(aac) }.filter { thePlayer.getDistanceToEntityBox(it) <= getAttackRange(thePlayer, it) }.map(IEntity::asEntityLivingBase).forEach { entity ->
 						attackEntity(entity)
 						targets += 1
 
@@ -852,7 +849,7 @@ class KillAura : Module()
 		val autoBlockHurtTimeCheck = autoBlockHurtTimeCheckValue.get()
 		val smartBlock = autoBlockWallCheckValue.get()
 
-		val entityList = EntityUtils.getEntitiesInRadius(theWorld, thePlayer, maxTargetRange + 2.0).filter { EntityUtils.isEnemy(it, aac) }.filterNot { switchMode && previouslySwitchedTargets.contains(it.entityId) }.run { if (fov < 180f) filter { (if (fovMode.equals("ServerRotation", ignoreCase = true)) RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, playerPredictSize) else RotationUtils.getClientRotationDifference(thePlayer, it, playerPredict, playerPredictSize)) <= fov } else this }.map { it.asEntityLivingBase() to thePlayer.getDistanceToEntityBox(it) }
+		val entityList = theWorld.getEntitiesInRadius(thePlayer, maxTargetRange + 2.0).filter { it.isEnemy(aac) }.filterNot { switchMode && previouslySwitchedTargets.contains(it.entityId) }.run { if (fov < 180f) filter { (if (fovMode.equals("ServerRotation", ignoreCase = true)) RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, playerPredictSize) else RotationUtils.getClientRotationDifference(thePlayer, it, playerPredict, playerPredictSize)) <= fov } else this }.map { it.asEntityLivingBase() to thePlayer.getDistanceToEntityBox(it) }
 
 		entityList.forEach { (entity, distance) ->
 			val entityHurtTime = entity.hurtTime
@@ -1057,13 +1054,13 @@ class KillAura : Module()
 
 		if (rotationMode.equals("Off", ignoreCase = true))
 		{
-			updateRotationsDebug = arrayOf("rotate".equalTo("DISABLED", "\u00A74"), "reason" equalTo "Rotation is turned off".withParentheses("\u00A7c"))
+			updateRotationsDebug = arrayOf("state".equalTo("DISABLED", "\u00A74"), "reason" equalTo "Rotation is turned off".withParentheses("\u00A7c"))
 			return true
 		}
 
 		if (rotationTurnSpeedValue.getMax() <= 0F)
 		{
-			updateRotationsDebug = arrayOf("rotate".equalTo("DISABLED", "\u00A74"), "reason" equalTo "TurnSpeed is zero or negative".withParentheses("\u00A7c"))
+			updateRotationsDebug = arrayOf("state".equalTo("DISABLED", "\u00A74"), "reason" equalTo "TurnSpeed is zero or negative".withParentheses("\u00A7c"))
 			return true
 		}
 
@@ -1080,10 +1077,10 @@ class KillAura : Module()
 
 		val commonDebug = arrayOf(
 
-			"rotate".equalTo("SUCCESS", "\u00A7a"), // rotationResult
-			"useFallback" equalTo useFallback, // useFallback
+			"state".equalTo("SUCCESS", "\u00A7a"), // rotationResult
+			"fallback" equalTo useFallback, // useFallback
 			"jitter" equalTo (flags and RotationUtils.JITTER != 0), // jitter
-			"skipVisibleCheck" equalTo (flags and RotationUtils.SKIP_VISIBLE_CHECK != 0) // skipVisibleCheck
+			"skipVisibleChecks" equalTo (flags and RotationUtils.SKIP_VISIBLE_CHECK != 0) // skipVisibleCheck
 
 		)
 
@@ -1139,26 +1136,24 @@ class KillAura : Module()
 
 		val updateHitableByRange = {
 			hitable = currentTarget != null && thePlayer.getDistanceToEntityBox(currentTarget) <= reach
+			arrayOf("raycast" equalTo false, "rangeCheck" equalTo hitable)
 		}
 
 		if (rotationMode.get().equals("Off", ignoreCase = true))
 		{
-			updateHitableByRange()
-			updateHitableDebug = arrayOf("rangeCheck" equalTo hitable, "reason" equalTo "Rotation is turned off".withParentheses("\u00A7c"))
+			updateHitableDebug = arrayOf(*updateHitableByRange(), "reason" equalTo "Rotation is turned off".withParentheses("\u00A7c"))
 			return
 		}
 
 		if (rotationTurnSpeedValue.getMax() <= 0F)
 		{
-			updateHitableByRange()
-			updateHitableDebug = arrayOf("rangeCheck" equalTo hitable, "reason" equalTo "TurnSpeed is zero or negative".withParentheses("\u00A7c"))
+			updateHitableDebug = arrayOf(*updateHitableByRange(), "reason" equalTo "TurnSpeed is zero or negative".withParentheses("\u00A7c"))
 			return
 		}
 
 		if (targetModeValue.get().equals("Multi", ignoreCase = true))
 		{
-			updateHitableByRange()
-			updateHitableDebug = arrayOf("rangeCheck" equalTo hitable, "reason" equalTo "MultiAura".withParentheses("\u00A7c"))
+			updateHitableDebug = arrayOf(*updateHitableByRange(), "reason" equalTo "MultiAura".withParentheses("\u00A7c"))
 			return
 		}
 
@@ -1172,7 +1167,7 @@ class KillAura : Module()
 			val provider = classProvider
 
 			val distanceToTarget = currentTarget?.let(thePlayer::getDistanceToEntityBox)
-			val raycastedEntity = RaycastUtils.raycastEntity(theWorld, thePlayer, reach + 1.0, lastYaw, lastPitch, { getHitbox(it, if (rotationLockValue.get()) 0.0 else rotationLockExpandRangeValue.get().toDouble()) }) { entity -> entity != null && (!livingOnly || (provider.isEntityLivingBase(entity) && !provider.isEntityArmorStand(entity))) && (skipEnemyCheck || EntityUtils.isEnemy(entity, aac) || includeCollidedWithTarget && theWorld.getEntitiesWithinAABBExcludingEntity(entity, entity.entityBoundingBox).isNotEmpty()) }
+			val raycastedEntity = theWorld.raycastEntity(thePlayer, reach + 1.0, lastYaw, lastPitch, { getHitbox(it, if (rotationLockValue.get()) 0.0 else rotationLockExpandRangeValue.get().toDouble()) }) { entity -> entity != null && (!livingOnly || (provider.isEntityLivingBase(entity) && !provider.isEntityArmorStand(entity))) && (skipEnemyCheck || entity.isEnemy(aac) || includeCollidedWithTarget && theWorld.getEntitiesWithinAABBExcludingEntity(entity, entity.entityBoundingBox).isNotEmpty()) }
 			val distanceToRaycasted = raycastedEntity?.let(thePlayer::getDistanceToEntityBox)
 
 			if (raycastedEntity != null && provider.isEntityLivingBase(raycastedEntity) && (LiquidBounce.moduleManager[NoFriends::class.java].state || !provider.isEntityPlayer(raycastedEntity) || !raycastedEntity.asEntityPlayer().isClientFriend())) this.currentTarget = raycastedEntity.asEntityLivingBase()
@@ -1181,19 +1176,19 @@ class KillAura : Module()
 			{
 				if (distanceToRaycasted != null)
 				{
-					if (currentTarget != raycastedEntity) arrayOf("raycastResult" equalTo "\u00A7aSUCCESS", "raycastFrom" equalTo listOf("name".equalTo(currentTarget.name, "\u00A7e\u00A7l"), "id".equalTo(currentTarget.entityId, "\u00A7e")).serialize().withParentheses("\u00A78"), "raycastTo" equalTo listOf("name".equalTo(raycastedEntity.name, "\u00A7e\u00A7l"), "id".equalTo(raycastedEntity.entityId, "\u00A7e")).serialize().withParentheses("\u00A78"), "distance" equalTo DECIMALFORMAT_6.format(distanceToTarget - distanceToRaycasted))
-					else arrayOf("raycastResult" equalTo "\u00A7eEQUAL", "reason" equalTo "(\u00A7ccurrentTarget = raycastedTarget\u00A77)")
+					if (currentTarget != raycastedEntity) arrayOf("raycast" equalTo true, "result" equalTo "\u00A7aSUCCESS", "from" equalTo listOf("name".equalTo(currentTarget.name, "\u00A7e\u00A7l"), "id".equalTo(currentTarget.entityId, "\u00A7e")).serialize().withParentheses("\u00A78"), "to" equalTo listOf("name".equalTo(raycastedEntity.name, "\u00A7e\u00A7l"), "id".equalTo(raycastedEntity.entityId, "\u00A7e")).serialize().withParentheses("\u00A78"), "distance" equalTo DECIMALFORMAT_6.format(distanceToRaycasted - distanceToTarget))
+					else arrayOf("raycast" equalTo true, "result" equalTo "\u00A7eEQUAL", "reason" equalTo "currentTarget = raycastedTarget".withParentheses("\u00A7c"))
 				}
-				else arrayOf("raycastResult" equalTo "\u00A7cFAILED", "reason" equalTo "(\u00A7craycastedTarget is null\u00A77)")
+				else arrayOf("raycast" equalTo false, "reason" equalTo "raycastedTarget is null".withParentheses("\u00A7c"))
 			}
-			else arrayOf("raycastResult" equalTo "\u00A7cFAILED", "reason" equalTo "(\u00A7ccurrentTarget is null\u00A77)")
+			else arrayOf("raycast" equalTo false, "reason" equalTo "currentTarget is null".withParentheses("\u00A7c"))
 
 			hitable = (distanceToTarget == null || distanceToTarget <= reach) && (distanceToRaycasted == null || distanceToRaycasted <= reach) && this.currentTarget == raycastedEntity
 		}
 		else
 		{
 			hitable = if (currentTarget != null) RotationUtils.isFaced(theWorld, thePlayer, currentTarget, reach) { getHitbox(it, if (rotationLockValue.get()) 0.0 else rotationLockExpandRangeValue.get().toDouble()) } else false
-			updateHitableDebug = arrayOf("faced" equalTo hitable)
+			updateHitableDebug = arrayOf("raycast" equalTo false, "faced" equalTo hitable)
 		}
 	}
 
@@ -1239,16 +1234,17 @@ class KillAura : Module()
 				val lookAt = positionEye.addVector(yawSin * pitchCos * range, pitchSin * range, yawCos * pitchCos * range)
 
 				val movingObject = boundingBox.calculateIntercept(positionEye, lookAt)
-				startBlockingDebug = if (movingObject != null)
+				startBlockingDebug = if (movingObject != null && movingObject.typeOfHit != IMovingObjectPosition.WMovingObjectType.MISS)
 				{
 					val hitVec = movingObject.hitVec
 
 					netHandler.addToSendQueue(provider.createCPacketUseEntity(interactEntity, WVec3(hitVec.xCoord - interactEntity.posX, hitVec.yCoord - interactEntity.posY, hitVec.zCoord - interactEntity.posZ)))
 					netHandler.addToSendQueue(provider.createCPacketUseEntity(interactEntity, ICPacketUseEntity.WAction.INTERACT))
 
-					arrayOf("interactAutoblockResult".equalTo("SUCCESS", "\u00A7a"), "interactAutoblockHitType" equalTo movingObject.typeOfHit.name, "interactAutoblockHitVec" equalTo hitVec)
+					if (movingObject.typeOfHit == IMovingObjectPosition.WMovingObjectType.BLOCK) arrayOf("result".equalTo("BLOCK HIT", "\u00A7e"), "blockPos" equalTo "\u00A7e${movingObject.blockPos}", "blockSide" equalTo movingObject.sideHit, "hitVec" equalTo hitVec)
+					else arrayOf("result".equalTo("ENTITY HIT", "\u00A7a"), "name" equalTo "\u00A7e${movingObject.entityHit?.name}", "dispName" equalTo movingObject.entityHit?.displayName?.formattedText, "hitVec" equalTo hitVec)
 				}
-				else arrayOf("interactAutoblockResult".equalTo("FAILED", "\u00A7c"), "reason" equalTo "raytraceResult = null".withParentheses("\u00A74"))
+				else arrayOf("result".equalTo("FAILED", "\u00A7c"), "reason" equalTo "raytraceResult = null".withParentheses("\u00A74"))
 			}
 
 			netHandler.addToSendQueue(provider.createCPacketPlayerBlockPlacement(WBlockPos(-1, -1, -1), 255, (mc.thePlayer ?: return).inventory.getCurrentItemInHand(), 0.0F, 0.0F, 0.0F))
@@ -1280,7 +1276,7 @@ class KillAura : Module()
 	{
 		val moduleManager = LiquidBounce.moduleManager
 
-		val shouldDisableOnDeath = thePlayer.spectator || !EntityUtils.isAlive(thePlayer, false)
+		val shouldDisableOnDeath = thePlayer.spectator || !thePlayer.isAlive(false)
 
 		if (shouldDisableOnDeath && disableOnDeathValue.get())
 		{

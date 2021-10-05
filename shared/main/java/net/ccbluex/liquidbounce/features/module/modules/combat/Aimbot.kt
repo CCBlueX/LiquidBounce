@@ -14,9 +14,10 @@ import net.ccbluex.liquidbounce.event.Render2DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
+import net.ccbluex.liquidbounce.utils.extensions.getEntitiesInRadius
+import net.ccbluex.liquidbounce.utils.extensions.isSelected
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.*
@@ -120,7 +121,7 @@ class Aimbot : Module()
 
 		val jitter = jitterValue.get()
 
-		target = EntityUtils.getEntitiesInRadius(theWorld, thePlayer, range + 2.0).asSequence().filter { EntityUtils.isSelected(it, true) }.filter { thePlayer.getDistanceToEntityBox(it) <= range }.run { if (fov < 180F) filter { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, playerPredictSize) <= fov } else this }.run { if (throughWalls) this else filter(thePlayer::canEntityBeSeen) }.minBy { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, playerPredictSize) }?.asEntityLivingBase()
+		target = theWorld.getEntitiesInRadius(thePlayer, range + 2.0).asSequence().filter { it.isSelected(true) }.filter { thePlayer.getDistanceToEntityBox(it) <= range }.run { if (fov < 180F) filter { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, playerPredictSize) <= fov } else this }.run { if (throughWalls) this else filter(thePlayer::canEntityBeSeen) }.minBy { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, playerPredictSize) }?.asEntityLivingBase()
 
 		val entity = target ?: run {
 			fadeRotations(thePlayer)

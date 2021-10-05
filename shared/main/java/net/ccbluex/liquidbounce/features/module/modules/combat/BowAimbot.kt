@@ -15,8 +15,8 @@ import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.extensions.isSelected
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatRangeValue
@@ -112,7 +112,7 @@ class BowAimbot : Module()
 		val ignoreVisibleCheck = flags and RotationUtils.SKIP_VISIBLE_CHECK != 0
 
 		// The Target Candidates
-		val targetCandidates = theWorld.loadedEntityList.asSequence().filter { EntityUtils.isSelected(it, true) }.filter { ignoreVisibleCheck || thePlayer.canEntityBeSeen(it) }.map(IEntity::asEntityLivingBase)
+		val targetCandidates = theWorld.loadedEntityList.asSequence().filter { it.isSelected(true) }.filter { ignoreVisibleCheck || thePlayer.canEntityBeSeen(it) }.map(IEntity::asEntityLivingBase)
 
 		val playerPredict = flags and RotationUtils.PLAYER_PREDICT != 0
 

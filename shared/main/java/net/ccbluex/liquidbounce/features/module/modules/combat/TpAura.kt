@@ -19,9 +19,9 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.CPSCounter
-import net.ccbluex.liquidbounce.utils.EntityUtils
-import net.ccbluex.liquidbounce.utils.EntityUtils.isEnemy
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
+import net.ccbluex.liquidbounce.utils.extensions.getEntitiesInRadius
+import net.ccbluex.liquidbounce.utils.extensions.isEnemy
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.pathfinding.PathFinder
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
@@ -370,7 +370,7 @@ class TpAura : Module()
 	{
 		val range = rangeValue.get().toDouble()
 		val hurtTime = hurtTimeValue.get()
-		return EntityUtils.getEntitiesInRadius(theWorld, thePlayer, range).asSequence().filter { isEnemy(it, false) }.map(IEntity::asEntityLivingBase).filter { it.hurtTime <= hurtTime }.filter { thePlayer.getDistanceToEntityBox(it) <= range }.sortedBy { it.getDistanceToEntity(thePlayer) * 1000 }.toMutableList()
+		return theWorld.getEntitiesInRadius(thePlayer, range).asSequence().filter { it.isEnemy(false) }.map(IEntity::asEntityLivingBase).filter { it.hurtTime <= hurtTime }.filter { thePlayer.getDistanceToEntityBox(it) <= range }.sortedBy { it.getDistanceToEntity(thePlayer) * 1000 }.toMutableList()
 	}
 
 	fun isTarget(entity: IEntity?): Boolean = currentTargets.isNotEmpty() && (0 until if (currentTargets.size > maxTargetsValue.get()) maxTargetsValue.get() else currentTargets.size).any { currentTargets[it] == entity }

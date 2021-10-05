@@ -15,7 +15,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.utils.ClientUtils
-import net.ccbluex.liquidbounce.utils.EntityUtils
+import net.ccbluex.liquidbounce.utils.extensions.isSelected
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
@@ -196,7 +196,7 @@ class ESP : Module()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		theWorld.loadedEntityList.asSequence().filter { EntityUtils.isSelected(it, false) }.map(IEntity::asEntityLivingBase).run { if (bot) this else filter { !AntiBot.isBot(theWorld, thePlayer, it) } }.filter { it != thePlayer }.forEach { draw(it, getColor(it)) }
+		theWorld.loadedEntityList.asSequence().filter { it.isSelected(false) }.map(IEntity::asEntityLivingBase).run { if (bot) this else filter { !AntiBot.isBot(theWorld, thePlayer, it) } }.filter { it != thePlayer }.forEach { draw(it, getColor(it)) }
 
 		if (real2d)
 		{
@@ -229,7 +229,7 @@ class ESP : Module()
 			val theWorld = mc.theWorld ?: return
 			val thePlayer = mc.thePlayer ?: return
 
-			theWorld.loadedEntityList.filter { EntityUtils.isSelected(it, false) }.map(IEntity::asEntityLivingBase).run { if (bot) this else filter { AntiBot.isBot(theWorld, thePlayer, it) } }.forEach { renderManager.renderEntityStatic(it, partialTicks, true) }
+			theWorld.loadedEntityList.filter { it.isSelected(false) }.map(IEntity::asEntityLivingBase).run { if (bot) this else filter { AntiBot.isBot(theWorld, thePlayer, it) } }.forEach { renderManager.renderEntityStatic(it, partialTicks, true) }
 		}
 		catch (ex: Exception)
 		{

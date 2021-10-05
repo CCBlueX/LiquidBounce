@@ -18,12 +18,8 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.CPSCounter
 import net.ccbluex.liquidbounce.utils.EntityUtils
-import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
-import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
-import net.ccbluex.liquidbounce.utils.extensions.canBeClicked
-import net.ccbluex.liquidbounce.utils.extensions.getBlock
-import net.ccbluex.liquidbounce.utils.extensions.isReplaceable
+import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -63,14 +59,14 @@ class Ignite : Module()
 		val itemDelay = itemDelayValue.get()
 		val randomSlot = randomSlotValue.get()
 
-		val lighterInHotbar = if (lighterValue.get()) InventoryUtils.findItem(inventoryContainer, 36, 45, provider.getItemEnum(ItemType.FLINT_AND_STEEL), itemDelay.toLong(), randomSlot) else -1
-		val lavaInHotbar = if (lavaBucketValue.get()) InventoryUtils.findItem(inventoryContainer, 26, 45, provider.getItemEnum(ItemType.LAVA_BUCKET), itemDelay.toLong(), randomSlot) else -1
+		val lighterInHotbar = if (lighterValue.get()) inventoryContainer.findItem(36, 45, provider.getItemEnum(ItemType.FLINT_AND_STEEL), itemDelay.toLong(), randomSlot) else -1
+		val lavaInHotbar = if (lavaBucketValue.get()) inventoryContainer.findItem(26, 45, provider.getItemEnum(ItemType.LAVA_BUCKET), itemDelay.toLong(), randomSlot) else -1
 
 		if (lighterInHotbar == -1 && lavaInHotbar == -1) return
 
 		val fireInHotbar = if (lighterInHotbar == -1) lavaInHotbar else lighterInHotbar
 
-		EntityUtils.getEntitiesInRadius(theWorld, thePlayer, 8.0).asSequence().filterNot(IEntity::burning).filter { isSelected(it, true) }.map(IEntity::position).filter { thePlayer.getDistanceSq(it) < 22.3 }.filter(theWorld::isReplaceable).firstOrNull { provider.isBlockAir(theWorld.getBlock(it)) }?.let { blockPos ->
+		theWorld.getEntitiesInRadius(thePlayer, 8.0).asSequence().filterNot(IEntity::burning).filter { it.isSelected(true) }.map(IEntity::position).filter { thePlayer.getDistanceSq(it) < 22.3 }.filter(theWorld::isReplaceable).firstOrNull { provider.isBlockAir(theWorld.getBlock(it)) }?.let { blockPos ->
 			RotationUtils.keepCurrentRotation = true
 			netHandler.addToSendQueue(provider.createCPacketHeldItemChange(fireInHotbar - 36))
 

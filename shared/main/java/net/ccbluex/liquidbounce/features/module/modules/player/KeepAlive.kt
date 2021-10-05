@@ -12,9 +12,8 @@ import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-
-import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.createUseItemPacket
+import net.ccbluex.liquidbounce.utils.extensions.findItem
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -47,7 +46,7 @@ class KeepAlive : Module()
 				{
 					val provider = classProvider
 
-					val soupInHotbar = InventoryUtils.findItem(thePlayer.inventoryContainer, 36, 45, provider.getItemEnum(ItemType.MUSHROOM_STEW), itemDelayValue.get().toLong(), randomSlotValue.get())
+					val soupInHotbar = thePlayer.inventoryContainer.findItem(36, 45, provider.getItemEnum(ItemType.MUSHROOM_STEW), itemDelayValue.get().toLong(), randomSlotValue.get())
 
 					if (soupInHotbar != -1)
 					{

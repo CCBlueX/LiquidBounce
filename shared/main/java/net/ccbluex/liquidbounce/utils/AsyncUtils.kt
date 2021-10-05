@@ -1,5 +1,6 @@
 package net.ccbluex.liquidbounce.utils
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import java.util.concurrent.*
 
 object AsyncUtils
@@ -20,6 +21,8 @@ object AsyncUtils
 }
 
 fun runAsync(block: () -> Unit) = AsyncUtils.workers.execute(block)
+
+fun runSync(block: () -> Unit) = LiquidBounce.wrapper.minecraft.addScheduledTask(block)
 
 fun <T> supplyAsync(block: () -> T): Future<T> = AsyncUtils.workers.submit(block)
 

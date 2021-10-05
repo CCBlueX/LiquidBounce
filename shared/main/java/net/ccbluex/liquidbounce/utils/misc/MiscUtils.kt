@@ -8,10 +8,10 @@ package net.ccbluex.liquidbounce.utils.misc
 import net.ccbluex.liquidbounce.utils.ClientUtils.logger
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import java.awt.Desktop
-import java.io.*
+import java.io.File
+import java.io.IOException
 import java.net.URI
 import java.net.URISyntaxException
-import java.nio.charset.StandardCharsets
 import javax.swing.JFileChooser
 import javax.swing.JFrame
 import javax.swing.JOptionPane
@@ -96,31 +96,4 @@ object MiscUtils : MinecraftInstance()
 
 		return if (action == JFileChooser.APPROVE_OPTION) fileChooser?.selectedFile else null
 	}
-
-	/**
-	 * Read specified file with UTF-8 and create a BufferedReader from it
-	 *
-	 * @param  file
-	 * The file
-	 * @return                       Created BufferedReader
-	 * @author                       eric0210
-	 * @throws FileNotFoundException
-	 * If the file doesn't exists
-	 */
-	@JvmStatic
-	@Throws(FileNotFoundException::class)
-	fun createBufferedFileReader(file: File): BufferedReader = BufferedReader(InputStreamReader(FileInputStream(file), StandardCharsets.UTF_8))
-
-	/**
-	 * Create specified file if it doesn't exists andcreate a BufferedWriter which writes bytes with UTF-8 from it
-	 *
-	 * @param  file
-	 * The file
-	 * @return                       Created BufferedWriter
-	 * @throws FileNotFoundException
-	 * if the file exists but is a directory rather than a regular file, does not exist but cannot be created, or cannot be opened for any other reason
-	 */
-	@JvmStatic
-	@Throws(FileNotFoundException::class)
-	fun createBufferedFileWriter(file: File): BufferedWriter = BufferedWriter(OutputStreamWriter(FileOutputStream(file), StandardCharsets.UTF_8))
 }

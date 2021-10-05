@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.ui.font.assumeNonVolatile
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
+import net.ccbluex.liquidbounce.utils.extensions.isSelected
 import net.ccbluex.liquidbounce.utils.extensions.ping
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_2
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
@@ -108,7 +109,7 @@ class NameTags : Module()
 
 		val bot = elementBotValue.get()
 
-		theWorld.loadedEntityList.asSequence().filter { EntityUtils.isSelected(it, false) }.map(IEntity::asEntityLivingBase).map { it to AntiBot.isBot(theWorld, thePlayer, it) }.run { if (bot) this else filterNot(Pair<IEntityLivingBase, Boolean>::second) }.forEach { (entity, isBot) ->
+		theWorld.loadedEntityList.asSequence().filter { it.isSelected(false) }.map(IEntity::asEntityLivingBase).map { it to AntiBot.isBot(theWorld, thePlayer, it) }.run { if (bot) this else filterNot(Pair<IEntityLivingBase, Boolean>::second) }.forEach { (entity, isBot) ->
 			val name = entity.displayName.unformattedText
 			renderNameTag(provider, renderManager, renderItem, glStateManager, murderDetector, thePlayer, entity, if (elementClearNamesValue.get()) ColorUtils.stripColor(name) else name, equipmentArrangement, isBot, partialTicks)
 		}

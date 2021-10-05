@@ -47,5 +47,6 @@ interface IPacket
 	fun asCPacketConfirmTransaction(): ICPacketConfirmTransaction
 	fun asCPacketClientStatus(): ICPacketClientStatus
 	fun asCPacketCloseWindow(): ICPacketCloseWindow
+	fun asCPacketEntityAction(): ICPacketEntityAction
 	// </editor-fold>
 }

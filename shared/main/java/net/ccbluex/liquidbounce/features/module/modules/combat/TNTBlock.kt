@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.EntityUtils
+import net.ccbluex.liquidbounce.utils.extensions.getEntitiesInRadius
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -35,7 +35,7 @@ class TNTBlock : Module()
 		val fuse = fuseValue.get()
 
 		val provider = classProvider
-		if (EntityUtils.getEntitiesInRadius(theWorld, thePlayer, range + 2.0).any { provider.isEntityTNTPrimed(it) && thePlayer.getDistanceToEntity(it) <= range && it.asEntityTNTPrimed().fuse <= fuse || provider.isEntityTNTPrimed(it) && it.asEntityCreeper().ignited })
+		if (theWorld.getEntitiesInRadius(thePlayer, range + 2.0).any { provider.isEntityTNTPrimed(it) && thePlayer.getDistanceToEntity(it) <= range && it.asEntityTNTPrimed().fuse <= fuse || provider.isEntityTNTPrimed(it) && it.asEntityCreeper().ignited })
 		{
 			if (autoSwordValue.get())
 			{

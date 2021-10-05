@@ -211,6 +211,20 @@ fun ICPacketResourcePackStatus.WAction.unwrap(): C19PacketResourcePackStatus.Act
 	}
 }
 
+fun C0BPacketEntityAction.Action.wrap(): ICPacketEntityAction.WAction
+{
+	return when (this)
+	{
+		C0BPacketEntityAction.Action.START_SNEAKING -> ICPacketEntityAction.WAction.START_SNEAKING
+		C0BPacketEntityAction.Action.STOP_SNEAKING -> ICPacketEntityAction.WAction.STOP_SNEAKING
+		C0BPacketEntityAction.Action.STOP_SLEEPING -> ICPacketEntityAction.WAction.STOP_SLEEPING
+		C0BPacketEntityAction.Action.START_SPRINTING -> ICPacketEntityAction.WAction.START_SPRINTING
+		C0BPacketEntityAction.Action.STOP_SPRINTING -> ICPacketEntityAction.WAction.STOP_SPRINTING
+		C0BPacketEntityAction.Action.OPEN_INVENTORY -> ICPacketEntityAction.WAction.OPEN_INVENTORY
+		C0BPacketEntityAction.Action.RIDING_JUMP -> ICPacketEntityAction.WAction.RIDING_JUMP
+	}
+}
+
 fun ICPacketEntityAction.WAction.unwrap(): C0BPacketEntityAction.Action
 {
 	return when (this)
@@ -221,6 +235,7 @@ fun ICPacketEntityAction.WAction.unwrap(): C0BPacketEntityAction.Action
 		ICPacketEntityAction.WAction.START_SPRINTING -> C0BPacketEntityAction.Action.START_SPRINTING
 		ICPacketEntityAction.WAction.STOP_SPRINTING -> C0BPacketEntityAction.Action.STOP_SPRINTING
 		ICPacketEntityAction.WAction.OPEN_INVENTORY -> C0BPacketEntityAction.Action.OPEN_INVENTORY
+		ICPacketEntityAction.WAction.RIDING_JUMP -> C0BPacketEntityAction.Action.RIDING_JUMP
 	}
 }
 
@@ -267,7 +282,7 @@ fun S38PacketPlayerListItem.AddPlayerData.wrap(): ISPacketPlayerListItem.WAddPla
 
 fun C16PacketClientStatus.EnumState.wrap(): ICPacketClientStatus.WEnumState
 {
-	return when(this)
+	return when (this)
 	{
 		C16PacketClientStatus.EnumState.PERFORM_RESPAWN -> ICPacketClientStatus.WEnumState.PERFORM_RESPAWN
 		C16PacketClientStatus.EnumState.REQUEST_STATS -> ICPacketClientStatus.WEnumState.REQUEST_STATS

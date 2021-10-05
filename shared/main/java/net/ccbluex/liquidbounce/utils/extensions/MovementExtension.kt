@@ -22,7 +22,7 @@ val IEntity.speed: Float
 	get() = hypot(motionX, motionZ).toFloat()
 
 val IEntityLivingBase.cantBoostUp: Boolean
-	get() = isInWater || isInLava || isInWeb || isOnLadder || isRiding || !sneaking
+	get() = isInWater || isInLava || isInWeb || isOnLadder || isRiding || sneaking
 
 val IEntity.hasMotion: Boolean
 	get() = motionX != 0.0 && motionZ != 0.0 && motionY != 0.0

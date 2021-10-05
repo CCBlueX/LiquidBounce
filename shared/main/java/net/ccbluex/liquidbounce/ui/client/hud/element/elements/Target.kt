@@ -440,7 +440,7 @@ class Target : Element()
 								debugFont.drawString(string, scaledDebugXPos, scaledDebugYPos + yOffset, 0xffffff)
 								yOffset += 10
 							}
-							yOffset += 5
+							yOffset += 8
 						}
 					}
 
@@ -473,9 +473,9 @@ class Target : Element()
 			tpAura.state && tpAura.maxTargetsValue.get() == 1 && tpAura.currentTarget != null -> tpAura.currentTarget to arrayOf(arrayOf("type=TpAura${tpAura.debug?.let { ", $it" }}"))
 			killAuraTarget != null -> killAuraTarget to run {
 				val list = mutableListOf(arrayOf("type" equalTo "KillAura"))
-				killAura.updateHitableDebug?.let(list::add)
-				killAura.updateRotationsDebug?.let(list::add)
-				killAura.startBlockingDebug?.let(list::add)
+				killAura.updateHitableDebug?.let { list.add(arrayOf("updateHitable", *it)) }
+				killAura.updateRotationsDebug?.let { list.add(arrayOf("updateRotations", *it)) }
+				killAura.startBlockingDebug?.let { list.add(arrayOf("startBlocking", *it)) }
 				list.toTypedArray()
 			}
 			aimbotTarget != null -> aimbotTarget to arrayOf(arrayOf("type=Aimbot"))

@@ -35,7 +35,7 @@ class XRayConfig(file: File) : FileConfig(file)
 	override fun loadConfig()
 	{
 		val xRay = LiquidBounce.moduleManager[XRay::class.java] as XRay
-		val json = JsonParser().parse(MiscUtils.createBufferedFileReader(file))
+		val json = JsonParser().parse(file.bufferedReader())
 
 		xRay.xrayBlocks.clear()
 
@@ -93,7 +93,7 @@ class XRayConfig(file: File) : FileConfig(file)
 
 		jsonObject.add("blocks", blocks)
 
-		val writer = MiscUtils.createBufferedFileWriter(file)
+		val writer = file.bufferedWriter()
 		writer.write(FileManager.PRETTY_GSON.toJson(jsonObject) + System.lineSeparator())
 		writer.close()
 	}

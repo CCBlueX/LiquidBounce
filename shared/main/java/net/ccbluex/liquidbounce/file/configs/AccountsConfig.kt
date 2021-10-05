@@ -40,7 +40,7 @@ class AccountsConfig(file: File) : FileConfig(file)
 		clearAccounts()
 		try
 		{
-			val jsonElement = JsonParser().parse(MiscUtils.createBufferedFileReader(file))
+			val jsonElement = JsonParser().parse(file.bufferedReader())
 			if (jsonElement is JsonNull) return
 			val jsonArray = jsonElement.asJsonArray
 			for (accountElement in jsonArray)
@@ -86,7 +86,7 @@ class AccountsConfig(file: File) : FileConfig(file)
 		// When the JSON Parse fail, the client try to load and update the old config
 		logger.info("[FileManager] Failed to load Accounts config with new format. Try to load old Accounts config...", ex)
 
-		val accountList = Gson().fromJson<List<*>>(MiscUtils.createBufferedFileReader(file), MutableList::class.java) ?: return
+		val accountList = Gson().fromJson<List<*>>(file.bufferedReader(), MutableList::class.java) ?: return
 
 		accounts.clear()
 
@@ -145,7 +145,7 @@ class AccountsConfig(file: File) : FileConfig(file)
 		}
 		// lock.writeLock().lock()
 
-		val writer = MiscUtils.createBufferedFileWriter(file)
+		val writer = file.bufferedWriter()
 		writer.write(FileManager.PRETTY_GSON.toJson(jsonArray) + System.lineSeparator())
 		writer.close()
 	}

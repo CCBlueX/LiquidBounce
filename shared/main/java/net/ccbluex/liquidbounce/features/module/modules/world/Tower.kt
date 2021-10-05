@@ -28,10 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.BlockOverlay
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.block.PlaceInfo
-import net.ccbluex.liquidbounce.utils.extensions.canBeClicked
-import net.ccbluex.liquidbounce.utils.extensions.getBlock
-import net.ccbluex.liquidbounce.utils.extensions.isMoving
-import net.ccbluex.liquidbounce.utils.extensions.isReplaceable
+import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
@@ -209,7 +206,7 @@ class Tower : Module()
 
 			val heldItem = thePlayer.heldItem
 
-			if (if (!autoBlockModeValue.get().equals("Off", ignoreCase = true)) InventoryUtils.findAutoBlockBlock(theWorld, thePlayer.inventoryContainer, autoBlockFullCubeOnlyValue.get()) != -1 || heldItem != null && provider.isItemBlock(heldItem.item) else heldItem != null && provider.isItemBlock(heldItem.item))
+			if (if (!autoBlockModeValue.get().equals("Off", ignoreCase = true)) thePlayer.inventoryContainer.findAutoBlockBlock(theWorld, autoBlockFullCubeOnlyValue.get()) != -1 || heldItem != null && provider.isItemBlock(heldItem.item) else heldItem != null && provider.isItemBlock(heldItem.item))
 			{
 				if (!stopWhenBlockAbove.get() || provider.isBlockAir(theWorld.getBlock(WBlockPos(thePlayer.posX, thePlayer.posY + 2, thePlayer.posZ)))) move()
 
@@ -426,7 +423,7 @@ class Tower : Module()
 		{
 			if (autoBlockModeValue.get().equals("Off", true)) return
 
-			val blockSlot = InventoryUtils.findAutoBlockBlock(theWorld, thePlayer.inventoryContainer, autoBlockFullCubeOnlyValue.get())
+			val blockSlot = thePlayer.inventoryContainer.findAutoBlockBlock(theWorld, autoBlockFullCubeOnlyValue.get())
 			if (blockSlot == -1) return
 
 			when (val autoBlockMode = autoBlockModeValue.get().toLowerCase())
@@ -600,7 +597,7 @@ class Tower : Module()
 
 		val inventoryContainer = thePlayer.inventoryContainer
 
-		return (36..44).mapNotNull { inventoryContainer.getSlot(it).stack }.filter { provider.isItemBlock(it.item) }.filter { thePlayer.heldItem == it || InventoryUtils.canAutoBlock(it.item?.asItemBlock()?.block) }.sumBy(IItemStack::stackSize)
+		return (36..44).mapNotNull { inventoryContainer.getSlot(it).stack }.filter { provider.isItemBlock(it.item) }.filter { thePlayer.heldItem == it || it.item?.asItemBlock()?.block.canAutoBlock }.sumBy(IItemStack::stackSize)
 	}
 
 	override val tag: String

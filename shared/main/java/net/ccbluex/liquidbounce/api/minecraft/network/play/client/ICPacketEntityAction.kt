@@ -10,6 +10,8 @@ import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
 
 interface ICPacketEntityAction : IPacket
 {
+	val action: WAction
+
 	enum class WAction
 	{
 		START_SNEAKING,
@@ -17,6 +19,7 @@ interface ICPacketEntityAction : IPacket
 		STOP_SLEEPING,
 		START_SPRINTING,
 		STOP_SPRINTING,
+		RIDING_JUMP,
 		OPEN_INVENTORY
 	}
 }

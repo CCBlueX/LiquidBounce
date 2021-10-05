@@ -7,6 +7,7 @@ import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.MotionEvent
+import net.ccbluex.liquidbounce.utils.extensions.getEntitiesInRadius
 import java.lang.ref.SoftReference
 
 class LocationCache : MinecraftInstance(), Listenable
@@ -23,7 +24,7 @@ class LocationCache : MinecraftInstance(), Listenable
 
 			playerLocationList.add(Location(WVec3(thePlayer.posX, thePlayer.entityBoundingBox.minY, thePlayer.posZ), RotationUtils.serverRotation))
 
-			val entities = EntityUtils.getEntitiesInRadius(theWorld, thePlayer, 64.0)
+			val entities = theWorld.getEntitiesInRadius(thePlayer, 64.0)
 
 			// Manual garbage collect by distance check
 			aabbList.keys.filterNot(entities.map(IEntity::entityId)::contains).forEach { aabbList.remove(it) }

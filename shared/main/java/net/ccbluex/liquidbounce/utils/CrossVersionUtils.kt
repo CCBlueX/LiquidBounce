@@ -8,14 +8,8 @@ import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketClient
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketEntityAction
 import net.ccbluex.liquidbounce.injection.backend.Backend
 
-fun createUseItemPacket(itemStack: IItemStack?, hand: WEnumHand): IPacket
-{
-	val classProvider = wrapper.classProvider
-	return if (Backend.MINECRAFT_VERSION_MINOR == 8) classProvider.createCPacketPlayerBlockPlacement(itemStack) else classProvider.createCPacketTryUseItem(hand)
-}
+fun createUseItemPacket(itemStack: IItemStack?, hand: WEnumHand): IPacket = if (Backend.MINECRAFT_VERSION_MINOR == 8) wrapper.classProvider.createCPacketPlayerBlockPlacement(itemStack) else wrapper.classProvider.createCPacketTryUseItem(hand)
 
-fun createOpenInventoryPacket(): IPacket
-{
-	val classProvider = wrapper.classProvider
-	return if (Backend.MINECRAFT_VERSION_MINOR == 8) classProvider.createCPacketClientStatus(ICPacketClientStatus.WEnumState.OPEN_INVENTORY_ACHIEVEMENT) else classProvider.createCPacketEntityAction(wrapper.minecraft.thePlayer!!, ICPacketEntityAction.WAction.OPEN_INVENTORY)
-}
+fun isOpenInventoryPacket(packet: IPacket): Boolean = if (Backend.MINECRAFT_VERSION_MINOR == 8) wrapper.classProvider.isCPacketClientStatus(packet) && packet.asCPacketClientStatus().status == ICPacketClientStatus.WEnumState.OPEN_INVENTORY_ACHIEVEMENT else wrapper.classProvider.isCPacketEntityAction(packet) && packet.asCPacketEntityAction().action == ICPacketEntityAction.WAction.OPEN_INVENTORY
+
+fun createOpenInventoryPacket(): IPacket = if (Backend.MINECRAFT_VERSION_MINOR == 8) wrapper.classProvider.createCPacketClientStatus(ICPacketClientStatus.WEnumState.OPEN_INVENTORY_ACHIEVEMENT) else wrapper.classProvider.createCPacketEntityAction(wrapper.minecraft.thePlayer!!, ICPacketEntityAction.WAction.OPEN_INVENTORY)

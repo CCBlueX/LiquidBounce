@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.TickEvent
 import net.ccbluex.liquidbounce.features.module.modules.combat.FastBow
-import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
+import net.ccbluex.liquidbounce.utils.extensions.raycastEntity
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
 import java.lang.Double.isNaN
 import java.util.*
@@ -97,7 +97,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 				packetPlayer.rotating = true
 			}
 
-			if (serverRotation != lastServerRotation) lastServerRotation = serverRotation
+			if (serverRotation !== lastServerRotation) lastServerRotation = serverRotation
 			if (packetPlayer.rotating) serverRotation = Rotation(packetPlayer.yaw, packetPlayer.pitch)
 		}
 	}
@@ -583,7 +583,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * your reach
 		 * @return                    if crosshair is over target
 		 */
-		fun isFaced(theWorld: IWorld, thePlayer: IEntity, targetEntity: IEntity?, reachDistance: Double, aabbGetter: (IEntity) -> IAxisAlignedBB = IEntity::entityBoundingBox): Boolean = raycastEntity(theWorld, thePlayer, reachDistance, { entity -> targetEntity != null && targetEntity == entity }, aabbGetter) != null
+		fun isFaced(theWorld: IWorld, thePlayer: IEntity, targetEntity: IEntity?, reachDistance: Double, aabbGetter: (IEntity) -> IAxisAlignedBB = IEntity::entityBoundingBox): Boolean = theWorld.raycastEntity(thePlayer, reachDistance, { entity -> targetEntity != null && targetEntity == entity }, aabbGetter) != null
 
 		/**
 		 * Allows you to check if your enemy is behind a wall

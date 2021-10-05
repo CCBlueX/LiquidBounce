@@ -42,6 +42,8 @@ class PlayerControllerMPImpl(val wrapped: PlayerControllerMP) : IPlayerControlle
 		{
 			wrapped.blockHitDelay = value
 		}
+	override val hittingBlock: Boolean
+		get() = wrapped.isHittingBlock
 
 	override fun windowClick(windowId: Int, slot: Int, mouseButton: Int, mode: Int, player: IEntityPlayerSP)
 	{

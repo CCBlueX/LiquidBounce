@@ -208,7 +208,7 @@ class TargetStrafe : Module()
 			val checkIsClientTarget = { entity: IEntity -> if (entity.isClientTarget()) -1000000.0 else 0.0 }
 
 			target = if (targetModeValue.get().equals("KillAuraTarget", ignoreCase = true)) (LiquidBounce.moduleManager[KillAura::class.java] as KillAura).target
-			else EntityUtils.getEntitiesInRadius(theWorld, thePlayer).filter { EntityUtils.isSelected(it, true) }.map(IEntity::asEntityLivingBase).filter { thePlayer.getDistanceToEntityBox(it) <= targetRange }.minBy {
+			else theWorld.getEntitiesInRadius(thePlayer).filter { it.isSelected(true) }.map(IEntity::asEntityLivingBase).filter { thePlayer.getDistanceToEntityBox(it) <= targetRange }.minBy {
 				when (targetModeValue.get().toLowerCase())
 				{
 					"livingtime" -> -it.ticksExisted.toFloat()

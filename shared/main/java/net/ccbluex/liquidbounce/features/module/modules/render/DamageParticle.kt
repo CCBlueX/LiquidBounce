@@ -9,8 +9,8 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.extensions.isSelected
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.FontValue
@@ -43,7 +43,7 @@ class DamageParticle : Module()
 
 		val provider = classProvider
 		synchronized(particles) {
-			theWorld.loadedEntityList.filter(provider::isEntityLivingBase).map(IEntity::asEntityLivingBase).filter { EntityUtils.isSelected(it, true) }.mapNotNull { entity ->
+			theWorld.loadedEntityList.filter(provider::isEntityLivingBase).map(IEntity::asEntityLivingBase).filter { it.isSelected(true) }.mapNotNull { entity ->
 				val lastHealth = healthData[entity.entityId] ?: entity.maxHealth
 				healthData[entity.entityId] = entity.health
 

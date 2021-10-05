@@ -14,7 +14,8 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ESP
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
-import net.ccbluex.liquidbounce.utils.EntityUtils
+import net.ccbluex.liquidbounce.utils.extensions.getEntitiesInRadius
+import net.ccbluex.liquidbounce.utils.extensions.isSelected
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.MiniMapRegister
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
@@ -200,7 +201,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y)
 		val esp = LiquidBounce.moduleManager[ESP::class.java] as ESP
 		val useESPColors = useESPColorsValue.get()
 
-		EntityUtils.getEntitiesInRadius(theWorld, thePlayer, maxViewDistance + 2.0).filter { EntityUtils.isSelected(it, false) }.filterNot { it == thePlayer }.forEach { entity ->
+		theWorld.getEntitiesInRadius(thePlayer, maxViewDistance + 2.0).filter { it.isSelected(false) }.filterNot { it == thePlayer }.forEach { entity ->
 			val positionRelativeToPlayer = Vector2f((renderX - entity.posX).toFloat(), (renderZ - entity.posZ).toFloat())
 
 			if (maxDisplayableDistanceSquare < positionRelativeToPlayer.lengthSquared()) return@forEach

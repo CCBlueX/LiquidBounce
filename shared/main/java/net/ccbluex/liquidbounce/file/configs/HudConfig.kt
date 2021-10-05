@@ -42,7 +42,7 @@ class HudConfig(file: File) : FileConfig(file)
 	@Throws(IOException::class)
 	override fun saveConfig()
 	{
-		val writer = MiscUtils.createBufferedFileWriter(file)
+		val writer = file.bufferedWriter()
 		writer.write(Config(LiquidBounce.hud).toJson() + System.lineSeparator())
 		writer.close()
 	}

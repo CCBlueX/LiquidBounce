@@ -23,6 +23,7 @@ interface IPlayerControllerMP
 	val isInCreativeMode: Boolean
 	var curBlockDamageMP: Float
 	var blockHitDelay: Int
+	val hittingBlock: Boolean
 
 	fun windowClick(windowId: Int, slot: Int, mouseButton: Int, mode: Int, player: IEntityPlayerSP)
 	fun updateController()
