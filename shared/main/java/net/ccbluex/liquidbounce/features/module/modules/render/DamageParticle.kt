@@ -47,13 +47,13 @@ class DamageParticle : Module()
 				val lastHealth = healthData[entity.entityId] ?: entity.maxHealth
 				healthData[entity.entityId] = entity.health
 
-				val delta = lastHealth - entity.health
+				val delta = entity.health - lastHealth
 				if (delta == 0.0F) null else entity to delta
 			}.forEach { (entity, delta) ->
 				val width = entity.width * 0.5
 				val height = entity.height * 0.5
 				val pos = RotationUtils.getCenter(entity.entityBoundingBox)
-				particles.add(SingleParticle(StringUtils.DECIMALFORMAT_1.format(delta), pos.xCoord + nextDouble(-width, width), pos.yCoord + nextDouble(-height, height), pos.zCoord + nextDouble(-width, width), if (delta > 0) damageAnimationColorValue.get() else healAnimationColorValue.get()))
+				particles.add(SingleParticle(StringUtils.DECIMALFORMAT_1.format(delta), pos.xCoord + nextDouble(-width, width), pos.yCoord + nextDouble(-height, height), pos.zCoord + nextDouble(-width, width), if (delta > 0) healAnimationColorValue.get() else damageAnimationColorValue.get()))
 			}
 
 			val itr = particles.iterator()
@@ -62,7 +62,7 @@ class DamageParticle : Module()
 	}
 
 	@EventTarget
-	fun onRender3d(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
+	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
 		synchronized(particles) {
 			val glStateManager = classProvider.glStateManager
@@ -92,7 +92,7 @@ class DamageParticle : Module()
 
 				font.drawStringWithShadow(particle.str, -(font.getStringWidth(particle.str) / 2), -(font.fontHeight - 1), particle.color)
 
-				GL11.glColor4f(187.0f, 255.0f, 255.0f, 1.0f)
+				GL11.glColor4f(1f, 1f, 1f, 1.0f)
 				GL11.glDepthMask(true)
 				glStateManager.doPolygonOffset(1.0f, 1500000.0f)
 				glStateManager.disablePolygonOffset()

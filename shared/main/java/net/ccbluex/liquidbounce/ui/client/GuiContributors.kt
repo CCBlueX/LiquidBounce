@@ -33,7 +33,7 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 	private lateinit var list: GuiList
 
 	private var credits: List<Credit> = Collections.emptyList()
-	private var failed = false
+	private var exception: Throwable? = null
 
 	override fun initGui()
 	{
@@ -43,7 +43,7 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 		representedScreen.buttonList.add(classProvider.createGuiButton(1, (representedScreen.width shr 1) - 100, representedScreen.height - 30, "Back"))
 
-		failed = false
+		exception = null
 
 		runAsync(::loadCredits)
 	}
@@ -136,10 +136,10 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 			val posX = (representedScreen.width shr 3).toFloat()
 			val posY = (representedScreen.height shr 1).toFloat()
 
-			if (failed)
+			if (exception != null)
 			{
 				val gb = ((functions.sin(System.currentTimeMillis() * (1 / 333.0F)) + 1) * (0.5 * 255)).toInt()
-				Fonts.font40.drawCenteredString("Failed to load", posX, posY, Color(255, gb, gb).rgb)
+				Fonts.font40.drawCenteredString("Failed to load ($exception)", posX, posY, Color(255, gb, gb).rgb)
 			}
 			else
 			{
@@ -247,7 +247,7 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 	catch (e: Exception)
 	{
 		ClientUtils.logger.error("Failed to load credits.", e)
-		failed = true
+		exception = e
 	}
 
 	internal class ContributorInformation(val name: String, val teamMember: Boolean, val contributions: List<String>)

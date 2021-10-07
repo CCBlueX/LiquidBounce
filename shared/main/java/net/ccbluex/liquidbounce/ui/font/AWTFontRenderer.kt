@@ -304,6 +304,17 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
 	private data class CharLocation(var x: Int, var y: Int, var width: Int, var height: Int)
 }
 
+data class CachedFont(val displayList: Int, var lastUsage: Long, var deleted: Boolean = false)
+{
+	protected fun finalize()
+	{
+		if (!deleted)
+		{
+			GL11.glDeleteLists(displayList, 1)
+		}
+	}
+}
+
 inline fun <T, R> T.assumeNonVolatile(block: T.() -> R): R
 {
 	val prev = AWTFontRenderer.assumeNonVolatile

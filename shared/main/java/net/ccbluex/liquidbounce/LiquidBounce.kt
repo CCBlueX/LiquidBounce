@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import net.minecraftforge.common.ForgeVersion
+import org.lwjgl.Sys
 import org.lwjgl.opengl.Display
 import org.spongepowered.asm.mixin.MixinEnvironment
 import org.spongepowered.asm.util.VersionNumber
@@ -100,13 +101,18 @@ object LiquidBounce
 		isStarting = true
 
 		ClientUtils.logger.info("Starting $CLIENT_NAME for $MINECRAFT_VERSION b$CLIENT_VERSION, by $CLIENT_CREATOR")
-		ClientUtils.logger.info("Java: ${System.getProperty("java.vm.name")} ${System.getProperty("java.vm.version")}")
-		ClientUtils.logger.info("Kotlin: ${KotlinVersion.CURRENT}")
-		if (hasForge()) ClientUtils.logger.info("MinecraftForge: ${ForgeVersion.getVersion()}")
-		ClientUtils.logger.info("Mixin: ${VersionNumber.parse(MixinEnvironment.getCurrentEnvironment().version)}")
-		ClientUtils.logger.info("Backend: $MINECRAFT_VERSION")
-		ClientUtils.logger.info("Nashorn: ${Version.fullVersion()}")
-		for (ver in io.netty.util.Version.identify().values) ClientUtils.logger.info("Netty: $ver")
+
+		ClientUtils.logger.info("* Java ${System.getProperty("java.vm.name")} ${System.getProperty("java.vm.version")}")
+		ClientUtils.logger.info("* Kotlin ${KotlinVersion.CURRENT}")
+		if (hasForge())
+		{
+			ClientUtils.logger.info("* MinecraftForge ${ForgeVersion.getVersion()}")
+			ClientUtils.logger.info("* MCP ${ForgeVersion.mcpVersion}")
+		}
+		ClientUtils.logger.info("* Mixin ${VersionNumber.parse(MixinEnvironment.getCurrentEnvironment().version)}")
+		ClientUtils.logger.info("* Nashorn ${Version.fullVersion()}")
+		for (ver in io.netty.util.Version.identify().values) ClientUtils.logger.info("* Netty $ver")
+		ClientUtils.logger.info("* LWJGL ${Sys.getVersion()}")
 
 		updateProgress("Initializing FileManager")
 

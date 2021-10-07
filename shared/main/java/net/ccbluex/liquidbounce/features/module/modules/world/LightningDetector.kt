@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationIcon
 
 // Ported from FDPClient (https://github.com/Project-EZ4H/FDPClient)
 // Original code is available in https://github.com/Project-EZ4H/FDPClient/blob/master/src/main/java/net/ccbluex/liquidbounce/features/module/modules/player/HackerDetector.kt
-@ModuleInfo(name = "LightningDetector", description = "Check lightning spawn at.", category = ModuleCategory.WORLD, array = false)
+@ModuleInfo(name = "LightningDetector", description = "Check lightning spawn at.", category = ModuleCategory.WORLD)
 class LightningDetector : Module()
 {
 	@EventTarget
