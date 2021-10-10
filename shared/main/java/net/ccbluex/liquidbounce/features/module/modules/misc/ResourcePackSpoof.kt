@@ -22,9 +22,7 @@ class ResourcePackSpoof : Module()
 	@EventTarget
 	fun onPacket(event: PacketEvent)
 	{
-		val provider = classProvider
-
-		if (provider.isSPacketResourcePackSend(event.packet))
+		if (classProvider.isSPacketResourcePackSend(event.packet))
 		{
 			val packet = event.packet.asSPacketResourcePackSend()
 
@@ -42,13 +40,13 @@ class ResourcePackSpoof : Module()
 
 				if (isLevelProtocol && (url.contains("..") || !url.endsWith("/resources.zip"))) throw URISyntaxException(url, "Invalid levelstorage resourcepack path")
 
-				netHandler.addToSendQueue(provider.createCPacketResourcePackStatus(packet.hash, ICPacketResourcePackStatus.WAction.ACCEPTED))
-				netHandler.addToSendQueue(provider.createCPacketResourcePackStatus(packet.hash, ICPacketResourcePackStatus.WAction.SUCCESSFULLY_LOADED))
+				netHandler.addToSendQueue(classProvider.createCPacketResourcePackStatus(packet.hash, ICPacketResourcePackStatus.WAction.ACCEPTED))
+				netHandler.addToSendQueue(classProvider.createCPacketResourcePackStatus(packet.hash, ICPacketResourcePackStatus.WAction.SUCCESSFULLY_LOADED))
 			}
 			catch (e: URISyntaxException)
 			{
 				ClientUtils.logger.error("Failed to handle resource pack", e)
-				netHandler.addToSendQueue(provider.createCPacketResourcePackStatus(hash, ICPacketResourcePackStatus.WAction.FAILED_DOWNLOAD))
+				netHandler.addToSendQueue(classProvider.createCPacketResourcePackStatus(hash, ICPacketResourcePackStatus.WAction.FAILED_DOWNLOAD))
 			}
 		}
 	}

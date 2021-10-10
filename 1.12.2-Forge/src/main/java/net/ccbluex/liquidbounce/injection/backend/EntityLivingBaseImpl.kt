@@ -76,8 +76,8 @@ open class EntityLivingBaseImpl<out T : EntityLivingBase>(wrapped: T) : EntityIm
 		{
 			wrapped.rotationYawHead = value
 		}
-
-	/////////////////
+	override val isHandActive: Boolean
+		get() = wrapped.isHandActive
 
 	override var customNameTag: String
 		get() = wrapped.customNameTag

@@ -16,6 +16,13 @@ class NetworkManagerImpl(val wrapped: NetworkManager) : INetworkManager
 {
 	override fun sendPacket(packet: IPacket) = wrapped.sendPacket(packet.unwrap())
 	override fun sendPacket(packet: IPacket, listener: () -> Unit) = wrapped.sendPacket(packet.unwrap(), GenericFutureListener { listener() })
+	override fun sendPacketWithoutEvent(packet: IPacket)
+	{
+		wrapped.sendPacket(packet.unwrap())
+	}
+
+	override val channelOpen: Boolean
+		get() = wrapped.isChannelOpen
 
 	override fun enableEncryption(secretKey: SecretKey) = wrapped.enableEncryption(secretKey)
 

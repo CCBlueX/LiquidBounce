@@ -13,7 +13,6 @@ import java.util.Optional;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.api.IClassProvider;
 import net.ccbluex.liquidbounce.api.minecraft.client.IMinecraft;
-import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.modules.combat.AutoClicker;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.AbortBreaking;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.MultiActions;
@@ -46,9 +45,9 @@ import net.minecraft.client.particle.EffectRenderer;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.util.MovingObjectPosition.MovingObjectType;
 import net.minecraft.util.Util;
 import net.minecraft.util.Util.EnumOS;
+import net.minecraft.util.MovingObjectPosition.MovingObjectType;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -103,6 +102,13 @@ public abstract class MixinMinecraft
 
 	@Shadow
 	public GameSettings gameSettings;
+
+	private long lastFrame = getTime();
+
+	public long getTime()
+	{
+		return Sys.getTime() * 1000 / Sys.getTimerResolution();
+	}
 
 	@Inject(method = "run", at = @At("HEAD"))
 	private void init(final CallbackInfo callbackInfo)
@@ -184,8 +190,6 @@ public abstract class MixinMinecraft
 		LiquidBounce.eventManager.callEvent(new ScreenEvent(Optional.ofNullable(currentScreen).map(GuiScreenImplKt::wrap).orElse(null)));
 	}
 
-	private long lastFrame = getTime();
-
 	@Inject(method = "runGameLoop", at = @At("HEAD"))
 	private void runGameLoop(final CallbackInfo callbackInfo)
 	{
@@ -194,11 +198,6 @@ public abstract class MixinMinecraft
 		lastFrame = currentTime;
 
 		RenderUtils.setDeltaTime(deltaTime);
-	}
-
-	public long getTime()
-	{
-		return Sys.getTime() * 1000 / Sys.getTimerResolution();
 	}
 
 	@Inject(method = "runTick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;joinPlayerCounter:I", shift = Shift.BEFORE))

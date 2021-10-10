@@ -24,8 +24,8 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
-
 import net.minecraftforge.common.ForgeHooks;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -43,6 +43,9 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 	protected boolean isJumping;
 	@Shadow
 	private int jumpTicks;
+
+	@Shadow
+	public float cameraPitch;
 
 	@Shadow
 	public abstract boolean isHandActive();
@@ -146,7 +149,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity
 	}
 
 	@Inject(method = "isPotionActive(Lnet/minecraft/potion/Potion;)Z", at = @At("HEAD"), cancellable = true)
-	private void isPotionActive(final Potion p_isPotionActive_1_, final CallbackInfoReturnable<Boolean> callbackInfoReturnable)
+	private void isPotionActive(final Potion p_isPotionActive_1_, final CallbackInfoReturnable<? super Boolean> callbackInfoReturnable)
 	{
 		final AntiBlind antiBlind = (AntiBlind) LiquidBounce.moduleManager.get(AntiBlind.class);
 

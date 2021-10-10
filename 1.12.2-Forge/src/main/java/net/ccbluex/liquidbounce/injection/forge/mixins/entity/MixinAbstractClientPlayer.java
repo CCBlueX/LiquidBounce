@@ -30,7 +30,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @SideOnly(Side.CLIENT)
 public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer
 {
-
 	private CapeInfo capeInfo;
 
 	@Inject(method = "getLocationCape", at = @At("HEAD"), cancellable = true)
@@ -80,9 +79,9 @@ public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer
 	{
 		final NameProtect nameProtect = (NameProtect) LiquidBounce.moduleManager.get(NameProtect.class);
 
-		if (nameProtect.getState() && nameProtect.skinProtectValue.get())
+		if (nameProtect.getState() && nameProtect.getSkinProtectValue().get())
 		{
-			if (!nameProtect.allPlayersValue.get() && !Objects.equals(getGameProfile().getName(), Minecraft.getMinecraft().player.getGameProfile().getName()))
+			if (!nameProtect.getAllPlayerEnabledValue().get() && !Objects.equals(getGameProfile().getName(), Minecraft.getMinecraft().player.getGameProfile().getName()))
 				return;
 
 			callbackInfoReturnable.setReturnValue(DefaultPlayerSkin.getDefaultSkin(getUniqueID()));

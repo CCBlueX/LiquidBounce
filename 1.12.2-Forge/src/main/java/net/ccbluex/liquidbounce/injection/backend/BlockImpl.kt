@@ -48,6 +48,7 @@ class BlockImpl(val wrapped: Block) : IBlock
 
 	override fun getMaterial(state: IIBlockState): IMaterial = wrapped.getMaterial(state.unwrap()).wrap()
 	override fun isFullCube(state: IIBlockState): Boolean = wrapped.isFullCube(state.unwrap())
+	override fun isOpaqueCube(state: IIBlockState): Boolean = wrapped.isOpaqueCube(state.unwrap())
 
 	override fun getUnlocalizedName(): String = wrapped.unlocalizedName
 

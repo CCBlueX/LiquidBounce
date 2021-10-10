@@ -50,6 +50,8 @@ class PlayerControllerMPImpl(val wrapped: PlayerControllerMP) : IPlayerControlle
 		{
 			wrapped.blockHitDelay = value
 		}
+	override val hittingBlock: Boolean
+		get() = wrapped.isHittingBlock
 
 	override fun windowClick(windowId: Int, slot: Int, mouseButton: Int, mode: Int, player: IEntityPlayerSP)
 	{
@@ -113,6 +115,7 @@ class PlayerControllerMPImpl(val wrapped: PlayerControllerMP) : IPlayerControlle
 	override fun clickBlock(blockPos: WBlockPos, enumFacing: IEnumFacing) = wrapped.clickBlock(blockPos.unwrap(), enumFacing.unwrap())
 
 	override fun onPlayerDestroyBlock(blockPos: WBlockPos, enumFacing: IEnumFacing): Boolean = wrapped.onPlayerDestroyBlock(blockPos.unwrap())
+	override fun shouldDrawHUD(): Boolean = wrapped.shouldDrawHUD()
 
 	override fun equals(other: Any?): Boolean = other is PlayerControllerMPImpl && other.wrapped == wrapped
 }

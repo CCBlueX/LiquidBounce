@@ -11,14 +11,18 @@ import java.util.UUID;
 import javax.annotation.Nullable;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.event.StrafeEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.HitBox;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.NoPitchLimit;
+import net.ccbluex.liquidbounce.features.module.modules.render.ItemPhysics;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.Minecraft;
 import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.MoverType;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -192,6 +196,12 @@ public abstract class MixinEntity
 	@Shadow
 	public abstract boolean isBurning();
 
+	@Shadow
+	public abstract void setFire(int seconds);
+
+	@Shadow
+	public abstract void setPosition(double x, double y, double z);
+
 	public int getNextStepDistance()
 	{
 		return nextStepDistance;
@@ -207,11 +217,8 @@ public abstract class MixinEntity
 		return fire;
 	}
 
-	@Shadow
-	public abstract void setFire(int seconds);
-
 	@Inject(method = "getCollisionBorderSize", at = @At("HEAD"), cancellable = true)
-	private void getCollisionBorderSize(final CallbackInfoReturnable<Float> callbackInfoReturnable)
+	private void getCollisionBorderSize(final CallbackInfoReturnable<? super Float> callbackInfoReturnable)
 	{
 		final HitBox hitBox = (HitBox) LiquidBounce.moduleManager.get(HitBox.class);
 
@@ -235,4 +242,37 @@ public abstract class MixinEntity
 		}
 	}
 
+	@Inject(method = "moveRelative", at = @At("HEAD"), cancellable = true)
+	private void handleRotations(final float strafe, final float up, final float forward, final float friction, final CallbackInfo callbackInfo)
+	{
+		// Trigger StrafeEvent
+
+		// noinspection ConstantConditions
+		if ((Object) this != Minecraft.getMinecraft().player)
+			return;
+
+		final StrafeEvent strafeEvent = new StrafeEvent(strafe, forward, friction);
+		LiquidBounce.eventManager.callEvent(strafeEvent, true);
+
+		if (strafeEvent.isCancelled())
+			callbackInfo.cancel();
+	}
+
+	@SideOnly(Side.CLIENT)
+	@Inject(method = "setPositionAndRotationDirect", at = @At("HEAD"), cancellable = true)
+	public void setPositionAndRotationDirect(final double x, final double y, final double z, final float yaw, final float pitch, final int posRotationIncrements, final boolean p_180426_10_, final CallbackInfo callbackInfo)
+	{
+		// ItemPhysics
+
+		// noinspection ConstantConditions
+		if ((Object) this instanceof EntityItem)
+		{
+			final ItemPhysics itemPhysics = (ItemPhysics) LiquidBounce.moduleManager.get(ItemPhysics.class);
+			if (itemPhysics.getState())
+			{
+				setPosition(x, y, z);
+				callbackInfo.cancel();
+			}
+		}
+	}
 }

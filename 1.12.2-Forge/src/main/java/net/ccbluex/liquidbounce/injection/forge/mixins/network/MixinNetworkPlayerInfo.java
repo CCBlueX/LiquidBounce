@@ -26,18 +26,16 @@ public class MixinNetworkPlayerInfo
 	private GameProfile gameProfile;
 
 	@Inject(method = "getLocationSkin", cancellable = true, at = @At("HEAD"))
-	private void injectSkinProtect(final CallbackInfoReturnable<ResourceLocation> cir)
+	private void injectSkinProtect(final CallbackInfoReturnable<? super ResourceLocation> cir)
 	{
 		final NameProtect nameProtect = (NameProtect) LiquidBounce.moduleManager.get(NameProtect.class);
 
-		if (nameProtect.getState() && nameProtect.skinProtectValue.get())
-		{
-			if (nameProtect.allPlayersValue.get() || Objects.equals(gameProfile.getId(), Minecraft.getMinecraft().getSession().getProfile().getId()))
+		if (nameProtect.getState() && nameProtect.getSkinProtectValue().get())
+			if (nameProtect.getAllPlayerEnabledValue().get() || Objects.equals(gameProfile.getId(), Minecraft.getMinecraft().getSession().getProfile().getId()))
 			{
 				cir.setReturnValue(DefaultPlayerSkin.getDefaultSkin(gameProfile.getId()));
 				cir.cancel();
 			}
-		}
 
 	}
 }

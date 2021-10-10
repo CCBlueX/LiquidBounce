@@ -8,6 +8,10 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.block;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.modules.movement.NoSlow;
 import net.minecraft.block.BlockSoulSand;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.Entity;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -22,11 +26,18 @@ public class MixinBlockSoulSand
 {
 
 	@Inject(method = "onEntityCollidedWithBlock", at = @At("HEAD"), cancellable = true)
-	private void onEntityCollidedWithBlock(final CallbackInfo callbackInfo)
+	private void onEntityCollidedWithBlock(final World worldIn, final BlockPos pos, final IBlockState state, final Entity entityIn, final CallbackInfo callbackInfo)
 	{
 		final NoSlow noSlow = (NoSlow) LiquidBounce.moduleManager.get(NoSlow.class);
 
-		if (noSlow.getState() && noSlow.getSoulsandValue().get())
+		if (noSlow.getState())
+		{
+			final float multiplier = noSlow.getSoulSandForwardMultiplier().get();
+
+			entityIn.motionX *= multiplier;
+			entityIn.motionZ *= multiplier;
+
 			callbackInfo.cancel();
+		}
 	}
 }

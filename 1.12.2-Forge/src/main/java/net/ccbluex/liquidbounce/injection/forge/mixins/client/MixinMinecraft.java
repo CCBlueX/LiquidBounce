@@ -6,11 +6,14 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.client;
 
 import java.nio.ByteBuffer;
+import java.util.Optional;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.modules.combat.AutoClicker;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.AbortBreaking;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.MultiActions;
+import net.ccbluex.liquidbounce.features.module.modules.render.HUD;
 import net.ccbluex.liquidbounce.features.module.modules.world.FastPlace;
 import net.ccbluex.liquidbounce.injection.backend.EnumFacingImplKt;
 import net.ccbluex.liquidbounce.injection.backend.GuiScreenImplKt;
@@ -20,6 +23,8 @@ import net.ccbluex.liquidbounce.injection.backend.utils.BackendExtentionsKt;
 import net.ccbluex.liquidbounce.ui.client.GuiMainMenu;
 import net.ccbluex.liquidbounce.ui.client.GuiUpdate;
 import net.ccbluex.liquidbounce.ui.client.GuiWelcome;
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationIcon;
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notifications;
 import net.ccbluex.liquidbounce.utils.CPSCounter;
 import net.ccbluex.liquidbounce.utils.CPSCounter.MouseButton;
 import net.ccbluex.liquidbounce.utils.render.IconUtils;
@@ -87,6 +92,11 @@ public abstract class MixinMinecraft
 	private int leftClickCounter;
 	private long lastFrame = getTime();
 
+	public long getTime()
+	{
+		return Sys.getTime() * 1000 / Sys.getTimerResolution();
+	}
+
 	@Inject(method = "run", at = @At("HEAD"))
 	private void init(final CallbackInfo callbackInfo)
 	{
@@ -113,8 +123,11 @@ public abstract class MixinMinecraft
 	@Inject(method = "init", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;displayGuiScreen(Lnet/minecraft/client/gui/GuiScreen;)V", shift = Shift.AFTER))
 	private void afterMainScreen(final CallbackInfo callbackInfo)
 	{
+		// Display welcome screen
 		if (LiquidBounce.fileManager.firstStart)
 			LiquidBounce.wrapper.getMinecraft().displayGuiScreen(LiquidBounce.wrapper.getClassProvider().wrapGuiScreen(new GuiWelcome()));
+
+		// Display update screen
 		else if (LiquidBounce.INSTANCE.getLatestVersion() > LiquidBounce.CLIENT_VERSION - (LiquidBounce.IN_DEV ? 1 : 0))
 			LiquidBounce.wrapper.getMinecraft().displayGuiScreen(LiquidBounce.wrapper.getClassProvider().wrapGuiScreen(new GuiUpdate()));
 	}
@@ -122,12 +135,13 @@ public abstract class MixinMinecraft
 	@Inject(method = "createDisplay", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/Display;setTitle(Ljava/lang/String;)V", shift = Shift.AFTER))
 	private void createDisplay(final CallbackInfo callbackInfo)
 	{
-		Display.setTitle(LiquidBounce.CLIENT_NAME + " b" + LiquidBounce.CLIENT_VERSION + " | " + LiquidBounce.MINECRAFT_VERSION + (LiquidBounce.IN_DEV ? " | DEVELOPMENT BUILD" : ""));
+		Display.setTitle(LiquidBounce.getTitle());
 	}
 
 	@Inject(method = "displayGuiScreen", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;currentScreen:Lnet/minecraft/client/gui/GuiScreen;", shift = Shift.AFTER))
 	private void displayGuiScreen(final CallbackInfo callbackInfo)
 	{
+		// Replace Main Menu screen
 		if (currentScreen instanceof net.minecraft.client.gui.GuiMainMenu || currentScreen != null && currentScreen.getClass().getName().startsWith("net.labymod") && currentScreen.getClass().getSimpleName().equals("ModGuiMainMenu"))
 		{
 			currentScreen = GuiScreenImplKt.unwrap(LiquidBounce.wrapper.getClassProvider().wrapGuiScreen(new GuiMainMenu()));
@@ -137,7 +151,7 @@ public abstract class MixinMinecraft
 			skipRenderWorld = false;
 		}
 
-		LiquidBounce.eventManager.callEvent(new ScreenEvent(currentScreen == null ? null : GuiScreenImplKt.wrap(currentScreen)));
+		LiquidBounce.eventManager.callEvent(new ScreenEvent(Optional.ofNullable(currentScreen).map(GuiScreenImplKt::wrap).orElse(null)));
 	}
 
 	@Inject(method = "runGameLoop", at = @At("HEAD"))
@@ -147,25 +161,20 @@ public abstract class MixinMinecraft
 		final int deltaTime = (int) (currentTime - lastFrame);
 		lastFrame = currentTime;
 
-		RenderUtils.deltaTime = deltaTime;
-	}
-
-	public long getTime()
-	{
-		return Sys.getTime() * 1000 / Sys.getTimerResolution();
+		RenderUtils.setDeltaTime(deltaTime);
 	}
 
 	@Inject(method = "runTick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;joinPlayerCounter:I", shift = Shift.BEFORE))
 	private void onTick(final CallbackInfo callbackInfo)
 	{
-		LiquidBounce.eventManager.callEvent(new TickEvent());
+		LiquidBounce.eventManager.callEvent(new TickEvent(), true);
 	}
 
 	@Inject(method = "runTickKeyboard", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;dispatchKeypresses()V", shift = Shift.AFTER))
 	private void onKey(final CallbackInfo callbackInfo)
 	{
 		if (Keyboard.getEventKeyState() && currentScreen == null)
-			LiquidBounce.eventManager.callEvent(new KeyEvent(Keyboard.getEventKey() == 0 ? Keyboard.getEventCharacter() + 256 : Keyboard.getEventKey()));
+			LiquidBounce.eventManager.callEvent(new KeyEvent(Keyboard.getEventKey() == 0 ? Keyboard.getEventCharacter() + 256 : Keyboard.getEventKey()), true);
 	}
 
 	@Inject(method = "sendClickBlockToController", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/RayTraceResult;getBlockPos()Lnet/minecraft/util/math/BlockPos;"))
@@ -174,9 +183,7 @@ public abstract class MixinMinecraft
 		final IBlockState blockState = world.getBlockState(objectMouseOver.getBlockPos());
 
 		if (leftClickCounter == 0 && blockState.getBlock().getMaterial(blockState) != Material.AIR)
-		{
 			LiquidBounce.eventManager.callEvent(new ClickBlockEvent(BackendExtentionsKt.wrap(objectMouseOver.getBlockPos()), EnumFacingImplKt.wrap(objectMouseOver.sideHit)));
-		}
 	}
 
 	@Inject(method = "setWindowIcon", at = @At("HEAD"), cancellable = true)
@@ -226,14 +233,18 @@ public abstract class MixinMinecraft
 	}
 
 	@Inject(method = "loadWorld(Lnet/minecraft/client/multiplayer/WorldClient;Ljava/lang/String;)V", at = @At("HEAD"))
-	private void loadWorld(final WorldClient p_loadWorld_1_, final String p_loadWorld_2_, final CallbackInfo callbackInfo)
+	private void loadWorld(final WorldClient theWorld, final String p_loadWorld_2_, final CallbackInfo callbackInfo)
 	{
 		if (world != null)
-		{
 			MiniMapRegister.INSTANCE.unloadAllChunks();
-		}
 
-		LiquidBounce.eventManager.callEvent(new WorldEvent(p_loadWorld_1_ == null ? null : WorldClientImplKt.wrap(p_loadWorld_1_)));
+		// Trigger WorldEvent
+		LiquidBounce.eventManager.callEvent(new WorldEvent(Optional.ofNullable(theWorld).map(WorldClientImplKt::wrap).orElse(null)));
+
+		final HUD hud = (HUD) LiquidBounce.moduleManager.get(HUD.class);
+
+		if (hud.getNotificationWorldChangeValue().get() && LiquidBounce.hud.getNotifications().size() <= Notifications.Companion.getMaxRendered().get())
+			LiquidBounce.hud.addNotification(NotificationIcon.INFORMATION, "World Change", "(" + theWorld + ") -> (" + world + ")", 2000L);
 	}
 
 	/**
@@ -246,7 +257,6 @@ public abstract class MixinMinecraft
 			leftClickCounter = 0;
 
 		if (leftClickCounter <= 0 && (!player.isHandActive() || LiquidBounce.moduleManager.get(MultiActions.class).getState()))
-		{
 			if (leftClick && objectMouseOver != null && objectMouseOver.typeOfHit == Type.BLOCK)
 			{
 				final BlockPos blockPos = objectMouseOver.getBlockPos();
@@ -261,16 +271,13 @@ public abstract class MixinMinecraft
 					effectRenderer.addBlockHitEffects(blockPos, objectMouseOver.sideHit);
 					player.swingArm(EnumHand.MAIN_HAND);
 				}
-			}
-			else if (!LiquidBounce.moduleManager.get(AbortBreaking.class).getState())
-			{
+			} else if (!LiquidBounce.moduleManager.get(AbortBreaking.class).getState())
 				playerController.resetBlockRemoving();
-			}
-		}
 	}
 
 	/**
-	 * @author
+	 * @author CCBlueX
+	 * @reason Limit framerate if any kind of gui is open
 	 */
 	@Overwrite
 	public int getLimitFramerate()

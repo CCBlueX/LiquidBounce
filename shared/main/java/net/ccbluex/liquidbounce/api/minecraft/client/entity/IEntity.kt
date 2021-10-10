@@ -29,7 +29,7 @@ interface IEntity
 	val isInWater: Boolean
 	var isInWeb: Boolean
 	val isInLava: Boolean
-	val isEating: Boolean
+	val isHandActive: Boolean
 	val isSilent: Boolean
 
 	@get:JvmName("isSprinting")
@@ -66,9 +66,9 @@ interface IEntity
 	var posY: Double
 	var posZ: Double
 
-	val serverPosX: Int
-	val serverPosY: Int
-	val serverPosZ: Int
+	val serverPosX: Long
+	val serverPosY: Long
+	val serverPosZ: Long
 
 	val lastTickPosX: Double
 	val lastTickPosY: Double

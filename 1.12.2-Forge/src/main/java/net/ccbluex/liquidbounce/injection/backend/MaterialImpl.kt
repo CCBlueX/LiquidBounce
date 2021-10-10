@@ -14,6 +14,8 @@ class MaterialImpl(val wrapped: Material) : IMaterial
 	override val isReplaceable: Boolean
 		get() = wrapped.isReplaceable
 
+	override fun blocksMovement(): Boolean = wrapped.blocksMovement()
+
 	override fun equals(other: Any?): Boolean = other is MaterialImpl && other.wrapped == wrapped
 }
 

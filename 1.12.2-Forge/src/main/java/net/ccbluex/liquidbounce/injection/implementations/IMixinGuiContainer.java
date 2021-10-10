@@ -6,4 +6,5 @@ import net.minecraft.inventory.Slot;
 public interface IMixinGuiContainer
 {
 	void publicHandleMouseClick(Slot slot, int slotNumber, int clickedButton, ClickType clickType);
+	void highlight(int slotNumber, long duration, int color);
 }

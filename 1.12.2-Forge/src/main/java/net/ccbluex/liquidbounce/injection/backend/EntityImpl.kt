@@ -16,6 +16,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.MoverType
 import net.minecraft.entity.item.EntityTNTPrimed
+import net.minecraft.entity.monster.EntityCreeper
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.entity.projectile.EntityArrow
 import net.minecraft.entity.projectile.EntityFishHook
@@ -102,8 +103,8 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 		}
 	override val isInLava: Boolean
 		get() = wrapped.isInLava
-	override val isEating: Boolean
-		get() = wrapped.getFlag(4)
+	override val isHandActive: Boolean
+		get() = false
 	override val isSilent: Boolean
 		get() = wrapped.isSilent
 	override val width: Float
@@ -166,11 +167,11 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 		{
 			wrapped.posZ = value
 		}
-	override val serverPosX: Int
+	override val serverPosX: Long
 		get() = wrapped.serverPosX
-	override val serverPosY: Int
+	override val serverPosY: Long
 		get() = wrapped.serverPosY
-	override val serverPosZ: Int
+	override val serverPosZ: Long
 		get() = wrapped.serverPosZ
 	override val lastTickPosX: Double
 		get() = wrapped.lastTickPosX
@@ -252,6 +253,8 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 	override fun asEntityPotion(): IEntityPotion = EntityPotionImpl(wrapped as EntityPotion)
 
 	override fun asEntityFishHook(): IEntityFishHook = EntityFishHookImpl(wrapped as EntityFishHook)
+
+	override fun asEntityCreeper(): IEntityCreeper = EntityCreeperImpl(wrapped as EntityCreeper)
 
 	override fun getDistance(x: Double, y: Double, z: Double): Double = wrapped.getDistance(x, y, z)
 

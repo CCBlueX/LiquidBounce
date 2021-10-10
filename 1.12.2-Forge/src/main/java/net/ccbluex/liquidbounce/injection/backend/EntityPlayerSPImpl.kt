@@ -38,6 +38,8 @@ open class EntityPlayerSPImpl<T : EntityPlayerSP>(wrapped: T) : AbstractClientPl
 		{
 			wrapped.serverSprintState = value
 		}
+	override val timeInPortal: Float
+		get() = wrapped.timeInPortal
 
 	override fun sendChatMessage(msg: String) = wrapped.sendChatMessage(msg)
 

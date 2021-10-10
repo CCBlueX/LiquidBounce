@@ -19,6 +19,11 @@ open class ItemImpl<out T : Item>(val wrapped: T) : IItem
 	override fun asItemBlock(): IItemBlock = ItemBlockImpl(wrapped as ItemBlock)
 	override fun asItemSword(): IItemSword = ItemSwordImpl(wrapped as ItemSword)
 	override fun asItemBucket(): IItemBucket = ItemBucketImpl(wrapped as ItemBucket)
+	override fun asItemFood(): IItemFood = ItemFoodImpl(wrapped as ItemFood)
+
+	override fun showDurabilityBar(stack: IItemStack): Boolean = wrapped.showDurabilityBar(stack.unwrap())
+
+	override fun getDurabilityForDisplay(stack: IItemStack): Double = wrapped.getDurabilityForDisplay(stack.unwrap())
 
 	override fun equals(other: Any?): Boolean = other is ItemImpl<*> && other.wrapped == wrapped
 }

@@ -28,7 +28,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @SideOnly(Side.CLIENT)
 public class MixinPlayerControllerMP
 {
-
 	@Inject(method = "attackEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/PlayerControllerMP;syncCurrentPlayItem()V"))
 	private void attackEntity(final EntityPlayer entityPlayer, final Entity targetEntity, final CallbackInfo callbackInfo)
 	{

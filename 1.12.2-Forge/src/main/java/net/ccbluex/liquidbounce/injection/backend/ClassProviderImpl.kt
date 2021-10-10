@@ -107,6 +107,7 @@ import java.io.File
 import java.security.PublicKey
 import javax.crypto.SecretKey
 
+// TODO: Sort members according to IClassProvider
 object ClassProviderImpl : IClassProvider
 {
 	override val tessellatorInstance: ITessellator
@@ -249,9 +250,9 @@ object ClassProviderImpl : IClassProvider
 
 	override fun createCPacketChatMessage(message: String): ICPacketChatMessage = CPacketChatMessageImpl(CPacketChatMessage(message))
 
-	override fun createCPacketInput(): IPacket = CPacketInputImpl(CPacketInput())
+	override fun createCPacketInput(): IPacket = PacketImpl(CPacketInput())
 
-	override fun createCPacketPlayerAbilities(capabilities: IPlayerCapabilities): ICPacketPlayerAbilities = CPacketAbilitiesImpl(CPacketPlayerAbilities(capabilities.unwrap()))
+	override fun createCPacketPlayerAbilities(capabilities: IPlayerCapabilities): ICPacketPlayerAbilities = CPacketPlayerAbilitiesImpl(CPacketPlayerAbilities(capabilities.unwrap()))
 
 	/* instance checks (Entity) */
 	override fun isEntityAnimal(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityAnimal

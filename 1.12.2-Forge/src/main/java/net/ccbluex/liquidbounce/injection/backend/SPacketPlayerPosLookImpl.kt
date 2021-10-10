@@ -7,11 +7,17 @@
 package net.ccbluex.liquidbounce.injection.backend
 
 import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ISPacketPlayerPosLook
-import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ISPacketPosLook
 import net.minecraft.network.play.server.SPacketPlayerPosLook
 
-class SPacketPosLookImpl<out T : SPacketPlayerPosLook>(wrapped: T) : PacketImpl<T>(wrapped), ISPacketPlayerPosLook
+class SPacketPlayerPosLookImpl<out T : SPacketPlayerPosLook>(wrapped: T) : PacketImpl<T>(wrapped), ISPacketPlayerPosLook
 {
+	override val x: Double
+		get() = wrapped.x
+	override val y: Double
+		get() = wrapped.y
+	override val z: Double
+		get() = wrapped.z
+
 	override var yaw: Float
 		get() = wrapped.yaw
 		set(value)
@@ -26,5 +32,5 @@ class SPacketPosLookImpl<out T : SPacketPlayerPosLook>(wrapped: T) : PacketImpl<
 		}
 }
 
-fun ISPacketPosLook.unwrap(): SPacketPlayerPosLook = (this as SPacketPosLookImpl<*>).wrapped
-fun SPacketPlayerPosLook.wrap(): ISPacketPosLook = SPacketPosLookImpl(this)
+fun ISPacketPlayerPosLook.unwrap(): SPacketPlayerPosLook = (this as SPacketPlayerPosLookImpl<*>).wrapped
+fun SPacketPlayerPosLook.wrap(): ISPacketPlayerPosLook = SPacketPlayerPosLookImpl(this)

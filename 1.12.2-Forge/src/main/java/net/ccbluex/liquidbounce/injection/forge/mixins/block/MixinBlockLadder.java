@@ -55,11 +55,10 @@ public abstract class MixinBlockLadder extends MixinBlock
 		if (state.getBlock() instanceof BlockLadder)
 		{
 			final FastClimb fastClimb = (FastClimb) LiquidBounce.moduleManager.get(FastClimb.class);
-			final boolean fastLadder = fastClimb.getState() && fastClimb.getModeValue().get().equalsIgnoreCase("AAC3.0.0");
+			final boolean fastLadder = fastClimb.getState() && "AAC3.0.0".equalsIgnoreCase(fastClimb.getModeValue().get());
 			final float f = 0.99f;
 
 			if (fastLadder)
-			{
 				switch (state.getValue(FACING))
 				{
 					case NORTH:
@@ -72,7 +71,6 @@ public abstract class MixinBlockLadder extends MixinBlock
 					default:
 						return new AxisAlignedBB(0.0F, 0.0F, 0.0F, f, 1.0F, 1.0F);
 				}
-			}
 		}
 
 		// Default to the default implementation

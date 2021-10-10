@@ -5,6 +5,8 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.packets;
 
+import net.ccbluex.liquidbounce.features.special.AntiModDisable;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.EnumConnectionState;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.handshake.client.C00Handshake;
@@ -30,12 +32,14 @@ public class MixinC00Handshake
 
 	/**
 	 * @author CCBlueX
+	 * @reason AntiModDisable
+	 * @see AntiModDisable
 	 */
 	@Overwrite
 	public void writePacketData(final PacketBuffer buf)
 	{
 		buf.writeVarInt(protocolVersion);
-		buf.writeString(ip + "\0FML\0");
+		buf.writeString(ip + (AntiModDisable.Companion.getEnabled() && AntiModDisable.Companion.getBlockFMLPackets() && !Minecraft.getMinecraft().isIntegratedServerRunning() ? "" : "\0FML\0"));
 		buf.writeShort(port);
 		buf.writeVarInt(requestedState.getId());
 	}

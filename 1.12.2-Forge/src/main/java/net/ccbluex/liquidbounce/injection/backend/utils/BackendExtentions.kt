@@ -6,17 +6,22 @@
 
 package net.ccbluex.liquidbounce.injection.backend.utils
 
+import net.ccbluex.liquidbounce.api.enums.WEnumEquipmentSlot
 import net.ccbluex.liquidbounce.api.enums.WEnumHand
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.WEnumPlayerModelParts
 import net.ccbluex.liquidbounce.api.minecraft.event.IClickEvent
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.*
+import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ISPacketPlayerListItem
 import net.ccbluex.liquidbounce.api.minecraft.util.*
 import net.ccbluex.liquidbounce.api.minecraft.world.IWorldSettings
 import net.ccbluex.liquidbounce.injection.backend.Backend.BACKEND_UNSUPPORTED
+import net.ccbluex.liquidbounce.injection.backend.unwrap
+import net.ccbluex.liquidbounce.injection.backend.wrap
 import net.minecraft.entity.player.EnumPlayerModelParts
 import net.minecraft.inventory.ClickType
 import net.minecraft.inventory.EntityEquipmentSlot
 import net.minecraft.network.play.client.*
+import net.minecraft.network.play.server.SPacketPlayerListItem
 import net.minecraft.util.EnumHand
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.RayTraceResult
@@ -241,6 +246,8 @@ fun ICPacketEntityAction.WAction.unwrap(): CPacketEntityAction.Action
 		ICPacketEntityAction.WAction.START_SPRINTING -> CPacketEntityAction.Action.START_SPRINTING
 		ICPacketEntityAction.WAction.STOP_SPRINTING -> CPacketEntityAction.Action.STOP_SPRINTING
 		ICPacketEntityAction.WAction.OPEN_INVENTORY -> CPacketEntityAction.Action.OPEN_INVENTORY
+		ICPacketEntityAction.WAction.START_RIDING_JUMP -> CPacketEntityAction.Action.START_RIDING_JUMP
+		ICPacketEntityAction.WAction.STOP_RIDING_JUMP -> CPacketEntityAction.Action.STOP_RIDING_JUMP
 	}
 }
 
@@ -294,5 +301,55 @@ fun WEnumHand.unwrap(): EnumHand
 	{
 		WEnumHand.MAIN_HAND -> EnumHand.MAIN_HAND
 		WEnumHand.OFF_HAND -> EnumHand.OFF_HAND
+	}
+}
+
+fun ISPacketPlayerListItem.WAction.unwrap(): SPacketPlayerListItem.Action
+{
+	return when (this)
+	{
+		ISPacketPlayerListItem.WAction.ADD_PLAYER -> SPacketPlayerListItem.Action.ADD_PLAYER
+		ISPacketPlayerListItem.WAction.UPDATE_GAME_MODE -> SPacketPlayerListItem.Action.UPDATE_GAME_MODE
+		ISPacketPlayerListItem.WAction.UPDATE_LATENCY -> SPacketPlayerListItem.Action.UPDATE_LATENCY
+		ISPacketPlayerListItem.WAction.UPDATE_DISPLAY_NAME -> SPacketPlayerListItem.Action.UPDATE_DISPLAY_NAME
+		ISPacketPlayerListItem.WAction.REMOVE_PLAYER -> SPacketPlayerListItem.Action.REMOVE_PLAYER
+	}
+}
+
+fun SPacketPlayerListItem.Action.wrap(): ISPacketPlayerListItem.WAction
+{
+	return when (this)
+	{
+		SPacketPlayerListItem.Action.ADD_PLAYER -> ISPacketPlayerListItem.WAction.ADD_PLAYER
+		SPacketPlayerListItem.Action.UPDATE_GAME_MODE -> ISPacketPlayerListItem.WAction.UPDATE_GAME_MODE
+		SPacketPlayerListItem.Action.UPDATE_LATENCY -> ISPacketPlayerListItem.WAction.UPDATE_LATENCY
+		SPacketPlayerListItem.Action.UPDATE_DISPLAY_NAME -> ISPacketPlayerListItem.WAction.UPDATE_DISPLAY_NAME
+		SPacketPlayerListItem.Action.REMOVE_PLAYER -> ISPacketPlayerListItem.WAction.REMOVE_PLAYER
+	}
+}
+
+fun ISPacketPlayerListItem.WAddPlayerData.unwrap(): SPacketPlayerListItem.AddPlayerData = SPacketPlayerListItem().AddPlayerData(profile, ping, gameMode?.unwrap(), displayName?.unwrap())
+
+fun SPacketPlayerListItem.AddPlayerData.wrap(): ISPacketPlayerListItem.WAddPlayerData = ISPacketPlayerListItem.WAddPlayerData(profile, ping, gameMode?.wrap(), displayName?.wrap())
+
+fun CPacketClientStatus.State.wrap(): ICPacketClientStatus.WEnumState
+{
+	return when (this)
+	{
+		CPacketClientStatus.State.PERFORM_RESPAWN -> ICPacketClientStatus.WEnumState.PERFORM_RESPAWN
+		CPacketClientStatus.State.REQUEST_STATS -> ICPacketClientStatus.WEnumState.REQUEST_STATS
+	}
+}
+
+fun EntityEquipmentSlot.wrap(): WEnumEquipmentSlot
+{
+	return when (this)
+	{
+		EntityEquipmentSlot.MAINHAND -> WEnumEquipmentSlot.MAIN_HAND
+		EntityEquipmentSlot.OFFHAND -> WEnumEquipmentSlot.OFF_HAND
+		EntityEquipmentSlot.FEET -> WEnumEquipmentSlot.BOOTS
+		EntityEquipmentSlot.LEGS -> WEnumEquipmentSlot.LEGGINGS
+		EntityEquipmentSlot.CHEST -> WEnumEquipmentSlot.CHESTPLATE
+		EntityEquipmentSlot.HEAD -> WEnumEquipmentSlot.HELMET
 	}
 }

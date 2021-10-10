@@ -36,6 +36,9 @@ class ItemStackImpl(val wrapped: ItemStack) : IItemStack
 	override fun getAttributeModifier(key: String): Collection<IAttributeModifier> = WrappedCollection(wrapped.getAttributeModifiers(EntityEquipmentSlot.MAINHAND)[key], IAttributeModifier::unwrap, AttributeModifier::wrap)
 	override fun isSplash(): Boolean = wrapped.item == Items.SPLASH_POTION
 
+	override val animationsToGo: Int
+		get() = wrapped.animationsToGo
+
 	override val isItemEnchanted: Boolean
 		get() = wrapped.isItemEnchanted
 	override val displayName: String
@@ -53,8 +56,12 @@ class ItemStackImpl(val wrapped: ItemStack) : IItemStack
 		{
 			wrapped.tagCompound = value?.unwrap()
 		}
-	override val stackSize: Int
+	override var stackSize: Int
 		get() = wrapped.stackSize
+		set(value)
+		{
+			wrapped.stackSize = value
+		}
 	override var itemDamage: Int
 		get() = wrapped.itemDamage
 		set(value)
@@ -69,6 +76,8 @@ class ItemStackImpl(val wrapped: ItemStack) : IItemStack
 		get() = wrapped.maxDamage
 
 	override fun getTooltip(thePlayer: IEntityPlayer, advanced: Boolean): List<String> = wrapped.getTooltip(thePlayer.unwrap(), if (advanced) ITooltipFlag.TooltipFlags.ADVANCED else ITooltipFlag.TooltipFlags.NORMAL)
+
+	override fun equals(other: Any?): Boolean = other is ItemStackImpl && wrapped.isItemEqual(other.wrapped)
 }
 
 fun IItemStack.unwrap(): ItemStack = (this as ItemStackImpl).wrapped

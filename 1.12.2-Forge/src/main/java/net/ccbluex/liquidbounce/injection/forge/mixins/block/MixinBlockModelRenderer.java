@@ -23,9 +23,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(BlockModelRenderer.class)
 public class MixinBlockModelRenderer
 {
-
 	@Inject(method = "renderModelSmooth", at = @At("HEAD"), cancellable = true)
-	public void renderModelSmooth(final IBlockAccess worldIn, final IBakedModel modelIn, final IBlockState stateIn, final BlockPos posIn, final BufferBuilder buffer, final boolean checkSides, final long rand, final CallbackInfoReturnable<Boolean> cir)
+	public void renderModelSmooth(final IBlockAccess worldIn, final IBakedModel modelIn, final IBlockState stateIn, final BlockPos posIn, final BufferBuilder buffer, final boolean checkSides, final long rand, final CallbackInfoReturnable<? super Boolean> cir)
 	{
 		final XRay xray = (XRay) LiquidBounce.moduleManager.get(XRay.class);
 
@@ -34,7 +33,7 @@ public class MixinBlockModelRenderer
 	}
 
 	@Inject(method = "renderModelFlat", at = @At("HEAD"), cancellable = true)
-	private void renderModelStandard(final IBlockAccess worldIn, final IBakedModel modelIn, final IBlockState stateIn, final BlockPos posIn, final BufferBuilder buffer, final boolean checkSides, final long rand, final CallbackInfoReturnable<Boolean> booleanCallbackInfoReturnable)
+	private void renderModelStandard(final IBlockAccess worldIn, final IBakedModel modelIn, final IBlockState stateIn, final BlockPos posIn, final BufferBuilder buffer, final boolean checkSides, final long rand, final CallbackInfoReturnable<? super Boolean> booleanCallbackInfoReturnable)
 	{
 		final XRay xray = (XRay) LiquidBounce.moduleManager.get(XRay.class);
 

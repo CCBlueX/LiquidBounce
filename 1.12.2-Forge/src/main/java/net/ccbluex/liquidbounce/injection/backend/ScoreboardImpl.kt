@@ -11,12 +11,16 @@ import net.ccbluex.liquidbounce.api.minecraft.scoreboard.IScoreObjective
 import net.ccbluex.liquidbounce.api.minecraft.scoreboard.IScoreboard
 import net.ccbluex.liquidbounce.api.minecraft.scoreboard.ITeam
 import net.ccbluex.liquidbounce.api.util.WrappedCollection
+import net.ccbluex.liquidbounce.api.util.WrappedMap
 import net.minecraft.scoreboard.Score
+import net.minecraft.scoreboard.ScoreObjective
 import net.minecraft.scoreboard.Scoreboard
 
 class ScoreboardImpl(val wrapped: Scoreboard) : IScoreboard
 {
 	override fun getPlayersTeam(name: String?): ITeam? = wrapped.getPlayersTeam(name)?.wrap()
+
+	override fun getObjectivesForEntity(entityName: String): Map<IScoreObjective, IScore> = WrappedMap(wrapped.getObjectivesForEntity(entityName), IScoreObjective::unwrap, ScoreObjective::wrap, IScore::unwrap, Score::wrap)
 
 	override fun getObjectiveInDisplaySlot(index: Int): IScoreObjective? = wrapped.getObjectiveInDisplaySlot(index)?.wrap()
 

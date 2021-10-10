@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.entity;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.api.minecraft.util.WVec3;
 import net.ccbluex.liquidbounce.event.AttackEvent;
 import net.ccbluex.liquidbounce.event.ClickWindowEvent;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.AbortBreaking;
@@ -29,15 +30,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @SideOnly(Side.CLIENT)
 public class MixinPlayerControllerMP
 {
-
 	@Inject(method = "attackEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/PlayerControllerMP;syncCurrentPlayItem()V"))
 	private void attackEntity(final EntityPlayer entityPlayer, final Entity targetEntity, final CallbackInfo callbackInfo)
 	{
-		LiquidBounce.eventManager.callEvent(new AttackEvent(EntityImplKt.wrap(targetEntity)));
+		LiquidBounce.eventManager.callEvent(new AttackEvent(EntityImplKt.wrap(targetEntity), new WVec3(entityPlayer.posX, entityPlayer.posY, entityPlayer.posZ)));
 	}
 
 	@Inject(method = "getIsHittingBlock", at = @At("HEAD"), cancellable = true)
-	private void getIsHittingBlock(final CallbackInfoReturnable<Boolean> callbackInfoReturnable)
+	private void getIsHittingBlock(final CallbackInfoReturnable<? super Boolean> callbackInfoReturnable)
 	{
 		if (LiquidBounce.moduleManager.get(AbortBreaking.class).getState())
 			callbackInfoReturnable.setReturnValue(false);

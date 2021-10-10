@@ -18,6 +18,8 @@ class PotionEffectImpl(val wrapped: PotionEffect) : IPotionEffect
 		get() = wrapped.amplifier
 	override val duration: Int
 		get() = wrapped.duration
+	override val effectName: String
+		get() = wrapped.effectName
 	override val potionID: Int
 		get() = Potion.getIdFromPotion(wrapped.potion)
 

@@ -19,6 +19,7 @@ import java.io.IOException
 import java.net.InetSocketAddress
 import java.net.Socket
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicInteger
 import javax.swing.JOptionPane
 
 class GuiPortScanner(private val prevGui: IGuiScreen) : WrappedGuiScreen()
@@ -34,10 +35,9 @@ class GuiPortScanner(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 	private var running = false
 	private var status = "\u00A77Idle..."
 	private var host: String? = null
-	private var currentPort = 0
 	private var maxPort = 0
 	private var minPort = 0
-	private var checkedPort = 0
+	private var checkedPort = AtomicInteger(0)
 
 	override fun initGui()
 	{
@@ -235,39 +235,50 @@ class GuiPortScanner(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 			}
 
 			ports.clear()
-			currentPort = minPort - 1
-			checkedPort = minPort
+			checkedPort.set(minPort)
 
 			val threadPool = Executors.newWorkStealingPool(threads)
-			val task = Runnable {
-				try
-				{
-					while (running && currentPort < maxPort)
+			// FIXME: Check the solution really works
+			val task = { startPort: Int, endPort: Int ->
+				Runnable {
+					var currentPort = startPort - 1
+
+					try
 					{
-						currentPort++
-						val port = currentPort
-						try
+						while (running && currentPort < endPort)
 						{
-							val socket = Socket()
-							socket.connect(InetSocketAddress(host, port), 500)
-							socket.close()
-							synchronized(ports) { if (!ports.contains(port)) ports.add(port) }
+							currentPort++
+							val port = currentPort
+							try
+							{
+								val socket = Socket()
+								socket.connect(InetSocketAddress(host, port), 500)
+								socket.close()
+								synchronized(ports) { if (!ports.contains(port)) ports.add(port) }
+							}
+							catch (ignored: Exception)
+							{
+							}
+							if (checkedPort.get() < port) checkedPort.set(port)
 						}
-						catch (ignored: Exception)
-						{
-						}
-						if (checkedPort < port) checkedPort = port
+						running = false
+						buttonToggle.displayString = "Start"
 					}
-					running = false
-					buttonToggle.displayString = "Start"
-				}
-				catch (e: Exception)
-				{
-					status = "\u00A7a\u00A7l" + e.javaClass.simpleName + ": \u00A7c" + e.message
+					catch (e: Exception)
+					{
+						status = "\u00A7a\u00A7l" + e.javaClass.simpleName + ": \u00A7c" + e.message
+					}
 				}
 			}
 
-			repeat(threads) { threadPool.execute(task) }
+			var offset = 0
+			val mod = (maxPort - minPort) % threads
+			val piece = (maxPort - minPort - mod) / threads
+			repeat(threads) {
+				val currentPiece = if (it == threads - 1) mod else piece
+				threadPool.execute(task(offset, offset + currentPiece))
+				offset += currentPiece + 1
+			}
 
 			running = true
 		}

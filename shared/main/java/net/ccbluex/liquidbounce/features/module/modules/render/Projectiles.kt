@@ -340,7 +340,7 @@ class Projectiles : Module()
 
 			classProvider.isEntityFishHook(projectile) && !projectile.asEntityFishHook().inGround && projectile.asEntityFishHook().caughtEntity == null -> ProjectileInfo(motionSlowdown = 0.92F, gravity = 0.04F, size = 0.25F) to -7829368
 
-			classProvider.isEntityPotion(projectile) -> ProjectileInfo(motionFactor = 0.5F, gravity = 0.05F, size = 0.25F, inaccuracy = -20.0F) to ColorUtils.applyAlphaChannel(functions.getLiquidColor(projectile.asEntityPotion().potionDamage, false), 255)
+			classProvider.isEntityPotion(projectile) -> ProjectileInfo(motionFactor = 0.5F, gravity = 0.05F, size = 0.25F, inaccuracy = -20.0F) to ColorUtils.applyAlphaChannel(functions.getLiquidColor(projectile.asEntityPotion().potionDamage, false), 255) // FIXME: Crossversion Support
 
 			classProvider.isEntityExpBottle(projectile) -> ProjectileInfo(motionFactor = 0.7F, gravity = 0.07F, size = 0.25F, inaccuracy = -20.0F) to -3539055
 

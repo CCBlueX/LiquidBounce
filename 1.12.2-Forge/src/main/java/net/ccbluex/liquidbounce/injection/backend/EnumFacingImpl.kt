@@ -23,6 +23,8 @@ class EnumFacingImpl(val wrapped: EnumFacing) : IEnumFacing
 
 	override fun isUp(): Boolean = wrapped == EnumFacing.UP
 
+	override fun toString(): String = wrapped.name2
+
 	override val opposite: IEnumFacing
 		get() = wrapped.opposite.wrap()
 	override val directionVec: WVec3i

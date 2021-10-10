@@ -22,6 +22,12 @@ class WorldClientImpl(wrapped: WorldClient) : WorldImpl<WorldClient>(wrapped), I
 {
 	override val playerEntities: Collection<IEntityPlayer>
 		get() = WrappedCollection(wrapped.playerEntities, IEntityPlayer::unwrap, EntityPlayer::wrap)
+	override var worldTime: Long
+		get() = wrapped.worldTime
+		set(value)
+		{
+			wrapped.worldTime = value
+		}
 	override val loadedEntityList: Collection<IEntity>
 		get() = WrappedCollection(wrapped.loadedEntityList, IEntity::unwrap, Entity::wrap)
 	override val loadedTileEntityList: Collection<ITileEntity>
@@ -36,6 +42,16 @@ class WorldClientImpl(wrapped: WorldClient) : WorldImpl<WorldClient>(wrapped), I
 	override fun removeEntityFromWorld(entityId: Int)
 	{
 		wrapped.removeEntityFromWorld(entityId)
+	}
+
+	override fun setRainStrength(strength: Float)
+	{
+		wrapped.setRainStrength(strength)
+	}
+
+	override fun setThunderingStrength(strength: Float)
+	{
+		wrapped.setThunderStrength(strength)
 	}
 }
 

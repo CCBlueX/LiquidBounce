@@ -23,7 +23,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(BlockModelRenderer.class)
 public class MixinBlockModelRenderer
 {
-
 	@Inject(method = "renderModelAmbientOcclusion", at = @At("HEAD"), cancellable = true)
 	private void renderModelAmbientOcclusion(final IBlockAccess blockAccessIn, final IBakedModel modelIn, final Block blockIn, final BlockPos blockPosIn, final WorldRenderer worldRendererIn, final boolean checkSide, final CallbackInfoReturnable<? super Boolean> booleanCallbackInfoReturnable)
 	{

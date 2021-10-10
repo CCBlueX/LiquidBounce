@@ -23,8 +23,6 @@ interface IBlock
 	val defaultState: IIBlockState?
 	val localizedName: String
 
-	val isOpaqueCube: Boolean
-
 	// <editor-fold desc="Bounding Box & Collide">
 	fun canCollideCheck(state: IIBlockState?, hitIfLiquid: Boolean): Boolean
 
@@ -37,6 +35,7 @@ interface IBlock
 	// <editor-fold desc="Characteristic">
 	fun isTranslucent(blockState: IIBlockState): Boolean
 	fun isFullCube(state: IIBlockState): Boolean
+	fun isOpaqueCube(state: IIBlockState): Boolean
 	// </editor-fold>
 
 	fun getPlayerRelativeBlockHardness(thePlayer: IEntityPlayerSP, theWorld: IWorld, blockPos: WBlockPos): Float

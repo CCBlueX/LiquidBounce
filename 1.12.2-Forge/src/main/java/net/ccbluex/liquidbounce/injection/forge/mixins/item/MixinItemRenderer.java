@@ -103,7 +103,7 @@ public abstract class MixinItemRenderer
 			{
 				final int j = flag1 ? 1 : -1;
 
-				final EnumAction enumaction = killAura.getBlockingStatus() ? EnumAction.BLOCK : stack.getItemUseAction();
+				final EnumAction enumaction = killAura.getClientSideBlockingStatus() ? EnumAction.BLOCK : stack.getItemUseAction();
 
 				switch (enumaction)
 				{
@@ -118,11 +118,11 @@ public abstract class MixinItemRenderer
 						break;
 					case BOW:
 						transformSideFirstPerson(enumhandside, p_187457_7_);
-						GlStateManager.translate((float) j * -0.2785682F, 0.18344387F, 0.15731531F);
+						GlStateManager.translate(j * -0.2785682F, 0.18344387F, 0.15731531F);
 						GlStateManager.rotate(-13.935F, 1.0F, 0.0F, 0.0F);
-						GlStateManager.rotate((float) j * 35.3F, 0.0F, 1.0F, 0.0F);
-						GlStateManager.rotate((float) j * -9.785F, 0.0F, 0.0F, 1.0F);
-						final float f5 = (float) stack.getMaxItemUseDuration() - ((float) mc.player.getItemInUseCount() - p_187457_2_ + 1.0F);
+						GlStateManager.rotate(j * 35.3F, 0.0F, 1.0F, 0.0F);
+						GlStateManager.rotate(j * -9.785F, 0.0F, 0.0F, 1.0F);
+						final float f5 = stack.getMaxItemUseDuration() - (mc.player.getItemInUseCount() - p_187457_2_ + 1.0F);
 						float f6 = f5 * 0.05f;
 						f6 = (f6 * f6 + f6 * 2.0F) / 3.0F;
 
@@ -141,7 +141,7 @@ public abstract class MixinItemRenderer
 
 						GlStateManager.translate(f6 * 0.0F, f6 * 0.0F, f6 * 0.04F);
 						GlStateManager.scale(1.0F, 1.0F, 1.0F + f6 * 0.2F);
-						GlStateManager.rotate((float) j * 45.0F, 0.0F, -1.0F, 0.0F);
+						GlStateManager.rotate(j * 45.0F, 0.0F, -1.0F, 0.0F);
 				}
 			}
 			else
@@ -150,7 +150,7 @@ public abstract class MixinItemRenderer
 				final float f1 = 0.2F * MathHelper.sin(MathHelper.sqrt(p_187457_5_) * (WMathHelper.PI * 2F));
 				final float f2 = -0.2F * MathHelper.sin(p_187457_5_ * WMathHelper.PI);
 				final int i = flag1 ? 1 : -1;
-				GlStateManager.translate((float) i * f, f1, f2);
+				GlStateManager.translate(i * f, f1, f2);
 				transformSideFirstPerson(enumhandside, p_187457_7_);
 				transformFirstPerson(enumhandside, p_187457_5_);
 			}

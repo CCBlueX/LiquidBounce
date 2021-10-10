@@ -103,59 +103,6 @@ public abstract class MixinNetworkManager implements IMixinNetworkManager
 		}
 	}
 
-	// FIXME: BUG (Can't ping and connect to any server in serverlist when enable it)
-	// @Overwrite
-	// @Inject(method = "createNetworkManagerAndConnect(Ljava/net/InetAddress;IZ)Lnet/minecraft/network/NetworkManager;", at = @At("HEAD"), cancellable = true)
-	// private static void createNetworkManagerAndConnect(final InetAddress address, final int serverPort, final boolean useNativeTransport, final CallbackInfoReturnable<NetworkManager> callback)
-	// {
-	// final NetworkManager networkmanager = new NetworkManager(EnumPacketDirection.CLIENTBOUND);
-	//
-	// final Class<? extends Channel> channelClass;
-	// final LazyLoadBase<? extends EventLoopGroup> eventLoopGroupLazy;
-	// if (Epoll.isAvailable() && useNativeTransport)
-	// {
-	// channelClass = EpollSocketChannel.class;
-	// eventLoopGroupLazy = CLIENT_EPOLL_EVENTLOOP;
-	// }
-	// else
-	// {
-	// channelClass = NioSocketChannel.class;
-	// eventLoopGroupLazy = CLIENT_NIO_EVENTLOOP;
-	// }
-	//
-	// final EventLoopGroup eventLoopGroup = eventLoopGroupLazy.getValue();
-	// if (eventLoopGroup != null)
-	// logger.info("using EventLoopGroup " + eventLoopGroup.getClass().getSimpleName() + " to connect " + address);
-	// else
-	// logger.warn("eventLoopGroup is null!!! This can't be happened!");
-	//
-	// // Connect to the server
-	// new Bootstrap().group(eventLoopGroup).handler(new ChannelInitializer<Channel>()
-	// {
-	// protected void initChannel(final Channel channel)
-	// {
-	// // Enable TCPNoDelay
-	// try
-	// {
-	// channel.config().setOption(ChannelOption.TCP_NODELAY, true);
-	// }
-	// catch (final ChannelException var3)
-	// {
-	// }
-	//
-	// channel.pipeline() // Build pipeline
-	// .addLast("timeout", new ReadTimeoutHandler(30)) // Timeout
-	// .addLast("splitter", new MessageDeserializer2()) // Splitter
-	// .addLast("decoder", new MessageDeserializer(EnumPacketDirection.CLIENTBOUND)) // Decoder
-	// .addLast("prepender", new MessageSerializer2()) // Prepender
-	// .addLast("encoder", new MessageSerializer(EnumPacketDirection.SERVERBOUND)) // Encoder
-	// .addLast("packet_handler", networkmanager); // PacketHandler (NetworkManager)
-	// }
-	// }).channel(channelClass).connect(address, serverPort).syncUninterruptibly();
-	//
-	// callback.setReturnValue(networkmanager);
-	// }
-
 	@SuppressWarnings("unchecked")
 	@Override
 	public void sendPacketWithoutEvent(final Packet<?> packetIn)

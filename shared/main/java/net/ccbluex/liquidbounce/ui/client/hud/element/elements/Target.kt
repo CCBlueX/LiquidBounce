@@ -203,7 +203,7 @@ class Target : Element()
 
 				if (target.invisible) dataWatcherBuilder.add("\u00A77\u00A7oInvisible")
 				if (target.burning) dataWatcherBuilder.add("\u00A7cBurning")
-				if (target.isEating) dataWatcherBuilder.add("\u00A7eEating")
+				if (target.isHandActive) dataWatcherBuilder.add("\u00A7eEating")
 				if (target.isSilent) dataWatcherBuilder.add("\u00A78Silent")
 
 				val headBoxYSize = headRenderSize + 6F

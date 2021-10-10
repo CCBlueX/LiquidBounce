@@ -49,11 +49,11 @@ public abstract class MixinBlock
 {
 
 	@Shadow
-	public abstract AxisAlignedBB getCollisionBoundingBox(World worldIn, BlockPos pos, IBlockState state);
-
-	@Shadow
 	@Final
 	protected BlockState blockState;
+
+	@Shadow
+	public abstract AxisAlignedBB getCollisionBoundingBox(World worldIn, BlockPos pos, IBlockState state);
 
 	@Shadow
 	public abstract void setBlockBounds(float minX, float minY, float minZ, float maxX, float maxY, float maxZ);

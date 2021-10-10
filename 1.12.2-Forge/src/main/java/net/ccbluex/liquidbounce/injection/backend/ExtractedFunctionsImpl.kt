@@ -33,6 +33,7 @@ import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.init.Items
 import net.minecraft.item.Item
 import net.minecraft.potion.Potion
+import net.minecraft.potion.PotionUtils
 import net.minecraft.scoreboard.ScorePlayerTeam
 import net.minecraft.util.EnumFacing
 import net.minecraft.util.ResourceLocation
@@ -90,8 +91,10 @@ object ExtractedFunctionsImpl : IExtractedFunctions
 	override fun sessionServiceJoinServer(profile: GameProfile, token: String, sessionHash: String) = Minecraft.getMinecraft().sessionService.joinServer(profile, token, sessionHash)
 
 	override fun getPotionById(potionID: Int): IPotion = Potion.getPotionById(potionID)!!.wrap()
+	override fun getLiquidColor(potion: IItemStack, bypassCache: Boolean): Int = PotionUtils.getColor(potion.unwrap())
 
 	override fun enableStandardItemLighting() = RenderHelper.enableStandardItemLighting()
+	override fun enableGUIStandardItemLighting() = RenderHelper.enableGUIStandardItemLighting()
 
 	override fun scoreboardFormatPlayerName(scorePlayerTeam: ITeam?, playerName: String): String = ScorePlayerTeam.formatPlayerName(scorePlayerTeam?.unwrap(), playerName)
 
@@ -120,7 +123,7 @@ object ExtractedFunctionsImpl : IExtractedFunctions
 
 	override fun getHorizontalFacing(yaw: Float): IEnumFacing = EnumFacing.getHorizontal(MathHelper.floor((yaw * 4.0 / 360.0) + 0.5) and 3).wrap()
 	override fun getLightMapTexUnit(): Int = OpenGlHelper.lightmapTexUnit
-	override fun setLightmapTextureCoords(target: Int, j: Float, k: Float) = OpenGlHelper.setLightmapTextureCoords(target, j, k)
+	override fun setLightmapTextureCoords(target: Int, x: Float, y: Float) = OpenGlHelper.setLightmapTextureCoords(target, x, y)
 
 	override fun cos(radians: Float): Float = MathHelper.cos(radians)
 	override fun sin(radians: Float): Float = MathHelper.sin(radians)

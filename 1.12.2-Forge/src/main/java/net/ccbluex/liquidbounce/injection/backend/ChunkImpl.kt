@@ -9,7 +9,6 @@ package net.ccbluex.liquidbounce.injection.backend
 import com.google.common.base.Predicate
 import net.ccbluex.liquidbounce.api.minecraft.block.state.IIBlockState
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.world.IChunk
@@ -28,7 +27,7 @@ class ChunkImpl(val wrapped: Chunk) : IChunk
 	override val isLoaded: Boolean
 		get() = wrapped.isLoaded
 
-	override fun getEntitiesWithinAABBForEntity(thePlayer: IEntityPlayerSP, arrowBox: IAxisAlignedBB, collidedEntities: MutableList<IEntity>, predicate: Predicate<IEntity>?) = wrapped.getEntitiesWithinAABBForEntity(thePlayer.unwrap(), arrowBox.unwrap(), WrappedMutableList(collidedEntities, Entity::wrap, IEntity::unwrap), predicate?.let { WrappedPredicate(it, Entity::wrap) })
+	override fun getEntitiesWithinAABBForEntity(entity: IEntity, arrowBox: IAxisAlignedBB, collidedEntities: MutableList<IEntity>, predicate: Predicate<IEntity>?) = wrapped.getEntitiesWithinAABBForEntity(entity.unwrap(), arrowBox.unwrap(), WrappedMutableList(collidedEntities, Entity::wrap, IEntity::unwrap), predicate?.let { WrappedPredicate(it, Entity::wrap) })
 
 	override fun getHeightValue(x: Int, z: Int): Int = wrapped.getHeightValue(x, z)
 

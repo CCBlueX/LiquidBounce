@@ -7,7 +7,7 @@ import net.ccbluex.liquidbounce.api.minecraft.client.shader.IFramebuffer
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import org.lwjgl.opengl.EXTFramebufferObject
 import org.lwjgl.opengl.EXTPackedDepthStencil
-import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL11.*
 
 /**
  * Outline ESP
@@ -20,36 +20,36 @@ object OutlineUtils
 	fun renderOne(lineWidth: Float)
 	{
 		checkSetupFBO()
-		GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS)
-		GL11.glDisable(GL11.GL_ALPHA_TEST)
-		GL11.glDisable(GL11.GL_TEXTURE_2D)
-		GL11.glDisable(GL11.GL_LIGHTING)
-		GL11.glEnable(GL11.GL_BLEND)
-		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-		GL11.glLineWidth(lineWidth)
-		GL11.glEnable(GL11.GL_LINE_SMOOTH)
-		GL11.glEnable(GL11.GL_STENCIL_TEST)
-		GL11.glClear(GL11.GL_STENCIL_BUFFER_BIT)
-		GL11.glClearStencil(0xF)
-		GL11.glStencilFunc(GL11.GL_NEVER, 1, 0xF)
-		GL11.glStencilOp(GL11.GL_REPLACE, GL11.GL_REPLACE, GL11.GL_REPLACE)
-		GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE)
+		glPushAttrib(GL_ALL_ATTRIB_BITS)
+		glDisable(GL_ALPHA_TEST)
+		glDisable(GL_TEXTURE_2D)
+		glDisable(GL_LIGHTING)
+		glEnable(GL_BLEND)
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+		glLineWidth(lineWidth)
+		glEnable(GL_LINE_SMOOTH)
+		glEnable(GL_STENCIL_TEST)
+		glClear(GL_STENCIL_BUFFER_BIT)
+		glClearStencil(0xF)
+		glStencilFunc(GL_NEVER, 1, 0xF)
+		glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE)
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
 	}
 
 	@JvmStatic
 	fun renderTwo()
 	{
-		GL11.glStencilFunc(GL11.GL_NEVER, 0, 0xF)
-		GL11.glStencilOp(GL11.GL_REPLACE, GL11.GL_REPLACE, GL11.GL_REPLACE)
-		GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_FILL)
+		glStencilFunc(GL_NEVER, 0, 0xF)
+		glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE)
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
 	}
 
 	@JvmStatic
 	fun renderThree()
 	{
-		GL11.glStencilFunc(GL11.GL_EQUAL, 1, 0xF)
-		GL11.glStencilOp(GL11.GL_KEEP, GL11.GL_KEEP, GL11.GL_KEEP)
-		GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE)
+		glStencilFunc(GL_EQUAL, 1, 0xF)
+		glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP)
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
 	}
 
 	@JvmStatic
@@ -58,10 +58,10 @@ object OutlineUtils
 		val functions: IExtractedFunctions = wrapper.functions
 
 		RenderUtils.glColor(color)
-		GL11.glDepthMask(false)
-		GL11.glDisable(GL11.GL_DEPTH_TEST)
-		GL11.glEnable(GL11.GL_POLYGON_OFFSET_LINE)
-		GL11.glPolygonOffset(1.0f, -2000000.0f)
+		glDepthMask(false)
+		glDisable(GL_DEPTH_TEST)
+		glEnable(GL_POLYGON_OFFSET_LINE)
+		glPolygonOffset(1.0f, -2000000.0f)
 
 		functions.setLightmapTextureCoords(functions.getLightMapTexUnit(), 240.0f, 240.0f)
 	}
@@ -69,18 +69,18 @@ object OutlineUtils
 	@JvmStatic
 	fun renderFive()
 	{
-		GL11.glPolygonOffset(1.0f, 2000000.0f)
-		GL11.glDisable(GL11.GL_POLYGON_OFFSET_LINE)
-		GL11.glEnable(GL11.GL_DEPTH_TEST)
-		GL11.glDepthMask(true)
-		GL11.glDisable(GL11.GL_STENCIL_TEST)
-		GL11.glDisable(GL11.GL_LINE_SMOOTH)
-		GL11.glHint(GL11.GL_LINE_SMOOTH_HINT, GL11.GL_DONT_CARE)
-		GL11.glEnable(GL11.GL_BLEND)
-		GL11.glEnable(GL11.GL_LIGHTING)
-		GL11.glEnable(GL11.GL_TEXTURE_2D)
-		GL11.glEnable(GL11.GL_ALPHA_TEST)
-		GL11.glPopAttrib()
+		glPolygonOffset(1.0f, 2000000.0f)
+		glDisable(GL_POLYGON_OFFSET_LINE)
+		glEnable(GL_DEPTH_TEST)
+		glDepthMask(true)
+		glDisable(GL_STENCIL_TEST)
+		glDisable(GL_LINE_SMOOTH)
+		glHint(GL_LINE_SMOOTH_HINT, GL_DONT_CARE)
+		glEnable(GL_BLEND)
+		glEnable(GL_LIGHTING)
+		glEnable(GL_TEXTURE_2D)
+		glEnable(GL_ALPHA_TEST)
+		glPopAttrib()
 	}
 
 	@JvmStatic

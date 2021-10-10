@@ -330,38 +330,6 @@ public abstract class MixinNetHandlerPlayClient
 			ingameGUI.getChatGUI().printChatMessage(message);
 	}
 
-	// Reduce exception stack-traces as
-	// [05:55:57] [Client thread/FATAL]: Error executing task
-	// java.util.concurrent.ExecutionException: java.lang.NullPointerException
-	// at java.util.concurrent.FutureTask.report(Unknown Source) ~[?:1.8.0_281]
-	// at java.util.concurrent.FutureTask.get(Unknown Source) ~[?:1.8.0_281]
-	// at net.minecraft.util.Util.func_181617_a(Util.java:20) [g.class:?]
-	// at net.minecraft.client.Minecraft.func_71411_J(Minecraft.java:1014) [ave.class:?]
-	// at net.minecraft.client.Minecraft.func_99999_d(Minecraft.java:349) [ave.class:?]
-	// at net.minecraft.client.main.Main.main(SourceFile:124) [Main.class:?]
-	// at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[?:1.8.0_281]
-	// at sun.reflect.NativeMethodAccessorImpl.invoke(Unknown Source) ~[?:1.8.0_281]
-	// at sun.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source) ~[?:1.8.0_281]
-	// at java.lang.reflect.Method.invoke(Unknown Source) ~[?:1.8.0_281]
-	// at net.minecraft.launchwrapper.Launch.launch(Launch.java:135) [launchwrapper-1.12.jar:?]
-	// at net.minecraft.launchwrapper.Launch.main(Launch.java:28) [launchwrapper-1.12.jar:?]
-	// Caused by: java.lang.NullPointerException
-	// at net.minecraft.scoreboard.Scoreboard.func_96511_d(SourceFile:229) ~[auo.class:?]
-	// at net.minecraft.client.network.NetHandlerPlayClient.func_147247_a(NetHandlerPlayClient.java:1813) ~[bcy.class:?]
-	// at net.minecraft.network.play.server.S3EPacketTeams.func_148833_a(SourceFile:113) ~[hr.class:?]
-	// at net.minecraft.network.play.server.S3EPacketTeams.func_148833_a(SourceFile:13) ~[hr.class:?]
-	// at net.minecraft.network.PacketThreadUtil$1.run(PacketThreadUtil.java:22) ~[fh$1.class:?]
-	// at java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source) ~[?:1.8.0_281]
-	// at java.util.concurrent.FutureTask.run(Unknown Source) ~[?:1.8.0_281]
-	// at net.minecraft.util.Util.func_181617_a(Util.java:19) ~[g.class:?]
-	// ... 9 more
-	@Inject(method = "handleTeams", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;getScoreboard()Lnet/minecraft/scoreboard/Scoreboard;", ordinal = 0), cancellable = true)
-	public void handleTeams(final S3EPacketTeams packetIn, final CallbackInfo ci)
-	{
-		if (clientWorldController == null || clientWorldController.getScoreboard() == null || packetIn.getAction() != 0 && clientWorldController.getScoreboard().getTeam(packetIn.getName()) == null)
-			ci.cancel();
-	}
-
 	private static boolean isHackerChat(final String text)
 	{
 		return HACKER_CHATS.stream().anyMatch(text::contains) && text.contains(Minecraft.getMinecraft().thePlayer.getName().toLowerCase(Locale.ENGLISH)) && HACKER_CHATS_WHITELIST.stream().noneMatch(text::contains);
