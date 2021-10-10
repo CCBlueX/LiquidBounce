@@ -77,7 +77,7 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 		}
 	override val isInLava: Boolean
 		get() = wrapped.isInLava
-	override val isEating: Boolean
+	override val isHandActive: Boolean
 		get() = wrapped.isEating
 	override val isSilent: Boolean
 		get() = wrapped.isSilent
@@ -158,12 +158,12 @@ open class EntityImpl<out T : Entity>(val wrapped: T) : IEntity
 			wrapped.posZ = value
 		}
 
-	override val serverPosX: Int
-		get() = wrapped.serverPosX
-	override val serverPosY: Int
-		get() = wrapped.serverPosY
-	override val serverPosZ: Int
-		get() = wrapped.serverPosZ
+	override val serverPosX: Long
+		get() = wrapped.serverPosX.toLong()
+	override val serverPosY: Long
+		get() = wrapped.serverPosY.toLong()
+	override val serverPosZ: Long
+		get() = wrapped.serverPosZ.toLong()
 
 	override val lastTickPosX: Double
 		get() = wrapped.lastTickPosX

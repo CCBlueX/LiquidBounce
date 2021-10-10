@@ -130,6 +130,8 @@ object ExtractedFunctionsImpl : IExtractedFunctions
 	override fun getPotionById(potionID: Int): IPotion = Potion.potionTypes[potionID].wrap()
 
 	override fun getLiquidColor(potionDamage: Int, bypassCache: Boolean): Int = PotionHelper.getLiquidColor(potionDamage, bypassCache)
+
+	override fun getLiquidColor(potion: IItemStack, bypassCache: Boolean): Int = Backend.BACKEND_UNSUPPORTED()
 	// </editor-fold>
 
 	// <editor-fold desc="Session">

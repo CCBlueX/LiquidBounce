@@ -38,9 +38,7 @@ public class MixinFontRenderer
 		rainbowEnabled0 = RainbowFontShader.INSTANCE.isInUse();
 
 		if (rainbowEnabled0)
-		{
 			GL20.glUseProgram(0);
-		}
 	}
 
 	@Debug(print = true)
@@ -48,9 +46,7 @@ public class MixinFontRenderer
 	private void injectShadow2(final String text, final float x, final float y, final int color, final boolean dropShadow, final CallbackInfoReturnable<Integer> cir)
 	{
 		if (rainbowEnabled0)
-		{
 			GL20.glUseProgram(RainbowFontShader.INSTANCE.getProgramId());
-		}
 	}
 
 	@Debug(print = true)
@@ -65,9 +61,7 @@ public class MixinFontRenderer
 	private void injectRainbow6(final String text, final boolean shadow, final CallbackInfo ci)
 	{
 		if (rainbowEnabled1)
-		{
 			GL20.glUseProgram(RainbowFontShader.INSTANCE.getProgramId());
-		}
 	}
 
 	@Debug(print = true)
@@ -75,9 +69,7 @@ public class MixinFontRenderer
 	private void injectRainbow3(final String text, final boolean shadow, final CallbackInfo ci)
 	{
 		if (rainbowEnabled1)
-		{
 			GL20.glUseProgram(0);
-		}
 	}
 
 	@Debug(print = true)
@@ -85,9 +77,7 @@ public class MixinFontRenderer
 	private void injectRainbow4(final String text, final boolean shadow, final CallbackInfo ci)
 	{
 		if (rainbowEnabled1)
-		{
 			GL20.glUseProgram(RainbowFontShader.INSTANCE.getProgramId());
-		}
 	}
 
 	@ModifyVariable(method = "renderString", at = @At("HEAD"), require = 1, ordinal = 0)
@@ -95,6 +85,7 @@ public class MixinFontRenderer
 	{
 		if (string == null)
 			return null;
+
 		if (LiquidBounce.eventManager == null)
 			return string;
 
@@ -108,6 +99,7 @@ public class MixinFontRenderer
 	{
 		if (string == null)
 			return null;
+
 		if (LiquidBounce.eventManager == null)
 			return string;
 

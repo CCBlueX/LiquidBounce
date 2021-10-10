@@ -16,12 +16,12 @@ class SPacketEntityImpl<out T : S14PacketEntity>(wrapped: T) : PacketImpl<T>(wra
 	override val rotating: Boolean
 		get() = wrapped.func_149060_h() // isRotating()
 
-	override val posX: Byte
-		get() = wrapped.func_149062_c()
-	override val posY: Byte
-		get() = wrapped.func_149061_d()
-	override val posZ: Byte
-		get() = wrapped.func_149064_e()
+	override val posX: Int
+		get() = wrapped.func_149062_c().toInt()
+	override val posY: Int
+		get() = wrapped.func_149061_d().toInt()
+	override val posZ: Int
+		get() = wrapped.func_149064_e().toInt()
 
 	override val onGround: Boolean
 		get() = wrapped.onGround

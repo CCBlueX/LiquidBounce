@@ -12,12 +12,12 @@ class SPacketPlayerSpawnImpl<out T : S0CPacketSpawnPlayer>(wrapped: T) : PacketI
 	override val uuid: UUID
 		get() = wrapped.player
 
-	override val x: Int
-		get() = wrapped.x
-	override val y: Int
-		get() = wrapped.y
-	override val z: Int
-		get() = wrapped.z
+	override val x: Double
+		get() = wrapped.x.toDouble() / 32.0
+	override val y: Double
+		get() = wrapped.y.toDouble() / 32.0
+	override val z: Double
+		get() = wrapped.z.toDouble() / 32.0
 }
 
 fun ISPacketPlayerSpawn.unwrap(): S0CPacketSpawnPlayer = (this as SPacketPlayerSpawnImpl<*>).wrapped

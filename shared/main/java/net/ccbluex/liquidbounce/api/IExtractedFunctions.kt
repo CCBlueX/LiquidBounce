@@ -64,7 +64,8 @@ interface IExtractedFunctions
 
 	// <editor-fold desc="Potion">
 	fun getPotionById(potionID: Int): IPotion
-	fun getLiquidColor(potion: IItemStack, bypassCache: Boolean): Int
+	fun getLiquidColor(potionDamage: Int, bypassCache: Boolean): Int // For 1.8.9
+	fun getLiquidColor(potion: IItemStack, bypassCache: Boolean): Int // For 1.12.2
 	// </editor-fold>
 
 	// <editor-fold desc="Session">

@@ -32,9 +32,6 @@ class BlockImpl(val wrapped: Block) : IBlock
 	override val localizedName: String
 		get() = wrapped.localizedName
 
-	override val isOpaqueCube: Boolean
-		get() = wrapped.isOpaqueCube
-
 	// <editor-fold desc="Bounding Box & Collide">
 	override fun canCollideCheck(state: IIBlockState?, hitIfLiquid: Boolean): Boolean = wrapped.canCollideCheck(state?.unwrap(), hitIfLiquid)
 
@@ -49,6 +46,8 @@ class BlockImpl(val wrapped: Block) : IBlock
 	override fun isTranslucent(blockState: IIBlockState): Boolean = wrapped.isTranslucent
 
 	override fun isFullCube(state: IIBlockState): Boolean = wrapped.isFullCube
+
+	override fun isOpaqueCube(state: IIBlockState): Boolean = wrapped.isOpaqueCube
 	// </editor-fold>
 
 	override fun equals(other: Any?): Boolean = other is BlockImpl && other.wrapped == wrapped

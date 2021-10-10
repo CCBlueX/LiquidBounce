@@ -39,14 +39,14 @@ public class MixinModelBiped
 	public ArmPose rightArmPose;
 
 	@Inject(method = "setRotationAngles", at = @At(value = "FIELD", target = "Lnet/minecraft/client/model/ModelBiped;swingProgress:F"))
-	private void revertSwordAnimation(final float p_setRotationAngles_1_, final float p_setRotationAngles_2_, final float p_setRotationAngles_3_, final float p_setRotationAngles_4_, final float p_setRotationAngles_5_, final float p_setRotationAngles_6_, final Entity p_setRotationAngles_7_, final CallbackInfo callbackInfo)
+	private void revertSwordAnimation(final float limbSwing, final float limbSwingAmount, final float ageInTicks, final float netHeadYaw, final float headPitch, final float scaleFactor, final Entity entityIn, final CallbackInfo callbackInfo)
 	{
 		if (rightArmPose == ArmPose.BOW_AND_ARROW)
-			bipedRightArm.rotateAngleY = 0F;
+			bipedRightArm.rotateAngleY = 0.0F;
 
-		if (LiquidBounce.moduleManager.get(Rotations.class).getState() && RotationUtils.serverRotation != null && p_setRotationAngles_7_ instanceof EntityPlayer && p_setRotationAngles_7_.equals(Minecraft.getMinecraft().player))
-		{
-			bipedHead.rotateAngleX = RotationUtils.serverRotation.getPitch() / (180F / WMathHelper.PI);
-		}
+		final Rotations rotations = (Rotations) LiquidBounce.moduleManager.get(Rotations.class);
+
+		if (rotations.getState() && !rotations.getBodyValue().get() && entityIn instanceof EntityPlayer && entityIn.equals(Minecraft.getMinecraft().player))
+			bipedHead.rotateAngleX = WMathHelper.toRadians(Rotations.Companion.interpolateIf(rotations.getInterpolateRotationsValue().get(), RotationUtils.lastServerRotation.getPitch(), RotationUtils.serverRotation.getPitch(), Minecraft.getMinecraft().timer.renderPartialTicks));
 	}
 }

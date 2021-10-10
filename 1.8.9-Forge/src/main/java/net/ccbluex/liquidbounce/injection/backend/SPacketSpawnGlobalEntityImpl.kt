@@ -14,12 +14,12 @@ class SPacketSpawnGlobalEntityImpl<out T : S2CPacketSpawnGlobalEntity>(wrapped: 
 	override val type: Int
 		get() = wrapped.func_149052_c()
 
-	override val x: Int
-		get() = wrapped.func_149051_d()
-	override val y: Int
-		get() = wrapped.func_149050_e()
-	override val z: Int
-		get() = wrapped.func_149049_f()
+	override val x: Double
+		get() = wrapped.func_149051_d().toDouble()
+	override val y: Double
+		get() = wrapped.func_149050_e().toDouble()
+	override val z: Double
+		get() = wrapped.func_149049_f().toDouble()
 }
 
 fun ISPacketSpawnGlobalEntity.unwrap(): S2CPacketSpawnGlobalEntity = (this as SPacketSpawnGlobalEntityImpl<*>).wrapped

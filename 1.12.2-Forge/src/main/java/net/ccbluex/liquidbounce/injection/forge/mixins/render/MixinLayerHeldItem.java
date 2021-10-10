@@ -50,7 +50,7 @@ public abstract class MixinLayerHeldItem
 
 			if (livingEntityRenderer.getMainModel().isChild)
 			{
-				final float f = 0.5F;
+//				final float f = 0.5F;
 				GlStateManager.translate(0.0F, 0.75F, 0.0F);
 				GlStateManager.scale(0.5F, 0.5F, 0.5F);
 			}

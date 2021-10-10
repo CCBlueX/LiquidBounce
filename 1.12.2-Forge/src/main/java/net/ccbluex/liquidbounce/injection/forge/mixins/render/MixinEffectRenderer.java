@@ -51,9 +51,7 @@ public abstract class MixinEffectRenderer
 		try
 		{
 			for (int i = 0; i < 4; ++i)
-			{
 				updateEffectLayer(i);
-			}
 
 			if (!particleEmitters.isEmpty())
 			{
@@ -64,29 +62,23 @@ public abstract class MixinEffectRenderer
 					particleemitter.onUpdate();
 
 					if (!particleemitter.isAlive())
-					{
 						list.add(particleemitter);
-					}
 				}
 
 				particleEmitters.removeAll(list);
 			}
 
 			if (!queue.isEmpty())
-			{
 				for (Particle particle = queue.poll(); particle != null; particle = queue.poll())
 				{
 					final int j = particle.getFXLayer();
 					final int k = particle.shouldDisableDepth() ? 0 : 1;
 
 					if (fxLayers[j][k].size() >= 16384)
-					{
 						fxLayers[j][k].removeFirst();
-					}
 
 					fxLayers[j][k].add(particle);
 				}
-			}
 		}
 		catch (final ConcurrentModificationException ignored)
 		{

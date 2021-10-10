@@ -14,7 +14,7 @@ interface ISPacketEntity : IPacket
 {
 	val rotating: Boolean
 
-	val posX: Int // FIXME: Check correction code
+	val posX: Int
 	val posY: Int
 	val posZ: Int
 

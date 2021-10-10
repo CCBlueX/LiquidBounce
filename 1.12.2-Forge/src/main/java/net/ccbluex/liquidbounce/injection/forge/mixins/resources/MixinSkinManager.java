@@ -1,5 +1,6 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.resources;
 
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -21,23 +22,20 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(SkinManager.class)
 public class MixinSkinManager
 {
-
 	@Inject(method = "loadSkinFromCache", cancellable = true, at = @At("HEAD"))
-	private void injectSkinProtect(final GameProfile gameProfile, final CallbackInfoReturnable<Map<Type, MinecraftProfileTexture>> cir)
+	private void injectSkinProtect(final GameProfile gameProfile, final CallbackInfoReturnable<? super Map<Type, MinecraftProfileTexture>> cir)
 	{
 		if (gameProfile == null)
 			return;
 
 		final NameProtect nameProtect = (NameProtect) LiquidBounce.moduleManager.get(NameProtect.class);
 
-		if (nameProtect.getState() && nameProtect.skinProtectValue.get())
-		{
-			if (nameProtect.allPlayersValue.get() || Objects.equals(gameProfile.getId(), Minecraft.getMinecraft().getSession().getProfile().getId()))
+		if (nameProtect.getState() && nameProtect.getSkinProtectValue().get())
+			if (nameProtect.getAllPlayerEnabledValue().get() || Objects.equals(gameProfile.getId(), Minecraft.getMinecraft().getSession().getProfile().getId()))
 			{
-				cir.setReturnValue(new HashMap<>());
+				cir.setReturnValue(new EnumMap<>(Type.class));
 				cir.cancel();
 			}
-		}
 	}
 
 }

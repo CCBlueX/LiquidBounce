@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.Render3DEvent;
 import net.ccbluex.liquidbounce.features.module.modules.player.Reach;
 import net.ccbluex.liquidbounce.features.module.modules.render.CameraClip;
-import net.ccbluex.liquidbounce.features.module.modules.render.NoHurtCam;
+import net.ccbluex.liquidbounce.features.module.modules.render.HurtCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.Tracers;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -74,13 +74,16 @@ public abstract class MixinEntityRenderer
 	@Inject(method = "renderWorldPass", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/EntityRenderer;renderHand:Z", shift = Shift.BEFORE))
 	private void renderWorldPass(final int pass, final float partialTicks, final long finishTimeNano, final CallbackInfo callbackInfo)
 	{
-		LiquidBounce.eventManager.callEvent(new Render3DEvent(partialTicks));
+		mc.mcProfiler.endStartSection("LiquidBounce-Render3DEvent");
+		LiquidBounce.eventManager.callEvent(new Render3DEvent(partialTicks), true);
+		mc.mcProfiler.endStartSection("hand");
 	}
 
 	@Inject(method = "hurtCameraEffect", at = @At("HEAD"), cancellable = true)
 	private void injectHurtCameraEffect(final CallbackInfo callbackInfo)
 	{
-		if (LiquidBounce.moduleManager.get(NoHurtCam.class).getState())
+		final HurtCam hurtCam = (HurtCam) LiquidBounce.moduleManager.get(HurtCam.class);
+		if (hurtCam.getState() && hurtCam.getNoHurtCam().get())
 			callbackInfo.cancel();
 	}
 
@@ -96,8 +99,8 @@ public abstract class MixinEntityRenderer
 
 			if (entity instanceof EntityLivingBase && ((EntityLivingBase) entity).isPlayerSleeping())
 			{
-				f = (float) ((double) f + 1D);
-				GlStateManager.translate(0F, 0.3F, 0.0F);
+				f += 1.0D;
+				GlStateManager.translate(0.0F, 0.3F, 0.0F);
 
 				if (!mc.gameSettings.debugCamEnable)
 				{
@@ -114,9 +117,7 @@ public abstract class MixinEntityRenderer
 				final double d3 = thirdPersonDistancePrev + (thirdPersonDistance - thirdPersonDistancePrev) * partialTicks;
 
 				if (mc.gameSettings.debugCamEnable)
-				{
 					GlStateManager.translate(0.0F, 0.0F, (float) -d3);
-				}
 				else
 				{
 					final float f1 = entity.rotationYaw;
@@ -158,9 +159,9 @@ public abstract class MixinEntityRenderer
 			}
 
 			GlStateManager.translate(0.0F, -f, 0.0F);
-			final double d0 = entity.prevPosX + (entity.posX - entity.prevPosX) * (double) partialTicks;
-			final double d1 = entity.prevPosY + (entity.posY - entity.prevPosY) * (double) partialTicks + (double) f;
-			final double d2 = entity.prevPosZ + (entity.posZ - entity.prevPosZ) * (double) partialTicks;
+			final double d0 = entity.prevPosX + (entity.posX - entity.prevPosX) * partialTicks;
+			final double d1 = entity.prevPosY + (entity.posY - entity.prevPosY) * partialTicks + f;
+			final double d2 = entity.prevPosZ + (entity.posZ - entity.prevPosZ) * partialTicks;
 			cloudFog = mc.renderGlobal.hasCloudFog(d0, d1, d2, partialTicks);
 		}
 	}
@@ -180,7 +181,8 @@ public abstract class MixinEntityRenderer
 	}
 
 	/**
-	 * @author
+	 * @author CCBlueX
+	 * @reason Reach, ExtendedReach
 	 */
 	@Overwrite
 	public void getMouseOver(final float partialTicks)
@@ -188,7 +190,6 @@ public abstract class MixinEntityRenderer
 		final Entity entity = mc.getRenderViewEntity();
 
 		if (entity != null)
-		{
 			if (mc.world != null)
 			{
 				mc.mcProfiler.startSection("pick");
@@ -196,7 +197,7 @@ public abstract class MixinEntityRenderer
 
 				final Reach reach = (Reach) LiquidBounce.moduleManager.get(Reach.class);
 
-				double d0 = reach.getState() ? reach.getMaxRange() : (double) mc.playerController.getBlockReachDistance();
+				double d0 = reach.getState() ? reach.getMaxRange() : mc.playerController.getBlockReachDistance();
 				mc.objectMouseOver = entity.rayTrace(reach.getState() ? reach.getBuildReachValue().get() : d0, partialTicks);
 
 				final Vec3d vec3d = entity.getPositionEyes(partialTicks);
@@ -209,18 +210,11 @@ public abstract class MixinEntityRenderer
 					d1 = 6.0D;
 					d0 = d1;
 				}
-				else
-				{
-					if (d0 > 3.0D)
-					{
-						flag = true;
-					}
-				}
+				else if (d0 > 3.0D)
+					flag = true;
 
 				if (mc.objectMouseOver != null)
-				{
 					d1 = mc.objectMouseOver.hitVec.distanceTo(vec3d);
-				}
 
 				if (reach.getState())
 				{
@@ -259,7 +253,6 @@ public abstract class MixinEntityRenderer
 						final double d3 = vec3d.distanceTo(raytraceresult.hitVec);
 
 						if (d3 < d2 || d2 == 0.0D)
-						{
 							if (entity1.getLowestRidingEntity() == entity.getLowestRidingEntity() && !entity1.canRiderInteract())
 							{
 								if (d2 == 0.0D)
@@ -274,7 +267,6 @@ public abstract class MixinEntityRenderer
 								vec3d3 = raytraceresult.hitVec;
 								d2 = d3;
 							}
-						}
 					}
 				}
 
@@ -289,13 +281,10 @@ public abstract class MixinEntityRenderer
 					mc.objectMouseOver = new RayTraceResult(pointedEntity, vec3d3);
 
 					if (pointedEntity instanceof EntityLivingBase || pointedEntity instanceof EntityItemFrame)
-					{
 						mc.pointedEntity = pointedEntity;
-					}
 				}
 
 				mc.mcProfiler.endSection();
 			}
-		}
 	}
 }

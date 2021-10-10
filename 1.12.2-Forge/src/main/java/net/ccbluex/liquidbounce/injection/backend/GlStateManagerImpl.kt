@@ -11,10 +11,7 @@ object GlStateManagerImpl : IGlStateManager
 	override fun enableTexture2D() = GlStateManager.enableTexture2D()
 
 	override fun enableBlend() = GlStateManager.enableBlend()
-	override fun enableLighting()
-	{
-		TODO("Not yet implemented")
-	}
+	override fun enableLighting() = GlStateManager.
 
 	override fun enableRescaleNormal()
 	{

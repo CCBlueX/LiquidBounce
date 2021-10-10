@@ -221,7 +221,7 @@ fun C0BPacketEntityAction.Action.wrap(): ICPacketEntityAction.WAction
 		C0BPacketEntityAction.Action.START_SPRINTING -> ICPacketEntityAction.WAction.START_SPRINTING
 		C0BPacketEntityAction.Action.STOP_SPRINTING -> ICPacketEntityAction.WAction.STOP_SPRINTING
 		C0BPacketEntityAction.Action.OPEN_INVENTORY -> ICPacketEntityAction.WAction.OPEN_INVENTORY
-		C0BPacketEntityAction.Action.RIDING_JUMP -> ICPacketEntityAction.WAction.RIDING_JUMP
+		C0BPacketEntityAction.Action.RIDING_JUMP -> ICPacketEntityAction.WAction.START_RIDING_JUMP
 	}
 }
 
@@ -235,7 +235,8 @@ fun ICPacketEntityAction.WAction.unwrap(): C0BPacketEntityAction.Action
 		ICPacketEntityAction.WAction.START_SPRINTING -> C0BPacketEntityAction.Action.START_SPRINTING
 		ICPacketEntityAction.WAction.STOP_SPRINTING -> C0BPacketEntityAction.Action.STOP_SPRINTING
 		ICPacketEntityAction.WAction.OPEN_INVENTORY -> C0BPacketEntityAction.Action.OPEN_INVENTORY
-		ICPacketEntityAction.WAction.RIDING_JUMP -> C0BPacketEntityAction.Action.RIDING_JUMP
+		ICPacketEntityAction.WAction.START_RIDING_JUMP -> C0BPacketEntityAction.Action.RIDING_JUMP
+		ICPacketEntityAction.WAction.STOP_RIDING_JUMP -> C0BPacketEntityAction.Action.RIDING_JUMP
 	}
 }
 
