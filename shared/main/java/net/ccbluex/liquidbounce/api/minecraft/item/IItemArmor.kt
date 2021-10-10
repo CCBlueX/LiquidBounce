@@ -6,8 +6,6 @@
 
 package net.ccbluex.liquidbounce.api.minecraft.item
 
-import net.ccbluex.liquidbounce.api.minecraft.minecraft.IArmorMaterial
-
 interface IItemArmor : IItem
 {
 	val damageReduceAmount: Int

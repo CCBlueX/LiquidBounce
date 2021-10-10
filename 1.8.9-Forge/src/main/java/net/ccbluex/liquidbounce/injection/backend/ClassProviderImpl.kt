@@ -20,11 +20,11 @@ import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IServerData
-import net.ccbluex.liquidbounce.api.minecraft.client.render.ITessellator
-import net.ccbluex.liquidbounce.api.minecraft.client.render.IThreadDownloadImageData
-import net.ccbluex.liquidbounce.api.minecraft.client.render.WIImageBuffer
-import net.ccbluex.liquidbounce.api.minecraft.client.render.texture.IDynamicTexture
-import net.ccbluex.liquidbounce.api.minecraft.client.render.vertex.IVertexFormat
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.ITessellator
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IThreadDownloadImageData
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.WIImageBuffer
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.texture.IDynamicTexture
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.vertex.IVertexFormat
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IGlStateManager
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.texture.ITextureUtil
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.vertex.IVertexBuffer
@@ -44,12 +44,54 @@ import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.api.minecraft.stats.IStatBase
 import net.ccbluex.liquidbounce.api.minecraft.util.*
 import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
-import net.ccbluex.liquidbounce.api.network.IPacketBuffer
+import net.ccbluex.liquidbounce.api.minecraft.network.IPacketBuffer
 import net.ccbluex.liquidbounce.api.util.IWrappedFontRenderer
 import net.ccbluex.liquidbounce.api.util.WrappedCreativeTabs
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
 import net.ccbluex.liquidbounce.api.util.WrappedGuiSlot
+import net.ccbluex.liquidbounce.injection.backend.minecraft.block.material.MaterialImpl
+import net.ccbluex.liquidbounce.injection.backend.minecraft.client.block.BlockImpl
+import net.ccbluex.liquidbounce.injection.backend.minecraft.client.block.unwrap
+import net.ccbluex.liquidbounce.injection.backend.minecraft.client.entity.EntityOtherPlayerMPImpl
+import net.ccbluex.liquidbounce.injection.backend.minecraft.client.entity.unwrap
+import net.ccbluex.liquidbounce.injection.backend.minecraft.client.gui.*
+import net.ccbluex.liquidbounce.injection.backend.minecraft.client.multiplayer.unwrap
+import net.ccbluex.liquidbounce.injection.backend.minecraft.client.renderer.TessellatorImpl
+import net.ccbluex.liquidbounce.injection.backend.minecraft.client.renderer.GlStateManagerImpl
+import net.ccbluex.liquidbounce.injection.backend.minecraft.client.renderer.ThreadDownloadImageDataImpl
+import net.ccbluex.liquidbounce.injection.backend.minecraft.client.renderer.texture.DynamicTextureImpl
+import net.ccbluex.liquidbounce.injection.backend.minecraft.client.renderer.texture.TextureUtilImpl
+import net.ccbluex.liquidbounce.injection.backend.minecraft.client.renderer.vertex.VertexFormatImpl
+import net.ccbluex.liquidbounce.injection.backend.minecraft.client.renderer.vertex.unwrap
+import net.ccbluex.liquidbounce.injection.backend.minecraft.client.renderer.vertex.wrap
+import net.ccbluex.liquidbounce.injection.backend.minecraft.client.settings.unwrap
+import net.ccbluex.liquidbounce.injection.backend.minecraft.client.shader.FramebufferImpl
+import net.ccbluex.liquidbounce.injection.backend.minecraft.client.unwrap
+import net.ccbluex.liquidbounce.injection.backend.minecraft.creativetabs.CreativeTabsImpl
+import net.ccbluex.liquidbounce.injection.backend.minecraft.enchantments.EnchantmentImpl
+import net.ccbluex.liquidbounce.injection.backend.minecraft.entity.EntityImpl
+import net.ccbluex.liquidbounce.injection.backend.minecraft.entity.player.unwrap
+import net.ccbluex.liquidbounce.injection.backend.minecraft.entity.unwrap
+import net.ccbluex.liquidbounce.injection.backend.minecraft.event.ClickEventImpl
+import net.ccbluex.liquidbounce.injection.backend.minecraft.item.ItemImpl
+import net.ccbluex.liquidbounce.injection.backend.minecraft.item.ItemStackImpl
+import net.ccbluex.liquidbounce.injection.backend.minecraft.item.unwrap
+import net.ccbluex.liquidbounce.injection.backend.minecraft.nbt.*
+import net.ccbluex.liquidbounce.injection.backend.minecraft.network.PacketBufferImpl
+import net.ccbluex.liquidbounce.injection.backend.minecraft.network.PacketImpl
+import net.ccbluex.liquidbounce.injection.backend.minecraft.network.play.client.*
+import net.ccbluex.liquidbounce.injection.backend.minecraft.network.unwrap
+import net.ccbluex.liquidbounce.injection.backend.minecraft.potion.PotionEffectImpl
+import net.ccbluex.liquidbounce.injection.backend.minecraft.potion.PotionImpl
+import net.ccbluex.liquidbounce.injection.backend.minecraft.stats.StatBaseImpl
+import net.ccbluex.liquidbounce.injection.backend.minecraft.tileentity.TileEntityImpl
+import net.ccbluex.liquidbounce.injection.backend.minecraft.util.*
+import net.ccbluex.liquidbounce.injection.backend.minecraft.world.unwrap
 import net.ccbluex.liquidbounce.injection.backend.utils.*
+import net.ccbluex.liquidbounce.injection.backend.wrappers.CreativeTabsWrapper
+import net.ccbluex.liquidbounce.injection.backend.wrappers.FontRendererWrapper
+import net.ccbluex.liquidbounce.injection.backend.wrappers.GuiScreenWrapper
+import net.ccbluex.liquidbounce.injection.backend.wrappers.GuiSlotWrapper
 import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.minecraft.block.*
@@ -70,10 +112,7 @@ import net.minecraft.enchantment.Enchantment
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.boss.EntityDragon
 import net.minecraft.entity.item.*
-import net.minecraft.entity.monster.EntityGhast
-import net.minecraft.entity.monster.EntityGolem
-import net.minecraft.entity.monster.EntityMob
-import net.minecraft.entity.monster.EntitySlime
+import net.minecraft.entity.monster.*
 import net.minecraft.entity.passive.EntityAnimal
 import net.minecraft.entity.passive.EntityBat
 import net.minecraft.entity.passive.EntitySquid
@@ -304,6 +343,10 @@ object ClassProviderImpl : IClassProvider
 	override fun isEntityFishHook(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityFishHook
 
 	override fun isEntityExpBottle(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityExpBottle
+
+	override fun isEntityThrowable(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityThrowable
+
+	override fun isEntityCreeper(obj: Any?): Boolean = obj is EntityImpl<*> && obj.wrapped is EntityCreeper
 	// </editor-fold>
 
 	// <editor-fold desc="Type checks (TileEntity)">

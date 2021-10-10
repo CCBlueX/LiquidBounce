@@ -21,8 +21,8 @@ import javax.crypto.SecretKey;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 
-import net.ccbluex.liquidbounce.injection.backend.NetworkManagerImplKt;
-import net.ccbluex.liquidbounce.injection.backend.SPacketEncryptionRequestImplKt;
+import net.ccbluex.liquidbounce.injection.backend.minecraft.network.NetworkManagerImplKt;
+import net.ccbluex.liquidbounce.injection.backend.minecraft.network.login.server.SPacketEncryptionRequestImplKt;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.mcleaks.MCLeaks;
 import net.mcleaks.Session;

@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.features.special.AntiModDisable;
 import net.ccbluex.liquidbounce.features.special.AutoReconnect;
 import net.ccbluex.liquidbounce.file.FileManager;
 import net.ccbluex.liquidbounce.injection.backend.ClassProviderImpl;
-import net.ccbluex.liquidbounce.injection.backend.GuiScreenImplKt;
+import net.ccbluex.liquidbounce.injection.backend.minecraft.client.gui.GuiScreenImplKt;
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager;
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.altgenerator.GuiTheAltening;
 import net.ccbluex.liquidbounce.utils.ClientUtils;

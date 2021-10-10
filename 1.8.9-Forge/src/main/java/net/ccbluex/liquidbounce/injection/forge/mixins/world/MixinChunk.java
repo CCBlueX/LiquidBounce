@@ -7,8 +7,8 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.world;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.modules.render.ProphuntESP;
-import net.ccbluex.liquidbounce.injection.backend.ChunkImplKt;
-import net.ccbluex.liquidbounce.injection.backend.utils.BackendExtentionsKt;
+import net.ccbluex.liquidbounce.injection.backend.minecraft.world.ChunkImplKt;
+import net.ccbluex.liquidbounce.injection.backend.utils.BackendExtensionKt;
 import net.ccbluex.liquidbounce.utils.render.MiniMapRegister;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.BlockPos;
@@ -44,7 +44,7 @@ public class MixinChunk
 		if (prophuntESP.getState())
 			synchronized (prophuntESP.getBlocks())
 			{
-				prophuntESP.getBlocks().put(BackendExtentionsKt.wrap(pos), System.currentTimeMillis());
+				prophuntESP.getBlocks().put(BackendExtensionKt.wrap(pos), System.currentTimeMillis());
 			}
 	}
 

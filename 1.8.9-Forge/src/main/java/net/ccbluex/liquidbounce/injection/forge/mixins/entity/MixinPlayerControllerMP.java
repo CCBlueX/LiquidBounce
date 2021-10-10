@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.api.minecraft.util.WVec3;
 import net.ccbluex.liquidbounce.event.AttackEvent;
 import net.ccbluex.liquidbounce.event.ClickWindowEvent;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.AbortBreaking;
-import net.ccbluex.liquidbounce.injection.backend.EntityImplKt;
+import net.ccbluex.liquidbounce.injection.backend.minecraft.entity.EntityImplKt;
 import net.minecraft.client.multiplayer.PlayerControllerMP;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;

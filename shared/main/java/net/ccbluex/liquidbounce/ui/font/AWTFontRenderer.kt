@@ -340,7 +340,7 @@ inline fun <T, R> T.assumeNonVolatileIf(assumeNonVolatile: Boolean, block: T.() 
 	val prev = AWTFontRenderer.assumeNonVolatile
 	if (assumeNonVolatile) AWTFontRenderer.assumeNonVolatile = true
 	val `return` = block()
-	if (assumeNonVolatile) AWTFontRenderer.assumeNonVolatile = false
+	if (assumeNonVolatile) AWTFontRenderer.assumeNonVolatile = prev
 
 	return `return`
 }

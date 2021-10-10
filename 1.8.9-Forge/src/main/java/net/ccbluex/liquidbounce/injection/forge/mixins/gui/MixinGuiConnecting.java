@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.mojang.authlib.GameProfile;
 
-import net.ccbluex.liquidbounce.injection.backend.ServerDataImplKt;
+import net.ccbluex.liquidbounce.injection.backend.minecraft.client.multiplayer.ServerDataImplKt;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.ServerUtils;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;

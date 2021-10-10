@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.cape
 
 import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.minecraft.client.render.WIImageBuffer
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.WIImageBuffer
 import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.GuiDonatorCape
 import net.ccbluex.liquidbounce.utils.ClientUtils

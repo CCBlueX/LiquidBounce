@@ -12,7 +12,7 @@ import java.util.Locale;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.modules.misc.ComponentOnHover;
 import net.ccbluex.liquidbounce.features.module.modules.render.HUD;
-import net.ccbluex.liquidbounce.injection.backend.ResourceLocationImplKt;
+import net.ccbluex.liquidbounce.injection.backend.minecraft.util.ResourceLocationImplKt;
 import net.ccbluex.liquidbounce.ui.client.GuiBackground;
 import net.ccbluex.liquidbounce.utils.render.ParticleUtils;
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.BackgroundShader;

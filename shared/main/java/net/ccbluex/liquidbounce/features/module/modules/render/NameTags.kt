@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.IClassProvider
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
-import net.ccbluex.liquidbounce.api.minecraft.client.render.entity.IRenderItem
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.entity.IRenderItem
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IGlStateManager
 import net.ccbluex.liquidbounce.api.minecraft.renderer.entity.IRenderManager
 import net.ccbluex.liquidbounce.event.EventTarget

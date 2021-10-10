@@ -17,16 +17,15 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.Velocity;
 import net.ccbluex.liquidbounce.features.module.modules.misc.NoRotateSet;
 import net.ccbluex.liquidbounce.features.module.modules.render.HUD;
 import net.ccbluex.liquidbounce.features.special.AntiModDisable;
-import net.ccbluex.liquidbounce.injection.backend.EntityImplKt;
+import net.ccbluex.liquidbounce.injection.backend.minecraft.entity.EntityImplKt;
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationIcon;
+import net.ccbluex.liquidbounce.utils.AsyncUtilsKt;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.RotationUtils;
-import net.ccbluex.liquidbounce.utils.AsyncUtils;
 import net.minecraft.client.ClientBrandRetriever;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.GuiDownloadTerrain;
-import net.minecraft.client.gui.GuiIngame;
 import net.minecraft.client.multiplayer.PlayerControllerMP;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.network.NetHandlerPlayClient;
@@ -34,7 +33,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.PacketThreadUtil;
-import net.minecraft.network.play.INetHandlerPlayClient;
 import net.minecraft.network.play.client.C03PacketPlayer.C06PacketPlayerPosLook;
 import net.minecraft.network.play.client.C17PacketCustomPayload;
 import net.minecraft.network.play.client.C19PacketResourcePackStatus;
@@ -42,15 +40,13 @@ import net.minecraft.network.play.client.C19PacketResourcePackStatus.Action;
 import net.minecraft.network.play.server.*;
 import net.minecraft.network.play.server.S08PacketPlayerPosLook.EnumFlags;
 import net.minecraft.util.IChatComponent;
-import net.minecraft.world.Explosion;
 import net.minecraft.world.WorldSettings;
-import net.minecraftforge.event.ForgeEventFactory;
 
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.At.Shift;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
@@ -149,11 +145,13 @@ public abstract class MixinNetHandlerPlayClient
 	 * @reason NoRotateSet, SetBack Alert
 	 * @see    NoRotateSet
 	 */
-	@Overwrite
-	public void handlePlayerPosLook(final S08PacketPlayerPosLook packetIn)
+	@Inject(method = "handlePlayerPosLook", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/PacketThreadUtil;checkThreadAndEnqueue(Lnet/minecraft/network/Packet;Lnet/minecraft/network/INetHandler;Lnet/minecraft/util/IThreadListener;)V", shift = Shift.AFTER), cancellable = true)
+	public void handlePlayerPosLook(final S08PacketPlayerPosLook packetIn, final CallbackInfo ci)
 	{
-		// noinspection CastToIncompatibleInterface
-		PacketThreadUtil.checkThreadAndEnqueue(packetIn, (INetHandlerPlayClient) this, gameController);
+		final NoRotateSet noRotateSet = (NoRotateSet) LiquidBounce.moduleManager.get(NoRotateSet.class);
+
+		if (!noRotateSet.getState())
+			return;
 
 		final EntityPlayerSP thePlayer = gameController.thePlayer;
 
@@ -162,7 +160,6 @@ public abstract class MixinNetHandlerPlayClient
 		double z = packetIn.getZ();
 		float yaw = packetIn.getYaw();
 		float pitch = packetIn.getPitch();
-		final NoRotateSet noRotateSet = (NoRotateSet) LiquidBounce.moduleManager.get(NoRotateSet.class);
 
 		final double prevPosX = thePlayer.posX;
 		final double prevPosY = thePlayer.posY;
@@ -195,19 +192,20 @@ public abstract class MixinNetHandlerPlayClient
 		if (relativeYaw)
 			yaw += prevYaw;
 
-		final float newYaw = yaw % 360.0F;
+		yaw %= 360.0F;
 
-		if (noRotateSet.getState() && !(noRotateSet.getNoZeroValue().get() && !relativeYaw && yaw == 0.0f && !relativePitch && pitch == 0.0f))
+		if (noRotateSet.getNoZeroValue().get() && !relativeYaw && yaw == 0.0f && !relativePitch && pitch == 0.0f)
+		{
+			// NoZero
+			thePlayer.setPositionAndRotation(x, y, z, 0.0f, 0.0f);
+			netManager.sendPacket(new C06PacketPlayerPosLook(thePlayer.posX, thePlayer.getEntityBoundingBox().minY, thePlayer.posZ, prevYaw, thePlayer.rotationPitch, false));
+		}
+		else
 		{
 			thePlayer.setPosition(x, y, z);
 
 			// Send (Spoofed) Responce Packet
-			netManager.sendPacket(noRotateSet.getConfirmValue().get() && (noRotateSet.getConfirmIllegalRotationValue().get() || pitch >= -90 && pitch <= 90) && (newYaw != RotationUtils.serverRotation.getYaw() || pitch != RotationUtils.serverRotation.getPitch()) ? new C06PacketPlayerPosLook(thePlayer.posX, thePlayer.getEntityBoundingBox().minY, thePlayer.posZ, newYaw, pitch % 360.0F, false) : new C06PacketPlayerPosLook(thePlayer.posX, thePlayer.getEntityBoundingBox().minY, thePlayer.posZ, prevYaw % 360.0F, thePlayer.rotationPitch % 360.0F, false));
-		}
-		else
-		{
-			thePlayer.setPositionAndRotation(x, y, z, yaw, pitch);
-			netManager.sendPacket(new C06PacketPlayerPosLook(thePlayer.posX, thePlayer.getEntityBoundingBox().minY, thePlayer.posZ, prevYaw, thePlayer.rotationPitch, false));
+			netManager.sendPacket(noRotateSet.getConfirmValue().get() && (noRotateSet.getConfirmIllegalRotationValue().get() || pitch >= -90 && pitch <= 90) && (yaw != RotationUtils.serverRotation.getYaw() || pitch != RotationUtils.serverRotation.getPitch()) ? new C06PacketPlayerPosLook(thePlayer.posX, thePlayer.getEntityBoundingBox().minY, thePlayer.posZ, yaw, pitch, false) : new C06PacketPlayerPosLook(thePlayer.posX, thePlayer.getEntityBoundingBox().minY, thePlayer.posZ, prevYaw % 360.0F, thePlayer.rotationPitch, false));
 		}
 
 		if (!doneLoadingTerrain)
@@ -218,6 +216,8 @@ public abstract class MixinNetHandlerPlayClient
 			doneLoadingTerrain = true;
 			gameController.displayGuiScreen(null);
 		}
+
+		ci.cancel();
 	}
 
 	/**
@@ -225,73 +225,68 @@ public abstract class MixinNetHandlerPlayClient
 	 * @reason Velocity
 	 * @see    Velocity
 	 */
-	@Overwrite
-	public void handleExplosion(final S27PacketExplosion packetIn)
+	@Inject(method = "handleExplosion", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/Explosion;doExplosionB(Z)V"), cancellable = true)
+	public void hypixelVelocity(final S27PacketExplosion packetIn, final CallbackInfo ci)
 	{
-		// noinspection CastToIncompatibleInterface
-		PacketThreadUtil.checkThreadAndEnqueue(packetIn, (INetHandlerPlayClient) this, gameController);
-
-		final Explosion explosion = new Explosion(gameController.theWorld, null, packetIn.getX(), packetIn.getY(), packetIn.getZ(), packetIn.getStrength(), packetIn.getAffectedBlockPositions());
-		explosion.doExplosionB(true);
-
 		final EntityPlayerSP thePlayer = gameController.thePlayer;
+
+		if (thePlayer == null)
+			return;
 
 		double motionX = packetIn.func_149149_c();
 		double motionY = packetIn.func_149144_d();
 		double motionZ = packetIn.func_149147_e();
 
-		// Hypixel Explosion-packet Velocity //
-		if (thePlayer != null)
+		final Velocity velocity = (Velocity) LiquidBounce.moduleManager.get(Velocity.class);
+
+		if (!velocity.getState())
+			return;
+
+		ci.cancel();
+
+		velocity.getVelocityTimer().reset();
+
+		switch (velocity.getModeValue().get().toLowerCase(Locale.ENGLISH))
 		{
-			final Velocity velocity = (Velocity) LiquidBounce.moduleManager.get(Velocity.class);
-			velocity.getVelocityTimer().reset();
+			case "simple":
+				final float horizontal = velocity.getHorizontalValue().get();
+				final float vertical = velocity.getVerticalValue().get();
 
-			switch (velocity.getModeValue().get().toLowerCase(Locale.ENGLISH))
-			{
-				case "simple":
-					final float horizontal = velocity.getHorizontalValue().get();
-					final float vertical = velocity.getVerticalValue().get();
+				if (horizontal == 0.0F && vertical == 0.0F)
+					return;
 
-					if (horizontal == 0.0F && vertical == 0.0F)
-						return;
+				motionX *= horizontal;
+				motionY *= vertical;
+				motionZ *= horizontal;
+				break;
+			case "aac":
+			case "reverse":
+			case "smoothreverse":
+			case "aaczero":
+				velocity.setVelocityInput(true);
+				break;
 
-					motionX *= horizontal;
-					motionY *= vertical;
-					motionZ *= horizontal;
-					break;
-				case "aac":
-				case "reverse":
-				case "smoothreverse":
-				case "aaczero":
+			case "glitch":
+				if (thePlayer.onGround)
+				{
 					velocity.setVelocityInput(true);
-					break;
-
-				case "glitch":
-					if (thePlayer.onGround)
-					{
-						velocity.setVelocityInput(true);
-						return;
-					}
-					break;
-			}
-
-			thePlayer.motionX += motionX;
-			thePlayer.motionY += motionY;
-			thePlayer.motionZ += motionZ;
+					return;
+				}
+				break;
 		}
+
+		thePlayer.motionX += motionX;
+		thePlayer.motionY += motionY;
+		thePlayer.motionZ += motionZ;
 	}
 
 	/**
 	 * @author CCBlueX
 	 * @reason Chat Alerts
 	 */
-	@Overwrite
-	public void handleChat(final S02PacketChat packetIn)
+	@Inject(method = "handleChat", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/PacketThreadUtil;checkThreadAndEnqueue(Lnet/minecraft/network/Packet;Lnet/minecraft/network/INetHandler;Lnet/minecraft/util/IThreadListener;)V", shift = Shift.AFTER))
+	public void chatAlerts(final S02PacketChat packetIn, final CallbackInfo ci)
 	{
-		// noinspection CastToIncompatibleInterface
-		PacketThreadUtil.checkThreadAndEnqueue(packetIn, (INetHandlerPlayClient) this, gameController);
-
-		final byte messageType = packetIn.getType();
 		final IChatComponent messageComponent = packetIn.getChatComponent();
 
 		final String text = messageComponent.getUnformattedText().toLowerCase(Locale.ENGLISH);
@@ -299,35 +294,19 @@ public abstract class MixinNetHandlerPlayClient
 		final boolean alerts = hud.getNotificationAlertsValue().get();
 
 		if (alerts)
-			AsyncUtils.getWorkers().execute(() ->
+			AsyncUtilsKt.runAsync(() ->
 			{
 				if (isHackerChat(text))
 					LiquidBounce.hud.addNotification(NotificationIcon.WARNING_YELLOW, "Chat", "Someone called you a hacker.", 2000L);
-
-				if (text.contains("ground items will be removed in"))
+				else if (text.contains("ground items will be removed in"))
 					LiquidBounce.hud.addNotification(NotificationIcon.WARNING_YELLOW, "ClearLag", "ClearLag " + text.substring(text.lastIndexOf("in ")), 2000L);
-
-				if (text.contains("removed ") && text.contains("entities"))
+				else if (text.contains("removed ") && text.contains("entities"))
 					LiquidBounce.hud.addNotification(NotificationIcon.WARNING_YELLOW, "ClearLag", text.substring(text.lastIndexOf("removed ")), 2000L);
-
-				if (text.contains("you are now in "))
+				else if (text.contains("you are now in "))
 					LiquidBounce.hud.addNotification(NotificationIcon.WARNING_YELLOW, "Faction Warning", "Chunk: " + text.substring(text.lastIndexOf("in ") + 3), 2000L);
-
-				if (text.contains("now entering"))
+				else if (text.contains("now entering"))
 					LiquidBounce.hud.addNotification(NotificationIcon.WARNING_YELLOW, "Faction", "Chunk: " + text.substring(text.lastIndexOf(": ") + 4), 2000L);
 			});
-
-		final IChatComponent message = ForgeEventFactory.onClientChat(messageType, messageComponent);
-
-		if (message == null)
-			return;
-
-		final GuiIngame ingameGUI = gameController.ingameGUI;
-
-		if (messageType == 2)
-			ingameGUI.setRecordPlaying(message, false);
-		else
-			ingameGUI.getChatGUI().printChatMessage(message);
 	}
 
 	private static boolean isHackerChat(final String text)

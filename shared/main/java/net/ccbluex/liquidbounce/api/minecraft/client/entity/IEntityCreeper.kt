@@ -8,5 +8,5 @@ package net.ccbluex.liquidbounce.api.minecraft.client.entity
 
 interface IEntityCreeper : IEntity
 {
-	val ignited: Boolean
+	val creeperState: Boolean
 }

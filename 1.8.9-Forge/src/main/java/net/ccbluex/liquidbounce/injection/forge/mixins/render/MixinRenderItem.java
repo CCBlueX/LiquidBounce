@@ -1,7 +1,7 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.render;
 
-import net.ccbluex.liquidbounce.injection.backend.GlStateManagerImpl;
-import net.ccbluex.liquidbounce.injection.backend.ItemStackImplKt;
+import net.ccbluex.liquidbounce.injection.backend.minecraft.client.renderer.GlStateManagerImpl;
+import net.ccbluex.liquidbounce.injection.backend.minecraft.item.ItemStackImplKt;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.gui.FontRenderer;

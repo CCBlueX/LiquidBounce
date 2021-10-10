@@ -5,16 +5,14 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.network;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.Queue;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.PacketEvent;
 import net.ccbluex.liquidbounce.features.module.modules.misc.LagDetector;
-import net.ccbluex.liquidbounce.injection.backend.PacketImplKt;
+import net.ccbluex.liquidbounce.injection.backend.minecraft.network.PacketImplKt;
 import net.ccbluex.liquidbounce.injection.implementations.IMixinNetworkManager;
-import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.PacketCounter;
 import net.ccbluex.liquidbounce.utils.PacketCounter.PacketType;
 import net.minecraft.client.Minecraft;

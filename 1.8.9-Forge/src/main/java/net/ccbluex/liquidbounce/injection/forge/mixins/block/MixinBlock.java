@@ -15,10 +15,9 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.GhostHand;
 import net.ccbluex.liquidbounce.features.module.modules.player.NoFall;
 import net.ccbluex.liquidbounce.features.module.modules.render.XRay;
 import net.ccbluex.liquidbounce.features.module.modules.world.NoSlowBreak;
-import net.ccbluex.liquidbounce.injection.backend.AxisAlignedBBImplKt;
-import net.ccbluex.liquidbounce.injection.backend.BlockImplKt;
-import net.ccbluex.liquidbounce.injection.backend.EnumFacingImplKt;
-import net.ccbluex.liquidbounce.injection.backend.utils.BackendExtentionsKt;
+import net.ccbluex.liquidbounce.injection.backend.minecraft.client.block.BlockImplKt;
+import net.ccbluex.liquidbounce.injection.backend.minecraft.util.AxisAlignedBBImplKt;
+import net.ccbluex.liquidbounce.injection.backend.utils.BackendExtensionKt;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.BlockState;
@@ -73,7 +72,7 @@ public abstract class MixinBlock
 	public void addCollisionBoxesToList(final World worldIn, final BlockPos pos, final IBlockState state, final AxisAlignedBB mask, final List<? super AxisAlignedBB> list, final Entity collidingEntity)
 	{
 		AxisAlignedBB axisalignedbb = getCollisionBoundingBox(worldIn, pos, state);
-		final BlockBBEvent blockBBEvent = new BlockBBEvent(BackendExtentionsKt.wrap(pos), BlockImplKt.wrap(blockState.getBlock()), Optional.ofNullable(axisalignedbb).map(AxisAlignedBBImplKt::wrap).orElse(null));
+		final BlockBBEvent blockBBEvent = new BlockBBEvent(BackendExtensionKt.wrap(pos), BlockImplKt.wrap(blockState.getBlock()), Optional.ofNullable(axisalignedbb).map(AxisAlignedBBImplKt::wrap).orElse(null));
 		LiquidBounce.eventManager.callEvent(blockBBEvent);
 
 		axisalignedbb = blockBBEvent.getBoundingBox() == null ? null : AxisAlignedBBImplKt.unwrap(blockBBEvent.getBoundingBox());
@@ -89,7 +88,7 @@ public abstract class MixinBlock
 
 		if (xray.getState())
 			// noinspection ConstantConditions
-			callbackInfoReturnable.setReturnValue(xray.canBeRendered(BlockImplKt.wrap((Block) (Object) this), BackendExtentionsKt.wrap(pos))); // #298 Bugfix
+			callbackInfoReturnable.setReturnValue(xray.canBeRendered(BlockImplKt.wrap((Block) (Object) this), BackendExtensionKt.wrap(pos))); // #298 Bugfix
 	}
 
 	@Inject(method = "isCollidable", at = @At("HEAD"), cancellable = true)

@@ -15,8 +15,8 @@ import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IPlayerControll
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IServerData
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.client.network.IINetHandlerPlayClient
-import net.ccbluex.liquidbounce.api.minecraft.client.render.entity.IRenderItem
-import net.ccbluex.liquidbounce.api.minecraft.client.render.texture.ITextureManager
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.entity.IRenderItem
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.texture.ITextureManager
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IEntityRenderer
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IRenderGlobal
 import net.ccbluex.liquidbounce.api.minecraft.client.settings.IGameSettings

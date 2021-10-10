@@ -13,7 +13,7 @@ interface IWorldSettings
 		NOT_SET,
 		SURVIVAL,
 		CREATIVE,
-		ADVENTUR,
+		ADVENTURE,
 		SPECTATOR
 	}
 }

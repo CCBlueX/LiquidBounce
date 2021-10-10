@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.cape.CapeAPI;
 import net.ccbluex.liquidbounce.cape.CapeInfo;
 import net.ccbluex.liquidbounce.features.module.modules.misc.NameProtect;
 import net.ccbluex.liquidbounce.features.module.modules.render.NoFOV;
-import net.ccbluex.liquidbounce.injection.backend.ResourceLocationImplKt;
+import net.ccbluex.liquidbounce.injection.backend.minecraft.util.ResourceLocationImplKt;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.resources.DefaultPlayerSkin;

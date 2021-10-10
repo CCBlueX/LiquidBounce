@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.api.IClassProvider;
 import net.ccbluex.liquidbounce.features.special.BungeeCordSpoof;
 import net.ccbluex.liquidbounce.file.FileManager;
-import net.ccbluex.liquidbounce.injection.backend.GuiScreenImplKt;
+import net.ccbluex.liquidbounce.injection.backend.minecraft.client.gui.GuiScreenImplKt;
 import net.ccbluex.liquidbounce.ui.client.GuiAntiModDisable;
 import net.ccbluex.liquidbounce.ui.client.tools.GuiTools;
 import net.minecraft.client.gui.GuiButton;

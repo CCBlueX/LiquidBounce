@@ -7,7 +7,7 @@
 package net.ccbluex.liquidbounce.api.minecraft.network.play.client
 
 import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
-import net.ccbluex.liquidbounce.api.network.IPacketBuffer
+import net.ccbluex.liquidbounce.api.minecraft.network.IPacketBuffer
 
 interface ICPacketCustomPayload : IPacket
 {

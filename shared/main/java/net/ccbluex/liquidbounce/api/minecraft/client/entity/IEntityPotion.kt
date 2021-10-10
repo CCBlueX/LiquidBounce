@@ -6,7 +6,10 @@
 
 package net.ccbluex.liquidbounce.api.minecraft.client.entity
 
-interface IEntityPotion : IEntity
+import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
+
+interface IEntityPotion : IEntityThrowable
 {
 	val potionDamage: Int
+	val potionItem: IItemStack?
 }

@@ -8,8 +8,8 @@ package net.ccbluex.liquidbounce.utils.render
 import net.ccbluex.liquidbounce.api.enums.WDefaultVertexFormats
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer
-import net.ccbluex.liquidbounce.api.minecraft.client.render.IWorldRenderer
-import net.ccbluex.liquidbounce.api.minecraft.client.render.entity.IRenderItem
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IWorldRenderer
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.entity.IRenderItem
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IGlStateManager
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB

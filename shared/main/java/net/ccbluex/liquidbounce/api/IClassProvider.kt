@@ -19,14 +19,14 @@ import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IServerData
-import net.ccbluex.liquidbounce.api.minecraft.client.render.ITessellator
-import net.ccbluex.liquidbounce.api.minecraft.client.render.IThreadDownloadImageData
-import net.ccbluex.liquidbounce.api.minecraft.client.render.WIImageBuffer
-import net.ccbluex.liquidbounce.api.minecraft.client.render.texture.IDynamicTexture
-import net.ccbluex.liquidbounce.api.minecraft.client.render.vertex.IVertexFormat
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IGlStateManager
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.ITessellator
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IThreadDownloadImageData
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.WIImageBuffer
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.texture.IDynamicTexture
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.texture.ITextureUtil
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.vertex.IVertexBuffer
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.vertex.IVertexFormat
 import net.ccbluex.liquidbounce.api.minecraft.client.settings.IGameSettings
 import net.ccbluex.liquidbounce.api.minecraft.client.shader.IFramebuffer
 import net.ccbluex.liquidbounce.api.minecraft.enchantments.IEnchantment
@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.api.minecraft.item.IItem
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.nbt.*
 import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
+import net.ccbluex.liquidbounce.api.minecraft.network.IPacketBuffer
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.*
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotion
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotionEffect
@@ -43,13 +44,10 @@ import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.api.minecraft.stats.IStatBase
 import net.ccbluex.liquidbounce.api.minecraft.util.*
 import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
-import net.ccbluex.liquidbounce.api.network.IPacketBuffer
 import net.ccbluex.liquidbounce.api.util.IWrappedFontRenderer
 import net.ccbluex.liquidbounce.api.util.WrappedCreativeTabs
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
 import net.ccbluex.liquidbounce.api.util.WrappedGuiSlot
-import net.ccbluex.liquidbounce.injection.backend.ClassProviderImpl.createCPacketTryUseItem
-import net.ccbluex.liquidbounce.injection.backend.PacketImpl
 import java.awt.image.BufferedImage
 import java.io.File
 import java.security.PublicKey
@@ -156,7 +154,7 @@ interface IClassProvider
 	fun createCPacketPlayerBlockPlacement(stack: IItemStack?): ICPacketPlayerBlockPlacement
 
 	@SupportsMinecraftVersions(MinecraftVersion.MC_1_12)
-	fun createCPacketTryUseItem(hand: WEnumHand): PacketImpl<*>
+	fun createCPacketTryUseItem(hand: WEnumHand): IPacket
 	// </editor-fold>
 
 	// <editor-fold desc="Type checks (Entity)">
@@ -188,6 +186,8 @@ interface IClassProvider
 	fun isEntityEgg(obj: Any?): Boolean
 	fun isEntityFishHook(obj: Any?): Boolean
 	fun isEntityExpBottle(obj: Any?): Boolean
+	fun isEntityThrowable(obj: Any?): Boolean
+	fun isEntityCreeper(obj: Any?): Boolean
 	// </editor-fold>
 
 	// <editor-fold desc="Type checks (TileEntity)">

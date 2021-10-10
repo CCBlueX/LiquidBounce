@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.render;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.modules.render.XRay;
-import net.ccbluex.liquidbounce.injection.backend.BlockImplKt;
+import net.ccbluex.liquidbounce.injection.backend.minecraft.client.block.BlockImplKt;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.tileentity.TileEntity;
 

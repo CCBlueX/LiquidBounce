@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
 import java.awt.*;
 
-import net.ccbluex.liquidbounce.injection.backend.FontRendererImpl;
+import net.ccbluex.liquidbounce.injection.backend.minecraft.client.gui.FontRendererImpl;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.Minecraft;

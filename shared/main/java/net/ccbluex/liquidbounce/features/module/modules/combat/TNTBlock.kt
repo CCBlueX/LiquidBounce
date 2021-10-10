@@ -35,7 +35,7 @@ class TNTBlock : Module()
 		val fuse = fuseValue.get()
 
 		val provider = classProvider
-		if (theWorld.getEntitiesInRadius(thePlayer, range + 2.0).any { provider.isEntityTNTPrimed(it) && thePlayer.getDistanceToEntity(it) <= range && it.asEntityTNTPrimed().fuse <= fuse || provider.isEntityTNTPrimed(it) && it.asEntityCreeper().ignited })
+		if (theWorld.getEntitiesInRadius(thePlayer, range + 2.0).any { provider.isEntityTNTPrimed(it) && thePlayer.getDistanceToEntity(it) <= range && it.asEntityTNTPrimed().fuse <= fuse || provider.isEntityCreeper(it) && thePlayer.getDistanceToEntity(it) <= range && it.asEntityCreeper().creeperState })
 		{
 			if (autoSwordValue.get())
 			{

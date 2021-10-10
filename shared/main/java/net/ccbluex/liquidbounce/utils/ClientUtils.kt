@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.utils
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.LiquidBounce.wrapper
-import net.ccbluex.liquidbounce.api.minecraft.INetworkManager
+import net.ccbluex.liquidbounce.api.minecraft.network.INetworkManager
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.network.login.server.ISPacketEncryptionRequest
 import org.apache.logging.log4j.LogManager

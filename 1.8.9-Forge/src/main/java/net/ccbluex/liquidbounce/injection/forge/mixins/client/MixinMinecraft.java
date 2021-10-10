@@ -19,11 +19,11 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.AbortBreaking;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.MultiActions;
 import net.ccbluex.liquidbounce.features.module.modules.render.HUD;
 import net.ccbluex.liquidbounce.features.module.modules.world.FastPlace;
-import net.ccbluex.liquidbounce.injection.backend.EnumFacingImplKt;
-import net.ccbluex.liquidbounce.injection.backend.GuiScreenImplKt;
-import net.ccbluex.liquidbounce.injection.backend.WorldClientImplKt;
 import net.ccbluex.liquidbounce.injection.backend.WrapperImpl;
-import net.ccbluex.liquidbounce.injection.backend.utils.BackendExtentionsKt;
+import net.ccbluex.liquidbounce.injection.backend.minecraft.client.gui.GuiScreenImplKt;
+import net.ccbluex.liquidbounce.injection.backend.minecraft.client.multiplayer.WorldClientImplKt;
+import net.ccbluex.liquidbounce.injection.backend.minecraft.util.EnumFacingImplKt;
+import net.ccbluex.liquidbounce.injection.backend.utils.BackendExtensionKt;
 import net.ccbluex.liquidbounce.injection.forge.SplashProgressLock;
 import net.ccbluex.liquidbounce.ui.client.GuiMainMenu;
 import net.ccbluex.liquidbounce.ui.client.GuiUpdate;
@@ -218,7 +218,7 @@ public abstract class MixinMinecraft
 	private void onClickBlock(final CallbackInfo callbackInfo)
 	{
 		if (leftClickCounter == 0 && theWorld.getBlockState(objectMouseOver.getBlockPos()).getBlock().getMaterial() != Material.air)
-			LiquidBounce.eventManager.callEvent(new ClickBlockEvent(BackendExtentionsKt.wrap(objectMouseOver.getBlockPos()), EnumFacingImplKt.wrap(objectMouseOver.sideHit)));
+			LiquidBounce.eventManager.callEvent(new ClickBlockEvent(BackendExtensionKt.wrap(objectMouseOver.getBlockPos()), EnumFacingImplKt.wrap(objectMouseOver.sideHit)));
 	}
 
 	@Inject(method = "setWindowIcon", at = @At("HEAD"), cancellable = true)
@@ -299,7 +299,7 @@ public abstract class MixinMinecraft
 				final BlockPos blockPos = objectMouseOver.getBlockPos();
 
 				if (leftClickCounter == 0)
-					LiquidBounce.eventManager.callEvent(new ClickBlockEvent(BackendExtentionsKt.wrap(blockPos), EnumFacingImplKt.wrap(objectMouseOver.sideHit)));
+					LiquidBounce.eventManager.callEvent(new ClickBlockEvent(BackendExtensionKt.wrap(blockPos), EnumFacingImplKt.wrap(objectMouseOver.sideHit)));
 
 				if (theWorld.getBlockState(blockPos).getBlock().getMaterial() != Material.air && playerController.onPlayerDamageBlock(blockPos, objectMouseOver.sideHit))
 				{

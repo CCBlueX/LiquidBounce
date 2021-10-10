@@ -118,36 +118,37 @@ interface IEntity
 	fun asEntityPotion(): IEntityPotion
 	fun asEntityFishHook(): IEntityFishHook
 	fun asEntityCreeper(): IEntityCreeper
+	fun asEntityThrowable(): IEntityThrowable
 	// </editor-fold>
 
 	// <editor-fold desc="Position & Movement">
 	fun getPositionEyes(partialTicks: Float): WVec3
-	fun getLook(partialTicks: Float): WVec3
 
+	fun getLook(partialTicks: Float): WVec3
 	fun moveEntity(x: Double, y: Double, z: Double)
 	fun setPosition(x: Double, y: Double, z: Double)
 	fun setPositionAndRotation(posX: Double, posY: Double, posZ: Double, rotationYaw: Float, rotationPitch: Float)
+
 	fun setPositionAndUpdate(posX: Double, posY: Double, posZ: Double)
-
 	fun copyLocationAndAnglesFrom(player: IEntity)
-	// </editor-fold>
 
+	// </editor-fold>
 	// <editor-fold desc="Distance">
 	fun getDistance(x: Double, y: Double, z: Double): Double
-	fun getDistanceToEntity(it: IEntity): Float
 
+	fun getDistanceToEntity(it: IEntity): Float
 	fun getDistanceSq(blockPos: WBlockPos): Double
 	fun getDistanceSq(x: Double, y: Double, z: Double): Double
 	fun getDistanceSqToEntity(it: IEntity): Double
-	// </editor-fold>
 
+	// </editor-fold>
 	fun canRiderInteract(): Boolean
+
 	fun canBeCollidedWith(): Boolean
 
 	fun setCanBeCollidedWith(value: Boolean)
-
 	fun rayTrace(range: Double, partialTicks: Float): IMovingObjectPosition?
-	fun isInsideOfMaterial(material: IMaterial): Boolean
 
+	fun isInsideOfMaterial(material: IMaterial): Boolean
 	override operator fun equals(other: Any?): Boolean
 }

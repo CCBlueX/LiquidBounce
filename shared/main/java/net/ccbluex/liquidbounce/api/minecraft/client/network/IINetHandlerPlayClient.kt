@@ -6,7 +6,7 @@
 
 package net.ccbluex.liquidbounce.api.minecraft.client.network
 
-import net.ccbluex.liquidbounce.api.minecraft.INetworkManager
+import net.ccbluex.liquidbounce.api.minecraft.network.INetworkManager
 import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
 import java.util.*
 

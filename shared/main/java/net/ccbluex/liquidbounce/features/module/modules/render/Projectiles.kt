@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.FastBow
 import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.getPotionLiquidColor
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.*
@@ -34,6 +35,7 @@ import org.lwjgl.util.glu.GLU
 import java.awt.Color
 import kotlin.math.ceil
 import kotlin.math.floor
+import kotlin.math.max
 import kotlin.math.sqrt
 
 @ModuleInfo(name = "Projectiles", description = "Allows you to see where arrows will land. (a.k.a. Trajectories)", category = ModuleCategory.RENDER)
@@ -137,7 +139,7 @@ class Projectiles : Module()
 				val lastPosY = proj.lastTickPosY
 				val lastPosZ = proj.lastTickPosZ
 
-				renderTrajectory(theWorld, thePlayer, provider, func, renderPosX, renderPosY, renderPosZ, color, lastPosX + (proj.posX - lastPosX) * partialTicks, lastPosY + (proj.posY - lastPosY) * partialTicks, lastPosZ + (proj.posZ - lastPosZ) * partialTicks, proj.motionX, proj.motionY, proj.motionZ, info.motionSlowdown, info.gravity, info.size)
+				renderTrajectory(theWorld, thePlayer, provider, func, renderPosX, renderPosY, renderPosZ, ColorUtils.applyAlphaChannel(color, colorValue.getAlpha()), lastPosX + (proj.posX - lastPosX) * partialTicks, lastPosY + (proj.posY - lastPosY) * partialTicks, lastPosZ + (proj.posZ - lastPosZ) * partialTicks, proj.motionX, proj.motionY, proj.motionZ, info.motionSlowdown, info.gravity, info.size)
 			}
 		}
 	}
@@ -340,22 +342,21 @@ class Projectiles : Module()
 
 			classProvider.isEntityFishHook(projectile) && !projectile.asEntityFishHook().inGround && projectile.asEntityFishHook().caughtEntity == null -> ProjectileInfo(motionSlowdown = 0.92F, gravity = 0.04F, size = 0.25F) to -7829368
 
-			classProvider.isEntityPotion(projectile) -> ProjectileInfo(motionFactor = 0.5F, gravity = 0.05F, size = 0.25F, inaccuracy = -20.0F) to ColorUtils.applyAlphaChannel(functions.getLiquidColor(projectile.asEntityPotion().potionDamage, false), 255) // FIXME: Crossversion Support
-
-			classProvider.isEntityExpBottle(projectile) -> ProjectileInfo(motionFactor = 0.7F, gravity = 0.07F, size = 0.25F, inaccuracy = -20.0F) to -3539055
-
-			else ->
+			classProvider.isEntityThrowable(projectile) ->
 			{
-				val color = when
+				val throwable = projectile.asEntityThrowable()
+
+				ProjectileInfo(motionFactor = throwable.velocity, gravity = throwable.gravityVelocity, size = max(throwable.width, throwable.height), inaccuracy = throwable.inaccuracy) to when
 				{
-					classProvider.isEntitySnowball(projectile) -> -1
 					classProvider.isEntityEgg(projectile) -> -2109797
 					classProvider.isEntityEnderPearl(projectile) -> -6750004
-					else -> return null
+					classProvider.isEntityPotion(projectile) -> ColorUtils.applyAlphaChannel(getPotionLiquidColor(projectile.asEntityPotion(), false), 255)
+					classProvider.isEntityExpBottle(projectile) -> -3539055
+					else -> -1
 				}
-
-				ProjectileInfo(gravity = 0.03F, size = 0.25F) to color
 			}
+
+			else -> return null
 		}
 	}
 }

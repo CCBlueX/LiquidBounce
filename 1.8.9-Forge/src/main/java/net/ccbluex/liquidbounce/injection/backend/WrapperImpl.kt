@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.api.IClassProvider
 import net.ccbluex.liquidbounce.api.IExtractedFunctions
 import net.ccbluex.liquidbounce.api.Wrapper
 import net.ccbluex.liquidbounce.api.minecraft.client.IMinecraft
+import net.ccbluex.liquidbounce.injection.backend.minecraft.client.MinecraftImpl
 import net.minecraft.client.Minecraft
 
 object WrapperImpl : Wrapper
