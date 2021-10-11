@@ -37,7 +37,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @SuppressWarnings(
@@ -75,6 +77,11 @@ public abstract class MixinItemRenderer
 
 	@Shadow
 	protected abstract void doBowTransformations(float partialTicks, AbstractClientPlayer clientPlayer);
+
+	@Shadow
+	private void doBlockTransformations()
+	{
+	}
 
 	@Shadow
 	protected abstract void doItemUsedTransformations(float swingProgress);
@@ -122,17 +129,14 @@ public abstract class MixinItemRenderer
 
 	/**
 	 * @author eric0210
-	 * @reason SwingAnimation
+	 * @reason SwingAnimation.BlockAngle
 	 */
-	@Overwrite
-	private void doBlockTransformations()
+	@ModifyConstant(method = "doBlockTransformations", constant = @Constant(floatValue = -80.0F, ordinal = 0), require = 1)
+	private float doBlockTransformations(final float prevBlockAngle)
 	{
 		final SwingAnimation sa = (SwingAnimation) LiquidBounce.moduleManager.get(SwingAnimation.class);
 
-		GlStateManager.translate(-0.5f, 0.2f, 0.0f);
-		GlStateManager.rotate(30.0f, 0.0f, 1.0f, 0.0f);
-		GlStateManager.rotate(sa.getState() ? -sa.getBlockAngle().get() : -80.0f, 1.0f, 0.0f, 0.0f);
-		GlStateManager.rotate(60.0f, 0.0f, 1.0f, 0.0f);
+		return sa.getState() ? -sa.getBlockAngle().get() : -80.0f;
 	}
 
 	/**

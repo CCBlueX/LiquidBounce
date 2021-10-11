@@ -46,9 +46,9 @@ import net.minecraft.client.particle.EffectRenderer;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.MovingObjectPosition.MovingObjectType;
 import net.minecraft.util.Util;
 import net.minecraft.util.Util.EnumOS;
-import net.minecraft.util.MovingObjectPosition.MovingObjectType;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -58,9 +58,8 @@ import org.lwjgl.opengl.Display;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.At.Shift;
-import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Minecraft.class)
@@ -195,10 +194,10 @@ public abstract class MixinMinecraft
 	private void runGameLoop(final CallbackInfo callbackInfo)
 	{
 		final long currentTime = getTime();
-		final int deltaTime = (int) (currentTime - lastFrame);
+		final int frameTime = (int) (currentTime - lastFrame);
 		lastFrame = currentTime;
 
-		RenderUtils.setDeltaTime(deltaTime);
+		RenderUtils.setFrameTime(frameTime);
 	}
 
 	@Inject(method = "runTick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;joinPlayerCounter:I", shift = Shift.BEFORE))
@@ -285,39 +284,45 @@ public abstract class MixinMinecraft
 
 	/**
 	 * @author CCBlueX
-	 * @reason ClickBlockEvent
+	 * @reason MultiActions
 	 */
-	@Overwrite
-	private void sendClickBlockToController(final boolean leftClick)
+	@Redirect(method = "sendClickBlockToController", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/EntityPlayerSP;isUsingItem()Z"))
+	private boolean handleMultiActions(final EntityPlayerSP thePlayer)
 	{
-		if (!leftClick)
-			leftClickCounter = 0;
-
-		if (leftClickCounter <= 0 && (!thePlayer.isUsingItem() || LiquidBounce.moduleManager.get(MultiActions.class).getState()))
-			if (leftClick && objectMouseOver != null && objectMouseOver.typeOfHit == MovingObjectType.BLOCK)
-			{
-				final BlockPos blockPos = objectMouseOver.getBlockPos();
-
-				if (leftClickCounter == 0)
-					LiquidBounce.eventManager.callEvent(new ClickBlockEvent(BackendExtensionKt.wrap(blockPos), EnumFacingImplKt.wrap(objectMouseOver.sideHit)));
-
-				if (theWorld.getBlockState(blockPos).getBlock().getMaterial() != Material.air && playerController.onPlayerDamageBlock(blockPos, objectMouseOver.sideHit))
-				{
-					effectRenderer.addBlockHitEffects(blockPos, objectMouseOver.sideHit);
-					thePlayer.swingItem();
-				}
-			}
-			else if (!LiquidBounce.moduleManager.get(AbortBreaking.class).getState())
-				playerController.resetBlockRemoving();
+		return thePlayer.isUsingItem() && !LiquidBounce.moduleManager.get(MultiActions.class).getState();
 	}
 
 	/**
 	 * @author CCBlueX
-	 * @reason Limit framerate if any kind of gui is open
+	 * @reason ClickBlockEvent
 	 */
-	@Overwrite
-	public int getLimitFramerate()
+	@ModifyVariable(method = "sendClickBlockToController", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/WorldClient;getBlockState(Lnet/minecraft/util/BlockPos;)Lnet/minecraft/block/state/IBlockState;", shift = Shift.BEFORE), require = 1, ordinal = 0)
+	private BlockPos handleClickBlockEvent(final BlockPos blockpos)
 	{
-		return theWorld == null && currentScreen != null ? 60 : gameSettings.limitFramerate;
+		if (leftClickCounter == 0)
+			LiquidBounce.eventManager.callEvent(new ClickBlockEvent(BackendExtensionKt.wrap(blockpos), EnumFacingImplKt.wrap(objectMouseOver.sideHit)));
+
+		return blockpos;
+	}
+
+	/**
+	 * @author CCBlueX
+	 * @reason AbortBreaking
+	 */
+	@Inject(method = "sendClickBlockToController", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/PlayerControllerMP;resetBlockRemoving()V", shift = Shift.BEFORE), cancellable = true)
+	private void handleAbortBreaking(final CallbackInfo ci)
+	{
+		if (LiquidBounce.moduleManager.get(AbortBreaking.class).getState())
+			ci.cancel();
+	}
+
+	/**
+	 * @author CCBlueX
+	 * @reason Limit framerate to 60 if any kind of gui is open
+	 */
+	@ModifyConstant(method = "getLimitFramerate", constant = @Constant(intValue = 30, ordinal = 0), require = 1)
+	public int upgradeVSyncFrameTo60(final int prevFrame)
+	{
+		return 60;
 	}
 }

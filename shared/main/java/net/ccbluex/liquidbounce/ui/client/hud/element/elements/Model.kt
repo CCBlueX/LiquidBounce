@@ -61,7 +61,7 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y)
 
 			"animation" ->
 			{
-				val delta = RenderUtils.deltaTime
+				val delta = RenderUtils.frameTime
 
 				if (rotateDirection)
 				{

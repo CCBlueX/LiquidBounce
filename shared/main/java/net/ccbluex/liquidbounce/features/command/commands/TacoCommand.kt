@@ -40,7 +40,7 @@ class TacoCommand : Command("taco"), Listenable
 	{
 		if (!toggle) return
 
-		running += 0.15f * RenderUtils.deltaTime
+		running += 0.15f * RenderUtils.frameTime
 		val scaledResolution = classProvider.createScaledResolution(mc)
 		RenderUtils.drawImage(tacoTextures[image], running.toInt(), scaledResolution.scaledHeight - 60, 64, 32)
 		if (scaledResolution.scaledWidth <= running) running = -64f

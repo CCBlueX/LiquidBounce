@@ -24,7 +24,6 @@ import org.spongepowered.asm.mixin.Shadow;
 @Mixin(ResourcePackRepository.class)
 public class MixinResourcePackRepository
 {
-
 	@Shadow
 	@Final
 	private File dirServerResourcepacks;

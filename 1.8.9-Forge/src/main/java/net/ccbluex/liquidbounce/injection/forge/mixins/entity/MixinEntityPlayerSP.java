@@ -18,7 +18,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.*;
 import net.ccbluex.liquidbounce.features.module.modules.render.Bobbing;
 import net.ccbluex.liquidbounce.features.module.modules.render.NoSwing;
 import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold;
-import net.ccbluex.liquidbounce.utils.MovementUtils;
 import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.ccbluex.liquidbounce.utils.extensions.MovementExtensionKt;
 import net.minecraft.block.Block;
@@ -259,10 +258,10 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 
 		if (noSwing.getState())
 		{
-			callbackInfo.cancel();
-
 			if (!noSwing.getServerSideValue().get())
 				sendQueue.addToSendQueue(new C0APacketAnimation());
+
+			callbackInfo.cancel();
 		}
 	}
 

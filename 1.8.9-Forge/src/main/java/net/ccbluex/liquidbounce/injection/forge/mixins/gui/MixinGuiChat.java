@@ -68,7 +68,7 @@ public abstract class MixinGuiChat extends MixinGuiScreen
 	@Inject(method = "updateScreen", at = @At("HEAD"))
 	private void updateScreen(final CallbackInfo callbackInfo)
 	{
-		final int delta = RenderUtils.getDeltaTime();
+		final int delta = RenderUtils.getFrameTime();
 
 		if (fade < 14)
 			fade += 0.4F * delta;

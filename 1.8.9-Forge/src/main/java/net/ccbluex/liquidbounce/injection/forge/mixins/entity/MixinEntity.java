@@ -217,8 +217,6 @@ public abstract class MixinEntity
 		// NoPitchLimit
 		if (LiquidBounce.moduleManager.get(NoPitchLimit.class).getState())
 		{
-			callbackInfo.cancel();
-
 			final float rotYaw = rotationYaw;
 			final float rotPitch = rotationPitch;
 
@@ -226,6 +224,8 @@ public abstract class MixinEntity
 			rotationPitch -= pitch * 0.15D;
 			prevRotationPitch += rotationPitch - rotPitch;
 			prevRotationYaw += rotationYaw - rotYaw;
+
+			callbackInfo.cancel();
 		}
 	}
 

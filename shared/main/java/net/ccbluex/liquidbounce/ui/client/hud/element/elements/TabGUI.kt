@@ -163,7 +163,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 
 	private fun updateAnimation()
 	{
-		val delta = RenderUtils.deltaTime
+		val delta = RenderUtils.frameTime
 
 		val xPos = tabHeight.get() * selectedCategory
 		if (tabY.toInt() != xPos.toInt())

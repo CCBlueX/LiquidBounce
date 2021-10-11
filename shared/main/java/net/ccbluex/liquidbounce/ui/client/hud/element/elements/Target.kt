@@ -351,7 +351,7 @@ class Target : Element()
 					// Draw Ping text
 					textFont.drawString("${ping}ms", textXOffset + 12, 22, pingTextColor)
 
-					easingArmor += ((targetArmor - easingArmor) / 2.0F.pow(10.0F - armorFadeSpeedValue.get())) * RenderUtils.deltaTime
+					easingArmor += ((targetArmor - easingArmor) / 2.0F.pow(10.0F - armorFadeSpeedValue.get())) * RenderUtils.frameTime
 				}
 
 				// Render equipments
@@ -381,8 +381,8 @@ class Target : Element()
 
 				RenderUtils.glColor(Color.white) // Reset Color
 
-				if (!suspendAnimation) easingHealth += ((targetHealth - easingHealth) / 2.0F.pow(10.0F - healthFadeSpeedValue.get())) * RenderUtils.deltaTime
-				easingAbsorption += ((targetAbsorption - easingAbsorption) / 2.0F.pow(10.0F - absorptionFadeSpeedValue.get())) * RenderUtils.deltaTime
+				if (!suspendAnimation) easingHealth += ((targetHealth - easingHealth) / 2.0F.pow(10.0F - healthFadeSpeedValue.get())) * RenderUtils.frameTime
+				easingAbsorption += ((targetAbsorption - easingAbsorption) / 2.0F.pow(10.0F - absorptionFadeSpeedValue.get())) * RenderUtils.frameTime
 
 				// Draw Target Name
 				nameFont.drawString(name, textXOffset, 3, 0xffffff)

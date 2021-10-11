@@ -18,7 +18,7 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.SlowlyStyle
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.ui.font.assumeNonVolatile
 import net.ccbluex.liquidbounce.utils.EntityUtils
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.frameTime
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawImage
 import org.lwjgl.input.Mouse
 import org.lwjgl.opengl.GL11
@@ -66,7 +66,7 @@ class ClickGui : WrappedGuiScreen()
 
 			for (panel in panels)
 			{
-				panel.updateFade(deltaTime)
+				panel.updateFade(frameTime)
 				panel.drawScreen(newMouseXI, newMouseYI, partialTicks)
 			}
 

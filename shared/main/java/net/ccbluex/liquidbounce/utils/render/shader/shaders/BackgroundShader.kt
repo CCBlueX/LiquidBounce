@@ -36,7 +36,7 @@ class BackgroundShader : Shader("background.frag")
 
 		if (timeID > -1) GL20.glUniform1f(timeID, time)
 
-		time += 0.003f * RenderUtils.deltaTime
+		time += 0.003f * RenderUtils.frameTime
 	}
 
 	companion object

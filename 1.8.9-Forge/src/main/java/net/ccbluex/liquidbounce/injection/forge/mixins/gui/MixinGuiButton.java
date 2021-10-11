@@ -75,7 +75,7 @@ public abstract class MixinGuiButton extends Gui
 			final FontRenderer fontRenderer = mc.getLanguageManager().isCurrentLocaleUnicode() ? mc.fontRendererObj : ((FontRendererImpl) Fonts.font35).getWrapped();
 			hovered = mouseX >= xPosition && mouseY >= yPosition && mouseX < xPosition + width && mouseY < yPosition + height;
 
-			final int delta = RenderUtils.getDeltaTime();
+			final int delta = RenderUtils.getFrameTime();
 
 			if (enabled && hovered)
 			{

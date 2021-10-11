@@ -16,6 +16,8 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
 
 @SideOnly(Side.CLIENT)
 @Mixin(C00Handshake.class)
@@ -39,12 +41,9 @@ public class MixinC00Handshake
 	 * @reason AntiModDisable
 	 * @see AntiModDisable
 	 */
-	@Overwrite
-	public void writePacketData(final PacketBuffer buffer)
+	@ModifyConstant(method = "writePacketData", constant = @Constant(stringValue = "\u0000FML\u0000", ordinal = 0), require = 1)
+	public String antiModDisable(final String string)
 	{
-		buffer.writeVarIntToBuffer(protocolVersion);
-		buffer.writeString(ip + (AntiModDisable.Companion.getEnabled() && AntiModDisable.Companion.getBlockFMLPackets() && !Minecraft.getMinecraft().isIntegratedServerRunning() ? "" : "\0FML\0"));
-		buffer.writeShort(port);
-		buffer.writeVarIntToBuffer(requestedState.getId());
+		return AntiModDisable.Companion.getEnabled() && AntiModDisable.Companion.getBlockFMLPackets() && !Minecraft.getMinecraft().isIntegratedServerRunning() ? "" : "\u0000FML\u0000";
 	}
 }

@@ -15,7 +15,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(BlockAnvil.class)
 public abstract class MixinBlockAnvil extends MixinBlock
 {
-
 	@Inject(method = "onBlockPlaced", cancellable = true, at = @At("HEAD"))
 	private void injectAnvilCrashFix(final World worldIn, final BlockPos pos, final EnumFacing facing, final float hitX, final float hitY, final float hitZ, final int meta, final EntityLivingBase placer, final CallbackInfoReturnable<? super IBlockState> cir)
 	{

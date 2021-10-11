@@ -40,7 +40,7 @@ object RenderUtils : MinecraftInstance()
 	val ICONS: IResourceLocation = classProvider.createResourceLocation("textures/gui/icons.png")
 
 	@JvmStatic
-	var deltaTime = 0
+	var frameTime = 0
 
 	@JvmStatic
 	fun drawBlockBox(theWorld: IWorld, thePlayer: IEntity, blockPos: WBlockPos, color: Int, outlineColor: Int, hydraESP: Boolean, partialTicks: Float)

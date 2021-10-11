@@ -7,8 +7,6 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
-import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
@@ -17,7 +15,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.BowAimbot
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.world.*
-import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 
 @ModuleInfo(name = "Rotations", description = "Allows you to see server-sided rotations.", category = ModuleCategory.RENDER)
@@ -26,20 +23,6 @@ class Rotations : Module()
 	val bodyValue = BoolValue("Body", true)
 	val interpolateRotationsValue = BoolValue("Interpolate", true)
 	private val onlyWhileRotatingValue = BoolValue("OnlyWhileRotating", true)
-
-	/**
-	 * Rotations - Head only, Yaw
-	 */
-	@EventTarget
-	fun onRender3D(event: Render3DEvent)
-	{
-		val thePlayer = mc.thePlayer ?: return
-
-		if (bodyValue.get() || !isRotating(thePlayer)) return
-
-		// Head Rotations
-		thePlayer.rotationYawHead = interpolateIf(interpolateRotationsValue.get(), RotationUtils.lastServerRotation.yaw, RotationUtils.serverRotation.yaw, event.partialTicks)
-	}
 
 	private fun getState(module: Class<*>) = LiquidBounce.moduleManager[module].state
 

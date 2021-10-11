@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(MovementInputFromOptions.class)
 public class MixinMovementInputFromOptions extends MovementInput
 {
-	@Inject(method = "updatePlayerMoveState", at = @At(value = "FIELD", target = "Lnet/minecraft/util/MovementInputFromOptions;sneak:Z", shift = Shift.AFTER, ordinal = 0))
+	@Inject(method = "updatePlayerMoveState", at = @At(value = "FIELD", target = "Lnet/minecraft/util/MovementInputFromOptions;sneak:Z", shift = Shift.AFTER, ordinal = 0), cancellable = true)
 	private void updatePlayerMoveState(final CallbackInfo callbackInfo)
 	{
 		if (sneak)
@@ -23,6 +23,8 @@ public class MixinMovementInputFromOptions extends MovementInput
 
 			moveForward *= noSlow.getSneakForwardMultiplier().get();
 			moveStrafe *= noSlow.getSneakStrafeMultiplier().get();
+
+			callbackInfo.cancel();
 		}
 	}
 }

@@ -118,7 +118,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 
 			// Slide animation - update every render
 			val slideAnimationSpeed = 21F - animationSpeedValue.get().coerceIn(0.01f, 20f)
-			val deltaTime = RenderUtils.deltaTime
+			val deltaTime = RenderUtils.frameTime
 
 			val uppercase = textUpperCaseValue.get()
 

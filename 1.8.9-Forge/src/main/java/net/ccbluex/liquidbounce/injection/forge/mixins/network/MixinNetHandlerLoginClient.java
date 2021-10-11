@@ -49,6 +49,10 @@ public class MixinNetHandlerLoginClient
 	@Final
 	private NetworkManager networkManager;
 
+	/**
+	 * @author CCBlueX
+	 * @reason MCLeaks
+	 */
 	@Inject(method = "handleEncryptionRequest", at = @At("HEAD"), cancellable = true)
 	private void handleEncryptionRequest(final S01PacketEncryptionRequest packetIn, final CallbackInfo callbackInfo)
 	{

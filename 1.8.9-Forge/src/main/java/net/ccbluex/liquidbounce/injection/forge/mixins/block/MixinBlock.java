@@ -46,7 +46,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @SideOnly(Side.CLIENT)
 public abstract class MixinBlock
 {
-
 	@Shadow
 	@Final
 	protected BlockState blockState;

@@ -30,7 +30,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @SideOnly(Side.CLIENT)
 public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer
 {
-
 	private CapeInfo capeInfo;
 
 	@Inject(method = "getLocationCape", at = @At("HEAD"), cancellable = true)

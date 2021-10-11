@@ -300,7 +300,7 @@ class Notification(private val type: NotificationIcon, private val header: Strin
 		RenderUtils.resetColor()
 
 		// Animation
-		val delta = RenderUtils.deltaTime
+		val delta = RenderUtils.frameTime
 
 		val fadeSpeed = Notifications.fadeSpeedValue.get()
 		val deploySpeed = Notifications.deploySpeedValue.get()
