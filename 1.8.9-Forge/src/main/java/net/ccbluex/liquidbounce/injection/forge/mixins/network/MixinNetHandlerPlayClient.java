@@ -76,7 +76,7 @@ public abstract class MixinNetHandlerPlayClient
 			"ThrowCaughtLocally", "IfCanBeAssertion"
 	})
 	@Inject(method = "handleResourcePack", at = @At("HEAD"), cancellable = true)
-	private void handleResourcePack(final S48PacketResourcePackSend packetResourcePack, final CallbackInfo callbackInfo)
+	private void injectResourcePackFix(final S48PacketResourcePackSend packetResourcePack, final CallbackInfo callbackInfo)
 	{
 		final String url = packetResourcePack.getURL();
 		final String hash = packetResourcePack.getHash();
@@ -102,7 +102,7 @@ public abstract class MixinNetHandlerPlayClient
 
 	@SuppressWarnings("ConstantConditions")
 	@Inject(method = "handleJoinGame", at = @At("HEAD"), cancellable = true)
-	private void handleJoinGameWithAntiForge(final S01PacketJoinGame packetIn, final CallbackInfo callbackInfo)
+	private void injectAntiModDisable(final S01PacketJoinGame packetIn, final CallbackInfo callbackInfo)
 	{
 		if (!AntiModDisable.Companion.getEnabled() || !AntiModDisable.Companion.getBlockFMLPackets() || Minecraft.getMinecraft().isIntegratedServerRunning())
 			return;
@@ -146,7 +146,7 @@ public abstract class MixinNetHandlerPlayClient
 	 * @see    NoRotateSet
 	 */
 	@Inject(method = "handlePlayerPosLook", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/PacketThreadUtil;checkThreadAndEnqueue(Lnet/minecraft/network/Packet;Lnet/minecraft/network/INetHandler;Lnet/minecraft/util/IThreadListener;)V", shift = Shift.AFTER), cancellable = true)
-	public void handlePlayerPosLook(final S08PacketPlayerPosLook packetIn, final CallbackInfo ci)
+	public void injectNoRotateSet(final S08PacketPlayerPosLook packetIn, final CallbackInfo ci)
 	{
 		final NoRotateSet noRotateSet = (NoRotateSet) LiquidBounce.moduleManager.get(NoRotateSet.class);
 
@@ -226,7 +226,7 @@ public abstract class MixinNetHandlerPlayClient
 	 * @see    Velocity
 	 */
 	@Inject(method = "handleExplosion", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/Explosion;doExplosionB(Z)V"), cancellable = true)
-	public void hypixelVelocity(final S27PacketExplosion packetIn, final CallbackInfo ci)
+	public void injectVelocity(final S27PacketExplosion packetIn, final CallbackInfo ci)
 	{
 		final EntityPlayerSP thePlayer = gameController.thePlayer;
 
@@ -285,7 +285,7 @@ public abstract class MixinNetHandlerPlayClient
 	 * @reason Chat Alerts
 	 */
 	@Inject(method = "handleChat", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/PacketThreadUtil;checkThreadAndEnqueue(Lnet/minecraft/network/Packet;Lnet/minecraft/network/INetHandler;Lnet/minecraft/util/IThreadListener;)V", shift = Shift.AFTER))
-	public void chatAlerts(final S02PacketChat packetIn, final CallbackInfo ci)
+	public void injectChatAlerts(final S02PacketChat packetIn, final CallbackInfo ci)
 	{
 		final IChatComponent messageComponent = packetIn.getChatComponent();
 

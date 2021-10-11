@@ -20,7 +20,7 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 public abstract class MixinBlockLadder extends MixinBlock
 {
 	@ModifyConstant(method = "setBlockBoundsBasedOnState", constant = @Constant(floatValue = 0.125f, ordinal = 0), require = 1)
-	public float aac3FastClimb(final float f)
+	public float injectAAC3FastClimb(final float f)
 	{
 		// AAC 3.0.0 FastClimb
 		final FastClimb fastClimb = (FastClimb) LiquidBounce.moduleManager.get(FastClimb.class);

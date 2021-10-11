@@ -70,7 +70,7 @@ public abstract class MixinEntityRenderer
 	private boolean cloudFog;
 
 	@Inject(method = "renderWorldPass", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/EntityRenderer;renderHand:Z", shift = Shift.BEFORE))
-	private void callRender3DEvent(final int pass, final float partialTicks, final long finishTimeNano, final CallbackInfo callbackInfo)
+	private void handleRender3DEvent(final int pass, final float partialTicks, final long finishTimeNano, final CallbackInfo callbackInfo)
 	{
 		mc.mcProfiler.endStartSection("LiquidBounce-Render3DEvent");
 		LiquidBounce.eventManager.callEvent(new Render3DEvent(partialTicks), true);
@@ -78,7 +78,7 @@ public abstract class MixinEntityRenderer
 	}
 
 	@Inject(method = "hurtCameraEffect", at = @At("HEAD"), cancellable = true)
-	private void noHurtCam(final CallbackInfo callbackInfo)
+	private void injectNoHurtCam(final CallbackInfo callbackInfo)
 	{
 		final HurtCam hurtCam = (HurtCam) LiquidBounce.moduleManager.get(HurtCam.class);
 		if (hurtCam.getState() && hurtCam.getNoHurtCam().get())
@@ -86,7 +86,7 @@ public abstract class MixinEntityRenderer
 	}
 
 	@Inject(method = "orientCamera", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Vec3;distanceTo(Lnet/minecraft/util/Vec3;)D"), cancellable = true)
-	private void cameraClip(final float partialTicks, final CallbackInfo callbackInfo)
+	private void injectCameraClip(final float partialTicks, final CallbackInfo callbackInfo)
 	{
 		if (LiquidBounce.moduleManager.get(CameraClip.class).getState())
 		{
@@ -165,14 +165,14 @@ public abstract class MixinEntityRenderer
 	}
 
 	@Inject(method = "setupCameraTransform", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/EntityRenderer;setupViewBobbing(F)V", shift = Shift.BEFORE))
-	private void setupCameraViewBobbingPre(final CallbackInfo callbackInfo)
+	private void injectTracersPre(final CallbackInfo callbackInfo)
 	{
 		if (LiquidBounce.moduleManager.get(Tracers.class).getState())
 			GL11.glPushMatrix();
 	}
 
 	@Inject(method = "setupCameraTransform", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/EntityRenderer;setupViewBobbing(F)V", shift = Shift.AFTER))
-	private void setupCameraViewBobbingPost(final CallbackInfo callbackInfo)
+	private void injectTracersPost(final CallbackInfo callbackInfo)
 	{
 		if (LiquidBounce.moduleManager.get(Tracers.class).getState())
 			GL11.glPopMatrix();

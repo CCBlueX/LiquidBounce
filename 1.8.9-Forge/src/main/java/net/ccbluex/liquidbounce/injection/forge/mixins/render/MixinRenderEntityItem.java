@@ -49,7 +49,7 @@ public class MixinRenderEntityItem
 	 * @reason ItemPhysics
 	 * @see ItemPhysics
 	 */
-	@Inject(method = "doRender", at = @At("HEAD"), cancellable = true)
+	@Inject(method = "doRender(Lnet/minecraft/entity/item/EntityItem;DDDFF)V", at = @At("HEAD"), cancellable = true)
 	private void injectItemPhysicsAndChams(final EntityItem entity, final double x, final double y, final double z, final float entityYaw, final float partialTicks, final CallbackInfo callbackInfo)
 	{
 		final Minecraft mc = Minecraft.getMinecraft();
@@ -189,7 +189,7 @@ public class MixinRenderEntityItem
 		}
 	}
 
-	@Inject(method = "doRender", at = @At("RETURN"))
+	@Inject(method = "doRender(Lnet/minecraft/entity/item/EntityItem;DDDFF)V", at = @At("RETURN"))
 	private void injectItemChamsPost(final CallbackInfo callbackInfo)
 	{
 		final Chams chams = (Chams) LiquidBounce.moduleManager.get(Chams.class);

@@ -28,7 +28,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @SideOnly(Side.CLIENT)
 public class MixinModelBiped
 {
-
 	@Shadow
 	public ModelRenderer bipedRightArm;
 
@@ -44,7 +43,7 @@ public class MixinModelBiped
 	 * @see Rotations
 	 */
 	@Inject(method = "setRotationAngles", at = @At(value = "FIELD", target = "Lnet/minecraft/client/model/ModelBiped;swingProgress:F"))
-	private void headRotationsPitch(final float limbSwing, final float limbSwingAmount, final float ageInTicks, final float netHeadYaw, final float headPitch, final float scaleFactor, final Entity entityIn, final CallbackInfo callbackInfo)
+	private void injectRotations(final float limbSwing, final float limbSwingAmount, final float ageInTicks, final float netHeadYaw, final float headPitch, final float scaleFactor, final Entity entityIn, final CallbackInfo callbackInfo)
 	{
 		if (heldItemRight == 3)
 			bipedRightArm.rotateAngleY = 0.0F;

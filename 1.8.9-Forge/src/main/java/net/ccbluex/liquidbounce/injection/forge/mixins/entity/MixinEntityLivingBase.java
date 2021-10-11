@@ -16,8 +16,10 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.Speed;
 import net.ccbluex.liquidbounce.features.module.modules.render.AntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.SwingAnimation;
 import net.ccbluex.liquidbounce.injection.implementations.IMixinEntityLivingBase;
+import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.MovementUtils;
 import net.minecraft.block.Block;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -136,9 +138,9 @@ public abstract class MixinEntityLivingBase extends MixinEntity implements IMixi
 	@Overwrite
 	protected void jump()
 	{
-		final IEntityPlayerSP thePlayer = wrapper.getMinecraft().getThePlayer();
+		final EntityPlayerSP thePlayer = Minecraft.getMinecraft().thePlayer;
 
-		if (thePlayer != null && thePlayer == (EntityLivingBase) (Object) this)
+		if (thePlayer != null && thePlayer.isEntityEqual((Entity) (Object) this))
 		{
 			final JumpEvent jumpEvent = new JumpEvent(getJumpUpwardsMotion());
 			LiquidBounce.eventManager.callEvent(jumpEvent);
@@ -170,14 +172,14 @@ public abstract class MixinEntityLivingBase extends MixinEntity implements IMixi
 	}
 
 	@Inject(method = "onLivingUpdate", at = @At("HEAD"))
-	private void headLiving(final CallbackInfo callbackInfo)
+	private void injectNoJumpDelay(final CallbackInfo callbackInfo)
 	{
 		if (LiquidBounce.moduleManager.get(NoJumpDelay.class).getState())
 			jumpTicks = 0;
 	}
 
 	@Inject(method = "onLivingUpdate", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/EntityLivingBase;isJumping:Z", ordinal = 1))
-	private void onJumpSection(final CallbackInfo callbackInfo)
+	private void injectAirJump(final CallbackInfo callbackInfo)
 	{
 		if (LiquidBounce.moduleManager.get(AirJump.class).getState() && isJumping && jumpTicks == 0)
 		{
@@ -187,17 +189,16 @@ public abstract class MixinEntityLivingBase extends MixinEntity implements IMixi
 	}
 
 	@Inject(method = "getLook", at = @At("HEAD"), cancellable = true)
-	private void getLook(final CallbackInfoReturnable<? super Vec3> callbackInfoReturnable)
+	private void injectMouseDelayFix(final CallbackInfoReturnable<? super Vec3> callbackInfoReturnable)
 	{
 		// MouseDelayFix
-
 		// noinspection ConstantConditions
 		if ((EntityLivingBase) (Object) this instanceof EntityPlayerSP)
 			callbackInfoReturnable.setReturnValue(getVectorForRotation(rotationPitch, rotationYaw));
 	}
 
 	@Inject(method = "isPotionActive(Lnet/minecraft/potion/Potion;)Z", at = @At("HEAD"), cancellable = true)
-	private void isPotionActive(final Potion potion, final CallbackInfoReturnable<? super Boolean> callbackInfoReturnable)
+	private void injectAntiBlind(final Potion potion, final CallbackInfoReturnable<? super Boolean> callbackInfoReturnable)
 	{
 		final AntiBlind antiBlind = (AntiBlind) LiquidBounce.moduleManager.get(AntiBlind.class);
 

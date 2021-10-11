@@ -30,7 +30,7 @@ public abstract class MixinServerListEntryNormal
 	/**
 	 * The default server pinger executor pool has only 5-thread support. Improved to use all available threads.
 	 */
-	private static final Executor enhancedServerPinger = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors(), new ThreadFactoryBuilder().setNameFormat("Server Pinger #%d").setDaemon(true).build());
+	private static final Executor enhancedServerPinger = new ScheduledThreadPoolExecutor(Runtime.getRuntime().availableProcessors(), new ThreadFactoryBuilder().setNameFormat("Enhanced Server Pinger #%d").setDaemon(true).build());
 
 	@Shadow
 	@Final

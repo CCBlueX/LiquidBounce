@@ -40,6 +40,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Block.class)
@@ -67,21 +68,17 @@ public abstract class MixinBlock
 	 * @author CCBlueX
 	 * @reason BlockBBEvent
 	 */
-	@Overwrite
-	public void addCollisionBoxesToList(final World worldIn, final BlockPos pos, final IBlockState state, final AxisAlignedBB mask, final List<? super AxisAlignedBB> list, final Entity collidingEntity)
+	@Redirect(method = "addCollisionBoxesToList", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/Block;getCollisionBoundingBox(Lnet/minecraft/world/World;Lnet/minecraft/util/BlockPos;Lnet/minecraft/block/state/IBlockState;)Lnet/minecraft/util/AxisAlignedBB;"))
+	public AxisAlignedBB handleBlockBBEvent(final Block instance, final World worldIn, final BlockPos pos, final IBlockState state)
 	{
-		AxisAlignedBB axisalignedbb = getCollisionBoundingBox(worldIn, pos, state);
-		final BlockBBEvent blockBBEvent = new BlockBBEvent(BackendExtensionKt.wrap(pos), BlockImplKt.wrap(blockState.getBlock()), Optional.ofNullable(axisalignedbb).map(AxisAlignedBBImplKt::wrap).orElse(null));
+		final BlockBBEvent blockBBEvent = new BlockBBEvent(BackendExtensionKt.wrap(pos), BlockImplKt.wrap(blockState.getBlock()), Optional.ofNullable(getCollisionBoundingBox(worldIn, pos, state)).map(AxisAlignedBBImplKt::wrap).orElse(null));
 		LiquidBounce.eventManager.callEvent(blockBBEvent);
 
-		axisalignedbb = blockBBEvent.getBoundingBox() == null ? null : AxisAlignedBBImplKt.unwrap(blockBBEvent.getBoundingBox());
-
-		if (axisalignedbb != null && mask.intersectsWith(axisalignedbb))
-			list.add(axisalignedbb);
+		return Optional.ofNullable(blockBBEvent.getBoundingBox()).map((bb) -> AxisAlignedBBImplKt.unwrap(bb)).orElse(null);
 	}
 
 	@Inject(method = "shouldSideBeRendered", at = @At("HEAD"), cancellable = true)
-	private void shouldSideBeRendered(final IBlockAccess worldIn, final BlockPos pos, final EnumFacing side, final CallbackInfoReturnable<? super Boolean> callbackInfoReturnable)
+	private void injectXRay(final IBlockAccess worldIn, final BlockPos pos, final EnumFacing side, final CallbackInfoReturnable<? super Boolean> callbackInfoReturnable)
 	{
 		final XRay xray = (XRay) LiquidBounce.moduleManager.get(XRay.class);
 
@@ -91,7 +88,7 @@ public abstract class MixinBlock
 	}
 
 	@Inject(method = "isCollidable", at = @At("HEAD"), cancellable = true)
-	private void isCollidable(final CallbackInfoReturnable<? super Boolean> callbackInfoReturnable)
+	private void injectGhostHand(final CallbackInfoReturnable<? super Boolean> callbackInfoReturnable)
 	{
 		final GhostHand ghostHand = (GhostHand) LiquidBounce.moduleManager.get(GhostHand.class);
 
@@ -101,7 +98,7 @@ public abstract class MixinBlock
 	}
 
 	@Inject(method = "getAmbientOcclusionLightValue", at = @At("HEAD"), cancellable = true)
-	private void getAmbientOcclusionLightValue(final CallbackInfoReturnable<? super Float> floatCallbackInfoReturnable)
+	private void injectXRay(final CallbackInfoReturnable<? super Float> floatCallbackInfoReturnable)
 	{
 		if (LiquidBounce.moduleManager.get(XRay.class).getState())
 			floatCallbackInfoReturnable.setReturnValue(1.0F);

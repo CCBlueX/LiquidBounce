@@ -44,6 +44,8 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArgs;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import co.uk.hexeption.utils.OutlineUtils;
@@ -264,7 +266,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 		GlStateManager.popMatrix();
 
 		if (!renderOutlines)
-			doRender(entity, x, y, z, entityYaw, partialTicks, null);
+			super.doRender(entity, x, y, z, entityYaw, partialTicks);
 
 		if (chams.getState() && chams.getTargetsValue().get() && EntityExtensionKt.isSelected(EntityLivingBaseImplKt.wrap(entity), false))
 		{
@@ -377,8 +379,8 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 	}
 
 	/**
-	 * @author CCBlueX
-	 * @reason
+	 * @author Mojang, eric0210
+	 * @reason Custom Hurt Effect Color
 	 */
 	@Overwrite
 	protected <T extends EntityLivingBase> boolean setBrightness(final T entitylivingbaseIn, final float partialTicks, final boolean combineTextures)

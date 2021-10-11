@@ -132,7 +132,7 @@ public abstract class MixinItemRenderer
 	 * @reason SwingAnimation.BlockAngle
 	 */
 	@ModifyConstant(method = "doBlockTransformations", constant = @Constant(floatValue = -80.0F, ordinal = 0), require = 1)
-	private float doBlockTransformations(final float prevBlockAngle)
+	private float injectCustomBlockAngle(final float prevBlockAngle)
 	{
 		final SwingAnimation sa = (SwingAnimation) LiquidBounce.moduleManager.get(SwingAnimation.class);
 

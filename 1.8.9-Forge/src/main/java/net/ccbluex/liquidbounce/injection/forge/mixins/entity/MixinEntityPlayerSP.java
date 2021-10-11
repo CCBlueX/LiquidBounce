@@ -252,7 +252,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 	}
 
 	@Inject(method = "swingItem", at = @At("HEAD"), cancellable = true)
-	private void swingItem(final CallbackInfo callbackInfo)
+	private void injectNoSwing(final CallbackInfo callbackInfo)
 	{
 		final NoSwing noSwing = (NoSwing) LiquidBounce.moduleManager.get(NoSwing.class);
 
@@ -266,7 +266,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 	}
 
 	@Inject(method = "pushOutOfBlocks", at = @At("HEAD"), cancellable = true)
-	private void onPushOutOfBlocks(final CallbackInfoReturnable<? super Boolean> callbackInfoReturnable)
+	private void handlePushOutEvent(final CallbackInfoReturnable<? super Boolean> callbackInfoReturnable)
 	{
 		final PushOutEvent event = new PushOutEvent();
 		if (noClip)

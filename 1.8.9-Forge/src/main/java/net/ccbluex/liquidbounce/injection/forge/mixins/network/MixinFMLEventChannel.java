@@ -15,7 +15,7 @@ import io.netty.channel.ChannelHandlerContext;
 public class MixinFMLEventChannel
 {
 	@Inject(method = "fireRead", at = @At("HEAD"), cancellable = true, remap = false)
-	void antiModDisable(final FMLProxyPacket msg, final ChannelHandlerContext ctx, final CallbackInfo callback)
+	void injectAntiModDisable(final FMLProxyPacket msg, final ChannelHandlerContext ctx, final CallbackInfo callback)
 	{
 		if (AntiModDisable.canBlockForgeChannelPacket(msg.channel()))
 			callback.cancel();

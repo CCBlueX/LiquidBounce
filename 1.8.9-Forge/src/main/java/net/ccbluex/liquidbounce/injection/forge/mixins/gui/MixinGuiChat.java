@@ -23,9 +23,8 @@ import org.lwjgl.input.Mouse;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.At.Shift;
-import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(GuiChat.class)
@@ -126,14 +125,21 @@ public abstract class MixinGuiChat extends MixinGuiScreen
 
 	/**
 	 * @author CCBlueX
-	 * @reason LiquidBounce Command AutoComplete
+	 * @reason Chat fade
 	 */
-	@Overwrite
-	public void drawScreen(final int mouseX, final int mouseY, final float partialTicks)
+	@Redirect(method = "drawScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiChat;drawRect(IIIII)V"), require = 1)
+	private void handleChatFade(final int left, final int top, final int right, final int bottom, final int color)
 	{
 		Gui.drawRect(2, height - (int) fade, width - 2, height, Integer.MIN_VALUE);
-		inputField.drawTextBox();
+	}
 
+	/**
+	 * @author CCBlueX
+	 * @reason LiquidBounce Command AutoComplete
+	 */
+	@Inject(method = "drawScreen", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiTextField;drawTextBox()V", shift = Shift.AFTER))
+	public void handleAutoComplete(final CallbackInfo ci)
+	{
 		if (LiquidBounce.commandManager.getLatestAutoComplete().length > 0 && !inputField.getText().isEmpty() && inputField.getText().startsWith(String.valueOf(LiquidBounce.commandManager.getPrefix())))
 		{
 			final String[] latestAutoComplete = LiquidBounce.commandManager.getLatestAutoComplete();
@@ -142,10 +148,5 @@ public abstract class MixinGuiChat extends MixinGuiScreen
 
 			mc.fontRendererObj.drawStringWithShadow(trimmedString, inputField.xPosition + mc.fontRendererObj.getStringWidth(inputField.getText()), inputField.yPosition, new Color(165, 165, 165).getRGB());
 		}
-
-		final IChatComponent ichatcomponent = mc.ingameGUI.getChatGUI().getChatComponent(Mouse.getX(), Mouse.getY());
-
-		if (ichatcomponent != null)
-			handleComponentHover(ichatcomponent, mouseX, mouseY);
 	}
 }

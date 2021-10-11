@@ -21,7 +21,7 @@ public class MixinTileEntityRendererDispatcher
 {
 
 	@Inject(method = "renderTileEntity", at = @At("HEAD"), cancellable = true)
-	private void xray(final TileEntity tileentityIn, final float partialTicks, final int destroyStage, final CallbackInfo callbackInfo)
+	private void injectXRay(final TileEntity tileentityIn, final float partialTicks, final int destroyStage, final CallbackInfo callbackInfo)
 	{
 		final XRay xray = (XRay) LiquidBounce.moduleManager.get(XRay.class);
 

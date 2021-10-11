@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinTileEntityMobSpawnerRenderer
 {
 	@Inject(method = "renderMob", cancellable = true, at = @At("HEAD"))
-	private static void crashSpawnerExploitFix(final MobSpawnerBaseLogic mobSpawnerLogic, final double posX, final double posY, final double posZ, final float partialTicks, final CallbackInfo ci)
+	private static void injectCrashSpawnerFix(final MobSpawnerBaseLogic mobSpawnerLogic, final double posX, final double posY, final double posZ, final float partialTicks, final CallbackInfo ci)
 	{
 		final Entity entity = mobSpawnerLogic.func_180612_a(mobSpawnerLogic.getSpawnerWorld());
 

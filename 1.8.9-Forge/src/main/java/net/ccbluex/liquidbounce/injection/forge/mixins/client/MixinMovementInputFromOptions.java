@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinMovementInputFromOptions extends MovementInput
 {
 	@Inject(method = "updatePlayerMoveState", at = @At(value = "FIELD", target = "Lnet/minecraft/util/MovementInputFromOptions;sneak:Z", shift = Shift.AFTER, ordinal = 0), cancellable = true)
-	private void updatePlayerMoveState(final CallbackInfo callbackInfo)
+	private void injectNoSlow(final CallbackInfo callbackInfo)
 	{
 		if (sneak)
 		{

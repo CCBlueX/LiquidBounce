@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinRenderItem
 {
 	@Inject(method = "renderItemOverlayIntoGUI", at = @At("RETURN"))
-	public void renderItemOverlayIntoGUI(final FontRenderer fr, final ItemStack stack, final int xPosition, final int yPosition, final String text, final CallbackInfo ci)
+	public void injectRenderItemEnchantments(final FontRenderer fr, final ItemStack stack, final int xPosition, final int yPosition, final String text, final CallbackInfo ci)
 	{
 		if (stack != null)
 			RenderUtils.renderItemEnchantments(GlStateManagerImpl.INSTANCE, Fonts.INSTANCE.getMinecraftFont(), ItemStackImplKt.wrap(stack), xPosition, yPosition);

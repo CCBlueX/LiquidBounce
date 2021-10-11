@@ -24,7 +24,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public class MixinBlockModelRenderer
 {
 	@Inject(method = "renderModelAmbientOcclusion", at = @At("HEAD"), cancellable = true)
-	private void renderModelAmbientOcclusion(final IBlockAccess blockAccessIn, final IBakedModel modelIn, final Block blockIn, final BlockPos blockPosIn, final WorldRenderer worldRendererIn, final boolean checkSide, final CallbackInfoReturnable<? super Boolean> booleanCallbackInfoReturnable)
+	private void renderModelAmbientOcclusion_injectXRay(final IBlockAccess blockAccessIn, final IBakedModel modelIn, final Block blockIn, final BlockPos blockPosIn, final WorldRenderer worldRendererIn, final boolean checkSide, final CallbackInfoReturnable<? super Boolean> booleanCallbackInfoReturnable)
 	{
 		// XRay
 		final XRay xray = (XRay) LiquidBounce.moduleManager.get(XRay.class);
@@ -34,7 +34,7 @@ public class MixinBlockModelRenderer
 	}
 
 	@Inject(method = "renderModelStandard", at = @At("HEAD"), cancellable = true)
-	private void renderModelStandard(final IBlockAccess blockAccessIn, final IBakedModel modelIn, final Block blockIn, final BlockPos blockPosIn, final WorldRenderer worldRendererIn, final boolean checkSides, final CallbackInfoReturnable<? super Boolean> booleanCallbackInfoReturnable)
+	private void renderModelStandard_injectXRay(final IBlockAccess blockAccessIn, final IBakedModel modelIn, final Block blockIn, final BlockPos blockPosIn, final WorldRenderer worldRendererIn, final boolean checkSides, final CallbackInfoReturnable<? super Boolean> booleanCallbackInfoReturnable)
 	{
 		// XRay
 		final XRay xray = (XRay) LiquidBounce.moduleManager.get(XRay.class);

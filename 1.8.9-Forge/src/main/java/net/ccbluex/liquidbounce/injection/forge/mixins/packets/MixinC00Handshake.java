@@ -23,7 +23,6 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 @Mixin(C00Handshake.class)
 public class MixinC00Handshake
 {
-
 	@Shadow
 	private int protocolVersion;
 
@@ -42,7 +41,7 @@ public class MixinC00Handshake
 	 * @see AntiModDisable
 	 */
 	@ModifyConstant(method = "writePacketData", constant = @Constant(stringValue = "\u0000FML\u0000", ordinal = 0), require = 1)
-	public String antiModDisable(final String string)
+	public String injectAntiModDisable(final String string)
 	{
 		return AntiModDisable.Companion.getEnabled() && AntiModDisable.Companion.getBlockFMLPackets() && !Minecraft.getMinecraft().isIntegratedServerRunning() ? "" : "\u0000FML\u0000";
 	}

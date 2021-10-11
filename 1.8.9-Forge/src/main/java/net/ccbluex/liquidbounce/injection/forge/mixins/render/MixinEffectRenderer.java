@@ -23,7 +23,6 @@ import org.spongepowered.asm.mixin.Shadow;
 @SideOnly(Side.CLIENT)
 public abstract class MixinEffectRenderer
 {
-
 	@Shadow
 	protected abstract void updateEffectLayer(int layer);
 

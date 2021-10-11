@@ -68,7 +68,7 @@ public abstract class MixinNetworkManager implements IMixinNetworkManager
 	protected abstract void dispatchPacket(Packet<?> inPacket, GenericFutureListener<? extends Future<? super Void>>[] futureListeners);
 
 	@Inject(method = "channelRead0", at = @At("HEAD"), cancellable = true)
-	private void read(final ChannelHandlerContext context, final Packet<?> packet, final CallbackInfo callback)
+	private void handlePacketEvent_Receive(final ChannelHandlerContext context, final Packet<?> packet, final CallbackInfo callback)
 	{
 		// In-coming(Received from the server) packet name starts with 'S' (Server) (example: S00PacketKeepAlive)
 		if (!Minecraft.getMinecraft().isIntegratedServerRunning() || packet.getClass().getSimpleName().charAt(0) == 'S')
@@ -86,7 +86,7 @@ public abstract class MixinNetworkManager implements IMixinNetworkManager
 	}
 
 	@Inject(method = "sendPacket(Lnet/minecraft/network/Packet;)V", at = @At("HEAD"), cancellable = true)
-	private void send(final Packet<?> packet, final CallbackInfo callback)
+	private void handlePacketEvent_Send(final Packet<?> packet, final CallbackInfo callback)
 	{
 		// Out-going(Sent to the server) packet name starts with 'C' (Client) (example: C00PacketKeepAlive)
 		if (!Minecraft.getMinecraft().isIntegratedServerRunning() || packet.getClass().getSimpleName().charAt(0) == 'C')

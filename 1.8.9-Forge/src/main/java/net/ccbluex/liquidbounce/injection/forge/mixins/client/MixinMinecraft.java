@@ -111,7 +111,7 @@ public abstract class MixinMinecraft
 	}
 
 	@Inject(method = "run", at = @At("HEAD"))
-	private void init(final CallbackInfo callbackInfo)
+	private void resizeWindow(final CallbackInfo callbackInfo)
 	{
 		if (displayWidth < 1067)
 			displayWidth = 1067;
@@ -128,7 +128,7 @@ public abstract class MixinMinecraft
 	}
 
 	@Inject(method = "startGame", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;checkGLError(Ljava/lang/String;)V", ordinal = 2, shift = Shift.AFTER))
-	private void startGame(final CallbackInfo callbackInfo)
+	private void injectLiquidBounceEntryPoint(final CallbackInfo callbackInfo)
 	{
 		LiquidBounce.INSTANCE.startClient();
 	}
@@ -168,14 +168,14 @@ public abstract class MixinMinecraft
 	}
 
 	@Inject(method = "createDisplay", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/Display;setTitle(Ljava/lang/String;)V", shift = Shift.AFTER))
-	private void createDisplay(final CallbackInfo callbackInfo)
+	private void injectLiquidBounceTitle(final CallbackInfo callbackInfo)
 	{
 		// Set the window title
 		Display.setTitle(LiquidBounce.getTitle());
 	}
 
 	@Inject(method = "displayGuiScreen", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;currentScreen:Lnet/minecraft/client/gui/GuiScreen;", shift = Shift.AFTER))
-	private void displayGuiScreen(final CallbackInfo callbackInfo)
+	private void handleScreenEvent(final CallbackInfo callbackInfo)
 	{
 		// Replace Main Menu screen
 		if (currentScreen instanceof net.minecraft.client.gui.GuiMainMenu || currentScreen != null && currentScreen.getClass().getName().startsWith("net.labymod") && "ModGuiMainMenu".equals(currentScreen.getClass().getSimpleName()))
@@ -191,7 +191,7 @@ public abstract class MixinMinecraft
 	}
 
 	@Inject(method = "runGameLoop", at = @At("HEAD"))
-	private void runGameLoop(final CallbackInfo callbackInfo)
+	private void injectFrameTimeCalculation(final CallbackInfo callbackInfo)
 	{
 		final long currentTime = getTime();
 		final int frameTime = (int) (currentTime - lastFrame);
@@ -201,27 +201,27 @@ public abstract class MixinMinecraft
 	}
 
 	@Inject(method = "runTick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;joinPlayerCounter:I", shift = Shift.BEFORE))
-	private void onTick(final CallbackInfo callbackInfo)
+	private void handleTickEvent(final CallbackInfo callbackInfo)
 	{
 		LiquidBounce.eventManager.callEvent(new TickEvent(), true);
 	}
 
 	@Inject(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;dispatchKeypresses()V", shift = Shift.AFTER))
-	private void onKey(final CallbackInfo callbackInfo)
+	private void handleKeyEvent(final CallbackInfo callbackInfo)
 	{
 		if (Keyboard.getEventKeyState() && currentScreen == null)
 			LiquidBounce.eventManager.callEvent(new KeyEvent(Keyboard.getEventKey() == 0 ? Keyboard.getEventCharacter() + 256 : Keyboard.getEventKey()), true);
 	}
 
 	@Inject(method = "sendClickBlockToController", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/MovingObjectPosition;getBlockPos()Lnet/minecraft/util/BlockPos;"))
-	private void onClickBlock(final CallbackInfo callbackInfo)
+	private void handleClickBlockEvent(final CallbackInfo callbackInfo)
 	{
 		if (leftClickCounter == 0 && theWorld.getBlockState(objectMouseOver.getBlockPos()).getBlock().getMaterial() != Material.air)
 			LiquidBounce.eventManager.callEvent(new ClickBlockEvent(BackendExtensionKt.wrap(objectMouseOver.getBlockPos()), EnumFacingImplKt.wrap(objectMouseOver.sideHit)));
 	}
 
 	@Inject(method = "setWindowIcon", at = @At("HEAD"), cancellable = true)
-	private void setWindowIcon(final CallbackInfo callbackInfo)
+	private void injectLiquidBounceFavicon(final CallbackInfo callbackInfo)
 	{
 		// Replace window icon
 		if (Util.getOSType() != EnumOS.OSX)
@@ -236,13 +236,13 @@ public abstract class MixinMinecraft
 	}
 
 	@Inject(method = "shutdown", at = @At("HEAD"))
-	private void shutdown(final CallbackInfo callbackInfo)
+	private void injectLiquidBounceExitPoint(final CallbackInfo callbackInfo)
 	{
 		LiquidBounce.INSTANCE.stopClient();
 	}
 
 	@Inject(method = "clickMouse", at = @At("HEAD"))
-	private void clickMouse(final CallbackInfo callbackInfo)
+	private void injectCPSCounterLeft(final CallbackInfo callbackInfo)
 	{
 		CPSCounter.registerClick(MouseButton.LEFT);
 
@@ -251,13 +251,13 @@ public abstract class MixinMinecraft
 	}
 
 	@Inject(method = "middleClickMouse", at = @At("HEAD"))
-	private void middleClickMouse(final CallbackInfo ci)
+	private void injectCPSCounterMiddle(final CallbackInfo ci)
 	{
 		CPSCounter.registerClick(MouseButton.MIDDLE);
 	}
 
 	@Inject(method = "rightClickMouse", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;rightClickDelayTimer:I", shift = Shift.AFTER))
-	private void rightClickMouse(final CallbackInfo callbackInfo)
+	private void injectCPSCounterRight(final CallbackInfo callbackInfo)
 	{
 		CPSCounter.registerClick(MouseButton.RIGHT);
 
@@ -268,7 +268,7 @@ public abstract class MixinMinecraft
 	}
 
 	@Inject(method = "loadWorld(Lnet/minecraft/client/multiplayer/WorldClient;Ljava/lang/String;)V", at = @At("HEAD"))
-	private void loadWorld(final WorldClient world, final String loadingMessage, final CallbackInfo callbackInfo)
+	private void handleWorldEvent(final WorldClient world, final String loadingMessage, final CallbackInfo callbackInfo)
 	{
 		if (theWorld != null)
 			MiniMapRegister.INSTANCE.unloadAllChunks();
@@ -287,7 +287,7 @@ public abstract class MixinMinecraft
 	 * @reason MultiActions
 	 */
 	@Redirect(method = "sendClickBlockToController", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/EntityPlayerSP;isUsingItem()Z"))
-	private boolean handleMultiActions(final EntityPlayerSP thePlayer)
+	private boolean injectMultiActions(final EntityPlayerSP thePlayer)
 	{
 		return thePlayer.isUsingItem() && !LiquidBounce.moduleManager.get(MultiActions.class).getState();
 	}
@@ -310,7 +310,7 @@ public abstract class MixinMinecraft
 	 * @reason AbortBreaking
 	 */
 	@Inject(method = "sendClickBlockToController", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/PlayerControllerMP;resetBlockRemoving()V", shift = Shift.BEFORE), cancellable = true)
-	private void handleAbortBreaking(final CallbackInfo ci)
+	private void injectAbortBreaking(final CallbackInfo ci)
 	{
 		if (LiquidBounce.moduleManager.get(AbortBreaking.class).getState())
 			ci.cancel();
@@ -321,7 +321,7 @@ public abstract class MixinMinecraft
 	 * @reason Limit framerate to 60 if any kind of gui is open
 	 */
 	@ModifyConstant(method = "getLimitFramerate", constant = @Constant(intValue = 30, ordinal = 0), require = 1)
-	public int upgradeVSyncFrameTo60(final int prevFrame)
+	public int vsyncFrameTo60(final int prevFrame)
 	{
 		return 60;
 	}

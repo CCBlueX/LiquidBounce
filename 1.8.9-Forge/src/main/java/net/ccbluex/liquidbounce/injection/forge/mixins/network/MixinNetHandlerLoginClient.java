@@ -54,7 +54,7 @@ public class MixinNetHandlerLoginClient
 	 * @reason MCLeaks
 	 */
 	@Inject(method = "handleEncryptionRequest", at = @At("HEAD"), cancellable = true)
-	private void handleEncryptionRequest(final S01PacketEncryptionRequest packetIn, final CallbackInfo callbackInfo)
+	private void injectMCLeaks(final S01PacketEncryptionRequest packetIn, final CallbackInfo callbackInfo)
 	{
 		if (MCLeaks.isAltActive())
 		{

@@ -34,7 +34,7 @@ public class MixinChunk
 	public int zPosition;
 
 	@Inject(method = "setBlockState", at = @At("HEAD"))
-	private void setProphuntBlock(final BlockPos pos, final IBlockState state, final CallbackInfoReturnable callbackInfo)
+	private void injectProphuntESP(final BlockPos pos, final IBlockState state, final CallbackInfoReturnable callbackInfo)
 	{
 		// noinspection ConstantConditions
 		MiniMapRegister.INSTANCE.updateChunk(ChunkImplKt.wrap((Chunk) (Object) this));
@@ -49,13 +49,13 @@ public class MixinChunk
 	}
 
 	@Inject(method = "onChunkUnload", at = @At("HEAD"))
-	private void unloadMiniMapChunk(final CallbackInfo ci)
+	private void injectMiniMapChunkUnload(final CallbackInfo ci)
 	{
 		MiniMapRegister.INSTANCE.unloadChunk(xPosition, zPosition);
 	}
 
 	@Inject(method = "fillChunk", at = @At("RETURN"))
-	private void updateMiniMapChunk(final byte[] chunkData, final int chunkX, final boolean chunkZ, final CallbackInfo ci)
+	private void injectMiniMapChunkUpdate(final byte[] chunkData, final int chunkX, final boolean chunkZ, final CallbackInfo ci)
 	{
 		// noinspection ConstantConditions
 		MiniMapRegister.INSTANCE.updateChunk(ChunkImplKt.wrap((Chunk) (Object) this));

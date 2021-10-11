@@ -203,7 +203,7 @@ public abstract class MixinEntity
 	}
 
 	@Inject(method = "getCollisionBorderSize", at = @At("HEAD"), cancellable = true)
-	private void getCollisionBorderSize(final CallbackInfoReturnable<? super Float> callbackInfoReturnable)
+	private void injectHitbox(final CallbackInfoReturnable<? super Float> callbackInfoReturnable)
 	{
 		final HitBox hitBox = (HitBox) LiquidBounce.moduleManager.get(HitBox.class);
 
@@ -212,7 +212,7 @@ public abstract class MixinEntity
 	}
 
 	@Inject(method = "setAngles", at = @At("HEAD"), cancellable = true)
-	private void setAngles(final float yaw, final float pitch, final CallbackInfo callbackInfo)
+	private void injectNoPitchLimit(final float yaw, final float pitch, final CallbackInfo callbackInfo)
 	{
 		// NoPitchLimit
 		if (LiquidBounce.moduleManager.get(NoPitchLimit.class).getState())
@@ -230,7 +230,7 @@ public abstract class MixinEntity
 	}
 
 	@Inject(method = "moveFlying", at = @At("HEAD"), cancellable = true)
-	private void handleRotations(final float strafe, final float forward, final float friction, final CallbackInfo callbackInfo)
+	private void handleStrafeEvent(final float strafe, final float forward, final float friction, final CallbackInfo callbackInfo)
 	{
 		// Trigger StrafeEvent
 
@@ -247,7 +247,7 @@ public abstract class MixinEntity
 
 	@SideOnly(Side.CLIENT)
 	@Inject(method = "setPositionAndRotation2", at = @At("HEAD"), cancellable = true)
-	public void setPositionAndRotation2(final double x, final double y, final double z, final float yaw, final float pitch, final int posRotationIncrements, final boolean p_180426_10_, final CallbackInfo callbackInfo)
+	public void injectItemPhysics(final double x, final double y, final double z, final float yaw, final float pitch, final int posRotationIncrements, final boolean p_180426_10_, final CallbackInfo callbackInfo)
 	{
 		// ItemPhysics
 		final ItemPhysics itemPhysics = (ItemPhysics) LiquidBounce.moduleManager.get(ItemPhysics.class);

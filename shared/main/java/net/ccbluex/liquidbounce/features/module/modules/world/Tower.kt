@@ -166,7 +166,6 @@ class Tower : Module()
 	@EventTarget
 	fun onMotion(event: MotionEvent)
 	{
-
 		// Lock Rotation
 		if (rotationEnabledValue.get() && rotationKeepRotationEnabledValue.get() && rotationKeepRotationLockValue.get() && lockRotation != null) RotationUtils.setTargetRotation(lockRotation)
 
