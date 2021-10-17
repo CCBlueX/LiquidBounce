@@ -406,7 +406,7 @@
 
   "liquidbounce.module.fastUse.description": "Allows you to use items faster.",
 
-  "liquidbounce.module.noSlow.description": "Cancels slowness effects caused by soulsand and using items.",
+  "liquidbounce.module.noSlow.description": "Cancels slowness effects caused by blocks and using items.",
 
   "liquidbounce.module.highJump.description": "Allows you to jump higher.",
 
