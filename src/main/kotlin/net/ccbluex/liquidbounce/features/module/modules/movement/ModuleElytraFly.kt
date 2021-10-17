@@ -48,6 +48,11 @@ object ModuleElytraFly : Module("ElytraFly", Category.MOVEMENT) {
     }
 
     val repeatable = repeatable {
+
+        if (player.vehicle != null) {
+            return@repeatable
+        }
+
         // Find the chest slot
         val chestSlot = player.getEquippedStack(EquipmentSlot.CHEST)
 

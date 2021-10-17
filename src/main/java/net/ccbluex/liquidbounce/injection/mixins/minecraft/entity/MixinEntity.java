@@ -66,6 +66,8 @@ public abstract class MixinEntity {
 
     @Shadow public abstract double getZ();
 
+    @Shadow public abstract float getYaw();
+
     /**
      * Hook entity margin modification event
      */

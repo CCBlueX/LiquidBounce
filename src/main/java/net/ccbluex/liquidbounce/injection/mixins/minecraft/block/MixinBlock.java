@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.block;
 
+import net.ccbluex.liquidbounce.event.BlockSlipperinessMultiplierEvent;
 import net.ccbluex.liquidbounce.event.BlockVelocityMultiplierEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.minecraft.block.Block;
@@ -37,6 +38,16 @@ public class MixinBlock {
         final BlockVelocityMultiplierEvent multiplierEvent = new BlockVelocityMultiplierEvent((Block) (Object) this, callback.getReturnValue());
         EventManager.INSTANCE.callEvent(multiplierEvent);
         callback.setReturnValue(multiplierEvent.getMultiplier());
+    }
+
+    /**
+     * Hook slipperiness multiplier event
+     */
+    @Inject(method = "getSlipperiness", at = @At("RETURN"), cancellable = true)
+    private void hookSlipperinessMultiplier(CallbackInfoReturnable<Float> cir) {
+        final BlockSlipperinessMultiplierEvent slipperinessEvent = new BlockSlipperinessMultiplierEvent((Block) (Object) this, cir.getReturnValue());
+        EventManager.INSTANCE.callEvent(slipperinessEvent);
+        cir.setReturnValue(slipperinessEvent.getSlipperiness());
     }
 
 }

@@ -406,14 +406,16 @@
 
   "liquidbounce.module.fastUse.description": "Allows you to use items faster.",
 
-  "liquidbounce.module.noSlow.description": "Cancels slowness effects caused by soulsand and using items.",
+  "liquidbounce.module.noSlow.description": "Cancels slowness effects caused by blocks and using items.",
 
   "liquidbounce.module.highJump.description": "Allows you to jump higher.",
 
   "liquidbounce.module.sleepWalker.description": "Allows you to walk while sleeping, also makes your hitbox small.",
 
   "liquidbounce.module.dankBobbing.description": "Adds more bobbing effect.",
-
-  "liquidbounce.module.projectilePuncher.description": "Shoots back incoming projectiles around you."
+  
+  "liquidbounce.module.projectilePuncher.description": "Shoots back incoming projectiles around you.",
+  
+  "liquidbounce.module.autoPot.description": "Automatically throws healing potions whenever your health is low."
 
 }

@@ -26,13 +26,15 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAntiLevit
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoJumpDelay;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPush;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -44,6 +46,9 @@ import javax.annotation.Nullable;
 
 @Mixin(LivingEntity.class)
 public abstract class MixinLivingEntity extends MixinEntity {
+
+    @Shadow
+    private int jumpingCooldown;
 
     @Shadow
     protected abstract float getJumpVelocity();
@@ -59,9 +64,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
     public abstract ItemStack getMainHandStack();
 
     @Shadow
-    private int jumpingCooldown;
-
-    @Shadow protected abstract void jump();
+    public abstract double getJumpBoostVelocityModifier();
 
     @Shadow protected boolean jumping;
 
@@ -87,19 +90,26 @@ public abstract class MixinLivingEntity extends MixinEntity {
         }
     }
 
-    @Redirect(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getJumpVelocity()F"))
-    private float hookJumpEvent(LivingEntity entity) {
-        // Check if entity is client user
-        if ((Object) this == MinecraftClient.getInstance().player) {
-            // Hook player jump event
-            final PlayerJumpEvent jumpEvent = new PlayerJumpEvent(getJumpVelocity());
-            EventManager.INSTANCE.callEvent(jumpEvent);
-            if (jumpEvent.isCancelled()) {
-                return 0f;
-            }
-            return jumpEvent.getMotion();
+    /**
+     * @author mems01
+     */
+    @Overwrite
+    public void jump() {
+        final PlayerJumpEvent jumpEvent = new PlayerJumpEvent(getJumpVelocity());
+        EventManager.INSTANCE.callEvent(jumpEvent);
+        if (jumpEvent.isCancelled()) {
+            return;
         }
-        return getJumpVelocity();
+
+        double d = jumpEvent.getMotion() + getJumpBoostVelocityModifier();
+        Vec3d vec3d = this.getVelocity();
+        this.setVelocity(vec3d.x, d, vec3d.z);
+        if (this.isSprinting()) {
+            float f = this.getYaw() * 0.017453292F;
+            this.setVelocity(this.getVelocity().add(-MathHelper.sin(f) * 0.2F, 0.0D, MathHelper.cos(f) * 0.2F));
+        }
+
+        this.velocityDirty = true;
     }
 
     @Inject(method = "pushAwayFrom", at = @At("HEAD"), cancellable = true)
@@ -111,8 +121,8 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
     @Inject(method = "tickMovement", at = @At("HEAD"), cancellable = true)
     private void hookTickMovement(CallbackInfo callbackInfo) {
-        if (ModuleNoJumpDelay.INSTANCE.getEnabled()) {
-            jumpingCooldown = ModuleAirJump.INSTANCE.getEnabled() ? 10 : 0;
+        if (ModuleNoJumpDelay.INSTANCE.getEnabled() && !ModuleAirJump.INSTANCE.getEnabled()) {
+            jumpingCooldown = 0;
         }
     }
 

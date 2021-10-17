@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.entity.EquipmentSlot
@@ -37,24 +38,46 @@ import net.minecraft.util.Hand
 
 object ModuleAutoFish : Module("AutoFish", Category.PLAYER) {
 
-    val recastRod by boolean("RecastRod", true)
+    private val recastRod by boolean("RecastRod", true)
 
-    val packetHandler = handler<PacketEvent> { event ->
-        if (player.fishHook == null)
-            return@handler
+    private var caughtFish = false
 
-        if (event.packet !is PlaySoundS2CPacket || event.packet.sound != SoundEvents.ENTITY_FISHING_BOBBER_SPLASH)
-            return@handler
+    override fun disable() {
+        caughtFish = false
+    }
 
-        for (hand in arrayOf(Hand.MAIN_HAND, Hand.OFF_HAND)) {
-            if (player.getEquippedStack(hand.equipmentSlot).item !is FishingRodItem)
-                continue
+    val repeatable = repeatable {
+        if (caughtFish) {
+            for (hand in arrayOf(Hand.MAIN_HAND, Hand.OFF_HAND)) {
 
-            repeat(1 + if (recastRod) 1 else 0) {
+                if (player.getEquippedStack(hand.equipmentSlot).item !is FishingRodItem) {
+                    continue
+                }
+
                 network.sendPacket(PlayerInteractItemC2SPacket(hand))
                 player.swingHand(hand)
+
+                if (recastRod) {
+                    wait(10)
+                    network.sendPacket(PlayerInteractItemC2SPacket(hand))
+                    player.swingHand(hand)
+                }
+
+                caughtFish = false
             }
         }
+    }
+
+    val packetHandler = handler<PacketEvent> { event ->
+        if (player.fishHook == null) {
+            return@handler
+        }
+
+        if (event.packet !is PlaySoundS2CPacket || event.packet.sound != SoundEvents.ENTITY_FISHING_BOBBER_SPLASH) {
+            return@handler
+        }
+
+        caughtFish = true
     }
 
     private val Hand.equipmentSlot: EquipmentSlot
