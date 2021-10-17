@@ -66,8 +66,6 @@ public abstract class MixinLivingEntity extends MixinEntity {
     @Shadow
     public abstract double getJumpBoostVelocityModifier();
 
-    @Shadow protected abstract void jump();
-
     @Shadow protected boolean jumping;
 
     /**
