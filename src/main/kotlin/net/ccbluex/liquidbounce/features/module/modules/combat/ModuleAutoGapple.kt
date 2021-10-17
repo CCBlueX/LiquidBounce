@@ -78,6 +78,9 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
                     saveSlot = true
                 }
                 player.inventory.selectedSlot = slot
+
+                // Avoid sword shield
+                wait(2)
                 eating = true
                 mc.options.keyUse.isPressed = true
             } else {
