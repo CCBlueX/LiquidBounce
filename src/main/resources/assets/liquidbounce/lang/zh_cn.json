@@ -1,0 +1,417 @@
+{
+  "modmenu.descriptionTranslation.liquidbounce": "一个免费的基于 mixin 的注入黑客客户端",
+  "liquidbounce.generic.guilded": "Guilded",
+  "liquidbounce.generic.forum": "论坛",
+  "liquidbounce.generic.error": "错误",
+  "liquidbounce.generic.enabled": "已启用",
+  "liquidbounce.generic.disabled": "已禁用",
+
+  "liquidbounce.generic.notifyDeveloper": "检查你的游戏日志并通知我们.",
+
+  "liquidbounce.commandManager.exceptionOccurred": "无法执行命令.%s",
+  "liquidbounce.commandManager.unknownCommand": "命令 \"%s\" 未找到.",
+  "liquidbounce.commandManager.invalidUsage": "命令 \"%s\" 的用法无效.",
+  "liquidbounce.commandManager.commandTakesNoParameters": "命令不带任何参数.",
+  "liquidbounce.commandManager.parameterRequired": "参数 \"%s\" 是必需的.",
+  "liquidbounce.commandManager.unknownParameter": "未知参数\"%s\".",
+  "liquidbounce.commandManager.commandNotExecutable": "命令 \"%s\" 不可执行.",
+  "liquidbounce.commandManager.invalidParameterValue": "参数 \"%s\" 的无效参数 \"%s\".%s",
+
+  "liquidbounce.command.bind.description": "将模块绑定到一个键.",
+  "liquidbounce.command.bind.parameter.name.description": "模块名称.",
+  "liquidbounce.command.bind.parameter.key.description": "模块应该绑定的键.",
+  "liquidbounce.command.bind.result.moduleNotFound": "未找到模块 \"%s\".",
+  "liquidbounce.command.bind.result.moduleBound": "绑定模块 \"%s\" 到键 \"%s\".",
+
+  "liquidbounce.command.binds.description": "将模块绑定到一个键.",
+
+  "liquidbounce.command.binds.subcommand.add.description": "添加一个新的绑定.",
+  "liquidbounce.command.binds.subcommand.add.parameter.name.description": "模块名称.",
+  "liquidbounce.command.binds.subcommand.add.parameter.key.description": "模块应该绑定的键.",
+  "liquidbounce.command.binds.subcommand.add.result.moduleNotFound": "未找到模块 \"%s\".",
+  "liquidbounce.command.binds.subcommand.add.result.unknownKey": "未知密钥.",
+  "liquidbounce.command.binds.subcommand.add.result.moduleBound": "绑定模块\"%s\"到键\"%s\".",
+
+  "liquidbounce.command.binds.subcommand.remove.description": "删除现有的绑定.",
+  "liquidbounce.command.binds.subcommand.remove.parameter.name.description": "模块名称.",
+  "liquidbounce.command.binds.subcommand.remove.result.moduleNotFound": "未找到模块 \"%s\".",
+  "liquidbounce.command.binds.subcommand.remove.result.moduleNotBound": "模块没有绑定到任何键.",
+  "liquidbounce.command.binds.subcommand.remove.result.bindRemoved": "已删除模块\"%s\"的绑定.",
+
+  "liquidbounce.command.binds.subcommand.list.description": "列出所有绑定.",
+  "liquidbounce.command.binds.subcommand.list.parameter.page.description": "要显示的页面.",
+  "liquidbounce.command.binds.subcommand.list.result.noBindings": "没有找到绑定.",
+  "liquidbounce.command.binds.subcommand.list.result.pageNumberTooLarge": "您输入的页码超过了可用页数，最多可能是 %d.",
+  "liquidbounce.command.binds.subcommand.list.result.bindings": "绑定",
+  "liquidbounce.command.binds.subcommand.list.result.page": "页面：%s",
+
+  "liquidbounce.command.binds.subcommand.clear.description": "清除所有绑定.",
+  "liquidbounce.command.binds.subcommand.clear.result.bindsCleared": "已清除所有绑定.",
+
+  "liquidbounce.command.clear.description": "清除聊天.",
+
+  "liquidbounce.command.client.description": "允许您管理客户端.",
+
+  "liquidbounce.command.client.subcommand.info.description": "显示客户端信息.",
+  "liquidbounce.command.client.subcommand.info.result.clientName": "客户端名称：%s",
+  "liquidbounce.command.client.subcommand.info.result.clientVersion": "客户端版本：%s",
+  "liquidbounce.command.client.subcommand.info.result.clientAuthor": "客户端作者：%s",
+
+  "liquidbounce.command.client.subcommand.reload.description": "重新加载你的客户端.",
+
+  "liquidbounce.command.friend.description": "允许您管理您的好友列表.",
+
+  "liquidbounce.command.friend.subcommand.add.description": "给好友列表添加一个名字.",
+  "liquidbounce.command.friend.subcommand.add.parameter.name.description": "好友的名字.",
+  "liquidbounce.command.friend.subcommand.add.parameter.alias.description": "朋友的可选别名.",
+  "liquidbounce.command.friend.subcommand.add.result.alreadyFriends": "%s 已经在好友列表中.",
+  "liquidbounce.command.friend.subcommand.add.result.success": "%s 已成功添加到好友列表中.",
+  "liquidbounce.command.friend.subcommand.add.result.successAlias": "%s 已作为 %s 成功添加到好友列表中.",
+
+  "liquidbounce.command.friend.subcommand.remove.description": "从好友列表中删除好友.",
+  "liquidbounce.command.friend.subcommand.remove.parameter.name.description": "好友的名字.",
+  "liquidbounce.command.friend.subcommand.remove.result.notFriends": "%s 不在好友列表中.",
+  "liquidbounce.command.friend.subcommand.remove.result.success": "%s 已成功从好友列表中删除.",
+
+  "liquidbounce.command.friend.subcommand.alias.description": "更改好友的别名.",
+  "liquidbounce.command.friend.subcommand.alias.parameter.name.description": "好友的名字.",
+  "liquidbounce.command.friend.subcommand.alias.parameter.alias.description": "新别名.",
+  "liquidbounce.command.friend.subcommand.alias.result.notFriends": "%s 不在你的好友列表中.",
+  "liquidbounce.command.friend.subcommand.alias.result.success": "%s 的别名已更改为 %s",
+
+  "liquidbounce.command.friend.subcommand.list.description": "列出所有好友.",
+  "liquidbounce.command.friend.subcommand.list.result.noFriends": "好友列表为空.",
+
+  "liquidbounce.command.friend.subcommand.clear.description": "清除好友列表.",
+  "liquidbounce.command.friend.subcommand.clear.result.noFriends": "好友列表为空.",
+  "liquidbounce.command.friend.subcommand.clear.result.success": "好友列表已清除.",
+
+  "liquidbounce.command.help.description": "列出所有可用的命令.",
+  "liquidbounce.command.help.parameter.page.description": "要显示的页面.",
+  "liquidbounce.command.help.result.pageNumberTooLarge": "您输入的页码超过了可用页数，最多可能是 %d.",
+  "liquidbounce.command.help.result.help": "帮助",
+  "liquidbounce.command.help.result.pageCount": "页面：%s",
+  "liquidbounce.command.help.result.page": "页面",
+
+  "liquidbounce.command.hide.description": "隐藏模块.",
+
+  "liquidbounce.command.hide.subcommand.hide.description": "隐藏一个模块.",
+  "liquidbounce.command.hide.subcommand.hide.parameter.name.description": "模块名称.",
+  "liquidbounce.command.hide.subcommand.hide.result.moduleNotFound": "未找到模块 \"%s\".",
+  "liquidbounce.command.hide.subcommand.hide.result.moduleHidden": "模块 \"%s\" 现在隐藏了.",
+
+  "liquidbounce.command.hide.subcommand.unhide.description": "取消隐藏模块.",
+  "liquidbounce.command.hide.subcommand.unhide.parameter.name.description": "模块名称.",
+  "liquidbounce.command.hide.subcommand.unhide.result.moduleNotFound": "未找到模块 \"%s\".",
+  "liquidbounce.command.hide.subcommand.unhide.result.moduleUnhidden": "模块 \"%s\" 不再隐藏.",
+
+  "liquidbounce.command.hide.subcommand.list.description": "列出所有隐藏模块.",
+  "liquidbounce.command.hide.subcommand.list.parameter.page.description": "要显示的页面",
+  "liquidbounce.command.hide.subcommand.list.result.noHiddenModules": "没有隐藏模块.",
+  "liquidbounce.command.hide.subcommand.list.result.pageNumberTooLarge": "您输入的页码超过了可用页数，最多可能是 %d",
+  "liquidbounce.command.hide.subcommand.list.result.hidden": "隐藏",
+  "liquidbounce.command.hide.subcommand.list.result.page": "页面",
+
+  "liquidbounce.command.hide.subcommand.clear.description": "让每个模块再次可见.",
+  "liquidbounce.command.hide.subcommand.clear.result.modulesUnhi​​dden": "已成功取消隐藏所有模块.",
+
+  "liquidbounce.command.panic.description": "关闭所有模块.",
+  "liquidbounce.command.panic.parameter.category.description": "仅禁用特定类别中的模块.",
+  "liquidbounce.command.panic.result.categoryNotFound": "未找到类别 \"%s\".",
+  "liquidbounce.command.panic.result.disabledAllModules": "禁用所有模块.",
+  "liquidbounce.command.panic.result.disabledAllCategoryModules": "禁用所有 %s 模块.",
+  "liquidbounce.command.panic.result.nonRender": "非渲染",
+
+  "liquidbounce.command.prefix.description": "更改命令前缀.",
+  "liquidbounce.command.prefix.parameter.prefix.description": "新的命令前缀.",
+  "liquidbounce.command.prefix.result.prefixChanged": "已成功将命令前缀更改为 \"%s\".",
+
+  "liquidbounce.command.toggle.description": "切换模块.",
+  "liquidbounce.command.toggle.parameter.name.description": "模块名称.",
+  "liquidbounce.command.toggle.result.moduleNotFound": "未找到模块 \"%s\".",
+  "liquidbounce.command.toggle.result.moduleToggled": "%s 已经 %s.",
+  "liquidbounce.command.toggle.result.enabled": "启用",
+  "liquidbounce.command.toggle.result.disabled": "禁用",
+
+  "liquidbounce.command.give.description": "给自己一个物品.",
+  "liquidbounce.command.give.parameter.item.description": "物品名称.",
+  "liquidbounce.command.give.parameter.amount.description": "可选数量.",
+  "liquidbounce.command.give.result.mustBeCreative": "需要创意模式！",
+  "liquidbounce.command.give.result.noEmptySlot": "您的物品栏中没有空位.",
+  "liquidbounce.command.give.result.itemGiven": "给了你 %s * %d.",
+
+  "liquidbounce.command.rename.description": "重命名当前选中的项目.",
+  "liquidbounce.command.rename.parameter.name.description": "物品的新名称.",
+  "liquidbounce.command.rename.result.mustBeCreative": "需要创意模式！",
+  "liquidbounce.command.rename.result.mustHoldItem": "你没有拿着物品！",
+  "liquidbounce.command.rename.result.renamedItem": "将项目从 \"%s\" 重命名为 \"%s\".",
+
+  "liquidbounce.command.skull.description": "给自己一个特定玩家的头骨.",
+  "liquidbounce.command.skull.parameter.name.description": "玩家姓名.",
+  "liquidbounce.command.skull.result.mustBeCreative": "需要创意模式！",
+  "liquidbounce.command.skull.result.noEmptySlot": "你的物品栏中没有空位.",
+  "liquidbounce.command.skull.result.skullGiven": "给你 %s 的头骨.",
+
+  "liquidbounce.command.position.description": "将你当前的坐标复制到剪贴板.",
+  "liquidbounce.command.position.result.position": "位置：%s",
+
+  "liquidbounce.command.username.description": "将您的用户名复制到剪贴板.",
+  "liquidbounce.command.username.result.username": "用户名：%s",
+
+  "liquidbounce.command.chat.description": "在 LiquidChat 上发送消息.",
+  "liquidbounce.command.chat.parameter.message.description": "要发送的消息.",
+
+  "liquidbounce.command.value.description": "允许你改变一个值",
+  "liquidbounce.command.value.result.success": "已成功更改值.",
+  "liquidbounce.command.value.result.valueNotFound": "无法找到值 %s！",
+
+  "liquidbounce.command.ping.description": "检查你的 ping.",
+  "liquidbounce.command.ping.result.pingCheck": "你的 ping 是 %sms.",
+
+  "liquidbounce.command.remoteview.description": "允许你查看另一个玩家的视角.",
+  "liquidbounce.command.remoteview.subcommand.view.result.viewPlayer": "您现在正在查看 %s 的视角.",
+  "liquidbounce.command.remoteview.subcommand.view.result.caseOff": "要停止远程查看 %s，请执行命令 \".rv off\"",
+  "liquidbounce.command.remoteview.subcommand.view.result.alreadyViewing": "您已经在查看 %s.",
+  "liquidbounce.command.remoteview.subcommand.off.result.off": "成功停止远程查看 %s.",
+  "liquidbounce.command.remoteview.subcommand.off.result.alreadyOff": "你没有远程查看任何人.",
+
+  "liquidbounce.liquidchat.states.connecting": "正在连接聊天服务器...",
+  "liquidbounce.liquidchat.states.connected": "已连接到聊天服务器！",
+  "liquidbounce.liquidchat.states.disconnected": "与聊天服务器断开连接！",
+  "liquidbounce.liquidchat.states.loggingIn": "正在验证...",
+  "liquidbounce.liquidchat.states.loggedIn": "已认证！",
+
+  "liquidbounce.liquidchat.jwtTokenReceived": "收到 JWT 令牌！重新登录...",
+
+  "liquidbounce.liquidchat.writeMessage": "发送消息：%s",
+  "liquidbounce.liquidchat.writePrivateMessage": "发送私信：%s",
+
+  "liquidbounce.module.autoArmor.description": "自动装备最好的盔甲.",
+  "liquidbounce.module.autoArmor.value.delay.description": "在装备多个物品之间等待的时间.",
+  "liquidbounce.module.autoArmor.value.inv_open.description": "是否需要打开的库存.",
+  "liquidbounce.module.autoArmor.value.simulate_inventory.description": "是否开启库存应模拟服务器端.",
+  "liquidbounce.module.autoArmor.value.no_move.description": "是否应该模拟物品拖动.",
+  "liquidbounce.module.autoArmor.value.hotbar.description": "物品是否应该从快捷栏中装备.",
+
+  "liquidbounce.module.autoBow.description": "当弓充满电时自动射箭并允许更快的射箭.",
+
+  "liquidbounce.module.autoLeave.description": "每当你的健康低于指定阈值时自动离开服务器.",
+
+  "liquidbounce.module.criticals.description": "每次实体被击中时自动造成严重伤害.",
+
+  "liquidbounce.module.hitbox.description": "放大其他实体的命中框.",
+
+  "liquidbounce.module.killAura.description": "自动攻击敌人.",
+
+  "liquidbounce.module.superKnockback.description": "增加对其他实体的击退.",
+
+  "liquidbounce.module.trigger.description": "面对敌人时自动攻击.",
+
+  "liquidbounce.module.velocity.description": "修改你的速度.",
+
+  "liquidbounce.module.abortBreaking.description": "允许您在不丢失进度的情况下中止中断.",
+
+  "liquidbounce.module.bedWalk.description": "允许你在睡觉时下床.",
+
+  "liquidbounce.module.clip.description": "允许你穿过方块.",
+
+  "liquidbounce.module.damage.description": "对自己造成指定数量的伤害.",
+
+  "liquidbounce.module.disabler.description": "禁用特定的 AntiCheat 或服务器.",
+
+  "liquidbounce.module.forceUnicodeChat.description": "将您发送的所有聊天消息翻译成 Unicode.",
+
+  "liquidbounce.module.godMode.description": "让你无敌.",
+
+  "liquidbounce.module.kick.description": "将自己踢出服务器.",
+  "liquidbounce.module.kick.messages.cantEnableInSingleplayer": "无法在单人游戏中启用 %s.",
+
+  "liquidbounce.module.moreCarry.description": "允许你在你的制作槽中存储额外的物品（仅适用于多人游戏）.",
+
+  "liquidbounce.module.noPitchLimit.description": "允许您将头部旋转到超出常规音高限制.",
+
+  "liquidbounce.module.pingSpoof.description": "将你的 ping 欺骗到一个指定的值.",
+  "liquidbounce.module.pingSpoof.noSingleplayer": "无法在单人游戏中启用 %s.",
+
+  "liquidbounce.module.plugins.description": "允许您查看服务器的插件.",
+  "liquidbounce.module.plugins.messages.timeOut": "插件检查超时.",
+  "liquidbounce.module.plugins.messages.noPluginsFound": "没有找到插件.",
+
+  "liquidbounce.module.portalMenu.description": "允许你站在门户内打开菜单.",
+
+  "liquidbounce.module.vehicleOneHit.description": "允许你一击破坏任何车辆.",
+
+  "liquidbounce.module.skinDerp.description": "让你的皮肤眨眼（需要多层皮肤）.",
+
+  "liquidbounce.module.spammer.description": "用指定消息向聊天发送垃圾邮件.",
+
+  "liquidbounce.module.fly.description": "允许你在生存模式下飞行.",
+
+  "liquidbounce.module.freeze.description": "允许你在服务器不知道的情况下将自己冻结在当前位置.",
+
+  "liquidbounce.module.noClip.description": "允许你飞过方块.",
+  "liquidbounce.module.noClip.messages.setbackDetected": "你已经被服务器挡住了！确保你已经站在一个街区内.",
+
+  "liquidbounce.module.parkour.description": "自动跳到方块边缘.",
+
+  "liquidbounce.module.speed.description": "让你移动得更快.",
+
+  "liquidbounce.module.strafe.description": "允许你在半空中扫射.",
+
+  "liquidbounce.module.vehicleFly.description": "允许你在骑乘实体（例如船、马）时飞行.",
+
+  "liquidbounce.module.antiCactus.description": "保护受到仙人掌伤害.",
+
+  "liquidbounce.module.antiLevitation.description": "防止悬浮和缓落效果影响你.",
+
+  "liquidbounce.module.autoBreak.description": "自动破坏你正在看的方块.",
+
+  "liquidbounce.module.autoRespawn.description": "你死后自动重生.",
+
+  "liquidbounce.module.autoWalk.description": "自动让你朝你面对的方向行走.",
+
+  "liquidbounce.module.blink.description": "让你看起来好像在传送给其他玩家.",
+
+  "liquidbounce.module.eagle.description": "自动潜入方块边缘（又名 FastBridge）.",
+
+  "liquidbounce.module.noFall.description": "保护你免受坠落伤害.",
+
+  "liquidbounce.module.antiBlind.description": "保护你免受可能会阻挡你视线的恼人屏幕效果.",
+
+  "liquidbounce.module.breadcrumbs.description": "在你身后留下痕迹.",
+
+  "liquidbounce.module.clickGUI.description": "显示一个易于使用的菜单来切换和配置模块.",
+
+  "liquidbounce.module.fullBright.description": "让世界变得更明亮.",
+
+  "liquidbounce.module.hud.description": "显示带有各种有用工具的游戏内叠加层.",
+
+  "liquidbounce.module.itemEsp.description": "允许你透过墙壁看到掉落的物品.",
+
+  "liquidbounce.module.nametags.description": "使玩家姓名标签更加明显并添加有用信息.",
+
+  "liquidbounce.module.traces.description": "为特定半径的每个实体画一条线.",
+
+  "liquidbounce.module.chestAura.description": "自动打开你周围的箱子.",
+
+  "liquidbounce.module.fastBreak.description": "让你更快地破坏方块.",
+
+  "liquidbounce.module.fastPlace.description": "让你可以更快地放置方块.",
+
+  "liquidbounce.module.timer.description": "改变游戏运行的速度.",
+
+  "liquidbounce.module.noWeb.description": "禁用网络减速.",
+
+  "liquidbounce.module.friendClicker.description": "允许你通过点击他们来交朋友.",
+  "liquidbounce.module.friendClicker. addedFriend": "%s 已成功添加到好友列表中.",
+  "liquidbounce.module.friendClicker.removedFriend": "%s 已成功从好友列表中删除.",
+
+  "liquidbounce.module.autoGapple.description": "当你的健康状况不佳时自动吃苹果.",
+
+  "liquidbounce.module.autoSoup.description": "当你的健康状况不佳时自动喝汤.",
+
+  "liquidbounce.module.badWifi.description": "阻止数据包以防止您被敌人击中.",
+
+  "liquidbounce.module.aimbot.description": "自动面对你周围的选定实体.",
+
+  "liquidbounce.module.antiReducedDebugInfo.description": "允许您查看扩展调试信息.",
+
+  "liquidbounce.module.ghostHand.description": "允许你穿过墙壁与选定的方块互动.",
+
+  "liquidbounce.module.notifier.description": "通知你各种事件.",
+
+  "liquidbounce.module.nameProtect.description": "在客户端更改玩家名称.",
+
+  "liquidbounce.module.teams.description": "防止 KillAura 攻击队友.",
+
+  "liquidbounce.module.avoidHazards.description": "防止你进入可能是恶意的块.",
+
+  "liquidbounce.module.blockBounce.description": "允许你在有弹性的块上弹得更高.",
+
+  "liquidbounce.module.blockWalk.description": "允许你在非完整方块上行走.",
+
+  "liquidbounce.module.bugUp.description": "落下一定距离后自动使你受挫.",
+
+  "liquidbounce.module.elytraFly.description": "让你在 Elytra 上飞得更快.",
+
+  "liquidbounce.module.inventoryMove.description": "允许你在打开物品栏时走路.",
+
+  "liquidbounce.module.liquidWalk.description": "允许你在水上行走.",
+
+  "liquidbounce.module.noJumpDelay.description": "移除跳跃之间的延迟.",
+
+  "liquidbounce.module.noPush.description": "防止你被其他玩家推送.",
+
+  "liquidbounce.module.perfectHorseJump.description": "当马的跳跃条完全填满时自动跳跃.",
+
+  "liquidbounce.module.safeWalk.description": "防止你像偷偷摸摸一样摔倒.",
+
+  "liquidbounce.module.sneak.description": "一直自动潜行.",
+
+  "liquidbounce.module.step.description": "允许你增加方块.",
+
+  "liquidbounce.module.terrainSpeed.description": "让你在特定表面上移动得更快.",
+
+  "liquidbounce.module.antiAfk.description": "防止你因为 AFK 而被踢.",
+
+  "liquidbounce.module.autoFish.description": "使用钓竿时自动钓到鱼.",
+
+  "liquidbounce.module.autoTotem.description": "自动在副手放置图腾.",
+
+  "liquidbounce.module.chestStealer.description": "自动从箱子里偷走所有物品.",
+
+  "liquidbounce.module.regen.description": "更快地恢复你的健康.",
+
+  "liquidbounce.module.zoot.description": "移除所有不良效果/火灾.",
+
+  "liquidbounce.module.inventoryCleaner.description": "自动丢弃无用的物品并对其进行分类.",
+
+  "liquidbounce.module.blockEsp.description": "允许你透过墙壁看到选定的方块.",
+
+  "liquidbounce.module.ESP.description": "允许你透过墙壁看到目标.",
+
+  "liquidbounce.module.freeCam.description": "允许你离开你的身体.",
+
+  "liquidbounce.module.holeEsp.description": "检测并显示水晶 PvP 的安全点.",
+
+  "liquidbounce.module.mobOwners.description": "显示可驯服的实体或弹丸属于哪个玩家.",
+
+  "liquidbounce.module.noBob.description": "禁用视图浮动效果.",
+
+  "liquidbounce.module.noHurtCam.description": "受伤时禁用伤害凸轮效果.",
+
+  "liquidbounce.module.noSignRender.description": "防止标志文本被渲染.",
+
+  "liquidbounce.module.noSwing.description": "禁用摇摆效果.",
+
+  "liquidbounce.module.noWeather.description": "禁用雨效果.",
+
+  "liquidbounce.module.rotations.description": "允许您查看服务器端的旋转.",
+
+  "liquidbounce.module.storageEsp.description": "允许你透过墙壁看到箱子、发射器等.",
+
+  "liquidbounce.module.trajectories.description": "让你可以看到射弹物品将落在何处.",
+
+  "liquidbounce.module.autoFarm.description": "自动种植东西.",
+
+  "liquidbounce.module.autoTool.description": "自动选择你库存中最好的工具来挖掘一个块.",
+
+  "liquidbounce.module.crystalAura.description": "自动放置和摧毁末地水晶.",
+
+  "liquidbounce.module.fucker.description": "摧毁/使用你周围选定的方块.",
+
+  "liquidbounce.module.ignite.description": "自动使你周围的目标着火.",
+
+  "liquidbounce.module.scaffold.description": "自动在你下方放置方块.",
+
+  "liquidbounce.module.fastUse.description": "让你可以更快地使用物品.",
+
+  "liquidbounce.module.noSlow.description": "取消由灵魂沙和使用物品造成的缓慢效果.",
+
+  "liquidbounce.module.highJump.description": "让你跳得更高.",
+
+  "liquidbounce.module.sleepWalker.description": "允许你在睡觉时走路，也让你的碰撞箱变小.",
+
+  "liquidbounce.module.dankBobbing.description": "增加更多的摆动效果."
+
+}
