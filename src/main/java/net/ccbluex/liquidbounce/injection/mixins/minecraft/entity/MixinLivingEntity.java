@@ -123,8 +123,8 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
     @Inject(method = "tickMovement", at = @At("HEAD"), cancellable = true)
     private void hookTickMovement(CallbackInfo callbackInfo) {
-        if (ModuleNoJumpDelay.INSTANCE.getEnabled()) {
-            jumpingCooldown = ModuleAirJump.INSTANCE.getEnabled() ? 10 : 0;
+        if (ModuleNoJumpDelay.INSTANCE.getEnabled() && !ModuleAirJump.INSTANCE.getEnabled()) {
+            jumpingCooldown = 0;
         }
     }
 
