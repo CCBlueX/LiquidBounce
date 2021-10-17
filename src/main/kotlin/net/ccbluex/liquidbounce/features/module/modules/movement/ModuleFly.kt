@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.minecraft.block.Blocks
+import net.minecraft.block.FluidBlock
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.util.shape.VoxelShapes
 
@@ -93,7 +94,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
             }
         }
         val shapeHandler = handler<BlockShapeEvent> { event ->
-            if (event.state.block == Blocks.AIR && event.pos.y < player.y) {
+            if (event.state.block !is FluidBlock && event.pos.y < player.y) {
                 event.shape = VoxelShapes.fullCube()
             }
         }
