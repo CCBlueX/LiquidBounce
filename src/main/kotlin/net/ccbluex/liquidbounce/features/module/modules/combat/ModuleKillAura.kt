@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.eyesPos
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
+import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityGroup
@@ -45,15 +46,13 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.AxeItem
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
+import net.minecraft.network.packet.c2s.play.*
 import net.minecraft.util.Hand
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.GameMode
+import kotlin.random.Random
 
 /**
  * KillAura module
@@ -93,13 +92,14 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private val unsprintOnCrit by boolean("UnsprintOnCrit", true)
     private val attackShielding by boolean("AttackShielding", false)
 
+    private val blockingTicks by int("BlockingTicks", 0, 0..20)
+
     private val raycast by enumChoice("Raycast", TRACE_ALL, values())
 
-    private val failRate by int("FailRate", 0, 0..100) // todo:
+    private val failRate by int("FailRate", 0, 0..100)
 
-    private val missSwing by boolean("MissSwing", true) // todo:
-
-    private val checkableInventory by boolean("CheckableInventory", false) // todo:
+    private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
+    private val simulateInventoryClosing by boolean("SimulateInventoryClosing", true)
 
     private val cpsTimer = CpsScheduler()
 
@@ -147,14 +147,114 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 //    }
 
     val repeatable = repeatable {
-        update()
-    }
-
-    private fun update() {
+        // Killaura in spectator-mode is pretty useless, trust me.
         if (player.isSpectator) {
-            return
+            return@repeatable
         }
 
+        // Make sure killaura-logic is not running while inventory is open
+        val isInInventoryScreen = mc.currentScreen is InventoryScreen
+
+        if (isInInventoryScreen && !ignoreOpenInventory) {
+            // Cleanup current target tracker
+            targetTracker.cleanup()
+            return@repeatable
+        }
+
+        // Update current target tracker to make sure you attack the best enemy
+        updateEnemySelection()
+
+        // Check if there is target to attack
+        val target = targetTracker.lockedOnTarget ?: return@repeatable
+        // Did you ever send a rotation before?
+        val rotation = RotationManager.serverRotation ?: return@repeatable
+
+        if (target.boxedDistanceTo(player) <= range && facingEnemy(target, range.toDouble(), rotation)) {
+            // Check if between enemy and player is another entity
+            val raycastedEntity = raytraceEntity(
+                range.toDouble(),
+                rotation,
+                filter = {
+                    when (raycast) {
+                        TRACE_NONE -> false
+                        TRACE_ONLYENEMY -> it.shouldBeAttacked()
+                        TRACE_ALL -> true
+                    }
+                }
+            ) ?: target
+
+            // Swap enemy if there is a better enemy
+            // todo: compare current target to locked target
+            if (raycastedEntity.shouldBeAttacked() && raycastedEntity != target) {
+                targetTracker.lock(raycastedEntity)
+            }
+
+            // Attack enemy according to cps and cooldown
+            val clicks = cpsTimer.clicks(condition = {
+                !cooldown || (player.getAttackCooldownProgress(0.0f) >= 1.0f && (!ModuleCriticals.shouldWaitForCrit() || raycastedEntity.velocity.lengthSquared() > 0.25 * 0.25))
+                    && (attackShielding || raycastedEntity !is PlayerEntity || player.mainHandStack.item is AxeItem || !raycastedEntity.wouldBlockHit(player))
+            }, cps)
+
+            repeat(clicks) {
+                if (simulateInventoryClosing && isInInventoryScreen) {
+                    network.sendPacket(CloseHandledScreenC2SPacket(0))
+                }
+
+                val blocking = player.isBlocking
+
+                // Make sure to unblock now
+                if (blocking) {
+                    network.sendPacket(
+                        PlayerActionC2SPacket(
+                            PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
+                            BlockPos.ORIGIN,
+                            Direction.DOWN
+                        )
+                    )
+
+                    // Wait until the un-blocking delay time is up
+                    if (blockingTicks > 0) {
+                        wait(blockingTicks)
+                    }
+                }
+
+                // Fail rate
+                if (failRate > 0 && failRate > Random.nextInt(100)) {
+                    // Fail rate should always make sure to swing the hand, so the server-side knows you missed the enemy.
+                    if (swing) {
+                        player.swingHand(Hand.MAIN_HAND)
+                    } else {
+                        network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
+                    }
+
+                    // todo: might notify client-user about fail hit
+                } else {
+                    // Attack enemy
+                    attackEntity(raycastedEntity)
+                }
+
+                // Make sure to block again
+                if (blocking) {
+                    // Wait until the blocking delay time is up
+                    if (blockingTicks > 0) {
+                        wait(blockingTicks)
+                    }
+
+                    network.sendPacket(PlayerInteractItemC2SPacket(player.activeHand))
+                }
+
+                // Make sure to reopen inventory
+                if (simulateInventoryClosing && isInInventoryScreen) {
+                    network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.OPEN_INVENTORY))
+                }
+            }
+        }
+    }
+
+    /**
+     * Update enemy on target tracker
+     */
+    private fun updateEnemySelection() {
         val rangeSquared = range * range
 
         targetTracker.validateLock { it.squaredBoxedDistanceTo(player) <= rangeSquared }
@@ -202,65 +302,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             // aim on target
             RotationManager.aimAt(rotation, configurable = rotations)
             break
-        }
-
-        val target = targetTracker.lockedOnTarget ?: return
-        val rotation = RotationManager.serverRotation ?: return
-
-        if (target.boxedDistanceTo(player) <= range && facingEnemy(
-                target,
-                range.toDouble(),
-                rotation
-            )
-        ) { // Check if between enemy and player is another entity
-            val raycastedEntity = raytraceEntity(
-                range.toDouble(),
-                rotation,
-                filter = {
-                    when (raycast) {
-                        TRACE_NONE -> false
-                        TRACE_ONLYENEMY -> it.shouldBeAttacked()
-                        TRACE_ALL -> true
-                    }
-                }
-            ) ?: target
-
-            // Swap enemy if there is a better enemy
-            // todo: compare current target to locked target
-            if (raycastedEntity.shouldBeAttacked() && raycastedEntity != target) {
-                targetTracker.lock(raycastedEntity)
-            }
-
-            val blocking = player.isBlocking
-
-            if (blocking) {
-                network.sendPacket(
-                    PlayerActionC2SPacket(
-                        PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
-                        BlockPos.ORIGIN,
-                        Direction.DOWN
-                    )
-                )
-            }
-
-            // Attack enemy according to cps and cooldown
-            cpsTimer.tick(
-                click = {
-                    attackEntity(raycastedEntity)
-                },
-                condition = {
-                    !cooldown || (player.getAttackCooldownProgress(0.0f) >= 1.0f && (!ModuleCriticals.shouldWaitForCrit() || raycastedEntity.velocity.lengthSquared() > 0.25 * 0.25)) && (
-                        attackShielding || raycastedEntity !is PlayerEntity || player.mainHandStack.item is AxeItem || !raycastedEntity.wouldBlockHit(
-                            player
-                        )
-                        )
-                },
-                cps
-            )
-
-            if (blocking) {
-                network.sendPacket(PlayerInteractItemC2SPacket(player.activeHand))
-            }
         }
     }
 

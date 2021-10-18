@@ -33,13 +33,13 @@ class CpsScheduler {
     var lastClick = 0L
     var clickTime = -1L
 
-    fun tick(click: () -> Unit, condition: () -> Boolean, cps: IntRange) {
+    fun clicks(condition: () -> Boolean, cps: IntRange): Int {
         val currTime = System.currentTimeMillis()
 
         var timeLeft = currTime - lastClick
         if (timeLeft > 1000) {
             lastClick = System.currentTimeMillis()
-            return
+            return 0
         }
         if (clickTime < 0) {
             clickTime = clickTime(cps)
@@ -48,13 +48,14 @@ class CpsScheduler {
         var clicks = 0
 
         while (timeLeft - clickTime > 0 && condition()) {
-            click()
             timeLeft -= clickTime
             clicks++
 
             clickTime = clickTime(cps)
             lastClick = System.currentTimeMillis()
         }
+
+        return clicks
     }
 
     // TODO: Make more stamina like
