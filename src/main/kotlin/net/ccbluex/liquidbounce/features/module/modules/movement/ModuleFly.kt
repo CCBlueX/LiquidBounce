@@ -137,7 +137,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
         }
 
         val repeatable = repeatable {
-            if (player.isSpectator || player.isDead || player.abilities.creativeMode) {
+            if (player.isSpectator || player.isDead) {
                 return@repeatable
             }
 
