@@ -29,11 +29,11 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
-import net.minecraft.block.Blocks
 import net.minecraft.block.FluidBlock
 import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.network.packet.c2s.play.TeleportConfirmC2SPacket
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket
 import net.minecraft.sound.SoundEvents
@@ -46,6 +46,7 @@ import org.apache.commons.lang3.RandomUtils
  *
  * Allows you to fly.
  */
+
 object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
     private val modes = choices("Mode", Vanilla, arrayOf(Vanilla, Jetpack, Verus, Enderpearl))
@@ -174,18 +175,19 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
                     threwPearl = true
                 }
-            } else if (threwPearl && canFly && player.hurtTime > 0) {
+            } else if (threwPearl && canFly) {
                 player.strafe(speed = speed.toDouble())
                 player.velocity.y = when {
                     mc.options.keyJump.isPressed -> speed.toDouble()
                     mc.options.keySneak.isPressed -> -speed.toDouble()
                     else -> 0.0
                 }
+                threwPearl = false
             }
         }
 
         val packetHandler = handler<PacketEvent> { event ->
-            if (event.packet is PlaySoundS2CPacket && event.packet.sound == SoundEvents.ENTITY_ENDER_PEARL_THROW && threwPearl) {
+            if ((event.packet is PlaySoundS2CPacket && event.packet.sound == SoundEvents.ENTITY_ENDER_PEARL_THROW) || event.packet is TeleportConfirmC2SPacket && threwPearl) {
                 canFly = true
             }
         }
