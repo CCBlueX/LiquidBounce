@@ -6,6 +6,7 @@
     import TogglableSetting from "./TogglableSetting.svelte";
     import ChooseSetting from "./ChooseSetting.svelte";
     import ChoiceSetting from "./ChoiceSetting.svelte";
+    import ConfigurableSetting from "./ConfigurableSetting.svelte";
 
     export let instance;
 
@@ -22,6 +23,8 @@
     <RangeSetting {instance} />
 {:else if type === "CHOICE"}
     <ChoiceSetting {instance} />
+{:else if type === "CONFIGURABLE"}
+    <ConfigurableSetting {instance} />
 {:else if type === "TEXT"}
     <TextSetting {instance} />
 {/if}
