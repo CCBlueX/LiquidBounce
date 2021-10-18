@@ -166,6 +166,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoFish,
             ModuleMobOwners,
             ModuleGhostHand,
+            ModuleAirJump,
+            ModuleProjectilePuncher,
             ModuleAutoPot,
             ModuleAirJump
         )

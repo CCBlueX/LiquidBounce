@@ -413,7 +413,9 @@
   "liquidbounce.module.sleepWalker.description": "Allows you to walk while sleeping, also makes your hitbox small.",
 
   "liquidbounce.module.dankBobbing.description": "Adds more bobbing effect.",
-
+  
+  "liquidbounce.module.projectilePuncher.description": "Shoots back incoming projectiles around you.",
+  
   "liquidbounce.module.autoPot.description": "Automatically throws healing potions whenever your health is low."
 
 }
