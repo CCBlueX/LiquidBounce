@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
 import net.minecraft.block.Blocks
+import net.minecraft.block.FluidBlock
 import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
@@ -104,7 +105,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
             }
         }
         val shapeHandler = handler<BlockShapeEvent> { event ->
-            if (event.state.block == Blocks.AIR && event.pos.y < player.y) {
+            if (event.state.block !is FluidBlock && event.pos.y < player.y) {
                 event.shape = VoxelShapes.fullCube()
             }
         }
