@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.client.MC_1_8
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
+import net.ccbluex.liquidbounce.utils.combat.CpsScheduler
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.eyesPos
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
@@ -45,6 +46,7 @@ import net.minecraft.util.Hand
 
 object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
 
+    private val cps by intRange("CPS", 5..8, 1..20)
     private val swing by boolean("Swing", true)
     private val range by float("Range", 3f, 3f..6f)
 
@@ -53,6 +55,8 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
 
     // Rotation
     private val rotations = RotationsConfigurable()
+
+    private val cpsTimer = CpsScheduler()
 
     override fun disable() {
         targetTracker.cleanup()
@@ -95,8 +99,16 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
         }
 
         val entity = targetTracker.lockedOnTarget ?: return
-        attackEntity(entity)
-        targetTracker.cleanup()
+        val clicks = cpsTimer.clicks(condition = { true },
+            cps
+        )
+
+        // There is no need for multiple clicks on one target.
+        if (clicks > 0) {
+            // Yeet away the projectile
+            attackEntity(entity)
+            targetTracker.cleanup()
+        }
     }
 
     private fun attackEntity(entity: Entity) {
