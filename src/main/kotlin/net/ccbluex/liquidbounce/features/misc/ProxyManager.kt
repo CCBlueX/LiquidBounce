@@ -32,7 +32,7 @@ import java.util.*
 /**
  * Proxy Manager
  */
-object ProxyManager : Configurable("proxies") {
+object ProxyManager : Configurable("Proxies") {
 
     val proxies by value(name, TreeSet<Proxy>(), listType = ListValueType.Proxy)
 

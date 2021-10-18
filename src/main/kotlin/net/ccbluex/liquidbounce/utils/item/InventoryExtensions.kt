@@ -34,7 +34,7 @@ fun convertClientSlotToServerSlot(slot: Int): Int {
 /**
  * Configurable to configure the dynamic rotation engine
  */
-class InventoryConstraintsConfigurable : Configurable("inventoryConstraints") {
+class InventoryConstraintsConfigurable : Configurable("InventoryConstraints") {
     internal var delay by intRange("Delay", 2..4, 0..20)
     internal val invOpen by boolean("InvOpen", false)
     internal val simulateInventory by boolean("SimulateInventory", true)

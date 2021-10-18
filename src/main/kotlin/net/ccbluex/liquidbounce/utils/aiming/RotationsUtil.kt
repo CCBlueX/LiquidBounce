@@ -38,7 +38,7 @@ import kotlin.math.sqrt
 /**
  * Configurable to configure the dynamic rotation engine
  */
-class RotationsConfigurable : Configurable("rotations") {
+class RotationsConfigurable : Configurable("Rotations") {
     val turnSpeed by curve("TurnSpeed", arrayOf(4f, 7f, 10f, 3f, 2f, 0.7f))
     val fixVelocity by boolean("FixVelocity", true)
 }

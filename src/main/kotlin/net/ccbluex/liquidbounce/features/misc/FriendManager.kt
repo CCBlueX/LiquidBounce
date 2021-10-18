@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.ListValueType
 import java.util.*
 
-object FriendManager : Configurable("friends") {
+object FriendManager : Configurable("Friends") {
 
     val friends by value(name, TreeSet<Friend>(), listType = ListValueType.Friend)
 

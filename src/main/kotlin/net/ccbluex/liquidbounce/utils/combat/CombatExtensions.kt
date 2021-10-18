@@ -37,7 +37,7 @@ val globalEnemyConfigurable = EnemyConfigurable()
 /**
  * Configurable to configure which entities and their state (like being dead) should be considered as enemy
  */
-class EnemyConfigurable : Configurable("enemies") {
+class EnemyConfigurable : Configurable("Enemies") {
 
     // Players should be considered as a enemy
     val players by boolean("Players", true)

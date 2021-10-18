@@ -42,7 +42,7 @@ object Fonts {
         }
     }
 
-    private object Options : Configurable("fonts") {
+    private object Options : Configurable("Fonts") {
 
         val fonts by value(
             "Fonts",
