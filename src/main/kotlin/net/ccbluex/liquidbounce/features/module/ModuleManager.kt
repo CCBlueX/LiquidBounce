@@ -168,8 +168,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleGhostHand,
             ModuleAirJump,
             ModuleProjectilePuncher,
-            ModuleAutoPot,
-            ModuleAirJump
+            ModuleAutoPot
         )
 
         builtin.apply {
