@@ -153,7 +153,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
                 }
             }
 
-            if (!threwPearl) {
+            if (!threwPearl && !canFly) {
                 if (slot != null) {
                     if (slot != player.inventory.selectedSlot) {
                         network.sendPacket(UpdateSelectedSlotC2SPacket(slot))
@@ -175,7 +175,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
                     threwPearl = true
                 }
-            } else if (threwPearl && canFly) {
+            } else {
                 player.strafe(speed = speed.toDouble())
                 player.velocity.y = when {
                     mc.options.keyJump.isPressed -> speed.toDouble()
