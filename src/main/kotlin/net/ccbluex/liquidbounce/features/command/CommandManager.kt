@@ -97,7 +97,7 @@ object CommandManager : Iterable<Command> {
 
     internal val commands = mutableListOf<Command>()
 
-    object Options : Configurable("commands") {
+    object Options : Configurable("Commands") {
         /**
          * The prefix of the commands.
          *

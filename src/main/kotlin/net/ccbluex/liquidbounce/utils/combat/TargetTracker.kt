@@ -31,7 +31,7 @@ import net.minecraft.entity.LivingEntity
 /**
  * A target tracker to choose the best enemy to attack
  */
-class TargetTracker(defaultPriority: PriorityEnum = PriorityEnum.HEALTH) : Configurable("target") {
+class TargetTracker(defaultPriority: PriorityEnum = PriorityEnum.HEALTH) : Configurable("Target") {
 
     var lockedOnTarget: Entity? = null
     var maxDistanceSquared: Double = 0.0
