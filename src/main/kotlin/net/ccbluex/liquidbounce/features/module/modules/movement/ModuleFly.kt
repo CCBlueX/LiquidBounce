@@ -27,16 +27,16 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
+import net.minecraft.block.Block
 import net.minecraft.block.FluidBlock
 import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.c2s.play.TeleportConfirmC2SPacket
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
-import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket
-import net.minecraft.sound.SoundEvents
 import net.minecraft.util.Hand
 import net.minecraft.util.shape.VoxelShapes
 import org.apache.commons.lang3.RandomUtils
@@ -137,20 +137,10 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
         }
 
         val repeatable = repeatable {
-            if (player.isSpectator || player.isDead) {
-                return@repeatable
-            }
-
             val slot = findHotbarSlot(Items.ENDER_PEARL)
 
-            // Make sure the player is STILL flying
-            if (canFly) {
-                player.strafe(speed = speed.toDouble())
-                player.velocity.y = when {
-                    mc.options.keyJump.isPressed -> speed.toDouble()
-                    mc.options.keySneak.isPressed -> -speed.toDouble()
-                    else -> 0.0
-                }
+            if (player.isDead || player.isSpectator || player.abilities.creativeMode) {
+                return@repeatable
             }
 
             if (!threwPearl && !canFly) {
@@ -175,21 +165,32 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
                     threwPearl = true
                 }
-            } else {
+            } else if (!threwPearl && canFly) {
                 player.strafe(speed = speed.toDouble())
                 player.velocity.y = when {
                     mc.options.keyJump.isPressed -> speed.toDouble()
                     mc.options.keySneak.isPressed -> -speed.toDouble()
                     else -> 0.0
                 }
-                threwPearl = false
+                return@repeatable
             }
         }
 
         val packetHandler = handler<PacketEvent> { event ->
-            if ((event.packet is PlaySoundS2CPacket && event.packet.sound == SoundEvents.ENTITY_ENDER_PEARL_THROW) || event.packet is TeleportConfirmC2SPacket && threwPearl) {
+            if (event.origin == TransferOrigin.SEND && event.packet is TeleportConfirmC2SPacket && isABitAboveGround() && threwPearl) {
+                threwPearl = false
                 canFly = true
             }
+        }
+
+        fun isABitAboveGround(): Boolean {
+            for (y in 0..5) {
+                val boundingBox = player.boundingBox
+                val detectionBox = boundingBox.withMinY(boundingBox.minY - y)
+
+                return isBlockAtPosition(detectionBox) { it is Block }
+            }
+            return false
         }
     }
 }
