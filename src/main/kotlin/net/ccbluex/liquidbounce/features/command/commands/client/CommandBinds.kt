@@ -138,7 +138,7 @@ object CommandBinds {
                                         keyName(module.bind).asText()
                                             .styled { it.withColor(Formatting.DARK_GRAY).withBold(true) }
                                     )
-                                    .append(module.name + " (")
+                                    .append(")")
                                     .styled { it.withColor(Formatting.GRAY) }
                             )
                         }
