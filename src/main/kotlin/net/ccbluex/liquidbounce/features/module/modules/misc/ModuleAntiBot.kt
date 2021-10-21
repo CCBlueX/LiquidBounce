@@ -1,5 +1,3 @@
-@file:Suppress("ReplaceSizeCheckWithIsNotEmpty")
-
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import com.mojang.authlib.GameProfile
@@ -59,13 +57,10 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
 
             for (entity in world.entities) {
                 if (entity is PlayerEntity && entity.entityName == pName) {
-                    if (!isArmored(entity)) {
-                        pName = null
-                        continue
+                    if (isArmored(entity) && entity.gameProfile.properties.isEmpty) {
+                        world.removeEntity(entity.id, Entity.RemovalReason.DISCARDED)
+                        notification("AntiBot", "Removed $pName", NotificationEvent.Severity.INFO)
                     }
-
-                    world.removeEntity(entity.id, Entity.RemovalReason.DISCARDED)
-                    notification("AntiBot", "Removed $pName", NotificationEvent.Severity.INFO)
                     pName = null
                 }
             }
