@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.client.gui.screen.ChatScreen
-import org.lwjgl.glfw.GLFW
+import net.minecraft.client.gui.screen.DeathScreen
 
 /**
  * KeepChatAfterDeath module
@@ -33,31 +33,15 @@ import org.lwjgl.glfw.GLFW
  */
 object ModuleKeepChatAfterDeath : Module("KeepChatAfterDeath", Category.MISC) {
 
-    var chatOpen = false
-
-    val packetHandler = handler<KeyboardKeyEvent> { event ->
-        if (player.isDead) {
-            val key = event.keyCode
-            val options = mc.options!!
-            if (!chatOpen && (key == options.keyChat!!.boundKey.code || key == options.keyCommand!!.boundKey.code)) {
-                // BUG: first clicked key (default T or /) is added to the chat field
-                mc.setScreen(ChatScreen(""))
-                chatOpen = true
-                return@handler
-            }
-            if (key == GLFW.GLFW_KEY_ENTER || key == GLFW.GLFW_KEY_ESCAPE) {
-                chatOpen = false
-            }
+    val keyboardKeyHandler = handler<KeyboardKeyEvent> {
+        if (mc.currentScreen !is DeathScreen) {
+            return@handler
         }
-    }
 
-    override fun disable() {
-        if (player.isDead) {
-            player.setShowsDeathScreen(true)
-            if (chatOpen) {
-                mc.setScreen(null)
-            }
+        val options = mc.options
+        if (it.keyCode == options.keyChat.boundKey.code || it.keyCode == options.keyCommand.boundKey.code) {
+            // BUG: first clicked key (default T or /) is added to the chat field
+            mc.setScreen(ChatScreen(""))
         }
-        chatOpen = false
     }
 }
