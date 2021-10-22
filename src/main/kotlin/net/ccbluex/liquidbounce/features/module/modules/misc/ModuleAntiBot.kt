@@ -16,7 +16,7 @@ import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket
 
 object ModuleAntiBot : Module("AntiBot", Category.MISC) {
 
-    private val modes = choices("Mode", Matrix, arrayOf(Custom, Matrix))
+    private val modes = choices("Mode", Custom, arrayOf(Custom, Matrix))
 
     private var pName: String? = null
 
