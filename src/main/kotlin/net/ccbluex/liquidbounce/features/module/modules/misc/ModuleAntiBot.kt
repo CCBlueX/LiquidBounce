@@ -16,7 +16,7 @@ import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket
 
 object ModuleAntiBot : Module("AntiBot", Category.MISC) {
 
-    private val modes = choices("Mode", Custom, arrayOf(Custom, Matrix))
+    private val modes = choices("Mode", Matrix, arrayOf(Custom, Matrix))
 
     private var pName: String? = null
 
@@ -35,7 +35,7 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
         val packetHandler = handler<PacketEvent> { event ->
             if (event.packet is PlayerListS2CPacket && event.packet.action == PlayerListS2CPacket.Action.ADD_PLAYER) {
                 for (entry in event.packet.entries) {
-                    if (entry.latency < 2 || entry.profile.name.length < 3 || !entry.profile.properties.isEmpty || isTheSamePlayer(entry.profile)) {
+                    if (entry.latency < 2 || !entry.profile.properties.isEmpty || isTheSamePlayer(entry.profile)) {
                         continue
                     }
 
@@ -72,7 +72,8 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
 
         private fun isArmored(entity: PlayerEntity): Boolean {
             for (i in 0..3) {
-                return !entity.inventory.getArmorStack(i).isEmpty
+                return !entity.inventory.getArmorStack(i).isEmpty && !entity.inventory.getArmorStack(i)
+                    .hasEnchantments()
             }
             return false
         }
