@@ -71,11 +71,15 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
         }
 
         private fun isArmored(entity: PlayerEntity): Boolean {
-            for (i in 0..3) {
-                return !entity.inventory.getArmorStack(i).isEmpty && !entity.inventory.getArmorStack(i)
-                    .hasEnchantments()
+            var count = 0
+            for (slot in 0..3) {
+                if (!entity.inventory.getArmorStack(slot).isEmpty &&
+                    !entity.inventory.getArmorStack(slot).hasEnchantments()
+                ) {
+                    count += 1
+                }
             }
-            return false
+            return count == 4
         }
 
         private fun isTheSamePlayer(profile: GameProfile): Boolean {
