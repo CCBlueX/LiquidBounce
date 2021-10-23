@@ -74,6 +74,7 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
             var count = 0
             for (slot in 0..3) {
                 if (!entity.inventory.getArmorStack(slot).isEmpty &&
+                    entity.inventory.getArmorStack(slot).isEnchantable &&
                     !entity.inventory.getArmorStack(slot).hasEnchantments()
                 ) {
                     count += 1
