@@ -290,7 +290,7 @@ class AutoPot : Module()
 		}
 	}
 
-	fun findHealPotion(thePlayer: IEntityLivingBase, startSlot: Int, endSlot: Int, inventoryContainer: IContainer, random: Boolean, splash: Boolean = true): Int
+	private fun findHealPotion(thePlayer: IEntityLivingBase, startSlot: Int, endSlot: Int, inventoryContainer: IContainer, random: Boolean, splash: Boolean = true): Int
 	{
 		val provider = classProvider
 

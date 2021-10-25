@@ -15,10 +15,10 @@ import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IPlayerControll
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IServerData
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.client.network.IINetHandlerPlayClient
-import net.ccbluex.liquidbounce.api.minecraft.client.renderer.entity.IRenderItem
-import net.ccbluex.liquidbounce.api.minecraft.client.renderer.texture.ITextureManager
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IEntityRenderer
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IRenderGlobal
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.entity.IRenderItem
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.texture.ITextureManager
 import net.ccbluex.liquidbounce.api.minecraft.client.settings.IGameSettings
 import net.ccbluex.liquidbounce.api.minecraft.client.shader.IFramebuffer
 import net.ccbluex.liquidbounce.api.minecraft.renderer.entity.IRenderManager
@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition
 import net.ccbluex.liquidbounce.api.minecraft.util.ISession
 import net.ccbluex.liquidbounce.api.minecraft.util.ITimer
 import java.io.File
+import java.util.concurrent.Future
 
 interface IMinecraft
 {
@@ -63,4 +64,5 @@ interface IMinecraft
 	fun shutdown()
 	fun toggleFullscreen()
 	fun addScheduledTask(block: () -> Unit)
+	fun <V> addScheduledTask(block: () -> V): Future<V>
 }

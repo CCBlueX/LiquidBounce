@@ -39,9 +39,6 @@ import org.lwjgl.opengl.Display
 import org.spongepowered.asm.mixin.MixinEnvironment
 import org.spongepowered.asm.util.VersionNumber
 
-/**
- * TODO: Smooth zoom animation
- */
 object LiquidBounce
 {
 	// Client information

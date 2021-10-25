@@ -94,7 +94,7 @@ class Tracers : Module()
 		val provider = classProvider
 
 		theWorld.loadedEntityList.filter { it.isSelected(false) }.map(IEntity::asEntityLivingBase).filter { it != thePlayer }.run { if (bot) this else filter { !AntiBot.isBot(theWorld, thePlayer, it) } }.forEach { entity ->
-			val distance = (thePlayer.getDistanceToEntity(entity) * 2).toInt().coerceAtMost(255)
+			val distance = (thePlayer.getDistanceToEntity(entity) * 2f).toInt().coerceAtMost(255)
 
 			val lastTickPosX = entity.lastTickPosX
 			val lastTickPosY = entity.lastTickPosY

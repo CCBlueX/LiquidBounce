@@ -100,7 +100,7 @@ class LiquidBounceStyle : Style()
 		if (moduleValues.isNotEmpty())
 		{
 			valueFont.drawString("+", elementX - 8, elementY + (moduleElement.height shr 1), -1)
-			if (moduleElement.isShowSettings)
+			if (moduleElement.showSettings)
 			{
 				var yPos = elementY + 4
 				for (value in moduleValues) yPos = drawAbstractValue(valueFont, glStateManager, moduleElement, value, yPos, mouseX, mouseY, valueColor)
@@ -137,7 +137,7 @@ class LiquidBounceStyle : Style()
 				font.drawString("\u00A7c$text", moduleIndentX + 6, yPos + 4, WHITE)
 				font.drawString(if (value.foldState) "-" else "+", (moduleXEnd - if (value.foldState) 5 else 6).toInt(), yPos + 4, WHITE)
 
-				if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= yPos + 2 && mouseY <= yPos + 14 && Mouse.isButtonDown(0) && moduleElement.isntPressed())
+				if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= yPos + 2 && mouseY <= yPos + 14 && Mouse.isButtonDown(0) && moduleElement.isntPressed)
 				{
 					value.foldState = !value.foldState
 					mc.soundHandler.playSound("gui.button.press", 1.0f)
@@ -342,7 +342,7 @@ class LiquidBounceStyle : Style()
 
 					drawRect(moduleX + 4f, yPos + 2f, moduleX + moduleElement.settingsWidth, yPos + 14f, BACKGROUND)
 
-					if (mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= yPos + 2 && mouseY <= yPos + 14 && Mouse.isButtonDown(0) && moduleElement.isntPressed())
+					if (mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= yPos + 2 && mouseY <= yPos + 14 && Mouse.isButtonDown(0) && moduleElement.isntPressed)
 					{
 						value.set(!value.get())
 						soundHandler.playSound("gui.button.press", 1.0f)
@@ -369,7 +369,7 @@ class LiquidBounceStyle : Style()
 					valueFont.drawString("\u00A7c$valueDisplayName", moduleIndentX + 6, yPos + 4, WHITE)
 					valueFont.drawString(if (value.openList) "-" else "+", (moduleXEnd - if (value.openList) 5 else 6).toInt(), yPos + 4, WHITE)
 
-					if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= yPos + 2 && mouseY <= yPos + 14 && Mouse.isButtonDown(0) && moduleElement.isntPressed())
+					if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= yPos + 2 && mouseY <= yPos + 14 && Mouse.isButtonDown(0) && moduleElement.isntPressed)
 					{
 						value.openList = !value.openList
 						soundHandler.playSound("gui.button.press", 1.0f)
@@ -391,7 +391,7 @@ class LiquidBounceStyle : Style()
 						{
 							drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 14f, BACKGROUND)
 
-							if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= yPos + 2 && mouseY <= yPos + 14 && Mouse.isButtonDown(0) && moduleElement.isntPressed())
+							if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= yPos + 2 && mouseY <= yPos + 14 && Mouse.isButtonDown(0) && moduleElement.isntPressed)
 							{
 								value.set(valueOfList)
 								soundHandler.playSound("gui.button.press", 1.0f)

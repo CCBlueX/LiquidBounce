@@ -11,11 +11,14 @@ import org.lwjgl.input.Mouse
 
 class ModuleElement(val module: Module) : ButtonElement(module.name)
 {
-	var isShowSettings = false
+	var showSettings = false
 	var settingsWidth = 0f
 	private var wasPressed = false
 	var slowlySettingsYPos = 0
 	var slowlyFade = 0
+
+	val isntPressed: Boolean
+		get() = !wasPressed
 
 	override fun drawScreen(mouseX: Int, mouseY: Int, button: Float)
 	{
@@ -32,12 +35,10 @@ class ModuleElement(val module: Module) : ButtonElement(module.name)
 
 		if (mouseButton == 1 && isHovering(mouseX, mouseY) && isVisible)
 		{
-			isShowSettings = !isShowSettings
+			showSettings = !showSettings
 			mc.soundHandler.playSound("gui.button.press", 1.0f)
 		}
 	}
-
-	fun isntPressed(): Boolean = !wasPressed
 
 	fun updatePressed()
 	{

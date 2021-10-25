@@ -45,6 +45,7 @@ import net.ccbluex.liquidbounce.injection.backend.minecraft.util.unwrap
 import net.ccbluex.liquidbounce.injection.backend.minecraft.util.wrap
 import net.minecraft.client.Minecraft
 import java.io.File
+import java.util.concurrent.Future
 
 class MinecraftImpl(val wrapped: Minecraft) : IMinecraft
 {
@@ -126,6 +127,8 @@ class MinecraftImpl(val wrapped: Minecraft) : IMinecraft
 	{
 		wrapped.addScheduledTask(block)
 	}
+
+	override fun <V> addScheduledTask(block: () -> V): Future<V> = wrapped.addScheduledTask(block)
 
 	override fun equals(other: Any?): Boolean = other is MinecraftImpl && other.wrapped == wrapped
 }

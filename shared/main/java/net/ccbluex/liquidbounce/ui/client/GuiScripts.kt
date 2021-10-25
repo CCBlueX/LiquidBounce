@@ -46,6 +46,7 @@ class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		buttonList.add(provider.createGuiButton(4, buttonX, 118, 70, 20, "Folder"))
 		buttonList.add(provider.createGuiButton(5, buttonX, 142, 70, 20, "Docs"))
 		buttonList.add(provider.createGuiButton(6, buttonX, 166, 70, 20, "Find Scripts"))
+		buttonList.add(provider.createGuiButton(6, buttonX, 190, 70, 20, "Find Scripts (Old Forum)"))
 	}
 
 	override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)
@@ -170,6 +171,14 @@ class GuiScripts(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 			}
 
 			6 -> try
+			{
+				Desktop.getDesktop().browse(URL("https://forums.ccbluex.net/category/9/scripts").toURI())
+			}
+			catch (ignored: Exception)
+			{
+			}
+
+			7 -> try
 			{
 				Desktop.getDesktop().browse(URL("https://forum.ccbluex.net/viewforum.php?id=16").toURI())
 			}

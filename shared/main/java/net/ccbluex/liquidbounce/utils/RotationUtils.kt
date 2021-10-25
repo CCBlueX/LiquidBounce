@@ -28,9 +28,7 @@ import net.ccbluex.liquidbounce.utils.extensions.raycastEntity
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
 import java.lang.Double.isNaN
 import java.util.*
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.sqrt
+import kotlin.math.*
 
 class RotationUtils : MinecraftInstance(), Listenable
 {
@@ -169,8 +167,8 @@ class RotationUtils : MinecraftInstance(), Listenable
 						val diffX = posVec.xCoord - eyesPos.xCoord
 						val diffY = posVec.yCoord - eyesPos.yCoord
 						val diffZ = posVec.zCoord - eyesPos.zCoord
-						val diffXZ = StrictMath.hypot(diffX, diffZ)
-						val rotation = Rotation(wrapAngleTo180_float(toDegrees(StrictMath.atan2(diffZ, diffX).toFloat()) - 90.0f), wrapAngleTo180_float(-toDegrees(StrictMath.atan2(diffY, diffXZ).toFloat())))
+						val diffXZ = hypot(diffX, diffZ)
+						val rotation = Rotation(wrapAngleTo180_float(toDegrees(atan2(diffZ, diffX).toFloat()) - 90.0f), wrapAngleTo180_float(-toDegrees(atan2(diffY, diffXZ).toFloat())))
 						val rotationVector = getVectorForRotation(rotation)
 						val vector = eyesPos.addVector(rotationVector.xCoord * dist, rotationVector.yCoord * dist, rotationVector.zCoord * dist)
 						val obj = theWorld.rayTraceBlocks(eyesPos, vector, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = false, returnLastUncollidableBlock = true)
@@ -228,13 +226,13 @@ class RotationUtils : MinecraftInstance(), Listenable
 
 			// Bow Power Calculation
 			val fastBow = LiquidBounce.moduleManager[FastBow::class.java] as FastBow
-			var velocity = (if (fastBow.state) fastBow.packetsValue.get() else thePlayer.itemInUseDuration) * 0.05f
-			velocity = (velocity * velocity + velocity * 2) / 3
-			if (velocity > 1) velocity = 1f
+			val velocity = (((if (fastBow.state) fastBow.packetsValue.get() else thePlayer.itemInUseDuration) * 0.05f).let { it * it + it * 2f } / 3f).coerceAtMost(1f)
+			val velocitySq = velocity.pow(2)
 
 			// Calculate Rotation
-			val posSqrt = StrictMath.hypot(posX, posZ)
-			val rotation = Rotation(toDegrees(StrictMath.atan2(posZ, posX).toFloat()) - 90, -toDegrees(StrictMath.atan((velocity * velocity - sqrt(velocity * velocity * velocity * velocity - 0.006f * (0.006f * (posSqrt * posSqrt) + 2 * posY * (velocity * velocity)))) / (0.006f * posSqrt)).toFloat()))
+			val distSq = posX * posX + posZ * posZ
+			val dist = sqrt(distSq)
+			val rotation = Rotation(toDegrees(atan2(posZ, posX).toFloat()) - 90, -toDegrees(atan((velocitySq - sqrt(velocity.pow(4) - 0.006f * (0.006f * distSq + 2 * posY * velocitySq))) / (0.006f * dist)).toFloat()))
 			val limitedRotation = limitAngleChange(clientRotation, rotation, nextFloat(turnSpeed.min, turnSpeed.max), nextFloat(smoothingRatio.min, smoothingRatio.max))
 
 			// Apply Rotation
@@ -278,7 +276,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 			val diffY = vec.yCoord - eyesPos.yCoord
 			val diffZ = vec.zCoord - eyesPos.zCoord
 
-			return Rotation(wrapAngleTo180_float(toDegrees(StrictMath.atan2(diffZ, diffX).toFloat()) - 90.0f), wrapAngleTo180_float(-toDegrees(StrictMath.atan2(diffY, StrictMath.hypot(diffX, diffZ)).toFloat())))
+			return Rotation(wrapAngleTo180_float(toDegrees(atan2(diffZ, diffX).toFloat()) - 90.0f), wrapAngleTo180_float(-toDegrees(atan2(diffY, hypot(diffX, diffZ)).toFloat())))
 		}
 
 		/**
@@ -517,7 +515,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * rotation
 		 * @return        difference between rotation
 		 */
-		fun getRotationDifference(first: Rotation, second: Rotation): Double = StrictMath.hypot(getAngleDifference(first.yaw, second.yaw).toDouble(), (first.pitch - second.pitch).toDouble())
+		fun getRotationDifference(first: Rotation, second: Rotation): Double = hypot(getAngleDifference(first.yaw, second.yaw).toDouble(), (first.pitch - second.pitch).toDouble())
 
 		/**
 		 * Limit your rotation using a turn speed
@@ -544,7 +542,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 			return Rotation(currentRotation.yaw + if (yawDelta > turnSpeed) turnSpeed else max(yawDelta, -turnSpeed), currentRotation.pitch + if (pitchDelta > turnSpeed) turnSpeed else max(pitchDelta, -turnSpeed))
 		}
 
-		private fun getAngleDifference(rot1: Rotation, rot2: Rotation): Double = StrictMath.hypot(getAngleDifference(rot1.yaw, rot2.yaw).toDouble(), getAngleDifference(rot1.pitch, rot2.pitch).toDouble())
+		private fun getAngleDifference(rot1: Rotation, rot2: Rotation): Double = hypot(getAngleDifference(rot1.yaw, rot2.yaw).toDouble(), getAngleDifference(rot1.pitch, rot2.pitch).toDouble())
 
 		/**
 		 * Calculate difference between two angle points

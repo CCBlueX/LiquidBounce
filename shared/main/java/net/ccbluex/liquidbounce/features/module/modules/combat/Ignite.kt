@@ -17,13 +17,13 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.CPSCounter
-import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import java.util.*
+import kotlin.math.atan2
 import kotlin.math.hypot
 
 @ModuleInfo(name = "Ignite", description = "Automatically sets targets around you on fire.", category = ModuleCategory.COMBAT)
@@ -79,8 +79,8 @@ class Ignite : Module()
 				val diffZ = blockPos.z + 0.5 - thePlayer.posZ
 				val sqrt = hypot(diffX, diffZ)
 
-				val yaw = WMathHelper.toDegrees(StrictMath.atan2(diffZ, diffX).toFloat()) - 90.0f
-				val pitch = -WMathHelper.toDegrees(StrictMath.atan2(diffY, sqrt).toFloat())
+				val yaw = WMathHelper.toDegrees(atan2(diffZ, diffX).toFloat()) - 90.0f
+				val pitch = -WMathHelper.toDegrees(atan2(diffY, sqrt).toFloat())
 
 				CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT)
 
@@ -99,8 +99,8 @@ class Ignite : Module()
 					val diffZ = neighbor.z + 0.5 - thePlayer.posZ
 					val sqrt = hypot(diffX, diffZ)
 
-					val yaw = WMathHelper.toDegrees(StrictMath.atan2(diffZ, diffX).toFloat()) - 90.0f
-					val pitch = -WMathHelper.toDegrees(StrictMath.atan2(diffY, sqrt).toFloat())
+					val yaw = WMathHelper.toDegrees(atan2(diffZ, diffX).toFloat()) - 90.0f
+					val pitch = -WMathHelper.toDegrees(atan2(diffY, sqrt).toFloat())
 
 					netHandler.addToSendQueue(provider.createCPacketPlayerLook(thePlayer.rotationYaw + wrapAngleTo180_float(yaw - thePlayer.rotationYaw), thePlayer.rotationPitch + wrapAngleTo180_float(pitch - thePlayer.rotationPitch), thePlayer.onGround))
 

@@ -13,7 +13,7 @@ import java.util.*
  */
 class ParticleGenerator(private val amount: Int, private val mouseOverRange: Int)
 {
-	private val particles: MutableCollection<Particle>
+	private val particles: MutableCollection<Particle?>
 
 	private var prevWidth = 0
 	private var prevHeight = 0
@@ -41,7 +41,7 @@ class ParticleGenerator(private val amount: Int, private val mouseOverRange: Int
 		prevWidth = displayWidth
 		prevHeight = displayHeight
 
-		particles.forEach { particle: Particle ->
+		particles.filterNotNull().forEach { particle: Particle ->
 			particle.fall(displayWidthF, displayHeightF, scaledWidth, scaledHeight)
 			particle.interpolation()
 
@@ -50,7 +50,7 @@ class ParticleGenerator(private val amount: Int, private val mouseOverRange: Int
 
 			val mouseOver = mouseX >= particleX - mouseOverRange && mouseY >= particleY - mouseOverRange && mouseX <= particleX + mouseOverRange && mouseY <= particleY + mouseOverRange
 
-			if (mouseOver) particles.filter {
+			if (mouseOver) particles.filterNotNull().filter {
 				val x = it.x
 				val y = it.y
 

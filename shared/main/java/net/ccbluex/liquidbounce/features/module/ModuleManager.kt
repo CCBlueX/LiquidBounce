@@ -27,8 +27,10 @@ import java.util.*
  * TODO
  * * Add TpFucker (like TpEggBreaker in Jigsaw)
  * * ProjectileAimbot (https://github.com/CCBlueX/Old-LiquidBounce-Issues/issues/3496)
- * * FarmBot (Wheat Nuker + Automatically plant seeds)
+ * * FarmBot (Wheat Nuker + Automatically plant seeds) + BonemealAura
  * * AutoFishHook + FishHookAimbot(or integrate FishHook support to ProjectileAimbot)
+ * * KillInsults (a.k.a. AutoSay)
+ * * Features in AutoGG
  */
 class ModuleManager : Listenable
 {

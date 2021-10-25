@@ -3,7 +3,7 @@ package net.mcleaks
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
-import net.ccbluex.liquidbounce.utils.AsyncUtils
+import net.ccbluex.liquidbounce.utils.runAsync
 import java.io.BufferedReader
 import java.io.DataOutputStream
 import java.io.InputStreamReader
@@ -22,7 +22,7 @@ object MCLeaks
 	val isAltActive: Boolean
 		get() = session != null
 
-	// private val EXECUTOR_SERVICE = Executors.newCachedThreadPool() // Share LiquidBounce workers
+	// private val EXECUTOR_SERVICE = Exec utors.newCachedThreadPool() // Share LiquidBounce workers
 
 	private val gson = Gson()
 	private const val REDEEM_URL = "https://auth.mcleaks.net/v1/redeem"
@@ -41,27 +41,26 @@ object MCLeaks
 
 	fun redeem(token: String, callback: (Any) -> Unit)
 	{
-		// Use LiquidBounce worker instead
-		AsyncUtils.workers.execute {
+		runAsync {
 			val connection = preparePostRequest("{\"token\":\"$token\"}")
 			if (connection == null)
 			{
 				callback("An error occurred! [Redeem - 0x1] - Failed to prepare request!")
-				return@execute
+				return@runAsync
 			}
 
 			val result = getResult(connection)
 			if (result is String)
 			{
 				callback(result)
-				return@execute
+				return@runAsync
 			}
 
-			val jsonObject = result as? JsonObject? ?: return@execute
+			val jsonObject = result as? JsonObject? ?: return@runAsync
 			if (!jsonObject.has("mcname") || !jsonObject.has("session"))
 			{
 				callback("An error occurred! [Redeem - 0x2] - Responce doesn't have 'mcname' or 'session' member!")
-				return@execute
+				return@runAsync
 			}
 
 			callback(RedeemResponse(jsonObject["mcname"].asString, jsonObject["session"].asString))
@@ -105,8 +104,11 @@ object MCLeaks
 			val jsonElement = gson.fromJson(readData, JsonElement::class.java)
 
 			if (!jsonElement.isJsonObject || !jsonElement.asJsonObject.has("success")) return "An error occurred! [Result Analysis - 0x1] - Responce is not JsonObject or Responce doesn't have 'success' member!"
-			if (!jsonElement.asJsonObject["success"].asBoolean) return if (jsonElement.asJsonObject.has("errorMessage")) jsonElement.asJsonObject["errorMessage"].asString else "An error occurred! [Result Analysis - 0x4] - Failed without any error message!"
+
+			if (!jsonElement.asJsonObject["success"].asBoolean) return if (jsonElement.asJsonObject.has("errorMessage")) "An error occurred! [Result Analysis - 0x4] - ${jsonElement.asJsonObject["errorMessage"].asString}" else "An error occurred! [Result Analysis - 0x4]"
+
 			if (!jsonElement.asJsonObject.has("result")) return "An error occurred! [Result Analysis - 0x3] - Responce doesn't have 'result' member!"
+
 			if (jsonElement.asJsonObject["result"].isJsonObject) jsonElement.asJsonObject["result"].asJsonObject else null
 		}
 		catch (e: Exception)

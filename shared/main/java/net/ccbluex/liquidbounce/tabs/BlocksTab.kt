@@ -24,6 +24,28 @@ class BlocksTab : WrappedCreativeTabs("Special blocks")
 	}
 
 	/**
+	 * Return icon item of tab
+	 *
+	 * @return icon item
+	 */
+	override val tabIconItem: IItem
+		get() = classProvider.createItemStack(classProvider.getBlockEnum(BlockType.COMMAND_BLOCK)).item!!
+
+	/**
+	 * Return name of tab
+	 *
+	 * @return tab name
+	 */
+	override val translatedTabLabel
+		get() = "Special blocks"
+
+	/**
+	 * @return searchbar status
+	 */
+	override val hasSearchBar
+		get() = true
+
+	/**
 	 * Add all items to tab
 	 *
 	 * @param itemList list of tab items
@@ -42,28 +64,4 @@ class BlocksTab : WrappedCreativeTabs("Special blocks")
 		itemList.add(provider.createItemStack(provider.getBlockEnum(BlockType.MOB_SPAWNER)))
 		itemList.add(provider.createItemStack(provider.getBlockEnum(BlockType.LIT_FURNACE)))
 	}
-
-	/**
-	 * Return icon item of tab
-	 *
-	 * @return icon item
-	 */
-	override fun getTabIconItem(): IItem
-	{
-		val provider = classProvider
-
-		return provider.createItemStack(provider.getBlockEnum(BlockType.COMMAND_BLOCK)).item!!
-	}
-
-	/**
-	 * Return name of tab
-	 *
-	 * @return tab name
-	 */
-	override fun getTranslatedTabLabel() = "Special blocks"
-
-	/**
-	 * @return searchbar status
-	 */
-	override fun hasSearchBar() = true
 }

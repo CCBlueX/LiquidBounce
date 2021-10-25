@@ -16,9 +16,9 @@ class ScriptTab(private val tabObject: JSObject) : WrappedCreativeTabs(tabObject
 {
 	val items = ScriptUtils.convert(tabObject.getMember("items"), Array<IItemStack>::class.java) as Array<IItemStack>
 
-	override fun getTabIconItem() = ItemUtils.createItem(tabObject.getMember("icon") as String)?.item!!
+	override val tabIconItem get() = ItemUtils.createItem(tabObject.getMember("icon") as String)?.item!!
 
-	override fun getTranslatedTabLabel() = tabObject.getMember("name") as String
+	override val translatedTabLabel get() = tabObject.getMember("name") as String
 
 	override fun displayAllReleventItems(itemList: MutableList<IItemStack>)
 	{

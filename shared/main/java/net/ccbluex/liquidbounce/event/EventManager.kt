@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.event
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.features.module.Module
 
 class EventManager
 {
@@ -52,7 +53,7 @@ class EventManager
 		val targets = registry[event.javaClass] ?: return
 
 		targets.filter { it.isIgnoreCondition || it.eventClass.handleEvents() }.forEach {
-			val name = it.eventClass.javaClass.simpleName.ifEmpty { "anonymous" }
+			val name = (if (it.eventClass is Module) it.eventClass.name else it.eventClass.javaClass.simpleName).ifEmpty { "anonymous" }
 			profiler?.startSection(name)
 
 			try

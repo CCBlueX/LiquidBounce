@@ -18,15 +18,17 @@ object AsyncUtils
 	}
 }
 
+// Kotlin style
 fun runAsync(commandBlock: () -> Unit) = AsyncUtils.workers.execute(commandBlock)
 
+// Java style
 fun runAsync(command: Runnable) = AsyncUtils.workers.execute(command)
 
 fun runSync(commandBlock: () -> Unit) = LiquidBounce.wrapper.minecraft.addScheduledTask(commandBlock)
 
 fun <T> supplyAsync(supplierBlock: () -> T): Future<T> = AsyncUtils.workers.submit(supplierBlock)
 
-// delayMillis: Long, task: () -> Unit -> WorkerUtils.scheduledWorkers.schedule(task, delayMillis, TimeUnit.MILLISECONDS)
+fun <T> supplySync(supplierBlock: () -> T): Future<T> = LiquidBounce.wrapper.minecraft.addScheduledTask(supplierBlock)
 
 fun <T> runAsyncDelayed(delayInMillis: Long, commandBlock: () -> T): ScheduledFuture<T> = AsyncUtils.scheduledWorkers.schedule(commandBlock, delayInMillis, TimeUnit.MILLISECONDS)
 

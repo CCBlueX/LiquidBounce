@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(VisGraph.class)
 public class MixinVisGraph
 {
-	@Inject(method = "func_178606_a", at = @At("HEAD"), cancellable = true)
+	@Inject(method = "func_178606_a" /* setOpaqueCube */, at = @At("HEAD"), cancellable = true)
 	private void injectXRay(final CallbackInfo callbackInfo)
 	{
 		if (LiquidBounce.moduleManager.get(XRay.class).getState())

@@ -48,7 +48,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 	private val textPositionY = FloatValue("TextPosition-Y", 2F, 0F, 5F)
 
 	private val tabHeight = FloatValue("TabHeight", 12F, 10F, 15F)
-	private val upperCaseValue = BoolValue("UpperCase", false)
+	private val textVarianceModeValue = ListValue("Variance", arrayOf("Original", "lowercase", "UPPERCASE", "UPPER-EXCEPT-i", "uPPER-eXCEPT-fIRST", "uPPER-eXCEPT-i-aND-fiRST"), "Original")
 
 	private val fontValue = FontValue("Font", Fonts.font35)
 
@@ -115,8 +115,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 
 			var y = 1F
 			tabs.forEachIndexed { index, tab ->
-				val tabName = if (upperCaseValue.get()) tab.tabName.toUpperCase()
-				else tab.tabName
+				val tabName = applyVariance(tab.tabName)
 
 				val textX = if (side.horizontal == Side.Horizontal.RIGHT) width - fontRenderer.getStringWidth(tabName) - tab.textFade - 3
 				else tab.textFade + 5
@@ -137,7 +136,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 					val tabX = if (side.horizontal == Side.Horizontal.RIGHT) 1F - tab.menuWidth
 					else width + 5
 
-					tab.drawTab(tabX, y, rectColor, backgroundColor, borderColor, borderStrengthValue.get(), upperCaseValue.get(), fontRenderer, borderRainbow.get(), rectangleRainbowEnabled)
+					tab.drawTab(tabX, y, rectColor, backgroundColor, borderColor, borderStrengthValue.get(), fontRenderer, borderRainbow.get(), rectangleRainbowEnabled)
 				}
 
 				y += tabHeight.get()
@@ -275,6 +274,16 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 		}
 	}
 
+	private fun applyVariance(string: String): String = when (textVarianceModeValue.get().toLowerCase())
+	{
+		"lowercase" -> string.toLowerCase()
+		"uppercase" -> string.toUpperCase()
+		"upper-except-i" -> string.toUpperCase().replace('I', 'i', ignoreCase = false)
+		"upper-except-first" -> string[0].toLowerCase() + string.substring(1).toUpperCase().replace('I', 'i', ignoreCase = false)
+		"upper-except-i-and-first" -> string[0].toLowerCase() + string.substring(1).toUpperCase().replace('I', 'i', ignoreCase = false)
+		else -> string
+	}
+
 	/**
 	 * TabGUI Tab
 	 */
@@ -285,9 +294,9 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 		var menuWidth = 0
 		var textFade = 0F
 
-		fun drawTab(x: Float, y: Float, color: Int, backgroundColor: Int, borderColor: Int, borderStrength: Float, upperCase: Boolean, fontRenderer: IFontRenderer, borderRainbow: Boolean, rectRainbow: Boolean)
+		fun drawTab(x: Float, y: Float, color: Int, backgroundColor: Int, borderColor: Int, borderStrength: Float, fontRenderer: IFontRenderer, borderRainbow: Boolean, rectRainbow: Boolean)
 		{
-			menuWidth = modules.map { fontRenderer.getStringWidth(if (upperCase) it.name.toUpperCase() else it.name) }.max()?.plus(7) ?: 10
+			menuWidth = modules.map { fontRenderer.getStringWidth(applyVariance(it.name)) }.max()?.plus(7) ?: 10
 
 			val tabHeight = tabHeight.get()
 			val menuHeight = modules.size * tabHeight
@@ -311,7 +320,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 
 			RenderUtils.resetColor()
 
-			modules.forEachIndexed { index, module -> fontRenderer.drawString(if (upperCase) module.name.toUpperCase() else module.name, x + 2F, y + tabHeight * index + textPositionY.get(), if (module.state) 0xffffff else 0xcdcdcd, textShadow.get()) }
+			modules.forEachIndexed { index, module -> fontRenderer.drawString(applyVariance(module.name), x + 2F, y + tabHeight * index + textPositionY.get(), if (module.state) 0xffffff else 0xcdcdcd, textShadow.get()) }
 		}
 	}
 

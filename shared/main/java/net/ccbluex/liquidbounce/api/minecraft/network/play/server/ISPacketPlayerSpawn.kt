@@ -14,7 +14,7 @@ interface ISPacketPlayerSpawn : IPacket
 	val entityID: Int
 	val uuid: UUID
 
-	val x: Double // FIXME: Remove corrections (divide by 32), move it to 1.8.9 backend
+	val x: Double
 	val y: Double
 	val z: Double
 }

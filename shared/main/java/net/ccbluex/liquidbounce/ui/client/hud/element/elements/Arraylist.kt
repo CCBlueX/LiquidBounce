@@ -38,7 +38,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 	private val textColorValue = RGBColorValue("Color", 0, 111, 255, Triple("Text-R", "Text-G", "Text-B"))
 
 	private val textShadowValue = BoolValue("Shadow", true, "ShadowText")
-	private val textUpperCaseValue = BoolValue("UpperCase", false)
+	private val textVarianceModeValue = ListValue("Variance", arrayOf("Original", "lowercase", "UPPERCASE", "UPPER-EXCEPT-i", "uPPER-eXCEPT-fIRST", "uPPER-eXCEPT-i-aND-fiRST"), "Original")
 
 	private val spaceValue = FloatValue("Space", 0F, 0F, 5F, "Space")
 	private val textHeightValue = FloatValue("Height", 11F, 1F, 20F, "TextHeight")
@@ -93,7 +93,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 	init
 	{
 		textColorGroup.addAll(textColorModeValue, textColorValue)
-		textGroup.addAll(textColorGroup, textShadowValue, textUpperCaseValue)
+		textGroup.addAll(textColorGroup, textShadowValue, textVarianceModeValue)
 
 		tagsColorGroup.addAll(tagsColorModeValue, tagsColorValue)
 		tagsGroup.addAll(tagsModeValue, tagsSpaceValue, tagsColorGroup)
@@ -120,17 +120,9 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 			val slideAnimationSpeed = 21F - animationSpeedValue.get().coerceIn(0.01f, 20f)
 			val deltaTime = RenderUtils.frameTime
 
-			val uppercase = textUpperCaseValue.get()
-
 			LiquidBounce.moduleManager.modules.filter(Module::array).filter { it.state || it.slide != 0F }.forEach { module ->
-				var moduleName = module.name
-				var moduleTag = formatTag(module)
-
-				if (uppercase)
-				{
-					moduleName = moduleName.toUpperCase()
-					moduleTag = moduleTag.toUpperCase()
-				}
+				val moduleName = applyVariance(module.name)
+				val moduleTag = applyVariance(formatTag(module))
 
 				val width = fontRenderer.getStringWidth(moduleName) + if (moduleTag.isEmpty()) 0f else tagSpace + fontRenderer.getStringWidth(moduleTag)
 
@@ -211,14 +203,8 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 				Horizontal.RIGHT, Horizontal.MIDDLE ->
 				{
 					modules.forEachIndexed { index, module ->
-						var moduleName = module.name
-						var moduleTag = formatTag(module)
-
-						if (uppercase)
-						{
-							moduleName = moduleName.toUpperCase()
-							moduleTag = moduleTag.toUpperCase()
-						}
+						val moduleName = applyVariance(module.name)
+						val moduleTag = applyVariance(formatTag(module))
 
 						val xPos = -module.slide - 2f
 						val yPos = (if (verticalSide == Vertical.DOWN) -textSpacer else textSpacer) * if (verticalSide == Vertical.DOWN) index + 1 else index
@@ -314,24 +300,15 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 				Horizontal.LEFT ->
 				{
 					modules.forEachIndexed { index, module ->
-						var moduleName = module.name
-						var moduleTag = formatTag(module)
+						val moduleName = applyVariance(module.name)
+						val moduleTag = applyVariance(formatTag(module))
 
 						val nextModuleIndex = if (verticalSide == Vertical.DOWN) -1 else 1
 						val isLastModule = index + nextModuleIndex == modules.size
 						val nextModule = modules[(index + nextModuleIndex).coerceIn(0, modules.size - 1)]
 
-						var nextModuleName = nextModule.name
-						var nextModuleTag = formatTag(nextModule)
-
-						if (uppercase)
-						{
-							moduleName = moduleName.toUpperCase()
-							moduleTag = moduleTag.toUpperCase()
-
-							nextModuleName = nextModuleName.toUpperCase()
-							nextModuleTag = nextModuleTag.toUpperCase()
-						}
+						val nextModuleName = applyVariance(nextModule.name)
+						val nextModuleTag = applyVariance(formatTag(nextModule))
 
 						val width = fontRenderer.getStringWidth(moduleName) + if (moduleTag.isBlank()) 0f else tagSpace + fontRenderer.getStringWidth(moduleTag)
 						val xPos = -(width - module.slide) + 2F + if (leftRect) rectWidth else 0F
@@ -458,6 +435,21 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 		return null
 	}
 
+	/**
+	 * xd
+	 *
+	 * @author eric0210
+	 */
+	private fun applyVariance(string: String): String = when (textVarianceModeValue.get().toLowerCase())
+	{
+		"lowercase" -> string.toLowerCase()
+		"uppercase" -> string.toUpperCase()
+		"upper-except-i" -> string.toUpperCase().replace('I', 'i', ignoreCase = false)
+		"upper-except-first" -> if (string.length <= 1) string.toLowerCase() else string[0].toLowerCase() + string.substring(1).toUpperCase()
+		"upper-except-i-and-first" -> if (string.length <= 1) string.toLowerCase() else string[0].toLowerCase() + string.substring(1).toUpperCase().replace('I', 'i', ignoreCase = false)
+		else -> string
+	}
+
 	private fun formatTag(module: Module): String
 	{
 		val originalTagString = if (!tagsModeValue.get().equals("Off", ignoreCase = true)) module.tag ?: return "" else return ""
@@ -477,16 +469,9 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 		val tagSpace = tagsSpaceValue.get()
 
 		modules = LiquidBounce.moduleManager.modules.filter(Module::array).filter { it.slide > 0 }.sortedBy {
-			var name = it.name
-			var tag = formatTag(it)
+			val tag = applyVariance(formatTag(it))
 
-			if (textUpperCaseValue.get())
-			{
-				name = name.toUpperCase()
-				tag = tag.toUpperCase()
-			}
-
-			-(font.getStringWidth(name) + if (tag.isEmpty()) 0f else tagSpace + font.getStringWidth(tag))
+			-(font.getStringWidth(applyVariance(it.name)) + if (tag.isEmpty()) 0f else tagSpace + font.getStringWidth(tag))
 		}
 	}
 }

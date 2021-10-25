@@ -414,7 +414,7 @@ class KillAura : Module()
 			updateHitable(theWorld, thePlayer)
 
 			// Delayed-AutoBlock
-			if (autoBlockValue.get().equals("AfterTick", true) && getCanBlock(thePlayer)) startBlocking(thePlayer, currentTarget, interactAutoBlockEnabledValue.get() && hitable)
+			if (autoBlockValue.get().equals("AfterTick", true) && canAutoBlock(thePlayer)) startBlocking(thePlayer, currentTarget, interactAutoBlockEnabledValue.get() && hitable)
 
 			return
 		}
@@ -489,8 +489,7 @@ class KillAura : Module()
 		updateTarget(theWorld, thePlayer)
 
 		// Pre-AutoBlock
-		if (autoBlockTarget != null && !autoBlockValue.get().equals("AfterTick", ignoreCase = true) && getCanBlock(thePlayer) && (!autoBlockHitableCheckValue.get() || hitable)) startBlocking(thePlayer, autoBlockTarget, interactAutoBlockEnabledValue.get())
-		else if (getCanBlock(thePlayer)) stopBlocking()
+		if (autoBlockTarget != null && !autoBlockValue.get().equals("AfterTick", ignoreCase = true) && canAutoBlock(thePlayer) && (!autoBlockHitableCheckValue.get() || hitable)) startBlocking(thePlayer, autoBlockTarget, interactAutoBlockEnabledValue.get()) else if (canAutoBlock(thePlayer)) stopBlocking()
 
 		// Target
 		currentTarget = target ?: return
@@ -517,23 +516,27 @@ class KillAura : Module()
 
 		val screen = mc.currentScreen
 
-		val provider = classProvider
-
 		attackRange = rangeAttackValue.get()
-		val throughWallsRange = rangeThroughWallsAttackValue.get()
 		aimRange = rangeAimValue.get()
 		swingRange = swingRangeValue.get()
 		blockRange = autoBlockRangeValue.get()
 		interactBlockRange = interactAutoBlockRangeValue.get()
 
+		// Range mark
 		val markRangeMode = visualMarkRangeModeValue.get().toLowerCase()
 		if (markRangeMode != "none")
 		{
 			val arr = arrayOfNulls<Pair<Float, Int>?>(6)
+
 			arr[0] = attackRange to visualMarkRangeColorAttackValue.get()
+
+			val throughWallsRange = rangeThroughWallsAttackValue.get()
 			if (throughWallsRange > 0) arr[1] = throughWallsRange to visualMarkRangeColorThroughWallsAttackValue.get()
+
 			arr[2] = aimRange to visualMarkRangeColorAimValue.get()
+
 			if (swingFakeSwingValue.get()) arr[3] = swingRange to visualMarkRangeColorSwingValue.get()
+
 			if (!autoBlockValue.get().equals("Off", ignoreCase = true))
 			{
 				arr[4] = blockRange to visualMarkRangeColorBlockValue.get()
@@ -548,14 +551,14 @@ class KillAura : Module()
 			}).filterNotNull()
 		}
 
-		if (noInventoryAttackEnabledValue.get() && (provider.isGuiContainer(screen) || System.currentTimeMillis() - containerOpen < noInventoryDelayValue.get()))
+		if (noInventoryAttackEnabledValue.get() && (classProvider.isGuiContainer(screen) || System.currentTimeMillis() - containerOpen < noInventoryDelayValue.get()))
 		{
 			target = null
 			currentTarget = null
 			hitable = false
 			comboReach = 0.0F
 
-			if (provider.isGuiContainer(screen)) containerOpen = System.currentTimeMillis()
+			if (classProvider.isGuiContainer(screen)) containerOpen = System.currentTimeMillis()
 
 			return
 		}
@@ -780,7 +783,7 @@ class KillAura : Module()
 				thePlayer.swingItem()
 
 				// Start blocking after FAKE attack
-				if ((isBlocking || (getCanBlock(thePlayer) && distance <= blockRange)) && !autoBlockValue.get().equals("AfterTick", true)) startBlocking(thePlayer, theCurrentTarget, interactAutoBlockEnabledValue.get())
+				if ((isBlocking || (canAutoBlock(thePlayer) && distance <= blockRange)) && !autoBlockValue.get().equals("AfterTick", true)) startBlocking(thePlayer, theCurrentTarget, interactAutoBlockEnabledValue.get())
 			}
 		}
 		else
@@ -985,7 +988,7 @@ class KillAura : Module()
 		}
 
 		// Start blocking after attack
-		if ((thePlayer.isBlocking || (getCanBlock(thePlayer) && thePlayer.getDistanceToEntityBox(entity) <= blockRange)) && !autoBlockValue.get().equals("AfterTick", true)) startBlocking(thePlayer, entity, interactAutoBlockEnabledValue.get())
+		if ((thePlayer.isBlocking || (canAutoBlock(thePlayer) && thePlayer.getDistanceToEntityBox(entity) <= blockRange)) && !autoBlockValue.get().equals("AfterTick", true)) startBlocking(thePlayer, entity, interactAutoBlockEnabledValue.get())
 
 		@Suppress("ConstantConditionIf") if (Backend.MINECRAFT_VERSION_MINOR != 8) thePlayer.resetCooldown()
 	}
@@ -1290,7 +1293,7 @@ class KillAura : Module()
 	/**
 	 * Check if player is able to block
 	 */
-	private fun getCanBlock(thePlayer: IEntityPlayer): Boolean = thePlayer.heldItem != null && classProvider.isItemSword(thePlayer.heldItem?.item) && Backend.MINECRAFT_VERSION_MINOR == 8
+	private fun canAutoBlock(thePlayer: IEntityPlayer): Boolean = thePlayer.heldItem != null && classProvider.isItemSword(thePlayer.heldItem?.item) && Backend.MINECRAFT_VERSION_MINOR == 8
 
 	/**
 	 * Range

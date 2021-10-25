@@ -80,7 +80,7 @@ class LongJump : Module()
 	private var jumped = false
 	private var canBoost = false
 	private var boosted = false
-	private var canMineplexBoost = false
+	private var canMineplex2Boost = false
 
 	private var teleportTicks = 0
 
@@ -89,7 +89,7 @@ class LongJump : Module()
 		boosted = false
 		jumped = false
 		canBoost = false
-		canMineplexBoost = false
+		canMineplex2Boost = false
 
 		if (autoDisableScaffoldValue.get())
 		{
@@ -124,7 +124,7 @@ class LongJump : Module()
 			if (thePlayer.onGround || thePlayer.capabilities.isFlying)
 			{
 				jumped = false
-				canMineplexBoost = false
+				canMineplex2Boost = false
 
 				if (mode.equals("NCP", ignoreCase = true)) thePlayer.zeroXZ()
 
@@ -180,7 +180,7 @@ class LongJump : Module()
 
 					"mineplex2" ->
 					{
-						if (!canMineplexBoost) return@run
+						if (!canMineplex2Boost) return@run
 
 						thePlayer.jumpMovementFactor = 0.1f
 
@@ -208,7 +208,6 @@ class LongJump : Module()
 		if (autoJumpValue.get() && thePlayer.onGround && thePlayer.isMoving)
 		{
 			jumped = true
-
 
 			if (damageOnStartValue.get()) when (damageModeValue.get().toLowerCase())
 			{
@@ -272,18 +271,21 @@ class LongJump : Module()
 
 		if (state)
 		{
+			if (damageOnStartValue.get()) when (damageModeValue.get().toLowerCase())
+			{
+				"ncp" -> Damage.ncpDamage()
+				"hypixel" -> Damage.hypixelDamage()
+			}
+
 			when (modeValue.get().toLowerCase())
 			{
 				"mineplex" -> event.motion = event.motion * 4.08f
 
-				"mineplex2" ->
+				"mineplex2" -> if (thePlayer.isCollidedHorizontally)
 				{
-					if (thePlayer.isCollidedHorizontally)
-					{
-						event.motion = 2.31f
-						canMineplexBoost = true
-						thePlayer.onGround = false
-					}
+					event.motion = 2.31f
+					canMineplex2Boost = true
+					thePlayer.onGround = false
 				}
 			}
 		}

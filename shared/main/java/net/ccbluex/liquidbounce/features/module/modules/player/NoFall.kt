@@ -26,6 +26,12 @@ import net.ccbluex.liquidbounce.value.*
 import kotlin.math.ceil
 import kotlin.math.pow
 
+/**
+ * TODO
+ * * https://forum.ccbluex.net/thread.php?id=2530#p14704
+ * * https://forums.ccbluex.net/topic/556/switchnofall-betternofall-recode/3
+ * * https://forums.ccbluex.net/topic/787/blinkfall-5-1?_=1635005507761&lang=ko
+ */
 @ModuleInfo(name = "NoFall", description = "Prevents you from taking fall damage.", category = ModuleCategory.PLAYER)
 class NoFall : Module()
 {
@@ -53,7 +59,7 @@ class NoFall : Module()
 	private val spartanTimer = TickTimer()
 	private val mlgTimer = TickTimer()
 
-	private var currentState = 0
+	private var aacTicks = 0
 	private var jumped = false
 	private var noSpoof = 0
 
@@ -128,32 +134,32 @@ class NoFall : Module()
 				if (fallDistance > thresholdFallDistance)
 				{
 					networkManager.sendPacketWithoutEvent(provider.createCPacketPlayer(true))
-					currentState = 2
+					aacTicks = 2
 				}
-				else if (currentState == 2 && fallDistance < 2)
+				else if (aacTicks == 2 && fallDistance < 2)
 				{
 					thePlayer.motionY = 0.1
-					currentState = 3
+					aacTicks = 3
 					return
 				}
-				when (currentState)
+				when (aacTicks)
 				{
 					3 ->
 					{
 						thePlayer.motionY = 0.1
-						currentState = 4
+						aacTicks = 4
 					}
 
 					4 ->
 					{
 						thePlayer.motionY = 0.1
-						currentState = 5
+						aacTicks = 5
 					}
 
 					5 ->
 					{
 						thePlayer.motionY = 0.1
-						currentState = 1
+						aacTicks = 1
 					}
 				}
 			}

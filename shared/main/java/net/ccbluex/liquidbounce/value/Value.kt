@@ -208,6 +208,11 @@ abstract class RangeValue<T : Comparable<T>>(name: String, protected var minValu
 
 abstract class ColorValue(name: String, protected var r: Int, protected var g: Int, protected var b: Int, protected var a: Int = 255, private val aliases: List<String?>? = null) : AbstractValue(name)
 {
+	fun set(hex: Int)
+	{
+		set(hex shr 16 and 0xFF, hex shr 8 and 0xFF, hex and 0xFF, hex shr 24 and 0xFF)
+	}
+
 	fun set(newRed: Int, newGreen: Int, newBlue: Int, newAlpha: Int)
 	{
 		if (newRed == r && newGreen == g && newBlue == b && newAlpha == a) return
@@ -454,7 +459,7 @@ open class BoolValue(name: String, value: Boolean, alias: String? = null) : Valu
 /**
  * Integer value represents a value with a integer
  */
-open class IntegerValue(name: String, value: Int, val minimum: Int = 0, val maximum: Int = Int.MAX_VALUE, alias: String? = null) : Value<Int>(name, value, alias)
+open class IntegerValue(name: String, value: Int, val minimum: Int, val maximum: Int, alias: String? = null) : Value<Int>(name, value, alias)
 {
 
 	fun set(newValue: Number)
@@ -470,7 +475,7 @@ open class IntegerValue(name: String, value: Int, val minimum: Int = 0, val maxi
 	}
 }
 
-open class IntegerRangeValue(name: String, minValue: Int, maxValue: Int, val minimum: Int = 0, val maximum: Int = Int.MAX_VALUE, aliases: Pair<String, String>? = null) : RangeValue<Int>(name, minValue, maxValue, aliases)
+open class IntegerRangeValue(name: String, minValue: Int, maxValue: Int, val minimum: Int, val maximum: Int, aliases: Pair<String, String>? = null) : RangeValue<Int>(name, minValue, maxValue, aliases)
 {
 	fun setMin(newValue: Number)
 	{
@@ -553,7 +558,7 @@ open class IntegerRangeValue(name: String, minValue: Int, maxValue: Int, val min
 /**
  * Float value represents a value with a float
  */
-open class FloatValue(name: String, value: Float, val minimum: Float = 0F, val maximum: Float = Float.MAX_VALUE, alias: String? = null) : Value<Float>(name, value, alias)
+open class FloatValue(name: String, value: Float, val minimum: Float, val maximum: Float, alias: String? = null) : Value<Float>(name, value, alias)
 {
 
 	fun set(newValue: Number)
@@ -569,7 +574,7 @@ open class FloatValue(name: String, value: Float, val minimum: Float = 0F, val m
 	}
 }
 
-open class FloatRangeValue(name: String, minValue: Float, maxValue: Float, val minimum: Float = 0F, val maximum: Float = Float.MAX_VALUE, aliases: Pair<String, String>? = null) : RangeValue<Float>(name, minValue, maxValue, aliases)
+open class FloatRangeValue(name: String, minValue: Float, maxValue: Float, val minimum: Float, val maximum: Float, aliases: Pair<String, String>? = null) : RangeValue<Float>(name, minValue, maxValue, aliases)
 {
 	fun setMin(newValue: Number)
 	{

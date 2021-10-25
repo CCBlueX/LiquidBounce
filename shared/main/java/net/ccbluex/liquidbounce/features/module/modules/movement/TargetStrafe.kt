@@ -16,7 +16,6 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
-import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbowRGB
@@ -188,7 +187,7 @@ class TargetStrafe : Module()
 			}
 
 			// TODO: Better calculation algorithm (current one is the ugliest one)
-			val resultYawRadians = WMathHelper.toRadians(WMathHelper.wrapAngleTo180_float(WMathHelper.toDegrees(StrictMath.atan2(encirclementZ + strafeZ, encirclementX + strafeX).toFloat()) - 90.0f))
+			val resultYawRadians = WMathHelper.toRadians(WMathHelper.wrapAngleTo180_float(WMathHelper.toDegrees(atan2(encirclementZ + strafeZ, encirclementX + strafeX).toFloat()) - 90.0f))
 			event.x = -func.sin(resultYawRadians) * moveSpeed
 			event.z = func.cos(resultYawRadians) * moveSpeed
 

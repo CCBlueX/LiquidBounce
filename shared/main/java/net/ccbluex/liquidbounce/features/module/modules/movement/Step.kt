@@ -7,9 +7,9 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.enums.StatType
-import net.ccbluex.liquidbounce.api.minecraft.network.INetworkManager
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
+import net.ccbluex.liquidbounce.api.minecraft.network.INetworkManager
 import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
@@ -341,7 +341,7 @@ class Step : Module()
 		}
 	}
 
-	// There could be some anti cheats which tries to detect step by checking for achievements and stuff
+	// There could be some anti cheats which tries to detect step by checking for achievements and stuff (ex: Hypixel Watchdog)
 	private fun fakeJump(thePlayer: IEntityPlayer)
 	{
 		thePlayer.isAirBorne = true

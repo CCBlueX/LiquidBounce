@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.value.*
@@ -34,6 +35,7 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
 				{
 					is BoolValue -> "<on/off>"
 					is RangeValue<*> -> "<min/max> <new value>"
+					is FontValue -> "<font name> <font size>"
 					else -> "<new value>"
 				}
 				"${it.name.toLowerCase()} $newValueParameters"
@@ -82,53 +84,70 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
 		{
 			if (args.size < 3)
 			{
-				chat(thePlayer, "\u00A77${module.name} \u00A78$valueName\u00A77 = ${
-					when (value)
-					{
-						is RangeValue<*> -> "${value.getMin()}-${value.getMax()}"
-						is ColorValue -> "\u00A7cRed: ${value.getRed()} \u00A7aGreen: ${value.getGreen()} \u00A79Blue: ${value.getBlue()}${if (value is RGBAColorValue) " \u00A77Alpha: ${value.getAlpha()}" else ""}"
-						else -> (value as Value<*>).get()
-					}
-				}\u00A77.") // Print current state
+				chat(thePlayer, "\u00A77${module.name} \u00A78$valueName\u00A77 = ${valueToString(value)}\u00A77.") // Print current state
 				if (value is IntegerValue || value is FloatValue || value is TextValue) chatSyntax(thePlayer, "$moduleName $valueName <value>")
 				else if (value is ListValue) chatSyntax(thePlayer, "$moduleName $valueName <${value.values.joinToString(separator = "/").toLowerCase()}>")
 				return
 			}
 
-			if (args.size < 4) when (value)
+			try
 			{
-				is RangeValue<*> ->
+				if (args.size < 4) when (value)
 				{
-					chatSyntax(thePlayer, "$moduleName $valueName <min/max> <value>")
-					return
-				}
+					is RangeValue<*> ->
+					{
+						chatSyntax(thePlayer, "$moduleName $valueName <min|max> <value>")
+						return
+					}
 
-				is RGBColorValue ->
-				{
-					chatSyntax(thePlayer, "$moduleName $valueName <red/green/blue> <value>")
-					return
-				}
+					is RGBColorValue ->
+					{
+						if (args[2].startsWith('#') && args[2].length <= 9)
+						{
+							value.set(args[2].substring(1).takeLast(6).toInt(16))
+							chat(thePlayer, "\u00A77${module.name} \u00A78$valueName\u00A77 was set to \u00A78${valueToString(value)}\u00A77.")
+							return
+						}
 
-				is RGBAColorValue ->
-				{
-					chatSyntax(thePlayer, "$moduleName $valueName <red/green/blue/alpha> <value>")
-					return
+						chatSyntax(thePlayer, "$moduleName $valueName <<red|green|blue> <value> or #<hex>>")
+						return
+					}
+
+					is RGBAColorValue ->
+					{
+						if (args[2].startsWith('#') && args[2].length <= 9)
+						{
+							val hex = args[2].substring(1)
+							value.set(hex.takeLast(6).toInt(16) or ((hex.take(2).toInt(16) and 0xFF shl 24)))
+							chat(thePlayer, "\u00A77${module.name} \u00A78$valueName\u00A77 was set to \u00A78${valueToString(value)}\u00A77.")
+							return
+						}
+
+						chatSyntax(thePlayer, "$moduleName $valueName <<red|green|blue|alpha> <value> or #<hex>>")
+						return
+					}
 				}
 			}
-
+			catch (e: NumberFormatException)
+			{
+				chat(thePlayer, "\u00A78${args[2]}\u00A77 cannot be converted to number!")
+				return
+			}
 
 			try
 			{
+				val newValue = lazy(LazyThreadSafetyMode.NONE) { if (args[3].startsWith("0x", ignoreCase = true)) args[3].substring(2).toInt(16) else args[3].toInt(10) }
+
 				when (value)
 				{
 					is RGBColorValue ->
 					{
 						when (args[2].toLowerCase())
 						{
-							"r", "red" -> value.set(args[3].toInt(), value.getGreen(), value.getBlue(), value.getAlpha())
-							"g", "green" -> value.set(value.getRed(), args[3].toInt(), value.getBlue(), value.getAlpha())
-							"b", "blue" -> value.set(value.getRed(), value.getGreen(), args[3].toInt(), value.getAlpha())
-							else -> chatSyntax(thePlayer, "$moduleName $valueName <red/green/blue> <value>")
+							"r", "red" -> value.set(newValue.value, value.getGreen(), value.getBlue(), value.getAlpha())
+							"g", "green" -> value.set(value.getRed(), newValue.value, value.getBlue(), value.getAlpha())
+							"b", "blue" -> value.set(value.getRed(), value.getGreen(), newValue.value, value.getAlpha())
+							else -> chatSyntax(thePlayer, "$moduleName $valueName <red|green|blue> <value>")
 						}
 					}
 
@@ -136,11 +155,11 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
 					{
 						when (args[2].toLowerCase())
 						{
-							"r", "red" -> value.set(args[3].toInt(), value.getGreen(), value.getBlue(), value.getAlpha())
-							"g", "green" -> value.set(value.getRed(), args[3].toInt(), value.getBlue(), value.getAlpha())
-							"b", "blue" -> value.set(value.getRed(), value.getGreen(), args[3].toInt(), value.getAlpha())
-							"a", "alpha", "opacity" -> value.set(value.getRed(), value.getGreen(), value.getBlue(), args[3].toInt())
-							else -> chatSyntax(thePlayer, "$moduleName $valueName <red/green/blue/alpha> <value>")
+							"r", "red" -> value.set(newValue.value, value.getGreen(), value.getBlue(), value.getAlpha())
+							"g", "green" -> value.set(value.getRed(), newValue.value, value.getBlue(), value.getAlpha())
+							"b", "blue" -> value.set(value.getRed(), value.getGreen(), newValue.value, value.getAlpha())
+							"a", "alpha", "o", "opacity" -> value.set(value.getRed(), value.getGreen(), value.getBlue(), newValue.value)
+							else -> chatSyntax(thePlayer, "$moduleName $valueName <red|green|blue|alpha> <value>")
 						}
 					}
 
@@ -175,9 +194,9 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
 					{
 						when (args[2].toLowerCase())
 						{
-							"min" -> value.setMin(args[3].toInt())
-							"max" -> value.setMax(args[3].toInt())
-							else -> chatSyntax(thePlayer, "$moduleName $valueName <min/max> <value>")
+							"min" -> value.setMin(newValue.value)
+							"max" -> value.setMax(newValue.value)
+							else -> chatSyntax(thePlayer, "$moduleName $valueName <min|max> <value>")
 						}
 					}
 
@@ -189,7 +208,7 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
 						{
 							"min" -> value.setMin(args[3].toFloat())
 							"max" -> value.setMax(args[3].toFloat())
-							else -> chatSyntax(thePlayer, "$moduleName $valueName <min/max> <value>")
+							else -> chatSyntax(thePlayer, "$moduleName $valueName <min|max> <value>")
 						}
 					}
 
@@ -205,23 +224,42 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
 					}
 
 					is TextValue -> value.set(StringUtils.toCompleteString(args, 2))
-				}
 
-				chat(thePlayer, "\u00A77${module.name} \u00A78$valueName\u00A77 was set to \u00A78${
-					when (value)
+					is FontValue ->
 					{
-						is RangeValue<*> -> "${value.getMin()}-${value.getMax()}"
-						is ColorValue -> "\u00A7cRed: ${value.getRed()} \u00A7aGreen: ${value.getGreen()} \u00A79Blue: ${value.getBlue()}${if (value is RGBAColorValue) " \u00A77Alpha: ${value.getAlpha()}" else ""}"
-						else -> (value as Value<*>).get()
+						val fontName = args[2].replace("_", " ", false)
+
+						if (Fonts.fonts.firstOrNull { (Fonts.getFontDetails(it) ?: return@firstOrNull false).name.equals(fontName, true) && (args.size <= 3 || Fonts.getFontDetails(it)?.fontSize == args[3].toInt()) }?.let(value::set) == null)
+						{
+							chat(thePlayer, "Font \"$fontName\" ${if (args.size >= 4) "- ${args[3]}" else ""} not found.")
+							return
+						}
 					}
-				}\u00A77.")
-				playEdit()
+				}
 			}
 			catch (e: NumberFormatException)
 			{
-				chat(thePlayer, "\u00A78${args[2]}\u00A77 cannot be converted to number!")
+				chat(thePlayer, "\u00A78${args[3]}\u00A77 cannot be converted to number!")
 			}
+
+			chat(thePlayer, "\u00A77${module.name} \u00A78$valueName\u00A77 was set to \u00A78${valueToString(value)}\u00A77.")
+			playEdit()
 		}
+	}
+
+	private fun valueToString(value: AbstractValue): String = when (value)
+	{
+		is RangeValue<*> -> "${value.getMin()}-${value.getMax()}"
+
+		is ColorValue ->
+		{
+			val hasAlpha = value is RGBAColorValue
+			"\u00A7cRed: ${value.getRed()} \u00A7aGreen: ${value.getGreen()} \u00A79Blue: ${value.getBlue()}${if (hasAlpha) " \u00A77Alpha: ${value.getAlpha()}" else ""} \u00A78(Hex: #${if (hasAlpha) encodeToHex(value.getAlpha()) else ""}${encodeToHex(value.getRed())}${encodeToHex(value.getGreen())}${encodeToHex(value.getBlue())})"
+		}
+
+		is FontValue -> Fonts.getFontDetails(value.get())?.let { "${it.name} ${it.fontSize}" } ?: "(Unknown font)"
+
+		else -> "${(value as Value<*>).get()}"
 	}
 
 	override fun tabComplete(args: Array<String>): List<String>
@@ -230,28 +268,24 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
 
 		return when (args.size)
 		{
-			1 -> values.asSequence().map { it.name.toLowerCase() }.filter { it.startsWith(args[0].toLowerCase(), false) }.toList()
+			1 -> values.map(AbstractValue::name).filter { it.startsWith(args[0], true) }
 
-			2 ->
+			2 -> when (val value = module.getValue(args[0]))
 			{
-				when (module.getValue(args[0]))
-				{
-					is BlockValue -> return functions.getItemRegistryKeys().map { it.resourcePath.toLowerCase() }.filter { it.startsWith(args[1], true) }.toList()
+				is BlockValue -> return functions.getItemRegistryKeys().map { it.resourcePath.toLowerCase() }.filter { it.startsWith(args[1], true) }
 
-					is ListValue ->
-					{
-						values.forEach { value ->
-							if (!value.name.equals(args[0], true)) return@forEach
-							if (value is ListValue) return@tabComplete value.values.filter { it.startsWith(args[1], true) }
-						}
-						return emptyList()
-					}
+				is ListValue -> return value.values.filter { it.startsWith(args[1], true) }
 
-					else -> emptyList()
-				}
+				is FontValue -> Fonts.fonts.mapNotNull(Fonts::getFontDetails).map { it.name.replace(' ', '_') }.filter { it.startsWith(args[1], true) }
+
+				else -> emptyList()
 			}
+
+			3 -> if (module.getValue(args[0]) is FontValue) Fonts.fonts.mapNotNull(Fonts::getFontDetails).filter { it.name.equals(args[1].replace('_', ' '), ignoreCase = true) }.map { "${it.fontSize}" }.filter { it.startsWith(args[2], true) } else emptyList()
 
 			else -> emptyList()
 		}
 	}
+
+	private fun encodeToHex(hex: Int) = hex.toString(16).toUpperCase().padStart(2, '0')
 }

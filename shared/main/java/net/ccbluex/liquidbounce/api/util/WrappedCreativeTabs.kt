@@ -21,11 +21,16 @@ abstract class WrappedCreativeTabs(val name: String)
 		@Suppress("LeakingThis") wrapper.classProvider.wrapCreativeTab(name, this)
 	}
 
+	open val translatedTabLabel: String
+		get() = "asdf"
+
+	open val tabIconItem: IItem
+		get() = wrapper.classProvider.getItemEnum(ItemType.WRITABLE_BOOK)
+
+	open val hasSearchBar: Boolean
+		get() = true
+
 	open fun displayAllReleventItems(itemList: MutableList<IItemStack>)
 	{
 	}
-
-	open fun getTranslatedTabLabel(): String = "asdf"
-	open fun getTabIconItem(): IItem = wrapper.classProvider.getItemEnum(ItemType.WRITABLE_BOOK)
-	open fun hasSearchBar(): Boolean = true
 }

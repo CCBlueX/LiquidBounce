@@ -128,7 +128,7 @@ public abstract class MixinNetHandlerPlayClient
 	}
 
 	/**
-	 * @author eric0210
+	 * @author Mojang, eric0210
 	 * @reason NoRotateSet, SetBack Alert
 	 * @see    NoRotateSet
 	 */
@@ -205,7 +205,7 @@ public abstract class MixinNetHandlerPlayClient
 	}
 
 	/**
-	 * @author Eric0210
+	 * @author Mojang, Eric0210
 	 * @reason Velocity
 	 * @see    Velocity
 	 */

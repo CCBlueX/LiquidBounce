@@ -34,6 +34,28 @@ class HeadsTab : WrappedCreativeTabs("Heads")
 	}
 
 	/**
+	 * Return icon item of tab
+	 *
+	 * @return icon item
+	 */
+	override val tabIconItem: IItem
+		get() = classProvider.getItemEnum(ItemType.SKULL)
+
+	/**
+	 * Return name of tab
+	 *
+	 * @return tab name
+	 */
+	override val translatedTabLabel
+		get() = "Heads"
+
+	/**
+	 * @return searchbar status
+	 */
+	override val hasSearchBar
+		get() = true
+
+	/**
 	 * Load all heads from the database
 	 */
 	private fun loadHeads()
@@ -90,23 +112,4 @@ class HeadsTab : WrappedCreativeTabs("Heads")
 	{
 		itemList.addAll(heads)
 	}
-
-	/**
-	 * Return icon item of tab
-	 *
-	 * @return icon item
-	 */
-	override fun getTabIconItem(): IItem = classProvider.getItemEnum(ItemType.SKULL)
-
-	/**
-	 * Return name of tab
-	 *
-	 * @return tab name
-	 */
-	override fun getTranslatedTabLabel() = "Heads"
-
-	/**
-	 * @return searchbar status
-	 */
-	override fun hasSearchBar() = true
 }

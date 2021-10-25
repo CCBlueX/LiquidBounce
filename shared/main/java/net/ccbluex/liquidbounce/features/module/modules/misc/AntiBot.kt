@@ -569,9 +569,7 @@ object AntiBot : Module()
 
 	private fun handleEntityMovement(theWorld: IWorldClient, thePlayer: IEntityPlayer, target: IEntityPlayer, isTeleport: Boolean, newPos: WVec3, rotating: Boolean, encodedYaw: Byte, encodedPitch: Byte, onGround: Boolean)
 	{
-		val decodedYaw = if (rotating) encodedYaw * 360.0F / 256.0F else target.rotationYaw
-		val decodedPitch = if (rotating) encodedPitch * 360.0F / 256.0F else target.rotationPitch
-		checks.filter(BotCheck::isActive).forEach { it.onEntityMove(theWorld, thePlayer, target, isTeleport, newPos, rotating, decodedYaw, decodedPitch, onGround) }
+		checks.filter(BotCheck::isActive).forEach { it.onEntityMove(theWorld, thePlayer, target, isTeleport, newPos, rotating, if (rotating) encodedYaw * 360.0F / 256.0F else target.rotationYaw, if (rotating) encodedPitch * 360.0F / 256.0F else target.rotationPitch, onGround) }
 	}
 
 	@EventTarget

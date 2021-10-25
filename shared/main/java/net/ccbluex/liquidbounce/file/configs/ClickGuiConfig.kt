@@ -13,7 +13,6 @@ import net.ccbluex.liquidbounce.file.FileConfig
 import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ModuleElement
 import net.ccbluex.liquidbounce.utils.ClientUtils.logger
-import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import java.io.File
 import java.io.IOException
 
@@ -51,7 +50,7 @@ class ClickGuiConfig(file: File) : FileConfig(file)
 					try
 					{
 						val elementObject = panelObject.getAsJsonObject(it.module.name)
-						it.isShowSettings = elementObject["Settings"].asBoolean
+						it.showSettings = elementObject["Settings"].asBoolean
 					}
 					catch (e: Exception)
 					{
@@ -86,7 +85,7 @@ class ClickGuiConfig(file: File) : FileConfig(file)
 
 			panel.elements.filterIsInstance<ModuleElement>().forEach { element ->
 				val elementObject = JsonObject()
-				elementObject.addProperty("Settings", element.isShowSettings)
+				elementObject.addProperty("Settings", element.showSettings)
 				panelObject.add(element.module.name, elementObject)
 			}
 

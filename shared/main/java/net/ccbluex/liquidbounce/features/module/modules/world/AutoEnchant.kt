@@ -58,10 +58,9 @@ class AutoEnchant : Module()
 				delayTimer.reset()
 				return
 			}
-			val bestSwordSlot = findBestSword(container, 3, 39, null)
+			val bestSwordSlot = findBestWeapon(container, 3, 39)
 
 			// Enchant the best sword with Enchanted Book(s)
-			@Suppress("UNUSED_PARAMETER")
 			val bestEnchantedBookSlots = findBestEnchantedBooks(container, 3, 39, listOf(classProvider.getEnchantmentEnum(EnchantmentType.SHARPNESS), classProvider.getEnchantmentEnum(EnchantmentType.KNOCKBACK), classProvider.getEnchantmentEnum(EnchantmentType.FIRE_ASPECT), classProvider.getEnchantmentEnum(EnchantmentType.UNBREAKING)))
 			if (bestEnchantedBookSlots.isNotEmpty())
 			{
@@ -84,11 +83,16 @@ class AutoEnchant : Module()
 				var secondSwordSlot = -1
 				if (bestSwordSlot != -1)
 				{
-					if (item1Slot.stack == null) triedEnchantSwordSlots.add(bestSwordSlot) else triedEnchantSwordSlots.add(item1Slot.slotNumber)
+					var whiteID: Int? = null
+					(if (item1Slot.stack == null) bestSwordSlot else item1Slot.slotNumber).let { slot ->
+						triedEnchantSwordSlots.add(slot)
+						container.getSlot(slot).stack?.item?.let { whiteID = functions.getIdFromItem(it) }
+					}
 					triedEnchantSwordSlots.add(outputSlot.slotNumber)
+
 					do
 					{
-						secondSwordSlot = findBestSword(container, 0, 39, triedEnchantSwordSlots)
+						secondSwordSlot = findBestWeapon(container, 0, 39, whiteID, triedEnchantSwordSlots)
 						triedEnchantSwordSlots.add(secondSwordSlot)
 					} while (secondSwordSlot != -1 && container.getSlot(bestSwordSlot).stack != null && container.getSlot(secondSwordSlot).stack != null && (!container.getSlot(secondSwordSlot).stack?.item?.unlocalizedName.equals(container.getSlot(bestSwordSlot).stack?.item?.unlocalizedName, ignoreCase = true) || container.getSlot(secondSwordSlot).stack?.isItemEnchanted != true))
 				}
@@ -118,14 +122,18 @@ class AutoEnchant : Module()
 		}
 	}
 
-	private fun findBestSword(container: IContainer, start: Int, end: Int, blacklist: List<Int>?): Int
+	private fun findBestWeapon(container: IContainer, start: Int, end: Int, whitelistedID: Int? = null, blacklistedSlots: List<Int>? = null): Int
 	{
 		var slot = -1
 		var bestDamage = 0.0
 		for (i in start until end)
 		{
 			val itemStack = container.getSlot(i).stack
-			if (blacklist != null && blacklist.contains(i) || itemStack == null || itemStack.item == null) continue
+
+			if (blacklistedSlots != null && blacklistedSlots.contains(i) || itemStack == null || itemStack.item == null) continue
+
+			if (whitelistedID != null && functions.getIdFromItem(itemStack.item!!) != whitelistedID) continue
+
 			if (classProvider.isItemSword(itemStack.item) || classProvider.isItemTool(itemStack.item)) for (attributeModifier in itemStack.getAttributeModifier("generic.attackDamage"))
 			{
 				val damage = attributeModifier.amount + 1.25 * itemStack.getEnchantmentLevel(classProvider.getEnchantmentEnum(EnchantmentType.SHARPNESS))
