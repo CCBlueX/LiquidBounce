@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.item.ArmorItem
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket
 
 object ModuleAntiBot : Module("AntiBot", Category.MISC) {
@@ -73,10 +74,8 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
         private fun isArmored(entity: PlayerEntity): Boolean {
             var count = 0
             for (slot in 0..3) {
-                if (!entity.inventory.getArmorStack(slot).isEmpty &&
-                    entity.inventory.getArmorStack(slot).isEnchantable &&
-                    !entity.inventory.getArmorStack(slot).hasEnchantments()
-                ) {
+                if (entity.inventory.getArmorStack(slot).item is ArmorItem &&
+                    !entity.inventory.getArmorStack(slot).hasEnchantments()) {
                     count += 1
                 }
             }
