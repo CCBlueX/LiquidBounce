@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.Maps
+import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.Cooldown
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -33,11 +34,13 @@ class ExtendedTooltips : Module()
 {
 	private val attackDamageGroup = ValueGroup("AttackDamage")
 	private val attackDamageEnabledValue = BoolValue("Enabled", true, "AttackDamage")
+	private val attackDamageBackgroundEnabledValue = BoolValue("Background", false)
 	private val attackDamageShadowValue = BoolValue("Shadow", false, "AttackDamageShadow")
 	private val attackDamageScaleValue = FloatValue("Scale", 0.5F, 0.5F, 1F, "AttackDamageScale")
 
 	private val enchantmentsGroup = ValueGroup("Enchantments")
 	private val enchantmentsEnabledValue = BoolValue("Enabled", true, "Enchantments")
+	private val enchantmentsBackgroundEnabledValue = BoolValue("Background", false)
 	private val enchantmentsShadowValue = BoolValue("Shadow", false, "EnchantmentsShadow")
 	private val enchantmentsScaleValue = FloatValue("Scale", 0.5F, 0.5F, 1F, "EnchantmentsScale")
 
@@ -48,6 +51,7 @@ class ExtendedTooltips : Module()
 
 	private val heldItemCountGroup = ValueGroup("HeldItemCount")
 	private val heldItemCountEnabledValue = BoolValue("Enabled", true, "HeldItemCount")
+	private val heldItemCountBackgroundEnabledValue = BoolValue("Background", false)
 	private val heldItemCountShadowValue = BoolValue("Shadow", true, "HeldItemCountShadow")
 	private val heldItemCountScaleValue = FloatValue("Scale", 1F, 0.5F, 1F, "HeldItemCountScale")
 	private val heldItemCountYPosValue = IntegerValue("YPos", 46, 20, 100, "HeldItemCountYPos")
@@ -67,9 +71,9 @@ class ExtendedTooltips : Module()
 
 	init
 	{
-		attackDamageGroup.addAll(attackDamageEnabledValue, attackDamageShadowValue, attackDamageScaleValue)
-		enchantmentsGroup.addAll(enchantmentsEnabledValue, enchantmentsShadowValue, enchantmentsScaleValue)
-		heldItemCountGroup.addAll(heldItemCountEnabledValue, heldItemCountShadowValue, heldItemCountScaleValue, heldItemCountYPosValue)
+		attackDamageGroup.addAll(attackDamageEnabledValue, attackDamageBackgroundEnabledValue, attackDamageShadowValue, attackDamageScaleValue)
+		enchantmentsGroup.addAll(enchantmentsEnabledValue, enchantmentsBackgroundEnabledValue, enchantmentsShadowValue, enchantmentsScaleValue)
+		heldItemCountGroup.addAll(heldItemCountEnabledValue, heldItemCountBackgroundEnabledValue, heldItemCountShadowValue, heldItemCountScaleValue, heldItemCountYPosValue)
 	}
 
 	@EventTarget
@@ -105,33 +109,52 @@ class ExtendedTooltips : Module()
 		{
 			if (attackDamageEnabledValue.get())
 			{
-				val scale = attackDamageScaleValue.get()
-				val reverseScale = 1 / scale
+				val toDraw: String = getAttackDamageString(thePlayer, heldItemStack)
+				if (toDraw.isNotBlank())
+				{
+					val scale = attackDamageScaleValue.get()
+					val reverseScale = 1 / scale
 
-				GL11.glPushMatrix()
-				if (scale != 1.0F) GL11.glScalef(scale, scale, scale)
+					GL11.glPushMatrix()
 
-				val attackDamage: String = getAttackDamageString(thePlayer, heldItemStack)
+					val x = calcXPos(toDraw, scale, reverseScale)
+					val y = (height - dmgAndEnchYPos + (if (isSurvivalOrAdventure) -1 else 14) + fontHeight).toFloat()
 
-				font.drawString(attackDamage, calcXPos(attackDamage, scale, reverseScale), (height - dmgAndEnchYPos + (if (isSurvivalOrAdventure) -1 else 14) + fontHeight) * reverseScale, 13421772, attackDamageShadowValue.get())
+					if (attackDamageBackgroundEnabledValue.get()) RenderUtils.drawBorderedRect(x * scale - 2f, y, (x + font.getStringWidth(toDraw)) * scale + 2f, y + font.fontHeight * scale, 3f, -16777216, -16777216)
 
-				if (scale != 1.0F) GL11.glScalef(reverseScale, reverseScale, reverseScale)
-				GL11.glPopMatrix()
+					if (scale != 1.0F) GL11.glScalef(scale, scale, scale)
+
+					font.drawString(toDraw, x, y * reverseScale, 13421772, attackDamageShadowValue.get())
+
+					if (scale != 1.0F) GL11.glScalef(reverseScale, reverseScale, reverseScale)
+
+					GL11.glPopMatrix()
+				}
 			}
 
 			if (enchantmentsEnabledValue.get())
 			{
 				val toDraw: String = if (provider.isItemPotion(heldItemStack.item)) getPotionEffectString(heldItemStack) else getEnchantmentString(heldItemStack)
-				val scale = enchantmentsScaleValue.get()
-				val reverseScale = 1 / scale
+				if (toDraw.isNotBlank())
+				{
+					val scale = enchantmentsScaleValue.get()
+					val reverseScale = 1 / scale
 
-				GL11.glPushMatrix()
-				if (scale != 1.0F) GL11.glScalef(scale, scale, scale)
+					GL11.glPushMatrix()
 
-				font.drawString(toDraw, calcXPos(toDraw, scale, reverseScale), (height - dmgAndEnchYPos + if (isSurvivalOrAdventure) -2 else 14) * reverseScale, 13421772, enchantmentsShadowValue.get())
+					val x = calcXPos(toDraw, scale, reverseScale)
+					val y = (height - dmgAndEnchYPos + if (isSurvivalOrAdventure) -2 else 14).toFloat()
 
-				if (scale != 1.0F) GL11.glScalef(reverseScale, reverseScale, reverseScale)
-				GL11.glPopMatrix()
+					if (enchantmentsBackgroundEnabledValue.get()) RenderUtils.drawBorderedRect(x * scale - 2f, y, (x + font.getStringWidth(toDraw)) * scale + 2f, y + font.fontHeight * scale, 3f, -16777216, -16777216)
+
+					if (scale != 1.0F) GL11.glScalef(scale, scale, scale)
+
+					font.drawString(toDraw, x, y * reverseScale, 13421772, enchantmentsShadowValue.get())
+
+					if (scale != 1.0F) GL11.glScalef(reverseScale, reverseScale, reverseScale)
+
+					GL11.glPopMatrix()
+				}
 			}
 		}
 
@@ -145,14 +168,25 @@ class ExtendedTooltips : Module()
 			val bow = provider.isItemBow(currentEquippedItem.item)
 
 			val count = getHeldItemCount(thePlayer, currentEquippedItem, bow)
+			if (count > 1 || bow && count > 0)
+			{
+				val toDraw = "$count"
 
-			GL11.glPushMatrix()
-			if (scale != 1.0F) GL11.glScalef(scale, scale, scale)
+				GL11.glPushMatrix()
 
-			if (count > 1 || bow && count > 0) font.drawString("$count", calcXPos("$count", scale, reverseScale), (height - heldItemCountYPos - if (isSurvivalOrAdventure) 10 else 0) * reverseScale, 16777215, heldItemCountShadowValue.get())
+				val x = calcXPos(toDraw, scale, reverseScale)
+				val y = (height - heldItemCountYPos - if (isSurvivalOrAdventure) 10 else 0).toFloat()
 
-			if (scale != 1.0F) GL11.glScalef(reverseScale, reverseScale, reverseScale)
-			GL11.glPopMatrix()
+				if (heldItemCountBackgroundEnabledValue.get()) RenderUtils.drawBorderedRect(x * scale - 2f, y, (x + font.getStringWidth(toDraw)) * scale + 2f, y + font.fontHeight * scale, 3f, -16777216, -16777216)
+
+				if (scale != 1.0F) GL11.glScalef(scale, scale, scale)
+
+				font.drawString(toDraw, x, y * reverseScale, 16777215, heldItemCountShadowValue.get())
+
+				if (scale != 1.0F) GL11.glScalef(reverseScale, reverseScale, reverseScale)
+
+				GL11.glPopMatrix()
+			}
 		}
 
 		val screen = mc.currentScreen

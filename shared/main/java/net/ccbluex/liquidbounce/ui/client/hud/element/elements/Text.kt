@@ -125,6 +125,13 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 			return multiReplace(textContent)
 		}
 
+	// Workaround
+	private var deltaX = 0.0
+	private var deltaY = 0.0
+	private var deltaZ = 0.0
+
+	private var lastTick = -1
+
 	init
 	{
 		textColorGroup.addAll(textColorModeValue, textColorValue)
@@ -167,23 +174,45 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 				"my" -> return DECIMALFORMAT_2.format(thePlayer.motionY)
 				"mz" -> return DECIMALFORMAT_2.format(thePlayer.motionZ)
 
+				"dx" -> return DECIMALFORMAT_2.format(deltaX)
+				"dy" -> return DECIMALFORMAT_2.format(deltaY)
+				"dz" -> return DECIMALFORMAT_2.format(deltaZ)
+
 				"mxpersec" -> return DECIMALFORMAT_2.format(thePlayer.motionX * defaultTPS)
 				"mypersec" -> return DECIMALFORMAT_2.format(thePlayer.motionY * defaultTPS)
 				"mzpersec" -> return DECIMALFORMAT_2.format(thePlayer.motionZ * defaultTPS)
+
+				"dxpersec" -> return DECIMALFORMAT_2.format((deltaX) * defaultTPS)
+				"dypersec" -> return DECIMALFORMAT_2.format((deltaY) * defaultTPS)
+				"dzpersec" -> return DECIMALFORMAT_2.format((deltaZ) * defaultTPS)
 
 				"mxdp" -> return thePlayer.motionX.toString()
 				"mydp" -> return thePlayer.motionY.toString()
 				"mzdp" -> return thePlayer.motionZ.toString()
 
-				"mxdppersec" -> return (thePlayer.motionX * defaultTPS).toString()
-				"mydppersec" -> return (thePlayer.motionY * defaultTPS).toString()
-				"mzdppersec" -> return (thePlayer.motionZ * defaultTPS).toString()
+				"dxdp" -> return "$deltaX"
+				"dydp" -> return "$deltaY"
+				"dzdp" -> return "$deltaZ"
+
+				"mxdppersec" -> return "${thePlayer.motionX * defaultTPS}"
+				"mydppersec" -> return "${thePlayer.motionY * defaultTPS}"
+				"mzdppersec" -> return "${thePlayer.motionZ * defaultTPS}"
+
+				"dxdppersec" -> return "${deltaX * defaultTPS}"
+				"dydppersec" -> return "${deltaY * defaultTPS}"
+				"dzdppersec" -> return "${deltaZ * defaultTPS}"
 
 				"velocity" -> return DECIMALFORMAT_2.format(hypot(thePlayer.motionX, thePlayer.motionZ))
 				"velocitypersec" -> return DECIMALFORMAT_2.format(hypot(thePlayer.motionX, thePlayer.motionZ) * defaultTPS)
 
+				"move" -> return DECIMALFORMAT_2.format(hypot(deltaX, deltaZ))
+				"movepersec" -> return DECIMALFORMAT_2.format(hypot(deltaX, deltaZ) * defaultTPS)
+
 				"velocitydp" -> return "${hypot(thePlayer.motionX, thePlayer.motionZ)}"
 				"velocitydppersec" -> return "${hypot(thePlayer.motionX, thePlayer.motionZ) * defaultTPS}"
+
+				"movedp" -> return "${hypot(deltaX, deltaZ)}"
+				"movedppersec" -> return "${hypot(deltaX, deltaZ) * defaultTPS}"
 
 				"ping" -> return thePlayer.ping.toString()
 				"health" -> return DECIMALFORMAT_2.format(thePlayer.health)
@@ -308,6 +337,18 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 
 		val textWidth = fontRenderer.getStringWidth(displayText)
 
+		// Workaround
+		mc.thePlayer?.let { thePlayer ->
+			if (lastTick != thePlayer.ticksExisted)
+			{
+				lastTick = thePlayer.ticksExisted
+
+				deltaX = thePlayer.posX - thePlayer.prevPosX
+				deltaY = thePlayer.posY - thePlayer.prevPosY
+				deltaZ = thePlayer.posZ - thePlayer.prevPosZ
+			}
+		}
+
 		// Border
 		val borderExpand = borderExpandValue.get()
 		val (borderXStart, borderXEnd) = when (horizontalSide)
@@ -419,8 +460,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 
 	override fun updateElement()
 	{
-		editTicks += 5
-		if (editTicks > 80) editTicks = 0
+		if (editTicks++ > 14) editTicks = 0
 
 		displayText = if (editMode) displayString.get() else display
 	}

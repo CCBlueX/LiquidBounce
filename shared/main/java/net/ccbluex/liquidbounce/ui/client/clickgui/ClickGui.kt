@@ -18,8 +18,8 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.SlowlyStyle
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.ui.font.assumeNonVolatile
 import net.ccbluex.liquidbounce.utils.EntityUtils
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.frameTime
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawImage
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.frameTime
 import org.lwjgl.input.Mouse
 import org.lwjgl.opengl.GL11
 import java.io.IOException
@@ -39,22 +39,17 @@ class ClickGui : WrappedGuiScreen()
 
 	override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)
 	{
-		var newMouseX = mouseX.toDouble()
-		var newMouseY = mouseY.toDouble()
-
-		val provider = classProvider
-
-		if (Mouse.isButtonDown(0) && newMouseX >= 5 && newMouseX <= 50 && newMouseY <= representedScreen.height - 5 && newMouseY >= representedScreen.height - 50) mc.displayGuiScreen(provider.wrapGuiScreen(GuiHudDesigner()))
+		if (Mouse.isButtonDown(0) && mouseX >= 5 && mouseX <= 50 && mouseY <= representedScreen.height - 5 && mouseY >= representedScreen.height - 50) mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiHudDesigner()))
 
 		val scale = (LiquidBounce.moduleManager[ClickGUI::class.java] as ClickGUI).scaleValue.get().toDouble()
-		newMouseX /= scale
-		newMouseY /= scale
+		val scaledMouseX = mouseX.toDouble() / scale
+		val scaledMouseY = mouseY.toDouble() / scale
 
-		val newMouseXI = newMouseX.toInt()
-		val newMouseYI = newMouseY.toInt()
+		val scaledMouseXI = scaledMouseX.toInt()
+		val scaledMouseYI = scaledMouseY.toInt()
 
-		this.mouseX = newMouseXI
-		this.mouseY = newMouseYI
+		this.mouseX = scaledMouseXI
+		this.mouseY = scaledMouseYI
 
 		// Enable DisplayList optimization
 		assumeNonVolatile {
@@ -67,25 +62,26 @@ class ClickGui : WrappedGuiScreen()
 			for (panel in panels)
 			{
 				panel.updateFade(frameTime)
-				panel.drawScreen(newMouseXI, newMouseYI, partialTicks)
+				panel.drawScreen(scaledMouseXI, scaledMouseYI, partialTicks)
 			}
 
 			// Draw Element Description
-			panels.forEach { panel -> panel.elements.asSequence().filterIsInstance<ModuleElement>().filter { newMouseX != 0.0 && newMouseY != 0.0 }.filter { it.isHovering(newMouseXI, newMouseYI) }.filter(ModuleElement::isVisible).filter { it.y <= panel.y + panel.fade }.forEach { style.drawDescription(newMouseXI, newMouseYI, it.module.description) } }
+			panels.forEach { panel -> panel.elements.asSequence().filterIsInstance<ModuleElement>().filter { scaledMouseX != 0.0 && scaledMouseY != 0.0 }.filter { it.isHovering(scaledMouseXI, scaledMouseYI) }.filter(ModuleElement::isVisible).filter { it.y <= panel.y + panel.fade }.filterNot { it.module.description.isBlank() }.forEach { style.drawDescription(scaledMouseXI, scaledMouseYI, it.module.description) } }
 
 			if (Mouse.hasWheel())
 			{
+				// TODO: Keyboard Up & Down key support
 				val wheel = Mouse.getDWheel()
-				panels.any { it.handleScroll(newMouseXI, newMouseYI, wheel) }
+				panels.any { it.handleScroll(scaledMouseXI, scaledMouseYI, wheel) }
 			}
 
-			provider.glStateManager.disableLighting()
+			classProvider.glStateManager.disableLighting()
 			functions.disableStandardItemLighting()
 
 			GL11.glScalef(1.0f, 1.0f, 1.0f)
 		}
 
-		super.drawScreen(newMouseXI, newMouseYI, partialTicks)
+		super.drawScreen(scaledMouseXI, scaledMouseYI, partialTicks)
 	}
 
 	@Throws(IOException::class)

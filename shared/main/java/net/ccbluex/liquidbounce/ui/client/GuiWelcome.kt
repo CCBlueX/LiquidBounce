@@ -39,16 +39,17 @@ class GuiWelcome : WrappedGuiScreen()
 		val clickGuiBinds = LiquidBounce.moduleManager[ClickGUI::class.java].keyBinds
 		if (clickGuiBinds.size > 0) font.drawCenteredString("Press ${Keyboard.getKeyName(clickGuiBinds.first())} to open up the ClickGUI", middleScreen, (representedScreen.height shr 3) + 80F + fontHeight * 4, 0xffffff, true)
 		font.drawCenteredString("Right-click modules with a '+' next to them to edit their settings.", middleScreen, y2 + fontHeight * 5, 0xffffff, true)
-		font.drawCenteredString("Hover a module to see it's description.", middleScreen, y2 + fontHeight * 6, 0xffffff, true)
+		font.drawCenteredString("Hover a module or value to see it's description.", middleScreen, y2 + fontHeight * 6, 0xffffff, true)
 
 		font.drawCenteredString("\u00A7lImportant Commands:", middleScreen, y2 + (fontHeight shl 3), 0xffffff, true)
-		font.drawCenteredString(".bind <module> <key> / .bind <module> none", middleScreen, y2 + fontHeight * 9, 0xffffff, true)
+		font.drawCenteredString(".bind <module> <add|remove> <key> / .bind <module> clear", middleScreen, y2 + fontHeight * 9, 0xffffff, true)
 		font.drawCenteredString(".autosettings load <name> / .autosettings list", middleScreen, y2 + fontHeight * 10, 0xffffff, true)
 
 		font.drawCenteredString("\u00A7lNeed help? Feel free to contact us!", middleScreen, y2 + fontHeight * 12, 0xffffff, true)
 		font.drawCenteredString("YouTube: https://youtube.com/ccbluex", middleScreen, y2 + fontHeight * 13, 0xffffff, true)
 		font.drawCenteredString("Twitter: https://twitter.com/ccbluex", middleScreen, y2 + fontHeight * 14, 0xffffff, true)
-		font.drawCenteredString("Forum: https://forum.ccbluex.net/", middleScreen, y2 + fontHeight * 15, 0xffffff, true)
+		font.drawCenteredString("Forum: https://forums.ccbluex.net/", middleScreen, y2 + fontHeight * 15, 0xffffff, true)
+		font.drawCenteredString("(Old) Forum: https://forum.ccbluex.net/", middleScreen, y2 + fontHeight * 15, 0xffffff, true)
 
 		super.drawScreen(mouseX, mouseY, partialTicks)
 

@@ -86,7 +86,7 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
 			{
 				chat(thePlayer, "\u00A77${module.name} \u00A78$valueName\u00A77 = ${valueToString(value)}\u00A77.") // Print current state
 				if (value is IntegerValue || value is FloatValue || value is TextValue) chatSyntax(thePlayer, "$moduleName $valueName <value>")
-				else if (value is ListValue) chatSyntax(thePlayer, "$moduleName $valueName <${value.values.joinToString(separator = "/").toLowerCase()}>")
+				else if (value is ListValue) chatSyntax(thePlayer, "$moduleName $valueName <${value.values.joinToString(separator = "|").toLowerCase()}>")
 				return
 			}
 
@@ -136,33 +136,8 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
 
 			try
 			{
-				val newValue = lazy(LazyThreadSafetyMode.NONE) { if (args[3].startsWith("0x", ignoreCase = true)) args[3].substring(2).toInt(16) else args[3].toInt(10) }
-
 				when (value)
 				{
-					is RGBColorValue ->
-					{
-						when (args[2].toLowerCase())
-						{
-							"r", "red" -> value.set(newValue.value, value.getGreen(), value.getBlue(), value.getAlpha())
-							"g", "green" -> value.set(value.getRed(), newValue.value, value.getBlue(), value.getAlpha())
-							"b", "blue" -> value.set(value.getRed(), value.getGreen(), newValue.value, value.getAlpha())
-							else -> chatSyntax(thePlayer, "$moduleName $valueName <red|green|blue> <value>")
-						}
-					}
-
-					is RGBAColorValue ->
-					{
-						when (args[2].toLowerCase())
-						{
-							"r", "red" -> value.set(newValue.value, value.getGreen(), value.getBlue(), value.getAlpha())
-							"g", "green" -> value.set(value.getRed(), newValue.value, value.getBlue(), value.getAlpha())
-							"b", "blue" -> value.set(value.getRed(), value.getGreen(), newValue.value, value.getAlpha())
-							"a", "alpha", "o", "opacity" -> value.set(value.getRed(), value.getGreen(), value.getBlue(), newValue.value)
-							else -> chatSyntax(thePlayer, "$moduleName $valueName <red|green|blue|alpha> <value>")
-						}
-					}
-
 					is BlockValue ->
 					{
 						val id: Int = try
@@ -190,33 +165,13 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
 
 					is IntegerValue -> value.set(args[2].toInt())
 
-					is IntegerRangeValue ->
-					{
-						when (args[2].toLowerCase())
-						{
-							"min" -> value.setMin(newValue.value)
-							"max" -> value.setMax(newValue.value)
-							else -> chatSyntax(thePlayer, "$moduleName $valueName <min|max> <value>")
-						}
-					}
-
 					is FloatValue -> value.set(args[2].toFloat())
-
-					is FloatRangeValue ->
-					{
-						when (args[2].toLowerCase())
-						{
-							"min" -> value.setMin(args[3].toFloat())
-							"max" -> value.setMax(args[3].toFloat())
-							else -> chatSyntax(thePlayer, "$moduleName $valueName <min|max> <value>")
-						}
-					}
 
 					is ListValue ->
 					{
 						if (!value.contains(args[2]))
 						{
-							chatSyntax(thePlayer, "$moduleName $valueName <${value.values.joinToString(separator = "/").toLowerCase()}>")
+							chatSyntax(thePlayer, "$moduleName $valueName <${value.values.joinToString(separator = "|").toLowerCase()}>")
 							return
 						}
 
@@ -235,11 +190,68 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
 							return
 						}
 					}
+
+					else -> try
+					{
+						val newValue = lazy(LazyThreadSafetyMode.NONE) { if (args[3].startsWith("0x", ignoreCase = true)) args[3].substring(2).toInt(16) else args[3].toInt(10) }
+
+						when (value)
+						{
+							is RGBColorValue ->
+							{
+								when (args[2].toLowerCase())
+								{
+									"r", "red" -> value.set(newValue.value, value.getGreen(), value.getBlue(), value.getAlpha())
+									"g", "green" -> value.set(value.getRed(), newValue.value, value.getBlue(), value.getAlpha())
+									"b", "blue" -> value.set(value.getRed(), value.getGreen(), newValue.value, value.getAlpha())
+									else -> chatSyntax(thePlayer, "$moduleName $valueName <red|green|blue> <value>")
+								}
+							}
+
+							is RGBAColorValue ->
+							{
+								when (args[2].toLowerCase())
+								{
+									"r", "red" -> value.set(newValue.value, value.getGreen(), value.getBlue(), value.getAlpha())
+									"g", "green" -> value.set(value.getRed(), newValue.value, value.getBlue(), value.getAlpha())
+									"b", "blue" -> value.set(value.getRed(), value.getGreen(), newValue.value, value.getAlpha())
+									"a", "alpha", "o", "opacity" -> value.set(value.getRed(), value.getGreen(), value.getBlue(), newValue.value)
+									else -> chatSyntax(thePlayer, "$moduleName $valueName <red|green|blue|alpha> <value>")
+								}
+							}
+
+							is IntegerRangeValue ->
+							{
+								when (args[2].toLowerCase())
+								{
+									"min" -> value.setMin(newValue.value)
+									"max" -> value.setMax(newValue.value)
+									else -> chatSyntax(thePlayer, "$moduleName $valueName <min|max> <value>")
+								}
+							}
+
+							is FloatRangeValue ->
+							{
+								when (args[2].toLowerCase())
+								{
+									"min" -> value.setMin(args[3].toFloat())
+									"max" -> value.setMax(args[3].toFloat())
+									else -> chatSyntax(thePlayer, "$moduleName $valueName <min|max> <value>")
+								}
+							}
+						}
+					}
+					catch (e: NumberFormatException)
+					{
+						chat(thePlayer, "\u00A78${args[3]}\u00A77 cannot be converted to number!")
+						return
+					}
 				}
 			}
 			catch (e: NumberFormatException)
 			{
-				chat(thePlayer, "\u00A78${args[3]}\u00A77 cannot be converted to number!")
+				chat(thePlayer, "\u00A78${args[2]}\u00A77 cannot be converted to number!")
+				return
 			}
 
 			chat(thePlayer, "\u00A77${module.name} \u00A78$valueName\u00A77 was set to \u00A78${valueToString(value)}\u00A77.")

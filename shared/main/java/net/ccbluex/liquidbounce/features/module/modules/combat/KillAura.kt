@@ -49,7 +49,7 @@ class KillAura : Module()
 	 * OPTIONS
 	 */
 
-	private val cpsValue: IntegerRangeValue = object : IntegerRangeValue("CPS", 5, 8, 1, 20, "MaxCPS" to "MinCPS")
+	private val cpsValue: IntegerRangeValue = object : IntegerRangeValue("CPS", 5, 8, 1, 20, "MaxCPS" to "MinCPS", "Number of attack tries per a second")
 	{
 		override fun onMaxValueChanged(oldValue: Int, newValue: Int)
 		{
@@ -66,7 +66,16 @@ class KillAura : Module()
 	private val cooldownValue = FloatValue("Cooldown", 1f, 0f, 1f)
 
 	private val rangeGroup = ValueGroup("Range")
-	private val rangeAttackValue = object : FloatValue("Attack", 3.7f, 1f, 8f, "Range")
+	private val rangeAttackGroup = ValueGroup("Attack")
+	private val rangeAttackOnGroundValue = object : FloatValue("OnGround", 3.7f, 1f, 8f, "Range")
+	{
+		override fun onChanged(oldValue: Float, newValue: Float)
+		{
+			val i = swingRangeValue.get()
+			if (i < newValue) this.set(i)
+		}
+	}
+	private val rangeAttackOffGroundValue = object : FloatValue("OffGround", 3.7f, 1f, 8f, "Range")
 	{
 		override fun onChanged(oldValue: Float, newValue: Float)
 		{
@@ -86,7 +95,7 @@ class KillAura : Module()
 	{
 		override fun onChanged(oldValue: Float, newValue: Float)
 		{
-			val i = rangeAttackValue.get()
+			val i = min(rangeAttackOnGroundValue.get(), rangeAttackOffGroundValue.get())
 			if (i > newValue) this.set(i)
 
 			val i2 = rangeAimValue.get()
@@ -134,19 +143,19 @@ class KillAura : Module()
 
 	private val rayCastGroup = ValueGroup("RayCast")
 	private val rayCastEnabledValue = BoolValue("Enabled", true, "RayCast")
-	private val rayCastSkipEnemyCheckValue = BoolValue("SkipEnemyCheck", false, "RayCastIgnored")
-	private val rayCastLivingOnlyValue = BoolValue("LivingOnly", true, "LivingRayCast")
-	private val rayCastIncludeCollidedValue = BoolValue("IncludeCollided", true, "AAC")
+	private val rayCastSkipEnemyCheckValue = BoolValue("SkipEnemyCheck", false, "RayCastIgnored", description = "Disable the enemy checks in raycast filter")
+	private val rayCastLivingOnlyValue = BoolValue("LivingOnly", true, "LivingRayCast", description = "Only include living entities; drop otherwise")
+	private val rayCastIncludeCollidedValue = BoolValue("IncludeCollided", true, "AAC", description = "Include entities which were collided with the target")
 
 	private val bypassGroup = ValueGroup("Bypass")
-	private val bypassKeepSprintValue = BoolValue("KeepSprint", true, "KeepSprint")
-	private val bypassAACValue = BoolValue("AAC", false, "AAC")
+	private val bypassKeepSprintValue = BoolValue("KeepSprint", true, "KeepSprint", description = "Don't cancel sprinting while attacking enemy")
+	private val bypassAACValue = BoolValue("AAC", false, "AAC", description = "Bypass several anti-cheats such as AAC")
 	private val bypassFailRateValue = FloatValue("FailRate", 0f, 0f, 100f, "FailRate")
-	private val bypassSuspendWhileConsumingValue = BoolValue("SuspendWhileConsuming", true, "SuspendWhileConsuming")
+	private val bypassSuspendWhileConsumingValue = BoolValue("SuspendWhileConsuming", true, "SuspendWhileConsuming", description = "Suspend KillAura if you're consuming something")
 
 	private val noInventoryGroup = ValueGroup("NoInvAttack")
-	private val noInventoryAttackEnabledValue = BoolValue("Enabled", false, "NoInvAttack")
-	private val noInventoryDelayValue = IntegerValue("Delay", 200, 0, 500, "NoInvDelay")
+	private val noInventoryAttackEnabledValue = BoolValue("Enabled", false, "NoInvAttack", description = "Suspend KillAura if your inventory is open")
+	private val noInventoryDelayValue = IntegerValue("Delay", 200, 0, 500, "NoInvDelay", description = "Time between inventory close and resume of KillAura")
 
 	private val rotationGroup = ValueGroup("Rotation")
 	private val rotationMode = ListValue("Mode", arrayOf("Off", "SearchCenter", "LockCenter", "RandomCenter", "Outborder"), "SearchCenter", "Rotation")
@@ -164,8 +173,8 @@ class KillAura : Module()
 	{
 		override fun showCondition() = rotationMode.get().equals("SearchCenter", ignoreCase = true)
 	}
-	private val rotationSearchCenterHitboxShrinkValue = FloatValue("Shrink", 0.15f, 0f, 0.3f, "Rotation-SearchCenter-HitboxShrink")
-	private val rotationSearchCenterSensitivityValue = IntegerValue("Steps", 7, 4, 20, "Rotation-SearchCenter-Steps")
+	private val rotationSearchCenterHitboxShrinkValue = FloatValue("Shrink", 0.15f, 0f, 0.3f, "Rotation-SearchCenter-HitboxShrink", description = "Shrinkage of the enemy hitbox when rotation calculation")
+	private val rotationSearchCenterSensitivityValue = IntegerValue("Steps", 7, 4, 20, "Rotation-SearchCenter-Steps", description = "Steps of rotation calculation")
 
 	private val rotationJitterGroup = ValueGroup("Jitter")
 	private val rotationJitterEnabledValue = BoolValue("Enabled", false, "Jitter")
@@ -323,7 +332,8 @@ class KillAura : Module()
 	init
 	{
 		comboReachGroup.addAll(comboReachEnabledValue, comboReachIncrementValue, comboReachLimitValue)
-		rangeGroup.addAll(rangeAttackValue, rangeThroughWallsAttackValue, rangeAimValue, rangeSprintReducementValue, comboReachGroup)
+		rangeAttackGroup.addAll(rangeAttackOnGroundValue, rangeAttackOffGroundValue)
+		rangeGroup.addAll(rangeAttackGroup, rangeThroughWallsAttackValue, rangeAimValue, rangeSprintReducementValue, comboReachGroup)
 		swingGroup.addAll(swingEnabledValue, swingFakeSwingValue, swingRangeValue)
 		targetGroup.addAll(targetPriorityValue, targetModeValue, targetLimitedMultiTargetsValue)
 		interactAutoBlockGroup.addAll(interactAutoBlockEnabledValue, interactAutoBlockRangeValue)
@@ -516,7 +526,7 @@ class KillAura : Module()
 
 		val screen = mc.currentScreen
 
-		attackRange = rangeAttackValue.get()
+		attackRange = (if (thePlayer.onGround) rangeAttackOnGroundValue else rangeAttackOffGroundValue).get()
 		aimRange = rangeAimValue.get()
 		swingRange = swingRangeValue.get()
 		blockRange = autoBlockRangeValue.get()

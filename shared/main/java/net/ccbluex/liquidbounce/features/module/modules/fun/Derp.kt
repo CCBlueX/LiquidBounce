@@ -20,12 +20,12 @@ import net.ccbluex.liquidbounce.value.ListValue
 @ModuleInfo(name = "Derp", description = "Makes it look like you were derping around.", category = ModuleCategory.FUN)
 class Derp : Module()
 {
-	private val yawModeValue = ListValue("Mode", arrayOf("Off", "Static", "Jitter", "Switch", "Random", "Spin"), "Random")
-	private val yawOffsetValue = object : FloatValue("YawOffset", 0f, -180f, 180f)
+	private val yawModeValue = ListValue("Yaw", arrayOf("Off", "Static", "Jitter", "Switch", "Random", "Spin"), "Random", "Mode", "Yaw rotation mode")
+	private val yawOffsetValue = object : FloatValue("YawOffset", 0f, -180f, 180f, description = "Static yaw value")
 	{
 		override fun showCondition() = yawModeValue.get().equals("Static", ignoreCase = true) || yawModeValue.get().equals("Jitter", ignoreCase = true)
 	}
-	private val yawToEntityValue = object : BoolValue("ToEntity", true)
+	private val yawToEntityValue = object : BoolValue("ToEntity", true, description = "If enabled, Yaw rotation will affected by nearby enemies as Anti-Aim")
 	{
 		override fun showCondition() = yawModeValue.get().equals("Static", ignoreCase = true) || yawModeValue.get().equals("Jitter", ignoreCase = true)
 	}

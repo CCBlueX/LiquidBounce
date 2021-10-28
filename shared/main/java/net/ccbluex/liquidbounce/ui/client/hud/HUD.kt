@@ -71,7 +71,7 @@ open class HUD : MinecraftInstance()
 	 */
 	fun update()
 	{
-		for (element in elements) element.updateElement()
+		elements.forEach(Element::updateElement)
 	}
 
 	/**

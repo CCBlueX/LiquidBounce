@@ -38,6 +38,7 @@ private const val BACKGROUND = Int.MIN_VALUE
 private const val BORDER = 1526726655
 private const val LIGHT_GRAY = Int.MAX_VALUE
 
+// TODO: Optimze as NullStyle, SlowlyStyle
 class LiquidBounceStyle : Style()
 {
 	private var mouseDown = false

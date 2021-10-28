@@ -18,7 +18,7 @@ import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import java.awt.Color
 
-abstract class AbstractValue(var name: String)
+abstract class AbstractValue(var name: String, val description: String = "")
 {
 	val displayName = name
 	var isSupported = true
@@ -84,7 +84,7 @@ open class ValueGroup(name: String) : AbstractValue(name)
 	}
 }
 
-abstract class Value<T>(name: String, protected var value: T, private val alias: String? = null) : AbstractValue(name)
+abstract class Value<T>(name: String, protected var value: T, private val alias: String? = null, description: String = "") : AbstractValue(name, description)
 {
 	fun set(newValue: T)
 	{
@@ -132,7 +132,7 @@ abstract class Value<T>(name: String, protected var value: T, private val alias:
 	}
 }
 
-abstract class RangeValue<T : Comparable<T>>(name: String, protected var minValue: T, protected var maxValue: T, protected val aliases: Pair<String, String>? = null) : AbstractValue(name)
+abstract class RangeValue<T : Comparable<T>>(name: String, protected var minValue: T, protected var maxValue: T, protected val aliases: Pair<String, String>? = null, description: String = "") : AbstractValue(name, description)
 {
 	fun setMin(newValue: T)
 	{
@@ -206,7 +206,7 @@ abstract class RangeValue<T : Comparable<T>>(name: String, protected var minValu
 	}
 }
 
-abstract class ColorValue(name: String, protected var r: Int, protected var g: Int, protected var b: Int, protected var a: Int = 255, private val aliases: List<String?>? = null) : AbstractValue(name)
+abstract class ColorValue(name: String, protected var r: Int, protected var g: Int, protected var b: Int, protected var a: Int = 255, private val aliases: List<String?>? = null, description: String = "") : AbstractValue(name, description)
 {
 	fun set(hex: Int)
 	{
@@ -267,7 +267,7 @@ abstract class ColorValue(name: String, protected var r: Int, protected var g: I
 	}
 }
 
-open class RGBColorValue(name: String, r: Int, g: Int, b: Int, private val aliases: Triple<String, String, String>? = null) : ColorValue(name, r, g, b, aliases = aliases?.toList())
+open class RGBColorValue(name: String, r: Int, g: Int, b: Int, private val aliases: Triple<String, String, String>? = null, description: String = "") : ColorValue(name, r, g, b, aliases = aliases?.toList(), description = description)
 {
 	override fun toJson(): JsonElement?
 	{
@@ -347,7 +347,7 @@ open class RGBColorValue(name: String, r: Int, g: Int, b: Int, private val alias
 	}
 }
 
-open class RGBAColorValue(name: String, r: Int, g: Int, b: Int, a: Int, private val aliases: List<String?>? = null) : ColorValue(name, r, g, b, a, aliases)
+open class RGBAColorValue(name: String, r: Int, g: Int, b: Int, a: Int, private val aliases: List<String?>? = null, description: String = "") : ColorValue(name, r, g, b, a, aliases, description)
 {
 	override fun toJson(): JsonElement?
 	{
@@ -446,7 +446,7 @@ open class RGBAColorValue(name: String, r: Int, g: Int, b: Int, a: Int, private 
 /**
  * Bool value represents a value with a boolean
  */
-open class BoolValue(name: String, value: Boolean, alias: String? = null) : Value<Boolean>(name, value, alias)
+open class BoolValue(name: String, value: Boolean, alias: String? = null, description: String = "") : Value<Boolean>(name, value, alias, description)
 {
 	override fun toJson() = JsonPrimitive(value)
 
@@ -459,7 +459,7 @@ open class BoolValue(name: String, value: Boolean, alias: String? = null) : Valu
 /**
  * Integer value represents a value with a integer
  */
-open class IntegerValue(name: String, value: Int, val minimum: Int, val maximum: Int, alias: String? = null) : Value<Int>(name, value, alias)
+open class IntegerValue(name: String, value: Int, val minimum: Int, val maximum: Int, alias: String? = null, description: String = "") : Value<Int>(name, value, alias, description)
 {
 
 	fun set(newValue: Number)
@@ -475,7 +475,7 @@ open class IntegerValue(name: String, value: Int, val minimum: Int, val maximum:
 	}
 }
 
-open class IntegerRangeValue(name: String, minValue: Int, maxValue: Int, val minimum: Int, val maximum: Int, aliases: Pair<String, String>? = null) : RangeValue<Int>(name, minValue, maxValue, aliases)
+open class IntegerRangeValue(name: String, minValue: Int, maxValue: Int, val minimum: Int, val maximum: Int, aliases: Pair<String, String>? = null, description: String = "") : RangeValue<Int>(name, minValue, maxValue, aliases, description)
 {
 	fun setMin(newValue: Number)
 	{
@@ -558,7 +558,7 @@ open class IntegerRangeValue(name: String, minValue: Int, maxValue: Int, val min
 /**
  * Float value represents a value with a float
  */
-open class FloatValue(name: String, value: Float, val minimum: Float, val maximum: Float, alias: String? = null) : Value<Float>(name, value, alias)
+open class FloatValue(name: String, value: Float, val minimum: Float, val maximum: Float, alias: String? = null, description: String = "") : Value<Float>(name, value, alias, description)
 {
 
 	fun set(newValue: Number)
@@ -574,7 +574,7 @@ open class FloatValue(name: String, value: Float, val minimum: Float, val maximu
 	}
 }
 
-open class FloatRangeValue(name: String, minValue: Float, maxValue: Float, val minimum: Float, val maximum: Float, aliases: Pair<String, String>? = null) : RangeValue<Float>(name, minValue, maxValue, aliases)
+open class FloatRangeValue(name: String, minValue: Float, maxValue: Float, val minimum: Float, val maximum: Float, aliases: Pair<String, String>? = null, description: String = "") : RangeValue<Float>(name, minValue, maxValue, aliases, description)
 {
 	fun setMin(newValue: Number)
 	{
@@ -655,7 +655,7 @@ open class FloatRangeValue(name: String, minValue: Float, maxValue: Float, val m
 /**
  * Text value represents a value with a string
  */
-open class TextValue(name: String, value: String, alias: String? = null) : Value<String>(name, value, alias)
+open class TextValue(name: String, value: String, alias: String? = null, description: String = "") : Value<String>(name, value, alias, description)
 {
 
 	override fun toJson() = JsonPrimitive(value)
@@ -698,7 +698,7 @@ class BlockValue(name: String, value: Int) : IntegerValue(name, value, 1, 197)
 /**
  * List value represents a selectable list of values
  */
-open class ListValue(name: String, val values: Array<String>, value: String, alias: String? = null) : Value<String>(name, value, alias)
+open class ListValue(name: String, val values: Array<String>, value: String, alias: String? = null, description: String = "") : Value<String>(name, value, alias, description)
 {
 
 	@JvmField

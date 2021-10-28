@@ -52,9 +52,6 @@ class ModuleManager : Listenable
 
 		val nanoTime = System.nanoTime()
 
-		registerModule(Fly)
-		registerModule(Speed)
-
 		registerModules(
 
 			AutoArmor::class.java, //
@@ -68,6 +65,7 @@ class ModuleManager : Listenable
 			KillAura::class.java, //
 			Trigger::class.java, //
 			Velocity::class.java, //
+			Fly, //
 			ClickGUI::class.java, //
 			HighJump::class.java, //
 			InventoryMove::class.java, //
@@ -86,6 +84,7 @@ class ModuleManager : Listenable
 			FastBreak::class.java, //
 			FastPlace::class.java, //
 			ESP::class.java, //
+			Speed, //
 			Tracers::class.java, //
 			NameTags::class.java, //
 			FastUse::class.java, //
@@ -211,14 +210,13 @@ class ModuleManager : Listenable
 			AntiVanish::class.java, //
 			LightningDetector::class.java, //
 			AutoEnchant::class.java, //
-			AntiCAPTCHA::class.java
+			AntiCAPTCHA::class.java, //
+			NoScoreboard, //
+			Fucker, //
+			ChestAura, //
+			AntiBot
 
 		)
-
-		registerModule(NoScoreboard)
-		registerModule(Fucker)
-		registerModule(ChestAura)
-		registerModule(AntiBot)
 
 		ClientUtils.logger.info("[ModuleManager] Loaded ${modules.size} modules. Took ${TimeUtils.nanosecondsToString(System.nanoTime() - nanoTime)}.")
 	}
@@ -256,10 +254,17 @@ class ModuleManager : Listenable
 	/**
 	 * Register a list of modules
 	 */
+	@Suppress("UNCHECKED_CAST")
 	@SafeVarargs
-	fun registerModules(vararg modules: Class<out Module>)
+	fun registerModules(vararg modules: Any)
 	{
-		modules.forEach(this::registerModule)
+		modules.forEach {
+			when (it)
+			{
+				is Module -> registerModule(it)
+				is Class<*> -> registerModule(it as? Class<out Module> ?: return@forEach)
+			}
+		}
 	}
 
 	/**

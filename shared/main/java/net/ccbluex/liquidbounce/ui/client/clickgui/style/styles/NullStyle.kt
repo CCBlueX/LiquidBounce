@@ -31,15 +31,21 @@ import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.input.Mouse
 import java.math.BigDecimal
 import java.math.RoundingMode
+import kotlin.math.max
+import kotlin.math.min
 
 private const val WHITE = -1
 private const val LIGHT_GRAY = Int.MAX_VALUE
 private const val BACKGROUND = Int.MIN_VALUE
 
+private const val SLIDER_START_SHIFT = 8f
+
+// FIXME: Fix broken FontValue support
 class NullStyle : Style()
 {
 	private var mouseDown = false
 	private var rightMouseDown = false
+	private var queuedTask: (() -> Unit)? = null
 
 	override fun drawPanel(mouseX: Int, mouseY: Int, panel: Panel)
 	{
@@ -97,10 +103,12 @@ class NullStyle : Style()
 
 		if (moduleValues.isNotEmpty())
 		{
-			valueFont.drawString("+", elementX - 8, elementY + (moduleElement.height shr 1), WHITE)
+			valueFont.drawString("+", elementX - 8 - if (moduleElement.isHovering(mouseX, mouseY)) 2 else 0, elementY + (moduleElement.height shr 1), WHITE)
 
 			if (moduleElement.showSettings)
 			{
+				queuedTask = null
+
 				var yPos = elementY + 4
 
 				for (value in moduleValues) yPos = drawAbstractValue(valueFont, glStateManager, moduleElement, value, yPos, mouseX, mouseY, valueColor)
@@ -111,6 +119,8 @@ class NullStyle : Style()
 				rightMouseDown = Mouse.isButtonDown(1)
 
 				if (moduleElement.settingsWidth > 0.0f && yPos > elementY + 4) drawBorderedRect(elementX + 4f, elementY + 6f, elementX + moduleElement.settingsWidth, yPos + 2f, 1.0f, BACKGROUND, 0)
+
+				queuedTask?.invoke()
 			}
 		}
 	}
@@ -118,63 +128,70 @@ class NullStyle : Style()
 	private fun drawAbstractValue(font: IFontRenderer, glStateManager: IGlStateManager, moduleElement: ModuleElement, value: AbstractValue, _yPos: Int, mouseX: Int, mouseY: Int, guiColor: Int, indent: Int = 0): Int
 	{
 		var yPos = _yPos
-		when (value)
+		yPos = when (value)
 		{
-			is ValueGroup ->
+			is ValueGroup -> drawValueGroup(font, glStateManager, moduleElement, value, yPos, mouseX, mouseY, guiColor, indent)
+			is ColorValue -> drawColorValue(font, glStateManager, moduleElement, value, yPos, mouseX, mouseY, indent)
+			is RangeValue<*> -> drawRangeValue(font, glStateManager, moduleElement, value, yPos, mouseX, mouseY, guiColor, indent)
+			else -> drawValue(font, glStateManager, moduleElement, value as Value<*>, yPos, mouseX, mouseY, guiColor, indent)
+		}
+		return yPos
+	}
+
+	private fun drawValueGroup(font: IFontRenderer, glStateManager: IGlStateManager, moduleElement: ModuleElement, value: ValueGroup, _yPos: Int, mouseX: Int, mouseY: Int, guiColor: Int, indent: Int): Int
+	{
+		var yPos = _yPos
+		val moduleX = moduleElement.x + moduleElement.width
+		val moduleIndentX = moduleX + indent
+
+		val text = value.displayName
+		val textWidth = font.getStringWidth(text) + indent + 16f
+
+		if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
+		val moduleXEnd = moduleX + moduleElement.settingsWidth
+
+		drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 14f, BACKGROUND)
+
+		glStateManager.resetColor()
+
+		val mouseOver = mouseX in moduleIndentX + 4..moduleXEnd.toInt() && mouseY in yPos + 2..yPos + 14
+
+		font.drawString("\u00A7c$text", moduleIndentX + 6, yPos + 4, WHITE)
+		font.drawString(if (value.foldState) "-" else "+", (moduleXEnd - (if (value.foldState) 5 else 6) - if (mouseOver) 2 else 0).toInt(), yPos + 4, WHITE)
+
+		if (mouseOver && Mouse.isButtonDown(0) && moduleElement.isntPressed)
+		{
+			value.foldState = !value.foldState
+			mc.soundHandler.playSound("gui.button.press", 1.0f)
+		}
+
+		yPos += 12
+
+		if (value.foldState)
+		{
+			val startYPos = yPos
+			val valuesInGroup = value.values.filter(AbstractValue::showCondition)
+			var i = 0
+			val j = valuesInGroup.size
+			while (i < j)
 			{
-				val moduleX = moduleElement.x + moduleElement.width
-				val moduleIndentX = moduleX + indent
+				val valueOfGroup = valuesInGroup[i]
+				val textWidthOfValue = font.getStringWidth(valueOfGroup.displayName) + 12f
 
-				val text = value.displayName
-				val textWidth = font.getStringWidth(text) + indent + 16f
-
-				if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
-				val moduleXEnd = moduleX + moduleElement.settingsWidth
-
-				drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 14f, BACKGROUND)
+				if (moduleElement.settingsWidth < textWidthOfValue) moduleElement.settingsWidth = textWidthOfValue
 
 				glStateManager.resetColor()
-				font.drawString("\u00A7c$text", moduleIndentX + 6, yPos + 4, WHITE)
-				font.drawString(if (value.foldState) "-" else "+", (moduleXEnd - if (value.foldState) 5 else 6).toInt(), yPos + 4, WHITE)
+				yPos = drawAbstractValue(font, glStateManager, moduleElement, valueOfGroup, yPos, mouseX, mouseY, guiColor, indent + 10)
 
-				if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= yPos + 2 && mouseY <= yPos + 14 && Mouse.isButtonDown(0) && moduleElement.isntPressed)
+				if (i == j - 1) // Last Index
 				{
-					value.foldState = !value.foldState
-					mc.soundHandler.playSound("gui.button.press", 1.0f)
+					drawRect(moduleIndentX + 7, startYPos, moduleIndentX + 8, yPos, LIGHT_GRAY)
+					drawRect(moduleIndentX + 7, yPos, moduleIndentX + 12, yPos + 1, LIGHT_GRAY)
 				}
-
-				yPos += 12
-
-				if (value.foldState)
-				{
-					val cachedYPos = yPos
-					val valuesInGroup = value.values.filter(AbstractValue::showCondition)
-					var i = 0
-					val j = valuesInGroup.size
-					while (i < j)
-					{
-						val valueOfGroup = valuesInGroup[i]
-						val textWidth2 = font.getStringWidth(valueOfGroup.displayName) + 12f
-
-						if (moduleElement.settingsWidth < textWidth2) moduleElement.settingsWidth = textWidth2
-
-						glStateManager.resetColor()
-						yPos = drawAbstractValue(font, glStateManager, moduleElement, valueOfGroup, yPos, mouseX, mouseY, guiColor, indent + 10)
-
-						if (i == j - 1) // Last Index
-						{
-							drawRect(moduleIndentX + 7, cachedYPos, moduleIndentX + 8, yPos, LIGHT_GRAY)
-							drawRect(moduleIndentX + 7, yPos, moduleIndentX + 12, yPos + 1, LIGHT_GRAY)
-						}
-						i++
-					}
-				}
+				i++
 			}
-
-			is ColorValue -> yPos = drawColorValue(font, glStateManager, moduleElement, value, yPos, mouseX, mouseY, indent)
-			is RangeValue<*> -> yPos = drawRangeValue(font, glStateManager, moduleElement, value, yPos, mouseX, mouseY, guiColor, indent)
-			else -> yPos = drawValue(font, glStateManager, moduleElement, value as Value<*>, yPos, mouseX, mouseY, guiColor, indent)
 		}
+
 		return yPos
 	}
 
@@ -192,8 +209,6 @@ class NullStyle : Style()
 
 		if (moduleElement.settingsWidth < textWidth + 20f) moduleElement.settingsWidth = textWidth + 20f
 		val moduleXEnd = moduleX + moduleElement.settingsWidth
-		val sliderXEnd = moduleElement.settingsWidth - indent - 12
-		val newSliderValue = lazy(LazyThreadSafetyMode.NONE, (255 * ((mouseX - moduleElement.x - moduleElement.width - indent - 8) / sliderXEnd).coerceIn(0f, 1f))::toInt)
 
 		drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 14f, BACKGROUND)
 
@@ -202,36 +217,37 @@ class NullStyle : Style()
 		font.drawString(colorText, moduleIndentX + displayTextWidth + 6, yPos + 4, value.get(255))
 		drawRect(moduleX + textWidth, yPos + 4f, moduleXEnd - 4f, yPos + 10f, value.get())
 
-		val renderSlider = { startY: Int, sliderValue: Int, color: Int ->
-			drawRect(moduleIndentX + 8f, startY + 8f, moduleXEnd - 4, startY + 9f, LIGHT_GRAY)
-
-			val sliderMarkXPos = (moduleIndentX + sliderXEnd * sliderValue / 255) + 8
-			drawRect(sliderMarkXPos, startY + 5f, sliderMarkXPos + 3, startY + 11f, color)
-
-			mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= startY + 5 && mouseY <= startY + 11 && Mouse.isButtonDown(0)
-		}
+		drawValueDescription(value, mouseX, mouseY, moduleIndentX, yPos + 2, moduleXEnd.toInt(), yPos + 14)
 
 		yPos += 10
 
 		drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 14f, BACKGROUND)
-		if (renderSlider(yPos, value.getRed(), -65536 /* 0xFFFF0000 */)) value.set(newSliderValue.value, value.getGreen(), value.getBlue(), value.getAlpha())
+		drawSlider(value.getRed().toFloat(), 0f, 255f, moduleX, moduleXEnd, yPos + 5, moduleElement.settingsWidth, mouseX, mouseY, indent, -65536 /* 0xFFFF0000 */) {
+			value.set(it.toInt(), value.getGreen(), value.getBlue(), value.getAlpha())
+		}
 
 		yPos += 12
 
 		drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 14f, BACKGROUND)
-		if (renderSlider(yPos, value.getGreen(), -16711936 /* 0xFF00FF00 */)) value.set(value.getRed(), newSliderValue.value, value.getBlue(), value.getAlpha())
+		drawSlider(value.getGreen().toFloat(), 0f, 255f, moduleX, moduleXEnd, yPos + 5, moduleElement.settingsWidth, mouseX, mouseY, indent, -16711936 /* 0xFF00FF00 */) {
+			value.set(value.getRed(), it.toInt(), value.getBlue(), value.getAlpha())
+		}
 
 		yPos += 12
 
 		drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 14f, BACKGROUND)
-		if (renderSlider(yPos, value.getBlue(), -16776961 /* 0xFF0000FF */)) value.set(value.getRed(), value.getGreen(), newSliderValue.value, value.getAlpha())
+		drawSlider(value.getBlue().toFloat(), 0f, 255f, moduleX, moduleXEnd, yPos + 5, moduleElement.settingsWidth, mouseX, mouseY, indent, -16776961 /* 0xFF0000FF */) {
+			value.set(value.getRed(), value.getGreen(), it.toInt(), value.getAlpha())
+		}
 
 		yPos += 12
 
 		if (alphaPresent)
 		{
 			drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 14f, BACKGROUND)
-			if (renderSlider(yPos, value.getAlpha(), LIGHT_GRAY)) value.set(value.getRed(), value.getGreen(), value.getBlue(), newSliderValue.value)
+			drawSlider(value.getAlpha().toFloat(), 0f, 255f, moduleX, moduleXEnd, yPos + 5, moduleElement.settingsWidth, mouseX, mouseY, indent, LIGHT_GRAY) {
+				value.set(value.getRed(), value.getGreen(), value.getBlue(), it.toInt())
+			}
 
 			yPos += 12
 		}
@@ -257,28 +273,17 @@ class NullStyle : Style()
 
 					if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
 					val moduleXEnd = moduleX + moduleElement.settingsWidth
-					val sliderXEnd = moduleElement.settingsWidth - indent - 12
 
 					drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 24f, BACKGROUND)
-					drawRect(moduleIndentX + 8f, yPos + 18f, moduleXEnd - 4, yPos + 19f, LIGHT_GRAY)
-
-					val minSliderValue = moduleIndentX + sliderXEnd * (value.getMin() - value.minimum) / (value.maximum - value.minimum) + 8
-					drawRect(minSliderValue, yPos + 15f, minSliderValue + 3, yPos + 21f, guiColor)
-
-					val maxSliderValue = moduleIndentX + sliderXEnd * (value.getMax() - value.minimum) / (value.maximum - value.minimum) + 8
-					drawRect(maxSliderValue, yPos + 15f, maxSliderValue + 3, yPos + 21f, guiColor)
-
-					drawRect(minSliderValue + 3, yPos + 18f, maxSliderValue, yPos + 19f, guiColor)
-
-					if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= yPos + 15 && mouseY <= yPos + 21 && Mouse.isButtonDown(0))
-					{
-						val newValue = (value.minimum + (value.maximum - value.minimum) * ((mouseX - moduleElement.x - moduleElement.width - indent - 8f) / sliderXEnd).coerceIn(0f, 1f)).toInt()
-						if (mouseX > minSliderValue + (maxSliderValue - minSliderValue) * 0.5f) value.setMax(newValue)
-						else value.setMin(newValue)
+					drawRangeSlider(value.getMin().toFloat(), value.getMax().toFloat(), value.minimum.toFloat(), value.maximum.toFloat(), moduleX, moduleXEnd, yPos + 15, moduleElement.settingsWidth, mouseX, mouseY, indent, guiColor) { (min, max) ->
+						if (min.toInt() != value.getMin()) value.setMin(min)
+						if (max.toInt() != value.getMax()) value.setMax(max)
 					}
 
 					glStateManager.resetColor()
 					font.drawString(text, moduleIndentX + 6, yPos + 4, WHITE)
+
+					drawValueDescription(value, mouseX, mouseY, moduleIndentX, yPos + 2, moduleXEnd.toInt(), yPos + 12)
 
 					yPos += 22
 				}
@@ -290,29 +295,18 @@ class NullStyle : Style()
 
 					if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
 					val moduleXEnd = moduleX + moduleElement.settingsWidth
-					val perc = moduleElement.settingsWidth - indent - 12
 
 					drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 24f, BACKGROUND)
-					drawRect(moduleIndentX + 8f, yPos + 18f, moduleXEnd - 4, yPos + 19f, LIGHT_GRAY)
-
-					val minSliderValue = moduleIndentX + perc * (value.getMin() - value.minimum) / (value.maximum - value.minimum) + 8
-					drawRect(minSliderValue, yPos + 15f, minSliderValue + 3, yPos + 21f, guiColor)
-
-					val maxSliderValue = moduleIndentX + perc * (value.getMax() - value.minimum) / (value.maximum - value.minimum) + 8
-					drawRect(maxSliderValue, yPos + 15f, maxSliderValue + 3, yPos + 21f, guiColor)
-
-					drawRect(minSliderValue + 3, yPos + 18f, maxSliderValue, yPos + 19f, guiColor)
-
-					if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd - 4 && mouseY >= yPos + 15 && mouseY <= yPos + 21 && Mouse.isButtonDown(0))
-					{
-						val newValue = round(value.minimum + (value.maximum - value.minimum) * ((mouseX - moduleElement.x - moduleElement.width - indent - 8f) / perc).coerceIn(0f, 1f))
-						if (mouseX > minSliderValue + (maxSliderValue - minSliderValue) * 0.5f) value.setMax(newValue.toFloat())
-						else value.setMin(newValue.toFloat())
+					drawRangeSlider(value.getMin(), value.getMax(), value.minimum, value.maximum, moduleX, moduleXEnd, yPos + 15, moduleElement.settingsWidth, mouseX, mouseY, indent, guiColor) { (min, max) ->
+						if (min != value.getMin()) value.setMin(min)
+						if (max != value.getMax()) value.setMax(max)
 					}
 
 					glStateManager.resetColor()
 
 					font.drawString(text, moduleIndentX + 6, yPos + 4, WHITE)
+
+					drawValueDescription(value, mouseX, mouseY, moduleIndentX, yPos + 2, moduleXEnd.toInt(), yPos + 12)
 
 					yPos += 22
 				}
@@ -343,7 +337,7 @@ class NullStyle : Style()
 
 					drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 14f, BACKGROUND)
 
-					if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= yPos + 2 && mouseY <= yPos + 14 && Mouse.isButtonDown(0) && moduleElement.isntPressed)
+					if (mouseX in moduleIndentX..moduleXEnd.toInt() && mouseY in yPos + 2..yPos + 14 && Mouse.isButtonDown(0) && moduleElement.isntPressed)
 					{
 						value.set(!value.get())
 						soundHandler.playSound("gui.button.press", 1.0f)
@@ -354,6 +348,8 @@ class NullStyle : Style()
 					valueFont.drawString(valueDisplayName, moduleIndentX + 6, yPos + 4, if (value.get()) guiColor else LIGHT_GRAY)
 
 					yPos += 12
+
+					drawValueDescription(value, mouseX, mouseY, moduleIndentX, _yPos, moduleXEnd.toInt(), yPos)
 				}
 
 				is ListValue ->
@@ -367,16 +363,20 @@ class NullStyle : Style()
 
 					glStateManager.resetColor()
 
-					valueFont.drawString("\u00A7c$valueDisplayName", moduleIndentX + 6, yPos + 4, WHITE)
-					valueFont.drawString(if (value.openList) "-" else "+", (moduleXEnd - if (value.openList) 5 else 6).toInt(), yPos + 4, WHITE)
+					var mouseOver = mouseX in moduleIndentX + 4..moduleXEnd.toInt() && mouseY in yPos + 2..yPos + 14
 
-					if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= yPos + 2 && mouseY <= yPos + 14 && Mouse.isButtonDown(0) && moduleElement.isntPressed)
+					valueFont.drawString("\u00A7c$valueDisplayName", moduleIndentX + 6, yPos + 4, WHITE)
+					valueFont.drawString(if (value.openList) "-" else "+", (moduleXEnd - (if (value.openList) 5 else 6) - if (mouseOver) 2 else 0).toInt(), yPos + 4, WHITE)
+
+					if (mouseOver && Mouse.isButtonDown(0) && moduleElement.isntPressed)
 					{
 						value.openList = !value.openList
 						soundHandler.playSound("gui.button.press", 1.0f)
 					}
 
 					yPos += 12
+
+					drawValueDescription(value, mouseX, mouseY, moduleIndentX, _yPos, moduleXEnd.toInt(), yPos)
 
 					for (valueOfList in value.values) if (value.openList)
 					{
@@ -390,7 +390,9 @@ class NullStyle : Style()
 
 						drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 14f, BACKGROUND)
 
-						if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= yPos + 2 && mouseY <= yPos + 14 && Mouse.isButtonDown(0) && moduleElement.isntPressed)
+						mouseOver = mouseX in moduleIndentX + 4..moduleXEnd.toInt() && mouseY in yPos + 2..yPos + 14
+
+						if (mouseOver && Mouse.isButtonDown(0) && moduleElement.isntPressed)
 						{
 							value.set(valueOfList)
 							soundHandler.playSound("gui.button.press", 1.0f)
@@ -398,7 +400,7 @@ class NullStyle : Style()
 
 						glStateManager.resetColor()
 
-						valueFont.drawString(">", moduleIndentX + 6, yPos + 4, LIGHT_GRAY)
+						valueFont.drawString(">", moduleIndentX + (if (mouseOver) 8 else 6), yPos + 4, LIGHT_GRAY)
 						valueFont.drawString(valueOfList, moduleIndentX + 14, yPos + 4, if (value.get().equals(valueOfList, ignoreCase = true)) guiColor else LIGHT_GRAY)
 
 						yPos += 12
@@ -412,19 +414,15 @@ class NullStyle : Style()
 
 					if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
 					val moduleXEnd = moduleX + moduleElement.settingsWidth
-					val sliderXEnd = moduleElement.settingsWidth - indent - 12
 
 					drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 24f, BACKGROUND)
-					drawRect(moduleIndentX + 8f, yPos + 18f, moduleXEnd - 4, yPos + 19f, LIGHT_GRAY)
-
-					val sliderValue = moduleIndentX + sliderXEnd * (value.get() - value.minimum) / (value.maximum - value.minimum)
-					drawRect(8 + sliderValue, yPos + 15f, sliderValue + 11, yPos + 21f, guiColor)
-
-					if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= yPos + 15 && mouseY <= yPos + 21 && Mouse.isButtonDown(0)) value.set((value.minimum + (value.maximum - value.minimum) * ((mouseX - (moduleIndentX + 8)) / sliderXEnd).coerceIn(0f, 1f)).toInt())
+					drawSlider(value.get().toFloat(), value.minimum.toFloat(), value.maximum.toFloat(), moduleX, moduleXEnd, yPos + 15, moduleElement.settingsWidth, mouseX, mouseY, indent, guiColor, value::set)
 
 					glStateManager.resetColor()
 
 					valueFont.drawString(text, moduleIndentX + 6, yPos + 4, WHITE)
+
+					drawValueDescription(value, mouseX, mouseY, moduleIndentX, yPos + 2, moduleXEnd.toInt(), yPos + 12)
 
 					yPos += 22
 				}
@@ -436,28 +434,25 @@ class NullStyle : Style()
 
 					if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
 					val moduleXEnd = moduleX + moduleElement.settingsWidth
-					val sliderXEnd = moduleElement.settingsWidth - indent - 12
 
 					drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 24f, BACKGROUND)
-					drawRect(moduleIndentX + 8f, yPos + 18f, moduleXEnd - 4, yPos + 19f, LIGHT_GRAY)
-
-					val sliderValue = moduleIndentX + sliderXEnd * (value.get() - value.minimum) / (value.maximum - value.minimum)
-					drawRect(8 + sliderValue, yPos + 15f, sliderValue + 11, yPos + 21f, guiColor)
-
-					if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd - 4 && mouseY >= yPos + 15 && mouseY <= yPos + 21 && Mouse.isButtonDown(0)) value.set(round(value.minimum + (value.maximum - value.minimum) * ((mouseX - (moduleIndentX + 8)) / sliderXEnd).coerceIn(0f, 1f)).toFloat())
+					drawSlider(value.get(), value.minimum, value.maximum, moduleX, moduleXEnd, yPos + 15, moduleElement.settingsWidth, mouseX, mouseY, indent, guiColor, value::set)
 
 					glStateManager.resetColor()
 
 					valueFont.drawString(text, moduleIndentX + 6, yPos + 4, WHITE)
+
+					drawValueDescription(value, mouseX, mouseY, moduleIndentX, yPos + 2, moduleXEnd.toInt(), yPos + 12)
 
 					yPos += 22
 				}
 
 				is FontValue ->
 				{
+					val moduleXEnd = moduleX + moduleElement.settingsWidth
 					val fontRenderer = value.get()
 
-					drawRect(moduleX + 4f, yPos + 2f, moduleX + moduleElement.settingsWidth, yPos + 14f, BACKGROUND)
+					drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 14f, BACKGROUND)
 
 					var displayString = "$valueDisplayName: Unknown"
 
@@ -479,11 +474,12 @@ class NullStyle : Style()
 
 					if (moduleElement.settingsWidth < stringWidth) moduleElement.settingsWidth = stringWidth
 
-					if ((Mouse.isButtonDown(0) && !mouseDown || Mouse.isButtonDown(1) && !rightMouseDown) && mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= yPos + 4 && mouseY <= yPos + 12)
+					if ((Mouse.isButtonDown(0) && !mouseDown || Mouse.isButtonDown(1) && !rightMouseDown) && mouseX in moduleIndentX + 4..moduleXEnd.toInt() && mouseY in yPos + 4..yPos + 12)
 					{
 						val fonts = Fonts.fonts
 						if (Mouse.isButtonDown(0))
 						{
+							// Next font
 							var i = 0
 							val j = fonts.size
 							while (i < j)
@@ -506,6 +502,7 @@ class NullStyle : Style()
 						}
 						else
 						{
+							// Previous font
 							var i = fonts.size - 1
 							while (i >= 0)
 							{
@@ -527,7 +524,10 @@ class NullStyle : Style()
 							}
 						}
 					}
+
 					yPos += 11
+
+					drawValueDescription(value, mouseX, mouseY, moduleIndentX, _yPos, moduleXEnd.toInt(), yPos)
 				}
 
 				else ->
@@ -536,14 +536,17 @@ class NullStyle : Style()
 					val textWidth = valueFont.getStringWidth(text) + indent + 8f
 
 					if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
+					val moduleXEnd = moduleX + moduleElement.settingsWidth
 
-					drawRect(moduleX + 4f, yPos + 2f, moduleX + moduleElement.settingsWidth, yPos + 14f, BACKGROUND)
+					drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 14f, BACKGROUND)
 
 					glStateManager.resetColor()
 
 					valueFont.drawString(text, moduleIndentX + 6, yPos + 4, WHITE)
 
 					yPos += 12
+
+					drawValueDescription(value, mouseX, mouseY, moduleIndentX, _yPos, moduleXEnd.toInt(), yPos)
 				}
 			}
 		}
@@ -551,9 +554,56 @@ class NullStyle : Style()
 		return yPos
 	}
 
+	private fun drawValueDescription(value: AbstractValue, mouseX: Int, mouseY: Int, valueBBX1: Int, valueBBY1: Int, valueBBX2: Int, valueBBY2: Int)
+	{
+		if (mouseX in min(valueBBX1, valueBBX2)..max(valueBBX1, valueBBX2) && mouseY in min(valueBBY1, valueBBY2)..max(valueBBY1, valueBBY2) && value.description.isNotBlank()) queuedTask = { drawDescription(mouseX, mouseY, value.description) }
+	}
+
 	companion object
 	{
 		private fun encodeToHex(hex: Int) = hex.toString(16).toUpperCase().padStart(2, '0')
+
+		private fun drawSlider(value: Float, min: Float, max: Float, xStart: Int, xEnd: Float, y: Int, settingsWidth: Float, mouseX: Int, mouseY: Int, indent: Int, color: Int, changedCallback: (Float) -> Unit)
+		{
+			val indentX = xStart + indent
+			val sliderXEnd = settingsWidth - indent - 12
+
+			// Slider
+			drawRect(indentX + SLIDER_START_SHIFT, y + 3f, xEnd - 4f, y + 4f, LIGHT_GRAY)
+
+			// Slider mark
+			val sliderValue = indentX + sliderXEnd * (value.coerceIn(min, max) - min) / (max - min)
+			drawRect((sliderValue + SLIDER_START_SHIFT).toInt(), y, (sliderValue + SLIDER_START_SHIFT).toInt() + 3, y + 6, color)
+
+			if (mouseX in (indentX + 4)..xEnd.toInt() && mouseY in y..y + 6 && Mouse.isButtonDown(0)) changedCallback(round(min + (max - min) * ((mouseX - (indentX + SLIDER_START_SHIFT)) / sliderXEnd).coerceIn(0f, 1f)).toFloat())
+		}
+
+		private fun drawRangeSlider(minValue: Float, maxValue: Float, min: Float, max: Float, xStart: Int, xEnd: Float, y: Int, settingsWidth: Float, mouseX: Int, mouseY: Int, indent: Int, color: Int, changeCallback: (Pair<Float, Float>) -> Unit)
+		{
+			val indentX = xStart + indent
+			val sliderXEnd = settingsWidth - indent - 12
+
+			// Slider
+			drawRect(indentX + SLIDER_START_SHIFT, y + 3f, xEnd - 4f, y + 4f, LIGHT_GRAY)
+
+			// Slider mark (min)
+			val minSliderValue = indentX + sliderXEnd * (minValue.coerceIn(min, max) - min) / (max - min)
+			drawRect((minSliderValue + SLIDER_START_SHIFT).toInt(), y, (minSliderValue + SLIDER_START_SHIFT).toInt() + 3, y + 6, color)
+
+			// Slider mark (max)
+			val maxSliderValue = indentX + sliderXEnd * (maxValue.coerceIn(min, max) - min) / (max - min)
+			drawRect((maxSliderValue + SLIDER_START_SHIFT).toInt(), y, (maxSliderValue + SLIDER_START_SHIFT).toInt() + 3, y + 6, color)
+
+			drawRect(minSliderValue + SLIDER_START_SHIFT, y + 3f, maxSliderValue + SLIDER_START_SHIFT, y + 4f, color)
+
+			val center = minSliderValue + (maxSliderValue - minSliderValue) * 0.5f
+
+			if (mouseX in indentX..xEnd.toInt() && mouseY in y..y + 6 && Mouse.isButtonDown(0))
+			{
+				val newValue = round(min + (max - min) * ((mouseX - (indentX + SLIDER_START_SHIFT)) / sliderXEnd).coerceIn(0f, 1f)).toFloat()
+				changeCallback(if (mouseX > center) minValue to newValue else newValue to maxValue)
+			}
+		}
 
 		private fun round(f: Float): BigDecimal = BigDecimal("$f").setScale(4, RoundingMode.HALF_UP)
 	}

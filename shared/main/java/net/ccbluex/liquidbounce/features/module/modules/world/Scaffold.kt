@@ -996,8 +996,8 @@ class Scaffold : Module()
 			classProvider.glStateManager.resetColor()
 
 			GL11.glScalef(0.5f, 0.5f, 0.5f)
-			info?.let { font.drawCenteredString(it, middleScreenX.toFloat() * 2f, (middleScreenY - 60f) * 2f, 0xffffff) }
-			info2?.let { font.drawCenteredString(it, middleScreenX.toFloat() * 2f, (middleScreenY - 50f) * 2f, 0xffffff) }
+			info?.let { font.drawString(it, (middleScreenX.toFloat() - infoWidth!!) * 2f, (middleScreenY - 60f) * 2f, 0xffffff) }
+			info2?.let { font.drawString(it, (middleScreenX.toFloat() - info2Width!!) * 2f, (middleScreenY - 50f) * 2f, 0xffffff) }
 			GL11.glScalef(2f, 2f, 2f)
 
 			GL11.glPopMatrix()

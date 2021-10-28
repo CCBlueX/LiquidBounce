@@ -642,7 +642,12 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 				val stringWidth = font.getStringWidth(text) + 8
 				if (width < stringWidth) width = stringWidth
 
-				if (Mouse.isButtonDown(0) && !mouseDown && mouseX >= xIndent && mouseX <= x + width && mouseY >= yPos && mouseY <= yPos + 10) Fonts.fonts.filter { it == fontRenderer }.forEachIndexed { index, _ -> value.set(Fonts.fonts[if (index + 1 >= Fonts.fonts.size) 0 else index + 1]) }
+				if (Mouse.isButtonDown(0) && !mouseDown && mouseX >= xIndent && mouseX <= x + width && mouseY >= yPos && mouseY <= yPos + 10)
+				{
+					val fonts = Fonts.fonts
+					// TODO: "Go to previous" support
+					fonts.filter { it == fontRenderer }.forEachIndexed { index, _ -> value.set(fonts[if (index + 1 >= fonts.size) 0 else index + 1]) }
+				}
 
 				height += 10
 				realHeight += 10

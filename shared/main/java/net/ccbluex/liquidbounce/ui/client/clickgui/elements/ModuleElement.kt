@@ -27,15 +27,10 @@ class ModuleElement(val module: Module) : ButtonElement(module.name)
 
 	override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int)
 	{
-		if (mouseButton == 0 && isHovering(mouseX, mouseY) && isVisible)
+		if (isHovering(mouseX, mouseY) && isVisible && mouseButton in 0..1)
 		{
-			module.toggle()
-			mc.soundHandler.playSound("gui.button.press", 1.0f)
-		}
+			if (mouseButton == 0) module.toggle() else showSettings = !showSettings
 
-		if (mouseButton == 1 && isHovering(mouseX, mouseY) && isVisible)
-		{
-			showSettings = !showSettings
 			mc.soundHandler.playSound("gui.button.press", 1.0f)
 		}
 	}

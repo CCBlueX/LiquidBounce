@@ -13,14 +13,13 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.FontValue
-import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.*
 
 @ModuleInfo(name = "LagDetector", description = "Detects network issues and notify it visually.", category = ModuleCategory.MISC)
 class LagDetector : Module()
 {
+	private val messageValue = TextValue("Text", "Lag: %dms")
+
 	private val alwaysDisplayOnTagValue = BoolValue("AlwaysDisplayLagOnTag", false)
 	private val thresholdMSValue = IntegerValue("ThresholdMS", 1000, 200, 2000)
 
@@ -31,10 +30,7 @@ class LagDetector : Module()
 	{
 		private val packetTimer = MSTimer()
 
-		fun onPacketReceived()
-		{
-			packetTimer.reset()
-		}
+		fun onPacketReceived() = packetTimer.reset()
 	}
 
 	@EventTarget
@@ -42,7 +38,7 @@ class LagDetector : Module()
 	{
 		if (!packetTimer.hasTimePassed(thresholdMSValue.get().toLong())) return
 
-		val info = "Lag Detected: ${packetTimer.getTime()}"
+		val info = messageValue.get().format(packetTimer.getTime())
 
 		val scaledResolution = classProvider.createScaledResolution(mc)
 

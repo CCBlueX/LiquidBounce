@@ -212,7 +212,7 @@ class InventoryCleaner : Module()
 			}
 		}
 
-		// NoMove, AutoArmorLock Check
+		// NoMove, AutoArmor Lock Check
 		if (noMoveValue.get() && thePlayer.isMoving || (LiquidBounce.moduleManager[AutoArmor::class.java] as AutoArmor).isLocked) return
 
 		if (!provider.isGuiInventory(screen) && invOpenValue.get()) return
@@ -399,13 +399,21 @@ class InventoryCleaner : Module()
 	{
 		val provider = classProvider
 		val netHandler = mc.netHandler
+		val screen = mc.currentScreen
 
 		(0..8).mapNotNull { it to (findBetterItem(thePlayer, it, thePlayer.inventory.getStackInSlot(it)) ?: return@mapNotNull null) }.firstOrNull { (index, bestItem) -> index != bestItem }?.let { (index, bestItem) ->
-			val openInventory = !provider.isGuiInventory(mc.currentScreen) && simulateInventory.get()
+			val openInventory = !provider.isGuiInventory(screen) && simulateInventory.get()
 
 			if (openInventory) netHandler.addToSendQueue(createOpenInventoryPacket())
 
-			mc.playerController.windowClick(0, if (bestItem < 9) bestItem + 36 else bestItem, index, 2, thePlayer)
+			val slot = if (bestItem < 9) bestItem + 36 else bestItem
+			mc.playerController.windowClick(0, slot, index, 2, thePlayer)
+
+			if (clickIndicationEnabledValue.get() && screen != null && provider.isGuiContainer(screen))
+			{
+				screen.asGuiContainer().highlight(slot, clickIndicationLengthValue.get().toLong(), -2130739200)
+				screen.asGuiContainer().highlight(index + 36, clickIndicationLengthValue.get().toLong(), -2130722816)
+			}
 
 			if (openInventory) netHandler.addToSendQueue(provider.createCPacketCloseWindow())
 

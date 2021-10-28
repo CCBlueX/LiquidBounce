@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.utils.timer.Cooldown
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerRangeValue
 import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ValueGroup
 
 @ModuleInfo(name = "AutoArmor", description = "Automatically equips the best armor in your inventory.", category = ModuleCategory.COMBAT)
 class AutoArmor : Module()
@@ -38,6 +39,16 @@ class AutoArmor : Module()
 	private val noMoveValue = BoolValue("NoMove", false)
 	private val itemDelayValue = IntegerValue("ItemDelay", 0, 0, 5000)
 	private val hotbarValue = BoolValue("Hotbar", true)
+
+	// Visuals
+	private val clickIndicationGroup = ValueGroup("ClickIndication")
+	private val clickIndicationEnabledValue = BoolValue("Enabled", false, "ClickIndication")
+	private val clickIndicationLengthValue = IntegerValue("Length", 100, 50, 1000, "ClickIndicationLength")
+
+	init
+	{
+		clickIndicationGroup.addAll(clickIndicationEnabledValue, clickIndicationLengthValue)
+	}
 
 	/**
 	 * Variables
@@ -126,13 +137,15 @@ class AutoArmor : Module()
 
 		if (!isArmorSlot && item < 9 && hotbarValue.get() && !provider.isGuiInventory(screen))
 		{
-			netHandler.addToSendQueue(provider.createCPacketHeldItemChange(item))
-			netHandler.addToSendQueue(createUseItemPacket(thePlayer.inventoryContainer.getSlot(item).stack, WEnumHand.MAIN_HAND))
-			netHandler.addToSendQueue(provider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
+			if (InventoryUtils.tryHoldSlot(thePlayer, item))
+			{
+				netHandler.addToSendQueue(createUseItemPacket(thePlayer.inventoryContainer.getSlot(item).stack, WEnumHand.MAIN_HAND))
+				InventoryUtils.resetSlot(thePlayer)
 
-			nextDelay = delayValue.getRandomDelay()
+				nextDelay = delayValue.getRandomDelay()
 
-			return true
+				return true
+			}
 		}
 
 		if (!(noMoveValue.get() && thePlayer.isMoving) && (!invOpenValue.get() || provider.isGuiInventory(screen)) && item != -1)
@@ -145,7 +158,9 @@ class AutoArmor : Module()
 
 			if (full) full = thePlayer.inventory.mainInventory.none(IItemStack?::isEmpty)
 
-			if (full) controller.windowClick(thePlayer.inventoryContainer.windowId, item, 1, 4, thePlayer) else controller.windowClick(thePlayer.inventoryContainer.windowId, if (isArmorSlot) item else if (item < 9) item + 36 else item, 0, 1, thePlayer)
+			val slot = if (full || isArmorSlot) item else if (item < 9) item + 36 else item
+			controller.windowClick(thePlayer.inventoryContainer.windowId, slot, if (full) 1 else 0, if (full) 4 else 1, thePlayer)
+			if (clickIndicationEnabledValue.get() && screen != null && provider.isGuiContainer(screen)) screen.asGuiContainer().highlight(slot, clickIndicationLengthValue.get().toLong(), if (full) -2147462913 else if (isArmorSlot) -2147450625 else -2147418113)
 
 			nextDelay = delayValue.getRandomDelay()
 

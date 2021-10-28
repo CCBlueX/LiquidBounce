@@ -421,10 +421,10 @@ object RenderUtils : MinecraftInstance()
 	}
 
 	@JvmStatic
-	fun drawBorderedRect(x: Float, y: Float, x2: Float, y2: Float, width: Float, color1: Int, color2: Int)
+	fun drawBorderedRect(x: Float, y: Float, x2: Float, y2: Float, width: Float, borderColor: Int, rectColor: Int)
 	{
-		drawRect(x, y, x2, y2, color2)
-		drawBorder(x, y, x2, y2, width, color1)
+		drawRect(x, y, x2, y2, rectColor)
+		drawBorder(x, y, x2, y2, width, borderColor)
 	}
 
 	@JvmStatic

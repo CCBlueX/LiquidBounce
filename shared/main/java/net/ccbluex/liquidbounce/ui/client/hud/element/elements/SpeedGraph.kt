@@ -95,7 +95,7 @@ class SpeedGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: S
 			val z = thePlayer.posZ
 			val prevZ = thePlayer.prevPosZ
 
-			speedList.add(hypot((x - prevX), (z - prevZ)))
+			speedList.add(hypot(x - prevX, z - prevZ))
 			yspeedList.add(y - prevY)
 
 			while (speedList.size > width) speedList.removeAt(0)

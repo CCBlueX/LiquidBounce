@@ -51,7 +51,7 @@ class TargetStrafe : Module()
 	/**
 	 * Strafe when player is on ground (bypass Strafe checks)
 	 */
-	private val onlyGroundValue = BoolValue("OnlyGround", false)
+	private val onlyGroundValue = BoolValue("OnlyGround", false, description = "Only strafe while on ground; This may useful for anticheats which contains Strafe(or Inertia) checks")
 
 	/**
 	 * Draw the strafe path

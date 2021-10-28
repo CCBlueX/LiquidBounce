@@ -203,25 +203,29 @@ class SlowlyStyle : Style()
 		font.drawString(text, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 4, WHITE)
 		font.drawString(colorText, moduleIndentX + displayTextWidth + 6, moduleElement.slowlySettingsYPos + 4, value.get(255))
 
-		val redSlider = drawSlider(value.getRed().toFloat(), 0f, 255f, moduleX + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, indent, -65536 /* 0xFFFF0000 */)
-		if (redSlider != value.getRed().toFloat()) value.set(redSlider.toInt(), value.getGreen(), value.getBlue(), value.getAlpha())
+		drawSlider(value.getRed().toFloat(), 0f, 255f, moduleX + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, indent, -65536 /* 0xFFFF0000 */) {
+			value.set(it.toInt(), value.getGreen(), value.getBlue(), value.getAlpha())
+		}
 
 		moduleElement.slowlySettingsYPos += 9
 
-		val greenSlider = drawSlider(value.getGreen().toFloat(), 0f, 255f, moduleX + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, indent, -16711936 /* 0xFF00FF00 */)
-		if (greenSlider != value.getGreen().toFloat()) value.set(value.getRed(), greenSlider.toInt(), value.getBlue(), value.getAlpha())
+		drawSlider(value.getGreen().toFloat(), 0f, 255f, moduleX + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, indent, -16711936 /* 0xFF00FF00 */) {
+			value.set(value.getRed(), it.toInt(), value.getBlue(), value.getAlpha())
+		}
 
 		moduleElement.slowlySettingsYPos += 9
 
-		val blueSlider = drawSlider(value.getBlue().toFloat(), 0f, 255f, moduleX + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, indent, -16776961 /* 0xFF0000FF */)
-		if (blueSlider != value.getBlue().toFloat()) value.set(value.getRed(), value.getGreen(), blueSlider.toInt(), value.getAlpha())
+		drawSlider(value.getBlue().toFloat(), 0f, 255f, moduleX + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, indent, -16776961 /* 0xFF0000FF */) {
+			value.set(value.getRed(), value.getGreen(), it.toInt(), value.getAlpha())
+		}
 
 		if (alphaPresent)
 		{
 			moduleElement.slowlySettingsYPos += 9
 
-			val alphaSlider = drawSlider(value.getAlpha().toFloat(), 0f, 255f, moduleX + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, indent, LIGHT_GRAY)
-			if (alphaSlider != value.getBlue().toFloat()) value.set(value.getRed(), value.getGreen(), value.getBlue(), alphaSlider.toInt())
+			drawSlider(value.getAlpha().toFloat(), 0f, 255f, moduleX + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, indent, LIGHT_GRAY) {
+				value.set(value.getRed(), value.getGreen(), value.getBlue(), it.toInt())
+			}
 		}
 
 		moduleElement.slowlySettingsYPos += 19
@@ -242,10 +246,10 @@ class SlowlyStyle : Style()
 
 					if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
 
-					val valueOfSlide = drawRangeSlider(value.getMin().toFloat(), value.getMax().toFloat(), value.minimum.toFloat(), value.maximum.toFloat(), moduleX + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, indent, -16279300 /* 0xFF0798FC */)
-
-					if (valueOfSlide.first != value.getMin().toFloat()) value.setMin(valueOfSlide.first)
-					if (valueOfSlide.second != value.getMax().toFloat()) value.setMax(valueOfSlide.second)
+					drawRangeSlider(value.getMin().toFloat(), value.getMax().toFloat(), value.minimum.toFloat(), value.maximum.toFloat(), moduleX + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, indent, -16279300 /* 0xFF0798FC */) { (min, max) ->
+						if (min.toInt() != value.getMin()) value.setMin(min)
+						if (max.toInt() != value.getMax()) value.setMax(max)
+					}
 
 					glStateManager.resetColor()
 					font.drawString(text, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 4, WHITE)
@@ -260,10 +264,10 @@ class SlowlyStyle : Style()
 
 					if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
 
-					val valueOfSlide = drawRangeSlider(value.getMin(), value.getMax(), value.minimum, value.maximum, moduleX + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, indent, -16279300 /* 0xFF0798FC */)
-
-					if (valueOfSlide.first != value.getMin()) value.setMin(valueOfSlide.first)
-					if (valueOfSlide.second != value.getMax()) value.setMax(valueOfSlide.second)
+					drawRangeSlider(value.getMin(), value.getMax(), value.minimum, value.maximum, moduleX + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, indent, -16279300 /* 0xFF0798FC */) { (min, max) ->
+						if (min != value.getMin()) value.setMin(min)
+						if (max != value.getMax()) value.setMax(max)
+					}
 
 					glStateManager.resetColor()
 
@@ -348,9 +352,7 @@ class SlowlyStyle : Style()
 
 					if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
 
-					val valueOfSlide = drawSlider(value.get().toFloat(), value.minimum.toFloat(), value.maximum.toFloat(), moduleX + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, indent, -16279300 /* 0xFF0798FC */)
-
-					if (valueOfSlide != value.get().toFloat()) value.set(valueOfSlide.toInt())
+					drawSlider(value.get().toFloat(), value.minimum.toFloat(), value.maximum.toFloat(), moduleX + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, indent, -16279300, value::set)
 
 					valueFont.drawString(text, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 3, WHITE)
 
@@ -364,9 +366,7 @@ class SlowlyStyle : Style()
 
 					if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
 
-					val valueOfSlide = drawSlider(value.get(), value.minimum, value.maximum, moduleX + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, indent, -16279300 /* 0xFF0798FC */)
-
-					if (valueOfSlide != value.get()) value.set(valueOfSlide)
+					drawSlider(value.get(), value.minimum, value.maximum, moduleX + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, indent, -16279300, value::set)
 
 					valueFont.drawString(text, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 3, WHITE)
 
@@ -459,15 +459,13 @@ class SlowlyStyle : Style()
 	{
 		private fun encodeToHex(hex: Int) = hex.toString(16).toUpperCase().padStart(2, '0')
 
-		private fun drawSlider(value: Float, min: Float, max: Float, x: Int, y: Int, width: Int, mouseX: Int, mouseY: Int, indent: Int, color: Int): Float
+		private fun drawSlider(value: Float, min: Float, max: Float, x: Int, y: Int, width: Int, mouseX: Int, mouseY: Int, indent: Int, color: Int, changeCallback: (Float) -> Unit)
 		{
-			val displayValue = value.coerceIn(min, max)
-
 			val indentX = x + indent
 			val xEnd = x + width
 			drawRect(indentX, y, xEnd, y + 2, Int.MAX_VALUE)
 
-			val sliderValue = indentX + (width - indent) * (displayValue - min) / (max - min)
+			val sliderValue = indentX + (width - indent) * (value.coerceIn(min, max) - min) / (max - min)
 
 			drawRect(indentX.toFloat(), y.toFloat(), sliderValue, y + 2f, color)
 			drawFilledCircle(sliderValue.toInt(), y + 1, 3f, color)
@@ -475,25 +473,20 @@ class SlowlyStyle : Style()
 			if (mouseX in indentX..xEnd && mouseY >= y && mouseY <= y + 3 && Mouse.isButtonDown(0))
 			{
 				val sliderXEnd = width - indent - 3f
-				return BigDecimal("${(min + (max - min) * ((mouseX - indentX) / sliderXEnd).coerceIn(0f, 1f))}").setScale(4, RoundingMode.HALF_UP).toFloat()
+				changeCallback(BigDecimal("${(min + (max - min) * ((mouseX - indentX) / sliderXEnd).coerceIn(0f, 1f))}").setScale(4, RoundingMode.HALF_UP).toFloat())
 			}
-
-			return value
 		}
 
-		private fun drawRangeSlider(minValue: Float, maxValue: Float, min: Float, max: Float, x: Int, y: Int, width: Int, mouseX: Int, mouseY: Int, indent: Int, color: Int): Pair<Float, Float>
+		private fun drawRangeSlider(minValue: Float, maxValue: Float, min: Float, max: Float, x: Int, y: Int, width: Int, mouseX: Int, mouseY: Int, indent: Int, color: Int, changeCallback: (Pair<Float, Float>) -> Unit)
 		{
-			val minDisplayValue = minValue.coerceIn(min, max)
-			val maxDisplayValue = maxValue.coerceIn(min, max)
-
 			val indentX = x + indent
 			val sliderXEnd = width - indent - 3f
 			drawRect(indentX, y, x + width, y + 2, Int.MAX_VALUE)
 
-			val minSliderValue = indentX + (width - indent) * (minDisplayValue - min) / (max - min)
+			val minSliderValue = indentX + (width - indent) * (minValue.coerceIn(min, max) - min) / (max - min)
 			drawFilledCircle(minSliderValue.toInt(), y + 1, 3f, color)
 
-			val maxSliderValue = indentX + (width - indent) * (maxDisplayValue - min) / (max - min)
+			val maxSliderValue = indentX + (width - indent) * (maxValue.coerceIn(min, max) - min) / (max - min)
 			drawFilledCircle(maxSliderValue.toInt(), y + 1, 3f, color)
 
 			drawRect(minSliderValue, y.toFloat(), maxSliderValue, y + 2f, color)
@@ -503,10 +496,8 @@ class SlowlyStyle : Style()
 			if (mouseX >= indentX && mouseX <= x + width && mouseY >= y && mouseY <= y + 3 && Mouse.isButtonDown(0))
 			{
 				val newValue = BigDecimal("${(min + (max - min) * ((mouseX - indentX) / sliderXEnd).coerceIn(0f, 1f))}").setScale(4, RoundingMode.HALF_UP).toFloat()
-				return if (mouseX > center) minValue to newValue else newValue to maxValue
+				changeCallback(if (mouseX > center) minValue to newValue else newValue to maxValue)
 			}
-
-			return minValue to maxValue
 		}
 
 		private fun hoverColor(color: Color, hover: Int): Color

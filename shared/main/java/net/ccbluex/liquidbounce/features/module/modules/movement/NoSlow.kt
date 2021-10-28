@@ -45,10 +45,10 @@ class NoSlow : Module()
 	val soulSandForwardMultiplier = FloatValue("SoulSandMultiplier", 0.4F, 0.4F, 1.0F)
 
 	private val packetGroup = ValueGroup("Packet")
-	private val packetEnabledValue = BoolValue("Enabled", true, "Packet")
+	private val packetEnabledValue = BoolValue("Enabled", true, "Packet", description = "Send blocking-unblocking packets frequently; Bypasses NCP")
 	private val packetDelayValue = IntegerValue("Delay", 0, 0, 3, "Packet-PacketsDelay")
-	private val packetBlockValue = BoolValue("Block", true, "Packet-Block")
-	private val packetUnblock = BoolValue("Unblock", true, "Packet-Unblock")
+	private val packetBlockValue = BoolValue("Block", true, "Packet-Block", description = "Send start blocking packets")
+	private val packetUnblock = BoolValue("Unblock", true, "Packet-Unblock", description = "Send stop blocking packets")
 	private val packetTimerValue = FloatValue("Timer", 1.0F, 0.1F, 1.0F, "Packet-Timer") // Set this 0.8 to bypass AAC NoSlowdown check
 
 	// Blocks

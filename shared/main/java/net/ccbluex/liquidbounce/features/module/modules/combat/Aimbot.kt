@@ -35,34 +35,34 @@ class Aimbot : Module()
 
 	private val predictGroup = ValueGroup("Predict")
 	private val predictEnemyGroup = ValueGroup("Enemy")
-	private val predictEnemyValue = BoolValue("Enabled", true)
+	private val predictEnemyValue = BoolValue("Enabled", true, description = "Predicts the next position of target")
 	private val predictEnemyIntensityValue = FloatRangeValue("Intensity", 1f, 1f, -2f, 2f, "MaxPredictSize" to "MinPredictSize")
 
 	private val predictPlayerGroup = ValueGroup("Player")
-	private val playerPredictValue = BoolValue("Enabled", true)
+	private val playerPredictValue = BoolValue("Enabled", true, description = "Predicts the nex position of player")
 	private val predictPlayerIntensityValue = FloatRangeValue("Intensity", 1f, 1f, -2f, 2f, "MaxPlayerPredictSize" to "MinPlayerPredictSize")
 
 	/**
 	 * Should we aim through walls?
 	 */
-	private val throughWallsValue = BoolValue("ThroughWalls", false)
+	private val throughWallsValue = BoolValue("ThroughWalls", false, description = "Disable visible checks")
 
 	/**
 	 * Lock Center
 	 */
-	private val centerValue = BoolValue("Center", false)
+	private val centerValue = BoolValue("Center", false, description = "Lock the aim to the center of target hitbox")
 
 	/**
 	 * Lock rotation
 	 */
-	private val lockValue = BoolValue("Lock", true)
+	private val lockValue = BoolValue("Lock", true, description = "Always aim the target")
 
 	private val onClickGroup = ValueGroup("OnClick")
-	private val onClickValue = BoolValue("Enabled", false)
+	private val onClickValue = BoolValue("Enabled", false, description = "Only aim while LMB is pressed")
 	private val onClickKeepValue = IntegerValue("KeepTime", 500, 0, 1000)
 
 	private val jitterGroup = ValueGroup("Jitter")
-	private val jitterValue = BoolValue("Enabled", false)
+	private val jitterValue = BoolValue("Enabled", false, description = "Shake your aim (to make your aim looks more legit)")
 	private val jitterRateYaw = IntegerValue("YawRate", 50, 1, 100)
 	private val jitterRatePitch = IntegerValue("PitchRate", 50, 1, 100)
 	private val jitterYawIntensityValue = FloatRangeValue("YawIntensity", 0f, 1f, 0f, 5f, "MaxYawStrength" to "MinYawStrength")
