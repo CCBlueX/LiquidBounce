@@ -11,9 +11,9 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.render.AnimationUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.easeOut
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.*
@@ -309,7 +309,7 @@ class Notification(private val type: NotificationIcon, private val header: Strin
 		{
 			if (yDeployProgress < yDeployProgressMax)
 			{
-				yDeployProgress = AnimationUtils.easeOut(yDeployStep, yDeployProgressMax) * yDeployProgressMax
+				yDeployProgress = easeOut(yDeployStep, yDeployProgressMax) * yDeployProgressMax
 				yDeployStep += delta * deploySpeed
 			}
 
@@ -329,7 +329,7 @@ class Notification(private val type: NotificationIcon, private val header: Strin
 
 				if (x < width)
 				{
-					x = AnimationUtils.easeOut(fadeStep, width) * (width + cornerX) - cornerX
+					x = easeOut(fadeStep, width) * (width + cornerX) - cornerX
 					fadeStep += delta * fadeSpeed
 				}
 
@@ -349,7 +349,7 @@ class Notification(private val type: NotificationIcon, private val header: Strin
 			{
 				if (x > -cornerX)
 				{
-					x = AnimationUtils.easeOut(fadeStep, width) * width
+					x = easeOut(fadeStep, width) * width
 					fadeStep -= delta * fadeSpeed
 				}
 				else fadeState = FadeState.END

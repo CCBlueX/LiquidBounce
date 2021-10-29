@@ -64,8 +64,8 @@ class ExtendedTooltips : Module()
 	 */
 	private var lastArmorPotential = ""
 
-	private val armorPotentialCooldown: Cooldown = Cooldown.getNewCooldownMiliseconds(300)
-	private val armorDurabilityWarningCooldown: Cooldown = Cooldown.getNewCooldownMiliseconds(1000)
+	private val armorPotentialCooldown: Cooldown = Cooldown.createCooldownInMillis(300)
+	private val armorDurabilityWarningCooldown: Cooldown = Cooldown.createCooldownInMillis(1000)
 
 	private var showArmorDurabilityWarning = false
 

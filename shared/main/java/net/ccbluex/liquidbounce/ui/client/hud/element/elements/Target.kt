@@ -28,12 +28,16 @@ import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_1
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_2
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.easeOutCubic
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 import java.util.*
-import kotlin.math.*
+import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.roundToInt
 
 /**
  * A target hud
@@ -351,7 +355,7 @@ class Target : Element()
 					// Draw Ping text
 					textFont.drawString("${ping}ms", textXOffset + 12, 22, pingTextColor)
 
-					easingArmor += ((targetArmor - easingArmor) / 2.0F.pow(10.0F - armorFadeSpeedValue.get())) * RenderUtils.frameTime
+					easingArmor = easeOutCubic(easingArmor, targetArmor.toFloat(), armorFadeSpeedValue.get())
 				}
 
 				// Render equipments
@@ -381,8 +385,8 @@ class Target : Element()
 
 				RenderUtils.glColor(Color.white) // Reset Color
 
-				if (!suspendAnimation) easingHealth += ((targetHealth - easingHealth) / 2.0F.pow(10.0F - healthFadeSpeedValue.get())) * RenderUtils.frameTime
-				easingAbsorption += ((targetAbsorption - easingAbsorption) / 2.0F.pow(10.0F - absorptionFadeSpeedValue.get())) * RenderUtils.frameTime
+				if (!suspendAnimation) easingHealth = easeOutCubic(easingHealth, targetHealth, healthFadeSpeedValue.get())
+				easingAbsorption = easeOutCubic(easingAbsorption, targetAbsorption, absorptionFadeSpeedValue.get())
 
 				// Draw Target Name
 				nameFont.drawString(name, textXOffset, 3, 0xffffff)

@@ -26,6 +26,12 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerRangeValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ValueGroup
+import java.lang.ref.SoftReference
+import java.util.*
+
+private const val CLICKINDICATION_SHIFT_LEFT = -2147462913
+private const val CLICKINDICATION_RIGHT_ARMORSLOT = -2147450625
+private const val CLICKINDICATION_RIGHT = -2147418113
 
 @ModuleInfo(name = "AutoArmor", description = "Automatically equips the best armor in your inventory.", category = ModuleCategory.COMBAT)
 class AutoArmor : Module()
@@ -56,26 +62,33 @@ class AutoArmor : Module()
 	private var nextDelay: Long = 0
 	private var locked = false
 
-	private val infoUpdateCooldown = Cooldown.getNewCooldownMiliseconds(100)
+	private val infoUpdateCooldown = Cooldown.createCooldownInMillis(100)
 
-	private var cachedInfo: String? = null
+	private var cachedDebug: SoftReference<String>? = null
 
-	val advancedInformations: String
+	val debug: String
 		get()
 		{
-			val cache = cachedInfo
+			val cache = cachedDebug?.get()
 
-			return if (cache == null || infoUpdateCooldown.attemptReset()) (if (!state) "AutoArmor is not active"
+			return if (cache == null || infoUpdateCooldown.attemptReset()) (if (!state) "AutoArmor disabled"
 			else
 			{
-				val minDelay = delayValue.getMin()
-				val maxDelay = delayValue.getMax()
-				val noMove = noMoveValue.get()
-				val hotbar = hotbarValue.get()
-				val itemDelay = itemDelayValue.get()
+				val builder = StringJoiner(", ")
 
-				"AutoArmor active [delay: ($minDelay ~ $maxDelay), itemdelay: $itemDelay, nomove: $noMove, hotbar: $hotbar]"
-			}).apply { cachedInfo = this }
+				builder.add("DELAY(${delayValue.getMin()}-${delayValue.getMax()}ms)")
+				builder.add("ITEMDELAY(${itemDelayValue.get()}ms)")
+
+				if (invOpenValue.get()) builder.add("INVOPEN")
+
+				if (simulateInventory.get()) builder.add("SIMULATE")
+
+				if (noMoveValue.get()) builder.add("NOMOVE")
+
+				if (hotbarValue.get()) builder.add("HOTBAR")
+
+				"AutoArmor ENABLED {$builder}"
+			}).also { cachedDebug = SoftReference(it) }
 			else cache
 		}
 
@@ -160,7 +173,7 @@ class AutoArmor : Module()
 
 			val slot = if (full || isArmorSlot) item else if (item < 9) item + 36 else item
 			controller.windowClick(thePlayer.inventoryContainer.windowId, slot, if (full) 1 else 0, if (full) 4 else 1, thePlayer)
-			if (clickIndicationEnabledValue.get() && screen != null && provider.isGuiContainer(screen)) screen.asGuiContainer().highlight(slot, clickIndicationLengthValue.get().toLong(), if (full) -2147462913 else if (isArmorSlot) -2147450625 else -2147418113)
+			if (clickIndicationEnabledValue.get() && screen != null && provider.isGuiContainer(screen)) screen.asGuiContainer().highlight(slot, clickIndicationLengthValue.get().toLong(), if (full) CLICKINDICATION_SHIFT_LEFT else if (isArmorSlot) CLICKINDICATION_RIGHT_ARMORSLOT else CLICKINDICATION_RIGHT)
 
 			nextDelay = delayValue.getRandomDelay()
 

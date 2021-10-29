@@ -120,10 +120,11 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 	private val display: String
 		get()
 		{
-			val textContent = if (displayString.get().isEmpty() && !editMode) "Text Element"
-			else displayString.get()
-			return multiReplace(textContent)
+			val value = displayString.get()
+			return multiReplace(if (value.isEmpty() && !editMode) "Text Element" else value)
 		}
+
+	private var cursor = displayText.length
 
 	// Workaround
 	private var deltaX = 0.0
@@ -444,7 +445,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 		RainbowFontShader.begin(textRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
 			fontRenderer.drawString(displayText, textX, 0F, textColor, shadow)
 
-			if (editMode && classProvider.isGuiHudDesigner(mc.currentScreen) && editTicks <= 40) fontRenderer.drawString("_", if (rightRect) 0f else if (leftRect) 3f else 1.5f + textWidth + 2F, 0F, textColor, shadow)
+			if (editMode && classProvider.isGuiHudDesigner(mc.currentScreen) && editTicks <= 10) fontRenderer.drawString("_", (if (rightRect) 0f else if (leftRect) rectWidth else rectWidth * 0.5F) + (borderXStart + borderExpand) + fontRenderer.getStringWidth(displayText.take(cursor)) + 2F, 0F, textColor, shadow)
 		}
 
 		// Disable edit mode when current gui is not HUD Designer
@@ -460,7 +461,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 
 	override fun updateElement()
 	{
-		if (editTicks++ > 14) editTicks = 0
+		if (editTicks++ > 20) editTicks = 0
 
 		displayText = if (editMode) displayString.get() else display
 	}
@@ -480,17 +481,28 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 	{
 		if (editMode && classProvider.isGuiHudDesigner(mc.currentScreen))
 		{
-			if (keyCode == Keyboard.KEY_BACK)
+			val string = displayString.get()
+
+			when (keyCode)
 			{
-				if (displayString.get().isNotEmpty()) displayString.set(displayString.get().substring(0, displayString.get().length - 1))
+				Keyboard.KEY_BACK -> if (string.isNotEmpty() && cursor > 0)
+				{
+					if (cursor >= string.length) displayString.set(string.dropLast(1)) else displayString.set("${string.take(cursor - 1)}${string.substring(cursor, string.length)}")
+					cursor--
+					updateElement()
+				}
 
-				updateElement()
-				return
+				Keyboard.KEY_LEFT -> cursor = (cursor - 1).coerceAtLeast(0)
+
+				Keyboard.KEY_RIGHT -> cursor = (cursor + 1).coerceAtMost(string.length)
+
+				else -> if (ColorUtils.isAllowedCharacter(c) || c == '\u00A7')
+				{
+					if (cursor >= string.length) displayString.set(string + c) else displayString.set("${string.take(cursor)}$c${string.substring(cursor, string.length)}")
+					cursor++
+					updateElement()
+				}
 			}
-
-			if (ColorUtils.isAllowedCharacter(c) || c == '\u00A7') displayString.set(displayString.get() + c)
-
-			updateElement()
 		}
 	}
 

@@ -1,12 +1,12 @@
 package net.ccbluex.liquidbounce.utils.timer
 
-class Cooldown private constructor(private val COOLDOWN_IN_MS: Int)
+class Cooldown private constructor(private val millis: Int)
 {
 	private var lastUse: Long = 0
 
 	fun attemptReset(): Boolean
 	{
-		return if (System.currentTimeMillis() - lastUse > COOLDOWN_IN_MS.toLong())
+		return if (System.currentTimeMillis() - lastUse > millis.toLong())
 		{
 			lastUse = System.currentTimeMillis()
 			true
@@ -16,6 +16,6 @@ class Cooldown private constructor(private val COOLDOWN_IN_MS: Int)
 
 	companion object
 	{
-		fun getNewCooldownMiliseconds(milis: Int): Cooldown = Cooldown(milis)
+		fun createCooldownInMillis(milis: Int): Cooldown = Cooldown(milis)
 	}
 }

@@ -15,9 +15,9 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Side.Horizontal
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side.Vertical
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.ui.font.assumeNonVolatile
-import net.ccbluex.liquidbounce.utils.render.AnimationUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.easeOut
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.*
@@ -130,13 +130,13 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 				{
 					if (module.slide < width)
 					{
-						module.slide = AnimationUtils.easeOut(module.slideStep, width) * width
+						module.slide = easeOut(module.slideStep, width) * width
 						module.slideStep += deltaTime / slideAnimationSpeed
 					}
 				}
 				else if (module.slide > 0)
 				{
-					module.slide = AnimationUtils.easeOut(module.slideStep, width) * width
+					module.slide = easeOut(module.slideStep, width) * width
 					module.slideStep -= deltaTime / slideAnimationSpeed
 				}
 

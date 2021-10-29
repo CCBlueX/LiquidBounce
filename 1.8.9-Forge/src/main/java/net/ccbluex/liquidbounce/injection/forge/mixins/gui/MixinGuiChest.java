@@ -15,8 +15,8 @@ public abstract class MixinGuiChest extends MixinGuiContainer
 	@Inject(method = "drawGuiContainerForegroundLayer", at = @At("RETURN"))
 	protected void drawGuiContainerForegroundLayer(final int mouseX, final int mouseY, final CallbackInfo ci)
 	{
-		final String advancedInformations = ((ChestStealer) LiquidBounce.moduleManager.get(ChestStealer.class)).getAdvancedInformations();
+		final String debug = ((ChestStealer) LiquidBounce.moduleManager.get(ChestStealer.class)).getDebug();
 
-		fontRendererObj.drawString(advancedInformations, -(fontRendererObj.getStringWidth(advancedInformations) >> 1) + (xSize >> 1), -12.0f, 0xFFFFFF, true);
+		fontRendererObj.drawString(debug, -(fontRendererObj.getStringWidth(debug) >> 1) + (xSize >> 1), -12.0f, 0xFFFFFF, true);
 	}
 }

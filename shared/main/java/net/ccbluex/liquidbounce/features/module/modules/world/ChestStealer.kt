@@ -26,11 +26,16 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerRangeValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ValueGroup
+import java.lang.ref.SoftReference
+import java.util.*
 import kotlin.math.max
 import kotlin.random.Random
 
+private const val CLICKINDICATION_MISCLICK = -2130771968 /* 0x80FF0000 */
+private const val CLICKINDICATION_TAKE = -2147418368 /* 0x8000FF00 */
+
 // TODO: Silent option (Steal without opening GUI)
-@ModuleInfo(name = "ChestStealer", description = "Automatically steals all items from a chest.", category = ModuleCategory.WORLD)
+@ModuleInfo(name = "ChestStealer", description = "Automatically steals items from a chest.", category = ModuleCategory.WORLD)
 class ChestStealer : Module()
 {
 	/**
@@ -64,7 +69,7 @@ class ChestStealer : Module()
 
 	private val misclickGroup = ValueGroup("ClickMistakes")
 	private val misclickEnabledValue = BoolValue("Enabled", false, "ClickMistakes")
-	private val misclickRateValue = IntegerValue("Rate", 5, 1, 100, "ClickMistakeRate")
+	private val misclickChanceValue = IntegerValue("Chance", 5, 1, 100, "ClickMistakeRate")
 	private val misclickMaxPerChestValue = IntegerValue("MaxPerChest", 5, 1, 10, "MaxClickMistakesPerChest")
 
 	private val autoCloseGroup = ValueGroup("AutoClose")
@@ -102,41 +107,45 @@ class ChestStealer : Module()
 	// Remaining Misclicks count
 	private var remainingMisclickCount = misclickMaxPerChestValue.get()
 
-	private val infoUpdateCooldown = Cooldown.getNewCooldownMiliseconds(100)
+	private val infoUpdateCooldown = Cooldown.createCooldownInMillis(100)
 
-	private var cachedInfo: String? = null
+	private var cachedDebug: SoftReference<String>? = null
 
-	val advancedInformations: String
+	val debug: String
 		get()
 		{
-			val cache = cachedInfo
+			val cache = cachedDebug?.get()
 
-			return if (cache == null || infoUpdateCooldown.attemptReset()) (if (!state) "ChestStealer is not active"
+			return if (cache == null || infoUpdateCooldown.attemptReset()) (if (!state) "ChestStealer disabled"
 			else
 			{
-				val minStartDelay = delayOnFirstDelayValue.getMin()
-				val maxStartDelay = delayOnFirstDelayValue.getMax()
-				val minDelay = delayValue.getMin()
-				val maxDelay = delayValue.getMax()
-				val invCleanerState = LiquidBounce.moduleManager[InventoryCleaner::class.java].state
-				val random = takeRandomizedValue.get()
-				val autoClose = autoCloseEnabledValue.get()
-				val minAutoClose = autoCloseDelayValue.getMin()
-				val maxAutoClose = autoCloseDelayValue.getMax()
-				val itemDelay = itemDelayValue.get()
-				val misclick = misclickEnabledValue.get()
-				val misclickRate = misclickRateValue.get()
-				val maxmisclick = misclickMaxPerChestValue.get()
+				val builder = StringJoiner(", ")
 
-				"ChestStealer active [startdelay: ($minStartDelay ~ $maxStartDelay), delay: ($minDelay ~ $maxDelay), itemdelay: $itemDelay, random: $random, onlyuseful: $invCleanerState${if (misclick) ", misclick($misclickRate%, max $maxmisclick per chest)" else ""}${if (autoClose) ", autoclose($minAutoClose ~ $maxAutoClose)" else ""}]"
-			}).apply { cachedInfo = this }
+				builder.add("FIRSTDELAY(${delayOnFirstDelayValue.getMin()}-${delayOnFirstDelayValue.getMax()}ms)")
+				builder.add("DELAY(${delayValue.getMin()}-${delayValue.getMax()}ms)")
+				builder.add("ITEMDELAY(${itemDelayValue.get()}ms)")
+
+				if (autoCloseEnabledValue.get()) builder.add("AUTOCLOSE[DELAY(${autoCloseDelayValue.getMin()}-${autoCloseDelayValue.getMax()}ms)${if (autoCloseOnFullValue.get()) ", ON_FULL" else ""}]")
+
+				if (misclickEnabledValue.get()) builder.add("MISCLICK[CHANCE(${misclickChanceValue.get()}%), LIMIT(${misclickMaxPerChestValue.get()}/chest)]")
+
+				if (LiquidBounce.moduleManager[InventoryCleaner::class.java].state) builder.add("ONLYUSEFUL")
+
+				if (takeRandomizedValue.get()) builder.add("RANDOM")
+
+				if (chestTitleValue.get()) builder.add("CHESTTITLE")
+
+				if (onlyItemsValue.get()) builder.add("ONLYITEMS")
+
+				"ChestStealer ENABLED {$builder}"
+			}).also { cachedDebug = SoftReference(it) }
 			else cache
 		}
 
 	init
 	{
 		delayOnFirstGroup.addAll(delayOnFirstEnabledValue, delayOnFirstDelayValue)
-		misclickGroup.addAll(misclickEnabledValue, misclickRateValue, misclickMaxPerChestValue)
+		misclickGroup.addAll(misclickEnabledValue, misclickChanceValue, misclickMaxPerChestValue)
 		autoCloseGroup.addAll(autoCloseEnabledValue, autoCloseEnabledValue, autoCloseOnFullValue, autoCloseDelayValue)
 		clickIndicationGroup.addAll(clickIndicationEnabledValue, clickIndicationLengthValue)
 	}
@@ -212,7 +221,7 @@ class ChestStealer : Module()
 					var misclick = false
 
 					// Simulate Click Mistakes to bypass some anti-cheats
-					if (misclickEnabledValue.get() && remainingMisclickCount > 0 && misclickRateValue.get() > 0 && Random.nextInt(100) <= misclickRateValue.get())
+					if (misclickEnabledValue.get() && remainingMisclickCount > 0 && misclickChanceValue.get() > 0 && Random.nextInt(100) <= misclickChanceValue.get())
 					{
 						val firstEmpty: ISlot? = firstEmpty(container.inventorySlots, end, true)
 						if (firstEmpty != null)
@@ -238,7 +247,7 @@ class ChestStealer : Module()
 				{
 					var misclick = false
 
-					if (misclickEnabledValue.get() && remainingMisclickCount > 0 && misclickRateValue.get() > 0 && Random.nextInt(100) <= misclickRateValue.get())
+					if (misclickEnabledValue.get() && remainingMisclickCount > 0 && misclickChanceValue.get() > 0 && Random.nextInt(100) <= misclickChanceValue.get())
 					{
 						val firstEmpty: ISlot? = firstEmpty(container.inventorySlots, end, false)
 						if (firstEmpty != null)
@@ -273,7 +282,7 @@ class ChestStealer : Module()
 	private fun move(screen: IGuiChest, slot: ISlot, misclick: Boolean)
 	{
 		screen.handleMouseClick(slot, slot.slotNumber, 0, 1)
-		if (clickIndicationEnabledValue.get()) screen.asGuiContainer().highlight(slot.slotNumber, clickIndicationLengthValue.get().toLong(), if (misclick) -2130771968 /* 0x80FF0000 */ else -2147418368 /* 0x8000FF00 */)
+		if (clickIndicationEnabledValue.get()) screen.asGuiContainer().highlight(slot.slotNumber, clickIndicationLengthValue.get().toLong(), if (misclick) CLICKINDICATION_MISCLICK else CLICKINDICATION_TAKE)
 		delayTimer.reset()
 		nextDelay = delayValue.getRandomDelay()
 	}

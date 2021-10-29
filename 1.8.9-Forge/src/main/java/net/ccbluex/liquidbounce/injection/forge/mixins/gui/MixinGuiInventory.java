@@ -19,8 +19,8 @@ public abstract class MixinGuiInventory extends MixinInventoryEffectRenderer
 		final AutoArmor autoArmor = (AutoArmor) LiquidBounce.moduleManager.get(AutoArmor.class);
 		final InventoryCleaner invCleaner = (InventoryCleaner) LiquidBounce.moduleManager.get(InventoryCleaner.class);
 
-		final String autoArmorInfo = autoArmor.getAdvancedInformations();
-		final String invCleanerInfo = invCleaner.getAdvancedInformations();
+		final String autoArmorInfo = autoArmor.getDebug();
+		final String invCleanerInfo = invCleaner.getDebug();
 
 		fontRendererObj.drawString(autoArmorInfo, -(fontRendererObj.getStringWidth(autoArmorInfo) >> 1) + (xSize >> 1), -24.0F - fontRendererObj.FONT_HEIGHT, 0xFFFFFF, true);
 		fontRendererObj.drawString(invCleanerInfo, -(fontRendererObj.getStringWidth(invCleanerInfo) >> 1) + (xSize >> 1), -24.0F, 0xFFFFFF, true);

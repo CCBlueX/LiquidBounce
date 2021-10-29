@@ -33,12 +33,18 @@ import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
 import net.ccbluex.liquidbounce.utils.timer.Cooldown
 import net.ccbluex.liquidbounce.value.*
+import java.lang.ref.SoftReference
+import java.util.*
 import kotlin.random.Random
+
+private const val CLICKINDICATION_MISCLICK = -2147475201
+private const val CLICKINDICATION_THROW = -2130771968
+private const val CLICKINDICATION_REPLACE_FROM = -2130739200
+private const val CLICKINDICATION_REPLACE_TO = -2130722816
 
 @ModuleInfo(name = "InventoryCleaner", description = "Automatically throws away useless items.", category = ModuleCategory.PLAYER)
 class InventoryCleaner : Module()
 {
-
 	/**
 	 * OPTIONS
 	 */
@@ -60,7 +66,7 @@ class InventoryCleaner : Module()
 
 	private val misclickGroup = ValueGroup("ClickMistakes")
 	private val misclickEnabledValue = BoolValue("Enabled", false, "ClickMistakes")
-	private val misclickRateValue = IntegerValue("Rate", 5, 0, 100, "ClickMistakeRate")
+	private val misclickChanceValue = IntegerValue("Rate", 5, 0, 100, "ClickMistakeRate")
 
 	// Sort
 	private val items = arrayOf("None", "Ignore", "Sword", "Bow", "Pickaxe", "Axe", "Food", "Block", "Water", "Gapple", "Pearl")
@@ -114,35 +120,46 @@ class InventoryCleaner : Module()
 
 	private var delay = 0L
 
-	private val infoUpdateCooldown = Cooldown.getNewCooldownMiliseconds(100)
+	private val infoUpdateCooldown = Cooldown.createCooldownInMillis(100)
 
-	private var cachedInfo: String? = null
+	private var cachedDebug: SoftReference<String>? = null
 
-	val advancedInformations: String
+	val debug: String
 		get()
 		{
-			val cache = cachedInfo
+			val cache = cachedDebug?.get()
 
-			return if (cache == null || infoUpdateCooldown.attemptReset()) (if (!state) "InventoryCleaner is not active"
+			return if (cache == null || infoUpdateCooldown.attemptReset()) (if (!state) "InventoryCleaner disabled"
 			else
 			{
-				val minDelay = delayValue.getMin()
-				val maxDelay = delayValue.getMax()
-				val random = randomSlotValue.get()
-				val noMove = noMoveValue.get()
-				val hotbar = hotbarValue.get()
-				val itemDelay = itemDelayValue.get()
-				val misclick = misclickEnabledValue.get()
-				val misclickRate = misclickRateValue.get()
+				val builder = StringJoiner(", ")
 
-				"InventoryCleaner active [delay: ($minDelay ~ $maxDelay), itemdelay: $itemDelay, random: $random, nomove: $noMove, hotbar: $hotbar${if (misclick) ", misclick($misclickRate%)" else ""}]"
-			}).apply { cachedInfo = this }
+				builder.add("DELAY(${delayValue.getMin()}-${delayValue.getMax()}ms)")
+				builder.add("HOTBARDELAY(${hotbarDelayValue.getMin()}-${hotbarDelayValue.getMax()}ms)")
+				builder.add("ITEMDELAY(${itemDelayValue.get()}ms)")
+
+				if (misclickEnabledValue.get()) builder.add("MISCLICK(${misclickChanceValue.get()}%)")
+
+				if (randomSlotValue.get()) builder.add("RANDOM")
+
+				if (invOpenValue.get()) builder.add("INVOPEN")
+
+				if (simulateInventory.get()) builder.add("SIMULATE")
+
+				if (noMoveValue.get()) builder.add("NOMOVE")
+
+				if (hotbarValue.get()) builder.add("HOTBAR")
+
+				if (sortValue.get()) builder.add("SORT")
+
+				"InventoryCleaner ENABLED {$builder}"
+			}).also { cachedDebug = SoftReference(it) }
 			else cache
 		}
 
 	init
 	{
-		misclickGroup.addAll(misclickEnabledValue, misclickRateValue)
+		misclickGroup.addAll(misclickEnabledValue, misclickChanceValue)
 		sortGroup.addAll(sortValue, slot1Value, slot2Value, slot2Value, slot3Value, slot4Value, slot5Value, slot6Value, slot7Value, slot8Value, slot9Value)
 
 		filterBowAndArrowGroup.addAll(filterBowAndArrowKeepValue, filterBowAndArrowArrowCountValue)
@@ -184,7 +201,7 @@ class InventoryCleaner : Module()
 
 				var misclick = false
 
-				val misclickRate = misclickRateValue.get()
+				val misclickRate = misclickChanceValue.get()
 
 				// Simulate Click Mistakes to bypass some anti-cheats
 				if (misclickEnabledValue.get() && misclickRate > 0 && Random.nextInt(100) <= misclickRate)
@@ -203,7 +220,7 @@ class InventoryCleaner : Module()
 				val action = if (amount > 1 || (amount == 1 && Math.random() > 0.8)) ICPacketPlayerDigging.WAction.DROP_ALL_ITEMS else ICPacketPlayerDigging.WAction.DROP_ITEM
 				netHandler.addToSendQueue(provider.createCPacketPlayerDigging(action, WBlockPos.ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
 
-				if (clickIndicationEnabledValue.get() && screen != null && provider.isGuiContainer(screen)) screen.asGuiContainer().highlight(garbageHotbarItem, clickIndicationLengthValue.get().toLong(), if (misclick) -2130771968 else -2147418368)
+				if (clickIndicationEnabledValue.get() && screen != null && provider.isGuiContainer(screen)) screen.asGuiContainer().highlight(garbageHotbarItem, clickIndicationLengthValue.get().toLong(), if (misclick) CLICKINDICATION_MISCLICK else CLICKINDICATION_THROW)
 
 				// Back to the original holding slot
 				netHandler.addToSendQueue(provider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
@@ -241,7 +258,7 @@ class InventoryCleaner : Module()
 			if (garbageItems.isEmpty()) return
 
 			val randomSlot = randomSlotValue.get()
-			val misclickRate = misclickRateValue.get()
+			val misclickRate = misclickChanceValue.get()
 
 			var garbageItem = if (randomSlot) garbageItems[Random.nextInt(garbageItems.size)] else garbageItems.first()
 
@@ -266,7 +283,7 @@ class InventoryCleaner : Module()
 
 			if (amount > 1 || /* Mistake simulation */ Random.nextBoolean()) controller.windowClick(container.windowId, garbageItem, 1, 4, thePlayer) else controller.windowClick(container.windowId, garbageItem, 0, 4, thePlayer)
 
-			if (clickIndicationEnabledValue.get() && screen != null && provider.isGuiContainer(screen)) screen.asGuiContainer().highlight(garbageItem, clickIndicationLengthValue.get().toLong(), if (misclick) -2130771968 else -2147418368)
+			if (clickIndicationEnabledValue.get() && screen != null && provider.isGuiContainer(screen)) screen.asGuiContainer().highlight(garbageItem, clickIndicationLengthValue.get().toLong(), if (misclick) CLICKINDICATION_MISCLICK else CLICKINDICATION_THROW)
 
 			clickTimer.reset() // For more compatibility with custom MSTimer(s)
 
@@ -411,8 +428,8 @@ class InventoryCleaner : Module()
 
 			if (clickIndicationEnabledValue.get() && screen != null && provider.isGuiContainer(screen))
 			{
-				screen.asGuiContainer().highlight(slot, clickIndicationLengthValue.get().toLong(), -2130739200)
-				screen.asGuiContainer().highlight(index + 36, clickIndicationLengthValue.get().toLong(), -2130722816)
+				screen.asGuiContainer().highlight(slot, clickIndicationLengthValue.get().toLong(), CLICKINDICATION_REPLACE_FROM)
+				screen.asGuiContainer().highlight(index + 36, clickIndicationLengthValue.get().toLong(), CLICKINDICATION_REPLACE_TO)
 			}
 
 			if (openInventory) netHandler.addToSendQueue(provider.createCPacketCloseWindow())

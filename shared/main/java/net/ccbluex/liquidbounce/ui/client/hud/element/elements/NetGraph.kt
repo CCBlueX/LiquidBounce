@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.utils.PacketCounter
 import net.ccbluex.liquidbounce.utils.extensions.ping
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_1
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.easeOutCubic
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11
@@ -42,6 +43,7 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 
 	private val packetsIncomingGroup = ValueGroup("IncomingPackets")
 	private val packetsIncomingPeakValue = BoolValue("Peak", true, "IncomingPackets-Peak")
+	private val packetsIncomingScaleFadeSpeedValue = IntegerValue("ScaleFadeSpeed", 2, 1, 9)
 	private val packetsIncomingYMultiplier = FloatValue("Multiplier", 1F, 0.001F, 50F, "IncomingPackets-MinYMultiplier")
 	private val packetsIncomingThicknessValue = FloatValue("Thickness", 2F, 1F, 3F, "IncomingPackets-Thickness")
 	private val packetsIncomingColorValue = RGBColorValue("Color", 255, 111, 0, Triple("IncomingPackets-R", "IncomingPackets-G", "IncomingPackets-B"))
@@ -52,6 +54,7 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 
 	private val packetsOutgoingGroup = ValueGroup("OutgoingPackets")
 	private val packetsOutgoingPeakValue = BoolValue("Peak", true, "OutgoingPackets-Peak")
+	private val packetsOutgoingScaleFadeSpeedValue = IntegerValue("ScaleFadeSpeed", 2, 1, 9)
 	private val packetsOutgoingYMultiplier = FloatValue("YMultiplier", 1F, 0.001F, 50F, "OutgoingPackets-MinYMultiplier")
 	private val packetsOutgoingThicknessValue = FloatValue("Thickness", 2F, 1F, 3F, "OutgoingPackets-Thickness")
 	private val packetsOutgoingColorValue = RGBColorValue("Color", 255, 0, 111, Triple("OutgoingPackets-R", "OutgoingPackets-G", "OutgoingPackets-B"))
@@ -68,13 +71,15 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 	private val pingList = ArrayList<Int>()
 
 	private val incomingPacketsList = ArrayList<Int>()
-	private var incomingPacketsAverage = 0.0
+	private var incomingPacketsAverage = 0.0f
 	private var incomingPacketsPeak = 0
+	private var incomingPacketsScale = 0f
 	private var incomingPacketsPeakIndex = -1
 
 	private val outgoingPacketsList = ArrayList<Int>()
-	private var outgoingPacketsAverage = 0.0
+	private var outgoingPacketsAverage = 0.0f
 	private var outgoingPacketsPeak = 0
+	private var outgoingPacketsScale = 0f
 	private var outgoingPacketsPeakIndex = -1
 
 	private var lastTick = -1
@@ -94,10 +99,10 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 		pingGroup.addAll(pingUpdatePeriodValue, pingYMultiplier, pingThicknessValue, pingColorValue)
 
 		packetsIncomingAverageGroup.addAll(packetsIncomingAverageEnabledValue, packetsIncomingAverageThicknessValue)
-		packetsIncomingGroup.addAll(packetsIncomingPeakValue, packetsIncomingYMultiplier, packetsIncomingThicknessValue, packetsIncomingColorValue, packetsIncomingAverageGroup)
+		packetsIncomingGroup.addAll(packetsIncomingPeakValue, packetsIncomingScaleFadeSpeedValue, packetsIncomingYMultiplier, packetsIncomingThicknessValue, packetsIncomingColorValue, packetsIncomingAverageGroup)
 
 		packetsOutgoingAverageGroup.addAll(packetsOutgoingAverageEnabledValue, packetsOutgoingAverageThicknessValue)
-		packetsOutgoingGroup.addAll(packetsOutgoingPeakValue, packetsOutgoingYMultiplier, packetsOutgoingThicknessValue, packetsOutgoingColorValue, packetsOutgoingAverageGroup)
+		packetsOutgoingGroup.addAll(packetsOutgoingPeakValue, packetsOutgoingScaleFadeSpeedValue, packetsOutgoingYMultiplier, packetsOutgoingThicknessValue, packetsOutgoingColorValue, packetsOutgoingAverageGroup)
 
 		packetsGroup.addAll(packetsUpdatePeriodValue, packetCounterBufferValue, packetsIncomingGroup, packetsOutgoingGroup)
 	}
@@ -151,7 +156,7 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 
 			if (incomingPacketsAverageEnabled)
 			{
-				incomingPacketsAverage = incomingSum.toDouble() / width.toDouble()
+				incomingPacketsAverage = incomingSum.toFloat() / width.toFloat()
 
 				incomingAverageString = DECIMALFORMAT_1.format(incomingPacketsAverage)
 			}
@@ -184,7 +189,7 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 
 			if (outgoingPacketsAverageEnabled)
 			{
-				outgoingPacketsAverage = outgoingSum.toDouble() / width.toDouble()
+				outgoingPacketsAverage = outgoingSum.toFloat() / width.toFloat()
 
 				outgoingAverageString = DECIMALFORMAT_1.format(outgoingPacketsAverage)
 				outgoingAverageStringWidth = stringFont.getStringWidth(outgoingAverageString).toFloat()
@@ -203,14 +208,17 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 			packetUpdateTimer.reset()
 		}
 
+		incomingPacketsScale = easeOutCubic(incomingPacketsScale, incomingPacketsPeak.toFloat(), packetsIncomingScaleFadeSpeedValue.get())
+		outgoingPacketsScale = easeOutCubic(outgoingPacketsScale, outgoingPacketsPeak.toFloat(), packetsOutgoingScaleFadeSpeedValue.get())
+
 		if (tickChanged) lastTick = currentTick
 
 		val incomingPacketsColor = packetsIncomingColorValue.get()
 		val outgoingPacketsColor = packetsOutgoingColorValue.get()
 
 		val pingYMul = pingYMultiplier.get() * 0.1f
-		val incomingPacketsMinYMul = packetsIncomingYMultiplier.get() * 0.1f
-		val outgoingPacketsMinYMul = packetsOutgoingYMultiplier.get() * 0.1f
+		val incomingPacketsMinYMul = packetsIncomingYMultiplier.get()
+		val outgoingPacketsMinYMul = packetsOutgoingYMultiplier.get()
 
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
 		GL11.glEnable(GL11.GL_BLEND)
@@ -248,7 +256,7 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 
 			val incomingPacketsListStart = if (incomingPacketsListSize > width) incomingPacketsListSize - width else 0
 
-			val ymul = (height / incomingPacketsPeak.toFloat()).coerceAtLeast(incomingPacketsMinYMul)
+			val ymul = (height / incomingPacketsScale).coerceAtMost(incomingPacketsMinYMul)
 
 			for (i in incomingPacketsListStart until incomingPacketsListSize - 1)
 			{
@@ -256,8 +264,8 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 				val incomingPacketsNextY = incomingPacketsList[i + 1] * ymul
 
 				RenderUtils.glColor(incomingPacketsColor)
-				GL11.glVertex2f(i.toFloat() - incomingPacketsListStart, height + 1 - incomingPacketsY)
-				GL11.glVertex2f(i + 1.0F - incomingPacketsListStart, height + 1 - incomingPacketsNextY)
+				GL11.glVertex2f(i.toFloat() - incomingPacketsListStart, height + 1 - incomingPacketsY.coerceAtMost(height))
+				GL11.glVertex2f(i + 1.0F - incomingPacketsListStart, height + 1 - incomingPacketsNextY.coerceAtMost(height))
 			}
 		}
 
@@ -270,7 +278,7 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 
 			// Draw Inbound Packets Average
 			run {
-				val ypos = height + 1.0 - (height / incomingPacketsPeak.toFloat()).coerceAtLeast(incomingPacketsMinYMul) * incomingPacketsAverage
+				val ypos = height + 1.0 - (height / incomingPacketsScale).coerceAtMost(incomingPacketsMinYMul) * incomingPacketsAverage
 
 				RenderUtils.glColor(incomingPacketsColor)
 				GL11.glVertex2d(stringFont.getStringWidth(incomingAverageString) + 2.0, ypos)
@@ -289,7 +297,7 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 
 			val outgoingPacketsListStart = (if (outgoingPacketsListSize > width) outgoingPacketsListSize - width else 0)
 
-			val ymul = (height / outgoingPacketsPeak.toFloat()).coerceAtLeast(outgoingPacketsMinYMul)
+			val ymul = (height / outgoingPacketsScale).coerceAtMost(outgoingPacketsMinYMul)
 
 			for (i in outgoingPacketsListStart until outgoingPacketsListSize - 1)
 			{
@@ -297,8 +305,8 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 				val outgoingPacketsNextY = outgoingPacketsList[i + 1] * ymul
 
 				RenderUtils.glColor(outgoingPacketsColor)
-				GL11.glVertex2f((i - outgoingPacketsListStart).toFloat(), height + 1 - outgoingPacketsY)
-				GL11.glVertex2f(i + 1.0F - outgoingPacketsListStart, height + 1 - outgoingPacketsNextY)
+				GL11.glVertex2f((i - outgoingPacketsListStart).toFloat(), height + 1 - outgoingPacketsY.coerceAtMost(height))
+				GL11.glVertex2f(i + 1.0F - outgoingPacketsListStart, height + 1 - outgoingPacketsNextY.coerceAtMost(height))
 			}
 		}
 
@@ -311,11 +319,11 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 
 			// Draw Outbound Packets Average
 			run {
-				val ypos = height + 1 - (height / outgoingPacketsPeak.toFloat()).coerceAtLeast(outgoingPacketsMinYMul) * outgoingPacketsAverage
+				val ypos = height + 1 - (height / outgoingPacketsScale).coerceAtMost(outgoingPacketsMinYMul) * outgoingPacketsAverage
 
 				RenderUtils.glColor(outgoingPacketsColor)
-				GL11.glVertex2d(0.0, ypos)
-				GL11.glVertex2d(width.toDouble() - outgoingAverageStringWidth - 2.0, ypos)
+				GL11.glVertex2f(0f, ypos)
+				GL11.glVertex2f(width - outgoingAverageStringWidth - 2f, ypos)
 			}
 
 			GL11.glEnd()
@@ -329,10 +337,10 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 		classProvider.glStateManager.resetColor()
 
 		// Draw Inbound Packets Average
-		if (incomingPacketsAverageEnabled) stringFont.drawString(incomingAverageString, 0F, height + 1 - (height / incomingPacketsPeak.toFloat()).coerceAtLeast(incomingPacketsMinYMul) * incomingPacketsAverage.toFloat() - stringHeightHalf, incomingPacketsColor, shadow = true)
+		if (incomingPacketsAverageEnabled) stringFont.drawString(incomingAverageString, 0F, height + 1 - (height / incomingPacketsScale).coerceAtMost(incomingPacketsMinYMul) * incomingPacketsAverage - stringHeightHalf, incomingPacketsColor, shadow = true)
 
 		// Draw Outbound Packets Average
-		if (outgoingPacketsAverageEnabled) stringFont.drawString(outgoingAverageString, width - outgoingAverageStringWidth, height + 1 - (height / outgoingPacketsPeak.toFloat()).coerceAtLeast(outgoingPacketsMinYMul) * outgoingPacketsAverage.toFloat() - stringHeightHalf, outgoingPacketsColor, shadow = true)
+		if (outgoingPacketsAverageEnabled) stringFont.drawString(outgoingAverageString, width - outgoingAverageStringWidth, height + 1 - (height / outgoingPacketsScale).coerceAtMost(outgoingPacketsMinYMul) * outgoingPacketsAverage - stringHeightHalf, outgoingPacketsColor, shadow = true)
 
 		if (incomingPacketsPeakEnabled)
 		{
@@ -340,7 +348,7 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 
 			val incomingPacketsListStart = if (incomingPacketsListSize > width) incomingPacketsListSize - width else 0
 
-			stringFont.drawString(incomingPeakString, incomingPacketsPeakIndex.toFloat() - incomingPeakStringWidth - incomingPacketsListStart, 0F, incomingPacketsColor, shadow = true)
+			stringFont.drawString(incomingPeakString, incomingPacketsPeakIndex.toFloat() - incomingPeakStringWidth - incomingPacketsListStart, height + 1.0f - ((height / incomingPacketsScale).coerceAtMost(incomingPacketsMinYMul) * incomingPacketsPeak).coerceAtMost(height), incomingPacketsColor, shadow = true)
 		}
 
 		if (outgoingPacketsPeakEnabled)
@@ -349,7 +357,7 @@ class NetGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: Sid
 
 			val outgoingPacketsListStart = if (outgoingPacketsListSize > width) outgoingPacketsListSize - width else 0
 
-			stringFont.drawString(outgoingPeakString, outgoingPacketsPeakIndex.toFloat() - outgoingPeakStringWidth - outgoingPacketsListStart, 0F, outgoingPacketsColor, shadow = true)
+			stringFont.drawString(outgoingPeakString, outgoingPacketsPeakIndex.toFloat() - outgoingPeakStringWidth - outgoingPacketsListStart, height + 1.0f - ((height / outgoingPacketsScale).coerceAtMost(outgoingPacketsMinYMul) * outgoingPacketsPeak).coerceAtMost(height), outgoingPacketsColor, shadow = true)
 		}
 
 		return Border(0F, 0F, width.toFloat(), height + 2)
