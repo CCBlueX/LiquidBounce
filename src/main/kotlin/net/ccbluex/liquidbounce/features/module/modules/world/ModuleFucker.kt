@@ -46,7 +46,7 @@ import net.minecraft.world.RaycastContext
 /**
  * Fucker module
  *
- * Destroys/Uses selected blocks around you.
+ * Fucks selected blocks around you.
  */
 object ModuleFucker : Module("Fucker", Category.WORLD) {
 
