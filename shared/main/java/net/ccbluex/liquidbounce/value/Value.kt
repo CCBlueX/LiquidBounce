@@ -693,7 +693,7 @@ class FontValue(valueName: String, value: IFontRenderer) : Value<IFontRenderer>(
 /**
  * Block value represents a value with a block
  */
-class BlockValue(name: String, value: Int) : IntegerValue(name, value, 1, 197)
+class BlockValue(name: String, value: Int, alias: String? = null) : IntegerValue(name, value, 1, 197, alias)
 
 /**
  * List value represents a selectable list of values

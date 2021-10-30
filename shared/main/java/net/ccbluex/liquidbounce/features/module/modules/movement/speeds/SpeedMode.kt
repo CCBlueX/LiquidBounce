@@ -33,7 +33,7 @@ abstract class SpeedMode(val modeName: String) : MinecraftInstance()
 	{
 		thePlayer.jump() // Jump without sprint-jump boost
 
-		// Apply the sprint-jump boost manually to prevent double-boost
+		// Apply the sprint-jump boost manually
 		thePlayer.boost(0.2f)
 	}
 }

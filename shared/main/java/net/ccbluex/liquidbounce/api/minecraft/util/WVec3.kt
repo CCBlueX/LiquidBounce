@@ -78,7 +78,7 @@ class WVec3(val xCoord: Double, val yCoord: Double, val zCoord: Double)
 		return result
 	}
 
-	override fun toString(): String = "(${DECIMALFORMAT_2.format(xCoord)}, ${DECIMALFORMAT_2.format(yCoord)}, ${DECIMALFORMAT_2.format(zCoord)}"
+	override fun toString(): String = "(${DECIMALFORMAT_2.format(xCoord)}, ${DECIMALFORMAT_2.format(yCoord)}, ${DECIMALFORMAT_2.format(zCoord)})"
 
 	constructor(blockPos: WVec3i) : this(blockPos.x.toDouble(), blockPos.y.toDouble(), blockPos.z.toDouble())
 }

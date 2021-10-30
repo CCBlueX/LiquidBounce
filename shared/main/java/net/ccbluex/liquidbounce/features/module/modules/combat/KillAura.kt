@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_1
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_6
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.easeOutCubic
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.*
@@ -230,6 +231,7 @@ class KillAura : Module()
 	private val visualMarkRangeModeValue = ListValue("Mode", arrayOf("None", "AttackRange", "ExceptBlockRange", "All"), "AttackRange", "Mark-Range")
 	private val visualMarkRangeLineWidthValue = FloatValue("LineWidth", 1f, 0.5f, 2f)
 	private val visualMarkRangeAccuracyValue = FloatValue("Accuracy", 10F, 0.5F, 20F, "Mark-Range-Accuracy")
+	private val visualMarkRangeFadeSpeedValue = IntegerValue("FadeSpeed", 5, 1, 9)
 
 	private val visualMarkRangeColorGroup = object : ValueGroup("Color")
 	{
@@ -328,6 +330,7 @@ class KillAura : Module()
 	 */
 	private var autoBlockTarget: IEntityLivingBase? = null
 	private var rangeMarks: List<Pair<Float, Int>>? = null
+	private var easingRangeMarks: ArrayList<Float>? = null
 
 	init
 	{
@@ -621,10 +624,16 @@ class KillAura : Module()
 			val lineWidth = visualMarkRangeLineWidthValue.get()
 			val accuracy = visualMarkRangeAccuracyValue.get()
 
-			rangeMarks?.forEach {
-				GL11.glPushMatrix()
-				RenderUtils.drawRadius(it.first, accuracy, lineWidth, it.second)
-				GL11.glPopMatrix()
+			rangeMarks?.let { rangeMarks ->
+				easingRangeMarks?.let { easingRangeMarks ->
+					for (i in easingRangeMarks.indices) rangeMarks[i].let { (originalRange, color) ->
+						GL11.glPushMatrix()
+						RenderUtils.drawRadius(easingRangeMarks[i], accuracy, lineWidth, color)
+						GL11.glPopMatrix()
+
+						easingRangeMarks[i] = easeOutCubic(easingRangeMarks[i], originalRange, visualMarkRangeFadeSpeedValue.get())
+					}
+				} ?: run { easingRangeMarks = rangeMarks.mapTo(ArrayList(), Pair<Float, Int>::first) }
 			}
 		}
 

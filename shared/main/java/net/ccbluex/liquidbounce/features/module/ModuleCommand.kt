@@ -62,7 +62,7 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
 		if (value == null)
 		{
 			chat(thePlayer, "Available value names:")
-			valueNames.value.forEach { name -> chat(thePlayer, "> $name") }
+			valueNames.value.forEach { name -> chat(thePlayer, "> \u00A77$name") }
 			return
 		}
 

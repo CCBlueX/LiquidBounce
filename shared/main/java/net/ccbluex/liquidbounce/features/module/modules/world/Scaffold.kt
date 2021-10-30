@@ -115,7 +115,7 @@ class Scaffold : Module()
 		override fun showCondition() = !rotationKeepRotationLockValue.get()
 	}
 
-	private val swingValue = BoolValue("Swing", true, "Swing")
+	private val swingValue = BoolValue("Swing", true)
 
 	private val movementGroup = ValueGroup("Movement")
 
@@ -630,7 +630,7 @@ class Scaffold : Module()
 		val ySteps = calcStepSize(yRange) * deltaY
 		val zSteps = calcStepSize(xzRange) * deltaZ
 
-		val sMinX = (0.5 - xzRange * 0.05) * deltaX + groundMinX
+		val sMinX = (0.5 - xzRange * 0.5) * deltaX + groundMinX
 		val sMaxX = (0.5 + xzRange * 0.5) * deltaX + groundMinX
 		val sMinY = (0.5 - yRange * 0.5) * deltaY + groundMinY
 		val sMaxY = (0.5 + yRange * 0.5) * deltaY + groundMinY
@@ -687,12 +687,12 @@ class Scaffold : Module()
 			else if (shouldGoDown)
 			{
 				searchPosition = pos.add(0.0, -0.6, 0.0).down() // Default full-block only scaffold
-				state = "\u00A7bDOWN"
+				state = "\u00A7bDOWNWARDS"
 			}
 			else
 			{
 				searchPosition = pos.down() // Default full-block only scaffold
-				state = "\u00A7aDEFAULT"
+				state = "\u00A7aFULLBLOCK"
 			}
 		}
 

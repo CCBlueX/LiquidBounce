@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
+import net.ccbluex.liquidbounce.api.minecraft.util.IEnumFacing
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.event.StrafeEvent
@@ -166,7 +167,7 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance()
 /**
  * Rotation with vector
  */
-data class VecRotation(val vec: WVec3, val rotation: Rotation)
+data class VecRotation(val vec: WVec3, val rotation: Rotation, val face: IEnumFacing? = null)
 
 /**
  * Rotation with place info

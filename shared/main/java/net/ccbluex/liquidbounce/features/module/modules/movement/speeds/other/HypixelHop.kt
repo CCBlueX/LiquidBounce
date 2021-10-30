@@ -22,21 +22,20 @@ class HypixelHop : SpeedMode("HypixelHop")
 
 		if (thePlayer.isMoving)
 		{
-			val speed = thePlayer.speed
-
 			if (thePlayer.onGround)
 			{
-				thePlayer.setPosition(thePlayer.posX, thePlayer.posY + 9.1314E-4, thePlayer.posZ)// #344
+				thePlayer.setPosition(thePlayer.posX, thePlayer.posY + 9.1314E-4, thePlayer.posZ) // #344
 
 				jump(thePlayer)
 
+				val speed = thePlayer.speed
 				thePlayer.strafe((if (speed < 0.56f) speed * 1.045f else 0.56f) * (1.0F + 0.13f * thePlayer.speedEffectAmplifier))
 
 				return
 			}
 			else if (thePlayer.motionY < 0.2) thePlayer.motionY -= 0.02
 
-			thePlayer.strafe(speed * 1.01889f)
+			thePlayer.strafe(thePlayer.speed * 1.01889f)
 		}
 		else thePlayer.zeroXZ()
 	}

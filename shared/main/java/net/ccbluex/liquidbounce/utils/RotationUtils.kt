@@ -174,7 +174,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 						val obj = theWorld.rayTraceBlocks(eyesPos, vector, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = false, returnLastUncollidableBlock = true)
 						if (obj != null && obj.typeOfHit == WMovingObjectType.BLOCK)
 						{
-							val currentVec = VecRotation(posVec, rotation)
+							val currentVec = VecRotation(posVec, rotation, obj.sideHit)
 							if (vecRotation == null || getRotationDifference(currentVec.rotation) < getRotationDifference(vecRotation.rotation)) vecRotation = currentVec
 						}
 						zSearch += 0.1

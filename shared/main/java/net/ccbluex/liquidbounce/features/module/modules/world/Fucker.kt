@@ -67,6 +67,8 @@ object Fucker : Module()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
+		val playerController = mc.playerController
+
 		val moduleManager = LiquidBounce.moduleManager
 
 		if (noHitValue.get() && (moduleManager[KillAura::class.java] as KillAura).hasTarget) return
@@ -127,10 +129,11 @@ object Fucker : Module()
 		// Face block
 		if (rotationsValue.get()) RotationUtils.setTargetRotation(rotations.rotation)
 
+		val face = rotations.face ?: provider.getEnumFacing(EnumFacingType.DOWN)
+
 		val actionMode = actionValue.get()
 		when
 		{
-
 			// Destory block
 			actionMode.equals("Destroy", true) || surroundings ->
 			{
@@ -147,11 +150,11 @@ object Fucker : Module()
 				if (instantValue.get())
 				{
 					// CivBreak style block breaking
-					netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, newPos, provider.getEnumFacing(EnumFacingType.DOWN)))
+					netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, newPos, face))
 
 					if (swingValue.get()) thePlayer.swingItem()
 
-					netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, newPos, provider.getEnumFacing(EnumFacingType.DOWN)))
+					netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, newPos, face))
 					currentDamage = 0F
 					return
 				}
@@ -161,12 +164,12 @@ object Fucker : Module()
 
 				if (currentDamage == 0F)
 				{
-					netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, newPos, provider.getEnumFacing(EnumFacingType.DOWN)))
+					netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, newPos, face))
 
 					if (thePlayer.capabilities.isCreativeMode || block.getPlayerRelativeBlockHardness(thePlayer, theWorld, currentPos) >= 1.0F)
 					{
 						if (swingValue.get()) thePlayer.swingItem()
-						mc.playerController.onPlayerDestroyBlock(currentPos, provider.getEnumFacing(EnumFacingType.DOWN))
+						playerController.onPlayerDestroyBlock(currentPos, face)
 
 						currentDamage = 0F
 						this.currentPos = null
@@ -181,8 +184,8 @@ object Fucker : Module()
 
 				if (currentDamage >= 1F)
 				{
-					netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, newPos, provider.getEnumFacing(EnumFacingType.DOWN)))
-					mc.playerController.onPlayerDestroyBlock(newPos, provider.getEnumFacing(EnumFacingType.DOWN))
+					netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, newPos, face))
+					playerController.onPlayerDestroyBlock(newPos, face)
 					blockHitDelay = 4
 					currentDamage = 0F
 					this.currentPos = null
@@ -194,7 +197,7 @@ object Fucker : Module()
 			{
 				CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT)
 
-				if (mc.playerController.onPlayerRightClick(thePlayer, theWorld, thePlayer.heldItem, currentPos, provider.getEnumFacing(EnumFacingType.DOWN), WVec3(newPos.x.toDouble(), newPos.y.toDouble(), newPos.z.toDouble())))
+				if (playerController.onPlayerRightClick(thePlayer, theWorld, thePlayer.heldItem, currentPos, face, WVec3(newPos.x.toDouble(), newPos.y.toDouble(), newPos.z.toDouble())))
 				{
 					if (swingValue.get()) thePlayer.swingItem()
 

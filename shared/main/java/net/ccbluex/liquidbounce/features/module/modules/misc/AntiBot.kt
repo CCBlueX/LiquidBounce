@@ -218,9 +218,9 @@ object AntiBot : Module()
 	val duplicateInWorldExistenceStripColorsValue = BoolValue("StripColorsInName", true, "DuplicateName-World-StripColorsInName")
 
 	private val duplicateInWorldAdditionGroup = ValueGroup("Addition")
-	val duplicateInWorldAdditionEnabledValue = BoolValue("AttemptToAddDuplicate-World", false, "AttemptToAddDuplicate-World")
-	val duplicateInWorldAdditionModeValue = ListValue("AttemptToAddDuplicate-World-NameMode", arrayOf("DisplayName", "GameProfileName"), "DisplayName", "AttemptToAddDuplicate-World-NameMode")
-	val duplicateInWorldAdditionStripColorsValue = BoolValue("AttemptToAddDuplicate-World-StripColorsInName", false, "AttemptToAddDuplicate-World-StripColorsInName")
+	val duplicateInWorldAdditionEnabledValue = BoolValue("Enabled", false, "AttemptToAddDuplicate-World")
+	val duplicateInWorldAdditionModeValue = ListValue("Mode", arrayOf("DisplayName", "GameProfileName"), "DisplayName", "AttemptToAddDuplicate-World-NameMode")
+	val duplicateInWorldAdditionStripColorsValue = BoolValue("StripColorsInName", false, "AttemptToAddDuplicate-World-StripColorsInName")
 
 	/**
 	 * Duplicate player in tab

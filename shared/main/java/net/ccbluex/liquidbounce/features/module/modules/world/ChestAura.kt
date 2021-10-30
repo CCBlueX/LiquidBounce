@@ -31,7 +31,11 @@ import net.ccbluex.liquidbounce.value.*
 @ModuleInfo(name = "ChestAura", description = "Automatically opens chests around you.", category = ModuleCategory.WORLD)
 object ChestAura : Module()
 {
-	private val chestValue = BlockValue("Chest", functions.getIdFromBlock(classProvider.getBlockEnum(BlockType.CHEST)))
+	private val chestGroup = ValueGroup("Chest")
+	private val chestFirstValue = BlockValue("First", functions.getIdFromBlock(classProvider.getBlockEnum(BlockType.CHEST)), "Chest")
+	private val chestSecondValue = BlockValue("Second", functions.getIdFromBlock(classProvider.getBlockEnum(BlockType.AIR)))
+	private val chestThirdValue = BlockValue("Third", functions.getIdFromBlock(classProvider.getBlockEnum(BlockType.AIR)))
+
 	private val rangeValue = FloatValue("Range", 5F, 1F, 6F)
 	private val priorityValue = ListValue("Priority", arrayOf("Distance", "ServerDirection", "ClientDirection"), "Distance")
 	private val delayValue = IntegerRangeValue("Delay", 100, 100, 50, 200, "MaxDelay" to "MinDelay")
@@ -60,6 +64,7 @@ object ChestAura : Module()
 
 	init
 	{
+		chestGroup.addAll(chestFirstValue, chestSecondValue, chestThirdValue)
 		rotationKeepRotationGroup.addAll(rotationKeepRotationEnabledValue, rotationKeepRotationTicksValue)
 		rotationGroup.addAll(rotationEnabledValue, rotationTurnSpeedValue, rotationResetSpeedValue, rotationKeepRotationGroup)
 	}
@@ -82,7 +87,6 @@ object ChestAura : Module()
 			{
 				if (provider.isGuiContainer(mc.currentScreen)) timer.reset() // No delay re-randomize code here because the performance impact is more than your think.
 
-				val chestID = chestValue.get()
 				val range = rangeValue.get()
 				val radius = range + 1
 				val eyesPos = WVec3(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, thePlayer.posZ)
@@ -98,8 +102,11 @@ object ChestAura : Module()
 					}
 				}
 
-				currentBlock = theWorld.searchBlocks(thePlayer, radius.toInt()).asSequence().filter { func.getIdFromBlock(it.value) == chestID }.filter { !clickedBlocks.contains(it.key) }.filter { thePlayer.distanceToCenter(it.key) < range }.run {
-					if (throughWalls) this else filter { (pos, _) -> (theWorld.rayTraceBlocks(eyesPos, pos.vec, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false) ?: return@filter false).blockPos == pos }
+				currentBlock = theWorld.searchBlocks(thePlayer, radius.toInt()).asSequence().filter { (_, block) ->
+					val id = func.getIdFromBlock(block)
+					arrayOf(chestFirstValue.get(), chestSecondValue.get(), chestThirdValue.get()).filterNot { it == 0 }.any { it == id }
+				}.filter { !clickedBlocks.contains(it.key) }.filter { thePlayer.distanceToCenter(it.key) < range }.run {
+					if (!throughWalls) this else filter { (pos, _) -> (theWorld.rayTraceBlocks(eyesPos, pos.vec, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false) ?: return@filter false).blockPos == pos }
 				}.minBy { prioritySelector(it.key) }?.key
 
 				if (rotationEnabledValue.get())

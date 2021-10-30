@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.ui.client.altmanager.sub.GuiDonatorCape.Companio
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.altgenerator.GuiTheAltening.Companion.apiKey
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.EntityUtils
-import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.value.AbstractValue
 import java.io.File
 import java.io.IOException
@@ -126,6 +125,7 @@ class ValuesConfig(file: File) : FileConfig(file)
 					for (moduleValue in module.flatValues) if (moduleValue.isAliasPresent(jsonModule))
 					{
 						moduleValue.fromJsonAlias(jsonModule)
+						ClientUtils.logger.info("[FileManager] [Backward-compatibility] Value ${module.name}.${moduleValue.name}")
 						backwardCompatibility = true
 					}
 				}
@@ -134,7 +134,7 @@ class ValuesConfig(file: File) : FileConfig(file)
 
 		if (backwardCompatibility)
 		{
-			ClientUtils.logger.info("[FileManager] Loaded old values config.")
+			ClientUtils.logger.info("[FileManager] Loaded values with backward-compatibility feature.")
 			saveConfig()
 		}
 	}

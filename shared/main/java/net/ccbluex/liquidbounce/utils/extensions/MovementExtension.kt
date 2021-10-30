@@ -63,7 +63,7 @@ fun IEntityPlayerSP.strafe(speed: Float = this.speed, directionDegrees: Float = 
 	motionZ = (func.cos(dir) * speed).toDouble()
 }
 
-fun IEntityPlayer.boost(speed: Float = this.speed, directionDegrees: Float = moveDirectionDegrees)
+fun IEntityPlayer.boost(speed: Float, directionDegrees: Float = moveDirectionDegrees)
 {
 	val func = LiquidBounce.wrapper.functions
 	val dir = WMathHelper.toRadians(directionDegrees)

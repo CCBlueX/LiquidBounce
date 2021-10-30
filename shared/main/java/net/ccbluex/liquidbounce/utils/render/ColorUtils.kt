@@ -230,7 +230,10 @@ object ColorUtils : MinecraftInstance()
 	fun applyAlphaChannel(color: Color, newAlpha: Int): Color = Color(applyAlphaChannel(color.rgb, newAlpha), true)
 
 	@JvmStatic
-	fun createRGB(red: Int, green: Int, blue: Int, alpha: Int = 255): Int = (alpha.coerceIn(0, 255) and 0xFF shl 24) or (red.coerceIn(0, 255) and 0xFF shl 16) or (green.coerceIn(0, 255) and 0xFF shl 8) or (blue.coerceIn(0, 255) and 0xFF shl 0)
+	fun multiplyAlphaChannel(rgb: Int, multiplier: Float): Int = applyAlphaChannel(rgb, ((rgb shr 24 and 0xFF) * multiplier).toInt())
+
+	@JvmStatic
+	fun createRGB(red: Int, green: Int, blue: Int, alpha: Int = 255): Int = (alpha and 0xFF shl 24) or (red and 0xFF shl 16) or (green and 0xFF shl 8) or (blue and 0xFF shl 0)
 
 	@JvmStatic
 	fun compareColor(color1: Int, color2: Int): Double

@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
 import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
+import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
@@ -18,8 +19,10 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.extensions.*
+import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbowRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.easeOutCubic
 import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11.*
 import kotlin.math.*
@@ -61,6 +64,7 @@ class TargetStrafe : Module()
 	private val pathEspEnabledValue = BoolValue("Enabled", true, "DrawPath")
 	private val pathEspAccuracyValue = FloatValue("Accuracy", 5F, 0.5F, 20F, "DrawPathAccuracy")
 	private val pathEspLineWidthValue = FloatValue("LineWidth", 1f, 0.5f, 2f)
+	private val pathEspFadeSpeedValue = IntegerValue("FadeSpeed", 5, 1, 9)
 
 	private val pathEspColorGroup = ValueGroup("Color")
 	private val pathEspColorValue = RGBAColorValue("Color", 255, 179, 72, 255)
@@ -99,6 +103,10 @@ class TargetStrafe : Module()
 	private var direction = -1F
 	private var lastStrafeDirection = 0F
 
+	private var targetPos: WVec3? = null
+	private var easingStrafeRadius = strafeRangeValue.get() * 1.5f
+	private var easingStrafeRadiusAlpha = 0f
+
 	init
 	{
 		pathEspColorRainbowGroup.addAll(pathEspColorRainbowEnabledValue, pathEspColorRainbowSpeedValue, pathEspColorRainbowSaturationValue, pathEspColorRainbowBrightnessValue)
@@ -107,7 +115,7 @@ class TargetStrafe : Module()
 		pathEspStrafingColorRainbowGroup.addAll(pathEspStrafingColorRainbowEnabledValue, pathEspStrafingColorRainbowSpeedValue, pathEspStrafingColorRainbowSaturationValue, pathEspStrafingColorRainbowBrightnessValue)
 		pathEspStrafingColorGroup.addAll(pathEspStrafingColorValue, pathEspStrafingColorRainbowGroup)
 
-		pathEspGroup.addAll(pathEspEnabledValue, pathEspAccuracyValue, pathEspLineWidthValue, pathEspColorGroup, pathEspStrafingColorGroup)
+		pathEspGroup.addAll(pathEspEnabledValue, pathEspAccuracyValue, pathEspLineWidthValue, pathEspFadeSpeedValue, pathEspColorGroup, pathEspStrafingColorGroup)
 	}
 
 	@EventTarget
@@ -223,14 +231,40 @@ class TargetStrafe : Module()
 	{
 		if (!pathEspEnabledValue.get()) return
 
-		val target = target ?: return
+		val pos = target?.let { target ->
+			val partialTicks = event.partialTicks
 
-		val partialTicks = event.partialTicks
+			easingStrafeRadius = easeOutCubic(easingStrafeRadius, strafeRangeValue.get(), pathEspFadeSpeedValue.get())
+			easingStrafeRadiusAlpha = easeOutCubic(easingStrafeRadiusAlpha, 1f, pathEspFadeSpeedValue.get())
+
+			WVec3(target.lastTickPosX + (target.posX - target.lastTickPosX) * partialTicks, target.lastTickPosY + (target.posY - target.lastTickPosY) * partialTicks, target.lastTickPosZ + (target.posZ - target.lastTickPosZ) * partialTicks).also { targetPos = it }
+		} ?: targetPos?.let {
+			easingStrafeRadius = easeOutCubic(easingStrafeRadius, 0f, pathEspFadeSpeedValue.get())
+			easingStrafeRadiusAlpha = easeOutCubic(easingStrafeRadiusAlpha, 0f, pathEspFadeSpeedValue.get())
+
+			if (easingStrafeRadiusAlpha > 0.1f) it
+			else
+			{
+				easingStrafeRadius = strafeRangeValue.get() * 1.5f
+				easingStrafeRadiusAlpha = 0f
+				null
+			}
+		} ?: return
+
 		val renderManager = mc.renderManager
 
 		glPushMatrix()
-		glTranslated(target.lastTickPosX + (target.posX - target.lastTickPosX) * partialTicks - renderManager.renderPosX, target.lastTickPosY + (target.posY - target.lastTickPosY) * partialTicks - renderManager.renderPosY, target.lastTickPosZ + (target.posZ - target.lastTickPosZ) * partialTicks - renderManager.renderPosZ)
-		RenderUtils.drawRadius(strafeRangeValue.get(), pathEspAccuracyValue.get(), pathEspLineWidthValue.get(), if (strafing) if (pathEspStrafingColorRainbowEnabledValue.get()) rainbowRGB(pathEspStrafingColorValue.getAlpha(), speed = pathEspStrafingColorRainbowSpeedValue.get(), saturation = pathEspStrafingColorRainbowSaturationValue.get(), brightness = pathEspStrafingColorRainbowBrightnessValue.get()) else pathEspStrafingColorValue.get() else if (pathEspColorRainbowEnabledValue.get()) rainbowRGB(pathEspColorValue.getAlpha(), speed = pathEspColorRainbowSpeedValue.get(), saturation = pathEspColorRainbowSaturationValue.get(), brightness = pathEspColorRainbowBrightnessValue.get()) else pathEspColorValue.get())
+		glTranslated(pos.xCoord - renderManager.renderPosX, pos.yCoord - renderManager.renderPosY, pos.zCoord - renderManager.renderPosZ)
+
+		val color = if (strafing)
+		{
+			if (pathEspStrafingColorRainbowEnabledValue.get()) rainbowRGB(pathEspStrafingColorValue.getAlpha(), speed = pathEspStrafingColorRainbowSpeedValue.get(), saturation = pathEspStrafingColorRainbowSaturationValue.get(), brightness = pathEspStrafingColorRainbowBrightnessValue.get())
+			else pathEspStrafingColorValue.get()
+		}
+		else if (pathEspColorRainbowEnabledValue.get()) rainbowRGB(pathEspColorValue.getAlpha(), speed = pathEspColorRainbowSpeedValue.get(), saturation = pathEspColorRainbowSaturationValue.get(), brightness = pathEspColorRainbowBrightnessValue.get())
+		else pathEspColorValue.get()
+
+		RenderUtils.drawRadius(easingStrafeRadius, pathEspAccuracyValue.get(), pathEspLineWidthValue.get(), ColorUtils.multiplyAlphaChannel(color, easingStrafeRadiusAlpha))
 		glPopMatrix()
 	}
 
