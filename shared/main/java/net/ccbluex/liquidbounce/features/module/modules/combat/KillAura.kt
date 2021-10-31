@@ -151,7 +151,7 @@ class KillAura : Module()
 	private val bypassGroup = ValueGroup("Bypass")
 	private val bypassKeepSprintValue = BoolValue("KeepSprint", true, "KeepSprint", description = "Don't cancel sprinting while attacking enemy")
 	private val bypassAACValue = BoolValue("AAC", false, "AAC", description = "Bypass several anti-cheats such as AAC")
-	private val bypassFailRateValue = FloatValue("FailRate", 0f, 0f, 100f, "FailRate")
+	private val bypassMissChanceValue = FloatValue("MissChance", 0f, 0f, 100f, "FailRate")
 	private val bypassSuspendWhileConsumingValue = BoolValue("SuspendWhileConsuming", true, "SuspendWhileConsuming", description = "Suspend KillAura if you're consuming something")
 
 	private val noInventoryGroup = ValueGroup("NoInvAttack")
@@ -225,7 +225,22 @@ class KillAura : Module()
 	private val visualParticles = IntegerValue("Particles", 1, 0, 10, "Particles")
 
 	private val visualMarkGroup = ValueGroup("Mark")
-	private val visualMarkTargetValue = ListValue("Target", arrayOf("None", "Platform", "Box"), "Platform", "Mark")
+
+	private val visualMarkTargetGroup = ValueGroup("Target")
+	private val visualMarkTargetModeValue = ListValue("Mode", arrayOf("None", "Platform", "Box"), "Platform", "Mark.Target")
+	private val visualMarkTargetEyePosValue = object : BoolValue("EyePosition", false)
+	{
+		override fun showCondition() = visualMarkTargetModeValue.get().equals("Platform", ignoreCase = true)
+	}
+
+	private val visualMarkTargetColorGroup = object : ValueGroup("Color")
+	{
+		override fun showCondition() = !visualMarkTargetModeValue.get().equals("None", ignoreCase = true)
+	}
+
+	private val visualMarkTargetColorSuccessColorValue = RGBAColorValue("Success", 0, 255, 0, 70)
+	private val visualMarkTargetColorMissColorValue = RGBAColorValue("Miss", 0, 0, 255, 70)
+	private val visualMarkTargetColorFailedColorValue = RGBAColorValue("Failed", 255, 0, 0, 70)
 
 	private val visualMarkRangeGroup = ValueGroup("Range")
 	private val visualMarkRangeModeValue = ListValue("Mode", arrayOf("None", "AttackRange", "ExceptBlockRange", "All"), "AttackRange", "Mark-Range")
@@ -319,9 +334,9 @@ class KillAura : Module()
 	var startBlockingDebug: Array<String>? = null
 
 	/**
-	 * Did last attack failed
+	 * Did last attack failed because of FailRate
 	 */
-	private var failedToHit = false
+	private var missed = false
 
 	private var failedToRotate = false
 
@@ -342,7 +357,7 @@ class KillAura : Module()
 		interactAutoBlockGroup.addAll(interactAutoBlockEnabledValue, interactAutoBlockRangeValue)
 		autoBlockGroup.addAll(autoBlockValue, autoBlockRangeValue, autoBlockRate, autoBlockHitableCheckValue, autoBlockHurtTimeCheckValue, autoBlockWallCheckValue, interactAutoBlockGroup)
 		rayCastGroup.addAll(rayCastEnabledValue, rayCastSkipEnemyCheckValue, rayCastLivingOnlyValue, rayCastIncludeCollidedValue)
-		bypassGroup.addAll(bypassKeepSprintValue, bypassAACValue, bypassFailRateValue, bypassSuspendWhileConsumingValue, noInventoryGroup, rayCastGroup)
+		bypassGroup.addAll(bypassKeepSprintValue, bypassAACValue, bypassMissChanceValue, bypassSuspendWhileConsumingValue, noInventoryGroup, rayCastGroup)
 		noInventoryGroup.addAll(noInventoryAttackEnabledValue, noInventoryDelayValue)
 		rotationSearchCenterGroup.addAll(rotationSearchCenterHitboxShrinkValue, rotationSearchCenterSensitivityValue)
 		rotationJitterGroup.addAll(rotationJitterEnabledValue, rotationJitterYawRate, rotationJitterPitchRate, rotationJitterYawIntensityValue, rotationJitterPitchIntensityValue)
@@ -355,9 +370,11 @@ class KillAura : Module()
 		rotationBacktrackGroup.addAll(rotationBacktrackEnabledValue, rotationBacktrackTicksValue)
 		rotationGroup.addAll(rotationMode, rotationLockValue, rotationLockExpandRangeValue, rotationSilentValue, rotationRandomCenterSizeValue, rotationSearchCenterGroup, rotationJitterGroup, rotationKeepRotationGroup, rotationLockAfterTeleportGroup, rotationAccelerationRatioValue, rotationTurnSpeedValue, rotationResetSpeedValue, rotationStrafeGroup, rotationPredictGroup, rotationBacktrackGroup)
 		fovGroup.addAll(fovModeValue, fovValue)
+		visualMarkTargetColorGroup.addAll(visualMarkTargetColorSuccessColorValue, visualMarkTargetColorMissColorValue, visualMarkTargetColorFailedColorValue)
+		visualMarkTargetGroup.addAll(visualMarkTargetModeValue, visualMarkTargetEyePosValue, visualMarkTargetColorGroup)
 		visualMarkRangeColorGroup.addAll(visualMarkRangeColorAttackValue, visualMarkRangeColorThroughWallsAttackValue, visualMarkRangeColorAimValue, visualMarkRangeColorSwingValue, visualMarkRangeColorBlockValue, visualMarkRangeColorInteractBlockValue)
 		visualMarkRangeGroup.addAll(visualMarkRangeModeValue, visualMarkRangeLineWidthValue, visualMarkRangeAccuracyValue, visualMarkRangeColorGroup)
-		visualMarkGroup.addAll(visualMarkTargetValue, visualMarkRangeGroup)
+		visualMarkGroup.addAll(visualMarkTargetGroup, visualMarkRangeGroup)
 		visualGroup.addAll(visualFakeSharpValue, visualParticles, visualMarkGroup)
 
 		cooldownValue.isSupported = Backend.REPRESENTED_BACKEND_VERSION != MinecraftVersion.MC_1_8
@@ -379,7 +396,7 @@ class KillAura : Module()
 		target = null
 		currentTarget = null
 		hitable = false
-		failedToHit = false
+		missed = false
 		previouslySwitchedTargets.clear()
 		attackTimer.reset()
 		clicks = 0
@@ -640,15 +657,15 @@ class KillAura : Module()
 		val target = target ?: return
 		val targetEntityId = target.entityId
 
-		val markMode = visualMarkTargetValue.get().toLowerCase()
+		val markMode = visualMarkTargetModeValue.get().toLowerCase()
 
 		if (markMode != "none" && !targetModeValue.get().equals("Multi", ignoreCase = true))
 		{
 			val markColor = when
 			{
-				failedToHit -> 0x460000FF
-				hitable -> 0x4600FF00
-				else -> 0x46FF0000
+				missed -> visualMarkTargetColorMissColorValue.get()
+				hitable -> visualMarkTargetColorSuccessColorValue.get()
+				else -> visualMarkTargetColorFailedColorValue.get()
 			}
 
 			val renderManager = mc.renderManager
@@ -695,9 +712,15 @@ class KillAura : Module()
 				targetBB = targetBB.offset(xPredict, yPredict, zPredict)
 			}
 
+			val eyePos = visualMarkTargetEyePosValue.get()
 			when (markMode)
 			{
-				"platform" -> classProvider.createAxisAlignedBB(targetBB.minX, targetBB.maxY + 0.2, targetBB.minZ, targetBB.maxX, targetBB.maxY + 0.26, targetBB.maxZ)
+				"platform" ->
+				{
+					val eyeHeight = targetBB.minY + target.eyeHeight
+					classProvider.createAxisAlignedBB(targetBB.minX, if (eyePos) eyeHeight - 0.03f else targetBB.maxY + 0.2, targetBB.minZ, targetBB.maxX, if (eyePos) eyeHeight + 0.03f else targetBB.maxY + 0.26, targetBB.maxZ)
+				}
+
 				"box" -> classProvider.createAxisAlignedBB(targetBB.minX, targetBB.minY, targetBB.minZ, targetBB.maxX, targetBB.maxY, targetBB.maxZ)
 				else -> null
 			}?.let { RenderUtils.drawAxisAlignedBB(it, markColor) }
@@ -769,24 +792,24 @@ class KillAura : Module()
 		val distance = thePlayer.getDistanceToEntityBox(theCurrentTarget)
 
 		// Settings
-		val failRate = bypassFailRateValue.get()
+		val failRate = bypassMissChanceValue.get()
 		val aac = bypassAACValue.get()
 
 		val openInventory = aac && provider.isGuiContainer(mc.currentScreen)
 		val limitedMultiTargets = targetLimitedMultiTargetsValue.get()
 
 		// FailRate
-		failedToHit = failRate > 0 && Random.nextInt(100) <= failRate
+		missed = failRate > 0 && Random.nextInt(100) <= failRate
 
 		// Close inventory when open
 		if (openInventory) netHandler.addToSendQueue(provider.createCPacketCloseWindow())
 
 		// Check is not hitable or check failrate
-		val fakeAttack = !hitable || failedToHit || failedToRotate
+		val fakeAttack = !hitable || missed || failedToRotate
 
 		if (fakeAttack)
 		{
-			if (swingEnabledValue.get() && distance <= swingRange && (failedToHit || swingFakeSwingValue.get()))
+			if (swingEnabledValue.get() && distance <= swingRange && (missed || swingFakeSwingValue.get()))
 			{
 				val isBlocking = thePlayer.isBlocking
 

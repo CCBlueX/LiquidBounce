@@ -23,10 +23,10 @@ import java.awt.Color
 /**
  * CustomHUD Armor element
  *
- * Shows a horizontal display of current armor
+ * Shows a key-strokes
  */
 @ElementInfo(name = "Keystrokes")
-class Keystrokes(x: Double = -8.0, y: Double = 57.0, scale: Float = 1F, side: Side = Side(Side.Horizontal.MIDDLE, Side.Vertical.DOWN)) : Element(x, y, scale, side)
+class Keystrokes(x: Double = 5.0, y: Double = 100.0, scale: Float = 1F, side: Side = Side(Side.Horizontal.LEFT, Side.Vertical.UP)) : Element(x, y, scale, side)
 {
 	private val keyboardGroup = ValueGroup("Keyboard")
 	private val keyboardEnabledValue = BoolValue("Enabled", true, "Keyboard")

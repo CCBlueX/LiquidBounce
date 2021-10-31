@@ -6,14 +6,15 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.IClassProvider
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
-import net.ccbluex.liquidbounce.api.minecraft.client.renderer.entity.IRenderItem
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IGlStateManager
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.entity.IRenderItem
+import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.renderer.entity.IRenderManager
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
+import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
@@ -35,6 +36,7 @@ import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11.*
 import kotlin.math.ceil
 
+// TODO: Move non-render logics to onUpdate()
 @ModuleInfo(name = "NameTags", description = "Changes the scale of the nametags so you can always read them.", category = ModuleCategory.RENDER)
 class NameTags : Module()
 {
@@ -47,6 +49,8 @@ class NameTags : Module()
 	private val elementEntityIDValue = BoolValue("EntityID", true)
 
 	private val scaleValue = FloatValue("Scale", 1F, 1F, 4F)
+
+	private val yPosValue = FloatValue("YPos", 0.55f, 0.4f, 2f)
 
 	private val healthModeValue = ListValue("PlayerHealthGetMethod", arrayOf("Datawatcher", "Mineplex", "Hive"), "Datawatcher")
 
@@ -82,46 +86,26 @@ class NameTags : Module()
 		rainbowGroup.addAll(rainbowSpeedValue, rainbowSaturationValue, rainbowBrightnessValue)
 	}
 
+	private var renderQueue = mapOf<Int, NameTag>()
+
 	@EventTarget
-	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
+	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
-		val renderManager = mc.renderManager
-		val renderItem = mc.renderItem
-		val partialTicks = if (interpolateValue.get()) event.partialTicks else 1f
-
-		glPushClientAttrib(GL_ALL_CLIENT_ATTRIB_BITS)
-		glPushAttrib(GL_ALL_ATTRIB_BITS)
-		glPushMatrix()
-
-		glDisable(GL_LIGHTING)
-		glDisable(GL_DEPTH_TEST)
-		glEnable(GL_LINE_SMOOTH)
-		glEnable(GL_BLEND)
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
-		val provider = classProvider
-		val glStateManager = provider.glStateManager
-
-		val murderDetector = LiquidBounce.moduleManager[MurderDetector::class.java] as MurderDetector
-		val equipmentArrangement = if (Backend.MINECRAFT_VERSION_MINOR == 8) (0..4).toList().toIntArray() else intArrayOf(0, 1, 2, 3, 5, 4)
 
 		val bot = elementBotValue.get()
 
-		theWorld.loadedEntityList.asSequence().filter { it.isSelected(false) }.map(IEntity::asEntityLivingBase).map { it to AntiBot.isBot(theWorld, thePlayer, it) }.run { if (bot) this else filterNot(Pair<IEntityLivingBase, Boolean>::second) }.forEach { (entity, isBot) ->
-			val name = entity.displayName.unformattedText
-			renderNameTag(provider, renderManager, renderItem, glStateManager, murderDetector, thePlayer, entity, if (elementClearNamesValue.get()) ColorUtils.stripColor(name) else name, equipmentArrangement, isBot, partialTicks)
-		}
+		val equipmentArrangement = if (Backend.MINECRAFT_VERSION_MINOR == 8) (0..4).toList().toIntArray() else intArrayOf(0, 1, 2, 3, 5, 4)
 
-		RenderUtils.resetColor()
+		val murderDetector = LiquidBounce.moduleManager[MurderDetector::class.java] as MurderDetector
 
-		glPopMatrix()
-		glPopAttrib()
-		glPopClientAttrib()
+		renderQueue = theWorld.loadedEntityList.asSequence().filter { it.isSelected(false) }.map(IEntity::asEntityLivingBase).map { it to AntiBot.isBot(theWorld, thePlayer, it) }.run { if (bot) this else filterNot(Pair<IEntityLivingBase, Boolean>::second) }.map { (entity, isBot) ->
+			serializeInformations(thePlayer, entity, isBot, equipmentArrangement, murderDetector)
+		}.toMap()
 	}
 
-	private fun renderNameTag(provider: IClassProvider, renderManager: IRenderManager, renderItem: IRenderItem, glStateManager: IGlStateManager, murderDetector: MurderDetector, thePlayer: IEntity, entity: IEntityLivingBase, name: String, equipmentArrangement: IntArray, isBot: Boolean, partialTicks: Float)
+	private fun serializeInformations(thePlayer: IEntity, entity: IEntityLivingBase, isBot: Boolean, equipmentArrangement: IntArray, murderDetector: MurderDetector): Pair<Int, NameTag>
 	{
 		val fontRenderer = elementfontValue.get()
 
@@ -132,29 +116,19 @@ class NameTags : Module()
 
 		val stripColors = stripColorsValue.get()
 		val healthMode = healthModeValue.get()
-		val scaleValue = scaleValue.get()
 
-		val borderEnabled = borderEnabledValue.get()
+		val isPlayer = classProvider.isEntityPlayer(entity)
 
-		val rainbowSpeed = rainbowSpeedValue.get()
-		val saturation = rainbowSaturationValue.get()
-		val brightness = rainbowBrightnessValue.get()
+		// Murder
+		val murderText = if (murderDetector.state && murderDetector.murders.contains(entity)) "\u00A75\u00A7l[MURDER]\u00A7r " else ""
 
-		val bodyColor = if (bodyColorRainbowValue.get()) ColorUtils.rainbowRGB(alpha = bodyColorValue.getAlpha(), speed = rainbowSpeed, saturation = saturation, brightness = brightness) else bodyColorValue.get()
-		val borderColor = if (borderEnabled) if (borderColorRainbowValue.get()) ColorUtils.rainbowRGB(alpha = borderColorValue.getAlpha(), speed = rainbowSpeed, saturation = saturation, brightness = brightness) else borderColorValue.get() else 0
-
-		val isPlayer = provider.isEntityPlayer(entity)
-
+		// EntityID
 		val entityIDText = if (entityIDEnabled) "#${entity.entityId} " else ""
 
-		val nameColor = when
-		{
-			isBot -> "\u00A74\u00A7l" // DARK_RED + STRIKETHROUGH
-			entity.invisible -> "\u00A78\u00A7o" // DARK_GRAY + ITALIC
-			entity.sneaking -> "\u00A7o" // ITALIC
-			else -> ""
-		}
+		// Distance
+		val distanceText = if (distanceEnabled) "\u00A77${DECIMALFORMAT_2.format(thePlayer.getDistanceToEntityBox(entity))}m\u00A7r " else ""
 
+		// Ping
 		val pingText = if (pingEnabled && isPlayer)
 		{
 			val ping = entity.asEntityPlayer().ping
@@ -171,12 +145,22 @@ class NameTags : Module()
 		}
 		else ""
 
-		val distanceText = if (distanceEnabled) "\u00A77${DECIMALFORMAT_2.format(thePlayer.getDistanceToEntityBox(entity))}m\u00A7r " else ""
+		// Name
+		val nameColor = when
+		{
+			isBot -> "\u00A74\u00A7l" // DARK_RED + STRIKETHROUGH
+			entity.invisible -> "\u00A78\u00A7o" // DARK_GRAY + ITALIC
+			entity.sneaking -> "\u00A7o" // ITALIC
+			else -> ""
+		}
 
+		var name = entity.displayName.unformattedText
+		if (elementClearNamesValue.get()) name = ColorUtils.stripColor(name)
+
+		// Health
 		val healthText = if (healthEnabled)
 		{
-			val health: Float = if (!isPlayer || healthMode.equals("Datawatcher", true)) entity.health
-			else EntityUtils.getPlayerHealthFromScoreboard(entity.asEntityPlayer().gameProfile.name, isMineplex = healthMode.equals("Mineplex", true)).toFloat()
+			val health = if (!isPlayer || healthMode.equals("Datawatcher", true)) entity.health else EntityUtils.getPlayerHealthFromScoreboard(entity.asEntityPlayer().gameProfile.name, isMineplex = healthMode.equals("Mineplex", true)).toFloat()
 
 			val absorption = if (ceil(entity.absorptionAmount.toDouble()) > 0) entity.absorptionAmount else 0f
 			val healthPercentage = (health + absorption) / entity.maxHealth * 100f
@@ -191,41 +175,80 @@ class NameTags : Module()
 		}
 		else ""
 
+		// Bot
 		val botText = if (isBot) " \u00A7c\u00A7l[BOT]\u00A7r" else ""
-		val murderText = if (murderDetector.state && murderDetector.murders.contains(entity)) "\u00A75\u00A7l[MURDER]\u00A7r " else ""
 
 		var text = "$murderText$entityIDText$distanceText$pingText\u00A77$nameColor$name\u00A7r$healthText$botText"
 		if (stripColors) text = ColorUtils.stripColor(text)
+		return entity.entityId to NameTag(text, fontRenderer.getStringWidth(text) * 0.5f, thePlayer.getDistanceToEntity(entity), equipmentArrangement.map { it to (entity.getEquipmentInSlot(it) ?: return@map null) }.filterNotNull())
+	}
+
+	@EventTarget
+	fun onRender3D(event: Render3DEvent)
+	{
+		val theWorld = mc.theWorld ?: return
+		val renderManager = mc.renderManager
+		val renderItem = mc.renderItem
+		val partialTicks = if (interpolateValue.get()) event.partialTicks else 1f
+
+		val glStateManager = classProvider.glStateManager
+
+		glPushClientAttrib(GL_ALL_CLIENT_ATTRIB_BITS)
+		glPushAttrib(GL_ALL_ATTRIB_BITS)
+		glPushMatrix()
+
+		glDisable(GL_LIGHTING)
+		glDisable(GL_DEPTH_TEST)
+		glEnable(GL_LINE_SMOOTH)
+		glEnable(GL_BLEND)
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+		theWorld.loadedEntityList.asSequence().mapNotNull { it to (renderQueue[it.entityId] ?: return@mapNotNull null) }.forEach { (entity, text) ->
+			renderNameTag(entity.asEntityLivingBase(), text, renderManager, renderItem, glStateManager, partialTicks)
+		}
+
+		RenderUtils.resetColor()
+
+		glPopMatrix()
+		glPopAttrib()
+		glPopClientAttrib()
+	}
+
+	private fun renderNameTag(entity: IEntityLivingBase, tag: NameTag, renderManager: IRenderManager, renderItem: IRenderItem, glStateManager: IGlStateManager, partialTicks: Float)
+	{
+		val fontRenderer = elementfontValue.get()
+		val scaleValue = scaleValue.get()
+		val ypos = yPosValue.get()
+
+		val borderEnabled = borderEnabledValue.get()
+
+		val rainbowSpeed = rainbowSpeedValue.get()
+		val saturation = rainbowSaturationValue.get()
+		val brightness = rainbowBrightnessValue.get()
+
+		val bodyColor = if (bodyColorRainbowValue.get()) ColorUtils.rainbowRGB(alpha = bodyColorValue.getAlpha(), speed = rainbowSpeed, saturation = saturation, brightness = brightness) else bodyColorValue.get()
+		val borderColor = if (borderEnabled) if (borderColorRainbowValue.get()) ColorUtils.rainbowRGB(alpha = borderColorValue.getAlpha(), speed = rainbowSpeed, saturation = saturation, brightness = brightness) else borderColorValue.get() else 0
 
 		// Push
 		glPushMatrix()
 
-		// Translate to player position
-		val renderPosX = renderManager.renderPosX
-		val renderPosY = renderManager.renderPosY
-		val renderPosZ = renderManager.renderPosZ
-
-		// Translate to player position with render pos and interpolate it
 		val lastTickPosX = entity.lastTickPosX
 		val lastTickPosY = entity.lastTickPosY
 		val lastTickPosZ = entity.lastTickPosZ
-		glTranslated(lastTickPosX + (entity.posX - lastTickPosX) * partialTicks - renderPosX, lastTickPosY + (entity.posY - lastTickPosY) * partialTicks - renderPosY + entity.eyeHeight.toDouble() + 0.55, lastTickPosZ + (entity.posZ - lastTickPosZ) * partialTicks - renderPosZ)
+		glTranslated(lastTickPosX + (entity.posX - lastTickPosX) * partialTicks - renderManager.renderPosX, lastTickPosY + (entity.posY - lastTickPosY) * partialTicks - renderManager.renderPosY + entity.eyeHeight.toDouble() + ypos, lastTickPosZ + (entity.posZ - lastTickPosZ) * partialTicks - renderManager.renderPosZ)
 
 		glRotatef(-renderManager.playerViewY, 0F, 1F, 0F)
 		glRotatef(renderManager.playerViewX, 1F, 0F, 0F)
 
 		// Scale
-		var distance = thePlayer.getDistanceToEntity(entity) * 0.25f
-
+		var distance = tag.distance * 0.25f
 		if (distance < 1F) distance = 1F
-
 		val distanceScale = distance * 0.01f * scaleValue
-
 		glScalef(-distanceScale, -distanceScale, distanceScale)
 
+		// Draw NameTag
 		assumeNonVolatile {
-			// Draw NameTag
-			val width = fontRenderer.getStringWidth(text) * 0.5f
+			val width = tag.textWidth
 
 			glDisable(GL_TEXTURE_2D)
 			glEnable(GL_BLEND)
@@ -236,16 +259,17 @@ class NameTags : Module()
 
 			glEnable(GL_TEXTURE_2D)
 
-			fontRenderer.drawString(text, 1F - width, if (fontRenderer == Fonts.minecraftFont) 1F else 1.5F, 0xFFFFFF, true)
+			fontRenderer.drawString(tag.text, 1F - width, if (fontRenderer == Fonts.minecraftFont) 1F else 1.5F, 0xFFFFFF, true)
 		}
 
-		if (elementArmorValue.get() && isPlayer)
+		// Draw armors
+		if (elementArmorValue.get())
 		{
 			val prevZLevel = renderItem.zLevel
 
 			renderItem.zLevel = -147F
 
-			equipmentArrangement.map { it to (entity.getEquipmentInSlot(it) ?: return@map null) }.filterNotNull().forEach { (index, equipment) ->
+			tag.equipments.forEach { (index, equipment) ->
 				RenderUtils.drawItemStack(renderItem, equipment, -50 + index * 20, -22)
 			}
 
@@ -260,3 +284,5 @@ class NameTags : Module()
 		glPopMatrix()
 	}
 }
+
+data class NameTag(val text: String, val textWidth: Float, val distance: Float, val equipments: List<Pair<Int, IItemStack>>)

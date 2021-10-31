@@ -20,9 +20,9 @@ import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11
 
 /**
- * CustomHUD network-activity graph element
+ * CustomHUD network activity graph element
  *
- * Allows to draw custom network-activity graph
+ * Allows to draw custom network activity graph
  */
 
 @ElementInfo(name = "NetGraph")

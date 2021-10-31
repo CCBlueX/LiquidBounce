@@ -72,6 +72,8 @@ class Target : Element()
 
 	private val healthTypeValue = ListValue("HealthType", arrayOf("Datawatcher", "Mineplex", "Hive"), "Datawatcher")
 
+	private val informationDisplayType = ListValue("InformationDisplayType", arrayOf("Verbose", "Abbreviated"), "Verbose")
+
 	private val renderEquipmentsValue = BoolValue("Armor", true)
 
 	private val backgroundGroup = ValueGroup("Background")
@@ -203,12 +205,14 @@ class Target : Element()
 				val damageColor = damageAnimationColorValue.get()
 				val healColor = healAnimationColorValue.get()
 
+				val verbose = informationDisplayType.get().equals("Verbose", ignoreCase = true)
+
 				val dataWatcherBuilder = StringJoiner("\u00A7r | ", " | ", "\u00A7r").setEmptyValue("")
 
-				if (target.invisible) dataWatcherBuilder.add("\u00A77\u00A7oInvisible")
-				if (target.burning) dataWatcherBuilder.add("\u00A7cBurning")
-				if (target.isHandActive) dataWatcherBuilder.add("\u00A7eEating")
-				if (target.isSilent) dataWatcherBuilder.add("\u00A78Silent")
+				if (target.invisible) dataWatcherBuilder.add("\u00A77\u00A7o${if (verbose) "Invisible" else "invis"}")
+				if (target.burning) dataWatcherBuilder.add("\u00A7c${if (verbose) "Burning" else "burn"}")
+				if (target.isHandActive) dataWatcherBuilder.add("\u00A7e${if (verbose) "Using Item" else "use"}")
+				if (target.isSilent) dataWatcherBuilder.add("\u00A78${if (verbose) "Silent" else "silent"}")
 
 				val headBoxYSize = headRenderSize + 6F
 
@@ -331,7 +335,7 @@ class Target : Element()
 					// Draw head
 					RenderUtils.resetColor()
 					textureManager.bindTexture(skinResource)
-					RenderUtils.drawScaledCustomSizeModalRect(4, 4, 8F, 8F, 8, 8, headRenderSize, headRenderSize, 64F, 64F)
+					RenderUtils.drawScaledCustomSizeModalRect(4f, 4f, 8F, 8F, 8f, 8f, headRenderSize.toFloat(), headRenderSize.toFloat(), 64F, 64F)
 
 					// Reset color after drawing head
 					RenderUtils.glColor(Color.white)
@@ -406,17 +410,34 @@ class Target : Element()
 				// Draw CustomNameTag
 				if (target.customNameTag.isNotBlank()) textFont.drawString("(${target.customNameTag})", textXOffset * reverseScale, (nameFont.fontHeight + 5) * reverseScale, Color.gray.rgb)
 
-				// Health/Armor-related
-				textFont.drawString("Health: $healthText | Absorption: ${if (targetAbsorption > 0) "\u00A7e" else "\u00A77"}${DECIMALFORMAT_1.format(targetAbsorption.toLong())}\u00A7r | Armor: $armorText", scaledXPos, scaledYPos, 0xffffff)
+				textFont.drawString(arrayOf(
 
-				// Movement/Position-related
-				textFont.drawString("Distance: ${distanceText}m | ${if (target.onGround) "\u00A7a" else "\u00A7c"}Ground\u00A7r | ${if (!target.sprinting) "\u00A7c" else "\u00A7a"}Sprinting\u00A7r | ${if (!target.sneaking) "\u00A7c" else "\u00A7a"}Sneaking\u00A7r", scaledXPos, scaledYPos + 12, 0xffffff)
+					"${if (verbose) "Health" else "h"}: $healthText", // Health
+					"${if (verbose) "Absorption" else "h_a"}: ${if (targetAbsorption > 0) "\u00A7e" else "\u00A77"}${DECIMALFORMAT_1.format(targetAbsorption)}\u00A7r", // Absorption
+					"${if (verbose) "Armor" else "a"}: $armorText" // Armor
+				).joinToString(separator = " | "), scaledXPos, scaledYPos, 0xffffff)
 
-				// Rotation-related
-				textFont.drawString("Yaw: $yawText | Pitch: $pitchText | Velocity: [$velocityText]", scaledXPos, scaledYPos + 24, 0xffffff)
+				textFont.drawString(arrayOf(
+
+					"${if (verbose) "Distance" else "d"}: $distanceText${if (verbose) "m" else ""}", // Distance
+					if (verbose) "${if (target.onGround) "\u00A7a" else "\u00A7c"}Ground\u00A7r" else "g: ${target.onGround}", // Ground
+					if (verbose) "${if (!target.sprinting) "\u00A7c" else "\u00A7a"}Sprinting\u00A7r" else "sp: ${target.sprinting}", // Sprinting
+					if (verbose) "${if (!target.sneaking) "\u00A7c" else "\u00A7a"}Sneaking\u00A7r" else "sn: ${target.sneaking}" // Sneaking
+				).joinToString(separator = " | "), scaledXPos, scaledYPos + 12, 0xffffff)
+
+				textFont.drawString(arrayOf(
+
+					"${if (verbose) "Yaw" else "y"}: $yawText", // Yaw
+					"${if (verbose) "Pitch" else "p"}: $pitchText", // Pitch
+					"${if (verbose) "Velocity" else "v"}: [$velocityText]" // Velocity
+				).joinToString(separator = " | "), scaledXPos, scaledYPos + 24, 0xffffff)
 
 				// Hurt-related
-				textFont.drawString("Hurt: ${if (target.hurtTime > 0) "\u00A7c" else "\u00A7a"}${target.hurtTime}\u00A7r | HurtResis: ${if (target.hurtResistantTime > 0) "\u00A7c" else "\u00A7a"}${target.hurtResistantTime}\u00A7r | Air: ${if (target.air > 0) "\u00A7c" else "\u00A7a"}${target.air}\u00A7r ", scaledXPos, scaledYPos + 34, 0xffffff)
+				textFont.drawString(arrayOf(
+
+					if (verbose) "HurtTime: ${if (target.hurtTime > 0) "\u00A7c" else "\u00A7a"}${target.hurtTime}\u00A7r" else "ht: ${target.hurtTime}", // HurtTime
+					if (verbose) "HurtResisTime: ${if (target.hurtResistantTime > 0) "\u00A7c" else "\u00A7a"}${target.hurtResistantTime}\u00A7r" else "hrt: ${target.hurtResistantTime}" // HurtResistantTime
+				).joinToString(separator = " | "), scaledXPos, scaledYPos + 34, 0xffffff)
 
 				// Datawatcher-related
 				textFont.drawString("EntityID: ${target.entityId}$dataWatcherBuilder", scaledXPos, scaledYPos + 44, 0xffffff)

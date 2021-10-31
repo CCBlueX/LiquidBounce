@@ -104,7 +104,7 @@ class TargetStrafe : Module()
 	private var lastStrafeDirection = 0F
 
 	private var targetPos: WVec3? = null
-	private var easingStrafeRadius = strafeRangeValue.get() * 1.5f
+	private var easingStrafeRadius = -1f
 	private var easingStrafeRadiusAlpha = 0f
 
 	init
@@ -231,6 +231,9 @@ class TargetStrafe : Module()
 	{
 		if (!pathEspEnabledValue.get()) return
 
+		// Initialize
+		if (easingStrafeRadius < 0) easingStrafeRadius = strafeRangeValue.get() + 1
+
 		val pos = target?.let { target ->
 			val partialTicks = event.partialTicks
 
@@ -245,7 +248,7 @@ class TargetStrafe : Module()
 			if (easingStrafeRadiusAlpha > 0.1f) it
 			else
 			{
-				easingStrafeRadius = strafeRangeValue.get() * 1.5f
+				easingStrafeRadius = strafeRangeValue.get() + 1
 				easingStrafeRadiusAlpha = 0f
 				null
 			}

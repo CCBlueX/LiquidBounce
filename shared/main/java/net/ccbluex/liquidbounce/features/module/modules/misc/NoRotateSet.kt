@@ -45,7 +45,7 @@ class NoRotateSet : Module()
 		get()
 		{
 			val tagBuilder = StringJoiner(", ")
-			if (confirmValue.get()) tagBuilder.add("Confirm${if (confirmIllegalRotationValue.get()) "(Allow illegal)" else ""}")
+			if (confirmValue.get()) tagBuilder.add("Confirm${if (confirmIllegalRotationValue.get()) "(illegal)" else ""}")
 			if (noZeroValue.get()) tagBuilder.add("NoZero")
 
 			return "$tagBuilder"

@@ -221,7 +221,7 @@ public abstract class MixinNetHandlerPlayClient
 	}
 
 	/**
-	 * @author Eric0210
+	 * @author eric0210
 	 * @reason Velocity
 	 * @see    Velocity
 	 */

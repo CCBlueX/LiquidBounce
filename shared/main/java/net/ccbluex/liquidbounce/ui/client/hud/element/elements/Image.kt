@@ -27,10 +27,8 @@ import javax.imageio.ImageIO
 @ElementInfo(name = "Image")
 class Image : Element()
 {
-
 	companion object
 	{
-
 		/**
 		 * Create default element
 		 */
@@ -65,7 +63,7 @@ class Image : Element()
 		}
 	}
 
-	private val resourceLocation = classProvider.createResourceLocation(RandomUtils.randomNumber(128))
+	private val resourceLocation = classProvider.createResourceLocation("LiquidBounce:HUDImage_${RandomUtils.randomString(128)}") // To prevent resourceLocation clash
 	private var width = 64
 	private var height = 64
 

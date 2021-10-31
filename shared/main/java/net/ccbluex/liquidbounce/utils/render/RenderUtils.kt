@@ -8,9 +8,9 @@ package net.ccbluex.liquidbounce.utils.render
 import net.ccbluex.liquidbounce.api.enums.WDefaultVertexFormats
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IFontRenderer
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IGlStateManager
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IWorldRenderer
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.entity.IRenderItem
-import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IGlStateManager
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
 import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
@@ -566,30 +566,52 @@ object RenderUtils : MinecraftInstance()
 	}
 
 	/**
-	 * Draws a textured rectangle at z = 0. Args: x, y, u, v, width, height, textureWidth, textureHeight
+	 * Draws a textured rectangle at z = 0.
+	 * Args: x, y, u, v, width, height, textureWidth, textureHeight
 	 */
 	@JvmStatic
 	fun drawModalRectWithCustomSizedTexture(x: Float, y: Float, u: Float, v: Float, width: Float, height: Float, textureWidth: Float, textureHeight: Float)
 	{
-		val provider = classProvider
-
-		val tessellator = provider.tessellatorInstance
+		val tessellator = classProvider.tessellatorInstance
 		val worldrenderer = tessellator.worldRenderer
 
-		worldrenderer.begin(7, provider.getVertexFormatEnum(WDefaultVertexFormats.POSITION_TEX))
+		worldrenderer.begin(7, classProvider.getVertexFormatEnum(WDefaultVertexFormats.POSITION_TEX))
 
 		val xD = x.toDouble()
 		val yD = y.toDouble()
 		val uD = u.toDouble()
 		val vD = v.toDouble()
 
-		val widthPercentage = 1.0f / textureWidth
-		val heightPercentage = 1.0f / textureHeight
+		val reverseTileWidth = 1.0f / textureWidth
+		val reverseTileHeight = 1.0f / textureHeight
 
-		worldrenderer.pos(xD, yD + height, 0.0).tex(uD * widthPercentage, (vD + height) * heightPercentage).endVertex()
-		worldrenderer.pos(xD + width, yD + height, 0.0).tex((uD + width) * widthPercentage, (vD + height) * heightPercentage).endVertex()
-		worldrenderer.pos(xD + width, yD, 0.0).tex((uD + width) * widthPercentage, vD * heightPercentage).endVertex()
-		worldrenderer.pos(xD, yD, 0.0).tex(uD * widthPercentage, vD * heightPercentage).endVertex()
+		worldrenderer.pos(xD, yD + height, 0.0).tex(uD * reverseTileWidth, (vD + height) * reverseTileHeight).endVertex()
+		worldrenderer.pos(xD + width, yD + height, 0.0).tex((uD + width) * reverseTileWidth, (vD + height) * reverseTileHeight).endVertex()
+		worldrenderer.pos(xD + width, yD, 0.0).tex((uD + width) * reverseTileWidth, vD * reverseTileHeight).endVertex()
+		worldrenderer.pos(xD, yD, 0.0).tex(uD * reverseTileWidth, vD * reverseTileHeight).endVertex()
+		tessellator.draw()
+	}
+
+	@JvmStatic
+	fun drawScaledCustomSizeModalRect(x: Float, y: Float, u: Float, v: Float, uWidth: Float, vHeight: Float, width: Float, height: Float, tileWidth: Float, tileHeight: Float)
+	{
+		val tessellator = classProvider.tessellatorInstance
+		val worldrenderer = tessellator.worldRenderer
+
+		worldrenderer.begin(7, classProvider.getVertexFormatEnum(WDefaultVertexFormats.POSITION_TEX))
+
+		val xD = x.toDouble()
+		val yD = y.toDouble()
+		val uD = u.toDouble()
+		val vD = v.toDouble()
+
+		val reverseTileWidth = 1.0f / tileWidth
+		val reverseTileHeight = 1.0f / tileHeight
+
+		worldrenderer.pos(xD, yD + height, 0.0).tex(uD * reverseTileWidth, (vD + vHeight) * reverseTileHeight).endVertex()
+		worldrenderer.pos(xD + width, yD + height, 0.0).tex((uD + uWidth) * reverseTileWidth, (vD + vHeight) * reverseTileHeight).endVertex()
+		worldrenderer.pos(xD + width, yD, 0.0).tex((uD + uWidth) * reverseTileWidth, vD * reverseTileHeight).endVertex()
+		worldrenderer.pos(xD, yD, 0.0).tex(uD * reverseTileWidth, vD * reverseTileHeight).endVertex()
 		tessellator.draw()
 	}
 
@@ -793,31 +815,6 @@ object RenderUtils : MinecraftInstance()
 	fun setGlState(cap: Int, state: Boolean)
 	{
 		if (state) GL11.glEnable(cap) else GL11.glDisable(cap)
-	}
-
-	@JvmStatic
-	fun drawScaledCustomSizeModalRect(x: Int, y: Int, u: Float, v: Float, uWidth: Int, vHeight: Int, width: Int, height: Int, tileWidth: Float, tileHeight: Float)
-	{
-		val provider = classProvider
-
-		val tessellator = provider.tessellatorInstance
-		val worldrenderer = tessellator.worldRenderer
-
-		worldrenderer.begin(7, provider.getVertexFormatEnum(WDefaultVertexFormats.POSITION_TEX))
-
-		val xD = x.toDouble()
-		val yD = y.toDouble()
-		val uD = u.toDouble()
-		val vD = v.toDouble()
-
-		val widthPercentage = 1.0f / tileWidth
-		val heightPercentage = 1.0f / tileHeight
-
-		worldrenderer.pos(xD, yD + height, 0.0).tex(uD * widthPercentage, (vD + vHeight) * heightPercentage).endVertex()
-		worldrenderer.pos(xD + width, yD + height, 0.0).tex((uD + uWidth) * widthPercentage, (vD + vHeight) * heightPercentage).endVertex()
-		worldrenderer.pos(xD + width, yD, 0.0).tex((uD + uWidth) * widthPercentage, vD * heightPercentage).endVertex()
-		worldrenderer.pos(xD, yD, 0.0).tex(uD * widthPercentage, vD * heightPercentage).endVertex()
-		tessellator.draw()
 	}
 
 	@JvmStatic
