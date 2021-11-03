@@ -19,23 +19,81 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
+import static java.lang.Float.MAX_VALUE;
+import static java.lang.Float.MIN_VALUE;
+import static org.spongepowered.asm.mixin.injection.At.Shift.AFTER;
+
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.interfaces.IMixinGameRenderer;
 import net.minecraft.client.render.BackgroundRenderer;
+import net.minecraft.client.render.BackgroundRenderer.FogType;
+import net.minecraft.client.render.Camera;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(BackgroundRenderer.class)
 public abstract class MixinBackgroundRenderer implements IMixinGameRenderer {
 
-    @Redirect(method = "applyFog", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;hasStatusEffect(Lnet/minecraft/entity/effect/StatusEffect;)Z", ordinal = 1))
+    @Redirect(
+      method = "applyFog",
+      at = @At(
+        value = "INVOKE",
+        ordinal = 1,
+        target = "Lnet/minecraft/entity/LivingEntity;hasStatusEffect"
+          + "(Lnet/minecraft/entity/effect/StatusEffect;)Z"
+      )
+    )
     private static boolean injectAntiBlind(LivingEntity livingEntity, StatusEffect effect) {
-        if (ModuleAntiBlind.INSTANCE.getEnabled() && ModuleAntiBlind.INSTANCE.getAntiBlind())
-            return false;
+        ModuleAntiBlind module = ModuleAntiBlind.INSTANCE;
+        return (!module.getEnabled() || !module.getAntiBlind())
+          && livingEntity.hasStatusEffect(effect);
+    }
 
-        return livingEntity.hasStatusEffect(effect);
+    @Inject(
+      method = "applyFog",
+      at = @At(
+        value = "INVOKE",
+        shift = AFTER,
+        ordinal = 1,
+        target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderFogStart(F)V",
+        remap = false
+      )
+    )
+    private static void injectLiquidsFog(Camera camera, FogType fogType, float viewDistance,
+      boolean thickFog, CallbackInfo info) {
+        if (isLiquidsFogEnabled(fogType)) {
+            RenderSystem.setShaderFogStart(MAX_VALUE);
+            RenderSystem.setShaderFogEnd(MIN_VALUE);
+        }
+    }
+
+    @Inject(
+      method = "applyFog",
+      at = @At(
+        value = "INVOKE",
+        shift = AFTER,
+        ordinal = 0,
+        target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderFogEnd(F)V",
+        remap = false
+      )
+    )
+    private static void injectLiquidsFogUnderwater(Camera camera, FogType fogType,
+      float viewDistance, boolean thickFog, CallbackInfo info) {
+        if (isLiquidsFogEnabled(fogType)) {
+            RenderSystem.setShaderFogEnd(MAX_VALUE);
+        }
+    }
+
+    @Unique
+    private static boolean isLiquidsFogEnabled(FogType fogType) {
+        ModuleAntiBlind module = ModuleAntiBlind.INSTANCE;
+        return module.getEnabled() && module.getLiquidsFog() && FogType.FOG_TERRAIN == fogType;
     }
 }
