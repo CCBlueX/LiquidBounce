@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 object ModuleAntiBlind : Module("AntiBlind", Category.RENDER) {
     val antiBlind by boolean("DisableBlindingEffect", true)
     val antiNausea by boolean("DisableNauseaEffect", true)
+    val pumpkinBlur by boolean("DisablePumpkinBlur", true)
     val liquidsFog by boolean("DisableLiquidsFog", true)
     val fireOpacity by float("FireOpacity", 1.0F, 0.0F..1.0F)
 }
