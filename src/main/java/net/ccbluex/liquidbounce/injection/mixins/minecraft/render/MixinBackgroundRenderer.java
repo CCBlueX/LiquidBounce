@@ -20,7 +20,8 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import static java.lang.Float.MAX_VALUE;
-import static java.lang.Float.MIN_VALUE;
+import static net.minecraft.client.render.CameraSubmersionType.LAVA;
+import static net.minecraft.client.render.CameraSubmersionType.WATER;
 import static org.spongepowered.asm.mixin.injection.At.Shift.AFTER;
 
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -29,6 +30,7 @@ import net.ccbluex.liquidbounce.interfaces.IMixinGameRenderer;
 import net.minecraft.client.render.BackgroundRenderer;
 import net.minecraft.client.render.BackgroundRenderer.FogType;
 import net.minecraft.client.render.Camera;
+import net.minecraft.client.render.CameraSubmersionType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import org.spongepowered.asm.mixin.Mixin;
@@ -68,9 +70,9 @@ public abstract class MixinBackgroundRenderer implements IMixinGameRenderer {
     )
     private static void injectLiquidsFog(Camera camera, FogType fogType, float viewDistance,
       boolean thickFog, CallbackInfo info) {
-        if (isLiquidsFogEnabled(fogType)) {
+        if (isLiquidsFogEnabled(camera)) {
             RenderSystem.setShaderFogStart(MAX_VALUE);
-            RenderSystem.setShaderFogEnd(MIN_VALUE);
+            RenderSystem.setShaderFogEnd(MAX_VALUE);
         }
     }
 
@@ -86,14 +88,18 @@ public abstract class MixinBackgroundRenderer implements IMixinGameRenderer {
     )
     private static void injectLiquidsFogUnderwater(Camera camera, FogType fogType,
       float viewDistance, boolean thickFog, CallbackInfo info) {
-        if (isLiquidsFogEnabled(fogType)) {
+        if (isLiquidsFogEnabled(camera)) {
             RenderSystem.setShaderFogEnd(MAX_VALUE);
         }
     }
 
     @Unique
-    private static boolean isLiquidsFogEnabled(FogType fogType) {
+    private static boolean isLiquidsFogEnabled(Camera camera) {
         ModuleAntiBlind module = ModuleAntiBlind.INSTANCE;
-        return module.getEnabled() && module.getLiquidsFog() && FogType.FOG_TERRAIN == fogType;
+        if (module.getEnabled() && module.getLiquidsFog()) {
+            CameraSubmersionType type = camera.getSubmersionType();
+            return LAVA == type || WATER == type;
+        }
+        return false;
     }
 }
