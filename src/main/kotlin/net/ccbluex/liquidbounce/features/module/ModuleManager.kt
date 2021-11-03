@@ -171,7 +171,6 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoPot,
             ModuleAirJump,
             ModuleAntiBot,
-            ModuleAutoPot
         )
 
         builtin.apply {

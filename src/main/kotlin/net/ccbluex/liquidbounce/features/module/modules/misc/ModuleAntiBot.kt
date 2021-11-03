@@ -1,3 +1,22 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2016 - 2021 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import com.mojang.authlib.GameProfile
@@ -19,8 +38,6 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
 
     private val modes = choices("Mode", Custom, arrayOf(Custom, Matrix))
 
-    private var pName: String? = null
-
     private object Custom : Choice("Custom") {
         override val parent: ChoiceConfigurable
             get() = modes
@@ -32,6 +49,8 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
     private object Matrix : Choice("Matrix") {
         override val parent: ChoiceConfigurable
             get() = modes
+
+        private var pName: String? = null
 
         val packetHandler = handler<PacketEvent> { event ->
             if (event.packet is PlayerListS2CPacket && event.packet.action == PlayerListS2CPacket.Action.ADD_PLAYER) {
@@ -75,7 +94,8 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
             var count = 0
             for (slot in 0..3) {
                 if (entity.inventory.getArmorStack(slot).item is ArmorItem &&
-                    !entity.inventory.getArmorStack(slot).hasEnchantments()) {
+                    !entity.inventory.getArmorStack(slot).hasEnchantments()
+                ) {
                     count += 1
                 }
             }
@@ -83,7 +103,7 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
         }
 
         private fun isTheSamePlayer(profile: GameProfile): Boolean {
-            // Prevents false positives when a player joins a minigame such as Practice
+            // Prevents false positives when a player is on a minigame such as Practice and joins a duel
             return network.playerList.count { it.profile.name == profile.name && it.profile.id == profile.id } == 1
         }
     }
