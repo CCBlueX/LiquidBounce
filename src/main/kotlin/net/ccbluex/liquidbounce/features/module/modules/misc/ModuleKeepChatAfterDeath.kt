@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import net.ccbluex.liquidbounce.event.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.client.gui.screen.ChatScreen
@@ -39,9 +40,16 @@ object ModuleKeepChatAfterDeath : Module("KeepChatAfterDeath", Category.MISC) {
         }
 
         val options = mc.options
-        if (it.keyCode == options.keyChat.boundKey.code || it.keyCode == options.keyCommand.boundKey.code) {
-            // BUG: first clicked key (default T or /) is added to the chat field
+        if (options.keyChat.boundKey.code == it.keyCode) {
             mc.setScreen(ChatScreen(""))
+            (mc.currentScreen as ChatScreen).focused = null
+            return@handler
+        }
+
+        val prefixCode = CommandManager.Options.prefix[0].code
+        if (options.keyCommand.boundKey.code == it.keyCode || prefixCode == it.keyCode) {
+            mc.setScreen(ChatScreen(""))
+            return@handler
         }
     }
 }
