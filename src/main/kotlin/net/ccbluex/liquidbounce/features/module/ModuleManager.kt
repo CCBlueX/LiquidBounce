@@ -170,7 +170,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleProjectilePuncher,
             ModuleAutoPot,
             ModuleKeepChatAfterDeath,
-            ModuleOverrideTime
+            ModuleOverrideTime,
+            ModuleXRay
         )
 
         builtin.apply {
