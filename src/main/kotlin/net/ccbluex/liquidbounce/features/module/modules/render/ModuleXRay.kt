@@ -159,6 +159,7 @@ object ModuleXRay : Module("XRay", Category.RENDER) {
         CLAY,
         DRAGON_EGG,
         FIRE,
+        SPAWNER,
         TNT,
     ))
 
