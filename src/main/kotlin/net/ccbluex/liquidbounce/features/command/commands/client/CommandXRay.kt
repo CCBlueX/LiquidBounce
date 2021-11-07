@@ -58,22 +58,21 @@ object CommandXRay {
             .handler { command, args ->
                 val option = args[0] as String
                 val id = args[1] as String
+                val mcId = Identifier.tryParse(id)
+                val block = Registry.BLOCK.get(mcId)
 
                 if ("add".equals(option, true)) {
-                    val mcId = Identifier.tryParse(id)
-                    val block = Registry.BLOCK.get(mcId)
                     ModuleXRay.blocks.add(block)
                     chat(regular("Added ${mcId.toString()}"))
                     return@handler
                 }
 
                 if ("remove".equals(option, true)) {
-                    val mcId = Identifier.tryParse(id)
-                    val block = Registry.BLOCK.get(mcId)
                     ModuleXRay.blocks.remove(block)
                     chat(regular("Removed ${mcId.toString()}"))
                     return@handler
                 }
+
                 throw CommandException(command.result("valueNotFound", id))
             }
             .build()
@@ -96,7 +95,7 @@ object CommandXRay {
                     1
                 }.coerceAtLeast(1)
 
-                val blocks = ModuleXRay.blocks.sortedBy { Registry.BLOCK.getId(it).toString() }
+                val blocks = ModuleXRay.blocks.sortedBy { it.translationKey }
 
                 // Max page
                 val maxPage = ceil(blocks.size / 8.0).roundToInt()
