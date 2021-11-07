@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.minecraft.block.Block
 import net.minecraft.block.Blocks.*
 
 /**
@@ -31,8 +30,11 @@ import net.minecraft.block.Blocks.*
 
 object ModuleXRay : Module("XRay", Category.RENDER) {
 
+    // Lighting of blocks through walls
     val fullBright by boolean("FullBright", true)
-    val inclusiveBlockList = mutableListOf<Block>(
+
+    // Set of blocks that will not be excluded
+    val blocks by blocks("Blocks", mutableSetOf(
         // Overworld ores
         COAL_ORE,
         COPPER_ORE,
@@ -158,7 +160,7 @@ object ModuleXRay : Module("XRay", Category.RENDER) {
         DRAGON_EGG,
         FIRE,
         TNT,
-    )
+    ))
 
     override fun enable() {
         mc.worldRenderer.reload()

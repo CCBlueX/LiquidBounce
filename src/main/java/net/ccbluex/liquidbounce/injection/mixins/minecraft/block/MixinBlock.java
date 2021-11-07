@@ -32,7 +32,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.List;
+import java.util.Set;
 
 @Mixin(Block.class)
 public class MixinBlock {
@@ -45,8 +45,8 @@ public class MixinBlock {
             return;
         }
 
-        List<Block> inclusiveBlockList = module.getInclusiveBlockList();
-        callback.setReturnValue(inclusiveBlockList.contains(state.getBlock()));
+        Set<Block> blocks = module.getBlocks();
+        callback.setReturnValue(blocks.contains(state.getBlock()));
         callback.cancel();
     }
 
