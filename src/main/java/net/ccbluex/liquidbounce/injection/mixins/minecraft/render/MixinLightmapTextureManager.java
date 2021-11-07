@@ -28,13 +28,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(LightmapTextureManager.class)
 public class MixinLightmapTextureManager {
 
-    @Redirect(
-        method = "update(F)V",
-        at = @At(
-            value = "FIELD",
-            target = "Lnet/minecraft/client/option/GameOptions;gamma:D"
-        )
-    )
+    @Redirect(method = "update(F)V", at = @At(value = "FIELD", target = "Lnet/minecraft/client/option/GameOptions;gamma:D"))
     private double injectXRayFullBright(GameOptions instance) {
         ModuleXRay module = ModuleXRay.INSTANCE;
         if (!module.getEnabled() || !module.getFullBright()) {

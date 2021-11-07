@@ -38,8 +38,7 @@ import java.util.Set;
 public class MixinBlock {
 
     @Inject(method = "shouldDrawSide", at = @At("RETURN"), cancellable = true)
-    private static void injectXRay(BlockState state, BlockView world, BlockPos pos, Direction side,
-                                   BlockPos blockPos, CallbackInfoReturnable<Boolean> callback) {
+    private static void injectXRay(BlockState state, BlockView world, BlockPos pos, Direction side, BlockPos blockPos, CallbackInfoReturnable<Boolean> callback) {
         ModuleXRay module = ModuleXRay.INSTANCE;
         if (!module.getEnabled()) {
             return;

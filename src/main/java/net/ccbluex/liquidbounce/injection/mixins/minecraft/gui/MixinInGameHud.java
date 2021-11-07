@@ -46,15 +46,11 @@ public class MixinInGameHud {
         EventManager.INSTANCE.callEvent(new OverlayRenderEvent(matrices, tickDelta));
     }
 
-    @Inject(
-      method = "renderOverlay",
-      at = @At("HEAD"),
-      cancellable = true
-    )
-    private void injectPumpkinBlur(Identifier texture, float opacity, CallbackInfo ci) {
+    @Inject(method = "renderOverlay", at = @At("HEAD"), cancellable = true)
+    private void injectPumpkinBlur(Identifier texture, float opacity, CallbackInfo callback) {
         ModuleAntiBlind module = ModuleAntiBlind.INSTANCE;
         if (module.getEnabled() && module.getPumpkinBlur() && PUMPKIN_BLUR.equals(texture)) {
-            ci.cancel();
+            callback.cancel();
         }
     }
 }
