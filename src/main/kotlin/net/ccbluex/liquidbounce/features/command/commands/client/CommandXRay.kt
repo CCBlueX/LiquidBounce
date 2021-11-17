@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
-import net.minecraft.text.TranslatableText
 import net.minecraft.util.Formatting
 import net.minecraft.util.Identifier
 import net.minecraft.util.registry.Registry
@@ -40,89 +39,124 @@ object CommandXRay {
     fun createCommand(): Command {
         return CommandBuilder
             .begin("xray")
-            .parameter(
-                ParameterBuilder
-                    .begin<String>("option")
-                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                    .required()
-                    .build()
-            )
-            .parameter(
-                ParameterBuilder
-                    .begin<String>("id")
-                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                    .required()
-                    .build()
-            )
-            .subcommand(subCommandList())
-            .handler { command, args ->
-                val option = args[0] as String
-                val id = args[1] as String
-                val mcId = Identifier.tryParse(id)
-                val block = Registry.BLOCK.get(mcId)
-
-                if ("add".equals(option, true)) {
-                    ModuleXRay.blocks.add(block)
-                    chat(regular("Added ${mcId.toString()}"))
-                    return@handler
-                }
-
-                if ("remove".equals(option, true)) {
-                    ModuleXRay.blocks.remove(block)
-                    chat(regular("Removed ${mcId.toString()}"))
-                    return@handler
-                }
-
-                throw CommandException(command.result("valueNotFound", id))
-            }
-            .build()
-    }
-
-    private fun subCommandList(): Command {
-        return CommandBuilder
-            .begin("list")
-            .parameter(
-                ParameterBuilder
-                    .begin<Int>("page")
-                    .verifiedBy(ParameterBuilder.INTEGER_VALIDATOR)
-                    .optional()
-                    .build()
-            )
-            .handler { command, args ->
-                val page = if (args.size > 1) {
-                    args[0] as Int
-                } else {
-                    1
-                }.coerceAtLeast(1)
-
-                val blocks = ModuleXRay.blocks.sortedBy { it.translationKey }
-
-                // Max page
-                val maxPage = ceil(blocks.size / 8.0).roundToInt()
-                if (page > maxPage) {
-                    throw CommandException(TranslatableText("liquidbounce.command.help.result.pageNumberTooLarge", maxPage))
-                }
-
-                // Print out help page
-                chat("Xray List".asText().styled { it.withColor(Formatting.RED).withBold(true) })
-                chat(regular(TranslatableText("liquidbounce.command.help.result.pageCount", variable("$page / $maxPage"))))
-
-                val iterPage = 8 * page
-                for (block in blocks.subList(iterPage - 8, iterPage.coerceAtMost(blocks.size))) {
-                    chat(
-                        block.translationKey.replaceFirst("block.", "").asText()
-                            .styled { it.withColor(Formatting.GRAY) }
+            .hub()
+            .subcommand(
+                CommandBuilder
+                    .begin("add")
+                    .parameter(
+                        ParameterBuilder
+                            .begin<String>("block")
+                            .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                            .required()
+                            .build()
                     )
-                }
+                    .handler { command, args ->
+                        val name = args[0] as String
+                        val identifier = Identifier.tryParse(name)
+                        val displayName = identifier.toString()
 
-                chat(
-                    "--- ".asText()
-                        .styled { it.withColor(Formatting.DARK_GRAY) }
-                        .append(variable("${CommandManager.Options.prefix}xray list <"))
-                        .append(variable(TranslatableText("liquidbounce.command.help.result.page")))
-                        .append(variable(">"))
-                )
-            }
+                        val block = Registry.BLOCK.getOrEmpty(identifier).orElseThrow {
+                            throw CommandException(command.result("blockNotExists", displayName))
+                        }
+
+                        if (!ModuleXRay.blocks.add(block)) {
+                            throw CommandException(command.result("blockIsPresent", displayName))
+                        }
+
+                        chat(regular(command.result("blockAdded", displayName)))
+                    }
+                    .build()
+            )
+            .subcommand(
+                CommandBuilder
+                    .begin("remove")
+                    .parameter(
+                        ParameterBuilder
+                            .begin<String>("block")
+                            .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                            .required()
+                            .build()
+                    )
+                    .handler { command, args ->
+                        val name = args[0] as String
+                        val identifier = Identifier.tryParse(name)
+                        val displayName = identifier.toString()
+
+                        val block = Registry.BLOCK.getOrEmpty(identifier).orElseThrow {
+                            throw CommandException(command.result("blockNotExists", displayName))
+                        }
+
+                        if (!ModuleXRay.blocks.remove(block)) {
+                            throw CommandException(command.result("blockNotFound", displayName))
+                        }
+
+                        chat(regular(command.result("blockRemoved", displayName)))
+                    }
+                    .build()
+            )
+            .subcommand(
+                CommandBuilder
+                    .begin("list")
+                    .parameter(
+                        ParameterBuilder
+                            .begin<Int>("page")
+                            .verifiedBy(ParameterBuilder.POSITIVE_INTEGER_VALIDATOR)
+                            .optional()
+                            .build()
+                    )
+                    .handler { command, args ->
+                        val page = if (args.size > 1) {
+                            args[0] as Int
+                        } else {
+                            1
+                        }.coerceAtLeast(1)
+
+                        val blocks = ModuleXRay.blocks.sortedBy { it.translationKey }
+
+                        // Max page
+                        val maxPage = ceil(blocks.size / 8.0).roundToInt()
+                        if (page > maxPage) {
+                            throw CommandException(command.result("pageNumberTooLarge", maxPage))
+                        }
+
+                        // Print out help page
+                        chat(command.result("list").styled { it.withColor(Formatting.RED).withBold(true) })
+                        chat(regular(command.result("pageCount", variable("$page / $maxPage"))))
+
+                        val iterPage = 8 * page
+                        for (block in blocks.subList(iterPage - 8, iterPage.coerceAtMost(blocks.size))) {
+                            val identifier = block.translationKey
+                                .replace("block.", "")
+                                .replace(".", ":")
+
+                            chat(
+                                block.name
+                                    .styled { it.withColor(Formatting.GRAY) }
+                                    .append(variable(" ("))
+                                    .append(regular(identifier))
+                                    .append(variable(")"))
+                            )
+                        }
+
+                        chat(
+                            "--- ".asText()
+                                .styled { it.withColor(Formatting.DARK_GRAY) }
+                                .append(variable("${CommandManager.Options.prefix}xray list <"))
+                                .append(variable(command.result("page")))
+                                .append(variable(">"))
+                        )
+                    }
+                    .build()
+            )
+            .subcommand(
+                CommandBuilder
+                    .begin("clear")
+                    .handler { command, _ ->
+                        ModuleXRay.blocks.clear()
+                        chat(regular(command.result("blocksCleared")))
+                    }
+                    .build()
+            )
             .build()
     }
 }
