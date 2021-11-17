@@ -41,15 +41,23 @@ object ModuleKeepChatAfterDeath : Module("KeepChatAfterDeath", Category.MISC) {
 
         val options = mc.options
         if (options.keyChat.boundKey.code == it.keyCode) {
-            mc.setScreen(ChatScreen(""))
-            (mc.currentScreen as ChatScreen).focused = null
+            openChat("")
             return@handler
         }
 
-        val prefixCode = CommandManager.Options.prefix[0].code
-        if (options.keyCommand.boundKey.code == it.keyCode || prefixCode == it.keyCode) {
-            mc.setScreen(ChatScreen(""))
+        if (options.keyCommand.boundKey.code == it.keyCode) {
+            openChat("/")
             return@handler
         }
+
+        if (CommandManager.Options.prefix[0].code == it.keyCode) {
+            openChat(".")
+            return@handler
+        }
+    }
+
+    private fun openChat(text: String) {
+        mc.setScreen(ChatScreen(text))
+        (mc.currentScreen as ChatScreen).focused = null
     }
 }
