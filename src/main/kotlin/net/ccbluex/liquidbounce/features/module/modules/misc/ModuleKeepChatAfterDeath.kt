@@ -50,8 +50,9 @@ object ModuleKeepChatAfterDeath : Module("KeepChatAfterDeath", Category.MISC) {
             return@handler
         }
 
-        if (CommandManager.Options.prefix[0].code == it.keyCode) {
-            openChat(".")
+        val prefix = CommandManager.Options.prefix[0]
+        if (prefix.code == it.keyCode) {
+            openChat(prefix.toString())
             return@handler
         }
     }
