@@ -23,7 +23,7 @@ class LightningDetector : Module()
 
 			if (packet.type != 1) return
 
-			LiquidBounce.hud.addNotification(Notification(NotificationIcon.INFORMATION, name, "Lightning at X:" + packet.x + " Y:" + packet.y + " Z:" + packet.z, 5000))
+			LiquidBounce.hud.addNotification(Notification(NotificationIcon.INFORMATION, name, "X:" + packet.x + " Y:" + packet.y + " Z:" + packet.z, 10000))
 		}
 	}
 }

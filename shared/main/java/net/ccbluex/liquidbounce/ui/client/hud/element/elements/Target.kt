@@ -77,14 +77,14 @@ class Target : Element()
 	private val renderEquipmentsValue = BoolValue("Armor", true)
 
 	private val backgroundGroup = ValueGroup("Background")
-	private val backgroundRainbowCeilValue = BoolValue("Background-RainbowCeil", false)
+	private val backgroundRainbowCeilValue = BoolValue("RainbowCeil", false, "Background-RainbowCeil")
 
 	private val backgroundColorGroup = ValueGroup("Color")
 	private val backgroundColorModeValue = ListValue("Mode", arrayOf("None", "Custom", "Rainbow", "RainbowShader"), "Custom", "Background-Color")
 	private val backgroundColorValue = RGBColorValue("Color", 0, 0, 0, Triple("Background-R", "Background-G", "Background-B"))
 
 	private val borderGroup = ValueGroup("Border")
-	private val borderWidthValue = FloatValue("Border-Width", 3F, 2F, 5F)
+	private val borderWidthValue = FloatValue("Width", 3F, 2F, 5F, "Border-Width")
 
 	private val borderColorGroup = ValueGroup("Color")
 	private val borderColorModeValue = ListValue("Mode", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom", "Border-Color")

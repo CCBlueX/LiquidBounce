@@ -85,7 +85,7 @@ class PositionCheck : BotCheck("position.position")
 
 				if (remove && newVL > removeVL)
 				{
-					remove(theWorld, entityId, target.gameProfile.name, target.displayName.formattedText, "position")
+					remove(theWorld, entityId, target.gameProfile.name, target.displayName.formattedText)
 					positionVL.remove(entityId)
 				}
 				else
@@ -94,7 +94,7 @@ class PositionCheck : BotCheck("position.position")
 
 					if (detectionCount >= 5)
 					{
-						notification(target) { "Suspicious position: [posIndex: $posIndex, dist: ${StringUtils.DECIMALFORMAT_6.format(distanceSq)}, vl: (+$baseScore(base) +$yawMovementScore(yaw) +$spawnPosScore(spawnPos) +$speedScore(speed) +$extraScore(extra))]" }
+						notification(target) { arrayOf("reason=expect", "posIndex=$posIndex", "delta=${StringUtils.DECIMALFORMAT_6.format(distanceSq)}", "vl=(+$baseScore(base) +$yawMovementScore(yaw) +$spawnPosScore(spawnPos) +$speedScore(speed) +$extraScore(extra))") }
 						detectionCount = 0
 					}
 
@@ -134,7 +134,7 @@ class PositionCheck : BotCheck("position.position")
 
 						if (detectionCount >= 5)
 						{
-							notification(target) { "Suspicious position consistency: [posIndex: $posIndex, delta: ${StringUtils.DECIMALFORMAT_6.format(consistency)}, posVL: $previousVL, posConsistencyVL: $prevConsistencyVL)]" }
+							notification(target) { arrayOf("reason=consistency", "posIndex=$posIndex", "delta=${StringUtils.DECIMALFORMAT_6.format(consistency)}", "posVL=$previousVL", "posConsistencyVL=$prevConsistencyVL") }
 							detectionCount = 0
 						}
 

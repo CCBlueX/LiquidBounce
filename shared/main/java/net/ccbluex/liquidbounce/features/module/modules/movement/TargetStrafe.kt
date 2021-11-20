@@ -103,7 +103,7 @@ class TargetStrafe : Module()
 	private var direction = -1F
 	private var lastStrafeDirection = 0F
 
-	private var targetPos: WVec3? = null
+	private var lastTargetPos: WVec3? = null
 	private var easingStrafeRadius = -1f
 	private var easingStrafeRadiusAlpha = 0f
 
@@ -240,8 +240,8 @@ class TargetStrafe : Module()
 			easingStrafeRadius = easeOutCubic(easingStrafeRadius, strafeRangeValue.get(), pathEspFadeSpeedValue.get())
 			easingStrafeRadiusAlpha = easeOutCubic(easingStrafeRadiusAlpha, 1f, pathEspFadeSpeedValue.get())
 
-			WVec3(target.lastTickPosX + (target.posX - target.lastTickPosX) * partialTicks, target.lastTickPosY + (target.posY - target.lastTickPosY) * partialTicks, target.lastTickPosZ + (target.posZ - target.lastTickPosZ) * partialTicks).also { targetPos = it }
-		} ?: targetPos?.let {
+			WVec3(target.lastTickPosX + (target.posX - target.lastTickPosX) * partialTicks, target.lastTickPosY + (target.posY - target.lastTickPosY) * partialTicks, target.lastTickPosZ + (target.posZ - target.lastTickPosZ) * partialTicks).also { lastTargetPos = it }
+		} ?: lastTargetPos?.let {
 			easingStrafeRadius = easeOutCubic(easingStrafeRadius, 0f, pathEspFadeSpeedValue.get())
 			easingStrafeRadiusAlpha = easeOutCubic(easingStrafeRadiusAlpha, 0f, pathEspFadeSpeedValue.get())
 

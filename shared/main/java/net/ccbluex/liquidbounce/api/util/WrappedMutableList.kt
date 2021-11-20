@@ -6,7 +6,7 @@
 
 package net.ccbluex.liquidbounce.api.util
 
-class WrappedMutableList<WRAPPED, UNWRAPPED, out COLLECTION : MutableList<WRAPPED>>(wrapped: COLLECTION, unwrapper: (UNWRAPPED) -> WRAPPED, wrapper: (WRAPPED) -> UNWRAPPED) : WrappedMutableCollection<WRAPPED, UNWRAPPED, COLLECTION>(wrapped, unwrapper, wrapper), MutableList<UNWRAPPED>
+class WrappedMutableList<WRAPPED, UNWRAPPED, out COLLECTION : MutableList<WRAPPED>>(wrapped: COLLECTION, wrapper: (UNWRAPPED) -> WRAPPED, unwrapper: (WRAPPED) -> UNWRAPPED) : WrappedMutableCollection<WRAPPED, UNWRAPPED, COLLECTION>(wrapped, wrapper, unwrapper), MutableList<UNWRAPPED>
 {
 	override fun get(index: Int): UNWRAPPED = unwrapper(wrapped[index])
 

@@ -25,11 +25,9 @@ class Strafe : Module()
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		val shotSpeed = hypot(thePlayer.motionX, thePlayer.motionZ)
-
 		val strength = strengthValue.get()
 
-		val speed = shotSpeed * strength
+		val speed = hypot(thePlayer.motionX, thePlayer.motionZ) * strength
 		val motionX = thePlayer.motionX * (1 - strength)
 		val motionZ = thePlayer.motionZ * (1 - strength)
 
@@ -41,11 +39,9 @@ class Strafe : Module()
 
 		if (!thePlayer.onGround || onGroundStrafeValue.get())
 		{
-			val func = functions
-
 			val yaw = WMathHelper.toRadians(thePlayer.moveDirectionDegrees)
-			thePlayer.motionX = -func.sin(yaw) * speed + motionX
-			thePlayer.motionZ = func.cos(yaw) * speed + motionZ
+			thePlayer.motionX = -functions.sin(yaw) * speed + motionX
+			thePlayer.motionZ = functions.cos(yaw) * speed + motionZ
 		}
 	}
 }

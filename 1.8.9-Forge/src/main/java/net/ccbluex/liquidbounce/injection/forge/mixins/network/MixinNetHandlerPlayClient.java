@@ -18,6 +18,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.NoRotateSet;
 import net.ccbluex.liquidbounce.features.module.modules.render.HUD;
 import net.ccbluex.liquidbounce.features.special.AntiModDisable;
 import net.ccbluex.liquidbounce.injection.backend.minecraft.entity.EntityImplKt;
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification;
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationIcon;
 import net.ccbluex.liquidbounce.utils.AsyncUtilsKt;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
@@ -297,15 +298,15 @@ public abstract class MixinNetHandlerPlayClient
 			AsyncUtilsKt.runAsync(() ->
 			{
 				if (isHackerChat(text))
-					LiquidBounce.hud.addNotification(NotificationIcon.WARNING_YELLOW, "Chat", "Someone called you a hacker.", 2000L);
+					LiquidBounce.hud.addNotification(new Notification(NotificationIcon.WARNING, "Player Warning", "Someone called you a hacker.", 2000L));
 				else if (text.contains("ground items will be removed in"))
-					LiquidBounce.hud.addNotification(NotificationIcon.WARNING_YELLOW, "ClearLag", "ClearLag " + text.substring(text.lastIndexOf("in ")), 2000L);
+					LiquidBounce.hud.addNotification(new Notification(NotificationIcon.WARNING, "ClearLag Warning", "ClearLag " + text.substring(text.lastIndexOf("in ")), 2000L));
 				else if (text.contains("removed ") && text.contains("entities"))
-					LiquidBounce.hud.addNotification(NotificationIcon.WARNING_YELLOW, "ClearLag", text.substring(text.lastIndexOf("removed ")), 2000L);
+					LiquidBounce.hud.addNotification(new Notification(NotificationIcon.WARNING, "ClearLag Warning", text.substring(text.lastIndexOf("removed ")), 2000L));
 				else if (text.contains("you are now in "))
-					LiquidBounce.hud.addNotification(NotificationIcon.WARNING_YELLOW, "Faction Warning", "Chunk: " + text.substring(text.lastIndexOf("in ") + 3), 2000L);
+					LiquidBounce.hud.addNotification(new Notification(NotificationIcon.WARNING, "Faction Warning", "Chunk: " + text.substring(text.lastIndexOf("in ") + 3), 2000L));
 				else if (text.contains("now entering"))
-					LiquidBounce.hud.addNotification(NotificationIcon.WARNING_YELLOW, "Faction", "Chunk: " + text.substring(text.lastIndexOf(": ") + 4), 2000L);
+					LiquidBounce.hud.addNotification(new Notification(NotificationIcon.WARNING, "Faction Warning", "Chunk: " + text.substring(text.lastIndexOf(": ") + 4), 2000L));
 			});
 	}
 
@@ -345,6 +346,7 @@ public abstract class MixinNetHandlerPlayClient
 
 		HACKER_CHATS_WHITELIST.add("ncp");
 		HACKER_CHATS_WHITELIST.add("aac");
-		HACKER_CHATS_WHITELIST.add("anticheat");
+		HACKER_CHATS_WHITELIST.add("verbose");
+		HACKER_CHATS_WHITELIST.add("vl");
 	}
 }

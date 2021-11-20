@@ -185,7 +185,20 @@ open class HUD : MinecraftInstance()
 	/**
 	 * Add [notification]
 	 */
-	fun addNotification(notification: Notification) = elements.any { it is Notifications } && notifications.add(notification)
-
-	fun addNotification(type: NotificationIcon, header: String, message: String, stayTime: Long) = addNotification(Notification(type, header, message, stayTime))
+	fun addNotification(notification: Notification): Boolean
+	{
+		if (elements.any { it is Notifications })
+		{
+			// Stack same notifications
+			val last = notifications.lastOrNull()
+			if (last?.let { it.header.equals(notification.header, ignoreCase = true) && it.message.withIndex().all { (index, message) -> notification.message[index].equals(message, ignoreCase = true) } && (it.fadeState != Notification.FadeState.END) } == true)
+			{
+				last.stayTimer.reset()
+				if (last.fadeState == Notification.FadeState.OUT) last.fadeState = Notification.FadeState.IN
+				last.stackCount++
+			}
+			else notifications.add(notification)
+		}
+		return false
+	}
 }

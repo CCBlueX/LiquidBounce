@@ -25,22 +25,22 @@ import org.lwjgl.opengl.GL11
 class Tracers : Module()
 {
 
-	private val colorMode = ListValue("Color", arrayOf("Custom", "DistanceColor", "Rainbow"), "Custom")
+	private val colorMode = ListValue("Color", arrayOf("Custom", "DistanceColor", "Rainbow"), "Custom", description = "Tracer line color mode")
 
-	private val thicknessValue = FloatValue("Thickness", 2F, 1F, 5F)
+	private val thicknessValue = FloatValue("Thickness", 2F, 1F, 5F, description = "Tracer line Thickness")
 
 	private val colorGroup = ValueGroup("Color")
-	private val colorValue = RGBAColorValue("Color", 0, 160, 255, 150, listOf("R", "G", "B", null))
+	private val colorValue = RGBAColorValue("Color", 0, 160, 255, 150, listOf("R", "G", "B", null), description = "Tracer line custom color")
 
 	private val colorRainbowGroup = ValueGroup("Rainbow")
-	private val colorRainbowEnabledValue = BoolValue("Enabled", true, "Rainbow")
-	private val colorRainbowSpeedValue = IntegerValue("Speed", 10, 1, 10, "Rainbow-Speed")
-	private val colorRainbowSaturationValue = FloatValue("Saturation", 1.0f, 0.0f, 1.0f, "HSB-Saturation")
-	private val colorRainbowBrightnessValue = FloatValue("Brightness", 1.0f, 0.0f, 1.0f, "HSB-Brightness")
+	private val colorRainbowEnabledValue = BoolValue("Enabled", true, "Rainbow", description = "Tracer line rainbow enabled")
+	private val colorRainbowSpeedValue = IntegerValue("Speed", 10, 1, 10, "Rainbow-Speed", description = "Tracer line rainbow speed")
+	private val colorRainbowSaturationValue = FloatValue("Saturation", 1.0f, 0.0f, 1.0f, "HSB-Saturation", description = "Tracer line rainbow HSB(HSV) saturation")
+	private val colorRainbowBrightnessValue = FloatValue("Brightness", 1.0f, 0.0f, 1.0f, "HSB-Brightness", description = "Tracer line rainbow HSB(HSV) brightness(value)")
 
 	private val botValue = BoolValue("Bots", true)
 
-	private val interpolateValue = BoolValue("Interpolate", true)
+	private val interpolateValue = BoolValue("Interpolate", true, description = "Interpolate line target positions")
 
 	init
 	{

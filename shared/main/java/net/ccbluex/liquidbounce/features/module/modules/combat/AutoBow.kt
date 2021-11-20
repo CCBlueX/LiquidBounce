@@ -19,7 +19,6 @@ import net.ccbluex.liquidbounce.value.BoolValue
 @ModuleInfo(name = "AutoBow", description = "Automatically shoots an arrow whenever your bow is fully loaded.", category = ModuleCategory.COMBAT)
 class AutoBow : Module()
 {
-
 	private val waitForBowAimbot = BoolValue("WaitForBowAimbot", true)
 
 	@EventTarget
@@ -27,14 +26,12 @@ class AutoBow : Module()
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		val provider = classProvider
-
 		val bowAimbot = LiquidBounce.moduleManager[BowAimbot::class.java] as BowAimbot
 
-		if (thePlayer.isUsingItem && provider.isItemBow(thePlayer.heldItem?.item) && thePlayer.itemInUseDuration > 20 && (!waitForBowAimbot.get() || !bowAimbot.state || bowAimbot.hasTarget(thePlayer)))
+		if (thePlayer.isUsingItem && classProvider.isItemBow(thePlayer.heldItem?.item) && thePlayer.itemInUseDuration > 20 && (!waitForBowAimbot.get() || !bowAimbot.state || bowAimbot.hasTarget(thePlayer)))
 		{
 			thePlayer.stopUsingItem()
-			mc.netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos.ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
+			mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos.ORIGIN, classProvider.getEnumFacing(EnumFacingType.DOWN)))
 		}
 	}
 }

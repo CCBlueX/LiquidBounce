@@ -16,6 +16,9 @@ import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import net.ccbluex.liquidbounce.utils.runAsync
 import kotlin.concurrent.thread
 
+private const val SETTINGS_LIST_URL = "https://api.github.com/repos/CCBlueX/LiquidCloud/contents/LiquidBounce/settings"
+private const val SETTING_URL = "${LiquidBounce.CLIENT_CLOUD}/settings/%s"
+
 class AutoSettingsCommand : Command("autosettings", "setting", "settings", "config", "autosetting")
 {
 	private val loadingLock = Object()
@@ -48,22 +51,24 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
 				}
 
 				chat(thePlayer, "Loading settings...")
+				val url = if (args[2].startsWith("http")) args[2] else SETTING_URL.format(args[2].toLowerCase())
 
 				runAsync {
 					try
-					{ // Load settings and apply them
-						val settings = HttpUtils[if (args[2].startsWith("http")) args[2] else "${LiquidBounce.CLIENT_CLOUD}/settings/${args[2].toLowerCase()}"]
+					{
+						val settings = HttpUtils[url]
 
 						chat(thePlayer, "Applying settings...")
 						SettingsUtils.executeScript(settings)
 						chat(thePlayer, "\u00A76Settings applied successfully")
-						LiquidBounce.hud.addNotification(Notification(NotificationIcon.INFORMATION, "Autosettings", "Updated Settings"))
+						LiquidBounce.hud.addNotification(Notification(NotificationIcon.INFORMATION, "AutoSettings", arrayOf("Updated settings from", url)))
 						playEdit()
 					}
-					catch (exception: Exception)
+					catch (e: Exception)
 					{
-						exception.printStackTrace()
-						chat(thePlayer, "Failed to fetch auto settings.")
+						e.printStackTrace()
+						chat(thePlayer, "\u00A74Failed to fetch settings ($e)")
+						LiquidBounce.hud.addNotification(Notification(NotificationIcon.ERROR, "AutoSettings", arrayOf("Failed to fetch settings from", url, "$e")))
 					}
 				}
 			}
@@ -94,7 +99,7 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
 
 				try
 				{
-					val json = JsonParser().parse(HttpUtils["https://api.github.com/repos/CCBlueX/LiquidCloud/contents/LiquidBounce/settings"])
+					val json = JsonParser().parse(HttpUtils[SETTINGS_LIST_URL])
 
 					val autoSettings: MutableList<String> = mutableListOf()
 
@@ -124,13 +129,7 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
 
 			2 ->
 			{
-				if (args[0].equals("load", ignoreCase = true))
-				{
-					val autoSettingFiles = autoSettingFiles
-
-					if (autoSettingFiles == null) loadSettings(true, 500) {}
-					else return autoSettingFiles.filter { it.startsWith(args[1], true) }.toList()
-				}
+				if (args[0].equals("load", ignoreCase = true)) autoSettingFiles?.filter { it.startsWith(args[1], true) }?.toList() ?: run { loadSettings(true, 500) {} }
 
 				return emptyList()
 			}

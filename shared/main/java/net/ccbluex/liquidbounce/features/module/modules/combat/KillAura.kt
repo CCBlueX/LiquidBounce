@@ -24,11 +24,13 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
 import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam
 import net.ccbluex.liquidbounce.injection.backend.Backend
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationIcon
 import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_1
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_6
+import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.easeOutCubic
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
@@ -232,6 +234,10 @@ class KillAura : Module()
 	{
 		override fun showCondition() = visualMarkTargetModeValue.get().equals("Platform", ignoreCase = true)
 	}
+	private val visualMarkTargetFadeSpeedValue = object : IntegerValue("FadeSpeed", 5, 1, 9)
+	{
+		override fun showCondition() = !visualMarkTargetModeValue.get().equals("None", ignoreCase = true)
+	}
 
 	private val visualMarkTargetColorGroup = object : ValueGroup("Color")
 	{
@@ -285,6 +291,10 @@ class KillAura : Module()
 	private var hitable = false
 	private val previouslySwitchedTargets = mutableSetOf<Int>()
 
+	// Variables in below must only used to render visual marks
+	private var lastTargetBB: IAxisAlignedBB? = null
+	private var lastTargetEyeHeight: Float = -1f
+
 	private var lastTargetID: Int = -1
 
 	// Attack delay
@@ -320,14 +330,14 @@ class KillAura : Module()
 	// Container Delay
 	private var containerOpen = -1L
 
+	private var switchDelay = switchDelayValue.getRandomDelay()
+	private val switchDelayTimer = MSTimer()
+
 	// Server-side block status
 	var serverSideBlockingStatus: Boolean = false
 
 	// Client-side(= visual) block status
 	var clientSideBlockingStatus: Boolean = false
-
-	private var switchDelay = switchDelayValue.getRandomDelay()
-	private val switchDelayTimer = MSTimer()
 
 	var updateHitableDebug: Array<String>? = null
 	var updateRotationsDebug: Array<String>? = null
@@ -341,11 +351,55 @@ class KillAura : Module()
 	private var failedToRotate = false
 
 	/**
+	 * Hit-box of the current target
+	 */
+	private val getHitbox: (IEntity, Double) -> IAxisAlignedBB = { target: IEntity, expand: Double ->
+		var bb = target.entityBoundingBox
+
+		val collisionExpand = target.collisionBorderSize.toDouble()
+		bb = bb.expand(collisionExpand, collisionExpand, collisionExpand)
+
+		// Backtrace
+		if (rotationBacktrackEnabledValue.get()) bb = LocationCache.getAABBBeforeNTicks(target.entityId, rotationBacktrackTicksValue.get(), bb)
+
+		// Entity movement predict
+		if (rotationPredictEnemyEnabledValue.get()) bb = bb.offset((target.posX - target.lastTickPosX) * predictX, (target.posY - target.lastTickPosY) * predictY, (target.posZ - target.lastTickPosZ) * predictZ)
+
+		bb.expand(expand, expand, expand)
+	}
+
+	/**
+	 * Maximum attack range
+	 */
+	private val maxAttackRange: Float
+		get() = max(attackRange, rangeThroughWallsAttackValue.get()) + comboReach
+
+	/**
+	 * Maximum target-search range
+	 */
+	private val maxTargetRange: Float
+		get() = max(aimRange, max(maxAttackRange, if (swingFakeSwingValue.get()) swingRange else 0f))
+
+	/**
+	 * HUD Tag
+	 */
+	override val tag: String
+		get() = "${targetModeValue.get()}, ${DECIMALFORMAT_1.format(maxTargetRange)}, ${DECIMALFORMAT_1.format(maxAttackRange)}"
+
+	/**
+	 * Is KillAura has target?
+	 */
+	val hasTarget: Boolean
+		get() = state && target != null
+
+	/**
 	 * Target of auto-block
 	 */
 	private var autoBlockTarget: IEntityLivingBase? = null
 	private var rangeMarks: List<Pair<Float, Int>>? = null
-	private var easingRangeMarks: ArrayList<Float>? = null
+	private var easingRanges: ArrayList<Float>? = null
+
+	private var easingMarkAlpha: Float = 0f
 
 	init
 	{
@@ -371,9 +425,9 @@ class KillAura : Module()
 		rotationGroup.addAll(rotationMode, rotationLockValue, rotationLockExpandRangeValue, rotationSilentValue, rotationRandomCenterSizeValue, rotationSearchCenterGroup, rotationJitterGroup, rotationKeepRotationGroup, rotationLockAfterTeleportGroup, rotationAccelerationRatioValue, rotationTurnSpeedValue, rotationResetSpeedValue, rotationStrafeGroup, rotationPredictGroup, rotationBacktrackGroup)
 		fovGroup.addAll(fovModeValue, fovValue)
 		visualMarkTargetColorGroup.addAll(visualMarkTargetColorSuccessColorValue, visualMarkTargetColorMissColorValue, visualMarkTargetColorFailedColorValue)
-		visualMarkTargetGroup.addAll(visualMarkTargetModeValue, visualMarkTargetEyePosValue, visualMarkTargetColorGroup)
+		visualMarkTargetGroup.addAll(visualMarkTargetModeValue, visualMarkTargetEyePosValue, visualMarkTargetFadeSpeedValue, visualMarkTargetColorGroup)
 		visualMarkRangeColorGroup.addAll(visualMarkRangeColorAttackValue, visualMarkRangeColorThroughWallsAttackValue, visualMarkRangeColorAimValue, visualMarkRangeColorSwingValue, visualMarkRangeColorBlockValue, visualMarkRangeColorInteractBlockValue)
-		visualMarkRangeGroup.addAll(visualMarkRangeModeValue, visualMarkRangeLineWidthValue, visualMarkRangeAccuracyValue, visualMarkRangeColorGroup)
+		visualMarkRangeGroup.addAll(visualMarkRangeModeValue, visualMarkRangeLineWidthValue, visualMarkRangeAccuracyValue, visualMarkRangeFadeSpeedValue, visualMarkRangeColorGroup)
 		visualMarkGroup.addAll(visualMarkTargetGroup, visualMarkRangeGroup)
 		visualGroup.addAll(visualFakeSharpValue, visualParticles, visualMarkGroup)
 
@@ -402,6 +456,7 @@ class KillAura : Module()
 		clicks = 0
 		comboReach = 0.0F
 		stopBlocking()
+		easingRanges = null
 	}
 
 	@EventTarget
@@ -410,7 +465,7 @@ class KillAura : Module()
 		if (disableOnDeathValue.get())
 		{
 			state = false
-			LiquidBounce.hud.addNotification(NotificationIcon.WARNING_YELLOW, "KillAura", "Disabled KillAura due world change", 1000L)
+			LiquidBounce.hud.addNotification(Notification(NotificationIcon.WARNING, "Disabled KillAura", "due world change", 1000L))
 		}
 	}
 
@@ -420,7 +475,7 @@ class KillAura : Module()
 		if (mc.thePlayer == null || mc.theWorld == null)
 		{
 			state = false
-			LiquidBounce.hud.addNotification(NotificationIcon.WARNING_YELLOW, "KillAura", "Disabled KillAura due world change", 1000L)
+			LiquidBounce.hud.addNotification(Notification(NotificationIcon.WARNING, "Disabled KillAura", "due world change", 1000L))
 		}
 	}
 
@@ -642,91 +697,108 @@ class KillAura : Module()
 			val accuracy = visualMarkRangeAccuracyValue.get()
 
 			rangeMarks?.let { rangeMarks ->
-				easingRangeMarks?.let { easingRangeMarks ->
-					for (i in easingRangeMarks.indices) rangeMarks[i].let { (originalRange, color) ->
+				easingRanges?.let { easingRangeMarks ->
+					for (i in rangeMarks.indices) rangeMarks[i].let { (originalRange, color) ->
+						if (easingRangeMarks.size <= i) easingRangeMarks.add(originalRange)
+
 						GL11.glPushMatrix()
 						RenderUtils.drawRadius(easingRangeMarks[i], accuracy, lineWidth, color)
 						GL11.glPopMatrix()
 
 						easingRangeMarks[i] = easeOutCubic(easingRangeMarks[i], originalRange, visualMarkRangeFadeSpeedValue.get())
 					}
-				} ?: run { easingRangeMarks = rangeMarks.mapTo(ArrayList(), Pair<Float, Int>::first) }
+				} ?: run { easingRanges = rangeMarks.mapTo(ArrayList()) { it.first + 1f } }
 			}
 		}
 
-		val target = target ?: return
-		val targetEntityId = target.entityId
-
+		// Mark
 		val markMode = visualMarkTargetModeValue.get().toLowerCase()
-
 		if (markMode != "none" && !targetModeValue.get().equals("Multi", ignoreCase = true))
 		{
-			val markColor = when
-			{
-				missed -> visualMarkTargetColorMissColorValue.get()
-				hitable -> visualMarkTargetColorSuccessColorValue.get()
-				else -> visualMarkTargetColorFailedColorValue.get()
-			}
+			(target?.let { target ->
+				val targetEntityId = target.entityId
 
-			val renderManager = mc.renderManager
-			val renderPosX = renderManager.renderPosX
-			val renderPosY = renderManager.renderPosY
-			val renderPosZ = renderManager.renderPosZ
+				val partialTicks = event.partialTicks
 
-			var targetBB = target.entityBoundingBox
-			val partialTicks = event.partialTicks
-
-			targetBB = if (rotationBacktrackEnabledValue.get())
-			{
-				val backtraceTicks = rotationBacktrackTicksValue.get()
-
-				val bb = LocationCache.getAABBBeforeNTicks(targetEntityId, backtraceTicks, targetBB)
-				val lastBB = LocationCache.getAABBBeforeNTicks(targetEntityId, backtraceTicks + 1, targetBB)
-
-				classProvider.createAxisAlignedBB(lastBB.minX + (bb.minX - lastBB.minX) * partialTicks, lastBB.minY + (bb.minY - lastBB.minY) * partialTicks, lastBB.minZ + (bb.minZ - lastBB.minZ) * partialTicks, lastBB.maxX + (bb.maxX - lastBB.maxX) * partialTicks, lastBB.maxY + (bb.maxY - lastBB.maxY) * partialTicks, lastBB.maxZ + (bb.maxZ - lastBB.maxZ) * partialTicks).offset(-renderPosX, -renderPosY, -renderPosZ)
-			}
-			else
-			{
-				val posX = target.posX
-				val posY = target.posY
-				val posZ = target.posZ
-
-				val lastTickPosX = target.lastTickPosX
-				val lastTickPosY = target.lastTickPosY
-				val lastTickPosZ = target.lastTickPosZ
-
-				val x = lastTickPosX + (posX - lastTickPosX) * partialTicks - renderPosX
-				val y = lastTickPosY + (posY - lastTickPosY) * partialTicks - renderPosY
-				val z = lastTickPosZ + (posZ - lastTickPosZ) * partialTicks - renderPosZ
-
-				targetBB.offset(-posX, -posY, -posZ).offset(x, y, z)
-			}
-
-			// Entity movement predict
-			if (rotationPredictEnemyEnabledValue.get())
-			{
-				val xPredict = (target.posX - target.lastTickPosX) * predictX
-				val yPredict = (target.posY - target.lastTickPosY) * predictY
-				val zPredict = (target.posZ - target.lastTickPosZ) * predictZ
-
-				targetBB = targetBB.offset(xPredict, yPredict, zPredict)
-			}
-
-			val eyePos = visualMarkTargetEyePosValue.get()
-			when (markMode)
-			{
-				"platform" ->
+				var bb = target.entityBoundingBox
+				bb = if (rotationBacktrackEnabledValue.get())
 				{
-					val eyeHeight = targetBB.minY + target.eyeHeight
-					classProvider.createAxisAlignedBB(targetBB.minX, if (eyePos) eyeHeight - 0.03f else targetBB.maxY + 0.2, targetBB.minZ, targetBB.maxX, if (eyePos) eyeHeight + 0.03f else targetBB.maxY + 0.26, targetBB.maxZ)
+					val backtraceTicks = rotationBacktrackTicksValue.get()
+
+					val backtrack = LocationCache.getAABBBeforeNTicks(targetEntityId, backtraceTicks, bb)
+					val prevBacktrace = LocationCache.getAABBBeforeNTicks(targetEntityId, backtraceTicks + 1, backtrack)
+
+					classProvider.createAxisAlignedBB(prevBacktrace.minX + (backtrack.minX - prevBacktrace.minX) * partialTicks, prevBacktrace.minY + (backtrack.minY - prevBacktrace.minY) * partialTicks, prevBacktrace.minZ + (backtrack.minZ - prevBacktrace.minZ) * partialTicks, prevBacktrace.maxX + (backtrack.maxX - prevBacktrace.maxX) * partialTicks, prevBacktrace.maxY + (backtrack.maxY - prevBacktrace.maxY) * partialTicks, prevBacktrace.maxZ + (backtrack.maxZ - prevBacktrace.maxZ) * partialTicks)
+				}
+				else
+				{
+					val posX = target.posX
+					val posY = target.posY
+					val posZ = target.posZ
+
+					val lastTickPosX = target.lastTickPosX
+					val lastTickPosY = target.lastTickPosY
+					val lastTickPosZ = target.lastTickPosZ
+
+					val x = lastTickPosX + (posX - lastTickPosX) * partialTicks
+					val y = lastTickPosY + (posY - lastTickPosY) * partialTicks
+					val z = lastTickPosZ + (posZ - lastTickPosZ) * partialTicks
+
+					bb.offset(-posX, -posY, -posZ).offset(x, y, z)
 				}
 
-				"box" -> classProvider.createAxisAlignedBB(targetBB.minX, targetBB.minY, targetBB.minZ, targetBB.maxX, targetBB.maxY, targetBB.maxZ)
-				else -> null
-			}?.let { RenderUtils.drawAxisAlignedBB(it, markColor) }
+				// Entity movement predict
+				if (rotationPredictEnemyEnabledValue.get())
+				{
+					val xPredict = (target.posX - target.lastTickPosX) * predictX
+					val yPredict = (target.posY - target.lastTickPosY) * predictY
+					val zPredict = (target.posZ - target.lastTickPosZ) * predictZ
+
+					bb = bb.offset(xPredict, yPredict, zPredict)
+				}
+
+				easingMarkAlpha = easeOutCubic(easingMarkAlpha, 1f, visualMarkTargetFadeSpeedValue.get())
+
+				lastTargetEyeHeight = target.eyeHeight
+
+				bb.also { lastTargetBB = it }
+			} ?: lastTargetBB?.let {
+				easingMarkAlpha = easeOutCubic(easingMarkAlpha, 0f, visualMarkTargetFadeSpeedValue.get())
+				if (easingMarkAlpha > 0.1f) it
+				else
+				{
+					easingMarkAlpha = 0f
+					null
+				}
+			})?.let {
+				val renderManager = mc.renderManager
+				it.offset(-renderManager.renderPosX, -renderManager.renderPosY, -renderManager.renderPosZ)
+			}?.let { targetBB ->
+				val markColor = ColorUtils.multiplyAlphaChannel(when
+				{
+					missed -> visualMarkTargetColorMissColorValue.get()
+					hitable -> visualMarkTargetColorSuccessColorValue.get()
+					else -> visualMarkTargetColorFailedColorValue.get()
+				}, easingMarkAlpha)
+
+				val eyePos = visualMarkTargetEyePosValue.get()
+				when (markMode)
+				{
+					"platform" ->
+					{
+						val eyeHeight = targetBB.minY + lastTargetEyeHeight
+						classProvider.createAxisAlignedBB(targetBB.minX, if (eyePos) eyeHeight - 0.03f else targetBB.maxY + 0.2, targetBB.minZ, targetBB.maxX, if (eyePos) eyeHeight + 0.03f else targetBB.maxY + 0.26, targetBB.maxZ)
+					}
+
+					"box" -> classProvider.createAxisAlignedBB(targetBB.minX, targetBB.minY, targetBB.minZ, targetBB.maxX, targetBB.maxY, targetBB.maxZ)
+					else -> null
+				}?.let { RenderUtils.drawAxisAlignedBB(it, markColor) }
+			}
 		}
 
-		if (currentTarget != null && attackTimer.hasTimePassed(attackDelay) && (currentTarget ?: return).hurtTime <= hurtTimeValue.get())
+		target ?: return
+
+		if ((currentTarget ?: return).hurtTime <= hurtTimeValue.get() && attackTimer.hasTimePassed(attackDelay))
 		{
 			clicks++
 			attackTimer.reset()
@@ -792,14 +864,14 @@ class KillAura : Module()
 		val distance = thePlayer.getDistanceToEntityBox(theCurrentTarget)
 
 		// Settings
-		val failRate = bypassMissChanceValue.get()
+		val missChance = bypassMissChanceValue.get()
 		val aac = bypassAACValue.get()
 
 		val openInventory = aac && provider.isGuiContainer(mc.currentScreen)
 		val limitedMultiTargets = targetLimitedMultiTargetsValue.get()
 
 		// FailRate
-		missed = failRate > 0 && Random.nextInt(100) <= failRate
+		missed = missChance > 0 && Random.nextInt(100) <= missChance
 
 		// Close inventory when open
 		if (openInventory) netHandler.addToSendQueue(provider.createCPacketCloseWindow())
@@ -1151,21 +1223,6 @@ class KillAura : Module()
 		return true
 	}
 
-	private val getHitbox: (IEntity, Double) -> IAxisAlignedBB = { target: IEntity, expand: Double ->
-		var bb = target.entityBoundingBox
-
-		val collisionExpand = target.collisionBorderSize.toDouble()
-		bb = bb.expand(collisionExpand, collisionExpand, collisionExpand)
-
-		// Backtrace
-		if (rotationBacktrackEnabledValue.get()) bb = LocationCache.getAABBBeforeNTicks(target.entityId, rotationBacktrackTicksValue.get(), bb)
-
-		// Entity movement predict
-		if (rotationPredictEnemyEnabledValue.get()) bb = bb.offset((target.posX - target.lastTickPosX) * predictX, (target.posY - target.lastTickPosY) * predictY, (target.posZ - target.lastTickPosZ) * predictZ)
-
-		bb.expand(expand, expand, expand)
-	}
-
 	private fun updateComboReach()
 	{
 		if (target == null || currentTarget == null || !hitable) comboReach = 0f
@@ -1326,7 +1383,7 @@ class KillAura : Module()
 		if (shouldDisableOnDeath && disableOnDeathValue.get())
 		{
 			state = false
-			LiquidBounce.hud.addNotification(NotificationIcon.WARNING_YELLOW, "KillAura", "Disabled KillAura due player death", 1000L)
+			LiquidBounce.hud.addNotification(Notification(NotificationIcon.WARNING, "Disabled KillAura", "due player death", 1000L))
 		}
 
 		return shouldDisableOnDeath || (bypassSuspendWhileConsumingValue.get() && thePlayer.isUsingItem && thePlayer.heldItem == thePlayer.itemInUse && (classProvider.isItemFood(thePlayer.heldItem?.item) || classProvider.isItemPotion(thePlayer.heldItem?.item))) || !suspendTimer.hasTimePassed(suspend) || (moduleManager[Blink::class.java] as Blink).state || moduleManager[FreeCam::class.java].state
@@ -1337,29 +1394,11 @@ class KillAura : Module()
 	 */
 	private fun canAutoBlock(thePlayer: IEntityPlayer): Boolean = thePlayer.heldItem != null && classProvider.isItemSword(thePlayer.heldItem?.item) && Backend.MINECRAFT_VERSION_MINOR == 8
 
-	/**
-	 * Range
-	 */
-	private val maxAttackRange: Float
-		get() = max(attackRange, rangeThroughWallsAttackValue.get()) + comboReach
-
-	private val maxTargetRange: Float
-		get() = max(aimRange, max(maxAttackRange, if (swingFakeSwingValue.get()) swingRange else 0f))
-
 	private fun getAttackRange(thePlayer: IEntity, entity: IEntity): Float
 	{
 		val throughWallsRange = rangeThroughWallsAttackValue.get()
 		return (if (thePlayer.getDistanceToEntityBox(entity) >= throughWallsRange) attackRange else throughWallsRange) - if (thePlayer.sprinting) rangeSprintReducementValue.get() else 0F + comboReach
 	}
-
-	/**
-	 * HUD Tag
-	 */
-	override val tag: String
-		get() = "${targetModeValue.get()}, ${DECIMALFORMAT_1.format(maxTargetRange)}, ${DECIMALFORMAT_1.format(maxAttackRange)}"
-
-	val hasTarget: Boolean
-		get() = state && target != null
 
 	fun suspend(time: Long)
 	{

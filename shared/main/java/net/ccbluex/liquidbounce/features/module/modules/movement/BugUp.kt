@@ -28,7 +28,7 @@ import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.max
 
-@ModuleInfo(name = "BugUp", description = "Automatically setbacks you after falling a certain distance.", category = ModuleCategory.MOVEMENT)
+@ModuleInfo(name = "BugUp", description = "Automatically setbacks you after falling a certain distance. (a.k.a. AntiFall)", category = ModuleCategory.MOVEMENT)
 class BugUp : Module()
 {
 	private val modeValue = ListValue("Mode", arrayOf("TeleportBack", "FlyFlag", "OnGroundSpoof", "MotionTeleport-Flag", "Packet", "SpeedFlag"), "FlyFlag")

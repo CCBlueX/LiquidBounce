@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationIcon
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -38,7 +39,7 @@ class AntiVanish : Module()
 
 	private fun vanish()
 	{
-		if (notifyTimer.hasTimePassed(notifyDelayValue.get().toLong())) LiquidBounce.hud.addNotification(NotificationIcon.VANISH, name, "A player is vanished!", 1000)
+		if (notifyTimer.hasTimePassed(notifyDelayValue.get().toLong())) LiquidBounce.hud.addNotification(Notification(NotificationIcon.VANISH, name, "A player is vanished!", 1000))
 		notifyTimer.reset()
 	}
 }

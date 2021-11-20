@@ -61,7 +61,7 @@ class SpawnedPositionCheck : BotCheck("position.spawnedPosition")
 				// Position Delta
 				if (delta <= deltaLimit)
 				{
-					notification { "Suspicious spawn: (posIndex: $posIndex, dist: ${StringUtils.DECIMALFORMAT_6.format(sqrt(delta))}) Entity #$entityId " }
+					notification { arrayOf("posIndex=$posIndex", "delta=${StringUtils.DECIMALFORMAT_6.format(sqrt(delta))}") }
 					spawnPosition.add(entityId)
 				}
 			}

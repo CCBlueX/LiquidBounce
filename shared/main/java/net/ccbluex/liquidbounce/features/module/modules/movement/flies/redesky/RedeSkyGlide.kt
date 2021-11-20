@@ -14,7 +14,7 @@ class RedeSkyGlide : FlyMode("RedeSky-Glide")
 	{
 		val thePlayer = mc.thePlayer ?: return
 
-		if (thePlayer.onGround) redeskyVClip(thePlayer, Fly.redeskyVClipHeight.get())
+		if (thePlayer.onGround) vclip(thePlayer, Fly.redeskyVClipHeight.get())
 	}
 
 	override fun onUpdate()
@@ -23,10 +23,10 @@ class RedeSkyGlide : FlyMode("RedeSky-Glide")
 
 		mc.timer.timerSpeed = 0.3f
 
-		redeskyPacketHClip(thePlayer, 7.0)
-		redeskyPacketVClip(thePlayer, 10.0)
+		packetHClip(thePlayer, 7.0)
+		packetVClip(thePlayer, 10.0)
 
-		redeskyVClip(thePlayer, -0.5f)
+		vclip(thePlayer, -0.5f)
 		thePlayer.forward(2.0)
 
 		thePlayer.strafe(1F)
@@ -39,10 +39,10 @@ class RedeSkyGlide : FlyMode("RedeSky-Glide")
 		val thePlayer = mc.thePlayer ?: return
 
 		thePlayer.zeroXZ()
-		redeskyPacketHClip(thePlayer, 0.0)
+		packetHClip(thePlayer, 0.0)
 	}
 
-	private fun redeskyPacketHClip(thePlayer: IEntity, horizontal: Double)
+	private fun packetHClip(thePlayer: IEntity, horizontal: Double)
 	{
 		val func = functions
 
@@ -51,12 +51,12 @@ class RedeSkyGlide : FlyMode("RedeSky-Glide")
 		mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX + horizontal * -func.sin(playerYaw), thePlayer.posY, thePlayer.posZ + horizontal * func.cos(playerYaw), false))
 	}
 
-	private fun redeskyVClip(thePlayer: IEntity, vertical: Float)
+	private fun vclip(thePlayer: IEntity, vertical: Float)
 	{
 		thePlayer.setPosition(thePlayer.posX, thePlayer.posY + vertical, thePlayer.posZ)
 	}
 
-	private fun redeskyPacketVClip(thePlayer: IEntity, vertical: Double)
+	private fun packetVClip(thePlayer: IEntity, vertical: Double)
 	{
 		mc.netHandler.networkManager.sendPacketWithoutEvent(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY + vertical, thePlayer.posZ, false))
 	}

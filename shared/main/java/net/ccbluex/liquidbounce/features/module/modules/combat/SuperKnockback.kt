@@ -139,7 +139,7 @@ class SuperKnockback : Module()
 		else if (classProvider.isCPacketUseEntity(packet))
 		{
 			val mode = modeValue.get().toLowerCase()
-			if (mode.equals("deprecated", ignoreCase = true)) return
+			if (mode.equals("Deprecated", ignoreCase = true)) return
 
 			val attackPacket = packet.asCPacketUseEntity()
 			if (attackPacket.action == ICPacketUseEntity.WAction.ATTACK)

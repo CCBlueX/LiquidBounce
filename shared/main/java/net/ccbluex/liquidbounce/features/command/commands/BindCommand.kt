@@ -30,6 +30,7 @@ class BindCommand : Command("bind")
 				return
 			}
 
+			val keyBinds = module.keyBinds
 			if (args.size > 2)
 			{
 				when (args[2].toLowerCase())
@@ -37,9 +38,9 @@ class BindCommand : Command("bind")
 					"add" -> if (args.size > 3)
 					{
 						val key = Keyboard.getKeyIndex(args[3].toUpperCase())
-						if (key != Keyboard.KEY_NONE) module.keyBinds.add(key)
+						if (key != Keyboard.KEY_NONE) keyBinds.add(key)
 
-						chat(thePlayer, "Bound module \u00A7a\u00A7l${module.name}\u00A73 to key(s) \u00A7a\u00A7l${module.keyBinds.joinToString { Keyboard.getKeyName(it) }}\u00A73.")
+						chat(thePlayer, "Bound module \u00A7a\u00A7l${module.name}\u00A73 to key(s) \u00A7a\u00A7l${keyBinds.joinToString { Keyboard.getKeyName(it) }}\u00A73.")
 						playEdit()
 						return
 					}
@@ -47,26 +48,26 @@ class BindCommand : Command("bind")
 					"remove" -> if (args.size > 3)
 					{
 						val key = Keyboard.getKeyIndex(args[3].toUpperCase())
-						if (!module.keyBinds.remove(key))
+						if (!keyBinds.remove(key))
 						{
 							chat(thePlayer, "Module \u00A7a\u00A7l${module.name}\u00A73 hadn't bound to key \u00A7a\u00A7l${Keyboard.getKeyName(key)}\u00A73.")
 							return
 						}
 
-						if (module.keyBinds.isEmpty()) chat(thePlayer, "Took all bounds from module \u00A7a\u00A7l${module.name}\u00A73.") else chat(thePlayer, "Bound module \u00A7a\u00A7l${module.name}\u00A73 to key(s) \u00A7a\u00A7l${module.keyBinds.joinToString { Keyboard.getKeyName(it) }}\u00A73.")
+						if (keyBinds.isEmpty()) chat(thePlayer, "Took all bounds from module \u00A7a\u00A7l${module.name}\u00A73.") else chat(thePlayer, "Bound module \u00A7a\u00A7l${module.name}\u00A73 to key(s) \u00A7a\u00A7l${keyBinds.joinToString { Keyboard.getKeyName(it) }}\u00A73.")
 						playEdit()
 					}
 
 					"clear" ->
 					{
-						module.keyBinds.clear()
+						keyBinds.clear()
 						chat(thePlayer, "Took all bounds from module \u00A7a\u00A7l${module.name}\u00A73.")
 						playEdit()
 						return
 					}
 				}
 			}
-			else chat(thePlayer, "Module \u00A7a\u00A7l${module.name}\u00A73 is bound to key(s) \u00A7a\u00A7l${module.keyBinds.joinToString { Keyboard.getKeyName(it) }}\u00A73.")
+			else chat(thePlayer, "Module \u00A7a\u00A7l${module.name}\u00A73 is bound to key(s) \u00A7a\u00A7l${keyBinds.joinToString { Keyboard.getKeyName(it) }}\u00A73.")
 		}
 
 		chatSyntax(thePlayer, arrayOf("<module> <add/remove> <key>", "<module> <clear>"))

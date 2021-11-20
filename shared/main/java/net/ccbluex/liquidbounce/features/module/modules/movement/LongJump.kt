@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.exploit.Damage
 import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.Tower
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationIcon
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -104,7 +105,7 @@ class LongJump : Module()
 			if (disableScaffold) scaffold.state = false
 			if (disableTower) tower.state = false
 
-			if (disableScaffold || disableTower) LiquidBounce.hud.addNotification(NotificationIcon.INFORMATION, "LongJump", "Disabled ${if (disableScaffold && disableTower) "Scaffold and Tower" else if (disableScaffold) "Scaffold" else "Tower"}", 1000)
+			if (disableScaffold || disableTower) LiquidBounce.hud.addNotification(Notification(NotificationIcon.INFORMATION, "LongJump", "Disabled ${if (disableScaffold && disableTower) "Scaffold and Tower" else if (disableScaffold) "Scaffold" else "Tower"}", 1000))
 		}
 	}
 

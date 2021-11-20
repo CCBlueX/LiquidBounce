@@ -28,7 +28,7 @@ class HorizontalSpeedCheck : BotCheck("move.hspeed")
 		val speed = hypot(target.posX - newPos.xCoord, target.posZ - newPos.zCoord)
 		if (speed > AntiBot.hspeedLimitValue.get())
 		{
-			notification(target) { "Suspicious horizontal speed: ${StringUtils.DECIMALFORMAT_6.format(speed)} blocks/tick" }
+			notification(target) { arrayOf("delta=${StringUtils.DECIMALFORMAT_6.format(speed)}") }
 			vl[entityId] = (vl[entityId] ?: 0) + 2
 		}
 		else if (AntiBot.hspeedVLDecValue.get())

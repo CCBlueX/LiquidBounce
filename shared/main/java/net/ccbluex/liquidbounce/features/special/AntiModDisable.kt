@@ -16,9 +16,9 @@ import java.util.regex.Matcher
 import java.util.regex.Pattern
 
 /**
- * TODO: <p>https://github.com/amata1219/KerisuteGomen/blob/master/src/amata1219/kerisute/gomen/KerisuteGomen.java</p>
+ * TODO: <code>https://github.com/amata1219/KerisuteGomen/blob/master/src/amata1219/kerisute/gomen/KerisuteGomen.java</code>
  *
- * @author UnstoppableLeaks @ blackspigot.com
+ * @author CCBlueX, UnstoppableLeaks@blackspigot.com
  */
 class AntiModDisable : MinecraftInstance(), Listenable
 {

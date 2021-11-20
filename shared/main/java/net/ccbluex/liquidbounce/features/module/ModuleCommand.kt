@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.features.module
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
+import net.ccbluex.liquidbounce.utils.extensions.serialized
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.value.*
 
@@ -269,7 +270,7 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
 			"\u00A7cRed: ${value.getRed()} \u00A7aGreen: ${value.getGreen()} \u00A79Blue: ${value.getBlue()}${if (hasAlpha) " \u00A77Alpha: ${value.getAlpha()}" else ""} \u00A78(Hex: #${if (hasAlpha) encodeToHex(value.getAlpha()) else ""}${encodeToHex(value.getRed())}${encodeToHex(value.getGreen())}${encodeToHex(value.getBlue())})"
 		}
 
-		is FontValue -> Fonts.getFontDetails(value.get())?.let { "${it.name} ${it.fontSize}" } ?: "(Unknown font)"
+		is FontValue -> value.get().serialized ?: "(Unknown font)"
 
 		else -> "${(value as Value<*>).get()}"
 	}

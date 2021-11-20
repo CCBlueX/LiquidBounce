@@ -6,6 +6,7 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.DamageOnStart
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationIcon
 import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.extensions.moveDirectionRadians
@@ -174,7 +175,7 @@ class HypixelFly : FlyMode("Hypixel")
 		if (classProvider.isSPacketPlayerPosLook(packet) && canPerformHypixelDamageFly && hypixelFlyStarted && !hypixelDamageBoostFailed)
 		{
 			hypixelDamageBoostFailed = true
-			LiquidBounce.hud.addNotification(NotificationIcon.WARNING_RED, "Hypixel Damage-Boost Fly", "A teleport has been detected. Disabled Damage-Boost to prevent more flags.", 1000L)
+			LiquidBounce.hud.addNotification(Notification(NotificationIcon.CAUTION, "Cancelled Damage Boost", "due (anti-cheat) setback", 1000L))
 		}
 	}
 

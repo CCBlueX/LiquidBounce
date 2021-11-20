@@ -92,12 +92,12 @@ class MoveDirectionCheck : BotCheck("move.direction")
 
 				if (removeOnCaught && newVL > removeOnVL)
 				{
-					remove(theWorld, entityId, target.gameProfile.name, target.displayName.formattedText, "position")
+					remove(theWorld, entityId, target.gameProfile.name, target.displayName.formattedText)
 					positionVL.remove(entityId)
 				}
 				else
 				{
-					if (((previousVL + 5) % 20 == 0) || (vlIncrement >= 5)) notification(target) { "Suspicious position: [posIndex: $posIndex, dist: ${StringUtils.DECIMALFORMAT_6.format(distanceSq)}, vl: (+$baseScore(base) +$yawMovementScore(yaw) +$spawnPosScore(spawnPos) +$speedScore(speed) +$extraScore(extra))]" }
+					if (((previousVL + 5) % 20 == 0) || (vlIncrement >= 5)) notification(target) { arrayOf("reason=expect", "posIndex=$posIndex", "delta=${StringUtils.DECIMALFORMAT_6.format(distanceSq)}", "vl=(+$baseScore(base) +$yawMovementScore(yaw) +$spawnPosScore(spawnPos) +$speedScore(speed) +$extraScore(extra))]") }
 					positionVL[entityId] = newVL
 				}
 			}
@@ -132,7 +132,7 @@ class MoveDirectionCheck : BotCheck("move.direction")
 								else -> 1
 							} + if (isSuspectedForSpawnPosition) 10 else 0
 
-							if (((previousVL + 5) % 10 == 0 || vlIncrement >= 5)) notification(target) { "Suspicious position consistency: [posIndex: $posIndex, delta: ${StringUtils.DECIMALFORMAT_6.format(consistency)}, posVL: $previousVL, posConsistencyVL: $prevConsistencyVL)]" }
+							if (((previousVL + 5) % 10 == 0 || vlIncrement >= 5)) notification(target) { arrayOf("reason=consistency", "posIndex=$posIndex", "delta=${StringUtils.DECIMALFORMAT_6.format(consistency)}", "posVL=$previousVL", "posConsistencyVL=$prevConsistencyVL") }
 							positionConsistencyVL[entityId] = prevConsistencyVL + vlIncrement
 						}
 						else if (positionDeltaConsistencyVLDec)

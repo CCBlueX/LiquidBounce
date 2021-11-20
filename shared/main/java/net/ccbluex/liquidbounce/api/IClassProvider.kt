@@ -300,6 +300,8 @@ interface IClassProvider
 	fun isItemGlassBottle(obj: Any?): Boolean
 	fun isItemSkull(obj: Any?): Boolean
 	fun isItemExpBottle(obj: Any?): Boolean
+	fun isItemSpade(obj: Any?): Boolean
+	fun isItemShears(obj: Any?): Boolean
 	// </editor-fold>
 
 	// <editor-fold desc="Type checks (GUI)">

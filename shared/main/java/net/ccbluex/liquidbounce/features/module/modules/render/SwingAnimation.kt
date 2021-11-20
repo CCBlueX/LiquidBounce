@@ -21,11 +21,20 @@ class SwingAnimation : Module()
 
 	private val equipProgressSmoothingGroup = ValueGroup("Smoothing")
 	val equipProgressSmoothingModeValue = ListValue("Mode", arrayOf("None", "Linear", "Square", "Cube", "Quadratic-Function", "Reverse-Quadratic-Function"), "None", "EquipProgressSmoothing")
-	val equipProgressSmoothingSpeedModifierValue = IntegerValue("SpeedModifier", 1, 0, 2, "EquipProgressSmoothingSpeedModifier")
+	val equipProgressSmoothingSpeedModifierValue = object : IntegerValue("SpeedModifier", 1, 0, 2, "EquipProgressSmoothingSpeedModifier")
+	{
+		override fun showCondition(): Boolean = equipProgressSmoothingModeValue.get().equals("Reverse-Quadratic-Function", ignoreCase = true)
+	}
 	val equipProgressSmoothingDownSpeedMultiplierValue = FloatValue("DownMultiplier", 2.4F, 0.2F, 5F, "EquipProgressSmoothDownSpeedMultiplier")
-	val equipProgressSmoothingDownSpeedValue = IntegerValue("Down", 6, 1, 10, "EquipProgressSmoothDownSpeed")
+	val equipProgressSmoothingDownSpeedValue = object : IntegerValue("Down", 6, 1, 10, "EquipProgressSmoothDownSpeed")
+	{
+		override fun showCondition(): Boolean = equipProgressSmoothingModeValue.get().endsWith("Function", ignoreCase = true)
+	}
 	val equipProgressSmoothingUpSpeedMultiplierValue = FloatValue("UpMultiplier", 1.2F, 0.2F, 5F, "EquipProgressSmoothUpSpeedMultiplier")
-	val equipProgressSmoothingUpSpeedValue = IntegerValue("Up", 3, 1, 10, "EquipProgressSmoothUpSpeed")
+	val equipProgressSmoothingUpSpeedValue = object : IntegerValue("Up", 3, 1, 10, "EquipProgressSmoothUpSpeed")
+	{
+		override fun showCondition(): Boolean = equipProgressSmoothingModeValue.get().endsWith("Function", ignoreCase = true)
+	}
 
 	private val equipProgressInfluenceSwingProgressGroup = ValueGroup("InfluencesSwingProgress")
 	val equipProgressInfluenceSwingProgressAffectEnabled = BoolValue("Enabled", false, "EquipProgressAffectsBlockSwingAnimationIntensity")
@@ -40,15 +49,19 @@ class SwingAnimation : Module()
 	private val equipProgressBoostSmoothingExponentGroup = ValueGroup("BoostsSmoothingExponent")
 	val equipProgressBoostSmoothingExponentAmount = FloatValue("Amount", 0f, -2f, 2f)
 	val equipProgressBoostSmoothingExponentReturnStep = FloatValue("ReturnStep", 0.5f, 0.05f, 2f)
-	val equipProgressBoostSmoothingExponentReturnDelay = IntegerValue("ReturnDelay", 4, 2, 20)
+	val equipProgressBoostSmoothingExponentReturnDelay = IntegerValue("ReturnDelay", 4, 1, 20)
 
 	private val swingSpeedBoostGroup = ValueGroup("SwingSpeedBoostAfterReequip")
 	val swingSpeedBoostAmount = IntegerValue("Amount", 0, -5, 6, "SwingSpeedBoostAfterReequip")
-	val swingSpeedBoostReturnDelay = IntegerValue("ReturnDelay", 4, 2, 20, "SwingSpeedBoostAfterReequip")
+	val swingSpeedBoostReturnDelay = IntegerValue("ReturnDelay", 4, 1, 20, "SwingSpeedBoostAfterReequip")
+
+	private val swingProgressEndBoostGroup = ValueGroup("SwingProgressEndBoostAfterReequip")
+	val swingProgressEndBoostAmount = IntegerValue("Amount", 0, -6, 6)
+	val swingProgressEndBoostReturnDelay = IntegerValue("ReturnDelay", 4, 1, 20)
 
 	private val swingSpeedGroup = ValueGroup("SwingSpeed")
 	val swingSpeedSwingSpeed = IntegerValue("SwingSpeed", 0, -4, 20, "SwingSpeed")
-	val swingSpeedSwingProgressLimit: IntegerValue = object : IntegerValue("SwingProgressLimit", 3, 1, 20, "SwingProgressLimit")
+	val swingSpeedSwingProgressLimit: IntegerValue = object : IntegerValue("SwingProgressEnd", 3, 1, 20, "SwingProgressLimit")
 	{
 		override fun onChanged(oldValue: Int, newValue: Int)
 		{
@@ -132,7 +145,7 @@ class SwingAnimation : Module()
 	val blockTranslationRelativeZMode = ListValue("Mode", smoothingModes, "Sqrt", "Z-RelTranslationSmoothingMethod")
 	val blockTranslationRelativeZExp = FloatValue("Exponent", 2f, 1f, 5f)
 	val blockTranslationRelativeZReverse = BoolValue("Reverse", false)
-	
+
 	val blockScale = FloatValue("Scale", .4f, 0.2f, 0.6f, "Block-Scale")
 
 	val blockAngle = FloatValue("Angle", 80f, 45f, 135f, "BlockAngle")
@@ -173,15 +186,15 @@ class SwingAnimation : Module()
 	{
 		override fun showCondition(): Boolean = blockAnimationMode.get().equals("Exhibobo", ignoreCase = true)
 	}
-	val blockAnimationExhiAngleX = FloatValue("AngleX", 15f, 0f, 45f, "Exhibobo-SwingAngle")
+	val blockAnimationExhiAngleX = FloatValue("AngleX", 30f, 0f, 45f, "Exhibobo-SwingAngle")
 	val blockAnimationExhiPosX = FloatValue("PosX", 1f, 0f, 20f)
-	val blockAnimationExhiAngleY = FloatValue("AngleY", 0f, -10f, 30f, "Exhibobo-PushDepth")
+	val blockAnimationExhiAngleY = FloatValue("AngleY", 6.25f, -10f, 30f, "Exhibobo-PushDepth")
 	val blockAnimationExhiPosY = FloatValue("PosY", 1f, 0f, 20f)
-	val blockAnimationExhiAngleZ = FloatValue("AngleZ", 0f, -10f, 30f, "Exhibobo-Slope")
+	val blockAnimationExhiAngleZ = FloatValue("AngleZ", 12.5f, -10f, 30f, "Exhibobo-Slope")
 	val blockAnimationExhiPosZ = FloatValue("PosZ", 1f, 0f, 20f)
-	val blockAnimationExhiPushXPos = FloatValue("PushX", 0f, 0f, 100f)
-	val blockAnimationExhiPushYPos = FloatValue("PushY", 20f, 0f, 100f, "Exhibobo-Y-PushPos")
-	val blockAnimationExhiPushZPos = FloatValue("PushZ", 50f, 0f, 100f, "Exhibobo-Z-PushPos")
+	val blockAnimationExhiPushXPos = FloatValue("PushX", 45f, 0f, 90f)
+	val blockAnimationExhiPushYPos = FloatValue("PushY", 40f, 0f, 90f, "Exhibobo-Y-PushPos")
+	val blockAnimationExhiPushZPos = FloatValue("PushZ", 20f, 0f, 90f, "Exhibobo-Z-PushPos")
 	val blockAnimationExhiSmoothX = FloatValue("SmoothX", 0f, -25f, 25f)
 	val blockAnimationExhiSmoothY = FloatValue("SmoothY", 5f, -25f, 25f, "Exhibobo-Smooth")
 	val blockAnimationExhiSmoothZ = FloatValue("SmoothZ", 0f, -25f, 25f)
@@ -195,7 +208,8 @@ class SwingAnimation : Module()
 
 		equipProgress.addAll(equipProgressMultiplier, equipProgressSmoothingGroup, equipProgressInfluenceSwingProgressGroup, equipProgressInfluenceTranslationGroup, equipProgressBoostSmoothingExponentGroup)
 		swingSpeedBoostGroup.addAll(swingSpeedBoostAmount, swingSpeedBoostReturnDelay)
-		swingSpeedGroup.addAll(swingSpeedBoostGroup, swingSpeedSwingSpeed, swingSpeedSwingProgressLimit)
+		swingProgressEndBoostGroup.addAll(swingProgressEndBoostAmount, swingProgressEndBoostReturnDelay)
+		swingSpeedGroup.addAll(swingSpeedBoostGroup, swingProgressEndBoostGroup, swingSpeedSwingSpeed, swingSpeedSwingProgressLimit)
 
 		swingTranslationGroup.addAll(swingTranslationAbsoluteGroup, swingTranslationRelativeGroup)
 		swingTranslationAbsoluteGroup.addAll(swingTranslationAbsoluteX, swingTranslationAbsoluteY, swingTranslationAbsoluteZ)
@@ -234,6 +248,9 @@ class SwingAnimation : Module()
 
 	@JvmField
 	var swingSpeedBoost = 0
+
+	@JvmField
+	var swingProgressEndBoost = 0
 
 	@JvmField
 	var exponentBoost = 0f

@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.ui.font.assumeVolatile
 import net.ccbluex.liquidbounce.ui.font.assumeVolatileIf
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
+import net.ccbluex.liquidbounce.utils.extensions.serialized
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_4
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.stripControlCodes
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
@@ -40,7 +41,6 @@ private const val BACKGROUND = Int.MIN_VALUE
 
 private const val SLIDER_START_SHIFT = 8f
 
-// FIXME: Fix broken FontValue support
 class NullStyle : Style()
 {
 	private var mouseDown = false
@@ -145,9 +145,9 @@ class NullStyle : Style()
 		val moduleIndentX = moduleX + indent
 
 		val text = value.displayName
-		val textWidth = font.getStringWidth(text) + indent + 16f
+		val textWidth = font.getStringWidth(text) + indent
 
-		if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
+		if (moduleElement.settingsWidth < textWidth + 16f) moduleElement.settingsWidth = textWidth + 16f
 		val moduleXEnd = moduleX + moduleElement.settingsWidth
 
 		drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 14f, BACKGROUND)
@@ -166,6 +166,8 @@ class NullStyle : Style()
 		}
 
 		yPos += 12
+
+		drawValueDescription(value, mouseX, mouseY, moduleIndentX + 6, _yPos, textWidth, yPos)
 
 		if (value.foldState)
 		{
@@ -217,7 +219,7 @@ class NullStyle : Style()
 		font.drawString(colorText, moduleIndentX + displayTextWidth + 6, yPos + 4, value.get(255))
 		drawRect(moduleX + textWidth, yPos + 4f, moduleXEnd - 4f, yPos + 10f, value.get())
 
-		drawValueDescription(value, mouseX, mouseY, moduleIndentX, yPos + 2, moduleXEnd.toInt(), yPos + 14)
+		drawValueDescription(value, mouseX, mouseY, moduleIndentX + 6, yPos + 2, textWidth.toInt(), yPos + 14)
 
 		yPos += 10
 
@@ -269,9 +271,9 @@ class NullStyle : Style()
 				is IntegerRangeValue ->
 				{
 					val text = "$valueDisplayName\u00A7f: \u00A7c${value.getMin()}-${value.getMax()}"
-					val textWidth = font.getStringWidth(text) + indent + 8f
+					val textWidth = font.getStringWidth(text) + indent
 
-					if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
+					if (moduleElement.settingsWidth < textWidth + 8f) moduleElement.settingsWidth = textWidth + 8f
 					val moduleXEnd = moduleX + moduleElement.settingsWidth
 
 					drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 24f, BACKGROUND)
@@ -283,7 +285,7 @@ class NullStyle : Style()
 					glStateManager.resetColor()
 					font.drawString(text, moduleIndentX + 6, yPos + 4, WHITE)
 
-					drawValueDescription(value, mouseX, mouseY, moduleIndentX, yPos + 2, moduleXEnd.toInt(), yPos + 12)
+					drawValueDescription(value, mouseX, mouseY, moduleIndentX, yPos + 2, textWidth, yPos + 12)
 
 					yPos += 22
 				}
@@ -291,9 +293,9 @@ class NullStyle : Style()
 				is FloatRangeValue ->
 				{
 					val text = "$valueDisplayName\u00A7f: \u00A7c${DECIMALFORMAT_4.format(value.getMin())}-${DECIMALFORMAT_4.format(value.getMax())}"
-					val textWidth = font.getStringWidth(text) + indent + 8f
+					val textWidth = font.getStringWidth(text) + indent
 
-					if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
+					if (moduleElement.settingsWidth < textWidth + 8f) moduleElement.settingsWidth = textWidth + 8f
 					val moduleXEnd = moduleX + moduleElement.settingsWidth
 
 					drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 24f, BACKGROUND)
@@ -306,7 +308,7 @@ class NullStyle : Style()
 
 					font.drawString(text, moduleIndentX + 6, yPos + 4, WHITE)
 
-					drawValueDescription(value, mouseX, mouseY, moduleIndentX, yPos + 2, moduleXEnd.toInt(), yPos + 12)
+					drawValueDescription(value, mouseX, mouseY, moduleIndentX, yPos + 2, textWidth, yPos + 12)
 
 					yPos += 22
 				}
@@ -330,9 +332,9 @@ class NullStyle : Style()
 			{
 				is BoolValue ->
 				{
-					val textWidth = valueFont.getStringWidth(valueDisplayName) + indent + 8f
+					val textWidth = valueFont.getStringWidth(valueDisplayName) + indent
 
-					if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
+					if (moduleElement.settingsWidth < textWidth + 8f) moduleElement.settingsWidth = textWidth + 8f
 					val moduleXEnd = moduleX + moduleElement.settingsWidth
 
 					drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 14f, BACKGROUND)
@@ -349,14 +351,14 @@ class NullStyle : Style()
 
 					yPos += 12
 
-					drawValueDescription(value, mouseX, mouseY, moduleIndentX, _yPos, moduleXEnd.toInt(), yPos)
+					drawValueDescription(value, mouseX, mouseY, moduleIndentX, _yPos, textWidth, yPos)
 				}
 
 				is ListValue ->
 				{
-					val textWidth = valueFont.getStringWidth(valueDisplayName) + indent + 16f
+					val textWidth = valueFont.getStringWidth(valueDisplayName) + indent
 
-					if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
+					if (moduleElement.settingsWidth < textWidth + 16f) moduleElement.settingsWidth = textWidth + 16f
 					var moduleXEnd = moduleX + moduleElement.settingsWidth
 
 					drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 14f, BACKGROUND)
@@ -376,7 +378,7 @@ class NullStyle : Style()
 
 					yPos += 12
 
-					drawValueDescription(value, mouseX, mouseY, moduleIndentX, _yPos, moduleXEnd.toInt(), yPos)
+					drawValueDescription(value, mouseX, mouseY, moduleIndentX, _yPos, textWidth, yPos)
 
 					for (valueOfList in value.values) if (value.openList)
 					{
@@ -410,9 +412,9 @@ class NullStyle : Style()
 				is IntegerValue ->
 				{
 					val text = "$valueDisplayName\u00A7f: \u00A7c${if (value is BlockValue) "${getBlockName(value.get())} (${value.get()})" else "${value.get()}"}"
-					val textWidth = valueFont.getStringWidth(text) + indent + 8f
+					val textWidth = valueFont.getStringWidth(text) + indent
 
-					if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
+					if (moduleElement.settingsWidth < textWidth + 8f) moduleElement.settingsWidth = textWidth + 8f
 					val moduleXEnd = moduleX + moduleElement.settingsWidth
 
 					drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 24f, BACKGROUND)
@@ -422,7 +424,7 @@ class NullStyle : Style()
 
 					valueFont.drawString(text, moduleIndentX + 6, yPos + 4, WHITE)
 
-					drawValueDescription(value, mouseX, mouseY, moduleIndentX, yPos + 2, moduleXEnd.toInt(), yPos + 12)
+					drawValueDescription(value, mouseX, mouseY, moduleIndentX, yPos + 2, textWidth, yPos + 12)
 
 					yPos += 22
 				}
@@ -430,9 +432,9 @@ class NullStyle : Style()
 				is FloatValue ->
 				{
 					val text = "$valueDisplayName\u00A7f: \u00A7c${DECIMALFORMAT_4.format(value.get())}"
-					val textWidth = valueFont.getStringWidth(text) + indent + 8f
+					val textWidth = valueFont.getStringWidth(text) + indent
 
-					if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
+					if (moduleElement.settingsWidth < textWidth + 8f) moduleElement.settingsWidth = textWidth + 8f
 					val moduleXEnd = moduleX + moduleElement.settingsWidth
 
 					drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 24f, BACKGROUND)
@@ -442,7 +444,7 @@ class NullStyle : Style()
 
 					valueFont.drawString(text, moduleIndentX + 6, yPos + 4, WHITE)
 
-					drawValueDescription(value, mouseX, mouseY, moduleIndentX, yPos + 2, moduleXEnd.toInt(), yPos + 12)
+					drawValueDescription(value, mouseX, mouseY, moduleIndentX, yPos + 2, textWidth, yPos + 12)
 
 					yPos += 22
 				}
@@ -454,88 +456,29 @@ class NullStyle : Style()
 
 					drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 14f, BACKGROUND)
 
-					var displayString = "$valueDisplayName: Unknown"
-
-					if (fontRenderer.isGameFontRenderer())
-					{
-						val liquidFontRenderer = fontRenderer.getGameFontRenderer()
-						displayString = "$valueDisplayName: " + liquidFontRenderer.defaultFont.font.name + " - " + liquidFontRenderer.defaultFont.font.size
-					}
-					else if (fontRenderer == Fonts.minecraftFont) displayString = "$valueDisplayName: Minecraft"
-					else
-					{
-						val objects = Fonts.getFontDetails(fontRenderer)
-						if (objects != null) displayString = "$valueDisplayName: ${objects.name}${if (objects.fontSize == -1) "" else " - " + objects.fontSize}"
-					}
-
+					val displayString = "$valueDisplayName: ${fontRenderer.serialized ?: "Unknown"}"
 					valueFont.drawString(displayString, moduleIndentX + 6, yPos + 4, WHITE)
 
-					val stringWidth = valueFont.getStringWidth(displayString) + indent + 8f
-
-					if (moduleElement.settingsWidth < stringWidth) moduleElement.settingsWidth = stringWidth
+					val textWidth = valueFont.getStringWidth(displayString) + indent
+					if (moduleElement.settingsWidth < textWidth + 8f) moduleElement.settingsWidth = textWidth + 8f
 
 					if ((Mouse.isButtonDown(0) && !mouseDown || Mouse.isButtonDown(1) && !rightMouseDown) && mouseX in moduleIndentX + 4..moduleXEnd.toInt() && mouseY in yPos + 4..yPos + 12)
 					{
 						val fonts = Fonts.fonts
-						if (Mouse.isButtonDown(0))
-						{
-							// Next font
-							var i = 0
-							val j = fonts.size
-							while (i < j)
-							{
-								val font = fonts[i]
-
-								if (font == fontRenderer)
-								{
-									i++
-
-									if (i >= fonts.size) i = 0
-
-									value.set(fonts[i])
-
-									break
-								}
-
-								i++
-							}
-						}
-						else
-						{
-							// Previous font
-							var i = fonts.size - 1
-							while (i >= 0)
-							{
-								val font = fonts[i]
-
-								if (font == fontRenderer)
-								{
-									i--
-
-									if (i >= fonts.size) i = 0
-									if (i < 0) i = fonts.size - 1
-
-									value.set(fonts[i])
-
-									break
-								}
-
-								i--
-							}
-						}
+						if (Mouse.isButtonDown(0)) fonts.filter { it == fontRenderer }.forEachIndexed { index, _ -> value.set(fonts[if (index + 1 >= fonts.size) 0 else index + 1]) } // Next fontelse fonts.filter { it == fontRenderer }.forEachIndexed { index, _ -> value.set(fonts[if (index - 1 < 0) fonts.size - 1 else index - 1]) } // Previous font
 					}
 
 					yPos += 11
 
-					drawValueDescription(value, mouseX, mouseY, moduleIndentX, _yPos, moduleXEnd.toInt(), yPos)
+					drawValueDescription(value, mouseX, mouseY, moduleIndentX, _yPos, textWidth, yPos)
 				}
 
 				else ->
 				{
 					val text = "$valueDisplayName\u00A7f: \u00A7c${value.get()}"
-					val textWidth = valueFont.getStringWidth(text) + indent + 8f
+					val textWidth = valueFont.getStringWidth(text) + indent
 
-					if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
+					if (moduleElement.settingsWidth < textWidth + 8f) moduleElement.settingsWidth = textWidth + 8f
 					val moduleXEnd = moduleX + moduleElement.settingsWidth
 
 					drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 14f, BACKGROUND)
@@ -546,7 +489,7 @@ class NullStyle : Style()
 
 					yPos += 12
 
-					drawValueDescription(value, mouseX, mouseY, moduleIndentX, _yPos, moduleXEnd.toInt(), yPos)
+					drawValueDescription(value, mouseX, mouseY, moduleIndentX, _yPos, textWidth, yPos)
 				}
 			}
 		}

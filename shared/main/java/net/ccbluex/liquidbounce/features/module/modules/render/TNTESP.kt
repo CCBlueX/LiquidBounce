@@ -16,7 +16,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 @ModuleInfo(name = "TNTESP", description = "Allows you to see ignited TNT blocks through walls.", category = ModuleCategory.RENDER)
 class TNTESP : Module()
 {
-	private val interpolateValue = BoolValue("Interpolate", true)
+	private val interpolateValue = BoolValue("Interpolate", true, description = "Interpolate tnt positions")
 
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)

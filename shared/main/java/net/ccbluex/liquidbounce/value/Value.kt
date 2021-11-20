@@ -45,7 +45,7 @@ open class ValueGroup(name: String) : AbstractValue(name)
 	{
 		values += value
 		value.name = "$name.${value.name}"
-		if (value is ValueGroup) value.renameSubvalues(name)
+		if (value is ValueGroup) value.appendPrefixToSubvalues(name)
 		value.isBelongsToGroup = true
 	}
 
@@ -54,9 +54,9 @@ open class ValueGroup(name: String) : AbstractValue(name)
 		for (value in values) add(value)
 	}
 
-	private fun renameSubvalues(newName: String)
+	private fun appendPrefixToSubvalues(prefix: String)
 	{
-		values.forEach { if (it is ValueGroup) it.renameSubvalues(newName) else it.name = "$newName.${it.name}" }
+		values.forEach { if (it is ValueGroup) it.appendPrefixToSubvalues(prefix) else it.name = "$prefix.${it.name}" }
 	}
 
 	override fun toJson(): JsonElement?

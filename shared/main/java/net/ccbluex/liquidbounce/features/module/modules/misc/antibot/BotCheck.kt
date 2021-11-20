@@ -44,20 +44,20 @@ abstract class BotCheck(val modeName: String) : MinecraftInstance()
 	{
 	}
 
-	fun notification(message: () -> String)
+	fun notification(messageSupplier: () -> Array<String>)
 	{
-		if (AntiBot.notificationValue.get()) LiquidBounce.hud.addNotification(Notification(NotificationIcon.ROBOT, modeName, message(), 6000L))
+		if (AntiBot.notificationValue.get()) LiquidBounce.hud.addNotification(Notification(NotificationIcon.BOT, "AntiBot", arrayOf("module=$modeName", *messageSupplier()), 6000L))
 	}
 
-	fun notification(target: IEntityPlayer, message: () -> String)
+	fun notification(target: IEntityPlayer, message: () -> Array<String>)
 	{
-		notification { "$message ${target.gameProfile.name} (${target.displayName.formattedText}\u00A7r)" }
+		notification { arrayOf("profileName=${target.gameProfile.name}", "displayName=${target.displayName.formattedText}\u00A7r", *message()) }
 	}
 
-	fun remove(theWorld: IWorldClient, entityId: Int?, profileName: String, displayName: String?, reason: String)
+	fun remove(theWorld: IWorldClient?, entityId: Int?, profileName: String, displayName: String?, reason: Array<String> = arrayOf())
 	{
-		entityId?.let(theWorld::removeEntityFromWorld)
-		notification { "Removed $profileName ($displayName\u00A7r) from the game ($reason)" }
+		entityId?.let { theWorld?.removeEntityFromWorld(it) }
+		if (AntiBot.notificationValue.get()) LiquidBounce.hud.addNotification(Notification(NotificationIcon.BOT, "AntiBot (Remove)", arrayOf("module=$modeName", "profileName=$profileName", "displayName=$displayName\u00A7r", *reason), 6000L))
 	}
 
 	companion object

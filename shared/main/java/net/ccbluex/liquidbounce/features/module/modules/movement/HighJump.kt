@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.Tower
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationIcon
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.extensions.*
@@ -80,7 +81,7 @@ class HighJump : Module()
 			if (disableScaffold) scaffold.state = false
 			if (disableTower) tower.state = false
 
-			if (disableScaffold || disableTower) LiquidBounce.hud.addNotification(NotificationIcon.INFORMATION, "HighJump", "Disabled ${if (disableScaffold && disableTower) "Scaffold and Tower" else if (disableScaffold) "Scaffold" else "Tower"}", 1000)
+			if (disableScaffold || disableTower) LiquidBounce.hud.addNotification(Notification(NotificationIcon.INFORMATION, "HighJump", "Disabled ${if (disableScaffold && disableTower) "Scaffold and Tower" else if (disableScaffold) "Scaffold" else "Tower"}", 1000))
 		}
 
 		if (modeValue.get().equals("mineplex", ignoreCase = true)) ClientUtils.displayChatMessage(mc.thePlayer, "\u00A78[\u00A7c\u00A7lMineplex Highjump\u00A78] \u00A7cWalk off an island to highjump.")
@@ -211,7 +212,7 @@ class HighJump : Module()
 	@EventTarget
 	fun onPacket(event: PacketEvent)
 	{
-		if (classProvider.isSPacketPlayerPosLook(event.packet) && modeValue.get().equals("mineplex", ignoreCase = true) && jumped)
+		if (classProvider.isSPacketPlayerPosLook(event.packet) && modeValue.get().equals("Mineplex", ignoreCase = true) && jumped)
 		{
 			val thePlayer = mc.thePlayer ?: return
 
@@ -220,7 +221,7 @@ class HighJump : Module()
 			thePlayer.zeroXZ()
 			thePlayer.jumpMovementFactor = 0.02F
 
-			LiquidBounce.hud.addNotification(NotificationIcon.WARNING_RED, "Mineplex HighJump", "A teleport has been detected. Disabled HighJump to prevent kick.", 1000L)
+			LiquidBounce.hud.addNotification(Notification(NotificationIcon.CAUTION, "Disabled HighJump", "due setback", 1000L))
 		}
 	}
 

@@ -257,5 +257,7 @@ object Fonts : MinecraftInstance()
 		}
 
 		override fun hashCode(): Int = 31 * name.hashCode() + fontSize
+
+		override fun toString(): String = "${name}${if (fontSize > 0) " - $fontSize" else ""}"
 	}
 }

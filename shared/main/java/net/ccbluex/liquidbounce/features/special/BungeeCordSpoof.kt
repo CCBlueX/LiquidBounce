@@ -11,6 +11,9 @@ import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import java.util.*
 
+/**
+ * @author CCBlueX
+ */
 class BungeeCordSpoof : MinecraftInstance(), Listenable
 {
 	@EventTarget

@@ -17,8 +17,6 @@ class AntiCactus : Module()
 	@EventTarget
 	fun onBlockBB(event: BlockBBEvent)
 	{
-		val provider = classProvider
-
-		if (provider.isBlockCactus(event.block)) event.boundingBox = provider.createAxisAlignedBB(event.x.toDouble(), event.y.toDouble(), event.z.toDouble(), event.x + 1.0, event.y + 1.0, event.z + 1.0)
+		if (classProvider.isBlockCactus(event.block)) event.boundingBox = classProvider.createAxisAlignedBB(event.x.toDouble(), event.y.toDouble(), event.z.toDouble(), event.x + 1.0, event.y + 1.0, event.z + 1.0)
 	}
 }

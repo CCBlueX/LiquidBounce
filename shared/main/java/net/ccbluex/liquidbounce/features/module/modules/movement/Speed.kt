@@ -20,6 +20,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre.
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre.SpectreLowHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre.SpectreOnGround
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.vanilla.Vanilla
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationIcon
 import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.extensions.zeroXZ
@@ -198,7 +199,7 @@ object Speed : Module()
 			thePlayer.zeroXZ()
 			thePlayer.jumpMovementFactor = 0.02F
 
-			LiquidBounce.hud.addNotification(NotificationIcon.WARNING_RED, "Speed", "A teleport has been detected. Disabled Speed to prevent more flags.", 1000L)
+			LiquidBounce.hud.addNotification(Notification(NotificationIcon.CAUTION, "Disabled Speed", "due (anti-cheat) setback", 1000L))
 		}
 	}
 

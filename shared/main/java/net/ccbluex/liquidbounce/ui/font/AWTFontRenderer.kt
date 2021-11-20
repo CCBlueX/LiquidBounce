@@ -293,6 +293,8 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
 		activeFontRenderers.remove(this)
 	}
 
+	override fun toString(): String = "${font.name}${if (font.size > 0) " - ${font.size}" else ""}"
+
 	fun finalize()
 	{
 		delete()

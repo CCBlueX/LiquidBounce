@@ -467,7 +467,7 @@ public abstract class MixinItemRenderer
 			{
 				translateBlock(swingAnimation, swingProgress);
 
-				final float xTranslate = equipProgress * (equipProgressAffectTranslation ? xEquipProgressTranslationAffectness : 0.0f) + equipProgressAffect * sqrt * swingAnimation.getBlockAnimationExhiPushXPos().get() * 0.001f + equipProgressAffect * -sq * swingAnimation.getBlockAnimationExhiSmoothX().get() * 0.005f;
+				final float xTranslate = equipProgress * (equipProgressAffectTranslation ? xEquipProgressTranslationAffectness : 0.0f) + equipProgressAffect * sqrt * -swingAnimation.getBlockAnimationExhiPushXPos().get() * 0.001f + equipProgressAffect * -sq * swingAnimation.getBlockAnimationExhiSmoothX().get() * 0.005f;
 				final float yTranslate = equipProgress * (equipProgressAffectTranslation ? yEquipProgressTranslationAffectness : -0.2f) + equipProgressAffect * sqrt * swingAnimation.getBlockAnimationExhiPushYPos().get() * 0.001f + equipProgressAffect * -sq * swingAnimation.getBlockAnimationExhiSmoothY().get() * 0.005f;
 				final float zTranslate = equipProgress * (equipProgressAffectTranslation ? zEquipProgressTranslationAffectness : 0.0f) + equipProgressAffect * sqrt * swingAnimation.getBlockAnimationExhiPushZPos().get() * 0.001f + equipProgressAffect * -sq * swingAnimation.getBlockAnimationExhiSmoothZ().get() * 0.005f;
 
@@ -745,19 +745,27 @@ public abstract class MixinItemRenderer
 			equippedItemSlot = currentItem;
 
 			swingAnimation.swingSpeedBoost = swingAnimation.getSwingSpeedBoostAmount().get();
+			swingAnimation.swingProgressEndBoost = swingAnimation.getSwingProgressEndBoostAmount().get();
 			swingAnimation.exponentBoost = swingAnimation.getEquipProgressBoostSmoothingExponentAmount().get();
 		}
 		else if (equippedProgress >= 0.995)
 			equippedProgress = 1.0F;
 
-		// TODO: Better fade-out algorithm
-		if (swingAnimation.swingSpeedBoost != 0 && mc.thePlayer.ticksExisted % swingAnimation.getSwingSpeedBoostReturnDelay().get() == 0)
+		final int ticks = mc.thePlayer.ticksExisted;
+
+		if (swingAnimation.swingSpeedBoost != 0 && ticks % swingAnimation.getSwingSpeedBoostReturnDelay().get() == 0)
 			if (swingAnimation.swingSpeedBoost < 0)
 				swingAnimation.swingSpeedBoost++;
 			else
 				swingAnimation.swingSpeedBoost--;
 
-		if (mc.thePlayer.ticksExisted % swingAnimation.getEquipProgressBoostSmoothingExponentReturnDelay().get() == 0)
+		if (swingAnimation.swingProgressEndBoost != 0 && ticks % swingAnimation.getSwingProgressEndBoostReturnDelay().get() == 0)
+			if (swingAnimation.swingProgressEndBoost < 0)
+				swingAnimation.swingProgressEndBoost++;
+			else
+				swingAnimation.swingProgressEndBoost--;
+
+		if (ticks % swingAnimation.getEquipProgressBoostSmoothingExponentReturnDelay().get() == 0)
 			if (swingAnimation.exponentBoost > 0)
 				swingAnimation.exponentBoost = Math.max(swingAnimation.exponentBoost - swingAnimation.getEquipProgressBoostSmoothingExponentReturnStep().get(), 0.0f);
 			else if (swingAnimation.exponentBoost < 0)

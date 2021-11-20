@@ -2,6 +2,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.api.enums.EnchantmentType
 import net.ccbluex.liquidbounce.api.minecraft.enchantments.IEnchantment
+import net.ccbluex.liquidbounce.api.minecraft.entity.ai.attributes.IAttributeModifier
 import net.ccbluex.liquidbounce.api.minecraft.inventory.IContainer
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
@@ -12,9 +13,26 @@ import net.ccbluex.liquidbounce.utils.extensions.getEnchantmentLevel
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerRangeValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ValueGroup
+
+private const val CLICKINDICATION_BOOK2ITEM_ITEM = -6270721
+private const val CLICKINDICATION_BOOK2ITEM_BOOK = -8388528
+private const val CLICKINDICATION_ITEM2ITEM_FIRST = -8367903
+private const val CLICKINDICATION_ITEM2ITEM_SECOND = -8355776
 
 /**
  * LiquidBounce Hacked Client A minecraft forge injection client using Mixin
+ *
+ *  TODO
+ * * Book-To-Armor support
+ * * Book-To-FishingRod support
+ * * Book-To-Bow support
+ * * Book-To-Tool support
+ * * Armor-To-Armor support
+ * * FishingRod-To-FishingRod support
+ * * Bow-To-Bow support
+ * * Tool-To-Tool support
  *
  * @author CCBlueX
  * @game   Minecraft
@@ -24,7 +42,16 @@ class AutoEnchant : Module()
 {
 	val delayValue = IntegerRangeValue("Delay", 100, 100, 0, 500)
 	private val firstDelayValue = IntegerRangeValue("FirstDelay", 500, 500, 0, 1000)
-	private val enchantSwordBetweenEm = BoolValue("SwordToSword", true)
+	private val itemToItemValue = BoolValue("Item-To-Item", true, "SwordToSword")
+
+	private val clickIndicationGroup = ValueGroup("ClickIndication")
+	private val clickIndicationEnabledValue = BoolValue("Enabled", false, "ClickIndication")
+	private val clickIndicationLengthValue = IntegerValue("Length", 100, 50, 1000, "ClickIndicationLength")
+
+	init
+	{
+		clickIndicationGroup.addAll(clickIndicationEnabledValue, clickIndicationLengthValue)
+	}
 
 	private var delay = firstDelayValue.getRandomDelay()
 	private val delayTimer = MSTimer()
@@ -34,57 +61,65 @@ class AutoEnchant : Module()
 	{
 		val thePlayer = mc.thePlayer ?: return
 		val currentScreen = mc.currentScreen ?: return
+		val playerController = mc.playerController
 
 		if (classProvider.isGuiRepair(currentScreen))
 		{
 			val guiRepair = currentScreen.asGuiRepair()
 			val container = guiRepair.inventorySlots ?: return
+
 			if (!delayTimer.hasTimePassed(delay)) return
 
 			// Find a item for enchant. If there is no items for enchant found, close the gui automatically if option is present.
-			// Map<Integer, ItemStack> items = findbests
 
 			// Find a best sword
-			val triedEnchantSwordSlots: MutableList<Int> = ArrayList()
+			val triedEnchantSwordSlots = ArrayList<Int>()
 
 			// For Anvil Inventory
-			val item1Slot = container.getSlot(0)
-			val item2Slot = container.getSlot(1)
+			val firstInputSlot = container.getSlot(0)
+			val secondInputSlot = container.getSlot(1)
 			val outputSlot = container.getSlot(2)
 			if (outputSlot.stack != null) // I'm sure there is no anticheat detecting autoenchant with output-slot item spoofing.
 			{
-				mc.playerController.windowClick(container.windowId, outputSlot.slotNumber, 0, 1, thePlayer)
+				playerController.windowClick(container.windowId, outputSlot.slotNumber, 0, 1, thePlayer)
 				delay = delayValue.getRandomDelay()
 				delayTimer.reset()
 				return
 			}
+
 			val bestSwordSlot = findBestWeapon(container, 3, 39)
 
-			// Enchant the best sword with Enchanted Book(s)
 			val bestEnchantedBookSlots = findBestEnchantedBooks(container, 3, 39, listOf(classProvider.getEnchantmentEnum(EnchantmentType.SHARPNESS), classProvider.getEnchantmentEnum(EnchantmentType.KNOCKBACK), classProvider.getEnchantmentEnum(EnchantmentType.FIRE_ASPECT), classProvider.getEnchantmentEnum(EnchantmentType.UNBREAKING)))
 			if (bestEnchantedBookSlots.isNotEmpty())
 			{
-				if (item1Slot.stack == null && bestSwordSlot != -1)
+				// Item-To-Book
+				if (firstInputSlot.stack == null && bestSwordSlot != -1)
 				{
-					mc.playerController.windowClick(container.windowId, bestSwordSlot, 0, 1, thePlayer)
+					playerController.windowClick(container.windowId, bestSwordSlot, 0, 1, thePlayer)
+
+					if (clickIndicationEnabledValue.get()) guiRepair.highlight(bestSwordSlot, clickIndicationLengthValue.get().toLong(), CLICKINDICATION_BOOK2ITEM_ITEM)
+
 					delay = delayValue.getRandomDelay()
 					delayTimer.reset()
 				}
-				else if (item2Slot.stack == null)
+				else if (secondInputSlot.stack == null)
 				{
-					mc.playerController.windowClick(container.windowId, bestEnchantedBookSlots[0], 0, 1, thePlayer)
+					playerController.windowClick(container.windowId, bestEnchantedBookSlots[0], 0, 1, thePlayer)
+
+					if (clickIndicationEnabledValue.get()) guiRepair.highlight(bestSwordSlot, clickIndicationLengthValue.get().toLong(), CLICKINDICATION_BOOK2ITEM_BOOK)
+
 					delay = delayValue.getRandomDelay()
 					delayTimer.reset()
 				}
 			}
-			else if (enchantSwordBetweenEm.get())
+			else if (itemToItemValue.get())
 			{
-				// Find second sword
+				// Item-To-Item
 				var secondSwordSlot = -1
 				if (bestSwordSlot != -1)
 				{
 					var whiteID: Int? = null
-					(if (item1Slot.stack == null) bestSwordSlot else item1Slot.slotNumber).let { slot ->
+					(if (firstInputSlot.stack == null) bestSwordSlot else firstInputSlot.slotNumber).let { slot ->
 						triedEnchantSwordSlots.add(slot)
 						container.getSlot(slot).stack?.item?.let { whiteID = functions.getIdFromItem(it) }
 					}
@@ -94,22 +129,35 @@ class AutoEnchant : Module()
 					{
 						secondSwordSlot = findBestWeapon(container, 0, 39, whiteID, triedEnchantSwordSlots)
 						triedEnchantSwordSlots.add(secondSwordSlot)
-					} while (secondSwordSlot != -1 && container.getSlot(bestSwordSlot).stack != null && container.getSlot(secondSwordSlot).stack != null && (!container.getSlot(secondSwordSlot).stack?.item?.unlocalizedName.equals(container.getSlot(bestSwordSlot).stack?.item?.unlocalizedName, ignoreCase = true) || container.getSlot(secondSwordSlot).stack?.isItemEnchanted != true))
+					} while (run {
+							if (secondSwordSlot == -1) return@run false
+							val bestSwordStack = container.getSlot(bestSwordSlot).stack ?: return@run false
+							val secondSwordStack = container.getSlot(secondSwordSlot).stack ?: return@run false
+
+							secondSwordStack.item?.let(functions::getIdFromItem)?.equals(bestSwordStack.item?.let(functions::getIdFromItem)) == true || !secondSwordStack.isItemEnchanted
+						})
 				}
 
-				// Enchant swords between 'em
-				if (item1Slot.stack == null)
+				if (firstInputSlot.stack == null)
 				{
+					// First
 					if (bestSwordSlot != -1 && secondSwordSlot != -1)
 					{
-						mc.playerController.windowClick(container.windowId, bestSwordSlot, 0, 1, thePlayer)
+						playerController.windowClick(container.windowId, bestSwordSlot, 0, 1, thePlayer)
+
+						if (clickIndicationEnabledValue.get()) guiRepair.highlight(bestSwordSlot, clickIndicationLengthValue.get().toLong(), CLICKINDICATION_ITEM2ITEM_FIRST)
+
 						delay = delayValue.getRandomDelay()
 						delayTimer.reset()
 					}
 				}
-				else if (item2Slot.stack == null && secondSwordSlot != -1)
+				else if (secondInputSlot.stack == null && secondSwordSlot != -1)
 				{
-					mc.playerController.windowClick(container.windowId, secondSwordSlot, 0, 1, thePlayer)
+					// Second
+					playerController.windowClick(container.windowId, secondSwordSlot, 0, 1, thePlayer)
+
+					if (clickIndicationEnabledValue.get()) guiRepair.highlight(bestSwordSlot, clickIndicationLengthValue.get().toLong(), CLICKINDICATION_ITEM2ITEM_SECOND)
+
 					delay = delayValue.getRandomDelay()
 					delayTimer.reset()
 				}
@@ -122,59 +170,25 @@ class AutoEnchant : Module()
 		}
 	}
 
-	private fun findBestWeapon(container: IContainer, start: Int, end: Int, whitelistedID: Int? = null, blacklistedSlots: List<Int>? = null): Int
-	{
-		var slot = -1
-		var bestDamage = 0.0
-		for (i in start until end)
-		{
-			val itemStack = container.getSlot(i).stack
-
-			if (blacklistedSlots != null && blacklistedSlots.contains(i) || itemStack == null || itemStack.item == null) continue
-
-			if (whitelistedID != null && functions.getIdFromItem(itemStack.item!!) != whitelistedID) continue
-
-			if (classProvider.isItemSword(itemStack.item) || classProvider.isItemTool(itemStack.item)) for (attributeModifier in itemStack.getAttributeModifier("generic.attackDamage"))
-			{
-				val damage = attributeModifier.amount + 1.25 * itemStack.getEnchantmentLevel(classProvider.getEnchantmentEnum(EnchantmentType.SHARPNESS))
-				if (damage > bestDamage)
-				{
-					bestDamage = damage
-					slot = i
-				}
-			}
-		}
-		return slot
-	}
+	private fun findBestWeapon(container: IContainer, start: Int, end: Int, whitelistedID: Int? = null, blacklistedSlots: List<Int>? = null): Int = (start until end).filter { blacklistedSlots?.contains(it) != true }.mapNotNull { it to (container.getSlot(it).stack ?: return@mapNotNull null) }.filter { (_, stack) -> classProvider.isItemSword(stack.item) || classProvider.isItemTool(stack.item) }.filter { (_, stack) -> whitelistedID?.let { functions.getIdFromItem(stack.item ?: return@filter true) == it } != false }.maxBy { (_, stack) ->
+		stack.getAttributeModifier("generic.attackDamage").map(IAttributeModifier::amount).sum() + 1.25 * stack.getEnchantmentLevel(classProvider.getEnchantmentEnum(EnchantmentType.SHARPNESS))
+	}?.first ?: -1
 
 	private fun findBestEnchantedBooks(container: IContainer, start: Int, end: Int, enchantments: Collection<IEnchantment>): List<Int>
 	{
 		val bestSlots: MutableList<Int> = ArrayList()
-		for (currentEnch in enchantments)
-		{
-			// For each specified enchantments
-			var bestSlot = -1
-			var maxLevel = 0
-			for (i in start until end)
-			{
-				// Search inventory for find enchantment book that have specified enchantment
-				val itemStack = container.getSlot(i).stack
-				if (itemStack?.item?.let { !classProvider.isItemEnchantedBook(it) } != false) continue
 
-				val enchantMap = functions.getEnchantments(itemStack)
-				enchantMap.forEach { (id, lvl) ->
-					if (currentEnch.effectId == id)
-					{
-						if (lvl > maxLevel)
-						{
-							maxLevel = lvl
-							bestSlot = i
-						}
-					}
-				}
-			}
+		for (enchantment in enchantments)
+		{
+			// Find the best enchanted book for each enchantment (#Kotlin style)
+			val enchantID = enchantment.effectId
+			val bestSlot = (start until end).mapNotNull { it to (container.getSlot(it).stack ?: return@mapNotNull null) }.filter { (_, stack) -> stack.item?.let(classProvider::isItemEnchantedBook) == true }.maxBy { (_, stack) ->
+				functions.getEnchantments(stack).filter { it.key == enchantID }.maxBy(Map.Entry<Int, Int>::value)?.value ?: -1
+			}?.first ?: -1
+
 			if (bestSlot != -1 && !bestSlots.contains(bestSlot)) bestSlots.add(bestSlot)
 		}
+
 		return bestSlots
 	}
 }

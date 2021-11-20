@@ -38,22 +38,25 @@ class GuiAntiModDisable(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		val buttonX = (width shr 1) - 100
 		val buttonY = (height shr 2) + 50
 
-		val provider = classProvider
+		buttonsList.add(classProvider.createGuiButton(1, buttonX, (representedScreen.height shr 2) + 35, "Enabled ${getStateString(AntiModDisable.enabled)}").also { enabledButton = it })
 
-		buttonsList.add(provider.createGuiButton(1, buttonX, (representedScreen.height shr 2) + 35, "Enabled ${getStateString(AntiModDisable.enabled)}").also { enabledButton = it })
-		buttonsList.add(provider.createGuiButton(2, buttonX, buttonY + 25, "$BLOCK_FML${getStateString(AntiModDisable.enabled && AntiModDisable.blockFMLPackets)}").also { fmlButton = it })
-		buttonsList.add(provider.createGuiButton(3, buttonX, buttonY + 50, "$BLOCK_FML_PROXY_PACKET${getStateString(AntiModDisable.enabled && AntiModDisable.blockFMLProxyPackets)}").also { fmlProxyPacket = it })
-		buttonsList.add(provider.createGuiButton(4, buttonX, buttonY + 75, "$SPOOF_BRAND_PAYLOAD_PACKETS${getStateString(AntiModDisable.enabled && AntiModDisable.blockClientBrandRetrieverPackets)}").also { clientBrandPayloadPacket = it })
-		buttonsList.add(provider.createGuiButton(5, buttonX, buttonY + 100, "$BLOCK_WDL_PACKETS${getStateString(AntiModDisable.enabled && AntiModDisable.blockWDLPayloads)}").also { wdlPayloadButton = it })
-		buttonsList.add(provider.createGuiButton(6, buttonX, buttonY + 125, "$BLOCK_5ZIG_PACKETS ${getStateString(AntiModDisable.enabled && AntiModDisable.block5zigsmodPayloads)}").also { `5zigPayloadButton` = it })
-		buttonsList.add(provider.createGuiButton(7, buttonX, buttonY + 150, "$BLOCK_BETTERSPRINTING_PACKETS${getStateString(AntiModDisable.enabled && AntiModDisable.blockBetterSprintingPayloads)}").also { betterSprintingButton = it })
-		buttonsList.add(provider.createGuiButton(8, buttonX, buttonY + 175, "$BLOCK_VAPE_SABOTAGES${getStateString(AntiModDisable.enabled && AntiModDisable.blockCrackedVapeSabotages)}").also { vapeButton = it })
-		buttonsList.add(provider.createGuiButton(9, buttonX, buttonY + 200, "$BLOCK_DIPERMISSIONS_PACKETS${getStateString(AntiModDisable.enabled && AntiModDisable.blockDIPermissionsPayloads)}").also { dipermsButton = it })
-		buttonsList.add(provider.createGuiButton(10, buttonX, buttonY + 225, "$BLOCK_PERMISSIONS_REPL_PACKETS${getStateString(AntiModDisable.enabled && AntiModDisable.blockReplicatedPermissionsPayloads)}").also { permsreplButton = it })
-		buttonsList.add(provider.createGuiButton(11, buttonX, buttonY + 250, "$BLOCK_SCHEMATICA_PACKETS${getStateString(AntiModDisable.enabled && AntiModDisable.blockSchematicaPayloads)}").also { schematicaButton = it })
-		buttonsList.add(provider.createGuiButton(999, buttonX, buttonY + 275, "$PRINT_DEBUG_MESSAGES${getStateString(AntiModDisable.enabled && AntiModDisable.debug)}").also { debugmode = it })
+		val addButton = { id: Int, index: Int, text: String, callback: (IGuiButton) -> Unit ->
+			buttonsList.add(classProvider.createGuiButton(id, buttonX, buttonY + 25 * index + 25, text).also(callback))
+		}
 
-		buttonsList.add(provider.createGuiButton(0, buttonX, (height shr 2) + 55 + 300 + 5, "Back"))
+		addButton(2, 0, "$BLOCK_FML${getStateString(AntiModDisable.enabled && AntiModDisable.blockFMLPackets)}") { fmlButton = it }
+		addButton(3, 1, "$BLOCK_FML_PROXY_PACKET${getStateString(AntiModDisable.enabled && AntiModDisable.blockFMLProxyPackets)}") { fmlProxyPacket = it }
+		addButton(4, 2, "$SPOOF_BRAND_PAYLOAD_PACKETS${getStateString(AntiModDisable.enabled && AntiModDisable.blockClientBrandRetrieverPackets)}") { clientBrandPayloadPacket = it }
+		addButton(5, 3, "$BLOCK_WDL_PACKETS${getStateString(AntiModDisable.enabled && AntiModDisable.blockWDLPayloads)}") { wdlPayloadButton = it }
+		addButton(6, 4, "$BLOCK_5ZIG_PACKETS ${getStateString(AntiModDisable.enabled && AntiModDisable.block5zigsmodPayloads)}") { `5zigPayloadButton` = it }
+		addButton(7, 5, "$BLOCK_BETTERSPRINTING_PACKETS${getStateString(AntiModDisable.enabled && AntiModDisable.blockBetterSprintingPayloads)}") { betterSprintingButton = it }
+		addButton(8, 6, "$BLOCK_VAPE_SABOTAGES${getStateString(AntiModDisable.enabled && AntiModDisable.blockCrackedVapeSabotages)}") { vapeButton = it }
+		addButton(9, 7, "$BLOCK_DIPERMISSIONS_PACKETS${getStateString(AntiModDisable.enabled && AntiModDisable.blockDIPermissionsPayloads)}") { dipermsButton = it }
+		addButton(10, 8, "$BLOCK_PERMISSIONS_REPL_PACKETS${getStateString(AntiModDisable.enabled && AntiModDisable.blockReplicatedPermissionsPayloads)}") { permsreplButton = it }
+		addButton(11, 9, "$BLOCK_SCHEMATICA_PACKETS${getStateString(AntiModDisable.enabled && AntiModDisable.blockSchematicaPayloads)}") { schematicaButton = it }
+		addButton(999, 10, "$PRINT_DEBUG_MESSAGES${getStateString(AntiModDisable.enabled && AntiModDisable.debug)}") { debugmode = it }
+
+		buttonsList.add(classProvider.createGuiButton(0, buttonX, (height shr 2) + 55 + 300 + 5, "Back"))
 	}
 
 	override fun actionPerformed(button: IGuiButton)

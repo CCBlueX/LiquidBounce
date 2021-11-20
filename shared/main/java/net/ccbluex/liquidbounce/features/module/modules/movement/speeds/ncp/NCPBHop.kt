@@ -50,7 +50,6 @@ class NCPBHop : SpeedMode("NCPBHop")
 			{
 				jump(thePlayer)
 
-				jumps++
 				if (shouldLegitJump) shouldLegitJump = false
 				else
 				{

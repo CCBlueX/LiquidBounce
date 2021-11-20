@@ -21,6 +21,10 @@ import java.io.IOException
 import java.time.OffsetDateTime
 import kotlin.concurrent.thread
 
+/**
+ * LiquidBounce Discord RPC
+ * @author CCBlueX
+ */
 class ClientRichPresence : MinecraftInstance()
 {
 

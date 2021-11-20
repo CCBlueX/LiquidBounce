@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.value.*
 import org.lwjgl.opengl.GL11.*
 import kotlin.math.ceil
 
-// TODO: Move non-render logics to onUpdate()
 @ModuleInfo(name = "NameTags", description = "Changes the scale of the nametags so you can always read them.", category = ModuleCategory.RENDER)
 class NameTags : Module()
 {

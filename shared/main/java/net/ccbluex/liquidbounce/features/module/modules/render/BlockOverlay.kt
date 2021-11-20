@@ -47,14 +47,7 @@ class BlockOverlay : Module()
 		infoGroup.addAll(infoEnabledValue, infoFontValue)
 	}
 
-	fun getCurrentBlock(theWorld: IWorld): WBlockPos?
-	{
-		val blockPos = mc.objectMouseOver?.blockPos ?: return null
-
-		if (theWorld.canBeClicked(blockPos) && blockPos in theWorld.worldBorder) return blockPos
-
-		return null
-	}
+	fun getCurrentBlock(theWorld: IWorld): WBlockPos? = mc.objectMouseOver?.blockPos?.let { if (theWorld.canBeClicked(it) && it in theWorld.worldBorder) it else null }
 
 	@EventTarget
 	fun onRender3D(event: Render3DEvent)

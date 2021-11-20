@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
+import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
@@ -25,8 +26,11 @@ import net.ccbluex.liquidbounce.utils.extensions.canBeClicked
 import net.ccbluex.liquidbounce.utils.extensions.distanceToCenter
 import net.ccbluex.liquidbounce.utils.extensions.searchBlocks
 import net.ccbluex.liquidbounce.utils.extensions.vec
+import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.easeOutCubic
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.*
+import org.lwjgl.opengl.GL11
 
 @ModuleInfo(name = "ChestAura", description = "Automatically opens chests around you.", category = ModuleCategory.WORLD)
 object ChestAura : Module()
@@ -53,6 +57,13 @@ object ChestAura : Module()
 	private val visualSwing = BoolValue("VisualSwing", true)
 	private val noHitValue = BoolValue("KillAuraBypass", true, "NoHit")
 
+	private val visualMarkGroup = ValueGroup("Mark")
+	private val visualMarkEnabledValue = BoolValue("Enabled", false)
+	private val visualMarkLineWidthValue = FloatValue("LineWidth", 1f, 0.5f, 2f)
+	private val visualMarkAccuracyValue = FloatValue("Accuracy", 10F, 0.5F, 20F)
+	private val visualMarkFadeSpeedValue = IntegerValue("FadeSpeed", 5, 1, 9)
+	private val visualMarkColorValue = RGBAColorValue("Color", 255, 128, 0, 255)
+
 	var currentBlock: WBlockPos? = null
 
 	private val timer = MSTimer()
@@ -62,11 +73,14 @@ object ChestAura : Module()
 
 	private var facesBlock = false
 
+	private var easingRange = 0f
+
 	init
 	{
 		chestGroup.addAll(chestFirstValue, chestSecondValue, chestThirdValue)
 		rotationKeepRotationGroup.addAll(rotationKeepRotationEnabledValue, rotationKeepRotationTicksValue)
 		rotationGroup.addAll(rotationEnabledValue, rotationTurnSpeedValue, rotationResetSpeedValue, rotationKeepRotationGroup)
+		visualMarkGroup.addAll(visualMarkEnabledValue, visualMarkLineWidthValue, visualMarkAccuracyValue, visualMarkFadeSpeedValue, visualMarkColorValue)
 	}
 
 	@EventTarget
@@ -171,10 +185,23 @@ object ChestAura : Module()
 		}
 	}
 
+	@EventTarget
+	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
+	{
+		if (!visualMarkEnabledValue.get()) return
+
+		GL11.glPushMatrix()
+		RenderUtils.drawRadius(easingRange, visualMarkAccuracyValue.get(), visualMarkLineWidthValue.get(), visualMarkColorValue.get())
+		GL11.glPopMatrix()
+
+		easingRange = easeOutCubic(easingRange, rangeValue.get(), visualMarkFadeSpeedValue.get())
+	}
+
 	override fun onDisable()
 	{
 		clickedBlocks.clear()
 		facesBlock = false
+		easingRange = 0f
 	}
 
 	override val tag: String

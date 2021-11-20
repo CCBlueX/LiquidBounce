@@ -237,7 +237,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity implements IMixi
 		if (stack == null || stack.getItem() == null || !stack.getItem().onEntitySwing((EntityLivingBase) (Object) this, stack))
 		{
 			final SwingAnimation sa = (SwingAnimation) LiquidBounce.moduleManager.get(SwingAnimation.class);
-			if (!isSwingInProgress || swingProgressInt >= (sa.getState() ? sa.getSwingSpeedSwingProgressLimit().get() : getArmSwingAnimationEnd() >> 1) || swingProgressInt < 0)
+			if (!isSwingInProgress || swingProgressInt >= (sa.getState() ? sa.getSwingSpeedSwingProgressLimit().get() + sa.swingProgressEndBoost : getArmSwingAnimationEnd() >> 1) || swingProgressInt < 0)
 			{
 				swingProgressInt = -1;
 				isSwingInProgress = true;

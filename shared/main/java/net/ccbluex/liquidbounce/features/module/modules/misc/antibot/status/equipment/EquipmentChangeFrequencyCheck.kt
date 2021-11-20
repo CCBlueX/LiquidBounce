@@ -1,10 +1,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.status.equipment
 
+import net.ccbluex.liquidbounce.api.enums.WEnumEquipmentSlot
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
 import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ISPacketEntityEquipment
-import net.ccbluex.liquidbounce.api.enums.WEnumEquipmentSlot
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.BotCheck
@@ -57,21 +57,21 @@ class EquipmentChangeFrequencyCheck : BotCheck("status.equipment.changeFrequency
 					if (prev.item == item)
 					{
 						invalidPacket += entityId
-						notification(target) { "Suspicious equipment packet (actual content is same)" }
+						notification(target) { arrayOf("reason=(actual content is same)") }
 					}
 
 					val perSlotDelayLimit = AntiBot.equipmentChangeFrequencyPerSlotDelayValue.get().toLong()
 					if (perSlotDelay != null && !perSlotDelay.hasTimePassed(perSlotDelayLimit))
 					{
 						vlIncrement = ((perSlotDelayLimit - perSlotDelay.getTime()).toInt() / 50).coerceAtLeast(3)
-						notification(target) { "Suspicious equipment change frequency (per slot) (${perSlotDelay.getTime()}ms)" }
+						notification(target) { arrayOf("reason=frequency (per slot)", "frequency=${perSlotDelay.getTime()}") }
 					}
 
 					val overallDelayLimit = AntiBot.equipmentChangeFrequencyOverallDelayValue.get().toLong()
 					if (overallDelay != null && !overallDelay.hasTimePassed(overallDelayLimit))
 					{
 						vlIncrement = ((overallDelayLimit - overallDelay.getTime()).toInt() / 50).coerceAtLeast(5)
-						notification(target) { "Suspicious equipment change frequency (all) (${overallDelay.getTime()}ms)" }
+						notification(target) { arrayOf("reason=frequency (all)", "frequency=${overallDelay.getTime()}") }
 					}
 				}
 				previousEquipmentPacketMap.computeIfAbsent(entityId) { mutableMapOf() }[slot] = equipmentPacket

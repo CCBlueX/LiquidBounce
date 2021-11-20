@@ -27,8 +27,10 @@ import net.ccbluex.liquidbounce.utils.extensions.distanceToCenter
 import net.ccbluex.liquidbounce.utils.extensions.getBlock
 import net.ccbluex.liquidbounce.utils.extensions.isFullBlock
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.easeOutCubic
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.*
+import org.lwjgl.opengl.GL11
 
 @ModuleInfo(name = "Fucker", description = "Destroys selected blocks around you. (a.k.a.  IDNuker, BedNuker, EggNuker, BedDestroyer, etc.)", category = ModuleCategory.WORLD)
 object Fucker : Module()
@@ -49,6 +51,18 @@ object Fucker : Module()
 	private val surroundingsValue = BoolValue("Surroundings", true)
 	private val noHitValue = BoolValue("NoHit", false)
 
+	private val visualMarkGroup = ValueGroup("Mark")
+	private val visualMarkEnabledValue = BoolValue("Enabled", false)
+	private val visualMarkLineWidthValue = FloatValue("LineWidth", 1f, 0.5f, 2f)
+	private val visualMarkAccuracyValue = FloatValue("Accuracy", 10F, 0.5F, 20F)
+	private val visualMarkFadeSpeedValue = IntegerValue("FadeSpeed", 5, 1, 9)
+	private val visualMarkColorValue = RGBAColorValue("Color", 255, 0, 0, 32)
+
+	init
+	{
+		visualMarkGroup.addAll(visualMarkEnabledValue, visualMarkLineWidthValue, visualMarkAccuracyValue, visualMarkFadeSpeedValue, visualMarkColorValue)
+	}
+
 	/**
 	 * VALUES
 	 */
@@ -58,8 +72,15 @@ object Fucker : Module()
 	private val switchTimer = MSTimer()
 	var currentDamage = 0F
 
+	private var easingRange = 0f
+
 	@JvmStatic
 	private val facings = EnumFacingType.values().map(classProvider::getEnumFacing)
+
+	override fun onDisable()
+	{
+		easingRange = 0f
+	}
 
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
@@ -212,7 +233,15 @@ object Fucker : Module()
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
-		RenderUtils.drawBlockBox(mc.theWorld ?: return, mc.thePlayer ?: return, currentPos ?: return, 553582592, 0, false, event.partialTicks)
+		currentPos?.let { RenderUtils.drawBlockBox(mc.theWorld ?: return@onRender3D, mc.thePlayer ?: return@onRender3D, it, visualMarkColorValue.get(), 0, false, event.partialTicks) }
+
+		if (!visualMarkEnabledValue.get()) return
+
+		GL11.glPushMatrix()
+		RenderUtils.drawRadius(easingRange, visualMarkAccuracyValue.get(), visualMarkLineWidthValue.get(), visualMarkColorValue.get(255))
+		GL11.glPopMatrix()
+
+		easingRange = easeOutCubic(easingRange, rangeValue.get(), visualMarkFadeSpeedValue.get())
 	}
 
 	/**
@@ -220,8 +249,6 @@ object Fucker : Module()
 	 */
 	private fun find(theWorld: IWorld, thePlayer: IEntity, targetID: Int): WBlockPos?
 	{
-		val func = functions
-
 		val surroundings = surroundingsValue.get()
 		val range = rangeValue.get()
 
@@ -236,7 +263,7 @@ object Fucker : Module()
 
 		(radius downTo -radius + 1).forEach { x ->
 			(radius downTo -radius + 1).forEach { y ->
-				(radius downTo -radius + 1).asSequence().map { z -> WBlockPos(posXI + x, posYI + y, posZI + z) }.filter { blockPos -> func.getIdFromBlock(theWorld.getBlock(blockPos)) == targetID }.map { it to thePlayer.distanceToCenter(it) }.filter { it.second <= range }.filter { it.second <= nearestBlockDistance }.filter { surroundings || isHitable(theWorld, thePlayer, it.first) }.toList().forEach {
+				(radius downTo -radius + 1).asSequence().map { z -> WBlockPos(posXI + x, posYI + y, posZI + z) }.filter { blockPos -> functions.getIdFromBlock(theWorld.getBlock(blockPos)) == targetID }.map { it to thePlayer.distanceToCenter(it) }.filter { it.second <= range }.filter { it.second <= nearestBlockDistance }.filter { surroundings || isHitable(theWorld, thePlayer, it.first) }.toList().forEach {
 					nearestBlockDistance = it.second
 					nearestBlock = it.first
 				}

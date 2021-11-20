@@ -45,7 +45,7 @@ class DuplicateInTabAdditionCheck : BotCheck("tab.duplicateInTab.addition")
 					if ((queryNameFromData(playerData) ?: continue) in currentPlayerList)
 					{
 						itr.remove()
-						notification { "Removed ${playerData.profile.name} (${playerData.displayName?.formattedText}\u00A7r) from the tab list" }
+						notification { arrayOf("profileName=${playerData.profile.name}", "displayName=${playerData.displayName?.formattedText}\u00A7r") }
 					}
 				}
 

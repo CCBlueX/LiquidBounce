@@ -45,7 +45,7 @@ class Teams : Module()
 			val targetName = entityDisplayName.replace("\u00A7r", "")
 			val clientName = displayName.replace("\u00A7r", "")
 
-			if (targetName.startsWith("T") && clientName.startsWith("T")) if (targetName[1].isDigit() && clientName[1].isDigit()) return targetName[1] == clientName[1]
+			if (targetName.startsWith("T") && clientName.startsWith("T") && targetName[1].isDigit() && clientName[1].isDigit()) return targetName[1] == clientName[1]
 		}
 
 		// Color

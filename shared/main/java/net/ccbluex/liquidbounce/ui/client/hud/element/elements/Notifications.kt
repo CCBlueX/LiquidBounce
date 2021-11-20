@@ -41,6 +41,10 @@ class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F, side: 
 		val rectInfoColorModeValue = ListValue("Mode", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom", "Rect-Color")
 		val rectInfoColorValue = RGBAColorValue("Color", 0, 111, 255, 255, listOf("Rect-R", "Rect-G", "Rect-B", "Rect-Alpha"))
 
+		private val rectCautionColorGroup = ValueGroup("CautionColor")
+		val rectCautionColorModeValue = ListValue("Mode", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom")
+		val rectCautionColorValue = RGBAColorValue("Color", 255, 255, 0, 255)
+
 		private val rectWarnColorGroup = ValueGroup("WarnColor")
 		val rectWarnColorModeValue = ListValue("Mode", arrayOf("Custom", "Rainbow", "RainbowShader"), "Custom")
 		val rectWarnColorValue = RGBAColorValue("Color", 255, 255, 0, 255)
@@ -74,8 +78,8 @@ class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F, side: 
 
 		val maxRendered = IntegerValue("MaxRendered", 6, 3, 15)
 
-		val fadeSpeedValue = FloatValue("FadeSpeed", 0.25F, 0.1F, 0.95F)
-		val deploySpeedValue = FloatValue("DeploySpeed", 0.65F, 0.40F, 0.95F)
+		val fadeSpeedValue = FloatValue("FadeSpeed", 15F, 0.1F, 20F)
+		val deploySpeedValue = FloatValue("DeploySpeed", 15F, 0.1F, 20F)
 
 		val headerFontValue = FontValue("HeaderFont", Fonts.font40)
 		val messageFontValue = FontValue("MessageFont", Fonts.font35)
@@ -86,9 +90,10 @@ class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F, side: 
 
 			rectInfoColorGroup.addAll(rectInfoColorModeValue, rectInfoColorValue)
 			rectWarnColorGroup.addAll(rectWarnColorModeValue, rectWarnColorValue)
+			rectCautionColorGroup.addAll(rectCautionColorModeValue, rectCautionColorValue)
 			rectVerboseColorGroup.addAll(rectVerboseColorModeValue, rectVerboseColorValue)
 			rectErrorColorGroup.addAll(rectErrorColorModeValue, rectErrorColorValue)
-			rectGroup.addAll(rectModeValue, rectWidthValue, rectInfoColorGroup, rectWarnColorGroup, rectVerboseColorGroup, rectErrorColorGroup)
+			rectGroup.addAll(rectModeValue, rectWidthValue, rectInfoColorGroup, rectWarnColorGroup, rectCautionColorGroup, rectVerboseColorGroup, rectErrorColorGroup)
 
 			remainingTimeBarGroup.addAll(remainingTimeBarModeValue, remainingTimeBarWidthValue)
 
@@ -101,7 +106,7 @@ class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F, side: 
 	/**
 	 * Example notification for CustomHUD designer
 	 */
-	private val exampleNotification = Notification(NotificationIcon.INFORMATION, "Example Notification Header", "Example Notification Message")
+	private val exampleNotification = Notification(NotificationIcon.INFORMATION, "Example Notification Header", arrayOf("Example Notification Message", "Example Notification Message 2", "Example Notification Message 3"))
 
 	/**
 	 * Draw element
@@ -151,9 +156,9 @@ class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F, side: 
 
 			return when (side.horizontal)
 			{
-				Side.Horizontal.RIGHT -> Border(0F, -30F, 150F, 0F)
-				Side.Horizontal.MIDDLE -> Border(-75F, -30F, 75F, 0F)
-				Side.Horizontal.LEFT -> Border(-150F, -30F, 0F, 0F)
+				Side.Horizontal.RIGHT -> Border(-30F, 0F, 140F, 55F)
+				Side.Horizontal.MIDDLE -> Border(-40F, 0F, 100F, 55F)
+				Side.Horizontal.LEFT -> Border(-140F, 0F, 20F, 55F)
 			}
 		}
 
@@ -161,26 +166,40 @@ class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F, side: 
 	}
 }
 
+/**
+ * TODO:
+ * * Custom icon support
+ * *
+ */
 enum class NotificationIcon(iconPath: String, val colorMode: () -> String, val customColor: () -> Int)
 {
+	// General-purpose
+	ERROR("/notification/error.png", Notifications.rectErrorColorModeValue::get, Notifications.rectErrorColorValue::get),
+	CAUTION("/notification/caution.png", Notifications.rectCautionColorModeValue::get, Notifications.rectCautionColorValue::get),
+	WARNING("/notification/warning.png", Notifications.rectWarnColorModeValue::get, Notifications.rectWarnColorValue::get),
 	INFORMATION("/notification/information.png", Notifications.rectInfoColorModeValue::get, Notifications.rectInfoColorValue::get),
-	WARNING_YELLOW("/notification/warning_yellow.png", Notifications.rectWarnColorModeValue::get, Notifications.rectWarnColorValue::get),
-	WARNING_RED("/notification/warning_red.png", Notifications.rectWarnColorModeValue::get, Notifications.rectWarnColorValue::get),
 	VERBOSE("/notification/verbose.png", Notifications.rectVerboseColorModeValue::get, Notifications.rectVerboseColorValue::get),
+
+	// Non-general-purpose
 	VANISH("/notification/vanish.png", Notifications.rectWarnColorModeValue::get, Notifications.rectWarnColorValue::get),
-	MURDER_MYSTERY("/notification/murder_mystery.png", Notifications.rectErrorColorModeValue::get, Notifications.rectErrorColorValue::get),
-	ROBOT("/notification/robot.png", Notifications.rectErrorColorModeValue::get, Notifications.rectErrorColorValue::get),
-	ERROR("/notification/error.png", Notifications.rectErrorColorModeValue::get, Notifications.rectErrorColorValue::get);
+	MURDER_MYSTERY("/notification/murder_mystery.png", Notifications.rectWarnColorModeValue::get, Notifications.rectWarnColorValue::get),
+	BOT("/notification/robot.png", Notifications.rectCautionColorModeValue::get, Notifications.rectCautionColorValue::get);
 
 	val resourceLocation = LiquidBounce.wrapper.classProvider.createResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + iconPath)
 }
 
-class Notification(private val type: NotificationIcon, private val header: String, private val message: String, private val stayTime: Long = 0L)
+class Notification(private val type: NotificationIcon, var header: String, val message: Array<String>, private val stayTime: Long = 0L)
 {
 	var x = Float.MAX_VALUE // 0F
 	var textLength = 0
+	var stackCount = 1
+		set(value)
+		{
+			field = value
+			updateTextLength()
+		}
 
-	private val stayTimer = MSTimer()
+	val stayTimer = MSTimer()
 	private var fadeStep = 0F
 	var fadeState = FadeState.IN
 
@@ -191,6 +210,8 @@ class Notification(private val type: NotificationIcon, private val header: Strin
 
 	internal val yDeploy: Float
 		get() = yDeployProgress * 0.35F
+
+	constructor(type: NotificationIcon, header: String, message: String, stayTime: Long = 0L) : this(type, header, arrayOf(message), stayTime)
 
 	/**
 	 * Fade state for animation
@@ -205,10 +226,14 @@ class Notification(private val type: NotificationIcon, private val header: Strin
 
 	init
 	{
-		val headerFont = Notifications.headerFontValue.get()
+		updateTextLength()
+	}
+
+	private fun updateTextLength()
+	{
 		val messageFont = Notifications.messageFontValue.get()
 
-		textLength = max(headerFont.getStringWidth(header), messageFont.getStringWidth(message))
+		textLength = max(Notifications.headerFontValue.get().getStringWidth(header + (if (stackCount > 1) " ($stackCount)" else "")), message.map(messageFont::getStringWidth).max() ?: 0)
 	}
 
 	/**
@@ -236,42 +261,43 @@ class Notification(private val type: NotificationIcon, private val header: Strin
 		// Draw Background (Body)
 		val bodyRainbowShader = bodyColorMode.equals("RainbowShader", ignoreCase = true)
 
+		val yEnd = (headerFont.fontHeight + 10F) + (messageFont.fontHeight + 2) * message.size
 		val width = textLength + 38f
 		val (bodyXStart, bodyXEnd) = when (side.horizontal)
 		{
-			Side.Horizontal.LEFT -> x - width to x
+			Side.Horizontal.RIGHT -> x - width to x
 			Side.Horizontal.MIDDLE -> -x + width - width * 0.5f to -x + width + width * 0.5f
-			Side.Horizontal.RIGHT -> -x to -x + width
+			Side.Horizontal.LEFT -> -x to -x + width
+		}
+
+		val bodyColor = when
+		{
+			bodyRainbowShader -> 0
+			bodyColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbowRGB(speed = rainbowSpeed, saturation = saturation, brightness = brightness)
+			else -> bodyCustomColor
 		}
 		RainbowShader.begin(bodyRainbowShader, rainbowShaderX, rainbowShaderY, rainbowShaderOffset).use {
-			val color = when
-			{
-				bodyRainbowShader -> 0
-				bodyColorMode.equals("Rainbow", ignoreCase = true) -> ColorUtils.rainbowRGB(speed = rainbowSpeed, saturation = saturation, brightness = brightness)
-				else -> bodyCustomColor
-			}
-
-			RenderUtils.drawRect(bodyXStart, 0F, bodyXEnd, -30F, color)
+			RenderUtils.drawRect(bodyXStart, 0F, bodyXEnd, yEnd, bodyColor)
 		}
 
 		// Draw remaining time line
 		val remainingTimePercentage = if (fadeState != FadeState.IN) stayTimer.hasTimeLeft(stayTime).coerceAtLeast(0).toFloat() / stayTime.toFloat() else if (stayTime == 0L) 0F else 1F
-		val color = ColorUtils.blendColors(floatArrayOf(0f, 0.5f, 1f), arrayOf(Color.RED, Color.YELLOW, Color.GREEN), remainingTimePercentage).brighter()
+		val remainingTimeColor = ColorUtils.blendColors(floatArrayOf(0f, 0.5f, 1f), arrayOf(Color.RED, Color.YELLOW, Color.GREEN), remainingTimePercentage).brighter()
 
-		run {
-			val pair: Pair<Float, Float> = when (Notifications.remainingTimeBarModeValue.get().toLowerCase())
-			{
-				"up" -> -30f to -30f + Notifications.remainingTimeBarWidthValue.get()
-				"down" -> 0f to -Notifications.remainingTimeBarWidthValue.get()
-				else -> null
-			} ?: return@run
-			RenderUtils.drawRect(bodyXStart + width * (1f - remainingTimePercentage), pair.first, bodyXEnd, pair.second, color)
-		}
+		val rectExpand = when (Notifications.remainingTimeBarModeValue.get().toLowerCase())
+		{
+			"up" -> (0f to 0f - Notifications.remainingTimeBarWidthValue.get()) to (-Notifications.remainingTimeBarWidthValue.get() to 0f)
+			"down" -> yEnd to yEnd + Notifications.remainingTimeBarWidthValue.get() to (0f to Notifications.remainingTimeBarWidthValue.get())
+			else -> null
+		}?.also { (pair, _) ->
+			RenderUtils.drawRect(bodyXStart, pair.first, bodyXEnd, pair.second, bodyColor)
+			RenderUtils.drawRect(bodyXStart + width * (1f - remainingTimePercentage), pair.first, bodyXEnd, pair.second, remainingTimeColor)
+		}?.second ?: (0f to 0f)
 
-		RenderUtils.drawImage(type.resourceLocation, bodyXStart + 5f, -25f, 20f, 20f)
+		RenderUtils.drawImage(type.resourceLocation, bodyXStart + 5f, 5f, 20f, 20f)
 
-		headerFont.drawString(header, bodyXStart.toInt() + 30, -25, Int.MAX_VALUE)
-		messageFont.drawString(message, bodyXStart.toInt() + 30, -12, Int.MAX_VALUE)
+		headerFont.drawString(header + (if (stackCount > 1) " ($stackCount)" else ""), bodyXStart.toInt() + 30, 5, Int.MAX_VALUE)
+		message.forEachIndexed { index, message -> messageFont.drawString(message, bodyXStart.toInt() + 30, (headerFont.fontHeight + 10) + (messageFont.fontHeight + 2) * index, Int.MAX_VALUE) }
 
 		// Draw Rect
 		if (!rect.equals("None", ignoreCase = true))
@@ -290,8 +316,8 @@ class Notification(private val type: NotificationIcon, private val header: Strin
 
 				when (rect.toLowerCase())
 				{
-					"left" -> RenderUtils.drawRect(bodyXStart - rectWidth, 0F, bodyXStart, -30F, rectColor)
-					"right" -> RenderUtils.drawRect(bodyXEnd, 0F, bodyXEnd + rectWidth, -30F, rectColor)
+					"left" -> RenderUtils.drawRect(bodyXStart - rectWidth, 0F + rectExpand.first, bodyXStart, yEnd + rectExpand.second, rectColor)
+					"right" -> RenderUtils.drawRect(bodyXEnd, rectExpand.first, bodyXEnd + rectWidth, yEnd + rectExpand.second, rectColor)
 				}
 			}
 		}
@@ -300,17 +326,17 @@ class Notification(private val type: NotificationIcon, private val header: Strin
 		RenderUtils.resetColor()
 
 		// Animation
-		val delta = RenderUtils.frameTime
+		val frameTime = RenderUtils.frameTime
 
-		val fadeSpeed = Notifications.fadeSpeedValue.get()
-		val deploySpeed = Notifications.deploySpeedValue.get()
+		val fadeSpeed = 20.5F - Notifications.fadeSpeedValue.get().coerceIn(0.01f, 20f)
+		val deploySpeed = 20.5F - Notifications.deploySpeedValue.get().coerceIn(0.01f, 20f)
 
 		if (yDeploying)
 		{
 			if (yDeployProgress < yDeployProgressMax)
 			{
 				yDeployProgress = easeOut(yDeployStep, yDeployProgressMax) * yDeployProgressMax
-				yDeployStep += delta * deploySpeed
+				yDeployStep += frameTime / deploySpeed
 			}
 
 			if (yDeployProgress >= yDeployProgressMax)
@@ -330,7 +356,7 @@ class Notification(private val type: NotificationIcon, private val header: Strin
 				if (x < width)
 				{
 					x = easeOut(fadeStep, width) * (width + cornerX) - cornerX
-					fadeStep += delta * fadeSpeed
+					fadeStep += frameTime / fadeSpeed
 				}
 
 				if (x >= width)
@@ -350,7 +376,7 @@ class Notification(private val type: NotificationIcon, private val header: Strin
 				if (x > -cornerX)
 				{
 					x = easeOut(fadeStep, width) * width
-					fadeStep -= delta * fadeSpeed
+					fadeStep -= frameTime / fadeSpeed
 				}
 				else fadeState = FadeState.END
 			}

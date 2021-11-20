@@ -33,31 +33,19 @@ class EnchantCommand : Command("enchant")
 				return
 			}
 
-			val func = functions
-
-			val enchantID: Int = try
+			val enchantment = try
 			{
-				args[1].toInt()
+				functions.getEnchantmentById(args[1].toInt()) ?: run {
+					chat(thePlayer, "There is no enchantment with the ID '${args[1]}'")
+					return@execute
+				}
 			}
 			catch (e: NumberFormatException)
 			{
-				val enchantment = func.getEnchantmentByLocation(args[1])
-
-				if (enchantment == null)
-				{
+				functions.getEnchantmentByLocation(args[1]) ?: run {
 					chat(thePlayer, "There is no enchantment with the name '${args[1]}'")
-					return
+					return@execute
 				}
-
-				enchantment.effectId
-			}
-
-			val enchantment = func.getEnchantmentById(enchantID)
-
-			if (enchantment == null)
-			{
-				chat(thePlayer, "There is no enchantment with the ID '$enchantID'")
-				return
 			}
 
 			val level = try
@@ -76,7 +64,7 @@ class EnchantCommand : Command("enchant")
 			return
 		}
 
-		chatSyntax(thePlayer, "enchant <type> [level]")
+		chatSyntax(thePlayer, "enchant <type> <level>")
 	}
 
 	override fun tabComplete(args: Array<String>): List<String>

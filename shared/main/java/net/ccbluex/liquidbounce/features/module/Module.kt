@@ -88,7 +88,7 @@ open class Module : MinecraftInstance(), Listenable
 				{
 					field = false
 					ClientUtils.logger.error("Uncaught exception '$e' occurred while onEnable() in module $name", e)
-					LiquidBounce.hud.addNotification(Notification(NotificationIcon.ERROR, "Module Manager", "Something went wrong while enabling module $name"))
+					LiquidBounce.hud.addNotification(Notification(NotificationIcon.ERROR, "Module Manager", "Error occurred while enabling module $name"))
 				}
 			}
 			else
@@ -101,7 +101,7 @@ open class Module : MinecraftInstance(), Listenable
 				catch (e: Exception)
 				{
 					ClientUtils.logger.error("Uncaught exception '$e' occurred while onDisable() in module $name", e)
-					LiquidBounce.hud.addNotification(Notification(NotificationIcon.ERROR, "Module Manager", "Something went wrong while disabling module $name"))
+					LiquidBounce.hud.addNotification(Notification(NotificationIcon.ERROR, "Module Manager", "Error occurred while disabling module $name"))
 				}
 			}
 

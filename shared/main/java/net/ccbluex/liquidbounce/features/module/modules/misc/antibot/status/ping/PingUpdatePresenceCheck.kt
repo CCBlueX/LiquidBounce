@@ -44,13 +44,13 @@ class PingUpdatePresenceCheck : BotCheck("status.ping.updatePresence")
 						val prevPingUpdatedPlayerUUIDList = tabPlayerUUIDs.filterNot(notUpdated::contains)
 						if (if (allMatches) !updatesPlayerUUIDs.all(prevPingUpdatedPlayerUUIDList::contains) else updatesPlayerUUIDs.none(prevPingUpdatedPlayerUUIDList::contains))
 						{
-							notification { "Suspicious ping update packet: [${if (allMatches) "Missing: ${uuidListToString(updatesPlayerUUIDs.filterNot(prevPingUpdatedPlayerUUIDList::contains))}" else "None matches"}]" }
+							notification { arrayOf("reason=(Player omission)", "omitted=${if (allMatches) uuidListToString(updatesPlayerUUIDs.filterNot(prevPingUpdatedPlayerUUIDList::contains)) else "<none matches>"}") }
 							return
 						}
 					}
 
 					if (notUpdated.isEmpty()) notUpdated.addAll(tabPlayerUUIDs.filterNot(updatesPlayerUUIDs::contains)) else notUpdated.removeAll(tabPlayerUUIDs.filter(updatesPlayerUUIDs::contains).filter(notUpdated::contains))
-					if (notUpdated.isNotEmpty()) notification { "Ping not updated - ${uuidListToString(notUpdated)}" }
+					if (notUpdated.isNotEmpty()) notification { arrayOf("reason=(Ping update omission)", "list=${uuidListToString(notUpdated)}") }
 				}
 
 				ISPacketPlayerListItem.WAction.REMOVE_PLAYER -> notUpdated.removeAll(updatedPlayers.map { it.profile.id })

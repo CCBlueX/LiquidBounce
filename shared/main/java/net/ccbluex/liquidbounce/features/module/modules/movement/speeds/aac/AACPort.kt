@@ -34,16 +34,13 @@ class AACPort : SpeedMode("AACPort")
 
 		while (speed <= maxSpeed)
 		{
-			val func = functions
+			val x = thePlayer.posX - functions.sin(dir) * speed
+			val posY = thePlayer.posY
+			val z = thePlayer.posZ + functions.cos(dir) * speed
 
-			val x = thePlayer.posX - func.sin(dir) * speed
-			val z = thePlayer.posZ + func.cos(dir) * speed
+			if (posY < posY.toInt() + 0.5 && !classProvider.isBlockAir(theWorld.getBlock(WBlockPos(x, posY, z)))) break
 
-			val provider = classProvider
-
-			if (thePlayer.posY < thePlayer.posY.toInt() + 0.5 && !provider.isBlockAir(theWorld.getBlock(WBlockPos(x, thePlayer.posY, z)))) break
-
-			thePlayer.sendQueue.addToSendQueue(provider.createCPacketPlayerPosition(x, thePlayer.posY, z, true))
+			thePlayer.sendQueue.addToSendQueue(classProvider.createCPacketPlayerPosition(x, posY, z, true))
 			speed += 0.2
 		}
 	}

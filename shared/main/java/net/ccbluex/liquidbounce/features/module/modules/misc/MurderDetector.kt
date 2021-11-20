@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.event.WorldEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationIcon
 import net.ccbluex.liquidbounce.utils.ClientUtils
 
@@ -40,7 +41,7 @@ class MurderDetector : Module()
 		theWorld.loadedEntityList.asSequence().filter(provider::isEntityPlayer).map(IEntity::asEntityPlayer).filter { it != thePlayer }.filter { it.currentEquippedItem?.item != null }.filter { !murders.contains(it) }.filter { isMurder(it.currentEquippedItem?.item!!) }.forEach {
 			murders.add(it.asEntityPlayer())
 			ClientUtils.displayChatMessage(thePlayer, "\u00A7a\u00A7l${it.asEntityPlayer().name}\u00A7r is the \u00A74\u00A7lmurderer\u00A7r!")
-			LiquidBounce.hud.addNotification(NotificationIcon.MURDER_MYSTERY, "Murder Detector", it.name, 5000L)
+			LiquidBounce.hud.addNotification(Notification(NotificationIcon.MURDER_MYSTERY, "Murder Detector", "${it.name}\u00A7r is murder!", 5000L))
 		}
 	}
 

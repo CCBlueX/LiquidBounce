@@ -25,7 +25,7 @@ class InvalidGroundCheck : BotCheck("status.invalidGround")
 		val previousVL = vl[entityId] ?: 0
 		if (onGround)
 		{
-			if ((previousVL + 5) % 10 == 0) notification(target) { "Suspicious ground" }
+			if ((previousVL + 5) % 10 == 0) notification(target) { arrayOf("delta=${target.prevPosY - target.posY}") }
 			if (target.prevPosY != target.posY) vl[entityId] = previousVL + 2
 		}
 		else

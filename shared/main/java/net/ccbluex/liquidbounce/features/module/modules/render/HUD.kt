@@ -15,6 +15,10 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FontValue
 import net.ccbluex.liquidbounce.value.ValueGroup
 
+/**
+ * TODO
+ * * Add more notification options
+ */
 @ModuleInfo(name = "HUD", description = "Toggles visibility of the HUD.", category = ModuleCategory.RENDER, array = false)
 class HUD : Module()
 {
@@ -24,7 +28,7 @@ class HUD : Module()
 	private val notificationGroup = ValueGroup("Notification")
 	val notificationAlertsValue = BoolValue("Alerts", true, "Alerts")
 	val notificationWorldChangeValue = BoolValue("WorldChange", true, "WorldChangeAlerts")
-	val notificationModuleManagerValue = BoolValue("ModuleToggle", true)
+	val notificationModuleManagerValue = BoolValue("ModuleToggle", true) // TODO: ModuleToggleNotificationKeepTime
 	val fontChatValue = BoolValue("FontChat", false)
 	val chatFontValue = FontValue("FontChatFont", Fonts.font40)
 

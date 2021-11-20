@@ -20,14 +20,14 @@ import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen
 import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IServerData
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IGlStateManager
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.ITessellator
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IThreadDownloadImageData
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.WIImageBuffer
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.texture.IDynamicTexture
-import net.ccbluex.liquidbounce.api.minecraft.client.renderer.vertex.IVertexFormat
-import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IGlStateManager
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.texture.ITextureUtil
 import net.ccbluex.liquidbounce.api.minecraft.client.renderer.vertex.IVertexBuffer
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.vertex.IVertexFormat
 import net.ccbluex.liquidbounce.api.minecraft.client.settings.IGameSettings
 import net.ccbluex.liquidbounce.api.minecraft.client.shader.IFramebuffer
 import net.ccbluex.liquidbounce.api.minecraft.enchantments.IEnchantment
@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.api.minecraft.item.IItem
 import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.api.minecraft.nbt.*
 import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
+import net.ccbluex.liquidbounce.api.minecraft.network.IPacketBuffer
 import net.ccbluex.liquidbounce.api.minecraft.network.play.client.*
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotion
 import net.ccbluex.liquidbounce.api.minecraft.potion.IPotionEffect
@@ -44,7 +45,6 @@ import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.api.minecraft.stats.IStatBase
 import net.ccbluex.liquidbounce.api.minecraft.util.*
 import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
-import net.ccbluex.liquidbounce.api.minecraft.network.IPacketBuffer
 import net.ccbluex.liquidbounce.api.util.IWrappedFontRenderer
 import net.ccbluex.liquidbounce.api.util.WrappedCreativeTabs
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
@@ -53,11 +53,10 @@ import net.ccbluex.liquidbounce.injection.backend.minecraft.block.material.Mater
 import net.ccbluex.liquidbounce.injection.backend.minecraft.client.block.BlockImpl
 import net.ccbluex.liquidbounce.injection.backend.minecraft.client.block.unwrap
 import net.ccbluex.liquidbounce.injection.backend.minecraft.client.entity.EntityOtherPlayerMPImpl
-import net.ccbluex.liquidbounce.injection.backend.minecraft.client.entity.unwrap
 import net.ccbluex.liquidbounce.injection.backend.minecraft.client.gui.*
 import net.ccbluex.liquidbounce.injection.backend.minecraft.client.multiplayer.unwrap
-import net.ccbluex.liquidbounce.injection.backend.minecraft.client.renderer.TessellatorImpl
 import net.ccbluex.liquidbounce.injection.backend.minecraft.client.renderer.GlStateManagerImpl
+import net.ccbluex.liquidbounce.injection.backend.minecraft.client.renderer.TessellatorImpl
 import net.ccbluex.liquidbounce.injection.backend.minecraft.client.renderer.ThreadDownloadImageDataImpl
 import net.ccbluex.liquidbounce.injection.backend.minecraft.client.renderer.texture.DynamicTextureImpl
 import net.ccbluex.liquidbounce.injection.backend.minecraft.client.renderer.texture.TextureUtilImpl
@@ -87,7 +86,9 @@ import net.ccbluex.liquidbounce.injection.backend.minecraft.stats.StatBaseImpl
 import net.ccbluex.liquidbounce.injection.backend.minecraft.tileentity.TileEntityImpl
 import net.ccbluex.liquidbounce.injection.backend.minecraft.util.*
 import net.ccbluex.liquidbounce.injection.backend.minecraft.world.unwrap
-import net.ccbluex.liquidbounce.injection.backend.utils.*
+import net.ccbluex.liquidbounce.injection.backend.utils.GuiPasswordField
+import net.ccbluex.liquidbounce.injection.backend.utils.SafeVertexBuffer
+import net.ccbluex.liquidbounce.injection.backend.utils.unwrap
 import net.ccbluex.liquidbounce.injection.backend.wrappers.CreativeTabsWrapper
 import net.ccbluex.liquidbounce.injection.backend.wrappers.FontRendererWrapper
 import net.ccbluex.liquidbounce.injection.backend.wrappers.GuiScreenWrapper
@@ -552,6 +553,10 @@ object ClassProviderImpl : IClassProvider
 	override fun isItemSkull(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemSkull
 
 	override fun isItemExpBottle(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemExpBottle
+
+	override fun isItemSpade(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemSpade
+
+	override fun isItemShears(obj: Any?): Boolean = obj is ItemImpl<*> && obj.wrapped is ItemShears
 	// </editor-fold>
 
 	// <editor-fold desc="Type checks (GUI)">
