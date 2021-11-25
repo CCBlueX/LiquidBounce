@@ -20,6 +20,8 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(ResourcePackRepository.class)
 public class MixinResourcePackRepository
@@ -32,29 +34,21 @@ public class MixinResourcePackRepository
 	@Final
 	private static Logger logger;
 
-	/**
-	 * @author Mojang
-	 * @reason Fix a bug
-	 */
-	@Overwrite
+	@Shadow
 	private void deleteOldServerResourcesPacks()
+	{
+	}
+
+	@Redirect(method = "downloadResourcePack", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/resources/ResourcePackRepository;deleteOldServerResourcesPacks()V"))
+	public void injectExceptionHandler(final ResourcePackRepository instance)
 	{
 		try
 		{
-			final List<File> resourcePacks = Lists.newArrayList(FileUtils.listFiles(dirServerResourcepacks, TrueFileFilter.TRUE, null));
-			resourcePacks.sort(LastModifiedFileComparator.LASTMODIFIED_REVERSE);
-			int index = 0;
-
-			for (final File resourcePackFile : resourcePacks)
-				if (index++ >= 10)
-				{
-					logger.info("Deleting old server resource pack {}", resourcePackFile.getName());
-					FileUtils.deleteQuietly(resourcePackFile);
-				}
+			deleteOldServerResourcesPacks();
 		}
-		catch (final Throwable e)
+		catch(final Throwable t)
 		{
-			e.printStackTrace();
+			logger.warn("Failed to delete old server resource packs", t);
 		}
 	}
 }

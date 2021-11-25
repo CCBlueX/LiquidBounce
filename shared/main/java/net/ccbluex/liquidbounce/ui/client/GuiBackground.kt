@@ -11,6 +11,8 @@ import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen
 import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
+import net.ccbluex.liquidbounce.utils.runAsync
+import net.ccbluex.liquidbounce.utils.runSync
 import org.lwjgl.input.Keyboard
 import java.io.FileInputStream
 import java.io.FileOutputStream
@@ -36,19 +38,17 @@ class GuiBackground(val prevGui: IGuiScreen) : WrappedGuiScreen()
 
 		val buttonList = representedScreen.buttonList
 
-		val provider = classProvider
+		buttonList.add(classProvider.createGuiButton(0, buttonX, quarterScreen + 55 + (25 shl 2) + 5, "Back"))
 
-		buttonList.add(provider.createGuiButton(0, buttonX, quarterScreen + 55 + (25 shl 2) + 5, "Back"))
-
-		enabledButton = provider.createGuiButton(1, buttonX, quarterScreen + 35, "Enabled (${if (enabled) "On" else "Off"})")
+		enabledButton = classProvider.createGuiButton(1, buttonX, quarterScreen + 35, "Enabled (${if (enabled) "On" else "Off"})")
 		buttonList.add(enabledButton)
 
-		particlesButton = provider.createGuiButton(2, buttonX, quarterScreen + 50 + 25, "Particles (${if (particles) "On" else "Off"})")
+		particlesButton = classProvider.createGuiButton(2, buttonX, quarterScreen + 75, "Particles (${if (particles) "On" else "Off"})")
 		buttonList.add(particlesButton)
 
-		val buttonY = quarterScreen + (25 shl 1) + 50
-		buttonList.add(provider.createGuiButton(3, buttonX, buttonY, 98, 20, "Change wallpaper"))
-		buttonList.add(provider.createGuiButton(4, (representedScreen.width shr 1) + 2, buttonY, 98, 20, "Reset wallpaper"))
+		val buttonY = quarterScreen + 100
+		buttonList.add(classProvider.createGuiButton(3, buttonX, buttonY, 98, 20, "Change wallpaper"))
+		buttonList.add(classProvider.createGuiButton(4, (representedScreen.width shr 1) + 2, buttonY, 98, 20, "Reset wallpaper"))
 	}
 
 	override fun actionPerformed(button: IGuiButton)
@@ -67,25 +67,22 @@ class GuiBackground(val prevGui: IGuiScreen) : WrappedGuiScreen()
 				particlesButton.displayString = "Particles (${if (particles) "On" else "Off"})"
 			}
 
-			3 ->
-			{
-				val file = MiscUtils.openFileChooser() ?: return
-				if (file.isDirectory) return
+			3 -> runAsync {
+				val file = MiscUtils.openFileChooser() ?: return@runAsync
+				if (file.isDirectory) return@runAsync
 
 				try
 				{
 					Files.copy(file.toPath(), FileOutputStream(LiquidBounce.fileManager.backgroundFile))
 
 					val location = classProvider.createResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/background.png")
-
 					LiquidBounce.background = location
-
-					mc.textureManager.loadTexture(location, classProvider.createDynamicTexture(ImageIO.read(FileInputStream(LiquidBounce.fileManager.backgroundFile))))
+					runSync { mc.textureManager.loadTexture(location, classProvider.createDynamicTexture(ImageIO.read(FileInputStream(LiquidBounce.fileManager.backgroundFile)))) }
 				}
 				catch (e: Exception)
 				{
 					e.printStackTrace()
-					MiscUtils.showErrorPopup("Error", "Exception class: " + e.javaClass.name + "\nMessage: " + e.message)
+					MiscUtils.showErrorPopup("Error", "Exception class: ${e.javaClass.name}\nMessage: ${e.message}")
 					LiquidBounce.fileManager.backgroundFile.delete()
 				}
 			}

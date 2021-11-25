@@ -105,9 +105,9 @@ public abstract class MixinBlock
 	}
 
 	@Inject(method = "getPlayerRelativeBlockHardness", at = @At("RETURN"), cancellable = true)
-	public void modifyBreakSpeed(final EntityPlayer playerIn, final World worldIn, final BlockPos pos, final CallbackInfoReturnable<Float> callbackInfo)
+	public void modifyBreakSpeed(final EntityPlayer playerIn, final World worldIn, final BlockPos pos, final CallbackInfoReturnable<? super Float> callbackInfo)
 	{
-		float returnValue = callbackInfo.getReturnValue();
+		float returnValue = callbackInfo.getReturnValueF();
 
 		// NoSlowBreak
 		final NoSlowBreak noSlowBreak = (NoSlowBreak) LiquidBounce.moduleManager.get(NoSlowBreak.class);

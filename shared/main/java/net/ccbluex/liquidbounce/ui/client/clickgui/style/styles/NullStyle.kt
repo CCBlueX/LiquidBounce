@@ -277,10 +277,7 @@ class NullStyle : Style()
 					val moduleXEnd = moduleX + moduleElement.settingsWidth
 
 					drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 24f, BACKGROUND)
-					drawRangeSlider(value.getMin().toFloat(), value.getMax().toFloat(), value.minimum.toFloat(), value.maximum.toFloat(), moduleX, moduleXEnd, yPos + 15, moduleElement.settingsWidth, mouseX, mouseY, indent, guiColor) { (min, max) ->
-						if (min.toInt() != value.getMin()) value.setMin(min)
-						if (max.toInt() != value.getMax()) value.setMax(max)
-					}
+					drawRangeSlider(value.getMin().toFloat(), value.getMax().toFloat(), value.minimum.toFloat(), value.maximum.toFloat(), moduleX, moduleXEnd, yPos + 15, moduleElement.settingsWidth, mouseX, mouseY, indent, guiColor, value::setMin, value::setMax)
 
 					glStateManager.resetColor()
 					font.drawString(text, moduleIndentX + 6, yPos + 4, WHITE)
@@ -299,10 +296,7 @@ class NullStyle : Style()
 					val moduleXEnd = moduleX + moduleElement.settingsWidth
 
 					drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 24f, BACKGROUND)
-					drawRangeSlider(value.getMin(), value.getMax(), value.minimum, value.maximum, moduleX, moduleXEnd, yPos + 15, moduleElement.settingsWidth, mouseX, mouseY, indent, guiColor) { (min, max) ->
-						if (min != value.getMin()) value.setMin(min)
-						if (max != value.getMax()) value.setMax(max)
-					}
+					drawRangeSlider(value.getMin(), value.getMax(), value.minimum, value.maximum, moduleX, moduleXEnd, yPos + 15, moduleElement.settingsWidth, mouseX, mouseY, indent, guiColor, value::setMin, value::setMax)
 
 					glStateManager.resetColor()
 
@@ -465,7 +459,9 @@ class NullStyle : Style()
 					if ((Mouse.isButtonDown(0) && !mouseDown || Mouse.isButtonDown(1) && !rightMouseDown) && mouseX in moduleIndentX + 4..moduleXEnd.toInt() && mouseY in yPos + 4..yPos + 12)
 					{
 						val fonts = Fonts.fonts
-						if (Mouse.isButtonDown(0)) fonts.filter { it == fontRenderer }.forEachIndexed { index, _ -> value.set(fonts[if (index + 1 >= fonts.size) 0 else index + 1]) } // Next fontelse fonts.filter { it == fontRenderer }.forEachIndexed { index, _ -> value.set(fonts[if (index - 1 < 0) fonts.size - 1 else index - 1]) } // Previous font
+						val index = fonts.indexOf(fontRenderer)
+						if (Mouse.isButtonDown(0)) value.set(fonts[if (index + 1 >= fonts.size) 0 else index + 1]) // Next font
+						else value.set(fonts[if (index - 1 < 0) fonts.size - 1 else index - 1]) // Previous font
 					}
 
 					yPos += 11
@@ -506,7 +502,7 @@ class NullStyle : Style()
 	{
 		private fun encodeToHex(hex: Int) = hex.toString(16).toUpperCase().padStart(2, '0')
 
-		private fun drawSlider(value: Float, min: Float, max: Float, xStart: Int, xEnd: Float, y: Int, settingsWidth: Float, mouseX: Int, mouseY: Int, indent: Int, color: Int, changedCallback: (Float) -> Unit)
+		private inline fun drawSlider(value: Float, min: Float, max: Float, xStart: Int, xEnd: Float, y: Int, settingsWidth: Float, mouseX: Int, mouseY: Int, indent: Int, color: Int, onChanged: (Float) -> Unit)
 		{
 			val indentX = xStart + indent
 			val sliderXEnd = settingsWidth - indent - 12
@@ -518,10 +514,10 @@ class NullStyle : Style()
 			val sliderValue = indentX + sliderXEnd * (value.coerceIn(min, max) - min) / (max - min)
 			drawRect((sliderValue + SLIDER_START_SHIFT).toInt(), y, (sliderValue + SLIDER_START_SHIFT).toInt() + 3, y + 6, color)
 
-			if (mouseX in (indentX + 4)..xEnd.toInt() && mouseY in y..y + 6 && Mouse.isButtonDown(0)) changedCallback(round(min + (max - min) * ((mouseX - (indentX + SLIDER_START_SHIFT)) / sliderXEnd).coerceIn(0f, 1f)).toFloat())
+			if (mouseX in (indentX + 4)..xEnd.toInt() && mouseY in y..y + 6 && Mouse.isButtonDown(0)) onChanged(round(min + (max - min) * ((mouseX - (indentX + SLIDER_START_SHIFT)) / sliderXEnd).coerceIn(0f, 1f)).toFloat())
 		}
 
-		private fun drawRangeSlider(minValue: Float, maxValue: Float, min: Float, max: Float, xStart: Int, xEnd: Float, y: Int, settingsWidth: Float, mouseX: Int, mouseY: Int, indent: Int, color: Int, changeCallback: (Pair<Float, Float>) -> Unit)
+		private inline fun drawRangeSlider(minValue: Float, maxValue: Float, min: Float, max: Float, xStart: Int, xEnd: Float, y: Int, settingsWidth: Float, mouseX: Int, mouseY: Int, indent: Int, color: Int, onMinChanged: (Float) -> Unit, onMaxChanged: (Float) -> Unit)
 		{
 			val indentX = xStart + indent
 			val sliderXEnd = settingsWidth - indent - 12
@@ -544,7 +540,7 @@ class NullStyle : Style()
 			if (mouseX in indentX..xEnd.toInt() && mouseY in y..y + 6 && Mouse.isButtonDown(0))
 			{
 				val newValue = round(min + (max - min) * ((mouseX - (indentX + SLIDER_START_SHIFT)) / sliderXEnd).coerceIn(0f, 1f)).toFloat()
-				changeCallback(if (mouseX > center) minValue to newValue else newValue to maxValue)
+				if (mouseX > center) onMaxChanged(newValue) else onMinChanged(newValue)
 			}
 		}
 

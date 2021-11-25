@@ -192,8 +192,7 @@ class NameTags : Module()
 
 		val glStateManager = classProvider.glStateManager
 
-		glPushClientAttrib(GL_ALL_CLIENT_ATTRIB_BITS)
-		glPushAttrib(GL_ALL_ATTRIB_BITS)
+		glPushAttrib(GL_ENABLE_BIT)
 		glPushMatrix()
 
 		glDisable(GL_LIGHTING)
@@ -210,7 +209,6 @@ class NameTags : Module()
 
 		glPopMatrix()
 		glPopAttrib()
-		glPopClientAttrib()
 	}
 
 	private fun renderNameTag(entity: IEntityLivingBase, tag: NameTag, renderManager: IRenderManager, renderItem: IRenderItem, glStateManager: IGlStateManager, partialTicks: Float)
@@ -264,8 +262,6 @@ class NameTags : Module()
 		// Draw armors
 		if (elementArmorValue.get())
 		{
-			val prevZLevel = renderItem.zLevel
-
 			renderItem.zLevel = -147F
 
 			tag.equipments.forEach { (index, equipment) ->
@@ -275,8 +271,7 @@ class NameTags : Module()
 			glStateManager.enableAlpha()
 			glStateManager.disableBlend()
 			glStateManager.enableTexture2D()
-
-			renderItem.zLevel = prevZLevel
+			glStateManager.disableDepth()
 		}
 
 		// Pop

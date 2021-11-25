@@ -21,4 +21,5 @@ interface IFontRenderer
 	fun isGameFontRenderer(): Boolean
 	fun getGameFontRenderer(): GameFontRenderer
 	fun drawString(str: String, x: Float, y: Float, color: Int): Int
+	override fun equals(other: Any?): Boolean
 }

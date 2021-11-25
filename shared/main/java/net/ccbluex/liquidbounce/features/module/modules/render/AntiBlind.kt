@@ -13,7 +13,21 @@ import net.ccbluex.liquidbounce.value.BoolValue
 @ModuleInfo(name = "AntiBlind", description = "Cancels blindness effects.", category = ModuleCategory.RENDER)
 class AntiBlind : Module()
 {
+	val blindnessEffect = BoolValue("Blindness", true)
 	val confusionEffect = BoolValue("Confusion", true)
 	val pumpkinEffect = BoolValue("Pumpkin", true)
 	val fireEffect = BoolValue("Fire", false)
+
+	override val tag: String
+		get()
+		{
+			var tag = ""
+
+			if (blindnessEffect.get()) tag += 'b'
+			if (confusionEffect.get()) tag += 'c'
+			if (pumpkinEffect.get()) tag += 'p'
+			if (fireEffect.get()) tag += 'f'
+
+			return tag
+		}
 }

@@ -21,6 +21,7 @@ import net.ccbluex.liquidbounce.ui.font.assumeVolatileIf
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_4
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.stripControlCodes
+import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawFilledCircle
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
@@ -35,6 +36,9 @@ private const val LIGHT_GRAY = Int.MAX_VALUE
 
 private const val BACKGROUND = -14010033
 private const val BACKGROUND_BORDER = -13220000
+
+private val BUTTON_UNPRESSED = Color(54, 71, 96).rgb
+private val BUTTON_PRESSED = Color(7, 152, 252).rgb
 
 class SlowlyStyle : Style()
 {
@@ -72,7 +76,7 @@ class SlowlyStyle : Style()
 
 	override fun drawButtonElement(mouseX: Int, mouseY: Int, buttonElement: ButtonElement)
 	{
-		drawRect(buttonElement.x - 1, buttonElement.y - 1, buttonElement.x + buttonElement.width + 1, buttonElement.y + buttonElement.height + 1, hoverColor(if (buttonElement.color == Int.MAX_VALUE) Color(54, 71, 96) else Color(7, 152, 252), buttonElement.hoverTime).rgb)
+		drawRect(buttonElement.x - 1, buttonElement.y - 1, buttonElement.x + buttonElement.width + 1, buttonElement.y + buttonElement.height + 1, getHoverColor(if (buttonElement.color == Int.MAX_VALUE) BUTTON_UNPRESSED else BUTTON_PRESSED, buttonElement.hoverTime))
 
 		classProvider.glStateManager.resetColor()
 
@@ -93,8 +97,8 @@ class SlowlyStyle : Style()
 		val buttonFont = getButtonFont()
 		val valueFont = getValueFont()
 
-		drawRect(moduleElement.x - 1, moduleElement.y - 1, moduleElement.x + moduleElement.width + 1, moduleElement.y + moduleElement.height + 1, hoverColor(Color(54, 71, 96), moduleElement.hoverTime).rgb)
-		drawRect(moduleElement.x - 1, moduleElement.y - 1, moduleElement.x + moduleElement.width + 1, moduleElement.y + moduleElement.height + 1, hoverColor(Color(7, 152, 252, moduleElement.slowlyFade), moduleElement.hoverTime).rgb)
+		drawRect(moduleElement.x - 1, moduleElement.y - 1, moduleElement.x + moduleElement.width + 1, moduleElement.y + moduleElement.height + 1, getHoverColor(BUTTON_UNPRESSED, moduleElement.hoverTime))
+		drawRect(moduleElement.x - 1, moduleElement.y - 1, moduleElement.x + moduleElement.width + 1, moduleElement.y + moduleElement.height + 1, getHoverColor(ColorUtils.applyAlphaChannel(BUTTON_PRESSED, moduleElement.slowlyFade), moduleElement.hoverTime))
 
 		val glStateManager = classProvider.glStateManager
 		glStateManager.resetColor()
@@ -246,10 +250,7 @@ class SlowlyStyle : Style()
 
 					if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
 
-					drawRangeSlider(value.getMin().toFloat(), value.getMax().toFloat(), value.minimum.toFloat(), value.maximum.toFloat(), moduleX + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, indent, -16279300 /* 0xFF0798FC */) { (min, max) ->
-						if (min.toInt() != value.getMin()) value.setMin(min)
-						if (max.toInt() != value.getMax()) value.setMax(max)
-					}
+					drawRangeSlider(value.getMin().toFloat(), value.getMax().toFloat(), value.minimum.toFloat(), value.maximum.toFloat(), moduleX + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, indent, -16279300 /* 0xFF0798FC */, value::setMin, value::setMax)
 
 					glStateManager.resetColor()
 					font.drawString(text, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 4, WHITE)
@@ -264,10 +265,7 @@ class SlowlyStyle : Style()
 
 					if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
 
-					drawRangeSlider(value.getMin(), value.getMax(), value.minimum, value.maximum, moduleX + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, indent, -16279300 /* 0xFF0798FC */) { (min, max) ->
-						if (min != value.getMin()) value.setMin(min)
-						if (max != value.getMax()) value.setMax(max)
-					}
+					drawRangeSlider(value.getMin(), value.getMax(), value.minimum, value.maximum, moduleX + 8, moduleElement.slowlySettingsYPos + 14, moduleElement.settingsWidth.toInt() - 12, mouseX, mouseY, indent, -16279300 /* 0xFF0798FC */, value::setMin, value::setMax)
 
 					glStateManager.resetColor()
 
@@ -459,7 +457,7 @@ class SlowlyStyle : Style()
 	{
 		private fun encodeToHex(hex: Int) = hex.toString(16).toUpperCase().padStart(2, '0')
 
-		private fun drawSlider(value: Float, min: Float, max: Float, x: Int, y: Int, width: Int, mouseX: Int, mouseY: Int, indent: Int, color: Int, changeCallback: (Float) -> Unit)
+		private inline fun drawSlider(value: Float, min: Float, max: Float, x: Int, y: Int, width: Int, mouseX: Int, mouseY: Int, indent: Int, color: Int, changeCallback: (Float) -> Unit)
 		{
 			val indentX = x + indent
 			val xEnd = x + width
@@ -477,7 +475,7 @@ class SlowlyStyle : Style()
 			}
 		}
 
-		private fun drawRangeSlider(minValue: Float, maxValue: Float, min: Float, max: Float, x: Int, y: Int, width: Int, mouseX: Int, mouseY: Int, indent: Int, color: Int, changeCallback: (Pair<Float, Float>) -> Unit)
+		private inline fun drawRangeSlider(minValue: Float, maxValue: Float, min: Float, max: Float, x: Int, y: Int, width: Int, mouseX: Int, mouseY: Int, indent: Int, color: Int, onMinChanged: (Float) -> Unit, onMaxChanged: (Float) -> Unit)
 		{
 			val indentX = x + indent
 			val sliderXEnd = width - indent - 3f
@@ -496,16 +494,10 @@ class SlowlyStyle : Style()
 			if (mouseX >= indentX && mouseX <= x + width && mouseY >= y && mouseY <= y + 3 && Mouse.isButtonDown(0))
 			{
 				val newValue = BigDecimal("${(min + (max - min) * ((mouseX - indentX) / sliderXEnd).coerceIn(0f, 1f))}").setScale(4, RoundingMode.HALF_UP).toFloat()
-				changeCallback(if (mouseX > center) minValue to newValue else newValue to maxValue)
+				if (mouseX > center) onMaxChanged(newValue) else onMinChanged(newValue)
 			}
 		}
 
-		private fun hoverColor(color: Color, hover: Int): Color
-		{
-			val red = color.red - (hover shl 1)
-			val green = color.green - (hover shl 1)
-			val blue = color.blue - (hover shl 1)
-			return Color(red.coerceAtLeast(0), green.coerceAtLeast(0), blue.coerceAtLeast(0), color.alpha)
-		}
+		private fun getHoverColor(color: Int, hover: Int): Int = ColorUtils.createRGB(((color shr 16 and 0xFF) - (hover shl 1)).coerceAtLeast(0), ((color shr 8 and 0xFF) - (hover shl 1)).coerceAtLeast(0), ((color and 0xFF) - (hover shl 1)).coerceAtLeast(0), color shr 24 and 0xFF)
 	}
 }

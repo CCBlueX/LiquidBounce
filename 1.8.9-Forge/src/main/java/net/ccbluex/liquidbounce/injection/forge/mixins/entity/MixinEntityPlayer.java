@@ -23,29 +23,17 @@ import net.minecraft.world.EnumDifficulty;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.At.Shift;
 
 @Mixin(EntityPlayer.class)
 public abstract class MixinEntityPlayer extends MixinEntityLivingBase
 {
 	@Shadow
-	public float prevCameraYaw;
-	@Shadow
-	public float cameraYaw;
-
-	@Shadow
 	protected int flyToggleTimer;
 
 	@Shadow
 	public PlayerCapabilities capabilities;
-
-	@Shadow
-	protected FoodStats foodStats;
-
-	@Shadow
-	public float speedInAir;
-
-	@Shadow
-	public InventoryPlayer inventory;
 
 	@Shadow
 	public abstract ItemStack getHeldItem();
@@ -71,77 +59,50 @@ public abstract class MixinEntityPlayer extends MixinEntityLivingBase
 	@Shadow
 	public abstract boolean isUsingItem();
 
-	@Shadow
-	public abstract boolean isSpectator();
-
-	@Shadow
-	private void collideWithPlayer(final Entity p_71044_1_)
+	@ModifyVariable(method = "onLivingUpdate", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/EntityPlayer;onGround:Z", ordinal = 0, shift = Shift.BEFORE), ordinal = 0)
+	public float injectBobbingCameraIncrementMultiplierYaw(final float f)
 	{
+		final Bobbing bobbing = (Bobbing) LiquidBounce.moduleManager.get(Bobbing.class);
+
+		if (!bobbing.getState())
+			return f;
+		return f * bobbing.getCameraIncrementMultiplierYawValue().get();
 	}
 
-	/**
-	 * Called frequently so the entity can update its state every tick as required. For example, zombies and skeletons use this to react to sunlight and start to burn.
-	 *
-	 * @reason Bobbing Camera Yaw/Pitch multiplier & Ignore ground check
-	 * @author eric0210
-	 */
-	@Overwrite
-	public void onLivingUpdate()
+	@ModifyVariable(method = "onLivingUpdate", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/EntityPlayer;onGround:Z", ordinal = 1, shift = Shift.BEFORE), ordinal = 1)
+	public float injectBobbingCameraIncrementMultiplierPitch(final float f1)
 	{
-		if (flyToggleTimer > 0)
-			--flyToggleTimer;
-
-		if (worldObj.getDifficulty() == EnumDifficulty.PEACEFUL && worldObj.getGameRules().getBoolean("naturalRegeneration"))
-		{
-			if (getHealth() < getMaxHealth() && ticksExisted % 20 == 0)
-				heal(1.0F);
-
-			if (foodStats.needFood() && ticksExisted % 10 == 0)
-				foodStats.setFoodLevel(foodStats.getFoodLevel() + 1);
-		}
-
-		inventory.decrementAnimations();
-		prevCameraYaw = cameraYaw;
-
-		super.onLivingUpdate();
-
-		final IAttributeInstance iattributeinstance = getEntityAttribute(SharedMonsterAttributes.movementSpeed);
-
-		if (!worldObj.isRemote)
-			iattributeinstance.setBaseValue(capabilities.getWalkSpeed());
-
-		jumpMovementFactor = speedInAir;
-
-		if (isSprinting())
-			jumpMovementFactor += speedInAir * 0.3D;
-
-		setAIMoveSpeed((float) iattributeinstance.getAttributeValue());
-
 		final Bobbing bobbing = (Bobbing) LiquidBounce.moduleManager.get(Bobbing.class);
-		final boolean bobbingState = bobbing.getState();
 
-		final float yawIncMultiplier = bobbing.getCameraIncrementMultiplierYawValue().get();
-		final float pitchIncMultiplier = bobbing.getCameraIncrementMultiplierPitchValue().get();
+		if (!bobbing.getState())
+			return f1;
+		return f1 * bobbing.getCameraIncrementMultiplierPitchValue().get();
+	}
 
-		float cameraYawInc = Math.min(MathHelper.sqrt_double(motionX * motionX + motionZ * motionZ), 0.1f) * yawIncMultiplier;
-		float cameraPitchInc = (float) (StrictMath.atan(-motionY * 0.20000000298023224D) * 15.0D) * pitchIncMultiplier;
+	@Redirect(method = "onLivingUpdate", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/EntityPlayer;onGround:Z"))
+	public boolean injectBobbingGroundCheck(final EntityPlayer instance)
+	{
+		final Bobbing bobbing = (Bobbing) LiquidBounce.moduleManager.get(Bobbing.class);
+		return onGround || bobbing.getState() && !bobbing.getCheckGroundValue().get();
+	}
 
-		final boolean groundCheck = onGround || bobbingState && !bobbing.getCheckGroundValue().get();
+	@ModifyConstant(method = "onLivingUpdate", constant = @Constant(floatValue = 0.4F, ordinal = 0))
+	public float injectBobbingMultiplierYaw(final float _0_4)
+	{
+		final Bobbing bobbing = (Bobbing) LiquidBounce.moduleManager.get(Bobbing.class);
 
-		if (!groundCheck || getHealth() <= 0.0F)
-			cameraYawInc = 0.0F;
+		if (!bobbing.getState())
+			return _0_4;
+		return bobbing.getCameraMultiplierYawValue().get();
+	}
 
-		if (groundCheck || getHealth() <= 0.0F)
-			cameraPitchInc = 0.0F;
+	@ModifyConstant(method = "onLivingUpdate", constant = @Constant(floatValue = 0.8F, ordinal = 0))
+	public float injectBobbingMultiplierPitch(final float _0_8)
+	{
+		final Bobbing bobbing = (Bobbing) LiquidBounce.moduleManager.get(Bobbing.class);
 
-		final float yawMultiplier = bobbingState ? bobbing.getCameraMultiplierYawValue().get() : 0.4F;
-		cameraYaw += (cameraYawInc - cameraYaw) * yawMultiplier;
-
-		final float pitchMultiplier = bobbingState ? bobbing.getCameraMultiplierPitchValue().get() : 0.8F;
-		cameraPitch += (cameraPitchInc - cameraPitch) * pitchMultiplier;
-
-		if (getHealth() > 0.0F && !isSpectator())
-			// noinspection ConstantConditions
-			worldObj.getEntitiesWithinAABBExcludingEntity((Entity) (Object) this, ridingEntity != null && !ridingEntity.isDead ? getEntityBoundingBox().union(ridingEntity.getEntityBoundingBox()).expand(1.0D, 0.0D, 1.0D) : getEntityBoundingBox().expand(1.0D, 0.5D, 1.0D)).stream().filter(entity -> !entity.isDead).forEach(this::collideWithPlayer);
+		if (!bobbing.getState())
+			return _0_8;
+		return bobbing.getCameraMultiplierPitchValue().get();
 	}
 }

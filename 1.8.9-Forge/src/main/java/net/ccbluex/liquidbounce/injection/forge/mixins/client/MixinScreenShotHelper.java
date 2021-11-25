@@ -11,6 +11,7 @@ import java.util.Optional;
 import javax.imageio.ImageIO;
 
 import net.ccbluex.liquidbounce.utils.AsyncUtils;
+import net.ccbluex.liquidbounce.utils.AsyncUtilsKt;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiNewChat;
 import net.minecraft.client.renderer.GlStateManager;
@@ -114,7 +115,7 @@ public abstract class MixinScreenShotHelper
 			final File screenshotFile = Optional.ofNullable(screenshotName).map(name -> new File(screenshotsFolder, name)).orElseGet(() -> getTimestampedPNGFileForDirectory(screenshotsFolder));
 
 			// Create the BufferedImage and Save to the file ASYNCHRONOUSLY!
-			AsyncUtils.getWorkers().execute(() ->
+			AsyncUtilsKt.runAsync(() ->
 			{
 				// Process pixels
 				TextureUtil.processPixelValues(pixelValues, width, height);

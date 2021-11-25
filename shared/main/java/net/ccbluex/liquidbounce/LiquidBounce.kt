@@ -39,6 +39,8 @@ import org.lwjgl.opengl.Display
 import org.spongepowered.asm.mixin.MixinEnvironment
 import org.spongepowered.asm.util.VersionNumber
 
+// Mixin TODO: 목표 메서드 내의 *두 개 이상의* 로컬 변수를 가져올 수 있는 ModifyVariable 비슷한 역할 하는 injector 만들 수 있으면 만들어보기 (ModifyArgs 처럼)
+// ㄴ 여려 개의 @ModifyVariable 인젝션과, 지역 변수 대신 전역 변수를 사용하는 방안으로 해결 가능하다.
 object LiquidBounce
 {
 	// Client information
@@ -77,16 +79,18 @@ object LiquidBounce
 	lateinit var wrapper: Wrapper
 
 	@JvmStatic
-	val title: String = run {
-		val arr = mutableListOf("$CLIENT_NAME b$CLIENT_VERSION by $CLIENT_CREATOR", "Kotlin ${KotlinVersion.CURRENT}", "Nashorn ${Version.version()}", "Backend $MINECRAFT_VERSION", "Source https://github.com/hsheric0210/LiquidBounce")
-		if (IN_DEV) arr += "DEVELOPMENT BUILD"
-		if (currentProgress != null) arr += currentProgress!!
-		arr.joinToString(" | ")
-	}
+	val title: String
+		get()
+		{
+			val arr = mutableListOf("$CLIENT_NAME b$CLIENT_VERSION by $CLIENT_CREATOR", "Kotlin ${KotlinVersion.CURRENT}", "Nashorn ${Version.version()}", "Backend $MINECRAFT_VERSION", "Source https://github.com/hsheric0210/LiquidBounce")
+			if (IN_DEV) arr += "DEVELOPMENT BUILD"
+			currentProgress?.let { arr += it }
+			return arr.joinToString(" | ")
+		}
 
 	fun updateProgress(progress: String?)
 	{
-		currentProgress = "$progress"
+		currentProgress = progress
 		Display.setTitle(title)
 	}
 
@@ -111,19 +115,16 @@ object LiquidBounce
 		for (ver in io.netty.util.Version.identify().values) ClientUtils.logger.info("* Netty $ver")
 		ClientUtils.logger.info("* LWJGL ${Sys.getVersion()}")
 
-		updateProgress("Initializing FileManager")
-
-		// Create file manager
+		// Initialize file manager
+		updateProgress("Initializing File Manager")
 		fileManager = FileManager()
 
-		updateProgress("Initializing EventManager")
-
-		// Crate event manager
+		// Initialize event manager
+		updateProgress("Initializing Event Manager")
 		eventManager = EventManager()
 
+		// Register special event listeners
 		updateProgress("Initializing Special Event Listeners")
-
-		// Register listeners
 		eventManager.registerListener(RotationUtils())
 		eventManager.registerListener(AntiModDisable())
 		eventManager.registerListener(BungeeCordSpoof())
@@ -131,37 +132,37 @@ object LiquidBounce
 		eventManager.registerListener(InventoryUtils())
 		eventManager.registerListener(LocationCache())
 
-		updateProgress("Initializing Discord RPC")
-
 		// Init Discord RPC
+		updateProgress("Initializing Discord RPC")
 		clientRichPresence = ClientRichPresence()
 
-		updateProgress("Initializing CommandManager")
-
 		// Create command manager
+		updateProgress("Initializing Command Manager")
 		commandManager = CommandManager()
 
-		updateProgress("Loading Fonts")
-
 		// Load client fonts
+		updateProgress("Loading Fonts")
 		Fonts.loadFonts()
 
-		updateProgress("Initializing ModuleManager")
-
 		// Setup module manager and register modules
+		updateProgress("Initializing Module Manager")
 		moduleManager = ModuleManager()
 		moduleManager.registerModules()
-
-		updateProgress("Loading Scripts")
 
 		try
 		{
 			// Remapper
+			updateProgress("Loading Remapper")
 			loadSrg()
 
 			// ScriptManager
+			updateProgress("Initializing Script Manager")
 			scriptManager = ScriptManager()
+
+			updateProgress("Loading Scripts")
 			scriptManager.loadScripts()
+
+			updateProgress("Enabling Scripts")
 			scriptManager.enableScripts()
 		}
 		catch (throwable: Throwable)
@@ -174,30 +175,29 @@ object LiquidBounce
 		// Register commands
 		commandManager.registerCommands()
 
-		updateProgress("Loading configs")
-
 		// Load configs
+		updateProgress("Loading Configurations")
 		FileManager.loadConfigs(fileManager.modulesConfig, fileManager.valuesConfig, fileManager.accountsConfig, fileManager.friendsConfig, fileManager.xrayConfig, fileManager.shortcutsConfig)
 
-		updateProgress("Initializing ClickGUI")
-
 		// ClickGUI
+		updateProgress("Initializing ClickGUI")
 		clickGui = ClickGui()
-		FileManager.loadConfig(fileManager.clickGuiConfig)
 
-		updateProgress("Registering Tabs")
+		updateProgress("Loading ClickGUI Configuration")
+		FileManager.loadConfig(fileManager.clickGuiConfig)
 
 		// Tabs (Only for Forge!)
 		if (hasForge())
 		{
+			updateProgress("Registering Tabs")
+
 			BlocksTab()
 			ExploitsTab()
 			HeadsTab()
 		}
 
-		updateProgress("Registering Cape Service")
-
 		// Register capes service
+		updateProgress("Registering Cape Service")
 		try
 		{
 			registerCapeService()
@@ -207,19 +207,20 @@ object LiquidBounce
 			ClientUtils.logger.error("Failed to register cape service", throwable)
 		}
 
-		updateProgress("Creating HUD")
-
 		// Set HUD
+		updateProgress("Creating HUD")
 		hud = createDefault()
+
+		updateProgress("Loading HUD Configuration")
 		FileManager.loadConfig(fileManager.hudConfig)
 
 		// Disable optifine fastrender
+		// updateProgress("Disabling OptiFine Fast-Render Feature")
 		// ClientUtils.disableFastRender()
-
-		updateProgress("Checking for updates")
 
 		try
 		{
+			updateProgress("Checking for updates")
 
 			// Read versions json from cloud
 			val jsonObj = JsonParser().parse(HttpUtils["$CLIENT_CLOUD/versions.json"])
@@ -229,21 +230,17 @@ object LiquidBounce
 		}
 		catch (exception: Throwable)
 		{
-
 			// Print throwable to console
 			ClientUtils.logger.error("Failed to check for updates.", exception)
 		}
 
 		updateProgress("Loading Alt Generators")
-
-		// Load generators
 		GuiAltManager.loadGenerators()
-
-		updateProgress("Establishing Discord RPC")
 
 		// Setup Discord RPC
 		if (clientRichPresence.showRichPresenceValue)
 		{
+			updateProgress("Establishing Discord RPC")
 			runAsync {
 				try
 				{
@@ -259,7 +256,11 @@ object LiquidBounce
 		// Set is starting status
 		isStarting = false
 
-		updateProgress(null) // Done
+		updateProgress("Done") // Done
+
+		runAsyncDelayed(5000L) {
+			runSync { updateProgress(null) }
+		}
 	}
 
 	/**
@@ -268,12 +269,17 @@ object LiquidBounce
 	fun stopClient()
 	{
 		// Call client shutdown
+		updateProgress("Handling Shutdown Event")
 		eventManager.callEvent(ClientShutdownEvent())
 
 		// Save all available configs
+		updateProgress("Saving All Configurations")
 		fileManager.saveAllConfigs()
 
 		// Shutdown discord rpc
+		updateProgress("Shutting Down Discord RPC")
 		clientRichPresence.shutdown()
+
+		updateProgress(null)
 	}
 }

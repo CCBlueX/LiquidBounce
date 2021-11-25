@@ -38,7 +38,7 @@ class GuiAntiModDisable(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		val buttonX = (width shr 1) - 100
 		val buttonY = (height shr 2) + 50
 
-		buttonsList.add(classProvider.createGuiButton(1, buttonX, (representedScreen.height shr 2) + 35, "Enabled ${getStateString(AntiModDisable.enabled)}").also { enabledButton = it })
+		buttonsList.add(classProvider.createGuiButton(1, buttonX, buttonY - 25, "Enabled ${getStateString(AntiModDisable.enabled)}").also { enabledButton = it })
 
 		val addButton = { id: Int, index: Int, text: String, callback: (IGuiButton) -> Unit ->
 			buttonsList.add(classProvider.createGuiButton(id, buttonX, buttonY + 25 * index + 25, text).also(callback))
@@ -56,7 +56,7 @@ class GuiAntiModDisable(private val prevGui: IGuiScreen) : WrappedGuiScreen()
 		addButton(11, 9, "$BLOCK_SCHEMATICA_PACKETS${getStateString(AntiModDisable.enabled && AntiModDisable.blockSchematicaPayloads)}") { schematicaButton = it }
 		addButton(999, 10, "$PRINT_DEBUG_MESSAGES${getStateString(AntiModDisable.enabled && AntiModDisable.debug)}") { debugmode = it }
 
-		buttonsList.add(classProvider.createGuiButton(0, buttonX, (height shr 2) + 55 + 300 + 5, "Back"))
+		buttonsList.add(classProvider.createGuiButton(0, buttonX, buttonY + 310, "Back"))
 	}
 
 	override fun actionPerformed(button: IGuiButton)

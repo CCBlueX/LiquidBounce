@@ -21,13 +21,7 @@ class EventManager
 		listener.javaClass.declaredMethods.asSequence().filter { it.isAnnotationPresent(EventTarget::class.java) }.filter { it.parameterTypes.size == 1 }.forEach { method ->
 			if (!method.isAccessible) method.isAccessible = true
 
-			@Suppress("UNCHECKED_CAST")
-			val eventClass = method.parameterTypes[0] as? Class<out Event> ?: return@forEach
-			val eventTarget = method.getAnnotation(EventTarget::class.java)
-
-			val invokableEventTargets = registry.getOrDefault(eventClass, ArrayList())
-			invokableEventTargets.add(EventHook(listener, method, eventTarget))
-			registry[eventClass] = invokableEventTargets
+			@Suppress("UNCHECKED_CAST") registry.computeIfAbsent(method.parameterTypes[0] as? Class<out Event> ?: return@forEach) { ArrayList() }.add(EventHook(listener, method, method.getAnnotation(EventTarget::class.java)))
 		}
 	}
 

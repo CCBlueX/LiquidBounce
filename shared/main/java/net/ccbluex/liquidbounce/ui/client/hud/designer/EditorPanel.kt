@@ -645,8 +645,11 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 				if (Mouse.isButtonDown(0) && !mouseDown && mouseX >= xIndent && mouseX <= x + width && mouseY >= yPos && mouseY <= yPos + 10)
 				{
 					val fonts = Fonts.fonts
-					// TODO: "Go to previous" support
-					fonts.filter { it == fontRenderer }.forEachIndexed { index, _ -> value.set(fonts[if (index + 1 >= fonts.size) 0 else index + 1]) }
+					val index = fonts.indexOf(fontRenderer)
+
+					// if (Mouse.isButtonDown(0))
+					value.set(fonts[if (index + 1 >= fonts.size) 0 else index + 1]) // Next font
+					// else value.set(fonts[if (index - 1 < 0) fonts.size - 1 else index - 1]) // Previous font
 				}
 
 				height += 10

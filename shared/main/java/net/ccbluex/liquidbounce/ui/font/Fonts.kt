@@ -66,8 +66,11 @@ object Fonts : MinecraftInstance()
 					val fontObject = element as? JsonObject ?: continue
 
 					val font = getFont(fontObject["fontFile"].asString, fontObject["fontSize"].asInt)
+					val fontInfo = FontInfo(font)
 
-					CUSTOM_FONT_RENDERERS[FontInfo(font)] = provider.wrapFontRenderer(GameFontRenderer(font))
+					CUSTOM_FONT_RENDERERS[fontInfo] = provider.wrapFontRenderer(GameFontRenderer(font))
+
+					logger.info("Loaded custom font: ${fontInfo.name} - ${fontInfo.fontSize}")
 				}
 			}
 			else

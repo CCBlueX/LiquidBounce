@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.value.RGBAColorValue;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.model.ModelBase;
+import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
@@ -214,8 +215,8 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 				final String mode = esp.getModeValue().get();
 				if (esp.getState() && ("Fill".equalsIgnoreCase(mode) || "CSGO".equalsIgnoreCase(mode)) && EntityExtensionKt.isSelected(EntityLivingBaseImplKt.wrap(entity), false))
 				{
-					final Minecraft mc = Minecraft.getMinecraft();
-					mc.entityRenderer.disableLightmap();
+					final EntityRenderer entityRenderer = Minecraft.getMinecraft().entityRenderer;
+					entityRenderer.disableLightmap();
 					RenderUtils.glColor(esp.getColor(EntityLivingBaseImplKt.wrap(entity)));
 					GL11.glPushMatrix();
 					GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
@@ -239,7 +240,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
 						GlStateManager.enableColorMaterial();
 					}
 					GL11.glPopMatrix();
-					mc.entityRenderer.disableLightmap();
+					entityRenderer.disableLightmap();
 					RenderUtils.glColor(-1);
 				}
 

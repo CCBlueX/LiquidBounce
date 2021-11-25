@@ -130,7 +130,7 @@ public abstract class MixinSoundManager
 		}
 		catch(final ConcurrentModificationException ignored)
 		{
-			logger.debug(LOG_MARKER, "Suppressed ConcurrentModificationException in TickableSoundIteration");
+			logger.warn(LOG_MARKER, "Suppressed ConcurrentModificationException in TickableSoundIteration");
 		}
 
 		try
@@ -178,7 +178,7 @@ public abstract class MixinSoundManager
 		}
 		catch (final ConcurrentModificationException ignored)
 		{
-			logger.debug(LOG_MARKER, "Suppressed ConcurrentModificationException in PlayingSoundIteration");
+			logger.warn(LOG_MARKER, "Suppressed ConcurrentModificationException in PlayingSoundIteration");
 		}
 
 		try
@@ -201,7 +201,7 @@ public abstract class MixinSoundManager
 		}
 		catch(final ConcurrentModificationException ignored)
 		{
-			logger.debug(LOG_MARKER, "Suppressed ConcurrentModificationException in DelayedSoundIteration");
+			logger.warn(LOG_MARKER, "Suppressed ConcurrentModificationException in DelayedSoundIteration");
 		}
 	}
 }
