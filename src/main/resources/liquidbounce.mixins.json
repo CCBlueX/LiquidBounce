@@ -13,6 +13,8 @@
     "minecraft.block.MixinSnowBlock",
     "minecraft.block.MixinSlimeBlock",
     "minecraft.block.MixinPowderSnowBlock",
+    "minecraft.block.MixinHorizontalConnectingBlock",
+    "minecraft.block.MixinFenceGateBlock",
     "minecraft.client.MixinClientWorld",
     "minecraft.client.MixinInput",
     "minecraft.client.MixinKeyboard",
