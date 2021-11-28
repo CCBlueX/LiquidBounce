@@ -613,10 +613,11 @@ class KillAura : Module()
 		{
 			val arr = arrayOfNulls<Pair<Float, Int>?>(6)
 
-			arr[0] = (target?.let { getAttackRange(thePlayer, it) } ?: maxAttackRange) to visualMarkRangeColorAttackValue.get()
+			val attackRangeOffset = (if (thePlayer.sprinting) -rangeSprintReducementValue.get() else 0F) + comboReach
+			arr[0] = attackRange + attackRangeOffset to visualMarkRangeColorAttackValue.get()
 
 			val throughWallsRange = rangeThroughWallsAttackValue.get()
-			if (throughWallsRange > 0) arr[1] = throughWallsRange to visualMarkRangeColorThroughWallsAttackValue.get()
+			if (throughWallsRange > 0) arr[1] = throughWallsRange + attackRangeOffset to visualMarkRangeColorThroughWallsAttackValue.get()
 
 			arr[2] = aimRange to visualMarkRangeColorAimValue.get()
 
