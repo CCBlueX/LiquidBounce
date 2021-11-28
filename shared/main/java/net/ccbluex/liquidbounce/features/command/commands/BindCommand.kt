@@ -37,8 +37,10 @@ class BindCommand : Command("bind")
 				{
 					"add" -> if (args.size > 3)
 					{
-						val key = Keyboard.getKeyIndex(args[3].toUpperCase())
-						if (key != Keyboard.KEY_NONE) keyBinds.add(key)
+						(3 until args.size).forEach {
+							val key = Keyboard.getKeyIndex(args[it].toUpperCase())
+							if (key != Keyboard.KEY_NONE) keyBinds.add(key)
+						}
 
 						chat(thePlayer, "Bound module \u00A7a\u00A7l${module.name}\u00A73 to key(s) \u00A7a\u00A7l${keyBinds.joinToString { Keyboard.getKeyName(it) }}\u00A73.")
 						playEdit()
@@ -47,11 +49,13 @@ class BindCommand : Command("bind")
 
 					"remove" -> if (args.size > 3)
 					{
-						val key = Keyboard.getKeyIndex(args[3].toUpperCase())
-						if (!keyBinds.remove(key))
-						{
-							chat(thePlayer, "Module \u00A7a\u00A7l${module.name}\u00A73 hadn't bound to key \u00A7a\u00A7l${Keyboard.getKeyName(key)}\u00A73.")
-							return
+						(3 until args.size).forEach {
+							val key = Keyboard.getKeyIndex(args[it].toUpperCase())
+							if (!keyBinds.remove(key))
+							{
+								chat(thePlayer, "Module \u00A7a\u00A7l${module.name}\u00A73 hadn't bound to key \u00A7a\u00A7l${Keyboard.getKeyName(key)}\u00A73.")
+								return@execute
+							}
 						}
 
 						if (keyBinds.isEmpty()) chat(thePlayer, "Took all bounds from module \u00A7a\u00A7l${module.name}\u00A73.") else chat(thePlayer, "Bound module \u00A7a\u00A7l${module.name}\u00A73 to key(s) \u00A7a\u00A7l${keyBinds.joinToString { Keyboard.getKeyName(it) }}\u00A73.")
@@ -70,7 +74,7 @@ class BindCommand : Command("bind")
 			else chat(thePlayer, "Module \u00A7a\u00A7l${module.name}\u00A73 is bound to key(s) \u00A7a\u00A7l${keyBinds.joinToString { Keyboard.getKeyName(it) }}\u00A73.")
 		}
 
-		chatSyntax(thePlayer, arrayOf("<module> <add/remove> <key>", "<module> <clear>"))
+		chatSyntax(thePlayer, arrayOf("<module> <add/remove> <keys...>", "<module> <clear>"))
 	}
 
 	override fun tabComplete(args: Array<String>): List<String>

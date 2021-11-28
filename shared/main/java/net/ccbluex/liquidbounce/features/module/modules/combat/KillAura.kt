@@ -613,7 +613,7 @@ class KillAura : Module()
 		{
 			val arr = arrayOfNulls<Pair<Float, Int>?>(6)
 
-			arr[0] = attackRange to visualMarkRangeColorAttackValue.get()
+			arr[0] = (target?.let { getAttackRange(thePlayer, it) } ?: maxAttackRange) to visualMarkRangeColorAttackValue.get()
 
 			val throughWallsRange = rangeThroughWallsAttackValue.get()
 			if (throughWallsRange > 0) arr[1] = throughWallsRange to visualMarkRangeColorThroughWallsAttackValue.get()
@@ -1397,7 +1397,7 @@ class KillAura : Module()
 	private fun getAttackRange(thePlayer: IEntity, entity: IEntity): Float
 	{
 		val throughWallsRange = rangeThroughWallsAttackValue.get()
-		return (if (thePlayer.getDistanceToEntityBox(entity) >= throughWallsRange) attackRange else throughWallsRange) - if (thePlayer.sprinting) rangeSprintReducementValue.get() else 0F + comboReach
+		return (if (thePlayer.getDistanceToEntityBox(entity) >= throughWallsRange) attackRange else throughWallsRange) - (if (thePlayer.sprinting) rangeSprintReducementValue.get() else 0F) + comboReach
 	}
 
 	fun suspend(time: Long)

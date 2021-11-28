@@ -51,7 +51,7 @@ class NameTags : Module()
 
 	private val yPosValue = FloatValue("YPos", 0.55f, 0.4f, 2f)
 
-	private val healthModeValue = ListValue("PlayerHealthGetMethod", arrayOf("Datawatcher", "Mineplex", "Hive"), "Datawatcher")
+	private val healthModeValue = ListValue("PlayerHealthGetMethod", arrayOf("Metadata", "Mineplex", "Hive"), "Metadata")
 
 	private val bodyColorGroup = ValueGroup("BodyColor")
 	private val bodyColorValue = RGBAColorValue("Color", 0, 0, 0, 175, listOf("BodyRed", "BodyGreen", "BodyBlue", "BodyAlpha"))
@@ -159,7 +159,7 @@ class NameTags : Module()
 		// Health
 		val healthText = if (healthEnabled)
 		{
-			val health = if (!isPlayer || healthMode.equals("Datawatcher", true)) entity.health else EntityUtils.getPlayerHealthFromScoreboard(entity.asEntityPlayer().gameProfile.name, isMineplex = healthMode.equals("Mineplex", true)).toFloat()
+			val health = if (!isPlayer || healthMode.equals("Metadata", true)) entity.health else EntityUtils.getPlayerHealthFromScoreboard(entity.asEntityPlayer().gameProfile.name, isMineplex = healthMode.equals("Mineplex", true)).toFloat()
 
 			val absorption = if (ceil(entity.absorptionAmount.toDouble()) > 0) entity.absorptionAmount else 0f
 			val healthPercentage = (health + absorption) / entity.maxHealth * 100f

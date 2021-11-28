@@ -70,7 +70,7 @@ class Target : Element()
 	private val absorptionFadeSpeedValue = IntegerValue("AbsorptionFadeSpeed", 2, 1, 9)
 	private val armorFadeSpeedValue = IntegerValue("ArmorFadeSpeed", 2, 1, 9)
 
-	private val healthTypeValue = ListValue("HealthType", arrayOf("Datawatcher", "Mineplex", "Hive"), "Datawatcher")
+	private val healthTypeValue = ListValue("HealthType", arrayOf("Metadata", "Mineplex", "Hive"), "Metadata")
 
 	private val informationDisplayType = ListValue("InformationDisplayType", arrayOf("Verbose", "Abbreviated"), "Verbose")
 
@@ -207,12 +207,12 @@ class Target : Element()
 
 				val verbose = informationDisplayType.get().equals("Verbose", ignoreCase = true)
 
-				val dataWatcherBuilder = StringJoiner("\u00A7r | ", " | ", "\u00A7r").setEmptyValue("")
+				val metaDataBuilder = StringJoiner("\u00A7r | ", " | ", "\u00A7r").setEmptyValue("")
 
-				if (target.invisible) dataWatcherBuilder.add("\u00A77\u00A7o${if (verbose) "Invisible" else "invis"}")
-				if (target.burning) dataWatcherBuilder.add("\u00A7c${if (verbose) "Burning" else "burn"}")
-				if (target.isHandActive) dataWatcherBuilder.add("\u00A7e${if (verbose) "Using Item" else "use"}")
-				if (target.isSilent) dataWatcherBuilder.add("\u00A78${if (verbose) "Silent" else "silent"}")
+				if (target.invisible) metaDataBuilder.add("\u00A77\u00A7o${if (verbose) "Invisible" else "invis"}")
+				if (target.burning) metaDataBuilder.add("\u00A7c${if (verbose) "Burning" else "burn"}")
+				if (target.isHandActive) metaDataBuilder.add("\u00A7e${if (verbose) "Using Item" else "use"}")
+				if (target.isSilent) metaDataBuilder.add("\u00A78${if (verbose) "Silent" else "silent"}")
 
 				val headBoxYSize = headRenderSize + 6F
 
@@ -439,8 +439,8 @@ class Target : Element()
 					if (verbose) "HurtResisTime: ${if (target.hurtResistantTime > 0) "\u00A7c" else "\u00A7a"}${target.hurtResistantTime}\u00A7r" else "hrt: ${target.hurtResistantTime}" // HurtResistantTime
 				).joinToString(separator = " | "), scaledXPos, scaledYPos + 34, 0xffffff)
 
-				// Datawatcher-related
-				textFont.drawString("EntityID: ${target.entityId}$dataWatcherBuilder", scaledXPos, scaledYPos + 44, 0xffffff)
+				// Metadata-related
+				textFont.drawString("EntityID: ${target.entityId}$metaDataBuilder", scaledXPos, scaledYPos + 44, 0xffffff)
 
 				GL11.glScalef(reverseScale, reverseScale, reverseScale)
 

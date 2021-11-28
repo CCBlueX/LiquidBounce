@@ -77,7 +77,7 @@ class ESP : Module()
 	private val indicateTargetValue = BoolValue("Targets", true, "Targets")
 	private val indicateHurtValue = BoolValue("Hurt", true, "Hurt")
 
-	private val healthModeValue = ListValue("PlayerHealthMethod", arrayOf("Datawatcher", "Mineplex", "Hive"), "Datawatcher")
+	private val healthModeValue = ListValue("PlayerHealthMethod", arrayOf("Metadata", "Mineplex", "Hive"), "Metadata")
 
 	private val interpolateValue = BoolValue("Interpolate", true)
 
