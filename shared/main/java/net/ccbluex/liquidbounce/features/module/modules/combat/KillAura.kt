@@ -1264,13 +1264,14 @@ class KillAura : Module()
 		val livingOnly = rayCastLivingOnlyValue.get()
 		val skipEnemyCheck = rayCastSkipEnemyCheckValue.get()
 		val includeCollidedWithTarget = rayCastIncludeCollidedValue.get()
+		val bbGetter: (IEntity) -> IAxisAlignedBB = { getHitbox(it, if (rotationLockValue.get()) 0.0 else rotationLockExpandRangeValue.get().toDouble()) }
 
 		if (rayCastEnabledValue.get())
 		{
 			val provider = classProvider
 
 			val distanceToTarget = currentTarget?.let(thePlayer::getDistanceToEntityBox)
-			val raycastedEntity = theWorld.raycastEntity(thePlayer, reach + 1.0, lastYaw, lastPitch, { getHitbox(it, if (rotationLockValue.get()) 0.0 else rotationLockExpandRangeValue.get().toDouble()) }) { entity -> entity != null && (!livingOnly || (provider.isEntityLivingBase(entity) && !provider.isEntityArmorStand(entity))) && (skipEnemyCheck || entity.isEnemy(aac) || includeCollidedWithTarget && theWorld.getEntitiesWithinAABBExcludingEntity(entity, entity.entityBoundingBox).isNotEmpty()) }
+			val raycastedEntity = theWorld.raycastEntity(thePlayer, reach + 1.0, lastYaw, lastPitch, bbGetter) { entity -> entity != null && (!livingOnly || (provider.isEntityLivingBase(entity) && !provider.isEntityArmorStand(entity))) && (skipEnemyCheck || entity.isEnemy(aac) || includeCollidedWithTarget && theWorld.getEntitiesWithinAABBExcludingEntity(entity, entity.entityBoundingBox).isNotEmpty()) }
 			val distanceToRaycasted = raycastedEntity?.let(thePlayer::getDistanceToEntityBox)
 
 			if (raycastedEntity != null && provider.isEntityLivingBase(raycastedEntity) && (LiquidBounce.moduleManager[NoFriends::class.java].state || !provider.isEntityPlayer(raycastedEntity) || !raycastedEntity.asEntityPlayer().isClientFriend())) this.currentTarget = raycastedEntity.asEntityLivingBase()
@@ -1290,8 +1291,17 @@ class KillAura : Module()
 		}
 		else
 		{
-			hitable = if (currentTarget != null) RotationUtils.isFaced(theWorld, thePlayer, currentTarget, reach) { getHitbox(it, if (rotationLockValue.get()) 0.0 else rotationLockExpandRangeValue.get().toDouble()) } else false
-			updateHitableDebug = arrayOf("raycast" equalTo false, "faced" equalTo hitable)
+			hitable = if (currentTarget != null)
+			{
+				val faced = theWorld.raycastEntity(thePlayer, reach, lastYaw, lastPitch, bbGetter) { entity -> currentTarget == entity } != null // RotationUtils.isFaced(theWorld, thePlayer, currentTarget, reach, bbGetter)
+				updateHitableDebug = arrayOf("raycast" equalTo false, "faced" equalTo faced)
+				faced
+			}
+			else
+			{
+				updateHitableDebug = arrayOf("raycast" equalTo false, "faced" equalTo "currentTarget is null")
+				false
+			}
 		}
 	}
 

@@ -581,7 +581,11 @@ class RotationUtils : MinecraftInstance(), Listenable
 		 * your reach
 		 * @return                    if crosshair is over target
 		 */
-		fun isFaced(theWorld: IWorld, thePlayer: IEntity, targetEntity: IEntity?, reachDistance: Double, aabbGetter: (IEntity) -> IAxisAlignedBB = IEntity::entityBoundingBox): Boolean = theWorld.raycastEntity(thePlayer, reachDistance, { entity -> targetEntity != null && targetEntity == entity }, aabbGetter) != null
+		fun isFaced(theWorld: IWorld, thePlayer: IEntity, targetEntity: IEntity?, reachDistance: Double, aabbGetter: (IEntity) -> IAxisAlignedBB = IEntity::entityBoundingBox): Boolean
+		{
+			targetEntity ?: return false
+			return theWorld.raycastEntity(thePlayer, reachDistance, aabbGetter = aabbGetter, entityFilter = { entity -> targetEntity == entity }) != null
+		}
 
 		/**
 		 * Allows you to check if your enemy is behind a wall

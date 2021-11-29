@@ -197,7 +197,7 @@ class ExtendedReach : Module()
 		{
 			val provider = classProvider
 
-			val facedEntity = theWorld.raycastEntity(thePlayer, combatReach.get().toDouble(), provider::isEntityLivingBase)
+			val facedEntity = theWorld.raycastEntity(thePlayer, combatReach.get().toDouble(), entityFilter = provider::isEntityLivingBase)
 
 			var targetEntity: IEntityLivingBase? = null
 			val from = WVec3(thePlayer.posX, thePlayer.posY, thePlayer.posZ)

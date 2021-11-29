@@ -36,7 +36,7 @@ class TeleportHit : Module()
 
 		val provider = classProvider
 
-		val facedEntity = theWorld.raycastEntity(thePlayer, 100.0, provider::isEntityLivingBase)
+		val facedEntity = theWorld.raycastEntity(thePlayer, 100.0, entityFilter = provider::isEntityLivingBase)
 
 		if (mc.gameSettings.keyBindAttack.isKeyDown && facedEntity.isSelected(true) && (facedEntity?.getDistanceSqToEntity(thePlayer) ?: 0.0) >= 1.0) targetEntity = facedEntity?.asEntityLivingBase()
 

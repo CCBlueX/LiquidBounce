@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.style.Style
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.ui.font.assumeVolatile
 import net.ccbluex.liquidbounce.ui.font.assumeVolatileIf
+import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
 import net.ccbluex.liquidbounce.utils.extensions.serialized
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_4
@@ -331,9 +332,11 @@ class NullStyle : Style()
 					if (moduleElement.settingsWidth < textWidth + 8f) moduleElement.settingsWidth = textWidth + 8f
 					val moduleXEnd = moduleX + moduleElement.settingsWidth
 
+					val mouseOver = mouseX in moduleIndentX..moduleXEnd.toInt() && mouseY in yPos + 2..yPos + 14
+
 					drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 14f, BACKGROUND)
 
-					if (mouseX in moduleIndentX..moduleXEnd.toInt() && mouseY in yPos + 2..yPos + 14 && Mouse.isButtonDown(0) && moduleElement.isntPressed)
+					if (mouseOver && Mouse.isButtonDown(0) && moduleElement.isntPressed)
 					{
 						value.set(!value.get())
 						soundHandler.playSound("gui.button.press", 1.0f)
@@ -341,7 +344,7 @@ class NullStyle : Style()
 
 					glStateManager.resetColor()
 
-					valueFont.drawString(valueDisplayName, moduleIndentX + 6, yPos + 4, if (value.get()) guiColor else LIGHT_GRAY)
+					valueFont.drawString(valueDisplayName, moduleIndentX + if (mouseOver) 8 else 6, yPos + 4, if (value.get()) guiColor else LIGHT_GRAY)
 
 					yPos += 12
 
@@ -448,20 +451,30 @@ class NullStyle : Style()
 					val moduleXEnd = moduleX + moduleElement.settingsWidth
 					val fontRenderer = value.get()
 
+					val mouseOver = mouseX in moduleIndentX + 4..moduleXEnd.toInt() && mouseY in yPos + 4..yPos + 12
+
 					drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 14f, BACKGROUND)
 
 					val displayString = "$valueDisplayName: ${fontRenderer.serialized ?: "Unknown"}"
-					valueFont.drawString(displayString, moduleIndentX + 6, yPos + 4, WHITE)
+					valueFont.drawString(displayString, moduleIndentX + if (mouseOver) 8 else 6, yPos + 4, WHITE)
 
 					val textWidth = valueFont.getStringWidth(displayString) + indent
 					if (moduleElement.settingsWidth < textWidth + 8f) moduleElement.settingsWidth = textWidth + 8f
 
-					if ((Mouse.isButtonDown(0) && !mouseDown || Mouse.isButtonDown(1) && !rightMouseDown) && mouseX in moduleIndentX + 4..moduleXEnd.toInt() && mouseY in yPos + 4..yPos + 12)
+					if (mouseOver)
 					{
-						val fonts = Fonts.fonts
-						val index = fonts.indexOf(fontRenderer)
-						if (Mouse.isButtonDown(0)) value.set(fonts[if (index + 1 >= fonts.size) 0 else index + 1]) // Next font
-						else value.set(fonts[if (index - 1 < 0) fonts.size - 1 else index - 1]) // Previous font
+						// DEBUG CODE START //
+						if (Mouse.isButtonDown(0)) ClientUtils.displayChatMessage(mc.thePlayer, "Pressed left click (prev=$mouseDown)")
+						if (Mouse.isButtonDown(1)) ClientUtils.displayChatMessage(mc.thePlayer, "Pressed right click (prev=$rightMouseDown)")
+						// DEBUG CODE END //
+
+						if (Mouse.isButtonDown(0) && !mouseDown || Mouse.isButtonDown(1) && !rightMouseDown)
+						{
+							val fonts = Fonts.fonts
+							val index = fonts.indexOf(fontRenderer)
+							if (Mouse.isButtonDown(0)) value.set(fonts[if (index + 1 >= fonts.size) 0 else index + 1]) // Next font
+							else value.set(fonts[if (index - 1 < 0) fonts.size - 1 else index - 1]) // Previous font
+						}
 					}
 
 					yPos += 11
@@ -507,14 +520,17 @@ class NullStyle : Style()
 			val indentX = xStart + indent
 			val sliderXEnd = settingsWidth - indent - 12
 
+			val mouseOver = mouseX in (indentX + 4)..xEnd.toInt() && mouseY in y..y + 6
+
 			// Slider
 			drawRect(indentX + SLIDER_START_SHIFT, y + 3f, xEnd - 4f, y + 4f, LIGHT_GRAY)
 
 			// Slider mark
 			val sliderValue = indentX + sliderXEnd * (value.coerceIn(min, max) - min) / (max - min)
-			drawRect((sliderValue + SLIDER_START_SHIFT).toInt(), y, (sliderValue + SLIDER_START_SHIFT).toInt() + 3, y + 6, color)
+			val offset = if (mouseOver) 1 else 0
+			drawRect((sliderValue + SLIDER_START_SHIFT).toInt() - offset, y - offset, (sliderValue + SLIDER_START_SHIFT).toInt() + offset + 3, y + offset + 6, color)
 
-			if (mouseX in (indentX + 4)..xEnd.toInt() && mouseY in y..y + 6 && Mouse.isButtonDown(0)) onChanged(round(min + (max - min) * ((mouseX - (indentX + SLIDER_START_SHIFT)) / sliderXEnd).coerceIn(0f, 1f)).toFloat())
+			if (mouseOver && Mouse.isButtonDown(0)) onChanged(round(min + (max - min) * ((mouseX - (indentX + SLIDER_START_SHIFT)) / sliderXEnd).coerceIn(0f, 1f)).toFloat())
 		}
 
 		private inline fun drawRangeSlider(minValue: Float, maxValue: Float, min: Float, max: Float, xStart: Int, xEnd: Float, y: Int, settingsWidth: Float, mouseX: Int, mouseY: Int, indent: Int, color: Int, onMinChanged: (Float) -> Unit, onMaxChanged: (Float) -> Unit)
@@ -522,25 +538,28 @@ class NullStyle : Style()
 			val indentX = xStart + indent
 			val sliderXEnd = settingsWidth - indent - 12
 
+			val minSliderValue = indentX + sliderXEnd * (minValue.coerceIn(min, max) - min) / (max - min)
+			val maxSliderValue = indentX + sliderXEnd * (maxValue.coerceIn(min, max) - min) / (max - min)
+			val mouseOver = mouseX in indentX..xEnd.toInt() && mouseY in y..y + 6
+			val maxMouseOver = mouseX > minSliderValue + (maxSliderValue - minSliderValue) * 0.5f
+
 			// Slider
 			drawRect(indentX + SLIDER_START_SHIFT, y + 3f, xEnd - 4f, y + 4f, LIGHT_GRAY)
 
 			// Slider mark (min)
-			val minSliderValue = indentX + sliderXEnd * (minValue.coerceIn(min, max) - min) / (max - min)
-			drawRect((minSliderValue + SLIDER_START_SHIFT).toInt(), y, (minSliderValue + SLIDER_START_SHIFT).toInt() + 3, y + 6, color)
+			val minSliderOffset = if (mouseOver && !maxMouseOver) 1 else 0
+			drawRect((minSliderValue + SLIDER_START_SHIFT).toInt() - minSliderOffset, y - minSliderOffset, (minSliderValue + SLIDER_START_SHIFT).toInt() + minSliderOffset + 3, y + minSliderOffset + 6, color)
 
 			// Slider mark (max)
-			val maxSliderValue = indentX + sliderXEnd * (maxValue.coerceIn(min, max) - min) / (max - min)
-			drawRect((maxSliderValue + SLIDER_START_SHIFT).toInt(), y, (maxSliderValue + SLIDER_START_SHIFT).toInt() + 3, y + 6, color)
+			val maxSliderOffset = if (mouseOver && maxMouseOver) 1 else 0
+			drawRect((maxSliderValue + SLIDER_START_SHIFT).toInt() - maxSliderOffset, y - maxSliderOffset, (maxSliderValue + SLIDER_START_SHIFT).toInt() + maxSliderOffset + 3, y + maxSliderOffset + 6, color)
 
 			drawRect(minSliderValue + SLIDER_START_SHIFT, y + 3f, maxSliderValue + SLIDER_START_SHIFT, y + 4f, color)
 
-			val center = minSliderValue + (maxSliderValue - minSliderValue) * 0.5f
-
-			if (mouseX in indentX..xEnd.toInt() && mouseY in y..y + 6 && Mouse.isButtonDown(0))
+			if (mouseOver && Mouse.isButtonDown(0))
 			{
 				val newValue = round(min + (max - min) * ((mouseX - (indentX + SLIDER_START_SHIFT)) / sliderXEnd).coerceIn(0f, 1f)).toFloat()
-				if (mouseX > center) onMaxChanged(newValue) else onMinChanged(newValue)
+				if (maxMouseOver) onMaxChanged(newValue) else onMinChanged(newValue)
 			}
 		}
 

@@ -10,9 +10,7 @@ import net.ccbluex.liquidbounce.utils.RotationUtils
 import kotlin.math.ceil
 import kotlin.math.floor
 
-fun IWorld.raycastEntity(entity: IEntity, range: Double, entityFilter: (IEntity?) -> Boolean, aabbGetter: (IEntity) -> IAxisAlignedBB = IEntity::entityBoundingBox) = raycastEntity(entity, range, RotationUtils.serverRotation.yaw, RotationUtils.serverRotation.pitch, aabbGetter, entityFilter)
-
-fun IWorld.raycastEntity(entity: IEntity, range: Double, yaw: Float, pitch: Float, aabbGetter: (IEntity) -> IAxisAlignedBB = IEntity::entityBoundingBox, entityFilter: (IEntity?) -> Boolean): IEntity?
+fun IWorld.raycastEntity(entity: IEntity, range: Double, yaw: Float = RotationUtils.serverRotation.yaw, pitch: Float = RotationUtils.serverRotation.pitch, aabbGetter: (IEntity) -> IAxisAlignedBB = IEntity::entityBoundingBox, entityFilter: (IEntity?) -> Boolean): IEntity?
 {
 	val func = MinecraftInstance.functions
 
