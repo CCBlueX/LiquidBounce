@@ -23,8 +23,8 @@ import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePortalMenu;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoSlow;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModulePerfectHorseJump;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleStep;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.client.TickStateManager;
@@ -46,10 +46,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
 
     @Shadow
-    private float lastYaw;
+    public float lastYaw;
 
     @Shadow
-    private float lastPitch;
+    public float lastPitch;
 
     @Shadow
     public Input input;
@@ -200,9 +200,8 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
 
     @Inject(method = "isAutoJumpEnabled", cancellable = true, at = @At("HEAD"))
     private void injectLegitStep(CallbackInfoReturnable<Boolean> cir) {
-        if (ModuleStep.Legit.INSTANCE.isActive()) {
-            cir.setReturnValue(true);
-            cir.cancel();
+        if (ModuleStep.INSTANCE.getEnabled()) {
+            cir.setReturnValue(ModuleStep.Legit.INSTANCE.isActive());
         }
     }
 
@@ -215,6 +214,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
                 MinecraftClient.getInstance().getNetworkHandler().sendPacket(new HandSwingC2SPacket(hand));
         }
     }
+
     @Inject(method = "getMountJumpStrength", at = @At("HEAD"), cancellable = true)
     private void hookMountJumpStrength(CallbackInfoReturnable<Float> callbackInfoReturnable) {
         if (ModulePerfectHorseJump.INSTANCE.getEnabled()) {
