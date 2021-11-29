@@ -42,13 +42,13 @@ object ModuleStep : Module("Step", Category.MOVEMENT) {
     }
 
     object Instant : Choice("Instant") {
+        override val parent: ChoiceConfigurable
+            get() = modes
+        
         private val height by float("Height", 1.0F, 0.6F..5.0F)
 
         val stepHandler = handler<PlayerStepEvent> {
             it.height = height
         }
-
-        override val parent: ChoiceConfigurable
-            get() = modes
     }
 }
