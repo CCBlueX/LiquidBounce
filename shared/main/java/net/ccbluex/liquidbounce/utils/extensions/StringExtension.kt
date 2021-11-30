@@ -6,7 +6,7 @@ infix fun String.equalTo(second: Any?) = this.equalTo(second, "\u00A77")
 
 infix fun String.equalTo(second: Boolean) = "\u00A77$this\u00A78=\u00A7${if (second) "a" else "c"}$second\u00A7r"
 
-fun String.equalTo(second: Any?, colorCodes: String) = "\u00A77$this\u00A78=$colorCodes$second\u00A7r"
+fun String.equalTo(second: Any?, colorCodes: String = "") = "\u00A77$this\u00A78=$colorCodes$second\u00A7r"
 
 fun Iterable<String>.serialize() = this.joinToString(separator = "\u00A78, ", postfix = "\u00A7r")
 

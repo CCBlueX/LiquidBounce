@@ -24,7 +24,7 @@ class ServiceAPI(private val baseURL: String) : CapeService
 	 * @param uuid of user
 	 * @return url of cape
 	 */
-	override fun getCape(uuid: UUID) = String.format(baseURL, uuid)
+	override fun getCape(uuid: UUID) = baseURL.format(uuid)
 }
 
 class ServiceList(private val users: Map<String, String>) : CapeService

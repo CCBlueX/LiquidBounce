@@ -42,9 +42,6 @@ private val BUTTON_PRESSED = Color(7, 152, 252).rgb
 
 class SlowlyStyle : Style()
 {
-	private var mouseDown = false
-	private var rightMouseDown = false
-
 	override fun drawPanel(mouseX: Int, mouseY: Int, panel: Panel)
 	{
 		val font = getPanelFont()
@@ -83,14 +80,12 @@ class SlowlyStyle : Style()
 		getButtonFont().drawString(buttonElement.displayName, buttonElement.x + 5, buttonElement.y + 5, WHITE)
 	}
 
-	/*
-	 * public static boolean drawCheckbox(final boolean value, final int x, final int y, final int mouseX, final int mouseY, final Color color) { RenderUtils.drawRect(x, y, x + 20, y + 10, value ? Color.GREEN : Color.RED); RenderUtils.drawFilledCircle(x +
-	 * (value ? 15 : 5),y + 5, 5, Color.WHITE);
-	 * 
-	 * if(mouseX >= x && mouseX <= x + 20 && mouseY >= y && mouseY <= y + 10 && Mouse.isButtonDown(0)) return !value;
-	 * 
-	 * return value; }
-	 */
+	// fun drawCheckbox(value: Boolean, x: Int, y: Int, mouseX: Int, mouseY: Int, color: Color?): Boolean
+	// {
+	// 	drawRect(x, y, x + 20, y + 10, if (value) Color.GREEN.rgb else Color.RED.rgb)
+	// 	drawFilledCircle(x + if (value) 15 else 5, y + 5, 5f, Color.WHITE.rgb)
+	// 	return if (mouseX >= x && mouseX <= x + 20 && mouseY >= y && mouseY <= y + 10 && Mouse.isButtonDown(0)) !value else value
+	// }
 
 	override fun drawModuleElement(mouseX: Int, mouseY: Int, moduleElement: ModuleElement)
 	{
@@ -119,9 +114,6 @@ class SlowlyStyle : Style()
 				for (value in moduleValues) drawAbstractValue(valueFont, glStateManager, moduleElement, value, mouseX, mouseY)
 
 				moduleElement.updatePressed()
-
-				mouseDown = Mouse.isButtonDown(0)
-				rightMouseDown = Mouse.isButtonDown(1)
 			}
 		}
 	}
@@ -146,7 +138,7 @@ class SlowlyStyle : Style()
 				font.drawString("\u00A7c$text", moduleIndentX + 6, moduleElement.slowlySettingsYPos + 2, WHITE)
 				font.drawString(if (value.foldState) "-" else "+", (moduleXEnd - if (value.foldState) 5 else 6).toInt(), moduleElement.slowlySettingsYPos + 2, WHITE)
 
-				if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= moduleElement.slowlySettingsYPos && mouseY <= moduleElement.slowlySettingsYPos + textHeight && Mouse.isButtonDown(0) && moduleElement.isntPressed)
+				if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= moduleElement.slowlySettingsYPos && mouseY <= moduleElement.slowlySettingsYPos + textHeight && Mouse.isButtonDown(0) && moduleElement.isntLeftPressed)
 				{
 					value.foldState = !value.foldState
 					mc.soundHandler.playSound("gui.button.press", 1.0f)
@@ -292,7 +284,7 @@ class SlowlyStyle : Style()
 
 					if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
 
-					if (mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= moduleElement.slowlySettingsYPos && mouseY <= moduleElement.slowlySettingsYPos + 12 && Mouse.isButtonDown(0) && moduleElement.isntPressed)
+					if (mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= moduleElement.slowlySettingsYPos && mouseY <= moduleElement.slowlySettingsYPos + 12 && Mouse.isButtonDown(0) && moduleElement.isntLeftPressed)
 					{
 						value.set(!value.get())
 						mc.soundHandler.playSound("gui.button.press", 1.0f)
@@ -313,7 +305,7 @@ class SlowlyStyle : Style()
 					valueFont.drawString(text, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 2, WHITE)
 					valueFont.drawString(if (value.openList) "-" else "+", (moduleX + moduleElement.settingsWidth - if (value.openList) 5 else 6).toInt(), moduleElement.slowlySettingsYPos + 2, WHITE)
 
-					if (mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= moduleElement.slowlySettingsYPos && mouseY <= moduleElement.slowlySettingsYPos + valueFont.fontHeight && Mouse.isButtonDown(0) && moduleElement.isntPressed)
+					if (mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= moduleElement.slowlySettingsYPos && mouseY <= moduleElement.slowlySettingsYPos + valueFont.fontHeight && Mouse.isButtonDown(0) && moduleElement.isntLeftPressed)
 					{
 						value.openList = !value.openList
 						mc.soundHandler.playSound("gui.button.press", 1.0f)
@@ -329,7 +321,7 @@ class SlowlyStyle : Style()
 
 						if (value.openList)
 						{
-							if (mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= moduleElement.slowlySettingsYPos + 2 && mouseY <= moduleElement.slowlySettingsYPos + 14 && Mouse.isButtonDown(0) && moduleElement.isntPressed)
+							if (mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= moduleElement.slowlySettingsYPos + 2 && mouseY <= moduleElement.slowlySettingsYPos + 14 && Mouse.isButtonDown(0) && moduleElement.isntLeftPressed)
 							{
 								value.set(valueOfList)
 								mc.soundHandler.playSound("gui.button.press", 1.0f)
@@ -394,7 +386,7 @@ class SlowlyStyle : Style()
 
 					if (moduleElement.settingsWidth < stringWidth) moduleElement.settingsWidth = stringWidth
 
-					if ((Mouse.isButtonDown(0) && !mouseDown || Mouse.isButtonDown(1) && !rightMouseDown) && mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= moduleElement.slowlySettingsYPos && mouseY <= moduleElement.slowlySettingsYPos + 12)
+					if ((Mouse.isButtonDown(0) && moduleElement.isntLeftPressed || Mouse.isButtonDown(1) && moduleElement.isntRightPressed) && mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= moduleElement.slowlySettingsYPos && mouseY <= moduleElement.slowlySettingsYPos + 12)
 					{
 						val fonts = Fonts.fonts
 						if (Mouse.isButtonDown(0))

@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.utils.RotationUtils
 import kotlin.math.ceil
 import kotlin.math.floor
 
-fun IWorld.raycastEntity(entity: IEntity, range: Double, yaw: Float = RotationUtils.serverRotation.yaw, pitch: Float = RotationUtils.serverRotation.pitch, aabbGetter: (IEntity) -> IAxisAlignedBB = IEntity::entityBoundingBox, entityFilter: (IEntity?) -> Boolean): IEntity?
+fun IWorld.raycastEntity(entity: IEntity, range: Double, yaw: Float = RotationUtils.serverRotation.yaw, pitch: Float = RotationUtils.serverRotation.pitch, expandRange: Double = 1.0, aabbGetter: (IEntity) -> IAxisAlignedBB = IEntity::entityBoundingBox, entityFilter: (IEntity?) -> Boolean): IEntity?
 {
 	val func = MinecraftInstance.functions
 
@@ -32,7 +32,7 @@ fun IWorld.raycastEntity(entity: IEntity, range: Double, yaw: Float = RotationUt
 
 	val rayEndPos = rayStartPos.addVector(lookX * reach, pitchSin * reach, lookZ * reach)
 
-	val entityList = getEntitiesInAABBexcluding(entity, entity.entityBoundingBox.addCoord(lookX * reach, pitchSin * reach, lookZ * reach).expand(1.0, 1.0, 1.0)) { it != null && (!MinecraftInstance.classProvider.isEntityPlayer(it) || !it.asEntityPlayer().spectator) && it.canBeCollidedWith() }
+	val entityList = getEntitiesInAABBexcluding(entity, entity.entityBoundingBox.addCoord(lookX * reach, pitchSin * reach, lookZ * reach).expand(expandRange, expandRange, expandRange)) { it != null && (!MinecraftInstance.classProvider.isEntityPlayer(it) || !it.asEntityPlayer().spectator) && it.canBeCollidedWith() }
 
 	var pointedEntity: IEntity? = null
 

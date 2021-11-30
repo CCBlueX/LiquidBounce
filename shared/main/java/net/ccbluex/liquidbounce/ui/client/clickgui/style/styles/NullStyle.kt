@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.style.Style
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.ui.font.assumeVolatile
 import net.ccbluex.liquidbounce.ui.font.assumeVolatileIf
-import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
 import net.ccbluex.liquidbounce.utils.extensions.serialized
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_4
@@ -44,8 +43,6 @@ private const val SLIDER_START_SHIFT = 8f
 
 class NullStyle : Style()
 {
-	private var mouseDown = false
-	private var rightMouseDown = false
 	private var queuedTask: (() -> Unit)? = null
 
 	override fun drawPanel(mouseX: Int, mouseY: Int, panel: Panel)
@@ -116,9 +113,6 @@ class NullStyle : Style()
 
 				moduleElement.updatePressed()
 
-				mouseDown = Mouse.isButtonDown(0)
-				rightMouseDown = Mouse.isButtonDown(1)
-
 				if (moduleElement.settingsWidth > 0.0f && yPos > elementY + 4) drawBorderedRect(elementX + 4f, elementY + 6f, elementX + moduleElement.settingsWidth, yPos + 2f, 1.0f, BACKGROUND, 0)
 
 				queuedTask?.invoke()
@@ -160,7 +154,7 @@ class NullStyle : Style()
 		font.drawString("\u00A7c$text", moduleIndentX + 6, yPos + 4, WHITE)
 		font.drawString(if (value.foldState) "-" else "+", (moduleXEnd - (if (value.foldState) 5 else 6) - if (mouseOver) 2 else 0).toInt(), yPos + 4, WHITE)
 
-		if (mouseOver && Mouse.isButtonDown(0) && moduleElement.isntPressed)
+		if (mouseOver && Mouse.isButtonDown(0) && moduleElement.isntLeftPressed)
 		{
 			value.foldState = !value.foldState
 			mc.soundHandler.playSound("gui.button.press", 1.0f)
@@ -336,7 +330,7 @@ class NullStyle : Style()
 
 					drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 14f, BACKGROUND)
 
-					if (mouseOver && Mouse.isButtonDown(0) && moduleElement.isntPressed)
+					if (mouseOver && Mouse.isButtonDown(0) && moduleElement.isntLeftPressed)
 					{
 						value.set(!value.get())
 						soundHandler.playSound("gui.button.press", 1.0f)
@@ -367,7 +361,7 @@ class NullStyle : Style()
 					valueFont.drawString("\u00A7c$valueDisplayName", moduleIndentX + 6, yPos + 4, WHITE)
 					valueFont.drawString(if (value.openList) "-" else "+", (moduleXEnd - (if (value.openList) 5 else 6) - if (mouseOver) 2 else 0).toInt(), yPos + 4, WHITE)
 
-					if (mouseOver && Mouse.isButtonDown(0) && moduleElement.isntPressed)
+					if (mouseOver && Mouse.isButtonDown(0) && moduleElement.isntLeftPressed)
 					{
 						value.openList = !value.openList
 						soundHandler.playSound("gui.button.press", 1.0f)
@@ -391,7 +385,7 @@ class NullStyle : Style()
 
 						mouseOver = mouseX in moduleIndentX + 4..moduleXEnd.toInt() && mouseY in yPos + 2..yPos + 14
 
-						if (mouseOver && Mouse.isButtonDown(0) && moduleElement.isntPressed)
+						if (mouseOver && Mouse.isButtonDown(0) && moduleElement.isntLeftPressed)
 						{
 							value.set(valueOfList)
 							soundHandler.playSound("gui.button.press", 1.0f)
@@ -461,20 +455,12 @@ class NullStyle : Style()
 					val textWidth = valueFont.getStringWidth(displayString) + indent
 					if (moduleElement.settingsWidth < textWidth + 8f) moduleElement.settingsWidth = textWidth + 8f
 
-					if (mouseOver)
+					if (mouseOver && (Mouse.isButtonDown(0) && moduleElement.isntLeftPressed || Mouse.isButtonDown(1) && moduleElement.isntRightPressed))
 					{
-						// DEBUG CODE START //
-						if (Mouse.isButtonDown(0)) ClientUtils.displayChatMessage(mc.thePlayer, "Pressed left click (prev=$mouseDown)")
-						if (Mouse.isButtonDown(1)) ClientUtils.displayChatMessage(mc.thePlayer, "Pressed right click (prev=$rightMouseDown)")
-						// DEBUG CODE END //
-
-						if (Mouse.isButtonDown(0) && !mouseDown || Mouse.isButtonDown(1) && !rightMouseDown)
-						{
-							val fonts = Fonts.fonts
-							val index = fonts.indexOf(fontRenderer)
-							if (Mouse.isButtonDown(0)) value.set(fonts[if (index + 1 >= fonts.size) 0 else index + 1]) // Next font
-							else value.set(fonts[if (index - 1 < 0) fonts.size - 1 else index - 1]) // Previous font
-						}
+						val fonts = Fonts.fonts
+						val index = fonts.indexOf(fontRenderer)
+						if (Mouse.isButtonDown(0)) value.set(fonts[if (index + 1 >= fonts.size) 0 else index + 1]) // Next font
+						else value.set(fonts[if (index - 1 < 0) fonts.size - 1 else index - 1]) // Previous font
 					}
 
 					yPos += 11

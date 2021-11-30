@@ -87,42 +87,43 @@ class InventoryCleaner : Module()
 	private val slot9Value = ListValue("9", items, "Block", "Slot-9")
 
 	private val filterGroup = ValueGroup("Filter")
-	private val filterKeepOldSwordValue = BoolValue("KeepOldSword", false, "KeepOldSword")
-	private val filterSwordCountValue = object : IntegerValue("MaxSwords", 1, 0, 45)
+	private val filterKeepOldSwordValue = BoolValue("KeepOldSword", false, "KeepOldSword", description = "Don't touch any kind of swords in the inventory")
+	private val filterSwordCountValue = object : IntegerValue("MaxSwords", 1, 0, 45, description = "Maximum allowed count of good swords in the inventory")
 	{
 		override fun showCondition(): Boolean = !filterKeepOldSwordValue.get()
 	}
-	private val filterKeepOldToolsValue = BoolValue("KeepOldTools", false, "KeepOldTools")
-	private val filterToolCountValue = object : IntegerValue("MaxTools", 1, 0, 45)
+	private val filterKeepOldToolsValue = BoolValue("KeepOldTools", false, "KeepOldTools", description = "Don't touch any kind of tools in the inventory")
+	private val filterToolCountValue = object : IntegerValue("MaxTools", 1, 0, 45, description = "Maximum allowed count of good tools in the inventory")
 	{
 		override fun showCondition(): Boolean = !filterKeepOldToolsValue.get()
 	}
-	private val filterKeepOldArmorsValue = BoolValue("KeepOldArmors", false, "KeepOldArmors")
-	private val filterArmorCountValue = object : IntegerValue("MaxArmors", 1, 0, 45)
+	private val filterKeepOldArmorsValue = BoolValue("KeepOldArmors", false, "KeepOldArmors", description = "Don't touch any kind of armors in the inventory")
+	private val filterArmorCountValue = object : IntegerValue("MaxArmors", 1, 0, 45, description = "Maximum allowed count of armors in the inventory")
 	{
 		override fun showCondition(): Boolean = !filterKeepOldArmorsValue.get()
 	}
 
 	private val filterBowAndArrowGroup = ValueGroup("BowAndArrow")
-	private val filterBowAndArrowBowCountValue = IntegerValue("MaxBows", 1, 0, 45)
-	private val filterBowAndArrowArrowCountValue = IntegerValue("MaxArrows", 2304, 0, 2304, "MaxArrows")
+	private val filterBowAndArrowBowCountValue = IntegerValue("MaxBows", 1, 0, 45, description = "Maximum allowed count of good bows in the inventory")
+	private val filterBowAndArrowArrowCountValue = IntegerValue("MaxArrows", 2304, 0, 2304, "MaxArrows", "Maximum allowed count of arrows in the inventory")
 
-	private val filterFoodCountValue = IntegerValue("MaxFoods", 2304, 0, 2304, "MaxFoods")
-	private val filterMaxBlockCountValue = IntegerValue("MaxBlocks", 2304, 0, 2304, "MaxBlocks")
-	private val filterBedCountValue = IntegerValue("MaxBeds", 45, 0, 45, "MaxFoods")
-	private val filterCompassCountValue = IntegerValue("MaxCompasses", 45, 0, 45)
-	private val filterEnderPearlCountValue = IntegerValue("MaxEnderPearls", 720, 0, 720)
-	private val filterSkullCountValue = IntegerValue("MaxSkulls", 2304, 0, 2304)
-	private val filterPotionCountValue = IntegerValue("MaxPotions", 720, 0, 720)
-	private val filterIronIngotCountValue = IntegerValue("MaxIronIngots", 2304, 0, 2304)
-	private val filterDiamondCountValue = IntegerValue("MaxDiamonds", 2304, 0, 2304)
-	private val filterVehicleCountValue = IntegerValue("MaxVehicles", 720, 0, 720, "IgnoreVehicles")
+	private val filterFoodCountValue = IntegerValue("MaxFoods", 2304, 0, 2304, "MaxFoods", description = "Maximum allowed count of foods (except Golden Apple) in the inventory")
+	private val filterGoldAppleCountValue = IntegerValue("MaxGoldApples", 2304, 0, 2304, description = "Maximum allowed count of Golden Apples in the inventory")
+	private val filterMaxBlockCountValue = IntegerValue("MaxBlocks", 2304, 0, 2304, "MaxBlocks", description = "Maximum allowed count of blocks in the inventory")
+	private val filterBedCountValue = IntegerValue("MaxBeds", 45, 0, 45, description = "Maximum allowed count of beds in the inventory")
+	private val filterCompassCountValue = IntegerValue("MaxCompasses", 45, 0, 45, description = "Maximum allowed count of compasses in the inventory")
+	private val filterEnderPearlCountValue = IntegerValue("MaxEnderPearls", 720, 0, 720, description = "Maximum allowed count of ender pearls in the inventory")
+	private val filterSkullCountValue = IntegerValue("MaxSkulls", 2304, 0, 2304, description = "Maximum allowed count of skulls in the inventory")
+	private val filterPotionCountValue = IntegerValue("MaxPotions", 720, 0, 720, description = "Maximum allowed count of potion (which contains any good effects) in the inventory")
+	private val filterIronIngotCountValue = IntegerValue("MaxIronIngots", 2304, 0, 2304, description = "Maximum allowed count of iron ingots in the inventory")
+	private val filterDiamondCountValue = IntegerValue("MaxDiamonds", 2304, 0, 2304, description = "Maximum allowed count of diamonds in the inventory")
+	private val filterVehicleCountValue = IntegerValue("MaxVehicles", 720, 0, 720, "IgnoreVehicles", description = "Maximum allowed count of boat and minecart in the inventory")
 
 	private val filterBucketGroup = ValueGroup("MaxBucket")
-	private val filterBucketEmptyCountValue = IntegerValue("Empty", 0, 0, 45)
-	private val filterBucketWaterCountValue = IntegerValue("Water", 1, 0, 45)
-	private val filterBucketLavaCountValue = IntegerValue("Lava", 0, 0, 45)
-	private val filterBucketOtherCountValue = IntegerValue("Other", 0, 0, 45)
+	private val filterBucketEmptyCountValue = IntegerValue("Empty", 0, 0, 45, description = "Maximum allowed count of empty buckets in the inventory")
+	private val filterBucketWaterCountValue = IntegerValue("Water", 1, 0, 45, description = "Maximum allowed count of water buckets in the inventory")
+	private val filterBucketLavaCountValue = IntegerValue("Lava", 0, 0, 45, description = "Maximum allowed count of lava buckets in the inventory")
+	private val filterBucketOtherCountValue = IntegerValue("Other", 0, 0, 45, description = "Maximum allowed count of buckets of the liquid neither water nor lava in the inventory")
 
 	// Visuals
 	private val clickIndicationGroup = ValueGroup("ClickIndication")
@@ -333,11 +334,23 @@ class InventoryCleaner : Module()
 			{
 				provider.isItemSword(item) || provider.isItemTool(item) ->
 				{
-					val isSword = provider.isItemSword(item)
+					val typeOf = { _item: IItem? ->
+						when
+						{
+							provider.isItemSword(_item) -> 0
+							provider.isItemPickaxe(_item) -> 1
+							provider.isItemAxe(_item) -> 2
+							provider.isItemSpade(_item) -> 3
+							else -> -1
+						}
+					}
+					val currentType = typeOf(item)
+
+					val isSword = currentType == 0
 					if (if (isSword) filterKeepOldSwordValue.get() else filterKeepOldToolsValue.get()) return true
 
-					val maxDuplicate = if (isSword) filterSwordCountValue.get() else filterToolCountValue.get()
-					if (maxDuplicate <= 0) return false
+					val maxCount = if (isSword) filterSwordCountValue.get() else filterToolCountValue.get()
+					if (maxCount <= 0) return false
 
 					// Failsafe for continuous-swapping bug
 					val hotbarSlot = slot - 36
@@ -346,19 +359,13 @@ class InventoryCleaner : Module()
 					// Failsafe for continuous-swapping bug 2
 					repeat(9) { hotbar ->
 						val type = type(hotbar)
-						if ((type.equals("sword", true) && isSword || type.equals("pickaxe", true) && provider.isItemPickaxe(item) || type.equals("axe", true) && provider.isItemAxe(item)) && findBetterItem(thePlayer, hotbar, thePlayer.inventory.getStackInSlot(hotbar)) == null) return@isUseful true
+						if ((type.equals("sword", true) && isSword || type.equals("pickaxe", true) && currentType == 1 || type.equals("axe", true) && currentType == 2) && findBetterItem(thePlayer, hotbar, thePlayer.inventory.getStackInSlot(hotbar)) == null) return@isUseful true
 					}
 
 					val sharpEnch = provider.getEnchantmentEnum(EnchantmentType.SHARPNESS)
 					val getAttackDamage = { itemStack: IItemStack -> (itemStack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount ?: 0.0) + 1.25 * itemStack.getEnchantmentLevel(sharpEnch) }
 					val attackDamage = getAttackDamage(stack)
-					val stackID = functions.getIdFromItem(item!!)
-					// check(maxDuplicate) { otherStack -> otherStack.item?.let(functions::getIdFromItem) == stackID && attackDamage.compareTo(getAttackDamage(otherStack)) < itemComparator }
-
-					val filtered = otherItems.filter { otherStack -> otherStack.item?.let(functions::getIdFromItem) == stackID && attackDamage <= getAttackDamage(otherStack) }
-					val totalStackSize = filtered.sumBy(IItemStack::stackSize) + stackSize
-					ClientUtils.displayChatMessage(mc.thePlayer, "[${otherItems.filter { it.item?.let(functions::getIdFromItem) == stackID }.joinToString { "${it.unlocalizedName} - ${getAttackDamage(it)}" }}] -> attackDamage: $attackDamage (Comparated)-> [${filtered.joinToString { "${it.unlocalizedName} - ${getAttackDamage(it)}" }}] -> Totally, found ${filtered.size + 1} items, $totalStackSize stacks")
-					totalStackSize <= maxDuplicate
+					check(maxCount) { otherStack -> typeOf(otherStack.item) == currentType && attackDamage <= getAttackDamage(otherStack) }
 				}
 
 				provider.isItemBow(item) ->
@@ -398,10 +405,14 @@ class InventoryCleaner : Module()
 
 				provider.isItemBlock(item) && !provider.isBlockBush(item?.asItemBlock()?.block) && !provider.isBlockChest(item?.asItemBlock()?.block) -> otherItems.filter { provider.isItemBlock(it.item) && item?.asItemBlock()?.block?.let(::checkBlock) == true }.sumBy(IItemStack::stackSize) + stackSize <= filterMaxBlockCountValue.get()
 
-				filterFoodCountValue.get() > 0 && provider.isItemFood(item) ->
+				filterFoodCountValue.get() > 0 && provider.isItemFood(item) && !provider.isItemAppleGold(item) ->
 				{
-					val itemID = functions.getIdFromItem(item!!)
-					otherItems.filter { provider.isItemFood(it.item) }.filter { functions.getIdFromItem(it.item!!) == itemID }.sumBy(IItemStack::stackSize) + stackSize <= filterFoodCountValue.get()
+					val getScore = { foodStack: IItemStack ->
+						val itemFood = foodStack.item!!.asItemFood()
+						itemFood.getHealAmount(stack) + itemFood.getSaturationModifier(stack)
+					}
+					val score = getScore(stack)
+					check(filterFoodCountValue.get()) { otherStack -> provider.isItemFood(otherStack.item) && score <= getScore(otherStack) }
 				}
 
 				provider.isItemBucket(item) ->
@@ -425,6 +436,7 @@ class InventoryCleaner : Module()
 					}) { provider.isItemBucket(it) && normalize(it.item!!.asItemBucket().isFull) == full }
 				}
 
+				filterGoldAppleCountValue.get() > 0 && provider.isItemAppleGold(item) -> check(filterGoldAppleCountValue.get()) { provider.isItemAppleGold(item) }
 				filterEnderPearlCountValue.get() > 0 && provider.isItemEnderPearl(item) -> check(filterEnderPearlCountValue.get()) { provider.isItemEnderPearl(it.item) }
 				filterDiamondCountValue.get() > 0 && stack.unlocalizedName == "item.diamond" -> check(filterDiamondCountValue.get()) { it.unlocalizedName == "item.diamond" }
 				filterIronIngotCountValue.get() > 0 && stack.unlocalizedName == "item.ingotIron" -> check(filterIronIngotCountValue.get()) { it.unlocalizedName == "item.ingotIron" }

@@ -56,7 +56,8 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 	 * @param wheel
 	 */
 	fun drawPanel(mouseX: Int, mouseY: Int, wheel: Int)
-	{ // Drag panel
+	{
+		// Drag panel
 		drag(mouseX, mouseY)
 
 		// Set current element

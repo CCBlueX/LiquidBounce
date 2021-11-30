@@ -11,7 +11,6 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.enums.BlockType
 import net.ccbluex.liquidbounce.api.enums.EnumFacingType
 import net.ccbluex.liquidbounce.api.minecraft.block.state.IIBlockState
-import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP
 import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityPlayer
 import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
@@ -212,8 +211,6 @@ class Scaffold : Module()
 
 	// Last Ground Block
 	private var lastGroundBlockState: IIBlockState? = null
-	private var lastGroundBlockPos: WBlockPos? = null
-	private var lastGroundBlockBB: IAxisAlignedBB? = null
 
 	private var lastSearchPosition: WBlockPos? = null
 
@@ -466,11 +463,16 @@ class Scaffold : Module()
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
 
-		if (!thePlayer.onGround && thePlayer.motionY < 0)
+		if (eventState == EventState.PRE)
 		{
-			if (fallStartY < thePlayer.posY) fallStartY = thePlayer.posY
+			if (!thePlayer.onGround && thePlayer.motionY < 0)
+			{
+				if (fallStartY < thePlayer.posY) fallStartY = thePlayer.posY
+			}
+			else fallStartY = 0.0
+
+			updateGroundBlock(theWorld, thePlayer)
 		}
-		else fallStartY = 0.0
 
 		if (!state) return
 
@@ -510,27 +512,23 @@ class Scaffold : Module()
 		}
 	}
 
-	fun update(theWorld: IWorld, thePlayer: IEntityPlayerSP)
+	private fun update(theWorld: IWorld, thePlayer: IEntityPlayerSP)
 	{
-		val provider = classProvider
-
 		val heldItem = thePlayer.heldItem
-		val heldItemIsNotBlock: Boolean = heldItem == null || !provider.isItemBlock(heldItem.item)
+		val heldItemIsNotBlock: Boolean = heldItem == null || !classProvider.isItemBlock(heldItem.item)
 
 		if (if (autoBlockModeValue.get().equals("Off", true)) heldItemIsNotBlock else thePlayer.inventoryContainer.findAutoBlockBlock(theWorld, autoBlockFullCubeOnlyValue.get()) == -1 && heldItemIsNotBlock) return
+		findBlock(theWorld, thePlayer, modeValue.get().equals("expand", true))
+	}
 
+	private fun updateGroundBlock(theWorld: IWorld, thePlayer: IEntityPlayerSP)
+	{
 		val groundSearchDepth = 0.2
 
 		val pos = WBlockPos(thePlayer.posX, thePlayer.posY - groundSearchDepth, thePlayer.posZ)
 		val bs: IIBlockState = theWorld.getBlockState(pos)
-		if ( /* (this.lastGroundBlockState == null || !pos.equals(this.lastGroundBlockPos)) && */!theWorld.isReplaceable(bs))
-		{
-			lastGroundBlockState = bs
-			lastGroundBlockPos = pos
-			lastGroundBlockBB = theWorld.getBlockCollisionBox(bs)
-		}
-
-		findBlock(theWorld, thePlayer, modeValue.get().equals("expand", true))
+		if (!theWorld.isReplaceable(bs)) lastGroundBlockState = bs
+		else if (lastGroundBlockState == null) lastGroundBlockState = classProvider.getBlockEnum(BlockType.STONE).defaultState // Failsafe
 	}
 
 	private fun setRotation(thePlayer: IEntityPlayer, rotation: Rotation, keepRotation: Int)
@@ -564,12 +562,10 @@ class Scaffold : Module()
 			return@findBlock
 		}
 
-		val groundBlockBB = lastGroundBlockBB ?: run {
-			failedResponce("lastGroundBlockBB = null")
+		val groundBlockBB = theWorld.getBlockCollisionBox(groundBlockState) ?: run {
+			failedResponce("lastGroundBlockState.blockCollisionBox = null")
 			return@findBlock
 		}
-
-		val groundBlock: IBlock = groundBlockState.block
 
 		// get the block that will be automatically placed
 		var autoBlock: IItemStack? = thePlayer.heldItem
@@ -597,13 +593,13 @@ class Scaffold : Module()
 		}
 
 		val autoBlockBlock = (autoBlock?.item ?: run {
-			failedResponce("Block?.item = null")
+			failedResponce("autoBlock = null OR autoBlock.item = null")
 			return@findBlock
 		}).asItemBlock().block
 
 		val func = functions
 
-		val abCollisionBB = theWorld.getBlockCollisionBox(if (func.isBlockEqualTo(groundBlock, autoBlockBlock)) groundBlockState
+		val abCollisionBB = theWorld.getBlockCollisionBox(if (func.isBlockEqualTo(groundBlockState.block, autoBlockBlock)) groundBlockState
 		else autoBlockBlock.defaultState ?: run {
 			failedResponce("BlockState unavailable")
 			return@findBlock
@@ -696,12 +692,12 @@ class Scaffold : Module()
 			}
 		}
 
-		if (visualSearchDebugValue.get()) searchDebug = listOf("result".equalTo("SUCCESS", "\u00A7a"), "state" equalTo "$state${if (flagged) " \u00A78+ \u00A7cFLAGGED\u00A7r" else ""}", "searchRange".equalTo(searchBounds, "\u00A7b"), "autoBlockCollisionBox".equalTo("$abCollisionBB", "\u00A73"), "groundBlockCollisionBB".equalTo("$lastGroundBlockBB", "\u00A72")).serialize()
+		if (visualSearchDebugValue.get()) searchDebug = listOf("result".equalTo("SUCCESS", "\u00A7a"), "state" equalTo "$state${if (flagged) " \u00A78+ \u00A7cFLAGGED\u00A7r" else ""}", "searchRange".equalTo(searchBounds, "\u00A7b"), "autoBlockCollisionBox".equalTo("$abCollisionBB", "\u00A73"), "groundBlockCollisionBB".equalTo("$groundBlockBB", "\u00A72")).serialize()
 
 		lastSearchPosition = searchPosition
 
 		val facings = EnumFacingType.values().map(provider::getEnumFacing)
-		if (!expand && (!theWorld.isReplaceable(searchPosition) || search(theWorld, thePlayer, searchPosition, rotationSearchCheckVisibleValue.get() && !shouldGoDown, searchBounds, facings))) return
+		if (!expand && (!theWorld.isReplaceable(searchPosition) || search(theWorld, thePlayer, searchPosition, rotationSearchCheckVisibleValue.get() && !shouldGoDown, searchBounds, facings, "\u00A7aDefault"))) return
 
 		val ySearch = rotationSearchYSearchValue.get() || clutching || flagged
 		if (expand)
@@ -719,7 +715,7 @@ class Scaffold : Module()
 						provider.getEnumFacing(EnumFacingType.NORTH) -> -i
 						provider.getEnumFacing(EnumFacingType.SOUTH) -> i
 						else -> 0
-					}), false, searchBounds, facings)) return@findBlock
+					}), false, searchBounds, facings, "\u00A7cExpand")) return@findBlock
 			}
 		}
 		else if (rotationSearchSearchValue.get())
@@ -753,7 +749,7 @@ class Scaffold : Module()
 			val yList = if (urgent) -yrangeValue..yrangeValue else listPair.second
 
 			listPair.first.forEach { (x, z) ->
-				if (yList.any { y -> search(theWorld, thePlayer, searchPosition.add(x, y, z), !shouldGoDown, searchBounds, facings) }) return@findBlock
+				if (yList.any { y -> search(theWorld, thePlayer, searchPosition.add(x, y, z), !shouldGoDown, searchBounds, facings, "\u00A7bSearch") }) return@findBlock
 			}
 		}
 	}
@@ -876,7 +872,7 @@ class Scaffold : Module()
 		val pos = targetPlace.blockPos
 		if (controller.onPlayerRightClick(thePlayer, theWorld, itemStack, pos, targetPlace.enumFacing, targetPlace.vec3))
 		{
-			placeDebug = listOf("position".equalTo(pos, "\u00A7a"), "side".equalTo(targetPlace.enumFacing, "\u00A7b"), "hitVec".equalTo(targetPlace.vec3.addVector(-pos.x.toDouble(), -pos.y.toDouble(), -pos.z.toDouble()), "\u00A7e")).serialize()
+			placeDebug = listOf("searchType".equalTo(targetPlace.type), "position".equalTo(pos, "\u00A7a"), "side".equalTo(targetPlace.enumFacing, "\u00A7b"), "hitVec".equalTo(targetPlace.vec3.addVector(-pos.x.toDouble(), -pos.y.toDouble(), -pos.z.toDouble()), "\u00A7e")).serialize()
 
 			// Reset delay
 			delayTimer.reset()
@@ -1047,7 +1043,7 @@ class Scaffold : Module()
 	 * @return
 	 */
 
-	private fun search(theWorld: IWorld, thePlayer: IEntityPlayer, blockPosition: WBlockPos, checkVisible: Boolean, data: SearchBounds, facings: List<IEnumFacing>): Boolean
+	private fun search(theWorld: IWorld, thePlayer: IEntityPlayer, blockPosition: WBlockPos, checkVisible: Boolean, data: SearchBounds, facings: List<IEnumFacing>, type: String): Boolean
 	{
 		if (!theWorld.isReplaceable(blockPosition)) return false
 
@@ -1128,7 +1124,7 @@ class Scaffold : Module()
 							val rayTrace = theWorld.rayTraceBlocks(eyesPos, blockReachPos, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = false, returnLastUncollidableBlock = true)
 							if (rayTrace != null && (rayTrace.typeOfHit != IMovingObjectPosition.WMovingObjectType.BLOCK || rayTrace.blockPos != neighbor)) return@repeat // Raytrace Check - rayTrace hit between eye position and block reach position
 
-							if (placeRotation?.let { RotationUtils.getRotationDifference(rotation) < RotationUtils.getRotationDifference(it.rotation) } != false) placeRotation = PlaceRotation(PlaceInfo(neighbor, side.opposite, hitVec), rotation) // If the current rotation is better than the previous one
+							if (placeRotation?.let { RotationUtils.getRotationDifference(rotation) < RotationUtils.getRotationDifference(it.rotation) } != false) placeRotation = PlaceRotation(PlaceInfo(neighbor, side.opposite, hitVec, type), rotation) // If the current rotation is better than the previous one
 
 							xSearchFace = xSearch
 							ySearchFace = ySearch
@@ -1251,6 +1247,6 @@ class Scaffold : Module()
 		val ySteps = ysteps
 		val zSteps = zsteps
 
-		override fun toString(): String = String.format("SearchBounds[X: %.2f~%.2f (%.3f), Y: %.2f~%.2f (%.3f), Z: %.2f~%.2f (%.3f)]", minX, maxX, xSteps, minY, maxY, ySteps, minZ, maxZ, zSteps)
+		override fun toString(): String = "SearchBounds[X: %.2f~%.2f (%.3f), Y: %.2f~%.2f (%.3f), Z: %.2f~%.2f (%.3f)]".format(minX, maxX, xSteps, minY, maxY, ySteps, minZ, maxZ, zSteps)
 	}
 }

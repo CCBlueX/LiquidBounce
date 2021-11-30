@@ -216,7 +216,7 @@ class ExtendedTooltips : Module()
 
 		potionItem.item?.asItemPotion()?.getEffects(potionItem)?.forEach { effect ->
 			val durationInSeconds: Int = effect.duration / 20
-			potionBuilder.append("\u00A7l${Maps.POTION_SHORT_NAME[effect.potionID]} ${effect.amplifier + 1} (${durationInSeconds / 60}${String.format(":%02d", durationInSeconds % 60)})  ")
+			potionBuilder.append("\u00A7l${Maps.POTION_SHORT_NAME[effect.potionID]} ${effect.amplifier + 1} (${durationInSeconds / 60}${":%02d".format(durationInSeconds % 60)})  ")
 		}
 
 		return "$potionBuilder".trim { it <= ' ' }

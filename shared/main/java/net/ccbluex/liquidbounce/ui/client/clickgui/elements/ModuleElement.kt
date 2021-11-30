@@ -13,12 +13,15 @@ class ModuleElement(val module: Module) : ButtonElement(module.name)
 {
 	var showSettings = false
 	var settingsWidth = 0f
-	private var wasPressed = false
+	private var wasLeftClickPressed = false
+	private var wasRightClickPressed = false
 	var slowlySettingsYPos = 0
 	var slowlyFade = 0
 
-	val isntPressed: Boolean
-		get() = !wasPressed
+	val isntLeftPressed: Boolean
+		get() = !wasLeftClickPressed
+	val isntRightPressed: Boolean
+		get() = !wasRightClickPressed
 
 	override fun drawScreen(mouseX: Int, mouseY: Int, button: Float)
 	{
@@ -37,6 +40,7 @@ class ModuleElement(val module: Module) : ButtonElement(module.name)
 
 	fun updatePressed()
 	{
-		wasPressed = Mouse.isButtonDown(0)
+		wasLeftClickPressed = Mouse.isButtonDown(0)
+		wasRightClickPressed = Mouse.isButtonDown(1)
 	}
 }

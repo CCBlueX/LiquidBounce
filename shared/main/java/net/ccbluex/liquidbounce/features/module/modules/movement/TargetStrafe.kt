@@ -118,6 +118,11 @@ class TargetStrafe : Module()
 		pathEspGroup.addAll(pathEspEnabledValue, pathEspAccuracyValue, pathEspLineWidthValue, pathEspFadeSpeedValue, pathEspColorGroup, pathEspStrafingColorGroup)
 	}
 
+	override fun onDisable()
+	{
+		target = null
+	}
+
 	@EventTarget
 	fun onMove(event: MoveEvent)
 	{
@@ -226,10 +231,10 @@ class TargetStrafe : Module()
 		}
 	}
 
-	@EventTarget
+	@EventTarget(ignoreCondition = true)
 	fun onRender3D(event: Render3DEvent)
 	{
-		if (!pathEspEnabledValue.get()) return
+		if (!pathEspEnabledValue.get() || !state && lastTargetPos == null) return
 
 		// Initialize
 		if (easingStrafeRadius < 0) easingStrafeRadius = strafeRangeValue.get() + 1
@@ -250,6 +255,7 @@ class TargetStrafe : Module()
 			{
 				easingStrafeRadius = strafeRangeValue.get() + 1
 				easingStrafeRadiusAlpha = 0f
+				if (!state) lastTargetPos = null
 				null
 			}
 		} ?: return

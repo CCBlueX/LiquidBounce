@@ -23,10 +23,10 @@ class AntiBlind : Module()
 		{
 			var tag = ""
 
-			if (blindnessEffect.get()) tag += 'b'
-			if (confusionEffect.get()) tag += 'c'
-			if (pumpkinEffect.get()) tag += 'p'
-			if (fireEffect.get()) tag += 'f'
+			if (blindnessEffect.get()) tag += 'B'
+			if (confusionEffect.get()) tag += 'C'
+			if (pumpkinEffect.get()) tag += 'P'
+			if (fireEffect.get()) tag += 'F'
 
 			return tag
 		}

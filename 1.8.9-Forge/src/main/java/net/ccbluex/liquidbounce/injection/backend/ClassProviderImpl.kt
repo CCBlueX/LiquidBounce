@@ -696,6 +696,7 @@ object ClassProviderImpl : IClassProvider
 			BlockType.GRAVEL -> Blocks.gravel
 			BlockType.STANDING_SIGN -> Blocks.standing_sign
 			BlockType.WALL_SIGN -> Blocks.wall_sign
+			BlockType.STONE -> Blocks.stone
 		})
 	}
 

@@ -253,6 +253,7 @@ class KillAura : Module()
 	private val visualMarkRangeLineWidthValue = FloatValue("LineWidth", 1f, 0.5f, 2f)
 	private val visualMarkRangeAccuracyValue = FloatValue("Accuracy", 10F, 0.5F, 20F, "Mark-Range-Accuracy")
 	private val visualMarkRangeFadeSpeedValue = IntegerValue("FadeSpeed", 5, 1, 9)
+	private val visualMarkRangeAlphaFadeSpeedValue = IntegerValue("AlphaFadeSpeed", 5, 1, 9, "Visual.Mark.Range.FadeSpeed")
 
 	private val visualMarkRangeColorGroup = object : ValueGroup("Color")
 	{
@@ -328,7 +329,7 @@ class KillAura : Module()
 	private var predictZ = 1F
 
 	// Container Delay
-	private var containerOpen = -1L
+	private val containerOpenTimer = MSTimer()
 
 	private var switchDelay = switchDelayValue.getRandomDelay()
 	private val switchDelayTimer = MSTimer()
@@ -397,7 +398,7 @@ class KillAura : Module()
 	 */
 	private var autoBlockTarget: IEntityLivingBase? = null
 	private var rangeMarks: List<Pair<Float, Int>>? = null
-	private var easingRanges: ArrayList<Float>? = null
+	private var easingRangeAndAlphas: ArrayList<Pair<Float, Float>>? = null
 
 	private var easingMarkAlpha: Float = 0f
 
@@ -456,7 +457,6 @@ class KillAura : Module()
 		clicks = 0
 		comboReach = 0.0F
 		stopBlocking()
-		easingRanges = null
 	}
 
 	@EventTarget
@@ -568,7 +568,7 @@ class KillAura : Module()
 	fun update(theWorld: IWorld, thePlayer: IEntityPlayer)
 	{
 		// CancelRun & NoInventory
-		if (shouldCancelRun(thePlayer) || (noInventoryAttackEnabledValue.get() && (classProvider.isGuiContainer(mc.currentScreen) || System.currentTimeMillis() - containerOpen < noInventoryDelayValue.get()))) return
+		if (shouldCancelRun(thePlayer) || (noInventoryAttackEnabledValue.get() && (classProvider.isGuiContainer(mc.currentScreen) || containerOpenTimer.hasTimePassed(noInventoryDelayValue.get().toLong())))) return
 
 		// Update target
 		updateTarget(theWorld, thePlayer)
@@ -637,14 +637,14 @@ class KillAura : Module()
 			}).filterNotNull()
 		}
 
-		if (noInventoryAttackEnabledValue.get() && (classProvider.isGuiContainer(screen) || System.currentTimeMillis() - containerOpen < noInventoryDelayValue.get()))
+		if (noInventoryAttackEnabledValue.get() && (classProvider.isGuiContainer(screen) || containerOpenTimer.hasTimePassed(noInventoryDelayValue.get().toLong())))
 		{
 			target = null
 			currentTarget = null
 			hitable = false
 			comboReach = 0.0F
 
-			if (classProvider.isGuiContainer(screen)) containerOpen = System.currentTimeMillis()
+			if (classProvider.isGuiContainer(screen)) containerOpenTimer.reset()
 
 			return
 		}
@@ -664,140 +664,152 @@ class KillAura : Module()
 	/**
 	 * Render event
 	 */
-	@EventTarget
+	@EventTarget(ignoreCondition = true)
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
-		if (shouldCancelRun(mc.thePlayer ?: return))
+		var cancelRun = !state
+
+		if (!cancelRun && shouldCancelRun(mc.thePlayer ?: return))
 		{
 			target = null
 			currentTarget = null
 			hitable = false
 			comboReach = 0.0F
 			stopBlocking()
-			return
+			cancelRun = true
 		}
 
 		val screen = mc.currentScreen
 
-		val provider = classProvider
-
 		// NoInventory
-		if (noInventoryAttackEnabledValue.get() && (provider.isGuiContainer(screen) || System.currentTimeMillis() - containerOpen < noInventoryDelayValue.get()))
+		if (!cancelRun && noInventoryAttackEnabledValue.get() && (classProvider.isGuiContainer(screen) || containerOpenTimer.hasTimePassed(noInventoryDelayValue.get().toLong())))
 		{
 			target = null
 			currentTarget = null
 			hitable = false
 			comboReach = 0.0F
-			if (provider.isGuiContainer(screen)) containerOpen = System.currentTimeMillis()
-			return
+			if (classProvider.isGuiContainer(screen)) containerOpenTimer.reset()
+			cancelRun = true
 		}
 
-		if (!visualMarkRangeModeValue.get().equals("None", ignoreCase = true))
+		if ((state || easingRangeAndAlphas != null) && !visualMarkRangeModeValue.get().equals("None", ignoreCase = true))
 		{
 			val lineWidth = visualMarkRangeLineWidthValue.get()
 			val accuracy = visualMarkRangeAccuracyValue.get()
 
 			rangeMarks?.let { rangeMarks ->
-				easingRanges?.let { easingRangeMarks ->
-					for (i in rangeMarks.indices) rangeMarks[i].let { (originalRange, color) ->
-						if (easingRangeMarks.size <= i) easingRangeMarks.add(originalRange)
+				easingRangeAndAlphas?.let { easingRangeMarks ->
+					for (i in rangeMarks.indices)
+					{
+						val (range, alpha) = easingRangeMarks[i]
+						rangeMarks[i].let { (originalRange, color) ->
+							if (easingRangeMarks.size <= i) easingRangeMarks.add(originalRange to 1f)
 
-						GL11.glPushMatrix()
-						RenderUtils.drawRadius(easingRangeMarks[i], accuracy, lineWidth, color)
-						GL11.glPopMatrix()
+							GL11.glPushMatrix()
+							RenderUtils.drawRadius(range, accuracy, lineWidth, ColorUtils.multiplyAlphaChannel(color, alpha))
+							GL11.glPopMatrix()
 
-						easingRangeMarks[i] = easeOutCubic(easingRangeMarks[i], originalRange, visualMarkRangeFadeSpeedValue.get())
+							easingRangeMarks[i] = easeOutCubic(range, if (cancelRun) 0f else originalRange, visualMarkRangeFadeSpeedValue.get()) to easeOutCubic(alpha, if (cancelRun) 0f else 1f, visualMarkRangeAlphaFadeSpeedValue.get())
+							if (cancelRun && easingRangeMarks[i].second <= 0.1f) easingRangeMarks[i] = originalRange + 1 to 0f
+						}
 					}
-				} ?: run { easingRanges = rangeMarks.mapTo(ArrayList()) { it.first + 1f } }
+
+					// GC the list after all ranges are successfully eased-out
+					if (cancelRun && easingRangeMarks.all { it.second == 0f }) easingRangeAndAlphas = null
+				} ?: run { if (!cancelRun) easingRangeAndAlphas = rangeMarks.mapTo(ArrayList()) { it.first + 1f to 0f } }
 			}
 		}
 
 		// Mark
-		val markMode = visualMarkTargetModeValue.get().toLowerCase()
-		if (markMode != "none" && !targetModeValue.get().equals("Multi", ignoreCase = true))
+		if (state || lastTargetBB != null)
 		{
-			(target?.let { target ->
-				val targetEntityId = target.entityId
+			val markMode = visualMarkTargetModeValue.get().toLowerCase()
+			if (markMode != "none" && !targetModeValue.get().equals("Multi", ignoreCase = true))
+			{
+				(target?.let { target ->
+					val targetEntityId = target.entityId
 
-				val partialTicks = event.partialTicks
+					val partialTicks = event.partialTicks
 
-				var bb = target.entityBoundingBox
-				bb = if (rotationBacktrackEnabledValue.get())
-				{
-					val backtraceTicks = rotationBacktrackTicksValue.get()
-
-					val backtrack = LocationCache.getAABBBeforeNTicks(targetEntityId, backtraceTicks, bb)
-					val prevBacktrace = LocationCache.getAABBBeforeNTicks(targetEntityId, backtraceTicks + 1, backtrack)
-
-					classProvider.createAxisAlignedBB(prevBacktrace.minX + (backtrack.minX - prevBacktrace.minX) * partialTicks, prevBacktrace.minY + (backtrack.minY - prevBacktrace.minY) * partialTicks, prevBacktrace.minZ + (backtrack.minZ - prevBacktrace.minZ) * partialTicks, prevBacktrace.maxX + (backtrack.maxX - prevBacktrace.maxX) * partialTicks, prevBacktrace.maxY + (backtrack.maxY - prevBacktrace.maxY) * partialTicks, prevBacktrace.maxZ + (backtrack.maxZ - prevBacktrace.maxZ) * partialTicks)
-				}
-				else
-				{
-					val posX = target.posX
-					val posY = target.posY
-					val posZ = target.posZ
-
-					val lastTickPosX = target.lastTickPosX
-					val lastTickPosY = target.lastTickPosY
-					val lastTickPosZ = target.lastTickPosZ
-
-					val x = lastTickPosX + (posX - lastTickPosX) * partialTicks
-					val y = lastTickPosY + (posY - lastTickPosY) * partialTicks
-					val z = lastTickPosZ + (posZ - lastTickPosZ) * partialTicks
-
-					bb.offset(-posX, -posY, -posZ).offset(x, y, z)
-				}
-
-				// Entity movement predict
-				if (rotationPredictEnemyEnabledValue.get())
-				{
-					val xPredict = (target.posX - target.lastTickPosX) * predictX
-					val yPredict = (target.posY - target.lastTickPosY) * predictY
-					val zPredict = (target.posZ - target.lastTickPosZ) * predictZ
-
-					bb = bb.offset(xPredict, yPredict, zPredict)
-				}
-
-				easingMarkAlpha = easeOutCubic(easingMarkAlpha, 1f, visualMarkTargetFadeSpeedValue.get())
-
-				lastTargetEyeHeight = target.eyeHeight
-
-				bb.also { lastTargetBB = it }
-			} ?: lastTargetBB?.let {
-				easingMarkAlpha = easeOutCubic(easingMarkAlpha, 0f, visualMarkTargetFadeSpeedValue.get())
-				if (easingMarkAlpha > 0.1f) it
-				else
-				{
-					easingMarkAlpha = 0f
-					null
-				}
-			})?.let {
-				val renderManager = mc.renderManager
-				it.offset(-renderManager.renderPosX, -renderManager.renderPosY, -renderManager.renderPosZ)
-			}?.let { targetBB ->
-				val markColor = ColorUtils.multiplyAlphaChannel(when
-				{
-					missed -> visualMarkTargetColorMissColorValue.get()
-					hitable -> visualMarkTargetColorSuccessColorValue.get()
-					else -> visualMarkTargetColorFailedColorValue.get()
-				}, easingMarkAlpha)
-
-				val eyePos = visualMarkTargetEyePosValue.get()
-				when (markMode)
-				{
-					"platform" ->
+					var bb = target.entityBoundingBox
+					bb = if (rotationBacktrackEnabledValue.get())
 					{
-						val eyeHeight = targetBB.minY + lastTargetEyeHeight
-						classProvider.createAxisAlignedBB(targetBB.minX, if (eyePos) eyeHeight - 0.03f else targetBB.maxY + 0.2, targetBB.minZ, targetBB.maxX, if (eyePos) eyeHeight + 0.03f else targetBB.maxY + 0.26, targetBB.maxZ)
+						val backtraceTicks = rotationBacktrackTicksValue.get()
+
+						val backtrack = LocationCache.getAABBBeforeNTicks(targetEntityId, backtraceTicks, bb)
+						val prevBacktrace = LocationCache.getAABBBeforeNTicks(targetEntityId, backtraceTicks + 1, backtrack)
+
+						classProvider.createAxisAlignedBB(prevBacktrace.minX + (backtrack.minX - prevBacktrace.minX) * partialTicks, prevBacktrace.minY + (backtrack.minY - prevBacktrace.minY) * partialTicks, prevBacktrace.minZ + (backtrack.minZ - prevBacktrace.minZ) * partialTicks, prevBacktrace.maxX + (backtrack.maxX - prevBacktrace.maxX) * partialTicks, prevBacktrace.maxY + (backtrack.maxY - prevBacktrace.maxY) * partialTicks, prevBacktrace.maxZ + (backtrack.maxZ - prevBacktrace.maxZ) * partialTicks)
+					}
+					else
+					{
+						val posX = target.posX
+						val posY = target.posY
+						val posZ = target.posZ
+
+						val lastTickPosX = target.lastTickPosX
+						val lastTickPosY = target.lastTickPosY
+						val lastTickPosZ = target.lastTickPosZ
+
+						val x = lastTickPosX + (posX - lastTickPosX) * partialTicks
+						val y = lastTickPosY + (posY - lastTickPosY) * partialTicks
+						val z = lastTickPosZ + (posZ - lastTickPosZ) * partialTicks
+
+						bb.offset(-posX, -posY, -posZ).offset(x, y, z)
 					}
 
-					"box" -> classProvider.createAxisAlignedBB(targetBB.minX, targetBB.minY, targetBB.minZ, targetBB.maxX, targetBB.maxY, targetBB.maxZ)
-					else -> null
-				}?.let { RenderUtils.drawAxisAlignedBB(it, markColor) }
+					// Entity movement predict
+					if (rotationPredictEnemyEnabledValue.get())
+					{
+						val xPredict = (target.posX - target.lastTickPosX) * predictX
+						val yPredict = (target.posY - target.lastTickPosY) * predictY
+						val zPredict = (target.posZ - target.lastTickPosZ) * predictZ
+
+						bb = bb.offset(xPredict, yPredict, zPredict)
+					}
+
+					easingMarkAlpha = easeOutCubic(easingMarkAlpha, 1f, visualMarkTargetFadeSpeedValue.get())
+
+					lastTargetEyeHeight = target.eyeHeight
+
+					bb.also { lastTargetBB = it }
+				} ?: lastTargetBB?.let {
+					easingMarkAlpha = easeOutCubic(easingMarkAlpha, 0f, visualMarkTargetFadeSpeedValue.get())
+					if (easingMarkAlpha > 0.1f) it
+					else
+					{
+						easingMarkAlpha = 0f
+						if (cancelRun) lastTargetBB = null
+						null
+					}
+				})?.let {
+					val renderManager = mc.renderManager
+					it.offset(-renderManager.renderPosX, -renderManager.renderPosY, -renderManager.renderPosZ)
+				}?.let { targetBB ->
+					val markColor = ColorUtils.multiplyAlphaChannel(when
+					{
+						missed -> visualMarkTargetColorMissColorValue.get()
+						hitable -> visualMarkTargetColorSuccessColorValue.get()
+						else -> visualMarkTargetColorFailedColorValue.get()
+					}, easingMarkAlpha)
+
+					val eyePos = visualMarkTargetEyePosValue.get()
+					when (markMode)
+					{
+						"platform" ->
+						{
+							val eyeHeight = targetBB.minY + lastTargetEyeHeight
+							classProvider.createAxisAlignedBB(targetBB.minX, if (eyePos) eyeHeight - 0.03f else targetBB.maxY + 0.2, targetBB.minZ, targetBB.maxX, if (eyePos) eyeHeight + 0.03f else targetBB.maxY + 0.26, targetBB.maxZ)
+						}
+
+						"box" -> classProvider.createAxisAlignedBB(targetBB.minX, targetBB.minY, targetBB.minZ, targetBB.maxX, targetBB.maxY, targetBB.maxZ)
+						else -> null
+					}?.let { RenderUtils.drawAxisAlignedBB(it, markColor) }
+				}
 			}
 		}
 
-		target ?: return
+		if (cancelRun || target == null) return
 
 		if ((currentTarget ?: return).hurtTime <= hurtTimeValue.get() && attackTimer.hasTimePassed(attackDelay))
 		{
@@ -1155,7 +1167,7 @@ class KillAura : Module()
 		var fallBackRotation: VecRotation? = null
 		var useFallback = false
 		val rotation = if (rotationLockAfterTeleportEnabledValue.get() && lockRotation != null && !lockRotationTimer.hasTimePassed(lockRotationDelay)) lockRotation!!
-		else if (!rotationLockValue.get() && RotationUtils.isFaced(theWorld, thePlayer, entity, aimRange.toDouble()) { getHitbox(entity, rotationLockExpandRangeValue.get().toDouble()) }) Rotation(lastYaw, lastPitch)
+		else if (!rotationLockValue.get() && RotationUtils.isFaced(theWorld, thePlayer, entity, aimRange.toDouble(), 3.0) { getHitbox(entity, rotationLockExpandRangeValue.get().toDouble()) }) Rotation(lastYaw, lastPitch)
 		else (searchCenter(if (isAttackRotation) attackRange else aimRange) {
 			// Because of '.getDistanceToEntityBox()' is not perfect. (searchCenter() >>> 넘사벽 >>> getDistanceToEntityBox())
 			failedToRotate = true
@@ -1271,7 +1283,7 @@ class KillAura : Module()
 			val provider = classProvider
 
 			val distanceToTarget = currentTarget?.let(thePlayer::getDistanceToEntityBox)
-			val raycastedEntity = theWorld.raycastEntity(thePlayer, reach + 1.0, lastYaw, lastPitch, bbGetter) { entity -> entity != null && (!livingOnly || (provider.isEntityLivingBase(entity) && !provider.isEntityArmorStand(entity))) && (skipEnemyCheck || entity.isEnemy(aac) || includeCollidedWithTarget && theWorld.getEntitiesWithinAABBExcludingEntity(entity, entity.entityBoundingBox).isNotEmpty()) }
+			val raycastedEntity = theWorld.raycastEntity(thePlayer, reach + 1.0, lastYaw, lastPitch, 3.0, bbGetter) { entity -> entity != null && (!livingOnly || (provider.isEntityLivingBase(entity) && !provider.isEntityArmorStand(entity))) && (skipEnemyCheck || entity.isEnemy(aac) || includeCollidedWithTarget && theWorld.getEntitiesWithinAABBExcludingEntity(entity, entity.entityBoundingBox).isNotEmpty()) }
 			val distanceToRaycasted = raycastedEntity?.let(thePlayer::getDistanceToEntityBox)
 
 			if (raycastedEntity != null && provider.isEntityLivingBase(raycastedEntity) && (LiquidBounce.moduleManager[NoFriends::class.java].state || !provider.isEntityPlayer(raycastedEntity) || !raycastedEntity.asEntityPlayer().isClientFriend())) this.currentTarget = raycastedEntity.asEntityLivingBase()
@@ -1281,7 +1293,7 @@ class KillAura : Module()
 				if (distanceToRaycasted != null)
 				{
 					if (currentTarget != raycastedEntity) arrayOf("raycast" equalTo true, "result" equalTo "\u00A7aSUCCESS", "from" equalTo listOf("name".equalTo(currentTarget.name, "\u00A7e\u00A7l"), "id".equalTo(currentTarget.entityId, "\u00A7e")).serialize().withParentheses("\u00A78"), "to" equalTo listOf("name".equalTo(raycastedEntity.name, "\u00A7e\u00A7l"), "id".equalTo(raycastedEntity.entityId, "\u00A7e")).serialize().withParentheses("\u00A78"), "distance" equalTo DECIMALFORMAT_6.format(distanceToRaycasted - distanceToTarget))
-					else arrayOf("raycast" equalTo true, "result" equalTo "\u00A7eEQUAL", "reason" equalTo "currentTarget = raycastedTarget".withParentheses("\u00A7c"))
+					else arrayOf("raycast" equalTo true, "result" equalTo "\u00A7eEQUAL", "reason" equalTo "currentTarget = raycastedTarget".withParentheses("\u00A7e"))
 				}
 				else arrayOf("raycast" equalTo false, "reason" equalTo "raycastedTarget is null".withParentheses("\u00A7c"))
 			}
@@ -1293,7 +1305,7 @@ class KillAura : Module()
 		{
 			hitable = if (currentTarget != null)
 			{
-				val faced = theWorld.raycastEntity(thePlayer, reach, lastYaw, lastPitch, bbGetter) { entity -> currentTarget == entity } != null // RotationUtils.isFaced(theWorld, thePlayer, currentTarget, reach, bbGetter)
+				val faced = theWorld.raycastEntity(thePlayer, reach, lastYaw, lastPitch, 3.0, bbGetter) { entity -> currentTarget == entity } != null // RotationUtils.isFaced(theWorld, thePlayer, currentTarget, reach, bbGetter)
 				updateHitableDebug = arrayOf("raycast" equalTo false, "faced" equalTo faced)
 				faced
 			}
@@ -1413,6 +1425,7 @@ class KillAura : Module()
 
 	fun suspend(time: Long)
 	{
+		if (time <= 0) return
 		suspend = time
 		suspendTimer.reset()
 	}
