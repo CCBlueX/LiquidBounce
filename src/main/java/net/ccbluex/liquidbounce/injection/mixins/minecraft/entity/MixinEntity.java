@@ -108,6 +108,6 @@ public abstract class MixinEntity {
     private float hookStepHeight(Entity instance) {
         final PlayerStepEvent stepEvent = new PlayerStepEvent(instance.stepHeight);
         EventManager.INSTANCE.callEvent(stepEvent);
-        return stepEvent.getHeight() != 0.6f ? stepEvent.getHeight() : instance.stepHeight;
+        return stepEvent.getHeight();
     }
 }
