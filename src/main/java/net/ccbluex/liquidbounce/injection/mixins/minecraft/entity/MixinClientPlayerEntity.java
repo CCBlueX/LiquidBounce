@@ -117,19 +117,32 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     }
 
     /**
-     * Hook custom multiplier
+     * Hook custom multiplier forward
      */
     @Inject(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/Input;movementForward:F", shift = At.Shift.AFTER))
-    private void hookCustomMultiplier(CallbackInfo callbackInfo) {
+    private void hookCustomMultiplierForward(CallbackInfo callbackInfo) {
         final Input input = this.input;
         // reverse
         input.movementForward /= 0.2f;
-        input.movementSideways /= 0.2f;
 
         // then
         final PlayerUseMultiplier playerUseMultiplier = new PlayerUseMultiplier(0.2f, 0.2f);
         EventManager.INSTANCE.callEvent(playerUseMultiplier);
         input.movementForward *= playerUseMultiplier.getForward();
+    }
+
+    /**
+     * Hook custom multiplier sideways
+     */
+    @Inject(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/Input;movementSideways:F", shift = At.Shift.AFTER))
+    private void hookCustomMultiplierSideways(CallbackInfo callbackInfo) {
+        final Input input = this.input;
+        // reverse
+        input.movementSideways /= 0.2f;
+
+        // then
+        final PlayerUseMultiplier playerUseMultiplier = new PlayerUseMultiplier(0.2f, 0.2f);
+        EventManager.INSTANCE.callEvent(playerUseMultiplier);
         input.movementSideways *= playerUseMultiplier.getSideways();
     }
 
