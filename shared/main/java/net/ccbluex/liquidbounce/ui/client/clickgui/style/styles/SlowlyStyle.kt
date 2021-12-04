@@ -64,7 +64,7 @@ class SlowlyStyle : Style()
 		val font = getDescriptionFont()
 		val fontHeight = font.fontHeight
 		val textWidth = font.getStringWidth(text)
-		drawBorderedRect((mouseX + 9).toFloat(), mouseY.toFloat(), (mouseX + textWidth + 14).toFloat(), (mouseY + fontHeight + 3).toFloat(), 3.0f, BACKGROUND, BACKGROUND)
+		drawBorderedRect((mouseX + 9).toFloat(), mouseY.toFloat(), mouseX + textWidth + 14f, mouseY + fontHeight + 3f, 3.0f, BACKGROUND, BACKGROUND)
 
 		classProvider.glStateManager.resetColor()
 

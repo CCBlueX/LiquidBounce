@@ -288,7 +288,7 @@ class NoFall : Module()
 
 				val collision = fallingPlayer.findCollision(ceil(1.0 / thePlayer.motionY * -maxDist).toInt()) ?: return
 
-				var reachCheck: Boolean = WVec3(thePlayer.posX, thePlayer.posY + thePlayer.eyeHeight, thePlayer.posZ).squareDistanceTo(WVec3(collision.pos).addVector(0.5, 0.5, 0.5)) <= (controller.blockReachDistance + 0.75).pow(2)
+				var reachCheck = WVec3(thePlayer.posX, thePlayer.posY + thePlayer.eyeHeight, thePlayer.posZ).squareDistanceTo(WVec3(collision.pos) + 0.5) <= (controller.blockReachDistance + 0.75).pow(2)
 
 				if (thePlayer.motionY < collision.pos.y + 1 - thePlayer.posY) reachCheck = true
 

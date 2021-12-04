@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.event.StrafeEvent
 import net.ccbluex.liquidbounce.utils.block.PlaceInfo
+import net.ccbluex.liquidbounce.utils.block.SearchInfo
 import kotlin.math.sqrt
 
 /**
@@ -172,4 +173,4 @@ data class VecRotation(val vec: WVec3, val rotation: Rotation, val face: IEnumFa
 /**
  * Rotation with place info
  */
-data class PlaceRotation(val placeInfo: PlaceInfo, val rotation: Rotation)
+data class PlaceRotation(val placeInfo: PlaceInfo, val rotation: Rotation, val searchInfo: SearchInfo? = null)

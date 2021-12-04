@@ -13,7 +13,9 @@ import net.ccbluex.liquidbounce.api.minecraft.world.IWorld
 import net.ccbluex.liquidbounce.injection.backend.WrapperImpl.classProvider
 import net.ccbluex.liquidbounce.utils.extensions.canBeClicked
 
-class PlaceInfo(val blockPos: WBlockPos, val enumFacing: IEnumFacing, var vec3: WVec3 = WVec3(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5), val type: String? = null)
+data class SearchInfo(val type: String, val eyesPos: WVec3, val raytraceEnd: WVec3, val expectedHitVec: WVec3?, val actualHitVec: WVec3, val delta: Double)
+
+class PlaceInfo(val blockPos: WBlockPos, val enumFacing: IEnumFacing, var vec3: WVec3 = WVec3(blockPos) + 0.5)
 {
 	companion object
 	{

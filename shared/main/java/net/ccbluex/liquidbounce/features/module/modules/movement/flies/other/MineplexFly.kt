@@ -47,7 +47,7 @@ class MineplexFly : FlyMode("Mineplex")
 			}
 
 			val blockPos = WBlockPos(x, thePlayer.entityBoundingBox.minY - 1, z)
-			val vec: WVec3 = WVec3(blockPos).addVector(0.4, 0.4, 0.4).add(WVec3(classProvider.getEnumFacing(EnumFacingType.UP).directionVec))
+			val vec = WVec3(blockPos) + WVec3(classProvider.getEnumFacing(EnumFacingType.UP).directionVec) + 0.4
 
 			CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT)
 

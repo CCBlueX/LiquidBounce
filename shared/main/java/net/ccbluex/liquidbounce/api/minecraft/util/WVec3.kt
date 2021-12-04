@@ -12,7 +12,17 @@ import kotlin.math.sqrt
 
 class WVec3(val xCoord: Double, val yCoord: Double, val zCoord: Double)
 {
-	fun addVector(x: Double, y: Double, z: Double): WVec3 = WVec3(xCoord + x, yCoord + y, zCoord + z)
+	constructor(blockPos: WVec3i) : this(blockPos.x.toDouble(), blockPos.y.toDouble(), blockPos.z.toDouble())
+
+	operator fun plus(vec: WVec3): WVec3 = plus(vec.xCoord, vec.yCoord, vec.zCoord)
+
+	operator fun plus(offset: Double): WVec3 = plus(offset, offset, offset)
+
+	fun plus(x: Double, y: Double, z: Double): WVec3 = WVec3(xCoord + x, yCoord + y, zCoord + z)
+
+	operator fun times(vec: WVec3): WVec3 = WVec3(xCoord * vec.xCoord, yCoord * vec.yCoord, zCoord * vec.zCoord)
+
+	operator fun times(multiplier: Double): WVec3 = WVec3(xCoord * multiplier, yCoord * multiplier, zCoord * multiplier)
 
 	fun distanceTo(vec: WVec3): Double
 	{
@@ -31,8 +41,6 @@ class WVec3(val xCoord: Double, val yCoord: Double, val zCoord: Double)
 
 		return deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ
 	}
-
-	fun add(vec: WVec3): WVec3 = addVector(vec.xCoord, vec.yCoord, vec.zCoord)
 
 	fun rotatePitch(pitchRadians: Float): WVec3
 	{
@@ -79,6 +87,4 @@ class WVec3(val xCoord: Double, val yCoord: Double, val zCoord: Double)
 	}
 
 	override fun toString(): String = "(${DECIMALFORMAT_2.format(xCoord)}, ${DECIMALFORMAT_2.format(yCoord)}, ${DECIMALFORMAT_2.format(zCoord)})"
-
-	constructor(blockPos: WVec3i) : this(blockPos.x.toDouble(), blockPos.y.toDouble(), blockPos.z.toDouble())
 }

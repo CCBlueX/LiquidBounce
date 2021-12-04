@@ -70,7 +70,7 @@ class FallingPlayer(private val theWorld: IWorld, private val thePlayer: IEntity
 
 			val w = thePlayer.width * 0.5
 
-			val rayTrace = { xOffset: Double, zOffset: Double -> rayTrace(theWorld, start.addVector(xOffset, 0.0, zOffset), end).also { result = it?.let { CollisionResult(it, i) } } != null }
+			val rayTrace = { xOffset: Double, zOffset: Double -> rayTrace(theWorld, start.plus(xOffset, 0.0, zOffset), end).also { result = it?.let { CollisionResult(it, i) } } != null }
 
 			if (rayTrace(0.0, 0.0)) return@findCollision result
 

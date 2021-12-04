@@ -26,7 +26,7 @@ class FoVCheck : BotCheck("position.fov")
 		val entityId = target.entityId
 
 		val deltaLimit = AntiBot.fovFoVValue.get().toDouble()
-		val delta = RotationUtils.getRotationDifference(RotationUtils.toRotation(thePlayer, newPos.addVector(0.0, target.height * 0.5, 0.0), false, RotationUtils.MinMaxPair.ZERO), getPingCorrectionAppliedLocation(thePlayer, AntiBot.fovPingCorrectionOffsetValue.get()).rotation)
+		val delta = RotationUtils.getRotationDifference(RotationUtils.toRotation(thePlayer, newPos.plus(0.0, target.height * 0.5, 0.0), false, RotationUtils.MinMaxPair.ZERO), getPingCorrectionAppliedLocation(thePlayer, AntiBot.fovPingCorrectionOffsetValue.get()).rotation)
 
 		if (delta > deltaLimit) vl[entityId] = (vl[entityId] ?: 0) + 1
 		else if (AntiBot.fovVLDecValue.get())

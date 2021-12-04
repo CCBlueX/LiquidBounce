@@ -77,11 +77,6 @@ object Fucker : Module()
 	@JvmStatic
 	private val facings = EnumFacingType.values().map(classProvider::getEnumFacing)
 
-	override fun onDisable()
-	{
-		easingRange = 0f
-	}
-
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
 	{
@@ -230,18 +225,22 @@ object Fucker : Module()
 		}
 	}
 
-	@EventTarget
+	@EventTarget(ignoreCondition = true)
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
+		if (visualMarkEnabledValue.get() && (state || easingRange > 0f))
+		{
+			GL11.glPushMatrix()
+			RenderUtils.drawRadius(easingRange, visualMarkAccuracyValue.get(), visualMarkLineWidthValue.get(), visualMarkColorValue.get(255))
+			GL11.glPopMatrix()
+
+			easingRange = easeOutCubic(easingRange, if (state) rangeValue.get() else 0f, visualMarkFadeSpeedValue.get())
+			if (!state && easingRange <= 0.1f) easingRange = 0f
+		}
+
+		if (!state) return
+
 		currentPos?.let { RenderUtils.drawBlockBox(mc.theWorld ?: return@onRender3D, mc.thePlayer ?: return@onRender3D, it, visualMarkColorValue.get(), 0, false, event.partialTicks) }
-
-		if (!visualMarkEnabledValue.get()) return
-
-		GL11.glPushMatrix()
-		RenderUtils.drawRadius(easingRange, visualMarkAccuracyValue.get(), visualMarkLineWidthValue.get(), visualMarkColorValue.get(255))
-		GL11.glPopMatrix()
-
-		easingRange = easeOutCubic(easingRange, rangeValue.get(), visualMarkFadeSpeedValue.get())
 	}
 
 	/**

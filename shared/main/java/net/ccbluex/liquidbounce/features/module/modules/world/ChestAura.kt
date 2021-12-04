@@ -149,7 +149,7 @@ object ChestAura : Module()
 							})) return
 
 						val rotationVector = RotationUtils.getVectorForRotation(limitedRotation)
-						val vector = eyesPos.addVector(rotationVector.xCoord * range, rotationVector.yCoord * range, rotationVector.zCoord * range)
+						val vector = eyesPos + rotationVector * range.toDouble()
 						val rayTrace = theWorld.rayTraceBlocks(eyesPos, vector, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = false, returnLastUncollidableBlock = true)
 
 						if (rayTrace != null && (rayTrace.typeOfHit != IMovingObjectPosition.WMovingObjectType.BLOCK || rayTrace.blockPos != currentBlock)) return
@@ -185,23 +185,23 @@ object ChestAura : Module()
 		}
 	}
 
-	@EventTarget
+	@EventTarget(ignoreCondition = true)
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
-		if (!visualMarkEnabledValue.get()) return
+		if (!visualMarkEnabledValue.get() || !state && easingRange <= 0f) return
 
 		GL11.glPushMatrix()
 		RenderUtils.drawRadius(easingRange, visualMarkAccuracyValue.get(), visualMarkLineWidthValue.get(), visualMarkColorValue.get())
 		GL11.glPopMatrix()
 
-		easingRange = easeOutCubic(easingRange, rangeValue.get(), visualMarkFadeSpeedValue.get())
+		easingRange = easeOutCubic(easingRange, if (state) rangeValue.get() else 0f, visualMarkFadeSpeedValue.get())
+		if (!state && easingRange <= 0.1f) easingRange = 0f
 	}
 
 	override fun onDisable()
 	{
 		clickedBlocks.clear()
 		facesBlock = false
-		easingRange = 0f
 	}
 
 	override val tag: String

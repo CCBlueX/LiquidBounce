@@ -43,6 +43,8 @@ open class ValueGroup(name: String) : AbstractValue(name)
 
 	fun add(value: AbstractValue)
 	{
+		if (value == this) return
+
 		values += value
 		value.name = "$name.${value.name}"
 		if (value is ValueGroup) value.appendPrefixToSubvalues(name)

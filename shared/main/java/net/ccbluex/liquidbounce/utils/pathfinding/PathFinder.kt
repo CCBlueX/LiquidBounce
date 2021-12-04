@@ -42,12 +42,12 @@ class PathFinder(startVec: WVec3, endVec: WVec3) : MinecraftInstance()
 						hubsToWork.remove(hub)
 						hubs.add(hub)
 
-						flatCardinalDirections.map { hub.position.add(it).floor() }.forEach { if (checkPositionValidity(theWorld, it) && addHub(hub, it)) return@findLoop }
+						flatCardinalDirections.map { (hub.position + it).floor() }.forEach { if (checkPositionValidity(theWorld, it) && addHub(hub, it)) return@findLoop }
 
-						val up = hub.position.addVector(0.0, 1.0, 0.0).floor()
+						val up = hub.position.plus(0.0, 1.0, 0.0).floor()
 						if (checkPositionValidity(theWorld, up) && addHub(hub, up)) return@findLoop
 
-						val down = hub.position.addVector(0.0, -1.0, 0.0).floor()
+						val down = hub.position.plus(0.0, -1.0, 0.0).floor()
 						if (checkPositionValidity(theWorld, down) && addHub(hub, down)) return@findLoop
 					}
 				}

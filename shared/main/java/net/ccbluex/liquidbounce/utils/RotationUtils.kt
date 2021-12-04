@@ -162,7 +162,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 					var zSearch = 0.1
 					while (zSearch < 0.9)
 					{
-						val posVec = WVec3(blockPos).addVector(xSearch, ySearch, zSearch)
+						val posVec = WVec3(blockPos).plus(xSearch, ySearch, zSearch)
 						val dist = eyesPos.distanceTo(posVec)
 						val diffX = posVec.xCoord - eyesPos.xCoord
 						val diffY = posVec.yCoord - eyesPos.yCoord
@@ -170,7 +170,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 						val diffXZ = hypot(diffX, diffZ)
 						val rotation = Rotation(wrapAngleTo180_float(toDegrees(atan2(diffZ, diffX).toFloat()) - 90.0f), wrapAngleTo180_float(-toDegrees(atan2(diffY, diffXZ).toFloat())))
 						val rotationVector = getVectorForRotation(rotation)
-						val vector = eyesPos.addVector(rotationVector.xCoord * dist, rotationVector.yCoord * dist, rotationVector.zCoord * dist)
+						val vector = eyesPos + rotationVector * dist
 						val obj = theWorld.rayTraceBlocks(eyesPos, vector, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = false, returnLastUncollidableBlock = true)
 						if (obj != null && obj.typeOfHit == WMovingObjectType.BLOCK)
 						{
@@ -269,7 +269,7 @@ class RotationUtils : MinecraftInstance(), Listenable
 				val yPredict = (thePlayer.posY - thePlayer.prevPosY) * nextFloat(playerPredictSize.min, playerPredictSize.max)
 				val zPredict = (posZ - thePlayer.prevPosZ) * nextFloat(playerPredictSize.min, playerPredictSize.max)
 
-				eyesPos = eyesPos.addVector(xPredict, yPredict, zPredict)
+				eyesPos = eyesPos.plus(xPredict, yPredict, zPredict)
 			}
 
 			val diffX = vec.xCoord - eyesPos.xCoord

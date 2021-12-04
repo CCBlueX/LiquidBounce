@@ -30,7 +30,7 @@ fun IWorld.raycastEntity(entity: IEntity, range: Double, yaw: Float = RotationUt
 	val lookX = yawSin * pitchCos
 	val lookZ = yawCos * pitchCos
 
-	val rayEndPos = rayStartPos.addVector(lookX * reach, pitchSin * reach, lookZ * reach)
+	val rayEndPos = rayStartPos.plus(lookX * reach, pitchSin * reach, lookZ * reach)
 
 	val entityList = getEntitiesInAABBexcluding(entity, entity.entityBoundingBox.addCoord(lookX * reach, pitchSin * reach, lookZ * reach).expand(expandRange, expandRange, expandRange)) { it != null && (!MinecraftInstance.classProvider.isEntityPlayer(it) || !it.asEntityPlayer().spectator) && it.canBeCollidedWith() }
 

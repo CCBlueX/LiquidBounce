@@ -247,7 +247,7 @@ class ExtendedReach : Module()
 	{
 		var topFromPos = topFrom
 
-		if (!canPassThrough(theWorld, WBlockPos(topFromPos.xCoord, topFromPos.yCoord, topFromPos.zCoord))) topFromPos = topFromPos.addVector(0.0, 1.0, 0.0)
+		if (!canPassThrough(theWorld, WBlockPos(topFromPos.xCoord, topFromPos.yCoord, topFromPos.zCoord))) topFromPos = topFromPos.plus(0.0, 1.0, 0.0)
 
 		val pathfinder = PathFinder(topFromPos, to)
 		pathfinder.compute(theWorld)
@@ -260,9 +260,9 @@ class ExtendedReach : Module()
 		pathFinderPath.forEachIndexed { i, pathElm ->
 			if (i == 0 || i == pathFinderPath.size - 1)
 			{
-				if (lastPos != null) path.add((lastPos ?: return@forEachIndexed).addVector(0.5, 0.0, 0.5))
+				if (lastPos != null) path.add((lastPos ?: return@forEachIndexed).plus(0.5, 0.0, 0.5))
 
-				path.add(pathElm.addVector(0.5, 0.0, 0.5))
+				path.add(pathElm.plus(0.5, 0.0, 0.5))
 				lastDashPos = pathElm
 			}
 			else
@@ -305,7 +305,7 @@ class ExtendedReach : Module()
 
 				if (stop)
 				{
-					path.add((lastPos ?: return@forEachIndexed).addVector(0.5, 0.0, 0.5))
+					path.add((lastPos ?: return@forEachIndexed).plus(0.5, 0.0, 0.5))
 					lastDashPos = lastPos
 				}
 			}

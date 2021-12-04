@@ -60,7 +60,7 @@ class MineplexGround : SpeedMode("Mineplex-Ground")
 
 		val provider = classProvider
 
-		val vec = WVec3(blockPos).addVector(0.4, 0.4, 0.4).add(WVec3(provider.getEnumFacing(EnumFacingType.UP).directionVec))
+		val vec = WVec3(blockPos) + WVec3(provider.getEnumFacing(EnumFacingType.UP).directionVec) + 0.4
 
 		CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT)
 

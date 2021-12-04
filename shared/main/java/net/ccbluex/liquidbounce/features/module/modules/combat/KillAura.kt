@@ -1356,7 +1356,7 @@ class KillAura : Module()
 				val pitchSin = func.sin(-pitchRadians)
 
 				val range = min(interactBlockRange.toDouble(), thePlayer.getDistanceToEntityBox(interactEntity)) + 1
-				val lookAt = positionEye.addVector(yawSin * pitchCos * range, pitchSin * range, yawCos * pitchCos * range)
+				val lookAt = positionEye.plus(yawSin * pitchCos * range, pitchSin * range, yawCos * pitchCos * range)
 
 				val movingObject = boundingBox.calculateIntercept(positionEye, lookAt)
 				startBlockingDebug = if (movingObject != null && movingObject.typeOfHit != IMovingObjectPosition.WMovingObjectType.MISS)

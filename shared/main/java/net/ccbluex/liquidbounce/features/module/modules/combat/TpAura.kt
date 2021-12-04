@@ -298,7 +298,7 @@ class TpAura : Module()
 	{
 		var fromPos = from
 
-		if (!canPassThrough(theWorld, WBlockPos(fromPos.xCoord, fromPos.yCoord, fromPos.zCoord))) fromPos = fromPos.addVector(0.0, 1.0, 0.0)
+		if (!canPassThrough(theWorld, WBlockPos(fromPos.xCoord, fromPos.yCoord, fromPos.zCoord))) fromPos = fromPos.plus(0.0, 1.0, 0.0)
 
 		val pathfinder = PathFinder(fromPos, to)
 		pathfinder.compute(theWorld)
@@ -312,9 +312,9 @@ class TpAura : Module()
 			if (i == 0 || i == pathFinderPath.size - 1)
 			{
 				// If the current path node is start or end node
-				if (lastPath != null) path.add((lastPath ?: return@forEachIndexed).addVector(0.5, 0.0, 0.5))
+				if (lastPath != null) path.add((lastPath ?: return@forEachIndexed).plus(0.5, 0.0, 0.5))
 
-				path.add(currentPathFinderPath.addVector(0.5, 0.0, 0.5))
+				path.add(currentPathFinderPath.plus(0.5, 0.0, 0.5))
 				lastEndPath = currentPathFinderPath
 			}
 			else
@@ -356,7 +356,7 @@ class TpAura : Module()
 
 				if (!canContinueSearching)
 				{
-					path.add((lastPath ?: return@forEachIndexed).addVector(0.5, 0.0, 0.5))
+					path.add((lastPath ?: return@forEachIndexed).plus(0.5, 0.0, 0.5))
 					lastEndPath = lastPath
 				}
 			}

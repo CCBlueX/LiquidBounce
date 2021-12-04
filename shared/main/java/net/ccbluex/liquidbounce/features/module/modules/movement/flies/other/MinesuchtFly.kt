@@ -1,6 +1,5 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.flies.other
 
-import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 
@@ -22,9 +21,9 @@ class MinesuchtFly : FlyMode("Minesucht")
 
 		if (teleportTimer.hasTimePassed(99))
 		{
-			val vec3: WVec3 = thePlayer.getPositionEyes(0.0f)
-			val vec31: WVec3 = thePlayer.getLook(0.0f)
-			val vec32: WVec3 = vec3.addVector(vec31.xCoord * 7, vec31.yCoord * 7, vec31.zCoord * 7)
+			val vec3 = thePlayer.getPositionEyes(0.0f)
+			val vec31 = thePlayer.getLook(0.0f)
+			val vec32 = vec3 + vec31 * 7.0
 
 			if (thePlayer.fallDistance > 0.8)
 			{

@@ -52,7 +52,7 @@ class MineplexBHop2 : SpeedMode("Mineplex-BHop2")
 		{
 			if (timer.timerSpeed == 2.001f) timer.timerSpeed = 1.0F
 
-			moveSpeed = 0.62f - stage / 300.0f + mineplex * 0.2f
+			moveSpeed = (0.62f - stage / 300.0f + mineplex * 0.2f).coerceAtLeast(0f)
 
 			stage++
 		}

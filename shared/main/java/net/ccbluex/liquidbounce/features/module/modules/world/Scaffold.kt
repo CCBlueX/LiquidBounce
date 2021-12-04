@@ -29,7 +29,9 @@ import net.ccbluex.liquidbounce.features.module.modules.render.BlockOverlay
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.block.PlaceInfo
+import net.ccbluex.liquidbounce.utils.block.SearchInfo
 import net.ccbluex.liquidbounce.utils.extensions.*
+import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_6
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.*
@@ -52,7 +54,7 @@ class Scaffold : Module()
 
 	private val autoBlockGroup = ValueGroup("AutoBlock")
 	private val autoBlockModeValue = ListValue("Mode", arrayOf("Off", "Pick", "Spoof", "Switch"), "Spoof", "AutoBlock")
-	private val autoBlockSwitchKeepTimeValue = object : IntegerValue("SwitchKeepTime", -1, -1, 10, "AutoBlockSwitchKeepTime")
+	private val autoBlockSwitchKeepTimeValue = object : IntegerValue("SwitchKeepTime", -1, -1, 10, "AutoBlockSwitchKeepTime", "-1 : Return to original slot immediately after block place, 0~ : Put a small tick delay between returning back to original slot")
 	{
 		override fun showCondition() = !autoBlockModeValue.get().equals("None", ignoreCase = true)
 	}
@@ -175,13 +177,31 @@ class Scaffold : Module()
 	private val visualCounterFontValue = FontValue("Font", Fonts.font40)
 
 	private val visualMarkValue = BoolValue("Mark", false, "Mark")
-	private val visualSearchDebugValue = BoolValue("SearchDebug", false, "SearchDebugChat")
+
+	private val visualDebugGroup = ValueGroup("Debug")
+	private val visualDebugSearchValue = BoolValue("Search", false, "SearchDebugChat")
+	private val visualDebugPlaceValue = BoolValue("Place", false)
+
+	private val visualDebugRayGroup = object : ValueGroup("Ray")
+	{
+		override fun showCondition(): Boolean = rotationSearchCheckVisibleValue.get()
+	}
+	private val visualDebugRayEnabledValue = BoolValue("Enabled", false)
+
+	private val visualDebugRayColorGroup = object : ValueGroup("Color")
+	{
+		override fun showCondition(): Boolean = visualDebugRayEnabledValue.get()
+	}
+	private val visualDebugRayColorReachValue = RGBAColorValue("Reach", 255, 0, 0, 80)
+	private val visualDebugRayColorExpectValue = RGBAColorValue("Expect", 255, 0, 0, 80)
+	private val visualDebugRayColorActualValue = RGBAColorValue("Actual", 255, 0, 0, 80)
 
 	// MODULE
 
 	// Target block
 	private var targetPlace: PlaceInfo? = null
 	private var lastSearchBound: SearchBounds? = null
+	private var targetSearchInfo: SearchInfo? = null
 
 	// Rotation lock
 	var lockRotation: Rotation? = null
@@ -220,6 +240,16 @@ class Scaffold : Module()
 	private var searchDebug: String? = null
 	private var placeDebug: String? = null
 
+	private fun setSearchDebug(supplier: () -> String?)
+	{
+		if (visualDebugSearchValue.get()) searchDebug = supplier()
+	}
+
+	private fun setPlaceDebug(supplier: () -> String?)
+	{
+		if (visualDebugPlaceValue.get()) placeDebug = supplier()
+	}
+
 	private val searchRanges = hashMapOf<Pair<Int, Int>, Pair<List<Pair<Int, Int>>, List<Int>>>()
 
 	init
@@ -235,7 +265,10 @@ class Scaffold : Module()
 		movementGroup.addAll(movementSprintValue, movementEagleGroup, movementZitterGroup, movementSlowGroup, movementSafeWalkValue, movementAirSafeValue)
 		killAuraBypassGroup.addAll(killauraBypassModeValue, killAuraBypassKillAuraSuspendDurationValue)
 		visualCounterGroup.addAll(visualCounterEnabledValue, visualCounterFontValue)
-		visualGroup.addAll(visualCounterGroup, visualMarkValue, visualSearchDebugValue)
+		visualDebugRayColorGroup.addAll(visualDebugRayColorReachValue, visualDebugRayColorExpectValue, visualDebugRayColorActualValue)
+		visualDebugRayGroup.addAll(visualDebugRayEnabledValue, visualDebugRayColorGroup)
+		visualDebugGroup.addAll(visualDebugSearchValue, visualDebugPlaceValue, visualDebugRayGroup)
+		visualGroup.addAll(visualCounterGroup, visualMarkValue, visualDebugGroup)
 	}
 
 	// ENABLING MODULE
@@ -321,92 +354,92 @@ class Scaffold : Module()
 			// Eagle
 			if (!movementEagleModeValue.get().equals("Off", true) && !shouldGoDown)
 			{
-				var dif = 0.5
+				var edgeDistance = 0.5
 
 				// Caldulate edge distance
 				if (movementEagleModeValue.get().endsWith("EdgeDistance", true) && !shouldGoDown)
 				{
 					repeat(4) {
+						val y = thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0)
+
 						when (it)
 						{
 							0 ->
 							{
-								val blockPos = WBlockPos(thePlayer.posX - 1.0, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ)
-								val placeInfo: PlaceInfo? = PlaceInfo[theWorld, blockPos]
+								val blockPos = WBlockPos(thePlayer.posX - 1.0, y, thePlayer.posZ)
+								val placeInfo = PlaceInfo[theWorld, blockPos]
 								if (theWorld.isReplaceable(blockPos) && placeInfo != null)
 								{
-									var calcDif: Double = thePlayer.posX - blockPos.x
-									calcDif -= 0.5
+									var deltaX = thePlayer.posX - blockPos.x
+									deltaX -= 0.5
 
-									if (calcDif < 0)
+									if (deltaX < 0)
 									{
-										calcDif *= -1.0
-										calcDif -= 0.5
+										deltaX *= -1.0
+										deltaX -= 0.5
 									}
-									if (calcDif < dif)
-									{
-										dif = calcDif
-									}
+
+									if (deltaX < edgeDistance) edgeDistance = deltaX
 								}
 							}
 
 							1 ->
 							{
-								val blockPos = WBlockPos(thePlayer.posX + 1.0, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ)
-								val placeInfo: PlaceInfo? = PlaceInfo[theWorld, blockPos]
+								val blockPos = WBlockPos(thePlayer.posX + 1.0, y, thePlayer.posZ)
+								val placeInfo = PlaceInfo[theWorld, blockPos]
 
 								if (theWorld.isReplaceable(blockPos) && placeInfo != null)
 								{
-									var calcDif: Double = thePlayer.posX - blockPos.x
-									calcDif -= 0.5
+									var deltaX = thePlayer.posX - blockPos.x
+									deltaX -= 0.5
 
-									if (calcDif < 0)
+									if (deltaX < 0)
 									{
-										calcDif *= -1.0
-										calcDif -= 0.5
+										deltaX *= -1.0
+										deltaX -= 0.5
 									}
 
-									if (calcDif < dif) dif = calcDif
+									if (deltaX < edgeDistance) edgeDistance = deltaX
 								}
 							}
 
 							2 ->
 							{
-								val blockPos = WBlockPos(thePlayer.posX, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ - 1.0)
-								val placeInfo: PlaceInfo? = PlaceInfo[theWorld, blockPos]
+								val blockPos = WBlockPos(thePlayer.posX, y, thePlayer.posZ - 1.0)
+								val placeInfo = PlaceInfo[theWorld, blockPos]
 
 								if (theWorld.isReplaceable(blockPos) && placeInfo != null)
 								{
-									var calcDif: Double = thePlayer.posZ - blockPos.z
-									calcDif -= 0.5
+									var deltaZ = thePlayer.posZ - blockPos.z
+									deltaZ -= 0.5
 
-									if (calcDif < 0)
+									if (deltaZ < 0)
 									{
-										calcDif *= -1.0
-										calcDif -= 0.5
+										deltaZ *= -1.0
+										deltaZ -= 0.5
 									}
 
-									if (calcDif < dif) dif = calcDif
+									if (deltaZ < edgeDistance) edgeDistance = deltaZ
 								}
 							}
 
 							3 ->
 							{
-								val blockPos = WBlockPos(thePlayer.posX, thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0), thePlayer.posZ + 1.0)
-								val placeInfo: PlaceInfo? = PlaceInfo[theWorld, blockPos]
+								val blockPos = WBlockPos(thePlayer.posX, y, thePlayer.posZ + 1.0)
+								val placeInfo = PlaceInfo[theWorld, blockPos]
 
 								if (theWorld.isReplaceable(blockPos) && placeInfo != null)
 								{
-									var calcDif: Double = thePlayer.posZ - blockPos.z
-									calcDif -= 0.5
+									var deltaZ = thePlayer.posZ - blockPos.z
+									deltaZ -= 0.5
 
-									if (calcDif < 0)
+									if (deltaZ < 0)
 									{
-										calcDif *= -1
-										calcDif -= 0.5
+										deltaZ *= -1
+										deltaZ -= 0.5
 									}
 
-									if (calcDif < dif) dif = calcDif
+									if (deltaZ < edgeDistance) edgeDistance = deltaZ
 								}
 							}
 						}
@@ -417,7 +450,7 @@ class Scaffold : Module()
 				{
 					val provider = classProvider
 
-					val shouldEagle: Boolean = theWorld.getBlockState(WBlockPos(thePlayer.posX, thePlayer.posY - 1.0, thePlayer.posZ)).block == (provider.getBlockEnum(BlockType.AIR)) || (dif < movementEagleEdgeDistanceValue.get() && movementEagleModeValue.get().endsWith("EdgeDistance", true))
+					val shouldEagle = theWorld.getBlockState(WBlockPos(thePlayer.posX, thePlayer.posY - 1.0, thePlayer.posZ)).block == (provider.getBlockEnum(BlockType.AIR)) || (edgeDistance < movementEagleEdgeDistanceValue.get() && movementEagleModeValue.get().endsWith("EdgeDistance", true))
 					if (movementEagleModeValue.get().startsWith("Silent", true) && !shouldGoDown)
 					{
 						if (eagleSneaking != shouldEagle) mc.netHandler.addToSendQueue(provider.createCPacketEntityAction(thePlayer, if (shouldEagle) ICPacketEntityAction.WAction.START_SNEAKING else ICPacketEntityAction.WAction.STOP_SNEAKING))
@@ -554,7 +587,7 @@ class Scaffold : Module()
 	private fun findBlock(theWorld: IWorld, thePlayer: IEntityPlayerSP, expand: Boolean)
 	{
 		val failedResponce = { reason: String ->
-			searchDebug = listOf("result".equalTo("FAILED", "\u00A74"), "reason" equalTo reason.withParentheses("\u00A74")).serialize()
+			setSearchDebug(listOf("result".equalTo("FAILED", "\u00A74"), "reason" equalTo reason.withParentheses("\u00A74"))::serialize)
 		}
 
 		val groundBlockState = lastGroundBlockState ?: run {
@@ -692,7 +725,7 @@ class Scaffold : Module()
 			}
 		}
 
-		if (visualSearchDebugValue.get()) searchDebug = listOf("result".equalTo("SUCCESS", "\u00A7a"), "state" equalTo "$state${if (flagged) " \u00A78+ \u00A7cFLAGGED\u00A7r" else ""}", "searchRange".equalTo(searchBounds, "\u00A7b"), "autoBlockCollisionBox".equalTo("$abCollisionBB", "\u00A73"), "groundBlockCollisionBB".equalTo("$groundBlockBB", "\u00A72")).serialize()
+		setSearchDebug(listOf("result".equalTo("SUCCESS", "\u00A7a"), "state" equalTo "$state${if (flagged) " \u00A78+ \u00A7cFLAGGED\u00A7r" else ""}", "searchRange".equalTo(searchBounds, "\u00A7b"), "autoBlockCollisionBox".equalTo("$abCollisionBB", "\u00A73"), "groundBlockCollisionBB".equalTo("$groundBlockBB", "\u00A72"))::serialize)
 
 		lastSearchPosition = searchPosition
 
@@ -767,7 +800,7 @@ class Scaffold : Module()
 		}
 
 		val failedResponce = { reason: String ->
-			placeDebug = listOf("result".equalTo("FAILED", "\u00A74"), "reason" equalTo reason.withParentheses("\u00A74")).serialize()
+			setPlaceDebug(listOf("result".equalTo("FAILED", "\u00A74"), "reason" equalTo reason.withParentheses("\u00A74"))::serialize)
 		}
 
 		if (BLACKLISTED_BLOCKS.contains(theWorld.getBlock((targetPlace ?: return).blockPos)))
@@ -779,7 +812,7 @@ class Scaffold : Module()
 		if (killauraBypassModeValue.get().equals("WaitForKillAuraEnd", true) && killAura.hasTarget)
 		{
 			placeableDelay()
-			failedResponce("Waiting for KillAura end")
+			setPlaceDebug(listOf("result".equalTo("WAITING", "\u00A7e"), "reason" equalTo "Waiting for KillAura end".withParentheses("\u00A74"))::serialize)
 			return
 		}
 
@@ -872,7 +905,7 @@ class Scaffold : Module()
 		val pos = targetPlace.blockPos
 		if (controller.onPlayerRightClick(thePlayer, theWorld, itemStack, pos, targetPlace.enumFacing, targetPlace.vec3))
 		{
-			placeDebug = listOf("searchType".equalTo(targetPlace.type), "position".equalTo(pos, "\u00A7a"), "side".equalTo(targetPlace.enumFacing, "\u00A7b"), "hitVec".equalTo(targetPlace.vec3.addVector(-pos.x.toDouble(), -pos.y.toDouble(), -pos.z.toDouble()), "\u00A7e")).serialize()
+			targetSearchInfo?.let { searchInfo -> setPlaceDebug(listOf("searchType".equalTo(searchInfo.type), "position".equalTo(pos, "\u00A7a"), "side".equalTo(targetPlace.enumFacing, "\u00A7b"), "hitVec".equalTo(targetPlace.vec3.plus(-pos.x.toDouble(), -pos.y.toDouble(), -pos.z.toDouble()), "\u00A7e"), "delta".equalTo(DECIMALFORMAT_6.format(searchInfo.delta)))::serialize) }
 
 			// Reset delay
 			delayTimer.reset()
@@ -889,7 +922,7 @@ class Scaffold : Module()
 			if (swingValue.get()) thePlayer.swingItem()
 			else netHandler.addToSendQueue(provider.createCPacketAnimation())
 		}
-		else placeDebug = "result".equalTo("FAILED_TO_PLACE", "\u00A74")
+		else setPlaceDebug { "result".equalTo("FAILED_TO_PLACE", "\u00A74") }
 
 		// Switch back to original slot after place on AutoBlock-Switch mode
 		if (autoBlockMode == "switch" && switchKeepTime < 0) InventoryUtils.resetSlot(thePlayer)
@@ -904,13 +937,11 @@ class Scaffold : Module()
 		val gameSettings = mc.gameSettings
 		val netHandler = mc.netHandler
 
-		val provider = classProvider
-
 		// Reset Seaking (Eagle)
 		if (!gameSettings.isKeyDown(gameSettings.keyBindSneak))
 		{
 			gameSettings.keyBindSneak.pressed = false
-			if (eagleSneaking) netHandler.addToSendQueue(provider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SNEAKING))
+			if (eagleSneaking) netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SNEAKING))
 		}
 
 		if (!gameSettings.isKeyDown(gameSettings.keyBindRight)) gameSettings.keyBindRight.pressed = false
@@ -923,6 +954,8 @@ class Scaffold : Module()
 		facesBlock = false
 		mc.timer.timerSpeed = 1f
 		shouldGoDown = false
+
+		targetSearchInfo = null
 
 		InventoryUtils.resetSlot(thePlayer)
 	}
@@ -940,11 +973,8 @@ class Scaffold : Module()
 	@EventTarget
 	fun onRender2D(@Suppress("UNUSED_PARAMETER") event: Render2DEvent)
 	{
-		// TODO: Move these 'rendering' implementation to RenderUtils
-
 		val counter = visualCounterEnabledValue.get()
-		val debug = visualSearchDebugValue.get()
-		if (!counter && !debug) return
+		if (!counter/* && !debug*/) return
 
 		val theWorld = mc.theWorld ?: return
 		val thePlayer = mc.thePlayer ?: return
@@ -974,26 +1004,23 @@ class Scaffold : Module()
 			GL11.glPopMatrix()
 		}
 
-		if (debug)
-		{
-			val font = Fonts.minecraftFont
+		val font = Fonts.minecraftFont
 
-			val info = searchDebug
-			val infoWidth = info?.let { font.getStringWidth(it) shr 2 }
-
-			val info2 = placeDebug
-			val info2Width = info2?.let { font.getStringWidth(it) shr 2 }
+		arrayOf(searchDebug?.let { it to "Search" }, placeDebug?.let { it to "Place" }).filterNotNull().forEachIndexed { index, (info, infoType) ->
+			val offset = -60f + index * 10f
+			val yPos = middleScreenY + offset
+			val infoWidth = font.getStringWidth(info) shr 2
+			val infoTypeWidth = font.getStringWidth(infoType) shr 1
 
 			GL11.glPushMatrix()
 
-			infoWidth?.let { RenderUtils.drawBorderedRect(middleScreenX - it - 2f, middleScreenY - 60f, middleScreenX + it + 2f, middleScreenY + font.fontHeight * 0.5f - 60f, 3f, -16777216, -16777216) }
-			info2Width?.let { RenderUtils.drawBorderedRect(middleScreenX - it - 2f, middleScreenY - 50f, middleScreenX + it + 2f, middleScreenY + font.fontHeight * 0.5f - 50f, 3f, -16777216, -16777216) }
+			RenderUtils.drawBorderedRect(middleScreenX - infoWidth - 2f, yPos, middleScreenX + infoWidth + 2f, yPos + font.fontHeight * 0.5f, 3f, -16777216, -16777216)
 
 			classProvider.glStateManager.resetColor()
 
 			GL11.glScalef(0.5f, 0.5f, 0.5f)
-			info?.let { font.drawString(it, (middleScreenX.toFloat() - infoWidth!!) * 2f, (middleScreenY - 60f) * 2f, 0xffffff) }
-			info2?.let { font.drawString(it, (middleScreenX.toFloat() - info2Width!!) * 2f, (middleScreenY - 50f) * 2f, 0xffffff) }
+			font.drawString(infoType, (middleScreenX.toFloat() - infoWidth - infoTypeWidth) * 2f, (yPos - font.fontHeight * 0.2f) * 2f, 0xffffff, true)
+			font.drawString(info, (middleScreenX.toFloat() - infoWidth) * 2f, yPos * 2f, 0xffffff)
 			GL11.glScalef(2f, 2f, 2f)
 
 			GL11.glPopMatrix()
@@ -1003,6 +1030,41 @@ class Scaffold : Module()
 	@EventTarget
 	fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
 	{
+		if (visualDebugRayEnabledValue.get() && rotationSearchCheckVisibleValue.get() && !rotationModeValue.get().equals("Off", ignoreCase = true)) targetSearchInfo?.let { (_, rayStart, rayEnd, expectedRayEnd, actualRayEnd) ->
+			GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
+			GL11.glEnable(GL11.GL_BLEND)
+			GL11.glEnable(GL11.GL_LINE_SMOOTH)
+			GL11.glLineWidth(3.0f)
+			GL11.glDisable(GL11.GL_TEXTURE_2D)
+			GL11.glDisable(GL11.GL_DEPTH_TEST)
+			GL11.glDepthMask(false)
+
+			val renderManager = mc.renderManager
+			val renderPosX = renderManager.renderPosX
+			val renderPosY = renderManager.renderPosY
+			val renderPosZ = renderManager.renderPosZ
+
+			val vertex = { vec: WVec3 -> vec.plus(-renderPosX, -renderPosY, -renderPosZ).let { GL11.glVertex3d(it.xCoord, it.yCoord, it.zCoord) } }
+			val drawLine = { start: WVec3, end: WVec3, color: Int ->
+				GL11.glBegin(GL11.GL_LINES)
+				RenderUtils.glColor(color)
+				vertex(start)
+				vertex(end)
+				GL11.glEnd()
+			}
+
+			drawLine(rayStart, rayEnd, visualDebugRayColorReachValue.get()) // Display reach distance
+			if (expectedRayEnd != null) drawLine(rayStart, expectedRayEnd, visualDebugRayColorExpectValue.get()) // Display EXPECTED raytrace result (if available)
+			drawLine(rayStart, actualRayEnd, visualDebugRayColorActualValue.get()) // Display ACTUAL raytrace result
+
+			GL11.glEnable(GL11.GL_TEXTURE_2D)
+			GL11.glDisable(GL11.GL_LINE_SMOOTH)
+			GL11.glEnable(GL11.GL_DEPTH_TEST)
+			GL11.glDepthMask(true)
+			GL11.glDisable(GL11.GL_BLEND)
+			RenderUtils.resetColor()
+		}
+
 		if (!visualMarkValue.get()) return
 
 		val theWorld = mc.theWorld ?: return
@@ -1068,15 +1130,19 @@ class Scaffold : Module()
 		val searchMinZ = data.minZ
 		val searchMaxZ = data.maxZ
 
+		val xSteps = data.xSteps
+		val ySteps = data.ySteps
+		val zSteps = data.zSteps
+
+		val minDelta = rotationSearchMinDiffValue.get()
+
 		facings.forEach { side ->
 			val neighbor = blockPosition.offset(side)
 
 			if (!theWorld.canBeClicked(neighbor)) return@forEach
 
 			val dirVec = WVec3(side.directionVec)
-			val dirX = dirVec.xCoord
-			val dirY = dirVec.yCoord
-			val dirZ = dirVec.zCoord
+			val dirVecHalf = dirVec * 0.5
 
 			var xSearch = searchMinX
 			while (xSearch <= searchMaxX)
@@ -1087,55 +1153,56 @@ class Scaffold : Module()
 					var zSearch = searchMinZ
 					while (zSearch <= searchMaxZ)
 					{
-						val posVec = WVec3(blockPosition).addVector(xSearch, ySearch, zSearch)
-						val distanceSqPosVec = eyesPos.squareDistanceTo(posVec)
-						val hitVec = posVec.add(WVec3(dirX * 0.5, dirY * 0.5, dirZ * 0.5))
+						val searchVec = WVec3(blockPosition).plus(xSearch, ySearch, zSearch)
+						val sqDistanceToSearchVec = eyesPos.squareDistanceTo(searchVec)
+						val searchSideVec = searchVec + dirVecHalf
 
-						// Visible check
-						if (checkVisible && (eyesPos.squareDistanceTo(hitVec) > 18.0 // Distance Check - distance > 3√2 blocks
-								|| distanceSqPosVec > eyesPos.squareDistanceTo(posVec.add(dirVec)) // Against Distance Check - distance to Block > distance to Block SIDE
-								|| theWorld.rayTraceBlocks(eyesPos, hitVec, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false) != null)) // Raytrace Check - rayTrace hit between eye position and block side
+						// Visibility checks
+						if (checkVisible && (eyesPos.squareDistanceTo(searchSideVec) > 18.0 // Distance Check - (distance(eyes, searchSideVec)^2 > 18 blocks)
+								|| sqDistanceToSearchVec > eyesPos.squareDistanceTo(searchVec + dirVec) // Against Distance Check - (distance(eyes, searchVec) > distance(eyes, searchDirVec))
+								|| theWorld.rayTraceBlocks(eyesPos, searchSideVec, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false) != null)) // Raytrace Check - (rayTrace hit between eye position and block side)
 						{
 							// Skip
-							zSearch += data.zSteps
+							zSearch += zSteps
 							continue
 						}
 
-						val minDiff = rotationSearchMinDiffValue.get()
-
 						// Face block
-						repeat(if (staticYaw) 2 else 1) { i ->
-							val diffX: Double = if (staticYaw && i == 0) 0.0 else hitVec.xCoord - eyesPos.xCoord
-							val diffY = hitVec.yCoord - eyesPos.yCoord
-							val diffZ: Double = if (staticYaw && i == 1) 0.0 else hitVec.zCoord - eyesPos.zCoord
-							val diffXZ = hypot(diffX, diffZ)
+						repeat(if (staticYaw) 2 /* Separated X search and Z search */ else 1) { i ->
+							var delta = -1.0
+							val deltaX = if (staticYaw && i == 0) 0.0 else searchSideVec.xCoord - eyesPos.xCoord
+							val deltaZ = if (staticYaw && i == 1) 0.0 else searchSideVec.zCoord - eyesPos.zCoord
 
-							if (!side.isUp() && minDiff > 0)
+							if (!side.isUp() && minDelta > 0)
 							{
-								val diff: Double = abs(if (side.isNorth() || side.isSouth()) diffZ else diffX)
-								if (diff < minDiff || diff > 0.3f) return@repeat
+								delta = abs(if (side.isNorth() || side.isSouth()) deltaZ else deltaX)
+								if (delta < minDelta || delta > 0.3f) return@repeat
 							}
 
 							// Calculate the rotation from vector
-							val rotation = Rotation(wrapAngleTo180_float(WMathHelper.toDegrees(atan2(diffZ, diffX).toFloat()) - 90f + if (staticYaw) staticYawOffset else 0f), if (staticPitch) staticPitchOffset else wrapAngleTo180_float((-WMathHelper.toDegrees(atan2(diffY, diffXZ).toFloat()))))
-							val rotationVector = RotationUtils.getVectorForRotation(rotation)
-							val blockReachPos = eyesPos.addVector(rotationVector.xCoord * 4, rotationVector.yCoord * 4, rotationVector.zCoord * 4)
+							val rotation = Rotation(wrapAngleTo180_float(WMathHelper.toDegrees(atan2(deltaZ, deltaX).toFloat()) - 90f + if (staticYaw) staticYawOffset else 0f), if (staticPitch) staticPitchOffset else wrapAngleTo180_float((-WMathHelper.toDegrees(atan2(searchSideVec.yCoord - eyesPos.yCoord, hypot(deltaX, deltaZ)).toFloat()))))
+							val vectorForRotation = RotationUtils.getVectorForRotation(rotation)
+							val rayEnd = eyesPos + vectorForRotation * 4.0
 
-							val rayTrace = theWorld.rayTraceBlocks(eyesPos, blockReachPos, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = false, returnLastUncollidableBlock = true)
+							val rayTrace = theWorld.rayTraceBlocks(eyesPos, rayEnd, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = false, returnLastUncollidableBlock = true)
 							if (rayTrace != null && (rayTrace.typeOfHit != IMovingObjectPosition.WMovingObjectType.BLOCK || rayTrace.blockPos != neighbor)) return@repeat // Raytrace Check - rayTrace hit between eye position and block reach position
 
-							if (placeRotation?.let { RotationUtils.getRotationDifference(rotation) < RotationUtils.getRotationDifference(it.rotation) } != false) placeRotation = PlaceRotation(PlaceInfo(neighbor, side.opposite, hitVec, type), rotation) // If the current rotation is better than the previous one
+							if (placeRotation?.let { RotationUtils.getRotationDifference(rotation) < RotationUtils.getRotationDifference(it.rotation) } != false) // If the current rotation is better than the previous one
+							{
+								val expectedHitVec = if (staticYaw || staticPitch) null else searchSideVec
+								placeRotation = PlaceRotation(PlaceInfo(neighbor, side.opposite, rayEnd), rotation, SearchInfo(type, eyesPos, rayEnd, expectedHitVec, rayTrace?.hitVec ?: expectedHitVec ?: rayEnd, delta))
+							}
 
 							xSearchFace = xSearch
 							ySearchFace = ySearch
 							zSearchFace = zSearch
 						}
 
-						zSearch += data.zSteps
+						zSearch += zSteps
 					}
-					ySearch += data.ySteps
+					ySearch += ySteps
 				}
-				xSearch += data.xSteps
+				xSearch += xSteps
 			}
 		}
 
@@ -1172,15 +1239,16 @@ class Scaffold : Module()
 						if (!theWorld.canBeClicked(neighbor)) return@sideLoop
 
 						val dirVec = WVec3(side.directionVec)
-						val posVec = WVec3(blockPosition).addVector(xSearchFace, ySearchFace, zSearchFace)
-						val distanceSqPosVec = eyesPos.squareDistanceTo(posVec)
-						val hitVec = posVec.add(WVec3(dirVec.xCoord * 0.5, dirVec.yCoord * 0.5, dirVec.zCoord * 0.5))
+						val posVec = WVec3(blockPosition).plus(xSearchFace, ySearchFace, zSearchFace)
+						val sqDistanceToPosVec = eyesPos.squareDistanceTo(posVec)
+						val hitVec = posVec + WVec3(dirVec.xCoord, dirVec.yCoord, dirVec.zCoord) * 0.5
 
-						if (checkVisible && (eyesPos.squareDistanceTo(hitVec) > 18.0 || distanceSqPosVec > eyesPos.squareDistanceTo(posVec.add(dirVec)) || theWorld.rayTraceBlocks(eyesPos, hitVec, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false) != null)) return@sideLoop
+						// Visibility checks
+						if (checkVisible && (eyesPos.squareDistanceTo(hitVec) > 18.0 || sqDistanceToPosVec > eyesPos.squareDistanceTo(posVec + dirVec) || theWorld.rayTraceBlocks(eyesPos, hitVec, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false) != null)) return@sideLoop
 
 						val rotationVector = RotationUtils.getVectorForRotation(limitedRotation)
-						val vector = eyesPos.addVector(rotationVector.xCoord * 4, rotationVector.yCoord * 4, rotationVector.zCoord * 4)
-						val rayTrace = theWorld.rayTraceBlocks(eyesPos, vector, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = false, returnLastUncollidableBlock = true)
+						val rayEndPos = eyesPos + rotationVector * 4.0
+						val rayTrace = theWorld.rayTraceBlocks(eyesPos, rayEndPos, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = false, returnLastUncollidableBlock = true)
 
 						if (rayTrace != null && (rayTrace.typeOfHit != IMovingObjectPosition.WMovingObjectType.BLOCK || rayTrace.blockPos != neighbor)) return@sideLoop
 
@@ -1202,6 +1270,7 @@ class Scaffold : Module()
 		}
 
 		targetPlace = placeRotation?.placeInfo
+		targetSearchInfo = placeRotation?.searchInfo
 		return true
 	}
 
