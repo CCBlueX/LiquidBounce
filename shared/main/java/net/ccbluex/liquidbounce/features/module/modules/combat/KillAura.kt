@@ -331,7 +331,7 @@ class KillAura : Module()
 	// Container Delay
 	private val containerOpenTimer = MSTimer()
 
-	private var switchDelay = switchDelayValue.getRandomDelay()
+	private var switchDelay = switchDelayValue.getRandomLong()
 	private val switchDelayTimer = MSTimer()
 
 	// Server-side block status
@@ -853,7 +853,7 @@ class KillAura : Module()
 			{
 				lockRotation = Rotation(tpPacket.yaw, tpPacket.pitch)
 				lockRotationTimer.reset()
-				lockRotationDelay = rotationLockAfterTeleportDelayValue.getRandomDelay()
+				lockRotationDelay = rotationLockAfterTeleportDelayValue.getRandomLong()
 
 				if (rotationSilentValue.get()) RotationUtils.setTargetRotation(lockRotation, 0) else lockRotation?.applyRotationToPlayer(thePlayer)
 			}
@@ -939,7 +939,7 @@ class KillAura : Module()
 			previouslySwitchedTargets.add(if (aac) theTarget.entityId else theCurrentTarget.entityId)
 
 			switchDelayTimer.reset()
-			switchDelay = switchDelayValue.getRandomDelay()
+			switchDelay = switchDelayValue.getRandomLong()
 		}
 
 		if (!fakeAttack && theTarget == theCurrentTarget)

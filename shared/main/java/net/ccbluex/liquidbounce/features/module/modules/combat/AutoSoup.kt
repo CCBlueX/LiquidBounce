@@ -50,9 +50,9 @@ class AutoSoup : Module()
 	private val inventoryMisclickRateValue = IntegerValue("Rate", 5, 0, 100, "ClickMistakeRate")
 
 	private val soupDelayTimer = MSTimer()
-	private var soupDelay = delayValue.getRandomDelay()
+	private var soupDelay = delayValue.getRandomLong()
 
-	private var invDelay = inventoryDelayValue.getRandomDelay()
+	private var invDelay = inventoryDelayValue.getRandomLong()
 
 	private var soup = -1
 
@@ -132,7 +132,7 @@ class AutoSoup : Module()
 
 							controller.windowClick(0, bowlInHotbar, 0, 1, thePlayer)
 
-							invDelay = inventoryDelayValue.getRandomDelay()
+							invDelay = inventoryDelayValue.getRandomLong()
 							InventoryUtils.CLICK_TIMER.reset()
 
 							return
@@ -162,7 +162,7 @@ class AutoSoup : Module()
 
 						if (openInventory) netHandler.addToSendQueue(provider.createCPacketCloseWindow())
 
-						invDelay = inventoryDelayValue.getRandomDelay()
+						invDelay = inventoryDelayValue.getRandomLong()
 						InventoryUtils.CLICK_TIMER.reset()
 					}
 				}
@@ -182,7 +182,7 @@ class AutoSoup : Module()
 
 						if (silentValue.get()) InventoryUtils.resetSlot(thePlayer)
 
-						soupDelay = delayValue.getRandomDelay()
+						soupDelay = delayValue.getRandomLong()
 						soupDelayTimer.reset()
 					}
 

@@ -53,7 +53,7 @@ class AutoEnchant : Module()
 		clickIndicationGroup.addAll(clickIndicationEnabledValue, clickIndicationLengthValue)
 	}
 
-	private var delay = firstDelayValue.getRandomDelay()
+	private var delay = firstDelayValue.getRandomLong()
 	private val delayTimer = MSTimer()
 
 	@EventTarget
@@ -82,7 +82,7 @@ class AutoEnchant : Module()
 			if (outputSlot.stack != null) // I'm sure there is no anticheat detecting autoenchant with output-slot item spoofing.
 			{
 				playerController.windowClick(container.windowId, outputSlot.slotNumber, 0, 1, thePlayer)
-				delay = delayValue.getRandomDelay()
+				delay = delayValue.getRandomLong()
 				delayTimer.reset()
 				return
 			}
@@ -99,7 +99,7 @@ class AutoEnchant : Module()
 
 					if (clickIndicationEnabledValue.get()) guiRepair.highlight(bestSwordSlot, clickIndicationLengthValue.get().toLong(), CLICKINDICATION_BOOK2ITEM_ITEM)
 
-					delay = delayValue.getRandomDelay()
+					delay = delayValue.getRandomLong()
 					delayTimer.reset()
 				}
 				else if (secondInputSlot.stack == null)
@@ -108,7 +108,7 @@ class AutoEnchant : Module()
 
 					if (clickIndicationEnabledValue.get()) guiRepair.highlight(bestSwordSlot, clickIndicationLengthValue.get().toLong(), CLICKINDICATION_BOOK2ITEM_BOOK)
 
-					delay = delayValue.getRandomDelay()
+					delay = delayValue.getRandomLong()
 					delayTimer.reset()
 				}
 			}
@@ -147,7 +147,7 @@ class AutoEnchant : Module()
 
 						if (clickIndicationEnabledValue.get()) guiRepair.highlight(bestSwordSlot, clickIndicationLengthValue.get().toLong(), CLICKINDICATION_ITEM2ITEM_FIRST)
 
-						delay = delayValue.getRandomDelay()
+						delay = delayValue.getRandomLong()
 						delayTimer.reset()
 					}
 				}
@@ -158,14 +158,14 @@ class AutoEnchant : Module()
 
 					if (clickIndicationEnabledValue.get()) guiRepair.highlight(bestSwordSlot, clickIndicationLengthValue.get().toLong(), CLICKINDICATION_ITEM2ITEM_SECOND)
 
-					delay = delayValue.getRandomDelay()
+					delay = delayValue.getRandomLong()
 					delayTimer.reset()
 				}
 			}
 		}
 		else
 		{
-			delay = firstDelayValue.getRandomDelay()
+			delay = firstDelayValue.getRandomLong()
 			delayTimer.reset()
 		}
 	}

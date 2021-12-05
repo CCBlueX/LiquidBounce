@@ -270,8 +270,6 @@ class NoFall : Module()
 
 		val silentRotation = mlgSilentRotationValue.get()
 
-		val provider = classProvider
-
 		if (event.eventState == EventState.PRE)
 		{
 			currentMlgRotation = null
@@ -299,18 +297,16 @@ class NoFall : Module()
 				val inventory = thePlayer.inventory
 
 				run {
-					(0..8).mapNotNull { it to (inventory.getStackInSlot(it) ?: return@mapNotNull null) }.filter { (_, stack) -> stack.item == provider.getItemEnum(ItemType.WATER_BUCKET) || provider.isItemBlock(stack.item) && (stack.item?.asItemBlock())?.block == provider.getBlockEnum(BlockType.WEB) }.forEach {
+					(0..8).mapNotNull { it to (inventory.getStackInSlot(it) ?: return@mapNotNull null) }.filter { (_, stack) -> stack.item == classProvider.getItemEnum(ItemType.WATER_BUCKET) || classProvider.isItemBlock(stack.item) && stack.item!!.asItemBlock().block == classProvider.getBlockEnum(BlockType.WEB) }.forEach {
 						mlgItemSlot = it.first
 						if (thePlayer.inventory.currentItem == mlgItemSlot) return@run
 					}
 				}
 
-				if (mlgItemSlot == -1) return
+				if (!InventoryUtils.tryHoldSlot(thePlayer, mlgItemSlot, lock = true)) return
 
 				currentMlgItemIndex = mlgItemSlot
 				currentMlgBlock = collision.pos
-
-				if (!InventoryUtils.tryHoldSlot(thePlayer, mlgItemSlot, lock = true)) return
 
 				val currentMlgRotation = RotationUtils.faceBlock(theWorld, thePlayer, collision.pos)
 
@@ -322,7 +318,7 @@ class NoFall : Module()
 		else if (currentMlgRotation != null)
 		{
 			val stack = thePlayer.inventory.getStackInSlot(currentMlgItemIndex)
-			if (stack != null) if (provider.isItemBucket(stack.item)) controller.sendUseItem(thePlayer, theWorld, stack) else if (controller.sendUseItem(thePlayer, theWorld, stack)) mlgTimer.reset()
+			if (stack != null) if (classProvider.isItemBucket(stack.item)) controller.sendUseItem(thePlayer, theWorld, stack) else if (controller.sendUseItem(thePlayer, theWorld, stack)) mlgTimer.reset()
 
 			InventoryUtils.resetSlot(thePlayer)
 		}

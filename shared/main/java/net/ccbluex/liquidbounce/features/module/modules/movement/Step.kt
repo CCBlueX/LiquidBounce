@@ -65,7 +65,7 @@ class Step : Module()
 	private var spartanSwitch = false
 
 	private val timer = MSTimer()
-	private var delay = delayValue.getRandomDelay()
+	private var delay = delayValue.getRandomLong()
 
 	override fun onDisable()
 	{
@@ -326,7 +326,7 @@ class Step : Module()
 	private fun resetTimer()
 	{
 		timer.reset()
-		delay = delayValue.getRandomDelay()
+		delay = delayValue.getRandomLong()
 	}
 
 	@EventTarget(ignoreCondition = true)

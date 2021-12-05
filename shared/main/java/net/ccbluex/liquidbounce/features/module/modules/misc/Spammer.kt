@@ -47,7 +47,7 @@ class Spammer : Module()
 	 * Variables
 	 */
 	private val msTimer = MSTimer()
-	var delay = delayValue.getRandomDelay()
+	var delay = delayValue.getRandomLong()
 
 	@EventTarget
 	fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
@@ -61,7 +61,7 @@ class Spammer : Module()
 			thePlayer.sendChatMessage(if (customValue.get()) replace(message) else message + " >" + randomString(5 + Random.nextInt(5)) + "<")
 
 			msTimer.reset()
-			delay = delayValue.getRandomDelay()
+			delay = delayValue.getRandomLong()
 		}
 	}
 

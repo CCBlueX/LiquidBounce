@@ -36,5 +36,5 @@ class AutoGG : Module()
 	 * Variables
 	 */
 	private val msTimer = MSTimer()
-	var delay = delayValue.getRandomDelay()
+	var delay = delayValue.getRandomLong()
 }

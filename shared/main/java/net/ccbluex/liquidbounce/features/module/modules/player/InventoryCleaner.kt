@@ -239,7 +239,7 @@ class InventoryCleaner : Module()
 				// Back to the original holding slot
 				netHandler.addToSendQueue(provider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
 
-				delay = hotbarDelayValue.getRandomDelay()
+				delay = hotbarDelayValue.getRandomLong()
 			}
 		}
 
@@ -302,7 +302,7 @@ class InventoryCleaner : Module()
 			// SimulateInventory
 			if (openInventory) netHandler.addToSendQueue(classProvider.createCPacketCloseWindow())
 
-			delay = delayValue.getRandomDelay()
+			delay = delayValue.getRandomLong()
 		}
 
 		return
@@ -488,7 +488,7 @@ class InventoryCleaner : Module()
 
 			if (openInventory) netHandler.addToSendQueue(provider.createCPacketCloseWindow())
 
-			delay = delayValue.getRandomDelay()
+			delay = delayValue.getRandomLong()
 		}
 	}
 

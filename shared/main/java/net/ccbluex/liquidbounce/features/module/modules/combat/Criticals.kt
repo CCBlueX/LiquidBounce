@@ -68,7 +68,7 @@ class Criticals : Module()
 	 * Delay Timer
 	 */
 	private val delayTimer = MSTimer()
-	private var nextDelay = delayValue.getRandomDelay()
+	private var nextDelay = delayValue.getRandomLong()
 
 	init
 	{
@@ -179,7 +179,7 @@ class Criticals : Module()
 			}
 
 			delayTimer.reset()
-			nextDelay = delayValue.getRandomDelay()
+			nextDelay = delayValue.getRandomLong()
 		}
 	}
 

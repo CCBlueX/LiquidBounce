@@ -31,7 +31,7 @@ class SkinDerp : Module()
 	private var prevModelParts = emptySet<WEnumPlayerModelParts>()
 
 	private val timer = MSTimer()
-	private var delay = delayValue.getRandomDelay()
+	private var delay = delayValue.getRandomLong()
 
 	override fun onEnable()
 	{
@@ -68,7 +68,7 @@ class SkinDerp : Module()
 			if (rightSleeveValue.get()) gameSettings.setModelPartEnabled(WEnumPlayerModelParts.RIGHT_SLEEVE, Random.nextBoolean())
 
 			timer.reset()
-			delay = delayValue.getRandomDelay()
+			delay = delayValue.getRandomLong()
 		}
 	}
 }

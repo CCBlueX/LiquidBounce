@@ -50,7 +50,7 @@ class Blink : Module()
 	private val positions = LinkedList<DoubleArray>()
 
 	private val pulseTimer = MSTimer()
-	private var pulseDelay = pulseDelayValue.getRandomDelay()
+	private var pulseDelay = pulseDelayValue.getRandomLong()
 
 	private var fakePlayer: FakePlayer? = null
 
@@ -110,7 +110,7 @@ class Blink : Module()
 			fakePlayer?.updatePositionAndRotation(thePlayer)
 
 			pulseTimer.reset()
-			pulseDelay = pulseDelayValue.getRandomDelay()
+			pulseDelay = pulseDelayValue.getRandomLong()
 		}
 	}
 

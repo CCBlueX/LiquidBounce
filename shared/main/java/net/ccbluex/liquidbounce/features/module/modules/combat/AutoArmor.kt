@@ -155,7 +155,7 @@ class AutoArmor : Module()
 				netHandler.addToSendQueue(createUseItemPacket(thePlayer.inventoryContainer.getSlot(item).stack, WEnumHand.MAIN_HAND))
 				InventoryUtils.resetSlot(thePlayer)
 
-				nextDelay = delayValue.getRandomDelay()
+				nextDelay = delayValue.getRandomLong()
 
 				return true
 			}
@@ -175,7 +175,7 @@ class AutoArmor : Module()
 			controller.windowClick(thePlayer.inventoryContainer.windowId, slot, if (full) 1 else 0, if (full) 4 else 1, thePlayer)
 			if (clickIndicationEnabledValue.get() && screen != null && provider.isGuiContainer(screen)) screen.asGuiContainer().highlight(slot, clickIndicationLengthValue.get().toLong(), if (full) CLICKINDICATION_SHIFT_LEFT else if (isArmorSlot) CLICKINDICATION_RIGHT_ARMORSLOT else CLICKINDICATION_RIGHT)
 
-			nextDelay = delayValue.getRandomDelay()
+			nextDelay = delayValue.getRandomLong()
 
 			if (openInventory) netHandler.addToSendQueue(provider.createCPacketCloseWindow())
 

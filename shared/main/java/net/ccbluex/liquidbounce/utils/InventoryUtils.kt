@@ -74,7 +74,7 @@ class InventoryUtils : MinecraftInstance(), Listenable
 
 		fun tryHoldSlot(thePlayer: IEntityPlayerSP, slot: Int, keepLength: Int = 0, lock: Boolean = false): Boolean
 		{
-			if (occupied) return false
+			if (occupied || slot !in 0..8) return false
 
 			if (slot != (if (targetSlot == null) thePlayer.inventory.currentItem else targetSlot))
 			{

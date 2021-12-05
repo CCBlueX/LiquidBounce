@@ -67,7 +67,7 @@ object ChestAura : Module()
 	var currentBlock: WBlockPos? = null
 
 	private val timer = MSTimer()
-	private var delay = delayValue.getRandomDelay()
+	private var delay = delayValue.getRandomLong()
 
 	val clickedBlocks = mutableListOf<WBlockPos>()
 
@@ -179,7 +179,7 @@ object ChestAura : Module()
 					clickedBlocks.add(currentBlock)
 					this.currentBlock = null
 					timer.reset()
-					delay = delayValue.getRandomDelay()
+					delay = delayValue.getRandomLong()
 				}
 			}
 		}

@@ -46,7 +46,7 @@ class AutoClicker : Module()
 	private var leftLastSwing = 0L
 
 	private val delayAfterBlockBreakTimer = MSTimer()
-	private var delayAfterBlockBreak = delayAfterBreakBlockValue.getRandomDelay()
+	private var delayAfterBlockBreak = delayAfterBreakBlockValue.getRandomLong()
 
 	@EventTarget
 	fun onRender(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
@@ -82,7 +82,7 @@ class AutoClicker : Module()
 		val breakingBlock = mc.playerController.curBlockDamageMP > 0F
 		if (breakingBlock)
 		{
-			delayAfterBlockBreak = delayAfterBreakBlockValue.getRandomDelay()
+			delayAfterBlockBreak = delayAfterBreakBlockValue.getRandomLong()
 			delayAfterBlockBreakTimer.reset()
 		}
 

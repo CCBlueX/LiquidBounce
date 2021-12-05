@@ -160,7 +160,7 @@ class SuperKnockback : Module()
 				{
 					val notSprintingSlowdown = notSprintingSlowdownValue.get()
 
-					val delay = delayValue.getRandomDelay()
+					val delay = delayValue.getRandomLong()
 					val multipliedDelay = (delay * multiplierValue.getRandom()).toLong()
 
 					when (mode)

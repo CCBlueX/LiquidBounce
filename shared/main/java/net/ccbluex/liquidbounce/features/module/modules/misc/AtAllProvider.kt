@@ -25,7 +25,7 @@ class AtAllProvider : Module()
 	private val sendQueue = LinkedBlockingQueue<String>()
 	private val retryQueue: MutableList<String> = ArrayList()
 	private val msTimer = MSTimer()
-	private var delay = delayValue.getRandomDelay()
+	private var delay = delayValue.getRandomLong()
 
 	override fun onDisable()
 	{
@@ -54,7 +54,7 @@ class AtAllProvider : Module()
 				thePlayer.sendChatMessage(sendQueue.take())
 				msTimer.reset()
 
-				delay = delayValue.getRandomDelay()
+				delay = delayValue.getRandomLong()
 			}
 		}
 		catch (e: InterruptedException)

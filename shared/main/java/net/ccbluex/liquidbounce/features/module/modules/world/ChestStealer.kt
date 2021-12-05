@@ -97,10 +97,10 @@ class ChestStealer : Module()
 	 */
 
 	private val delayTimer = MSTimer()
-	private var nextDelay = delayValue.getRandomDelay()
+	private var nextDelay = delayValue.getRandomLong()
 
 	private val autoCloseTimer = MSTimer()
-	private var nextCloseDelay = autoCloseDelayValue.getRandomDelay()
+	private var nextCloseDelay = autoCloseDelayValue.getRandomLong()
 
 	private var contentReceived = 0
 
@@ -164,7 +164,7 @@ class ChestStealer : Module()
 			if (delayOnFirstEnabledValue.get() || itemDelay > 0L)
 			{
 				delayTimer.reset()
-				if (nextDelay < delayOnFirstDelayValue.getMin()) nextDelay = max(delayOnFirstDelayValue.getRandomDelay(), itemDelay)
+				if (nextDelay < delayOnFirstDelayValue.getMin()) nextDelay = max(delayOnFirstDelayValue.getRandomLong(), itemDelay)
 			}
 			autoCloseTimer.reset()
 			return
@@ -265,7 +265,7 @@ class ChestStealer : Module()
 		else if (autoCloseEnabledValue.get() && autoCloseTimer.hasTimePassed(nextCloseDelay))
 		{
 			thePlayer.closeScreen()
-			nextCloseDelay = autoCloseDelayValue.getRandomDelay()
+			nextCloseDelay = autoCloseDelayValue.getRandomLong()
 		}
 	}
 
@@ -284,7 +284,7 @@ class ChestStealer : Module()
 		screen.handleMouseClick(slot, slot.slotNumber, 0, 1)
 		if (clickIndicationEnabledValue.get()) screen.asGuiContainer().highlight(slot.slotNumber, clickIndicationLengthValue.get().toLong(), if (misclick) CLICKINDICATION_MISCLICK else CLICKINDICATION_TAKE)
 		delayTimer.reset()
-		nextDelay = delayValue.getRandomDelay()
+		nextDelay = delayValue.getRandomLong()
 	}
 
 	private fun isEmpty(thePlayer: IEntityPlayer, chest: IGuiChest, itemDelay: Long): Boolean

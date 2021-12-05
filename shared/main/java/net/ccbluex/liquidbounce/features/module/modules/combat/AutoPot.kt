@@ -83,8 +83,8 @@ class AutoPot : Module()
 	private val potionFilterJumpBoostAmpLimitValue = IntegerValue("AmplifierLimit", 5, 2, 127, "JumpPotAmplifierLimit")
 
 	private val potThrowDelayTimer = MSTimer()
-	private var potThrowDelay = throwDelayValue.getRandomDelay()
-	private var invDelay = inventoryDelayValue.getRandomDelay()
+	private var potThrowDelay = throwDelayValue.getRandomLong()
+	private var invDelay = inventoryDelayValue.getRandomLong()
 
 	private var potion = -1
 
@@ -259,7 +259,7 @@ class AutoPot : Module()
 
 						if (openInventory) netHandler.addToSendQueue(provider.createCPacketCloseWindow())
 
-						invDelay = inventoryDelayValue.getRandomDelay()
+						invDelay = inventoryDelayValue.getRandomLong()
 						InventoryUtils.CLICK_TIMER.reset()
 					}
 				}
@@ -280,7 +280,7 @@ class AutoPot : Module()
 
 						if (throwSilentValue.get()) InventoryUtils.resetSlot(thePlayer)
 
-						potThrowDelay = throwDelayValue.getRandomDelay()
+						potThrowDelay = throwDelayValue.getRandomLong()
 						potThrowDelayTimer.reset()
 					}
 

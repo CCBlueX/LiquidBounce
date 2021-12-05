@@ -79,9 +79,9 @@ class AutoUse : Module()
 	}
 
 	private val useDelayTimer = MSTimer()
-	private var useDelay = delayValue.getRandomDelay()
+	private var useDelay = delayValue.getRandomLong()
 
-	private var invDelay = inventoryDelayValue.getRandomDelay()
+	private var invDelay = inventoryDelayValue.getRandomLong()
 
 	private var slotToUse = -1
 
@@ -222,7 +222,7 @@ class AutoUse : Module()
 
 							controller.windowClick(0, glassBottleInHotbar, 0, 1, thePlayer)
 
-							invDelay = inventoryDelayValue.getRandomDelay()
+							invDelay = inventoryDelayValue.getRandomLong()
 							InventoryUtils.CLICK_TIMER.reset()
 
 							return
@@ -256,7 +256,7 @@ class AutoUse : Module()
 
 						if (openInventory) netHandler.addToSendQueue(provider.createCPacketCloseWindow())
 
-						invDelay = inventoryDelayValue.getRandomDelay()
+						invDelay = inventoryDelayValue.getRandomLong()
 						InventoryUtils.CLICK_TIMER.reset()
 					}
 				}
@@ -281,7 +281,7 @@ class AutoUse : Module()
 		{
 			if (handleGlassBottle.equals("Drop", true) && (provider.isItemGlassBottle(itemStack.item) || provider.isItemPotion(itemStack.item) && !itemStack.isSplash())) netHandler.addToSendQueue(provider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.DROP_ITEM, WBlockPos.ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
 
-			useDelay = delayValue.getRandomDelay()
+			useDelay = delayValue.getRandomLong()
 			useDelayTimer.reset()
 		}
 

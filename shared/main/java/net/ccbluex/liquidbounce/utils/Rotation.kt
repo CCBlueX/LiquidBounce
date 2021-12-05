@@ -173,4 +173,4 @@ data class VecRotation(val vec: WVec3, val rotation: Rotation, val face: IEnumFa
 /**
  * Rotation with place info
  */
-data class PlaceRotation(val placeInfo: PlaceInfo, val rotation: Rotation, val searchInfo: SearchInfo? = null)
+data class PlaceRotation(val placeInfo: PlaceInfo, val rotation: Rotation, val searchInfo: (() -> SearchInfo)? = null)

@@ -87,4 +87,9 @@ class WVec3(val xCoord: Double, val yCoord: Double, val zCoord: Double)
 	}
 
 	override fun toString(): String = "(${DECIMALFORMAT_2.format(xCoord)}, ${DECIMALFORMAT_2.format(yCoord)}, ${DECIMALFORMAT_2.format(zCoord)})"
+
+	companion object
+	{
+		val ZERO: WVec3 = WVec3(0.0, 0.0, 0.0)
+	}
 }

@@ -491,7 +491,7 @@ open class IntegerRangeValue(name: String, minValue: Int, maxValue: Int, val min
 
 	fun getRandom() = RandomUtils.nextInt(minValue, maxValue)
 
-	fun getRandomDelay() = TimeUtils.randomDelay(minValue, maxValue)
+	fun getRandomLong() = TimeUtils.randomDelay(minValue, maxValue)
 
 	fun getRandomClickDelay() = TimeUtils.randomClickDelay(minValue, maxValue)
 
@@ -702,8 +702,6 @@ class BlockValue(name: String, value: Int, alias: String? = null) : IntegerValue
  */
 open class ListValue(name: String, val values: Array<String>, value: String, alias: String? = null, description: String = "") : Value<String>(name, value, alias, description)
 {
-
-	@JvmField
 	var openList = false
 
 	init
