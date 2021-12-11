@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
 import net.ccbluex.liquidbounce.event.AttackEvent;
-import net.ccbluex.liquidbounce.event.BlockAttackEvent;
+import net.ccbluex.liquidbounce.event.BlockBreakingProgressEvent;
 import net.ccbluex.liquidbounce.event.CancelBlockBreakingEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar;
@@ -57,12 +57,12 @@ public class MixinClientPlayerInteractionManager {
     }
 
     /**
-     * Hook into attackBlock method at HEAD and call block attack event event.
+     * Hook into updateBlockBreakingProgress method at HEAD and call BlockBreakingProgress event.
      */
-    @Inject(method = "attackBlock", at = @At(value = "HEAD"))
-    private void hookBlockAttack(final BlockPos pos, final Direction direction, final CallbackInfoReturnable<Boolean> cir) {
-        final BlockAttackEvent blockAttackEvent = new BlockAttackEvent(pos);
-        EventManager.INSTANCE.callEvent(blockAttackEvent);
+    @Inject(method = "updateBlockBreakingProgress", at = @At(value = "HEAD"))
+    private void hookBlockBreakingProgress(BlockPos pos, Direction direction, CallbackInfoReturnable<Boolean> cir) {
+        final BlockBreakingProgressEvent blockBreakingProgressEvent = new BlockBreakingProgressEvent(pos);
+        EventManager.INSTANCE.callEvent(blockBreakingProgressEvent);
     }
 
     /**

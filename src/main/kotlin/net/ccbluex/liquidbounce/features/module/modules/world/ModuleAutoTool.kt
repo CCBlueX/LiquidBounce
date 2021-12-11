@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.event.BlockAttackEvent
+import net.ccbluex.liquidbounce.event.BlockBreakingProgressEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -32,13 +32,19 @@ import net.ccbluex.liquidbounce.features.module.Module
 
 object ModuleAutoTool : Module("AutoTool", Category.WORLD) {
 
-    val handler = handler<BlockAttackEvent> { event ->
+    val handler = handler<BlockBreakingProgressEvent> { event ->
         val blockState = world.getBlockState(event.pos)
+        var bestSlot: Int? = null
+        var bestSpeed = 1f
 
-        val bestSlot = (0..8).maxByOrNull { i ->
-            val item = player.inventory.getStack(i) ?: return@maxByOrNull -1.0f
+        for (i in 0..8) {
+            val item = player.inventory.getStack(i)
+            val speed = item.getMiningSpeedMultiplier(blockState)
 
-            item.getMiningSpeedMultiplier(blockState)
+            if (speed > bestSpeed) {
+                bestSpeed = speed
+                bestSlot = i
+            }
         }
 
         if (bestSlot != null) {
