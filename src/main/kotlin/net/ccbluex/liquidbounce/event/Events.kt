@@ -168,6 +168,9 @@ class PlayerSafeWalkEvent(var isSafeWalk: Boolean = false) : Event()
 @Nameable("cancelBlockBreaking")
 class CancelBlockBreakingEvent : CancellableEvent()
 
+@Nameable("playerStep")
+class PlayerStepEvent(var height: Float) : Event()
+
 // Network events
 
 @Nameable("packet")
