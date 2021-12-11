@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
@@ -38,7 +39,15 @@ import net.minecraft.util.Hand
 
 object ModuleAutoFish : Module("AutoFish", Category.PLAYER) {
 
-    private val recastRod by boolean("RecastRod", true)
+    private val reelDelay by intRange("ReelDelay", 5..8, 0..20)
+
+    private object RecastRod : ToggleableConfigurable(this, "RecastRod", true) {
+        val delay by intRange("Delay", 15..20, 10..30)
+    }
+
+    init {
+        tree(RecastRod)
+    }
 
     private var caughtFish = false
 
@@ -49,16 +58,16 @@ object ModuleAutoFish : Module("AutoFish", Category.PLAYER) {
     val repeatable = repeatable {
         if (caughtFish) {
             for (hand in arrayOf(Hand.MAIN_HAND, Hand.OFF_HAND)) {
-
                 if (player.getEquippedStack(hand.equipmentSlot).item !is FishingRodItem) {
                     continue
                 }
 
+                wait(reelDelay.random())
                 network.sendPacket(PlayerInteractItemC2SPacket(hand))
                 player.swingHand(hand)
 
-                if (recastRod) {
-                    wait(10)
+                if (RecastRod.enabled) {
+                    wait(RecastRod.delay.random())
                     network.sendPacket(PlayerInteractItemC2SPacket(hand))
                     player.swingHand(hand)
                 }
