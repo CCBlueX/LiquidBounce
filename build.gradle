@@ -38,8 +38,8 @@ ktlint {
 
 }
 
-sourceCompatibility = JavaVersion.VERSION_16
-targetCompatibility = JavaVersion.VERSION_16
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
 
 archivesBaseName = project.archives_base_name
 version = project.mod_version
@@ -51,8 +51,13 @@ loom {
 
 repositories {
     mavenCentral()
+    mavenLocal()
     maven { url = "https://maven.fabricmc.net/" }
     maven { url = "https://jitpack.io" }
+    maven {
+        name = 'TerraformersMC'
+        url = 'https://maven.terraformersmc.com/'
+    }
 }
 
 dependencies {
@@ -69,13 +74,20 @@ dependencies {
     // MultiConnect API
     modImplementation "net.earthcomputer.multiconnect:multiconnect-api:${project.multiconnect_version}"
 
-    // Recommended mods (on IDE)
-    modRuntime "net.earthcomputer.multiconnect:multiconnect-slim:${project.multiconnect_version}"
-//    modRuntime "com.terraformersmc:modmenu:${project.mod_menu_version}"
+    /*
+        Recommended mods (on IDE)
+     */
+    // modRuntime "net.earthcomputer.multiconnect:multiconnect-slim:${project.multiconnect_version}"
 
-//    modRuntime "com.github.CaffeineMC:sodium-fabric:${project.sodium_version}"
-//    modRuntime "com.github.CaffeineMC:lithium-fabric:${project.lithium_version}"
-//    modRuntime "com.github.CaffeineMC:phosphor-fabric:${project.phosphor_version}"
+    // Mod Menu
+    modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
+
+    // CaffeineMC optimization mods
+    // modRuntime "com.github.CaffeineMC:sodium-fabric:${project.sodium_version}"
+    modRuntimeOnly "com.github.CaffeineMC:lithium-fabric:${project.lithium_version}"
+    // modRuntime "com.github.CaffeineMC:phosphor-fabric:${project.phosphor_version}"
+
+    // Baritone
 //    modRuntime ("com.github.CCBlueX:baritone:${project.minecraft_version}-SNAPSHOT") {
 //        exclude group: "org.ow2.asm", module: "asm-debug-all"
 //
@@ -128,8 +140,8 @@ tasks.withType(JavaCompile).configureEach {
     // If Javadoc is generated, this must be specified in that task too.
     it.options.encoding = "UTF-8"
 
-    // Minecraft 1.17 (21w19a) upwards uses Java 16.
-    it.options.release = 16
+    // Minecraft 1.18 upwards uses Java 17.
+    it.options.release = 17
 }
 
 tasks.withType(Test) {
