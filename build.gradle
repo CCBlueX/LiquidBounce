@@ -161,6 +161,11 @@ task sourcesJar(type: Jar, dependsOn: classes) {
     from sourceSets.main.allSource
 }
 
+compileKotlin {
+    kotlinOptions.suppressWarnings = true
+    kotlinOptions.useIR = true
+}
+
 shadowJar {
     archiveClassifier.set('shadow')
 
