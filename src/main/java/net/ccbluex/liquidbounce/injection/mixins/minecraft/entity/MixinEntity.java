@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import net.ccbluex.liquidbounce.event.EntityMarginEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.PlayerStepEvent;
 import net.ccbluex.liquidbounce.event.PlayerVelocityStrafe;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleNoPitchLimit;
 import net.minecraft.client.MinecraftClient;
@@ -37,36 +38,37 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(Entity.class)
 public abstract class MixinEntity {
 
-    @Shadow public abstract Vec3d getVelocity();
-
-    @Shadow public abstract void setVelocity(Vec3d velocity);
-
-    @Shadow public abstract boolean isSprinting();
-
-    @Shadow public float yaw;
-
-    @Shadow public boolean velocityDirty;
-
-    @Shadow public abstract void setVelocity(double x, double y, double z);
+    @Shadow
+    public abstract Vec3d getVelocity();
 
     @Shadow
-    protected static Vec3d movementInputToVelocity(Vec3d movementInput, float speed, float yaw) {
+    public abstract void setVelocity(Vec3d velocity);
+
+    @Shadow
+    public abstract boolean isSprinting();
+
+    @Shadow
+    public boolean velocityDirty;
+
+    @Shadow
+    public abstract void setVelocity(double x, double y, double z);
+
+    @Shadow
+    public static Vec3d movementInputToVelocity(Vec3d movementInput, float speed, float yaw) {
         return null;
     }
 
-    @Shadow public float pitch;
+    @Shadow
+    public abstract double getX();
 
-    @Shadow protected boolean onGround;
+    @Shadow
+    public abstract double getY();
 
-    @Shadow public abstract boolean hasVehicle();
+    @Shadow
+    public abstract double getZ();
 
-    @Shadow public abstract double getX();
-
-    @Shadow public abstract double getY();
-
-    @Shadow public abstract double getZ();
-
-    @Shadow public abstract float getYaw();
+    @Shadow
+    public abstract float getYaw();
 
     /**
      * Hook entity margin modification event
@@ -100,5 +102,12 @@ public abstract class MixinEntity {
         }
 
         return movementInputToVelocity(movementInput, speed, yaw);
+    }
+
+    @Redirect(method = "adjustMovementForCollisions(Lnet/minecraft/util/math/Vec3d;)Lnet/minecraft/util/math/Vec3d;", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/Entity;stepHeight:F"))
+    private float hookStepHeight(Entity instance) {
+        final PlayerStepEvent stepEvent = new PlayerStepEvent(instance.stepHeight);
+        EventManager.INSTANCE.callEvent(stepEvent);
+        return stepEvent.getHeight();
     }
 }
