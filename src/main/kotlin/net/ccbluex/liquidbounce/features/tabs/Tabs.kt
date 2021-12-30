@@ -52,13 +52,17 @@ object Tabs {
         },
         items = {
             it.add(ItemStack(Blocks.COMMAND_BLOCK))
+            it.add(ItemStack(Blocks.CHAIN_COMMAND_BLOCK))
+            it.add(ItemStack(Blocks.REPEATING_COMMAND_BLOCK))
             it.add(ItemStack(Items.COMMAND_BLOCK_MINECART))
-            it.add(ItemStack(Blocks.BARRIER))
+            it.add(ItemStack(Blocks.END_PORTAL_FRAME))
             it.add(ItemStack(Blocks.DRAGON_EGG))
-            it.add(ItemStack(Blocks.BROWN_MUSHROOM_BLOCK))
-            it.add(ItemStack(Blocks.RED_MUSHROOM_BLOCK))
-            it.add(ItemStack(Blocks.FARMLAND))
+            it.add(ItemStack(Blocks.BARRIER))
+            it.add(ItemStack(Blocks.JIGSAW))
+            it.add(ItemStack(Blocks.STRUCTURE_BLOCK))
+            it.add(ItemStack(Blocks.STRUCTURE_VOID))
             it.add(ItemStack(Blocks.SPAWNER))
+            it.add(ItemStack(Items.DEBUG_STICK))
         }
     ).create()
 
