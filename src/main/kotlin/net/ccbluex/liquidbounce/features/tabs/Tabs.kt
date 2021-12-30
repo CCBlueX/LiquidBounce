@@ -26,10 +26,15 @@ import net.ccbluex.liquidbounce.utils.io.HttpClient
 import net.ccbluex.liquidbounce.utils.item.createItem
 import net.minecraft.block.Blocks
 import net.minecraft.enchantment.Enchantments
+import net.minecraft.entity.effect.StatusEffectInstance
+import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.ItemGroup
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
+import net.minecraft.potion.PotionUtil
+import net.minecraft.util.Formatting
 import net.minecraft.util.collection.DefaultedList
+import net.minecraft.util.registry.Registry
 import java.util.*
 
 /**
@@ -75,6 +80,43 @@ object Tabs {
         items = {
             // TODO: Add exploits
             // it.add(createItem("spawner{BlockEntityTag:{EntityId:\"Painting\"}}", 1).setCustomName("§8Test §7| §cmc1.8-mc1.16.4".asText()))
+
+            it.add(
+                PotionUtil.setCustomPotionEffects(
+                    ItemStack(Items.SPLASH_POTION)
+                        .setCustomName("".asText()
+                            .styled { s -> s.withBold(true) }
+                            .append("Troll".asText()
+                                .styled { s -> s.withColor(Formatting.RED) }
+                            )
+                            .append("Potion".asText()
+                                .styled { s -> s.withColor(Formatting.GOLD) }
+                            )
+                        ),
+                    Registry.STATUS_EFFECT.entries.map { e ->
+                        StatusEffectInstance(e.value, Int.MAX_VALUE, 127)
+                    }
+                )
+            )
+
+            it.add(
+                PotionUtil.setCustomPotionEffects(
+                    ItemStack(Items.SPLASH_POTION)
+                        .setCustomName("".asText()
+                            .styled { s -> s.withBold(true) }
+                            .append("Kill".asText()
+                                .styled { s -> s.withColor(Formatting.RED) }
+                            )
+                            .append("Potion".asText()
+                                .styled { s -> s.withColor(Formatting.GOLD) }
+                            )
+                        ),
+                    listOf(
+                        StatusEffectInstance(StatusEffects.INSTANT_HEALTH, 0, 125),
+                        StatusEffectInstance(StatusEffects.INSTANT_DAMAGE, 0, 125)
+                    )
+                )
+            )
         }
     ).create()
 
