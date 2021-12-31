@@ -24,20 +24,32 @@ import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
 import net.ccbluex.liquidbounce.utils.entity.strafe
-import net.minecraft.block.Blocks
+import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
+import net.minecraft.block.Block
 import net.minecraft.block.FluidBlock
+import net.minecraft.item.Items
+import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.network.packet.c2s.play.TeleportConfirmC2SPacket
+import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
+import net.minecraft.util.Hand
 import net.minecraft.util.shape.VoxelShapes
+import org.apache.commons.lang3.RandomUtils
 
 /**
  * Fly module
  *
  * Allows you to fly.
  */
+
 object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
-    private val modes = choices("Mode", Vanilla, arrayOf(Vanilla, Jetpack, Verus))
+    private val modes = choices("Mode", Vanilla, arrayOf(Vanilla, Jetpack, Verus, Enderpearl))
 
     private object Visuals : ToggleableConfigurable(this, "Visuals", true) {
 
@@ -107,4 +119,78 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
         tree(Visuals)
     }
 
+    private object Enderpearl : Choice("Enderpearl") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val speed by float("Speed", 1f, 0.5f..2f)
+
+        var threwPearl = false
+        var canFly = false
+
+        val rotations = tree(RotationsConfigurable())
+
+        override fun enable() {
+            threwPearl = false
+            canFly = false
+        }
+
+        val repeatable = repeatable {
+            val slot = findHotbarSlot(Items.ENDER_PEARL)
+
+            if (player.isDead || player.isSpectator || player.abilities.creativeMode) {
+                return@repeatable
+            }
+
+            if (!threwPearl && !canFly) {
+                if (slot != null) {
+                    if (slot != player.inventory.selectedSlot) {
+                        network.sendPacket(UpdateSelectedSlotC2SPacket(slot))
+                    }
+
+                    if (player.pitch <= 80) {
+                        RotationManager.aimAt(
+                            Rotation(player.yaw, RandomUtils.nextFloat(80f, 90f)),
+                            configurable = rotations
+                        )
+                    }
+
+                    wait(2)
+                    network.sendPacket(PlayerInteractItemC2SPacket(Hand.MAIN_HAND))
+
+                    if (slot != player.inventory.selectedSlot) {
+                        network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
+                    }
+
+                    threwPearl = true
+                }
+            } else if (!threwPearl && canFly) {
+                player.strafe(speed = speed.toDouble())
+                player.velocity.y = when {
+                    mc.options.keyJump.isPressed -> speed.toDouble()
+                    mc.options.keySneak.isPressed -> -speed.toDouble()
+                    else -> 0.0
+                }
+                return@repeatable
+            }
+        }
+
+        val packetHandler = handler<PacketEvent> { event ->
+            if (event.origin == TransferOrigin.SEND && event.packet is TeleportConfirmC2SPacket && isABitAboveGround() && threwPearl) {
+                threwPearl = false
+                canFly = true
+            }
+        }
+
+        fun isABitAboveGround(): Boolean {
+            for (y in 0..5) {
+                val boundingBox = player.boundingBox
+                val detectionBox = boundingBox.withMinY(boundingBox.minY - y)
+
+                return isBlockAtPosition(detectionBox) { it is Block }
+            }
+            return false
+        }
+    }
 }
