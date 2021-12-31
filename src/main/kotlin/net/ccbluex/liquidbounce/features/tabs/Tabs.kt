@@ -133,7 +133,7 @@ open class LiquidsItemGroup(
 
             override fun getName() = plainName
 
-            override fun getTranslationKey() = plainName.asText()
+            override fun getDisplayName() = plainName.asText()
 
             override fun shouldRenderName() = true
 

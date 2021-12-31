@@ -120,7 +120,7 @@ class UseCooldownEvent(var cooldown: Int) : Event()
 class BlockShapeEvent(val state: BlockState, val pos: BlockPos, var shape: VoxelShape) : Event()
 
 @Nameable("blockAttack")
-class BlockAttackEvent(val pos: BlockPos) : Event()
+class BlockBreakingProgressEvent(val pos: BlockPos) : Event()
 
 @Nameable("blockMultiplier")
 class BlockVelocityMultiplierEvent(val block: Block, var multiplier: Float) : Event()
@@ -167,6 +167,9 @@ class PlayerSafeWalkEvent(var isSafeWalk: Boolean = false) : Event()
 
 @Nameable("cancelBlockBreaking")
 class CancelBlockBreakingEvent : CancellableEvent()
+
+@Nameable("playerStep")
+class PlayerStepEvent(var height: Float) : Event()
 
 // Network events
 
