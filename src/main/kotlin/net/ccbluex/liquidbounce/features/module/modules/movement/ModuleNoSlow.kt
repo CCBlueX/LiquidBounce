@@ -136,9 +136,18 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
 
     private fun multiplier(action: UseAction) = when (action) {
         UseAction.NONE -> Pair(1f, 1f)
-        UseAction.EAT, UseAction.DRINK -> Pair(Consume.forwardMultiplier, Consume.sidewaysMultiplier)
-        UseAction.BLOCK, UseAction.SPYGLASS -> Pair(Block.forwardMultiplier, Block.sidewaysMultiplier)
-        UseAction.BOW, UseAction.CROSSBOW, UseAction.SPEAR -> Pair(Bow.forwardMultiplier, Bow.sidewaysMultiplier)
+        UseAction.EAT, UseAction.DRINK -> if (Consume.enabled) Pair(
+            Consume.forwardMultiplier,
+            Consume.sidewaysMultiplier
+        ) else Pair(0.2f, 0.2f)
+        UseAction.BLOCK, UseAction.SPYGLASS -> if (Block.enabled) Pair(
+            Block.forwardMultiplier,
+            Block.sidewaysMultiplier
+        ) else Pair(0.2f, 0.2f)
+        UseAction.BOW, UseAction.CROSSBOW, UseAction.SPEAR -> if (Bow.enabled) Pair(
+            Bow.forwardMultiplier,
+            Bow.sidewaysMultiplier
+        ) else Pair(0.2f, 0.2f)
     }
 
 }
