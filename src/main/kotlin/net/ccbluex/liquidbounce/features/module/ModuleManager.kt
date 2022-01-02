@@ -141,7 +141,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleStep,
             ModuleLiquidWalk,
             ModuleAutoTotem,
-            ModuleNoWeather,
+            ModuleOverrideWeather,
             ModuleAutoFarm,
             ModuleNoWeb,
             ModuleFastUse,
@@ -168,7 +168,10 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleGhostHand,
             ModuleAirJump,
             ModuleProjectilePuncher,
-            ModuleAutoPot
+            ModuleAutoPot,
+            ModuleKeepChatAfterDeath,
+            ModuleOverrideTime,
+            ModuleXRay
         )
 
         builtin.apply {

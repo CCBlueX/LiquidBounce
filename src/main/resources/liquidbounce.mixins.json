@@ -42,6 +42,7 @@
     "minecraft.render.MixinEntityRenderer",
     "minecraft.render.MixinGameRenderer",
     "minecraft.render.MixinInGameOverlayRenderer",
+    "minecraft.render.MixinLightmapTextureManager",
     "minecraft.render.MixinLivingEntityRenderer",
     "minecraft.render.MixinRenderTickCounter",
     "minecraft.render.MixinSignBlockEntityRenderer",

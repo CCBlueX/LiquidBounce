@@ -20,51 +20,50 @@ package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
+import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay
+import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.util.Formatting
-import org.lwjgl.glfw.GLFW
+import net.minecraft.util.Identifier
+import net.minecraft.util.registry.Registry
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
-object CommandBinds {
+object CommandXRay {
 
     fun createCommand(): Command {
         return CommandBuilder
-            .begin("binds")
+            .begin("xray")
             .hub()
             .subcommand(
                 CommandBuilder
                     .begin("add")
                     .parameter(
                         ParameterBuilder
-                            .begin<String>("name")
-                            .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                            .autocompletedWith(ModuleManager::autoComplete)
-                            .required()
-                            .build()
-                    ).parameter(
-                        ParameterBuilder
-                            .begin<String>("key")
+                            .begin<String>("block")
                             .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                             .required()
                             .build()
                     )
                     .handler { command, args ->
                         val name = args[0] as String
-                        val keyName = args[1] as String
-                        val module = ModuleManager.find { it.name.equals(name, true) }
-                            ?: throw CommandException(command.result("moduleNotFound", name))
+                        val identifier = Identifier.tryParse(name)
+                        val displayName = identifier.toString()
 
-                        val bindKey = key(keyName)
-                        if (bindKey == GLFW.GLFW_KEY_UNKNOWN) {
-                            throw CommandException(command.result("unknownKey"))
+                        val block = Registry.BLOCK.getOrEmpty(identifier).orElseThrow {
+                            throw CommandException(command.result("blockNotExists", displayName))
                         }
 
-                        module.bind = bindKey
-                        chat(regular(command.result("moduleBound", variable(module.name), variable(keyName(bindKey)))))
+                        if (!ModuleXRay.blocks.add(block)) {
+                            throw CommandException(command.result("blockIsPresent", displayName))
+                        }
+
+                        chat(regular(command.result("blockAdded", displayName)))
                     }
                     .build()
             )
@@ -73,23 +72,25 @@ object CommandBinds {
                     .begin("remove")
                     .parameter(
                         ParameterBuilder
-                            .begin<String>("name")
+                            .begin<String>("block")
                             .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                            .autocompletedWith { ModuleManager.autoComplete(it) { mod -> mod.bind != -1 } }
                             .required()
                             .build()
                     )
                     .handler { command, args ->
                         val name = args[0] as String
-                        val module = ModuleManager.find { it.name.equals(name, true) }
-                            ?: throw CommandException(command.result("moduleNotFound", name))
+                        val identifier = Identifier.tryParse(name)
+                        val displayName = identifier.toString()
 
-                        if (module.bind == GLFW.GLFW_KEY_UNKNOWN) {
-                            throw CommandException(command.result("moduleNotBound"))
+                        val block = Registry.BLOCK.getOrEmpty(identifier).orElseThrow {
+                            throw CommandException(command.result("blockNotExists", displayName))
                         }
 
-                        module.bind = GLFW.GLFW_KEY_UNKNOWN
-                        chat(regular(command.result("bindRemoved", variable(module.name))))
+                        if (!ModuleXRay.blocks.remove(block)) {
+                            throw CommandException(command.result("blockNotFound", displayName))
+                        }
+
+                        chat(regular(command.result("blockRemoved", displayName)))
                     }
                     .build()
             )
@@ -99,7 +100,7 @@ object CommandBinds {
                     .parameter(
                         ParameterBuilder
                             .begin<Int>("page")
-                            .verifiedBy(ParameterBuilder.INTEGER_VALIDATOR)
+                            .verifiedBy(ParameterBuilder.POSITIVE_INTEGER_VALIDATOR)
                             .optional()
                             .build()
                     )
@@ -110,38 +111,40 @@ object CommandBinds {
                             1
                         }.coerceAtLeast(1)
 
-                        val bindings = ModuleManager.sortedBy { it.name }
-                            .filter { it.bind != GLFW.GLFW_KEY_UNKNOWN }
-
-                        if (bindings.isEmpty()) {
-                            throw CommandException(command.result("noBindings"))
-                        }
+                        val blocks = ModuleXRay.blocks.sortedBy { it.translationKey }
 
                         // Max page
-                        val maxPage = ceil(bindings.size / 8.0).roundToInt()
+                        val maxPage = ceil(blocks.size / 8.0).roundToInt()
                         if (page > maxPage) {
                             throw CommandException(command.result("pageNumberTooLarge", maxPage))
                         }
 
-                        // Print out bindings
-                        chat(command.result("bindings").styled { it.withColor(Formatting.RED).withBold(true) })
-                        chat(regular(command.result("page", variable("$page / $maxPage"))))
+                        // Print out help page
+                        chat(command.result("list").styled { it.withColor(Formatting.RED).withBold(true) })
+                        chat(regular(command.result("pageCount", variable("$page / $maxPage"))))
 
                         val iterPage = 8 * page
-                        for (module in bindings.subList(iterPage - 8, iterPage.coerceAtMost(bindings.size))) {
+                        for (block in blocks.subList(iterPage - 8, iterPage.coerceAtMost(blocks.size))) {
+                            val identifier = block.translationKey
+                                .replace("block.", "")
+                                .replace(".", ":")
+
                             chat(
-                                "> ".asText()
-                                    .styled { it.withColor(Formatting.GOLD) }
-                                    .append(module.name + " (")
+                                block.name
                                     .styled { it.withColor(Formatting.GRAY) }
-                                    .append(
-                                        keyName(module.bind).asText()
-                                            .styled { it.withColor(Formatting.DARK_GRAY).withBold(true) }
-                                    )
-                                    .append(")")
-                                    .styled { it.withColor(Formatting.GRAY) }
+                                    .append(variable(" ("))
+                                    .append(regular(identifier))
+                                    .append(variable(")"))
                             )
                         }
+
+                        chat(
+                            "--- ".asText()
+                                .styled { it.withColor(Formatting.DARK_GRAY) }
+                                .append(variable("${CommandManager.Options.prefix}xray list <"))
+                                .append(variable(command.result("page")))
+                                .append(variable(">"))
+                        )
                     }
                     .build()
             )
@@ -149,12 +152,11 @@ object CommandBinds {
                 CommandBuilder
                     .begin("clear")
                     .handler { command, _ ->
-                        ModuleManager.forEach { it.bind = GLFW.GLFW_KEY_UNKNOWN }
-                        chat(command.result("bindsCleared"))
+                        ModuleXRay.blocks.clear()
+                        chat(regular(command.result("blocksCleared")))
                     }
                     .build()
             )
             .build()
     }
-
 }
