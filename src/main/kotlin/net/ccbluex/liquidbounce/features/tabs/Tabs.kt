@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,10 +26,15 @@ import net.ccbluex.liquidbounce.utils.io.HttpClient
 import net.ccbluex.liquidbounce.utils.item.createItem
 import net.minecraft.block.Blocks
 import net.minecraft.enchantment.Enchantments
+import net.minecraft.entity.effect.StatusEffectInstance
+import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.ItemGroup
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
+import net.minecraft.potion.PotionUtil
+import net.minecraft.util.Formatting
 import net.minecraft.util.collection.DefaultedList
+import net.minecraft.util.registry.Registry
 import java.util.*
 
 /**
@@ -52,13 +57,17 @@ object Tabs {
         },
         items = {
             it.add(ItemStack(Blocks.COMMAND_BLOCK))
+            it.add(ItemStack(Blocks.CHAIN_COMMAND_BLOCK))
+            it.add(ItemStack(Blocks.REPEATING_COMMAND_BLOCK))
             it.add(ItemStack(Items.COMMAND_BLOCK_MINECART))
-            it.add(ItemStack(Blocks.BARRIER))
+            it.add(ItemStack(Blocks.END_PORTAL_FRAME))
             it.add(ItemStack(Blocks.DRAGON_EGG))
-            it.add(ItemStack(Blocks.BROWN_MUSHROOM_BLOCK))
-            it.add(ItemStack(Blocks.RED_MUSHROOM_BLOCK))
-            it.add(ItemStack(Blocks.FARMLAND))
+            it.add(ItemStack(Blocks.BARRIER))
+            it.add(ItemStack(Blocks.JIGSAW))
+            it.add(ItemStack(Blocks.STRUCTURE_BLOCK))
+            it.add(ItemStack(Blocks.STRUCTURE_VOID))
             it.add(ItemStack(Blocks.SPAWNER))
+            it.add(ItemStack(Items.DEBUG_STICK))
         }
     ).create()
 
@@ -71,6 +80,43 @@ object Tabs {
         items = {
             // TODO: Add exploits
             // it.add(createItem("spawner{BlockEntityTag:{EntityId:\"Painting\"}}", 1).setCustomName("§8Test §7| §cmc1.8-mc1.16.4".asText()))
+
+            it.add(
+                PotionUtil.setCustomPotionEffects(
+                    ItemStack(Items.SPLASH_POTION)
+                        .setCustomName("".asText()
+                            .styled { s -> s.withBold(true) }
+                            .append("Troll".asText()
+                                .styled { s -> s.withColor(Formatting.RED) }
+                            )
+                            .append("Potion".asText()
+                                .styled { s -> s.withColor(Formatting.GOLD) }
+                            )
+                        ),
+                    Registry.STATUS_EFFECT.entries.map { e ->
+                        StatusEffectInstance(e.value, Int.MAX_VALUE, 127)
+                    }
+                )
+            )
+
+            it.add(
+                PotionUtil.setCustomPotionEffects(
+                    ItemStack(Items.SPLASH_POTION)
+                        .setCustomName("".asText()
+                            .styled { s -> s.withBold(true) }
+                            .append("Kill".asText()
+                                .styled { s -> s.withColor(Formatting.RED) }
+                            )
+                            .append("Potion".asText()
+                                .styled { s -> s.withColor(Formatting.GOLD) }
+                            )
+                        ),
+                    listOf(
+                        StatusEffectInstance(StatusEffects.INSTANT_HEALTH, 0, 125),
+                        StatusEffectInstance(StatusEffects.INSTANT_DAMAGE, 0, 125)
+                    )
+                )
+            )
         }
     ).create()
 
@@ -133,7 +179,7 @@ open class LiquidsItemGroup(
 
             override fun getName() = plainName
 
-            override fun getTranslationKey() = plainName.asText()
+            override fun getDisplayName() = plainName.asText()
 
             override fun shouldRenderName() = true
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -131,22 +131,12 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
     }
 
     private fun randomKeyBind(): KeyBinding? {
-        when (RandomUtils.nextInt(0, 4)) {
-            0 -> {
-                return mc.options.keyRight
-            }
-            1 -> {
-                return mc.options.keyLeft
-            }
-            2 -> {
-                return mc.options.keyBack
-            }
-            3 -> {
-                return mc.options.keyForward
-            }
-            else -> {
-                return null
-            }
+        return when (RandomUtils.nextInt(0, 4)) {
+            0 -> mc.options.keyRight
+            1 -> mc.options.keyLeft
+            2 -> mc.options.keyBack
+            3 -> mc.options.keyForward
+            else -> null
         }
     }
 

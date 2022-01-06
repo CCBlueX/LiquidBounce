@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -79,7 +79,9 @@ private fun MinecraftSessionService.login(username: String, password: String = "
             userAuthentication.selectedProfile.name,
             userAuthentication.selectedProfile.id.toString(),
             userAuthentication.authenticatedToken,
-            "mojang"
+            Optional.empty(),
+            Optional.empty(),
+            Session.AccountType.MOJANG
         )
         mc.sessionService = authenticationService.createMinecraftSessionService()
         EventManager.callEvent(SessionEvent())
@@ -99,13 +101,14 @@ private fun MinecraftSessionService.login(username: String, password: String = "
 }
 
 fun MinecraftSessionService.loginMojang(email: String, password: String) =
-    login(email, password, YggdrasilEnvironment.PROD)
+    login(email, password, YggdrasilEnvironment.PROD.environment)
 
 fun MinecraftSessionService.loginAltening(account: String) =
     login(account, LiquidBounce.CLIENT_NAME, GenEnvironments.THE_ALTENING)
 
 fun MinecraftSessionService.loginCracked(username: String): LoginResult {
-    mc.session = Session(username, MojangApi.getUUID(username), "-", "legacy")
+    mc.session = Session(username, MojangApi.getUUID(username), "-", Optional.empty(), Optional.empty(),
+        Session.AccountType.LEGACY)
     EventManager.callEvent(SessionEvent())
     return LoginResult.LOGGED_IN
 }

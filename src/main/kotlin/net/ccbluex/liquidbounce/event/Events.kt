@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -120,7 +120,7 @@ class UseCooldownEvent(var cooldown: Int) : Event()
 class BlockShapeEvent(val state: BlockState, val pos: BlockPos, var shape: VoxelShape) : Event()
 
 @Nameable("blockAttack")
-class BlockAttackEvent(val pos: BlockPos) : Event()
+class BlockBreakingProgressEvent(val pos: BlockPos) : Event()
 
 @Nameable("blockMultiplier")
 class BlockVelocityMultiplierEvent(val block: Block, var multiplier: Float) : Event()
@@ -167,6 +167,9 @@ class PlayerSafeWalkEvent(var isSafeWalk: Boolean = false) : Event()
 
 @Nameable("cancelBlockBreaking")
 class CancelBlockBreakingEvent : CancellableEvent()
+
+@Nameable("playerStep")
+class PlayerStepEvent(var height: Float) : Event()
 
 // Network events
 
