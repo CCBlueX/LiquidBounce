@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -134,6 +134,7 @@ object CommandManager : Iterable<Command> {
         addCommand(CommandValue.createCommand())
         addCommand(CommandPing.createCommand())
         addCommand(CommandRemoteView.createCommand())
+        addCommand(CommandXRay.createCommand())
 
         // creative commands
         addCommand(CommandItemRename.createCommand())

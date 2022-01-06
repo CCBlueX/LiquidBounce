@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,8 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import net.ccbluex.liquidbounce.event.BlockChangeEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoWeather;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleOverrideTime;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleOverrideWeather;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
@@ -43,11 +44,25 @@ public class MixinWorld {
         EventManager.INSTANCE.callEvent(new BlockChangeEvent(pos, state));
     }
 
+    @Inject(method = "getTimeOfDay", cancellable = true, at = @At("HEAD"))
+    private void injectOverrideTime(CallbackInfoReturnable<Long> cir) {
+        ModuleOverrideTime module = ModuleOverrideTime.INSTANCE;
+        if (module.getEnabled()) {
+            cir.setReturnValue(switch (module.getTime().get()) {
+                case NOON -> 6000L;
+                case NIGHT -> 13000L;
+                case MID_NIGHT -> 18000L;
+                default -> 1000L;
+            });
+            cir.cancel();
+        }
+    }
 
     @Inject(method = "getRainGradient", cancellable = true, at = @At("HEAD"))
-    private void injectNoWeather(float delta, CallbackInfoReturnable<Float> cir) {
-        if (ModuleNoWeather.INSTANCE.getEnabled()) {
-            cir.setReturnValue(0.0f);
+    private void injectOverrideWeather(float delta, CallbackInfoReturnable<Float> cir) {
+        ModuleOverrideWeather module = ModuleOverrideWeather.INSTANCE;
+        if (module.getEnabled()) {
+            cir.setReturnValue(module.getWeather().get() == ModuleOverrideWeather.WeatherType.SUNNY ? 0.0f : 1.0f);
             cir.cancel();
         }
     }
