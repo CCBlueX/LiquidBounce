@@ -109,6 +109,7 @@ val Item.attackDamage: Float
     get() =
         when (this) {
             is SwordItem -> this.attackDamage
+            is MiningToolItem -> this.attackDamage
             is ToolItem -> this.material.attackDamage
-            else -> throw IllegalArgumentException()
+            else -> 0.0f
         }
