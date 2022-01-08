@@ -29,7 +29,8 @@ import net.ccbluex.liquidbounce.features.module.modules.player.WeightedSwordItem
 import net.ccbluex.liquidbounce.utils.item.attackDamage
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.item.isNothing
-import net.minecraft.enchantment.Enchantments
+import net.minecraft.enchantment.Enchantments.FIRE_ASPECT
+import net.minecraft.enchantment.Enchantments.KNOCKBACK
 import net.minecraft.item.AxeItem
 import net.minecraft.item.PickaxeItem
 import net.minecraft.item.ShovelItem
@@ -98,7 +99,7 @@ object ModuleAutoWeapon : Module("AutoWeapon", Category.COMBAT) {
                     val stack = it.second
                     if (stack.isNothing()
                         || (!player.isCreative && stack.damage >= (stack.maxDamage - 2) && ignoreDurability)
-                        || (stack.getEnchantment(Enchantments.KNOCKBACK) != 0 && ignoreKnockback)
+                        || (stack.getEnchantment(KNOCKBACK) != 0 && ignoreKnockback)
                     ) {
                         return@filter false
                     }
@@ -113,9 +114,9 @@ object ModuleAutoWeapon : Module("AutoWeapon", Category.COMBAT) {
                     }
                 }
                 .maxByOrNull {
-                    it.second.item.attackDamage * (1.0f + DAMAGE_ESTIMATOR.estimateValue(
-                        it.second
-                    ))
+                    val stack = it.second
+                    stack.item.attackDamage * (1.0f + DAMAGE_ESTIMATOR.estimateValue(stack)
+                        + stack.getEnchantment(FIRE_ASPECT)) * 4.0f * 0.625f * 0.9f
                 } ?: return@handler
             hotbarSlot
         } else {
