@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.common.RenderingFlags;
 import net.ccbluex.liquidbounce.event.*;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
@@ -66,6 +67,17 @@ public abstract class MixinMinecraftClient {
     @Shadow private int itemUseCooldown;
 
     @Shadow public abstract ClientBuiltinResourcePackProvider getResourcePackProvider();
+
+    @Inject(method = "isAmbientOcclusionEnabled()Z", at = @At("HEAD"), cancellable = true)
+    private static void injectXRayFullBright(CallbackInfoReturnable<Boolean> callback) {
+        ModuleXRay module = ModuleXRay.INSTANCE;
+        if (!module.getEnabled() || !module.getFullBright()) {
+            return;
+        }
+
+        callback.setReturnValue(false);
+        callback.cancel();
+    }
 
     /**
      * Entry point of our hacked client
