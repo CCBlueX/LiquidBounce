@@ -23,13 +23,17 @@ import net.ccbluex.liquidbounce.event.AttackEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.PreferredWeapon.ANY
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.PreferredWeapon.AXE
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.PreferredWeapon.SWORD
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoWeapon.PreferredWeapon.*
 import net.ccbluex.liquidbounce.features.module.modules.player.WeightedSwordItem.Companion.DAMAGE_ESTIMATOR
 import net.ccbluex.liquidbounce.utils.item.attackDamage
+import net.ccbluex.liquidbounce.utils.item.getEnchantment
+import net.ccbluex.liquidbounce.utils.item.isNothing
+import net.minecraft.enchantment.Enchantments
 import net.minecraft.item.AxeItem
+import net.minecraft.item.PickaxeItem
+import net.minecraft.item.ShovelItem
 import net.minecraft.item.SwordItem
+import net.minecraft.item.TridentItem
 
 /**
  * AutoWeapon module
@@ -39,13 +43,24 @@ import net.minecraft.item.SwordItem
 object ModuleAutoWeapon : Module("AutoWeapon", Category.COMBAT) {
 
     enum class PreferredWeapon(override val choiceName: String) : NamedChoice {
-        SWORD("Sword"), AXE("Axe"), ANY("Any");
+        ANY("Any"),
+        AXE("Axe"),
+        PICKAXE("Pickaxe"),
+        SHOVEL("Shovel"),
+        SWORD("Sword"),
+        TRIDENT("Trident");
     }
 
     // Preferred type of weapon e.g. a shovel (ANY)
     private val preferredWeapon by enumChoice(
-        "Preferred Weapon", SWORD, PreferredWeapon.values()
+        "PreferredWeapon", ANY, PreferredWeapon.values()
     )
+
+    // Ignore items with low durability
+    private val ignoreDurability by boolean("IgnoreDurability", false)
+
+    // Ignore items with knockback enchantment
+    private val ignoreKnockback by boolean("IgnoreKnockback", false)
 
     // Automatic search for the best weapon
     private val search by boolean("Search", true)
@@ -60,17 +75,25 @@ object ModuleAutoWeapon : Module("AutoWeapon", Category.COMBAT) {
 
     val attackHandler = handler<AttackEvent> {
         val inventory = player.inventory
-
-        // Find the best weapon in hotbar
         val index = if (search) {
             val (hotbarSlot, _) = (0..8)
                 .map { Pair(it, inventory.getStack(it)) }
                 .filter {
-                    val item = it.second.item
+                    val stack = it.second
+                    if (stack.isNothing()
+                        || (!player.isCreative && stack.damage >= (stack.maxDamage - 2) && ignoreDurability)
+                        || (stack.getEnchantment(Enchantments.KNOCKBACK) != 0 && ignoreKnockback)
+                    ) {
+                        return@filter false
+                    }
+                    val item = stack.item
                     when (preferredWeapon) {
-                        SWORD -> item is SwordItem
-                        AXE -> item is AxeItem
                         ANY -> true
+                        AXE -> item is AxeItem
+                        PICKAXE -> item is PickaxeItem
+                        SHOVEL -> item is ShovelItem
+                        SWORD -> item is SwordItem
+                        TRIDENT -> item is TridentItem
                     }
                 }
                 .maxByOrNull {
@@ -83,13 +106,9 @@ object ModuleAutoWeapon : Module("AutoWeapon", Category.COMBAT) {
         } else {
             slot
         }
-
-        // If in hand no need to swap
         if (inventory.selectedSlot == index) {
             return@handler
         }
-
-        // Switch to best weapon
         inventory.selectedSlot = index
         inventory.updateItems()
     }
