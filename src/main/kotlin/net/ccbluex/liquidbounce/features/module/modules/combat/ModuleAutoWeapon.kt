@@ -38,7 +38,7 @@ import net.minecraft.item.TridentItem
 /**
  * AutoWeapon module
  *
- * Automatically selects the best weapon from the hotbar
+ * Automatically selects the best weapon in your hotbar
  */
 object ModuleAutoWeapon : Module("AutoWeapon", Category.COMBAT) {
 

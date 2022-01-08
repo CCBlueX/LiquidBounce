@@ -444,6 +444,7 @@
 
   "liquidbounce.module.keepChatAfterDeath.description": "Allows you to use the chat on the death screen.",
 
-  "liquidbounce.module.xray.description": "Allows you to see ores through walls."
+  "liquidbounce.module.xray.description": "Allows you to see ores through walls.",
 
+  "liquidbounce.module.autoWeapon.description": "Automatically selects the best weapon in your hotbar."
 }
