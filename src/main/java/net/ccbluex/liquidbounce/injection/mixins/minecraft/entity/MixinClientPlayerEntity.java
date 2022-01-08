@@ -93,8 +93,9 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     private void hookPushOut(CallbackInfo callbackInfo) {
         final PlayerPushOutEvent pushOutEvent = new PlayerPushOutEvent();
         EventManager.INSTANCE.callEvent(pushOutEvent);
-        if (pushOutEvent.isCancelled())
+        if (pushOutEvent.isCancelled()) {
             callbackInfo.cancel();
+        }
     }
 
     /**
@@ -117,32 +118,19 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     }
 
     /**
-     * Hook custom multiplier forward
+     * Hook custom multiplier
      */
-    @Inject(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/Input;movementForward:F", shift = At.Shift.AFTER))
-    private void hookCustomMultiplierForward(CallbackInfo callbackInfo) {
+    @Inject(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z"))
+    private void hookCustomMultiplier(CallbackInfo callbackInfo) {
         final Input input = this.input;
         // reverse
         input.movementForward /= 0.2f;
-
-        // then
-        final PlayerUseMultiplier playerUseMultiplier = new PlayerUseMultiplier(0.2f, 0.2f);
-        EventManager.INSTANCE.callEvent(playerUseMultiplier);
-        input.movementForward *= playerUseMultiplier.getForward();
-    }
-
-    /**
-     * Hook custom multiplier sideways
-     */
-    @Inject(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/Input;movementSideways:F", shift = At.Shift.AFTER))
-    private void hookCustomMultiplierSideways(CallbackInfo callbackInfo) {
-        final Input input = this.input;
-        // reverse
         input.movementSideways /= 0.2f;
 
         // then
         final PlayerUseMultiplier playerUseMultiplier = new PlayerUseMultiplier(0.2f, 0.2f);
         EventManager.INSTANCE.callEvent(playerUseMultiplier);
+        input.movementForward *= playerUseMultiplier.getForward();
         input.movementSideways *= playerUseMultiplier.getSideways();
     }
 

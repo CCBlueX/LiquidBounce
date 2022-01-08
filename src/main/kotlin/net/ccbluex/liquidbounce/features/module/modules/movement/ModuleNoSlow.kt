@@ -115,6 +115,11 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
         val multiplier by float("Multiplier", 1f, 0.4f..2f)
     }
 
+    private object Fluid : ToggleableConfigurable(this, "Fluid", true) {
+        val fluidPushHandler = handler<FluidPushEvent> {
+            it.cancelEvent()
+        }
+    }
 
     init {
         tree(Block)
@@ -124,6 +129,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
         tree(Slime)
         tree(Honey)
         tree(PowderSnow)
+        tree(Fluid)
     }
 
     val multiplierHandler = handler<PlayerUseMultiplier> { event ->
@@ -135,7 +141,6 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
     }
 
     private fun multiplier(action: UseAction) = when (action) {
-        UseAction.NONE -> Pair(1f, 1f)
         UseAction.EAT, UseAction.DRINK -> if (Consume.enabled) Pair(
             Consume.forwardMultiplier,
             Consume.sidewaysMultiplier
@@ -148,6 +153,6 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
             Bow.forwardMultiplier,
             Bow.sidewaysMultiplier
         ) else Pair(0.2f, 0.2f)
+        else -> Pair(0.2f, 0.2f)
     }
-
 }
