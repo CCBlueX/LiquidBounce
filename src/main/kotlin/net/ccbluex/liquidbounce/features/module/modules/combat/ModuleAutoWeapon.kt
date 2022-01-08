@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.AttackEvent
+import net.ccbluex.liquidbounce.event.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -73,8 +74,23 @@ object ModuleAutoWeapon : Module("AutoWeapon", Category.COMBAT) {
      */
     private val slot by int("Slot", 0, 0..8)
 
+    // Swap the slot of the previous item
+    private val swapPrevious by boolean("SwapPrevious", false)
+
+    // Time (in ticks) to swap to the previous slot (0.5s - 2.5s)
+    private val time by int("Time", 25, 10..50)
+
+    // Time left to swap
+    private var leftTime = 0
+
+    // Previous slot
+    private var prev = 0
+
     val attackHandler = handler<AttackEvent> {
         val inventory = player.inventory
+        if (swapPrevious) {
+            leftTime = time
+        }
         val index = if (search) {
             val (hotbarSlot, _) = (0..8)
                 .map { Pair(it, inventory.getStack(it)) }
@@ -108,7 +124,21 @@ object ModuleAutoWeapon : Module("AutoWeapon", Category.COMBAT) {
         if (inventory.selectedSlot == index) {
             return@handler
         }
+        prev = inventory.selectedSlot
         inventory.selectedSlot = index
         inventory.updateItems()
+    }
+
+    val playerTickHandler = handler<PlayerTickEvent> {
+        if (prev == -1) {
+            return@handler
+        }
+        if (leftTime > 0) {
+            if (leftTime == 1) {
+                player.inventory.selectedSlot = prev
+                prev = -1
+            }
+            leftTime--
+        }
     }
 }
