@@ -111,5 +111,5 @@ val Item.attackDamage: Float
             is SwordItem -> this.attackDamage
             is MiningToolItem -> this.attackDamage
             is ToolItem -> this.material.attackDamage
-            else -> 0.0f
+            else -> 1.0f
         }
