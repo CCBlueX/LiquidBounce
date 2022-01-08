@@ -101,7 +101,6 @@ object ModuleAutoWeapon : Module("AutoWeapon", Category.COMBAT) {
                         it.second
                     ))
                 } ?: return@handler
-
             hotbarSlot
         } else {
             slot
