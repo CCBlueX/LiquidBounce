@@ -141,6 +141,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
     }
 
     private fun multiplier(action: UseAction) = when (action) {
+        UseAction.NONE -> Pair(0.2f, 0.2f)
         UseAction.EAT, UseAction.DRINK -> if (Consume.enabled) Pair(
             Consume.forwardMultiplier,
             Consume.sidewaysMultiplier
@@ -153,6 +154,5 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
             Bow.forwardMultiplier,
             Bow.sidewaysMultiplier
         ) else Pair(0.2f, 0.2f)
-        else -> Pair(0.2f, 0.2f)
     }
 }
