@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.PlayerPushOutEvent;
 import net.ccbluex.liquidbounce.event.PlayerSafeWalkEvent;
 import net.ccbluex.liquidbounce.event.PlayerStrideEvent;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAntiReducedDebugInfo;
@@ -35,6 +36,7 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(PlayerEntity.class)
@@ -124,4 +126,11 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
         }
     }
 
+    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;isSpectator()Z", shift = At.Shift.BEFORE))
+    private void hookNoClip(CallbackInfo ci) {
+        ClientPlayerEntity player = MinecraftClient.getInstance().player;
+        final PlayerPushOutEvent pushOutEvent = new PlayerPushOutEvent();
+        EventManager.INSTANCE.callEvent(pushOutEvent);
+        this.noClip = player != null && player.noClip || pushOutEvent.isCancelled();
+    }
 }
