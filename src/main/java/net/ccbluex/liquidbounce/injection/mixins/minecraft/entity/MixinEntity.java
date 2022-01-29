@@ -110,7 +110,7 @@ public abstract class MixinEntity {
 
     @Redirect(method = "updateMovementInFluid", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;isPushedByFluids()Z"))
     private boolean hookLiquidPush(Entity instance) {
-        if ((Object) this == MinecraftClient.getInstance().player) {
+        if (instance == MinecraftClient.getInstance().player) {
             final FluidPushEvent fluidPushEvent = new FluidPushEvent();
             EventManager.INSTANCE.callEvent(fluidPushEvent);
             if (fluidPushEvent.isCancelled()) {
