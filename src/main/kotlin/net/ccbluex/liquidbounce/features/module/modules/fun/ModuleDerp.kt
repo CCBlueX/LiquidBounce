@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.`fun`
 
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 
@@ -29,7 +30,10 @@ import net.ccbluex.liquidbounce.features.module.Module
 object ModuleDerp : Module("Derp", Category.FUN) {
 
     private val headLess by boolean("Headless", false)
-    private val incrementSpin by float("IncrementSpin", 0f, 0f..50f)
+
+    private object NoRandomSpin : ToggleableConfigurable(this, "NoRandomSpin", false) {
+        val increment by float("Increment", 0f, 0f..50f)
+    }
 
     private var currentSpin = 0f
 
@@ -42,8 +46,8 @@ object ModuleDerp : Module("Derp", Category.FUN) {
                 derpRotations[1] = 180f
             }
 
-            if (incrementSpin != 0f) {
-                derpRotations[0] = currentSpin + incrementSpin
+            if (NoRandomSpin.enabled) {
+                derpRotations[0] = currentSpin + NoRandomSpin.increment
                 currentSpin = derpRotations[0]
             }
 
