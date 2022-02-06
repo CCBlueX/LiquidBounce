@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePortalMenu;
+import net.ccbluex.liquidbounce.features.module.modules.fun.ModuleDerp;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoSlow;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModulePerfectHorseJump;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleStep;
@@ -220,5 +221,23 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
         if (ModulePerfectHorseJump.INSTANCE.getEnabled()) {
             callbackInfoReturnable.setReturnValue(1f);
         }
+    }
+
+    @Redirect(method = "sendMovementPackets", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getYaw()F"))
+    private float hookDerpRotationYaw(ClientPlayerEntity instance) {
+        if (ModuleDerp.INSTANCE.getEnabled() && RotationManager.INSTANCE.getCurrentRotation() == null) {
+            return ModuleDerp.INSTANCE.getRotation()[0];
+        }
+
+        return instance.getYaw();
+    }
+
+    @Redirect(method = "sendMovementPackets", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getPitch()F"))
+    private float hookDerpRotationPitch(ClientPlayerEntity instance) {
+        if (ModuleDerp.INSTANCE.getEnabled() && RotationManager.INSTANCE.getCurrentRotation() == null) {
+            return ModuleDerp.INSTANCE.getRotation()[1];
+        }
+
+        return instance.getPitch();
     }
 }
