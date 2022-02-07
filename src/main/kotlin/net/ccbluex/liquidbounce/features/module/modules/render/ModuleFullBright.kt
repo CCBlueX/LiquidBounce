@@ -44,30 +44,12 @@ object ModuleFullBright : Module("FullBright", Category.RENDER) {
         )
     )
 
-    private object FullBrightGamma : Choice("Gamma") {
-
+    object FullBrightGamma : Choice("Gamma") {
         override val parent: ChoiceConfigurable
             get() = modes
-
-        private var prevValue = 0.0
-
-        override fun enable() {
-            prevValue = mc.options.gamma
-        }
-
-        val tickHandler = sequenceHandler<PlayerTickEvent> {
-            if (mc.options.gamma <= 100) {
-                mc.options.gamma++
-            }
-        }
-
-        override fun disable() {
-            mc.options.gamma = prevValue
-        }
     }
 
     private object FullBrightNightVision : Choice("Night Vision") {
-
         override val parent: ChoiceConfigurable
             get() = modes
 

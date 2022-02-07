@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFullBright;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.render.LightmapTextureManager;
@@ -31,10 +32,10 @@ public class MixinLightmapTextureManager {
     @Redirect(method = "update(F)V", at = @At(value = "FIELD", target = "Lnet/minecraft/client/option/GameOptions;gamma:D"))
     private double injectXRayFullBright(GameOptions instance) {
         ModuleXRay module = ModuleXRay.INSTANCE;
-        if (!module.getEnabled() || !module.getFullBright()) {
-            return instance.gamma;
+        if (module.getEnabled() && module.getFullBright() || ModuleFullBright.INSTANCE.getEnabled() && ModuleFullBright.FullBrightGamma.INSTANCE.isActive()) {
+            return Byte.MAX_VALUE;
         }
 
-        return Byte.MAX_VALUE;
+        return instance.gamma;
     }
 }
