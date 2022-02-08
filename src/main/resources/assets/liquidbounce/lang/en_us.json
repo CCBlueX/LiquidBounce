@@ -181,13 +181,13 @@
   "liquidbounce.command.xray.subcommand.add.parameter.block.description": "Block name (for example: \"minecraft:stone\")",
   "liquidbounce.command.xray.subcommand.add.result.blockNotExists": "Block named %s does not exist.",
   "liquidbounce.command.xray.subcommand.add.result.blockIsPresent": "Block named %s is already in the render list.",
-  "liquidbounce.command.xray.subcommand.add.result.blockAdded": "Block named %s has added to render list.",
+  "liquidbounce.command.xray.subcommand.add.result.blockAdded": "Block named %s has been added to render list.",
 
   "liquidbounce.command.xray.subcommand.remove.description": "Removes a block to render from the list.",
   "liquidbounce.command.xray.subcommand.remove.parameter.block.description": "Block name (for example: \"minecraft:stone\")",
   "liquidbounce.command.xray.subcommand.remove.result.blockNotExists": "Block named %s does not exist.",
   "liquidbounce.command.xray.subcommand.remove.result.blockNotFound": "Block named %s is not in the render list.",
-  "liquidbounce.command.xray.subcommand.remove.result.blockRemoved": "Block named %s has removed from render list.",
+  "liquidbounce.command.xray.subcommand.remove.result.blockRemoved": "Block named %s has been removed from render list.",
 
   "liquidbounce.command.xray.subcommand.list.description": "Shows a list of rendered blocks.",
   "liquidbounce.command.xray.subcommand.list.parameter.page.description": "Page to show.",
