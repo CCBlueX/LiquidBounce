@@ -35,6 +35,10 @@ object ModuleDerp : Module("Derp", Category.FUN) {
         val increment by float("Increment", 0f, 0f..50f)
     }
 
+    init {
+        tree(NoRandomSpin)
+    }
+
     private var currentSpin = 0f
 
     val rotation: FloatArray
