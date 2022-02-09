@@ -11,5 +11,5 @@ import net.ccbluex.liquidbounce.features.module.Module
 
 object ModuleTrueSight : Module("TrueSight", Category.RENDER) {
     val barriers by boolean("Barriers", true)
-    // val entities by boolean("Entities", true)
+    val entities by boolean("Entities", true)
 }
