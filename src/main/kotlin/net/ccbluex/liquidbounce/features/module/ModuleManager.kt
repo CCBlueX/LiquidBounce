@@ -171,7 +171,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoPot,
             ModuleKeepChatAfterDeath,
             ModuleOverrideTime,
-            ModuleXRay
+            ModuleXRay,
+            ModuleNoSlowBreak
         )
 
         builtin.apply {
