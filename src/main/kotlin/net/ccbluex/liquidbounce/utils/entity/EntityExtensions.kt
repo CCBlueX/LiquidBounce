@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,30 +42,27 @@ val PlayerEntity.ping: Int
 val ClientPlayerEntity.directionYaw: Float
     get() {
         var rotationYaw = yaw
-        val options = mc.options
+        var forward = 1f
 
         // Check if client-user tries to walk backwards (+180 to turn around)
-        if (options.keyBack.isPressed) {
+        if (input.pressingBack) {
             rotationYaw += 180f
-        }
-
-        // Check which direction the client-user tries to walk sideways
-        var forward = 1f
-        if (options.keyBack.isPressed) {
             forward = -0.5f
-        } else if (options.keyForward.isPressed) {
+        } else if (input.pressingForward) {
             forward = 0.5f
         }
 
-        if (options.keyLeft.isPressed) {
+        // Check which direction the client-user tries to walk sideways
+        if (input.pressingLeft) {
             rotationYaw -= 90f * forward
         }
-        if (options.keyRight.isPressed) {
+        if (input.pressingRight) {
             rotationYaw += 90f * forward
         }
 
         return rotationYaw
     }
+
 
 val PlayerEntity.sqrtSpeed: Double
     get() = velocity.sqrtSpeed

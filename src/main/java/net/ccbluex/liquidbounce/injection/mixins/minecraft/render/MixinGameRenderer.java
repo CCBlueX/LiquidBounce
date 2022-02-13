@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -88,7 +88,7 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
     public Matrix4f getCameraMVPMatrix(float tickDelta, boolean bobbing) {
         MatrixStack matrixStack = new MatrixStack();
 
-        matrixStack.peek().getModel().multiply(this.getBasicProjectionMatrix(this.getFov(camera, tickDelta, true)));
+        matrixStack.peek().getPositionMatrix().multiply(this.getBasicProjectionMatrix(this.getFov(camera, tickDelta, true)));
 
         if (bobbing) {
             this.bobViewWhenHurt(matrixStack, tickDelta);
@@ -115,7 +115,7 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
 
         Vec3d pos = this.camera.getPos();
 
-        Matrix4f model = matrixStack.peek().getModel();
+        Matrix4f model = matrixStack.peek().getPositionMatrix();
 
         model.multiply(Matrix4f.translate(-(float) pos.x, -(float) pos.y, -(float) pos.z));
 

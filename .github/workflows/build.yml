@@ -10,26 +10,38 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@master
-      - name: Checkout submodules
-        uses: textbook/git-checkout-submodule-action@master
-      - name: Set up JDK 16
-        uses: actions/setup-java@v1
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v2
         with:
-          distribution: 'adopt'
-          java-version: '16'
+          submodules: recursive
+      - name: Set up JDK 17
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'temurin'
+          java-version: '17'
       - name: Grant all permissions for theme
         run: sudo chmod -R 777 theme
       - uses: burrunan/gradle-cache-action@v1
         name: Build
         with:
-          job-id: jdk16
+          job-id: jdk17
           arguments: genSources build
           gradle-version: wrapper
       - name: Upload artifact
         run: |
+          function gradleprop {
+              grep "${1}" gradle.properties|cut -d'=' -f2
+          }
+          export LB_VERSION=$(gradleprop 'mod_version')
+          export MINECRAFT_VERSION=$(gradleprop 'minecraft_version')
+          export LOADER_VERSION=$(gradleprop 'loader_version')
+          export FABRICAPI_VERSION=$(gradleprop 'fabric_version')
+          export KOTLIN_VERSION=$(gradleprop 'kotlin_version')
+          export FABRIC_KOTLIN_VERSION=$(gradleprop 'fabric_kotlin_version')
+          echo Version: $LB_VERSION, Minecraft: $MINECRAFT_VERSION
           cd build/libs
-          export LB_VERSION=$(find . -regex '.*liquidbounce-[0-9|.]*\.jar')
-          cp $LB_VERSION liquidbounce.jar
-          curl --connect-timeout 30 -m 300 -X POST -F "artifact=@liquidbounce.jar" -H "Authentication: ${{ secrets.NIGHTLY_PASS }}" -F "gh_id=${{ github.event.head_commit.id }}" -F "gh_ref=${{ github.ref }}" -F "gh_message=${{ github.event.head_commit.message }}" -F "gh_timestamp=${{ github.event.head_commit.timestamp }}" -F "lb_version=$LB_VERSION" https://liquidbounce.net/php/nightly/webhook
+          export JAR=$(find . -regex '.*liquidbounce-[0-9|.]*\.jar')
+          cp $JAR liquidbounce.jar
+          zip -r liquidbounce.zip liquidbounce.jar ../../zip_include
+          md5sum liquidbounce.zip
+          curl --connect-timeout 30 -m 300 -X POST -F "artifact=@liquidbounce.zip" -H "Authorization: ${{ secrets.NIGHTLY_PASS }}" -F "gh_id=${{ github.event.head_commit.id }}" -F "gh_ref=${{ github.ref }}" -F "gh_message=${{ github.event.head_commit.message }}" -F "gh_timestamp=${{ github.event.head_commit.timestamp }}" -F "lb_version=$LB_VERSION" -F "mc_version=$MINECRAFT_VERSION" -F "fabric_loader_version=$LOADER_VERSION" -F "fabric_api_version=$FABRICAPI_VERSION" -F "kotlin_version=$KOTLIN_VERSION" -F "fabric_kotlin_version=$FABRIC_KOTLIN_VERSION" https://api.liquidbounce.net/api/v1/version/new

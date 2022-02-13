@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -141,7 +141,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleStep,
             ModuleLiquidWalk,
             ModuleAutoTotem,
-            ModuleNoWeather,
+            ModuleOverrideWeather,
             ModuleAutoFarm,
             ModuleNoWeb,
             ModuleFastUse,
@@ -168,7 +168,10 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleGhostHand,
             ModuleAirJump,
             ModuleProjectilePuncher,
-            ModuleAutoPot
+            ModuleAutoPot,
+            ModuleKeepChatAfterDeath,
+            ModuleOverrideTime,
+            ModuleXRay
         )
 
         builtin.apply {

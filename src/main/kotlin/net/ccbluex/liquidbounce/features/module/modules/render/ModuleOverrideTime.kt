@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,13 +19,22 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 
+
 /**
- * NoWeather module
+ * OverrideTime module
  *
- * Disables the rain effect.
+ * Override the time visual effect
  */
 
-object ModuleNoWeather : Module("NoWeather", Category.RENDER)
+object ModuleOverrideTime : Module("OverrideTime", Category.RENDER) {
+
+    val time = enumChoice("Time", TimeType.NOON, TimeType.values())
+
+    enum class TimeType(override val choiceName: String) : NamedChoice {
+        DAY("Day"), NOON("Noon"), NIGHT("Night"), MID_NIGHT("MidNight")
+    }
+}

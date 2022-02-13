@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAntiLevit
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoJumpDelay;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPush;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -34,7 +35,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -66,7 +66,11 @@ public abstract class MixinLivingEntity extends MixinEntity {
     @Shadow
     public abstract double getJumpBoostVelocityModifier();
 
-    @Shadow protected boolean jumping;
+    @Shadow
+    protected boolean jumping;
+
+    @Shadow
+    protected abstract void jump();
 
     /**
      * Hook anti levitation module
@@ -90,27 +94,29 @@ public abstract class MixinLivingEntity extends MixinEntity {
         }
     }
 
-    /**
-     * @author mems01
-     */
-    @Overwrite
-    public void jump() {
-        final PlayerJumpEvent jumpEvent = new PlayerJumpEvent(getJumpVelocity());
-        EventManager.INSTANCE.callEvent(jumpEvent);
-        if (jumpEvent.isCancelled()) {
-            return;
-        }
+    @Inject(method = "jump", at = @At("HEAD"), cancellable = true)
+    private void hookJump(CallbackInfo ci) {
+        if ((Object) this == MinecraftClient.getInstance().player) {
+            final PlayerJumpEvent jumpEvent = new PlayerJumpEvent(getJumpVelocity());
+            EventManager.INSTANCE.callEvent(jumpEvent);
+            if (jumpEvent.isCancelled()) {
+                ci.cancel();
+                return;
+            }
 
-        double d = jumpEvent.getMotion() + getJumpBoostVelocityModifier();
-        Vec3d vec3d = this.getVelocity();
-        this.setVelocity(vec3d.x, d, vec3d.z);
-        if (this.isSprinting()) {
-            float f = this.getYaw() * 0.017453292F;
-            this.setVelocity(this.getVelocity().add(-MathHelper.sin(f) * 0.2F, 0.0D, MathHelper.cos(f) * 0.2F));
-        }
+            double d = (double) jumpEvent.getMotion() + this.getJumpBoostVelocityModifier();
+            Vec3d vec3d = this.getVelocity();
+            this.setVelocity(vec3d.x, d, vec3d.z);
+            if (this.isSprinting()) {
+                float f = this.getYaw() * 0.017453292F;
+                this.setVelocity(this.getVelocity().add(-MathHelper.sin(f) * 0.2F, 0.0D, MathHelper.cos(f) * 0.2F));
+            }
 
-        this.velocityDirty = true;
+            this.velocityDirty = true;
+            ci.cancel();
+        }
     }
+
 
     @Inject(method = "pushAwayFrom", at = @At("HEAD"), cancellable = true)
     private void hookNoPush(CallbackInfo callbackInfo) {
@@ -127,11 +133,10 @@ public abstract class MixinLivingEntity extends MixinEntity {
     }
 
     @Inject(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;jumping:Z"))
-    private void hookJump(CallbackInfo callbackInfo) {
+    private void hookAirJump(CallbackInfo callbackInfo) {
         if (ModuleAirJump.INSTANCE.getEnabled() && jumping && jumpingCooldown == 0) {
             this.jump();
             jumpingCooldown = 10;
         }
     }
-
 }

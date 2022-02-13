@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,8 +23,8 @@ import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePortalMenu;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoSlow;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModulePerfectHorseJump;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleStep;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.client.TickStateManager;
@@ -46,10 +46,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
 
     @Shadow
-    private float lastYaw;
+    public float lastYaw;
 
     @Shadow
-    private float lastPitch;
+    public float lastPitch;
 
     @Shadow
     public Input input;
@@ -108,12 +108,12 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     /**
      * Hook portal menu module to make opening menus in portals possible
      */
-    @Redirect(method = "updateNausea", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;isPauseScreen()Z"))
+    @Redirect(method = "updateNausea", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;shouldPause()Z"))
     private boolean hookNetherClosingScreen(Screen screen) {
         if (ModulePortalMenu.INSTANCE.getEnabled()) {
             return true;
         }
-        return screen.isPauseScreen();
+        return screen.shouldPause();
     }
 
     /**
@@ -200,9 +200,8 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
 
     @Inject(method = "isAutoJumpEnabled", cancellable = true, at = @At("HEAD"))
     private void injectLegitStep(CallbackInfoReturnable<Boolean> cir) {
-        if (ModuleStep.Legit.INSTANCE.isActive()) {
-            cir.setReturnValue(true);
-            cir.cancel();
+        if (ModuleStep.INSTANCE.getEnabled()) {
+            cir.setReturnValue(ModuleStep.Legit.INSTANCE.isActive());
         }
     }
 
@@ -215,6 +214,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
                 MinecraftClient.getInstance().getNetworkHandler().sendPacket(new HandSwingC2SPacket(hand));
         }
     }
+
     @Inject(method = "getMountJumpStrength", at = @At("HEAD"), cancellable = true)
     private void hookMountJumpStrength(CallbackInfoReturnable<Float> callbackInfoReturnable) {
         if (ModulePerfectHorseJump.INSTANCE.getEnabled()) {

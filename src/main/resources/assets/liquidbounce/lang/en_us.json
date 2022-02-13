@@ -175,6 +175,30 @@
   "liquidbounce.command.remoteview.subcommand.off.result.off": "Successfully stopped remote viewing %s.",
   "liquidbounce.command.remoteview.subcommand.off.result.alreadyOff": "You are not remote viewing anyone.",
 
+  "liquidbounce.command.xray.description": "Allows you to see ores through walls.",
+
+  "liquidbounce.command.xray.subcommand.add.description": "Adds a block to render from the list.",
+  "liquidbounce.command.xray.subcommand.add.parameter.block.description": "Block name (for example: \"minecraft:stone\")",
+  "liquidbounce.command.xray.subcommand.add.result.blockNotExists": "Block named %s does not exist.",
+  "liquidbounce.command.xray.subcommand.add.result.blockIsPresent": "Block named %s is already in the render list.",
+  "liquidbounce.command.xray.subcommand.add.result.blockAdded": "Block named %s has added to render list.",
+
+  "liquidbounce.command.xray.subcommand.remove.description": "Removes a block to render from the list.",
+  "liquidbounce.command.xray.subcommand.remove.parameter.block.description": "Block name (for example: \"minecraft:stone\")",
+  "liquidbounce.command.xray.subcommand.remove.result.blockNotExists": "Block named %s does not exist.",
+  "liquidbounce.command.xray.subcommand.remove.result.blockNotFound": "Block named %s is not in the render list.",
+  "liquidbounce.command.xray.subcommand.remove.result.blockRemoved": "Block named %s has removed from render list.",
+
+  "liquidbounce.command.xray.subcommand.list.description": "Shows a list of rendered blocks.",
+  "liquidbounce.command.xray.subcommand.list.parameter.page.description": "Page to show.",
+  "liquidbounce.command.xray.subcommand.list.result.pageNumberTooLarge": "The page number you have entered exceeds the number of available pages, it may at most be %d",
+  "liquidbounce.command.xray.subcommand.list.result.list": "List",
+  "liquidbounce.command.xray.subcommand.list.result.pageCount": "Page: %s",
+  "liquidbounce.command.xray.subcommand.list.result.page": "page",
+
+  "liquidbounce.command.xray.subcommand.clear.description": "Clears the list of rendered blocks.",
+  "liquidbounce.command.xray.subcommand.clear.result.blocksCleared": "List of rendered blocks cleared.",
+
   "liquidbounce.liquidchat.states.connecting": "Connecting to chat server...",
   "liquidbounce.liquidchat.states.connected": "Connected to chat server!",
   "liquidbounce.liquidchat.states.disconnected": "Disconnected from chat server!",
@@ -416,6 +440,10 @@
   
   "liquidbounce.module.projectilePuncher.description": "Shoots back incoming projectiles around you.",
   
-  "liquidbounce.module.autoPot.description": "Automatically throws healing potions whenever your health is low."
+  "liquidbounce.module.autoPot.description": "Automatically throws healing potions whenever your health is low.",
+
+  "liquidbounce.module.keepChatAfterDeath.description": "Allows you to use the chat on the death screen.",
+
+  "liquidbounce.module.xray.description": "Allows you to see ores through walls."
 
 }
