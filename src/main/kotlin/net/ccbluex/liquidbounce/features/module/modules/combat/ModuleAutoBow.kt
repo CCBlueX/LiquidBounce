@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2021 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.combat.PriorityEnum
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
-import net.ccbluex.liquidbounce.utils.combat.approximatePitch
 import net.ccbluex.liquidbounce.utils.entity.eyesPos
 import net.minecraft.entity.Entity
 import net.minecraft.item.BowItem
@@ -154,7 +153,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             )
         }
 
-        val finalPrediction = predictBow(deltaPos, FastChargeOptions.enabled, approximatePitch = true)
+        val finalPrediction = predictBow(deltaPos, FastChargeOptions.enabled)
         val rotation = finalPrediction.rotation
 
         if (rotation.yaw.isNaN() || rotation.pitch.isNaN()) {
@@ -235,7 +234,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
         BowAimbotOptions.targetTracker.cleanup()
     }
 
-    fun predictBow(target: Vec3d, assumeElongated: Boolean, approximatePitch: Boolean = false): BowPredictionResult {
+    fun predictBow(target: Vec3d, assumeElongated: Boolean): BowPredictionResult {
         val player = player
 
         val travelledOnX = sqrt(target.x * target.x + target.z * target.z)
@@ -248,15 +247,11 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             velocity = 1f
         }
 
-        val yaw = (atan2(target.z, target.x) * 180.0f / Math.PI).toFloat() - 90.0f
-        val pitch = if (approximatePitch) {
-            approximatePitch(velocity, yaw, target) * 180.0F / Math.PI.toFloat()
-        } else {
-            (-Math.toDegrees(atan((velocity * velocity - sqrt(velocity * velocity * velocity * velocity - 0.006f * (0.006f * (travelledOnX * travelledOnX) + 2 * target.y * (velocity * velocity)))) / (0.006f * travelledOnX)))).toFloat()
-        }
-
         return BowPredictionResult(
-            Rotation(yaw, pitch),
+            Rotation(
+                (atan2(target.z, target.x) * 180.0f / Math.PI).toFloat() - 90.0f,
+                (-Math.toDegrees(Math.atan((velocity * velocity - Math.sqrt(velocity * velocity * velocity * velocity - 0.006f * (0.006f * (travelledOnX * travelledOnX) + 2 * target.y * (velocity * velocity)))) / (0.006f * travelledOnX)))).toFloat()
+            ),
             velocity,
             travelledOnX
         )
