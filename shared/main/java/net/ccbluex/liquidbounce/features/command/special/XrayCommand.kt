@@ -101,23 +101,23 @@ class XrayCommand : Command("xray") {
         return when (args.size) {
             1 -> {
                 arrayOf("add", "remove", "list")
-                        .map { it.toLowerCase() }
-                        .filter { it.startsWith(args[0], true) }
+                    .map { it.toLowerCase() }
+                    .filter { it.startsWith(args[0], true) }
             }
             2 -> {
                 when (args[0].toLowerCase()) {
                     "add" -> {
                         return functions.getBlockRegistryKeys()
-                                .map { it.resourcePath.toLowerCase() }
-                                .filter { Block.getBlockFromName(it.toLowerCase()) != null }
-                                .filter { !xRay.xrayBlocks.contains(functions.getBlockFromName(it.toLowerCase())) }
-                                .filter { it.startsWith(args[1], true) }
+                            .map { it.resourcePath.toLowerCase() }
+                            .filter { Block.getBlockFromName(it.toLowerCase()) != null }
+                            .filter { !xRay.xrayBlocks.contains(functions.getBlockFromName(it.toLowerCase())) }
+                            .filter { it.startsWith(args[1], true) }
                     }
                     "remove" -> {
                         return functions.getBlockRegistryKeys()
-                                .map { it.resourcePath.toLowerCase() }
-                                .filter { xRay.xrayBlocks.contains(functions.getBlockFromName(it)) }
-                                .filter { it.startsWith(args[1], true) }
+                            .map { it.resourcePath.toLowerCase() }
+                            .filter { xRay.xrayBlocks.contains(functions.getBlockFromName(it)) }
+                            .filter { it.startsWith(args[1], true) }
                     }
                     else -> emptyList()
                 }

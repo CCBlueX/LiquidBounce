@@ -26,6 +26,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -45,11 +46,11 @@ import java.util.Objects;
 public abstract class MixinBlock {
 
     @Shadow
-    public abstract AxisAlignedBB getCollisionBoundingBox(World worldIn, BlockPos pos, IBlockState state);
-
-    @Shadow
     @Final
     protected BlockState blockState;
+
+    @Shadow
+    public abstract AxisAlignedBB getCollisionBoundingBox(World worldIn, BlockPos pos, IBlockState state);
 
     @Shadow
     public abstract void setBlockBounds(float minX, float minY, float minZ, float maxX, float maxY, float maxZ);
@@ -71,31 +72,32 @@ public abstract class MixinBlock {
 
         axisalignedbb = blockBBEvent.getBoundingBox() == null ? null : AxisAlignedBBImplKt.unwrap(blockBBEvent.getBoundingBox());
 
-        if (axisalignedbb != null && mask.intersectsWith(axisalignedbb))
-            list.add(axisalignedbb);
+        if (axisalignedbb != null && mask.intersectsWith(axisalignedbb)) list.add(axisalignedbb);
     }
 
     @Inject(method = "shouldSideBeRendered", at = @At("HEAD"), cancellable = true)
-    private void shouldSideBeRendered(CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
+    private void shouldSideBeRendered(IBlockAccess p_shouldSideBeRendered_1_, BlockPos p_shouldSideBeRendered_2_, EnumFacing p_shouldSideBeRendered_3_, CallbackInfoReturnable<Boolean> cir) {
         final XRay xray = (XRay) LiquidBounce.moduleManager.getModule(XRay.class);
 
-        if (Objects.requireNonNull(xray).getState())
-            //noinspection SuspiciousMethodCalls
-            callbackInfoReturnable.setReturnValue(xray.getXrayBlocks().contains(this));
+        if (xray.getState()) {
+            cir.setReturnValue(xray.getXrayBlocks().contains(BlockImplKt.wrap((Block) (Object) this)));
+        }
     }
 
     @Inject(method = "isCollidable", at = @At("HEAD"), cancellable = true)
     private void isCollidable(CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
         final GhostHand ghostHand = (GhostHand) LiquidBounce.moduleManager.getModule(GhostHand.class);
 
-        if (Objects.requireNonNull(ghostHand).getState() && !(ghostHand.getBlockValue().get() == Block.getIdFromBlock((Block) (Object) this)))
+        if (Objects.requireNonNull(ghostHand).getState() && !(ghostHand.getBlockValue().get() == Block.getIdFromBlock((Block) (Object) this))) {
             callbackInfoReturnable.setReturnValue(false);
+        }
     }
 
     @Inject(method = "getAmbientOcclusionLightValue", at = @At("HEAD"), cancellable = true)
-    private void getAmbientOcclusionLightValue(final CallbackInfoReturnable<Float> floatCallbackInfoReturnable) {
-        if (Objects.requireNonNull(LiquidBounce.moduleManager.getModule(XRay.class)).getState())
-            floatCallbackInfoReturnable.setReturnValue(1F);
+    private void getAmbientOcclusionLightValue(CallbackInfoReturnable<Float> cir) {
+        if (LiquidBounce.moduleManager.getModule(XRay.class).getState()) {
+            cir.setReturnValue(1F);
+        }
     }
 
     @Inject(method = "getPlayerRelativeBlockHardness", at = @At("RETURN"), cancellable = true)
@@ -105,8 +107,7 @@ public abstract class MixinBlock {
         // NoSlowBreak
         final NoSlowBreak noSlowBreak = (NoSlowBreak) LiquidBounce.moduleManager.getModule(NoSlowBreak.class);
         if (Objects.requireNonNull(noSlowBreak).getState()) {
-            if (noSlowBreak.getWaterValue().get() && playerIn.isInsideOfMaterial(Material.water) &&
-                    !EnchantmentHelper.getAquaAffinityModifier(playerIn)) {
+            if (noSlowBreak.getWaterValue().get() && playerIn.isInsideOfMaterial(Material.water) && !EnchantmentHelper.getAquaAffinityModifier(playerIn)) {
                 f *= 5.0F;
             }
 
@@ -117,8 +118,7 @@ public abstract class MixinBlock {
             final NoFall noFall = (NoFall) LiquidBounce.moduleManager.getModule(NoFall.class);
             final Criticals criticals = (Criticals) LiquidBounce.moduleManager.getModule(Criticals.class);
 
-            if (Objects.requireNonNull(noFall).getState() && noFall.modeValue.get().equalsIgnoreCase("NoGround") ||
-                    Objects.requireNonNull(criticals).getState() && criticals.getModeValue().get().equalsIgnoreCase("NoGround")) {
+            if (Objects.requireNonNull(noFall).getState() && noFall.modeValue.get().equalsIgnoreCase("NoGround") || Objects.requireNonNull(criticals).getState() && criticals.getModeValue().get().equalsIgnoreCase("NoGround")) {
                 f /= 5F;
             }
         }
