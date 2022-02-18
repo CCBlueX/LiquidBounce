@@ -444,6 +444,8 @@
 
   "liquidbounce.module.keepChatAfterDeath.description": "Allows you to use the chat on the death screen.",
 
-  "liquidbounce.module.xray.description": "Allows you to see ores through walls."
+  "liquidbounce.module.xray.description": "Allows you to see ores through walls.",
+
+  "liquidbounce.module.disabler.vulcan.message": "You need to have a trident enchanted with Riptide in your offhand in order to bypass Vulcan movement checks."
 
 }
