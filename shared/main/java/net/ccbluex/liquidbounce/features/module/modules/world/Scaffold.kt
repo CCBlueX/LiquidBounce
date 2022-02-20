@@ -81,6 +81,7 @@ class Scaffold : Module() {
     private val edgeDistanceValue = FloatValue("EagleEdgeDistance", 0f, 0f, 0.5f)
 
     // Expand
+    private val omniDirectionalExpand = BoolValue("OmniDirectionalExpand", false)
     private val expandLengthValue = IntegerValue("ExpandLength", 1, 1, 6)
 
     // Rotation Options
@@ -407,8 +408,11 @@ class Scaffold : Module() {
         }
 
         if (expand) {
-            val x = mc.thePlayer!!.horizontalFacing.directionVec.x
-            val z = mc.thePlayer!!.horizontalFacing.directionVec.z
+            val yaw = Math.toRadians(mc.thePlayer!!.rotationYaw.toDouble())
+            val x =
+                if (omniDirectionalExpand.get()) -sin(yaw).roundToInt() else mc.thePlayer!!.horizontalFacing.directionVec.x
+            val z =
+                if (omniDirectionalExpand.get()) cos(yaw).roundToInt() else mc.thePlayer!!.horizontalFacing.directionVec.z
             for (i in 0 until expandLengthValue.get()) {
                 if (search(blockPosition.add(x * i, 0, z * i), false)) {
                     return
@@ -584,8 +588,11 @@ class Scaffold : Module() {
             return
         }
         for (i in 0 until if (modeValue.get().equals("Expand", true)) expandLengthValue.get() + 1 else 2) {
-            val x = mc.thePlayer!!.horizontalFacing.directionVec.x
-            val z = mc.thePlayer!!.horizontalFacing.directionVec.z
+            val yaw = Math.toRadians(mc.thePlayer!!.rotationYaw.toDouble())
+            val x =
+                if (omniDirectionalExpand.get()) -sin(yaw).roundToInt() else mc.thePlayer!!.horizontalFacing.directionVec.x
+            val z =
+                if (omniDirectionalExpand.get()) cos(yaw).roundToInt() else mc.thePlayer!!.horizontalFacing.directionVec.z
             val blockPos = WBlockPos(
                 mc.thePlayer!!.posX + x * i,
                 if (sameYValue.get() && launchY <= mc.thePlayer!!.posY) launchY - 1.0 else mc.thePlayer!!.posY - (if (mc.thePlayer!!.posY == mc.thePlayer!!.posY + 0.5) 0.0 else 1.0) - if (shouldGoDown) 1.0 else 0.0,
