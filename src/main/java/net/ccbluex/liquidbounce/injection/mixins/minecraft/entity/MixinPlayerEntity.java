@@ -110,12 +110,7 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
         }
 
         Rotation currentRotation = RotationManager.INSTANCE.getCurrentRotation();
-        if (currentRotation == null) {
-            return entity.getYaw();
-        }
-
-        currentRotation = currentRotation.fixedSensitivity();
-        if (currentRotation == null) {
+        if (currentRotation == null || currentRotation.fixedSensitivity() == null) {
             return entity.getYaw();
         }
 

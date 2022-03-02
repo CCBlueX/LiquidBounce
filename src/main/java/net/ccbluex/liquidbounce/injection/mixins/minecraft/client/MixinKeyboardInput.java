@@ -52,12 +52,7 @@ public class MixinKeyboardInput extends MixinInput {
         }
 
         Rotation currentRotation = RotationManager.INSTANCE.getCurrentRotation();
-        if (currentRotation == null) {
-            return;
-        }
-
-        currentRotation = currentRotation.fixedSensitivity();
-        if (currentRotation == null) {
+        if (currentRotation == null || currentRotation.fixedSensitivity() == null) {
             return;
         }
 
