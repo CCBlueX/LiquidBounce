@@ -179,6 +179,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
      */
     @Inject(method = "sendMovementPackets", at = @At(value = "FIELD", target = "Lnet/minecraft/client/network/ClientPlayerEntity;lastPitch:F", ordinal = 1, shift = At.Shift.AFTER))
     private void hookSilentRotationsUpdate(CallbackInfo ci) {
+        // This might need improvement
         if (updatedSilent) {
             updatedSilent = false;
 
