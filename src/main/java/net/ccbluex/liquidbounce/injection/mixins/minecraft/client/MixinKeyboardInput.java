@@ -44,7 +44,7 @@ public class MixinKeyboardInput extends MixinInput {
         return ModuleInventoryMove.INSTANCE.shouldHandleInputs(keyBinding) ? InputUtil.isKeyPressed(MinecraftClient.getInstance().getWindow().getHandle(), keyBinding.boundKey.getCode()) : keyBinding.isPressed();
     }
 
-    @Inject(method = "tick", at = @At("RETURN"))
+    @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;sneaking:Z", shift = At.Shift.AFTER))
     private void injectStrafing(boolean slowDown, CallbackInfo ci) {
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         if (RotationManager.INSTANCE.getActiveConfigurable() == null || !RotationManager.INSTANCE.getActiveConfigurable().getFixVelocity() || player == null) {
@@ -71,11 +71,6 @@ public class MixinKeyboardInput extends MixinInput {
 
         this.movementSideways = Math.round(newX);
         this.movementForward = Math.round(newZ);
-
-        if (slowDown) {
-            this.movementSideways *= 0.3F;
-            this.movementForward *= 0.3F;
-        }
     }
 
 }
