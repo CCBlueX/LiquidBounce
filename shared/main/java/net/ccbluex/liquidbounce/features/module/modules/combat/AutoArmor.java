@@ -62,41 +62,33 @@ public class AutoArmor extends Module {
 
     @EventTarget
     public void onRender3D(final Render3DEvent event) {
-        if (!InventoryUtils.CLICK_TIMER.hasTimePassed(delay) || mc.getThePlayer() == null ||
-                (mc.getThePlayer().getOpenContainer() != null && mc.getThePlayer().getOpenContainer().getWindowId() != 0))
+        if (!InventoryUtils.CLICK_TIMER.hasTimePassed(delay) || mc.getThePlayer() == null || (mc.getThePlayer().getOpenContainer() != null && mc.getThePlayer().getOpenContainer().getWindowId() != 0))
             return;
 
         // Find best armor
-        final Map<Integer, List<ArmorPiece>> armorPieces = IntStream.range(0, 36)
-                .filter(i -> {
-                    final IItemStack itemStack = mc.getThePlayer().getInventory().getStackInSlot(i);
+        final Map<Integer, List<ArmorPiece>> armorPieces = IntStream.range(0, 36).filter(i -> {
+            final IItemStack itemStack = mc.getThePlayer().getInventory().getStackInSlot(i);
 
-                    return itemStack != null && classProvider.isItemArmor(itemStack.getItem())
-                            && (i < 9 || System.currentTimeMillis() - itemStack.getItemDelay() >= itemDelayValue.get());
-                })
-                .mapToObj(i -> new ArmorPiece(mc.getThePlayer().getInventory().getStackInSlot(i), i))
-                .collect(Collectors.groupingBy(ArmorPiece::getArmorType));
+            return itemStack != null && classProvider.isItemArmor(itemStack.getItem()) && (i < 9 || System.currentTimeMillis() - itemStack.getItemDelay() >= itemDelayValue.get());
+        }).mapToObj(i -> new ArmorPiece(mc.getThePlayer().getInventory().getStackInSlot(i), i)).collect(Collectors.groupingBy(ArmorPiece::getArmorType));
 
         final ArmorPiece[] bestArmor = new ArmorPiece[4];
 
         for (final Map.Entry<Integer, List<ArmorPiece>> armorEntry : armorPieces.entrySet()) {
-            bestArmor[armorEntry.getKey()] = armorEntry.getValue().stream()
-                    .max(ARMOR_COMPARATOR).orElse(null);
+            bestArmor[armorEntry.getKey()] = armorEntry.getValue().stream().max(ARMOR_COMPARATOR).orElse(null);
         }
 
         // Swap armor
         for (int i = 0; i < 4; i++) {
             final ArmorPiece armorPiece = bestArmor[i];
 
-            if (armorPiece == null)
-                continue;
+            if (armorPiece == null) continue;
 
             int armorSlot = 3 - i;
 
             final ArmorPiece oldArmor = new ArmorPiece(mc.getThePlayer().getInventory().armorItemInSlot(armorSlot), -1);
 
-            if (ItemUtils.isStackEmpty(oldArmor.getItemStack()) || !classProvider.isItemArmor(oldArmor.getItemStack().getItem()) ||
-                    ARMOR_COMPARATOR.compare(oldArmor, armorPiece) < 0) {
+            if (ItemUtils.isStackEmpty(oldArmor.getItemStack()) || !classProvider.isItemArmor(oldArmor.getItemStack().getItem()) || ARMOR_COMPARATOR.compare(oldArmor, armorPiece) < 0) {
                 if (!ItemUtils.isStackEmpty(oldArmor.getItemStack()) && move(8 - armorSlot, true)) {
                     locked = true;
                     return;
@@ -113,7 +105,7 @@ public class AutoArmor extends Module {
     }
 
     public boolean isLocked() {
-        return !getState() || locked;
+        return getState() && locked;
     }
 
     /**
@@ -135,8 +127,7 @@ public class AutoArmor extends Module {
         } else if (!(noMoveValue.get() && MovementUtils.isMoving()) && (!invOpenValue.get() || classProvider.isGuiInventory(mc.getCurrentScreen())) && item != -1) {
             final boolean openInventory = simulateInventory.get() && !classProvider.isGuiInventory(mc.getCurrentScreen());
 
-            if (openInventory)
-                mc.getNetHandler().addToSendQueue(createOpenInventoryPacket());
+            if (openInventory) mc.getNetHandler().addToSendQueue(createOpenInventoryPacket());
 
             boolean full = isArmorSlot;
 
@@ -157,8 +148,7 @@ public class AutoArmor extends Module {
 
             delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get());
 
-            if (openInventory)
-                mc.getNetHandler().addToSendQueue(classProvider.createCPacketCloseWindow());
+            if (openInventory) mc.getNetHandler().addToSendQueue(classProvider.createCPacketCloseWindow());
 
             return true;
         }
