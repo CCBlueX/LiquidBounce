@@ -12,6 +12,7 @@ interface IEnumFacing {
     fun isEast(): Boolean
     fun isWest(): Boolean
     fun isUp(): Boolean
+    fun isDown(): Boolean
 
     val opposite: IEnumFacing
     val directionVec: WVec3i

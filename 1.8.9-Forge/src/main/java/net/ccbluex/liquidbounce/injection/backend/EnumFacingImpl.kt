@@ -22,6 +22,8 @@ class EnumFacingImpl(val wrapped: EnumFacing) : IEnumFacing {
 
     override fun isUp(): Boolean = wrapped == EnumFacing.UP
 
+    override fun isDown(): Boolean = wrapped == EnumFacing.DOWN
+
     override val opposite: IEnumFacing
         get() = wrapped.opposite.wrap()
     override val directionVec: WVec3i
