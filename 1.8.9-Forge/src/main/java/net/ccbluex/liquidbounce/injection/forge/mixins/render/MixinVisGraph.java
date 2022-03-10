@@ -18,7 +18,8 @@ public class MixinVisGraph {
 
     @Inject(method = "func_178606_a", at = @At("HEAD"), cancellable = true)
     private void func_178606_a(final CallbackInfo callbackInfo) {
-        if (LiquidBounce.moduleManager.getModule(XRay.class).getState())
+        if (LiquidBounce.moduleManager.getModule(XRay.class).getState()) {
             callbackInfo.cancel();
+        }
     }
 }

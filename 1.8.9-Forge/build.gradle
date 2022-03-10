@@ -90,7 +90,7 @@ dependencies {
 
     implementation 'com.github.TheAltening:TheAltening4j:d0771f42d3'
     implementation 'com.github.TheAltening:API-Java-AuthLib:-SNAPSHOT'
-    compile 'com.github.TheAltening:TheAltening4j:api-2.0-22541fa70f-1'
+    compile 'com.github.TheAltening:TheAltening4j:api-2.0-SNAPSHOT'
     compile 'com.github.TheAltening:API-Java-AuthLib:-SNAPSHOT'
     compile('commons-io:commons-io') {
         version {
@@ -104,11 +104,11 @@ dependencies {
 processResources {
     inputs.property 'version', project.version
     inputs.property 'mcversion', project.minecraft.version
-    
+
     from(sourceSets.main.resources.srcDirs) {
         include 'mcmod.info'
 
-        expand 'version':project.version, 'mcversion':project.minecraft.version
+        expand 'version': project.version, 'mcversion': project.minecraft.version
     }
 
     from(sourceSets.main.resources.srcDirs) {
@@ -123,16 +123,14 @@ mixin {
 }
 
 jar {
-    manifest.attributes(
-            'MixinConfigs': 'liquidbounce.forge.mixins.json',
+    manifest.attributes('MixinConfigs': 'liquidbounce.forge.mixins.json',
             'tweakClass': 'org.spongepowered.asm.launch.MixinTweaker',
             'TweakOrder': 0,
             'FMLCorePluginContainsFMLMod': 'net.ccbluex.liquidbounce.injection.forge.MixinLoader',
             'FMLCorePlugin': 'net.ccbluex.liquidbounce.injection.forge.TransformerLoader',
             'FMLAT': 'liquidbounce_at.cfg',
             'Manifest-Version': 1.0,
-            'Main-Class': 'net.ccbluex.liquidinstruction.LiquidInstructionKt'
-    )
+            'Main-Class': 'net.ccbluex.liquidinstruction.LiquidInstructionKt')
 }
 
 shadowJar {
