@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleNoPitchLim
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.fluid.Fluid;
-import net.minecraft.tag.Tag;
+import net.minecraft.tag.TagKey;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
@@ -73,10 +73,10 @@ public abstract class MixinEntity {
     public abstract float getYaw();
 
     @Shadow
-    public abstract boolean isSubmergedIn(Tag<Fluid> fluidTag);
+    public abstract boolean isOnGround();
 
     @Shadow
-    public abstract boolean isOnGround();
+    public abstract boolean isSubmergedIn(TagKey<Fluid> fluidTag);
 
     /**
      * Hook entity margin modification event
@@ -95,8 +95,7 @@ public abstract class MixinEntity {
     public float hookNoPitchLimit(float value, float min, float max) {
         final boolean noLimit = ModuleNoPitchLimit.INSTANCE.getEnabled();
 
-        if (noLimit)
-            return value;
+        if (noLimit) return value;
         return MathHelper.clamp(value, min, max);
     }
 

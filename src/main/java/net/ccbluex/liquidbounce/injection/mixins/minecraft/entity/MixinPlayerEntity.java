@@ -54,23 +54,7 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
     /**
      * Hook player stride event
      */
-    @ModifyVariable(
-            method = "tickMovement",
-            at = @At(
-                    value = "FIELD",
-                    target = "Lnet/minecraft/entity/player/PlayerEntity;strideDistance:F",
-                    shift = At.Shift.BEFORE,
-                    ordinal = 0
-            ),
-            slice = @Slice(
-                    from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setMovementSpeed(F)V"),
-                    to = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;isSpectator()Z")
-            ),
-            index = 1,
-            ordinal = 0,
-            require = 1,
-            allow = 1
-    )
+    @ModifyVariable(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerEntity;strideDistance:F", shift = At.Shift.BEFORE, ordinal = 0), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setMovementSpeed(F)V"), to = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;isSpectator()Z")), index = 1, ordinal = 0, require = 1, allow = 1)
     private float hookStrideForce(float strideForce) {
         final PlayerStrideEvent event = new PlayerStrideEvent(strideForce);
         EventManager.INSTANCE.callEvent(event);
@@ -84,8 +68,7 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
     private ItemStack hookMainHandStack(PlayerInventory playerInventory) {
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
 
-        if ((Object) this != player)
-            return this.inventory.getMainHandStack();
+        if ((Object) this != player) return this.inventory.getMainHandStack();
 
         int slot = SilentHotbar.INSTANCE.getServersideSlot();
 
@@ -116,8 +99,7 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
 
         Rotation currentRotation = RotationManager.INSTANCE.getCurrentRotation();
 
-        if (currentRotation == null)
-            return entity.getYaw();
+        if (currentRotation == null) return entity.getYaw();
 
         currentRotation = currentRotation.fixedSensitivity();
 
@@ -134,26 +116,21 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
     @Inject(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;hasStatusEffect(Lnet/minecraft/entity/effect/StatusEffect;)Z", shift = At.Shift.BEFORE), locals = LocalCapture.CAPTURE_FAILHARD, cancellable = true)
     private void injectNoSlowBreak(BlockState block, CallbackInfoReturnable<Float> cir, float f) {
         ModuleNoSlowBreak module = ModuleNoSlowBreak.INSTANCE;
+        if ((Object) this != MinecraftClient.getInstance().player) {
+            return;
+        }
+
         if (!module.getEnabled()) {
             return;
         }
 
         if (!module.getMiningFatigue() && this.hasStatusEffect(StatusEffects.MINING_FATIGUE)) {
-            float i;
-            switch (this.getStatusEffect(StatusEffects.MINING_FATIGUE).getAmplifier()) {
-                case 0:
-                    i = 0.3F;
-                    break;
-                case 1:
-                    i = 0.09F;
-                    break;
-                case 2:
-                    i = 0.0027F;
-                    break;
-                case 3:
-                default:
-                    i = 8.1E-4F;
-            }
+            float i = switch (this.getStatusEffect(StatusEffects.MINING_FATIGUE).getAmplifier()) {
+                case 0 -> 0.3F;
+                case 1 -> 0.09F;
+                case 2 -> 0.0027F;
+                default -> 8.1E-4F;
+            };
 
             f *= i;
         }
