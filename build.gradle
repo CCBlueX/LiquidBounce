@@ -58,6 +58,7 @@ repositories {
         name = 'TerraformersMC'
         url = 'https://maven.terraformersmc.com/'
     }
+    maven { url = "https://repo.getfdp.today/" }
 }
 
 dependencies {
@@ -113,6 +114,8 @@ dependencies {
     implementation ('com.thealtening.api:api:4.1.0') {
         exclude group: 'com.google.code.gson', module: 'gson'
     }
+
+    implementation ("me.liuli:Elixir:1.2.1")
 
     implementation "com.labymedia:ultralight-java-base:0.4.6"
     implementation "com.labymedia:ultralight-java-databind:0.4.6"
@@ -180,6 +183,7 @@ shadowJar {
         include(dependency('com.labymedia:ultralight-java-databind'))
         include(dependency('com.labymedia:ultralight-java-gpu'))
         include(dependency('com.thealtening.api:api'))
+        include(dependency('me.liuli:Elixir'))
         include(project(":theme"))
     }
 }

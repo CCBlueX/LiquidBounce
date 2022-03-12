@@ -26,6 +26,7 @@ import com.mojang.authlib.exceptions.AuthenticationUnavailableException
 import com.mojang.authlib.minecraft.MinecraftSessionService
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService
 import com.mojang.authlib.yggdrasil.YggdrasilEnvironment
+import me.liuli.elixir.account.MicrosoftAccount
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.SessionEvent
@@ -111,6 +112,40 @@ fun MinecraftSessionService.loginCracked(username: String): LoginResult {
         Session.AccountType.LEGACY)
     EventManager.callEvent(SessionEvent())
     return LoginResult.LOGGED_IN
+}
+
+fun MinecraftSessionService.loginMicrosoft() {
+    MicrosoftAccount.buildFromOpenBrowser(object : MicrosoftAccount.OAuthHandler {
+
+        /**
+         * Called when the user has cancelled the authentication process or the thread has been interrupted
+         */
+        override fun authError(error: String) {
+            logger.error("auth error", error)
+        }
+
+        /**
+         * Called when the user has completed authentication
+         */
+        override fun authResult(account: MicrosoftAccount) {
+            mc.session = Session(
+                account.name,
+                account.session.uuid,
+                account.session.token,
+                Optional.empty(),
+                Optional.empty(),
+                Session.AccountType.MSA
+            )
+        }
+
+        /**
+         * Called when the server has prepared the user for authentication
+         */
+        override fun openUrl(url: String) {
+            browseUrl(url)
+        }
+
+    })
 }
 
 enum class LoginResult(val readable: String) {
