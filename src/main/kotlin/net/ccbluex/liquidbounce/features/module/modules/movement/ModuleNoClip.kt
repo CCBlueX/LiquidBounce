@@ -48,8 +48,8 @@ object ModuleNoClip : Module("NoClip", Category.MOVEMENT) {
         player.strafe(speed = speed)
 
         player.velocity.y = when {
-            mc.options.keyJump.isPressed -> speed
-            mc.options.keySneak.isPressed -> -speed
+            mc.options.jumpKey.isPressed -> speed
+            mc.options.sneakKey.isPressed -> -speed
             else -> 0.0
         }
     }
