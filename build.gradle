@@ -73,23 +73,24 @@ dependencies {
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 
     // MultiConnect API
-    modImplementation("net.earthcomputer.multiconnect:multiconnect-api:${project.multiconnect_version}") {
+    modImplementation ("net.earthcomputer.multiconnect:multiconnect-api:${project.multiconnect_version}") {
         transitive = false
     }
 
     /*
         Recommended mods (on IDE)
      */
-    modRuntimeOnly("net.earthcomputer.multiconnect:multiconnect:${project.multiconnect_version}") {
-        transitive = false
-    }
+    // MultiConnect does not support 1.18.2 yet
+    // modRuntimeOnly ("net.earthcomputer.multiconnect:multiconnect:${project.multiconnect_version}") {
+    //    transitive = false
+    //}
 
     // Mod Menu
     modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
 
     // CaffeineMC optimization mods
-    // modRuntime "com.github.CaffeineMC:sodium-fabric:${project.sodium_version}"
-    // modRuntimeOnly "com.github.CaffeineMC:lithium-fabric:${project.lithium_version}"
+    modRuntime "com.github.CaffeineMC:sodium-fabric:${project.sodium_version}"
+    modRuntimeOnly "com.github.CaffeineMC:lithium-fabric:${project.lithium_version}"
     // modRuntime "com.github.CaffeineMC:phosphor-fabric:${project.phosphor_version}"
 
     // Baritone
@@ -110,7 +111,7 @@ dependencies {
 
     // Client libraries
 
-    implementation('com.thealtening.api:api:4.1.0') {
+    implementation ('com.thealtening.api:api:4.1.0') {
         exclude group: 'com.google.code.gson', module: 'gson'
     }
 
@@ -192,4 +193,3 @@ task remapShadow(type: RemapJarTask, dependsOn: shadowJar) {
 }
 
 build.dependsOn remapShadow
-

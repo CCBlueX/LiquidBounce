@@ -55,13 +55,13 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
             get() = modes
 
         override fun disable() {
-            if (!InputUtil.isKeyPressed(mc.window.handle, mc.options.keyForward.boundKey.code)) {
-                mc.options.keyForward.isPressed = false
+            if (!InputUtil.isKeyPressed(mc.window.handle, mc.options.forwardKey.boundKey.code)) {
+                mc.options.forwardKey.isPressed = false
             }
         }
 
         val repeatable = repeatable {
-            mc.options.keyForward.isPressed = true
+            mc.options.forwardKey.isPressed = true
             wait(10)
             player.yaw += 180f
         }
@@ -77,10 +77,10 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
         val timer = Chronometer()
 
         override fun disable() {
-            mc.options.keyRight.isPressed = false
-            mc.options.keyLeft.isPressed = false
-            mc.options.keyBack.isPressed = false
-            mc.options.keyForward.isPressed = false
+            mc.options.rightKey.isPressed = false
+            mc.options.leftKey.isPressed = false
+            mc.options.backKey.isPressed = false
+            mc.options.forwardKey.isPressed = false
         }
 
         val repeatable = repeatable {
@@ -132,10 +132,10 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
 
     private fun randomKeyBind(): KeyBinding? {
         return when (RandomUtils.nextInt(0, 4)) {
-            0 -> mc.options.keyRight
-            1 -> mc.options.keyLeft
-            2 -> mc.options.keyBack
-            3 -> mc.options.keyForward
+            0 -> mc.options.rightKey
+            1 -> mc.options.leftKey
+            2 -> mc.options.backKey
+            3 -> mc.options.forwardKey
             else -> null
         }
     }
@@ -162,14 +162,14 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
         val move by boolean("Move", true)
 
         override fun disable() {
-            if (!InputUtil.isKeyPressed(mc.window.handle, mc.options.keyForward.boundKey.code)) {
-                mc.options.keyForward.isPressed = false
+            if (!InputUtil.isKeyPressed(mc.window.handle, mc.options.forwardKey.boundKey.code)) {
+                mc.options.forwardKey.isPressed = false
             }
         }
 
         val repeatable = repeatable {
             if (move) {
-                mc.options.keyForward.isPressed = true
+                mc.options.forwardKey.isPressed = true
             }
 
             if (jump && player.isOnGround) {

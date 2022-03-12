@@ -93,8 +93,8 @@ object Tabs {
                                 .styled { s -> s.withColor(Formatting.GOLD) }
                             )
                         ),
-                    Registry.STATUS_EFFECT.entries.map { e ->
-                        StatusEffectInstance(e.value, Int.MAX_VALUE, 127)
+                    Registry.STATUS_EFFECT.map { e ->
+                        StatusEffectInstance(e, Int.MAX_VALUE, 127)
                     }
                 )
             )

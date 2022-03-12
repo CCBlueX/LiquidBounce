@@ -40,12 +40,12 @@ object ModuleKeepChatAfterDeath : Module("KeepChatAfterDeath", Category.MISC) {
         }
 
         val options = mc.options
-        if (options.keyChat.boundKey.code == it.keyCode) {
+        if (options.chatKey.boundKey.code == it.keyCode) {
             openChat("")
             return@handler
         }
 
-        if (options.keyCommand.boundKey.code == it.keyCode) {
+        if (options.commandKey.boundKey.code == it.keyCode) {
             openChat("/")
             return@handler
         }

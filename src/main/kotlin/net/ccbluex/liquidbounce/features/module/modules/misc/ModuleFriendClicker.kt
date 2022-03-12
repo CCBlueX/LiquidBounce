@@ -41,7 +41,7 @@ object ModuleFriendClicker : Module("FriendClicker", Category.MISC) {
 
     val repeatable = repeatable {
         val crosshair = mc.crosshairTarget
-        val pickup = mc.options.keyPickItem.isPressed
+        val pickup = mc.options.pickItemKey.isPressed
 
         if (crosshair is EntityHitResult && crosshair.entity is PlayerEntity && pickup && !clicked) {
             val name = (crosshair.entity as PlayerEntity).gameProfile.name
