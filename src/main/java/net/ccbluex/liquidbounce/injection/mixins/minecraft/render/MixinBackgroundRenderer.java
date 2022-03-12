@@ -51,7 +51,7 @@ public abstract class MixinBackgroundRenderer implements IMixinGameRenderer {
             && livingEntity.hasStatusEffect(effect);
     }
 
-    @Inject(method = "applyFog", at = @At(value = "INVOKE", shift = AFTER, ordinal = 1, target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderFogStart(F)V", remap = false))
+    @Inject(method = "applyFog", at = @At(value = "INVOKE", shift = AFTER, ordinal = 0, target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderFogStart(F)V", remap = false))
     private static void injectLiquidsFog(Camera camera, FogType fogType, float viewDistance, boolean thickFog, CallbackInfo callback) {
         if (isLiquidsFogEnabled(camera)) {
             RenderSystem.setShaderFogStart(MAX_VALUE);
