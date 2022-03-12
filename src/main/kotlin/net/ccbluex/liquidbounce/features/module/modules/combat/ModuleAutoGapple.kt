@@ -47,8 +47,8 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
     var saveSlot = false
 
     override fun disable() {
-        if (!InputUtil.isKeyPressed(mc.window.handle, mc.options.keyUse.boundKey.code)) {
-            mc.options.keyUse.isPressed = false
+        if (!InputUtil.isKeyPressed(mc.window.handle, mc.options.useKey.boundKey.code)) {
+            mc.options.useKey.isPressed = false
         }
     }
 
@@ -82,7 +82,7 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
                 // Avoid sword shield
                 wait(2)
                 eating = true
-                mc.options.keyUse.isPressed = true
+                mc.options.useKey.isPressed = true
             } else {
                 // If there's no apples in the hotbar slot though, start checking on inventory
                 val serverSlot = convertClientSlotToServerSlot(invSlot!!)
@@ -105,7 +105,7 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
         if (eating && player.health + player.absorptionAmount >= health) {
             saveSlot = false
             eating = false
-            mc.options.keyUse.isPressed = false
+            mc.options.useKey.isPressed = false
             player.inventory.selectedSlot = prevSlot
         }
     }
