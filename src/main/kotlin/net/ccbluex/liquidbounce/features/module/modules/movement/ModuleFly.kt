@@ -168,8 +168,8 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
             } else if (!threwPearl && canFly) {
                 player.strafe(speed = speed.toDouble())
                 player.velocity.y = when {
-                    mc.options.keyJump.isPressed -> speed.toDouble()
-                    mc.options.keySneak.isPressed -> -speed.toDouble()
+                    mc.options.jumpKey.isPressed -> speed.toDouble()
+                    mc.options.sneakKey.isPressed -> -speed.toDouble()
                     else -> 0.0
                 }
                 return@repeatable

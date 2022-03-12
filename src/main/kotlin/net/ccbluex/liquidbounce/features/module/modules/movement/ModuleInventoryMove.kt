@@ -39,7 +39,7 @@ object ModuleInventoryMove : Module("InventoryMove", Category.MOVEMENT) {
     val passthroughSneak by boolean("PassthroughSneak", false)
 
     fun shouldHandleInputs(keyBinding: KeyBinding) = enabled && mc.currentScreen !is ChatScreen && !isInCreativeSearchField() &&
-        (!undetectable || mc.currentScreen !is HandledScreen<*>) && (passthroughSneak || keyBinding != mc.options.keySneak)
+        (!undetectable || mc.currentScreen !is HandledScreen<*>) && (passthroughSneak || keyBinding != mc.options.sneakKey)
 
     private fun isInCreativeSearchField(): Boolean {
         val currentScreen = mc.currentScreen

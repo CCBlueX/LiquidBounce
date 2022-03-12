@@ -107,7 +107,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     var currentTarget: Target? = null
 
     val shouldGoDown: Boolean
-        get() = this.down && mc.options.keySneak.isPressed
+        get() = this.down && mc.options.sneakKey.isPressed
 
     val rotationUpdateHandler = handler<PlayerNetworkMovementTickEvent> {
         if (it.state != EventState.PRE) {
