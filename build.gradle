@@ -57,7 +57,6 @@ repositories {
     maven {
         name = 'TerraformersMC'
         url = 'https://maven.terraformersmc.com/'
-
     }
 }
 
@@ -163,8 +162,11 @@ task sourcesJar(type: Jar, dependsOn: classes) {
 }
 
 compileKotlin {
-    kotlinOptions.suppressWarnings = true
-    kotlinOptions.useIR = true
+    kotlinOptions {
+        suppressWarnings = true
+        useIR = true
+        jvmTarget = 17
+    }
 }
 
 shadowJar {
