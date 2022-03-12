@@ -194,3 +194,9 @@ task remapShadow(type: RemapJarTask, dependsOn: shadowJar) {
 
 build.dependsOn remapShadow
 
+task copyZipInclude(type: Copy) {
+    from 'zip_include/'
+    into 'build/libs/zip'
+}
+
+build.dependsOn copyZipInclude
