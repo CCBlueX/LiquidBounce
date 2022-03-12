@@ -78,7 +78,7 @@ object ModuleTerrainSpeed : Module("TerrainSpeed", Category.MOVEMENT) {
 
             val moveHandler = handler<PlayerMoveEvent> {
 
-                if (player.isClimbing && mc.options.keyForward.isPressed) {
+                if (player.isClimbing && mc.options.forwardKey.isPressed) {
                     val startPos = player.pos
 
                     for (y in 1..8) {
