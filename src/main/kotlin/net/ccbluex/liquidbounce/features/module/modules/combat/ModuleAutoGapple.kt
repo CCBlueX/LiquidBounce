@@ -73,11 +73,11 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
                     waitUntil { !player.isBlocking }
                 }
 
-                mc.options.keyUse.isPressed = true
+                mc.options.useKey.isPressed = true
 
                 waitUntil { player.health + player.absorptionAmount >= health }
 
-                mc.options.keyUse.isPressed = false
+                mc.options.useKey.isPressed = false
 
                 if (lastSlot != -1) {
                     player.inventory.selectedSlot = lastSlot
@@ -121,8 +121,8 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
     }
 
     override fun disable() {
-        if (!InputUtil.isKeyPressed(mc.window.handle, mc.options.keyUse.boundKey.code)) {
-            mc.options.keyUse.isPressed = false
+        if (!InputUtil.isKeyPressed(mc.window.handle, mc.options.useKey.boundKey.code)) {
+            mc.options.useKey.isPressed = false
         }
 
         if (lastSlot != -1) {
