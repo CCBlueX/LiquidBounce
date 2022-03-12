@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,12 +53,12 @@ object ModuleSneak : Module("Sneak", Category.MOVEMENT) {
                     disable()
                 } else return@handler
             }
-            mc.options.keySneak.isPressed = true
+            mc.options.sneakKey.isPressed = true
         }
 
         override fun disable() {
-            if (!InputUtil.isKeyPressed(mc.window.handle, mc.options.keySneak.boundKey.code)) {
-                mc.options.keySneak.isPressed = false
+            if (!InputUtil.isKeyPressed(mc.window.handle, mc.options.sneakKey.boundKey.code)) {
+                mc.options.sneakKey.isPressed = false
                 sneaking = false
             }
         }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 object ModuleParkour : Module("Parkour", Category.MOVEMENT) {
 
     val repeatable = repeatable {
-        if (player.moving && player.isOnGround && !player.isSneaking && !mc.options.keySneak.isPressed && !mc.options.keyJump.isPressed) {
+        if (player.moving && player.isOnGround && !player.isSneaking && !mc.options.sneakKey.isPressed && !mc.options.jumpKey.isPressed) {
             if (world.getBlockCollisions(
                     player,
                     player.boundingBox.offset(0.0, -0.5, 0.0)

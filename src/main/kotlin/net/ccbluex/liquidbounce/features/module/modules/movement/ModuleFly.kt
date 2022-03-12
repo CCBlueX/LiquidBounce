@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -168,8 +168,8 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
             } else if (!threwPearl && canFly) {
                 player.strafe(speed = speed.toDouble())
                 player.velocity.y = when {
-                    mc.options.keyJump.isPressed -> speed.toDouble()
-                    mc.options.keySneak.isPressed -> -speed.toDouble()
+                    mc.options.jumpKey.isPressed -> speed.toDouble()
+                    mc.options.sneakKey.isPressed -> -speed.toDouble()
                     else -> 0.0
                 }
                 return@repeatable

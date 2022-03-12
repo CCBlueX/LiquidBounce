@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -80,15 +80,16 @@ dependencies {
     /*
         Recommended mods (on IDE)
      */
-    modRuntimeOnly ("net.earthcomputer.multiconnect:multiconnect:${project.multiconnect_version}") {
-        transitive = false
-    }
+    // MultiConnect does not support 1.18.2 yet
+    // modRuntimeOnly ("net.earthcomputer.multiconnect:multiconnect:${project.multiconnect_version}") {
+    //    transitive = false
+    //}
 
     // Mod Menu
     modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
 
     // CaffeineMC optimization mods
-    // modRuntime "com.github.CaffeineMC:sodium-fabric:${project.sodium_version}"
+    modRuntime "com.github.CaffeineMC:sodium-fabric:${project.sodium_version}"
     modRuntimeOnly "com.github.CaffeineMC:lithium-fabric:${project.lithium_version}"
     // modRuntime "com.github.CaffeineMC:phosphor-fabric:${project.phosphor_version}"
 

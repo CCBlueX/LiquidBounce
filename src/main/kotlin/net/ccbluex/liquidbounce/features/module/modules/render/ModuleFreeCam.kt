@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -96,8 +96,8 @@ object ModuleFreeCam : Module("FreeCam", Category.RENDER) {
             player.strafe(speed = speed)
 
             player.velocity.y = when {
-                mc.options.keyJump.isPressed -> speed
-                mc.options.keySneak.isPressed -> -speed
+                mc.options.jumpKey.isPressed -> speed
+                mc.options.sneakKey.isPressed -> -speed
                 else -> 0.0
             }
         }
