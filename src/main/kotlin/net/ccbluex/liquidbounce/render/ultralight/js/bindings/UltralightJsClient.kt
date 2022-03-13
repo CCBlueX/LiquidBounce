@@ -22,10 +22,7 @@ package net.ccbluex.liquidbounce.render.ultralight.js.bindings
 import com.thealtening.api.TheAltening
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.utils.client.loginAltening
-import net.ccbluex.liquidbounce.utils.client.loginCracked
-import net.ccbluex.liquidbounce.utils.client.loginMojang
-import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.*
 import java.net.InetSocketAddress
 
 /**
@@ -46,6 +43,10 @@ object UltralightJsClient {
         fun loginCracked(username: String) = mc.sessionService.loginCracked(username).readable
         fun loginMojang(email: String, password: String) = mc.sessionService.loginMojang(email, password).readable
         fun loginAltening(token: String) = mc.sessionService.loginAltening(token).readable
+
+        fun loginMicrosoft() {
+            mc.sessionService.loginMicrosoft()
+        }
 
         fun getFaceUrl() = "https://visage.surgeplay.com/face/${mc.session.uuid}"
         fun getUsername(): String = mc.session.username
