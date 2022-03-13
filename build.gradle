@@ -57,8 +57,8 @@ repositories {
     maven {
         name = 'TerraformersMC'
         url = 'https://maven.terraformersmc.com/'
-
     }
+    maven { url = "https://repo.getfdp.today/" }
 }
 
 dependencies {
@@ -115,6 +115,8 @@ dependencies {
         exclude group: 'com.google.code.gson', module: 'gson'
     }
 
+    implementation ("me.liuli:Elixir:1.2.1")
+
     implementation "com.labymedia:ultralight-java-base:0.4.6"
     implementation "com.labymedia:ultralight-java-databind:0.4.6"
     implementation "com.labymedia:ultralight-java-gpu:0.4.6"
@@ -163,8 +165,11 @@ task sourcesJar(type: Jar, dependsOn: classes) {
 }
 
 compileKotlin {
-    kotlinOptions.suppressWarnings = true
-    kotlinOptions.useIR = true
+    kotlinOptions {
+        suppressWarnings = true
+        useIR = true
+        jvmTarget = 17
+    }
 }
 
 shadowJar {
@@ -178,6 +183,7 @@ shadowJar {
         include(dependency('com.labymedia:ultralight-java-databind'))
         include(dependency('com.labymedia:ultralight-java-gpu'))
         include(dependency('com.thealtening.api:api'))
+        include(dependency('me.liuli:Elixir'))
         include(project(":theme"))
     }
 }
@@ -193,3 +199,10 @@ task remapShadow(type: RemapJarTask, dependsOn: shadowJar) {
 }
 
 build.dependsOn remapShadow
+
+task copyZipInclude(type: Copy) {
+    from 'zip_include/'
+    into 'build/libs/zip'
+}
+
+build.dependsOn copyZipInclude
