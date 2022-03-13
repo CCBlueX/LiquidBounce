@@ -23,6 +23,8 @@ import net.ccbluex.liquidbounce.event.ChunkLoadEvent;
 import net.ccbluex.liquidbounce.event.ChunkUnloadEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoRotateSet;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.DownloadingTerrainScreen;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.ClientConnection;
@@ -44,9 +46,6 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 public class MixinClientPlayNetworkHandler {
 
     @Shadow
-    private boolean positionLookSetup;
-
-    @Shadow
     @Final
     private ClientConnection connection;
 
@@ -62,14 +61,14 @@ public class MixinClientPlayNetworkHandler {
 
     @Inject(method = "onPlayerPositionLook", cancellable = true, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;updatePositionAndAngles(DDDFF)V", shift = At.Shift.BEFORE), locals = LocalCapture.CAPTURE_FAILHARD)
     private void injectNoRotateSet(PlayerPositionLookS2CPacket packet, CallbackInfo ci, PlayerEntity playerEntity, Vec3d vec3d, boolean bl, boolean bl2, boolean bl3, double d, double e, double f, double g, double h, double i, float j, float k) {
-        if (!ModuleNoRotateSet.INSTANCE.getEnabled() || !this.positionLookSetup) {
+        if (!ModuleNoRotateSet.INSTANCE.getEnabled() || MinecraftClient.getInstance().currentScreen instanceof DownloadingTerrainScreen) {
             return;
         }
 
-        // Silent approach.
+        // Accept the requested position only.
         playerEntity.updatePosition(e, g, i);
         this.connection.send(new TeleportConfirmC2SPacket(packet.getTeleportId()));
-        // Accept yaw/pitch values requested by the server.
+        // Silently accept yaw and pitch values requested by the server.
         this.connection.send(new PlayerMoveC2SPacket.Full(playerEntity.getX(), playerEntity.getY(), playerEntity.getZ(), j, k, false));
         // Increase yaw and pitch by a value so small that the difference cannot be seen, just to update the rotations server-side.
         playerEntity.setYaw(playerEntity.prevYaw + 0.000001f);
