@@ -284,20 +284,18 @@ object RotationManager : Listenable {
         if (ticksUntilReset == 0) {
             val threshold = 2f // todo: might use turn speed
 
-            if (rotationDifference(this.currentRotation ?: serverRotation ?: return, playerRotation) < threshold) {
+            if (rotationDifference(currentRotation ?: serverRotation ?: return, playerRotation) < threshold) {
                 ticksUntilReset = -1
 
-                this.targetRotation = null
-                this.currentRotation = null
+                targetRotation = null
+                currentRotation = null
                 return
             }
 
-            this.currentRotation =
-                limitAngleChange(this.currentRotation ?: serverRotation ?: return, playerRotation, turnSpeed)
+            currentRotation = limitAngleChange(currentRotation ?: serverRotation ?: return, playerRotation, turnSpeed)
         } else if (targetRotation != null) {
             targetRotation?.let { targetRotation ->
-                this.currentRotation =
-                    limitAngleChange(this.currentRotation ?: playerRotation, targetRotation, turnSpeed)
+                currentRotation = limitAngleChange(currentRotation ?: playerRotation, targetRotation, turnSpeed)
             }
         }
     }
@@ -307,7 +305,7 @@ object RotationManager : Listenable {
         update()
 
         // Check if something changed
-        val (currYaw, currPitch) = currentRotation ?: return false
+        val (currYaw, currPitch) = currentRotation?.fixedSensitivity() ?: return false
 
         return lastYaw != currYaw || lastPitch != currPitch
     }

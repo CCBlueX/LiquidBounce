@@ -98,8 +98,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     private void hookPushOut(CallbackInfo callbackInfo) {
         final PlayerPushOutEvent pushOutEvent = new PlayerPushOutEvent();
         EventManager.INSTANCE.callEvent(pushOutEvent);
-        if (pushOutEvent.isCancelled())
-            callbackInfo.cancel();
+        if (pushOutEvent.isCancelled()) callbackInfo.cancel();
     }
 
     /**
@@ -141,18 +140,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     /**
      * Hook sprint affect from NoSlow module
      */
-    @Redirect(method = "tickMovement",
-            slice = @Slice(
-                    from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/HungerManager;getFoodLevel()I"),
-                    to = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isFallFlying()Z")
-            ),
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z"
-            ),
-            require = 2,
-            allow = 2
-    )
+    @Redirect(method = "tickMovement", slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/HungerManager;getFoodLevel()I"), to = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isFallFlying()Z")), at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z"), require = 2, allow = 2)
     private boolean hookSprintAffect(ClientPlayerEntity playerEntity) {
         if (ModuleNoSlow.INSTANCE.getEnabled()) {
             return false;
@@ -179,11 +167,15 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
      */
     @Inject(method = "sendMovementPackets", at = @At(value = "FIELD", target = "Lnet/minecraft/client/network/ClientPlayerEntity;lastPitch:F", ordinal = 1, shift = At.Shift.AFTER))
     private void hookSilentRotationsUpdate(CallbackInfo ci) {
-        // This might need improvement
         if (updatedSilent) {
             updatedSilent = false;
 
-            final Rotation currRotation = RotationManager.INSTANCE.getCurrentRotation();
+            Rotation currRotation = RotationManager.INSTANCE.getCurrentRotation();
+            if (currRotation == null) {
+                return;
+            }
+
+            currRotation = currRotation.fixedSensitivity();
             if (currRotation == null) {
                 return;
             }
