@@ -166,7 +166,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
      * Hook silent rotations
      */
     @Inject(method = "sendMovementPackets", at = @At(value = "FIELD", target = "Lnet/minecraft/client/network/ClientPlayerEntity;lastPitch:F", ordinal = 1, shift = At.Shift.AFTER))
-    private void hookSilentRotationsUpdate(CallbackInfo ci) {
+    private void hookLastSilentRotations(CallbackInfo ci) {
         if (updatedSilent) {
             updatedSilent = false;
 
@@ -183,6 +183,15 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
             this.lastYaw = currRotation.getYaw();
             this.lastPitch = currRotation.getPitch();
         }
+    }
+
+    @Inject(method = "sendMovementPackets", at = @At(value = "FIELD", target = "Lnet/minecraft/client/network/ClientPlayerEntity;lastOnGround:Z", ordinal = 1, shift = At.Shift.BEFORE))
+    private void hookSilentRotationsUpdate(CallbackInfo ci) {
+        if (RotationManager.INSTANCE.getCurrentRotation() == null) {
+            return;
+        }
+
+        RotationManager.INSTANCE.update();
     }
 
     @Inject(method = "isSneaking", at = @At("HEAD"), cancellable = true)

@@ -265,7 +265,7 @@ object RotationManager : Listenable {
     /**
      * Update current rotation to new rotation step
      */
-    private fun update() {
+    fun update() {
         // Update reset ticks
         if (ticksUntilReset > 0) {
             ticksUntilReset--
@@ -301,9 +301,6 @@ object RotationManager : Listenable {
     }
 
     fun needsUpdate(lastYaw: Float, lastPitch: Float): Boolean {
-        // Update current rotation
-        update()
-
         // Check if something changed
         val (currYaw, currPitch) = currentRotation?.fixedSensitivity() ?: return false
 
@@ -314,7 +311,7 @@ object RotationManager : Listenable {
      * Calculate difference between the server rotation and your rotation
      */
     fun rotationDifference(rotation: Rotation): Double {
-        return if (serverRotation == null) 0.0 else rotationDifference(rotation, serverRotation!!)
+        return rotationDifference(rotation, serverRotation ?: Rotation(0f, 0f))
     }
 
     /**
