@@ -19,7 +19,10 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
-import net.ccbluex.liquidbounce.event.*;
+import net.ccbluex.liquidbounce.event.EntityMarginEvent;
+import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.PlayerStepEvent;
+import net.ccbluex.liquidbounce.event.PlayerVelocityStrafe;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleNoPitchLimit;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
@@ -106,17 +109,5 @@ public abstract class MixinEntity {
         final PlayerStepEvent stepEvent = new PlayerStepEvent(instance.stepHeight);
         EventManager.INSTANCE.callEvent(stepEvent);
         return stepEvent.getHeight();
-    }
-
-    @Redirect(method = "updateMovementInFluid", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;isPushedByFluids()Z"))
-    private boolean hookLiquidPush(Entity instance) {
-        if (instance == MinecraftClient.getInstance().player) {
-            final FluidPushEvent fluidPushEvent = new FluidPushEvent();
-            EventManager.INSTANCE.callEvent(fluidPushEvent);
-            if (fluidPushEvent.isCancelled()) {
-                return false;
-            }
-        }
-        return instance.isPushedByFluids();
     }
 }
