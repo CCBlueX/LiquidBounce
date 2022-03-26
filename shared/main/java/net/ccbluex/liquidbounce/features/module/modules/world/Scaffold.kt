@@ -50,14 +50,18 @@ class Scaffold : Module() {
     private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 0, 0, 1000) {
         override fun onChanged(oldValue: Int, newValue: Int) {
             val minDelay = minDelayValue.get()
-            if (minDelay > newValue) set(minDelay)
+            if (minDelay > newValue) {
+                set(minDelay)
+            }
         }
     }
 
     private val minDelayValue: IntegerValue = object : IntegerValue("MinDelay", 0, 0, 1000) {
         override fun onChanged(oldValue: Int, newValue: Int) {
             val maxDelay = maxDelayValue.get()
-            if (maxDelay < newValue) set(maxDelay)
+            if (maxDelay < newValue) {
+                set(maxDelay)
+            }
         }
     }
 
@@ -185,7 +189,7 @@ class Scaffold : Module() {
     override fun onEnable() {
         val player = mc.thePlayer ?: return
 
-        launchY = player.posY.toInt()
+        launchY = player.posY.roundToInt()
         slot = player.inventory.currentItem
         facesBlock = false
     }
@@ -379,11 +383,13 @@ class Scaffold : Module() {
     }
 
     private fun setRotation(rotation: Rotation) {
+        val player = mc.thePlayer ?: return
+
         if (silentRotationValue.get()) {
             RotationUtils.setTargetRotation(rotation, 0)
         } else {
-            mc.thePlayer!!.rotationYaw = rotation.yaw
-            mc.thePlayer!!.rotationPitch = rotation.pitch
+            player.rotationYaw = rotation.yaw
+            player.rotationPitch = rotation.pitch
         }
     }
 
@@ -392,15 +398,15 @@ class Scaffold : Module() {
         val player = mc.thePlayer ?: return
 
         val blockPosition = if (shouldGoDown) {
-            (if (player.posY == player.posY.toInt() + 0.5) {
+            (if (player.posY == player.posY.roundToInt() + 0.5) {
                 WBlockPos(player.posX, player.posY - 0.6, player.posZ)
             } else {
                 WBlockPos(player.posX, player.posY - 0.6, player.posZ).down()
             })
         } else (if (sameYValue.get() && launchY <= player.posY) {
             WBlockPos(player.posX, launchY - 1.0, player.posZ)
-        } else (if (player.posY == player.posY.toInt() + 0.5) {
-            WBlockPos(mc.thePlayer!!)
+        } else (if (player.posY == player.posY.roundToInt() + 0.5) {
+            WBlockPos(player)
         } else {
             WBlockPos(player.posX, player.posY, player.posZ).down()
         }))
@@ -534,10 +540,12 @@ class Scaffold : Module() {
     // Entity movement event
     @EventTarget
     fun onMove(event: MoveEvent) {
+        val player = mc.thePlayer ?: return
+
         if (!safeWalkValue.get() || shouldGoDown) {
             return
         }
-        if (airSafeValue.get() || mc.thePlayer!!.onGround) {
+        if (airSafeValue.get() || player.onGround) {
             event.isSafeWalk = true
         }
     }
@@ -604,11 +612,11 @@ class Scaffold : Module() {
      * Search for placeable block
      *
      * @param blockPosition pos
-     * @param raytrace visible
+     * @param raycast visible
      * @return
      */
 
-    private fun search(blockPosition: WBlockPos, raytrace: Boolean): Boolean {
+    private fun search(blockPosition: WBlockPos, raycast: Boolean): Boolean {
         facesBlock = false
         val player = mc.thePlayer ?: return false
         val world = mc.theWorld ?: return false
@@ -644,7 +652,7 @@ class Scaffold : Module() {
                         )
                         val distanceSqPosVec = eyesPos.squareDistanceTo(posVec)
                         val hitVec = posVec.add(WVec3(dirVec.xCoord * 0.5, dirVec.yCoord * 0.5, dirVec.zCoord * 0.5))
-                        if (raytrace && (eyesPos.distanceTo(hitVec) > 4.25 || distanceSqPosVec > eyesPos.squareDistanceTo(
+                        if (raycast && (eyesPos.distanceTo(hitVec) > 4.25 || distanceSqPosVec > eyesPos.squareDistanceTo(
                                 posVec.add(dirVec)
                             ) || world.rayTraceBlocks(
                                 eyesPos,
@@ -663,9 +671,9 @@ class Scaffold : Module() {
                         val diffY = hitVec.yCoord - eyesPos.yCoord
                         val diffZ = hitVec.zCoord - eyesPos.zCoord
                         val diffXZ = sqrt(diffX * diffX + diffZ * diffZ)
-                        if (!side.isUp() && !side.isDown() && minDistValue.get() > 0) {
+                        if (!side.isUp() && !side.isDown()) {
                             val diff = abs(if (side.isNorth() || side.isSouth()) diffZ else diffX)
-                            if (diff < minDistValue.get() || diff > 0.3f) {
+                            if (diff < minDistValue.get()) {
                                 zSearch += if (auto) 0.1 else xzSSV
                                 continue
                             }
@@ -747,7 +755,7 @@ class Scaffold : Module() {
         return if (range / accuracy < 0.01) 0.01 else (range / accuracy)
     }
 
-    // RETURN HOTBAR AMOUNT
+    // Return hotbar amount
     private val blocksAmount: Int
         get() {
             var amount = 0
