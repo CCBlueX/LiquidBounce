@@ -312,7 +312,7 @@ class Scaffold : Module() {
 
     @EventTarget
     fun onStrafe(event: StrafeEvent) {
-        if (strafeMode.get().equals("off", true)) {
+        if (strafeMode.get().equals("Off", true)) {
             return
         }
 
