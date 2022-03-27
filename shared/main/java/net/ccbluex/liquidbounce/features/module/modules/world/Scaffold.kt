@@ -312,7 +312,7 @@ class Scaffold : Module() {
 
     @EventTarget
     fun onStrafe(event: StrafeEvent) {
-        if (strafeMode.get().equals("Off", true)) {
+        if (strafeMode.get().equals("off", true)) {
             return
         }
 
@@ -321,23 +321,18 @@ class Scaffold : Module() {
 
         if (rotationsValue.get() && (keepRotationValue.get() || !lockRotationTimer.hasTimePassed(keepLengthValue.get()))) {
             if (targetPlace == null) {
-                var yaw = 0f
-                for (i in 0..7) {
-                    if (abs(
-                            RotationUtils.getAngleDifference(
-                                rotation.yaw, (i * 45f)
-                            )
-                        ) < abs(RotationUtils.getAngleDifference(rotation.yaw, yaw))
-                    ) {
-                        yaw = wrapAngleTo180_float(i * 45f)
-                    }
-                }
-                rotation.yaw = yaw
+                rotation.yaw = wrapAngleTo180_float((rotation.yaw / 45f).roundToInt() * 45f)
             }
             setRotation(rotation)
             lockRotationTimer.update()
+
+            rotation.applyStrafeToPlayer(event)
+            event.cancelEvent()
+            return
         }
-        rotation.applyStrafeToPlayer(event)
+
+        val targetRotation = RotationUtils.targetRotation ?: return
+        targetRotation.applyStrafeToPlayer(event)
         event.cancelEvent()
     }
 
@@ -376,9 +371,12 @@ class Scaffold : Module() {
 
         val holdingItem = player.heldItem != null && classProvider.isItemBlock(player.heldItem!!.item)
         if (if (!autoBlockValue.get()
-                    .equals("Off", true)
+                    .equals("off", true)
             ) InventoryUtils.findAutoBlockBlock() == -1 && !holdingItem else !holdingItem
-        ) return
+        ) {
+            return
+        }
+
         findBlock(modeValue.get().equals("expand", true))
     }
 
