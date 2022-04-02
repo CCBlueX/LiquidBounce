@@ -23,29 +23,21 @@ import net.ccbluex.liquidbounce.event.BlockBreakingProgressEvent;
 import net.ccbluex.liquidbounce.event.CancelBlockBreakingEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ClientPlayerInteractionManager.class)
 public class MixinClientPlayerInteractionManager {
-
-    @Shadow @Final private MinecraftClient client;
-    @Shadow private int lastSelectedSlot;
-    @Shadow @Final private ClientPlayNetworkHandler networkHandler;
 
     /**
      * Hook attacking entity
@@ -80,14 +72,8 @@ public class MixinClientPlayerInteractionManager {
     /**
      * @author superblaubeere27
      */
-    @Overwrite
-    private void syncSelectedSlot() {
-        int i = SilentHotbar.INSTANCE.getServersideSlot();
-
-        if (i != this.lastSelectedSlot) {
-            this.lastSelectedSlot = i;
-            this.networkHandler.sendPacket(new UpdateSelectedSlotC2SPacket(this.lastSelectedSlot));
-        }
-
+    @Redirect(method = "syncSelectedSlot", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerInventory;selectedSlot:I"))
+    private int hookCustomSelectedSlot(PlayerInventory instance) {
+        return SilentHotbar.INSTANCE.getServersideSlot();
     }
 }
