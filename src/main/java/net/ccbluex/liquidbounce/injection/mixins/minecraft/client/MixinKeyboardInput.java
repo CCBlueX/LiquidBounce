@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.input.KeyboardInput;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.util.math.MathHelper;
@@ -40,25 +41,27 @@ public class MixinKeyboardInput extends MixinInput {
      */
     @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z"))
     private boolean hookInventoryMove(KeyBinding keyBinding) {
-        return ModuleInventoryMove.INSTANCE.shouldHandleInputs(keyBinding) ?
-                InputUtil.isKeyPressed(MinecraftClient.getInstance().getWindow().getHandle(),
-                                       keyBinding.boundKey.getCode()) :
-                keyBinding.isPressed();
+        return ModuleInventoryMove.INSTANCE.shouldHandleInputs(keyBinding) ? InputUtil.isKeyPressed(MinecraftClient.getInstance().getWindow().getHandle(), keyBinding.boundKey.getCode()) : keyBinding.isPressed();
     }
 
-    @Inject(method = "tick", at = @At("RETURN"))
+    @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;sneaking:Z", shift = At.Shift.AFTER))
     private void injectStrafing(boolean slowDown, CallbackInfo ci) {
-        if (RotationManager.INSTANCE.getActiveConfigurable() == null || !RotationManager.INSTANCE.getActiveConfigurable().getFixVelocity())
+        ClientPlayerEntity player = MinecraftClient.getInstance().player;
+        if (RotationManager.INSTANCE.getActiveConfigurable() == null || !RotationManager.INSTANCE.getActiveConfigurable().getFixVelocity() || player == null) {
             return;
+        }
 
         Rotation currentRotation = RotationManager.INSTANCE.getCurrentRotation();
-
-        if (currentRotation == null)
+        if (currentRotation == null) {
             return;
+        }
 
         currentRotation = currentRotation.fixedSensitivity();
+        if (currentRotation == null) {
+            return;
+        }
 
-        float deltaYaw = MinecraftClient.getInstance().player.getYaw() - currentRotation.getYaw();
+        float deltaYaw = player.getYaw() - currentRotation.getYaw();
 
         float x = this.movementSideways;
         float z = this.movementForward;
@@ -68,11 +71,6 @@ public class MixinKeyboardInput extends MixinInput {
 
         this.movementSideways = Math.round(newX);
         this.movementForward = Math.round(newZ);
-
-        if (slowDown) {
-            this.movementSideways *= 0.3F;
-            this.movementForward *= 0.3F;
-        }
     }
 
 }

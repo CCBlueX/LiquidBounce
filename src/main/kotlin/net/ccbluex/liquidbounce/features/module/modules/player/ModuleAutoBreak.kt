@@ -44,12 +44,12 @@ object ModuleAutoBreak : Module("AutoBreak", Category.PLAYER) {
             }
 
             // Start breaking
-            mc.options.keyAttack.isPressed = true
+            mc.options.attackKey.isPressed = true
             wasBreaking = true
         } else if (wasBreaking) {
             // Stop breaking
             wasBreaking = false
-            mc.options.keyAttack.isPressed = false
+            mc.options.attackKey.isPressed = false
         }
     }
 
@@ -61,7 +61,7 @@ object ModuleAutoBreak : Module("AutoBreak", Category.PLAYER) {
     override fun disable() {
         // Check if auto break was breaking a block
         if (wasBreaking) {
-            mc.options.keyAttack.isPressed = false
+            mc.options.attackKey.isPressed = false
             wasBreaking = false
         }
     }
