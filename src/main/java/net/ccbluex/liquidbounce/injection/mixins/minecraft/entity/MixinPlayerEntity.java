@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.PlayerJumpEvent;
 import net.ccbluex.liquidbounce.event.PlayerSafeWalkEvent;
 import net.ccbluex.liquidbounce.event.PlayerStrideEvent;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAntiReducedDebugInfo;
@@ -43,7 +44,7 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
 
     @Shadow
     @Final
-    public PlayerInventory inventory;
+    private PlayerInventory inventory;
 
     /**
      * Hook player stride event
@@ -62,7 +63,9 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
     private ItemStack hookMainHandStack(PlayerInventory playerInventory) {
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
 
-        if ((Object) this != player) return this.inventory.getMainHandStack();
+        if ((Object) this != player) {
+            return this.inventory.getMainHandStack();
+        }
 
         int slot = SilentHotbar.INSTANCE.getServersideSlot();
 
@@ -88,14 +91,19 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
      */
     @Redirect(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getYaw()F"))
     private float hookFixRotation(PlayerEntity entity) {
-        if (RotationManager.INSTANCE.getActiveConfigurable() == null || !RotationManager.INSTANCE.getActiveConfigurable().getFixVelocity())
+        if (RotationManager.INSTANCE.getActiveConfigurable() == null || !RotationManager.INSTANCE.getActiveConfigurable().getFixVelocity()) {
             return entity.getYaw();
+        }
 
         Rotation currentRotation = RotationManager.INSTANCE.getCurrentRotation();
-
-        if (currentRotation == null) return entity.getYaw();
+        if (currentRotation == null) {
+            return entity.getYaw();
+        }
 
         currentRotation = currentRotation.fixedSensitivity();
+        if (currentRotation == null) {
+            return entity.getYaw();
+        }
 
         return currentRotation.getYaw();
     }
@@ -111,5 +119,18 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
     private void hookNoClip(CallbackInfo ci) {
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         this.noClip = player != null && player.noClip;
+    }
+  
+    @Inject(method = "jump", at = @At("HEAD"), cancellable = true)
+    private void hookJumpEvent(CallbackInfo ci) {
+        if ((Object) this != MinecraftClient.getInstance().player) {
+            return;
+        }
+
+        final PlayerJumpEvent jumpEvent = new PlayerJumpEvent(getJumpVelocity());
+        EventManager.INSTANCE.callEvent(jumpEvent);
+        if (jumpEvent.isCancelled()) {
+            ci.cancel();
+        }
     }
 }
