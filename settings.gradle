@@ -1,7 +1,27 @@
-rootProject.name = 'LiquidBounce'
-
-if (System.getenv()['mcversion'] == "1.12") {
-    include '1.12.2-Forge'
-} else {
-    include '1.8.9-Forge'
+pluginManagement {
+    repositories {
+        mavenCentral()
+        gradlePluginPortal()
+        maven { url = "https://maven.minecraftforge.net/" }
+        maven { url = "https://jitpack.io/" }
+        maven { url = "https://repo.spongepowered.org/repository/maven-public/" }
+    }
+    resolutionStrategy {
+        eachPlugin {
+            switch (requested.id.id) {
+                case "net.minecraftforge.gradle.forge":
+                    useModule("com.github.asbyth:ForgeGradle:${forgegradle_version}")
+                    break
+                case "org.spongepowered.mixin":
+                    useModule("com.github.xcfrg:mixingradle:${mixingradle_version}")
+                    break
+            }
+        }
+    }
+    plugins {
+        id "org.jetbrains.kotlin.jvm" version kotlin_version
+        id "io.gitlab.arturbosch.detekt" version detekt_version
+    }
 }
+
+rootProject.name = 'LiquidBounce Legacy'
