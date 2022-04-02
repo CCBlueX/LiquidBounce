@@ -69,7 +69,7 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
     @Redirect(method = "getEquippedStack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerInventory;getMainHandStack()Lnet/minecraft/item/ItemStack;"))
     private ItemStack hookMainHandStack(PlayerInventory playerInventory) {
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
-      
+
         if ((Object) this != player) {
             return this.inventory.getMainHandStack();
         }
@@ -121,7 +121,7 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
             callbackInfoReturnable.setReturnValue(false);
         }
     }
-  
+
     @Inject(method = "jump", at = @At("HEAD"), cancellable = true)
     private void hookJumpEvent(CallbackInfo ci) {
         final PlayerJumpEvent jumpEvent = new PlayerJumpEvent(getJumpVelocity());
@@ -130,14 +130,14 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
             ci.cancel();
         }
     }
-  
+
     @Inject(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;hasStatusEffect(Lnet/minecraft/entity/effect/StatusEffect;)Z", shift = At.Shift.BEFORE), locals = LocalCapture.CAPTURE_FAILHARD, cancellable = true)
     private void injectNoSlowBreak(BlockState block, CallbackInfoReturnable<Float> cir, float f) {
         ModuleNoSlowBreak module = ModuleNoSlowBreak.INSTANCE;
         if ((Object) this != MinecraftClient.getInstance().player) {
             return;
         }
-      
+
         if (!module.getEnabled()) {
             return;
         }
