@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
+import net.minecraft.util.BlockPos
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.MoveEvent
@@ -18,6 +18,7 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.block.BlockPane
 
 @ModuleInfo(name = "HighJump", description = "Allows you to jump higher.", category = ModuleCategory.MOVEMENT)
 class HighJump : Module() {
@@ -29,7 +30,7 @@ class HighJump : Module() {
     fun onUpdate(event: UpdateEvent?) {
         val thePlayer = mc.thePlayer!!
 
-        if (glassValue.get() && !classProvider.isBlockPane(getBlock(WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ))))
+        if (glassValue.get() && getBlock(BlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)) !is BlockPane)
             return
 
         when (modeValue.get().toLowerCase()) {
@@ -44,7 +45,7 @@ class HighJump : Module() {
     fun onMove(event: MoveEvent?) {
         val thePlayer = mc.thePlayer ?: return
 
-        if (glassValue.get() && !classProvider.isBlockPane(getBlock(WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ))))
+        if (glassValue.get() && getBlock(BlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)) !is BlockPane)
             return
         if (!thePlayer.onGround) {
             if ("mineplex" == modeValue.get().toLowerCase()) {
@@ -57,7 +58,7 @@ class HighJump : Module() {
     fun onJump(event: JumpEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        if (glassValue.get() && !classProvider.isBlockPane(getBlock(WBlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ))))
+        if (glassValue.get() && getBlock(BlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)) !is BlockPane)
             return
         when (modeValue.get().toLowerCase()) {
             "vanilla" -> event.motion = event.motion * heightValue.get()

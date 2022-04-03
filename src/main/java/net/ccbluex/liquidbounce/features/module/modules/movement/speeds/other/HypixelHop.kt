@@ -5,10 +5,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other
 
-import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.minecraft.potion.Potion
 
 class HypixelHop : SpeedMode("HypixelHop") {
     override fun onMotion() {
@@ -16,7 +16,7 @@ class HypixelHop : SpeedMode("HypixelHop") {
             if (mc.thePlayer!!.onGround) {
                 mc.thePlayer!!.jump()
                 var speed = if (MovementUtils.speed < 0.56f) MovementUtils.speed * 1.045f else 0.56f
-                if (mc.thePlayer!!.onGround && mc.thePlayer!!.isPotionActive(classProvider.getPotionEnum(PotionType.MOVE_SPEED))) speed *= 1f + 0.13f * (1 + mc.thePlayer!!.getActivePotionEffect(classProvider.getPotionEnum(PotionType.MOVE_SPEED))!!.amplifier)
+                if (mc.thePlayer!!.onGround && mc.thePlayer!!.isPotionActive(Potion.moveSpeed)) speed *= 1f + 0.13f * (1 + mc.thePlayer!!.getActivePotionEffect(Potion.moveSpeed)!!.amplifier)
                 MovementUtils.strafe(speed)
                 return
             } else if (mc.thePlayer!!.motionY < 0.2) mc.thePlayer!!.motionY -= 0.02

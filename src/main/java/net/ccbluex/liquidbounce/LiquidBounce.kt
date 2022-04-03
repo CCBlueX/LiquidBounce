@@ -7,8 +7,7 @@ package net.ccbluex.liquidbounce
 
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import net.ccbluex.liquidbounce.api.Wrapper
-import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
+
 import net.ccbluex.liquidbounce.cape.CapeAPI.registerCapeService
 
 import net.ccbluex.liquidbounce.event.ClientShutdownEvent
@@ -20,7 +19,7 @@ import net.ccbluex.liquidbounce.features.special.BungeeCordSpoof
 import net.ccbluex.liquidbounce.features.special.ClientRichPresence
 import net.ccbluex.liquidbounce.features.special.DonatorCape
 import net.ccbluex.liquidbounce.file.FileManager
-import net.ccbluex.liquidbounce.injection.backend.Backend
+
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.script.remapper.Remapper.loadSrg
 import net.ccbluex.liquidbounce.tabs.BlocksTab
@@ -36,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
+import net.minecraft.util.ResourceLocation
 import kotlin.concurrent.thread
 
 object LiquidBounce {
@@ -45,7 +45,7 @@ object LiquidBounce {
     const val CLIENT_VERSION = 73
     const val IN_DEV = true
     const val CLIENT_CREATOR = "CCBlueX"
-    const val MINECRAFT_VERSION = Backend.MINECRAFT_VERSION
+    const val MINECRAFT_VERSION = "1.8.9"
     const val CLIENT_CLOUD = "https://cloud.liquidbounce.net/LiquidBounce"
 
     var isStarting = false
@@ -66,12 +66,10 @@ object LiquidBounce {
     var latestVersion = 0
 
     // Menu Background
-    var background: IResourceLocation? = null
+    var background: ResourceLocation? = null
 
     // Discord RPC
     lateinit var clientRichPresence: ClientRichPresence
-
-    lateinit var wrapper: Wrapper
 
     /**
      * Execute if client will be started

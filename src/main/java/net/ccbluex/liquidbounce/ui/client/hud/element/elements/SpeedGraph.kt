@@ -39,12 +39,15 @@ class SpeedGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F,
 
     override fun drawElement(): Border {
         val width = width.get()
-        if (lastTick != mc.thePlayer!!.ticksExisted) {
-            lastTick = mc.thePlayer!!.ticksExisted
-            val z2 = mc.thePlayer!!.posZ
-            val z1 = mc.thePlayer!!.prevPosZ
-            val x2 = mc.thePlayer!!.posX
-            val x1 = mc.thePlayer!!.prevPosX
+
+        val player = mc.thePlayer!!
+
+        if (lastTick != player.ticksExisted) {
+            lastTick = player.ticksExisted
+            val z2 = player.posZ
+            val z1 = player.prevPosZ
+            val x2 = player.posX
+            val x1 = player.prevPosX
             var speed = sqrt((z2 - z1) * (z2 - z1) + (x2 - x1) * (x2 - x1))
             if (speed < 0)
                 speed = -speed

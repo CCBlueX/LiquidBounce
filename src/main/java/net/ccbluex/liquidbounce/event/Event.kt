@@ -18,7 +18,7 @@ open class CancellableEvent : Event() {
         private set
 
     /**
-     * Allows you to cancel a event
+     * Allows you to cancel an event
      */
     fun cancelEvent() {
         isCancelled = true

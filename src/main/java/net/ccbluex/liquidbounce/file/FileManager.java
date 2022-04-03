@@ -9,9 +9,10 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.file.configs.*;
-import net.ccbluex.liquidbounce.injection.backend.Backend;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.MinecraftInstance;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -24,7 +25,7 @@ import java.lang.reflect.Field;
 @SideOnly(Side.CLIENT)
 public class FileManager extends MinecraftInstance {
 
-    public final File dir = new File(mc.getDataDir(), LiquidBounce.CLIENT_NAME + "-" + Backend.MINECRAFT_VERSION_MAJOR + "." + Backend.MINECRAFT_VERSION_MINOR);
+    public final File dir = new File(mc.mcDataDir, LiquidBounce.CLIENT_NAME + "-" + LiquidBounce.MINECRAFT_VERSION);
     public final File fontsDir = new File(dir, "fonts");
     public final File settingsDir = new File(dir, "settings");
 
@@ -190,8 +191,8 @@ public class FileManager extends MinecraftInstance {
                 if(bufferedImage == null)
                     return;
 
-                LiquidBounce.INSTANCE.setBackground(classProvider.createResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/background.png"));
-                mc.getTextureManager().loadTexture(LiquidBounce.INSTANCE.getBackground(), classProvider.createDynamicTexture(bufferedImage));
+                LiquidBounce.INSTANCE.setBackground(new ResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/background.png"));
+                mc.getTextureManager().loadTexture(LiquidBounce.INSTANCE.getBackground(), new DynamicTexture(bufferedImage));
                 ClientUtils.getLogger().info("[FileManager] Loaded background.");
             }catch(final Exception e) {
                 ClientUtils.getLogger().error("[FileManager] Failed to load background.", e);

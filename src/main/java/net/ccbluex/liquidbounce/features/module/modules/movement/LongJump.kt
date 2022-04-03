@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.util.EnumFacing
 
 @ModuleInfo(name = "LongJump", description = "Allows you to jump further.", category = ModuleCategory.MOVEMENT)
 class LongJump : Module() {
@@ -70,11 +71,11 @@ class LongJump : Module() {
                             var x = 0.0
                             var z = 0.0
 
-                            when {
-                                horizontalFacing.isNorth() -> z = -value
-                                horizontalFacing.isEast() -> x = +value
-                                horizontalFacing.isSouth() -> z = +value
-                                horizontalFacing.isWest() -> x = -value
+                            when(horizontalFacing) {
+                                EnumFacing.NORTH -> z = -value
+                                EnumFacing.EAST -> x = +value
+                                EnumFacing.SOUTH -> z = +value
+                                EnumFacing.WEST -> x = -value
                                 else -> {
                                 }
                             }

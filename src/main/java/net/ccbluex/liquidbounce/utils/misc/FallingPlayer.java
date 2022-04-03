@@ -5,10 +5,11 @@
  */
 package net.ccbluex.liquidbounce.utils.misc;
 
-import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition;
-import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos;
-import net.ccbluex.liquidbounce.api.minecraft.util.WVec3;
 import net.ccbluex.liquidbounce.utils.MinecraftInstance;
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 public class FallingPlayer extends MinecraftInstance {
@@ -51,7 +52,7 @@ public class FallingPlayer extends MinecraftInstance {
                 v = 1.0F;
             }
 
-            v = mc.getThePlayer().getJumpMovementFactor() / v;
+            v = mc.thePlayer.jumpMovementFactor / v;
             strafe = strafe * v;
             forward = forward * v;
             float f1 = (float) Math.sin(yaw * (float) Math.PI / 180.0F);
@@ -75,15 +76,15 @@ public class FallingPlayer extends MinecraftInstance {
 
     public CollisionResult findCollision(int ticks) {
         for (int i = 0; i < ticks; i++) {
-            WVec3 start = new WVec3(x, y, z);
+            Vec3 start = new Vec3(x, y, z);
 
             calculateForTick();
 
-            WVec3 end = new WVec3(x, y, z);
+            Vec3 end = new Vec3(x, y, z);
 
-            WBlockPos raytracedBlock;
+            BlockPos raytracedBlock;
 
-            float w = mc.getThePlayer().getWidth() / 2F;
+            float w = mc.thePlayer.width / 2F;
 
             if ((raytracedBlock = rayTrace(start, end)) != null) return new CollisionResult(raytracedBlock, i);
 
@@ -112,10 +113,10 @@ public class FallingPlayer extends MinecraftInstance {
 
 
     @Nullable
-    private WBlockPos rayTrace(WVec3 start, WVec3 end) {
-        IMovingObjectPosition result = mc.getTheWorld().rayTraceBlocks(start, end, true);
+    private BlockPos rayTrace(Vec3 start, Vec3 end) {
+        MovingObjectPosition result = mc.theWorld.rayTraceBlocks(start, end, true);
 
-        if (result != null && result.getTypeOfHit() == IMovingObjectPosition.WMovingObjectType.BLOCK && result.getSideHit().isUp()) {
+        if (result != null && result.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK && result.sideHit == EnumFacing.UP) {
             return result.getBlockPos();
         }
 
@@ -123,15 +124,15 @@ public class FallingPlayer extends MinecraftInstance {
     }
 
     public static class CollisionResult {
-        private final WBlockPos pos;
+        private final BlockPos pos;
         private final int tick;
 
-        public CollisionResult(WBlockPos pos, int tick) {
+        public CollisionResult(BlockPos pos, int tick) {
             this.pos = pos;
             this.tick = tick;
         }
 
-        public WBlockPos getPos() {
+        public BlockPos getPos() {
             return pos;
         }
 

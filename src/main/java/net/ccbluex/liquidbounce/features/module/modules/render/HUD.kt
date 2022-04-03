@@ -10,7 +10,10 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.value.BoolValue
+import net.minecraft.client.gui.GuiChat
+import net.minecraft.util.ResourceLocation
 
 @ModuleInfo(name = "HUD", description = "Toggles visibility of the HUD.", category = ModuleCategory.RENDER, array = false)
 class HUD : Module() {
@@ -21,7 +24,7 @@ class HUD : Module() {
 
     @EventTarget
     fun onRender2D(event: Render2DEvent?) {
-        if (classProvider.isGuiHudDesigner(mc.currentScreen))
+        if (mc.currentScreen is GuiHudDesigner)
             return
 
         LiquidBounce.hud.render(false)
@@ -41,7 +44,9 @@ class HUD : Module() {
     fun onScreen(event: ScreenEvent) {
         if (mc.theWorld == null || mc.thePlayer == null) return
         if (state && blurValue.get() && !mc.entityRenderer.isShaderActive() && event.guiScreen != null &&
-                !(classProvider.isGuiChat(event.guiScreen) || classProvider.isGuiHudDesigner(event.guiScreen))) mc.entityRenderer.loadShader(classProvider.createResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/blur.json")) else if (mc.entityRenderer.shaderGroup != null &&
+                !(event.guiScreen is GuiChat || event.guiScreen is GuiHudDesigner)) mc.entityRenderer.loadShader(
+            ResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/blur.json")
+        ) else if (mc.entityRenderer.shaderGroup != null &&
                 mc.entityRenderer.shaderGroup!!.shaderGroupName.contains("liquidbounce/blur.json")) mc.entityRenderer.stopUseShader()
     }
 

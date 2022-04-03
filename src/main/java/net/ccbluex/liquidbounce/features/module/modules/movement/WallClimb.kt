@@ -13,6 +13,9 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlockIntersects
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.init.Blocks
+import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.util.AxisAlignedBB
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -63,7 +66,7 @@ class WallClimb : Module() {
             }
             "checkerclimb" -> {
                 val isInsideBlock = collideBlockIntersects(thePlayer.entityBoundingBox) {
-                    !classProvider.isBlockAir(it)
+                    it != Blocks.air
                 }
                 val motion = checkerClimbMotionValue.get()
 
@@ -92,13 +95,13 @@ class WallClimb : Module() {
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        if (classProvider.isCPacketPlayer(event.packet)) {
-            val packetPlayer = event.packet.asCPacketPlayer()
+        val packet = event.packet
 
+        if (packet is C03PacketPlayer) {
             if (glitch) {
                 val yaw = MovementUtils.direction.toFloat()
-                packetPlayer.x = packetPlayer.x - sin(yaw) * 0.00000001
-                packetPlayer.z = packetPlayer.z + cos(yaw) * 0.00000001
+                packet.x = packet.x - sin(yaw) * 0.00000001
+                packet.z = packet.z + cos(yaw) * 0.00000001
                 glitch = false
             }
         }
@@ -112,7 +115,7 @@ class WallClimb : Module() {
 
         when (mode.toLowerCase()) {
             "checkerclimb" -> if (event.y > thePlayer.posY) event.boundingBox = null
-            "clip" -> if (event.block != null && mc.thePlayer != null && classProvider.isBlockAir(event.block) && event.y < thePlayer.posY && thePlayer.isCollidedHorizontally && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isInLava) event.boundingBox = classProvider.createAxisAlignedBB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0).offset(thePlayer.posX, thePlayer.posY.toInt() - 1.0, thePlayer.posZ)
+            "clip" -> if (event.block != null && mc.thePlayer != null && event.block == Blocks.air && event.y < thePlayer.posY && thePlayer.isCollidedHorizontally && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isInLava) event.boundingBox = AxisAlignedBB.fromBounds(0.0, 0.0, 0.0, 1.0, 1.0, 1.0).offset(thePlayer.posX, thePlayer.posY.toInt() - 1.0, thePlayer.posZ)
         }
     }
 }

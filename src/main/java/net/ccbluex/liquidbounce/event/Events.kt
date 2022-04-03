@@ -5,21 +5,21 @@
  */
 package net.ccbluex.liquidbounce.event
 
-import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient
-import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
-import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
-import net.ccbluex.liquidbounce.api.minecraft.util.IEnumFacing
-import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
+import net.minecraft.block.Block
+import net.minecraft.client.gui.GuiScreen
+import net.minecraft.client.multiplayer.WorldClient
+import net.minecraft.entity.Entity
+import net.minecraft.network.Packet
+import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.BlockPos
+import net.minecraft.util.EnumFacing
 
 /**
  * Called when player attacks other entity
  *
  * @param targetEntity Attacked entity
  */
-class AttackEvent(val targetEntity: IEntity?) : Event()
+class AttackEvent(val targetEntity: Entity?) : Event()
 
 /**
  * Called when minecraft get bounding box of block
@@ -28,7 +28,7 @@ class AttackEvent(val targetEntity: IEntity?) : Event()
  * @param block block itself
  * @param boundingBox vanilla bounding box
  */
-class BlockBBEvent(blockPos: WBlockPos, val block: IBlock, var boundingBox: IAxisAlignedBB?) : Event() {
+class BlockBBEvent(blockPos: BlockPos, val block: Block, var boundingBox: AxisAlignedBB?) : Event() {
     val x = blockPos.x
     val y = blockPos.y
     val z = blockPos.z
@@ -37,7 +37,7 @@ class BlockBBEvent(blockPos: WBlockPos, val block: IBlock, var boundingBox: IAxi
 /**
  * Called when player clicks a block
  */
-class ClickBlockEvent(val clickedBlock: WBlockPos?, val WEnumFacing: IEnumFacing?) : Event()
+class ClickBlockEvent(val clickedBlock: BlockPos?, val WEnumFacing: EnumFacing?) : Event()
 
 /**
  * Called when client is shutting down
@@ -47,7 +47,7 @@ class ClientShutdownEvent : Event()
 /**
  * Called when an other entity moves
  */
-data class EntityMovementEvent(val movedEntity: IEntity) : Event()
+data class EntityMovementEvent(val movedEntity: Entity) : Event()
 
 /**
  * Called when player jumps
@@ -108,7 +108,7 @@ class MoveEvent(var x: Double, var y: Double, var z: Double) : CancellableEvent(
 /**
  * Called when receive or send a packet
  */
-class PacketEvent(val packet: IPacket) : CancellableEvent()
+class PacketEvent(val packet: Packet<*>) : CancellableEvent()
 
 /**
  * Called when a block tries to push you
@@ -128,13 +128,13 @@ class Render3DEvent(val partialTicks: Float) : Event()
 /**
  * Called when entity is going to be rendered
  */
-class RenderEntityEvent(val entity: IEntity, val x: Double, val y: Double, val z: Double, val entityYaw: Float,
+class RenderEntityEvent(val entity: Entity, val x: Double, val y: Double, val z: Double, val entityYaw: Float,
                         val partialTicks: Float) : Event()
 
 /**
  * Called when the screen changes
  */
-class ScreenEvent(val guiScreen: IGuiScreen?) : Event()
+class ScreenEvent(val guiScreen: GuiScreen?) : Event()
 
 /**
  * Called when the session changes
@@ -169,7 +169,7 @@ class UpdateEvent : Event()
 /**
  * Called when the world changes
  */
-class WorldEvent(val worldClient: IWorldClient?) : Event()
+class WorldEvent(val worldClient: WorldClient?) : Event()
 
 /**
  * Called when window clicked

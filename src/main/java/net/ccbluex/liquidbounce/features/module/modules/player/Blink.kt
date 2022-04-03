@@ -6,8 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityOtherPlayerMP
-import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
@@ -21,6 +19,9 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
+import net.minecraft.client.entity.EntityOtherPlayerMP
+import net.minecraft.network.Packet
+import net.minecraft.network.play.client.*
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 import java.util.*
@@ -28,8 +29,9 @@ import java.util.concurrent.LinkedBlockingQueue
 
 @ModuleInfo(name = "Blink", description = "Suspends all movement packets.", category = ModuleCategory.PLAYER)
 class Blink : Module() {
-    private val packets = LinkedBlockingQueue<IPacket>()
-    private var fakePlayer: IEntityOtherPlayerMP? = null
+
+    private val packets = LinkedBlockingQueue<Packet<*>>()
+    private var fakePlayer: EntityOtherPlayerMP? = null
     private var disableLogger = false
     private val positions = LinkedList<DoubleArray>()
     private val pulseValue = BoolValue("Pulse", false)
@@ -40,8 +42,7 @@ class Blink : Module() {
         val thePlayer = mc.thePlayer ?: return
 
         if (!pulseValue.get()) {
-            val faker: IEntityOtherPlayerMP = classProvider.createEntityOtherPlayerMP(mc.theWorld!!, thePlayer.gameProfile)
-
+            val faker = EntityOtherPlayerMP(mc.theWorld, thePlayer.gameProfile)
 
             faker.rotationYawHead = thePlayer.rotationYawHead;
             faker.renderYawOffset = thePlayer.renderYawOffset;

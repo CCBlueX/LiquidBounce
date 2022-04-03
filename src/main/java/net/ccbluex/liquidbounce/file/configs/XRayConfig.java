@@ -9,11 +9,11 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import net.ccbluex.liquidbounce.LiquidBounce;
-import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock;
 import net.ccbluex.liquidbounce.features.module.modules.render.XRay;
 import net.ccbluex.liquidbounce.file.FileConfig;
 import net.ccbluex.liquidbounce.file.FileManager;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
+import net.minecraft.block.Block;
 
 import java.io.*;
 
@@ -48,7 +48,7 @@ public class XRayConfig extends FileConfig {
 
         for (final JsonElement jsonElement : jsonArray) {
             try {
-                final IBlock block = LiquidBounce.wrapper.getFunctions().getBlockFromName(jsonElement.getAsString());
+                final Block block = Block.getBlockFromName(jsonElement.getAsString());
 
                 if (xRay.getXrayBlocks().contains(block)) {
                     ClientUtils.getLogger().error("[FileManager] Skipped xray block '" + block.getRegistryName() + "' because the block is already added.");
@@ -78,8 +78,8 @@ public class XRayConfig extends FileConfig {
 
         final JsonArray jsonArray = new JsonArray();
 
-        for (final IBlock block : xRay.getXrayBlocks())
-            jsonArray.add(FileManager.PRETTY_GSON.toJsonTree(LiquidBounce.wrapper.getFunctions().getIdFromBlock(block)));
+        for (final Block block : xRay.getXrayBlocks())
+            jsonArray.add(FileManager.PRETTY_GSON.toJsonTree(Block.getIdFromBlock(block)));
 
         final PrintWriter printWriter = new PrintWriter(new FileWriter(getFile()));
         printWriter.println(FileManager.PRETTY_GSON.toJson(jsonArray));

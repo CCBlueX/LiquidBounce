@@ -5,8 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
-import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -21,6 +19,10 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.entity.Entity
+import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.util.Vec3
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 
@@ -81,7 +83,7 @@ class Tracers : Module() {
         GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
     }
 
-    private fun drawTraces(entity: IEntity, color: Color) {
+    private fun drawTraces(entity: Entity, color: Color) {
         val thePlayer = mc.thePlayer ?: return
 
         val x = (entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * mc.timer.renderPartialTicks
@@ -91,7 +93,7 @@ class Tracers : Module() {
         val z = (entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * mc.timer.renderPartialTicks
                 - mc.renderManager.renderPosZ)
 
-        val eyeVector = WVec3(0.0, 0.0, 1.0)
+        val eyeVector = Vec3(0.0, 0.0, 1.0)
                 .rotatePitch((-Math.toRadians(thePlayer.rotationPitch.toDouble())).toFloat())
                 .rotateYaw((-Math.toRadians(thePlayer.rotationYaw.toDouble())).toFloat())
 

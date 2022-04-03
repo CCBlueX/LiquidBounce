@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.minecraft.client.settings.GameSettings
 
 @ModuleInfo(name = "AutoWalk", description = "Automatically makes you walk.", category = ModuleCategory.MOVEMENT)
 class AutoWalk : Module() {
@@ -20,7 +21,7 @@ class AutoWalk : Module() {
     }
 
     override fun onDisable() {
-        if (!mc.gameSettings.isKeyDown(mc.gameSettings.keyBindForward))
+        if (!GameSettings.isKeyDown(mc.gameSettings.keyBindForward))
             mc.gameSettings.keyBindForward.pressed = false
     }
 }

@@ -5,11 +5,13 @@
  */
 package net.ccbluex.liquidbounce.ui.client.hud
 
+import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.*
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Target
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.minecraft.client.gui.ScaledResolution
 import org.lwjgl.opengl.GL11
 import kotlin.math.max
 import kotlin.math.min
@@ -48,7 +50,7 @@ open class HUD : MinecraftInstance() {
                 .addElement(Armor())
                 .addElement(Effects())
                 .addElement(Notifications())
-                .addElement(SpeedGraph())
+                // .addElement(SpeedGraph()) / not as default pls
 
     }
 
@@ -121,10 +123,10 @@ open class HUD : MinecraftInstance() {
      * Handle mouse move
      */
     fun handleMouseMove(mouseX: Int, mouseY: Int) {
-        if (!classProvider.isGuiHudDesigner(mc.currentScreen))
+        if (mc.currentScreen !is GuiHudDesigner)
             return
 
-        val scaledResolution = classProvider.createScaledResolution(mc)
+        val scaledResolution = ScaledResolution(mc)
 
         for (element in elements) {
             val scaledX = mouseX / element.scale

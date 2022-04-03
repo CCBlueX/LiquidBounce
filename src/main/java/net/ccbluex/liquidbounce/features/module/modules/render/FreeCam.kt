@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityOtherPlayerMP
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
@@ -22,7 +21,7 @@ class FreeCam : Module() {
     private val flyValue = BoolValue("Fly", true)
     private val noClipValue = BoolValue("NoClip", true)
 
-    private var fakePlayer: IEntityOtherPlayerMP? = null
+    private var fakePlayer: EntityOtherPlayerMP? = null
 
     private var oldX = 0.0
     private var oldY = 0.0

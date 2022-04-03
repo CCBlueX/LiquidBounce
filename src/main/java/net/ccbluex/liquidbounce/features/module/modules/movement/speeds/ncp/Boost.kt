@@ -29,7 +29,7 @@ class Boost : SpeedMode("Boost") {
             ground = 0.0f
 
         if (ground == 1.0f && shouldSpeedUp()) {
-            if (!thePlayer.sprinting)
+            if (!thePlayer.isSprinting)
                 offset += 0.8
 
             if (thePlayer.moveStrafing != 0f) {
@@ -62,6 +62,6 @@ class Boost : SpeedMode("Boost") {
     override fun onMove(event: MoveEvent) {}
 
     private fun shouldSpeedUp(): Boolean {
-        return !mc.thePlayer!!.isInLava && !mc.thePlayer!!.isOnLadder && !mc.thePlayer!!.sneaking && MovementUtils.isMoving
+        return !mc.thePlayer!!.isInLava && !mc.thePlayer!!.isOnLadder && !mc.thePlayer!!.isSneaking && MovementUtils.isMoving
     }
 }

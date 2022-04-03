@@ -34,13 +34,13 @@ public abstract class MixinBlockLadder extends MixinBlock {
      */
     @Overwrite
     public void setBlockBoundsBasedOnState(IBlockAccess worldIn, BlockPos pos) {
-        final IBlockState iblockstate = worldIn.getBlockState(pos);
+        final IBlockState blockState = worldIn.getBlockState(pos);
 
-        if(iblockstate.getBlock() instanceof BlockLadder) {
+        if(blockState.getBlock() instanceof BlockLadder) {
             final FastClimb fastClimb = (FastClimb) LiquidBounce.moduleManager.getModule(FastClimb.class);
             final float f = Objects.requireNonNull(fastClimb).getState() && fastClimb.getModeValue().get().equalsIgnoreCase("AAC3.0.0") ? 0.99f : 0.125f;
 
-            switch(iblockstate.getValue(FACING)) {
+            switch(blockState.getValue(FACING)) {
                 case NORTH:
                     this.setBlockBounds(0.0F, 0.0F, 1.0F - f, 1.0F, 1.0F, 1.0F);
                     break;

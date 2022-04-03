@@ -5,17 +5,20 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp
 
-import net.ccbluex.liquidbounce.api.enums.MaterialType
-import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock
-import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
-import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
-import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.minecraft.block.Block
+import net.minecraft.block.material.Material
+import net.minecraft.init.Blocks
+import net.minecraft.potion.Potion
+import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.BlockPos
 import java.math.BigDecimal
 import java.math.RoundingMode
+import kotlin.math.cos
 import kotlin.math.floor
+import kotlin.math.sin
 import kotlin.math.sqrt
 
 class YPort : SpeedMode("YPort") {
@@ -25,7 +28,8 @@ class YPort : SpeedMode("YPort") {
     private var timerDelay = 0
     private var safeJump = false
     override fun onMotion() {
-        if (!safeJump && !mc.gameSettings.keyBindJump.isKeyDown && !mc.thePlayer!!.isOnLadder && !mc.thePlayer!!.isInsideOfMaterial(classProvider.getMaterialEnum(MaterialType.WATER)) && !mc.thePlayer!!.isInsideOfMaterial(classProvider.getMaterialEnum(MaterialType.LAVA)) && !mc.thePlayer!!.isInWater && (!classProvider.isBlockAir(this.getBlock(-1.1)) && !classProvider.isBlockAir(this.getBlock(-1.1)) || !classProvider.isBlockAir(this.getBlock(-0.1)) && mc.thePlayer!!.motionX != 0.0 && mc.thePlayer!!.motionZ != 0.0 && !mc.thePlayer!!.onGround && mc.thePlayer!!.fallDistance < 3.0f && mc.thePlayer!!.fallDistance > 0.05) && level == 3) mc.thePlayer!!.motionY = -0.3994
+        if (!safeJump && !mc.gameSettings.keyBindJump.isKeyDown && !mc.thePlayer!!.isOnLadder && !mc.thePlayer!!.isInsideOfMaterial(
+                Material.water) && !mc.thePlayer!!.isInsideOfMaterial(Material.lava) && !mc.thePlayer!!.isInWater && (this.getBlock(-1.1) != Blocks.air && this.getBlock(-1.1) != Blocks.air || this.getBlock(-0.1) != Blocks.air && mc.thePlayer!!.motionX != 0.0 && mc.thePlayer!!.motionZ != 0.0 && !mc.thePlayer!!.onGround && mc.thePlayer!!.fallDistance < 3.0f && mc.thePlayer!!.fallDistance > 0.05) && level == 3) mc.thePlayer!!.motionY = -0.3994
         val xDist = mc.thePlayer!!.posX - mc.thePlayer!!.prevPosX
         val zDist = mc.thePlayer!!.posZ - mc.thePlayer!!.prevPosZ
         lastDist = sqrt(xDist * xDist + zDist * zDist)
@@ -68,7 +72,7 @@ class YPort : SpeedMode("YPort") {
             if (mc.theWorld!!.getCollidingBoundingBoxes(mc.thePlayer!!, mc.thePlayer!!.entityBoundingBox.offset(0.0, mc.thePlayer!!.motionY, 0.0)).size > 0 || mc.thePlayer!!.isCollidedVertically) level = 1
             moveSpeed = lastDist - lastDist / 159.0
         }
-        moveSpeed = Math.max(moveSpeed, baseMoveSpeed)
+        moveSpeed = moveSpeed.coerceAtLeast(baseMoveSpeed)
         var forward: Float = mc.thePlayer!!.movementInput.moveForward
         var strafe: Float = mc.thePlayer!!.movementInput.moveStrafe
         var yaw = mc.thePlayer!!.rotationYaw
@@ -85,8 +89,8 @@ class YPort : SpeedMode("YPort") {
             }
             if (forward > 0f) forward = 1f else if (forward < 0f) forward = -1f
         }
-        val mx = Math.cos(Math.toRadians(yaw + 90.0f.toDouble()))
-        val mz = Math.sin(Math.toRadians(yaw + 90.0f.toDouble()))
+        val mx = cos(Math.toRadians(yaw + 90.0f.toDouble()))
+        val mz = sin(Math.toRadians(yaw + 90.0f.toDouble()))
         event.x = forward * moveSpeed * mx + strafe * moveSpeed * mz
         event.z = forward * moveSpeed * mz - strafe * moveSpeed * mx
         mc.thePlayer!!.stepHeight = 0.6f
@@ -99,17 +103,17 @@ class YPort : SpeedMode("YPort") {
     private val baseMoveSpeed: Double
         get() {
             var baseSpeed = 0.2873
-            if (mc.thePlayer!!.isPotionActive(classProvider.getPotionEnum(PotionType.MOVE_SPEED))) {
-                val amplifier: Int = mc.thePlayer!!.getActivePotionEffect(classProvider.getPotionEnum(PotionType.MOVE_SPEED))!!.amplifier
+            if (mc.thePlayer!!.isPotionActive(Potion.moveSpeed)) {
+                val amplifier: Int = mc.thePlayer!!.getActivePotionEffect(Potion.moveSpeed)!!.amplifier
                 baseSpeed *= 1.0 + 0.2 * (amplifier + 1)
             }
             return baseSpeed
         }
 
-    private fun getBlock(axisAlignedBB: IAxisAlignedBB): IBlock? {
+    private fun getBlock(axisAlignedBB: AxisAlignedBB): Block? {
         for (x in floor(axisAlignedBB.minX).toInt() until floor(axisAlignedBB.maxX).toInt() + 1) {
             for (z in floor(axisAlignedBB.minZ).toInt() until floor(axisAlignedBB.maxZ).toInt() + 1) {
-                val block = mc.theWorld!!.getBlockState(WBlockPos(x, axisAlignedBB.minY.toInt(), z)).block
+                val block = mc.theWorld!!.getBlockState(BlockPos(x, axisAlignedBB.minY.toInt(), z)).block
 
                 if (block != null)
                     return block
@@ -118,7 +122,7 @@ class YPort : SpeedMode("YPort") {
         return null
     }
 
-    private fun getBlock(offset: Double): IBlock? {
+    private fun getBlock(offset: Double): Block? {
         return this.getBlock(mc.thePlayer!!.entityBoundingBox.offset(0.0, offset, 0.0))
     }
 

@@ -5,13 +5,12 @@
  */
 package net.ccbluex.liquidbounce.ui.client.tools;
 
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton;
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen;
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField;
-import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.TabUtils;
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.GuiTextField;
 import org.lwjgl.input.Keyboard;
 
 import javax.swing.*;
@@ -24,15 +23,15 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GuiPortScanner extends WrappedGuiScreen {
+public class GuiPortScanner extends GuiScreen {
 
-    private final IGuiScreen prevGui;
+    private final GuiScreen prevGui;
     private final List<Integer> ports = new ArrayList<>();
-    private IGuiTextField hostField;
-    private IGuiTextField minPortField;
-    private IGuiTextField maxPortField;
-    private IGuiTextField threadsField;
-    private IGuiButton buttonToggle;
+    private GuiTextField hostField;
+    private GuiTextField minPortField;
+    private GuiTextField maxPortField;
+    private GuiTextField threadsField;
+    private GuiButton buttonToggle;
     private boolean running;
     private String status = "§7Waiting...";
     private String host;
@@ -41,7 +40,7 @@ public class GuiPortScanner extends WrappedGuiScreen {
     private int minPort;
     private int checkedPort;
 
-    public GuiPortScanner(final IGuiScreen prevGui) {
+    public GuiPortScanner(final GuiScreen prevGui) {
         this.prevGui = prevGui;
     }
 
@@ -49,38 +48,38 @@ public class GuiPortScanner extends WrappedGuiScreen {
     public void initGui() {
         Keyboard.enableRepeatEvents(true);
 
-        hostField = classProvider.createGuiTextField(0, Fonts.font40, representedScreen.getWidth() / 2 - 100, 60, 200, 20);
+        hostField = new GuiTextField(0, Fonts.font40, width / 2 - 100, 60, 200, 20);
         hostField.setFocused(true);
         hostField.setMaxStringLength(Integer.MAX_VALUE);
         hostField.setText("localhost");
 
-        minPortField = classProvider.createGuiTextField(1, Fonts.font40, representedScreen.getWidth() / 2 - 100, 90, 90, 20);
+        minPortField = new GuiTextField(1, Fonts.font40, width / 2 - 100, 90, 90, 20);
         minPortField.setMaxStringLength(5);
         minPortField.setText(String.valueOf(1));
 
-        maxPortField = classProvider.createGuiTextField(2, Fonts.font40, representedScreen.getWidth() / 2 + 10, 90, 90, 20);
+        maxPortField = new GuiTextField(2, Fonts.font40, width / 2 + 10, 90, 90, 20);
         maxPortField.setMaxStringLength(5);
         maxPortField.setText(String.valueOf(65535));
 
-        threadsField = classProvider.createGuiTextField(3, Fonts.font40, representedScreen.getWidth() / 2 - 100, 120, 200, 20);
+        threadsField = new GuiTextField(3, Fonts.font40, width / 2 - 100, 120, 200, 20);
         threadsField.setMaxStringLength(Integer.MAX_VALUE);
         threadsField.setText(String.valueOf(500));
 
-        representedScreen.getButtonList().add(buttonToggle = classProvider.createGuiButton(1, representedScreen.getWidth() / 2 - 100, representedScreen.getHeight() / 4 + 95, running ? "Stop" : "Start"));
-        representedScreen.getButtonList().add(classProvider.createGuiButton(0, representedScreen.getWidth() / 2 - 100, representedScreen.getHeight() / 4 + 120, "Back"));
-        representedScreen.getButtonList().add(classProvider.createGuiButton(2, representedScreen.getWidth() / 2 - 100, representedScreen.getHeight() / 4 + 155, "Export"));
+        buttonList.add(buttonToggle = new GuiButton(1, width / 2 - 100, height / 4 + 95, running ? "Stop" : "Start"));
+        buttonList.add(new GuiButton(0, width / 2 - 100, height / 4 + 120, "Back"));
+        buttonList.add(new GuiButton(2, width / 2 - 100, height / 4 + 155, "Export"));
 
         super.initGui();
     }
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        representedScreen.drawBackground(0);
+        drawBackground(0);
 
-        Fonts.font40.drawCenteredString("Port Scanner", representedScreen.getWidth() / 2.0f, 34, 0xffffff);
-        Fonts.font35.drawCenteredString(running ? "§7" + checkedPort + " §8/ §7" + maxPort : status == null ? "" : status, representedScreen.getWidth() / 2.0f, representedScreen.getHeight() / 4.0f + 80, 0xffffff);
+        Fonts.font40.drawCenteredString("Port Scanner", width / 2.0f, 34, 0xffffff);
+        Fonts.font35.drawCenteredString(running ? "§7" + checkedPort + " §8/ §7" + maxPort : status == null ? "" : status, width / 2.0f, height / 4.0f + 80, 0xffffff);
 
-        buttonToggle.setDisplayString(running ? "Stop" : "Start");
+        buttonToggle.displayString = running ? "Stop" : "Start";
 
         hostField.drawTextBox();
         minPortField.drawTextBox();
@@ -102,8 +101,8 @@ public class GuiPortScanner extends WrappedGuiScreen {
     }
 
     @Override
-    public void actionPerformed(IGuiButton button) throws IOException {
-        switch (button.getId()) {
+    public void actionPerformed(GuiButton button) throws IOException {
+        switch (button.id) {
             case 0:
                 mc.displayGuiScreen(prevGui);
                 break;
@@ -170,7 +169,7 @@ public class GuiPortScanner extends WrappedGuiScreen {
                                 }
 
                                 running = false;
-                                buttonToggle.setDisplayString("Start");
+                                buttonToggle.displayString = "Start";
                             } catch (final Exception e) {
                                 status = "§a§l" + e.getClass().getSimpleName() + ": §c" + e.getMessage();
                             }
@@ -180,7 +179,7 @@ public class GuiPortScanner extends WrappedGuiScreen {
                     running = true;
                 }
 
-                buttonToggle.setDisplayString(running ? "Stop" : "Start");
+                buttonToggle.displayString = running ? "Stop" : "Start";
                 break;
             case 2:
                 final File selectedFile = MiscUtils.saveFileChooser();

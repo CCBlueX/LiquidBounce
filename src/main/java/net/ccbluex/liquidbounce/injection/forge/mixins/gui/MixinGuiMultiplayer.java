@@ -7,7 +7,6 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.special.BungeeCordSpoof;
-import net.ccbluex.liquidbounce.injection.backend.GuiScreenImplKt;
 import net.ccbluex.liquidbounce.ui.client.GuiAntiForge;
 import net.ccbluex.liquidbounce.ui.client.tools.GuiTools;
 import net.minecraft.client.gui.GuiButton;
@@ -34,7 +33,7 @@ public abstract class MixinGuiMultiplayer extends MixinGuiScreen {
     private void actionPerformed(GuiButton button, CallbackInfo callbackInfo) {
         switch (button.id) {
             case 997:
-                mc.displayGuiScreen(GuiScreenImplKt.unwrap(LiquidBounce.wrapper.getClassProvider().wrapGuiScreen(new GuiAntiForge(GuiScreenImplKt.wrap((GuiScreen) (Object) this)))));
+                mc.displayGuiScreen(new GuiAntiForge((GuiScreen) (Object) this));
                 break;
             case 998:
                 BungeeCordSpoof.enabled = !BungeeCordSpoof.enabled;
@@ -42,7 +41,7 @@ public abstract class MixinGuiMultiplayer extends MixinGuiScreen {
                 LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
                 break;
             case 999:
-                mc.displayGuiScreen(GuiScreenImplKt.unwrap(LiquidBounce.wrapper.getClassProvider().wrapGuiScreen(new GuiTools(GuiScreenImplKt.wrap((GuiScreen) (Object) this)))));
+                mc.displayGuiScreen(new GuiTools((GuiScreen) (Object) this));
                 break;
         }
     }

@@ -7,11 +7,13 @@ package net.ccbluex.liquidbounce.cape
 
 import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.minecraft.client.render.WIImageBuffer
-import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
+
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
+import net.minecraft.client.renderer.IImageBuffer
+import net.minecraft.client.renderer.ThreadDownloadImageData
+import net.minecraft.util.ResourceLocation
 import java.awt.image.BufferedImage
 import java.util.*
 
@@ -64,9 +66,9 @@ object CapeAPI : MinecraftInstance() {
         val url = (capeService ?: return null).getCape(uuid) ?: return null
 
         // Load cape
-        val resourceLocation = LiquidBounce.wrapper.classProvider.createResourceLocation("capes/%s.png".format(uuid.toString()))
+        val resourceLocation = ResourceLocation("capes/%s.png".format(uuid.toString()))
         val capeInfo = CapeInfo(resourceLocation)
-        val threadDownloadImageData = LiquidBounce.wrapper.classProvider.createThreadDownloadImageData(null, url, null, object : WIImageBuffer {
+        val threadDownloadImageData = ThreadDownloadImageData(null, url, null, object : IImageBuffer {
 
             override fun parseUserSkin(image: BufferedImage?): BufferedImage? {
                 return image
@@ -91,4 +93,4 @@ object CapeAPI : MinecraftInstance() {
     fun hasCapeService() = capeService != null
 }
 
-data class CapeInfo(val resourceLocation: IResourceLocation, var isCapeAvailable: Boolean = false)
+data class CapeInfo(val resourceLocation: ResourceLocation, var isCapeAvailable: Boolean = false)

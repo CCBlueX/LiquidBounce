@@ -13,6 +13,8 @@ import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer.Companion.assumeNonVolat
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FontValue
+import net.minecraft.client.resources.I18n
+import net.minecraft.potion.Potion
 
 /**
  * CustomHUD effects element
@@ -38,7 +40,7 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F,
         assumeNonVolatile = true
 
         for (effect in mc.thePlayer!!.activePotionEffects) {
-            val potion = functions.getPotionById(effect.potionID)
+            val potion = Potion.potionTypes[effect.potionID]
 
             val number = when {
                 effect.amplifier == 1 -> "II"
@@ -54,14 +56,14 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F,
                 else -> "I"
             }
 
-            val name = "${functions.formatI18n(potion.name)} $number§f: §7${effect.getDurationString()}"
+            val name = "${I18n.format(potion.name)} $number§f: §7${Potion.getDurationString(effect)}"
             val stringWidth = fontRenderer.getStringWidth(name).toFloat()
 
             if (width < stringWidth)
                 width = stringWidth
 
             fontRenderer.drawString(name, -stringWidth, y, potion.liquidColor, shadow.get())
-            y -= fontRenderer.fontHeight
+            y -= fontRenderer.FONT_HEIGHT
         }
 
         assumeNonVolatile = false
@@ -72,6 +74,6 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F,
         if (y == 0F)
             y = -10F
 
-        return Border(2F, fontRenderer.fontHeight.toFloat(), -width - 2F, y + fontRenderer.fontHeight - 2F)
+        return Border(2F, fontRenderer.FONT_HEIGHT.toFloat(), -width - 2F, y + fontRenderer.FONT_HEIGHT - 2F)
     }
 }

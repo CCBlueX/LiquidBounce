@@ -7,25 +7,25 @@ package net.ccbluex.liquidbounce.tabs
 
 import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.enums.ItemType
-import net.ccbluex.liquidbounce.api.minecraft.item.IItem
-import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
-import net.ccbluex.liquidbounce.api.util.WrappedCreativeTabs
-import net.ccbluex.liquidbounce.injection.backend.WrapperImpl.classProvider
+
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
+import net.minecraft.creativetab.CreativeTabs
+import net.minecraft.init.Items
+import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
 
-class HeadsTab : WrappedCreativeTabs("Heads") {
+class HeadsTab : CreativeTabs("Heads") {
 
     // List of heads
-    private val heads = ArrayList<IItemStack>()
+    private val heads = ArrayList<ItemStack>()
 
     /**
      * Constructor of heads tab
      */
     init {
-        representedType.backgroundImageName = "item_search.png"
+        backgroundImageName = "item_search.png"
 
         loadHeads()
     }
@@ -76,7 +76,7 @@ class HeadsTab : WrappedCreativeTabs("Heads") {
      *
      * @param itemList list of tab items
      */
-    override fun displayAllReleventItems(itemList: MutableList<IItemStack>) {
+    override fun displayAllReleventItems(itemList: MutableList<ItemStack>) {
         itemList.addAll(heads)
     }
 
@@ -85,7 +85,7 @@ class HeadsTab : WrappedCreativeTabs("Heads") {
      *
      * @return icon item
      */
-    override fun getTabIconItem(): IItem = classProvider.getItemEnum(ItemType.SKULL)
+    override fun getTabIconItem(): Item = Items.skull
 
     /**
      * Return name of tab

@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.ui.font
 
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.minecraft.client.renderer.GlStateManager
 import net.minecraft.client.renderer.texture.TextureUtil
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
@@ -87,7 +88,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, v
         if (this.loadingScreen)
             GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID);
         else
-            classProvider.getGlStateManager().bindTexture(textureID)
+            GlStateManager.bindTexture(textureID)
 
         val red: Float = (color shr 16 and 0xff) / 255F
         val green: Float = (color shr 8 and 0xff) / 255F
@@ -134,7 +135,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, v
                 if (this.loadingScreen)
                     GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID);
                 else
-                    classProvider.getGlStateManager().bindTexture(textureID)
+                    GlStateManager.bindTexture(textureID)
 
                 GL11.glColor4f(red, green, blue, alpha)
 

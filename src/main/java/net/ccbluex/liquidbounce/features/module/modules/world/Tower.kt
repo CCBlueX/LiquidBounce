@@ -6,11 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.enums.EnumFacingType
-import net.ccbluex.liquidbounce.api.enums.StatType
-import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition
-import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -25,12 +20,26 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.canBeClicked
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.isReplaceable
 import net.ccbluex.liquidbounce.utils.block.PlaceInfo
+import net.ccbluex.liquidbounce.utils.extensions.getBlock
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.block.BlockBush
+import net.minecraft.client.gui.ScaledResolution
+import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.init.Blocks
+import net.minecraft.item.ItemBlock
+import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.network.play.client.C09PacketHeldItemChange
+import net.minecraft.network.play.client.C0APacketAnimation
+import net.minecraft.stats.StatList
+import net.minecraft.util.BlockPos
+import net.minecraft.util.EnumFacing
+import net.minecraft.util.MovingObjectPosition
+import net.minecraft.util.Vec3
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
 import java.awt.Color
@@ -108,7 +117,7 @@ class Tower : Module() {
         lockRotation = null
 
         if (slot != thePlayer.inventory.currentItem) {
-            mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(thePlayer.inventory.currentItem))
+            mc.netHandler.addToSendQueue(C09PacketHeldItemChange(thePlayer.inventory.currentItem))
         }
     }
 
@@ -134,26 +143,22 @@ class Tower : Module() {
             timer.update()
 
             val update = if (!autoBlockValue.get().equals("Off", ignoreCase = true)) {
-                InventoryUtils.findAutoBlockBlock() != -1 || thePlayer.heldItem != null && classProvider.isItemBlock(
-                    thePlayer.heldItem!!.item
-                )
+                InventoryUtils.findAutoBlockBlock() != -1 || thePlayer.heldItem != null && thePlayer.heldItem!!.item is ItemBlock
             } else {
-                thePlayer.heldItem != null && classProvider.isItemBlock(thePlayer.heldItem!!.item)
+                thePlayer.heldItem != null && thePlayer.heldItem!!.item is ItemBlock
             }
 
             if (update) {
-                if (!stopWhenBlockAbove.get() || classProvider.isBlockAir(
-                        getBlock(
-                            WBlockPos(
-                                thePlayer.posX, thePlayer.posY + 2, thePlayer.posZ
-                            )
+                if (!stopWhenBlockAbove.get() || getBlock(
+                        BlockPos(
+                            thePlayer.posX, thePlayer.posY + 2, thePlayer.posZ
                         )
-                    )
+                    ) == Blocks.air
                 ) {
                     move()
                 }
-                val blockPos = WBlockPos(thePlayer.posX, thePlayer.posY - 1.0, thePlayer.posZ)
-                if (classProvider.isBlockAir(mc.theWorld!!.getBlockState(blockPos).block)) {
+                val blockPos = BlockPos(thePlayer.posX, thePlayer.posY - 1.0, thePlayer.posZ)
+                if (blockPos.getBlock() == Blocks.air) {
                     if (search(blockPos) && rotationsValue.get()) {
                         val vecRotation = RotationUtils.faceBlock(blockPos)
                         if (vecRotation != null) {
@@ -169,7 +174,7 @@ class Tower : Module() {
     //Send jump packets, bypasses Hypixel.
     private fun fakeJump() {
         mc.thePlayer!!.isAirBorne = true
-        mc.thePlayer!!.triggerAchievement(classProvider.getStatEnum(StatType.JUMP_STAT))
+        mc.thePlayer!!.triggerAchievement(StatList.jumpStat)
     }
 
     /**
@@ -199,12 +204,12 @@ class Tower : Module() {
             "packet" -> if (thePlayer.onGround && timer.hasTimePassed(2)) {
                 fakeJump()
                 mc.netHandler.addToSendQueue(
-                    classProvider.createCPacketPlayerPosition(
+                    C03PacketPlayer.C04PacketPlayerPosition(
                         thePlayer.posX, thePlayer.posY + 0.42, thePlayer.posZ, false
                     )
                 )
                 mc.netHandler.addToSendQueue(
-                    classProvider.createCPacketPlayerPosition(
+                    C03PacketPlayer.C04PacketPlayerPosition(
                         thePlayer.posX, thePlayer.posY + 0.753, thePlayer.posZ, false
                     )
                 )
@@ -268,8 +273,7 @@ class Tower : Module() {
 
         // AutoBlock
         var itemStack = thePlayer.heldItem
-        if (itemStack == null || !classProvider.isItemBlock(itemStack.item) || classProvider.isBlockBush(itemStack.item?.asItemBlock()?.block)) {
-
+        if (itemStack == null || itemStack.item !is ItemBlock || (itemStack.item as ItemBlock).block is BlockBush) {
             val blockSlot = InventoryUtils.findAutoBlockBlock()
 
             if (blockSlot == -1) return
@@ -282,12 +286,12 @@ class Tower : Module() {
                 }
                 "Spoof" -> {
                     if (blockSlot - 36 != slot) {
-                        mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(blockSlot - 36))
+                        mc.netHandler.addToSendQueue(C09PacketHeldItemChange(blockSlot - 36))
                     }
                 }
                 "Switch" -> {
                     if (blockSlot - 36 != slot) {
-                        mc.netHandler.addToSendQueue(classProvider.createCPacketHeldItemChange(blockSlot - 36))
+                        mc.netHandler.addToSendQueue(C09PacketHeldItemChange(blockSlot - 36))
                     }
                 }
             }
@@ -302,12 +306,12 @@ class Tower : Module() {
             if (swingValue.get()) {
                 thePlayer.swingItem()
             } else {
-                mc.netHandler.addToSendQueue(classProvider.createCPacketAnimation())
+                mc.netHandler.addToSendQueue(C0APacketAnimation())
             }
         }
         if (autoBlockValue.get().equals("Switch", true)) {
             if (slot != mc.thePlayer!!.inventory.currentItem) mc.netHandler.addToSendQueue(
-                classProvider.createCPacketHeldItemChange(
+                C09PacketHeldItemChange(
                     mc.thePlayer!!.inventory.currentItem
                 )
             )
@@ -321,21 +325,20 @@ class Tower : Module() {
      * @param blockPosition pos
      * @return
      */
-    private fun search(blockPosition: WBlockPos): Boolean {
+    private fun search(blockPosition: BlockPos): Boolean {
         val thePlayer = mc.thePlayer ?: return false
         if (!isReplaceable(blockPosition)) {
             return false
         }
 
-        val eyesPos = WVec3(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, thePlayer.posZ)
+        val eyesPos = Vec3(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, thePlayer.posZ)
         var placeRotation: PlaceRotation? = null
-        for (facingType in EnumFacingType.values()) {
-            val side = classProvider.getEnumFacing(facingType)
-            val neighbor = blockPosition.offset(side)
+        for (facingType in EnumFacing.values()) {
+            val neighbor = blockPosition.offset(facingType)
             if (!canBeClicked(neighbor)) {
                 continue
             }
-            val dirVec = WVec3(side.directionVec)
+            val dirVec = Vec3(facingType.directionVec)
             val matrix = matrixValue.get()
             var xSearch = 0.1
             while (xSearch < 0.9) {
@@ -343,19 +346,19 @@ class Tower : Module() {
                 while (ySearch < 0.9) {
                     var zSearch = 0.1
                     while (zSearch < 0.9) {
-                        val posVec = WVec3(blockPosition).addVector(
+                        val posVec = Vec3(blockPosition).addVector(
                             if (matrix) 0.5 else xSearch, if (matrix) 0.5 else ySearch, if (matrix) 0.5 else zSearch
                         )
                         val distanceSqPosVec = eyesPos.squareDistanceTo(posVec)
-                        val hitVec = posVec.add(WVec3(dirVec.xCoord * 0.5, dirVec.yCoord * 0.5, dirVec.zCoord * 0.5))
+                        val hitVec = posVec.add(Vec3(dirVec.xCoord * 0.5, dirVec.yCoord * 0.5, dirVec.zCoord * 0.5))
                         if (eyesPos.distanceTo(hitVec) > 4.25 || distanceSqPosVec > eyesPos.squareDistanceTo(
                                 posVec.add(dirVec)
                             ) || mc.theWorld!!.rayTraceBlocks(
                                 eyesPos,
                                 hitVec,
-                                stopOnLiquid = false,
-                                ignoreBlockWithoutBoundingBox = true,
-                                returnLastUncollidableBlock = false
+                                false,
+                                true,
+                                false
                             ) != null
                         ) {
                             zSearch += 0.1
@@ -372,12 +375,12 @@ class Tower : Module() {
                         val obj = mc.theWorld!!.rayTraceBlocks(
                             eyesPos,
                             vector,
-                            stopOnLiquid = false,
-                            ignoreBlockWithoutBoundingBox = false,
-                            returnLastUncollidableBlock = true
+                            false,
+                            false,
+                            true
                         ) ?: continue
 
-                        if (obj.typeOfHit != IMovingObjectPosition.WMovingObjectType.BLOCK || obj.blockPos != neighbor) {
+                        if (obj.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK || obj.blockPos != neighbor) {
                             zSearch += 0.1
                             continue
                         }
@@ -386,7 +389,7 @@ class Tower : Module() {
                                 placeRotation.rotation
                             )
                         ) {
-                            placeRotation = PlaceRotation(PlaceInfo(neighbor, side.opposite, hitVec), rotation)
+                            placeRotation = PlaceRotation(PlaceInfo(neighbor, facingType.opposite, hitVec), rotation)
                         }
                         zSearch += 0.1
                     }
@@ -408,8 +411,8 @@ class Tower : Module() {
     fun onPacket(event: PacketEvent) {
         if (mc.thePlayer == null) return
         val packet = event.packet
-        if (classProvider.isCPacketHeldItemChange(packet)) {
-            slot = packet.asCPacketHeldItemChange().slotId
+        if (packet is C09PacketHeldItemChange) {
+            slot = packet.slotId
         }
     }
 
@@ -427,7 +430,7 @@ class Tower : Module() {
                 GL11.glTranslatef(0f, 15f, 0f)
             }
             val info = "Blocks: §7$blocksAmount"
-            val scaledResolution = classProvider.createScaledResolution(mc)
+            val scaledResolution = ScaledResolution(mc)
 
             RenderUtils.drawBorderedRect(
                 scaledResolution.scaledWidth / 2 - 2.toFloat(),
@@ -439,7 +442,7 @@ class Tower : Module() {
                 Color.BLACK.rgb
             )
 
-            classProvider.getGlStateManager().resetColor()
+            GlStateManager.resetColor()
 
             Fonts.font40.drawString(
                 info,
@@ -464,8 +467,9 @@ class Tower : Module() {
             var amount = 0
             for (i in 36..44) {
                 val itemStack = mc.thePlayer!!.inventoryContainer.getSlot(i).stack
-                if (itemStack != null && classProvider.isItemBlock(itemStack.item)) {
-                    val block = itemStack.item!!.asItemBlock().block
+                val item = itemStack?.item
+                if (itemStack != null && item is ItemBlock) {
+                    val block = item.block
                     if (mc.thePlayer!!.heldItem == itemStack || !InventoryUtils.BLOCK_BLACKLIST.contains(block)) {
                         amount += itemStack.stackSize
                     }

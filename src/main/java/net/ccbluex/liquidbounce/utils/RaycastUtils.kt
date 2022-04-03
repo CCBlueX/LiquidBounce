@@ -5,8 +5,9 @@
  */
 package net.ccbluex.liquidbounce.utils
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
-import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
+import net.minecraft.entity.Entity
+import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.util.Vec3
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -16,7 +17,7 @@ object RaycastUtils : MinecraftInstance() {
     @JvmStatic
     fun raycastEntity(range: Double, entityFilter: EntityFilter) = raycastEntity(range, RotationUtils.serverRotation.yaw, RotationUtils.serverRotation.pitch, entityFilter)
 
-    private fun raycastEntity(range: Double, yaw: Float, pitch: Float, entityFilter: EntityFilter): IEntity? {
+    private fun raycastEntity(range: Double, yaw: Float, pitch: Float, entityFilter: EntityFilter): Entity? {
         val renderViewEntity = mc.renderViewEntity
 
         if (renderViewEntity != null && mc.theWorld != null) {
@@ -28,13 +29,13 @@ object RaycastUtils : MinecraftInstance() {
             val pitchCos = (-cos(-pitch * 0.017453292f.toDouble())).toFloat()
             val pitchSin = sin(-pitch * 0.017453292f.toDouble()).toFloat()
 
-            val entityLook = WVec3((yawSin * pitchCos).toDouble(), pitchSin.toDouble(), (yawCos * pitchCos).toDouble())
+            val entityLook = Vec3((yawSin * pitchCos).toDouble(), pitchSin.toDouble(), (yawCos * pitchCos).toDouble())
             val vector = eyePosition.addVector(entityLook.xCoord * blockReachDistance, entityLook.yCoord * blockReachDistance, entityLook.zCoord * blockReachDistance)
             val entityList = mc.theWorld!!.getEntitiesInAABBexcluding(renderViewEntity, renderViewEntity.entityBoundingBox.addCoord(entityLook.xCoord * blockReachDistance, entityLook.yCoord * blockReachDistance, entityLook.zCoord * blockReachDistance).expand(1.0, 1.0, 1.0)) {
-                it != null && (!classProvider.isEntityPlayer(it) || !it.asEntityPlayer().spectator) && it.canBeCollidedWith()
+                it != null && (it !is EntityPlayer || !it.isSpectator) && it.canBeCollidedWith()
             }
 
-            var pointedEntity: IEntity? = null
+            var pointedEntity: Entity? = null
 
             for (entity in entityList) {
                 if (!entityFilter.canRaycast(entity))
@@ -72,6 +73,6 @@ object RaycastUtils : MinecraftInstance() {
     }
 
     interface EntityFilter {
-        fun canRaycast(entity: IEntity?): Boolean
+        fun canRaycast(entity: Entity?): Boolean
     }
 }

@@ -6,39 +6,41 @@
 package net.ccbluex.liquidbounce.ui.client
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen
-import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
+
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
+import net.minecraft.client.gui.GuiButton
+import net.minecraft.client.gui.GuiScreen
+import net.minecraft.client.renderer.texture.DynamicTexture
+import net.minecraft.util.ResourceLocation
 import org.lwjgl.input.Keyboard
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.nio.file.Files
 import javax.imageio.ImageIO
 
-class GuiBackground(val prevGui: IGuiScreen) : WrappedGuiScreen() {
+class GuiBackground(val prevGui: GuiScreen) : GuiScreen() {
 
     companion object {
         var enabled = true
         var particles = false
     }
 
-    private lateinit var enabledButton: IGuiButton
-    private lateinit var particlesButton: IGuiButton
+    private lateinit var enabledButton: GuiButton
+    private lateinit var particlesButton: GuiButton
 
     override fun initGui() {
-        enabledButton = classProvider.createGuiButton(1, representedScreen.width / 2 - 100, representedScreen.height / 4 + 35, "Enabled (${if (enabled) "On" else "Off"})")
-        representedScreen.buttonList.add(enabledButton)
-        particlesButton = classProvider.createGuiButton(2, representedScreen.width / 2 - 100, representedScreen.height / 4 + 50 + 25, "Particles (${if (particles) "On" else "Off"})")
-        representedScreen.buttonList.add(particlesButton)
-        representedScreen.buttonList.add(classProvider.createGuiButton(3, representedScreen.width / 2 - 100, representedScreen.height / 4 + 50 + 25 * 2, 98, 20, "Change wallpaper"))
-        representedScreen.buttonList.add(classProvider.createGuiButton(4, representedScreen.width / 2 + 2, representedScreen.height / 4 + 50 + 25 * 2, 98, 20, "Reset wallpaper"))
+        enabledButton = GuiButton(1, width / 2 - 100, height / 4 + 35, "Enabled (${if (enabled) "On" else "Off"})")
+        buttonList.add(enabledButton)
+        particlesButton = GuiButton(2, width / 2 - 100, height / 4 + 50 + 25, "Particles (${if (particles) "On" else "Off"})")
+        buttonList.add(particlesButton)
+        buttonList.add(GuiButton(3, width / 2 - 100, height / 4 + 50 + 25 * 2, 98, 20, "Change wallpaper"))
+        buttonList.add(GuiButton(4, width / 2 + 2, height / 4 + 50 + 25 * 2, 98, 20, "Reset wallpaper"))
 
-        representedScreen.buttonList.add(classProvider.createGuiButton(0, representedScreen.width / 2 - 100, representedScreen.height / 4 + 55 + 25 * 4 + 5, "Back"))
+        buttonList.add(GuiButton(0, width / 2 - 100, height / 4 + 55 + 25 * 4 + 5, "Back"))
     }
 
-    override fun actionPerformed(button: IGuiButton) {
+    override fun actionPerformed(button: GuiButton) {
         when (button.id) {
             1 -> {
                 enabled = !enabled
@@ -56,11 +58,11 @@ class GuiBackground(val prevGui: IGuiScreen) : WrappedGuiScreen() {
                     Files.copy(file.toPath(), FileOutputStream(LiquidBounce.fileManager.backgroundFile))
 
                     val image = ImageIO.read(FileInputStream(LiquidBounce.fileManager.backgroundFile))
-                    val location = classProvider.createResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/background.png")
+                    val location = ResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/background.png")
 
                     LiquidBounce.background = location
 
-                    mc.textureManager.loadTexture(location, classProvider.createDynamicTexture(image))
+                    mc.textureManager.loadTexture(location, DynamicTexture(image))
                 } catch (e: Exception) {
                     e.printStackTrace()
                     MiscUtils.showErrorPopup("Error", "Exception class: " + e.javaClass.name + "\nMessage: " + e.message)
@@ -76,8 +78,8 @@ class GuiBackground(val prevGui: IGuiScreen) : WrappedGuiScreen() {
     }
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
-        representedScreen.drawBackground(0)
-        Fonts.fontBold180.drawCenteredString("Background", this.representedScreen.width / 2F, representedScreen.height / 8F + 5F,
+        drawBackground(0)
+        Fonts.fontBold180.drawCenteredString("Background", this.width / 2F, height / 8F + 5F,
                 4673984, true)
 
         super.drawScreen(mouseX, mouseY, partialTicks)

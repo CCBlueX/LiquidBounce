@@ -6,21 +6,23 @@
 package net.ccbluex.liquidbounce.ui.client.altmanager.sub;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton;
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField;
-import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen;
+
 import net.ccbluex.liquidbounce.event.SessionEvent;
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.GuiTextField;
+import net.minecraft.util.Session;
 import org.lwjgl.input.Keyboard;
 
 import java.io.IOException;
 
-public class GuiChangeName extends WrappedGuiScreen {
+public class GuiChangeName extends GuiScreen {
 
     private final GuiAltManager prevGui;
-    private IGuiTextField name;
+    private GuiTextField name;
     private String status;
 
     public GuiChangeName(final GuiAltManager gui) {
@@ -29,10 +31,10 @@ public class GuiChangeName extends WrappedGuiScreen {
 
     public void initGui() {
         Keyboard.enableRepeatEvents(true);
-        representedScreen.getButtonList().add(classProvider.createGuiButton(1, representedScreen.getWidth() / 2 - 100, representedScreen.getHeight() / 4 + 96, "Change"));
-        representedScreen.getButtonList().add(classProvider.createGuiButton(0, representedScreen.getWidth() / 2 - 100, representedScreen.getHeight() / 4 + 120, "Back"));
+        buttonList.add(new GuiButton(1, width / 2 - 100, height / 4 + 96, "Change"));
+        buttonList.add(new GuiButton(0, width / 2 - 100, height / 4 + 120, "Back"));
 
-        name = classProvider.createGuiTextField(2, Fonts.font40, representedScreen.getWidth() / 2 - 100, 60, 200, 20);
+        name = new GuiTextField(2, Fonts.font40, width / 2 - 100, 60, 200, 20);
         name.setFocused(true);
         name.setText(mc.getSession().getUsername());
         name.setMaxStringLength(16);
@@ -40,24 +42,24 @@ public class GuiChangeName extends WrappedGuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        representedScreen.drawBackground(0);
-        RenderUtils.drawRect(30, 30, representedScreen.getWidth() - 30, representedScreen.getHeight() - 30, Integer.MIN_VALUE);
+        drawBackground(0);
+        RenderUtils.drawRect(30, 30, width - 30, height - 30, Integer.MIN_VALUE);
 
-        Fonts.font40.drawCenteredString("Change Name", representedScreen.getWidth() / 2.0f, 34, 0xffffff);
-        Fonts.font40.drawCenteredString(status == null ? "" : status, representedScreen.getWidth() / 2.0f, representedScreen.getHeight() / 4.0f + 84, 0xffffff);
+        Fonts.font40.drawCenteredString("Change Name", width / 2.0f, 34, 0xffffff);
+        Fonts.font40.drawCenteredString(status == null ? "" : status, width / 2.0f, height / 4.0f + 84, 0xffffff);
         name.drawTextBox();
 
         if (name.getText().isEmpty() && !name.isFocused())
-            Fonts.font40.drawCenteredString("§7Username", representedScreen.getWidth() / 2.0f - 74, 66, 0xffffff);
+            Fonts.font40.drawCenteredString("§7Username", width / 2.0f - 74, 66, 0xffffff);
 
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
     @Override
-    public void actionPerformed(IGuiButton button) throws IOException {
-        switch (button.getId()) {
+    public void actionPerformed(GuiButton button) throws IOException {
+        switch (button.id) {
             case 0:
-                mc.displayGuiScreen(prevGui.representedScreen);
+                mc.displayGuiScreen(prevGui);
                 break;
             case 1:
                 if (name.getText().isEmpty()) {
@@ -70,11 +72,11 @@ public class GuiChangeName extends WrappedGuiScreen {
                     return;
                 }
 
-                mc.setSession(classProvider.createSession(name.getText(), mc.getSession().getPlayerId(), mc.getSession().getToken(), mc.getSession().getSessionType()));
+                mc.session = new Session(name.getText(), mc.getSession().getPlayerID(), mc.getSession().getToken(), mc.getSession().getSessionType().name());
                 LiquidBounce.eventManager.callEvent(new SessionEvent());
                 status = "§aChanged name to §7" + name.getText() + "§c.";
                 prevGui.status = status;
-                mc.displayGuiScreen(prevGui.representedScreen);
+                mc.displayGuiScreen(prevGui);
                 break;
         }
     }
@@ -82,7 +84,7 @@ public class GuiChangeName extends WrappedGuiScreen {
     @Override
     public void keyTyped(char typedChar, int keyCode) throws IOException {
         if(Keyboard.KEY_ESCAPE == keyCode) {
-            mc.displayGuiScreen(prevGui.getRepresentedScreen());
+            mc.displayGuiScreen(prevGui);
             return;
         }
 

@@ -6,8 +6,6 @@
 package net.ccbluex.liquidbounce.features.special;
 
 import io.netty.buffer.Unpooled;
-import net.ccbluex.liquidbounce.api.minecraft.network.IPacket;
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketCustomPayload;
 import net.ccbluex.liquidbounce.event.EventTarget;
 import net.ccbluex.liquidbounce.event.Listenable;
 import net.ccbluex.liquidbounce.event.PacketEvent;

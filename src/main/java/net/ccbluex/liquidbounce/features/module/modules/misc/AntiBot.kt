@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
 import net.ccbluex.liquidbounce.event.AttackEvent
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
@@ -53,7 +52,7 @@ object AntiBot : Module() {
     private val notAlwaysInRadius = mutableListOf<Int>()
 
     @JvmStatic // TODO: Remove as soon EntityUtils is translated to kotlin
-    fun isBot(entity: IEntityLivingBase): Boolean {
+    fun isBot(entity: EntityLivingBase): Boolean {
         // Check if entity is a player
         if (!classProvider.isEntityPlayer(entity))
             return false

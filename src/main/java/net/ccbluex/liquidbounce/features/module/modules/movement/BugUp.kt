@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
@@ -20,6 +19,12 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.block.BlockAir
+import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.BlockPos
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 import kotlin.math.abs
@@ -28,12 +33,13 @@ import kotlin.math.max
 
 @ModuleInfo(name = "BugUp", description = "Automatically setbacks you after falling a certain distance.", category = ModuleCategory.MOVEMENT)
 class BugUp : Module() {
+
     private val modeValue = ListValue("Mode", arrayOf("TeleportBack", "FlyFlag", "OnGroundSpoof", "MotionTeleport-Flag"), "FlyFlag")
     private val maxFallDistance = IntegerValue("MaxFallDistance", 10, 2, 255)
     private val maxDistanceWithoutGround = FloatValue("MaxDistanceToSetback", 2.5f, 1f, 30f)
     private val indicator = BoolValue("Indicator", true)
 
-    private var detectedLocation: WBlockPos? = null
+    private var detectedLocation: BlockPos? = null
     private var lastFound = 0F
     private var prevX = 0.0
     private var prevY = 0.0
@@ -51,8 +57,7 @@ class BugUp : Module() {
 
         val thePlayer = mc.thePlayer ?: return
 
-        if (thePlayer.onGround && !classProvider.isBlockAir(BlockUtils.getBlock(WBlockPos(thePlayer.posX, thePlayer.posY - 1.0,
-                        thePlayer.posZ)))) {
+        if (thePlayer.onGround && BlockUtils.getBlock(BlockPos(thePlayer.posX, thePlayer.posY - 1.0, thePlayer.posZ)) !is BlockAir) {
             prevX = thePlayer.prevPosX
             prevY = thePlayer.prevPosY
             prevZ = thePlayer.prevPosZ
@@ -91,11 +96,11 @@ class BugUp : Module() {
                         thePlayer.motionY += 0.1
                         thePlayer.fallDistance = 0F
                     }
-                    "ongroundspoof" -> mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(true))
+                    "ongroundspoof" -> mc.netHandler.addToSendQueue(C03PacketPlayer(true))
 
                     "motionteleport-flag" -> {
                         thePlayer.setPositionAndUpdate(thePlayer.posX, thePlayer.posY + 1f, thePlayer.posZ)
-                        mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(thePlayer.posX, thePlayer.posY, thePlayer.posZ, true))
+                        mc.netHandler.addToSendQueue(C04PacketPlayerPosition(thePlayer.posX, thePlayer.posY, thePlayer.posZ, true))
                         thePlayer.motionY = 0.1
 
                         MovementUtils.strafe()
@@ -128,7 +133,8 @@ class BugUp : Module() {
         GL11.glDepthMask(false)
 
         RenderUtils.glColor(Color(255, 0, 0, 90))
-        RenderUtils.drawFilledBox(classProvider.createAxisAlignedBB(
+        RenderUtils.drawFilledBox(
+            AxisAlignedBB.fromBounds(
                 x - renderManager.renderPosX,
                 y + 1 - renderManager.renderPosY,
                 z - renderManager.renderPosZ,
@@ -146,6 +152,6 @@ class BugUp : Module() {
 
         RenderUtils.renderNameTag("${fallDist}m (~${max(0, fallDist - 3)} damage)", x + 0.5, y + 1.7, z + 0.5)
 
-        classProvider.getGlStateManager().resetColor()
+        GlStateManager.resetColor()
     }
 }

@@ -6,43 +6,43 @@
 package net.ccbluex.liquidbounce.ui.client
 
 import com.google.gson.Gson
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen
-import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
+
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.minecraft.client.gui.GuiButton
+import net.minecraft.client.gui.GuiScreen
 import org.lwjgl.input.Keyboard
 import java.awt.Color
 import java.io.IOException
 import kotlin.concurrent.thread
 
-class GuiServerStatus(private val prevGui: IGuiScreen) : WrappedGuiScreen() {
+class GuiServerStatus(private val prevGui: GuiScreen) : GuiScreen() {
     private val status = HashMap<String, String>()
 
     override fun initGui() {
-        representedScreen.buttonList.add(classProvider.createGuiButton(1, representedScreen.width / 2 - 100, representedScreen.height / 4 + 145, "Back"))
+        buttonList.add(GuiButton(1, width / 2 - 100, height / 4 + 145, "Back"))
 
         thread { loadInformation() }
     }
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
-        representedScreen.drawBackground(0)
+        drawBackground(0)
 
-        var i = representedScreen.height / 4 + 40
-        RenderUtils.drawRect(representedScreen.width / 2.0f - 115, i - 5.0f, representedScreen.width / 2.0f + 115, representedScreen.height / 4.0f + 43 + if (status.keys.isEmpty()) 10 else status.keys.size * Fonts.font40.fontHeight, Integer.MIN_VALUE)
+        var i = height / 4 + 40
+        RenderUtils.drawRect(width / 2.0f - 115, i - 5.0f, width / 2.0f + 115, height / 4.0f + 43 + if (status.keys.isEmpty()) 10 else status.keys.size * Fonts.font40.fontHeight, Integer.MIN_VALUE)
 
         if (status.isEmpty()) {
-            Fonts.font40.drawCenteredString("Loading...", representedScreen.width / 2.0f, representedScreen.height / 4.0f + 40, Color.WHITE.rgb)
+            Fonts.font40.drawCenteredString("Loading...", width / 2.0f, height / 4.0f + 40, Color.WHITE.rgb)
         } else {
             for (server in status.keys) {
                 val color = status[server]
-                Fonts.font40.drawCenteredString("$server: ${if (color.equals("red", ignoreCase = true)) "§c" else if (color.equals("yellow", ignoreCase = true)) "§e" else "§a"}${if (color.equals("red", ignoreCase = true)) "Offline" else if (color.equals("yellow", ignoreCase = true)) "Slow" else "Online"}", representedScreen.width / 2.0f, i.toFloat(), Color.WHITE.rgb)
+                Fonts.font40.drawCenteredString("$server: ${if (color.equals("red", ignoreCase = true)) "§c" else if (color.equals("yellow", ignoreCase = true)) "§e" else "§a"}${if (color.equals("red", ignoreCase = true)) "Offline" else if (color.equals("yellow", ignoreCase = true)) "Slow" else "Online"}", width / 2.0f, i.toFloat(), Color.WHITE.rgb)
                 i += Fonts.font40.fontHeight
             }
         }
 
-        Fonts.fontBold180.drawCenteredString("Server Status", representedScreen.width / 2F, representedScreen.height / 8f + 5F, 4673984, true)
+        Fonts.fontBold180.drawCenteredString("Server Status", width / 2F, height / 8f + 5F, 4673984, true)
 
         super.drawScreen(mouseX, mouseY, partialTicks)
     }
@@ -63,7 +63,7 @@ class GuiServerStatus(private val prevGui: IGuiScreen) : WrappedGuiScreen() {
 
     }
 
-    override fun actionPerformed(button: IGuiButton) {
+    override fun actionPerformed(button: GuiButton) {
         if (button.id == 1) mc.displayGuiScreen(prevGui)
     }
 

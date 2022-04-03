@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
+import net.minecraft.block.BlockCarpet
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -30,7 +31,7 @@ class AACHop3313 : SpeedMode("AACHop3.3.13") {
             LiquidBounce.eventManager.callEvent(JumpEvent(0.405f))
             MovementUtils.strafe()
         } else if (thePlayer.fallDistance < 0.31f) {
-            if (classProvider.isBlockCarpet(getBlock(thePlayer.position))) // why?
+            if (getBlock(thePlayer.position) is BlockCarpet) // why?
                 return
 
             // Motion XZ

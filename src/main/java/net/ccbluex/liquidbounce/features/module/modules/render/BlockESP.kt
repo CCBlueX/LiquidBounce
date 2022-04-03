@@ -5,8 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.api.enums.BlockType
-import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
@@ -22,6 +20,9 @@ import net.ccbluex.liquidbounce.value.BlockValue
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.block.Block
+import net.minecraft.init.Blocks
+import net.minecraft.util.BlockPos
 import java.awt.Color
 
 @ModuleInfo(name = "BlockESP", description = "Allows you to see a selected block through walls.", category = ModuleCategory.RENDER)
@@ -35,7 +36,7 @@ class BlockESP : Module() {
     private val colorBlueValue = IntegerValue("B", 72, 0, 255)
     private val colorRainbow = BoolValue("Rainbow", false)
     private val searchTimer = MSTimer()
-    private val posList: MutableList<WBlockPos> = ArrayList()
+    private val posList: MutableList<BlockPos> = ArrayList()
     private var thread: Thread? = null
 
     @EventTarget
@@ -48,7 +49,7 @@ class BlockESP : Module() {
                 return
 
             thread = Thread(Runnable {
-                val blockList: MutableList<WBlockPos> = ArrayList()
+                val blockList: MutableList<BlockPos> = ArrayList()
 
                 for (x in -radius until radius) {
                     for (y in radius downTo -radius + 1) {
@@ -59,7 +60,7 @@ class BlockESP : Module() {
                             val yPos = thePlayer.posY.toInt() + y
                             val zPos = thePlayer.posZ.toInt() + z
 
-                            val blockPos = WBlockPos(xPos, yPos, zPos)
+                            val blockPos = BlockPos(xPos, yPos, zPos)
                             val block = getBlock(blockPos)
 
                             if (block == selectedBlock && blockList.size < blockLimitValue.get()) blockList.add(blockPos)

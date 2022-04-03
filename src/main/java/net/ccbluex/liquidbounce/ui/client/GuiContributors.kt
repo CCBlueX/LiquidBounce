@@ -8,15 +8,17 @@ package net.ccbluex.liquidbounce.ui.client
 import com.google.gson.Gson
 import com.google.gson.JsonParser
 import com.google.gson.annotations.SerializedName
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiScreen
-import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
-import net.ccbluex.liquidbounce.api.util.WrappedGuiSlot
+import net.ccbluex.liquidbounce.injection.implementations.IMixinGuiSlot
+
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import net.ccbluex.liquidbounce.utils.render.CustomTexture
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.minecraft.client.gui.GuiButton
+import net.minecraft.client.gui.GuiScreen
+import net.minecraft.client.gui.GuiSlot
+import net.minecraft.client.renderer.GlStateManager
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
 import java.awt.Color
@@ -27,7 +29,7 @@ import javax.imageio.ImageIO
 import kotlin.concurrent.thread
 import kotlin.math.sin
 
-class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen() {
+class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
     private val DECIMAL_FORMAT = NumberFormat.getInstance(Locale.US) as DecimalFormat
     private lateinit var list: GuiList
 
@@ -35,11 +37,11 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen() {
     private var failed = false
 
     override fun initGui() {
-        list = GuiList(this.representedScreen)
-        list.represented.registerScrollButtons(7, 8)
-        list.represented.elementClicked(-1, false, 0, 0)
+        list = GuiList(this)
+        list.registerScrollButtons(7, 8)
+        list.elementClicked(-1, false, 0, 0)
 
-        representedScreen.buttonList.add(classProvider.createGuiButton(1, representedScreen.width / 2 - 100, representedScreen.height - 30, "Back"))
+        buttonList.add(GuiButton(1, width / 2 - 100, height - 30, "Back"))
 
         failed = false
 
@@ -47,34 +49,34 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen() {
     }
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
-        representedScreen.drawBackground(0)
+        drawBackground(0)
 
-        list.represented.drawScreen(mouseX, mouseY, partialTicks)
+        list.drawScreen(mouseX, mouseY, partialTicks)
 
-        RenderUtils.drawRect(representedScreen.width / 4.0f, 40.0f, representedScreen.width.toFloat(), representedScreen.height - 40.0f, Integer.MIN_VALUE)
+        RenderUtils.drawRect(width / 4.0f, 40.0f, width.toFloat(), height - 40.0f, Integer.MIN_VALUE)
 
         if (list.getSelectedSlot() != -1) {
             val credit = credits[list.getSelectedSlot()]
 
             var y = 45
-            val x = representedScreen.width / 4 + 5
+            val x = width / 4 + 5
             var infoOffset = 0
 
             val avatar = credit.avatar
 
-            val imageSize = representedScreen.fontRendererObj.fontHeight.toInt() * 4
+            val imageSize = fontRendererObj.FONT_HEIGHT * 4
 
             if (avatar != null) {
                 GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS)
 
-                classProvider.getGlStateManager().enableAlpha()
-                classProvider.getGlStateManager().enableBlend()
-                classProvider.getGlStateManager().tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
-                classProvider.getGlStateManager().enableTexture2D()
+                GlStateManager.enableAlpha()
+                GlStateManager.enableBlend()
+                GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
+                GlStateManager.enableTexture2D()
 
                 GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
 
-                classProvider.getGlStateManager().bindTexture(avatar.textureId)
+                GlStateManager.bindTexture(avatar.textureId)
 
 
                 GL11.glBegin(GL11.GL_QUADS)
@@ -90,9 +92,9 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen() {
 
                 GL11.glEnd()
 
-                classProvider.getGlStateManager().bindTexture(0)
+                GlStateManager.bindTexture(0)
 
-                classProvider.getGlStateManager().disableBlend()
+                GlStateManager.disableBlend()
 
                 infoOffset = imageSize
 
@@ -107,7 +109,7 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen() {
             for (s in credit.contributions) {
                 y += Fonts.font40.fontHeight.toInt() + 2
 
-                classProvider.getGlStateManager().disableTexture2D()
+                GlStateManager.disableTexture2D()
                 GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
                 GL11.glBegin(GL11.GL_LINES)
 
@@ -120,22 +122,22 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen() {
             }
         }
 
-        Fonts.font40.drawCenteredString("Contributors", representedScreen.width / 2F, 6F, 0xffffff)
+        Fonts.font40.drawCenteredString("Contributors", width / 2F, 6F, 0xffffff)
 
         if (credits.isEmpty()) {
             if (failed) {
                 val gb = ((sin(System.currentTimeMillis() * (1 / 333.0)) + 1) * (0.5 * 255)).toInt()
-                Fonts.font40.drawCenteredString("Failed to load", representedScreen.width / 8.0f, representedScreen.height / 2.0f, Color(255, gb, gb).rgb)
+                Fonts.font40.drawCenteredString("Failed to load", width / 8.0f, height / 2.0f, Color(255, gb, gb).rgb)
             } else {
-                Fonts.font40.drawCenteredString("Loading...", representedScreen.width / 8.0f, representedScreen.height / 2.0f, Color.WHITE.rgb)
-                RenderUtils.drawLoadingCircle((representedScreen.width / 8).toFloat(), (representedScreen.height / 2 - 40).toFloat())
+                Fonts.font40.drawCenteredString("Loading...", width / 8.0f, height / 2.0f, Color.WHITE.rgb)
+                RenderUtils.drawLoadingCircle((width / 8).toFloat(), (height / 2 - 40).toFloat())
             }
         }
 
         super.drawScreen(mouseX, mouseY, partialTicks)
     }
 
-    override fun actionPerformed(button: IGuiButton) {
+    override fun actionPerformed(button: GuiButton) {
         if (button.id == 1) {
             mc.displayGuiScreen(prevGui)
         }
@@ -152,7 +154,7 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen() {
 
     override fun handleMouseInput() {
         super.handleMouseInput()
-        list.represented.handleMouseInput()
+        list.handleMouseInput()
     }
 
     private fun loadCredits() {
@@ -207,7 +209,7 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen() {
 
             for (credit in credits) {
                 try {
-                    HttpUtils.requestStream("${credit.avatarUrl}?s=${representedScreen.fontRendererObj.fontHeight * 4}", "GET")?.use {
+                    HttpUtils.requestStream("${credit.avatarUrl}?s=${fontRendererObj.FONT_HEIGHT * 4}", "GET")?.use {
                         credit.avatar = CustomTexture(ImageIO.read(it)!!)
                     }
                 } catch (e: Exception) {
@@ -228,12 +230,13 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen() {
 
     internal inner class Credit(val name: String, val avatarUrl: String, var avatar: CustomTexture?, val additions: Int, val deletions: Int, val commits: Int, val isTeamMember: Boolean, val contributions: List<String>)
 
-    private inner class GuiList(gui: IGuiScreen) :
-            WrappedGuiSlot(mc, gui.width / 4, gui.height, 40, gui.height - 40, 15) {
+    private inner class GuiList(gui: GuiScreen) : GuiSlot(mc, gui.width / 4, gui.height, 40, gui.height - 40, 15) {
 
         init {
-            this.represented.setListWidth(gui.width * 3 / 13)
-            this.represented.setEnableScissor(true)
+            val mixin = this as IMixinGuiSlot
+
+            mixin.setListWidth(gui.width * 3 / 13)
+            mixin.setEnableScissor(true)
         }
 
         private var selectedSlot = 0
@@ -244,14 +247,14 @@ class GuiContributors(private val prevGui: IGuiScreen) : WrappedGuiScreen() {
 
         internal fun getSelectedSlot() = if (selectedSlot > credits.size) -1 else selectedSlot
 
-        override fun elementClicked(index: Int, doubleClick: Boolean, var3: Int, var4: Int) {
+        public override fun elementClicked(index: Int, doubleClick: Boolean, var3: Int, var4: Int) {
             selectedSlot = index
         }
 
         override fun drawSlot(entryID: Int, p_180791_2_: Int, p_180791_3_: Int, p_180791_4_: Int, mouseXIn: Int, mouseYIn: Int) {
             val credit = credits[entryID]
 
-            Fonts.font40.drawCenteredString(credit.name, represented.width / 2F, p_180791_3_ + 2F, Color.WHITE.rgb, true)
+            Fonts.font40.drawCenteredString(credit.name, width / 2F, p_180791_3_ + 2F, Color.WHITE.rgb, true)
         }
 
         override fun drawBackground() {}

@@ -6,26 +6,27 @@
 package net.ccbluex.liquidbounce.ui.client.altmanager.sub
 
 import com.thealtening.AltService
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField
-import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
+
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.login.LoginUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.mcleaks.MCLeaks
+import net.minecraft.client.gui.GuiButton
+import net.minecraft.client.gui.GuiScreen
+import net.minecraft.client.gui.GuiTextField
 import org.lwjgl.input.Keyboard
 import kotlin.concurrent.thread
 
 
-class GuiSessionLogin(private val prevGui: GuiAltManager) : WrappedGuiScreen() {
+class GuiSessionLogin(private val prevGui: GuiAltManager) : GuiScreen() {
 
     // Buttons
-    private lateinit var loginButton: IGuiButton
+    private lateinit var loginButton: GuiButton
 
     // User Input Fields
-    private lateinit var sessionTokenField: IGuiTextField
+    private lateinit var sessionTokenField: GuiTextField
 
     // Status
     private var status = ""
@@ -40,14 +41,14 @@ class GuiSessionLogin(private val prevGui: GuiAltManager) : WrappedGuiScreen() {
         // Add buttons to screen
 
 
-        loginButton = classProvider.createGuiButton(1, representedScreen.width / 2 - 100, representedScreen.height / 4 + 96, "Login")
-        representedScreen.buttonList.add(loginButton)
+        loginButton = GuiButton(1, width / 2 - 100, height / 4 + 96, "Login")
+        buttonList.add(loginButton)
 
 
-        representedScreen.buttonList.add(classProvider.createGuiButton(0, representedScreen.width / 2 - 100, representedScreen.height / 4 + 120, "Back"))
+        buttonList.add(GuiButton(0, width / 2 - 100, height / 4 + 120, "Back"))
 
         // Add fields to screen
-        sessionTokenField = classProvider.createGuiTextField(666, Fonts.font40, representedScreen.width / 2 - 100, 80, 200, 20)
+        sessionTokenField = GuiTextField(666, Fonts.font40, width / 2 - 100, 80, 200, 20)
         sessionTokenField.isFocused = true
         sessionTokenField.maxStringLength = Integer.MAX_VALUE
         sessionTokenField
@@ -61,17 +62,17 @@ class GuiSessionLogin(private val prevGui: GuiAltManager) : WrappedGuiScreen() {
      */
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
         // Draw background to screen
-        representedScreen.drawBackground(0)
-        RenderUtils.drawRect(30.0f, 30.0f, representedScreen.width - 30.0f, representedScreen.height - 30.0f, Integer.MIN_VALUE)
+        drawBackground(0)
+        RenderUtils.drawRect(30.0f, 30.0f, width - 30.0f, height - 30.0f, Integer.MIN_VALUE)
 
         // Draw title and status
-        Fonts.font35.drawCenteredString("Session Login", representedScreen.width / 2.0f, 36.0f, 0xffffff)
-        Fonts.font35.drawCenteredString(status, representedScreen.width / 2.0f, representedScreen.height / 4.0f + 80.0f, 0xffffff)
+        Fonts.font35.drawCenteredString("Session Login", width / 2.0f, 36.0f, 0xffffff)
+        Fonts.font35.drawCenteredString(status, width / 2.0f, height / 4.0f + 80.0f, 0xffffff)
 
         // Draw fields
         sessionTokenField.drawTextBox()
 
-        Fonts.font40.drawCenteredString("§7Session Token:", representedScreen.width / 2.0f - 65.0f, 66.0f, 0xffffff)
+        Fonts.font40.drawCenteredString("§7Session Token:", width / 2.0f - 65.0f, 66.0f, 0xffffff)
 
         // Call sub method
         super.drawScreen(mouseX, mouseY, partialTicks)
@@ -80,11 +81,11 @@ class GuiSessionLogin(private val prevGui: GuiAltManager) : WrappedGuiScreen() {
     /**
      * Handle button actions
      */
-    override fun actionPerformed(button: IGuiButton) {
+    override fun actionPerformed(button: GuiButton) {
         if (!button.enabled) return
 
         when (button.id) {
-            0 -> mc.displayGuiScreen(prevGui.representedScreen)
+            0 -> mc.displayGuiScreen(prevGui)
             1 -> {
                 loginButton.enabled = false
                 status = "§aLogging in..."
@@ -126,7 +127,7 @@ class GuiSessionLogin(private val prevGui: GuiAltManager) : WrappedGuiScreen() {
         // Check if user want to escape from screen
         if (Keyboard.KEY_ESCAPE == keyCode) {
             // Send back to prev screen
-            mc.displayGuiScreen(prevGui.representedScreen)
+            mc.displayGuiScreen(prevGui)
 
             // Quit
             return

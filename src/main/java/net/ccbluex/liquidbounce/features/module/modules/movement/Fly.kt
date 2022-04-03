@@ -5,11 +5,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.api.enums.EnumFacingType
-import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
-import net.ccbluex.liquidbounce.api.minecraft.util.IAxisAlignedBB
-import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
+import net.minecraft.util.BlockPos
+import net.minecraft.util.Vec3
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -23,6 +20,14 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.init.Blocks
+import net.minecraft.network.play.client.C00PacketKeepAlive
+import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.play.client.C03PacketPlayer.C06PacketPlayerPosLook
+import net.minecraft.potion.Potion
+import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.EnumFacing
 import org.lwjgl.input.Keyboard
 import java.awt.Color
 import java.math.BigDecimal
@@ -133,11 +138,11 @@ class Fly : Module() {
                     if (!thePlayer.onGround) return@run
 
                     for (i in 0..64) {
-                        mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(x, y + 0.049, z, false))
-                        mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(x, y, z, false))
+                        mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y + 0.049, z, false))
+                        mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y, z, false))
                     }
 
-                    mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(x, y + 0.1, z, true))
+                    mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y + 0.1, z, true))
 
                     thePlayer.motionX *= 0.1
                     thePlayer.motionZ *= 0.1
@@ -147,8 +152,8 @@ class Fly : Module() {
                     if (!thePlayer.onGround) return@run
 
                     for (i in 0..3) {
-                        mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(x, y + 1.01, z, false))
-                        mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(x, y, z, false))
+                        mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y + 1.01, z, false))
+                        mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y, z, false))
                     }
 
                     thePlayer.jump()
@@ -156,11 +161,11 @@ class Fly : Module() {
                 }
                 "bugspartan" -> {
                     for (i in 0..64) {
-                        mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(x, y + 0.049, z, false))
-                        mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(x, y, z, false))
+                        mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y + 0.049, z, false))
+                        mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y, z, false))
                     }
 
-                    mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(x, y + 0.1, z, true))
+                    mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y + 0.1, z, true))
 
                     thePlayer.motionX *= 0.1
                     thePlayer.motionZ *= 0.1
@@ -178,7 +183,7 @@ class Fly : Module() {
                     for (i in 0..9) {
                         //Imagine flagging to NCP.
                         mc.netHandler.addToSendQueue(
-                            classProvider.createCPacketPlayerPosition(
+                            C04PacketPlayerPosition(
                                 thePlayer.posX, thePlayer.posY, thePlayer.posZ, true
                             )
                         )
@@ -188,22 +193,22 @@ class Fly : Module() {
 
                     while (fallDistance > 0) {
                         mc.netHandler.addToSendQueue(
-                            classProvider.createCPacketPlayerPosition(
+                            C04PacketPlayerPosition(
                                 thePlayer.posX, thePlayer.posY + 0.0624986421, thePlayer.posZ, false
                             )
                         )
                         mc.netHandler.addToSendQueue(
-                            classProvider.createCPacketPlayerPosition(
+                            C04PacketPlayerPosition(
                                 thePlayer.posX, thePlayer.posY + 0.0625, thePlayer.posZ, false
                             )
                         )
                         mc.netHandler.addToSendQueue(
-                            classProvider.createCPacketPlayerPosition(
+                            C04PacketPlayerPosition(
                                 thePlayer.posX, thePlayer.posY + 0.0624986421, thePlayer.posZ, false
                             )
                         )
                         mc.netHandler.addToSendQueue(
-                            classProvider.createCPacketPlayerPosition(
+                            C04PacketPlayerPosition(
                                 thePlayer.posX, thePlayer.posY + 0.0000013579, thePlayer.posZ, false
                             )
                         )
@@ -211,7 +216,7 @@ class Fly : Module() {
                     }
 
                     mc.netHandler.addToSendQueue(
-                        classProvider.createCPacketPlayerPosition(
+                        C04PacketPlayerPosition(
                             thePlayer.posX, thePlayer.posY, thePlayer.posZ, true
                         )
                     )
@@ -314,7 +319,7 @@ class Fly : Module() {
                     if (mc.gameSettings.keyBindSneak.isKeyDown) aacJump -= 0.2
 
                     if (startY + aacJump > thePlayer.posY) {
-                        mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(true))
+                        mc.netHandler.addToSendQueue(C03PacketPlayer(true))
                         thePlayer.motionY = 0.8
                         MovementUtils.strafe(aacSpeedValue.get())
                     }
@@ -338,7 +343,7 @@ class Fly : Module() {
                     }
                     aac3delay++
                     if (!noFlag) mc.netHandler.addToSendQueue(
-                        classProvider.createCPacketPlayerPosition(
+                        C04PacketPlayerPosition(
                             thePlayer.posX, thePlayer.posY, thePlayer.posZ, thePlayer.onGround
                         )
                     )
@@ -346,7 +351,7 @@ class Fly : Module() {
                 }
                 "flag" -> {
                     mc.netHandler.addToSendQueue(
-                        classProvider.createCPacketPlayerPosLook(
+                        C03PacketPlayer.C06PacketPlayerPosLook(
                             thePlayer.posX + thePlayer.motionX * 999,
                             thePlayer.posY + (if (mc.gameSettings.keyBindJump.isKeyDown) 1.5624 else 0.00000001) - if (mc.gameSettings.keyBindSneak.isKeyDown) 0.0624 else 0.00000002,
                             thePlayer.posZ + thePlayer.motionZ * 999,
@@ -356,7 +361,7 @@ class Fly : Module() {
                         )
                     )
                     mc.netHandler.addToSendQueue(
-                        classProvider.createCPacketPlayerPosLook(
+                        C03PacketPlayer.C06PacketPlayerPosLook(
                             thePlayer.posX + thePlayer.motionX * 999,
                             thePlayer.posY - 6969,
                             thePlayer.posZ + thePlayer.motionZ * 999,
@@ -371,7 +376,7 @@ class Fly : Module() {
                     thePlayer.motionY = 0.0
                 }
                 "keepalive" -> {
-                    mc.netHandler.addToSendQueue(classProvider.createCPacketKeepAlive())
+                    mc.netHandler.addToSendQueue(C00PacketKeepAlive())
                     thePlayer.capabilities.isFlying = false
                     thePlayer.motionY = 0.0
                     thePlayer.motionX = 0.0
@@ -389,12 +394,12 @@ class Fly : Module() {
                     MovementUtils.strafe(vanillaSpeed)
                     if (mineSecureVClipTimer.hasTimePassed(150) && mc.gameSettings.keyBindJump.isKeyDown) {
                         mc.netHandler.addToSendQueue(
-                            classProvider.createCPacketPlayerPosition(
+                            C04PacketPlayerPosition(
                                 thePlayer.posX, thePlayer.posY + 5, thePlayer.posZ, false
                             )
                         )
                         mc.netHandler.addToSendQueue(
-                            classProvider.createCPacketPlayerPosition(
+                            C04PacketPlayerPosition(
                                 0.5, -1000.0, 0.5, false
                             )
                         )
@@ -413,22 +418,22 @@ class Fly : Module() {
                 }
                 "hawkeye" -> thePlayer.motionY = if (thePlayer.motionY <= -0.42) 0.42 else -0.42
                 "teleportrewinside" -> {
-                    val vectorStart = WVec3(thePlayer.posX, thePlayer.posY, thePlayer.posZ)
+                    val vectorStart = Vec3(thePlayer.posX, thePlayer.posY, thePlayer.posZ)
                     val yaw = -thePlayer.rotationYaw
                     val pitch = -thePlayer.rotationPitch
                     val length = 9.9
-                    val vectorEnd = WVec3(
+                    val vectorEnd = Vec3(
                         sin(Math.toRadians(yaw.toDouble())) * cos(Math.toRadians(pitch.toDouble())) * length + vectorStart.xCoord,
                         sin(Math.toRadians(pitch.toDouble())) * length + vectorStart.yCoord,
                         cos(Math.toRadians(yaw.toDouble())) * cos(Math.toRadians(pitch.toDouble())) * length + vectorStart.zCoord
                     )
                     mc.netHandler.addToSendQueue(
-                        classProvider.createCPacketPlayerPosition(
+                        C04PacketPlayerPosition(
                             vectorEnd.xCoord, thePlayer.posY + 2, vectorEnd.zCoord, true
                         )
                     )
                     mc.netHandler.addToSendQueue(
-                        classProvider.createCPacketPlayerPosition(
+                        C04PacketPlayerPosition(
                             vectorStart.xCoord, thePlayer.posY + 2, vectorStart.zCoord, true
                         )
                     )
@@ -442,52 +447,52 @@ class Fly : Module() {
                     if (!mc.gameSettings.keyBindForward.isKeyDown) return@run
 
                     if (System.currentTimeMillis() - minesuchtTP > 99) {
-                        val vec3: WVec3 = thePlayer.getPositionEyes(0.0f)
-                        val vec31: WVec3 = mc.thePlayer!!.getLook(0.0f)
-                        val vec32: WVec3 = vec3.addVector(vec31.xCoord * 7, vec31.yCoord * 7, vec31.zCoord * 7)
+                        val vec3: Vec3 = thePlayer.getPositionEyes(0.0f)
+                        val vec31: Vec3 = mc.thePlayer!!.getLook(0.0f)
+                        val vec32: Vec3 = vec3.addVector(vec31.xCoord * 7, vec31.yCoord * 7, vec31.zCoord * 7)
                         if (thePlayer.fallDistance > 0.8) {
                             thePlayer.sendQueue.addToSendQueue(
-                                classProvider.createCPacketPlayerPosition(
+                                C04PacketPlayerPosition(
                                     posX, posY + 50, posZ, false
                                 )
                             )
                             mc.thePlayer!!.fall(100.0f, 100.0f)
                             thePlayer.fallDistance = 0.0f
                             thePlayer.sendQueue.addToSendQueue(
-                                classProvider.createCPacketPlayerPosition(
+                                C04PacketPlayerPosition(
                                     posX, posY + 20, posZ, true
                                 )
                             )
                         }
                         thePlayer.sendQueue.addToSendQueue(
-                            classProvider.createCPacketPlayerPosition(
+                            C04PacketPlayerPosition(
                                 vec32.xCoord, thePlayer.posY + 50, vec32.zCoord, true
                             )
                         )
                         thePlayer.sendQueue.addToSendQueue(
-                            classProvider.createCPacketPlayerPosition(
+                            C04PacketPlayerPosition(
                                 posX, posY, posZ, false
                             )
                         )
                         thePlayer.sendQueue.addToSendQueue(
-                            classProvider.createCPacketPlayerPosition(
+                            C04PacketPlayerPosition(
                                 vec32.xCoord, posY, vec32.zCoord, true
                             )
                         )
                         thePlayer.sendQueue.addToSendQueue(
-                            classProvider.createCPacketPlayerPosition(
+                            C04PacketPlayerPosition(
                                 posX, posY, posZ, false
                             )
                         )
                         minesuchtTP = System.currentTimeMillis()
                     } else {
                         thePlayer.sendQueue.addToSendQueue(
-                            classProvider.createCPacketPlayerPosition(
+                            C04PacketPlayerPosition(
                                 thePlayer.posX, thePlayer.posY, thePlayer.posZ, false
                             )
                         )
                         thePlayer.sendQueue.addToSendQueue(
-                            classProvider.createCPacketPlayerPosition(
+                            C04PacketPlayerPosition(
                                 posX, posY, posZ, true
                             )
                         )
@@ -499,25 +504,25 @@ class Fly : Module() {
                     thePlayer.motionX *= 1.1
                     thePlayer.motionZ *= 1.1
                 }
-                "mineplex" -> if (thePlayer.inventory.getCurrentItemInHand() == null) {
+                "mineplex" -> if (thePlayer.inventory.getCurrentItem() == null) {
                     if (mc.gameSettings.keyBindJump.isKeyDown && mineplexTimer.hasTimePassed(100)) {
                         thePlayer.setPosition(thePlayer.posX, thePlayer.posY + 0.6, thePlayer.posZ)
                         mineplexTimer.reset()
                     }
-                    if (mc.thePlayer!!.sneaking && mineplexTimer.hasTimePassed(100)) {
+                    if (mc.thePlayer!!.isSneaking && mineplexTimer.hasTimePassed(100)) {
                         thePlayer.setPosition(thePlayer.posX, thePlayer.posY - 0.6, thePlayer.posZ)
                         mineplexTimer.reset()
                     }
-                    val blockPos = WBlockPos(thePlayer.posX, mc.thePlayer!!.entityBoundingBox.minY - 1, thePlayer.posZ)
-                    val vec: WVec3 = WVec3(blockPos).addVector(0.4, 0.4, 0.4)
-                        .add(WVec3(classProvider.getEnumFacing(EnumFacingType.UP).directionVec))
+                    val blockPos = BlockPos(thePlayer.posX, mc.thePlayer!!.entityBoundingBox.minY - 1, thePlayer.posZ)
+                    val vec: Vec3 = Vec3(blockPos).addVector(0.4, 0.4, 0.4)
+                        .add(Vec3(EnumFacing.UP.directionVec))
                     mc.playerController.onPlayerRightClick(
                         thePlayer,
                         mc.theWorld!!,
-                        thePlayer.inventory.getCurrentItemInHand(),
+                        thePlayer.inventory.getCurrentItem(),
                         blockPos,
-                        classProvider.getEnumFacing(EnumFacingType.UP),
-                        WVec3(vec.xCoord * 0.4f, vec.yCoord * 0.4f, vec.zCoord * 0.4f)
+                        EnumFacing.UP,
+                        Vec3(vec.xCoord * 0.4f, vec.yCoord * 0.4f, vec.zCoord * 0.4f)
                     )
                     MovementUtils.strafe(0.27f)
                     mc.timer.timerSpeed = 1 + mineplexSpeedValue.get()
@@ -558,7 +563,7 @@ class Fly : Module() {
                 }
                 "watchcat" -> {
                     MovementUtils.strafe(0.15f)
-                    mc.thePlayer!!.sprinting = true
+                    mc.thePlayer!!.isSprinting = true
 
                     if (thePlayer.posY < startY + 2) {
                         thePlayer.motionY = Math.random() * 0.5
@@ -573,12 +578,12 @@ class Fly : Module() {
                     spartanTimer.update()
                     if (spartanTimer.hasTimePassed(12)) {
                         mc.netHandler.addToSendQueue(
-                            classProvider.createCPacketPlayerPosition(
+                            C04PacketPlayerPosition(
                                 thePlayer.posX, thePlayer.posY + 8, thePlayer.posZ, true
                             )
                         )
                         mc.netHandler.addToSendQueue(
-                            classProvider.createCPacketPlayerPosition(
+                            C04PacketPlayerPosition(
                                 thePlayer.posX, thePlayer.posY - 8, thePlayer.posZ, true
                             )
                         )
@@ -588,7 +593,7 @@ class Fly : Module() {
                 "spartan2" -> {
                     MovementUtils.strafe(0.264f)
                     if (thePlayer.ticksExisted % 8 == 0) thePlayer.sendQueue.addToSendQueue(
-                        classProvider.createCPacketPlayerPosition(
+                        C04PacketPlayerPosition(
                             thePlayer.posX, thePlayer.posY + 10, thePlayer.posZ, true
                         )
                     )
@@ -694,8 +699,8 @@ class Fly : Module() {
     fun onPacket(event: PacketEvent) {
         if (noPacketModify) return
 
-        if (classProvider.isCPacketPlayer(event.packet)) {
-            val packetPlayer = event.packet.asCPacketPlayer()
+        if (event.packet is C03PacketPlayer) {
+            val packetPlayer = event.packet
 
             val mode = modeValue.get()
 
@@ -703,14 +708,14 @@ class Fly : Module() {
                     "Rewinside", ignoreCase = true
                 ) || mode.equals(
                     "Mineplex", ignoreCase = true
-                ) && mc.thePlayer!!.inventory.getCurrentItemInHand() == null
+                ) && mc.thePlayer!!.inventory.getCurrentItem() == null
             ) packetPlayer.onGround = true
             if (mode.equals("Hypixel", ignoreCase = true) || mode.equals(
                     "BoostHypixel", ignoreCase = true
                 )
             ) packetPlayer.onGround = false
         }
-        if (classProvider.isSPacketPlayerPosLook(event.packet)) {
+        if (event.packet is C06PacketPlayerPosLook) {
             val mode = modeValue.get()
             if (mode.equals("BoostHypixel", ignoreCase = true)) {
                 failedStart = true
@@ -742,16 +747,14 @@ class Fly : Module() {
                 if (failedStart) return
 
                 val amplifier =
-                    1 + (if (mc.thePlayer!!.isPotionActive(classProvider.getPotionEnum(PotionType.MOVE_SPEED))) 0.2 * (mc.thePlayer!!.getActivePotionEffect(
-                        classProvider.getPotionEnum(PotionType.MOVE_SPEED)
-                    )!!.amplifier + 1.0) else 0.0)
+                    1 + (if (mc.thePlayer!!.isPotionActive(Potion.moveSpeed)) 0.2 * (mc.thePlayer!!.getActivePotionEffect(Potion.moveSpeed)!!.amplifier + 1.0) else 0.0)
 
                 val baseSpeed = 0.29 * amplifier
 
                 when (boostHypixelState) {
                     1 -> {
                         moveSpeed =
-                            (if (mc.thePlayer!!.isPotionActive(classProvider.getPotionEnum(PotionType.MOVE_SPEED))) 1.56 else 2.034) * baseSpeed
+                            (if (mc.thePlayer!!.isPotionActive(Potion.moveSpeed)) 1.56 else 2.034) * baseSpeed
                         boostHypixelState = 2
                     }
                     2 -> {
@@ -784,14 +787,14 @@ class Fly : Module() {
     fun onBB(event: BlockBBEvent) {
         if (mc.thePlayer == null) return
         val mode = modeValue.get()
-        if (classProvider.isBlockAir(event.block) && (mode.equals(
+        if (event.block == Blocks.air && (mode.equals(
                 "Hypixel", ignoreCase = true
             ) || mode.equals("BoostHypixel", ignoreCase = true) || mode.equals(
                 "Rewinside", ignoreCase = true
             ) || mode.equals(
                 "Mineplex", ignoreCase = true
-            ) && mc.thePlayer!!.inventory.getCurrentItemInHand() == null) && event.y < mc.thePlayer!!.posY
-        ) event.boundingBox = classProvider.createAxisAlignedBB(
+            ) && mc.thePlayer!!.inventory.getCurrentItem() == null) && event.y < mc.thePlayer!!.posY
+        ) event.boundingBox = AxisAlignedBB.fromBounds(
             event.x.toDouble(),
             event.y.toDouble(),
             event.z.toDouble(),
@@ -808,7 +811,7 @@ class Fly : Module() {
                 "BoostHypixel", ignoreCase = true
             ) || mode.equals("Rewinside", ignoreCase = true) || mode.equals(
                 "Mineplex", ignoreCase = true
-            ) && mc.thePlayer!!.inventory.getCurrentItemInHand() == null
+            ) && mc.thePlayer!!.inventory.getCurrentItem() == null
         ) e.cancelEvent()
     }
 
@@ -819,7 +822,7 @@ class Fly : Module() {
                 "BoostHypixel", ignoreCase = true
             ) || mode.equals("Rewinside", ignoreCase = true) || mode.equals(
                 "Mineplex", ignoreCase = true
-            ) && mc.thePlayer!!.inventory.getCurrentItemInHand() == null
+            ) && mc.thePlayer!!.inventory.getCurrentItem() == null
         ) e.stepHeight = 0f
     }
 
@@ -830,7 +833,7 @@ class Fly : Module() {
             var posY = mc.thePlayer!!.posY
             while (posY > ground) {
                 mc.netHandler.addToSendQueue(
-                    classProvider.createCPacketPlayerPosition(
+                    C04PacketPlayerPosition(
                         mc.thePlayer!!.posX, posY, mc.thePlayer!!.posZ, true
                     )
                 )
@@ -839,14 +842,14 @@ class Fly : Module() {
             }
         }
         mc.netHandler.addToSendQueue(
-            classProvider.createCPacketPlayerPosition(
+            C04PacketPlayerPosition(
                 mc.thePlayer!!.posX, ground, mc.thePlayer!!.posZ, true
             )
         )
         var posY = ground
         while (posY < mc.thePlayer!!.posY) {
             mc.netHandler.addToSendQueue(
-                classProvider.createCPacketPlayerPosition(
+                C04PacketPlayerPosition(
                     mc.thePlayer!!.posX, posY, mc.thePlayer!!.posZ, true
                 )
             )
@@ -854,7 +857,7 @@ class Fly : Module() {
             posY += 8.0
         }
         mc.netHandler.addToSendQueue(
-            classProvider.createCPacketPlayerPosition(
+            C04PacketPlayerPosition(
                 mc.thePlayer!!.posX, mc.thePlayer!!.posY, mc.thePlayer!!.posZ, true
             )
         )
@@ -877,7 +880,7 @@ class Fly : Module() {
     private fun redeskyHClip2(horizontal: Double) {
         val playerYaw = Math.toRadians(mc.thePlayer!!.rotationYaw.toDouble())
         mc.netHandler.addToSendQueue(
-            classProvider.createCPacketPlayerPosition(
+            C04PacketPlayerPosition(
                 mc.thePlayer!!.posX + horizontal * -sin(
                     playerYaw
                 ), mc.thePlayer!!.posY, mc.thePlayer!!.posZ + horizontal * cos(playerYaw), false
@@ -887,7 +890,7 @@ class Fly : Module() {
 
     private fun redeskyVClip2(vertical: Double) {
         mc.netHandler.addToSendQueue(
-            classProvider.createCPacketPlayerPosition(
+            C04PacketPlayerPosition(
                 mc.thePlayer!!.posX, mc.thePlayer!!.posY + vertical, mc.thePlayer!!.posZ, false
             )
         )
@@ -901,11 +904,11 @@ class Fly : Module() {
 
     // TODO: Make better and faster calculation lol
     private fun calculateGround(): Double {
-        val playerBoundingBox: IAxisAlignedBB = mc.thePlayer!!.entityBoundingBox
+        val playerBoundingBox = mc.thePlayer!!.entityBoundingBox
         var blockHeight = 1.0
         var ground = mc.thePlayer!!.posY
         while (ground > 0.0) {
-            val customBox = classProvider.createAxisAlignedBB(
+            val customBox = AxisAlignedBB.fromBounds(
                 playerBoundingBox.maxX,
                 ground + blockHeight,
                 playerBoundingBox.maxZ,

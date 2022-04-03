@@ -5,13 +5,13 @@
  */
 package net.ccbluex.liquidbounce.utils;
 
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField;
+import net.minecraft.client.gui.GuiTextField;
 
 public final class TabUtils {
 
-    public static void tab(final IGuiTextField... textFields) {
+    public static void tab(final GuiTextField... textFields) {
         for (int i = 0; i < textFields.length; i++) {
-            final IGuiTextField textField = textFields[i];
+            final GuiTextField textField = textFields[i];
 
             if (textField.isFocused()) {
                 textField.setFocused(false);

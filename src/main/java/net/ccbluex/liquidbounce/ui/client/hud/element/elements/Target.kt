@@ -7,8 +7,7 @@
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
-import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation
+
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
@@ -17,6 +16,9 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.FloatValue
+import net.minecraft.entity.Entity
+import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.util.ResourceLocation
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 import java.text.DecimalFormat
@@ -35,12 +37,12 @@ class Target : Element() {
     private val fadeSpeed = FloatValue("FadeSpeed", 2F, 1F, 9F)
 
     private var easingHealth: Float = 0F
-    private var lastTarget: IEntity? = null
+    private var lastTarget: Entity? = null
 
     override fun drawElement(): Border {
         val target = (LiquidBounce.moduleManager[KillAura::class.java] as KillAura).target
 
-        if (classProvider.isEntityPlayer(target) && target != null) {
+        if (target is EntityPlayer) {
             if (target != lastTarget || easingHealth < 0 || easingHealth > target.maxHealth ||
                     abs(easingHealth - target.health) < 0.01) {
                 easingHealth = target.health
@@ -88,7 +90,7 @@ class Target : Element() {
         return Border(0F, 0F, 120F, 36F)
     }
 
-    private fun drawHead(skin: IResourceLocation, width: Int, height: Int) {
+    private fun drawHead(skin: ResourceLocation, width: Int, height: Int) {
         GL11.glColor4f(1F, 1F, 1F, 1F)
         mc.textureManager.bindTexture(skin)
         RenderUtils.drawScaledCustomSizeModalRect(2, 2, 8F, 8F, 8, 8, width, height,

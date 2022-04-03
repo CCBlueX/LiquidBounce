@@ -130,7 +130,7 @@ class AntiAFK : Module() {
     }
 
     override fun onDisable() {
-        if (!mc.gameSettings.isKeyDown(mc.gameSettings.keyBindForward))
+        if (!GameSettings.isKeyDown(mc.gameSettings.keyBindForward))
             mc.gameSettings.keyBindForward.pressed = false
     }
 }

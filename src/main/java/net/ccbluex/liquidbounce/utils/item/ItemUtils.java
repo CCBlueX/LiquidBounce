@@ -5,12 +5,13 @@
  */
 package net.ccbluex.liquidbounce.utils.item;
 
-import net.ccbluex.liquidbounce.api.minecraft.enchantments.IEnchantment;
-import net.ccbluex.liquidbounce.api.minecraft.item.IItem;
-import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack;
-import net.ccbluex.liquidbounce.api.minecraft.nbt.INBTTagCompound;
-import net.ccbluex.liquidbounce.api.minecraft.util.IResourceLocation;
 import net.ccbluex.liquidbounce.utils.MinecraftInstance;
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.JsonToNBT;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ResourceLocation;
 import org.jetbrains.annotations.Contract;
 
 import java.util.Objects;
@@ -22,25 +23,25 @@ import java.util.regex.Pattern;
 public final class ItemUtils extends MinecraftInstance {
 
     /**
-     * Allows you to create a item using the item json
+     * Allows you to create an item using the item json
      *
      * @param itemArguments arguments of item
      * @return created item
      * @author MCModding4K
      */
-    public static IItemStack createItem(String itemArguments) {
+    public static ItemStack createItem(String itemArguments) {
         try {
             itemArguments = itemArguments.replace('&', '§');
-            IItem item = classProvider.createItem();
-            IItem itemInstance = item;
+            Item item = new Item();
+            Item itemInstance = item;
             String[] args = null;
             int i = 1;
             int j = 0;
 
             for (int mode = 0; mode <= Math.min(12, itemArguments.length() - 2); ++mode) {
                 args = itemArguments.substring(mode).split(Pattern.quote(" "));
-                IResourceLocation resourcelocation = classProvider.createResourceLocation(args[0]);
-                item = functions.getObjectFromItemRegistry(resourcelocation);
+                ResourceLocation resourcelocation = new ResourceLocation(args[0]);
+                item = Item.itemRegistry.getObject(resourcelocation);
 
                 if (item != null)
                     break;
@@ -54,13 +55,13 @@ public final class ItemUtils extends MinecraftInstance {
             if (args.length >= 3 && args[2].matches("\\d+"))
                 j = Integer.parseInt(args[2]);
 
-            IItemStack itemstack = classProvider.createItemStack(item, i, j);
+            ItemStack itemstack = new ItemStack(item, i, j);
 
             if (args.length >= 4) {
                 StringBuilder NBT = new StringBuilder();
                 for (int nbtcount = 3; nbtcount < args.length; ++nbtcount)
                     NBT.append(" ").append(args[nbtcount]);
-                itemstack.setTagCompound(classProvider.getJsonToNBTInstance().getTagFromJson(NBT.toString()));
+                itemstack.setTagCompound(JsonToNBT.getTagFromJson(NBT.toString()));
             }
 
             return itemstack;
@@ -70,28 +71,28 @@ public final class ItemUtils extends MinecraftInstance {
         }
     }
 
-    public static int getEnchantment(IItemStack itemStack, IEnchantment enchantment) {
+    public static int getEnchantment(ItemStack itemStack, Enchantment enchantment) {
         if (itemStack == null || itemStack.getEnchantmentTagList() == null || itemStack.getEnchantmentTagList().hasNoTags())
             return 0;
 
         for (int i = 0; i < itemStack.getEnchantmentTagList().tagCount(); i++) {
-            final INBTTagCompound tagCompound = itemStack.getEnchantmentTagList().getCompoundTagAt(i);
+            final NBTTagCompound tagCompound = itemStack.getEnchantmentTagList().getCompoundTagAt(i);
 
-            if ((tagCompound.hasKey("ench") && tagCompound.getShort("ench") == enchantment.getEffectId()) || (tagCompound.hasKey("id") && tagCompound.getShort("id") == enchantment.getEffectId()))
+            if ((tagCompound.hasKey("ench") && tagCompound.getShort("ench") == enchantment.effectId) || (tagCompound.hasKey("id") && tagCompound.getShort("id") == enchantment.effectId))
                 return tagCompound.getShort("lvl");
         }
 
         return 0;
     }
 
-    public static int getEnchantmentCount(IItemStack itemStack) {
+    public static int getEnchantmentCount(ItemStack itemStack) {
         if (itemStack == null || itemStack.getEnchantmentTagList() == null || itemStack.getEnchantmentTagList().hasNoTags())
             return 0;
 
         int c = 0;
 
         for (int i = 0; i < itemStack.getEnchantmentTagList().tagCount(); i++) {
-            INBTTagCompound tagCompound = itemStack.getEnchantmentTagList().getCompoundTagAt(i);
+            NBTTagCompound tagCompound = itemStack.getEnchantmentTagList().getCompoundTagAt(i);
 
             if ((tagCompound.hasKey("ench") || tagCompound.hasKey("id")))
                 c++;
@@ -101,7 +102,7 @@ public final class ItemUtils extends MinecraftInstance {
     }
 
     @Contract("null -> true")
-    public static boolean isStackEmpty(IItemStack stack) {
-        return stack == null || classProvider.isItemAir(stack.getItem());
+    public static boolean isStackEmpty(ItemStack stack) {
+        return stack == null || stack.getItem() == null;
     }
 }

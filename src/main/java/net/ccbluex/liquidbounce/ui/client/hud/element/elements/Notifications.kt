@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
@@ -35,7 +36,7 @@ class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F,
         if (LiquidBounce.hud.notifications.size > 0)
             LiquidBounce.hud.notifications[0].drawNotification()
 
-        if (classProvider.isGuiHudDesigner(mc.currentScreen)) {
+        if (mc.currentScreen is GuiHudDesigner) {
             if (!LiquidBounce.hud.notifications.contains(exampleNotification))
                 LiquidBounce.hud.addNotification(exampleNotification)
 

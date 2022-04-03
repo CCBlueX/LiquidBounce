@@ -5,7 +5,8 @@
  */
 package net.ccbluex.liquidbounce.utils.render.shader;
 
-import net.ccbluex.liquidbounce.api.minecraft.util.IScaledResolution;
+import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.shader.Framebuffer;
 
@@ -32,21 +33,21 @@ public abstract class FramebufferShader extends Shader {
     }
 
     public void startDraw(final float partialTicks) {
-        classProvider.getGlStateManager().enableAlpha();
+        GlStateManager.enableAlpha();
 
-        classProvider.getGlStateManager().pushMatrix();
-        classProvider.getGlStateManager().pushAttrib();
+        GlStateManager.pushMatrix();
+        GlStateManager.pushAttrib();
 
         framebuffer = setupFrameBuffer(framebuffer);
         framebuffer.framebufferClear();
         framebuffer.bindFramebuffer(true);
-        entityShadows = mc.getGameSettings().getEntityShadows();
-        mc.getGameSettings().setEntityShadows(false);
-        mc.getEntityRenderer().setupCameraTransform(partialTicks, 0);
+        entityShadows = mc.gameSettings.entityShadows;
+        mc.gameSettings.entityShadows = false;
+        mc.entityRenderer.setupCameraTransform(partialTicks, 0);
     }
 
     public void stopDraw(final Color color, final float radius, final float quality) {
-        mc.getGameSettings().setEntityShadows(entityShadows);
+        mc.gameSettings.entityShadows = entityShadows;
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         mc.getFramebuffer().bindFramebuffer(true);
@@ -58,18 +59,18 @@ public abstract class FramebufferShader extends Shader {
         this.radius = radius;
         this.quality = quality;
 
-        mc.getEntityRenderer().disableLightmap();
+        mc.entityRenderer.disableLightmap();
         RenderHelper.disableStandardItemLighting();
 
         startShader();
-        mc.getEntityRenderer().setupOverlayRendering();
+        mc.entityRenderer.setupOverlayRendering();
         drawFramebuffer(framebuffer);
         stopShader();
 
-        mc.getEntityRenderer().disableLightmap();
+        mc.entityRenderer.disableLightmap();
 
-        classProvider.getGlStateManager().popMatrix();
-        classProvider.getGlStateManager().popAttrib();
+        GlStateManager.popMatrix();
+        GlStateManager.popAttrib();
     }
 
     /**
@@ -81,7 +82,7 @@ public abstract class FramebufferShader extends Shader {
         if(frameBuffer != null)
             frameBuffer.deleteFramebuffer();
 
-        frameBuffer = new Framebuffer(mc.getDisplayWidth(), mc.getDisplayHeight(), true);
+        frameBuffer = new Framebuffer(mc.displayWidth, mc.displayHeight, true);
 
         return frameBuffer;
     }
@@ -90,7 +91,7 @@ public abstract class FramebufferShader extends Shader {
      * @author TheSlowly
      */
     public void drawFramebuffer(final Framebuffer framebuffer) {
-        final IScaledResolution scaledResolution = classProvider.createScaledResolution(mc);
+        final ScaledResolution scaledResolution = new ScaledResolution(mc);
 
         glBindTexture(GL_TEXTURE_2D, framebuffer.framebufferTexture);
         glBegin(GL_QUADS);

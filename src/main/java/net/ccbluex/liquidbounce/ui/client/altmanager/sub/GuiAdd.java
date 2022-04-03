@@ -11,15 +11,17 @@ import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
 import com.mojang.authlib.yggdrasil.YggdrasilUserAuthentication;
 import com.thealtening.AltService;
 import net.ccbluex.liquidbounce.LiquidBounce;
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton;
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiTextField;
-import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen;
+
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager;
+import net.ccbluex.liquidbounce.ui.elements.GuiPasswordField;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.TabUtils;
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.GuiTextField;
 import org.lwjgl.input.Keyboard;
 
 import java.awt.*;
@@ -28,14 +30,14 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.IOException;
 import java.net.Proxy;
 
-public class GuiAdd extends WrappedGuiScreen {
+public class GuiAdd extends GuiScreen {
 
     private final GuiAltManager prevGui;
 
-    private IGuiButton addButton;
-    private IGuiButton clipboardButton;
-    private IGuiTextField username;
-    private IGuiTextField password;
+    private GuiButton addButton;
+    private GuiButton clipboardButton;
+    private GuiTextField username;
+    private GuiTextField password;
 
     private String status = "§7Idle...";
 
@@ -45,43 +47,43 @@ public class GuiAdd extends WrappedGuiScreen {
 
     public void initGui() {
         Keyboard.enableRepeatEvents(true);
-        representedScreen.getButtonList().add(addButton = classProvider.createGuiButton(1, representedScreen.getWidth() / 2 - 100, representedScreen.getHeight() / 4 + 72, "Add"));
-        representedScreen.getButtonList().add(clipboardButton = classProvider.createGuiButton(2, representedScreen.getWidth() / 2 - 100, representedScreen.getHeight() / 4 + 96, "Clipboard"));
-        representedScreen.getButtonList().add(classProvider.createGuiButton(0, representedScreen.getWidth() / 2 - 100, representedScreen.getHeight() / 4 + 120, "Back"));
-        username = classProvider.createGuiTextField(2, Fonts.font40, representedScreen.getWidth() / 2 - 100, 60, 200, 20);
+        buttonList.add(addButton = new GuiButton(1, width / 2 - 100, height / 4 + 72, "Add"));
+        buttonList.add(clipboardButton = new GuiButton(2, width / 2 - 100, height / 4 + 96, "Clipboard"));
+        buttonList.add(new GuiButton(0, width / 2 - 100, height / 4 + 120, "Back"));
+        username = new GuiTextField(2, Fonts.font40, width / 2 - 100, 60, 200, 20);
         username.setFocused(true);
         username.setMaxStringLength(Integer.MAX_VALUE);
-        password = classProvider.createGuiPasswordField(3, Fonts.font40, representedScreen.getWidth() / 2 - 100, 85, 200, 20);
+        password = new GuiPasswordField(3, Fonts.font40, width / 2 - 100, 85, 200, 20);
         password.setMaxStringLength(Integer.MAX_VALUE);
     }
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        representedScreen.drawBackground(0);
-        RenderUtils.drawRect(30, 30, representedScreen.getWidth() - 30, representedScreen.getHeight() - 30, Integer.MIN_VALUE);
+        drawBackground(0);
+        RenderUtils.drawRect(30, 30, width - 30, height - 30, Integer.MIN_VALUE);
 
-        Fonts.font40.drawCenteredString("Add Account", representedScreen.getWidth() / 2.0f, 34, 0xffffff);
-        Fonts.font35.drawCenteredString(status == null ? "" : status, representedScreen.getWidth() / 2.0f, representedScreen.getHeight() / 4.0f + 60, 0xffffff);
+        Fonts.font40.drawCenteredString("Add Account", width / 2.0f, 34, 0xffffff);
+        Fonts.font35.drawCenteredString(status == null ? "" : status, width / 2.0f, height / 4.0f + 60, 0xffffff);
 
         username.drawTextBox();
         password.drawTextBox();
 
         if (username.getText().isEmpty() && !username.isFocused())
-            Fonts.font40.drawCenteredString("§7Username / E-Mail", representedScreen.getWidth() / 2 - 55, 66, 0xffffff);
+            Fonts.font40.drawCenteredString("§7Username / E-Mail", width / 2 - 55, 66, 0xffffff);
 
         if (password.getText().isEmpty() && !password.isFocused())
-            Fonts.font40.drawCenteredString("§7Password", representedScreen.getWidth() / 2 - 74, 91, 0xffffff);
+            Fonts.font40.drawCenteredString("§7Password", width / 2 - 74, 91, 0xffffff);
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
     @Override
-    public void actionPerformed(IGuiButton button) throws IOException {
-        if (!button.getEnabled())
+    public void actionPerformed(GuiButton button) throws IOException {
+        if (!button.enabled)
             return;
 
-        switch (button.getId()) {
+        switch (button.id) {
             case 0:
-                mc.displayGuiScreen(prevGui.representedScreen);
+                mc.displayGuiScreen(prevGui);
                 break;
             case 1:
                 if (LiquidBounce.fileManager.accountsConfig.accountExists(username.getText())) {
@@ -115,7 +117,7 @@ public class GuiAdd extends WrappedGuiScreen {
     public void keyTyped(char typedChar, int keyCode) throws IOException {
         switch (keyCode) {
             case Keyboard.KEY_ESCAPE:
-                mc.displayGuiScreen(prevGui.representedScreen);
+                mc.displayGuiScreen(prevGui);
                 return;
             case Keyboard.KEY_TAB:
                 TabUtils.tab(username, password);
@@ -159,8 +161,7 @@ public class GuiAdd extends WrappedGuiScreen {
             return;
         }
 
-        addButton.setEnabled(false);
-        clipboardButton.setEnabled(false);
+        addButton.enabled = clipboardButton.enabled = false;
 
         final MinecraftAccount account = new MinecraftAccount(name, password);
 
@@ -189,8 +190,7 @@ public class GuiAdd extends WrappedGuiScreen {
                         GuiAltManager.altService.switchService(AltService.EnumAltService.THEALTENING);
                 } catch (NullPointerException | AuthenticationException | NoSuchFieldException | IllegalAccessException e) {
                     status = "§cThe account doesn't work.";
-                    addButton.setEnabled(true);
-                    clipboardButton.setEnabled(true);
+                    addButton.enabled = clipboardButton.enabled = true;
                     return;
                 }
             }
@@ -201,7 +201,7 @@ public class GuiAdd extends WrappedGuiScreen {
 
             status = "§aThe account has been added.";
             prevGui.status = status;
-            mc.displayGuiScreen(prevGui.representedScreen);
+            mc.displayGuiScreen(prevGui);
         }).start();
     }
 }

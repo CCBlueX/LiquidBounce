@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.features.module.modules.combat.NoFriends
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
@@ -32,13 +31,10 @@ object EntityUtils : MinecraftInstance() {
     var targetDead = false
 
     @JvmStatic
-    fun isSelected(entity: IEntity?, canAttackCheck: Boolean): Boolean {
-        if (classProvider.isEntityLivingBase(entity) && (targetDead || entity!!.entityAlive) && entity != null
-                && entity != mc.thePlayer) {
-            if (targetInvisible || !entity.invisible) {
-                if (targetPlayer && classProvider.isEntityPlayer(entity)) {
-                    val entityPlayer = entity.asEntityPlayer()
-
+    fun isSelected(entity: Entity?, canAttackCheck: Boolean): Boolean {
+        if (entity is EntityLivingBase && (targetDead || entity!!.isEntityAlive) && entity != mc.thePlayer) {
+            if (targetInvisible || !entity.isInvisible) {
+                if (targetPlayer && entity is EntityPlayer) {
                     if (canAttackCheck) {
                         if (isBot(entityPlayer))
                             return false

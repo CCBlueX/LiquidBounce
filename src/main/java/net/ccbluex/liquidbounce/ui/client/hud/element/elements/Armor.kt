@@ -5,12 +5,13 @@
  */
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
-import net.ccbluex.liquidbounce.api.enums.MaterialType
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.block.material.Material
+import net.minecraft.client.renderer.GlStateManager
 import org.lwjgl.opengl.GL11
 
 /**
@@ -32,7 +33,7 @@ class Armor(x: Double = -8.0, y: Double = 57.0, scale: Float = 1F,
             GL11.glPushMatrix()
 
             val renderItem = mc.renderItem
-            val isInsideWater = mc.thePlayer!!.isInsideOfMaterial(classProvider.getMaterialEnum(MaterialType.WATER))
+            val isInsideWater = mc.thePlayer!!.isInsideOfMaterial(Material.water)
 
             var x = 1
             var y = if (isInsideWater) -10 else 0
@@ -50,10 +51,10 @@ class Armor(x: Double = -8.0, y: Double = 57.0, scale: Float = 1F,
                     y += 18
             }
 
-            classProvider.getGlStateManager().enableAlpha()
-            classProvider.getGlStateManager().disableBlend()
-            classProvider.getGlStateManager().disableLighting()
-            classProvider.getGlStateManager().disableCull()
+            GlStateManager.enableAlpha()
+            GlStateManager.disableBlend()
+            GlStateManager.disableLighting()
+            GlStateManager.disableCull()
             GL11.glPopMatrix()
         }
 

@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -16,6 +15,8 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.block.BlockStairs
+import net.minecraft.util.BlockPos
 
 @ModuleInfo(name = "FastStairs", description = "Allows you to climb up stairs faster.", category = ModuleCategory.MOVEMENT)
 class FastStairs : Module() {
@@ -44,9 +45,9 @@ class FastStairs : Module() {
         if (!thePlayer.onGround)
             return
 
-        val blockPos = WBlockPos(thePlayer.posX, thePlayer.entityBoundingBox.minY, thePlayer.posZ)
+        val blockPos = BlockPos(thePlayer.posX, thePlayer.entityBoundingBox.minY, thePlayer.posZ)
 
-        if (classProvider.isBlockStairs(getBlock(blockPos)) && !walkingDown) {
+        if (getBlock(blockPos) is BlockStairs && !walkingDown) {
             thePlayer.setPosition(thePlayer.posX, thePlayer.posY + 0.5, thePlayer.posZ)
 
             val motion = when {
@@ -60,7 +61,7 @@ class FastStairs : Module() {
             thePlayer.motionZ *= motion
         }
 
-        if (classProvider.isBlockStairs(getBlock(blockPos.down()))) {
+        if (getBlock(blockPos.down()) is BlockStairs) {
             if (walkingDown) {
                 when {
                     mode.equals("NCP", ignoreCase = true) ->

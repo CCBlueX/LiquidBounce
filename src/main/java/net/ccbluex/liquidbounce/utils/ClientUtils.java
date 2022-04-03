@@ -6,19 +6,37 @@
 package net.ccbluex.liquidbounce.utils;
 
 import com.google.gson.JsonObject;
-import net.ccbluex.liquidbounce.LiquidBounce;
-import net.ccbluex.liquidbounce.api.minecraft.INetworkManager;
-import net.ccbluex.liquidbounce.api.minecraft.network.login.server.ISPacketEncryptionRequest;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.settings.GameSettings;
+import net.minecraft.network.NetworkManager;
+import net.minecraft.network.login.client.C01PacketEncryptionResponse;
+import net.minecraft.network.login.server.S01PacketEncryptionRequest;
+import net.minecraft.util.IChatComponent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.crypto.SecretKey;
+import java.lang.reflect.Field;
 import java.security.PublicKey;
 
 @SideOnly(Side.CLIENT)
 public final class ClientUtils extends MinecraftInstance {
+
+    private static Field fastRenderField = null;
+
+    static {
+        try {
+            final Field declaredField = GameSettings.class.getDeclaredField("ofFastRender");
+
+            if (!declaredField.isAccessible()) {
+                declaredField.setAccessible(true);
+            }
+
+            fastRenderField = declaredField;
+        } catch (NoSuchFieldException e) { }
+    }
 
     private static final Logger logger = LogManager.getLogger("LiquidBounce");
 
@@ -27,19 +45,26 @@ public final class ClientUtils extends MinecraftInstance {
     }
 
     public static void disableFastRender() {
-        LiquidBounce.wrapper.getFunctions().disableFastRender();
+        try {
+            if (fastRenderField != null) {
+                if (!fastRenderField.isAccessible()) {
+                    fastRenderField.setAccessible(true);
+                }
+
+                fastRenderField.setBoolean(Minecraft.getMinecraft().gameSettings, false);
+            }
+        } catch (IllegalAccessException ignored) {
+        }
     }
 
-    public static void sendEncryption(final INetworkManager networkManager, final SecretKey secretKey, final PublicKey publicKey, final ISPacketEncryptionRequest encryptionRequest) {
-        networkManager.sendPacket(classProvider.createCPacketEncryptionResponse(secretKey, publicKey, encryptionRequest.getVerifyToken()), () -> {
+    public static void sendEncryption(final NetworkManager networkManager, final SecretKey secretKey, final PublicKey publicKey, final S01PacketEncryptionRequest encryptionRequest) {
+        networkManager.sendPacket(new C01PacketEncryptionResponse(secretKey, publicKey, encryptionRequest.getVerifyToken()), future -> {
             networkManager.enableEncryption(secretKey);
-
-            return null;
         });
     }
 
     public static void displayChatMessage(final String message) {
-        if (mc.getThePlayer() == null) {
+        if (mc.thePlayer == null) {
             getLogger().info("(MCChat)" + message);
             return;
         }
@@ -47,6 +72,6 @@ public final class ClientUtils extends MinecraftInstance {
         final JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("text", message);
 
-        mc.getThePlayer().addChatMessage(LiquidBounce.wrapper.getFunctions().jsonToComponent(jsonObject.toString()));
+        mc.thePlayer.addChatMessage(IChatComponent.Serializer.jsonToComponent(jsonObject.toString()));
     }
 }

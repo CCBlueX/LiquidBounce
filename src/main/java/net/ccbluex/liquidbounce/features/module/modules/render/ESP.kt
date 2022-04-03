@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render2DEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
@@ -27,6 +26,10 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.entity.Entity
+import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.player.EntityPlayer
 import org.lwjgl.opengl.GL11
 import org.lwjgl.util.vector.Vector3f
 import java.awt.Color
@@ -73,7 +76,7 @@ class ESP : Module() {
             GL11.glLoadIdentity()
             GL11.glDisable(GL11.GL_DEPTH_TEST)
             GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-            classProvider.getGlStateManager().enableTexture2D()
+            GlStateManager.enableTexture2D()
             GL11.glDepthMask(true)
             GL11.glLineWidth(1.0f)
         }
@@ -151,7 +154,7 @@ class ESP : Module() {
         renderNameTags = false
         try {
             //search entities
-            val entityMap = HashMap<Color, ArrayList<IEntity>>()
+            val entityMap = HashMap<Color, ArrayList<Entity>>()
             for (entity in mc.theWorld!!.loadedEntityList) {
                 if (!EntityUtils.isSelected(entity, false)) continue
                 if (AntiBot.isBot(entity.asEntityLivingBase()) && !botValue.get()) continue
@@ -180,7 +183,7 @@ class ESP : Module() {
     override val tag: String
         get() = modeValue.get()
 
-    fun getColor(entity: IEntity?): Color {
+    fun getColor(entity: Entity?): Color {
         run {
             if (entity != null && classProvider.isEntityLivingBase(entity)) {
                 val entityLivingBase = entity.asEntityLivingBase()

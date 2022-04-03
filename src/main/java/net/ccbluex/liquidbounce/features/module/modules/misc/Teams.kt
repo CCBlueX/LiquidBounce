@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
@@ -21,7 +20,7 @@ class Teams : Module() {
     /**
      * Check if [entity] is in your own team using scoreboard, name color or team prefix
      */
-    fun isInYourTeam(entity: IEntityLivingBase): Boolean {
+    fun isInYourTeam(entity: EntityLivingBase): Boolean {
         val thePlayer = mc.thePlayer ?: return false
 
         if (scoreboardValue.get() && thePlayer.team != null && entity.team != null &&

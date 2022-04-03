@@ -13,6 +13,10 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.value.BoolValue
+import net.minecraft.client.gui.GuiChat
+import net.minecraft.client.gui.GuiIngameMenu
+import net.minecraft.client.gui.inventory.GuiContainer
+import net.minecraft.client.settings.GameSettings
 
 @ModuleInfo(name = "InventoryMove", description = "Allows you to walk while an inventory is opened.", category = ModuleCategory.MOVEMENT)
 class InventoryMove : Module() {
@@ -36,9 +40,9 @@ class InventoryMove : Module() {
     }
 
     fun tick() {
-        if (!classProvider.isGuiChat(mc.currentScreen) && !classProvider.isGuiIngameMenu(mc.currentScreen) && (!undetectable.get() || !classProvider.isGuiContainer(mc.currentScreen))) {
+        if (mc.currentScreen !is GuiChat && mc.currentScreen !is GuiIngameMenu && (!undetectable.get() || mc.currentScreen !is GuiContainer)) {
             for (affectedBinding in affectedBindings) {
-                affectedBinding.pressed = mc.gameSettings.isKeyDown(affectedBinding)
+                affectedBinding.pressed = GameSettings.isKeyDown(affectedBinding)
             }
         }
     }
@@ -53,7 +57,7 @@ class InventoryMove : Module() {
         val isIngame = mc.currentScreen != null
 
         for (affectedBinding in affectedBindings) {
-            if (!mc.gameSettings.isKeyDown(affectedBinding) || isIngame)
+            if (!GameSettings.isKeyDown(affectedBinding) || isIngame)
                 affectedBinding.pressed = false
         }
     }

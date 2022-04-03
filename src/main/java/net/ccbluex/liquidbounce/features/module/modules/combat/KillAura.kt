@@ -6,16 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.MinecraftVersion
-import net.ccbluex.liquidbounce.api.enums.EnumFacingType
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketUseEntity
-import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
-import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
-import net.ccbluex.liquidbounce.api.minecraft.world.IWorldSettings
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -24,8 +14,10 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
 import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam
-import net.ccbluex.liquidbounce.injection.backend.Backend
-import net.ccbluex.liquidbounce.utils.*
+import net.ccbluex.liquidbounce.utils.EntityUtils
+import net.ccbluex.liquidbounce.utils.RaycastUtils
+import net.ccbluex.liquidbounce.utils.Rotation
+import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.extensions.isAnimal
 import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
@@ -38,6 +30,20 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.client.gui.inventory.GuiContainer
+import net.minecraft.client.gui.inventory.GuiInventory
+import net.minecraft.enchantment.EnchantmentHelper
+import net.minecraft.entity.Entity
+import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.item.EntityArmorStand
+import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.item.ItemSword
+import net.minecraft.network.play.client.*
+import net.minecraft.potion.Potion
+import net.minecraft.util.BlockPos
+import net.minecraft.util.EnumFacing
+import net.minecraft.util.Vec3
+import net.minecraft.world.WorldSettings
 import org.lwjgl.input.Keyboard
 import java.awt.Color
 import java.util.*
@@ -71,7 +77,6 @@ class KillAura : Module() {
     }
 
     private val hurtTimeValue = IntegerValue("HurtTime", 10, 0, 10)
-    private val cooldownValue = FloatValue("Cooldown", 1f, 0f, 1f)
 
     // Range
     private val rangeValue = FloatValue("Range", 3.7f, 1f, 8f)
@@ -153,8 +158,8 @@ class KillAura : Module() {
      */
 
     // Target
-    var target: IEntityLivingBase? = null
-    private var currentTarget: IEntityLivingBase? = null
+    var target: EntityLivingBase? = null
+    private var currentTarget: EntityLivingBase? = null
     private var hitable = false
     private val prevTargetEntities = mutableListOf<Int>()
 
@@ -422,7 +427,7 @@ class KillAura : Module() {
 
         // Open inventory
         if (openInventory)
-            mc.netHandler.addToSendQueue(createOpenInventoryPacket())
+            mc.netHandler.addToSendQueue(C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT))
     }
 
     /**
@@ -438,7 +443,7 @@ class KillAura : Module() {
         val switchMode = targetModeValue.get().equals("Switch", ignoreCase = true)
 
         // Find possible targets
-        val targets = mutableListOf<IEntityLivingBase>()
+        val targets = mutableListOf<EntityLivingBase>()
 
         val theWorld = mc.theWorld!!
         val thePlayer = mc.thePlayer!!
@@ -483,9 +488,9 @@ class KillAura : Module() {
     /**
      * Check if [entity] is selected as enemy with current target options and other modules
      */
-    private fun isEnemy(entity: IEntity?): Boolean {
-        if (classProvider.isEntityLivingBase(entity) && entity != null && (EntityUtils.targetDead || isAlive(entity.asEntityLivingBase())) && entity != mc.thePlayer) {
-            if (!EntityUtils.targetInvisible && entity.invisible)
+    private fun isEnemy(entity: Entity?): Boolean {
+        if (entity is EntityLivingBase && (EntityUtils.targetDead || isAlive(entity)) && entity != mc.thePlayer) {
+            if (!EntityUtils.targetInvisible && entity.isInvisible)
                 return false
 
             if (EntityUtils.targetPlayer && classProvider.isEntityPlayer(entity)) {
@@ -511,7 +516,7 @@ class KillAura : Module() {
     /**
      * Attack [entity]
      */
-    private fun attackEntity(entity: IEntityLivingBase) {
+    private fun attackEntity(entity: EntityLivingBase) {
         // Stop blocking
         val thePlayer = mc.thePlayer!!
 
@@ -570,7 +575,7 @@ class KillAura : Module() {
     /**
      * Update killaura rotations to enemy
      */
-    private fun updateRotations(entity: IEntity): Boolean {
+    private fun updateRotations(entity: Entity): Boolean {
         if (maxTurnSpeed.get() <= 0F)
             return true
 
@@ -617,16 +622,16 @@ class KillAura : Module() {
 
         if (raycastValue.get()) {
             val raycastedEntity = RaycastUtils.raycastEntity(reach, object : RaycastUtils.EntityFilter {
-                override fun canRaycast(entity: IEntity?): Boolean {
-                    return (!livingRaycastValue.get() || (classProvider.isEntityLivingBase(entity) && !classProvider.isEntityArmorStand(entity))) &&
+                override fun canRaycast(entity: Entity?): Boolean {
+                    return (!livingRaycastValue.get() || (entity is EntityLivingBase && entity !is EntityArmorStand)) &&
                             (isEnemy(entity) || raycastIgnoredValue.get() || aacValue.get() && mc.theWorld!!.getEntitiesWithinAABBExcludingEntity(entity, entity!!.entityBoundingBox).isNotEmpty())
                 }
 
             })
 
-            if (raycastValue.get() && raycastedEntity != null && classProvider.isEntityLivingBase(raycastedEntity)
-                    && (LiquidBounce.moduleManager[NoFriends::class.java].state || !(classProvider.isEntityPlayer(raycastedEntity) && raycastedEntity.asEntityPlayer().isClientFriend())))
-                currentTarget = raycastedEntity.asEntityLivingBase()
+            if (raycastValue.get() && raycastedEntity != null && raycastedEntity is EntityLivingBase
+                    && (LiquidBounce.moduleManager[NoFriends::class.java].state || !(raycastedEntity is EntityPlayer && raycastedEntity.isClientFriend())))
+                currentTarget = raycastedEntity
 
             hitable = if (maxTurnSpeed.get() > 0F) currentTarget == raycastedEntity else true
         } else
@@ -636,7 +641,7 @@ class KillAura : Module() {
     /**
      * Start blocking
      */
-    private fun startBlocking(interactEntity: IEntity, interact: Boolean) {
+    private fun startBlocking(interactEntity: Entity, interact: Boolean) {
         if (!(blockRate.get() > 0 && Random().nextInt(100) <= blockRate.get()))
             return
 
@@ -657,16 +662,15 @@ class KillAura : Module() {
             val movingObject = boundingBox.calculateIntercept(positionEye, lookAt) ?: return
             val hitVec = movingObject.hitVec
 
-            mc.netHandler.addToSendQueue(classProvider.createCPacketUseEntity(interactEntity, WVec3(
+            mc.netHandler.addToSendQueue(C02PacketUseEntity(interactEntity, Vec3(
                     hitVec.xCoord - interactEntity.posX,
                     hitVec.yCoord - interactEntity.posY,
                     hitVec.zCoord - interactEntity.posZ)
             ))
-            mc.netHandler.addToSendQueue(classProvider.createCPacketUseEntity(interactEntity, ICPacketUseEntity.WAction.INTERACT))
+            mc.netHandler.addToSendQueue(C02PacketUseEntity(interactEntity, C02PacketUseEntity.Action.INTERACT))
         }
 
-        mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerBlockPlacement(WBlockPos(-1, -1, -1),
-                255, mc.thePlayer!!.inventory.getCurrentItemInHand(), 0.0F, 0.0F, 0.0F))
+        mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, mc.thePlayer!!.inventory.getCurrentItem(), 0.0F, 0.0F, 0.0F))
         blockingStatus = true
     }
 
@@ -676,7 +680,7 @@ class KillAura : Module() {
      */
     private fun stopBlocking() {
         if (blockingStatus) {
-            mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos.ORIGIN, classProvider.getEnumFacing(EnumFacingType.DOWN)))
+            mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
             blockingStatus = false
         }
     }
@@ -685,20 +689,20 @@ class KillAura : Module() {
      * Check if run should be cancelled
      */
     private val cancelRun: Boolean
-        inline get() = mc.thePlayer!!.spectator || !isAlive(mc.thePlayer!!)
+        inline get() = mc.thePlayer!!.isSpectator || !isAlive(mc.thePlayer!!)
                 || LiquidBounce.moduleManager[Blink::class.java].state || LiquidBounce.moduleManager[FreeCam::class.java].state
 
     /**
      * Check if [entity] is alive
      */
-    private fun isAlive(entity: IEntityLivingBase) = entity.entityAlive && entity.health > 0 ||
+    private fun isAlive(entity: EntityLivingBase) = entity.isEntityAlive && entity.health > 0 ||
             aacValue.get() && entity.hurtTime > 5
 
     /**
      * Check if player is able to block
      */
     private val canBlock: Boolean
-        inline get() = mc.thePlayer!!.heldItem != null && classProvider.isItemSword(mc.thePlayer!!.heldItem!!.item) && Backend.MINECRAFT_VERSION_MINOR == 8
+        inline get() = mc.thePlayer!!.heldItem != null && mc.thePlayer?.heldItem?.item is ItemSword
 
     /**
      * Range
@@ -706,8 +710,8 @@ class KillAura : Module() {
     private val maxRange: Float
         get() = max(rangeValue.get(), throughWallsRangeValue.get())
 
-    private fun getRange(entity: IEntity) =
-            (if (mc.thePlayer!!.getDistanceToEntityBox(entity) >= throughWallsRangeValue.get()) rangeValue.get() else throughWallsRangeValue.get()) - if (mc.thePlayer!!.sprinting) rangeSprintReducementValue.get() else 0F
+    private fun getRange(entity: Entity) =
+            (if (mc.thePlayer!!.getDistanceToEntityBox(entity) >= throughWallsRangeValue.get()) rangeValue.get() else throughWallsRangeValue.get()) - if (mc.thePlayer!!.isSprinting) rangeSprintReducementValue.get() else 0F
 
     /**
      * HUD Tag

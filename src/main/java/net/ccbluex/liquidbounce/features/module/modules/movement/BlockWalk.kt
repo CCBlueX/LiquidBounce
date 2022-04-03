@@ -5,13 +5,14 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.api.enums.BlockType
 import net.ccbluex.liquidbounce.event.BlockBBEvent
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.value.BoolValue
+import net.minecraft.init.Blocks
+import net.minecraft.util.AxisAlignedBB
 
 @ModuleInfo(name = "BlockWalk", description = "Allows you to walk on non-fullblock blocks.", category = ModuleCategory.MOVEMENT)
 class BlockWalk : Module() {
@@ -20,8 +21,8 @@ class BlockWalk : Module() {
 
     @EventTarget
     fun onBlockBB(event: BlockBBEvent) {
-        if (cobwebValue.get() && event.block == classProvider.getBlockEnum(BlockType.WEB) || snowValue.get() && event.block == classProvider.getBlockEnum(BlockType.SNOW_LAYER))
-            event.boundingBox = classProvider.createAxisAlignedBB(event.x.toDouble(), event.y.toDouble(), event.z.toDouble(),
+        if (cobwebValue.get() && event.block == Blocks.web || snowValue.get() && event.block == Blocks.snow_layer)
+            event.boundingBox = AxisAlignedBB.fromBounds(event.x.toDouble(), event.y.toDouble(), event.z.toDouble(),
                     event.x + 1.0, event.y + 1.0, event.z + 1.0)
     }
 }

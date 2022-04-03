@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.enums.StatType
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -17,6 +16,8 @@ import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.stats.StatList
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -162,7 +163,7 @@ class Step : Module() {
                     flyMode.equals("OtherHypixel", ignoreCase = true) ||
                     flyMode.equals("LatestHypixel", ignoreCase = true) ||
                     flyMode.equals("Rewinside", ignoreCase = true) ||
-                    flyMode.equals("Mineplex", ignoreCase = true) && thePlayer.inventory.getCurrentItemInHand() == null) {
+                    flyMode.equals("Mineplex", ignoreCase = true) && thePlayer.inventory.getCurrentItem() == null) {
                 event.stepHeight = 0F
                 return
             }
@@ -208,10 +209,18 @@ class Step : Module() {
                     fakeJump()
 
                     // Half legit step (1 packet missing) [COULD TRIGGER TOO MANY PACKETS]
-                    mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(stepX,
-                            stepY + 0.41999998688698, stepZ, false))
-                    mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(stepX,
-                            stepY + 0.7531999805212, stepZ, false))
+                    mc.netHandler.addToSendQueue(
+                        C03PacketPlayer.C04PacketPlayerPosition(
+                            stepX,
+                            stepY + 0.41999998688698, stepZ, false
+                        )
+                    )
+                    mc.netHandler.addToSendQueue(
+                        C03PacketPlayer.C04PacketPlayerPosition(
+                            stepX,
+                            stepY + 0.7531999805212, stepZ, false
+                        )
+                    )
                     timer.reset()
                 }
 
@@ -220,15 +229,31 @@ class Step : Module() {
 
                     if (spartanSwitch) {
                         // Vanilla step (3 packets) [COULD TRIGGER TOO MANY PACKETS]
-                        mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(stepX,
-                                stepY + 0.41999998688698, stepZ, false))
-                        mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(stepX,
-                                stepY + 0.7531999805212, stepZ, false))
-                        mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(stepX,
-                                stepY + 1.001335979112147, stepZ, false))
+                        mc.netHandler.addToSendQueue(
+                            C03PacketPlayer.C04PacketPlayerPosition(
+                                stepX,
+                                stepY + 0.41999998688698, stepZ, false
+                            )
+                        )
+                        mc.netHandler.addToSendQueue(
+                            C03PacketPlayer.C04PacketPlayerPosition(
+                                stepX,
+                                stepY + 0.7531999805212, stepZ, false
+                            )
+                        )
+                        mc.netHandler.addToSendQueue(
+                            C03PacketPlayer.C04PacketPlayerPosition(
+                                stepX,
+                                stepY + 1.001335979112147, stepZ, false
+                            )
+                        )
                     } else // Force step
-                        mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(stepX,
-                                stepY + 0.6, stepZ, false))
+                        mc.netHandler.addToSendQueue(
+                            C03PacketPlayer.C04PacketPlayerPosition(
+                                stepX,
+                                stepY + 0.6, stepZ, false
+                            )
+                        )
 
                     // Spartan allows one unlegit step so just swap between legit and unlegit
                     spartanSwitch = !spartanSwitch
@@ -241,12 +266,24 @@ class Step : Module() {
                     fakeJump()
 
                     // Vanilla step (3 packets) [COULD TRIGGER TOO MANY PACKETS]
-                    mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(stepX,
-                            stepY + 0.41999998688698, stepZ, false))
-                    mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(stepX,
-                            stepY + 0.7531999805212, stepZ, false))
-                    mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerPosition(stepX,
-                            stepY + 1.001335979112147, stepZ, false))
+                    mc.netHandler.addToSendQueue(
+                        C03PacketPlayer.C04PacketPlayerPosition(
+                            stepX,
+                            stepY + 0.41999998688698, stepZ, false
+                        )
+                    )
+                    mc.netHandler.addToSendQueue(
+                        C03PacketPlayer.C04PacketPlayerPosition(
+                            stepX,
+                            stepY + 0.7531999805212, stepZ, false
+                        )
+                    )
+                    mc.netHandler.addToSendQueue(
+                        C03PacketPlayer.C04PacketPlayerPosition(
+                            stepX,
+                            stepY + 1.001335979112147, stepZ, false
+                        )
+                    )
 
                     // Reset timer
                     timer.reset()
@@ -264,8 +301,8 @@ class Step : Module() {
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (classProvider.isCPacketPlayer(packet) && isStep && modeValue.get().equals("OldNCP", ignoreCase = true)) {
-            packet.asCPacketPlayer().y += 0.07
+        if (packet is C03PacketPlayer && isStep && modeValue.get().equals("OldNCP", ignoreCase = true)) {
+            packet.y += 0.07
             isStep = false
         }
     }
@@ -275,7 +312,7 @@ class Step : Module() {
         val thePlayer = mc.thePlayer ?: return
 
         thePlayer.isAirBorne = true
-        thePlayer.triggerAchievement(classProvider.getStatEnum(StatType.JUMP_STAT))
+        thePlayer.triggerAchievement(StatList.jumpStat)
     }
 
     private fun couldStep(): Boolean {

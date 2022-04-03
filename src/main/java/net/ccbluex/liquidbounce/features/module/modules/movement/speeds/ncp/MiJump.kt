@@ -8,6 +8,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 class MiJump : SpeedMode("MiJump") {
     override fun onMotion() {
@@ -17,7 +19,7 @@ class MiJump : SpeedMode("MiJump") {
             val multiplier = 1.8
             mc.thePlayer!!.motionX *= multiplier
             mc.thePlayer!!.motionZ *= multiplier
-            val currentSpeed = Math.sqrt(Math.pow(mc.thePlayer!!.motionX, 2.0) + Math.pow(mc.thePlayer!!.motionZ, 2.0))
+            val currentSpeed = sqrt(mc.thePlayer!!.motionX.pow(2.0) + mc.thePlayer!!.motionZ.pow(2.0))
             val maxSpeed = 0.66
             if (currentSpeed > maxSpeed) {
                 mc.thePlayer!!.motionX = mc.thePlayer!!.motionX / currentSpeed * maxSpeed

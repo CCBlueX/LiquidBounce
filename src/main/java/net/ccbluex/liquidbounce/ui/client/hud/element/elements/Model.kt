@@ -5,13 +5,16 @@
  */
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.client.renderer.OpenGlHelper
+import net.minecraft.client.renderer.RenderHelper
+import net.minecraft.entity.EntityLivingBase
 import org.lwjgl.opengl.GL11
 import kotlin.math.abs
 import kotlin.math.atan
@@ -80,9 +83,9 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y) {
     /**
      * Draw [entityLivingBase] to screen
      */
-    private fun drawEntityOnScreen(yaw: Float, pitch: Float, entityLivingBase: IEntityLivingBase) {
-        classProvider.getGlStateManager().resetColor()
-        classProvider.getGlStateManager().enableColorMaterial()
+    private fun drawEntityOnScreen(yaw: Float, pitch: Float, entityLivingBase: EntityLivingBase) {
+        GlStateManager.resetColor()
+        GlStateManager.enableColorMaterial()
         GL11.glPushMatrix()
         GL11.glTranslatef(0F, 0F, 50F)
         GL11.glScalef(-50F, 50F, 50F)
@@ -95,7 +98,7 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y) {
         val rotationYawHead = entityLivingBase.rotationYawHead
 
         GL11.glRotatef(135F, 0F, 1F, 0F)
-        functions.enableStandardItemLighting()
+        RenderHelper.enableStandardItemLighting()
         GL11.glRotatef(-135F, 0F, 1F, 0F)
         GL11.glRotatef(-atan(pitch / 40F) * 20.0F, 1F, 0F, 0F)
 
@@ -120,11 +123,11 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y) {
         entityLivingBase.rotationYawHead = rotationYawHead
 
         GL11.glPopMatrix()
-        functions.disableStandardItemLighting()
-        classProvider.getGlStateManager().disableRescaleNormal()
-        functions.setActiveTextureLightMapTexUnit()
-        classProvider.getGlStateManager().disableTexture2D()
-        functions.setActiveTextureDefaultTexUnit()
-        classProvider.getGlStateManager().resetColor()
+        RenderHelper.disableStandardItemLighting()
+        GlStateManager.disableRescaleNormal()
+        GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit)
+        GlStateManager.disableTexture2D()
+        GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit)
+        GlStateManager.resetColor()
     }
 }

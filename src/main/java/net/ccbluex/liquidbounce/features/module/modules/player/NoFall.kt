@@ -6,10 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.enums.BlockType
-import net.ccbluex.liquidbounce.api.enums.ItemType
-import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -22,6 +18,16 @@ import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.block.BlockLiquid
+import net.minecraft.init.Blocks
+import net.minecraft.init.Items
+import net.minecraft.item.ItemBlock
+import net.minecraft.item.ItemBucket
+import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.network.play.client.C09PacketHeldItemChange
+import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.BlockPos
+import net.minecraft.util.Vec3
 import kotlin.math.ceil
 import kotlin.math.sqrt
 
@@ -50,7 +56,7 @@ class NoFall : Module() {
     private var jumped = false
     private var currentMlgRotation: VecRotation? = null
     private var currentMlgItemIndex = 0
-    private var currentMlgBlock: WBlockPos? = null
+    private var currentMlgBlock: BlockPos? = null
 
     @EventTarget(ignoreCondition = true)
     fun onUpdate(event: UpdateEvent?) {
@@ -60,31 +66,31 @@ class NoFall : Module() {
 
         if (!state || LiquidBounce.moduleManager.getModule(FreeCam::class.java).state) return
 
-        if (collideBlock(mc.thePlayer!!.entityBoundingBox, classProvider::isBlockLiquid) || collideBlock(
-                classProvider.createAxisAlignedBB(
+        if (collideBlock(mc.thePlayer!!.entityBoundingBox) { it is BlockLiquid } || collideBlock(
+                AxisAlignedBB.fromBounds(
                     mc.thePlayer!!.entityBoundingBox.maxX,
                     mc.thePlayer!!.entityBoundingBox.maxY,
                     mc.thePlayer!!.entityBoundingBox.maxZ,
                     mc.thePlayer!!.entityBoundingBox.minX,
                     mc.thePlayer!!.entityBoundingBox.minY - 0.01,
                     mc.thePlayer!!.entityBoundingBox.minZ
-                ), classProvider::isBlockLiquid
-            )
+                )
+            ) { it is BlockLiquid }
         ) return
 
         when (modeValue.get().toLowerCase()) {
             "packet" -> {
                 if (mc.thePlayer!!.fallDistance > 2f) {
-                    mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(true))
+                    mc.netHandler.addToSendQueue(C03PacketPlayer(true))
                 }
             }
             "cubecraft" -> if (mc.thePlayer!!.fallDistance > 2f) {
                 mc.thePlayer!!.onGround = false
-                mc.thePlayer!!.sendQueue.addToSendQueue(classProvider.createCPacketPlayer(true))
+                mc.thePlayer!!.sendQueue.addToSendQueue(C03PacketPlayer(true))
             }
             "aac" -> {
                 if (mc.thePlayer!!.fallDistance > 2f) {
-                    mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(true))
+                    mc.netHandler.addToSendQueue(C03PacketPlayer(true))
                     currentState = 2
                 } else if (currentState == 2 && mc.thePlayer!!.fallDistance < 2) {
                     mc.thePlayer!!.motionY = 0.1
@@ -112,15 +118,15 @@ class NoFall : Module() {
                 mc.thePlayer!!.motionZ = 0.0
                 mc.thePlayer!!.motionX = mc.thePlayer!!.motionZ
                 mc.netHandler.addToSendQueue(
-                    classProvider.createCPacketPlayerPosition(
+                    C03PacketPlayer.C04PacketPlayerPosition(
                         mc.thePlayer!!.posX, mc.thePlayer!!.posY - 10E-4, mc.thePlayer!!.posZ, mc.thePlayer!!.onGround
                     )
                 )
-                mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(true))
+                mc.netHandler.addToSendQueue(C03PacketPlayer(true))
             }
             "aac3.3.15" -> if (mc.thePlayer!!.fallDistance > 2) {
                 if (!mc.isIntegratedServerRunning) mc.netHandler.addToSendQueue(
-                    classProvider.createCPacketPlayerPosition(
+                    C03PacketPlayer.C04PacketPlayerPosition(
                         mc.thePlayer!!.posX, Double.NaN, mc.thePlayer!!.posZ, false
                     )
                 )
@@ -130,12 +136,12 @@ class NoFall : Module() {
                 spartanTimer.update()
                 if (mc.thePlayer!!.fallDistance > 1.5 && spartanTimer.hasTimePassed(10)) {
                     mc.netHandler.addToSendQueue(
-                        classProvider.createCPacketPlayerPosition(
+                        C03PacketPlayer.C04PacketPlayerPosition(
                             mc.thePlayer!!.posX, mc.thePlayer!!.posY + 10, mc.thePlayer!!.posZ, true
                         )
                     )
                     mc.netHandler.addToSendQueue(
-                        classProvider.createCPacketPlayerPosition(
+                        C03PacketPlayer.C04PacketPlayerPosition(
                             mc.thePlayer!!.posX, mc.thePlayer!!.posY - 10, mc.thePlayer!!.posZ, true
                         )
                     )
@@ -149,31 +155,30 @@ class NoFall : Module() {
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
         val mode = modeValue.get()
-        if (classProvider.isCPacketPlayer(packet)) {
-            val playerPacket = packet.asCPacketPlayer()
-            if (mode.equals("SpoofGround", ignoreCase = true)) playerPacket.onGround = true
-            if (mode.equals("NoGround", ignoreCase = true)) playerPacket.onGround = false
+        if (packet is C03PacketPlayer) {
+            if (mode.equals("SpoofGround", ignoreCase = true)) packet.onGround = true
+            if (mode.equals("NoGround", ignoreCase = true)) packet.onGround = false
             if (mode.equals(
                     "Hypixel", ignoreCase = true
                 ) && mc.thePlayer != null && mc.thePlayer!!.fallDistance > 1.5
-            ) playerPacket.onGround = mc.thePlayer!!.ticksExisted % 2 == 0
+            ) packet.onGround = mc.thePlayer!!.ticksExisted % 2 == 0
         }
     }
 
     @EventTarget
     fun onMove(event: MoveEvent) {
         if (collideBlock(
-                mc.thePlayer!!.entityBoundingBox, classProvider::isBlockLiquid
-            ) || collideBlock(
-                classProvider.createAxisAlignedBB(
+                mc.thePlayer!!.entityBoundingBox
+            ) { it is BlockLiquid } || collideBlock(
+                AxisAlignedBB.fromBounds(
                     mc.thePlayer!!.entityBoundingBox.maxX,
                     mc.thePlayer!!.entityBoundingBox.maxY,
                     mc.thePlayer!!.entityBoundingBox.maxZ,
                     mc.thePlayer!!.entityBoundingBox.minX,
                     mc.thePlayer!!.entityBoundingBox.minY - 0.01,
                     mc.thePlayer!!.entityBoundingBox.minZ
-                ), classProvider::isBlockLiquid
-            )
+                )
+            ) { it is BlockLiquid }
         ) return
 
         if (modeValue.get().equals("laac", ignoreCase = true)) {
@@ -213,10 +218,10 @@ class NoFall : Module() {
                 val collision =
                     fallingPlayer.findCollision(ceil(1.0 / mc.thePlayer!!.motionY * -maxDist).toInt()) ?: return
 
-                var ok: Boolean = WVec3(
+                var ok: Boolean = Vec3(
                     mc.thePlayer!!.posX, mc.thePlayer!!.posY + mc.thePlayer!!.eyeHeight, mc.thePlayer!!.posZ
                 ).distanceTo(
-                    WVec3(collision.pos).addVector(
+                    Vec3(collision.pos).addVector(
                         0.5, 0.5, 0.5
                     )
                 ) < mc.playerController.blockReachDistance + sqrt(0.75)
@@ -232,9 +237,7 @@ class NoFall : Module() {
                 for (i in 36..44) {
                     val itemStack = mc.thePlayer!!.inventoryContainer.getSlot(i).stack
 
-                    if (itemStack != null && (itemStack.item == classProvider.getItemEnum(ItemType.WATER_BUCKET) || classProvider.isItemBlock(
-                            itemStack.item
-                        ) && (itemStack.item?.asItemBlock())?.block == classProvider.getBlockEnum(BlockType.WEB))
+                    if (itemStack != null && (itemStack.item == Items.water_bucket || itemStack.item is ItemBlock && (itemStack.item as ItemBlock).block == Blocks.web)
                     ) {
                         index = i - 36
 
@@ -247,7 +250,7 @@ class NoFall : Module() {
                 currentMlgBlock = collision.pos
 
                 if (mc.thePlayer!!.inventory.currentItem != index) {
-                    mc.thePlayer!!.sendQueue.addToSendQueue(classProvider.createCPacketHeldItemChange(index))
+                    mc.thePlayer!!.sendQueue.addToSendQueue(C09PacketHeldItemChange(index))
                 }
 
                 currentMlgRotation = RotationUtils.faceBlock(collision.pos)
@@ -256,7 +259,7 @@ class NoFall : Module() {
         } else if (currentMlgRotation != null) {
             val stack = mc.thePlayer!!.inventory.getStackInSlot(currentMlgItemIndex)
 
-            if (classProvider.isItemBucket(stack!!.item)) {
+            if (stack!!.item is ItemBucket) {
                 mc.playerController.sendUseItem(mc.thePlayer!!, mc.theWorld!!, stack)
             } else {
                 if (mc.playerController.sendUseItem(mc.thePlayer!!, mc.theWorld!!, stack)) {
@@ -264,7 +267,7 @@ class NoFall : Module() {
                 }
             }
             if (mc.thePlayer!!.inventory.currentItem != currentMlgItemIndex) mc.thePlayer!!.sendQueue.addToSendQueue(
-                classProvider.createCPacketHeldItemChange(mc.thePlayer!!.inventory.currentItem)
+                C09PacketHeldItemChange(mc.thePlayer!!.inventory.currentItem)
             )
         }
     }

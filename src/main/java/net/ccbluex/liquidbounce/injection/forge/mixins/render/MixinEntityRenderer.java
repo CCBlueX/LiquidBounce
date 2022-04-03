@@ -85,9 +85,9 @@ public abstract class MixinEntityRenderer {
                 GlStateManager.translate(0F, 0.3F, 0.0F);
 
                 if(!this.mc.gameSettings.debugCamEnable) {
-                    BlockPos blockpos = new BlockPos(entity);
-                    IBlockState iblockstate = this.mc.theWorld.getBlockState(blockpos);
-                    net.minecraftforge.client.ForgeHooksClient.orientBedCamera(this.mc.theWorld, blockpos, iblockstate, entity);
+                    BlockPos blockPos = new BlockPos(entity);
+                    IBlockState blockState = this.mc.theWorld.getBlockState(blockPos);
+                    net.minecraftforge.client.ForgeHooksClient.orientBedCamera(this.mc.theWorld, blockPos, blockState, entity);
 
                     GlStateManager.rotate(entity.prevRotationYaw + (entity.rotationYaw - entity.prevRotationYaw) * partialTicks + 180.0F, 0.0F, -1.0F, 0.0F);
                     GlStateManager.rotate(entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch) * partialTicks, -1.0F, 0.0F, 0.0F);

@@ -5,12 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.api.enums.MaterialType
-import net.ccbluex.liquidbounce.api.enums.WDefaultVertexFormats
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity
-import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition
-import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -21,6 +15,15 @@ import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.block.material.Material
+import net.minecraft.client.renderer.Tessellator
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats
+import net.minecraft.entity.Entity
+import net.minecraft.item.*
+import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.BlockPos
+import net.minecraft.util.MovingObjectPosition
+import net.minecraft.util.Vec3
 import org.lwjgl.opengl.GL11
 import org.lwjgl.util.glu.Cylinder
 import org.lwjgl.util.glu.GLU
@@ -155,26 +158,26 @@ class Projectiles : Module() {
 
         while (!hasLanded && posY > 0.0) {
             // Set pos before and after
-            var posBefore = WVec3(posX, posY, posZ)
-            var posAfter = WVec3(posX + motionX, posY + motionY, posZ + motionZ)
+            var posBefore = Vec3(posX, posY, posZ)
+            var posAfter = Vec3(posX + motionX, posY + motionY, posZ + motionZ)
 
             // Get landing position
-            landingPosition = theWorld.rayTraceBlocks(posBefore, posAfter, stopOnLiquid = false,
-                    ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false)
+            landingPosition = theWorld.rayTraceBlocks(posBefore, posAfter, false,
+                    true, false)
 
             // Set pos before and after
-            posBefore = WVec3(posX, posY, posZ)
-            posAfter = WVec3(posX + motionX, posY + motionY, posZ + motionZ)
+            posBefore = Vec3(posX, posY, posZ)
+            posAfter = Vec3(posX + motionX, posY + motionY, posZ + motionZ)
 
             // Check if arrow is landing
             if (landingPosition != null) {
                 hasLanded = true
-                posAfter = WVec3(landingPosition.hitVec.xCoord, landingPosition.hitVec.yCoord, landingPosition.hitVec.zCoord)
+                posAfter = Vec3(landingPosition.hitVec.xCoord, landingPosition.hitVec.yCoord, landingPosition.hitVec.zCoord)
             }
 
             // Set arrow box
-            val arrowBox = classProvider.createAxisAlignedBB(posX - size, posY - size, posZ - size, posX + size,
-                    posY + size, posZ + size).addCoord(motionX, motionY, motionZ).expand(1.0, 1.0, 1.0)
+            val arrowBox = AxisAlignedBB(posX - size, posY - size, posZ - size, posX + size,
+                posY + size, posZ + size).addCoord(motionX, motionY, motionZ).expand(1.0, 1.0, 1.0)
 
             val chunkMinX = floor((arrowBox.minX - 2.0) / 16.0).toInt()
             val chunkMaxX = floor((arrowBox.maxX + 2.0) / 16.0).toInt()
@@ -182,7 +185,7 @@ class Projectiles : Module() {
             val chunkMaxZ = floor((arrowBox.maxZ + 2.0) / 16.0).toInt()
 
             // Check which entities colliding with the arrow
-            val collidedEntities = mutableListOf<IEntity>()
+            val collidedEntities = mutableListOf<Entity>()
 
             for (x in chunkMinX..chunkMaxX)
                 for (z in chunkMinZ..chunkMaxZ)
@@ -209,7 +212,7 @@ class Projectiles : Module() {
             posY += motionY
             posZ += motionZ
 
-            val blockState = theWorld.getBlockState(WBlockPos(posX, posY, posZ))
+            val blockState = theWorld.getBlockState(BlockPos(posX, posY, posZ))
 
             // Check is next position water
             if (blockState.block.getMaterial(blockState) == classProvider.getMaterialEnum(MaterialType.WATER)) {

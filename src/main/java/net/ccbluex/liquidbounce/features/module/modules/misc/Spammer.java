@@ -55,7 +55,7 @@ public class Spammer extends Module {
     @EventTarget
     public void onUpdate(UpdateEvent event) {
         if(msTimer.hasTimePassed(delay)) {
-            mc.getThePlayer().sendChatMessage(customValue.get() ? replace(messageValue.get()) : messageValue.get() + " >" + RandomUtils.randomString(5 + new Random().nextInt(5)) + "<");
+            mc.thePlayer.sendChatMessage(customValue.get() ? replace(messageValue.get()) : messageValue.get() + " >" + RandomUtils.randomString(5 + new Random().nextInt(5)) + "<");
             msTimer.reset();
             delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get());
         }

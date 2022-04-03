@@ -6,39 +6,40 @@
 package net.ccbluex.liquidbounce.ui.client
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.IGuiButton
-import net.ccbluex.liquidbounce.api.util.WrappedGuiScreen
+
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
+import net.minecraft.client.gui.GuiButton
+import net.minecraft.client.gui.GuiScreen
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 
-class GuiUpdate : WrappedGuiScreen() {
+class GuiUpdate : GuiScreen() {
 
     override fun initGui() {
-        val j = representedScreen.height / 4 + 48
+        val j = height / 4 + 48
 
-        representedScreen.buttonList.add(classProvider.createGuiButton(1, representedScreen.width / 2 + 2, j + 24 * 2, 98, 20, "OK"))
-        representedScreen.buttonList.add(classProvider.createGuiButton(2, representedScreen.width / 2 - 100, j + 24 * 2, 98, 20, "Download"))
+        buttonList.add(GuiButton(1, width / 2 + 2, j + 24 * 2, 98, 20, "OK"))
+        buttonList.add(GuiButton(2, width / 2 - 100, j + 24 * 2, 98, 20, "Download"))
     }
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
-        representedScreen.drawBackground(0)
+        drawBackground(0)
 
-        Fonts.font35.drawCenteredString("b${LiquidBounce.latestVersion} got released!", representedScreen.width / 2.0f, representedScreen.height / 8.0f + 80, 0xffffff)
-        Fonts.font35.drawCenteredString("Press \"Download\" to visit our website or dismiss this message by pressing \"OK\".", representedScreen.width / 2.0f, representedScreen.height / 8.0f + 80 + Fonts.font35.fontHeight, 0xffffff)
+        Fonts.font35.drawCenteredString("b${LiquidBounce.latestVersion} got released!", width / 2.0f, height / 8.0f + 80, 0xffffff)
+        Fonts.font35.drawCenteredString("Press \"Download\" to visit our website or dismiss this message by pressing \"OK\".", width / 2.0f, height / 8.0f + 80 + Fonts.font35.fontHeight, 0xffffff)
 
         super.drawScreen(mouseX, mouseY, partialTicks)
 
         // Title
         GL11.glScalef(2F, 2F, 2F)
-        Fonts.font35.drawCenteredString("New update available!", representedScreen.width / 4.0f, representedScreen.height / 16.0f + 20, Color(255, 0, 0).rgb)
+        Fonts.font35.drawCenteredString("New update available!", width / 4.0f, height / 16.0f + 20, Color(255, 0, 0).rgb)
     }
 
-    override fun actionPerformed(button: IGuiButton) {
+    override fun actionPerformed(button: GuiButton) {
         when (button.id) {
-            1 -> mc.displayGuiScreen(classProvider.wrapGuiScreen(GuiMainMenu()))
+            1 -> mc.displayGuiScreen(GuiMainMenu())
             2 -> MiscUtils.showURL("https://liquidbounce.net/download")
         }
     }

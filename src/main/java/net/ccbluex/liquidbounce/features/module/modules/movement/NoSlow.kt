@@ -6,10 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.enums.EnumFacingType
-import net.ccbluex.liquidbounce.api.minecraft.item.IItem
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging
-import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
@@ -18,10 +14,14 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
-import net.ccbluex.liquidbounce.injection.backend.Backend
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
+import net.minecraft.item.*
+import net.minecraft.network.play.client.C07PacketPlayerDigging
+import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
+import net.minecraft.util.BlockPos
+import net.minecraft.util.EnumFacing
 
 @ModuleInfo(name = "NoSlow", description = "Cancels slowness effects caused by soulsand and using items.",
         category = ModuleCategory.MOVEMENT)
@@ -50,21 +50,21 @@ class NoSlow : Module() {
         val thePlayer = mc.thePlayer ?: return
         val heldItem = thePlayer.heldItem ?: return
 
-        if (!classProvider.isItemSword(heldItem.item) || !MovementUtils.isMoving)
+        if (heldItem.item !is ItemSword || !MovementUtils.isMoving)
             return
 
         val aura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
         if (!thePlayer.isBlocking && !aura.blockingStatus)
             return
 
-        if (this.packet.get() && Backend.MINECRAFT_VERSION_MINOR == 8) {
+        if (this.packet.get()) {
             when (event.eventState) {
                 EventState.PRE -> {
-                    val digging = classProvider.createCPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, WBlockPos(0, 0, 0), classProvider.getEnumFacing(EnumFacingType.DOWN))
+                    val digging = C07PacketPlayerDigging(C07PacketPlayerDigging.Action.RELEASE_USE_ITEM, BlockPos(0, 0, 0), EnumFacing.DOWN)
                     mc.netHandler.addToSendQueue(digging)
                 }
                 EventState.POST -> {
-                    val blockPlace = classProvider.createCPacketPlayerBlockPlacement(WBlockPos(-1, -1, -1), 255, mc.thePlayer!!.inventory.getCurrentItemInHand(), 0.0F, 0.0F, 0.0F)
+                    val blockPlace = C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, mc.thePlayer!!.inventory.getCurrentItem(), 0.0F, 0.0F, 0.0F)
                     mc.netHandler.addToSendQueue(blockPlace)
                 }
             }
@@ -79,15 +79,15 @@ class NoSlow : Module() {
         event.strafe = getMultiplier(heldItem, false)
     }
 
-    private fun getMultiplier(item: IItem?, isForward: Boolean): Float {
+    private fun getMultiplier(item: Item?, isForward: Boolean): Float {
         return when {
-            classProvider.isItemFood(item) || classProvider.isItemPotion(item) || classProvider.isItemBucketMilk(item) -> {
+            item is ItemFood || item is ItemPotion || item is ItemBucketMilk -> {
                 if (isForward) this.consumeForwardMultiplier.get() else this.consumeStrafeMultiplier.get()
             }
-            classProvider.isItemSword(item) -> {
+            item is ItemSword -> {
                 if (isForward) this.blockForwardMultiplier.get() else this.blockStrafeMultiplier.get()
             }
-            classProvider.isItemBow(item) -> {
+            item is ItemBow -> {
                 if (isForward) this.bowForwardMultiplier.get() else this.bowStrafeMultiplier.get()
             }
             else -> 0.2F

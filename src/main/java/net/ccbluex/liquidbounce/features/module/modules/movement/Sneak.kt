@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketEntityAction
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
@@ -16,6 +15,8 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.client.settings.GameSettings
+import net.minecraft.network.play.client.C0BPacketEntityAction
 
 @ModuleInfo(name = "Sneak", description = "Automatically sneaks all the time.", category = ModuleCategory.MOVEMENT)
 class Sneak : Module() {
@@ -41,18 +42,18 @@ class Sneak : Module() {
                 if (sneaking)
                     return
 
-                mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(mc.thePlayer!!, ICPacketEntityAction.WAction.START_SNEAKING))
+                mc.netHandler.addToSendQueue(C0BPacketEntityAction(mc.thePlayer!!, C0BPacketEntityAction.Action.START_SNEAKING))
             }
 
             "switch" -> {
                 when (event.eventState) {
                     EventState.PRE -> {
-                        mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(mc.thePlayer!!, ICPacketEntityAction.WAction.START_SNEAKING))
-                        mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(mc.thePlayer!!, ICPacketEntityAction.WAction.STOP_SNEAKING))
+                        mc.netHandler.addToSendQueue(C0BPacketEntityAction(mc.thePlayer!!, C0BPacketEntityAction.Action.START_SNEAKING))
+                        mc.netHandler.addToSendQueue(C0BPacketEntityAction(mc.thePlayer!!, C0BPacketEntityAction.Action.STOP_SNEAKING))
                     }
                     EventState.POST -> {
-                        mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(mc.thePlayer!!, ICPacketEntityAction.WAction.STOP_SNEAKING))
-                        mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(mc.thePlayer!!, ICPacketEntityAction.WAction.START_SNEAKING))
+                        mc.netHandler.addToSendQueue(C0BPacketEntityAction(mc.thePlayer!!, C0BPacketEntityAction.Action.STOP_SNEAKING))
+                        mc.netHandler.addToSendQueue(C0BPacketEntityAction(mc.thePlayer!!, C0BPacketEntityAction.Action.START_SNEAKING))
                     }
                 }
             }
@@ -61,7 +62,7 @@ class Sneak : Module() {
                 if (event.eventState == EventState.PRE)
                     return
 
-                mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(mc.thePlayer!!, ICPacketEntityAction.WAction.START_SNEAKING))
+                mc.netHandler.addToSendQueue(C0BPacketEntityAction(mc.thePlayer!!, C0BPacketEntityAction.Action.START_SNEAKING))
             }
         }
     }
@@ -76,11 +77,11 @@ class Sneak : Module() {
 
         when (modeValue.get().toLowerCase()) {
             "legit" -> {
-                if (!mc.gameSettings.isKeyDown(mc.gameSettings.keyBindSneak)) {
+                if (!GameSettings.isKeyDown(mc.gameSettings.keyBindSneak)) {
                     mc.gameSettings.keyBindSneak.pressed = false
                 }
             }
-            "vanilla", "switch", "minesecure" -> mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(player, ICPacketEntityAction.WAction.STOP_SNEAKING))
+            "vanilla", "switch", "minesecure" -> mc.netHandler.addToSendQueue(C0BPacketEntityAction(player, C0BPacketEntityAction.Action.STOP_SNEAKING))
         }
         sneaking = false
     }

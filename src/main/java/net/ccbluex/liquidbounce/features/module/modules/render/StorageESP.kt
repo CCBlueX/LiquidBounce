@@ -20,6 +20,9 @@ import net.ccbluex.liquidbounce.utils.render.shader.shaders.GlowShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.OutlineShader
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher
+import net.minecraft.entity.item.EntityMinecartChest
+import net.minecraft.tileentity.*
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 

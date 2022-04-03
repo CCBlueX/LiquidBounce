@@ -32,7 +32,7 @@ class Zoot : Module() {
 
             if (effect != null) {
                 repeat(effect.duration / 20) {
-                    mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(thePlayer.onGround))
+                    mc.netHandler.addToSendQueue(C03PacketPlayer(thePlayer.onGround))
                 }
             }
         }
@@ -40,7 +40,7 @@ class Zoot : Module() {
 
         if (fireValue.get() && !thePlayer.capabilities.isCreativeMode && thePlayer.burning) {
             repeat(9) {
-                mc.netHandler.addToSendQueue(classProvider.createCPacketPlayer(thePlayer.onGround))
+                mc.netHandler.addToSendQueue(C03PacketPlayer(thePlayer.onGround))
             }
         }
     }

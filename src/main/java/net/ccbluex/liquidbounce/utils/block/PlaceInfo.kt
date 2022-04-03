@@ -5,15 +5,13 @@
  */
 package net.ccbluex.liquidbounce.utils.block
 
-import net.ccbluex.liquidbounce.api.enums.EnumFacingType
-import net.ccbluex.liquidbounce.api.minecraft.util.IEnumFacing
-import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.WVec3
-import net.ccbluex.liquidbounce.injection.backend.WrapperImpl.classProvider
+import net.minecraft.util.BlockPos
+import net.minecraft.util.EnumFacing
+import net.minecraft.util.Vec3
 
 
-class PlaceInfo(val blockPos: WBlockPos, val enumFacing: IEnumFacing,
-                var vec3: WVec3 = WVec3(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5)) {
+class PlaceInfo(val blockPos: BlockPos, val enumFacing: EnumFacing,
+                var vec3: Vec3 = Vec3(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5)) {
 
     companion object {
 
@@ -21,18 +19,18 @@ class PlaceInfo(val blockPos: WBlockPos, val enumFacing: IEnumFacing,
          * Allows you to find a specific place info for your [blockPos]
          */
         @JvmStatic
-        fun get(blockPos: WBlockPos): PlaceInfo? {
+        fun get(blockPos: BlockPos): PlaceInfo? {
             return when {
                 BlockUtils.canBeClicked(blockPos.add(0, -1, 0)) ->
-                    return PlaceInfo(blockPos.add(0, -1, 0), classProvider.getEnumFacing(EnumFacingType.UP))
+                    return PlaceInfo(blockPos.add(0, -1, 0), EnumFacing.UP)
                 BlockUtils.canBeClicked(blockPos.add(0, 0, 1)) ->
-                    return PlaceInfo(blockPos.add(0, 0, 1), classProvider.getEnumFacing(EnumFacingType.NORTH))
+                    return PlaceInfo(blockPos.add(0, 0, 1), EnumFacing.NORTH)
                 BlockUtils.canBeClicked(blockPos.add(-1, 0, 0)) ->
-                    return PlaceInfo(blockPos.add(-1, 0, 0), classProvider.getEnumFacing(EnumFacingType.EAST))
+                    return PlaceInfo(blockPos.add(-1, 0, 0), EnumFacing.EAST)
                 BlockUtils.canBeClicked(blockPos.add(0, 0, -1)) ->
-                    return PlaceInfo(blockPos.add(0, 0, -1), classProvider.getEnumFacing(EnumFacingType.SOUTH))
+                    return PlaceInfo(blockPos.add(0, 0, -1), EnumFacing.SOUTH)
                 BlockUtils.canBeClicked(blockPos.add(1, 0, 0)) ->
-                    PlaceInfo(blockPos.add(1, 0, 0), classProvider.getEnumFacing(EnumFacingType.WEST))
+                    PlaceInfo(blockPos.add(1, 0, 0), EnumFacing.WEST)
                 else -> null
             }
         }

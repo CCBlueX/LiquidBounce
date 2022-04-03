@@ -5,14 +5,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render2DEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.injection.backend.Backend
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.canBeClicked
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
@@ -20,6 +18,10 @@ import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
+import net.minecraft.block.Block
+import net.minecraft.client.gui.ScaledResolution
+import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.util.BlockPos
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 
@@ -31,7 +33,7 @@ class BlockOverlay : Module() {
     private val colorRainbow = BoolValue("Rainbow", false)
     val infoValue = BoolValue("Info", false)
 
-    val currentBlock: WBlockPos?
+    val currentBlock: BlockPos?
         get() {
             val blockPos = mc.objectMouseOver?.blockPos ?: return null
 
@@ -51,11 +53,11 @@ class BlockOverlay : Module() {
         val color = if (colorRainbow.get()) rainbow(0.4F) else Color(colorRedValue.get(),
                 colorGreenValue.get(), colorBlueValue.get(), (0.4F * 255).toInt())
 
-        classProvider.getGlStateManager().enableBlend()
-        classProvider.getGlStateManager().tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
+        GlStateManager.enableBlend()
+        GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
         RenderUtils.glColor(color)
         GL11.glLineWidth(2F)
-        classProvider.getGlStateManager().disableTexture2D()
+        GlStateManager.disableTexture2D()
         GL11.glDepthMask(false)
 
         @Suppress("ConstantConditionIf")
@@ -76,9 +78,9 @@ class BlockOverlay : Module() {
         RenderUtils.drawSelectionBoundingBox(axisAlignedBB)
         RenderUtils.drawFilledBox(axisAlignedBB)
         GL11.glDepthMask(true)
-        classProvider.getGlStateManager().enableTexture2D()
-        classProvider.getGlStateManager().disableBlend()
-        classProvider.getGlStateManager().resetColor()
+        GlStateManager.enableTexture2D()
+        GlStateManager.disableBlend()
+        GlStateManager.resetColor()
     }
 
     @EventTarget
@@ -98,7 +100,7 @@ class BlockOverlay : Module() {
                     3F, Color.BLACK.rgb, Color.BLACK.rgb
             )
 
-            classProvider.getGlStateManager().resetColor()
+            GlStateManager.resetColor()
             Fonts.font40.drawString(info, scaledResolution.scaledWidth / 2f, scaledResolution.scaledHeight / 2f + 7f, Color.WHITE.rgb, false)
         }
     }

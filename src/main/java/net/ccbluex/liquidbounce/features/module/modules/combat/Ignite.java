@@ -5,16 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat;
 
-import net.ccbluex.liquidbounce.api.enums.EnumFacingType;
-import net.ccbluex.liquidbounce.api.enums.ItemType;
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntity;
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityPlayerSP;
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.IWorldClient;
-import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack;
-import net.ccbluex.liquidbounce.api.minecraft.util.IEnumFacing;
-import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos;
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper;
-import net.ccbluex.liquidbounce.api.minecraft.util.WVec3;
 import net.ccbluex.liquidbounce.event.EventTarget;
 import net.ccbluex.liquidbounce.event.UpdateEvent;
 import net.ccbluex.liquidbounce.features.module.Module;
@@ -26,6 +16,19 @@ import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.ccbluex.liquidbounce.utils.block.BlockUtils;
 import net.ccbluex.liquidbounce.utils.timer.MSTimer;
 import net.ccbluex.liquidbounce.value.BoolValue;
+import net.minecraft.block.BlockAir;
+import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.entity.Entity;
+import net.minecraft.init.Items;
+import net.minecraft.item.ItemBucket;
+import net.minecraft.item.ItemStack;
+import net.minecraft.network.play.client.C03PacketPlayer;
+import net.minecraft.network.play.client.C09PacketHeldItemChange;
+import net.minecraft.util.BlockPos;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.MathHelper;
+import net.minecraft.util.Vec3;
 
 @ModuleInfo(name = "Ignite", description = "Automatically sets targets around you on fire.", category = ModuleCategory.COMBAT)
 public class Ignite extends Module {
@@ -39,8 +42,8 @@ public class Ignite extends Module {
        if (!msTimer.hasTimePassed(500L))
            return;
 
-       IEntityPlayerSP thePlayer = mc.getThePlayer();
-       IWorldClient theWorld = mc.getTheWorld();
+       EntityPlayerSP thePlayer = mc.thePlayer;
+       WorldClient theWorld = mc.theWorld;
 
        if (thePlayer == null || theWorld == null)
            return;
@@ -55,11 +58,11 @@ public class Ignite extends Module {
 
        final int fireInHotbar = lighterInHotbar != -1 ? lighterInHotbar : lavaInHotbar;
 
-       for (final IEntity entity : theWorld.getLoadedEntityList()) {
+       for (final Entity entity : theWorld.getLoadedEntityList()) {
            if (EntityUtils.isSelected(entity, true) && !entity.isBurning()) {
-               WBlockPos blockPos = entity.getPosition();
+               BlockPos blockPos = entity.getPosition();
 
-               if (mc.getThePlayer().getDistanceSq(blockPos) >= 22.3D ||
+               if (mc.thePlayer.getDistanceSq(blockPos) >= 22.3D ||
                        !BlockUtils.isReplaceable(blockPos) ||
                        !classProvider.isBlockAir(BlockUtils.getBlock(blockPos)))
                    continue;
@@ -68,10 +71,11 @@ public class Ignite extends Module {
 
                mc.getNetHandler().addToSendQueue(classProvider.createCPacketHeldItemChange(fireInHotbar - 36));
 
-               final IItemStack itemStack = mc.getThePlayer().getInventory().getStackInSlot(fireInHotbar);
+               final ItemStack itemStack =
+                       mc.thePlayer.inventoryContainer.getSlot(fireInHotbar).getStack();
 
-               if (classProvider.isItemBucket(itemStack.getItem())) {
-                   final double diffX = blockPos.getX() + 0.5D - mc.getThePlayer().getPosX();
+               if (itemStack.getItem() instanceof ItemBucket) {
+                   final double diffX = blockPos.getX() + 0.5D - mc.thePlayer.posX;
                    final double diffY = blockPos.getY() + 0.5D -
                            (thePlayer.getEntityBoundingBox().getMinY() +
                                    thePlayer.getEyeHeight());
@@ -89,10 +93,8 @@ public class Ignite extends Module {
 
                    mc.getPlayerController().sendUseItem(thePlayer, theWorld, itemStack);
                } else {
-                   for (EnumFacingType enumFacingType : EnumFacingType.values()) {
-                       IEnumFacing side = classProvider.getEnumFacing(enumFacingType);
-
-                       final WBlockPos neighbor = blockPos.offset(side);
+                   for (final EnumFacing side : EnumFacing.values()) {
+                       final BlockPos neighbor = blockPos.offset(side);
 
                        if (!BlockUtils.canBeClicked(neighbor)) continue;
 
@@ -112,8 +114,8 @@ public class Ignite extends Module {
                                        WMathHelper.wrapAngleTo180_float(pitch - thePlayer.getRotationPitch()),
                                thePlayer.getOnGround()));
 
-                       if (mc.getPlayerController().onPlayerRightClick(thePlayer, theWorld, itemStack, neighbor,
-                               side.getOpposite(), new WVec3(side.getDirectionVec()))) {
+                       if (mc.playerController.onPlayerRightClick(thePlayer, theWorld, itemStack, neighbor,
+                               side.getOpposite(), new Vec3(side.getDirectionVec()))) {
                            thePlayer.swingItem();
                            break;
                        }

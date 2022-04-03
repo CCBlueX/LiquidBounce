@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.ui.client.hud.designer
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI
 import net.ccbluex.liquidbounce.ui.client.hud.HUD.Companion.createDefault
 import net.ccbluex.liquidbounce.ui.client.hud.HUD.Companion.elements
@@ -14,9 +13,12 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.ui.font.GameFontRenderer
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.*
+import net.minecraft.client.gui.ScaledResolution
+import net.minecraft.util.MathHelper
 import org.lwjgl.input.Mouse
 import org.lwjgl.opengl.GL11
 import java.awt.Color
@@ -239,8 +241,8 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
             element.side.horizontal = values[if (currIndex + 1 >= values.size) 0 else currIndex + 1]
             element.x = when (element.side.horizontal) {
                 Side.Horizontal.LEFT -> x
-                Side.Horizontal.MIDDLE -> (classProvider.createScaledResolution(mc).scaledWidth / 2) - x
-                Side.Horizontal.RIGHT -> classProvider.createScaledResolution(mc).scaledWidth - x
+                Side.Horizontal.MIDDLE -> (ScaledResolution(mc).scaledWidth / 2) - x
+                Side.Horizontal.RIGHT -> ScaledResolution(mc).scaledWidth - x
             }
         }
 
@@ -261,8 +263,8 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
             element.side.vertical = values[if (currIndex + 1 >= values.size) 0 else currIndex + 1]
             element.y = when (element.side.vertical) {
                 Side.Vertical.UP -> y
-                Side.Vertical.MIDDLE -> (classProvider.createScaledResolution(mc).scaledHeight / 2) - y
-                Side.Vertical.DOWN -> classProvider.createScaledResolution(mc).scaledHeight - y
+                Side.Vertical.MIDDLE -> (ScaledResolution(mc).scaledHeight / 2) - y
+                Side.Vertical.DOWN -> ScaledResolution(mc).scaledHeight - y
             }
 
         }
@@ -316,7 +318,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
                     // Slider changer
                     if (mouseX >= x + 8 && mouseX <= x + prevWidth && mouseY >= y + height + 9 && mouseY <= y + height + 15 &&
                             Mouse.isButtonDown(0)) {
-                        val curr = WMathHelper.clamp_float((mouseX - x - 8F) / (prevWidth - 18F), 0F, 1F)
+                        val curr = MathHelper.clamp_float((mouseX - x - 8F) / (prevWidth - 18F), 0F, 1F)
 
                         value.set(min + (max - min) * curr)
                     }
@@ -351,7 +353,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
                     // Slider changer
                     if (mouseX >= x + 8 && mouseX <= x + prevWidth && mouseY >= y + height + 9 && mouseY <= y + height + 15 &&
                             Mouse.isButtonDown(0)) {
-                        val curr = WMathHelper.clamp_float((mouseX - x - 8F) / (prevWidth - 18F), 0F, 1F)
+                        val curr = MathHelper.clamp_float((mouseX - x - 8F) / (prevWidth - 18F), 0F, 1F)
 
                         value.set((min + (max - min) * curr).toInt())
                     }
@@ -394,7 +396,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 
                     // Title
                     val text = when {
-                        fontRenderer.isGameFontRenderer() -> "Font: ${fontRenderer.getGameFontRenderer().defaultFont.font.name} - ${fontRenderer.getGameFontRenderer().defaultFont.font.size}"
+                        fontRenderer is GameFontRenderer -> "Font: ${fontRenderer.defaultFont.font.name} - ${fontRenderer.defaultFont.font.size}"
                         fontRenderer == Fonts.minecraftFont -> "Font: Minecraft"
                         else -> "Font: Unknown"
                     }

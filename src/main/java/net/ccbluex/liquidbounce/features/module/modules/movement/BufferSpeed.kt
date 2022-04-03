@@ -6,8 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.enums.BlockType
-import net.ccbluex.liquidbounce.api.minecraft.util.WBlockPos
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
@@ -19,6 +17,12 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.block.BlockSlab
+import net.minecraft.block.BlockSlime
+import net.minecraft.block.BlockStairs
+import net.minecraft.init.Blocks
+import net.minecraft.network.play.server.S08PacketPlayerPosLook
+import net.minecraft.util.BlockPos
 
 @ModuleInfo(name = "BufferSpeed", description = "Allows you to walk faster on slabs and stairs.", category = ModuleCategory.MOVEMENT)
 class BufferSpeed : Module() {
@@ -62,7 +66,7 @@ class BufferSpeed : Module() {
             return
         }
 
-        val blockPos = WBlockPos(thePlayer.posX, thePlayer.entityBoundingBox.minY, thePlayer.posZ)
+        val blockPos = BlockPos(thePlayer.posX, thePlayer.entityBoundingBox.minY, thePlayer.posZ)
 
         if (forceDown || down && thePlayer.motionY == 0.0) {
             thePlayer.motionY = -1.0
@@ -78,7 +82,7 @@ class BufferSpeed : Module() {
             hadFastHop = false
         }
 
-        if (!MovementUtils.isMoving || thePlayer.sneaking || thePlayer.isInWater || mc.gameSettings.keyBindJump.isKeyDown) {
+        if (!MovementUtils.isMoving || thePlayer.isSneaking || thePlayer.isInWater || mc.gameSettings.keyBindJump.isKeyDown) {
             reset()
             return
         }
@@ -86,7 +90,7 @@ class BufferSpeed : Module() {
         if (thePlayer.onGround) {
             fastHop = false
 
-            if (slimeValue.get() && (classProvider.isBlockSlime(getBlock(blockPos.down())) || classProvider.isBlockSlime(getBlock(blockPos)))) {
+            if (slimeValue.get() && (getBlock(blockPos.down()) is BlockSlime || getBlock(blockPos) is BlockSlime)) {
                 thePlayer.jump()
 
                 thePlayer.motionX = thePlayer.motionY * 1.132
@@ -96,7 +100,7 @@ class BufferSpeed : Module() {
                 down = true
                 return
             }
-            if (slabsValue.get() && classProvider.isBlockSlab(getBlock(blockPos))) {
+            if (slabsValue.get() && getBlock(blockPos) is BlockSlab) {
                 when (slabsModeValue.get().toLowerCase()) {
                     "old" -> {
                         boost(slabsBoostValue.get())
@@ -120,7 +124,7 @@ class BufferSpeed : Module() {
                     }
                 }
             }
-            if (stairsValue.get() && (classProvider.isBlockStairs(getBlock(blockPos.down())) || classProvider.isBlockStairs(getBlock(blockPos)))) {
+            if (stairsValue.get() && (getBlock(blockPos.down()) is BlockStairs || getBlock(blockPos) is BlockStairs)) {
                 when (stairsModeValue.get().toLowerCase()) {
                     "old" -> {
                         boost(stairsBoostValue.get())
@@ -146,17 +150,17 @@ class BufferSpeed : Module() {
             }
             legitHop = true
 
-            if (headBlockValue.get() && getBlock(blockPos.up(2)) == classProvider.getBlockEnum(BlockType.AIR)) {
+            if (headBlockValue.get() && getBlock(blockPos.up(2)) == Blocks.air) {
                 boost(headBlockBoostValue.get())
                 return
             }
 
-            if (iceValue.get() && (getBlock(blockPos.down()) == classProvider.getBlockEnum(BlockType.ICE) || getBlock(blockPos.down()) == classProvider.getBlockEnum(BlockType.ICE_PACKED))) {
+            if (iceValue.get() && (getBlock(blockPos.down()) == Blocks.ice || getBlock(blockPos.down()) == Blocks.packed_ice)) {
                 boost(iceBoostValue.get())
                 return
             }
 
-            if (snowValue.get() && getBlock(blockPos) == classProvider.getBlockEnum(BlockType.SNOW_LAYER) && (snowPortValue.get() || thePlayer.posY - thePlayer.posY.toInt() >= 0.12500)) {
+            if (snowValue.get() && getBlock(blockPos) == Blocks.snow_layer && (snowPortValue.get() || thePlayer.posY - thePlayer.posY.toInt() >= 0.12500)) {
                 if (thePlayer.posY - thePlayer.posY.toInt() >= 0.12500) {
                     boost(snowBoostValue.get())
                 } else {
@@ -168,7 +172,7 @@ class BufferSpeed : Module() {
 
             if (wallValue.get()) {
                 when (wallModeValue.get().toLowerCase()) {
-                    "old" -> if (thePlayer.isCollidedVertically && isNearBlock || !classProvider.isBlockAir(getBlock(WBlockPos(thePlayer.posX, thePlayer.posY + 2.0, thePlayer.posZ)))) {
+                    "old" -> if (thePlayer.isCollidedVertically && isNearBlock || getBlock(BlockPos(thePlayer.posX, thePlayer.posY + 2.0, thePlayer.posZ)) != Blocks.air) {
                         boost(wallBoostValue.get())
                         return
                     }
@@ -203,7 +207,7 @@ class BufferSpeed : Module() {
     @EventTarget
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
-        if (classProvider.isSPacketPlayerPosLook(packet))
+        if (packet is S08PacketPlayerPosLook)
             speed = 0.0
     }
 
@@ -242,11 +246,11 @@ class BufferSpeed : Module() {
         get() {
             val thePlayer = mc.thePlayer
             val theWorld = mc.theWorld
-            val blocks: MutableList<WBlockPos> = ArrayList()
-            blocks.add(WBlockPos(thePlayer!!.posX, thePlayer.posY + 1, thePlayer.posZ - 0.7))
-            blocks.add(WBlockPos(thePlayer.posX + 0.7, thePlayer.posY + 1, thePlayer.posZ))
-            blocks.add(WBlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ + 0.7))
-            blocks.add(WBlockPos(thePlayer.posX - 0.7, thePlayer.posY + 1, thePlayer.posZ))
+            val blocks: MutableList<BlockPos> = ArrayList()
+            blocks.add(BlockPos(thePlayer!!.posX, thePlayer.posY + 1, thePlayer.posZ - 0.7))
+            blocks.add(BlockPos(thePlayer.posX + 0.7, thePlayer.posY + 1, thePlayer.posZ))
+            blocks.add(BlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ + 0.7))
+            blocks.add(BlockPos(thePlayer.posX - 0.7, thePlayer.posY + 1, thePlayer.posZ))
             for (blockPos in blocks) {
                 val blockState = theWorld!!.getBlockState(blockPos)
 
@@ -254,8 +258,8 @@ class BufferSpeed : Module() {
 
                 if ((collisionBoundingBox == null || collisionBoundingBox.maxX ==
                                 collisionBoundingBox.minY + 1) &&
-                        !blockState.block.isTranslucent(blockState) && blockState.block == classProvider.getBlockEnum(BlockType.WATER) &&
-                        !classProvider.isBlockSlab(blockState.block) || blockState.block == classProvider.getBlockEnum(BlockType.BARRIER)) return true
+                        !blockState.block.isTranslucent && blockState.block == Blocks.water &&
+                        blockState.block !is BlockSlab || blockState.block == Blocks.barrier) return true
             }
             return false
         }

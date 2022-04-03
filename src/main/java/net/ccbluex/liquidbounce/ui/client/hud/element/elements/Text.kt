@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
@@ -17,6 +18,7 @@ import net.ccbluex.liquidbounce.utils.extensions.getPing
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.ccbluex.liquidbounce.value.*
+import net.minecraft.client.Minecraft
 import org.lwjgl.input.Keyboard
 import java.awt.Color
 import java.text.DecimalFormat
@@ -106,7 +108,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
             "clientname" -> LiquidBounce.CLIENT_NAME
             "clientversion" -> "b${LiquidBounce.CLIENT_VERSION}"
             "clientcreator" -> LiquidBounce.CLIENT_CREATOR
-            "fps" -> mc.debugFPS.toString()
+            "fps" -> Minecraft.getDebugFPS().toString()
             "date" -> DATE_FORMAT.format(System.currentTimeMillis())
             "time" -> HOUR_FORMAT.format(System.currentTimeMillis())
             "serverip" -> ServerUtils.getRemoteIp()
@@ -161,12 +163,12 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
             fontRenderer.drawString(displayText, 0F, 0F, if (rainbow)
                 0 else color, shadow.get())
 
-            if (editMode && classProvider.isGuiHudDesigner(mc.currentScreen) && editTicks <= 40)
+            if (editMode && mc.currentScreen is GuiHudDesigner && editTicks <= 40)
                 fontRenderer.drawString("_", fontRenderer.getStringWidth(displayText) + 2F,
                         0F, if (rainbow) ColorUtils.rainbow(400000000L).rgb else color, shadow.get())
         }
 
-        if (editMode && !classProvider.isGuiHudDesigner(mc.currentScreen)) {
+        if (editMode && mc.currentScreen !is GuiHudDesigner) {
             editMode = false
             updateElement()
         }
@@ -175,7 +177,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
                 -2F,
                 -2F,
                 fontRenderer.getStringWidth(displayText) + 2F,
-                fontRenderer.fontHeight.toFloat()
+                fontRenderer.FONT_HEIGHT.toFloat()
         )
     }
 
@@ -198,7 +200,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
     }
 
     override fun handleKey(c: Char, keyCode: Int) {
-        if (editMode && classProvider.isGuiHudDesigner(mc.currentScreen)) {
+        if (editMode && mc.currentScreen is GuiHudDesigner) {
             if (keyCode == Keyboard.KEY_BACK) {
                 if (displayString.get().isNotEmpty())
                     displayString.set(displayString.get().substring(0, displayString.get().length - 1))

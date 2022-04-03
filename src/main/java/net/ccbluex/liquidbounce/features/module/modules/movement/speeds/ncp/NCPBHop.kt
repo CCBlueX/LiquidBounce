@@ -5,10 +5,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp
 
-import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.minecraft.potion.Potion
 import java.math.BigDecimal
 import java.math.RoundingMode
 import kotlin.math.cos
@@ -111,7 +111,8 @@ class NCPBHop : SpeedMode("NCPBHop") {
     private val baseMoveSpeed: Double
         get() {
             var baseSpeed = 0.2873
-            if (mc.thePlayer!!.isPotionActive(classProvider.getPotionEnum(PotionType.MOVE_SPEED))) baseSpeed *= 1.0 + 0.2 * (mc.thePlayer!!.getActivePotionEffect(classProvider.getPotionEnum(PotionType.MOVE_SPEED)))!!.amplifier + 1
+            if (mc.thePlayer!!.isPotionActive(Potion.moveSpeed)) baseSpeed *= 1.0 + 0.2 * (mc.thePlayer!!.getActivePotionEffect(
+                Potion.moveSpeed))!!.amplifier + 1
             return baseSpeed
         }
 

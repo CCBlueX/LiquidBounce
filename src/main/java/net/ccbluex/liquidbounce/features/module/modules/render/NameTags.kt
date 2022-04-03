@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.IEntityLivingBase
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -74,15 +73,15 @@ class NameTags : Module() {
         glColor4f(1F, 1F, 1F, 1F)
     }
 
-    private fun renderNameTag(entity: IEntityLivingBase, tag: String) {
+    private fun renderNameTag(entity: EntityLivingBase, tag: String) {
         val thePlayer = mc.thePlayer ?: return
 
         val fontRenderer = fontValue.get()
 
         // Modify tag
         val bot = AntiBot.isBot(entity)
-        val nameColor = if (bot) "§3" else if (entity.invisible) "§6" else if (entity.sneaking) "§4" else "§7"
-        val ping = if (classProvider.isEntityPlayer(entity)) entity.asEntityPlayer().getPing() else 0
+        val nameColor = if (bot) "§3" else if (entity.isInvisible) "§6" else if (entity.isSneaking) "§4" else "§7"
+        val ping = if (entity is EntityPlayer) entity.getPing() else 0
 
         val distanceText = if (distanceValue.get()) "§7${thePlayer.getDistanceToEntity(entity).roundToInt()}m " else ""
         val pingText = if (pingValue.get() && classProvider.isEntityPlayer(entity)) (if (ping > 200) "§c" else if (ping > 100) "§e" else "§a") + ping + "ms §7" else ""

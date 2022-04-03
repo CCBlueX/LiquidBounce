@@ -5,49 +5,48 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.api.enums.BlockType
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.minecraft.init.Blocks
 
 @ModuleInfo(name = "XRay", description = "Allows you to see ores through walls.", category = ModuleCategory.RENDER)
 class XRay : Module() {
 
     val xrayBlocks = mutableListOf(
-        classProvider.getBlockEnum(BlockType.COAL_ORE),
-        classProvider.getBlockEnum(BlockType.IRON_ORE),
-        classProvider.getBlockEnum(BlockType.GOLD_ORE),
-        classProvider.getBlockEnum(BlockType.REDSTONE_ORE),
-        classProvider.getBlockEnum(BlockType.LAPIS_ORE),
-        classProvider.getBlockEnum(BlockType.DIAMOND_ORE),
-        classProvider.getBlockEnum(BlockType.EMERALD_ORE),
-        classProvider.getBlockEnum(BlockType.QUARTZ_ORE),
-        classProvider.getBlockEnum(BlockType.CLAY),
-        classProvider.getBlockEnum(BlockType.GLOWSTONE),
-        classProvider.getBlockEnum(BlockType.CRAFTING_TABLE),
-        classProvider.getBlockEnum(BlockType.TORCH),
-        classProvider.getBlockEnum(BlockType.LADDER),
-        classProvider.getBlockEnum(BlockType.TNT),
-        classProvider.getBlockEnum(BlockType.COAL_BLOCK),
-        classProvider.getBlockEnum(BlockType.IRON_BLOCK),
-        classProvider.getBlockEnum(BlockType.GOLD_BLOCK),
-        classProvider.getBlockEnum(BlockType.DIAMOND_BLOCK),
-        classProvider.getBlockEnum(BlockType.EMERALD_BLOCK),
-        classProvider.getBlockEnum(BlockType.REDSTONE_BLOCK),
-        classProvider.getBlockEnum(BlockType.LAPIS_BLOCK),
-        classProvider.getBlockEnum(BlockType.FIRE),
-        classProvider.getBlockEnum(BlockType.MOSSY_COBBLESTONE),
-        classProvider.getBlockEnum(BlockType.MOB_SPAWNER),
-        classProvider.getBlockEnum(BlockType.END_PORTAL_FRAME),
-        classProvider.getBlockEnum(BlockType.ENCHANTING_TABLE),
-        classProvider.getBlockEnum(BlockType.BOOKSHELF),
-        classProvider.getBlockEnum(BlockType.COMMAND_BLOCK),
-        classProvider.getBlockEnum(BlockType.LAVA),
-        classProvider.getBlockEnum(BlockType.FLOWING_LAVA),
-        classProvider.getBlockEnum(BlockType.WATER),
-        classProvider.getBlockEnum(BlockType.FLOWING_WATER),
-        classProvider.getBlockEnum(BlockType.FURNACE),
-        classProvider.getBlockEnum(BlockType.LIT_FURNACE)
+        Blocks.coal_ore,
+        Blocks.iron_ore,
+        Blocks.gold_ore,
+        Blocks.redstone_ore,
+        Blocks.lapis_ore,
+        Blocks.diamond_ore,
+        Blocks.emerald_ore,
+        Blocks.quartz_ore,
+        Blocks.clay,
+        Blocks.glowstone,
+        Blocks.crafting_table,
+        Blocks.torch,
+        Blocks.ladder,
+        Blocks.tnt,
+        Blocks.coal_block,
+        Blocks.iron_block,
+        Blocks.gold_block,
+        Blocks.diamond_block,
+        Blocks.emerald_block,
+        Blocks.lapis_block,
+        Blocks.fire,
+        Blocks.mossy_cobblestone,
+        Blocks.mob_spawner,
+        Blocks.end_portal_frame,
+        Blocks.enchanting_table,
+        Blocks.bookshelf,
+        Blocks.command_block,
+        Blocks.lava,
+        Blocks.flowing_lava,
+        Blocks.water,
+        Blocks.flowing_water,
+        Blocks.furnace,
+        Blocks.lit_furnace
     )
 
     override fun onToggle(state: Boolean) {
