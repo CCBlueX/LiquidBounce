@@ -174,10 +174,6 @@ class KillAura : Module() {
     // Fake block status
     var blockingStatus = false
 
-    init {
-        cooldownValue.isSupported = Backend.REPRESENTED_BACKEND_VERSION != MinecraftVersion.MC_1_8
-    }
-
     /**
      * Enable kill aura module
      */
@@ -276,7 +272,7 @@ class KillAura : Module() {
     }
 
     fun update() {
-        if (cancelRun || (noInventoryAttackValue.get() && (classProvider.isGuiContainer(mc.currentScreen) ||
+        if (cancelRun || (noInventoryAttackValue.get() && (mc.currentScreen is GuiContainer ||
                         System.currentTimeMillis() - containerOpen < noInventoryDelayValue.get())))
             return
 
@@ -308,16 +304,16 @@ class KillAura : Module() {
             return
         }
 
-        if (noInventoryAttackValue.get() && (classProvider.isGuiContainer(mc.currentScreen) ||
+        if (noInventoryAttackValue.get() && (mc.currentScreen is GuiContainer ||
                         System.currentTimeMillis() - containerOpen < noInventoryDelayValue.get())) {
             target = null
             currentTarget = null
             hitable = false
-            if (classProvider.isGuiContainer(mc.currentScreen)) containerOpen = System.currentTimeMillis()
+            if (mc.currentScreen is GuiContainer) containerOpen = System.currentTimeMillis()
             return
         }
 
-        if (target != null && currentTarget != null && (Backend.MINECRAFT_VERSION_MINOR == 8 || mc.thePlayer!!.getCooledAttackStrength(0.0F) >= cooldownValue.get())) {
+        if (target != null && currentTarget != null) {
             while (clicks > 0) {
                 runAttack()
                 clicks--
@@ -338,12 +334,12 @@ class KillAura : Module() {
             return
         }
 
-        if (noInventoryAttackValue.get() && (classProvider.isGuiContainer(mc.currentScreen) ||
+        if (noInventoryAttackValue.get() && (mc.currentScreen is GuiContainer ||
                         System.currentTimeMillis() - containerOpen < noInventoryDelayValue.get())) {
             target = null
             currentTarget = null
             hitable = false
-            if (classProvider.isGuiContainer(mc.currentScreen)) containerOpen = System.currentTimeMillis()
+            if (mc.currentScreen is GuiContainer) containerOpen = System.currentTimeMillis()
             return
         }
 
@@ -386,12 +382,12 @@ class KillAura : Module() {
         val failRate = failRateValue.get()
         val swing = swingValue.get()
         val multi = targetModeValue.get().equals("Multi", ignoreCase = true)
-        val openInventory = aacValue.get() && classProvider.isGuiContainer(mc.currentScreen)
+        val openInventory = aacValue.get() && mc.currentScreen is GuiInventory
         val failHit = failRate > 0 && Random().nextInt(100) <= failRate
 
         // Close inventory when open
         if (openInventory)
-            mc.netHandler.addToSendQueue(classProvider.createCPacketCloseWindow())
+            mc.netHandler.addToSendQueue(C0DPacketCloseWindow())
 
         // Check is not hitable or check failrate
 
@@ -408,8 +404,8 @@ class KillAura : Module() {
                 for (entity in theWorld.loadedEntityList) {
                     val distance = thePlayer.getDistanceToEntityBox(entity)
 
-                    if (classProvider.isEntityLivingBase(entity) && isEnemy(entity) && distance <= getRange(entity)) {
-                        attackEntity(entity.asEntityLivingBase())
+                    if (entity is EntityLivingBase && isEnemy(entity) && distance <= getRange(entity)) {
+                        attackEntity(entity)
 
                         targets += 1
 
@@ -449,14 +445,14 @@ class KillAura : Module() {
         val thePlayer = mc.thePlayer!!
 
         for (entity in theWorld.loadedEntityList) {
-            if (!classProvider.isEntityLivingBase(entity) || !isEnemy(entity) || (switchMode && prevTargetEntities.contains(entity.entityId)))
+            if (entity !is EntityLivingBase || !isEnemy(entity) || (switchMode && prevTargetEntities.contains(entity.entityId)))
                 continue
 
             val distance = thePlayer.getDistanceToEntityBox(entity)
             val entityFov = RotationUtils.getRotationDifference(entity)
 
-            if (distance <= maxRange && (fov == 180F || entityFov <= fov) && entity.asEntityLivingBase().hurtTime <= hurtTime)
-                targets.add(entity.asEntityLivingBase())
+            if (distance <= maxRange && (fov == 180F || entityFov <= fov) && entity.hurtTime <= hurtTime)
+                targets.add(entity)
         }
 
         // Sort targets by priority
@@ -493,18 +489,16 @@ class KillAura : Module() {
             if (!EntityUtils.targetInvisible && entity.isInvisible)
                 return false
 
-            if (EntityUtils.targetPlayer && classProvider.isEntityPlayer(entity)) {
-                val player = entity.asEntityPlayer()
-
-                if (player.spectator || AntiBot.isBot(player))
+            if (EntityUtils.targetPlayer && entity is EntityPlayer) {
+                if (entity.isSpectator || AntiBot.isBot(entity))
                     return false
 
-                if (player.isClientFriend() && !LiquidBounce.moduleManager[NoFriends::class.java].state)
+                if (entity.isClientFriend() && !LiquidBounce.moduleManager[NoFriends::class.java].state)
                     return false
 
                 val teams = LiquidBounce.moduleManager[Teams::class.java] as Teams
 
-                return !teams.state || !teams.isInYourTeam(entity.asEntityLivingBase())
+                return !teams.state || !teams.isInYourTeam(entity)
             }
 
             return EntityUtils.targetMobs && entity.isMob() || EntityUtils.targetAnimals && entity.isAnimal()
@@ -527,25 +521,22 @@ class KillAura : Module() {
         LiquidBounce.eventManager.callEvent(AttackEvent(entity))
 
         // Attack target
-        if (swingValue.get() && Backend.MINECRAFT_VERSION_MINOR == 8)
+        if (swingValue.get())
             thePlayer.swingItem()
 
-        mc.netHandler.addToSendQueue(classProvider.createCPacketUseEntity(entity, ICPacketUseEntity.WAction.ATTACK))
-
-        if (swingValue.get() && Backend.MINECRAFT_VERSION_MINOR != 8)
-            thePlayer.swingItem()
+        mc.netHandler.addToSendQueue(C02PacketUseEntity(entity, C02PacketUseEntity.Action.ATTACK))
 
         if (keepSprintValue.get()) {
             // Critical Effect
-            if (thePlayer.fallDistance > 0F && !thePlayer.onGround && !thePlayer.isOnLadder &&
-                    !thePlayer.isInWater && !thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.BLINDNESS)) && !thePlayer.isRiding)
-                thePlayer.onCriticalHit(entity)
+            if (mc.thePlayer.fallDistance > 0F && !mc.thePlayer.onGround && !mc.thePlayer.isOnLadder &&
+                !mc.thePlayer.isInWater && !mc.thePlayer.isPotionActive(Potion.blindness) && !mc.thePlayer.isRiding)
+                mc.thePlayer.onCriticalHit(entity)
 
             // Enchant Effect
-            if (functions.getModifierForCreature(thePlayer.heldItem, entity.creatureAttribute) > 0F)
+            if (EnchantmentHelper.getModifierForCreature(mc.thePlayer.heldItem, entity.creatureAttribute) > 0F)
                 thePlayer.onEnchantmentCritical(entity)
         } else {
-            if (mc.playerController.currentGameType != IWorldSettings.WGameType.SPECTATOR)
+            if (mc.playerController.currentGameType != WorldSettings.GameType.SPECTATOR)
                 thePlayer.attackTargetEntityWithCurrentItem(entity)
         }
 
@@ -554,22 +545,31 @@ class KillAura : Module() {
 
         for (i in 0..2) {
             // Critical Effect
-            if (thePlayer.fallDistance > 0F && !thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.BLINDNESS)) && thePlayer.ridingEntity == null || criticals.state && criticals.msTimer.hasTimePassed(criticals.delayValue.get().toLong()) && !thePlayer.isInWater && !thePlayer.isInLava && !thePlayer.isInWeb)
+            if (mc.thePlayer.fallDistance > 0F && !mc.thePlayer.onGround && !mc.thePlayer.isOnLadder && !mc.thePlayer.isInWater && !mc.thePlayer.isPotionActive(Potion.blindness) && mc.thePlayer.ridingEntity == null || criticals.state && criticals.msTimer.hasTimePassed(criticals.delayValue.get().toLong()) && !mc.thePlayer.isInWater && !mc.thePlayer.isInLava && !mc.thePlayer.isInWeb)
                 thePlayer.onCriticalHit(target!!)
 
             // Enchant Effect
-            if (functions.getModifierForCreature(thePlayer.heldItem, target!!.creatureAttribute) > 0.0f || fakeSharpValue.get())
+            if (EnchantmentHelper.getModifierForCreature(mc.thePlayer.heldItem, target!!.creatureAttribute) > 0.0f || fakeSharpValue.get())
                 thePlayer.onEnchantmentCritical(target!!)
         }
 
+        //TODO: SHOULD THIS BE THIS? https://github.com/CCBlueX/LiquidBounce/blob/bb112eb53fdee22a974695a1dcaec3c6d9ec10eb/1.8.9-Forge/src/main/java/net/ccbluex/liquidbounce/features/module/modules/combat/KillAura.kt#L547
+        /*
+
+            // Start blocking after attack
+        if (mc.thePlayer.isBlocking || (autoBlockValue.get() && canBlock)) {
+            if (!(blockRate.get() > 0 && Random().nextInt(100) <= blockRate.get()))
+                return
+
+            if (delayedBlockValue.get())
+                return
+
+            startBlocking(entity, interactAutoBlockValue.get())
+        }
+         */
         // Start blocking after attack
         if (autoBlockValue.get().equals("Packet", true) && (thePlayer.isBlocking || canBlock))
             startBlocking(entity, interactAutoBlockValue.get())
-
-        @Suppress("ConstantConditionIf")
-        if (Backend.MINECRAFT_VERSION_MINOR != 8) {
-            thePlayer.resetCooldown()
-        }
     }
 
     /**

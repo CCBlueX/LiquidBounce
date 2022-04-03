@@ -7,16 +7,15 @@ package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.injection.backend.Backend
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
 import net.ccbluex.liquidbounce.value.Value
+import net.minecraft.client.audio.PositionedSoundRecord
+import net.minecraft.util.ResourceLocation
 import org.lwjgl.input.Keyboard
 
 open class Module : MinecraftInstance(), Listenable {
-    var isSupported: Boolean
-
     // Module information
     // TODO: Remove ModuleInfo and change to constructor (#Kotlin)
     var name: String
@@ -49,7 +48,6 @@ open class Module : MinecraftInstance(), Listenable {
         keyBind = moduleInfo.keyBind
         array = moduleInfo.array
         canEnable = moduleInfo.canEnable
-        isSupported = Backend.REPRESENTED_BACKEND_VERSION in moduleInfo.supportedVersions
     }
 
     // Current state of module
@@ -63,7 +61,9 @@ open class Module : MinecraftInstance(), Listenable {
 
             // Play sound and add notification
             if (!LiquidBounce.isStarting) {
-                mc.soundHandler.playSound("random.click", 1F)
+                mc.soundHandler.playSound(PositionedSoundRecord.create(
+                    ResourceLocation("random.click"),
+                    1F))
                 LiquidBounce.hud.addNotification(Notification("${if (value) "Enabled " else "Disabled "}$name"))
             }
 

@@ -11,6 +11,8 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.minecraft.network.play.client.C19PacketResourcePackStatus
+import net.minecraft.network.play.server.S48PacketResourcePackSend
 import java.net.URI
 import java.net.URISyntaxException
 
@@ -19,8 +21,8 @@ class ResourcePackSpoof : Module() {
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        if (classProvider.isSPacketResourcePackSend(event.packet)) {
-            val packet = event.packet.asSPacketResourcePackSend()
+        if (event.packet is S48PacketResourcePackSend) {
+            val packet = event.packet
 
             val url = packet.url
             val hash = packet.hash
@@ -35,13 +37,13 @@ class ResourcePackSpoof : Module() {
                 if (isLevelProtocol && (url.contains("..") || !url.endsWith("/resources.zip")))
                     throw URISyntaxException(url, "Invalid levelstorage resourcepack path")
 
-                mc.netHandler.addToSendQueue(classProvider.createICPacketResourcePackStatus(packet.hash,
-                        ICPacketResourcePackStatus.WAction.ACCEPTED))
-                mc.netHandler.addToSendQueue(classProvider.createICPacketResourcePackStatus(packet.hash,
-                        ICPacketResourcePackStatus.WAction.SUCCESSFULLY_LOADED))
+                mc.netHandler.addToSendQueue(C19PacketResourcePackStatus(packet.hash,
+                    C19PacketResourcePackStatus.Action.ACCEPTED))
+                mc.netHandler.addToSendQueue(C19PacketResourcePackStatus(packet.hash,
+                    C19PacketResourcePackStatus.Action.SUCCESSFULLY_LOADED))
             } catch (e: URISyntaxException) {
                 ClientUtils.getLogger().error("Failed to handle resource pack", e)
-                mc.netHandler.addToSendQueue(classProvider.createICPacketResourcePackStatus(hash, ICPacketResourcePackStatus.WAction.FAILED_DOWNLOAD))
+                mc.netHandler.addToSendQueue(C19PacketResourcePackStatus(hash, C19PacketResourcePackStatus.Action.FAILED_DOWNLOAD))
             }
         }
     }

@@ -31,7 +31,7 @@ class FastBow : Module() {
         if (!thePlayer.isUsingItem)
             return
 
-        val currentItem = thePlayer.inventory.getCurrentItemInHand()
+        val currentItem = thePlayer.inventory.getCurrentItem()
 
         if (currentItem != null && currentItem.item is ItemBow) {
             mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(BlockPos.ORIGIN, 255, mc.thePlayer.currentEquippedItem, 0F, 0F, 0F))
@@ -47,7 +47,7 @@ class FastBow : Module() {
                 thePlayer.rotationPitch
 
             for (i in 0 until packetsValue.get())
-                mc.netHandler.addToSendQueue(classProvider.createCPacketPlayerLook(yaw, pitch, true))
+                mc.netHandler.addToSendQueue(C05PacketPlayerLook(yaw, pitch, true))
 
             mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
             thePlayer.itemInUseCount = currentItem.maxItemUseDuration - 1

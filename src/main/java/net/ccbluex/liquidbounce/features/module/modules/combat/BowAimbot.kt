@@ -17,6 +17,9 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.entity.Entity
+import net.minecraft.entity.EntityLivingBase
+import net.minecraft.item.ItemBow
 import java.awt.Color
 
 @ModuleInfo(name = "BowAimbot", description = "Automatically aims at players when using a bow.", category = ModuleCategory.COMBAT)
@@ -39,7 +42,7 @@ class BowAimbot : Module() {
     fun onUpdate(event: UpdateEvent) {
         target = null
 
-        if (classProvider.isItemBow(mc.thePlayer?.itemInUse?.item)) {
+        if (mc.thePlayer.itemInUse?.item is ItemBow) {
             val entity = getTarget(throughWallsValue.get(), priorityValue.get()) ?: return
 
             target = entity
@@ -59,10 +62,10 @@ class BowAimbot : Module() {
                     (throughWalls || mc.thePlayer.canEntityBeSeen(it))
         }
 
-        return when {
-            priorityMode.equals("distance", true) -> targets.minByOrNull { mc.thePlayer!!.getDistanceToEntity(it) }
-            priorityMode.equals("direction", true) -> targets.minByOrNull { RotationUtils.getRotationDifference(it) }
-            priorityMode.equals("health", true) -> targets.minByOrNull { it.asEntityLivingBase().health }
+        return when (priorityMode.toUpperCase()) {
+            "DISTANCE" -> targets.minByOrNull { mc.thePlayer.getDistanceToEntity(it) }
+            "DIRECTION" -> targets.minByOrNull { RotationUtils.getRotationDifference(it) }
+            "HEALTH" -> targets.minByOrNull { (it as EntityLivingBase).health }
             else -> null
         }
     }

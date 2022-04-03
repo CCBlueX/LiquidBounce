@@ -14,6 +14,9 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
+import net.minecraft.client.entity.EntityOtherPlayerMP
+import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.network.play.client.C0BPacketEntityAction
 
 @ModuleInfo(name = "FreeCam", description = "Allows you to move out of your body.", category = ModuleCategory.RENDER)
 class FreeCam : Module() {
@@ -34,7 +37,7 @@ class FreeCam : Module() {
         oldY = thePlayer.posY
         oldZ = thePlayer.posZ
 
-        val playerMP = classProvider.createEntityOtherPlayerMP(mc.theWorld!!, thePlayer.gameProfile)
+        val playerMP = EntityOtherPlayerMP(mc.theWorld, thePlayer.gameProfile)
 
 
         playerMP.rotationYawHead = thePlayer.rotationYawHead;
@@ -96,7 +99,7 @@ class FreeCam : Module() {
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (classProvider.isCPacketPlayer(packet) || classProvider.isCPacketEntityAction(packet))
+        if (packet is C03PacketPlayer || packet is C0BPacketEntityAction)
             event.cancelEvent()
     }
 }

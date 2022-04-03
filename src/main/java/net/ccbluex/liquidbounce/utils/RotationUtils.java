@@ -11,6 +11,11 @@ import net.ccbluex.liquidbounce.event.Listenable;
 import net.ccbluex.liquidbounce.event.PacketEvent;
 import net.ccbluex.liquidbounce.event.TickEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.FastBow;
+import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.entity.Entity;
+import net.minecraft.network.Packet;
+import net.minecraft.network.play.client.C03PacketPlayer;
+import net.minecraft.util.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Random;

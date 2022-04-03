@@ -5,13 +5,14 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.value.BoolValue
+import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.potion.Potion
 
 @ModuleInfo(name = "Zoot", description = "Removes all bad potion effects/fire.", category = ModuleCategory.PLAYER)
 class Zoot : Module() {
@@ -38,7 +39,7 @@ class Zoot : Module() {
         }
 
 
-        if (fireValue.get() && !thePlayer.capabilities.isCreativeMode && thePlayer.burning) {
+        if (fireValue.get() && !thePlayer.capabilities.isCreativeMode && thePlayer.isBurning) {
             repeat(9) {
                 mc.netHandler.addToSendQueue(C03PacketPlayer(thePlayer.onGround))
             }
@@ -46,13 +47,9 @@ class Zoot : Module() {
     }
 
     // TODO: Check current potion
-    private fun hasBadEffect(): Boolean {
-        val thePlayer = mc.thePlayer ?: return false
-
-        return thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.HUNGER)) || thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.MOVE_SLOWDOWN)) ||
-                thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.DIG_SLOWDOWN)) || thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.HARM)) ||
-                thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.CONFUSION)) || thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.BLINDNESS)) ||
-                thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.WEAKNESS)) || thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.WITHER)) || thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.POISON))
-    }
+    private fun hasBadEffect() = mc.thePlayer.isPotionActive(Potion.hunger) || mc.thePlayer.isPotionActive(Potion.moveSlowdown) ||
+            mc.thePlayer.isPotionActive(Potion.digSlowdown) || mc.thePlayer.isPotionActive(Potion.harm) ||
+            mc.thePlayer.isPotionActive(Potion.confusion) || mc.thePlayer.isPotionActive(Potion.blindness) ||
+            mc.thePlayer.isPotionActive(Potion.weakness) || mc.thePlayer.isPotionActive(Potion.wither) || mc.thePlayer.isPotionActive(Potion.poison)
 
 }

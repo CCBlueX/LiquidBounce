@@ -13,8 +13,15 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
+import net.minecraft.client.settings.GameSettings
+import net.minecraft.entity.item.EntityTNTPrimed
+import net.minecraft.item.ItemSword
 
-@ModuleInfo(name = "TNTBlock", description = "Automatically blocks with your sword when TNT around you explodes.", category = ModuleCategory.COMBAT)
+@ModuleInfo(
+    name = "TNTBlock",
+    description = "Automatically blocks with your sword when TNT around you explodes.",
+    category = ModuleCategory.COMBAT
+)
 class TNTBlock : Module() {
     private val fuseValue = IntegerValue("Fuse", 10, 0, 80)
     private val rangeValue = FloatValue("Range", 9F, 1F, 20F)
@@ -27,18 +34,16 @@ class TNTBlock : Module() {
         val theWorld = mc.theWorld ?: return
 
         for (entity in theWorld.loadedEntityList) {
-            if (classProvider.isEntityTNTPrimed(entity) && thePlayer.getDistanceToEntity(entity) <= rangeValue.get()) {
-                val tntPrimed = entity.asEntityTNTPrimed()
-
-                if (tntPrimed.fuse <= fuseValue.get()) {
+            if (entity is EntityTNTPrimed && mc.thePlayer.getDistanceToEntity(entity) <= rangeValue.get()) {
+                if (entity.fuse <= fuseValue.get()) {
                     if (autoSwordValue.get()) {
                         var slot = -1
                         var bestDamage = 1f
                         for (i in 0..8) {
                             val itemStack = thePlayer.inventory.getStackInSlot(i)
 
-                            if (itemStack != null && classProvider.isItemSword(itemStack.item)) {
-                                val itemDamage = itemStack.item!!.asItemSword().damageVsEntity + 4f
+                            if (itemStack != null && itemStack.getItem() is ItemSword) {
+                                val itemDamage = (itemStack.getItem() as ItemSword).damageVsEntity + 4F;
 
                                 if (itemDamage > bestDamage) {
                                     bestDamage = itemDamage
@@ -53,7 +58,7 @@ class TNTBlock : Module() {
                         }
                     }
 
-                    if (thePlayer.heldItem != null && classProvider.isItemSword(thePlayer.heldItem!!.item)) {
+                    if (mc.thePlayer.getHeldItem() != null && mc.thePlayer.getHeldItem().getItem() is ItemSword) {
                         mc.gameSettings.keyBindUseItem.pressed = true
                         blocked = true
                     }
@@ -63,7 +68,7 @@ class TNTBlock : Module() {
             }
         }
 
-        if (blocked && !mc.gameSettings.isKeyDown(mc.gameSettings.keyBindUseItem)) {
+        if (blocked && !GameSettings.isKeyDown(mc.gameSettings.keyBindUseItem)) {
             mc.gameSettings.keyBindUseItem.pressed = false
             blocked = false
         }

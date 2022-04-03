@@ -8,6 +8,8 @@ package net.ccbluex.liquidbounce.features.command.commands
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
+import net.minecraft.item.Item
+import net.minecraft.network.play.client.C10PacketCreativeInventoryAction
 
 class GiveCommand : Command("give", "item", "i", "get") {
     /**
@@ -48,7 +50,7 @@ class GiveCommand : Command("give", "item", "i", "get") {
             }
 
             if (emptySlot != -1) {
-                mc.netHandler.addToSendQueue(classProvider.createCPacketCreativeInventoryAction(emptySlot, itemStack))
+                mc.netHandler.addToSendQueue(C10PacketCreativeInventoryAction(emptySlot, itemStack))
                 chat("§7Given [§8${itemStack.displayName}§7] * §8${itemStack.stackSize}§7 to §8${mc.session.username}§7.")
             } else
                 chat("Your inventory is full.")
@@ -64,9 +66,9 @@ class GiveCommand : Command("give", "item", "i", "get") {
 
         return when (args.size) {
             1 -> {
-                return functions.getItemRegistryKeys()
-                        .map { it.resourcePath.toLowerCase() }
-                        .filter { it.startsWith(args[0], true) }
+                return Item.itemRegistry.keys
+                    .map { it.resourcePath.toLowerCase() }
+                    .filter { it.startsWith(args[0], true) }
             }
             else -> emptyList()
         }

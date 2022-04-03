@@ -46,7 +46,7 @@ class ProphuntESP : Module() {
         val color = if (colorRainbow.get()) rainbow() else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
         for (entity in mc.theWorld!!.loadedEntityList) {
             if(!mode.equals("Box", true) || !mode.equals("OtherBox", true)) break
-            if (!classProvider.isEntityFallingBlock(entity)) continue
+            if (entity !is EntityFallingBlock) continue
 
             RenderUtils.drawEntityBox(entity, color, mode.equals("Box", true))
         }
@@ -77,7 +77,7 @@ class ProphuntESP : Module() {
         shader.startDraw(event.partialTicks)
         try {
             for (entity in mc.theWorld!!.loadedEntityList) {
-                if (!classProvider.isEntityFallingBlock(entity)) continue
+                if (entity !is EntityFallingBlock) continue
                 mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
             }
         } catch (ex: Exception) {

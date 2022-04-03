@@ -11,7 +11,6 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
-import net.ccbluex.liquidbounce.injection.backend.Backend
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.EntityUtils
@@ -23,6 +22,8 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.FontValue
 import net.minecraft.client.renderer.GlStateManager.*
+import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.player.EntityPlayer
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import kotlin.math.roundToInt
@@ -55,10 +56,11 @@ class NameTags : Module() {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
         for (entity in mc.theWorld!!.loadedEntityList) {
+            if (entity !is EntityLivingBase) continue
             if (!EntityUtils.isSelected(entity, false)) continue
-            if (AntiBot.isBot(entity.asEntityLivingBase()) && !botValue.get()) continue
+            if (AntiBot.isBot(entity) && !botValue.get()) continue
 
-            renderNameTag(entity.asEntityLivingBase(),
+            renderNameTag(entity,
                     if (clearNamesValue.get())
                         ColorUtils.stripColor(entity.displayName?.unformattedText) ?: continue
                     else
@@ -84,7 +86,7 @@ class NameTags : Module() {
         val ping = if (entity is EntityPlayer) entity.getPing() else 0
 
         val distanceText = if (distanceValue.get()) "§7${thePlayer.getDistanceToEntity(entity).roundToInt()}m " else ""
-        val pingText = if (pingValue.get() && classProvider.isEntityPlayer(entity)) (if (ping > 200) "§c" else if (ping > 100) "§e" else "§a") + ping + "ms §7" else ""
+        val pingText = if (pingValue.get() && entity is EntityPlayer) (if (ping > 200) "§c" else if (ping > 100) "§e" else "§a") + ping + "ms §7" else ""
         val healthText = if (healthValue.get()) "§7§c " + entity.health.toInt() + " HP" else ""
         val botText = if (bot) " §c§lBot" else ""
 
@@ -127,9 +129,9 @@ class NameTags : Module() {
         glEnable(GL_BLEND)
 
         if (borderValue.get())
-            quickDrawBorderedRect(-width - 2F, -2F, width + 4F, fontRenderer.fontHeight + 2F, 2F, Color(255, 255, 255, 90).rgb, Integer.MIN_VALUE)
+            quickDrawBorderedRect(-width - 2F, -2F, width + 4F, fontRenderer.FONT_HEIGHT + 2F, 2F, Color(255, 255, 255, 90).rgb, Integer.MIN_VALUE)
         else
-            quickDrawRect(-width - 2F, -2F, width + 4F, fontRenderer.fontHeight + 2F, Integer.MIN_VALUE)
+            quickDrawRect(-width - 2F, -2F, width + 4F, fontRenderer.FONT_HEIGHT + 2F, Integer.MIN_VALUE)
 
         glEnable(GL_TEXTURE_2D)
 
@@ -138,10 +140,10 @@ class NameTags : Module() {
 
         AWTFontRenderer.assumeNonVolatile = false
 
-        if (armorValue.get() && classProvider.isEntityPlayer(entity)) {
+        if (armorValue.get() && entity is EntityPlayer) {
             mc.renderItem.zLevel = -147F
 
-            val indices: IntArray = if (Backend.MINECRAFT_VERSION_MINOR == 8) (0..4).toList().toIntArray() else intArrayOf(0, 1, 2, 3, 5, 4)
+            val indices = (0..4).toList().toIntArray()
 
             for (index in indices) {
                 val equipmentInSlot = entity.getEquipmentInSlot(index) ?: continue

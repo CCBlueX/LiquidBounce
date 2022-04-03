@@ -36,8 +36,9 @@ public class TeleportHit extends Module {
         if (thePlayer == null)
             return;
 
-        if (mc.getGameSettings().getKeyBindAttack().isKeyDown() && EntityUtils.isSelected(facedEntity, true) && facedEntity.getDistanceSqToEntity(thePlayer) >= 1D)
-            targetEntity = facedEntity.asEntityLivingBase();
+        if(mc.gameSettings.keyBindAttack.isKeyDown() && EntityUtils.isSelected(facedEntity, true)) {
+            if (facedEntity.getDistanceSqToEntity(mc.thePlayer) >= 1D) targetEntity = (EntityLivingBase) facedEntity;
+        }
 
         if (targetEntity != null) {
             if (!shouldHit) {
@@ -51,14 +52,14 @@ public class TeleportHit extends Module {
                 final double z = mc.thePlayer.posZ + rotationVector.zCoord * (mc.thePlayer.getDistanceToEntity(targetEntity) - 1.0F);
                 final double y = targetEntity.getPosition().getY() + 0.25D;
 
-                PathUtils.findPath(x, y + 1.0D, z, 4D).forEach(pos -> mc.getNetHandler().addToSendQueue(classProvider.createCPacketPlayerPosition(pos.getX(), pos.getY(), pos.getZ(), false)));
+                PathUtils.findPath(x, y + 1.0D, z, 4D).forEach(pos -> mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(pos.getX(), pos.getY(), pos.getZ(), false)));
 
                 thePlayer.swingItem();
-                mc.getNetHandler().addToSendQueue(classProvider.createCPacketUseEntity(targetEntity, ICPacketUseEntity.WAction.ATTACK));
+                mc.thePlayer.sendQueue.addToSendQueue(new C02PacketUseEntity(targetEntity, C02PacketUseEntity.Action.ATTACK));
                 thePlayer.onCriticalHit(targetEntity);
                 shouldHit = false;
                 targetEntity = null;
-            } else if (thePlayer.getOnGround())
+            } else if (thePlayer.onGround)
                 thePlayer.jump();
         } else
             shouldHit = false;

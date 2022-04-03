@@ -12,6 +12,9 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.utils.extensions.isAnimal
 import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
 import net.ccbluex.liquidbounce.utils.extensions.isMob
+import net.minecraft.entity.Entity
+import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.player.EntityPlayer
 
 object EntityUtils : MinecraftInstance() {
 
@@ -36,15 +39,15 @@ object EntityUtils : MinecraftInstance() {
             if (targetInvisible || !entity.isInvisible) {
                 if (targetPlayer && entity is EntityPlayer) {
                     if (canAttackCheck) {
-                        if (isBot(entityPlayer))
+                        if (isBot(entity))
                             return false
 
-                        if (entityPlayer.isClientFriend() && !LiquidBounce.moduleManager.getModule(NoFriends::class.java).state)
+                        if (entity.isClientFriend() && !LiquidBounce.moduleManager.getModule(NoFriends::class.java).state)
                             return false
 
-                        if (entityPlayer.spectator) return false
+                        if (entity.isSpectator) return false
                         val teams = LiquidBounce.moduleManager.getModule(Teams::class.java) as Teams
-                        return !teams.state || !teams.isInYourTeam(entityPlayer)
+                        return !teams.state || !teams.isInYourTeam(entity)
                     }
                     return true
                 }

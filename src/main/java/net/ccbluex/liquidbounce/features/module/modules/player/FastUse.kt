@@ -16,6 +16,10 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.item.ItemBucketMilk
+import net.minecraft.item.ItemFood
+import net.minecraft.item.ItemPotion
+import net.minecraft.network.play.client.C03PacketPlayer
 
 @ModuleInfo(name = "FastUse", description = "Allows you to use items faster.", category = ModuleCategory.PLAYER)
 class FastUse : Module() {
@@ -47,7 +51,7 @@ class FastUse : Module() {
 
         val usingItem = thePlayer.itemInUse!!.item
 
-        if (classProvider.isItemFood(usingItem) || classProvider.isItemBucketMilk(usingItem) || classProvider.isItemPotion(usingItem)) {
+        if (usingItem is ItemFood || usingItem is ItemBucketMilk || usingItem is ItemPotion) {
             when (modeValue.get().toLowerCase()) {
                 "instant" -> {
                     repeat(35) {
@@ -98,7 +102,7 @@ class FastUse : Module() {
 
         val usingItem = thePlayer.itemInUse!!.item
 
-        if (classProvider.isItemFood(usingItem) || classProvider.isItemBucketMilk(usingItem) || classProvider.isItemPotion(usingItem))
+        if ((usingItem is ItemFood || usingItem is ItemBucketMilk || usingItem is ItemPotion))
             event.zero()
     }
 

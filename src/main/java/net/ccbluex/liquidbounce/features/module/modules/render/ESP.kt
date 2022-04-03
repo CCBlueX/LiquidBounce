@@ -39,7 +39,11 @@ import kotlin.math.min
 @ModuleInfo(name = "ESP", description = "Allows you to see targets through walls.", category = ModuleCategory.RENDER)
 class ESP : Module() {
     @JvmField
-    val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "WireFrame", "2D", "Real2D", "Outline", "ShaderOutline", "ShaderGlow"), "Box")
+    val modeValue = ListValue(
+        "Mode",
+        arrayOf("Box", "OtherBox", "WireFrame", "2D", "Real2D", "Outline", "ShaderOutline", "ShaderGlow"),
+        "Box"
+    )
 
     @JvmField
     val outlineWidth = FloatValue("Outline-Width", 3f, 0.5f, 5f)
@@ -82,38 +86,61 @@ class ESP : Module() {
         }
 
         for (entity in mc.theWorld!!.loadedEntityList) {
-            if (!classProvider.isEntityLivingBase(entity) || !botValue.get() && AntiBot.isBot(entity.asEntityLivingBase())) continue
+            if (entity !is EntityLivingBase || !botValue.get() && AntiBot.isBot(entity)) continue
             if (entity != mc.thePlayer && EntityUtils.isSelected(entity, false)) {
-                val entityLiving = entity.asEntityLivingBase()
-                val color = getColor(entityLiving)
+                val color = getColor(entity)
 
                 when (mode.toLowerCase()) {
-                    "box", "otherbox" -> RenderUtils.drawEntityBox(entity, color, !mode.equals("otherbox", ignoreCase = true))
+                    "box", "otherbox" -> RenderUtils.drawEntityBox(
+                        entity,
+                        color,
+                        !mode.equals("otherbox", ignoreCase = true)
+                    )
                     "2d" -> {
                         val renderManager = mc.renderManager
                         val timer = mc.timer
-                        val posX: Double = entityLiving.lastTickPosX + (entityLiving.posX - entityLiving.lastTickPosX) * timer.renderPartialTicks - renderManager.renderPosX
-                        val posY: Double = entityLiving.lastTickPosY + (entityLiving.posY - entityLiving.lastTickPosY) * timer.renderPartialTicks - renderManager.renderPosY
-                        val posZ: Double = entityLiving.lastTickPosZ + (entityLiving.posZ - entityLiving.lastTickPosZ) * timer.renderPartialTicks - renderManager.renderPosZ
-                        RenderUtils.draw2D(entityLiving, posX, posY, posZ, color.rgb, Color.BLACK.rgb)
+                        val posX: Double =
+                            entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * timer.renderPartialTicks - renderManager.renderPosX
+                        val posY: Double =
+                            entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * timer.renderPartialTicks - renderManager.renderPosY
+                        val posZ: Double =
+                            entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * timer.renderPartialTicks - renderManager.renderPosZ
+                        RenderUtils.draw2D(entity, posX, posY, posZ, color.rgb, Color.BLACK.rgb)
                     }
                     "real2d" -> {
                         val renderManager = mc.renderManager
                         val timer = mc.timer
-                        val bb = entityLiving.entityBoundingBox
-                                .offset(-entityLiving.posX, -entityLiving.posY, -entityLiving.posZ)
-                                .offset(entityLiving.lastTickPosX + (entityLiving.posX - entityLiving.lastTickPosX) * timer.renderPartialTicks,
-                                        entityLiving.lastTickPosY + (entityLiving.posY - entityLiving.lastTickPosY) * timer.renderPartialTicks,
-                                        entityLiving.lastTickPosZ + (entityLiving.posZ - entityLiving.lastTickPosZ) * timer.renderPartialTicks)
-                                .offset(-renderManager.renderPosX, -renderManager.renderPosY, -renderManager.renderPosZ)
-                        val boxVertices = arrayOf(doubleArrayOf(bb.minX, bb.minY, bb.minZ), doubleArrayOf(bb.minX, bb.maxY, bb.minZ), doubleArrayOf(bb.maxX, bb.maxY, bb.minZ), doubleArrayOf(bb.maxX, bb.minY, bb.minZ), doubleArrayOf(bb.minX, bb.minY, bb.maxZ), doubleArrayOf(bb.minX, bb.maxY, bb.maxZ), doubleArrayOf(bb.maxX, bb.maxY, bb.maxZ), doubleArrayOf(bb.maxX, bb.minY, bb.maxZ))
+                        val bb = entity.entityBoundingBox
+                            .offset(-entity.posX, -entity.posY, -entity.posZ)
+                            .offset(
+                                entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * timer.renderPartialTicks,
+                                entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * timer.renderPartialTicks,
+                                entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * timer.renderPartialTicks
+                            )
+                            .offset(-renderManager.renderPosX, -renderManager.renderPosY, -renderManager.renderPosZ)
+                        val boxVertices = arrayOf(
+                            doubleArrayOf(bb.minX, bb.minY, bb.minZ),
+                            doubleArrayOf(bb.minX, bb.maxY, bb.minZ),
+                            doubleArrayOf(bb.maxX, bb.maxY, bb.minZ),
+                            doubleArrayOf(bb.maxX, bb.minY, bb.minZ),
+                            doubleArrayOf(bb.minX, bb.minY, bb.maxZ),
+                            doubleArrayOf(bb.minX, bb.maxY, bb.maxZ),
+                            doubleArrayOf(bb.maxX, bb.maxY, bb.maxZ),
+                            doubleArrayOf(bb.maxX, bb.minY, bb.maxZ)
+                        )
                         var minX = Float.MAX_VALUE
                         var minY = Float.MAX_VALUE
                         var maxX = -1f
                         var maxY = -1f
                         for (boxVertex in boxVertices) {
-                            val screenPos = WorldToScreen.worldToScreen(Vector3f(boxVertex[0].toFloat(), boxVertex[1].toFloat(), boxVertex[2].toFloat()), mvMatrix, projectionMatrix, mc.displayWidth, mc.displayHeight)
-                                    ?: continue
+                            val screenPos = WorldToScreen.worldToScreen(
+                                Vector3f(
+                                    boxVertex[0].toFloat(),
+                                    boxVertex[1].toFloat(),
+                                    boxVertex[2].toFloat()
+                                ), mvMatrix, projectionMatrix, mc.displayWidth, mc.displayHeight
+                            )
+                                ?: continue
                             minX = min(screenPos.x, minX)
                             minY = min(screenPos.y, minY)
                             maxX = max(screenPos.x, maxX)
@@ -147,17 +174,33 @@ class ESP : Module() {
     fun onRender2D(event: Render2DEvent) {
         val mode = modeValue.get().toLowerCase()
         val partialTicks = event.partialTicks
-        val shader = (if (mode.equals("shaderoutline", ignoreCase = true)) OutlineShader.OUTLINE_SHADER else if (mode.equals("shaderglow", ignoreCase = true)) GlowShader.GLOW_SHADER else null)
-                ?: return
-        val radius = if (mode.equals("shaderoutline", ignoreCase = true)) shaderOutlineRadius.get() else if (mode.equals("shaderglow", ignoreCase = true)) shaderGlowRadius.get() else 1f
+        val shader = (if (mode.equals(
+                "shaderoutline",
+                ignoreCase = true
+            )
+        ) OutlineShader.OUTLINE_SHADER else if (mode.equals(
+                "shaderglow",
+                ignoreCase = true
+            )
+        ) GlowShader.GLOW_SHADER else null)
+            ?: return
+        val radius = if (mode.equals(
+                "shaderoutline",
+                ignoreCase = true
+            )
+        ) shaderOutlineRadius.get() else if (mode.equals(
+                "shaderglow",
+                ignoreCase = true
+            )
+        ) shaderGlowRadius.get() else 1f
 
         renderNameTags = false
         try {
             //search entities
             val entityMap = HashMap<Color, ArrayList<Entity>>()
             for (entity in mc.theWorld!!.loadedEntityList) {
-                if (!EntityUtils.isSelected(entity, false)) continue
-                if (AntiBot.isBot(entity.asEntityLivingBase()) && !botValue.get()) continue
+                if (!EntityUtils.isSelected(entity, false) || entity !is EntityLivingBase) continue
+                if (AntiBot.isBot(entity) && !botValue.get()) continue
                 //can draw
                 val color = getColor(entity)
                 if (!entityMap.containsKey(color)) {
@@ -185,16 +228,14 @@ class ESP : Module() {
 
     fun getColor(entity: Entity?): Color {
         run {
-            if (entity != null && classProvider.isEntityLivingBase(entity)) {
-                val entityLivingBase = entity.asEntityLivingBase()
-
-                if (entityLivingBase.hurtTime > 0)
+            if (entity != null && entity is EntityLivingBase) {
+                if (entity.hurtTime > 0)
                     return Color.RED
-                if (classProvider.isEntityPlayer(entityLivingBase) && entityLivingBase.asEntityPlayer().isClientFriend())
+                if (entity is EntityPlayer && entity.isClientFriend())
                     return Color.BLUE
 
                 if (colorTeam.get()) {
-                    val chars: CharArray = (entityLivingBase.displayName ?: return@run).formattedText.toCharArray()
+                    val chars: CharArray = (entity.displayName ?: return@run).formattedText.toCharArray()
                     var color = Int.MAX_VALUE
                     for (i in chars.indices) {
                         if (chars[i] != '§' || i + 1 >= chars.size) continue
@@ -209,7 +250,11 @@ class ESP : Module() {
             }
         }
 
-        return if (colorRainbow.get()) rainbow() else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
+        return if (colorRainbow.get()) rainbow() else Color(
+            colorRedValue.get(),
+            colorGreenValue.get(),
+            colorBlueValue.get()
+        )
     }
 
     companion object {

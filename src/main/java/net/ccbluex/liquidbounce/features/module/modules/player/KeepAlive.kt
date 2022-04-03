@@ -5,8 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.api.enums.ItemType
-import net.ccbluex.liquidbounce.api.enums.WEnumHand
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -14,7 +12,6 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 
 import net.ccbluex.liquidbounce.utils.InventoryUtils
-import net.ccbluex.liquidbounce.utils.createUseItemPacket
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.init.Items
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
@@ -37,7 +34,7 @@ class KeepAlive : Module() {
             when (modeValue.get().toLowerCase()) {
                 "/heal" -> thePlayer.sendChatMessage("/heal")
                 "soup" -> {
-                    val soupInHotbar = InventoryUtils.findItem(36, 45, classProvider.getItemEnum(ItemType.MUSHROOM_STEW))
+                    val soupInHotbar = InventoryUtils.findItem(36, 45, Items.mushroom_stew)
 
                     if (soupInHotbar != -1) {
                         mc.netHandler.addToSendQueue(C09PacketHeldItemChange(soupInHotbar - 36))

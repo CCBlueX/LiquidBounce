@@ -37,7 +37,7 @@ class BlockOverlay : Module() {
         get() {
             val blockPos = mc.objectMouseOver?.blockPos ?: return null
 
-            if (canBeClicked(blockPos) && mc.theWorld!!.worldBorder.contains(blockPos))
+            if (canBeClicked(blockPos) && mc.theWorld.worldBorder.contains(blockPos))
                 return blockPos
 
             return null
@@ -47,7 +47,7 @@ class BlockOverlay : Module() {
     fun onRender3D(event: Render3DEvent) {
         val blockPos = currentBlock ?: return
 
-        val block = mc.theWorld!!.getBlockState(blockPos).block
+        val block = mc.theWorld.getBlockState(blockPos).block
         val partialTicks = event.partialTicks
 
         val color = if (colorRainbow.get()) rainbow(0.4F) else Color(colorRedValue.get(),
@@ -60,10 +60,8 @@ class BlockOverlay : Module() {
         GlStateManager.disableTexture2D()
         GL11.glDepthMask(false)
 
-        @Suppress("ConstantConditionIf")
-        if (Backend.MINECRAFT_VERSION_MINOR < 12) {
-            block.setBlockBoundsBasedOnState(mc.theWorld!!, blockPos)
-        }
+        block.setBlockBoundsBasedOnState(mc.theWorld, blockPos)
+
 
         val thePlayer = mc.thePlayer ?: return
 
@@ -71,9 +69,9 @@ class BlockOverlay : Module() {
         val y = thePlayer.lastTickPosY + (thePlayer.posY - thePlayer.lastTickPosY) * partialTicks
         val z = thePlayer.lastTickPosZ + (thePlayer.posZ - thePlayer.lastTickPosZ) * partialTicks
 
-        val axisAlignedBB = block.getSelectedBoundingBox(mc.theWorld!!, mc.theWorld!!.getBlockState(blockPos), blockPos)
-                .expand(0.0020000000949949026, 0.0020000000949949026, 0.0020000000949949026)
-                .offset(-x, -y, -z)
+        val axisAlignedBB = block.getSelectedBoundingBox(mc.theWorld, blockPos)
+            .expand(0.0020000000949949026, 0.0020000000949949026, 0.0020000000949949026)
+            .offset(-x, -y, -z)
 
         RenderUtils.drawSelectionBoundingBox(axisAlignedBB)
         RenderUtils.drawFilledBox(axisAlignedBB)
@@ -89,8 +87,8 @@ class BlockOverlay : Module() {
             val blockPos = currentBlock ?: return
             val block = getBlock(blockPos) ?: return
 
-            val info = "${block.localizedName} §7ID: ${functions.getIdFromBlock(block)}"
-            val scaledResolution = classProvider.createScaledResolution(mc)
+            val info = "${block.localizedName} §7ID: ${Block.getIdFromBlock(block)}"
+            val scaledResolution = ScaledResolution(mc)
 
             RenderUtils.drawBorderedRect(
                     scaledResolution.scaledWidth / 2 - 2F,

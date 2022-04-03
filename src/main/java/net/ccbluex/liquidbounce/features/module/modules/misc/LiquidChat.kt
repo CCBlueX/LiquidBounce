@@ -5,9 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.api.minecraft.event.IClickEvent
-import net.ccbluex.liquidbounce.api.minecraft.util.IIChatComponent
-import net.ccbluex.liquidbounce.api.minecraft.util.WEnumChatFormatting
 import net.ccbluex.liquidbounce.chat.Client
 import net.ccbluex.liquidbounce.chat.packet.packets.*
 import net.ccbluex.liquidbounce.event.EventTarget
@@ -20,6 +17,10 @@ import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.login.UserUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
+import net.minecraft.event.ClickEvent
+import net.minecraft.util.ChatComponentText
+import net.minecraft.util.EnumChatFormatting
+import net.minecraft.util.IChatComponent
 import java.net.URI
 import java.net.URISyntaxException
 import java.util.regex.Pattern
@@ -94,7 +95,7 @@ class LiquidChat : Module() {
                         return
                     }
 
-                    val chatComponent = classProvider.createChatComponentText("§7[§a§lChat§7] §9${packet.user.name}: ")
+                    val chatComponent = ChatComponentText("§7[§a§lChat§7] §9${packet.user.name}: ")
                     val messageComponent = toChatComponent(packet.content)
                     chatComponent.appendSibling(messageComponent)
 
@@ -221,8 +222,8 @@ class LiquidChat : Module() {
 
     private val urlPattern = Pattern.compile("((?:[a-z0-9]{2,}:\\/\\/)?(?:(?:[0-9]{1,3}\\.){3}[0-9]{1,3}|(?:[-\\w_\\.]{1,}\\.[a-z]{2,}?))(?::[0-9]{1,5})?.*?(?=[!\"\u00A7 \n]|$))", Pattern.CASE_INSENSITIVE)
 
-    private fun toChatComponent(string: String): IIChatComponent {
-        var component: IIChatComponent? = null
+    private fun toChatComponent(string: String): IChatComponent {
+        var component: IChatComponent? = null
         val matcher = urlPattern.matcher(string)
         var lastEnd = 0
 
@@ -234,8 +235,8 @@ class LiquidChat : Module() {
             val part = string.substring(lastEnd, start)
             if (part.isNotEmpty()) {
                 if (component == null) {
-                    component = classProvider.createChatComponentText(part)
-                    component.chatStyle.color = WEnumChatFormatting.GRAY
+                    component = ChatComponentText(part)
+                    component.chatStyle.color = EnumChatFormatting.GRAY
                 } else
                     component.appendText(part)
             }
@@ -247,11 +248,11 @@ class LiquidChat : Module() {
             try {
                 if (URI(url).scheme != null) {
                     // Set the click event and append the link.
-                    val link: IIChatComponent = classProvider.createChatComponentText(url)
+                    val link: IChatComponent = ChatComponentText(url)
 
-                    link.chatStyle.chatClickEvent = classProvider.createClickEvent(IClickEvent.WAction.OPEN_URL, url)
+                    link.chatStyle.chatClickEvent = ClickEvent(ClickEvent.Action.OPEN_URL, url)
                     link.chatStyle.underlined = true
-                    link.chatStyle.color = WEnumChatFormatting.GRAY
+                    link.chatStyle.color = EnumChatFormatting.GRAY
 
                     if (component == null)
                         component = link
@@ -263,8 +264,8 @@ class LiquidChat : Module() {
             }
 
             if (component == null) {
-                component = classProvider.createChatComponentText(url)
-                component.chatStyle.color = WEnumChatFormatting.GRAY
+                component = ChatComponentText(url)
+                component.chatStyle.color = EnumChatFormatting.GRAY
             } else
                 component.appendText(url)
         }
@@ -273,8 +274,8 @@ class LiquidChat : Module() {
         val end = string.substring(lastEnd)
 
         if (component == null) {
-            component = classProvider.createChatComponentText(end)
-            component.chatStyle.color = WEnumChatFormatting.GRAY
+            component = ChatComponentText(end)
+            component.chatStyle.color = EnumChatFormatting.GRAY
         } else if (end.isNotEmpty())
             component.appendText(string.substring(lastEnd))
 

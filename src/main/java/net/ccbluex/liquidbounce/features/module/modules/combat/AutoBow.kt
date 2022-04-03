@@ -28,7 +28,7 @@ class AutoBow : Module() {
 
         val thePlayer = mc.thePlayer!!
 
-        if (thePlayer.isUsingItem && classProvider.isItemBow(thePlayer.heldItem?.item) &&
+        if (thePlayer.isUsingItem && thePlayer.heldItem?.item is ItemBow &&
                 thePlayer.itemInUseDuration > 20 && (!waitForBowAimbot.get() || !bowAimbot.state || bowAimbot.hasTarget())) {
             thePlayer.stopUsingItem()
             mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))

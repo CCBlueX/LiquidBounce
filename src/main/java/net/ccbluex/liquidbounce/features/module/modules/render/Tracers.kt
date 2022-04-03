@@ -54,7 +54,7 @@ class Tracers : Module() {
         GL11.glBegin(GL11.GL_LINES)
 
         for (entity in mc.theWorld!!.loadedEntityList) {
-            if (!classProvider.isEntityLivingBase(entity) || !botValue.get() && AntiBot.isBot(entity.asEntityLivingBase())) continue
+            if (entity !is EntityLivingBase || !botValue.get() && AntiBot.isBot(entity)) continue
             if (entity != thePlayer && EntityUtils.isSelected(entity, false)) {
                 var dist = (thePlayer.getDistanceToEntity(entity) * 2).toInt()
 
@@ -62,7 +62,7 @@ class Tracers : Module() {
 
                 val colorMode = colorMode.get().toLowerCase()
                 val color = when {
-                    classProvider.isEntityPlayer(entity) && entity.asEntityPlayer().isClientFriend() -> Color(0, 0, 255, 150)
+                    entity is EntityPlayer && entity.isClientFriend() -> Color(0, 0, 255, 150)
                     colorMode == "custom" -> Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), 150)
                     colorMode == "distancecolor" -> Color(255 - dist, dist, 0, 150)
                     colorMode == "rainbow" -> ColorUtils.rainbow()

@@ -18,6 +18,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.world.*
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.value.BoolValue
+import net.minecraft.network.play.client.C03PacketPlayer
 
 @ModuleInfo(name = "Rotations", description = "Allows you to see server-sided head and body rotations.", category = ModuleCategory.RENDER)
 class Rotations : Module() {
@@ -41,13 +42,10 @@ class Rotations : Module() {
 
         val packet = event.packet
 
-        if (classProvider.isCPacketPlayerPosLook(packet) || classProvider.isCPacketPlayerLook(packet)) {
-            val packetPlayer = packet.asCPacketPlayer()
-
-            playerYaw = packetPlayer.yaw
-
-            thePlayer.renderYawOffset = packetPlayer.yaw
-            thePlayer.rotationYawHead = packetPlayer.yaw
+        if (packet is C03PacketPlayer.C06PacketPlayerPosLook || packet is C03PacketPlayer.C05PacketPlayerLook) {
+            playerYaw = (packet as C03PacketPlayer).yaw
+            mc.thePlayer.renderYawOffset = packet.getYaw()
+            mc.thePlayer.rotationYawHead = packet.getYaw()
         } else {
             if (playerYaw != null)
                 thePlayer.renderYawOffset = this.playerYaw!!

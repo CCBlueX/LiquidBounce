@@ -91,7 +91,7 @@ public class AutoArmor extends Module {
 
             final ArmorPiece oldArmor = new ArmorPiece(mc.thePlayer.inventory.armorItemInSlot(armorSlot), -1);
 
-            if (ItemUtils.isStackEmpty(oldArmor.getItemStack()) || !classProvider.isItemArmor(oldArmor.getItemStack().getItem()) || ARMOR_COMPARATOR.compare(oldArmor, armorPiece) < 0) {
+            if (ItemUtils.isStackEmpty(oldArmor.getItemStack()) || !(oldArmor.getItemStack().getItem() instanceof ItemArmor) || ARMOR_COMPARATOR.compare(oldArmor, armorPiece) < 0) {
                 if (!ItemUtils.isStackEmpty(oldArmor.getItemStack()) && move(8 - armorSlot, true)) {
                     locked = true;
                     return;
@@ -127,8 +127,8 @@ public class AutoArmor extends Module {
             delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get());
 
             return true;
-        } else if (!(noMoveValue.get() && MovementUtils.isMoving()) && (!invOpenValue.get() || classProvider.isGuiInventory(mc.getCurrentScreen())) && item != -1) {
-            final boolean openInventory = simulateInventory.get() && !classProvider.isGuiInventory(mc.getCurrentScreen());
+        } else if (!(noMoveValue.get() && MovementUtils.isMoving()) && (!invOpenValue.get() || mc.currentScreen instanceof GuiInventory) && item != -1) {
+            final boolean openInventory = simulateInventory.get() && !(mc.currentScreen instanceof GuiInventory);
 
             if (openInventory) mc.getNetHandler().addToSendQueue(new C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT));
 
@@ -151,7 +151,8 @@ public class AutoArmor extends Module {
 
             delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get());
 
-            if (openInventory) mc.getNetHandler().addToSendQueue(classProvider.createCPacketCloseWindow());
+            if (openInventory)
+                mc.getNetHandler().addToSendQueue(new C0DPacketCloseWindow());
 
             return true;
         }

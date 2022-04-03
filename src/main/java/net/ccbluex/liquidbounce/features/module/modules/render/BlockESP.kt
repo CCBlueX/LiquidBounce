@@ -43,10 +43,10 @@ class BlockESP : Module() {
     fun onUpdate(event: UpdateEvent?) {
         if (searchTimer.hasTimePassed(1000L) && (thread == null || !thread!!.isAlive)) {
             val radius = radiusValue.get()
-            val selectedBlock = functions.getBlockById(blockValue.get())
+            val selectedBlock = Block.getBlockById(blockValue.get());
 
-            if (selectedBlock == null || selectedBlock == classProvider.getBlockEnum(BlockType.AIR))
-                return
+            if (selectedBlock == null || selectedBlock == Blocks.air)
+                return;
 
             thread = Thread(Runnable {
                 val blockList: MutableList<BlockPos> = ArrayList()

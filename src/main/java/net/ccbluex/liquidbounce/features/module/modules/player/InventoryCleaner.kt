@@ -6,10 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.enums.BlockType
-import net.ccbluex.liquidbounce.api.enums.EnchantmentType
-import net.ccbluex.liquidbounce.api.minecraft.item.IItem
-import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -20,7 +16,6 @@ import net.ccbluex.liquidbounce.injection.implementations.IMixinItemStack
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils
-import net.ccbluex.liquidbounce.utils.createOpenInventoryPacket
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
@@ -267,25 +262,20 @@ class InventoryCleaner : Module() {
             }
 
             "bow" -> {
-                var bestBow = if (classProvider.isItemBow(slotStack?.item)) targetSlot else -1
-                var bestPower = if (bestBow != -1) ItemUtils.getEnchantment(
-                    slotStack, classProvider.getEnchantmentEnum(EnchantmentType.POWER)
-                )
-                else 0
+                var bestBow = if (slotStack?.item is ItemBow) targetSlot else -1
+                var bestPower = if (bestBow != -1)
+                    ItemUtils.getEnchantment(slotStack, Enchantment.power)
+                else
+                    0
 
                 thePlayer.inventory.mainInventory.forEachIndexed { index, itemStack ->
-                    if (classProvider.isItemBow(itemStack?.item) && !type(index).equals(type, ignoreCase = true)) {
+                    if (itemStack?.item is ItemBow && !type(index).equals(type, ignoreCase = true)) {
                         if (bestBow == -1) {
                             bestBow = index
                         } else {
-                            val power = ItemUtils.getEnchantment(
-                                itemStack, classProvider.getEnchantmentEnum(EnchantmentType.POWER)
-                            )
+                            val power = ItemUtils.getEnchantment(itemStack, Enchantment.power)
 
-                            if (ItemUtils.getEnchantment(
-                                    itemStack, classProvider.getEnchantmentEnum(EnchantmentType.POWER)
-                                ) > bestPower
-                            ) {
+                            if (ItemUtils.getEnchantment(itemStack, Enchantment.power) > bestPower) {
                                 bestBow = index
                                 bestPower = power
                             }

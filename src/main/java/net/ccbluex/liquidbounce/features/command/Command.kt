@@ -8,6 +8,8 @@ package net.ccbluex.liquidbounce.features.command
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.minecraft.client.audio.PositionedSoundRecord
+import net.minecraft.util.ResourceLocation
 
 abstract class Command(val command: String, vararg val alias: String) : MinecraftInstance() {
     /**
@@ -55,5 +57,5 @@ abstract class Command(val command: String, vararg val alias: String) : Minecraf
     /**
      * Play edit sound
      */
-    protected fun playEdit() = mc.soundHandler.playSound("random.anvil_use", 1F)
+    protected fun playEdit() = mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("random.anvil_use"), 1F))
 }

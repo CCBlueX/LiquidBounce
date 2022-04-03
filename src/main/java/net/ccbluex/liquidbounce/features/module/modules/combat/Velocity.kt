@@ -19,6 +19,8 @@ import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.network.play.server.S12PacketEntityVelocity
+import net.minecraft.network.play.server.S27PacketExplosion
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -174,11 +176,8 @@ class Velocity : Module() {
 
         val packet = event.packet
 
-        if (classProvider.isSPacketEntityVelocity(packet)) {
-            val packetEntityVelocity = packet.asSPacketEntityVelocity()
-
-
-            if ((mc.theWorld?.getEntityByID(packetEntityVelocity.entityID) ?: return) != thePlayer)
+        if (packet is S12PacketEntityVelocity) {
+            if ((mc.theWorld?.getEntityByID(packet.entityID) ?: return) != thePlayer)
                 return
 
             velocityTimer.reset()
@@ -191,9 +190,9 @@ class Velocity : Module() {
                     if (horizontal == 0F && vertical == 0F)
                         event.cancelEvent()
 
-                    packetEntityVelocity.motionX = (packetEntityVelocity.motionX * horizontal).toInt()
-                    packetEntityVelocity.motionY = (packetEntityVelocity.motionY * vertical).toInt()
-                    packetEntityVelocity.motionZ = (packetEntityVelocity.motionZ * horizontal).toInt()
+                    packet.motionX = (packet.motionX * horizontal).toInt()
+                    packet.motionY = (packet.motionY * vertical).toInt()
+                    packet.motionZ = (packet.motionZ * horizontal).toInt()
                 }
 
                 "aac", "reverse", "smoothreverse", "aaczero" -> velocityInput = true
@@ -206,7 +205,7 @@ class Velocity : Module() {
                     event.cancelEvent()
                 }
             }
-        } else if (classProvider.isSPacketExplosion(packet)) {
+        } else if (packet is S27PacketExplosion) {
             // TODO: Support velocity for explosions
             event.cancelEvent()
         }

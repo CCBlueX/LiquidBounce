@@ -18,11 +18,11 @@ class XrayCommand : Command("xray") {
                 if (args.size > 2) {
                     try {
                         val block = try {
-                            functions.getBlockById(args[2].toInt())
+                            Block.getBlockById(args[2].toInt())
                         } catch (exception: NumberFormatException) {
-                            val tmpBlock = functions.getBlockFromName(args[2])
+                            val tmpBlock = Block.getBlockFromName(args[2])
 
-                            if (tmpBlock == null || functions.getIdFromBlock(tmpBlock) <= 0) {
+                            if (tmpBlock == null || Block.getIdFromBlock(tmpBlock) <= 0) {
                                 chat("§7Block §8${args[2]}§7 does not exist!")
                                 return
                             }
@@ -54,11 +54,11 @@ class XrayCommand : Command("xray") {
                 if (args.size > 2) {
                     try {
                         val block = try {
-                            functions.getBlockById(args[2].toInt())
+                            Block.getBlockById(args[2].toInt())
                         } catch (exception: NumberFormatException) {
-                            val tmpBlock = functions.getBlockFromName(args[2])
+                            val tmpBlock = Block.getBlockFromName(args[2])
 
-                            if (tmpBlock == null || functions.getIdFromBlock(tmpBlock) <= 0) {
+                            if (tmpBlock == null || Block.getIdFromBlock(tmpBlock) <= 0) {
                                 chat("§7Block §8${args[2]}§7 does not exist!")
                                 return
                             }
@@ -87,7 +87,7 @@ class XrayCommand : Command("xray") {
 
             if (args[1].equals("list", ignoreCase = true)) {
                 chat("§8Xray blocks:")
-                xRay.xrayBlocks.forEach { chat("§8${it.localizedName} §7-§c ${functions.getIdFromBlock(it)}") }
+                xRay.xrayBlocks.forEach { chat("§8${it.localizedName} §7-§c ${Block.getIdFromBlock(it)}") }
                 return
             }
         }
@@ -107,16 +107,16 @@ class XrayCommand : Command("xray") {
             2 -> {
                 when (args[0].toLowerCase()) {
                     "add" -> {
-                        return functions.getBlockRegistryKeys()
+                        return Block.blockRegistry.keys
                             .map { it.resourcePath.toLowerCase() }
                             .filter { Block.getBlockFromName(it.toLowerCase()) != null }
-                            .filter { !xRay.xrayBlocks.contains(functions.getBlockFromName(it.toLowerCase())) }
+                            .filter { !xRay.xrayBlocks.contains(Block.getBlockFromName(it.toLowerCase())) }
                             .filter { it.startsWith(args[1], true) }
                     }
                     "remove" -> {
-                        return functions.getBlockRegistryKeys()
+                        return Block.blockRegistry.keys
                             .map { it.resourcePath.toLowerCase() }
-                            .filter { xRay.xrayBlocks.contains(functions.getBlockFromName(it)) }
+                            .filter { xRay.xrayBlocks.contains(Block.getBlockFromName(it)) }
                             .filter { it.startsWith(args[1], true) }
                     }
                     else -> emptyList()

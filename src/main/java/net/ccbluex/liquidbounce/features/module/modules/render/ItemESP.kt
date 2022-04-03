@@ -20,6 +20,8 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.entity.item.EntityItem
+import net.minecraft.entity.projectile.EntityArrow
 import java.awt.Color
 
 @ModuleInfo(name = "ItemESP", description = "Allows you to see items through walls.", category = ModuleCategory.RENDER)
@@ -39,7 +41,7 @@ class ItemESP : Module() {
     fun onRender3D(event: Render3DEvent?) {
         val color=getColor()
         for (entity in mc.theWorld!!.loadedEntityList) {
-            if (!(classProvider.isEntityItem(entity) || classProvider.isEntityArrow(entity))) continue
+            if (!(entity is EntityItem || entity is EntityArrow)) continue
             when (modeValue.get().toLowerCase()) {
                 "box" -> RenderUtils.drawEntityBox(entity, color, true)
                 "otherbox" -> RenderUtils.drawEntityBox(entity, color, false)
@@ -57,7 +59,7 @@ class ItemESP : Module() {
 
         try {
             for (entity in mc.theWorld!!.loadedEntityList) {
-                if (!(classProvider.isEntityItem(entity) || classProvider.isEntityArrow(entity))) continue
+                if (!(entity is EntityItem || entity is EntityArrow)) continue
                 mc.renderManager.renderEntityStatic(entity, event.partialTicks, true)
             }
         } catch (ex: Exception) {

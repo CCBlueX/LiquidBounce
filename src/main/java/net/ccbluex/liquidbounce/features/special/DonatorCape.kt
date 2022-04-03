@@ -30,7 +30,7 @@ class DonatorCape : Listenable, MinecraftInstance() {
             return
 
         thread {
-            val uuid = mc.session.playerId
+            val uuid = mc.session.playerID
             val username = mc.session.username
 
             val httpClient = HttpClients.createDefault()

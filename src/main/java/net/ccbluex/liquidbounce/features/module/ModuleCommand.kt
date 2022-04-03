@@ -9,6 +9,8 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.value.*
+import net.minecraft.block.Block
+import net.minecraft.item.Item
 
 /**
  * Module command
@@ -68,7 +70,7 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
                         id = try {
                             args[2].toInt()
                         } catch (exception: NumberFormatException) {
-                            val tmpId = functions.getBlockFromName(args[2])?.let { functions.getIdFromBlock(it) }
+                            val tmpId = Block.getBlockFromName(args[2])?.let { Block.getIdFromBlock(it) }
 
                             if (tmpId == null || tmpId <= 0) {
                                 chat("§7Block §8${args[2]}§7 does not exist!")
@@ -114,7 +116,7 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
             2 -> {
                 when(module.getValue(args[0])) {
                     is BlockValue -> {
-                        return functions.getItemRegistryKeys()
+                        return Item.itemRegistry.keys
                                 .map { it.resourcePath.toLowerCase() }
                                 .filter { it.startsWith(args[1], true) }
                     }

@@ -6,6 +6,8 @@
 package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.features.command.Command
+import net.minecraft.enchantment.Enchantment
+import net.minecraft.network.play.client.C10PacketCreativeInventoryAction
 
 class EnchantCommand : Command("enchant") {
     /**
@@ -28,7 +30,7 @@ class EnchantCommand : Command("enchant") {
             val enchantID: Int = try {
                 args[1].toInt()
             } catch (e: NumberFormatException) {
-                val enchantment = functions.getEnchantmentByLocation(args[1])
+                val enchantment = Enchantment.getEnchantmentByLocation(args[1])
 
                 if (enchantment == null) {
                     chat("There is no enchantment with the name '${args[1]}'")
@@ -38,7 +40,7 @@ class EnchantCommand : Command("enchant") {
                 enchantment.effectId
             }
 
-            val enchantment = functions.getEnchantmentById(enchantID)
+            val enchantment = Enchantment.getEnchantmentById(enchantID)
 
             if (enchantment == null) {
                 chat("There is no enchantment with the ID '$enchantID'")
@@ -53,7 +55,7 @@ class EnchantCommand : Command("enchant") {
             }
 
             item.addEnchantment(enchantment, level)
-            mc.netHandler.addToSendQueue(classProvider.createCPacketCreativeInventoryAction(36 + mc.thePlayer!!.inventory.currentItem, item))
+            mc.netHandler.addToSendQueue(C10PacketCreativeInventoryAction(36 + mc.thePlayer!!.inventory.currentItem, item))
             chat("${enchantment.getTranslatedName(level)} added to ${item.displayName}.")
             return
         }
@@ -65,9 +67,9 @@ class EnchantCommand : Command("enchant") {
 
         return when (args.size) {
             1 -> {
-                return functions.getEnchantments()
-                        .map { it.resourcePath.toLowerCase() }
-                        .filter { it.startsWith(args[0], true) }
+                return Enchantment.func_181077_c()
+                    .map { it.resourcePath.toLowerCase() }
+                    .filter { it.startsWith(args[0], true) }
             }
             else -> emptyList()
         }

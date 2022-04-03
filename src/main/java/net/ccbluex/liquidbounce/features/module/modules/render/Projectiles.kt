@@ -57,7 +57,7 @@ class Projectiles : Module() {
         val size: Float
 
         // Check items
-        if (classProvider.isItemBow(item)) {
+        if (item is ItemBow) {
             if (!thePlayer.isUsingItem)
                 return
 
@@ -75,16 +75,16 @@ class Projectiles : Module() {
                 power = 1F
 
             motionFactor = power * 3F
-        } else if (classProvider.isItemFishingRod(item)) {
+        } else if (item is ItemFishingRod) {
             gravity = 0.04F
             size = 0.25F
             motionSlowdown = 0.92F
-        } else if (classProvider.isItemPotion(item) && heldItem.isSplash()) {
+        } else if (item is ItemPotion && ItemPotion.isSplash(mc.thePlayer.heldItem.itemDamage)) {
             gravity = 0.05F
             size = 0.25F
             motionFactor = 0.5F
         } else {
-            if (!classProvider.isItemSnowball(item) && !classProvider.isItemEnderPearl(item) && !classProvider.isItemEgg(item))
+            if (item !is ItemSnowball && item !is ItemEnderPearl && item !is ItemEgg)
                 return
 
             gravity = 0.03F
@@ -114,7 +114,7 @@ class Projectiles : Module() {
         var motionX = (-sin(yawRadians) * cos(pitchRadians)
                 * if (isBow) 1.0 else 0.4)
         var motionY = -sin((pitch +
-                if (classProvider.isItemPotion(item) && heldItem.isSplash()) -20 else 0)
+                if (item is ItemPotion && ItemPotion.isSplash(mc.thePlayer.heldItem.itemDamage)) -20 else 0)
                 / 180f * 3.1415927f) * if (isBow) 1.0 else 0.4
         var motionZ = (cos(yawRadians) * cos(pitchRadians)
                 * if (isBow) 1.0 else 0.4)
@@ -128,11 +128,11 @@ class Projectiles : Module() {
         motionZ *= motionFactor
 
         // Landing
-        var landingPosition: IMovingObjectPosition? = null
+        var landingPosition: MovingObjectPosition? = null
         var hasLanded = false
         var hitEntity = false
 
-        val tessellator = classProvider.tessellatorInstance
+        val tessellator = Tessellator.getInstance()
         val worldRenderer = tessellator.worldRenderer
 
         // Start drawing of path
@@ -154,7 +154,7 @@ class Projectiles : Module() {
         }
         GL11.glLineWidth(2f)
 
-        worldRenderer.begin(GL11.GL_LINE_STRIP, classProvider.getVertexFormatEnum(WDefaultVertexFormats.POSITION))
+        worldRenderer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION)
 
         while (!hasLanded && posY > 0.0) {
             // Set pos before and after
@@ -215,7 +215,7 @@ class Projectiles : Module() {
             val blockState = theWorld.getBlockState(BlockPos(posX, posY, posZ))
 
             // Check is next position water
-            if (blockState.block.getMaterial(blockState) == classProvider.getMaterialEnum(MaterialType.WATER)) {
+            if (mc.theWorld.getBlockState(BlockPos(posX, posY, posZ)).block.material === Material.water) {
                 // Update motion
                 motionX *= 0.6
                 motionY *= 0.6
@@ -241,7 +241,7 @@ class Projectiles : Module() {
 
         if (landingPosition != null) {
             // Switch rotation of hit cylinder of the hit axis
-            when (landingPosition.sideHit!!.axisOrdinal) {
+            when (landingPosition.sideHit.ordinal) {
                 0 -> GL11.glRotatef(90F, 0F, 0F, 1F)
                 2 -> GL11.glRotatef(90F, 1F, 0F, 0F)
             }

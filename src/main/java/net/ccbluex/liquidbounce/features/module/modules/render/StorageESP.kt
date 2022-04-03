@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import co.uk.hexeption.utils.OutlineUtils
-import net.ccbluex.liquidbounce.api.minecraft.tileentity.ITileEntity
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render2DEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
@@ -34,16 +33,14 @@ class StorageESP : Module() {
     private val furnaceValue = BoolValue("Furnace", true)
     private val dispenserValue = BoolValue("Dispenser", true)
     private val hopperValue = BoolValue("Hopper", true)
-    private val shulkerBoxValue = BoolValue("ShulkerBox", true)
 
-    private fun getColor(tileEntity: ITileEntity):Color?{
+    private fun getColor(tileEntity: TileEntity):Color?{
         return when {
-            chestValue.get() && classProvider.isTileEntityChest(tileEntity) && !clickedBlocks.contains(tileEntity.pos) -> Color(0, 66, 255)
-            enderChestValue.get() && classProvider.isTileEntityEnderChest(tileEntity) && !clickedBlocks.contains(tileEntity.pos) -> Color.MAGENTA
-            furnaceValue.get() && classProvider.isTileEntityFurnace(tileEntity) -> Color.BLACK
-            dispenserValue.get() && classProvider.isTileEntityDispenser(tileEntity) -> Color.BLACK
-            hopperValue.get() && classProvider.isTileEntityHopper(tileEntity) -> Color.GRAY
-            shulkerBoxValue.get() && classProvider.isTileEntityShulkerBox(tileEntity) -> Color(0x6e, 0x4d, 0x6e).brighter()
+            chestValue.get() && tileEntity is TileEntityChest && !clickedBlocks.contains(tileEntity.pos) -> Color(0, 66, 255)
+            enderChestValue.get() && tileEntity is TileEntityEnderChest && !clickedBlocks.contains(tileEntity.pos) -> Color.MAGENTA
+            furnaceValue.get() && tileEntity is TileEntityFurnace -> Color.BLACK
+            dispenserValue.get() && tileEntity is TileEntityDispenser -> Color.BLACK
+            hopperValue.get() && tileEntity is TileEntityHopper -> Color.GRAY
             else -> null
         }
     }
@@ -65,7 +62,7 @@ class StorageESP : Module() {
             for (tileEntity in mc.theWorld!!.loadedTileEntityList) {
                 val color: Color = getColor(tileEntity)?: continue
 
-                if (!(classProvider.isTileEntityChest(tileEntity) || classProvider.isTileEntityEnderChest(tileEntity))) {
+                if (!(tileEntity is TileEntityChest || tileEntity is TileEntityEnderChest)) {
                     RenderUtils.drawBlockBox(tileEntity.pos, color, !mode.equals("otherbox", ignoreCase = true))
                     continue
                 }
@@ -73,17 +70,18 @@ class StorageESP : Module() {
                     "otherbox", "box" -> RenderUtils.drawBlockBox(tileEntity.pos, color, !mode.equals("otherbox", ignoreCase = true))
                     "2d" -> RenderUtils.draw2D(tileEntity.pos, color.rgb, Color.BLACK.rgb)
                     "outline" -> {
-                        RenderUtils.glColor(color)
-                        OutlineUtils.renderOne(3f)
-                        functions.renderTileEntity(tileEntity, event.partialTicks, -1)
-                        OutlineUtils.renderTwo()
-                        functions.renderTileEntity(tileEntity, event.partialTicks, -1)
-                        OutlineUtils.renderThree()
-                        functions.renderTileEntity(tileEntity, event.partialTicks, -1)
-                        OutlineUtils.renderFour(color)
-                        functions.renderTileEntity(tileEntity, event.partialTicks, -1)
-                        OutlineUtils.renderFive()
-                        OutlineUtils.setColor(Color.WHITE)
+                        RenderUtils.glColor(color);
+                        OutlineUtils.renderOne(3F);
+                        TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1);
+                        OutlineUtils.renderTwo();
+                        TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1);
+                        OutlineUtils.renderThree();
+                        TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1);
+                        OutlineUtils.renderFour(color);
+                        TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1);
+                        OutlineUtils.renderFive();
+
+                        OutlineUtils.setColor(Color.WHITE);
                     }
                     "wireframe" -> {
                         GL11.glPushMatrix()
@@ -97,14 +95,14 @@ class StorageESP : Module() {
                         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
                         RenderUtils.glColor(color)
                         GL11.glLineWidth(1.5f)
-                        functions.renderTileEntity(tileEntity, event.partialTicks, -1)
+                        TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1) //TODO: render twice?
                         GL11.glPopAttrib()
                         GL11.glPopMatrix()
                     }
                 }
             }
             for (entity in mc.theWorld!!.loadedEntityList) {
-                if (classProvider.isEntityMinecartChest(entity)) {
+                if (entity is EntityMinecartChest) {
                     when (mode.toLowerCase()) {
                         "otherbox", "box" -> RenderUtils.drawEntityBox(entity, Color(0, 66, 255), !mode.equals("otherbox", ignoreCase = true))
                         "2d" -> RenderUtils.draw2D(entity.position, Color(0, 66, 255).rgb, Color.BLACK.rgb)
@@ -164,7 +162,7 @@ class StorageESP : Module() {
         shader.startDraw(event.partialTicks)
 
         try {
-            val entityMap = HashMap<Color, ArrayList<ITileEntity>>()
+            val entityMap = HashMap<Color, ArrayList<TileEntity>>()
             for (tileEntity in mc.theWorld!!.loadedTileEntityList) {
                 val color: Color = getColor(tileEntity) ?: continue
 
@@ -178,7 +176,7 @@ class StorageESP : Module() {
             for ((color, arr) in entityMap) {
                 shader.startDraw(partialTicks)
                 for (entity in arr) {
-                    mc.renderManager.renderEntityAt(
+                    TileEntityRendererDispatcher.instance.renderTileEntityAt(
                             entity,
                             entity.pos.x - renderManager.renderPosX,
                             entity.pos.y - renderManager.renderPosY,

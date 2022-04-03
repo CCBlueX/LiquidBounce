@@ -50,11 +50,16 @@ class Blink : Module() {
             faker.rotationYawHead = thePlayer.rotationYawHead
             mc.theWorld!!.addEntityToWorld(-1337, faker)
 
-
             fakePlayer = faker
         }
         synchronized(positions) {
-            positions.add(doubleArrayOf(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight / 2, thePlayer.posZ))
+            positions.add(
+                doubleArrayOf(
+                    thePlayer.posX,
+                    thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight / 2,
+                    thePlayer.posZ
+                )
+            )
             positions.add(doubleArrayOf(thePlayer.posX, thePlayer.entityBoundingBox.minY, thePlayer.posZ))
         }
         pulseTimer.reset()
@@ -76,18 +81,19 @@ class Blink : Module() {
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        val packet: IPacket = event.packet
+        val packet = event.packet
 
         if (mc.thePlayer == null || disableLogger)
             return
 
-        if (classProvider.isCPacketPlayer(packet)) // Cancel all movement stuff
+        if (packet is C03PacketPlayer) // Cancel all movement stuff
             event.cancelEvent()
 
-        if (classProvider.isCPacketPlayerPosition(packet) || classProvider.isCPacketPlayerPosLook(packet) ||
-                classProvider.isCPacketPlayerBlockPlacement(packet) ||
-                classProvider.isCPacketAnimation(packet) ||
-                classProvider.isCPacketEntityAction(packet) || classProvider.isCPacketUseEntity(packet)) {
+        if (packet is C03PacketPlayer.C04PacketPlayerPosition || packet is C03PacketPlayer.C06PacketPlayerPosLook ||
+            packet is C08PacketPlayerBlockPlacement ||
+            packet is C0APacketAnimation ||
+            packet is C0BPacketEntityAction || packet is C02PacketUseEntity
+        ) {
             event.cancelEvent()
             packets.add(packet)
         }
@@ -97,7 +103,15 @@ class Blink : Module() {
     fun onUpdate(event: UpdateEvent?) {
         val thePlayer = mc.thePlayer ?: return
 
-        synchronized(positions) { positions.add(doubleArrayOf(thePlayer.posX, thePlayer.entityBoundingBox.minY, thePlayer.posZ)) }
+        synchronized(positions) {
+            positions.add(
+                doubleArrayOf(
+                    thePlayer.posX,
+                    thePlayer.entityBoundingBox.minY,
+                    thePlayer.posZ
+                )
+            )
+        }
         if (pulseValue.get() && pulseTimer.hasTimePassed(pulseDelayValue.get().toLong())) {
             blink()
             pulseTimer.reset()
@@ -107,7 +121,11 @@ class Blink : Module() {
     @EventTarget
     fun onRender3D(event: Render3DEvent?) {
         val breadcrumbs = LiquidBounce.moduleManager.getModule(Breadcrumbs::class.java) as Breadcrumbs?
-        val color = if (breadcrumbs!!.colorRainbow.get()) rainbow() else Color(breadcrumbs.colorRedValue.get(), breadcrumbs.colorGreenValue.get(), breadcrumbs.colorBlueValue.get())
+        val color = if (breadcrumbs!!.colorRainbow.get()) rainbow() else Color(
+            breadcrumbs.colorRedValue.get(),
+            breadcrumbs.colorGreenValue.get(),
+            breadcrumbs.colorBlueValue.get()
+        )
         synchronized(positions) {
             GL11.glPushMatrix()
             GL11.glDisable(GL11.GL_TEXTURE_2D)
