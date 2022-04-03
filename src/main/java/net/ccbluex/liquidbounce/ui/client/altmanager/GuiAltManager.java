@@ -9,6 +9,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.thealtening.AltService;
+import me.liuli.elixir.account.MicrosoftAccount;
 import net.ccbluex.liquidbounce.LiquidBounce;
 
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.*;
@@ -27,6 +28,8 @@ import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiSlot;
 import net.minecraft.client.gui.GuiTextField;
+import net.minecraft.util.Session;
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.input.Keyboard;
 
 import javax.swing.*;
@@ -152,9 +155,10 @@ public class GuiAltManager extends GuiScreen {
             buttonList.add(new GuiButton(5, 5, j + 24 * 5 + 5, 90, 20, "MCLeaks"));
         if (GENERATORS.getOrDefault("thealtening", true))
             buttonList.add(new GuiButton(9, 5, j + 24 * 6 + 5, 90, 20, "TheAltening"));
+        buttonList.add(new GuiButton(93, 5, j + 24 * 7 + 5, 90, 20, "Microsoft"));
 
-        buttonList.add(new GuiButton(10, 5, j + 24 * 7 + 5, 90, 20, "Session Login"));
-        buttonList.add(new GuiButton(11, 5, j + 24 * 8 + 10, 90, 20, "Cape"));
+        buttonList.add(new GuiButton(10, 5, j + 24 * 8 + 5, 90, 20, "Session Login"));
+        buttonList.add(new GuiButton(11, 5, j + 24 * 9 + 10, 90, 20, "Cape"));
 
     }
 
@@ -295,6 +299,26 @@ public class GuiAltManager extends GuiScreen {
                 break;
             case 11:
                 mc.displayGuiScreen(new GuiDonatorCape(this));
+                break;
+            case 93:
+                MicrosoftAccount.Companion.buildFromOpenBrowser(new MicrosoftAccount.OAuthHandler() {
+                    @Override
+                    public void openUrl(@NotNull String s) {
+                        MiscUtils.showURL(s);
+                    }
+
+                    @Override
+                    public void authResult(@NotNull MicrosoftAccount microsoftAccount) {
+                        mc.session = new Session(microsoftAccount.getSession().getUsername(),
+                                microsoftAccount.getSession().getUuid(), microsoftAccount.getSession().getToken(),
+                                "mojang");
+                    }
+
+                    @Override
+                    public void authError(@NotNull String s) {
+                        ClientUtils.getLogger().error("auth error microsoft", s);
+                    }
+                }, MicrosoftAccount.AuthMethod.Companion.getAZURE_APP());
                 break;
             case 12:
                 if (LiquidBounce.fileManager.accountsConfig.getAccounts().size() == 0) {
