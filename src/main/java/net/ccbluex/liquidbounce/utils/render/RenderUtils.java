@@ -178,7 +178,7 @@ public final class RenderUtils extends MinecraftInstance {
         final AxisAlignedBB axisAlignedBB = AxisAlignedBB.fromBounds(
                 entityBox.minX - entity.posX + x - 0.05D,
                 entityBox.minY - entity.posY + y,
-                entityBox.minZ - entity.posX + z - 0.05D,
+                entityBox.minZ - entity.posZ + z - 0.05D,
                 entityBox.maxX - entity.posX + x + 0.05D,
                 entityBox.maxY - entity.posY + y + 0.15D,
                 entityBox.maxZ - entity.posZ + z + 0.05D
