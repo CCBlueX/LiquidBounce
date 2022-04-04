@@ -135,97 +135,95 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
     /**
      * @author CCBlueX
      */
-    @Overwrite
-    public void onUpdateWalkingPlayer() {
-        try {
-            LiquidBounce.eventManager.callEvent(new MotionEvent(EventState.PRE));
+    @Inject(method = "onUpdateWalkingPlayer", at = @At("HEAD"), cancellable = true)
+    private void onUpdateWalkingPlayer(CallbackInfo ci) {
+        LiquidBounce.eventManager.callEvent(new MotionEvent(EventState.PRE));
 
-            final InventoryMove inventoryMove = (InventoryMove) LiquidBounce.moduleManager.getModule(InventoryMove.class);
-            final Sneak sneak = (Sneak) LiquidBounce.moduleManager.getModule(Sneak.class);
-            final boolean fakeSprint = (inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get()) || LiquidBounce.moduleManager.getModule(AntiHunger.class).getState() || (sneak.getState() && (!MovementUtils.isMoving() || !sneak.stopMoveValue.get()) && sneak.modeValue.get().equalsIgnoreCase("MineSecure"));
+        final InventoryMove inventoryMove = (InventoryMove) LiquidBounce.moduleManager.getModule(InventoryMove.class);
+        final Sneak sneak = (Sneak) LiquidBounce.moduleManager.getModule(Sneak.class);
+        final boolean fakeSprint = (inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get()) || LiquidBounce.moduleManager.getModule(AntiHunger.class).getState() || (sneak.getState() && (!MovementUtils.isMoving() || !sneak.stopMoveValue.get()) && sneak.modeValue.get().equalsIgnoreCase("MineSecure"));
 
-            boolean sprinting = this.isSprinting() && !fakeSprint;
+        boolean sprinting = this.isSprinting() && !fakeSprint;
 
-            if (sprinting != this.serverSprintState) {
-                if (sprinting)
-                    this.sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, C0BPacketEntityAction.Action.START_SPRINTING));
-                else
-                    this.sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, C0BPacketEntityAction.Action.STOP_SPRINTING));
+        if (sprinting != this.serverSprintState) {
+            if (sprinting)
+                this.sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, C0BPacketEntityAction.Action.START_SPRINTING));
+            else
+                this.sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, C0BPacketEntityAction.Action.STOP_SPRINTING));
 
-                this.serverSprintState = sprinting;
-            }
-
-            boolean sneaking = this.isSneaking();
-
-            if (sneaking != this.serverSneakState && (!sneak.getState() || sneak.modeValue.get().equalsIgnoreCase("Legit"))) {
-                if (sneaking)
-                    this.sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, C0BPacketEntityAction.Action.START_SNEAKING));
-                else
-                    this.sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, C0BPacketEntityAction.Action.STOP_SNEAKING));
-
-                this.serverSneakState = sneaking;
-            }
-
-            if (this.isCurrentViewEntity()) {
-                float yaw = rotationYaw;
-                float pitch = rotationPitch;
-                float lastReportedYaw = RotationUtils.serverRotation.getYaw();
-                float lastReportedPitch = RotationUtils.serverRotation.getPitch();
-
-                final Derp derp = (Derp) LiquidBounce.moduleManager.getModule(Derp.class);
-                if (derp.getState()) {
-                    float[] rot = derp.getRotation();
-                    yaw = rot[0];
-                    pitch = rot[1];
-                }
-
-                if (RotationUtils.targetRotation != null) {
-                    yaw = RotationUtils.targetRotation.getYaw();
-                    pitch = RotationUtils.targetRotation.getPitch();
-                }
-
-                double xDiff = this.posX - this.lastReportedPosX;
-                double yDiff = this.getEntityBoundingBox().minY - this.lastReportedPosY;
-                double zDiff = this.posZ - this.lastReportedPosZ;
-                double yawDiff = yaw - lastReportedYaw;
-                double pitchDiff = pitch - lastReportedPitch;
-                boolean moved = xDiff * xDiff + yDiff * yDiff + zDiff * zDiff > 9.0E-4D || this.positionUpdateTicks >= 20;
-                boolean rotated = yawDiff != 0.0D || pitchDiff != 0.0D;
-
-                if (this.ridingEntity == null) {
-                    if (moved && rotated) {
-                        this.sendQueue.addToSendQueue(new C03PacketPlayer.C06PacketPlayerPosLook(this.posX, this.getEntityBoundingBox().minY, this.posZ, yaw, pitch, this.onGround));
-                    } else if (moved) {
-                        this.sendQueue.addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(this.posX, this.getEntityBoundingBox().minY, this.posZ, this.onGround));
-                    } else if (rotated) {
-                        this.sendQueue.addToSendQueue(new C03PacketPlayer.C05PacketPlayerLook(yaw, pitch, this.onGround));
-                    } else {
-                        this.sendQueue.addToSendQueue(new C03PacketPlayer(this.onGround));
-                    }
-                } else {
-                    this.sendQueue.addToSendQueue(new C03PacketPlayer.C06PacketPlayerPosLook(this.motionX, -999.0D, this.motionZ, yaw, pitch, this.onGround));
-                    moved = false;
-                }
-
-                ++this.positionUpdateTicks;
-
-                if (moved) {
-                    this.lastReportedPosX = this.posX;
-                    this.lastReportedPosY = this.getEntityBoundingBox().minY;
-                    this.lastReportedPosZ = this.posZ;
-                    this.positionUpdateTicks = 0;
-                }
-
-                if (rotated) {
-                    this.lastReportedYaw = this.rotationYaw;
-                    this.lastReportedPitch = this.rotationPitch;
-                }
-            }
-
-            LiquidBounce.eventManager.callEvent(new MotionEvent(EventState.POST));
-        } catch (final Exception e) {
-            e.printStackTrace();
+            this.serverSprintState = sprinting;
         }
+
+        boolean sneaking = this.isSneaking();
+
+        if (sneaking != this.serverSneakState && (!sneak.getState() || sneak.modeValue.get().equalsIgnoreCase("Legit"))) {
+            if (sneaking)
+                this.sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, C0BPacketEntityAction.Action.START_SNEAKING));
+            else
+                this.sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, C0BPacketEntityAction.Action.STOP_SNEAKING));
+
+            this.serverSneakState = sneaking;
+        }
+
+        if (this.isCurrentViewEntity()) {
+            float yaw = rotationYaw;
+            float pitch = rotationPitch;
+            float lastReportedYaw = RotationUtils.serverRotation.getYaw();
+            float lastReportedPitch = RotationUtils.serverRotation.getPitch();
+
+            final Derp derp = (Derp) LiquidBounce.moduleManager.getModule(Derp.class);
+            if (derp.getState()) {
+                float[] rot = derp.getRotation();
+                yaw = rot[0];
+                pitch = rot[1];
+            }
+
+            if (RotationUtils.targetRotation != null) {
+                yaw = RotationUtils.targetRotation.getYaw();
+                pitch = RotationUtils.targetRotation.getPitch();
+            }
+
+            double xDiff = this.posX - this.lastReportedPosX;
+            double yDiff = this.getEntityBoundingBox().minY - this.lastReportedPosY;
+            double zDiff = this.posZ - this.lastReportedPosZ;
+            double yawDiff = yaw - lastReportedYaw;
+            double pitchDiff = pitch - lastReportedPitch;
+            boolean moved = xDiff * xDiff + yDiff * yDiff + zDiff * zDiff > 9.0E-4D || this.positionUpdateTicks >= 20;
+            boolean rotated = yawDiff != 0.0D || pitchDiff != 0.0D;
+
+            if (this.ridingEntity == null) {
+                if (moved && rotated) {
+                    this.sendQueue.addToSendQueue(new C03PacketPlayer.C06PacketPlayerPosLook(this.posX, this.getEntityBoundingBox().minY, this.posZ, yaw, pitch, this.onGround));
+                } else if (moved) {
+                    this.sendQueue.addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(this.posX, this.getEntityBoundingBox().minY, this.posZ, this.onGround));
+                } else if (rotated) {
+                    this.sendQueue.addToSendQueue(new C03PacketPlayer.C05PacketPlayerLook(yaw, pitch, this.onGround));
+                } else {
+                    this.sendQueue.addToSendQueue(new C03PacketPlayer(this.onGround));
+                }
+            } else {
+                this.sendQueue.addToSendQueue(new C03PacketPlayer.C06PacketPlayerPosLook(this.motionX, -999.0D, this.motionZ, yaw, pitch, this.onGround));
+                moved = false;
+            }
+
+            ++this.positionUpdateTicks;
+
+            if (moved) {
+                this.lastReportedPosX = this.posX;
+                this.lastReportedPosY = this.getEntityBoundingBox().minY;
+                this.lastReportedPosZ = this.posZ;
+                this.positionUpdateTicks = 0;
+            }
+
+            if (rotated) {
+                this.lastReportedYaw = this.rotationYaw;
+                this.lastReportedPitch = this.rotationPitch;
+            }
+        }
+
+        LiquidBounce.eventManager.callEvent(new MotionEvent(EventState.POST));
+
+        ci.cancel();
     }
 
     @Inject(method = "swingItem", at = @At("HEAD"), cancellable = true)
@@ -235,19 +233,23 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         if (noSwing.getState()) {
             callbackInfo.cancel();
 
-            if (!noSwing.getServerSideValue().get())
+            if (!noSwing.getServerSideValue().get()) {
                 this.sendQueue.addToSendQueue(new C0APacketAnimation());
+            }
         }
     }
 
     @Inject(method = "pushOutOfBlocks", at = @At("HEAD"), cancellable = true)
     private void onPushOutOfBlocks(CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
         PushOutEvent event = new PushOutEvent();
-        if (this.noClip) event.cancelEvent();
+        if (this.noClip) {
+            event.cancelEvent();
+        }
         LiquidBounce.eventManager.callEvent(event);
 
-        if (event.isCancelled())
+        if (event.isCancelled()) {
             callbackInfoReturnable.setReturnValue(false);
+        }
     }
 
     /**
@@ -272,8 +274,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         this.prevTimeInPortal = this.timeInPortal;
 
         if (this.inPortal) {
-            if (this.mc.currentScreen != null && !this.mc.currentScreen.doesGuiPauseGame()
-                    && !LiquidBounce.moduleManager.getModule(PortalMenu.class).getState()) {
+            if (this.mc.currentScreen != null && !this.mc.currentScreen.doesGuiPauseGame() && !LiquidBounce.moduleManager.getModule(PortalMenu.class).getState()) {
                 this.mc.displayGuiScreen(null);
             }
 
@@ -422,8 +423,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         MoveEvent moveEvent = new MoveEvent(x, y, z);
         LiquidBounce.eventManager.callEvent(moveEvent);
 
-        if (moveEvent.isCancelled())
-            return;
+        if (moveEvent.isCancelled()) return;
 
         x = moveEvent.getX();
         y = moveEvent.getY();
