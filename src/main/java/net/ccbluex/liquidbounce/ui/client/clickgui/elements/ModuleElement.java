@@ -38,16 +38,19 @@ public class ModuleElement extends ButtonElement {
     }
 
     @Override
-    public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
+    public boolean mouseClicked(int mouseX, int mouseY, int mouseButton) {
         if(mouseButton == 0 && isHovering(mouseX, mouseY) && isVisible()) {
             module.toggle();
             mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("gui.button.press"), 1.0F));
+            return true;
         }
 
         if(mouseButton == 1 && isHovering(mouseX, mouseY) && isVisible()) {
             showSettings = !showSettings;
             mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("gui.button.press"), 1.0F));
+            return true;
         }
+        return false;
     }
 
     public Module getModule() {
