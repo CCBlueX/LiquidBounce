@@ -23,10 +23,12 @@ public class Element extends MinecraftInstance {
     public void drawScreen(int mouseX, int mouseY, float button) {
     }
 
-    public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
+    public boolean mouseClicked(int mouseX, int mouseY, int mouseButton) {
+        return false;
     }
 
-    public void mouseReleased(int mouseX, int mouseY, int state) {
+    public boolean mouseReleased(int mouseX, int mouseY, int state) {
+        return false;
     }
 
     public int getX() {

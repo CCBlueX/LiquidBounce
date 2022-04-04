@@ -97,32 +97,40 @@ public abstract class Panel extends MinecraftInstance {
         }
     }
 
-    public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
+    public boolean mouseClicked(int mouseX, int mouseY, int mouseButton) {
         if(!visible)
-            return;
+            return false;
 
         if(mouseButton == 1 && isHovering(mouseX, mouseY)) {
             open = !open;
             mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("random.bow"), 1.0F));
-            return;
+            return true;
         }
 
-        for(final Element element : elements)
-            if(element.getY() <= getY() + fade)
-                element.mouseClicked(mouseX, mouseY, mouseButton);
+        for(final Element element : elements) {
+            if(element.getY() <= getY() + fade && element.mouseClicked(mouseX, mouseY, mouseButton)) {
+                return true;
+            }
+        }
+        return false;
     }
 
-    public void mouseReleased(int mouseX, int mouseY, int state) {
+    public boolean mouseReleased(int mouseX, int mouseY, int state) {
         if(!visible)
-            return;
+            return false;
 
         drag = false;
 
         if(!open)
-            return;
+            return false;
 
-        for(final Element element : elements)
-            element.mouseReleased(mouseX, mouseY, state);
+
+        for(final Element element : elements) {
+            if(element.getY() <= getY() + fade && element.mouseReleased(mouseX, mouseY, state)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean handleScroll(int mouseX, int mouseY, int wheel) {
