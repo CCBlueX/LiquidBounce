@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
+import net.ccbluex.liquidbounce.utils.extensions.rotation
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -41,30 +42,29 @@ class Aimbot : Module() {
         if (onClickValue.get() && clickTimer.hasTimePassed(500L))
             return
 
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.thePlayer ?: return
 
         val range = rangeValue.get()
-        val entity = mc.theWorld!!.loadedEntityList
+        val entity = mc.theWorld.loadedEntityList
                 .filter {
-                    EntityUtils.isSelected(it, true) && thePlayer.canEntityBeSeen(it) &&
-                            thePlayer.getDistanceToEntityBox(it) <= range && RotationUtils.getRotationDifference(it) <= fovValue.get()
+                    EntityUtils.isSelected(it, true) && player.canEntityBeSeen(it) &&
+                            player.getDistanceToEntityBox(it) <= range && RotationUtils.getRotationDifference(it) <= fovValue.get()
                 }
                 .minByOrNull { RotationUtils.getRotationDifference(it) } ?: return
 
         if (!lockValue.get() && RotationUtils.isFaced(entity, range.toDouble()))
             return
 
-        val rotation = RotationUtils.limitAngleChange(
-                Rotation(thePlayer.rotationYaw, thePlayer.rotationPitch),
-                if (centerValue.get())
-                    RotationUtils.toRotation(RotationUtils.getCenter(entity.entityBoundingBox), true)
-                else
-                    RotationUtils.searchCenter(entity.entityBoundingBox, false, false, true,
-                            false, range).rotation,
-                (turnSpeedValue.get() + Math.random()).toFloat()
-        )
+        val boundingBox = entity.entityBoundingBox ?: return
 
-        rotation.toPlayer(thePlayer)
+        val destinationRotation = if (centerValue.get()) {
+            RotationUtils.toRotation(RotationUtils.getCenter(boundingBox) ?: return, true)
+        } else {
+            RotationUtils.searchCenter(boundingBox, false, false, true, false, range).rotation
+        }
+        val rotation = RotationUtils.limitAngleChange(player.rotation, destinationRotation, (turnSpeedValue.get() + Math.random()).toFloat())
+
+        rotation.toPlayer(player)
 
         if (jitterValue.get()) {
             val yaw = Random.nextBoolean()
@@ -73,14 +73,14 @@ class Aimbot : Module() {
             val pitchNegative = Random.nextBoolean()
 
             if (yaw)
-                thePlayer.rotationYaw += if (yawNegative) -RandomUtils.nextFloat(0F, 1F) else RandomUtils.nextFloat(0F, 1F)
+                player.rotationYaw += if (yawNegative) -RandomUtils.nextFloat(0F, 1F) else RandomUtils.nextFloat(0F, 1F)
 
             if (pitch) {
-                thePlayer.rotationPitch += if (pitchNegative) -RandomUtils.nextFloat(0F, 1F) else RandomUtils.nextFloat(0F, 1F)
-                if (thePlayer.rotationPitch > 90)
-                    thePlayer.rotationPitch = 90F
-                else if (thePlayer.rotationPitch < -90)
-                    thePlayer.rotationPitch = -90F
+                player.rotationPitch += if (pitchNegative) -RandomUtils.nextFloat(0F, 1F) else RandomUtils.nextFloat(0F, 1F)
+                if (player.rotationPitch > 90)
+                    player.rotationPitch = 90F
+                else if (player.rotationPitch < -90)
+                    player.rotationPitch = -90F
             }
         }
     }

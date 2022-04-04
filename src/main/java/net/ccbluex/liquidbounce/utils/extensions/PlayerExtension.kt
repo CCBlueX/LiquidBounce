@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.utils.extensions
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
 import net.minecraft.entity.Entity
 import net.minecraft.entity.boss.EntityDragon
@@ -72,3 +73,6 @@ fun EntityPlayer.isClientFriend(): Boolean {
 
     return LiquidBounce.fileManager.friendsConfig.isFriend(stripColor(entityName))
 }
+
+val Entity.rotation: Rotation
+    get() = Rotation(rotationYaw, rotationPitch)
