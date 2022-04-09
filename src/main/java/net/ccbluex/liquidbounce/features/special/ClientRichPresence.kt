@@ -93,7 +93,7 @@ class ClientRichPresence : MinecraftInstance() {
 
         // Check assets contains logo and set logo
         if (assets.containsKey("logo"))
-            builder.setLargeImage(assets["logo"], "MC ${LiquidBounce.MINECRAFT_VERSION} - ${LiquidBounce.CLIENT_NAME} b${LiquidBounce.CLIENT_VERSION}")
+            builder.setLargeImage(assets["logo"], "MC ${LiquidBounce.MINECRAFT_VERSION} - ${LiquidBounce.CLIENT_NAME} ${LiquidBounce.CLIENT_VERSION}")
 
         // Check user is ingame
         if (mc.thePlayer != null) {

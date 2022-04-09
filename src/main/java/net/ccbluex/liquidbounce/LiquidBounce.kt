@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.ui.client.hud.HUD
 import net.ccbluex.liquidbounce.ui.client.hud.HUD.Companion.createDefault
 import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.update.UpdateInfo.gitInfo
 import net.ccbluex.liquidbounce.utils.ClassUtils.hasForge
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.InventoryUtils
@@ -42,11 +43,16 @@ object LiquidBounce {
 
     // Client information
     const val CLIENT_NAME = "LiquidBounce"
-    const val CLIENT_VERSION = 73
+    @JvmField
+    val CLIENT_VERSION: String = gitInfo["git.build.version"]?.toString() ?: "unknown"
+    var CLIENT_VERSION_INT = CLIENT_VERSION.substring(1).toIntOrNull() ?: 0 // version format: "b<VERSION>" on legacy
+    @JvmField
+    val CLIENT_COMMIT: String = gitInfo["git.commit.id.abbrev"]?.let { "git-$it" } ?: "unknown"
     const val IN_DEV = true
     const val CLIENT_CREATOR = "CCBlueX"
     const val MINECRAFT_VERSION = "1.8.9"
     const val CLIENT_CLOUD = "https://cloud.liquidbounce.net/LiquidBounce"
+    const val CLIENT_API = "https://api.liquidbounce.net/api/v1"
 
     var isStarting = false
 
@@ -62,9 +68,6 @@ object LiquidBounce {
 
     lateinit var clickGui: ClickGui
 
-    // Update information
-    var latestVersion = 0
-
     // Menu Background
     var background: ResourceLocation? = null
 
@@ -77,7 +80,7 @@ object LiquidBounce {
     fun startClient() {
         isStarting = true
 
-        ClientUtils.getLogger().info("Starting $CLIENT_NAME b$CLIENT_VERSION, by $CLIENT_CREATOR")
+        ClientUtils.getLogger().info("Starting $CLIENT_NAME $CLIENT_VERSION $CLIENT_COMMIT, by $CLIENT_CREATOR")
 
         // Create file manager
         fileManager = FileManager()
@@ -148,20 +151,6 @@ object LiquidBounce {
 
         // Disable optifine fastrender
         ClientUtils.disableFastRender()
-
-        try {
-            // Read versions json from cloud
-            val jsonObj = JsonParser()
-                    .parse(HttpUtils.get("$CLIENT_CLOUD/versions.json"))
-
-            // Check json is valid object and has current minecraft version
-            if (jsonObj is JsonObject && jsonObj.has(MINECRAFT_VERSION)) {
-                // Get official latest client version
-                latestVersion = jsonObj[MINECRAFT_VERSION].asInt
-            }
-        } catch (exception: Throwable) { // Print throwable to console
-            ClientUtils.getLogger().error("Failed to check for updates.", exception)
-        }
 
         // Load generators
         GuiAltManager.loadGenerators()

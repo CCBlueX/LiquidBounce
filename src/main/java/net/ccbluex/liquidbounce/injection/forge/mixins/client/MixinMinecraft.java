@@ -15,6 +15,7 @@ import net.ccbluex.liquidbounce.injection.forge.SplashProgressLock;
 import net.ccbluex.liquidbounce.ui.client.GuiMainMenu;
 import net.ccbluex.liquidbounce.ui.client.GuiUpdate;
 import net.ccbluex.liquidbounce.ui.client.GuiWelcome;
+import net.ccbluex.liquidbounce.update.UpdateInfo;
 import net.ccbluex.liquidbounce.utils.CPSCounter;
 import net.ccbluex.liquidbounce.utils.render.IconUtils;
 import net.ccbluex.liquidbounce.utils.render.MiniMapRegister;
@@ -119,16 +120,16 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "startGame", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;displayGuiScreen(Lnet/minecraft/client/gui/GuiScreen;)V", shift = At.Shift.AFTER))
     private void afterMainScreen(CallbackInfo callbackInfo) {
-//        if (!LiquidBounce.scriptManager.getLateInitScripts().isEmpty())
-//            LiquidBounce.wrapper.getMinecraft().displayGuiScreen(LiquidBounce.wrapper.getClassProvider().wrapGuiScreen(new GuiUnsignedScripts()));
-        if (LiquidBounce.fileManager.firstStart) displayGuiScreen(new GuiWelcome());
-        else if (LiquidBounce.INSTANCE.getLatestVersion() > LiquidBounce.CLIENT_VERSION - (LiquidBounce.IN_DEV ? 1 : 0))
+        if (LiquidBounce.fileManager.firstStart) {
+            displayGuiScreen(new GuiWelcome());
+        } else if (!UpdateInfo.INSTANCE.hasUpdate()) {
             displayGuiScreen(new GuiUpdate());
+        }
     }
 
     @Inject(method = "createDisplay", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/Display;setTitle(Ljava/lang/String;)V", shift = At.Shift.AFTER))
     private void createDisplay(CallbackInfo callbackInfo) {
-        Display.setTitle(LiquidBounce.CLIENT_NAME + " b" + LiquidBounce.CLIENT_VERSION + " | " + LiquidBounce.MINECRAFT_VERSION + (LiquidBounce.IN_DEV ? " | DEVELOPMENT BUILD" : ""));
+        Display.setTitle(LiquidBounce.CLIENT_NAME + " " + LiquidBounce.CLIENT_VERSION + " " +  LiquidBounce.CLIENT_COMMIT + "  | " + LiquidBounce.MINECRAFT_VERSION + (LiquidBounce.IN_DEV ? " | DEVELOPMENT BUILD" : ""));
     }
 
     @Inject(method = "displayGuiScreen", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;currentScreen:Lnet/minecraft/client/gui/GuiScreen;", shift = At.Shift.AFTER))
