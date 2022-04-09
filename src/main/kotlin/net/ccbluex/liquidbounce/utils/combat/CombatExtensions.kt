@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.utils.combat
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.features.misc.FriendManager
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleTeams
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
@@ -60,29 +61,6 @@ class EnemyConfigurable : Configurable("Enemies") {
     // Friends (client friends - other players) should be also considered as enemy
     val teamMates by boolean("TeamMates", false)
 
-    // Should bots be blocked to bypass anti cheat techniques
-    val antibot = tree(AntiBotConfigurable())
-
-    class AntiBotConfigurable : Configurable("AntiBot") {
-
-        /**
-         * Should always be enabled. A good antibot should never detect a real player as a bot (on default settings).
-         */
-        val enabled by boolean("Enabled", true)
-
-        /**
-         * Check if player might be a bot
-         */
-        fun isBot(player: ClientPlayerEntity): Boolean {
-            if (!enabled) {
-                return false
-            }
-
-            return false
-        }
-
-    }
-
     init {
         ConfigSystem.root(this)
     }
@@ -106,7 +84,7 @@ class EnemyConfigurable : Configurable("Enemies") {
                     }
 
                     // Check if player might be a bot
-                    if (suspect is ClientPlayerEntity && antibot.isBot(suspect)) {
+                    if (suspect is ClientPlayerEntity && ModuleAntiBot.isBot(suspect)) {
                         return false
                     }
 
@@ -130,18 +108,13 @@ class EnemyConfigurable : Configurable("Enemies") {
 fun Entity.shouldBeShown(enemyConf: EnemyConfigurable = globalEnemyConfigurable) = enemyConf.isTargeted(this)
 
 fun Entity.shouldBeAttacked(enemyConf: EnemyConfigurable = globalEnemyConfigurable) = enemyConf.isTargeted(
-    this,
-    true
+    this, true
 )
 
 /**
  * Find the best emeny in current world in a specific range.
  */
 fun ClientWorld.findEnemy(
-    range: Float,
-    player: Entity = mc.player!!,
-    enemyConf: EnemyConfigurable = globalEnemyConfigurable
-) = entities.filter { it.shouldBeAttacked(enemyConf) }
-    .map { Pair(it, it.boxedDistanceTo(player)) }
-    .filter { (_, distance) -> distance <= range }
-    .minByOrNull { (_, distance) -> distance }
+    range: Float, player: Entity = mc.player!!, enemyConf: EnemyConfigurable = globalEnemyConfigurable
+) = entities.filter { it.shouldBeAttacked(enemyConf) }.map { Pair(it, it.boxedDistanceTo(player)) }
+    .filter { (_, distance) -> distance <= range }.minByOrNull { (_, distance) -> distance }
