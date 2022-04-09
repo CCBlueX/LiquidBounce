@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleTeams
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
-import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
@@ -84,7 +83,7 @@ class EnemyConfigurable : Configurable("Enemies") {
                     }
 
                     // Check if player might be a bot
-                    if (suspect is ClientPlayerEntity && ModuleAntiBot.isBot(suspect)) {
+                    if (ModuleAntiBot.isBot(suspect)) {
                         return false
                     }
 
