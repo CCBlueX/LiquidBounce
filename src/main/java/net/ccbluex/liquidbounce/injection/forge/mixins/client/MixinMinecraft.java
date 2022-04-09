@@ -122,7 +122,7 @@ public abstract class MixinMinecraft {
     private void afterMainScreen(CallbackInfo callbackInfo) {
         if (LiquidBounce.fileManager.firstStart) {
             displayGuiScreen(new GuiWelcome());
-        } else if (!UpdateInfo.INSTANCE.hasUpdate()) {
+        } else if (UpdateInfo.INSTANCE.hasUpdate()) {
             displayGuiScreen(new GuiUpdate());
         }
     }
