@@ -35,11 +35,14 @@ import net.minecraft.block.Block
 import net.minecraft.block.Blocks
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
+import net.minecraft.network.packet.s2c.play.BlockEventS2CPacket
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
+import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.RaycastContext
 
@@ -62,8 +65,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     private val targets by blocks("Target", hashSetOf(Blocks.DRAGON_EGG))
     private val action by enumChoice("Action", DestroyAction.USE, DestroyAction.values())
     private val throughWalls by boolean("ThroughWalls", false)
-
-//    private val instant by boolean("Instant", false) // TODO: Instant option
+    private val instant by boolean("Instant", false) // TODO: Instant option
     private val delay by int("SwitchDelay", 0, 0..20)
 
     // Rotation
@@ -83,6 +85,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
             return@repeatable
         }
 
+
         val curr = currentTarget ?: return@repeatable
         val serverRotation = RotationManager.serverRotation ?: return@repeatable
 
@@ -98,6 +101,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         }
 
         if (curr.action == DestroyAction.USE) {
+
             if (interaction.interactBlock(
                     player,
                     mc.world!!,
@@ -117,14 +121,24 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
             if (!blockPos.getState()!!.isAir) {
                 val direction = rayTraceResult.side
 
-                if (mc.interactionManager!!.updateBlockBreakingProgress(blockPos, direction)) {
-                    if (visualSwing) {
-                        player.swingHand(Hand.MAIN_HAND)
-                    } else {
-                        network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
+                if (instant) {
+                    mc.networkHandler?.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, Direction.DOWN))
+                    swingHand()
+                    network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, Direction.DOWN))
+                } else {
+                    if (mc.interactionManager!!.updateBlockBreakingProgress(blockPos, direction)) {
+                        swingHand()
                     }
                 }
             }
+        }
+    }
+
+    private fun swingHand() {
+        if (visualSwing) {
+            player.swingHand(Hand.MAIN_HAND)
+        } else {
+            network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
         }
     }
 
