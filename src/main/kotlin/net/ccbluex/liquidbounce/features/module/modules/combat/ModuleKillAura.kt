@@ -193,7 +193,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 ))
             }, cps)
 
-            if (clicks > 0) {
+            repeat(clicks) {
                 if (simulateInventoryClosing && isInInventoryScreen) {
                     network.sendPacket(CloseHandledScreenC2SPacket(0))
                 }

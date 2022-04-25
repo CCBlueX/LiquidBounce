@@ -45,7 +45,7 @@ object ModuleTrigger : Module("Trigger", Category.COMBAT) {
         if (crosshair is EntityHitResult && crosshair.entity.shouldBeAttacked()) {
             val clicks = cpsTimer.clicks(condition = { !cooldown || player.getAttackCooldownProgress(0.0f) >= 1.0f }, cps)
 
-            if (clicks > 0) {
+            repeat(clicks) {
                 interaction.attackEntity(player, crosshair.entity)
                 player.swingHand(Hand.MAIN_HAND)
             }
