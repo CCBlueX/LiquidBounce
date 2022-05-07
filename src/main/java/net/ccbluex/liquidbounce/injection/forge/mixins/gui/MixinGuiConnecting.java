@@ -9,7 +9,6 @@ import com.mojang.authlib.GameProfile;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.ServerUtils;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
-import net.mcleaks.MCLeaks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiDisconnected;
 import net.minecraft.client.gui.GuiScreen;
@@ -41,79 +40,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 @SideOnly(Side.CLIENT)
 public abstract class MixinGuiConnecting extends GuiScreen {
 
-    @Shadow
-    private NetworkManager networkManager;
-
-    @Shadow
-    @Final
-    private static Logger logger;
-
-    @Shadow
-    private boolean cancel;
-
-    @Shadow
-    @Final
-    private GuiScreen previousGuiScreen;
-
-    @Shadow
-    @Final
-    private static AtomicInteger CONNECTION_ID;
-
     @Inject(method = "connect", at = @At("HEAD"))
     private void headConnect(final String ip, final int port, CallbackInfo callbackInfo) {
         ServerUtils.serverData = new ServerData("", ip + ":" + port, false);
-    }
-
-    @Inject(method = "connect", at = @At(value = "NEW", target = "net/minecraft/network/login/client/C00PacketLoginStart"), cancellable = true)
-    private void mcLeaks(CallbackInfo callbackInfo) {
-        if(MCLeaks.isAltActive()) {
-            networkManager.sendPacket(new C00PacketLoginStart(new GameProfile(null, MCLeaks.getSession().getUsername())));
-            callbackInfo.cancel();
-        }
-    }
-
-    /**
-     * @author CCBlueX
-     */
-    @Overwrite
-    private void connect(final String ip, final int port) {
-        logger.info("Connecting to " + ip + ", " + port);
-
-        new Thread(() -> {
-            InetAddress inetaddress = null;
-
-            try {
-                if(cancel) {
-                    return;
-                }
-
-                inetaddress = InetAddress.getByName(ip);
-                networkManager = NetworkManager.createNetworkManagerAndConnect(inetaddress, port, mc.gameSettings.isUsingNativeTransport());
-                networkManager.setNetHandler(new NetHandlerLoginClient(networkManager, mc, previousGuiScreen));
-                networkManager.sendPacket(new C00Handshake(47, ip, port, EnumConnectionState.LOGIN, true));
-                networkManager.sendPacket(new C00PacketLoginStart(MCLeaks.isAltActive() ? new GameProfile(null, MCLeaks.getSession().getUsername()) : mc.getSession().getProfile()));
-            }catch(UnknownHostException unknownhostexception) {
-                if(cancel)
-                    return;
-
-                logger.error("Couldn't connect to server", unknownhostexception);
-                mc.displayGuiScreen(new GuiDisconnected(previousGuiScreen, "connect.failed", new ChatComponentTranslation("disconnect.genericReason", "Unknown host")));
-            }catch(Exception exception) {
-                if(cancel) {
-                    return;
-                }
-
-                logger.error("Couldn't connect to server", exception);
-                String s = exception.toString();
-
-                if(inetaddress != null) {
-                    String s1 = inetaddress.toString() + ":" + port;
-                    s = s.replaceAll(s1, "");
-                }
-
-                mc.displayGuiScreen(new GuiDisconnected(previousGuiScreen, "connect.failed", new ChatComponentTranslation("disconnect.genericReason", s)));
-            }
-        }, "Server Connector #" + CONNECTION_ID.incrementAndGet()).start();
     }
 
     /**

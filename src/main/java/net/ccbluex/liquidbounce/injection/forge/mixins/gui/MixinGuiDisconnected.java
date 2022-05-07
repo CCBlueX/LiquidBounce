@@ -5,25 +5,32 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
+import com.google.gson.JsonObject;
 import com.mojang.authlib.Agent;
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
 import com.mojang.authlib.yggdrasil.YggdrasilUserAuthentication;
 import com.thealtening.AltService;
 import com.thealtening.api.TheAltening;
 import com.thealtening.api.data.AccountData;
+import kotlin.Unit;
+import kotlin.jvm.functions.Function0;
+import kotlin.jvm.functions.Function1;
+import me.liuli.elixir.account.CrackedAccount;
+import me.liuli.elixir.account.MinecraftAccount;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.SessionEvent;
 import net.ccbluex.liquidbounce.features.special.AntiForge;
 import net.ccbluex.liquidbounce.features.special.AutoReconnect;
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager;
-import net.ccbluex.liquidbounce.ui.client.altmanager.sub.altgenerator.GuiTheAltening;
+import net.ccbluex.liquidbounce.ui.client.altmanager.menus.altgenerator.GuiTheAltening;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.ServerUtils;
-import net.ccbluex.liquidbounce.utils.login.LoginUtils;
-import net.ccbluex.liquidbounce.utils.login.MinecraftAccount;
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiDisconnected;
+import net.minecraft.client.gui.GuiMainMenu;
+import net.minecraft.client.gui.GuiMultiplayer;
+import net.minecraft.util.IChatComponent;
 import net.minecraft.util.Session;
 import net.minecraftforge.fml.client.config.GuiSlider;
 import org.spongepowered.asm.mixin.Mixin;
@@ -76,7 +83,7 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen {
 
                     try {
                         final AccountData account = theAltening.getAccountData();
-                        GuiAltManager.altService.switchService(AltService.EnumAltService.THEALTENING);
+                        GuiAltManager.Companion.getAltService().switchService(AltService.EnumAltService.THEALTENING);
 
                         final YggdrasilUserAuthentication yggdrasilUserAuthentication = new YggdrasilUserAuthentication(new YggdrasilAuthenticationService(Proxy.NO_PROXY, ""), Agent.MINECRAFT);
                         yggdrasilUserAuthentication.setUsername(account.getToken());
@@ -93,14 +100,32 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen {
                 }
 
                 final List<MinecraftAccount> accounts = LiquidBounce.fileManager.accountsConfig.getAccounts();
-                if (accounts.isEmpty()) break;
-
+                if (accounts.isEmpty())
+                    break;
                 final MinecraftAccount minecraftAccount = accounts.get(new Random().nextInt(accounts.size()));
-                GuiAltManager.login(minecraftAccount);
-                ServerUtils.connectToLastServer();
+
+                GuiAltManager.Companion.login(minecraftAccount, () -> {
+                    LiquidBounce.eventManager.callEvent(new SessionEvent());
+                    ServerUtils.connectToLastServer();
+                    return null;
+                }, e -> {
+                    final JsonObject jsonObject = new JsonObject();
+                    jsonObject.addProperty("text", e.getMessage());
+
+                    mc.displayGuiScreen(new GuiDisconnected(new GuiMultiplayer(new GuiMainMenu()), e.getMessage(), IChatComponent.Serializer.jsonToComponent(jsonObject.toString())));
+                    return null;
+                }, () -> null);
+
+
                 break;
             case 4:
-                LoginUtils.loginCracked(RandomUtils.randomString(RandomUtils.nextInt(5, 16)));
+                final CrackedAccount crackedAccount = new CrackedAccount();
+                crackedAccount.setName(RandomUtils.randomString(RandomUtils.nextInt(5, 16)));
+                crackedAccount.update();
+
+                mc.session = new Session(crackedAccount.getSession().getUsername(), crackedAccount.getSession().getUuid(),
+                        crackedAccount.getSession().getToken(), crackedAccount.getSession().getType());
+                LiquidBounce.eventManager.callEvent(new SessionEvent());
                 ServerUtils.connectToLastServer();
                 break;
             case 5:

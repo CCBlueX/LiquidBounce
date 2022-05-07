@@ -19,40 +19,9 @@ import net.minecraft.util.Session
 import java.net.Proxy
 import java.util.*
 
+fun me.liuli.elixir.compat.Session.intoMinecraftSession(): Session = Session(username, uuid, token, type)
+
 object LoginUtils : MinecraftInstance() {
-
-    @JvmStatic
-    fun login(username: String?, password: String?): LoginResult {
-        val userAuthentication = YggdrasilAuthenticationService(Proxy.NO_PROXY, "").createUserAuthentication(Agent.MINECRAFT) as YggdrasilUserAuthentication
-
-        userAuthentication.setUsername(username)
-        userAuthentication.setPassword(password)
-
-        return try {
-            userAuthentication.logIn()
-            mc.session = Session(userAuthentication.selectedProfile.name,
-                    userAuthentication.selectedProfile.id.toString(), userAuthentication.authenticatedToken, "mojang")
-            LiquidBounce.eventManager.callEvent(SessionEvent())
-            LoginResult.LOGGED
-        } catch (exception: AuthenticationUnavailableException) {
-            LoginResult.NO_CONTACT
-        } catch (exception: AuthenticationException) {
-            val message = exception.message!!
-            when {
-                message.contains("invalid username or password.", ignoreCase = true) -> LoginResult.INVALID_ACCOUNT_DATA
-                message.contains("account migrated", ignoreCase = true) -> LoginResult.MIGRATED
-                else -> LoginResult.NO_CONTACT
-            }
-        } catch (exception: NullPointerException) {
-            LoginResult.WRONG_PASSWORD
-        }
-    }
-
-    @JvmStatic
-    fun loginCracked(username: String?) {
-        mc.session = Session(username!!, getUUID(username), "-", "legacy")
-        LiquidBounce.eventManager.callEvent(SessionEvent())
-    }
 
     @JvmStatic
     fun loginSessionId(sessionId: String): LoginResult {
@@ -83,6 +52,7 @@ object LoginUtils : MinecraftInstance() {
     }
 
     enum class LoginResult {
-        WRONG_PASSWORD, NO_CONTACT, INVALID_ACCOUNT_DATA, MIGRATED, LOGGED, FAILED_PARSE_TOKEN
+        INVALID_ACCOUNT_DATA, LOGGED, FAILED_PARSE_TOKEN
     }
+
 }

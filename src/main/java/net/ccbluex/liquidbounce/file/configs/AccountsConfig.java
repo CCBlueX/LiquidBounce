@@ -6,10 +6,12 @@
 package net.ccbluex.liquidbounce.file.configs;
 
 import com.google.gson.*;
+import me.liuli.elixir.account.CrackedAccount;
+import me.liuli.elixir.account.MinecraftAccount;
+import me.liuli.elixir.account.MojangAccount;
+import me.liuli.elixir.manage.AccountSerializer;
 import net.ccbluex.liquidbounce.file.FileConfig;
 import net.ccbluex.liquidbounce.file.FileManager;
-import net.ccbluex.liquidbounce.utils.ClientUtils;
-import net.ccbluex.liquidbounce.utils.login.MinecraftAccount;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -35,53 +37,43 @@ public class AccountsConfig extends FileConfig {
     @Override
     protected void loadConfig() throws IOException {
         clearAccounts();
-        try {
-            final JsonElement jsonElement = new JsonParser().parse(new BufferedReader(new FileReader(getFile())));
 
-            if (jsonElement instanceof JsonNull)
-                return;
+        final JsonElement jsonElement = new JsonParser().parse(new BufferedReader(new FileReader(getFile())));
 
-            for (final JsonElement accountElement : jsonElement.getAsJsonArray()) {
-                JsonObject accountObject = accountElement.getAsJsonObject();
+        if (jsonElement instanceof JsonNull)
+            return;
+
+        for (final JsonElement accountElement : jsonElement.getAsJsonArray()) {
+            final JsonObject accountObject = accountElement.getAsJsonObject();
+
+            try{
+                // Import Elixir account format
+
+                accounts.add(AccountSerializer.INSTANCE.fromJson(accountElement.getAsJsonObject()));
+            } catch (JsonSyntaxException | IllegalStateException e) {
+                // Import old account format
+
                 JsonElement name = accountObject.get("name");
                 JsonElement password = accountObject.get("password");
                 JsonElement inGameName = accountObject.get("inGameName");
 
-                if (inGameName == null || inGameName.isJsonNull())
-                    addAccount(name.getAsString(), password.getAsString());
-                else if (inGameName.isJsonNull() && password.isJsonNull())
-                    addAccount(name.getAsString());
-                else
-                    addAccount(name.getAsString(), accountObject.get("password").getAsString(), accountObject.get("inGameName").getAsString());
+                if (inGameName.isJsonNull() && password.isJsonNull()) {
+                    final MojangAccount mojangAccount = new MojangAccount();
+
+                    mojangAccount.setEmail(name.getAsString());
+                    mojangAccount.setName(inGameName.getAsString());
+                    mojangAccount.setPassword(password.getAsString());
+
+                    accounts.add(mojangAccount);
+                } else {
+                    final CrackedAccount crackedAccount = new CrackedAccount();
+
+                    crackedAccount.setName(name.getAsString());
+
+                    accounts.add(crackedAccount);
+                }
             }
-
-        } catch (JsonSyntaxException | IllegalStateException ex) {
-            //When the JSON Parse fail, the client try to load and update the old config
-            ClientUtils.getLogger().info("[FileManager] Try to load old Accounts config...");
-            final List<String> accountList = new Gson().fromJson(new BufferedReader(new FileReader(getFile())), List.class);
-
-            if (accountList == null)
-                return;
-
-            accounts.clear();
-
-            for (final String account : accountList) {
-                final String[] information = account.split(":");
-
-                if (information.length >= 3)
-                    accounts.add(new MinecraftAccount(information[0], information[1], information[2]));
-                else if (information.length == 2)
-                    accounts.add(new MinecraftAccount(information[0], information[1]));
-                else
-                    accounts.add(new MinecraftAccount(information[0]));
-            }
-            ClientUtils.getLogger().info("[FileManager] Loaded old Accounts config...");
-
-            //Save the accounts into a new valid JSON file
-            saveConfig();
-            ClientUtils.getLogger().info("[FileManager] Saved Accounts to new config...");
         }
-
     }
 
     /**
@@ -94,11 +86,7 @@ public class AccountsConfig extends FileConfig {
         final JsonArray jsonArray = new JsonArray();
 
         for (final MinecraftAccount minecraftAccount : accounts) {
-            JsonObject friendObject = new JsonObject();
-            friendObject.addProperty("name", minecraftAccount.getName());
-            friendObject.addProperty("password", minecraftAccount.getPassword());
-            friendObject.addProperty("inGameName", minecraftAccount.getAccountName());
-            jsonArray.add(friendObject);
+            jsonArray.add(AccountSerializer.INSTANCE.toJson(minecraftAccount));
         }
 
         final PrintWriter printWriter = new PrintWriter(new FileWriter(getFile()));
@@ -111,11 +99,14 @@ public class AccountsConfig extends FileConfig {
      *
      * @param name of account
      */
-    public void addAccount(final String name) {
-        if (accountExists(name))
+    public void addCrackedAccount(final String name) {
+        final CrackedAccount crackedAccount = new CrackedAccount();
+        crackedAccount.setName(name);
+
+        if (accountExists(crackedAccount))
             return;
 
-        accounts.add(new MinecraftAccount(name));
+        accounts.add(crackedAccount);
     }
 
     /**
@@ -124,24 +115,22 @@ public class AccountsConfig extends FileConfig {
      * @param name     of account
      * @param password of password
      */
-    public void addAccount(final String name, final String password) {
-        if (accountExists(name))
+    public void addMojangAccount(final String name, final String password) {
+        final MojangAccount mojangAccount = new MojangAccount();
+        mojangAccount.setName(name);
+        mojangAccount.setPassword(password);
+
+        if (accountExists(mojangAccount))
             return;
 
-        accounts.add(new MinecraftAccount(name, password));
+        accounts.add(mojangAccount);
     }
 
     /**
      * Add account to config
-     *
-     * @param name     of account
-     * @param password of account
      */
-    public void addAccount(final String name, final String password, final String inGameName) {
-        if (accountExists(name))
-            return;
-
-        accounts.add(new MinecraftAccount(name, password, inGameName));
+    public void addAccount(final MinecraftAccount account) {
+        accounts.add(account);
     }
 
     /**
@@ -165,13 +154,10 @@ public class AccountsConfig extends FileConfig {
 
     /**
      * Check if the account is already added
-     *
-     * @param name of account
-     * @return if the account exists
      */
-    public boolean accountExists(final String name) {
+    public boolean accountExists(final MinecraftAccount newAccount) {
         for (final MinecraftAccount minecraftAccount : accounts)
-            if (minecraftAccount.getName().equals(name))
+            if (minecraftAccount.getClass().getName().equals(newAccount.getClass().getName()) && minecraftAccount.getName().equals(newAccount.getName()))
                 return true;
         return false;
     }

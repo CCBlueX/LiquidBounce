@@ -203,8 +203,9 @@ class LiquidChat : Module() {
 
                 if (jwtValue.get())
                     client.loginJWT(jwtToken)
-                else if (UserUtils.isValidToken(mc.session.token))
+                else if (UserUtils.isValidTokenOffline(mc.session.token)) {
                     client.loginMojang()
+                }
             } catch (cause: Exception) {
                 ClientUtils.getLogger().error("LiquidChat error", cause)
                 ClientUtils.displayChatMessage("§7[§a§lChat§7] §cError: §7${cause.javaClass.name}: ${cause.message}")

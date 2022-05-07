@@ -5,9 +5,6 @@
  */
 package net.ccbluex.liquidbounce
 
-import com.google.gson.JsonObject
-import com.google.gson.JsonParser
-
 import net.ccbluex.liquidbounce.cape.CapeAPI.registerCapeService
 
 import net.ccbluex.liquidbounce.event.ClientShutdownEvent
@@ -35,7 +32,6 @@ import net.ccbluex.liquidbounce.utils.ClassUtils.hasForge
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
-import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import net.minecraft.util.ResourceLocation
 import kotlin.concurrent.thread
 
@@ -153,7 +149,7 @@ object LiquidBounce {
         ClientUtils.disableFastRender()
 
         // Load generators
-        GuiAltManager.loadGenerators()
+        GuiAltManager.loadActiveGenerators()
 
         // Setup Discord RPC
         if (clientRichPresence.showRichPresenceValue) {

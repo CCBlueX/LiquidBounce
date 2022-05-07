@@ -3,7 +3,7 @@
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
  * https://github.com/CCBlueX/LiquidBounce/
  */
-package net.ccbluex.liquidbounce.ui.client.altmanager.sub
+package net.ccbluex.liquidbounce.ui.client.altmanager.menus
 
 import com.thealtening.AltService
 
@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.login.LoginUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
-import net.mcleaks.MCLeaks
+
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiTextField
@@ -104,8 +104,6 @@ class GuiSessionLogin(private val prevGui: GuiAltManager) : GuiScreen() {
                                     ClientUtils.getLogger().error("Something went wrong while trying to switch alt service.", e)
                                 }
                             }
-
-                            MCLeaks.remove()
 
                             "§cYour name is now §f§l${mc.session.username}§c"
                         }

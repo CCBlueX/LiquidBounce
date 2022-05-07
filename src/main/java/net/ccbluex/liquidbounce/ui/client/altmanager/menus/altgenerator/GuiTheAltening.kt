@@ -3,7 +3,7 @@
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
  * https://github.com/CCBlueX/LiquidBounce/
  */
-package net.ccbluex.liquidbounce.ui.client.altmanager.sub.altgenerator
+package net.ccbluex.liquidbounce.ui.client.altmanager.menus.altgenerator
 
 import com.mojang.authlib.Agent.MINECRAFT
 import com.mojang.authlib.exceptions.AuthenticationException
@@ -20,7 +20,7 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
-import net.mcleaks.MCLeaks
+
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiTextField
@@ -140,7 +140,6 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
                                     .selectedProfile.id.toString(),
                                     yggdrasilUserAuthentication.authenticatedToken, "mojang")
                             LiquidBounce.eventManager.callEvent(SessionEvent())
-                            MCLeaks.remove()
 
                             prevGui.status = "§aYour name is now §b§l${yggdrasilUserAuthentication.selectedProfile.name}§c."
                             mc.displayGuiScreen(prevGui)
@@ -190,7 +189,6 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
                                     .selectedProfile.id.toString(),
                                     yggdrasilUserAuthentication.authenticatedToken, "mojang")
                             LiquidBounce.eventManager.callEvent(SessionEvent())
-                            MCLeaks.remove()
 
                             prevGui.status = "§aYour name is now §b§l${yggdrasilUserAuthentication.selectedProfile.name}§c."
                             mc.displayGuiScreen(prevGui)
