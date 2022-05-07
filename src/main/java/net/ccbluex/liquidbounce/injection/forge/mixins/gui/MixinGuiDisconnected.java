@@ -12,9 +12,6 @@ import com.mojang.authlib.yggdrasil.YggdrasilUserAuthentication;
 import com.thealtening.AltService;
 import com.thealtening.api.TheAltening;
 import com.thealtening.api.data.AccountData;
-import kotlin.Unit;
-import kotlin.jvm.functions.Function0;
-import kotlin.jvm.functions.Function1;
 import me.liuli.elixir.account.CrackedAccount;
 import me.liuli.elixir.account.MinecraftAccount;
 import net.ccbluex.liquidbounce.LiquidBounce;
@@ -22,6 +19,7 @@ import net.ccbluex.liquidbounce.event.SessionEvent;
 import net.ccbluex.liquidbounce.features.special.AntiForge;
 import net.ccbluex.liquidbounce.features.special.AutoReconnect;
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager;
+import net.ccbluex.liquidbounce.ui.client.altmanager.menus.GuiLoginProgress;
 import net.ccbluex.liquidbounce.ui.client.altmanager.menus.altgenerator.GuiTheAltening;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.ServerUtils;
@@ -104,18 +102,21 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen {
                     break;
                 final MinecraftAccount minecraftAccount = accounts.get(new Random().nextInt(accounts.size()));
 
-                GuiAltManager.Companion.login(minecraftAccount, () -> {
-                    LiquidBounce.eventManager.callEvent(new SessionEvent());
-                    ServerUtils.connectToLastServer();
+                mc.displayGuiScreen(new GuiLoginProgress(minecraftAccount, () -> {
+                    mc.addScheduledTask(() -> {
+                        LiquidBounce.eventManager.callEvent(new SessionEvent());
+                        ServerUtils.connectToLastServer();
+                    });
                     return null;
                 }, e -> {
-                    final JsonObject jsonObject = new JsonObject();
-                    jsonObject.addProperty("text", e.getMessage());
+                    mc.addScheduledTask(() -> {
+                        final JsonObject jsonObject = new JsonObject();
+                        jsonObject.addProperty("text", e.getMessage());
 
-                    mc.displayGuiScreen(new GuiDisconnected(new GuiMultiplayer(new GuiMainMenu()), e.getMessage(), IChatComponent.Serializer.jsonToComponent(jsonObject.toString())));
+                        mc.displayGuiScreen(new GuiDisconnected(new GuiMultiplayer(new GuiMainMenu()), e.getMessage(), IChatComponent.Serializer.jsonToComponent(jsonObject.toString())));
+                    });
                     return null;
-                }, () -> null);
-
+                }, () -> null));
 
                 break;
             case 4:
