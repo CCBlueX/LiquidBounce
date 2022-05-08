@@ -36,7 +36,6 @@ object CapeAPI : MinecraftInstance() {
             val resourceLocation = ResourceLocation("capes/%s.png".format(name))
             val cacheFile = File(capesCache, "%s.png".format(name))
             val capeInfo = CapeInfo(resourceLocation)
-            println(url)
             val threadDownloadImageData = ThreadDownloadImageData(cacheFile, url, null, object : IImageBuffer {
 
                 override fun parseUserSkin(image: BufferedImage?): BufferedImage? {
