@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.login.UserUtils.isValidTokenOffline
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
-
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
@@ -33,11 +32,11 @@ import org.lwjgl.input.Keyboard
 import java.awt.Color
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
-import java.io.BufferedReader
-import java.io.FileReader
 import java.util.*
 import java.util.function.Consumer
+import javax.swing.JOptionPane
 import kotlin.concurrent.thread
+
 
 class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
 
@@ -62,23 +61,24 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
 
         // Setup buttons
 
-        val startPositionX = 22
-        buttonList.add(GuiButton(1, width - 80, startPositionX + 24, 70, 20, "Add"))
-        buttonList.add(GuiButton(2, width - 80, startPositionX + 24 * 2, 70, 20, "Remove"))
-        buttonList.add(GuiButton(7, width - 80, startPositionX + 24 * 3, 70, 20, "Import"))
-        buttonList.add(GuiButton(8, width - 80, startPositionX + 24 * 5, 70, 20, "Copy"))
+        val startPositionY = 22
+        buttonList.add(GuiButton(1, width - 80, startPositionY + 24, 70, 20, "Add"))
+        buttonList.add(GuiButton(2, width - 80, startPositionY + 24 * 2, 70, 20, "Remove"))
+        buttonList.add(GuiButton(7, width - 80, startPositionY + 24 * 3, 70, 20, "Import"))
+        buttonList.add(GuiButton(12, width - 80, startPositionY + 24 * 4, 70, 20, "Export"))
+        buttonList.add(GuiButton(8, width - 80, startPositionY + 24 * 5, 70, 20, "Copy"))
         buttonList.add(GuiButton(0, width - 80, height - 65, 70, 20, "Back"))
-        buttonList.add(GuiButton(3, 5, startPositionX + 24, 90, 20, "Login").also { loginButton = it })
-        buttonList.add(GuiButton(4, 5, startPositionX + 24 * 2, 90, 20, "Random").also { randomButton = it })
-        buttonList.add(GuiButton(6, 5, startPositionX + 24 * 3, 90, 20, "Direct Login"))
-        buttonList.add(GuiButton(10, 5, startPositionX + 24 * 4, 90, 20, "Session Login"))
-        buttonList.add(GuiButton(88, 5, startPositionX + 24 * 5, 90, 20, "Change Name"))
+        buttonList.add(GuiButton(3, 5, startPositionY + 24, 90, 20, "Login").also { loginButton = it })
+        buttonList.add(GuiButton(4, 5, startPositionY + 24 * 2, 90, 20, "Random").also { randomButton = it })
+        buttonList.add(GuiButton(6, 5, startPositionY + 24 * 3, 90, 20, "Direct Login"))
+        buttonList.add(GuiButton(10, 5, startPositionY + 24 * 4, 90, 20, "Session Login"))
+        buttonList.add(GuiButton(88, 5, startPositionY + 24 * 5, 90, 20, "Change Name"))
 
         if (activeGenerators.getOrDefault("thealtening", true)) {
-            buttonList.add(GuiButton(9, 5, startPositionX + 24 * 6 + 5, 90, 20, "TheAltening"))
+            buttonList.add(GuiButton(9, 5, startPositionY + 24 * 6 + 5, 90, 20, "TheAltening"))
         }
 
-        buttonList.add(GuiButton(11, 5, startPositionX + 24 * 7 + 10, 90, 20, "Cape"))
+        buttonList.add(GuiButton(11, 5, startPositionY + 24 * 7 + 10, 90, 20, "Cape"))
     }
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
@@ -167,11 +167,9 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
             }
             7 -> { // Import button
                 val file = MiscUtils.openFileChooser() ?: return
-                val fileReader = FileReader(file)
-                val bufferedReader = BufferedReader(fileReader)
-                var line: String
-                while (bufferedReader.readLine().also { line = it } != null) {
-                    val accountData = line.split(":".toRegex(), limit = 2).toTypedArray()
+
+                file.readLines().forEach {
+                    val accountData = it.split(":".toRegex(), limit = 2)
                     if (accountData.size > 1) {
                         // Most likely mojang account
                         fileManager.accountsConfig.addMojangAccount(accountData[0], accountData[1])
@@ -180,10 +178,39 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
                         fileManager.accountsConfig.addCrackedAccount(accountData[0])
                     } // skip account
                 }
-                fileReader.close()
-                bufferedReader.close()
+
                 fileManager.saveConfig(fileManager.accountsConfig)
                 status = "§aThe accounts were imported successfully."
+            }
+            12-> { // Export button
+                if (fileManager.accountsConfig.accounts.isEmpty()) {
+                    status = "§cYou do not have any accounts to export."
+                    return
+                }
+
+                val file = MiscUtils.saveFileChooser()
+                if (file == null || file.isDirectory) {
+                    return
+                }
+
+                try {
+                    if (!file.exists()) {
+                        file.createNewFile()
+                    }
+
+                    val accounts = fileManager.accountsConfig.accounts.joinToString(separator = "\n") { account ->
+                        when (account) {
+                            is MojangAccount -> "${account.email}:${account.password}" // EMAIL:PASSWORD
+                            is MicrosoftAccount -> "${account.name}:${account.session.token}" // NAME:SESSION
+                            else -> account.name
+                        }
+                    }
+                    file.writeText(accounts)
+
+                    status = "§aExported successfully!"
+                } catch (e: Exception) {
+                    status = "§cUnable to export due to error: ${e.message}"
+                }
             }
             8 -> {
                 val currentAccount = altsList.selectedAccount
