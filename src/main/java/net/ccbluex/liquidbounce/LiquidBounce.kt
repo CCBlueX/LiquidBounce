@@ -5,8 +5,7 @@
  */
 package net.ccbluex.liquidbounce
 
-import net.ccbluex.liquidbounce.cape.CapeAPI.registerCapeService
-
+import net.ccbluex.liquidbounce.cape.CapeService
 import net.ccbluex.liquidbounce.event.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.features.command.CommandManager
@@ -14,7 +13,6 @@ import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.special.AntiForge
 import net.ccbluex.liquidbounce.features.special.BungeeCordSpoof
 import net.ccbluex.liquidbounce.features.special.ClientRichPresence
-import net.ccbluex.liquidbounce.features.special.DonatorCape
 import net.ccbluex.liquidbounce.file.FileManager
 
 import net.ccbluex.liquidbounce.script.ScriptManager
@@ -88,7 +86,7 @@ object LiquidBounce {
         eventManager.registerListener(RotationUtils())
         eventManager.registerListener(AntiForge())
         eventManager.registerListener(BungeeCordSpoof())
-        eventManager.registerListener(DonatorCape())
+        eventManager.registerListener(CapeService)
         eventManager.registerListener(InventoryUtils())
 
         // Init Discord RPC
@@ -134,13 +132,6 @@ object LiquidBounce {
             HeadsTab()
         }
 
-        // Register capes service
-        try {
-            registerCapeService()
-        } catch (throwable: Throwable) {
-            ClientUtils.getLogger().error("Failed to register cape service", throwable)
-        }
-
         // Set HUD
         hud = createDefault()
         fileManager.loadConfig(fileManager.hudConfig)
@@ -160,6 +151,11 @@ object LiquidBounce {
                     ClientUtils.getLogger().error("Failed to setup Discord RPC.", throwable)
                 }
             }
+        }
+
+        // Refresh cape service
+        CapeService.refreshCapeCarriers {
+            ClientUtils.getLogger().info("Successfully loaded ${CapeService.capeCarriers.count()} cape carriers.")
         }
 
         // Set is starting status

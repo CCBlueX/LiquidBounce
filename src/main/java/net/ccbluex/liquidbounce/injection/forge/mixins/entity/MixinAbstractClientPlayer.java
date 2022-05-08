@@ -5,6 +5,8 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.entity;
 
+import kotlin.Unit;
+import kotlin.jvm.functions.Function1;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.cape.CapeAPI;
 import net.ccbluex.liquidbounce.cape.CapeInfo;
@@ -32,14 +34,16 @@ public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer {
 
     @Inject(method = "getLocationCape", at = @At("HEAD"), cancellable = true)
     private void getCape(CallbackInfoReturnable<ResourceLocation> callbackInfoReturnable) {
-        if(!CapeAPI.INSTANCE.hasCapeService())
-            return;
+        if (capeInfo == null) {
+            CapeAPI.INSTANCE.loadCape(getUniqueID(), newCapeInfo -> {
+                capeInfo = newCapeInfo;
+                return null;
+            });
+        }
 
-        if (capeInfo == null)
-            capeInfo = CapeAPI.INSTANCE.loadCape(getUniqueID());
-
-        if(capeInfo != null && capeInfo.isCapeAvailable())
+        if(capeInfo != null && capeInfo.isCapeAvailable()) {
             callbackInfoReturnable.setReturnValue(capeInfo.getResourceLocation());
+        }
     }
 
     @Inject(method = "getFovModifier", at = @At("HEAD"), cancellable = true)

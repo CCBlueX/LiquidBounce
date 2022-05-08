@@ -20,4 +20,7 @@ public final class MSTimer {
     public void reset() {
         time = System.currentTimeMillis();
     }
+
+    public void zero() { time = -1L; }
+
 }
