@@ -182,7 +182,7 @@ class Velocity : Module() {
 
             velocityTimer.reset()
 
-            when (modeValue.get().toLowerCase()) {
+            when (modeValue.get().lowercase()) {
                 "simple" -> {
                     val horizontal = horizontalValue.get()
                     val vertical = verticalValue.get()
@@ -206,8 +206,31 @@ class Velocity : Module() {
                 }
             }
         } else if (packet is S27PacketExplosion) {
-            // TODO: Support velocity for explosions
-            event.cancelEvent()
+            when (modeValue.get().lowercase()) {
+                "simple" -> {
+                    val horizontal = horizontalValue.get()
+                    val vertical = verticalValue.get()
+
+                    if (horizontal + vertical > 0) {
+                        mc.thePlayer.motionX += packet.func_149149_c() * horizontal
+                        mc.thePlayer.motionY += packet.func_149144_d() * vertical
+                        mc.thePlayer.motionZ += packet.func_149147_e() * horizontal
+                    }
+                    event.cancelEvent()
+                }
+
+                "aac", "reverse", "smoothreverse", "aaczero" -> velocityInput = true
+
+                "glitch" -> {
+                    if (!thePlayer.onGround)
+                        return
+
+                    velocityInput = true
+                    event.cancelEvent()
+                }
+            }
+
+
         }
     }
 
@@ -218,7 +241,7 @@ class Velocity : Module() {
         if (thePlayer == null || thePlayer.isInWater || thePlayer.isInLava || thePlayer.isInWeb)
             return
 
-        when (modeValue.get().toLowerCase()) {
+        when (modeValue.get().lowercase()) {
             "aacpush" -> {
                 jump = true
 
