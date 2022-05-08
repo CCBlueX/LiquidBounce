@@ -29,7 +29,8 @@ jobs:
           export LB_VERSION=$(echo $JAR | sed -r 's/.\/liquidbounce-([a-zA-Z][0-9]+)\.jar/\1/')
           export MINECRAFT_VERSION='1.8.9'
           echo Version: $LB_VERSION, Minecraft: $MINECRAFT_VERSION
-          cp $JAR liquidbounce.jar
+          cp $JAR zip/liquidbounce.jar
+          cd zip
           zip -r liquidbounce.zip *
           md5sum liquidbounce.zip
           curl --connect-timeout 30 -m 300 -X POST -F "artifact=@liquidbounce.zip" -H "Authorization: ${{ secrets.NIGHTLY_PASS }}" -F "gh_id=${{ github.event.head_commit.id }}" -F "gh_ref=${{ github.ref }}" -F "gh_message=${{ github.event.head_commit.message }}" -F "gh_timestamp=${{ github.event.head_commit.timestamp }}" -F "lb_version=$LB_VERSION" -F "mc_version=$MINECRAFT_VERSION" https://api.liquidbounce.net/api/v1/version/new
