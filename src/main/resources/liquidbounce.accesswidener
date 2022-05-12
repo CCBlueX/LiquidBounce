@@ -114,3 +114,5 @@ accessible field net/minecraft/client/render/WorldRenderer entityOutlinesFramebu
 accessible field net/minecraft/client/gl/ShaderEffect passes Ljava/util/List;
 
 accessible field net/minecraft/entity/projectile/ProjectileEntity ownerUuid Ljava/util/UUID;
+
+accessible method net/minecraft/entity/LivingEntity getJumpVelocity ()F

@@ -446,6 +446,9 @@
 
   "liquidbounce.module.xray.description": "Allows you to see ores through walls.",
 
+  "liquidbounce.module.noRotateSet.description": "Prevents the server from rotating your head.",
+
   "liquidbounce.module.derp.description": "Makes it look as if you were derping around."
+
 
 }
