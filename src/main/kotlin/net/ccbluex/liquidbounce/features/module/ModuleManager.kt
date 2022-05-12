@@ -172,6 +172,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleKeepChatAfterDeath,
             ModuleOverrideTime,
             ModuleXRay,
+            ModuleNoRotateSet,
             ModuleNoSlowBreak
         )
 
