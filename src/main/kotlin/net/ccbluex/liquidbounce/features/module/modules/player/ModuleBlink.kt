@@ -31,11 +31,13 @@ import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.math.times
 import net.minecraft.client.network.OtherClientPlayerEntity
 import net.minecraft.entity.Entity
 import net.minecraft.network.Packet
 import net.minecraft.network.packet.c2s.play.*
 import net.minecraft.util.math.Vec3d
+import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -46,10 +48,12 @@ import java.util.concurrent.atomic.AtomicInteger
  */
 
 object ModuleBlink : Module("Blink", Category.PLAYER) {
-    private val pulse by boolean("Pulse", false)
+    private object Pulse : ToggleableConfigurable(this, "Pulse", false) {
+        val delay by int("Delay", 20, 10..100)
+    }
+
     private val dummy by boolean("Dummy", false)
     private val ambush by boolean("Ambush", false)
-    private val delay by int("Delay", 20, 10..100)
 
     private object BreadcrumbsOption : ToggleableConfigurable(this, "Breadcrumbs", false) {
         val breadcrumbscolor by color("BreadcrumbsColor", Color4b(255, 179, 72, 255))
@@ -62,32 +66,39 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
 
     private val packets = LinkedBlockingQueue<Packet<*>>()
     private var startPos: Vec3d? = null
-    private var fakeplayer: OtherClientPlayerEntity? = null
+    private var fakePlayer: OtherClientPlayerEntity? = null
     private var disablelogger = false
     private val positions = mutableListOf<Double>()
 
     private var positionPackets = AtomicInteger(0)
 
     init {
+        tree(Pulse)
         tree(BreadcrumbsOption)
         tree(AutoResetOption)
     }
 
     override fun enable() {
         if (ModuleBadWifi.enabled) {
-            this.enabled = false
+            enabled = false // Doesn't disable the module for some reason
 
             notification("Compatibility error", "Blink is incompatible with BadWIFI", NotificationEvent.Severity.ERROR)
+            return
         }
 
-        if (!pulse && dummy) {
-            val faker = OtherClientPlayerEntity(world, player.gameProfile)
+        if (!Pulse.enabled && dummy) {
+            val clone = OtherClientPlayerEntity(world, player.gameProfile)
 
-            faker.headYaw = player.headYaw
-            faker.copyPositionAndRotation(player)
-            world.addEntity(faker.id, faker)
+            clone.headYaw = player.headYaw
+            clone.copyPositionAndRotation(player)
+            /**
+             * A different UUID has to be set, to avoid [fakePlayer] from being invisible to [player]
+             * @see net.minecraft.world.entity.EntityIndex.add
+             */
+            clone.uuid = UUID.randomUUID()
+            world.addEntity(clone.id, clone)
 
-            fakeplayer = faker
+            fakePlayer = clone
         }
 
         startPos = player.pos
@@ -102,7 +113,7 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
             if (BreadcrumbsOption.enabled) {
                 RenderEngine.enqueueForRendering(
                     RenderEngine.CAMERA_VIEW_LAYER,
-                    ModuleBreadcrumbs.createBreadcrumbsRenderTask(color, this.positions, it.tickDelta)
+                    ModuleBreadcrumbs.createBreadcrumbsRenderTask(color, positions, it.tickDelta)
                 )
             }
         }
@@ -117,52 +128,48 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
 
         blink()
 
-        removeFakePlayer()
+        removeClone()
     }
 
-    private fun removeFakePlayer() {
-        val faker = this.fakeplayer
+    private fun removeClone() {
+        val clone = fakePlayer ?: return
 
-        if (faker != null) {
-            world.removeEntity(faker.id, Entity.RemovalReason.UNLOADED_TO_CHUNK)
-
-            this.fakeplayer = null
-        }
+        world.removeEntity(clone.id, Entity.RemovalReason.DISCARDED)
+        fakePlayer = null
     }
 
-    val packetHandler = handler<PacketEvent>(priority = -1) { event ->
+    val packetHandler = handler<PacketEvent> { event ->
         if (mc.player == null || disablelogger || event.origin != TransferOrigin.SEND) {
             return@handler
         }
 
-        if (ambush && event.packet is PlayerInteractEntityC2SPacket) {
+        val packet = event.packet
+
+        if (ambush && packet is PlayerInteractEntityC2SPacket) {
             enabled = false
 
             return@handler
         }
 
-        if (event.packet is PlayerMoveC2SPacket || event.packet is PlayerInteractBlockC2SPacket ||
-            event.packet is HandSwingC2SPacket ||
-            event.packet is PlayerActionC2SPacket || event.packet is PlayerInteractEntityC2SPacket
-        ) {
-            if (event.packet is PlayerMoveC2SPacket && !event.packet.changePosition) {
+        if (packet is PlayerMoveC2SPacket || packet is PlayerInteractBlockC2SPacket || packet is HandSwingC2SPacket || packet is PlayerActionC2SPacket || packet is PlayerInteractEntityC2SPacket) {
+            if (packet is PlayerMoveC2SPacket && !packet.changePosition) {
                 return@handler
             }
 
-            if (event.packet is PlayerMoveC2SPacket) {
+            if (packet is PlayerMoveC2SPacket) {
                 positionPackets.getAndIncrement()
-                synchronized(positions) { positions.addAll(listOf(event.packet.x, event.packet.y, event.packet.z)) }
+                synchronized(positions) { positions.addAll(listOf(packet.x, packet.y, packet.z)) }
             }
 
             event.cancelEvent()
 
-            packets.add(event.packet)
+            packets.add(packet)
         }
     }
 
     val repeatable = repeatable {
-        if (pulse) {
-            wait(delay)
+        if (Pulse.enabled) {
+            wait(Pulse.delay)
             blink()
         }
     }
@@ -196,13 +203,13 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
     }
 
     private fun reset() {
-        this.packets.clear()
+        packets.clear()
         synchronized(positions) { positions.clear() }
         positionPackets.set(0)
 
-        val start = startPos!!
+        val start = startPos ?: return
 
-        player.setPos(start.x, start.y, start.z)
+        player.setPosition(start)
 
         player.prevX = start.x
         player.prevY = start.y
@@ -211,7 +218,7 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
         player.lastRenderY = start.y
         player.lastRenderZ = start.z
 
-        player.setVelocity(0.0, 0.0, 0.0)
+        player.velocity.times(0.0)
 
         player.updatePositionAndAngles(start.x, start.y, start.z, player.yaw, player.pitch)
     }
