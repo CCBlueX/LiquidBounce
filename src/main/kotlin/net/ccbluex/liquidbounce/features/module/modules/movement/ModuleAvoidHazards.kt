@@ -50,7 +50,7 @@ object ModuleAvoidHazards : Module("AvoidHazards", Category.MOVEMENT) {
             event.shape = VoxelShapes.fullCube()
         } else if (cobWebs && event.state.block is CobwebBlock) {
             event.shape = VoxelShapes.fullCube()
-        } else if (pressurePlates && event.state.block is PressurePlateBlock) {
+        } else if (pressurePlates && event.state.block is AbstractPressurePlateBlock) {
             event.shape = Block.createCuboidShape(0.0, 0.0, 0.0, 16.0, 4.0, 16.0)
         } else if (magmaBlocks && event.pos.down().getBlock() is MagmaBlock && !event.state.isSideSolid(
                 world, event.pos, Direction.UP, SideShapeType.CENTER
