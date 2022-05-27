@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.RenderEngine
-import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.engine.memory.PositionColorVertexFormat
 import net.ccbluex.liquidbounce.render.engine.memory.putVertex
 import net.ccbluex.liquidbounce.render.utils.ColorUtils
@@ -35,6 +34,7 @@ import net.ccbluex.liquidbounce.render.utils.drawBoxNew
 import net.ccbluex.liquidbounce.render.utils.drawBoxOutlineNew
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
+import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.render.espBoxInstancedOutlineRenderTask
 import net.ccbluex.liquidbounce.utils.render.espBoxInstancedRenderTask
 import net.minecraft.entity.Entity
@@ -89,12 +89,7 @@ object ModuleESP : Module("ESP", Category.RENDER) {
                 val d = dimensions.width.toDouble() / 2.0
 
                 Box(
-                    -d,
-                    0.0,
-                    -d,
-                    d,
-                    dimensions.height.toDouble(),
-                    d
+                    -d, 0.0, -d, d, dimensions.height.toDouble(), d
                 )
             }
 
@@ -106,11 +101,7 @@ object ModuleESP : Module("ESP", Category.RENDER) {
                 val outlineInstanceBuffer = PositionColorVertexFormat().apply { initBuffer(it.value.size) }
 
                 for (entity in it.value) {
-                    val pos = Vec3(
-                        entity.x + (entity.x - entity.lastRenderX) * event.tickDelta,
-                        entity.y + (entity.y - entity.lastRenderY) * event.tickDelta,
-                        entity.z + (entity.z - entity.lastRenderZ) * event.tickDelta
-                    )
+                    val pos = entity.interpolateCurrentPosition(event.tickDelta)
 
                     val color = getColor(entity) ?: base
 
@@ -121,8 +112,14 @@ object ModuleESP : Module("ESP", Category.RENDER) {
                     outlineInstanceBuffer.putVertex { this.position = pos; this.color = outlineColor }
                 }
 
-                RenderEngine.enqueueForRendering(RenderEngine.CAMERA_VIEW_LAYER_WITHOUT_BOBBING, espBoxInstancedRenderTask(instanceBuffer, box.first, box.second))
-                RenderEngine.enqueueForRendering(RenderEngine.CAMERA_VIEW_LAYER_WITHOUT_BOBBING, espBoxInstancedOutlineRenderTask(outlineInstanceBuffer, boxOutline.first, boxOutline.second))
+                RenderEngine.enqueueForRendering(
+                    RenderEngine.CAMERA_VIEW_LAYER_WITHOUT_BOBBING,
+                    espBoxInstancedRenderTask(instanceBuffer, box.first, box.second)
+                )
+                RenderEngine.enqueueForRendering(
+                    RenderEngine.CAMERA_VIEW_LAYER_WITHOUT_BOBBING,
+                    espBoxInstancedOutlineRenderTask(outlineInstanceBuffer, boxOutline.first, boxOutline.second)
+                )
             }
         }
 
