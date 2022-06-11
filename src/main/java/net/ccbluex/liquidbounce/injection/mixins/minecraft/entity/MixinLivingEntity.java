@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPush;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
-import net.ccbluex.liquidbounce.utils.client.ClientUtilsKt;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
@@ -116,8 +115,6 @@ public abstract class MixinLivingEntity extends MixinEntity {
         }
 
         float yaw = currentRotation.getYaw() * 0.017453292F;
-
-        ClientUtilsKt.chat("4th or 5th? method");
 
         return instance.add(-MathHelper.sin(yaw) * 0.2F, 0.0, MathHelper.cos(yaw) * 0.2F);
     }
