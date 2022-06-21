@@ -63,6 +63,7 @@ object ModuleTrigger : Module("Trigger", Category.COMBAT) {
             repeat(clicks) {
                 if (player.usingItem) {
                     this@repeatable.encounterItemUse()
+                    return@repeatable
                 }
 
                 if (failRate > 0 && failRate > Random.nextInt(100)) {
