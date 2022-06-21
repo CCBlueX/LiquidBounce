@@ -40,8 +40,8 @@ public class LiquidBounceStyle extends Style {
     @Override
     public void drawPanel(int mouseX, int mouseY, Panel panel) {
         RenderUtils.drawBorderedRect((float) panel.getX() - (panel.getScrollbar() ? 4 : 0), (float) panel.getY(), (float) panel.getX() + panel.getWidth(), (float) panel.getY() + 19 + panel.getFade(), 1F, new Color(255, 255, 255, 90).getRGB(), Integer.MIN_VALUE);
-        float textWidth = Fonts.font35.getStringWidth("§f" + StringUtils.stripControlCodes(panel.getName()));
-        Fonts.font35.drawString("§f" + panel.getName(), (int) (panel.getX() - (textWidth - 100.0F) / 2F), panel.getY() + 7, -16777216);
+        float textWidth = ClickGUI.Font.get().getStringWidth("§f" + StringUtils.stripControlCodes(panel.getName()));
+        ClickGUI.Font.get().drawString("§f" + panel.getName(), (int) (panel.getX() - (textWidth - 100.0F) / 2F), panel.getY() + 7, -16777216);
 
         if(panel.getScrollbar() && panel.getFade() > 0) {
             RenderUtils.drawRect(panel.getX() - 2, panel.getY() + 21, panel.getX(), panel.getY() + 16 + panel.getFade(), Integer.MAX_VALUE);
@@ -51,29 +51,29 @@ public class LiquidBounceStyle extends Style {
 
     @Override
     public void drawDescription(int mouseX, int mouseY, String text) {
-        int textWidth = Fonts.font35.getStringWidth(text);
+        int textWidth = ClickGUI.Font.get().getStringWidth(text);
 
-        RenderUtils.drawBorderedRect(mouseX + 9, mouseY, mouseX + textWidth + 14, mouseY + Fonts.font35.getFontHeight() + 3, 1, new Color(255, 255, 255, 90).getRGB(), Integer.MIN_VALUE);
+        RenderUtils.drawBorderedRect(mouseX + 9, mouseY, mouseX + textWidth + 14, mouseY + ClickGUI.Font.get().FONT_HEIGHT + 3, 1, new Color(255, 255, 255, 90).getRGB(), Integer.MIN_VALUE);
         GlStateManager.resetColor();
-        Fonts.font35.drawString(text, mouseX + 12, mouseY + (Fonts.font35.getFontHeight()) / 2, Integer.MAX_VALUE);
+        ClickGUI.Font.get().drawString(text, mouseX + 12, mouseY + (ClickGUI.Font.get().FONT_HEIGHT) / 2, Integer.MAX_VALUE);
     }
 
     @Override
     public void drawButtonElement(int mouseX, int mouseY, ButtonElement buttonElement) {
         GlStateManager.resetColor();
-        Fonts.font35.drawString(buttonElement.getDisplayName(), (int) (buttonElement.getX() - (Fonts.font35.getStringWidth(buttonElement.getDisplayName()) - 100.0f) / 2.0f), buttonElement.getY() + 6, buttonElement.getColor());
+        ClickGUI.Font.get().drawString(buttonElement.getDisplayName(), (int) (buttonElement.getX() - (ClickGUI.Font.get().getStringWidth(buttonElement.getDisplayName()) - 100.0f) / 2.0f), buttonElement.getY() + 6, buttonElement.getColor());
     }
 
     @Override
     public void drawModuleElement(int mouseX, int mouseY, ModuleElement moduleElement) {
         int guiColor = ClickGUI.generateColor().getRGB();
         GlStateManager.resetColor();
-        Fonts.font35.drawString(moduleElement.getDisplayName(), (int) (moduleElement.getX() - (Fonts.font35.getStringWidth(moduleElement.getDisplayName()) - 100.0f) / 2.0f), moduleElement.getY() + 6, moduleElement.getModule().getState() ? guiColor : Integer.MAX_VALUE);
+        ClickGUI.Font.get().drawString(moduleElement.getDisplayName(), (int) (moduleElement.getX() - (ClickGUI.Font.get().getStringWidth(moduleElement.getDisplayName()) - 100.0f) / 2.0f), moduleElement.getY() + 6, moduleElement.getModule().getState() ? guiColor : Integer.MAX_VALUE);
 
         final List<Value<?>> moduleValues = moduleElement.getModule().getValues();
 
         if(!moduleValues.isEmpty()) {
-            Fonts.font35.drawString("+", moduleElement.getX() + moduleElement.getWidth() - 8, moduleElement.getY() + (moduleElement.getHeight() / 2), Color.WHITE.getRGB());
+            ClickGUI.Font.get().drawString("+", moduleElement.getX() + moduleElement.getWidth() - 8, moduleElement.getY() + (moduleElement.getHeight() / 2), Color.WHITE.getRGB());
 
             if(moduleElement.isShowSettings()) {
                 int yPos = moduleElement.getY() + 4;
@@ -86,7 +86,7 @@ public class LiquidBounceStyle extends Style {
 
                     if (value instanceof BoolValue) {
                         final String text = value.getName();
-                        final float textWidth = Fonts.font35.getStringWidth(text);
+                        final float textWidth = ClickGUI.Font.get().getStringWidth(text);
 
                         if (moduleElement.getSettingsWidth() < textWidth + 8)
                             moduleElement.setSettingsWidth(textWidth + 8);
@@ -103,21 +103,21 @@ public class LiquidBounceStyle extends Style {
                         }
 
                         GlStateManager.resetColor();
-                        Fonts.font35.drawString(text, moduleElement.getX() + moduleElement.getWidth() + 6, yPos + 4, ((BoolValue) value).get() ? guiColor : Integer.MAX_VALUE);
+                        ClickGUI.Font.get().drawString(text, moduleElement.getX() + moduleElement.getWidth() + 6, yPos + 4, ((BoolValue) value).get() ? guiColor : Integer.MAX_VALUE);
                         yPos += 12;
                     }else if(value instanceof ListValue) {
                         ListValue listValue = (ListValue) value;
 
                         final String text = value.getName();
-                        final float textWidth = Fonts.font35.getStringWidth(text);
+                        final float textWidth = ClickGUI.Font.get().getStringWidth(text);
 
                         if(moduleElement.getSettingsWidth() < textWidth + 16)
                             moduleElement.setSettingsWidth(textWidth + 16);
 
                         RenderUtils.drawRect(moduleElement.getX() + moduleElement.getWidth() + 4, yPos + 2, moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth(), yPos + 14, Integer.MIN_VALUE);
                         GlStateManager.resetColor();
-                        Fonts.font35.drawString("§c" + text, moduleElement.getX() + moduleElement.getWidth() + 6, yPos + 4, 0xffffff);
-                        Fonts.font35.drawString(listValue.openList ? "-" : "+", (int) (moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth() - (listValue.openList ? 5 : 6)), yPos + 4, 0xffffff);
+                        ClickGUI.Font.get().drawString("§c" + text, moduleElement.getX() + moduleElement.getWidth() + 6, yPos + 4, 0xffffff);
+                        ClickGUI.Font.get().drawString(listValue.openList ? "-" : "+", (int) (moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth() - (listValue.openList ? 5 : 6)), yPos + 4, 0xffffff);
 
                         if(mouseX >= moduleElement.getX() + moduleElement.getWidth() + 4 && mouseX <= moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth() && mouseY >= yPos + 2 && mouseY <= yPos + 14) {
                             if(Mouse.isButtonDown(0) && moduleElement.isntPressed()) {
@@ -129,7 +129,7 @@ public class LiquidBounceStyle extends Style {
                         yPos += 12;
 
                         for(final String valueOfList : listValue.getValues()) {
-                            final float textWidth2 = Fonts.font35.getStringWidth(">" + valueOfList);
+                            final float textWidth2 = ClickGUI.Font.get().getStringWidth(">" + valueOfList);
 
                             if(moduleElement.getSettingsWidth() < textWidth2 + 8)
                                 moduleElement.setSettingsWidth(textWidth2 + 8);
@@ -145,15 +145,15 @@ public class LiquidBounceStyle extends Style {
                                 }
 
                                 GlStateManager.resetColor();
-                                Fonts.font35.drawString(">", moduleElement.getX() + moduleElement.getWidth() + 6, yPos + 4, Integer.MAX_VALUE);
-                                Fonts.font35.drawString(valueOfList, moduleElement.getX() + moduleElement.getWidth() + 14, yPos + 4, listValue.get() != null && listValue.get().equalsIgnoreCase(valueOfList) ? guiColor : Integer.MAX_VALUE);
+                                ClickGUI.Font.get().drawString(">", moduleElement.getX() + moduleElement.getWidth() + 6, yPos + 4, Integer.MAX_VALUE);
+                                ClickGUI.Font.get().drawString(valueOfList, moduleElement.getX() + moduleElement.getWidth() + 14, yPos + 4, listValue.get() != null && listValue.get().equalsIgnoreCase(valueOfList) ? guiColor : Integer.MAX_VALUE);
                                 yPos += 12;
                             }
                         }
                     }else if(value instanceof FloatValue) {
                         final FloatValue floatValue = (FloatValue) value;
                         final String text = value.getName() + "§f: §c" + round(floatValue.get());
-                        final float textWidth = Fonts.font35.getStringWidth(text);
+                        final float textWidth = ClickGUI.Font.get().getStringWidth(text);
 
                         if(moduleElement.getSettingsWidth() < textWidth + 8)
                             moduleElement.setSettingsWidth(textWidth + 8);
@@ -171,12 +171,12 @@ public class LiquidBounceStyle extends Style {
                         }
 
                         GlStateManager.resetColor();
-                        Fonts.font35.drawString(text, moduleElement.getX() + moduleElement.getWidth() + 6, yPos + 4, 0xffffff);
+                        ClickGUI.Font.get().drawString(text, moduleElement.getX() + moduleElement.getWidth() + 6, yPos + 4, 0xffffff);
                         yPos += 22;
                     }else if(value instanceof IntegerValue) {
                         final IntegerValue integerValue = (IntegerValue) value;
                         final String text = value.getName() + "§f: §c" + (value instanceof BlockValue ? BlockUtils.getBlockName(integerValue.get()) + " (" + integerValue.get() + ")" : integerValue.get());
-                        final float textWidth = Fonts.font35.getStringWidth(text);
+                        final float textWidth = ClickGUI.Font.get().getStringWidth(text);
 
                         if(moduleElement.getSettingsWidth() < textWidth + 8)
                             moduleElement.setSettingsWidth(textWidth + 8);
@@ -194,7 +194,7 @@ public class LiquidBounceStyle extends Style {
                         }
 
                         GlStateManager.resetColor();
-                        Fonts.font35.drawString(text, moduleElement.getX() + moduleElement.getWidth() + 6, yPos + 4, 0xffffff);
+                        ClickGUI.Font.get().drawString(text, moduleElement.getX() + moduleElement.getWidth() + 6, yPos + 4, 0xffffff);
                         yPos += 22;
                     }else if(value instanceof FontValue) {
                         final FontValue fontValue = (FontValue) value;
@@ -218,8 +218,8 @@ public class LiquidBounceStyle extends Style {
                             }
                         }
 
-                        Fonts.font35.drawString(displayString, moduleElement.getX() + moduleElement.getWidth() + 6, yPos + 4, Color.WHITE.getRGB());
-                        int stringWidth = Fonts.font35.getStringWidth(displayString);
+                        ClickGUI.Font.get().drawString(displayString, moduleElement.getX() + moduleElement.getWidth() + 6, yPos + 4, Color.WHITE.getRGB());
+                        int stringWidth = ClickGUI.Font.get().getStringWidth(displayString);
 
                         if(moduleElement.getSettingsWidth() < stringWidth + 8)
                             moduleElement.setSettingsWidth(stringWidth + 8);
@@ -264,14 +264,14 @@ public class LiquidBounceStyle extends Style {
                         yPos += 11;
                     }else{
                         String text = value.getName() + "§f: §c" + value.get();
-                        float textWidth = Fonts.font35.getStringWidth(text);
+                        float textWidth = ClickGUI.Font.get().getStringWidth(text);
 
                         if (moduleElement.getSettingsWidth() < textWidth + 8)
                             moduleElement.setSettingsWidth(textWidth + 8);
 
                         RenderUtils.drawRect(moduleElement.getX() + moduleElement.getWidth() + 4, yPos + 2, moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth(), yPos + 14, Integer.MIN_VALUE);
                         GlStateManager.resetColor();
-                        Fonts.font35.drawString(text, moduleElement.getX() + moduleElement.getWidth() + 6, yPos + 4, 0xffffff);
+                        ClickGUI.Font.get().drawString(text, moduleElement.getX() + moduleElement.getWidth() + 6, yPos + 4, 0xffffff);
                         yPos += 12;
                     }
 
