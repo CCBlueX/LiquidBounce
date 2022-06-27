@@ -62,8 +62,11 @@ object ModuleTrigger : Module("Trigger", Category.COMBAT) {
 
             repeat(clicks) {
                 if (player.usingItem) {
-                    this@repeatable.encounterItemUse()
-                    return@repeatable
+                    val encounterItemUse = this.encounterItemUse()
+
+                    if (encounterItemUse) {
+                        return@repeatable
+                    }
                 }
 
                 if (failRate > 0 && failRate > Random.nextInt(100)) {
@@ -87,16 +90,18 @@ object ModuleTrigger : Module("Trigger", Category.COMBAT) {
         }
     }
 
-    private suspend fun <T : Event> Sequence<T>.encounterItemUse() {
-        val player = mc.player ?: return
+    private suspend fun <T : Event> Sequence<T>.encounterItemUse(): Boolean {
+        val player = mc.player ?: return true
 
-        when (onItemUse) {
+        return when (onItemUse) {
             Use.WAIT -> {
                 this.waitUntil { !player.isUsingItem }
 
                 if (delayPostStopUse > 0) {
                     wait(delayPostStopUse)
                 }
+
+                true
             }
             Use.STOP -> {
                 network.sendPacket(
@@ -109,8 +114,10 @@ object ModuleTrigger : Module("Trigger", Category.COMBAT) {
                 if (delayPostStopUse > 0) {
                     wait(delayPostStopUse)
                 }
+
+                true
             }
-            Use.IGNORE -> return
+            Use.IGNORE -> false
         }
     }
 
