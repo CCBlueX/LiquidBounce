@@ -30,7 +30,7 @@ import kotlin.random.Random
  *
  * Spams the chat with a given message.
  */
-object ModuleSpammer : Module("Spammer", Category.MISC) {
+object ModuleS : Module("minehut autojoiner", Category.MISC) {
 
     private val delay by intRange("Delay", 12..14, 0..20)
     private val messages by textArray(
@@ -40,22 +40,20 @@ object ModuleSpammer : Module("Spammer", Category.MISC) {
             "LiquidBounce: FREE and OPEN-SOURCE & 100% CUSTOMIZABLE"
         )
     )
-
-
-    val spamtext by text("Spam text", "SPAM SPAM SPAM")
     private val customFormatter by boolean("CustomFormatter", false)
 
-    val repeatable = repeatable {
-        val text = if (customFormatter) {
-            format(messages.random())
-        } else {
-            "[${RandomStringUtils.randomAlphabetic(Random.nextInt(4) + 1)}] " + messages.random().toCharArray()
-                .map { if (Random.nextBoolean()) it.toUpperCase() else it.toLowerCase() }.joinToString("")
-        }
 
-        player.sendChatMessage(spamtext)
-        wait(delay.random())
+
+    override fun enable() {
+        player.sendChatMessage("joined server or was enabled")
     }
+
+    override fun disable() {
+        player.sendChatMessage("joined server or was disabled")
+        
+
+    }
+
 
     private fun format(text: String): String {
         var formattedText = text
