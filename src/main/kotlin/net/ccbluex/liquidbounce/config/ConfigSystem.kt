@@ -94,7 +94,7 @@ object ConfigSystem {
 
                 logger.debug("Reading config ${configurable.name}...")
 
-                JsonParser().parse(gson.newJsonReader(reader()))?.let { deserializeConfigurable(configurable, it) }
+                JsonParser.parseReader(gson.newJsonReader(reader()))?.let { deserializeConfigurable(configurable, it) }
 
                 logger.info("Successfully loaded config '${configurable.name}'.")
             }.onFailure {
