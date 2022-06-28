@@ -114,7 +114,7 @@ dependencies {
         exclude group: 'com.google.code.gson', module: 'gson'
     }
 
-    implementation "com.github.CCBlueX:Elixir:1.2.4"
+    implementation "com.github.Kawa1Ares:Elixir:1.2.6"
 
     implementation "com.labymedia:ultralight-java-base:0.4.6"
     implementation "com.labymedia:ultralight-java-databind:0.4.6"
