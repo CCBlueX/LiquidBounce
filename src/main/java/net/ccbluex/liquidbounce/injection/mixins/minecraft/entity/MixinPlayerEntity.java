@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.PlayerJumpEvent;
 import net.ccbluex.liquidbounce.event.PlayerSafeWalkEvent;
 import net.ccbluex.liquidbounce.event.PlayerStrideEvent;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAntiReducedDebugInfo;
@@ -35,6 +36,7 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(PlayerEntity.class)
@@ -42,28 +44,12 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
 
     @Shadow
     @Final
-    public PlayerInventory inventory;
+    private PlayerInventory inventory;
 
     /**
      * Hook player stride event
      */
-    @ModifyVariable(
-            method = "tickMovement",
-            at = @At(
-                    value = "FIELD",
-                    target = "Lnet/minecraft/entity/player/PlayerEntity;strideDistance:F",
-                    shift = At.Shift.BEFORE,
-                    ordinal = 0
-            ),
-            slice = @Slice(
-                    from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setMovementSpeed(F)V"),
-                    to = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;isSpectator()Z")
-            ),
-            index = 1,
-            ordinal = 0,
-            require = 1,
-            allow = 1
-    )
+    @ModifyVariable(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerEntity;strideDistance:F", shift = At.Shift.BEFORE, ordinal = 0), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setMovementSpeed(F)V"), to = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;isSpectator()Z")), index = 1, ordinal = 0, require = 1, allow = 1)
     private float hookStrideForce(float strideForce) {
         final PlayerStrideEvent event = new PlayerStrideEvent(strideForce);
         EventManager.INSTANCE.callEvent(event);
@@ -77,8 +63,9 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
     private ItemStack hookMainHandStack(PlayerInventory playerInventory) {
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
 
-        if ((Object) this != player)
+        if ((Object) this != player) {
             return this.inventory.getMainHandStack();
+        }
 
         int slot = SilentHotbar.INSTANCE.getServersideSlot();
 
@@ -104,15 +91,19 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
      */
     @Redirect(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getYaw()F"))
     private float hookFixRotation(PlayerEntity entity) {
-        if (RotationManager.INSTANCE.getActiveConfigurable() == null || !RotationManager.INSTANCE.getActiveConfigurable().getFixVelocity())
+        if (RotationManager.INSTANCE.getActiveConfigurable() == null || !RotationManager.INSTANCE.getActiveConfigurable().getFixVelocity()) {
             return entity.getYaw();
+        }
 
         Rotation currentRotation = RotationManager.INSTANCE.getCurrentRotation();
-
-        if (currentRotation == null)
+        if (currentRotation == null) {
             return entity.getYaw();
+        }
 
         currentRotation = currentRotation.fixedSensitivity();
+        if (currentRotation == null) {
+            return entity.getYaw();
+        }
 
         return currentRotation.getYaw();
     }
@@ -121,6 +112,19 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
     private void injectReducedDebugInfo(CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
         if (ModuleAntiReducedDebugInfo.INSTANCE.getEnabled()) {
             callbackInfoReturnable.setReturnValue(false);
+        }
+    }
+
+    @Inject(method = "jump", at = @At("HEAD"), cancellable = true)
+    private void hookJumpEvent(CallbackInfo ci) {
+        if ((Object) this != MinecraftClient.getInstance().player) {
+            return;
+        }
+
+        final PlayerJumpEvent jumpEvent = new PlayerJumpEvent(getJumpVelocity());
+        EventManager.INSTANCE.callEvent(jumpEvent);
+        if (jumpEvent.isCancelled()) {
+            ci.cancel();
         }
     }
 

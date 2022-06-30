@@ -31,12 +31,12 @@ import net.minecraft.client.util.InputUtil
 object ModuleAutoWalk : Module("AutoWalk", Category.PLAYER) {
 
     val repeatable = repeatable {
-        mc.options.keyForward.isPressed = true
+        mc.options.forwardKey.isPressed = true
     }
 
     override fun disable() {
-        if (!InputUtil.isKeyPressed(mc.window.handle, mc.options.keyForward.boundKey.code)) {
-            mc.options.keyForward.isPressed = false
+        if (!InputUtil.isKeyPressed(mc.window.handle, mc.options.forwardKey.boundKey.code)) {
+            mc.options.forwardKey.isPressed = false
         }
     }
 

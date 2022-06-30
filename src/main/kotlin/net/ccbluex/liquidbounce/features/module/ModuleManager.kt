@@ -107,6 +107,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAntiBlind,
             ModuleTraces,
             ModuleElytraFly,
+            ModuleS,
             ModuleSpammer,
             ModuleHighJump,
             ModuleBlockBounce,
@@ -171,7 +172,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoPot,
             ModuleKeepChatAfterDeath,
             ModuleOverrideTime,
-            ModuleXRay
+            ModuleXRay,
+            ModuleNoRotateSet
         )
 
         builtin.apply {
