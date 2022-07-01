@@ -33,7 +33,7 @@ minecraft {
     runDir = "run"
     mappings = "stable_22"
     makeObfSourceJar = false
-    clientJvmArgs += ["-Dfml.coreMods.load=net.ccbluex.liquidbounce.injection.forge.TransformerLoader", "-Xmx1024m -Xms1024m", "-Ddev-mode"]
+    clientJvmArgs += ["-Dfml.coreMods.load=net.ccbluex.liquidbounce.injection.forge.MixinLoader", "-Xmx1024m -Xms1024m", "-Ddev-mode"]
 }
 
 configurations {
@@ -104,7 +104,7 @@ classes.dependsOn(moveResources)
 
 jar {
     manifest.attributes(
-            "FMLCorePlugin": "net.ccbluex.liquidbounce.injection.forge.TransformerLoader",
+            "FMLCorePlugin": "net.ccbluex.liquidbounce.injection.forge.MixinLoader",
             "FMLCorePluginContainsFMLMod": true,
             "ForceLoadAsMod": true,
             "MixinConfigs": "liquidbounce.forge.mixins.json",
