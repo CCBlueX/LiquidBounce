@@ -1,0 +1,21 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
+
+package net.ccbluex.liquidbounce.injection.backend.minecraft.client.renderer
+
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.ITessellator
+import net.ccbluex.liquidbounce.api.minecraft.client.renderer.IWorldRenderer
+import net.minecraft.client.renderer.Tessellator
+
+class TessellatorImpl(val wrapped: Tessellator) : ITessellator
+{
+    override val worldRenderer: IWorldRenderer
+        get() = WorldRendererImpl(wrapped.worldRenderer)
+
+    override fun draw() = wrapped.draw()
+
+    override fun equals(other: Any?): Boolean = other is TessellatorImpl && other.wrapped == wrapped
+}
