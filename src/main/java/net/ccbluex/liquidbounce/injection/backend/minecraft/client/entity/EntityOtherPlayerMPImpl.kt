@@ -1,0 +1,16 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
+
+package net.ccbluex.liquidbounce.injection.backend.minecraft.client.entity
+
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.IEntityOtherPlayerMP
+import net.ccbluex.liquidbounce.injection.backend.minecraft.entity.player.EntityPlayerImpl
+import net.minecraft.client.entity.EntityOtherPlayerMP
+
+class EntityOtherPlayerMPImpl<out T : EntityOtherPlayerMP>(wrapped: T) : EntityPlayerImpl<T>(wrapped), IEntityOtherPlayerMP
+
+fun IEntityOtherPlayerMP.unwrap(): EntityOtherPlayerMP = (this as EntityOtherPlayerMPImpl<*>).wrapped
+fun EntityOtherPlayerMP.wrap(): IEntityOtherPlayerMP = EntityOtherPlayerMPImpl(this)
