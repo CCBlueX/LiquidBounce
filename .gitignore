@@ -1,12 +1,6 @@
-.idea/*
-!.idea/runConfigurations/
-*.iml
-*.ipr
-*.iws
-/bin/
-/.settings/
-/.gradle/
-*.salive
-desktop.ini
-icon.ico
+/run/
+/out/
 /build/
+/.settings/
+/bin/
+/.gradle/

@@ -1,0 +1,33 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
+package net.ccbluex.liquidbounce.utils
+
+import net.ccbluex.liquidbounce.utils.extensions.toRadians
+
+object MovementUtils : MinecraftInstance()
+{
+    @JvmStatic
+    fun getDirection(rotationYaw: Float, moveForward: Float, moveStrafing: Float): Float = getDirectionDegrees(rotationYaw, moveForward, moveStrafing).toRadians
+
+    @JvmStatic
+    fun getDirectionDegrees(rotationYaw: Float, moveForward: Float, moveStrafing: Float): Float
+    {
+        var yaw = rotationYaw % 360f
+        var forward = 1f
+
+        if (moveForward < 0f)
+        {
+            yaw += 180f
+            forward = -0.5f
+        }
+        else if (moveForward > 0f) forward = 0.5f
+
+        if (moveStrafing > 0f) yaw -= 90f * forward
+        if (moveStrafing < 0f) yaw += 90f * forward
+
+        return yaw
+    }
+}
