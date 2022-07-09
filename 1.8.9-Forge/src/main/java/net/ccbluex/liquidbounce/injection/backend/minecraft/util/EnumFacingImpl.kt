@@ -13,26 +13,28 @@ import net.minecraft.util.EnumFacing
 
 class EnumFacingImpl(val wrapped: EnumFacing) : IEnumFacing
 {
-	override val opposite: IEnumFacing
-		get() = wrapped.opposite.wrap()
-	override val directionVec: WVec3i
-		get() = wrapped.directionVec.wrap()
-	override val axisOrdinal: Int
-		get() = wrapped.axis.ordinal
+    override val opposite: IEnumFacing
+        get() = wrapped.opposite.wrap()
+    override val directionVec: WVec3i
+        get() = wrapped.directionVec.wrap()
+    override val axisOrdinal: Int
+        get() = wrapped.axis.ordinal
 
-	override fun isNorth(): Boolean = wrapped == EnumFacing.NORTH
+    override fun isNorth(): Boolean = wrapped == EnumFacing.NORTH
 
-	override fun isSouth(): Boolean = wrapped == EnumFacing.SOUTH
+    override fun isSouth(): Boolean = wrapped == EnumFacing.SOUTH
 
-	override fun isEast(): Boolean = wrapped == EnumFacing.EAST
+    override fun isEast(): Boolean = wrapped == EnumFacing.EAST
 
-	override fun isWest(): Boolean = wrapped == EnumFacing.WEST
+    override fun isWest(): Boolean = wrapped == EnumFacing.WEST
 
-	override fun isUp(): Boolean = wrapped == EnumFacing.UP
+    override fun isUp(): Boolean = wrapped == EnumFacing.UP
 
-	override fun equals(other: Any?): Boolean = other is EnumFacingImpl && other.wrapped == wrapped
+    override fun isDown(): Boolean = wrapped == EnumFacing.DOWN
 
-	override fun toString(): String = wrapped.name2
+    override fun equals(other: Any?): Boolean = other is EnumFacingImpl && other.wrapped == wrapped
+
+    override fun toString(): String = wrapped.name2
 }
 
 fun IEnumFacing.unwrap(): EnumFacing = (this as EnumFacingImpl).wrapped

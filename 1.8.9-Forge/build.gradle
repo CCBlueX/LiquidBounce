@@ -90,7 +90,7 @@ dependencies {
 
 	implementation 'com.github.TheAltening:TheAltening4j:d0771f42d3'
 	implementation 'com.github.TheAltening:API-Java-AuthLib:-SNAPSHOT'
-	compile 'com.github.TheAltening:TheAltening4j:api-2.0-22541fa70f-1'
+	compile 'com.github.TheAltening:TheAltening4j:api-2.0-SNAPSHOT'
 	compile 'com.github.TheAltening:API-Java-AuthLib:-SNAPSHOT'
 	compile('commons-io:commons-io') {
 		version {

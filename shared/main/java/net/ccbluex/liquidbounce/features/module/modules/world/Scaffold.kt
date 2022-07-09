@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.render.BlockOverlay
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.*
+import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.block.PlaceInfo
 import net.ccbluex.liquidbounce.utils.block.SearchInfo
 import net.ccbluex.liquidbounce.utils.extensions.*
@@ -357,151 +358,80 @@ class Scaffold : Module()
                 thePlayer.motionY = 0.0
             }
 
-            // Smooth Zitter
-            if (movementZitterModeValue.get().equals("Smooth", true))
-            {
-                val keyBindRight = gameSettings.keyBindRight
-                val keyBindLeft = gameSettings.keyBindLeft
-
-                if (!gameSettings.isKeyDown(keyBindRight)) keyBindRight.pressed = false
-                if (!gameSettings.isKeyDown(keyBindLeft)) keyBindLeft.pressed = false
-
-                if (zitterTimer.hasTimePassed(100))
-                {
-                    zitterDirection = !zitterDirection
-                    zitterTimer.reset()
-                }
-
-                if (zitterDirection)
-                {
-                    keyBindRight.pressed = true
-                    keyBindLeft.pressed = false
-                }
-                else
-                {
-                    keyBindRight.pressed = false
-                    keyBindLeft.pressed = true
-                }
-            }
-
             // Eagle
             if (!movementEagleModeValue.get().equals("Off", true) && !shouldGoDown)
             {
-                var edgeDistance = 0.5
-
-                // Caldulate edge distance
-                if (movementEagleModeValue.get().endsWith("EdgeDistance", true) && !shouldGoDown)
+                var dif = 0.5
+                val blockPos = WBlockPos(mc.thePlayer!!.posX, mc.thePlayer!!.posY - 1.0, mc.thePlayer!!.posZ)
+                if (movementEagleEdgeDistanceValue.get() > 0)
                 {
-                    repeat(4) {
-                        val y = thePlayer.posY - (if (thePlayer.posY == thePlayer.posY.toInt() + 0.5) 0.0 else 1.0)
-
-                        when (it)
+                    for (facingType in EnumFacingType.values())
+                    {
+                        val side = classProvider.getEnumFacing(facingType)
+                        if (side.isUp() || side.isDown()) continue
+                        val neighbor = blockPos.offset(side)
+                        if (theWorld.isReplaceable(neighbor))
                         {
-                            0 ->
-                            {
-                                val blockPos = WBlockPos(thePlayer.posX - 1.0, y, thePlayer.posZ)
-                                val placeInfo = PlaceInfo[theWorld, blockPos]
-                                if (theWorld.isReplaceable(blockPos) && placeInfo != null)
-                                {
-                                    var deltaX = thePlayer.posX - blockPos.x
-                                    deltaX -= 0.5
+                            val calcDif = ((if (side.isNorth() || side.isSouth()) abs((neighbor.z + 0.5) - mc.thePlayer!!.posZ)
+                            else abs((neighbor.x + 0.5) - mc.thePlayer!!.posX))) - 0.5
 
-                                    if (deltaX < 0)
-                                    {
-                                        deltaX *= -1.0
-                                        deltaX -= 0.5
-                                    }
-
-                                    if (deltaX < edgeDistance) edgeDistance = deltaX
-                                }
-                            }
-
-                            1 ->
-                            {
-                                val blockPos = WBlockPos(thePlayer.posX + 1.0, y, thePlayer.posZ)
-                                val placeInfo = PlaceInfo[theWorld, blockPos]
-
-                                if (theWorld.isReplaceable(blockPos) && placeInfo != null)
-                                {
-                                    var deltaX = thePlayer.posX - blockPos.x
-                                    deltaX -= 0.5
-
-                                    if (deltaX < 0)
-                                    {
-                                        deltaX *= -1.0
-                                        deltaX -= 0.5
-                                    }
-
-                                    if (deltaX < edgeDistance) edgeDistance = deltaX
-                                }
-                            }
-
-                            2 ->
-                            {
-                                val blockPos = WBlockPos(thePlayer.posX, y, thePlayer.posZ - 1.0)
-                                val placeInfo = PlaceInfo[theWorld, blockPos]
-
-                                if (theWorld.isReplaceable(blockPos) && placeInfo != null)
-                                {
-                                    var deltaZ = thePlayer.posZ - blockPos.z
-                                    deltaZ -= 0.5
-
-                                    if (deltaZ < 0)
-                                    {
-                                        deltaZ *= -1.0
-                                        deltaZ -= 0.5
-                                    }
-
-                                    if (deltaZ < edgeDistance) edgeDistance = deltaZ
-                                }
-                            }
-
-                            3 ->
-                            {
-                                val blockPos = WBlockPos(thePlayer.posX, y, thePlayer.posZ + 1.0)
-                                val placeInfo = PlaceInfo[theWorld, blockPos]
-
-                                if (theWorld.isReplaceable(blockPos) && placeInfo != null)
-                                {
-                                    var deltaZ = thePlayer.posZ - blockPos.z
-                                    deltaZ -= 0.5
-
-                                    if (deltaZ < 0)
-                                    {
-                                        deltaZ *= -1
-                                        deltaZ -= 0.5
-                                    }
-
-                                    if (deltaZ < edgeDistance) edgeDistance = deltaZ
-                                }
-                            }
+                            if (calcDif < dif) dif = calcDif
                         }
                     }
                 }
-
                 if (placedBlocksWithoutEagle >= movementEagleBlocksToEagleValue.get())
                 {
-                    val shouldEagle = theWorld.getBlockState(WBlockPos(thePlayer.posX, thePlayer.posY - 1.0, thePlayer.posZ)).block == (classProvider.getBlockEnum(BlockType.AIR)) || (edgeDistance < movementEagleEdgeDistanceValue.get() && movementEagleModeValue.get().endsWith("EdgeDistance", true))
-                    if (movementEagleModeValue.get().startsWith("Silent", true) && !shouldGoDown)
+                    val shouldEagle = theWorld.isReplaceable(blockPos) || (movementEagleEdgeDistanceValue.get() > 0 && dif < movementEagleEdgeDistanceValue.get())
+                    if (movementEagleModeValue.get().equals("Silent", true))
                     {
-                        if (eagleSneaking != shouldEagle) mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(thePlayer, if (shouldEagle) ICPacketEntityAction.WAction.START_SNEAKING else ICPacketEntityAction.WAction.STOP_SNEAKING))
+                        if (eagleSneaking != shouldEagle)
+                        {
+                            mc.netHandler.addToSendQueue(classProvider.createCPacketEntityAction(mc.thePlayer!!, if (shouldEagle) ICPacketEntityAction.WAction.START_SNEAKING
+                            else ICPacketEntityAction.WAction.STOP_SNEAKING))
+                        }
                         eagleSneaking = shouldEagle
                     }
-                    else
-                    {
-                        gameSettings.keyBindSneak.pressed = shouldEagle
-                        placedBlocksWithoutEagle = 0
-                    }
+                    else mc.gameSettings.keyBindSneak.pressed = shouldEagle
+                    placedBlocksWithoutEagle = 0
                 }
                 else placedBlocksWithoutEagle++
             }
 
-            // Teleport Zitter
-            if (movementZitterModeValue.get().equals("Teleport", true))
+            // Smooth Zitter
+            when (movementZitterModeValue.get().toLowerCase())
             {
-                thePlayer.strafe(movementZitterSpeedValue.get())
-                thePlayer.boost(movementZitterIntensityValue.get(), thePlayer.rotationYaw + if (zitterDirection) 90f else -90f)
-                zitterDirection = !zitterDirection
+                "smooth" ->
+                {
+                    val keyBindRight = gameSettings.keyBindRight
+                    val keyBindLeft = gameSettings.keyBindLeft
+
+                    if (!gameSettings.isKeyDown(keyBindRight)) keyBindRight.pressed = false
+                    if (!gameSettings.isKeyDown(keyBindLeft)) keyBindLeft.pressed = false
+
+                    if (zitterTimer.hasTimePassed(100))
+                    {
+                        zitterDirection = !zitterDirection
+                        zitterTimer.reset()
+                    }
+
+                    if (zitterDirection)
+                    {
+                        keyBindRight.pressed = true
+                        keyBindLeft.pressed = false
+                    }
+                    else
+                    {
+                        keyBindRight.pressed = false
+                        keyBindLeft.pressed = true
+                    }
+                }
+
+                "teleport" ->
+                {
+                    thePlayer.strafe(movementZitterSpeedValue.get())
+                    thePlayer.boost(movementZitterIntensityValue.get(), thePlayer.rotationYaw + if (zitterDirection) 90f else -90f)
+                    zitterDirection = !zitterDirection
+                }
             }
         }
     }
@@ -1183,7 +1113,7 @@ class Scaffold : Module()
                         val searchSideVec = searchVec + dirVecHalf
 
                         // Visibility checks
-                        if (checkVisible && (eyesPos.squareDistanceTo(searchSideVec) > 18.0 // Distance Check - (distance(eyes, searchSideVec)^2 > 18 blocks)
+                        if (checkVisible && (eyesPos.distanceTo(searchSideVec) > 4.25 // Distance Check - (distance(eyes, searchSideVec) > 4.25 blocks)
                                 || sqDistanceToSearchVec > eyesPos.squareDistanceTo(searchVec + dirVec) // Against Distance Check - (distance(eyes, searchVec) > distance(eyes, searchDirVec))
                                 || theWorld.rayTraceBlocks(eyesPos, searchSideVec, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false) != null)) // Raytrace Check - (rayTrace hit between eye position and block side)
                         {
@@ -1197,16 +1127,16 @@ class Scaffold : Module()
                             val deltaX = if (staticYaw && i == 0) 0.0 else searchSideVec.xCoord - eyesPos.xCoord
                             val deltaZ = if (staticYaw && i == 1) 0.0 else searchSideVec.zCoord - eyesPos.zCoord
 
-                            if (!side.isUp() && minDelta > 0)
+                            if (!side.isUp())
                             {
                                 delta = abs(if (side.isNorth() || side.isSouth()) deltaZ else deltaX)
-                                if (delta < minDelta || delta > 0.3f) return@repeat
+                                if (delta < minDelta) return@repeat
                             }
 
                             // Calculate the rotation from vector
                             val rotation = Rotation(wrapAngleTo180_float(WMathHelper.toDegrees(atan2(deltaZ, deltaX).toFloat()) - 90f + if (staticYaw) staticYawOffset else 0f), if (staticPitch) staticPitchOffset else wrapAngleTo180_float((-WMathHelper.toDegrees(atan2(searchSideVec.yCoord - eyesPos.yCoord, hypot(deltaX, deltaZ)).toFloat()))))
                             val vectorForRotation = RotationUtils.getVectorForRotation(rotation)
-                            val rayEnd = eyesPos + vectorForRotation * 4.0
+                            val rayEnd = eyesPos + vectorForRotation * 4.25
 
                             var rayTrace: IMovingObjectPosition? = null
                             if (!checkVisible || run {
