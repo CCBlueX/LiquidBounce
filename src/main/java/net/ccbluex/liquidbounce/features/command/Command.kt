@@ -1,0 +1,62 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
+package net.ccbluex.liquidbounce.features.command
+
+import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.minecraft.client.entity.EntityPlayerSP
+import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.ccbluex.liquidbounce.utils.extensions.withClientPrefix
+
+abstract class Command(val command: String, vararg val alias: String) : MinecraftInstance()
+{
+    /**
+     * Execute commands with provided [args]
+     */
+    abstract fun execute(args: Array<String>)
+
+    /**
+     * Returns a list of command completions based on the provided [args].
+     * If a command does not implement [tabComplete] an [EmptyList] is returned by default.
+     *
+     * @param args an array of command arguments that the player has passed to the command so far
+     * @return a list of matching completions for the command the player is trying to autocomplete
+     * @author NurMarvin
+     */
+    open fun tabComplete(args: Array<String>): List<String> = emptyList()
+
+    /**
+     * Print [msg] to chat
+     */
+    protected fun chat(thePlayer: EntityPlayerSP?, msg: String) = ClientUtils.displayChatMessage(thePlayer, msg.withClientPrefix())
+
+    /**
+     * Print [syntax] of command to chat
+     */
+    protected fun chatSyntax(thePlayer: EntityPlayerSP?, syntax: String) = ClientUtils.displayChatMessage(thePlayer, "\u00A73Syntax: \u00A77${LiquidBounce.commandManager.prefix}$syntax".withClientPrefix())
+
+    /**
+     * Print [syntaxes] of command to chat
+     */
+    protected fun chatSyntax(thePlayer: EntityPlayerSP?, syntaxes: Array<String>)
+    {
+        ClientUtils.displayChatMessage(thePlayer, "Syntax: ".withClientPrefix())
+
+        val commandPrefix = LiquidBounce.commandManager.prefix
+
+        syntaxes.map(String::toLowerCase).forEach { ClientUtils.displayChatMessage(thePlayer, "\u00A78> \u00A77$commandPrefix$command $it".withClientPrefix()) }
+    }
+
+    /**
+     * Print a syntax error to chat
+     */
+    protected fun chatSyntaxError(thePlayer: EntityPlayerSP?) = ClientUtils.displayChatMessage(thePlayer, "\u00A73Syntax error!".withClientPrefix())
+
+    /**
+     * Play edit sound
+     */
+    protected fun playEdit() = mc.soundHandler.playSound("random.anvil_use", 1F)
+}
