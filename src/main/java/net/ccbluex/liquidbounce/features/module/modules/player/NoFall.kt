@@ -6,10 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.enums.BlockType
-import net.ccbluex.liquidbounce.api.enums.ItemType
-import net.ccbluex.liquidbounce.api.minecraft.util.BlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.Vec3
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -20,9 +16,20 @@ import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.VecRotation
 import net.ccbluex.liquidbounce.utils.extensions.collideBlock
+import net.ccbluex.liquidbounce.utils.extensions.plus
+import net.ccbluex.liquidbounce.utils.extensions.sendPacketWithoutEvent
 import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
 import net.ccbluex.liquidbounce.value.*
+import net.minecraft.block.BlockLiquid
+import net.minecraft.init.Blocks
+import net.minecraft.init.Items
+import net.minecraft.item.ItemBlock
+import net.minecraft.item.ItemBucket
+import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.BlockPos
+import net.minecraft.util.Vec3
 import kotlin.math.ceil
 import kotlin.math.pow
 
@@ -99,10 +106,8 @@ class NoFall : Module()
         }
 
         val moduleManager = LiquidBounce.moduleManager
-        val provider = classProvider
-
         val fly = moduleManager[Fly::class.java] as Fly
-        if (!state || moduleManager[FreeCam::class.java].state || fly.state && fly.shouldDisableNoFall || thePlayer.spectator || thePlayer.capabilities.allowFlying || thePlayer.capabilities.disableDamage || theWorld.collideBlock(playerBB) { it.block is BlockLiquid } || theWorld.collideBlock(AxisAlignedBB(playerBB.minX, playerBB.minY - 0.01, playerBB.minZ, playerBB.maxX, playerBB.maxY, playerBB.maxZ)) { it.block is BlockLiquid })
+        if (!state || moduleManager[FreeCam::class.java].state || fly.state && fly.shouldDisableNoFall || thePlayer.isSpectator || thePlayer.capabilities.allowFlying || thePlayer.capabilities.disableDamage || theWorld.collideBlock(playerBB) { it.block is BlockLiquid } || theWorld.collideBlock(AxisAlignedBB(playerBB.minX, playerBB.minY - 0.01, playerBB.minZ, playerBB.maxX, playerBB.maxY, playerBB.maxZ)) { it.block is BlockLiquid })
         {
             noSpoof = 0
             return
@@ -117,7 +122,7 @@ class NoFall : Module()
                 val nospoofticks: Int = noSpoofTicks.get()
                 if (noSpoof >= nospoofticks)
                 {
-                    networkManager.sendPacketWithoutEvent(CPacketPlayer(true))
+                    networkManager.sendPacketWithoutEvent(C03PacketPlayer(true))
                     noSpoof = 0
                 }
                 noSpoof++
@@ -126,14 +131,14 @@ class NoFall : Module()
             "cubecraft" -> if (fallDistance > thresholdFallDistance)
             {
                 thePlayer.onGround = false
-                networkManager.sendPacketWithoutEvent(CPacketPlayer(true))
+                networkManager.sendPacketWithoutEvent(C03PacketPlayer(true))
             }
 
             "aac3.1.0" ->
             {
                 if (fallDistance > thresholdFallDistance)
                 {
-                    networkManager.sendPacketWithoutEvent(CPacketPlayer(true))
+                    networkManager.sendPacketWithoutEvent(C03PacketPlayer(true))
                     aacTicks = 2
                 }
                 else if (aacTicks == 2 && fallDistance < 2)
@@ -170,13 +175,13 @@ class NoFall : Module()
             {
                 thePlayer.motionZ = 0.0
                 thePlayer.motionX = thePlayer.motionZ
-                networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(posX, posY - 10E-4, posZ, thePlayer.onGround))
-                networkManager.sendPacketWithoutEvent(CPacketPlayer(true))
+                networkManager.sendPacketWithoutEvent(C03PacketPlayer.C04PacketPlayerPosition(posX, posY - 10E-4, posZ, thePlayer.onGround))
+                networkManager.sendPacketWithoutEvent(C03PacketPlayer(true))
             }
 
             "aac3.3.15" -> if (fallDistance > thresholdFallDistance)
             {
-                if (!mc.isIntegratedServerRunning) networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(posX, Double.NaN, posZ, false))
+                if (!mc.isIntegratedServerRunning) networkManager.sendPacketWithoutEvent(C03PacketPlayer.C04PacketPlayerPosition(posX, Double.NaN, posZ, false))
                 thePlayer.fallDistance = -9999.0F
             }
 
@@ -185,8 +190,8 @@ class NoFall : Module()
                 spartanTimer.update()
                 if (fallDistance > thresholdFallDistance && spartanTimer.hasTimePassed(10))
                 {
-                    networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(posX, posY + 10, posZ, true))
-                    networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(posX, posY - 10, posZ, true))
+                    networkManager.sendPacketWithoutEvent(C03PacketPlayer.C04PacketPlayerPosition(posX, posY + 10, posZ, true))
+                    networkManager.sendPacketWithoutEvent(C03PacketPlayer.C04PacketPlayerPosition(posX, posY - 10, posZ, true))
                     spartanTimer.reset()
                 }
             }
@@ -203,10 +208,8 @@ class NoFall : Module()
         val mode = modeValue.get()
 
         val fly = LiquidBounce.moduleManager[Fly::class.java] as Fly
-        if (packet is CPacketPlayer && !(fly.state && fly.shouldDisableNoFall))
+        if (packet is C03PacketPlayer && !(fly.state && fly.shouldDisableNoFall))
         {
-            val playerPacket = packet.asCPacketPlayer()
-
             if (fallDistance > thresholdFallDistanceValue.get())
             {
                 // SpoofGround
@@ -215,7 +218,7 @@ class NoFall : Module()
                     val nospoofticks: Int = noSpoofTicks.get()
                     if (noSpoof >= nospoofticks)
                     {
-                        playerPacket.onGround = true
+                        packet.onGround = true
                         noSpoof = 0
                     }
                     noSpoof++
@@ -224,18 +227,18 @@ class NoFall : Module()
                 // ACP
                 else if (mode.equals("ACP", ignoreCase = true) /* && fallDistance > 2 */)
                 {
-                    playerPacket.onGround = true
+                    packet.onGround = true
 
                     thePlayer.motionZ = 0.0
                     thePlayer.motionX = thePlayer.motionZ
                 }
 
                 // Hypixel
-                if (mode.equals("Hypixel", ignoreCase = true) /* && fallDistance > 1.5 */) playerPacket.onGround = thePlayer.ticksExisted % 2 == 0
+                if (mode.equals("Hypixel", ignoreCase = true) /* && fallDistance > 1.5 */) packet.onGround = thePlayer.ticksExisted % 2 == 0
             }
 
             // NoGround
-            if (mode.equals("NoGround", ignoreCase = true)) playerPacket.onGround = false
+            if (mode.equals("NoGround", ignoreCase = true)) packet.onGround = false
         }
     }
 
@@ -297,7 +300,7 @@ class NoFall : Module()
                 val inventory = thePlayer.inventory
 
                 run {
-                    (0..8).mapNotNull { it to (inventory.getStackInSlot(it) ?: return@mapNotNull null) }.filter { (_, stack) -> stack.item == classProvider.getItemEnum(ItemType.WATER_BUCKET) || stack.item is ItemBlock && (stack.item!! as ItemBlock)block == classProvider.getBlockEnum(BlockType.WEB) }.forEach {
+                    (0..8).mapNotNull { it to (inventory.getStackInSlot(it) ?: return@mapNotNull null) }.filter { (_, stack) -> stack.item == Items.water_bucket || stack.item is ItemBlock && (stack.item as ItemBlock).block == Blocks.web }.forEach {
                         mlgItemSlot = it.first
                         if (thePlayer.inventory.currentItem == mlgItemSlot) return@run
                     }

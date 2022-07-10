@@ -2,8 +2,10 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.flies.minorACs
 
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
+import net.ccbluex.liquidbounce.utils.extensions.sendPacketWithoutEvent
 import net.ccbluex.liquidbounce.utils.extensions.zeroXZ
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
+import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 
 class ACPFly : FlyMode("ACP") // ACP = AntiCheatPlus
 {
@@ -13,7 +15,7 @@ class ACPFly : FlyMode("ACP") // ACP = AntiCheatPlus
     {
         val thePlayer = mc.thePlayer ?: return
 
-        mc.netHandler.networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(thePlayer.posX, thePlayer.posY + 0.4, thePlayer.posZ, thePlayer.onGround))
+        mc.netHandler.networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(thePlayer.posX, thePlayer.posY + 0.4, thePlayer.posZ, thePlayer.onGround))
     }
 
     override fun onUpdate()

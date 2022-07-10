@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
-
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
@@ -13,6 +12,10 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.ccbluex.liquidbounce.value.ValueGroup
+import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.client.renderer.OpenGlHelper
+import net.minecraft.client.renderer.RenderHelper
+import net.minecraft.entity.EntityLivingBase
 import org.lwjgl.opengl.GL11
 import kotlin.math.abs
 import kotlin.math.atan
@@ -114,8 +117,6 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y)
      */
     private fun drawEntityOnScreen(yaw: Float, pitch: Float, entityLivingBase: EntityLivingBase)
     {
-        val glStateManager = classProvider.glStateManager
-
         GlStateManager.resetColor()
         GlStateManager.enableColorMaterial()
         GL11.glPushMatrix()
@@ -129,10 +130,8 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y)
         val prevRotationYawHead = entityLivingBase.prevRotationYawHead
         val rotationYawHead = entityLivingBase.rotationYawHead
 
-        val func = functions
-
         GL11.glRotatef(135F, 0F, 1F, 0F)
-        func.enableStandardItemLighting()
+        RenderHelper.enableStandardItemLighting()
         GL11.glRotatef(-135F, 0F, 1F, 0F)
         GL11.glRotatef(-atan(pitch * 0.025f) * 20.0F, 1F, 0F, 0F)
 
@@ -157,11 +156,11 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y)
         entityLivingBase.rotationYawHead = rotationYawHead
 
         GL11.glPopMatrix()
-        func.disableStandardItemLighting()
+        RenderHelper.disableStandardItemLighting()
         GlStateManager.disableRescaleNormal()
-        func.setActiveTextureLightMapTexUnit()
+        GlStateManager.setActiveTexture(OpenGlHelper.lightmapTexUnit)
         GlStateManager.disableTexture2D()
-        func.setActiveTextureDefaultTexUnit()
+        GlStateManager.setActiveTexture(OpenGlHelper.defaultTexUnit)
         GlStateManager.resetColor()
     }
 }

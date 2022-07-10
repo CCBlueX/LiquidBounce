@@ -6,8 +6,6 @@
 package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles
 
 import net.ccbluex.liquidbounce.LiquidBounce
-
-
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.Companion.generateButtonColor
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.Companion.generateValueColor
@@ -20,6 +18,7 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ButtonElement
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ModuleElement
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.Style
 import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.ui.font.GameFontRenderer
 import net.ccbluex.liquidbounce.ui.font.assumeNonVolatile
 import net.ccbluex.liquidbounce.ui.font.assumeVolatileIf
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
@@ -28,6 +27,10 @@ import net.ccbluex.liquidbounce.utils.misc.StringUtils.stripControlCodes
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.ccbluex.liquidbounce.value.*
+import net.minecraft.client.audio.PositionedSoundRecord
+import net.minecraft.client.gui.FontRenderer
+import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.util.ResourceLocation
 import org.lwjgl.input.Mouse
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -66,11 +69,11 @@ class LiquidBounceStyle : Style()
     override fun drawDescription(mouseX: Int, mouseY: Int, text: String)
     {
         val font = getDescriptionFont()
-        val fontHeight = font.fontHeight
+        val fontHeight = font.FONT_HEIGHT
         val textWidth = font.getStringWidth(text)
         drawBorderedRect(mouseX + 9f, mouseY.toFloat(), mouseX + textWidth + 14f, mouseY + fontHeight + 3f, 1f, BORDER, BACKGROUND)
 
-        classProvider.GlStateManager.resetColor()
+        GlStateManager.resetColor()
 
         font.drawString(text, mouseX + 12, mouseY + (fontHeight shr 1), LIGHT_GRAY)
     }
@@ -78,7 +81,7 @@ class LiquidBounceStyle : Style()
     override fun drawButtonElement(mouseX: Int, mouseY: Int, buttonElement: ButtonElement)
     {
         val font = getButtonFont()
-        classProvider.GlStateManager.resetColor()
+        GlStateManager.resetColor()
         font.drawString(buttonElement.displayName, (buttonElement.x - (font.getStringWidth(buttonElement.displayName) - 100.0f) * 0.5f).toInt(), buttonElement.y + 6, buttonElement.color)
     }
 
@@ -88,8 +91,6 @@ class LiquidBounceStyle : Style()
 
         val valueFont = getValueFont()
         val valueColor = generateValueColor()
-        val glStateManager = classProvider.glStateManager
-
         GlStateManager.resetColor()
 
         val elementX = moduleElement.x + moduleElement.width
@@ -104,19 +105,19 @@ class LiquidBounceStyle : Style()
             if (moduleElement.showSettings)
             {
                 var yPos = elementY + 4
-                for (value in moduleValues) yPos = drawAbstractValue(valueFont, glStateManager, moduleElement, value, yPos, mouseX, mouseY, valueColor)
+                for (value in moduleValues) yPos = drawAbstractValue(valueFont, moduleElement, value, yPos, mouseX, mouseY, valueColor)
 
                 moduleElement.updatePressed()
 
-                mouseDown = 0 is ButtonDown
-                rightMouseDown = 1 is ButtonDown
+                mouseDown = Mouse.isButtonDown(0)
+                rightMouseDown = Mouse.isButtonDown(1)
 
                 if (moduleElement.settingsWidth > 0.0f && yPos > elementY + 4) drawBorderedRect(elementX + 4f, elementY + 6f, elementX + moduleElement.settingsWidth, yPos + 2f, 1.0f, BACKGROUND, 0)
             }
         }
     }
 
-    private fun drawAbstractValue(font: FontRenderer, glStateManager: IGlStateManager, moduleElement: ModuleElement, value: AbstractValue, _yPos: Int, mouseX: Int, mouseY: Int, guiColor: Int, indent: Int = 0): Int
+    private fun drawAbstractValue(font: FontRenderer, moduleElement: ModuleElement, value: AbstractValue, _yPos: Int, mouseX: Int, mouseY: Int, guiColor: Int, indent: Int = 0): Int
     {
         var yPos = _yPos
         when (value)
@@ -138,10 +139,10 @@ class LiquidBounceStyle : Style()
                 font.drawString("\u00A7c$text", moduleIndentX + 6, yPos + 4, WHITE)
                 font.drawString(if (value.foldState) "-" else "+", (moduleXEnd - if (value.foldState) 5 else 6).toInt(), yPos + 4, WHITE)
 
-                if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= yPos + 2 && mouseY <= yPos + 14 && 0 is ButtonDown && moduleElement.isntLeftPressed)
+                if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= yPos + 2 && mouseY <= yPos + 14 && Mouse.isButtonDown(0) && moduleElement.isntLeftPressed)
                 {
                     value.foldState = !value.foldState
-                    mc.soundHandler.playSound("gui.button.press", 1.0f)
+                    mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("gui.button.press"), 1.0f))
                 }
 
                 yPos += 12
@@ -160,7 +161,7 @@ class LiquidBounceStyle : Style()
                         if (moduleElement.settingsWidth < textWidth2) moduleElement.settingsWidth = textWidth2
 
                         GlStateManager.resetColor()
-                        yPos = drawAbstractValue(font, glStateManager, moduleElement, valueOfGroup, yPos, mouseX, mouseY, guiColor, indent + 10)
+                        yPos = drawAbstractValue(font, moduleElement, valueOfGroup, yPos, mouseX, mouseY, guiColor, indent + 10)
 
                         if (i == j - 1) // Last Index
                         {
@@ -172,14 +173,14 @@ class LiquidBounceStyle : Style()
                 }
             }
 
-            is ColorValue -> yPos = drawColorValue(font, glStateManager, moduleElement, value, yPos, mouseX, mouseY, indent)
-            is RangeValue<*> -> yPos = drawRangeValue(font, glStateManager, moduleElement, value, yPos, mouseX, mouseY, guiColor, indent)
-            else -> yPos = drawValue(font, glStateManager, moduleElement, value as Value<*>, yPos, mouseX, mouseY, guiColor, indent)
+            is ColorValue -> yPos = drawColorValue(font, moduleElement, value, yPos, mouseX, mouseY, indent)
+            is RangeValue<*> -> yPos = drawRangeValue(font, moduleElement, value, yPos, mouseX, mouseY, guiColor, indent)
+            else -> yPos = drawValue(font, moduleElement, value as Value<*>, yPos, mouseX, mouseY, guiColor, indent)
         }
         return yPos
     }
 
-    private fun drawColorValue(font: FontRenderer, glStateManager: IGlStateManager, moduleElement: ModuleElement, value: ColorValue, _yPos: Int, mouseX: Int, mouseY: Int, indent: Int = 0): Int
+    private fun drawColorValue(font: FontRenderer, moduleElement: ModuleElement, value: ColorValue, _yPos: Int, mouseX: Int, mouseY: Int, indent: Int = 0): Int
     {
         var yPos = _yPos
         val moduleX = moduleElement.x + moduleElement.width
@@ -209,7 +210,7 @@ class LiquidBounceStyle : Style()
             val sliderMarkXPos = (moduleIndentX + sliderXEnd * sliderValue / 255) + 8
             drawRect(sliderMarkXPos, startY + 5f, sliderMarkXPos + 3, startY + 11f, color)
 
-            mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= startY + 15 && mouseY <= startY + 21 && 0 is ButtonDown
+            mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= startY + 15 && mouseY <= startY + 21 && Mouse.isButtonDown(0)
         }
 
         yPos += 10
@@ -240,7 +241,7 @@ class LiquidBounceStyle : Style()
         return yPos
     }
 
-    private fun drawRangeValue(font: FontRenderer, glStateManager: IGlStateManager, moduleElement: ModuleElement, value: RangeValue<*>, _yPos: Int, mouseX: Int, mouseY: Int, guiColor: Int, indent: Int = 0): Int
+    private fun drawRangeValue(font: FontRenderer, moduleElement: ModuleElement, value: RangeValue<*>, _yPos: Int, mouseX: Int, mouseY: Int, guiColor: Int, indent: Int = 0): Int
     {
         var yPos = _yPos
         val moduleX = moduleElement.x + moduleElement.width
@@ -271,7 +272,7 @@ class LiquidBounceStyle : Style()
 
                     drawRect(minSliderValue + 3, yPos + 18f, maxSliderValue, yPos + 19f, guiColor)
 
-                    if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= yPos + 15 && mouseY <= yPos + 21 && 0 is ButtonDown)
+                    if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= yPos + 15 && mouseY <= yPos + 21 && Mouse.isButtonDown(0))
                     {
                         val newValue = (value.minimum + (value.maximum - value.minimum) * ((mouseX - moduleElement.x - moduleElement.width - indent - 8f) / sliderXEnd).coerceIn(0f, 1f)).toInt()
                         if (mouseX > minSliderValue + (maxSliderValue - minSliderValue) * 0.5f) value.setMax(newValue)
@@ -304,7 +305,7 @@ class LiquidBounceStyle : Style()
 
                     drawRect(minSliderValue + 3, yPos + 18f, maxSliderValue, yPos + 19f, guiColor)
 
-                    if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd - 4 && mouseY >= yPos + 15 && mouseY <= yPos + 21 && 0 is ButtonDown)
+                    if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd - 4 && mouseY >= yPos + 15 && mouseY <= yPos + 21 && Mouse.isButtonDown(0))
                     {
                         val newValue = round(value.minimum + (value.maximum - value.minimum) * ((mouseX - moduleElement.x - moduleElement.width - indent - 8) / sliderXEnd).coerceIn(0f, 1f))
                         if (mouseX > minSliderValue + (maxSliderValue - minSliderValue) * 0.5f) value.setMax(newValue.toFloat())
@@ -323,7 +324,7 @@ class LiquidBounceStyle : Style()
         return yPos
     }
 
-    private fun drawValue(valueFont: FontRenderer, glStateManager: IGlStateManager, moduleElement: ModuleElement, value: Value<*>, _yPos: Int, mouseX: Int, mouseY: Int, guiColor: Int, indent: Int = 0): Int
+    private fun drawValue(valueFont: FontRenderer, moduleElement: ModuleElement, value: Value<*>, _yPos: Int, mouseX: Int, mouseY: Int, guiColor: Int, indent: Int = 0): Int
     {
         var yPos = _yPos
         val moduleX = moduleElement.x + moduleElement.width
@@ -343,10 +344,10 @@ class LiquidBounceStyle : Style()
 
                     drawRect(moduleX + 4f, yPos + 2f, moduleX + moduleElement.settingsWidth, yPos + 14f, BACKGROUND)
 
-                    if (mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= yPos + 2 && mouseY <= yPos + 14 && 0 is ButtonDown && moduleElement.isntLeftPressed)
+                    if (mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= yPos + 2 && mouseY <= yPos + 14 && Mouse.isButtonDown(0) && moduleElement.isntLeftPressed)
                     {
                         value.set(!value.get())
-                        soundHandler.playSound("gui.button.press", 1.0f)
+                        mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("gui.button.press"), 1.0f))
                     }
 
                     GlStateManager.resetColor()
@@ -370,10 +371,10 @@ class LiquidBounceStyle : Style()
                     valueFont.drawString("\u00A7c$valueDisplayName", moduleIndentX + 6, yPos + 4, WHITE)
                     valueFont.drawString(if (value.openList) "-" else "+", (moduleXEnd - if (value.openList) 5 else 6).toInt(), yPos + 4, WHITE)
 
-                    if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= yPos + 2 && mouseY <= yPos + 14 && 0 is ButtonDown && moduleElement.isntLeftPressed)
+                    if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= yPos + 2 && mouseY <= yPos + 14 && Mouse.isButtonDown(0) && moduleElement.isntLeftPressed)
                     {
                         value.openList = !value.openList
-                        soundHandler.playSound("gui.button.press", 1.0f)
+                        mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("gui.button.press"), 1.0f))
                     }
 
                     yPos += 12
@@ -392,10 +393,10 @@ class LiquidBounceStyle : Style()
                         {
                             drawRect(moduleX + 4f, yPos + 2f, moduleXEnd, yPos + 14f, BACKGROUND)
 
-                            if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= yPos + 2 && mouseY <= yPos + 14 && 0 is ButtonDown && moduleElement.isntLeftPressed)
+                            if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= yPos + 2 && mouseY <= yPos + 14 && Mouse.isButtonDown(0) && moduleElement.isntLeftPressed)
                             {
                                 value.set(valueOfList)
-                                soundHandler.playSound("gui.button.press", 1.0f)
+                                mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("gui.button.press"), 1.0f))
                             }
 
                             GlStateManager.resetColor()
@@ -423,7 +424,7 @@ class LiquidBounceStyle : Style()
                     val sliderValue = moduleIndentX + sliderXEnd * (value.get() - value.minimum) / (value.maximum - value.minimum)
                     drawRect(8 + sliderValue, yPos + 15f, sliderValue + 11, yPos + 21f, guiColor)
 
-                    if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= yPos + 15 && mouseY <= yPos + 21 && 0 is ButtonDown) value.set((value.minimum + (value.maximum - value.minimum) * ((mouseX - (moduleIndentX + 8)) / sliderXEnd).coerceIn(0f, 1f)).toInt())
+                    if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= yPos + 15 && mouseY <= yPos + 21 && Mouse.isButtonDown(0)) value.set((value.minimum + (value.maximum - value.minimum) * ((mouseX - (moduleIndentX + 8)) / sliderXEnd).coerceIn(0f, 1f)).toInt())
 
                     GlStateManager.resetColor()
 
@@ -447,7 +448,7 @@ class LiquidBounceStyle : Style()
                     val sliderValue = moduleIndentX + sliderXEnd * (value.get() - value.minimum) / (value.maximum - value.minimum)
                     drawRect(8 + sliderValue, yPos + 15f, sliderValue + 11, yPos + 21f, guiColor)
 
-                    if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd - 4 && mouseY >= yPos + 15 && mouseY <= yPos + 21 && 0 is ButtonDown) value.set(round(value.minimum + (value.maximum - value.minimum) * ((mouseX - (moduleIndentX + 8)) / sliderXEnd).coerceIn(0f, 1f)).toFloat())
+                    if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd - 4 && mouseY >= yPos + 15 && mouseY <= yPos + 21 && Mouse.isButtonDown(0)) value.set(round(value.minimum + (value.maximum - value.minimum) * ((mouseX - (moduleIndentX + 8)) / sliderXEnd).coerceIn(0f, 1f)).toFloat())
 
                     GlStateManager.resetColor()
 
@@ -464,11 +465,7 @@ class LiquidBounceStyle : Style()
 
                     var displayString = "Font: Unknown"
 
-                    if (fontRenderer.isGameFontRenderer())
-                    {
-                        val liquidFontRenderer = fontRenderer.getGameFontRenderer()
-                        displayString = "Font: " + liquidFontRenderer.defaultFont.font.name + " - " + liquidFontRenderer.defaultFont.font.size
-                    }
+                    if (fontRenderer is GameFontRenderer) displayString = "Font: " + fontRenderer.defaultFont.font.name + " - " + fontRenderer.defaultFont.font.size
                     else if (fontRenderer == Fonts.minecraftFont) displayString = "Font: Minecraft"
                     else
                     {
@@ -482,11 +479,11 @@ class LiquidBounceStyle : Style()
 
                     if (moduleElement.settingsWidth < stringWidth + 8) moduleElement.settingsWidth = stringWidth + 8f
 
-                    if ((0 is ButtonDown && !mouseDown || 1 is ButtonDown && !rightMouseDown) && mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= yPos + 4 && mouseY <= yPos + 12)
+                    if ((Mouse.isButtonDown(0) && !mouseDown || Mouse.isButtonDown(1) && !rightMouseDown) && mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= yPos + 4 && mouseY <= yPos + 12)
                     {
                         val fonts = Fonts.fonts
 
-                        if (0 is ButtonDown)
+                        if (Mouse.isButtonDown(0))
                         {
                             var i = 0
                             val j = fonts.size

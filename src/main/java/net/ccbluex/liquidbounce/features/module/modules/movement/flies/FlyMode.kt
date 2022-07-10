@@ -1,18 +1,21 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.flies
 
-import net.ccbluex.liquidbounce.api.enums.StatType
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.Entity
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.EntityPlayer
-import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
-import net.ccbluex.liquidbounce.api.minecraft.util.AxisAlignedBB
-import net.ccbluex.liquidbounce.api.minecraft.util.BlockPos
-import net.ccbluex.liquidbounce.api.minecraft.world.World
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.extensions.boost
 import net.ccbluex.liquidbounce.utils.extensions.getBlockCollisionBox
 import net.ccbluex.liquidbounce.utils.extensions.getEffectAmplifier
+import net.ccbluex.liquidbounce.utils.extensions.sendPacketWithoutEvent
+import net.minecraft.block.BlockAir
+import net.minecraft.entity.Entity
+import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.potion.Potion
+import net.minecraft.stats.StatList
+import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.BlockPos
+import net.minecraft.world.World
 import kotlin.math.min
 
 abstract class FlyMode(val modeName: String) : MinecraftInstance()
@@ -71,8 +74,6 @@ abstract class FlyMode(val modeName: String) : MinecraftInstance()
             if (!Fly.vanillaKickBypassValue.get() || !Fly.groundTimer.hasTimePassed(1000)) return
 
             val networkManager = mc.netHandler.networkManager
-            val provider = classProvider
-
             val ground = calculateGround(theWorld, thePlayer)
 
             val posX = thePlayer.posX
@@ -83,23 +84,23 @@ abstract class FlyMode(val modeName: String) : MinecraftInstance()
                 var posY = originalPosY
                 while (posY > ground)
                 {
-                    networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(posX, posY, posZ, true))
+                    networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(posX, posY, posZ, true))
                     if (posY - 8.0 < ground) break // Prevent next step
                     posY -= 8.0
                 }
             }
 
-            networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(posX, ground, posZ, true))
+            networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(posX, ground, posZ, true))
 
             var posY = ground
             while (posY < originalPosY)
             {
-                networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(posX, posY, posZ, true))
+                networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(posX, posY, posZ, true))
                 if (posY + 8.0 > originalPosY) break // Prevent next step
                 posY += 8.0
             }
 
-            networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(posX, originalPosY, posZ, true))
+            networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(posX, originalPosY, posZ, true))
 
             Fly.groundTimer.reset()
         }
@@ -127,22 +128,20 @@ abstract class FlyMode(val modeName: String) : MinecraftInstance()
 
         fun jump(theWorld: World, thePlayer: EntityPlayer)
         {
-            val provider = classProvider
-
             val blockAboveState = theWorld.getBlockState(BlockPos(thePlayer.posX, thePlayer.posY + 2, thePlayer.posZ))
             val blockAbove = blockAboveState.block
-            val normalJumpY = 0.42 + thePlayer.getEffectAmplifier(PotionType.JUMP) * 0.1f
+            val normalJumpY = 0.42 + thePlayer.getEffectAmplifier(Potion.jump) * 0.1f
             val jumpY = if (blockAbove is BlockAir) normalJumpY else min(blockAboveState.let { theWorld.getBlockCollisionBox(it)?.minY?.plus(0.2) } ?: normalJumpY, normalJumpY)
 
             // Simulate Vanilla Player Jump
             thePlayer.setPosition(thePlayer.posX, thePlayer.posY + jumpY, thePlayer.posZ)
 
             // Jump Boost
-            if (thePlayer.sprinting) thePlayer.boost(0.2f)
+            if (thePlayer.isSprinting) thePlayer.boost(0.2f)
             thePlayer.isAirBorne = true
 
             // ForgeHooks.onLivingJump(thePlayer)
-            thePlayer.triggerAchievement(provider.getStatEnum(StatType.JUMP_STAT))
+            thePlayer.triggerAchievement(StatList.jumpStat)
         }
     }
 }

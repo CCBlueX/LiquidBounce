@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.api.minecraft.util.BlockPos
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render2DEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
@@ -18,6 +17,8 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.GlowShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.OutlineShader
 import net.ccbluex.liquidbounce.value.*
+import net.minecraft.entity.item.EntityFallingBlock
+import net.minecraft.util.BlockPos
 
 @ModuleInfo(name = "ProphuntESP", description = "Allows you to see disguised players in PropHunt.", category = ModuleCategory.RENDER)
 class ProphuntESP : Module()
@@ -79,7 +80,7 @@ class ProphuntESP : Module()
 
         val partialTicks = if (interpolateValue.get()) event.partialTicks else 1f
 
-        if (mode == "box" || hydraESP) theWorld.loadedEntityList.filter(classProvider::isEntityFallingBlock).forEach { RenderUtils.drawEntityBox(it, color, boxOutlineColor, hydraESP, partialTicks) }
+        if (mode == "box" || hydraESP) theWorld.loadedEntityList.filterIsInstance<EntityFallingBlock>().forEach { RenderUtils.drawEntityBox(it, color, boxOutlineColor, hydraESP, partialTicks) }
 
         synchronized(blocks) {
             val iterator: MutableIterator<Map.Entry<BlockPos, Long>> = blocks.entries.iterator()
@@ -106,8 +107,6 @@ class ProphuntESP : Module()
         val renderManager = mc.renderManager
         val partialTicks = if (interpolateValue.get()) event.partialTicks else 1f
 
-        val provider = classProvider
-
         val mode = modeValue.get().toLowerCase()
         val shader = when (mode)
         {
@@ -120,7 +119,7 @@ class ProphuntESP : Module()
 
         try
         {
-            theWorld.loadedEntityList.filter(provider::isEntityFallingBlock).forEach { renderManager.renderEntityStatic(it, partialTicks, true) }
+            theWorld.loadedEntityList.filterIsInstance<EntityFallingBlock>().forEach { renderManager.renderEntityStatic(it, partialTicks, true) }
         }
         catch (ex: Exception)
         {

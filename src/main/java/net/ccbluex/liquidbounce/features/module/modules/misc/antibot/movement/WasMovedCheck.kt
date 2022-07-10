@@ -1,12 +1,13 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.movement
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.Entity
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.EntityPlayer
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.WorldClient
-import net.ccbluex.liquidbounce.api.minecraft.util.Vec3
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.BotCheck
+import net.minecraft.client.multiplayer.WorldClient
+import net.minecraft.entity.Entity
+import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.network.play.server.S0CPacketSpawnPlayer
+import net.minecraft.util.Vec3
 import kotlin.math.pow
 
 class WasMovedCheck : BotCheck("move.wasMoved")
@@ -22,13 +23,7 @@ class WasMovedCheck : BotCheck("move.wasMoved")
     override fun onPacket(event: PacketEvent)
     {
         val packet = event.packet
-
-        if (packet is SPacketSpawnPlayer)
-        {
-            val playerSpawnPacket = packet.asSPacketSpawnPlayer()
-
-            spawnedPosition[playerSpawnPacket.entityID] = Vec3(playerSpawnPacket.x.toDouble() / 32.0, playerSpawnPacket.y.toDouble() / 32.0, playerSpawnPacket.z.toDouble() / 32.0)
-        }
+        if (packet is S0CPacketSpawnPlayer) spawnedPosition[packet.entityID] = Vec3(packet.x.toDouble() / 32.0, packet.y.toDouble() / 32.0, packet.z.toDouble() / 32.0)
     }
 
     override fun onEntityMove(theWorld: WorldClient, thePlayer: EntityPlayer, target: EntityPlayer, isTeleport: Boolean, newPos: Vec3, rotating: Boolean, newYaw: Float, newPitch: Float, onGround: Boolean)

@@ -7,6 +7,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMod
 import net.ccbluex.liquidbounce.utils.extensions.cantBoostUp
 import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.extensions.strafe
+import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import kotlin.math.round
 
 /**
@@ -66,7 +67,7 @@ class MineplexBHop2 : SpeedMode("Mineplex-BHop2")
 
     fun onPacket(event: PacketEvent)
     {
-        if (event.packet is SPacketPlayerPosLook)
+        if (event.packet is S08PacketPlayerPosLook)
         {
             mineplex = -2
             stage = 0

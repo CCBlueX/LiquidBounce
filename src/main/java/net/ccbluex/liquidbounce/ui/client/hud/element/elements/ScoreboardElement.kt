@@ -5,8 +5,6 @@
  */
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
-
-
 import net.ccbluex.liquidbounce.features.module.modules.render.NoScoreboard
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
@@ -18,6 +16,9 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.*
+import net.minecraft.scoreboard.ScoreObjective
+import net.minecraft.scoreboard.ScorePlayerTeam
+import net.minecraft.util.EnumChatFormatting
 import kotlin.math.min
 
 /**
@@ -83,7 +84,7 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F, sid
 
         val worldScoreboard = (mc.theWorld ?: return null).scoreboard
 
-        var currObjective: IScoreObjective? = null
+        var currObjective: ScoreObjective? = null
         val playerTeam = worldScoreboard.getPlayersTeam((mc.thePlayer ?: return null).name)
 
         if (playerTeam != null)
@@ -96,7 +97,7 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F, sid
         val objective = currObjective ?: worldScoreboard.getObjectiveInDisplaySlot(1) ?: return null
 
         val fontRenderer = fontValue.get()
-        val fontHeight = fontRenderer.fontHeight.toFloat()
+        val fontHeight = fontRenderer.FONT_HEIGHT.toFloat()
 
         val saturation = rainbowSaturationValue.get()
         val brightness = rainbowBrightnessValue.get()
@@ -139,12 +140,10 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F, sid
 
         var maxWidth = fontRenderer.getStringWidth(objective.displayName)
 
-        val func = functions
-
         maxWidth = maxWidth.coerceAtLeast(scoreCollection.map { score ->
             val playerName = score.playerName
-            fontRenderer.getStringWidth("${func.scoreboardFormatPlayerName(scoreboard.getPlayersTeam(playerName), playerName)}: ${WEnumChatFormatting.RED}${score.scorePoints}")
-        }.min() ?: -1)
+            fontRenderer.getStringWidth("${ScorePlayerTeam.formatPlayerName(scoreboard.getPlayersTeam(playerName), playerName)}: ${EnumChatFormatting.RED}${score.scorePoints}")
+        }.minOrNull() ?: -1)
 
         val maxHeight = scoreCollectionSize * fontHeight
 
@@ -166,8 +165,8 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F, sid
             val playerName = score.playerName
             val team = scoreboard.getPlayersTeam(playerName)
 
-            val formattedPlayerName = func.scoreboardFormatPlayerName(team, playerName)
-            val scorePoints = "${WEnumChatFormatting.RED}${score.scorePoints}"
+            val formattedPlayerName = ScorePlayerTeam.formatPlayerName(team, playerName)
+            val scorePoints = "${EnumChatFormatting.RED}${score.scorePoints}"
 
             val width = 5F + (if (leftRect) 1F else if (rightRect) -1F else 0F) * (rectWidth + 1F)
             val height = maxHeight - index * fontHeight

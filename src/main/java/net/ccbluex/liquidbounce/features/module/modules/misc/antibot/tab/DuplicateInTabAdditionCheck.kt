@@ -1,14 +1,14 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.tab
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.Entity
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.EntityPlayer
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.WorldClient
-import net.ccbluex.liquidbounce.api.minecraft.client.network.NetworkPlayerInfo
-import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ISPacketPlayerListItem
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.BotCheck
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
+import net.minecraft.client.multiplayer.WorldClient
+import net.minecraft.client.network.NetworkPlayerInfo
+import net.minecraft.entity.Entity
+import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.network.play.server.S38PacketPlayerListItem
 
 class DuplicateInTabAdditionCheck : BotCheck("tab.duplicateInTab.addition")
 {
@@ -22,19 +22,18 @@ class DuplicateInTabAdditionCheck : BotCheck("tab.duplicateInTab.addition")
         val packet = event.packet
 
         // DuplicateInTab - Addition
-        if (packet is SPacketPlayerListItem)
+        if (packet is S38PacketPlayerListItem)
         {
-            val playerListItem = packet.asSPacketPlayerListItem()
-            if (playerListItem.action == ISPacketPlayerListItem.WAction.ADD_PLAYER)
+            if (packet.action == S38PacketPlayerListItem.Action.ADD_PLAYER)
             {
-                val players = playerListItem.players
+                val players = packet.entries
 
                 val stripColors = AntiBot.duplicateInTabAdditionStripColorsValue.get()
                 val tryStripColors = { name: String -> if (stripColors) ColorUtils.stripColor(name) else name }
 
                 val useDisplayName = AntiBot.duplicateInTabAdditionNameModeValue.get().equals("DisplayName", ignoreCase = true)
                 val queryNameFromInfo = { playerInfo: NetworkPlayerInfo -> (if (useDisplayName) playerInfo.displayName?.formattedText else playerInfo.gameProfile.name)?.let(tryStripColors) }
-                val queryNameFromData = { playerData: ISPacketPlayerListItem.WAddPlayerData -> (if (useDisplayName) playerData.displayName?.formattedText else playerData.profile.name)?.let(tryStripColors) }
+                val queryNameFromData = { playerData: S38PacketPlayerListItem.AddPlayerData -> (if (useDisplayName) playerData.displayName?.formattedText else playerData.profile.name)?.let(tryStripColors) }
 
                 val currentPlayerList = mc.netHandler.playerInfoMap.map { queryNameFromInfo(it) ?: "" }
 

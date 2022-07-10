@@ -16,6 +16,8 @@ import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbowRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.OutlineShader
 import net.ccbluex.liquidbounce.value.*
+import net.minecraft.entity.item.EntityItem
+import net.minecraft.entity.projectile.EntityArrow
 
 @ModuleInfo(name = "ItemESP", description = "Allows you to see items through walls.", category = ModuleCategory.RENDER)
 class ItemESP : Module()
@@ -57,8 +59,6 @@ class ItemESP : Module()
         if (mode != "shaderoutline")
         {
             val theWorld = mc.theWorld ?: return
-            val provider = classProvider
-
             val color = if (colorRainbowEnabledValue.get()) rainbowRGB(alpha = colorValue.getAlpha(), speed = colorRainbowSpeedValue.get(), saturation = colorRainbowSaturationValue.get(), brightness = colorRainbowBrightnessValue.get()) else colorValue.get()
             val hydraESP = mode == "hydra"
             val boxOutlineColor = modeBoxOutlineColorValue.get()
@@ -81,8 +81,6 @@ class ItemESP : Module()
             OutlineShader.INSTANCE.startDraw(partialTicks)
 
             val renderManager = mc.renderManager
-            val provider = classProvider
-
             try
             {
                 theWorld.loadedEntityList.filter { it is EntityItem || it is EntityArrow }.forEach { renderManager.renderEntityStatic(it, partialTicks, true) }

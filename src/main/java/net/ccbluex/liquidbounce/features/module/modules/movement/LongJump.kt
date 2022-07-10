@@ -241,10 +241,8 @@ class LongJump : Module()
                     val dir = thePlayer.moveDirectionRadians
                     val teleportDistance = teleportDistanceValue.get()
 
-                    val func = functions
-
-                    event.x = (-func.sin(dir) * teleportDistance).toDouble()
-                    event.z = (func.cos(dir) * teleportDistance).toDouble()
+                    event.x = (-dir.sin * teleportDistance).toDouble()
+                    event.z = (dir.cos * teleportDistance).toDouble()
 
                     canBoost = false
                     boosted = true

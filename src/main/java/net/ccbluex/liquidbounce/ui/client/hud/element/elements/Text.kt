@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.*
+import net.minecraft.client.Minecraft
 import org.lwjgl.input.Keyboard
 import java.awt.Color
 import java.text.SimpleDateFormat
@@ -240,7 +241,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
             "clientversion" -> "b${LiquidBounce.CLIENT_VERSION}"
             "clientcreator" -> LiquidBounce.CLIENT_CREATOR
 
-            "fps" -> mc.debugFPS.toString() // TODO: Access Transformer
+            "fps" -> Minecraft.getDebugFPS().toString()
 
             "date" -> DATE_FORMAT.format(System.currentTimeMillis())
             "time" -> HOUR_FORMAT.format(System.currentTimeMillis())
@@ -456,7 +457,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
         }
 
         val borderExpanded = if (shouldDrawBorder) borderWidth else 0F
-        return Border(backgroundXStart - (if (leftRect) rectWidth else 0F) - borderExpanded, -borderExpand - borderExpanded, backgroundXEnd + (if (rightRect) rectWidth else 0F) + borderExpanded, fontRenderer.fontHeight.toFloat() + borderExpand + borderExpanded)
+        return Border(backgroundXStart - (if (leftRect) rectWidth else 0F) - borderExpanded, -borderExpand - borderExpanded, backgroundXEnd + (if (rightRect) rectWidth else 0F) + borderExpanded, fontRenderer.FONT_HEIGHT.toFloat() + borderExpand + borderExpanded)
     }
 
     override fun updateElement()
@@ -496,7 +497,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 
                 Keyboard.KEY_RIGHT -> cursor = (cursor + 1).coerceAtMost(string.length)
 
-                else -> if (c is AllowedCharacter || c == '\u00A7')
+                else -> if (ColorUtils.isAllowedCharacter(c) || c == '\u00A7')
                 {
                     if (cursor >= string.length) displayString.set(string + c) else displayString.set("${string.take(cursor)}$c${string.substring(cursor, string.length)}")
                     cursor++

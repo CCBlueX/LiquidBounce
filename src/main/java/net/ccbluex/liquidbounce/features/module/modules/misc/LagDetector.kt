@@ -14,6 +14,8 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.*
+import net.minecraft.client.gui.ScaledResolution
+import net.minecraft.client.renderer.GlStateManager
 
 @ModuleInfo(name = "LagDetector", description = "Detects network issues and notify it visually.", category = ModuleCategory.MISC)
 class LagDetector : Module()
@@ -49,9 +51,9 @@ class LagDetector : Module()
         val stringWidthHalf = font.getStringWidth(info) * 0.5F
         val yoffset = notificationYOffsetValue.get()
 
-        RenderUtils.drawBorderedRect(middleScreenX - stringWidthHalf - 2F, middleScreenY + yoffset - 2F, middleScreenX + stringWidthHalf + 2F, middleScreenY + yoffset + font.fontHeight, 3F, -16777216, -16777216)
+        RenderUtils.drawBorderedRect(middleScreenX - stringWidthHalf - 2F, middleScreenY + yoffset - 2F, middleScreenX + stringWidthHalf + 2F, middleScreenY + yoffset + font.FONT_HEIGHT, 3F, -16777216, -16777216)
 
-        classProvider.GlStateManager.resetColor()
+        GlStateManager.resetColor()
         font.drawString(info, middleScreenX - stringWidthHalf, middleScreenY + yoffset, 0xFF0000, false)
     }
 

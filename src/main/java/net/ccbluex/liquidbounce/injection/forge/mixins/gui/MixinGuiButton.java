@@ -7,7 +7,6 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
 import java.awt.*;
 
-
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;

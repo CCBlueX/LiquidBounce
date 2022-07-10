@@ -10,10 +10,13 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FontValue
 import net.ccbluex.liquidbounce.value.ValueGroup
+import net.minecraft.client.gui.GuiChat
+import net.minecraft.util.ResourceLocation
 
 /**
  * TODO
@@ -64,8 +67,6 @@ class HUD : Module()
         mc.thePlayer ?: return
 
         val entityRenderer = mc.entityRenderer
-
-        val provider = classProvider
 
         val screen = event.guiScreen
 

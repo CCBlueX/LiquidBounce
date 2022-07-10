@@ -96,13 +96,8 @@ fun Container.findAutoBlockBlock(theWorld: World, autoblockFullcubeOnly: Boolean
 
         (36..44).forEach { i ->
             val itemStack = getSlot(i).stack
-            if (itemStack != null && itemStack.item is ItemBlock && itemStack.stackSize > 0)
-            {
-                val itemBlock = itemStack.item!! as ItemBlock
-                val block = itemBlock.block
-
-                if (block.canAutoBlock) hotbarSlots.add(i)
-            }
+            val item = itemStack?.item
+            if (itemStack != null && item is ItemBlock && itemStack.stackSize > 0 && item.block.canAutoBlock) hotbarSlots.add(i)
         }
 
         (if (boundingBoxYLimit == 0.0) hotbarSlots.firstOrNull()

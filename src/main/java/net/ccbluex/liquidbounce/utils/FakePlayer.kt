@@ -1,8 +1,9 @@
 package net.ccbluex.liquidbounce.utils
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.EntityOtherPlayerMP
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.EntityPlayer
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.WorldClient
+import net.ccbluex.liquidbounce.utils.extensions.setCanBeCollidedWith
+import net.minecraft.client.entity.EntityOtherPlayerMP
+import net.minecraft.client.multiplayer.WorldClient
+import net.minecraft.entity.player.EntityPlayer
 
 class FakePlayer(val theWorld: WorldClient, thePlayer: EntityPlayer, val entityId: Int) : MinecraftInstance()
 {

@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.api.minecraft.util.BlockPos
 import net.ccbluex.liquidbounce.event.BlockBBEvent
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MoveEvent
@@ -18,6 +17,10 @@ import net.ccbluex.liquidbounce.utils.extensions.zeroXYZ
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.block.BlockLadder
+import net.minecraft.block.BlockVine
+import net.minecraft.util.BlockPos
+import net.minecraft.util.EnumFacing
 
 @ModuleInfo(name = "FastClimb", description = "Allows you to climb up ladders and vines faster.", category = ModuleCategory.MOVEMENT)
 class FastClimb : Module()
@@ -39,8 +42,6 @@ class FastClimb : Module()
 
         val horizontalFacing = thePlayer.horizontalFacing
 
-        val provider = classProvider
-
         when (mode)
         {
             "vanilla" -> if (thePlayer.isCollidedHorizontally && thePlayer.isOnLadder)
@@ -54,12 +55,12 @@ class FastClimb : Module()
                 var x = 0.0
                 var z = 0.0
 
-                when
+                when (horizontalFacing)
                 {
-                    horizontalFacing.isNorth() -> z = -0.99
-                    horizontalFacing.isEast() -> x = +0.99
-                    horizontalFacing.isSouth() -> z = +0.99
-                    horizontalFacing.isWest() -> x = -0.99
+                    EnumFacing.NORTH -> z = -0.99
+                    EnumFacing.EAST -> x = +0.99
+                    EnumFacing.SOUTH -> z = +0.99
+                    EnumFacing.WEST -> x = -0.99
 
                     else ->
                     {
@@ -105,12 +106,12 @@ class FastClimb : Module()
                         var x = 0.0
                         var z = 0.0
 
-                        when
+                        when (horizontalFacing)
                         {
-                            horizontalFacing.isNorth() -> z = -1.0
-                            horizontalFacing.isEast() -> x = +1.0
-                            horizontalFacing.isSouth() -> z = +1.0
-                            horizontalFacing.isWest() -> x = -1.0
+                            EnumFacing.NORTH -> z = -1.0
+                            EnumFacing.EAST -> x = +1.0
+                            EnumFacing.SOUTH -> z = +1.0
+                            EnumFacing.WEST -> x = -1.0
 
                             else ->
                             {
@@ -133,8 +134,6 @@ class FastClimb : Module()
         val thePlayer = mc.thePlayer ?: return
 
         val eventBlock = event.block
-
-        val provider = classProvider
 
         if ((eventBlock is BlockLadder || eventBlock is BlockVine) && modeValue.get().equals("AAC3.0.5", ignoreCase = true) && thePlayer.isOnLadder) event.boundingBox = null
     }

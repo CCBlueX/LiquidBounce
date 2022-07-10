@@ -10,7 +10,6 @@ import java.util.Optional;
 
 import javax.imageio.ImageIO;
 
-import net.ccbluex.liquidbounce.utils.AsyncUtils;
 import net.ccbluex.liquidbounce.utils.AsyncUtilsKt;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiNewChat;

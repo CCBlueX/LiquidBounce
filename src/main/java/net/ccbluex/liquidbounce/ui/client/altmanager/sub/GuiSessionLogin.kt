@@ -6,10 +6,6 @@
 package net.ccbluex.liquidbounce.ui.client.altmanager.sub
 
 import com.thealtening.AltService
-
-
-
-
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils

@@ -6,21 +6,26 @@
 package net.ccbluex.liquidbounce.ui.client.hud.designer
 
 import net.ccbluex.liquidbounce.LiquidBounce
-
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.Companion.getPanelFont
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.Companion.getValueFont
-
 import net.ccbluex.liquidbounce.ui.client.hud.HUD.Companion.createDefault
 import net.ccbluex.liquidbounce.ui.client.hud.HUD.Companion.elements
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.ui.font.GameFontRenderer
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.ccbluex.liquidbounce.utils.extensions.drawString
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.*
+import net.minecraft.client.audio.PositionedSoundRecord
+import net.minecraft.client.gui.FontRenderer
+import net.minecraft.client.gui.ScaledResolution
+import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.util.ResourceLocation
 import org.lwjgl.input.Mouse
 import org.lwjgl.opengl.GL11
 import java.awt.Color
@@ -112,7 +117,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
         }
 
         // Save mouse states
-        mouseDown = 0 is ButtonDown
+        mouseDown = Mouse.isButtonDown(0)
     }
 
     /**
@@ -139,7 +144,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
             val stringWidth = font.getStringWidth(name)
             if (width < stringWidth + 8) width = stringWidth + 8
 
-            if (0 is ButtonDown && !mouseDown && mouseX >= x && mouseX <= x + width && mouseY >= y + height && mouseY <= y + height + 10)
+            if (Mouse.isButtonDown(0) && !mouseDown && mouseX >= x && mouseX <= x + width && mouseY >= y + height && mouseY <= y + height + 10)
             {
                 try
                 {
@@ -178,13 +183,13 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
         width = 120
 
         font.drawString("\u00A7lCreate element", x + 2.0f, y.toFloat() + height, -1)
-        if (0 is ButtonDown && !mouseDown && mouseX >= x && mouseX <= x + width && mouseY >= y + height && mouseY <= y + height + 10) create = true
+        if (Mouse.isButtonDown(0) && !mouseDown && mouseX >= x && mouseX <= x + width && mouseY >= y + height && mouseY <= y + height + 10) create = true
 
         height += 10
         realHeight += 10
 
         font.drawString("\u00A7lReset", x + 2f, y.toFloat() + height, -1)
-        if (0 is ButtonDown && !mouseDown && mouseX >= x && mouseX <= x + width && mouseY >= y + height && mouseY <= y + height + 10) LiquidBounce.hud = createDefault()
+        if (Mouse.isButtonDown(0) && !mouseDown && mouseX >= x && mouseX <= x + width && mouseY >= y + height && mouseY <= y + height + 10) LiquidBounce.hud = createDefault()
 
         height += 15
         realHeight += 15
@@ -200,7 +205,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
             val stringWidth = font.getStringWidth(element.name)
             if (width < stringWidth + 8) width = stringWidth + 8
 
-            if (0 is ButtonDown && !mouseDown && mouseX >= x && mouseX <= x + width && mouseY >= y + height && mouseY <= y + height + 10) hudDesigner.selectedElement = element
+            if (Mouse.isButtonDown(0) && !mouseDown && mouseX >= x && mouseX <= x + width && mouseY >= y + height && mouseY <= y + height + 10) hudDesigner.selectedElement = element
 
             height += 10
             realHeight += 10
@@ -244,9 +249,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
         valueFont.drawString("H:", x + 2, y + height, -1)
         valueFont.drawString(element.side.horizontal.sideName, x + 12, y + height, Color.GRAY.rgb)
 
-        val provider = classProvider
-
-        if (0 is ButtonDown && !mouseDown && mouseX >= x && mouseX <= x + width && mouseY >= y + height && mouseY <= y + height + 10)
+        if (Mouse.isButtonDown(0) && !mouseDown && mouseX >= x && mouseX <= x + width && mouseY >= y + height && mouseY <= y + height + 10)
         {
             val values = Side.Horizontal.values()
             val currIndex = values.indexOf(element.side.horizontal)
@@ -269,7 +272,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
         valueFont.drawString("V:", x + 2, y + height, -1)
         valueFont.drawString(element.side.vertical.sideName, x + 12, y + height, Color.GRAY.rgb)
 
-        if (0 is ButtonDown && !mouseDown && mouseX >= x && mouseX <= x + width && mouseY >= y + height && mouseY <= y + height + 10)
+        if (Mouse.isButtonDown(0) && !mouseDown && mouseX >= x && mouseX <= x + width && mouseY >= y + height && mouseY <= y + height + 10)
         {
             val values = Side.Vertical.values()
             val currIndex = values.indexOf(element.side.vertical)
@@ -300,7 +303,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
         {
             val deleteWidth = x + width - valueFont.getStringWidth("\u00A7lDelete") - 2F
             valueFont.drawString("\u00A7lDelete", deleteWidth, y + 3.5F, -1)
-            if (0 is ButtonDown && !mouseDown && mouseX >= deleteWidth && mouseX <= x + width && mouseY >= y && mouseY <= y + 10) LiquidBounce.hud.removeElement(element)
+            if (Mouse.isButtonDown(0) && !mouseDown && mouseX >= deleteWidth && mouseX <= x + width && mouseY >= y && mouseY <= y + 10) LiquidBounce.hud.removeElement(element)
         }
     }
 
@@ -321,10 +324,10 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
                 font.drawString(text, xIndent + 2, y + height, -1)
                 font.drawString(if (value.foldState) "-" else "+", xEnd - if (value.foldState) 5 else 6, y + height, -1)
 
-                if (0 is ButtonDown && !mouseDown && mouseX >= xIndent && mouseX <= xEnd && mouseY >= y + height && mouseY <= y + height + 10)
+                if (Mouse.isButtonDown(0) && !mouseDown && mouseX >= xIndent && mouseX <= xEnd && mouseY >= y + height && mouseY <= y + height + 10)
                 {
                     value.foldState = !value.foldState
-                    mc.soundHandler.playSound("gui.button.press", 1.0f)
+                    mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("gui.button.press"), 1.0f))
                 }
 
                 height += 10
@@ -386,7 +389,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
         val redSliderValue = (xIndent + perc * (value.getRed()) / 255) + 8
         RenderUtils.drawRect(redSliderValue, y + height + 9F, redSliderValue + 3F, y + height + 15F, Color.RED)
 
-        if (mouseX >= xIndent + 8 && mouseX <= xEnd && mouseY >= y + height + 9 && mouseY <= y + height + 15 && 0 is ButtonDown) value.set(newSliderValue, value.getGreen(), value.getBlue(), value.getAlpha())
+        if (mouseX >= xIndent + 8 && mouseX <= xEnd && mouseY >= y + height + 9 && mouseY <= y + height + 15 && Mouse.isButtonDown(0)) value.set(newSliderValue, value.getGreen(), value.getBlue(), value.getAlpha())
 
         height += 10
         realHeight += 10
@@ -396,7 +399,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
         val greenSliderValue = (xIndent + perc * (value.getGreen()) / 255) + 8
         RenderUtils.drawRect(greenSliderValue, y + height + 9F, greenSliderValue + 3F, y + height + 15F, Color.GREEN)
 
-        if (mouseX >= xIndent + 8 && mouseX <= xEnd && mouseY >= y + height + 9 && mouseY <= y + height + 15 && 0 is ButtonDown) value.set(value.getRed(), newSliderValue, value.getBlue(), value.getAlpha())
+        if (mouseX >= xIndent + 8 && mouseX <= xEnd && mouseY >= y + height + 9 && mouseY <= y + height + 15 && Mouse.isButtonDown(0)) value.set(value.getRed(), newSliderValue, value.getBlue(), value.getAlpha())
 
         height += 10
         realHeight += 10
@@ -406,7 +409,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
         val blueSliderValue = (xIndent + perc * (value.getBlue()) / 255) + 8
         RenderUtils.drawRect(blueSliderValue, y + height + 9F, blueSliderValue + 3F, y + height + 15F, Color.BLUE)
 
-        if (mouseX >= xIndent + 8 && mouseX <= xEnd && mouseY >= y + height + 9 && mouseY <= y + height + 15 && 0 is ButtonDown) value.set(value.getRed(), value.getGreen(), newSliderValue, value.getAlpha())
+        if (mouseX >= xIndent + 8 && mouseX <= xEnd && mouseY >= y + height + 9 && mouseY <= y + height + 15 && Mouse.isButtonDown(0)) value.set(value.getRed(), value.getGreen(), newSliderValue, value.getAlpha())
 
         height += 10
         realHeight += 10
@@ -418,7 +421,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
             val alphaSliderValue = (xIndent + perc * (value.getAlpha()) / 255) + 8
             RenderUtils.drawRect(alphaSliderValue, y + height + 9F, alphaSliderValue + 3F, y + height + 15F, Int.MAX_VALUE)
 
-            if (mouseX >= xIndent + 8 && mouseX <= xEnd && mouseY >= y + height + 9 && mouseY <= y + height + 15 && 0 is ButtonDown) value.set(value.getRed(), value.getGreen(), value.getBlue(), newSliderValue)
+            if (mouseX >= xIndent + 8 && mouseX <= xEnd && mouseY >= y + height + 9 && mouseY <= y + height + 15 && Mouse.isButtonDown(0)) value.set(value.getRed(), value.getGreen(), value.getBlue(), newSliderValue)
 
             height += 10
             realHeight += 10
@@ -460,7 +463,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 
                 val center = minSliderValue + (maxSliderValue - minSliderValue) * 0.5f
 
-                if (mouseX >= x + 8 && mouseX <= xEnd && mouseY >= yPos + 9 && mouseY <= yPos + 15 && 0 is ButtonDown)
+                if (mouseX >= x + 8 && mouseX <= xEnd && mouseY >= yPos + 9 && mouseY <= yPos + 15 && Mouse.isButtonDown(0))
                 {
                     val newValue = (value.minimum + (value.maximum - value.minimum) * ((mouseX - (xIndent + 8f)) / perc).coerceIn(0f, 1f)).toInt()
                     if (mouseX > center) value.setMax(newValue)
@@ -496,7 +499,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 
                 val center = minSliderValue + (maxSliderValue - minSliderValue) * 0.5f
 
-                if (mouseX >= xIndent + 8 && mouseX <= xEnd && mouseY >= yPos + 9 && mouseY <= yPos + 15 && 0 is ButtonDown)
+                if (mouseX >= xIndent + 8 && mouseX <= xEnd && mouseY >= yPos + 9 && mouseY <= yPos + 15 && Mouse.isButtonDown(0))
                 {
                     val newValue = round(value.minimum + (value.maximum - value.minimum) * ((mouseX - (xIndent + 8f)) / perc).coerceIn(0f, 1f))
                     if (mouseX > center) value.setMax(newValue.toFloat())
@@ -534,7 +537,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
                 if (width < textWidth) width = textWidth
 
                 // Toggle value
-                if (0 is ButtonDown && !mouseDown && mouseX >= xIndent && mouseX <= x + width && mouseY >= yPos && mouseY <= yPos + 10) value.set(!value.get())
+                if (Mouse.isButtonDown(0) && !mouseDown && mouseX >= xIndent && mouseX <= x + width && mouseY >= yPos && mouseY <= yPos + 10) value.set(!value.get())
 
                 // Change pos
                 height += 10
@@ -563,7 +566,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
                 RenderUtils.drawRect(sliderValue, yPos + 9F, sliderValue + 3f, yPos + 15F, -14319873)
 
                 // Slider changer
-                if (mouseX >= xIndent + 8 && mouseX <= xEnd && mouseY >= yPos + 9 && mouseY <= yPos + 15 && 0 is ButtonDown) value.set((min + (max - min) * ((mouseX - (xIndent + 8F)) / perc).coerceIn(0f, 1f)).toInt())
+                if (mouseX >= xIndent + 8 && mouseX <= xEnd && mouseY >= yPos + 9 && mouseY <= yPos + 15 && Mouse.isButtonDown(0)) value.set((min + (max - min) * ((mouseX - (xIndent + 8F)) / perc).coerceIn(0f, 1f)).toInt())
 
                 // Change pos
                 height += 20
@@ -592,7 +595,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
                 RenderUtils.drawRect(sliderValue, yPos + 9F, sliderValue + 3F, yPos + 15F, Color(37, 126, 255).rgb)
 
                 // Slider changer
-                if (mouseX >= xIndent + 8 && mouseX <= xEnd && mouseY >= yPos + 9 && mouseY <= yPos + 15 && 0 is ButtonDown) value.set(min + (max - min) * ((mouseX - (xIndent + 8f)) / perc).coerceIn(0f, 1f))
+                if (mouseX >= xIndent + 8 && mouseX <= xEnd && mouseY >= yPos + 9 && mouseY <= yPos + 15 && Mouse.isButtonDown(0)) value.set(min + (max - min) * ((mouseX - (xIndent + 8f)) / perc).coerceIn(0f, 1f))
 
                 // Change pos
                 height += 20
@@ -618,7 +621,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
                     if (width < stringWidth) width = stringWidth
 
                     // Select value
-                    if (0 is ButtonDown && !mouseDown && mouseX >= xIndent && mouseX <= x + width && mouseY >= y + height && mouseY <= y + height + 10) value.set(s)
+                    if (Mouse.isButtonDown(0) && !mouseDown && mouseX >= xIndent && mouseX <= x + width && mouseY >= y + height && mouseY <= y + height + 10) value.set(s)
 
                     // Change pos
                     height += 10
@@ -633,7 +636,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
                 // Title
                 val text = when
                 {
-                    fontRenderer.isGameFontRenderer() -> "${value.displayName}: ${fontRenderer.getGameFontRenderer().defaultFont.font.name} - ${fontRenderer.getGameFontRenderer().defaultFont.font.size}"
+                    fontRenderer is GameFontRenderer -> "${value.displayName}: ${fontRenderer.defaultFont.font.name} - ${fontRenderer.defaultFont.font.size}"
                     fontRenderer == Fonts.minecraftFont -> "${value.displayName}: Minecraft"
                     else -> "${value.displayName}: Unknown"
                 }
@@ -643,12 +646,12 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
                 val stringWidth = font.getStringWidth(text) + 8
                 if (width < stringWidth) width = stringWidth
 
-                if (0 is ButtonDown && !mouseDown && mouseX >= xIndent && mouseX <= x + width && mouseY >= yPos && mouseY <= yPos + 10)
+                if (Mouse.isButtonDown(0) && !mouseDown && mouseX >= xIndent && mouseX <= x + width && mouseY >= yPos && mouseY <= yPos + 10)
                 {
                     val fonts = Fonts.fonts
                     val index = fonts.indexOf(fontRenderer)
 
-                    // if (0 is ButtonDown)
+                    // if (Mouse.isButtonDown(0))
                     value.set(fonts[if (index + 1 >= fonts.size) 0 else index + 1]) // Next font
                     // else value.set(fonts[if (index - 1 < 0) fonts.size - 1 else index - 1]) // Previous font
                 }
@@ -664,14 +667,14 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
      */
     private fun drag(mouseX: Int, mouseY: Int)
     {
-        if (mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + 12 && 0 is ButtonDown && !mouseDown)
+        if (mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + 12 && Mouse.isButtonDown(0) && !mouseDown)
         {
             drag = true
             dragX = mouseX - x
             dragY = mouseY - y
         }
 
-        if (0 is ButtonDown && drag)
+        if (Mouse.isButtonDown(0) && drag)
         {
             x = mouseX - dragX
             y = mouseY - dragY

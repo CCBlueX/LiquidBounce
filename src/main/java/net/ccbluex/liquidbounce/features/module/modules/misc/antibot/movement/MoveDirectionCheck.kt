@@ -1,17 +1,21 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.movement
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.Entity
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.EntityPlayer
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.WorldClient
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
-import net.ccbluex.liquidbounce.api.minecraft.util.Vec3
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.BotCheck
+import net.ccbluex.liquidbounce.utils.extensions.cos
+import net.ccbluex.liquidbounce.utils.extensions.sin
+import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.minecraft.client.multiplayer.WorldClient
+import net.minecraft.entity.Entity
+import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.network.play.server.S0CPacketSpawnPlayer
+import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.Vec3
 import kotlin.math.*
 
 // TODO:  Movement direction check - 플레이어가 머리를 돌리는 것에 반응하여 그 정 반대 방향으로 움직이는지 검사
@@ -44,7 +48,7 @@ class MoveDirectionCheck : BotCheck("move.direction")
         var yawMovementScore = ceil(max(abs(getPingCorrectionAppliedLocation(thePlayer, 1).rotation.yaw - serverYaw), abs(getPingCorrectionAppliedLocation(thePlayer, 2).rotation.yaw - serverYaw)) / 5F).toInt()
         if (yawMovementScore <= 5) yawMovementScore = 0
 
-        val yawRadians = serverYaw - 180.0F.toRadians
+        val yawRadians = (serverYaw - 180.0F).toRadians
 
         // Position delta limit
         val positionDeltaLimitSq = AntiBot.positionDeltaThresholdValue.get().pow(2)
@@ -63,9 +67,9 @@ class MoveDirectionCheck : BotCheck("move.direction")
 
         for ((posIndex, back, y) in arrayOf(Triple(1, AntiBot.positionPosition1BackValue.get(), AntiBot.positionPosition1YValue.get()), Triple(2, AntiBot.positionPosition2BackValue.get(), AntiBot.positionPosition2YValue.get()), Triple(3, AntiBot.positionPosition3BackValue.get(), AntiBot.positionPosition3YValue.get()), Triple(4, AntiBot.positionPosition4BackValue.get(), AntiBot.positionPosition4YValue.get())))
         {
-            val deltaX = newPos.xCoord - (serverPos.xCoord - functions.sin(yawRadians) * back)
+            val deltaX = newPos.xCoord - (serverPos.xCoord - yawRadians.sin * back)
             val deltaY = newPos.yCoord - (serverPos.yCoord + y)
-            val deltaZ = newPos.zCoord - (serverPos.zCoord + functions.cos(yawRadians) * back)
+            val deltaZ = newPos.zCoord - (serverPos.zCoord + yawRadians.cos * back)
 
             val distanceSq = deltaX * deltaX + deltaY * deltaY * deltaZ * deltaZ
 
@@ -159,9 +163,9 @@ class MoveDirectionCheck : BotCheck("move.direction")
 
         val packet = event.packet
 
-        if (packet is SPacketSpawnPlayer)
+        if (packet is S0CPacketSpawnPlayer)
         {
-            val playerSpawnPacket = packet.asSPacketSpawnPlayer()
+            val playerSpawnPacket = packet
 
             val entityId = playerSpawnPacket.entityID
 
@@ -195,16 +199,12 @@ class MoveDirectionCheck : BotCheck("move.direction")
 
         val dir = yaw - 180.0F.toRadians
 
-        val func = functions
-
-        val sin = -func.sin(dir)
-        val cos = func.cos(dir)
+        val sin = -dir.sin
+        val cos = dir.cos
 
         val posX = lastServerPos.xCoord + (serverPos.xCoord - lastServerPos.xCoord) * partialTicks
         val posY = lastServerPos.yCoord + (serverPos.yCoord - lastServerPos.yCoord) * partialTicks
         val posZ = lastServerPos.zCoord + (serverPos.zCoord - lastServerPos.zCoord) * partialTicks
-
-        val provider = classProvider
 
         val renderManager = mc.renderManager
         val renderPosX = renderManager.renderPosX

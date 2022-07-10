@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.utils.ClientUtils.logger
+import net.minecraft.util.*
 
 /**
  * A buffer which stores it's contents in an array. You can only add contents to it. If you add more elements than it can hold it will overflow and overwrite the first element. Made to improve performance for time measurements.

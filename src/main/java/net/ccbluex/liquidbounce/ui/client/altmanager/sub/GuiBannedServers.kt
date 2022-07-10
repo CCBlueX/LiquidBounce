@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.ui.client.altmanager.sub
 
 import net.ccbluex.liquidbounce.LiquidBounce
-
 import net.ccbluex.liquidbounce.file.FileManager.Companion.saveConfig
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc

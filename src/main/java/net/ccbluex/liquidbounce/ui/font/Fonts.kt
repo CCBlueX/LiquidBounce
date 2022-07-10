@@ -7,7 +7,6 @@ package net.ccbluex.liquidbounce.ui.font
 
 import com.google.gson.*
 import net.ccbluex.liquidbounce.LiquidBounce
-
 import net.ccbluex.liquidbounce.utils.ClientUtils.logger
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils.download

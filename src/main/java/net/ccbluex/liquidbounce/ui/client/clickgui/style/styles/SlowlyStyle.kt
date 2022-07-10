@@ -5,8 +5,6 @@
  */
 package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles
 
-
-
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.Companion.getButtonFont
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.Companion.getDescriptionFont
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.Companion.getPanelFont
@@ -16,6 +14,7 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ButtonElement
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ModuleElement
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.Style
 import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.ui.font.GameFontRenderer
 import net.ccbluex.liquidbounce.ui.font.assumeVolatile
 import net.ccbluex.liquidbounce.ui.font.assumeVolatileIf
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
@@ -26,6 +25,10 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawFilledCircle
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.ccbluex.liquidbounce.value.*
+import net.minecraft.client.audio.PositionedSoundRecord
+import net.minecraft.client.gui.FontRenderer
+import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.util.ResourceLocation
 import org.lwjgl.input.Mouse
 import java.awt.Color
 import java.math.BigDecimal
@@ -53,7 +56,7 @@ class SlowlyStyle : Style()
             drawBorderedRect(panel.x.toFloat(), panel.y + panel.fade + 17, panel.x.toFloat() + panel.width, panel.y + 19 + panel.fade + 5, 3f, BACKGROUND, BACKGROUND)
         }
 
-        classProvider.GlStateManager.resetColor()
+        GlStateManager.resetColor()
 
         val textWidth = font.getStringWidth("\u00A7f" + stripControlCodes(panel.name)).toFloat()
         font.drawString(panel.name, (panel.x - (textWidth - 100.0f) * 0.5).toInt(), panel.y + 7 - 3, WHITE)
@@ -62,11 +65,11 @@ class SlowlyStyle : Style()
     override fun drawDescription(mouseX: Int, mouseY: Int, text: String)
     {
         val font = getDescriptionFont()
-        val fontHeight = font.fontHeight
+        val fontHeight = font.FONT_HEIGHT
         val textWidth = font.getStringWidth(text)
         drawBorderedRect((mouseX + 9).toFloat(), mouseY.toFloat(), mouseX + textWidth + 14f, mouseY + fontHeight + 3f, 3.0f, BACKGROUND, BACKGROUND)
 
-        classProvider.GlStateManager.resetColor()
+        GlStateManager.resetColor()
 
         font.drawString(text, mouseX + 12, mouseY + (fontHeight shr 1), WHITE)
     }
@@ -75,7 +78,7 @@ class SlowlyStyle : Style()
     {
         drawRect(buttonElement.x - 1, buttonElement.y - 1, buttonElement.x + buttonElement.width + 1, buttonElement.y + buttonElement.height + 1, getHoverColor(if (buttonElement.color == Int.MAX_VALUE) BUTTON_UNPRESSED else BUTTON_PRESSED, buttonElement.hoverTime))
 
-        classProvider.GlStateManager.resetColor()
+        GlStateManager.resetColor()
 
         getButtonFont().drawString(buttonElement.displayName, buttonElement.x + 5, buttonElement.y + 5, WHITE)
     }
@@ -84,7 +87,7 @@ class SlowlyStyle : Style()
     // {
     // 	drawRect(x, y, x + 20, y + 10, if (value) Color.GREEN.rgb else Color.RED.rgb)
     // 	drawFilledCircle(x + if (value) 15 else 5, y + 5, 5f, Color.WHITE.rgb)
-    // 	return if (mouseX >= x && mouseX <= x + 20 && mouseY >= y && mouseY <= y + 10 && 0 is ButtonDown) !value else value
+    // 	return if (mouseX >= x && mouseX <= x + 20 && mouseY >= y && mouseY <= y + 10 && Mouse.isButtonDown(0)) !value else value
     // }
 
     override fun drawModuleElement(mouseX: Int, mouseY: Int, moduleElement: ModuleElement)
@@ -94,8 +97,6 @@ class SlowlyStyle : Style()
 
         drawRect(moduleElement.x - 1, moduleElement.y - 1, moduleElement.x + moduleElement.width + 1, moduleElement.y + moduleElement.height + 1, getHoverColor(BUTTON_UNPRESSED, moduleElement.hoverTime))
         drawRect(moduleElement.x - 1, moduleElement.y - 1, moduleElement.x + moduleElement.width + 1, moduleElement.y + moduleElement.height + 1, getHoverColor(ColorUtils.applyAlphaChannel(BUTTON_PRESSED, moduleElement.slowlyFade), moduleElement.hoverTime))
-
-        val glStateManager = classProvider.glStateManager
         GlStateManager.resetColor()
 
         buttonFont.drawString(moduleElement.displayName, moduleElement.x + 5, moduleElement.y + 5, WHITE)
@@ -111,14 +112,14 @@ class SlowlyStyle : Style()
                 if (moduleElement.settingsWidth > 0.0f && moduleElement.slowlySettingsYPos > moduleElement.y + 6) drawBorderedRect((moduleElement.x + moduleElement.width + 4).toFloat(), moduleElement.y + 6f, moduleElement.x + moduleElement.width + moduleElement.settingsWidth, moduleElement.slowlySettingsYPos + 2f, 3.0f, BACKGROUND_BORDER, BACKGROUND_BORDER)
                 moduleElement.slowlySettingsYPos = moduleElement.y + 6
 
-                for (value in moduleValues) drawAbstractValue(valueFont, glStateManager, moduleElement, value, mouseX, mouseY)
+                for (value in moduleValues) drawAbstractValue(valueFont, moduleElement, value, mouseX, mouseY)
 
                 moduleElement.updatePressed()
             }
         }
     }
 
-    private fun drawAbstractValue(font: FontRenderer, glStateManager: IGlStateManager, moduleElement: ModuleElement, value: AbstractValue, mouseX: Int, mouseY: Int, indent: Int = 0)
+    private fun drawAbstractValue(font: FontRenderer, moduleElement: ModuleElement, value: AbstractValue, mouseX: Int, mouseY: Int, indent: Int = 0)
     {
         when (value)
         {
@@ -129,7 +130,7 @@ class SlowlyStyle : Style()
 
                 val text = value.displayName
                 val textWidth = font.getStringWidth(text) + indent + 16f
-                val textHeight = font.fontHeight
+                val textHeight = font.FONT_HEIGHT
 
                 if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
                 val moduleXEnd = moduleX + moduleElement.settingsWidth
@@ -138,10 +139,10 @@ class SlowlyStyle : Style()
                 font.drawString("\u00A7c$text", moduleIndentX + 6, moduleElement.slowlySettingsYPos + 2, WHITE)
                 font.drawString(if (value.foldState) "-" else "+", (moduleXEnd - if (value.foldState) 5 else 6).toInt(), moduleElement.slowlySettingsYPos + 2, WHITE)
 
-                if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= moduleElement.slowlySettingsYPos && mouseY <= moduleElement.slowlySettingsYPos + textHeight && 0 is ButtonDown && moduleElement.isntLeftPressed)
+                if (mouseX >= moduleIndentX + 4 && mouseX <= moduleXEnd && mouseY >= moduleElement.slowlySettingsYPos && mouseY <= moduleElement.slowlySettingsYPos + textHeight && Mouse.isButtonDown(0) && moduleElement.isntLeftPressed)
                 {
                     value.foldState = !value.foldState
-                    mc.soundHandler.playSound("gui.button.press", 1.0f)
+                    mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("gui.button.press"), 1.0f))
                 }
 
                 moduleElement.slowlySettingsYPos += textHeight + 1
@@ -160,7 +161,7 @@ class SlowlyStyle : Style()
                         if (moduleElement.settingsWidth < textWidth2) moduleElement.settingsWidth = textWidth2
 
                         GlStateManager.resetColor()
-                        drawAbstractValue(font, glStateManager, moduleElement, valueOfGroup, mouseX, mouseY, indent + 10)
+                        drawAbstractValue(font, moduleElement, valueOfGroup, mouseX, mouseY, indent + 10)
 
                         if (i == j - 1) // Last Index
                         {
@@ -173,13 +174,13 @@ class SlowlyStyle : Style()
                 else moduleElement.slowlySettingsYPos++
             }
 
-            is ColorValue -> drawColorValue(font, glStateManager, moduleElement, value, mouseX, mouseY, indent)
-            is RangeValue<*> -> drawRangeValue(font, glStateManager, moduleElement, value, mouseX, mouseY, indent)
-            else -> drawValue(font, glStateManager, moduleElement, value as Value<*>, mouseX, mouseY, indent)
+            is ColorValue -> drawColorValue(font, moduleElement, value, mouseX, mouseY, indent)
+            is RangeValue<*> -> drawRangeValue(font, moduleElement, value, mouseX, mouseY, indent)
+            else -> drawValue(font, moduleElement, value as Value<*>, mouseX, mouseY, indent)
         }
     }
 
-    private fun drawColorValue(font: FontRenderer, glStateManager: IGlStateManager, moduleElement: ModuleElement, value: ColorValue, mouseX: Int, mouseY: Int, indent: Int = 0)
+    private fun drawColorValue(font: FontRenderer, moduleElement: ModuleElement, value: ColorValue, mouseX: Int, mouseY: Int, indent: Int = 0)
     {
         val moduleX = moduleElement.x + moduleElement.width
         val moduleIndentX = moduleX + indent
@@ -227,7 +228,7 @@ class SlowlyStyle : Style()
         moduleElement.slowlySettingsYPos += 19
     }
 
-    private fun drawRangeValue(font: FontRenderer, glStateManager: IGlStateManager, moduleElement: ModuleElement, value: RangeValue<*>, mouseX: Int, mouseY: Int, indent: Int = 0)
+    private fun drawRangeValue(font: FontRenderer, moduleElement: ModuleElement, value: RangeValue<*>, mouseX: Int, mouseY: Int, indent: Int = 0)
     {
         val moduleX = moduleElement.x + moduleElement.width
         val moduleIndentX = moduleX + indent
@@ -269,7 +270,7 @@ class SlowlyStyle : Style()
         }
     }
 
-    private fun drawValue(valueFont: FontRenderer, glStateManager: IGlStateManager, moduleElement: ModuleElement, value: Value<*>, mouseX: Int, mouseY: Int, indent: Int = 0)
+    private fun drawValue(valueFont: FontRenderer, moduleElement: ModuleElement, value: Value<*>, mouseX: Int, mouseY: Int, indent: Int = 0)
     {
         val moduleX = moduleElement.x + moduleElement.width
         val moduleIndentX = moduleElement.x + moduleElement.width + indent
@@ -284,10 +285,10 @@ class SlowlyStyle : Style()
 
                     if (moduleElement.settingsWidth < textWidth) moduleElement.settingsWidth = textWidth
 
-                    if (mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= moduleElement.slowlySettingsYPos && mouseY <= moduleElement.slowlySettingsYPos + 12 && 0 is ButtonDown && moduleElement.isntLeftPressed)
+                    if (mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= moduleElement.slowlySettingsYPos && mouseY <= moduleElement.slowlySettingsYPos + 12 && Mouse.isButtonDown(0) && moduleElement.isntLeftPressed)
                     {
                         value.set(!value.get())
-                        mc.soundHandler.playSound("gui.button.press", 1.0f)
+                        mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("gui.button.press"), 1.0f))
                     }
 
                     valueFont.drawString(text, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 2, if (value.get()) WHITE else LIGHT_GRAY)
@@ -305,13 +306,13 @@ class SlowlyStyle : Style()
                     valueFont.drawString(text, moduleIndentX + 6, moduleElement.slowlySettingsYPos + 2, WHITE)
                     valueFont.drawString(if (value.openList) "-" else "+", (moduleX + moduleElement.settingsWidth - if (value.openList) 5 else 6).toInt(), moduleElement.slowlySettingsYPos + 2, WHITE)
 
-                    if (mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= moduleElement.slowlySettingsYPos && mouseY <= moduleElement.slowlySettingsYPos + valueFont.fontHeight && 0 is ButtonDown && moduleElement.isntLeftPressed)
+                    if (mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= moduleElement.slowlySettingsYPos && mouseY <= moduleElement.slowlySettingsYPos + valueFont.FONT_HEIGHT && Mouse.isButtonDown(0) && moduleElement.isntLeftPressed)
                     {
                         value.openList = !value.openList
-                        mc.soundHandler.playSound("gui.button.press", 1.0f)
+                        mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("gui.button.press"), 1.0f))
                     }
 
-                    moduleElement.slowlySettingsYPos += valueFont.fontHeight + 1
+                    moduleElement.slowlySettingsYPos += valueFont.FONT_HEIGHT + 1
 
                     for (valueOfList in value.values)
                     {
@@ -321,14 +322,14 @@ class SlowlyStyle : Style()
 
                         if (value.openList)
                         {
-                            if (mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= moduleElement.slowlySettingsYPos + 2 && mouseY <= moduleElement.slowlySettingsYPos + 14 && 0 is ButtonDown && moduleElement.isntLeftPressed)
+                            if (mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= moduleElement.slowlySettingsYPos + 2 && mouseY <= moduleElement.slowlySettingsYPos + 14 && Mouse.isButtonDown(0) && moduleElement.isntLeftPressed)
                             {
                                 value.set(valueOfList)
-                                mc.soundHandler.playSound("gui.button.press", 1.0f)
+                                mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("gui.button.press"), 1.0f))
                             }
                             GlStateManager.resetColor()
                             valueFont.drawString("> $valueOfList", moduleIndentX + 6, moduleElement.slowlySettingsYPos + 2, if (value.get().equals(valueOfList, ignoreCase = true)) WHITE else LIGHT_GRAY)
-                            moduleElement.slowlySettingsYPos += valueFont.fontHeight + 1
+                            moduleElement.slowlySettingsYPos += valueFont.FONT_HEIGHT + 1
                         }
                     }
 
@@ -368,11 +369,7 @@ class SlowlyStyle : Style()
                     val fontRenderer = value.get()
                     var displayString = "Font: Unknown"
 
-                    if (fontRenderer.isGameFontRenderer())
-                    {
-                        val liquidFontRenderer = fontRenderer.getGameFontRenderer()
-                        displayString = "Font: " + liquidFontRenderer.defaultFont.font.name + " - " + liquidFontRenderer.defaultFont.font.size
-                    }
+                    if (fontRenderer is GameFontRenderer) displayString = "Font: " + fontRenderer.defaultFont.font.name + " - " + fontRenderer.defaultFont.font.size
                     else if (fontRenderer == Fonts.minecraftFont) displayString = "Font: Minecraft"
                     else
                     {
@@ -386,10 +383,10 @@ class SlowlyStyle : Style()
 
                     if (moduleElement.settingsWidth < stringWidth) moduleElement.settingsWidth = stringWidth
 
-                    if ((0 is ButtonDown && moduleElement.isntLeftPressed || 1 is ButtonDown && moduleElement.isntRightPressed) && mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= moduleElement.slowlySettingsYPos && mouseY <= moduleElement.slowlySettingsYPos + 12)
+                    if ((Mouse.isButtonDown(0) && moduleElement.isntLeftPressed || Mouse.isButtonDown(1) && moduleElement.isntRightPressed) && mouseX >= moduleIndentX + 4 && mouseX <= moduleX + moduleElement.settingsWidth && mouseY >= moduleElement.slowlySettingsYPos && mouseY <= moduleElement.slowlySettingsYPos + 12)
                     {
                         val fonts = Fonts.fonts
-                        if (0 is ButtonDown)
+                        if (Mouse.isButtonDown(0))
                         {
                             var i = 0
                             val j = fonts.size
@@ -460,7 +457,7 @@ class SlowlyStyle : Style()
             drawRect(indentX.toFloat(), y.toFloat(), sliderValue, y + 2f, color)
             drawFilledCircle(sliderValue.toInt(), y + 1, 3f, color)
 
-            if (mouseX in indentX..xEnd && mouseY >= y && mouseY <= y + 3 && 0 is ButtonDown)
+            if (mouseX in indentX..xEnd && mouseY >= y && mouseY <= y + 3 && Mouse.isButtonDown(0))
             {
                 val sliderXEnd = width - indent - 3f
                 changeCallback(BigDecimal("${(min + (max - min) * ((mouseX - indentX) / sliderXEnd).coerceIn(0f, 1f))}").setScale(4, RoundingMode.HALF_UP).toFloat())
@@ -483,7 +480,7 @@ class SlowlyStyle : Style()
 
             val center = minSliderValue + (maxSliderValue - minSliderValue) * 0.5f
 
-            if (mouseX >= indentX && mouseX <= x + width && mouseY >= y && mouseY <= y + 3 && 0 is ButtonDown)
+            if (mouseX >= indentX && mouseX <= x + width && mouseY >= y && mouseY <= y + 3 && Mouse.isButtonDown(0))
             {
                 val newValue = BigDecimal("${(min + (max - min) * ((mouseX - indentX) / sliderXEnd).coerceIn(0f, 1f))}").setScale(4, RoundingMode.HALF_UP).toFloat()
                 if (mouseX > center) onMaxChanged(newValue) else onMinChanged(newValue)

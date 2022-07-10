@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.ui.client.clickgui
 
 import net.ccbluex.liquidbounce.LiquidBounce
-
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.Companion.generateButtonColor
@@ -20,6 +19,11 @@ import net.ccbluex.liquidbounce.ui.font.assumeNonVolatile
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawImage
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.frameTime
+import net.minecraft.client.audio.PositionedSoundRecord
+import net.minecraft.client.gui.GuiScreen
+import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.client.renderer.RenderHelper
+import net.minecraft.util.ResourceLocation
 import org.lwjgl.input.Mouse
 import org.lwjgl.opengl.GL11
 import java.io.IOException
@@ -39,7 +43,7 @@ class ClickGui : GuiScreen()
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)
     {
-        if (0 is ButtonDown && mouseX >= 5 && mouseX <= 50 && mouseY <= this.height - 5 && mouseY >= this.height - 50) mc.displayGuiScreen(GuiHudDesigner()))
+        if (Mouse.isButtonDown(0) && mouseX >= 5 && mouseX <= 50 && mouseY <= this.height - 5 && mouseY >= this.height - 50) mc.displayGuiScreen(GuiHudDesigner())
 
         val scale = (LiquidBounce.moduleManager[ClickGUI::class.java] as ClickGUI).scaleValue.get().toDouble()
         val scaledMouseX = mouseX.toDouble() / scale
@@ -75,8 +79,8 @@ class ClickGui : GuiScreen()
                 panels.any { it.handleScroll(scaledMouseXI, scaledMouseYI, wheel) }
             }
 
-            classProvider.GlStateManager.disableLighting()
-            functions.disableStandardItemLighting()
+            GlStateManager.disableLighting()
+            RenderHelper.disableStandardItemLighting()
 
             GL11.glScalef(1.0f, 1.0f, 1.0f)
         }
@@ -214,7 +218,7 @@ class ClickGui : GuiScreen()
                             EntityUtils.targetPlayer = !EntityUtils.targetPlayer
                             displayName = "Players"
                             color = if (EntityUtils.targetPlayer) generateButtonColor() else i
-                            mc.soundHandler.playSound("gui.button.press", 1.0f)
+                            mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("gui.button.press"), 1.0f))
                         }
                     }
                 })
@@ -241,7 +245,7 @@ class ClickGui : GuiScreen()
                             EntityUtils.targetMobs = !EntityUtils.targetMobs
                             displayName = "Mobs"
                             color = if (EntityUtils.targetMobs) generateButtonColor() else i
-                            mc.soundHandler.playSound("gui.button.press", 1.0f)
+                            mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("gui.button.press"), 1.0f))
                         }
                     }
                 })
@@ -268,7 +272,7 @@ class ClickGui : GuiScreen()
                             EntityUtils.targetAnimals = !EntityUtils.targetAnimals
                             displayName = "Animals"
                             color = if (EntityUtils.targetAnimals) generateButtonColor() else i
-                            mc.soundHandler.playSound("gui.button.press", 1.0f)
+                            mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("gui.button.press"), 1.0f))
                         }
                     }
                 })
@@ -295,7 +299,7 @@ class ClickGui : GuiScreen()
                             EntityUtils.targetArmorStand = !EntityUtils.targetArmorStand
                             displayName = "Armor-Stand"
                             color = if (EntityUtils.targetArmorStand) generateButtonColor() else i
-                            mc.soundHandler.playSound("gui.button.press", 1.0f)
+                            mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("gui.button.press"), 1.0f))
                         }
                     }
                 })
@@ -322,7 +326,7 @@ class ClickGui : GuiScreen()
                             EntityUtils.targetInvisible = !EntityUtils.targetInvisible
                             displayName = "Invisible"
                             color = if (EntityUtils.targetInvisible) generateButtonColor() else i
-                            mc.soundHandler.playSound("gui.button.press", 1.0f)
+                            mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("gui.button.press"), 1.0f))
                         }
                     }
                 })
@@ -349,7 +353,7 @@ class ClickGui : GuiScreen()
                             EntityUtils.targetDead = !EntityUtils.targetDead
                             displayName = "Dead"
                             color = if (EntityUtils.targetDead) generateButtonColor() else i
-                            mc.soundHandler.playSound("gui.button.press", 1.0f)
+                            mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("gui.button.press"), 1.0f))
                         }
                     }
                 })

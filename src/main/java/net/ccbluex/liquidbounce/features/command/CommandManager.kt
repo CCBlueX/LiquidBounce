@@ -6,13 +6,13 @@
 package net.ccbluex.liquidbounce.features.command
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.LiquidBounce.wrapper
 import net.ccbluex.liquidbounce.features.command.commands.*
 import net.ccbluex.liquidbounce.features.command.shortcuts.Shortcut
 import net.ccbluex.liquidbounce.features.command.shortcuts.ShortcutParser
 import net.ccbluex.liquidbounce.features.command.special.*
 import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
 import net.ccbluex.liquidbounce.utils.extensions.withDoubleQuotes
 
 class CommandManager
@@ -69,7 +69,7 @@ class CommandManager
     fun executeCommands(input: String)
     {
         val args = input.split(" ").toTypedArray()
-        commands.firstOrNull { command -> args[0].equals("$prefix" + command.command, ignoreCase = true) || command.alias.any { args[0].equals("$prefix" + it, ignoreCase = true) } }?.execute(args) ?: ClientUtils.displayChatMessage(wrapper.minecraft.thePlayer, "\u00A7cCommand not found. Type ${"${prefix}help".withDoubleQuotes("\u00A73\u00A7l", "\u00A78")}\u00A7c to view all commands.")
+        commands.firstOrNull { command -> args[0].equals("$prefix" + command.command, ignoreCase = true) || command.alias.any { args[0].equals("$prefix" + it, ignoreCase = true) } }?.execute(args) ?: ClientUtils.displayChatMessage(mc.thePlayer, "\u00A7cCommand not found. Type ${"${prefix}help".withDoubleQuotes("\u00A73\u00A7l", "\u00A78")}\u00A7c to view all commands.")
     }
 
     /**

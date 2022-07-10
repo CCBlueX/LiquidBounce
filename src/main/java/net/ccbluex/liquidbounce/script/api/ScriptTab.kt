@@ -7,20 +7,21 @@ package net.ccbluex.liquidbounce.script.api
 
 import jdk.nashorn.api.scripting.JSObject
 import jdk.nashorn.api.scripting.ScriptUtils
-import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
-import net.ccbluex.liquidbounce.api.util.WrappedCreativeTabs
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
+import net.minecraft.creativetab.CreativeTabs
+import net.minecraft.item.ItemStack
+import net.minecraft.util.*
 
 @Suppress("UNCHECKED_CAST", "unused")
-class ScriptTab(private val tabObject: JSObject) : WrappedCreativeTabs(tabObject.getMember("name") as String)
+class ScriptTab(private val tabObject: JSObject) : CreativeTabs(tabObject.getMember("name") as String)
 {
-    val items = ScriptUtils.convert(tabObject.getMember("items"), Array<IItemStack>::class.java) as Array<IItemStack>
+    val items = ScriptUtils.convert(tabObject.getMember("items"), Array<ItemStack>::class.java) as Array<ItemStack>
 
-    override val tabIconItem get() = ItemUtils.createItem(tabObject.getMember("icon") as String)?.item!!
+    override fun getTabIconItem() = ItemUtils.createItem(tabObject.getMember("icon") as String)?.item!!
 
-    override val translatedTabLabel get() = tabObject.getMember("name") as String
+    override fun getTranslatedTabLabel() = tabObject.getMember("name") as String
 
-    override fun displayAllReleventItems(itemList: MutableList<IItemStack>)
+    override fun displayAllReleventItems(itemList: MutableList<ItemStack>)
     {
         itemList.forEach { itemList.add(it) }
     }

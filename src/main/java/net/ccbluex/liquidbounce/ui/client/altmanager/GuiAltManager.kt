@@ -215,7 +215,7 @@ class GuiAltManager(private val prevGui: GuiScreen?) : GuiScreen()
                 while (bufferedReader.readLine().also { line = it } != null)
                 {
                     val accountData = line.split(":", ignoreCase = true, limit = 2)
-                    if (accountData[0] !is AccountExists) LiquidBounce.fileManager.accountsConfig.addAccount(if (accountData.size > 1) MinecraftAccount(AltServiceType.MOJANG, accountData[0], accountData[1]) else MinecraftAccount(AltServiceType.MOJANG, accountData[0]))
+                    if (!LiquidBounce.fileManager.accountsConfig.isAccountExists(accountData[0])) LiquidBounce.fileManager.accountsConfig.addAccount(if (accountData.size > 1) MinecraftAccount(AltServiceType.MOJANG, accountData[0], accountData[1]) else MinecraftAccount(AltServiceType.MOJANG, accountData[0]))
                 }
                 bufferedReader.close()
                 altsList.updateAccounts(searchField.text)

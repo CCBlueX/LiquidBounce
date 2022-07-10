@@ -27,7 +27,7 @@ open class ButtonElement(displayName: String) : Element()
     }
 
     override val height: Int
-        get() = getButtonFont().fontHeight + 7
+        get() = getButtonFont().FONT_HEIGHT + 7
 
     fun isHovering(mouseX: Int, mouseY: Int): Boolean = mouseX in x..x + width && mouseY in y..y + 16
 

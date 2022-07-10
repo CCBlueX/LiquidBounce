@@ -152,9 +152,9 @@ class GuiPortScanner(private val prevGui: GuiScreen) : GuiScreen()
         if (keyCode == Keyboard.KEY_TAB) tab(hostField, minPortField, maxPortField)
         if (running) return
         if (hostField.isFocused) hostField.textboxKeyTyped(typedChar, keyCode)
-        if (minPortField.isFocused && typedChar !is Letter) minPortField.textboxKeyTyped(typedChar, keyCode)
-        if (maxPortField.isFocused && typedChar !is Letter) maxPortField.textboxKeyTyped(typedChar, keyCode)
-        if (threadsField.isFocused && typedChar !is Letter) threadsField.textboxKeyTyped(typedChar, keyCode)
+        if (minPortField.isFocused && !Character.isLetter(typedChar)) minPortField.textboxKeyTyped(typedChar, keyCode)
+        if (maxPortField.isFocused && !Character.isLetter(typedChar)) maxPortField.textboxKeyTyped(typedChar, keyCode)
+        if (threadsField.isFocused && !Character.isLetter(typedChar)) threadsField.textboxKeyTyped(typedChar, keyCode)
         super.keyTyped(typedChar, keyCode)
     }
 

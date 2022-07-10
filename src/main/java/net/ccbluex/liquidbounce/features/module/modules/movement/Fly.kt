@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerAbilities
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -36,12 +35,16 @@ import net.ccbluex.liquidbounce.features.module.modules.render.Bobbing
 import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.Tower
 import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.utils.extensions.drawString
 import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.extensions.zeroXYZ
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
 import net.ccbluex.liquidbounce.value.*
+import net.minecraft.client.gui.ScaledResolution
+import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.network.play.client.C13PacketPlayerAbilities
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
 
@@ -371,8 +374,6 @@ object Fly : Module()
         if (visualVanillaFlightRemainingTimeCounterEnabledValue.get())
         {
             val theWorld = mc.theWorld ?: return
-            val provider = classProvider
-
             GL11.glPushMatrix()
 
             val moduleManager = LiquidBounce.moduleManager
@@ -389,9 +390,9 @@ object Fly : Module()
             val info = "You can fly ${if (remainingTicks <= 10) "\u00A7c" else ""}${remainingTicks}\u00A7r more ticks"
             val scaledResolution = ScaledResolution(mc)
 
-            RenderUtils.drawBorderedRect((scaledResolution.scaledWidth shr 1) - 2.0f, (scaledResolution.scaledHeight shr 1) + 5.0f, ((scaledResolution.scaledWidth shr 1) + font.getStringWidth(info)) + 2.0f, (scaledResolution.scaledHeight shr 1) + font.fontHeight + 7f, 3f, -16777216, -16777216)
+            RenderUtils.drawBorderedRect((scaledResolution.scaledWidth shr 1) - 2.0f, (scaledResolution.scaledHeight shr 1) + 5.0f, ((scaledResolution.scaledWidth shr 1) + font.getStringWidth(info)) + 2.0f, (scaledResolution.scaledHeight shr 1) + font.FONT_HEIGHT + 7f, 3f, -16777216, -16777216)
 
-            provider.GlStateManager.resetColor()
+            GlStateManager.resetColor()
 
             font.drawString(info, (scaledResolution.scaledWidth shr 1).toFloat(), (scaledResolution.scaledHeight shr 1) + 7.0f, 0xffffff)
 
@@ -399,29 +400,28 @@ object Fly : Module()
         }
     }
 
-    private var lastAbilitiesPacket: ICPacketPlayerAbilities? = null
+    private var lastAbilitiesPacket: C13PacketPlayerAbilities? = null
 
     @EventTarget
     fun onPacket(event: PacketEvent)
     {
         val packet = event.packet
 
-        if (packet is CPacketAbilities)
+        if (packet is C13PacketPlayerAbilities)
         {
             val thePlayer = mc.thePlayer ?: return
 
-            val abilities = packet.asCPacketPlayerAbilities()
             if (bypassAbilitiesValue.get())
             {
                 if (lastAbilitiesPacket == null)
                 {
-                    lastAbilitiesPacket = CPacketPlayerAbilities(thePlayer.capabilities)
-                    lastAbilitiesPacket!!.flying = false
+                    lastAbilitiesPacket = C13PacketPlayerAbilities(thePlayer.capabilities)
+                    lastAbilitiesPacket!!.isFlying = false
                 }
 
-                abilities.flying = false
+                packet.isFlying = false
 
-                if (lastAbilitiesPacket != null && lastAbilitiesPacket == abilities) event.cancelEvent() else lastAbilitiesPacket = abilities
+                if (lastAbilitiesPacket != null && lastAbilitiesPacket == packet) event.cancelEvent() else lastAbilitiesPacket = packet
             }
         }
 

@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.extensions.getBlock
 import net.ccbluex.liquidbounce.utils.extensions.multiply
 import net.ccbluex.liquidbounce.value.FloatValue
+import net.minecraft.block.BlockLiquid
 
 @ModuleInfo(name = "WaterSpeed", description = "Allows you to swim faster. (bypassed ~AAC3.2.2)", category = ModuleCategory.MOVEMENT)
 class WaterSpeed : Module()
@@ -25,7 +26,7 @@ class WaterSpeed : Module()
         val theWorld = mc.theWorld ?: return
         val thePlayer = mc.thePlayer ?: return
 
-        if (thePlayer.isInWater && classProvider.isBlockLiquid(theWorld.getBlock(thePlayer.position))) thePlayer.multiply(speedValue.get())
+        if (thePlayer.isInWater && theWorld.getBlock(thePlayer.position) is BlockLiquid) thePlayer.multiply(speedValue.get())
     }
 
     override val tag: String

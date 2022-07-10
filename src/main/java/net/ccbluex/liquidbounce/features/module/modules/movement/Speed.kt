@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationIcon
 import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.extensions.zeroXZ
 import net.ccbluex.liquidbounce.value.*
+import net.minecraft.network.play.server.S08PacketPlayerPosLook
 
 @ModuleInfo(name = "Speed", description = "Allows you to move faster.", category = ModuleCategory.MOVEMENT)
 object Speed : Module()
@@ -155,9 +156,9 @@ object Speed : Module()
     {
         val thePlayer = mc.thePlayer ?: return
 
-        if (thePlayer.sneaking) return
+        if (thePlayer.isSneaking) return
 
-        if (thePlayer.isMoving) thePlayer.sprinting = true
+        if (thePlayer.isMoving) thePlayer.isSprinting = true
 
         mode?.onUpdate()
     }
@@ -167,7 +168,7 @@ object Speed : Module()
     {
         val thePlayer = mc.thePlayer ?: return
 
-        if (thePlayer.sneaking) return
+        if (thePlayer.isSneaking) return
 
         mode?.onMotion(event.eventState)
     }
@@ -175,14 +176,14 @@ object Speed : Module()
     @EventTarget
     fun onMove(event: MoveEvent)
     {
-        if ((mc.thePlayer ?: return).sneaking) return
+        if ((mc.thePlayer ?: return).isSneaking) return
         mode?.onMove(event)
     }
 
     @EventTarget
     fun onTick(@Suppress("UNUSED_PARAMETER") event: TickEvent)
     {
-        if ((mc.thePlayer ?: return).sneaking) return
+        if ((mc.thePlayer ?: return).isSneaking) return
 
         mode?.onTick()
     }
@@ -190,7 +191,7 @@ object Speed : Module()
     @EventTarget
     fun onPacket(event: PacketEvent)
     {
-        if (event.packet is SPacketPlayerPosLook && disableOnFlagValue.get())
+        if (event.packet is S08PacketPlayerPosLook && disableOnFlagValue.get())
         {
             val thePlayer = mc.thePlayer ?: return
 

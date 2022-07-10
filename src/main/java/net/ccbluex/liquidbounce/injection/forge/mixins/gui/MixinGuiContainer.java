@@ -7,8 +7,6 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 
-import com.google.common.collect.Sets;
-
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.modules.combat.AutoArmor;
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura;

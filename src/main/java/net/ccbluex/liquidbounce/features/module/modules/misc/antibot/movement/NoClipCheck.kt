@@ -1,12 +1,12 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.movement
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.Entity
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.EntityPlayer
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.WorldClient
-import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition
-import net.ccbluex.liquidbounce.api.minecraft.util.Vec3
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.BotCheck
+import net.minecraft.client.multiplayer.WorldClient
+import net.minecraft.entity.Entity
+import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.util.MovingObjectPosition
+import net.minecraft.util.Vec3
 
 class NoClipCheck : BotCheck("move.noClip")
 {
@@ -25,7 +25,7 @@ class NoClipCheck : BotCheck("move.noClip")
     {
         val entityId = target.entityId
         val rayTraceResult = theWorld.rayTraceBlocks(Vec3(target.posX, target.posY, target.posZ), newPos)
-        if (rayTraceResult?.typeOfHit == IMovingObjectPosition.WMovingObjectType.BLOCK)
+        if (rayTraceResult?.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK)
         {
             vl[entityId] = (vl[entityId] ?: 0) + 20
         }

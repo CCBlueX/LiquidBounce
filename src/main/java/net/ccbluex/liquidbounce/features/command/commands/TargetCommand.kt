@@ -6,10 +6,10 @@
 package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.EntityPlayer
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.utils.EntityUtils
+import net.minecraft.entity.player.EntityPlayer
 
 class TargetCommand : Command("target")
 {
@@ -141,7 +141,7 @@ class TargetCommand : Command("target")
                 val prefix = args[1]
                 when (args[0].toLowerCase())
                 {
-                    "add" -> return theWorld.playerEntities.map(EntityPlayer::name).filter { it.startsWith(prefix, true) }.toList()
+                    "add" -> return theWorld.playerEntities.map(EntityPlayer::getName).filter { it.startsWith(prefix, true) }.toList()
                     "remove" -> return LiquidBounce.fileManager.targetsConfig.targets.filter { it.startsWith(prefix, true) }.toList()
                 }
 

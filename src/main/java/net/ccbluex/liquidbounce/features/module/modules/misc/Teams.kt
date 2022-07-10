@@ -5,14 +5,15 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.EntityLivingBase
-import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
+import net.minecraft.entity.EntityLivingBase
+import net.minecraft.item.ItemArmor
+import net.minecraft.item.ItemStack
 
 @ModuleInfo(name = "Teams", description = "Prevents KillAura from attacking team mates.", category = ModuleCategory.MISC)
 class Teams : Module()
@@ -34,7 +35,7 @@ class Teams : Module()
         val targetTeam = entity.team
 
         // Scoreboard Team
-        if (scoreboardValue.get() && playerTeam != null && targetTeam != null && targetTeam is SameTeam) return true
+        if (scoreboardValue.get() && playerTeam != null && targetTeam != null && playerTeam.isSameTeam(targetTeam)) return true
 
         val displayName = thePlayer.displayName.formattedText
         val entityDisplayName = entity.displayName.formattedText
@@ -59,7 +60,7 @@ class Teams : Module()
 
         if (armorColorValue.get())
         {
-            val getColor = { it: IItemStack -> it.item!! as ArmorgetColor(it) }
+            val getColor = { it: ItemStack -> (it.item!! as ItemArmor).getColor(it) }
             val colorSensitivity = armorColorSensitivityValue.get()
 
             if ((1..4).asSequence().map { thePlayer.getEquipmentInSlot(it) to entity.getEquipmentInSlot(it) }.filter { it.first?.item is ItemArmor && it.second?.item is ItemArmor }.map { getColor(it.first!!) to getColor(it.second!!) }.filter { (playerColor, targetColor) -> playerColor != -1 && targetColor != -1 && playerColor != 0xA06540 && targetColor != 0xA06540 /* Default leather armor color */ }.any { ColorUtils.compareColor(it.first, it.second) <= colorSensitivity }) return true

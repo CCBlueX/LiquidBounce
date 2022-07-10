@@ -8,7 +8,6 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.extensions.*
 
 class MiJump : SpeedMode("MiJump")

@@ -6,6 +6,8 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.extensions.boost
+import net.minecraft.block.BlockAir
+import net.minecraft.util.AxisAlignedBB
 
 class RedeSkyCollideFly : FlyMode("RedeSky-Collide")
 {

@@ -6,18 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.IClassProvider
-import net.ccbluex.liquidbounce.api.IExtractedFunctions
-import net.ccbluex.liquidbounce.api.enums.MaterialType
-import net.ccbluex.liquidbounce.api.enums.WDefaultVertexFormats
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.Entity
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.EntityPlayer
-import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
-import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition
-import net.ccbluex.liquidbounce.api.minecraft.util.BlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
-import net.ccbluex.liquidbounce.api.minecraft.util.Vec3
-import net.ccbluex.liquidbounce.api.minecraft.world.World
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -25,10 +13,27 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.FastBow
 import net.ccbluex.liquidbounce.utils.RotationUtils
-import net.ccbluex.liquidbounce.utils.getPotionLiquidColor
+import net.ccbluex.liquidbounce.utils.extensions.cos
+import net.ccbluex.liquidbounce.utils.extensions.getPotionLiquidColor
+import net.ccbluex.liquidbounce.utils.extensions.sin
+import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.*
+import net.minecraft.block.material.Material
+import net.minecraft.client.renderer.Tessellator
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats
+import net.minecraft.entity.Entity
+import net.minecraft.entity.item.EntityEnderPearl
+import net.minecraft.entity.item.EntityExpBottle
+import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.entity.projectile.*
+import net.minecraft.item.*
+import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.BlockPos
+import net.minecraft.util.MovingObjectPosition
+import net.minecraft.util.Vec3
+import net.minecraft.world.World
 import org.lwjgl.opengl.GL11
 import org.lwjgl.util.glu.Cylinder
 import org.lwjgl.util.glu.GLU
@@ -78,9 +83,6 @@ class Projectiles : Module()
 
         val partialTicks = if (interpolateValue.get()) event.partialTicks else 1f
 
-        val provider = classProvider
-        val func = functions
-
         run {
             val (motionMultiplier, motionFactor, motionSlowdown, gravity, size, inaccuracy) = getProjectileInfo(thePlayer, thePlayer.heldItem ?: return@run, partialTicks) ?: return@run
 
@@ -101,9 +103,9 @@ class Projectiles : Module()
             val yawRadians = yaw.toRadians
             val pitchRadians = pitch.toRadians
 
-            val yawSin = func.sin(yawRadians)
-            val yawCos = func.cos(yawRadians)
-            val pitchCos = func.cos(pitchRadians)
+            val yawSin = yawRadians.sin
+            val yawCos = yawRadians.cos
+            val pitchCos = pitchRadians.cos
 
             // Positions
             val posX = renderPosX - yawCos * 0.16F
@@ -112,7 +114,7 @@ class Projectiles : Module()
 
             // Motions
             var motionX = -yawSin * pitchCos * motionMultiplier
-            var motionY = -func.sin(pitch + inaccuracy).toRadians * motionMultiplier
+            var motionY = -(pitch + inaccuracy).sin.toRadians * motionMultiplier
             var motionZ = yawCos * pitchCos * motionMultiplier
 
             val distance = sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ)
@@ -125,7 +127,7 @@ class Projectiles : Module()
             motionY *= motionFactor
             motionZ *= motionFactor
 
-            renderTrajectory(theWorld, thePlayer, provider, func, renderPosX, renderPosY, renderPosZ, color, posX, posY, posZ, motionX, motionY, motionZ, motionSlowdown, gravity, size)
+            renderTrajectory(theWorld, thePlayer, renderPosX, renderPosY, renderPosZ, color, posX, posY, posZ, motionX, motionY, motionZ, motionSlowdown, gravity, size)
         }
 
         if (allProjectilesValue.get())
@@ -139,19 +141,19 @@ class Projectiles : Module()
                 val lastPosY = proj.lastTickPosY
                 val lastPosZ = proj.lastTickPosZ
 
-                renderTrajectory(theWorld, thePlayer, provider, func, renderPosX, renderPosY, renderPosZ, ColorUtils.applyAlphaChannel(color, colorValue.getAlpha()), lastPosX + (proj.posX - lastPosX) * partialTicks, lastPosY + (proj.posY - lastPosY) * partialTicks, lastPosZ + (proj.posZ - lastPosZ) * partialTicks, proj.motionX, proj.motionY, proj.motionZ, info.motionSlowdown, info.gravity, info.size)
+                renderTrajectory(theWorld, thePlayer, renderPosX, renderPosY, renderPosZ, ColorUtils.applyAlphaChannel(color, colorValue.getAlpha()), lastPosX + (proj.posX - lastPosX) * partialTicks, lastPosY + (proj.posY - lastPosY) * partialTicks, lastPosZ + (proj.posZ - lastPosZ) * partialTicks, proj.motionX, proj.motionY, proj.motionZ, info.motionSlowdown, info.gravity, info.size)
             }
         }
     }
 
-    private fun renderTrajectory(theWorld: World, thePlayer: Entity, provider: IClassProvider, func: IExtractedFunctions, renderPosX: Double, renderPosY: Double, renderPosZ: Double, color: Int, defaultPosX: Double, defaultPosY: Double, defaultPosZ: Double, defaultMotionX: Double, defaultMotionY: Double, defaultMotionZ: Double, motionSlowdown: Float, gravity: Float, size: Float)
+    private fun renderTrajectory(theWorld: World, thePlayer: Entity, renderPosX: Double, renderPosY: Double, renderPosZ: Double, color: Int, defaultPosX: Double, defaultPosY: Double, defaultPosZ: Double, defaultMotionX: Double, defaultMotionY: Double, defaultMotionZ: Double, motionSlowdown: Float, gravity: Float, size: Float)
     {
         // Landing
-        var landingPosition: IMovingObjectPosition? = null
+        var landingPosition: MovingObjectPosition? = null
         var hasLanded = false
         var hitEntity = false
 
-        val tessellator = provider.tessellatorInstance
+        val tessellator = Tessellator.getInstance()
         val worldRenderer = tessellator.worldRenderer
 
         var posX = defaultPosX
@@ -173,7 +175,7 @@ class Projectiles : Module()
 
         GL11.glLineWidth(lineWidthValue.get())
 
-        worldRenderer.begin(GL11.GL_LINE_STRIP, provider.getVertexFormatEnum(WDefaultVertexFormats.POSITION))
+        worldRenderer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION)
 
         while (!hasLanded && posY > 0.0)
         {
@@ -182,7 +184,7 @@ class Projectiles : Module()
             var posAfter = Vec3(posX + motionX, posY + motionY, posZ + motionZ)
 
             // Get landing position
-            landingPosition = theWorld.rayTraceBlocks(posBefore, posAfter, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false)
+            landingPosition = theWorld.rayTraceBlocks(posBefore, posAfter, false, true, false)
 
             // Set pos before and after
             posBefore = Vec3(posX, posY, posZ)
@@ -230,7 +232,7 @@ class Projectiles : Module()
             val blockState = theWorld.getBlockState(BlockPos(posX, posY, posZ))
 
             // Check is next position water
-            if (blockState.block.getMaterial(blockState) == provider.getMaterialEnum(MaterialType.WATER))
+            if (blockState.block.getMaterial() == Material.water)
             {
                 // Update motion in water
                 motionX *= 0.6
@@ -261,7 +263,7 @@ class Projectiles : Module()
         if (landingPosition != null)
         {
             // Switch rotation of hit cylinder of the hit axis
-            when (landingPosition?.sideHit?.axisOrdinal ?: -1)
+            when (landingPosition?.sideHit?.ordinal ?: -1)
             {
                 0 -> GL11.glRotatef(90F, 0F, 0F, 1F)
                 2 -> GL11.glRotatef(90F, 1F, 0F, 0F)
@@ -276,8 +278,8 @@ class Projectiles : Module()
 
         val cylinder = object : Cylinder()
         {
-            override fun sin(r: Float): Float = func.sin(r)
-            override fun cos(r: Float): Float = func.cos(r)
+            override fun sin(r: Float): Float = r.sin
+            override fun cos(r: Float): Float = r.cos
         }
         cylinder.drawStyle = GLU.GLU_LINE
         cylinder.draw(0.2F, 0F, 0F, 60, 1)
@@ -288,7 +290,7 @@ class Projectiles : Module()
         RenderUtils.resetColor()
     }
 
-    private fun getProjectileInfo(thePlayer: EntityPlayer, itemStack: IItemStack, partialTicks: Float): ProjectileInfo?
+    private fun getProjectileInfo(thePlayer: EntityPlayer, itemStack: ItemStack, partialTicks: Float): ProjectileInfo?
     {
         val item = itemStack.item
 
@@ -319,13 +321,13 @@ class Projectiles : Module()
 
             item is ItemFishingRod -> ProjectileInfo(motionSlowdown = 0.92F, gravity = 0.04F, size = 0.25F)
 
-            item is ItemPotion && itemStack.isSplash() -> ProjectileInfo(motionFactor = 0.5F, gravity = 0.05F, size = 0.25F, inaccuracy = -20.0F)
+            item is ItemPotion && ItemPotion.isSplash(itemStack.metadata) -> ProjectileInfo(motionFactor = 0.5F, gravity = 0.05F, size = 0.25F, inaccuracy = -20.0F)
 
             item is ItemExpBottle -> ProjectileInfo(motionFactor = 0.7F, gravity = 0.07F, size = 0.25F, inaccuracy = -20.0F)
 
             else ->
             {
-                if (!item is ItemSnowball && !item is ItemEnderPearl && !item is ItemEgg) return null
+                if (item !is ItemSnowball && item !is ItemEnderPearl && item !is ItemEgg) return null
 
                 ProjectileInfo(gravity = 0.03F, size = 0.25F)
             }
@@ -338,19 +340,17 @@ class Projectiles : Module()
 
         return when
         {
-            projectile is EntityArrow && !projectile.asEntityArrow().inGround -> ProjectileInfo(motionMultiplier = 1.0, gravity = 0.05F, size = 0.3F) to -65536
+            projectile is EntityArrow && !projectile.inGround -> ProjectileInfo(motionMultiplier = 1.0, gravity = 0.05F, size = 0.3F) to -65536
 
-            projectile is EntityFishHook && !projectile.asEntityFishHook().inGround && projectile.asEntityFishHook().caughtEntity == null -> ProjectileInfo(motionSlowdown = 0.92F, gravity = 0.04F, size = 0.25F) to -7829368
+            projectile is EntityFishHook && !projectile.inGround && projectile.caughtEntity == null -> ProjectileInfo(motionSlowdown = 0.92F, gravity = 0.04F, size = 0.25F) to -7829368
 
             projectile is EntityThrowable ->
             {
-                val throwable = projectile.asEntityThrowable()
-
-                ProjectileInfo(motionFactor = throwable.velocity, gravity = throwable.gravityVelocity, size = max(throwable.width, throwable.height), inaccuracy = throwable.inaccuracy) to when
+                ProjectileInfo(motionFactor = projectile.velocity, gravity = projectile.gravityVelocity, size = max(projectile.width, projectile.height), inaccuracy = projectile.inaccuracy) to when
                 {
                     projectile is EntityEgg -> -2109797
                     projectile is EntityEnderPearl -> -6750004
-                    projectile is EntityPotion -> ColorUtils.applyAlphaChannel(getPotionLiquidColor(projectile.asEntityPotion(), false), 255)
+                    projectile is EntityPotion -> ColorUtils.applyAlphaChannel(getPotionLiquidColor(projectile, false), 255)
                     projectile is EntityExpBottle -> -3539055
                     else -> -1
                 }

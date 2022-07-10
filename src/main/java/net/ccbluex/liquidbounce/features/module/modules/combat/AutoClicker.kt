@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerRangeValue
+import net.minecraft.client.settings.KeyBinding
 import kotlin.random.Random
 
 @ModuleInfo(name = "AutoClicker", description = "Constantly clicks when holding down a mouse button.", category = ModuleCategory.COMBAT)
@@ -57,7 +58,7 @@ class AutoClicker : Module()
         // Left click
         if (gameSettings.keyBindAttack.isKeyDown && leftValue.get() && System.currentTimeMillis() - leftLastSwing >= leftDelay && mc.playerController.curBlockDamageMP == 0F && delayAfterBlockBreakTimer.hasTimePassed(delayAfterBlockBreak))
         {
-            gameSettings.keyBindAttack.onTick(gameSettings.keyBindAttack.keyCode) // Minecraft Click Handling
+            KeyBinding.onTick(gameSettings.keyBindAttack.keyCode) // Minecraft Click Handling
 
             leftLastSwing = System.currentTimeMillis()
             leftDelay = cpsValue.getRandomClickDelay()
@@ -66,7 +67,7 @@ class AutoClicker : Module()
         // Right click
         if (gameSettings.keyBindUseItem.isKeyDown && !thePlayer.isUsingItem && rightValue.get() && System.currentTimeMillis() - rightLastSwing >= rightDelay)
         {
-            gameSettings.keyBindAttack.onTick(gameSettings.keyBindUseItem.keyCode) // Minecraft Click Handling
+            KeyBinding.onTick(gameSettings.keyBindUseItem.keyCode) // Minecraft Click Handling
 
             rightLastSwing = System.currentTimeMillis()
             rightDelay = cpsValue.getRandomClickDelay()

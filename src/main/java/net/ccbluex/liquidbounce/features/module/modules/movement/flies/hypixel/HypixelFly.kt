@@ -1,18 +1,20 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.flies.hypixel
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.DamageOnStart
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationIcon
-import net.ccbluex.liquidbounce.utils.extensions.isMoving
-import net.ccbluex.liquidbounce.utils.extensions.moveDirectionRadians
-import net.ccbluex.liquidbounce.utils.extensions.speedEffectAmplifier
+import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
+import net.minecraft.block.BlockAir
+import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.network.play.server.S08PacketPlayerPosLook
+import net.minecraft.potion.Potion
+import net.minecraft.util.AxisAlignedBB
 import kotlin.math.hypot
 import kotlin.math.max
 
@@ -170,9 +172,9 @@ class HypixelFly : FlyMode("Hypixel")
     {
         val packet = event.packet
 
-        if (packet is CPacketPlayer && hypixelFlyStarted) packet.asCPacketPlayer().onGround = Fly.hypixelOnGroundValue.get()
+        if (packet is C03PacketPlayer && hypixelFlyStarted) packet.onGround = Fly.hypixelOnGroundValue.get()
 
-        if (packet is SPacketPlayerPosLook && canPerformHypixelDamageFly && hypixelFlyStarted && !hypixelDamageBoostFailed)
+        if (packet is S08PacketPlayerPosLook && canPerformHypixelDamageFly && hypixelFlyStarted && !hypixelDamageBoostFailed)
         {
             hypixelDamageBoostFailed = true
             LiquidBounce.hud.addNotification(Notification(NotificationIcon.CAUTION, "Cancelled Damage Boost", "due (anti-cheat) setback", 1000L))
@@ -198,7 +200,7 @@ class HypixelFly : FlyMode("Hypixel")
 
         if (hypixelDamageBoostFailed) return
 
-        val step1Speed = if (thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.MOVE_SPEED))) 1.56 else 2.034
+        val step1Speed = if (thePlayer.isPotionActive(Potion.moveSpeed)) 1.56 else 2.034
         val speedEffectAffect = 1 + 0.2 * thePlayer.speedEffectAmplifier
         val baseSpeed = 0.29 * speedEffectAffect
 
@@ -229,8 +231,8 @@ class HypixelFly : FlyMode("Hypixel")
 
         val dir = thePlayer.moveDirectionRadians
 
-        event.x = -functions.sin(dir) * hypixelBoostSpeed
-        event.z = functions.cos(dir) * hypixelBoostSpeed
+        event.x = -dir.sin * hypixelBoostSpeed
+        event.z = dir.cos * hypixelBoostSpeed
 
         thePlayer.motionX = event.x
         thePlayer.motionZ = event.z

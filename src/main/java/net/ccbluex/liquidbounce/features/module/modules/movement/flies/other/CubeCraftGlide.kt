@@ -1,8 +1,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.flies.other
 
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
+import net.ccbluex.liquidbounce.utils.extensions.cos
+import net.ccbluex.liquidbounce.utils.extensions.sin
+import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
 
 class CubeCraftGlide : FlyMode("CubeCraft")
@@ -20,19 +22,18 @@ class CubeCraftGlide : FlyMode("CubeCraft")
     override fun onMove(event: MoveEvent)
     {
         val yaw = (mc.thePlayer ?: return).rotationYaw.toRadians
-        val func = functions
 
         if (cubecraftTeleportTickTimer.hasTimePassed(2))
         {
-            event.x = -func.sin(yaw) * 2.4
-            event.z = func.cos(yaw) * 2.4
+            event.x = -yaw.sin * 2.4
+            event.z = yaw.cos * 2.4
 
             cubecraftTeleportTickTimer.reset()
         }
         else
         {
-            event.x = -func.sin(yaw) * 0.2
-            event.z = func.cos(yaw) * 0.2
+            event.x = -yaw.sin * 0.2
+            event.z = yaw.cos * 0.2
         }
     }
 }

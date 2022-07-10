@@ -2,8 +2,10 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.flies.aac
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
+import net.ccbluex.liquidbounce.utils.extensions.sendPacketWithoutEvent
 import net.ccbluex.liquidbounce.utils.extensions.strafe
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.minecraft.network.play.client.C03PacketPlayer
 
 class AAC1_9_10Fly : FlyMode("AAC1.9.10")
 {
@@ -29,7 +31,7 @@ class AAC1_9_10Fly : FlyMode("AAC1.9.10")
 
         if (Fly.startY + jump > posY)
         {
-            mc.netHandler.networkManager.sendPacketWithoutEvent(CPacketPlayer(true))
+            mc.netHandler.networkManager.sendPacketWithoutEvent(C03PacketPlayer(true))
             thePlayer.motionY = 0.8
             thePlayer.strafe(Fly.aacSpeedValue.get())
         }

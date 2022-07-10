@@ -5,8 +5,8 @@
  */
 package net.ccbluex.liquidbounce.script.api.global
 
-import net.ccbluex.liquidbounce.LiquidBounce.wrapper
 import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
 
 /**
  * Object used by the script API to provide an easier way of calling chat-related methods.
@@ -22,6 +22,6 @@ object Chat
     @JvmStatic
     fun print(message: String)
     {
-        ClientUtils.displayChatMessage(wrapper.minecraft.thePlayer, message)
+        ClientUtils.displayChatMessage(mc.thePlayer, message)
     }
 }

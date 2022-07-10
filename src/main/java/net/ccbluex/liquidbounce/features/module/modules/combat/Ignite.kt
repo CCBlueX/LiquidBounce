@@ -5,12 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.api.enums.EnumFacingType
-import net.ccbluex.liquidbounce.api.enums.ItemType
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.Entity
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.wrapAngleTo180_float
-import net.ccbluex.liquidbounce.api.minecraft.util.Vec3
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -22,6 +16,15 @@ import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
+import net.minecraft.block.BlockAir
+import net.minecraft.entity.Entity
+import net.minecraft.entity.EntityLivingBase
+import net.minecraft.init.Items
+import net.minecraft.item.ItemBucket
+import net.minecraft.network.play.client.C03PacketPlayer.C05PacketPlayerLook
+import net.minecraft.network.play.client.C09PacketHeldItemChange
+import net.minecraft.util.EnumFacing
+import net.minecraft.util.Vec3
 import java.util.*
 import kotlin.math.atan2
 import kotlin.math.hypot
@@ -54,21 +57,19 @@ class Ignite : Module()
 
         val inventoryContainer = thePlayer.inventoryContainer
 
-        val provider = classProvider
-
         val itemDelay = itemDelayValue.get()
         val randomSlot = randomSlotValue.get()
 
-        val lighterInHotbar = if (lighterValue.get()) inventoryContainer.findItem(36, 45, provider.getItemEnum(ItemType.FLINT_AND_STEEL), itemDelay.toLong(), randomSlot) else -1
-        val lavaInHotbar = if (lavaBucketValue.get()) inventoryContainer.findItem(26, 45, provider.getItemEnum(ItemType.LAVA_BUCKET), itemDelay.toLong(), randomSlot) else -1
+        val lighterInHotbar = if (lighterValue.get()) inventoryContainer.findItem(36, 45, Items.flint_and_steel, itemDelay.toLong(), randomSlot) else -1
+        val lavaInHotbar = if (lavaBucketValue.get()) inventoryContainer.findItem(26, 45, Items.lava_bucket, itemDelay.toLong(), randomSlot) else -1
 
         if (lighterInHotbar == -1 && lavaInHotbar == -1) return
 
         val fireInHotbar = if (lighterInHotbar == -1) lavaInHotbar else lighterInHotbar
 
-        theWorld.getEntitiesInRadius(thePlayer, 8.0).asSequence().filterNot(Entity::burning).filter { true is Selected }.map(Entity::position).filter { thePlayer.getDistanceSq(it) < 22.3 }.filter(theWorld::isReplaceable).firstOrNull { provider.isBlockAir(theWorld.getBlock(it)) }?.let { blockPos ->
+        theWorld.getEntitiesInRadius(thePlayer, 8.0).asSequence().filterIsInstance<EntityLivingBase>().filterNot(Entity::isBurning).filter { it.isSelected(true) }.map(Entity::getPosition).filter { thePlayer.getDistanceSq(it) < 22.3 }.filter(theWorld::isReplaceable).firstOrNull { theWorld.getBlock(it) is BlockAir }?.let { blockPos ->
             RotationUtils.keepCurrentRotation = true
-            netHandler.addToSendQueue(CPacketHeldItemChange(fireInHotbar - 36))
+            netHandler.addToSendQueue(C09PacketHeldItemChange(fireInHotbar - 36))
 
             val itemStack = thePlayer.inventory.getStackInSlot(fireInHotbar)
 
@@ -79,17 +80,17 @@ class Ignite : Module()
                 val diffZ = blockPos.z + 0.5 - thePlayer.posZ
                 val sqrt = hypot(diffX, diffZ)
 
-                val yaw = WMathHelper.toDegrees(atan2(diffZ, diffX).toFloat()) - 90.0f
-                val pitch = -WMathHelper.toDegrees(atan2(diffY, sqrt).toFloat())
+                val yaw = (atan2(diffZ, diffX).toFloat()).toDegrees - 90.0f
+                val pitch = -(atan2(diffY, sqrt).toFloat()).toDegrees
 
                 CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT)
 
-                netHandler.addToSendQueue(CPacketPlayerLook(thePlayer.rotationYaw + wrapAngleTo180_float(yaw - thePlayer.rotationYaw), thePlayer.rotationPitch + wrapAngleTo180_float(pitch - thePlayer.rotationPitch), thePlayer.onGround))
+                netHandler.addToSendQueue(C05PacketPlayerLook(thePlayer.rotationYaw + (yaw - thePlayer.rotationYaw).wrapAngleTo180, thePlayer.rotationPitch + (pitch - thePlayer.rotationPitch).wrapAngleTo180, thePlayer.onGround))
 
                 controller.sendUseItem(thePlayer, theWorld, itemStack)
             }
             else run {
-                EnumFacingType.values().map(provider::getEnumFacing).forEach { side ->
+                EnumFacing.values().forEach { side ->
                     val neighbor = blockPos.offset(side)
 
                     if (!theWorld.canBeClicked(neighbor)) return@forEach
@@ -99,10 +100,10 @@ class Ignite : Module()
                     val diffZ = neighbor.z + 0.5 - thePlayer.posZ
                     val sqrt = hypot(diffX, diffZ)
 
-                    val yaw = WMathHelper.toDegrees(atan2(diffZ, diffX).toFloat()) - 90.0f
-                    val pitch = -WMathHelper.toDegrees(atan2(diffY, sqrt).toFloat())
+                    val yaw = (atan2(diffZ, diffX).toFloat()).toDegrees - 90.0f
+                    val pitch = -(atan2(diffY, sqrt).toFloat()).toDegrees
 
-                    netHandler.addToSendQueue(CPacketPlayerLook(thePlayer.rotationYaw + wrapAngleTo180_float(yaw - thePlayer.rotationYaw), thePlayer.rotationPitch + wrapAngleTo180_float(pitch - thePlayer.rotationPitch), thePlayer.onGround))
+                    netHandler.addToSendQueue(C05PacketPlayerLook(thePlayer.rotationYaw + (yaw - thePlayer.rotationYaw).wrapAngleTo180, thePlayer.rotationPitch + (pitch - thePlayer.rotationPitch).wrapAngleTo180, thePlayer.onGround))
 
                     CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT)
 
@@ -114,9 +115,9 @@ class Ignite : Module()
                 }
             }
 
-            netHandler.addToSendQueue(CPacketHeldItemChange(thePlayer.inventory.currentItem))
+            netHandler.addToSendQueue(C09PacketHeldItemChange(thePlayer.inventory.currentItem))
             RotationUtils.keepCurrentRotation = false
-            netHandler.addToSendQueue(CPacketPlayerLook(thePlayer.rotationYaw, thePlayer.rotationPitch, thePlayer.onGround))
+            netHandler.addToSendQueue(C05PacketPlayerLook(thePlayer.rotationYaw, thePlayer.rotationPitch, thePlayer.onGround))
             msTimer.reset()
         }
     }

@@ -5,11 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.api.IClassProvider
-import net.ccbluex.liquidbounce.api.enums.BlockType
-import net.ccbluex.liquidbounce.api.enums.MaterialType
-import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock
-import net.ccbluex.liquidbounce.api.minecraft.util.BlockPos
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -20,6 +15,13 @@ import net.ccbluex.liquidbounce.utils.extensions.multiply
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.block.Block
+import net.minecraft.block.BlockLiquid
+import net.minecraft.block.material.Material
+import net.minecraft.init.Blocks
+import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.BlockPos
 import org.lwjgl.input.Keyboard
 
 @ModuleInfo(name = "LiquidWalk", description = "Allows you to walk on water.", category = ModuleCategory.MOVEMENT, defaultKeyBinds = [Keyboard.KEY_J])
@@ -34,9 +36,9 @@ class LiquidWalk : Module()
 
     private var nextTick = false
 
-    private val waterBlocks by lazy(LazyThreadSafetyMode.NONE) { arrayOf(BlockType.WATER, BlockType.FLOWING_WATER).map(classProvider::getBlockEnum) }
+    private val waterBlocks by lazy(LazyThreadSafetyMode.NONE) { arrayOf(Blocks.water, Blocks.flowing_water) }
 
-    private fun checkLiquid(provider: IClassProvider, block: IBlock, waterOnly: Boolean) = if (waterOnly) block in waterBlocks else block is BlockLiquid
+    private fun checkLiquid(block: Block, waterOnly: Boolean) = if (waterOnly) block in waterBlocks else block is BlockLiquid
 
     @EventTarget
     fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
@@ -44,7 +46,7 @@ class LiquidWalk : Module()
         val theWorld = mc.theWorld ?: return
         val thePlayer = mc.thePlayer ?: return
 
-        if (thePlayer.sneaking) return
+        if (thePlayer.isSneaking) return
 
         val waterOnly = waterOnlyValue.get()
 
@@ -54,19 +56,17 @@ class LiquidWalk : Module()
         val posY = thePlayer.posY
         val posZ = thePlayer.posZ
 
-        val provider = classProvider
-
         when (modeValue.get().toLowerCase())
         {
-            "ncp", "vanilla" -> if (theWorld.collideBlock(thePlayer.entityBoundingBox) { checkLiquid(provider, it.block, waterOnly) } && thePlayer.isInsideOfMaterial(provider.getMaterialEnum(MaterialType.AIR)) && !thePlayer.sneaking) thePlayer.motionY = 0.08
+            "ncp", "vanilla" -> if (theWorld.collideBlock(thePlayer.entityBoundingBox) { checkLiquid(it.block, waterOnly) } && thePlayer.isInsideOfMaterial(Material.air) && !thePlayer.isSneaking) thePlayer.motionY = 0.08
 
             "aac3.1.0" ->
             {
                 val block = theWorld.getBlock(thePlayer.position.down())
 
-                if (!thePlayer.onGround && checkLiquid(provider, block, waterOnly) || isInLiquid)
+                if (!thePlayer.onGround && checkLiquid(block, waterOnly) || isInLiquid)
                 {
-                    if (!thePlayer.sprinting)
+                    if (!thePlayer.isSprinting)
                     {
                         thePlayer.multiply(0.99999)
                         thePlayer.motionY = 0.0
@@ -97,7 +97,7 @@ class LiquidWalk : Module()
                 val block = theWorld.getBlock(BlockPos(posX, posY + 1, posZ))
                 val blockUp = theWorld.getBlock(BlockPos(posX, posY + 1.1, posZ))
 
-                if (checkLiquid(provider, blockUp, waterOnly)) thePlayer.motionY = 0.1 else if (checkLiquid(provider, block, waterOnly)) thePlayer.motionY = 0.0
+                if (checkLiquid(blockUp, waterOnly)) thePlayer.motionY = 0.1 else if (checkLiquid(block, waterOnly)) thePlayer.motionY = 0.0
 
                 thePlayer.onGround = true
                 thePlayer.multiply(1.085)
@@ -106,7 +106,7 @@ class LiquidWalk : Module()
             "aac3.3.11" -> if (isInLiquid)
             {
                 thePlayer.multiply(1.17)
-                if (thePlayer.isCollidedHorizontally) thePlayer.motionY = 0.24 else if (theWorld.getBlockState(BlockPos(posX, posY + 1.0, posZ)).block != provider.getBlockEnum(BlockType.AIR)) thePlayer.motionY += 0.04
+                if (thePlayer.isCollidedHorizontally) thePlayer.motionY = 0.24 else if (theWorld.getBlockState(BlockPos(posX, posY + 1.0, posZ)).block != Blocks.air) thePlayer.motionY += 0.04
             }
 
             "dolphin" -> if (isInLiquid) thePlayer.motionY += 0.03999999910593033 // Same as normal swimming
@@ -132,11 +132,9 @@ class LiquidWalk : Module()
         val theWorld = mc.theWorld ?: return
         val thePlayer = mc.thePlayer ?: return
 
-        val provider = classProvider
-
         val waterOnly = waterOnlyValue.get()
 
-        if (checkLiquid(provider, event.block, waterOnly) && !theWorld.collideBlock(thePlayer.entityBoundingBox) { checkLiquid(provider, it.block, waterOnly) } && !thePlayer.sneaking) when (modeValue.get().toLowerCase())
+        if (checkLiquid(event.block, waterOnly) && !theWorld.collideBlock(thePlayer.entityBoundingBox) { checkLiquid(it.block, waterOnly) } && !thePlayer.isSneaking) when (modeValue.get().toLowerCase())
         {
             "ncp", "vanilla" ->
             {
@@ -157,17 +155,15 @@ class LiquidWalk : Module()
         val theWorld = mc.theWorld ?: return
         val thePlayer = mc.thePlayer ?: return
 
-        val provider = classProvider
-
         val lava = waterOnlyValue.get()
 
         // Bypass NCP Jesus checks
-        if (event.packet is CPacketPlayer)
+        if (event.packet is C03PacketPlayer)
         {
-            val packetPlayer = event.packet.asCPacketPlayer()
+            val packetPlayer = event.packet
 
             val bb = thePlayer.entityBoundingBox
-            if (theWorld.collideBlock(AxisAlignedBB(bb.minX, bb.minY - 0.01, bb.minZ, bb.maxX, bb.maxY, bb.maxZ)) { checkLiquid(provider, it.block, lava) })
+            if (theWorld.collideBlock(AxisAlignedBB(bb.minX, bb.minY - 0.01, bb.minZ, bb.maxX, bb.maxY, bb.maxZ)) { checkLiquid(it.block, lava) })
             {
                 nextTick = !nextTick
                 if (nextTick) packetPlayer.y -= 0.001
@@ -183,7 +179,7 @@ class LiquidWalk : Module()
 
         val block = theWorld.getBlock(BlockPos(thePlayer.posX, thePlayer.posY - 0.01, thePlayer.posZ))
 
-        if (noJumpValue.get() && checkLiquid(classProvider, block, waterOnlyValue.get())) event.cancelEvent()
+        if (noJumpValue.get() && checkLiquid(block, waterOnlyValue.get())) event.cancelEvent()
     }
 
     override val tag: String

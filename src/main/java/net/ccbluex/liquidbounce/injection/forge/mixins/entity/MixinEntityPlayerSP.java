@@ -8,7 +8,6 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.entity;
 import java.util.List;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.EntityPlayerSP;
 import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.AntiHunger;
@@ -146,7 +145,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
     {
         try
         {
-            final EntityPlayerSP thePlayer = LiquidBounce.wrapper.getMinecraft().getThePlayer();
+            final EntityPlayerSP thePlayer = Minecraft.getMinecraft().thePlayer;
             if (thePlayer == null)
                 return;
 
@@ -156,7 +155,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 
             final InventoryMove inventoryMove = (InventoryMove) LiquidBounce.moduleManager.get(InventoryMove.class);
             final Sneak sneak = (Sneak) LiquidBounce.moduleManager.get(Sneak.class);
-            final boolean fakeSprint = inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get() || LiquidBounce.moduleManager.get(AntiHunger.class).getState() || sneak.getState() && (thePlayer !is Moving || !sneak.stopMoveValue.get()) && "MineSecure".equalsIgnoreCase(sneak.modeValue.get());
+            final boolean fakeSprint = inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get() || LiquidBounce.moduleManager.get(AntiHunger.class).getState() || sneak.getState() && (!MovementExtensionKt.isMoving(thePlayer) || !sneak.stopMoveValue.get()) && "MineSecure".equalsIgnoreCase(sneak.modeValue.get());
 
             final boolean sprinting = isSprinting() && !fakeSprint;
 

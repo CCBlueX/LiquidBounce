@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="EclipseCodeFormatterProjectSettings">
+    <option name="selectedGlobalProfile">
+      <Settings>
+        <option name="formatter" value="ECLIPSE" />
+        <option name="id" value="1588337398385" />
+        <option name="importOrder" value="java;javax;com;net;org;me;" />
+        <option name="name" value="Eric's Eclipse Code Formatter" />
+        <option name="pathToConfigFileJava" value="$PROJECT_DIR$/../../Configurations/Eclipse/Formatter/2022/Eric.xml" />
+        <option name="selectedJavaProfile" value="Eric's Eclipse Java Formatter" />
+      </Settings>
+    </option>
+  </component>
+</project>

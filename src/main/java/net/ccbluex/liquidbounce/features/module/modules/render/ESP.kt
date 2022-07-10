@@ -5,8 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.Entity
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.EntityLivingBase
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render2DEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
@@ -22,6 +20,9 @@ import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.GlowShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.OutlineShader
 import net.ccbluex.liquidbounce.value.*
+import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.entity.Entity
+import net.minecraft.entity.EntityLivingBase
 import org.lwjgl.opengl.GL11
 import org.lwjgl.util.vector.Vector3f
 import kotlin.math.max
@@ -107,8 +108,6 @@ class ESP : Module()
         val renderPosY = renderManager.renderPosY
         val renderPosZ = renderManager.renderPosZ
 
-        val provider = classProvider
-
         if (real2d)
         {
             GL11.glPushAttrib(GL11.GL_ENABLE_BIT)
@@ -125,7 +124,7 @@ class ESP : Module()
             GL11.glDisable(GL11.GL_DEPTH_TEST)
             GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
 
-            provider.GlStateManager.enableTexture2D()
+            GlStateManager.enableTexture2D()
 
             GL11.glDepthMask(true)
             GL11.glLineWidth(modeReal2DWidth.get())
@@ -196,7 +195,7 @@ class ESP : Module()
         val theWorld = mc.theWorld ?: return
         val thePlayer = mc.thePlayer ?: return
 
-        theWorld.loadedEntityList.asSequence().filter { false is Selected }.map(Entity::asEntityLivingBase).run { if (bot) this else filter { !AntiBot.isBot(theWorld, thePlayer, it) } }.filter { it != thePlayer }.forEach { draw(it, getColor(it)) }
+        theWorld.loadedEntityList.asSequence().filterIsInstance<EntityLivingBase>().filter { it.isSelected(false) }.run { if (bot) this else filter { !AntiBot.isBot(theWorld, thePlayer, it) } }.filter { it != thePlayer }.forEach { draw(it, getColor(it)) }
 
         if (real2d)
         {
@@ -229,7 +228,7 @@ class ESP : Module()
             val theWorld = mc.theWorld ?: return
             val thePlayer = mc.thePlayer ?: return
 
-            theWorld.loadedEntityList.filter { false is Selected }.map(Entity::asEntityLivingBase).run { if (bot) this else filter { AntiBot.isBot(theWorld, thePlayer, it) } }.forEach { renderManager.renderEntityStatic(it, partialTicks, true) }
+            theWorld.loadedEntityList.filterIsInstance<EntityLivingBase>().filter { it.isSelected(false) }.run { if (bot) this else filter { AntiBot.isBot(theWorld, thePlayer, it) } }.forEach { renderManager.renderEntityStatic(it, partialTicks, true) }
         }
         catch (ex: Exception)
         {

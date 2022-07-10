@@ -20,12 +20,12 @@ import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.login.UserUtils.getUUID
 import net.mcleaks.MCLeaks
 import net.mcleaks.RedeemResponse
+import net.minecraft.util.Session
 import java.net.Proxy
 import java.util.*
 
 object LoginUtils : MinecraftInstance()
 {
-
     @JvmStatic
     fun login(serviceType: MinecraftAccount.AltServiceType, username: String, password: String?): LoginResult
     {
@@ -149,7 +149,7 @@ object LoginUtils : MinecraftInstance()
         val uuid = sessionObject.get("spr").asString
         val accessToken = sessionObject.get("yggt").asString
 
-        if (accessToken !is ValidToken) return LoginResult.INVALID_ACCOUNT_DATA
+        if (!UserUtils.isValidToken(accessToken)) return LoginResult.INVALID_ACCOUNT_DATA
         val username = UserUtils.getUsername(uuid) ?: return LoginResult.INVALID_ACCOUNT_DATA
 
         mc.session = Session(username, uuid, accessToken, "mojang")

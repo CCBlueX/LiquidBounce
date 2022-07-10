@@ -5,8 +5,8 @@
  */
 package net.ccbluex.liquidbounce.utils.render
 
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.sin
+import net.ccbluex.liquidbounce.utils.extensions.PI
+import net.ccbluex.liquidbounce.utils.extensions.sin
 import kotlin.math.pow
 
 /*
@@ -36,9 +36,9 @@ fun easeOut(current: Float, total: Float): Float
  */
 fun easeOutElastic(x: Float): Float
 {
-    val c4 = 2 * WMathHelper.PI / 3.0f
+    val c4 = 2 * PI / 3.0f
 
-    return if (x == 0f) 0.0f else (if (x == 1f) 1.0 else 2.0.pow(-10.0 * x) * sin((x * 10 - 0.75f) * c4) + 1).toFloat()
+    return if (x == 0f) 0.0f else (if (x == 1f) 1.0 else 2.0.pow(-10.0 * x) * ((x * 10 - 0.75f) * c4).sin + 1).toFloat()
 }
 
 fun easeOutCubic(easingValue: Float, originalValue: Float, speed: Int): Float = easingValue + ((originalValue - easingValue) / 2.0F.pow(10 - speed.coerceAtMost(9))) * RenderUtils.frameTime

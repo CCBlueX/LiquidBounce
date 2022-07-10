@@ -1,7 +1,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.flies.spartan
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
+import net.ccbluex.liquidbounce.utils.extensions.sendPacketWithoutEvent
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
+import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 
 class Spartan185Fly : FlyMode("Spartan185")
 {
@@ -21,8 +23,8 @@ class Spartan185Fly : FlyMode("Spartan185")
         spartanTimer.update()
         if (spartanTimer.hasTimePassed(12))
         {
-            networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x, y + 8, z, true))
-            networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x, y - 8, z, true))
+            networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, y + 8, z, true))
+            networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, y - 8, z, true))
             spartanTimer.reset()
         }
     }

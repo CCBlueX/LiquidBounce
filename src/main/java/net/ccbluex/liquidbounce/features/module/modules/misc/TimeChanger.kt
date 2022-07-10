@@ -8,6 +8,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.network.play.server.S03PacketTimeUpdate
 
 /**
  * LiquidBounce Hacked Client A minecraft forge injection client using Mixin
@@ -31,6 +32,6 @@ class TimeChanger : Module()
     @EventTarget
     fun onPacket(event: PacketEvent)
     {
-        if (event.packet is SPacketTimeUpdate) event.cancelEvent()
+        if (event.packet is S03PacketTimeUpdate) event.cancelEvent()
     }
 }

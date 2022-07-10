@@ -9,12 +9,11 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.LiquidBounce.wrapper
 import net.ccbluex.liquidbounce.features.module.modules.render.XRay
 import net.ccbluex.liquidbounce.file.FileConfig
 import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.utils.ClientUtils
-import net.ccbluex.liquidbounce.utils.misc.MiscUtils
+import net.minecraft.block.Block
 import java.io.File
 import java.io.IOException
 
@@ -39,8 +38,6 @@ class XRayConfig(file: File) : FileConfig(file)
 
         xRay.xrayBlocks.clear()
 
-        val func = wrapper.functions
-
         (try
         {
             val jsonObject = json.asJsonObject
@@ -52,7 +49,7 @@ class XRayConfig(file: File) : FileConfig(file)
         catch (e: IllegalStateException)
         {
             json.asJsonArray // Backward-compatibility
-        }).mapNotNull { func.getBlockFromName(it.asString) }.forEach { block ->
+        }).mapNotNull { Block.getBlockFromName(it.asString) }.forEach { block ->
             try
             {
                 if (xRay.xrayBlocks.contains(block))
@@ -86,8 +83,7 @@ class XRayConfig(file: File) : FileConfig(file)
 
         val blocks = JsonArray()
 
-        val func = wrapper.functions
-        xRay.xrayBlocks.map(func::getIdFromBlock).forEach { blockID ->
+        xRay.xrayBlocks.map(Block::getIdFromBlock).forEach { blockID ->
             blocks.add(FileManager.PRETTY_GSON.toJsonTree(blockID))
         }
 

@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.utils.render
 
-import net.ccbluex.liquidbounce.LiquidBounce.wrapper
+import net.minecraft.client.renderer.texture.TextureUtil
 import org.lwjgl.opengl.GL11
 import java.awt.image.BufferedImage
 
@@ -25,8 +25,7 @@ class CustomTexture(private val image: BufferedImage)
 
             if (field != -1) return field
 
-            val textureUtil = wrapper.classProvider.textureUtil
-            return textureUtil.uploadTextureImageAllocate(textureUtil.glGenTextures(), image, textureBlur = true, textureClamp = true).also { field = it }
+            return TextureUtil.uploadTextureImageAllocate(TextureUtil.glGenTextures(), image, true, true).also { field = it }
         }
         private set
 

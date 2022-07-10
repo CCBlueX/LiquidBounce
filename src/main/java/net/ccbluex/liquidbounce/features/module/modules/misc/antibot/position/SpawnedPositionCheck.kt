@@ -1,16 +1,20 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.position
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.Entity
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.EntityPlayer
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.WorldClient
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.BotCheck
+import net.ccbluex.liquidbounce.utils.extensions.cos
+import net.ccbluex.liquidbounce.utils.extensions.sin
+import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.minecraft.client.multiplayer.WorldClient
+import net.minecraft.entity.Entity
+import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.network.play.server.S0CPacketSpawnPlayer
+import net.minecraft.util.AxisAlignedBB
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -29,32 +33,29 @@ class SpawnedPositionCheck : BotCheck("position.spawnedPosition")
 
         val packet = event.packet
 
-        if (packet is SPacketSpawnPlayer)
+        if (packet is S0CPacketSpawnPlayer)
         {
-            val playerSpawnPacket = packet.asSPacketSpawnPlayer()
 
-            val entityId = playerSpawnPacket.entityID
+            val entityId = packet.entityID
 
-            val entityX: Double = playerSpawnPacket.x.toDouble() / 32.0
-            val entityY: Double = playerSpawnPacket.y.toDouble() / 32.0
-            val entityZ: Double = playerSpawnPacket.z.toDouble() / 32.0
+            val entityX: Double = packet.x.toDouble() / 32.0
+            val entityY: Double = packet.y.toDouble() / 32.0
+            val entityZ: Double = packet.z.toDouble() / 32.0
 
             val serverLocation = getPingCorrectionAppliedLocation(thePlayer)
 
             val serverPos = serverLocation.position
             val serverYaw = serverLocation.rotation.yaw
 
-            val yawRadians = serverYaw - 180.0F.toRadians
-
-            val func = functions
+            val yawRadians = (serverYaw - 180.0F).toRadians
 
             val deltaLimit = AntiBot.positionSpawnedPositionDeltaThresholdValue.get().pow(2)
 
             for ((posIndex, back, y) in arrayOf(Triple(1, AntiBot.positionSpawnedPositionPosition1BackValue.get(), AntiBot.positionSpawnedPositionPosition1YValue.get()), Triple(2, AntiBot.positionPosition2BackValue.get(), AntiBot.positionSpawnedPositionPosition2YValue.get())))
             {
-                val expectDeltaX = serverPos.xCoord - func.sin(yawRadians) * back - entityX
+                val expectDeltaX = serverPos.xCoord - yawRadians.sin * back - entityX
                 val expectDeltaY = serverPos.yCoord + y - entityY
-                val expectDeltaZ = serverPos.zCoord + func.cos(yawRadians) * back - entityZ
+                val expectDeltaZ = serverPos.zCoord + yawRadians.cos * back - entityZ
 
                 val delta = expectDeltaX * expectDeltaX + expectDeltaY * expectDeltaY + expectDeltaZ * expectDeltaZ
 
@@ -88,16 +89,12 @@ class SpawnedPositionCheck : BotCheck("position.spawnedPosition")
 
         val dir = yaw - 180.0F.toRadians
 
-        val func = functions
-
-        val sin = -func.sin(dir)
-        val cos = func.cos(dir)
+        val sin = -dir.sin
+        val cos = dir.cos
 
         val posX = lastServerPos.xCoord + (serverPos.xCoord - lastServerPos.xCoord) * partialTicks
         val posY = lastServerPos.yCoord + (serverPos.yCoord - lastServerPos.yCoord) * partialTicks
         val posZ = lastServerPos.zCoord + (serverPos.zCoord - lastServerPos.zCoord) * partialTicks
-
-        val provider = classProvider
 
         val renderManager = mc.renderManager
         val renderPosX = renderManager.renderPosX

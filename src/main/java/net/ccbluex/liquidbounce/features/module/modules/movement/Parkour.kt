@@ -22,6 +22,6 @@ class Parkour : Module()
         val thePlayer = mc.thePlayer ?: return
         val gameSettings = mc.gameSettings
 
-        if (thePlayer.isMoving && thePlayer.onGround && !thePlayer.sneaking && !gameSettings.keyBindSneak.isKeyDown && !gameSettings.keyBindJump.isKeyDown && theWorld.getCollidingBoundingBoxes(thePlayer, thePlayer.entityBoundingBox.offset(0.0, -0.5, 0.0).expand(-0.001, 0.0, -0.001)).isEmpty()) thePlayer.jump()
+        if (thePlayer.isMoving && thePlayer.onGround && !thePlayer.isSneaking && !gameSettings.keyBindSneak.isKeyDown && !gameSettings.keyBindJump.isKeyDown && theWorld.getCollidingBoundingBoxes(thePlayer, thePlayer.entityBoundingBox.offset(0.0, -0.5, 0.0).expand(-0.001, 0.0, -0.001)).isEmpty()) thePlayer.jump()
     }
 }

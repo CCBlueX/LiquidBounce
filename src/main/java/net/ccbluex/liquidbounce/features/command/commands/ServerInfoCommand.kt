@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.command.Command
+import net.minecraft.network.handshake.client.C00Handshake
 
 class ServerInfoCommand : Command("serverinfo"), Listenable
 {
@@ -51,12 +52,11 @@ class ServerInfoCommand : Command("serverinfo"), Listenable
     {
         val packet = event.packet
 
-        if (packet is CPacketHandshake)
+        // fixme: INetHandlerHandshakeServer is not handled by MIXIN
+        if (packet is C00Handshake)
         {
-            val handshake = packet.asCPacketHandshake()
-
-            ip = handshake.ip
-            port = handshake.port
+            ip = packet.ip
+            port = packet.port
         }
     }
 

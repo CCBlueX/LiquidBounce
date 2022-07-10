@@ -18,7 +18,6 @@ import net.ccbluex.liquidbounce.value.Value
 @ModuleInfo(name = "ScriptModule", description = "Empty", category = ModuleCategory.MISC)
 class ScriptModule(private val moduleObject: JSObject) : Module()
 {
-
     private val events = HashMap<String, JSObject>()
     private val _values = LinkedHashMap<String, Value<*>>()
     private var _tag: String? = null

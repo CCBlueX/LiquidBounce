@@ -1,6 +1,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.flies.aac
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
+import net.ccbluex.liquidbounce.utils.extensions.sendPacketWithoutEvent
+import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 
 class AAC3_1_6GommeFly : FlyMode("AAC3.1.6-Gomme")
 {
@@ -23,7 +25,7 @@ class AAC3_1_6GommeFly : FlyMode("AAC3.1.6-Gomme")
         ticks++
 
         val posY = thePlayer.posY
-        if (!metVoid) mc.netHandler.networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(thePlayer.posX, posY, thePlayer.posZ, thePlayer.onGround))
+        if (!metVoid) mc.netHandler.networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(thePlayer.posX, posY, thePlayer.posZ, thePlayer.onGround))
         if (posY <= 0.0) metVoid = true
     }
 

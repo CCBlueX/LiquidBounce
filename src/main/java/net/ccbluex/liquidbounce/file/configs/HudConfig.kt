@@ -8,7 +8,6 @@ package net.ccbluex.liquidbounce.file.configs
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.file.FileConfig
 import net.ccbluex.liquidbounce.ui.client.hud.Config
-import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import org.apache.commons.io.FileUtils
 import java.io.File
 import java.io.IOException

@@ -15,6 +15,10 @@ import net.ccbluex.liquidbounce.utils.extensions.isEnemy
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
+import net.minecraft.client.settings.GameSettings
+import net.minecraft.entity.item.EntityTNTPrimed
+import net.minecraft.entity.monster.EntityCreeper
+import net.minecraft.item.ItemSword
 
 @ModuleInfo(name = "TNTBlock", description = "Automatically blocks with your sword when TNT around you explodes.", category = ModuleCategory.COMBAT)
 class TNTBlock : Module()
@@ -34,14 +38,12 @@ class TNTBlock : Module()
 
         val range = rangeValue.get()
         val fuse = fuseValue.get()
-
-        val provider = classProvider
-        if (theWorld.getEntitiesInRadius(thePlayer, range + 2.0).any { it is EntityTNTPrimed && thePlayer.getDistanceToEntity(it) <= range && it.asEntityTNTPrimed().fuse <= fuse || it is EntityCreeper && thePlayer.getDistanceToEntity(it) <= range && it.asEntityLivingBase()false is Enemy && it.asEntityCreeper().creeperState })
+        if (theWorld.getEntitiesInRadius(thePlayer, range + 2.0).any { it is EntityTNTPrimed && thePlayer.getDistanceToEntity(it) <= range && it.fuse <= fuse || it is EntityCreeper && thePlayer.getDistanceToEntity(it) <= range && it.isEnemy(false) && it.creeperState == 1 })
         {
             if (autoSwordValue.get())
             {
                 val inventory = thePlayer.inventory
-                val slot = (0..8).mapNotNull { it to (inventory.getStackInSlot(it) ?: return@mapNotNull null) }.filter { it.second.item is ItemSword }.maxBy { (it.second.item? as ItemSword?.damageVsEntity ?: 0f) + 4f }?.first ?: -1
+                val slot = (0..8).mapNotNull { it to (inventory.getStackInSlot(it) ?: return@mapNotNull null) }.filter { it.second.item is ItemSword }.maxByOrNull { (it.second.item as ItemSword).damageVsEntity + 4f }?.first ?: -1
 
                 if (slot != -1 && slot != inventory.currentItem)
                 {
@@ -61,7 +63,7 @@ class TNTBlock : Module()
             return
         }
 
-        if (blocked && gameSettings.keyBindUseItem !is KeyDown)
+        if (blocked && !GameSettings.isKeyDown(gameSettings.keyBindUseItem))
         {
             gameSettings.keyBindUseItem.pressed = false
             blocked = false

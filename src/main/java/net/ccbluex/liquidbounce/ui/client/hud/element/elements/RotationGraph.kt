@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.*
+import net.minecraft.client.renderer.GlStateManager
 import org.lwjgl.opengl.GL11
 import kotlin.math.abs
 import kotlin.math.hypot
@@ -326,7 +327,7 @@ class RotationGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side
         GL11.glEnable(GL11.GL_DEPTH_TEST)
         GL11.glDepthMask(true)
         GL11.glDisable(GL11.GL_BLEND)
-        classProvider.GlStateManager.resetColor()
+        GlStateManager.resetColor()
 
         return Border(0F, 0F, width.toFloat(), height + 2.0f)
     }

@@ -3,6 +3,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.flies.other
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
 import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.extensions.sendPacketWithoutEvent
+import net.minecraft.network.play.client.C03PacketPlayer.C06PacketPlayerPosLook
 
 class FlagFly : FlyMode("Flag")
 {
@@ -29,8 +31,8 @@ class FlagFly : FlyMode("Flag")
         val yaw = thePlayer.rotationYaw
         val pitch = thePlayer.rotationPitch
 
-        networkManager.sendPacketWithoutEvent(CPacketPlayerPosLook(x + thePlayer.motionX * 999, y + (if (gameSettings.keyBindJump.isKeyDown) 1.5624 else 0.00000001) - if (gameSettings.keyBindSneak.isKeyDown) 0.0624 else 0.00000002, z + thePlayer.motionZ * 999, yaw, pitch, true))
-        networkManager.sendPacketWithoutEvent(CPacketPlayerPosLook(x + thePlayer.motionX * 999, y - 6969, z + thePlayer.motionZ * 999, yaw, pitch, true))
+        networkManager.sendPacketWithoutEvent(C06PacketPlayerPosLook(x + thePlayer.motionX * 999, y + (if (gameSettings.keyBindJump.isKeyDown) 1.5624 else 0.00000001) - if (gameSettings.keyBindSneak.isKeyDown) 0.0624 else 0.00000002, z + thePlayer.motionZ * 999, yaw, pitch, true))
+        networkManager.sendPacketWithoutEvent(C06PacketPlayerPosLook(x + thePlayer.motionX * 999, y - 6969, z + thePlayer.motionZ * 999, yaw, pitch, true))
 
         thePlayer.setPosition(x + thePlayer.motionX * 11, y, z + thePlayer.motionZ * 11)
         thePlayer.motionY = 0.0

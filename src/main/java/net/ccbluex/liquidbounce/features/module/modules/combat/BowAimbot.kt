@@ -5,9 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.Entity
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.EntityLivingBase
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.WorldClient
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
@@ -22,6 +19,9 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatRangeValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.ccbluex.liquidbounce.value.ValueGroup
+import net.minecraft.client.multiplayer.WorldClient
+import net.minecraft.entity.EntityLivingBase
+import net.minecraft.item.ItemBow
 
 @ModuleInfo(name = "BowAimbot", description = "Automatically aims at players when using a bow.", category = ModuleCategory.COMBAT)
 class BowAimbot : Module()
@@ -112,16 +112,16 @@ class BowAimbot : Module()
         val ignoreVisibleCheck = flags and RotationUtils.SKIP_VISIBLE_CHECK != 0
 
         // The Target Candidates
-        val targetCandidates = theWorld.loadedEntityList.asSequence().filter { true is Selected }.filter { ignoreVisibleCheck || thePlayer.canEntityBeSeen(it) }.map(Entity::asEntityLivingBase)
+        val targetCandidates = theWorld.loadedEntityList.asSequence().filterIsInstance<EntityLivingBase>().filter { it.isSelected(true) }.filter { ignoreVisibleCheck || thePlayer.canEntityBeSeen(it) }
 
         val playerPredict = flags and RotationUtils.PLAYER_PREDICT != 0
 
         return when (priorityMode.toLowerCase())
         {
-            "distance" -> targetCandidates.minBy(thePlayer::getDistanceToEntity)
-            "serverdirection" -> targetCandidates.minBy { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, playerPredictSize) }
-            "clientdirection" -> targetCandidates.minBy { RotationUtils.getClientRotationDifference(thePlayer, it, playerPredict, playerPredictSize) }
-            "health" -> targetCandidates.minBy { it.asEntityLivingBase().health }
+            "distance" -> targetCandidates.minByOrNull(thePlayer::getDistanceToEntity)
+            "serverdirection" -> targetCandidates.minByOrNull { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, playerPredictSize) }
+            "clientdirection" -> targetCandidates.minByOrNull { RotationUtils.getClientRotationDifference(thePlayer, it, playerPredict, playerPredictSize) }
+            "health" -> targetCandidates.minByOrNull { it.health }
             else -> null
         }
     }

@@ -8,7 +8,6 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 import java.util.List;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.FontRenderer;
 import net.ccbluex.liquidbounce.features.module.modules.render.HUD;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
@@ -20,7 +19,6 @@ import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.util.MathHelper;
 
-import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -200,7 +198,7 @@ public abstract class MixinGuiNewChat
 
                     if (lvt_6_1_ <= MathHelper.floor_float(getChatWidth() / getChatScale()) && lvt_7_1_ < Fonts.font40.getFontHeight() * lvt_8_1_ + lvt_8_1_)
                     {
-                        final int lvt_9_1_ = lvt_7_1_ / font.getFontHeight() + scrollPos;
+                        final int lvt_9_1_ = lvt_7_1_ / font.FONT_HEIGHT + scrollPos;
 
                         if (lvt_9_1_ >= 0 && lvt_9_1_ < drawnChatLines.size())
                         {

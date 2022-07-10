@@ -1,7 +1,7 @@
 package net.ccbluex.liquidbounce.utils
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
 import java.util.concurrent.*
 
 object AsyncUtils
@@ -24,11 +24,11 @@ fun runAsync(commandBlock: () -> Unit) = AsyncUtils.workers.execute(commandBlock
 // Java style
 fun runAsync(command: Runnable) = AsyncUtils.workers.execute(command)
 
-fun runSync(commandBlock: () -> Unit) = LiquidBounce.wrapper.minecraft.addScheduledTask(commandBlock)
+fun runSync(commandBlock: () -> Unit) = mc.addScheduledTask(commandBlock)
 
 fun <T> supplyAsync(supplierBlock: () -> T): Future<T> = AsyncUtils.workers.submit(supplierBlock)
 
-fun <T> supplySync(supplierBlock: () -> T): Future<T> = LiquidBounce.wrapper.minecraft.addScheduledTask(supplierBlock)
+fun <T> supplySync(supplierBlock: () -> T): Future<T> = mc.addScheduledTask(supplierBlock)
 
 fun <T> runAsyncDelayed(delayInMillis: Long, commandBlock: () -> T): ScheduledFuture<T> = AsyncUtils.scheduledWorkers.schedule(commandBlock, delayInMillis, TimeUnit.MILLISECONDS)
 

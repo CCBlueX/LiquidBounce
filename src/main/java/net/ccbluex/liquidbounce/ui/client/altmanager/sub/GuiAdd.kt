@@ -10,17 +10,14 @@ import com.mojang.authlib.exceptions.AuthenticationException
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService
 import com.thealtening.AltService.EnumAltService
 import net.ccbluex.liquidbounce.LiquidBounce
-
-
-
 import net.ccbluex.liquidbounce.file.FileManager.Companion.saveConfig
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
+import net.ccbluex.liquidbounce.ui.elements.GuiPasswordField
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils.logger
 import net.ccbluex.liquidbounce.utils.TabUtils.tab
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount.AltServiceType
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.ccbluex.liquidbounce.utils.runAsync
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
@@ -99,7 +96,7 @@ class GuiAdd(private val prevGui: GuiAltManager) : GuiScreen()
             {
                 val name = username.text
 
-                if (name is AccountExists)
+                if (LiquidBounce.fileManager.accountsConfig.isAccountExists(name))
                 {
                     status = "\u00A7cThe account has already been added."
                     return
@@ -186,7 +183,7 @@ class GuiAdd(private val prevGui: GuiAltManager) : GuiScreen()
 
     private fun addAccount(name: String, password: String)
     {
-        if (name is AccountExists)
+        if (LiquidBounce.fileManager.accountsConfig.isAccountExists(name))
         {
             status = "\u00A7cThe account has already been added."
             return

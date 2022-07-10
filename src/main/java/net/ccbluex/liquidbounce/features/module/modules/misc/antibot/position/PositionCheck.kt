@@ -1,17 +1,21 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.position
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.Entity
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.EntityPlayer
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.WorldClient
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
-import net.ccbluex.liquidbounce.api.minecraft.util.Vec3
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.BotCheck
+import net.ccbluex.liquidbounce.utils.extensions.cos
+import net.ccbluex.liquidbounce.utils.extensions.sin
+import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.minecraft.client.multiplayer.WorldClient
+import net.minecraft.entity.Entity
+import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.network.play.server.S0CPacketSpawnPlayer
+import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.Vec3
 import kotlin.math.*
 
 class PositionCheck : BotCheck("position.position")
@@ -50,13 +54,13 @@ class PositionCheck : BotCheck("position.position")
         val serverLocation = getPingCorrectionAppliedLocation(thePlayer)
         val serverPos = serverLocation.position
         val serverYaw = serverLocation.rotation.yaw
-        val dir = serverYaw - 180.0F.toRadians
+        val dir = (serverYaw - 180.0F).toRadians
 
         val moveSpeed = hypot(target.posX - newPos.xCoord, target.posZ - newPos.zCoord)
 
         for ((posIndex, back, y) in arrayOf(Triple(1, AntiBot.positionPosition1BackValue.get(), AntiBot.positionPosition1YValue.get()), Triple(2, AntiBot.positionPosition2BackValue.get(), AntiBot.positionPosition2YValue.get()), Triple(3, AntiBot.positionPosition3BackValue.get(), AntiBot.positionPosition3YValue.get()), Triple(4, AntiBot.positionPosition4BackValue.get(), AntiBot.positionPosition4YValue.get())))
         {
-            val distanceSq = (newPos.xCoord - (serverPos.xCoord - functions.sin(dir) * back)).pow(2) + (newPos.yCoord - (serverPos.yCoord + y)).pow(2) * (newPos.zCoord - (serverPos.zCoord + functions.cos(dir) * back)).pow(2)
+            val distanceSq = (newPos.xCoord - (serverPos.xCoord - dir.sin * back)).pow(2) + (newPos.yCoord - (serverPos.yCoord + y)).pow(2) * (newPos.zCoord - (serverPos.zCoord + dir.cos * back)).pow(2)
 
             val previousVL = positionVL[entityId] ?: 0
 
@@ -164,14 +168,12 @@ class PositionCheck : BotCheck("position.position")
 
         val packet = event.packet
 
-        if (packet is SPacketSpawnPlayer)
+        if (packet is S0CPacketSpawnPlayer)
         {
-            val playerSpawnPacket = packet.asSPacketSpawnPlayer()
+            val entityId = packet.entityID
 
-            val entityId = playerSpawnPacket.entityID
-
-            val entityX: Double = playerSpawnPacket.x.toDouble() / 32.0
-            val entityZ: Double = playerSpawnPacket.z.toDouble() / 32.0
+            val entityX: Double = packet.x.toDouble() / 32.0
+            val entityZ: Double = packet.z.toDouble() / 32.0
 
             val serverPos = getPingCorrectionAppliedLocation(thePlayer).position
             if (hypot(serverPos.xCoord - entityX, serverPos.zCoord - entityZ) >= 6) spawnPositionSuspects.add(entityId)
@@ -200,8 +202,8 @@ class PositionCheck : BotCheck("position.position")
 
         val lastServerYaw = lastServerLocation.rotation.yaw
         val dir = lastServerYaw + (serverLocation.rotation.yaw - lastServerYaw) * partialTicks - 180.0F.toRadians
-        val sin = -functions.sin(dir)
-        val cos = functions.cos(dir)
+        val sin = -dir.sin
+        val cos = dir.cos
 
         val renderManager = mc.renderManager
         val renderPosX = renderManager.renderPosX

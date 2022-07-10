@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
@@ -21,6 +22,7 @@ import net.ccbluex.liquidbounce.utils.render.easeOut
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.*
+import net.minecraft.client.renderer.GlStateManager
 import java.awt.Color
 
 /**
@@ -232,8 +234,6 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
                     extra(color)
                 }
             }
-
-            val glStateManager = classProvider.glStateManager
 
             val renderArraylist: (index: Int, slide: Float, randomColorSupplier: () -> Int, moduleName: String, moduleTag: String) -> Unit = when (horizontalSide)
             {

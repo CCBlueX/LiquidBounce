@@ -1,9 +1,5 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.flies.other
 
-import net.ccbluex.liquidbounce.api.enums.EnumFacingType
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.EntityPlayer
-import net.ccbluex.liquidbounce.api.minecraft.util.BlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.Vec3
 import net.ccbluex.liquidbounce.event.BlockBBEvent
 import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.PacketEvent
@@ -12,14 +8,22 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
 import net.ccbluex.liquidbounce.utils.CPSCounter
 import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.extensions.plus
 import net.ccbluex.liquidbounce.utils.extensions.strafe
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
+import net.minecraft.block.BlockAir
+import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.BlockPos
+import net.minecraft.util.EnumFacing
+import net.minecraft.util.Vec3
 
 class MineplexFly : FlyMode("Mineplex")
 {
     private val clipTimer = MSTimer()
 
-    private fun canFly(thePlayer: EntityPlayer) = thePlayer.inventory.getCurrentItemInHand() == null
+    private fun canFly(thePlayer: EntityPlayer) = thePlayer.inventory.getCurrentItem() == null
 
     override fun onUpdate()
     {
@@ -40,18 +44,18 @@ class MineplexFly : FlyMode("Mineplex")
                 clipTimer.reset()
             }
 
-            if (thePlayer.sneaking && clipTimer.hasTimePassed(100))
+            if (thePlayer.isSneaking && clipTimer.hasTimePassed(100))
             {
                 thePlayer.setPosition(x, y - 0.6, z)
                 clipTimer.reset()
             }
 
             val blockPos = BlockPos(x, thePlayer.entityBoundingBox.minY - 1, z)
-            val vec = Vec3(blockPos) + Vec3(classProvider.getEnumFacing(EnumFacingType.UP).directionVec) + 0.4
+            val vec = Vec3(blockPos) + Vec3(EnumFacing.UP.directionVec) + 0.4
 
             CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT)
 
-            mc.playerController.onPlayerRightClick(thePlayer, theWorld, null, blockPos, classProvider.getEnumFacing(EnumFacingType.UP), Vec3(vec.xCoord * 0.4f, vec.yCoord * 0.4f, vec.zCoord * 0.4f))
+            mc.playerController.onPlayerRightClick(thePlayer, theWorld, null, blockPos, EnumFacing.UP, Vec3(vec.xCoord * 0.4f, vec.yCoord * 0.4f, vec.zCoord * 0.4f))
 
             thePlayer.strafe(0.27f)
 
@@ -69,7 +73,7 @@ class MineplexFly : FlyMode("Mineplex")
     {
         val packet = event.packet
 
-        if (canFly(mc.thePlayer ?: return) && packet is CPacketPlayer) packet.asCPacketPlayer().onGround = true
+        if (canFly(mc.thePlayer ?: return) && packet is C03PacketPlayer) packet.onGround = true
     }
 
     override fun onBlockBB(event: BlockBBEvent)

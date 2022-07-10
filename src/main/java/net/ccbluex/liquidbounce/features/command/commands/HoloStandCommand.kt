@@ -5,9 +5,14 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands
 
-import net.ccbluex.liquidbounce.api.enums.ItemType
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
+import net.minecraft.init.Items
+import net.minecraft.item.ItemStack
+import net.minecraft.nbt.NBTTagCompound
+import net.minecraft.nbt.NBTTagDouble
+import net.minecraft.nbt.NBTTagList
+import net.minecraft.network.play.client.C10PacketCreativeInventoryAction
 
 class HoloStandCommand : Command("holostand")
 {
@@ -33,9 +38,7 @@ class HoloStandCommand : Command("holostand")
                 val z = args[3].toDouble()
                 val message = StringUtils.toCompleteString(args, 4)
 
-                val provider = classProvider
-
-                val itemStack = ItemStack(provider.getItemEnum(ItemType.ARMOR_STAND))
+                val itemStack = ItemStack(Items.armor_stand)
                 val base = NBTTagCompound()
                 val entityTag = NBTTagCompound()
 
@@ -52,7 +55,7 @@ class HoloStandCommand : Command("holostand")
                 base.setTag("EntityTag", entityTag)
                 itemStack.tagCompound = base
                 itemStack.setStackDisplayName("\u00A7c\u00A7lHolo\u00A7eStand")
-                mc.netHandler.addToSendQueue(CPacketCreativeInventoryAction(36, itemStack))
+                mc.netHandler.addToSendQueue(C10PacketCreativeInventoryAction(36, itemStack))
 
                 chat(thePlayer, "The HoloStand was successfully added to your inventory.")
             }

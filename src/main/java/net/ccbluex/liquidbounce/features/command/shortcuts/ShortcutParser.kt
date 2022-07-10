@@ -45,7 +45,7 @@ object ShortcutParser
         {
             when
             {
-                code is Whitespace -> finishLiteral(tokens, tokenBuf)
+                Character.isWhitespace(code) -> finishLiteral(tokens, tokenBuf)
 
                 code == SEPARATOR ->
                 {

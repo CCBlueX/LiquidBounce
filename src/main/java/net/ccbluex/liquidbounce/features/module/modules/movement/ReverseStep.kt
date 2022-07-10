@@ -13,6 +13,8 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.extensions.collideBlock
 import net.ccbluex.liquidbounce.value.FloatValue
+import net.minecraft.block.BlockLiquid
+import net.minecraft.util.AxisAlignedBB
 
 @ModuleInfo(name = "ReverseStep", description = "Allows you to step down blocks faster.", category = ModuleCategory.MOVEMENT)
 class ReverseStep : Module()

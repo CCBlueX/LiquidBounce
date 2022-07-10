@@ -1,7 +1,7 @@
 package net.vitox
 
-import net.ccbluex.liquidbounce.LiquidBounce.wrapper
-import net.ccbluex.liquidbounce.api.minecraft.client.IMinecraft
+import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
+import net.minecraft.client.gui.ScaledResolution
 import net.vitox.particle.util.RenderUtils
 import java.util.*
 
@@ -20,15 +20,13 @@ class ParticleGenerator(private val amount: Int, private val mouseOverRange: Int
 
     fun draw(mouseX: Int, mouseY: Int)
     {
-        val mc: IMinecraft = wrapper.minecraft
-
         val displayWidth = mc.displayWidth
         val displayHeight = mc.displayHeight
 
         val displayWidthF = displayWidth.toFloat()
         val displayHeightF = displayHeight.toFloat()
 
-        val resolution = wrapper.classProvider.createScaledResolution(mc)
+        val resolution = ScaledResolution(mc)
         val scaledWidth = resolution.scaledWidth.toFloat()
         val scaledHeight = resolution.scaledHeight.toFloat()
 
@@ -64,7 +62,6 @@ class ParticleGenerator(private val amount: Int, private val mouseOverRange: Int
     private fun create()
     {
         val random = Random()
-        val mc: IMinecraft = wrapper.minecraft
         val displayWidth = mc.displayWidth
         val displayHeight = mc.displayHeight
 

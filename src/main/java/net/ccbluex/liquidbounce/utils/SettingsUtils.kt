@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.misc.NameProtect
 import net.ccbluex.liquidbounce.features.module.modules.misc.Spammer
 import net.ccbluex.liquidbounce.file.FileManager
+import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
 import net.ccbluex.liquidbounce.utils.extensions.withDoubleQuotes
 import net.ccbluex.liquidbounce.utils.extensions.withParentheses
 import net.ccbluex.liquidbounce.utils.extensions.withPrefix
@@ -35,7 +36,7 @@ object SettingsUtils
      */
     fun executeScript(script: String)
     {
-        val thePlayer = MinecraftInstance.mc.thePlayer
+        val thePlayer = mc.thePlayer
 
         script.lines().filter(String::isNotEmpty).filter { !it.startsWith('#') }.forEachIndexed { index, s ->
             val args = s.split(" ").toTypedArray()

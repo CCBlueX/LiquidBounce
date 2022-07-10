@@ -15,11 +15,11 @@ val Float.wrapAngleTo180: Float
         return value
     }
 
-// BetterFps-compatible solutionFloat.
+// BetterFps-compatible solution
 val Float.sin: Float
     get() = MathHelper.sin(this)
 
-// BetterFps-compatible solutionFloat.
+// BetterFps-compatible solution
 val Float.cos: Float
     get() = MathHelper.cos(this)
 

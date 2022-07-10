@@ -4,9 +4,11 @@ import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.DamageOnStart
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
+import net.ccbluex.liquidbounce.utils.extensions.sendPacketWithoutEvent
 import net.ccbluex.liquidbounce.utils.extensions.strafe
 import net.ccbluex.liquidbounce.utils.extensions.zeroXYZ
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
+import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 
 class MushMCFly : FlyMode("MushMC")
 {
@@ -30,13 +32,13 @@ class MushMCFly : FlyMode("MushMC")
         thePlayer.jump()
 
         repeat(3) {
-            networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x, y + 1.01, z, false))
-            networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x, y, z, false))
+            networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, y + 1.01, z, false))
+            networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, y, z, false))
         }
 
-        networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x, y + 0.15, z, false))
-        networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x, y, z, false))
-        networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x, y, z, true))
+        networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, y + 0.15, z, false))
+        networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, y, z, false))
+        networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, y, z, true))
 
         mushAfterJump = false
     }
@@ -45,8 +47,6 @@ class MushMCFly : FlyMode("MushMC")
     {
         val thePlayer = mc.thePlayer ?: return
         val networkManager = mc.netHandler.networkManager
-        val provider = classProvider
-
         if (!mushAfterJump)
         {
             if (thePlayer.onGround) mushAfterJump = true
@@ -63,13 +63,13 @@ class MushMCFly : FlyMode("MushMC")
         if (Fly.mushMCBoostDelay.get() != 0 && mushTimer.hasTimePassed((Fly.mushMCBoostDelay.get() * 300).toLong()))
         {
             repeat(3) {
-                networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x, y + 1.01, z, false))
-                networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x, y, z, false))
+                networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, y + 1.01, z, false))
+                networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, y, z, false))
             }
 
-            networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x, y + 0.15, z, false))
-            networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x, y, z, false))
-            networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x, y, z, true))
+            networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, y + 0.15, z, false))
+            networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, y, z, false))
+            networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, y, z, true))
 
             mushTimer.reset()
         }

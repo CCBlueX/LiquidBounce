@@ -9,19 +9,18 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.features.module.modules.render.HUD
 import net.ccbluex.liquidbounce.file.FileManager
-
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationIcon
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.value.AbstractValue
 import net.ccbluex.liquidbounce.value.ValueGroup
+import net.minecraft.client.audio.PositionedSoundRecord
+import net.minecraft.util.ResourceLocation
 import kotlin.random.Random
 
 open class Module : MinecraftInstance(), Listenable
 {
-    var isSupported: Boolean
-
     // Module information
     // TODO: Remove ModuleInfo and change to constructor (#Kotlin)
     var name: String
@@ -55,7 +54,6 @@ open class Module : MinecraftInstance(), Listenable
         keyBinds = moduleInfo.defaultKeyBinds.toMutableSet()
         array = moduleInfo.array
         canEnable = moduleInfo.canEnable
-        isSupported = Backend.REPRESENTED_BACKEND_VERSION in moduleInfo.supportedVersions
     }
 
     /**
@@ -72,7 +70,7 @@ open class Module : MinecraftInstance(), Listenable
             // Play sound and add notification
             if (!LiquidBounce.isStarting)
             {
-                mc.soundHandler.playSound("random.click", 1.0F)
+                mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("random.click"), 1.0F))
                 if ((LiquidBounce.moduleManager[HUD::class.java] as HUD).notificationModuleManagerValue.get()) LiquidBounce.hud.addNotification(Notification(NotificationIcon.INFORMATION, "Module Manager", "${if (value) "Enabled " else "Disabled "}$name"))
             }
 

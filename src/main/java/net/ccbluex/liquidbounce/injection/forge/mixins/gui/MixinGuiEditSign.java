@@ -136,7 +136,7 @@ public class MixinGuiEditSign extends GuiScreen
         if (enabled && typedChar == '&')
             typedChar = '\u00A7';
 
-        if ((typedChar is AllowedCharacter || enabled && typedChar == '\u00A7') && fontRendererObj.getStringWidth(s + typedChar) <= 90)
+        if ((ChatAllowedCharacters.isAllowedCharacter(typedChar) || enabled && typedChar == '\u00A7') && fontRendererObj.getStringWidth(s + typedChar) <= 90)
             s += typedChar;
 
         tileSign.signText[editLine] = new ChatComponentText(s);

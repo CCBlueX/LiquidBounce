@@ -11,6 +11,7 @@ import io.netty.channel.SimpleChannelInboundHandler
 import io.netty.handler.codec.http.FullHttpResponse
 import io.netty.handler.codec.http.websocketx.*
 import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.minecraft.util.*
 
 class ClientHandler(val client: Client, private val handshaker: WebSocketClientHandshaker) : SimpleChannelInboundHandler<Any>()
 {

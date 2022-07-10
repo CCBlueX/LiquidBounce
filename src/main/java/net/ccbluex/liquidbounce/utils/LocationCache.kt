@@ -1,13 +1,13 @@
 package net.ccbluex.liquidbounce.utils
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.Entity
-import net.ccbluex.liquidbounce.api.minecraft.util.AxisAlignedBB
-import net.ccbluex.liquidbounce.api.minecraft.util.Vec3
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.utils.extensions.getEntitiesInRadius
+import net.minecraft.entity.Entity
+import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.Vec3
 import java.lang.ref.SoftReference
 
 class LocationCache : MinecraftInstance(), Listenable
@@ -27,7 +27,7 @@ class LocationCache : MinecraftInstance(), Listenable
             val entities = theWorld.getEntitiesInRadius(thePlayer, 64.0)
 
             // Manual garbage collect by distance check
-            aabbList.keys.filterNot(entities.map(Entity::entityId)::contains).forEach { aabbList.remove(it) }
+            aabbList.keys.filterNot(entities.map(Entity::getEntityId)::contains).forEach { aabbList.remove(it) }
 
             for (entity in entities)
             {

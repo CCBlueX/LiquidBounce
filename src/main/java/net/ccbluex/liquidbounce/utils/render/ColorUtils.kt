@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.utils.render
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.Entity
 import net.ccbluex.liquidbounce.features.module.modules.combat.Aimbot
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.TpAura
@@ -16,6 +15,9 @@ import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.extensions.isFriend
 import net.ccbluex.liquidbounce.utils.runAsync
+import net.minecraft.entity.Entity
+import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.player.EntityPlayer
 import java.awt.Color
 import java.text.NumberFormat
 import java.util.regex.Pattern
@@ -88,13 +90,9 @@ object ColorUtils : MinecraftInstance()
     @JvmStatic
     fun getESPColor(entity: Entity?, colorMode: String, customStaticColor: Int, healthMode: String, indicateHurt: Boolean, indicateTarget: Boolean, indicateFriend: Boolean, rainbowSpeed: Int, rainbowSaturation: Float, rainbowBrightness: Float, alpha: Int = 255): Int
     {
-        val provider = classProvider
-
         return applyAlphaChannel(run {
             if (entity != null && entity is EntityLivingBase)
             {
-                val entityLiving = entity.asEntityLivingBase()
-
                 val moduleManager = LiquidBounce.moduleManager
 
                 val aimBot = moduleManager[Aimbot::class.java] as Aimbot
@@ -103,10 +101,10 @@ object ColorUtils : MinecraftInstance()
                 val murderDetector = moduleManager[MurderDetector::class.java] as MurderDetector
 
                 // Indicate Hurt
-                if (indicateHurt && entityLiving.hurtTime > 0 || indicateTarget && (entity == aimBot.target || entity == killAura.target || entityLiving is Target)) return@run -65536
+                if (indicateHurt && entity.hurtTime > 0 || indicateTarget && (entity == aimBot.target || entity == killAura.target || tpAura.isTarget(entity))) return@run -65536
 
                 // Indicate Friend
-                if (indicateFriend && entityLiving.isFriend) return@run -16776961
+                if (indicateFriend && entity.isFriend) return@run -16776961
 
                 // Indicate Murder
                 if (murderDetector.state && murderDetector.murders.contains(entity)) return@run -6750055
@@ -146,10 +144,10 @@ object ColorUtils : MinecraftInstance()
 
                     "health" ->
                     {
-                        var health = entityLiving.health
-                        val maxHealth = entityLiving.maxHealth
+                        var health = entity.health
+                        val maxHealth = entity.maxHealth
 
-                        if (entity is EntityPlayer && (healthMode.equals("Mineplex", ignoreCase = true) || healthMode.equals("Hive", ignoreCase = true))) health = EntityUtils.getPlayerHealthFromScoreboard(entity.asEntityPlayer().gameProfile.name, isMineplex = healthMode.equals("mineplex", ignoreCase = true)).toFloat()
+                        if (entity is EntityPlayer && (healthMode.equals("Mineplex", ignoreCase = true) || healthMode.equals("Hive", ignoreCase = true))) health = EntityUtils.getPlayerHealthFromScoreboard(entity.gameProfile.name, isMineplex = healthMode.equals("mineplex", ignoreCase = true)).toFloat()
 
                         return@run getHealthColor(health, maxHealth).rgb
                     }

@@ -9,7 +9,6 @@ import com.google.gson.*
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.file.FileConfig
 import net.ccbluex.liquidbounce.file.FileManager
-import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import org.lwjgl.input.Keyboard
 import java.io.File
 import java.io.IOException

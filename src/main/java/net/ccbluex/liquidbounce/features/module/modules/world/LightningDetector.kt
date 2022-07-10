@@ -8,6 +8,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationIcon
+import net.minecraft.network.play.server.S2CPacketSpawnGlobalEntity
 
 // Ported from FDPClient (https://github.com/Project-EZ4H/FDPClient)
 // Original code is available in https://github.com/Project-EZ4H/FDPClient/blob/master/src/main/java/net/ccbluex/liquidbounce/features/module/modules/player/HackerDetector.kt
@@ -17,13 +18,11 @@ class LightningDetector : Module()
     @EventTarget
     fun onPacket(event: PacketEvent)
     {
-        if (event.packet is SPacketSpawnGlobalEntity)
+        val packet = event.packet
+        if (packet is S2CPacketSpawnGlobalEntity)
         {
-            val packet = event.packet.asSPacketSpawnGlobalEntity()
-
-            if (packet.type != 1) return
-
-            LiquidBounce.hud.addNotification(Notification(NotificationIcon.INFORMATION, name, "X:" + packet.x + " Y:" + packet.y + " Z:" + packet.z, 10000))
+            if (packet.func_149053_g() != 1) return
+            LiquidBounce.hud.addNotification(Notification(NotificationIcon.INFORMATION, name, "X:" + packet.func_149051_d() + " Y:" + packet.func_149050_e() + " Z:" + packet.func_149049_f(), 10000))
         }
     }
 }

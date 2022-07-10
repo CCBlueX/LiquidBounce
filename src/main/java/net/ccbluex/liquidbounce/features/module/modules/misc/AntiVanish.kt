@@ -15,6 +15,8 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationIcon
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.IntegerValue
+import net.minecraft.network.play.server.S14PacketEntity
+import net.minecraft.network.play.server.S1DPacketEntityEffect
 
 // Original code available in https://github.com/Project-EZ4H/FDPClient/blob/master/src/main/java/net/ccbluex/liquidbounce/features/module/modules/misc/AntiVanish.kt
 @ModuleInfo(name = "AntiVanish", description = "Anti player vanish", category = ModuleCategory.MISC)
@@ -30,11 +32,11 @@ class AntiVanish : Module()
         val theWorld = mc.theWorld ?: return
         val packet = event.packet
 
-        if (packet is SPacketEntityEffect)
+        if (packet is S1DPacketEntityEffect)
         {
-            if (theWorld.getEntityByID(packet.asSPacketEntityEffect().entityId) == null) vanish()
+            if (theWorld.getEntityByID(packet.entityId) == null) vanish()
         }
-        else if (packet is SPacketEntity && packet.asSPacketEntity().getEntity(theWorld) == null) vanish()
+        else if (packet is S14PacketEntity && packet.getEntity(theWorld) == null) vanish()
     }
 
     private fun vanish()

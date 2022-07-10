@@ -6,11 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.enums.EnumFacingType
-import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging
-import net.ccbluex.liquidbounce.api.minecraft.util.BlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.Vec3
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
@@ -28,6 +23,15 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.block.Block
+import net.minecraft.block.BlockAir
+import net.minecraft.block.BlockLiquid
+import net.minecraft.init.Blocks
+import net.minecraft.item.ItemSword
+import net.minecraft.network.play.client.C07PacketPlayerDigging
+import net.minecraft.util.BlockPos
+import net.minecraft.util.EnumFacing
+import net.minecraft.util.Vec3
 import kotlin.math.roundToInt
 
 @ModuleInfo(name = "Nuker", description = "Breaks all blocks around you.", category = ModuleCategory.WORLD)
@@ -88,8 +92,6 @@ class Nuker : Module()
 
         val playerController = mc.playerController
         val netHandler = mc.netHandler
-        val provider = classProvider
-
         val priority = priorityValue.get().toLowerCase()
         val radius = radiusValue.get()
         val nukeEnabled = nukeValue.get()
@@ -107,7 +109,7 @@ class Nuker : Module()
                 else filterKeys { pos ->
                     val eyesPos = Vec3(posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, posZ)
                     val blockVec = Vec3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5)
-                    val rayTrace = theWorld.rayTraceBlocks(eyesPos, blockVec, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false)
+                    val rayTrace = theWorld.rayTraceBlocks(eyesPos, blockVec, false, true, false)
 
                     // Check if block is visible
                     rayTrace != null && rayTrace.blockPos == pos
@@ -118,7 +120,7 @@ class Nuker : Module()
             {
                 val (blockPos, block) = when (priority)
                 {
-                    "distance" -> visibleBlocks.minBy { (pos, _) ->
+                    "distance" -> visibleBlocks.minByOrNull { (pos, _) ->
                         val distance = thePlayer.distanceToCenter(pos)
                         val safePos = BlockPos(posX, thePlayer.posY - 1, posZ)
 
@@ -126,7 +128,7 @@ class Nuker : Module()
                         else distance
                     }
 
-                    "hardness" -> visibleBlocks.maxBy { (pos, block) ->
+                    "hardness" -> visibleBlocks.maxByOrNull { (pos, block) ->
                         val hardness = block.getPlayerRelativeBlockHardness(thePlayer, theWorld, pos).toDouble()
                         val safePos = BlockPos(posX, thePlayer.posY - 1, posZ)
 
@@ -160,7 +162,7 @@ class Nuker : Module()
                 // Start block breaking
                 if (currentDamage == 0F)
                 {
-                    netHandler.addToSendQueue(CPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, blockPos, provider.getEnumFacing(EnumFacingType.DOWN)))
+                    netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, blockPos, EnumFacing.DOWN))
 
                     // End block break if able to break instant
                     if (block.getPlayerRelativeBlockHardness(thePlayer, theWorld, blockPos) >= 1F)
@@ -168,7 +170,7 @@ class Nuker : Module()
                         currentDamage = 0F
 
                         thePlayer.swingItem()
-                        playerController.onPlayerDestroyBlock(blockPos, provider.getEnumFacing(EnumFacingType.DOWN))
+                        playerController.onPlayerDestroyBlock(blockPos, EnumFacing.DOWN)
 
                         blockHitDelay = hitDelay
                         visibleBlocks -= blockPos
@@ -186,8 +188,8 @@ class Nuker : Module()
                 // End of breaking block
                 if (currentDamage >= 1F)
                 {
-                    netHandler.addToSendQueue(CPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, blockPos, provider.getEnumFacing(EnumFacingType.DOWN)))
-                    playerController.onPlayerDestroyBlock(blockPos, provider.getEnumFacing(EnumFacingType.DOWN))
+                    netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK, blockPos, EnumFacing.DOWN))
+                    playerController.onPlayerDestroyBlock(blockPos, EnumFacing.DOWN)
 
                     blockHitDelay = hitDelay
                     currentDamage = 0F
@@ -205,11 +207,11 @@ class Nuker : Module()
             // Search for new blocks to break
             theWorld.searchBlocks(thePlayer, radiusInt).filterValues(::validBlock).filterKeys { thePlayer.distanceToCenter(it) <= radius }.filterKeys { !layer || it.y >= thePlayer.posY }.run {
                 if (throughWalls) this
-                else filterKeys { pos -> (theWorld.rayTraceBlocks(Vec3(posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, posZ), Vec3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5), stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false) ?: return@filterKeys false).blockPos == pos }
+                else filterKeys { pos -> (theWorld.rayTraceBlocks(Vec3(posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, posZ), Vec3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5), false, true, false) ?: return@filterKeys false).blockPos == pos }
             }.forEach { (pos, _) -> // Instant break block
-                netHandler.addToSendQueue(CPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, pos, provider.getEnumFacing(EnumFacingType.DOWN)))
+                netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, pos, EnumFacing.DOWN))
                 thePlayer.swingItem()
-                netHandler.addToSendQueue(CPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, pos, provider.getEnumFacing(EnumFacingType.DOWN)))
+                netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK, pos, EnumFacing.DOWN))
                 attackedBlocks.add(pos)
             }
         }
@@ -238,7 +240,7 @@ class Nuker : Module()
     /**
      * Check if [block] is a valid block to break
      */
-    private fun validBlock(block: IBlock): Boolean = !block is BlockAir && !block is BlockLiquid && !block is BlockBedrock
+    private fun validBlock(block: Block): Boolean = block !is BlockAir && block !is BlockLiquid && block == Blocks.bedrock
 
     companion object
     {

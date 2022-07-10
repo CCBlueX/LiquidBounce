@@ -6,8 +6,8 @@
 package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.EntityPlayer
 import net.ccbluex.liquidbounce.features.command.Command
+import net.minecraft.entity.player.EntityPlayer
 
 class RemoteViewCommand : Command("remoteview", "rv")
 {
@@ -48,7 +48,7 @@ class RemoteViewCommand : Command("remoteview", "rv")
 
         return when (args.size)
         {
-            1 -> return theWorld.playerEntities.map(EntityPlayer::name).filter { it.startsWith(args[0], true) }.toList()
+            1 -> return theWorld.playerEntities.map(EntityPlayer::getName).filter { it.startsWith(args[0], true) }.toList()
             else -> emptyList()
         }
     }

@@ -5,21 +5,23 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.api.minecraft.util.BlockPos
-import net.ccbluex.liquidbounce.api.minecraft.world.World
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render2DEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.extensions.canBeClicked
 import net.ccbluex.liquidbounce.utils.extensions.getBlock
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbowRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.*
+import net.minecraft.block.Block
+import net.minecraft.client.gui.ScaledResolution
+import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.util.BlockPos
+import net.minecraft.world.World
 import org.lwjgl.opengl.GL11
 
 @ModuleInfo(name = "BlockOverlay", description = "Allows you to change the design of the block overlay.", category = ModuleCategory.RENDER)
@@ -68,8 +70,6 @@ class BlockOverlay : Module()
         val rainbowSpeed = colorRainbowSpeedValue.get()
         val color = if (colorRainbowEnabledValue.get()) rainbowRGB(alpha = colorValue.getAlpha(), speed = rainbowSpeed, saturation = colorRainbowSaturationValue.get(), brightness = colorRainbowBrightnessValue.get()) else colorValue.get()
 
-        val glStateManager = classProvider.glStateManager
-
         GlStateManager.enableBlend()
         GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
         RenderUtils.glColor(color)
@@ -77,14 +77,14 @@ class BlockOverlay : Module()
         GlStateManager.disableTexture2D()
         GL11.glDepthMask(false)
 
-        @Suppress("ConstantConditionIf") if (Backend.MINECRAFT_VERSION_MINOR < 12) block.setBlockBoundsBasedOnState(theWorld, blockPos)
+        block.setBlockBoundsBasedOnState(theWorld, blockPos)
 
         val x = lastTickPosX + (thePlayer.posX - lastTickPosX) * partialTicks
         val y = lastTickPosY + (thePlayer.posY - lastTickPosY) * partialTicks
         val z = lastTickPosZ + (thePlayer.posZ - lastTickPosZ) * partialTicks
 
         val boxExpandSize = 0.002
-        val axisAlignedBB = block.getSelectedBoundingBox(theWorld, theWorld.getBlockState(blockPos), blockPos).expand(boxExpandSize, boxExpandSize, boxExpandSize).offset(-x, -y, -z)
+        val axisAlignedBB = block.getSelectedBoundingBox(theWorld, blockPos).expand(boxExpandSize, boxExpandSize, boxExpandSize).offset(-x, -y, -z)
 
         RenderUtils.drawSelectionBoundingBox(axisAlignedBB, drawHydraESPValue.get())
         RenderUtils.drawFilledBox(axisAlignedBB)
@@ -105,9 +105,7 @@ class BlockOverlay : Module()
             val blockPos = getCurrentBlock(theWorld) ?: return
             val block = theWorld.getBlock(blockPos)
 
-            val info = "${block.localizedName} \u00A77ID: ${functions.getIdFromBlock(block)}"
-
-            val provider = classProvider
+            val info = "${block.localizedName} \u00A77ID: ${Block.getIdFromBlock(block)}"
 
             val scaledResolution = ScaledResolution(mc)
 
@@ -117,7 +115,7 @@ class BlockOverlay : Module()
 
             RenderUtils.drawBorderedRect(middleScreenX - 2F, middleScreenY + 5F, (middleScreenX + font.getStringWidth(info)) + 2F, middleScreenY + 16F, 3F, -16777216, -16777216)
 
-            provider.GlStateManager.resetColor()
+            GlStateManager.resetColor()
             font.drawString(info, middleScreenX.toFloat(), middleScreenY + 7f, 0xffffff, false)
         }
     }

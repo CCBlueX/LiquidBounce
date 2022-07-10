@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
-
+import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
@@ -18,6 +18,10 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.*
+import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.client.resources.I18n
+import net.minecraft.potion.Potion
+import net.minecraft.potion.PotionEffect
 import kotlin.math.roundToInt
 
 /**
@@ -94,7 +98,7 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F, side: Side =
         rainbowGroup.addAll(rainbowSpeedValue, rainbowSaturationValue, rainbowBrightnessValue)
     }
 
-    private var effects = emptyList<IPotionEffect>()
+    private var effects = emptyList<PotionEffect>()
 
     private var x2 = 0
     private var y2 = 0F
@@ -140,8 +144,6 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F, side: Side =
         val textShadow = textShadowValue.get()
 
         assumeNonVolatile {
-            val provider = classProvider
-
             val renderText = { text: String, x: Float, y: Float, colorMode: String, potionColor: Int, customColor: Int, function: (Int) -> Int ->
                 var useRainbowShader = false
                 val color = function(when (colorMode.toLowerCase())
@@ -212,7 +214,7 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F, side: Side =
                     // Draw Background
                     renderRect(0F, yPos, xPos + width + (2F + if (rightRect) rectWidth else 0F), yPos + textHeight, backgroundColorMode, potionColor, backgroundCustomColor)
 
-                    provider.GlStateManager.resetColor()
+                    GlStateManager.resetColor()
 
                     // Draw String
                     renderText(string, xPos, yPos + textY, textColorMode, potionColor, textCustomColor) { it }
@@ -233,7 +235,7 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F, side: Side =
                 val string = formatEffect(effect)
                 val timeString = formatRemainingTime(effect)
 
-                renderFunc(index, fontRenderer.getStringWidth(string).toFloat() + timeDistance + fontRenderer.getStringWidth(timeString), string, timeString, effect.duration, applyAlphaChannel(functions.getPotionById(effect.potionID).liquidColor, 255))
+                renderFunc(index, fontRenderer.getStringWidth(string).toFloat() + timeDistance + fontRenderer.getStringWidth(timeString), string, timeString, effect.duration, applyAlphaChannel(Potion.potionTypes[effect.potionID].liquidColor, 255))
             }
 
             // Draw border
@@ -283,11 +285,9 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F, side: Side =
         }
     }
 
-    private fun formatEffect(effect: IPotionEffect): String
+    private fun formatEffect(effect: PotionEffect): String
     {
-        val func = functions
-
-        val potion = func.getPotionById(effect.potionID)
+        val potion = Potion.potionTypes[effect.potionID]
 
         val amplifierString = when
         {
@@ -304,16 +304,16 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F, side: Side =
             else -> "I"
         }
 
-        return "${func.formatI18n(potion.name)} $amplifierString"
+        return "${I18n.format(potion.name)} $amplifierString"
     }
 
-    private fun formatRemainingTime(effect: IPotionEffect): String
+    private fun formatRemainingTime(effect: PotionEffect): String
     {
         return when (textTimeModeValue.get().toLowerCase())
         {
             "ticks" -> "${effect.duration} ticks"
-            "both" -> "${effect.getDurationString()} (${effect.duration} ticks)"
-            else -> effect.getDurationString()
+            "both" -> "${Potion.getDurationString(effect)} (${effect.duration} ticks)"
+            else -> Potion.getDurationString(effect)
         }
     }
 }

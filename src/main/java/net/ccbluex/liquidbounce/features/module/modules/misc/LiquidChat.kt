@@ -5,9 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.api.minecraft.event.IClickEvent
-import net.ccbluex.liquidbounce.api.minecraft.util.IIChatComponent
-import net.ccbluex.liquidbounce.api.minecraft.util.WEnumChatFormatting
 import net.ccbluex.liquidbounce.chat.Client
 import net.ccbluex.liquidbounce.chat.packet.packets.*
 import net.ccbluex.liquidbounce.event.EventTarget
@@ -21,6 +18,10 @@ import net.ccbluex.liquidbounce.utils.login.UserUtils
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
+import net.minecraft.event.ClickEvent
+import net.minecraft.util.ChatComponentText
+import net.minecraft.util.EnumChatFormatting
+import net.minecraft.util.IChatComponent
 import java.net.URI
 import java.net.URISyntaxException
 import kotlin.concurrent.thread
@@ -236,7 +237,7 @@ class LiquidChat : Module()
                 client.connect()
 
                 if (jwtValue.get()) client.loginJWT(jwtToken)
-                else if (mc.session.token is ValidToken) client.loginMojang()
+                else if (UserUtils.isValidToken(mc.session.token)) client.loginMojang()
             }
             catch (cause: Exception)
             {
@@ -254,13 +255,11 @@ class LiquidChat : Module()
      * @author Forge
      */
 
-    private fun toChatComponent(string: String): IIChatComponent
+    private fun toChatComponent(string: String): IChatComponent
     {
-        var component: IIChatComponent? = null
+        var component: IChatComponent? = null
         val matcher = StringUtils.URL_PATTERN.matcher(string)
         var lastEnd = 0
-
-        val provider = classProvider
 
         while (matcher.find())
         {
@@ -274,7 +273,7 @@ class LiquidChat : Module()
                 if (component == null)
                 {
                     component = ChatComponentText(part)
-                    component.chatStyle.color = WEnumChatFormatting.GRAY
+                    component.chatStyle.color = EnumChatFormatting.GRAY
                 }
                 else component.appendText(part)
             }
@@ -287,11 +286,11 @@ class LiquidChat : Module()
             {
                 if (URI(url).scheme != null)
                 { // Set the click event and append the link.
-                    val link: IIChatComponent = ChatComponentText(url)
+                    val link: IChatComponent = ChatComponentText(url)
 
-                    link.chatStyle.chatClickEvent = ClickEvent(IClickEvent.WAction.OPEN_URL, url)
+                    link.chatStyle.chatClickEvent = ClickEvent(ClickEvent.Action.OPEN_URL, url)
                     link.chatStyle.underlined = true
-                    link.chatStyle.color = WEnumChatFormatting.GRAY
+                    link.chatStyle.color = EnumChatFormatting.GRAY
 
                     if (component == null) component = link
                     else component.appendSibling(link)
@@ -305,7 +304,7 @@ class LiquidChat : Module()
             if (component == null)
             {
                 component = ChatComponentText(url)
-                component.chatStyle.color = WEnumChatFormatting.GRAY
+                component.chatStyle.color = EnumChatFormatting.GRAY
             }
             else component.appendText(url)
         }
@@ -316,7 +315,7 @@ class LiquidChat : Module()
         if (component == null)
         {
             component = ChatComponentText(end)
-            component.chatStyle.color = WEnumChatFormatting.GRAY
+            component.chatStyle.color = EnumChatFormatting.GRAY
         }
         else if (end.isNotEmpty()) component.appendText(string.substring(lastEnd))
 

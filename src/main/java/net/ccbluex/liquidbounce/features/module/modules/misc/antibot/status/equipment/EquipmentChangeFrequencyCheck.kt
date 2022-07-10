@@ -1,22 +1,21 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.status.equipment
 
-import net.ccbluex.liquidbounce.api.enums.WEnumEquipmentSlot
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.Entity
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.EntityPlayer
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.WorldClient
-import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ISPacketEntityEquipment
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.BotCheck
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
+import net.minecraft.client.multiplayer.WorldClient
+import net.minecraft.entity.Entity
+import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.network.play.server.S04PacketEntityEquipment
 
 class EquipmentChangeFrequencyCheck : BotCheck("status.equipment.changeFrequency")
 {
     override val isActive: Boolean
         get() = AntiBot.equipmentChangeFrequencyEnabledValue.get()
 
-    private val previousEquipmentPacketMap = mutableMapOf<Int, MutableMap<WEnumEquipmentSlot, ISPacketEntityEquipment>>()
-    private val previousEquipmentDelayMap = mutableMapOf<Int, MutableMap<WEnumEquipmentSlot, MSTimer>>()
+    private val previousEquipmentPacketMap = mutableMapOf<Int, MutableMap<Int, S04PacketEntityEquipment>>()
+    private val previousEquipmentDelayMap = mutableMapOf<Int, MutableMap<Int, MSTimer>>()
     private val overallDelayMap = mutableMapOf<Int, MSTimer>()
     private val invalidPacket = mutableSetOf<Int>()
     private val vl = mutableMapOf<Int, Int>()
@@ -31,22 +30,18 @@ class EquipmentChangeFrequencyCheck : BotCheck("status.equipment.changeFrequency
     {
         val packet = event.packet
 
-        if (packet is SPacketEntityEquipment)
+        if (packet is S04PacketEntityEquipment)
         {
             val theWorld = mc.theWorld ?: return
 
-            val equipmentPacket = packet.asSPacketEntityEquipment()
-
-            val entityId = equipmentPacket.entityID
-            val slot = equipmentPacket.slot
-            val item = equipmentPacket.item
+            val entityId = packet.entityID
+            val slot = packet.equipmentSlot
+            val item = packet.itemStack
 
             val entity = theWorld.getEntityByID(entityId)
 
             if (entity != null && entity is EntityPlayer)
             {
-                val target = entity.asEntityPlayer()
-
                 var vlIncrement = 0
 
                 val prev = previousEquipmentPacketMap[entityId]?.get(slot)
@@ -54,27 +49,27 @@ class EquipmentChangeFrequencyCheck : BotCheck("status.equipment.changeFrequency
                 val overallDelay = overallDelayMap[entityId]
                 if (prev != null)
                 {
-                    if (prev.item == item)
+                    if (prev.itemStack.isItemEqual(item))
                     {
                         invalidPacket += entityId
-                        notification(target) { arrayOf("reason=(actual content is same)") }
+                        notification(entity) { arrayOf("reason=(actual content is same)") }
                     }
 
                     val perSlotDelayLimit = AntiBot.equipmentChangeFrequencyPerSlotDelayValue.get().toLong()
                     if (perSlotDelay != null && !perSlotDelay.hasTimePassed(perSlotDelayLimit))
                     {
                         vlIncrement = ((perSlotDelayLimit - perSlotDelay.getTime()).toInt() / 50).coerceAtLeast(3)
-                        notification(target) { arrayOf("reason=frequency (per slot)", "frequency=${perSlotDelay.getTime()}") }
+                        notification(entity) { arrayOf("reason=frequency (per slot)", "frequency=${perSlotDelay.getTime()}") }
                     }
 
                     val overallDelayLimit = AntiBot.equipmentChangeFrequencyOverallDelayValue.get().toLong()
                     if (overallDelay != null && !overallDelay.hasTimePassed(overallDelayLimit))
                     {
                         vlIncrement = ((overallDelayLimit - overallDelay.getTime()).toInt() / 50).coerceAtLeast(5)
-                        notification(target) { arrayOf("reason=frequency (all)", "frequency=${overallDelay.getTime()}") }
+                        notification(entity) { arrayOf("reason=frequency (all)", "frequency=${overallDelay.getTime()}") }
                     }
                 }
-                previousEquipmentPacketMap.computeIfAbsent(entityId) { mutableMapOf() }[slot] = equipmentPacket
+                previousEquipmentPacketMap.computeIfAbsent(entityId) { mutableMapOf() }[slot] = packet
                 previousEquipmentDelayMap.computeIfAbsent(entityId) { mutableMapOf() }[slot] = MSTimer().apply(MSTimer::reset)
                 overallDelayMap.computeIfAbsent(entityId) { MSTimer() }.reset()
 

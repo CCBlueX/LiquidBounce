@@ -6,18 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.enums.EnumFacingType
-import net.ccbluex.liquidbounce.api.enums.StatType
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.Entity
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.EntityPlayerSP
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.EntityPlayer
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.WorldClient
-import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
-import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition
-import net.ccbluex.liquidbounce.api.minecraft.util.BlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
-import net.ccbluex.liquidbounce.api.minecraft.util.Vec3
-import net.ccbluex.liquidbounce.api.minecraft.world.World
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -33,6 +21,24 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
 import net.ccbluex.liquidbounce.value.*
+import net.minecraft.block.BlockAir
+import net.minecraft.block.BlockBush
+import net.minecraft.client.entity.EntityPlayerSP
+import net.minecraft.client.gui.ScaledResolution
+import net.minecraft.client.multiplayer.WorldClient
+import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.entity.Entity
+import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.item.ItemBlock
+import net.minecraft.item.ItemStack
+import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.play.client.C0APacketAnimation
+import net.minecraft.stats.StatList
+import net.minecraft.util.BlockPos
+import net.minecraft.util.EnumFacing
+import net.minecraft.util.MovingObjectPosition
+import net.minecraft.util.Vec3
+import net.minecraft.world.World
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
 import kotlin.math.atan2
@@ -201,16 +207,14 @@ class Tower : Module()
             placeInfo = null
             delayTimer.update()
 
-            val provider = classProvider
-
             val heldItem = thePlayer.heldItem
 
             if (if (!autoBlockModeValue.get().equals("Off", ignoreCase = true)) thePlayer.inventoryContainer.findAutoBlockBlock(theWorld, autoBlockFullCubeOnlyValue.get()) != -1 || heldItem != null && heldItem.item is ItemBlock else heldItem != null && heldItem.item is ItemBlock)
             {
-                if (!stopWhenBlockAbove.get() || provider.isBlockAir(theWorld.getBlock(BlockPos(thePlayer.posX, thePlayer.posY + 2, thePlayer.posZ)))) move()
+                if (!stopWhenBlockAbove.get() || theWorld.getBlock(BlockPos(thePlayer.posX, thePlayer.posY + 2, thePlayer.posZ)) is BlockAir) move()
 
                 val blockPos = BlockPos(thePlayer.posX, thePlayer.posY - 1.0, thePlayer.posZ)
-                if (provider.isBlockAir(theWorld.getBlockState(blockPos).block) && search(theWorld, thePlayer, blockPos) && rotationEnabledValue.get())
+                if (theWorld.getBlockState(blockPos).block is BlockAir && search(theWorld, thePlayer, blockPos) && rotationEnabledValue.get())
                 {
                     val vecRotation = RotationUtils.faceBlock(theWorld, thePlayer, blockPos)
                     if (vecRotation != null)
@@ -233,7 +237,7 @@ class Tower : Module()
         val thePlayer = mc.thePlayer ?: return
 
         thePlayer.isAirBorne = true
-        thePlayer.triggerAchievement(classProvider.getStatEnum(StatType.JUMP_STAT))
+        thePlayer.triggerAchievement(StatList.jumpStat)
     }
 
     /**
@@ -278,10 +282,8 @@ class Tower : Module()
 
                 fakeJump()
 
-                val provider = classProvider
-
-                netHandler.addToSendQueue(CPacketPlayerPosition(posX, posY + 0.42, posZ, false))
-                netHandler.addToSendQueue(CPacketPlayerPosition(posX, posY + 0.753, posZ, false))
+                netHandler.addToSendQueue(C04PacketPlayerPosition(posX, posY + 0.42, posZ, false))
+                netHandler.addToSendQueue(C04PacketPlayerPosition(posX, posY + 0.753, posZ, false))
                 thePlayer.setPosition(posX, posY + 1.0, posZ)
 
                 delayTimer.reset()
@@ -408,9 +410,7 @@ class Tower : Module()
         val controller = mc.playerController
         val inventory = thePlayer.inventory
 
-        val provider = classProvider
-
-        (LiquidBounce.moduleManager[AutoUse::class.java] as AutoUse).endEating(thePlayer, classProvider, netHandler)
+        (LiquidBounce.moduleManager[AutoUse::class.java] as AutoUse).endEating(thePlayer)
 
         // AutoBlock
         val slot = InventoryUtils.targetSlot ?: inventory.currentItem
@@ -418,7 +418,7 @@ class Tower : Module()
 
         val switchKeepTime = autoBlockSwitchKeepTimeValue.get()
 
-        if (itemStack == null || itemStack.item !is ItemBlock || provider.isBlockBush(itemStack.item? as ItemBlock?.block))
+        if (itemStack == null || itemStack.item !is ItemBlock || (itemStack.item as ItemBlock)?.block is BlockBush)
         {
             if (autoBlockModeValue.get().equals("Off", true)) return
 
@@ -449,7 +449,7 @@ class Tower : Module()
         if (thePlayer.isUsingItem && stopConsumingBeforePlaceValue.get()) mc.playerController.onStoppedUsingItem(thePlayer)
 
         // Place block
-        if (controller.onPlayerRightClick(thePlayer, theWorld, itemStack, placeInfo.blockPos, placeInfo.enumFacing, placeInfo.vec3)) if (swingValue.get()) thePlayer.swingItem() else netHandler.addToSendQueue(CPacketAnimation())
+        if (controller.onPlayerRightClick(thePlayer, theWorld, itemStack, placeInfo.blockPos, placeInfo.enumFacing, placeInfo.vec3)) if (swingValue.get()) thePlayer.swingItem() else netHandler.addToSendQueue(C0APacketAnimation())
 
         // Switch back to original slot after place on AutoBlock-Switch mode
         if (autoBlockModeValue.get().equals("Switch", true) && switchKeepTime < 0) InventoryUtils.resetSlot(thePlayer)
@@ -465,14 +465,12 @@ class Tower : Module()
      */
     private fun search(theWorld: World, thePlayer: Entity, blockPosition: BlockPos): Boolean
     {
-        if (blockPosition !is Replaceable) return false
+        if (!theWorld.isReplaceable(blockPosition)) return false
 
         val eyesPos = Vec3(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, thePlayer.posZ)
         var placeRotation: PlaceRotation? = null
 
-        val provider = classProvider
-
-        EnumFacingType.values().map(provider::getEnumFacing).forEach { side ->
+        EnumFacing.values().forEach { side ->
             val neighbor = blockPosition.offset(side)
 
             if (!theWorld.canBeClicked(neighbor)) return@forEach
@@ -491,7 +489,7 @@ class Tower : Module()
                         val posVec = Vec3(blockPosition).plus(xSearch, ySearch, zSearch)
                         val distanceSqPosVec = eyesPos.squareDistanceTo(posVec)
                         val hitVec = posVec + Vec3(dirVec.xCoord, dirVec.yCoord, dirVec.zCoord) * 0.5
-                        if (eyesPos.squareDistanceTo(hitVec) > 18.0 || distanceSqPosVec > eyesPos.squareDistanceTo(posVec + dirVec) || theWorld.rayTraceBlocks(eyesPos, hitVec, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false) != null)
+                        if (eyesPos.squareDistanceTo(hitVec) > 18.0 || distanceSqPosVec > eyesPos.squareDistanceTo(posVec + dirVec) || theWorld.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null)
                         {
                             zSearch += 0.1
                             continue
@@ -503,12 +501,12 @@ class Tower : Module()
                         val diffZ = hitVec.zCoord - eyesPos.zCoord
                         val diffXZ = hypot(diffX, diffZ)
 
-                        val rotation = Rotation(WMathHelper.wrapAngleTo180_float(WMathHelper.toDegrees(atan2(diffZ, diffX).toFloat()) - 90f), WMathHelper.wrapAngleTo180_float((-WMathHelper.toDegrees(atan2(diffY, diffXZ).toFloat()))))
+                        val rotation = Rotation(((atan2(diffZ, diffX).toFloat()).toDegrees - 90f).wrapAngleTo180, ((-(atan2(diffY, diffXZ).toFloat()).toDegrees)).wrapAngleTo180)
                         val rotationVector = RotationUtils.getVectorForRotation(rotation)
                         val vector = eyesPos + rotationVector * 4.0
-                        val rayTrace = theWorld.rayTraceBlocks(eyesPos, vector, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = false, returnLastUncollidableBlock = true)
+                        val rayTrace = theWorld.rayTraceBlocks(eyesPos, vector, false, false, true)
 
-                        if (rayTrace != null && (rayTrace.typeOfHit != IMovingObjectPosition.WMovingObjectType.BLOCK || rayTrace.blockPos != neighbor))
+                        if (rayTrace != null && (rayTrace.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK || rayTrace.blockPos != neighbor))
                         {
                             zSearch += 0.1
                             continue
@@ -566,9 +564,9 @@ class Tower : Module()
             val yoffset = if (blockOverlay.state && blockOverlay.infoEnabledValue.get() && blockOverlay.getCurrentBlock(theWorld) != null) 15f else 0f
             val font = counterFontValue.get()
 
-            RenderUtils.drawBorderedRect(middleScreenX - 2.0f, middleScreenY + yoffset + 5.0f, ((scaledResolution.scaledWidth shr 1) + font.getStringWidth(info)) + 2.0f, middleScreenY + yoffset + font.fontHeight + 7.0f, 3f, -16777216, -16777216)
+            RenderUtils.drawBorderedRect(middleScreenX - 2.0f, middleScreenY + yoffset + 5.0f, ((scaledResolution.scaledWidth shr 1) + font.getStringWidth(info)) + 2.0f, middleScreenY + yoffset + font.FONT_HEIGHT + 7.0f, 3f, -16777216, -16777216)
 
-            classProvider.GlStateManager.resetColor()
+            GlStateManager.resetColor()
 
             font.drawString(info, middleScreenX.toFloat(), middleScreenY + yoffset + 7.0f, 0xffffff)
             GL11.glPopMatrix()
@@ -592,11 +590,9 @@ class Tower : Module()
      */
     private fun getBlocksAmount(thePlayer: EntityPlayer): Int
     {
-        val provider = classProvider
-
         val inventoryContainer = thePlayer.inventoryContainer
 
-        return (36..44).mapNotNull { inventoryContainer.getSlot(it).stack }.filter { it.item is ItemBlock }.filter { thePlayer.heldItem == it || it.item? as ItemBlock?.block.canAutoBlock }.sumBy(IItemStack::stackSize)
+        return (36..44).mapNotNull { inventoryContainer.getSlot(it).stack }.filter { it.item is ItemBlock }.filter { thePlayer.heldItem == it || (it.item as ItemBlock).block.canAutoBlock }.sumBy(ItemStack::stackSize)
     }
 
     override val tag: String

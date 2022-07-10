@@ -5,11 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.Entity
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.EntityLivingBase
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.EntityPlayer
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.WorldClient
-import net.ccbluex.liquidbounce.api.minecraft.util.Vec3
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -36,6 +31,12 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.tab.Duplica
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.tab.DuplicateInTabExistenceCheck
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.tab.TabCheck
 import net.ccbluex.liquidbounce.value.*
+import net.minecraft.client.multiplayer.WorldClient
+import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.network.play.server.S14PacketEntity
+import net.minecraft.network.play.server.S18PacketEntityTeleport
+import net.minecraft.util.*
 import java.util.*
 import kotlin.math.*
 
@@ -504,11 +505,8 @@ object AntiBot : Module()
     fun isBot(theWorld: WorldClient, thePlayer: EntityPlayer, target: EntityLivingBase): Boolean
     {
         if (!state) return false
-
-        if (!target is EntityPlayer) return false
-
-        val entity = target.asEntityPlayer()
-        return entity.name.isEmpty() || entity.name.equals(thePlayer.name, ignoreCase = true) || entity.gameProfile.name.equals(thePlayer.gameProfile.name, ignoreCase = true) || checks.filter(BotCheck::isActive).any { it.isBot(theWorld, thePlayer, entity) }
+        if (target !is EntityPlayer) return false
+        return target.name.isEmpty() || target.name.equals(thePlayer.name, ignoreCase = true) || target.gameProfile.name.equals(thePlayer.gameProfile.name, ignoreCase = true) || checks.filter(BotCheck::isActive).any { it.isBot(theWorld, thePlayer, target) }
     }
 
     // TODO
@@ -539,29 +537,18 @@ object AntiBot : Module()
 
         val packet = event.packet
 
-        val provider = classProvider
-
         // Movement checks
-        if (packet is SPacketEntity)
+        if (packet is S14PacketEntity)
         {
-            val movePacket = packet.asSPacketEntity()
-
-            val target = movePacket.getEntity(theWorld)
-            if (target != null && target is EntityPlayer)
-            {
-                val targetPlayer = target.asEntityPlayer()
-
-                handleEntityMovement(theWorld, thePlayer, targetPlayer, false, Vec3((targetPlayer.serverPosX + movePacket.posX) / 32.0, (targetPlayer.serverPosY + movePacket.posY) / 32.0, (targetPlayer.serverPosZ + movePacket.posZ) / 32.0), movePacket.rotating, movePacket.yaw, movePacket.pitch, movePacket.onGround)
-            }
+            val target = packet.getEntity(theWorld)
+            if (target != null && target is EntityPlayer) handleEntityMovement(theWorld, thePlayer, target, false, Vec3((target.serverPosX + packet.func_149062_c()) / 32.0, (target.serverPosY + packet.func_149061_d()) / 32.0, (target.serverPosZ + packet.func_149064_e()) / 32.0), packet.func_149060_h(), packet.func_149066_f(), packet.func_149063_g(), packet.onGround)
         }
 
         // Teleport packet check & Movement checks
-        if (packet is SPacketEntityTeleport)
+        if (packet is S18PacketEntityTeleport)
         {
-            val teleportPacket = packet.asSPacketEntityTeleport()
-            val entity: Entity? = theWorld.getEntityByID(teleportPacket.entityId)
-
-            if (entity != null && entity is EntityPlayer) handleEntityMovement(theWorld, thePlayer, entity.asEntityPlayer(), true, Vec3(teleportPacket.x, teleportPacket.y, teleportPacket.z), true, teleportPacket.yaw, teleportPacket.pitch, teleportPacket.onGround)
+            val entity = theWorld.getEntityByID(packet.entityId)
+            if (entity is EntityPlayer) handleEntityMovement(theWorld, thePlayer, entity, true, Vec3(packet.x.toDouble(), packet.y.toDouble(), packet.z.toDouble()), true, packet.yaw, packet.pitch, packet.onGround)
         }
 
         if (!event.isCancelled) checks.filter(BotCheck::isActive).forEach { it.onPacket(event) }

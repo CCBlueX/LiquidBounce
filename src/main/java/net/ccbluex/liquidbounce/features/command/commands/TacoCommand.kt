@@ -6,20 +6,22 @@
 package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.Render2DEvent
+import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.minecraft.client.gui.ScaledResolution
+import net.minecraft.util.ResourceLocation
 
 class TacoCommand : Command("taco"), Listenable
 {
     private var toggle = false
     private var image = 0
     private var running = 0f
-    private val tacoTextures = run {
-        val provider = classProvider
-        arrayOf(ResourceLocation("liquidbounce/taco/1.png"), ResourceLocation("liquidbounce/taco/2.png"), ResourceLocation("liquidbounce/taco/3.png"), ResourceLocation("liquidbounce/taco/4.png"), ResourceLocation("liquidbounce/taco/5.png"), ResourceLocation("liquidbounce/taco/6.png"), ResourceLocation("liquidbounce/taco/7.png"), ResourceLocation("liquidbounce/taco/8.png"), ResourceLocation("liquidbounce/taco/9.png"), ResourceLocation("liquidbounce/taco/10.png"), ResourceLocation("liquidbounce/taco/11.png"), ResourceLocation("liquidbounce/taco/12.png"))
-    }
+    private val tacoTextures = arrayOf(ResourceLocation("liquidbounce/taco/1.png"), ResourceLocation("liquidbounce/taco/2.png"), ResourceLocation("liquidbounce/taco/3.png"), ResourceLocation("liquidbounce/taco/4.png"), ResourceLocation("liquidbounce/taco/5.png"), ResourceLocation("liquidbounce/taco/6.png"), ResourceLocation("liquidbounce/taco/7.png"), ResourceLocation("liquidbounce/taco/8.png"), ResourceLocation("liquidbounce/taco/9.png"), ResourceLocation("liquidbounce/taco/10.png"), ResourceLocation("liquidbounce/taco/11.png"), ResourceLocation("liquidbounce/taco/12.png"))
 
     init
     {

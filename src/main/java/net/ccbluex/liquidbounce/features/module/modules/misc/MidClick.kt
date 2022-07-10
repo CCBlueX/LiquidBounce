@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
+import net.minecraft.entity.player.EntityPlayer
 import org.lwjgl.input.Mouse
 
 @ModuleInfo(name = "MidClick", description = "Allows you to add a player as a friend by right clicking him. (a.k.a. MiddleClickFriend)", category = ModuleCategory.MISC)
@@ -26,17 +27,17 @@ class MidClick : Module()
     {
         if (mc.currentScreen != null) return
 
-        if (!wasDown && 2 is ButtonDown)
+        if (!wasDown && Mouse.isButtonDown(2))
         {
             val entity = (mc.objectMouseOver ?: return).entityHit
             val thePlayer = mc.thePlayer ?: return
 
-            if (entity != null && entity is EntityPlayer)
+            if (entity is EntityPlayer)
             {
                 val playerName = stripColor(entity.name)
                 val friendsConfig = LiquidBounce.fileManager.friendsConfig
 
-                if (playerName !is Friend)
+                if (!friendsConfig.isFriend(playerName))
                 {
                     friendsConfig.addFriend(playerName)
                     FileManager.saveConfig(friendsConfig)
@@ -52,6 +53,6 @@ class MidClick : Module()
             else ClientUtils.displayChatMessage(thePlayer, "\u00A7c\u00A7lError: \u00A7aYou need to select a player.")
         }
 
-        wasDown = 2 is ButtonDown
+        wasDown = Mouse.isButtonDown(2)
     }
 }

@@ -13,6 +13,8 @@ import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.TextValue
+import net.minecraft.client.renderer.texture.DynamicTexture
+import net.minecraft.util.ResourceLocation
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.nio.file.Files

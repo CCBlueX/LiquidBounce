@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -14,6 +13,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.value.BoolValue
+import net.minecraft.potion.Potion
 
 @ModuleInfo(name = "Sprint", description = "Automatically sprints all the time.", category = ModuleCategory.MOVEMENT)
 class Sprint : Module()
@@ -33,17 +33,17 @@ class Sprint : Module()
     {
         val thePlayer = mc.thePlayer ?: return
 
-        val blindCheck = blindnessValue.get() && thePlayer.isPotionActive(classProvider.getPotionEnum(PotionType.BLINDNESS).id)
+        val blindCheck = blindnessValue.get() && thePlayer.isPotionActive(Potion.blindness.id)
         val foodCheck = foodValue.get() && thePlayer.foodStats.foodLevel <= 6.0f && !thePlayer.capabilities.allowFlying
         val serversideCheck = checkServerSide.get() && (thePlayer.onGround || !checkServerSideGround.get()) && !allDirectionsValue.get() && RotationUtils.getRotationDifference(RotationUtils.clientRotation) > 30
 
-        if (!thePlayer.isMoving || thePlayer.sneaking || blindCheck || foodCheck || serversideCheck)
+        if (!thePlayer.isMoving || thePlayer.isSneaking || blindCheck || foodCheck || serversideCheck)
         {
-            thePlayer.sprinting = false
+            thePlayer.isSprinting = false
             return
         }
 
-        if (allDirectionsValue.get() || thePlayer.movementInput.moveForward >= 0.8f) thePlayer.sprinting = true
+        if (allDirectionsValue.get() || thePlayer.movementInput.moveForward >= 0.8f) thePlayer.isSprinting = true
     }
 
     override val tag: String?

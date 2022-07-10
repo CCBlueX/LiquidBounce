@@ -226,8 +226,6 @@ class ModuleManager : Listenable
      */
     fun registerModule(module: Module)
     {
-        if (!module.isSupported) return
-
         modules += module
         moduleClassMap[module.javaClass] = module
         moduleNameMap[module.name.toLowerCase()] = module

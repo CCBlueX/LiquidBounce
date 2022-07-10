@@ -5,11 +5,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.EntityPlayer
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.extensions.boost
+import net.minecraft.entity.player.EntityPlayer
 
 abstract class SpeedMode(val modeName: String) : MinecraftInstance()
 {

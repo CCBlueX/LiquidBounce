@@ -5,13 +5,17 @@
  */
 package net.ccbluex.liquidbounce.utils.misc
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.EntityLivingBase
-import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition.WMovingObjectType
-import net.ccbluex.liquidbounce.api.minecraft.util.BlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.toRadians
-import net.ccbluex.liquidbounce.api.minecraft.util.Vec3
-import net.ccbluex.liquidbounce.api.minecraft.world.World
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.ccbluex.liquidbounce.utils.extensions.cos
+import net.ccbluex.liquidbounce.utils.extensions.plus
+import net.ccbluex.liquidbounce.utils.extensions.sin
+import net.ccbluex.liquidbounce.utils.extensions.toRadians
+import net.minecraft.entity.EntityLivingBase
+import net.minecraft.util.BlockPos
+import net.minecraft.util.EnumFacing
+import net.minecraft.util.MovingObjectPosition
+import net.minecraft.util.Vec3
+import net.minecraft.world.World
 import kotlin.math.sqrt
 
 class FallingPlayer(private val theWorld: World, private val thePlayer: EntityLivingBase, private var x: Double, private var y: Double, private var z: Double, private var motionX: Double, private var motionY: Double, private var motionZ: Double, private val yaw: Float, private var strafe: Float, private var forward: Float) : MinecraftInstance()
@@ -34,11 +38,9 @@ class FallingPlayer(private val theWorld: World, private val thePlayer: EntityLi
             strafe *= v
             forward *= v
 
-            val func = functions
-
             val yawRadians = yaw.toRadians
-            val sin = func.sin(yawRadians)
-            val cos = func.cos(yawRadians)
+            val sin = yawRadians.sin
+            val cos = yawRadians.cos
             motionX += (strafe * cos - forward * sin).toDouble()
             motionZ += (forward * cos + strafe * sin).toDouble()
         }
@@ -95,7 +97,7 @@ class FallingPlayer(private val theWorld: World, private val thePlayer: EntityLi
         private fun rayTrace(theWorld: World, start: Vec3, end: Vec3): BlockPos?
         {
             val result = theWorld.rayTraceBlocks(start, end, true)
-            return if (result != null && result.typeOfHit == WMovingObjectType.BLOCK && result.sideHit?.isUp() == true) result.blockPos else null
+            return if (result != null && result.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK && result.sideHit == EnumFacing.UP) result.blockPos else null
         }
     }
 }

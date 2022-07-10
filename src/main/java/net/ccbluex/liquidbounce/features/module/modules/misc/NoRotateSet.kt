@@ -24,7 +24,7 @@ class NoRotateSet : Module()
     //	{
     //		val thePlayer = mc.thePlayer ?: return
     //
-    //		if (event.packet is SPacketPlayerPosLook)
+    //		if (event.packet is S08PacketPlayerPosLook)
     //		{
     //			val packet = event.packet.asSPacketPosLook()
     //
@@ -33,7 +33,7 @@ class NoRotateSet : Module()
     //			if (confirmIllegalRotationValue.get() || packet.pitch <= 90 && packet.pitch >= -90 && RotationUtils.serverRotation != null && packet.yaw != RotationUtils.serverRotation.yaw && packet.pitch != RotationUtils.serverRotation.pitch)
     //			{
     //
-    //				if (confirmValue.get()) mc.netHandler.addToSendQueue(CPacketPlayerLook(packet.yaw, packet.pitch, thePlayer.onGround))
+    //				if (confirmValue.get()) mc.netHandler.addToSendQueue(C05PacketPlayerLook(packet.yaw, packet.pitch, thePlayer.onGround))
     //			}
     //
     //			packet.yaw = thePlayer.rotationYaw

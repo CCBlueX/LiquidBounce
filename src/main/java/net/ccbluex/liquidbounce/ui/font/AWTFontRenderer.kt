@@ -7,6 +7,8 @@ package net.ccbluex.liquidbounce.ui.font
 
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.client.renderer.texture.TextureUtil
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 import java.awt.Font
@@ -88,10 +90,8 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
         GL11.glScalef(scale, scale, scale)
         GL11.glTranslated(x * 2F, y * 2.0 - 2.0, 0.0)
 
-        val provider = classProvider
-
         if (loadingScreen) GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID)
-        else provider.GlStateManager.bindTexture(textureID)
+        else GlStateManager.bindTexture(textureID)
 
         RenderUtils.glColor(color)
 
@@ -136,7 +136,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
                 GL11.glScalef(scale, scale, scale)
 
                 if (loadingScreen) GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID)
-                else provider.GlStateManager.bindTexture(textureID)
+                else GlStateManager.bindTexture(textureID)
 
                 RenderUtils.glColor(color)
 
@@ -233,9 +233,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
 
         (startChar until stopChar).mapNotNull { (fontImages[it] ?: return@mapNotNull null) to (charLocations[it] ?: return@mapNotNull null) }.forEach { (fontImage, charLocation) -> graphics2D.drawImage(fontImage, charLocation.x, charLocation.y, null) }
 
-        val textureUtil = classProvider.textureUtil
-
-        textureID = textureUtil.uploadTextureImageAllocate(textureUtil.glGenTextures(), bufferedImage, textureBlur = true, textureClamp = true)
+        textureID = TextureUtil.uploadTextureImageAllocate(TextureUtil.glGenTextures(), bufferedImage, true, true)
     }
 
     /**

@@ -11,6 +11,8 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.extensions.serialized
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.value.*
+import net.minecraft.block.Block
+import net.minecraft.item.Item
 
 /**
  * Module command
@@ -147,7 +149,7 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
                         }
                         catch (exception: NumberFormatException)
                         {
-                            val tmpId = functions.getBlockFromName(args[2])?.let(functions::getIdFromBlock)
+                            val tmpId = Block.getBlockFromName(args[2])?.let(Block::getIdFromBlock)
 
                             if (tmpId == null || tmpId <= 0)
                             {
@@ -285,7 +287,7 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
 
             2 -> when (val value = module.getValue(args[0]))
             {
-                is BlockValue -> return functions.getItemRegistryKeys().map { it.resourcePath.toLowerCase() }.filter { it.startsWith(args[1], true) }
+                is BlockValue -> return Item.itemRegistry.keys.map { it.resourcePath.toLowerCase() }.filter { it.startsWith(args[1], true) }
 
                 is ListValue -> return value.values.filter { it.startsWith(args[1], true) }
 

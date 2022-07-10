@@ -1,10 +1,9 @@
 package co.uk.hexeption.utils
 
-import net.ccbluex.liquidbounce.LiquidBounce.wrapper
-import net.ccbluex.liquidbounce.api.IExtractedFunctions
-import net.ccbluex.liquidbounce.api.minecraft.client.IMinecraft
-import net.ccbluex.liquidbounce.api.minecraft.client.shader.IFramebuffer
+import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.minecraft.client.renderer.OpenGlHelper
+import net.minecraft.client.shader.Framebuffer
 import org.lwjgl.opengl.EXTFramebufferObject
 import org.lwjgl.opengl.EXTPackedDepthStencil
 import org.lwjgl.opengl.GL11.*
@@ -55,15 +54,13 @@ object OutlineUtils
     @JvmStatic
     fun renderFour(color: Int)
     {
-        val functions: IExtractedFunctions = wrapper.functions
-
         RenderUtils.glColor(color)
         glDepthMask(false)
         glDisable(GL_DEPTH_TEST)
         glEnable(GL_POLYGON_OFFSET_LINE)
         glPolygonOffset(1.0f, -2000000.0f)
 
-        functions.setLightmapTextureCoords(functions.getLightMapTexUnit(), 240.0f, 240.0f)
+        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240.0f, 240.0f)
     }
 
     @JvmStatic
@@ -86,17 +83,15 @@ object OutlineUtils
     @JvmStatic
     fun checkSetupFBO()
     {
-        val mc: IMinecraft = wrapper.minecraft
-
         // Gets the FBO of Minecraft
         val fbo = mc.framebuffer
 
         // Check if FBO isn't null
         // Checks if screen has been resized or new FBO has been created
-        if (fbo != null) if (fbo.depthBuffer > -1)
+        if (fbo != null && fbo.depthBuffer > -1)
         {
             // Sets up the FBO with depth and stencil extensions (24/8 bit)
-            setupFBO(mc, fbo)
+            setupFBO(fbo)
             // Reset the ID to prevent multiple FBO's
             fbo.depthBuffer = -1
         }
@@ -109,7 +104,7 @@ object OutlineUtils
      * Framebuffer
      */
     @JvmStatic
-    private fun setupFBO(mc: IMinecraft, fbo: IFramebuffer)
+    private fun setupFBO(fbo: Framebuffer)
     {
         // Deletes old render buffer extensions such as depth
         // Args: Render Buffer ID

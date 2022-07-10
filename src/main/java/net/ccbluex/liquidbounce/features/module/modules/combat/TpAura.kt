@@ -1,27 +1,12 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.enums.BlockType
-import net.ccbluex.liquidbounce.api.enums.EnumFacingType
-import net.ccbluex.liquidbounce.api.enums.MaterialType
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.Entity
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.EntityLivingBase
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.EntityPlayer
-import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketUseEntity
-import net.ccbluex.liquidbounce.api.minecraft.util.BlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.BlockPos.Companion.ORIGIN
-import net.ccbluex.liquidbounce.api.minecraft.util.Vec3
-import net.ccbluex.liquidbounce.api.minecraft.world.World
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.CPSCounter
-import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
-import net.ccbluex.liquidbounce.utils.extensions.getEntitiesInRadius
-import net.ccbluex.liquidbounce.utils.extensions.isEnemy
+import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.pathfinding.PathFinder
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
@@ -29,6 +14,20 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.*
+import net.minecraft.block.material.Material
+import net.minecraft.entity.Entity
+import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.init.Blocks
+import net.minecraft.item.ItemSword
+import net.minecraft.network.play.client.C02PacketUseEntity
+import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.play.client.C07PacketPlayerDigging
+import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
+import net.minecraft.util.BlockPos
+import net.minecraft.util.EnumFacing
+import net.minecraft.util.Vec3
+import net.minecraft.world.World
 import org.lwjgl.opengl.GL11.*
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.math.max
@@ -120,9 +119,7 @@ class TpAura : Module()
 
         if (serverSideBlockingStatus)
         {
-            val provider = classProvider
-
-            mc.netHandler.addToSendQueue(CPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
+            mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
             serverSideBlockingStatus = false
         }
 
@@ -141,8 +138,6 @@ class TpAura : Module()
 
         if (attackTimer.hasTimePassed(attackDelay))
         {
-            val provider = classProvider
-
             if (currentTargets.isNotEmpty())
             {
                 targetPaths.clear()
@@ -170,13 +165,13 @@ class TpAura : Module()
                     // Unblock before attack
                     if (thePlayer.isBlocking || autoBlockValue.get().equals("Packet", ignoreCase = true) || serverSideBlockingStatus)
                     {
-                        netHandler.addToSendQueue(CPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
+                        netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
                         serverSideBlockingStatus = false
                     }
 
                     // Travel to the target
                     currentPath.forEach { path ->
-                        networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(path.xCoord, path.yCoord, path.zCoord, true))
+                        networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(path.xCoord, path.yCoord, path.zCoord, true))
                     }
 
                     currentPath.reverse()
@@ -189,7 +184,7 @@ class TpAura : Module()
 
                     // Make AutoWeapon compatible
                     var sendAttack = true
-                    val attackPacket: IPacket = CPacketUseEntity(currentTarget, ICPacketUseEntity.WAction.ATTACK)
+                    val attackPacket = C02PacketUseEntity(currentTarget, C02PacketUseEntity.Action.ATTACK)
                     val autoWeapon = LiquidBounce.moduleManager[AutoWeapon::class.java] as AutoWeapon
 
                     if (autoWeapon.state)
@@ -203,13 +198,13 @@ class TpAura : Module()
                     // Block after attack
                     if (canBlock(thePlayer) && !serverSideBlockingStatus && (thePlayer.isBlocking || autoBlockValue.get().equals("Packet", ignoreCase = true)))
                     {
-                        netHandler.addToSendQueue(CPacketPlayerBlockPlacement(thePlayer.inventory.getCurrentItemInHand()))
+                        netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(thePlayer.inventory.getCurrentItem()))
                         serverSideBlockingStatus = true
                     }
 
                     // Travel back to the original position
                     currentPath.forEach { path ->
-                        networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(path.xCoord, path.yCoord, path.zCoord, true))
+                        networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(path.xCoord, path.yCoord, path.zCoord, true))
                     }
                     targetIndex++
                 }
@@ -221,7 +216,7 @@ class TpAura : Module()
             {
                 if (serverSideBlockingStatus)
                 {
-                    netHandler.addToSendQueue(CPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
+                    netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
                     serverSideBlockingStatus = false
                 }
 
@@ -370,7 +365,7 @@ class TpAura : Module()
     {
         val range = rangeValue.get().toDouble()
         val hurtTime = hurtTimeValue.get()
-        return theWorld.getEntitiesInRadius(thePlayer, range).asSequence().filter { false is Enemy }.map(Entity::asEntityLivingBase).filter { it.hurtTime <= hurtTime }.filter { thePlayer.getDistanceToEntityBox(it) <= range }.sortedBy { it.getDistanceToEntity(thePlayer) * 1000 }.toMutableList()
+        return theWorld.getEntitiesInRadius(thePlayer, range).asSequence().filterIsInstance<EntityLivingBase>().filter { it.isEnemy(false) }.filter { it.hurtTime <= hurtTime }.filter { thePlayer.getDistanceToEntityBox(it) <= range }.sortedBy { it.getDistanceToEntity(thePlayer) * 1000 }.toMutableList()
     }
 
     fun isTarget(entity: Entity?): Boolean = currentTargets.isNotEmpty() && (0 until if (currentTargets.size > maxTargetsValue.get()) maxTargetsValue.get() else currentTargets.size).any { currentTargets[it] == entity }
@@ -387,9 +382,7 @@ class TpAura : Module()
             val state = theWorld.getBlockState(BlockPos(pos.x, pos.y, pos.z))
             val block = state.block
 
-            val provider = classProvider
-
-            return provider.getMaterialEnum(MaterialType.AIR) == block.getMaterial(state) || provider.getMaterialEnum(MaterialType.PLANTS) == block.getMaterial(state) || provider.getMaterialEnum(MaterialType.VINE) == block.getMaterial(state) || provider.getBlockEnum(BlockType.LADDER) == block || provider.getBlockEnum(BlockType.WATER) == block || provider.getBlockEnum(BlockType.FLOWING_WATER) == block || provider.getBlockEnum(BlockType.WALL_SIGN) == block || provider.getBlockEnum(BlockType.STANDING_SIGN) == block
+            return Material.air == block.material || Material.plants == block.material || Material.vine == block.material || Blocks.ladder == block || Blocks.water == block || Blocks.flowing_water == block || Blocks.wall_sign == block || Blocks.standing_sign == block
         }
     }
 }

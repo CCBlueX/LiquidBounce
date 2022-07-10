@@ -5,15 +5,14 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 
-import net.ccbluex.liquidbounce.api.minecraft.util.BlockPos
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.extensions.cantBoostUp
-import net.ccbluex.liquidbounce.utils.extensions.getBlock
-import net.ccbluex.liquidbounce.utils.extensions.isMoving
-import net.ccbluex.liquidbounce.utils.extensions.moveDirectionRadians
+import net.ccbluex.liquidbounce.utils.extensions.*
+import net.minecraft.block.BlockAir
+import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.util.BlockPos
 
 class AACPort : SpeedMode("AACPort")
 {
@@ -34,13 +33,13 @@ class AACPort : SpeedMode("AACPort")
 
         while (speed <= maxSpeed)
         {
-            val x = thePlayer.posX - functions.sin(dir) * speed
+            val x = thePlayer.posX - dir.sin * speed
             val posY = thePlayer.posY
-            val z = thePlayer.posZ + functions.cos(dir) * speed
+            val z = thePlayer.posZ + dir.cos * speed
 
-            if (posY < posY.toInt() + 0.5 && !classProvider.isBlockAir(theWorld.getBlock(BlockPos(x, posY, z)))) break
+            if (posY < posY.toInt() + 0.5 && theWorld.getBlock(BlockPos(x, posY, z)) !is BlockAir) break
 
-            thePlayer.sendQueue.addToSendQueue(CPacketPlayerPosition(x, posY, z, true))
+            thePlayer.sendQueue.addToSendQueue(C04PacketPlayerPosition(x, posY, z, true))
             speed += 0.2
         }
     }
