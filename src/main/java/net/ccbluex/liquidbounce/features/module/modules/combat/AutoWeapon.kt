@@ -5,8 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.api.enums.EnchantmentType
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketUseEntity
 import net.ccbluex.liquidbounce.event.AttackEvent
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
@@ -15,9 +13,14 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.extensions.getEnchantmentLevel
+import net.ccbluex.liquidbounce.utils.extensions.itemDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ValueGroup
+import net.minecraft.enchantment.Enchantment
+import net.minecraft.item.ItemSword
+import net.minecraft.item.ItemTool
+import net.minecraft.network.play.client.C02PacketUseEntity
 
 @ModuleInfo(name = "AutoWeapon", description = "Automatically selects the best weapon in your hotbar.", category = ModuleCategory.COMBAT)
 class AutoWeapon : Module()
@@ -45,16 +48,13 @@ class AutoWeapon : Module()
     @EventTarget
     fun onPacket(event: PacketEvent)
     {
-        val provider = classProvider
-
-        if (event.packet !is CPacketUseEntity) return
+        val packet = event.packet
+        if (packet !is C02PacketUseEntity) return
 
         val thePlayer = mc.thePlayer ?: return
         val netHandler = mc.netHandler
 
-        val packet = event.packet.asCPacketUseEntity()
-
-        if (packet.action == ICPacketUseEntity.WAction.ATTACK && attackEnemy)
+        if (packet.action == C02PacketUseEntity.Action.ATTACK && attackEnemy)
         {
             val inventory = thePlayer.inventory
 
@@ -65,10 +65,8 @@ class AutoWeapon : Module()
 
             val currentTime = System.currentTimeMillis()
 
-            val sharpEnch = provider.getEnchantmentEnum(EnchantmentType.SHARPNESS)
-
             // Find best weapon in hotbar (#Kotlin Style)
-            val (slot, _) = (0..8).asSequence().mapNotNull { it to (inventory.getStackInSlot(it) ?: return@mapNotNull null) }.filter { (_, stack) -> (stack.item is ItemSword || !onlySword && stack.item is ItemTool) && currentTime - stack.itemDelay >= itemDelay }.maxBy { (_, stack) -> (stack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount ?: 2.0) + 1.25 * stack.getEnchantmentLevel(sharpEnch) } ?: return
+            val (slot, _) = (0..8).asSequence().mapNotNull { it to (inventory.getStackInSlot(it) ?: return@mapNotNull null) }.filter { (_, stack) -> (stack.item is ItemSword || !onlySword && stack.item is ItemTool) && currentTime - stack.itemDelay >= itemDelay }.maxByOrNull { (_, stack) -> (stack.attributeModifiers["generic.attackDamage"].firstOrNull()?.amount ?: 2.0) + 1.25 * stack.getEnchantmentLevel(Enchantment.sharpness) } ?: return
 
             if (slot == inventory.currentItem) // If in hand no need to swap
                 return

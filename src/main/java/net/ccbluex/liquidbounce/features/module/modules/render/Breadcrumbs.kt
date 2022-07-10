@@ -13,8 +13,26 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbowRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
-import net.ccbluex.liquidbounce.value.*
-import org.lwjgl.opengl.GL11.*
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.RGBAColorValue
+import net.ccbluex.liquidbounce.value.ValueGroup
+import org.lwjgl.opengl.GL11.GL_BLEND
+import org.lwjgl.opengl.GL11.GL_DEPTH_TEST
+import org.lwjgl.opengl.GL11.GL_LINE_SMOOTH
+import org.lwjgl.opengl.GL11.GL_LINE_STRIP
+import org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA
+import org.lwjgl.opengl.GL11.GL_SRC_ALPHA
+import org.lwjgl.opengl.GL11.GL_TEXTURE_2D
+import org.lwjgl.opengl.GL11.glBegin
+import org.lwjgl.opengl.GL11.glBlendFunc
+import org.lwjgl.opengl.GL11.glDisable
+import org.lwjgl.opengl.GL11.glEnable
+import org.lwjgl.opengl.GL11.glEnd
+import org.lwjgl.opengl.GL11.glPopMatrix
+import org.lwjgl.opengl.GL11.glPushMatrix
+import org.lwjgl.opengl.GL11.glVertex3d
 import java.util.*
 
 @ModuleInfo(name = "Breadcrumbs", description = "Leaves a trail behind you.", category = ModuleCategory.RENDER)

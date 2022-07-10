@@ -6,12 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.enums.EnumFacingType
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.Entity
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging
-import net.ccbluex.liquidbounce.api.minecraft.util.BlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.Vec3
-import net.ccbluex.liquidbounce.api.minecraft.world.World
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
@@ -29,7 +23,21 @@ import net.ccbluex.liquidbounce.utils.extensions.isFullBlock
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.easeOutCubic
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.value.*
+import net.ccbluex.liquidbounce.value.BlockValue
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.RGBAColorValue
+import net.ccbluex.liquidbounce.value.ValueGroup
+import net.minecraft.block.Block
+import net.minecraft.block.BlockAir
+import net.minecraft.entity.Entity
+import net.minecraft.network.play.client.C07PacketPlayerDigging
+import net.minecraft.util.BlockPos
+import net.minecraft.util.EnumFacing
+import net.minecraft.util.Vec3
+import net.minecraft.world.World
 import org.lwjgl.opengl.GL11
 
 @ModuleInfo(name = "Fucker", description = "Destroys selected blocks around you. (a.k.a.  IDNuker, BedNuker, EggNuker, BedDestroyer, etc.)", category = ModuleCategory.WORLD)
@@ -74,9 +82,6 @@ object Fucker : Module()
 
     private var easingRange = 0f
 
-    @JvmStatic
-    private val facings = EnumFacingType.values().map(classProvider::getEnumFacing)
-
     @EventTarget
     fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
     {
@@ -93,7 +98,7 @@ object Fucker : Module()
 
         val currentPos = currentPos
 
-        if (currentPos == null || functions.getIdFromBlock(theWorld.getBlock(currentPos)) != targetId || thePlayer.distanceToCenter(currentPos) > rangeValue.get()) this.currentPos = find(theWorld, thePlayer, targetId)
+        if (currentPos == null || Block.getIdFromBlock(theWorld.getBlock(currentPos)) != targetId || thePlayer.distanceToCenter(currentPos) > rangeValue.get()) this.currentPos = find(theWorld, thePlayer, targetId)
 
         // Reset current breaking when there is no target block
         if (currentPos == null)
@@ -108,11 +113,9 @@ object Fucker : Module()
         // Surroundings
         var surroundings = false
 
-        val provider = classProvider
-
         if (surroundingsValue.get())
         {
-            val blockPos = theWorld.rayTraceBlocks(thePlayer.getPositionEyes(1F), rotations.vec, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = false, returnLastUncollidableBlock = true)?.blockPos
+            val blockPos = theWorld.rayTraceBlocks(thePlayer.getPositionEyes(1F), rotations.vec, false, false, true)?.blockPos
 
             if (blockPos != null && blockPos !is BlockAir)
             {
@@ -145,7 +148,7 @@ object Fucker : Module()
         // Face block
         if (rotationsValue.get()) RotationUtils.setTargetRotation(rotations.rotation)
 
-        val face = rotations.face ?: provider.getEnumFacing(EnumFacingType.DOWN)
+        val face = rotations.face ?: EnumFacing.DOWN
 
         val actionMode = actionValue.get()
         when
@@ -166,21 +169,21 @@ object Fucker : Module()
                 if (instantValue.get())
                 {
                     // CivBreak style block breaking
-                    netHandler.addToSendQueue(CPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, newPos, face))
+                    netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, newPos, face))
 
                     if (swingValue.get()) thePlayer.swingItem()
 
-                    netHandler.addToSendQueue(CPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, newPos, face))
+                    netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK, newPos, face))
                     currentDamage = 0F
                     return
                 }
 
                 // Minecraft block breaking
-                val block = newPos.getBlock(theWorld)
+                val block = theWorld.getBlock(newPos)
 
                 if (currentDamage == 0F)
                 {
-                    netHandler.addToSendQueue(CPacketPlayerDigging(ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK, newPos, face))
+                    netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, newPos, face))
 
                     if (thePlayer.capabilities.isCreativeMode || block.getPlayerRelativeBlockHardness(thePlayer, theWorld, currentPos) >= 1.0F)
                     {
@@ -200,7 +203,7 @@ object Fucker : Module()
 
                 if (currentDamage >= 1F)
                 {
-                    netHandler.addToSendQueue(CPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, newPos, face))
+                    netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK, newPos, face))
                     playerController.onPlayerDestroyBlock(newPos, face)
                     blockHitDelay = 4
                     currentDamage = 0F
@@ -262,7 +265,7 @@ object Fucker : Module()
 
         (radius downTo -radius + 1).forEach { x ->
             (radius downTo -radius + 1).forEach { y ->
-                (radius downTo -radius + 1).asSequence().map { z -> BlockPos(posXI + x, posYI + y, posZI + z) }.filter { blockPos -> functions.getIdFromBlock(theWorld.getBlock(blockPos)) == targetID }.map { it to thePlayer.distanceToCenter(it) }.filter { it.second <= range }.filter { it.second <= nearestBlockDistance }.filter { surroundings || isHitable(theWorld, thePlayer, it.first) }.toList().forEach {
+                (radius downTo -radius + 1).asSequence().map { z -> BlockPos(posXI + x, posYI + y, posZI + z) }.filter { blockPos -> Block.getIdFromBlock(theWorld.getBlock(blockPos)) == targetID }.map { it to thePlayer.distanceToCenter(it) }.filter { it.second <= range }.filter { it.second <= nearestBlockDistance }.filter { surroundings || isHitable(theWorld, thePlayer, it.first) }.toList().forEach {
                     nearestBlockDistance = it.second
                     nearestBlock = it.first
                 }
@@ -282,12 +285,12 @@ object Fucker : Module()
             "raycast" ->
             {
                 val eyesPos = Vec3(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, thePlayer.posZ)
-                val movingObjectPosition = theWorld.rayTraceBlocks(eyesPos, Vec3(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5), stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false)
+                val movingObjectPosition = theWorld.rayTraceBlocks(eyesPos, Vec3(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5), false, true, false)
 
                 movingObjectPosition != null && movingObjectPosition.blockPos == blockPos
             }
 
-            "around" -> facings.any { !theWorld.isFullBlock(blockPos.offset(it)) }
+            "around" -> EnumFacing.values().any { !theWorld.isFullBlock(blockPos.offset(it)) }
             else -> true
         }
     }

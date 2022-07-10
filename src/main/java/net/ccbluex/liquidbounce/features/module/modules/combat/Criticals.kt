@@ -6,8 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.enums.StatType
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.Entity
 import net.ccbluex.liquidbounce.event.AttackEvent
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
@@ -16,8 +14,18 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.sendPacketWithoutEvent
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.value.*
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerRangeValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.ValueGroup
+import net.minecraft.entity.Entity
+import net.minecraft.entity.EntityLivingBase
+import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.stats.StatList
 import kotlin.random.Random
 
 @ModuleInfo(name = "Criticals", description = "Automatically deals critical hits.", category = ModuleCategory.COMBAT)
@@ -83,21 +91,17 @@ class Criticals : Module()
     @EventTarget
     fun onAttack(event: AttackEvent)
     {
-        val provider = classProvider
-
-        if (event.targetEntity is EntityLivingBase)
+        val entity = (event.targetEntity ?: return)
+        if (entity is EntityLivingBase)
         {
             val thePlayer = mc.thePlayer ?: return
-            val entity = (event.targetEntity ?: return)
-            if (entity !is EntityLivingBase) return
-            val targetEntity = entity.asEntityLivingBase()
 
             val attackPos = event.attackPos
 
             val networkManager = mc.netHandler.networkManager
 
             val chance = hitChanceValue.get()
-            if (!thePlayer.onGround || thePlayer.isOnLadder || thePlayer.ridingEntity != null || targetEntity.hurtTime > hurtTimeValue.get() || !(chance > 0 && Random.nextInt(100) <= chance) || LiquidBounce.moduleManager[Fly::class.java].state || !canCritical(thePlayer)) return
+            if (!thePlayer.onGround || thePlayer.isOnLadder || thePlayer.ridingEntity != null || entity.hurtTime > hurtTimeValue.get() || !(chance > 0 && Random.nextInt(100) <= chance) || LiquidBounce.moduleManager[Fly::class.java].state || !canCritical(thePlayer)) return
 
             val x = attackPos.xCoord
             val y = attackPos.yCoord
@@ -109,49 +113,49 @@ class Criticals : Module()
             {
                 "packet" ->
                 {
-                    networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x, y + 0.0625, z, true))
-                    networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x, y, z, false))
-                    networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x, y + 0.000011, z, false))
-                    networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x, y, z, false))
-                    thePlayer.onCriticalHit(targetEntity)
+                    networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, y + 0.0625, z, true))
+                    networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, y, z, false))
+                    networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, y + 0.000011, z, false))
+                    networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, y, z, false))
+                    thePlayer.onCriticalHit(entity)
                 }
 
                 "ncppacket" ->
                 {
-                    networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x, y + 0.11, z, false))
-                    networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x, y + 0.1100013579, z, false))
-                    networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x, y + 0.0000013579, z, false))
-                    thePlayer.onCriticalHit(targetEntity)
+                    networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, y + 0.11, z, false))
+                    networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, y + 0.1100013579, z, false))
+                    networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, y + 0.0000013579, z, false))
+                    thePlayer.onCriticalHit(entity)
                 }
 
                 "aacpacket" ->
                 {
-                    networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x, y + 0.05250000001304, z, true))
-                    networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x, y + 0.00150000001304, z, false))
-                    networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x, y + 0.01400000001304, z, false))
-                    networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x, y + 0.00150000001304, z, false))
+                    networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, y + 0.05250000001304, z, true))
+                    networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, y + 0.00150000001304, z, false))
+                    networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, y + 0.01400000001304, z, false))
+                    networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, y + 0.00150000001304, z, false))
                     thePlayer.onCriticalHit(entity)
                 }
 
                 "tphop" ->
                 {
-                    networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x, y + 0.02, z, false))
-                    networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x, y + 0.01, z, false))
+                    networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, y + 0.02, z, false))
+                    networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, y + 0.01, z, false))
                     thePlayer.setPosition(x, y + 0.01, z)
-                    thePlayer.onCriticalHit(targetEntity)
+                    thePlayer.onCriticalHit(entity)
                 }
 
                 "fakecollide" ->
                 {
-                    thePlayer.triggerAchievement(provider.getStatEnum(StatType.JUMP_STAT))
-                    networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x + motion.first / 3, y + 0.20, z + motion.second / 3, false))
-                    networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x + motion.first / 1.5, y + 0.121600000013, z + motion.second / 1.5, false))
+                    thePlayer.triggerAchievement(StatList.jumpStat)
+                    networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x + motion.first / 3, y + 0.20, z + motion.second / 3, false))
+                    networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x + motion.first / 1.5, y + 0.121600000013, z + motion.second / 1.5, false))
                     thePlayer.onCriticalHit(entity)
                 }
 
                 "tpcollide" ->
                 {
-                    thePlayer.triggerAchievement(provider.getStatEnum(StatType.JUMP_STAT))
+                    thePlayer.triggerAchievement(StatList.jumpStat)
                     thePlayer.isAirBorne = true
                     thePlayer.motionY = 0.0
                     thePlayer.setPosition(x, y + 0.2, z)
@@ -161,9 +165,9 @@ class Criticals : Module()
                 {
                     val ystep = arrayOf(customYStep1Value.get(), customYStep2Value.get(), customYStep3Value.get(), customYStep4Value.get(), customYStep5Value.get(), customYStep6Value.get())
 
-                    repeat(customStepsValue.get()) { networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x, y + ystep[it], z, false)) }
+                    repeat(customStepsValue.get()) { networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, y + ystep[it], z, false)) }
 
-                    thePlayer.onCriticalHit(targetEntity)
+                    thePlayer.onCriticalHit(entity)
                 }
 
                 "hop" ->
@@ -175,7 +179,7 @@ class Criticals : Module()
 
                 "jump" -> thePlayer.motionY = 0.42
                 "lowjump" -> thePlayer.motionY = 0.3425
-                "visual" -> thePlayer.onCriticalHit(targetEntity)
+                "visual" -> thePlayer.onCriticalHit(entity)
             }
 
             delayTimer.reset()
@@ -189,8 +193,7 @@ class Criticals : Module()
     fun onPacket(event: PacketEvent)
     {
         val packet = event.packet
-
-        if (packet is CPacketPlayer && modeValue.get().equals("NoGround", ignoreCase = true)) packet.asCPacketPlayer().onGround = false
+        if (packet is C03PacketPlayer && modeValue.get().equals("NoGround", ignoreCase = true)) packet.onGround = false
     }
 
     override val tag: String

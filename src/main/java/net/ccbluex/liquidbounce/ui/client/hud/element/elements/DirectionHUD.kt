@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.RGBColorValue
+import net.minecraft.util.ResourceLocation
 import kotlin.math.floor
 
 /**

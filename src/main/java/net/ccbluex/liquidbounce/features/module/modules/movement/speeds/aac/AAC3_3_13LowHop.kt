@@ -10,7 +10,13 @@ import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.extensions.*
+import net.ccbluex.liquidbounce.utils.extensions.boost
+import net.ccbluex.liquidbounce.utils.extensions.cantBoostUp
+import net.ccbluex.liquidbounce.utils.extensions.getBlock
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.multiply
+import net.ccbluex.liquidbounce.utils.extensions.strafe
+import net.minecraft.block.BlockCarpet
 
 class AAC3_3_13LowHop : SpeedMode("AAC3.3.13-LowHop") // Was AACHop3.3.13
 {
@@ -37,7 +43,7 @@ class AAC3_3_13LowHop : SpeedMode("AAC3.3.13-LowHop") // Was AACHop3.3.13
         }
         else if (thePlayer.fallDistance < 0.31f)
         {
-            if (classProvider.isBlockCarpet(theWorld.getBlock(thePlayer.position))) // why?
+            if (theWorld.getBlock(thePlayer.position) is BlockCarpet) // why?
                 return
 
             // Motion XZ

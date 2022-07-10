@@ -1,13 +1,15 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.StrafeEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.utils.extensions.cos
 import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.extensions.moveDirectionDegrees
+import net.ccbluex.liquidbounce.utils.extensions.sin
+import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.ccbluex.liquidbounce.utils.extensions.zeroXZ
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -40,8 +42,8 @@ class Strafe : Module()
         if (!thePlayer.onGround || onGroundStrafeValue.get())
         {
             val yaw = thePlayer.moveDirectionDegrees.toRadians
-            thePlayer.motionX = -functions.sin(yaw) * speed + motionX
-            thePlayer.motionZ = functions.cos(yaw) * speed + motionZ
+            thePlayer.motionX = -yaw.sin * speed + motionX
+            thePlayer.motionZ = yaw.cos * speed + motionZ
         }
     }
 }

@@ -4,6 +4,7 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.modules.render.XRay
 import net.ccbluex.liquidbounce.file.FileManager
+import net.minecraft.block.Block
 
 class XrayCommand : Command("xray")
 {
@@ -19,8 +20,6 @@ class XrayCommand : Command("xray")
 
         if (args.size > 1)
         {
-            val func = functions
-
             when (args[1].toLowerCase())
             {
                 "add" ->
@@ -31,13 +30,13 @@ class XrayCommand : Command("xray")
                         {
                             val block = try
                             {
-                                func.getBlockById(args[2].toInt())
+                                Block.getBlockById(args[2].toInt())
                             }
                             catch (exception: NumberFormatException)
                             {
-                                val tmpBlock = func.getBlockFromName(args[2])
+                                val tmpBlock = Block.getBlockFromName(args[2])
 
-                                if (tmpBlock == null || func.getIdFromBlock(tmpBlock) <= 0)
+                                if (tmpBlock == null || Block.getIdFromBlock(tmpBlock) <= 0)
                                 {
                                     chat(thePlayer, "\u00A77Block \u00A78${args[2]}\u00A77 does not exist!")
                                     return
@@ -78,13 +77,13 @@ class XrayCommand : Command("xray")
                         {
                             val block = try
                             {
-                                func.getBlockById(args[2].toInt())
+                                Block.getBlockById(args[2].toInt())
                             }
                             catch (exception: NumberFormatException)
                             {
-                                val tmpBlock = func.getBlockFromName(args[2])
+                                val tmpBlock = Block.getBlockFromName(args[2])
 
-                                if (tmpBlock == null || func.getIdFromBlock(tmpBlock) <= 0)
+                                if (tmpBlock == null || Block.getIdFromBlock(tmpBlock) <= 0)
                                 {
                                     chat(thePlayer, "\u00A77Block \u00A78${args[2]}\u00A77 does not exist!")
                                     return
@@ -119,7 +118,7 @@ class XrayCommand : Command("xray")
                 "list" ->
                 {
                     chat(thePlayer, "\u00A78Xray blocks:")
-                    xRay.xrayBlocks.forEach { chat(thePlayer, "\u00A78${it.localizedName} \u00A77-\u00A7c ${func.getIdFromBlock(it)}") }
+                    xRay.xrayBlocks.forEach { chat(thePlayer, "\u00A78${it.localizedName} \u00A77-\u00A7c ${Block.getIdFromBlock(it)}") }
                     return
                 }
 
@@ -142,21 +141,19 @@ class XrayCommand : Command("xray")
     {
         if (args.isEmpty()) return emptyList()
 
-        val func = functions
-
         return when (args.size)
         {
             1 -> arrayOf("add", "remove", "list", "orbfuscatorBypass").filter { it.startsWith(args[0], ignoreCase = true) }
 
             2 ->
             {
-                val blockRegistryKeys = func.getBlockRegistryKeys()
+                val blockRegistryKeys = Block.blockRegistry.keys
                 val xrayBlocks = xRay.xrayBlocks
 
                 when (args[0].toLowerCase())
                 {
-                    "add" -> return blockRegistryKeys.asSequence().map { it.resourcePath.toLowerCase() }.filter { !xrayBlocks.contains((func.getBlockFromName(it) ?: return@filter false)) }.filter { it.startsWith(args[1], true) }.toList()
-                    "remove" -> return blockRegistryKeys.asSequence().map { it.resourcePath.toLowerCase() }.filter { xrayBlocks.contains(func.getBlockFromName(it) ?: return@filter false) }.filter { it.startsWith(args[1], true) }.toList()
+                    "add" -> return blockRegistryKeys.asSequence().map { it.resourcePath.toLowerCase() }.filter { !xrayBlocks.contains((Block.getBlockFromName(it) ?: return@filter false)) }.filter { it.startsWith(args[1], true) }.toList()
+                    "remove" -> return blockRegistryKeys.asSequence().map { it.resourcePath.toLowerCase() }.filter { xrayBlocks.contains(Block.getBlockFromName(it) ?: return@filter false) }.filter { it.startsWith(args[1], true) }.toList()
                     else -> emptyList()
                 }
             }

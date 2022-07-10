@@ -5,9 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other
 
-import net.ccbluex.liquidbounce.api.enums.EnumFacingType
-import net.ccbluex.liquidbounce.api.minecraft.util.BlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.Vec3
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
@@ -15,7 +12,12 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMod
 import net.ccbluex.liquidbounce.utils.CPSCounter
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.plus
 import net.ccbluex.liquidbounce.utils.extensions.strafe
+import net.minecraft.network.play.client.C09PacketHeldItemChange
+import net.minecraft.util.BlockPos
+import net.minecraft.util.EnumFacing
+import net.minecraft.util.Vec3
 
 class MineplexGround : SpeedMode("Mineplex-Ground")
 {
@@ -29,12 +31,12 @@ class MineplexGround : SpeedMode("Mineplex-Ground")
         val thePlayer = mc.thePlayer ?: return
 
         val inventory = thePlayer.inventory
-        if (!thePlayer.isMoving || !thePlayer.onGround || inventory.getCurrentItemInHand() == null || thePlayer.isUsingItem) return
+        if (!thePlayer.isMoving || !thePlayer.onGround || inventory.getCurrentItem() == null || thePlayer.isUsingItem) return
 
         spoofSlot = false
 
         (0..8).firstOrNull { inventory.getStackInSlot(it) == null }?.let {
-            mc.netHandler.addToSendQueue(CPacketHeldItemChange(it))
+            mc.netHandler.addToSendQueue(C09PacketHeldItemChange(it))
             spoofSlot = true
         }
     }
@@ -50,7 +52,7 @@ class MineplexGround : SpeedMode("Mineplex-Ground")
             return
         }
 
-        if (!spoofSlot && thePlayer.inventory.getCurrentItemInHand() != null)
+        if (!spoofSlot && thePlayer.inventory.getCurrentItem() != null)
         {
             ClientUtils.displayChatMessage(thePlayer, "\u00A78[\u00A7c\u00A7lMineplex\u00A7aSpeed\u00A78] \u00A7cYou need one empty slot.")
             return
@@ -58,13 +60,11 @@ class MineplexGround : SpeedMode("Mineplex-Ground")
 
         val blockPos = BlockPos(thePlayer.posX, thePlayer.entityBoundingBox.minY - 1, thePlayer.posZ)
 
-        val provider = classProvider
-
-        val vec = Vec3(blockPos) + Vec3(provider.getEnumFacing(EnumFacingType.UP).directionVec) + 0.4
+        val vec = Vec3(blockPos) + Vec3(EnumFacing.UP.directionVec) + 0.4
 
         CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT)
 
-        mc.playerController.onPlayerRightClick(thePlayer, theWorld, null, blockPos, provider.getEnumFacing(EnumFacingType.UP), Vec3(vec.xCoord * 0.4f, vec.yCoord * 0.4f, vec.zCoord * 0.4f))
+        mc.playerController.onPlayerRightClick(thePlayer, theWorld, null, blockPos, EnumFacing.UP, Vec3(vec.xCoord * 0.4f, vec.yCoord * 0.4f, vec.zCoord * 0.4f))
 
         val targetSpeed = Speed.mineplexGroundSpeedValue.get()
 
@@ -73,7 +73,7 @@ class MineplexGround : SpeedMode("Mineplex-Ground")
 
         thePlayer.strafe(moveSpeed)
 
-        if (!spoofSlot) mc.netHandler.addToSendQueue(CPacketHeldItemChange(thePlayer.inventory.currentItem))
+        if (!spoofSlot) mc.netHandler.addToSendQueue(C09PacketHeldItemChange(thePlayer.inventory.currentItem))
     }
 
     override fun onMove(event: MoveEvent)
@@ -83,7 +83,7 @@ class MineplexGround : SpeedMode("Mineplex-Ground")
     override fun onDisable()
     {
         moveSpeed = 0f
-        mc.netHandler.addToSendQueue(CPacketHeldItemChange((mc.thePlayer ?: return).inventory.currentItem))
+        mc.netHandler.addToSendQueue(C09PacketHeldItemChange((mc.thePlayer ?: return).inventory.currentItem))
         spoofSlot = false
     }
 }

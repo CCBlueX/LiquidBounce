@@ -5,8 +5,6 @@
  */
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
-
-
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
@@ -15,6 +13,9 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.*
+import net.minecraft.client.gui.FontRenderer
+import net.minecraft.client.settings.KeyBinding
+import net.minecraft.util.*
 import org.lwjgl.input.Keyboard
 import org.lwjgl.input.Mouse
 import org.lwjgl.opengl.GL11
@@ -131,7 +132,7 @@ class Keystrokes(x: Double = 5.0, y: Double = 100.0, scale: Float = 1F, side: Si
     }
 }
 
-private open class Key(val keybinding: IKeyBinding, val xPos: Int, val yPos: () -> Int, val width: Int, val height: Int, val pressedColor: () -> Pair<Color, Color>, val unpressedColor: () -> Pair<Color, Color>, val fadingTime: () -> Int)
+private open class Key(val keybinding: KeyBinding, val xPos: Int, val yPos: () -> Int, val width: Int, val height: Int, val pressedColor: () -> Pair<Color, Color>, val unpressedColor: () -> Pair<Color, Color>, val fadingTime: () -> Int)
 {
     var isPressed = false
     var percentFade = 0.0
@@ -189,7 +190,7 @@ private open class Key(val keybinding: IKeyBinding, val xPos: Int, val yPos: () 
         val keyNameString = keyName
 
         drawPosX += (width - font.getStringWidth(keyNameString)) / 2 + 1
-        drawPosY += (height - font.fontHeight) / 2 + 1
+        drawPosY += (height - font.FONT_HEIGHT) / 2 + 1
 
         GL11.glEnable(GL11.GL_BLEND)
         font.drawString(keyNameString, drawPosX, drawPosY, textColor)
@@ -207,10 +208,10 @@ private open class Key(val keybinding: IKeyBinding, val xPos: Int, val yPos: () 
         percentFade = (System.currentTimeMillis() - lastPress).toDouble() / fadingTime()
     }
 
-    private fun isKeyDown(keyCode: Int) = if (keyCode < 0) Mouse.isButtonDown(keyCode + 100) else keyCode is KeyDown
+    private fun isKeyDown(keyCode: Int) = if (keyCode < 0) Mouse.isButtonDown(keyCode + 100) else Keyboard.isKeyDown(keyCode)
 }
 
-private class KeySpace(keybinding: IKeyBinding, xPos: Int, yPos: () -> Int, width: Int, height: Int, pressedColor: () -> Pair<Color, Color>, unpressedColor: () -> Pair<Color, Color>, fadingTime: () -> Int) : Key(keybinding, xPos, yPos, width, height, pressedColor, unpressedColor, fadingTime)
+private class KeySpace(keybinding: KeyBinding, xPos: Int, yPos: () -> Int, width: Int, height: Int, pressedColor: () -> Pair<Color, Color>, unpressedColor: () -> Pair<Color, Color>, fadingTime: () -> Int) : Key(keybinding, xPos, yPos, width, height, pressedColor, unpressedColor, fadingTime)
 {
     override fun drawKey(font: FontRenderer)
     {

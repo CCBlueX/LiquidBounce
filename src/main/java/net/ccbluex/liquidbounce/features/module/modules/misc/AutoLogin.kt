@@ -6,6 +6,8 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.value.TextValue
+import net.minecraft.network.play.server.S02PacketChat
+import net.minecraft.network.play.server.S45PacketTitle
 
 @ModuleInfo(name = "AutoLogin", description = "Automatically log-in or register with specified password.", category = ModuleCategory.MISC)
 class AutoLogin : Module()
@@ -18,16 +20,16 @@ class AutoLogin : Module()
         val thePlayer = mc.thePlayer ?: return
         val pw = password.get()
 
-        if (event.packet is SPacketChat)
+        if (event.packet is S02PacketChat)
         {
-            val chat = event.packet.asSPacketChat().chatComponent.unformattedText
+            val chat = event.packet.chatComponent.unformattedText
             if (chat matches loginPattern) thePlayer.sendChatMessage("/login $pw")
             if (chat matches registerPattern) thePlayer.sendChatMessage("/register $pw")
             if (chat matches registerPattern2) thePlayer.sendChatMessage("/register $pw $pw")
         }
-        else if (event.packet is SPacketTitle)
+        else if (event.packet is S45PacketTitle)
         {
-            val title = event.packet.asSPacketTitle().message?.unformattedText ?: return
+            val title = event.packet.message?.unformattedText ?: return
             if (title matches loginPattern) thePlayer.sendChatMessage("/login $pw")
             if (title matches registerPattern) thePlayer.sendChatMessage("/register $pw")
             if (title matches registerPattern2) thePlayer.sendChatMessage("/register $pw $pw")

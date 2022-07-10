@@ -5,11 +5,17 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.EntityLivingBase
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.extensions.*
+import net.ccbluex.liquidbounce.utils.extensions.cantBoostUp
+import net.ccbluex.liquidbounce.utils.extensions.cos
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.moveDirectionRadians
+import net.ccbluex.liquidbounce.utils.extensions.multiply
+import net.ccbluex.liquidbounce.utils.extensions.sin
+import net.ccbluex.liquidbounce.utils.extensions.speedEffectAmplifier
+import net.minecraft.entity.EntityLivingBase
 import java.math.BigDecimal
 import java.math.RoundingMode
 import kotlin.math.hypot
@@ -119,11 +125,9 @@ class OldNCPBHop : SpeedMode("OldNCPBHop")
 
         if (moving)
         {
-            val func = functions
-
             val dir = thePlayer.moveDirectionRadians
-            event.x = -func.sin(dir) * moveSpeed
-            event.z = func.cos(dir) * moveSpeed
+            event.x = -dir.sin * moveSpeed
+            event.z = dir.cos * moveSpeed
 
             thePlayer.stepHeight = 0.5f
         }

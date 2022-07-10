@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.AbstractValue
 import net.ccbluex.liquidbounce.value.ValueGroup
+import net.minecraft.client.gui.ScaledResolution
 import kotlin.math.max
 import kotlin.math.min
 
@@ -43,8 +44,6 @@ abstract class Element(var x: Double = 2.0, var y: Double = 2.0, scale: Float = 
     var renderX: Double
         get()
         {
-            val provider = classProvider
-
             return when (side.horizontal)
             {
                 Side.Horizontal.LEFT -> x
@@ -68,8 +67,6 @@ abstract class Element(var x: Double = 2.0, var y: Double = 2.0, scale: Float = 
     var renderY: Double
         get()
         {
-            val provider = classProvider
-
             return when (side.vertical)
             {
                 Side.Vertical.UP -> y

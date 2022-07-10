@@ -7,29 +7,27 @@ package net.ccbluex.liquidbounce.tabs
 
 import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.enums.ItemType
-import net.ccbluex.liquidbounce.api.minecraft.item.IItem
-import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
-import net.ccbluex.liquidbounce.api.util.WrappedCreativeTabs
-
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
+import net.minecraft.creativetab.CreativeTabs
+import net.minecraft.init.Items
+import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
 
-class HeadsTab : WrappedCreativeTabs("Heads")
+class HeadsTab : CreativeTabs("Heads")
 {
 
     // List of heads
-    private val heads = ArrayList<IItemStack>()
+    private val heads = ArrayList<ItemStack>()
 
     /**
      * Constructor of heads tab
      */
     init
     {
-        representedType.backgroundImageName = "item_search.png"
-
+        backgroundImageName = "item_search.png"
         loadHeads()
     }
 
@@ -38,22 +36,19 @@ class HeadsTab : WrappedCreativeTabs("Heads")
      *
      * @return icon item
      */
-    override val tabIconItem: IItem
-        get() = classProvider.getItemEnum(ItemType.SKULL)
+    override fun getTabIconItem(): Item = Items.skull
 
     /**
      * Return name of tab
      *
      * @return tab name
      */
-    override val translatedTabLabel
-        get() = "Heads"
+    override fun getTranslatedTabLabel() = "Heads"
 
     /**
      * @return searchbar status
      */
-    override val hasSearchBar
-        get() = true
+    override fun hasSearchBar() = true
 
     /**
      * Load all heads from the database
@@ -108,7 +103,7 @@ class HeadsTab : WrappedCreativeTabs("Heads")
      *
      * @param itemList list of tab items
      */
-    override fun displayAllReleventItems(itemList: MutableList<IItemStack>)
+    override fun displayAllReleventItems(itemList: MutableList<ItemStack>)
     {
         itemList.addAll(heads)
     }

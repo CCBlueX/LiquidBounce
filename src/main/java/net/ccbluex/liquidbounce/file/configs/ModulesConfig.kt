@@ -5,11 +5,14 @@
  */
 package net.ccbluex.liquidbounce.file.configs
 
-import com.google.gson.*
+import com.google.gson.JsonArray
+import com.google.gson.JsonNull
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
+import com.google.gson.JsonPrimitive
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.file.FileConfig
 import net.ccbluex.liquidbounce.file.FileManager
-import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import org.lwjgl.input.Keyboard
 import java.io.File
 import java.io.IOException

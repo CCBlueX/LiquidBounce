@@ -15,16 +15,15 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.gui.GuiTextField;
-import net.minecraft.util.IChatComponent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-import org.lwjgl.input.Mouse;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.At.Shift;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(GuiChat.class)
@@ -85,7 +84,7 @@ public abstract class MixinGuiChat extends MixinGuiScreen
     @Inject(method = "autocompletePlayerNames", at = @At("HEAD"))
     private void prioritizeClientFriends(final CallbackInfo callbackInfo)
     {
-        foundPlayerNames.sort(Comparator.comparing(s -> s !is Friend));
+        foundPlayerNames.sort(Comparator.comparing(s -> !LiquidBounce.fileManager.friendsConfig.isFriend(s)));
     }
 
     /**

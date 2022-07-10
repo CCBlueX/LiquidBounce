@@ -5,10 +5,7 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.client;
 
-import static net.ccbluex.liquidbounce.LiquidBounce.wrapper;
-
 import java.nio.ByteBuffer;
-import java.util.Optional;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.*;
@@ -40,7 +37,6 @@ import net.minecraft.client.particle.EffectRenderer;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.MovingObjectPosition;
-import net.minecraft.util.MovingObjectPosition.MovingObjectType;
 import net.minecraft.util.Util;
 import net.minecraft.util.Util.EnumOS;
 import net.minecraftforge.fml.relauncher.Side;
@@ -50,7 +46,6 @@ import org.lwjgl.Sys;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.Display;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.At.Shift;

@@ -1,12 +1,16 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.flies.redesky
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.Entity
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
+import net.ccbluex.liquidbounce.utils.extensions.cos
 import net.ccbluex.liquidbounce.utils.extensions.forward
+import net.ccbluex.liquidbounce.utils.extensions.sendPacketWithoutEvent
+import net.ccbluex.liquidbounce.utils.extensions.sin
 import net.ccbluex.liquidbounce.utils.extensions.strafe
+import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.ccbluex.liquidbounce.utils.extensions.zeroXZ
+import net.minecraft.entity.Entity
+import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 
 class RedeSkyGlide : FlyMode("RedeSky-Glide")
 {
@@ -44,11 +48,9 @@ class RedeSkyGlide : FlyMode("RedeSky-Glide")
 
     private fun packetHClip(thePlayer: Entity, horizontal: Double)
     {
-        val func = functions
-
         val playerYaw = thePlayer.rotationYaw.toRadians
 
-        mc.netHandler.networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(thePlayer.posX + horizontal * -func.sin(playerYaw), thePlayer.posY, thePlayer.posZ + horizontal * func.cos(playerYaw), false))
+        mc.netHandler.networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(thePlayer.posX + horizontal * -playerYaw.sin, thePlayer.posY, thePlayer.posZ + horizontal * playerYaw.cos, false))
     }
 
     private fun vclip(thePlayer: Entity, vertical: Float)
@@ -58,6 +60,6 @@ class RedeSkyGlide : FlyMode("RedeSky-Glide")
 
     private fun packetVClip(thePlayer: Entity, vertical: Double)
     {
-        mc.netHandler.networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(thePlayer.posX, thePlayer.posY + vertical, thePlayer.posZ, false))
+        mc.netHandler.networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(thePlayer.posX, thePlayer.posY + vertical, thePlayer.posZ, false))
     }
 }

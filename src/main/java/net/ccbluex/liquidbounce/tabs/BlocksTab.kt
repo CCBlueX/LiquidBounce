@@ -5,14 +5,13 @@
  */
 package net.ccbluex.liquidbounce.tabs
 
-import net.ccbluex.liquidbounce.api.enums.BlockType
-import net.ccbluex.liquidbounce.api.enums.ItemType
-import net.ccbluex.liquidbounce.api.minecraft.item.IItem
-import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
-import net.ccbluex.liquidbounce.api.util.WrappedCreativeTabs
+import net.minecraft.creativetab.CreativeTabs
+import net.minecraft.init.Blocks
+import net.minecraft.init.Items
+import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
 
-
-class BlocksTab : WrappedCreativeTabs("Special blocks")
+class BlocksTab : CreativeTabs("Special blocks")
 {
 
     /**
@@ -20,7 +19,7 @@ class BlocksTab : WrappedCreativeTabs("Special blocks")
      */
     init
     {
-        representedType.backgroundImageName = "item_search.png"
+        backgroundImageName = "item_search.png"
     }
 
     /**
@@ -28,40 +27,35 @@ class BlocksTab : WrappedCreativeTabs("Special blocks")
      *
      * @return icon item
      */
-    override val tabIconItem: IItem
-        get() = ItemStack(classProvider.getBlockEnum(BlockType.COMMAND_BLOCK)).item!!
+    override fun getTabIconItem(): Item = ItemStack(Blocks.command_block).item!!
 
     /**
      * Return name of tab
      *
      * @return tab name
      */
-    override val translatedTabLabel
-        get() = "Special blocks"
+    override fun getTranslatedTabLabel() = "Special blocks"
 
     /**
      * @return searchbar status
      */
-    override val hasSearchBar
-        get() = true
+    override fun hasSearchBar() = true
 
     /**
      * Add all items to tab
      *
      * @param itemList list of tab items
      */
-    override fun displayAllReleventItems(itemList: MutableList<IItemStack>)
+    override fun displayAllReleventItems(itemList: MutableList<ItemStack>)
     {
-        val provider = classProvider
-
-        itemList.add(ItemStack(provider.getBlockEnum(BlockType.COMMAND_BLOCK)))
-        itemList.add(ItemStack(provider.getItemEnum(ItemType.COMMAND_BLOCK_MINECART)))
-        itemList.add(ItemStack(provider.getBlockEnum(BlockType.BARRIER)))
-        itemList.add(ItemStack(provider.getBlockEnum(BlockType.DRAGON_EGG)))
-        itemList.add(ItemStack(provider.getBlockEnum(BlockType.BROWN_MUSHROOM_BLOCK)))
-        itemList.add(ItemStack(provider.getBlockEnum(BlockType.RED_MUSHROOM_BLOCK)))
-        itemList.add(ItemStack(provider.getBlockEnum(BlockType.FARMLAND)))
-        itemList.add(ItemStack(provider.getBlockEnum(BlockType.MOB_SPAWNER)))
-        itemList.add(ItemStack(provider.getBlockEnum(BlockType.LIT_FURNACE)))
+        itemList.add(ItemStack(Blocks.command_block))
+        itemList.add(ItemStack(Items.command_block_minecart))
+        itemList.add(ItemStack(Blocks.barrier))
+        itemList.add(ItemStack(Blocks.dragon_egg))
+        itemList.add(ItemStack(Blocks.brown_mushroom_block))
+        itemList.add(ItemStack(Blocks.red_mushroom_block))
+        itemList.add(ItemStack(Blocks.farmland))
+        itemList.add(ItemStack(Blocks.mob_spawner))
+        itemList.add(ItemStack(Blocks.lit_furnace))
     }
 }

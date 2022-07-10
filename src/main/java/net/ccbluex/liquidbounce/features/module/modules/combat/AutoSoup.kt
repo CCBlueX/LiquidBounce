@@ -5,11 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.api.enums.EnumFacingType
-import net.ccbluex.liquidbounce.api.enums.ItemType
-import net.ccbluex.liquidbounce.api.enums.WEnumHand
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging
-import net.ccbluex.liquidbounce.api.minecraft.util.BlockPos
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
@@ -17,14 +12,26 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.InventoryUtils
-import net.ccbluex.liquidbounce.utils.createOpenInventoryPacket
-import net.ccbluex.liquidbounce.utils.createUseItemPacket
+import net.ccbluex.liquidbounce.utils.extensions.createOpenInventoryPacket
+import net.ccbluex.liquidbounce.utils.extensions.createUseItemPacket
 import net.ccbluex.liquidbounce.utils.extensions.findItem
 import net.ccbluex.liquidbounce.utils.extensions.firstEmpty
 import net.ccbluex.liquidbounce.utils.extensions.hasSpaceHotbar
 import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.value.*
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerRangeValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.ValueGroup
+import net.minecraft.client.gui.inventory.GuiContainer
+import net.minecraft.client.gui.inventory.GuiInventory
+import net.minecraft.init.Items
+import net.minecraft.network.play.client.C07PacketPlayerDigging
+import net.minecraft.network.play.client.C0DPacketCloseWindow
+import net.minecraft.util.BlockPos
+import net.minecraft.util.EnumFacing
 import kotlin.random.Random
 
 @ModuleInfo(name = "AutoSoup", description = "Makes you automatically eat soup whenever your health is low.", category = ModuleCategory.COMBAT)
@@ -77,8 +84,6 @@ class AutoSoup : Module()
         val inventory = thePlayer.inventory
         val inventoryContainer = thePlayer.inventoryContainer
 
-        val provider = classProvider
-
         val itemDelay = itemDelayValue.get().toLong()
         val random = inventoryRandomSlotValue.get()
         val handleBowl = bowlValue.get()
@@ -89,7 +94,7 @@ class AutoSoup : Module()
             {
                 if (soupDelayTimer.hasTimePassed(soupDelay) && (ignoreScreen.get() || screen is GuiContainer))
                 {
-                    val soupInHotbar = inventoryContainer.findItem(36, 45, provider.getItemEnum(ItemType.MUSHROOM_STEW), itemDelay, random)
+                    val soupInHotbar = inventoryContainer.findItem(36, 45, Items.mushroom_stew, itemDelay, random)
 
                     if (thePlayer.health <= healthValue.get() && soupInHotbar != -1)
                     {
@@ -112,7 +117,7 @@ class AutoSoup : Module()
 
                 if (InventoryUtils.CLICK_TIMER.hasTimePassed(invDelay) && !(inventoryNoMoveValue.get() && thePlayer.isMoving) && !(openContainer != null && openContainer.windowId != 0))
                 {
-                    val bowl = provider.getItemEnum(ItemType.BOWL)
+                    val bowl = Items.bowl
 
                     // Move empty bowls to inventory
                     val bowlInHotbar = inventoryContainer.findItem(36, 45, bowl, itemDelay, random)
@@ -140,7 +145,7 @@ class AutoSoup : Module()
                     }
 
                     // Move soups to hotbar
-                    var soupInInventory = inventoryContainer.findItem(9, 36, provider.getItemEnum(ItemType.MUSHROOM_STEW), itemDelay, random)
+                    var soupInInventory = inventoryContainer.findItem(9, 36, Items.mushroom_stew, itemDelay, random)
 
                     if (soupInInventory != -1 && inventory.hasSpaceHotbar)
                     {
@@ -160,7 +165,7 @@ class AutoSoup : Module()
 
                         controller.windowClick(0, soupInInventory, 0, 1, thePlayer)
 
-                        if (openInventory) netHandler.addToSendQueue(CPacketCloseWindow())
+                        if (openInventory) netHandler.addToSendQueue(C0DPacketCloseWindow())
 
                         invDelay = inventoryDelayValue.getRandomLong()
                         InventoryUtils.CLICK_TIMER.reset()
@@ -176,9 +181,9 @@ class AutoSoup : Module()
 
                     if (itemStack != null)
                     {
-                        netHandler.addToSendQueue(createUseItemPacket(itemStack, WEnumHand.MAIN_HAND))
+                        netHandler.addToSendQueue(createUseItemPacket(itemStack))
 
-                        if (handleBowl.equals("Drop", true)) netHandler.addToSendQueue(CPacketPlayerDigging(ICPacketPlayerDigging.WAction.DROP_ITEM, BlockPos.ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
+                        if (handleBowl.equals("Drop", true)) netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.DROP_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
 
                         if (silentValue.get()) InventoryUtils.resetSlot(thePlayer)
 

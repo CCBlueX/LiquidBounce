@@ -24,7 +24,7 @@ class AAC3_1_0YPort : SpeedMode("AAC3.1.0-YPort") // Was AACYPort
 
         if (thePlayer.cantBoostUp) return
 
-        if (thePlayer.isMoving && !thePlayer.sneaking)
+        if (thePlayer.isMoving && !thePlayer.isSneaking)
         {
             if (thePlayer.onGround)
             {

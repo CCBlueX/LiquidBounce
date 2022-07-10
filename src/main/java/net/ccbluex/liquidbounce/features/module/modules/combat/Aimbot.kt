@@ -5,8 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.EntityLivingBase
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.EntityPlayer
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
@@ -20,7 +18,14 @@ import net.ccbluex.liquidbounce.utils.extensions.getEntitiesInRadius
 import net.ccbluex.liquidbounce.utils.extensions.isSelected
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.value.*
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatRangeValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.ValueGroup
+import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.player.EntityPlayer
 import kotlin.math.abs
 
 @ModuleInfo(name = "Aimbot", description = "Automatically faces selected entities around you.", category = ModuleCategory.COMBAT)
@@ -121,7 +126,7 @@ class Aimbot : Module()
 
         val jitter = jitterValue.get()
 
-        target = theWorld.getEntitiesInRadius(thePlayer, range + 2.0).asSequence().filter { true is Selected }.filter { thePlayer.getDistanceToEntityBox(it) <= range }.run { if (fov < 180F) filter { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, playerPredictSize) <= fov } else this }.run { if (throughWalls) this else filter(thePlayer::canEntityBeSeen) }.minBy { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, playerPredictSize) }?.asEntityLivingBase()
+        target = theWorld.getEntitiesInRadius(thePlayer, range + 2.0).asSequence().filterIsInstance<EntityLivingBase>().filter { it.isSelected(true) }.filter { thePlayer.getDistanceToEntityBox(it) <= range }.run { if (fov < 180F) filter { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, playerPredictSize) <= fov } else this }.run { if (throughWalls) this else filter(thePlayer::canEntityBeSeen) }.minByOrNull { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, playerPredictSize) }
 
         val entity = target ?: run {
             fadeRotations(thePlayer)
@@ -182,7 +187,6 @@ class Aimbot : Module()
 
     private fun fadeRotations(thePlayer: EntityPlayer)
     {
-
         val friction = aimFrictionValue.get()
 
         val unlockThr = resetThresoldValue.get()

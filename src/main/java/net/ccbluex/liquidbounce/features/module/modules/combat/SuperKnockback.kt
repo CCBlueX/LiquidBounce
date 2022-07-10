@@ -5,8 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketEntityAction
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketUseEntity
 import net.ccbluex.liquidbounce.event.AttackEvent
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
@@ -17,8 +15,20 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.extensions.boost
 import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.runAsyncDelayed
-import net.ccbluex.liquidbounce.value.*
-import org.lwjgl.input.Keyboard
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatRangeValue
+import net.ccbluex.liquidbounce.value.IntegerRangeValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.ValueGroup
+import net.minecraft.client.settings.GameSettings
+import net.minecraft.entity.EntityLivingBase
+import net.minecraft.network.play.client.C02PacketUseEntity
+import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.play.client.C03PacketPlayer.C05PacketPlayerLook
+import net.minecraft.network.play.client.C03PacketPlayer.C06PacketPlayerPosLook
+import net.minecraft.network.play.client.C0BPacketEntityAction
 
 // Original author: turtl (https://github.com/chocopie69/Liquidbounce-Scripts/blob/main/combat/superKB.js and https://github.com/CzechHek/Core/blob/master/Scripts/SuperKnock.js)
 @ModuleInfo(name = "SuperKnockback", description = "Increases knockback dealt to other entities.", category = ModuleCategory.COMBAT)
@@ -79,24 +89,22 @@ class SuperKnockback : Module()
     @EventTarget
     fun onAttack(event: AttackEvent)
     {
-        val provider = classProvider
-
         val targetEntity = event.targetEntity
 
-        if (modeValue.get().equals("Deprecated", ignoreCase = true) && targetEntity != null && targetEntity is EntityLivingBase)
+        if (targetEntity is EntityLivingBase && modeValue.get().equals("Deprecated", ignoreCase = true))
         {
-            if (targetEntity.asEntityLivingBase().hurtTime > hurtTimeValue.get()) return
+            if (targetEntity.hurtTime > hurtTimeValue.get()) return
 
             val thePlayer = mc.thePlayer ?: return
             val netHandler = mc.netHandler
 
-            if (thePlayer.sprinting) netHandler.addToSendQueue(CPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SPRINTING))
+            if (thePlayer.isSprinting) netHandler.addToSendQueue(C0BPacketEntityAction(thePlayer, C0BPacketEntityAction.Action.STOP_SPRINTING))
 
-            netHandler.addToSendQueue(CPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
-            netHandler.addToSendQueue(CPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SPRINTING))
-            netHandler.addToSendQueue(CPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
+            netHandler.addToSendQueue(C0BPacketEntityAction(thePlayer, C0BPacketEntityAction.Action.START_SPRINTING))
+            netHandler.addToSendQueue(C0BPacketEntityAction(thePlayer, C0BPacketEntityAction.Action.STOP_SPRINTING))
+            netHandler.addToSendQueue(C0BPacketEntityAction(thePlayer, C0BPacketEntityAction.Action.START_SPRINTING))
 
-            thePlayer.sprinting = true
+            thePlayer.isSprinting = true
             thePlayer.serverSprintState = true
         }
     }
@@ -125,26 +133,26 @@ class SuperKnockback : Module()
         val netHandler = mc.netHandler
 
         // Packet Override
-        if ((packet is CPacketPlayerPosition || packet is CPacketPlayerLook || packet is CPacketPlayerPosLook) && packetOverride.get())
+        if ((packet is C04PacketPlayerPosition || packet is C05PacketPlayerLook || packet is C06PacketPlayerPosLook) && packetOverride.get())
         {
-            val movePacket = packet.asCPacketPlayer()
-            if (!movePacket.moving && (thePlayer.onGround || movePacket.onGround))
+            val movePacket = packet as C03PacketPlayer
+            // TODO: Access transformer
+            if (!movePacket.isMoving && (thePlayer.onGround || movePacket.onGround))
             {
                 movePacket.x = thePlayer.posX
                 movePacket.y = thePlayer.posY
                 movePacket.z = thePlayer.posZ
-                movePacket.moving = true
+                movePacket.isMoving = true
             }
         }
-        else if (packet is CPacketUseEntity)
+        else if (packet is C02PacketUseEntity)
         {
             val mode = modeValue.get().toLowerCase()
             if (mode.equals("Deprecated", ignoreCase = true)) return
 
-            val attackPacket = packet.asCPacketUseEntity()
-            if (attackPacket.action == ICPacketUseEntity.WAction.ATTACK)
+            if (packet.action == C02PacketUseEntity.Action.ATTACK)
             {
-                val target = attackPacket.getEntityFromWorld(theWorld)?.asEntityLivingBase() ?: return
+                val target = packet.getEntityFromWorld(theWorld) as? EntityLivingBase? ?: return
 
                 val gameSettings = mc.gameSettings
 
@@ -153,7 +161,7 @@ class SuperKnockback : Module()
                 val movementInput = thePlayer.isMoving
                 val positionChanged = thePlayer.posX - thePlayer.lastTickPosX + thePlayer.posZ - thePlayer.lastTickPosZ == 0.0
 
-                sprinting = thePlayer.sprinting
+                sprinting = thePlayer.isSprinting
                 superKnockback = (sprinting || exploitNoSprintValue.get()) && (movementInput || noMoveExploit)
 
                 if (target.hurtTime <= hurtTimeValue.get() && knockTicks <= ticksDelayValue.get() && superKnockback)
@@ -171,33 +179,33 @@ class SuperKnockback : Module()
 
                             if (!movementInput && noMoveExploit)
                             {
-                                if (!thePlayer.sprinting) thePlayer.sprinting = true
+                                if (!thePlayer.isSprinting) thePlayer.isSprinting = true
 
                                 thePlayer.boost(1.0E-5F)
                             }
 
-                            netHandler.addToSendQueue(CPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SPRINTING))
-                            netHandler.addToSendQueue(CPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
+                            netHandler.addToSendQueue(C0BPacketEntityAction(thePlayer, C0BPacketEntityAction.Action.STOP_SPRINTING))
+                            netHandler.addToSendQueue(C0BPacketEntityAction(thePlayer, C0BPacketEntityAction.Action.START_SPRINTING))
 
                             // Restore the original sprinting state
                             if (!sprinting) runAsyncDelayed(1L) {
-                                netHandler.addToSendQueue(CPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SPRINTING))
-                                thePlayer.sprinting = false
+                                netHandler.addToSendQueue(C0BPacketEntityAction(thePlayer, C0BPacketEntityAction.Action.STOP_SPRINTING))
+                                thePlayer.isSprinting = false
                             }
                         }
 
                         "superpacket" ->
                         {
-                            if (!thePlayer.sprinting) netHandler.addToSendQueue(CPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
+                            if (!thePlayer.isSprinting) netHandler.addToSendQueue(C0BPacketEntityAction(thePlayer, C0BPacketEntityAction.Action.START_SPRINTING))
 
-                            netHandler.addToSendQueue(CPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SPRINTING))
-                            netHandler.addToSendQueue(CPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
+                            netHandler.addToSendQueue(C0BPacketEntityAction(thePlayer, C0BPacketEntityAction.Action.STOP_SPRINTING))
+                            netHandler.addToSendQueue(C0BPacketEntityAction(thePlayer, C0BPacketEntityAction.Action.START_SPRINTING))
 
                             // Restore the original sprinting state
                             if (!sprinting)
                             {
-                                thePlayer.sprinting = false
-                                runAsyncDelayed(1L) { netHandler.addToSendQueue(CPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SPRINTING)) }
+                                thePlayer.isSprinting = false
+                                runAsyncDelayed(1L) { netHandler.addToSendQueue(C0BPacketEntityAction(thePlayer, C0BPacketEntityAction.Action.STOP_SPRINTING)) }
                             }
                         }
 
@@ -207,37 +215,37 @@ class SuperKnockback : Module()
                             {
                                 // NoMove exploit for W-Tap
 
-                                if (!sprinting) netHandler.addToSendQueue(CPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
+                                if (!sprinting) netHandler.addToSendQueue(C0BPacketEntityAction(thePlayer, C0BPacketEntityAction.Action.START_SPRINTING))
 
                                 runAsyncDelayed(delay) {
-                                    netHandler.addToSendQueue(CPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SPRINTING))
+                                    netHandler.addToSendQueue(C0BPacketEntityAction(thePlayer, C0BPacketEntityAction.Action.STOP_SPRINTING))
 
-                                    if (notSprintingSlowdown && !thePlayer.sprinting) thePlayer.sprinting = false
+                                    if (notSprintingSlowdown && !thePlayer.isSprinting) thePlayer.isSprinting = false
                                 }
 
                                 // Restore the original sprinting state
                                 if (sprinting) runAsyncDelayed(multipliedDelay) {
-                                    netHandler.addToSendQueue(CPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
+                                    netHandler.addToSendQueue(C0BPacketEntityAction(thePlayer, C0BPacketEntityAction.Action.START_SPRINTING))
 
-                                    if (notSprintingSlowdown) thePlayer.sprinting = true
+                                    if (notSprintingSlowdown) thePlayer.isSprinting = true
                                 }
                             }
                             else
                             {
                                 // A legit W-Tap
-                                if (!sprinting && !thePlayer.sprinting) thePlayer.sprinting = true
+                                if (!sprinting && !thePlayer.isSprinting) thePlayer.isSprinting = true
 
                                 // Stop sprinting
                                 if (gameSettings.keyBindForward.pressed) gameSettings.keyBindForward.pressed = false
 
                                 // Start sprinting after some delay
                                 runAsyncDelayed(delay) {
-                                    gameSettings.keyBindForward.pressed = gameSettings.keyBindForward.keyCode is KeyDown
+                                    gameSettings.keyBindForward.pressed = GameSettings.isKeyDown(gameSettings.keyBindForward)
                                 }
 
                                 // Restore the original sprinting state
                                 if (!sprinting) runAsyncDelayed(multipliedDelay) {
-                                    if (thePlayer.sprinting) thePlayer.sprinting = false
+                                    if (thePlayer.isSprinting) thePlayer.isSprinting = false
                                 }
                             }
                         }
@@ -245,19 +253,19 @@ class SuperKnockback : Module()
                         "packet_w-tap" ->
                         {
                             // Start sprinting
-                            if (!sprinting) netHandler.addToSendQueue(CPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
+                            if (!sprinting) netHandler.addToSendQueue(C0BPacketEntityAction(thePlayer, C0BPacketEntityAction.Action.START_SPRINTING))
 
                             // Stop sprinting after some delay
                             runAsyncDelayed(delay) {
-                                netHandler.addToSendQueue(CPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SPRINTING))
-                                if (notSprintingSlowdown && thePlayer.sprinting) thePlayer.sprinting = false
+                                netHandler.addToSendQueue(C0BPacketEntityAction(thePlayer, C0BPacketEntityAction.Action.STOP_SPRINTING))
+                                if (notSprintingSlowdown && thePlayer.isSprinting) thePlayer.isSprinting = false
                             }
 
                             // Restore the original sprinting state
                             if (sprinting) runAsyncDelayed(multipliedDelay) {
-                                netHandler.addToSendQueue(CPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.START_SPRINTING))
+                                netHandler.addToSendQueue(C0BPacketEntityAction(thePlayer, C0BPacketEntityAction.Action.START_SPRINTING))
 
-                                if (notSprintingSlowdown && !thePlayer.sprinting) thePlayer.sprinting = true
+                                if (notSprintingSlowdown && !thePlayer.isSprinting) thePlayer.isSprinting = true
                             }
                         }
                     }

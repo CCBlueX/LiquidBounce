@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
@@ -16,12 +15,20 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.render.Breadcrumbs
 import net.ccbluex.liquidbounce.utils.FakePlayer
+import net.ccbluex.liquidbounce.utils.extensions.sendPacketWithoutEvent
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbowRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerRangeValue
 import net.ccbluex.liquidbounce.value.ValueGroup
+import net.minecraft.network.Packet
+import net.minecraft.network.play.client.C02PacketUseEntity
+import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
+import net.minecraft.network.play.client.C0APacketAnimation
+import net.minecraft.network.play.client.C0BPacketEntityAction
+import net.minecraft.util.*
 import org.lwjgl.opengl.GL11.*
 import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
@@ -46,7 +53,7 @@ class Blink : Module()
     /**
      * Variables
      */
-    private val packets = LinkedBlockingQueue<IPacket>()
+    private val packets = LinkedBlockingQueue<Packet<*>>()
     private val positions = LinkedList<DoubleArray>()
 
     private val pulseTimer = MSTimer()
@@ -84,13 +91,11 @@ class Blink : Module()
     @EventTarget
     fun onPacket(event: PacketEvent)
     {
-        val packet: IPacket = event.packet
+        val packet: Packet<*> = event.packet
 
         mc.thePlayer ?: return
 
-        val provider = classProvider
-
-        if (packet is CPacketPlayer || packet is CPacketPlayerPosition || packet is CPacketPlayerPosLook || packetBlockPlaceValue.get() && packet is CPacketPlayerBlockPlacement || packetSwingValue.get() && packet is CPacketAnimation || packetEntityActionValue.get() && packet is CPacketEntityAction || packetUseEntityValue.get() && packet is CPacketUseEntity)
+        if (packet is C03PacketPlayer || packetBlockPlaceValue.get() && packet is C08PacketPlayerBlockPlacement || packetSwingValue.get() && packet is C0APacketAnimation || packetEntityActionValue.get() && packet is C0BPacketEntityAction || packetUseEntityValue.get() && packet is C02PacketUseEntity)
         {
             event.cancelEvent()
             packets.add(packet)

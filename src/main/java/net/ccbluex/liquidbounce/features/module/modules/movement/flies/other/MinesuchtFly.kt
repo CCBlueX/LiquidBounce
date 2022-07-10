@@ -1,7 +1,11 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.flies.other
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
+import net.ccbluex.liquidbounce.utils.extensions.plus
+import net.ccbluex.liquidbounce.utils.extensions.sendPacketWithoutEvent
+import net.ccbluex.liquidbounce.utils.extensions.times
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
+import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 
 class MinesuchtFly : FlyMode("Minesucht")
 {
@@ -13,8 +17,6 @@ class MinesuchtFly : FlyMode("Minesucht")
 
         val thePlayer = mc.thePlayer ?: return
         val networkManager = mc.netHandler.networkManager
-        val provider = classProvider
-
         val x = thePlayer.posX
         val y = thePlayer.posY
         val z = thePlayer.posZ
@@ -27,25 +29,25 @@ class MinesuchtFly : FlyMode("Minesucht")
 
             if (thePlayer.fallDistance > 0.8)
             {
-                networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x, y + 50, z, false))
+                networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, y + 50, z, false))
 
                 thePlayer.fall(100.0f, 100.0f)
                 thePlayer.fallDistance = 0.0f
 
-                networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x, y + 20, z, true))
+                networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, y + 20, z, true))
             }
 
-            networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(vec32.xCoord, y + 50, vec32.zCoord, true))
-            networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x, y, z, false))
-            networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(vec32.xCoord, y, vec32.zCoord, true))
-            networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x, y, z, false))
+            networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(vec32.xCoord, y + 50, vec32.zCoord, true))
+            networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, y, z, false))
+            networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(vec32.xCoord, y, vec32.zCoord, true))
+            networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, y, z, false))
 
             teleportTimer.reset()
         }
         else
         {
-            networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x, y, z, false))
-            networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x, y, z, true))
+            networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, y, z, false))
+            networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, y, z, true))
         }
     }
 }

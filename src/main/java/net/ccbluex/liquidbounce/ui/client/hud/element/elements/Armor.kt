@@ -5,13 +5,14 @@
  */
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
-
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.block.material.Material
+import net.minecraft.client.renderer.GlStateManager
 import org.lwjgl.opengl.GL11
 
 /**
@@ -40,10 +41,8 @@ class Armor(x: Double = -8.0, y: Double = 57.0, scale: Float = 1F, side: Side = 
 
             val renderItem = mc.renderItem
 
-            val provider = classProvider
-
             // Prevents being conflicted with the bubbles
-            val preventConflict = preventConflictValue.get() && thePlayer.isInsideOfMaterial(provider.getMaterialEnum(MaterialType.WATER))
+            val preventConflict = preventConflictValue.get() && thePlayer.isInsideOfMaterial(Material.water)
 
             var x = 1
             var y = if (preventConflict) -10 else 0
@@ -57,8 +56,6 @@ class Armor(x: Double = -8.0, y: Double = 57.0, scale: Float = 1F, side: Side = 
                 if (mode.equals("Horizontal", true)) x += 18
                 else if (mode.equals("Vertical", true)) y += 18
             }
-
-            val glStateManager = provider.glStateManager
 
             GlStateManager.enableAlpha()
             GlStateManager.disableBlend()

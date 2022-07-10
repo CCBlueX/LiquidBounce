@@ -12,6 +12,10 @@ import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 import net.ccbluex.liquidbounce.utils.ClientUtils.logger
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.minecraft.network.PacketBuffer
+import net.minecraft.network.play.client.C17PacketCustomPayload
+import net.minecraft.network.play.server.S02PacketChat
+import net.minecraft.network.play.server.S3FPacketCustomPayload
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
@@ -31,17 +35,14 @@ class AntiModDisable : MinecraftInstance(), Listenable
         {
             if (blockFMLProxyPackets && packet.javaClass.name.equals("net.minecraftforge.fml.common.network.internal.FMLProxyPacket", ignoreCase = true)) action(event, "FMLProxyPacket")
 
-            val provider = classProvider
-
-            if (packet is CPacketCustomPayload)
+            if (packet is C17PacketCustomPayload)
             {
-                val customPayload = packet.asCPacketCustomPayload()
-                val channelName = customPayload.channelName
+                val channelName = packet.channelName
 
                 // Block ClientBrandRetriever packets
-                if (blockClientBrandRetrieverPackets && customPayload.channelName.equals("MC|Brand", ignoreCase = true))
+                if (blockClientBrandRetrieverPackets && packet.channelName.equals("MC|Brand", ignoreCase = true))
                 {
-                    customPayload.data = PacketBuffer(Unpooled.buffer()).writeString("vanilla")
+                    packet.data = PacketBuffer(Unpooled.buffer()).writeString("vanilla")
                     action(event, "ClientBrandRetriever", cancelEvent = false)
                 }
 
@@ -60,10 +61,9 @@ class AntiModDisable : MinecraftInstance(), Listenable
                     blockReplicatedPermissionsPayloads && channelName.equals("PERMISSIONSREPL", ignoreCase = true) -> action(event, "(?) ($channelName)")
                 }
             }
-            else if (packet is SPacketChat)
+            else if (packet is S02PacketChat)
             {
-                val chat = packet.asSPacketChat()
-                val text = chat.chatComponent.unformattedText
+                val text = packet.chatComponent.unformattedText
 
                 if (blockCrackedVapeSabotages) when // Cracked vapes are responding 'I'm using cracked vape!' when a specified chat is received.
                 {
@@ -76,10 +76,9 @@ class AntiModDisable : MinecraftInstance(), Listenable
                     text.startsWith("\u00A70\u00A70", ignoreCase = true) && text.endsWith("\u00A7e\u00A7f", ignoreCase = true) -> action(event, "CrackedVape Type G(type: startsWith \"&0&0\" and endsWith \"&E&F\", text: \"$text\")")
                 }
             }
-            else if (packet is SPacketCustomPayload)
+            else if (packet is S3FPacketCustomPayload)
             {
-                val customPayload = packet.asSPacketCustomPayload()
-                val channelName = customPayload.channelName
+                val channelName = packet.channelName
 
                 when
                 {

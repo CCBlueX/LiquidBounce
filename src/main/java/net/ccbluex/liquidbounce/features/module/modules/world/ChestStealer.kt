@@ -6,11 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.EntityPlayer
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.inventory.IGuiChest
-import net.ccbluex.liquidbounce.api.minecraft.inventory.IContainer
-import net.ccbluex.liquidbounce.api.minecraft.inventory.ISlot
-import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
@@ -18,7 +13,9 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.player.InventoryCleaner
+import net.ccbluex.liquidbounce.utils.extensions.highlight
 import net.ccbluex.liquidbounce.utils.extensions.isEmpty
+import net.ccbluex.liquidbounce.utils.extensions.itemDelay
 import net.ccbluex.liquidbounce.utils.timer.Cooldown
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
@@ -26,6 +23,15 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerRangeValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ValueGroup
+import net.minecraft.client.gui.inventory.GuiChest
+import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.inventory.Container
+import net.minecraft.inventory.Slot
+import net.minecraft.item.Item
+import net.minecraft.item.ItemBlock
+import net.minecraft.item.ItemStack
+import net.minecraft.network.play.server.S30PacketWindowItems
+import net.minecraft.util.*
 import java.lang.ref.SoftReference
 import java.util.*
 import kotlin.math.max
@@ -155,11 +161,10 @@ class ChestStealer : Module()
     {
         val thePlayer = mc.thePlayer ?: return
 
-        val provider = classProvider
-
         val itemDelay = itemDelayValue.get().toLong()
 
-        if (mc.currentScreen !is GuiChest)
+        val screen = mc.currentScreen
+        if (screen !is GuiChest)
         {
             if (delayOnFirstEnabledValue.get() || itemDelay > 0L)
             {
@@ -176,14 +181,13 @@ class ChestStealer : Module()
             return
         }
 
-        val screen = (mc.currentScreen ?: return).asGuiChest()
         val lowerChestInventory = screen.lowerChestInventory
 
         // No Compass
-        if (noCompassValue.get() && thePlayer.inventory.getCurrentItemInHand()?.item?.unlocalizedName == "item.compass") return
+        if (noCompassValue.get() && thePlayer.inventory.getCurrentItem()?.item?.unlocalizedName == "item.compass") return
 
         // Chest title
-        if (chestTitleValue.get() && (lowerChestInventory == null || !lowerChestInventory.name.contains(functions.getObjectFromItemRegistry(ResourceLocation("minecraft:chest"))?.let { ItemStack(it).displayName } ?: "Chest"))) return
+        if (chestTitleValue.get() && (lowerChestInventory == null || !lowerChestInventory.name.contains(Item.itemRegistry.getObject(ResourceLocation("minecraft:chest"))?.let { ItemStack(it).displayName } ?: "Chest"))) return
 
         // inventory cleaner
         val inventoryCleaner = LiquidBounce.moduleManager[InventoryCleaner::class.java] as InventoryCleaner
@@ -223,7 +227,7 @@ class ChestStealer : Module()
                     // Simulate Click Mistakes to bypass some anti-cheats
                     if (misclickEnabledValue.get() && remainingMisclickCount > 0 && misclickChanceValue.get() > 0 && Random.nextInt(100) <= misclickChanceValue.get())
                     {
-                        val firstEmpty: ISlot? = firstEmpty(container.inventorySlots, end, true)
+                        val firstEmpty = firstEmpty(container.inventorySlots, end, true)
                         if (firstEmpty != null)
                         {
                             slot = firstEmpty
@@ -249,7 +253,7 @@ class ChestStealer : Module()
 
                     if (misclickEnabledValue.get() && remainingMisclickCount > 0 && misclickChanceValue.get() > 0 && Random.nextInt(100) <= misclickChanceValue.get())
                     {
-                        val firstEmpty: ISlot? = firstEmpty(container.inventorySlots, end, false)
+                        val firstEmpty = firstEmpty(container.inventorySlots, end, false)
                         if (firstEmpty != null)
                         {
                             slot = firstEmpty
@@ -274,20 +278,20 @@ class ChestStealer : Module()
     {
         val packet = event.packet
 
-        if (packet is SPacketWindowItems) contentReceived = packet.asSPacketWindowItems().windowId
+        if (packet is S30PacketWindowItems) contentReceived = packet.func_148911_c()
     }
 
-    private fun shouldTake(thePlayer: EntityPlayer, stack: IItemStack?, slot: Int, inventoryCleaner: InventoryCleaner, end: Int, container: IContainer, itemDelay: Long): Boolean = stack != null && (!onlyItemsValue.get() || !stack.item is ItemBlock) && (System.currentTimeMillis() - stack.itemDelay >= itemDelay && (!inventoryCleaner.state || inventoryCleaner.isUseful(thePlayer, slot, stack, end = end, container = container) && inventoryCleaner.isUseful(thePlayer, -1, stack, container = thePlayer.inventoryContainer) /* 상자 안에서 가장 좋은 템이랑 인벤 안의 가장 좋은 템이랑 비교한 후, 상자 안의 것이 더 좋을 경우에만 가져가기 */))
+    private fun shouldTake(thePlayer: EntityPlayer, stack: ItemStack?, slot: Int, inventoryCleaner: InventoryCleaner, end: Int, container: Container, itemDelay: Long): Boolean = stack != null && (!onlyItemsValue.get() || stack.item !is ItemBlock) && (System.currentTimeMillis() - stack.itemDelay >= itemDelay && (!inventoryCleaner.state || inventoryCleaner.isUseful(thePlayer, slot, stack, end = end, container = container) && inventoryCleaner.isUseful(thePlayer, -1, stack, container = thePlayer.inventoryContainer) /* 상자 안에서 가장 좋은 템이랑 인벤 안의 가장 좋은 템이랑 비교한 후, 상자 안의 것이 더 좋을 경우에만 가져가기 */))
 
-    private fun move(screen: IGuiChest, slot: ISlot, misclick: Boolean)
+    private fun move(screen: GuiChest, slot: Slot, misclick: Boolean)
     {
         screen.handleMouseClick(slot, slot.slotNumber, 0, 1)
-        if (clickIndicationEnabledValue.get()) screen.asGuiContainer().highlight(slot.slotNumber, clickIndicationLengthValue.get().toLong(), if (misclick) CLICKINDICATION_MISCLICK else CLICKINDICATION_TAKE)
+        if (clickIndicationEnabledValue.get()) screen.highlight(slot.slotNumber, clickIndicationLengthValue.get().toLong(), if (misclick) CLICKINDICATION_MISCLICK else CLICKINDICATION_TAKE)
         delayTimer.reset()
         nextDelay = delayValue.getRandomLong()
     }
 
-    private fun isEmpty(thePlayer: EntityPlayer, chest: IGuiChest, itemDelay: Long): Boolean
+    private fun isEmpty(thePlayer: EntityPlayer, chest: GuiChest, itemDelay: Long): Boolean
     {
         val inventoryCleaner = LiquidBounce.moduleManager[InventoryCleaner::class.java] as InventoryCleaner
         val container = chest.inventorySlots ?: return false
@@ -296,7 +300,7 @@ class ChestStealer : Module()
         return (0 until end).map(container::getSlot).none { shouldTake(thePlayer, it.stack, it.slotNumber, inventoryCleaner, end, container, itemDelay) }
     }
 
-    private fun firstEmpty(slots: List<ISlot>?, length: Int, random: Boolean): ISlot?
+    private fun firstEmpty(slots: List<Slot>?, length: Int, random: Boolean): Slot?
     {
         slots ?: return null
         val emptySlots = (0 until length).map { slots[it] }.filter { it.stack == null }
@@ -306,7 +310,7 @@ class ChestStealer : Module()
         return if (random) emptySlots[Random.nextInt(emptySlots.size)] else emptySlots.first()
     }
 
-    private fun getFullInventory(thePlayer: EntityPlayer): Boolean = thePlayer.inventory.mainInventory.none(IItemStack?::isEmpty)
+    private fun getFullInventory(thePlayer: EntityPlayer): Boolean = thePlayer.inventory.mainInventory.none(ItemStack?::isEmpty)
 
     override val tag: String
         get() = "${delayValue.getMin()} ~ ${delayValue.getMax()}"

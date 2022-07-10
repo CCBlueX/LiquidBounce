@@ -7,6 +7,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.value.FloatValue
+import net.minecraft.network.play.server.S2BPacketChangeGameState
 
 /**
  * LiquidBounce Hacked Client A minecraft forge injection client using Mixin
@@ -26,12 +27,12 @@ class WeatherChanger : Module()
         val theWorld = mc.theWorld ?: return
 
         theWorld.setRainStrength(rainStrength.get())
-        theWorld.setThunderingStrength(thunderingStrength.get())
+        theWorld.thunderingStrength = thunderingStrength.get()
     }
 
     @EventTarget
     fun onPacket(event: PacketEvent)
     {
-        if (event.packet is SPacketChangeGameState && event.packet.asSPacketChangeGameState().gameState in arrayOf(1, 2, 7, 8)) event.cancelEvent()
+        if (event.packet is S2BPacketChangeGameState && event.packet.gameState in arrayOf(1, 2, 7, 8)) event.cancelEvent()
     }
 }

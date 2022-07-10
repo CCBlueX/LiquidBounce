@@ -1,12 +1,12 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc.antibot.status.ping
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.Entity
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.EntityPlayer
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.WorldClient
-import net.ccbluex.liquidbounce.api.minecraft.network.play.server.ISPacketPlayerListItem
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.BotCheck
+import net.minecraft.client.multiplayer.WorldClient
+import net.minecraft.entity.Entity
+import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.network.play.server.S38PacketPlayerListItem
 import java.util.*
 
 class PingUpdatePresenceCheck : BotCheck("status.ping.updatePresence")
@@ -22,16 +22,15 @@ class PingUpdatePresenceCheck : BotCheck("status.ping.updatePresence")
     {
         val packet = event.packet
 
-        if (packet is SPacketPlayerListItem)
+        if (packet is S38PacketPlayerListItem)
         {
-            val playerListItemPacket = packet.asSPacketPlayerListItem()
-            val updatedPlayers = playerListItemPacket.players
+            val updatedPlayers = packet.entries
 
             val playerInfoMap = mc.netHandler.playerInfoMap
 
-            @Suppress("NON_EXHAUSTIVE_WHEN") when (playerListItemPacket.action)
+            @Suppress("NON_EXHAUSTIVE_WHEN") when (packet.action)
             {
-                ISPacketPlayerListItem.WAction.UPDATE_LATENCY ->
+                S38PacketPlayerListItem.Action.UPDATE_LATENCY ->
                 {
                     val updatesPlayerUUIDs = updatedPlayers.map { it.profile.id }
                     val tabPlayerUUIDs = playerInfoMap.map { it.gameProfile.id }
@@ -53,7 +52,7 @@ class PingUpdatePresenceCheck : BotCheck("status.ping.updatePresence")
                     if (notUpdated.isNotEmpty()) notification { arrayOf("reason=(Ping update omission)", "list=${uuidListToString(notUpdated)}") }
                 }
 
-                ISPacketPlayerListItem.WAction.REMOVE_PLAYER -> notUpdated.removeAll(updatedPlayers.map { it.profile.id })
+                S38PacketPlayerListItem.Action.REMOVE_PLAYER -> notUpdated.removeAll(updatedPlayers.map { it.profile.id })
             }
         }
     }

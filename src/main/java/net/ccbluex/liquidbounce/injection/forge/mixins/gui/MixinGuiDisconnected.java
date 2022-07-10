@@ -23,8 +23,6 @@ import net.ccbluex.liquidbounce.event.SessionEvent;
 import net.ccbluex.liquidbounce.features.special.AntiModDisable;
 import net.ccbluex.liquidbounce.features.special.AutoReconnect;
 import net.ccbluex.liquidbounce.file.FileManager;
-
-
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager;
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.altgenerator.GuiTheAltening;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
@@ -131,7 +129,7 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen
                 ServerUtils.connectToLastServer();
                 break;
             case 5:
-                mc.displayGuiScreen(GuiScreenImplKt.unwrap(ClassProviderImpl.INSTANCE.wrapGuiScreen(new GuiAltManager(null))));
+                mc.displayGuiScreen(new GuiAltManager(null));
                 break;
             case 6:
                 final String lastServerIp = ServerUtils.getLastServerIp();

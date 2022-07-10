@@ -9,7 +9,7 @@ import com.google.gson.*
 import net.ccbluex.liquidbounce.file.FileConfig
 import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.utils.ClientUtils.logger
-import net.ccbluex.liquidbounce.utils.misc.MiscUtils
+import net.minecraft.util.*
 import java.io.File
 import java.io.IOException
 import java.util.*

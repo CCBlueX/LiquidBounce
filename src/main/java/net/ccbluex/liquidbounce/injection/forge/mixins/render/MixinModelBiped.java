@@ -6,10 +6,9 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.render;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper;
 import net.ccbluex.liquidbounce.features.module.modules.render.Rotations;
-
 import net.ccbluex.liquidbounce.utils.RotationUtils;
+import net.ccbluex.liquidbounce.utils.extensions.MathExtensionKt;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.model.ModelRenderer;
@@ -53,10 +52,10 @@ public class MixinModelBiped
             final EntityPlayer player = (EntityPlayer) entityIn;
             final Rotations rotations = (Rotations) LiquidBounce.moduleManager.get(Rotations.class);
 
-            if (rotations.getState() && !rotations.getBodyValue().get() && entityIn.equals(Minecraft.getMinecraft().thePlayer) && rotations.isRotating(EntityPlayerImplKt.wrap(player)))
+            if (rotations.getState() && !rotations.getBodyValue().get() && entityIn.equals(Minecraft.getMinecraft().thePlayer) && rotations.isRotating(player))
             {
-                bipedHead.rotateAngleY = Rotations.Companion.interpolateIf(rotations.getInterpolateRotationsValue().get(), RotationUtils.lastServerRotation.getYaw() - player.prevRenderYawOffset, RotationUtils.serverRotation.getYaw() - player.renderYawOffset, Minecraft.getMinecraft().timer.renderPartialTicks).toRadians;
-                bipedHead.rotateAngleX = Rotations.Companion.interpolateIf(rotations.getInterpolateRotationsValue().get(), RotationUtils.lastServerRotation.getPitch(), RotationUtils.serverRotation.getPitch(), Minecraft.getMinecraft().timer.renderPartialTicks).toRadians;
+                bipedHead.rotateAngleY = MathExtensionKt.getToRadians(Rotations.Companion.interpolateIf(rotations.getInterpolateRotationsValue().get(), RotationUtils.lastServerRotation.getYaw() - player.prevRenderYawOffset, RotationUtils.serverRotation.getYaw() - player.renderYawOffset, Minecraft.getMinecraft().timer.renderPartialTicks));
+                bipedHead.rotateAngleX = MathExtensionKt.getToRadians(Rotations.Companion.interpolateIf(rotations.getInterpolateRotationsValue().get(), RotationUtils.lastServerRotation.getPitch(), RotationUtils.serverRotation.getPitch(), Minecraft.getMinecraft().timer.renderPartialTicks));
             }
         }
     }

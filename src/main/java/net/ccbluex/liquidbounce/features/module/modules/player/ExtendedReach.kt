@@ -1,29 +1,58 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.enums.BlockType
-import net.ccbluex.liquidbounce.api.enums.MaterialType
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.EntityLivingBase
-import net.ccbluex.liquidbounce.api.minecraft.network.IPacket
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketUseEntity
-import net.ccbluex.liquidbounce.api.minecraft.util.BlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.Vec3
-import net.ccbluex.liquidbounce.api.minecraft.world.World
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.AttackEvent
+import net.ccbluex.liquidbounce.event.EventState
+import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.MotionEvent
+import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.AutoWeapon
 import net.ccbluex.liquidbounce.utils.extensions.isSelected
+import net.ccbluex.liquidbounce.utils.extensions.plus
 import net.ccbluex.liquidbounce.utils.extensions.raycastEntity
+import net.ccbluex.liquidbounce.utils.extensions.sendPacketWithoutEvent
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.pathfinding.PathFinder
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.value.*
-import org.lwjgl.opengl.GL11.*
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.RGBAColorValue
+import net.ccbluex.liquidbounce.value.ValueGroup
+import net.minecraft.block.BlockContainer
+import net.minecraft.block.material.Material
+import net.minecraft.entity.EntityLivingBase
+import net.minecraft.init.Blocks
+import net.minecraft.network.Packet
+import net.minecraft.network.play.client.C02PacketUseEntity
+import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.play.client.C07PacketPlayerDigging
+import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
+import net.minecraft.util.BlockPos
+import net.minecraft.util.Vec3
+import net.minecraft.world.World
+import org.lwjgl.opengl.GL11.GL_BLEND
+import org.lwjgl.opengl.GL11.GL_DEPTH_TEST
+import org.lwjgl.opengl.GL11.GL_LINE_SMOOTH
+import org.lwjgl.opengl.GL11.GL_LINE_STRIP
+import org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA
+import org.lwjgl.opengl.GL11.GL_SRC_ALPHA
+import org.lwjgl.opengl.GL11.GL_TEXTURE_2D
+import org.lwjgl.opengl.GL11.glBegin
+import org.lwjgl.opengl.GL11.glBlendFunc
+import org.lwjgl.opengl.GL11.glDisable
+import org.lwjgl.opengl.GL11.glEnable
+import org.lwjgl.opengl.GL11.glEnd
+import org.lwjgl.opengl.GL11.glLineWidth
+import org.lwjgl.opengl.GL11.glPopMatrix
+import org.lwjgl.opengl.GL11.glPushMatrix
+import org.lwjgl.opengl.GL11.glVertex3d
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sqrt
@@ -129,58 +158,54 @@ class ExtendedReach : Module()
         val packet = event.packet
         val networkManager = mc.netHandler.networkManager
 
-        val provider = classProvider
-
-        if (packet is CPacketPlayerBlockPlacement)
+        if (packet is C08PacketPlayerBlockPlacement)
         {
-            val blockPlacement = packet.asCPacketPlayerBlockPlacement()
-            val pos = blockPlacement.position
-            val stack = blockPlacement.stack
+            val pos = packet.position
+            val stack = packet.stack
             val distance = sqrt(thePlayer.getDistanceSq(pos))
 
-            if (distance > 6.0 && pos.y != -1 && (stack != null || provider.isBlockContainer(theWorld.getBlockState(pos).block)))
+            if (distance > 6.0 && pos.y != -1 && (stack != null || theWorld.getBlockState(pos).block is BlockContainer))
             {
                 val to = Vec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
                 path = computePath(theWorld, playerPosVec, to)
 
                 // Travel to the target block.
-                for (pathElm in path) networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
+                for (pathElm in path) networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
                 pathESPTimer.reset()
                 networkManager.sendPacketWithoutEvent(packet)
 
                 // Go back to the home.
                 path.reverse()
-                for (pathElm in path) networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
+                for (pathElm in path) networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
                 event.cancelEvent()
             }
         }
 
-        if (packet is CPacketPlayerDigging)
+        if (packet is C07PacketPlayerDigging)
         {
-            val digging = packet.asCPacketPlayerDigging()
-            val action = digging.status
-            val pos = digging.position
-            val face = digging.facing
+            val action = packet.status
+            val pos = packet.position
+            val face = packet.facing
             val distance = sqrt(thePlayer.getDistanceSq(pos))
 
-            if (distance > 6 && action == ICPacketPlayerDigging.WAction.START_DESTROY_BLOCK)
+            if (distance > 6 && action == C07PacketPlayerDigging.Action.START_DESTROY_BLOCK)
             {
                 val to = Vec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
                 path = computePath(theWorld, playerPosVec, to)
 
                 // Travel to the target.
-                for (pathElm in path) networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
+                for (pathElm in path) networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
                 pathESPTimer.reset()
-                val end = CPacketPlayerDigging(ICPacketPlayerDigging.WAction.STOP_DESTROY_BLOCK, pos, face)
+                val end = C07PacketPlayerDigging(C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK, pos, face)
                 networkManager.sendPacketWithoutEvent(packet)
                 networkManager.sendPacketWithoutEvent(end)
 
                 // Go back to the home.
                 path.reverse()
-                for (pathElm in path) networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
+                for (pathElm in path) networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
                 event.cancelEvent()
             }
-            else if (action == ICPacketPlayerDigging.WAction.ABORT_DESTROY_BLOCK) event.cancelEvent()
+            else if (action == C07PacketPlayerDigging.Action.ABORT_DESTROY_BLOCK) event.cancelEvent()
         }
     }
 
@@ -195,14 +220,12 @@ class ExtendedReach : Module()
 
         if (event.eventState == EventState.PRE)
         {
-            val provider = classProvider
-
-            val facedEntity = theWorld.raycastEntity(thePlayer, combatReach.get().toDouble(), entityFilter = provider::isEntityLivingBase)
+            val facedEntity = theWorld.raycastEntity(thePlayer, combatReach.get().toDouble(), entityFilter = { entity -> entity is EntityLivingBase })
 
             var targetEntity: EntityLivingBase? = null
             val from = Vec3(thePlayer.posX, thePlayer.posY, thePlayer.posZ)
 
-            if (mc.gameSettings.keyBindAttack.isKeyDown && facedEntity != null && true is Selected && thePlayer.getDistanceSqToEntity(facedEntity) >= 1) targetEntity = facedEntity.asEntityLivingBase()
+            if (mc.gameSettings.keyBindAttack.isKeyDown && facedEntity != null && facedEntity.isSelected(true) && thePlayer.getDistanceSqToEntity(facedEntity) >= 1) targetEntity = facedEntity as EntityLivingBase
 
             if (targetEntity != null)
             {
@@ -212,7 +235,7 @@ class ExtendedReach : Module()
                 path = computePath(theWorld, from, to)
 
                 // Travel to the target entity.
-                for (pathElm in path) networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
+                for (pathElm in path) networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
                 path.reverse()
 
                 LiquidBounce.eventManager.callEvent(AttackEvent(targetEntity, path.firstOrNull() ?: from))
@@ -222,7 +245,7 @@ class ExtendedReach : Module()
 
                 // Make AutoWeapon compatible
                 var sendAttack = true
-                val attackPacket: IPacket = CPacketUseEntity(targetEntity, ICPacketUseEntity.WAction.ATTACK)
+                val attackPacket: Packet<*> = C02PacketUseEntity(targetEntity, C02PacketUseEntity.Action.ATTACK)
 
                 val autoWeapon = LiquidBounce.moduleManager[AutoWeapon::class.java] as AutoWeapon
                 if (autoWeapon.state)
@@ -238,7 +261,7 @@ class ExtendedReach : Module()
                 thePlayer.onCriticalHit(targetEntity)
 
                 // Go back to the home.
-                for (pathElm in path) networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
+                for (pathElm in path) networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(pathElm.xCoord, pathElm.yCoord, pathElm.zCoord, true))
             }
         }
     }
@@ -325,9 +348,7 @@ class ExtendedReach : Module()
             val state = theWorld.getBlockState(BlockPos(pos.x, pos.y, pos.z))
             val block = state.block
 
-            val provider = classProvider
-
-            return provider.getMaterialEnum(MaterialType.AIR) == block.getMaterial(state) || provider.getMaterialEnum(MaterialType.PLANTS) == block.getMaterial(state) || provider.getMaterialEnum(MaterialType.VINE) == block.getMaterial(state) || provider.getBlockEnum(BlockType.LADDER) == block || provider.getBlockEnum(BlockType.WATER) == block || provider.getBlockEnum(BlockType.FLOWING_WATER) == block || provider.getBlockEnum(BlockType.WALL_SIGN) == block || provider.getBlockEnum(BlockType.STANDING_SIGN) == block
+            return Material.air == block.getMaterial() || Material.plants == block.getMaterial() || Material.vine == block.getMaterial() || Blocks.ladder == block || Blocks.water == block || Blocks.flowing_water == block || Blocks.wall_sign == block || Blocks.standing_sign == block
         }
     }
 }

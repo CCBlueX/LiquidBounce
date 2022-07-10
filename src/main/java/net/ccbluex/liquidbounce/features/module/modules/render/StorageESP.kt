@@ -6,8 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import co.uk.hexeption.utils.OutlineUtils
-import net.ccbluex.liquidbounce.api.MinecraftVersion
-import net.ccbluex.liquidbounce.api.enums.WEnumChestType
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render2DEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
@@ -15,14 +13,45 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.world.ChestAura.clickedBlocks
-
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.GlowShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.OutlineShader
-import net.ccbluex.liquidbounce.value.*
-import org.lwjgl.opengl.GL11.*
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.RGBColorValue
+import net.ccbluex.liquidbounce.value.ValueGroup
+import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher
+import net.minecraft.entity.item.EntityMinecartChest
+import net.minecraft.entity.item.EntityMinecartFurnace
+import net.minecraft.entity.item.EntityMinecartHopper
+import net.minecraft.tileentity.TileEntityChest
+import net.minecraft.tileentity.TileEntityDispenser
+import net.minecraft.tileentity.TileEntityEnderChest
+import net.minecraft.tileentity.TileEntityFurnace
+import net.minecraft.tileentity.TileEntityHopper
+import org.lwjgl.opengl.GL11.GL_ALL_ATTRIB_BITS
+import org.lwjgl.opengl.GL11.GL_BLEND
+import org.lwjgl.opengl.GL11.GL_DEPTH_TEST
+import org.lwjgl.opengl.GL11.GL_FRONT_AND_BACK
+import org.lwjgl.opengl.GL11.GL_LIGHTING
+import org.lwjgl.opengl.GL11.GL_LINE
+import org.lwjgl.opengl.GL11.GL_LINE_SMOOTH
+import org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA
+import org.lwjgl.opengl.GL11.GL_SRC_ALPHA
+import org.lwjgl.opengl.GL11.GL_TEXTURE_2D
+import org.lwjgl.opengl.GL11.glBlendFunc
+import org.lwjgl.opengl.GL11.glDisable
+import org.lwjgl.opengl.GL11.glEnable
+import org.lwjgl.opengl.GL11.glLineWidth
+import org.lwjgl.opengl.GL11.glPolygonMode
+import org.lwjgl.opengl.GL11.glPopAttrib
+import org.lwjgl.opengl.GL11.glPopMatrix
+import org.lwjgl.opengl.GL11.glPushAttrib
+import org.lwjgl.opengl.GL11.glPushMatrix
 import java.awt.Color
 
 @ModuleInfo(name = "StorageESP", description = "Allows you to see chests, dispensers, etc. through walls.", category = ModuleCategory.RENDER)
@@ -77,14 +106,6 @@ class StorageESP : Module()
         override fun showCondition() = !hopperRainbowValue.get()
     }
 
-    private val shulkerBoxGroup = ValueGroup("ShulkerBox")
-    private val shulkerBoxEnabledValue = BoolValue("Enabled", true, "ShulkerBox")
-    private val shulkerBoxRainbowValue = BoolValue("Rainbow", false, "ShulkerBox-Rainbow")
-    private val shulkerBoxColorValue = object : RGBColorValue("Color", 0, 0, 0, Triple("ShulkerBox-R", "ShulkerBox-G", "ShulkerBox-B"))
-    {
-        override fun showCondition() = !shulkerBoxRainbowValue.get()
-    }
-
     private val alphaValue = IntegerValue("Alpha", 60, 0, 255)
 
     private val boxOutlineAlphaValue = object : IntegerValue("Box-Outline-Alpha", 90, 0, 255)
@@ -118,11 +139,8 @@ class StorageESP : Module()
         furnaceGroup.addAll(furnaceEnabledValue, furnaceColorValue, furnaceRainbowValue)
         dispenserGroup.addAll(dispenserEnabledValue, dispenserColorValue, dispenserRainbowValue)
         hopperGroup.addAll(hopperEnabledValue, hopperColorValue, hopperRainbowValue)
-        shulkerBoxGroup.addAll(shulkerBoxEnabledValue, shulkerBoxColorValue, shulkerBoxRainbowValue)
 
         rainbowGroup.addAll(rainbowSpeedValue, rainbowSaturationValue, rainbowBrightnessValue)
-
-        shulkerBoxGroup.isSupported = Backend.REPRESENTED_BACKEND_VERSION != MinecraftVersion.MC_1_8
     }
 
     @EventTarget
@@ -141,7 +159,6 @@ class StorageESP : Module()
             val furnace = furnaceEnabledValue.get()
             val dispenser = dispenserEnabledValue.get()
             val hopper = hopperEnabledValue.get()
-            val shulkerBox = shulkerBoxEnabledValue.get()
 
             val alpha = alphaValue.get()
 
@@ -153,7 +170,6 @@ class StorageESP : Module()
             val furnaceColor = if (furnaceRainbowValue.get()) rainbow else furnaceColorValue.get(alpha)
             val dispenserColor = if (dispenserRainbowValue.get()) rainbow else dispenserColorValue.get(alpha)
             val hopperColor = if (hopperRainbowValue.get()) rainbow else hopperColorValue.get(alpha)
-            val shulkerBoxColor = if (shulkerBoxRainbowValue.get()) rainbow else shulkerBoxColorValue.get(alpha)
 
             val outlineAlpha = boxOutlineAlphaValue.get()
 
@@ -169,8 +185,6 @@ class StorageESP : Module()
 
             gameSettings.gammaSetting = 100000.0f
 
-            val provider = classProvider
-
             val outlineWidth = outlineWidthValue.get()
             val wireFrameWidth = wireFrameWidthValue.get()
 
@@ -179,12 +193,11 @@ class StorageESP : Module()
             theWorld.loadedTileEntityList.mapNotNull {
                 val type = when
                 {
-                    chest && it is TileEntityChest && !clickedBlocks.contains(it.pos) -> if (it.asTileEntityChest().chestType == WEnumChestType.TRAPPED) 2 else 1
+                    chest && it is TileEntityChest && !clickedBlocks.contains(it.pos) -> if (it.chestType == 1) 2 else 1
                     enderChest && it is TileEntityEnderChest && !clickedBlocks.contains(it.pos) -> 3
                     furnace && it is TileEntityFurnace -> 4
                     dispenser && it is TileEntityDispenser -> 5
                     hopper && it is TileEntityHopper -> 6
-                    shulkerBox && it is TileEntityShulkerBox -> 7
                     else -> null
                 } ?: return@mapNotNull null
 
@@ -196,7 +209,6 @@ class StorageESP : Module()
                     4 -> furnaceColor
                     5 -> dispenserColor
                     6 -> hopperColor
-                    7 -> shulkerBoxColor
                     else -> null
                 } ?: return@mapNotNull null)
             }.forEach { (tileEntity, type, color) ->
@@ -208,7 +220,7 @@ class StorageESP : Module()
                     return@forEach
                 }
 
-                val func = functions
+                val renderer = TileEntityRendererDispatcher.instance
 
                 when (mode)
                 {
@@ -220,13 +232,13 @@ class StorageESP : Module()
                     {
                         RenderUtils.glColor(color)
                         OutlineUtils.renderOne(outlineWidth)
-                        func.renderTileEntity(tileEntity, partialTicks, -1)
+                        renderer.renderTileEntity(tileEntity, partialTicks, -1)
                         OutlineUtils.renderTwo()
-                        func.renderTileEntity(tileEntity, partialTicks, -1)
+                        renderer.renderTileEntity(tileEntity, partialTicks, -1)
                         OutlineUtils.renderThree()
-                        func.renderTileEntity(tileEntity, partialTicks, -1)
+                        renderer.renderTileEntity(tileEntity, partialTicks, -1)
                         OutlineUtils.renderFour(color)
-                        func.renderTileEntity(tileEntity, partialTicks, -1)
+                        renderer.renderTileEntity(tileEntity, partialTicks, -1)
                         OutlineUtils.renderFive()
                         RenderUtils.glColor(Color.WHITE)
                     }
@@ -246,12 +258,12 @@ class StorageESP : Module()
 
                         glLineWidth(0.5F)
 
-                        func.renderTileEntity(tileEntity, partialTicks, -1)
+                        renderer.renderTileEntity(tileEntity, partialTicks, -1)
 
                         RenderUtils.glColor(color)
                         glLineWidth(wireFrameWidth)
 
-                        func.renderTileEntity(tileEntity, partialTicks, -1)
+                        renderer.renderTileEntity(tileEntity, partialTicks, -1)
 
                         glPopAttrib()
                         glPopMatrix()
@@ -352,7 +364,6 @@ class StorageESP : Module()
         val furnace = furnaceEnabledValue.get()
         val dispenser = dispenserEnabledValue.get()
         val hopper = hopperEnabledValue.get()
-        val shulkerBox = shulkerBoxEnabledValue.get()
 
         val rainbow = ColorUtils.rainbowRGB(speed = rainbowSpeedValue.get(), saturation = rainbowSaturationValue.get(), brightness = rainbowBrightnessValue.get())
         val chestColor = if (chestRainbowValue.get()) rainbow else chestColorValue.get()
@@ -361,7 +372,6 @@ class StorageESP : Module()
         val furnaceColor = if (furnaceRainbowValue.get()) rainbow else furnaceColorValue.get()
         val dispenserColor = if (dispenserRainbowValue.get()) rainbow else dispenserColorValue.get()
         val hopperColor = if (hopperRainbowValue.get()) rainbow else hopperColorValue.get()
-        val shulkerBoxColor = if (shulkerBoxRainbowValue.get()) rainbow else shulkerBoxColorValue.get()
 
         val shader = (if (mode.equals("shaderoutline", ignoreCase = true)) OutlineShader.INSTANCE else if (mode.equals("shaderglow", ignoreCase = true)) GlowShader.INSTANCE else null) ?: return
         val radius = if (mode.equals("shaderglow", ignoreCase = true)) 2.5f else 1.5f
@@ -373,17 +383,14 @@ class StorageESP : Module()
             val startDraw = { shader.startDraw(partialTicks) }
             val stopDraw = { color: Int -> shader.stopDraw(color, radius, 1f) }
 
-            val provider = classProvider
-
             val tileEntityGroup = theWorld.loadedTileEntityList.groupBy {
                 when
                 {
-                    it is TileEntityChest -> if (it.asTileEntityChest().chestType == WEnumChestType.TRAPPED) 2 else 1 // Chest or Trapped Chest
+                    it is TileEntityChest -> if (it.chestType == 1) 2 else 1 // Chest or Trapped Chest
                     it is TileEntityEnderChest -> 3 // Ender Chest
                     it is TileEntityFurnace -> 4 // Furnace
                     it is TileEntityDispenser -> 5 // Dispenser (and Dropper)
                     it is TileEntityHopper -> 6 // Hopper
-                    it is TileEntityShulkerBox -> 7 // Shulker box
                     else -> 0
                 }
             }.filterNot { it.key == 0 }
@@ -400,7 +407,7 @@ class StorageESP : Module()
 
             val renderTileEntity = { type: Int ->
                 tileEntityGroup[type]?.forEach {
-                    renderManager.renderEntityAt(it, it.pos.x - renderPosX, it.pos.y - renderPosY, it.pos.z - renderPosZ, partialTicks)
+                    TileEntityRendererDispatcher.instance.renderTileEntityAt(it, it.pos.x - renderPosX, it.pos.y - renderPosY, it.pos.z - renderPosZ, partialTicks)
                 }
             }
 
@@ -450,9 +457,6 @@ class StorageESP : Module()
                 renderMinecart(3) // EntityMinecartHopper
                 stopDraw(hopperColor)
             }
-
-            // Draw Shulker box
-            if (shulkerBox) renderTileEntityOnly(7, shulkerBoxColor) // TileEntityShulkerBox
         }
         catch (ex: Exception)
         {

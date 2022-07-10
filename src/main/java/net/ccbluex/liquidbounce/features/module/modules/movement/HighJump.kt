@@ -6,12 +6,11 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.Entity
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.EntityPlayerSP
-import net.ccbluex.liquidbounce.api.minecraft.util.AxisAlignedBB
-import net.ccbluex.liquidbounce.api.minecraft.util.BlockPos
-import net.ccbluex.liquidbounce.api.minecraft.world.World
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.JumpEvent
+import net.ccbluex.liquidbounce.event.MoveEvent
+import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
@@ -20,11 +19,27 @@ import net.ccbluex.liquidbounce.features.module.modules.world.Tower
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationIcon
 import net.ccbluex.liquidbounce.utils.ClientUtils
-import net.ccbluex.liquidbounce.utils.extensions.*
+import net.ccbluex.liquidbounce.utils.extensions.cos
+import net.ccbluex.liquidbounce.utils.extensions.getBlock
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.moveDirectionRadians
+import net.ccbluex.liquidbounce.utils.extensions.sendPacketWithoutEvent
+import net.ccbluex.liquidbounce.utils.extensions.sin
+import net.ccbluex.liquidbounce.utils.extensions.speed
+import net.ccbluex.liquidbounce.utils.extensions.strafe
+import net.ccbluex.liquidbounce.utils.extensions.zeroXZ
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.ccbluex.liquidbounce.value.ValueGroup
+import net.minecraft.block.BlockPane
+import net.minecraft.client.entity.EntityPlayerSP
+import net.minecraft.entity.Entity
+import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.play.server.S08PacketPlayerPosLook
+import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.BlockPos
+import net.minecraft.world.World
 
 @ModuleInfo(name = "HighJump", description = "Allows you to jump higher.", category = ModuleCategory.MOVEMENT)
 class HighJump : Module()
@@ -101,7 +116,7 @@ class HighJump : Module()
             if (autodisable.get()) state = false
         }
 
-        if (vanillaGlassValue.get() && !classProvider.isBlockPane(theWorld.getBlock(BlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)))) return // 'AAC Ground-check always returns true when player is collided with glass pane or iron bars, etc.' bug exploit
+        if (vanillaGlassValue.get() && theWorld.getBlock(BlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)) !is BlockPane) return // 'AAC Ground-check always returns true when player is collided with glass pane or iron bars, etc.' bug exploit
 
         when (modeValue.get().toLowerCase())
         {
@@ -140,13 +155,9 @@ class HighJump : Module()
 
         val posY = thePlayer.posY
 
-        val func = functions
-
         val dir = thePlayer.moveDirectionRadians
-        val nextX = thePlayer.posX - func.sin(dir) * 0.45f
-        val nextZ = thePlayer.posZ + func.cos(dir) * 0.45f
-
-        val provider = classProvider
+        val nextX = thePlayer.posX - dir.sin * 0.45f
+        val nextZ = thePlayer.posZ + dir.cos * 0.45f
 
         if (jumped) if (!thePlayer.onGround)
         {
@@ -163,8 +174,8 @@ class HighJump : Module()
             {
                 mineplexStage = 1
                 jumped = true
-                networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(nextX, posY, nextZ, true))
-                networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(nextX, posY + noCollisionYOffset, nextZ, true))
+                networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(nextX, posY, nextZ, true))
+                networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(nextX, posY + noCollisionYOffset, nextZ, true))
                 thePlayer.setPosition(nextX, posY, nextZ)
 
                 thePlayer.motionY = mineplexHeightValue.get().toDouble()
@@ -184,7 +195,7 @@ class HighJump : Module()
         val theWorld = mc.theWorld ?: return
         val thePlayer = mc.thePlayer ?: return
 
-        if (vanillaGlassValue.get() && !classProvider.isBlockPane(theWorld.getBlock(BlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)))) return
+        if (vanillaGlassValue.get() && theWorld.getBlock(BlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)) !is BlockPane) return
 
         if (!thePlayer.onGround && modeValue.get().equals("oldmineplex", ignoreCase = true)) thePlayer.motionY += if (thePlayer.fallDistance == 0.0f) 0.0499 else 0.05
     }
@@ -195,7 +206,7 @@ class HighJump : Module()
         val theWorld = mc.theWorld ?: return
         val thePlayer = mc.thePlayer ?: return
 
-        if (vanillaGlassValue.get() && !classProvider.isBlockPane(theWorld.getBlock(BlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)))) return
+        if (vanillaGlassValue.get() && theWorld.getBlock(BlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)) !is BlockPane) return
 
         when (modeValue.get().toLowerCase())
         {
@@ -212,7 +223,7 @@ class HighJump : Module()
     @EventTarget
     fun onPacket(event: PacketEvent)
     {
-        if (event.packet is SPacketPlayerPosLook && modeValue.get().equals("Mineplex", ignoreCase = true) && jumped)
+        if (event.packet is S08PacketPlayerPosLook && modeValue.get().equals("Mineplex", ignoreCase = true) && jumped)
         {
             val thePlayer = mc.thePlayer ?: return
 

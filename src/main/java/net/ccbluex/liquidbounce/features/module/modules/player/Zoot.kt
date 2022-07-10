@@ -5,8 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.api.minecraft.potion.IPotionEffect
-import net.ccbluex.liquidbounce.api.minecraft.potion.PotionType
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -15,6 +13,9 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.runAsync
 import net.ccbluex.liquidbounce.value.BoolValue
+import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.potion.Potion
+import net.minecraft.potion.PotionEffect
 
 // TODO: Max packets per tick limit
 @ModuleInfo(name = "Zoot", description = "Removes all bad potion effects/fire.", category = ModuleCategory.PLAYER)
@@ -38,11 +39,9 @@ class Zoot : Module()
 
         val netHandler = mc.netHandler
 
-        val provider = classProvider
+        if (badEffectsValue.get()) thePlayer.activePotionEffects.filter { isBadEffect(it.potionID) }.maxByOrNull(PotionEffect::getDuration)?.let { effect -> runAsync { repeat(effect.duration / 20) { netHandler.addToSendQueue(C03PacketPlayer(onGround)) } } }
 
-        if (badEffectsValue.get()) thePlayer.activePotionEffects.filter { isBadEffect(it.potionID) }.maxBy(IPotionEffect::duration)?.let { effect -> runAsync { repeat(effect.duration / 20) { netHandler.addToSendQueue(CPacketPlayer(onGround)) } } }
-
-        if (fireValue.get() && !thePlayer.capabilities.isCreativeMode && thePlayer.burning) runAsync { repeat(9) { netHandler.addToSendQueue(CPacketPlayer(onGround)) } }
+        if (fireValue.get() && !thePlayer.capabilities.isCreativeMode && thePlayer.isBurning) runAsync { repeat(9) { netHandler.addToSendQueue(C03PacketPlayer(onGround)) } }
     }
 
     companion object
@@ -51,17 +50,15 @@ class Zoot : Module()
 
         init
         {
-            val provider = classProvider
-
-            badEffectsArray.add(provider.getPotionEnum(PotionType.HUNGER).id)
-            badEffectsArray.add(provider.getPotionEnum(PotionType.MOVE_SLOWDOWN).id)
-            badEffectsArray.add(provider.getPotionEnum(PotionType.DIG_SLOWDOWN).id)
-            badEffectsArray.add(provider.getPotionEnum(PotionType.HARM).id)
-            badEffectsArray.add(provider.getPotionEnum(PotionType.CONFUSION).id)
-            badEffectsArray.add(provider.getPotionEnum(PotionType.BLINDNESS).id)
-            badEffectsArray.add(provider.getPotionEnum(PotionType.WEAKNESS).id)
-            badEffectsArray.add(provider.getPotionEnum(PotionType.WITHER).id)
-            badEffectsArray.add(provider.getPotionEnum(PotionType.POISON).id)
+            badEffectsArray.add(Potion.hunger.id)
+            badEffectsArray.add(Potion.moveSlowdown.id)
+            badEffectsArray.add(Potion.digSlowdown.id)
+            badEffectsArray.add(Potion.harm.id)
+            badEffectsArray.add(Potion.confusion.id)
+            badEffectsArray.add(Potion.blindness.id)
+            badEffectsArray.add(Potion.weakness.id)
+            badEffectsArray.add(Potion.wither.id)
+            badEffectsArray.add(Potion.poison.id)
         }
 
         fun isBadEffect(potionID: Int): Boolean = badEffectsArray.any { potionID == it }

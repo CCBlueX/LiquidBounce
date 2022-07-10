@@ -1,7 +1,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.flies.spartan
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
+import net.ccbluex.liquidbounce.utils.extensions.sendPacketWithoutEvent
 import net.ccbluex.liquidbounce.utils.extensions.strafe
+import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 
 class Spartan194Glide : FlyMode("Spartan194Glide")
 {
@@ -16,6 +18,6 @@ class Spartan194Glide : FlyMode("Spartan194Glide")
 
         thePlayer.strafe(0.264f)
 
-        if (thePlayer.ticksExisted % 8 == 0) networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(x, y + 10, z, true))
+        if (thePlayer.ticksExisted % 8 == 0) networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, y + 10, z, true))
     }
 }

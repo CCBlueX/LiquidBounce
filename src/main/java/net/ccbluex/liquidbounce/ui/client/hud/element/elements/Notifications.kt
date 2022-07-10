@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
@@ -17,6 +18,8 @@ import net.ccbluex.liquidbounce.utils.render.easeOut
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.*
+import net.minecraft.client.gui.ScaledResolution
+import net.minecraft.util.*
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 import kotlin.math.max
@@ -121,7 +124,7 @@ class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F, side: 
             val itr = LiquidBounce.hud.notifications.asReversed().iterator()
 
             var deployingNotification: Notification? = null
-            val cornerX = (LiquidBounce.wrapper.ScaledResolution(LiquidBounce.wrapper.minecraft).scaledWidth - renderX).toFloat()
+            val cornerX = (ScaledResolution(mc).scaledWidth - renderX).toFloat()
             val vertical = if (side.vertical == Side.Vertical.UP) 1f else -1f
 
             while (itr.hasNext())
@@ -185,7 +188,7 @@ enum class NotificationIcon(iconPath: String, val colorMode: () -> String, val c
     MURDER_MYSTERY("/notification/murder_mystery.png", Notifications.rectWarnColorModeValue::get, Notifications.rectWarnColorValue::get),
     BOT("/notification/robot.png", Notifications.rectCautionColorModeValue::get, Notifications.rectCautionColorValue::get);
 
-    val resourceLocation = LiquidBounce.wrapper.ResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + iconPath)
+    val resourceLocation = ResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + iconPath)
 }
 
 class Notification(private val type: NotificationIcon, var header: String, val message: Array<String>, private val stayTime: Long = 0L)
@@ -233,7 +236,7 @@ class Notification(private val type: NotificationIcon, var header: String, val m
     {
         val messageFont = Notifications.messageFontValue.get()
 
-        textLength = max(Notifications.headerFontValue.get().getStringWidth(header + (if (stackCount > 1) " ($stackCount)" else "")), message.map(messageFont::getStringWidth).max() ?: 0)
+        textLength = max(Notifications.headerFontValue.get().getStringWidth(header + (if (stackCount > 1) " ($stackCount)" else "")), message.map(messageFont::getStringWidth).maxOrNull() ?: 0)
     }
 
     /**
@@ -261,7 +264,7 @@ class Notification(private val type: NotificationIcon, var header: String, val m
         // Draw Background (Body)
         val bodyRainbowShader = bodyColorMode.equals("RainbowShader", ignoreCase = true)
 
-        val yEnd = (headerFont.fontHeight + 10F) + (messageFont.fontHeight + 2) * message.size
+        val yEnd = (headerFont.FONT_HEIGHT + 10F) + (messageFont.FONT_HEIGHT + 2) * message.size
         val width = textLength + 38f
         val (bodyXStart, bodyXEnd) = when (side.horizontal)
         {
@@ -297,7 +300,7 @@ class Notification(private val type: NotificationIcon, var header: String, val m
         RenderUtils.drawImage(type.resourceLocation, bodyXStart + 5f, 5f, 20f, 20f)
 
         headerFont.drawString(header + (if (stackCount > 1) " ($stackCount)" else ""), bodyXStart.toInt() + 30, 5, Int.MAX_VALUE)
-        message.forEachIndexed { index, message -> messageFont.drawString(message, bodyXStart.toInt() + 30, (headerFont.fontHeight + 10) + (messageFont.fontHeight + 2) * index, Int.MAX_VALUE) }
+        message.forEachIndexed { index, message -> messageFont.drawString(message, bodyXStart.toInt() + 30, (headerFont.FONT_HEIGHT + 10) + (messageFont.FONT_HEIGHT + 2) * index, Int.MAX_VALUE) }
 
         // Draw Rect
         if (!rect.equals("None", ignoreCase = true))

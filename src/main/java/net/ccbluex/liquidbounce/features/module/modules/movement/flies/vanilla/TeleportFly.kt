@@ -2,8 +2,10 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.flies.vanilla
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
+import net.ccbluex.liquidbounce.utils.extensions.cos
 import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.extensions.moveDirectionRadians
+import net.ccbluex.liquidbounce.utils.extensions.sin
 import net.ccbluex.liquidbounce.utils.extensions.zeroXYZ
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 
@@ -26,7 +28,7 @@ class TeleportFly : FlyMode("Teleport")
         val jumpKeyDown = gameSettings.keyBindJump.isKeyDown
         val sneakKeyDown = gameSettings.keyBindSneak.isKeyDown
 
-        thePlayer.sprinting = true
+        thePlayer.isSprinting = true
         thePlayer.zeroXYZ()
         val isMoving = thePlayer.isMoving
         if ((isMoving || jumpKeyDown || sneakKeyDown) && teleportTimer.hasTimePassed(Fly.teleportDelayValue.get().toLong()))
@@ -39,8 +41,8 @@ class TeleportFly : FlyMode("Teleport")
 
             if (isMoving && !thePlayer.isCollidedHorizontally)
             {
-                x = -functions.sin(yaw) * speed
-                z = functions.cos(yaw) * speed
+                x = -yaw.sin * speed
+                z = yaw.cos * speed
             }
 
             if (!thePlayer.isCollidedVertically) if (jumpKeyDown && !sneakKeyDown) y = speed else if (!jumpKeyDown && sneakKeyDown) y = -speed

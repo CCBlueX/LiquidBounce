@@ -6,15 +6,63 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.MotionEvent
+import net.ccbluex.liquidbounce.event.MoveEvent
+import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.TickEvent
+import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac.*
-import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.minorACs.*
-import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp.*
-import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other.*
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac.AAC1_9_10BHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac.AAC3_0_3LowHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac.AAC3_0_5BHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac.AAC3_1_0YPort
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac.AAC3_1_5FastLowHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac.AAC3_1_5LowHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac.AAC3_2_2LowHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac.AAC3_2_2YPort
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac.AAC3_3_11BHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac.AAC3_3_11Ground
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac.AAC3_3_11Ground2
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac.AAC3_3_11LowHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac.AAC3_3_13LowHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac.AAC3_3_7FlagBHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac.AAC3_3_9BHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac.AAC3_5_0BHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac.AAC3_5_0LowHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac.AAC4_4_0BHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac.AAC5BHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac.AACPort
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.minorACs.ACP
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.minorACs.ACPBHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.minorACs.ACRBHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.minorACs.DaedalusAACBHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.minorACs.MatrixBHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.minorACs.PACBHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp.Boost
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp.Frame
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp.MiJump
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp.NCPBHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp.NCPFHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp.NCPYPort
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp.OldNCPBHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp.OnGround
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp.SNCPBHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp.YPort
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp.YPort2
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other.CustomSpeed
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other.HiveHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other.HypixelHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other.MineplexBHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other.MineplexBHop2
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other.MineplexGround
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other.RedeSkyBoostHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other.RedeSkySlowHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other.SlowHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other.TeleportCubeCraft
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spartan.SpartanYPort
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre.SpectreBHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre.SpectreLowHop
@@ -24,7 +72,12 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationIcon
 import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.extensions.zeroXZ
-import net.ccbluex.liquidbounce.value.*
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.ValueGroup
+import net.minecraft.network.play.server.S08PacketPlayerPosLook
 
 @ModuleInfo(name = "Speed", description = "Allows you to move faster.", category = ModuleCategory.MOVEMENT)
 object Speed : Module()
@@ -155,9 +208,9 @@ object Speed : Module()
     {
         val thePlayer = mc.thePlayer ?: return
 
-        if (thePlayer.sneaking) return
+        if (thePlayer.isSneaking) return
 
-        if (thePlayer.isMoving) thePlayer.sprinting = true
+        if (thePlayer.isMoving) thePlayer.isSprinting = true
 
         mode?.onUpdate()
     }
@@ -167,7 +220,7 @@ object Speed : Module()
     {
         val thePlayer = mc.thePlayer ?: return
 
-        if (thePlayer.sneaking) return
+        if (thePlayer.isSneaking) return
 
         mode?.onMotion(event.eventState)
     }
@@ -175,14 +228,14 @@ object Speed : Module()
     @EventTarget
     fun onMove(event: MoveEvent)
     {
-        if ((mc.thePlayer ?: return).sneaking) return
+        if ((mc.thePlayer ?: return).isSneaking) return
         mode?.onMove(event)
     }
 
     @EventTarget
     fun onTick(@Suppress("UNUSED_PARAMETER") event: TickEvent)
     {
-        if ((mc.thePlayer ?: return).sneaking) return
+        if ((mc.thePlayer ?: return).isSneaking) return
 
         mode?.onTick()
     }
@@ -190,7 +243,7 @@ object Speed : Module()
     @EventTarget
     fun onPacket(event: PacketEvent)
     {
-        if (event.packet is SPacketPlayerPosLook && disableOnFlagValue.get())
+        if (event.packet is S08PacketPlayerPosLook && disableOnFlagValue.get())
         {
             val thePlayer = mc.thePlayer ?: return
 

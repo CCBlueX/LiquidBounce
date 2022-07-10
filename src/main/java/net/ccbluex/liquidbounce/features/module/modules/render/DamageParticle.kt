@@ -1,6 +1,5 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.Entity
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
@@ -10,12 +9,15 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.extensions.drawStringWithShadow
 import net.ccbluex.liquidbounce.utils.extensions.isSelected
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.FontValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.RGBColorValue
+import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.entity.EntityLivingBase
 import org.lwjgl.opengl.GL11
 import kotlin.random.Random.Default.nextDouble
 
@@ -40,10 +42,8 @@ class DamageParticle : Module()
     fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
     {
         val theWorld = mc.theWorld ?: return
-
-        val provider = classProvider
         synchronized(particles) {
-            theWorld.loadedEntityList.filter(provider::isEntityLivingBase).map(Entity::asEntityLivingBase).filter { true is Selected }.mapNotNull { entity ->
+            theWorld.loadedEntityList.filterIsInstance<EntityLivingBase>().filter { it.isSelected(true) }.mapNotNull { entity ->
                 val lastHealth = healthData[entity.entityId] ?: entity.maxHealth
                 healthData[entity.entityId] = entity.health
 
@@ -64,9 +64,7 @@ class DamageParticle : Module()
     @EventTarget
     fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
     {
-        synchronized(particles) {
-            val glStateManager = classProvider.glStateManager
-            val xRotate = if (mc.gameSettings.thirdPersonView == 2) -1.0f else 1.0f
+        synchronized(particles) {            val xRotate = if (mc.gameSettings.thirdPersonView == 2) -1.0f else 1.0f
 
             val renderManager = mc.renderManager
             val renderPosX = renderManager.renderPosX
@@ -90,7 +88,7 @@ class DamageParticle : Module()
                 GL11.glScalef(-size, -size, size)
                 GL11.glDepthMask(false)
 
-                font.drawStringWithShadow(particle.str, -(font.getStringWidth(particle.str) / 2), -(font.fontHeight - 1), particle.color)
+                font.drawStringWithShadow(particle.str, -(font.getStringWidth(particle.str) / 2), -(font.FONT_HEIGHT - 1), particle.color)
 
                 GL11.glColor4f(1f, 1f, 1f, 1.0f)
                 GL11.glDepthMask(true)

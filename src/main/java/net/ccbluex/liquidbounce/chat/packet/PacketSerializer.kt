@@ -5,7 +5,10 @@
  */
 package net.ccbluex.liquidbounce.chat.packet
 
-import com.google.gson.*
+import com.google.gson.Gson
+import com.google.gson.JsonElement
+import com.google.gson.JsonSerializationContext
+import com.google.gson.JsonSerializer
 import net.ccbluex.liquidbounce.chat.packet.packets.Packet
 import java.lang.reflect.Type
 

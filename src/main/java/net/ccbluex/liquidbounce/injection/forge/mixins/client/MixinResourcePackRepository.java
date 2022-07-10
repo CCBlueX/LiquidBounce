@@ -6,19 +6,12 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.client;
 
 import java.io.File;
-import java.util.List;
-
-import com.google.common.collect.Lists;
 
 import net.minecraft.client.resources.ResourcePackRepository;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.comparator.LastModifiedFileComparator;
-import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.logging.log4j.Logger;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;

@@ -1,6 +1,10 @@
 package net.ccbluex.liquidbounce.utils.extensions
 
-import net.minecraft.block.*
+import net.minecraft.block.Block
+import net.minecraft.block.BlockBush
+import net.minecraft.block.BlockDoor
+import net.minecraft.block.BlockRailBase
+import net.minecraft.block.BlockSign
 import net.minecraft.entity.player.InventoryPlayer
 import net.minecraft.init.Blocks
 import net.minecraft.init.Items
@@ -96,13 +100,8 @@ fun Container.findAutoBlockBlock(theWorld: World, autoblockFullcubeOnly: Boolean
 
         (36..44).forEach { i ->
             val itemStack = getSlot(i).stack
-            if (itemStack != null && itemStack.item is ItemBlock && itemStack.stackSize > 0)
-            {
-                val itemBlock = itemStack.item!! as ItemBlock
-                val block = itemBlock.block
-
-                if (block.canAutoBlock) hotbarSlots.add(i)
-            }
+            val item = itemStack.item
+            if (itemStack != null && item is ItemBlock && itemStack.stackSize > 0 && item.block.canAutoBlock) hotbarSlots.add(i)
         }
 
         (if (boundingBoxYLimit == 0.0) hotbarSlots.firstOrNull()

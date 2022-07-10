@@ -11,7 +11,13 @@ import com.thealtening.AltService
 import com.thealtening.AltService.EnumAltService
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.file.FileManager.Companion.saveConfig
-import net.ccbluex.liquidbounce.ui.client.altmanager.sub.*
+import net.ccbluex.liquidbounce.ui.client.altmanager.sub.GuiAdd
+import net.ccbluex.liquidbounce.ui.client.altmanager.sub.GuiBannedServers
+import net.ccbluex.liquidbounce.ui.client.altmanager.sub.GuiChangeName
+import net.ccbluex.liquidbounce.ui.client.altmanager.sub.GuiDirectLogin
+import net.ccbluex.liquidbounce.ui.client.altmanager.sub.GuiDonatorCape
+import net.ccbluex.liquidbounce.ui.client.altmanager.sub.GuiSessionInfo
+import net.ccbluex.liquidbounce.ui.client.altmanager.sub.GuiSessionLogin
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.altgenerator.GuiMCLeaks
 import net.ccbluex.liquidbounce.ui.client.altmanager.sub.altgenerator.GuiTheAltening
 import net.ccbluex.liquidbounce.ui.font.Fonts
@@ -215,7 +221,7 @@ class GuiAltManager(private val prevGui: GuiScreen?) : GuiScreen()
                 while (bufferedReader.readLine().also { line = it } != null)
                 {
                     val accountData = line.split(":", ignoreCase = true, limit = 2)
-                    if (accountData[0] !is AccountExists) LiquidBounce.fileManager.accountsConfig.addAccount(if (accountData.size > 1) MinecraftAccount(AltServiceType.MOJANG, accountData[0], accountData[1]) else MinecraftAccount(AltServiceType.MOJANG, accountData[0]))
+                    if (!LiquidBounce.fileManager.accountsConfig.isAccountExists(accountData[0])) LiquidBounce.fileManager.accountsConfig.addAccount(if (accountData.size > 1) MinecraftAccount(AltServiceType.MOJANG, accountData[0], accountData[1]) else MinecraftAccount(AltServiceType.MOJANG, accountData[0]))
                 }
                 bufferedReader.close()
                 altsList.updateAccounts(searchField.text)

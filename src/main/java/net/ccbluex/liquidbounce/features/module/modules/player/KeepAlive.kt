@@ -5,18 +5,18 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.api.enums.ItemType
-import net.ccbluex.liquidbounce.api.enums.WEnumHand
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.createUseItemPacket
+import net.ccbluex.liquidbounce.utils.extensions.createUseItemPacket
 import net.ccbluex.liquidbounce.utils.extensions.findItem
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.init.Items
+import net.minecraft.network.play.client.C09PacketHeldItemChange
 
 @ModuleInfo(name = "KeepAlive", description = "Tries to prevent you from dying.", category = ModuleCategory.PLAYER)
 class KeepAlive : Module()
@@ -44,16 +44,14 @@ class KeepAlive : Module()
 
                 "soup" ->
                 {
-                    val provider = classProvider
-
-                    val soupInHotbar = thePlayer.inventoryContainer.findItem(36, 45, provider.getItemEnum(ItemType.MUSHROOM_STEW), itemDelayValue.get().toLong(), randomSlotValue.get())
+                    val soupInHotbar = thePlayer.inventoryContainer.findItem(36, 45, Items.mushroom_stew, itemDelayValue.get().toLong(), randomSlotValue.get())
 
                     if (soupInHotbar != -1)
                     {
 
-                        netHandler.addToSendQueue(CPacketHeldItemChange(soupInHotbar - 36))
-                        netHandler.addToSendQueue(createUseItemPacket(thePlayer.inventory.getStackInSlot(soupInHotbar), WEnumHand.MAIN_HAND))
-                        netHandler.addToSendQueue(CPacketHeldItemChange(thePlayer.inventory.currentItem))
+                        netHandler.addToSendQueue(C09PacketHeldItemChange(soupInHotbar - 36))
+                        netHandler.addToSendQueue(createUseItemPacket(thePlayer.inventory.getStackInSlot(soupInHotbar)))
+                        netHandler.addToSendQueue(C09PacketHeldItemChange(thePlayer.inventory.currentItem))
                     }
                 }
             }

@@ -10,8 +10,15 @@ import com.google.gson.GsonBuilder
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.LiquidBounce.background
 import net.ccbluex.liquidbounce.LiquidBounce.isStarting
-import net.ccbluex.liquidbounce.file.configs.*
-
+import net.ccbluex.liquidbounce.file.configs.AccountsConfig
+import net.ccbluex.liquidbounce.file.configs.ClickGuiConfig
+import net.ccbluex.liquidbounce.file.configs.FriendsConfig
+import net.ccbluex.liquidbounce.file.configs.HudConfig
+import net.ccbluex.liquidbounce.file.configs.ModulesConfig
+import net.ccbluex.liquidbounce.file.configs.ShortcutsConfig
+import net.ccbluex.liquidbounce.file.configs.TargetsConfig
+import net.ccbluex.liquidbounce.file.configs.ValuesConfig
+import net.ccbluex.liquidbounce.file.configs.XRayConfig
 import net.ccbluex.liquidbounce.utils.ClientUtils.logger
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.runAsync

@@ -19,11 +19,8 @@ import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.network.play.client.C03PacketPlayer
-import net.minecraft.util.AxisAlignedBB
-import net.minecraft.util.BlockPos
+import net.minecraft.util.*
 import net.minecraft.util.MathHelper.wrapAngleTo180_float
-import net.minecraft.util.MovingObjectPosition
-import net.minecraft.util.Vec3
 import net.minecraft.world.World
 import java.lang.Double.isNaN
 import java.util.*
@@ -630,5 +627,7 @@ class RotationUtils : MinecraftInstance(), Listenable
             }
             else this.targetRotation = limitAngleChange(targetRotation, goalRotation, if (maxResetTurnSpeed - minResetTurnSpeed > 0) nextFloat(minResetTurnSpeed, maxResetTurnSpeed) else maxResetTurnSpeed, 0f).apply { fixedSensitivity(mc.gameSettings.mouseSensitivity) }
         }
+
+        fun getHorizontalFacing(dir: Float): EnumFacing = EnumFacing.getHorizontal(MathHelper.floor_double((dir * 4.0 / 360.0) + 0.5) and 3)
     }
 }

@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerRangeValue
+import net.minecraft.network.play.client.C01PacketChatMessage
 import java.util.concurrent.LinkedBlockingQueue
 
 @ModuleInfo(name = "AtAllProvider", description = "Automatically mentions everyone on the server when using '@a' in your message.", category = ModuleCategory.MISC)
@@ -68,11 +69,10 @@ class AtAllProvider : Module()
     {
         val thePlayer = mc.thePlayer ?: return
 
-        if (event.packet is CPacketChatMessage)
+        val packet = event.packet
+        if (packet is C01PacketChatMessage)
         {
-            val packetChatMessage = event.packet.asCPacketChatMessage()
-            val message = packetChatMessage.message
-
+            val message = packet.message
             if (message.contains("@a"))
             {
                 synchronized(sendQueue) {

@@ -2,8 +2,10 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.flies.other
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
+import net.ccbluex.liquidbounce.utils.extensions.sendPacketWithoutEvent
 import net.ccbluex.liquidbounce.utils.extensions.strafe
 import net.ccbluex.liquidbounce.utils.extensions.zeroXYZ
+import net.minecraft.network.play.client.C00PacketKeepAlive
 
 class KeepAliveFly : FlyMode("KeepAlive")
 {
@@ -15,7 +17,7 @@ class KeepAliveFly : FlyMode("KeepAlive")
         val thePlayer = mc.thePlayer ?: return
         val gameSettings = mc.gameSettings
 
-        mc.netHandler.networkManager.sendPacketWithoutEvent(CPacketKeepAlive())
+        mc.netHandler.networkManager.sendPacketWithoutEvent(C00PacketKeepAlive())
 
         thePlayer.capabilities.isFlying = false
 

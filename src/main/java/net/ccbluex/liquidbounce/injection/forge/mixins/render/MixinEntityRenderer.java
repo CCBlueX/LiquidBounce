@@ -239,7 +239,7 @@ public abstract class MixinEntityRenderer
                 final AxisAlignedBB expandedBB = entityInRay.getEntityBoundingBox().expand(borderSize, borderSize, borderSize);
                 final MovingObjectPosition intercept = expandedBB.calculateIntercept(eyePos, blockReachPos);
 
-                if (eyePos is VecInside)
+                if (expandedBB.isVecInside(eyePos))
                 {
                     if (interceptPosDistance >= 0.0D)
                     {

@@ -5,9 +5,6 @@
  */
 package net.ccbluex.liquidbounce.ui.client.altmanager.sub
 
-
-
-
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.ui.font.Fonts

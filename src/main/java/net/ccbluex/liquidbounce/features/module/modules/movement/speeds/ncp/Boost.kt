@@ -5,13 +5,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.EntityPlayerSP
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.extensions.divide
 import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.extensions.multiply
+import net.minecraft.client.entity.EntityPlayerSP
 
 class Boost : SpeedMode("Boost")
 {
@@ -37,7 +37,7 @@ class Boost : SpeedMode("Boost")
 
         if (groundTimes == 5 && shouldSpeedUp(thePlayer))
         {
-            if (!thePlayer.sprinting) offset += 0.8
+            if (!thePlayer.isSprinting) offset += 0.8
 
             if (thePlayer.moveStrafing != 0f)
             {
@@ -70,5 +70,5 @@ class Boost : SpeedMode("Boost")
     {
     }
 
-    private fun shouldSpeedUp(thePlayer: EntityPlayerSP): Boolean = !thePlayer.isInLava && !thePlayer.isOnLadder && !thePlayer.sneaking && thePlayer.isMoving
+    private fun shouldSpeedUp(thePlayer: EntityPlayerSP): Boolean = !thePlayer.isInLava && !thePlayer.isOnLadder && !thePlayer.isSneaking && thePlayer.isMoving
 }

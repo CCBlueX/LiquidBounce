@@ -5,14 +5,16 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketUseEntity
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.utils.extensions.sendPacketWithoutEvent
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.network.play.client.C02PacketUseEntity
+import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 import kotlin.random.Random
 
 @ModuleInfo(name = "AutoLeave", description = "Automatically makes you leave the server whenever your health is low.", category = ModuleCategory.COMBAT)
@@ -30,13 +32,11 @@ class AutoLeave : Module()
 
         if (thePlayer.health <= healthValue.get() && !thePlayer.capabilities.isCreativeMode && !mc.isIntegratedServerRunning)
         {
-            val provider = classProvider
-
             when (modeValue.get().toLowerCase())
             {
                 "quit" -> theWorld.sendQuittingDisconnectingPacket()
-                "invalidpacket" -> netHandler.networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(Double.NaN, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, !thePlayer.onGround))
-                "selfhurt" -> netHandler.networkManager.sendPacketWithoutEvent(CPacketUseEntity(thePlayer, ICPacketUseEntity.WAction.ATTACK))
+                "invalidpacket" -> netHandler.networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(Double.NaN, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, !thePlayer.onGround))
+                "selfhurt" -> netHandler.networkManager.sendPacketWithoutEvent(C02PacketUseEntity(thePlayer, C02PacketUseEntity.Action.ATTACK))
                 "illegalchat" -> thePlayer.sendChatMessage("${Random.nextInt()}\u00A7\u00A7\u00A7${Random.nextInt()}")
             }
 

@@ -5,8 +5,9 @@
  */
 package net.ccbluex.liquidbounce.utils.block
 
-import net.ccbluex.liquidbounce.api.minecraft.block.state.IBlockState
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.minecraft.block.Block
+import net.minecraft.block.state.IBlockState
 
 typealias Collidable = (IBlockState) -> Boolean
 
@@ -16,5 +17,5 @@ object BlockUtils : MinecraftInstance()
      * Get block name by [id]
      */
     @JvmStatic
-    fun getBlockName(id: Int): String = functions.getBlockById(id)?.localizedName ?: ""
+    fun getBlockName(id: Int): String = Block.getBlockById(id)?.localizedName ?: ""
 }

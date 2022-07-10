@@ -70,8 +70,8 @@ class Derp : Module()
                 ((if (yawToEntityValue.get())
                 {
                     val distance = yawToEntityDistanceValue.get()
-                    val entities = theWorld.getEntitiesInRadius(thePlayer, distance.toDouble()).filter { false is Selected }
-                    (if (yawToEntityPriorityValue.get().equals("Distance", ignoreCase = true)) entities.minBy { it.getDistanceSqToEntity(thePlayer) } else entities.minBy { RotationUtils.getClientRotationDifference(thePlayer, it, false, RotationUtils.MinMaxPair.ZERO) })?.let { RotationUtils.searchCenter(theWorld, thePlayer, it.entityBoundingBox, LOCK_CENTER, null, RotationUtils.MinMaxPair.ZERO, distance, 0.0, 0, 0.0)?.rotation?.yaw } ?: thePlayer.rotationYaw
+                    val entities = theWorld.getEntitiesInRadius(thePlayer, distance.toDouble()).filter { it.isSelected(false) }
+                    (if (yawToEntityPriorityValue.get().equals("Distance", ignoreCase = true)) entities.minByOrNull { it.getDistanceSqToEntity(thePlayer) } else entities.minByOrNull { RotationUtils.getClientRotationDifference(thePlayer, it, false, RotationUtils.MinMaxPair.ZERO) })?.let { RotationUtils.searchCenter(theWorld, thePlayer, it.entityBoundingBox, LOCK_CENTER, null, RotationUtils.MinMaxPair.ZERO, distance, 0.0, 0, 0.0)?.rotation?.yaw } ?: thePlayer.rotationYaw
                 }
                 else thePlayer.rotationYaw) + 180f + yawOffset) % 360f
             }

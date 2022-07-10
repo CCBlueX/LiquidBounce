@@ -5,13 +5,14 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.api.enums.BlockType
 import net.ccbluex.liquidbounce.event.BlockBBEvent
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.value.BoolValue
+import net.minecraft.init.Blocks
+import net.minecraft.util.AxisAlignedBB
 
 @ModuleInfo(name = "BlockWalk", description = "Allows you to walk on non-fullblock blocks.", category = ModuleCategory.MOVEMENT)
 class BlockWalk : Module()
@@ -22,9 +23,7 @@ class BlockWalk : Module()
     @EventTarget
     fun onBlockBB(event: BlockBBEvent)
     {
-        val provider = classProvider
-
-        if (cobwebValue.get() && event.block == provider.getBlockEnum(BlockType.WEB) || snowValue.get() && event.block == provider.getBlockEnum(BlockType.SNOW_LAYER))
+        if (cobwebValue.get() && event.block == Blocks.web || snowValue.get() && event.block == Blocks.snow_layer)
         {
             val x = event.x
             val y = event.y

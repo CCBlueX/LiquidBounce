@@ -6,11 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.enums.BlockType
-import net.ccbluex.liquidbounce.api.enums.EnumFacingType
-import net.ccbluex.liquidbounce.api.minecraft.util.IMovingObjectPosition
-import net.ccbluex.liquidbounce.api.minecraft.util.BlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.Vec3
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
@@ -24,21 +19,39 @@ import net.ccbluex.liquidbounce.utils.CPSCounter
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.extensions.canBeClicked
 import net.ccbluex.liquidbounce.utils.extensions.distanceToCenter
+import net.ccbluex.liquidbounce.utils.extensions.plus
 import net.ccbluex.liquidbounce.utils.extensions.searchBlocks
+import net.ccbluex.liquidbounce.utils.extensions.times
 import net.ccbluex.liquidbounce.utils.extensions.vec
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.easeOutCubic
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.value.*
+import net.ccbluex.liquidbounce.value.BlockValue
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatRangeValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerRangeValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.RGBAColorValue
+import net.ccbluex.liquidbounce.value.ValueGroup
+import net.minecraft.block.Block
+import net.minecraft.client.gui.inventory.GuiContainer
+import net.minecraft.init.Blocks
+import net.minecraft.network.play.client.C0APacketAnimation
+import net.minecraft.util.BlockPos
+import net.minecraft.util.EnumFacing
+import net.minecraft.util.MovingObjectPosition
+import net.minecraft.util.Vec3
 import org.lwjgl.opengl.GL11
 
 @ModuleInfo(name = "ChestAura", description = "Automatically opens chests around you.", category = ModuleCategory.WORLD)
 object ChestAura : Module()
 {
     private val chestGroup = ValueGroup("Chest")
-    private val chestFirstValue = BlockValue("First", functions.getIdFromBlock(classProvider.getBlockEnum(BlockType.CHEST)), "Chest")
-    private val chestSecondValue = BlockValue("Second", functions.getIdFromBlock(classProvider.getBlockEnum(BlockType.AIR)))
-    private val chestThirdValue = BlockValue("Third", functions.getIdFromBlock(classProvider.getBlockEnum(BlockType.AIR)))
+    private val chestFirstValue = BlockValue("First", Block.getIdFromBlock(Blocks.chest), "Chest")
+    private val chestSecondValue = BlockValue("Second", Block.getIdFromBlock(Blocks.air))
+    private val chestThirdValue = BlockValue("Third", Block.getIdFromBlock(Blocks.air))
 
     private val rangeValue = FloatValue("Range", 5F, 1F, 6F)
     private val priorityValue = ListValue("Priority", arrayOf("Distance", "ServerDirection", "ClientDirection"), "Distance")
@@ -92,9 +105,6 @@ object ChestAura : Module()
         val thePlayer = mc.thePlayer ?: return
         val theWorld = mc.theWorld ?: return
 
-        val provider = classProvider
-        val func = functions
-
         when (event.eventState)
         {
             EventState.PRE ->
@@ -117,11 +127,11 @@ object ChestAura : Module()
                 }
 
                 currentBlock = theWorld.searchBlocks(thePlayer, radius.toInt()).asSequence().filter { (_, block) ->
-                    val id = func.getIdFromBlock(block)
+                    val id = Block.getIdFromBlock(block)
                     arrayOf(chestFirstValue.get(), chestSecondValue.get(), chestThirdValue.get()).filterNot { it == 0 }.any { it == id }
                 }.filter { !clickedBlocks.contains(it.key) }.filter { thePlayer.distanceToCenter(it.key) < range }.run {
-                    if (!throughWalls) this else filter { (pos, _) -> (theWorld.rayTraceBlocks(eyesPos, pos.vec, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false) ?: return@filter false).blockPos == pos }
-                }.minBy { prioritySelector(it.key) }?.key
+                    if (!throughWalls) this else filter { (pos, _) -> (theWorld.rayTraceBlocks(eyesPos, pos.vec, false, true, false) ?: return@filter false).blockPos == pos }
+                }.minByOrNull { prioritySelector(it.key) }?.key
 
                 if (rotationEnabledValue.get())
                 {
@@ -143,16 +153,16 @@ object ChestAura : Module()
                         if (!theWorld.canBeClicked(currentBlock)) return
 
                         if (!throughWalls && (eyesPos.squareDistanceTo(posVec) > 18.0 || run {
-                                val rayTrace = theWorld.rayTraceBlocks(eyesPos, posVec, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false)
+                                val rayTrace = theWorld.rayTraceBlocks(eyesPos, posVec, false, true, false)
 
-                                rayTrace == null || rayTrace.typeOfHit != IMovingObjectPosition.WMovingObjectType.BLOCK || rayTrace.blockPos != currentBlock
+                                rayTrace == null || rayTrace.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK || rayTrace.blockPos != currentBlock
                             })) return
 
                         val rotationVector = RotationUtils.getVectorForRotation(limitedRotation)
                         val vector = eyesPos + rotationVector * range.toDouble()
-                        val rayTrace = theWorld.rayTraceBlocks(eyesPos, vector, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = false, returnLastUncollidableBlock = true)
+                        val rayTrace = theWorld.rayTraceBlocks(eyesPos, vector, false, false, true)
 
-                        if (rayTrace != null && (rayTrace.typeOfHit != IMovingObjectPosition.WMovingObjectType.BLOCK || rayTrace.blockPos != currentBlock)) return
+                        if (rayTrace != null && (rayTrace.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK || rayTrace.blockPos != currentBlock)) return
 
                         facesBlock = true
                     }
@@ -172,9 +182,9 @@ object ChestAura : Module()
 
                 CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT)
 
-                if (mc.playerController.onPlayerRightClick(thePlayer, theWorld, thePlayer.heldItem, currentBlock, provider.getEnumFacing(EnumFacingType.DOWN), currentBlock.vec))
+                if (mc.playerController.onPlayerRightClick(thePlayer, theWorld, thePlayer.heldItem, currentBlock, EnumFacing.DOWN, currentBlock.vec))
                 {
-                    if (visualSwing.get()) thePlayer.swingItem() else mc.netHandler.addToSendQueue(CPacketAnimation())
+                    if (visualSwing.get()) thePlayer.swingItem() else mc.netHandler.addToSendQueue(C0APacketAnimation())
 
                     clickedBlocks.add(currentBlock)
                     this.currentBlock = null

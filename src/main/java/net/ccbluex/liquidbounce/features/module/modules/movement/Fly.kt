@@ -6,20 +6,47 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerAbilities
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.BlockBBEvent
+import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.JumpEvent
+import net.ccbluex.liquidbounce.event.MotionEvent
+import net.ccbluex.liquidbounce.event.MoveEvent
+import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.Render2DEvent
+import net.ccbluex.liquidbounce.event.Render3DEvent
+import net.ccbluex.liquidbounce.event.StepEvent
+import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.DamageOnStart
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
-import net.ccbluex.liquidbounce.features.module.modules.movement.flies.aac.*
+import net.ccbluex.liquidbounce.features.module.modules.movement.flies.aac.AAC1_9_10Fly
+import net.ccbluex.liquidbounce.features.module.modules.movement.flies.aac.AAC3_0_5Fly
+import net.ccbluex.liquidbounce.features.module.modules.movement.flies.aac.AAC3_1_6GommeFly
+import net.ccbluex.liquidbounce.features.module.modules.movement.flies.aac.AAC3_3_12Glide
+import net.ccbluex.liquidbounce.features.module.modules.movement.flies.aac.AAC3_3_12HighJump
+import net.ccbluex.liquidbounce.features.module.modules.movement.flies.aac.AAC3_3_13HighJump
+import net.ccbluex.liquidbounce.features.module.modules.movement.flies.aac.AAC4_xGlide
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.hypixel.FreeHypixelFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.hypixel.HypixelFly
-import net.ccbluex.liquidbounce.features.module.modules.movement.flies.minorACs.*
+import net.ccbluex.liquidbounce.features.module.modules.movement.flies.minorACs.ACPFly
+import net.ccbluex.liquidbounce.features.module.modules.movement.flies.minorACs.HACFly
+import net.ccbluex.liquidbounce.features.module.modules.movement.flies.minorACs.HawkEyeFly
+import net.ccbluex.liquidbounce.features.module.modules.movement.flies.minorACs.MineSecureGlide
+import net.ccbluex.liquidbounce.features.module.modules.movement.flies.minorACs.WatchCatFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.ncp.NCPGlide
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.ncp.OldNCPFly
-import net.ccbluex.liquidbounce.features.module.modules.movement.flies.other.*
+import net.ccbluex.liquidbounce.features.module.modules.movement.flies.other.BlockWalkFly
+import net.ccbluex.liquidbounce.features.module.modules.movement.flies.other.CubeCraftGlide
+import net.ccbluex.liquidbounce.features.module.modules.movement.flies.other.FlagFly
+import net.ccbluex.liquidbounce.features.module.modules.movement.flies.other.Jetpack
+import net.ccbluex.liquidbounce.features.module.modules.movement.flies.other.KeepAliveFly
+import net.ccbluex.liquidbounce.features.module.modules.movement.flies.other.MCCentralFly
+import net.ccbluex.liquidbounce.features.module.modules.movement.flies.other.MineplexFly
+import net.ccbluex.liquidbounce.features.module.modules.movement.flies.other.MinesuchtFly
+import net.ccbluex.liquidbounce.features.module.modules.movement.flies.other.MushMCFly
+import net.ccbluex.liquidbounce.features.module.modules.movement.flies.other.NeruxVaceGlide
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.redesky.RedeSkyCollideFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.redesky.RedeSkyGlide
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.redesky.RedeSkySmoothFly
@@ -36,12 +63,21 @@ import net.ccbluex.liquidbounce.features.module.modules.render.Bobbing
 import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.Tower
 import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.utils.extensions.drawString
 import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.extensions.zeroXYZ
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
-import net.ccbluex.liquidbounce.value.*
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.FontValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.ValueGroup
+import net.minecraft.client.gui.ScaledResolution
+import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.network.play.client.C13PacketPlayerAbilities
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
 
@@ -371,8 +407,6 @@ object Fly : Module()
         if (visualVanillaFlightRemainingTimeCounterEnabledValue.get())
         {
             val theWorld = mc.theWorld ?: return
-            val provider = classProvider
-
             GL11.glPushMatrix()
 
             val moduleManager = LiquidBounce.moduleManager
@@ -389,9 +423,9 @@ object Fly : Module()
             val info = "You can fly ${if (remainingTicks <= 10) "\u00A7c" else ""}${remainingTicks}\u00A7r more ticks"
             val scaledResolution = ScaledResolution(mc)
 
-            RenderUtils.drawBorderedRect((scaledResolution.scaledWidth shr 1) - 2.0f, (scaledResolution.scaledHeight shr 1) + 5.0f, ((scaledResolution.scaledWidth shr 1) + font.getStringWidth(info)) + 2.0f, (scaledResolution.scaledHeight shr 1) + font.fontHeight + 7f, 3f, -16777216, -16777216)
+            RenderUtils.drawBorderedRect((scaledResolution.scaledWidth shr 1) - 2.0f, (scaledResolution.scaledHeight shr 1) + 5.0f, ((scaledResolution.scaledWidth shr 1) + font.getStringWidth(info)) + 2.0f, (scaledResolution.scaledHeight shr 1) + font.FONT_HEIGHT + 7f, 3f, -16777216, -16777216)
 
-            provider.GlStateManager.resetColor()
+            GlStateManager.resetColor()
 
             font.drawString(info, (scaledResolution.scaledWidth shr 1).toFloat(), (scaledResolution.scaledHeight shr 1) + 7.0f, 0xffffff)
 
@@ -399,29 +433,28 @@ object Fly : Module()
         }
     }
 
-    private var lastAbilitiesPacket: ICPacketPlayerAbilities? = null
+    private var lastAbilitiesPacket: C13PacketPlayerAbilities? = null
 
     @EventTarget
     fun onPacket(event: PacketEvent)
     {
         val packet = event.packet
 
-        if (packet is CPacketAbilities)
+        if (packet is C13PacketPlayerAbilities)
         {
             val thePlayer = mc.thePlayer ?: return
 
-            val abilities = packet.asCPacketPlayerAbilities()
             if (bypassAbilitiesValue.get())
             {
                 if (lastAbilitiesPacket == null)
                 {
-                    lastAbilitiesPacket = CPacketPlayerAbilities(thePlayer.capabilities)
-                    lastAbilitiesPacket!!.flying = false
+                    lastAbilitiesPacket = C13PacketPlayerAbilities(thePlayer.capabilities)
+                    lastAbilitiesPacket!!.isFlying = false
                 }
 
-                abilities.flying = false
+                packet.isFlying = false
 
-                if (lastAbilitiesPacket != null && lastAbilitiesPacket == abilities) event.cancelEvent() else lastAbilitiesPacket = abilities
+                if (lastAbilitiesPacket != null && lastAbilitiesPacket == packet) event.cancelEvent() else lastAbilitiesPacket = packet
             }
         }
 

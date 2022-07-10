@@ -5,8 +5,6 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
-import static net.ccbluex.liquidbounce.LiquidBounce.wrapper;
-
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.special.BungeeCordSpoof;
 import net.ccbluex.liquidbounce.file.FileManager;

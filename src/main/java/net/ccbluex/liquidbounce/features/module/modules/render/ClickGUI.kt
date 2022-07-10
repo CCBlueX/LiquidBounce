@@ -6,18 +6,21 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.minecraft.client.gui.FontRenderer
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.LiquidBounceStyle
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.NullStyle
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.SlowlyStyle
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbowRGB
 import net.ccbluex.liquidbounce.value.*
+import net.minecraft.client.gui.FontRenderer
+import net.minecraft.network.play.server.S2EPacketCloseWindow
+import net.minecraft.util.*
 import org.lwjgl.input.Keyboard
 
 @ModuleInfo(name = "ClickGUI", description = "Opens the ClickGUI.", category = ModuleCategory.RENDER, defaultKeyBinds = [Keyboard.KEY_RSHIFT], canEnable = false)
@@ -39,7 +42,7 @@ class ClickGUI : Module()
     override fun onEnable()
     {
         updateStyle()
-        mc.displayGuiScreen(classLiquidBounce.clickGui))
+        mc.displayGuiScreen(LiquidBounce.clickGui)
     }
 
     fun updateStyle()
@@ -57,9 +60,7 @@ class ClickGUI : Module()
     {
         val packet = event.packet
 
-        val provider = classProvider
-
-        if (packet is SPacketCloseWindow && mc.currentScreen is ClickGui) event.cancelEvent()
+        if (packet is S2EPacketCloseWindow && mc.currentScreen is ClickGui) event.cancelEvent()
     }
 
     companion object

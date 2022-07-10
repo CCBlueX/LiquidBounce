@@ -4,6 +4,8 @@ import net.ccbluex.liquidbounce.event.BlockBBEvent
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
+import net.minecraft.block.BlockAir
+import net.minecraft.util.AxisAlignedBB
 
 class RedeSkySmoothFly : FlyMode("RedeSky-Smooth")
 {

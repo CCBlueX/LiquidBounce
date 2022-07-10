@@ -31,10 +31,10 @@ class DonatorCape : Listenable, MinecraftInstance()
     fun onSession(@Suppress("UNUSED_PARAMETER") event: SessionEvent)
     {
         val session = mc.session
-        if (!GuiDonatorCape.capeEnabled || GuiDonatorCape.transferCode.isEmpty() || session.token !is ValidTokenOffline) return
+        if (!GuiDonatorCape.capeEnabled || GuiDonatorCape.transferCode.isEmpty() || !UserUtils.isValidTokenOffline(session.token)) return
 
         runAsync {
-            val uuid = session.playerId
+            val uuid = session.playerID
             val username = session.username
 
             val httpClient = HttpClients.createDefault()

@@ -8,7 +8,12 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.extensions.*
+import net.ccbluex.liquidbounce.utils.extensions.cantBoostUp
+import net.ccbluex.liquidbounce.utils.extensions.forward
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.moveDirectionRadians
+import net.ccbluex.liquidbounce.utils.extensions.strafe
+import net.ccbluex.liquidbounce.utils.extensions.zeroXZ
 
 class AAC3_5_0LowHop : SpeedMode("AAC3.5.0-LowHop") // Was AACLowHop3
 {

@@ -1,7 +1,9 @@
 package net.vitox.particle.util
 
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.toRadians
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.ccbluex.liquidbounce.utils.extensions.cos
+import net.ccbluex.liquidbounce.utils.extensions.sin
+import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.resetColor
 import org.lwjgl.opengl.GL11
@@ -40,11 +42,9 @@ object RenderUtils : MinecraftInstance()
         GL11.glLineWidth(1.0f)
         GL11.glBegin(GL11.GL_POLYGON)
 
-        val func = functions
-
         (0..360).map {
-            val radians = toRadians(it.toFloat())
-            func.sin(radians) to func.cos(radians)
+            val radians = it.toFloat().toRadians
+            radians.sin to radians.cos
         }.forEach { GL11.glVertex2f(x + it.first * radius, y + it.second * radius) }
 
         GL11.glEnd()

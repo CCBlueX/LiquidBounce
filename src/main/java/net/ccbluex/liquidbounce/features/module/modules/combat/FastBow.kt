@@ -5,9 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.api.enums.EnumFacingType
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging
-import net.ccbluex.liquidbounce.api.minecraft.util.BlockPos
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -15,6 +12,12 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.value.IntegerValue
+import net.minecraft.item.ItemBow
+import net.minecraft.network.play.client.C03PacketPlayer.C05PacketPlayerLook
+import net.minecraft.network.play.client.C07PacketPlayerDigging
+import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
+import net.minecraft.util.BlockPos
+import net.minecraft.util.EnumFacing
 
 @ModuleInfo(name = "FastBow", description = "Turns your bow into a machine gun.", category = ModuleCategory.COMBAT)
 class FastBow : Module()
@@ -29,19 +32,17 @@ class FastBow : Module()
 
         if (!thePlayer.isUsingItem) return
 
-        val currentItem = thePlayer.inventory.getCurrentItemInHand()
-
-        val provider = classProvider
+        val currentItem = thePlayer.inventory.getCurrentItem()
 
         if (currentItem != null && currentItem.item is ItemBow)
         {
-            netHandler.addToSendQueue(CPacketPlayerBlockPlacement(BlockPos.ORIGIN, 255, currentItem, 0F, 0F, 0F))
+            netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(BlockPos.ORIGIN, 255, currentItem, 0F, 0F, 0F))
 
             val yaw = RotationUtils.targetRotation?.yaw ?: thePlayer.rotationYaw
             val pitch = RotationUtils.targetRotation?.pitch ?: thePlayer.rotationPitch
 
-            repeat(packetsValue.get()) { netHandler.addToSendQueue(CPacketPlayerLook(yaw, pitch, true)) }
-            netHandler.addToSendQueue(CPacketPlayerDigging(ICPacketPlayerDigging.WAction.RELEASE_USE_ITEM, BlockPos.ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
+            repeat(packetsValue.get()) { netHandler.addToSendQueue(C05PacketPlayerLook(yaw, pitch, true)) }
+            netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
             thePlayer.itemInUseCount = currentItem.maxItemUseDuration - 1
         }
     }

@@ -47,7 +47,7 @@ public class MixinRenderEntityItem
 
     /**
      * @reason ItemPhysics
-     * @see    ItemPhysics
+     * @see ItemPhysics
      */
     @Inject(method = "doRender(Lnet/minecraft/entity/item/EntityItem;DDDFF)V", at = @At("HEAD"), cancellable = true)
     private void injectItemPhysicsAndChams(final EntityItem entity, final double x, final double y, final double z, final float entityYaw, final float partialTicks, final CallbackInfo callbackInfo)
@@ -117,8 +117,7 @@ public class MixinRenderEntityItem
 
                         entity.rotationPitch += _rotation;
                     }
-                }
-                else if (entity.posX !is NaN && entity.posY !is NaN && entity.posZ !is NaN && entity.worldObj != null)
+                } else if (!Double.isNaN(entity.posX) && !Double.isNaN(entity.posY) && !Double.isNaN(entity.posZ) && entity.worldObj != null)
                     if (entity.onGround)
                         entity.rotationPitch = 0;
                     else
@@ -147,8 +146,7 @@ public class MixinRenderEntityItem
                     ibakedmodel = ForgeHooksClient.handleCameraTransforms(ibakedmodel, TransformType.GROUND);
                     mc.getRenderItem().renderItem(itemstack, ibakedmodel);
                     GlStateManager.popMatrix();
-                }
-                else
+                } else
                 {
                     GlStateManager.pushMatrix();
 
@@ -242,8 +240,7 @@ public class MixinRenderEntityItem
             // filled -= 0.11111111F; // Why this is needed.. not sure...
             if (eyepos > blockY + (1 - filled))
                 return fluid;
-        }
-        else if (eyepos < blockY + filled)
+        } else if (eyepos < blockY + filled)
             return fluid;
         return null;
     }

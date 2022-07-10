@@ -7,13 +7,13 @@ package net.ccbluex.liquidbounce.ui.client.altmanager.sub
 
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager.Companion.login
+import net.ccbluex.liquidbounce.ui.elements.GuiPasswordField
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils.logger
 import net.ccbluex.liquidbounce.utils.TabUtils.tab
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount.AltServiceType
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.translateAlternateColorCodes
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.ccbluex.liquidbounce.utils.runAsync
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen

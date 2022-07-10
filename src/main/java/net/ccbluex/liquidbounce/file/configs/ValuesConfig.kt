@@ -122,7 +122,7 @@ class ValuesConfig(file: File) : FileConfig(file)
                         if (element != null) moduleValue.fromJson(element)
                     }
 
-                    for (moduleValue in module.flatValues) if (jsonModule is AliasPresent)
+                    for (moduleValue in module.flatValues) if (moduleValue.isAliasPresent(jsonModule))
                     {
                         moduleValue.fromJsonAlias(jsonModule)
                         ClientUtils.logger.info("[FileManager] [Backward-compatibility] Value ${module.name}.${moduleValue.name}")

@@ -13,7 +13,7 @@ class WatchCatFly : FlyMode("WatchCat")
         val y = thePlayer.posY
 
         thePlayer.strafe(0.15f)
-        thePlayer.sprinting = true
+        thePlayer.isSprinting = true
 
         if (y < Fly.startY + 2)
         {

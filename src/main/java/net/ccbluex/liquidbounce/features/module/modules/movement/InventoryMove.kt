@@ -12,10 +12,17 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.createOpenInventoryPacket
+import net.ccbluex.liquidbounce.utils.extensions.createOpenInventoryPacket
 import net.ccbluex.liquidbounce.utils.extensions.isMoving
-import net.ccbluex.liquidbounce.utils.isOpenInventoryPacket
+import net.ccbluex.liquidbounce.utils.extensions.isOpenInventoryPacket
+import net.ccbluex.liquidbounce.utils.extensions.sendPacketWithoutEvent
 import net.ccbluex.liquidbounce.value.BoolValue
+import net.minecraft.client.gui.GuiChat
+import net.minecraft.client.gui.GuiIngameMenu
+import net.minecraft.client.gui.inventory.GuiContainer
+import net.minecraft.client.gui.inventory.GuiInventory
+import net.minecraft.client.settings.GameSettings
+import net.minecraft.network.play.client.C0DPacketCloseWindow
 
 @ModuleInfo(name = "InventoryMove", description = "Allows you to walk while an inventory is opened.", category = ModuleCategory.MOVEMENT)
 class InventoryMove : Module()
@@ -36,7 +43,7 @@ class InventoryMove : Module()
     {
         val currentScreen = mc.currentScreen
         val gameSettings = mc.gameSettings
-        if (!currentScreen is GuiChat && !currentScreen is GuiIngameMenu && (!undetectable.get() || !currentScreen is GuiContainer) && (!onlyInventoryValue.get() || !currentScreen is GuiContainer || currentScreen is GuiInventory)) for (affectedBinding in affectedBindings) affectedBinding.pressed = affectedBinding is KeyDown
+        if (currentScreen !is GuiChat && currentScreen !is GuiIngameMenu && (!undetectable.get() || currentScreen !is GuiContainer) && (!onlyInventoryValue.get() || currentScreen !is GuiContainer || currentScreen is GuiInventory)) for (affectedBinding in affectedBindings) affectedBinding.pressed = GameSettings.isKeyDown(affectedBinding)
     }
 
     @EventTarget
@@ -47,7 +54,7 @@ class InventoryMove : Module()
         val packet = event.packet
 
         if (isOpenInventoryPacket(packet)) event.cancelEvent()
-        else if (packet is CPacketCloseWindow && packet.asCPacketCloseWindow().windowId == 0) event.cancelEvent()
+        else if (packet is C0DPacketCloseWindow && packet.windowId == 0) event.cancelEvent()
     }
 
     @EventTarget
@@ -62,14 +69,14 @@ class InventoryMove : Module()
         if (cancel) event.cancelEvent()
 
         // Close inventory
-        if (simulateInventory) mc.netHandler.networkManager.sendPacketWithoutEvent(CPacketCloseWindow(0))
+        if (simulateInventory) mc.netHandler.networkManager.sendPacketWithoutEvent(C0DPacketCloseWindow(0))
     }
 
     override fun onDisable()
     {
         val isIngame = mc.currentScreen != null
 
-        affectedBindings.filter { it !is KeyDown || isIngame }.forEach { it.pressed = false }
+        affectedBindings.filter { !GameSettings.isKeyDown(it) || isIngame }.forEach { it.pressed = false }
     }
 
     override val tag: String?

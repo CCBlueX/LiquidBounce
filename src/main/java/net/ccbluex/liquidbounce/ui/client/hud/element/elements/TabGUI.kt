@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
 import net.ccbluex.liquidbounce.LiquidBounce
-
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
@@ -18,6 +17,8 @@ import net.ccbluex.liquidbounce.ui.font.assumeNonVolatile
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.*
+import net.minecraft.client.gui.FontRenderer
+import net.minecraft.util.*
 import org.lwjgl.input.Keyboard
 
 @ElementInfo(name = "TabGUI")
@@ -296,7 +297,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 
         fun drawTab(x: Float, y: Float, color: Int, backgroundColor: Int, borderColor: Int, borderStrength: Float, fontRenderer: FontRenderer, borderRainbow: Boolean, rectRainbow: Boolean)
         {
-            menuWidth = modules.map { fontRenderer.getStringWidth(applyVariance(it.name)) }.max()?.plus(7) ?: 10
+            menuWidth = modules.map { fontRenderer.getStringWidth(applyVariance(it.name)) }.maxOrNull()?.plus(7) ?: 10
 
             val tabHeight = tabHeight.get()
             val menuHeight = modules.size * tabHeight

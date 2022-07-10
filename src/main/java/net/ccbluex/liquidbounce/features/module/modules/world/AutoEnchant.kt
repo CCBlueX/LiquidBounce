@@ -1,20 +1,27 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.api.enums.EnchantmentType
-import net.ccbluex.liquidbounce.api.minecraft.enchantments.IEnchantment
-import net.ccbluex.liquidbounce.api.minecraft.entity.ai.attributes.IAttributeModifier
-import net.ccbluex.liquidbounce.api.minecraft.inventory.IContainer
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.extensions.getEnchantmentLevel
+import net.ccbluex.liquidbounce.utils.extensions.highlight
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerRangeValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ValueGroup
+import net.minecraft.client.gui.GuiRepair
+import net.minecraft.enchantment.Enchantment
+import net.minecraft.enchantment.EnchantmentHelper
+import net.minecraft.entity.ai.attributes.AttributeModifier
+import net.minecraft.inventory.Container
+import net.minecraft.item.Item
+import net.minecraft.item.ItemEnchantedBook
+import net.minecraft.item.ItemSword
+import net.minecraft.item.ItemTool
+import net.minecraft.util.*
 
 private const val CLICKINDICATION_BOOK2ITEM_ITEM = -6270721
 private const val CLICKINDICATION_BOOK2ITEM_BOOK = -8388528
@@ -60,13 +67,12 @@ class AutoEnchant : Module()
     fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
     {
         val thePlayer = mc.thePlayer ?: return
-        val currentScreen = mc.currentScreen ?: return
+        val screen = mc.currentScreen ?: return
         val playerController = mc.playerController
 
-        if (currentScreen is GuiRepair)
+        if (screen is GuiRepair)
         {
-            val guiRepair = currentScreen.asGuiRepair()
-            val container = guiRepair.inventorySlots ?: return
+            val container = screen.inventorySlots ?: return
 
             if (!delayTimer.hasTimePassed(delay)) return
 
@@ -89,7 +95,7 @@ class AutoEnchant : Module()
 
             val bestSwordSlot = findBestWeapon(container, 3, 39)
 
-            val bestEnchantedBookSlots = findBestEnchantedBooks(container, 3, 39, listOf(classProvider.getEnchantmentEnum(EnchantmentType.SHARPNESS), classProvider.getEnchantmentEnum(EnchantmentType.KNOCKBACK), classProvider.getEnchantmentEnum(EnchantmentType.FIRE_ASPECT), classProvider.getEnchantmentEnum(EnchantmentType.UNBREAKING)))
+            val bestEnchantedBookSlots = findBestEnchantedBooks(container, 3, 39, listOf(Enchantment.sharpness, Enchantment.knockback, Enchantment.fireAspect, Enchantment.unbreaking))
             if (bestEnchantedBookSlots.isNotEmpty())
             {
                 // Item-To-Book
@@ -97,7 +103,7 @@ class AutoEnchant : Module()
                 {
                     playerController.windowClick(container.windowId, bestSwordSlot, 0, 1, thePlayer)
 
-                    if (clickIndicationEnabledValue.get()) guiRepair.highlight(bestSwordSlot, clickIndicationLengthValue.get().toLong(), CLICKINDICATION_BOOK2ITEM_ITEM)
+                    if (clickIndicationEnabledValue.get()) screen.highlight(bestSwordSlot, clickIndicationLengthValue.get().toLong(), CLICKINDICATION_BOOK2ITEM_ITEM)
 
                     delay = delayValue.getRandomLong()
                     delayTimer.reset()
@@ -106,7 +112,7 @@ class AutoEnchant : Module()
                 {
                     playerController.windowClick(container.windowId, bestEnchantedBookSlots[0], 0, 1, thePlayer)
 
-                    if (clickIndicationEnabledValue.get()) guiRepair.highlight(bestSwordSlot, clickIndicationLengthValue.get().toLong(), CLICKINDICATION_BOOK2ITEM_BOOK)
+                    if (clickIndicationEnabledValue.get()) screen.highlight(bestSwordSlot, clickIndicationLengthValue.get().toLong(), CLICKINDICATION_BOOK2ITEM_BOOK)
 
                     delay = delayValue.getRandomLong()
                     delayTimer.reset()
@@ -121,7 +127,7 @@ class AutoEnchant : Module()
                     var whiteID: Int? = null
                     (if (firstInputSlot.stack == null) bestSwordSlot else firstInputSlot.slotNumber).let { slot ->
                         triedEnchantSwordSlots.add(slot)
-                        container.getSlot(slot).stack?.item?.let { whiteID = functions.getIdFromItem(it) }
+                        container.getSlot(slot).stack?.item?.let { whiteID = Item.getIdFromItem(it) }
                     }
                     triedEnchantSwordSlots.add(outputSlot.slotNumber)
 
@@ -134,7 +140,7 @@ class AutoEnchant : Module()
                             val bestSwordStack = container.getSlot(bestSwordSlot).stack ?: return@run false
                             val secondSwordStack = container.getSlot(secondSwordSlot).stack ?: return@run false
 
-                            secondSwordStack.item?.let(functions::getIdFromItem)?.equals(bestSwordStack.item?.let(functions::getIdFromItem)) == true || !secondSwordStack.isItemEnchanted
+                            secondSwordStack.item?.let(Item::getIdFromItem)?.equals(bestSwordStack.item?.let(Item::getIdFromItem)) == true || !secondSwordStack.isItemEnchanted
                         })
                 }
 
@@ -145,7 +151,7 @@ class AutoEnchant : Module()
                     {
                         playerController.windowClick(container.windowId, bestSwordSlot, 0, 1, thePlayer)
 
-                        if (clickIndicationEnabledValue.get()) guiRepair.highlight(bestSwordSlot, clickIndicationLengthValue.get().toLong(), CLICKINDICATION_ITEM2ITEM_FIRST)
+                        if (clickIndicationEnabledValue.get()) screen.highlight(bestSwordSlot, clickIndicationLengthValue.get().toLong(), CLICKINDICATION_ITEM2ITEM_FIRST)
 
                         delay = delayValue.getRandomLong()
                         delayTimer.reset()
@@ -156,7 +162,7 @@ class AutoEnchant : Module()
                     // Second
                     playerController.windowClick(container.windowId, secondSwordSlot, 0, 1, thePlayer)
 
-                    if (clickIndicationEnabledValue.get()) guiRepair.highlight(bestSwordSlot, clickIndicationLengthValue.get().toLong(), CLICKINDICATION_ITEM2ITEM_SECOND)
+                    if (clickIndicationEnabledValue.get()) screen.highlight(bestSwordSlot, clickIndicationLengthValue.get().toLong(), CLICKINDICATION_ITEM2ITEM_SECOND)
 
                     delay = delayValue.getRandomLong()
                     delayTimer.reset()
@@ -170,11 +176,11 @@ class AutoEnchant : Module()
         }
     }
 
-    private fun findBestWeapon(container: IContainer, start: Int, end: Int, whitelistedID: Int? = null, blacklistedSlots: List<Int>? = null): Int = (start until end).filter { blacklistedSlots?.contains(it) != true }.mapNotNull { it to (container.getSlot(it).stack ?: return@mapNotNull null) }.filter { (_, stack) -> stack.item is ItemSword || stack.item is ItemTool }.filter { (_, stack) -> whitelistedID?.let { functions.getIdFromItem(stack.item ?: return@filter true) == it } != false }.maxBy { (_, stack) ->
-        stack.getAttributeModifier("generic.attackDamage").map(IAttributeModifier::amount).sum() + 1.25 * stack.getEnchantmentLevel(classProvider.getEnchantmentEnum(EnchantmentType.SHARPNESS))
+    private fun findBestWeapon(container: Container, start: Int, end: Int, whitelistedID: Int? = null, blacklistedSlots: List<Int>? = null): Int = (start until end).filter { blacklistedSlots?.contains(it) != true }.mapNotNull { it to (container.getSlot(it).stack ?: return@mapNotNull null) }.filter { (_, stack) -> stack.item is ItemSword || stack.item is ItemTool }.filter { (_, stack) -> whitelistedID?.let { Item.getIdFromItem(stack.item ?: return@filter true) == it } != false }.maxByOrNull { (_, stack) ->
+        stack.attributeModifiers["generic.attackDamage"].map(AttributeModifier::getAmount).sum() + 1.25 * stack.getEnchantmentLevel(Enchantment.sharpness)
     }?.first ?: -1
 
-    private fun findBestEnchantedBooks(container: IContainer, start: Int, end: Int, enchantments: Collection<IEnchantment>): List<Int>
+    private fun findBestEnchantedBooks(container: Container, start: Int, end: Int, enchantments: Collection<Enchantment>): List<Int>
     {
         val bestSlots: MutableList<Int> = ArrayList()
 
@@ -182,8 +188,8 @@ class AutoEnchant : Module()
         {
             // Find the best enchanted book for each enchantment (#Kotlin style)
             val enchantID = enchantment.effectId
-            val bestSlot = (start until end).mapNotNull { it to (container.getSlot(it).stack ?: return@mapNotNull null) }.filter { (_, stack) -> stack.item?.let(classProvider::isItemEnchantedBook) == true }.maxBy { (_, stack) ->
-                functions.getEnchantments(stack).filter { it.key == enchantID }.maxBy(Map.Entry<Int, Int>::value)?.value ?: -1
+            val bestSlot = (start until end).mapNotNull { it to (container.getSlot(it).stack ?: return@mapNotNull null) }.filter { (_, stack) -> stack.item is ItemEnchantedBook }.maxByOrNull { (_, stack) ->
+                EnchantmentHelper.getEnchantments(stack).filter { it.key == enchantID }.maxByOrNull(Map.Entry<Int, Int>::value)?.value ?: -1
             }?.first ?: -1
 
             if (bestSlot != -1 && !bestSlots.contains(bestSlot)) bestSlots.add(bestSlot)

@@ -5,9 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.Entity
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
-import net.ccbluex.liquidbounce.api.minecraft.util.Vec3
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -16,9 +13,19 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
 import net.ccbluex.liquidbounce.utils.extensions.isSelected
+import net.ccbluex.liquidbounce.utils.extensions.plus
+import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
-import net.ccbluex.liquidbounce.value.*
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.RGBAColorValue
+import net.ccbluex.liquidbounce.value.ValueGroup
+import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.util.Vec3
 import org.lwjgl.opengl.GL11
 
 @ModuleInfo(name = "Tracers", description = "Draws a line to targets around you.", category = ModuleCategory.RENDER)
@@ -91,9 +98,7 @@ class Tracers : Module()
         }
 
         val bot = botValue.get()
-        val provider = classProvider
-
-        theWorld.loadedEntityList.filter { false is Selected }.map(Entity::asEntityLivingBase).filter { it != thePlayer }.run { if (bot) this else filter { !AntiBot.isBot(theWorld, thePlayer, it) } }.forEach { entity ->
+        theWorld.loadedEntityList.filterIsInstance<EntityLivingBase>().filter { it.isSelected(false) }.filter { it != thePlayer }.run { if (bot) this else filter { !AntiBot.isBot(theWorld, thePlayer, it) } }.forEach { entity ->
             val distance = (thePlayer.getDistanceToEntity(entity) * 2f).toInt().coerceAtMost(255)
 
             val lastTickPosX = entity.lastTickPosX
@@ -106,7 +111,7 @@ class Tracers : Module()
 
             RenderUtils.glColor(when
             {
-                entity is EntityPlayer && entity.asEntityPlayer().isClientFriend() -> ColorUtils.createRGB(0, 0, 255, alpha)
+                entity is EntityPlayer && entity.isClientFriend() -> ColorUtils.createRGB(0, 0, 255, alpha)
                 colorMode.equals("DistanceColor", ignoreCase = true) -> ColorUtils.createRGB(255 - distance, distance, 0, alpha)
                 else -> color
             })

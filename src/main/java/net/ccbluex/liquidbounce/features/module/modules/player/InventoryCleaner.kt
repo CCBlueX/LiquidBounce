@@ -6,17 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.enums.BlockType
-import net.ccbluex.liquidbounce.api.enums.EnchantmentType
-import net.ccbluex.liquidbounce.api.enums.EnumFacingType
-import net.ccbluex.liquidbounce.api.minecraft.client.block.IBlock
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.EntityPlayerSP
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.EntityPlayer
-import net.ccbluex.liquidbounce.api.minecraft.inventory.IContainer
-import net.ccbluex.liquidbounce.api.minecraft.item.IItem
-import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketPlayerDigging
-import net.ccbluex.liquidbounce.api.minecraft.util.BlockPos
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -26,14 +15,50 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.AutoArmor
 import net.ccbluex.liquidbounce.features.module.modules.combat.AutoPot
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.InventoryUtils
-import net.ccbluex.liquidbounce.utils.createOpenInventoryPacket
 import net.ccbluex.liquidbounce.utils.extensions.BLACKLISTED_BLOCKS
+import net.ccbluex.liquidbounce.utils.extensions.createOpenInventoryPacket
 import net.ccbluex.liquidbounce.utils.extensions.getEnchantmentLevel
+import net.ccbluex.liquidbounce.utils.extensions.highlight
 import net.ccbluex.liquidbounce.utils.extensions.isEmpty
 import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.itemDelay
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
 import net.ccbluex.liquidbounce.utils.timer.Cooldown
 import net.ccbluex.liquidbounce.value.*
+import net.minecraft.block.Block
+import net.minecraft.block.BlockBush
+import net.minecraft.block.BlockChest
+import net.minecraft.client.entity.EntityPlayerSP
+import net.minecraft.client.gui.inventory.GuiContainer
+import net.minecraft.client.gui.inventory.GuiInventory
+import net.minecraft.enchantment.Enchantment
+import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.init.Blocks
+import net.minecraft.inventory.Container
+import net.minecraft.item.Item
+import net.minecraft.item.ItemAppleGold
+import net.minecraft.item.ItemArmor
+import net.minecraft.item.ItemAxe
+import net.minecraft.item.ItemBed
+import net.minecraft.item.ItemBlock
+import net.minecraft.item.ItemBoat
+import net.minecraft.item.ItemBow
+import net.minecraft.item.ItemBucket
+import net.minecraft.item.ItemEnchantedBook
+import net.minecraft.item.ItemEnderPearl
+import net.minecraft.item.ItemFood
+import net.minecraft.item.ItemMinecart
+import net.minecraft.item.ItemPickaxe
+import net.minecraft.item.ItemPotion
+import net.minecraft.item.ItemSkull
+import net.minecraft.item.ItemSpade
+import net.minecraft.item.ItemStack
+import net.minecraft.item.ItemSword
+import net.minecraft.item.ItemTool
+import net.minecraft.network.play.client.C07PacketPlayerDigging
+import net.minecraft.network.play.client.C09PacketHeldItemChange
+import net.minecraft.network.play.client.C0DPacketCloseWindow
+import net.minecraft.util.*
 import java.lang.ref.SoftReference
 import java.util.*
 import kotlin.random.Random
@@ -195,8 +220,6 @@ class InventoryCleaner : Module()
 
         val hotbar = hotbarValue.get()
 
-        val provider = classProvider
-
         val screen = mc.currentScreen
 
         // Clean hotbar
@@ -227,17 +250,17 @@ class InventoryCleaner : Module()
 
                 // Switch to the slot of garbage item
 
-                netHandler.addToSendQueue(CPacketHeldItemChange(garbageHotbarItem - 36))
+                netHandler.addToSendQueue(C09PacketHeldItemChange(garbageHotbarItem - 36))
 
                 // Drop items
                 val amount = getAmount(garbageHotbarItem, inventoryContainer)
-                val action = if (amount > 1 || (amount == 1 && Math.random() > 0.8)) ICPacketPlayerDigging.WAction.DROP_ALL_ITEMS else ICPacketPlayerDigging.WAction.DROP_ITEM
-                netHandler.addToSendQueue(CPacketPlayerDigging(action, BlockPos.ORIGIN, provider.getEnumFacing(EnumFacingType.DOWN)))
+                val action = if (amount > 1 || (amount == 1 && Math.random() > 0.8)) C07PacketPlayerDigging.Action.DROP_ALL_ITEMS else C07PacketPlayerDigging.Action.DROP_ITEM
+                netHandler.addToSendQueue(C07PacketPlayerDigging(action, BlockPos.ORIGIN, EnumFacing.DOWN))
 
-                if (clickIndicationEnabledValue.get() && screen != null && screen is GuiContainer) screen.asGuiContainer().highlight(garbageHotbarItem, clickIndicationLengthValue.get().toLong(), if (misclick) CLICKINDICATION_MISCLICK else CLICKINDICATION_THROW)
+                if (clickIndicationEnabledValue.get() && screen != null && screen is GuiContainer) screen.highlight(garbageHotbarItem, clickIndicationLengthValue.get().toLong(), if (misclick) CLICKINDICATION_MISCLICK else CLICKINDICATION_THROW)
 
                 // Back to the original holding slot
-                netHandler.addToSendQueue(CPacketHeldItemChange(thePlayer.inventory.currentItem))
+                netHandler.addToSendQueue(C09PacketHeldItemChange(thePlayer.inventory.currentItem))
 
                 delay = hotbarDelayValue.getRandomLong()
             }
@@ -255,7 +278,7 @@ class InventoryCleaner : Module()
         cleanInventory(thePlayer, end = if (hotbar) 45 else 36, container = inventoryContainer)
     }
 
-    private fun cleanInventory(thePlayer: EntityPlayerSP, start: Int = 9, end: Int = 45, container: IContainer)
+    private fun cleanInventory(thePlayer: EntityPlayerSP, start: Int = 9, end: Int = 45, container: Container)
     {
         val controller = mc.playerController
         val netHandler = mc.netHandler
@@ -287,7 +310,7 @@ class InventoryCleaner : Module()
             }
 
             // SimulateInventory
-            val openInventory = simulateInventory.get() && !screen is GuiInventory
+            val openInventory = simulateInventory.get() && screen !is GuiInventory
             if (openInventory) netHandler.addToSendQueue(createOpenInventoryPacket())
 
             // Drop all useless items
@@ -295,12 +318,12 @@ class InventoryCleaner : Module()
 
             if (amount > 1 || /* Mistake simulation */ Random.nextBoolean()) controller.windowClick(container.windowId, garbageItem, 1, 4, thePlayer) else controller.windowClick(container.windowId, garbageItem, 0, 4, thePlayer)
 
-            if (clickIndicationEnabledValue.get() && screen != null && screen is GuiContainer) screen.asGuiContainer().highlight(garbageItem, clickIndicationLengthValue.get().toLong(), if (misclick) CLICKINDICATION_MISCLICK else CLICKINDICATION_THROW)
+            if (clickIndicationEnabledValue.get() && screen != null && screen is GuiContainer) screen.highlight(garbageItem, clickIndicationLengthValue.get().toLong(), if (misclick) CLICKINDICATION_MISCLICK else CLICKINDICATION_THROW)
 
             clickTimer.reset() // For more compatibility with custom MSTimer(s)
 
             // SimulateInventory
-            if (openInventory) netHandler.addToSendQueue(CPacketCloseWindow())
+            if (openInventory) netHandler.addToSendQueue(C0DPacketCloseWindow())
 
             delay = delayValue.getRandomLong()
         }
@@ -314,27 +337,25 @@ class InventoryCleaner : Module()
      * @param slot Slot id of the item.
      * @return Returns true when the item is useful
      */
-    fun isUseful(thePlayer: EntityPlayer, slot: Int, stack: IItemStack, start: Int = 0, end: Int = 45, container: IContainer): Boolean
+    fun isUseful(thePlayer: EntityPlayer, slot: Int, stack: ItemStack, start: Int = 0, end: Int = 45, container: Container): Boolean
     {
         return try
         {
             val item = stack.item
             val stackSize = stack.stackSize
 
-            val provider = classProvider
-
             val otherItemMap = items(start, end, container).filter { (otherSlot, _) -> otherSlot != slot }
             val otherItems = otherItemMap.values
 
-            val check = { max: Int, filter: (IItemStack) -> Boolean ->
-                otherItems.filter(filter).sumBy(IItemStack::stackSize) + stackSize <= max
+            val check = { max: Int, filter: (ItemStack) -> Boolean ->
+                otherItems.filter(filter).sumBy(ItemStack::stackSize) + stackSize <= max
             }
 
             when
             {
                 item is ItemSword || item is ItemTool ->
                 {
-                    val typeOf = { _item: IItem? ->
+                    val typeOf = { _item: Item? ->
                         when
                         {
                             _item is ItemSword -> 0
@@ -362,8 +383,7 @@ class InventoryCleaner : Module()
                         if ((type.equals("sword", true) && isSword || type.equals("pickaxe", true) && currentType == 1 || type.equals("axe", true) && currentType == 2) && findBetterItem(thePlayer, hotbar, thePlayer.inventory.getStackInSlot(hotbar)) == null) return@isUseful true
                     }
 
-                    val sharpEnch = provider.getEnchantmentEnum(EnchantmentType.SHARPNESS)
-                    val getAttackDamage = { itemStack: IItemStack -> (itemStack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount ?: 0.0) + 1.25 * itemStack.getEnchantmentLevel(sharpEnch) }
+                    val getAttackDamage = { itemStack: ItemStack -> (itemStack.attributeModifiers["generic.attackDamage"].firstOrNull()?.amount ?: 0.0) + 1.25 * itemStack.getEnchantmentLevel(Enchantment.sharpness) }
                     val attackDamage = getAttackDamage(stack)
                     check(maxCount) { otherStack -> typeOf(otherStack.item) == currentType && attackDamage <= getAttackDamage(otherStack) }
                 }
@@ -373,13 +393,13 @@ class InventoryCleaner : Module()
                     val maxCount = filterBowAndArrowBowCountValue.get()
                     if (maxCount <= 0) return false
 
-                    val powerEnch = provider.getEnchantmentEnum(EnchantmentType.POWER)
-                    val getPower = { itemStack: IItemStack -> itemStack.getEnchantmentLevel(powerEnch) }
+                    val powerEnch = Enchantment.power
+                    val getPower = { itemStack: ItemStack -> itemStack.getEnchantmentLevel(powerEnch) }
                     val currentPower = getPower(stack)
                     check(maxCount) { otherStack -> otherStack.item is ItemBow && currentPower <= getPower(otherStack) }
                 }
 
-                filterBowAndArrowArrowCountValue.get() > 0 && stack.unlocalizedName == "item.arrow" -> otherItems.filter { it.unlocalizedName == "item.arrow" }.sumBy(IItemStack::stackSize) + stackSize <= filterBowAndArrowArrowCountValue.get()
+                filterBowAndArrowArrowCountValue.get() > 0 && stack.unlocalizedName == "item.arrow" -> otherItems.filter { it.unlocalizedName == "item.arrow" }.sumBy(ItemStack::stackSize) + stackSize <= filterBowAndArrowArrowCountValue.get()
 
                 item is ItemArmor ->
                 {
@@ -392,7 +412,7 @@ class InventoryCleaner : Module()
                     otherItemMap.filter { it.value.item is ItemArmor }.filter { (otherSlot, otherStack) ->
                         val otherArmorPiece = ArmorPiece(otherStack, otherSlot)
                         otherArmorPiece.armorType == currentArmor.armorType && AutoArmor.ARMOR_COMPARATOR.compare(currentArmor, otherArmorPiece) <= 0
-                    }.values.sumBy(IItemStack::stackSize) + stackSize <= maxCount
+                    }.values.sumBy(ItemStack::stackSize) + stackSize <= maxCount
                 }
 
                 filterCompassCountValue.get() > 0 && stack.unlocalizedName == "item.compass" -> check(filterCompassCountValue.get()) { it.unlocalizedName == "item.compass" }
@@ -403,11 +423,11 @@ class InventoryCleaner : Module()
                     check(filterBedCountValue.get()) { it.unlocalizedName == name }
                 }
 
-                item is ItemBlock && !provider.isBlockBush(item? as ItemBlock?.block) && !provider.isBlockChest(item? as ItemBlock?.block) -> otherItems.filter { it.item is ItemBlock && item? as ItemBlock?.block?.let(::checkBlock) == true }.sumBy(IItemStack::stackSize) + stackSize <= filterMaxBlockCountValue.get()
+                item is ItemBlock && item.block !is BlockBush && item.block !is BlockChest -> otherItems.filter { it.item is ItemBlock && item.block?.let(::checkBlock) == true }.sumBy(ItemStack::stackSize) + stackSize <= filterMaxBlockCountValue.get()
 
                 filterFoodCountValue.get() > 0 && item is ItemFood && item !is ItemAppleGold ->
                 {
-                    val getScore = { foodStack: IItemStack ->
+                    val getScore = { foodStack: ItemStack ->
                         val itemFood = foodStack.item!! as ItemFood
                         itemFood.getHealAmount(stack) + itemFood.getSaturationModifier(stack)
                     }
@@ -417,30 +437,30 @@ class InventoryCleaner : Module()
 
                 item is ItemBucket ->
                 {
-                    val normalize = { block: IBlock ->
+                    val normalize = { block: Block ->
                         when (block)
                         {
-                            provider.getBlockEnum(BlockType.FLOWING_WATER) -> provider.getBlockEnum(BlockType.WATER)
-                            provider.getBlockEnum(BlockType.FLOWING_LAVA) -> provider.getBlockEnum(BlockType.LAVA)
+                            Blocks.flowing_water -> Blocks.water
+                            Blocks.flowing_lava -> Blocks.lava
                             else -> block
                         }
                     }
 
-                    val full = (normalize(item!! as ItemBucket)isFull)
+                    val full = normalize(item.isFull)
                     check(when (full)
                     {
-                        provider.getBlockEnum(BlockType.AIR) -> filterBucketEmptyCountValue.get()
-                        provider.getBlockEnum(BlockType.WATER) -> filterBucketWaterCountValue.get()
-                        provider.getBlockEnum(BlockType.LAVA) -> filterBucketLavaCountValue.get()
+                        Blocks.air -> filterBucketEmptyCountValue.get()
+                        Blocks.water -> filterBucketWaterCountValue.get()
+                        Blocks.lava -> filterBucketLavaCountValue.get()
                         else -> filterBucketOtherCountValue.get()
-                    }) { it is ItemBucket && (normalize(it.item!! as ItemBucket)isFull) == full }
+                    }) { it.item is ItemBucket && normalize((it.item as ItemBucket).isFull) == full }
                 }
 
                 filterGoldAppleCountValue.get() > 0 && item is ItemAppleGold -> check(filterGoldAppleCountValue.get()) { item is ItemAppleGold }
                 filterEnderPearlCountValue.get() > 0 && item is ItemEnderPearl -> check(filterEnderPearlCountValue.get()) { it.item is ItemEnderPearl }
                 filterDiamondCountValue.get() > 0 && stack.unlocalizedName == "item.diamond" -> check(filterDiamondCountValue.get()) { it.unlocalizedName == "item.diamond" }
                 filterIronIngotCountValue.get() > 0 && stack.unlocalizedName == "item.ingotIron" -> check(filterIronIngotCountValue.get()) { it.unlocalizedName == "item.ingotIron" }
-                filterPotionCountValue.get() > 0 && item is ItemPotion && stack is PotionUseful -> check(filterPotionCountValue.get()) { it.item is ItemPotion && it is PotionUseful }
+                filterPotionCountValue.get() > 0 && item is ItemPotion && AutoPot.isPotionUseful(stack) -> check(filterPotionCountValue.get()) { it.item is ItemPotion && AutoPot.isPotionUseful(it) }
                 filterSkullCountValue.get() > 0 && item is ItemSkull -> check(filterSkullCountValue.get()) { it.item is ItemSkull }
                 filterVehicleCountValue.get() > 0 && (item is ItemBoat || item is ItemMinecart) -> check(filterVehicleCountValue.get()) { item is ItemBoat || item is ItemMinecart }
 
@@ -457,7 +477,7 @@ class InventoryCleaner : Module()
     }
 
     // TODO: update block filter
-    private fun checkBlock(block: IBlock): Boolean = !block is BlockBush && !block is BlockChest
+    private fun checkBlock(block: Block): Boolean = block !is BlockBush && block !is BlockChest
 
     /**
      * INVENTORY SORTER
@@ -468,7 +488,6 @@ class InventoryCleaner : Module()
      */
     private fun sortHotbar(thePlayer: EntityPlayerSP)
     {
-        val provider = classProvider
         val netHandler = mc.netHandler
         val screen = mc.currentScreen
 
@@ -482,21 +501,19 @@ class InventoryCleaner : Module()
 
             if (clickIndicationEnabledValue.get() && screen != null && screen is GuiContainer)
             {
-                screen.asGuiContainer().highlight(slot, clickIndicationLengthValue.get().toLong(), CLICKINDICATION_REPLACE_FROM)
-                screen.asGuiContainer().highlight(index + 36, clickIndicationLengthValue.get().toLong(), CLICKINDICATION_REPLACE_TO)
+                screen.highlight(slot, clickIndicationLengthValue.get().toLong(), CLICKINDICATION_REPLACE_FROM)
+                screen.highlight(index + 36, clickIndicationLengthValue.get().toLong(), CLICKINDICATION_REPLACE_TO)
             }
 
-            if (openInventory) netHandler.addToSendQueue(CPacketCloseWindow())
+            if (openInventory) netHandler.addToSendQueue(C0DPacketCloseWindow())
 
             delay = delayValue.getRandomLong()
         }
     }
 
-    private fun findBetterItem(thePlayer: EntityPlayer, slot: Int, slotStack: IItemStack?): Int?
+    private fun findBetterItem(thePlayer: EntityPlayer, slot: Int, slotStack: ItemStack?): Int?
     {
         val type = type(slot).toLowerCase()
-
-        val provider = classProvider
 
         val mainInventory = thePlayer.inventory.mainInventory.asSequence().withIndex()
 
@@ -508,15 +525,15 @@ class InventoryCleaner : Module()
                 // https://youtrack.jetbrains.com/issue/KT-17018
                 // https://youtrack.jetbrains.com/issue/KT-38704
                 @Suppress("ConvertLambdaToReference")
-                val typecheck: ((IItem?) -> Boolean) = when (type)
+                val typecheck: ((Item?) -> Boolean) = when (type)
                 {
-                    "pickaxe" -> { item: IItem? -> item is ItemPickaxe }
-                    "axe" -> { item: IItem? -> item is ItemAxe }
-                    else -> { item: IItem? -> item is ItemSword }
+                    "pickaxe" -> { item: Item? -> item is ItemPickaxe }
+                    "axe" -> { item: Item? -> item is ItemAxe }
+                    else -> { item: Item? -> item is ItemSword }
                 }
 
                 var bestWeapon = if (typecheck(slotStack?.item)) slot else -1
-                val getAttackDamage = { itemStack: IItemStack -> (itemStack.getAttributeModifier("generic.attackDamage").firstOrNull()?.amount ?: 0.0) + 1.25 * itemStack.getEnchantmentLevel(provider.getEnchantmentEnum(EnchantmentType.SHARPNESS)) }
+                val getAttackDamage = { itemStack: ItemStack -> (itemStack.attributeModifiers["generic.attackDamage"].firstOrNull()?.amount ?: 0.0) + 1.25 * itemStack.getEnchantmentLevel(Enchantment.sharpness) }
 
                 mainInventory.filter { typecheck(it.value?.item) }.map { it.index to it.value!! }.filter { !type(it.first).equals(type, ignoreCase = true) }.forEach { (index, stack) -> if (bestWeapon == -1) bestWeapon = index else if (getAttackDamage(thePlayer.inventory.getStackInSlot(bestWeapon) ?: return@forEach) < getAttackDamage(stack)) bestWeapon = index }
 
@@ -526,7 +543,7 @@ class InventoryCleaner : Module()
             "bow" -> if (filterBowAndArrowBowCountValue.get() > 0)
             {
                 var bestBow = if (slotStack?.item is ItemBow) slot else -1
-                val powerEnch = provider.getEnchantmentEnum(EnchantmentType.POWER)
+                val powerEnch = Enchantment.power
                 var bestPower = if (bestBow != -1) slotStack.getEnchantmentLevel(powerEnch) else 0
 
                 mainInventory.filter { it.value?.item is ItemBow }.map { it.index to it.value!! }.filter { !type(it.first).equals(type, ignoreCase = true) }.forEach { (index, stack) ->
@@ -545,13 +562,13 @@ class InventoryCleaner : Module()
                 return if (bestBow != -1) bestBow else null
             }
 
-            "food" -> if (filterFoodCountValue.get() > 0) mainInventory.filter { it.value?.item is ItemFood }.map { it.index to it.value!! }.filter { it.second !is ItemAppleGold }.filter { !type(it.first).equals("Food", ignoreCase = true) }.toList().forEach { (index, stack) -> return@findBetterItem if (stack.isEmpty || stack.item !is ItemFood) index else null }
-            "block" -> mainInventory.filter { it.value?.item is ItemBlock }.mapNotNull { it.index to (it.value?.item? as ItemBlock ?: return@mapNotNull null) }.filter { !BLACKLISTED_BLOCKS.contains(it.second.block) }.filter { !type(it.first).equals("Block", ignoreCase = true) }.forEach { (index, item) -> return@findBetterItem if (slotStack.isEmpty || item !is ItemBlock) index else null }
+            "food" -> if (filterFoodCountValue.get() > 0) mainInventory.filter { it.value?.item is ItemFood }.map { it.index to it.value!! }.filter { it.second.item !is ItemAppleGold }.filter { !type(it.first).equals("Food", ignoreCase = true) }.toList().forEach { (index, stack) -> return@findBetterItem if (stack.isEmpty || stack.item !is ItemFood) index else null }
+            "block" -> mainInventory.filter { it.value?.item is ItemBlock }.mapNotNull { it.index to it.value?.item as ItemBlock }.filter { !BLACKLISTED_BLOCKS.contains(it.second.block) }.filter { !type(it.first).equals("Block", ignoreCase = true) }.forEach { (index, item) -> return@findBetterItem if (slotStack.isEmpty || item !is ItemBlock) index else null }
 
             "water" -> if (filterBucketWaterCountValue.get() > 0)
             {
-                val flowingWater = provider.getBlockEnum(BlockType.FLOWING_WATER)
-                mainInventory.filter { it.value?.item is ItemBucket }.mapNotNull { it.index to (it.value?.item? as ItemBucket ?: return@mapNotNull null) }.filter { it.second.isFull == flowingWater }.filter { !type(it.first).equals("Water", ignoreCase = true) }.toList().forEach { (index, item) -> return@findBetterItem if (slotStack.isEmpty || item !is ItemBucket || (item as ItemBucket).isFull != flowingWater) index else null }
+                val flowingWater = Blocks.flowing_water
+                mainInventory.filter { it.value?.item is ItemBucket }.mapNotNull { it.index to it.value?.item as ItemBucket }.filter { it.second.isFull == flowingWater }.filter { !type(it.first).equals("Water", ignoreCase = true) }.toList().forEach { (index, item) -> return@findBetterItem if (slotStack.isEmpty || item !is ItemBucket || (item as ItemBucket).isFull != flowingWater) index else null }
             }
 
             "gapple" -> if (filterFoodCountValue.get() > 0) mainInventory.filter { it.value?.item is ItemAppleGold }.filter { !type(it.index).equals("Gapple", ignoreCase = true) }.forEach { return@findBetterItem if (slotStack.isEmpty || slotStack?.item !is ItemAppleGold) it.index else null }
@@ -564,9 +581,9 @@ class InventoryCleaner : Module()
     /**
      * Get items in inventory
      */
-    private fun items(start: Int = 0, end: Int = 45, container: IContainer): Map<Int, IItemStack>
+    private fun items(start: Int = 0, end: Int = 45, container: Container): Map<Int, ItemStack>
     {
-        val items = mutableMapOf<Int, IItemStack>()
+        val items = mutableMapOf<Int, ItemStack>()
 
         val itemDelay = itemDelayValue.get()
 
@@ -576,7 +593,7 @@ class InventoryCleaner : Module()
         return items
     }
 
-    private fun firstEmpty(slots: Map<Int, IItemStack?>?, random: Boolean): Int
+    private fun firstEmpty(slots: Map<Int, ItemStack?>?, random: Boolean): Int
     {
         slots ?: return -1
 
@@ -591,7 +608,7 @@ class InventoryCleaner : Module()
         return if (random) emptySlots.random() else emptySlots.first()
     }
 
-    private fun getAmount(slot: Int, container: IContainer): Int
+    private fun getAmount(slot: Int, container: Container): Int
     {
         val itemStack = container.inventorySlots[slot].stack ?: return -1
         itemStack.item ?: return -1

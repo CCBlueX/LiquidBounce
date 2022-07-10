@@ -1,7 +1,6 @@
 package net.ccbluex.liquidinstruction
 
 import net.ccbluex.liquidbounce.LiquidBounce
-
 import java.awt.BorderLayout
 import java.io.File
 import javax.swing.JFrame
@@ -21,7 +20,7 @@ fun main()
     frame.isAlwaysOnTop = true
 
     // Add instruction as label
-    val label = JLabel(LiquidBounce::class.java.getResourceAsStream("/instructions.html")?.run { reader().readText().replace("{assets}", "${LiquidBounce.javaClass.classLoader.getResource("assets")}").replace("{filename}", LiquidBounce.javaClass.protectionDomain?.codeSource?.location?.path?.let { File(it).name } ?: "").replace("{mcversion}", Backend.MINECRAFT_VERSION) } ?: "Instruction HTML unavailable")
+    val label = JLabel(LiquidBounce::class.java.getResourceAsStream("/instructions.html")?.run { reader().readText().replace("{assets}", "${LiquidBounce.javaClass.classLoader.getResource("assets")}").replace("{filename}", LiquidBounce.javaClass.protectionDomain?.codeSource?.location?.path?.let { File(it).name } ?: "").replace("{mcversion}", LiquidBounce.MINECRAFT_VERSION) } ?: "Instruction HTML unavailable")
     frame.add(label, BorderLayout.CENTER)
 
     // Pack frame

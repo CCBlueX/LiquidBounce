@@ -9,15 +9,22 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.module.modules.combat.NoFriends
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
+import net.ccbluex.liquidbounce.injection.implementations.IMixinEntityLivingBase
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
-import net.minecraft.entity.boss.*
+import net.minecraft.entity.boss.EntityDragon
 import net.minecraft.entity.item.EntityArmorStand
-import net.minecraft.entity.monster.*
-import net.minecraft.entity.passive.*
+import net.minecraft.entity.monster.EntityGhast
+import net.minecraft.entity.monster.EntityGolem
+import net.minecraft.entity.monster.EntityMob
+import net.minecraft.entity.monster.EntitySlime
+import net.minecraft.entity.passive.EntityAnimal
+import net.minecraft.entity.passive.EntityBat
+import net.minecraft.entity.passive.EntitySquid
+import net.minecraft.entity.passive.EntityVillager
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.Vec3
@@ -87,7 +94,7 @@ fun Entity?.isSelected(attackableCheck: Boolean = false): Boolean
 
             // Team check
             val teams = LiquidBounce.moduleManager[Teams::class.java] as Teams
-            if (teams.state && this is InYourTeam) return false
+            if (teams.state && teams.isInYourTeam(this)) return false
 
             // Bot check
             return !AntiBot.isBot(mc.theWorld ?: return false, thePlayer ?: return false, this)
@@ -120,7 +127,7 @@ fun Entity?.isEnemy(aac: Boolean = false): Boolean
 
             // Team check
             val teams = LiquidBounce.moduleManager[Teams::class.java] as Teams
-            if (teams.state && this is InYourTeam) return false
+            if (teams.state && teams.isInYourTeam(this)) return false
 
             // Bot check
             return !AntiBot.isBot(mc.theWorld ?: return false, thePlayer, this)
@@ -131,3 +138,5 @@ fun Entity?.isEnemy(aac: Boolean = false): Boolean
 
     return false
 }
+
+fun EntityLivingBase.setCanBeCollidedWith(value: Boolean) = (this as IMixinEntityLivingBase).setCanBeCollidedWith(value)

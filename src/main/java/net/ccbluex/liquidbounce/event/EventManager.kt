@@ -5,8 +5,8 @@
  */
 package net.ccbluex.liquidbounce.event
 
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
 
 class EventManager
 {
@@ -18,7 +18,7 @@ class EventManager
      */
     fun registerListener(listener: Listenable)
     {
-        listener.javaClass.declaredMethods.asSequence().filter { EventTarget::class.java is AnnotationPresent }.filter { it.parameterTypes.size == 1 }.forEach { method ->
+        listener.javaClass.declaredMethods.asSequence().filter { it.isAnnotationPresent(EventTarget::class.java) }.filter { it.parameterTypes.size == 1 }.forEach { method ->
             if (!method.isAccessible) method.isAccessible = true
 
             @Suppress("UNCHECKED_CAST") registry.computeIfAbsent(method.parameterTypes[0] as? Class<out Event> ?: return@forEach) { ArrayList() }.add(EventHook(listener, method, method.getAnnotation(EventTarget::class.java)))
@@ -43,7 +43,7 @@ class EventManager
     @JvmOverloads
     fun callEvent(event: Event, profile: Boolean = false)
     {
-        val profiler = if (profile) LiquidBounce.wrapper.minecraft.mcProfiler else null
+        val profiler = if (profile) mc.mcProfiler else null
         val targets = registry[event.javaClass] ?: return
 
         targets.filter { it.isIgnoreCondition || it.eventClass.handleEvents() }.forEach {

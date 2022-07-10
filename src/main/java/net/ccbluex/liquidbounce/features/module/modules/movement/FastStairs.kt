@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.minecraft.util.BlockPos
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -17,6 +16,8 @@ import net.ccbluex.liquidbounce.utils.extensions.isMoving
 import net.ccbluex.liquidbounce.utils.extensions.multiply
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.block.BlockStairs
+import net.minecraft.util.BlockPos
 
 @ModuleInfo(name = "FastStairs", description = "Allows you to climb up stairs faster.", category = ModuleCategory.MOVEMENT)
 class FastStairs : Module()
@@ -46,9 +47,7 @@ class FastStairs : Module()
 
         val blockPos = BlockPos(thePlayer.posX, thePlayer.entityBoundingBox.minY, thePlayer.posZ)
 
-        val provider = classProvider
-
-        if (provider.isBlockStairs(theWorld.getBlock(blockPos)) && !walkingDown)
+        if (theWorld.getBlock(blockPos) is BlockStairs && !walkingDown)
         {
             thePlayer.setPosition(thePlayer.posX, thePlayer.posY + 0.5, thePlayer.posZ)
 
@@ -61,7 +60,7 @@ class FastStairs : Module()
             })
         }
 
-        if (provider.isBlockStairs(theWorld.getBlock(blockPos.down())))
+        if (theWorld.getBlock(blockPos.down()) is BlockStairs)
         {
             if (walkingDown)
             {

@@ -6,13 +6,44 @@
 package net.ccbluex.liquidbounce.features.command
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.LiquidBounce.wrapper
-import net.ccbluex.liquidbounce.features.command.commands.*
+import net.ccbluex.liquidbounce.features.command.commands.AutoSettingsCommand
+import net.ccbluex.liquidbounce.features.command.commands.BindCommand
+import net.ccbluex.liquidbounce.features.command.commands.BindsCommand
+import net.ccbluex.liquidbounce.features.command.commands.EnchantCommand
+import net.ccbluex.liquidbounce.features.command.commands.FriendCommand
+import net.ccbluex.liquidbounce.features.command.commands.GiveCommand
+import net.ccbluex.liquidbounce.features.command.commands.HClipCommand
+import net.ccbluex.liquidbounce.features.command.commands.HelpCommand
+import net.ccbluex.liquidbounce.features.command.commands.HideCommand
+import net.ccbluex.liquidbounce.features.command.commands.HoloStandCommand
+import net.ccbluex.liquidbounce.features.command.commands.HurtCommand
+import net.ccbluex.liquidbounce.features.command.commands.LocalAutoSettingsCommand
+import net.ccbluex.liquidbounce.features.command.commands.LoginCommand
+import net.ccbluex.liquidbounce.features.command.commands.PanicCommand
+import net.ccbluex.liquidbounce.features.command.commands.PingCommand
+import net.ccbluex.liquidbounce.features.command.commands.PrefixCommand
+import net.ccbluex.liquidbounce.features.command.commands.ReloadCommand
+import net.ccbluex.liquidbounce.features.command.commands.RemoteViewCommand
+import net.ccbluex.liquidbounce.features.command.commands.RenameCommand
+import net.ccbluex.liquidbounce.features.command.commands.SayCommand
+import net.ccbluex.liquidbounce.features.command.commands.ScriptManagerCommand
+import net.ccbluex.liquidbounce.features.command.commands.ServerInfoCommand
+import net.ccbluex.liquidbounce.features.command.commands.ShortcutCommand
+import net.ccbluex.liquidbounce.features.command.commands.TacoCommand
+import net.ccbluex.liquidbounce.features.command.commands.TargetCommand
+import net.ccbluex.liquidbounce.features.command.commands.ToggleCommand
+import net.ccbluex.liquidbounce.features.command.commands.UsernameCommand
+import net.ccbluex.liquidbounce.features.command.commands.VClipCommand
 import net.ccbluex.liquidbounce.features.command.shortcuts.Shortcut
 import net.ccbluex.liquidbounce.features.command.shortcuts.ShortcutParser
-import net.ccbluex.liquidbounce.features.command.special.*
+import net.ccbluex.liquidbounce.features.command.special.ChatAdminCommand
+import net.ccbluex.liquidbounce.features.command.special.ChatTokenCommand
+import net.ccbluex.liquidbounce.features.command.special.LiquidChatCommand
+import net.ccbluex.liquidbounce.features.command.special.PrivateChatCommand
+import net.ccbluex.liquidbounce.features.command.special.XrayCommand
 import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
 import net.ccbluex.liquidbounce.utils.extensions.withDoubleQuotes
 
 class CommandManager
@@ -69,7 +100,7 @@ class CommandManager
     fun executeCommands(input: String)
     {
         val args = input.split(" ").toTypedArray()
-        commands.firstOrNull { command -> args[0].equals("$prefix" + command.command, ignoreCase = true) || command.alias.any { args[0].equals("$prefix" + it, ignoreCase = true) } }?.execute(args) ?: ClientUtils.displayChatMessage(wrapper.minecraft.thePlayer, "\u00A7cCommand not found. Type ${"${prefix}help".withDoubleQuotes("\u00A73\u00A7l", "\u00A78")}\u00A7c to view all commands.")
+        commands.firstOrNull { command -> args[0].equals("$prefix" + command.command, ignoreCase = true) || command.alias.any { args[0].equals("$prefix" + it, ignoreCase = true) } }?.execute(args) ?: ClientUtils.displayChatMessage(mc.thePlayer, "\u00A7cCommand not found. Type ${"${prefix}help".withDoubleQuotes("\u00A73\u00A7l", "\u00A78")}\u00A7c to view all commands.")
     }
 
     /**

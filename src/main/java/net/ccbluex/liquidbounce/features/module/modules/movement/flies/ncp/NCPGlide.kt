@@ -6,6 +6,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.flies.DamageOnS
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
 import net.ccbluex.liquidbounce.utils.extensions.multiply
 import net.ccbluex.liquidbounce.utils.extensions.strafe
+import net.minecraft.network.play.client.C03PacketPlayer
 
 class NCPGlide : FlyMode("NCP")
 {
@@ -36,6 +37,6 @@ class NCPGlide : FlyMode("NCP")
     {
         val packet = event.packet
 
-        if (packet is CPacketPlayer) packet.asCPacketPlayer().onGround = true
+        if (packet is C03PacketPlayer) packet.onGround = true
     }
 }

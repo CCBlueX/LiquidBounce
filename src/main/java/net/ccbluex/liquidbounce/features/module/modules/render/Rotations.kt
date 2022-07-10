@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.EntityLivingBase
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
@@ -14,8 +13,14 @@ import net.ccbluex.liquidbounce.features.module.modules.`fun`.Derp
 import net.ccbluex.liquidbounce.features.module.modules.combat.BowAimbot
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
-import net.ccbluex.liquidbounce.features.module.modules.world.*
+import net.ccbluex.liquidbounce.features.module.modules.world.ChestAura
+import net.ccbluex.liquidbounce.features.module.modules.world.CivBreak
+import net.ccbluex.liquidbounce.features.module.modules.world.Fucker
+import net.ccbluex.liquidbounce.features.module.modules.world.Nuker
+import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold
+import net.ccbluex.liquidbounce.features.module.modules.world.Tower
 import net.ccbluex.liquidbounce.value.BoolValue
+import net.minecraft.entity.EntityLivingBase
 
 @ModuleInfo(name = "Rotations", description = "Allows you to see server-sided rotations.", category = ModuleCategory.RENDER)
 class Rotations : Module()

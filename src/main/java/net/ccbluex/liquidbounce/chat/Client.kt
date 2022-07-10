@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.chat.packet.PacketSerializer
 import net.ccbluex.liquidbounce.chat.packet.packets.*
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.login.UserUtils
+import net.minecraft.util.*
 import java.net.URI
 import java.util.*
 

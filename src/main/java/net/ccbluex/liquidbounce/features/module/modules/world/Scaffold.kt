@@ -8,18 +8,15 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.enums.BlockType
-import net.ccbluex.liquidbounce.api.enums.EnumFacingType
-import net.ccbluex.liquidbounce.api.minecraft.block.state.IBlockState
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.EntityPlayerSP
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.EntityPlayer
-import net.ccbluex.liquidbounce.api.minecraft.client.multiplayer.WorldClient
-import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
-import net.ccbluex.liquidbounce.api.minecraft.network.play.client.ICPacketEntityAction
-import net.ccbluex.liquidbounce.api.minecraft.util.*
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper.wrapAngleTo180_float
-import net.ccbluex.liquidbounce.api.minecraft.world.World
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EventState
+import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.MotionEvent
+import net.ccbluex.liquidbounce.event.MoveEvent
+import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.Render2DEvent
+import net.ccbluex.liquidbounce.event.Render3DEvent
+import net.ccbluex.liquidbounce.event.StrafeEvent
+import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
@@ -27,20 +24,74 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.AutoUse
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.render.BlockOverlay
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.*
-import net.ccbluex.liquidbounce.utils.block.BlockUtils
+import net.ccbluex.liquidbounce.utils.CPSCounter
+import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.InventoryUtils
+import net.ccbluex.liquidbounce.utils.PlaceRotation
+import net.ccbluex.liquidbounce.utils.Rotation
+import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.block.PlaceInfo
 import net.ccbluex.liquidbounce.utils.block.SearchInfo
-import net.ccbluex.liquidbounce.utils.extensions.*
+import net.ccbluex.liquidbounce.utils.extensions.BLACKLISTED_BLOCKS
+import net.ccbluex.liquidbounce.utils.extensions.boost
+import net.ccbluex.liquidbounce.utils.extensions.canAutoBlock
+import net.ccbluex.liquidbounce.utils.extensions.canBeClicked
+import net.ccbluex.liquidbounce.utils.extensions.drawString
+import net.ccbluex.liquidbounce.utils.extensions.equalTo
+import net.ccbluex.liquidbounce.utils.extensions.findAutoBlockBlock
+import net.ccbluex.liquidbounce.utils.extensions.getBlock
+import net.ccbluex.liquidbounce.utils.extensions.getBlockCollisionBox
+import net.ccbluex.liquidbounce.utils.extensions.isReplaceable
+import net.ccbluex.liquidbounce.utils.extensions.moveDirectionDegrees
+import net.ccbluex.liquidbounce.utils.extensions.plus
+import net.ccbluex.liquidbounce.utils.extensions.serialize
+import net.ccbluex.liquidbounce.utils.extensions.strafe
+import net.ccbluex.liquidbounce.utils.extensions.times
+import net.ccbluex.liquidbounce.utils.extensions.toDegrees
+import net.ccbluex.liquidbounce.utils.extensions.withParentheses
+import net.ccbluex.liquidbounce.utils.extensions.wrapAngleTo180
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.DECIMALFORMAT_6
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.value.*
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatRangeValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.FontValue
+import net.ccbluex.liquidbounce.value.IntegerRangeValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.RGBAColorValue
+import net.ccbluex.liquidbounce.value.ValueGroup
+import net.minecraft.block.Block
+import net.minecraft.block.state.IBlockState
+import net.minecraft.client.entity.EntityPlayerSP
+import net.minecraft.client.gui.ScaledResolution
+import net.minecraft.client.multiplayer.WorldClient
+import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.client.settings.GameSettings
+import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.init.Blocks
+import net.minecraft.item.ItemBlock
+import net.minecraft.item.ItemStack
+import net.minecraft.network.play.client.C0APacketAnimation
+import net.minecraft.network.play.client.C0BPacketEntityAction
+import net.minecraft.network.play.server.S08PacketPlayerPosLook
+import net.minecraft.util.BlockPos
+import net.minecraft.util.EnumFacing
+import net.minecraft.util.EnumFacing.Axis
+import net.minecraft.util.EnumFacing.UP
+import net.minecraft.util.MovingObjectPosition
+import net.minecraft.util.Vec3
+import net.minecraft.world.World
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
 import java.awt.Color
-import kotlin.math.*
+import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.floor
+import kotlin.math.hypot
+import kotlin.math.max
 
 @ModuleInfo(name = "Scaffold", description = "Automatically places blocks beneath your feet.", category = ModuleCategory.WORLD, defaultKeyBinds = [Keyboard.KEY_I])
 class Scaffold : Module()
@@ -330,7 +381,7 @@ class Scaffold : Module()
 
         mc.timer.timerSpeed = timerValue.get()
 
-        shouldGoDown = downValue.get() && !sameYValue.get() && gameSettings.keyBindSneak is KeyDown && getBlocksAmount(thePlayer) > 1
+        shouldGoDown = downValue.get() && !sameYValue.get() && GameSettings.isKeyDown(gameSettings.keyBindSneak) && getBlocksAmount(thePlayer) > 1
         if (shouldGoDown) gameSettings.keyBindSneak.pressed = false
 
         // Slow
@@ -365,14 +416,13 @@ class Scaffold : Module()
                 val blockPos = BlockPos(mc.thePlayer!!.posX, mc.thePlayer!!.posY - 1.0, mc.thePlayer!!.posZ)
                 if (movementEagleEdgeDistanceValue.get() > 0)
                 {
-                    for (facingType in EnumFacingType.values())
+                    for (side in EnumFacing.values())
                     {
-                        val side = classProvider.getEnumFacing(facingType)
-                        if (side.isUp() || side.isDown()) continue
+                        if (side.axis == Axis.Y) continue
                         val neighbor = blockPos.offset(side)
-                        if (neighbor is Replaceable)
+                        if (theWorld.isReplaceable(neighbor))
                         {
-                            val calcDif = ((if (side.isNorth() || side.isSouth()) abs((neighbor.z + 0.5) - mc.thePlayer!!.posZ)
+                            val calcDif = ((if (side.axis == Axis.Z) abs((neighbor.z + 0.5) - mc.thePlayer!!.posZ)
                             else abs((neighbor.x + 0.5) - mc.thePlayer!!.posX))) - 0.5
 
                             if (calcDif < dif) dif = calcDif
@@ -381,13 +431,13 @@ class Scaffold : Module()
                 }
                 if (placedBlocksWithoutEagle >= movementEagleBlocksToEagleValue.get())
                 {
-                    val shouldEagle = blockPos is Replaceable || (movementEagleEdgeDistanceValue.get() > 0 && dif < movementEagleEdgeDistanceValue.get())
+                    val shouldEagle = theWorld.isReplaceable(blockPos) || (movementEagleEdgeDistanceValue.get() > 0 && dif < movementEagleEdgeDistanceValue.get())
                     if (movementEagleModeValue.get().equals("Silent", true))
                     {
                         if (eagleSneaking != shouldEagle)
                         {
-                            mc.netHandler.addToSendQueue(CPacketEntityAction(mc.thePlayer!!, if (shouldEagle) ICPacketEntityAction.WAction.START_SNEAKING
-                            else ICPacketEntityAction.WAction.STOP_SNEAKING))
+                            mc.netHandler.addToSendQueue(C0BPacketEntityAction(mc.thePlayer!!, if (shouldEagle) C0BPacketEntityAction.Action.START_SNEAKING
+                            else C0BPacketEntityAction.Action.STOP_SNEAKING))
                         }
                         eagleSneaking = shouldEagle
                     }
@@ -405,8 +455,8 @@ class Scaffold : Module()
                     val keyBindRight = gameSettings.keyBindRight
                     val keyBindLeft = gameSettings.keyBindLeft
 
-                    if (keyBindRight !is KeyDown) keyBindRight.pressed = false
-                    if (keyBindLeft !is KeyDown) keyBindLeft.pressed = false
+                    if (!GameSettings.isKeyDown(keyBindRight)) keyBindRight.pressed = false
+                    if (!GameSettings.isKeyDown(keyBindLeft)) keyBindLeft.pressed = false
 
                     if (zitterTimer.hasTimePassed(100))
                     {
@@ -492,19 +542,17 @@ class Scaffold : Module()
     {
         val packet = event.packet
 
-        if (packet is SPacketPlayerPosLook)
+        if (packet is S08PacketPlayerPosLook)
         {
-            val tpPacket = packet.asSPacketPlayerPosLook()
-
             flagTimer.reset()
-            launchY = tpPacket.y.toInt()
+            launchY = packet.y.toInt()
         }
     }
 
     private fun update(theWorld: World, thePlayer: EntityPlayerSP)
     {
         val heldItem = thePlayer.heldItem
-        val heldItemIsNotBlock: Boolean = heldItem == null || !heldItem.item is ItemBlock
+        val heldItemIsNotBlock: Boolean = heldItem == null || heldItem.item !is ItemBlock
 
         if (if (autoBlockModeValue.get().equals("Off", true)) heldItemIsNotBlock else thePlayer.inventoryContainer.findAutoBlockBlock(theWorld, autoBlockFullCubeOnlyValue.get()) == -1 && heldItemIsNotBlock) return
         findBlock(theWorld, thePlayer, modeValue.get().equals("expand", true))
@@ -516,8 +564,8 @@ class Scaffold : Module()
 
         val pos = BlockPos(thePlayer.posX, thePlayer.posY - groundSearchDepth, thePlayer.posZ)
         val bs: IBlockState = theWorld.getBlockState(pos)
-        if (bs !is Replaceable) lastGroundBlockState = bs
-        else if (lastGroundBlockState == null) lastGroundBlockState = classProvider.getBlockEnum(BlockType.STONE).defaultState // Failsafe
+        if (!theWorld.isReplaceable(bs)) lastGroundBlockState = bs
+        else if (lastGroundBlockState == null) lastGroundBlockState = Blocks.stone.defaultState // Failsafe
     }
 
     private fun setRotation(thePlayer: EntityPlayer, rotation: Rotation, keepRotation: Int)
@@ -557,11 +605,9 @@ class Scaffold : Module()
         }
 
         // get the block that will be automatically placed
-        var autoBlock: IItemStack? = thePlayer.heldItem
+        var autoBlock: ItemStack? = thePlayer.heldItem
 
-        val provider = classProvider
-
-        if (autoBlock == null || autoBlock.item !is ItemBlock || autoBlock.stackSize <= 0 || autoBlock.item?.let { (!it as ItemBlock)block.canAutoBlock } != false)
+        if (autoBlock == null || autoBlock.item !is ItemBlock || autoBlock.stackSize <= 0 || autoBlock.item?.let { !(it as ItemBlock).block.canAutoBlock } != false)
         {
             if (autoBlockModeValue.get().equals("Off", true))
             {
@@ -581,14 +627,12 @@ class Scaffold : Module()
             autoBlock = inventoryContainer.getSlot(autoBlockSlot).stack
         }
 
-        val autoBlockBlock = (autoBlock?.item ?: run {
+        val autoBlockBlock = ((autoBlock?.item ?: run {
             failedResponce("autoBlock = null OR autoBlock.item = null")
             return@findBlock
-        (}) as ItemBlock)block
+        }) as ItemBlock).block
 
-        val func = functions
-
-        val abCollisionBB = theWorld.getBlockCollisionBox(if (func.isBlockEqualTo(groundBlockState.block, autoBlockBlock)) groundBlockState
+        val abCollisionBB = theWorld.getBlockCollisionBox(if (Block.isEqualTo(groundBlockState.block, autoBlockBlock)) groundBlockState
         else autoBlockBlock.defaultState ?: run {
             failedResponce("BlockState unavailable")
             return@findBlock
@@ -685,26 +729,25 @@ class Scaffold : Module()
 
         lastSearchPosition = searchPosition
 
-        val facings = EnumFacingType.values().map(provider::getEnumFacing)
-        if (!expand && (searchPosition !is Replaceable || search(theWorld, thePlayer, searchPosition, rotationSearchCheckVisibleValue.get() && !shouldGoDown, searchBounds, facings, "\u00A7aDefault"))) return
+        if (!expand && (!theWorld.isReplaceable(searchPosition) || search(theWorld, thePlayer, searchPosition, rotationSearchCheckVisibleValue.get() && !shouldGoDown, searchBounds, "\u00A7aDefault"))) return
 
         val ySearch = rotationSearchYSearchValue.get() || clutching || flagged
         if (expand)
         {
-            val hFacing = func.getHorizontalFacing(thePlayer.moveDirectionDegrees)
+            val hFacing = RotationUtils.getHorizontalFacing(thePlayer.moveDirectionDegrees)
 
             repeat(expandLengthValue.get()) { i ->
                 if (search(theWorld, thePlayer, searchPosition.add(when (hFacing)
                     {
-                        provider.getEnumFacing(EnumFacingType.WEST) -> -i
-                        provider.getEnumFacing(EnumFacingType.EAST) -> i
+                        EnumFacing.WEST -> -i
+                        EnumFacing.EAST -> i
                         else -> 0
                     }, 0, when (hFacing)
                     {
-                        provider.getEnumFacing(EnumFacingType.NORTH) -> -i
-                        provider.getEnumFacing(EnumFacingType.SOUTH) -> i
+                        EnumFacing.NORTH -> -i
+                        EnumFacing.SOUTH -> i
                         else -> 0
-                    }), false, searchBounds, facings, "\u00A7cExpand")) return@findBlock
+                    }), false, searchBounds, "\u00A7cExpand")) return@findBlock
             }
         }
         else if (rotationSearchSearchValue.get())
@@ -737,7 +780,7 @@ class Scaffold : Module()
 
             val yList = listPair.second
             listPair.first.forEach { (x, z) ->
-                if (yList.any { y -> search(theWorld, thePlayer, searchPosition.add(x, y, z), !shouldGoDown, searchBounds, facings, "\u00A7bSearch") }) return@findBlock
+                if (yList.any { y -> search(theWorld, thePlayer, searchPosition.add(x, y, z), !shouldGoDown, searchBounds, "\u00A7bSearch") }) return@findBlock
             }
         }
     }
@@ -785,16 +828,14 @@ class Scaffold : Module()
         val netHandler = mc.netHandler
         val inventory = thePlayer.inventory
 
-        val provider = classProvider
-
-        (LiquidBounce.moduleManager[AutoUse::class.java] as AutoUse).endEating(thePlayer, classProvider, netHandler)
+        (LiquidBounce.moduleManager[AutoUse::class.java] as AutoUse).endEating(thePlayer)
 
         // Check if the player is holding block
         val slot = InventoryUtils.targetSlot ?: inventory.currentItem
         var itemStack = inventory.mainInventory[slot]
         var switched = false
 
-        if (itemStack == null || itemStack.item !is ItemBlock || !itemStack.item? as ItemBlock?.block.canAutoBlock || itemStack.stackSize <= 0)
+        if (itemStack == null || itemStack.item !is ItemBlock || !(itemStack.item as ItemBlock).block.canAutoBlock || itemStack.stackSize <= 0)
         {
             if (autoBlockMode == "off")
             {
@@ -875,7 +916,7 @@ class Scaffold : Module()
             }
 
             if (swingValue.get()) thePlayer.swingItem()
-            else netHandler.addToSendQueue(CPacketAnimation())
+            else netHandler.addToSendQueue(C0APacketAnimation())
         }
         else setPlaceDebug { "result".equalTo("FAILED_TO_PLACE", "\u00A74") }
 
@@ -893,14 +934,14 @@ class Scaffold : Module()
         val netHandler = mc.netHandler
 
         // Reset Seaking (Eagle)
-        if (gameSettings.keyBindSneak !is KeyDown)
+        if (!GameSettings.isKeyDown(gameSettings.keyBindSneak))
         {
             gameSettings.keyBindSneak.pressed = false
-            if (eagleSneaking) netHandler.addToSendQueue(CPacketEntityAction(thePlayer, ICPacketEntityAction.WAction.STOP_SNEAKING))
+            if (eagleSneaking) netHandler.addToSendQueue(C0BPacketEntityAction(thePlayer, C0BPacketEntityAction.Action.STOP_SNEAKING))
         }
 
-        if (gameSettings.keyBindRight !is KeyDown) gameSettings.keyBindRight.pressed = false
-        if (gameSettings.keyBindLeft !is KeyDown) gameSettings.keyBindLeft.pressed = false
+        if (!GameSettings.isKeyDown(gameSettings.keyBindRight)) gameSettings.keyBindRight.pressed = false
+        if (!GameSettings.isKeyDown(gameSettings.keyBindLeft)) gameSettings.keyBindLeft.pressed = false
 
         // Reset rotations
         lockRotation = null
@@ -951,9 +992,9 @@ class Scaffold : Module()
             val yoffset = if (blockOverlay.state && blockOverlay.infoEnabledValue.get() && blockOverlay.getCurrentBlock(theWorld) != null) 15f else 0f
 
             val font = visualCounterFontValue.get()
-            RenderUtils.drawBorderedRect(middleScreenX - 2f, middleScreenY + yoffset + 5f, middleScreenX + font.getStringWidth(info) + 2f, middleScreenY + yoffset + font.fontHeight + 7f, 3f, -16777216, -16777216)
+            RenderUtils.drawBorderedRect(middleScreenX - 2f, middleScreenY + yoffset + 5f, middleScreenX + font.getStringWidth(info) + 2f, middleScreenY + yoffset + font.FONT_HEIGHT + 7f, 3f, -16777216, -16777216)
 
-            classProvider.GlStateManager.resetColor()
+            GlStateManager.resetColor()
 
             font.drawString(info, middleScreenX.toFloat(), middleScreenY + yoffset + 7f, 0xffffff)
             GL11.glPopMatrix()
@@ -969,12 +1010,12 @@ class Scaffold : Module()
 
             GL11.glPushMatrix()
 
-            RenderUtils.drawBorderedRect(middleScreenX - infoWidth - 2f, yPos, middleScreenX + infoWidth + 2f, yPos + font.fontHeight * 0.5f, 3f, -16777216, -16777216)
+            RenderUtils.drawBorderedRect(middleScreenX - infoWidth - 2f, yPos, middleScreenX + infoWidth + 2f, yPos + font.FONT_HEIGHT * 0.5f, 3f, -16777216, -16777216)
 
-            classProvider.GlStateManager.resetColor()
+            GlStateManager.resetColor()
 
             GL11.glScalef(0.5f, 0.5f, 0.5f)
-            font.drawString(infoType, (middleScreenX.toFloat() - infoWidth - infoTypeWidth) * 2f, (yPos - font.fontHeight * 0.2f) * 2f, 0xffffff, true)
+            font.drawString(infoType, (middleScreenX.toFloat() - infoWidth - infoTypeWidth) * 2f, (yPos - font.FONT_HEIGHT * 0.2f) * 2f, 0xffffff, true)
             font.drawString(info, (middleScreenX.toFloat() - infoWidth) * 2f, yPos * 2f, 0xffffff)
             GL11.glScalef(2f, 2f, 2f)
 
@@ -1027,25 +1068,23 @@ class Scaffold : Module()
 
         if (!visualMarkValue.get()) return
 
-        val provider = classProvider
-
         run searchLoop@{
             repeat(if (modeValue.get().equals("Expand", true)) expandLengthValue.get() + 1 else 2) {
-                val horizontalFacing = functions.getHorizontalFacing(thePlayer.moveDirectionDegrees)
+                val horizontalFacing = RotationUtils.getHorizontalFacing(thePlayer.moveDirectionDegrees)
                 val blockPos = BlockPos(thePlayer.posX + when (horizontalFacing)
                 {
-                    provider.getEnumFacing(EnumFacingType.WEST) -> -it.toDouble()
-                    provider.getEnumFacing(EnumFacingType.EAST) -> it.toDouble()
+                    EnumFacing.WEST -> -it.toDouble()
+                    EnumFacing.EAST -> it.toDouble()
                     else -> 0.0
                 }, if (sameYValue.get() && launchY <= thePlayer.posY && fallStartY - thePlayer.posY <= 2) launchY - 1.0 else thePlayer.posY - (if (thePlayer.posY > floor(thePlayer.posY).toInt()) 0.0 else 1.0) - if (shouldGoDown) 1.0 else 0.0, thePlayer.posZ + when (horizontalFacing)
                 {
-                    provider.getEnumFacing(EnumFacingType.NORTH) -> -it.toDouble()
-                    provider.getEnumFacing(EnumFacingType.SOUTH) -> it.toDouble()
+                    EnumFacing.NORTH -> -it.toDouble()
+                    EnumFacing.SOUTH -> it.toDouble()
                     else -> 0.0
                 })
 
                 val placeInfo = PlaceInfo[theWorld, blockPos]
-                if (blockPos is Replaceable && placeInfo != null)
+                if (theWorld.isReplaceable(blockPos) && placeInfo != null)
                 {
                     RenderUtils.drawBlockBox(theWorld, thePlayer, blockPos, 1682208255, 0, false, event.partialTicks)
                     return@searchLoop
@@ -1062,9 +1101,9 @@ class Scaffold : Module()
      * @return
      */
 
-    private fun search(theWorld: World, thePlayer: EntityPlayer, blockPosition: BlockPos, checkVisible: Boolean, data: SearchBounds, facings: List<IEnumFacing>, type: String): Boolean
+    private fun search(theWorld: World, thePlayer: EntityPlayer, blockPosition: BlockPos, checkVisible: Boolean, data: SearchBounds, type: String): Boolean
     {
-        if (blockPosition !is Replaceable) return false
+        if (!theWorld.isReplaceable(blockPosition)) return false
 
         // Static Modes
         val staticMode = rotationModeValue.get().equals("Static", ignoreCase = true)
@@ -1073,7 +1112,7 @@ class Scaffold : Module()
         val staticPitchOffset = rotationSearchStaticPitchValue.get()
         val staticYawOffset = rotationSearchStaticYawValue.get()
 
-        var searchFace = Vec3.ZERO
+        var searchFace = Vec3(0.0, 0.0, 0.0)
 
         val eyesPos = Vec3(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, thePlayer.posZ)
         var placeRotation: PlaceRotation? = null
@@ -1091,7 +1130,7 @@ class Scaffold : Module()
 
         val minDelta = rotationSearchMinDiffValue.get()
 
-        facings.forEach { side ->
+        EnumFacing.values().forEach { side ->
             val neighbor = blockPosition.offset(side)
 
             if (!theWorld.canBeClicked(neighbor)) return@forEach
@@ -1115,7 +1154,7 @@ class Scaffold : Module()
                         // Visibility checks
                         if (checkVisible && (eyesPos.distanceTo(searchSideVec) > 4.25 // Distance Check - (distance(eyes, searchSideVec) > 4.25 blocks)
                                 || sqDistanceToSearchVec > eyesPos.squareDistanceTo(searchVec + dirVec) // Against Distance Check - (distance(eyes, searchVec) > distance(eyes, searchDirVec))
-                                || theWorld.rayTraceBlocks(eyesPos, searchSideVec, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false) != null)) // Raytrace Check - (rayTrace hit between eye position and block side)
+                                || theWorld.rayTraceBlocks(eyesPos, searchSideVec, false, true, false) != null)) // Raytrace Check - (rayTrace hit between eye position and block side)
                         {
                             zSearch += zSteps // Skip current step
                             continue
@@ -1127,21 +1166,21 @@ class Scaffold : Module()
                             val deltaX = if (staticYaw && i == 0) 0.0 else searchSideVec.xCoord - eyesPos.xCoord
                             val deltaZ = if (staticYaw && i == 1) 0.0 else searchSideVec.zCoord - eyesPos.zCoord
 
-                            if (!side.isUp())
+                            if (side != UP)
                             {
-                                delta = abs(if (side.isNorth() || side.isSouth()) deltaZ else deltaX)
+                                delta = abs(if (side.axis == Axis.Z) deltaZ else deltaX)
                                 if (delta < minDelta) return@repeat
                             }
 
                             // Calculate the rotation from vector
-                            val rotation = Rotation(wrapAngleTo180_float(WMathHelper.toDegrees(atan2(deltaZ, deltaX).toFloat()) - 90f + if (staticYaw) staticYawOffset else 0f), if (staticPitch) staticPitchOffset else wrapAngleTo180_float((-WMathHelper.toDegrees(atan2(searchSideVec.yCoord - eyesPos.yCoord, hypot(deltaX, deltaZ)).toFloat()))))
+                            val rotation = Rotation(((atan2(deltaZ, deltaX).toFloat()).toDegrees - 90f + if (staticYaw) staticYawOffset else 0f).wrapAngleTo180, if (staticPitch) staticPitchOffset else ((-(atan2(searchSideVec.yCoord - eyesPos.yCoord, hypot(deltaX, deltaZ)).toFloat()).toDegrees)).wrapAngleTo180)
                             val vectorForRotation = RotationUtils.getVectorForRotation(rotation)
                             val rayEnd = eyesPos + vectorForRotation * 4.25
 
-                            var rayTrace: IMovingObjectPosition? = null
+                            var rayTrace: MovingObjectPosition? = null
                             if (!checkVisible || run {
-                                    rayTrace = theWorld.rayTraceBlocks(eyesPos, rayEnd, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = false, returnLastUncollidableBlock = true)
-                                    rayTrace?.let { it.typeOfHit != IMovingObjectPosition.WMovingObjectType.BLOCK || it.blockPos != neighbor } == true // Raytrace Check - rayTrace hit between eye position and block reach position
+                                    rayTrace = theWorld.rayTraceBlocks(eyesPos, rayEnd, false, false, true)
+                                    rayTrace?.let { it.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK || it.blockPos != neighbor } == true // Raytrace Check - rayTrace hit between eye position and block reach position
                                 }) return@repeat
 
                             if (placeRotation?.let { RotationUtils.getRotationDifference(rotation) < RotationUtils.getRotationDifference(it.rotation) } != false) // If the current rotation is better than the previous one
@@ -1180,7 +1219,7 @@ class Scaffold : Module()
 
                 // Check player is faced the target block
                 run searchLoop@{
-                    facings.forEach sideLoop@{ side ->
+                    EnumFacing.values().forEach sideLoop@{ side ->
                         val neighbor = blockPosition.offset(side)
 
                         if (!theWorld.canBeClicked(neighbor)) return@sideLoop
@@ -1191,13 +1230,13 @@ class Scaffold : Module()
                         val hitVec = posVec + dirVec * 0.5
 
                         // Visibility checks
-                        if (checkVisible && (eyesPos.squareDistanceTo(hitVec) > 18.0 || sqDistanceToPosVec > eyesPos.squareDistanceTo(posVec + dirVec) || theWorld.rayTraceBlocks(eyesPos, hitVec, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = true, returnLastUncollidableBlock = false) != null)) return@sideLoop
+                        if (checkVisible && (eyesPos.squareDistanceTo(hitVec) > 18.0 || sqDistanceToPosVec > eyesPos.squareDistanceTo(posVec + dirVec) || theWorld.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null)) return@sideLoop
 
                         val rotationVector = RotationUtils.getVectorForRotation(limitedRotation)
                         val rayEndPos = eyesPos + rotationVector * 4.0
-                        val rayTrace = theWorld.rayTraceBlocks(eyesPos, rayEndPos, stopOnLiquid = false, ignoreBlockWithoutBoundingBox = false, returnLastUncollidableBlock = true)
+                        val rayTrace = theWorld.rayTraceBlocks(eyesPos, rayEndPos, false, false, true)
 
-                        if (rayTrace != null && (rayTrace.typeOfHit != IMovingObjectPosition.WMovingObjectType.BLOCK || rayTrace.blockPos != neighbor)) return@sideLoop
+                        if (rayTrace != null && (rayTrace.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK || rayTrace.blockPos != neighbor)) return@sideLoop
 
                         facesBlock = true
 
@@ -1234,8 +1273,6 @@ class Scaffold : Module()
      */
     private fun getBlocksAmount(thePlayer: EntityPlayer): Int
     {
-        val provider = classProvider
-
         val inventory = thePlayer.inventory
         val heldItem = thePlayer.heldItem
 

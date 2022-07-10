@@ -5,10 +5,12 @@
  */
 package net.ccbluex.liquidbounce.utils.item
 
-import net.ccbluex.liquidbounce.api.minecraft.item.IItem
-import net.ccbluex.liquidbounce.api.minecraft.item.IItemStack
 import net.ccbluex.liquidbounce.utils.ClientUtils.logger
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
+import net.minecraft.nbt.JsonToNBT
+import net.minecraft.util.ResourceLocation
 import java.util.regex.Pattern
 import kotlin.math.min
 
@@ -26,15 +28,13 @@ object ItemUtils : MinecraftInstance()
      * @author               MCModding4K
      */
     @JvmStatic
-    fun createItem(itemArguments: String): IItemStack?
+    fun createItem(itemArguments: String): ItemStack?
     {
         return try
         {
             val fixedItemArguments = itemArguments.replace('&', '\u00A7') // Translate Colorcodes
 
-            val provider = classProvider
-
-            var item: IItem? = Item()
+            var item: Item? = Item()
             var args: List<String>? = null
 
             val modeSize = min(12, fixedItemArguments.length - 2)
@@ -42,12 +42,9 @@ object ItemUtils : MinecraftInstance()
 
             (0 until modeSize).any {
                 args = fixedItemArguments.substring(it).split(" ")
-                item = functions.getObjectFromItemRegistry(ResourceLocation((args ?: return@any false)[0]))
-
+                item = Item.itemRegistry.getObject(ResourceLocation((args ?: return@any false)[0]))
                 item != null
             }
-
-            val createdItem = item ?: return null
 
             val checkedArgs = args ?: return null
             val argsLength = checkedArgs.size
@@ -60,7 +57,7 @@ object ItemUtils : MinecraftInstance()
             var meta = 0
             if (argsLength >= 3 && PATTERN.matcher(checkedArgs[2]).matches()) meta = checkedArgs[2].toInt()
 
-            val itemstack = ItemStack(createdItem, amount, meta)
+            val itemstack = ItemStack(item, amount, meta)
 
             // Build NBT tag
             if (argsLength >= 4)
@@ -69,7 +66,7 @@ object ItemUtils : MinecraftInstance()
 
                 for (nbtcount in 3 until argsLength) nbtBuilder.append(" ${checkedArgs[nbtcount]}")
 
-                itemstack.tagCompound = provider.jsonToNBTInstance.getTagFromJson("$nbtBuilder")
+                itemstack.tagCompound = JsonToNBT.getTagFromJson("$nbtBuilder")
             }
 
             itemstack
@@ -83,7 +80,7 @@ object ItemUtils : MinecraftInstance()
     }
 
     @JvmStatic
-    fun isStackEmpty(stack: IItemStack?): Boolean = stack == null || stack.item is ItemAir
+    fun isStackEmpty(stack: ItemStack?): Boolean = stack == null
 
     @JvmStatic
     private val PATTERN = Pattern.compile("\\d+")

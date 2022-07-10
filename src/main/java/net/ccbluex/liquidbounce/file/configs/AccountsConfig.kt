@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.utils.ClientUtils.logger
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount
 import net.ccbluex.liquidbounce.utils.login.MinecraftAccount.AltServiceType
-import net.ccbluex.liquidbounce.utils.misc.MiscUtils
+import net.minecraft.util.*
 import java.io.File
 import java.io.IOException
 import java.util.*

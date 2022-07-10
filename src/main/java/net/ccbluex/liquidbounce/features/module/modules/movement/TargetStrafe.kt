@@ -6,26 +6,54 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.Entity
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.EntityLivingBase
-import net.ccbluex.liquidbounce.api.minecraft.util.BlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
-import net.ccbluex.liquidbounce.api.minecraft.util.Vec3
-import net.ccbluex.liquidbounce.api.minecraft.world.World
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EventState
+import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.MotionEvent
+import net.ccbluex.liquidbounce.event.MoveEvent
+import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.utils.RotationUtils
-import net.ccbluex.liquidbounce.utils.extensions.*
+import net.ccbluex.liquidbounce.utils.extensions.PI
+import net.ccbluex.liquidbounce.utils.extensions.collideBlockIntersects
+import net.ccbluex.liquidbounce.utils.extensions.cos
+import net.ccbluex.liquidbounce.utils.extensions.getBlock
+import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
+import net.ccbluex.liquidbounce.utils.extensions.getEntitiesInRadius
+import net.ccbluex.liquidbounce.utils.extensions.isClientTarget
+import net.ccbluex.liquidbounce.utils.extensions.isReplaceable
+import net.ccbluex.liquidbounce.utils.extensions.isSelected
+import net.ccbluex.liquidbounce.utils.extensions.sin
+import net.ccbluex.liquidbounce.utils.extensions.toDegrees
+import net.ccbluex.liquidbounce.utils.extensions.toRadians
+import net.ccbluex.liquidbounce.utils.extensions.wrapAngleTo180
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbowRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.easeOutCubic
-import net.ccbluex.liquidbounce.value.*
-import org.lwjgl.opengl.GL11.*
-import kotlin.math.*
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.RGBAColorValue
+import net.ccbluex.liquidbounce.value.ValueGroup
+import net.minecraft.block.BlockAir
+import net.minecraft.entity.Entity
+import net.minecraft.entity.EntityLivingBase
+import net.minecraft.util.BlockPos
+import net.minecraft.util.Vec3
+import net.minecraft.world.World
+import org.lwjgl.opengl.GL11.glPopMatrix
+import org.lwjgl.opengl.GL11.glPushMatrix
+import org.lwjgl.opengl.GL11.glTranslated
+import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.ceil
+import kotlin.math.hypot
+import kotlin.math.min
+import kotlin.math.sign
 
 // I'm not an author of this TargetStrafe code. Original author: CzechHek (Converted from JS https://github.com/CzechHek/Core/blob/master/Scripts/TargetStrafe.js)
 // I'm not an author of this 'Circle' code. Original author: Auto-reply bot (https://forums.ccbluex.net/topic/1574/script-circle/2?_=1623645819000)
@@ -133,8 +161,6 @@ class TargetStrafe : Module()
 
         val target = target ?: return
 
-        val func = functions
-
         // Change direction
         if (thePlayer.moveStrafing != 0F && sign(thePlayer.moveStrafing) != lastStrafeDirection)
         {
@@ -169,10 +195,10 @@ class TargetStrafe : Module()
             val strafeYawRadians = atan2(zDelta, xDelta).toFloat()
 
             // Encirclement yaw radians
-            val encirclementYawRadians = strafeYawRadians - WMathHelper.PI * 0.5F
+            val encirclementYawRadians = strafeYawRadians - PI * 0.5F
 
             // FoV check
-            if (abs(RotationUtils.getAngleDifference(WMathHelper.toDegrees(encirclementYawRadians), thePlayer.rotationYaw)) > fovValue.get()) return
+            if (abs(RotationUtils.getAngleDifference(encirclementYawRadians.toDegrees, thePlayer.rotationYaw)) > fovValue.get()) return
 
             // Predict next position of the target and check it is safe
             val predict = targetPosX + (targetPosX - target.lastTickPosX) * 2.0 to targetPosZ + (targetPosZ - target.lastTickPosZ) * 2.0
@@ -181,18 +207,16 @@ class TargetStrafe : Module()
             // Setup encirclement movements
             val encirclementSpeed = distance - strafeRange
             val encirclementSpeedLimited = sign(encirclementSpeed) * min(abs(encirclementSpeed), moveSpeed)
-            val encirclementX = -func.sin(encirclementYawRadians) * encirclementSpeedLimited
-            val encirclementZ = func.cos(encirclementYawRadians) * encirclementSpeedLimited
+            val encirclementX = -encirclementYawRadians.sin * encirclementSpeedLimited
+            val encirclementZ = encirclementYawRadians.cos * encirclementSpeedLimited
 
             // Setup strafe movements
             val strafeSpeed = (moveSpeed - if (priorityValue.get().equals("Encirclement", ignoreCase = true)) hypot(encirclementX, encirclementZ) else 0.0) * direction
-            var strafeX = -func.sin(strafeYawRadians) * strafeSpeed
-            var strafeZ = func.cos(strafeYawRadians) * strafeSpeed
-
-            val provider = classProvider
+            var strafeX = -strafeYawRadians.sin * strafeSpeed
+            var strafeZ = strafeYawRadians.cos * strafeSpeed
             if (thePlayer.onGround && (thePlayer.isCollidedHorizontally // Horizontal collision check
                     || !isAboveGround(theWorld, playerPosX + encirclementX + strafeX * 2, thePlayer.posY, playerPosZ + encirclementZ + strafeZ * 2)) // Safewalk check
-                || theWorld.collideBlockIntersects(thePlayer.entityBoundingBox.offset(encirclementX + strafeX, 0.0, encirclementZ + strafeZ)) { it.block !is BlockAir && it !is Replaceable }) // Predict-based aabb collision check
+                || theWorld.collideBlockIntersects(thePlayer.entityBoundingBox.offset(encirclementX + strafeX, 0.0, encirclementZ + strafeZ)) { it.block !is BlockAir && !theWorld.isReplaceable(it) }) // Predict-based aabb collision check
             {
                 direction *= -1F
                 strafeX *= -1
@@ -200,9 +224,9 @@ class TargetStrafe : Module()
             }
 
             // TODO: Better calculation algorithm (current one is the ugliest one)
-            val resultYawRadians = WMathHelper.wrapAngleTo180_float(WMathHelper.toDegrees(atan2(encirclementZ + strafeZ, encirclementX + strafeX).toFloat()) - 90.0f).toRadians
-            event.x = -func.sin(resultYawRadians) * moveSpeed
-            event.z = func.cos(resultYawRadians) * moveSpeed
+            val resultYawRadians = ((atan2(encirclementZ + strafeZ, encirclementX + strafeX).toFloat()).toDegrees - 90.0f).wrapAngleTo180.toRadians
+            event.x = -resultYawRadians.sin * moveSpeed
+            event.z = resultYawRadians.cos * moveSpeed
 
             strafing = true
         }
@@ -220,7 +244,7 @@ class TargetStrafe : Module()
             val checkIsClientTarget = { entity: Entity -> if (entity.isClientTarget()) -1000000.0 else 0.0 }
 
             target = if (targetModeValue.get().equals("KillAuraTarget", ignoreCase = true)) (LiquidBounce.moduleManager[KillAura::class.java] as KillAura).target
-            else theWorld.getEntitiesInRadius(thePlayer).filter { true is Selected }.map(Entity::asEntityLivingBase).filter { thePlayer.getDistanceToEntityBox(it) <= targetRange }.minBy {
+            else theWorld.getEntitiesInRadius(thePlayer).filterIsInstance<EntityLivingBase>().filter { it.isSelected(true) }.filter { thePlayer.getDistanceToEntityBox(it) <= targetRange }.minByOrNull {
                 when (targetModeValue.get().toLowerCase())
                 {
                     "livingtime" -> -it.ticksExisted.toFloat()
@@ -280,7 +304,7 @@ class TargetStrafe : Module()
     private fun isAboveGround(theWorld: World, x: Double, y: Double, z: Double): Boolean
     {
         var i = ceil(y)
-        while ((y - 5) < i--) if (!classProvider.isBlockAir(theWorld.getBlock(BlockPos(x, i, z)))) return true
+        while ((y - 5) < i--) if (theWorld.getBlock(BlockPos(x, i, z)) !is BlockAir) return true
 
         return false
     }

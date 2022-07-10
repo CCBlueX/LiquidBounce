@@ -16,6 +16,8 @@ import net.ccbluex.liquidbounce.utils.extensions.strafe
 import net.ccbluex.liquidbounce.utils.extensions.zeroXYZ
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
+import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.network.play.client.C0BPacketEntityAction
 
 @ModuleInfo(name = "FreeCam", description = "Allows you to move out of your body.", category = ModuleCategory.RENDER)
 class FreeCam : Module()
@@ -89,29 +91,25 @@ class FreeCam : Module()
     {
         val packet = event.packet
 
-        val provider = classProvider
-
-        if (packet is CPacketPlayer) // To bypass FreeCam checks, we need to keep sending normal packets.
+        if (packet is C03PacketPlayer) // To bypass FreeCam checks, we need to keep sending normal packets.
         {
-            val movePacket = packet.asCPacketPlayer()
-
-            if (movePacket.moving)
+            if (packet.isMoving)
             {
-                movePacket.x = oldX
-                movePacket.y = oldY
-                movePacket.z = oldZ
+                packet.x = oldX
+                packet.y = oldY
+                packet.z = oldZ
             }
 
-            movePacket.onGround = oldGround
+            packet.onGround = oldGround
 
-            if (movePacket.rotating)
+            if (packet.rotating)
             {
-                movePacket.yaw = oldYaw
-                movePacket.pitch = oldPitch
+                packet.yaw = oldYaw
+                packet.pitch = oldPitch
             }
         }
 
-        if (packet is CPacketEntityAction) event.cancelEvent()
+        if (packet is C0BPacketEntityAction) event.cancelEvent()
     }
 
     override val tag: String

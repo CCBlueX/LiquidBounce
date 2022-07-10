@@ -8,6 +8,9 @@ package net.ccbluex.liquidbounce.features.command.commands
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
+import net.minecraft.item.Item
+import net.minecraft.network.play.client.C10PacketCreativeInventoryAction
+import net.minecraft.util.*
 
 class GiveCommand : Command("give", "item", "i", "get")
 {
@@ -52,7 +55,7 @@ class GiveCommand : Command("give", "item", "i", "get")
                 {
                     if (emptySlots.isEmpty()) break
 
-                    mc.netHandler.addToSendQueue(CPacketCreativeInventoryAction(emptySlots.removeAt(0), itemStack.apply {
+                    mc.netHandler.addToSendQueue(C10PacketCreativeInventoryAction(emptySlots.removeAt(0), itemStack.apply {
                         val count = remaining.coerceAtMost(64)
 
                         stackSize = count
@@ -79,7 +82,7 @@ class GiveCommand : Command("give", "item", "i", "get")
 
         return when (args.size)
         {
-            1 -> return functions.getItemRegistryKeys().map { it.resourcePath.toLowerCase() }.filter { it.startsWith(args[0], true) }.toList()
+            1 -> return Item.itemRegistry.keys.map { it.resourcePath.toLowerCase() }.filter { it.startsWith(args[0], true) }.toList()
             else -> emptyList()
         }
     }

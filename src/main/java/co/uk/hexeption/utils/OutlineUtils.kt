@@ -1,13 +1,46 @@
 package co.uk.hexeption.utils
 
-import net.ccbluex.liquidbounce.LiquidBounce.wrapper
-import net.ccbluex.liquidbounce.api.IExtractedFunctions
-import net.ccbluex.liquidbounce.api.minecraft.client.IMinecraft
-import net.ccbluex.liquidbounce.api.minecraft.client.shader.IFramebuffer
+import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.minecraft.client.renderer.OpenGlHelper
+import net.minecraft.client.shader.Framebuffer
 import org.lwjgl.opengl.EXTFramebufferObject
 import org.lwjgl.opengl.EXTPackedDepthStencil
-import org.lwjgl.opengl.GL11.*
+import org.lwjgl.opengl.GL11.GL_ALL_ATTRIB_BITS
+import org.lwjgl.opengl.GL11.GL_ALPHA_TEST
+import org.lwjgl.opengl.GL11.GL_BLEND
+import org.lwjgl.opengl.GL11.GL_DEPTH_TEST
+import org.lwjgl.opengl.GL11.GL_DONT_CARE
+import org.lwjgl.opengl.GL11.GL_EQUAL
+import org.lwjgl.opengl.GL11.GL_FILL
+import org.lwjgl.opengl.GL11.GL_FRONT_AND_BACK
+import org.lwjgl.opengl.GL11.GL_KEEP
+import org.lwjgl.opengl.GL11.GL_LIGHTING
+import org.lwjgl.opengl.GL11.GL_LINE
+import org.lwjgl.opengl.GL11.GL_LINE_SMOOTH
+import org.lwjgl.opengl.GL11.GL_LINE_SMOOTH_HINT
+import org.lwjgl.opengl.GL11.GL_NEVER
+import org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA
+import org.lwjgl.opengl.GL11.GL_POLYGON_OFFSET_LINE
+import org.lwjgl.opengl.GL11.GL_REPLACE
+import org.lwjgl.opengl.GL11.GL_SRC_ALPHA
+import org.lwjgl.opengl.GL11.GL_STENCIL_BUFFER_BIT
+import org.lwjgl.opengl.GL11.GL_STENCIL_TEST
+import org.lwjgl.opengl.GL11.GL_TEXTURE_2D
+import org.lwjgl.opengl.GL11.glBlendFunc
+import org.lwjgl.opengl.GL11.glClear
+import org.lwjgl.opengl.GL11.glClearStencil
+import org.lwjgl.opengl.GL11.glDepthMask
+import org.lwjgl.opengl.GL11.glDisable
+import org.lwjgl.opengl.GL11.glEnable
+import org.lwjgl.opengl.GL11.glHint
+import org.lwjgl.opengl.GL11.glLineWidth
+import org.lwjgl.opengl.GL11.glPolygonMode
+import org.lwjgl.opengl.GL11.glPolygonOffset
+import org.lwjgl.opengl.GL11.glPopAttrib
+import org.lwjgl.opengl.GL11.glPushAttrib
+import org.lwjgl.opengl.GL11.glStencilFunc
+import org.lwjgl.opengl.GL11.glStencilOp
 
 /**
  * Outline ESP
@@ -55,15 +88,13 @@ object OutlineUtils
     @JvmStatic
     fun renderFour(color: Int)
     {
-        val functions: IExtractedFunctions = wrapper.functions
-
         RenderUtils.glColor(color)
         glDepthMask(false)
         glDisable(GL_DEPTH_TEST)
         glEnable(GL_POLYGON_OFFSET_LINE)
         glPolygonOffset(1.0f, -2000000.0f)
 
-        functions.setLightmapTextureCoords(functions.getLightMapTexUnit(), 240.0f, 240.0f)
+        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, 240.0f, 240.0f)
     }
 
     @JvmStatic
@@ -86,17 +117,15 @@ object OutlineUtils
     @JvmStatic
     fun checkSetupFBO()
     {
-        val mc: IMinecraft = wrapper.minecraft
-
         // Gets the FBO of Minecraft
         val fbo = mc.framebuffer
 
         // Check if FBO isn't null
         // Checks if screen has been resized or new FBO has been created
-        if (fbo != null) if (fbo.depthBuffer > -1)
+        if (fbo != null && fbo.depthBuffer > -1)
         {
             // Sets up the FBO with depth and stencil extensions (24/8 bit)
-            setupFBO(mc, fbo)
+            setupFBO(fbo)
             // Reset the ID to prevent multiple FBO's
             fbo.depthBuffer = -1
         }
@@ -109,7 +138,7 @@ object OutlineUtils
      * Framebuffer
      */
     @JvmStatic
-    private fun setupFBO(mc: IMinecraft, fbo: IFramebuffer)
+    private fun setupFBO(fbo: Framebuffer)
     {
         // Deletes old render buffer extensions such as depth
         // Args: Render Buffer ID

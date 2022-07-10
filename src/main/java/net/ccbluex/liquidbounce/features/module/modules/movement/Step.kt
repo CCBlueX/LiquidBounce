@@ -6,22 +6,36 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.enums.StatType
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.Entity
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.player.EntityPlayer
-import net.ccbluex.liquidbounce.api.minecraft.network.INetworkManager
-import net.ccbluex.liquidbounce.api.minecraft.world.World
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.MoveEvent
+import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.StepConfirmEvent
+import net.ccbluex.liquidbounce.event.StepEvent
+import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.exploit.Phase
-import net.ccbluex.liquidbounce.utils.extensions.*
+import net.ccbluex.liquidbounce.utils.extensions.boost
+import net.ccbluex.liquidbounce.utils.extensions.cantBoostUp
+import net.ccbluex.liquidbounce.utils.extensions.cos
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.moveDirectionRadians
+import net.ccbluex.liquidbounce.utils.extensions.multiply
+import net.ccbluex.liquidbounce.utils.extensions.sendPacketWithoutEvent
+import net.ccbluex.liquidbounce.utils.extensions.sin
+import net.ccbluex.liquidbounce.utils.extensions.zeroXZ
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerRangeValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.entity.Entity
+import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.stats.StatList
+import net.minecraft.world.World
 
 @ModuleInfo(name = "Step", description = "Allows you to step up blocks.", category = ModuleCategory.MOVEMENT)
 class Step : Module()
@@ -162,10 +176,8 @@ class Step : Module()
 
                 if (motionNCPBoost > 0F)
                 {
-                    val func = functions
-
-                    event.x = (-func.sin(yaw) * motionNCPBoost).toDouble()
-                    event.z = (func.cos(yaw) * motionNCPBoost).toDouble()
+                    event.x = (-yaw.sin * motionNCPBoost).toDouble()
+                    event.z = (yaw.cos * motionNCPBoost).toDouble()
                 }
 
                 motionNCPNextStep = 0
@@ -194,7 +206,7 @@ class Step : Module()
         {
             val flyMode = fly.modeValue.get()
 
-            if (flyMode.equals("Hypixel", ignoreCase = true) || flyMode.equals("Rewinside", ignoreCase = true) || flyMode.equals("Mineplex", ignoreCase = true) && thePlayer.inventory.getCurrentItemInHand() == null)
+            if (flyMode.equals("Hypixel", ignoreCase = true) || flyMode.equals("Rewinside", ignoreCase = true) || flyMode.equals("Mineplex", ignoreCase = true) && thePlayer.inventory.getCurrentItem() == null)
             {
                 event.stepHeight = 0F
                 return
@@ -243,8 +255,6 @@ class Step : Module()
             val mode = modeValue.get().toLowerCase()
             val networkManager = mc.netHandler.networkManager
 
-            val provider = classProvider
-
             when (mode)
             {
                 "ncp", "aac3.1.5" ->
@@ -252,10 +262,10 @@ class Step : Module()
                     fakeJump(thePlayer)
 
                     // Half legit step (1 packet missing) [COULD TRIGGER TOO MANY PACKETS]
-                    // networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(stepX, stepY + 0.41999998688698, stepZ, false)) // 0.42
-                    // networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(stepX, stepY + 0.7531999805212, stepZ, false)) // 0.333
+                    // networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(stepX, stepY + 0.41999998688698, stepZ, false)) // 0.42
+                    // networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(stepX, stepY + 0.7531999805212, stepZ, false)) // 0.333
 
-                    performNCPPacketStep(networkManager, thePlayer, stepX, stepY, stepZ, stepHeight)
+                    performNCPPacketStep(thePlayer, stepX, stepY, stepZ, stepHeight)
                     resetTimer()
                 }
 
@@ -266,12 +276,12 @@ class Step : Module()
                     if (spartanSwitch)
                     {
                         // Vanilla step (3 packets) [COULD TRIGGER TOO MANY PACKETS]
-                        networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(stepX, stepY + 0.41999998688698, stepZ, false)) // 0.42
-                        networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(stepX, stepY + 0.7531999805212, stepZ, false)) // 0.333
-                        networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(stepX, stepY + 1.001335979112147, stepZ, false)) // 0.248
+                        networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(stepX, stepY + 0.41999998688698, stepZ, false)) // 0.42
+                        networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(stepX, stepY + 0.7531999805212, stepZ, false)) // 0.333
+                        networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(stepX, stepY + 1.001335979112147, stepZ, false)) // 0.248
                     }
                     else // Force step
-                        networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(stepX, stepY + 0.6, stepZ, false))
+                        networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(stepX, stepY + 0.6, stepZ, false))
 
                     // Spartan b127 allows one unlegit step so just swap between legit and unlegit
                     spartanSwitch = !spartanSwitch
@@ -285,9 +295,9 @@ class Step : Module()
                     fakeJump(thePlayer)
 
                     // Vanilla step (3 packets) [COULD TRIGGER TOO MANY PACKETS]
-                    networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(stepX, stepY + 0.41999998688698, stepZ, false)) // 0.42
-                    networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(stepX, stepY + 0.7531999805212, stepZ, false)) // 0.333
-                    networkManager.sendPacketWithoutEvent(CPacketPlayerPosition(stepX, stepY + 1.001335979112147, stepZ, false)) // 0.248
+                    networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(stepX, stepY + 0.41999998688698, stepZ, false)) // 0.42
+                    networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(stepX, stepY + 0.7531999805212, stepZ, false)) // 0.333
+                    networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(stepX, stepY + 1.001335979112147, stepZ, false)) // 0.248
 
                     // Reset timer
                     resetTimer()
@@ -303,8 +313,9 @@ class Step : Module()
         stepZ = 0.0
     }
 
-    private fun performNCPPacketStep(networkManager: INetworkManager, thePlayer: Entity, stepX: Double, stepY: Double, stepZ: Double, stepHeight: Double)
+    private fun performNCPPacketStep(thePlayer: Entity, stepX: Double, stepY: Double, stepZ: Double, stepHeight: Double)
     {
+        val networkManager = mc.netHandler.networkManager
         // Values from NCPStep v1.0 by york
 
         val (motions, resetXZ) = when
@@ -318,7 +329,7 @@ class Step : Module()
             else -> return
         }
 
-        motions.map { CPacketPlayerPosition(stepX, stepY + it, stepZ, false) }.forEach(networkManager::sendPacketWithoutEvent)
+        motions.map { C04PacketPlayerPosition(stepX, stepY + it, stepZ, false) }.forEach(networkManager::sendPacketWithoutEvent)
 
         if (resetXZ) thePlayer.zeroXZ()
     }
@@ -334,9 +345,9 @@ class Step : Module()
     {
         val packet = event.packet
 
-        if (packet is CPacketPlayer && isStep && modeValue.get().equals("OldNCP", ignoreCase = true))
+        if (packet is C03PacketPlayer && isStep && modeValue.get().equals("OldNCP", ignoreCase = true))
         {
-            packet.asCPacketPlayer().y += 0.07
+            packet.y += 0.07
             isStep = false
         }
     }
@@ -345,16 +356,14 @@ class Step : Module()
     private fun fakeJump(thePlayer: EntityPlayer)
     {
         thePlayer.isAirBorne = true
-        thePlayer.triggerAchievement(classProvider.getStatEnum(StatType.JUMP_STAT))
+        thePlayer.triggerAchievement(StatList.jumpStat)
     }
 
     private fun couldStep(theWorld: World, thePlayer: EntityPlayer): Boolean
     {
-        val func = functions
-
         val yaw = thePlayer.moveDirectionRadians
-        val x = -func.sin(yaw) * 0.4
-        val z = func.cos(yaw) * 0.4
+        val x = -yaw.sin * 0.4
+        val z = yaw.cos * 0.4
 
         return theWorld.getCollisionBoxes(thePlayer.entityBoundingBox.offset(x, 1.001335979112147, z)).isEmpty() && (!checkLiquid.get() || !thePlayer.isInWater && !thePlayer.isInLava)
     }

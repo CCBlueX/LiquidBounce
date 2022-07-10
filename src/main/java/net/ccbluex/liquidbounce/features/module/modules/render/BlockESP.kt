@@ -5,8 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.api.enums.BlockType
-import net.ccbluex.liquidbounce.api.minecraft.util.BlockPos
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
@@ -18,7 +16,16 @@ import net.ccbluex.liquidbounce.utils.extensions.getBlock
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbowRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.value.*
+import net.ccbluex.liquidbounce.value.BlockValue
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.RGBAColorValue
+import net.ccbluex.liquidbounce.value.ValueGroup
+import net.minecraft.block.Block
+import net.minecraft.init.Blocks
+import net.minecraft.util.BlockPos
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
@@ -109,9 +116,9 @@ class BlockESP : Module()
         if (task == null && searchTimer.hasTimePassed(updateDelayValue.get().toLong()))
         {
             val radius = radiusValue.get()
-            val selectedBlock = functions.getBlockById(blockValue.get())
+            val selectedBlock = Block.getBlockById(blockValue.get())
 
-            if (selectedBlock == null || selectedBlock == classProvider.getBlockEnum(BlockType.AIR)) return
+            if (selectedBlock == null || selectedBlock == Blocks.air) return
 
             val playerX = thePlayer.posX.toInt()
             val playerY = thePlayer.posY.toInt()

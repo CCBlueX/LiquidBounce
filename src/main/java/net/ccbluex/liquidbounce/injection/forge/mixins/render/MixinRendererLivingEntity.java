@@ -42,8 +42,6 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArgs;
-import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import co.uk.hexeption.utils.OutlineUtils;
@@ -157,7 +155,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
             float interpolatedPitch = entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch) * partialTicks;
 
             final EntityPlayerSP thePlayer = Minecraft.getMinecraft().thePlayer;
-            if (entity instanceof EntityPlayer && entity == thePlayer && entityYaw != 0 && rotations.getState() && rotations.getBodyValue().get() && thePlayer is Rotating)
+            if (entity instanceof EntityPlayer && entity == thePlayer && entityYaw != 0 && rotations.getState() && rotations.getBodyValue().get() && rotations.isRotating(thePlayer))
             {
                 final Rotation lastServerRotation = RotationUtils.lastServerRotation;
                 final Rotation serverRotation = RotationUtils.serverRotation;

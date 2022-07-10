@@ -12,6 +12,8 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.easeOutCubic
 import net.ccbluex.liquidbounce.value.*
+import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.util.*
 import org.lwjgl.opengl.GL11
 import kotlin.math.hypot
 
@@ -114,28 +116,28 @@ class SpeedGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: S
             while (speedList.size > width) speedList.removeAt(0)
             while (yspeedList.size > width) yspeedList.removeAt(0)
 
-            speedPeak = speedList.max() ?: 0.0
-            yspeedPeak = yspeedList.max() ?: 0.0
+            speedPeak = speedList.maxOrNull() ?: 0.0
+            yspeedPeak = yspeedList.maxOrNull() ?: 0.0
 
             if (timerEnabled)
             {
                 timerList.add(mc.timer.timerSpeed)
                 while (timerList.size > width) timerList.removeAt(0)
-                timerPeak = timerList.max() ?: 0.0f
+                timerPeak = timerList.maxOrNull() ?: 0.0f
             }
 
             if (motionEnabled)
             {
                 motionList.add(hypot(thePlayer.motionX, thePlayer.motionZ))
                 while (motionList.size > width) motionList.removeAt(0)
-                motionPeak = motionList.max() ?: 0.0
+                motionPeak = motionList.maxOrNull() ?: 0.0
             }
 
             if (ymotionEnabled)
             {
                 ymotionList.add(thePlayer.motionY)
                 while (ymotionList.size > width) ymotionList.removeAt(0)
-                ymotionPeak = ymotionList.max() ?: 0.0
+                ymotionPeak = ymotionList.maxOrNull() ?: 0.0
             }
         }
 
@@ -286,7 +288,7 @@ class SpeedGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F, side: S
         GL11.glEnable(GL11.GL_DEPTH_TEST)
         GL11.glDepthMask(true)
         GL11.glDisable(GL11.GL_BLEND)
-        classProvider.GlStateManager.resetColor()
+        GlStateManager.resetColor()
 
         return Border(0F, 0F, width.toFloat(), height + 2.0f)
     }

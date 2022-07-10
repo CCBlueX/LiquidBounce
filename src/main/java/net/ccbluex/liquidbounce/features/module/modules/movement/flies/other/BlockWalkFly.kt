@@ -1,9 +1,13 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.flies.other
 
-import net.ccbluex.liquidbounce.api.minecraft.util.BlockPos
 import net.ccbluex.liquidbounce.event.BlockBBEvent
 import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
+import net.ccbluex.liquidbounce.utils.extensions.sendPacketWithoutEvent
+import net.minecraft.block.BlockAir
+import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
+import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.BlockPos
 import kotlin.random.Random
 
 class BlockWalkFly : FlyMode("BlockWalk")
@@ -12,7 +16,7 @@ class BlockWalkFly : FlyMode("BlockWalk")
     {
         val thePlayer = mc.thePlayer ?: return
 
-        if (Random.nextBoolean()) mc.netHandler.networkManager.sendPacketWithoutEvent(CPacketPlayerBlockPlacement(BlockPos(0, -1, 0), 0, thePlayer.inventory.getCurrentItemInHand(), 0F, 0F, 0F))
+        if (Random.nextBoolean()) mc.netHandler.networkManager.sendPacketWithoutEvent(C08PacketPlayerBlockPlacement(BlockPos(0, -1, 0), 0, thePlayer.inventory.getCurrentItem(), 0F, 0F, 0F))
     }
 
     override fun onBlockBB(event: BlockBBEvent)

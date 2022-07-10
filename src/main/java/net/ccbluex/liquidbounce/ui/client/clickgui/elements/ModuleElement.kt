@@ -7,6 +7,8 @@ package net.ccbluex.liquidbounce.ui.client.clickgui.elements
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.module.Module
+import net.minecraft.client.audio.PositionedSoundRecord
+import net.minecraft.util.ResourceLocation
 import org.lwjgl.input.Mouse
 
 class ModuleElement(val module: Module) : ButtonElement(module.name)
@@ -34,13 +36,13 @@ class ModuleElement(val module: Module) : ButtonElement(module.name)
         {
             if (mouseButton == 0) module.toggle() else showSettings = !showSettings
 
-            mc.soundHandler.playSound("gui.button.press", 1.0f)
+            mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("gui.button.press"), 1.0f))
         }
     }
 
     fun updatePressed()
     {
-        wasLeftClickPressed = 0 is ButtonDown
-        wasRightClickPressed = 1 is ButtonDown
+        wasLeftClickPressed = Mouse.isButtonDown(0)
+        wasRightClickPressed = Mouse.isButtonDown(1)
     }
 }

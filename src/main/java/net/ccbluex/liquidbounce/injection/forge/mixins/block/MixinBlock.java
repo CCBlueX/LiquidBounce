@@ -5,9 +5,6 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.block;
 
-import java.util.List;
-import java.util.Optional;
-
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.BlockBBEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.Criticals;
@@ -109,14 +106,13 @@ public abstract class MixinBlock
         if (noSlowBreak.getState())
         {
             // Water
-            if (noSlowBreak.getWaterValue().get() && Material.water is InsideOfMaterial && !EnchantmentHelper.getAquaAffinityModifier(playerIn))
+            if (noSlowBreak.getWaterValue().get() && playerIn.isInsideOfMaterial(Material.water) && !EnchantmentHelper.getAquaAffinityModifier(playerIn))
                 returnValue *= 5.0F;
 
             // Air
             if (noSlowBreak.getAirValue().get() && !playerIn.onGround)
                 returnValue *= 5.0F;
-        }
-        else if (playerIn.onGround)
+        } else if (playerIn.onGround)
         {
             // NoFall, Criticals NoGround mode NoSlowBreak
             final NoFall noFall = (NoFall) LiquidBounce.moduleManager.get(NoFall.class);

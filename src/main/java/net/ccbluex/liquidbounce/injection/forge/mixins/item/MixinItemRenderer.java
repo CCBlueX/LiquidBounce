@@ -8,12 +8,12 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.item;
 import java.util.Locale;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper;
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura;
 import net.ccbluex.liquidbounce.features.module.modules.combat.TpAura;
 import net.ccbluex.liquidbounce.features.module.modules.render.AntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.EatAnimation;
 import net.ccbluex.liquidbounce.features.module.modules.render.SwingAnimation;
+import net.ccbluex.liquidbounce.utils.extensions.MathExtensionKt;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -106,10 +106,10 @@ public abstract class MixinItemRenderer
         final float interpolatedItemInUse = clientPlayer.getItemInUseCount() - partialTicks + 1.0F;
         final float itemInUseUnfinishedPercentage = interpolatedItemInUse / itemToRender.getMaxItemUseDuration();
         float xTranslation = 0.0f;
-        float yTranslation = MathHelper.abs(MathHelper.cos(interpolatedItemInUse / (eaState ? ea.getVerticalSpeedValue().get() : 4.0F) * WMathHelper.PI) * (eaState ? ea.getVerticalIntensityValue().get() : 0.1F));
+        float yTranslation = MathHelper.abs(MathHelper.cos(interpolatedItemInUse / (eaState ? ea.getVerticalSpeedValue().get() : 4.0F) * MathExtensionKt.PI) * (eaState ? ea.getVerticalIntensityValue().get() : 0.1F));
 
         if (eaState && ea.getHorizontalEnabledValue().get())
-            xTranslation = MathHelper.abs(MathHelper.cos(interpolatedItemInUse / ea.getHorizontalSpeedValue().get() * WMathHelper.PI) * ea.getHorizontalIntensityValue().get());
+            xTranslation = MathHelper.abs(MathHelper.cos(interpolatedItemInUse / ea.getHorizontalSpeedValue().get() * MathExtensionKt.PI) * ea.getHorizontalIntensityValue().get());
 
         // Don't start shaking animation way too fast
         if (itemInUseUnfinishedPercentage >= (eaState ? ea.getShakeStartTime().get() : 0.8F))
@@ -192,10 +192,10 @@ public abstract class MixinItemRenderer
                         newSwingProgress = swingProgress;
                 }
 
-                return MathHelper.sin(newSwingProgress * WMathHelper.PI);
+                return MathHelper.sin(newSwingProgress * MathExtensionKt.PI);
             }
 
-            return MathHelper.sin(swingProgress * swingProgress * WMathHelper.PI);
+            return MathHelper.sin(swingProgress * swingProgress * MathExtensionKt.PI);
         }
 
         if (swingAnimation.getState())
@@ -214,10 +214,10 @@ public abstract class MixinItemRenderer
                     newSwingProgress = swingProgress;
             }
 
-            return MathHelper.sin(newSwingProgress * WMathHelper.PI);
+            return MathHelper.sin(newSwingProgress * MathExtensionKt.PI);
         }
 
-        return MathHelper.sin(MathHelper.sqrt_float(swingProgress) * WMathHelper.PI);
+        return MathHelper.sin(MathHelper.sqrt_float(swingProgress) * MathExtensionKt.PI);
     }
 
     /**
@@ -562,7 +562,7 @@ public abstract class MixinItemRenderer
             default:
                 newSwingProgress = swingProgress;
         }
-        double smooth = MathHelper.sin((swingAnimation.getSwingTranslationRelativeXReverse().get() ? 1 - newSwingProgress : newSwingProgress) * WMathHelper.PI);
+        double smooth = MathHelper.sin((swingAnimation.getSwingTranslationRelativeXReverse().get() ? 1 - newSwingProgress : newSwingProgress) * MathExtensionKt.PI);
         final double x = 0.56 + swingAnimation.getSwingTranslationAbsoluteX().get() + smooth * swingAnimation.getSwingTranslationRelativeX().get();
 
         exp = swingAnimation.getSwingTranslationRelativeYExp().get() + expBoost;
@@ -577,7 +577,7 @@ public abstract class MixinItemRenderer
             default:
                 newSwingProgress = swingProgress;
         }
-        smooth = MathHelper.sin((swingAnimation.getSwingTranslationRelativeYReverse().get() ? 1 - newSwingProgress : newSwingProgress) * WMathHelper.PI);
+        smooth = MathHelper.sin((swingAnimation.getSwingTranslationRelativeYReverse().get() ? 1 - newSwingProgress : newSwingProgress) * MathExtensionKt.PI);
         final double y = -0.52 + swingAnimation.getSwingTranslationAbsoluteY().get() + smooth * swingAnimation.getSwingTranslationRelativeY().get();
 
         exp = swingAnimation.getSwingTranslationRelativeZExp().get() + expBoost;
@@ -592,7 +592,7 @@ public abstract class MixinItemRenderer
             default:
                 newSwingProgress = swingProgress;
         }
-        smooth = MathHelper.sin((swingAnimation.getSwingTranslationRelativeZReverse().get() ? 1 - newSwingProgress : newSwingProgress) * WMathHelper.PI);
+        smooth = MathHelper.sin((swingAnimation.getSwingTranslationRelativeZReverse().get() ? 1 - newSwingProgress : newSwingProgress) * MathExtensionKt.PI);
         final double z = -0.72 + swingAnimation.getSwingTranslationAbsoluteZ().get() + smooth * swingAnimation.getSwingTranslationRelativeZ().get();
 
         GlStateManager.translate(x, y, z);
@@ -620,7 +620,7 @@ public abstract class MixinItemRenderer
             default:
                 newSwingProgress = swingProgress;
         }
-        double smooth = MathHelper.sin((swingAnimation.getBlockTranslationRelativeXReverse().get() ? 1 - newSwingProgress : newSwingProgress) * WMathHelper.PI);
+        double smooth = MathHelper.sin((swingAnimation.getBlockTranslationRelativeXReverse().get() ? 1 - newSwingProgress : newSwingProgress) * MathExtensionKt.PI);
         final double x = 0.56 + swingAnimation.getBlockTranslationAbsoluteX().get() + smooth * swingAnimation.getBlockTranslationRelativeX().get();
 
         exp = swingAnimation.getBlockTranslationRelativeYExp().get() + expBoost;
@@ -635,7 +635,7 @@ public abstract class MixinItemRenderer
             default:
                 newSwingProgress = swingProgress;
         }
-        smooth = MathHelper.sin((swingAnimation.getBlockTranslationRelativeYReverse().get() ? 1 - newSwingProgress : newSwingProgress) * WMathHelper.PI);
+        smooth = MathHelper.sin((swingAnimation.getBlockTranslationRelativeYReverse().get() ? 1 - newSwingProgress : newSwingProgress) * MathExtensionKt.PI);
         final double y = -0.52 + swingAnimation.getBlockTranslationAbsoluteY().get() + smooth * swingAnimation.getBlockTranslationRelativeY().get();
 
         exp = swingAnimation.getBlockTranslationRelativeZExp().get() + expBoost;
@@ -650,7 +650,7 @@ public abstract class MixinItemRenderer
             default:
                 newSwingProgress = swingProgress;
         }
-        smooth = MathHelper.sin((swingAnimation.getBlockTranslationRelativeZReverse().get() ? 1 - newSwingProgress : newSwingProgress) * WMathHelper.PI);
+        smooth = MathHelper.sin((swingAnimation.getBlockTranslationRelativeZReverse().get() ? 1 - newSwingProgress : newSwingProgress) * MathExtensionKt.PI);
         final double z = -0.72 + swingAnimation.getBlockTranslationAbsoluteZ().get() + smooth * swingAnimation.getBlockTranslationRelativeZ().get();
 
         GlStateManager.translate(x, y, z);

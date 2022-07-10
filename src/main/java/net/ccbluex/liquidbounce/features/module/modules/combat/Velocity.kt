@@ -6,21 +6,33 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.api.minecraft.util.BlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.WMathHelper
-import net.ccbluex.liquidbounce.api.minecraft.util.Vec3
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.JumpEvent
+import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.StrafeEvent
+import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.utils.RotationUtils
-import net.ccbluex.liquidbounce.utils.extensions.*
+import net.ccbluex.liquidbounce.utils.extensions.boost
+import net.ccbluex.liquidbounce.utils.extensions.cos
+import net.ccbluex.liquidbounce.utils.extensions.divide
+import net.ccbluex.liquidbounce.utils.extensions.multiply
+import net.ccbluex.liquidbounce.utils.extensions.sin
+import net.ccbluex.liquidbounce.utils.extensions.speed
+import net.ccbluex.liquidbounce.utils.extensions.strafe
+import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.ccbluex.liquidbounce.value.ValueGroup
+import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.play.server.S12PacketEntityVelocity
+import net.minecraft.util.BlockPos
+import net.minecraft.util.Vec3
 import kotlin.math.sqrt
 
 @ModuleInfo(name = "Velocity", description = "Allows you to modify the amount of knockback you take. (a.k.a. AntiKnockback)", category = ModuleCategory.COMBAT)
@@ -199,11 +211,9 @@ class Velocity : Module()
 
         val packet = event.packet
 
-        if (packet is SPacketEntityVelocity)
+        if (packet is S12PacketEntityVelocity)
         {
-            val packetEntityVelocity = packet.asSPacketEntityVelocity()
-
-            if ((mc.theWorld?.getEntityByID(packetEntityVelocity.entityID) ?: return) != thePlayer) return
+            if ((mc.theWorld?.getEntityByID(packet.entityID) ?: return) != thePlayer) return
 
             velocityTimer.reset()
 
@@ -216,9 +226,9 @@ class Velocity : Module()
 
                     if (horizontal == 0F && vertical == 0F) event.cancelEvent()
 
-                    packetEntityVelocity.motionX = (packetEntityVelocity.motionX * horizontal).toInt()
-                    packetEntityVelocity.motionY = (packetEntityVelocity.motionY * vertical).toInt()
-                    packetEntityVelocity.motionZ = (packetEntityVelocity.motionZ * horizontal).toInt()
+                    packet.motionX = (packet.motionX * horizontal).toInt()
+                    packet.motionY = (packet.motionY * vertical).toInt()
+                    packet.motionZ = (packet.motionZ * horizontal).toInt()
                 }
 
                 "aac3.1.2", "aac3.2.0-reverse", "aac3.3.4-reverse", "aac3.5.0-zero" -> velocityInput = true
@@ -244,9 +254,9 @@ class Velocity : Module()
                 {
                     if (!thePlayer.onGround && phaseOnlyGround.get()) return
 
-                    if (packetEntityVelocity.motionX < 500 && packetEntityVelocity.motionY < 500) return
+                    if (packet.motionX < 500 && packet.motionY < 500) return
 
-                    mc.netHandler.addToSendQueue(CPacketPlayerPosition(thePlayer.posX, thePlayer.posY - phaseHeightValue.get(), thePlayer.posZ, false))
+                    mc.netHandler.addToSendQueue(C04PacketPlayerPosition(thePlayer.posX, thePlayer.posY - phaseHeightValue.get(), thePlayer.posZ, false))
                     event.cancelEvent()
                 }
 
@@ -308,9 +318,8 @@ class Velocity : Module()
                 forward *= f
 
                 val dir = rotation.yaw.toRadians
-                val sin = functions.sin(dir)
-                val cos = functions.cos(dir)
-
+                val sin = dir.sin
+                val cos = dir.cos
                 thePlayer.motionX += strafe * cos - forward * sin
                 thePlayer.motionZ += forward * cos + strafe * sin
             }

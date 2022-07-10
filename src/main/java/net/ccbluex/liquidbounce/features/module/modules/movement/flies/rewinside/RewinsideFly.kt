@@ -5,6 +5,9 @@ import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.StepEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
+import net.minecraft.block.BlockAir
+import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.util.AxisAlignedBB
 
 class RewinsideFly : FlyMode("Rewinside")
 {
@@ -16,7 +19,7 @@ class RewinsideFly : FlyMode("Rewinside")
     {
         val packet = event.packet
 
-        if (packet is CPacketPlayer) packet.asCPacketPlayer().onGround = true
+        if (packet is C03PacketPlayer) packet.onGround = true
     }
 
     override fun onBlockBB(event: BlockBBEvent)

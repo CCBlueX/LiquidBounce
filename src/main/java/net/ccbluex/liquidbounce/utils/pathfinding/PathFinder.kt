@@ -1,9 +1,26 @@
 package net.ccbluex.liquidbounce.utils.pathfinding
 
-import net.ccbluex.liquidbounce.api.minecraft.util.BlockPos
-import net.ccbluex.liquidbounce.api.minecraft.util.Vec3
-import net.ccbluex.liquidbounce.api.minecraft.world.World
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.ccbluex.liquidbounce.utils.extensions.floor
+import net.ccbluex.liquidbounce.utils.extensions.plus
+import net.minecraft.block.BlockCactus
+import net.minecraft.block.BlockChest
+import net.minecraft.block.BlockEnderChest
+import net.minecraft.block.BlockFence
+import net.minecraft.block.BlockGlass
+import net.minecraft.block.BlockPane
+import net.minecraft.block.BlockPistonBase
+import net.minecraft.block.BlockPistonExtension
+import net.minecraft.block.BlockPistonMoving
+import net.minecraft.block.BlockSkull
+import net.minecraft.block.BlockSlab
+import net.minecraft.block.BlockStainedGlass
+import net.minecraft.block.BlockStairs
+import net.minecraft.block.BlockTrapDoor
+import net.minecraft.block.BlockWall
+import net.minecraft.util.BlockPos
+import net.minecraft.util.Vec3
+import net.minecraft.world.World
 import java.io.Serializable
 
 /**
@@ -124,26 +141,18 @@ class PathFinder(startVec: Vec3, endVec: Vec3) : MinecraftInstance()
             val block1 = BlockPos(x, y, z)
             val block2 = BlockPos(x, y + 1, z)
             val block3 = BlockPos(x, y - 1, z)
-
             return !isBlockSolid(theWorld, block1) && !isBlockSolid(theWorld, block2) && (isBlockSolid(theWorld, block3) || !checkGround) && isSafeToWalkOn(theWorld, block3)
         }
 
         private fun isBlockSolid(theWorld: World, blockpos: BlockPos): Boolean
         {
-            val state = theWorld.getBlockState(blockpos)
-            val block = state.block
-
-            val provider = classProvider
-
-            return (block.getMaterial(state)?.blocksMovement() ?: true) && state is FullCube || block is BlockSlab || block is BlockStairs || block is BlockCactus || block is BlockChest || block is BlockEnderChest || block is BlockSkull || block is BlockPane || block is BlockFence || block is BlockWall || block is BlockGlass || block is BlockPistonBase || block is BlockPistonExtension || block is BlockPistonMoving || block is BlockStainedGlass || block is BlockTrapDoor
+            val block = theWorld.getBlockState(blockpos).block
+            return (block.material?.blocksMovement() ?: true) && block.isFullCube || block is BlockSlab || block is BlockStairs || block is BlockCactus || block is BlockChest || block is BlockEnderChest || block is BlockSkull || block is BlockPane || block is BlockFence || block is BlockWall || block is BlockGlass || block is BlockPistonBase || block is BlockPistonExtension || block is BlockPistonMoving || block is BlockStainedGlass || block is BlockTrapDoor
         }
 
         private fun isSafeToWalkOn(theWorld: World, blockpos: BlockPos): Boolean
         {
             val block = theWorld.getBlockState(blockpos).block
-
-            val provider = classProvider
-
             return block !is BlockFence && block !is BlockWall
         }
     }

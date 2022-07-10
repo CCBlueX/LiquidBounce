@@ -5,9 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.api.minecraft.client.entity.EntityPlayerSP
-import net.ccbluex.liquidbounce.api.minecraft.item.IItem
-import net.ccbluex.liquidbounce.api.minecraft.util.ITimer
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
@@ -16,7 +13,18 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.AsyncUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.value.*
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.ValueGroup
+import net.minecraft.client.entity.EntityPlayerSP
+import net.minecraft.item.Item
+import net.minecraft.item.ItemBucketMilk
+import net.minecraft.item.ItemFood
+import net.minecraft.item.ItemPotion
+import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.util.Timer
 import kotlin.math.ceil
 
 @ModuleInfo(name = "FastUse", description = "Allows you to use items faster.", category = ModuleCategory.PLAYER)
@@ -78,7 +86,7 @@ class FastUse : Module()
         perform(mc.thePlayer ?: return, mc.timer)
     }
 
-    fun perform(thePlayer: EntityPlayerSP, timer: ITimer, customItem: IItem? = null, usingItemTicks: Int? = null): Int
+    fun perform(thePlayer: EntityPlayerSP, timer: Timer, customItem: Item? = null, usingItemTicks: Int? = null): Int
     {
         if (!state) return 32
 
@@ -93,8 +101,6 @@ class FastUse : Module()
             msTimer.reset()
             return -1
         }
-
-        val provider = classProvider
         val itemInUse = customItem ?: thePlayer.itemInUse?.item
         val itemInUseDuration = usingItemTicks ?: thePlayer.itemInUseDuration
 
@@ -110,7 +116,7 @@ class FastUse : Module()
                 "instant" ->
                 {
                     repeat(35) {
-                        netHandler.addToSendQueue(CPacketPlayer(onGround))
+                        netHandler.addToSendQueue(C03PacketPlayer(onGround))
                     }
 
                     mc.playerController.onStoppedUsingItem(thePlayer)
@@ -131,7 +137,7 @@ class FastUse : Module()
                             if (itemInUseDuration > ncpAtOnceWaitTicksValue.get())
                             {
                                 repeat(ncpAtOncePacketsValue.get()) {
-                                    netHandler.addToSendQueue(CPacketPlayer(onGround))
+                                    netHandler.addToSendQueue(C03PacketPlayer(onGround))
                                 }
 
                                 mc.playerController.onStoppedUsingItem(thePlayer)
@@ -143,7 +149,7 @@ class FastUse : Module()
                         "constant" ->
                         {
                             repeat(ncpConstantPacketsValue.get()) {
-                                netHandler.addToSendQueue(CPacketPlayer(onGround))
+                                netHandler.addToSendQueue(C03PacketPlayer(onGround))
                             }
 
                             return 32 / (ncpConstantPacketsValue.get() + 1)
@@ -168,7 +174,7 @@ class FastUse : Module()
                     {
                         workers.execute {
                             repeat(customSpeedValue.get()) {
-                                netHandler.addToSendQueue(CPacketPlayer(onGround))
+                                netHandler.addToSendQueue(C03PacketPlayer(onGround))
                             }
                         }
 
@@ -191,8 +197,6 @@ class FastUse : Module()
         if (!state || !thePlayer.isUsingItem || !noMoveValue.get()) return
 
         val usingItem = (thePlayer.itemInUse ?: return).item
-
-        val provider = classProvider
 
         if (usingItem is ItemFood || usingItem is ItemBucketMilk || usingItem is ItemPotion) event.zero()
     }

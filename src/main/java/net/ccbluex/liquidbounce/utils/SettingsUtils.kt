@@ -11,13 +11,22 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.misc.NameProtect
 import net.ccbluex.liquidbounce.features.module.modules.misc.Spammer
 import net.ccbluex.liquidbounce.file.FileManager
+import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
 import net.ccbluex.liquidbounce.utils.extensions.withDoubleQuotes
 import net.ccbluex.liquidbounce.utils.extensions.withParentheses
 import net.ccbluex.liquidbounce.utils.extensions.withPrefix
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.translateAlternateColorCodes
-import net.ccbluex.liquidbounce.value.*
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatRangeValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerRangeValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.RangeValue
+import net.ccbluex.liquidbounce.value.TextValue
+import net.ccbluex.liquidbounce.value.Value
 import net.minecraft.client.entity.EntityPlayerSP
 import org.lwjgl.input.Keyboard
 
@@ -35,7 +44,7 @@ object SettingsUtils
      */
     fun executeScript(script: String)
     {
-        val thePlayer = MinecraftInstance.mc.thePlayer
+        val thePlayer = mc.thePlayer
 
         script.lines().filter(String::isNotEmpty).filter { !it.startsWith('#') }.forEachIndexed { index, s ->
             val args = s.split(" ").toTypedArray()

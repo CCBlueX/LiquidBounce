@@ -17,7 +17,6 @@ import net.minecraft.util.ResourceLocation
 import java.awt.image.BufferedImage
 import java.io.File
 import java.util.*
-import kotlin.collections.HashMap
 
 object CapeAPI : MinecraftInstance()
 {
