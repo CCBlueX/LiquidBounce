@@ -9,6 +9,7 @@ import com.google.common.base.Joiner
 
 class MinecraftAccount
 {
+    // TODO: Modularize - MojangAccount, McLeaksAccount, TheAlteningAccount, etc.
     var serviceType: AltServiceType
     val name: String
     var password: String? = null
@@ -74,7 +75,9 @@ class MinecraftAccount
         MCLEAKS("MCLeaks", null),
         MCLEAKS_INVALID("MCLeaks(Invalid)", MCLEAKS),
         THEALTENING("TheAltening", null),
-        THEALTENING_INVALID("TheAltening(Invalid)", THEALTENING);
+        THEALTENING_INVALID("TheAltening(Invalid)", THEALTENING),
+        MICROSOFT("Microsoft", null),
+        MICROSOFT_INVALID("Microsoft(Invalid)", MICROSOFT);
 
         @Suppress("CovariantEquals")
         fun equals(other: AltServiceType?): Boolean = other != null && (this == other || parent != null && other == parent || this == other.parent)

@@ -149,10 +149,12 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
             if (thePlayer == null)
                 return;
 
+            // pt.1: MotionEvent_Pre -> Use @Inject
             mc.mcProfiler.startSection("LiquidBounce-MotionEvent-PRE");
             LiquidBounce.eventManager.callEvent(new MotionEvent(EventState.PRE), true);
             mc.mcProfiler.endStartSection("onUpdateWalkingPlayer");
 
+            // pt.2: Sprint -> Use ModifyVariable on local variable 'sprinting'
             final InventoryMove inventoryMove = (InventoryMove) LiquidBounce.moduleManager.get(InventoryMove.class);
             final Sneak sneak = (Sneak) LiquidBounce.moduleManager.get(Sneak.class);
             final boolean fakeSprint = inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get() || LiquidBounce.moduleManager.get(AntiHunger.class).getState() || sneak.getState() && (!MovementExtensionKt.isMoving(thePlayer) || !sneak.stopMoveValue.get()) && "MineSecure".equalsIgnoreCase(sneak.modeValue.get());
@@ -169,6 +171,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
                 serverSprintState = sprinting;
             }
 
+            // pt.3: Sneak -> Use ModifyVariable to modify local variable 'sneaking' matching/not-matching with 'serverSneakState'
             final boolean sneaking = isSneaking();
 
             if (sneaking != serverSneakState && (!sneak.getState() || "Legit".equalsIgnoreCase(sneak.modeValue.get())))
@@ -205,6 +208,9 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
                 final double xDiff = posX - lastReportedPosX;
                 final double yDiff = getEntityBoundingBox().minY - lastReportedPosY;
                 final double zDiff = posZ - lastReportedPosZ;
+                // pt.4: Rotation -> Use two '@Inject' to modify fields 'rotationYaw' and 'rotationPitch'
+                // First inject: Set 'rotationYaw' and 'rotationPitch' to the calculated value, located before this.posX access
+                // Second inject: Restore 'rotationYaw' and 'rotationPitch' to the original value, located before/after the positionUpdateTicks increment
                 final double yawDiff = yaw - lastReportedYaw;
                 final double pitchDiff = pitch - lastReportedPitch;
                 boolean moved = xDiff * xDiff + yDiff * yDiff + zDiff * zDiff > 9.0E-4D || positionUpdateTicks >= 20;
@@ -240,6 +246,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
                 }
             }
 
+            // pt.5: MotionEvent_Post -> Use @Inject
             mc.mcProfiler.endStartSection("LiquidBounce-MotionEvent-POST");
             LiquidBounce.eventManager.callEvent(new MotionEvent(EventState.POST), true);
             mc.mcProfiler.endSection();
@@ -284,6 +291,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
     @Overwrite
     public void onLivingUpdate()
     {
+        // pt.1: UpdateEvent
         worldObj.theProfiler.startSection("LiquidBounce-UpdateEvent");
         LiquidBounce.eventManager.callEvent(new UpdateEvent(), true);
         worldObj.theProfiler.endSection();
@@ -303,6 +311,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 
         if (inPortal)
         {
+            // Pt.2: PortalMenu -> Use @Redirect for 'currentScreen' or 'doesGuiPauseGame()' access
             if (mc.currentScreen != null && !mc.currentScreen.doesGuiPauseGame() && !LiquidBounce.moduleManager.get(PortalMenu.class).getState())
                 mc.displayGuiScreen(null);
 
@@ -345,6 +354,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
         final NoSlow noSlow = (NoSlow) LiquidBounce.moduleManager.get(NoSlow.class);
         final KillAura killAura = (KillAura) LiquidBounce.moduleManager.get(KillAura.class);
 
+        // Pt.3: SlowDownEvent -> Use @ModifyConstant or @Redirect(drop moveStrafe and moveForward access) to drop these modifier applications, apply them MANUALLY after event call
         if (getHeldItem() != null && (isUsingItem() || getHeldItem().getItem() instanceof ItemSword && killAura.getServerSideBlockingStatus()) && !isRiding())
         {
             final SlowDownEvent slowDownEvent = new SlowDownEvent(0.2F, 0.2F);
@@ -359,11 +369,13 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
         pushOutOfBlocks(posX + width * 0.35D, getEntityBoundingBox().minY + 0.5D, posZ - width * 0.35D);
         pushOutOfBlocks(posX + width * 0.35D, getEntityBoundingBox().minY + 0.5D, posZ + width * 0.35D);
 
+        // Pt.4: Sprint
         final Sprint sprint = (Sprint) LiquidBounce.moduleManager.get(Sprint.class);
 
         final boolean foodCheck = !sprint.getFoodValue().get() || getFoodStats().getFoodLevel() > 6.0F || capabilities.allowFlying;
 
         final boolean blindCheck = !isPotionActive(Potion.blindness.id); // isPotionActive(Potion.blindness) // AntiBlind compatible (AntiBlind only blocks isPotionActive(Potion), not isPotionActive(int))
+
         if (onGround && !sneak && !forward && movementInput.moveForward >= sprintForwardThreshold && !isSprinting() && foodCheck && !isUsingItem() && blindCheck)
             if (sprintToggleTimer <= 0 && !mc.gameSettings.keyBindSprint.isKeyDown())
                 sprintToggleTimer = 7;
@@ -371,15 +383,19 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
                 setSprinting(true);
 
         final boolean sprintCheck = noSlow.getState() || !isUsingItem();
+
+        // Check sprint threshold to sprint
         if (!isSprinting() && movementInput.moveForward >= sprintForwardThreshold && foodCheck && sprintCheck && blindCheck && mc.gameSettings.keyBindSprint.isKeyDown())
             setSprinting(true);
 
         final Scaffold scaffold = (Scaffold) LiquidBounce.moduleManager.get(Scaffold.class);
 
+        // Disable sprint
         if (scaffold.getState() && !scaffold.getMovementSprintValue().get() || sprint.getState() && sprint.getCheckServerSide().get() && (onGround || !sprint.getCheckServerSideGround().get()) && !sprint.getAllDirectionsValue().get() && RotationUtils.Companion.getRotationDifference(RotationUtils.Companion.getClientRotation()) > 30)
             setSprinting(false);
 
         final boolean allDirection = sprint.getState() && sprint.getAllDirectionsValue().get();
+        // LostSprint
         if (isSprinting() && (!allDirection && movementInput.moveForward < sprintForwardThreshold || isCollidedHorizontally || !foodCheck))
             setSprinting(false);
 
@@ -453,7 +469,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
     @Override
     public void moveEntity(double moveX, double moveY, double moveZ)
     {
-        // Call MoveEvent
+        // pt.1: MoveEvent
         final MoveEvent moveEvent = new MoveEvent(moveX, moveY, moveZ);
         LiquidBounce.eventManager.callEvent(moveEvent);
 
@@ -579,11 +595,11 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
 
             final Step step = (Step) LiquidBounce.moduleManager.get(Step.class);
 
-            // Stepping
+            // pt.2: Step
             final boolean airStep = step.getState() && step.getAirStepValue().get() && step.canAirStep();
             if (stepHeight > 0.0F && (onGround || airStep || safewalkAppliedY != moveY && safewalkAppliedY < 0.0D) && (safewalkAppliedX != moveX || safewalkAppliedZ != moveZ))
             {
-                // Call StepEvent
+                // pt.3: StepEvent
                 final StepEvent stepEvent = new StepEvent(!onGround && airStep ? Math.min(stepHeight, step.getAirStepHeightValue().get()) : stepHeight);
                 LiquidBounce.eventManager.callEvent(stepEvent);
 
@@ -685,6 +701,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
                 // Apply Y Offset 3
                 setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, moveY, 0.0D));
 
+                // pt.4: StepEvent
                 if (__x * __x + __z * __z >= moveX * moveX + moveZ * moveZ)
                 {
                     moveX = __x;
@@ -756,6 +773,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
                 final boolean bobbingState = bobbing.getState();
                 final double bobbingMultiplier = bobbingState ? bobbing.getMultiplierValue().get() : 0.6D;
 
+                // pt.5: StepEvent
                 distanceWalkedModified += StrictMath.hypot(xDelta, zDelta) * bobbingMultiplier;
                 distanceWalkedOnStepModified += MathHelper.sqrt_double(xDelta * xDelta + yDelta * yDelta + zDelta * zDelta) * bobbingMultiplier;
 

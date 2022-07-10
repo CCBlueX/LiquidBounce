@@ -6,9 +6,8 @@
 
 package net.ccbluex.liquidbounce.utils.misc
 
-import com.google.common.io.ByteStreams
+import org.apache.commons.io.FileUtils
 import java.io.File
-import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.net.HttpURLConnection
@@ -62,7 +61,5 @@ object HttpUtils
 
     @Throws(IOException::class)
     @JvmStatic
-    fun download(url: String, file: File) = FileOutputStream(file).use {
-        @Suppress("UnstableApiUsage") ByteStreams.copy(openURLConnection(url, "GET").inputStream, it)
-    }
+    fun download(url: String, file: File) = FileUtils.copyInputStreamToFile(openURLConnection(url, "GET").getInputStream(), file)
 }

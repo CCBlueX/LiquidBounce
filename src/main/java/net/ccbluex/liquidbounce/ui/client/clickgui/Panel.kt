@@ -75,18 +75,18 @@ abstract class Panel(val name: String, x: Int, y: Int, width: Int, height: Int, 
         else element.isVisible = false
     }
 
-    fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int)
+    fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int): Boolean
     {
-        if (!isVisible) return
+        if (!isVisible) return false
 
         if (mouseButton == 1 && isHovering(mouseX, mouseY))
         {
             open = !open
             mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("random.bow"), 1.0f))
-            return
+            return true
         }
 
-        elements.filter { it.y <= y + fade }.forEach { it.mouseClicked(mouseX, mouseY, mouseButton) }
+        return elements.filter { it.y <= y + fade }.any { it.mouseClicked(mouseX, mouseY, mouseButton) }
     }
 
     fun mouseReleased(mouseX: Int, mouseY: Int, state: Int)

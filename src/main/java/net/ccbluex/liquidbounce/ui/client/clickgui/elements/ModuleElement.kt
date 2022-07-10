@@ -30,14 +30,16 @@ class ModuleElement(val module: Module) : ButtonElement(module.name)
         LiquidBounce.clickGui.style.drawModuleElement(mouseX, mouseY, this)
     }
 
-    override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int)
+    override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int): Boolean
     {
         if (isHovering(mouseX, mouseY) && isVisible && mouseButton in 0..1)
         {
             if (mouseButton == 0) module.toggle() else showSettings = !showSettings
 
             mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("gui.button.press"), 1.0f))
+            return true
         }
+        return false
     }
 
     fun updatePressed()

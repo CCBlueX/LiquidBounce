@@ -211,7 +211,7 @@ class ClickGui : GuiScreen()
                         super.createButton(displayName)
                     }
 
-                    override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int)
+                    override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int): Boolean
                     {
                         if (mouseButton == 0 && isHovering(mouseX, mouseY) && isVisible)
                         {
@@ -219,7 +219,9 @@ class ClickGui : GuiScreen()
                             displayName = "Players"
                             color = if (EntityUtils.targetPlayer) generateButtonColor() else i
                             mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("gui.button.press"), 1.0f))
+                            return true
                         }
+                        return false
                     }
                 })
 
@@ -238,7 +240,7 @@ class ClickGui : GuiScreen()
                         super.createButton(displayName)
                     }
 
-                    override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int)
+                    override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int): Boolean
                     {
                         if (mouseButton == 0 && isHovering(mouseX, mouseY) && isVisible)
                         {
@@ -246,7 +248,9 @@ class ClickGui : GuiScreen()
                             displayName = "Mobs"
                             color = if (EntityUtils.targetMobs) generateButtonColor() else i
                             mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("gui.button.press"), 1.0f))
+                            return true
                         }
+                        return false
                     }
                 })
 
@@ -265,7 +269,7 @@ class ClickGui : GuiScreen()
                         super.createButton(displayName)
                     }
 
-                    override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int)
+                    override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int): Boolean
                     {
                         if (mouseButton == 0 && isHovering(mouseX, mouseY) && isVisible)
                         {
@@ -273,7 +277,9 @@ class ClickGui : GuiScreen()
                             displayName = "Animals"
                             color = if (EntityUtils.targetAnimals) generateButtonColor() else i
                             mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("gui.button.press"), 1.0f))
+                            return true
                         }
+                        return false
                     }
                 })
 
@@ -292,7 +298,7 @@ class ClickGui : GuiScreen()
                         super.createButton(displayName)
                     }
 
-                    override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int)
+                    override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int): Boolean
                     {
                         if (mouseButton == 0 && isHovering(mouseX, mouseY) && isVisible)
                         {
@@ -300,7 +306,9 @@ class ClickGui : GuiScreen()
                             displayName = "Armor-Stand"
                             color = if (EntityUtils.targetArmorStand) generateButtonColor() else i
                             mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("gui.button.press"), 1.0f))
+                            return true
                         }
+                        return false
                     }
                 })
 
@@ -319,7 +327,7 @@ class ClickGui : GuiScreen()
                         super.createButton(displayName)
                     }
 
-                    override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int)
+                    override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int): Boolean
                     {
                         if (mouseButton == 0 && isHovering(mouseX, mouseY) && isVisible)
                         {
@@ -327,7 +335,9 @@ class ClickGui : GuiScreen()
                             displayName = "Invisible"
                             color = if (EntityUtils.targetInvisible) generateButtonColor() else i
                             mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("gui.button.press"), 1.0f))
+                            return true
                         }
+                        return false
                     }
                 })
 
@@ -346,7 +356,7 @@ class ClickGui : GuiScreen()
                         super.createButton(displayName)
                     }
 
-                    override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int)
+                    override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int): Boolean
                     {
                         if (mouseButton == 0 && isHovering(mouseX, mouseY) && isVisible)
                         {
@@ -354,7 +364,9 @@ class ClickGui : GuiScreen()
                             displayName = "Dead"
                             color = if (EntityUtils.targetDead) generateButtonColor() else i
                             mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("gui.button.press"), 1.0f))
+                            return true
                         }
+                        return false
                     }
                 })
             }

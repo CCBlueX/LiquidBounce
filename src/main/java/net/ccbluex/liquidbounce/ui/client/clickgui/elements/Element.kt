@@ -25,12 +25,8 @@ open class Element : MinecraftInstance()
     {
     }
 
-    open fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int)
-    {
-    }
+    open fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int): Boolean = false
 
     @Suppress("UNUSED_PARAMETER")
-    fun mouseReleased(mouseX: Int, mouseY: Int, state: Int)
-    {
-    }
+    fun mouseReleased(mouseX: Int, mouseY: Int, state: Int): Boolean = false
 }

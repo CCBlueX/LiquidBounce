@@ -231,6 +231,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen()
                                 {
                                     LiquidBounce.fileManager.accountsConfig.accounts.add(account)
                                     FileManager.saveConfig(LiquidBounce.fileManager.accountsConfig)
+                                    moreMessage = " Account added to the list."
                                 }
 
                                 "\u00A7aYour name is now \u00A7b\u00A7l${yggdrasilUserAuthentication.selectedProfile.name}\u00A7c.$moreMessage"

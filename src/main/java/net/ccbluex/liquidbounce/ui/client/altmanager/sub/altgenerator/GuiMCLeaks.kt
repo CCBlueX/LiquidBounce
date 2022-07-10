@@ -108,6 +108,7 @@ class GuiMCLeaks(private val prevGui: GuiAltManager) : GuiScreen()
                         {
                             LiquidBounce.fileManager.accountsConfig.accounts.add(account)
                             FileManager.saveConfig(LiquidBounce.fileManager.accountsConfig)
+                            moreMessage = " Account added to the list."
                         }
                         status = "\u00A7aYour token was redeemed successfully!\u00A7c$moreMessage"
                     }
