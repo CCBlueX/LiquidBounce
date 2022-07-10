@@ -673,7 +673,7 @@ class Scaffold : Module()
             }
             else if (shouldGoDown)
             {
-                searchPosition = pos.add(0.0, -0.6, 0.0).down() // Default full-block only scaffold
+                searchPosition = pos.add(0.0, -0.6, 0.0).down()
                 state = "\u00A7bDOWNWARDS"
             }
             else
@@ -749,17 +749,16 @@ class Scaffold : Module()
 
         val placeableDelay = { if (delayPlaceableDelayValue.get()) delayTimer.reset() }
 
-        if (targetPlace == null)
-        {
-            placeableDelay()
-            return
-        }
-
         val failedResponce = { reason: String ->
             setPlaceDebug(listOf("result".equalTo("FAILED", "\u00A74"), "reason" equalTo reason.withParentheses("\u00A74"))::serialize)
         }
 
-        if (BLACKLISTED_BLOCKS.contains(theWorld.getBlock((targetPlace ?: return).blockPos)))
+        val targetPlace = targetPlace ?: run {
+            placeableDelay()
+            return@place
+        }
+
+        if (BLACKLISTED_BLOCKS.contains(theWorld.getBlock(targetPlace.blockPos)))
         {
             placeableDelay()
             failedResponce("Blacklisted block in targetPlace.blockPos")
@@ -772,13 +771,20 @@ class Scaffold : Module()
             return
         }
 
-        val targetPlace = targetPlace ?: return
-
         val autoBlockMode = autoBlockModeValue.get().toLowerCase()
         val switchKeepTime = autoBlockSwitchKeepTimeValue.get()
 
-        // Delay & SameY check
-        if (!delayTimer.hasTimePassed(delay) || sameYValue.get() && launchY - 1 != targetPlace.vec3.yCoord.toInt() && fallStartY - thePlayer.posY <= 2) return
+        // Delay check
+        if (!delayTimer.hasTimePassed(delay)) return
+
+        // SameY check
+        val first = launchY - 1
+        val second = targetPlace.blockPos.y
+        if (sameYValue.get() && first != second && fallStartY - thePlayer.posY <= 2)
+        {
+            failedResponce("SameY [ $first(launchY-1) != $second(target.blockPos.y) ]")
+            return
+        }
 
         if (killauraBypassModeValue.get().equals("SuspendKillAura", true)) killAura.suspend(killAuraBypassKillAuraSuspendDurationValue.get().toLong())
 
@@ -1136,7 +1142,7 @@ class Scaffold : Module()
                             val rayEnd = eyesPos + vectorForRotation * 4.25
 
                             var rayTrace: MovingObjectPosition? = null
-                            if (!checkVisible || run {
+                            if (checkVisible && run {
                                     rayTrace = theWorld.rayTraceBlocks(eyesPos, rayEnd, false, false, true)
                                     rayTrace?.let { it.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK || it.blockPos != neighbor } == true // Raytrace Check - rayTrace hit between eye position and block reach position
                                 }) return@repeat

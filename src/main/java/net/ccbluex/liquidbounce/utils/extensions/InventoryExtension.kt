@@ -96,7 +96,7 @@ fun Container.findAutoBlockBlock(theWorld: World, autoblockFullcubeOnly: Boolean
 
         (36..44).forEach { i ->
             val itemStack = getSlot(i).stack
-            val item = itemStack.item
+            val item = itemStack?.item
             if (itemStack != null && item is ItemBlock && itemStack.stackSize > 0 && item.block.canAutoBlock) hotbarSlots.add(i)
         }
 
