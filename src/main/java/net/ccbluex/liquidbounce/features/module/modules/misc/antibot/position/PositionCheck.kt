@@ -16,11 +16,7 @@ import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.network.play.server.S0CPacketSpawnPlayer
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.Vec3
-import kotlin.math.abs
-import kotlin.math.ceil
-import kotlin.math.hypot
-import kotlin.math.max
-import kotlin.math.pow
+import kotlin.math.*
 
 class PositionCheck : BotCheck("position.position")
 {

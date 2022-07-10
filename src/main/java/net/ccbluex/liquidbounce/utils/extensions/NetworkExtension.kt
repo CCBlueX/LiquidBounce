@@ -1,6 +1,6 @@
 package net.ccbluex.liquidbounce.utils.extensions
 
-import net.ccbluex.liquidbounce.injection.forge.mixins.network.MixinNetworkManager
+import net.ccbluex.liquidbounce.injection.implementations.IMixinNetworkManager
 import net.minecraft.client.network.NetworkPlayerInfo
 import net.minecraft.entity.projectile.EntityPotion
 import net.minecraft.item.ItemStack
@@ -22,7 +22,7 @@ fun NetworkPlayerInfo.getFullName(useDisplayNameIfPresent: Boolean): String
 }
 
 @Suppress("CAST_NEVER_SUCCEEDS")
-fun NetworkManager.sendPacketWithoutEvent(packet: Packet<*>) = (this as MixinNetworkManager).sendPacketWithoutEvent(packet)
+fun NetworkManager.sendPacketWithoutEvent(packet: Packet<*>) = (this as IMixinNetworkManager).sendPacketWithoutEvent(packet)
 
 fun isOpenInventoryPacket(packet: Packet<*>): Boolean = packet is C16PacketClientStatus && packet.status == C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT
 

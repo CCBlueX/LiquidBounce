@@ -18,7 +18,6 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.gui.FontRenderer
-import net.minecraft.util.*
 import org.lwjgl.input.Keyboard
 
 @ElementInfo(name = "TabGUI")

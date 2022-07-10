@@ -1,10 +1,6 @@
 package net.ccbluex.liquidbounce.utils.extensions
 
-import net.minecraft.block.Block
-import net.minecraft.block.BlockBush
-import net.minecraft.block.BlockDoor
-import net.minecraft.block.BlockRailBase
-import net.minecraft.block.BlockSign
+import net.minecraft.block.*
 import net.minecraft.entity.player.InventoryPlayer
 import net.minecraft.init.Blocks
 import net.minecraft.init.Items

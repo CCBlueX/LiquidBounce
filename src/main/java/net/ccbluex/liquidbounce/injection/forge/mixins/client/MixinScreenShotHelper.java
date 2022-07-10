@@ -1,5 +1,7 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.client;
 
+import static org.lwjgl.opengl.GL11.*;
+
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -29,8 +31,6 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
-
-import static org.lwjgl.opengl.GL11.*;
 
 @Mixin(ScreenShotHelper.class)
 public abstract class MixinScreenShotHelper

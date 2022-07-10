@@ -12,14 +12,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.CPSCounter
 import net.ccbluex.liquidbounce.utils.RotationUtils
-import net.ccbluex.liquidbounce.utils.extensions.canBeClicked
-import net.ccbluex.liquidbounce.utils.extensions.findItem
-import net.ccbluex.liquidbounce.utils.extensions.getBlock
-import net.ccbluex.liquidbounce.utils.extensions.getEntitiesInRadius
-import net.ccbluex.liquidbounce.utils.extensions.isReplaceable
-import net.ccbluex.liquidbounce.utils.extensions.isSelected
-import net.ccbluex.liquidbounce.utils.extensions.toDegrees
-import net.ccbluex.liquidbounce.utils.extensions.wrapAngleTo180
+import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue

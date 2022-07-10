@@ -19,7 +19,7 @@ import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.gui.ScaledResolution
-import net.minecraft.util.*
+import net.minecraft.util.ResourceLocation
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 import kotlin.math.max
@@ -385,6 +385,9 @@ class Notification(private val type: NotificationIcon, var header: String, val m
             }
 
             // FadeState.END -> LiquidBounce.hud.removeNotification(this) - throws ConcurrentModificationException
+            else ->
+            {
+            }
         }
     }
 }

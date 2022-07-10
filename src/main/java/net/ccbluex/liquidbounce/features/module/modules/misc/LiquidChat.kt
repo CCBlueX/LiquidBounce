@@ -6,12 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import net.ccbluex.liquidbounce.chat.Client
-import net.ccbluex.liquidbounce.chat.packet.packets.ClientErrorPacket
-import net.ccbluex.liquidbounce.chat.packet.packets.ClientMessagePacket
-import net.ccbluex.liquidbounce.chat.packet.packets.ClientNewJWTPacket
-import net.ccbluex.liquidbounce.chat.packet.packets.ClientPrivateMessagePacket
-import net.ccbluex.liquidbounce.chat.packet.packets.ClientSuccessPacket
-import net.ccbluex.liquidbounce.chat.packet.packets.Packet
+import net.ccbluex.liquidbounce.chat.packet.packets.*
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.SessionEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent

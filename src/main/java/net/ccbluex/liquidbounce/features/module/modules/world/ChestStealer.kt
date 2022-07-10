@@ -31,7 +31,7 @@ import net.minecraft.item.Item
 import net.minecraft.item.ItemBlock
 import net.minecraft.item.ItemStack
 import net.minecraft.network.play.server.S30PacketWindowItems
-import net.minecraft.util.*
+import net.minecraft.util.ResourceLocation
 import java.lang.ref.SoftReference
 import java.util.*
 import kotlin.math.max

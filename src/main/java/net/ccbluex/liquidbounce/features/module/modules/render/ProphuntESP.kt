@@ -16,12 +16,7 @@ import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbowRGB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.GlowShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.OutlineShader
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
-import net.ccbluex.liquidbounce.value.RGBAColorValue
-import net.ccbluex.liquidbounce.value.ValueGroup
+import net.ccbluex.liquidbounce.value.*
 import net.minecraft.entity.item.EntityFallingBlock
 import net.minecraft.util.BlockPos
 

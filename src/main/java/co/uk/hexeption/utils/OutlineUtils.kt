@@ -6,41 +6,7 @@ import net.minecraft.client.renderer.OpenGlHelper
 import net.minecraft.client.shader.Framebuffer
 import org.lwjgl.opengl.EXTFramebufferObject
 import org.lwjgl.opengl.EXTPackedDepthStencil
-import org.lwjgl.opengl.GL11.GL_ALL_ATTRIB_BITS
-import org.lwjgl.opengl.GL11.GL_ALPHA_TEST
-import org.lwjgl.opengl.GL11.GL_BLEND
-import org.lwjgl.opengl.GL11.GL_DEPTH_TEST
-import org.lwjgl.opengl.GL11.GL_DONT_CARE
-import org.lwjgl.opengl.GL11.GL_EQUAL
-import org.lwjgl.opengl.GL11.GL_FILL
-import org.lwjgl.opengl.GL11.GL_FRONT_AND_BACK
-import org.lwjgl.opengl.GL11.GL_KEEP
-import org.lwjgl.opengl.GL11.GL_LIGHTING
-import org.lwjgl.opengl.GL11.GL_LINE
-import org.lwjgl.opengl.GL11.GL_LINE_SMOOTH
-import org.lwjgl.opengl.GL11.GL_LINE_SMOOTH_HINT
-import org.lwjgl.opengl.GL11.GL_NEVER
-import org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA
-import org.lwjgl.opengl.GL11.GL_POLYGON_OFFSET_LINE
-import org.lwjgl.opengl.GL11.GL_REPLACE
-import org.lwjgl.opengl.GL11.GL_SRC_ALPHA
-import org.lwjgl.opengl.GL11.GL_STENCIL_BUFFER_BIT
-import org.lwjgl.opengl.GL11.GL_STENCIL_TEST
-import org.lwjgl.opengl.GL11.GL_TEXTURE_2D
-import org.lwjgl.opengl.GL11.glBlendFunc
-import org.lwjgl.opengl.GL11.glClear
-import org.lwjgl.opengl.GL11.glClearStencil
-import org.lwjgl.opengl.GL11.glDepthMask
-import org.lwjgl.opengl.GL11.glDisable
-import org.lwjgl.opengl.GL11.glEnable
-import org.lwjgl.opengl.GL11.glHint
-import org.lwjgl.opengl.GL11.glLineWidth
-import org.lwjgl.opengl.GL11.glPolygonMode
-import org.lwjgl.opengl.GL11.glPolygonOffset
-import org.lwjgl.opengl.GL11.glPopAttrib
-import org.lwjgl.opengl.GL11.glPushAttrib
-import org.lwjgl.opengl.GL11.glStencilFunc
-import org.lwjgl.opengl.GL11.glStencilOp
+import org.lwjgl.opengl.GL11.*
 
 /**
  * Outline ESP

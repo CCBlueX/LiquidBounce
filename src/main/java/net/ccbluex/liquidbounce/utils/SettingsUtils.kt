@@ -18,15 +18,7 @@ import net.ccbluex.liquidbounce.utils.extensions.withPrefix
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.translateAlternateColorCodes
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatRangeValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerRangeValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
-import net.ccbluex.liquidbounce.value.RangeValue
-import net.ccbluex.liquidbounce.value.TextValue
-import net.ccbluex.liquidbounce.value.Value
+import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.entity.EntityPlayerSP
 import org.lwjgl.input.Keyboard
 

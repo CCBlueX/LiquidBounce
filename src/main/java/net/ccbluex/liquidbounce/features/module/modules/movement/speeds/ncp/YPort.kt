@@ -8,14 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.extensions.cantBoostUp
-import net.ccbluex.liquidbounce.utils.extensions.cos
-import net.ccbluex.liquidbounce.utils.extensions.hasMotion
-import net.ccbluex.liquidbounce.utils.extensions.isMoving
-import net.ccbluex.liquidbounce.utils.extensions.moveDirectionRadians
-import net.ccbluex.liquidbounce.utils.extensions.multiply
-import net.ccbluex.liquidbounce.utils.extensions.sin
-import net.ccbluex.liquidbounce.utils.extensions.speedEffectAmplifier
+import net.ccbluex.liquidbounce.utils.extensions.*
 import net.minecraft.block.Block
 import net.minecraft.block.BlockAir
 import net.minecraft.entity.Entity

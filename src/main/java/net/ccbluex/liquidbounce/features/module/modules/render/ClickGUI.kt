@@ -20,7 +20,6 @@ import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbowRGB
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.gui.FontRenderer
 import net.minecraft.network.play.server.S2EPacketCloseWindow
-import net.minecraft.util.*
 import org.lwjgl.input.Keyboard
 
 @ModuleInfo(name = "ClickGUI", description = "Opens the ClickGUI.", category = ModuleCategory.RENDER, defaultKeyBinds = [Keyboard.KEY_RSHIFT], canEnable = false)

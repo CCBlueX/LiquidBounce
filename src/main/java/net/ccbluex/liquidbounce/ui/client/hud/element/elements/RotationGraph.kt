@@ -13,7 +13,6 @@ import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.renderer.GlStateManager
-import net.minecraft.util.*
 import org.lwjgl.opengl.GL11
 import kotlin.math.abs
 import kotlin.math.hypot

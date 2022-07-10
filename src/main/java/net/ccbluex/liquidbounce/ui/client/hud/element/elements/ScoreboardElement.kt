@@ -18,7 +18,7 @@ import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.scoreboard.ScoreObjective
 import net.minecraft.scoreboard.ScorePlayerTeam
-import net.minecraft.util.*
+import net.minecraft.util.EnumChatFormatting
 import kotlin.math.min
 
 /**

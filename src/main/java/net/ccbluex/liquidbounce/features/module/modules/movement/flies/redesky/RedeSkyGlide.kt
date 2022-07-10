@@ -2,13 +2,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.flies.redesky
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
-import net.ccbluex.liquidbounce.utils.extensions.cos
-import net.ccbluex.liquidbounce.utils.extensions.forward
-import net.ccbluex.liquidbounce.utils.extensions.sendPacketWithoutEvent
-import net.ccbluex.liquidbounce.utils.extensions.sin
-import net.ccbluex.liquidbounce.utils.extensions.strafe
-import net.ccbluex.liquidbounce.utils.extensions.toRadians
-import net.ccbluex.liquidbounce.utils.extensions.zeroXZ
+import net.ccbluex.liquidbounce.utils.extensions.*
 import net.minecraft.entity.Entity
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 
