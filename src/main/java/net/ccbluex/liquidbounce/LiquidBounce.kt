@@ -5,10 +5,8 @@
  */
 package net.ccbluex.liquidbounce
 
-import com.google.gson.JsonObject
-import com.google.gson.JsonParser
 import jdk.nashorn.internal.runtime.Version
-import net.ccbluex.liquidbounce.cape.CapeAPI.registerCapeService
+import net.ccbluex.liquidbounce.cape.CapeService
 import net.ccbluex.liquidbounce.event.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.features.command.CommandManager
@@ -16,7 +14,6 @@ import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.special.AntiModDisable
 import net.ccbluex.liquidbounce.features.special.BungeeCordSpoof
 import net.ccbluex.liquidbounce.features.special.ClientRichPresence
-import net.ccbluex.liquidbounce.features.special.DonatorCape
 import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.script.remapper.Remapper.loadSrg
@@ -28,8 +25,8 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.ui.client.hud.HUD
 import net.ccbluex.liquidbounce.ui.client.hud.HUD.Companion.createDefault
 import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.update.UpdateInfo
 import net.ccbluex.liquidbounce.utils.*
-import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import net.minecraft.util.ResourceLocation
 import net.minecraftforge.common.ForgeVersion
 import org.lwjgl.Sys
@@ -43,11 +40,19 @@ object LiquidBounce
 {
     // Client information
     const val CLIENT_NAME = "LiquidBounce"
-    const val CLIENT_VERSION = 73
+
     const val IN_DEV = true
     const val CLIENT_CREATOR = "CCBlueX"
     const val MINECRAFT_VERSION = "1.8.9"
     const val CLIENT_CLOUD = "https://cloud.liquidbounce.net/LiquidBounce"
+    const val CLIENT_API = "https://api.liquidbounce.net/api/v1"
+
+    @JvmField
+    val CLIENT_VERSION = UpdateInfo.gitInfo["git.build.version"]?.toString() ?: "unknown"
+    var CLIENT_VERSION_INT = CLIENT_VERSION.substring(1).toIntOrNull() ?: 0 // version format: "b<VERSION>" on legacy
+
+    @JvmField
+    val CLIENT_COMMIT: String = UpdateInfo.gitInfo["git.commit.id.abbrev"]?.let { "git-$it" } ?: "unknown"
 
     var isStarting = false
 
@@ -78,7 +83,7 @@ object LiquidBounce
     val title: String
         get()
         {
-            val arr = mutableListOf("$CLIENT_NAME b$CLIENT_VERSION by $CLIENT_CREATOR", "Kotlin ${KotlinVersion.CURRENT}", "Nashorn ${Version.version()}", "Backend $MINECRAFT_VERSION", "Source https://github.com/hsheric0210/LiquidBounce")
+            val arr = mutableListOf("$CLIENT_NAME $CLIENT_VERSION $CLIENT_COMMIT by $CLIENT_CREATOR", "Kotlin ${KotlinVersion.CURRENT}", "Nashorn ${Version.version()}", "Backend $MINECRAFT_VERSION", "Source https://github.com/hsheric0210/LiquidBounce")
             if (IN_DEV) arr += "DEVELOPMENT BUILD"
             currentProgress?.let { arr += it }
             return arr.joinToString(" | ")
@@ -124,7 +129,6 @@ object LiquidBounce
         eventManager.registerListener(RotationUtils())
         eventManager.registerListener(AntiModDisable())
         eventManager.registerListener(BungeeCordSpoof())
-        eventManager.registerListener(DonatorCape())
         eventManager.registerListener(InventoryUtils())
         eventManager.registerListener(LocationCache())
 
@@ -192,17 +196,6 @@ object LiquidBounce
             HeadsTab()
         }
 
-        // Register capes service
-        updateProgress("Registering Cape Service")
-        try
-        {
-            registerCapeService()
-        }
-        catch (throwable: Throwable)
-        {
-            ClientUtils.logger.error("Failed to register cape service", throwable)
-        }
-
         // Set HUD
         updateProgress("Creating HUD")
         hud = createDefault()
@@ -213,22 +206,6 @@ object LiquidBounce
         // Disable optifine fastrender
         // updateProgress("Disabling OptiFine Fast-Render Feature")
         // ClientUtils.disableFastRender()
-
-        try
-        {
-            updateProgress("Checking for updates")
-
-            // Read versions json from cloud
-            val jsonObj = JsonParser().parse(HttpUtils["$CLIENT_CLOUD/versions.json"])
-
-            // Check json is valid object and has current minecraft version
-            if (jsonObj is JsonObject && jsonObj.has(MINECRAFT_VERSION)) latestVersion = jsonObj[MINECRAFT_VERSION].asInt // Get official latest client version
-        }
-        catch (exception: Throwable)
-        {
-            // Print throwable to console
-            ClientUtils.logger.error("Failed to check for updates.", exception)
-        }
 
         updateProgress("Loading Alt Generators")
         GuiAltManager.loadGenerators()
@@ -247,6 +224,11 @@ object LiquidBounce
                     ClientUtils.logger.error("Failed to setup Discord RPC.", throwable)
                 }
             }
+        }
+
+        // Refresh cape service
+        CapeService.refreshCapeCarriers {
+            ClientUtils.logger.info("Successfully loaded ${CapeService.capeCarriers.size} cape carriers.")
         }
 
         // Set is starting status

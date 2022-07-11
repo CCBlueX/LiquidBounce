@@ -34,12 +34,12 @@ public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer
     @Inject(method = "getLocationCape", at = @At("HEAD"), cancellable = true)
     private void injectLiquidBounceCape(final CallbackInfoReturnable<? super ResourceLocation> callbackInfoReturnable)
     {
-        // Custom Cape
-        if (!CapeAPI.INSTANCE.hasCapeService())
-            return;
-
         if (capeInfo == null)
-            capeInfo = CapeAPI.INSTANCE.loadCape(getUniqueID());
+            CapeAPI.INSTANCE.loadCape(getUniqueID(), newCapeInfo ->
+            {
+                capeInfo = newCapeInfo;
+                return null;
+            });
 
         if (capeInfo != null && capeInfo.isCapeAvailable())
             callbackInfoReturnable.setReturnValue(capeInfo.getResourceLocation());

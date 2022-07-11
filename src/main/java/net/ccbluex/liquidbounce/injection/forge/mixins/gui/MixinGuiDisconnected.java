@@ -112,7 +112,7 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen
                     }
                     catch (final Throwable throwable)
                     {
-                        ClientUtils.getLogger().error("Failed to login into random account from TheAltening.", throwable);
+                        ClientUtils.logger.error("Failed to login into random account from TheAltening.", throwable);
                     }
                 }
 

@@ -238,7 +238,8 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
             "username" -> mc.session.username
 
             "clientname" -> LiquidBounce.CLIENT_NAME
-            "clientversion" -> "b${LiquidBounce.CLIENT_VERSION}"
+            "clientversion" -> "${LiquidBounce.CLIENT_VERSION}"
+            "clientcommit" -> "${LiquidBounce.CLIENT_COMMIT}"
             "clientcreator" -> LiquidBounce.CLIENT_CREATOR
 
             "fps" -> Minecraft.getDebugFPS().toString()

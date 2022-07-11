@@ -5,8 +5,8 @@
  */
 package net.ccbluex.liquidbounce.ui.client
 
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.update.UpdateInfo
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
@@ -22,8 +22,8 @@ class GuiUpdate : GuiScreen()
         val middleScreen = width shr 1
 
         val buttonList = buttonList
-        buttonList.add(GuiButton(1, middleScreen + 2, j + 48, 98, 20, "OK"))
-        buttonList.add(GuiButton(2, middleScreen - 100, j + 48, 98, 20, "Download"))
+        buttonList.add(GuiButton(1, middleScreen + 2, j + 48, 98, 20, "Ignore"))
+        buttonList.add(GuiButton(2, middleScreen - 100, j + 48, 98, 20, "Go to download page"))
     }
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)
@@ -35,7 +35,7 @@ class GuiUpdate : GuiScreen()
         val middleScreen = (width shr 1).toFloat()
         val textY = (height shr 3) + 80f
 
-        font.drawCenteredString("b${LiquidBounce.latestVersion} got released!", middleScreen, textY, 0xffffff)
+        font.drawCenteredString("b${UpdateInfo.newestVersion?.lbVersion} got released!", middleScreen, textY, 0xffffff)
         font.drawCenteredString("Press \"Download\" to visit our website or dismiss this message by pressing \"OK\".", middleScreen, textY + font.fontHeight, 0xffffff)
 
         super.drawScreen(mouseX, mouseY, partialTicks)

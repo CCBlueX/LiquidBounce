@@ -21,6 +21,7 @@ import net.ccbluex.liquidbounce.ui.client.GuiWelcome;
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification;
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationIcon;
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notifications;
+import net.ccbluex.liquidbounce.update.UpdateInfo;
 import net.ccbluex.liquidbounce.utils.CPSCounter;
 import net.ccbluex.liquidbounce.utils.CPSCounter.MouseButton;
 import net.ccbluex.liquidbounce.utils.render.IconUtils;
@@ -144,7 +145,7 @@ public abstract class MixinMinecraft
             displayGuiScreen(new GuiWelcome());
 
         // Display update screen
-        else if (LiquidBounce.INSTANCE.getLatestVersion() > LiquidBounce.CLIENT_VERSION - (LiquidBounce.IN_DEV ? 1 : 0))
+        else if (UpdateInfo.INSTANCE.hasUpdate())
             displayGuiScreen(new GuiUpdate());
     }
 

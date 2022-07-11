@@ -30,6 +30,7 @@ class Aimbot : Module()
 
     private val rotationAccelerationRatioValue = FloatRangeValue("Acceleration", 0f, 0f, 0f, .99f, "MaxAccelerationRatio" to "MinAccelerationRatio")
     private val rotationTurnSpeedValue = FloatRangeValue("TurnSpeed", 180f, 180f, 1f, 180f, "MaxTurnSpeed" to "MinTurnSpeed")
+    private val rotationInViewTurnSpeedMinValue = FloatRangeValue("InViewTurnSpeed", 180f, 180f, 1f, 180f, "MaxTurnSpeed" to "MinTurnSpeed")
 
     private val fovValue = FloatValue("FoV", 30F, 1F, 180F)
 
@@ -139,7 +140,7 @@ class Aimbot : Module()
 
         // Apply predict to target box
 
-        var targetBB = entity.entityBoundingBox
+        var targetBB = entity.entityBoundingBox ?: return
 
         if (predictEnemyValue.get())
         {
@@ -164,7 +165,7 @@ class Aimbot : Module()
 
         val targetRotation = (RotationUtils.searchCenter(theWorld, thePlayer, targetBB, flags, jitterData, playerPredictSize, range, hitboxDecrementValue.get().toDouble(), centerSearchSensitivityValue.get(), 0.0) ?: return).rotation
 
-        val turnSpeed = rotationTurnSpeedValue.getRandomStrict()
+        val turnSpeed = (if (RotationUtils.getRotationDifference(targetRotation, RotationUtils.clientRotation) < mc.gameSettings.fovSetting) rotationInViewTurnSpeedMinValue else rotationTurnSpeedValue).getRandomStrict()
         val acceleration = rotationAccelerationRatioValue.getRandomStrict()
 
         // Limit by TurnSpeed any apply

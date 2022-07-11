@@ -51,7 +51,7 @@ class GuiMainMenu : GuiScreen()
         RenderUtils.drawRect(middleScreenX - 115, quarterScreenY + 35, middleScreenX + 115, quarterScreenY + 175, Integer.MIN_VALUE)
 
         Fonts.fontBold180.drawCenteredString(LiquidBounce.CLIENT_NAME, middleScreenX, halfQuarterScreenY, 4673984, true)
-        Fonts.font35.drawCenteredString("b" + LiquidBounce.CLIENT_VERSION, middleScreenX + 148, halfQuarterScreenY + Fonts.font35.fontHeight, 0xffffff, true)
+        Fonts.font35.drawCenteredString(LiquidBounce.CLIENT_VERSION, middleScreenX + 148, halfQuarterScreenY + Fonts.font35.fontHeight, 0xffffff, true)
 
         super.drawScreen(mouseX, mouseY, partialTicks)
     }

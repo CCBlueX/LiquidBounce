@@ -19,4 +19,9 @@ class MSTimer
     {
         time = System.currentTimeMillis()
     }
+
+    fun zero()
+    {
+        time = -1L
+    }
 }
