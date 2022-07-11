@@ -27,6 +27,7 @@ import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
@@ -47,12 +48,12 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.At.Shift;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(EntityPlayerSP.class)
 @SideOnly(Side.CLIENT)
@@ -136,125 +137,76 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
     @Shadow
     private float lastReportedPitch;
 
-    /**
-     * @author CCBlueX
-     * @reason InventoryMove, Sneak, MotionEvent
-     */
-    @Overwrite
-    public void onUpdateWalkingPlayer()
+    private Sneak sneak;
+    public float backup_rotationYaw = rotationYaw;
+    public float backup_rotationPitch;
+    private float backup_lastReportedYaw;
+    private float backup_lastReportedPitch;
+
+    @Inject(method = "onUpdateWalkingPlayer", at = @At("HEAD"))
+    private void injectMotionEventPre(final CallbackInfo ci)
     {
-        try
+        mc.mcProfiler.startSection("LiquidBounce-MotionEvent-PRE");
+        LiquidBounce.eventManager.callEvent(new MotionEvent(EventState.PRE), true);
+        mc.mcProfiler.endStartSection("onUpdateWalkingPlayer");
+    }
+
+    @SuppressWarnings("InvalidInjectorMethodSignature")
+    @ModifyVariable(method = "onUpdateWalkingPlayer", at = @At(value = "STORE", ordinal = 0), ordinal = 0)
+    private boolean applySprint(final boolean flag)
+    {
+        final InventoryMove inventoryMove = (InventoryMove) LiquidBounce.moduleManager.get(InventoryMove.class);
+        sneak = (Sneak) LiquidBounce.moduleManager.get(Sneak.class);
+        return flag && !(inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get() || LiquidBounce.moduleManager.get(AntiHunger.class).getState() || sneak.getState() && (!MovementExtensionKt.isMoving(mc.thePlayer) || !sneak.stopMoveValue.get()) && "MineSecure".equalsIgnoreCase(sneak.modeValue.get()));
+    }
+
+    @ModifyVariable(method = "onUpdateWalkingPlayer", at = @At(value = "STORE", ordinal = 1), ordinal = 1)
+    private boolean applySneak(final boolean flag1)
+    {
+        return sneak.getState() && !"Legit".equalsIgnoreCase(sneak.modeValue.get()) ? serverSneakState : flag1;
+    }
+
+    @Inject(method = "onUpdateWalkingPlayer", at = @At(value = "FIELD", target = "Lnet/minecraft/client/entity/EntityPlayerSP;posX:D", ordinal = 0))
+    private void applyRotations(final CallbackInfo ci)
+    {
+        backup_rotationYaw = rotationYaw;
+        backup_rotationPitch = rotationPitch;
+        backup_lastReportedYaw = lastReportedYaw;
+        backup_lastReportedPitch = lastReportedPitch;
+
+        lastReportedYaw = RotationUtils.serverRotation.getYaw();
+        lastReportedPitch = RotationUtils.serverRotation.getPitch();
+
+        final Derp derp = (Derp) LiquidBounce.moduleManager.get(Derp.class);
+        if (derp.getState())
         {
-            final EntityPlayerSP thePlayer = Minecraft.getMinecraft().thePlayer;
-            if (thePlayer == null)
-                return;
-
-            // pt.1: MotionEvent_Pre -> Use @Inject
-            mc.mcProfiler.startSection("LiquidBounce-MotionEvent-PRE");
-            LiquidBounce.eventManager.callEvent(new MotionEvent(EventState.PRE), true);
-            mc.mcProfiler.endStartSection("onUpdateWalkingPlayer");
-
-            // pt.2: Sprint -> Use ModifyVariable on local variable 'sprinting'
-            final InventoryMove inventoryMove = (InventoryMove) LiquidBounce.moduleManager.get(InventoryMove.class);
-            final Sneak sneak = (Sneak) LiquidBounce.moduleManager.get(Sneak.class);
-            final boolean fakeSprint = inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get() || LiquidBounce.moduleManager.get(AntiHunger.class).getState() || sneak.getState() && (!MovementExtensionKt.isMoving(thePlayer) || !sneak.stopMoveValue.get()) && "MineSecure".equalsIgnoreCase(sneak.modeValue.get());
-
-            final boolean sprinting = isSprinting() && !fakeSprint;
-
-            if (sprinting != serverSprintState)
-            {
-                final Action action = sprinting ? Action.START_SPRINTING : Action.STOP_SPRINTING;
-
-                // noinspection ConstantConditions
-                sendQueue.addToSendQueue(new C0BPacketEntityAction((Entity) (Object) this, action));
-
-                serverSprintState = sprinting;
-            }
-
-            // pt.3: Sneak -> Use ModifyVariable to modify local variable 'sneaking' matching/not-matching with 'serverSneakState'
-            final boolean sneaking = isSneaking();
-
-            if (sneaking != serverSneakState && (!sneak.getState() || "Legit".equalsIgnoreCase(sneak.modeValue.get())))
-            {
-                final Action action = sneaking ? Action.START_SNEAKING : Action.STOP_SNEAKING;
-
-                // noinspection ConstantConditions
-                sendQueue.addToSendQueue(new C0BPacketEntityAction((Entity) (Object) this, action));
-
-                serverSneakState = sneaking;
-            }
-
-            if (isCurrentViewEntity())
-            {
-                float yaw = rotationYaw;
-                float pitch = rotationPitch;
-                final float lastReportedYaw = RotationUtils.serverRotation.getYaw();
-                final float lastReportedPitch = RotationUtils.serverRotation.getPitch();
-
-                final Derp derp = (Derp) LiquidBounce.moduleManager.get(Derp.class);
-                if (derp.getState())
-                {
-                    final float[] rot = derp.getRotation();
-                    yaw = rot[0];
-                    pitch = rot[1];
-                }
-
-                if (RotationUtils.targetRotation != null)
-                {
-                    yaw = RotationUtils.targetRotation.getYaw();
-                    pitch = RotationUtils.targetRotation.getPitch();
-                }
-
-                final double xDiff = posX - lastReportedPosX;
-                final double yDiff = getEntityBoundingBox().minY - lastReportedPosY;
-                final double zDiff = posZ - lastReportedPosZ;
-                // pt.4: Rotation -> Use two '@Inject' to modify fields 'rotationYaw' and 'rotationPitch'
-                // First inject: Set 'rotationYaw' and 'rotationPitch' to the calculated value, located before this.posX access
-                // Second inject: Restore 'rotationYaw' and 'rotationPitch' to the original value, located before/after the positionUpdateTicks increment
-                final double yawDiff = yaw - lastReportedYaw;
-                final double pitchDiff = pitch - lastReportedPitch;
-                boolean moved = xDiff * xDiff + yDiff * yDiff + zDiff * zDiff > 9.0E-4D || positionUpdateTicks >= 20;
-                final boolean rotated = yawDiff != 0.0D || pitchDiff != 0.0D;
-
-                if (ridingEntity == null)
-                    if (moved && rotated)
-                        sendQueue.addToSendQueue(new C06PacketPlayerPosLook(posX, getEntityBoundingBox().minY, posZ, yaw, pitch, onGround));
-                    else if (moved)
-                        sendQueue.addToSendQueue(new C04PacketPlayerPosition(posX, getEntityBoundingBox().minY, posZ, onGround));
-                    else
-                        sendQueue.addToSendQueue(rotated ? new C05PacketPlayerLook(yaw, pitch, onGround) : new C03PacketPlayer(onGround));
-                else
-                {
-                    sendQueue.addToSendQueue(new C06PacketPlayerPosLook(motionX, -999.0D, motionZ, yaw, pitch, onGround));
-                    moved = false;
-                }
-
-                ++positionUpdateTicks;
-
-                if (moved)
-                {
-                    lastReportedPosX = posX;
-                    lastReportedPosY = getEntityBoundingBox().minY;
-                    lastReportedPosZ = posZ;
-                    positionUpdateTicks = 0;
-                }
-
-                if (rotated)
-                {
-                    this.lastReportedYaw = rotationYaw;
-                    this.lastReportedPitch = rotationPitch;
-                }
-            }
-
-            // pt.5: MotionEvent_Post -> Use @Inject
-            mc.mcProfiler.endStartSection("LiquidBounce-MotionEvent-POST");
-            LiquidBounce.eventManager.callEvent(new MotionEvent(EventState.POST), true);
-            mc.mcProfiler.endSection();
+            final float[] rot = derp.getRotation();
+            rotationYaw = rot[0];
+            rotationPitch = rot[1];
         }
-        catch (final Exception e)
+
+        if (RotationUtils.targetRotation != null)
         {
-            e.printStackTrace();
+            rotationYaw = RotationUtils.targetRotation.getYaw();
+            rotationPitch = RotationUtils.targetRotation.getPitch();
         }
+    }
+
+    @Inject(method = "onUpdateWalkingPlayer", at = @At(value = "FIELD", target = "Lnet/minecraft/client/entity/EntityPlayerSP;positionUpdateTicks:I", ordinal = 1))
+    private void restoreRotations(final CallbackInfo ci)
+    {
+        rotationYaw = backup_rotationYaw;
+        rotationPitch = backup_rotationPitch;
+        lastReportedYaw = backup_lastReportedYaw;
+        lastReportedPitch = backup_lastReportedPitch;
+    }
+
+    @Inject(method = "onUpdateWalkingPlayer", at = @At("TAIL"))
+    private void injectMotionEventPost(final CallbackInfo ci)
+    {
+        mc.mcProfiler.endStartSection("LiquidBounce-MotionEvent-POST");
+        LiquidBounce.eventManager.callEvent(new MotionEvent(EventState.POST), true);
+        mc.mcProfiler.endSection();
     }
 
     @Inject(method = "swingItem", at = @At("HEAD"), cancellable = true)
@@ -283,558 +235,60 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
             callbackInfoReturnable.setReturnValue(false);
     }
 
-    /**
-     * @author CCBlueX
-     * @reason Sprint
-     */
-    @Override
-    @Overwrite
-    public void onLivingUpdate()
+    private Sprint sprint;
+
+    @Inject(method = "onLivingUpdate", at = @At("HEAD"))
+    private void injectUpdateEvent(CallbackInfo ci)
     {
-        // pt.1: UpdateEvent
         worldObj.theProfiler.startSection("LiquidBounce-UpdateEvent");
         LiquidBounce.eventManager.callEvent(new UpdateEvent(), true);
         worldObj.theProfiler.endSection();
-
-        if (sprintingTicksLeft > 0)
-        {
-            --sprintingTicksLeft;
-
-            if (sprintingTicksLeft == 0)
-                setSprinting(false);
-        }
-
-        if (sprintToggleTimer > 0)
-            --sprintToggleTimer;
-
-        prevTimeInPortal = timeInPortal;
-
-        if (inPortal)
-        {
-            // Pt.2: PortalMenu -> Use @Redirect for 'currentScreen' or 'doesGuiPauseGame()' access
-            if (mc.currentScreen != null && !mc.currentScreen.doesGuiPauseGame() && !LiquidBounce.moduleManager.get(PortalMenu.class).getState())
-                mc.displayGuiScreen(null);
-
-            if (timeInPortal == 0.0F)
-                mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("portal.trigger"), rand.nextFloat() * 0.4F + 0.8F));
-
-            timeInPortal += 0.0125F;
-
-            if (timeInPortal >= 1.0F)
-                timeInPortal = 1.0F;
-
-            inPortal = false;
-        }
-        else if (isPotionActive(Potion.confusion) && getActivePotionEffect(Potion.confusion).getDuration() > 60) // AntiBlind compatible
-        {
-            timeInPortal += 0.006666667F;
-
-            if (timeInPortal > 1.0F)
-                timeInPortal = 1.0F;
-        }
-        else
-        {
-            if (timeInPortal > 0.0F)
-                timeInPortal -= 0.05F;
-
-            if (timeInPortal < 0.0F)
-                timeInPortal = 0.0F;
-        }
-
-        if (timeUntilPortal > 0)
-            --timeUntilPortal;
-
-        final boolean jump = movementInput.jump;
-        final float sprintForwardThreshold = 0.8F;
-        final boolean forward = movementInput.moveForward >= sprintForwardThreshold;
-        final boolean sneak = movementInput.sneak;
-
-        movementInput.updatePlayerMoveState();
-
-        final NoSlow noSlow = (NoSlow) LiquidBounce.moduleManager.get(NoSlow.class);
-        final KillAura killAura = (KillAura) LiquidBounce.moduleManager.get(KillAura.class);
-
-        // Pt.3: SlowDownEvent -> Use @ModifyConstant or @Redirect(drop moveStrafe and moveForward access) to drop these modifier applications, apply them MANUALLY after event call
-        if (getHeldItem() != null && (isUsingItem() || getHeldItem().getItem() instanceof ItemSword && killAura.getServerSideBlockingStatus()) && !isRiding())
-        {
-            final SlowDownEvent slowDownEvent = new SlowDownEvent(0.2F, 0.2F);
-            LiquidBounce.eventManager.callEvent(slowDownEvent);
-            movementInput.moveStrafe *= slowDownEvent.getStrafe();
-            movementInput.moveForward *= slowDownEvent.getForward();
-            sprintToggleTimer = 0;
-        }
-
-        pushOutOfBlocks(posX - width * 0.35D, getEntityBoundingBox().minY + 0.5D, posZ + width * 0.35D);
-        pushOutOfBlocks(posX - width * 0.35D, getEntityBoundingBox().minY + 0.5D, posZ - width * 0.35D);
-        pushOutOfBlocks(posX + width * 0.35D, getEntityBoundingBox().minY + 0.5D, posZ - width * 0.35D);
-        pushOutOfBlocks(posX + width * 0.35D, getEntityBoundingBox().minY + 0.5D, posZ + width * 0.35D);
-
-        // Pt.4: Sprint
-        final Sprint sprint = (Sprint) LiquidBounce.moduleManager.get(Sprint.class);
-
-        final boolean foodCheck = !sprint.getFoodValue().get() || getFoodStats().getFoodLevel() > 6.0F || capabilities.allowFlying;
-
-        final boolean blindCheck = !isPotionActive(Potion.blindness.id); // isPotionActive(Potion.blindness) // AntiBlind compatible (AntiBlind only blocks isPotionActive(Potion), not isPotionActive(int))
-
-        if (onGround && !sneak && !forward && movementInput.moveForward >= sprintForwardThreshold && !isSprinting() && foodCheck && !isUsingItem() && blindCheck)
-            if (sprintToggleTimer <= 0 && !mc.gameSettings.keyBindSprint.isKeyDown())
-                sprintToggleTimer = 7;
-            else
-                setSprinting(true);
-
-        final boolean sprintCheck = noSlow.getState() || !isUsingItem();
-
-        // Check sprint threshold to sprint
-        if (!isSprinting() && movementInput.moveForward >= sprintForwardThreshold && foodCheck && sprintCheck && blindCheck && mc.gameSettings.keyBindSprint.isKeyDown())
-            setSprinting(true);
-
-        final Scaffold scaffold = (Scaffold) LiquidBounce.moduleManager.get(Scaffold.class);
-
-        // Disable sprint
-        if (scaffold.getState() && !scaffold.getMovementSprintValue().get() || sprint.getState() && sprint.getCheckServerSide().get() && (onGround || !sprint.getCheckServerSideGround().get()) && !sprint.getAllDirectionsValue().get() && RotationUtils.Companion.getRotationDifference(RotationUtils.Companion.getClientRotation()) > 30)
-            setSprinting(false);
-
-        final boolean allDirection = sprint.getState() && sprint.getAllDirectionsValue().get();
-        // LostSprint
-        if (isSprinting() && (!allDirection && movementInput.moveForward < sprintForwardThreshold || isCollidedHorizontally || !foodCheck))
-            setSprinting(false);
-
-        if (capabilities.allowFlying)
-            if (mc.playerController.isSpectatorMode())
-            {
-                if (!capabilities.isFlying)
-                {
-                    capabilities.isFlying = true;
-                    sendPlayerAbilities();
-                }
-            }
-            else if (!jump && movementInput.jump)
-                if (flyToggleTimer == 0)
-                    flyToggleTimer = 7;
-                else
-                {
-                    capabilities.isFlying = !capabilities.isFlying;
-                    sendPlayerAbilities();
-                    flyToggleTimer = 0;
-                }
-
-        if (capabilities.isFlying && isCurrentViewEntity())
-        {
-            if (movementInput.sneak)
-                motionY -= capabilities.getFlySpeed() * 3.0F;
-
-            if (movementInput.jump)
-                motionY += capabilities.getFlySpeed() * 3.0F;
-        }
-
-        if (isRidingHorse())
-        {
-            if (horseJumpPowerCounter < 0)
-            {
-                ++horseJumpPowerCounter;
-
-                if (horseJumpPowerCounter == 0)
-                    horseJumpPower = 0.0F;
-            }
-
-            if (jump && !movementInput.jump)
-            {
-                horseJumpPowerCounter = -10;
-                sendHorseJump();
-            }
-            else if (!jump && movementInput.jump)
-            {
-                horseJumpPowerCounter = 0;
-                horseJumpPower = 0.0F;
-            }
-            else if (jump)
-            {
-                ++horseJumpPowerCounter;
-
-                horseJumpPower = horseJumpPowerCounter < 10 ? horseJumpPowerCounter * 0.1F : 0.8F + 2.0F / (horseJumpPowerCounter - 9) * 0.1F;
-            }
-        }
-        else
-            horseJumpPower = 0.0F;
-
-        super.onLivingUpdate();
-
-        if (onGround && capabilities.isFlying && !mc.playerController.isSpectatorMode())
-        {
-            capabilities.isFlying = false;
-            sendPlayerAbilities();
-        }
+        sprint = (Sprint) LiquidBounce.moduleManager.get(Sprint.class);
     }
 
-    @Override
-    public void moveEntity(double moveX, double moveY, double moveZ)
+    @Redirect(method = "onLivingUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiScreen;doesGuiPauseGame()Z", ordinal = 0))
+    private boolean injectPortalMenu(final GuiScreen instance)
     {
-        // pt.1: MoveEvent
-        final MoveEvent moveEvent = new MoveEvent(moveX, moveY, moveZ);
-        LiquidBounce.eventManager.callEvent(moveEvent);
-
-        if (moveEvent.isCancelled())
-            return;
-
-        // Fix Position
-        moveX = moveEvent.getX();
-        moveY = moveEvent.getY();
-        moveZ = moveEvent.getZ();
-
-        if (noClip)
-        {
-            setEntityBoundingBox(getEntityBoundingBox().offset(moveX, moveY, moveZ));
-
-            posX = (getEntityBoundingBox().minX + getEntityBoundingBox().maxX) * 0.5;
-            posY = getEntityBoundingBox().minY;
-            posZ = (getEntityBoundingBox().minZ + getEntityBoundingBox().maxZ) * 0.5;
-        }
-        else
-        {
-            /* Move */
-            worldObj.theProfiler.startSection("move");
-            final double lastPosX = posX;
-            final double lastPosY = posY;
-            final double lastPosZ = posZ;
-
-            // Motion correction for web
-            if (isInWeb)
-            {
-                isInWeb = false;
-
-                moveX *= 0.25D;
-                moveY *= 0.05000000074505806D;
-                moveZ *= 0.25D;
-
-                motionX = 0.0D;
-                motionY = 0.0D;
-                motionZ = 0.0D;
-            }
-
-            double safewalkAppliedX = moveX;
-            final double safewalkAppliedY = moveY;
-            double safewalkAppliedZ = moveZ;
-
-            final boolean sneaking = onGround && isSneaking();
-
-            // SafeWalk
-            if (sneaking || moveEvent.isSafeWalk())
-            {
-                final double collisionCheckRange = 0.05D;
-
-                // TODO: Please fold these triple-iterations into one if can
-
-                // X
-                // noinspection ConstantConditions, MethodCallInLoopCondition
-                while (moveX != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(moveX, -1.0D, 0.0D)).isEmpty())
-                {
-                    if (moveX < collisionCheckRange && moveX >= -collisionCheckRange)
-                        moveX = 0.0D;
-                    else
-                        moveX -= moveX > 0.0D ? collisionCheckRange : -collisionCheckRange;
-
-                    safewalkAppliedX = moveX;
-                }
-
-                // Z
-                // noinspection ConstantConditions, MethodCallInLoopCondition
-                while (moveZ != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(0.0D, -1.0D, moveZ)).isEmpty())
-                {
-                    if (moveZ < collisionCheckRange && moveZ >= -collisionCheckRange)
-                        moveZ = 0.0D;
-                    else
-                        moveZ -= moveZ > 0.0D ? collisionCheckRange : -collisionCheckRange;
-
-                    safewalkAppliedZ = moveZ;
-                }
-
-                // X, Z
-                // noinspection ConstantConditions, MethodCallInLoopCondition
-                while (moveX != 0.0D && moveZ != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(moveX, -1.0D, moveZ)).isEmpty())
-                {
-                    if (moveX < collisionCheckRange && moveX >= -collisionCheckRange)
-                        moveX = 0.0D;
-                    else
-                        moveX -= moveX > 0.0D ? collisionCheckRange : -collisionCheckRange;
-
-                    safewalkAppliedX = moveX;
-
-                    if (moveZ < collisionCheckRange && moveZ >= -collisionCheckRange)
-                        moveZ = 0.0D;
-                    else
-                        moveZ -= moveZ > 0.0D ? collisionCheckRange : -collisionCheckRange;
-
-                    safewalkAppliedZ = moveZ;
-                }
-            }
-
-            // noinspection ConstantConditions
-            final List<AxisAlignedBB> collidedBoxList = worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().addCoord(moveX, moveY, moveZ));
-            final AxisAlignedBB entityBox = getEntityBoundingBox();
-
-            // Calculate Y Offset
-            for (final AxisAlignedBB collidedBox : collidedBoxList)
-                moveY = collidedBox.calculateYOffset(getEntityBoundingBox(), moveY);
-
-            // Apply Y Offset
-            setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, moveY, 0.0D));
-
-            // Calculate X Offset
-            for (final AxisAlignedBB collidedBox : collidedBoxList)
-                moveX = collidedBox.calculateXOffset(getEntityBoundingBox(), moveX);
-
-            // Apply X Offset
-            setEntityBoundingBox(getEntityBoundingBox().offset(moveX, 0.0D, 0.0D));
-
-            // Calculate Z Offset
-            for (final AxisAlignedBB collidedBox : collidedBoxList)
-                moveZ = collidedBox.calculateZOffset(getEntityBoundingBox(), moveZ);
-
-            // Apply Z Offset
-            setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, 0.0D, moveZ));
-
-            final Step step = (Step) LiquidBounce.moduleManager.get(Step.class);
-
-            // pt.2: Step
-            final boolean airStep = step.getState() && step.getAirStepValue().get() && step.canAirStep();
-            if (stepHeight > 0.0F && (onGround || airStep || safewalkAppliedY != moveY && safewalkAppliedY < 0.0D) && (safewalkAppliedX != moveX || safewalkAppliedZ != moveZ))
-            {
-                // pt.3: StepEvent
-                final StepEvent stepEvent = new StepEvent(!onGround && airStep ? Math.min(stepHeight, step.getAirStepHeightValue().get()) : stepHeight);
-                LiquidBounce.eventManager.callEvent(stepEvent);
-
-                final double __x = moveX;
-                final double __y = moveY;
-                final double __z = moveZ;
-
-                final AxisAlignedBB cachedBB = getEntityBoundingBox();
-
-                setEntityBoundingBox(entityBox);
-
-                moveY = stepEvent.getStepHeight();
-
-                // noinspection ConstantConditions
-                final List<AxisAlignedBB> collisionList = worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().addCoord(safewalkAppliedX, moveY, safewalkAppliedZ));
-
-                AxisAlignedBB offsetAppliedBB = getEntityBoundingBox();
-
-                final AxisAlignedBB safewalkAppliedBB = offsetAppliedBB.addCoord(safewalkAppliedX, 0.0D, safewalkAppliedZ);
-
-                double offsetY = moveY;
-
-                // Calculate Y Offset
-                for (final AxisAlignedBB collision : collisionList)
-                    offsetY = collision.calculateYOffset(safewalkAppliedBB, offsetY);
-
-                // Apply Y Offset
-                offsetAppliedBB = offsetAppliedBB.offset(0.0D, offsetY, 0.0D);
-
-                double offsetX = safewalkAppliedX;
-
-                // Calculate X Offset
-                for (final AxisAlignedBB collision : collisionList)
-                    offsetX = collision.calculateXOffset(offsetAppliedBB, offsetX);
-
-                // Apply X Offset
-                offsetAppliedBB = offsetAppliedBB.offset(offsetX, 0.0D, 0.0D);
-
-                double offsetZ = safewalkAppliedZ;
-
-                // Calculate Z Offset
-                for (final AxisAlignedBB collision : collisionList)
-                    offsetZ = collision.calculateZOffset(offsetAppliedBB, offsetZ);
-
-                // Apply Z Offset
-                offsetAppliedBB = offsetAppliedBB.offset(0.0D, 0.0D, offsetZ);
-
-                AxisAlignedBB offset2AppliedBB = getEntityBoundingBox();
-
-                double offsetY2 = moveY;
-
-                // Calculate Y Offset 2
-                for (final AxisAlignedBB collision : collisionList)
-                    offsetY2 = collision.calculateYOffset(offset2AppliedBB, offsetY2);
-
-                // Apply Y Offset 2
-                offset2AppliedBB = offset2AppliedBB.offset(0.0D, offsetY2, 0.0D);
-                double offsetX2 = safewalkAppliedX;
-
-                // Calculate X Offset 2
-                for (final AxisAlignedBB collision : collisionList)
-                    offsetX2 = collision.calculateXOffset(offset2AppliedBB, offsetX2);
-
-                // Apply X Offset 2
-                offset2AppliedBB = offset2AppliedBB.offset(offsetX2, 0.0D, 0.0D);
-
-                double offsetZ2 = safewalkAppliedZ;
-
-                // Calculate Z Offset 2
-                for (final AxisAlignedBB collision : collisionList)
-                    offsetZ2 = collision.calculateZOffset(offset2AppliedBB, offsetZ2);
-
-                // Apply Z Offset 2
-                offset2AppliedBB = offset2AppliedBB.offset(0.0D, 0.0D, offsetZ2);
-
-                final double offset = offsetX * offsetX + offsetZ * offsetZ;
-                final double offset2 = offsetX2 * offsetX2 + offsetZ2 * offsetZ2;
-
-                // Apply bigger one
-                if (offset > offset2)
-                {
-                    moveX = offsetX;
-                    moveZ = offsetZ;
-                    moveY = -offsetY;
-                    setEntityBoundingBox(offsetAppliedBB);
-                }
-                else
-                {
-                    moveX = offsetX2;
-                    moveZ = offsetZ2;
-                    moveY = -offsetY2;
-                    setEntityBoundingBox(offset2AppliedBB);
-                }
-
-                // Calculate Y Offset 3
-                for (final AxisAlignedBB collision : collisionList)
-                    moveY = collision.calculateYOffset(getEntityBoundingBox(), moveY);
-
-                // Apply Y Offset 3
-                setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, moveY, 0.0D));
-
-                // pt.4: StepEvent
-                if (__x * __x + __z * __z >= moveX * moveX + moveZ * moveZ)
-                {
-                    moveX = __x;
-                    moveY = __y;
-                    moveZ = __z;
-                    setEntityBoundingBox(cachedBB);
-                }
-                else
-                    LiquidBounce.eventManager.callEvent(new StepConfirmEvent());
-            }
-
-            worldObj.theProfiler.endSection();
-
-            /* Rest */
-            worldObj.theProfiler.startSection("rest");
-            posX = (getEntityBoundingBox().minX + getEntityBoundingBox().maxX) * 0.5;
-            posY = getEntityBoundingBox().minY;
-            posZ = (getEntityBoundingBox().minZ + getEntityBoundingBox().maxZ) * 0.5;
-            isCollidedHorizontally = safewalkAppliedX != moveX || safewalkAppliedZ != moveZ;
-            isCollidedVertically = safewalkAppliedY != moveY;
-            onGround = isCollidedVertically && safewalkAppliedY < 0.0D;
-            isCollided = isCollidedHorizontally || isCollidedVertically;
-
-            final double groundCheckDepth = 0.20000000298023224D;
-
-            final int groundCheckX = MathHelper.floor_double(posX);
-            final int groundCheckY = MathHelper.floor_double(posY - groundCheckDepth);
-            final int groundCheckZ = MathHelper.floor_double(posZ);
-            BlockPos groundCheckPos = new BlockPos(groundCheckX, groundCheckY, groundCheckZ);
-            Block groundBlock = worldObj.getBlockState(groundCheckPos).getBlock();
-
-            if (groundBlock.getMaterial() == Material.air)
-            {
-                final Block groundDownBlock = worldObj.getBlockState(groundCheckPos.down()).getBlock();
-
-                if (groundDownBlock instanceof BlockFence || groundDownBlock instanceof BlockWall || groundDownBlock instanceof BlockFenceGate)
-                {
-                    groundBlock = groundDownBlock;
-                    groundCheckPos = groundCheckPos.down();
-                }
-            }
-
-            updateFallState(moveY, onGround, groundBlock, groundCheckPos);
-
-            if (safewalkAppliedX != moveX)
-                motionX = 0.0D;
-
-            if (safewalkAppliedY != moveY)
-                // noinspection ConstantConditions
-                groundBlock.onLanded(worldObj, (Entity) (Object) this);
-
-            if (safewalkAppliedZ != moveZ)
-                motionZ = 0.0D;
-
-            if (canTriggerWalking() && !sneaking && ridingEntity == null)
-            {
-                final double xDelta = posX - lastPosX;
-                double yDelta = posY - lastPosY;
-                final double zDelta = posZ - lastPosZ;
-
-                if (groundBlock != Blocks.ladder)
-                    yDelta = 0.0D;
-
-                if (onGround)
-                    // noinspection ConstantConditions
-                    groundBlock.onEntityCollidedWithBlock(worldObj, groundCheckPos, (Entity) (Object) this);
-
-                final Bobbing bobbing = (Bobbing) LiquidBounce.moduleManager.get(Bobbing.class);
-                final boolean bobbingState = bobbing.getState();
-                final double bobbingMultiplier = bobbingState ? bobbing.getMultiplierValue().get() : 0.6D;
-
-                // pt.5: StepEvent
-                distanceWalkedModified += StrictMath.hypot(xDelta, zDelta) * bobbingMultiplier;
-                distanceWalkedOnStepModified += MathHelper.sqrt_double(xDelta * xDelta + yDelta * yDelta + zDelta * zDelta) * bobbingMultiplier;
-
-                if (distanceWalkedOnStepModified > getNextStepDistance() && groundBlock.getMaterial() != Material.air)
-                {
-                    setNextStepDistance((int) distanceWalkedOnStepModified + 1);
-
-                    // Swimming check
-                    if (isInWater())
-                    {
-                        float volume = MathHelper.sqrt_double(motionX * motionX * groundCheckDepth + motionY * motionY + motionZ * motionZ * groundCheckDepth) * 0.35F;
-
-                        if (volume > 1.0F)
-                            volume = 1.0F;
-
-                        playSound(getSwimSound(), volume, 1.0F + (rand.nextFloat() - rand.nextFloat()) * 0.4F);
-                    }
-
-                    playStepSound(groundCheckPos, groundBlock);
-                }
-            }
-
-            // Block collision check
-            try
-            {
-                doBlockCollisions();
-            }
-            catch (final Throwable throwable)
-            {
-                final CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Checking entity block collision");
-                final CrashReportCategory crashreportcategory = crashreport.makeCategory("Entity being checked for collision");
-                addEntityCrashInfo(crashreportcategory);
-                throw new ReportedException(crashreport);
-            }
-
-            final boolean wet = isWet();
-
-            // Take fire damage
-            if (worldObj.isFlammableWithin(getEntityBoundingBox().contract(0.001D, 0.001D, 0.001D)))
-            {
-                dealFireDamage(1);
-
-                if (!wet)
-                {
-                    setFire(getFire() + 1);
-
-                    if (getFire() == 0)
-                        setFire(8);
-                }
-            }
-            else if (getFire() <= 0)
-                setFire(-fireResistance);
-
-            // Extinguish fire
-            if (wet && getFire() > 0)
-            {
-                playSound("random.fizz", 0.7F, 1.6F + (rand.nextFloat() - rand.nextFloat()) * 0.4F);
-                setFire(-fireResistance);
-            }
-
-            worldObj.theProfiler.endSection();
-        }
+        return instance.doesGuiPauseGame() || LiquidBounce.moduleManager.get(PortalMenu.class).getState();
+    }
+
+    @ModifyVariable(method = "onLivingUpdate", at = @At(value = "FIELD", target = "Lnet/minecraft/client/entity/EntityPlayerSP;onGround:Z", shift = Shift.BEFORE, ordinal = 0), ordinal = 3)
+    private boolean sprintFood(final boolean flag3)
+    {
+        return flag3 || !sprint.getFoodValue().get();
+    }
+
+    @Inject(method = "onLivingUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/EntityPlayerSP;isSprinting()Z", shift = Shift.BEFORE, ordinal = 2))
+    private void injectSprintDisable(final CallbackInfo ci)
+    {
+        final Scaffold scaffold = (Scaffold) LiquidBounce.moduleManager.get(Scaffold.class);
+        final boolean scaffoldSprintCheck = scaffold.getState() && !scaffold.getMovementSprintValue().get();
+        final boolean sprintDirectionCheck = sprint.getState()
+                && sprint.getCheckServerSide().get()
+                && (onGround || !sprint.getCheckServerSideGround().get())
+                && !sprint.getAllDirectionsValue().get()
+                && RotationUtils.Companion.getRotationDifference(RotationUtils.Companion.getClientRotation()) > 30;
+        if (scaffoldSprintCheck || sprintDirectionCheck)
+            setSprinting(false);
+    }
+
+    @Redirect(method = "onLivingUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/EntityPlayerSP;isPotionActive(Lnet/minecraft/potion/Potion;)Z", ordinal = 1))
+    private boolean injectAntiBlindCompatibility(final EntityPlayerSP instance, final Potion potion)
+    {
+        // isPotionActive(Potion) is tampered by AntiBlind injection.
+        // Thus, we should us e isPotionActive(int) here instead to bypass AntiCheat "Blind sprint" detection
+        return instance.isPotionActive(potion.id);
+    }
+
+    @Redirect(method = "onLivingUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/EntityPlayerSP;isUsingItem()Z", ordinal = 2))
+    private boolean injectNoSlowSprint(final EntityPlayerSP instance)
+    {
+        return instance.isUsingItem() && !LiquidBounce.moduleManager.get(NoSlow.class).getState();
+    }
+
+    @Redirect(method = "onLivingUpdate", at = @At(value = "FIELD", target = "Lnet/minecraft/util/MovementInput;moveForward:F", ordinal = 4))
+    private float injectSprintAllDirection(final MovementInput instance)
+    {
+        return sprint.getState() && sprint.getAllDirectionsValue().get() ? Float.MAX_VALUE : instance.moveForward;
     }
 }

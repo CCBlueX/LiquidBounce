@@ -22,7 +22,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(FontRenderer.class)
-@Debug(export = true, print = true)
+@Debug(export = true)
 @SideOnly(Side.CLIENT)
 public class MixinFontRenderer
 {
