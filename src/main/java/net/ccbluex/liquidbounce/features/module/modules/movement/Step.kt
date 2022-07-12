@@ -23,6 +23,7 @@ import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 import net.minecraft.stats.StatList
 import net.minecraft.world.World
+import java.util.*
 
 @ModuleInfo(name = "Step", description = "Allows you to step up blocks.", category = ModuleCategory.MOVEMENT)
 class Step : Module()
@@ -84,7 +85,7 @@ class Step : Module()
         val canStep = !mc.gameSettings.keyBindJump.isKeyDown && thePlayer.isMoving
 
         // Motion steps
-        when (modeValue.get().toLowerCase())
+        when (modeValue.get().lowercase(Locale.getDefault()))
         {
             "jump" -> if (thePlayer.isCollidedHorizontally && thePlayer.onGround && canStep && couldStep(theWorld, thePlayer))
             {
@@ -203,7 +204,7 @@ class Step : Module()
         val mode = modeValue.get()
 
         // Set step to default in some cases
-        if ((!thePlayer.onGround && !airStepValue.get()) || !timer.hasTimePassed(delay) || specialCases.contains(mode.toLowerCase()) || checkLiquid.get() && (thePlayer.isInWater || thePlayer.isInLava))
+        if ((!thePlayer.onGround && !airStepValue.get()) || !timer.hasTimePassed(delay) || specialCases.contains(mode.lowercase(Locale.getDefault())) || checkLiquid.get() && (thePlayer.isInWater || thePlayer.isInLava))
         {
             thePlayer.stepHeight = 0.6F
             event.stepHeight = 0.6F
@@ -239,7 +240,7 @@ class Step : Module()
         {
 
             // Check if full block step
-            val mode = modeValue.get().toLowerCase()
+            val mode = modeValue.get().lowercase(Locale.getDefault())
             val networkManager = mc.netHandler.networkManager
 
             when (mode)

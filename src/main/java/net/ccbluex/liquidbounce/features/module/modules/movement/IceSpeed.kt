@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockAir
 import net.minecraft.init.Blocks
 import net.minecraft.util.BlockPos
+import java.util.*
 
 @ModuleInfo(name = "IceSpeed", description = "Allows you to walk faster on ice.", category = ModuleCategory.MOVEMENT)
 class IceSpeed : Module()
@@ -53,7 +54,7 @@ class IceSpeed : Module()
 
         if (thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isSneaking && thePlayer.isSprinting && thePlayer.movementInput.moveForward > 0.0)
         {
-            when (mode.toLowerCase())
+            when (mode.lowercase(Locale.getDefault()))
             {
                 "aac3.2.0" -> theWorld.getMaterial(thePlayer.position.down()).let {
                     if (it == Blocks.ice || it == Blocks.packed_ice)

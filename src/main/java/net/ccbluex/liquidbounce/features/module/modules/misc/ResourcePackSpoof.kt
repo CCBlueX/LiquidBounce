@@ -15,6 +15,7 @@ import net.minecraft.network.play.client.C19PacketResourcePackStatus
 import net.minecraft.network.play.server.S48PacketResourcePackSend
 import java.net.URI
 import java.net.URISyntaxException
+import java.util.*
 
 @ModuleInfo(name = "ResourcePackSpoof", description = "Prevents servers from forcing you to download their resource pack.", category = ModuleCategory.MISC)
 class ResourcePackSpoof : Module()
@@ -33,7 +34,7 @@ class ResourcePackSpoof : Module()
 
             try
             {
-                val scheme = URI(url).scheme.toLowerCase()
+                val scheme = URI(url).scheme.lowercase(Locale.getDefault())
                 val isLevelProtocol = scheme == "level"
 
                 if ("http" != scheme && "https" != scheme && !isLevelProtocol) throw URISyntaxException(url, "Wrong protocol (only HTTP and HTTPS, LEVEL protocols are accepted)")

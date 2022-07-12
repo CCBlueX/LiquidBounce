@@ -20,10 +20,12 @@ import net.ccbluex.liquidbounce.value.*
 import net.minecraft.block.Block
 import net.minecraft.init.Blocks
 import net.minecraft.util.BlockPos
+import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import kotlin.collections.ArrayList
 
 // TODO: Improve performance
 @ModuleInfo(name = "BlockESP", description = "Allows you to see a selected block through walls.", category = ModuleCategory.RENDER)
@@ -138,7 +140,7 @@ class BlockESP : Module()
         val theWorld = mc.theWorld ?: return
         val thePlayer = mc.thePlayer ?: return
 
-        val mode = modeValue.get().toLowerCase()
+        val mode = modeValue.get().lowercase(Locale.getDefault())
         val hydraESP = mode == "hydra"
         val color = if (colorRainbowEnabledValue.get()) rainbowRGB(colorValue.getAlpha(), speed = colorRainbowSpeedValue.get(), saturation = colorRainbowSaturationValue.get(), brightness = colorRainbowBrightnessValue.get()) else colorValue.get()
         val outlineColor = modeBoxOutlineColorValue.get()

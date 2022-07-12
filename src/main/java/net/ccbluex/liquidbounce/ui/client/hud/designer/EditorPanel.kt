@@ -31,6 +31,7 @@ import org.lwjgl.opengl.GL11
 import java.awt.Color
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.util.*
 
 class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: Int) : MinecraftInstance()
 {
@@ -684,7 +685,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 
     companion object
     {
-        private fun encodeToHex(hex: Int) = hex.toString(16).toUpperCase().padStart(2, '0')
+        private fun encodeToHex(hex: Int) = hex.toString(16).uppercase(Locale.getDefault()).padStart(2, '0')
 
         private fun round(f: Float): BigDecimal = BigDecimal("$f").setScale(2, RoundingMode.HALF_UP)
     }

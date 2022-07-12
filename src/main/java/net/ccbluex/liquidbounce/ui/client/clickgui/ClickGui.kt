@@ -32,7 +32,7 @@ import java.util.*
 class ClickGui : GuiScreen()
 {
     val panels: ArrayDeque<Panel> = ArrayDeque(9)
-    private val hudIcon = ResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/custom_hud_icon.png")
+    private val hudIcon = ResourceLocation(LiquidBounce.CLIENT_NAME.lowercase(Locale.getDefault()) + "/custom_hud_icon.png")
 
     @JvmField
     var style: Style = SlowlyStyle()
@@ -43,7 +43,7 @@ class ClickGui : GuiScreen()
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float)
     {
-        if (Mouse.isButtonDown(0) && mouseX >= 5 && mouseX <= 50 && mouseY <= this.height - 5 && mouseY >= this.height - 50) mc.displayGuiScreen(GuiHudDesigner())
+        if (Mouse.isButtonDown(0) && mouseX >= 5 && mouseX <= 50 && mouseY <= height - 5 && mouseY >= height - 50) mc.displayGuiScreen(GuiHudDesigner())
 
         val scale = (LiquidBounce.moduleManager[ClickGUI::class.java] as ClickGUI).scaleValue.get().toDouble()
         val scaledMouseX = mouseX.toDouble() / scale

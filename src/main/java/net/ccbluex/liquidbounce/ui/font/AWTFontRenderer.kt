@@ -124,7 +124,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
         val mcfont = mc.fontRendererObj
 
         text.forEach { char ->
-            if (char.toInt() >= charLocations.size)
+            if (char.code >= charLocations.size)
             {
                 GL11.glEnd()
 
@@ -144,7 +144,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
             }
             else
             {
-                val fontChar = charLocations[char.toInt()] ?: return@forEach
+                val fontChar = charLocations[char.code] ?: return@forEach
 
                 drawChar(fontChar, currX, 0.0f)
                 currX += fontChar.width - 8.0F
@@ -276,8 +276,8 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
     fun getStringWidth(text: String): Int
     {
         return text.map {
-            charLocations[if (it.toInt() < charLocations.size) it.toInt() else 3]
-        }.sumBy { it?.width?.minus(8) ?: 0 } shr 1
+            charLocations[if (it.code < charLocations.size) it.code else 3]
+        }.sumOf { it?.width?.minus(8) ?: 0 } shr 1
     }
 
     fun delete()

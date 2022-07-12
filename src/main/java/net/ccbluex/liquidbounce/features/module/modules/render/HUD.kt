@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.value.FontValue
 import net.ccbluex.liquidbounce.value.ValueGroup
 import net.minecraft.client.gui.GuiChat
 import net.minecraft.util.ResourceLocation
+import java.util.*
 
 /**
  * TODO
@@ -70,7 +71,7 @@ class HUD : Module()
 
         val screen = event.guiScreen
 
-        if (state && blurValue.get() && !entityRenderer.isShaderActive() && screen != null && screen !is GuiChat && screen !is GuiHudDesigner) entityRenderer.loadShader(ResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/blur.json"))
+        if (state && blurValue.get() && !entityRenderer.isShaderActive() && screen != null && screen !is GuiChat && screen !is GuiHudDesigner) entityRenderer.loadShader(ResourceLocation(LiquidBounce.CLIENT_NAME.lowercase(Locale.getDefault()) + "/blur.json"))
         else
         {
             val shaderGroup = entityRenderer.shaderGroup

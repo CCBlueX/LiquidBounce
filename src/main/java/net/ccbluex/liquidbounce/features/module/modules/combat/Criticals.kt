@@ -22,6 +22,7 @@ import net.minecraft.entity.EntityLivingBase
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 import net.minecraft.stats.StatList
+import java.util.*
 import kotlin.random.Random
 
 @ModuleInfo(name = "Criticals", description = "Automatically deals critical hits.", category = ModuleCategory.COMBAT)
@@ -105,7 +106,7 @@ class Criticals : Module()
 
             val motion = (if (thePlayer.isMoving) thePlayer.motionX to thePlayer.motionZ else 0.0 to 0.0)
 
-            when (modeValue.get().toLowerCase())
+            when (modeValue.get().lowercase(Locale.getDefault()))
             {
                 "packet" ->
                 {

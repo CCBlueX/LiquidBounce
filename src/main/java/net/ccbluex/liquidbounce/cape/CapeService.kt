@@ -15,6 +15,7 @@ import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.login.UserUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
+import net.ccbluex.liquidbounce.utils.runAsync
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import org.apache.http.HttpHeaders
 import org.apache.http.HttpStatus
@@ -132,7 +133,7 @@ object CapeService : Listenable, MinecraftInstance()
         // Check if donator cape is actually enabled and has a transfer code, also make sure the account used is premium.
         if (!GuiDonatorCape.capeEnabled || GuiDonatorCape.transferCode.isEmpty() || !UserUtils.isValidTokenOffline(mc.session.token)) return
 
-        thread(name = "CapeUpdate") {
+        runAsync {
             // Apply cape to new account
             val uuid = mc.session.playerID
             val username = mc.session.username

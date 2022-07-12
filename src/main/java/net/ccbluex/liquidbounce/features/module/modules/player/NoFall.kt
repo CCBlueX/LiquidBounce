@@ -30,6 +30,7 @@ import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.BlockPos
 import net.minecraft.util.Vec3
+import java.util.*
 import kotlin.math.ceil
 import kotlin.math.pow
 
@@ -115,7 +116,7 @@ class NoFall : Module()
 
         val thresholdFallDistance = thresholdFallDistanceValue.get()
 
-        when (modeValue.get().toLowerCase())
+        when (modeValue.get().lowercase(Locale.getDefault()))
         {
             "packet" -> if (fallDistance > thresholdFallDistance)
             {

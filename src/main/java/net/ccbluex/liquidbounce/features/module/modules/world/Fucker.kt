@@ -33,6 +33,7 @@ import net.minecraft.util.EnumFacing
 import net.minecraft.util.Vec3
 import net.minecraft.world.World
 import org.lwjgl.opengl.GL11
+import java.util.*
 
 @ModuleInfo(name = "Fucker", description = "Destroys selected blocks around you. (a.k.a.  IDNuker, BedNuker, EggNuker, BedDestroyer, etc.)", category = ModuleCategory.WORLD)
 object Fucker : Module()
@@ -274,7 +275,7 @@ object Fucker : Module()
      */
     private fun isHitable(theWorld: World, thePlayer: Entity, blockPos: BlockPos): Boolean
     {
-        return when (throughWallsValue.get().toLowerCase())
+        return when (throughWallsValue.get().lowercase(Locale.getDefault()))
         {
             "raycast" ->
             {

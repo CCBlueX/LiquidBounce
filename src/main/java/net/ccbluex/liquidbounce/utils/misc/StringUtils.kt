@@ -15,10 +15,10 @@ import kotlin.math.floor
 object StringUtils
 {
     @JvmStatic
-    val URL_PATTERN: Pattern = Pattern.compile("((?:[a-z0-9]{2,}://)?(?:(?:[0-9]{1,3}\\.){3}[0-9]{1,3}|(?:[-\\w_.]+\\.[a-z]{2,}?))(?::[0-9]{1,5})?.*?(?=[!\"\u00A7 \n]|$))", Pattern.CASE_INSENSITIVE)
+    val URL_PATTERN: Pattern = Pattern.compile("((?:[a-z\\d]{2,}://)?(?:(?:\\d{1,3}\\.){3}\\d{1,3}|(?:[-\\w_.]+\\.[a-z]{2,}?))(?::\\d{1,5})?.*?(?=[!\"\u00A7 \n]|$))", Pattern.CASE_INSENSITIVE)
 
     @JvmStatic
-    private val patternControlCode = Pattern.compile("(?i)\\u00A7[0-9A-FK-OR]")
+    private val patternControlCode = Pattern.compile("(?i)\\u00A7[\\dA-FK-OR]")
 
     @JvmStatic
     val DECIMALFORMAT_1 = DecimalFormat("##0.0", DecimalFormatSymbols(Locale.ENGLISH))

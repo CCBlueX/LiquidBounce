@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationIcon
 import net.ccbluex.liquidbounce.utils.SettingsUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import net.ccbluex.liquidbounce.utils.runAsync
+import java.util.*
 import kotlin.concurrent.thread
 
 private const val SETTINGS_LIST_URL = "https://api.github.com/repos/CCBlueX/LiquidCloud/contents/LiquidBounce/settings"
@@ -38,7 +39,7 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
             return
         }
 
-        when (args[1].toLowerCase())
+        when (args[1].lowercase(Locale.getDefault()))
         {
 
             // Load subcommand
@@ -51,7 +52,7 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
                 }
 
                 chat(thePlayer, "Loading settings...")
-                val url = if (args[2].startsWith("http")) args[2] else SETTING_URL.format(args[2].toLowerCase())
+                val url = if (args[2].startsWith("http")) args[2] else SETTING_URL.format(args[2].lowercase(Locale.getDefault()))
 
                 runAsync {
                     try

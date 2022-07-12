@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.ClientUtils
+import java.util.*
 
 class HideCommand : Command("hide")
 {
@@ -26,7 +27,7 @@ class HideCommand : Command("hide")
             val moduleManager = LiquidBounce.moduleManager
             val modules = moduleManager.modules
 
-            when (args[1].toLowerCase())
+            when (args[1].lowercase(Locale.getDefault()))
             {
                 "list" ->
                 {

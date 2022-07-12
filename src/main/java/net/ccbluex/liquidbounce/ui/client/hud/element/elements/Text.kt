@@ -29,6 +29,7 @@ import net.minecraft.client.Minecraft
 import org.lwjgl.input.Keyboard
 import java.awt.Color
 import java.text.SimpleDateFormat
+import java.util.*
 import kotlin.math.hypot
 
 /**
@@ -157,7 +158,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
     {
         val thePlayer = mc.thePlayer
 
-        val s = str.toLowerCase()
+        val s = str.lowercase(Locale.getDefault())
 
         if (thePlayer != null)
         {
@@ -238,8 +239,8 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
             "username" -> mc.session.username
 
             "clientname" -> LiquidBounce.CLIENT_NAME
-            "clientversion" -> "${LiquidBounce.CLIENT_VERSION}"
-            "clientcommit" -> "${LiquidBounce.CLIENT_COMMIT}"
+            "clientversion" -> LiquidBounce.CLIENT_VERSION
+            "clientcommit" -> LiquidBounce.CLIENT_COMMIT
             "clientcreator" -> LiquidBounce.CLIENT_CREATOR
 
             "fps" -> Minecraft.getDebugFPS().toString()

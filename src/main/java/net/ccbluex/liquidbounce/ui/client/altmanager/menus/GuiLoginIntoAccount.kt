@@ -18,6 +18,7 @@ import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.TabUtils
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.runAsync
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
@@ -28,7 +29,6 @@ import java.awt.Toolkit
 import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.UnsupportedFlavorException
 import java.io.IOException
-import kotlin.concurrent.thread
 
 class GuiLoginIntoAccount(private val prevGui: GuiAltManager, private val directLogin: Boolean = false) : GuiScreen()
 {
@@ -253,7 +253,7 @@ class GuiLoginIntoAccount(private val prevGui: GuiAltManager, private val direct
         clipboardButton.enabled = false
         addButton.enabled = false
 
-        thread(name = "Account-Checking-Task") {
+        runAsync {
             try
             {
                 // Switch back to Mojang auth service
@@ -272,7 +272,7 @@ class GuiLoginIntoAccount(private val prevGui: GuiAltManager, private val direct
 
                 clipboardButton.enabled = true
                 addButton.enabled = true
-                return@thread
+                return@runAsync
             }
 
             // Login directly into account

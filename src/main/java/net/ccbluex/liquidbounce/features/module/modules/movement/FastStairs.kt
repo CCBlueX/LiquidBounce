@@ -18,6 +18,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockStairs
 import net.minecraft.util.BlockPos
+import java.util.*
 
 @ModuleInfo(name = "FastStairs", description = "Allows you to climb up stairs faster.", category = ModuleCategory.MOVEMENT)
 class FastStairs : Module()
@@ -41,7 +42,7 @@ class FastStairs : Module()
         if (thePlayer.fallDistance > 0 && !walkingDown) walkingDown = true
         else if (thePlayer.posY > thePlayer.prevChasingPosY) walkingDown = false
 
-        val mode = modeValue.get().toLowerCase()
+        val mode = modeValue.get().lowercase(Locale.getDefault())
 
         if (!thePlayer.onGround) return
 

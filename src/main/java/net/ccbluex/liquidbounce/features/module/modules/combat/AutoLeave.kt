@@ -15,6 +15,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.network.play.client.C02PacketUseEntity
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import java.util.*
 import kotlin.random.Random
 
 @ModuleInfo(name = "AutoLeave", description = "Automatically makes you leave the server whenever your health is low.", category = ModuleCategory.COMBAT)
@@ -32,7 +33,7 @@ class AutoLeave : Module()
 
         if (thePlayer.health <= healthValue.get() && !thePlayer.capabilities.isCreativeMode && !mc.isIntegratedServerRunning)
         {
-            when (modeValue.get().toLowerCase())
+            when (modeValue.get().lowercase(Locale.getDefault()))
             {
                 "quit" -> theWorld.sendQuittingDisconnectingPacket()
                 "invalidpacket" -> netHandler.networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(Double.NaN, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, !thePlayer.onGround))

@@ -25,6 +25,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import org.lwjgl.opengl.GL11
 import org.lwjgl.util.vector.Vector3f
+import java.util.*
 import kotlin.math.max
 import kotlin.math.min
 
@@ -93,7 +94,7 @@ class ESP : Module()
     @EventTarget
     fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
     {
-        val mode = modeValue.get().toLowerCase()
+        val mode = modeValue.get().lowercase(Locale.getDefault())
         val mvMatrix = WorldToScreen.getMatrix(GL11.GL_MODELVIEW_MATRIX)
         val projectionMatrix = WorldToScreen.getMatrix(GL11.GL_PROJECTION_MATRIX)
         val real2d = mode.equals("Real2D", ignoreCase = true)
@@ -211,7 +212,7 @@ class ESP : Module()
     @EventTarget
     fun onRender2D(event: Render2DEvent)
     {
-        val mode = modeValue.get().toLowerCase()
+        val mode = modeValue.get().lowercase(Locale.getDefault())
         val shader = (if (mode.equals("ShaderOutline", ignoreCase = true)) OutlineShader.INSTANCE else if (mode.equals("ShaderGlow", ignoreCase = true)) GlowShader.INSTANCE else null) ?: return
 
         val partialTicks = if (interpolateValue.get()) event.partialTicks else 1f

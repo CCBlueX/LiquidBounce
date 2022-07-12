@@ -24,6 +24,7 @@ import net.minecraft.util.EnumChatFormatting
 import net.minecraft.util.IChatComponent
 import java.net.URI
 import java.net.URISyntaxException
+import java.util.*
 import kotlin.concurrent.thread
 
 @ModuleInfo(name = "LiquidChat", description = "Allows you to chat with other LiquidBounce users.", category = ModuleCategory.MISC)
@@ -116,7 +117,7 @@ class LiquidChat : Module()
 
                 is ClientErrorPacket ->
                 {
-                    val message = when (packet.message.toLowerCase())
+                    val message = when (packet.message.lowercase(Locale.getDefault()))
                     {
                         "notsupported" -> "This method is not supported!"
                         "loginfailed" -> "Login Failed!"
@@ -141,7 +142,7 @@ class LiquidChat : Module()
 
                 is ClientSuccessPacket ->
                 {
-                    when (packet.reason.toLowerCase())
+                    when (packet.reason.lowercase(Locale.getDefault()))
                     {
                         "login" ->
                         {

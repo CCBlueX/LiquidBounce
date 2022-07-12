@@ -265,7 +265,7 @@ class ExtendedTooltips : Module()
 
     private fun getEffProtPoints(level: Int, typeModifier: Double = 0.75): Int = if (level != 0) floor((6 + level * level).toDouble() * typeModifier / 3.0).toInt() else 0
 
-    private fun calcProtection(armorEpf: Double): Double = (50..100).sumByDouble { if (ceil(armorEpf * it.toDouble() * 0.01) < 20.0) ceil(armorEpf * it.toDouble() * 0.01) else 20.0 } / 51.0
+    private fun calcProtection(armorEpf: Double): Double = (50..100).sumOf { if (ceil(armorEpf * it.toDouble() * 0.01) < 20.0) ceil(armorEpf * it.toDouble() * 0.01) else 20.0 } / 51.0
 
     private fun addArmorProtResistance(armor: Double, protection: Double, resistanceAmplifier: Int): Double
     {

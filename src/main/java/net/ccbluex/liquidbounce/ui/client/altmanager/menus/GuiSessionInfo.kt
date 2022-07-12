@@ -24,6 +24,7 @@ import java.nio.charset.StandardCharsets
 import java.text.SimpleDateFormat
 import java.util.*
 
+// FIXME: The session token format changed since microsoft account migration
 class GuiSessionInfo(private val prevGui: GuiScreen, private val defaultSessionId: String?) : GuiScreen()
 {
     private lateinit var sessionIdField: GuiTextField

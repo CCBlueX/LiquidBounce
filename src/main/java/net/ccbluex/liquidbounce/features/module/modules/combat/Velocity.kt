@@ -22,6 +22,7 @@ import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 import net.minecraft.network.play.server.S12PacketEntityVelocity
 import net.minecraft.util.BlockPos
 import net.minecraft.util.Vec3
+import java.util.*
 import kotlin.math.sqrt
 
 @ModuleInfo(name = "Velocity", description = "Allows you to modify the amount of knockback you take. (a.k.a. AntiKnockback)", category = ModuleCategory.COMBAT)
@@ -104,7 +105,7 @@ class Velocity : Module()
 
         if (thePlayer.isInWater || thePlayer.isInLava || thePlayer.isInWeb) return
 
-        when (modeValue.get().toLowerCase())
+        when (modeValue.get().lowercase(Locale.getDefault()))
         {
             "jump" -> if (thePlayer.hurtTime > 0 && thePlayer.onGround)
             {
@@ -206,7 +207,7 @@ class Velocity : Module()
 
             velocityTimer.reset()
 
-            when (modeValue.get().toLowerCase())
+            when (modeValue.get().lowercase(Locale.getDefault()))
             {
                 "simple" ->
                 {
@@ -263,7 +264,7 @@ class Velocity : Module()
 
         if (thePlayer.isInWater || thePlayer.isInLava || thePlayer.isInWeb) return
 
-        when (modeValue.get().toLowerCase())
+        when (modeValue.get().lowercase(Locale.getDefault()))
         {
             "aacpush" ->
             {

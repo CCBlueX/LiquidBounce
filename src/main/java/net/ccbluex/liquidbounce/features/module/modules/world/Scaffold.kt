@@ -49,6 +49,7 @@ import net.minecraft.world.World
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
 import java.awt.Color
+import java.util.*
 import kotlin.math.*
 
 @ModuleInfo(name = "Scaffold", description = "Automatically places blocks beneath your feet.", category = ModuleCategory.WORLD, defaultKeyBinds = [Keyboard.KEY_I])
@@ -406,7 +407,7 @@ class Scaffold : Module()
             }
 
             // Smooth Zitter
-            when (movementZitterModeValue.get().toLowerCase())
+            when (movementZitterModeValue.get().lowercase(Locale.getDefault()))
             {
                 "smooth" ->
                 {
@@ -771,7 +772,7 @@ class Scaffold : Module()
             return
         }
 
-        val autoBlockMode = autoBlockModeValue.get().toLowerCase()
+        val autoBlockMode = autoBlockModeValue.get().lowercase(Locale.getDefault())
         val switchKeepTime = autoBlockSwitchKeepTimeValue.get()
 
         // Delay check
@@ -1240,7 +1241,7 @@ class Scaffold : Module()
         val inventory = thePlayer.inventory
         val heldItem = thePlayer.heldItem
 
-        return (0..8).asSequence().map(inventory::getStackInSlot).filter { it?.item is ItemBlock }.mapNotNull { (it ?: return@mapNotNull null) to (it.item ?: return@mapNotNull null) as ItemBlock }.filter { (stack, itemBlock) -> heldItem == stack || itemBlock.block.canAutoBlock }.sumBy { it.first.stackSize }
+        return (0..8).asSequence().map(inventory::getStackInSlot).filter { it?.item is ItemBlock }.mapNotNull { (it ?: return@mapNotNull null) to (it.item ?: return@mapNotNull null) as ItemBlock }.filter { (stack, itemBlock) -> heldItem == stack || itemBlock.block.canAutoBlock }.sumOf { it.first.stackSize }
     }
 
     override val tag: String?

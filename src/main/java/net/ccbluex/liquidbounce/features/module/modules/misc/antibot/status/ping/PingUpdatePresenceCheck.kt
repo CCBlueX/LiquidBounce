@@ -48,11 +48,11 @@ class PingUpdatePresenceCheck : BotCheck("status.ping.updatePresence")
                         }
                     }
 
-                    if (notUpdated.isEmpty()) notUpdated.addAll(tabPlayerUUIDs.filterNot(updatesPlayerUUIDs::contains)) else notUpdated.removeAll(tabPlayerUUIDs.filter(updatesPlayerUUIDs::contains).filter(notUpdated::contains))
+                    if (notUpdated.isEmpty()) notUpdated.addAll(tabPlayerUUIDs.filterNot(updatesPlayerUUIDs::contains)) else notUpdated.removeAll(tabPlayerUUIDs.filter(updatesPlayerUUIDs::contains).filter(notUpdated::contains).toSet())
                     if (notUpdated.isNotEmpty()) notification { arrayOf("reason=(Ping update omission)", "list=${uuidListToString(notUpdated)}") }
                 }
 
-                S38PacketPlayerListItem.Action.REMOVE_PLAYER -> notUpdated.removeAll(updatedPlayers.map { it.profile.id })
+                S38PacketPlayerListItem.Action.REMOVE_PLAYER -> notUpdated.removeAll(updatedPlayers.map { it.profile.id }.toSet())
             }
         }
     }

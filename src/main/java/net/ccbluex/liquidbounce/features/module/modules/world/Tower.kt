@@ -41,6 +41,7 @@ import net.minecraft.util.Vec3
 import net.minecraft.world.World
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
+import java.util.*
 import kotlin.math.atan2
 import kotlin.math.hypot
 import kotlin.math.truncate
@@ -194,7 +195,7 @@ class Tower : Module()
 
         active = true
 
-        if (modeValue.get().toLowerCase() !in noCustomTimer) timer.timerSpeed = timerValue.get()
+        if (modeValue.get().lowercase(Locale.getDefault()) !in noCustomTimer) timer.timerSpeed = timerValue.get()
 
         val eventState = event.eventState
 
@@ -253,7 +254,7 @@ class Tower : Module()
         val onGround = thePlayer.onGround
         val timer = mc.timer
 
-        when (modeValue.get().toLowerCase())
+        when (modeValue.get().lowercase(Locale.getDefault()))
         {
             "jump" -> if (onGround && delayTimer.hasTimePassed(jumpDelayValue.get()))
             {
@@ -418,14 +419,14 @@ class Tower : Module()
 
         val switchKeepTime = autoBlockSwitchKeepTimeValue.get()
 
-        if (itemStack == null || itemStack.item !is ItemBlock || (itemStack.item as ItemBlock)?.block is BlockBush)
+        if (itemStack == null || itemStack.item !is ItemBlock || (itemStack.item as ItemBlock).block is BlockBush)
         {
             if (autoBlockModeValue.get().equals("Off", true)) return
 
             val blockSlot = thePlayer.inventoryContainer.findAutoBlockBlock(theWorld, autoBlockFullCubeOnlyValue.get())
             if (blockSlot == -1) return
 
-            when (val autoBlockMode = autoBlockModeValue.get().toLowerCase())
+            when (val autoBlockMode = autoBlockModeValue.get().lowercase(Locale.getDefault()))
             {
                 "pick" ->
                 {
@@ -592,7 +593,7 @@ class Tower : Module()
     {
         val inventoryContainer = thePlayer.inventoryContainer
 
-        return (36..44).mapNotNull { inventoryContainer.getSlot(it).stack }.filter { it.item is ItemBlock }.filter { thePlayer.heldItem == it || (it.item as ItemBlock).block.canAutoBlock }.sumBy(ItemStack::stackSize)
+        return (36..44).mapNotNull { inventoryContainer.getSlot(it).stack }.filter { it.item is ItemBlock }.filter { thePlayer.heldItem == it || (it.item as ItemBlock).block.canAutoBlock }.sumOf(ItemStack::stackSize)
     }
 
     override val tag: String

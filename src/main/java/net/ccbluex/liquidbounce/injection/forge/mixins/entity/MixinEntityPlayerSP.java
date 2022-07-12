@@ -5,42 +5,21 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.entity;
 
-import java.util.List;
-
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.*;
-import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.AntiHunger;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.PortalMenu;
 import net.ccbluex.liquidbounce.features.module.modules.fun.Derp;
 import net.ccbluex.liquidbounce.features.module.modules.movement.*;
-import net.ccbluex.liquidbounce.features.module.modules.render.Bobbing;
 import net.ccbluex.liquidbounce.features.module.modules.render.NoSwing;
 import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold;
 import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.ccbluex.liquidbounce.utils.extensions.MovementExtensionKt;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockFence;
-import net.minecraft.block.BlockFenceGate;
-import net.minecraft.block.BlockWall;
-import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.network.NetHandlerPlayClient;
-import net.minecraft.crash.CrashReport;
-import net.minecraft.crash.CrashReportCategory;
-import net.minecraft.entity.Entity;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.ItemSword;
-import net.minecraft.network.play.client.C03PacketPlayer;
-import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition;
-import net.minecraft.network.play.client.C03PacketPlayer.C05PacketPlayerLook;
-import net.minecraft.network.play.client.C03PacketPlayer.C06PacketPlayerPosLook;
 import net.minecraft.network.play.client.C0APacketAnimation;
-import net.minecraft.network.play.client.C0BPacketEntityAction;
-import net.minecraft.network.play.client.C0BPacketEntityAction.Action;
 import net.minecraft.potion.Potion;
 import net.minecraft.util.*;
 import net.minecraftforge.fml.relauncher.Side;
@@ -53,7 +32,6 @@ import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.At.Shift;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(EntityPlayerSP.class)
 @SideOnly(Side.CLIENT)

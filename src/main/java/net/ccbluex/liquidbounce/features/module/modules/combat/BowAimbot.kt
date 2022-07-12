@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.value.ValueGroup
 import net.minecraft.client.multiplayer.WorldClient
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.item.ItemBow
+import java.util.*
 
 @ModuleInfo(name = "BowAimbot", description = "Automatically aims at players when using a bow.", category = ModuleCategory.COMBAT)
 class BowAimbot : Module()
@@ -116,7 +117,7 @@ class BowAimbot : Module()
 
         val playerPredict = flags and RotationUtils.PLAYER_PREDICT != 0
 
-        return when (priorityMode.toLowerCase())
+        return when (priorityMode.lowercase(Locale.getDefault()))
         {
             "distance" -> targetCandidates.minByOrNull(thePlayer::getDistanceToEntity)
             "serverdirection" -> targetCandidates.minByOrNull { RotationUtils.getServerRotationDifference(thePlayer, it, playerPredict, playerPredictSize) }

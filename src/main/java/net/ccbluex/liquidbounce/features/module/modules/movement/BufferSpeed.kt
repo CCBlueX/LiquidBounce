@@ -140,7 +140,7 @@ class BufferSpeed : Module()
 
             if (slabsEnabledValue.get() && theWorld.getBlock(blockPos) is BlockSlab)
             {
-                when (slabsModeValue.get().toLowerCase())
+                when (slabsModeValue.get().lowercase(Locale.getDefault()))
                 {
                     "old" ->
                     {
@@ -171,7 +171,7 @@ class BufferSpeed : Module()
 
             if (stairsEnabledValue.get() && (theWorld.getBlock(blockPos.down()) is BlockStairs || theWorld.getBlock(blockPos) is BlockStairs))
             {
-                when (stairsModeValue.get().toLowerCase())
+                when (stairsModeValue.get().lowercase(Locale.getDefault()))
                 {
                     "old" ->
                     {
@@ -226,7 +226,7 @@ class BufferSpeed : Module()
 
             if (wallEnabledValue.get())
             {
-                when (wallModeValue.get().toLowerCase())
+                when (wallModeValue.get().lowercase(Locale.getDefault()))
                 {
                     "aac3.2.1" -> if (thePlayer.isCollidedVertically && isNearBlock(theWorld, thePlayer) || theWorld.getBlock(BlockPos(thePlayer.posX, thePlayer.posY + 2.0, thePlayer.posZ)) !is BlockAir)
                     {

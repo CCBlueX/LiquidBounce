@@ -165,12 +165,10 @@ class MoveDirectionCheck : BotCheck("move.direction")
 
         if (packet is S0CPacketSpawnPlayer)
         {
-            val playerSpawnPacket = packet
+            val entityId = packet.entityID
 
-            val entityId = playerSpawnPacket.entityID
-
-            val entityX: Double = playerSpawnPacket.x.toDouble() / 32.0
-            val entityZ: Double = playerSpawnPacket.z.toDouble() / 32.0
+            val entityX: Double = packet.x.toDouble() / 32.0
+            val entityZ: Double = packet.z.toDouble() / 32.0
 
             val serverLocation = getPingCorrectionAppliedLocation(thePlayer)
             val serverPos = serverLocation.position

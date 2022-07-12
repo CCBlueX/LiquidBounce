@@ -14,7 +14,7 @@ val ItemStack?.enchantmentCount: Int
 fun ItemStack?.getEnchantmentLevel(enchantment: Enchantment): Int
 {
     val enchTagList = this?.enchantmentTagList
-    return if (enchTagList == null || enchTagList.hasNoTags()) 0 else (0 until enchTagList.tagCount()).map(enchTagList::getCompoundTagAt).filter { it.hasKey("ench") || it.hasKey("id") }.filter { it.getShort("ench").toInt() == enchantment.effectId || it.getShort("id").toInt() == enchantment.effectId }.sumBy { it.getShort("lvl").toInt() }
+    return if (enchTagList == null || enchTagList.hasNoTags()) 0 else (0 until enchTagList.tagCount()).map(enchTagList::getCompoundTagAt).filter { it.hasKey("ench") || it.hasKey("id") }.filter { it.getShort("ench").toInt() == enchantment.effectId || it.getShort("id").toInt() == enchantment.effectId }.sumOf { it.getShort("lvl").toInt() }
 }
 
 val ItemStack?.isEmpty: Boolean

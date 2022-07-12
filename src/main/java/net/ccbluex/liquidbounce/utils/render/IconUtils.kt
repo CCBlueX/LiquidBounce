@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.utils.ClientUtils.logger
 import java.io.IOException
 import java.io.InputStream
 import java.nio.ByteBuffer
+import java.util.*
 import javax.imageio.ImageIO
 
 object IconUtils
@@ -18,7 +19,7 @@ object IconUtils
     val favicon: Array<ByteBuffer?>?
         get() = try
         {
-            arrayOf(readImageToBuffer(IconUtils::class.java.getResourceAsStream("/assets/minecraft/" + LiquidBounce.CLIENT_NAME.toLowerCase() + "/icon_16x16.png")), readImageToBuffer(IconUtils::class.java.getResourceAsStream("/assets/minecraft/" + LiquidBounce.CLIENT_NAME.toLowerCase() + "/icon_32x32.png")))
+            arrayOf(readImageToBuffer(IconUtils::class.java.getResourceAsStream("/assets/minecraft/" + LiquidBounce.CLIENT_NAME.lowercase(Locale.getDefault()) + "/icon_16x16.png")), readImageToBuffer(IconUtils::class.java.getResourceAsStream("/assets/minecraft/" + LiquidBounce.CLIENT_NAME.lowercase(Locale.getDefault()) + "/icon_32x32.png")))
         }
         catch (e: IOException)
         {

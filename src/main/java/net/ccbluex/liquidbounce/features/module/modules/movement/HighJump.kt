@@ -28,6 +28,7 @@ import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.BlockPos
 import net.minecraft.world.World
+import java.util.*
 
 @ModuleInfo(name = "HighJump", description = "Allows you to jump higher.", category = ModuleCategory.MOVEMENT)
 class HighJump : Module()
@@ -106,7 +107,7 @@ class HighJump : Module()
 
         if (vanillaGlassValue.get() && theWorld.getBlock(BlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)) !is BlockPane) return // 'AAC Ground-check always returns true when player is collided with glass pane or iron bars, etc.' bug exploit
 
-        when (modeValue.get().toLowerCase())
+        when (modeValue.get().lowercase(Locale.getDefault()))
         {
             "damage" -> if (thePlayer.hurtTime > 0 && onGround)
             {
@@ -196,7 +197,7 @@ class HighJump : Module()
 
         if (vanillaGlassValue.get() && theWorld.getBlock(BlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)) !is BlockPane) return
 
-        when (modeValue.get().toLowerCase())
+        when (modeValue.get().lowercase(Locale.getDefault()))
         {
             "vanilla" ->
             {

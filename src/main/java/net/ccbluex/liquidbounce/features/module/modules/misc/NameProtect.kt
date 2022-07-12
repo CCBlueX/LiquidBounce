@@ -18,6 +18,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.ccbluex.liquidbounce.value.TextValue
 import net.ccbluex.liquidbounce.value.ValueGroup
+import java.util.*
 
 // TODO: Hide GameID (rewinside)
 // TODO: Hide other things that can be used to recognize you
@@ -57,7 +58,7 @@ class NameProtect : Module()
             val customFakeName = allPlayerCustomFakeNameValue.get()
 
             mc.netHandler.playerInfoMap.asSequence().map { it.gameProfile.name }.forEach {
-                event.text = StringUtils.replace(event.text, it, when (allPlayerModeValue.get().toLowerCase())
+                event.text = StringUtils.replace(event.text, it, when (allPlayerModeValue.get().lowercase(Locale.getDefault()))
                 {
                     "obfuscate" -> "\u00A7k$it"
                     "empty" -> ""

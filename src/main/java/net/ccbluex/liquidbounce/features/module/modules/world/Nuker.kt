@@ -32,6 +32,7 @@ import net.minecraft.network.play.client.C07PacketPlayerDigging
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 import net.minecraft.util.Vec3
+import java.util.*
 import kotlin.math.roundToInt
 
 @ModuleInfo(name = "Nuker", description = "Breaks all blocks around you.", category = ModuleCategory.WORLD)
@@ -92,7 +93,7 @@ class Nuker : Module()
 
         val playerController = mc.playerController
         val netHandler = mc.netHandler
-        val priority = priorityValue.get().toLowerCase()
+        val priority = priorityValue.get().lowercase(Locale.getDefault())
         val radius = radiusValue.get()
         val nukeEnabled = nukeValue.get()
         val throughWalls = throughWallsValue.get()

@@ -22,6 +22,7 @@ import net.minecraft.network.play.client.C02PacketUseEntity
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.client.C03PacketPlayer.*
 import net.minecraft.network.play.client.C0BPacketEntityAction
+import java.util.*
 
 // Original author: turtl (https://github.com/chocopie69/Liquidbounce-Scripts/blob/main/combat/superKB.js and https://github.com/CzechHek/Core/blob/master/Scripts/SuperKnock.js)
 @ModuleInfo(name = "SuperKnockback", description = "Increases knockback dealt to other entities.", category = ModuleCategory.COMBAT)
@@ -140,7 +141,7 @@ class SuperKnockback : Module()
         }
         else if (packet is C02PacketUseEntity)
         {
-            val mode = modeValue.get().toLowerCase()
+            val mode = modeValue.get().lowercase(Locale.getDefault())
             if (mode.equals("Deprecated", ignoreCase = true)) return
 
             if (packet.action == C02PacketUseEntity.Action.ATTACK)

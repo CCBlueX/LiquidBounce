@@ -17,6 +17,7 @@ import net.minecraft.client.renderer.OpenGlHelper
 import net.minecraft.client.renderer.RenderHelper
 import net.minecraft.entity.EntityLivingBase
 import org.lwjgl.opengl.GL11
+import java.util.*
 import kotlin.math.abs
 import kotlin.math.atan
 
@@ -58,7 +59,7 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y)
     {
         val thePlayer = mc.thePlayer ?: return null
 
-        val yaw = when (yawModeValue.get().toLowerCase())
+        val yaw = when (yawModeValue.get().lowercase(Locale.getDefault()))
         {
             "player" -> thePlayer.rotationYaw
 
@@ -98,7 +99,7 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y)
             else -> 0F
         }
 
-        var pitch = when (pitchModeValue.get().toLowerCase())
+        var pitch = when (pitchModeValue.get().lowercase(Locale.getDefault()))
         {
             "player" -> thePlayer.rotationPitch
             "custom" -> pitchCustomPitchValue.get()

@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.Module
 import org.lwjgl.input.Keyboard
+import java.util.*
 
 class BindCommand : Command("bind")
 {
@@ -33,12 +34,12 @@ class BindCommand : Command("bind")
             val keyBinds = module.keyBinds
             if (args.size > 2)
             {
-                when (args[2].toLowerCase())
+                when (args[2].lowercase(Locale.getDefault()))
                 {
                     "add" -> if (args.size > 3)
                     {
                         (3 until args.size).forEach {
-                            val key = Keyboard.getKeyIndex(args[it].toUpperCase())
+                            val key = Keyboard.getKeyIndex(args[it].uppercase(Locale.getDefault()))
                             if (key != Keyboard.KEY_NONE) keyBinds.add(key)
                         }
 
@@ -50,7 +51,7 @@ class BindCommand : Command("bind")
                     "remove" -> if (args.size > 3)
                     {
                         (3 until args.size).forEach {
-                            val key = Keyboard.getKeyIndex(args[it].toUpperCase())
+                            val key = Keyboard.getKeyIndex(args[it].uppercase(Locale.getDefault()))
                             if (!keyBinds.remove(key))
                             {
                                 chat(thePlayer, "Module \u00A7a\u00A7l${module.name}\u00A73 hadn't bound to key \u00A7a\u00A7l${Keyboard.getKeyName(key)}\u00A73.")

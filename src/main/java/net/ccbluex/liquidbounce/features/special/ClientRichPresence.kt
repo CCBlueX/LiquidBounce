@@ -16,10 +16,10 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
+import net.ccbluex.liquidbounce.utils.runAsync
 import org.json.JSONObject
 import java.io.IOException
 import java.time.OffsetDateTime
-import kotlin.concurrent.thread
 
 /**
  * LiquidBounce Discord RPC
@@ -62,7 +62,7 @@ class ClientRichPresence : MinecraftInstance()
                  */
                 override fun onReady(client: IPCClient?)
                 {
-                    thread {
+                    runAsync {
                         while (running)
                         {
                             update()

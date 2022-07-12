@@ -30,6 +30,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.network.play.client.C0DPacketCloseWindow
 import net.minecraft.potion.Potion
 import net.minecraft.potion.PotionEffect
+import java.util.*
 import kotlin.random.Random
 
 // TODO: Movement prediction when throwing pot
@@ -119,7 +120,7 @@ class AutoPot : Module()
 
             if (potionItem !is ItemPotion) return false
 
-            return (potionItem as ItemPotion).getEffects(item).any { goodEffects.contains(it.potionID) }
+            return potionItem.getEffects(item).any { goodEffects.contains(it.potionID) }
         }
     }
 
@@ -143,7 +144,7 @@ class AutoPot : Module()
 
         val randomSlot = throwRandomSlotValue.get()
         val invRandomSlot = inventoryRandomSlotValue.get()
-        val throwDirection = throwDirectionValue.get().toLowerCase()
+        val throwDirection = throwDirectionValue.get().lowercase(Locale.getDefault())
         val health = healthValue.get()
 
         val containerOpen = screen is GuiContainer
@@ -166,7 +167,7 @@ class AutoPot : Module()
                     {
                         if (thePlayer.onGround)
                         {
-                            when (throwModeValue.get().toLowerCase())
+                            when (throwModeValue.get().lowercase(Locale.getDefault()))
                             {
                                 "jump" -> thePlayer.jump()
                                 "port" -> thePlayer.moveEntity(0.0, 0.42, 0.0)

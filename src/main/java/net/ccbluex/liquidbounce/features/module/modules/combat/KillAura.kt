@@ -44,6 +44,8 @@ import net.minecraft.world.World
 import net.minecraft.world.WorldSettings
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
+import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sqrt
@@ -524,7 +526,7 @@ class KillAura : Module()
 
         if (currentTarget != null && RotationUtils.targetRotation != null && (thePlayer.onGround || !rotationStrafeOnlyGroundValue.get()))
         {
-            when (rotationStrafeValue.get().toLowerCase())
+            when (rotationStrafeValue.get().lowercase(Locale.getDefault()))
             {
                 "strict" ->
                 {
@@ -609,7 +611,7 @@ class KillAura : Module()
         interactBlockRange = interactAutoBlockRangeValue.get()
 
         // Range mark
-        val markRangeMode = visualMarkRangeModeValue.get().toLowerCase()
+        val markRangeMode = visualMarkRangeModeValue.get().lowercase(Locale.getDefault())
         if (markRangeMode != "none")
         {
             val arr = arrayOfNulls<Pair<Float, Int>?>(6)
@@ -724,7 +726,7 @@ class KillAura : Module()
         // Mark
         if (state || lastTargetBB != null)
         {
-            val markMode = visualMarkTargetModeValue.get().toLowerCase()
+            val markMode = visualMarkTargetModeValue.get().lowercase(Locale.getDefault())
             if (markMode != "none" && !targetModeValue.get().equals("Multi", ignoreCase = true))
             {
                 (target?.let { target ->
@@ -991,7 +993,7 @@ class KillAura : Module()
         val checkIsClientTarget = { entity: Entity -> if (entity.isClientTarget()) -1000000.0 else 0.0 }
 
         // Sort targets by priority
-        when (targetPriorityValue.get().toLowerCase())
+        when (targetPriorityValue.get().lowercase(Locale.getDefault()))
         {
             "distance" ->
             {
@@ -1133,7 +1135,7 @@ class KillAura : Module()
 
         var flags = 0
 
-        val rotationMode = rotationMode.get().toLowerCase()
+        val rotationMode = rotationMode.get().lowercase(Locale.getDefault())
 
         // Apply rotation mode to flags
         flags = flags or when (rotationMode)

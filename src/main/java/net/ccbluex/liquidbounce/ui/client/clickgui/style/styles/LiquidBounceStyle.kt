@@ -34,6 +34,7 @@ import net.minecraft.util.ResourceLocation
 import org.lwjgl.input.Mouse
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.util.*
 
 private const val WHITE = 0xFFFFFF
 private const val BLACK = -16777216
@@ -553,7 +554,7 @@ class LiquidBounceStyle : Style()
 
     companion object
     {
-        private fun encodeToHex(hex: Int) = hex.toString(16).toUpperCase().padStart(2, '0')
+        private fun encodeToHex(hex: Int) = hex.toString(16).uppercase(Locale.getDefault()).padStart(2, '0')
 
         private fun round(f: Float): BigDecimal = BigDecimal("$f").setScale(4, RoundingMode.HALF_UP)
     }

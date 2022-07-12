@@ -22,6 +22,7 @@ import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.util.ResourceLocation
 import org.lwjgl.opengl.GL11
 import java.awt.Color
+import java.util.*
 import kotlin.math.max
 
 /**
@@ -188,7 +189,7 @@ enum class NotificationIcon(iconPath: String, val colorMode: () -> String, val c
     MURDER_MYSTERY("/notification/murder_mystery.png", Notifications.rectWarnColorModeValue::get, Notifications.rectWarnColorValue::get),
     BOT("/notification/robot.png", Notifications.rectCautionColorModeValue::get, Notifications.rectCautionColorValue::get);
 
-    val resourceLocation = ResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + iconPath)
+    val resourceLocation = ResourceLocation(LiquidBounce.CLIENT_NAME.lowercase(Locale.getDefault()) + iconPath)
 }
 
 class Notification(private val type: NotificationIcon, var header: String, val message: Array<String>, private val stayTime: Long = 0L)
@@ -287,7 +288,7 @@ class Notification(private val type: NotificationIcon, var header: String, val m
         val remainingTimePercentage = if (fadeState != FadeState.IN) stayTimer.hasTimeLeft(stayTime).coerceAtLeast(0).toFloat() / stayTime.toFloat() else if (stayTime == 0L) 0F else 1F
         val remainingTimeColor = ColorUtils.blendColors(floatArrayOf(0f, 0.5f, 1f), arrayOf(Color.RED, Color.YELLOW, Color.GREEN), remainingTimePercentage).brighter()
 
-        val rectExpand = when (Notifications.remainingTimeBarModeValue.get().toLowerCase())
+        val rectExpand = when (Notifications.remainingTimeBarModeValue.get().lowercase(Locale.getDefault()))
         {
             "up" -> (0f to 0f - Notifications.remainingTimeBarWidthValue.get()) to (-Notifications.remainingTimeBarWidthValue.get() to 0f)
             "down" -> yEnd to yEnd + Notifications.remainingTimeBarWidthValue.get() to (0f to Notifications.remainingTimeBarWidthValue.get())
@@ -317,7 +318,7 @@ class Notification(private val type: NotificationIcon, var header: String, val m
                     else -> rectCustomColor
                 }
 
-                when (rect.toLowerCase())
+                when (rect.lowercase(Locale.getDefault()))
                 {
                     "left" -> RenderUtils.drawRect(bodyXStart - rectWidth, 0F + rectExpand.first, bodyXStart, yEnd + rectExpand.second, rectColor)
                     "right" -> RenderUtils.drawRect(bodyXEnd, rectExpand.first, bodyXEnd + rectWidth, yEnd + rectExpand.second, rectColor)

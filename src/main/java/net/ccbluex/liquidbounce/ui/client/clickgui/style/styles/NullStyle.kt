@@ -34,6 +34,7 @@ import net.minecraft.util.ResourceLocation
 import org.lwjgl.input.Mouse
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.util.*
 import kotlin.math.max
 import kotlin.math.min
 
@@ -499,7 +500,7 @@ class NullStyle : Style()
 
     companion object
     {
-        private fun encodeToHex(hex: Int) = hex.toString(16).toUpperCase().padStart(2, '0')
+        private fun encodeToHex(hex: Int) = hex.toString(16).uppercase(Locale.getDefault()).padStart(2, '0')
 
         private inline fun drawSlider(value: Float, min: Float, max: Float, xStart: Int, xEnd: Float, y: Int, settingsWidth: Float, mouseX: Int, mouseY: Int, indent: Int, color: Int, onChanged: (Float) -> Unit)
         {

@@ -24,7 +24,7 @@ fun runAsync(commandBlock: () -> Unit) = AsyncUtils.workers.execute(commandBlock
 // Java style
 fun runAsync(command: Runnable) = AsyncUtils.workers.execute(command)
 
-fun runSync(commandBlock: () -> Unit) = mc.addScheduledTask(commandBlock)
+fun runSync(commandBlock: () -> Unit): Future<*> = mc.addScheduledTask(commandBlock)
 
 fun <T> supplyAsync(supplierBlock: () -> T): Future<T> = AsyncUtils.workers.submit(supplierBlock)
 

@@ -19,6 +19,7 @@ import net.ccbluex.liquidbounce.utils.render.shader.shaders.OutlineShader
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.entity.item.EntityFallingBlock
 import net.minecraft.util.BlockPos
+import java.util.*
 
 @ModuleInfo(name = "ProphuntESP", description = "Allows you to see disguised players in PropHunt.", category = ModuleCategory.RENDER)
 class ProphuntESP : Module()
@@ -73,7 +74,7 @@ class ProphuntESP : Module()
         val theWorld = mc.theWorld ?: return
         val thePlayer = mc.thePlayer ?: return
 
-        val mode = modeValue.get().toLowerCase()
+        val mode = modeValue.get().lowercase(Locale.getDefault())
         val hydraESP = mode == "hydra"
         val color = if (colorRainbowEnabledValue.get()) rainbowRGB(alpha = colorValue.getAlpha(), speed = colorRainbowSpeedValue.get(), saturation = colorRainbowSaturationValue.get(), brightness = colorRainbowBrightnessValue.get()) else colorValue.get()
         val boxOutlineColor = modeBoxOutlineColorValue.get()
@@ -107,7 +108,7 @@ class ProphuntESP : Module()
         val renderManager = mc.renderManager
         val partialTicks = if (interpolateValue.get()) event.partialTicks else 1f
 
-        val mode = modeValue.get().toLowerCase()
+        val mode = modeValue.get().lowercase(Locale.getDefault())
         val shader = when (mode)
         {
             "shaderoutline" -> OutlineShader.INSTANCE

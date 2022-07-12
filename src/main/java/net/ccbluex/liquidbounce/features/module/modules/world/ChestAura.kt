@@ -31,6 +31,7 @@ import net.minecraft.util.EnumFacing
 import net.minecraft.util.MovingObjectPosition
 import net.minecraft.util.Vec3
 import org.lwjgl.opengl.GL11
+import java.util.*
 
 @ModuleInfo(name = "ChestAura", description = "Automatically opens chests around you.", category = ModuleCategory.WORLD)
 object ChestAura : Module()
@@ -105,7 +106,7 @@ object ChestAura : Module()
                 val throughWalls = throughWallsValue.get()
 
                 val prioritySelector = { blockPos: BlockPos ->
-                    when (priorityValue.get().toLowerCase())
+                    when (priorityValue.get().lowercase(Locale.getDefault()))
                     {
                         "serverdirection" -> RotationUtils.getServerRotationDifference(thePlayer, blockPos, false, RotationUtils.MinMaxPair.ZERO)
                         "clientdirection" -> RotationUtils.getClientRotationDifference(thePlayer, blockPos, false, RotationUtils.MinMaxPair.ZERO)

@@ -227,7 +227,7 @@ class Target : Element()
 
                 if (target is EntityPlayer)
                 {
-                    val healthMethod = healthTypeValue.get().toLowerCase()
+                    val healthMethod = healthTypeValue.get().lowercase(Locale.getDefault())
                     if (healthMethod.equals("Mineplex", ignoreCase = true) || healthMethod.equals("Hive", ignoreCase = true)) targetHealth = EntityUtils.getPlayerHealthFromScoreboard(target.gameProfile.name, isMineplex = healthTypeValue.get().equals("Mineplex", true)).toFloat()
 
                     targetArmor = target.totalArmorValue

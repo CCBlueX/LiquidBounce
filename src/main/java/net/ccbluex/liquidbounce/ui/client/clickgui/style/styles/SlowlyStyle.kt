@@ -33,6 +33,7 @@ import org.lwjgl.input.Mouse
 import java.awt.Color
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.util.*
 
 private const val WHITE = -1
 private const val LIGHT_GRAY = Int.MAX_VALUE
@@ -444,7 +445,7 @@ class SlowlyStyle : Style()
 
     companion object
     {
-        private fun encodeToHex(hex: Int) = hex.toString(16).toUpperCase().padStart(2, '0')
+        private fun encodeToHex(hex: Int) = hex.toString(16).uppercase(Locale.getDefault()).padStart(2, '0')
 
         private inline fun drawSlider(value: Float, min: Float, max: Float, x: Int, y: Int, width: Int, mouseX: Int, mouseY: Int, indent: Int, color: Int, changeCallback: (Float) -> Unit)
         {

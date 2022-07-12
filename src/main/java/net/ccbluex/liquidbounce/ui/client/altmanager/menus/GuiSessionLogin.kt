@@ -17,6 +17,7 @@ import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiTextField
 import org.lwjgl.input.Keyboard
 
+// FIXME: The session token format changed since microsoft account migration
 class GuiSessionLogin(private val prevGui: GuiScreen) : GuiScreen()
 {
 

@@ -23,6 +23,7 @@ import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.BlockPos
 import org.lwjgl.input.Keyboard
+import java.util.*
 
 @ModuleInfo(name = "LiquidWalk", description = "Allows you to walk on water.", category = ModuleCategory.MOVEMENT, defaultKeyBinds = [Keyboard.KEY_J])
 class LiquidWalk : Module()
@@ -56,7 +57,7 @@ class LiquidWalk : Module()
         val posY = thePlayer.posY
         val posZ = thePlayer.posZ
 
-        when (modeValue.get().toLowerCase())
+        when (modeValue.get().lowercase(Locale.getDefault()))
         {
             "ncp", "vanilla" -> if (theWorld.collideBlock(thePlayer.entityBoundingBox) { checkLiquid(it.block, waterOnly) } && thePlayer.isInsideOfMaterial(Material.air) && !thePlayer.isSneaking) thePlayer.motionY = 0.08
 
@@ -134,7 +135,7 @@ class LiquidWalk : Module()
 
         val waterOnly = waterOnlyValue.get()
 
-        if (checkLiquid(event.block, waterOnly) && !theWorld.collideBlock(thePlayer.entityBoundingBox) { checkLiquid(it.block, waterOnly) } && !thePlayer.isSneaking) when (modeValue.get().toLowerCase())
+        if (checkLiquid(event.block, waterOnly) && !theWorld.collideBlock(thePlayer.entityBoundingBox) { checkLiquid(it.block, waterOnly) } && !thePlayer.isSneaking) when (modeValue.get().lowercase(Locale.getDefault()))
         {
             "ncp", "vanilla" ->
             {

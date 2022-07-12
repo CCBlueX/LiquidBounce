@@ -21,6 +21,8 @@ import net.ccbluex.liquidbounce.utils.render.ColorUtils.translateAlternateColorC
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.entity.EntityPlayerSP
 import org.lwjgl.input.Keyboard
+import java.util.*
+import kotlin.collections.HashSet
 
 /*
  * LiquidBounce Hacked Client
@@ -47,7 +49,7 @@ object SettingsUtils
                 return@forEachIndexed
             }
 
-            when (args[0].toLowerCase())
+            when (args[0].lowercase(Locale.getDefault()))
             {
                 "chat" -> chat(thePlayer, "\u00A7e", translateAlternateColorCodes(StringUtils.toCompleteString(args, 1)))
                 "unchat" -> ClientUtils.displayChatMessage(thePlayer, translateAlternateColorCodes(StringUtils.toCompleteString(args, 1)))
@@ -56,7 +58,7 @@ object SettingsUtils
                 {
                     val urlRaw = StringUtils.toCompleteString(args, 1)
                     val url = if (urlRaw.startsWith("http")) urlRaw
-                    else "${LiquidBounce.CLIENT_CLOUD}/settings/${urlRaw.toLowerCase()}"
+                    else "${LiquidBounce.CLIENT_CLOUD}/settings/${urlRaw.lowercase(Locale.getDefault())}"
 
                     try
                     {

@@ -18,6 +18,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.settings.GameSettings
 import net.minecraft.client.settings.KeyBinding
+import java.util.*
 
 @ModuleInfo(name = "AntiAFK", description = "Prevents you from getting kicked for being AFK.", category = ModuleCategory.PLAYER)
 class AntiAFK : Module()
@@ -45,7 +46,7 @@ class AntiAFK : Module()
         val thePlayer = mc.thePlayer ?: return
         val gameSettings = mc.gameSettings
 
-        when (modeValue.get().toLowerCase())
+        when (modeValue.get().lowercase(Locale.getDefault()))
         {
             "old" ->
             {

@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import java.util.*
 
 // FIXME: Fix broken LongJump
 @ModuleInfo(name = "LongJump", description = "Allows you to jump further.", category = ModuleCategory.MOVEMENT)
@@ -134,7 +135,7 @@ class LongJump : Module()
             }
 
             run {
-                when (mode.toLowerCase())
+                when (mode.lowercase(Locale.getDefault()))
                 {
                     "ncp" ->
                     {
@@ -210,7 +211,7 @@ class LongJump : Module()
         {
             jumped = true
 
-            if (damageOnStartValue.get()) when (damageModeValue.get().toLowerCase())
+            if (damageOnStartValue.get()) when (damageModeValue.get().lowercase(Locale.getDefault()))
             {
                 "ncp" -> Damage.ncpDamage()
                 "hypixel" -> Damage.hypixelDamage()
@@ -224,7 +225,7 @@ class LongJump : Module()
     fun onMove(event: MoveEvent)
     {
         val thePlayer = mc.thePlayer ?: return
-        val mode = modeValue.get().toLowerCase()
+        val mode = modeValue.get().lowercase(Locale.getDefault())
 
         if (mode == "mineplex3")
         {
@@ -270,13 +271,13 @@ class LongJump : Module()
 
         if (state)
         {
-            if (damageOnStartValue.get()) when (damageModeValue.get().toLowerCase())
+            if (damageOnStartValue.get()) when (damageModeValue.get().lowercase(Locale.getDefault()))
             {
                 "ncp" -> Damage.ncpDamage()
                 "hypixel" -> Damage.hypixelDamage()
             }
 
-            when (modeValue.get().toLowerCase())
+            when (modeValue.get().lowercase(Locale.getDefault()))
             {
                 "mineplex" -> event.motion = event.motion * 4.08f
 

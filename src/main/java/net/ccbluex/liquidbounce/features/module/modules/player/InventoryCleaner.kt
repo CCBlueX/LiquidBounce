@@ -324,7 +324,7 @@ class InventoryCleaner : Module()
             val otherItems = otherItemMap.values
 
             val check = { max: Int, filter: (ItemStack) -> Boolean ->
-                otherItems.filter(filter).sumBy(ItemStack::stackSize) + stackSize <= max
+                otherItems.filter(filter).sumOf(ItemStack::stackSize) + stackSize <= max
             }
 
             when
@@ -375,7 +375,7 @@ class InventoryCleaner : Module()
                     check(maxCount) { otherStack -> otherStack.item is ItemBow && currentPower <= getPower(otherStack) }
                 }
 
-                filterBowAndArrowArrowCountValue.get() > 0 && stack.unlocalizedName == "item.arrow" -> otherItems.filter { it.unlocalizedName == "item.arrow" }.sumBy(ItemStack::stackSize) + stackSize <= filterBowAndArrowArrowCountValue.get()
+                filterBowAndArrowArrowCountValue.get() > 0 && stack.unlocalizedName == "item.arrow" -> otherItems.filter { it.unlocalizedName == "item.arrow" }.sumOf(ItemStack::stackSize) + stackSize <= filterBowAndArrowArrowCountValue.get()
 
                 item is ItemArmor ->
                 {
@@ -388,7 +388,7 @@ class InventoryCleaner : Module()
                     otherItemMap.filter { it.value.item is ItemArmor }.filter { (otherSlot, otherStack) ->
                         val otherArmorPiece = ArmorPiece(otherStack, otherSlot)
                         otherArmorPiece.armorType == currentArmor.armorType && AutoArmor.ARMOR_COMPARATOR.compare(currentArmor, otherArmorPiece) <= 0
-                    }.values.sumBy(ItemStack::stackSize) + stackSize <= maxCount
+                    }.values.sumOf(ItemStack::stackSize) + stackSize <= maxCount
                 }
 
                 filterCompassCountValue.get() > 0 && stack.unlocalizedName == "item.compass" -> check(filterCompassCountValue.get()) { it.unlocalizedName == "item.compass" }
@@ -399,7 +399,7 @@ class InventoryCleaner : Module()
                     check(filterBedCountValue.get()) { it.unlocalizedName == name }
                 }
 
-                item is ItemBlock && item.block !is BlockBush && item.block !is BlockChest -> otherItems.filter { it.item is ItemBlock && item.block?.let(::checkBlock) == true }.sumBy(ItemStack::stackSize) + stackSize <= filterMaxBlockCountValue.get()
+                item is ItemBlock && item.block !is BlockBush && item.block !is BlockChest -> otherItems.filter { it.item is ItemBlock && item.block?.let(::checkBlock) == true }.sumOf(ItemStack::stackSize) + stackSize <= filterMaxBlockCountValue.get()
 
                 filterFoodCountValue.get() > 0 && item is ItemFood && item !is ItemAppleGold ->
                 {
@@ -489,7 +489,7 @@ class InventoryCleaner : Module()
 
     private fun findBetterItem(thePlayer: EntityPlayer, slot: Int, slotStack: ItemStack?): Int?
     {
-        val type = type(slot).toLowerCase()
+        val type = type(slot).lowercase(Locale.getDefault())
 
         val mainInventory = thePlayer.inventory.mainInventory.asSequence().withIndex()
 
@@ -539,12 +539,12 @@ class InventoryCleaner : Module()
             }
 
             "food" -> if (filterFoodCountValue.get() > 0) mainInventory.filter { it.value?.item is ItemFood }.map { it.index to it.value!! }.filter { it.second.item !is ItemAppleGold }.filter { !type(it.first).equals("Food", ignoreCase = true) }.toList().forEach { (index, stack) -> return@findBetterItem if (stack.isEmpty || stack.item !is ItemFood) index else null }
-            "block" -> mainInventory.filter { it.value?.item is ItemBlock }.mapNotNull { it.index to it.value?.item as ItemBlock }.filter { !BLACKLISTED_BLOCKS.contains(it.second.block) }.filter { !type(it.first).equals("Block", ignoreCase = true) }.forEach { (index, item) -> return@findBetterItem if (slotStack.isEmpty || item !is ItemBlock) index else null }
+            "block" -> mainInventory.filter { it.value?.item is ItemBlock }.map { it.index to it.value?.item as ItemBlock }.filter { !BLACKLISTED_BLOCKS.contains(it.second.block) }.filter { !type(it.first).equals("Block", ignoreCase = true) }.forEach { (index, item) -> return@findBetterItem if (slotStack.isEmpty || item !is ItemBlock) index else null }
 
             "water" -> if (filterBucketWaterCountValue.get() > 0)
             {
                 val flowingWater = Blocks.flowing_water
-                mainInventory.filter { it.value?.item is ItemBucket }.mapNotNull { it.index to it.value?.item as ItemBucket }.filter { it.second.isFull == flowingWater }.filter { !type(it.first).equals("Water", ignoreCase = true) }.toList().forEach { (index, item) -> return@findBetterItem if (slotStack.isEmpty || item !is ItemBucket || (item as ItemBucket).isFull != flowingWater) index else null }
+                mainInventory.filter { it.value?.item is ItemBucket }.map { it.index to it.value?.item as ItemBucket }.filter { it.second.isFull == flowingWater }.filter { !type(it.first).equals("Water", ignoreCase = true) }.toList().forEach { (index, item) -> return@findBetterItem if (slotStack.isEmpty || item !is ItemBucket || item.isFull != flowingWater) index else null }
             }
 
             "gapple" -> if (filterFoodCountValue.get() > 0) mainInventory.filter { it.value?.item is ItemAppleGold }.filter { !type(it.index).equals("Gapple", ignoreCase = true) }.forEach { return@findBetterItem if (slotStack.isEmpty || slotStack?.item !is ItemAppleGold) it.index else null }

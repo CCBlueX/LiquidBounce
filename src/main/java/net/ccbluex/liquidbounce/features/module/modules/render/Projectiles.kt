@@ -38,6 +38,7 @@ import org.lwjgl.opengl.GL11
 import org.lwjgl.util.glu.Cylinder
 import org.lwjgl.util.glu.GLU
 import java.awt.Color
+import java.util.*
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.max
@@ -87,7 +88,7 @@ class Projectiles : Module()
             val (motionMultiplier, motionFactor, motionSlowdown, gravity, size, inaccuracy) = getProjectileInfo(thePlayer, thePlayer.heldItem ?: return@run, partialTicks) ?: return@run
 
             val alpha = colorValue.getAlpha()
-            val color = when (colorModeValue.get().toLowerCase())
+            val color = when (colorModeValue.get().lowercase(Locale.getDefault()))
             {
                 "bowpower" -> ColorUtils.applyAlphaChannel(ColorUtils.blendColors(floatArrayOf(0f, 0.5f, 1f), arrayOf(Color.RED, Color.YELLOW, Color.GREEN), (motionFactor / 30) * 10).rgb, alpha)
                 "rainbow" -> ColorUtils.rainbowRGB(alpha = alpha, speed = colorRainbowSpeedValue.get(), saturation = colorRainbowSaturationValue.get(), brightness = colorRainbowBrightnessValue.get())

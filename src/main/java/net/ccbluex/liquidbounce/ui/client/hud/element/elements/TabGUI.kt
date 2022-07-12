@@ -19,6 +19,7 @@ import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.gui.FontRenderer
 import org.lwjgl.input.Keyboard
+import java.util.*
 
 @ElementInfo(name = "TabGUI")
 class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
@@ -274,13 +275,13 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
         }
     }
 
-    private fun applyVariance(string: String): String = when (textVarianceModeValue.get().toLowerCase())
+    private fun applyVariance(string: String): String = when (textVarianceModeValue.get().lowercase(Locale.getDefault()))
     {
-        "lowercase" -> string.toLowerCase()
-        "uppercase" -> string.toUpperCase()
-        "upper-except-i" -> string.toUpperCase().replace('I', 'i', ignoreCase = false)
-        "upper-except-first" -> string[0].toLowerCase() + string.substring(1).toUpperCase().replace('I', 'i', ignoreCase = false)
-        "upper-except-i-and-first" -> string[0].toLowerCase() + string.substring(1).toUpperCase().replace('I', 'i', ignoreCase = false)
+        "lowercase" -> string.lowercase(Locale.getDefault())
+        "uppercase" -> string.uppercase(Locale.getDefault())
+        "upper-except-i" -> string.uppercase(Locale.getDefault()).replace('I', 'i', ignoreCase = false)
+        "upper-except-first" -> string[0].lowercaseChar() + string.substring(1).uppercase(Locale.getDefault()).replace('I', 'i', ignoreCase = false)
+        "upper-except-i-and-first" -> string[0].lowercaseChar() + string.substring(1).uppercase(Locale.getDefault()).replace('I', 'i', ignoreCase = false)
         else -> string
     }
 

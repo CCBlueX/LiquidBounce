@@ -11,7 +11,7 @@ class InvalidNameCheck : BotCheck("name.invalidName")
     override val isActive: Boolean
         get() = AntiBot.invalidProfileNameValue.get()
 
-    private val invalidProfileNameRegex = Regex("[^a-zA-Z0-9_]*")
+    private val invalidProfileNameRegex = Regex("\\W*")
 
     override fun isBot(theWorld: WorldClient, thePlayer: Entity, target: EntityPlayer) = invalidProfileNameRegex.containsMatchIn(target.gameProfile.name)
 }

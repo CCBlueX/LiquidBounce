@@ -114,7 +114,7 @@ class FileManager : MinecraftInstance()
         {
             val bufferedImage = ImageIO.read(FileInputStream(backgroundFile)) ?: return
 
-            mc.textureManager.loadTexture(ResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/background.png").also { background = it }, DynamicTexture(bufferedImage))
+            mc.textureManager.loadTexture(ResourceLocation(LiquidBounce.CLIENT_NAME.lowercase(Locale.getDefault()) + "/background.png").also { background = it }, DynamicTexture(bufferedImage))
 
             logger.info("[FileManager] Loaded background.")
         }

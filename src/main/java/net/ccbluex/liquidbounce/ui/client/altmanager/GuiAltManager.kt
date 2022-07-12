@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.utils.login.unwrapped
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils.openFileChooser
+import net.ccbluex.liquidbounce.utils.runAsync
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
@@ -41,7 +42,6 @@ import java.awt.datatransfer.StringSelection
 import java.io.IOException
 import java.util.*
 import java.util.function.Consumer
-import kotlin.concurrent.thread
 
 class GuiAltManager(private val prevGui: GuiScreen?) : GuiScreen()
 {
@@ -228,7 +228,7 @@ class GuiAltManager(private val prevGui: GuiScreen?) : GuiScreen()
                 }
 
                 // Copy to clipboard
-                Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(formattedData), null);
+                Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(formattedData), null)
                 status = "\u00A7aCopied account into your clipboard."
             }
 
@@ -453,7 +453,7 @@ class GuiAltManager(private val prevGui: GuiScreen?) : GuiScreen()
             }
         }
 
-        fun login(minecraftAccount: MinecraftAccount, success: () -> Unit, error: (Exception) -> Unit, done: () -> Unit) = thread(name = "LoginTask") {
+        fun login(minecraftAccount: MinecraftAccount, success: () -> Unit, error: (Exception) -> Unit, done: () -> Unit) = runAsync {
             val targetAltService = if (minecraftAccount.unwrapped is TheAlteningAccount) EnumAltService.THEALTENING else EnumAltService.MOJANG
             if (altService.currentService != targetAltService)
             {

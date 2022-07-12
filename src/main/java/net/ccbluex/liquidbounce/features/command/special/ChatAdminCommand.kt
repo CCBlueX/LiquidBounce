@@ -3,6 +3,7 @@ package net.ccbluex.liquidbounce.features.command.special
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.modules.misc.LiquidChat
+import java.util.*
 
 class ChatAdminCommand : Command("chatadmin")
 {
@@ -24,7 +25,7 @@ class ChatAdminCommand : Command("chatadmin")
 
         if (args.size > 1)
         {
-            when (args[1].toLowerCase())
+            when (args[1].lowercase(Locale.getDefault()))
             {
                 "ban" ->
                 {

@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.minecraft.item.Item
 import net.minecraft.network.play.client.C10PacketCreativeInventoryAction
 import net.minecraft.util.*
+import java.util.*
 
 class GiveCommand : Command("give", "item", "i", "get")
 {
@@ -82,7 +83,7 @@ class GiveCommand : Command("give", "item", "i", "get")
 
         return when (args.size)
         {
-            1 -> return Item.itemRegistry.keys.map { it.resourcePath.toLowerCase() }.filter { it.startsWith(args[0], true) }.toList()
+            1 -> return Item.itemRegistry.keys.map { it.resourcePath.lowercase(Locale.getDefault()) }.filter { it.startsWith(args[0], true) }.toList()
             else -> emptyList()
         }
     }

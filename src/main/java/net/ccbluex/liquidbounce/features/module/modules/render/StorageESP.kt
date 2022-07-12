@@ -26,6 +26,7 @@ import net.minecraft.entity.item.EntityMinecartHopper
 import net.minecraft.tileentity.*
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
+import java.util.*
 
 @ModuleInfo(name = "StorageESP", description = "Allows you to see chests, dispensers, etc. through walls.", category = ModuleCategory.RENDER)
 class StorageESP : Module()
@@ -126,7 +127,7 @@ class StorageESP : Module()
 
         try
         {
-            val mode = modeValue.get().toLowerCase()
+            val mode = modeValue.get().lowercase(Locale.getDefault())
             val chest = chestEnabledValue.get()
             val enderChest = enderChestEnabledValue.get()
             val furnace = furnaceEnabledValue.get()

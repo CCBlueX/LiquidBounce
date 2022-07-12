@@ -22,6 +22,7 @@ import net.minecraft.client.renderer.GlStateManager
 import net.minecraft.client.resources.I18n
 import net.minecraft.potion.Potion
 import net.minecraft.potion.PotionEffect
+import java.util.*
 import kotlin.math.roundToInt
 
 /**
@@ -146,7 +147,7 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F, side: Side =
         assumeNonVolatile {
             val renderText = { text: String, x: Float, y: Float, colorMode: String, potionColor: Int, customColor: Int, function: (Int) -> Int ->
                 var useRainbowShader = false
-                val color = function(when (colorMode.toLowerCase())
+                val color = function(when (colorMode.lowercase(Locale.getDefault()))
                 {
                     "rainbowshader" ->
                     {
@@ -166,7 +167,7 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F, side: Side =
 
             val renderRect = { xStart: Float, yStart: Float, xEnd: Float, yEnd: Float, colorMode: String, potionColor: Int, customColor: Int ->
                 var useRainbowShader = false
-                val color = when (colorMode.toLowerCase())
+                val color = when (colorMode.lowercase(Locale.getDefault()))
                 {
                     "rainbowshader" ->
                     {
@@ -309,7 +310,7 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F, side: Side =
 
     private fun formatRemainingTime(effect: PotionEffect): String
     {
-        return when (textTimeModeValue.get().toLowerCase())
+        return when (textTimeModeValue.get().lowercase(Locale.getDefault()))
         {
             "ticks" -> "${effect.duration} ticks"
             "both" -> "${Potion.getDurationString(effect)} (${effect.duration} ticks)"

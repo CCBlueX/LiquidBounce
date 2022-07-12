@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.utils.extensions.withClientPrefix
 import net.minecraft.client.audio.PositionedSoundRecord
 import net.minecraft.client.entity.EntityPlayerSP
 import net.minecraft.util.ResourceLocation
+import java.util.*
 
 abstract class Command(val command: String, vararg val alias: String) : MinecraftInstance()
 {
@@ -49,7 +50,7 @@ abstract class Command(val command: String, vararg val alias: String) : Minecraf
 
         val commandPrefix = LiquidBounce.commandManager.prefix
 
-        syntaxes.map(String::toLowerCase).forEach { ClientUtils.displayChatMessage(thePlayer, "\u00A78> \u00A77$commandPrefix$command $it".withClientPrefix()) }
+        syntaxes.map(String::this.lowercase(Locale.getDefault())).forEach { ClientUtils.displayChatMessage(thePlayer, "\u00A78> \u00A77$commandPrefix$command $it".withClientPrefix()) }
     }
 
     /**

@@ -7,6 +7,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.LiquidChat
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
+import java.util.*
 
 class ChatTokenCommand : Command("chattoken")
 {
@@ -22,7 +23,7 @@ class ChatTokenCommand : Command("chattoken")
 
         if (args.size > 1)
         {
-            when (args[1].toLowerCase())
+            when (args[1].lowercase(Locale.getDefault()))
             {
                 "set" ->
                 {
