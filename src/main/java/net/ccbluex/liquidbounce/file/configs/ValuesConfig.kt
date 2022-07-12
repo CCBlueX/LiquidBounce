@@ -18,9 +18,9 @@ import net.ccbluex.liquidbounce.file.FileConfig
 import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.ui.client.GuiBackground.Companion.enabled
 import net.ccbluex.liquidbounce.ui.client.GuiBackground.Companion.particles
-import net.ccbluex.liquidbounce.ui.client.altmanager.sub.GuiDonatorCape.Companion.capeEnabled
-import net.ccbluex.liquidbounce.ui.client.altmanager.sub.GuiDonatorCape.Companion.transferCode
-import net.ccbluex.liquidbounce.ui.client.altmanager.sub.altgenerator.GuiTheAltening.Companion.apiKey
+import net.ccbluex.liquidbounce.ui.client.altmanager.menus.GuiDonatorCape.Companion.capeEnabled
+import net.ccbluex.liquidbounce.ui.client.altmanager.menus.GuiDonatorCape.Companion.transferCode
+import net.ccbluex.liquidbounce.ui.client.altmanager.menus.altgenerator.GuiTheAltening.Companion.apiKey
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.value.AbstractValue

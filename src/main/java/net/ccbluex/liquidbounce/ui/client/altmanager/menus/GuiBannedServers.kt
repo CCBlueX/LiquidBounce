@@ -3,13 +3,13 @@
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
  * https://github.com/CCBlueX/LiquidBounce/
  */
-package net.ccbluex.liquidbounce.ui.client.altmanager.sub
+package net.ccbluex.liquidbounce.ui.client.altmanager.menus
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.file.FileManager.Companion.saveConfig
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
-import net.ccbluex.liquidbounce.utils.login.MinecraftAccount
+import net.ccbluex.liquidbounce.utils.login.WrappedMinecraftAccount
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiSlot
@@ -17,7 +17,7 @@ import net.minecraft.client.gui.GuiTextField
 import org.lwjgl.input.Keyboard
 import java.io.IOException
 
-class GuiBannedServers(private val prevGui: GuiScreen, private val account: MinecraftAccount) : GuiScreen()
+class GuiBannedServers(private val prevGui: GuiScreen, private val account: WrappedMinecraftAccount) : GuiScreen()
 {
     private lateinit var serversList: GuiServersList
 
@@ -49,9 +49,8 @@ class GuiBannedServers(private val prevGui: GuiScreen, private val account: Mine
 
         val middleScreen = (width shr 1).toFloat()
 
-        val accName = account.accountName
-        Fonts.font40.drawCenteredString("\u00A7cBanned servers\u00A78 of \u00A7a" + (accName ?: account.name), middleScreen, 6f, 0xffffff)
-        Fonts.font35.drawCenteredString("\u00A7a" + (accName ?: account.name) + "\u00A78 is \u00A7cbanned\u00A78 from \u00A7c" + serversList.getSize() + "\u00A7a servers.", middleScreen, 18f, 0xffffff)
+        Fonts.font40.drawCenteredString("\u00A7cBanned servers\u00A78 of \u00A7a" + account.name, middleScreen, 6f, 0xffffff)
+        Fonts.font35.drawCenteredString("\u00A7a" + account.name + "\u00A78 is \u00A7cbanned\u00A78 from \u00A7c" + serversList.size + "\u00A7a servers.", middleScreen, 18f, 0xffffff)
         Fonts.font35.drawCenteredString(status, middleScreen, 32f, 0xffffff)
 
         super.drawScreen(mouseX, mouseY, partialTicks)
@@ -132,7 +131,7 @@ class GuiBannedServers(private val prevGui: GuiScreen, private val account: Mine
         serversList.handleMouseInput()
     }
 
-    class GuiServersList internal constructor(prevGui: GuiBannedServers, private val account: MinecraftAccount) : GuiSlot(mc, prevGui.width, prevGui.height, 40, prevGui.height - 40, 15)
+    class GuiServersList internal constructor(prevGui: GuiBannedServers, private val account: WrappedMinecraftAccount) : GuiSlot(mc, prevGui.width, prevGui.height, 40, prevGui.height - 40, 15)
     {
         internal var selectedSlot = 0
             get()
@@ -163,7 +162,7 @@ class GuiBannedServers(private val prevGui: GuiScreen, private val account: Mine
         }
     }
 
-    private class GuiAddBanned(private val prevGui: GuiBannedServers, private val account: MinecraftAccount) : GuiScreen()
+    private class GuiAddBanned(private val prevGui: GuiBannedServers, private val account: WrappedMinecraftAccount) : GuiScreen()
     {
         private lateinit var name: GuiTextField
         var status = "\u00A77Idle..."
@@ -181,7 +180,7 @@ class GuiBannedServers(private val prevGui: GuiScreen, private val account: Mine
 
             val buttonList = screen.buttonList
 
-            buttonList.add(GuiButton(1, buttonX, quarterScreen + 96, "Add " + (if (account.accountName == null) account.name else account.accountName) + "'s banned server"))
+            buttonList.add(GuiButton(1, buttonX, quarterScreen + 96, "Add ${account.name}'s banned server"))
             buttonList.add(GuiButton(0, buttonX, quarterScreen + 120, "Back"))
 
             name = GuiTextField(2, Fonts.font40, buttonX, 60, 200, 20).apply {
@@ -244,7 +243,7 @@ class GuiBannedServers(private val prevGui: GuiScreen, private val account: Mine
 
                     saveConfig(LiquidBounce.fileManager.accountsConfig)
 
-                    prevGui.status = "\u00A7aAdded banned server \u00A7c" + server + " \u00A7aof " + (if (account.accountName == null) account.name else account.accountName) + "\u00A7c."
+                    prevGui.status = "\u00A7aAdded banned server \u00A7c$server \u00A7aof ${account.name}\u00A7c."
 
                     mc.displayGuiScreen(prevGui)
                 }

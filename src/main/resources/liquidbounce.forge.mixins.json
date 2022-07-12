@@ -53,7 +53,6 @@
         "item.MixinMixinItemStack",
 
         "network.MixinFMLEventChannel",
-        "network.MixinNetHandlerLoginClient",
         "network.MixinNetHandlerPlayClient",
         "network.MixinNetworkManager",
         "network.MixinNetworkPlayerInfo",

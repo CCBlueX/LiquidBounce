@@ -10,6 +10,7 @@ import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Random;
 
+import com.google.gson.JsonObject;
 import com.mojang.authlib.Agent;
 import com.mojang.authlib.UserAuthentication;
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
@@ -24,14 +25,16 @@ import net.ccbluex.liquidbounce.features.special.AntiModDisable;
 import net.ccbluex.liquidbounce.features.special.AutoReconnect;
 import net.ccbluex.liquidbounce.file.FileManager;
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager;
-import net.ccbluex.liquidbounce.ui.client.altmanager.sub.altgenerator.GuiTheAltening;
+import net.ccbluex.liquidbounce.ui.client.altmanager.menus.altgenerator.GuiTheAltening;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.ServerUtils;
-import net.ccbluex.liquidbounce.utils.login.LoginUtils;
-import net.ccbluex.liquidbounce.utils.login.MinecraftAccount;
+import net.ccbluex.liquidbounce.utils.login.WrappedMinecraftAccount;
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiDisconnected;
+import net.minecraft.client.gui.GuiMainMenu;
+import net.minecraft.client.gui.GuiMultiplayer;
+import net.minecraft.util.IChatComponent;
 import net.minecraft.util.Session;
 import net.minecraftforge.fml.client.config.GuiSlider;
 
@@ -41,6 +44,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import me.liuli.elixir.account.CrackedAccount;
+import me.liuli.elixir.account.MinecraftAccount;
+
 @Mixin(GuiDisconnected.class)
 public abstract class MixinGuiDisconnected extends MixinGuiScreen
 {
@@ -49,6 +55,7 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen
     @Shadow
     private int field_175353_i;
 
+    private final Random random = new Random();
     private GuiButton reconnectButton;
     private GuiSlider autoReconnectDelaySlider;
     private GuiButton forgeBypassButton;
@@ -112,20 +119,40 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen
                     }
                     catch (final Throwable throwable)
                     {
-                        ClientUtils.logger.error("Failed to login into random account from TheAltening.", throwable);
+                        ClientUtils.getLogger().error("Failed to login into random account from TheAltening.", throwable);
                     }
                 }
 
-                final List<MinecraftAccount> accounts = LiquidBounce.fileManager.accountsConfig.getAccounts();
+                final List<WrappedMinecraftAccount> accounts = LiquidBounce.fileManager.accountsConfig.getAccounts();
                 if (accounts.isEmpty())
                     break;
 
-                final MinecraftAccount minecraftAccount = accounts.get(new Random().nextInt(accounts.size()));
-                GuiAltManager.login(minecraftAccount);
+                final MinecraftAccount minecraftAccount = accounts.get(random.nextInt(accounts.size()));
+
+                GuiAltManager.Companion.login(minecraftAccount, () ->
+                {
+                    LiquidBounce.eventManager.callEvent(new SessionEvent());
+                    ServerUtils.connectToLastServer();
+                    return null;
+                }, e ->
+                {
+                    final JsonObject jsonObject = new JsonObject();
+                    jsonObject.addProperty("text", e.getMessage());
+
+                    mc.displayGuiScreen(new GuiDisconnected(new GuiMultiplayer(new GuiMainMenu()), e.getMessage(), IChatComponent.Serializer.jsonToComponent(jsonObject.toString())));
+                    return null;
+                }, () -> null);
+
                 ServerUtils.connectToLastServer();
                 break;
             case 4:
-                LoginUtils.loginCracked(RandomUtils.randomString(RandomUtils.nextInt(5, 16)));
+                final CrackedAccount crackedAccount = new CrackedAccount();
+                crackedAccount.setName(RandomUtils.randomString(RandomUtils.nextInt(5, 16)));
+                crackedAccount.update();
+
+                mc.session = new Session(crackedAccount.getSession().getUsername(), crackedAccount.getSession().getUuid(),
+                        crackedAccount.getSession().getToken(), crackedAccount.getSession().getType());
+                LiquidBounce.eventManager.callEvent(new SessionEvent());
                 ServerUtils.connectToLastServer();
                 break;
             case 5:

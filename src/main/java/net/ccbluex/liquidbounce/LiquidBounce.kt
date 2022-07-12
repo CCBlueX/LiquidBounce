@@ -208,7 +208,7 @@ object LiquidBounce
         // ClientUtils.disableFastRender()
 
         updateProgress("Loading Alt Generators")
-        GuiAltManager.loadGenerators()
+        GuiAltManager.loadActiveGenerators()
 
         // Setup Discord RPC
         if (clientRichPresence.showRichPresenceValue)

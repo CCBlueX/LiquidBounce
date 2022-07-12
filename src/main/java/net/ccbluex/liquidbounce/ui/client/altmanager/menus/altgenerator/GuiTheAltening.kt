@@ -3,7 +3,7 @@
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
  * https://github.com/CCBlueX/LiquidBounce/
  */
-package net.ccbluex.liquidbounce.ui.client.altmanager.sub.altgenerator
+package net.ccbluex.liquidbounce.ui.client.altmanager.menus.altgenerator
 
 import com.mojang.authlib.Agent.MINECRAFT
 import com.mojang.authlib.exceptions.AuthenticationException
@@ -18,11 +18,12 @@ import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.elements.GuiPasswordField
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils
-import net.ccbluex.liquidbounce.utils.login.MinecraftAccount
+import net.ccbluex.liquidbounce.utils.login.TheAlteningAccount
+import net.ccbluex.liquidbounce.utils.login.unwrapped
+import net.ccbluex.liquidbounce.utils.login.wrapped
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.runAsync
-import net.mcleaks.MCLeaks
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiTextField
@@ -156,7 +157,6 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen()
 
                             mc.session = Session(yggdrasilUserAuthentication.selectedProfile.name, yggdrasilUserAuthentication.selectedProfile.id.toString(), yggdrasilUserAuthentication.authenticatedToken, "mojang")
                             LiquidBounce.eventManager.callEvent(SessionEvent())
-                            MCLeaks.remove()
 
                             prevGui.status = "\u00A7aYour name is now \u00A7b\u00A7l${yggdrasilUserAuthentication.selectedProfile.name}\u00A7c."
                             mc.displayGuiScreen(prevGui)
@@ -192,7 +192,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen()
                 loginButton.enabled = false
                 generateButton.enabled = false
 
-                val account = MinecraftAccount(MinecraftAccount.AltServiceType.THEALTENING, tokenField.text, LiquidBounce.CLIENT_NAME)
+                val account = TheAlteningAccount().also { it.token = tokenField.text }
 
                 runAsync {
                     try
@@ -212,26 +212,22 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen()
                         {
                             yggdrasilUserAuthentication.logIn()
 
-                            account.accountName = yggdrasilUserAuthentication.selectedProfile.name
+                            account.name = yggdrasilUserAuthentication.selectedProfile.name
 
                             mc.session = Session(yggdrasilUserAuthentication.selectedProfile.name, yggdrasilUserAuthentication.selectedProfile.id.toString(), yggdrasilUserAuthentication.authenticatedToken, "mojang")
                             LiquidBounce.eventManager.callEvent(SessionEvent())
-                            MCLeaks.remove()
 
                             prevGui.status = "\u00A7aYour name is now \u00A7b\u00A7l${yggdrasilUserAuthentication.selectedProfile.name}\u00A7c."
                             mc.displayGuiScreen(prevGui)
 
                             if (button.id == 4)
                             {
-                                var moreMessage = ""
-                                val alteningAccountName = account.name
-                                val alteningAccountNickName = account.accountName
-                                if (LiquidBounce.fileManager.accountsConfig.accounts.filter { acc -> alteningAccountName.equals(acc.name, true) }.any { acc -> alteningAccountNickName.equals(acc.accountName ?: "", true) }) moreMessage = " But the account has already been added."
+                                val moreMessage: String = if (LiquidBounce.fileManager.accountsConfig.accounts.any { acc -> acc.unwrapped is TheAlteningAccount && account.token == (acc.unwrapped as TheAlteningAccount).token && account.name == acc.name }) " But the account has already been added."
                                 else
                                 {
-                                    LiquidBounce.fileManager.accountsConfig.accounts.add(account)
+                                    LiquidBounce.fileManager.accountsConfig.accounts.add(account.wrapped)
                                     FileManager.saveConfig(LiquidBounce.fileManager.accountsConfig)
-                                    moreMessage = " Account added to the list."
+                                    " Account added to the list."
                                 }
 
                                 "\u00A7aYour name is now \u00A7b\u00A7l${yggdrasilUserAuthentication.selectedProfile.name}\u00A7c.$moreMessage"

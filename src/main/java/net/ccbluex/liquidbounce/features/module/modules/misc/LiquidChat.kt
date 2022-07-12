@@ -237,7 +237,7 @@ class LiquidChat : Module()
                 client.connect()
 
                 if (jwtValue.get()) client.loginJWT(jwtToken)
-                else if (UserUtils.isValidToken(mc.session.token)) client.loginMojang()
+                else if (UserUtils.isValidTokenOffline(mc.session.token)) client.loginMojang()
             }
             catch (cause: Exception)
             {

@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.cape
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.ui.client.altmanager.sub.GuiDonatorCape
+import net.ccbluex.liquidbounce.ui.client.altmanager.menus.GuiDonatorCape
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.minecraft.client.renderer.IImageBuffer
