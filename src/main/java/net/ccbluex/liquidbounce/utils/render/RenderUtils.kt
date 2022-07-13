@@ -26,7 +26,6 @@ import net.minecraft.world.World
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL14
 import java.awt.Color
-import java.util.*
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -870,7 +869,7 @@ object RenderUtils : MinecraftInstance()
     @JvmStatic
     fun renderItemEnchantments(font: FontRenderer, stack: ItemStack, x: Int, y: Int)
     {
-        val texts = EnchantmentHelper.getEnchantments(stack).asSequence().map { (id, lvl) -> Maps.ENCHANTMENT_SHORT_NAME[id]?.let { "${it.lowercase(Locale.getDefault())}$lvl" } ?: "" }.chunked(2).take(3)
+        val texts = EnchantmentHelper.getEnchantments(stack).asSequence().map { (id, lvl) -> Maps.ENCHANTMENT_SHORT_NAME[id]?.let { "${it.lowercase()}$lvl" } ?: "" }.chunked(2).take(3)
 
         GlStateManager.disableLighting()
         GlStateManager.disableDepth()

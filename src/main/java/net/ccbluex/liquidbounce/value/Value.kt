@@ -17,7 +17,6 @@ import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.minecraft.client.gui.FontRenderer
 import java.awt.Color
-import java.util.*
 
 abstract class AbstractValue(var name: String, val description: String = "")
 {
@@ -314,7 +313,7 @@ open class RGBColorValue(name: String, r: Int, g: Int, b: Int, private val alias
 
     override fun adaptToValue(name: String): Value<*>?
     {
-        val checkedAliases = aliases?.toList()?.map(String::this.lowercase(Locale.getDefault())) ?: return null
+        val checkedAliases = aliases?.toList()?.map(String::lowercase) ?: return null
 
         return when (name)
         {
@@ -401,7 +400,7 @@ open class RGBAColorValue(name: String, r: Int, g: Int, b: Int, a: Int, private 
 
     override fun adaptToValue(name: String): Value<*>?
     {
-        val checkedAliases = aliases?.toList()?.mapNotNull { it?.lowercase(Locale.getDefault()) } ?: return null
+        val checkedAliases = aliases?.toList()?.mapNotNull { it?.lowercase() } ?: return null
 
         return when (name)
         {
@@ -531,7 +530,7 @@ open class IntegerRangeValue(name: String, minValue: Int, maxValue: Int, val min
 
     override fun adaptToValue(name: String): Value<*>?
     {
-        val checkedAliases = aliases?.toList()?.map(String::this.lowercase(Locale.getDefault())) ?: return null
+        val checkedAliases = aliases?.toList()?.map(String::lowercase) ?: return null
 
         return when (name)
         {
@@ -628,7 +627,7 @@ open class FloatRangeValue(name: String, minValue: Float, maxValue: Float, val m
 
     override fun adaptToValue(name: String): Value<*>?
     {
-        val checkedAliases = aliases?.toList()?.map(String::this.lowercase(Locale.getDefault())) ?: return null
+        val checkedAliases = aliases?.toList()?.map(String::lowercase) ?: return null
 
         return when (name)
         {

@@ -78,7 +78,7 @@ public class MixinFontRenderer
             GL20.glUseProgram(RainbowFontShader.INSTANCE.getProgramId());
     }
 
-    @ModifyVariable(method = "renderString", at = @At("HEAD"), require = 1, ordinal = 0)
+    @ModifyVariable(method = "renderString", at = @At("HEAD"), require = 1, ordinal = 0, argsOnly = true)
     private String renderString_handleTextEvent(final String string)
     {
         if (string == null)
@@ -92,7 +92,7 @@ public class MixinFontRenderer
         return textEvent.getText();
     }
 
-    @ModifyVariable(method = "getStringWidth", at = @At("HEAD"), require = 1, ordinal = 0)
+    @ModifyVariable(method = "getStringWidth", at = @At("HEAD"), require = 1, ordinal = 0, argsOnly = true)
     private String getStringWidth_handleTextEvent(final String string)
     {
         if (string == null)

@@ -14,8 +14,6 @@ import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import org.lwjgl.input.Keyboard
 import java.io.IOException
-import java.util.*
-import kotlin.collections.HashMap
 
 class GuiServerStatus(private val prevGui: GuiScreen) : GuiScreen()
 {
@@ -53,7 +51,7 @@ class GuiServerStatus(private val prevGui: GuiScreen) : GuiScreen()
         {
             val color = status[address]
             val text = "${
-                when (color?.lowercase(Locale.getDefault()))
+                when (color?.lowercase())
                 {
                     "green" -> "\u00A7a"
                     "yellow" -> "\u00A7e"
@@ -61,7 +59,7 @@ class GuiServerStatus(private val prevGui: GuiScreen) : GuiScreen()
                     else -> color
                 }
             }$address: ${
-                when (color?.lowercase(Locale.getDefault()))
+                when (color?.lowercase())
                 {
                     "green" -> "Online and Stable"
                     "yellow" -> "Slow or Unstable"

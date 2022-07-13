@@ -55,9 +55,6 @@ class MurderDetector : Module()
 
     companion object
     {
-        fun isMurder(item: Item): Boolean
-        {
-            return item !is ItemMap && item !is ItemBow && arrayOf("item.ingotGold", "item.arrow", "item.potion", "item.paper", "tile.tnt", "item.web", "item.bed", "item.compass", "item.comparator", "item.shovelWood").none { item.unlocalizedName.equals(it, ignoreCase = true) }
-        }
+        fun isMurder(item: Item): Boolean = item !is ItemMap && item !is ItemBow && arrayOf("item.ingotGold", "item.arrow", "item.potion", "item.paper", "tile.tnt", "item.web", "item.bed", "item.compass", "item.comparator", "item.shovelWood").none { item.unlocalizedName.equals(it, ignoreCase = true) }
     }
 }

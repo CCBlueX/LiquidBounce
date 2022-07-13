@@ -228,7 +228,7 @@ class ModuleManager : Listenable
     {
         modules += module
         moduleClassMap[module.javaClass] = module
-        moduleNameMap[module.name.lowercase(Locale.getDefault())] = module
+        moduleNameMap[module.name.lowercase()] = module
 
         generateCommand(module)
         LiquidBounce.eventManager.registerListener(module)
@@ -272,7 +272,7 @@ class ModuleManager : Listenable
     {
         modules.remove(module)
         moduleClassMap.remove(module::class.java)
-        moduleNameMap.remove(module.name.lowercase(Locale.getDefault()))
+        moduleNameMap.remove(module.name.lowercase())
         LiquidBounce.eventManager.unregisterListener(module)
     }
 
@@ -300,7 +300,7 @@ class ModuleManager : Listenable
     /**
      * Get module by [moduleName]
      */
-    fun getModule(moduleName: String?) = moduleName?.let { moduleNameMap[it.lowercase(Locale.getDefault())] }
+    fun getModule(moduleName: String?) = moduleName?.let { moduleNameMap[it.lowercase()] }
 
     /**
      * Module related events

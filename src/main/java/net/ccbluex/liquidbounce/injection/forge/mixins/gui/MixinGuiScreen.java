@@ -67,7 +67,7 @@ public abstract class MixinGuiScreen extends Gui
 
     @SuppressWarnings("NoopMethodInAbstractClass")
     @Shadow
-    public void drawScreen(int mouseX, int mouseY, float partialTicks)
+    public void drawScreen(final int mouseX, final int mouseY, final float partialTicks)
     {
     }
 

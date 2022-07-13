@@ -40,12 +40,12 @@ class GuiModsMenu(private val prevGui: GuiScreen) : GuiScreen()
             2 ->
             {
                 val rpc = LiquidBounce.clientRichPresence
-                rpc.showRichPresenceValue = when (val state = !rpc.showRichPresenceValue)
+                rpc.showRichPresenceValue = when (!rpc.showRichPresenceValue)
                 {
                     false ->
                     {
                         rpc.shutdown()
-                        changeDisplayState(id, state)
+                        changeDisplayState(id, false)
                         false
                     }
 

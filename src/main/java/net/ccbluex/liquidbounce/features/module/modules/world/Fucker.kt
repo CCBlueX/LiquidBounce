@@ -33,7 +33,6 @@ import net.minecraft.util.EnumFacing
 import net.minecraft.util.Vec3
 import net.minecraft.world.World
 import org.lwjgl.opengl.GL11
-import java.util.*
 
 @ModuleInfo(name = "Fucker", description = "Destroys selected blocks around you. (a.k.a.  IDNuker, BedNuker, EggNuker, BedDestroyer, etc.)", category = ModuleCategory.WORLD)
 object Fucker : Module()
@@ -112,7 +111,7 @@ object Fucker : Module()
         {
             val blockPos = theWorld.rayTraceBlocks(thePlayer.getPositionEyes(1F), rotations.vec, false, false, true)?.blockPos
 
-            if (blockPos != null && blockPos !is BlockAir)
+            if (blockPos != null && theWorld.getBlock(blockPos) !is BlockAir)
             {
                 if (newPos.x != blockPos.x || newPos.y != blockPos.y || newPos.z != blockPos.z) surroundings = true
 
@@ -123,7 +122,7 @@ object Fucker : Module()
         }
 
         // Reset switch timer when position changed
-        if (currentPos != newPos)
+        if (this.currentPos != newPos)
         {
             currentDamage = 0F
             switchTimer.reset()
@@ -275,7 +274,7 @@ object Fucker : Module()
      */
     private fun isHitable(theWorld: World, thePlayer: Entity, blockPos: BlockPos): Boolean
     {
-        return when (throughWallsValue.get().lowercase(Locale.getDefault()))
+        return when (throughWallsValue.get().lowercase())
         {
             "raycast" ->
             {

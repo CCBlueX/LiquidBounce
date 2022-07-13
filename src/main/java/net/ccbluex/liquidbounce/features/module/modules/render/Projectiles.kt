@@ -38,7 +38,6 @@ import org.lwjgl.opengl.GL11
 import org.lwjgl.util.glu.Cylinder
 import org.lwjgl.util.glu.GLU
 import java.awt.Color
-import java.util.*
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.max
@@ -88,7 +87,7 @@ class Projectiles : Module()
             val (motionMultiplier, motionFactor, motionSlowdown, gravity, size, inaccuracy) = getProjectileInfo(thePlayer, thePlayer.heldItem ?: return@run, partialTicks) ?: return@run
 
             val alpha = colorValue.getAlpha()
-            val color = when (colorModeValue.get().lowercase(Locale.getDefault()))
+            val color = when (colorModeValue.get().lowercase())
             {
                 "bowpower" -> ColorUtils.applyAlphaChannel(ColorUtils.blendColors(floatArrayOf(0f, 0.5f, 1f), arrayOf(Color.RED, Color.YELLOW, Color.GREEN), (motionFactor / 30) * 10).rgb, alpha)
                 "rainbow" -> ColorUtils.rainbowRGB(alpha = alpha, speed = colorRainbowSpeedValue.get(), saturation = colorRainbowSaturationValue.get(), brightness = colorRainbowBrightnessValue.get())
@@ -233,7 +232,7 @@ class Projectiles : Module()
             val blockState = theWorld.getBlockState(BlockPos(posX, posY, posZ))
 
             // Check is next position water
-            if (blockState.block.getMaterial() == Material.water)
+            if (blockState.block.material == Material.water)
             {
                 // Update motion in water
                 motionX *= 0.6
@@ -347,12 +346,12 @@ class Projectiles : Module()
 
             projectile is EntityThrowable ->
             {
-                ProjectileInfo(motionFactor = projectile.velocity, gravity = projectile.gravityVelocity, size = max(projectile.width, projectile.height), inaccuracy = projectile.inaccuracy) to when
+                ProjectileInfo(motionFactor = projectile.velocity, gravity = projectile.gravityVelocity, size = max(projectile.width, projectile.height), inaccuracy = projectile.inaccuracy) to when (projectile)
                 {
-                    projectile is EntityEgg -> -2109797
-                    projectile is EntityEnderPearl -> -6750004
-                    projectile is EntityPotion -> ColorUtils.applyAlphaChannel(getPotionLiquidColor(projectile, false), 255)
-                    projectile is EntityExpBottle -> -3539055
+                    is EntityEgg -> -2109797
+                    is EntityEnderPearl -> -6750004
+                    is EntityPotion -> ColorUtils.applyAlphaChannel(getPotionLiquidColor(projectile, false), 255)
+                    is EntityExpBottle -> -3539055
                     else -> -1
                 }
             }

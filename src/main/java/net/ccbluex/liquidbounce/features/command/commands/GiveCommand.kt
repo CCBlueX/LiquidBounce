@@ -83,7 +83,7 @@ class GiveCommand : Command("give", "item", "i", "get")
 
         return when (args.size)
         {
-            1 -> return Item.itemRegistry.keys.map { it.resourcePath.lowercase(Locale.getDefault()) }.filter { it.startsWith(args[0], true) }.toList()
+            1 -> return Item.itemRegistry.keys.map { it.resourcePath.lowercase() }.filter { it.startsWith(args[0], true) }.toList()
             else -> emptyList()
         }
     }

@@ -64,7 +64,8 @@ class DamageParticle : Module()
     @EventTarget
     fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
     {
-        synchronized(particles) {            val xRotate = if (mc.gameSettings.thirdPersonView == 2) -1.0f else 1.0f
+        synchronized(particles) {
+            val xRotate = if (mc.gameSettings.thirdPersonView == 2) -1.0f else 1.0f
 
             val renderManager = mc.renderManager
             val renderPosX = renderManager.renderPosX

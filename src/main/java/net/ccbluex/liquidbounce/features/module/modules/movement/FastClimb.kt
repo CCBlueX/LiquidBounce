@@ -21,7 +21,6 @@ import net.minecraft.block.BlockLadder
 import net.minecraft.block.BlockVine
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
-import java.util.*
 
 @ModuleInfo(name = "FastClimb", description = "Allows you to climb up ladders and vines faster.", category = ModuleCategory.MOVEMENT)
 class FastClimb : Module()
@@ -33,7 +32,7 @@ class FastClimb : Module()
     @EventTarget
     fun onMove(event: MoveEvent)
     {
-        val mode = modeValue.get().lowercase(Locale.getDefault())
+        val mode = modeValue.get().lowercase()
 
         val theWorld = mc.theWorld ?: return
         val thePlayer = mc.thePlayer ?: return

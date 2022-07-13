@@ -40,7 +40,6 @@ import org.lwjgl.input.Keyboard
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
 import java.io.IOException
-import java.util.*
 import java.util.function.Consumer
 
 class GuiAltManager(private val prevGui: GuiScreen?) : GuiScreen()
@@ -350,7 +349,7 @@ class GuiAltManager(private val prevGui: GuiScreen?) : GuiScreen()
                 if (search == null || search.isEmpty()) return LiquidBounce.fileManager.accountsConfig.accounts
 
                 // Apply search filter
-                search = search.lowercase(Locale.getDefault())
+                search = search.lowercase()
 
                 return LiquidBounce.fileManager.accountsConfig.accounts.filter { it.name.contains(search, ignoreCase = true) || (it.represented is MojangAccount && it.represented.email.contains(search, ignoreCase = true)) }
             }
@@ -434,7 +433,7 @@ class GuiAltManager(private val prevGui: GuiScreen?) : GuiScreen()
             try
             {
                 // Read versions json from cloud
-                val jsonElement = JsonParser().parse(HttpUtils.get(LiquidBounce.CLIENT_CLOUD + "/generators.json"))
+                val jsonElement = JsonParser().parse(HttpUtils[LiquidBounce.CLIENT_CLOUD + "/generators.json"])
 
                 // Check json is valid object
                 if (jsonElement.isJsonObject)

@@ -16,7 +16,6 @@ import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
-import java.util.*
 
 @ModuleInfo(name = "Derp", description = "Makes it look like you were derping around.", category = ModuleCategory.FUN)
 class Derp : Module()
@@ -77,7 +76,7 @@ class Derp : Module()
                 else thePlayer.rotationYaw) + 180f + yawOffset) % 360f
             }
 
-            return floatArrayOf(when (yawModeValue.get().lowercase(Locale.getDefault()))
+            return floatArrayOf(when (yawModeValue.get().lowercase())
             {
                 "random" -> thePlayer.rotationYaw + RandomUtils.nextFloat(-180f, 180f)
                 "static" -> yaw.value
@@ -92,7 +91,7 @@ class Derp : Module()
                 }
 
                 else -> thePlayer.rotationYaw
-            }, when (pitchModeValue.get().lowercase(Locale.getDefault()))
+            }, when (pitchModeValue.get().lowercase())
             {
                 "static" -> pitchOffsetValue.get()
                 "random" -> RandomUtils.nextFloat(-90f, 90f)

@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.renderer.GlStateManager
 import java.awt.Color
-import java.util.*
 
 /**
  * CustomHUD Arraylist element
@@ -197,7 +196,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 
             val renderText = { text: String, x: Float, y: Float, colorMode: String, index: Int, randomColorSupplier: () -> Int, customColor: Int ->
                 var useRainbowShader = false
-                val color = when (colorMode.lowercase(Locale.getDefault()))
+                val color = when (colorMode.lowercase())
                 {
                     "rainbowshader" ->
                     {
@@ -217,7 +216,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
 
             val renderRect = { xStart: Float, yStart: Float, xEnd: Float, yEnd: Float, colorMode: String, index: Int, randomColorSupplier: () -> Int, customColor: Int, extra: (Int) -> Unit ->
                 var useRainbowShader = false
-                val color = when (colorMode.lowercase(Locale.getDefault()))
+                val color = when (colorMode.lowercase())
                 {
                     "rainbowshader" ->
                     {
@@ -273,7 +272,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
                         when
                         {
                             leftRect || frame -> renderRect(frameStartX, yPos, xPos - 2F, yPos + textHeight, rectColorMode, index, randomColorSupplier, rectCustomColor, renderFrame)
-                            rightRect -> renderRect(-rectWidth, yPos, 0F, yPos + textHeight, rectColorMode, index, randomColorSupplier, rectCustomColor, renderFrame)
+                            else -> renderRect(-rectWidth, yPos, 0F, yPos + textHeight, rectColorMode, index, randomColorSupplier, rectCustomColor, renderFrame)
                         }
                     }
                 }
@@ -319,7 +318,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
                         when
                         {
                             leftRect -> renderRect(0F, yPos - 1F, rectWidth, yPos + textHeight, rectColorMode, index, randomColorSupplier, rectCustomColor, renderFrame)
-                            rightRect || frame -> renderRect(xPos + width + 2F, yPos, frameEndX, yPos + textHeight, rectColorMode, index, randomColorSupplier, rectCustomColor, renderFrame)
+                            else -> renderRect(xPos + width + 2F, yPos, frameEndX, yPos + textHeight, rectColorMode, index, randomColorSupplier, rectCustomColor, renderFrame)
                         }
                     }
                 }
@@ -367,13 +366,13 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
     /**
      * @author eric0210
      */
-    private fun applyVariance(string: String): String = when (textVarianceModeValue.get().lowercase(Locale.getDefault()))
+    private fun applyVariance(string: String): String = when (textVarianceModeValue.get().lowercase())
     {
-        "lowercase" -> string.lowercase(Locale.getDefault())
-        "uppercase" -> string.uppercase(Locale.getDefault())
-        "upper-except-i" -> string.uppercase(Locale.getDefault()).replace('I', 'i', ignoreCase = false)
-        "upper-except-first" -> if (string.length <= 1) string.lowercase(Locale.getDefault()) else string[0].lowercaseChar() + string.substring(1).uppercase(Locale.getDefault())
-        "upper-except-i-and-first" -> if (string.length <= 1) string.lowercase(Locale.getDefault()) else string[0].lowercaseChar() + string.substring(1).uppercase(Locale.getDefault()).replace('I', 'i', ignoreCase = false)
+        "lowercase" -> string.lowercase()
+        "uppercase" -> string.uppercase()
+        "upper-except-i" -> string.uppercase().replace('I', 'i', ignoreCase = false)
+        "upper-except-first" -> if (string.length <= 1) string.lowercase() else string[0].lowercaseChar() + string.substring(1).uppercase()
+        "upper-except-i-and-first" -> if (string.length <= 1) string.lowercase() else string[0].lowercaseChar() + string.substring(1).uppercase().replace('I', 'i', ignoreCase = false)
         else -> string
     }
 
@@ -384,7 +383,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F, side: Side 
     {
         val originalTagString = if (!tagsModeValue.get().equals("Off", ignoreCase = true)) module.tag ?: return "" else return ""
 
-        return if (originalTagString.isNotBlank()) when (tagsModeValue.get().lowercase(Locale.getDefault()))
+        return if (originalTagString.isNotBlank()) when (tagsModeValue.get().lowercase())
         {
             "square-bracket" -> "[$originalTagString\u00A7r]"
             "round-bracket" -> "($originalTagString\u00A7r)"

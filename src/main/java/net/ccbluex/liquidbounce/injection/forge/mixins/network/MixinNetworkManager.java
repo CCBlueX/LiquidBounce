@@ -66,7 +66,7 @@ public abstract class MixinNetworkManager implements IMixinNetworkManager
     @Shadow
     protected abstract void dispatchPacket(Packet<?> inPacket, GenericFutureListener<? extends Future<? super Void>>[] futureListeners);
 
-    @Inject(method = "channelRead0", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "channelRead0*", at = @At("HEAD"), cancellable = true)
     private void handlePacketEvent_Receive(final ChannelHandlerContext context, final Packet<?> packet, final CallbackInfo callback)
     {
         // In-coming(Received from the server) packet name starts with 'S' (Server) (example: S00PacketKeepAlive)

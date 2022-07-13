@@ -21,7 +21,6 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.ai.attributes.IAttribute;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
-import net.minecraft.item.ItemStack;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.util.BlockPos;
@@ -84,9 +83,6 @@ public abstract class MixinEntityLivingBase extends MixinEntity implements IMixi
 
     @Shadow
     public abstract float getHealth();
-
-    @Shadow
-    public abstract ItemStack getHeldItem();
 
     @Shadow
     public abstract void heal(float healAmount);

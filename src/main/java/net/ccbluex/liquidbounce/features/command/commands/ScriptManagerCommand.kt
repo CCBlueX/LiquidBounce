@@ -16,9 +16,7 @@ import org.apache.commons.io.IOUtils
 import java.awt.Desktop
 import java.io.File
 import java.io.FileOutputStream
-import java.util.*
 import java.util.zip.ZipFile
-import kotlin.collections.ArrayList
 
 class ScriptManagerCommand : Command("scriptmanager", "scripts")
 {
@@ -34,7 +32,7 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts")
 
         if (args.size > 1)
         {
-            when (args[1].lowercase(Locale.getDefault()))
+            when (args[1].lowercase())
             {
                 "import" ->
                 {

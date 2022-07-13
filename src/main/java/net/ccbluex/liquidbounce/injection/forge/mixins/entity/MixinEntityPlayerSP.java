@@ -216,7 +216,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer
     private Sprint sprint;
 
     @Inject(method = "onLivingUpdate", at = @At("HEAD"))
-    private void injectUpdateEvent(CallbackInfo ci)
+    private void injectUpdateEvent(final CallbackInfo ci)
     {
         worldObj.theProfiler.startSection("LiquidBounce-UpdateEvent");
         LiquidBounce.eventManager.callEvent(new UpdateEvent(), true);

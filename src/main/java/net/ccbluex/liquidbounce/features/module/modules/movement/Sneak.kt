@@ -17,7 +17,6 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.settings.GameSettings
 import net.minecraft.network.play.client.C0BPacketEntityAction
-import java.util.*
 
 @ModuleInfo(name = "Sneak", description = "Automatically sneaks all the time.", category = ModuleCategory.MOVEMENT)
 class Sneak : Module()
@@ -43,7 +42,7 @@ class Sneak : Module()
 
         val netHandler = mc.netHandler
 
-        when (modeValue.get().lowercase(Locale.getDefault()))
+        when (modeValue.get().lowercase())
         {
             "legit" -> mc.gameSettings.keyBindSneak.pressed = true
 
@@ -91,7 +90,7 @@ class Sneak : Module()
     {
         val player = mc.thePlayer ?: return
 
-        when (modeValue.get().lowercase(Locale.getDefault()))
+        when (modeValue.get().lowercase())
         {
             "legit" ->
             {

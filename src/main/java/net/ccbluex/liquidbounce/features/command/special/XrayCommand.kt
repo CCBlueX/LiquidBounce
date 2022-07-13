@@ -5,7 +5,6 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.modules.render.XRay
 import net.ccbluex.liquidbounce.file.FileManager
 import net.minecraft.block.Block
-import java.util.*
 
 class XrayCommand : Command("xray")
 {
@@ -21,7 +20,7 @@ class XrayCommand : Command("xray")
 
         if (args.size > 1)
         {
-            when (args[1].lowercase(Locale.getDefault()))
+            when (args[1].lowercase())
             {
                 "add" ->
                 {
@@ -151,10 +150,10 @@ class XrayCommand : Command("xray")
                 val blockRegistryKeys = Block.blockRegistry.keys
                 val xrayBlocks = xRay.xrayBlocks
 
-                when (args[0].lowercase(Locale.getDefault()))
+                when (args[0].lowercase())
                 {
-                    "add" -> return blockRegistryKeys.asSequence().map { it.resourcePath.lowercase(Locale.getDefault()) }.filter { !xrayBlocks.contains((Block.getBlockFromName(it) ?: return@filter false)) }.filter { it.startsWith(args[1], true) }.toList()
-                    "remove" -> return blockRegistryKeys.asSequence().map { it.resourcePath.lowercase(Locale.getDefault()) }.filter { xrayBlocks.contains(Block.getBlockFromName(it) ?: return@filter false) }.filter { it.startsWith(args[1], true) }.toList()
+                    "add" -> return blockRegistryKeys.asSequence().map { it.resourcePath.lowercase() }.filter { !xrayBlocks.contains((Block.getBlockFromName(it) ?: return@filter false)) }.filter { it.startsWith(args[1], true) }.toList()
+                    "remove" -> return blockRegistryKeys.asSequence().map { it.resourcePath.lowercase() }.filter { xrayBlocks.contains(Block.getBlockFromName(it) ?: return@filter false) }.filter { it.startsWith(args[1], true) }.toList()
                     else -> emptyList()
                 }
             }

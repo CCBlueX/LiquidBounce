@@ -9,7 +9,6 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.Module
 import org.lwjgl.input.Keyboard
-import java.util.*
 
 class BindCommand : Command("bind")
 {
@@ -34,16 +33,16 @@ class BindCommand : Command("bind")
             val keyBinds = module.keyBinds
             if (args.size > 2)
             {
-                when (args[2].lowercase(Locale.getDefault()))
+                when (args[2].lowercase())
                 {
                     "add" -> if (args.size > 3)
                     {
                         (3 until args.size).forEach {
-                            val key = Keyboard.getKeyIndex(args[it].uppercase(Locale.getDefault()))
+                            val key = Keyboard.getKeyIndex(args[it].uppercase())
                             if (key != Keyboard.KEY_NONE) keyBinds.add(key)
                         }
 
-                        chat(thePlayer, "Bound module \u00A7a\u00A7l${module.name}\u00A73 to key(s) \u00A7a\u00A7l${keyBinds.joinToString { Keyboard.getKeyName(it) }}\u00A73.")
+                        chat(thePlayer, "Bound module \u00A7a\u00A7l${module.name}\u00A73 to key(s) \u00A7a\u00A7l${keyBinds.joinToString(transform = Keyboard::getKeyName)}\u00A73.")
                         playEdit()
                         return
                     }
@@ -51,7 +50,7 @@ class BindCommand : Command("bind")
                     "remove" -> if (args.size > 3)
                     {
                         (3 until args.size).forEach {
-                            val key = Keyboard.getKeyIndex(args[it].uppercase(Locale.getDefault()))
+                            val key = Keyboard.getKeyIndex(args[it].uppercase())
                             if (!keyBinds.remove(key))
                             {
                                 chat(thePlayer, "Module \u00A7a\u00A7l${module.name}\u00A73 hadn't bound to key \u00A7a\u00A7l${Keyboard.getKeyName(key)}\u00A73.")
@@ -59,7 +58,7 @@ class BindCommand : Command("bind")
                             }
                         }
 
-                        if (keyBinds.isEmpty()) chat(thePlayer, "Took all bounds from module \u00A7a\u00A7l${module.name}\u00A73.") else chat(thePlayer, "Bound module \u00A7a\u00A7l${module.name}\u00A73 to key(s) \u00A7a\u00A7l${keyBinds.joinToString { Keyboard.getKeyName(it) }}\u00A73.")
+                        if (keyBinds.isEmpty()) chat(thePlayer, "Took all bounds from module \u00A7a\u00A7l${module.name}\u00A73.") else chat(thePlayer, "Bound module \u00A7a\u00A7l${module.name}\u00A73 to key(s) \u00A7a\u00A7l${keyBinds.joinToString(transform = Keyboard::getKeyName)}\u00A73.")
                         playEdit()
                     }
 
@@ -72,7 +71,7 @@ class BindCommand : Command("bind")
                     }
                 }
             }
-            else chat(thePlayer, "Module \u00A7a\u00A7l${module.name}\u00A73 is bound to key(s) \u00A7a\u00A7l${keyBinds.joinToString { Keyboard.getKeyName(it) }}\u00A73.")
+            else chat(thePlayer, "Module \u00A7a\u00A7l${module.name}\u00A73 is bound to key(s) \u00A7a\u00A7l${keyBinds.joinToString(transform = Keyboard::getKeyName)}\u00A73.")
         }
 
         chatSyntax(thePlayer, arrayOf("<module> <add/remove> <keys...>", "<module> <clear>"))

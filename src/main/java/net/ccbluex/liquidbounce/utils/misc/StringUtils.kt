@@ -15,7 +15,7 @@ import kotlin.math.floor
 object StringUtils
 {
     @JvmStatic
-    val URL_PATTERN: Pattern = Pattern.compile("((?:[a-z\\d]{2,}://)?(?:(?:\\d{1,3}\\.){3}\\d{1,3}|(?:[-\\w_.]+\\.[a-z]{2,}?))(?::\\d{1,5})?.*?(?=[!\"\u00A7 \n]|$))", Pattern.CASE_INSENSITIVE)
+    val URL_PATTERN: Pattern = Pattern.compile("((?:[a-z\\d]{2,}://)?(?:(?:\\d{1,3}\\.){3}\\d{1,3}|[-\\w_.]+\\.[a-z]{2,}?)(?::\\d{1,5})?.*?(?=[!\"\u00A7 \n]|$))", Pattern.CASE_INSENSITIVE)
 
     @JvmStatic
     private val patternControlCode = Pattern.compile("(?i)\\u00A7[\\dA-FK-OR]")

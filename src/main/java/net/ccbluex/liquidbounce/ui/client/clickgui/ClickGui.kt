@@ -32,7 +32,7 @@ import java.util.*
 class ClickGui : GuiScreen()
 {
     val panels: ArrayDeque<Panel> = ArrayDeque(9)
-    private val hudIcon = ResourceLocation(LiquidBounce.CLIENT_NAME.lowercase(Locale.getDefault()) + "/custom_hud_icon.png")
+    private val hudIcon = ResourceLocation(LiquidBounce.CLIENT_NAME.lowercase() + "/custom_hud_icon.png")
 
     @JvmField
     var style: Style = SlowlyStyle()

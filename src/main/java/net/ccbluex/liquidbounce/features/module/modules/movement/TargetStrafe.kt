@@ -26,7 +26,6 @@ import net.minecraft.util.BlockPos
 import net.minecraft.util.Vec3
 import net.minecraft.world.World
 import org.lwjgl.opengl.GL11.*
-import java.util.*
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.ceil
@@ -224,7 +223,7 @@ class TargetStrafe : Module()
 
             target = if (targetModeValue.get().equals("KillAuraTarget", ignoreCase = true)) (LiquidBounce.moduleManager[KillAura::class.java] as KillAura).target
             else theWorld.getEntitiesInRadius(thePlayer).filterIsInstance<EntityLivingBase>().filter { it.isSelected(true) }.filter { thePlayer.getDistanceToEntityBox(it) <= targetRange }.minByOrNull {
-                when (targetModeValue.get().lowercase(Locale.getDefault()))
+                when (targetModeValue.get().lowercase())
                 {
                     "livingtime" -> -it.ticksExisted.toFloat()
                     "health" -> it.health

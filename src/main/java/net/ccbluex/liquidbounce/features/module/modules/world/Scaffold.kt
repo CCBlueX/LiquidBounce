@@ -49,7 +49,6 @@ import net.minecraft.world.World
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
 import java.awt.Color
-import java.util.*
 import kotlin.math.*
 
 @ModuleInfo(name = "Scaffold", description = "Automatically places blocks beneath your feet.", category = ModuleCategory.WORLD, defaultKeyBinds = [Keyboard.KEY_I])
@@ -407,7 +406,7 @@ class Scaffold : Module()
             }
 
             // Smooth Zitter
-            when (movementZitterModeValue.get().lowercase(Locale.getDefault()))
+            when (movementZitterModeValue.get().lowercase())
             {
                 "smooth" ->
                 {
@@ -772,7 +771,7 @@ class Scaffold : Module()
             return
         }
 
-        val autoBlockMode = autoBlockModeValue.get().lowercase(Locale.getDefault())
+        val autoBlockMode = autoBlockModeValue.get().lowercase()
         val switchKeepTime = autoBlockSwitchKeepTimeValue.get()
 
         // Delay check
@@ -934,9 +933,6 @@ class Scaffold : Module()
     @EventTarget
     fun onRender2D(@Suppress("UNUSED_PARAMETER") event: Render2DEvent)
     {
-        val counter = visualCounterEnabledValue.get()
-        if (!counter/* && !debug*/) return
-
         val theWorld = mc.theWorld ?: return
         val thePlayer = mc.thePlayer ?: return
 
@@ -947,7 +943,7 @@ class Scaffold : Module()
         val middleScreenX = scaledResolution.scaledWidth shr 1
         val middleScreenY = scaledResolution.scaledHeight shr 1
 
-        if (counter)
+        if (visualCounterEnabledValue.get())
         {
             GL11.glPushMatrix()
 
@@ -966,7 +962,6 @@ class Scaffold : Module()
         }
 
         val font = Fonts.minecraftFont
-
         arrayOf(findBlockDebug?.let { it to "findBlock()" }, placeDebug?.let { it to "place()" }).filterNotNull().forEachIndexed { index, (info, infoType) ->
             val offset = -60f + index * 10f
             val yPos = middleScreenY + offset

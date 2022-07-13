@@ -15,15 +15,13 @@ class AAC3_3_12Glide : FlyMode("AAC3.3.12-Glide")
 
         if (!onGround) ticks++
 
-        if (ticks < 12)
+        when (ticks)
         {
-            when (ticks)
-            {
-                2 -> timer.timerSpeed = 1f
-                12 -> timer.timerSpeed = 0.1f
-            }
+            2 -> timer.timerSpeed = 1f
+            12 -> timer.timerSpeed = 0.1f
         }
-        else if (!onGround)
+
+        if (ticks >= 12 && !onGround)
         {
             ticks = 0
             thePlayer.motionY = .015

@@ -140,10 +140,10 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F, sid
 
         var maxWidth = fontRenderer.getStringWidth(objective.displayName)
 
-        maxWidth = maxWidth.coerceAtLeast(scoreCollection.map { score ->
+        maxWidth = maxWidth.coerceAtLeast(scoreCollection.minOfOrNull { score ->
             val playerName = score.playerName
             fontRenderer.getStringWidth("${ScorePlayerTeam.formatPlayerName(scoreboard.getPlayersTeam(playerName), playerName)}: ${EnumChatFormatting.RED}${score.scorePoints}")
-        }.minOrNull() ?: -1)
+        } ?: -1)
 
         val maxHeight = scoreCollectionSize * fontHeight
 

@@ -332,12 +332,12 @@ class InventoryCleaner : Module()
                 item is ItemSword || item is ItemTool ->
                 {
                     val typeOf = { _item: Item? ->
-                        when
+                        when (_item)
                         {
-                            _item is ItemSword -> 0
-                            _item is ItemPickaxe -> 1
-                            _item is ItemAxe -> 2
-                            _item is ItemSpade -> 3
+                            is ItemSword -> 0
+                            is ItemPickaxe -> 1
+                            is ItemAxe -> 2
+                            is ItemSpade -> 3
                             else -> -1
                         }
                     }
@@ -432,13 +432,13 @@ class InventoryCleaner : Module()
                     }) { it.item is ItemBucket && normalize((it.item as ItemBucket).isFull) == full }
                 }
 
-                filterGoldAppleCountValue.get() > 0 && item is ItemAppleGold -> check(filterGoldAppleCountValue.get()) { item is ItemAppleGold }
+                filterGoldAppleCountValue.get() > 0 && item is ItemAppleGold -> check(filterGoldAppleCountValue.get()) { it.item is ItemAppleGold }
                 filterEnderPearlCountValue.get() > 0 && item is ItemEnderPearl -> check(filterEnderPearlCountValue.get()) { it.item is ItemEnderPearl }
                 filterDiamondCountValue.get() > 0 && stack.unlocalizedName == "item.diamond" -> check(filterDiamondCountValue.get()) { it.unlocalizedName == "item.diamond" }
                 filterIronIngotCountValue.get() > 0 && stack.unlocalizedName == "item.ingotIron" -> check(filterIronIngotCountValue.get()) { it.unlocalizedName == "item.ingotIron" }
                 filterPotionCountValue.get() > 0 && item is ItemPotion && AutoPot.isPotionUseful(stack) -> check(filterPotionCountValue.get()) { it.item is ItemPotion && AutoPot.isPotionUseful(it) }
                 filterSkullCountValue.get() > 0 && item is ItemSkull -> check(filterSkullCountValue.get()) { it.item is ItemSkull }
-                filterVehicleCountValue.get() > 0 && (item is ItemBoat || item is ItemMinecart) -> check(filterVehicleCountValue.get()) { item is ItemBoat || item is ItemMinecart }
+                filterVehicleCountValue.get() > 0 && (item is ItemBoat || item is ItemMinecart) -> check(filterVehicleCountValue.get()) { it.item is ItemBoat || it.item is ItemMinecart }
 
                 else -> item is ItemEnchantedBook // Enchanted Book
                     || stack.unlocalizedName == "item.stick" // Stick
@@ -489,7 +489,7 @@ class InventoryCleaner : Module()
 
     private fun findBetterItem(thePlayer: EntityPlayer, slot: Int, slotStack: ItemStack?): Int?
     {
-        val type = type(slot).lowercase(Locale.getDefault())
+        val type = type(slot).lowercase()
 
         val mainInventory = thePlayer.inventory.mainInventory.asSequence().withIndex()
 

@@ -13,14 +13,13 @@ import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.block.Block
 import net.minecraft.item.Item
-import java.util.*
 
 /**
  * Module command
  *
  * @author SenkJu
  */
-class ModuleCommand(val module: Module, val values: List<AbstractValue> = module.flatValues) : Command(module.name.lowercase(Locale.getDefault()))
+class ModuleCommand(val module: Module, val values: List<AbstractValue> = module.flatValues) : Command(module.name.lowercase())
 {
 
     init
@@ -42,11 +41,11 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
                     is FontValue -> "<font name> <font size>"
                     else -> "<new value>"
                 }
-                "${it.name.lowercase(Locale.getDefault())} $newValueParameters"
+                "${it.name.lowercase()} $newValueParameters"
             }
         }
 
-        val moduleName = module.name.lowercase(Locale.getDefault())
+        val moduleName = module.name.lowercase()
 
         val thePlayer = mc.thePlayer
         if (args.size < 2)
@@ -70,11 +69,11 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
             return
         }
 
-        val valueName = value.name.lowercase(Locale.getDefault())
+        val valueName = value.name.lowercase()
         if (value is BoolValue)
         {
             var newValue = !value.get()
-            if (args.size > 2) when (args[2].lowercase(Locale.getDefault()))
+            if (args.size > 2) when (args[2].lowercase())
             {
                 "on", "true", "1", "yes", "positive", "pos" -> newValue = true
                 "off", "false", "0", "no", "negative", "neg" -> newValue = false
@@ -90,7 +89,7 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
             {
                 chat(thePlayer, "\u00A77${module.name} \u00A78$valueName\u00A77 = ${valueToString(value)}\u00A77.") // Print current state
                 if (value is IntegerValue || value is FloatValue || value is TextValue) chatSyntax(thePlayer, "$moduleName $valueName <value>")
-                else if (value is ListValue) chatSyntax(thePlayer, "$moduleName $valueName <${value.values.joinToString(separator = "|").lowercase(Locale.getDefault())}>")
+                else if (value is ListValue) chatSyntax(thePlayer, "$moduleName $valueName <${value.values.joinToString(separator = "|").lowercase()}>")
                 return
             }
 
@@ -175,7 +174,7 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
                     {
                         if (!value.contains(args[2]))
                         {
-                            chatSyntax(thePlayer, "$moduleName $valueName <${value.values.joinToString(separator = "|").lowercase(Locale.getDefault())}>")
+                            chatSyntax(thePlayer, "$moduleName $valueName <${value.values.joinToString(separator = "|").lowercase()}>")
                             return
                         }
 
@@ -203,7 +202,7 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
                         {
                             is RGBColorValue ->
                             {
-                                when (args[2].lowercase(Locale.getDefault()))
+                                when (args[2].lowercase())
                                 {
                                     "r", "red" -> value.set(newValue.value, value.getGreen(), value.getBlue(), value.getAlpha())
                                     "g", "green" -> value.set(value.getRed(), newValue.value, value.getBlue(), value.getAlpha())
@@ -214,7 +213,7 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
 
                             is RGBAColorValue ->
                             {
-                                when (args[2].lowercase(Locale.getDefault()))
+                                when (args[2].lowercase())
                                 {
                                     "r", "red" -> value.set(newValue.value, value.getGreen(), value.getBlue(), value.getAlpha())
                                     "g", "green" -> value.set(value.getRed(), newValue.value, value.getBlue(), value.getAlpha())
@@ -226,7 +225,7 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
 
                             is IntegerRangeValue ->
                             {
-                                when (args[2].lowercase(Locale.getDefault()))
+                                when (args[2].lowercase())
                                 {
                                     "min" -> value.setMin(newValue.value)
                                     "max" -> value.setMax(newValue.value)
@@ -236,7 +235,7 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
 
                             is FloatRangeValue ->
                             {
-                                when (args[2].lowercase(Locale.getDefault()))
+                                when (args[2].lowercase())
                                 {
                                     "min" -> value.setMin(args[3].toFloat())
                                     "max" -> value.setMax(args[3].toFloat())
@@ -288,7 +287,7 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
 
             2 -> when (val value = module.getValue(args[0]))
             {
-                is BlockValue -> return Item.itemRegistry.keys.map { it.resourcePath.lowercase(Locale.getDefault()) }.filter { it.startsWith(args[1], true) }
+                is BlockValue -> return Item.itemRegistry.keys.map { it.resourcePath.lowercase() }.filter { it.startsWith(args[1], true) }
 
                 is ListValue -> return value.values.filter { it.startsWith(args[1], true) }
 
@@ -303,5 +302,5 @@ class ModuleCommand(val module: Module, val values: List<AbstractValue> = module
         }
     }
 
-    private fun encodeToHex(hex: Int) = hex.toString(16).uppercase(Locale.getDefault()).padStart(2, '0')
+    private fun encodeToHex(hex: Int) = hex.toString(16).uppercase().padStart(2, '0')
 }

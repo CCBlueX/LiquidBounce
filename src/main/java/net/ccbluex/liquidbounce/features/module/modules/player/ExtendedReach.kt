@@ -324,7 +324,7 @@ class ExtendedReach : Module()
             val state = theWorld.getBlockState(BlockPos(pos.x, pos.y, pos.z))
             val block = state.block
 
-            return Material.air == block.getMaterial() || Material.plants == block.getMaterial() || Material.vine == block.getMaterial() || Blocks.ladder == block || Blocks.water == block || Blocks.flowing_water == block || Blocks.wall_sign == block || Blocks.standing_sign == block
+            return Material.air == block.material || Material.plants == block.material || Material.vine == block.material || Blocks.ladder == block || Blocks.water == block || Blocks.flowing_water == block || Blocks.wall_sign == block || Blocks.standing_sign == block
         }
     }
 }

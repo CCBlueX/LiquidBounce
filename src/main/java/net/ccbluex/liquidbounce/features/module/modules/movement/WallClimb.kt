@@ -18,7 +18,6 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockAir
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.util.AxisAlignedBB
-import java.util.*
 
 @ModuleInfo(name = "WallClimb", description = "Allows you to climb up walls like a spider. (a.k.a. Spider)", category = ModuleCategory.MOVEMENT)
 class WallClimb : Module()
@@ -56,7 +55,7 @@ class WallClimb : Module()
 
         val onGround = thePlayer.onGround
 
-        when (modeValue.get().lowercase(Locale.getDefault()))
+        when (modeValue.get().lowercase())
         {
             "clip" ->
             {
@@ -64,7 +63,7 @@ class WallClimb : Module()
 
                 if (thePlayer.isCollidedHorizontally)
                 {
-                    when (clipMode.get().lowercase(Locale.getDefault()))
+                    when (clipMode.get().lowercase())
                     {
                         "jump" -> if (onGround) thePlayer.jump()
 
@@ -130,7 +129,7 @@ class WallClimb : Module()
 
         val mode = modeValue.get()
 
-        when (mode.lowercase(Locale.getDefault()))
+        when (mode.lowercase())
         {
             "checkerclimb" -> if (event.y > thePlayer.posY) event.boundingBox = null
 

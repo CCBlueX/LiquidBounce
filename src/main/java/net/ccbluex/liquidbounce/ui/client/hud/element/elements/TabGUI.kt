@@ -19,7 +19,6 @@ import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.gui.FontRenderer
 import org.lwjgl.input.Keyboard
-import java.util.*
 
 @ElementInfo(name = "TabGUI")
 class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
@@ -71,7 +70,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
         for (category in ModuleCategory.values())
         {
             val tab = Tab(category.displayName)
-            LiquidBounce.moduleManager.modules.filter { category == it.category }.forEach { tab.modules.add(it) }
+            LiquidBounce.moduleManager.modules.filter { category == it.category }.forEach(tab.modules::add)
             tabs.add(tab)
         }
     }
@@ -275,13 +274,13 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
         }
     }
 
-    private fun applyVariance(string: String): String = when (textVarianceModeValue.get().lowercase(Locale.getDefault()))
+    private fun applyVariance(string: String): String = when (textVarianceModeValue.get().lowercase())
     {
-        "lowercase" -> string.lowercase(Locale.getDefault())
-        "uppercase" -> string.uppercase(Locale.getDefault())
-        "upper-except-i" -> string.uppercase(Locale.getDefault()).replace('I', 'i', ignoreCase = false)
-        "upper-except-first" -> string[0].lowercaseChar() + string.substring(1).uppercase(Locale.getDefault()).replace('I', 'i', ignoreCase = false)
-        "upper-except-i-and-first" -> string[0].lowercaseChar() + string.substring(1).uppercase(Locale.getDefault()).replace('I', 'i', ignoreCase = false)
+        "lowercase" -> string.lowercase()
+        "uppercase" -> string.uppercase()
+        "upper-except-i" -> string.uppercase().replace('I', 'i', ignoreCase = false)
+        "upper-except-first" -> string[0].lowercaseChar() + string.substring(1).uppercase().replace('I', 'i', ignoreCase = false)
+        "upper-except-i-and-first" -> string[0].lowercaseChar() + string.substring(1).uppercase().replace('I', 'i', ignoreCase = false)
         else -> string
     }
 
@@ -297,7 +296,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y)
 
         fun drawTab(x: Float, y: Float, color: Int, backgroundColor: Int, borderColor: Int, borderStrength: Float, fontRenderer: FontRenderer, borderRainbow: Boolean, rectRainbow: Boolean)
         {
-            menuWidth = modules.map { fontRenderer.getStringWidth(applyVariance(it.name)) }.maxOrNull()?.plus(7) ?: 10
+            menuWidth = modules.maxOfOrNull { fontRenderer.getStringWidth(applyVariance(it.name)) }?.plus(7) ?: 10
 
             val tabHeight = tabHeight.get()
             val menuHeight = modules.size * tabHeight

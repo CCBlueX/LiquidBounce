@@ -41,7 +41,6 @@ import net.minecraft.util.Vec3
 import net.minecraft.world.World
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
-import java.util.*
 import kotlin.math.atan2
 import kotlin.math.hypot
 import kotlin.math.truncate
@@ -195,7 +194,7 @@ class Tower : Module()
 
         active = true
 
-        if (modeValue.get().lowercase(Locale.getDefault()) !in noCustomTimer) timer.timerSpeed = timerValue.get()
+        if (modeValue.get().lowercase() !in noCustomTimer) timer.timerSpeed = timerValue.get()
 
         val eventState = event.eventState
 
@@ -254,7 +253,7 @@ class Tower : Module()
         val onGround = thePlayer.onGround
         val timer = mc.timer
 
-        when (modeValue.get().lowercase(Locale.getDefault()))
+        when (modeValue.get().lowercase())
         {
             "jump" -> if (onGround && delayTimer.hasTimePassed(jumpDelayValue.get()))
             {
@@ -426,7 +425,7 @@ class Tower : Module()
             val blockSlot = thePlayer.inventoryContainer.findAutoBlockBlock(theWorld, autoBlockFullCubeOnlyValue.get())
             if (blockSlot == -1) return
 
-            when (val autoBlockMode = autoBlockModeValue.get().lowercase(Locale.getDefault()))
+            when (val autoBlockMode = autoBlockModeValue.get().lowercase())
             {
                 "pick" ->
                 {

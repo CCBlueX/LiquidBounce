@@ -22,7 +22,6 @@ import net.minecraft.client.renderer.GlStateManager
 import net.minecraft.client.resources.I18n
 import net.minecraft.potion.Potion
 import net.minecraft.potion.PotionEffect
-import java.util.*
 import kotlin.math.roundToInt
 
 /**
@@ -147,7 +146,7 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F, side: Side =
         assumeNonVolatile {
             val renderText = { text: String, x: Float, y: Float, colorMode: String, potionColor: Int, customColor: Int, function: (Int) -> Int ->
                 var useRainbowShader = false
-                val color = function(when (colorMode.lowercase(Locale.getDefault()))
+                val color = function(when (colorMode.lowercase())
                 {
                     "rainbowshader" ->
                     {
@@ -167,7 +166,7 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F, side: Side =
 
             val renderRect = { xStart: Float, yStart: Float, xEnd: Float, yEnd: Float, colorMode: String, potionColor: Int, customColor: Int ->
                 var useRainbowShader = false
-                val color = when (colorMode.lowercase(Locale.getDefault()))
+                val color = when (colorMode.lowercase())
                 {
                     "rainbowshader" ->
                     {
@@ -204,7 +203,7 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F, side: Side =
                     if (leftRect || rightRect) when
                     {
                         leftRect -> renderRect(xPos - 2F - rectWidth, yPos, xPos - 2F, yPos + textHeight, rectColorMode, potionColor, rectCustomColor)
-                        rightRect -> renderRect(-rectWidth, yPos, 0F, yPos + textHeight, rectColorMode, potionColor, rectCustomColor)
+                        else -> renderRect(-rectWidth, yPos, 0F, yPos + textHeight, rectColorMode, potionColor, rectCustomColor)
                     }
                 }
 
@@ -227,7 +226,7 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F, side: Side =
                     if (leftRect || rightRect) when
                     {
                         leftRect -> renderRect(0F, yPos - 1, rectWidth, yPos + textHeight, rectColorMode, potionColor, rectCustomColor)
-                        rightRect -> renderRect(xPos + width + 2F, yPos, xPos + width + 2F + rectWidth, yPos + textHeight, rectColorMode, potionColor, rectCustomColor)
+                        else -> renderRect(xPos + width + 2F, yPos, xPos + width + 2F + rectWidth, yPos + textHeight, rectColorMode, potionColor, rectCustomColor)
                     }
                 }
             }
@@ -310,7 +309,7 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F, side: Side =
 
     private fun formatRemainingTime(effect: PotionEffect): String
     {
-        return when (textTimeModeValue.get().lowercase(Locale.getDefault()))
+        return when (textTimeModeValue.get().lowercase())
         {
             "ticks" -> "${effect.duration} ticks"
             "both" -> "${Potion.getDurationString(effect)} (${effect.duration} ticks)"

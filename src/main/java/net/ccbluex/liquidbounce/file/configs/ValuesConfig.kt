@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.value.AbstractValue
 import java.io.File
 import java.io.IOException
-import java.util.*
 import java.util.function.Consumer
 
 /**
@@ -50,7 +49,7 @@ class ValuesConfig(file: File) : FileConfig(file)
         val jsonElement = JsonParser().parse(file.bufferedReader())
         if (jsonElement is JsonNull) return
         val jsonObject = jsonElement as JsonObject
-        for ((key, value) in jsonObject.entrySet()) when (key.lowercase(Locale.getDefault()))
+        for ((key, value) in jsonObject.entrySet()) when (key.lowercase())
         {
             "commandprefix" -> LiquidBounce.commandManager.prefix = value.asCharacter
             "showrichpresence" -> LiquidBounce.clientRichPresence.showRichPresenceValue = value.asBoolean

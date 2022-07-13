@@ -18,7 +18,6 @@ import net.ccbluex.liquidbounce.utils.render.shader.shaders.OutlineShader
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.entity.item.EntityItem
 import net.minecraft.entity.projectile.EntityArrow
-import java.util.*
 
 @ModuleInfo(name = "ItemESP", description = "Allows you to see items through walls.", category = ModuleCategory.RENDER)
 class ItemESP : Module()
@@ -56,7 +55,7 @@ class ItemESP : Module()
     @EventTarget
     fun onRender3D(@Suppress("UNUSED_PARAMETER") event: Render3DEvent)
     {
-        val mode = modeValue.get().lowercase(Locale.getDefault())
+        val mode = modeValue.get().lowercase()
         if (mode != "shaderoutline")
         {
             val theWorld = mc.theWorld ?: return

@@ -17,7 +17,6 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.init.Items
 import net.minecraft.network.play.client.C09PacketHeldItemChange
-import java.util.*
 
 @ModuleInfo(name = "KeepAlive", description = "Tries to prevent you from dying.", category = ModuleCategory.PLAYER)
 class KeepAlive : Module()
@@ -39,7 +38,7 @@ class KeepAlive : Module()
         {
             if (runOnce) return
 
-            when (modeValue.get().lowercase(Locale.getDefault()))
+            when (modeValue.get().lowercase())
             {
                 "/heal" -> thePlayer.sendChatMessage("/heal")
 

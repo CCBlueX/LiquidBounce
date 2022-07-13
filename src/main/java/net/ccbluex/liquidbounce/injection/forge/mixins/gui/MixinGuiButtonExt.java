@@ -29,12 +29,12 @@ public abstract class MixinGuiButtonExt extends GuiButton
     private float cut;
     private float alpha;
 
-    public MixinGuiButtonExt(int buttonId, int x, int y, String buttonText)
+    public MixinGuiButtonExt(final int buttonId, final int x, final int y, final String buttonText)
     {
         super(buttonId, x, y, buttonText);
     }
 
-    public MixinGuiButtonExt(int buttonId, int x, int y, int widthIn, int heightIn, String buttonText)
+    public MixinGuiButtonExt(final int buttonId, final int x, final int y, final int widthIn, final int heightIn, final String buttonText)
     {
         super(buttonId, x, y, widthIn, heightIn, buttonText);
     }
@@ -43,6 +43,7 @@ public abstract class MixinGuiButtonExt extends GuiButton
      * @author CCBlueX
      * @reason
      */
+    @Override
     @Overwrite
     public void drawButton(final Minecraft mc, final int mouseX, final int mouseY)
     {

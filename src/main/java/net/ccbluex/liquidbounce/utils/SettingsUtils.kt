@@ -21,8 +21,6 @@ import net.ccbluex.liquidbounce.utils.render.ColorUtils.translateAlternateColorC
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.entity.EntityPlayerSP
 import org.lwjgl.input.Keyboard
-import java.util.*
-import kotlin.collections.HashSet
 
 /*
  * LiquidBounce Hacked Client
@@ -49,7 +47,7 @@ object SettingsUtils
                 return@forEachIndexed
             }
 
-            when (args[0].lowercase(Locale.getDefault()))
+            when (args[0].lowercase())
             {
                 "chat" -> chat(thePlayer, "\u00A7e", translateAlternateColorCodes(StringUtils.toCompleteString(args, 1)))
                 "unchat" -> ClientUtils.displayChatMessage(thePlayer, translateAlternateColorCodes(StringUtils.toCompleteString(args, 1)))
@@ -58,7 +56,7 @@ object SettingsUtils
                 {
                     val urlRaw = StringUtils.toCompleteString(args, 1)
                     val url = if (urlRaw.startsWith("http")) urlRaw
-                    else "${LiquidBounce.CLIENT_CLOUD}/settings/${urlRaw.lowercase(Locale.getDefault())}"
+                    else "${LiquidBounce.CLIENT_CLOUD}/settings/${urlRaw.lowercase()}"
 
                     try
                     {
@@ -139,7 +137,7 @@ object SettingsUtils
                     if (valueName.equals("bind", ignoreCase = true))
                     {
                         val binds = value.split(';')
-                        module.keyBinds = binds.mapTo(HashSet()) { Keyboard.getKeyIndex(it) }
+                        module.keyBinds = binds.mapTo(HashSet(), Keyboard::getKeyIndex)
                         chat(thePlayer, "\u00A7a", "Module ${actualModuleName.withDoubleQuotes("\u00A7a\u00A7l", "\u00A78")}\u00A7a was bound to\u00A7c\u00A7l${binds.joinToString()}\u00A77.")
                         return@forEachIndexed
                     }
@@ -208,7 +206,7 @@ object SettingsUtils
 
             if (states) stringBuilder.append(module.name).append(" toggle ").append(module.state).append("\n")
 
-            if (binds) stringBuilder.append(module.name).append(" bind ").append(module.keyBinds.joinToString(separator = ";") { Keyboard.getKeyName(it) }).append("\n")
+            if (binds) stringBuilder.append(module.name).append(" bind ").append(module.keyBinds.joinToString(separator = ";", transform = Keyboard::getKeyName)).append("\n")
         }
 
         return "$stringBuilder"

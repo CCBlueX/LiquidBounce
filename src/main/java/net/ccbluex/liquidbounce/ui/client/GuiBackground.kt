@@ -18,7 +18,6 @@ import org.lwjgl.input.Keyboard
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.nio.file.Files
-import java.util.*
 import javax.imageio.ImageIO
 
 class GuiBackground(val prevGui: GuiScreen) : GuiScreen()
@@ -77,7 +76,7 @@ class GuiBackground(val prevGui: GuiScreen) : GuiScreen()
                 {
                     Files.copy(file.toPath(), FileOutputStream(LiquidBounce.fileManager.backgroundFile))
 
-                    val location = ResourceLocation(LiquidBounce.CLIENT_NAME.lowercase(Locale.getDefault()) + "/background.png")
+                    val location = ResourceLocation(LiquidBounce.CLIENT_NAME.lowercase() + "/background.png")
                     LiquidBounce.background = location
                     runSync { mc.textureManager.loadTexture(location, DynamicTexture(ImageIO.read(FileInputStream(LiquidBounce.fileManager.backgroundFile)))) }
                 }

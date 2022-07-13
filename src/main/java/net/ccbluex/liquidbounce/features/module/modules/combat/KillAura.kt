@@ -44,8 +44,6 @@ import net.minecraft.world.World
 import net.minecraft.world.WorldSettings
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
-import java.util.*
-import kotlin.collections.ArrayList
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sqrt
@@ -526,7 +524,7 @@ class KillAura : Module()
 
         if (currentTarget != null && RotationUtils.targetRotation != null && (thePlayer.onGround || !rotationStrafeOnlyGroundValue.get()))
         {
-            when (rotationStrafeValue.get().lowercase(Locale.getDefault()))
+            when (rotationStrafeValue.get().lowercase())
             {
                 "strict" ->
                 {
@@ -611,7 +609,7 @@ class KillAura : Module()
         interactBlockRange = interactAutoBlockRangeValue.get()
 
         // Range mark
-        val markRangeMode = visualMarkRangeModeValue.get().lowercase(Locale.getDefault())
+        val markRangeMode = visualMarkRangeModeValue.get().lowercase()
         if (markRangeMode != "none")
         {
             val arr = arrayOfNulls<Pair<Float, Int>?>(6)
@@ -653,8 +651,7 @@ class KillAura : Module()
         }
 
         target ?: return
-
-        if (target != null && currentTarget != null)
+        if (currentTarget != null)
         {
             while (clicks > 0)
             {
@@ -726,7 +723,7 @@ class KillAura : Module()
         // Mark
         if (state || lastTargetBB != null)
         {
-            val markMode = visualMarkTargetModeValue.get().lowercase(Locale.getDefault())
+            val markMode = visualMarkTargetModeValue.get().lowercase()
             if (markMode != "none" && !targetModeValue.get().equals("Multi", ignoreCase = true))
             {
                 (target?.let { target ->
@@ -993,7 +990,7 @@ class KillAura : Module()
         val checkIsClientTarget = { entity: Entity -> if (entity.isClientTarget()) -1000000.0 else 0.0 }
 
         // Sort targets by priority
-        when (targetPriorityValue.get().lowercase(Locale.getDefault()))
+        when (targetPriorityValue.get().lowercase())
         {
             "distance" ->
             {
@@ -1135,7 +1132,7 @@ class KillAura : Module()
 
         var flags = 0
 
-        val rotationMode = rotationMode.get().lowercase(Locale.getDefault())
+        val rotationMode = rotationMode.get().lowercase()
 
         // Apply rotation mode to flags
         flags = flags or when (rotationMode)

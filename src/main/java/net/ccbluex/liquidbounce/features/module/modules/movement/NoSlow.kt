@@ -111,11 +111,11 @@ class NoSlow : Module()
 
     private fun getMultiplier(item: Item?, isForward: Boolean): Float
     {
-        return when
+        return when (item)
         {
-            item is ItemFood || item is ItemPotion || item is ItemBucketMilk -> if (isForward) consumeForwardMultiplier.get() else consumeStrafeMultiplier.get()
-            item is ItemSword -> if (isForward) blockForwardMultiplier.get() else blockStrafeMultiplier.get()
-            item is ItemBow -> if (isForward) bowForwardMultiplier.get() else bowStrafeMultiplier.get()
+            is ItemFood, is ItemPotion, is ItemBucketMilk -> if (isForward) consumeForwardMultiplier.get() else consumeStrafeMultiplier.get()
+            is ItemSword -> if (isForward) blockForwardMultiplier.get() else blockStrafeMultiplier.get()
+            is ItemBow -> if (isForward) bowForwardMultiplier.get() else bowStrafeMultiplier.get()
             else -> 0.2F
         }
     }

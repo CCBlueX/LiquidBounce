@@ -111,7 +111,8 @@ public abstract class MixinGuiChat extends MixinGuiScreen
     }
 
     /**
-     * Add this callback, to check if the User complete a Playername or a Liquidbounce command. To fix this bug: https://github.com/CCBlueX/LiquidBounce1.8-Issues/issues/3795
+     * Add this callback, to check if the User complete a Playername or a Liquidbounce command.
+     * To fix this bug, <a href="https://github.com/CCBlueX/LiquidBounce1.8-Issues/issues/3795">see here</a>
      *
      * @author derech1e
      */

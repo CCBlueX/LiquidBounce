@@ -22,7 +22,6 @@ import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.util.Vec3
 import org.lwjgl.opengl.GL11
-import java.util.*
 
 @ModuleInfo(name = "Tracers", description = "Draws a line to targets around you.", category = ModuleCategory.RENDER)
 class Tracers : Module()
@@ -67,7 +66,7 @@ class Tracers : Module()
 
         GL11.glBegin(GL11.GL_LINES)
 
-        val colorMode = colorMode.get().lowercase(Locale.getDefault())
+        val colorMode = colorMode.get().lowercase()
 
         val partialTicks = if (interpolateValue.get()) event.partialTicks else 1f
 

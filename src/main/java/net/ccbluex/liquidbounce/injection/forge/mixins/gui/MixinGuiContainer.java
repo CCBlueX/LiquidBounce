@@ -168,6 +168,7 @@ public abstract class MixinGuiContainer extends MixinGuiScreen implements IMixin
      * @author eric0210
      * @reason ChestStealer slot highlighting
      */
+    @Override
     @Overwrite
     public void drawScreen(final int mouseX, final int mouseY, final float partialTicks)
     {

@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.event.StrafeEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.HitBox;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.NoPitchLimit;
 import net.ccbluex.liquidbounce.features.module.modules.movement.Step;
+import net.ccbluex.liquidbounce.features.module.modules.render.Bobbing;
 import net.ccbluex.liquidbounce.features.module.modules.render.ItemPhysics;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -34,10 +35,8 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.At.Shift;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
@@ -300,35 +299,35 @@ public abstract class MixinEntity
 
     // FIXME Mixin: argsOnly doesn't works well with double captures
     // /*****************************************************************************************************************/
-    // /*         Target Class : net.minecraft.entity.Entity                                                            */
-    // /*        Target Method : func_70091_d                                                                           */
-    // /*        Callback Name : localvar$injectMoveEventNewMoveX$zzl000                                                */
-    // /*         Capture Type : double                                                                                 */
-    // /*          Instruction : LabelNode UNKNOWN                                                                      */
+    // /* Target Class : net.minecraft.entity.Entity */
+    // /* Target Method : func_70091_d */
+    // /* Callback Name : localvar$injectMoveEventNewMoveX$zzl000 */
+    // /* Capture Type : double */
+    // /* Instruction : LabelNode UNKNOWN */
     // /*****************************************************************************************************************/
-    // /*           Match mode : EXPLICIT (match by criteria)                                                           */
-    // /*        Match ordinal : 0                                                                                      */
-    // /*          Match index : any                                                                                    */
-    // /*        Match name(s) : any                                                                                    */
-    // /*            Args only : true                                                                                   */
+    // /* Match mode : EXPLICIT (match by criteria) */
+    // /* Match ordinal : 0 */
+    // /* Match index : any */
+    // /* Match name(s) : any */
+    // /* Args only : true */
     //
     // Reality:
     // /*****************************************************************************************************************/
-    // /* INDEX  ORDINAL                            TYPE  NAME                                                CANDIDATE */
-    // /* [  1]    [  0]                          double  arg1                                                YES       */
-    // /* [  2]    [  1]                          double  arg2                                                YES       */
-    // /* [  3]    [  2]                          double  arg3                                                YES       */
+    // /* INDEX ORDINAL TYPE NAME CANDIDATE */
+    // /* [ 1] [ 0] double arg1 YES */
+    // /* [ 2] [ 1] double arg2 YES */
+    // /* [ 3] [ 2] double arg3 YES */
     // /*****************************************************************************************************************/
     //
     // Imagine:
     // /*****************************************************************************************************************/
-    // /* INDEX  ORDINAL                            TYPE  NAME                                                CANDIDATE */
-    // /* [  1]    [  0]                          double  x                                                   YES       */
-    // /* [  2]                                    <top>                                                                */
-    // /* [  3]    [  1]                          double  y                                                   YES       */
-    // /* [  4]                                    <top>                                                                */
-    // /* [  5]    [  2]                          double  z                                                   YES       */
-    // /* [  6]                                    <top>                                                                */
+    // /* INDEX ORDINAL TYPE NAME CANDIDATE */
+    // /* [ 1] [ 0] double x YES */
+    // /* [ 2] <top> */
+    // /* [ 3] [ 1] double y YES */
+    // /* [ 4] <top> */
+    // /* [ 5] [ 2] double z YES */
+    // /* [ 6] <top> */
     // ... empty locals
     // /*****************************************************************************************************************/
     //
@@ -385,5 +384,14 @@ public abstract class MixinEntity
     {
         if (isThePlayer && d11 * d11 + d8 * d8 < x * x + z * z)
             LiquidBounce.eventManager.callEvent(new StepConfirmEvent());
+    }
+
+    @ModifyConstant(method = "moveEntity", constant = @Constant(doubleValue = 0.6), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/block/Block;onEntityCollidedWithBlock(Lnet/minecraft/world/World;Lnet/minecraft/util/BlockPos;Lnet/minecraft/entity/Entity;)V", ordinal = 0), to = @At(value = "INVOKE", target ="Lnet/minecraft/entity/Entity;playStepSound(Lnet/minecraft/util/BlockPos;Lnet/minecraft/block/Block;)V", ordinal = 0)))
+    private double injectBobbingMultiplier(final double defaultMultiplier)
+    {
+        final Bobbing bobbing = (Bobbing) LiquidBounce.moduleManager.get(Bobbing.class);
+        if (bobbing.getState())
+            return bobbing.getMultiplierValue().get();
+        return defaultMultiplier;
     }
 }

@@ -17,7 +17,6 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.potion.Potion
-import java.util.*
 
 @ModuleInfo(name = "Regen", description = "Regenerates your health much faster.", category = ModuleCategory.PLAYER)
 class Regen : Module()
@@ -48,7 +47,7 @@ class Regen : Module()
         {
             if (potionEffectValue.get() && !thePlayer.isPotionActive(Potion.regeneration)) return
 
-            when (modeValue.get().lowercase(Locale.getDefault()))
+            when (modeValue.get().lowercase())
             {
                 "vanilla" -> runAsync { repeat(speedValue.get()) { netHandler.addToSendQueue(C03PacketPlayer(onGround)) } }
 
@@ -56,7 +55,7 @@ class Regen : Module()
                 {
                     if (thePlayer.isMoving || !onGround) return
 
-                    runAsync { repeat(9) { netHandler.addToSendQueue(C03PacketPlayer(onGround)) } }
+                    runAsync { repeat(9) { netHandler.addToSendQueue(C03PacketPlayer(true)) } }
 
                     timer.timerSpeed = 0.45F
                     resetTimer = true

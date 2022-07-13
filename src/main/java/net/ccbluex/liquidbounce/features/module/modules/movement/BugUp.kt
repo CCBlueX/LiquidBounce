@@ -27,7 +27,6 @@ import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.BlockPos
 import org.lwjgl.opengl.GL11
 import java.awt.Color
-import java.util.*
 import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.max
@@ -130,7 +129,7 @@ class BugUp : Module()
 
             if (fallDistance - lastFound > maxDistanceWithoutGround.get())
             {
-                when (modeValue.get().lowercase(Locale.getDefault()))
+                when (modeValue.get().lowercase())
                 {
                     "teleportback" ->
                     {
@@ -153,7 +152,7 @@ class BugUp : Module()
         {
             if (!flagTimer.hasTimePassed(flagTryTicks.get()))
             {
-                when (modeValue.get().lowercase(Locale.getDefault()))
+                when (modeValue.get().lowercase())
                 {
                     "flyflag" ->
                     {

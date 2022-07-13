@@ -21,7 +21,6 @@ import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.gui.FontRenderer
 import net.minecraft.network.play.server.S2EPacketCloseWindow
 import org.lwjgl.input.Keyboard
-import java.util.*
 
 @ModuleInfo(name = "ClickGUI", description = "Opens the ClickGUI.", category = ModuleCategory.RENDER, defaultKeyBinds = [Keyboard.KEY_RSHIFT], canEnable = false)
 class ClickGUI : Module()
@@ -47,7 +46,7 @@ class ClickGUI : Module()
 
     fun updateStyle()
     {
-        LiquidBounce.clickGui.style = when (styleValue.get().lowercase(Locale.getDefault()))
+        LiquidBounce.clickGui.style = when (styleValue.get().lowercase())
         {
             "liquidbounce" -> LiquidBounceStyle()
             "slowly" -> SlowlyStyle()

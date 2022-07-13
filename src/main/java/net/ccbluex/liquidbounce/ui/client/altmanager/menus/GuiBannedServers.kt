@@ -69,7 +69,7 @@ class GuiBannedServers(private val prevGui: GuiScreen, private val account: Wrap
             2 ->
             {
                 val selected = serversList.selectedSlot
-                status = if (selected != -1 && selected < serversList.getSize())
+                status = if (selected != -1 && selected < serversList.size)
                 {
                     val bannedServers = account.bannedServers
                     bannedServers.remove(bannedServers[selected])

@@ -74,7 +74,7 @@ object CapeService : Listenable, MinecraftInstance()
                 task = thread(name = "UpdateCarriersTask") {
                     runCatching {
                         // Capture data from API and parse JSON
-                        val parsedJson = JsonParser().parse(HttpUtils.get(CAPE_CARRIERS_URL))
+                        val parsedJson = JsonParser().parse(HttpUtils[CAPE_CARRIERS_URL])
 
                         // Should be a JSON Array. It will fail if not.
                         // Format: [["8f617b6abea04af58e4bd026d8fa9de8", "marco"], ...]
@@ -82,7 +82,7 @@ object CapeService : Listenable, MinecraftInstance()
                             // Should be a JSON Array. It will fail if not.
                             val arrayInArray = objInArray.asJsonArray
                             // 1. is UUID 2. is name of cape
-                            val (uuid, name) = Pair(arrayInArray.get(0).asString, arrayInArray.get(1).asString)
+                            val (uuid, name) = arrayInArray.get(0).asString to arrayInArray.get(1).asString
 
                             val dashedUuid = Regex("(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)").replace(uuid, "$1-$2-$3-$4-$5")
                             CapeCarrier(UUID.fromString(dashedUuid), name)
@@ -97,9 +97,7 @@ object CapeService : Listenable, MinecraftInstance()
                         lastUpdate.reset()
 
                         // Call out done
-                        mc.addScheduledTask {
-                            done()
-                        }
+                        mc.addScheduledTask(::done)
                     }.onFailure {
                         ClientUtils.logger.error("Failed to refresh cape carriers due to error.", it)
                     }
@@ -121,7 +119,7 @@ object CapeService : Listenable, MinecraftInstance()
         // Lookup cape carrier by UUID, if UUID is matching
         val capeCarrier = capeCarriers.find { it.uuid == uuid } ?: return null
 
-        return Pair(capeCarrier.capeName, String.format(CAPE_NAME_DL_BASE_URL, capeCarrier.capeName))
+        return capeCarrier.capeName to String.format(CAPE_NAME_DL_BASE_URL, capeCarrier.capeName)
     }
 
     /**
@@ -145,7 +143,7 @@ object CapeService : Listenable, MinecraftInstance()
 
             val body = JSONObject()
             body.put("uuid", uuid)
-            request.entity = StringEntity(body.toString())
+            request.entity = StringEntity("$body")
 
             val response = httpClient.execute(request)
             val statusCode = response.statusLine.statusCode

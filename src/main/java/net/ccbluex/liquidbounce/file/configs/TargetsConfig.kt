@@ -37,7 +37,7 @@ class TargetsConfig(file: File) : FileConfig(file)
 
         if (jsonElement is JsonNull) return
 
-        jsonElement.asJsonArray.map { it.asString }.forEach { addTarget(it) }
+        jsonElement.asJsonArray.map { it.asString }.forEach(::addTarget)
     }
 
     /**

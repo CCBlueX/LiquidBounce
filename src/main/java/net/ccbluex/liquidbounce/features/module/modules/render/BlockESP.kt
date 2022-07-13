@@ -20,12 +20,10 @@ import net.ccbluex.liquidbounce.value.*
 import net.minecraft.block.Block
 import net.minecraft.init.Blocks
 import net.minecraft.util.BlockPos
-import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
-import kotlin.collections.ArrayList
 
 // TODO: Improve performance
 @ModuleInfo(name = "BlockESP", description = "Allows you to see a selected block through walls.", category = ModuleCategory.RENDER)
@@ -124,7 +122,7 @@ class BlockESP : Module()
             task = Runnable {
                 val blockList: MutableList<BlockPos> = ArrayList()
 
-                (-radius until radius).forEach { x -> (-radius until radius).forEach { y -> (-radius until radius).map { z -> BlockPos(playerX + x, playerY + y, playerZ + z) }.filter { blockList.size < blockLimit }.filter { theWorld.getBlock(it) == selectedBlock }.forEach { blockList.add(it) } } }
+                (-radius until radius).forEach { x -> (-radius until radius).forEach { y -> (-radius until radius).map { z -> BlockPos(playerX + x, playerY + y, playerZ + z) }.filter { blockList.size < blockLimit }.filter { theWorld.getBlock(it) == selectedBlock }.forEach(blockList::add) } }
 
                 searchTimer.reset()
 
@@ -140,7 +138,7 @@ class BlockESP : Module()
         val theWorld = mc.theWorld ?: return
         val thePlayer = mc.thePlayer ?: return
 
-        val mode = modeValue.get().lowercase(Locale.getDefault())
+        val mode = modeValue.get().lowercase()
         val hydraESP = mode == "hydra"
         val color = if (colorRainbowEnabledValue.get()) rainbowRGB(colorValue.getAlpha(), speed = colorRainbowSpeedValue.get(), saturation = colorRainbowSaturationValue.get(), brightness = colorRainbowBrightnessValue.get()) else colorValue.get()
         val outlineColor = modeBoxOutlineColorValue.get()

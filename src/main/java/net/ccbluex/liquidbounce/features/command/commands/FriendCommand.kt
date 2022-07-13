@@ -11,7 +11,6 @@ import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.file.configs.FriendsConfig
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.minecraft.entity.player.EntityPlayer
-import java.util.*
 
 class FriendCommand : Command("friend", "friends")
 {
@@ -26,7 +25,7 @@ class FriendCommand : Command("friend", "friends")
         {
             val friendsConfig = LiquidBounce.fileManager.friendsConfig
 
-            when (args[1].lowercase(Locale.getDefault()))
+            when (args[1].lowercase())
             {
                 "add" ->
                 {
@@ -109,7 +108,7 @@ class FriendCommand : Command("friend", "friends")
             2 ->
             {
                 val prefix = args[1]
-                when (args[0].lowercase(Locale.getDefault()))
+                when (args[0].lowercase())
                 {
                     "add" -> return theWorld.playerEntities.map(EntityPlayer::getName).filter { it.startsWith(prefix, true) }.toList()
                     "remove" -> return LiquidBounce.fileManager.friendsConfig.friends.map(FriendsConfig.Friend::playerName).filter { it.startsWith(prefix, true) }.toList()

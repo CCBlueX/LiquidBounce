@@ -26,7 +26,6 @@ import net.minecraft.entity.item.EntityMinecartHopper
 import net.minecraft.tileentity.*
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
-import java.util.*
 
 @ModuleInfo(name = "StorageESP", description = "Allows you to see chests, dispensers, etc. through walls.", category = ModuleCategory.RENDER)
 class StorageESP : Module()
@@ -127,7 +126,7 @@ class StorageESP : Module()
 
         try
         {
-            val mode = modeValue.get().lowercase(Locale.getDefault())
+            val mode = modeValue.get().lowercase()
             val chest = chestEnabledValue.get()
             val enderChest = enderChestEnabledValue.get()
             val furnace = furnaceEnabledValue.get()
@@ -358,23 +357,23 @@ class StorageESP : Module()
             val stopDraw = { color: Int -> shader.stopDraw(color, radius, 1f) }
 
             val tileEntityGroup = theWorld.loadedTileEntityList.groupBy {
-                when
+                when (it)
                 {
-                    it is TileEntityChest -> if (it.chestType == 1) 2 else 1 // Chest or Trapped Chest
-                    it is TileEntityEnderChest -> 3 // Ender Chest
-                    it is TileEntityFurnace -> 4 // Furnace
-                    it is TileEntityDispenser -> 5 // Dispenser (and Dropper)
-                    it is TileEntityHopper -> 6 // Hopper
+                    is TileEntityChest -> if (it.chestType == 1) 2 else 1 // Chest or Trapped Chest
+                    is TileEntityEnderChest -> 3 // Ender Chest
+                    is TileEntityFurnace -> 4 // Furnace
+                    is TileEntityDispenser -> 5 // Dispenser (and Dropper)
+                    is TileEntityHopper -> 6 // Hopper
                     else -> 0
                 }
             }.filterNot { it.key == 0 }
 
             val entityGroup = theWorld.loadedEntityList.groupBy {
-                when
+                when (it)
                 {
-                    it is EntityMinecartChest -> 1 // Minecart Chest
-                    it is EntityMinecartFurnace -> 2 // Minecart Furnace
-                    it is EntityMinecartHopper -> 3 // Minecart Hopper
+                    is EntityMinecartChest -> 1 // Minecart Chest
+                    is EntityMinecartFurnace -> 2 // Minecart Furnace
+                    is EntityMinecartHopper -> 3 // Minecart Hopper
                     else -> 0
                 }
             }.filterNot { it.key == 0 }

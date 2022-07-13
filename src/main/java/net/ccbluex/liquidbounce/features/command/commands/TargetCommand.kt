@@ -10,7 +10,6 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.minecraft.entity.player.EntityPlayer
-import java.util.*
 
 class TargetCommand : Command("target")
 {
@@ -26,7 +25,7 @@ class TargetCommand : Command("target")
             val targetsConfig = LiquidBounce.fileManager.targetsConfig
             val targetListSize = targetsConfig.targets.size
 
-            when (args[1].lowercase(Locale.getDefault()))
+            when (args[1].lowercase())
             {
                 "players" ->
                 {
@@ -140,7 +139,7 @@ class TargetCommand : Command("target")
             2 ->
             {
                 val prefix = args[1]
-                when (args[0].lowercase(Locale.getDefault()))
+                when (args[0].lowercase())
                 {
                     "add" -> return theWorld.playerEntities.map(EntityPlayer::getName).filter { it.startsWith(prefix, true) }.toList()
                     "remove" -> return LiquidBounce.fileManager.targetsConfig.targets.filter { it.startsWith(prefix, true) }.toList()

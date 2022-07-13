@@ -20,7 +20,6 @@ import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.player.EntityPlayer
 import java.awt.Color
 import java.text.NumberFormat
-import java.util.*
 import java.util.regex.Pattern
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -110,7 +109,7 @@ object ColorUtils : MinecraftInstance()
                 // Indicate Murder
                 if (murderDetector.state && murderDetector.murders.contains(entity)) return@run -6750055
 
-                when (colorMode.lowercase(Locale.getDefault()))
+                when (colorMode.lowercase())
                 {
                     "rainbow" -> return@run rainbowRGB(speed = rainbowSpeed, saturation = rainbowSaturation, brightness = rainbowBrightness)
 

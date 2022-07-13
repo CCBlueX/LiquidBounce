@@ -27,7 +27,7 @@ class LocationCache : MinecraftInstance(), Listenable
             val entities = theWorld.getEntitiesInRadius(thePlayer, 64.0)
 
             // Manual garbage collect by distance check
-            aabbList.keys.filterNot(entities.map(Entity::getEntityId)::contains).forEach { aabbList.remove(it) }
+            aabbList.keys.filterNot(entities.map(Entity::getEntityId)::contains).forEach(aabbList::remove)
 
             for (entity in entities)
             {

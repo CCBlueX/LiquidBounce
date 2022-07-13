@@ -1,6 +1,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.flies
 
 import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.features.module.modules.exploit.Damage
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.extensions.boost
@@ -150,9 +151,9 @@ enum class DamageOnStart(val execute: () -> Unit)
 {
     OFF({ }),
     NONE({ }), // Used internally
-    NCP({ net.ccbluex.liquidbounce.features.module.modules.exploit.Damage.ncpDamage() }),
+    NCP(Damage::ncpDamage),
     OLD_NCP({ net.ccbluex.liquidbounce.features.module.modules.exploit.Damage.ncpDamage(motionSize = 1.01) }),
-    HYPIXEL({ net.ccbluex.liquidbounce.features.module.modules.exploit.Damage.hypixelDamage() });
+    HYPIXEL(Damage::hypixelDamage);
 
     companion object
     {

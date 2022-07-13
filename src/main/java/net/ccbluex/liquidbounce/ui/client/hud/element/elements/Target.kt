@@ -227,7 +227,7 @@ class Target : Element()
 
                 if (target is EntityPlayer)
                 {
-                    val healthMethod = healthTypeValue.get().lowercase(Locale.getDefault())
+                    val healthMethod = healthTypeValue.get().lowercase()
                     if (healthMethod.equals("Mineplex", ignoreCase = true) || healthMethod.equals("Hive", ignoreCase = true)) targetHealth = EntityUtils.getPlayerHealthFromScoreboard(target.gameProfile.name, isMineplex = healthTypeValue.get().equals("Mineplex", true)).toFloat()
 
                     targetArmor = target.totalArmorValue
@@ -244,7 +244,7 @@ class Target : Element()
                 if (targetChanged || easingAbsorption < 0 || easingAbsorption > targetAbsorption || abs(easingAbsorption - targetAbsorption) < 0.01) easingAbsorption = targetAbsorption
                 if (isPlayer && (targetChanged || easingArmor < 0 || easingArmor > 20 || abs(easingArmor - targetArmor) < 0.01)) easingArmor = targetArmor.toFloat()
                 val suspendAnimation = healthAnimationDelay > 0
-                if (suspendAnimation && thePlayer.ticksExisted != prevTick && healthAnimationDelay > 0) healthAnimationDelay--
+                if (suspendAnimation && thePlayer.ticksExisted != prevTick) healthAnimationDelay--
                 prevTick = thePlayer.ticksExisted
 
                 val healthText = "${if (targetHealthPercentage < 0.25) "\u00A7c" else if (targetHealthPercentage < 0.5) "\u00A7e" else "\u00A7a"}${DECIMALFORMAT_2.format(targetHealth.toDouble())} (${DECIMALFORMAT_1.format(targetHealthPercentage * 100.0)}%)\u00A7r"

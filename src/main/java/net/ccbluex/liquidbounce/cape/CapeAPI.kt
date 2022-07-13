@@ -77,10 +77,7 @@ object CapeAPI : MinecraftInstance()
             val threadDownloadImageData = ThreadDownloadImageData(cacheFile, url, null, object : IImageBuffer
             {
 
-                override fun parseUserSkin(image: BufferedImage?): BufferedImage?
-                {
-                    return image
-                }
+                override fun parseUserSkin(image: BufferedImage?): BufferedImage? = image
 
                 override fun skinAvailable()
                 {

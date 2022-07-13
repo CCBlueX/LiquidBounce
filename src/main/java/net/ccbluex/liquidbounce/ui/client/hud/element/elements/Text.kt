@@ -29,7 +29,6 @@ import net.minecraft.client.Minecraft
 import org.lwjgl.input.Keyboard
 import java.awt.Color
 import java.text.SimpleDateFormat
-import java.util.*
 import kotlin.math.hypot
 
 /**
@@ -158,7 +157,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
     {
         val thePlayer = mc.thePlayer
 
-        val s = str.lowercase(Locale.getDefault())
+        val s = str.lowercase()
 
         if (thePlayer != null)
         {

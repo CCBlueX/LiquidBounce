@@ -8,7 +8,6 @@ package net.ccbluex.liquidbounce.features.command.commands
 import net.ccbluex.liquidbounce.features.command.Command
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.network.play.client.C10PacketCreativeInventoryAction
-import java.util.*
 
 class EnchantCommand : Command("enchant")
 {
@@ -77,7 +76,7 @@ class EnchantCommand : Command("enchant")
         val prefix = args[0]
         return when (args.size)
         {
-            1 -> return Enchantment.func_181077_c().map { it.resourcePath.lowercase(Locale.getDefault()) }.filter { it.startsWith(prefix, true) }.toList()
+            1 -> return Enchantment.func_181077_c().map { it.resourcePath.lowercase() }.filter { it.startsWith(prefix, true) }.toList()
             else -> emptyList()
         }
     }

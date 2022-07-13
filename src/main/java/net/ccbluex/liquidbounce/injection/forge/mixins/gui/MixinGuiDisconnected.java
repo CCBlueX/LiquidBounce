@@ -35,6 +35,7 @@ import net.minecraft.client.gui.GuiDisconnected;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.gui.GuiMultiplayer;
 import net.minecraft.util.IChatComponent;
+import net.minecraft.util.IChatComponent.Serializer;
 import net.minecraft.util.Session;
 import net.minecraftforge.fml.client.config.GuiSlider;
 
@@ -139,7 +140,7 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen
                     final JsonObject jsonObject = new JsonObject();
                     jsonObject.addProperty("text", e.getMessage());
 
-                    mc.displayGuiScreen(new GuiDisconnected(new GuiMultiplayer(new GuiMainMenu()), e.getMessage(), IChatComponent.Serializer.jsonToComponent(jsonObject.toString())));
+                    mc.displayGuiScreen(new GuiDisconnected(new GuiMultiplayer(new GuiMainMenu()), e.getMessage(), Serializer.jsonToComponent(jsonObject.toString())));
                     return null;
                 }, () -> null);
 

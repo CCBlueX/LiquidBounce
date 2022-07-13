@@ -6,7 +6,6 @@ import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.minecraft.client.multiplayer.WorldClient
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.EntityPlayer
-import java.util.*
 
 class DuplicateInWorldExistenceCheck : BotCheck("tab.duplicateInWorld.existence")
 {
@@ -18,7 +17,7 @@ class DuplicateInWorldExistenceCheck : BotCheck("tab.duplicateInWorld.existence"
         val stripColors = AntiBot.duplicateInWorldExistenceStripColorsValue.get()
         val tryStripColors = { string: String -> if (stripColors) ColorUtils.stripColor(string) else string }
 
-        val mode = AntiBot.duplicateInWorldExistenceNameModeValue.get().lowercase(Locale.getDefault())
+        val mode = AntiBot.duplicateInWorldExistenceNameModeValue.get().lowercase()
         val entityName = when (mode)
         {
             "displayname" -> target.displayName.formattedText

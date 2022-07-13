@@ -18,8 +18,8 @@ import kotlin.math.round
  */
 class MineplexBHop2 : SpeedMode("Mineplex-BHop2")
 {
-    var mineplex = 0
-    var stage = 0
+    private var mineplex = 0
+    private var stage = 0
 
     override fun onMotion(eventState: EventState)
     {

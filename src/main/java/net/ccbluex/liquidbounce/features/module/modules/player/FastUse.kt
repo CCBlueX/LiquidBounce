@@ -21,7 +21,6 @@ import net.minecraft.item.ItemFood
 import net.minecraft.item.ItemPotion
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.util.Timer
-import java.util.*
 import kotlin.math.ceil
 
 @ModuleInfo(name = "FastUse", description = "Allows you to use items faster.", category = ModuleCategory.PLAYER)
@@ -108,7 +107,7 @@ class FastUse : Module()
             val netHandler = mc.netHandler
             val onGround = thePlayer.onGround
 
-            when (modeValue.get().lowercase(Locale.getDefault()))
+            when (modeValue.get().lowercase())
             {
                 "instant" ->
                 {
@@ -127,7 +126,7 @@ class FastUse : Module()
 
                     usedTimer = true
 
-                    when (ncpModeValue.get().lowercase(Locale.getDefault()))
+                    when (ncpModeValue.get().lowercase())
                     {
                         "atonce" ->
                         {

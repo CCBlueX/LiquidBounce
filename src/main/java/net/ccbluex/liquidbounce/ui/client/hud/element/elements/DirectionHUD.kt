@@ -13,7 +13,6 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.RGBColorValue
 import net.minecraft.util.ResourceLocation
-import java.util.*
 import kotlin.math.floor
 
 /**
@@ -24,7 +23,7 @@ import kotlin.math.floor
 @ElementInfo(name = "DirectionHUD")
 class DirectionHUD(x: Double = -8.0, y: Double = 57.0, scale: Float = 1F, side: Side = Side(Side.Horizontal.MIDDLE, Side.Vertical.UP)) : Element(x, y, scale, side)
 {
-    private val COMPASS_IMAGE = ResourceLocation("${LiquidBounce.CLIENT_NAME.lowercase(Locale.getDefault())}/directionhud/compass.png")
+    private val COMPASS_IMAGE = ResourceLocation("${LiquidBounce.CLIENT_NAME.lowercase()}/directionhud/compass.png")
 
     private val arrowColorValue = RGBColorValue("ArrowColor", 255, 0, 0)
 
