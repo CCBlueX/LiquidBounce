@@ -14,7 +14,6 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.FastBow
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.extensions.cos
-import net.ccbluex.liquidbounce.utils.extensions.getPotionLiquidColor
 import net.ccbluex.liquidbounce.utils.extensions.sin
 import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
@@ -29,6 +28,7 @@ import net.minecraft.entity.item.EntityExpBottle
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.entity.projectile.*
 import net.minecraft.item.*
+import net.minecraft.potion.PotionHelper
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.BlockPos
 import net.minecraft.util.MovingObjectPosition
@@ -350,7 +350,7 @@ class Projectiles : Module()
                 {
                     is EntityEgg -> -2109797
                     is EntityEnderPearl -> -6750004
-                    is EntityPotion -> ColorUtils.applyAlphaChannel(getPotionLiquidColor(projectile, false), 255)
+                    is EntityPotion -> ColorUtils.applyAlphaChannel(PotionHelper.getLiquidColor(projectile.potionDamage, false), 255)
                     is EntityExpBottle -> -3539055
                     else -> -1
                 }

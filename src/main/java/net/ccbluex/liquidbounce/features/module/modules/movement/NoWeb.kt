@@ -83,7 +83,7 @@ class NoWeb : Module()
 
             "oldmatrix" ->
             {
-                thePlayer.jumpMovementFactor = 0.124133333f
+                thePlayer.jumpMovementFactor = 0.12413333f
                 thePlayer.motionY = -0.0125
                 if (mc.gameSettings.keyBindSneak.isKeyDown) thePlayer.motionY = -0.1625
                 if (thePlayer.onGround)

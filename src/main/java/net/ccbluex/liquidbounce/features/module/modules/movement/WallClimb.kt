@@ -16,6 +16,8 @@ import net.ccbluex.liquidbounce.utils.extensions.sin
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockAir
+import net.minecraft.client.entity.EntityPlayerSP
+import net.minecraft.client.multiplayer.WorldClient
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.util.AxisAlignedBB
 
@@ -57,68 +59,73 @@ class WallClimb : Module()
 
         when (modeValue.get().lowercase())
         {
-            "clip" ->
+            "clip" -> clipClimb(thePlayer, onGround)
+            "checkerclimb" -> checkerClimb(theWorld, thePlayer)
+            "aac3.3.12" -> aac3_3_12Climb(thePlayer, onGround)
+            "aac3.3.8-glide" -> aac3_3_8Glide(thePlayer)
+        }
+    }
+
+    private fun clipClimb(thePlayer: EntityPlayerSP, onGround: Boolean)
+    {
+        if (thePlayer.motionY < 0) glitch = true
+
+        if (thePlayer.isCollidedHorizontally)
+        {
+            when (clipMode.get().lowercase())
             {
-                if (thePlayer.motionY < 0) glitch = true
+                "jump" -> if (onGround) thePlayer.jump()
 
-                if (thePlayer.isCollidedHorizontally)
-                {
-                    when (clipMode.get().lowercase())
-                    {
-                        "jump" -> if (onGround) thePlayer.jump()
-
-                        "fast" -> if (onGround) thePlayer.motionY = 0.42
-                        else if (thePlayer.motionY < 0) thePlayer.motionY = -0.3
-                    }
-                }
-            }
-
-            "checkerclimb" ->
-            {
-                val isInsideBlock = theWorld.collideBlockIntersects(thePlayer.entityBoundingBox) { it !is BlockAir }
-                val motion = checkerClimbMotionValue.get()
-
-                if (isInsideBlock && motion != 0f) thePlayer.motionY = motion.toDouble()
-            }
-
-            "aac3.3.12" -> if (thePlayer.isCollidedHorizontally && !thePlayer.isOnLadder)
-            {
-                aac3_3_12_steps++
-                if (aac3_3_12_steps < 30) when (aac3_3_12_steps)
-                {
-                    1 -> thePlayer.motionY = 0.43
-                    12 -> thePlayer.motionY = 0.43
-                    23 -> thePlayer.motionY = 0.43
-                    29 -> thePlayer.setPosition(thePlayer.posX, thePlayer.posY + 0.5, thePlayer.posZ)
-                }
-                else aac3_3_12_steps = 0
-            }
-            else if (onGround) aac3_3_12_steps = 0
-
-            "aac3.3.8-glide" ->
-            {
-                if (!thePlayer.isCollidedHorizontally || thePlayer.isOnLadder) return
-
-                thePlayer.motionY = -0.19
+                "fast" -> if (onGround) thePlayer.motionY = 0.42
+                else if (thePlayer.motionY < 0) thePlayer.motionY = -0.3
             }
         }
+    }
+
+    private fun checkerClimb(theWorld: WorldClient, thePlayer: EntityPlayerSP)
+    {
+        val isInsideBlock = theWorld.collideBlockIntersects(thePlayer.entityBoundingBox) { it !is BlockAir }
+        val motion = checkerClimbMotionValue.get()
+
+        if (isInsideBlock && motion != 0f) thePlayer.motionY = motion.toDouble()
+    }
+
+    private fun aac3_3_12Climb(thePlayer: EntityPlayerSP, onGround: Boolean)
+    {
+        if (thePlayer.isCollidedHorizontally && !thePlayer.isOnLadder)
+        {
+            aac3_3_12_steps++
+            if (aac3_3_12_steps < 30) when (aac3_3_12_steps)
+            {
+                1 -> thePlayer.motionY = 0.43
+                12 -> thePlayer.motionY = 0.43
+                23 -> thePlayer.motionY = 0.43
+                29 -> thePlayer.setPosition(thePlayer.posX, thePlayer.posY + 0.5, thePlayer.posZ)
+            }
+            else aac3_3_12_steps = 0
+        }
+        else if (onGround) aac3_3_12_steps = 0
+    }
+
+    private fun aac3_3_8Glide(thePlayer: EntityPlayerSP)
+    {
+        if (!thePlayer.isCollidedHorizontally || thePlayer.isOnLadder) return
+
+        thePlayer.motionY = -0.19
     }
 
     @EventTarget
     fun onPacket(event: PacketEvent)
     {
-        if (event.packet is C03PacketPlayer)
+        if (event.packet is C03PacketPlayer && glitch)
         {
-            if (glitch)
-            {
-                val thePlayer = mc.thePlayer ?: return
+            val thePlayer = mc.thePlayer ?: return
 
-                val dir = thePlayer.moveDirectionRadians
-                event.packet.x = event.packet.x - dir.sin * 0.00000001
-                event.packet.z = event.packet.z + dir.cos * 0.00000001
+            val dir = thePlayer.moveDirectionRadians
+            event.packet.x = event.packet.x - dir.sin * 0.00000001
+            event.packet.z = event.packet.z + dir.cos * 0.00000001
 
-                glitch = false
-            }
+            glitch = false
         }
     }
 

@@ -29,6 +29,7 @@ import net.minecraft.item.Item
 import net.minecraft.item.ItemGlassBottle
 import net.minecraft.item.ItemPotion
 import net.minecraft.network.play.client.C07PacketPlayerDigging
+import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.network.play.client.C0DPacketCloseWindow
 import net.minecraft.potion.PotionEffect
 import net.minecraft.util.BlockPos
@@ -173,7 +174,7 @@ class AutoUse : Module()
 
                         val stack = inventoryContainer.getSlot(slotToUse).stack
 
-                        if (isFirst) netHandler.addToSendQueue(createUseItemPacket(stack))
+                        if (isFirst) netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(stack))
 
                         // Suspend killaura if option is present
                         if (killauraBypassModeValue.get().equals("SuspendKillAura", true)) killAura.suspend(killAuraBypassKillAuraSuspendDurationValue.get().toLong())

@@ -313,7 +313,6 @@ class NullStyle : Style()
         val moduleX = moduleElement.x + moduleElement.width
         val moduleIndentX = moduleX + indent
 
-        val soundHandler = mc.soundHandler
         val valueDisplayName = value.displayName
 
         assumeVolatileIf(value.get() is Number) {

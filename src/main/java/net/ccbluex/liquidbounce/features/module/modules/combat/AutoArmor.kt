@@ -24,6 +24,7 @@ import net.minecraft.client.gui.inventory.GuiContainer
 import net.minecraft.client.gui.inventory.GuiInventory
 import net.minecraft.item.ItemArmor
 import net.minecraft.item.ItemStack
+import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.network.play.client.C0DPacketCloseWindow
 import java.lang.ref.SoftReference
 import java.util.*
@@ -145,7 +146,7 @@ class AutoArmor : Module()
 
         if (!isArmorSlot && item < 9 && hotbarValue.get() && screen !is GuiInventory && InventoryUtils.tryHoldSlot(thePlayer, item))
         {
-            netHandler.addToSendQueue(createUseItemPacket(thePlayer.inventoryContainer.getSlot(item).stack))
+            netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(thePlayer.inventoryContainer.getSlot(item).stack))
             InventoryUtils.resetSlot(thePlayer)
 
             nextDelay = delayValue.getRandomLong()

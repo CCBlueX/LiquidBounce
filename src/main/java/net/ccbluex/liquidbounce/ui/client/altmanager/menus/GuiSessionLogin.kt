@@ -127,7 +127,6 @@ class GuiSessionLogin(private val prevGui: GuiScreen) : GuiScreen()
 
                 LoginUtils.LoginResult.FAILED_PARSE_SESSION -> "\u00A7cFailed to parse Session ID!"
                 LoginUtils.LoginResult.INVALID_ACCOUNT_DATA -> "\u00A7cInvalid Session ID!"
-                else -> ""
             }
 
             loginButton.enabled = true

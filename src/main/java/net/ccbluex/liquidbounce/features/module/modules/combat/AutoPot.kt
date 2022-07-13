@@ -27,6 +27,7 @@ import net.minecraft.entity.EntityLivingBase
 import net.minecraft.inventory.Container
 import net.minecraft.item.ItemPotion
 import net.minecraft.item.ItemStack
+import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.network.play.client.C0DPacketCloseWindow
 import net.minecraft.potion.Potion
 import net.minecraft.potion.PotionEffect
@@ -274,7 +275,7 @@ class AutoPot : Module()
 
                     if (itemStack != null)
                     {
-                        netHandler.addToSendQueue(createUseItemPacket(itemStack))
+                        netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(itemStack))
 
                         if (throwSilentValue.get()) InventoryUtils.resetSlot(thePlayer)
 

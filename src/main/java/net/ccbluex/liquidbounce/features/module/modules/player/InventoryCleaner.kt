@@ -539,12 +539,12 @@ class InventoryCleaner : Module()
             }
 
             "food" -> if (filterFoodCountValue.get() > 0) mainInventory.filter { it.value?.item is ItemFood }.map { it.index to it.value!! }.filter { it.second.item !is ItemAppleGold }.filter { !type(it.first).equals("Food", ignoreCase = true) }.toList().forEach { (index, stack) -> return@findBetterItem if (stack.isEmpty || stack.item !is ItemFood) index else null }
-            "block" -> mainInventory.filter { it.value?.item is ItemBlock }.map { it.index to it.value?.item as ItemBlock }.filter { !BLACKLISTED_BLOCKS.contains(it.second.block) }.filter { !type(it.first).equals("Block", ignoreCase = true) }.forEach { (index, item) -> return@findBetterItem if (slotStack.isEmpty || item !is ItemBlock) index else null }
+            "block" -> mainInventory.filter { it.value?.item is ItemBlock }.map { it.index to it.value?.item as ItemBlock }.filter { !BLACKLISTED_BLOCKS.contains(it.second.block) }.filter { !type(it.first).equals("Block", ignoreCase = true) }.forEach { (index, item) -> return@findBetterItem if (slotStack.isEmpty) index else null }
 
             "water" -> if (filterBucketWaterCountValue.get() > 0)
             {
                 val flowingWater = Blocks.flowing_water
-                mainInventory.filter { it.value?.item is ItemBucket }.map { it.index to it.value?.item as ItemBucket }.filter { it.second.isFull == flowingWater }.filter { !type(it.first).equals("Water", ignoreCase = true) }.toList().forEach { (index, item) -> return@findBetterItem if (slotStack.isEmpty || item !is ItemBucket || item.isFull != flowingWater) index else null }
+                mainInventory.filter { it.value?.item is ItemBucket }.map { it.index to it.value?.item as ItemBucket }.filter { it.second.isFull == flowingWater }.filter { !type(it.first).equals("Water", ignoreCase = true) }.toList().forEach { (index, item) -> return@findBetterItem if (slotStack.isEmpty || item.isFull != flowingWater) index else null }
             }
 
             "gapple" -> if (filterFoodCountValue.get() > 0) mainInventory.filter { it.value?.item is ItemAppleGold }.filter { !type(it.index).equals("Gapple", ignoreCase = true) }.forEach { return@findBetterItem if (slotStack.isEmpty || slotStack?.item !is ItemAppleGold) it.index else null }

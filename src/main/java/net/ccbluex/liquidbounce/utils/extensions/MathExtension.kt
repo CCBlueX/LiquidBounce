@@ -27,4 +27,4 @@ val Float.toRadians: Float
     get() = this * 0.017453292F /* 1 / 180 * PI = 0.017453292... */
 
 val Float.toDegrees: Float
-    get() = this * 57.295779513F /* 1 * 180 / PI = 57.295779513... */
+    get() = this * 57.29578F /* 1 * 180 / PI = 57.295779513... */

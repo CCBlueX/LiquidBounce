@@ -33,7 +33,7 @@ class AAC3_0_5BHop : SpeedMode("AAC3.0.5-BHop") // Was AAC2BHop
             }
             else if (thePlayer.motionY > -0.2)
             {
-                thePlayer.motionY += 0.0143099999999999999999999999999
+                thePlayer.motionY += 0.01431
                 thePlayer.jumpMovementFactor = 0.07f
             }
         }

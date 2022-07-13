@@ -153,7 +153,7 @@ class LongJump : Module()
                     "aac3.0.5", "mineplex3" ->
                     {
                         thePlayer.jumpMovementFactor = 0.09f
-                        thePlayer.motionY += 0.0132099999999999999999999999999
+                        thePlayer.motionY += 0.01321
                         thePlayer.jumpMovementFactor = 0.08f
 
                         thePlayer.strafe()
@@ -173,7 +173,7 @@ class LongJump : Module()
 
                     "mineplex" ->
                     {
-                        thePlayer.motionY += 0.0132099999999999999999999999999
+                        thePlayer.motionY += 0.01321
                         thePlayer.jumpMovementFactor = 0.08f
                         boosted = true
                         thePlayer.strafe()

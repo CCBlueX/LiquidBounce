@@ -5,11 +5,11 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.modules.render.XRay
 import net.ccbluex.liquidbounce.file.FileManager
 import net.minecraft.block.Block
+import net.minecraft.client.entity.EntityPlayerSP
 
 class XrayCommand : Command("xray")
 {
-
-    val xRay = LiquidBounce.moduleManager[XRay::class.java] as XRay
+    private val xRay = LiquidBounce.moduleManager[XRay::class.java] as XRay
 
     /**
      * Execute commands with provided [args]
@@ -26,42 +26,7 @@ class XrayCommand : Command("xray")
                 {
                     if (args.size > 2)
                     {
-                        try
-                        {
-                            val block = try
-                            {
-                                Block.getBlockById(args[2].toInt())
-                            }
-                            catch (exception: NumberFormatException)
-                            {
-                                val tmpBlock = Block.getBlockFromName(args[2])
-
-                                if (tmpBlock == null || Block.getIdFromBlock(tmpBlock) <= 0)
-                                {
-                                    chat(thePlayer, "\u00A77Block \u00A78${args[2]}\u00A77 does not exist!")
-                                    return
-                                }
-
-                                tmpBlock
-                            }
-
-                            if (block == null || xRay.xrayBlocks.contains(block))
-                            {
-                                chat(thePlayer, "This block is already on the list.")
-                                return
-                            }
-
-                            xRay.xrayBlocks.add(block)
-                            if (xRay.state) mc.renderGlobal.loadRenderers()
-                            FileManager.saveConfig(LiquidBounce.fileManager.xrayConfig)
-                            chat(thePlayer, "\u00A77Added block \u00A78${block.localizedName}\u00A77.")
-                            playEdit()
-                        }
-                        catch (exception: NumberFormatException)
-                        {
-                            chatSyntaxError(thePlayer)
-                        }
-
+                        addBlock(thePlayer, args[2])
                         return
                     }
 
@@ -73,42 +38,7 @@ class XrayCommand : Command("xray")
                 {
                     if (args.size > 2)
                     {
-                        try
-                        {
-                            val block = try
-                            {
-                                Block.getBlockById(args[2].toInt())
-                            }
-                            catch (exception: NumberFormatException)
-                            {
-                                val tmpBlock = Block.getBlockFromName(args[2])
-
-                                if (tmpBlock == null || Block.getIdFromBlock(tmpBlock) <= 0)
-                                {
-                                    chat(thePlayer, "\u00A77Block \u00A78${args[2]}\u00A77 does not exist!")
-                                    return
-                                }
-
-                                tmpBlock
-                            }
-
-                            if (block == null || !xRay.xrayBlocks.contains(block))
-                            {
-                                chat(thePlayer, "This block is not on the list.")
-                                return
-                            }
-
-                            xRay.xrayBlocks.remove(block)
-                            if (xRay.state) mc.renderGlobal.loadRenderers()
-                            FileManager.saveConfig(LiquidBounce.fileManager.xrayConfig)
-                            chat(thePlayer, "\u00A77Removed block \u00A78${block.localizedName}\u00A77.")
-                            playEdit()
-                        }
-                        catch (exception: NumberFormatException)
-                        {
-                            chatSyntaxError(thePlayer)
-                        }
-
+                        removeBlock(thePlayer, args[2])
                         return
                     }
                     chatSyntax(thePlayer, "xray remove <block_id>")
@@ -160,5 +90,54 @@ class XrayCommand : Command("xray")
 
             else -> emptyList()
         }
+    }
+
+    private fun addBlock(thePlayer: EntityPlayerSP?, blockName: String)
+    {
+        val block = parseBlockName(thePlayer, blockName) ?: return
+
+        if (xRay.xrayBlocks.contains(block))
+        {
+            chat(thePlayer, "This block is already on the list.")
+            return
+        }
+
+        xRay.xrayBlocks.add(block)
+
+        // Refresh XRay
+        if (xRay.state) mc.renderGlobal.loadRenderers()
+
+        FileManager.saveConfig(LiquidBounce.fileManager.xrayConfig)
+        chat(thePlayer, "\u00A77Added block \u00A78${block.localizedName}\u00A77.")
+        playEdit()
+    }
+
+    private fun removeBlock(thePlayer: EntityPlayerSP?, blockName: String)
+    {
+        val block = parseBlockName(thePlayer, blockName) ?: return
+        if (!xRay.xrayBlocks.contains(block))
+        {
+            chat(thePlayer, "This block is not on the list.")
+            return
+        }
+
+        xRay.xrayBlocks.remove(block)
+
+        // Refresh XRay
+        if (xRay.state) mc.renderGlobal.loadRenderers()
+        FileManager.saveConfig(LiquidBounce.fileManager.xrayConfig)
+        chat(thePlayer, "\u00A77Removed block \u00A78${block.localizedName}\u00A77.")
+        playEdit()
+    }
+
+    private fun parseBlockName(thePlayer: EntityPlayerSP?, blockName: String): Block? = blockName.toIntOrNull()?.let(Block::getBlockById) ?: run {
+        val tmpBlock = Block.getBlockFromName(blockName)
+
+        if (tmpBlock == null || Block.getIdFromBlock(tmpBlock) <= 0)
+        {
+            chat(thePlayer, "\u00A77Block \u00A78$blockName\u00A77 does not exist!")
+            null
+        }
+        else tmpBlock
     }
 }

@@ -19,6 +19,7 @@ import net.minecraft.client.gui.inventory.GuiContainer
 import net.minecraft.client.gui.inventory.GuiInventory
 import net.minecraft.init.Items
 import net.minecraft.network.play.client.C07PacketPlayerDigging
+import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.network.play.client.C0DPacketCloseWindow
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
@@ -171,7 +172,7 @@ class AutoSoup : Module()
 
                     if (itemStack != null)
                     {
-                        netHandler.addToSendQueue(createUseItemPacket(itemStack))
+                        netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(itemStack))
 
                         if (handleBowl.equals("Drop", true)) netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.DROP_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
 

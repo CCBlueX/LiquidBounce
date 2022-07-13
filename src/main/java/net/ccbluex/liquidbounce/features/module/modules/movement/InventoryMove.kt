@@ -42,7 +42,6 @@ class InventoryMove : Module()
     fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
     {
         val currentScreen = mc.currentScreen
-        val gameSettings = mc.gameSettings
         if (currentScreen !is GuiChat && currentScreen !is GuiIngameMenu && (!undetectable.get() || currentScreen !is GuiContainer) && (!onlyInventoryValue.get() || currentScreen !is GuiContainer || currentScreen is GuiInventory)) for (affectedBinding in affectedBindings) affectedBinding.pressed = GameSettings.isKeyDown(affectedBinding)
     }
 

@@ -255,7 +255,7 @@ class BufferSpeed : Module()
 
             if (bufferValue.get() && speed > 0.2f)
             {
-                speed /= 1.0199999809265137F
+                speed /= 1.02F
                 thePlayer.strafe(speed)
             }
         }

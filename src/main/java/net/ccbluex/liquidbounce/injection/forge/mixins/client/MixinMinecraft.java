@@ -149,7 +149,7 @@ public abstract class MixinMinecraft
             displayGuiScreen(new GuiUpdate());
     }
 
-    @Inject(method = "createDisplay", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/Display;setTitle(Ljava/lang/String;)V", shift = Shift.AFTER))
+    @Inject(method = "createDisplay", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/Display;setTitle(Ljava/lang/String;)V", shift = Shift.AFTER), remap = false)
     private void injectLiquidBounceTitle(final CallbackInfo callbackInfo)
     {
         // Set the window title

@@ -18,11 +18,11 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.ccbluex.liquidbounce.value.ValueGroup
+import net.minecraft.client.entity.EntityPlayerSP
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 import net.minecraft.network.play.server.S12PacketEntityVelocity
 import net.minecraft.util.BlockPos
 import net.minecraft.util.Vec3
-import kotlin.math.sqrt
 
 @ModuleInfo(name = "Velocity", description = "Allows you to modify the amount of knockback you take. (a.k.a. AntiKnockback)", category = ModuleCategory.COMBAT)
 class Velocity : Module()
@@ -208,19 +208,15 @@ class Velocity : Module()
 
             when (modeValue.get().lowercase())
             {
-                "simple" ->
-                {
-                    val horizontal = horizontalValue.get()
-                    val vertical = verticalValue.get()
-
-                    if (horizontal == 0F && vertical == 0F) event.cancelEvent()
-
-                    packet.motionX = (packet.motionX * horizontal).toInt()
-                    packet.motionY = (packet.motionY * vertical).toInt()
-                    packet.motionZ = (packet.motionZ * horizontal).toInt()
-                }
+                "simple" -> if (applySimpleVelocity(packet)) event.cancelEvent()
 
                 "aac3.1.2", "aac3.2.0-reverse", "aac3.3.4-reverse", "aac3.5.0-zero" -> velocityInput = true
+
+                "phase" -> if (applyPhaseVelocity(thePlayer)) event.cancelEvent()
+
+                "packetphase" -> if (applyPacketPhaseVelocity(thePlayer, packet)) event.cancelEvent()
+
+                "legit" -> pos = BlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)
 
                 "glitch" ->
                 {
@@ -229,27 +225,6 @@ class Velocity : Module()
                     velocityInput = true
                     event.cancelEvent()
                 }
-
-                "phase" ->
-                {
-                    if (!thePlayer.onGround && phaseOnlyGround.get()) return
-
-                    velocityInput = true
-                    thePlayer.setPositionAndUpdate(thePlayer.posX, thePlayer.posY - phaseHeightValue.get(), thePlayer.posZ)
-                    event.cancelEvent()
-                }
-
-                "packetphase" ->
-                {
-                    if (!thePlayer.onGround && phaseOnlyGround.get()) return
-
-                    if (packet.motionX < 500 && packet.motionY < 500) return
-
-                    mc.netHandler.addToSendQueue(C04PacketPlayerPosition(thePlayer.posX, thePlayer.posY - phaseHeightValue.get(), thePlayer.posZ, false))
-                    event.cancelEvent()
-                }
-
-                "legit" -> pos = BlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)
             }
         }
 
@@ -288,30 +263,34 @@ class Velocity : Module()
         if (legitFaceValue.get()) RotationUtils.setTargetRotation(rotation)
 
         if (legitStrafeValue.get()) thePlayer.strafe(directionDegrees = rotation.yaw)
-        else
-        {
-            var strafe = event.strafe
-            var forward = event.forward
-            val friction = event.friction
-
-            var f = strafe * strafe + forward * forward
-
-            if (f >= 1.0E-4F)
-            {
-                f = sqrt(f)
-
-                if (f < 1.0F) f = 1.0F
-
-                f = friction / f
-                strafe *= f
-                forward *= f
-
-                val dir = rotation.yaw.toRadians
-                val sin = dir.sin
-                val cos = dir.cos
-                thePlayer.motionX += strafe * cos - forward * sin
-                thePlayer.motionZ += forward * cos + strafe * sin
-            }
-        }
+        else thePlayer.simulateStrafe(event.forward, event.strafe, event.friction, rotation.yaw)
     }
+
+    private fun applySimpleVelocity(packet: S12PacketEntityVelocity): Boolean
+    {
+        val horizontal = horizontalValue.get()
+        val vertical = verticalValue.get()
+
+        if (horizontal == 0F && vertical == 0F) return true
+
+        packet.motionX = (packet.motionX * horizontal).toInt()
+        packet.motionY = (packet.motionY * vertical).toInt()
+        packet.motionZ = (packet.motionZ * horizontal).toInt()
+        return false;
+    }
+
+    private fun applyPacketPhaseVelocity(thePlayer: EntityPlayerSP, packet: S12PacketEntityVelocity): Boolean = if (!(!thePlayer.onGround && phaseOnlyGround.get() || packet.motionX < 500 && packet.motionY < 500))
+    {
+        mc.netHandler.addToSendQueue(C04PacketPlayerPosition(thePlayer.posX, thePlayer.posY - phaseHeightValue.get(), thePlayer.posZ, false))
+        true
+    }
+    else false
+
+    private fun applyPhaseVelocity(thePlayer: EntityPlayerSP): Boolean = if (thePlayer.onGround || !phaseOnlyGround.get())
+    {
+        velocityInput = true
+        thePlayer.setPositionAndUpdate(thePlayer.posX, thePlayer.posY - phaseHeightValue.get(), thePlayer.posZ)
+        true
+    }
+    else false
 }

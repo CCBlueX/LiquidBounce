@@ -35,7 +35,7 @@ class YPort : SpeedMode("YPort")
 
         val thePlayer = mc.thePlayer ?: return
 
-        if (!safeJump && !thePlayer.movementInput.jump && !thePlayer.cantBoostUp && (this.getBlock(thePlayer, -1.1) !is BlockAir && this.getBlock(thePlayer, -1.1) !is BlockAir || this.getBlock(thePlayer, -0.1) !is BlockAir && thePlayer.motionX != 0.0 && thePlayer.motionZ != 0.0 && !thePlayer.onGround && thePlayer.fallDistance < 3.0f && thePlayer.fallDistance > 0.05) && step == 3) thePlayer.motionY = -0.3994
+        if (!safeJump && !thePlayer.movementInput.jump && !thePlayer.cantBoostUp && (this.getBlock(thePlayer, -1.1) !is BlockAir || this.getBlock(thePlayer, -0.1) !is BlockAir && thePlayer.motionX != 0.0 && thePlayer.motionZ != 0.0 && !thePlayer.onGround && thePlayer.fallDistance < 3.0f && thePlayer.fallDistance > 0.05) && step == 3) thePlayer.motionY = -0.3994
 
         lastSpeed = hypot(thePlayer.posX - thePlayer.prevPosX, thePlayer.posZ - thePlayer.prevPosZ)
 

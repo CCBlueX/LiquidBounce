@@ -47,7 +47,7 @@ class Criticals : Module()
     {
         override fun showCondition() = customStepsValue.get() >= 1
     }
-    private val customYStep2Value = object : FloatValue("Step2", 0.1100013579F, 0f, 2.9f, "Custom-Step2")
+    private val customYStep2Value = object : FloatValue("Step2", 0.110001355F, 0f, 2.9f, "Custom-Step2")
     {
         override fun showCondition() = customStepsValue.get() >= 2
     }

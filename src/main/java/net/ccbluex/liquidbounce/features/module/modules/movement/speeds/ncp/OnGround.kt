@@ -37,7 +37,7 @@ class OnGround : SpeedMode("OnGround")
             thePlayer.multiply(1.590000033378601)
 
             thePlayer.motionY = 0.3993000090122223
-            LiquidBounce.eventManager.callEvent(JumpEvent(0.3993000090122223f))
+            LiquidBounce.eventManager.callEvent(JumpEvent(0.3993f))
 
             timer.timerSpeed = 1.199f
         }

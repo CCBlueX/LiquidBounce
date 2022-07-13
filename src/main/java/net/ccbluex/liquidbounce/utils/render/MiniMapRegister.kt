@@ -81,8 +81,6 @@ object MiniMapRegister : MinecraftInstance()
 
         fun updateChunkData(chunk: Chunk)
         {
-            val theWorld = mc.theWorld ?: return
-
             val rgbValues = texture.textureData
 
             (0..15).forEach { x ->

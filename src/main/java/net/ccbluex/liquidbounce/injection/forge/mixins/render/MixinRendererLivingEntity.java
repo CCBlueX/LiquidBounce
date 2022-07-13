@@ -335,7 +335,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender
      * @author eric0210
      * @reason HurtCam: Custom Hurt Effect Color
      */
-    @Inject(method = "setBrightness", at = @At(value = "INVOKE", target = "Ljava/nio/FloatBuffer;put(F)Ljava/nio/FloatBuffer;", ordinal = 3, shift = Shift.AFTER))
+    @Inject(method = "setBrightness", at = @At(value = "INVOKE", target = "Ljava/nio/FloatBuffer;put(F)Ljava/nio/FloatBuffer;", ordinal = 3, shift = Shift.AFTER), remap = false)
     private <T extends EntityLivingBase> void setBrightness(final T entitylivingbaseIn, final float partialTicks, final boolean combineTextures, final CallbackInfoReturnable<Boolean> cir)
     {
         final HurtCam hurtCam = (HurtCam) LiquidBounce.moduleManager.get(HurtCam.class);

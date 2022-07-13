@@ -97,7 +97,7 @@ object CapeService : Listenable, MinecraftInstance()
                         lastUpdate.reset()
 
                         // Call out done
-                        mc.addScheduledTask(::done)
+                        mc.addScheduledTask { done() }
                     }.onFailure {
                         ClientUtils.logger.error("Failed to refresh cape carriers due to error.", it)
                     }

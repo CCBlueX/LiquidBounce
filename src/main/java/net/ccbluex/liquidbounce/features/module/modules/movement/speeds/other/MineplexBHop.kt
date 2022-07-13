@@ -51,7 +51,7 @@ class MineplexBHop : SpeedMode("Mineplex-BHop")
         }
 
         var minimum = 0f
-        if (!wfg) minimum = 0.399900111f
+        if (!wfg) minimum = 0.3999001f
 
         thePlayer.strafe(speed1.coerceIn(minimum, 2f))
     }
