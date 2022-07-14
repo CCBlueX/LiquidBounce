@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.client.settings.KeyBinding
+import net.minecraft.init.Blocks
 import kotlin.random.Random
 
 @ModuleInfo(name = "AutoClicker", description = "Constantly clicks when holding down a mouse button.", category = ModuleCategory.COMBAT)
@@ -49,25 +50,48 @@ class AutoClicker : Module() {
     private var leftDelay = TimeUtils.randomClickDelay(minCPSValue.get(), maxCPSValue.get())
     private var leftLastSwing = 0L
 
-    @EventTarget
-    fun onRender(event: Render3DEvent) {
-        // Left click
-        if (mc.gameSettings.keyBindAttack.isKeyDown && leftValue.get() &&
-                System.currentTimeMillis() - leftLastSwing >= leftDelay && mc.playerController.curBlockDamageMP == 0F) {
+    private var blockBrokenDelay = 1000L / 20 * (6 + 2) // 6 ticks and 2 ticks more, just in case
+    private var blockLastBroken = 0L
+    private var wasBreakingBlock = false
+
+    // BUG: There is no delay between breaking blocks in creative mode
+    // BUG: If jitter is enabled, cursor jitters between breaking blocks
+    fun leftClick(currentTime: Long) {
+        if (mc.gameSettings.keyBindAttack.isKeyDown && leftValue.get()) {
+            var isBreakingBlock = mc.playerController.curBlockDamageMP != 0F
+            if (!isBreakingBlock && wasBreakingBlock) {
+                blockLastBroken = currentTime
+            }
+            wasBreakingBlock = isBreakingBlock
+            if (isBreakingBlock || currentTime - leftLastSwing < leftDelay
+                || (currentTime - blockLastBroken < blockBrokenDelay &&
+                mc.objectMouseOver != null && mc.objectMouseOver!!.blockPos != null && mc.theWorld != null &&
+                mc.theWorld.getBlockState(mc.objectMouseOver.blockPos).block != Blocks.air)) {
+                return
+            }
             KeyBinding.onTick(mc.gameSettings.keyBindAttack.keyCode) // Minecraft Click Handling
 
-            leftLastSwing = System.currentTimeMillis()
+            leftLastSwing = currentTime
+            blockLastBroken = 0L
             leftDelay = TimeUtils.randomClickDelay(minCPSValue.get(), maxCPSValue.get())
         }
+    }
 
-        // Right click
+    fun rightClick(currentTime: Long) {
         if (mc.gameSettings.keyBindUseItem.isKeyDown && !mc.thePlayer!!.isUsingItem && rightValue.get() &&
-                System.currentTimeMillis() - rightLastSwing >= rightDelay) {
+                currentTime - rightLastSwing >= rightDelay) {
             KeyBinding.onTick(mc.gameSettings.keyBindUseItem.keyCode) // Minecraft Click Handling
 
-            rightLastSwing = System.currentTimeMillis()
+            rightLastSwing = currentTime
             rightDelay = TimeUtils.randomClickDelay(minCPSValue.get(), maxCPSValue.get())
         }
+    }
+
+    @EventTarget
+    fun onRender(event: Render3DEvent) {
+        var currentTime = System.currentTimeMillis()
+        leftClick(currentTime)
+        rightClick(currentTime)
     }
 
     @EventTarget
