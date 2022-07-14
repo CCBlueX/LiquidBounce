@@ -50,23 +50,32 @@ class AutoClicker : Module() {
     private var leftDelay = TimeUtils.randomClickDelay(minCPSValue.get(), maxCPSValue.get())
     private var leftLastSwing = 0L
 
-    private var blockBrokenDelay = 1000L / 20 * (6 + 2) // 6 ticks and 2 ticks more, just in case
+    private var blockBrokenDelay = 1000L / 20 * (6 + 2) // 6 ticks and 2 more, so autoclicker
+    // won't click between breaking blocks for sure
     private var blockLastBroken = 0L
+    private var isBreakingBlock = false
     private var wasBreakingBlock = false
 
+    fun leftCanAutoClick(currentTime: Long): Boolean {
+        return !isBreakingBlock
+                && !(currentTime - blockLastBroken < blockBrokenDelay &&
+                mc.objectMouseOver != null && mc.objectMouseOver!!.blockPos != null && mc.theWorld != null &&
+                mc.theWorld.getBlockState(mc.objectMouseOver.blockPos).block != Blocks.air)
+    }
+
+    fun rightCanAutoClick(): Boolean {
+        return !mc.thePlayer!!.isUsingItem
+    }
+
     // BUG: There is no delay between breaking blocks in creative mode
-    // BUG: If jitter is enabled, cursor jitters between breaking blocks
     fun leftClick(currentTime: Long) {
-        if (mc.gameSettings.keyBindAttack.isKeyDown && leftValue.get()) {
-            var isBreakingBlock = mc.playerController.curBlockDamageMP != 0F
+        if (leftValue.get() && mc.gameSettings.keyBindAttack.isKeyDown) {
+            isBreakingBlock = mc.playerController.curBlockDamageMP != 0F
             if (!isBreakingBlock && wasBreakingBlock) {
                 blockLastBroken = currentTime
             }
             wasBreakingBlock = isBreakingBlock
-            if (isBreakingBlock || currentTime - leftLastSwing < leftDelay
-                || (currentTime - blockLastBroken < blockBrokenDelay &&
-                mc.objectMouseOver != null && mc.objectMouseOver!!.blockPos != null && mc.theWorld != null &&
-                mc.theWorld.getBlockState(mc.objectMouseOver.blockPos).block != Blocks.air)) {
+            if (currentTime - leftLastSwing < leftDelay || !leftCanAutoClick(currentTime)) {
                 return
             }
             KeyBinding.onTick(mc.gameSettings.keyBindAttack.keyCode) // Minecraft Click Handling
@@ -78,8 +87,7 @@ class AutoClicker : Module() {
     }
 
     fun rightClick(currentTime: Long) {
-        if (mc.gameSettings.keyBindUseItem.isKeyDown && !mc.thePlayer!!.isUsingItem && rightValue.get() &&
-                currentTime - rightLastSwing >= rightDelay) {
+        if (rightValue.get() && mc.gameSettings.keyBindUseItem.isKeyDown && currentTime - rightLastSwing >= rightDelay && rightCanAutoClick()) {
             KeyBinding.onTick(mc.gameSettings.keyBindUseItem.keyCode) // Minecraft Click Handling
 
             rightLastSwing = currentTime
@@ -96,10 +104,9 @@ class AutoClicker : Module() {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
-
-        if (jitterValue.get() && (leftValue.get() && mc.gameSettings.keyBindAttack.isKeyDown && mc.playerController.curBlockDamageMP == 0F
-                        || rightValue.get() && mc.gameSettings.keyBindUseItem.isKeyDown && !thePlayer.isUsingItem)) {
+        if (jitterValue.get() && ((leftValue.get() && mc.gameSettings.keyBindAttack.isKeyDown && leftCanAutoClick(System.currentTimeMillis()))
+                || (rightValue.get() && mc.gameSettings.keyBindUseItem.isKeyDown && rightCanAutoClick()))) {
+            val thePlayer = mc.thePlayer ?: return
             if (Random.nextBoolean()) thePlayer.rotationYaw += if (Random.nextBoolean()) -RandomUtils.nextFloat(0F, 1F) else RandomUtils.nextFloat(0F, 1F)
 
             if (Random.nextBoolean()) {
