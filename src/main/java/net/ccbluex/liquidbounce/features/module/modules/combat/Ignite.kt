@@ -18,12 +18,17 @@ import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.block.BlockAir
+import net.minecraft.client.entity.EntityPlayerSP
+import net.minecraft.client.multiplayer.WorldClient
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.init.Items
 import net.minecraft.item.ItemBucket
+import net.minecraft.item.ItemStack
+import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 import net.minecraft.util.Vec3
+import net.minecraft.util.Vec3i
 import java.util.*
 import kotlin.math.atan2
 import kotlin.math.hypot
@@ -63,15 +68,12 @@ class Ignite : Module()
 
         val theWorld = mc.theWorld ?: return
         val thePlayer = mc.thePlayer ?: return
-        val netHandler = mc.netHandler
-        val controller = mc.playerController
-
-        val inventoryContainer = thePlayer.inventoryContainer
 
         val itemDelay = itemDelayValue.get()
         val randomSlot = randomSlotValue.get()
         val range = rangeValue.get()
 
+        val inventoryContainer = thePlayer.inventoryContainer
         val lighterInHotbar = if (lighterValue.get()) inventoryContainer.findItem(36, 45, Items.flint_and_steel, itemDelay.toLong(), randomSlot) else -1
         val lavaInHotbar = if (lavaBucketValue.get()) inventoryContainer.findItem(26, 45, Items.lava_bucket, itemDelay.toLong(), randomSlot) else -1
 
@@ -84,44 +86,47 @@ class Ignite : Module()
 
             val itemStack = thePlayer.inventory.getStackInSlot(fireInHotbar - 36)
 
-            if (itemStack != null && itemStack.item is ItemBucket)
-            {
-                val diffX = blockPos.x + 0.5 - thePlayer.posX
-                val diffY = blockPos.y + 0.5 - (thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight)
-                val diffZ = blockPos.z + 0.5 - thePlayer.posZ
-                val sqrt = hypot(diffX, diffZ)
-
-                val rotation = Rotation((atan2(diffZ, diffX).toFloat()).toDegrees - 90.0f, -(atan2(diffY, sqrt).toFloat()).toDegrees)
-                if (silentRotationValue.get()) RotationUtils.setTargetRotation(rotation, if (keepRotationEnabledValue.get()) keepRotationTicksValue.get() else 0) else rotation.applyRotationToPlayer(thePlayer)
-                CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT)
-                controller.sendUseItem(thePlayer, theWorld, itemStack)
-            }
-            else run {
-                EnumFacing.values().forEach { side ->
-                    val neighbor = blockPos.offset(side)
-
-                    if (!theWorld.canBeClicked(neighbor)) return@forEach
-
-                    val diffX = neighbor.x + 0.5 - thePlayer.posX
-                    val diffY = neighbor.y + 0.5 - (thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight)
-                    val diffZ = neighbor.z + 0.5 - thePlayer.posZ
-                    val sqrt = hypot(diffX, diffZ)
-
-                    val rotation = Rotation((atan2(diffZ, diffX).toFloat()).toDegrees - 90.0f, -(atan2(diffY, sqrt).toFloat()).toDegrees)
-                    if (silentRotationValue.get()) RotationUtils.setTargetRotation(rotation, if (keepRotationEnabledValue.get()) keepRotationTicksValue.get() else 0) else rotation.applyRotationToPlayer(thePlayer)
-                    CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT)
-                    if (controller.onPlayerRightClick(thePlayer, theWorld, itemStack, neighbor, side.opposite, Vec3(side.directionVec)))
-                    {
-                        thePlayer.swingItem()
-                        return@run
-                    }
-                }
-            }
+            if (itemStack != null && itemStack.item is ItemBucket) useLavaBucket(theWorld, thePlayer, blockPos, itemStack) else useLighter(theWorld, thePlayer, blockPos, itemStack)
 
             InventoryUtils.resetSlot(thePlayer)
             delay = delayValue.getRandomLong()
             msTimer.reset()
         }
+    }
+
+    private fun useLighter(theWorld: WorldClient, thePlayer: EntityPlayerSP, blockPos: BlockPos, itemStack: ItemStack?)
+    {
+        for (side in EnumFacing.values())
+        {
+            val neighbor = blockPos.offset(side)
+            if (!theWorld.canBeClicked(neighbor)) continue
+            aim(thePlayer, neighbor)
+
+            CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT)
+            if (mc.playerController.onPlayerRightClick(thePlayer, theWorld, itemStack, neighbor, side.opposite, Vec3(side.directionVec)))
+            {
+                thePlayer.swingItem()
+                break
+            }
+        }
+    }
+
+    private fun useLavaBucket(theWorld: WorldClient, thePlayer: EntityPlayerSP, blockPos: BlockPos, itemStack: ItemStack?)
+    {
+        aim(thePlayer, blockPos)
+        CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT)
+        mc.playerController.sendUseItem(thePlayer, theWorld, itemStack)
+    }
+
+    private fun aim(thePlayer: EntityPlayerSP, target: Vec3i)
+    {
+        val diffX = target.x + 0.5 - thePlayer.posX
+        val diffY = target.y + 0.5 - (thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight)
+        val diffZ = target.z + 0.5 - thePlayer.posZ
+        val sqrt = hypot(diffX, diffZ)
+
+        val rotation = Rotation((atan2(diffZ, diffX).toFloat()).toDegrees - 90.0f, -(atan2(diffY, sqrt).toFloat()).toDegrees)
+        if (silentRotationValue.get()) RotationUtils.setTargetRotation(rotation, if (keepRotationEnabledValue.get()) keepRotationTicksValue.get() else 0) else rotation.applyRotationToPlayer(thePlayer)
     }
 
     override val tag: String

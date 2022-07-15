@@ -87,7 +87,7 @@ class Blink : Module()
     @EventTarget
     fun onPacket(event: PacketEvent)
     {
-        val packet: Packet<*> = event.packet
+        val packet = event.packet
 
         mc.thePlayer ?: return
 
