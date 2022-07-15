@@ -38,6 +38,7 @@ import kotlin.math.pow
  * * https://forum.ccbluex.net/thread.php?id=2530#p14704
  * * https://forums.ccbluex.net/topic/556/switchnofall-betternofall-recode/3
  * * https://forums.ccbluex.net/topic/787/blinkfall-5-1?_=1635005507761&lang=ko
+ * * Add web, ladder, bed, boat, minecart, etc. support
  */
 @ModuleInfo(name = "NoFall", description = "Prevents you from taking fall damage.", category = ModuleCategory.PLAYER)
 class NoFall : Module()

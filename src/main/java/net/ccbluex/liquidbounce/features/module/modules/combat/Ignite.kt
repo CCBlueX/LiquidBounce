@@ -11,18 +11,17 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.CPSCounter
+import net.ccbluex.liquidbounce.utils.InventoryUtils
+import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.*
 import net.minecraft.block.BlockAir
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.init.Items
 import net.minecraft.item.ItemBucket
-import net.minecraft.network.play.client.C03PacketPlayer.C05PacketPlayerLook
-import net.minecraft.network.play.client.C09PacketHeldItemChange
 import net.minecraft.util.EnumFacing
 import net.minecraft.util.Vec3
 import java.util.*
@@ -35,20 +34,32 @@ class Ignite : Module()
     /**
      * Options
      */
+    private val rangeValue = FloatValue("Range", 1f, 3f, 6f)
+    private val delayValue = IntegerRangeValue("Delay", 0, 3000, 0, 0)
     private val lighterValue = BoolValue("Lighter", true)
     private val lavaBucketValue = BoolValue("Lava", true)
     private val randomSlotValue = BoolValue("RandomSlot", false)
     private val itemDelayValue = IntegerValue("ItemDelay", 0, 0, 1000)
+    private val silentRotationValue = BoolValue("SilentRotation", true, "SilentRotation")
+    private val keepRotationGroup = ValueGroup("KeepRotation")
+    private val keepRotationEnabledValue = BoolValue("Enabled", false, "KeepRotation")
+    private val keepRotationTicksValue = IntegerValue("Ticks", 1, 1, 40, "KeepRotationLength")
+
+    init
+    {
+        keepRotationGroup.addAll(keepRotationEnabledValue, keepRotationTicksValue)
+    }
 
     /**
      * Variables
      */
     private val msTimer = MSTimer()
+    private var delay = delayValue.getRandomLong()
 
     @EventTarget
     fun onUpdate(@Suppress("UNUSED_PARAMETER") event: UpdateEvent)
     {
-        if (!msTimer.hasTimePassed(500L)) return
+        if (!msTimer.hasTimePassed(delay)) return
 
         val theWorld = mc.theWorld ?: return
         val thePlayer = mc.thePlayer ?: return
@@ -59,6 +70,7 @@ class Ignite : Module()
 
         val itemDelay = itemDelayValue.get()
         val randomSlot = randomSlotValue.get()
+        val range = rangeValue.get()
 
         val lighterInHotbar = if (lighterValue.get()) inventoryContainer.findItem(36, 45, Items.flint_and_steel, itemDelay.toLong(), randomSlot) else -1
         val lavaInHotbar = if (lavaBucketValue.get()) inventoryContainer.findItem(26, 45, Items.lava_bucket, itemDelay.toLong(), randomSlot) else -1
@@ -67,11 +79,10 @@ class Ignite : Module()
 
         val fireInHotbar = if (lighterInHotbar == -1) lavaInHotbar else lighterInHotbar
 
-        theWorld.getEntitiesInRadius(thePlayer, 8.0).asSequence().filterIsInstance<EntityLivingBase>().filterNot(Entity::isBurning).filter { it.isSelected(true) }.map(Entity::getPosition).filter { thePlayer.getDistanceSq(it) < 22.3 }.filter(theWorld::isReplaceable).firstOrNull { theWorld.getBlock(it) is BlockAir }?.let { blockPos ->
-            RotationUtils.keepCurrentRotation = true
-            netHandler.addToSendQueue(C09PacketHeldItemChange(fireInHotbar - 36))
+        theWorld.getEntitiesInRadius(thePlayer, 8.0).asSequence().filterIsInstance<EntityLivingBase>().filterNot(Entity::isBurning).filter { it.isSelected(true) }.filter { thePlayer.getDistanceToEntityBox(it) < range }.map(Entity::getPosition).filter(theWorld::isReplaceable).firstOrNull { theWorld.getBlock(it) is BlockAir }?.let { blockPos ->
+            InventoryUtils.tryHoldSlot(thePlayer, fireInHotbar - 36, lock = true)
 
-            val itemStack = thePlayer.inventory.getStackInSlot(fireInHotbar)
+            val itemStack = thePlayer.inventory.getStackInSlot(fireInHotbar - 36)
 
             if (itemStack != null && itemStack.item is ItemBucket)
             {
@@ -80,13 +91,9 @@ class Ignite : Module()
                 val diffZ = blockPos.z + 0.5 - thePlayer.posZ
                 val sqrt = hypot(diffX, diffZ)
 
-                val yaw = (atan2(diffZ, diffX).toFloat()).toDegrees - 90.0f
-                val pitch = -(atan2(diffY, sqrt).toFloat()).toDegrees
-
+                val rotation = Rotation((atan2(diffZ, diffX).toFloat()).toDegrees - 90.0f, -(atan2(diffY, sqrt).toFloat()).toDegrees)
+                if (silentRotationValue.get()) RotationUtils.setTargetRotation(rotation, if (keepRotationEnabledValue.get()) keepRotationTicksValue.get() else 0) else rotation.applyRotationToPlayer(thePlayer)
                 CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT)
-
-                netHandler.addToSendQueue(C05PacketPlayerLook(thePlayer.rotationYaw + (yaw - thePlayer.rotationYaw).wrapAngleTo180, thePlayer.rotationPitch + (pitch - thePlayer.rotationPitch).wrapAngleTo180, thePlayer.onGround))
-
                 controller.sendUseItem(thePlayer, theWorld, itemStack)
             }
             else run {
@@ -100,13 +107,9 @@ class Ignite : Module()
                     val diffZ = neighbor.z + 0.5 - thePlayer.posZ
                     val sqrt = hypot(diffX, diffZ)
 
-                    val yaw = (atan2(diffZ, diffX).toFloat()).toDegrees - 90.0f
-                    val pitch = -(atan2(diffY, sqrt).toFloat()).toDegrees
-
-                    netHandler.addToSendQueue(C05PacketPlayerLook(thePlayer.rotationYaw + (yaw - thePlayer.rotationYaw).wrapAngleTo180, thePlayer.rotationPitch + (pitch - thePlayer.rotationPitch).wrapAngleTo180, thePlayer.onGround))
-
+                    val rotation = Rotation((atan2(diffZ, diffX).toFloat()).toDegrees - 90.0f, -(atan2(diffY, sqrt).toFloat()).toDegrees)
+                    if (silentRotationValue.get()) RotationUtils.setTargetRotation(rotation, if (keepRotationEnabledValue.get()) keepRotationTicksValue.get() else 0) else rotation.applyRotationToPlayer(thePlayer)
                     CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT)
-
                     if (controller.onPlayerRightClick(thePlayer, theWorld, itemStack, neighbor, side.opposite, Vec3(side.directionVec)))
                     {
                         thePlayer.swingItem()
@@ -115,9 +118,8 @@ class Ignite : Module()
                 }
             }
 
-            netHandler.addToSendQueue(C09PacketHeldItemChange(thePlayer.inventory.currentItem))
-            RotationUtils.keepCurrentRotation = false
-            netHandler.addToSendQueue(C05PacketPlayerLook(thePlayer.rotationYaw, thePlayer.rotationPitch, thePlayer.onGround))
+            InventoryUtils.resetSlot(thePlayer)
+            delay = delayValue.getRandomLong()
             msTimer.reset()
         }
     }

@@ -126,6 +126,16 @@ class Step : Module()
                 }
             }
             else aac334step = false
+
+            "aacstep" -> if (thePlayer.isCollidedHorizontally && canStep)
+            {
+                if (thePlayer.onGround && couldStep(theWorld, thePlayer))
+                {
+                    fakeJump(thePlayer)
+                    thePlayer.motionY += 0.4322
+                }
+                else thePlayer.motionY += 0.0122
+            }
         }
     }
 
