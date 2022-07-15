@@ -36,7 +36,7 @@ class SlowHop : SpeedMode("SlowHop")
 
                 if (requiredLegitCount > 0) requiredLegitCount--
             }
-            else if (requiredLegitCount <= 0) thePlayer.strafe(thePlayer.speed_f * Speed.slowHopMultiplierValue.get())
+            else if (requiredLegitCount <= 0) thePlayer.strafe(thePlayer.speed * Speed.slowHopMultiplierValue.get())
         }
         else
         {

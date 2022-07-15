@@ -149,7 +149,7 @@ class HighJump : Module()
         {
             if (!thePlayer.isMoving) thePlayer.strafe(0.05f)
 
-            thePlayer.strafe((0.55f - mineplexStage / 650.0f).coerceAtLeast(thePlayer.speed_f))
+            thePlayer.strafe((0.55f - mineplexStage / 650.0f).coerceAtLeast(thePlayer.speed.toFloat()))
             mineplexStage++
         }
 

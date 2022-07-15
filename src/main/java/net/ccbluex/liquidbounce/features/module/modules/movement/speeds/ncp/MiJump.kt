@@ -28,7 +28,7 @@ class MiJump : SpeedMode("MiJump")
 
             thePlayer.multiply(multiplier)
 
-            val speed = thePlayer.speed_f
+            val speed = thePlayer.speed
             val maxSpeed = 0.66
 
             if (speed > maxSpeed) thePlayer.divide(speed * maxSpeed)

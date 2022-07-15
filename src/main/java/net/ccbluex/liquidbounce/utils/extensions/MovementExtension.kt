@@ -100,7 +100,7 @@ fun EntityPlayer.simulateStrafe(forward: Float, strafe: Float, directionDegrees:
     motionZ = newZ
 }
 
-fun EntityLivingBase.strafe(speed: Double = this.speed, directionDegrees: Float = moveDirectionDegrees)
+fun EntityLivingBase.strafe(speed: Double, directionDegrees: Float = moveDirectionDegrees)
 {
     if (this !is EntityPlayerSP || !isMoving) return
 

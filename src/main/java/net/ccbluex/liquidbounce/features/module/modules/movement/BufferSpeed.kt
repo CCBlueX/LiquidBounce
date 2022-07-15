@@ -68,7 +68,7 @@ class BufferSpeed : Module()
     private val airStrafeValue = BoolValue("AirStrafe", false)
     private val noHurtValue = BoolValue("NoHurt", true)
 
-    private var speed = 0.0F
+    private var speed = 0.0
     private var down = false
     private var forceDown = false
     private var fastHop = false
@@ -249,7 +249,7 @@ class BufferSpeed : Module()
                 }
             }
 
-            val currentSpeed = thePlayer.speed_f
+            val currentSpeed = thePlayer.speed
 
             if (speed < currentSpeed) speed = currentSpeed
 
@@ -261,7 +261,7 @@ class BufferSpeed : Module()
         }
         else
         {
-            speed = 0.0F
+            speed = 0.0
 
             if (airStrafeValue.get()) thePlayer.strafe()
         }
@@ -271,7 +271,7 @@ class BufferSpeed : Module()
     fun onPacket(event: PacketEvent)
     {
         val packet = event.packet
-        if (packet is S08PacketPlayerPosLook) speed = 0.0F
+        if (packet is S08PacketPlayerPosLook) speed = 0.0
     }
 
     override fun onEnable()
@@ -288,7 +288,7 @@ class BufferSpeed : Module()
     {
         val thePlayer = mc.thePlayer ?: return
         legitHop = true
-        speed = 0.0F
+        speed = 0.0
 
         if (hadFastHop)
         {
@@ -300,9 +300,9 @@ class BufferSpeed : Module()
     private fun boost(thePlayer: Entity, boost: Float)
     {
         thePlayer.multiply(boost)
-        speed = thePlayer.speed_f
+        speed = thePlayer.speed
 
-        val maxSpeed = maxSpeedValue.get()
+        val maxSpeed = maxSpeedValue.get().toDouble()
         if (speedLimitValue.get() && speed > maxSpeed) speed = maxSpeed
     }
 
