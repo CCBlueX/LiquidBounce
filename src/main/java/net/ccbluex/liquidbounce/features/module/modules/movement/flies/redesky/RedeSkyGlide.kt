@@ -4,6 +4,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.minecraft.entity.Entity
+import net.minecraft.entity.EntityLivingBase
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 
 class RedeSkyGlide : FlyMode("RedeSky-Glide")
@@ -40,11 +41,10 @@ class RedeSkyGlide : FlyMode("RedeSky-Glide")
         packetHClip(thePlayer, 0.0)
     }
 
-    private fun packetHClip(thePlayer: Entity, horizontal: Double)
+    private fun packetHClip(thePlayer: EntityLivingBase, horizontal: Double)
     {
-        val playerYaw = thePlayer.rotationYaw.toRadians
-
-        mc.netHandler.networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(thePlayer.posX + horizontal * -playerYaw.sin, thePlayer.posY, thePlayer.posZ + horizontal * playerYaw.cos, false))
+        val (x, z) = thePlayer.getForwardAmount(horizontal, thePlayer.rotationYaw)
+        mc.netHandler.networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, thePlayer.posY, z, false))
     }
 
     private fun vclip(thePlayer: Entity, vertical: Float)

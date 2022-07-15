@@ -27,19 +27,18 @@ class AACPort : SpeedMode("AACPort")
 
         if (!thePlayer.isMoving || thePlayer.cantBoostUp) return
 
-        val dir = thePlayer.moveDirectionRadians
+        val dir = thePlayer.moveDirectionDegrees
         var speed = 0.2
         val maxSpeed = Speed.portMax.get()
 
         while (speed <= maxSpeed)
         {
-            val x = thePlayer.posX - dir.sin * speed
-            val posY = thePlayer.posY
-            val z = thePlayer.posZ + dir.cos * speed
+            val (x, z) = thePlayer.getForwardAmount(speed, dir)
+            val y = thePlayer.posY
 
-            if (posY < posY.toInt() + 0.5 && theWorld.getBlock(BlockPos(x, posY, z)) !is BlockAir) break
+            if (y < y.toInt() + 0.5 && theWorld.getBlock(BlockPos(x, y, z)) !is BlockAir) break
 
-            thePlayer.sendQueue.addToSendQueue(C04PacketPlayerPosition(x, posY, z, true))
+            thePlayer.sendQueue.addToSendQueue(C04PacketPlayerPosition(x, y, z, true))
             speed += 0.2
         }
     }

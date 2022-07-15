@@ -4,9 +4,7 @@ import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.BotCheck
-import net.ccbluex.liquidbounce.utils.extensions.cos
-import net.ccbluex.liquidbounce.utils.extensions.sin
-import net.ccbluex.liquidbounce.utils.extensions.toRadians
+import net.ccbluex.liquidbounce.utils.extensions.applyForward
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
@@ -54,13 +52,13 @@ class PositionCheck : BotCheck("position.position")
         val serverLocation = getPingCorrectionAppliedLocation(thePlayer)
         val serverPos = serverLocation.position
         val serverYaw = serverLocation.rotation.yaw
-        val dir = (serverYaw - 180.0F).toRadians
 
         val moveSpeed = hypot(target.posX - newPos.xCoord, target.posZ - newPos.zCoord)
 
         for ((posIndex, back, y) in arrayOf(Triple(1, AntiBot.positionPosition1BackValue.get(), AntiBot.positionPosition1YValue.get()), Triple(2, AntiBot.positionPosition2BackValue.get(), AntiBot.positionPosition2YValue.get()), Triple(3, AntiBot.positionPosition3BackValue.get(), AntiBot.positionPosition3YValue.get()), Triple(4, AntiBot.positionPosition4BackValue.get(), AntiBot.positionPosition4YValue.get())))
         {
-            val distanceSq = (newPos.xCoord - (serverPos.xCoord - dir.sin * back)).pow(2) + (newPos.yCoord - (serverPos.yCoord + y)).pow(2) * (newPos.zCoord - (serverPos.zCoord + dir.cos * back)).pow(2)
+            val (backX, backZ) = (serverPos.xCoord to serverPos.zCoord).applyForward(back, serverYaw - 180.0F)
+            val distanceSq = (newPos.xCoord - backX).pow(2) + (newPos.yCoord - (serverPos.yCoord + y)).pow(2) * (newPos.zCoord - backZ).pow(2)
 
             val previousVL = positionVL[entityId] ?: 0
 
@@ -201,9 +199,7 @@ class PositionCheck : BotCheck("position.position")
         val interpolatedZ = lastServerPos.zCoord + (serverPos.zCoord - lastServerPos.zCoord) * partialTicks
 
         val lastServerYaw = lastServerLocation.rotation.yaw
-        val dir = lastServerYaw + (serverLocation.rotation.yaw - lastServerYaw) * partialTicks - 180.0F.toRadians
-        val sin = -dir.sin
-        val cos = dir.cos
+        val dir = lastServerYaw + (serverLocation.rotation.yaw - lastServerYaw) * partialTicks - 180.0F
 
         val renderManager = mc.renderManager
         val renderPosX = renderManager.renderPosX
@@ -215,7 +211,11 @@ class PositionCheck : BotCheck("position.position")
 
         val bb = AxisAlignedBB(-width - renderPosX, -renderPosY, -width - renderPosZ, width - renderPosX, height - renderPosY, width - renderPosZ)
 
-        for ((back, y, color) in arrayOf(Triple(AntiBot.positionPosition1BackValue.get(), AntiBot.positionPosition1YValue.get(), 0xFF0000), Triple(AntiBot.positionPosition2BackValue.get(), AntiBot.positionPosition2YValue.get(), 0xFF8800), Triple(AntiBot.positionPosition3BackValue.get(), AntiBot.positionPosition3YValue.get(), 0x88FF00), Triple(AntiBot.positionPosition4BackValue.get(), AntiBot.positionPosition4YValue.get(), 0x00FF00))) RenderUtils.drawAxisAlignedBB(bb.offset(interpolatedX + sin * back, interpolatedY + y, interpolatedZ + cos * back), ColorUtils.applyAlphaChannel(color, alpha))
+        for ((back, y, color) in arrayOf(Triple(AntiBot.positionPosition1BackValue.get(), AntiBot.positionPosition1YValue.get(), 0xFF0000), Triple(AntiBot.positionPosition2BackValue.get(), AntiBot.positionPosition2YValue.get(), 0xFF8800), Triple(AntiBot.positionPosition3BackValue.get(), AntiBot.positionPosition3YValue.get(), 0x88FF00), Triple(AntiBot.positionPosition4BackValue.get(), AntiBot.positionPosition4YValue.get(), 0x00FF00)))
+        {
+            val (x, z) = (interpolatedX to interpolatedZ).applyForward(back, dir - 180.0F)
+            RenderUtils.drawAxisAlignedBB(bb.offset(x, interpolatedY + y, z), ColorUtils.applyAlphaChannel(color, alpha))
+        }
     }
 
     override fun clear()

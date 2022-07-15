@@ -249,7 +249,7 @@ class BufferSpeed : Module()
                 }
             }
 
-            val currentSpeed = thePlayer.speed
+            val currentSpeed = thePlayer.speed_f
 
             if (speed < currentSpeed) speed = currentSpeed
 
@@ -300,7 +300,7 @@ class BufferSpeed : Module()
     private fun boost(thePlayer: Entity, boost: Float)
     {
         thePlayer.multiply(boost)
-        speed = thePlayer.speed
+        speed = thePlayer.speed_f
 
         val maxSpeed = maxSpeedValue.get()
         if (speedLimitValue.get() && speed > maxSpeed) speed = maxSpeed

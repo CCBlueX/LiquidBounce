@@ -176,12 +176,8 @@ class BugUp : Module()
 
                     "packet" ->
                     {
-                        val dir = thePlayer.rotationYaw.toRadians
-                        val length = if (packetHBob) packetHValue.get() else -packetHValue.get()
-                        val x = dir.sin * length
-                        val z = dir.cos * length
-
-                        networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(posX - x, posY + if (packetVBob) packetVValue.get() else -packetVValue.get(), posZ + z, true))
+                        val (x, z) = (posX to posZ).applyForward(if (packetHBob) packetHValue.get() else -packetHValue.get(), thePlayer.rotationYaw)
+                        networkManager.sendPacketWithoutEvent(C04PacketPlayerPosition(x, posY + if (packetVBob) packetVValue.get() else -packetVValue.get(), z, true))
 
                         if (packetHBobValue.get()) packetHBob = !packetHBob
                         if (packetVBobValue.get()) packetVBob = !packetVBob

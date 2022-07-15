@@ -8,14 +8,11 @@ package net.ccbluex.liquidbounce.utils
 import net.ccbluex.liquidbounce.event.StrafeEvent
 import net.ccbluex.liquidbounce.utils.block.PlaceInfo
 import net.ccbluex.liquidbounce.utils.block.SearchInfo
-import net.ccbluex.liquidbounce.utils.extensions.cos
-import net.ccbluex.liquidbounce.utils.extensions.sin
-import net.ccbluex.liquidbounce.utils.extensions.toRadians
+import net.ccbluex.liquidbounce.utils.extensions.simulateStrafe
 import net.ccbluex.liquidbounce.utils.extensions.wrapAngleTo180
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.util.EnumFacing
 import net.minecraft.util.Vec3
-import kotlin.math.sqrt
 
 /**
  * Rotations
@@ -146,25 +143,7 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance()
 
         if (calcStrafe > 1f || calcStrafe < 0.9f && calcStrafe > 0.3f || calcStrafe < -1f || calcStrafe > -0.9f && calcStrafe < -0.3f) calcStrafe *= 0.5f
 
-        var speed = calcStrafe * calcStrafe + calcForward * calcForward
-
-        if (speed >= 1.0E-4f)
-        {
-            speed = sqrt(speed)
-
-            if (speed < 1.0f) speed = 1.0f
-
-            speed = friction / speed
-            calcStrafe *= speed
-            calcForward *= speed
-
-            val yawRadians = yaw.toRadians
-            val yawSin = yawRadians.sin
-            val yawCos = yawRadians.cos
-
-            thePlayer.motionX += calcStrafe * yawCos - calcForward * yawSin
-            thePlayer.motionZ += calcForward * yawCos + calcStrafe * yawSin
-        }
+        thePlayer.simulateStrafe(calcForward, calcStrafe, friction, yaw)
     }
 }
 

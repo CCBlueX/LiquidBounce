@@ -7,7 +7,10 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.flies.DamageOnS
 import net.ccbluex.liquidbounce.features.module.modules.movement.flies.FlyMode
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.NotificationIcon
-import net.ccbluex.liquidbounce.utils.extensions.*
+import net.ccbluex.liquidbounce.utils.extensions.forward
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.moveDirectionDegrees
+import net.ccbluex.liquidbounce.utils.extensions.speedEffectAmplifier
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
 import net.minecraft.block.BlockAir
@@ -228,11 +231,7 @@ class HypixelFly : FlyMode("Hypixel")
         }
 
         hypixelBoostSpeed = max(hypixelBoostSpeed, 0.3)
-
-        val dir = thePlayer.moveDirectionRadians
-
-        event.x = -dir.sin * hypixelBoostSpeed
-        event.z = dir.cos * hypixelBoostSpeed
+        event.forward(hypixelBoostSpeed, thePlayer.moveDirectionDegrees)
 
         thePlayer.motionX = event.x
         thePlayer.motionZ = event.z

@@ -5,10 +5,7 @@ import net.minecraft.entity.player.InventoryPlayer
 import net.minecraft.init.Blocks
 import net.minecraft.init.Items
 import net.minecraft.inventory.Container
-import net.minecraft.item.Item
-import net.minecraft.item.ItemAppleGold
-import net.minecraft.item.ItemBlock
-import net.minecraft.item.ItemFood
+import net.minecraft.item.*
 import net.minecraft.util.BlockPos
 import net.minecraft.world.World
 
@@ -19,30 +16,26 @@ import net.minecraft.world.World
 // mc.thePlayer.inventory.getStackInSlot() (= mc.thePlayer.inventory.mainInventory) - https://minecraft.gamepedia.com/File:Items_slot_number.png
 // !! ---------------------------------------------------------------------------------------------------------------------------- !!
 
-val BLACKLISTED_BLOCKS = run {
-    arrayOf(
-        // Interactible blocks
-        Blocks.chest, Blocks.ender_chest, Blocks.trapped_chest, Blocks.anvil, Blocks.dispenser, Blocks.dropper, Blocks.furnace, Blocks.lit_furnace, Blocks.crafting_table, Blocks.enchanting_table, Blocks.jukebox, Blocks.bed, Blocks.noteblock,
+val BLACKLISTED_BLOCKS = arrayOf(
+    // Interactible blocks
+    Blocks.chest, Blocks.ender_chest, Blocks.trapped_chest, Blocks.anvil, Blocks.dispenser, Blocks.dropper, Blocks.furnace, Blocks.lit_furnace, Blocks.crafting_table, Blocks.enchanting_table, Blocks.jukebox, Blocks.bed, Blocks.noteblock,
 
-        // Some excepted blocks
-        Blocks.torch, Blocks.redstone_torch, Blocks.redstone_wire, Blocks.ladder, Blocks.vine, Blocks.waterlily, Blocks.cactus, Blocks.glass_pane, Blocks.iron_bars, Blocks.web,
+    // Some excepted blocks
+    Blocks.torch, Blocks.redstone_torch, Blocks.redstone_wire, Blocks.ladder, Blocks.vine, Blocks.waterlily, Blocks.cactus, Blocks.glass_pane, Blocks.iron_bars, Blocks.web,
 
-        // Pressure plates
-        Blocks.stone_pressure_plate, Blocks.wooden_pressure_plate, Blocks.light_weighted_pressure_plate, Blocks.heavy_weighted_pressure_plate,
+    // Pressure plates
+    Blocks.stone_pressure_plate, Blocks.wooden_pressure_plate, Blocks.light_weighted_pressure_plate, Blocks.heavy_weighted_pressure_plate,
 
-        // Falling blocks
-        Blocks.sand, Blocks.gravel, Blocks.tnt,
+    // Falling blocks
+    Blocks.sand, Blocks.gravel, Blocks.tnt,
 
-        // Signs
-        Blocks.standing_sign, Blocks.wall_sign,
+    // Signs
+    Blocks.standing_sign, Blocks.wall_sign,
 
-        // Banners
-        Blocks.standing_banner, Blocks.wall_banner)
-}
+    // Banners
+    Blocks.standing_banner, Blocks.wall_banner)
 
-private val BLACKLISTED_FOODS = run {
-    arrayOf(Items.rotten_flesh, Items.spider_eye, Items.poisonous_potato)
-}
+private val BLACKLISTED_FOODS = arrayOf(Items.rotten_flesh, Items.spider_eye, Items.poisonous_potato)
 
 val InventoryPlayer.hasSpaceHotbar: Boolean
     get() = (0 until 9).map(::getStackInSlot).any { it == null }
@@ -52,91 +45,49 @@ val Block?.canAutoBlock: Boolean
 
 fun Container.findItem(startSlot: Int, endSlot: Int, item: Item?, itemDelay: Long, random: Boolean): Int
 {
-    val candidates: MutableList<Int> = ArrayList(endSlot - startSlot)
-
     val currentTime = System.currentTimeMillis()
-
-    (startSlot until endSlot).mapNotNull { it to (getSlot(it).stack ?: return@mapNotNull null) }.filter { it.second.item == item }.filter { currentTime - it.second.itemDelay >= itemDelay }.forEach { candidates.add(it.first) }
-
-    return when
-    {
-        candidates.isEmpty() -> -1
-        random -> candidates.random()
-        else -> candidates.first()
-    }
+    return (startSlot until endSlot).mapToSlotAndStack(this).filter { it.second.item == item }.filter { currentTime - it.second.itemDelay >= itemDelay }.let { if (random) it.randomOrNull() else it.firstOrNull() }?.first ?: -1
 }
 
 fun Container.findAutoBlockBlock(theWorld: World, autoblockFullcubeOnly: Boolean, boundingBoxYLimit: Double = 0.0): Int
 {
-    val hotbarSlots: MutableList<Int> = ArrayList(9)
+    val isStackValid: (Pair<Int, ItemStack>) -> Boolean = { (_, stack) -> stack.stackSize > 0 && stack.item.let { item -> item is ItemBlock && item.block.canAutoBlock } }
 
-    (36..44).forEach { i ->
-        val itemStack = getSlot(i).stack
-        if (itemStack != null && itemStack.item is ItemBlock && itemStack.stackSize > 0)
-        {
-            val block = (itemStack.item!! as ItemBlock).block
-            if (block.canAutoBlock && block.defaultState!!.block.isFullCube) hotbarSlots.add(i)
-        }
-    }
+    // Check full-cube only
+    (36..44).asSequence().mapToSlotAndStack(this).filter { isStackValid(it) && (it.second.item as ItemBlock).block.defaultState?.block?.isFullCube != false }.map(Pair<Int, *>::first).let { findOptimalSlot(theWorld, it, boundingBoxYLimit) }?.let { return@findAutoBlockBlock it }
 
-    (if (boundingBoxYLimit == 0.0) hotbarSlots.firstOrNull()
-    else hotbarSlots.filter {
-        val block = (getSlot(it).stack?.item!! as ItemBlock).block
-        val box = block.getCollisionBoundingBox(theWorld, BlockPos.ORIGIN, block.defaultState!!)
-
-        box != null && box.maxY - box.minY <= boundingBoxYLimit
-    }.maxByOrNull {
-        val bb = (theWorld.getBlockDefaultCollisionBox((getSlot(it).stack?.item!! as ItemBlock).block))
-        bb?.let { box -> box.maxY - box.minY } ?: 1.0
-    })?.let { return@findAutoBlockBlock it }
-
-    if (!autoblockFullcubeOnly)
-    {
-        hotbarSlots.clear() // Reuse list
-
-        (36..44).forEach { i ->
-            val itemStack = getSlot(i).stack
-            val item = itemStack?.item
-            if (itemStack != null && item is ItemBlock && itemStack.stackSize > 0 && item.block.canAutoBlock) hotbarSlots.add(i)
-        }
-
-        (if (boundingBoxYLimit == 0.0) hotbarSlots.firstOrNull()
-        else hotbarSlots.filter {
-            val block = (getSlot(it).stack?.item!! as ItemBlock).block
-            val box = block.getCollisionBoundingBox(theWorld, BlockPos.ORIGIN, block.defaultState!!)
-
-            box != null && box.maxY - box.minY <= boundingBoxYLimit
-        }.maxByOrNull {
-            val bb = theWorld.getBlockDefaultCollisionBox((getSlot(it).stack?.item!! as ItemBlock).block)
-            bb?.let { box -> box.maxY - box.minY } ?: 1.0
-        })?.let { return@findAutoBlockBlock it }
-    }
-
+    if (!autoblockFullcubeOnly) // Check for all blocks
+        (36..44).asSequence().mapToSlotAndStack(this).filter(isStackValid).map(Pair<Int, ItemStack>::first).let { findOptimalSlot(theWorld, it, boundingBoxYLimit) }?.let { return@findAutoBlockBlock it }
     return -1
 }
 
-fun Container.firstEmpty(startSlot: Int, endSlot: Int, randomSlot: Boolean): Int
-{
-    val emptySlots = (startSlot until endSlot).filter { getSlot(it).stack == null }.toIntArray()
-
-    return when
-    {
-        emptySlots.isEmpty() -> -1
-        randomSlot -> emptySlots.random()
-        else -> emptySlots.first()
-    }
-}
+fun Container.firstEmpty(startSlot: Int, endSlot: Int, randomSlot: Boolean): Int = (startSlot until endSlot).filter { getSlot(it).stack == null }.let { (if (randomSlot) it.randomOrNull() else it.firstOrNull()) } ?: -1
 
 fun Container.findBestFood(foodLevel: Int, startSlot: Int = 36, endSlot: Int = 45, itemDelay: Long): Int
 {
-
     val currentTime = System.currentTimeMillis()
 
-    return (startSlot until endSlot).mapNotNull { it to (getSlot(it).stack ?: return@mapNotNull null) }.filter { it.second.item is ItemFood }.filterNot { it.second.item in BLACKLISTED_FOODS }.filter { currentTime - it.second.itemDelay >= itemDelay }.maxByOrNull { (_, stack) ->
-        val foodStack = stack.item!! as ItemFood
-        val healAmount = foodStack.getHealAmount(stack)
-
-        val exactness = foodLevel + healAmount - 20
-        (if (exactness !in 0..2) 0 else (3 - exactness) * 10) - (if (foodStack is ItemAppleGold) 15 else 0) + healAmount + foodStack.getSaturationModifier(stack)
-    }?.first ?: -1
+    return (startSlot until endSlot).asSequence().mapToSlotAndStack(this).filter { it.second.item.let { item -> item is ItemFood && item !in BLACKLISTED_FOODS } }.filter { currentTime - it.second.itemDelay >= itemDelay }.maxByOrNull { (_, stack) -> (stack.item as ItemFood).foodSelector(stack, foodLevel) }?.first ?: -1
 }
+
+/* Method chain helpers */
+
+private fun Container.findOptimalSlot(theWorld: World, slotSeq: Sequence<Int>, boundingBoxYLimit: Double): Int?
+{
+    return if (boundingBoxYLimit == 0.0) slotSeq.firstOrNull()
+    else slotSeq.filter {
+        (getSlot(it).stack?.item!! as ItemBlock).block.let { block -> block.getCollisionBoundingBox(theWorld, BlockPos.ORIGIN, block.defaultState!!) }.let { box -> box != null && box.maxY - box.minY <= boundingBoxYLimit }
+    }.maxByOrNull {
+        theWorld.getBlockDefaultCollisionBox((getSlot(it).stack?.item!! as ItemBlock).block)?.let { box -> box.maxY - box.minY } ?: 1.0
+    }
+}
+
+private fun ItemFood.foodSelector(stack: ItemStack, currentfoodLevel: Int): Float
+{
+    val healAmount = getHealAmount(stack)
+    val exactness = currentfoodLevel + healAmount - 20
+    return (if (exactness !in 0..2) 0 else (3 - exactness) * 10) - (if (this is ItemAppleGold) 15 else 0) + healAmount + getSaturationModifier(stack)
+}
+
+fun Sequence<Int>.mapToSlotAndStack(container: Container): Sequence<Pair<Int, ItemStack>> = mapNotNull { it to (container.getSlot(it).stack ?: return@mapNotNull null) }
+fun Iterable<Int>.mapToSlotAndStack(container: Container): Collection<Pair<Int, ItemStack>> = mapNotNull { it to (container.getSlot(it).stack ?: return@mapNotNull null) }

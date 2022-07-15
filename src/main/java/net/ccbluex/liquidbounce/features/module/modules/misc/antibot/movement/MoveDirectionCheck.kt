@@ -4,9 +4,7 @@ import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.BotCheck
-import net.ccbluex.liquidbounce.utils.extensions.cos
-import net.ccbluex.liquidbounce.utils.extensions.sin
-import net.ccbluex.liquidbounce.utils.extensions.toRadians
+import net.ccbluex.liquidbounce.utils.extensions.applyForward
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
@@ -48,7 +46,7 @@ class MoveDirectionCheck : BotCheck("move.direction")
         var yawMovementScore = ceil(max(abs(getPingCorrectionAppliedLocation(thePlayer, 1).rotation.yaw - serverYaw), abs(getPingCorrectionAppliedLocation(thePlayer, 2).rotation.yaw - serverYaw)) / 5F).toInt()
         if (yawMovementScore <= 5) yawMovementScore = 0
 
-        val yawRadians = (serverYaw - 180.0F).toRadians
+        val yaw = serverYaw - 180.0F
 
         // Position delta limit
         val positionDeltaLimitSq = AntiBot.positionDeltaThresholdValue.get().pow(2)
@@ -67,9 +65,10 @@ class MoveDirectionCheck : BotCheck("move.direction")
 
         for ((posIndex, back, y) in arrayOf(Triple(1, AntiBot.positionPosition1BackValue.get(), AntiBot.positionPosition1YValue.get()), Triple(2, AntiBot.positionPosition2BackValue.get(), AntiBot.positionPosition2YValue.get()), Triple(3, AntiBot.positionPosition3BackValue.get(), AntiBot.positionPosition3YValue.get()), Triple(4, AntiBot.positionPosition4BackValue.get(), AntiBot.positionPosition4YValue.get())))
         {
-            val deltaX = newPos.xCoord - (serverPos.xCoord - yawRadians.sin * back)
+            val (backX, backZ) = (serverPos.xCoord to serverPos.zCoord).applyForward(back, yaw)
+            val deltaX = newPos.xCoord - backX
             val deltaY = newPos.yCoord - (serverPos.yCoord + y)
-            val deltaZ = newPos.zCoord - (serverPos.zCoord + yawRadians.cos * back)
+            val deltaZ = newPos.zCoord - backZ
 
             val distanceSq = deltaX * deltaX + deltaY * deltaY * deltaZ * deltaZ
 
@@ -195,11 +194,6 @@ class MoveDirectionCheck : BotCheck("move.direction")
 
         val yaw = lastServerYaw + (serverLocation.rotation.yaw - lastServerYaw) * partialTicks
 
-        val dir = yaw - 180.0F.toRadians
-
-        val sin = -dir.sin
-        val cos = dir.cos
-
         val posX = lastServerPos.xCoord + (serverPos.xCoord - lastServerPos.xCoord) * partialTicks
         val posY = lastServerPos.yCoord + (serverPos.yCoord - lastServerPos.yCoord) * partialTicks
         val posZ = lastServerPos.zCoord + (serverPos.zCoord - lastServerPos.zCoord) * partialTicks
@@ -218,7 +212,11 @@ class MoveDirectionCheck : BotCheck("move.direction")
 
         val bb = AxisAlignedBB(-width - renderPosX, -renderPosY, -width - renderPosZ, width - renderPosX, height - renderPosY, width - renderPosZ)
 
-        for ((back, y, color) in arrayOf(Triple(AntiBot.positionPosition1BackValue.get(), AntiBot.positionPosition1YValue.get(), 0xFF0000), Triple(AntiBot.positionPosition2BackValue.get(), AntiBot.positionPosition2YValue.get(), 0xFF8800), Triple(AntiBot.positionPosition3BackValue.get(), AntiBot.positionPosition3YValue.get(), 0x88FF00), Triple(AntiBot.positionPosition4BackValue.get(), AntiBot.positionPosition4YValue.get(), 0x00FF00))) RenderUtils.drawAxisAlignedBB(bb.offset(posX + sin * back, posY + y, posZ + cos * back), ColorUtils.applyAlphaChannel(color, alpha))
+        for ((back, y, color) in arrayOf(Triple(AntiBot.positionPosition1BackValue.get(), AntiBot.positionPosition1YValue.get(), 0xFF0000), Triple(AntiBot.positionPosition2BackValue.get(), AntiBot.positionPosition2YValue.get(), 0xFF8800), Triple(AntiBot.positionPosition3BackValue.get(), AntiBot.positionPosition3YValue.get(), 0x88FF00), Triple(AntiBot.positionPosition4BackValue.get(), AntiBot.positionPosition4YValue.get(), 0x00FF00)))
+        {
+            val (backX, backZ) = (posX to posZ).applyForward(back, yaw - 180.0F)
+            RenderUtils.drawAxisAlignedBB(bb.offset(backX, posY + y, backZ), ColorUtils.applyAlphaChannel(color, alpha))
+        }
     }
 
     override fun clear()

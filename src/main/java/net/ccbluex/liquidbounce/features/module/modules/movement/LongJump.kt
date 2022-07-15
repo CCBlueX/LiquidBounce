@@ -114,7 +114,7 @@ class LongJump : Module()
     {
         val thePlayer = mc.thePlayer ?: return
 
-        if (LadderJump.jumped) thePlayer.strafe(thePlayer.speed * 1.08f)
+        if (LadderJump.jumped) thePlayer.strafe(thePlayer.speed_f * 1.08f)
 
         val autoDisable = autoDisableValue.get()
 
@@ -138,7 +138,7 @@ class LongJump : Module()
                 {
                     "ncp" ->
                     {
-                        thePlayer.strafe(thePlayer.speed * if (canBoost) ncpBoostValue.get() else 1f)
+                        thePlayer.strafe(thePlayer.speed_f * if (canBoost) ncpBoostValue.get() else 1f)
                         canBoost = false
                         if (autoDisable) state = false
                     }
@@ -146,7 +146,7 @@ class LongJump : Module()
                     "aac3.0.1" ->
                     {
                         thePlayer.motionY += 0.05999
-                        thePlayer.strafe(thePlayer.speed * 1.08f)
+                        thePlayer.strafe(thePlayer.speed_f * 1.08f)
                         boosted = true
                     }
 
@@ -238,11 +238,7 @@ class LongJump : Module()
             {
                 if (teleportTicks >= teleportAtTicksValue.get())
                 {
-                    val dir = thePlayer.moveDirectionRadians
-                    val teleportDistance = teleportDistanceValue.get()
-
-                    event.x = (-dir.sin * teleportDistance).toDouble()
-                    event.z = (dir.cos * teleportDistance).toDouble()
+                    event.forward(teleportDistanceValue.get(), thePlayer.moveDirectionDegrees)
 
                     canBoost = false
                     boosted = true

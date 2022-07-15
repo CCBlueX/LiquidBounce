@@ -119,10 +119,7 @@ class OldNCPBHop : SpeedMode("OldNCPBHop")
 
         if (moving)
         {
-            val dir = thePlayer.moveDirectionRadians
-            event.x = -dir.sin * moveSpeed
-            event.z = dir.cos * moveSpeed
-
+            event.forward(moveSpeed, thePlayer.moveDirectionDegrees)
             thePlayer.stepHeight = 0.5f
         }
         else event.zeroXZ()

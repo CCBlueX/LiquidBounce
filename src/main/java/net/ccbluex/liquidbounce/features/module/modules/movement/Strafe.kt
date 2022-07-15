@@ -5,7 +5,10 @@ import net.ccbluex.liquidbounce.event.StrafeEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.extensions.*
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.moveDirectionDegrees
+import net.ccbluex.liquidbounce.utils.extensions.strafe
+import net.ccbluex.liquidbounce.utils.extensions.zeroXZ
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import kotlin.math.hypot
@@ -36,9 +39,9 @@ class Strafe : Module()
 
         if (!thePlayer.onGround || onGroundStrafeValue.get())
         {
-            val yaw = thePlayer.moveDirectionDegrees.toRadians
-            thePlayer.motionX = -yaw.sin * speed + motionX
-            thePlayer.motionZ = yaw.cos * speed + motionZ
+            thePlayer.strafe(speed, thePlayer.moveDirectionDegrees)
+            thePlayer.motionX += motionX
+            thePlayer.motionZ += motionZ
         }
     }
 }

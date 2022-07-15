@@ -46,7 +46,6 @@ import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.math.sqrt
 import kotlin.random.Random
 
 // TODO: Asynchronously start-stop blocking as Xave
@@ -529,29 +528,7 @@ class KillAura : Module()
                 "strict" ->
                 {
                     val (yaw, _) = RotationUtils.targetRotation ?: return
-                    var strafe = event.strafe
-                    var forward = event.forward
-                    val friction = event.friction
-
-                    var f = strafe * strafe + forward * forward
-
-                    if (f >= 1.0E-4F)
-                    {
-                        f = sqrt(f)
-
-                        if (f < 1.0F) f = 1.0F
-
-                        f = friction / f
-                        strafe *= f
-                        forward *= f
-
-                        val yawRadians = yaw.toRadians
-                        val yawSin = yawRadians.sin
-                        val yawCos = yawRadians.cos
-
-                        thePlayer.motionX += strafe * yawCos - forward * yawSin
-                        thePlayer.motionZ += forward * yawCos + strafe * yawSin
-                    }
+                    thePlayer.simulateStrafe(event.forward, event.strafe, event.friction, yaw)
                     event.cancelEvent()
                 }
 

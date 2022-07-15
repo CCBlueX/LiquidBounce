@@ -143,15 +143,13 @@ class HighJump : Module()
 
         val posY = thePlayer.posY
 
-        val dir = thePlayer.moveDirectionRadians
-        val nextX = thePlayer.posX - dir.sin * 0.45f
-        val nextZ = thePlayer.posZ + dir.cos * 0.45f
+        val (nextX, nextZ) = thePlayer.getForwardAmount(0.45F)
 
         if (jumped) if (!thePlayer.onGround)
         {
             if (!thePlayer.isMoving) thePlayer.strafe(0.05f)
 
-            thePlayer.strafe((0.55f - mineplexStage / 650.0f).coerceAtLeast(thePlayer.speed))
+            thePlayer.strafe((0.55f - mineplexStage / 650.0f).coerceAtLeast(thePlayer.speed_f))
             mineplexStage++
         }
 

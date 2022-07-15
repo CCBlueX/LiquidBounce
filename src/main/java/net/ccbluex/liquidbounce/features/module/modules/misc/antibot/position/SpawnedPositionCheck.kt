@@ -4,9 +4,7 @@ import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.BotCheck
-import net.ccbluex.liquidbounce.utils.extensions.cos
-import net.ccbluex.liquidbounce.utils.extensions.sin
-import net.ccbluex.liquidbounce.utils.extensions.toRadians
+import net.ccbluex.liquidbounce.utils.extensions.applyForward
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
@@ -47,15 +45,14 @@ class SpawnedPositionCheck : BotCheck("position.spawnedPosition")
             val serverPos = serverLocation.position
             val serverYaw = serverLocation.rotation.yaw
 
-            val yawRadians = (serverYaw - 180.0F).toRadians
-
             val deltaLimit = AntiBot.positionSpawnedPositionDeltaThresholdValue.get().pow(2)
 
             for ((posIndex, back, y) in arrayOf(Triple(1, AntiBot.positionSpawnedPositionPosition1BackValue.get(), AntiBot.positionSpawnedPositionPosition1YValue.get()), Triple(2, AntiBot.positionPosition2BackValue.get(), AntiBot.positionSpawnedPositionPosition2YValue.get())))
             {
-                val expectDeltaX = serverPos.xCoord - yawRadians.sin * back - entityX
+                var (expectDeltaX, expectDeltaZ) = (serverPos.xCoord to serverPos.zCoord).applyForward(back, serverYaw - 180.0F)
+                expectDeltaX -= entityX
                 val expectDeltaY = serverPos.yCoord + y - entityY
-                val expectDeltaZ = serverPos.zCoord + yawRadians.cos * back - entityZ
+                expectDeltaZ -= entityZ
 
                 val delta = expectDeltaX * expectDeltaX + expectDeltaY * expectDeltaY + expectDeltaZ * expectDeltaZ
 
@@ -87,11 +84,6 @@ class SpawnedPositionCheck : BotCheck("position.spawnedPosition")
 
         val yaw = lastServerYaw + (serverLocation.rotation.yaw - lastServerYaw) * partialTicks
 
-        val dir = yaw - 180.0F.toRadians
-
-        val sin = -dir.sin
-        val cos = dir.cos
-
         val posX = lastServerPos.xCoord + (serverPos.xCoord - lastServerPos.xCoord) * partialTicks
         val posY = lastServerPos.yCoord + (serverPos.yCoord - lastServerPos.yCoord) * partialTicks
         val posZ = lastServerPos.zCoord + (serverPos.zCoord - lastServerPos.zCoord) * partialTicks
@@ -110,7 +102,11 @@ class SpawnedPositionCheck : BotCheck("position.spawnedPosition")
 
         val bb = AxisAlignedBB(-width - renderPosX, -renderPosY, -width - renderPosZ, width - renderPosX, height - renderPosY, width - renderPosZ)
 
-        for ((back, y, color) in arrayOf(Triple(AntiBot.positionSpawnedPositionPosition1BackValue.get(), AntiBot.positionSpawnedPositionPosition1YValue.get(), 0x0088FF), Triple(AntiBot.positionSpawnedPositionPosition2BackValue.get(), AntiBot.positionSpawnedPositionPosition2YValue.get(), 0x0000FF))) RenderUtils.drawAxisAlignedBB(bb.offset(posX + sin * back, posY + y, posZ + cos * back), ColorUtils.applyAlphaChannel(color, alpha))
+        for ((back, y, color) in arrayOf(Triple(AntiBot.positionSpawnedPositionPosition1BackValue.get(), AntiBot.positionSpawnedPositionPosition1YValue.get(), 0x0088FF), Triple(AntiBot.positionSpawnedPositionPosition2BackValue.get(), AntiBot.positionSpawnedPositionPosition2YValue.get(), 0x0000FF)))
+        {
+            val (backX, backZ) = (posX to posZ).applyForward(back, yaw - 180.0F)
+            RenderUtils.drawAxisAlignedBB(bb.offset(backX, posY + y, backZ), ColorUtils.applyAlphaChannel(color, alpha))
+        }
     }
 
     override fun clear()

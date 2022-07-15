@@ -9,7 +9,10 @@ import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.extensions.*
+import net.ccbluex.liquidbounce.utils.extensions.cantBoostUp
+import net.ccbluex.liquidbounce.utils.extensions.forward
+import net.ccbluex.liquidbounce.utils.extensions.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.moveDirectionDegrees
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 
 class TeleportCubeCraft : SpeedMode("TeleportCubeCraft")
@@ -32,11 +35,7 @@ class TeleportCubeCraft : SpeedMode("TeleportCubeCraft")
 
         if (thePlayer.isMoving && thePlayer.onGround && timer.hasTimePassed(300L))
         {
-            val distance = Speed.cubecraftPortLengthValue.get()
-
-            val dir = thePlayer.moveDirectionRadians
-            event.x = (-dir.sin * distance).toDouble()
-            event.z = (dir.cos * distance).toDouble()
+            event.forward(Speed.cubecraftPortLengthValue.get(), thePlayer.moveDirectionDegrees)
             timer.reset()
         }
     }

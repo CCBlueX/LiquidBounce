@@ -184,14 +184,10 @@ class TargetStrafe : Module()
 
             // Setup encirclement movements
             val encirclementSpeed = distance - strafeRange
-            val encirclementSpeedLimited = sign(encirclementSpeed) * min(abs(encirclementSpeed), moveSpeed)
-            val encirclementX = -encirclementYawRadians.sin * encirclementSpeedLimited
-            val encirclementZ = encirclementYawRadians.cos * encirclementSpeedLimited
+            val (encirclementX, encirclementZ) = ZERO.applyForwardRadians(sign(encirclementSpeed) * min(abs(encirclementSpeed), moveSpeed), encirclementYawRadians)
 
             // Setup strafe movements
-            val strafeSpeed = (moveSpeed - if (priorityValue.get().equals("Encirclement", ignoreCase = true)) hypot(encirclementX, encirclementZ) else 0.0) * direction
-            var strafeX = -strafeYawRadians.sin * strafeSpeed
-            var strafeZ = strafeYawRadians.cos * strafeSpeed
+            var (strafeX, strafeZ) = ZERO.applyForwardRadians((moveSpeed - if (priorityValue.get().equals("Encirclement", ignoreCase = true)) hypot(encirclementX, encirclementZ) else 0.0) * direction, strafeYawRadians)
             if (thePlayer.onGround && (thePlayer.isCollidedHorizontally // Horizontal collision check
                     || !isAboveGround(theWorld, playerPosX + encirclementX + strafeX * 2, thePlayer.posY, playerPosZ + encirclementZ + strafeZ * 2)) // Safewalk check
                 || theWorld.collideBlockIntersects(thePlayer.entityBoundingBox.offset(encirclementX + strafeX, 0.0, encirclementZ + strafeZ)) { it.block !is BlockAir && !theWorld.isReplaceable(it) }) // Predict-based aabb collision check
@@ -201,11 +197,7 @@ class TargetStrafe : Module()
                 strafeZ *= -1
             }
 
-            // TODO: Better calculation algorithm (current one is the ugliest one)
-            val resultYawRadians = ((atan2(encirclementZ + strafeZ, encirclementX + strafeX).toFloat()).toDegrees - 90.0f).wrapAngleTo180.toRadians
-            event.x = -resultYawRadians.sin * moveSpeed
-            event.z = resultYawRadians.cos * moveSpeed
-
+            event.forward(moveSpeed, ((atan2(encirclementZ + strafeZ, encirclementX + strafeX).toFloat()).toDegrees - 90.0f).wrapAngleTo180)
             strafing = true
         }
     }

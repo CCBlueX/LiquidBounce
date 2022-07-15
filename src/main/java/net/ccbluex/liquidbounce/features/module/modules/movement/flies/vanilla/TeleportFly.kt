@@ -37,8 +37,9 @@ class TeleportFly : FlyMode("Teleport")
 
             if (isMoving && !thePlayer.isCollidedHorizontally)
             {
-                x = -yaw.sin * speed
-                z = yaw.cos * speed
+                val (_x, _z) = ZERO.applyForward(speed, thePlayer.moveDirectionDegrees)
+                x = _x
+                z = _z
             }
 
             if (!thePlayer.isCollidedVertically) if (jumpKeyDown && !sneakKeyDown) y = speed else if (!jumpKeyDown && sneakKeyDown) y = -speed

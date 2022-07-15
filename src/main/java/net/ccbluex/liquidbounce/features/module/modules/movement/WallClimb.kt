@@ -9,10 +9,9 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.utils.extensions.applyForward
 import net.ccbluex.liquidbounce.utils.extensions.collideBlockIntersects
-import net.ccbluex.liquidbounce.utils.extensions.cos
-import net.ccbluex.liquidbounce.utils.extensions.moveDirectionRadians
-import net.ccbluex.liquidbounce.utils.extensions.sin
+import net.ccbluex.liquidbounce.utils.extensions.moveDirectionDegrees
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockAir
@@ -117,13 +116,14 @@ class WallClimb : Module()
     @EventTarget
     fun onPacket(event: PacketEvent)
     {
-        if (event.packet is C03PacketPlayer && glitch)
+        val packet = event.packet
+        if (packet is C03PacketPlayer && glitch)
         {
             val thePlayer = mc.thePlayer ?: return
 
-            val dir = thePlayer.moveDirectionRadians
-            event.packet.x = event.packet.x - dir.sin * 0.00000001
-            event.packet.z = event.packet.z + dir.cos * 0.00000001
+            val (x, z) = (packet.x to packet.z).applyForward(0.00000001, thePlayer.moveDirectionDegrees)
+            packet.x = x
+            packet.z = z
 
             glitch = false
         }

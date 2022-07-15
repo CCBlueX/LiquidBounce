@@ -157,15 +157,9 @@ class Step : Module()
 
             motionNCPNextStep == 2 ->
             {
-                val yaw = thePlayer.moveDirectionRadians
-
                 event.y = 0.248135998590947 // Jump step 3 (0.248)
 
-                if (motionNCPBoost > 0F)
-                {
-                    event.x = (-yaw.sin * motionNCPBoost).toDouble()
-                    event.z = (yaw.cos * motionNCPBoost).toDouble()
-                }
+                if (motionNCPBoost > 0F) event.forward(motionNCPBoost, thePlayer.moveDirectionDegrees)
 
                 motionNCPNextStep = 0
             }
@@ -348,10 +342,7 @@ class Step : Module()
 
     private fun couldStep(theWorld: World, thePlayer: EntityPlayer): Boolean
     {
-        val yaw = thePlayer.moveDirectionRadians
-        val x = -yaw.sin * 0.4
-        val z = yaw.cos * 0.4
-
+        val (x, z) = ZERO.applyForward(0.4, thePlayer.moveDirectionDegrees)
         return theWorld.getCollisionBoxes(thePlayer.entityBoundingBox.offset(x, 1.001335979112147, z)).isEmpty() && (!checkLiquid.get() || !thePlayer.isInWater && !thePlayer.isInLava)
     }
 
