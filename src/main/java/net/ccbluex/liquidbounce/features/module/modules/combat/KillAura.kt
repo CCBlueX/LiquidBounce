@@ -174,6 +174,8 @@ class KillAura : Module() {
     // Fake block status
     var blockingStatus = false
 
+    // fix ncp
+    var blockStopInDead = false
     /**
      * Enable kill aura module
      */
@@ -279,7 +281,8 @@ class KillAura : Module() {
         // Update target
         updateTarget()
 
-        if (target == null) {
+        if (target == null && !blockStopInDead) {
+            blockStopInDead = true
             stopBlocking()
             return
         }
@@ -395,6 +398,7 @@ class KillAura : Module() {
             if (swing && (fakeSwingValue.get() || failHit))
                 thePlayer.swingItem()
         } else {
+            blockStopInDead = false
             // Attack
             if (!multi) {
                 attackEntity(currentTarget!!)
