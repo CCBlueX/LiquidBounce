@@ -44,6 +44,7 @@ abstract class Value<T>(val name: String, protected var value: T) {
     abstract fun toJson(): JsonElement?
     abstract fun fromJson(element: JsonElement)
 
+    protected open fun onInit(value: T) {}
     protected open fun onChange(oldValue: T, newValue: T) {}
     protected open fun onChanged(oldValue: T, newValue: T) {}
 
@@ -59,6 +60,7 @@ open class BoolValue(name: String, value: Boolean) : Value<Boolean>(name, value)
     override fun fromJson(element: JsonElement) {
         if (element.isJsonPrimitive)
             value = element.asBoolean || element.asString.equals("true", ignoreCase = true)
+        onInit(value)
     }
 
 }
@@ -78,6 +80,7 @@ open class IntegerValue(name: String, value: Int, val minimum: Int = 0, val maxi
     override fun fromJson(element: JsonElement) {
         if (element.isJsonPrimitive)
             value = element.asInt
+        onInit(value)
     }
 
 }
@@ -97,6 +100,7 @@ open class FloatValue(name: String, value: Float, val minimum: Float = 0F, val m
     override fun fromJson(element: JsonElement) {
         if (element.isJsonPrimitive)
             value = element.asFloat
+        onInit(value)
     }
 
 }
@@ -111,6 +115,7 @@ open class TextValue(name: String, value: String) : Value<String>(name, value) {
     override fun fromJson(element: JsonElement) {
         if (element.isJsonPrimitive)
             value = element.asString
+        onInit(value)
     }
 }
 
@@ -131,6 +136,7 @@ class FontValue(valueName: String, value: FontRenderer) : Value<FontRenderer>(va
         if (!element.isJsonObject) return
         val valueObject = element.asJsonObject
         value = Fonts.getFontRenderer(valueObject["fontName"].asString, valueObject["fontSize"].asInt)
+        onInit(value)
     }
 }
 
@@ -167,8 +173,8 @@ open class ListValue(name: String, val values: Array<String>, value: String) : V
     override fun toJson() = JsonPrimitive(value)
 
     override fun fromJson(element: JsonElement) {
-        if (element.isJsonPrimitive) changeValue(element.asString)
+        if (element.isJsonPrimitive)
+            changeValue(element.asString)
+        onInit(value)
     }
-
-
 }
