@@ -29,12 +29,6 @@ public class Sprint extends Module {
                 foodValue.setIsSupported(false);
                 checkServerSide.setIsSupported(false);
                 checkServerSideGround.setIsSupported(false);
-                // XXX: Because of magic in MixinEntityPlayerSP.java it works properly only if all of those are disabled
-                allDirectionsValue.set(false);
-                blindnessValue.set(false);
-                foodValue.set(false);
-                checkServerSide.set(false);
-                checkServerSideGround.set(false);
             } else {
                 allDirectionsValue.setIsSupported(true);
                 blindnessValue.setIsSupported(true);
