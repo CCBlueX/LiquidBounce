@@ -23,7 +23,7 @@ import net.minecraft.potion.Potion;
 public class Sprint extends Module {
     public final ListValue modeValue = new ListValue("Mode", new String[] {"Legit", "Vanilla"}, "Vanilla") {
         protected void setSupported(final String value) {
-            if (value.toLowerCase() == "legit") {
+            if (modeValue.get().equalsIgnoreCase("legit")) {
                 allDirectionsValue.setIsSupported(false);
                 blindnessValue.setIsSupported(false);
                 foodValue.setIsSupported(false);
@@ -58,14 +58,14 @@ public class Sprint extends Module {
 
     @EventTarget
     public void onTick(final TickEvent event) {
-        if (modeValue.get().toLowerCase() == "legit") {
+        if (modeValue.get().equalsIgnoreCase("legit")) {
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindSprint.getKeyCode(), true);
         }
     }
 
     @Override
     public void onDisable() {
-        if (modeValue.get().toLowerCase() == "legit") {
+        if (modeValue.get().equalsIgnoreCase("legit")) {
             final int keyCode = mc.gameSettings.keyBindSprint.getKeyCode();
             KeyBinding.setKeyBindState(keyCode, keyCode > 0 && mc.gameSettings.keyBindSprint.isKeyDown());
         }
@@ -73,7 +73,7 @@ public class Sprint extends Module {
 
     @EventTarget
     public void onUpdate(final UpdateEvent event) {
-        if (modeValue.get().toLowerCase() == "vanilla") {
+        if (modeValue.get().equalsIgnoreCase("vanilla")) {
             if (!MovementUtils.isMoving() || mc.thePlayer.isSneaking() ||
                     (blindnessValue.get() && mc.thePlayer.isPotionActive(Potion.blindness)) ||
                     (foodValue.get() && !(mc.thePlayer.getFoodStats().getFoodLevel() > 6.0F || mc.thePlayer.capabilities.allowFlying))
