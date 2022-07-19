@@ -30,6 +30,7 @@ abstract class Value<T>(val name: String, protected var value: T) {
             onChange(oldValue, newValue)
             changeValue(newValue)
             onChanged(oldValue, newValue)
+            onUpdate(newValue)
             LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig)
         } catch (e: Exception) {
             ClientUtils.getLogger().error("[ValueSystem ($name)]: ${e.javaClass.name} (${e.message}) [$oldValue >> $newValue]")
@@ -52,12 +53,14 @@ abstract class Value<T>(val name: String, protected var value: T) {
             value = result
         }
         onInit(value)
+        onUpdate(value)
     }
 
     abstract fun toJsonF(): JsonElement?
     abstract fun fromJsonF(element: JsonElement): T?
 
     protected open fun onInit(value: T) {}
+    protected open fun onUpdate(value: T) {}
     protected open fun onChange(oldValue: T, newValue: T) {}
     protected open fun onChanged(oldValue: T, newValue: T) {}
 
