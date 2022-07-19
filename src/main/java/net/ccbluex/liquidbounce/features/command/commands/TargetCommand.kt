@@ -42,17 +42,24 @@ class TargetCommand : Command("target") {
                     playEdit()
                     return
                 }
+
+                args[1].equals("dead", ignoreCase = true) -> {
+                    EntityUtils.defaultTargets.dead = !EntityUtils.defaultTargets.dead
+                    chat("§7Target dead toggled ${if (EntityUtils.defaultTargets.dead) "on" else "off"}.")
+                    playEdit()
+                    return
+                }
             }
         }
 
-        chatSyntax("target <players/mobs/animals/invisible>")
+        chatSyntax("target <players/mobs/animals/invisible/dead>")
     }
 
     override fun tabComplete(args: Array<String>): List<String> {
         if (args.isEmpty()) return emptyList()
 
         return when (args.size) {
-            1 -> listOf("players", "mobs", "animals", "invisible")
+            1 -> listOf("players", "mobs", "animals", "invisible", "dead")
                 .filter { it.startsWith(args[0], true) }
             else -> emptyList()
         }
