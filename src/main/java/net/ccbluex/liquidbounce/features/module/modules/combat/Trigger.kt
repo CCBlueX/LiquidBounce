@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.TargetsValue
 import net.minecraft.client.settings.KeyBinding
 
 @ModuleInfo(name = "Trigger", description = "Automatically attacks the entity you are looking at.", category = ModuleCategory.COMBAT)
@@ -34,6 +35,8 @@ class Trigger : Module() {
         }
     }
 
+    private val targetsValue = TargetsValue()
+
     private var delay = TimeUtils.randomClickDelay(minCPS.get(), maxCPS.get())
     private var lastSwing = 0L
 
@@ -42,7 +45,7 @@ class Trigger : Module() {
         val objectMouseOver = mc.objectMouseOver
 
         if (objectMouseOver != null && System.currentTimeMillis() - lastSwing >= delay &&
-                EntityUtils.isSelected(objectMouseOver.entityHit, true)) {
+                EntityUtils.isSelected(objectMouseOver.entityHit, targetsValue.targets, true)) {
             KeyBinding.onTick(mc.gameSettings.keyBindAttack.keyCode) // Minecraft Click handling
 
             lastSwing = System.currentTimeMillis()

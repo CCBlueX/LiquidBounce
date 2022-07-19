@@ -42,7 +42,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
     private <T extends EntityLivingBase> void injectChamsPre(T entity, double x, double y, double z, float entityYaw, float partialTicks, CallbackInfo callbackInfo) {
         final Chams chams = (Chams) LiquidBounce.moduleManager.getModule(Chams.class);
 
-        if (chams.getState() && chams.getTargetsValue().get() && EntityUtils.isSelected(entity, false)) {
+        if (chams.getState() && EntityUtils.isSelected(entity, chams.getTargetsValue().getTargets(), false)) {
             GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);
             GL11.glPolygonOffset(1.0F, -1000000F);
         }
@@ -52,7 +52,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
     private <T extends EntityLivingBase> void injectChamsPost(T entity, double x, double y, double z, float entityYaw, float partialTicks, CallbackInfo callbackInfo) {
         final Chams chams = (Chams) LiquidBounce.moduleManager.getModule(Chams.class);
 
-        if (chams.getState() && chams.getTargetsValue().get() && EntityUtils.isSelected(entity, false)) {
+        if (chams.getState() && EntityUtils.isSelected(entity, chams.getTargetsValue().getTargets(), false)) {
             GL11.glPolygonOffset(1.0F, 1000000F);
             GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);
         }
@@ -60,7 +60,8 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
 
     @Inject(method = "canRenderName(Lnet/minecraft/entity/EntityLivingBase;)Z", at = @At("HEAD"), cancellable = true)
     private <T extends EntityLivingBase> void canRenderName(T entity, CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
-        if (!ESP.renderNameTags || (LiquidBounce.moduleManager.getModule(NameTags.class).getState() && EntityUtils.isSelected(entity, false))) {
+        final NameTags nameTags = (NameTags) LiquidBounce.moduleManager.getModule(NameTags.class);
+        if (!ESP.renderNameTags || nameTags.getState() && EntityUtils.isSelected(entity, nameTags.getTargetsValue().getTargets(), false)) {
             callbackInfoReturnable.setReturnValue(false);
         }
     }
@@ -89,7 +90,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
             }
 
             final ESP esp = (ESP) LiquidBounce.moduleManager.getModule(ESP.class);
-            if (esp.getState() && EntityUtils.isSelected(p_renderModel_1_, false)) {
+            if (esp.getState() && EntityUtils.isSelected(p_renderModel_1_, esp.getTargetsValue().getTargets(), false)) {
                 Minecraft mc = Minecraft.getMinecraft();
                 boolean fancyGraphics = mc.gameSettings.fancyGraphics;
                 mc.gameSettings.fancyGraphics = false;

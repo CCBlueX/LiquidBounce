@@ -21,6 +21,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.quickDrawRect
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.FontValue
+import net.ccbluex.liquidbounce.value.TargetsValue
 import net.minecraft.client.renderer.GlStateManager.*
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.player.EntityPlayer
@@ -39,6 +40,7 @@ class NameTags : Module() {
     private val borderValue = BoolValue("Border", true)
     private val scaleValue = FloatValue("Scale", 1F, 1F, 4F)
     private val botValue = BoolValue("Bots", true)
+    val targetsValue = TargetsValue()
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
@@ -57,7 +59,7 @@ class NameTags : Module() {
 
         for (entity in mc.theWorld!!.loadedEntityList) {
             if (entity !is EntityLivingBase) continue
-            if (!EntityUtils.isSelected(entity, false)) continue
+            if (!EntityUtils.isSelected(entity, targetsValue.targets, false)) continue
             if (AntiBot.isBot(entity) && !botValue.get()) continue
 
             renderNameTag(entity,

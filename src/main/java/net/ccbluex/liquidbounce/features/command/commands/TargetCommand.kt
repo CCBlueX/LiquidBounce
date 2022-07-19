@@ -16,29 +16,29 @@ class TargetCommand : Command("target") {
         if (args.size > 1) {
             when {
                 args[1].equals("players", ignoreCase = true) -> {
-                    EntityUtils.targetPlayer = !EntityUtils.targetPlayer
-                    chat("§7Target player toggled ${if (EntityUtils.targetPlayer) "on" else "off"}.")
+                    EntityUtils.defaultTargets.players = !EntityUtils.defaultTargets.players
+                    chat("§7Target players toggled ${if (EntityUtils.defaultTargets.players) "on" else "off"}.")
                     playEdit()
                     return
                 }
 
                 args[1].equals("mobs", ignoreCase = true) -> {
-                    EntityUtils.targetMobs = !EntityUtils.targetMobs
-                    chat("§7Target mobs toggled ${if (EntityUtils.targetMobs) "on" else "off"}.")
+                    EntityUtils.defaultTargets.mobs = !EntityUtils.defaultTargets.mobs
+                    chat("§7Target mobs toggled ${if (EntityUtils.defaultTargets.mobs) "on" else "off"}.")
                     playEdit()
                     return
                 }
 
                 args[1].equals("animals", ignoreCase = true) -> {
-                    EntityUtils.targetAnimals = !EntityUtils.targetAnimals
-                    chat("§7Target animals toggled ${if (EntityUtils.targetAnimals) "on" else "off"}.")
+                    EntityUtils.defaultTargets.animals = !EntityUtils.defaultTargets.animals
+                    chat("§7Target animals toggled ${if (EntityUtils.defaultTargets.animals) "on" else "off"}.")
                     playEdit()
                     return
                 }
 
                 args[1].equals("invisible", ignoreCase = true) -> {
-                    EntityUtils.targetInvisible = !EntityUtils.targetInvisible
-                    chat("§7Target Invisible toggled ${if (EntityUtils.targetInvisible) "on" else "off"}.")
+                    EntityUtils.defaultTargets.invisible = !EntityUtils.defaultTargets.invisible
+                    chat("§7Target Invisible toggled ${if (EntityUtils.defaultTargets.invisible) "on" else "off"}.")
                     playEdit()
                     return
                 }

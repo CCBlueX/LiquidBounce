@@ -20,6 +20,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.TargetsValue
 import net.minecraft.client.renderer.GlStateManager
 import net.minecraft.client.renderer.Tessellator
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats
@@ -61,6 +62,8 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y) {
     private val borderBlueValue = IntegerValue("Border Blue", 0, 0, 255)
     private val borderAlphaValue = IntegerValue("Border Alpha", 150, 0, 255)
     private val borderRainbowValue = BoolValue("Border Rainbow", false)
+
+    private val targetsValue = TargetsValue()
 
     private var fovMarkerVertexBuffer: VertexBuffer? = null
     private var lastFov = 0f
@@ -175,7 +178,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y) {
         }
 
         for (entity in mc.theWorld!!.loadedEntityList) {
-            if (entity != mc.thePlayer && EntityUtils.isSelected(entity, false)) {
+            if (entity != mc.thePlayer && EntityUtils.isSelected(entity, targetsValue.targets, false)) {
                 val positionRelativeToPlayer = Vector2f((renderViewEntity.posX - entity.posX).toFloat(),
                         (renderViewEntity.posZ - entity.posZ).toFloat())
 

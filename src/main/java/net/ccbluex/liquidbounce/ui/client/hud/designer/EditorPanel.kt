@@ -391,6 +391,33 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
                     }
                 }
 
+                is MultiListValue -> {
+                    // Title
+                    Fonts.font35.drawString(value.name, x + 2, y + height, Color.WHITE.rgb)
+
+                    height += 10
+                    realHeight += 10
+                    // Selectable values
+                    for (s in value.values) {
+                        // Value title
+                        val text = "§c> §r$s"
+                        Fonts.font35.drawString(text, x + 2, y + height, if (value.valueContains(s)) Color.WHITE.rgb else Color.GRAY.rgb)
+
+                        val stringWidth = Fonts.font35.getStringWidth(text)
+                        if (width < stringWidth + 8)
+                            width = stringWidth + 8
+
+                        // Select value
+                        if (Mouse.isButtonDown(0) && !mouseDown && mouseX >= x && mouseX <= x + width
+                                && mouseY >= y + height && mouseY <= y + height + 10)
+                            value.toggle(s)
+
+                        // Change pos
+                        height += 10
+                        realHeight += 10
+                    }
+                }
+
                 is FontValue -> {
                     val fontRenderer = value.get()
 

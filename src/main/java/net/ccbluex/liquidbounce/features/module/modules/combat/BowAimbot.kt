@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.TargetsValue
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.item.ItemBow
@@ -31,6 +32,7 @@ class BowAimbot : Module() {
     private val predictSizeValue = FloatValue("PredictSize", 2F, 0.1F, 5F)
     private val priorityValue = ListValue("Priority", arrayOf("Health", "Distance", "Direction"), "Direction")
     private val markValue = BoolValue("Mark", true)
+    private val targetsValue = TargetsValue()
 
     private var target: Entity? = null
 
@@ -58,7 +60,7 @@ class BowAimbot : Module() {
 
     private fun getTarget(throughWalls: Boolean, priorityMode: String): Entity? {
         val targets = mc.theWorld.loadedEntityList.filter {
-            it is EntityLivingBase && EntityUtils.isSelected(it, true) &&
+            it is EntityLivingBase && EntityUtils.isSelected(it, targetsValue.targets, true) &&
                     (throughWalls || mc.thePlayer.canEntityBeSeen(it))
         }
 

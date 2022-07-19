@@ -56,28 +56,28 @@ object SettingsUtils {
                 }
 
                 "targetPlayer", "targetPlayers" -> {
-                    EntityUtils.targetPlayer = args[1].equals("true", ignoreCase = true)
-                    ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${args[0]}§7 set to §c§l${EntityUtils.targetPlayer}§7.")
+                    EntityUtils.defaultTargets.players = args[1].equals("true", ignoreCase = true)
+                    ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${args[0]}§7 set to §c§l${EntityUtils.defaultTargets.players}§7.")
                 }
 
                 "targetMobs" -> {
-                    EntityUtils.targetMobs = args[1].equals("true", ignoreCase = true)
-                    ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${args[0]}§7 set to §c§l${EntityUtils.targetMobs}§7.")
+                    EntityUtils.defaultTargets.mobs = args[1].equals("true", ignoreCase = true)
+                    ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${args[0]}§7 set to §c§l${EntityUtils.defaultTargets.mobs}§7.")
                 }
 
                 "targetAnimals" -> {
-                    EntityUtils.targetAnimals = args[1].equals("true", ignoreCase = true)
-                    ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${args[0]}§7 set to §c§l${EntityUtils.targetAnimals}§7.")
+                    EntityUtils.defaultTargets.animals = args[1].equals("true", ignoreCase = true)
+                    ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${args[0]}§7 set to §c§l${EntityUtils.defaultTargets.animals}§7.")
                 }
 
                 "targetInvisible" -> {
-                    EntityUtils.targetInvisible = args[1].equals("true", ignoreCase = true)
-                    ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${args[0]}§7 set to §c§l${EntityUtils.targetInvisible}§7.")
+                    EntityUtils.defaultTargets.invisible = args[1].equals("true", ignoreCase = true)
+                    ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${args[0]}§7 set to §c§l${EntityUtils.defaultTargets.invisible}§7.")
                 }
 
                 "targetDead" -> {
-                    EntityUtils.targetDead = args[1].equals("true", ignoreCase = true)
-                    ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${args[0]}§7 set to §c§l${EntityUtils.targetDead}§7.")
+                    EntityUtils.defaultTargets.dead = args[1].equals("true", ignoreCase = true)
+                    ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §a§l${args[0]}§7 set to §c§l${EntityUtils.defaultTargets.dead}§7.")
                 }
 
                 else -> {

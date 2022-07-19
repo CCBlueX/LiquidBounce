@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.TargetsValue
 import net.minecraft.client.gui.inventory.GuiContainer
 import net.minecraft.client.gui.inventory.GuiInventory
 import net.minecraft.enchantment.EnchantmentHelper
@@ -152,6 +153,8 @@ class KillAura : Module() {
     // Visuals
     private val markValue = BoolValue("Mark", true)
     private val fakeSharpValue = BoolValue("FakeSharp", true)
+
+    private val targetsValue = TargetsValue()
 
     /**
      * MODULE
@@ -489,11 +492,12 @@ class KillAura : Module() {
      * Check if [entity] is selected as enemy with current target options and other modules
      */
     private fun isEnemy(entity: Entity?): Boolean {
-        if (entity is EntityLivingBase && (EntityUtils.targetDead || isAlive(entity)) && entity != mc.thePlayer) {
-            if (!EntityUtils.targetInvisible && entity.isInvisible)
+        var usedTargets = EntityUtils.getTargets(targetsValue.targets)
+        if (entity is EntityLivingBase && (usedTargets.dead || isAlive(entity)) && entity != mc.thePlayer) {
+            if (!usedTargets.invisible && entity.isInvisible)
                 return false
 
-            if (EntityUtils.targetPlayer && entity is EntityPlayer) {
+            if (usedTargets.players && entity is EntityPlayer) {
                 if (entity.isSpectator || AntiBot.isBot(entity))
                     return false
 
@@ -505,7 +509,7 @@ class KillAura : Module() {
                 return !teams.state || !teams.isInYourTeam(entity)
             }
 
-            return EntityUtils.targetMobs && entity.isMob() || EntityUtils.targetAnimals && entity.isAnimal()
+            return usedTargets.mobs && entity.isMob() || usedTargets.animals && entity.isAnimal()
         }
 
         return false

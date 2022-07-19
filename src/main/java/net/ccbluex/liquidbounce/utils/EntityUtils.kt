@@ -16,28 +16,44 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.player.EntityPlayer
 
+class Targets {
+    @JvmField
+    var default = false
+
+    @JvmField
+    var invisible = false
+
+    @JvmField
+    var players = true
+
+    @JvmField
+    var mobs = true
+
+    @JvmField
+    var animals = false
+
+    @JvmField
+    var dead = false
+}
+
 object EntityUtils : MinecraftInstance() {
-
     @JvmField
-    var targetInvisible = false
+    var defaultTargets = Targets()
 
-    @JvmField
-    var targetPlayer = true
-
-    @JvmField
-    var targetMobs = true
-
-    @JvmField
-    var targetAnimals = false
-
-    @JvmField
-    var targetDead = false
+    fun getTargets(targets: Targets): Targets {
+        if (targets.default) {
+            return defaultTargets
+        } else {
+            return targets
+        }
+    }
 
     @JvmStatic
-    fun isSelected(entity: Entity?, canAttackCheck: Boolean): Boolean {
-        if (entity is EntityLivingBase && (targetDead || entity!!.isEntityAlive) && entity != mc.thePlayer) {
-            if (targetInvisible || !entity.isInvisible) {
-                if (targetPlayer && entity is EntityPlayer) {
+    fun isSelected(entity: Entity?, targets: Targets, canAttackCheck: Boolean): Boolean {
+        var usedTargets = getTargets(targets)
+        if (entity is EntityLivingBase && (usedTargets.dead || entity.isEntityAlive) && entity != mc.thePlayer) {
+            if (usedTargets.invisible || !entity.isInvisible) {
+                if (usedTargets.players && entity is EntityPlayer) {
                     if (canAttackCheck) {
                         if (isBot(entity))
                             return false
@@ -52,10 +68,9 @@ object EntityUtils : MinecraftInstance() {
                     return true
                 }
 
-                return targetMobs && entity.isMob() || targetAnimals && entity.isAnimal()
+                return usedTargets.mobs && entity.isMob() || usedTargets.animals && entity.isAnimal()
             }
         }
         return false
     }
-
 }

@@ -19,6 +19,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.TargetsValue
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.player.EntityPlayer
@@ -39,6 +40,8 @@ class Tracers : Module() {
 
     private val botValue = BoolValue("Bots", true)
 
+    private val targetsValue = TargetsValue()
+
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
         val thePlayer = mc.thePlayer ?: return
@@ -55,7 +58,7 @@ class Tracers : Module() {
 
         for (entity in mc.theWorld!!.loadedEntityList) {
             if (entity !is EntityLivingBase || !botValue.get() && AntiBot.isBot(entity)) continue
-            if (entity != thePlayer && EntityUtils.isSelected(entity, false)) {
+            if (entity != thePlayer && EntityUtils.isSelected(entity, targetsValue.targets, false)) {
                 var dist = (thePlayer.getDistanceToEntity(entity) * 2).toInt()
 
                 if (dist > 255) dist = 255

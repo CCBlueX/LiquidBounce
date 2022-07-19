@@ -177,6 +177,46 @@ public class SlowlyStyle extends Style {
                         if (!listValue.openList) {
                             moduleElement.slowlySettingsYPos += 1;
                         }
+                    } else if (value instanceof MultiListValue) {
+                        final MultiListValue listValue = (MultiListValue) value;
+
+                        final String text = value.getName();
+                        final float textWidth = Fonts.font35.getStringWidth(text);
+
+                        if (moduleElement.getSettingsWidth() < textWidth + 16)
+                            moduleElement.setSettingsWidth(textWidth + 16);
+
+                        Fonts.font35.drawString(text, moduleElement.getX() + moduleElement.getWidth() + 6, moduleElement.slowlySettingsYPos + 2, 0xffffff);
+                        Fonts.font35.drawString(listValue.openList ? "-" : "+", (int) (moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth() - (listValue.openList ? 5 : 6)), moduleElement.slowlySettingsYPos + 2, 0xffffff);
+
+                        if (mouseX >= moduleElement.getX() + moduleElement.getWidth() + 4 && mouseX <= moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth() && mouseY >= moduleElement.slowlySettingsYPos && mouseY <= moduleElement.slowlySettingsYPos + Fonts.font35.getFontHeight() && Mouse.isButtonDown(0) && moduleElement.isntPressed()) {
+                            listValue.openList = !listValue.openList;
+                            mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("gui.button.press"), 1.0F));
+                        }
+
+                        moduleElement.slowlySettingsYPos += Fonts.font35.getFontHeight() + 1;
+
+                        for (final String valueOfList : listValue.getValues()) {
+                            final float textWidth2 = Fonts.font35.getStringWidth("> " + valueOfList);
+
+                            if (moduleElement.getSettingsWidth() < textWidth2 + 12)
+                                moduleElement.setSettingsWidth(textWidth2 + 12);
+
+                            if (listValue.openList) {
+                                if (mouseX >= moduleElement.getX() + moduleElement.getWidth() + 4 && mouseX <= moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth() && mouseY >= moduleElement.slowlySettingsYPos + 2 && mouseY <= moduleElement.slowlySettingsYPos + 14 && Mouse.isButtonDown(0) && moduleElement.isntPressed()) {
+                                    listValue.toggle(valueOfList);
+                                    mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("gui.button.press"), 1.0F));
+                                }
+
+                                GlStateManager.resetColor();
+                                Fonts.font35.drawString("> " + valueOfList, moduleElement.getX() + moduleElement.getWidth() + 6, moduleElement.slowlySettingsYPos + 2, listValue.valueContains(valueOfList) ? Color.WHITE.getRGB() : Integer.MAX_VALUE);
+                                moduleElement.slowlySettingsYPos += Fonts.font35.getFontHeight() + 1;
+                            }
+                        }
+
+                        if (!listValue.openList) {
+                            moduleElement.slowlySettingsYPos += 1;
+                        }
                     } else if (value instanceof FloatValue) {
                         final FloatValue floatValue = (FloatValue) value;
                         final String text = value.getName() + "§f: " + round(floatValue.get());

@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.utils.extensions.rotation
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.TargetsValue
 import java.util.*
 
 @ModuleInfo(name = "Aimbot", description = "Automatically faces selected entities around you.", category = ModuleCategory.COMBAT)
@@ -30,6 +31,7 @@ class Aimbot : Module() {
     private val lockValue = BoolValue("Lock", true)
     private val onClickValue = BoolValue("OnClick", false)
     private val jitterValue = BoolValue("Jitter", false)
+    private val targetsValue = TargetsValue()
 
     private val clickTimer = MSTimer()
 
@@ -47,7 +49,7 @@ class Aimbot : Module() {
         val range = rangeValue.get()
         val entity = mc.theWorld.loadedEntityList
                 .filter {
-                    EntityUtils.isSelected(it, true) && mc.thePlayer.canEntityBeSeen(it) &&
+                    EntityUtils.isSelected(it, targetsValue.targets, true) && mc.thePlayer.canEntityBeSeen(it) &&
                             mc.thePlayer.getDistanceToEntityBox(it) <= range && RotationUtils.getRotationDifference(it) <= fovValue.get()
                 }
                 .minByOrNull { RotationUtils.getRotationDifference(it) } ?: return

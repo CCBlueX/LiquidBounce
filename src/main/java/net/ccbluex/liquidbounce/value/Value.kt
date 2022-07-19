@@ -12,6 +12,8 @@ import net.ccbluex.liquidbounce.LiquidBounce
 
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.EntityUtils
+import net.ccbluex.liquidbounce.utils.Targets
 import net.minecraft.client.gui.FontRenderer
 import java.util.*
 
@@ -177,5 +179,76 @@ open class ListValue(name: String, val values: Array<String>, value: String) : V
         if (element.isJsonPrimitive)
             changeValue(element.asString)
         onInit(value)
+    }
+}
+
+open class MultiListValue(name: String, val values: Array<String>, value: ArrayList<String>): Value<ArrayList<String>>(name, value) {
+
+    @JvmField
+    var openList = false
+
+    init {
+        this.value = value
+    }
+
+    operator fun contains(string: String?): Boolean {
+        return Arrays.stream(values).anyMatch { s: String -> s.equals(string, ignoreCase = true) }
+    }
+
+    fun valueContains(string: String?): Boolean {
+        return value.stream().anyMatch { s: String -> s.equals(string, ignoreCase = true) }
+    }
+
+    override fun changeValue(value: ArrayList<String>) {
+        this.value = value
+    }
+
+    fun toggle(toggledElement: String) {
+        var newValue = ArrayList<String>()
+        if (valueContains(toggledElement)) {
+            for (valueElement in value) {
+                if (!valueElement.equals(toggledElement, ignoreCase = true)) {
+                    newValue.add(valueElement)
+                }
+            }
+        } else {
+            newValue.addAll(value)
+            newValue.add(toggledElement)
+        }
+        set(newValue)
+    }
+
+    override fun toJson() = JsonPrimitive(value.joinToString(";"))
+
+    override fun fromJson(element: JsonElement) {
+        if (element.isJsonPrimitive)
+            value = ArrayList<String>(element.asString.split(";"))
+        onInit(value)
+    }
+}
+
+class TargetsValue(): MultiListValue("Targets", arrayOf("Default", "Invisible", "Players", "Mobs", "Animals", "Dead"), arrayListOf("Default")) {
+
+    @get:JvmName("getTargets")
+    var targets: Targets = Targets()
+        private set
+
+    private fun update() {
+        targets.default = valueContains("default")
+        if (!targets.default) {
+            targets.invisible = valueContains("invisible")
+            targets.players = valueContains("players")
+            targets.mobs = valueContains("mobs")
+            targets.animals = valueContains("animals")
+            targets.dead = valueContains("dead")
+        }
+    }
+
+    override fun onInit(value: ArrayList<String>) {
+        update()
+    }
+
+    override fun onChanged(oldValue: ArrayList<String>, newValue: ArrayList<String>) {
+        update()
     }
 }

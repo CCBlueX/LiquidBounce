@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.TargetsValue
 import net.minecraft.client.renderer.GlStateManager
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
@@ -58,6 +59,7 @@ class ESP : Module() {
     private val colorRainbow = BoolValue("Rainbow", false)
     private val colorTeam = BoolValue("Team", false)
     private val botValue = BoolValue("Bots", true)
+    val targetsValue = TargetsValue()
 
     @EventTarget
     fun onRender3D(event: Render3DEvent?) {
@@ -87,7 +89,7 @@ class ESP : Module() {
 
         for (entity in mc.theWorld!!.loadedEntityList) {
             if (entity !is EntityLivingBase || !botValue.get() && AntiBot.isBot(entity)) continue
-            if (entity != mc.thePlayer && EntityUtils.isSelected(entity, false)) {
+            if (entity != mc.thePlayer && EntityUtils.isSelected(entity, targetsValue.targets, false)) {
                 val color = getColor(entity)
 
                 when (mode.toLowerCase()) {
@@ -199,7 +201,7 @@ class ESP : Module() {
             //search entities
             val entityMap = HashMap<Color, ArrayList<Entity>>()
             for (entity in mc.theWorld!!.loadedEntityList) {
-                if (!EntityUtils.isSelected(entity, false) || entity !is EntityLivingBase) continue
+                if (!EntityUtils.isSelected(entity, targetsValue.targets, false) || entity !is EntityLivingBase) continue
                 if (AntiBot.isBot(entity) && !botValue.get()) continue
                 //can draw
                 val color = getColor(entity)

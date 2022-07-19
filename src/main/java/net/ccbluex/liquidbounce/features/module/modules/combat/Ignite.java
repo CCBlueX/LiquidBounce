@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.ccbluex.liquidbounce.utils.block.BlockUtils;
 import net.ccbluex.liquidbounce.utils.timer.MSTimer;
 import net.ccbluex.liquidbounce.value.BoolValue;
+import net.ccbluex.liquidbounce.value.TargetsValue;
 import net.minecraft.block.BlockAir;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.multiplayer.WorldClient;
@@ -34,6 +35,7 @@ import net.minecraft.util.Vec3;
 public class Ignite extends Module {
    private final BoolValue lighterValue = new BoolValue("Lighter", true);
    private final BoolValue lavaBucketValue = new BoolValue("Lava", true);
+   private final TargetsValue targetsValue = new TargetsValue();
 
    private final MSTimer msTimer = new MSTimer();
 
@@ -59,7 +61,7 @@ public class Ignite extends Module {
        final int fireInHotbar = lighterInHotbar != -1 ? lighterInHotbar : lavaInHotbar;
 
        for (final Entity entity : theWorld.getLoadedEntityList()) {
-           if (EntityUtils.isSelected(entity, true) && !entity.isBurning()) {
+           if (EntityUtils.isSelected(entity, targetsValue.getTargets(), true) && !entity.isBurning()) {
                BlockPos blockPos = entity.getPosition();
 
                if (mc.thePlayer.getDistanceSq(blockPos) >= 22.3D ||

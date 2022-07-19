@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.features.module.ModuleInfo;
 import net.ccbluex.liquidbounce.utils.*;
+import net.ccbluex.liquidbounce.value.TargetsValue;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -21,6 +22,8 @@ import net.minecraft.util.Vec3;
 
 @ModuleInfo(name = "TeleportHit", description = "Allows to hit entities from far away.", category = ModuleCategory.COMBAT)
 public class TeleportHit extends Module {
+    private final TargetsValue targetsValue = new TargetsValue();
+
     private EntityLivingBase targetEntity;
     private boolean shouldHit;
 
@@ -36,7 +39,7 @@ public class TeleportHit extends Module {
         if (thePlayer == null)
             return;
 
-        if(mc.gameSettings.keyBindAttack.isKeyDown() && EntityUtils.isSelected(facedEntity, true)) {
+        if (mc.gameSettings.keyBindAttack.isKeyDown() && EntityUtils.isSelected(facedEntity, targetsValue.getTargets(), true)) {
             if (facedEntity.getDistanceSqToEntity(mc.thePlayer) >= 1D) targetEntity = (EntityLivingBase) facedEntity;
         }
 

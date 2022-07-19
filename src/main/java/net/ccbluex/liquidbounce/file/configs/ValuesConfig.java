@@ -64,15 +64,15 @@ public class ValuesConfig extends FileConfig {
                 JsonObject jsonValue = (JsonObject) entry.getValue();
 
                 if (jsonValue.has("TargetPlayer"))
-                    EntityUtils.targetPlayer = jsonValue.get("TargetPlayer").getAsBoolean();
+                    EntityUtils.defaultTargets.players = jsonValue.get("TargetPlayer").getAsBoolean();
                 if (jsonValue.has("TargetMobs"))
-                    EntityUtils.targetMobs = jsonValue.get("TargetMobs").getAsBoolean();
+                    EntityUtils.defaultTargets.mobs = jsonValue.get("TargetMobs").getAsBoolean();
                 if (jsonValue.has("TargetAnimals"))
-                    EntityUtils.targetAnimals = jsonValue.get("TargetAnimals").getAsBoolean();
+                    EntityUtils.defaultTargets.animals = jsonValue.get("TargetAnimals").getAsBoolean();
                 if (jsonValue.has("TargetInvisible"))
-                    EntityUtils.targetInvisible = jsonValue.get("TargetInvisible").getAsBoolean();
+                    EntityUtils.defaultTargets.invisible = jsonValue.get("TargetInvisible").getAsBoolean();
                 if (jsonValue.has("TargetDead"))
-                    EntityUtils.targetDead = jsonValue.get("TargetDead").getAsBoolean();
+                    EntityUtils.defaultTargets.dead = jsonValue.get("TargetDead").getAsBoolean();
             } else if (entry.getKey().equalsIgnoreCase("features")) {
                 JsonObject jsonValue = (JsonObject) entry.getValue();
 
@@ -143,11 +143,11 @@ public class ValuesConfig extends FileConfig {
         jsonObject.addProperty("ShowRichPresence", LiquidBounce.clientRichPresence.getShowRichPresenceValue());
 
         final JsonObject jsonTargets = new JsonObject();
-        jsonTargets.addProperty("TargetPlayer", EntityUtils.targetPlayer);
-        jsonTargets.addProperty("TargetMobs", EntityUtils.targetMobs);
-        jsonTargets.addProperty("TargetAnimals", EntityUtils.targetAnimals);
-        jsonTargets.addProperty("TargetInvisible", EntityUtils.targetInvisible);
-        jsonTargets.addProperty("TargetDead", EntityUtils.targetDead);
+        jsonTargets.addProperty("TargetPlayer", EntityUtils.defaultTargets.players);
+        jsonTargets.addProperty("TargetMobs", EntityUtils.defaultTargets.mobs);
+        jsonTargets.addProperty("TargetAnimals", EntityUtils.defaultTargets.animals);
+        jsonTargets.addProperty("TargetInvisible", EntityUtils.defaultTargets.invisible);
+        jsonTargets.addProperty("TargetDead", EntityUtils.defaultTargets.dead);
         jsonObject.add("targets", jsonTargets);
 
         final JsonObject jsonFeatures = new JsonObject();
