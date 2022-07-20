@@ -47,6 +47,11 @@ public class Sprint extends Module {
     public final BoolValue checkServerSide = new BoolValue("CheckServerSide", false);
     public final BoolValue checkServerSideGround = new BoolValue("CheckServerSideOnlyGround", false);
 
+    @Override
+    public final String getTag() {
+        return modeValue.get();
+    }
+
     @EventTarget
     public void onTick(final TickEvent event) {
         if (modeValue.get().equalsIgnoreCase("legit")) {
