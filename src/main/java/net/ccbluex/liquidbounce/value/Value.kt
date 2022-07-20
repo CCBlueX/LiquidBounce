@@ -239,12 +239,12 @@ open class MultiListValue(name: String, val values: Array<String>, value: ArrayL
         set(newValue)
     }
 
-    override fun toJson() = JsonPrimitive(value.joinToString(";"))
+    override fun toJsonF() = JsonPrimitive(value.joinToString(";"))
 
-    override fun fromJson(element: JsonElement) {
+    override fun fromJsonF(element: JsonElement): ArrayList<String>? {
         if (element.isJsonPrimitive)
-            changeValue(ArrayList<String>(element.asString.split(";")))
-        onInit(value)
+            return ArrayList<String>(element.asString.split(";"))
+        return null
     }
 }
 
