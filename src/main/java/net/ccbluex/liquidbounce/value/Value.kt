@@ -200,6 +200,11 @@ open class MultiListValue(name: String, val values: Array<String>, value: ArrayL
     }
 
     override fun changeValue(value: ArrayList<String>) {
+        for (valueElement in value) {
+            if (valueElement !in this) {
+                return
+            }
+        }
         this.value = value
     }
 
@@ -222,7 +227,7 @@ open class MultiListValue(name: String, val values: Array<String>, value: ArrayL
 
     override fun fromJson(element: JsonElement) {
         if (element.isJsonPrimitive)
-            value = ArrayList<String>(element.asString.split(";"))
+            changeValue(ArrayList<String>(element.asString.split(";")))
         onInit(value)
     }
 }
