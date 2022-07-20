@@ -150,6 +150,51 @@ public class LiquidBounceStyle extends Style {
                                 yPos += 12;
                             }
                         }
+                    }else if(value instanceof MultiListValue) {
+                        MultiListValue listValue = (MultiListValue) value;
+
+                        final String text = value.getName();
+                        final float textWidth = Fonts.font35.getStringWidth(text);
+
+                        if(moduleElement.getSettingsWidth() < textWidth + 16)
+                            moduleElement.setSettingsWidth(textWidth + 16);
+
+                        RenderUtils.drawRect(moduleElement.getX() + moduleElement.getWidth() + 4, yPos + 2, moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth(), yPos + 14, Integer.MIN_VALUE);
+                        GlStateManager.resetColor();
+                        Fonts.font35.drawString("§c" + text, moduleElement.getX() + moduleElement.getWidth() + 6, yPos + 4, 0xffffff);
+                        Fonts.font35.drawString(listValue.openList ? "-" : "+", (int) (moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth() - (listValue.openList ? 5 : 6)), yPos + 4, 0xffffff);
+
+                        if(mouseX >= moduleElement.getX() + moduleElement.getWidth() + 4 && mouseX <= moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth() && mouseY >= yPos + 2 && mouseY <= yPos + 14) {
+                            if(Mouse.isButtonDown(0) && moduleElement.isntPressed()) {
+                                listValue.openList = !listValue.openList;
+                                mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("gui.button.press"), 1.0F));
+                            }
+                        }
+
+                        yPos += 12;
+
+                        for(final String valueOfList : listValue.getValues()) {
+                            final float textWidth2 = Fonts.font35.getStringWidth(">" + valueOfList);
+
+                            if(moduleElement.getSettingsWidth() < textWidth2 + 8)
+                                moduleElement.setSettingsWidth(textWidth2 + 8);
+
+                            if (listValue.openList) {
+                                RenderUtils.drawRect(moduleElement.getX() + moduleElement.getWidth() + 4, yPos + 2, moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth(), yPos + 14, Integer.MIN_VALUE);
+
+                                if(mouseX >= moduleElement.getX() + moduleElement.getWidth() + 4 && mouseX <= moduleElement.getX() + moduleElement.getWidth() + moduleElement.getSettingsWidth() && mouseY >= yPos + 2 && mouseY <= yPos + 14) {
+                                    if(Mouse.isButtonDown(0) && moduleElement.isntPressed()) {
+                                        listValue.toggle(valueOfList);
+                                        mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("gui.button.press"), 1.0F));
+                                    }
+                                }
+
+                                GlStateManager.resetColor();
+                                Fonts.font35.drawString(">", moduleElement.getX() + moduleElement.getWidth() + 6, yPos + 4, Integer.MAX_VALUE);
+                                Fonts.font35.drawString(valueOfList, moduleElement.getX() + moduleElement.getWidth() + 14, yPos + 4, listValue.valueContains(valueOfList) ? guiColor : Integer.MAX_VALUE);
+                                yPos += 12;
+                            }
+                        }
                     }else if(value instanceof FloatValue) {
                         final FloatValue floatValue = (FloatValue) value;
                         final String text = value.getName() + "§f: §c" + round(floatValue.get());
