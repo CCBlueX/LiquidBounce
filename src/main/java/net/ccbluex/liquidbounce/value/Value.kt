@@ -254,7 +254,7 @@ class TargetsValue(): MultiListValue("Targets", arrayOf("Default", "Invisible", 
     var targets: Targets = Targets()
         private set
 
-    private fun update() {
+    override fun onUpdate(value: ArrayList<String>) {
         targets.default = valueContains("default")
         if (!targets.default) {
             targets.invisible = valueContains("invisible")
@@ -263,13 +263,5 @@ class TargetsValue(): MultiListValue("Targets", arrayOf("Default", "Invisible", 
             targets.animals = valueContains("animals")
             targets.dead = valueContains("dead")
         }
-    }
-
-    override fun onInit(value: ArrayList<String>) {
-        update()
-    }
-
-    override fun onChanged(oldValue: ArrayList<String>, newValue: ArrayList<String>) {
-        update()
     }
 }
