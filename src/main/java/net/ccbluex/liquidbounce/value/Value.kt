@@ -50,7 +50,7 @@ abstract class Value<T>(val name: String, protected var value: T) {
     open fun fromJson(element: JsonElement) {
         val result = fromJsonF(element)
         if (result != null) {
-            value = result
+            changeValue(result)
         }
         onInit(value)
         onUpdate(value)
