@@ -22,7 +22,8 @@ import net.minecraft.potion.Potion;
 @ModuleInfo(name = "Sprint", description = "Automatically sprints all the time.", category = ModuleCategory.MOVEMENT)
 public class Sprint extends Module {
     public final ListValue modeValue = new ListValue("Mode", new String[] {"Legit", "Vanilla"}, "Vanilla") {
-        protected void setSupported(final String value) {
+        @Override
+        protected void onUpdate(final String value) {
             if (modeValue.get().equalsIgnoreCase("legit")) {
                 allDirectionsValue.setIsSupported(false);
                 blindnessValue.setIsSupported(false);
@@ -37,16 +38,6 @@ public class Sprint extends Module {
                 checkServerSideGround.setIsSupported(true);
             }
         }
-
-        @Override
-        protected void onInit(final String value) {
-            setSupported(value);
-        }
-
-        @Override
-        protected void onChanged(final String oldValue, final String newValue) {
-            setSupported(newValue);
-        }
     };
 
     public final BoolValue allDirectionsValue = new BoolValue("AllDirections", true);
@@ -55,6 +46,11 @@ public class Sprint extends Module {
 
     public final BoolValue checkServerSide = new BoolValue("CheckServerSide", false);
     public final BoolValue checkServerSideGround = new BoolValue("CheckServerSideOnlyGround", false);
+
+    @Override
+    public final String getTag() {
+        return modeValue.get();
+    }
 
     @EventTarget
     public void onTick(final TickEvent event) {

@@ -32,6 +32,7 @@ abstract class Value<T>(val name: String, protected var value: T) {
             onChange(oldValue, newValue)
             changeValue(newValue)
             onChanged(oldValue, newValue)
+            onUpdate(newValue)
             LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig)
         } catch (e: Exception) {
             ClientUtils.getLogger().error("[ValueSystem ($name)]: ${e.javaClass.name} (${e.message}) [$oldValue >> $newValue]")
@@ -44,10 +45,24 @@ abstract class Value<T>(val name: String, protected var value: T) {
         this.value = value
     }
 
-    abstract fun toJson(): JsonElement?
-    abstract fun fromJson(element: JsonElement)
+    open fun toJson(): JsonElement? {
+        return toJsonF()
+    }
+
+    open fun fromJson(element: JsonElement) {
+        val result = fromJsonF(element)
+        if (result != null) {
+            changeValue(result)
+        }
+        onInit(value)
+        onUpdate(value)
+    }
+
+    abstract fun toJsonF(): JsonElement?
+    abstract fun fromJsonF(element: JsonElement): T?
 
     protected open fun onInit(value: T) {}
+    protected open fun onUpdate(value: T) {}
     protected open fun onChange(oldValue: T, newValue: T) {}
     protected open fun onChanged(oldValue: T, newValue: T) {}
 
@@ -58,12 +73,12 @@ abstract class Value<T>(val name: String, protected var value: T) {
  */
 open class BoolValue(name: String, value: Boolean) : Value<Boolean>(name, value) {
 
-    override fun toJson() = JsonPrimitive(value)
+    override fun toJsonF() = JsonPrimitive(value)
 
-    override fun fromJson(element: JsonElement) {
+    override fun fromJsonF(element: JsonElement): Boolean? {
         if (element.isJsonPrimitive)
-            value = element.asBoolean || element.asString.equals("true", ignoreCase = true)
-        onInit(value)
+            return element.asBoolean || element.asString.equals("true", ignoreCase = true)
+        return null
     }
 
 }
@@ -78,12 +93,12 @@ open class IntegerValue(name: String, value: Int, val minimum: Int = 0, val maxi
         set(newValue.toInt())
     }
 
-    override fun toJson() = JsonPrimitive(value)
+    override fun toJsonF() = JsonPrimitive(value)
 
-    override fun fromJson(element: JsonElement) {
+    override fun fromJsonF(element: JsonElement): Int? {
         if (element.isJsonPrimitive)
-            value = element.asInt
-        onInit(value)
+            return element.asInt
+        return null
     }
 
 }
@@ -98,12 +113,12 @@ open class FloatValue(name: String, value: Float, val minimum: Float = 0F, val m
         set(newValue.toFloat())
     }
 
-    override fun toJson() = JsonPrimitive(value)
+    override fun toJsonF() = JsonPrimitive(value)
 
-    override fun fromJson(element: JsonElement) {
+    override fun fromJsonF(element: JsonElement): Float? {
         if (element.isJsonPrimitive)
-            value = element.asFloat
-        onInit(value)
+            return element.asFloat
+        return null
     }
 
 }
@@ -113,12 +128,12 @@ open class FloatValue(name: String, value: Float, val minimum: Float = 0F, val m
  */
 open class TextValue(name: String, value: String) : Value<String>(name, value) {
 
-    override fun toJson() = JsonPrimitive(value)
+    override fun toJsonF() = JsonPrimitive(value)
 
-    override fun fromJson(element: JsonElement) {
+    override fun fromJsonF(element: JsonElement): String? {
         if (element.isJsonPrimitive)
-            value = element.asString
-        onInit(value)
+            return element.asString
+        return null
     }
 }
 
@@ -127,7 +142,7 @@ open class TextValue(name: String, value: String) : Value<String>(name, value) {
  */
 class FontValue(valueName: String, value: FontRenderer) : Value<FontRenderer>(valueName, value) {
 
-    override fun toJson(): JsonElement? {
+    override fun toJsonF(): JsonElement? {
         val fontDetails = Fonts.getFontDetails(value) ?: return null
         val valueObject = JsonObject()
         valueObject.addProperty("fontName", fontDetails.name)
@@ -135,11 +150,12 @@ class FontValue(valueName: String, value: FontRenderer) : Value<FontRenderer>(va
         return valueObject
     }
 
-    override fun fromJson(element: JsonElement) {
-        if (!element.isJsonObject) return
-        val valueObject = element.asJsonObject
-        value = Fonts.getFontRenderer(valueObject["fontName"].asString, valueObject["fontSize"].asInt)
-        onInit(value)
+    override fun fromJsonF(element: JsonElement): FontRenderer? {
+        if (element.isJsonObject) {
+            val valueObject = element.asJsonObject
+            return Fonts.getFontRenderer(valueObject["fontName"].asString, valueObject["fontSize"].asInt)
+        }
+        return null
     }
 }
 
@@ -173,12 +189,12 @@ open class ListValue(name: String, val values: Array<String>, value: String) : V
         }
     }
 
-    override fun toJson() = JsonPrimitive(value)
+    override fun toJsonF() = JsonPrimitive(value)
 
-    override fun fromJson(element: JsonElement) {
+    override fun fromJsonF(element: JsonElement): String? {
         if (element.isJsonPrimitive)
-            changeValue(element.asString)
-        onInit(value)
+            return element.asString
+        return null
     }
 }
 
