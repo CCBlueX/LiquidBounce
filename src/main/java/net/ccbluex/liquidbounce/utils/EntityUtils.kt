@@ -49,6 +49,11 @@ object EntityUtils : MinecraftInstance() {
     }
 
     @JvmStatic
+    fun isSelected(entity: Entity?, canAttackCheck: Boolean): Boolean {
+        return isSelected(entity, defaultTargets, canAttackCheck)
+    }
+
+    @JvmStatic
     fun isSelected(entity: Entity?, targets: Targets, canAttackCheck: Boolean): Boolean {
         var usedTargets = getTargets(targets)
         if (entity is EntityLivingBase && (usedTargets.dead || entity.isEntityAlive) && entity != mc.thePlayer) {
