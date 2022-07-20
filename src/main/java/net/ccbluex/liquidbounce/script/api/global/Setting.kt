@@ -97,4 +97,19 @@ object Setting {
 
         return ListValue(name, values, default)
     }
+
+    /**
+     * Creates a multiList value.
+     * @param settingInfo JavaScript object containing information about the value.
+     * @return An instance of [MultiListValue]
+     */
+    @JvmStatic
+    @Suppress("UNCHECKED_CAST")
+    fun multiList(settingInfo: JSObject): MultiListValue {
+        val name = settingInfo.getMember("name") as String
+        val values = ScriptUtils.convert(settingInfo.getMember("values"), Array<String>::class.java) as Array<String>
+        val default = (ScriptUtils.convert(settingInfo.getMember("default"), Array<String>::class.java) as Array<String>).toCollection(ArrayList())
+
+        return MultiListValue(name, values, default)
+    }
 }
