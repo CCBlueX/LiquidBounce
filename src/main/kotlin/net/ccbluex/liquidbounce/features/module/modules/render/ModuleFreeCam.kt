@@ -19,17 +19,22 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.event.PlayerJumpEvent
+import net.ccbluex.liquidbounce.event.PlayerMoveEvent
+import net.ccbluex.liquidbounce.event.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.entity.directionYaw
 import net.ccbluex.liquidbounce.utils.entity.strafe
-import net.minecraft.client.network.OtherClientPlayerEntity
+import net.ccbluex.liquidbounce.utils.entity.yAxisMovement
+import net.ccbluex.liquidbounce.utils.math.minus
+import net.ccbluex.liquidbounce.utils.math.plus
 import net.minecraft.entity.Entity
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
+import net.minecraft.entity.LivingEntity
+import net.minecraft.util.math.Direction
+import net.minecraft.util.math.Vec3d
+import net.minecraft.util.math.Vec3i
 
 /**
  * FreeCam module
@@ -40,91 +45,107 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 object ModuleFreeCam : Module("FreeCam", Category.RENDER) {
 
     private val speed by float("Speed", 1f, 0.1f..2f)
-    private val fly by boolean("Fly", true)
-    private val collision by boolean("Collision", false)
-    private val resetMotion by boolean("ResetMotion", true)
+    private val freeze by boolean("Freeze", false)
+    private val interactFromCamera by boolean("InteractFromCamera", false)
+    private val renderCrosshair by boolean("RenderCrosshair", false)
+    private val renderHand by boolean("RenderHand", true)
+    private val disableRotations by boolean("DisableRotations", true)
 
-    private var fakePlayer: OtherClientPlayerEntity? = null
-    private var x = 0.0
-    private var y = 0.0
-    private var z = 0.0
-    private var posX = 0.0
-    private var posY = 0.0
-    private var posZ = 0.0
-    private var ground = false
+    private var pos = Vec3d.ZERO
+    private var lastPos = Vec3d.ZERO
 
     override fun enable() {
-        if (resetMotion) {
-            player.setVelocity(0.0, 0.0, 0.0)
+        updatePosition(player.eyePos, lastPosBeforePos = false, increase = false)
+    }
+
+    val tickHandler = handler<PlayerTickEvent> {
+        if (player.age < 3) {
+            updatePosition(player.eyePos, lastPosBeforePos = false, increase = false)
         }
-        x = 0.0
-        y = 0.0
-        z = 0.0
-        posX = player.x
-        posY = player.y
-        posZ = player.z
-        ground = player.isOnGround
-        val faker = OtherClientPlayerEntity(world, player.gameProfile)
 
-        faker.headYaw = player.headYaw
-        faker.copyPositionAndRotation(player)
-        world.addEntity(faker.id, faker)
-        fakePlayer = faker
+        val speed = this.speed.toDouble()
 
-        if (!collision) {
-            player.noClip = true
+        val velocity = Vec3d.of(Vec3i.ZERO).apply { strafe(player.directionYaw, speed, true) }
+            .withAxis(Direction.Axis.Y, player.input.yAxisMovement * speed)
+
+        updatePosition(velocity, lastPosBeforePos = true, increase = true)
+    }
+
+    val jumpHandler = handler<PlayerJumpEvent> {
+        it.cancelEvent()
+    }
+
+    val moveHandler = handler<PlayerMoveEvent> {
+        if (!freeze) {
+            return@handler
+        }
+
+        it.movement.x = 0.0
+        it.movement.y = 0.0
+        it.movement.z = 0.0
+    }
+
+    fun applyPosition(entity: Entity, tickDelta: Float) {
+        val player = mc.player ?: return
+        val camera = mc.gameRenderer.camera ?: return
+
+        if (!enabled || entity != player) {
+            return
+        }
+
+        return camera.setPos(interpolatePosition(tickDelta, lastPos, pos))
+    }
+
+    fun cancelMovementInput(original: Float): Float {
+        if (!enabled) {
+            return original
+        }
+
+        return 0.0f
+    }
+
+    fun renderPlayerFromAllPerspectives(entity: LivingEntity): Boolean {
+        val player = mc.player ?: return entity.isSleeping
+
+        if (!enabled || entity != player) {
+            return entity.isSleeping
+        }
+
+        return entity.isSleeping || !mc.gameRenderer.camera.isThirdPerson
+    }
+
+    fun modifyRaycast(original: Vec3d, entity: Entity, tickDelta: Float): Vec3d {
+        val player = mc.player ?: return original
+
+        if (!enabled || entity != player || !interactFromCamera) {
+            return original
+        }
+
+        return interpolatePosition(tickDelta, lastPos, pos)
+    }
+
+    fun shouldRenderCrosshairInThirdPerson(original: Boolean) = original || enabled && renderCrosshair
+
+    fun shouldDisableHandRender() = enabled && !renderHand
+
+    fun shouldDisableRotations() = enabled && disableRotations
+
+    private fun updatePosition(newPos: Vec3d, lastPosBeforePos: Boolean, increase: Boolean) {
+        if (lastPosBeforePos) {
+            lastPos = pos
+        }
+        pos += if (increase) newPos else newPos - pos
+        if (!lastPosBeforePos) {
+            lastPos = pos
         }
     }
 
-    override fun disable() {
-        player.updatePositionAndAngles(fakePlayer!!.x, fakePlayer!!.y, fakePlayer!!.z, player.yaw, player.pitch)
-        world.removeEntity(fakePlayer!!.id, Entity.RemovalReason.UNLOADED_TO_CHUNK)
-        fakePlayer = null
-        player.setVelocity(x, y, z)
+    private fun interpolatePosition(tickDelta: Float, lastPos: Vec3d, currPos: Vec3d): Vec3d {
+        return Vec3d(
+            lastPos.x + (currPos.x - lastPos.x) * tickDelta,
+            lastPos.y + (currPos.y - lastPos.y) * tickDelta,
+            lastPos.z + (currPos.z - lastPos.z) * tickDelta
+        )
     }
 
-    val repeatable = repeatable {
-        // Just to make sure it stays enabled
-        if (!collision) {
-            player.noClip = true
-            player.fallDistance = 0f
-            player.isOnGround = false
-        }
-
-        if (fly) {
-            val speed = speed.toDouble()
-            player.strafe(speed = speed)
-
-            player.velocity.y = when {
-                mc.options.jumpKey.isPressed -> speed
-                mc.options.sneakKey.isPressed -> -speed
-                else -> 0.0
-            }
-        }
-    }
-
-    val packetHandler = handler<PacketEvent> { event ->
-        when (val packet = event.packet) {
-            // For better FreeCam detecting AntiCheats, we need to prove to them that the player's moving
-            is PlayerMoveC2SPacket -> {
-                if (packet.changePosition) {
-                    packet.x = posX
-                    packet.y = posY
-                    packet.z = posZ
-                }
-                packet.onGround = ground
-                if (packet.changeLook) {
-                    packet.yaw = player.yaw
-                    packet.pitch = player.pitch
-                }
-            }
-            is PlayerActionC2SPacket -> event.cancelEvent()
-            // In case of a teleport
-            is PlayerPositionLookS2CPacket -> {
-                fakePlayer!!.updatePosition(packet.x, packet.y, packet.z)
-                // Reset the motion
-                event.cancelEvent()
-            }
-        }
-    }
 }
