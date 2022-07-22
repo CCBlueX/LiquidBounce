@@ -34,6 +34,8 @@ import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import org.jetbrains.annotations.Nullable;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -101,23 +103,29 @@ public abstract class MixinLivingEntity extends MixinEntity {
      * <p>
      * Jump according to modified rotation. Prevents detection by movement sensitive anticheats such as AAC, Hawk, Intave, etc.
      */
-    @Redirect(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getYaw()F"))
-    private float hookFixRotation(LivingEntity instance) {
-        if (instance != MinecraftClient.getInstance().player || RotationManager.INSTANCE.getActiveConfigurable() == null || !RotationManager.INSTANCE.getActiveConfigurable().getFixVelocity()) {
-            return instance.getYaw();
+    @Redirect(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/Vec3d;add(DDD)Lnet/minecraft/util/math/Vec3d;"))
+    private Vec3d hookFixRotation(Vec3d instance, double x, double y, double z) {
+        if ((Object) this != MinecraftClient.getInstance().player) {
+            return instance.add(x, y, z);
+        }
+
+        if (RotationManager.INSTANCE.getActiveConfigurable() == null || !RotationManager.INSTANCE.getActiveConfigurable().getFixVelocity()) {
+            return instance.add(x, y, z);
         }
 
         Rotation currentRotation = RotationManager.INSTANCE.getCurrentRotation();
         if (currentRotation == null) {
-            return instance.getYaw();
+            return instance.add(x, y, z);
         }
 
         currentRotation = currentRotation.fixedSensitivity();
         if (currentRotation == null) {
-            return instance.getYaw();
+            return instance.add(x, y, z);
         }
 
-        return currentRotation.getYaw();
+        float yaw = currentRotation.getYaw() * 0.017453292F;
+
+        return instance.add(-MathHelper.sin(yaw) * 0.2F, 0.0, MathHelper.cos(yaw) * 0.2F);
     }
 
     @Inject(method = "pushAwayFrom", at = @At("HEAD"), cancellable = true)
