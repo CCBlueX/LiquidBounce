@@ -51,7 +51,7 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
             val newValue = !value.get()
             value.set(newValue)
 
-            chat("§7${module.name} §8${args[1]}§7 was toggled ${if (newValue) "§8on§7" else "§8off§7" + "."}")
+            chat("§7${module.name} §8${args[1]}§7 was toggled §8${if (newValue) "on" else "off"}§7.")
             playEdit()
         } else {
             if (args.size < 3) {
