@@ -59,6 +59,8 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
                     chatSyntax("$moduleName ${args[1].toLowerCase()} <value>")
                 else if (value is ListValue)
                     chatSyntax("$moduleName ${args[1].toLowerCase()} <${value.values.joinToString(separator = "/").toLowerCase()}>")
+                else if (value is MultiListValue)
+                    chatSyntax("$moduleName ${args[1].toLowerCase()} <${value.values.joinToString(separator = "/").toLowerCase()}> ...")
                 return
             }
 
@@ -95,10 +97,19 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
 
                         value.set(args[2])
                     }
+                    is MultiListValue -> {
+                        for (i in 2 until args.size) {
+                            value.toggle(args[i])
+                        }
+                    }
                     is TextValue -> value.set(StringUtils.toCompleteString(args, 2))
                 }
 
-                chat("§7${module.name} §8${args[1]}§7 was set to §8${value.get()}§7.")
+                if (value is MultiListValue) {
+                    chat("§7${module.name} §8${args[1]}§7 was ${if (value.get().size > 0) "set to §8${value.get().joinToString(separator = ", ").lowercase()}§7" else "unset"}.")
+                } else {
+                    chat("§7${module.name} §8${args[1]}§7 was set to §8${value.get()}§7.")
+                }
                 playEdit()
             } catch (e: NumberFormatException) {
                 chat("§8${args[2]}§7 cannot be converted to number!")
@@ -128,11 +139,33 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
                                 return value.values.filter { it.startsWith(args[1], true) }
                         }
                         return emptyList()
-                    }                    
+                    }
+                    is MultiListValue -> {
+                        values.forEach { value ->
+                            if (!value.name.equals(args[0], true))
+                                return@forEach
+                            if (value is MultiListValue)
+                                return value.values.filter { it.startsWith(args[1], true) }
+                        }
+                        return emptyList()
+                    }
                     else -> emptyList()
                 }
             }
-            else -> emptyList()
+            else -> {
+                when(module.getValue(args[0])) {
+                    is MultiListValue -> {
+                        values.forEach { value ->
+                            if (!value.name.equals(args[0], true))
+                                return@forEach
+                            if (value is MultiListValue)
+                                return value.values.filter { it.startsWith(args.last(), true) }
+                        }
+                        return emptyList()
+                    }
+                    else -> emptyList()
+                }
+            }
         }
     }
 }
