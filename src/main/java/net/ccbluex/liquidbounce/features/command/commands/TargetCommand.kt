@@ -17,35 +17,35 @@ class TargetCommand : Command("target") {
             when {
                 args[1].equals("players", ignoreCase = true) -> {
                     EntityUtils.defaultTargets.players = !EntityUtils.defaultTargets.players
-                    chat("Target 'players' toggled ${if (EntityUtils.defaultTargets.players) "on" else "off"}.")
+                    chat("§7Target §8players§7 toggled §8${if (EntityUtils.defaultTargets.players) "on" else "off"}§7.")
                     playEdit()
                     return
                 }
 
                 args[1].equals("mobs", ignoreCase = true) -> {
                     EntityUtils.defaultTargets.mobs = !EntityUtils.defaultTargets.mobs
-                    chat("Target 'mobs' toggled ${if (EntityUtils.defaultTargets.mobs) "on" else "off"}.")
+                    chat("§7Target §8mobs§7 toggled §8${if (EntityUtils.defaultTargets.mobs) "on" else "off"}§7.")
                     playEdit()
                     return
                 }
 
                 args[1].equals("animals", ignoreCase = true) -> {
                     EntityUtils.defaultTargets.animals = !EntityUtils.defaultTargets.animals
-                    chat("Target 'animals' toggled ${if (EntityUtils.defaultTargets.animals) "on" else "off"}.")
+                    chat("§7Target §8animals§7 toggled §8${if (EntityUtils.defaultTargets.animals) "on" else "off"}§7.")
                     playEdit()
                     return
                 }
 
                 args[1].equals("invisible", ignoreCase = true) -> {
                     EntityUtils.defaultTargets.invisible = !EntityUtils.defaultTargets.invisible
-                    chat("Target 'invisible' toggled ${if (EntityUtils.defaultTargets.invisible) "on" else "off"}.")
+                    chat("§7Target §8invisible§7 toggled §8${if (EntityUtils.defaultTargets.invisible) "on" else "off"}§7.")
                     playEdit()
                     return
                 }
 
                 args[1].equals("dead", ignoreCase = true) -> {
                     EntityUtils.defaultTargets.dead = !EntityUtils.defaultTargets.dead
-                    chat("Target 'dead' toggled ${if (EntityUtils.defaultTargets.dead) "on" else "off"}.")
+                    chat("§7Target §8dead§7 toggled §8${if (EntityUtils.defaultTargets.dead) "on" else "off"}§7.")
                     playEdit()
                     return
                 }
