@@ -63,7 +63,6 @@ val ClientPlayerEntity.directionYaw: Float
         return rotationYaw
     }
 
-
 val PlayerEntity.sqrtSpeed: Double
     get() = velocity.sqrtSpeed
 

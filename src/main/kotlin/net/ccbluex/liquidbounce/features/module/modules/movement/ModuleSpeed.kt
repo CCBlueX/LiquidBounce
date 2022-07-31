@@ -111,7 +111,7 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
         }
 
         override fun enable() {
-            if(resetHorizontalSpeed) {
+            if (resetHorizontalSpeed) {
                 player.velocity.x = 0.0
                 player.velocity.z = 0.0
             }

@@ -91,8 +91,9 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
     }
 
     private fun flatten(pos: BlockPos): BlockPos {
-        if (!this.flattenMovement)
+        if (!this.flattenMovement) {
             return pos
+        }
 
         val flattenXZ = this.horizontalDistance < 8
         val flattenY = this.verticalDistance < 5
@@ -129,12 +130,14 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
             val pos = BlockPos(x, y, z)
             val blockState = world.getBlockState(pos)
 
-            if (!blockState.isAir && blockState.getCollisionShape(world, pos).boundingBoxes.any { it.maxY >= 1 })
+            if (!blockState.isAir && blockState.getCollisionShape(world, pos).boundingBoxes.any { it.maxY >= 1 }) {
                 return@forEachCoordinate
+            }
 
             // Can you actually go inside that hole?
-            if (arrayOf(pos.up(1), pos.up(2)).any { !world.getBlockState(it).getCollisionShape(world, it).isEmpty })
+            if (arrayOf(pos.up(1), pos.up(2)).any { !world.getBlockState(it).getCollisionShape(world, it).isEmpty }) {
                 return@forEachCoordinate
+            }
 
             val positionsToScan = arrayOf(
                 BlockPos(x + 1, y, z),
@@ -185,8 +188,9 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
     object InvalidationHook : WorldChangeNotifier.WorldChangeSubscriber {
         override fun invalidate(region: Region, rescan: Boolean) {
             // Check if the region intersects. Otherwise calling region.intersection would be unsafe
-            if (!region.intersects(movableRegionScanner.currentRegion))
+            if (!region.intersects(movableRegionScanner.currentRegion)) {
                 return
+            }
 
             val intersection = region.intersection(movableRegionScanner.currentRegion)
 
@@ -198,8 +202,9 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
             synchronized(holes) {
                 holes.entries.removeIf { it.key in rescanRegion }
 
-                if (rescan)
+                if (rescan) {
                     updateRegion(rescanRegion)
+                }
             }
         }
 

@@ -25,6 +25,7 @@ import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 
 fun Float.toRadians() = this / 180.0F * Math.PI.toFloat()
+fun Float.toDegrees() = this / Math.PI.toFloat() *180.0F
 
 fun Box.getFace(direction: Direction): ModuleScaffold.Face {
     return when (direction) {

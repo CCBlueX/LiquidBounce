@@ -40,11 +40,13 @@ class MovableRegionScanner {
             return null
         }
 
-        if (region in lastRegion)
+        if (region in lastRegion) {
             return listOf()
+        }
 
-        if (!lastRegion.intersects(region))
+        if (!lastRegion.intersects(region)) {
             return listOf(region)
+        }
 
         val returnCandidates = arrayOf(
             Region(BlockPos(min(region.to.x, lastRegion.to.x), region.from.y, region.from.z), BlockPos(max(region.to.x, lastRegion.to.x), region.to.y, region.to.z)),

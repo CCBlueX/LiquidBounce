@@ -36,7 +36,6 @@ import io.netty.handler.ssl.SslContext
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory
 import net.ccbluex.liquidbounce.features.chat.Chat
 import net.ccbluex.liquidbounce.features.chat.client.packet.*
-
 import java.net.URI
 
 class Client {
@@ -135,7 +134,6 @@ class Client {
 
         channel?.writeAndFlush(TextWebSocketFrame(gson.toJson(packet, Packet::class.java)))
     }
-
 
     /**
      * Handle incoming message of websocket

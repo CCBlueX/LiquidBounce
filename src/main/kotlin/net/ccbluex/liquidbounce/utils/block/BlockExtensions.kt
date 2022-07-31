@@ -80,8 +80,9 @@ inline fun searchBlocksInRadius(radius: Float, filter: (BlockPos, BlockState) ->
                 if (!filter(blockPos, state)) {
                     continue
                 }
-                if (Vec3d.of(blockPos).squaredDistanceTo(playerPos) > radiusSquared)
+                if (Vec3d.of(blockPos).squaredDistanceTo(playerPos) > radiusSquared) {
                     continue
+                }
 
                 blocks.add(Pair(blockPos, state))
             }
@@ -131,8 +132,9 @@ fun collideBlockIntersects(box: Box, isCorrectBlock: (Block?) -> Boolean): Boole
 
                 val boundingBox = shape.boundingBox
 
-                if (box.intersects(boundingBox))
+                if (box.intersects(boundingBox)) {
                     return true
+                }
             }
         }
     }

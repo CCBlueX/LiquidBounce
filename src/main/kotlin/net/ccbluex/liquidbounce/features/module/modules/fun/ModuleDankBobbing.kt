@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.features.module.Module
  *
  * Adds more bobbing effect.
  */
-object ModuleDankBobbing : Module("DankBobbing", Category.FUN){
+object ModuleDankBobbing : Module("DankBobbing", Category.FUN) {
 
     val motion by float("Motion", 5f, 1f..50f)
 

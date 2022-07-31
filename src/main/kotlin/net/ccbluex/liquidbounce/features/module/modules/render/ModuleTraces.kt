@@ -122,7 +122,7 @@ object ModuleTraces : Module("Traces", Category.RENDER) {
             } else if (entity is PlayerEntity && FriendManager.isFriend(entity.toString())) {
                 Color4b(0, 0, 255)
             } else {
-                baseColor!!
+                ModuleMurderMystery.getColor(entity) ?: baseColor!!
             }
 
             val x = (entity.lastRenderX + (entity.x - entity.lastRenderX) * event.tickDelta)

@@ -115,7 +115,6 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
         val multiplier by float("Multiplier", 1f, 0.4f..2f)
     }
 
-
     init {
         tree(Block)
         tree(Consume)

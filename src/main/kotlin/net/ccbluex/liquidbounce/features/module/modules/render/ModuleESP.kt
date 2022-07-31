@@ -149,6 +149,8 @@ object ModuleESP : Module("ESP", Category.RENDER) {
                     return Color4b(0, 0, 255)
                 }
 
+                ModuleMurderMystery.getColor(entity)?.let { return it }
+
                 if (teamColor) {
                     val chars: CharArray = (entity.displayName ?: return@run).string.toCharArray()
                     var color = Int.MAX_VALUE

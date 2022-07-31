@@ -60,7 +60,6 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
     private val visualSwing by boolean("VisualSwing", true)
     private val chest by blocks("Chest", hashSetOf(Blocks.CHEST))
 
-
     private object AwaitContainerOptions : ToggleableConfigurable(this, "AwaitContainer", true) {
         val timeout by int("Timeout", 10, 1..80)
         val maxRetrys by int("MaxRetries", 4, 1..10)

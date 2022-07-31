@@ -19,21 +19,28 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.NamedChoice
+import net.ccbluex.liquidbounce.event.GameRenderEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.minecraft.client.util.InputUtil
+import org.lwjgl.glfw.GLFW
 
-/**
- * OverrideTime module
- *
- * Override the time visual effect
- */
+object ModuleQuickPerspectiveSwap : Module("QuickPerspectiveSwap", Category.RENDER) {
 
-object ModuleOverrideTime : Module("OverrideTime", Category.RENDER) {
-
-    val time = enumChoice("Time", TimeType.NOON, TimeType.values())
-
-    enum class TimeType(override val choiceName: String) : NamedChoice {
-        DAY("Day"), NOON("Noon"), NIGHT("Night"), MID_NIGHT("MidNight")
+    private val onUpdate = handler<GameRenderEvent> {
+        if (!InputUtil.isKeyPressed(mc.window.handle, bind)) {
+            this.enabled = false
+        }
     }
+
+    override fun enable() {
+        if (this.bind == GLFW.GLFW_KEY_UNKNOWN) {
+            chat("You cannot use this module without a keybind as it will disable when the keybind isn't held anymore")
+
+            this.enabled = false
+        }
+    }
+
 }

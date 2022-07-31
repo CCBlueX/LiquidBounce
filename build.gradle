@@ -164,6 +164,7 @@ task sourcesJar(type: Jar, dependsOn: classes) {
 compileKotlin {
     kotlinOptions.suppressWarnings = true
     kotlinOptions.useIR = true
+    kotlinOptions.jvmTarget = "17"
 }
 
 shadowJar {
