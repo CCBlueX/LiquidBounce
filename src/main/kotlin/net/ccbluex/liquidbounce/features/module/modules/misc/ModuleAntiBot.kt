@@ -29,12 +29,13 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ArmorItem
+import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket
 import java.util.*
 
 object ModuleAntiBot : Module("AntiBot", Category.MISC) {
 
-    private val modes = choices("Mode", Custom, arrayOf(Custom, Matrix))
+    private val modes = choices("Mode", Custom, arrayOf(Custom, Matrix, IntaveHeavy))
 
     private object Custom : Choice("Custom") {
         override val parent: ChoiceConfigurable
@@ -101,7 +102,14 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
                     continue
                 }
 
-                if (isFullyArmored(entity) && entity.gameProfile.properties.isEmpty) {
+                var armor: MutableIterable<ItemStack>? = null
+
+                if (!isFullyArmored(entity)) {
+                    armor = entity.armorItems
+                    wait(1)
+                }
+
+                if ((isFullyArmored(entity) || updatesArmor(entity, armor)) && entity.gameProfile.properties.isEmpty) {
                     botList.add(entity.uuid)
                 }
 
@@ -121,10 +129,99 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
             }
         }
 
-        private fun isTheSamePlayer(profile: GameProfile): Boolean {
+        fun isTheSamePlayer(profile: GameProfile): Boolean {
             // Prevents false positives when a player is on a minigame such as Practice and joins a duel
             return network.playerList.count { it.profile.name == profile.name && it.profile.id == profile.id } == 1
         }
+
+        /**
+         * Matrix spawns its bot with a random set of armor but then instantly and silently gets a new set,
+         * therefore somewhat tricking the client that the bot already had the new armor.
+         *
+         * With the help of at least 1 tick of waiting time, this function patches this "trick".
+         */
+        private fun updatesArmor(entity: PlayerEntity, prevArmor: MutableIterable<ItemStack>?): Boolean {
+            return prevArmor != entity.armorItems
+        }
+    }
+
+    /**
+     * Intave anti-cheat, Heavy bot type, their best bot type.
+     *
+     * Tested on: gamster.org and a private server with latest Intave as of 7/28/2022.
+     */
+    private object IntaveHeavy : Choice("IntaveHeavy") {
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        private val suspectList = hashMapOf<UUID, Pair<Int, Long>>()
+        val botList = ArrayList<UUID>()
+
+        override fun disable() {
+            suspectList.clear()
+            botList.clear()
+        }
+
+        /**
+         * Ping logic:
+         *
+         * When you join a server, you always have 0 ping at start. However, if you are on a game like Practice and come back from a duel, you will keep your ping.
+         *
+         * As for Matrix and Intave, they defy this logic. Intave though decides instead to fix it by sending [PlayerListS2CPacket.Action.UPDATE_LATENCY]
+         * to make up for the ping issue. Unfortunately, that leads to even more problems.
+         */
+        val packetHandler = handler<PacketEvent> {
+            if (it.packet !is PlayerListS2CPacket) {
+                return@handler
+            }
+
+            when (it.packet.action) {
+                PlayerListS2CPacket.Action.ADD_PLAYER -> {
+                    for (entry in it.packet.entries) {
+                        if (entry.latency < 2 || Matrix.isTheSamePlayer(entry.profile)) {
+                            continue
+                        }
+
+                        suspectList[entry.profile.id] = Pair(entry.latency, System.currentTimeMillis())
+                    }
+                }
+                PlayerListS2CPacket.Action.REMOVE_PLAYER -> {
+                    for (entry in it.packet.entries) {
+                        if (suspectList.containsKey(entry.profile.id)) {
+                            suspectList.remove(entry.profile.id)
+                        }
+
+                        if (botList.contains(entry.profile.id)) {
+                            botList.remove(entry.profile.id)
+                        }
+                    }
+                }
+                PlayerListS2CPacket.Action.UPDATE_LATENCY -> {
+                    for (entry in it.packet.entries) {
+                        if (!suspectList.containsKey(entry.profile.id)) {
+                            continue
+                        }
+
+                        val pingSinceJoin = suspectList.getValue(entry.profile.id).first
+
+                        val deltaPing = pingSinceJoin - entry.latency
+                        val deltaMS = System.currentTimeMillis() - suspectList.getValue(entry.profile.id).second
+
+                        /**
+                         * Intave instantly sends this packet, but some servers might lag, so it might be delayed, that's why the difference limit is 10 MS.
+                         * The less the value, the lower the chances of producing false positives, even though it's highly unlikely.
+                         */
+                        if (deltaPing == pingSinceJoin && deltaMS <= 10) {
+                            botList.add(entry.profile.id)
+                        }
+
+                        suspectList.remove(entry.profile.id)
+                    }
+                }
+                else -> {}
+            }
+        }
+
     }
 
     /**
@@ -136,6 +233,10 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
         }
 
         if (Matrix.isActive && Matrix.botList.contains(player.uuid)) {
+            return true
+        }
+
+        if (IntaveHeavy.isActive && IntaveHeavy.botList.contains(player.uuid)) {
             return true
         }
 
