@@ -35,6 +35,7 @@ class StorageESP : Module() {
     private val hopperValue = BoolValue("Hopper", true)
     private val enchantmentTableValue = BoolValue("EnchantmentTable", false)
     private val brewingStandValue = BoolValue("BrewingStand", false)
+    private val signValue = BoolValue("Sign", false)
 
     private fun getColor(tileEntity: TileEntity):Color?{
         return when {
@@ -45,6 +46,7 @@ class StorageESP : Module() {
             hopperValue.get() && tileEntity is TileEntityHopper -> Color.GRAY
             enchantmentTableValue.get() && tileEntity is TileEntityEnchantmentTable -> Color(166, 202, 240) // Light blue
             brewingStandValue.get() && tileEntity is TileEntityBrewingStand -> Color.ORANGE
+            signValue.get() && tileEntity is TileEntitySign -> Color.RED
             else -> null
         }
     }
