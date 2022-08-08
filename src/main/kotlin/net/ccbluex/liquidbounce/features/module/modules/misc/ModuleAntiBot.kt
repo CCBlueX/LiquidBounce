@@ -40,7 +40,7 @@ import kotlin.math.abs
 
 object ModuleAntiBot : Module("AntiBot", Category.MISC) {
 
-    private val modes = choices("Mode", Custom, arrayOf(Custom, Matrix, IntaveHeavy))
+    private val modes = choices("Mode", Custom, arrayOf(Custom, Matrix, IntaveHeavy, Horizon))
     private val literalNPC by boolean("LiteralNPC", false)
 
     private object Custom : Choice("Custom") {
@@ -248,6 +248,40 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
 
     }
 
+    private object Horizon : Choice("Horizon") {
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val botList = ArrayList<UUID>()
+
+        val packetHandler = handler<PacketEvent> {
+            if (it.packet !is PlayerListS2CPacket) {
+                return@handler
+            }
+
+            when (it.packet.action) {
+                PlayerListS2CPacket.Action.ADD_PLAYER -> {
+                    for (entry in it.packet.entries) {
+                        // There are no accidents, no legit player joins with no gamemode.
+                        if (entry.gameMode != null) {
+                            continue
+                        }
+
+                        botList.add(entry.profile.id)
+                    }
+                }
+                PlayerListS2CPacket.Action.REMOVE_PLAYER -> {
+                    for (entry in it.packet.entries) {
+                        if (botList.contains(entry.profile.id)) {
+                            botList.remove(entry.profile.id)
+                        }
+                    }
+                }
+                else -> {}
+            }
+        }
+    }
+
     private fun isADuplicate(profile: GameProfile): Boolean {
         return network.playerList.count { it.profile.name == profile.name && it.profile.id != profile.id } == 1
     }
@@ -258,6 +292,7 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
         Matrix.botList.clear()
         IntaveHeavy.suspectList.clear()
         IntaveHeavy.botList.clear()
+        Horizon.botList.clear()
     }
 
     /**
@@ -275,6 +310,7 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
         when (modes.activeChoice) {
             is Matrix -> return Matrix.botList.contains(player.uuid)
             is IntaveHeavy -> return IntaveHeavy.botList.contains(player.uuid)
+            is Horizon -> return Horizon.botList.contains(player.uuid)
             is Custom -> {
                 val invalidGround = Custom.InvalidGround.enabled && Custom.invalidGroundList.getOrDefault(
                     player, 0
