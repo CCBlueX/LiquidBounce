@@ -22,40 +22,73 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 import com.mojang.authlib.GameProfile
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ArmorItem
 import net.minecraft.item.ItemStack
+import net.minecraft.network.packet.s2c.play.EntityS2CPacket
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket
 import java.util.*
+import kotlin.math.abs
 
 object ModuleAntiBot : Module("AntiBot", Category.MISC) {
 
     private val modes = choices("Mode", Custom, arrayOf(Custom, Matrix, IntaveHeavy))
+    private val literalNPC by boolean("LiteralNPC", false)
 
     private object Custom : Choice("Custom") {
         override val parent: ChoiceConfigurable
             get() = modes
 
-        // This part is up to 1zuna or superblauberee, so I don't mess things up.
-        // Basically a multiple antibot option dependent mode.
+        object InvalidGround : ToggleableConfigurable(ModuleAntiBot, "InvalidGround", true) {
+            val vlToConsiderAsBot by int("VLToConsiderAsBot", 10, 1..50)
+        }
+
+        init {
+            tree(InvalidGround)
+        }
+
+        val duplicate by boolean("Duplicate", true)
+        val noGameMode by boolean("NoGameMode", true)
+        val illegalPitch by boolean("IllegalPitch", true)
+        val fakeEntityID by boolean("FakeEntityID", false)
+
+        val invalidGroundList = mutableMapOf<Entity, Int>()
+
+        val packetHandler = handler<PacketEvent> {
+            if (it.packet !is EntityS2CPacket || !it.packet.isPositionChanged || !InvalidGround.enabled) {
+                return@handler
+            }
+
+            val entity = it.packet.getEntity(world) ?: return@handler
+
+            if (entity.isOnGround && entity.prevY != entity.y) {
+                invalidGroundList[entity] = invalidGroundList.getOrDefault(entity, 0) + 1
+            } else if (!entity.isOnGround && invalidGroundList.getOrDefault(entity, 0) > 0) {
+                val newVL = invalidGroundList.getOrDefault(entity, 0) / 2
+
+                if (newVL <= 0) {
+                    invalidGroundList.remove(entity)
+                } else {
+                    invalidGroundList[entity] = newVL
+                }
+            }
+        }
     }
 
     private object Matrix : Choice("Matrix") {
         override val parent: ChoiceConfigurable
             get() = modes
 
-        private val suspectList = ArrayList<UUID>()
+        val suspectList = ArrayList<UUID>()
         val botList = ArrayList<UUID>()
-
-        override fun disable() {
-            suspectList.clear()
-            botList.clear()
-        }
 
         val packetHandler = handler<PacketEvent> {
             if (it.packet !is PlayerListS2CPacket) {
@@ -117,15 +150,10 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
             }
         }
 
-        private fun isADuplicate(profile: GameProfile): Boolean {
-            return network.playerList.count { it.profile.name == profile.name && it.profile.id != profile.id } == 1
-        }
-
         private fun isFullyArmored(entity: PlayerEntity): Boolean {
             return (0..3).all {
-                entity.inventory.getArmorStack(it).item is ArmorItem && !entity.inventory.getArmorStack(
-                    it
-                ).hasEnchantments()
+                val stack = entity.inventory.getArmorStack(it)
+                stack.item is ArmorItem && stack.hasEnchantments()
             }
         }
 
@@ -154,13 +182,8 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
         override val parent: ChoiceConfigurable
             get() = modes
 
-        private val suspectList = hashMapOf<UUID, Pair<Int, Long>>()
+        val suspectList = hashMapOf<UUID, Pair<Int, Long>>()
         val botList = ArrayList<UUID>()
-
-        override fun disable() {
-            suspectList.clear()
-            botList.clear()
-        }
 
         /**
          * Ping logic:
@@ -207,11 +230,12 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
                         val deltaPing = pingSinceJoin - entry.latency
                         val deltaMS = System.currentTimeMillis() - suspectList.getValue(entry.profile.id).second
 
+                        chat("$deltaMS")
                         /**
-                         * Intave instantly sends this packet, but some servers might lag, so it might be delayed, that's why the difference limit is 10 MS.
+                         * Intave instantly sends this packet, but some servers might lag, so it might be delayed, that's why the difference limit is 15 MS.
                          * The less the value, the lower the chances of producing false positives, even though it's highly unlikely.
                          */
-                        if (deltaPing == pingSinceJoin && deltaMS <= 10) {
+                        if (deltaPing == pingSinceJoin && deltaMS <= 15) {
                             botList.add(entry.profile.id)
                         }
 
@@ -224,6 +248,18 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
 
     }
 
+    private fun isADuplicate(profile: GameProfile): Boolean {
+        return network.playerList.count { it.profile.name == profile.name && it.profile.id != profile.id } == 1
+    }
+
+    override fun disable() {
+        Custom.invalidGroundList.clear()
+        Matrix.suspectList.clear()
+        Matrix.botList.clear()
+        IntaveHeavy.suspectList.clear()
+        IntaveHeavy.botList.clear()
+    }
+
     /**
      * Check if player might be a bot
      */
@@ -232,12 +268,24 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
             return false
         }
 
-        if (Matrix.isActive && Matrix.botList.contains(player.uuid)) {
+        if (literalNPC && !network.playerUuids.contains(player.uuid)) {
             return true
         }
 
-        if (IntaveHeavy.isActive && IntaveHeavy.botList.contains(player.uuid)) {
-            return true
+        when (modes.activeChoice) {
+            is Matrix -> return Matrix.botList.contains(player.uuid)
+            is IntaveHeavy -> return IntaveHeavy.botList.contains(player.uuid)
+            is Custom -> {
+                val invalidGround = Custom.InvalidGround.enabled && Custom.invalidGroundList.getOrDefault(
+                    player, 0
+                ) >= Custom.InvalidGround.vlToConsiderAsBot
+                val noGameMode = Custom.noGameMode && network.getPlayerListEntry(player.uuid)?.gameMode == null
+                val fakeID = Custom.fakeEntityID && (player.id < 0 || player.id >= 1E+9)
+                val isADuplicate = Custom.duplicate && isADuplicate(player.gameProfile)
+                val illegalPitch = Custom.illegalPitch && abs(player.pitch) > 90
+
+                return invalidGround || noGameMode || fakeID || isADuplicate || illegalPitch
+            }
         }
 
         return false
