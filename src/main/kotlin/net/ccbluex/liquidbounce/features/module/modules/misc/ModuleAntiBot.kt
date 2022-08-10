@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ArmorItem
@@ -230,7 +229,6 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
                         val deltaPing = pingSinceJoin - entry.latency
                         val deltaMS = System.currentTimeMillis() - suspectList.getValue(entry.profile.id).second
 
-                        chat("$deltaMS")
                         /**
                          * Intave instantly sends this packet, but some servers might lag, so it might be delayed, that's why the difference limit is 15 MS.
                          * The less the value, the lower the chances of producing false positives, even though it's highly unlikely.
