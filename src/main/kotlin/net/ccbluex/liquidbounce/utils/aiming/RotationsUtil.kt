@@ -20,10 +20,7 @@
 package net.ccbluex.liquidbounce.utils.aiming
 
 import net.ccbluex.liquidbounce.config.Configurable
-import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.PacketEvent
-import net.ccbluex.liquidbounce.event.PlayerVelocityStrafe
-import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.step
 import net.minecraft.block.BlockState
@@ -62,7 +59,7 @@ object RotationManager : Listenable {
     var deactivateManipulation = false
 
     fun raytraceBlock(
-        eyes: Vec3d, pos: BlockPos, state: BlockState, range: Double, wallsRange: Double
+        eyes: Vec3d, pos: BlockPos, state: BlockState, range: Double, wallsRange: Double,
     ): VecRotation? {
         val offset = Vec3d(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
         val shape = state.getOutlineShape(mc.world, pos, ShapeContext.of(mc.player))
@@ -83,7 +80,7 @@ object RotationManager : Listenable {
         range: Double,
         wallsRange: Double,
         expectedTarget: BlockPos? = null,
-        pattern: Pattern = GaussianPattern
+        pattern: Pattern = GaussianPattern,
     ): VecRotation? {
         val preferredSpot = pattern.spot(box)
         val preferredRotation = makeRotation(preferredSpot, eyes)
@@ -152,7 +149,7 @@ object RotationManager : Listenable {
      * Find the best spot of the upper side of the block
      */
     fun canSeeBlockTop(
-        eyes: Vec3d, pos: BlockPos, range: Double, wallsRange: Double
+        eyes: Vec3d, pos: BlockPos, range: Double, wallsRange: Double,
     ): Boolean {
         val rangeSquared = range * range
         val wallsRangeSquared = wallsRange * wallsRange
@@ -247,8 +244,6 @@ object RotationManager : Listenable {
         activeConfigurable = configurable
         targetRotation = rotation
         ticksUntilReset = ticks
-
-        update()
     }
 
     fun makeRotation(vec: Vec3d, eyes: Vec3d): Rotation {
@@ -292,26 +287,29 @@ object RotationManager : Listenable {
                 return
             }
 
-            currentRotation = limitAngleChange(currentRotation ?: serverRotation ?: return, playerRotation, turnSpeed)
-        } else if (targetRotation != null) {
-            targetRotation?.let { targetRotation ->
-                currentRotation = limitAngleChange(currentRotation ?: playerRotation, targetRotation, turnSpeed)
-            }
+            currentRotation = limitAngleChange(
+                currentRotation ?: serverRotation ?: return, playerRotation, turnSpeed
+            ).fixedSensitivity()
+            return
+        }
+        targetRotation?.let { targetRotation ->
+            currentRotation =
+                limitAngleChange(currentRotation ?: playerRotation, targetRotation, turnSpeed).fixedSensitivity()
         }
     }
 
-    fun needsUpdate(lastYaw: Float, lastPitch: Float): Boolean {
-        // Check if something changed
-        val (currYaw, currPitch) = currentRotation?.fixedSensitivity() ?: return false
-
-        return lastYaw != currYaw || lastPitch != currPitch
+    /**
+     * Checks if there has been a rotation change
+     */
+    fun needsUpdate(original: Boolean): Boolean {
+        return rotationDifference(currentRotation ?: return original) != 0.0
     }
 
     /**
      * Calculate difference between the server rotation and your rotation
      */
     fun rotationDifference(rotation: Rotation): Double {
-        return rotationDifference(rotation, serverRotation ?: Rotation(0f, 0f))
+        return rotationDifference(rotation, serverRotation ?: return 0.0)
     }
 
     /**
@@ -328,8 +326,8 @@ object RotationManager : Listenable {
         val pitchDifference = angleDifference(targetRotation.pitch, currentRotation.pitch)
 
         return Rotation(
-            currentRotation.yaw + if (yawDifference > turnSpeed) turnSpeed else yawDifference.coerceAtLeast(-turnSpeed),
-            currentRotation.pitch + if (pitchDifference > turnSpeed) turnSpeed else pitchDifference.coerceAtLeast(-turnSpeed)
+            currentRotation.yaw + yawDifference.coerceIn(-turnSpeed, turnSpeed),
+            currentRotation.pitch + pitchDifference.coerceIn(-turnSpeed, turnSpeed)
         )
     }
 
@@ -344,24 +342,19 @@ object RotationManager : Listenable {
     private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (packet is PlayerMoveC2SPacket) {
-            if (!deactivateManipulation) {
-                currentRotation?.fixedSensitivity()?.let {
-                    val (serverYaw, serverPitch) = serverRotation ?: Rotation(0f, 0f)
+        if (packet !is PlayerMoveC2SPacket || !packet.changesLook()) {
+            return@handler
+        }
 
-                    if (it.yaw != serverYaw || it.pitch != serverPitch) {
-                        packet.yaw = it.yaw
-                        packet.pitch = it.pitch
-                        packet.changeLook = true
-                    }
-                }
-            }
-
-            // Update current rotation
-            if (packet.changeLook) {
-                serverRotation = Rotation(packet.yaw, packet.pitch)
+        if (!deactivateManipulation) {
+            currentRotation?.let {
+                packet.yaw = it.yaw
+                packet.pitch = it.pitch
             }
         }
+
+        // Update current rotation
+        serverRotation = Rotation(packet.yaw, packet.pitch)
     }
 
     val velocity = handler<PlayerVelocityStrafe> { event ->
@@ -370,11 +363,19 @@ object RotationManager : Listenable {
         }
     }
 
+    val gameTick = handler<GameTickEvent> {
+        if (targetRotation == null) {
+            return@handler
+        }
+
+        update()
+    }
+
     /**
      * Fix velocity
      */
     private fun fixVelocity(currVelocity: Vec3d, movementInput: Vec3d, speed: Float): Vec3d {
-        currentRotation?.fixedSensitivity()?.let { rotation ->
+        currentRotation?.let { rotation ->
             val yaw = rotation.yaw
             val d = movementInput.lengthSquared()
 

@@ -158,8 +158,8 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
      */
     @ModifyVariable(method = "sendMovementPackets", at = @At("STORE"), ordinal = 3)
     private boolean hookSilentRotationsCheck(boolean bl4) {
-        updatedSilent = RotationManager.INSTANCE.needsUpdate(lastYaw, lastPitch);
-        return (bl4 && RotationManager.INSTANCE.getCurrentRotation() == null) || updatedSilent;
+        updatedSilent = RotationManager.INSTANCE.needsUpdate(bl4);
+        return updatedSilent;
     }
 
     /**
@@ -171,11 +171,6 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
             updatedSilent = false;
 
             Rotation currRotation = RotationManager.INSTANCE.getCurrentRotation();
-            if (currRotation == null) {
-                return;
-            }
-
-            currRotation = currRotation.fixedSensitivity();
             if (currRotation == null) {
                 return;
             }
