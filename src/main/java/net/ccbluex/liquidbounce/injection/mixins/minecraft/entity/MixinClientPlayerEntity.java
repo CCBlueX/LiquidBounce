@@ -154,7 +154,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     private boolean updatedSilent;
 
     /**
-     * Hook silent rotations
+     * Hook silent rotations update check
      */
     @ModifyVariable(method = "sendMovementPackets", at = @At("STORE"), ordinal = 3)
     private boolean hookSilentRotationsCheck(boolean bl4) {
@@ -163,7 +163,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     }
 
     /**
-     * Hook silent rotations
+     * Hook last server rotations update
      */
     @Inject(method = "sendMovementPackets", at = @At(value = "FIELD", target = "Lnet/minecraft/client/network/ClientPlayerEntity;lastPitch:F", ordinal = 1, shift = At.Shift.AFTER))
     private void hookLastSilentRotations(CallbackInfo ci) {
@@ -180,6 +180,9 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
         }
     }
 
+    /**
+     * Hook silent rotations update
+     */
     @Inject(method = "sendMovementPackets", at = @At(value = "FIELD", target = "Lnet/minecraft/client/network/ClientPlayerEntity;lastOnGround:Z", ordinal = 1, shift = At.Shift.BEFORE))
     private void hookSilentRotationsUpdate(CallbackInfo ci) {
         if (RotationManager.INSTANCE.getCurrentRotation() == null) {

@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.utils.aiming
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.step
 import net.minecraft.block.BlockState
 import net.minecraft.block.ShapeContext
@@ -91,6 +92,7 @@ object RotationManager : Listenable {
         var visibleRot: VecRotation? = null
         var notVisibleRot: VecRotation? = null
 
+        // 0.0 to 1.0 for better reach results.
         for (x in 0.1..0.9 step 0.1) {
             for (y in 0.1..0.9 step 0.1) {
                 for (z in 0.1..0.9 step 0.1) {
@@ -274,7 +276,7 @@ object RotationManager : Listenable {
         // Update rotations
         val turnSpeed = RandomUtils.nextFloat(60f, 80f) // todo: use config
 
-        val playerRotation = Rotation(mc.player!!.yaw, mc.player!!.pitch)
+        val playerRotation = mc.player?.rotation ?: return
 
         if (ticksUntilReset == 0) {
             val threshold = 2f // todo: might use turn speed

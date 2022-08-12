@@ -19,9 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.NamedChoice
-import net.ccbluex.liquidbounce.event.AttackEvent
-import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKillAura.RaycastMode.*
@@ -147,6 +145,15 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 //        RenderEngine.enqueueForRendering(RenderEngine.CAMERA_VIEW_LAYER, renderTask)
 //    }
 
+    val rotationUpdateHandler = handler<PlayerNetworkMovementTickEvent> {
+        if (it.state != EventState.PRE) {
+            return@handler
+        }
+
+        // Update current target tracker to make sure you attack the best enemy
+        updateEnemySelection()
+    }
+
     val repeatable = repeatable {
         // Killaura in spectator-mode is pretty useless, trust me.
         if (player.isSpectator) {
@@ -161,9 +168,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             targetTracker.cleanup()
             return@repeatable
         }
-
-        // Update current target tracker to make sure you attack the best enemy
-        updateEnemySelection()
 
         // Check if there is target to attack
         val target = targetTracker.lockedOnTarget ?: return@repeatable
