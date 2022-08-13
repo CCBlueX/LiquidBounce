@@ -156,11 +156,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     }
 
     val repeatable = repeatable {
-        // Killaura in spectator-mode is pretty useless, trust me.
-        if (player.isSpectator) {
-            return@repeatable
-        }
-
         // Make sure killaura-logic is not running while inventory is open
         val isInInventoryScreen = mc.currentScreen is InventoryScreen
 
