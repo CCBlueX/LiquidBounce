@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleStep;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
-import net.ccbluex.liquidbounce.utils.client.TickStateManager;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.input.Input;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
@@ -190,16 +189,6 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
         }
 
         RotationManager.INSTANCE.update();
-    }
-
-    @Inject(method = "isSneaking", at = @At("HEAD"), cancellable = true)
-    private void injectForcedState(CallbackInfoReturnable<Boolean> cir) {
-        Boolean enforceEagle = TickStateManager.INSTANCE.getEnforcedState().getEnforceEagle();
-
-        if (enforceEagle != null) {
-            cir.setReturnValue(enforceEagle);
-            cir.cancel();
-        }
     }
 
     @Inject(method = "isAutoJumpEnabled", cancellable = true, at = @At("HEAD"))

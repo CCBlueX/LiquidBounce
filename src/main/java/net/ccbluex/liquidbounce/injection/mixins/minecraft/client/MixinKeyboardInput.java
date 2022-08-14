@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleInventoryMove;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
+import net.ccbluex.liquidbounce.utils.client.TickStateManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.input.KeyboardInput;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -66,6 +67,12 @@ public class MixinKeyboardInput extends MixinInput {
 
         this.movementSideways = Math.round(newX);
         this.movementForward = Math.round(newZ);
+    }
+
+    @Redirect(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;sneaking:Z"))
+    private void injectForcedState(KeyboardInput instance, boolean value) {
+        Boolean enforceEagle = TickStateManager.INSTANCE.getEnforcedState().getEnforceEagle();
+        instance.sneaking = enforceEagle != null || value;
     }
 
 }
