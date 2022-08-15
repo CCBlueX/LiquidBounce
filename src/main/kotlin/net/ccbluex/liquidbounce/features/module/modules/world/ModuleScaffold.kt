@@ -334,6 +334,10 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         return null
     }
 
+    val safeWalkHandler = handler<PlayerSafeWalkEvent> { event ->
+        event.isSafeWalk = !shouldDisableSafeWalk()
+    }
+
     private fun shouldDisableSafeWalk() = shouldGoDown && player.blockPos.add(0, -2, 0).canStandOn()
 
     data class Face(val from: Vec3d, val to: Vec3d) {
