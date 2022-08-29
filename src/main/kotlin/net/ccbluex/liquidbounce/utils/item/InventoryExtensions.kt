@@ -37,6 +37,5 @@ fun convertClientSlotToServerSlot(slot: Int): Int {
 class InventoryConstraintsConfigurable : Configurable("InventoryConstraints") {
     internal var delay by intRange("Delay", 2..4, 0..20)
     internal val invOpen by boolean("InvOpen", false)
-    internal val simulateInventory by boolean("SimulateInventory", true)
     internal val noMove by boolean("NoMove", false)
 }

@@ -31,10 +31,10 @@ import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.enchantment.Enchantments
+import net.minecraft.entity.JumpingMount
 import net.minecraft.fluid.LavaFluid
 import net.minecraft.fluid.WaterFluid
 import net.minecraft.item.*
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.screen.slot.SlotActionType
 import net.minecraft.util.math.BlockPos
@@ -47,18 +47,13 @@ import net.minecraft.util.math.BlockPos
 
 object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
 
-    val inventoryConstraints = InventoryConstraintsConfigurable()
-
-    init {
-        tree(inventoryConstraints)
-    }
+    val inventoryConstraints = tree(InventoryConstraintsConfigurable())
 
     val maxBlocks by int("MaxBlocks", 512, 0..3000)
     val maxArrows by int("MaxArrows", 256, 0..3000)
 
     val usefulItems = items(
-        "UsefulItems",
-        mutableListOf(
+        "UsefulItems", mutableListOf(
             Items.WATER_BUCKET,
             Items.LAVA_BUCKET,
             Items.MILK_BUCKET,
@@ -92,7 +87,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
     val slotItem9 by enumChoice("SlotItem-9", ItemSortChoice.BLOCK, ItemSortChoice.values())
 
     val repeatable = repeatable {
-        if (player.currentScreenHandler.syncId != 0) {
+        if (player.currentScreenHandler.syncId != 0 || player.vehicle is JumpingMount) {
             return@repeatable
         }
 
@@ -144,13 +139,11 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
                 if (hotbarSlotsToFill != null && currentStackCount < hotbarSlotsToFill.size && weightedItem.slot !in itemsUsedInHotbar) {
                     val hotbarSlotToFill = hotbarSlotsToFill[currentStackCount]
 
-                    if ((
-                        isGreedy || hotbarSlotToFill.first.satisfactionCheck?.invoke(
-                                inventory.getStack(
-                                        hotbarSlotToFill.second
-                                    )
-                            ) != true
-                        ) && weightedItem.slot != hotbarSlotToFill.second
+                    if ((isGreedy || hotbarSlotToFill.first.satisfactionCheck?.invoke(
+                            inventory.getStack(
+                                hotbarSlotToFill.second
+                            )
+                        ) != true) && weightedItem.slot != hotbarSlotToFill.second
                     ) {
                         if (executeAction(weightedItem.slot, hotbarSlotToFill.second, SlotActionType.SWAP)) {
                             wait(inventoryConstraints.delay.random())
@@ -259,15 +252,9 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
         val isInInventoryScreen = mc.currentScreen is InventoryScreen
 
         if (!(inventoryConstraints.noMove && player.moving) && (!inventoryConstraints.invOpen || isInInventoryScreen)) {
-            val openInventory = inventoryConstraints.simulateInventory && !isInInventoryScreen
-
-            if (openInventory) {
-                network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.OPEN_INVENTORY))
-            }
-
             interaction.clickSlot(0, slot, clickData, slotActionType, player)
 
-            if (openInventory) {
+            if (!isInInventoryScreen) {
                 network.sendPacket(CloseHandledScreenC2SPacket(0))
             }
 
@@ -280,7 +267,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
     private fun categoriteItem(
         items: MutableList<WeightedItem>,
         stack: ItemStack,
-        slotId: Int
+        slotId: Int,
     ) {
         if (stack.isNothing()) {
             return
@@ -321,10 +308,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
                     items.add(WeightedFoodItem(stack, slotId))
 
                     WeightedPrimitiveItem(
-                        stack,
-                        slotId,
-                        ItemCategory(ItemType.GAPPLE, 0),
-                        1
+                        stack, slotId, ItemCategory(ItemType.GAPPLE, 0), 1
                     )
                 }
                 else -> {
@@ -399,16 +383,13 @@ class WeightedSwordItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStac
         private val COMPARATOR = ComparatorChain<WeightedSwordItem>(
             { o1, o2 ->
                 (
-                    // TODO: Attack Speed
-                    o1.itemStack.item.attackDamage * (1.0f + DAMAGE_ESTIMATOR.estimateValue(o1.itemStack)) + o1.itemStack.getEnchantment(
-                        Enchantments.FIRE_ASPECT
-                    ) * 4.0f * 0.625f * 0.9f
-                    ).compareTo(
-                    o2.itemStack.item.attackDamage * (
-                        1.0f + DAMAGE_ESTIMATOR.estimateValue(
-                            o2.itemStack
-                        ) + o2.itemStack.getEnchantment(Enchantments.FIRE_ASPECT) * 4.0f * 0.625f * 0.9f
-                        )
+                        // TODO: Attack Speed
+                        o1.itemStack.item.attackDamage * (1.0f + DAMAGE_ESTIMATOR.estimateValue(o1.itemStack)) + o1.itemStack.getEnchantment(
+                            Enchantments.FIRE_ASPECT
+                        ) * 4.0f * 0.625f * 0.9f).compareTo(
+                    o2.itemStack.item.attackDamage * (1.0f + DAMAGE_ESTIMATOR.estimateValue(
+                        o2.itemStack
+                    ) + o2.itemStack.getEnchantment(Enchantments.FIRE_ASPECT) * 4.0f * 0.625f * 0.9f)
                 )
             },
             { o1, o2 ->
@@ -446,9 +427,7 @@ class WeightedBowItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack,
                 (VALUE_ESTIMATOR.estimateValue(o1.itemStack)).compareTo(
                     VALUE_ESTIMATOR.estimateValue(o2.itemStack)
                 )
-            },
-            HOTBAR_PREDICATE,
-            IDENTITY_PREDICATE
+            }, HOTBAR_PREDICATE, IDENTITY_PREDICATE
         )
     }
 
@@ -475,9 +454,7 @@ class WeightedCrossbowItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemS
                 (VALUE_ESTIMATOR.estimateValue(o1.itemStack)).compareTo(
                     VALUE_ESTIMATOR.estimateValue(o2.itemStack)
                 )
-            },
-            HOTBAR_PREDICATE,
-            IDENTITY_PREDICATE
+            }, HOTBAR_PREDICATE, IDENTITY_PREDICATE
         )
     }
 
@@ -494,9 +471,7 @@ class WeightedArrowItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStac
         private val COMPARATOR = ComparatorChain<WeightedArrowItem>(
             { o1, o2 ->
                 o1.itemStack.count.compareTo(o2.itemStack.count)
-            },
-            HOTBAR_PREDICATE,
-            IDENTITY_PREDICATE
+            }, HOTBAR_PREDICATE, IDENTITY_PREDICATE
         )
     }
 
@@ -515,15 +490,11 @@ class WeightedToolItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.2f),
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.FORTUNE, 0.33f),
         )
-        private val COMPARATOR = ComparatorChain<WeightedToolItem>(
-            { o1, o2 ->
-                (o1.itemStack.item as ToolItem).material.miningLevel.compareTo((o2.itemStack.item as ToolItem).material.miningLevel)
-            },
-            { o1, o2 ->
-                VALUE_ESTIMATOR.estimateValue(o1.itemStack).compareTo(VALUE_ESTIMATOR.estimateValue(o2.itemStack))
-            },
-            HOTBAR_PREDICATE,
-            IDENTITY_PREDICATE
+        private val COMPARATOR = ComparatorChain<WeightedToolItem>({ o1, o2 ->
+            (o1.itemStack.item as ToolItem).material.miningLevel.compareTo((o2.itemStack.item as ToolItem).material.miningLevel)
+        }, { o1, o2 ->
+            VALUE_ESTIMATOR.estimateValue(o1.itemStack).compareTo(VALUE_ESTIMATOR.estimateValue(o2.itemStack))
+        }, HOTBAR_PREDICATE, IDENTITY_PREDICATE
         )
     }
 
@@ -543,9 +514,7 @@ class WeightedRodItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack,
         private val COMPARATOR = ComparatorChain<WeightedRodItem>(
             { o1, o2 ->
                 VALUE_ESTIMATOR.estimateValue(o1.itemStack).compareTo(VALUE_ESTIMATOR.estimateValue(o2.itemStack))
-            },
-            HOTBAR_PREDICATE,
-            IDENTITY_PREDICATE
+            }, HOTBAR_PREDICATE, IDENTITY_PREDICATE
         )
     }
 
@@ -565,9 +534,7 @@ class WeightedShieldItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemSta
         private val COMPARATOR = ComparatorChain<WeightedShieldItem>(
             { o1, o2 ->
                 VALUE_ESTIMATOR.estimateValue(o1.itemStack).compareTo(VALUE_ESTIMATOR.estimateValue(o2.itemStack))
-            },
-            HOTBAR_PREDICATE,
-            IDENTITY_PREDICATE
+            }, HOTBAR_PREDICATE, IDENTITY_PREDICATE
         )
     }
 
@@ -582,7 +549,11 @@ class WeightedShieldItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemSta
 class WeightedFoodItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
     companion object {
         private val COMPARATOR = ComparatorChain<WeightedFoodItem>(
-            { o1, o2 -> compareByCondition(o1, o2) { it.itemStack.item == Items.ENCHANTED_GOLDEN_APPLE } },
+            { o1, o2 ->
+                compareByCondition(
+                    o1, o2
+                ) { it.itemStack.item == Items.ENCHANTED_GOLDEN_APPLE }
+            },
             { o1, o2 -> compareByCondition(o1, o2) { it.itemStack.item == Items.GOLDEN_APPLE } },
             { o1, o2 -> o1.itemStack.item.foodComponent!!.hunger.compareTo(o2.itemStack.item.foodComponent!!.hunger) },
             { o1, o2 -> o1.itemStack.item.foodComponent!!.saturationModifier.compareTo(o2.itemStack.item.foodComponent!!.saturationModifier) },
@@ -604,22 +575,15 @@ class WeightedFoodItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack
 
 class WeightedBlockItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
     companion object {
-        private val COMPARATOR = ComparatorChain<WeightedBlockItem>(
-            { o1, o2 ->
-                compareByCondition(
-                    o1,
-                    o2
-                ) { (it.itemStack.item as BlockItem).block.defaultState.material.isSolid }
-            },
-            { o1, o2 ->
-                compareByCondition(
-                    o1,
-                    o2
-                ) { (it.itemStack.item as BlockItem).block.defaultState.isFullCube(mc.world, BlockPos(0, 0, 0)) }
-            },
-            { o1, o2 -> o1.itemStack.count.compareTo(o2.itemStack.count) },
-            HOTBAR_PREDICATE,
-            IDENTITY_PREDICATE
+        private val COMPARATOR = ComparatorChain<WeightedBlockItem>({ o1, o2 ->
+            compareByCondition(
+                o1, o2
+            ) { (it.itemStack.item as BlockItem).block.defaultState.material.isSolid }
+        }, { o1, o2 ->
+            compareByCondition(
+                o1, o2
+            ) { (it.itemStack.item as BlockItem).block.defaultState.isFullCube(mc.world, BlockPos(0, 0, 0)) }
+        }, { o1, o2 -> o1.itemStack.count.compareTo(o2.itemStack.count) }, HOTBAR_PREDICATE, IDENTITY_PREDICATE
         )
     }
 
@@ -634,45 +598,34 @@ class WeightedBlockItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStac
 data class ItemCategory(val type: ItemType, val subtype: Int)
 
 enum class ItemType(val allowOnlyOne: Boolean) {
-    ARMOR(true),
-    SWORD(true),
-    BOW(true),
-    CROSSBOW(true),
-    ARROW(true),
-    TOOL(true),
-    ROD(true),
-    SHIELD(true),
-    FOOD(false),
-    BUCKET(false),
-    PEARL(false),
-    GAPPLE(false),
-    BLOCK(false),
-    NONE(false)
+    ARMOR(true), SWORD(true), BOW(true), CROSSBOW(true), ARROW(true), TOOL(true), ROD(true), SHIELD(true), FOOD(false), BUCKET(
+        false
+    ),
+    PEARL(false), GAPPLE(false), BLOCK(false), NONE(false)
 }
 
 enum class ItemSortChoice(
     override val choiceName: String,
     val category: ItemCategory?,
-    val satisfactionCheck: ((ItemStack) -> Boolean)? = null
+    val satisfactionCheck: ((ItemStack) -> Boolean)? = null,
 ) : NamedChoice {
-    SWORD("Sword", ItemCategory(ItemType.SWORD, 0)),
-    BOW("Bow", ItemCategory(ItemType.BOW, 0)),
-    CROSSBOW("Crossbow", ItemCategory(ItemType.CROSSBOW, 0)),
-    AXE("Axe", ItemCategory(ItemType.TOOL, 0)),
-    PICKAXE("Pickaxe", ItemCategory(ItemType.TOOL, 1)),
-    ROD("Rod", ItemCategory(ItemType.ROD, 0)),
-    SHIELD("Shield", ItemCategory(ItemType.SHIELD, 0)),
-    WATER("Water", ItemCategory(ItemType.BUCKET, 0)),
-    LAVA("Lava", ItemCategory(ItemType.BUCKET, 1)),
-    MILK("Milk", ItemCategory(ItemType.BUCKET, 2)),
-    PEARL("Pearl", ItemCategory(ItemType.PEARL, 0), { it.item == Items.ENDER_PEARL }),
-    GAPPLE(
-        "Gapple",
-        ItemCategory(ItemType.GAPPLE, 0),
-        { it.item == Items.GOLDEN_APPLE || it.item == Items.ENCHANTED_GOLDEN_APPLE }
+    SWORD("Sword", ItemCategory(ItemType.SWORD, 0)), BOW("Bow", ItemCategory(ItemType.BOW, 0)), CROSSBOW(
+        "Crossbow", ItemCategory(ItemType.CROSSBOW, 0)
     ),
-    FOOD("Food", ItemCategory(ItemType.FOOD, 0), { it.item.foodComponent != null }),
-    BLOCK("Block", ItemCategory(ItemType.BLOCK, 0), { it.item is BlockItem }),
-    IGNORE("Ignore", null),
-    NONE("None", null)
+    AXE("Axe", ItemCategory(ItemType.TOOL, 0)), PICKAXE("Pickaxe", ItemCategory(ItemType.TOOL, 1)), ROD(
+        "Rod", ItemCategory(ItemType.ROD, 0)
+    ),
+    SHIELD("Shield", ItemCategory(ItemType.SHIELD, 0)), WATER("Water", ItemCategory(ItemType.BUCKET, 0)), LAVA(
+        "Lava", ItemCategory(ItemType.BUCKET, 1)
+    ),
+    MILK("Milk", ItemCategory(ItemType.BUCKET, 2)), PEARL("Pearl",
+        ItemCategory(ItemType.PEARL, 0),
+        { it.item == Items.ENDER_PEARL }),
+    GAPPLE("Gapple",
+        ItemCategory(ItemType.GAPPLE, 0),
+        { it.item == Items.GOLDEN_APPLE || it.item == Items.ENCHANTED_GOLDEN_APPLE }),
+    FOOD("Food", ItemCategory(ItemType.FOOD, 0), { it.item.foodComponent != null }), BLOCK("Block",
+        ItemCategory(ItemType.BLOCK, 0),
+        { it.item is BlockItem }),
+    IGNORE("Ignore", null), NONE("None", null)
 }

@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoGapple.
 import net.ccbluex.liquidbounce.utils.item.InventoryConstraintsConfigurable
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
 import net.ccbluex.liquidbounce.utils.item.findInventorySlot
+import net.minecraft.entity.JumpingMount
 import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
@@ -52,7 +53,7 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
         val bowlHotbarSlot = findHotbarSlot(Items.BOWL)
         val bowlInvSlot = findInventorySlot(Items.MUSHROOM_STEW)
 
-        if (mushroomStewSlot == null && bowlInvSlot == null && bowlHotbarSlot == null) {
+        if (mushroomStewSlot == null && bowlInvSlot == null && bowlHotbarSlot == null || player.vehicle is JumpingMount) {
             return@repeatable
         }
 
