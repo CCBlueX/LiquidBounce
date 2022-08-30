@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.utils.item.convertClientSlotToServerSlot
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.screen.slot.SlotActionType
 
@@ -51,16 +50,11 @@ object ModuleAutoTotem : Module("AutoTotem", Category.PLAYER) {
         } ?: return@repeatable
 
         val serverSlot = convertClientSlotToServerSlot(slot)
-
-        val openInventory = mc.currentScreen !is InventoryScreen
-
-        if (openInventory) {
-            network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.OPEN_INVENTORY))
-        }
+        val isInInventoryScreen = mc.currentScreen !is InventoryScreen
 
         interaction.clickSlot(0, serverSlot, 40, SlotActionType.SWAP, player)
 
-        if (openInventory) {
+        if (!isInInventoryScreen) {
             network.sendPacket(CloseHandledScreenC2SPacket(0))
         }
     }
