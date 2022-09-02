@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
 import net.ccbluex.liquidbounce.utils.item.findInventorySlot
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.client.util.InputUtil
-import net.minecraft.entity.JumpingMount
 import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.screen.slot.SlotActionType
@@ -51,7 +50,7 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
         val slot = findHotbarSlot(Items.GOLDEN_APPLE)
         val invSlot = findInventorySlot(Items.GOLDEN_APPLE)
 
-        if (slot == null && invSlot == null || player.vehicle is JumpingMount) {
+        if (slot == null && invSlot == null || interaction.hasRidingInventory()) {
             if (lastSlot != -1) {
                 player.inventory.selectedSlot = lastSlot
                 lastSlot = -1

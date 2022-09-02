@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.item.*
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
-import net.minecraft.entity.JumpingMount
 import net.minecraft.item.ArmorItem
 import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
@@ -48,7 +47,7 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
     val repeatable = repeatable {
         val player = mc.player ?: return@repeatable
 
-        if (player.currentScreenHandler.syncId != 0 || player.vehicle is JumpingMount) {
+        if (player.currentScreenHandler.syncId != 0 || interaction.hasRidingInventory()) {
             return@repeatable
         }
 

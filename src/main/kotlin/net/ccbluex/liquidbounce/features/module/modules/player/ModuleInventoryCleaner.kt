@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.enchantment.Enchantments
-import net.minecraft.entity.JumpingMount
 import net.minecraft.fluid.LavaFluid
 import net.minecraft.fluid.WaterFluid
 import net.minecraft.item.*
@@ -87,7 +86,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
     val slotItem9 by enumChoice("SlotItem-9", ItemSortChoice.BLOCK, ItemSortChoice.values())
 
     val repeatable = repeatable {
-        if (player.currentScreenHandler.syncId != 0 || player.vehicle is JumpingMount) {
+        if (player.currentScreenHandler.syncId != 0 || interaction.hasRidingInventory()) {
             return@repeatable
         }
 

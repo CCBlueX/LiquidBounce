@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoGapple.
 import net.ccbluex.liquidbounce.utils.item.InventoryConstraintsConfigurable
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
 import net.ccbluex.liquidbounce.utils.item.findInventorySlot
-import net.minecraft.entity.JumpingMount
 import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
@@ -53,7 +52,7 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
         val bowlHotbarSlot = findHotbarSlot(Items.BOWL)
         val bowlInvSlot = findInventorySlot(Items.MUSHROOM_STEW)
 
-        if (mushroomStewSlot == null && bowlInvSlot == null && bowlHotbarSlot == null || player.vehicle is JumpingMount) {
+        if (mushroomStewSlot == null && bowlInvSlot == null && bowlHotbarSlot == null || interaction.hasRidingInventory()) {
             return@repeatable
         }
 
@@ -63,7 +62,11 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
                     PlayerActionC2SPacket.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.DOWN
                 )
             )
-            network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
+
+            if (bowlHotbarSlot != player.inventory.selectedSlot) {
+                network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
+            }
+
             when (bowl) {
                 BowlMode.DROP -> {
                     utilizeInventory(bowlHotbarSlot, 1, SlotActionType.THROW, inventoryConstraints)
