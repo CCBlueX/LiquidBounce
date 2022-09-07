@@ -151,19 +151,21 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             return@handler
         }
 
-        // Update current target tracker to make sure you attack the best enemy
-        updateEnemySelection()
-    }
-
-    val repeatable = repeatable {
         // Make sure killaura-logic is not running while inventory is open
         val isInInventoryScreen = mc.currentScreen is InventoryScreen
 
         if (isInInventoryScreen && !ignoreOpenInventory) {
             // Cleanup current target tracker
             targetTracker.cleanup()
-            return@repeatable
+            return@handler
         }
+
+        // Update current target tracker to make sure you attack the best enemy
+        updateEnemySelection()
+    }
+
+    val repeatable = repeatable {
+        val isInInventoryScreen = mc.currentScreen is InventoryScreen
 
         // Check if there is target to attack
         val target = targetTracker.lockedOnTarget ?: return@repeatable
@@ -237,11 +239,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                     }
 
                     network.sendPacket(PlayerInteractItemC2SPacket(player.activeHand))
-                }
-
-                // Make sure to reopen inventory
-                if (simulateInventoryClosing && isInInventoryScreen) {
-                    network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.OPEN_INVENTORY))
                 }
             }
         }
