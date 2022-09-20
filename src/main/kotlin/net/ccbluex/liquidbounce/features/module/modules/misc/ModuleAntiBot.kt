@@ -58,6 +58,7 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
         val noGameMode by boolean("NoGameMode", true)
         val illegalPitch by boolean("IllegalPitch", true)
         val fakeEntityID by boolean("FakeEntityID", false)
+        val illegalName by boolean("IllegalName", false)
 
         val invalidGroundList = mutableMapOf<Entity, Int>()
 
@@ -79,6 +80,23 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
                     invalidGroundList[entity] = newVL
                 }
             }
+        }
+
+        fun hasInvalidGround(player: PlayerEntity): Boolean {
+            return invalidGroundList.getOrDefault(player, 0) >= InvalidGround.vlToConsiderAsBot
+        }
+
+        fun hasIllegalName(player: PlayerEntity): Boolean {
+            val validChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
+            val name = player.entityName
+
+            if (name.length < 3 || name.length > 16) {
+                return true
+            }
+
+            val result = name.indices.find { !validChars.contains(name[it]) }
+
+            return result != null
         }
     }
 
@@ -109,6 +127,7 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
                         suspectList.add(entry.profile.id)
                     }
                 }
+
                 PlayerListS2CPacket.Action.REMOVE_PLAYER -> {
                     for (entry in it.packet.entries) {
                         if (suspectList.contains(entry.profile.id)) {
@@ -120,6 +139,7 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
                         }
                     }
                 }
+
                 else -> {}
             }
         }
@@ -207,6 +227,7 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
                         suspectList[entry.profile.id] = Pair(entry.latency, System.currentTimeMillis())
                     }
                 }
+
                 PlayerListS2CPacket.Action.REMOVE_PLAYER -> {
                     for (entry in it.packet.entries) {
                         if (suspectList.containsKey(entry.profile.id)) {
@@ -218,6 +239,7 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
                         }
                     }
                 }
+
                 PlayerListS2CPacket.Action.UPDATE_LATENCY -> {
                     for (entry in it.packet.entries) {
                         if (!suspectList.containsKey(entry.profile.id)) {
@@ -240,6 +262,7 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
                         suspectList.remove(entry.profile.id)
                     }
                 }
+
                 else -> {}
             }
         }
@@ -268,6 +291,7 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
                         botList.add(entry.profile.id)
                     }
                 }
+
                 PlayerListS2CPacket.Action.REMOVE_PLAYER -> {
                     for (entry in it.packet.entries) {
                         if (botList.contains(entry.profile.id)) {
@@ -275,6 +299,7 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
                         }
                     }
                 }
+
                 else -> {}
             }
         }
@@ -310,15 +335,14 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
             is IntaveHeavy -> return IntaveHeavy.botList.contains(player.uuid)
             is Horizon -> return Horizon.botList.contains(player.uuid)
             is Custom -> {
-                val invalidGround = Custom.InvalidGround.enabled && Custom.invalidGroundList.getOrDefault(
-                    player, 0
-                ) >= Custom.InvalidGround.vlToConsiderAsBot
                 val noGameMode = Custom.noGameMode && network.getPlayerListEntry(player.uuid)?.gameMode == null
+                val invalidGround = Custom.InvalidGround.enabled && Custom.hasInvalidGround(player)
                 val fakeID = Custom.fakeEntityID && (player.id < 0 || player.id >= 1E+9)
                 val isADuplicate = Custom.duplicate && isADuplicate(player.gameProfile)
+                val illegalName = Custom.illegalName && Custom.hasIllegalName(player)
                 val illegalPitch = Custom.illegalPitch && abs(player.pitch) > 90
 
-                return invalidGround || noGameMode || fakeID || isADuplicate || illegalPitch
+                return noGameMode || invalidGround || fakeID || isADuplicate || illegalName || illegalPitch
             }
         }
 
