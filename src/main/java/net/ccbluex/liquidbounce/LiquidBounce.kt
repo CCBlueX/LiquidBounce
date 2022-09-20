@@ -38,11 +38,11 @@ object LiquidBounce {
     // Client information
     const val CLIENT_NAME = "LiquidBounce"
     @JvmField
-    val CLIENT_VERSION: String = gitInfo["git.build.version"]?.toString() ?: "unknown"
-    var CLIENT_VERSION_INT = CLIENT_VERSION.substring(1).toIntOrNull() ?: 0 // version format: "b<VERSION>" on legacy
+    val CLIENT_VERSION: String = "b74"
+    var CLIENT_VERSION_INT = 74 // version format: "b<VERSION>" on legacy
     @JvmField
     val CLIENT_COMMIT: String = gitInfo["git.commit.id.abbrev"]?.let { "git-$it" } ?: "unknown"
-    const val IN_DEV = false
+    const val IN_DEV = true
     const val CLIENT_CREATOR = "CCBlueX"
     const val MINECRAFT_VERSION = "1.8.9"
     const val CLIENT_CLOUD = "https://cloud.liquidbounce.net/LiquidBounce"
