@@ -80,7 +80,7 @@ open class Module(
                 NotificationEvent.Severity.INFO
             )
 
-            // Ignore handleEvents condition to avoid modules freezing post game load
+            // Ignore handleEvents condition to prevent enabled modules from freezing post game load
             val notInGame = (mc.player == null || mc.world == null) && new
 
             // Call out module event
