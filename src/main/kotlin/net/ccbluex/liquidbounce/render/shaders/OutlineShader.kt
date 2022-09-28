@@ -24,10 +24,13 @@ import net.ccbluex.liquidbounce.render.engine.MinecraftFramebufferShader
 
 object OutlineShader : MinecraftFramebufferShader("outline_shader") {
 
-    fun begin(width: Float, color: Color4b) {
+    fun begin(width: Float) {
         this.setUniform1f("radius", width)
-        this.vertexConsumerProvider!!.setColor(color.r, color.g, color.b, color.a)
         this.beginInternal()
+    }
+
+    fun setColor(color: Color4b) {
+        this.vertexConsumerProvider?.setColor(color.r, color.g, color.b, color.a)
     }
 
 }
