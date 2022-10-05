@@ -14,14 +14,9 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
 import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam
-import net.ccbluex.liquidbounce.utils.EntityUtils
-import net.ccbluex.liquidbounce.utils.RaycastUtils
-import net.ccbluex.liquidbounce.utils.Rotation
-import net.ccbluex.liquidbounce.utils.RotationUtils
-import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
-import net.ccbluex.liquidbounce.utils.extensions.isAnimal
-import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
-import net.ccbluex.liquidbounce.utils.extensions.isMob
+import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold
+import net.ccbluex.liquidbounce.utils.*
+import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
@@ -105,6 +100,9 @@ class KillAura : Module() {
     private val aacValue = BoolValue("AAC", false)
 
     // Turn Speed
+    private val sensitivityValue = FloatValue("ResetRotationsSensitivity", 0.5f, 0f, 5f)
+    private val resetRotationDelay = IntegerValue("ResetRotationDelay", 1000, 0, 3000)
+
     private val maxTurnSpeed: FloatValue = object : FloatValue("MaxTurnSpeed", 180f, 0f, 180f) {
         override fun onChanged(oldValue: Float, newValue: Float) {
             val v = minTurnSpeed.get()
@@ -123,6 +121,7 @@ class KillAura : Module() {
     private val rotationStrafeValue = ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off")
     private val randomCenterValue = BoolValue("RandomCenter", true)
     private val outborderValue = BoolValue("Outborder", false)
+    private val jitterValue = BoolValue("Jitter", true)
     private val fovValue = FloatValue("FOV", 180f, 0f, 180f)
 
     // Predict
@@ -158,10 +157,14 @@ class KillAura : Module() {
      */
 
     // Target
+    private var turnSpeed = 0f
+    private var shouldResetRotations = false
+    var rotationsGotReset = false
     var target: EntityLivingBase? = null
     private var currentTarget: EntityLivingBase? = null
     private var hitable = false
     private val prevTargetEntities = mutableListOf<Int>()
+    private val rotationTimer = MSTimer()
 
     // Attack delay
     private val attackTimer = MSTimer()
@@ -175,7 +178,7 @@ class KillAura : Module() {
     var blockingStatus = false
 
     // fix ncp
-    var blockStopInDead = false
+    private var blockStopInDead = false
     /**
      * Enable kill aura module
      */
@@ -183,6 +186,8 @@ class KillAura : Module() {
         mc.thePlayer ?: return
         mc.theWorld ?: return
 
+        shouldResetRotations = false
+        rotationsGotReset = false
         updateTarget()
     }
 
@@ -221,6 +226,14 @@ class KillAura : Module() {
 
         if (rotationStrafeValue.get().equals("Off", true))
             update()
+
+        val limitedRotation = RotationUtils.limitAngleChange(RotationUtils.serverRotation!!, if (!shouldResetRotations) { RotationUtils.testRotation!! } else { mc.thePlayer!!.rotation},
+            turnSpeed)
+        if (silentRotationValue.get() && !cancelRun) {
+            if (!rotationsGotReset && maxTurnSpeed.get() > 0f) {
+                RotationUtils.setTargetRotationWithTurnBack(limitedRotation, resetRotationDelay.get(), turnSpeed, shouldResetRotations)
+            }
+        }
     }
 
     /**
@@ -233,8 +246,15 @@ class KillAura : Module() {
 
         update()
 
-        if (currentTarget != null && RotationUtils.targetRotation != null) {
-            when (rotationStrafeValue.get().toLowerCase()) {
+        val limitedRotation = RotationUtils.limitAngleChange(RotationUtils.serverRotation!!, if (!shouldResetRotations) { RotationUtils.testRotation!! } else { mc.thePlayer!!.rotation},
+            turnSpeed)
+        if (silentRotationValue.get() && !cancelRun) {
+            if (!rotationsGotReset && maxTurnSpeed.get() > 0f) {
+                RotationUtils.setTargetRotationWithTurnBack(limitedRotation, resetRotationDelay.get(), turnSpeed, shouldResetRotations)
+            }
+        }
+        if (!rotationsGotReset && RotationUtils.targetRotation != null && !cancelRun) {
+            when (rotationStrafeValue.get().lowercase(Locale.getDefault())) {
                 "strict" -> {
                     val (yaw) = RotationUtils.targetRotation ?: return
                     var strafe = event.strafe
@@ -306,7 +326,24 @@ class KillAura : Module() {
             stopBlocking()
             return
         }
+        turnSpeed =
+            if (rotationsGotReset) {
+                360f
+            } else {
+                if (shouldResetRotations) {
+                    if (rotationTimer.hasTimePassed(resetRotationDelay.get().toLong()) || minTurnSpeed.get() >= 180f) {
+                        (Math.random() * (maxTurnSpeed.get() - minTurnSpeed.get()) + minTurnSpeed.get()).toFloat()
+                    } else {
+                        0f
+                    }
+                } else {
+                    (Math.random() * (maxTurnSpeed.get() - minTurnSpeed.get()) + minTurnSpeed.get()).toFloat()
+                }
+            }
 
+        if (RotationUtils.diff(sensitivityValue.get())) {
+            rotationsGotReset = true
+        }
         if (noInventoryAttackValue.get() && (mc.currentScreen is GuiContainer ||
                         System.currentTimeMillis() - containerOpen < noInventoryDelayValue.get())) {
             target = null
@@ -315,7 +352,13 @@ class KillAura : Module() {
             if (mc.currentScreen is GuiContainer) containerOpen = System.currentTimeMillis()
             return
         }
-
+        if (target == null) {
+            shouldResetRotations = true
+        } else {
+            rotationTimer.reset()
+            shouldResetRotations = false
+            rotationsGotReset = false
+        }
         if (target != null && currentTarget != null) {
             while (clicks > 0) {
                 runAttack()
@@ -408,7 +451,7 @@ class KillAura : Module() {
                 for (entity in theWorld.loadedEntityList) {
                     val distance = thePlayer.getDistanceToEntityBox(entity)
 
-                    if (entity is EntityLivingBase && isEnemy(entity) && distance <= getRange(entity)) {
+                    if (entity is EntityLivingBase && isEnemy(entity) && distance <= getRange()) {
                         attackEntity(entity)
 
                         targets += 1
@@ -455,7 +498,7 @@ class KillAura : Module() {
             val distance = thePlayer.getDistanceToEntityBox(entity)
             val entityFov = RotationUtils.getRotationDifference(entity)
 
-            if (distance <= maxRange && (fov == 180F || entityFov <= fov) && entity.hurtTime <= hurtTime)
+            if (distance <= getRange() && (fov == 180F || entityFov <= fov) && entity.hurtTime <= hurtTime)
                 targets.add(entity)
         }
 
@@ -521,6 +564,7 @@ class KillAura : Module() {
         if (thePlayer.isBlocking || blockingStatus)
             stopBlocking()
 
+        CPSCounter.registerClick(CPSCounter.MouseButton.LEFT)
         // Call attack event
         LiquidBounce.eventManager.callEvent(AttackEvent(entity))
 
@@ -537,7 +581,7 @@ class KillAura : Module() {
                 mc.thePlayer.onCriticalHit(entity)
 
             // Enchant Effect
-            if (EnchantmentHelper.getModifierForCreature(mc.thePlayer.heldItem, entity.creatureAttribute) > 0F)
+            if (EnchantmentHelper.getModifierForCreature(mc.thePlayer.inventory.getStackInSlot(InventoryUtils.currentSlot), entity.creatureAttribute) > 0F)
                 thePlayer.onEnchantmentCritical(entity)
         } else {
             if (mc.playerController.currentGameType != WorldSettings.GameType.SPECTATOR)
@@ -553,7 +597,7 @@ class KillAura : Module() {
                 thePlayer.onCriticalHit(target!!)
 
             // Enchant Effect
-            if (EnchantmentHelper.getModifierForCreature(mc.thePlayer.heldItem, target!!.creatureAttribute) > 0.0f || fakeSharpValue.get())
+            if (EnchantmentHelper.getModifierForCreature(mc.thePlayer.inventory.getStackInSlot(InventoryUtils.currentSlot), target!!.creatureAttribute) > 0.0f || fakeSharpValue.get())
                 thePlayer.onEnchantmentCritical(target!!)
         }
 
@@ -598,18 +642,31 @@ class KillAura : Module() {
                 randomCenterValue.get(),
                 predictValue.get(),
                 mc.thePlayer!!.getDistanceToEntityBox(entity) < throughWallsRangeValue.get(),
-                maxRange
+                getRange()
         ) ?: return false
+        if (jitterValue.get()) {
+            val random = Random()
+            val yaw = random.nextBoolean()
+            val pitch = random.nextBoolean()
+            if (yaw) {
+                rotation.yaw += (random.nextGaussian() - 0.50).toFloat()
+            }
+            if (pitch) {
+                val pitchBuffer = (random.nextGaussian() - 0.50).toFloat()
+                if (rotation.pitch + pitchBuffer <= 90F && rotation.pitch + pitchBuffer >= -90F)
+                    rotation.pitch += pitchBuffer
+            }
+        }
+        val turnSpeed = if (!rotationsGotReset) (Math.random() * (maxTurnSpeed.get() - minTurnSpeed.get()) + minTurnSpeed.get()).toFloat()  else { 360f }
 
-        val limitedRotation = RotationUtils.limitAngleChange(RotationUtils.serverRotation, rotation,
-                (Math.random() * (maxTurnSpeed.get() - minTurnSpeed.get()) + minTurnSpeed.get()).toFloat())
-
-        if (silentRotationValue.get())
-            RotationUtils.setTargetRotation(limitedRotation, if (aacValue.get()) 15 else 0)
-        else
-            limitedRotation.toPlayer(mc.thePlayer!!)
-
-        return true
+    val limitedRotation = RotationUtils.limitAngleChange(RotationUtils.serverRotation, rotation,
+        turnSpeed)
+    if (silentRotationValue.get()) {
+        RotationUtils.testRotation = limitedRotation
+    } else {
+        limitedRotation.toPlayer(mc.thePlayer)
+    }
+    return true
     }
 
     /**
@@ -622,7 +679,7 @@ class KillAura : Module() {
             return
         }
 
-        val reach = min(maxRange.toDouble(), mc.thePlayer!!.getDistanceToEntityBox(target!!)) + 1
+        val reach = min(getRange().toDouble(), mc.thePlayer!!.getDistanceToEntityBox(currentTarget!!)) + 1
 
         if (raycastValue.get()) {
             val raycastedEntity = RaycastUtils.raycastEntity(reach, object : RaycastUtils.EntityFilter {
@@ -637,10 +694,11 @@ class KillAura : Module() {
                     && (LiquidBounce.moduleManager[NoFriends::class.java].state || !(raycastedEntity is EntityPlayer && raycastedEntity.isClientFriend())))
                 currentTarget = raycastedEntity
 
-            hitable = if (maxTurnSpeed.get() > 0F) currentTarget == raycastedEntity else true
+            hitable = if (maxTurnSpeed.get() > 0F) currentTarget!! == raycastedEntity else true
         } else
-            hitable = RotationUtils.isFaced(currentTarget, reach)
+            hitable = RotationUtils.isFaced(currentTarget!!, reach)
     }
+
 
     /**
      * Start blocking
@@ -660,7 +718,7 @@ class KillAura : Module() {
             val yawSin = sin(-yaw * 0.017453292F - Math.PI.toFloat())
             val pitchCos = -cos(-pitch * 0.017453292F)
             val pitchSin = sin(-pitch * 0.017453292F)
-            val range = min(maxRange.toDouble(), mc.thePlayer!!.getDistanceToEntityBox(interactEntity)) + 1
+            val range = min(getRange().toDouble(), mc.thePlayer!!.getDistanceToEntityBox(interactEntity)) + 1
             val lookAt = positionEye!!.addVector(yawSin * pitchCos * range, pitchSin * range, yawCos * pitchCos * range)
 
             val movingObject = boundingBox.calculateIntercept(positionEye, lookAt) ?: return
@@ -676,14 +734,14 @@ class KillAura : Module() {
 
         mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, mc.thePlayer!!.inventory.getCurrentItem(), 0.0F, 0.0F, 0.0F))
         blockingStatus = true
-    }
 
+    }
 
     /**
      * Stop blocking
      */
     private fun stopBlocking() {
-        if (blockingStatus) {
+        if (mc.thePlayer.isBlocking || blockingStatus) {
             mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
             blockingStatus = false
         }
@@ -694,8 +752,7 @@ class KillAura : Module() {
      */
     private val cancelRun: Boolean
         inline get() = mc.thePlayer!!.isSpectator || !isAlive(mc.thePlayer!!)
-                || LiquidBounce.moduleManager[Blink::class.java].state || LiquidBounce.moduleManager[FreeCam::class.java].state
-
+                || LiquidBounce.moduleManager[Blink::class.java].state || (LiquidBounce.moduleManager[Scaffold::class.java].state && (LiquidBounce.moduleManager.getModule(Scaffold::class.java) as Scaffold).rotationsValue.get()) || LiquidBounce.moduleManager[FreeCam::class.java].state
     /**
      * Check if [entity] is alive
      */
@@ -706,17 +763,13 @@ class KillAura : Module() {
      * Check if player is able to block
      */
     private val canBlock: Boolean
-        inline get() = mc.thePlayer!!.heldItem != null && mc.thePlayer?.heldItem?.item is ItemSword
+    inline get() = mc.thePlayer.inventory.getStackInSlot(InventoryUtils.currentSlot) != null && mc.thePlayer.inventory.getStackInSlot(InventoryUtils.currentSlot)!!.item!! is ItemSword
 
     /**
      * Range
      */
-    private val maxRange: Float
-        get() = max(rangeValue.get(), throughWallsRangeValue.get())
-
-    private fun getRange(entity: Entity) =
-            (if (mc.thePlayer!!.getDistanceToEntityBox(entity) >= throughWallsRangeValue.get()) rangeValue.get() else throughWallsRangeValue.get()) - if (mc.thePlayer!!.isSprinting) rangeSprintReducementValue.get() else 0F
-
+    private fun getRange() =
+    (max(rangeValue.get(), throughWallsRangeValue.get()) - if (mc.thePlayer!!.isSprinting) rangeSprintReducementValue.get() else 0F)
     /**
      * HUD Tag
      */

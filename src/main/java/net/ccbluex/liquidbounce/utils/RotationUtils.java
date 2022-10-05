@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.event.Listenable;
 import net.ccbluex.liquidbounce.event.PacketEvent;
 import net.ccbluex.liquidbounce.event.TickEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.FastBow;
+import net.ccbluex.liquidbounce.utils.timer.MSTimer;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
 import net.minecraft.network.Packet;
@@ -20,6 +21,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Random;
 
+import static java.lang.Math.abs;
+
 public final class RotationUtils extends MinecraftInstance implements Listenable {
 
     private static final Random random = new Random();
@@ -28,12 +31,14 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
 
     public static Rotation targetRotation;
     public static Rotation serverRotation = new Rotation(0F, 0F);
+    public static Rotation testRotation;
 
     public static boolean keepCurrentRotation = false;
 
     private static double x = random.nextDouble();
     private static double y = random.nextDouble();
     private static double z = random.nextDouble();
+    private static final MSTimer time = new MSTimer();
 
     /**
      * Face block
@@ -260,6 +265,42 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
      */
     public static float getAngleDifference(final float a, final float b) {
         return ((((a - b) % 360F) + 540F) % 360F) - 180F;
+    }
+
+    /**
+     * Calculate difference between client side and server side rotations
+     */
+    public static boolean diff(final Float sensitivity) {
+        return Math.max(abs(abs(RotationUtils.fixedYaw(mc.thePlayer.rotationYaw))-abs(RotationUtils.fixedYaw(RotationUtils.serverRotation.getYaw()))), abs(abs(mc.thePlayer.rotationPitch)-abs(serverRotation.getPitch())))<=sensitivity;
+    }
+
+    /**
+     * Fixes Yaw calculations
+     */
+    public static float fixedYaw(final Float rotationYaw) {
+        if(rotationYaw>=0) {
+            return rotationYaw % 360;
+        } else {
+            return 360 + rotationYaw % 360;
+        }
+    }
+
+
+    /**
+     * Set Your target rotations and then resets it
+     */
+    public static void setTargetRotationWithTurnBack(final Rotation rotation, final int delayReset, final float turnSpeed, final boolean turnBack) {
+        if (!turnBack) {
+            setTargetRotation(rotation, 0);
+            time.reset();
+        } else {
+            if (time.hasTimePassed(delayReset)) {
+                final Rotation limitedRotation = RotationUtils.limitAngleChange(RotationUtils.serverRotation, new Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch), turnSpeed);
+                setTargetRotation(limitedRotation, 0);
+            } else {
+                setTargetRotation(rotation, 0);
+            }
+        }
     }
 
     /**

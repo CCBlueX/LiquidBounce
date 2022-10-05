@@ -58,6 +58,8 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
         return -1;
     }
 
+    public static int currentSlot = 0;
+
     public static boolean hasSpaceHotbar() {
         for (int i = 36; i < 45; i++) {
             final ItemStack stack = mc.thePlayer.inventory.getStackInSlot(i);

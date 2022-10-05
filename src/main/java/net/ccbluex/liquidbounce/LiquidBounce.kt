@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.special.AntiForge
 import net.ccbluex.liquidbounce.features.special.BungeeCordSpoof
 import net.ccbluex.liquidbounce.features.special.ClientRichPresence
+import net.ccbluex.liquidbounce.features.special.Manager
 import net.ccbluex.liquidbounce.file.FileManager
 
 import net.ccbluex.liquidbounce.script.ScriptManager
@@ -55,6 +56,7 @@ object LiquidBounce {
     lateinit var commandManager: CommandManager
     lateinit var eventManager: EventManager
     lateinit var fileManager: FileManager
+    private lateinit var manager: Manager
     lateinit var scriptManager: ScriptManager
 
     // HUD & ClickGUI
@@ -81,6 +83,9 @@ object LiquidBounce {
 
         // Crate event manager
         eventManager = EventManager()
+
+        // Create manager
+        manager = Manager()
 
         // Register listeners
         eventManager.registerListener(RotationUtils())
