@@ -301,11 +301,9 @@ object RotationManager : Listenable {
     }
 
     /**
-     * Checks if there has been a rotation change
+     * Checks if it should update the server-side rotations
      */
-    fun needsUpdate(original: Boolean): Boolean {
-        return rotationDifference(currentRotation ?: return original) != 0.0
-    }
+    fun shouldUpdate() = !deactivateManipulation
 
     /**
      * Calculate difference between the server rotation and your rotation
@@ -348,15 +346,15 @@ object RotationManager : Listenable {
             return@handler
         }
 
-        if (!deactivateManipulation) {
-            currentRotation?.let {
-                packet.yaw = it.yaw
-                packet.pitch = it.pitch
-            }
-        }
-
         // Update current rotation
         serverRotation = Rotation(packet.yaw, packet.pitch)
+
+        // serverRotation and currentRotation must always match post update
+        currentRotation?.let {
+            if (rotationDifference(it) != 0.0) {
+                serverRotation = it
+            }
+        }
     }
 
     val velocity = handler<PlayerVelocityStrafe> { event ->

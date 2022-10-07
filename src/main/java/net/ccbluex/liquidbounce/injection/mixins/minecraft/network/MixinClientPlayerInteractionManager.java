@@ -22,6 +22,9 @@ import net.ccbluex.liquidbounce.event.AttackEvent;
 import net.ccbluex.liquidbounce.event.BlockBreakingProgressEvent;
 import net.ccbluex.liquidbounce.event.CancelBlockBreakingEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoJumpDelay;
+import net.ccbluex.liquidbounce.utils.aiming.Rotation;
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.entity.Entity;
@@ -32,9 +35,11 @@ import net.minecraft.util.math.Direction;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 @Mixin(ClientPlayerInteractionManager.class)
 public class MixinClientPlayerInteractionManager {
@@ -42,8 +47,7 @@ public class MixinClientPlayerInteractionManager {
     /**
      * Hook attacking entity
      */
-    @Inject(method = "attackEntity", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;syncSelectedSlot()V", shift = At.Shift.AFTER))
+    @Inject(method = "attackEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;syncSelectedSlot()V", shift = At.Shift.AFTER))
     private void hookAttack(PlayerEntity player, Entity target, CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new AttackEvent(target));
     }
@@ -65,8 +69,7 @@ public class MixinClientPlayerInteractionManager {
         final CancelBlockBreakingEvent cancelEvent = new CancelBlockBreakingEvent();
         EventManager.INSTANCE.callEvent(cancelEvent);
 
-        if (cancelEvent.isCancelled())
-            callbackInfo.cancel();
+        if (cancelEvent.isCancelled()) callbackInfo.cancel();
     }
 
     /**
@@ -75,5 +78,22 @@ public class MixinClientPlayerInteractionManager {
     @Redirect(method = "syncSelectedSlot", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerInventory;selectedSlot:I"))
     private int hookCustomSelectedSlot(PlayerInventory instance) {
         return SilentHotbar.INSTANCE.getServersideSlot();
+    }
+
+    /**
+     * Hook rotation-type packet modification
+     * <p>
+     * Rotate according to modified rotation to avoid being detected by movement sensitive anti-cheats.
+     */
+    @ModifyArgs(method = "interactItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket$Full;<init>(DDDFFZ)V"))
+    private void hookFixRotation(Args args) {
+        RotationManager rotationManager = RotationManager.INSTANCE;
+        Rotation rotation = rotationManager.getCurrentRotation();
+        if (rotation == null || !rotationManager.shouldUpdate() || ModuleNoJumpDelay.INSTANCE.getEnabled()) {
+            return;
+        }
+
+        args.set(3, rotation.getYaw());
+        args.set(4, rotation.getPitch());
     }
 }

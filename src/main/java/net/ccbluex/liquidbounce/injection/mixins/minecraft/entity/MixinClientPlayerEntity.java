@@ -38,18 +38,15 @@ import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ClientPlayerEntity.class)
 public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
-
-    @Shadow
-    public float lastYaw;
-
-    @Shadow
-    public float lastPitch;
 
     @Shadow
     public Input input;
@@ -150,45 +147,26 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
 
     // Silent rotations (Rotation Manager)
 
-    private boolean updatedSilent;
-
-    /**
-     * Hook silent rotations update check
-     */
-    @ModifyVariable(method = "sendMovementPackets", at = @At("STORE"), ordinal = 3)
-    private boolean hookSilentRotationsCheck(boolean bl4) {
-        updatedSilent = RotationManager.INSTANCE.needsUpdate(bl4);
-        return updatedSilent;
-    }
-
-    /**
-     * Hook last server rotations update
-     */
-    @Inject(method = "sendMovementPackets", at = @At(value = "FIELD", target = "Lnet/minecraft/client/network/ClientPlayerEntity;lastPitch:F", ordinal = 1, shift = At.Shift.AFTER))
-    private void hookLastSilentRotations(CallbackInfo ci) {
-        if (updatedSilent) {
-            updatedSilent = false;
-
-            Rotation currRotation = RotationManager.INSTANCE.getCurrentRotation();
-            if (currRotation == null) {
-                return;
-            }
-
-            this.lastYaw = currRotation.getYaw();
-            this.lastPitch = currRotation.getPitch();
-        }
-    }
-
-    /**
-     * Hook silent rotations update
-     */
-    @Inject(method = "sendMovementPackets", at = @At(value = "FIELD", target = "Lnet/minecraft/client/network/ClientPlayerEntity;lastOnGround:Z", ordinal = 1, shift = At.Shift.BEFORE))
-    private void hookSilentRotationsUpdate(CallbackInfo ci) {
-        if (RotationManager.INSTANCE.getCurrentRotation() == null) {
-            return;
+    @Redirect(method = "sendMovementPackets", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getYaw()F"))
+    private float hookSilentRotationYaw(ClientPlayerEntity instance) {
+        RotationManager rotationManager = RotationManager.INSTANCE;
+        Rotation rotation = rotationManager.getCurrentRotation();
+        if (rotation == null || !rotationManager.shouldUpdate()) {
+            return instance.getYaw();
         }
 
-        RotationManager.INSTANCE.update();
+        return rotation.getYaw();
+    }
+
+    @Redirect(method = "sendMovementPackets", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getPitch()F"))
+    private float hookSilentRotationPitch(ClientPlayerEntity instance) {
+        RotationManager rotationManager = RotationManager.INSTANCE;
+        Rotation rotation = rotationManager.getCurrentRotation();
+        if (rotation == null || !rotationManager.shouldUpdate()) {
+            return instance.getPitch();
+        }
+
+        return rotation.getPitch();
     }
 
     @Inject(method = "isAutoJumpEnabled", cancellable = true, at = @At("HEAD"))
