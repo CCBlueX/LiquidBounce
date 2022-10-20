@@ -41,7 +41,8 @@ jobs:
           echo Version: $LB_VERSION, Minecraft: $MINECRAFT_VERSION
           cd build/libs
           export JAR=$(find . -regex '.*liquidbounce-[0-9|.]*\.jar')
-          cp $JAR liquidbounce.jar
-          zip -r liquidbounce.zip liquidbounce.jar ../../zip_include
+          cp $JAR zip/liquidbounce.jar
+          cd zip
+          zip -r liquidbounce.zip *
           md5sum liquidbounce.zip
           curl --connect-timeout 30 -m 300 -X POST -F "artifact=@liquidbounce.zip" -H "Authorization: ${{ secrets.NIGHTLY_PASS }}" -F "gh_id=${{ github.event.head_commit.id }}" -F "gh_ref=${{ github.ref }}" -F "gh_message=${{ github.event.head_commit.message }}" -F "gh_timestamp=${{ github.event.head_commit.timestamp }}" -F "lb_version=$LB_VERSION" -F "mc_version=$MINECRAFT_VERSION" -F "fabric_loader_version=$LOADER_VERSION" -F "fabric_api_version=$FABRICAPI_VERSION" -F "kotlin_version=$KOTLIN_VERSION" -F "fabric_kotlin_version=$FABRIC_KOTLIN_VERSION" https://api.liquidbounce.net/api/v1/version/new

@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.render.engine.memory.putVertex
 import net.ccbluex.liquidbounce.render.shaders.ColoredPrimitiveShader
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
+import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity
 import java.awt.Color
@@ -51,7 +52,7 @@ object ModuleTraces : Module("Traces", Category.RENDER) {
             DistanceColor, StaticColor, RainbowColor
         )
     )
-
+    
     private object DistanceColor : Choice("Distance") {
 
         override val parent: ChoiceConfigurable
@@ -75,6 +76,8 @@ object ModuleTraces : Module("Traces", Category.RENDER) {
     }
 
     val renderHandler = handler<EngineRenderEvent> { event ->
+        val player = mc.player ?: return@handler
+
         val useDistanceColor = DistanceColor.isActive
 
         val baseColor = when {
@@ -87,7 +90,6 @@ object ModuleTraces : Module("Traces", Category.RENDER) {
             (if (DistanceColor.useViewDistance) mc.options.viewDistance.toFloat() else DistanceColor.customViewDistance) * 16 * sqrt(
                 2.0
             )
-        val player = mc.player!!
         val filteredEntities = world.entities.filter(this::shouldRenderTrace)
         val camera = mc.gameRenderer.camera
 
@@ -116,16 +118,14 @@ object ModuleTraces : Module("Traces", Category.RENDER) {
             } else if (entity is PlayerEntity && FriendManager.isFriend(entity.gameProfile.name)) {
                 Color4b(0, 0, 255)
             } else {
-                baseColor!!
+                baseColor ?: return@handler
             }
 
-            val x = (entity.lastRenderX + (entity.x - entity.lastRenderX) * event.tickDelta)
-            val y = (entity.lastRenderY + (entity.y - entity.lastRenderY) * event.tickDelta)
-            val z = (entity.lastRenderZ + (entity.z - entity.lastRenderZ) * event.tickDelta)
+            val pos = entity.interpolateCurrentPosition(event.tickDelta)
 
             val v0 = vertexFormat.putVertex { this.position = eyeVector; this.color = color }
-            val v1 = vertexFormat.putVertex { this.position = Vec3(x, y, z); this.color = color }
-            val v2 = vertexFormat.putVertex { this.position = Vec3(x, y + entity.height, z); this.color = color }
+            val v1 = vertexFormat.putVertex { this.position = pos; this.color = color }
+            val v2 = vertexFormat.putVertex { this.position = pos.add(Vec3(0f, entity.height, 0f)); this.color = color }
 
             indexBuffer.index(v0)
             indexBuffer.index(v1)
