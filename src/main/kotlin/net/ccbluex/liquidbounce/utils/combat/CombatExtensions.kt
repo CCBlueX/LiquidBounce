@@ -39,19 +39,19 @@ val globalEnemyConfigurable = EnemyConfigurable()
  */
 class EnemyConfigurable : Configurable("Enemies") {
 
-    // Players should be considered as a enemy
+    // Players should be considered as an enemy
     val players by boolean("Players", true)
 
-    // Hostile mobs (like skeletons and zombies) should be considered as a enemy
+    // Hostile mobs (like skeletons and zombies) should be considered as an enemy
     val mobs by boolean("Mobs", true)
 
-    // Animals (like cows, pigs and so on) should be considered as a enemy
+    // Animals (like cows, pigs and so on) should be considered as an enemy
     val animals by boolean("Animals", false)
 
-    // Invisible entities should be also considered as a enemy
+    // Invisible entities should be also considered as an enemy
     var invisible by boolean("Invisible", true)
 
-    // Dead entities should be also considered as a enemy to bypass modern anti cheat techniques
+    // Dead entities should be also considered as an enemy to bypass modern anti cheat techniques
     var dead by boolean("Dead", false)
 
     // Friends (client friends - other players) should be also considered as enemy
@@ -65,7 +65,7 @@ class EnemyConfigurable : Configurable("Enemies") {
     }
 
     /**
-     * Check if entity is considered a enemy
+     * Check if entity is considered an enemy
      */
     fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean {
         // Check if enemy is living and not dead (or ignore being dead)
@@ -78,7 +78,7 @@ class EnemyConfigurable : Configurable("Enemies") {
 
                 // Check if enemy is a player and should be considered as enemy
                 if (suspect is PlayerEntity && suspect != mc.player) {
-                    if (attackable && !friends && FriendManager.isFriend(suspect.toString())) {
+                    if (attackable && !friends && FriendManager.isFriend(suspect.gameProfile.name)) {
                         return false
                     }
 
@@ -114,6 +114,6 @@ fun Entity.shouldBeAttacked(enemyConf: EnemyConfigurable = globalEnemyConfigurab
  * Find the best emeny in current world in a specific range.
  */
 fun ClientWorld.findEnemy(
-    range: Float, player: Entity = mc.player!!, enemyConf: EnemyConfigurable = globalEnemyConfigurable
+    range: Float, player: Entity = mc.player!!, enemyConf: EnemyConfigurable = globalEnemyConfigurable,
 ) = entities.filter { it.shouldBeAttacked(enemyConf) }.map { Pair(it, it.boxedDistanceTo(player)) }
     .filter { (_, distance) -> distance <= range }.minByOrNull { (_, distance) -> distance }

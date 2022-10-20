@@ -89,12 +89,7 @@ object ModuleESP : Module("ESP", Category.RENDER) {
                 val d = dimensions.width.toDouble() / 2.0
 
                 Box(
-                    -d,
-                    0.0,
-                    -d,
-                    d,
-                    dimensions.height.toDouble(),
-                    d
+                    -d, 0.0, -d, d, dimensions.height.toDouble(), d
                 )
             }
 
@@ -121,8 +116,14 @@ object ModuleESP : Module("ESP", Category.RENDER) {
                     outlineInstanceBuffer.putVertex { this.position = pos; this.color = outlineColor }
                 }
 
-                RenderEngine.enqueueForRendering(RenderEngine.CAMERA_VIEW_LAYER_WITHOUT_BOBBING, espBoxInstancedRenderTask(instanceBuffer, box.first, box.second))
-                RenderEngine.enqueueForRendering(RenderEngine.CAMERA_VIEW_LAYER_WITHOUT_BOBBING, espBoxInstancedOutlineRenderTask(outlineInstanceBuffer, boxOutline.first, boxOutline.second))
+                RenderEngine.enqueueForRendering(
+                    RenderEngine.CAMERA_VIEW_LAYER_WITHOUT_BOBBING,
+                    espBoxInstancedRenderTask(instanceBuffer, box.first, box.second)
+                )
+                RenderEngine.enqueueForRendering(
+                    RenderEngine.CAMERA_VIEW_LAYER_WITHOUT_BOBBING,
+                    espBoxInstancedOutlineRenderTask(outlineInstanceBuffer, boxOutline.first, boxOutline.second)
+                )
             }
         }
 
@@ -145,7 +146,7 @@ object ModuleESP : Module("ESP", Category.RENDER) {
                 if (entity.hurtTime > 0) {
                     return Color4b(255, 0, 0)
                 }
-                if (entity is PlayerEntity && FriendManager.isFriend(entity.toString())) {
+                if (entity is PlayerEntity && FriendManager.isFriend(entity.gameProfile.name)) {
                     return Color4b(0, 0, 255)
                 }
 
