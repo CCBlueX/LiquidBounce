@@ -77,11 +77,11 @@ abstract class MinecraftFramebufferShader(private val shaderName: String) {
 
             mc.worldRenderer.entityOutlinesFramebuffer = framebuffer
 
-            vertexConsumerProvider!!.draw()
+            vertexConsumerProvider?.draw()
 
             mc.worldRenderer.entityOutlinesFramebuffer = originalFramebuffer
 
-            shaderEffect!!.render(tickDelta)
+            shaderEffect?.render(tickDelta)
         }
 
         mc.framebuffer.beginWrite(false)
