@@ -16,21 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+package net.ccbluex.liquidbounce.features.module.modules.player
 
-package net.ccbluex.liquidbounce.render.shaders
+import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.MinecraftFramebufferShader
-
-object OutlineShader : MinecraftFramebufferShader("outline_shader") {
-
-    fun begin(width: Float) {
-        this.setUniform1f("radius", width)
-        this.beginInternal()
-    }
-
-    fun setColor(color: Color4b) {
-        this.vertexConsumerProvider?.setColor(color.r, color.g, color.b, color.a)
-    }
-
-}
+/**
+ * NoRotateSet module.
+ *
+ * Prevents the server from rotating your head.
+ */
+object ModuleNoRotateSet : Module("NoRotateSet", Category.PLAYER)

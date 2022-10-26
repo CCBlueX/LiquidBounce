@@ -52,6 +52,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.GameMode
+import kotlin.math.sqrt
 import kotlin.random.Random
 
 /**
@@ -171,17 +172,13 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         if (target.boxedDistanceTo(player) <= range && facingEnemy(target, range.toDouble(), rotation)) {
             // Check if between enemy and player is another entity
-            val raycastedEntity = raytraceEntity(
-                range.toDouble(),
-                rotation,
-                filter = {
-                    when (raycast) {
-                        TRACE_NONE -> false
-                        TRACE_ONLYENEMY -> it.shouldBeAttacked()
-                        TRACE_ALL -> true
-                    }
+            val raycastedEntity = raytraceEntity(range.toDouble(), rotation, filter = {
+                when (raycast) {
+                    TRACE_NONE -> false
+                    TRACE_ONLYENEMY -> it.shouldBeAttacked()
+                    TRACE_ALL -> true
                 }
-            ) ?: target
+            }) ?: target
 
             // Swap enemy if there is a better enemy
             // todo: compare current target to locked target
@@ -191,8 +188,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
             // Attack enemy according to cps and cooldown
             val clicks = cpsTimer.clicks(condition = {
-                !cooldown || (player.getAttackCooldownProgress(0.0f) >= 1.0f && (!ModuleCriticals.shouldWaitForCrit() || raycastedEntity.velocity.lengthSquared() > 0.25 * 0.25))
-                    && (attackShielding || raycastedEntity !is PlayerEntity || player.mainHandStack.item is AxeItem || !raycastedEntity.wouldBlockHit(player))
+                (!cooldown || player.getAttackCooldownProgress(0.0f) >= 1.0f) && (!ModuleCriticals.shouldWaitForCrit() || raycastedEntity.velocity.lengthSquared() > 0.25 * 0.25) && (attackShielding || raycastedEntity !is PlayerEntity || player.mainHandStack.item !is AxeItem || !raycastedEntity.wouldBlockHit(
+                    player
+                ))
             }, cps)
 
             repeat(clicks) {
@@ -206,9 +204,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 if (blocking) {
                     network.sendPacket(
                         PlayerActionC2SPacket(
-                            PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
-                            BlockPos.ORIGIN,
-                            Direction.DOWN
+                            PlayerActionC2SPacket.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.DOWN
                         )
                     )
 
@@ -275,31 +271,24 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             val predictedTicks = predict.start + (predict.endInclusive - predict.start) * Math.random()
 
             val targetPrediction = Vec3d(
-                target.x - target.prevX,
-                target.y - target.prevY,
-                target.z - target.prevZ
+                target.x - target.prevX, target.y - target.prevY, target.z - target.prevZ
             ).multiply(predictedTicks)
 
             val playerPrediction = Vec3d(
-                player.x - player.prevX,
-                player.y - player.prevY,
-                player.z - player.prevZ
+                player.x - player.prevX, player.y - player.prevY, player.z - player.prevZ
             ).multiply(predictedTicks)
 
             val box = target.boundingBox.offset(targetPrediction)
 
             // find best spot (and skip if no spot was found)
             val (rotation, _) = RotationManager.raytraceBox(
-                eyes.add(playerPrediction),
-                box,
-                range = scanRange,
-                wallsRange = wallRange.toDouble()
+                eyes.add(playerPrediction), box, range = sqrt(scanRange), wallsRange = wallRange.toDouble()
             ) ?: continue
 
             // lock on target tracker
             targetTracker.lock(target)
 
-            // aim on target
+            // aim at target
             RotationManager.aimAt(rotation, configurable = rotations)
             break
         }
@@ -351,8 +340,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     }
 
     enum class RaycastMode(override val choiceName: String) : NamedChoice {
-        TRACE_NONE("None"),
-        TRACE_ONLYENEMY("Enemy"), TRACE_ALL("All")
+        TRACE_NONE("None"), TRACE_ONLYENEMY("Enemy"), TRACE_ALL("All")
     }
 
 }
