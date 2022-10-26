@@ -49,7 +49,7 @@ class LongJump : Module() {
                 return
             }
             run {
-                when (mode.toLowerCase()) {
+                when (mode.lowercase()) {
                     "ncp" -> {
                         MovementUtils.strafe(MovementUtils.speed * if (canBoost) ncpBoostValue.get() else 1f)
                         canBoost = false
@@ -136,7 +136,7 @@ class LongJump : Module() {
         teleported = false
 
         if (state) {
-            when (modeValue.get().toLowerCase()) {
+            when (modeValue.get().lowercase()) {
                 "mineplex" -> event.motion = event.motion * 4.08f
                 "mineplex2" -> {
                     if (mc.thePlayer!!.isCollidedHorizontally) {

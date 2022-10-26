@@ -27,7 +27,7 @@ class SlimeJump : Module() {
         if (mc.thePlayer != null && mc.theWorld != null && getBlock(thePlayer.position.down()) is BlockSlime) {
             event.cancelEvent()
 
-            when (modeValue.get().toLowerCase()) {
+            when (modeValue.get().lowercase()) {
                 "set" -> thePlayer.motionY = motionValue.get().toDouble()
                 "add" -> thePlayer.motionY += motionValue.get()
             }

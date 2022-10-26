@@ -49,7 +49,7 @@ class Criticals : Module() {
             val y = thePlayer.posY
             val z = thePlayer.posZ
 
-            when (modeValue.get().toLowerCase()) {
+            when (modeValue.get().lowercase()) {
                 "packet" -> {
                     mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y + 0.0625, z, true))
                     mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y, z, false))

@@ -60,7 +60,7 @@ class Tracers : Module() {
 
                 if (dist > 255) dist = 255
 
-                val colorMode = colorMode.get().toLowerCase()
+                val colorMode = colorMode.get().lowercase()
                 val color = when {
                     entity is EntityPlayer && entity.isClientFriend() -> Color(0, 0, 255, 150)
                     colorMode == "custom" -> Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), 150)

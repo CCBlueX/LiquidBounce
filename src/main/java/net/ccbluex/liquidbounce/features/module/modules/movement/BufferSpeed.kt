@@ -101,7 +101,7 @@ class BufferSpeed : Module() {
                 return
             }
             if (slabsValue.get() && getBlock(blockPos) is BlockSlab) {
-                when (slabsModeValue.get().toLowerCase()) {
+                when (slabsModeValue.get().lowercase()) {
                     "old" -> {
                         boost(slabsBoostValue.get())
                         return
@@ -125,7 +125,7 @@ class BufferSpeed : Module() {
                 }
             }
             if (stairsValue.get() && (getBlock(blockPos.down()) is BlockStairs || getBlock(blockPos) is BlockStairs)) {
-                when (stairsModeValue.get().toLowerCase()) {
+                when (stairsModeValue.get().lowercase()) {
                     "old" -> {
                         boost(stairsBoostValue.get())
                         return
@@ -171,7 +171,7 @@ class BufferSpeed : Module() {
             }
 
             if (wallValue.get()) {
-                when (wallModeValue.get().toLowerCase()) {
+                when (wallModeValue.get().lowercase()) {
                     "old" -> if (thePlayer.isCollidedVertically && isNearBlock || getBlock(BlockPos(thePlayer.posX, thePlayer.posY + 2.0, thePlayer.posZ)) != Blocks.air) {
                         boost(wallBoostValue.get())
                         return

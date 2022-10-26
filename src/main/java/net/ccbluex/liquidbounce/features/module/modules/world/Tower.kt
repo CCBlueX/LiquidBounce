@@ -183,7 +183,7 @@ class Tower : Module() {
     private fun move() {
         val thePlayer = mc.thePlayer ?: return
 
-        when (modeValue.get().toLowerCase()) {
+        when (modeValue.get().lowercase()) {
             "jump" -> if (thePlayer.onGround && timer.hasTimePassed(jumpDelayValue.get())) {
                 fakeJump()
                 thePlayer.motionY = jumpMotionValue.get().toDouble()

@@ -84,7 +84,7 @@ class BlockESP : Module() {
         synchronized(posList) {
             val color = if (colorRainbow.get()) rainbow() else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
             for (blockPos in posList) {
-                when (modeValue.get().toLowerCase()) {
+                when (modeValue.get().lowercase()) {
                     "box" -> RenderUtils.drawBlockBox(blockPos, color, true)
                     "2d" -> RenderUtils.draw2D(blockPos, color.rgb, Color.BLACK.rgb)
                 }

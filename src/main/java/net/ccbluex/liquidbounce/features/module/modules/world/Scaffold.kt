@@ -264,13 +264,13 @@ class Scaffold : Module() {
             }
         }
         if (player.onGround) {
-            when (modeValue.get().toLowerCase()) {
+            when (modeValue.get().lowercase()) {
                 "rewinside" -> {
                     MovementUtils.strafe(0.2F)
                     player.motionY = 0.0
                 }
             }
-            when (zitterMode.get().toLowerCase()) {
+            when (zitterMode.get().lowercase()) {
                 "off" -> {
                     return
                 }
@@ -461,7 +461,7 @@ class Scaffold : Module() {
                 return
             }
 
-            when (autoBlockValue.get().toLowerCase()) {
+            when (autoBlockValue.get().lowercase()) {
                 "off" -> {
                     return
                 }
