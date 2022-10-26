@@ -72,44 +72,31 @@ dependencies {
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 
     // MultiConnect API
-    modImplementation ("net.earthcomputer.multiconnect:multiconnect-api:${project.multiconnect_version}") {
-        transitive = false
-    }
+    modImplementation ("net.earthcomputer.multiconnect:multiconnect-api:${project.multiconnect_version}") { transitive = false }
 
     /*
         Recommended mods (on IDE)
      */
-    // MultiConnect does not support 1.18.2 yet
-    // modRuntimeOnly ("net.earthcomputer.multiconnect:multiconnect:${project.multiconnect_version}") {
-    //    transitive = false
-    //}
-
-    // Mod Menu
+    // modRuntimeOnly ("net.earthcomputer.multiconnect:multiconnect:${project.multiconnect_version}") { transitive = false }
     modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
-
-    // CaffeineMC optimization mods
-    modRuntime "com.github.CaffeineMC:sodium-fabric:${project.sodium_version}"
-    modRuntimeOnly "com.github.CaffeineMC:lithium-fabric:${project.lithium_version}"
+    // modRuntime "com.github.CaffeineMC:sodium-fabric:${project.sodium_version}"
+    // modRuntimeOnly "com.github.CaffeineMC:lithium-fabric:${project.lithium_version}"
     // modRuntime "com.github.CaffeineMC:phosphor-fabric:${project.phosphor_version}"
 
     // Baritone
 //    modRuntime ("com.github.CCBlueX:baritone:${project.minecraft_version}-SNAPSHOT") {
 //        exclude group: "org.ow2.asm", module: "asm-debug-all"
-//
 //        exclude group: "org.lwjgl.lwjgl", module: "lwjgl"
 //        exclude group: "org.lwjgl.lwjgl", module: "lwjgl-platform"
-//
 //        exclude group: "net.java.jinput", module: "jinput"
 //        exclude group: "net.java.jinput", module: "jinput-platform"
-//
 //        exclude group: "net.sf.jopt-simple", module: "jopt-simple"
 //    }
 
-    // Ignore in export
-    implementation "com.google.code.findbugs:jsr305:3.0.2" // to fix nullable imports
+    // fix nullable imports
+    implementation "com.google.code.findbugs:jsr305:3.0.2"
 
     // Client libraries
-
     implementation ('com.thealtening.api:api:4.1.0') {
         exclude group: 'com.google.code.gson', module: 'gson'
     }
@@ -155,18 +142,16 @@ tasks.withType(Test) {
     useJUnitPlatform()
 }
 
-// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-// if it is present.
-// If you remove this task, sources will not be generated.
-task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = "sources"
-    from sourceSets.main.allSource
+java {
+    // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
+    // if it is present.
+    // If you remove this line, sources will not be generated.
+    withSourcesJar()
 }
 
 compileKotlin {
     kotlinOptions {
         suppressWarnings = true
-        useIR = true
         jvmTarget = 17
     }
 }
@@ -182,7 +167,7 @@ shadowJar {
         include(dependency('com.labymedia:ultralight-java-databind'))
         include(dependency('com.labymedia:ultralight-java-gpu'))
         include(dependency('com.thealtening.api:api'))
-        include(dependency('me.liuli:Elixir'))
+        include(dependency('com.github.CCBlueX:Elixir'))
         include(project(":theme"))
     }
 }
@@ -193,7 +178,6 @@ jar {
 
 task remapShadow(type: RemapJarTask, dependsOn: shadowJar) {
     setInput(shadowJar.archiveFile)
-    remapAccessWidener.set(true)
     addNestedDependencies.set(remapJar.addNestedDependencies)
 }
 
