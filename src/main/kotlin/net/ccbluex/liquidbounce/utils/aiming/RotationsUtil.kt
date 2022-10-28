@@ -285,6 +285,13 @@ object RotationManager : Listenable {
                 ticksUntilReset = -1
 
                 targetRotation = null
+                currentRotation?.let { rotation ->
+                    mc.player?.let { player ->
+                        player.yaw = rotation.yaw + angleDifference(player.yaw, rotation.yaw)
+                        player.renderYaw = player.yaw
+                        player.lastRenderYaw = player.yaw
+                    }
+                }
                 currentRotation = null
                 return
             }
@@ -334,7 +341,7 @@ object RotationManager : Listenable {
     /**
      * Calculate difference between two angle points
      */
-    private fun angleDifference(a: Float, b: Float) = ((a - b) % 360f + 540f) % 360f - 180f
+    private fun angleDifference(a: Float, b: Float) = MathHelper.wrapDegrees(a - b)
 
     /**
      * Modify server-side rotations
