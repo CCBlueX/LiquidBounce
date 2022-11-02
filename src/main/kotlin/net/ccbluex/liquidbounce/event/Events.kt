@@ -174,7 +174,7 @@ class PlayerStepEvent(var height: Float) : Event()
 // Network events
 
 @Nameable("packet")
-class PacketEvent(val origin: TransferOrigin, val packet: Packet<*>) : CancellableEvent()
+class PacketEvent(val origin: TransferOrigin, val packet: Packet<*>, val normal: Boolean = true) : CancellableEvent()
 
 enum class TransferOrigin {
     SEND, RECEIVE

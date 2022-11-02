@@ -18,12 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import kotlinx.coroutines.delay
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.PacketEvent
-import net.ccbluex.liquidbounce.event.PlayerMoveEvent
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.entity.directionYaw
@@ -31,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
+import net.minecraft.world.explosion.Explosion
 
 /**
  * Velocity module
@@ -42,10 +42,38 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     val modes = choices("Mode", Modify) {
         arrayOf(
-            Modify,
-            Push,
-            Strafe
+            Modify, Push, Strafe
         )
+    }
+
+    object Delayed : ToggleableConfigurable(this, "Delayed", false) {
+        val ticks by intRange("Ticks", 3..6, 0..40)
+    }
+
+    init {
+        tree(Delayed)
+    }
+
+    val packetHandler = sequenceHandler<PacketEvent>(priority = 1) {
+        val packet = it.packet
+
+        if ((packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket) && it.normal && Delayed.enabled) {
+            it.cancelEvent()
+
+            delay(Delayed.ticks.random() * 50L)
+
+            val packetEvent = PacketEvent(TransferOrigin.RECEIVE, packet, false)
+            EventManager.callEvent(packetEvent)
+
+            if (!packetEvent.isCancelled) {
+                if (packet is EntityVelocityUpdateS2CPacket) {
+                    recreateEntityVelocityUpdate(packet)
+                } else {
+                    recreateExplosion(packet as ExplosionS2CPacket)
+                }
+            }
+
+        }
     }
 
     /**
@@ -155,6 +183,27 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
             }
         }
 
+    }
+
+    private fun recreateEntityVelocityUpdate(packet: EntityVelocityUpdateS2CPacket) {
+        val entity = world.getEntityById(packet.id) ?: return
+
+        entity.setVelocityClient(
+            packet.velocityX.toDouble() / 8000.0,
+            packet.velocityY.toDouble() / 8000.0,
+            packet.velocityZ.toDouble() / 8000.0
+        )
+    }
+
+    private fun recreateExplosion(packet: ExplosionS2CPacket) {
+        val player = mc.player ?: return
+        val world = mc.world ?: return
+
+        val explosion = Explosion(world, null, packet.x, packet.y, packet.z, packet.radius, packet.affectedBlocks)
+        explosion.affectWorld(true)
+        player.velocity = player.velocity.add(
+            packet.playerVelocityX.toDouble(), packet.playerVelocityY.toDouble(), packet.playerVelocityZ.toDouble()
+        )
     }
 
 }
