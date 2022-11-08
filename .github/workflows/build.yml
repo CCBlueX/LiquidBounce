@@ -23,12 +23,13 @@ jobs:
     
       - name: Grant ALL permissions to theme
         run: sudo chmod -R 777 theme
-        
-      - name: Setup Gradle
-        uses: gradle/gradle-build-action@v2
       
-      - name: Execute Gradle build
-        run: ./gradlew genSources build
+      - name: Setup and build
+        uses: gradle/gradle-build-action@v2
+        env:
+          CI: true
+        with:
+          arguments: genSources build
 
       - name: Upload artifact
         run: |
