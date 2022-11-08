@@ -72,7 +72,7 @@ class Velocity : Module() {
         if (thePlayer.isInWater || thePlayer.isInLava || thePlayer.isInWeb)
             return
 
-        when (modeValue.get().toLowerCase()) {
+        when (modeValue.get().lowercase()) {
             "jump" -> if (thePlayer.hurtTime > 0 && thePlayer.onGround) {
                 thePlayer.motionY = 0.42
 

@@ -254,7 +254,7 @@ object Fucker : Module() {
     private fun isHitable(blockPos: BlockPos): Boolean {
         val thePlayer = mc.thePlayer ?: return false
 
-        return when (throughWallsValue.get().toLowerCase()) {
+        return when (throughWallsValue.get().lowercase()) {
             "raycast" -> {
                 val eyesPos = Vec3(thePlayer.posX, thePlayer.entityBoundingBox.minY +
                         thePlayer.eyeHeight, thePlayer.posZ)

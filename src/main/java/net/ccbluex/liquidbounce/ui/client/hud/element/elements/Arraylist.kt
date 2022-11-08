@@ -84,7 +84,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
             else module.tagName
 
             if (upperCaseValue.get())
-                displayString = displayString.toUpperCase()
+                displayString = displayString.uppercase()
 
             val width = fontRenderer.getStringWidth(displayString)
 
@@ -130,7 +130,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                     else module.tagName
 
                     if (upperCaseValue.get())
-                        displayString = displayString.toUpperCase()
+                        displayString = displayString.uppercase()
 
                     val xPos = -module.slide - 2
                     val yPos = (if (side.vertical == Vertical.DOWN) -textSpacer else textSpacer) *
@@ -193,7 +193,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                     else module.tagName
 
                     if (upperCaseValue.get())
-                        displayString = displayString.toUpperCase()
+                        displayString = displayString.uppercase()
 
                     val width = fontRenderer.getStringWidth(displayString)
                     val xPos = -(width - module.slide) + if (rectMode.equals("left", true)) 5 else 2
@@ -286,6 +286,6 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
     override fun updateElement() {
         modules = LiquidBounce.moduleManager.modules
                 .filter { it.array && it.slide > 0 }
-                .sortedBy { -fontValue.get().getStringWidth(if (upperCaseValue.get()) (if (!tags.get()) it.name else if (tagsArrayColor.get()) it.colorlessTagName else it.tagName).toUpperCase() else if (!tags.get()) it.name else if (tagsArrayColor.get()) it.colorlessTagName else it.tagName) }
+                .sortedBy { -fontValue.get().getStringWidth(if (upperCaseValue.get()) (if (!tags.get()) it.name else if (tagsArrayColor.get()) it.colorlessTagName else it.tagName).uppercase() else if (!tags.get()) it.name else if (tagsArrayColor.get()) it.colorlessTagName else it.tagName) }
     }
 }

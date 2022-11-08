@@ -74,7 +74,7 @@ class StorageESP : Module() {
                         continue
                     }
                 }
-                when (mode.toLowerCase()) {
+                when (mode.lowercase()) {
                     "otherbox", "box" -> RenderUtils.drawBlockBox(tileEntity.pos, color, !mode.equals("otherbox", ignoreCase = true))
                     "2d" -> RenderUtils.draw2D(tileEntity.pos, color.rgb, Color.BLACK.rgb)
                     "outline" -> {
@@ -111,7 +111,7 @@ class StorageESP : Module() {
             }
             for (entity in mc.theWorld!!.loadedEntityList) {
                 if (entity is EntityMinecartChest) {
-                    when (mode.toLowerCase()) {
+                    when (mode.lowercase()) {
                         "otherbox", "box" -> RenderUtils.drawEntityBox(entity, Color(0, 66, 255), !mode.equals("otherbox", ignoreCase = true))
                         "2d" -> RenderUtils.draw2D(entity.position, Color(0, 66, 255).rgb, Color.BLACK.rgb)
                         "outline" -> {

@@ -42,7 +42,7 @@ class ItemESP : Module() {
         val color=getColor()
         for (entity in mc.theWorld!!.loadedEntityList) {
             if (!(entity is EntityItem || entity is EntityArrow)) continue
-            when (modeValue.get().toLowerCase()) {
+            when (modeValue.get().lowercase()) {
                 "box" -> RenderUtils.drawEntityBox(entity, color, true)
                 "otherbox" -> RenderUtils.drawEntityBox(entity, color, false)
             }

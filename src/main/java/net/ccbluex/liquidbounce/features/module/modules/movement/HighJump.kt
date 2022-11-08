@@ -33,7 +33,7 @@ class HighJump : Module() {
         if (glassValue.get() && getBlock(BlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)) !is BlockPane)
             return
 
-        when (modeValue.get().toLowerCase()) {
+        when (modeValue.get().lowercase()) {
             "damage" -> if (thePlayer.hurtTime > 0 && thePlayer.onGround) thePlayer.motionY += 0.42f * heightValue.get()
             "aacv3" -> if (!thePlayer.onGround) thePlayer.motionY += 0.059
             "dac" -> if (!thePlayer.onGround) thePlayer.motionY += 0.049999
@@ -48,7 +48,7 @@ class HighJump : Module() {
         if (glassValue.get() && getBlock(BlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)) !is BlockPane)
             return
         if (!thePlayer.onGround) {
-            if ("mineplex" == modeValue.get().toLowerCase()) {
+            if ("mineplex" == modeValue.get().lowercase()) {
                 thePlayer.motionY += if (thePlayer.fallDistance == 0.0f) 0.0499 else 0.05
             }
         }
@@ -60,7 +60,7 @@ class HighJump : Module() {
 
         if (glassValue.get() && getBlock(BlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)) !is BlockPane)
             return
-        when (modeValue.get().toLowerCase()) {
+        when (modeValue.get().lowercase()) {
             "vanilla" -> event.motion = event.motion * heightValue.get()
             "mineplex" -> event.motion = 0.47f
         }

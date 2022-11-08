@@ -59,7 +59,7 @@ class AutoPot : Module() {
 
                 if (thePlayer.health <= healthValue.get() && potionInHotbar != -1) {
                     if (thePlayer.onGround) {
-                        when (modeValue.get().toLowerCase()) {
+                        when (modeValue.get().lowercase()) {
                             "jump" -> thePlayer.jump()
                             "port" -> thePlayer.moveEntity(0.0, 0.42, 0.0)
                         }

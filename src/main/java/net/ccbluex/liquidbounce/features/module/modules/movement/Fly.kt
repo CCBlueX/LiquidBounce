@@ -133,7 +133,7 @@ class Fly : Module() {
         val mode = modeValue.get()
 
         run {
-            when (mode.toLowerCase()) {
+            when (mode.lowercase()) {
                 "ncp" -> {
                     if (!thePlayer.onGround) return@run
 
@@ -261,7 +261,7 @@ class Fly : Module() {
 
         val mode = modeValue.get()
 
-        if (!mode.toUpperCase().startsWith("AAC") && !mode.equals(
+        if (!mode.uppercase().startsWith("AAC") && !mode.equals(
                 "Hypixel", ignoreCase = true
             ) && !mode.equals("CubeCraft", ignoreCase = true)
         ) {
@@ -284,7 +284,7 @@ class Fly : Module() {
         val thePlayer = mc.thePlayer!!
 
         run {
-            when (modeValue.get().toLowerCase()) {
+            when (modeValue.get().lowercase()) {
                 "vanilla" -> {
                     thePlayer.capabilities.isFlying = false
                     thePlayer.motionY = 0.0
@@ -689,7 +689,7 @@ class Fly : Module() {
         RenderUtils.drawPlatform(
             y, if (mc.thePlayer!!.entityBoundingBox.maxY < y) Color(0, 255, 0, 90) else Color(255, 0, 0, 90), 1.0
         )
-        when (mode.toLowerCase()) {
+        when (mode.lowercase()) {
             "aac1.9.10" -> RenderUtils.drawPlatform(startY + aacJump, Color(0, 0, 255, 90), 1.0)
             "aac3.3.12" -> RenderUtils.drawPlatform(-70.0, Color(0, 0, 255, 90), 1.0)
         }
@@ -726,7 +726,7 @@ class Fly : Module() {
 
     @EventTarget
     fun onMove(event: MoveEvent) {
-        when (modeValue.get().toLowerCase()) {
+        when (modeValue.get().lowercase()) {
             "cubecraft" -> {
                 val yaw = Math.toRadians(mc.thePlayer!!.rotationYaw.toDouble())
                 if (cubecraftTeleportTickTimer.hasTimePassed(2)) {

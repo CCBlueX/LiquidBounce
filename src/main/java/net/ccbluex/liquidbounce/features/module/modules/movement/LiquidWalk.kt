@@ -36,7 +36,7 @@ class LiquidWalk : Module() {
 
         if (thePlayer == null || thePlayer.isSneaking) return
 
-        when (modeValue.get().toLowerCase()) {
+        when (modeValue.get().lowercase()) {
             "ncp", "vanilla" -> if (collideBlock(thePlayer.entityBoundingBox) { it is BlockLiquid } && thePlayer.isInsideOfMaterial(Material.air) && !thePlayer.isSneaking) thePlayer.motionY = 0.08
             "aac" -> {
                 val blockPos = thePlayer.position.down()
@@ -88,7 +88,7 @@ class LiquidWalk : Module() {
 
     @EventTarget
     fun onMove(event: MoveEvent) {
-        if ("aacfly" == modeValue.get().toLowerCase() && mc.thePlayer!!.isInWater) {
+        if ("aacfly" == modeValue.get().lowercase() && mc.thePlayer!!.isInWater) {
             event.y = aacFlyValue.get().toDouble()
             mc.thePlayer!!.motionY = aacFlyValue.get().toDouble()
         }
@@ -100,7 +100,7 @@ class LiquidWalk : Module() {
             return
 
         if (event.block is BlockLiquid && !collideBlock(mc.thePlayer!!.entityBoundingBox) { it is BlockLiquid } && !mc.thePlayer!!.isSneaking) {
-            when (modeValue.get().toLowerCase()) {
+            when (modeValue.get().lowercase()) {
                 "ncp", "vanilla" -> event.boundingBox = AxisAlignedBB.fromBounds(event.x.toDouble(), event.y.toDouble(), event.z.toDouble(), event.x + 1.toDouble(), event.y + 1.toDouble(), event.z + 1.toDouble())
             }
         }

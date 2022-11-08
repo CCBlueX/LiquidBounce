@@ -31,7 +31,7 @@ class KeepAlive : Module() {
         if (thePlayer.isDead || thePlayer.health <= 0) {
             if (runOnce) return
 
-            when (modeValue.get().toLowerCase()) {
+            when (modeValue.get().lowercase()) {
                 "/heal" -> thePlayer.sendChatMessage("/heal")
                 "soup" -> {
                     val soupInHotbar = InventoryUtils.findItem(36, 45, Items.mushroom_stew)
