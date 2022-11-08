@@ -36,7 +36,7 @@ LiquidBounce uses Gradle, to make sure that it is installed properly you can che
 1. Clone the repository using `git clone --recurse-submodules https://github.com/CCBlueX/LiquidBounce`. 
 2. CD into the local repository.
 3. Run `gradlew genSources`.
-4. Open the folder as a Gradle project in your preferred IDE.
+4. Open the folder as a **Gradle project** in your preferred IDE.
 5. Run the client.
 
 ## Additional libraries
