@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.PlayerStepEvent;
 import net.ccbluex.liquidbounce.event.PlayerVelocityStrafe;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleNoPitchLimit;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.fluid.Fluid;
@@ -41,6 +42,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class MixinEntity {
 
     @Shadow
+    public boolean velocityDirty;
+
+    @Shadow
+    public static Vec3d movementInputToVelocity(Vec3d movementInput, float speed, float yaw) {
+        return null;
+    }
+
+    @Shadow
     public abstract Vec3d getVelocity();
 
     @Shadow
@@ -50,15 +59,7 @@ public abstract class MixinEntity {
     public abstract boolean isSprinting();
 
     @Shadow
-    public boolean velocityDirty;
-
-    @Shadow
     public abstract void setVelocity(double x, double y, double z);
-
-    @Shadow
-    public static Vec3d movementInputToVelocity(Vec3d movementInput, float speed, float yaw) {
-        return null;
-    }
 
     @Shadow
     public abstract double getX();
@@ -116,5 +117,10 @@ public abstract class MixinEntity {
         final PlayerStepEvent stepEvent = new PlayerStepEvent(instance.stepHeight);
         EventManager.INSTANCE.callEvent(stepEvent);
         return stepEvent.getHeight();
+    }
+
+    @Inject(method = "getCameraPosVec", at = @At("RETURN"), cancellable = true)
+    private void hookFreeCamModifiedRaycast(float tickDelta, CallbackInfoReturnable<Vec3d> cir) {
+        cir.setReturnValue(ModuleFreeCam.INSTANCE.modifyRaycast(cir.getReturnValue(), (Entity) (Object) this, tickDelta));
     }
 }

@@ -40,6 +40,7 @@
     "minecraft.network.MixinPlayerListEntry",
     "minecraft.render.MixinBackgroundRenderer",
     "minecraft.render.MixinBuiltinModelItemRenderer",
+    "minecraft.render.MixinCamera",
     "minecraft.render.MixinEntityRenderer",
     "minecraft.render.MixinGameRenderer",
     "minecraft.render.MixinInGameOverlayRenderer",
