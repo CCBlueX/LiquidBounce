@@ -98,7 +98,9 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     private void hookPushOut(CallbackInfo callbackInfo) {
         final PlayerPushOutEvent pushOutEvent = new PlayerPushOutEvent();
         EventManager.INSTANCE.callEvent(pushOutEvent);
-        if (pushOutEvent.isCancelled()) callbackInfo.cancel();
+        if (pushOutEvent.isCancelled()) {
+            callbackInfo.cancel();
+        }
     }
 
     /**
@@ -123,7 +125,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     /**
      * Hook custom multiplier
      */
-    @Inject(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/Input;movementForward:F", shift = At.Shift.AFTER))
+    @Inject(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z", ordinal = 0))
     private void hookCustomMultiplier(CallbackInfo callbackInfo) {
         final Input input = this.input;
         // reverse

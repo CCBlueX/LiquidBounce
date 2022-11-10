@@ -171,6 +171,9 @@ class CancelBlockBreakingEvent : CancellableEvent()
 @Nameable("playerStep")
 class PlayerStepEvent(var height: Float) : Event()
 
+@Nameable("FluidPushEvent")
+class FluidPushEvent : CancellableEvent()
+
 // Network events
 
 @Nameable("packet")
