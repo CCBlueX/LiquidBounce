@@ -48,6 +48,7 @@
     "minecraft.render.MixinLivingEntityRenderer",
     "minecraft.render.MixinRenderTickCounter",
     "minecraft.render.MixinSignBlockEntityRenderer",
+    "minecraft.render.MixinSodiumBlockOcclusionCache",
     "minecraft.render.MixinTextRenderer",
     "minecraft.render.MixinWorldRenderer"
   ],
