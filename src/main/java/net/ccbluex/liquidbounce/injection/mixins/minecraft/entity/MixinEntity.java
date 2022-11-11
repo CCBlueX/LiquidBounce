@@ -42,9 +42,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class MixinEntity {
 
     @Shadow
-    public boolean velocityDirty;
-
-    @Shadow
     public static Vec3d movementInputToVelocity(Vec3d movementInput, float speed, float yaw) {
         return null;
     }
@@ -54,12 +51,6 @@ public abstract class MixinEntity {
 
     @Shadow
     public abstract void setVelocity(Vec3d velocity);
-
-    @Shadow
-    public abstract boolean isSprinting();
-
-    @Shadow
-    public abstract void setVelocity(double x, double y, double z);
 
     @Shadow
     public abstract double getX();
@@ -72,6 +63,9 @@ public abstract class MixinEntity {
 
     @Shadow
     public abstract float getYaw();
+
+    @Shadow
+    public boolean noClip;
 
     @Shadow
     public abstract boolean isOnGround();
