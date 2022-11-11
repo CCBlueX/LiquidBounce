@@ -122,8 +122,18 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
         }
     }
 
+    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;isSpectator()Z", shift = At.Shift.BEFORE))
+    private void hookNoClip(CallbackInfo ci) {
+        ClientPlayerEntity player = MinecraftClient.getInstance().player;
+        this.noClip = player != null && player.noClip;
+    }
+
     @Inject(method = "jump", at = @At("HEAD"), cancellable = true)
     private void hookJumpEvent(CallbackInfo ci) {
+        if ((Object) this != MinecraftClient.getInstance().player) {
+            return;
+        }
+
         final PlayerJumpEvent jumpEvent = new PlayerJumpEvent(getJumpVelocity());
         EventManager.INSTANCE.callEvent(jumpEvent);
         if (jumpEvent.isCancelled()) {
