@@ -20,8 +20,8 @@
 plugins {
     id "fabric-loom"
     id "org.jetbrains.kotlin.jvm"
-    id "com.github.johnrengelman.shadow" version "7.0.0"
-    id "org.jlleitschuh.gradle.ktlint" version "10.3.0"
+    id "com.github.johnrengelman.shadow" version "7.1.2"
+    id "org.jlleitschuh.gradle.ktlint" version "11.0.0"
 }
 
 import net.fabricmc.loom.task.RemapJarTask
@@ -113,7 +113,7 @@ dependencies {
 
     // Test libraries
 
-    testImplementation "org.junit.jupiter:junit-jupiter:5.9.0"
+    testImplementation "org.junit.jupiter:junit-jupiter:5.9.1"
 }
 
 processResources {
