@@ -54,9 +54,10 @@ inline fun <reified T : Event> Listenable.handler(
  */
 inline fun <reified T : Event> Listenable.sequenceHandler(
     ignoreCondition: Boolean = false,
+    priority: Int = 0,
     noinline eventHandler: SuspendableHandler<T>,
 ) {
-    handler<T>(ignoreCondition) { event -> Sequence(eventHandler, event) }
+    handler<T>(ignoreCondition, priority) { event -> Sequence(eventHandler, event) }
 }
 
 /**
