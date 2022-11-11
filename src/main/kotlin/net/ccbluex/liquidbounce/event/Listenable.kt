@@ -54,17 +54,16 @@ inline fun <reified T : Event> Listenable.handler(
  */
 inline fun <reified T : Event> Listenable.sequenceHandler(
     ignoreCondition: Boolean = false,
-    priority: Int = 0,
     noinline eventHandler: SuspendableHandler<T>,
 ) {
-    handler<T>(ignoreCondition, priority) { event -> Sequence(eventHandler, event) }
+    handler<T>(ignoreCondition) { event -> Sequence(eventHandler, event) }
 }
 
 /**
  * Registers a repeatable sequence which repeats the execution of code.
  */
-fun Listenable.repeatable(eventHandler: (SuspendableHandler<DummyEvent>)) {
-    var sequence: RepeatingSequence? = null
+fun Listenable.repeatable(eventHandler: SuspendableHandler<DummyEvent>) {
+    var sequence: RepeatingSequence? = RepeatingSequence(eventHandler)
 
     handler<ToggleModuleEvent>(ignoreCondition = true) {
         if (this == it.module || this.parent() == it.module) {
@@ -72,7 +71,7 @@ fun Listenable.repeatable(eventHandler: (SuspendableHandler<DummyEvent>)) {
                 if (sequence == null) {
                     sequence = RepeatingSequence(eventHandler)
                 }
-            } else if (sequence != null) {
+            } else if (sequence != null && !it.ignoreCondition) {
                 sequence?.cancel()
                 sequence = null
             }

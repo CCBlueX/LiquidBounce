@@ -16,21 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+package net.ccbluex.liquidbounce.features.module.modules.world
 
-package net.ccbluex.liquidbounce.render.shaders
+import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.MinecraftFramebufferShader
-
-object OutlineShader : MinecraftFramebufferShader("outline_shader") {
-
-    fun begin(width: Float) {
-        this.setUniform1f("radius", width)
-        this.beginInternal()
-    }
-
-    fun setColor(color: Color4b) {
-        this.vertexConsumerProvider?.setColor(color.r, color.g, color.b, color.a)
-    }
-
+/**
+ * NoSlowBreak module
+ *
+ * Automatically adjusts breaking speed when in negatively affecting situations.
+ */
+object ModuleNoSlowBreak : Module("NoSlowBreak", Category.WORLD) {
+    val miningFatigue by boolean("MiningFatigue", true)
+    val onAir by boolean("OnAir", true)
+    val water by boolean("Water", false)
 }

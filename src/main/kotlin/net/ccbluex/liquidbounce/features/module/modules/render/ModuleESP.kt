@@ -78,8 +78,6 @@ object ModuleESP : Module("ESP", Category.RENDER) {
             get() = modes
 
         val renderHandler = handler<EngineRenderEvent> { event ->
-            val base = getBaseColor()
-
             val filteredEntities = world.entities.filter { it.shouldBeShown() }
 
             val grouped = filteredEntities.groupBy {
@@ -102,7 +100,7 @@ object ModuleESP : Module("ESP", Category.RENDER) {
                 for (entity in it.value) {
                     val pos = entity.interpolateCurrentPosition(event.tickDelta)
 
-                    val color = getColor(entity) ?: base
+                    val color = getColor(entity)
 
                     val baseColor = Color4b(color.r, color.g, color.b, 50)
                     val outlineColor = Color4b(color.r, color.g, color.b, 100)
@@ -131,16 +129,17 @@ object ModuleESP : Module("ESP", Category.RENDER) {
         val width by float("Width", 3F, 0.5F..5F)
     }
 
-    fun getBaseColor(): Color4b {
+    private fun getBaseColor(): Color4b {
         return if (RainbowMode.isActive) rainbow() else StaticMode.color
     }
 
-    fun getColor(entity: Entity): Color4b? {
+    fun getColor(entity: Entity): Color4b {
         run {
             if (entity is LivingEntity) {
                 if (entity.hurtTime > 0) {
                     return Color4b(255, 0, 0)
                 }
+
                 if (entity is PlayerEntity && FriendManager.isFriend(entity.toString())) {
                     return Color4b(0, 0, 255)
                 }
@@ -171,7 +170,7 @@ object ModuleESP : Module("ESP", Category.RENDER) {
             }
         }
 
-        return null
+        return getBaseColor()
     }
 
 }
