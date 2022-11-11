@@ -175,7 +175,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleXRay,
             ModuleNoRotateSet,
             ModuleNoSlowBreak,
-            ModuleDerp
+            ModuleDerp,
         )
 
         builtin.apply {
