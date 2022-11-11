@@ -59,6 +59,7 @@ class TargetTracker(defaultPriority: PriorityEnum = PriorityEnum.HEALTH) : Confi
             PriorityEnum.HEALTH -> entities.sortedBy { if (it is LivingEntity) it.health else 0f } // Sort by health
             PriorityEnum.DIRECTION -> entities.sortedBy { RotationManager.rotationDifference(RotationManager.makeRotation(it.boundingBox.center, eyePos)) } // Sort by FOV
             PriorityEnum.AGE -> entities.sortedBy { -it.age } // Sort by existence
+            else -> {}
         }
 
         return entities.asIterable()

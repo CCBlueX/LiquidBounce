@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
@@ -39,11 +40,22 @@ public class MixinLivingEntityRenderer<T extends LivingEntity> {
 
     private final ThreadLocal<Rotation> currentRotation = ThreadLocal.withInitial(() -> null);
 
-    @Inject(method = "render", at = @At("HEAD"))
+    @Inject(method = "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At("HEAD"))
     private void injectRender(T livingEntity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo ci) {
         Rotation currentRotation = RotationManager.INSTANCE.getCurrentRotation();
+        Rotation serverRotation = RotationManager.INSTANCE.getServerRotation();
 
-        if (!ModuleRotations.INSTANCE.getEnabled() || livingEntity != MinecraftClient.getInstance().player || currentRotation == null) {
+        if (livingEntity != MinecraftClient.getInstance().player) {
+            this.currentRotation.set(null);
+            return;
+        }
+
+        if (ModuleFreeCam.INSTANCE.shouldDisableRotations() && serverRotation != null) {
+            this.currentRotation.set(serverRotation);
+            return;
+        }
+
+        if (!ModuleRotations.INSTANCE.getEnabled() || currentRotation == null) {
             this.currentRotation.set(null);
             return;
         }
@@ -53,11 +65,10 @@ public class MixinLivingEntityRenderer<T extends LivingEntity> {
 
     /**
      * Yaw injection hook
-     *
+     * <p>
      * float h = MathHelper.lerpAngleDegrees(g, livingEntity.prevBodyYaw, livingEntity.bodyYaw);
-     * float j = MathHelper.lerpAngleDegrees(g, livingEntity.prevHeadYaw, livingEntity.headYaw);
      */
-    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;lerpAngleDegrees(FFF)F", ordinal = 0))
+    @Redirect(method = "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;lerpAngleDegrees(FFF)F", ordinal = 0))
     private float injectRotationsA(float g, float f, float s) {
         Rotation rot = currentRotation.get();
         if (rot != null) {
@@ -69,11 +80,10 @@ public class MixinLivingEntityRenderer<T extends LivingEntity> {
 
     /**
      * Yaw injection hook
-     *
-     * float h = MathHelper.lerpAngleDegrees(g, livingEntity.prevBodyYaw, livingEntity.bodyYaw);
+     * <p>
      * float j = MathHelper.lerpAngleDegrees(g, livingEntity.prevHeadYaw, livingEntity.headYaw);
      */
-    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;lerpAngleDegrees(FFF)F", ordinal = 1))
+    @Redirect(method = "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;lerpAngleDegrees(FFF)F", ordinal = 1))
     private float injectRotationsB(float g, float f, float s) {
         Rotation rot = currentRotation.get();
         if (rot != null) {
@@ -85,10 +95,10 @@ public class MixinLivingEntityRenderer<T extends LivingEntity> {
 
     /**
      * Pitch injection hook
-     *
+     * <p>
      * float m = MathHelper.lerp(g, livingEntity.prevPitch, livingEntity.getPitch());
      */
-    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;lerp(FFF)F", ordinal = 0))
+    @Redirect(method = "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;lerp(FFF)F", ordinal = 0))
     private float injectRotationsC(float g, float f, float s) {
         Rotation rot = currentRotation.get();
         if (rot != null) {
