@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePortalMenu
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoSlow;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModulePerfectHorseJump;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleStep;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
@@ -33,6 +34,7 @@ import net.minecraft.client.input.Input;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.MovementType;
+import net.minecraft.entity.player.PlayerAbilities;
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.Vec3d;
@@ -45,12 +47,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ClientPlayerEntity.class)
 public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
-
-    @Shadow
-    public float lastYaw;
-
-    @Shadow
-    public float lastPitch;
 
     @Shadow
     public Input input;
@@ -104,7 +100,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     }
 
     /**
-     * Hook push out function tick at HEAD and call out push out event, which is able to stop the cancel the execution.
+     * Hook push out function tick at HEAD and call push out event, which is able to stop the cancel the execution.
      */
     @Inject(method = "move", at = @At("HEAD"))
     private void hookMove(MovementType type, Vec3d movement, CallbackInfo callbackInfo) {
@@ -152,6 +148,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     }
 
     // Silent rotations (Rotation Manager)
+
     @Redirect(method = "sendMovementPackets", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getYaw()F"))
     private float hookSilentRotationYaw(ClientPlayerEntity instance) {
         RotationManager rotationManager = RotationManager.INSTANCE;
@@ -159,8 +156,9 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
         if (rotation == null || !rotationManager.shouldUpdate()) {
             return instance.getYaw();
         }
-    }
 
+        return instance.getYaw();
+    }
 
     @Redirect(method = "sendMovementPackets", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getPitch()F"))
     private float hookSilentRotationPitch(ClientPlayerEntity instance) {
@@ -169,6 +167,8 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
         if (rotation == null || !rotationManager.shouldUpdate()) {
             return instance.getPitch();
         }
+
+        return instance.getPitch();
     }
 
     @Inject(method = "isSneaking", at = @At("HEAD"), cancellable = true)
@@ -208,5 +208,10 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     @Redirect(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerAbilities;allowFlying:Z", ordinal = 1))
     private boolean hookFreeCamPreventCreativeFly(PlayerAbilities instance) {
         return !ModuleFreeCam.INSTANCE.getEnabled() && instance.allowFlying;
+    }
+
+    @ModifyVariable(method = "sendMovementPackets", at = @At("STORE"), ordinal = 3)
+    private boolean hookFreeCamPreventRotations(boolean bl4) {
+        return !ModuleFreeCam.INSTANCE.shouldDisableRotations() && bl4;
     }
 }
