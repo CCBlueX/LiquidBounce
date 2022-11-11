@@ -14,6 +14,7 @@
     "minecraft.block.MixinSlimeBlock",
     "minecraft.block.MixinSnowBlock",
     "minecraft.client.MixinClientWorld",
+    "minecraft.client.MixinGameMode",
     "minecraft.client.MixinInput",
     "minecraft.client.MixinKeyboard",
     "minecraft.client.MixinKeyboardInput",

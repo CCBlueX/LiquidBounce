@@ -169,6 +169,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAirJump,
             ModuleProjectilePuncher,
             ModuleAutoPot,
+            ModuleAirJump,
+            ModuleAntiBot,
             ModuleKeepChatAfterDeath,
             ModuleOverrideTime,
             ModuleXRay,
