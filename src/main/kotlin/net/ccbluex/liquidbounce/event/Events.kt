@@ -171,6 +171,9 @@ class CancelBlockBreakingEvent : CancellableEvent()
 @Nameable("playerStep")
 class PlayerStepEvent(var height: Float) : Event()
 
+@Nameable("FluidPushEvent")
+class FluidPushEvent : CancellableEvent()
+
 // Network events
 
 @Nameable("packet")
@@ -192,22 +195,19 @@ class ClientShutdownEvent : Event()
 class ValueChangedEvent(val value: Value<*>) : Event()
 
 @Nameable("toggleModule")
-class ToggleModuleEvent(val module: Module, val newState: Boolean) : Event()
+class ToggleModuleEvent(val module: Module, val newState: Boolean, val ignoreCondition: Boolean = false) : Event()
 
 @Nameable("notification")
 class NotificationEvent(val title: String, val message: String, val severity: Severity) : Event() {
     enum class Severity {
-        INFO,
-        SUCCESS,
-        ERROR
+        INFO, SUCCESS, ERROR
     }
 }
 
 @Nameable("clientChatMessage")
 class ClientChatMessageEvent(val user: User, val message: String, val chatGroup: ChatGroup) : Event() {
     enum class ChatGroup {
-        PUBLIC_CHAT,
-        PRIVATE_CHAT
+        PUBLIC_CHAT, PRIVATE_CHAT
     }
 }
 
