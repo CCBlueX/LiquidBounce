@@ -41,8 +41,8 @@ import net.minecraft.util.math.Direction
 object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
 
     private object Block : ToggleableConfigurable(this, "Blocking", true) {
-        val forwardMultiplier by float("Forward", 1f, 0.2f..2f)
-        val sidewaysMultiplier by float("Sideways", 1f, 0.2f..2f)
+        val forwardMultiplier by float("Forward", 1f, 0.2f..1f)
+        val sidewaysMultiplier by float("Sideways", 1f, 0.2f..1f)
 
         val packet by boolean("Packet", true)
 
@@ -64,13 +64,13 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
     }
 
     private object Consume : ToggleableConfigurable(this, "Consume", true) {
-        val forwardMultiplier by float("Forward", 1f, 0.2f..2f)
-        val sidewaysMultiplier by float("Sideways", 1f, 0.2f..2f)
+        val forwardMultiplier by float("Forward", 1f, 0.2f..1f)
+        val sidewaysMultiplier by float("Sideways", 1f, 0.2f..1f)
     }
 
     private object Bow : ToggleableConfigurable(this, "Bow", true) {
-        val forwardMultiplier by float("Forward", 1f, 0.2f..2f)
-        val sidewaysMultiplier by float("Sideways", 1f, 0.2f..2f)
+        val forwardMultiplier by float("Forward", 1f, 0.2f..1f)
+        val sidewaysMultiplier by float("Sideways", 1f, 0.2f..1f)
     }
 
     private object Soulsand : ToggleableConfigurable(this, "Soulsand", true) {
@@ -86,7 +86,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
     }
 
     object Slime : ToggleableConfigurable(this, "SlimeBlock", true) {
-        val multiplier by float("Multiplier", 1f, 0.4f..2f)
+        private val multiplier by float("Multiplier", 1f, 0.4f..2f)
 
         val blockSlipperinessMultiplierHandler = handler<BlockSlipperinessMultiplierEvent> { event ->
             if (event.block is SlimeBlock) {
@@ -115,6 +115,11 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
         val multiplier by float("Multiplier", 1f, 0.4f..2f)
     }
 
+    private object Fluid : ToggleableConfigurable(this, "Fluid", true) {
+        val fluidPushHandler = handler<FluidPushEvent> {
+            it.cancelEvent()
+        }
+    }
 
     init {
         tree(Block)
@@ -124,6 +129,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
         tree(Slime)
         tree(Honey)
         tree(PowderSnow)
+        tree(Fluid)
     }
 
     val multiplierHandler = handler<PlayerUseMultiplier> { event ->
@@ -135,7 +141,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
     }
 
     private fun multiplier(action: UseAction) = when (action) {
-        UseAction.NONE -> Pair(1f, 1f)
+        UseAction.NONE -> Pair(0.2f, 0.2f)
         UseAction.EAT, UseAction.DRINK -> if (Consume.enabled) Pair(
             Consume.forwardMultiplier,
             Consume.sidewaysMultiplier
@@ -149,5 +155,4 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
             Bow.sidewaysMultiplier
         ) else Pair(0.2f, 0.2f)
     }
-
 }
