@@ -92,7 +92,7 @@ class ESP : Module() {
             if (entity != mc.thePlayer && EntityUtils.isSelected(entity, targetsValue.targets, false)) {
                 val color = getColor(entity)
 
-                when (mode.toLowerCase()) {
+                when (mode.lowercase()) {
                     "box", "otherbox" -> RenderUtils.drawEntityBox(
                         entity,
                         color,
@@ -174,7 +174,7 @@ class ESP : Module() {
 
     @EventTarget
     fun onRender2D(event: Render2DEvent) {
-        val mode = modeValue.get().toLowerCase()
+        val mode = modeValue.get().lowercase()
         val partialTicks = event.partialTicks
         val shader = (if (mode.equals(
                 "shaderoutline",

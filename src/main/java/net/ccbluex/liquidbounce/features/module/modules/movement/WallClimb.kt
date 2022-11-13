@@ -49,12 +49,12 @@ class WallClimb : Module() {
             return
 
 
-        when (modeValue.get().toLowerCase()) {
+        when (modeValue.get().lowercase()) {
             "clip" -> {
                 if (thePlayer.motionY < 0)
                     glitch = true
                 if (thePlayer.isCollidedHorizontally) {
-                    when (clipMode.get().toLowerCase()) {
+                    when (clipMode.get().lowercase()) {
                         "jump" -> if (thePlayer.onGround)
                             thePlayer.jump()
                         "fast" -> if (thePlayer.onGround)
@@ -113,7 +113,7 @@ class WallClimb : Module() {
 
         val mode = modeValue.get()
 
-        when (mode.toLowerCase()) {
+        when (mode.lowercase()) {
             "checkerclimb" -> if (event.y > thePlayer.posY) event.boundingBox = null
             "clip" -> if (event.block != null && mc.thePlayer != null && event.block == Blocks.air && event.y < thePlayer.posY && thePlayer.isCollidedHorizontally && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isInLava) event.boundingBox = AxisAlignedBB.fromBounds(0.0, 0.0, 0.0, 1.0, 1.0, 1.0).offset(thePlayer.posX, thePlayer.posY.toInt() - 1.0, thePlayer.posZ)
         }

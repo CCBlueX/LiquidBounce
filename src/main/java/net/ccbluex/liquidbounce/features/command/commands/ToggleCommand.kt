@@ -22,7 +22,7 @@ class ToggleCommand : Command("toggle", "t") {
             }
 
             if (args.size > 2) {
-                val newState = args[2].toLowerCase()
+                val newState = args[2].lowercase()
 
                 if (newState == "on" || newState == "off") {
                     module.state = newState == "on"

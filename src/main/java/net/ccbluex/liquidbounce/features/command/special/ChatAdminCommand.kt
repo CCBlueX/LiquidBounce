@@ -44,7 +44,7 @@ class ChatAdminCommand : Command("chatadmin") {
         return when (args.size) {
             1 -> {
                 arrayOf("ban", "unban")
-                        .map { it.toLowerCase() }
+                        .map { it.lowercase() }
                         .filter { it.startsWith(args[0], true) }
             }
             else -> emptyList()

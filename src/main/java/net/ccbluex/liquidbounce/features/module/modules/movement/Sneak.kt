@@ -36,7 +36,7 @@ class Sneak : Module() {
             return
         }
 
-        when (modeValue.get().toLowerCase()) {
+        when (modeValue.get().lowercase()) {
             "legit" -> mc.gameSettings.keyBindSneak.pressed = true
             "vanilla" -> {
                 if (sneaking)
@@ -75,7 +75,7 @@ class Sneak : Module() {
     override fun onDisable() {
         val player = mc.thePlayer ?: return
 
-        when (modeValue.get().toLowerCase()) {
+        when (modeValue.get().lowercase()) {
             "legit" -> {
                 if (!GameSettings.isKeyDown(mc.gameSettings.keyBindSneak)) {
                     mc.gameSettings.keyBindSneak.pressed = false

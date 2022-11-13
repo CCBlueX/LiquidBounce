@@ -33,6 +33,9 @@ class StorageESP : Module() {
     private val furnaceValue = BoolValue("Furnace", true)
     private val dispenserValue = BoolValue("Dispenser", true)
     private val hopperValue = BoolValue("Hopper", true)
+    private val enchantmentTableValue = BoolValue("EnchantmentTable", false)
+    private val brewingStandValue = BoolValue("BrewingStand", false)
+    private val signValue = BoolValue("Sign", false)
 
     private fun getColor(tileEntity: TileEntity):Color?{
         return when {
@@ -41,6 +44,9 @@ class StorageESP : Module() {
             furnaceValue.get() && tileEntity is TileEntityFurnace -> Color.BLACK
             dispenserValue.get() && tileEntity is TileEntityDispenser -> Color.BLACK
             hopperValue.get() && tileEntity is TileEntityHopper -> Color.GRAY
+            enchantmentTableValue.get() && tileEntity is TileEntityEnchantmentTable -> Color(166, 202, 240) // Light blue
+            brewingStandValue.get() && tileEntity is TileEntityBrewingStand -> Color.ORANGE
+            signValue.get() && tileEntity is TileEntitySign -> Color.RED
             else -> null
         }
     }
@@ -64,9 +70,11 @@ class StorageESP : Module() {
 
                 if (!(tileEntity is TileEntityChest || tileEntity is TileEntityEnderChest)) {
                     RenderUtils.drawBlockBox(tileEntity.pos, color, !mode.equals("otherbox", ignoreCase = true))
-                    continue
+                    if (tileEntity !is TileEntityEnchantmentTable) {
+                        continue
+                    }
                 }
-                when (mode.toLowerCase()) {
+                when (mode.lowercase()) {
                     "otherbox", "box" -> RenderUtils.drawBlockBox(tileEntity.pos, color, !mode.equals("otherbox", ignoreCase = true))
                     "2d" -> RenderUtils.draw2D(tileEntity.pos, color.rgb, Color.BLACK.rgb)
                     "outline" -> {
@@ -103,7 +111,7 @@ class StorageESP : Module() {
             }
             for (entity in mc.theWorld!!.loadedEntityList) {
                 if (entity is EntityMinecartChest) {
-                    when (mode.toLowerCase()) {
+                    when (mode.lowercase()) {
                         "otherbox", "box" -> RenderUtils.drawEntityBox(entity, Color(0, 66, 255), !mode.equals("otherbox", ignoreCase = true))
                         "2d" -> RenderUtils.draw2D(entity.position, Color(0, 66, 255).rgb, Color.BLACK.rgb)
                         "outline" -> {

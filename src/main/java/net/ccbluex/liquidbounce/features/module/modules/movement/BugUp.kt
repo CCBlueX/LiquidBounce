@@ -86,7 +86,7 @@ class BugUp : Module() {
             if (thePlayer.fallDistance - lastFound > maxDistanceWithoutGround.get()) {
                 val mode = modeValue.get()
 
-                when (mode.toLowerCase()) {
+                when (mode.lowercase()) {
                     "teleportback" -> {
                         thePlayer.setPositionAndUpdate(prevX, prevY, prevZ)
                         thePlayer.fallDistance = 0F

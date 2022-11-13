@@ -43,7 +43,7 @@ class AntiAFK : Module() {
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        when (modeValue.get().toLowerCase()) {
+        when (modeValue.get().lowercase()) {
             "old" -> {
                 mc.gameSettings.keyBindForward.pressed = true
 

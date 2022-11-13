@@ -40,7 +40,7 @@ class Regen : Module() {
             if(potionEffectValue.get() && !mc.thePlayer.isPotionActive(Potion.regeneration))
                 return
 
-            when (modeValue.get().toLowerCase()) {
+            when (modeValue.get().lowercase()) {
                 "vanilla" -> {
                     repeat(speedValue.get()) {
                         mc.netHandler.addToSendQueue(C03PacketPlayer(mc.thePlayer.onGround))

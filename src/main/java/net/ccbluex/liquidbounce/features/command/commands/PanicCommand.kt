@@ -18,7 +18,7 @@ class PanicCommand : Command("panic") {
         val msg: String
 
         if (args.size > 1 && args[1].isNotEmpty()) {
-            when (args[1].toLowerCase()) {
+            when (args[1].lowercase()) {
                 "all" -> msg = "all"
 
                 "nonrender" -> {

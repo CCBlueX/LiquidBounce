@@ -78,7 +78,7 @@ class NoFall : Module() {
             ) { it is BlockLiquid }
         ) return
 
-        when (modeValue.get().toLowerCase()) {
+        when (modeValue.get().lowercase()) {
             "packet" -> {
                 if (mc.thePlayer!!.fallDistance > 2f) {
                     mc.netHandler.addToSendQueue(C03PacketPlayer(true))
