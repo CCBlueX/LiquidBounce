@@ -178,6 +178,7 @@ jar {
 
 task remapShadow(type: RemapJarTask, dependsOn: shadowJar) {
     setInput(shadowJar.archiveFile)
+    remapAccessWidener.set(true)
     addNestedDependencies.set(remapJar.addNestedDependencies)
 }
 
