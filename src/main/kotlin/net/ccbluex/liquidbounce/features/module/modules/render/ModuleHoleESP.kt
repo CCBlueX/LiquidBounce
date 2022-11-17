@@ -48,14 +48,14 @@ import net.minecraft.util.math.Vec3i
 
 object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
 
-    var horizontalDistance by int("HorizontalScanDistance", 16, 4..100)
-    var verticalDistance by int("VerticalScanDistance", 16, 4..100)
+    private var horizontalDistance by int("HorizontalScanDistance", 16, 4..100)
+    private var verticalDistance by int("VerticalScanDistance", 16, 4..100)
 
-    val flattenMovement by boolean("FlattenMovement", true)
+    private val flattenMovement by boolean("FlattenMovement", true)
 
     val box = drawBoxNew(Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0), Color4b.WHITE)
 
-    val boxOutline = drawBoxOutlineNew(Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0), Color4b.WHITE)
+    private val boxOutline = drawBoxOutlineNew(Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0), Color4b.WHITE)
 
     val holes = HashMap<BlockPos, HoleQuality>()
     val movableRegionScanner = MovableRegionScanner()
@@ -86,6 +86,7 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
         )
     }
 
+    @Suppress("unused")
     val movementHandler = handler<PlayerTickEvent> { event ->
         this.updateScanRegion()
     }
@@ -184,7 +185,7 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
 
     object InvalidationHook : WorldChangeNotifier.WorldChangeSubscriber {
         override fun invalidate(region: Region, rescan: Boolean) {
-            // Check if the region intersects. Otherwise calling region.intersection would be unsafe
+            // Check if the region intersects. Otherwise, calling region.intersection would be unsafe
             if (!region.intersects(movableRegionScanner.currentRegion))
                 return
 

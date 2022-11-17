@@ -53,7 +53,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
 
     val box = drawBoxNew(Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0), Color4b.WHITE)
 
-    val boxOutline = drawBoxOutlineNew(Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0), Color4b.WHITE)
+    private val boxOutline = drawBoxOutlineNew(Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0), Color4b.WHITE)
 
     val renderHandler = handler<EngineRenderEvent> { event ->
         val base = if (colorRainbow) rainbow() else color
@@ -69,8 +69,8 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
         instanceBuffer.initBuffer(markedBlocks.size)
         instanceBufferOutline.initBuffer(markedBlocks.size)
 
-        for (pos in markedBlocks) {
-            val pos3 = Vec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+        for ((x, y, z) in markedBlocks) {
+            val pos3 = Vec3(x.toDouble(), y.toDouble(), z.toDouble())
 
             instanceBuffer.putVertex { this.position = pos3; this.color = baseColor }
             instanceBufferOutline.putVertex { this.position = pos3; this.color = outlineColor }

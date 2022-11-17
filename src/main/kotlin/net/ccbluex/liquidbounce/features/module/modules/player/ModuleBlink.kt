@@ -174,6 +174,7 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
         }
     }
 
+    @Suppress("unused")
     val playerMoveHandler = handler<PlayerMovementTickEvent> {
         if (AutoResetOption.enabled && positionPackets.get() > AutoResetOption.resetAfter) {
             reset()

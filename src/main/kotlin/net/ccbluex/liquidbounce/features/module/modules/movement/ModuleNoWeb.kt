@@ -43,7 +43,11 @@ object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
         if (ModuleAvoidHazards.enabled) {
             if (ModuleAvoidHazards.cobWebs) {
                 ModuleAvoidHazards.enabled = false
-                notification("Compatibility error", "NoWeb is incompatible with AvoidHazards", NotificationEvent.Severity.ERROR)
+                notification(
+                    "Compatibility error",
+                    "NoWeb is incompatible with AvoidHazards",
+                    NotificationEvent.Severity.ERROR
+                )
             }
         }
     }

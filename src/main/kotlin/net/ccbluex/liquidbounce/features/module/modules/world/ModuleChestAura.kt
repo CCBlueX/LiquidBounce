@@ -65,7 +65,9 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
         val timeout by int("Timeout", 10, 1..80)
         val maxRetrys by int("MaxRetries", 4, 1..10)
     }
-    private object CloseInstantlyOptions : ToggleableConfigurable(this, "CloseInstantly", false) { // FIXME: Close instantly
+
+    private object CloseInstantlyOptions :
+        ToggleableConfigurable(this, "CloseInstantly", false) { // FIXME: Close instantly
         val timeout by int("Timeout", 2500, 100..10000)
     }
 
@@ -82,8 +84,9 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
     private var currentBlock: BlockPos? = null
     val clickedBlocks = hashSetOf<BlockPos>()
 
-    var currentRetries = 0
+    private var currentRetries = 0
 
+    @Suppress("unused")
     val networkTickHandler = repeatable { event ->
 //        if (mc.currentScreen is HandledScreen<*>) {
 //            if (CloseInstantlyOptions.enabled && !closeInstantlyTimeout.hasElapsed(CloseInstantlyOptions.timeout.toLong())) {
@@ -189,7 +192,7 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
                 wallsRange = wallRange.toDouble()
             ) ?: continue
 
-            // aim on target
+            // aim at target
             RotationManager.aimAt(rotation, configurable = rotations)
             nextBlock = pos
             break

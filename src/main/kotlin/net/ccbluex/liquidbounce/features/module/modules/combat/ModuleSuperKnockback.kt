@@ -33,8 +33,9 @@ import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
  */
 object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
 
-    val hurtTime by int("HurtTime", 10, 0..10)
+    private val hurtTime by int("HurtTime", 10, 0..10)
 
+    @Suppress("unused")
     val attackHandler = handler<AttackEvent> { event ->
         val enemy = event.enemy
 

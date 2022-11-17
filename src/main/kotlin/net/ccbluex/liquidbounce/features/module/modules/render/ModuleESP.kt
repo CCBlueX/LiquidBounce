@@ -70,13 +70,14 @@ object ModuleESP : Module("ESP", Category.RENDER) {
             get() = colorModes
     }
 
-    val teamColor by boolean("TeamColor", true)
+    private val teamColor by boolean("TeamColor", true)
 
     private object BoxMode : Choice("Box") {
 
         override val parent: ChoiceConfigurable
             get() = modes
 
+        @Suppress("unused")
         val renderHandler = handler<EngineRenderEvent> { event ->
             val filteredEntities = world.entities.filter { it.shouldBeShown() }
 
@@ -139,7 +140,7 @@ object ModuleESP : Module("ESP", Category.RENDER) {
                 if (entity.hurtTime > 0) {
                     return Color4b(255, 0, 0)
                 }
-  
+
                 if (entity is PlayerEntity && FriendManager.isFriend(entity.gameProfile.name)) {
                     return Color4b(0, 0, 255)
                 }

@@ -55,6 +55,7 @@ object ModuleFullBright : Module("FullBright", Category.RENDER) {
             prevValue = mc.options.gamma
         }
 
+        @Suppress("unused")
         val tickHandler = sequenceHandler<PlayerTickEvent> {
             if (mc.options.gamma <= 100) {
                 mc.options.gamma++
@@ -71,6 +72,7 @@ object ModuleFullBright : Module("FullBright", Category.RENDER) {
         override val parent: ChoiceConfigurable
             get() = modes
 
+        @Suppress("unused")
         val tickHandler = sequenceHandler<PlayerTickEvent> {
             player.addStatusEffect(StatusEffectInstance(StatusEffects.NIGHT_VISION, 1337))
         }

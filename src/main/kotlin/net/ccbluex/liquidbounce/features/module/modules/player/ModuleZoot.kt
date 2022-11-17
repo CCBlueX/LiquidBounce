@@ -32,12 +32,12 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
  */
 object ModuleZoot : Module("Zoot", Category.PLAYER) {
 
-    val badEffects by boolean("BadEffects", true)
-    val fire by boolean("Fire", true)
-    val noAir by boolean("NoAir", false)
+    private val badEffects by boolean("BadEffects", true)
+    private val fire by boolean("Fire", true)
+    private val noAir by boolean("NoAir", false)
     val timer by float("Timer", 0.6f, 0.1f..10f)
 
-    var resetTimer = false
+    private var resetTimer = false
 
     override fun disable() {
         mc.timer.timerSpeed = 1F

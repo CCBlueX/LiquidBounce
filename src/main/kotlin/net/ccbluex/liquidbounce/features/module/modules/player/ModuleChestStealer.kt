@@ -37,8 +37,8 @@ import net.minecraft.text.TranslatableText
 object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
     var delay by intRange("Delay", 50..200, 0..2000)
-    var selectionMode by enumChoice("SelectionMode", SelectionMode.DISTANCE, SelectionMode.values())
-    val checkTitle by boolean("CheckTitle", true)
+    private var selectionMode by enumChoice("SelectionMode", SelectionMode.DISTANCE, SelectionMode.values())
+    private val checkTitle by boolean("CheckTitle", true)
 
     private var lastSlot = 0
     private val timer = Chronometer()

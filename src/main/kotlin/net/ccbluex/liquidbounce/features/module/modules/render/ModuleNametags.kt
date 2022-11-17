@@ -181,7 +181,14 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
                 val pixelX = (xWithoutAspectRatio + 1.0f) / 2.0f * mc.window.scaledWidth
                 val pixelY = (screenSpaceVec.y + 1.0f) / 2.0f * mc.window.scaledHeight
 
-                val slotTypes = arrayOf(EquipmentSlot.MAINHAND, EquipmentSlot.OFFHAND, EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)
+                val slotTypes = arrayOf(
+                    EquipmentSlot.MAINHAND,
+                    EquipmentSlot.OFFHAND,
+                    EquipmentSlot.HEAD,
+                    EquipmentSlot.CHEST,
+                    EquipmentSlot.LEGS,
+                    EquipmentSlot.FEET
+                )
 
                 val renderTasks = slotTypes.withIndex().mapNotNull { (index, slot) ->
                     val equipmentInSlot = entity.getEquippedStack(slot) ?: return@mapNotNull null
@@ -202,8 +209,28 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
             currIdx++
         }
 
-        RenderEngine.enqueueForRendering(RenderEngine.SCREEN_SPACE_LAYER, VertexFormatRenderTask(vertexFormat, PrimitiveType.Triangles, ColoredPrimitiveShader, indexBuffer = indexBuffer, state = GlRenderState(lineWidth = 2.0f, lineSmooth = true, depthTest = true)))
-        borderVertexFormat?.let { RenderEngine.enqueueForRendering(RenderEngine.SCREEN_SPACE_LAYER, VertexFormatRenderTask(it, PrimitiveType.Lines, ColoredPrimitiveShader, indexBuffer = borderIndexBuffer!!, state = GlRenderState(lineWidth = 1.0f, lineSmooth = true, depthTest = true))) }
+        RenderEngine.enqueueForRendering(
+            RenderEngine.SCREEN_SPACE_LAYER,
+            VertexFormatRenderTask(
+                vertexFormat,
+                PrimitiveType.Triangles,
+                ColoredPrimitiveShader,
+                indexBuffer = indexBuffer,
+                state = GlRenderState(lineWidth = 2.0f, lineSmooth = true, depthTest = true)
+            )
+        )
+        borderVertexFormat?.let {
+            RenderEngine.enqueueForRendering(
+                RenderEngine.SCREEN_SPACE_LAYER,
+                VertexFormatRenderTask(
+                    it,
+                    PrimitiveType.Lines,
+                    ColoredPrimitiveShader,
+                    indexBuffer = borderIndexBuffer!!,
+                    state = GlRenderState(lineWidth = 1.0f, lineSmooth = true, depthTest = true)
+                )
+            )
+        }
         RenderEngine.enqueueForRendering(RenderEngine.SCREEN_SPACE_LAYER, fontRenderer.commit())
     }
 

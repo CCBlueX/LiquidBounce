@@ -60,6 +60,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
             }
         }
 
+        @Suppress("unused")
         val repeatable = repeatable {
             mc.options.forwardKey.isPressed = true
             wait(10)
@@ -83,6 +84,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
             mc.options.forwardKey.isPressed = false
         }
 
+        @Suppress("unused")
         val repeatable = repeatable {
             randomKeyBind()!!.isPressed = shouldMove
 
@@ -100,25 +102,30 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
                     }
                     timer.reset()
                 }
+
                 1 -> {
                     if (!player.handSwinging) {
                         player.swingHand(Hand.MAIN_HAND)
                     }
                     timer.reset()
                 }
+
                 2 -> {
                     delay = RandomUtils.nextInt(0, 1000).toLong()
                     shouldMove = true
                     timer.reset()
                 }
+
                 3 -> {
                     player.inventory.selectedSlot = RandomUtils.nextInt(0, 9)
                     timer.reset()
                 }
+
                 4 -> {
                     player.yaw += RandomUtils.nextFloat(-180f, 180f)
                     timer.reset()
                 }
+
                 5 -> {
                     if (player.pitch <= -90f || player.pitch >= 90) {
                         player.pitch = 0f
@@ -167,6 +174,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
             }
         }
 
+        @Suppress("unused")
         val repeatable = repeatable {
             if (move) {
                 mc.options.forwardKey.isPressed = true

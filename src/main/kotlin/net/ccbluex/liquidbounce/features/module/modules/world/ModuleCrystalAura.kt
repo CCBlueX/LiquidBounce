@@ -62,7 +62,7 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
     private val swing by boolean("Swing", true)
     private val range by float("Range", 4f, 3f..8f)
 
-    var functioning = false
+    private var functioning = false
 
     // Target
     private val targetTracker = tree(TargetTracker())
@@ -77,6 +77,7 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
         functioning = false
     }
 
+    @Suppress("unused")
     val networkTickHandler = repeatable {
         val slot = (0..8).firstOrNull {
             player.inventory.getStack(it).item == Items.END_CRYSTAL
@@ -149,7 +150,7 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
                 // lock on target tracker
                 targetTracker.lock(block)
 
-                // aim on target
+                // aim at target
                 RotationManager.aimAt(rotation, configurable = rotations)
                 break
             }
@@ -189,19 +190,17 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
         val radiusSquared = radius * radius
         val eyesPos = player.eyesPos
 
-        val blockToProcess = searchBlocksInRadius(radius) { pos, state ->
+        val (pos1, state1) = searchBlocksInRadius(radius) { pos, state ->
             targetedBlocks.contains(state.block) && getNearestPoint(
                 eyesPos,
                 Box(pos, pos.add(1, 1, 1))
             ).squaredDistanceTo(eyesPos) <= radiusSquared
         }.minByOrNull { it.first.getCenterDistanceSquared() } ?: return
 
-        val (pos, state) = blockToProcess
-
         val rt = RotationManager.raytraceBlock(
             player.eyesPos,
-            pos,
-            state,
+            pos1,
+            state1,
             range = range.toDouble(),
             wallsRange = 0.0
         )
@@ -210,14 +209,14 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
         if (rt != null) {
             val (rotation, _) = rt
             RotationManager.aimAt(rotation, configurable = rotations)
-            currentBlock = pos
+            currentBlock = pos1
             return
         }
 
         val raytraceResult = world.raycast(
             RaycastContext(
                 player.eyesPos,
-                Vec3d.of(pos).add(0.5, 0.5, 0.5),
+                Vec3d.of(pos1).add(0.5, 0.5, 0.5),
                 RaycastContext.ShapeType.COLLIDER,
                 RaycastContext.FluidHandling.NONE,
                 player

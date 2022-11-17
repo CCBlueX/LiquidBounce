@@ -47,14 +47,14 @@ import net.minecraft.util.math.BlockPos
 
 object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
 
-    val inventoryConstraints = InventoryConstraintsConfigurable()
+    private val inventoryConstraints = InventoryConstraintsConfigurable()
 
     init {
         tree(inventoryConstraints)
     }
 
-    val maxBlocks by int("MaxBlocks", 512, 0..3000)
-    val maxArrows by int("MaxArrows", 256, 0..3000)
+    private val maxBlocks by int("MaxBlocks", 512, 0..3000)
+    private val maxArrows by int("MaxArrows", 256, 0..3000)
 
     val usefulItems = items(
         "UsefulItems",
@@ -78,18 +78,18 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
         )
     )
 
-    val isGreedy by boolean("Greedy", true)
+    private val isGreedy by boolean("Greedy", true)
 
-    val offHandItem by enumChoice("OffHandItem", ItemSortChoice.SHIELD, ItemSortChoice.values())
-    val slotItem1 by enumChoice("SlotItem-1", ItemSortChoice.SWORD, ItemSortChoice.values())
-    val slotItem2 by enumChoice("SlotItem-2", ItemSortChoice.BOW, ItemSortChoice.values())
-    val slotItem3 by enumChoice("SlotItem-3", ItemSortChoice.PICKAXE, ItemSortChoice.values())
-    val slotItem4 by enumChoice("SlotItem-4", ItemSortChoice.AXE, ItemSortChoice.values())
-    val slotItem5 by enumChoice("SlotItem-5", ItemSortChoice.NONE, ItemSortChoice.values())
-    val slotItem6 by enumChoice("SlotItem-6", ItemSortChoice.NONE, ItemSortChoice.values())
-    val slotItem7 by enumChoice("SlotItem-7", ItemSortChoice.FOOD, ItemSortChoice.values())
-    val slotItem8 by enumChoice("SlotItem-8", ItemSortChoice.BLOCK, ItemSortChoice.values())
-    val slotItem9 by enumChoice("SlotItem-9", ItemSortChoice.BLOCK, ItemSortChoice.values())
+    private val offHandItem by enumChoice("OffHandItem", ItemSortChoice.SHIELD, ItemSortChoice.values())
+    private val slotItem1 by enumChoice("SlotItem-1", ItemSortChoice.SWORD, ItemSortChoice.values())
+    private val slotItem2 by enumChoice("SlotItem-2", ItemSortChoice.BOW, ItemSortChoice.values())
+    private val slotItem3 by enumChoice("SlotItem-3", ItemSortChoice.PICKAXE, ItemSortChoice.values())
+    private val slotItem4 by enumChoice("SlotItem-4", ItemSortChoice.AXE, ItemSortChoice.values())
+    private val slotItem5 by enumChoice("SlotItem-5", ItemSortChoice.NONE, ItemSortChoice.values())
+    private val slotItem6 by enumChoice("SlotItem-6", ItemSortChoice.NONE, ItemSortChoice.values())
+    private val slotItem7 by enumChoice("SlotItem-7", ItemSortChoice.FOOD, ItemSortChoice.values())
+    private val slotItem8 by enumChoice("SlotItem-8", ItemSortChoice.BLOCK, ItemSortChoice.values())
+    private val slotItem9 by enumChoice("SlotItem-9", ItemSortChoice.BLOCK, ItemSortChoice.values())
 
     val repeatable = repeatable {
         if (player.currentScreenHandler.syncId != 0) {
@@ -145,12 +145,12 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
                     val hotbarSlotToFill = hotbarSlotsToFill[currentStackCount]
 
                     if ((
-                        isGreedy || hotbarSlotToFill.first.satisfactionCheck?.invoke(
+                            isGreedy || hotbarSlotToFill.first.satisfactionCheck?.invoke(
                                 inventory.getStack(
-                                        hotbarSlotToFill.second
-                                    )
+                                    hotbarSlotToFill.second
+                                )
                             ) != true
-                        ) && weightedItem.slot != hotbarSlotToFill.second
+                            ) && weightedItem.slot != hotbarSlotToFill.second
                     ) {
                         if (executeAction(weightedItem.slot, hotbarSlotToFill.second, SlotActionType.SWAP)) {
                             wait(inventoryConstraints.delay.random())
@@ -300,6 +300,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
 
                     WeightedToolItem(stack, slotId)
                 }
+
                 is FishingRodItem -> WeightedRodItem(stack, slotId)
                 is ShieldItem -> WeightedShieldItem(stack, slotId)
                 is BlockItem -> WeightedBlockItem(stack, slotId)
@@ -311,12 +312,14 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
                         else -> WeightedPrimitiveItem(stack, slotId, ItemCategory(ItemType.BUCKET, 3))
                     }
                 }
+
                 is EnderPearlItem -> WeightedPrimitiveItem(stack, slotId, ItemCategory(ItemType.PEARL, 0))
                 Items.GOLDEN_APPLE -> {
                     items.add(WeightedFoodItem(stack, slotId))
 
                     WeightedPrimitiveItem(stack, slotId, ItemCategory(ItemType.GAPPLE, 0))
                 }
+
                 Items.ENCHANTED_GOLDEN_APPLE -> {
                     items.add(WeightedFoodItem(stack, slotId))
 
@@ -327,6 +330,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
                         1
                     )
                 }
+
                 else -> {
                     if (stack.isFood) {
                         WeightedFoodItem(stack, slotId)
@@ -384,13 +388,13 @@ class WeightedArmorItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStac
 
 class WeightedSwordItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
     companion object {
-        val DAMAGE_ESTIMATOR = EnchantmentValueEstimator(
+        private val DAMAGE_ESTIMATOR = EnchantmentValueEstimator(
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SHARPNESS, 0.5f),
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SMITE, 2.0f * 0.05f),
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.BANE_OF_ARTHROPODS, 2.0f * 0.05f),
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.KNOCKBACK, 0.75f),
         )
-        val SECONDARY_VALUE_ESTIMATOR = EnchantmentValueEstimator(
+        private val SECONDARY_VALUE_ESTIMATOR = EnchantmentValueEstimator(
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.LOOTING, 0.05f),
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.05f),
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.VANISHING_CURSE, -0.1f),
@@ -404,19 +408,19 @@ class WeightedSwordItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStac
                         Enchantments.FIRE_ASPECT
                     ) * 4.0f * 0.625f * 0.9f
                     ).compareTo(
-                    o2.itemStack.item.attackDamage * (
-                        1.0f + DAMAGE_ESTIMATOR.estimateValue(
-                            o2.itemStack
-                        ) + o2.itemStack.getEnchantment(Enchantments.FIRE_ASPECT) * 4.0f * 0.625f * 0.9f
-                        )
-                )
+                        o2.itemStack.item.attackDamage * (
+                            1.0f + DAMAGE_ESTIMATOR.estimateValue(
+                                o2.itemStack
+                            ) + o2.itemStack.getEnchantment(Enchantments.FIRE_ASPECT) * 4.0f * 0.625f * 0.9f
+                            )
+                    )
             },
             { o1, o2 ->
                 SECONDARY_VALUE_ESTIMATOR.estimateValue(o1.itemStack)
                     .compareTo(SECONDARY_VALUE_ESTIMATOR.estimateValue(o2.itemStack))
             },
             { o1, o2 -> compareByCondition(o1, o2) { it.itemStack.item is SwordItem } },
-            { o1, o2 -> o1.itemStack.item.enchantability },
+            { o1, _ -> o1.itemStack.item.enchantability },
             HOTBAR_PREDICATE,
             IDENTITY_PREDICATE
         )
@@ -432,7 +436,7 @@ class WeightedSwordItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStac
 
 class WeightedBowItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
     companion object {
-        val VALUE_ESTIMATOR = EnchantmentValueEstimator(
+        private val VALUE_ESTIMATOR = EnchantmentValueEstimator(
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.POWER, 0.25f),
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.PUNCH, 0.33f),
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.FLAME, 4.0f * 0.9f),
@@ -462,7 +466,7 @@ class WeightedBowItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack,
 
 class WeightedCrossbowItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
     companion object {
-        val VALUE_ESTIMATOR = EnchantmentValueEstimator(
+        private val VALUE_ESTIMATOR = EnchantmentValueEstimator(
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.QUICK_CHARGE, 0.2f),
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.MULTISHOT, 1.5f),
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.PIERCING, 1.0f),
@@ -510,7 +514,7 @@ class WeightedArrowItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStac
 
 class WeightedToolItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
     companion object {
-        val VALUE_ESTIMATOR = EnchantmentValueEstimator(
+        private val VALUE_ESTIMATOR = EnchantmentValueEstimator(
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SILK_TOUCH, 1.0f),
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.2f),
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.FORTUNE, 0.33f),
@@ -537,7 +541,7 @@ class WeightedToolItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack
 
 class WeightedRodItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
     companion object {
-        val VALUE_ESTIMATOR = EnchantmentValueEstimator(
+        private val VALUE_ESTIMATOR = EnchantmentValueEstimator(
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.4f),
         )
         private val COMPARATOR = ComparatorChain<WeightedRodItem>(
@@ -559,7 +563,7 @@ class WeightedRodItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack,
 
 class WeightedShieldItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
     companion object {
-        val VALUE_ESTIMATOR = EnchantmentValueEstimator(
+        private val VALUE_ESTIMATOR = EnchantmentValueEstimator(
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.4f),
         )
         private val COMPARATOR = ComparatorChain<WeightedShieldItem>(

@@ -52,7 +52,7 @@ object ModuleTraces : Module("Traces", Category.RENDER) {
             DistanceColor, StaticColor, RainbowColor
         )
     )
-    
+
     private object DistanceColor : Choice("Distance") {
 
         override val parent: ChoiceConfigurable

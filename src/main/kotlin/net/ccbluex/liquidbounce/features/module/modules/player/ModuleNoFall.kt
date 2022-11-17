@@ -51,6 +51,7 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
         override val parent: ChoiceConfigurable
             get() = modes
 
+        @Suppress("unused")
         val packetHandler = handler<PacketEvent> {
             val packet = it.packet
 
@@ -67,6 +68,7 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
         override val parent: ChoiceConfigurable
             get() = modes
 
+        @Suppress("unused")
         val packetHandler = handler<PacketEvent> {
             val packet = it.packet
 
@@ -83,6 +85,7 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
         override val parent: ChoiceConfigurable
             get() = modes
 
+        @Suppress("unused")
         val repeatable = repeatable {
             if (player.fallDistance > 2f) {
                 network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(true))

@@ -34,6 +34,7 @@ import net.minecraft.entity.MovementType
  */
 object ModuleStrafe : Module("Strafe", Category.MOVEMENT) {
 
+    @Suppress("unused")
     val moveHandler = handler<PlayerMoveEvent> { event ->
         // Might just strafe when player controls itself
         if (event.type == MovementType.SELF && player.moving) {

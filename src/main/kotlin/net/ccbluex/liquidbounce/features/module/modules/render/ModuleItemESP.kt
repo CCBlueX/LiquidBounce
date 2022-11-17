@@ -63,6 +63,7 @@ object ModuleItemESP : Module("ItemESP", Category.RENDER) {
 
         val boxOutline = drawBoxOutlineNew(Box(-0.125, 0.125, -0.125, 0.125, 0.375, 0.125), Color4b.WHITE)
 
+        @Suppress("unused")
         val renderHandler = handler<EngineRenderEvent> { event ->
             val base = if (colorRainbow) rainbow() else color
             val baseColor = Color4b(base.r, base.g, base.b, 50)

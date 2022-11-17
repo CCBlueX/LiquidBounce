@@ -60,6 +60,7 @@ object ModuleTerrainSpeed : Module("TerrainSpeed", Category.MOVEMENT) {
 
             private val motion by float("Motion", 0.2872F, 0.1f..0.5f)
 
+            @Suppress("unused")
             val moveHandler = handler<PlayerMoveEvent> {
                 if (player.horizontalCollision && player.isClimbing) {
                     it.movement.y = motion.toDouble()
@@ -76,6 +77,7 @@ object ModuleTerrainSpeed : Module("TerrainSpeed", Category.MOVEMENT) {
             override val parent: ChoiceConfigurable
                 get() = modes
 
+            @Suppress("unused")
             val moveHandler = handler<PlayerMoveEvent> {
 
                 if (player.isClimbing && mc.options.forwardKey.isPressed) {
@@ -122,6 +124,7 @@ object ModuleTerrainSpeed : Module("TerrainSpeed", Category.MOVEMENT) {
 
         val iceBlocks = hashSetOf<Block>(Blocks.ICE, Blocks.BLUE_ICE, Blocks.FROSTED_ICE, Blocks.PACKED_ICE)
 
+        @Suppress("unused")
         val blockSlipperinessMultiplierHandler = handler<BlockSlipperinessMultiplierEvent> { event ->
             if (event.block in iceBlocks) {
                 if (Motion.enabled) {

@@ -33,6 +33,7 @@ object ModuleHighJump : Module("HighJump", Category.MOVEMENT) {
 
     private val motion by float("Motion", 0.8f, 0.2f..1f)
 
+    @Suppress("unused")
     val jumpEvent = handler<PlayerJumpEvent> {
         it.motion = motion
     }

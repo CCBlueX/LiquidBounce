@@ -47,6 +47,7 @@ object ModuleStep : Module("Step", Category.MOVEMENT) {
 
         private val height by float("Height", 1.0F, 0.6F..5.0F)
 
+        @Suppress("unused")
         val stepHandler = handler<PlayerStepEvent> {
             it.height = height
         }

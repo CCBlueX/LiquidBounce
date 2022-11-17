@@ -34,6 +34,7 @@ object ModuleAutoRespawn : Module("AutoRespawn", Category.PLAYER) {
     // There is a delay until the button is clickable on the death screen (20 ticks)
     private val delay by int("Delay", 0, 0..20)
 
+    @Suppress("unused")
     val screenHandler = sequenceHandler<ScreenEvent> {
         if (it.screen is DeathScreen) {
             if (delay > 0) {

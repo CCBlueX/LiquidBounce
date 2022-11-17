@@ -43,6 +43,7 @@ object ModuleLiquidWalk : Module("LiquidWalk", Category.MOVEMENT) {
         override val parent: ChoiceConfigurable
             get() = modes
 
+        @Suppress("unused")
         val shapeHandler = handler<BlockShapeEvent> { event ->
             if (event.state.material.isLiquid && !isBlockAtPosition(player.boundingBox) { it is FluidBlock } && !player.input.sneaking) {
                 event.shape = VoxelShapes.fullCube()
@@ -65,18 +66,21 @@ object ModuleLiquidWalk : Module("LiquidWalk", Category.MOVEMENT) {
 
         private var tick = false
 
+        @Suppress("unused")
         val shapeHandler = handler<BlockShapeEvent> { event ->
             if (event.state.material.isLiquid && !isBlockAtPosition(player.boundingBox) { it is FluidBlock } && !player.input.sneaking) {
                 event.shape = VoxelShapes.fullCube()
             }
         }
 
+        @Suppress("unused")
         val repeatable = repeatable {
             if (isBlockAtPosition(player.boundingBox) { it is FluidBlock } && !player.input.sneaking) {
                 player.velocity.y = 0.08
             }
         }
 
+        @Suppress("unused")
         val packetHandler = handler<PacketEvent> { event ->
             val packet = event.packet
 
@@ -85,7 +89,10 @@ object ModuleLiquidWalk : Module("LiquidWalk", Category.MOVEMENT) {
                 val detectionBox = boundingBox.withMinY(boundingBox.minY - 0.5)
 
                 // todo: fix moving passable flags on edges
-                if (!player.input.sneaking && !player.isTouchingWater && standingOnWater() && !collideBlockIntersects(detectionBox) { it !is FluidBlock }) {
+                if (!player.input.sneaking && !player.isTouchingWater && standingOnWater() && !collideBlockIntersects(
+                        detectionBox
+                    ) { it !is FluidBlock }
+                ) {
                     if (tick) {
                         packet.y -= 0.001
                     }
@@ -94,6 +101,7 @@ object ModuleLiquidWalk : Module("LiquidWalk", Category.MOVEMENT) {
             }
         }
 
+        @Suppress("unused")
         val jumpHandler = handler<PlayerJumpEvent> { event ->
             val boundingBox = player.boundingBox
 

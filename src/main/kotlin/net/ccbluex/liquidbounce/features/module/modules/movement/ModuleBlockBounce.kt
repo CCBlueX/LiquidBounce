@@ -37,13 +37,14 @@ object ModuleBlockBounce : Module("BlockBounce", Category.MOVEMENT) {
 
     private val motion by float("Motion", 0.42f, 0.2f..2f)
 
+    @Suppress("unused")
     val jumpHandler = handler<PlayerJumpEvent> { event ->
         if (standingOnBouncyBlock()) {
             event.motion += motion
         }
     }
 
-    fun standingOnBouncyBlock(): Boolean {
+    private fun standingOnBouncyBlock(): Boolean {
         val boundingBox = player.boundingBox
         val detectionBox = boundingBox.withMinY(boundingBox.minY - 0.01)
 

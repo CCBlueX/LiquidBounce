@@ -42,11 +42,11 @@ import java.util.concurrent.Executors
 
 object ModuleMobOwners : Module("MobOwners", Category.RENDER) {
 
-    val projectiles by boolean("Projectiles", false)
+    private val projectiles by boolean("Projectiles", false)
 
-    val uuidNameCache = ConcurrentHashMap<UUID, OrderedText>()
+    private val uuidNameCache = ConcurrentHashMap<UUID, OrderedText>()
 
-    var asyncRequestExecutor = Executors.newSingleThreadExecutor()
+    private var asyncRequestExecutor = Executors.newSingleThreadExecutor()
 
     fun getOwnerInfoText(entity: Entity): OrderedText? {
         if (!this.enabled)
@@ -70,7 +70,13 @@ object ModuleMobOwners : Module("MobOwners", Category.RENDER) {
                 try {
                     class UsernameRecord(var name: String, var changedToAt: Int?)
 
-                    val response = decode<Array<UsernameRecord>>(HttpClient.get("https://api.mojang.com/user/profiles/${it.toString().replace("-", "")}/names"))
+                    val response = decode<Array<UsernameRecord>>(
+                        HttpClient.get(
+                            "https://api.mojang.com/user/profiles/${
+                                it.toString().replace("-", "")
+                            }/names"
+                        )
+                    )
 
                     val entityName = response.first { it.changedToAt == null }.name
 
@@ -78,7 +84,10 @@ object ModuleMobOwners : Module("MobOwners", Category.RENDER) {
                 } catch (e: InterruptedException) {
 
                 } catch (e: Exception) {
-                    uuidNameCache[it] = OrderedText.styledForwardsVisitedString("Failed to query Mojang API", Style.EMPTY.withItalic(true).withColor(Formatting.RED))
+                    uuidNameCache[it] = OrderedText.styledForwardsVisitedString(
+                        "Failed to query Mojang API",
+                        Style.EMPTY.withItalic(true).withColor(Formatting.RED)
+                    )
                 }
             }
 
