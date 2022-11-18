@@ -51,7 +51,7 @@
   "liquidbounce.command.client.description": "Позволяет Вам управлять клиентом.",
 
   "liquidbounce.command.client.subcommand.info.description": "Показывает информацию о клиенте.",
-  "liquidbounce.command.client.subcommand.info.result.clientName": "Имя клиента: %s",
+  "liquidbounce.command.client.subcommand.info.result.clientName": "Название клиента: %s",
   "liquidbounce.command.client.subcommand.info.result.clientVersion": "Версия клиента: %s",
   "liquidbounce.command.client.subcommand.info.result.clientAuthor": "Автор клиента: %s",
 
@@ -69,7 +69,7 @@
   "liquidbounce.command.friend.subcommand.remove.description": "Удаляет друга из списка друзей.",
   "liquidbounce.command.friend.subcommand.remove.parameter.name.description": "Имя друга.",
   "liquidbounce.command.friend.subcommand.remove.result.notFriends": "%s не был в списке друзей.",
-  "liquidbounce.command.friend.subcommand.remove.result.success": "%s был успешно удален из списка друзей",
+  "liquidbounce.command.friend.subcommand.remove.result.success": "%s был успешно удалён из списка друзей",
 
   "liquidbounce.command.friend.subcommand.alias.description": "Изменяет псевдоним друга.",
   "liquidbounce.command.friend.subcommand.alias.parameter.name.description": "Имя друга.",
@@ -110,8 +110,8 @@
   "liquidbounce.command.hide.subcommand.list.result.hidden": "Скрыт",
   "liquidbounce.command.hide.subcommand.list.result.page": "Страница",
 
-  "liquidbounce.command.hide.subcommand.clear.description": "Все все модули снова видимыми.",
-  "liquidbounce.command.hide.subcommand.clear.result.modulesUnhidden": "Все модули успшено показаны.",
+  "liquidbounce.command.hide.subcommand.clear.description": "Делает все модули снова видимыми.",
+  "liquidbounce.command.hide.subcommand.clear.result.modulesUnhidden": "Все модули успешно показаны.",
 
   "liquidbounce.command.panic.description": "Выключает все модули",
   "liquidbounce.command.panic.parameter.category.description": "Отключает модули только в определённой категории.",
@@ -175,7 +175,7 @@
   "liquidbounce.module.autoArmor.value.no_move.description": "Нужно ли эмулировать движения предметов на стороне сервера.",
   "liquidbounce.module.autoArmor.value.hotbar.description": "Должны ли предметы с хотбара надеваться.",
 
-  "liquidbounce.module.autoBow.description": "Автоматически выпускает стрелу, когда лук полностью натянут и позволяет стрелять быстро",
+  "liquidbounce.module.autoBow.description": "Автоматически выпускает стрелу, когда лук полностью натянут и позволяет стрелять быстрее",
 
   "liquidbounce.module.autoLeave.description": "Автоматически выходит с сервера, когда Ваше здоровье опускается ниже указанного порога.",
 
@@ -191,7 +191,7 @@
 
   "liquidbounce.module.velocity.description": "Изменять Вашу скорость.",
 
-  "liquidbounce.module.abortBreaking.description": "Позволяет прервать ломание сохраняя прогресс.",
+  "liquidbounce.module.abortBreaking.description": "Позволяет прервать ломание, сохраняя прогресс.",
 
   "liquidbounce.module.bedWalk.description": "Позволяет вставать с кровати во время сна.",
 
@@ -227,7 +227,7 @@
   "liquidbounce.module.freeze.description": "Позволяет Вам заморозить себя в одном месте без ведома сервера.",
 
   "liquidbounce.module.noClip.description": "Позволяет Вам летать сквозь блоки.",
-  "liquidbounce.module.noClip.messages.setbackDetected": "YСервер отбросил вас назад! Убедитесь, что вы уже стоите внутри блока.",
+  "liquidbounce.module.noClip.messages.setbackDetected": "YСервер отбросил Вас назад! Убедитесь, что Вы уже стоите внутри блока.",
 
   "liquidbounce.module.parkour.description": "Автоматически прыгает на самый край блока.",
 
@@ -253,7 +253,7 @@
 
   "liquidbounce.module.noFall.description": "Защищает Вас от урона от падения.",
 
-  "liquidbounce.module.antiBlind.description": "Защищает вас от потенциально раздражающих экранных эффектов, блокирующих обзор.",
+  "liquidbounce.module.antiBlind.description": "Защищает Вас от потенциально раздражающих экранных эффектов, блокирующих обзор.",
 
   "liquidbounce.module.breadcrumbs.description": "Оставляет линию позади Вас.",
 
@@ -275,5 +275,179 @@
 
   "liquidbounce.module.fastPlace.description": "Позволяет Вам ставить блоки быстрее.",
 
-  "liquidbounce.module.timer.description": "Изменяет скорость игры."
+  "liquidbounce.module.timer.description": "Изменяет скорость игры.",
+
+  "liquidbounce.generic.notifyDeveloper": "Проверьте свой игровой журнал и оповестите нас.",
+
+  "liquidbounce.command.value.description": "Позволяет вам менять значения настроек",
+  "liquidbounce.command.value.result.success": "Успешно измененно значение настройки.",
+  "liquidbounce.command.value.result.valueNotFound": "Не удалось найти настройку %s!",
+
+  "liquidbounce.command.ping.description": "Узнает Ваш ping.",
+  "liquidbounce.command.ping.result.pingCheck": "Ваш ping - %sмс.",
+
+  "liquidbounce.command.remoteview.description": "Позволяет Вам увидеть перспективу другого игрока.",
+  "liquidbounce.command.remoteview.subcommand.view.result.viewPlayer": "Сейчас Вы видеть преспективы %s.",
+  "liquidbounce.command.remoteview.subcommand.view.result.caseOff": "Чтобы прекратить просмотр перспективы %s, выполните команду \".rv off\"",
+  "liquidbounce.command.remoteview.subcommand.view.result.alreadyViewing": "Вы уже смотрите перспективу %s.",
+  "liquidbounce.command.remoteview.subcommand.off.result.off": "Успешно прикрашен просмотр перспективы %s.",
+  "liquidbounce.command.remoteview.subcommand.off.result.alreadyOff": "Вы не просматриваете ничью перспективу.",
+
+  "liquidbounce.command.xray.description": "Позволяет Вам видеть руды через стены.",
+
+  "liquidbounce.command.xray.subcommand.add.description": "Добавялет блок для отображения в список.",
+  "liquidbounce.command.xray.subcommand.add.parameter.block.description": "Имя блока (например\": \"minecraft:stone\")",
+  "liquidbounce.command.xray.subcommand.add.result.blockNotExists": "Блока %s не существует.",
+  "liquidbounce.command.xray.subcommand.add.result.blockIsPresent": "Блок %s уже в списке отображаемых блоков.",
+  "liquidbounce.command.xray.subcommand.add.result.blockAdded": "Блок %s был добавлен в список для отображения.",
+
+  "liquidbounce.command.xray.subcommand.remove.description": "Убирает блок из списка для отображения,.",
+  "liquidbounce.command.xray.subcommand.remove.parameter.block.description": "Название блока (например: \"minecraft:stone\")",
+  "liquidbounce.command.xray.subcommand.remove.result.blockNotExists": "Блока %s не существует.",
+  "liquidbounce.command.xray.subcommand.remove.result.blockNotFound": "Блока %s нету в списке отображаемых блоков.",
+  "liquidbounce.command.xray.subcommand.remove.result.blockRemoved": "Блок %s был убран из списка для отображения.",
+
+  "liquidbounce.command.xray.subcommand.list.description": "Показывает список отображаемых блоков.",
+  "liquidbounce.command.xray.subcommand.list.parameter.page.description": "Страница для отображения.",
+  "liquidbounce.command.xray.subcommand.list.result.pageNumberTooLarge": "Введённый Вами номер страницы превышает макисмальное число доступных страниц, Максимальное количество %d.",
+  "liquidbounce.command.xray.subcommand.list.result.list": "Список",
+  "liquidbounce.command.xray.subcommand.list.result.pageCount": "Страница: %s",
+  "liquidbounce.command.xray.subcommand.list.result.page": "страница",
+
+  "liquidbounce.command.xray.subcommand.clear.description": "Очищает список блоков для отображения.",
+  "liquidbounce.command.xray.subcommand.clear.result.blocksCleared": "Список отображаемых блоков очищен.",
+
+  "liquidbounce.liquidchat.jwtTokenReceived": "Получен JWT токен! Перезеходит...",
+
+  "liquidbounce.module.pingSpoof.noSingleplayer": "Невозможно включить %s в одиночной игре.",
+
+  "liquidbounce.module.plugins.description": "Позволяет вам видеть плагины сервера.",
+  "liquidbounce.module.plugins.messages.timeOut": "Время для поиска плагинов вышло.",
+  "liquidbounce.module.plugins.messages.noPluginsFound": "Ни один плагин не был найден.",
+
+  "liquidbounce.module.noWeb.description": "Убирает замедление паутины.",
+
+  "liquidbounce.module.friendClicker.description": "Позволяет Вам добавлять друзей по нажатию.",
+  "liquidbounce.module.friendClicker.addedFriend": "%s был успешно добавлен в списко друзей.",
+  "liquidbounce.module.friendClicker.removedFriend": "%s Был успешно удален из списка друзей.",
+
+  "liquidbounce.module.autoGapple.description": "Автоматически есть яблоки, когда Ваше здоровье на исходе.",
+
+  "liquidbounce.module.autoSoup.description": "Автоматически есть супы, когда Ваше здоровье на исходе.",
+
+  "liquidbounce.module.badWifi.description": "Задержвает пакеты, чтобы не дать врагу ударить Вас.",
+
+  "liquidbounce.module.aimbot.description": "Автоматически наводится на выбранные сущности вокруг Вас.",
+
+  "liquidbounce.module.antiReducedDebugInfo.description": "Позволяет вам видеть дополнительную инфорацию для отладки.",
+
+  "liquidbounce.module.ghostHand.description": "Позволяет Вам взаимодействовать с выбранными блоками через стены.",
+
+  "liquidbounce.module.notifier.description": "Уведомляет вас обо всех происходящих событиях.",
+
+  "liquidbounce.module.nameProtect.description": "Изменяет имена игроков на стороне клиента.",
+
+  "liquidbounce.module.teams.description": "Не дает KillAura атаковать участников команды.",
+
+  "liquidbounce.module.avoidHazards.description": "Не даёт Вам попасть в блоки, которые могут быть опасными.",
+
+  "liquidbounce.module.blockBounce.description": "Позволяет Вам подпрыгивать выше на определённых блоках",
+
+  "liquidbounce.module.blockWalk.description": "Позволяет вам ходить по неполным блокам.",
+
+  "liquidbounce.module.bugUp.description": "Автоматически возвращает Вас обратно при подения с определёенной высоты.",
+
+  "liquidbounce.module.elytraFly.description": "Позволяет Вам быстрее лететь с Элитрами.",
+
+  "liquidbounce.module.inventoryMove.description": "Позволяет вам ходить с открытым инвентарем.",
+
+  "liquidbounce.module.liquidWalk.description": "Позволяет Вам ходить по воде.",
+
+  "liquidbounce.module.noJumpDelay.description": "Убирает задержку между прыжками.",
+
+  "liquidbounce.module.noPush.description": "Не даёт другим игрокам толкать Вас.",
+
+  "liquidbounce.module.perfectHorseJump.description": "Автоматически прыгает, когда планка прыжка лошади заполнена.",
+
+  "liquidbounce.module.safeWalk.description": "Не даёт вам упасть, как если бы вы крались.",
+
+  "liquidbounce.module.sneak.description": "Автоматически крадётся всё время.",
+
+  "liquidbounce.module.step.description": "Позволяет вам подниматься на блоки.",
+
+  "liquidbounce.module.terrainSpeed.description": "Позволяет вам двигаться быстрее на определённых поверхностях.",
+
+  "liquidbounce.module.antiAfk.description": "Предотвращает отключение за AFK.",
+
+  "liquidbounce.module.autoFish.description": "Автоматически ловит рыбу, когда Вы используете удочку.",
+
+  "liquidbounce.module.autoTotem.description": "Автоматически размещает тотем в левую руку.",
+
+  "liquidbounce.module.chestStealer.description": "Автоматически берет все предметы из сундука.",
+
+  "liquidbounce.module.regen.description": "Восстанавливает Ваше здоровье гораздо быстрее.",
+
+  "liquidbounce.module.zoot.description": "Убирает все плохие эффекты/огонь.",
+
+  "liquidbounce.module.inventoryCleaner.description": "Автоматически выбрасывает бесполезные предметы и сортирует оставшиеся.",
+
+  "liquidbounce.module.blockEsp.description": "Позволяет Вам видеть выбранные блоки через стены.",
+
+  "liquidbounce.module.ESP.description": "Позволяет Вам видеть цели через стены.",
+
+  "liquidbounce.module.freeCam.description": "Позволяет Вам выйти из тела.",
+
+  "liquidbounce.module.holeEsp.description": "Находит и отображает безопасные места для сражения на кристалах.",
+
+  "liquidbounce.module.mobOwners.description": "Показывает кому принадлежит прирученная сущность или снаряд.",
+
+  "liquidbounce.module.noBob.description": "Отключает эффект покачивания камеры.",
+
+  "liquidbounce.module.noHurtCam.description": "Отключает эффект получения урона.",
+
+  "liquidbounce.module.noSignRender.description": "Не даёт табличкам отображаться.",
+
+  "liquidbounce.module.noSwing.description": "Убирает эффект взмахивания рукой.",
+
+  "liquidbounce.module.noWeather.description": "Отключает эффект дождя.",
+
+  "liquidbounce.module.rotations.description": "Позволяет Вам видеть Ваш поворот головы для сервера.",
+
+  "liquidbounce.module.storageEsp.description": "Позволяет Вам видеть сундуки, раздатчики, т.п. сквозь стены.",
+
+  "liquidbounce.module.trajectories.description": "Позволяет Вам видеть, где снаряды приземлятся.",
+
+  "liquidbounce.module.autoFarm.description": "Автоматически собирает вещи для Вас.",
+
+  "liquidbounce.module.autoTool.description": "Автоматически выбирает лучший инструмент для ломания блока.",
+
+  "liquidbounce.module.crystalAura.description": "Автоматически ставит и взрывает кристалы Энда.",
+
+  "liquidbounce.module.fucker.description": "Ломает/использует выбранные блоки вокруг Вас.",
+
+  "liquidbounce.module.ignite.description": "Автоматически пождигает цели вокруг Вас.",
+
+  "liquidbounce.module.scaffold.description": "Автоматически ставит блоки под Вами.",
+
+  "liquidbounce.module.fastUse.description": "Позволяет Вам использовать предметы быстрее.",
+
+  "liquidbounce.module.noSlow.description": "Убирает эффект замедления, вызванный блоками или использованием предметов.",
+
+  "liquidbounce.module.highJump.description": "Позволяет Вам прыгать выше.",
+
+  "liquidbounce.module.sleepWalker.description": "Позволяет Вам ходить во время сна, так же делает Ваш хитбокс меньше.",
+
+  "liquidbounce.module.dankBobbing.description": "Увеличивает эффект покачивания.",
+
+  "liquidbounce.module.projectilePuncher.description": "Отбивает приблежающиеся снаряды.",
+
+  "liquidbounce.module.autoPot.description": "Автоматически бросает зелья лечения, когда Ваше здоровье на исходе.",
+
+  "liquidbounce.module.keepChatAfterDeath.description": "Позволяет Вам использовать чат на экране смерти.",
+
+  "liquidbounce.module.xray.description": "Позволяет Вам видеть руды через стены.",
+
+  "liquidbounce.module.noRotateSet.description": "Не даёт серверу поворачивать Вашу голову.",
+
+  "liquidbounce.module.noSlowBreak.description": "Автоматически меняет скорость ломания блоков в неблагоприятных условиях."
 }
