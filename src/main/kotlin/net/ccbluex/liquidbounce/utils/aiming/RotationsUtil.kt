@@ -20,13 +20,15 @@
 package net.ccbluex.liquidbounce.utils.aiming
 
 import net.ccbluex.liquidbounce.config.Configurable
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.GameTickEvent
+import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.PlayerVelocityStrafe
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.step
 import net.minecraft.block.BlockState
 import net.minecraft.block.ShapeContext
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.util.math.*
 import org.apache.commons.lang3.RandomUtils
 import kotlin.math.atan2
@@ -47,7 +49,8 @@ class RotationsConfigurable : Configurable("Rotations") {
 object RotationManager : Listenable {
 
     var targetRotation: Rotation? = null
-    var serverRotation: Rotation? = null
+    val serverRotation: Rotation
+        get() = Rotation(mc.player?.yaw ?: 0f, mc.player?.pitch ?: 0f)
 
     // Current rotation
     var currentRotation: Rotation? = null
@@ -281,7 +284,7 @@ object RotationManager : Listenable {
         if (ticksUntilReset == 0) {
             val threshold = 2f // todo: might use turn speed
 
-            if (rotationDifference(currentRotation ?: serverRotation ?: return, playerRotation) < threshold) {
+            if (rotationDifference(currentRotation ?: serverRotation, playerRotation) < threshold) {
                 ticksUntilReset = -1
 
                 targetRotation = null
@@ -296,9 +299,8 @@ object RotationManager : Listenable {
                 return
             }
 
-            currentRotation = limitAngleChange(
-                currentRotation ?: serverRotation ?: return, playerRotation, turnSpeed
-            ).fixedSensitivity()
+            currentRotation =
+                limitAngleChange(currentRotation ?: serverRotation, playerRotation, turnSpeed).fixedSensitivity()
             return
         }
         targetRotation?.let { targetRotation ->
@@ -316,7 +318,7 @@ object RotationManager : Listenable {
      * Calculate difference between the server rotation and your rotation
      */
     fun rotationDifference(rotation: Rotation): Double {
-        return rotationDifference(rotation, serverRotation ?: return 0.0)
+        return rotationDifference(rotation, serverRotation)
     }
 
     /**
@@ -343,34 +345,13 @@ object RotationManager : Listenable {
      */
     private fun angleDifference(a: Float, b: Float) = MathHelper.wrapDegrees(a - b)
 
-    /**
-     * Modify server-side rotations
-     */
-    private val packetHandler = handler<PacketEvent> { event ->
-        val packet = event.packet
-
-        if (packet !is PlayerMoveC2SPacket || !packet.changesLook()) {
-            return@handler
-        }
-
-        // Update current rotation
-        serverRotation = Rotation(packet.yaw, packet.pitch)
-
-        // serverRotation and currentRotation must always match post update
-        currentRotation?.let {
-            if (rotationDifference(it) != 0.0) {
-                serverRotation = it
-            }
-        }
-    }
-
-    val velocity = handler<PlayerVelocityStrafe> { event ->
+    val velocityHandler = handler<PlayerVelocityStrafe> { event ->
         if (activeConfigurable?.fixVelocity == true) {
             event.velocity = fixVelocity(event.velocity, event.movementInput, event.speed)
         }
     }
 
-    val gameTick = handler<GameTickEvent> {
+    val tickHandler = handler<GameTickEvent> {
         if (targetRotation == null) {
             return@handler
         }

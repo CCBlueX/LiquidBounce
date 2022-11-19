@@ -59,11 +59,6 @@ public class MixinKeyboardInput extends MixinInput {
             return;
         }
 
-        currentRotation = currentRotation.fixedSensitivity();
-        if (currentRotation == null) {
-            return;
-        }
-
         float deltaYaw = player.getYaw() - currentRotation.getYaw();
 
         float x = this.movementSideways;
