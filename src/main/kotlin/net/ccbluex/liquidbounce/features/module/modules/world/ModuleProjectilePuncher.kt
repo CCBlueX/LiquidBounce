@@ -81,26 +81,29 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
                     continue
                 }
 
-                // find best spot (and skip if no spot was found)
-                val (rotation, _) = RotationManager.raytraceBox(
-                    player.eyesPos,
-                    entity.boundingBox,
-                    range = range.toDouble(),
-                    wallsRange = 0.0
-                ) ?: continue
+                // find best spot
+                val spot = RotationManager.raytraceBox(
+                    player.eyesPos, entity.boundingBox, range = range.toDouble(), wallsRange = 0.0
+                )
+
+                // skip if no spot was found
+                if (spot == null) {
+                    targetTracker.cleanup()
+                    continue
+                }
 
                 // lock on target tracker
                 targetTracker.lock(entity)
 
                 // aim at target
-                RotationManager.aimAt(rotation, configurable = rotations)
+                RotationManager.aimAt(spot.rotation, configurable = rotations)
                 break
             }
         }
 
         val entity = targetTracker.lockedOnTarget ?: return
-        val clicks = cpsTimer.clicks(condition = { true },
-            cps
+        val clicks = cpsTimer.clicks(
+            condition = { true }, cps
         )
 
         // There is no need for multiple clicks on one target.

@@ -88,15 +88,12 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
             }
 
             updateTarget()
-            val curr = currentBlock ?: return@repeatable
-            val serverRotation = RotationManager.serverRotation ?: return@repeatable
 
-            val rayTraceResult = raytraceBlock(
-                range.toDouble(),
-                serverRotation,
-                curr,
-                curr.getState() ?: return@repeatable
-            )
+            val curr = currentBlock ?: return@repeatable
+            val currentRotation = RotationManager.currentRotation ?: return@repeatable
+
+            val rayTraceResult =
+                raytraceBlock(range.toDouble(), currentRotation, curr, curr.getState() ?: return@repeatable)
 
             if (rayTraceResult?.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != curr) {
                 return@repeatable
@@ -107,10 +104,7 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
             }
 
             if (interaction.interactBlock(
-                    player,
-                    world,
-                    Hand.MAIN_HAND,
-                    rayTraceResult
+                    player, world, Hand.MAIN_HAND, rayTraceResult
                 ) == ActionResult.SUCCESS
             ) {
                 if (swing) {
@@ -138,19 +132,22 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
                 if (block.boxedDistanceTo(player) > range) {
                     return
                 }
-                // find best spot (and skip if no spot was found)
-                val (rotation, _) = RotationManager.raytraceBox(
-                    player.eyesPos,
-                    block.boundingBox,
-                    range = range.toDouble(),
-                    wallsRange = 0.0
-                ) ?: continue
+                // find best spot
+                val spot = RotationManager.raytraceBox(
+                    player.eyesPos, block.boundingBox, range = range.toDouble(), wallsRange = 0.0
+                )
+
+                // skip if no spot was found
+                if (spot == null) {
+                    targetTracker.cleanup()
+                    continue
+                }
 
                 // lock on target tracker
                 targetTracker.lock(block)
 
                 // aim on target
-                RotationManager.aimAt(rotation, configurable = rotations)
+                RotationManager.aimAt(spot.rotation, configurable = rotations)
                 break
             }
         }
@@ -191,19 +188,14 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
 
         val blockToProcess = searchBlocksInRadius(radius) { pos, state ->
             targetedBlocks.contains(state.block) && getNearestPoint(
-                eyesPos,
-                Box(pos, pos.add(1, 1, 1))
+                eyesPos, Box(pos, pos.add(1, 1, 1))
             ).squaredDistanceTo(eyesPos) <= radiusSquared
         }.minByOrNull { it.first.getCenterDistanceSquared() } ?: return
 
         val (pos, state) = blockToProcess
 
         val rt = RotationManager.raytraceBlock(
-            player.eyesPos,
-            pos,
-            state,
-            range = range.toDouble(),
-            wallsRange = 0.0
+            player.eyesPos, pos, state, range = range.toDouble(), wallsRange = 0.0
         )
 
         // We got a free angle at the block? Cool.

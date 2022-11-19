@@ -45,7 +45,7 @@ object ModuleRotations : Module("Rotations", Category.RENDER) {
             return@handler
         }
 
-        val serverRotation = RotationManager.serverRotation ?: return@handler
+        val serverRotation = RotationManager.serverRotation
 
         val vertexFormat = PositionColorVertexFormat()
 
@@ -53,14 +53,22 @@ object ModuleRotations : Module("Rotations", Category.RENDER) {
 
         val camera = mc.gameRenderer.camera
 
-        val eyeVector = Vec3(0.0, 0.0, 1.0)
-            .rotatePitch((-Math.toRadians(camera.pitch.toDouble())).toFloat())
+        val eyeVector = Vec3(0.0, 0.0, 1.0).rotatePitch((-Math.toRadians(camera.pitch.toDouble())).toFloat())
             .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat()) + Vec3(camera.pos) + Vec3(0.0, 0.0, -1.0)
 
         vertexFormat.putVertex { this.position = eyeVector; this.color = Color4b.WHITE }
-        vertexFormat.putVertex { this.position = eyeVector + Vec3(serverRotation.rotationVec * 2.0); this.color = Color4b.WHITE }
+        vertexFormat.putVertex {
+            this.position = eyeVector + Vec3(serverRotation.rotationVec * 2.0); this.color = Color4b.WHITE
+        }
 
-        RenderEngine.enqueueForRendering(RenderEngine.CAMERA_VIEW_LAYER, VertexFormatRenderTask(vertexFormat, PrimitiveType.LineStrip, ColoredPrimitiveShader, state = GlRenderState(lineWidth = 2.0f, lineSmooth = true)))
+        RenderEngine.enqueueForRendering(
+            RenderEngine.CAMERA_VIEW_LAYER, VertexFormatRenderTask(
+                vertexFormat,
+                PrimitiveType.LineStrip,
+                ColoredPrimitiveShader,
+                state = GlRenderState(lineWidth = 2.0f, lineSmooth = true)
+            )
+        )
     }
 
 }

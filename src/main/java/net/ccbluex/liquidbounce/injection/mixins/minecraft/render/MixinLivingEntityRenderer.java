@@ -50,7 +50,7 @@ public class MixinLivingEntityRenderer<T extends LivingEntity> {
             return;
         }
 
-        if (ModuleFreeCam.INSTANCE.shouldDisableRotations() && serverRotation != null) {
+        if (ModuleFreeCam.INSTANCE.shouldDisableRotations()) {
             this.currentRotation.set(serverRotation);
             return;
         }

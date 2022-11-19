@@ -66,12 +66,12 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         }
 
         val curr = currentTarget ?: return@repeatable
-        val serverRotation = RotationManager.serverRotation ?: return@repeatable
+        val currentRotation = RotationManager.currentRotation ?: return@repeatable
 
         val rayTraceResult = mc.world?.raycast(
             RaycastContext(
                 player.eyesPos,
-                player.eyesPos.add(serverRotation.rotationVec.multiply(range.toDouble())),
+                player.eyesPos.add(currentRotation.rotationVec.multiply(range.toDouble())),
                 RaycastContext.ShapeType.COLLIDER,
                 RaycastContext.FluidHandling.NONE,
                 player

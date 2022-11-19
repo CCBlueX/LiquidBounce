@@ -110,7 +110,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     val networkTickHandler = repeatable {
         val target = currentTarget ?: return@repeatable
 
-        val currentRotation = RotationManager.currentRotation ?: RotationManager.serverRotation ?: return@repeatable
+        val currentRotation = RotationManager.currentRotation ?: return@repeatable
         val rayTraceResult = raycast(4.5, currentRotation) ?: return@repeatable
 
         if (rayTraceResult.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != target.blockPos || rayTraceResult.side != target.direction || rayTraceResult.pos.y < target.minY || !isValidTarget(
