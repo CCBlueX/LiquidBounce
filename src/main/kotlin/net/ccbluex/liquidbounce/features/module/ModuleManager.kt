@@ -174,7 +174,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleOverrideTime,
             ModuleXRay,
             ModuleNoRotateSet,
-            ModuleNoSlowBreak
+            ModuleNoSlowBreak,
+            ModuleSprint
         )
 
         builtin.apply {
