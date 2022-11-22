@@ -18,27 +18,20 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
-import net.ccbluex.liquidbounce.utils.client.Timer;
-import net.minecraft.client.render.RenderTickCounter;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
+import net.minecraft.client.render.Camera;
+import net.minecraft.entity.Entity;
+import net.minecraft.world.BlockView;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(RenderTickCounter.class)
-public class MixinRenderTickCounter {
+@Mixin(Camera.class)
+public class MixinCamera {
 
-    @Shadow public float lastFrameDuration;
-
-    /**
-     * Hook timer speed to modify frame duration
-     */
-    @Inject(method = "beginRenderTick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/RenderTickCounter;lastFrameDuration:F", shift = At.Shift.AFTER))
-    private void hookTimer(CallbackInfoReturnable<Integer> callback) {
-        float customTimer = Timer.INSTANCE.getTimerSpeed();
-        if (customTimer>0)
-            lastFrameDuration *= customTimer;
+    @Inject(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;setPos(DDD)V", shift = At.Shift.AFTER))
+    private void hookFreeCamModifiedPosition(BlockView area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo ci) {
+        ModuleFreeCam.INSTANCE.applyPosition(focusedEntity, tickDelta);
     }
-
 }

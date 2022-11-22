@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePortalMenu
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoSlow;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModulePerfectHorseJump;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleStep;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
@@ -33,6 +34,7 @@ import net.minecraft.client.input.Input;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.MovementType;
+import net.minecraft.entity.player.PlayerAbilities;
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.Vec3d;
@@ -95,10 +97,12 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
      * Hook push out function tick at HEAD and call out push out event, which is able to stop the cancel the execution.
      */
     @Inject(method = "pushOutOfBlocks", at = @At("HEAD"), cancellable = true)
-    private void hookPushOut(CallbackInfo callbackInfo) {
+    private void hookPushOut(double x, double z, CallbackInfo ci) {
         final PlayerPushOutEvent pushOutEvent = new PlayerPushOutEvent();
         EventManager.INSTANCE.callEvent(pushOutEvent);
-        if (pushOutEvent.isCancelled()) callbackInfo.cancel();
+        if (pushOutEvent.isCancelled()) {
+            ci.cancel();
+        }
     }
 
     /**
@@ -123,7 +127,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     /**
      * Hook custom multiplier
      */
-    @Inject(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/Input;movementForward:F", shift = At.Shift.AFTER))
+    @Inject(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z", ordinal = 0))
     private void hookCustomMultiplier(CallbackInfo callbackInfo) {
         final Input input = this.input;
         // reverse
@@ -158,8 +162,9 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
      */
     @ModifyVariable(method = "sendMovementPackets", at = @At("STORE"), ordinal = 3)
     private boolean hookSilentRotationsCheck(boolean bl4) {
+        boolean shouldDisableRotations = ModuleFreeCam.INSTANCE.shouldDisableRotations();
         updatedSilent = RotationManager.INSTANCE.needsUpdate(lastYaw, lastPitch);
-        return (bl4 && RotationManager.INSTANCE.getCurrentRotation() == null) || updatedSilent;
+        return !shouldDisableRotations && ((bl4 && RotationManager.INSTANCE.getCurrentRotation() == null) || updatedSilent);
     }
 
     /**
@@ -226,5 +231,10 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
         if (ModulePerfectHorseJump.INSTANCE.getEnabled()) {
             callbackInfoReturnable.setReturnValue(1f);
         }
+    }
+
+    @Redirect(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerAbilities;allowFlying:Z", ordinal = 1))
+    private boolean hookFreeCamPreventCreativeFly(PlayerAbilities instance) {
+        return !ModuleFreeCam.INSTANCE.getEnabled() && instance.allowFlying;
     }
 }
