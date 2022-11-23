@@ -157,7 +157,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
             return instance.getYaw();
         }
 
-        return instance.getYaw();
+        return rotation.getYaw();
     }
 
     @Redirect(method = "sendMovementPackets", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getPitch()F"))
@@ -168,7 +168,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
             return instance.getPitch();
         }
 
-        return instance.getPitch();
+        return rotation.getPitch();
     }
 
     @Inject(method = "isSneaking", at = @At("HEAD"), cancellable = true)
