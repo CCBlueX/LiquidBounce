@@ -46,7 +46,7 @@ object ColorUtils {
         for (i in 0 until chars.size - 1) {
             if (chars[i] == '&' && "0123456789AaBbCcDdEeFfKkLlMmNnOoRr".contains(chars[i + 1], true)) {
                 chars[i] = '§'
-                chars[i + 1] = Character.lowercase(chars[i + 1])
+                chars[i + 1] = Character.toLowerCase(chars[i + 1])
             }
         }
 
