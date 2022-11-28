@@ -75,6 +75,7 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
 
         val boxOutline = drawBoxOutlineNew(Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0), Color4b.WHITE)
 
+        @Suppress("unused")
         val tickHandler = handler<EngineRenderEvent> { event ->
             val blocksToRender = locations.entries.filter { it.value.shouldRender(it.key) }
 
@@ -121,8 +122,20 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
     }
 
     enum class ChestType(val color: Color4b, val shouldRender: (BlockPos) -> Boolean) {
-        CHEST(Color4b(0, 66, 255), { chestValue && !net.ccbluex.liquidbounce.features.module.modules.world.ModuleChestAura.clickedBlocks.contains(it) }),
-        ENDER_CHEST(Color4b(Color.MAGENTA), { enderChestValue && !net.ccbluex.liquidbounce.features.module.modules.world.ModuleChestAura.clickedBlocks.contains(it) }),
+        CHEST(
+            Color4b(0, 66, 255),
+            {
+                chestValue && !net.ccbluex.liquidbounce.features.module.modules.world.ModuleChestAura.clickedBlocks.contains(
+                    it
+                )
+            }),
+        ENDER_CHEST(
+            Color4b(Color.MAGENTA),
+            {
+                enderChestValue && !net.ccbluex.liquidbounce.features.module.modules.world.ModuleChestAura.clickedBlocks.contains(
+                    it
+                )
+            }),
         FURNACE(Color4b(Color.BLACK), { furnaceValue }),
         DISPENSER(Color4b(Color.BLACK), { dispenserValue }),
         HOPPER(Color4b(Color.GRAY), { hopperValue }),
@@ -138,7 +151,7 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
 
             // Chunk was unloaded? Don't rescan then
             if (!rescan)
-                return;
+                return
 
             val chunk = world.getChunk(x, z)
 

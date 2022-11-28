@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.features.module.Module
  */
 object ModuleSafeWalk : Module("SafeWalk", Category.MOVEMENT) {
 
+    @Suppress("unused")
     val safeWalkHandler = handler<PlayerSafeWalkEvent> { event ->
         event.isSafeWalk = true
     }

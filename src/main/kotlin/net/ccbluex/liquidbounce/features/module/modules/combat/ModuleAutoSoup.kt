@@ -67,6 +67,7 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
                 BowlMode.DROP -> {
                     utilizeInventory(bowlHotbarSlot, 1, SlotActionType.THROW, inventoryConstraints)
                 }
+
                 BowlMode.MOVE -> {
                     // If there is neither an empty slot nor an empty bowl, then replace whatever there is on slot 9
                     if (!player.inventory.getStack(9).isEmpty || player.inventory.getStack(9).item != Items.BOWL) {

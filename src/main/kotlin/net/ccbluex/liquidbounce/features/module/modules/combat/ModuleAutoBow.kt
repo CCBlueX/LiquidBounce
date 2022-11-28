@@ -48,7 +48,9 @@ import kotlin.math.*
  */
 object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
 
-    const val ACCELERATION = -0.006
+    private const val ACCELERATION = -0.006
+
+    @Suppress("unused")
     const val REAL_ACCELERATION = -0.005
 
     /**
@@ -58,6 +60,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
 
         val charged by int("Charged", 20, 3..20)
 
+        @Suppress("unused")
         val tickRepeatable = handler<GameTickEvent> {
             val player = mc.player ?: return@handler
 
@@ -226,7 +229,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
         return rotation
     }
 
-    fun getTravelTime(dist: Double, v0: Double): Float {
+    private fun getTravelTime(dist: Double, v0: Double): Float {
         return log((v0 / (ln(0.99)) + dist) / (v0 / (ln(0.99))), 0.99).toFloat()
     }
 
@@ -234,7 +237,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
         BowAimbotOptions.targetTracker.cleanup()
     }
 
-    fun predictBow(target: Vec3d, assumeElongated: Boolean): BowPredictionResult {
+    private fun predictBow(target: Vec3d, assumeElongated: Boolean): BowPredictionResult {
         val player = player
 
         val travelledOnX = sqrt(target.x * target.x + target.z * target.z)
@@ -250,7 +253,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
         return BowPredictionResult(
             Rotation(
                 (atan2(target.z, target.x) * 180.0f / Math.PI).toFloat() - 90.0f,
-                (-Math.toDegrees(Math.atan((velocity * velocity - Math.sqrt(velocity * velocity * velocity * velocity - 0.006f * (0.006f * (travelledOnX * travelledOnX) + 2 * target.y * (velocity * velocity)))) / (0.006f * travelledOnX)))).toFloat()
+                (-Math.toDegrees(atan((velocity * velocity - sqrt(velocity * velocity * velocity * velocity - 0.006f * (0.006f * (travelledOnX * travelledOnX) + 2 * target.y * (velocity * velocity)))) / (0.006f * travelledOnX)))).toFloat()
             ),
             velocity,
             travelledOnX
@@ -269,6 +272,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
 
         val packets by int("Packets", 20, 3..20)
 
+        @Suppress("unused")
         val tickRepeatable = handler<GameTickEvent> {
             val player = mc.player ?: return@handler
 

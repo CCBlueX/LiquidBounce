@@ -43,7 +43,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
     val modes = choices("Mode", Modify) {
         arrayOf(
             Modify,
-            Push,
+            // Push,
             Strafe
         )
     }
@@ -60,6 +60,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
         val horizontal by float("Horizontal", 0f, 0f..1f)
         val vertical by float("Vertical", 0f, 0f..1f)
 
+        @Suppress("unused")
         val packetHandler = handler<PacketEvent> { event ->
             val packet = event.packet
 
@@ -103,6 +104,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
         override val parent: ChoiceConfigurable
             get() = modes
 
+        @Suppress("unused")
         val packetHandler = sequenceHandler<PacketEvent> { event ->
             val packet = event.packet
 
@@ -130,6 +132,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
         var applyStrafe = false
 
+        @Suppress("unused")
         val packetHandler = sequenceHandler<PacketEvent> { event ->
             val packet = event.packet
 
@@ -147,6 +150,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
             }
         }
 
+        @Suppress("unused")
         val moveHandler = handler<PlayerMoveEvent> { event ->
             if (player.isOnGround) {
                 applyStrafe = false

@@ -45,7 +45,7 @@ import net.minecraft.world.RaycastContext
  * Automatically farms stuff for you.
  */
 object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
-// TODO Fix this entire module-
+    // TODO Fix this entire module-
     private val range by float("Range", 5F, 1F..6F)
     private val throughWalls by boolean("ThroughWalls", false)
 
@@ -54,6 +54,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
     private var currentTarget: BlockPos? = null
 
+    @Suppress("unused")
     val networkTickHandler = repeatable { event ->
         if (mc.currentScreen is HandledScreen<*>) {
             return@repeatable
@@ -78,7 +79,11 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             )
         )
 
-        if (rayTraceResult?.type != HitResult.Type.BLOCK || !isTargeted(rayTraceResult.blockPos.getState()!!, rayTraceResult.blockPos)) {
+        if (rayTraceResult?.type != HitResult.Type.BLOCK || !isTargeted(
+                rayTraceResult.blockPos.getState()!!,
+                rayTraceResult.blockPos
+            )
+        ) {
             return@repeatable
         }
 
@@ -100,19 +105,17 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         val radiusSquared = radius * radius
         val eyesPos = mc.player!!.eyesPos
 
-        val blockToProcess = searchBlocksInCuboid(radius.toInt()) { pos, state ->
+        val (pos1, state1) = searchBlocksInCuboid(radius.toInt()) { pos, state ->
             !state.isAir && getNearestPoint(
                 eyesPos,
                 Box(pos, pos.add(1, 1, 1))
             ).squaredDistanceTo(eyesPos) <= radiusSquared && isTargeted(state, pos)
         }.minByOrNull { it.first.getCenterDistanceSquared() } ?: return
 
-        val (pos, state) = blockToProcess
-
         val rt = RotationManager.raytraceBlock(
             player.eyesPos,
-            pos,
-            state,
+            pos1,
+            state1,
             range = range.toDouble(),
             wallsRange = if (throughWalls) range.toDouble() else 0.0
         )
@@ -122,14 +125,14 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             val (rotation, _) = rt
             RotationManager.aimAt(rotation, configurable = rotations)
 
-            this.currentTarget = pos
+            this.currentTarget = pos1
             return
         }
 
         val raytraceResult = mc.world?.raycast(
             RaycastContext(
                 player.eyesPos,
-                Vec3d.of(pos).add(0.5, 0.5, 0.5),
+                Vec3d.of(pos1).add(0.5, 0.5, 0.5),
                 RaycastContext.ShapeType.COLLIDER,
                 RaycastContext.FluidHandling.NONE,
                 player
@@ -143,9 +146,8 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     }
 
     private fun isTargeted(state: BlockState, pos: BlockPos): Boolean {
-        val block = state.block
 
-        return when (block) {
+        return when (val block = state.block) {
             is GourdBlock -> true
             is CropBlock -> block.isMature(state)
             is NetherWartBlock -> state.get(NetherWartBlock.AGE) >= 3

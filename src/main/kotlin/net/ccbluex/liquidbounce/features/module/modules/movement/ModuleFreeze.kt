@@ -34,6 +34,7 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
  */
 object ModuleFreeze : Module("Freeze", Category.MOVEMENT) {
 
+    @Suppress("unused")
     val moveHandler = handler<PlayerMoveEvent> { event ->
         // Set motion to zero
         event.movement.x = 0.0

@@ -58,6 +58,7 @@ object ModuleFreeCam : Module("FreeCam", Category.RENDER) {
         updatePosition(player.eyePos, lastPosBeforePos = false, increase = false)
     }
 
+    @Suppress("unused")
     val tickHandler = handler<PlayerTickEvent> {
         if (player.age < 3) {
             updatePosition(player.eyePos, lastPosBeforePos = false, increase = false)
@@ -71,10 +72,12 @@ object ModuleFreeCam : Module("FreeCam", Category.RENDER) {
         updatePosition(velocity, lastPosBeforePos = true, increase = true)
     }
 
+    @Suppress("unused")
     val jumpHandler = handler<PlayerJumpEvent> {
         it.cancelEvent()
     }
 
+    @Suppress("unused")
     val moveHandler = handler<PlayerMoveEvent> {
         if (!freeze) {
             return@handler

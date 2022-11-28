@@ -62,6 +62,7 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
 
         val invalidGroundList = mutableMapOf<Entity, Int>()
 
+        @Suppress("unused")
         val packetHandler = handler<PacketEvent> {
             if (it.packet !is EntityS2CPacket || !it.packet.isPositionChanged || !InvalidGround.enabled) {
                 return@handler
@@ -107,6 +108,7 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
         val suspectList = ArrayList<UUID>()
         val botList = ArrayList<UUID>()
 
+        @Suppress("unused")
         val packetHandler = handler<PacketEvent> {
             if (it.packet !is PlayerListS2CPacket) {
                 return@handler
@@ -144,6 +146,7 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
             }
         }
 
+        @Suppress("unused")
         val repeatable = repeatable {
             if (suspectList.isEmpty()) {
                 return@repeatable
@@ -212,6 +215,8 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
          * As for Matrix and Intave, they defy this logic. Intave though decides instead to fix it by sending [PlayerListS2CPacket.Action.UPDATE_LATENCY]
          * to make up for the ping issue. Unfortunately, that leads to even more problems.
          */
+
+        @Suppress("unused")
         val packetHandler = handler<PacketEvent> {
             if (it.packet !is PlayerListS2CPacket) {
                 return@handler
@@ -275,6 +280,7 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
 
         val botList = ArrayList<UUID>()
 
+        @Suppress("unused")
         val packetHandler = handler<PacketEvent> {
             if (it.packet !is PlayerListS2CPacket) {
                 return@handler

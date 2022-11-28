@@ -48,6 +48,7 @@ private class FontRendererCache {
     val lines: ArrayList<RenderedLine> = ArrayList()
 }
 
+@Suppress("unused")
 class FontRenderer(
     /**
      * Glyph pages for the style of the font. If an element is null, fall back to `[0]`

@@ -33,8 +33,8 @@ import net.ccbluex.liquidbounce.utils.entity.strafe
  */
 object ModuleVehicleFly : Module("VehicleFly", Category.MOVEMENT) {
 
-    val speedVertical by float("Vertical", 0.32f, 0.1f..0.4f)
-    val speedHorizontal by float("Horizontal", 0.48f, 0.1f..0.4f)
+    private val speedVertical by float("Vertical", 0.32f, 0.1f..0.4f)
+    private val speedHorizontal by float("Horizontal", 0.48f, 0.1f..0.4f)
 
     val repeatable = repeatable {
         val vehicle = player.vehicle ?: return@repeatable
@@ -43,7 +43,10 @@ object ModuleVehicleFly : Module("VehicleFly", Category.MOVEMENT) {
             mc.options.jumpKey.isPressed -> speedVertical.toDouble()
             else -> 0.0
         }
-        vehicle.velocity.strafe(yaw = player.directionYaw, speed = if (player.moving) speedHorizontal.toDouble() else 0.0)
+        vehicle.velocity.strafe(
+            yaw = player.directionYaw,
+            speed = if (player.moving) speedHorizontal.toDouble() else 0.0
+        )
     }
 
 }

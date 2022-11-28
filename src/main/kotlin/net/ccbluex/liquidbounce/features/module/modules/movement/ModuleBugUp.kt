@@ -46,6 +46,7 @@ object ModuleBugUp : Module("BugUp", Category.MOVEMENT) {
     private var prevZ = 0.0
     private var actionTaken = false
 
+    @Suppress("unused")
     val listener = repeatable {
         detectedLocation = null
 

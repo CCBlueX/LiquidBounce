@@ -43,12 +43,12 @@ import kotlin.random.Random
 object ModuleTrigger : Module("Trigger", Category.COMBAT) {
 
     // CPS means clicks per second
-    val cps by intRange("CPS", 5..8, 1..20)
-    val cooldown by boolean("Cooldown", true)
-    val failRate by int("FailRate", 0, 0..100)
-    val onItemUse by enumChoice("OnItemUse", Use.WAIT, Use.values())
-    val weapon by enumChoice("Weapon", Weapon.ANY, Weapon.values())
-    val delayPostStopUse by int("DelayPostStopUse", 0, 0..20)
+    private val cps by intRange("CPS", 5..8, 1..20)
+    private val cooldown by boolean("Cooldown", true)
+    private val failRate by int("FailRate", 0, 0..100)
+    private val onItemUse by enumChoice("OnItemUse", Use.WAIT, Use.values())
+    private val weapon by enumChoice("Weapon", Weapon.ANY, Weapon.values())
+    private val delayPostStopUse by int("DelayPostStopUse", 0, 0..20)
 
     private val cpsTimer = CpsScheduler()
 
@@ -79,7 +79,7 @@ object ModuleTrigger : Module("Trigger", Category.COMBAT) {
         }
     }
 
-    fun isWeaponSelected(): Boolean {
+    private fun isWeaponSelected(): Boolean {
         val item = player.mainHandStack.item
 
         return when (weapon) {
@@ -103,6 +103,7 @@ object ModuleTrigger : Module("Trigger", Category.COMBAT) {
 
                 true
             }
+
             Use.STOP -> {
                 network.sendPacket(
                     PlayerActionC2SPacket(
@@ -117,6 +118,7 @@ object ModuleTrigger : Module("Trigger", Category.COMBAT) {
 
                 true
             }
+
             Use.IGNORE -> false
         }
     }

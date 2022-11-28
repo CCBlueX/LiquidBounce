@@ -63,7 +63,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     private val action by enumChoice("Action", DestroyAction.USE, DestroyAction.values())
     private val throughWalls by boolean("ThroughWalls", false)
 
-//    private val instant by boolean("Instant", false) // TODO: Instant option
+    //    private val instant by boolean("Instant", false) // TODO: Instant option
     private val delay by int("SwitchDelay", 0, 0..20)
 
     // Rotation
@@ -71,6 +71,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
 
     private var currentTarget: DestroyerTarget? = null
 
+    @Suppress("unused")
     val networkTickHandler = repeatable { event ->
         if (mc.currentScreen is HandledScreen<*>) {
             wait { delay }
@@ -139,19 +140,17 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         val radiusSquared = radius * radius
         val eyesPos = mc.player!!.eyesPos
 
-        val blockToProcess = searchBlocksInCuboid(radius.toInt()) { pos, state ->
+        val (pos1, state1) = searchBlocksInCuboid(radius.toInt()) { pos, state ->
             targetedBlocks.contains(state.block) && getNearestPoint(
                 eyesPos,
                 Box(pos, pos.add(1, 1, 1))
             ).squaredDistanceTo(eyesPos) <= radiusSquared
         }.minByOrNull { it.first.getCenterDistanceSquared() } ?: return
 
-        val (pos, state) = blockToProcess
-
         val rt = RotationManager.raytraceBlock(
             player.eyesPos,
-            pos,
-            state,
+            pos1,
+            state1,
             range = range.toDouble(),
             wallsRange = wallRange.toDouble()
         )
@@ -161,14 +160,14 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
             val (rotation, _) = rt
             RotationManager.aimAt(rotation, configurable = rotations)
 
-            this.currentTarget = DestroyerTarget(pos, this.action)
+            this.currentTarget = DestroyerTarget(pos1, this.action)
             return
         }
 
         val raytraceResult = mc.world?.raycast(
             RaycastContext(
                 player.eyesPos,
-                Vec3d.of(pos).add(0.5, 0.5, 0.5),
+                Vec3d.of(pos1).add(0.5, 0.5, 0.5),
                 RaycastContext.ShapeType.COLLIDER,
                 RaycastContext.FluidHandling.NONE,
                 player

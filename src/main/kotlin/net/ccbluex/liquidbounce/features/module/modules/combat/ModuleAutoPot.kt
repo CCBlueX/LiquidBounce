@@ -84,7 +84,7 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
                     )
                 }
 
-                // Using timer so as to avoid sword shield
+                // Using timer to avoid sword shield
                 wait(2)
                 network.sendPacket(PlayerInteractItemC2SPacket(Hand.MAIN_HAND))
 

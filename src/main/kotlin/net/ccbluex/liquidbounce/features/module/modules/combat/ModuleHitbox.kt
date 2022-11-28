@@ -33,6 +33,7 @@ object ModuleHitbox : Module("Hitbox", Category.COMBAT) {
 
     val size by float("Size", 0.4f, 0f..1f)
 
+    @Suppress("unused")
     val marginHandler = handler<EntityMarginEvent> { event ->
         if (event.entity.shouldBeAttacked()) {
             event.margin = size

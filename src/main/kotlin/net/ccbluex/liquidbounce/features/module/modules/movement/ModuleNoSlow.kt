@@ -46,6 +46,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
 
         val packet by boolean("Packet", true)
 
+        @Suppress("unused")
         val networkTick = handler<PlayerNetworkMovementTickEvent> { event ->
             if (packet && player.isBlocking) {
                 when (event.state) {
@@ -56,6 +57,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
                             Direction.DOWN
                         )
                     )
+
                     EventState.POST -> network.sendPacket(PlayerInteractItemC2SPacket(player.activeHand))
                 }
             }
@@ -77,6 +79,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
 
         val multiplier by float("Multiplier", 1f, 0.4f..2f)
 
+        @Suppress("unused")
         val blockVelocityHandler = handler<BlockVelocityMultiplierEvent> { event ->
             if (event.block is SoulSandBlock) {
                 event.multiplier = multiplier
@@ -88,12 +91,14 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
     object Slime : ToggleableConfigurable(this, "SlimeBlock", true) {
         private val multiplier by float("Multiplier", 1f, 0.4f..2f)
 
+        @Suppress("unused")
         val blockSlipperinessMultiplierHandler = handler<BlockSlipperinessMultiplierEvent> { event ->
             if (event.block is SlimeBlock) {
                 event.slipperiness = 0.6f
             }
         }
 
+        @Suppress("unused")
         val blockVelocityHandler = handler<BlockVelocityMultiplierEvent> { event ->
             if (event.block is SlimeBlock) {
                 event.multiplier = multiplier
@@ -104,6 +109,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
     private object Honey : ToggleableConfigurable(this, "HoneyBlock", true) {
         val multiplier by float("Multiplier", 1f, 0.4f..2f)
 
+        @Suppress("unused")
         val blockVelocityHandler = handler<BlockVelocityMultiplierEvent> { event ->
             if (event.block is HoneyBlock) {
                 event.multiplier = multiplier
@@ -116,6 +122,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
     }
 
     private object Fluid : ToggleableConfigurable(this, "Fluid", true) {
+        @Suppress("unused")
         val fluidPushHandler = handler<FluidPushEvent> {
             it.cancelEvent()
         }
@@ -132,6 +139,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
         tree(Fluid)
     }
 
+    @Suppress("unused")
     val multiplierHandler = handler<PlayerUseMultiplier> { event ->
         val action = player.activeItem.useAction ?: return@handler
         val (forward, strafe) = multiplier(action)
@@ -146,10 +154,12 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
             Consume.forwardMultiplier,
             Consume.sidewaysMultiplier
         ) else Pair(0.2f, 0.2f)
+
         UseAction.BLOCK, UseAction.SPYGLASS -> if (Block.enabled) Pair(
             Block.forwardMultiplier,
             Block.sidewaysMultiplier
         ) else Pair(0.2f, 0.2f)
+
         UseAction.BOW, UseAction.CROSSBOW, UseAction.SPEAR -> if (Bow.enabled) Pair(
             Bow.forwardMultiplier,
             Bow.sidewaysMultiplier

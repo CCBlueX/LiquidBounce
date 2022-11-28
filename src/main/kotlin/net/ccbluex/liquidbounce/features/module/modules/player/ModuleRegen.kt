@@ -38,7 +38,7 @@ object ModuleRegen : Module("Regen", Category.PLAYER) {
     private val noAir by boolean("NoAir", false)
     private val potionEffect by boolean("PotionEffect", false)
 
-    var resetTimer = false
+    private var resetTimer = false
 
     override fun disable() {
         mc.timer.timerSpeed = 1F

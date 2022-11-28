@@ -35,11 +35,12 @@ import net.minecraft.item.ItemGroup
 
 object ModuleInventoryMove : Module("InventoryMove", Category.MOVEMENT) {
 
-    val undetectable by boolean("Undetectable", false)
-    val passthroughSneak by boolean("PassthroughSneak", false)
+    private val undetectable by boolean("Undetectable", false)
+    private val passthroughSneak by boolean("PassthroughSneak", false)
 
-    fun shouldHandleInputs(keyBinding: KeyBinding) = enabled && mc.currentScreen !is ChatScreen && !isInCreativeSearchField() &&
-        (!undetectable || mc.currentScreen !is HandledScreen<*>) && (passthroughSneak || keyBinding != mc.options.sneakKey)
+    fun shouldHandleInputs(keyBinding: KeyBinding) =
+        enabled && mc.currentScreen !is ChatScreen && !isInCreativeSearchField() &&
+            (!undetectable || mc.currentScreen !is HandledScreen<*>) && (passthroughSneak || keyBinding != mc.options.sneakKey)
 
     private fun isInCreativeSearchField(): Boolean {
         val currentScreen = mc.currentScreen

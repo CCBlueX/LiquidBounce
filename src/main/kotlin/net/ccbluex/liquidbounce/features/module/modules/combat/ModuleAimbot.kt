@@ -55,8 +55,13 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
 
             val box = target.boundingBox
 
-            if (fov >= RotationManager.rotationDifference(RotationManager.makeRotation(box.center, eyes), Rotation(player.yaw, player.pitch))) {
-                val (rotation, _) = RotationManager.raytraceBox(eyes, box, range = range.toDouble(), wallsRange = 0.0) ?: continue
+            if (fov >= RotationManager.rotationDifference(
+                    RotationManager.makeRotation(box.center, eyes),
+                    Rotation(player.yaw, player.pitch)
+                )
+            ) {
+                val (rotation, _) = RotationManager.raytraceBox(eyes, box, range = range.toDouble(), wallsRange = 0.0)
+                    ?: continue
 
                 currentRotation = rotation
                 return@repeatable
@@ -66,6 +71,7 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
         currentRotation = null
     }
 
+    @Suppress("unused")
     val mouseRotationHandler = handler<MouseRotationEvent> {
         currentRotation?.let {
             player.applyRotation(RotationManager.limitAngleChange(Rotation(player.yaw, player.pitch), it, 0.12f))

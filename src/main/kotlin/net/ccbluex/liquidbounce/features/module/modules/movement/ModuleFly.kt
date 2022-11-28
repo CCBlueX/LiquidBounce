@@ -55,6 +55,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
         private val stride by boolean("Stride", true)
 
+        @Suppress("unused")
         val strideHandler = handler<PlayerStrideEvent> { event ->
             if (stride) {
                 event.strideForce = 0.1.coerceAtMost(player.velocity.horizontalLength()).toFloat()
@@ -69,6 +70,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
         override val parent: ChoiceConfigurable
             get() = modes
 
+        @Suppress("unused")
         val repeatable = repeatable {
             player.strafe(speed = 0.44)
             player.velocity.y = when {
@@ -85,6 +87,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
         override val parent: ChoiceConfigurable
             get() = modes
 
+        @Suppress("unused")
         val repeatable = repeatable {
             if (player.input.jumping) {
                 player.velocity.x *= 1.1
@@ -100,16 +103,21 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
         override val parent: ChoiceConfigurable
             get() = modes
 
+        @Suppress("unused")
         val packetHandler = handler<PacketEvent> { event ->
             if (event.packet is PlayerMoveC2SPacket) {
                 event.packet.onGround = true
             }
         }
+
+        @Suppress("unused")
         val shapeHandler = handler<BlockShapeEvent> { event ->
             if (event.state.block !is FluidBlock && event.pos.y < player.y) {
                 event.shape = VoxelShapes.fullCube()
             }
         }
+
+        @Suppress("unused")
         val jumpEvent = handler<PlayerJumpEvent> { event ->
             event.cancelEvent()
         }
@@ -136,6 +144,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
             canFly = false
         }
 
+        @Suppress("unused")
         val repeatable = repeatable {
             val slot = findHotbarSlot(Items.ENDER_PEARL)
 
@@ -176,6 +185,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
             }
         }
 
+        @Suppress("unused")
         val packetHandler = handler<PacketEvent> { event ->
             if (event.origin == TransferOrigin.SEND && event.packet is TeleportConfirmC2SPacket && isABitAboveGround() && threwPearl) {
                 threwPearl = false

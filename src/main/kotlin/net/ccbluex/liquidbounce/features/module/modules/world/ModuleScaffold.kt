@@ -93,22 +93,23 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         { o1, o2 -> o2.count.compareTo(o1.count) }
     )
 
-    val silent by boolean("Silent", true)
+    private val silent by boolean("Silent", true)
     var delay by intRange("Delay", 3..5, 0..40)
 
-    val eagle by boolean("Eagle", true)
+    private val eagle by boolean("Eagle", true)
     val down by boolean("Down", false)
 
     // Rotation
-    val rotationsConfigurable = tree(RotationsConfigurable())
+    private val rotationsConfigurable = tree(RotationsConfigurable())
 
-    val minDist by float("MinDist", 0.0f, 0.0f..0.25f)
+    private val minDist by float("MinDist", 0.0f, 0.0f..0.25f)
 
-    var currentTarget: Target? = null
+    private var currentTarget: Target? = null
 
-    val shouldGoDown: Boolean
+    private val shouldGoDown: Boolean
         get() = this.down && mc.options.sneakKey.isPressed
 
+    @Suppress("unused")
     val rotationUpdateHandler = handler<PlayerNetworkMovementTickEvent> {
         if (it.state != EventState.PRE) {
             return@handler
@@ -121,6 +122,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         RotationManager.aimAt(target.rotation, ticks = 30, configurable = rotationsConfigurable)
     }
 
+    @Suppress("unused")
     val networkTickHandler = repeatable {
         val target = currentTarget ?: return@repeatable
 
@@ -220,7 +222,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         return block.defaultState.isSideSolid(world, target.blockPos, target.direction, SideShapeType.CENTER)
     }
 
-    fun getTargetedPosition(): BlockPos {
+    private fun getTargetedPosition(): BlockPos {
         if (shouldGoDown) {
             return player.blockPos.add(0, -2, 0)
         }
@@ -369,6 +371,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         return null
     }
 
+    @Suppress("unused")
     val safeWalkHandler = handler<PlayerSafeWalkEvent> { event ->
         event.isSafeWalk = !shouldDisableSafeWalk()
     }

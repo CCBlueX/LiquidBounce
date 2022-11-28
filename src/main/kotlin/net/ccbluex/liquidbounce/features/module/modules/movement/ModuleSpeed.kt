@@ -55,6 +55,7 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
         override val parent: ChoiceConfigurable
             get() = modes
 
+        @Suppress("unused")
         val repeatable = repeatable {
             if (player.isOnGround && player.moving) {
                 player.strafe(speed = 0.4)
@@ -71,6 +72,7 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
         override val parent: ChoiceConfigurable
             get() = modes
 
+        @Suppress("unused")
         val repeatable = repeatable {
             if (optimizeForCriticals && ModuleCriticals.shouldWaitForJump(0.42f)) {
                 return@repeatable
@@ -95,6 +97,7 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
         private val resetVerticalSpeed by boolean("ResetVerticalSpeed", true)
         private val timerSpeed by float("TimerSpeed", 1f, 0.1f..10f)
 
+        @Suppress("unused")
         val repeatable = repeatable {
             if (player.moving) {
                 mc.timer.timerSpeed = timerSpeed
@@ -104,6 +107,7 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
                         player.strafe(speed = horizontalSpeed.toDouble())
                         player.velocity.y = verticalSpeed.toDouble()
                     }
+
                     customStrafe -> player.strafe(speed = strafe.toDouble())
                     else -> player.strafe()
                 }
@@ -111,7 +115,7 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
         }
 
         override fun enable() {
-            if(resetHorizontalSpeed) {
+            if (resetHorizontalSpeed) {
                 player.velocity.x = 0.0
                 player.velocity.z = 0.0
             }

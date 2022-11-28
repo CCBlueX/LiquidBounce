@@ -45,6 +45,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
  *
  * Automatically crits every time you attack someone.
  */
+@Suppress("unused")
 object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
     /**
@@ -66,6 +67,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         override val parent: ChoiceConfigurable
             get() = ActiveOption.modes
 
+        @Suppress("unused")
         val attackHandler = handler<AttackEvent> { event ->
             if (!ActiveOption.enabled || event.enemy !is LivingEntity) {
                 return@handler
@@ -184,7 +186,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
     }
 
-    var ticksOnGround = 0
+    private var ticksOnGround = 0
 
     val repeatable = repeatable {
         if (player.isOnGround) {
@@ -201,7 +203,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
     /**
      * Sometimes when the player is almost at the highest point of his jump, the KillAura
-     * will try to attack the enemy anyways. To maximise damage, this function is used to determine
+     * will try to attack the enemy anyway. To maximise damage, this function is used to determine
      * whether or not it is worth to wait for the fall
      */
     fun shouldWaitForCrit(): Boolean {

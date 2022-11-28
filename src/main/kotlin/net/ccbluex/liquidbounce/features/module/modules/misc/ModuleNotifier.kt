@@ -77,6 +77,7 @@ object ModuleNotifier : Module("Notifier", Category.MISC) {
                         }
                     }
                 }
+
                 PlayerListS2CPacket.Action.REMOVE_PLAYER -> {
                     for (entry in packet.entries) {
                         if (leaveMessages) {
@@ -92,6 +93,7 @@ object ModuleNotifier : Module("Notifier", Category.MISC) {
                         uuidNameCache.remove(entry.profile.id)
                     }
                 }
+
                 else -> {
                 }
             }

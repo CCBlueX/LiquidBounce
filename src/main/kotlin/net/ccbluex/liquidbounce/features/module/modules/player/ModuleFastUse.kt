@@ -46,6 +46,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
         override val parent: ChoiceConfigurable
             get() = modes
 
+        @Suppress("unused")
         val repeatable = repeatable {
             if (!player.isUsingItem) {
                 return@repeatable
@@ -60,6 +61,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
             }
         }
 
+        @Suppress("unused")
         val moveHandler = handler<PlayerMoveEvent> { event ->
             if (noMove) {
                 if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem || player.activeItem.item is PotionItem) {
@@ -77,6 +79,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
         override val parent: ChoiceConfigurable
             get() = modes
 
+        @Suppress("unused")
         val repeatable = repeatable {
             if (!player.isUsingItem) {
                 return@repeatable
@@ -91,6 +94,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
             }
         }
 
+        @Suppress("unused")
         val moveHandler = handler<PlayerMoveEvent> { event ->
             if (noMove) {
                 if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem || player.activeItem.item is PotionItem) {
@@ -110,6 +114,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
 
         var usedTimer = false
 
+        @Suppress("unused")
         val repeatable = repeatable {
             if (usedTimer) {
                 mc.timer.timerSpeed = 1F
@@ -128,6 +133,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
             }
         }
 
+        @Suppress("unused")
         val moveHandler = handler<PlayerMoveEvent> { event ->
             if (noMove) {
                 if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem || player.activeItem.item is PotionItem) {
@@ -156,6 +162,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
 
         var usedTimer = false
 
+        @Suppress("unused")
         val repeatable = repeatable {
             if (usedTimer) {
                 mc.timer.timerSpeed = 1F
@@ -180,6 +187,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
             }
         }
 
+        @Suppress("unused")
         val moveHandler = handler<PlayerMoveEvent> { event ->
             if (noMove) {
                 if (player.activeItem.isFood || player.activeItem.item is MilkBucketItem || player.activeItem.item is PotionItem) {
