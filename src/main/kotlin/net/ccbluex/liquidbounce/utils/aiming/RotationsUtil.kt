@@ -50,10 +50,11 @@ object RotationManager : Listenable {
 
     var targetRotation: Rotation? = null
     val serverRotation: Rotation
-        get() = Rotation(mc.player?.yaw ?: 0f, mc.player?.pitch ?: 0f)
+        get() = Rotation(mc.player?.lastYaw ?: 0f, mc.player?.lastPitch ?: 0f)
 
     // Current rotation
     var currentRotation: Rotation? = null
+    var lastRotation: Rotation? = null
     var ticksUntilReset: Int = 0
 
     // Active configurable
@@ -296,14 +297,17 @@ object RotationManager : Listenable {
                     }
                 }
                 currentRotation = null
+                lastRotation = null
                 return
             }
 
+            lastRotation = currentRotation
             currentRotation =
                 limitAngleChange(currentRotation ?: serverRotation, playerRotation, turnSpeed).fixedSensitivity()
             return
         }
         targetRotation?.let { targetRotation ->
+            lastRotation = currentRotation
             currentRotation =
                 limitAngleChange(currentRotation ?: playerRotation, targetRotation, turnSpeed).fixedSensitivity()
         }
