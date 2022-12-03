@@ -301,13 +301,13 @@ object RotationManager : Listenable {
                 return
             }
 
-            lastRotation = currentRotation
+            lastRotation = currentRotation ?: serverRotation
             currentRotation =
                 limitAngleChange(currentRotation ?: serverRotation, playerRotation, turnSpeed).fixedSensitivity()
             return
         }
         targetRotation?.let { targetRotation ->
-            lastRotation = currentRotation
+            lastRotation = currentRotation ?: playerRotation
             currentRotation =
                 limitAngleChange(currentRotation ?: playerRotation, targetRotation, turnSpeed).fixedSensitivity()
         }
