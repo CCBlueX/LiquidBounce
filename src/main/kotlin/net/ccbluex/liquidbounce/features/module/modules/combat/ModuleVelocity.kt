@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import kotlinx.coroutines.delay
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
@@ -28,9 +27,10 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.entity.directionYaw
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.minecraft.network.Packet
+import net.minecraft.network.listener.ClientPlayPacketListener
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
-import net.minecraft.world.explosion.Explosion
 
 /**
  * Velocity module
@@ -60,19 +60,20 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
         if ((packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket) && it.normal && Delayed.enabled) {
             it.cancelEvent()
 
-            delay(Delayed.ticks.random() * 50L)
+            Delayed.ticks.random().let { ticks ->
+                if (ticks > 0) {
+                    val timeToWait = System.currentTimeMillis() + (ticks * 50L)
+
+                    waitUntil { System.currentTimeMillis() >= timeToWait }
+                }
+            }
 
             val packetEvent = PacketEvent(TransferOrigin.RECEIVE, packet, false)
             EventManager.callEvent(packetEvent)
 
             if (!packetEvent.isCancelled) {
-                if (packet is EntityVelocityUpdateS2CPacket) {
-                    recreateEntityVelocityUpdate(packet)
-                } else {
-                    recreateExplosion(packet as ExplosionS2CPacket)
-                }
+                (packet as Packet<ClientPlayPacketListener>).apply(network)
             }
-
         }
     }
 
@@ -183,27 +184,6 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
             }
         }
 
-    }
-
-    private fun recreateEntityVelocityUpdate(packet: EntityVelocityUpdateS2CPacket) {
-        val entity = world.getEntityById(packet.id) ?: return
-
-        entity.setVelocityClient(
-            packet.velocityX.toDouble() / 8000.0,
-            packet.velocityY.toDouble() / 8000.0,
-            packet.velocityZ.toDouble() / 8000.0
-        )
-    }
-
-    private fun recreateExplosion(packet: ExplosionS2CPacket) {
-        val player = mc.player ?: return
-        val world = mc.world ?: return
-
-        val explosion = Explosion(world, null, packet.x, packet.y, packet.z, packet.radius, packet.affectedBlocks)
-        explosion.affectWorld(true)
-        player.velocity = player.velocity.add(
-            packet.playerVelocityX.toDouble(), packet.playerVelocityY.toDouble(), packet.playerVelocityZ.toDouble()
-        )
     }
 
 }
