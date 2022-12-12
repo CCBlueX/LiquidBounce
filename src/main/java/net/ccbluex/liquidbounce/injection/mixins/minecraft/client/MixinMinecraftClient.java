@@ -67,11 +67,11 @@ public abstract class MixinMinecraftClient {
     private int itemUseCooldown;
 
     @Shadow
-    @org.jetbrains.annotations.Nullable
+    @Nullable
     public ClientPlayerEntity player;
 
     @Shadow
-    @org.jetbrains.annotations.Nullable
+    @Nullable
     public HitResult crosshairTarget;
 
     @Inject(method = "isAmbientOcclusionEnabled()Z", at = @At("HEAD"), cancellable = true)
@@ -172,8 +172,7 @@ public abstract class MixinMinecraftClient {
     private void hookScreen(Screen screen, CallbackInfo callbackInfo) {
         final ScreenEvent event = new ScreenEvent(screen);
         EventManager.INSTANCE.callEvent(event);
-        if (event.isCancelled())
-            callbackInfo.cancel();
+        if (event.isCancelled()) callbackInfo.cancel();
     }
 
     /**
