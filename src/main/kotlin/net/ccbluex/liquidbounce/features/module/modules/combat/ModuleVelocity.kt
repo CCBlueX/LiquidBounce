@@ -101,9 +101,9 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
                 }
 
                 // Modify packet according to the specified values
-                packet.velocityX *= horizontal.toInt()
-                packet.velocityY *= vertical.toInt()
-                packet.velocityZ *= horizontal.toInt()
+                packet.velocityX = (packet.velocityX * horizontal).toInt()
+                packet.velocityY = (packet.velocityY * vertical).toInt()
+                packet.velocityZ = (packet.velocityZ * horizontal).toInt()
             } else if (packet is ExplosionS2CPacket) { // Check if velocity is affected by explosion
                 // note: explosion packets are being used by hypixel to trick poorly made cheats.
 
