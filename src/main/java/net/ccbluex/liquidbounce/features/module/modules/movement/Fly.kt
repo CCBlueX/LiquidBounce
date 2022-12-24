@@ -55,7 +55,7 @@ class Fly : Module() {
             "AAC1.9.10", "AAC3.0.5", "AAC3.1.6-Gomme", "AAC3.3.12", "AAC3.3.12-Glide", "AAC3.3.13",
 
             // CubeCraft
-            "CubeCraft",
+            "CubeCraft", "InfinityCubeCraft", "InfinityVCubeCraft",
 
             // Hypixel
             "Hypixel", "BoostHypixel", "FreeHypixel",

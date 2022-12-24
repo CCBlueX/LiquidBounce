@@ -127,8 +127,8 @@ class Velocity : Module() {
             }
 
             "aacv4" -> {
-                if (thePlayer.hurtTime>0 && !thePlayer.onGround){
-                    val reduce=aacv4MotionReducerValue.get();
+                if (thePlayer.hurtTime > 0 && !thePlayer.onGround){
+                    val reduce = aacv4MotionReducerValue.get();
                     thePlayer.motionX *= reduce
                     thePlayer.motionZ *= reduce
                 }
