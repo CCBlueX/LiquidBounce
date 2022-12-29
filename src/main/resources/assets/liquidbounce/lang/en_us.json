@@ -437,9 +437,9 @@
   "liquidbounce.module.sleepWalker.description": "Allows you to walk while sleeping, also makes your hitbox small.",
 
   "liquidbounce.module.dankBobbing.description": "Adds more bobbing effect.",
-  
+
   "liquidbounce.module.projectilePuncher.description": "Shoots back incoming projectiles around you.",
-  
+
   "liquidbounce.module.autoPot.description": "Automatically throws healing potions whenever your health is low.",
 
   "liquidbounce.module.keepChatAfterDeath.description": "Allows you to use the chat on the death screen.",
@@ -448,5 +448,7 @@
 
   "liquidbounce.module.noRotateSet.description": "Prevents the server from rotating your head.",
 
-  "liquidbounce.module.noSlowBreak.description": "Automatically adjusts breaking speed when in negatively affecting situations."
+  "liquidbounce.module.noSlowBreak.description": "Automatically adjusts breaking speed when in negatively affecting situations.",
+
+  "liquidbounce.module.autoClicker.description": "Clicks automatically when holding down a mouse button."
 }
