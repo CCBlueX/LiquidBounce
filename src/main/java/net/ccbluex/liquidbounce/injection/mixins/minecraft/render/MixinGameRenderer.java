@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.GameRenderEvent;
 import net.ccbluex.liquidbounce.event.ScreenRenderEvent;
 import net.ccbluex.liquidbounce.features.module.modules.fun.ModuleDankBobbing;
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoBob;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoHurtCam;
@@ -41,9 +42,7 @@ import net.minecraft.util.math.Vec3f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(GameRenderer.class)
@@ -163,6 +162,18 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
     private void hookFreeCamDisableHandRender(MatrixStack matrices, Camera camera, float tickDelta, CallbackInfo ci) {
         if (ModuleFreeCam.INSTANCE.shouldDisableHandRender()) {
             ci.cancel();
+        }
+    }
+
+    @ModifyConstant(method = "updateTargetedEntity", constant = @Constant(doubleValue = 9.0))
+    private double hookReachModifyCombatReach(double constant) {
+        return ModuleReach.INSTANCE.getEnabled() ? (double) (ModuleReach.INSTANCE.getCombatReach() * ModuleReach.INSTANCE.getCombatReach()) : constant;
+    }
+
+    @Inject(method = "updateTargetedEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getRotationVec(F)Lnet/minecraft/util/math/Vec3d;"))
+    private void hookReachModifyBlockReach(float tickDelta, CallbackInfo ci) {
+        if (ModuleReach.INSTANCE.getEnabled()) {
+            this.client.crosshairTarget = this.client.player.raycast(ModuleReach.INSTANCE.getBlockReach(), tickDelta, false);
         }
     }
 }
