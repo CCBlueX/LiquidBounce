@@ -47,8 +47,10 @@ public class MixinLivingEntityRenderer<T extends LivingEntity> {
         Rotation serverRotation = RotationManager.INSTANCE.getServerRotation();
         Rotation lastRotation = RotationManager.INSTANCE.getLastRotation();
 
+        this.currentRotation.set(null);
+        this.lastRotation.set(null);
+
         if (livingEntity != MinecraftClient.getInstance().player) {
-            this.currentRotation.set(null);
             return;
         }
 
@@ -58,7 +60,6 @@ public class MixinLivingEntityRenderer<T extends LivingEntity> {
         }
 
         if (!ModuleRotations.INSTANCE.getEnabled() || currentRotation == null) {
-            this.currentRotation.set(null);
             return;
         }
 
