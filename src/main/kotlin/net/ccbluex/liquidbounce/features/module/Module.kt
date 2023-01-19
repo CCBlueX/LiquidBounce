@@ -140,7 +140,7 @@ open class Module(
     override fun handleEvents() = enabled && mc.player != null && mc.world != null
 
     fun message(key: String, vararg args: Any): TranslatableText {
-        return TranslatableText("$translationBaseKey.messages.$key", args)
+        return TranslatableText("$translationBaseKey.messages.$key", *args)
     }
 
 }
