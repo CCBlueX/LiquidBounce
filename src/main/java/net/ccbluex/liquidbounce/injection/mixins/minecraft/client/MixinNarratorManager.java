@@ -43,9 +43,10 @@ public class MixinNarratorManager {
     /**
      * This removes the narrator notifications
      */
-    @Inject(method = "addToast", at = @At("HEAD"), cancellable = true)
-    private void cancelToast(CallbackInfo callback) {
-        callback.cancel();
-    }
+//    todo: fix
+//    @Inject(method = "addToast", at = @At("HEAD"), cancellable = true)
+//    private void cancelToast(CallbackInfo callback) {
+//        callback.cancel();
+//    }
 
 }

@@ -52,17 +52,17 @@ object ModuleFullBright : Module("FullBright", Category.RENDER) {
         private var prevValue = 0.0
 
         override fun enable() {
-            prevValue = mc.options.gamma
+            prevValue = mc.options.gamma.value
         }
 
         val tickHandler = sequenceHandler<PlayerTickEvent> {
-            if (mc.options.gamma <= 100) {
-                mc.options.gamma++
+            if (mc.options.gamma.value <= 100) {
+                mc.options.gamma.value++
             }
         }
 
         override fun disable() {
-            mc.options.gamma = prevValue
+            mc.options.gamma.value = prevValue
         }
     }
 

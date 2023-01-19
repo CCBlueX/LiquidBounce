@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.suggestion.Suggestions;
 import net.ccbluex.liquidbounce.features.command.CommandManager;
-import net.minecraft.client.gui.screen.CommandSuggestor;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.command.CommandSource;
 import org.spongepowered.asm.mixin.Final;
@@ -35,10 +34,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.concurrent.CompletableFuture;
 
-@Mixin(CommandSuggestor.class)
+//@Mixin(CommandSuggestor.class)
 public class MixinCommandSuggestor {
 
-    @Shadow @Final private boolean slashOptional;
+    // todo: no idea
+/*    @Shadow @Final private boolean slashOptional;
 
     @Shadow @Final private TextFieldWidget textField;
 
@@ -59,5 +59,5 @@ public class MixinCommandSuggestor {
 
             ci.cancel();
         }
-    }
+    }*/
 }

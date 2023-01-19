@@ -29,7 +29,6 @@
     "minecraft.entity.MixinPlayerEntity",
     "minecraft.fluid.MixinFlowableFluid",
     "minecraft.gui.MixinChatScreen",
-    "minecraft.gui.MixinCommandSuggestor",
     "minecraft.gui.MixinInGameHud",
     "minecraft.gui.MixinRealmsMainScreen",
     "minecraft.gui.MixinScreen",

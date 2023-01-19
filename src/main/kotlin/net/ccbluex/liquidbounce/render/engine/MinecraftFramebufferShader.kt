@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.render.engine
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gl.Framebuffer
-import net.minecraft.client.gl.ShaderEffect
+// import net.minecraft.client.gl.ShaderEffect
 import net.minecraft.client.render.OutlineVertexConsumerProvider
 import net.minecraft.util.Identifier
 
@@ -33,58 +33,59 @@ abstract class MinecraftFramebufferShader(private val shaderName: String) {
     var isDirty = false
         private set
 
-    private var shaderEffect: ShaderEffect? = null
+    // private var shaderEffect: ShaderEffect? = null
 
     fun load() {
-        val outlinesShader = ShaderEffect(
-            mc.textureManager,
-            mc.resourceManager,
-            mc.framebuffer,
-            Identifier("liquidbounce", "shaders/post/$shaderName.json")
-        )
-
-        outlinesShader.setupDimensions(mc.window.framebufferWidth, mc.window.framebufferHeight)
-
-        framebuffer = outlinesShader.getSecondaryTarget("final")
-        vertexConsumerProvider = OutlineVertexConsumerProvider(mc.bufferBuilders.entityVertexConsumers)
-
-        this.shaderEffect = outlinesShader
+//        val outlinesShader = ShaderEffect(
+//            mc.textureManager,
+//            mc.resourceManager,
+//            mc.framebuffer,
+//            Identifier("liquidbounce", "shaders/post/$shaderName.json")
+//        )
+//
+//        outlinesShader.setupDimensions(mc.window.framebufferWidth, mc.window.framebufferHeight)
+//
+//        framebuffer = outlinesShader.getSecondaryTarget("final")
+//        vertexConsumerProvider = OutlineVertexConsumerProvider(mc.bufferBuilders.entityVertexConsumers)
+//
+//        this.shaderEffect = outlinesShader
     }
 
     fun close() {
-        shaderEffect?.close()
-
-        this.shaderEffect = null
+//        shaderEffect?.close()
+//
+//        this.shaderEffect = null
     }
 
     protected fun beginInternal() {
         // Clear the buffer if it is dirty
-        if (this.isDirty) {
-            assureLoaded(framebuffer).clear(MinecraftClient.IS_SYSTEM_MAC)
-
-            this.isDirty = false
-        }
-
-        mc.framebuffer.beginWrite(false)
+//        if (this.isDirty) {
+//            assureLoaded(framebuffer).clear(MinecraftClient.IS_SYSTEM_MAC)
+//
+//            this.isDirty = false
+//        }
+//
+//        mc.framebuffer.beginWrite(false)
     }
 
     fun end(tickDelta: Float) {
         // Render the framebuffer if something was rendered to it
-        if (this.isDirty) {
-            val framebuffer = assureLoaded(framebuffer)
+//        if (this.isDirty) {
+//            val framebuffer = assureLoaded(framebuffer)
+//
+//            val originalFramebuffer = mc.worldRenderer.entityOutlinesFramebuffer
+//
+//            mc.worldRenderer.entityOutlinesFramebuffer = framebuffer
+//
+//            vertexConsumerProvider?.draw()
+//
+//            mc.worldRenderer.entityOutlinesFramebuffer = originalFramebuffer
 
-            val originalFramebuffer = mc.worldRenderer.entityOutlinesFramebuffer
+//            shaderEffect?.render(tickDelta)
+//        }
 
-            mc.worldRenderer.entityOutlinesFramebuffer = framebuffer
+//        mc.framebuffer.beginWrite(false)
 
-            vertexConsumerProvider?.draw()
-
-            mc.worldRenderer.entityOutlinesFramebuffer = originalFramebuffer
-
-            shaderEffect?.render(tickDelta)
-        }
-
-        mc.framebuffer.beginWrite(false)
     }
 
     fun setDirty() {
@@ -92,16 +93,16 @@ abstract class MinecraftFramebufferShader(private val shaderName: String) {
     }
 
     fun drawFramebuffer() {
-        assureLoaded(framebuffer).draw(mc.window.framebufferWidth, mc.window.framebufferHeight, false)
+//        assureLoaded(framebuffer).draw(mc.window.framebufferWidth, mc.window.framebufferHeight, false)
     }
 
     fun onResized(width: Int, height: Int) {
-        this.shaderEffect?.setupDimensions(width, height)
+//        this.shaderEffect?.setupDimensions(width, height)
     }
 
     protected fun setUniform1f(name: String, value: Float) {
-        assureLoaded(this.shaderEffect).passes[0].program.getUniformByName(name)?.set(value)
-            ?: throw IllegalArgumentException("There is no uniform with the name $name")
+//        assureLoaded(this.shaderEffect).passes[0].program.getUniformByName(name)?.set(value)
+//            ?: throw IllegalArgumentException("There is no uniform with the name $name")
     }
 
     private inline fun <reified T> assureLoaded(t: T?): T =

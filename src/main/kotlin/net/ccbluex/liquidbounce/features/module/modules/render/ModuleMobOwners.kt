@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.io.HttpClient
 import net.minecraft.entity.Entity
-import net.minecraft.entity.passive.HorseBaseEntity
+import net.minecraft.entity.passive.HorseEntity
 import net.minecraft.entity.passive.TameableEntity
 import net.minecraft.entity.projectile.ProjectileEntity
 import net.minecraft.text.OrderedText
@@ -54,7 +54,7 @@ object ModuleMobOwners : Module("MobOwners", Category.RENDER) {
 
         val ownerId = when {
             entity is TameableEntity -> entity.ownerUuid
-            entity is HorseBaseEntity -> entity.ownerUuid
+            entity is HorseEntity -> entity.ownerUuid
             entity is ProjectileEntity && projectiles -> entity.ownerUuid
             else -> null
         } ?: return null

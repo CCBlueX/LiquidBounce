@@ -52,7 +52,7 @@ object ModuleTraces : Module("Traces", Category.RENDER) {
             DistanceColor, StaticColor, RainbowColor
         )
     )
-    
+
     private object DistanceColor : Choice("Distance") {
 
         override val parent: ChoiceConfigurable
@@ -87,7 +87,7 @@ object ModuleTraces : Module("Traces", Category.RENDER) {
         }
 
         val viewDistance =
-            (if (DistanceColor.useViewDistance) mc.options.viewDistance.toFloat() else DistanceColor.customViewDistance) * 16 * sqrt(
+            (if (DistanceColor.useViewDistance) mc.options.viewDistance.value.toFloat() else DistanceColor.customViewDistance) * 16 * sqrt(
                 2.0
             )
         val filteredEntities = world.entities.filter(this::shouldRenderTrace)

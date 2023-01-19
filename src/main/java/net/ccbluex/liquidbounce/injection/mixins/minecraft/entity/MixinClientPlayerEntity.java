@@ -144,7 +144,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     /**
      * Hook sprint affect from NoSlow module
      */
-    @Redirect(method = "tickMovement", slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/HungerManager;getFoodLevel()I"), to = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isFallFlying()Z")), at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z"), require = 2, allow = 2)
+    @Redirect(method = "tickMovement", slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;canSprint()Z"), to = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isFallFlying()Z")), at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z"), require = 2, allow = 2)
     private boolean hookSprintAffect(ClientPlayerEntity playerEntity) {
         if (ModuleNoSlow.INSTANCE.getEnabled()) {
             return false;
@@ -160,12 +160,13 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     /**
      * Hook silent rotations
      */
-    @ModifyVariable(method = "sendMovementPackets", at = @At("STORE"), ordinal = 3)
-    private boolean hookSilentRotationsCheck(boolean bl4) {
-        boolean shouldDisableRotations = ModuleFreeCam.INSTANCE.shouldDisableRotations();
-        updatedSilent = RotationManager.INSTANCE.needsUpdate(lastYaw, lastPitch);
-        return !shouldDisableRotations && ((bl4 && RotationManager.INSTANCE.getCurrentRotation() == null) || updatedSilent);
-    }
+//    todo: fix
+//    @ModifyVariable(method = "sendMovementPackets", at = @At("STORE"), ordinal = 3)
+//    private boolean hookSilentRotationsCheck(boolean bl4) {
+//        boolean shouldDisableRotations = ModuleFreeCam.INSTANCE.shouldDisableRotations();
+//        updatedSilent = RotationManager.INSTANCE.needsUpdate(lastYaw, lastPitch);
+//        return !shouldDisableRotations && ((bl4 && RotationManager.INSTANCE.getCurrentRotation() == null) || updatedSilent);
+//    }
 
     /**
      * Hook silent rotations
@@ -233,7 +234,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
         }
     }
 
-    @Redirect(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerAbilities;allowFlying:Z", ordinal = 1))
+    @Redirect(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerAbilities;allowFlying:Z"))
     private boolean hookFreeCamPreventCreativeFly(PlayerAbilities instance) {
         return !ModuleFreeCam.INSTANCE.getEnabled() && instance.allowFlying;
     }

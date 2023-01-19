@@ -157,7 +157,9 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
                     }
 
                     wait(2)
-                    network.sendPacket(PlayerInteractItemC2SPacket(Hand.MAIN_HAND))
+                    interaction.sendSequencedPacket(world) { sequence ->
+                        PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence)
+                    }
 
                     if (slot != player.inventory.selectedSlot) {
                         network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))

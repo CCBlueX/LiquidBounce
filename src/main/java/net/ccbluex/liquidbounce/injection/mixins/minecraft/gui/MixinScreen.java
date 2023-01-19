@@ -36,24 +36,23 @@ public abstract class MixinScreen {
     @Shadow @Nullable
     protected MinecraftClient client;
 
-    @Shadow public abstract void sendMessage(String message);
-
     /**
      * Handle user chat messages
      *
      * @param message chat message by client user
      * @param callbackInfo callback
      */
-    @Inject(method = "sendMessage(Ljava/lang/String;)V", at = @At("HEAD"), cancellable = true)
-    private void handleChatMessage(String message, CallbackInfo callbackInfo) {
-        ChatSendEvent chatSendEvent = new ChatSendEvent(message);
-
-        EventManager.INSTANCE.callEvent(chatSendEvent);
-
-        if (chatSendEvent.isCancelled()) {
-            client.inGameHud.getChatHud().addToMessageHistory(message);
-            callbackInfo.cancel();
-        }
-    }
+//    todo: where are the chat messages
+//    @Inject(method = "sendMessage(Ljava/lang/String;)V", at = @At("HEAD"), cancellable = true)
+//    private void handleChatMessage(String message, CallbackInfo callbackInfo) {
+//        ChatSendEvent chatSendEvent = new ChatSendEvent(message);
+//
+//        EventManager.INSTANCE.callEvent(chatSendEvent);
+//
+//        if (chatSendEvent.isCancelled()) {
+//            client.inGameHud.getChatHud().addToMessageHistory(message);
+//            callbackInfo.cancel();
+//        }
+//    }
 
 }

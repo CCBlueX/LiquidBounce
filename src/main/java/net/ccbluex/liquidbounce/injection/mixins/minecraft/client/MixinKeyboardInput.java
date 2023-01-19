@@ -47,7 +47,7 @@ public class MixinKeyboardInput extends MixinInput {
     }
 
     @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;sneaking:Z", shift = At.Shift.AFTER))
-    private void injectStrafing(boolean slowDown, CallbackInfo ci) {
+    private void injectStrafing(boolean slowDown, float f, CallbackInfo ci) {
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         if (RotationManager.INSTANCE.getActiveConfigurable() == null || !RotationManager.INSTANCE.getActiveConfigurable().getFixVelocity() || player == null) {
             return;

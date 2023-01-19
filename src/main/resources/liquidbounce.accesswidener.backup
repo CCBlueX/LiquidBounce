@@ -5,6 +5,8 @@ mutable field net/minecraft/client/MinecraftClient session Lnet/minecraft/client
 accessible field net/minecraft/client/MinecraftClient sessionService Lcom/mojang/authlib/minecraft/MinecraftSessionService;
 mutable field net/minecraft/client/MinecraftClient sessionService Lcom/mojang/authlib/minecraft/MinecraftSessionService;
 
+mutable field net/minecraft/item/ItemGroup GROUPS [Lnet/minecraft/item/ItemGroup;
+
 accessible method net/minecraft/entity/LivingEntity tickActiveItemStack ()V
 accessible field net/minecraft/client/network/ClientPlayerEntity lastSprinting Z
 
@@ -51,6 +53,23 @@ mutable field net/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket changeLo
 accessible field net/minecraft/client/network/ClientPlayerInteractionManager currentBreakingProgress F
 accessible field net/minecraft/client/network/ClientPlayerInteractionManager blockBreakingCooldown I
 
+accessible field net/minecraft/util/math/Matrix4f a00 F
+accessible field net/minecraft/util/math/Matrix4f a01 F
+accessible field net/minecraft/util/math/Matrix4f a02 F
+accessible field net/minecraft/util/math/Matrix4f a03 F
+accessible field net/minecraft/util/math/Matrix4f a10 F
+accessible field net/minecraft/util/math/Matrix4f a11 F
+accessible field net/minecraft/util/math/Matrix4f a12 F
+accessible field net/minecraft/util/math/Matrix4f a13 F
+accessible field net/minecraft/util/math/Matrix4f a20 F
+accessible field net/minecraft/util/math/Matrix4f a21 F
+accessible field net/minecraft/util/math/Matrix4f a22 F
+accessible field net/minecraft/util/math/Matrix4f a23 F
+accessible field net/minecraft/util/math/Matrix4f a30 F
+accessible field net/minecraft/util/math/Matrix4f a31 F
+accessible field net/minecraft/util/math/Matrix4f a32 F
+accessible field net/minecraft/util/math/Matrix4f a33 F
+
 accessible field net/minecraft/network/packet/c2s/play/ResourcePackStatusC2SPacket status Lnet/minecraft/network/packet/c2s/play/ResourcePackStatusC2SPacket$Status;
 
 accessible field net/minecraft/item/BucketItem fluid Lnet/minecraft/fluid/Fluid;
@@ -89,7 +108,10 @@ accessible field net/minecraft/client/world/ClientChunkManager chunks Lnet/minec
 accessible field net/minecraft/world/chunk/WorldChunk loadedToWorld Z
 accessible field net/minecraft/client/world/ClientChunkManager$ClientChunkMap chunks Ljava/util/concurrent/atomic/AtomicReferenceArray;
 
+accessible field net/minecraft/client/gui/screen/ingame/CreativeInventoryScreen selectedTab I
+
 accessible field net/minecraft/client/render/WorldRenderer entityOutlinesFramebuffer Lnet/minecraft/client/gl/Framebuffer;
+accessible field net/minecraft/client/gl/ShaderEffect passes Ljava/util/List;
 
 accessible field net/minecraft/entity/projectile/ProjectileEntity ownerUuid Ljava/util/UUID;
 
@@ -97,7 +119,3 @@ accessible method net/minecraft/entity/LivingEntity getJumpVelocity ()F
 
 accessible method net/minecraft/client/render/Camera setPos (DDD)V
 accessible method net/minecraft/client/render/Camera setPos (Lnet/minecraft/util/math/Vec3d;)V
-
-accessible method net/minecraft/client/network/ClientPlayerInteractionManager sendSequencedPacket (Lnet/minecraft/client/world/ClientWorld;Lnet/minecraft/client/network/SequencedPacketCreator;)V
-
-accessible field net/minecraft/client/gui/screen/ingame/CreativeInventoryScreen selectedTab Lnet/minecraft/item/ItemGroup;

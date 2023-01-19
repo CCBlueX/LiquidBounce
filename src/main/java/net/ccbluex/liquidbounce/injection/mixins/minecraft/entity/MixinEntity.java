@@ -27,8 +27,6 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleNoPitchLim
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.tag.TagKey;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
@@ -70,8 +68,7 @@ public abstract class MixinEntity {
     @Shadow
     public abstract boolean isOnGround();
 
-    @Shadow
-    public abstract boolean isSubmergedIn(TagKey<Fluid> fluidTag);
+    @Shadow protected boolean submergedInWater;
 
     /**
      * Hook entity margin modification event

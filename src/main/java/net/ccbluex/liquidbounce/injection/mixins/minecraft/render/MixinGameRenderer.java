@@ -35,9 +35,10 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Matrix4f;
+import net.minecraft.util.math.RotationAxis;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.Vec3f;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -81,7 +82,7 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
     /**
      * Hook screen render event
      */
-    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;render(Lnet/minecraft/client/util/math/MatrixStack;IIF)V"))
+    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;renderWithTooltip(Lnet/minecraft/client/util/math/MatrixStack;IIF)V"))
     public void hookScreenRender(Screen screen, MatrixStack matrices, int mouseX, int mouseY, float delta) {
         screen.render(matrices, mouseX, mouseY, delta);
         EventManager.INSTANCE.callEvent(new ScreenRenderEvent(screen, matrices, mouseX, mouseY, delta));
@@ -91,36 +92,38 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
     public Matrix4f getCameraMVPMatrix(float tickDelta, boolean bobbing) {
         MatrixStack matrixStack = new MatrixStack();
 
-        matrixStack.peek().getPositionMatrix().multiply(this.getBasicProjectionMatrix(this.getFov(camera, tickDelta, true)));
+        matrixStack.peek().getPositionMatrix().mul(this.getBasicProjectionMatrix(this.getFov(camera, tickDelta, true)));
 
         if (bobbing) {
             this.bobViewWhenHurt(matrixStack, tickDelta);
 
-            if (this.client.options.bobView) {
+            if (this.client.options.getBobView().getValue()) {
                 this.bobView(matrixStack, tickDelta);
             }
 
-            float f = MathHelper.lerp(tickDelta, this.client.player.lastNauseaStrength, this.client.player.nextNauseaStrength) * this.client.options.distortionEffectScale * this.client.options.distortionEffectScale;
+            float f = MathHelper.lerp(tickDelta, this.client.player.lastNauseaStrength, this.client.player.nextNauseaStrength) * this.client.options.getDistortionEffectScale().getValue().floatValue() * this.client.options.getDistortionEffectScale().getValue().floatValue();
             if (f > 0.0F) {
                 int i = this.client.player.hasStatusEffect(StatusEffects.NAUSEA) ? 7 : 20;
                 float g = 5.0F / (f * f + 5.0F) - f * 0.04F;
                 g *= g;
-                Vec3f vec3f = new Vec3f(0.0F, MathHelper.SQUARE_ROOT_OF_TWO / 2.0F, MathHelper.SQUARE_ROOT_OF_TWO / 2.0F);
-                matrixStack.multiply(vec3f.getDegreesQuaternion(((float) this.ticks + tickDelta) * (float) i));
+
+                RotationAxis vec3f = RotationAxis.of(new Vector3f(0.0F, MathHelper.SQUARE_ROOT_OF_TWO / 2.0F, MathHelper.SQUARE_ROOT_OF_TWO / 2.0F));
+                matrixStack.multiply(vec3f.rotationDegrees(((float) this.ticks + tickDelta) * (float) i));
                 matrixStack.scale(1.0F / g, 1.0F, 1.0F);
                 float h = -((float) this.ticks + tickDelta) * (float) i;
-                matrixStack.multiply(vec3f.getDegreesQuaternion(h));
+                matrixStack.multiply(vec3f.rotationDegrees(h));
             }
         }
 
-        matrixStack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(camera.getPitch()));
-        matrixStack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(camera.getYaw() + 180.0F));
+        matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(camera.getPitch()));
+        matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(camera.getYaw() + 180.0F));
 
         Vec3d pos = this.camera.getPos();
 
         Matrix4f model = matrixStack.peek().getPositionMatrix();
 
-        model.multiply(Matrix4f.translate(-(float) pos.x, -(float) pos.y, -(float) pos.z));
+        // todo: what
+        // model.mul(Matrix4f.translate(-(float) pos.x, -(float) pos.y, -(float) pos.z));
 
         return model;
     }
@@ -153,8 +156,8 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
         float h = -(playerEntity.horizontalSpeed + g * f);
         float i = MathHelper.lerp(f, playerEntity.prevStrideDistance, playerEntity.strideDistance);
         matrixStack.translate((MathHelper.sin(h * MathHelper.PI) * i * 0.5F), -Math.abs(MathHelper.cos(h * MathHelper.PI) * i), 0.0D);
-        matrixStack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(MathHelper.sin(h * MathHelper.PI) * i * (3.0F + additionalBobbing)));
-        matrixStack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(Math.abs(MathHelper.cos(h * MathHelper.PI - (0.2F + additionalBobbing)) * i) * 5.0F));
+        matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(MathHelper.sin(h * MathHelper.PI) * i * (3.0F + additionalBobbing)));
+        matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(Math.abs(MathHelper.cos(h * MathHelper.PI - (0.2F + additionalBobbing)) * i) * 5.0F));
 
         callbackInfo.cancel();
     }

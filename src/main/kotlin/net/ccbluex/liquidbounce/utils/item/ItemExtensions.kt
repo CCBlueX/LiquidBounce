@@ -26,15 +26,15 @@ import net.minecraft.command.argument.ItemStringReader
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.item.*
 import net.minecraft.nbt.NbtCompound
+import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
-import net.minecraft.util.registry.Registry
 
 /**
  * Create item with NBT tags
  *
  * @docs https://minecraft.gamepedia.com/Commands/give
  */
-fun createItem(stack: String, amount: Int = 1): ItemStack = ItemStringReader(StringReader(stack), true).consume().let {
+fun createItem(stack: String, amount: Int = 1): ItemStack = ItemStringReader.item(Registries.ITEM.readOnlyWrapper, StringReader(stack)).let {
     ItemStackArgument(it.item, it.nbt).createStack(amount, false)
 }
 
@@ -79,7 +79,7 @@ fun ItemStack?.getEnchantmentCount(): Int {
 
 fun ItemStack?.getEnchantment(enchantment: Enchantment): Int {
     val enchantments = this?.enchantments ?: return 0
-    val enchId = Registry.ENCHANTMENT.getId(enchantment)
+    val enchId = Registries.ENCHANTMENT.getId(enchantment)
 
     for (enchantmentEntry in enchantments) {
         if (enchantmentEntry !is NbtCompound) {

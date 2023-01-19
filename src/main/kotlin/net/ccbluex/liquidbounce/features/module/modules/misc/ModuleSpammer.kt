@@ -50,7 +50,8 @@ object ModuleSpammer : Module("Spammer", Category.MISC) {
                 .map { if (Random.nextBoolean()) it.toUpperCase() else it.toLowerCase() }.joinToString("")
         }
 
-        player.sendChatMessage(text)
+//        player.sendChatMessage(text)
+//        todo
         wait(delay.random())
     }
 

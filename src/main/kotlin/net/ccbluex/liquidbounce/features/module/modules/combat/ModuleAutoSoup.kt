@@ -94,7 +94,9 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
                     waitUntil { !player.isBlocking }
                 }
 
-                network.sendPacket(PlayerInteractItemC2SPacket(Hand.MAIN_HAND))
+                interaction.sendSequencedPacket(world) { sequence ->
+                    PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence)
+                }
                 return@repeatable
             } else {
                 // Search for the specific item in inventory and quick move it to hotbar

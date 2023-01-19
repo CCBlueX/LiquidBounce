@@ -119,7 +119,6 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
 
         if (interaction.interactBlock(
                 player,
-                mc.world!!,
                 Hand.MAIN_HAND,
                 rayTraceResult
             ) == ActionResult.SUCCESS

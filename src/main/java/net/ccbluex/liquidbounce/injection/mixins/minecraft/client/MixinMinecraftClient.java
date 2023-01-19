@@ -30,6 +30,7 @@ import net.minecraft.client.network.ServerInfo;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.util.Window;
 import net.minecraft.entity.Entity;
+import net.minecraft.resource.InputSupplier;
 import net.minecraft.server.integrated.IntegratedServer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -40,6 +41,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.io.InputStream;
 
 @Mixin(MinecraftClient.class)
@@ -57,11 +59,9 @@ public abstract class MixinMinecraftClient {
     public abstract boolean isConnectedToRealms();
 
     @Shadow
-    @Nullable
-    private ServerInfo currentServerEntry;
-
-    @Shadow
     private int itemUseCooldown;
+
+    @Shadow public abstract @org.jetbrains.annotations.Nullable ServerInfo getCurrentServerEntry();
 
     @Inject(method = "isAmbientOcclusionEnabled()Z", at = @At("HEAD"), cancellable = true)
     private static void injectXRayFullBright(CallbackInfoReturnable<Boolean> callback) {
@@ -118,7 +118,7 @@ public abstract class MixinMinecraftClient {
                 titleBuilder.append(I18n.translate("title.singleplayer"));
             } else if (this.isConnectedToRealms()) {
                 titleBuilder.append(I18n.translate("title.multiplayer.realms"));
-            } else if (this.server == null && (this.currentServerEntry == null || !this.currentServerEntry.isLocal())) {
+            } else if (this.server == null && (this.getCurrentServerEntry() == null || !this.getCurrentServerEntry().isLocal())) {
                 titleBuilder.append(I18n.translate("title.multiplayer.other"));
             } else {
                 titleBuilder.append(I18n.translate("title.multiplayer.lan"));
@@ -131,25 +131,26 @@ public abstract class MixinMinecraftClient {
     /**
      * Set window icon to our client icon.
      */
-    @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/Window;setIcon(Ljava/io/InputStream;Ljava/io/InputStream;)V"))
-    private void setupIcon(Window instance, InputStream icon16, InputStream icon32) {
-        LiquidBounce.INSTANCE.getLogger().debug("Loading client icons");
-
-        // Find client icons
-        final InputStream stream16 = LiquidBounce.class.getResourceAsStream("/assets/liquidbounce/icon_16x16.png");
-        final InputStream stream32 = LiquidBounce.class.getResourceAsStream("/assets/liquidbounce/icon_32x32.png");
-
-        // In case one of the icons are not found
-        if (stream16 == null || stream32 == null) {
-            LiquidBounce.INSTANCE.getLogger().error("Unable to find client icons.");
-            // => Fallback to minecraft icons
-            instance.setIcon(icon16, icon32);
-            return;
-        }
-
-        // Load client icons
-        instance.setIcon(stream16, stream32);
-    }
+    // todo: fix icon
+//    @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/Window;setIcon(Ljava/io/InputStream;Ljava/io/InputStream;)V"))
+//    private void setupIcon(Window instance, InputStream icon16, InputStream icon32) {
+//        LiquidBounce.INSTANCE.getLogger().debug("Loading client icons");
+//
+//        // Find client icons
+//        final InputStream stream16 = LiquidBounce.class.getResourceAsStream("/assets/liquidbounce/icon_16x16.png");
+//        final InputStream stream32 = LiquidBounce.class.getResourceAsStream("/assets/liquidbounce/icon_32x32.png");
+//
+//        // In case one of the icons are not found
+//        if (stream16 == null || stream32 == null) {
+//            LiquidBounce.INSTANCE.getLogger().error("Unable to find client icons.");
+//            // => Fallback to minecraft icons
+//            instance.setIcon(() -> stream16, () -> stream32);
+//            return;
+//        }
+//
+//        // Load client icons
+//        instance.setIcon(stream16, stream32);
+//    }
 
     /**
      * Handle opening screens

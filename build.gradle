@@ -78,7 +78,7 @@ dependencies {
         Recommended mods (on IDE)
      */
     // modRuntimeOnly ("net.earthcomputer.multiconnect:multiconnect:${project.multiconnect_version}") { transitive = false }
-    modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
+    // modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
     // modRuntime "com.github.CaffeineMC:sodium-fabric:${project.sodium_version}"
     // modRuntimeOnly "com.github.CaffeineMC:lithium-fabric:${project.lithium_version}"
     // modRuntime "com.github.CaffeineMC:phosphor-fabric:${project.phosphor_version}"
@@ -106,6 +106,11 @@ dependencies {
     implementation "com.labymedia:ultralight-java-base:0.4.6"
     implementation "com.labymedia:ultralight-java-databind:0.4.6"
     implementation "com.labymedia:ultralight-java-gpu:0.4.6"
+
+    // https://mvnrepository.com/artifact/io.netty/netty-codec-http
+    implementation 'io.netty:netty-codec-http:4.1.82.Final'
+    // https://mvnrepository.com/artifact/io.netty/netty-handler-proxy
+    implementation 'io.netty:netty-handler-proxy:4.1.82.Final'
 
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 
@@ -168,6 +173,8 @@ shadowJar {
         include(dependency('com.labymedia:ultralight-java-gpu'))
         include(dependency('com.thealtening.api:api'))
         include(dependency('com.github.CCBlueX:Elixir'))
+        include(dependency('io.netty:netty-codec-http'))
+        include(dependency('io.netty:netty-handler-proxy'))
         include(project(":theme"))
     }
 }
@@ -178,7 +185,7 @@ jar {
 
 task remapShadow(type: RemapJarTask, dependsOn: shadowJar) {
     setInput(shadowJar.archiveFile)
-    remapAccessWidener.set(true)
+    //remapAccessWidener.set(true)
     addNestedDependencies.set(remapJar.addNestedDependencies)
 }
 

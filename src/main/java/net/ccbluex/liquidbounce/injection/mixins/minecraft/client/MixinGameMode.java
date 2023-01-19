@@ -17,8 +17,8 @@ public class MixinGameMode {
      * With this injection though, this is no longer a problem.
      */
 
-    @ModifyVariable(method = {"byId(ILnet/minecraft/world/GameMode;)Lnet/minecraft/world/GameMode;", "byName(Ljava/lang/String;Lnet/minecraft/world/GameMode;)Lnet/minecraft/world/GameMode;"}, at = @At("HEAD"), ordinal = 0, argsOnly = true)
-    private static GameMode setDefaultAsNull(GameMode gameMode) {
-        return null;
-    }
+//    @ModifyVariable(method = {"byId(ILnet/minecraft/world/GameMode;)Lnet/minecraft/world/GameMode;", "byName(Ljava/lang/String;Lnet/minecraft/world/GameMode;)Lnet/minecraft/world/GameMode;"}, at = @At("HEAD"), ordinal = 0, argsOnly = true)
+//    private static GameMode setDefaultAsNull(GameMode gameMode) {
+//        return null;
+//    }
 }

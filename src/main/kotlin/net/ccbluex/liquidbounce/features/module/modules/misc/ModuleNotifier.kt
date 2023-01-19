@@ -61,40 +61,41 @@ object ModuleNotifier : Module("Notifier", Category.MISC) {
         val packet = event.packet
 
         if (packet is PlayerListS2CPacket) {
-            when (packet.action) {
-                PlayerListS2CPacket.Action.ADD_PLAYER -> {
-                    for (entry in packet.entries) {
-                        uuidNameCache[entry.profile.id] = entry.profile.name
-
-                        if (joinMessages) {
-                            val message = joinMessageFormat.format(entry.profile.name)
-
-                            if (useNotification) {
-                                notification("Notifier", message, NotificationEvent.Severity.INFO)
-                            } else {
-                                chat(regular(message))
-                            }
-                        }
-                    }
-                }
-                PlayerListS2CPacket.Action.REMOVE_PLAYER -> {
-                    for (entry in packet.entries) {
-                        if (leaveMessages) {
-                            val message = leaveMessageFormat.format(uuidNameCache[entry.profile.id])
-
-                            if (useNotification) {
-                                notification("Notifier", message, NotificationEvent.Severity.INFO)
-                            } else {
-                                chat(regular(message))
-                            }
-                        }
-
-                        uuidNameCache.remove(entry.profile.id)
-                    }
-                }
-                else -> {
-                }
-            }
+            // todo:
+//            when (packet.action) {
+//                PlayerListS2CPacket.Action.ADD_PLAYER -> {
+//                    for (entry in packet.entries) {
+//                        uuidNameCache[entry.profile.id] = entry.profile.name
+//
+//                        if (joinMessages) {
+//                            val message = joinMessageFormat.format(entry.profile.name)
+//
+//                            if (useNotification) {
+//                                notification("Notifier", message, NotificationEvent.Severity.INFO)
+//                            } else {
+//                                chat(regular(message))
+//                            }
+//                        }
+//                    }
+//                }
+//                PlayerListS2CPacket.Action.REMOVE_PLAYER -> {
+//                    for (entry in packet.entries) {
+//                        if (leaveMessages) {
+//                            val message = leaveMessageFormat.format(uuidNameCache[entry.profile.id])
+//
+//                            if (useNotification) {
+//                                notification("Notifier", message, NotificationEvent.Severity.INFO)
+//                            } else {
+//                                chat(regular(message))
+//                            }
+//                        }
+//
+//                        uuidNameCache.remove(entry.profile.id)
+//                    }
+//                }
+//                else -> {
+//                }
+//            }
         }
     }
 

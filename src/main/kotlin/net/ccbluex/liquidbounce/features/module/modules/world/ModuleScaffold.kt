@@ -160,7 +160,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         val result = interaction.interactBlock(
             player,
-            world,
             Hand.MAIN_HAND,
             rayTraceResult
         )

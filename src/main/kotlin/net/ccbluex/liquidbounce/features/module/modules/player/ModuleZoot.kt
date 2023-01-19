@@ -69,7 +69,8 @@ object ModuleZoot : Module("Zoot", Category.PLAYER) {
                 val (effect, status) = player.activeStatusEffects.maxByOrNull { it.value.duration }
                     ?: return@repeatable
 
-                if (!effect.isBeneficial && !status.isPermanent) {
+                // todo: check if && !status.isPermanent
+                if (!effect.isBeneficial ) {
                     // Accelerate game time (1.8.X)
                     repeat(status.duration / 20) {
                         network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(player.isOnGround))

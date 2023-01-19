@@ -33,7 +33,9 @@ import net.minecraft.client.network.ClientPlayNetworkHandler
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.network.ClientPlayerInteractionManager
 import net.minecraft.client.world.ClientWorld
-import net.minecraft.text.TranslatableText
+import net.minecraft.text.MutableText
+import net.minecraft.text.Text
+import net.minecraft.text.TranslatableTextContent
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -75,7 +77,7 @@ open class Module(
             }
 
             notification(
-                if (new) TranslatableText("liquidbounce.generic.enabled") else TranslatableText("liquidbounce.generic.disabled"),
+                if (new) Text.translatable("liquidbounce.generic.enabled") else Text.translatable("liquidbounce.generic.disabled"),
                 this.name,
                 NotificationEvent.Severity.INFO
             )
@@ -139,8 +141,8 @@ open class Module(
      */
     override fun handleEvents() = enabled && mc.player != null && mc.world != null
 
-    fun message(key: String, vararg args: Any): TranslatableText {
-        return TranslatableText("$translationBaseKey.messages.$key", *args)
+    fun message(key: String, vararg args: Any): MutableText {
+        return Text.translatable("$translationBaseKey.messages.$key", *args)
     }
 
 }

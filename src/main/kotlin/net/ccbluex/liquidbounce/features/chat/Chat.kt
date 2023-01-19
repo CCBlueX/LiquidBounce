@@ -10,7 +10,8 @@ import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.utils.client.*
-import net.minecraft.text.TranslatableText
+import net.minecraft.text.Text
+import net.minecraft.text.TranslatableTextContent
 import net.minecraft.util.Util
 import java.util.*
 
@@ -85,13 +86,13 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
 
     internal fun onConnect() {
         logger.info("Connecting to LiquidChat...")
-        notification("LiquidChat", TranslatableText("liquidbounce.liquidchat.states.connecting"), NotificationEvent.Severity.INFO)
+        notification("LiquidChat", Text.translatable("liquidbounce.liquidchat.states.connecting"), NotificationEvent.Severity.INFO)
     }
 
     internal fun onConnected() {
         logger.info("Successfully connected to LiquidChat!")
 
-        notification("LiquidChat", TranslatableText("liquidbounce.liquidchat.states.connected"), NotificationEvent.Severity.INFO)
+        notification("LiquidChat", Text.translatable("liquidbounce.liquidchat.states.connected"), NotificationEvent.Severity.INFO)
 
         if (jwtLogin) {
             logger.info("Logging in via JWT...")
@@ -104,15 +105,15 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
 
     internal fun onDisconnect() {
         client.channel = null
-        notification("LiquidChat", TranslatableText("liquidbounce.liquidchat.states.disconnected"), NotificationEvent.Severity.INFO)
+        notification("LiquidChat", Text.translatable("liquidbounce.liquidchat.states.disconnected"), NotificationEvent.Severity.INFO)
     }
 
     internal fun onLogon() {
-        notification("LiquidChat", TranslatableText("liquidbounce.liquidchat.states.loggingIn"), NotificationEvent.Severity.INFO)
+        notification("LiquidChat", Text.translatable("liquidbounce.liquidchat.states.loggingIn"), NotificationEvent.Severity.INFO)
     }
 
     internal fun onLoggedIn() {
-        notification("LiquidChat", TranslatableText("liquidbounce.liquidchat.states.loggedIn"), NotificationEvent.Severity.SUCCESS)
+        notification("LiquidChat", Text.translatable("liquidbounce.liquidchat.states.loggedIn"), NotificationEvent.Severity.SUCCESS)
     }
 
     internal fun onClientError(packet: ClientErrorPacket) {
@@ -178,12 +179,12 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
     }
 
     internal fun onError(cause: Throwable) {
-        notification("LiquidChat", TranslatableText("liquidbounce.generic.notifyDeveloper"), NotificationEvent.Severity.ERROR)
+        notification("LiquidChat", Text.translatable("liquidbounce.generic.notifyDeveloper"), NotificationEvent.Severity.ERROR)
         logger.error("LiquidChat error", cause)
     }
 
     internal fun onReceivedJwtToken(jwt: String) {
-        notification("LiquidChat", TranslatableText("liquidbounce.liquidchat.jwtTokenReceived"), NotificationEvent.Severity.SUCCESS)
+        notification("LiquidChat", Text.translatable("liquidbounce.liquidchat.jwtTokenReceived"), NotificationEvent.Severity.SUCCESS)
 
         // Set jwt token
         jwtLogin = true
