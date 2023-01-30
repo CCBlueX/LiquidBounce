@@ -21,7 +21,7 @@ plugins {
     id "fabric-loom"
     id "org.jetbrains.kotlin.jvm"
     id "com.github.johnrengelman.shadow" version "7.1.2"
-    id "org.jlleitschuh.gradle.ktlint" version "11.0.0"
+    id "org.jlleitschuh.gradle.ktlint" version "11.1.0"
 }
 
 import net.fabricmc.loom.task.RemapJarTask
