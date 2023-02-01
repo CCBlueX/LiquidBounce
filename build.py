@@ -32,15 +32,17 @@ if os.path.exists("theme.zip"):
 # Go through every folder and copy public folder to tmp folder with name of folder
 for folder in os.listdir("."):
     if os.path.isdir(folder):
+        # Check if theme has package.json
+        if os.path.exists(folder + "/package.json"):
+            # Build theme
+            npm_build(folder)
+        
+        # Check if theme has public folder to copy
         if os.path.exists(folder + "/public"):
-            # Check if theme has package.json
-            if os.path.exists(folder + "/package.json"):
-                # Build theme
-                npm_build(folder)
             # Copy theme to tmp folder
             shutil.copytree(folder + "/public", "tmp/" + folder)
         else:
-            shutil.copytree(folder, "tmp/" + folder)
+            print("Folder " + folder + " has no public folder")
 
 # Zip into theme bundle
 shutil.make_archive("theme", "zip", "tmp")
