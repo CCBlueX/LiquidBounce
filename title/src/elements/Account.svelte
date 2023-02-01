@@ -24,7 +24,9 @@
             <ToolTip text="Change location" />
             <img on:click={handleLocationClick} class="location" src="img/flags/{location}.svg" alt={location}>
         </div>
-        <img class="head" src={faceUrl} alt="head">
+        <object data={faceUrl} type="image/png" class="head">
+            <img src="img/steve.png" alt="head" class="head"/>
+        </object>
     </div>
     <div class="username">{username}</div>
     <div class="last-used">{lastUsed}</div>

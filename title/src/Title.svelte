@@ -34,7 +34,7 @@
     }
 
     function scheduleStop() {
-        minecraft.scheduleStop()
+        client.exitClient();
     }
 
     function browseForum() {
@@ -63,13 +63,16 @@
 
     const username = client.getSessionService().getUsername();
     const faceUrl = client.getSessionService().getFaceUrl();
+    const lastUsed = client.getSessionService().getLastUsed();
+
+    const location = client.getSessionService().getLocation();
 </script>
 
 <main>
     <div class="scale">
         <div class="wrapper">
             <Logo />
-            <Account username={username} location="de" faceUrl={faceUrl} lastUsed="2021-05-07" on:proxyManagerClick={openProxyManager} on:altManagerClick={openAltManager} />
+            <Account username={username} location={location} faceUrl={faceUrl} lastUsed={lastUsed} on:proxyManagerClick={openProxyManager} on:altManagerClick={openAltManager} />
             <MainButtons>
                 <MainButton text="Singleplayer" icon="singleplayer" on:click={openSingleplayer} />
                 <MainButton text="Multiplayer" icon="multiplayer" on:click={openMultiplayer} let:hovered>
