@@ -86,6 +86,12 @@ class UltralightJsContext(view: View, ulView: ThreadLock<UltralightView>) {
         )
 
         globalObject.setProperty(
+            "storage",
+            databind.conversionUtils.toJavascript(context, UltralightStorage),
+            0
+        )
+
+        globalObject.setProperty(
             "events",
             databind.conversionUtils.toJavascript(context, events),
             0

@@ -3,16 +3,7 @@
 
     let clickGuiOpened = true;
 
-    const categories = [
-        "Movement",
-        "Combat",
-        "Render",
-        "Exploit",
-        "Player",
-        "World",
-        "Misc",
-        "Fun",
-    ];
+    const categories = client.getModuleManager().getCategories();
     const modules = [];
     
     try {

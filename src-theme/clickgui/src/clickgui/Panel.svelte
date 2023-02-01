@@ -1,18 +1,18 @@
 <script>
-    import { sineInOut } from "svelte/easing";
-    import { slide } from "svelte/transition";
+    import {sineInOut} from "svelte/easing";
+    import {slide} from "svelte/transition";
     import Module from "./Module.svelte";
 
     export let category;
     export let modules;
 
-    let expanded = localStorage.getItem(`clickgui.panel.${category}.expanded`) === "true" 
-        || localStorage.getItem(`clickgui.panel.${category}.expanded`) === null;
+    let expanded = storage.getItem(`clickgui.panel.${category}.expanded`) === "true"
+        || storage.getItem(`clickgui.panel.${category}.expanded`) === null;
 
     let renderedModules = modules;
 
-    let top = parseInt(localStorage.getItem(`clickgui.panel.${category}.top`)) || 0;
-    let left = parseInt(localStorage.getItem(`clickgui.panel.${category}.left`)) || 0;
+    let top = parseInt(storage.getItem(`clickgui.panel.${category}.top`)) || 0;
+    let left = parseInt(storage.getItem(`clickgui.panel.${category}.left`)) || 0;
     let moving = false;
     let prevX = 0;
     let prevY = 0;
@@ -33,8 +33,8 @@
 	
 	function onMouseUp() {
 		moving = false;
-        localStorage.setItem(`clickgui.panel.${category}.top`, top);
-        localStorage.setItem(`clickgui.panel.${category}.left`, left);
+        storage.setItem(`clickgui.panel.${category}.top`, top);
+        storage.setItem(`clickgui.panel.${category}.left`, left);
 	}
 
     function toggleExpanded(e) {
@@ -45,7 +45,7 @@
             expanded = true;
             renderedModules = modules;
         }
-        localStorage.setItem(`clickgui.panel.${category}.expanded`, expanded);
+        storage.setItem(`clickgui.panel.${category}.expanded`, expanded);
     }
 
     window.addEventListener("mouseup", onMouseUp);

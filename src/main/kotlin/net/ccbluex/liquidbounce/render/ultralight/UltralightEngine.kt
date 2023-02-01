@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.render.ultralight.glfw.GlfwCursorAdapter
 import net.ccbluex.liquidbounce.render.ultralight.glfw.GlfwInputAdapter
 import net.ccbluex.liquidbounce.render.ultralight.hooks.UltralightIntegrationHook
 import net.ccbluex.liquidbounce.render.ultralight.hooks.UltralightScreenHook
+import net.ccbluex.liquidbounce.render.ultralight.js.bindings.UltralightStorage
 import net.ccbluex.liquidbounce.render.ultralight.renderer.CpuViewRenderer
 import net.ccbluex.liquidbounce.utils.client.ThreadLock
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -120,6 +121,8 @@ object UltralightEngine {
         // Setup hooks
         UltralightIntegrationHook
         UltralightScreenHook
+
+        UltralightStorage
 
         // Setup GLFW adapters
         clipboardAdapter = GlfwClipboardAdapter()

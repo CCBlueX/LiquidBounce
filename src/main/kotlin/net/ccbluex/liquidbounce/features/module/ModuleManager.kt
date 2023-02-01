@@ -201,4 +201,6 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
         return filter { it.name.startsWith(begin, true) && validator(it) }.map { it.name }
     }
 
+    fun getCategories() = Category.values().map { it.readableName }.toTypedArray()
+
 }
