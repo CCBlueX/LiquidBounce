@@ -442,6 +442,8 @@
 
   "liquidbounce.module.autoPot.description": "Automatically throws healing potions whenever your health is low.",
 
+  "liquidbounce.module.trueSight.description": "Allows you to see invisible objects and entities.",
+  
   "liquidbounce.module.keepChatAfterDeath.description": "Allows you to use the chat on the death screen.",
 
   "liquidbounce.module.xray.description": "Allows you to see ores through walls.",
