@@ -1,0 +1,23 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600&display=swap");
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+*:focus {
+    outline: none;
+}
+
+.ruler {
+    opacity: 0;
+    display: fixed;
+    font-family: "Montserrat", sans-serif;
+}
+
+body {
+/* background-image: url("img/back.png");
+    background-size: cover; */
+    overflow: hidden;
+}

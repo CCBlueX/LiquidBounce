@@ -1,0 +1,10 @@
+.idea/*
+*.iml
+*.ipr
+*.iws
+/.settings/
+/.gradle/
+/build/
+/out/
+/resources
+/theme.zip
