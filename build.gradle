@@ -83,16 +83,6 @@ dependencies {
     // modRuntimeOnly "com.github.CaffeineMC:lithium-fabric:${project.lithium_version}"
     // modRuntime "com.github.CaffeineMC:phosphor-fabric:${project.phosphor_version}"
 
-    // Baritone
-//    modRuntime ("com.github.CCBlueX:baritone:${project.minecraft_version}-SNAPSHOT") {
-//        exclude group: "org.ow2.asm", module: "asm-debug-all"
-//        exclude group: "org.lwjgl.lwjgl", module: "lwjgl"
-//        exclude group: "org.lwjgl.lwjgl", module: "lwjgl-platform"
-//        exclude group: "net.java.jinput", module: "jinput"
-//        exclude group: "net.java.jinput", module: "jinput-platform"
-//        exclude group: "net.sf.jopt-simple", module: "jopt-simple"
-//    }
-
     // fix nullable imports
     implementation "com.google.code.findbugs:jsr305:3.0.2"
 
@@ -109,8 +99,6 @@ dependencies {
 
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 
-    implementation project(":theme")
-
     // Test libraries
 
     testImplementation "org.junit.jupiter:junit-jupiter:5.9.1"
@@ -123,6 +111,26 @@ processResources {
         expand "version": project.version
     }
 }
+
+// The following code will include the theme into the build
+
+task makeTheme(type: Exec) {
+    workingDir file("src-theme")
+    commandLine "python", "build.py"
+    doLast {
+        println "Successfully exported theme.zip"
+    }
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDirs "src-theme/resources"
+        }
+    }
+}
+
+processResources.dependsOn makeTheme
 
 // ensure that the encoding is set to UTF-8, no matter what the system default is
 // this fixes some edge cases with special characters not displaying correctly
@@ -168,8 +176,8 @@ shadowJar {
         include(dependency('com.labymedia:ultralight-java-gpu'))
         include(dependency('com.thealtening.api:api'))
         include(dependency('com.github.CCBlueX:Elixir'))
-        include(project(":theme"))
     }
+
 }
 
 jar {
@@ -178,7 +186,6 @@ jar {
 
 task remapShadow(type: RemapJarTask, dependsOn: shadowJar) {
     setInput(shadowJar.archiveFile)
-    remapAccessWidener.set(true)
     addNestedDependencies.set(remapJar.addNestedDependencies)
 }
 

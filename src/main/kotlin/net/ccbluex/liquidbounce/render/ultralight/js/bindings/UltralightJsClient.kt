@@ -35,6 +35,8 @@ object UltralightJsClient {
     val proxyManager = UltralightJsProxyManager
     val theAltening = UltralightAlteningService
 
+    fun exitClient() = mc.scheduleStop()
+
     /**
      * Access session service from Ultralight
      */
@@ -48,8 +50,27 @@ object UltralightJsClient {
             mc.sessionService.loginMicrosoft()
         }
 
-        fun getFaceUrl() = "https://visage.surgeplay.com/face/${mc.session.uuid}"
         fun getUsername(): String = mc.session.username
+
+        /**
+         * Get face url to be displayed on display
+         *
+         * todo: pull URL service from API instead of hard coding the url
+         */
+        fun getFaceUrl() = "https://crafatar.com/avatars/${mc.session.uuid}?size=100"
+
+        /**
+         * todo: Save when account was last used
+         */
+        fun getLastUsed() = "Not used yet"
+
+        /**
+         * Get location of session
+         *
+         * This depends on the current Geo IP of the user. This might be affected by the proxy service.
+         * todo: pull from Geo IP
+         */
+        fun getLocation() = "de"
 
     }
 
