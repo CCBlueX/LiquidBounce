@@ -11,7 +11,7 @@
         "rollup-plugin-livereload": "^2.0.0",
         "rollup-plugin-svelte": "^7.0.0",
         "rollup-plugin-terser": "^7.0.0",
-        "svelte": "^3.0.0"
+        "svelte": "^3.49.0"
     },
     "dependencies": {
         "node-sass": "^8.0.0",
