@@ -62,7 +62,7 @@ object UltralightJsClient {
         /**
          * todo: Save when account was last used
          */
-        fun getLastUsed() = "Not used yet"
+        fun getLastUsed() = "Never"
 
         /**
          * Get location of session
