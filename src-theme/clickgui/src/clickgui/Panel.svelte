@@ -9,7 +9,7 @@
     let expanded = storage.getItem(`clickgui.panel.${category}.expanded`) === "true"
         || storage.getItem(`clickgui.panel.${category}.expanded`) === null;
 
-    let renderedModules = modules;
+    let renderedModules = expanded ? modules : [];
 
     let top = parseInt(storage.getItem(`clickgui.panel.${category}.top`)) || 0;
     let left = parseInt(storage.getItem(`clickgui.panel.${category}.left`)) || 0;
