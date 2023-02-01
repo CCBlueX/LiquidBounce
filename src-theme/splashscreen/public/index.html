@@ -1,0 +1,215 @@
+<html>
+
+<head>
+    <style>
+        body {
+            background: linear-gradient(227deg, #1e1e1e, #525050);
+            background-size: 400% 400%;
+
+            -webkit-animation: gradient 8s ease infinite;
+            -moz-animation: gradient 8s ease infinite;
+            animation: gradient 8s ease infinite;
+        }
+
+        @-webkit-keyframes gradient {
+            0%{background-position:0% 50%}
+            50%{background-position:100% 50%}
+            100%{background-position:0% 50%}
+        }
+        @-moz-keyframes gradient {
+            0%{background-position:0% 50%}
+            50%{background-position:100% 50%}
+            100%{background-position:0% 50%}
+        }
+        @keyframes gradient {
+            0%{background-position:0% 50%}
+            50%{background-position:100% 50%}
+            100%{background-position:0% 50%}
+        }
+
+/*        .fade-out {
+            animation: fade 3s forwards;
+        }
+
+        .background-fade-out {
+            animation: color-fade 2s forwards;
+        }*/
+
+        .center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            margin-right: -50%;
+            transform: translate(-50%, -50%)
+        }
+
+        .lds-roller {
+            display: inline-block;
+            position: relative;
+            width: 80px;
+            height: 80px;
+        }
+
+        .lds-roller div {
+            animation: lds-roller 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+            transform-origin: 40px 40px;
+        }
+
+        .lds-roller div:after {
+            content: " ";
+            display: block;
+            position: absolute;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #fff;
+            margin: -4px 0 0 -4px;
+        }
+
+        .lds-roller div:nth-child(1) {
+            animation-delay: -0.036s;
+        }
+
+        .lds-roller div:nth-child(1):after {
+            top: 63px;
+            left: 63px;
+        }
+
+        .lds-roller div:nth-child(2) {
+            animation-delay: -0.072s;
+        }
+
+        .lds-roller div:nth-child(2):after {
+            top: 68px;
+            left: 56px;
+        }
+
+        .lds-roller div:nth-child(3) {
+            animation-delay: -0.108s;
+        }
+
+        .lds-roller div:nth-child(3):after {
+            top: 71px;
+            left: 48px;
+        }
+
+        .lds-roller div:nth-child(4) {
+            animation-delay: -0.144s;
+        }
+
+        .lds-roller div:nth-child(4):after {
+            top: 72px;
+            left: 40px;
+        }
+
+        .lds-roller div:nth-child(5) {
+            animation-delay: -0.18s;
+        }
+
+        .lds-roller div:nth-child(5):after {
+            top: 71px;
+            left: 32px;
+        }
+
+        .lds-roller div:nth-child(6) {
+            animation-delay: -0.216s;
+        }
+
+        .lds-roller div:nth-child(6):after {
+            top: 68px;
+            left: 24px;
+        }
+
+        .lds-roller div:nth-child(7) {
+            animation-delay: -0.252s;
+        }
+
+        .lds-roller div:nth-child(7):after {
+            top: 63px;
+            left: 17px;
+        }
+
+        .lds-roller div:nth-child(8) {
+            animation-delay: -0.288s;
+        }
+
+        .lds-roller div:nth-child(8):after {
+            top: 56px;
+            left: 12px;
+        }
+
+        #text {
+            position: absolute;
+            top: 57%;
+            left: 50%;
+            margin-right: -50%;
+            transform: translate(-50%, -50%);
+            font-size: 40px;
+            color: white;
+            font-family: Helvetica, sans-serif;
+        }
+
+        @keyframes lds-roller {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+/*        @keyframes color-fade {
+            0% {
+                background-color: #1e1e1e;
+            }
+            100% {
+                background-color: #1e1e1e00;
+            }
+        }
+
+        @keyframes fade {
+            0% {
+                opacity: 100;
+            }
+            100% {
+                opacity: 0;
+            }
+        }*/
+    </style>
+
+    <script>
+        // todo: remap minecraft
+        /* events.on("close", (event) => {
+            event.cancelEvent();
+
+            let circle = document.getElementById("circle");
+            circle.addEventListener("animationend", (ev) => {
+                if (ev.animationName === "fade") {
+                    minecraft.setOverlay(null);
+                    engine.removeView(view);
+                }
+            });
+            circle.classList.add("fade-out");
+
+            document.getElementById("background").classList.add("background-fade-out");
+        }); */
+    </script>
+</head>
+
+<body id="background">
+<div class="center">
+    <div id="circle" class="lds-roller">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+</div>
+<p id="text">Loading Liquidbounce...</p>
+</body>
+
+</html>
