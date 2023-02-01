@@ -6,3 +6,5 @@
 /.gradle/
 /build/
 /out/
+/resources
+/theme.zip
