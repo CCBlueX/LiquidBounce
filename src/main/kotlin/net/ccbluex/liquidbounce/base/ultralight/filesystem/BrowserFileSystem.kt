@@ -216,7 +216,6 @@ class BrowserFileSystem : UltralightFileSystem {
      */
     private fun getPath(strPath: String): Path? {
         return try {
-            println(strPath)
             val path = Path.of(strPath)
 
             if (path.isAbsolute) {
