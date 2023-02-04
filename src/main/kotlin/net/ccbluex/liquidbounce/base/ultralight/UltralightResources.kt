@@ -40,7 +40,7 @@ class UltralightResources {
 
     }
 
-    private val ultralightRoot = File(ConfigSystem.rootFolder, "ultralight")
+    val ultralightRoot = File(ConfigSystem.rootFolder, "ultralight")
     val binRoot = File(ultralightRoot, "bin")
     val cacheRoot = File(ultralightRoot, "cache")
     val resourcesRoot = File(ultralightRoot, "resources")

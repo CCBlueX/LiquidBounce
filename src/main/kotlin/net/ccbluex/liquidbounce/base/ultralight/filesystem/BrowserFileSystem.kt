@@ -20,6 +20,8 @@ package net.ccbluex.liquidbounce.base.ultralight.filesystem
 
 import com.labymedia.ultralight.plugin.filesystem.UltralightFileSystem
 import net.ccbluex.liquidbounce.LiquidBounce.logger
+import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
+import java.io.File
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
@@ -212,9 +214,16 @@ class BrowserFileSystem : UltralightFileSystem {
      * @param path The path to convert to an NIO path
      * @return The converted path, or `null`, if the path failed to convert
      */
-    private fun getPath(path: String): Path? {
+    private fun getPath(strPath: String): Path? {
         return try {
-            Paths.get(path)
+            println(strPath)
+            val path = Path.of(strPath)
+
+            if (path.isAbsolute) {
+                path
+            } else {
+                File(UltralightEngine.resources.ultralightRoot, strPath).toPath()
+            }
         } catch (e: InvalidPathException) {
             null
         }

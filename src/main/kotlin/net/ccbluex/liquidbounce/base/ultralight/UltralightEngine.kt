@@ -53,7 +53,7 @@ object UltralightEngine {
     /**
      * Ultralight resources
      */
-    private val resources = UltralightResources()
+    val resources = UltralightResources()
 
     /**
      * Ultralight platform and renderer
