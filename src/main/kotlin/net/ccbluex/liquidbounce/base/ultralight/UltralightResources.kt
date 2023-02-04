@@ -36,7 +36,7 @@ class UltralightResources {
         /**
          * Exact library version of the LabyMod Ultralight Bindings.
          */
-        private const val LIBRARY_VERSION = 0.46
+        private const val LIBRARY_VERSION = "b8daecd_0.4.12"
 
     }
 
@@ -53,7 +53,7 @@ class UltralightResources {
             val versionsFile = File(ultralightRoot, "VERSION")
 
             // Check if library version is matching the resources version
-            if (versionsFile.exists() && versionsFile.readText().toDoubleOrNull() == LIBRARY_VERSION) {
+            if (versionsFile.exists() && versionsFile.readText() == LIBRARY_VERSION) {
                 return
             }
 

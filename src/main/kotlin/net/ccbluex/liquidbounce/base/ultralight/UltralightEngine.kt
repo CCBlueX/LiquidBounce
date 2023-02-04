@@ -87,8 +87,8 @@ object UltralightEngine {
         logger.info("Loading ultralight...")
 
         // Check resources
-        // logger.info("Checking resources...")
-        // resources.downloadResources()
+        logger.info("Checking resources...")
+        resources.downloadResources()
 
         // Load natives from native directory inside root folder
         logger.info("Loading ultralight natives")
