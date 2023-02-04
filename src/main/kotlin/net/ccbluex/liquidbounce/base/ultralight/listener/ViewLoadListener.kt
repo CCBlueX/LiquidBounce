@@ -92,10 +92,10 @@ class ViewLoadListener(private val view: View) : UltralightLoadListener {
      * @param url         The url that the frame currently contains
      */
     override fun onWindowObjectReady(frameId: Long, isMainFrame: Boolean, url: String) {
-        view.ultralightView.get().lockJavascriptContext().use { lock ->
+/*        view.ultralightView.get().lockJavascriptContext().use { lock ->
             val context = lock.context
             view.context.setupContext(view, context)
-        }
+        }*/
     }
 
     /**

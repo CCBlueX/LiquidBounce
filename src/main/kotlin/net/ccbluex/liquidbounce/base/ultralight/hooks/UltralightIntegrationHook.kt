@@ -21,18 +21,40 @@ package net.ccbluex.liquidbounce.base.ultralight.hooks
 import net.ccbluex.liquidbounce.base.ultralight.RenderLayer
 import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
 import net.ccbluex.liquidbounce.event.*
+import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL12
+import org.lwjgl.opengl.GL33.glGetInteger
 
 /**
  * A integration bridge between Minecraft and Ultralight
  */
 object UltralightIntegrationHook : Listenable {
 
-    val gameRenderHandlerHandler = handler<GameRenderEvent> {
-        UltralightEngine.update()
-    }
-
     val screenRenderHandler = handler<ScreenRenderEvent> {
-        UltralightEngine.render(RenderLayer.SCREEN_LAYER, it.matrices)
+        UltralightEngine.update()
+
+        // Render the web content
+        UltralightEngine.window.updateWebContent()
+
+        UltralightEngine.window.bindTexture()
+        UltralightEngine.window.postAndWait(Runnable {
+            val tex = glGetInteger(GL11.GL_TEXTURE_BINDING_2D)
+            GL11.glBindTexture(GL11.GL_TEXTURE_2D, 0)
+
+            val texWidth = UltralightEngine.window.width
+            val texHeight = UltralightEngine.window.height
+            val winWidth = UltralightEngine.window.width
+            val winHeight = UltralightEngine.window.height
+
+            GL12.glDisable(GL12.GL_SCISSOR_TEST)
+            GL12.glEnable(GL12.GL_BLEND)
+            GL12.glBlendFunc(GL12.GL_SRC_ALPHA, GL12.GL_ONE_MINUS_SRC_ALPHA)
+
+
+        })
+
+
+        UltralightEngine.window.swapBuffers()
     }
 
     val overlayRenderHandler = handler<OverlayRenderEvent> {

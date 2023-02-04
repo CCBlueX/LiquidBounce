@@ -39,9 +39,9 @@ object UltralightScreenHook : Listenable {
 
         val activeView = UltralightEngine.activeView
         if (activeView is ScreenView) {
-            if (activeView.context.events._fireViewClose()) {
-                UltralightEngine.removeView(activeView)
-            }
+            //if (activeView.context.events._fireViewClose()) {
+            //    UltralightEngine.removeView(activeView)
+            //}
         }
 
         val screen = event.screen ?: if (mc.world != null) return@handler else TitleScreen()

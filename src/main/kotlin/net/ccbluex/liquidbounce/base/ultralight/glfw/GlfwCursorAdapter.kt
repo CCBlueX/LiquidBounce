@@ -41,12 +41,12 @@ class GlfwCursorAdapter {
      */
     fun notifyCursorUpdated(cursor: UltralightCursor?) {
         when (cursor) {
-            UltralightCursor.CROSS -> GLFW.glfwSetCursor(UltralightEngine.window, crosshairCursor)
-            UltralightCursor.HAND -> GLFW.glfwSetCursor(UltralightEngine.window, handCursor)
-            UltralightCursor.I_BEAM -> GLFW.glfwSetCursor(UltralightEngine.window, beamCursor)
-            UltralightCursor.EAST_WEST_RESIZE -> GLFW.glfwSetCursor(UltralightEngine.window, hresizeCursor)
-            UltralightCursor.NORTH_SOUTH_RESIZE -> GLFW.glfwSetCursor(UltralightEngine.window, vresizeCursor)
-            else -> GLFW.glfwSetCursor(UltralightEngine.window, 0)
+            UltralightCursor.CROSS -> GLFW.glfwSetCursor(UltralightEngine.windowHandle, crosshairCursor)
+            UltralightCursor.HAND -> GLFW.glfwSetCursor(UltralightEngine.windowHandle, handCursor)
+            UltralightCursor.I_BEAM -> GLFW.glfwSetCursor(UltralightEngine.windowHandle, beamCursor)
+            UltralightCursor.EAST_WEST_RESIZE -> GLFW.glfwSetCursor(UltralightEngine.windowHandle, hresizeCursor)
+            UltralightCursor.NORTH_SOUTH_RESIZE -> GLFW.glfwSetCursor(UltralightEngine.windowHandle, vresizeCursor)
+            else -> GLFW.glfwSetCursor(UltralightEngine.windowHandle, 0)
         }
     }
 
@@ -62,7 +62,7 @@ class GlfwCursorAdapter {
     }
 
     fun unfocus() {
-        GLFW.glfwSetCursor(UltralightEngine.window, 0)
+        GLFW.glfwSetCursor(UltralightEngine.windowHandle, 0)
     }
 
 }
