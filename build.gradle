@@ -91,9 +91,10 @@ dependencies {
 
     implementation "com.github.CCBlueX:Elixir:1.2.4"
 
-    implementation "com.labymedia:ultralight-java-base:0.4.6"
-    implementation "com.labymedia:ultralight-java-databind:0.4.6"
-    implementation "com.labymedia:ultralight-java-gpu:0.4.6"
+    implementation "com.labymedia:ultralight-java-base:0.4.12"
+    implementation "com.labymedia:ultralight-java-databind:0.4.12"
+    implementation "com.labymedia:ultralight-java-gpu:0.4.12"
+    implementation "com.labymedia:ultralight-java-glfw-opengl-util:0.4.12"
 
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 

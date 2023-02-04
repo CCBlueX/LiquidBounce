@@ -19,11 +19,11 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
-import net.ccbluex.liquidbounce.render.ultralight.RenderLayer;
-import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine;
-import net.ccbluex.liquidbounce.render.ultralight.View;
-import net.ccbluex.liquidbounce.render.ultralight.theme.Page;
-import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager;
+import net.ccbluex.liquidbounce.base.ultralight.RenderLayer;
+import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine;
+import net.ccbluex.liquidbounce.base.ultralight.View;
+import net.ccbluex.liquidbounce.base.ultralight.theme.Page;
+import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.SplashOverlay;
 import net.minecraft.client.util.math.MatrixStack;
