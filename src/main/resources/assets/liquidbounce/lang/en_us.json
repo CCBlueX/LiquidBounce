@@ -437,9 +437,9 @@
   "liquidbounce.module.sleepWalker.description": "Allows you to walk while sleeping, also makes your hitbox small.",
 
   "liquidbounce.module.dankBobbing.description": "Adds more bobbing effect.",
-  
+
   "liquidbounce.module.projectilePuncher.description": "Shoots back incoming projectiles around you.",
-  
+
   "liquidbounce.module.autoPot.description": "Automatically throws healing potions whenever your health is low.",
 
   "liquidbounce.module.trueSight.description": "Allows you to see invisible objects and entities.",
@@ -454,5 +454,7 @@
 
   "liquidbounce.module.sprint.description": "Sprints automatically.",
 
-  "liquidbounce.module.cameraClip.description": "Allows you to see through walls in third person view."
+  "liquidbounce.module.cameraClip.description": "Allows you to see through walls in third person view.",
+
+  "liquidbounce.module.reach.description": "Increases your reach."
 }

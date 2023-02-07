@@ -177,7 +177,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNoRotateSet,
             ModuleNoSlowBreak,
             ModuleCameraClip,
-            ModuleSprint
+            ModuleSprint,
+            ModuleReach
         )
 
         builtin.apply {
