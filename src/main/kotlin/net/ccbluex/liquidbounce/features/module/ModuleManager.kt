@@ -168,6 +168,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleGhostHand,
             ModuleProjectilePuncher,
             ModuleAutoPot,
+            ModuleAirJump,
             ModuleTrueSight,
             ModuleAntiBot,
             ModuleKeepChatAfterDeath,
@@ -175,7 +176,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleXRay,
             ModuleNoRotateSet,
             ModuleNoSlowBreak,
-            ModuleCameraClip
+            ModuleCameraClip,
+            ModuleSprint
         )
 
         builtin.apply {
