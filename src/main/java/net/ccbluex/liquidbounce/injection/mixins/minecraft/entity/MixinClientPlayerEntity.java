@@ -180,16 +180,6 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
         return rotation.getPitch();
     }
 
-    @Inject(method = "isSneaking", at = @At("HEAD"), cancellable = true)
-    private void injectForcedState(CallbackInfoReturnable<Boolean> cir) {
-        Boolean enforceEagle = TickStateManager.INSTANCE.getEnforcedState().getEnforceEagle();
-
-        if (enforceEagle != null) {
-            cir.setReturnValue(enforceEagle);
-            cir.cancel();
-        }
-    }
-
     @Inject(method = "isAutoJumpEnabled", cancellable = true, at = @At("HEAD"))
     private void injectLegitStep(CallbackInfoReturnable<Boolean> cir) {
         if (ModuleStep.INSTANCE.getEnabled()) {
