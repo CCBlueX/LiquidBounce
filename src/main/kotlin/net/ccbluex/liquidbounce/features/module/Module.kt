@@ -38,7 +38,7 @@ import net.minecraft.text.TranslatableText
 import org.lwjgl.glfw.GLFW
 
 /**
- * A module also called 'hack' is able to be enabled and handle events
+ * A module also called 'hack' can be enabled and handle events
  */
 open class Module(
     name: String, // name parameter in configurable
