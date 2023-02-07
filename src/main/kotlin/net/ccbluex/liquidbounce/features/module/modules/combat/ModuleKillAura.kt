@@ -238,11 +238,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
                     network.sendPacket(PlayerInteractItemC2SPacket(player.activeHand))
                 }
-
-                // Make sure to reopen inventory
-                if (simulateInventoryClosing && isInInventoryScreen) {
-                    network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.OPEN_INVENTORY))
-                }
             }
         }
     }
