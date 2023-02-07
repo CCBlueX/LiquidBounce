@@ -19,11 +19,11 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
+import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.screen.EmptyScreen
-import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
-import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
 
 /**
  * ClickGUI module

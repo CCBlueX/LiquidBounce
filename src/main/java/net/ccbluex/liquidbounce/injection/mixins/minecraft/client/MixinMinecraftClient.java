@@ -19,10 +19,10 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
-import net.ccbluex.liquidbounce.common.RenderingFlags;
 import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModulePerfectHit;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
+import net.ccbluex.liquidbounce.render.engine.RenderingFlags;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;

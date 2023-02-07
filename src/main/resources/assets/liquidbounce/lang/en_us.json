@@ -255,7 +255,7 @@
   "liquidbounce.module.noPitchLimit.description": "Allows you to rotate your head beyond the regular pitch limit.",
 
   "liquidbounce.module.pingSpoof.description": "Spoofs your ping to a specified value.",
-  "liquidbounce.module.pingSpoof.noSingleplayer": "Cannot enable %s in singleplayer.",
+  "liquidbounce.module.pingSpoof.messages.noSingleplayer": "Cannot enable %s in singleplayer.",
 
   "liquidbounce.module.plugins.description": "Allows you to see a server's plugins.",
   "liquidbounce.module.plugins.messages.timeOut": "Plugins check timed out.",
@@ -442,6 +442,8 @@
 
   "liquidbounce.module.autoPot.description": "Automatically throws healing potions whenever your health is low.",
 
+  "liquidbounce.module.trueSight.description": "Allows you to see invisible objects and entities.",
+
   "liquidbounce.module.keepChatAfterDeath.description": "Allows you to use the chat on the death screen.",
 
   "liquidbounce.module.xray.description": "Allows you to see ores through walls.",
@@ -450,5 +452,14 @@
 
   "liquidbounce.module.noSlowBreak.description": "Automatically adjusts breaking speed when in negatively affecting situations.",
 
+  "liquidbounce.module.sprint.description": "Sprints automatically.",
+
+  "liquidbounce.module.cameraClip.description": "Allows you to see through walls in third person view.",
+
+  "liquidbounce.module.reach.description": "Increases your reach.",
+
+  "liquidbounce.module.disabler.vulcan.message": "You need to have a trident enchanted with Riptide in your offhand in order to bypass Vulcan movement checks.",
+
   "liquidbounce.module.perfectHit.description": "Allows attacks when attack cooldown is fully restored."
+
 }

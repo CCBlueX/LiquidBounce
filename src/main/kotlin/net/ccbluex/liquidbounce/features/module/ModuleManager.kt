@@ -169,12 +169,16 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleProjectilePuncher,
             ModuleAutoPot,
             ModuleAirJump,
+            ModuleTrueSight,
             ModuleAntiBot,
             ModuleKeepChatAfterDeath,
             ModuleOverrideTime,
             ModuleXRay,
             ModuleNoRotateSet,
             ModuleNoSlowBreak,
+            ModuleCameraClip,
+            ModuleSprint,
+            ModuleReach,
             ModulePerfectHit
         )
 
@@ -200,5 +204,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
     fun autoComplete(begin: String, validator: (Module) -> Boolean = { true }): List<String> {
         return filter { it.name.startsWith(begin, true) && validator(it) }.map { it.name }
     }
+
+    fun getCategories() = Category.values().map { it.readableName }.toTypedArray()
 
 }
