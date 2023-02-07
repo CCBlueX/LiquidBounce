@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.event.EventManager
@@ -68,6 +69,9 @@ open class Module(
             } else {
                 disable()
             }
+
+            // If successful might store configuration
+            ConfigSystem.storeConfigurable(ModuleManager.modulesConfigurable)
         }.onSuccess {
             // Save new module state when module activation is enabled
             if (disableActivation) {

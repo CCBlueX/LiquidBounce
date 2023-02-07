@@ -129,7 +129,7 @@ object LiquidBounce : Listenable {
      */
     val shutdownHandler = handler<ClientShutdownEvent> {
         logger.info("Shutting down client...")
-        ConfigSystem.store()
+        ConfigSystem.storeAll()
         UltralightEngine.shutdown()
 
         ChunkScanner.ChunkScannerThread.stopThread()

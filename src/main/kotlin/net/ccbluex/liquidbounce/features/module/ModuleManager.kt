@@ -40,9 +40,7 @@ private val modules = mutableListOf<Module>()
  */
 object ModuleManager : Listenable, Iterable<Module> by modules {
 
-    init {
-        ConfigSystem.root("modules", modules)
-    }
+    val modulesConfigurable = ConfigSystem.root("modules", modules)
 
     /**
      * Handle key input for module binds

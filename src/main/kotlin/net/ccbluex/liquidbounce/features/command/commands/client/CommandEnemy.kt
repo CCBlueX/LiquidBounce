@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
@@ -46,6 +47,8 @@ object CommandEnemy {
                         } else {
                             "disabled"
                         })))
+
+                        ConfigSystem.storeConfigurable(globalEnemyConfigurable)
                     }
                     .build()
             )
@@ -60,6 +63,8 @@ object CommandEnemy {
                         } else {
                             "disabled"
                         })))
+
+                        ConfigSystem.storeConfigurable(globalEnemyConfigurable)
                     }
                     .build()
             )
@@ -74,6 +79,8 @@ object CommandEnemy {
                         } else {
                             "disabled"
                         })))
+
+                        ConfigSystem.storeConfigurable(globalEnemyConfigurable)
                     }
                     .build()
             )
@@ -88,6 +95,8 @@ object CommandEnemy {
                         } else {
                             "disabled"
                         })))
+
+                        ConfigSystem.storeConfigurable(globalEnemyConfigurable)
                     }
                     .build()
             )
@@ -102,6 +111,8 @@ object CommandEnemy {
                         } else {
                             "disabled"
                         })))
+
+                        ConfigSystem.storeConfigurable(globalEnemyConfigurable)
                     }
                     .build()
             )
@@ -116,6 +127,8 @@ object CommandEnemy {
                         } else {
                             "disabled"
                         })))
+
+                        ConfigSystem.storeConfigurable(globalEnemyConfigurable)
                     }
                     .build()
             )
@@ -130,6 +143,8 @@ object CommandEnemy {
                         } else {
                             "disabled"
                         })))
+
+                        ConfigSystem.storeConfigurable(globalEnemyConfigurable)
                     }
                     .build()
             )
