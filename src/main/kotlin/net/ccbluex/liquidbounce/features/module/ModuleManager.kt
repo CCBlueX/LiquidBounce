@@ -22,10 +22,10 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.KeyEvent
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDankBobbing
-import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleSkinDerp
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
+import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDankBobbing
+import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleSkinDerp
 import net.ccbluex.liquidbounce.features.module.modules.misc.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.*
 import net.ccbluex.liquidbounce.features.module.modules.player.*
@@ -166,12 +166,19 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoFish,
             ModuleMobOwners,
             ModuleGhostHand,
-            ModuleAirJump,
             ModuleProjectilePuncher,
             ModuleAutoPot,
+            ModuleAirJump,
+            ModuleTrueSight,
+            ModuleAntiBot,
             ModuleKeepChatAfterDeath,
             ModuleOverrideTime,
-            ModuleXRay
+            ModuleXRay,
+            ModuleNoRotateSet,
+            ModuleNoSlowBreak,
+            ModuleCameraClip,
+            ModuleSprint,
+            ModuleReach
         )
 
         builtin.apply {
@@ -196,5 +203,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
     fun autoComplete(begin: String, validator: (Module) -> Boolean = { true }): List<String> {
         return filter { it.name.startsWith(begin, true) && validator(it) }.map { it.name }
     }
+
+    fun getCategories() = Category.values().map { it.readableName }.toTypedArray()
 
 }

@@ -62,11 +62,7 @@ object RotationManager : Listenable {
     var deactivateManipulation = false
 
     fun raytraceBlock(
-        eyes: Vec3d,
-        pos: BlockPos,
-        state: BlockState,
-        range: Double,
-        wallsRange: Double
+        eyes: Vec3d, pos: BlockPos, state: BlockState, range: Double, wallsRange: Double
     ): VecRotation? {
         val offset = Vec3d(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
         val shape = state.getOutlineShape(mc.world, pos, ShapeContext.of(mc.player))
@@ -131,8 +127,7 @@ object RotationManager : Listenable {
                     if (visible) {
                         // Calculate next spot to preferred spot
                         if (visibleRot == null || rotationDifference(rotation, preferredRotation) < rotationDifference(
-                                visibleRot.rotation,
-                                preferredRotation
+                                visibleRot.rotation, preferredRotation
                             )
                         ) {
                             visibleRot = VecRotation(rotation, vec3)
@@ -140,8 +135,7 @@ object RotationManager : Listenable {
                     } else {
                         // Calculate next spot to preferred spot
                         if (notVisibleRot == null || rotationDifference(
-                                rotation,
-                                preferredRotation
+                                rotation, preferredRotation
                             ) < rotationDifference(notVisibleRot.rotation, preferredRotation)
                         ) {
                             notVisibleRot = VecRotation(rotation, vec3)
@@ -158,10 +152,7 @@ object RotationManager : Listenable {
      * Find the best spot of the upper side of the block
      */
     fun canSeeBlockTop(
-        eyes: Vec3d,
-        pos: BlockPos,
-        range: Double,
-        wallsRange: Double
+        eyes: Vec3d, pos: BlockPos, range: Double, wallsRange: Double
     ): Boolean {
         val rangeSquared = range * range
         val wallsRangeSquared = wallsRange * wallsRange
@@ -173,9 +164,7 @@ object RotationManager : Listenable {
         for (x in 0.1..0.9 step 0.4) {
             for (z in 0.1..0.9 step 0.4) {
                 val vec3 = Vec3d(
-                    minX + x,
-                    y,
-                    minZ + z
+                    minX + x, y, minZ + z
                 )
 
                 // skip because of out of range
@@ -276,7 +265,7 @@ object RotationManager : Listenable {
     /**
      * Update current rotation to new rotation step
      */
-    private fun update() {
+    fun update() {
         // Update reset ticks
         if (ticksUntilReset > 0) {
             ticksUntilReset--
@@ -295,30 +284,25 @@ object RotationManager : Listenable {
         if (ticksUntilReset == 0) {
             val threshold = 2f // todo: might use turn speed
 
-            if (rotationDifference(this.currentRotation ?: serverRotation ?: return, playerRotation) < threshold) {
+            if (rotationDifference(currentRotation ?: serverRotation ?: return, playerRotation) < threshold) {
                 ticksUntilReset = -1
 
-                this.targetRotation = null
-                this.currentRotation = null
+                targetRotation = null
+                currentRotation = null
                 return
             }
 
-            this.currentRotation =
-                limitAngleChange(this.currentRotation ?: serverRotation ?: return, playerRotation, turnSpeed)
+            currentRotation = limitAngleChange(currentRotation ?: serverRotation ?: return, playerRotation, turnSpeed)
         } else if (targetRotation != null) {
             targetRotation?.let { targetRotation ->
-                this.currentRotation =
-                    limitAngleChange(this.currentRotation ?: playerRotation, targetRotation, turnSpeed)
+                currentRotation = limitAngleChange(currentRotation ?: playerRotation, targetRotation, turnSpeed)
             }
         }
     }
 
     fun needsUpdate(lastYaw: Float, lastPitch: Float): Boolean {
-        // Update current rotation
-        update()
-
         // Check if something changed
-        val (currYaw, currPitch) = currentRotation ?: return false
+        val (currYaw, currPitch) = currentRotation?.fixedSensitivity() ?: return false
 
         return lastYaw != currYaw || lastPitch != currPitch
     }
@@ -327,7 +311,7 @@ object RotationManager : Listenable {
      * Calculate difference between the server rotation and your rotation
      */
     fun rotationDifference(rotation: Rotation): Double {
-        return if (serverRotation == null) 0.0 else rotationDifference(rotation, serverRotation!!)
+        return rotationDifference(rotation, serverRotation ?: Rotation(0f, 0f))
     }
 
     /**
@@ -397,9 +381,7 @@ object RotationManager : Listenable {
             return if (d < 1.0E-7) {
                 Vec3d.ZERO
             } else {
-                var vec3d = (if (d > 1.0) movementInput.normalize() else movementInput)
-
-                vec3d = vec3d.multiply(speed.toDouble())
+                val vec3d = (if (d > 1.0) movementInput.normalize() else movementInput).multiply(speed.toDouble())
 
                 val f = MathHelper.sin(yaw * 0.017453292f)
                 val g = MathHelper.cos(yaw * 0.017453292f)

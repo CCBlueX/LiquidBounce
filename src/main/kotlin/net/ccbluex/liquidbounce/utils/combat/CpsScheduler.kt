@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.utils.combat
 /**
  * A CPS scheduler
  *
- * Minecraft is counting every click until it they handle all inputs.
+ * Minecraft is counting every click until it handles all inputs.
  * code:
  * while(this.options.keyAttack.wasPressed()) {
  *     this.doAttack();
@@ -30,25 +30,15 @@ package net.ccbluex.liquidbounce.utils.combat
  */
 class CpsScheduler {
 
-    var lastClick = 0L
-    var clickTime = -1L
+    private var lastClick = 0L
+    private var clickTime = -1L
 
     fun clicks(condition: () -> Boolean, cps: IntRange): Int {
-        val currTime = System.currentTimeMillis()
-
-        var timeLeft = currTime - lastClick
-        if (timeLeft > 1000) {
-            lastClick = System.currentTimeMillis()
-            return 0
-        }
-        if (clickTime < 0) {
-            clickTime = clickTime(cps)
-        }
-
+        var timeLeft = System.currentTimeMillis() - lastClick
         var clicks = 0
 
-        while (timeLeft - clickTime > 0 && condition()) {
-            timeLeft -= clickTime
+        while (timeLeft >= clickTime && condition()) {
+            timeLeft -= lastClick
             clicks++
 
             clickTime = clickTime(cps)

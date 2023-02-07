@@ -41,12 +41,10 @@ import org.lwjgl.glfw.GLFW
  */
 open class Module(
     name: String, // name parameter in configurable
-    @Exclude
-    val category: Category, // module category
+    @Exclude val category: Category, // module category
     bind: Int = GLFW.GLFW_KEY_UNKNOWN, // default bind
     state: Boolean = false, // default state
-    @Exclude
-    val disableActivation: Boolean = false, // disable activation
+    @Exclude val disableActivation: Boolean = false, // disable activation
     hide: Boolean = false, // default hide
 ) : Listenable, Configurable(name) {
 
@@ -57,47 +55,48 @@ open class Module(
         get() = "$translationBaseKey.description"
 
     // Module options
-    var enabled by boolean("Enabled", state)
-        .listen { new ->
-            runCatching {
-                // Check if player is in-game
-                if (mc.player == null || mc.world == null) {
-                    return@runCatching
-                }
-
-                // Call enable or disable function
-                if (new) {
-                    enable()
-                } else {
-                    disable()
-                }
-            }.onSuccess {
-                // Save new module state when module activation is enabled
-                if (disableActivation) {
-                    return@listen false
-                }
-
-                notification(
-                    if (new) TranslatableText("liquidbounce.generic.enabled") else TranslatableText("liquidbounce.generic.disabled"),
-                    this.name,
-                    NotificationEvent.Severity.INFO
-                )
-
-                // Call out module event
-                EventManager.callEvent(ToggleModuleEvent(this, new))
-
-                // Call to choices
-                value.filterIsInstance<ChoiceConfigurable>()
-                    .forEach { it.newState(new) }
-            }.onFailure {
-                // Log error
-                logger.error("Module failed to ${if (new) "enable" else "disable"}.", it)
-                // In case of an error module should stay disabled
-                throw it
+    var enabled by boolean("Enabled", state).listen { new ->
+        runCatching {
+            // Check if player is in-game
+            if (mc.player == null || mc.world == null) {
+                return@runCatching
             }
 
-            new
+            // Call enable or disable function
+            if (new) {
+                enable()
+            } else {
+                disable()
+            }
+        }.onSuccess {
+            // Save new module state when module activation is enabled
+            if (disableActivation) {
+                return@listen false
+            }
+
+            notification(
+                if (new) TranslatableText("liquidbounce.generic.enabled") else TranslatableText("liquidbounce.generic.disabled"),
+                this.name,
+                NotificationEvent.Severity.INFO
+            )
+
+            // Ignore handleEvents condition to prevent enabled modules from freezing post game load
+            val notInGame = (mc.player == null || mc.world == null) && new
+
+            // Call out module event
+            EventManager.callEvent(ToggleModuleEvent(this, new, notInGame))
+
+            // Call to choices
+            value.filterIsInstance<ChoiceConfigurable>().forEach { it.newState(new) }
+        }.onFailure {
+            // Log error
+            logger.error("Module failed to ${if (new) "enable" else "disable"}.", it)
+            // In case of an error module should stay disabled
+            throw it
         }
+
+        new
+    }
 
     var bind by int("Bind", bind, 0..0)
     var hidden by boolean("Hidden", hide)
@@ -123,17 +122,17 @@ open class Module(
     /**
      * Called when module is turned on
      */
-    open fun enable() { }
+    open fun enable() {}
 
     /**
      * Called when module is turned off
      */
-    open fun disable() { }
+    open fun disable() {}
 
     /**
      * Called when the module is added to the module manager
      */
-    open fun init() { }
+    open fun init() {}
 
     /**
      * Events should be handled when module is enabled
@@ -141,7 +140,7 @@ open class Module(
     override fun handleEvents() = enabled && mc.player != null && mc.world != null
 
     fun message(key: String, vararg args: Any): TranslatableText {
-        return TranslatableText("$translationBaseKey.messages.$key", args)
+        return TranslatableText("$translationBaseKey.messages.$key", *args)
     }
 
 }

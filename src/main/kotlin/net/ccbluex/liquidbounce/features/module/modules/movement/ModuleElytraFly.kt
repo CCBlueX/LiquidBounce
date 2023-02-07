@@ -72,8 +72,8 @@ object ModuleElytraFly : Module("ElytraFly", Category.MOVEMENT) {
                     player.strafe(speed = horizontal.toDouble())
                 }
                 player.velocity.y = when {
-                    mc.options.keyJump.isPressed -> vertical.toDouble()
-                    mc.options.keySneak.isPressed -> -vertical.toDouble()
+                    mc.options.jumpKey.isPressed -> vertical.toDouble()
+                    mc.options.sneakKey.isPressed -> -vertical.toDouble()
                     else -> return@repeatable
                 }
             }

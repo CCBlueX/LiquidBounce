@@ -20,11 +20,9 @@
 plugins {
     id "fabric-loom"
     id "org.jetbrains.kotlin.jvm"
-    id "com.github.johnrengelman.shadow" version "7.0.0"
-    id "org.jlleitschuh.gradle.ktlint" version "10.2.1"
+    id "com.github.johnrengelman.shadow" version "7.1.2"
+    id "org.jlleitschuh.gradle.ktlint" version "11.1.0"
 }
-
-import net.fabricmc.loom.task.RemapJarTask
 
 ktlint {
     enableExperimentalRules = true
@@ -57,7 +55,6 @@ repositories {
     maven {
         name = 'TerraformersMC'
         url = 'https://maven.terraformersmc.com/'
-
     }
 }
 
@@ -73,58 +70,37 @@ dependencies {
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 
     // MultiConnect API
-    modImplementation ("net.earthcomputer.multiconnect:multiconnect-api:${project.multiconnect_version}") {
-        transitive = false
-    }
+    modImplementation ("net.earthcomputer.multiconnect:multiconnect-api:${project.multiconnect_version}") { transitive = false }
 
     /*
         Recommended mods (on IDE)
      */
-    modRuntimeOnly ("net.earthcomputer.multiconnect:multiconnect:${project.multiconnect_version}") {
-        transitive = false
-    }
-
-    // Mod Menu
+    // modRuntimeOnly ("net.earthcomputer.multiconnect:multiconnect:${project.multiconnect_version}") { transitive = false }
     modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
-
-    // CaffeineMC optimization mods
     // modRuntime "com.github.CaffeineMC:sodium-fabric:${project.sodium_version}"
-    modRuntimeOnly "com.github.CaffeineMC:lithium-fabric:${project.lithium_version}"
+    // modRuntimeOnly "com.github.CaffeineMC:lithium-fabric:${project.lithium_version}"
     // modRuntime "com.github.CaffeineMC:phosphor-fabric:${project.phosphor_version}"
 
-    // Baritone
-//    modRuntime ("com.github.CCBlueX:baritone:${project.minecraft_version}-SNAPSHOT") {
-//        exclude group: "org.ow2.asm", module: "asm-debug-all"
-//
-//        exclude group: "org.lwjgl.lwjgl", module: "lwjgl"
-//        exclude group: "org.lwjgl.lwjgl", module: "lwjgl-platform"
-//
-//        exclude group: "net.java.jinput", module: "jinput"
-//        exclude group: "net.java.jinput", module: "jinput-platform"
-//
-//        exclude group: "net.sf.jopt-simple", module: "jopt-simple"
-//    }
-
-    // Ignore in export
-    implementation "com.google.code.findbugs:jsr305:3.0.2" // to fix nullable imports
+    // fix nullable imports
+    implementation "com.google.code.findbugs:jsr305:3.0.2"
 
     // Client libraries
-
     implementation ('com.thealtening.api:api:4.1.0') {
         exclude group: 'com.google.code.gson', module: 'gson'
     }
 
-    implementation "com.labymedia:ultralight-java-base:0.4.6"
-    implementation "com.labymedia:ultralight-java-databind:0.4.6"
-    implementation "com.labymedia:ultralight-java-gpu:0.4.6"
+    implementation "com.github.CCBlueX:Elixir:1.2.4"
+
+    implementation "com.labymedia:ultralight-java-base:0.4.12"
+    implementation "com.labymedia:ultralight-java-databind:0.4.12"
+    implementation "com.labymedia:ultralight-java-gpu:0.4.12"
+    implementation "com.labymedia:ultralight-java-glfw-opengl-util:0.4.12"
 
     implementation fileTree(include: ['*.jar'], dir: 'libs')
 
-    implementation project(":theme")
-
     // Test libraries
 
-    testImplementation "org.junit.jupiter:junit-jupiter:5.8.2"
+    testImplementation "org.junit.jupiter:junit-jupiter:5.9.2"
 }
 
 processResources {
@@ -134,6 +110,26 @@ processResources {
         expand "version": project.version
     }
 }
+
+// The following code will include the theme into the build
+
+task makeTheme(type: Exec) {
+    workingDir file("src-theme")
+    commandLine "python", "build.py"
+    doLast {
+        println "Successfully exported theme.zip"
+    }
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDirs "src-theme/resources"
+        }
+    }
+}
+
+processResources.dependsOn makeTheme
 
 // ensure that the encoding is set to UTF-8, no matter what the system default is
 // this fixes some edge cases with special characters not displaying correctly
@@ -153,17 +149,18 @@ tasks.withType(Test) {
     useJUnitPlatform()
 }
 
-// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-// if it is present.
-// If you remove this task, sources will not be generated.
-task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = "sources"
-    from sourceSets.main.allSource
+java {
+    // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
+    // if it is present.
+    // If you remove this line, sources will not be generated.
+    withSourcesJar()
 }
 
 compileKotlin {
-    kotlinOptions.suppressWarnings = true
-    kotlinOptions.useIR = true
+    kotlinOptions {
+        suppressWarnings = true
+        jvmTarget = 17
+    }
 }
 
 shadowJar {
@@ -176,20 +173,24 @@ shadowJar {
         include(dependency('com.labymedia:ultralight-java-base'))
         include(dependency('com.labymedia:ultralight-java-databind'))
         include(dependency('com.labymedia:ultralight-java-gpu'))
+        include(dependency('com.labymedia:ultralight-java-glfw-opengl-util'))
         include(dependency('com.thealtening.api:api'))
-        include(project(":theme"))
+        include(dependency('com.github.CCBlueX:Elixir'))
     }
+
 }
 
 jar {
     from "LICENSE"
 }
 
-task remapShadow(type: RemapJarTask, dependsOn: shadowJar) {
-    setInput(shadowJar.archiveFile)
-    remapAccessWidener.set(true)
-    addNestedDependencies.set(remapJar.addNestedDependencies)
+remapJar {
+    inputFile = shadowJar.archiveFile
 }
 
-build.dependsOn remapShadow
+task copyZipInclude(type: Copy) {
+    from 'zip_include/'
+    into 'build/libs/zip'
+}
 
+build.dependsOn copyZipInclude

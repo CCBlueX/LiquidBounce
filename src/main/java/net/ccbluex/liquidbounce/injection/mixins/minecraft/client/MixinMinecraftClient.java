@@ -19,31 +19,27 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
-import net.ccbluex.liquidbounce.common.RenderingFlags;
 import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
+import net.ccbluex.liquidbounce.render.engine.RenderingFlags;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ServerInfo;
-import net.minecraft.client.resource.ClientBuiltinResourcePackProvider;
 import net.minecraft.client.resource.language.I18n;
+import net.minecraft.client.util.Window;
 import net.minecraft.entity.Entity;
-import net.minecraft.resource.ResourceType;
 import net.minecraft.server.integrated.IntegratedServer;
-import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArgs;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
 import java.io.InputStream;
 
 @Mixin(MinecraftClient.class)
@@ -64,9 +60,8 @@ public abstract class MixinMinecraftClient {
     @Nullable
     private ServerInfo currentServerEntry;
 
-    @Shadow private int itemUseCooldown;
-
-    @Shadow public abstract ClientBuiltinResourcePackProvider getResourcePackProvider();
+    @Shadow
+    private int itemUseCooldown;
 
     @Inject(method = "isAmbientOcclusionEnabled()Z", at = @At("HEAD"), cancellable = true)
     private static void injectXRayFullBright(CallbackInfoReturnable<Boolean> callback) {
@@ -135,33 +130,32 @@ public abstract class MixinMinecraftClient {
 
     /**
      * Set window icon to our client icon.
-     *
-     * @param args arguments of target method
      */
-    @ModifyArgs(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/Window;setIcon(Ljava/io/InputStream;Ljava/io/InputStream;)V"))
-    private void setupIcon(final Args args) {
-        try {
-            LiquidBounce.INSTANCE.getLogger().debug("Loading client icons");
+    @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/Window;setIcon(Ljava/io/InputStream;Ljava/io/InputStream;)V"))
+    private void setupIcon(Window instance, InputStream icon16, InputStream icon32) {
+        LiquidBounce.INSTANCE.getLogger().debug("Loading client icons");
 
-            // Load client icons
-            final InputStream stream32 = getResourcePackProvider().getPack().open(ResourceType.CLIENT_RESOURCES,
-                    new Identifier("liquidbounce:icon_16x16.png"));
-            final InputStream stream64 = getResourcePackProvider().getPack().open(ResourceType.CLIENT_RESOURCES,
-                    new Identifier("liquidbounce:icon_32x32.png"));
+        // Find client icons
+        final InputStream stream16 = LiquidBounce.class.getResourceAsStream("/assets/liquidbounce/icon_16x16.png");
+        final InputStream stream32 = LiquidBounce.class.getResourceAsStream("/assets/liquidbounce/icon_32x32.png");
 
-            args.setAll(stream32, stream64);
-        } catch (final IOException e) {
-            LiquidBounce.INSTANCE.getLogger().error("Unable to load client icons.", e);
-
+        // In case one of the icons are not found
+        if (stream16 == null || stream32 == null) {
+            LiquidBounce.INSTANCE.getLogger().error("Unable to find client icons.");
             // => Fallback to minecraft icons
+            instance.setIcon(icon16, icon32);
+            return;
         }
+
+        // Load client icons
+        instance.setIcon(stream16, stream32);
     }
 
     /**
      * Handle opening screens
      *
-     * @param screen to be opened (null = no screen at all)
-     * @param callbackInfo          callback
+     * @param screen       to be opened (null = no screen at all)
+     * @param callbackInfo callback
      */
     @Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)
     private void hookScreen(Screen screen, CallbackInfo callbackInfo) {
