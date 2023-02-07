@@ -69,16 +69,17 @@ object ConfigSystem {
     /**
      * Create a new root configurable
      */
-    fun root(name: String, tree: MutableList<out Configurable> = mutableListOf()) {
-        @Suppress("UNCHECKED_CAST") root(Configurable(name, tree as MutableList<Value<*>>))
+    fun root(name: String, tree: MutableList<out Configurable> = mutableListOf()): Configurable {
+        @Suppress("UNCHECKED_CAST") return root(Configurable(name, tree as MutableList<Value<*>>))
     }
 
     /**
      * Add a root configurable
      */
-    fun root(configurable: Configurable) {
+    fun root(configurable: Configurable): Configurable {
         configurable.initConfigurable()
         configurables.add(configurable)
+        return configurable
     }
 
     /**
@@ -88,7 +89,7 @@ object ConfigSystem {
         for (configurable in configurables) { // Make a new .json file to save our root configurable
             File(rootFolder, "${configurable.name.lowercase()}.json").runCatching {
                 if (!exists()) {
-                    store()
+                    storeAll()
                     return@runCatching
                 }
 
@@ -99,7 +100,7 @@ object ConfigSystem {
                 logger.info("Successfully loaded config '${configurable.name}'.")
             }.onFailure {
                 logger.error("Unable to load config ${configurable.name}", it)
-                store()
+                storeAll()
             }
         }
     }
@@ -153,23 +154,33 @@ object ConfigSystem {
     }
 
     /**
-     * All configurables should store now.
+     * All configurables known to the config system should be stored now.
+     * This will overwrite all existing files with the new values.
+     *
+     * These configurables are root configurables, which always create a new file with their name.
      */
-    fun store() {
-        for (configurable in configurables) { // Make a new .json file to save our root configurable
-            File(rootFolder, "${configurable.name.lowercase()}.json").runCatching {
-                if (!exists()) {
-                    createNewFile().let { logger.debug("Created new file (status: $it)") }
-                }
+    fun storeAll() {
+        configurables.forEach(::storeConfigurable)
+    }
 
-                logger.debug("Writing config ${configurable.name}...")
-                gson.newJsonWriter(writer()).use {
-                    gson.toJson(configurable, confType, it)
-                }
-                logger.info("Successfully saved config '${configurable.name}'.")
-            }.onFailure {
-                logger.error("Unable to store config ${configurable.name}", it)
+    /**
+     * Store a configurable to a file (will be created if not exists).
+     *
+     * The configurable should be known to the config system.
+     */
+    fun storeConfigurable(configurable: Configurable) { // Make a new .json file to save our root configurable
+        File(rootFolder, "${configurable.name.lowercase()}.json").runCatching {
+            if (!exists()) {
+                createNewFile().let { logger.debug("Created new file (status: $it)") }
             }
+
+            logger.debug("Writing config ${configurable.name}...")
+            gson.newJsonWriter(writer()).use {
+                gson.toJson(configurable, confType, it)
+            }
+            logger.info("Successfully saved config '${configurable.name}'.")
+        }.onFailure {
+            logger.error("Unable to store config ${configurable.name}", it)
         }
     }
 

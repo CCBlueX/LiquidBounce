@@ -47,8 +47,12 @@ import kotlin.math.sqrt
 
 object ModuleTraces : Module("Traces", Category.RENDER) {
 
-    private val modes = choices("ColorMode", DistanceColor, arrayOf(DistanceColor, StaticColor, RainbowColor))
-
+    private val modes = choices(
+        "ColorMode", DistanceColor, arrayOf(
+            DistanceColor, StaticColor, RainbowColor
+        )
+    )
+    
     private object DistanceColor : Choice("Distance") {
 
         override val parent: ChoiceConfigurable
@@ -111,7 +115,7 @@ object ModuleTraces : Module("Traces", Category.RENDER) {
                         (dist.coerceAtMost(viewDistance) / viewDistance).toFloat() * (120.0f / 360.0f), 1.0f, 1.0f
                     )
                 )
-            } else if (entity is PlayerEntity && FriendManager.isFriend(entity.toString())) {
+            } else if (entity is PlayerEntity && FriendManager.isFriend(entity.gameProfile.name)) {
                 Color4b(0, 0, 255)
             } else {
                 baseColor ?: return@handler
