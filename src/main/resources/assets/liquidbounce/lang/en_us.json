@@ -460,4 +460,6 @@
 
   "liquidbounce.module.disabler.vulcan.message": "You need to have a trident enchanted with Riptide in your offhand in order to bypass Vulcan movement checks.",
 
+  "liquidbounce.module.perfectHit.description": "Allows attacks when attack cooldown is fully restored."
+
 }
