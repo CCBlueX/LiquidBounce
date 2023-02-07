@@ -22,7 +22,8 @@ import net.ccbluex.liquidbounce.event.AttackEvent;
 import net.ccbluex.liquidbounce.event.BlockBreakingProgressEvent;
 import net.ccbluex.liquidbounce.event.CancelBlockBreakingEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoJumpDelay;
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker;
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar;
@@ -69,7 +70,9 @@ public class MixinClientPlayerInteractionManager {
         final CancelBlockBreakingEvent cancelEvent = new CancelBlockBreakingEvent();
         EventManager.INSTANCE.callEvent(cancelEvent);
 
-        if (cancelEvent.isCancelled()) callbackInfo.cancel();
+        if (cancelEvent.isCancelled()) {
+            callbackInfo.cancel();
+        }
     }
 
     /**
@@ -78,6 +81,27 @@ public class MixinClientPlayerInteractionManager {
     @Redirect(method = "syncSelectedSlot", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerInventory;selectedSlot:I"))
     private int hookCustomSelectedSlot(PlayerInventory instance) {
         return SilentHotbar.INSTANCE.getServersideSlot();
+    }
+
+    @Inject(method = "getReachDistance", at = @At("HEAD"), cancellable = true)
+    private void hookReachA(CallbackInfoReturnable<Float> cir) {
+        if (ModuleReach.INSTANCE.getEnabled()) {
+            cir.setReturnValue(ModuleReach.INSTANCE.getMaxReach());
+        }
+    }
+
+    @Inject(method = "hasExtendedReach", at = @At("HEAD"), cancellable = true)
+    private void hookReachB(CallbackInfoReturnable<Boolean> cir) {
+        if (ModuleReach.INSTANCE.getEnabled()) {
+            cir.setReturnValue(false);
+        }
+    }
+
+    @Inject(method = "hasLimitedAttackSpeed", at = @At("HEAD"), cancellable = true)
+    private void injectAutoClicker(CallbackInfoReturnable<Boolean> cir) {
+        if (ModuleAutoClicker.INSTANCE.getEnabled() && ModuleAutoClicker.Left.INSTANCE.getEnabled()) {
+            cir.setReturnValue(false);
+        }
     }
 
     /**

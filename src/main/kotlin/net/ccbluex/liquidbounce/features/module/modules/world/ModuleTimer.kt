@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import kotlinx.coroutines.delay
 import net.ccbluex.liquidbounce.event.WorldDisconnectEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
@@ -31,23 +32,44 @@ import net.ccbluex.liquidbounce.utils.entity.moving
  */
 object ModuleTimer : Module("Timer", Category.WORLD) {
 
-    val speed by float("Speed", 2f, 0.1f..10f)
-    val onMove by boolean("OnMove", false)
+    private val normalSpeed: Float by float("NormalSpeed", 0.5f, 0.1f..10f)
+    private val normalSpeedTicks by int("NormalSpeedTicks", 200, 1..5000)
+    private val boostSpeed by float("BoostSpeed", 2f, 0.1f..10f)
+    private val boostSpeedTicks by int("BoostSpeedTicks", 200, 1..5000)
+    private val onMove by boolean("OnMove", false)
+    private var currentTimerState: TimerState = TimerState.NormalSpeed
 
-    val repeatable = repeatable {
-        mc.timer.timerSpeed = if (!onMove || player.moving) {
-            speed
-        } else {
-            1f
-        }
+    val repeatable: Unit = repeatable {
+        if (!onMove || player.moving) {
+            when (currentTimerState) {
+                TimerState.NormalSpeed -> {
+                    mc.timer.timerSpeed = normalSpeed
+                    delay(normalSpeedTicks.toLong())
+                    currentTimerState = TimerState.BoostSpeed
+                }
+
+                TimerState.BoostSpeed -> {
+                    mc.timer.timerSpeed = boostSpeed
+                    delay(boostSpeedTicks.toLong())
+                    currentTimerState = TimerState.NormalSpeed
+                }
+            }
+        } else
+            mc.timer.timerSpeed = 1f
     }
 
     override fun disable() {
         mc.timer.timerSpeed = 1f
+        currentTimerState = TimerState.NormalSpeed
     }
 
-    val disconnectHandler = handler<WorldDisconnectEvent> {
+    @Suppress("unused")
+    val disconnectHandler: Unit = handler<WorldDisconnectEvent> {
         enabled = false
     }
 
+    enum class TimerState {
+        NormalSpeed,
+        BoostSpeed
+    }
 }

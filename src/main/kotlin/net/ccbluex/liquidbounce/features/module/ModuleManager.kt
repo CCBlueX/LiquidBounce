@@ -40,9 +40,7 @@ private val modules = mutableListOf<Module>()
  */
 object ModuleManager : Listenable, Iterable<Module> by modules {
 
-    init {
-        ConfigSystem.root("modules", modules)
-    }
+    val modulesConfigurable = ConfigSystem.root("modules", modules)
 
     /**
      * Handle key input for module binds
@@ -166,14 +164,21 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoFish,
             ModuleMobOwners,
             ModuleGhostHand,
-            ModuleAirJump,
             ModuleProjectilePuncher,
             ModuleAutoPot,
+            ModuleAirJump,
+            ModuleTrueSight,
+            ModuleAntiBot,
             ModuleKeepChatAfterDeath,
             ModuleOverrideTime,
             ModuleXRay,
             ModuleNoRotateSet,
-            ModuleNoSlowBreak
+            ModuleNoSlowBreak,
+            ModuleCameraClip,
+            ModuleSprint,
+            ModuleReach,
+            ModulePerfectHit,
+            ModuleAutoClicker
         )
 
         builtin.apply {
@@ -198,5 +203,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
     fun autoComplete(begin: String, validator: (Module) -> Boolean = { true }): List<String> {
         return filter { it.name.startsWith(begin, true) && validator(it) }.map { it.name }
     }
+
+    fun getCategories() = Category.values().map { it.readableName }.toTypedArray()
 
 }
