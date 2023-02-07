@@ -22,9 +22,10 @@ import com.labymedia.ultralight.UltralightView
 import com.labymedia.ultralight.databind.Databind
 import com.labymedia.ultralight.databind.DatabindConfiguration
 import com.labymedia.ultralight.javascript.JavascriptContext
-import net.ccbluex.liquidbounce.base.ultralight.ScreenView
+import com.labymedia.ultralight.javascript.JavascriptObject
+import net.ccbluex.liquidbounce.base.ultralight.ScreenViewOverlay
 import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
-import net.ccbluex.liquidbounce.base.ultralight.View
+import net.ccbluex.liquidbounce.base.ultralight.ViewOverlay
 import net.ccbluex.liquidbounce.base.ultralight.js.bindings.*
 import net.ccbluex.liquidbounce.utils.client.ThreadLock
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -32,9 +33,9 @@ import net.ccbluex.liquidbounce.utils.client.mc
 /**
  * Context setup
  */
-class UltralightJsContext(view: View, ulView: ThreadLock<UltralightView>) {
+class UltralightJsContext(viewOverlay: ViewOverlay, ulView: ThreadLock<UltralightView>) {
 
-    val contextProvider = ViewContextProvider(ulView)
+    private val contextProvider = ViewContextProvider(ulView)
     val databind = Databind(
         DatabindConfiguration
             .builder()
@@ -42,83 +43,36 @@ class UltralightJsContext(view: View, ulView: ThreadLock<UltralightView>) {
             .build()
     )
 
-    var events = UltralightJsEvents(contextProvider, view)
+    var events = UltralightJsEvents(contextProvider, viewOverlay)
 
-    fun setupContext(view: View, context: JavascriptContext) {
+    fun setupContext(viewOverlay: ViewOverlay, context: JavascriptContext) {
         val globalContext = context.globalContext
         val globalObject = globalContext.globalObject
 
-        globalObject.setProperty(
-            "engine",
-            databind.conversionUtils.toJavascript(context, UltralightEngine),
-            0
-        )
+        setProperty(globalObject, context, "engine", UltralightEngine)
+        setProperty(globalObject, context, "view", viewOverlay)
+        setProperty(globalObject, context, "client", UltralightJsClient)
+        setProperty(globalObject, context, "storage", UltralightStorage)
+        setProperty(globalObject, context, "events", events)
 
-        globalObject.setProperty(
-            "view",
-            databind.conversionUtils.toJavascript(context, view),
-            0
-        )
+        setProperty(globalObject, context, "minecraft", mc) // todo: remap minecraft functions or do not use any minecraft functions
+        setProperty(globalObject, context, "ui", UltralightJsUi)
+        setProperty(globalObject, context, "kotlin", UltralightJsKotlin)
+        setProperty(globalObject, context, "utils", UltralightJsUtils)
 
-        globalObject.setProperty(
-            "client",
-            databind.conversionUtils.toJavascript(context, UltralightJsClient),
-            0
-        )
-
-        globalObject.setProperty(
-            "storage",
-            databind.conversionUtils.toJavascript(context, UltralightStorage),
-            0
-        )
-
-        globalObject.setProperty(
-            "events",
-            databind.conversionUtils.toJavascript(context, events),
-            0
-        )
-
-        // todo: minecraft has to be remapped
-        globalObject.setProperty(
-            "minecraft",
-            databind.conversionUtils.toJavascript(context, mc),
-            0
-        )
-
-        globalObject.setProperty(
-            "ui",
-            databind.conversionUtils.toJavascript(context, UltralightJsUi),
-            0
-        )
-
-        globalObject.setProperty(
-            "kotlin",
-            databind.conversionUtils.toJavascript(context, UltralightJsKotlin),
-            0
-        )
-
-        globalObject.setProperty(
-            "utils",
-            databind.conversionUtils.toJavascript(context, UltralightJsUtils),
-            0
-        )
-
-        if (view is ScreenView) {
-            globalObject.setProperty(
-                "screen",
-                databind.conversionUtils.toJavascript(context, view.adaptedScreen ?: view.screen),
-                0
-            )
-
-            val parentScreen = view.parentScreen
-
-            if (parentScreen != null) {
-                globalObject.setProperty(
-                    "parentScreen",
-                    databind.conversionUtils.toJavascript(context, view.parentScreen),
-                    0
-                )
+        if (viewOverlay is ScreenViewOverlay) {
+            setProperty(globalObject, context, "screen", viewOverlay.adaptedScreen ?: viewOverlay.screen)
+            viewOverlay.parentScreen?.let { parentScreen ->
+                setProperty(globalObject, context, "parentScreen", parentScreen)
             }
         }
     }
+
+    /**
+     * Sets a property on the given object
+     */
+    private fun setProperty(obj: JavascriptObject, context: JavascriptContext, name: String, value: Any) {
+        obj.setProperty(name, databind.conversionUtils.toJavascript(context, value), 0)
+    }
+
 }

@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.base.ultralight.renderer
+package net.ccbluex.liquidbounce.base.ultralight.impl.renderer
 
 import com.labymedia.ultralight.UltralightView
 import com.labymedia.ultralight.config.UltralightViewConfig

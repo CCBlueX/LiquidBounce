@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.base.ultralight.ScreenView
+import net.ccbluex.liquidbounce.base.ultralight.ScreenViewOverlay
 import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
 import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.features.command.Command
@@ -73,7 +73,7 @@ object CommandClient {
                                     .build()
                             )
                             .handler { command, args ->
-                                val open: (ScreenView) -> Unit = try {
+                                val open: (ScreenViewOverlay) -> Unit = try {
                                     val url = URL(args[0] as String)
 
                                     (

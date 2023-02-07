@@ -48,5 +48,6 @@ class ViewContextProvider(private val view: ThreadLock<UltralightView>) : Contex
             // Else use the formula pointed at above to find a view for a given value.
             return ViewContextProvider(view)
         }
+
     }
 }

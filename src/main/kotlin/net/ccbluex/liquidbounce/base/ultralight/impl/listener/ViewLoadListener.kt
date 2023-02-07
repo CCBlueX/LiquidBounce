@@ -16,13 +16,13 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.base.ultralight.listener
+package net.ccbluex.liquidbounce.base.ultralight.impl.listener
 
 import com.labymedia.ultralight.plugin.loading.UltralightLoadListener
-import net.ccbluex.liquidbounce.base.ultralight.View
+import net.ccbluex.liquidbounce.base.ultralight.ViewOverlay
 import net.ccbluex.liquidbounce.utils.client.logger
 
-class ViewLoadListener(private val view: View) : UltralightLoadListener {
+class ViewLoadListener(private val viewOverlay: ViewOverlay) : UltralightLoadListener {
 
     /**
      * Helper function to construct a name for a frame from a given set of parameters.
@@ -92,9 +92,9 @@ class ViewLoadListener(private val view: View) : UltralightLoadListener {
      * @param url         The url that the frame currently contains
      */
     override fun onWindowObjectReady(frameId: Long, isMainFrame: Boolean, url: String) {
-        view.ultralightView.get().lockJavascriptContext().use { lock ->
+        viewOverlay.ultralightView.get().lockJavascriptContext().use { lock ->
             val context = lock.context
-            view.context.setupContext(view, context)
+            viewOverlay.context.setupContext(viewOverlay, context)
         }
     }
 

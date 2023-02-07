@@ -23,10 +23,10 @@ import com.labymedia.ultralight.config.UltralightViewConfig
 import com.labymedia.ultralight.input.UltralightKeyEvent
 import com.labymedia.ultralight.input.UltralightMouseEvent
 import com.labymedia.ultralight.input.UltralightScrollEvent
+import net.ccbluex.liquidbounce.base.ultralight.impl.listener.ViewListener
+import net.ccbluex.liquidbounce.base.ultralight.impl.listener.ViewLoadListener
+import net.ccbluex.liquidbounce.base.ultralight.impl.renderer.ViewRenderer
 import net.ccbluex.liquidbounce.base.ultralight.js.UltralightJsContext
-import net.ccbluex.liquidbounce.base.ultralight.listener.ViewListener
-import net.ccbluex.liquidbounce.base.ultralight.listener.ViewLoadListener
-import net.ccbluex.liquidbounce.base.ultralight.renderer.ViewRenderer
 import net.ccbluex.liquidbounce.base.ultralight.theme.Page
 import net.ccbluex.liquidbounce.utils.client.ThreadLock
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -35,15 +35,36 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.util.math.MatrixStack
 
-open class View(val layer: RenderLayer, private val viewRenderer: ViewRenderer) {
+enum class ViewOverlayState {
+    HIDDEN,
+    VISIBLE,
+    TRANSITIONING,
+    END
+}
+
+/**
+ * A view overlay which is being rendered when the view state is [ViewOverlayState.VISIBLE] or [ViewOverlayState.TRANSITIONING].
+ *
+ * @param layer The layer to render the view on. This can be either [RenderLayer.OVERLAY_LAYER], [RenderLayer.SPLASH_LAYER] or [RenderLayer.SCREEN_LAYER]
+ * @param viewRenderer The renderer to use for this view
+ */
+open class ViewOverlay(val layer: RenderLayer, private val viewRenderer: ViewRenderer) {
+
+    var state = ViewOverlayState.VISIBLE
+        set(value) {
+            if (field != value) {
+                field = value
+                onStateChange?.invoke(value)
+            }
+        }
 
     val ultralightView = ThreadLock<UltralightView>()
-
     val context: UltralightJsContext
 
-    var viewingPage: Page? = null
+    private var ultralightPage: Page? = null
+    private var garbageCollected = 0L
 
-    private var jsGarbageCollected = 0L
+    private var onStateChange: ((ViewOverlayState) -> Unit)? = null
 
     init {
         // Setup view
@@ -63,6 +84,9 @@ open class View(val layer: RenderLayer, private val viewRenderer: ViewRenderer) 
         context = UltralightJsContext(this, ultralightView)
 
         logger.debug("Successfully created new view")
+
+        // Fix black screen issue
+        resize(width, height)
     }
 
     /**
@@ -72,17 +96,17 @@ open class View(val layer: RenderLayer, private val viewRenderer: ViewRenderer) 
         // Unregister listeners
         context.events._unregisterEvents()
 
-        if (viewingPage != page && viewingPage != null) {
+        if (ultralightPage != page && ultralightPage != null) {
             page.close()
         }
 
         ultralightView.get().loadURL(page.viewableFile)
-        viewingPage = page
+        ultralightPage = page
         logger.debug("Successfully loaded page ${page.name} from ${page.viewableFile}")
     }
 
     /**
-     * Loads the specified [page]
+     * Loads the specified [url]
      */
     fun loadUrl(url: String) {
         // Unregister listeners
@@ -97,7 +121,7 @@ open class View(val layer: RenderLayer, private val viewRenderer: ViewRenderer) 
      */
     fun update() {
         // Check if page has new update
-        val page = viewingPage
+        val page = ultralightPage
 
         if (page?.hasUpdate() == true) {
             loadPage(page)
@@ -126,49 +150,49 @@ open class View(val layer: RenderLayer, private val viewRenderer: ViewRenderer) 
      * Garbage collect JS engine
      */
     private fun collectGarbage() {
-        if (jsGarbageCollected == 0L) {
-            jsGarbageCollected = System.currentTimeMillis()
-        } else if (System.currentTimeMillis() - jsGarbageCollected > 1000) {
+        if (garbageCollected == 0L) {
+            garbageCollected = System.currentTimeMillis()
+        } else if (System.currentTimeMillis() - garbageCollected > 1000) {
             logger.debug("Garbage collecting Ultralight Javascript...")
             ultralightView.get().lockJavascriptContext().use { lock ->
                 lock.context.garbageCollect()
             }
-            jsGarbageCollected = System.currentTimeMillis()
+            garbageCollected = System.currentTimeMillis()
         }
     }
 
-    /**
-     * Free view
-     */
+    fun state(state: String) {
+        this.state = when (state) {
+            "hidden" -> ViewOverlayState.HIDDEN
+            "visible" -> ViewOverlayState.VISIBLE
+            "transitioning" -> ViewOverlayState.TRANSITIONING
+            "end" -> ViewOverlayState.END
+            else -> ViewOverlayState.HIDDEN
+        }
+    }
+
+    fun setOnStageChange(stateChange: (ViewOverlayState) -> Unit): ViewOverlay {
+        this.onStateChange = stateChange
+        return this
+    }
+
     fun free() {
         ultralightView.get().unfocus()
         ultralightView.get().stop()
-        viewingPage?.close()
+        ultralightPage?.close()
         viewRenderer.delete()
         context.events._unregisterEvents()
     }
 
-    fun focus() {
-        ultralightView.get().focus()
-    }
+    fun focus() = ultralightView.get().focus()
 
-    fun unfocus() {
-        ultralightView.get().unfocus()
-    }
+    fun unfocus() = ultralightView.get().unfocus()
 
-    fun fireScrollEvent(event: UltralightScrollEvent) {
-        ultralightView.get().fireScrollEvent(event)
-    }
-
-    fun fireMouseEvent(event: UltralightMouseEvent) {
-        ultralightView.get().fireMouseEvent(event)
-    }
-
-    fun fireKeyEvent(event: UltralightKeyEvent) {
-        ultralightView.get().fireKeyEvent(event)
-    }
+    fun fireScrollEvent(event: UltralightScrollEvent) = ultralightView.get().fireScrollEvent(event)
+    fun fireMouseEvent(event: UltralightMouseEvent) = ultralightView.get().fireMouseEvent(event)
+    fun fireKeyEvent(event: UltralightKeyEvent) = ultralightView.get().fireKeyEvent(event)
 
 }
 
-class ScreenView(viewRenderer: ViewRenderer, val screen: Screen, val adaptedScreen: Screen?, val parentScreen: Screen?) :
-    View(RenderLayer.SCREEN_LAYER, viewRenderer)
+class ScreenViewOverlay(viewRenderer: ViewRenderer, val screen: Screen, val adaptedScreen: Screen?, val parentScreen: Screen?) :
+    ViewOverlay(RenderLayer.SCREEN_LAYER, viewRenderer)
