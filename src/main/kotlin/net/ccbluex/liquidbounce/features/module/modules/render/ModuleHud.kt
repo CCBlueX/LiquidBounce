@@ -18,11 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
+import net.ccbluex.liquidbounce.base.ultralight.View
+import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
-import net.ccbluex.liquidbounce.render.ultralight.View
-import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
 
 /**
  * Module HUD
