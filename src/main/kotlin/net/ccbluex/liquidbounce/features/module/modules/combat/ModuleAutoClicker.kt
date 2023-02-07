@@ -19,8 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.GameRenderEvent
-import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.combat.CpsScheduler
@@ -59,7 +58,7 @@ object ModuleAutoClicker : Module("AutoClicker", Category.COMBAT) {
     val shouldTargetBlock: Boolean
         get() = player.abilities.creativeMode || mc.crosshairTarget?.type != HitResult.Type.BLOCK
 
-    val renderHandler = handler<GameRenderEvent> {
+    val tickHandler = repeatable {
         Left.let {
             repeat(cpsScheduler.clicks({ it.enabled && attack && shouldTargetBlock }, it.cps)) {
                 KeyBinding.onKeyPressed(mc.options.attackKey.boundKey)
