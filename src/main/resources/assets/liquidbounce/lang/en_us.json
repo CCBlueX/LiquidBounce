@@ -199,6 +199,36 @@
   "liquidbounce.command.xray.subcommand.clear.description": "Clears the list of rendered blocks.",
   "liquidbounce.command.xray.subcommand.clear.result.blocksCleared": "List of rendered blocks cleared.",
 
+  "liquidbounce.command.enemy.description": "Allows you to manage which entities are considered to be your enemy.",
+
+  "liquidbounce.command.enemy.subcommand.players.description": "Allows you to toggle if players are considered to be your enemy",
+  "liquidbounce.command.enemy.subcommand.players.result.enabled": "Players are now considered to be your enemy.",
+  "liquidbounce.command.enemy.subcommand.players.result.disabled": "Players are no longer considered to be your enemy.",
+
+  "liquidbounce.command.enemy.subcommand.mobs.description": "Allows you to toggle if mobs are considered to be your enemy",
+  "liquidbounce.command.enemy.subcommand.mobs.result.enabled": "Mobs are now considered to be your enemy.",
+  "liquidbounce.command.enemy.subcommand.mobs.result.disabled": "Mobs are no longer considered to be your enemy.",
+
+  "liquidbounce.command.enemy.subcommand.animals.description": "Allows you to toggle if animals are considered to be your enemy",
+  "liquidbounce.command.enemy.subcommand.animals.result.enabled": "Animals are now considered to be your enemy.",
+  "liquidbounce.command.enemy.subcommand.animals.result.disabled": "Animals are no longer considered to be your enemy.",
+
+  "liquidbounce.command.enemy.subcommand.dead.description": "Allows you to toggle if dead entities are considered to be your enemy",
+  "liquidbounce.command.enemy.subcommand.dead.result.enabled": "Dead entity are now considered to be your enemy.",
+  "liquidbounce.command.enemy.subcommand.dead.result.disabled": "Dead entity are no longer considered to be your enemy.",
+
+  "liquidbounce.command.enemy.subcommand.invisible.description": "Allows you to toggle if invisible entities are considered to be your enemy",
+  "liquidbounce.command.enemy.subcommand.invisible.result.enabled": "Invisible entity are now considered to be your enemy.",
+  "liquidbounce.command.enemy.subcommand.invisible.result.disabled": "Invisible entity are no longer considered to be your enemy.",
+
+  "liquidbounce.command.enemy.subcommand.friends.description": "Allows you to toggle if client friends are considered to be your enemy",
+  "liquidbounce.command.enemy.subcommand.friends.result.enabled": "Client friends are now considered to be your enemy.",
+  "liquidbounce.command.enemy.subcommand.friends.result.disabled": "Client friends are no longer considered to be your enemy.",
+
+  "liquidbounce.command.enemy.subcommand.teammates.description": "Allows you to toggle if teammates are considered to be your enemy",
+  "liquidbounce.command.enemy.subcommand.teammates.result.enabled": "Teammates are now considered to be your enemy.",
+  "liquidbounce.command.enemy.subcommand.teammates.result.disabled": "Teammates are no longer considered to be your enemy.",
+
   "liquidbounce.liquidchat.states.connecting": "Connecting to chat server...",
   "liquidbounce.liquidchat.states.connected": "Connected to chat server!",
   "liquidbounce.liquidchat.states.disconnected": "Disconnected from chat server!",
