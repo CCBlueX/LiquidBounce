@@ -39,6 +39,11 @@ interface Listenable {
      */
     fun parent(): Listenable? = null
 
+    /**
+     * Children listenables
+     */
+    fun children(): List<Listenable> = emptyList()
+
 }
 
 inline fun <reified T : Event> Listenable.handler(
@@ -63,18 +68,24 @@ inline fun <reified T : Event> Listenable.sequenceHandler(
  * Registers a repeatable sequence which repeats the execution of code.
  */
 fun Listenable.repeatable(eventHandler: SuspendableHandler<DummyEvent>) {
+    // We store our sequence in this variable. That can be done because our variable will survive the scope of this function
+    // and can be used in the event handler function. This is a very useful pattern to use in Kotlin.
     var sequence: RepeatingSequence? = RepeatingSequence(eventHandler)
 
-    handler<ToggleModuleEvent>(ignoreCondition = true) {
-        if (this == it.module || this.parent() == it.module) {
-            if (this.handleEvents()) {
-                if (sequence == null) {
-                    sequence = RepeatingSequence(eventHandler)
-                }
-            } else if (sequence != null && !it.ignoreCondition) {
-                sequence?.cancel()
-                sequence = null
+    // Ignore condition makes sense because we do not want our sequence to run after we do not handle events anymore
+    handler<GameTickEvent>(ignoreCondition = true) {
+        // Check if we should start or stop the sequence
+        if (this.handleEvents()) {
+            // Check if the sequence is already running
+            if (sequence == null) {
+                // If not, start it
+                // This will start a new repeating sequence which will run until the condition is false
+                sequence = RepeatingSequence(eventHandler)
             }
+        } else if (sequence != null) { // This condition is only true if the sequence is running
+            // If the sequence is running, we should stop it
+            sequence?.cancel()
+            sequence = null
         }
     }
 }

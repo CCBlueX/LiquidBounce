@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.event.EventManager
@@ -37,7 +38,7 @@ import net.minecraft.text.TranslatableText
 import org.lwjgl.glfw.GLFW
 
 /**
- * A module also called 'hack' is able to be enabled and handle events
+ * A module also called 'hack' can be enabled and handle events
  */
 open class Module(
     name: String, // name parameter in configurable
@@ -68,6 +69,9 @@ open class Module(
             } else {
                 disable()
             }
+
+            // If successful might store configuration
+            ConfigSystem.storeConfigurable(ModuleManager.modulesConfigurable)
         }.onSuccess {
             // Save new module state when module activation is enabled
             if (disableActivation) {
@@ -140,7 +144,7 @@ open class Module(
     override fun handleEvents() = enabled && mc.player != null && mc.world != null
 
     fun message(key: String, vararg args: Any): TranslatableText {
-        return TranslatableText("$translationBaseKey.messages.$key", args)
+        return TranslatableText("$translationBaseKey.messages.$key", *args)
     }
 
 }
