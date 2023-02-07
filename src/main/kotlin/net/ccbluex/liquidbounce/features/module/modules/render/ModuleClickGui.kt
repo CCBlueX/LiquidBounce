@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.screen.EmptyScreen
+import org.lwjgl.glfw.GLFW
 
 /**
  * ClickGUI module
@@ -31,7 +32,7 @@ import net.ccbluex.liquidbounce.render.screen.EmptyScreen
  * Shows you an easy-to-use menu to toggle and configure modules.
  */
 
-object ModuleClickGui : Module("ClickGUI", Category.RENDER, disableActivation = true) {
+object ModuleClickGui : Module("ClickGUI", Category.RENDER, bind = GLFW.GLFW_KEY_RIGHT_SHIFT, disableActivation = true) {
 
     override fun enable() {
         val page = ThemeManager.page("clickgui") ?: error("unable to find clickgui page in current theme")
