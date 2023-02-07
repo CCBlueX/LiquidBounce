@@ -104,6 +104,10 @@ class BrowserFileSystem : UltralightFileSystem {
             log(true, "Exception while retrieving mime type of %s", path)
             e.printStackTrace()
             null
+        } catch (e: NullPointerException) {
+            log(true, "Exception while retrieving mime type of %s", path)
+            e.printStackTrace()
+            null
         }
     }
 
