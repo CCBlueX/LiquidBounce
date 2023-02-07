@@ -24,17 +24,16 @@ import com.labymedia.ultralight.UltralightRenderer
 import com.labymedia.ultralight.config.FontHinting
 import com.labymedia.ultralight.config.UltralightConfig
 import com.labymedia.ultralight.gpu.UltralightGPUDriverNativeUtil
-import com.labymedia.ultralight.gpu.UltralightOpenGLGPUDriverNative
 import com.labymedia.ultralight.os.OperatingSystem
 import com.labymedia.ultralight.plugin.logging.UltralightLogLevel
-import net.ccbluex.liquidbounce.base.ultralight.filesystem.BrowserFileSystem
-import net.ccbluex.liquidbounce.base.ultralight.glfw.GlfwClipboardAdapter
-import net.ccbluex.liquidbounce.base.ultralight.glfw.GlfwCursorAdapter
-import net.ccbluex.liquidbounce.base.ultralight.glfw.GlfwInputAdapter
 import net.ccbluex.liquidbounce.base.ultralight.hooks.UltralightIntegrationHook
 import net.ccbluex.liquidbounce.base.ultralight.hooks.UltralightScreenHook
+import net.ccbluex.liquidbounce.base.ultralight.impl.BrowserFileSystem
+import net.ccbluex.liquidbounce.base.ultralight.impl.glfw.GlfwClipboardAdapter
+import net.ccbluex.liquidbounce.base.ultralight.impl.glfw.GlfwCursorAdapter
+import net.ccbluex.liquidbounce.base.ultralight.impl.glfw.GlfwInputAdapter
+import net.ccbluex.liquidbounce.base.ultralight.impl.renderer.CpuViewRenderer
 import net.ccbluex.liquidbounce.base.ultralight.js.bindings.UltralightStorage
-import net.ccbluex.liquidbounce.base.ultralight.renderer.CpuViewRenderer
 import net.ccbluex.liquidbounce.utils.client.ThreadLock
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -43,49 +42,83 @@ import net.minecraft.client.util.math.MatrixStack
 
 object UltralightEngine {
 
-    /**
-     * Ultralight window
-     *
-     * Might be useful in the future for external UI.
-     */
     val window = mc.window.handle
-
-    /**
-     * Ultralight resources
-     */
-    val resources = UltralightResources()
-
-    /**
-     * Ultralight platform and renderer
-     */
     var platform = ThreadLock<UltralightPlatform>()
     var renderer = ThreadLock<UltralightRenderer>()
-
-    /**
-     * Glfw
-     */
-    lateinit var gpuDriver: UltralightOpenGLGPUDriverNative
 
     lateinit var clipboardAdapter: GlfwClipboardAdapter
     lateinit var cursorAdapter: GlfwCursorAdapter
     lateinit var inputAdapter: GlfwInputAdapter
 
-    /**
-     * Views
-     */
-    val activeView: View?
-        get() = views.find { it is ScreenView && mc.currentScreen == it.screen }
+    val inputAwareOverlay: ViewOverlay?
+        get() = viewOverlays.find { it is ScreenViewOverlay && mc.currentScreen == it.screen && it.state == ViewOverlayState.VISIBLE }
+    private val viewOverlays = mutableListOf<ViewOverlay>()
 
-    private val views = mutableListOf<View>()
+    val resources = UltralightResources()
+
+    /**
+     * Frame limiter
+     */
+    private const val MAX_FRAME_RATE = 60
+    private var lastRenderTime = 0.0
 
     /**
      * Initializes the platform
      */
     fun init() {
-        val refreshRate = mc.window.refreshRate
-
         logger.info("Loading ultralight...")
+        initNatives()
 
+        // Setup platform
+        logger.debug("Setting up ultralight platform")
+        platform.lock(UltralightPlatform.instance())
+        platform.get().setConfig(
+            UltralightConfig()
+                .animationTimerDelay(1.0 / MAX_FRAME_RATE)
+                .scrollTimerDelay(1.0 / MAX_FRAME_RATE)
+                .cachePath(resources.cacheRoot.absolutePath)
+                .fontHinting(FontHinting.SMOOTH)
+                .forceRepaint(false)
+        )
+        platform.get().usePlatformFontLoader()
+        platform.get().setFileSystem(BrowserFileSystem())
+        platform.get().setClipboard(GlfwClipboardAdapter())
+        platform.get().setLogger { level, message ->
+            @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
+            when (level) {
+                UltralightLogLevel.ERROR -> logger.error("[Ul] $message")
+                UltralightLogLevel.WARNING -> logger.warn("[Ul] $message")
+                UltralightLogLevel.INFO -> logger.info("[Ul] $message")
+            }
+        }
+
+        // Setup renderer
+        logger.info("Setting up ultralight renderer")
+
+        val ulRenderer = UltralightRenderer.create()
+        ulRenderer.logMemoryUsage();
+        renderer.lock(ulRenderer)
+
+        // Setup hooks
+        UltralightIntegrationHook
+        UltralightScreenHook
+
+        UltralightStorage
+
+        // Setup GLFW adapters
+        clipboardAdapter = GlfwClipboardAdapter()
+        cursorAdapter = GlfwCursorAdapter()
+        inputAdapter = GlfwInputAdapter()
+
+        logger.info("Successfully loaded ultralight!")
+    }
+
+    /**
+     * Initializes the natives, this is required for ultralight to work.
+     *
+     * This will download the required natives and resources and load them.
+     */
+    fun initNatives() {
         // Check resources
         logger.info("Checking resources...")
         resources.downloadResources()
@@ -115,48 +148,6 @@ object UltralightEngine {
         UltralightJava.load(natives)
         logger.debug("Loading UltralightGPUDriver")
         UltralightGPUDriverNativeUtil.load(natives)
-
-        // Setup platform
-        logger.debug("Setting up ultralight platform")
-        platform.lock(UltralightPlatform.instance())
-        platform.get().setConfig(
-            UltralightConfig()
-                .animationTimerDelay(1.0 / refreshRate)
-                .scrollTimerDelay(1.0 / refreshRate)
-                .cachePath(resources.cacheRoot.absolutePath)
-                .fontHinting(FontHinting.SMOOTH)
-                .forceRepaint(false)
-        )
-        platform.get().usePlatformFontLoader()
-        platform.get().setFileSystem(BrowserFileSystem())
-        platform.get().setClipboard(GlfwClipboardAdapter())
-        platform.get().setLogger { level, message ->
-            @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
-            when (level) {
-                UltralightLogLevel.ERROR -> logger.debug("[Ultralight/ERR] $message")
-                UltralightLogLevel.WARNING -> logger.debug("[Ultralight/WARN] $message")
-                UltralightLogLevel.INFO -> logger.debug("[Ultralight/INFO] $message")
-            }
-        }
-
-        // Setup renderer
-        logger.info("Setting up ultralight renderer")
-        val ulRenderer = UltralightRenderer.create()
-        ulRenderer.logMemoryUsage();
-        renderer.lock(ulRenderer)
-
-        // Setup hooks
-        UltralightIntegrationHook
-        UltralightScreenHook
-
-        UltralightStorage
-
-        // Setup GLFW adapters
-        clipboardAdapter = GlfwClipboardAdapter()
-        cursorAdapter = GlfwCursorAdapter()
-        inputAdapter = GlfwInputAdapter()
-
-        logger.info("Successfully loaded ultralight!")
     }
 
     fun shutdown() {
@@ -164,22 +155,21 @@ object UltralightEngine {
     }
 
     fun update() {
-        views.forEach(View::update)
+        viewOverlays
+            .forEach(ViewOverlay::update)
         renderer.get().update()
     }
 
     fun render(layer: RenderLayer, matrices: MatrixStack) {
         frameLimitedRender()
 
-        views.filter { it.layer == layer }
+        viewOverlays
+            .filter { it.layer == layer && it.state != ViewOverlayState.HIDDEN }
             .forEach {
                 it.render(matrices)
             }
     }
 
-    // Maximum frame rate for the renderer
-    private const val MAX_FRAME_RATE = 60
-    private var lastRenderTime = 0.0
     private fun frameLimitedRender() {
         val frameTime = 1.0 / MAX_FRAME_RATE
         val time = System.nanoTime() / 1e9
@@ -194,29 +184,40 @@ object UltralightEngine {
     }
 
     fun resize(width: Long, height: Long) {
-        views.forEach { it.resize(width, height) }
+        viewOverlays.forEach { it.resize(width, height) }
     }
 
     fun newSplashView() =
-        View(RenderLayer.SPLASH_LAYER, newViewRenderer()).also { views += it }
+        ViewOverlay(RenderLayer.SPLASH_LAYER, newViewRenderer()).also { viewOverlays += it }
 
     fun newOverlayView() =
-        View(RenderLayer.OVERLAY_LAYER, newViewRenderer()).also { views += it }
+        ViewOverlay(RenderLayer.OVERLAY_LAYER, newViewRenderer()).also { viewOverlays += it }
 
     fun newScreenView(screen: Screen, adaptedScreen: Screen? = null, parentScreen: Screen? = null) =
-        ScreenView(newViewRenderer(), screen, adaptedScreen, parentScreen).also { views += it }
+        ScreenViewOverlay(newViewRenderer(), screen, adaptedScreen, parentScreen).also { viewOverlays += it }
 
-    fun removeView(view: View) {
-        view.free()
-        views.remove(view)
+    /**
+     * Removes the view overlay from the list of overlays
+     */
+    fun removeView(viewOverlay: ViewOverlay) {
+        if (viewOverlay.context.events._fireViewClose()) {
+            viewOverlay.free()
+            viewOverlays.remove(viewOverlay)
+        } else {
+            // Wait for the view to close
+            viewOverlay.setOnStageChange {
+                if (it == ViewOverlayState.END) {
+                    viewOverlay.free()
+                    viewOverlays.remove(viewOverlay)
+                }
+            }
+        }
     }
 
+    /**
+     * Creates a new view renderer
+     */
     private fun newViewRenderer() = CpuViewRenderer()
-
-    /*private fun newViewRenderer() = when (RenderEngine.openglLevel) {
-        OpenGLLevel.OpenGL1_2 -> CpuViewRenderer()
-        OpenGLLevel.OpenGL3_3, OpenGLLevel.OpenGL4_3 ->
-    }*/
 
 }
 

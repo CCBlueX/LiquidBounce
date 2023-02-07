@@ -16,30 +16,37 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.base.ultralight.renderer
+package net.ccbluex.liquidbounce.base.ultralight.impl.glfw
 
-import com.labymedia.ultralight.UltralightView
-import com.labymedia.ultralight.config.UltralightViewConfig
-import net.minecraft.client.util.math.MatrixStack
+import com.labymedia.ultralight.plugin.clipboard.UltralightClipboard
+import org.lwjgl.glfw.GLFW
 
 /**
- * Render Views
+ * Clipboard using GLFW
  */
-interface ViewRenderer {
+class GlfwClipboardAdapter : UltralightClipboard {
 
     /**
-     * Setup [viewConfig]
+     * This is called by Ultralight when the clipboard is requested as a string.
+     *
+     * @return The clipboard content as a string
      */
-    fun setupConfig(viewConfig: UltralightViewConfig)
+    override fun readPlainText() = GLFW.glfwGetClipboardString(0)!!
 
     /**
-     * Render view
+     * This is called by Ultralight when the clipboard content should be overwritten.
+     *
+     * @param text The plain text to write to the clipboard
      */
-    fun render(view: UltralightView, matrices: MatrixStack)
+    override fun writePlainText(text: String) {
+        GLFW.glfwSetClipboardString(0, text)
+    }
 
     /**
-     * Delete
+     * This is called by Ultralight when the clipboard should be cleared.
      */
-    fun delete()
+    override fun clear() {
+        GLFW.glfwSetClipboardString(0, "")
+    }
 
 }

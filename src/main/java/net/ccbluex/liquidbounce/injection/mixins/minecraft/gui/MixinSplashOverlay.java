@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
 import net.ccbluex.liquidbounce.base.ultralight.RenderLayer;
 import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine;
-import net.ccbluex.liquidbounce.base.ultralight.View;
+import net.ccbluex.liquidbounce.base.ultralight.ViewOverlay;
 import net.ccbluex.liquidbounce.base.ultralight.theme.Page;
 import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager;
 import net.minecraft.client.MinecraftClient;
@@ -44,7 +44,7 @@ public class MixinSplashOverlay {
     @Shadow @Final private MinecraftClient client;
     @Shadow @Final private ResourceReload reload;
 
-    private View view = null;
+    private ViewOverlay viewOverlay = null;
     private boolean closing = false;
 
     @Inject(method = "<init>", at = @At("RETURN"))
@@ -53,13 +53,13 @@ public class MixinSplashOverlay {
         if (page == null)
             return;
 
-        view = UltralightEngine.INSTANCE.newSplashView();
-        view.loadPage(page);
+        viewOverlay = UltralightEngine.INSTANCE.newSplashView();
+        viewOverlay.loadPage(page);
     }
 
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
     private void hookSplashRender(MatrixStack matrices, int mouseX, int mouseY, float delta, CallbackInfo callbackInfo) {
-        if (view != null) {
+        if (viewOverlay != null) {
             if (this.reload.isComplete()) {
                 if (this.client.currentScreen != null) {
                     this.client.currentScreen.render(matrices, 0, 0, delta);
@@ -67,10 +67,9 @@ public class MixinSplashOverlay {
 
                 if (!closing) {
                     closing = true;
-                    if (view.getContext().getEvents()._fireViewClose()) {
-                        UltralightEngine.INSTANCE.removeView(view);
-                        this.client.setOverlay(null);
-                    }
+                    this.client.setOverlay(null);
+
+                    UltralightEngine.INSTANCE.removeView(viewOverlay);
                 }
             }
 
