@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.event.AttackEvent;
 import net.ccbluex.liquidbounce.event.BlockBreakingProgressEvent;
 import net.ccbluex.liquidbounce.event.CancelBlockBreakingEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
@@ -88,6 +89,13 @@ public class MixinClientPlayerInteractionManager {
     @Inject(method = "hasExtendedReach", at = @At("HEAD"), cancellable = true)
     private void hookReachB(CallbackInfoReturnable<Boolean> cir) {
         if (ModuleReach.INSTANCE.getEnabled()) {
+            cir.setReturnValue(false);
+        }
+    }
+
+    @Inject(method = "hasLimitedAttackSpeed", at = @At("HEAD"), cancellable = true)
+    private void injectAutoClicker(CallbackInfoReturnable<Boolean> cir) {
+        if (ModuleAutoClicker.INSTANCE.getEnabled() && ModuleAutoClicker.Left.INSTANCE.getEnabled()) {
             cir.setReturnValue(false);
         }
     }

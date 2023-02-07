@@ -177,7 +177,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleCameraClip,
             ModuleSprint,
             ModuleReach,
-            ModulePerfectHit
+            ModulePerfectHit,
+            ModuleAutoClicker
         )
 
         builtin.apply {
