@@ -57,6 +57,8 @@ object LiquidBounce : Listenable {
     const val CLIENT_AUTHOR = "CCBlueX"
     const val CLIENT_CLOUD = "https://cloud.liquidbounce.net/LiquidBounce"
 
+    const val IN_DEVELOPMENT = true
+
     /**
      * Client logger to print out console messages
      */
