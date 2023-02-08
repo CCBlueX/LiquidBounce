@@ -46,8 +46,12 @@
 </main>
 
 <style>
-    .clickgui-container {
+
+    body {
         background-color: rgba(0, 0, 0, .4);
+    }
+
+    .clickgui-container {
         height: 100vh;
         width: 100vw;
         -webkit-user-select: none;

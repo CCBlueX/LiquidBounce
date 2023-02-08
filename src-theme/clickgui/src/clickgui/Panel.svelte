@@ -19,6 +19,12 @@
     let prevX = 0;
     let prevY = 0;
 
+    //Since the click gui is scrollable downwards, but not upwards we need to add this check (https://prnt.sc/7S024PzgFbWo).
+    if(top < 0) {
+        top = 5;
+    }
+
+
 	function onMouseDown() {
 		moving = true;
 	}
@@ -35,7 +41,14 @@
 
 	function onMouseUp() {
 		moving = false;
-        storage.setItem(`clickgui.panel.${name}.top`, top);
+
+		//Since the click gui is scrollable downwards, but not upwards we need to add this check (https://prnt.sc/7S024PzgFbWo).
+		if(top > 0) {
+		    storage.setItem(`clickgui.panel.${name}.top`, top);
+		} else {
+		    storage.setItem(`clickgui.panel.${name}.top`, 5);
+		}
+
         storage.setItem(`clickgui.panel.${name}.left`, left);
 	}
 
