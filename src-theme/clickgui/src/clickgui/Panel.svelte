@@ -19,16 +19,6 @@
     let prevX = 0;
     let prevY = 0;
 
-    //We must prevent the panel from exceeding this limit, otherwise it will no longer be visible on the screen. And therefore can no longer be interacted with.
-    if(top < 4 || top > 5) {
-        top = 5;
-    }
-
-    if(left < 0 || left > 1800) {
-        left = 5 || startLeft;
-    }
-
-
 	function onMouseDown() {
 		moving = true;
 	}
