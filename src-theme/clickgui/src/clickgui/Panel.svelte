@@ -30,6 +30,12 @@
 	}
 	
 	function onMouseMove(e) {
+
+	    //Since the click gui is scrollable downwards, but not upwards we need to add this check (https://prnt.sc/7S024PzgFbWo).
+        if(top < 0) {
+            top = 5;
+        }
+
 		if (moving) {
 			left += e.screenX - prevX;
 			top += e.screenY - prevY;
