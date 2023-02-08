@@ -35,13 +35,6 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.util.math.MatrixStack
 
-enum class ViewOverlayState {
-    HIDDEN,
-    VISIBLE,
-    TRANSITIONING,
-    END
-}
-
 /**
  * A view overlay which is being rendered when the view state is [ViewOverlayState.VISIBLE] or [ViewOverlayState.TRANSITIONING].
  *
@@ -51,12 +44,6 @@ enum class ViewOverlayState {
 open class ViewOverlay(val layer: RenderLayer, private val viewRenderer: ViewRenderer) {
 
     var state = ViewOverlayState.VISIBLE
-        set(value) {
-            if (field != value) {
-                field = value
-                onStateChange?.invoke(value)
-            }
-        }
 
     val ultralightView = ThreadLock<UltralightView>()
     val context: UltralightJsContext
@@ -162,13 +149,8 @@ open class ViewOverlay(val layer: RenderLayer, private val viewRenderer: ViewRen
     }
 
     fun state(state: String) {
-        this.state = when (state) {
-            "hidden" -> ViewOverlayState.HIDDEN
-            "visible" -> ViewOverlayState.VISIBLE
-            "transitioning" -> ViewOverlayState.TRANSITIONING
-            "end" -> ViewOverlayState.END
-            else -> ViewOverlayState.HIDDEN
-        }
+        this.state = ViewOverlayState.values().firstOrNull { it.jsName.equals(state, true) } ?: return
+        onStateChange?.invoke(this.state)
     }
 
     fun setOnStageChange(stateChange: (ViewOverlayState) -> Unit): ViewOverlay {
@@ -196,3 +178,10 @@ open class ViewOverlay(val layer: RenderLayer, private val viewRenderer: ViewRen
 
 class ScreenViewOverlay(viewRenderer: ViewRenderer, val screen: Screen, val adaptedScreen: Screen?, val parentScreen: Screen?) :
     ViewOverlay(RenderLayer.SCREEN_LAYER, viewRenderer)
+
+enum class ViewOverlayState(val jsName: String) {
+    HIDDEN("hidden"),
+    VISIBLE("visible"),
+    TRANSITIONING("transitioning"),
+    END("end")
+}
