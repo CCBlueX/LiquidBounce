@@ -65,7 +65,7 @@ object ModuleFreeCam : Module("FreeCam", Category.RENDER) {
 
         val speed = this.speed.toDouble()
 
-        val velocity = Vec3d.of(Vec3i.ZERO).apply { strafe(player.directionYaw, speed, true) }
+        val velocity = Vec3d.of(Vec3i.ZERO).apply { strafe(player.directionYaw, speed, keyboardCheck = true) }
             .withAxis(Direction.Axis.Y, player.input.yAxisMovement * speed)
 
         updatePosition(velocity, lastPosBeforePos = true, increase = true)
