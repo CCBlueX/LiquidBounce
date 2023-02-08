@@ -178,7 +178,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleSprint,
             ModuleReach,
             ModulePerfectHit,
-            ModuleAutoClicker
+            ModuleAutoClicker,
+            ModuleAntiVanish
         )
 
         builtin.apply {
