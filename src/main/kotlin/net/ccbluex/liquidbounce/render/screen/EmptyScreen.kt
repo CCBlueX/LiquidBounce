@@ -33,4 +33,9 @@ class EmptyScreen(title: Text = "".asText()) : Screen(title) {
         // render nothing
     }
 
+    override fun shouldPause(): Boolean {
+        // preventing game pause
+        return false
+    }
+
 }

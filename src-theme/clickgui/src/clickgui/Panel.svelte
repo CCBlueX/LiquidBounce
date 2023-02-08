@@ -32,7 +32,7 @@
         prevX = e.screenX;
         prevY = e.screenY;
 	}
-	
+
 	function onMouseUp() {
 		moving = false;
         storage.setItem(`clickgui.panel.${name}.top`, top);
