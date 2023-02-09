@@ -146,7 +146,7 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
             return
         }
 
-        player.sendMessage("§7[§a§lChat§7] §9$message".asText(), false)
+        player.sendMessage("§9§lLiquidChat §8▸ §7$message".asText(), false)
     }
 
     internal fun onMessage(user: User, message: String) {
@@ -160,7 +160,8 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
             return
         }
 
-        player.sendMessage("§7[§a§lChat§7] §9${user.name}: §r$message".asText(), false)
+
+        player.sendMessage("§9§lLiquidChat §8▸ §9${user.name} §8▸§7 $message".asText(), false)
     }
 
     internal fun onPrivateMessage(user: User, message: String) {
@@ -174,7 +175,7 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
             return
         }
 
-        player.sendMessage("§7[§a§lChat§7] §9${user.name}: §r$message".asText(), false)
+        player.sendMessage("§9§lLiquidChat §8▸ §9${user.name} §8▸§7 $message".asText(), false)
     }
 
     internal fun onError(cause: Throwable) {
