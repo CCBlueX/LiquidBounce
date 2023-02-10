@@ -15,6 +15,7 @@ import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
 import net.minecraft.network.Packet;
 import net.minecraft.network.play.client.C03PacketPlayer;
+import net.minecraft.network.play.server.S45PacketTitle;
 import net.minecraft.util.*;
 import org.jetbrains.annotations.NotNull;
 
