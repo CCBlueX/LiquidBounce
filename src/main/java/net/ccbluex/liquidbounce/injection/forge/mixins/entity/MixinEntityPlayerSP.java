@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.Sneak;
 import net.ccbluex.liquidbounce.features.module.modules.movement.Sprint;
 import net.ccbluex.liquidbounce.features.module.modules.render.NoSwing;
 import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold;
+import net.ccbluex.liquidbounce.utils.CooldownHelper;
 import net.ccbluex.liquidbounce.utils.MovementUtils;
 import net.ccbluex.liquidbounce.utils.Rotation;
 import net.ccbluex.liquidbounce.utils.RotationUtils;
@@ -235,7 +236,10 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
             if (!noSwing.getServerSideValue().get()) {
                 this.sendQueue.addToSendQueue(new C0APacketAnimation());
+                CooldownHelper.INSTANCE.resetLastAttackedTicks();
             }
+        } else {
+            CooldownHelper.INSTANCE.resetLastAttackedTicks();
         }
     }
 
