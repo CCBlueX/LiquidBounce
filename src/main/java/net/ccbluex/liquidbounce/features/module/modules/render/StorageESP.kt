@@ -192,12 +192,12 @@ class StorageESP : Module() {
                             partialTicks
                     )
                 }
-                shader.stopDraw(color, if (mode.equals("shaderglow", ignoreCase = true)) 2.5f else 1.5f, 1f)
+                shader.stopDraw(color, if (mode.equals("shaderglow", ignoreCase = true)) 2.5f else 1.5f)
             }
         } catch (ex: Exception) {
             ClientUtils.getLogger().error("An error occurred while rendering all storages for shader esp", ex)
         }
 
-        shader.stopDraw(Color(0, 66, 255), if (mode.equals("shaderglow", ignoreCase = true)) 2.5f else 1.5f, 1f)
+        shader.stopDraw(Color(0, 66, 255), if (mode.equals("shaderglow", ignoreCase = true)) 2.5f else 1.5f)
     }
 }

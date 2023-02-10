@@ -66,6 +66,6 @@ class ItemESP : Module() {
             ClientUtils.getLogger().error("An error occurred while rendering all item entities for shader esp", ex)
         }
 
-        shader.stopDraw(getColor(),shaderRadiusValue.get(),1f)
+        shader.stopDraw(getColor(),shaderRadiusValue.get())
     }
 }

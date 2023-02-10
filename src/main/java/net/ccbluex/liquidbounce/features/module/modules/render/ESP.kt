@@ -204,7 +204,7 @@ class ESP : Module() {
                 //can draw
                 val color = getColor(entity)
                 if (!entityMap.containsKey(color)) {
-                    entityMap.put(color, ArrayList())
+                    entityMap[color] = ArrayList()
                 }
                 entityMap[color]!!.add(entity)
             }
@@ -214,13 +214,13 @@ class ESP : Module() {
                 for (entity in arr) {
                     mc.renderManager.renderEntityStatic(entity, partialTicks, true)
                 }
-                shader.stopDraw(color, radius, 1f)
+                shader.stopDraw(color, radius)
             }
         } catch (ex: Exception) {
             ClientUtils.getLogger().error("An error occurred while rendering all entities for shader esp", ex)
         }
         renderNameTags = true
-        shader.stopDraw(getColor(null), radius, 1f)
+        shader.stopDraw(getColor(null), radius)
     }
 
     override val tag: String

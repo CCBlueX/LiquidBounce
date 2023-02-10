@@ -86,6 +86,6 @@ class ProphuntESP : Module() {
 
         val color = if (colorRainbow.get()) rainbow() else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
         val radius = if (mode.equals("ShaderOutline", ignoreCase = true)) shaderOutlineRadius.get() else if (mode.equals("ShaderGlow", ignoreCase = true)) shaderGlowRadius.get() else 1f
-        shader.stopDraw(color, radius, 1f)
+        shader.stopDraw(color, radius)
     }
 }
