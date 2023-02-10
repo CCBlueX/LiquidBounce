@@ -8,6 +8,9 @@ package net.ccbluex.liquidbounce.utils.render.shader;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.WorldRenderer;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.shader.Framebuffer;
 
 import java.awt.*;
@@ -16,29 +19,32 @@ import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.glUseProgram;
 
 /**
- * @author TheSlowly
+ * @author TheSlowly, Navex
  */
 public abstract class FramebufferShader extends Shader {
 
     private static Framebuffer framebuffer;
 
     protected float red, green, blue, alpha = 1F;
-    protected float radius = 2F;
-    protected float quality = 1F;
+    protected int radius = 5;
+    protected int fade = 10;
+    protected float renderScale = 1f;
+    protected float targetAlpha = 0f;
 
     private boolean entityShadows;
 
-    public FramebufferShader(final String fragmentShader) {
+    public FramebufferShader(String fragmentShader) {
         super(fragmentShader);
     }
 
-    public void startDraw(final float partialTicks) {
-        GlStateManager.enableAlpha();
+    public void startDraw(float partialTicks, float renderScale) {
+        this.renderScale = renderScale;
 
         GlStateManager.pushMatrix();
+        GlStateManager.enableAlpha();
         GlStateManager.pushAttrib();
 
-        framebuffer = setupFrameBuffer(framebuffer);
+        framebuffer = setupFrameBuffer(framebuffer, renderScale);
         framebuffer.framebufferClear();
         framebuffer.bindFramebuffer(true);
         entityShadows = mc.gameSettings.entityShadows;
@@ -46,7 +52,7 @@ public abstract class FramebufferShader extends Shader {
         mc.entityRenderer.setupCameraTransform(partialTicks, 0);
     }
 
-    public void stopDraw(final Color color, final float radius) {
+    public void stopDraw(Color color, int radius, int fade, float targetAlpha) {
         mc.gameSettings.entityShadows = entityShadows;
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -57,6 +63,8 @@ public abstract class FramebufferShader extends Shader {
         blue = color.getBlue() / 255F;
         alpha = color.getAlpha() / 255F;
         this.radius = radius;
+        this.fade = fade;
+        this.targetAlpha = targetAlpha;
 
         mc.entityRenderer.disableLightmap();
         RenderHelper.disableStandardItemLighting();
@@ -73,36 +81,35 @@ public abstract class FramebufferShader extends Shader {
     }
 
     /**
-     * @param frameBuffer
-     * @return frameBuffer
-     * @author TheSlowly
+     * @author TheSlowly, Navex
      */
-    public Framebuffer setupFrameBuffer(Framebuffer frameBuffer) {
+    public Framebuffer setupFrameBuffer(Framebuffer frameBuffer, float renderScale) {
         if(frameBuffer != null)
             frameBuffer.deleteFramebuffer();
 
-        frameBuffer = new Framebuffer(mc.displayWidth, mc.displayHeight, true);
+        frameBuffer = new Framebuffer((int)(mc.displayWidth * renderScale), (int)(mc.displayHeight * renderScale), true);
 
         return frameBuffer;
     }
 
     /**
-     * @author TheSlowly
+     * @author Navex
      */
-    public void drawFramebuffer(final Framebuffer framebuffer) {
-        final ScaledResolution scaledResolution = new ScaledResolution(mc);
+    public void drawFramebuffer(Framebuffer framebuffer) {
+        ScaledResolution scaledResolution = new ScaledResolution(mc);
+        double scaledWidth = scaledResolution.getScaledWidth_double();
+        double scaledHeight = scaledResolution.getScaledHeight_double();
+
+        Tessellator tessellator = Tessellator.getInstance();
+        WorldRenderer buffer = tessellator.getWorldRenderer();
 
         glBindTexture(GL_TEXTURE_2D, framebuffer.framebufferTexture);
-        glBegin(GL_QUADS);
-        glTexCoord2d(0, 1);
-        glVertex2d(0, 0);
-        glTexCoord2d(0, 0);
-        glVertex2d(0, scaledResolution.getScaledHeight());
-        glTexCoord2d(1, 0);
-        glVertex2d(scaledResolution.getScaledWidth(), scaledResolution.getScaledHeight());
-        glTexCoord2d(1, 1);
-        glVertex2d(scaledResolution.getScaledWidth(), 0);
-        glEnd();
+        buffer.begin(GL_QUADS, DefaultVertexFormats.POSITION_TEX);
+        buffer.pos(0.0, 0.0, 1.0).tex(0.0, 1.0).endVertex();
+        buffer.pos(0.0, scaledHeight, 1.0).tex(0.0, 0.0).endVertex();
+        buffer.pos(scaledWidth, scaledHeight, 1.0).tex(1.0, 0.0).endVertex();
+        buffer.pos(scaledWidth, 0.0, 0.0).tex(1.0, 1.0).endVertex();
+        tessellator.draw();
         glUseProgram(0);
     }
 }

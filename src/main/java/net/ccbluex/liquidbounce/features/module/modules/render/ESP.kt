@@ -21,7 +21,6 @@ import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.GlowShader
-import net.ccbluex.liquidbounce.utils.render.shader.shaders.OutlineShader
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -41,7 +40,7 @@ class ESP : Module() {
     @JvmField
     val modeValue = ListValue(
         "Mode",
-        arrayOf("Box", "OtherBox", "WireFrame", "2D", "Real2D", "Outline", "ShaderOutline", "ShaderGlow"),
+        arrayOf("Box", "OtherBox", "WireFrame", "2D", "Real2D", "Outline", "Glow"),
         "Box"
     )
 
@@ -50,8 +49,10 @@ class ESP : Module() {
 
     @JvmField
     val wireframeWidth = FloatValue("WireFrame-Width", 2f, 0.5f, 5f)
-    private val shaderOutlineRadius = FloatValue("ShaderOutline-Radius", 1.35f, 1f, 2f)
-    private val shaderGlowRadius = FloatValue("ShaderGlow-Radius", 2.3f, 2f, 3f)
+    private val glowRenderScale = FloatValue("Glow-Renderscale", 1f, 0.1f, 2f)
+    private val glowRadius = IntegerValue("Glow-Radius", 4, 1, 5)
+    private val glowFade = IntegerValue("Glow-Fade", 10, 0, 30)
+    private val glowTargetAlpha = FloatValue("Glow-Target-Alpha", 0f, 0f, 1f)
     private val colorRedValue = IntegerValue("R", 255, 0, 255)
     private val colorGreenValue = IntegerValue("G", 255, 0, 255)
     private val colorBlueValue = IntegerValue("B", 255, 0, 255)
@@ -174,53 +175,37 @@ class ESP : Module() {
     fun onRender2D(event: Render2DEvent) {
         val mode = modeValue.get().lowercase()
         val partialTicks = event.partialTicks
-        val shader = (if (mode.equals(
-                "shaderoutline",
-                ignoreCase = true
-            )
-        ) OutlineShader.OUTLINE_SHADER else if (mode.equals(
-                "shaderglow",
-                ignoreCase = true
-            )
-        ) GlowShader.GLOW_SHADER else null)
-            ?: return
-        val radius = if (mode.equals(
-                "shaderoutline",
-                ignoreCase = true
-            )
-        ) shaderOutlineRadius.get() else if (mode.equals(
-                "shaderglow",
-                ignoreCase = true
-            )
-        ) shaderGlowRadius.get() else 1f
-
+        val shader = if (mode == "glow") GlowShader.GLOW_SHADER else null ?: return
+        shader.startDraw(event.partialTicks, glowRenderScale.get())
         renderNameTags = false
+
+        if(mc.theWorld == null) return;
+
         try {
-            //search entities
-            val entityMap = HashMap<Color, ArrayList<Entity>>()
-            for (entity in mc.theWorld!!.loadedEntityList) {
-                if (!EntityUtils.isSelected(entity, false) || entity !is EntityLivingBase) continue
-                if (AntiBot.isBot(entity) && !botValue.get()) continue
-                //can draw
+            val entityMap = mutableMapOf<Color, ArrayList<Entity>>()
+            mc.theWorld.loadedEntityList
+                .filter { EntityUtils.isSelected(it, false) }
+                .filterIsInstance<EntityLivingBase>()
+                .filterNot { AntiBot.isBot(it) && botValue.get() }.forEach { entity ->
                 val color = getColor(entity)
                 if (!entityMap.containsKey(color)) {
                     entityMap[color] = ArrayList()
                 }
                 entityMap[color]!!.add(entity)
             }
-            //then draw it
-            for ((color, arr) in entityMap) {
-                shader.startDraw(partialTicks)
-                for (entity in arr) {
-                    mc.renderManager.renderEntityStatic(entity, partialTicks, true)
+
+            entityMap.forEach { (color, entities) ->
+                shader.startDraw(partialTicks, glowRenderScale.get())
+                for (entity in entities) {
+                    mc.renderManager.renderEntitySimple(entity, partialTicks)
                 }
-                shader.stopDraw(color, radius)
+                shader.stopDraw(color, glowRadius.get(), glowFade.get(), glowTargetAlpha.get())
             }
         } catch (ex: Exception) {
             ClientUtils.getLogger().error("An error occurred while rendering all entities for shader esp", ex)
         }
         renderNameTags = true
-        shader.stopDraw(getColor(null), radius)
+        shader.stopDraw(getColor(null), glowRadius.get(), glowFade.get(), glowTargetAlpha.get())
     }
 
     override val tag: String
