@@ -17,6 +17,7 @@ import java.awt.Color
 import java.io.IOException
 import kotlin.concurrent.thread
 
+@Deprecated("The server status service is not being provided by Mojang anymore.")
 class GuiServerStatus(private val prevGui: GuiScreen) : GuiScreen() {
     private val status = HashMap<String, String>()
 
