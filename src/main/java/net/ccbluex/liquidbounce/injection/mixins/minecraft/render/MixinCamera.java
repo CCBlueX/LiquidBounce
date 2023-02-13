@@ -16,9 +16,9 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleQuickPerspectiveSwap;
 import net.minecraft.client.render.Camera;
 import net.minecraft.entity.Entity;
@@ -26,13 +26,16 @@ import net.minecraft.world.BlockView;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Camera.class)
 public abstract class MixinCamera {
 
-    @Shadow private boolean thirdPerson;
+    @Shadow
+    private boolean thirdPerson;
 
     @Shadow protected abstract void setRotation(float yaw, float pitch);
 
@@ -55,4 +58,13 @@ public abstract class MixinCamera {
         }
     }
 
+    @Inject(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;setPos(DDD)V", shift = At.Shift.AFTER))
+    private void hookFreeCamModifiedPosition(BlockView area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo ci) {
+        ModuleFreeCam.INSTANCE.applyPosition(focusedEntity, tickDelta);
+    }
+
+    @ModifyConstant(method = "clipToSpace", constant = @Constant(intValue = 8))
+    private int hookCameraClip(int constant) {
+        return ModuleCameraClip.INSTANCE.getEnabled() ? 0 : constant;
+    }
 }

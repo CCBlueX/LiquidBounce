@@ -48,8 +48,6 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
         )
     )
 
-    private val optimizeForCriticals by boolean("OptimizeForCriticals", true)
-
     private object SpeedYPort : Choice("YPort") {
 
         override val parent: ChoiceConfigurable
@@ -70,6 +68,8 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
 
         override val parent: ChoiceConfigurable
             get() = modes
+
+        private val optimizeForCriticals by boolean("OptimizeForCriticals", true)
 
         val repeatable = repeatable {
             if (optimizeForCriticals && ModuleCriticals.shouldWaitForJump(0.42f)) {

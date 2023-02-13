@@ -35,8 +35,7 @@ object ModuleXRay : Module("XRay", Category.RENDER) {
 
     // Set of blocks that will not be excluded
     val blocks by blocks(
-        "Blocks",
-        mutableSetOf(
+        "Blocks", mutableSetOf(
             // Overworld ores
             COAL_ORE,
             COPPER_ORE,

@@ -66,15 +66,30 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
     private object Vanilla : Choice("Vanilla") {
 
+        val horizontalSpeed by float("Horizontal", 0.44f, 0.1f..5f)
+        val verticalSpeed by float("Vertical", 0.44f, 0.1f..5f)
+
+        val glide by float("Glide", 0.0f, -1f..1f)
+
+        val bypassVanillaCheck by boolean("BypassVanillaCheck", true)
+
         override val parent: ChoiceConfigurable
             get() = modes
 
         val repeatable = repeatable {
-            player.strafe(speed = 0.44)
+            player.strafe(speed = horizontalSpeed.toDouble())
             player.velocity.y = when {
-                player.input.jumping -> 0.31
-                player.input.sneaking -> -0.31
-                else -> 0.0
+                player.input.jumping -> verticalSpeed.toDouble()
+                player.input.sneaking -> (-verticalSpeed).toDouble()
+                else -> glide.toDouble()
+            }
+
+            // Most basic bypass for vanilla fly check
+            // This can also be done via packets, but this is easier.
+            if (bypassVanillaCheck && player.age % 40 == 0) {
+                wait(1)
+                player.velocity.y = -0.04
+                wait(1)
             }
         }
 
@@ -168,8 +183,8 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
             } else if (!threwPearl && canFly) {
                 player.strafe(speed = speed.toDouble())
                 player.velocity.y = when {
-                    mc.options.keyJump.isPressed -> speed.toDouble()
-                    mc.options.keySneak.isPressed -> -speed.toDouble()
+                    mc.options.jumpKey.isPressed -> speed.toDouble()
+                    mc.options.sneakKey.isPressed -> -speed.toDouble()
                     else -> 0.0
                 }
                 return@repeatable
