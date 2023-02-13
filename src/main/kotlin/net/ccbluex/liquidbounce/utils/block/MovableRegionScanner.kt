@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,7 +54,7 @@ class MovableRegionScanner {
             Region(BlockPos(region.from.x, min(region.to.y, lastRegion.to.y), region.from.z), BlockPos(region.to.x, max(region.to.y, lastRegion.to.y), region.to.z)),
             Region(BlockPos(region.from.x, min(region.from.y, lastRegion.from.y), region.from.z), BlockPos(region.to.x, max(region.from.y, lastRegion.from.y), region.to.z)),
             Region(BlockPos(region.from.x, region.from.y, min(region.to.z, lastRegion.to.z)), BlockPos(region.to.x, region.to.y, max(region.to.z, lastRegion.to.z))),
-            Region(BlockPos(region.from.x, region.from.y, min(region.from.z, lastRegion.from.z)), BlockPos(region.to.x, region.to.y, max(region.from.z, lastRegion.from.z))),
+            Region(BlockPos(region.from.x, region.from.y, min(region.from.z, lastRegion.from.z)), BlockPos(region.to.x, region.to.y, max(region.from.z, lastRegion.from.z)))
         )
 
         return returnCandidates.filter { !it.isEmpty() && it in region }

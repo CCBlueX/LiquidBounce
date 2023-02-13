@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@ class FallingPlayer(
     private var motionX: Double,
     private var motionY: Double,
     private var motionZ: Double,
-    private val yaw: Float,
+    private val yaw: Float
 ) {
     companion object {
         fun fromPlayer(player: ClientPlayerEntity): FallingPlayer {

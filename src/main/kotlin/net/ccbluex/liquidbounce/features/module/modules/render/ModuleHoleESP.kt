@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -144,7 +144,7 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
                 BlockPos(x - 1, y, z),
                 BlockPos(x, y, z + 1),
                 BlockPos(x, y, z - 1),
-                BlockPos(x, y - 1, z),
+                BlockPos(x, y - 1, z)
             )
 
             var unsafeBlocks = 0

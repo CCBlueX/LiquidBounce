@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -166,7 +166,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
         val interpolatedOffset = Vec3(
             otherPlayer.lastRenderX + (otherPlayer.x - otherPlayer.lastRenderX) * event.tickDelta - otherPlayer.x,
             otherPlayer.lastRenderY + (otherPlayer.y - otherPlayer.lastRenderY) * event.tickDelta - otherPlayer.y,
-            otherPlayer.lastRenderZ + (otherPlayer.z - otherPlayer.lastRenderZ) * event.tickDelta - otherPlayer.z,
+            otherPlayer.lastRenderZ + (otherPlayer.z - otherPlayer.lastRenderZ) * event.tickDelta - otherPlayer.z
         )
 
         // Positions
@@ -354,6 +354,6 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
         var motionSlowdown: Float = 0.99F,
         var pitchSubtrahend: Float = 0.0F,
         var angle: Float = 0.99F,
-        val isBow: Boolean = false,
+        val isBow: Boolean = false
     )
 }

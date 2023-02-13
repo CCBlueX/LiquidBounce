@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ class EventHook<T : Event>(
     val handlerClass: Listenable,
     val handler: Handler<T>,
     val ignoresCondition: Boolean,
-    val priority: Int = 0,
+    val priority: Int = 0
 )
 
 interface Listenable {
@@ -49,7 +49,7 @@ interface Listenable {
 inline fun <reified T : Event> Listenable.handler(
     ignoreCondition: Boolean = false,
     priority: Int = 0,
-    noinline handler: Handler<T>,
+    noinline handler: Handler<T>
 ) {
     EventManager.registerEventHook(T::class.java, EventHook(this, handler, ignoreCondition, priority))
 }
@@ -59,7 +59,7 @@ inline fun <reified T : Event> Listenable.handler(
  */
 inline fun <reified T : Event> Listenable.sequenceHandler(
     ignoreCondition: Boolean = false,
-    noinline eventHandler: SuspendableHandler<T>,
+    noinline eventHandler: SuspendableHandler<T>
 ) {
     handler<T>(ignoreCondition) { event -> Sequence(eventHandler, event) }
 }

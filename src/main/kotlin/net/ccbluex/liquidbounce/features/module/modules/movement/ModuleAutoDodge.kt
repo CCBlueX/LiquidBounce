@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@ import net.minecraft.util.math.Vec3d
 import kotlin.math.PI
 import kotlin.math.atan2
 
-object ModuleAutoDodge: Module("AutoDodge", Category.COMBAT) {
+object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
 
     private val positions = mutableListOf<Double>()
 
@@ -123,33 +123,34 @@ object ModuleAutoDodge: Module("AutoDodge", Category.COMBAT) {
 
         positions.clear()
 
-            for (i in 0 until 80) {
-                behaviour(simulatedPlayer)
+        for (i in 0 until 80) {
+            behaviour(simulatedPlayer)
 
-                simulatedPlayer.tick()
+            simulatedPlayer.tick()
 
-                simulatedArrows.forEach { arrow ->
-                    if (arrow.inGround)
-                        return@forEach
+            simulatedArrows.forEach { arrow ->
+                if (arrow.inGround) {
+                    return@forEach
+                }
 
-                    val lastPos = arrow.pos
+                val lastPos = arrow.pos
 
-                    val a = arrow.tick()
+                val a = arrow.tick()
 
 //                    if (a != null)
 //                        println()
 
 //                    positions.addAll(listOf(arrow.pos.x, arrow.pos.y, arrow.pos.z))
 
-                    val playerHitBox = Box(-0.3, 0.0, -0.3, 0.3, 1.8, 0.3).expand(0.3).offset(simulatedPlayer.pos)
+                val playerHitBox = Box(-0.3, 0.0, -0.3, 0.3, 1.8, 0.3).expand(0.3).offset(simulatedPlayer.pos)
 
-                    val raycastResult = playerHitBox.raycast(lastPos, arrow.pos)
+                val raycastResult = playerHitBox.raycast(lastPos, arrow.pos)
 
-                    raycastResult.orElse(null)?.let { hitPos ->
-                        return HitInfo(hitPos, lastPos, arrow.velocity)
-                    }
+                raycastResult.orElse(null)?.let { hitPos ->
+                    return HitInfo(hitPos, lastPos, arrow.velocity)
                 }
             }
+        }
 
         return null
     }

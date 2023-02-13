@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -179,7 +179,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleReach,
             ModulePerfectHit,
             ModuleAutoClicker,
-            ModuleAntiVanish
+            ModuleAntiVanish,
             ModuleXRay,
             ModuleQuickPerspectiveSwap,
             ModuleMurderMystery,
@@ -208,7 +208,5 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
     fun autoComplete(begin: String, validator: (Module) -> Boolean = { true }): List<String> {
         return filter { it.name.startsWith(begin, true) && validator(it) }.map { it.name }
     }
-
-    fun getCategories() = Category.values().map { it.readableName }.toTypedArray()
 
 }

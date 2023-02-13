@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -83,8 +83,9 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
         }
 
         fun getChargedRandom(): Int {
-            if (this.currentChargeRandom == null)
+            if (this.currentChargeRandom == null) {
                 updateChargeRandom()
+            }
 
             return currentChargeRandom!!
         }
@@ -102,8 +103,9 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             if (this.murderMysteryMode) {
                 val hypotheticalHit = getHypotheticalHit()
 
-                if (hypotheticalHit == null || !ModuleMurderMystery.isMurderer(hypotheticalHit))
+                if (hypotheticalHit == null || !ModuleMurderMystery.isMurderer(hypotheticalHit)) {
                     return@handler
+                }
             }
 
             println(getChargedRandom())
@@ -241,7 +243,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             deltaPos = deltaPos.add(
                 (target.x - target.prevX) * realTravelTime,
                 (target.y - target.prevY) * realTravelTime,
-                (target.z - target.prevZ) * realTravelTime,
+                (target.z - target.prevZ) * realTravelTime
             )
         }
 

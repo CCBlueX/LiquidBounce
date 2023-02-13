@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,8 +48,12 @@ import kotlin.math.sqrt
 object ModuleTraces : Module("Traces", Category.RENDER) {
 
     private val modes = choices(
-        "ColorMode", DistanceColor, arrayOf(
-            DistanceColor, StaticColor, RainbowColor
+        "ColorMode",
+        DistanceColor,
+        arrayOf(
+            DistanceColor,
+            StaticColor,
+            RainbowColor
         )
     )
 
@@ -112,7 +116,9 @@ object ModuleTraces : Module("Traces", Category.RENDER) {
             val color = if (useDistanceColor) {
                 Color4b(
                     Color.getHSBColor(
-                        (dist.coerceAtMost(viewDistance) / viewDistance).toFloat() * (120.0f / 360.0f), 1.0f, 1.0f
+                        (dist.coerceAtMost(viewDistance) / viewDistance).toFloat() * (120.0f / 360.0f),
+                        1.0f,
+                        1.0f
                     )
                 )
             } else if (entity is PlayerEntity && FriendManager.isFriend(entity.gameProfile.name)) {

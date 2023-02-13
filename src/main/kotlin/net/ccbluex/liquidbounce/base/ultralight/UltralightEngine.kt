@@ -96,7 +96,7 @@ object UltralightEngine {
         logger.info("Setting up ultralight renderer")
 
         val ulRenderer = UltralightRenderer.create()
-        ulRenderer.logMemoryUsage();
+        ulRenderer.logMemoryUsage()
         renderer.lock(ulRenderer)
 
         // Setup hooks

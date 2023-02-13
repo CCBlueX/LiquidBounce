@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@ import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.fluid.Fluid
 import net.minecraft.tag.FluidTags
-import net.minecraft.tag.Tag
+import net.minecraft.tag.TagKey
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.MathHelper
@@ -50,7 +50,7 @@ class SimulatedPlayer(
     private var isJumping: Boolean,
     private var onGround: Boolean,
     private var horizontalCollision: Boolean,
-    private var verticalCollision: Boolean,
+    private var verticalCollision: Boolean
 ) {
     companion object {
         fun fromPlayer(player: PlayerEntity, input: SimulatedPlayerInput): SimulatedPlayer {
@@ -127,11 +127,9 @@ class SimulatedPlayer(
     }
 
     private fun travel(movementInput: Vec3d) {
-        var bl: Boolean
         var d = 0.08
-        val bl2: Boolean = (this.velocity.y <= 0.0).also { bl = it }
 
-        if (bl && hasStatusEffect(StatusEffects.SLOW_FALLING)) {
+        if (velocity.y <= 0.0 && hasStatusEffect(StatusEffects.SLOW_FALLING)) {
             d = 0.01
             this.onLanding()
         }
@@ -259,8 +257,9 @@ class SimulatedPlayer(
     private fun getAirStrafingSpeed(): Float {
         val speed = 0.02f
 
-        if (this.input.sprinting)
+        if (this.input.sprinting) {
             return (speed + 0.005999999865889549).toFloat()
+        }
 
         return speed
     }
@@ -379,11 +378,13 @@ class SimulatedPlayer(
 
     private fun getJumpVelocity(): Float = 0.42f
 
-    private fun swimUpward(water: Tag.Identified<Fluid>?): Unit = TODO("Not yet implemented")
+    private fun swimUpward(water: TagKey<Fluid>?) {
+        // TODO: Not yet implemented
+    }
     private fun getSwimHeight(): Double = 0.0
     private fun isTouchingWater(): Boolean = false
     private fun isInLava(): Boolean = false
-    private fun getFluidHeight(tags: Tag<Fluid>): Double = 0.0
+    private fun getFluidHeight(tags: TagKey<Fluid>): Double = 0.0
 
     private fun getRotationVector(): Vec3d {
         return getRotationVector(this.pitch, this.yaw)
@@ -460,7 +461,6 @@ class SimulatedPlayer(
 
                 val rotatedVelocity = entity.velocity.rotateY(entity.yaw.toRadians())
 
-
                 val forwardVelocity = rotatedVelocity.z
                 val sidewardsVelocity = rotatedVelocity.x
 
@@ -492,7 +492,6 @@ class SimulatedPlayer(
                 return SimulatedPlayerInput(forwards, backwards, left, right, jumping, sprinting).apply { this.slowDown = entity.isSneaking }
             }
         }
-
 
     }
 }

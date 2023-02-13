@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.DrawableHelper
 import net.minecraft.client.util.math.MatrixStack
 
-
 /**
  * A gpu view renderer
  */
@@ -56,7 +55,7 @@ class GpuViewRenderer(val driver: UltralightOpenGLGPUDriverNative) : ViewRendere
         val renderTarget = view.renderTarget()
         val textureId = renderTarget.textureId
 
-        driver.bindTexture(0, textureId);
+        driver.bindTexture(0, textureId)
         DrawableHelper.drawTexture(matrices, 0, 0, 1, 0.0f, 0.0f, mc.window.scaledWidth, mc.window.scaledHeight, mc.window.scaledWidth, mc.window.scaledHeight)
     }
 

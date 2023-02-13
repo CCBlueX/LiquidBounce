@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -306,23 +306,23 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
                                 block == Blocks.CHORUS_PLANT
                         } ||
                         item in arrayOf(
-                            Items.GOLDEN_CARROT,
-                            Items.CARROT,
-                            Items.CARROT_ON_A_STICK,
-                            Items.BONE,
-                            Items.TROPICAL_FISH,
-                            Items.PUFFERFISH,
-                            Items.SALMON,
-                            Items.BLAZE_ROD,
-                            Items.PUMPKIN_PIE,
-                            Items.NAME_TAG,
-                            Items.APPLE,
-                            Items.FEATHER,
-                            Items.COOKIE,
-                            Items.SHEARS,
-                            Items.COOKED_SALMON,
-                            Items.STICK,
-                        )
+                        Items.GOLDEN_CARROT,
+                        Items.CARROT,
+                        Items.CARROT_ON_A_STICK,
+                        Items.BONE,
+                        Items.TROPICAL_FISH,
+                        Items.PUFFERFISH,
+                        Items.SALMON,
+                        Items.BLAZE_ROD,
+                        Items.PUMPKIN_PIE,
+                        Items.NAME_TAG,
+                        Items.APPLE,
+                        Items.FEATHER,
+                        Items.COOKIE,
+                        Items.SHEARS,
+                        Items.COOKED_SALMON,
+                        Items.STICK
+                    )
 
                 val isBow = item is BowItem
 
