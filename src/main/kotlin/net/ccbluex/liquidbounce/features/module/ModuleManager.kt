@@ -209,4 +209,9 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
         return filter { it.name.startsWith(begin, true) && validator(it) }.map { it.name }
     }
 
+    /**
+     * This is being used by UltralightJS for the implementation of the ClickGUI. DO NOT REMOVE!
+     */
+    fun getCategories() = Category.values().map { it.readableName }.toTypedArray()
+
 }
