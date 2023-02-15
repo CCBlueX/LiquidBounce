@@ -19,14 +19,6 @@
     let prevX = 0;
     let prevY = 0;
 
-    // Panels should not go out of bounds
-    if (top < 0) {
-        top = 0;
-    }
-    if (left < 0) {
-        left = 0;
-    }
-
 	function onMouseDown() {
 		moving = true;
 	}
@@ -51,7 +43,6 @@
 
 	function onMouseUp() {
 		moving = false;
-
         storage.setItem(`clickgui.panel.${name}.top`, top);
         storage.setItem(`clickgui.panel.${name}.left`, left);
 	}
