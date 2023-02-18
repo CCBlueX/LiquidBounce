@@ -23,14 +23,14 @@ import com.labymedia.ultralight.databind.context.ContextProvider
 import com.labymedia.ultralight.javascript.JavascriptObject
 import com.labymedia.ultralight.javascript.JavascriptPropertyAttributes
 import com.mojang.blaze3d.systems.RenderSystem
-import net.ccbluex.liquidbounce.base.ultralight.View
+import net.ccbluex.liquidbounce.base.ultralight.ViewOverlay
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.utils.client.logger
 
 /**
  * Referenced by JS as `events`
  */
-class UltralightJsEvents(private val viewContextProvider: ContextProvider, val view: View) : Listenable {
+class UltralightJsEvents(private val viewContextProvider: ContextProvider, val viewOverlay: ViewOverlay) : Listenable {
 
     companion object {
 
@@ -80,20 +80,29 @@ class UltralightJsEvents(private val viewContextProvider: ContextProvider, val v
         val eventHook = EventHook<Event>(
             this,
             { event ->
-                RenderSystem.recordRenderCall {
+                val callEvent = {
                     runCatching {
                         viewContextProvider.syncWithJavascript {
                             it.context.globalObject.getProperty(propertyName).toObject().callAsFunction(
                                 it.context.globalObject,
-                                view.context.databind.conversionUtils.toJavascript(it.context, event)
+                                viewOverlay.context.databind.conversionUtils.toJavascript(it.context, event)
                             )
                         }
                     }.onFailure {
                         logger.error("Ultralight JS Engine", it)
                     }
                 }
+
+                if (RenderSystem.isOnRenderThread()) {
+                    callEvent()
+                    return@EventHook
+                }
+
+                RenderSystem.recordRenderCall {
+                    callEvent()
+                }
             },
-            false,
+            false
         )
 
         // Add the event hook to the list

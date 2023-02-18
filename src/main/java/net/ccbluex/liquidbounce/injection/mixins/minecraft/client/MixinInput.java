@@ -25,6 +25,10 @@ import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(Input.class)
 public class MixinInput {
+    @Shadow public boolean pressingRight;
+    @Shadow public boolean pressingLeft;
+    @Shadow public boolean pressingBack;
+    @Shadow public boolean pressingForward;
     @Shadow public float movementForward;
     @Shadow public float movementSideways;
 }

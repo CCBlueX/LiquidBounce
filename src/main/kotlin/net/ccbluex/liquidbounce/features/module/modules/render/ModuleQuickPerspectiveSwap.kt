@@ -16,31 +16,30 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.event.PlayerMoveEvent
+package net.ccbluex.liquidbounce.features.module.modules.render
+
+import net.ccbluex.liquidbounce.event.GameRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.entity.directionYaw
-import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.entity.strafe
-import net.minecraft.entity.MovementType
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.minecraft.client.util.InputUtil
+import org.lwjgl.glfw.GLFW
 
-/**
- * Strafe module
- *
- * Strafe into different directions while you're midair.
- */
-object ModuleStrafe : Module("Strafe", Category.MOVEMENT) {
+object ModuleQuickPerspectiveSwap : Module("QuickPerspectiveSwap", Category.RENDER) {
 
-    private var strength by float("Strength", 1f, 0.1f..1f)
+    private val onUpdate = handler<GameRenderEvent> {
+        if (!InputUtil.isKeyPressed(mc.window.handle, bind)) {
+            this.enabled = false
+        }
+    }
 
-    val moveHandler = handler<PlayerMoveEvent> { event ->
-        // Might just strafe when player controls itself
-        if (event.type == MovementType.SELF && player.moving) {
-            val movement = event.movement
-            movement.strafe(player.directionYaw, strength = strength.toDouble())
+    override fun enable() {
+        if (this.bind == GLFW.GLFW_KEY_UNKNOWN) {
+            chat("You cannot use this module without a keybind as it will disable when the keybind isn't held anymore")
+
+            this.enabled = false
         }
     }
 

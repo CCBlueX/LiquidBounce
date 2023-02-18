@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.base.ultralight.filesystem
+package net.ccbluex.liquidbounce.base.ultralight.impl
 
 import com.labymedia.ultralight.plugin.filesystem.UltralightFileSystem
 import net.ccbluex.liquidbounce.LiquidBounce.logger

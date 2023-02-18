@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -247,10 +247,16 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
             val first = if (!blockStateToInvestigate.isAir && blockStateToInvestigate.canReplace(
                     ItemPlacementContext(
-                        player, Hand.MAIN_HAND, player.inventory.getStack(SilentHotbar.serversideSlot), BlockHitResult(
-                            Vec3d.of(posToInvestigate), Direction.UP, posToInvestigate, false
+                            player,
+                            Hand.MAIN_HAND,
+                            player.inventory.getStack(SilentHotbar.serversideSlot),
+                            BlockHitResult(
+                                    Vec3d.of(posToInvestigate),
+                                    Direction.UP,
+                                    posToInvestigate,
+                                    false
+                                )
                         )
-                    )
                 )
             ) {
                 Direction.values().mapNotNull { direction ->

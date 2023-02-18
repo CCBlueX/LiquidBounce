@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.base.ultralight.hooks
 
-import net.ccbluex.liquidbounce.base.ultralight.ScreenView
+import net.ccbluex.liquidbounce.base.ultralight.ScreenViewOverlay
 import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
 import net.ccbluex.liquidbounce.base.ultralight.js.bindings.UltralightJsUi
 import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager
@@ -37,8 +37,8 @@ object UltralightScreenHook : Listenable {
     val screenHandler = handler<ScreenEvent> { event ->
         UltralightEngine.cursorAdapter.unfocus()
 
-        val activeView = UltralightEngine.activeView
-        if (activeView is ScreenView) {
+        val activeView = UltralightEngine.inputAwareOverlay
+        if (activeView is ScreenViewOverlay) {
             if (activeView.context.events._fireViewClose()) {
                 UltralightEngine.removeView(activeView)
             }

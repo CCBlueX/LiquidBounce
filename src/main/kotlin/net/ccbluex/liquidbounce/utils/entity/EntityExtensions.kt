@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -68,7 +68,6 @@ val ClientPlayerEntity.directionYaw: Float
         return rotationYaw
     }
 
-
 val PlayerEntity.sqrtSpeed: Double
     get() = velocity.sqrtSpeed
 
@@ -103,13 +102,17 @@ fun ClientPlayerEntity.strafe(yaw: Float = directionYaw, speed: Double = sqrtSpe
 val Vec3d.sqrtSpeed: Double
     get() = sqrt(x * x + z * z)
 
-fun Vec3d.strafe(yaw: Float, speed: Double = sqrtSpeed) {
+fun Vec3d.strafe(yaw: Float, speed: Double = sqrtSpeed, strength: Double = 1.0) {
+    val prevX = x * (1.0 - strength)
+    val prevZ = z * (1.0 - strength)
+    val useSpeed = speed * strength
+
     val angle = Math.toRadians(yaw.toDouble())
-    x = -sin(angle) * speed
-    z = cos(angle) * speed
+    x = (-sin(angle) * useSpeed) + prevX
+    z = (cos(angle) * useSpeed) + prevZ
 }
 
-fun Vec3d.strafe(yaw: Float, speed: Double = sqrtSpeed, keyboardCheck: Boolean = false) {
+fun Vec3d.strafe(yaw: Float, speed: Double = sqrtSpeed, strength: Double = 1.0, keyboardCheck: Boolean = false) {
     val player = mc.player ?: return
 
     if (keyboardCheck && !player.pressingMovementButton) {
@@ -118,7 +121,7 @@ fun Vec3d.strafe(yaw: Float, speed: Double = sqrtSpeed, keyboardCheck: Boolean =
         return
     }
 
-    this.strafe(yaw, speed)
+    this.strafe(yaw, speed, strength)
 }
 
 val ClientPlayerEntity.eyesPos: Vec3d
@@ -156,7 +159,7 @@ fun Entity.interpolateCurrentPosition(tickDelta: Float): Vec3 {
     return Vec3(
         this.lastRenderX + (this.x - this.lastRenderX) * tickDelta,
         this.lastRenderY + (this.y - this.lastRenderY) * tickDelta,
-        this.lastRenderZ + (this.z - this.lastRenderZ) * tickDelta,
+        this.lastRenderZ + (this.z - this.lastRenderZ) * tickDelta
     )
 }
 

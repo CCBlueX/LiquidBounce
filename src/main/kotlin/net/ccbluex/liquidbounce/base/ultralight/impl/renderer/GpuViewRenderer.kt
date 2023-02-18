@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.base.ultralight.renderer
+package net.ccbluex.liquidbounce.base.ultralight.impl.renderer
 
 import com.labymedia.ultralight.UltralightView
 import com.labymedia.ultralight.config.UltralightViewConfig
@@ -25,7 +25,6 @@ import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gui.DrawableHelper
 import net.minecraft.client.util.math.MatrixStack
-
 
 /**
  * A gpu view renderer
@@ -56,7 +55,7 @@ class GpuViewRenderer(val driver: UltralightOpenGLGPUDriverNative) : ViewRendere
         val renderTarget = view.renderTarget()
         val textureId = renderTarget.textureId
 
-        driver.bindTexture(0, textureId);
+        driver.bindTexture(0, textureId)
         DrawableHelper.drawTexture(matrices, 0, 0, 1, 0.0f, 0.0f, mc.window.scaledWidth, mc.window.scaledHeight, mc.window.scaledWidth, mc.window.scaledHeight)
     }
 

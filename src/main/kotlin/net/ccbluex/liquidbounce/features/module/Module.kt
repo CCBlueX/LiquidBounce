@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -46,7 +46,7 @@ open class Module(
     bind: Int = GLFW.GLFW_KEY_UNKNOWN, // default bind
     state: Boolean = false, // default state
     @Exclude val disableActivation: Boolean = false, // disable activation
-    hide: Boolean = false, // default hide
+    hide: Boolean = false // default hide
 ) : Listenable, Configurable(name) {
 
     open val translationBaseKey: String

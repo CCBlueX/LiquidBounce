@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.base.ultralight.glfw
+package net.ccbluex.liquidbounce.base.ultralight.impl.glfw
 
 import com.labymedia.ultralight.input.UltralightCursor
 import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
