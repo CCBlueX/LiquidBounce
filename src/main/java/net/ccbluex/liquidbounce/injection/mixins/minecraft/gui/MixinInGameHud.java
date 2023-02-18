@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,25 +20,45 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.OverlayRenderEvent;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.minecraft.client.gui.hud.InGameHud;
+import net.minecraft.client.option.Perspective;
 import net.minecraft.client.util.math.MatrixStack;
-import org.lwjgl.opengl.GL11;
+import net.minecraft.util.Identifier;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(InGameHud.class)
 public class MixinInGameHud {
+
+    @Final
+    @Shadow
+    private static Identifier PUMPKIN_BLUR;
 
     /**
      * Hook render hud event at the top layer
      */
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/InGameHud;renderStatusEffectOverlay(Lnet/minecraft/client/util/math/MatrixStack;)V", shift = At.Shift.AFTER))
     private void hookRenderEvent(MatrixStack matrices, float tickDelta, CallbackInfo callbackInfo) {
-        GL11.glPushAttrib(GL11.GL_TEXTURE_BIT);
         EventManager.INSTANCE.callEvent(new OverlayRenderEvent(matrices, tickDelta));
-        GL11.glPopAttrib();
     }
 
+    @Inject(method = "renderOverlay", at = @At("HEAD"), cancellable = true)
+    private void injectPumpkinBlur(Identifier texture, float opacity, CallbackInfo callback) {
+        ModuleAntiBlind module = ModuleAntiBlind.INSTANCE;
+        if (module.getEnabled() && module.getPumpkinBlur() && PUMPKIN_BLUR.equals(texture)) {
+            callback.cancel();
+        }
+    }
+
+    @Redirect(method = "renderCrosshair", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/Perspective;isFirstPerson()Z"))
+    private boolean hookFreeCamRenderCrosshairInThirdPerson(Perspective instance) {
+        return ModuleFreeCam.INSTANCE.shouldRenderCrosshairInThirdPerson(instance.isFirstPerson());
+    }
 }

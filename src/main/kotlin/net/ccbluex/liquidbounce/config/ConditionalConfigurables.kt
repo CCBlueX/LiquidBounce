@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.config
 import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.script.RequiredByScript
 import net.ccbluex.liquidbounce.utils.client.toLowerCamelCase
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayNetworkHandler
@@ -58,58 +59,53 @@ open class ToggleableConfigurable(@Exclude val module: Module? = null, name: Str
 open class ChoiceConfigurable(
     @Exclude val module: Module,
     name: String,
-    var active: String,
-    val initialize: (ChoiceConfigurable) -> Unit
+    var activeChoice: Choice,
+    choicesCallback: (ChoiceConfigurable) -> Array<Choice>
 ) : Configurable(name, valueType = ValueType.CHOICE) {
 
+    val choices: Array<Choice>
     val translationBaseKey: String
         get() = "${module.translationBaseKey}.value.${name.toLowerCamelCase()}"
 
     val description: TranslatableText
         get() = TranslatableText("$translationBaseKey.description")
 
-    override fun initConfigurable() {
-        initialize(this)
-        super.initConfigurable()
+    init {
+        this.choices = choicesCallback(this)
     }
 
     fun newState(state: Boolean) {
-        val choice = choices.find { active.equals(it.name, true) } ?: return
-
         if (state) {
-            choice.enable()
+            this.activeChoice.enable()
         } else {
-            choice.disable()
+            this.activeChoice.disable()
         }
     }
 
-    @Exclude
-    val choices: MutableList<Choice> = mutableListOf()
+    fun setFromValueName(name: String) {
+        this.activeChoice = choices.first { it.choiceName == name }
+    }
 
+    @RequiredByScript
     fun getChoicesStrings(): Array<String> {
         return this.choices.map { it.name }.toTypedArray()
     }
 
-    // TODO Cancel sequence hanndlers on update, etc.
-    fun setFromValueName(name: String) {
-        this.active = name
-    }
 }
 
 /**
  * A mode is sub-module to separate different bypasses into extra classes
  */
-open class Choice(name: String, @Exclude private val configurable: ChoiceConfigurable) : Configurable(name), Listenable {
+abstract class Choice(name: String) : Configurable(name), Listenable, NamedChoice {
 
     private val translationBaseKey: String
-        get() = "${configurable.translationBaseKey}.choice.${name.toLowerCamelCase()}"
+        get() = "${this.parent.translationBaseKey}.choice.${name.toLowerCamelCase()}"
 
     val description: TranslatableText
         get() = TranslatableText("$translationBaseKey.description")
 
-    init {
-        configurable.choices += this
-    }
+    override val choiceName: String
+        get() = this.name
 
     /**
      * Quick access
@@ -124,7 +120,9 @@ open class Choice(name: String, @Exclude private val configurable: ChoiceConfigu
         get() = mc.networkHandler!!
 
     val isActive: Boolean
-        get() = configurable.active.equals(name, true)
+        get() = this.parent.activeChoice === this
+
+    abstract val parent: ChoiceConfigurable
 
     /**
      * Called when module is turned on
@@ -144,11 +142,11 @@ open class Choice(name: String, @Exclude private val configurable: ChoiceConfigu
     /**
      * Parent listenable
      */
-    override fun parent() = configurable.module
+    override fun parent() = this.parent.module
 
 }
 
 /**
  * Empty mode. It does nothing. Use it when you want a client-user to disable a feature.
  */
-class NoneChoice(configurable: ChoiceConfigurable) : Choice("None", configurable)
+class NoneChoice(override val parent: ChoiceConfigurable) : Choice("None")

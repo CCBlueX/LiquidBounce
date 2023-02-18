@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,12 +31,12 @@ import net.minecraft.entity.LivingEntity
 /**
  * A target tracker to choose the best enemy to attack
  */
-class TargetTracker(defaultPriority: PriorityEnum = PriorityEnum.HEALTH) : Configurable("target") {
+class TargetTracker(defaultPriority: PriorityEnum = PriorityEnum.HEALTH) : Configurable("Target") {
 
     var lockedOnTarget: Entity? = null
     var maxDistanceSquared: Double = 0.0
 
-    val priority by enumChoice("Priority", PriorityEnum.HEALTH, PriorityEnum.values())
+    val priority by enumChoice("Priority", defaultPriority, PriorityEnum.values())
     val lockOnTarget by boolean("LockOnTarget", false)
     val sortOut by boolean("SortOut", true)
     val delayableSwitch by intRange("DelayableSwitch", 10..20, 0..40)
@@ -59,6 +59,7 @@ class TargetTracker(defaultPriority: PriorityEnum = PriorityEnum.HEALTH) : Confi
             PriorityEnum.HEALTH -> entities.sortedBy { if (it is LivingEntity) it.health else 0f } // Sort by health
             PriorityEnum.DIRECTION -> entities.sortedBy { RotationManager.rotationDifference(RotationManager.makeRotation(it.boundingBox.center, eyePos)) } // Sort by FOV
             PriorityEnum.AGE -> entities.sortedBy { -it.age } // Sort by existence
+            else -> {}
         }
 
         return entities.asIterable()

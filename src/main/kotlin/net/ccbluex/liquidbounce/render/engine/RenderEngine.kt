@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.interfaces.IMixinGameRenderer
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.font.GlyphPage
+import net.ccbluex.liquidbounce.render.shaders.Shaders
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.math.Mat4
@@ -30,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.math.toMat4
 import net.minecraft.client.MinecraftClient
 import org.lwjgl.opengl.GL11
 import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.regex.Pattern
 
 class Layer(val renderTasks: ArrayList<RenderTask> = ArrayList(200))
@@ -84,7 +86,7 @@ object RenderEngine : Listenable {
     /**
      * What OpenGL level is this client supposed to use? Determined when initialized
      */
-    var openglLevel: OpenGLLevel = OpenGLLevel.OPENGL1_2
+    var openglLevel: OpenGLLevel = OpenGLLevel.OPENGL3_3
 
     /**
      * Used to recognize what GL version we are on
@@ -96,11 +98,19 @@ object RenderEngine : Listenable {
      */
     lateinit var cameraMvp: Mat4
 
+    val RENDERED_OUTLINES = AtomicInteger(0)
+
     val renderHandler = handler<OverlayRenderEvent> {
         this.cameraMvp = (MinecraftClient.getInstance().gameRenderer as IMixinGameRenderer).getCameraMVPMatrix(
             it.tickDelta,
             true
         ).toMat4()
+
+        val outlines = RENDERED_OUTLINES.getAndSet(0)
+
+        if (outlines > 0) {
+            println(outlines)
+        }
 
         EventManager.callEvent(EngineRenderEvent(it.tickDelta))
 
@@ -142,7 +152,8 @@ object RenderEngine : Listenable {
         val minorVersion = matcher.group(2).toInt()
         val patchVersion = if (matcher.groupCount() >= 5) matcher.group(4)?.toInt() else null
 
-        openglLevel = OpenGLLevel.getBestLevelFor(majorVersion, minorVersion)
+        // At the moment there is only one GL backend to be used and most graphic cards do not support 3.3+. So yeah, try it. If it doesn't work. I don't care.
+        // openglLevel = OpenGLLevel.getBestLevelFor(majorVersion, minorVersion) ?: error("Not supported graphics card")
 
         logger.info("Found out OpenGL version to be $majorVersion.$minorVersion${if (patchVersion != null) ".$patchVersion" else ""}. Using backend for ${openglLevel.backendInfo}")
     }
@@ -179,7 +190,6 @@ object RenderEngine : Listenable {
     fun render(tickDelta: Float) {
         val lvl = this.openglLevel
 
-        GL11.glEnable(GL11.GL_ALPHA_TEST)
         GL11.glEnable(GL11.GL_BLEND)
 
         for ((idx, layer) in renderTaskTable.withIndex()) {

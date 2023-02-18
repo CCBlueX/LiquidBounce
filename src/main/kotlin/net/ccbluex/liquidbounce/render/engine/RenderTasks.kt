@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,7 +31,9 @@ import kotlin.math.sin
 enum class OpenGLLevel(val minor: Int, val major: Int, val backendInfo: String) {
     OPENGL4_3(4, 3, "OpenGL 4.3+ (Multi rendering)"),
     OPENGL3_3(3, 3, "OpenGL 3.3+ (VAOs, VBOs, Instancing, Shaders)"),
-    OPENGL1_2(1, 2, "OpenGL 1.2+ (Immediate mode, Display Lists)");
+
+    // TODO: OPENGL 1.2 is broken right now on Minecraft 1.17+ and should be removed.
+    OPENGL1_2(999, 999, "OpenGL 1.2+ (Immediate mode, Display Lists)");
 
     /**
      * Determines if an OpenGL level is supported
@@ -50,8 +52,8 @@ enum class OpenGLLevel(val minor: Int, val major: Int, val backendInfo: String) 
         /**
          * Determines the best backend level for the given arguments
          */
-        fun getBestLevelFor(major: Int, minor: Int): OpenGLLevel {
-            return enumValues<OpenGLLevel>().first { it.isSupported(major, minor) }
+        fun getBestLevelFor(major: Int, minor: Int): OpenGLLevel? {
+            return enumValues<OpenGLLevel>().firstOrNull { it.isSupported(major, minor) }
         }
     }
 }
@@ -92,9 +94,9 @@ abstract class RenderTask {
     /**
      * Calls [upload] if this function hasn't been called yet
      */
-    fun uploadIfNotUploaded() {
+    fun uploadIfNotUploaded(level: OpenGLLevel) {
         if (!this.uploaded) {
-            this.upload()
+            this.upload(level)
 
             this.uploaded = true
         }
@@ -103,7 +105,7 @@ abstract class RenderTask {
     /**
      * Uploads the current state to VRAM
      */
-    open fun upload() {}
+    open fun upload(level: OpenGLLevel) {}
 
     /**
      * Sets up everything needed for rendering.
@@ -193,6 +195,7 @@ data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int) {
     }
 
     constructor(color: Color) : this(color.red, color.green, color.blue, color.alpha)
+    constructor(hex: String) : this(Color(hex.toInt(16)))
     constructor(r: Int, g: Int, b: Int) : this(r, g, b, 255)
 
     fun writeToBuffer(idx: Int, buffer: ByteBuffer) {

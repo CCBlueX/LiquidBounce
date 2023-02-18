@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@ import net.minecraft.entity.projectile.ProjectileUtil
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.RaycastContext
 
@@ -62,7 +63,7 @@ fun raytraceBlock(range: Double, rotation: Rotation, pos: BlockPos, state: Block
         start,
         end,
         pos,
-        state.getVisualShape(mc.world, pos, ShapeContext.of(mc.player)),
+        state.getOutlineShape(mc.world, pos, ShapeContext.of(mc.player)),
         state
     )
 }
@@ -109,7 +110,7 @@ fun facingEnemy(enemy: Entity, range: Double, rotation: Rotation): Boolean {
 /**
  * Allows you to check if a point is behind a wall
  */
-fun facingBlock(eyes: Vec3d, vec3: Vec3d, blockPos: BlockPos): Boolean {
+fun facingBlock(eyes: Vec3d, vec3: Vec3d, blockPos: BlockPos, expectedSide: Direction? = null): Boolean {
     val searchedPos = mc.world?.raycast(
         RaycastContext(
             eyes,
@@ -120,7 +121,7 @@ fun facingBlock(eyes: Vec3d, vec3: Vec3d, blockPos: BlockPos): Boolean {
         )
     ) ?: return false
 
-    if (searchedPos.type != HitResult.Type.BLOCK) {
+    if (searchedPos.type != HitResult.Type.BLOCK || (expectedSide != null && searchedPos.side != expectedSide)) {
         return false
     }
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,8 +22,16 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 
+/**
+ * AntiBlind module
+ *
+ * Protects you from potentially annoying screen effects that block your view.
+ */
+
 object ModuleAntiBlind : Module("AntiBlind", Category.RENDER) {
     val antiBlind by boolean("DisableBlindingEffect", true)
     val antiNausea by boolean("DisableNauseaEffect", true)
+    val pumpkinBlur by boolean("DisablePumpkinBlur", true)
+    val liquidsFog by boolean("DisableLiquidsFog", true)
     val fireOpacity by float("FireOpacity", 1.0F, 0.0F..1.0F)
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,11 +20,12 @@
 package net.ccbluex.liquidbounce.utils.item
 
 import com.mojang.brigadier.StringReader
+import net.minecraft.client.MinecraftClient
 import net.minecraft.command.argument.ItemStackArgument
 import net.minecraft.command.argument.ItemStringReader
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.item.*
-import net.minecraft.nbt.CompoundTag
+import net.minecraft.nbt.NbtCompound
 import net.minecraft.util.Identifier
 import net.minecraft.util.registry.Registry
 
@@ -34,7 +35,23 @@ import net.minecraft.util.registry.Registry
  * @docs https://minecraft.gamepedia.com/Commands/give
  */
 fun createItem(stack: String, amount: Int = 1): ItemStack = ItemStringReader(StringReader(stack), true).consume().let {
-    ItemStackArgument(it.item, it.tag).createStack(amount, false)
+    ItemStackArgument(it.item, it.nbt).createStack(amount, false)
+}
+
+fun findHotbarSlot(item: Item): Int? = findHotbarSlot { it.item == item }
+
+fun findHotbarSlot(predicate: (ItemStack) -> Boolean): Int? {
+    val player = MinecraftClient.getInstance().player ?: return null
+
+    return (0..8).firstOrNull { predicate(player.inventory.getStack(it)) }
+}
+
+fun findInventorySlot(item: Item): Int? = findInventorySlot { it.item == item }
+
+fun findInventorySlot(predicate: (ItemStack) -> Boolean): Int? {
+    val player = MinecraftClient.getInstance().player ?: return null
+
+    return (0..40).firstOrNull { predicate(player.inventory.getStack(it)) }
 }
 
 /**
@@ -48,7 +65,7 @@ fun ItemStack?.getEnchantmentCount(): Int {
     var c = 0
 
     for (enchantment in enchantments) {
-        if (enchantment !is CompoundTag) {
+        if (enchantment !is NbtCompound) {
             continue
         }
 
@@ -65,7 +82,7 @@ fun ItemStack?.getEnchantment(enchantment: Enchantment): Int {
     val enchId = Registry.ENCHANTMENT.getId(enchantment)
 
     for (enchantmentEntry in enchantments) {
-        if (enchantmentEntry !is CompoundTag) {
+        if (enchantmentEntry !is NbtCompound) {
             continue
         }
 

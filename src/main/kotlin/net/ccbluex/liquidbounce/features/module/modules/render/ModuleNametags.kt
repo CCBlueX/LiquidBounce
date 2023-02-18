@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,16 +24,26 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.*
-import net.ccbluex.liquidbounce.render.utils.rect
+import net.ccbluex.liquidbounce.render.engine.memory.IndexBuffer
+import net.ccbluex.liquidbounce.render.engine.memory.PositionColorVertexFormat
+import net.ccbluex.liquidbounce.render.engine.memory.VertexFormatComponentDataType
+import net.ccbluex.liquidbounce.render.shaders.ColoredPrimitiveShader
 import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.ping
 import net.ccbluex.liquidbounce.utils.math.Mat4
+import net.ccbluex.liquidbounce.utils.render.rect
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import kotlin.math.roundToInt
+
+/**
+ * Nametags module
+ *
+ * Makes player name tags more visible and adds useful information.
+ */
 
 object ModuleNametags : Module("Nametags", Category.RENDER) {
 
@@ -49,18 +59,31 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
     val renderHandler = handler<EngineRenderEvent> { event ->
         val filteredEntities = world.entities.filter(ModuleNametags::shouldRenderNametag)
 
+        if (filteredEntities.isEmpty()) {
+            return@handler
+        }
+
         val fontRenderer = Fonts.bodyFont
 
         fontRenderer.begin()
 
         // Two triangles per rect
-        val renderTask = ColoredPrimitiveRenderTask(filteredEntities.size * 2, PrimitiveType.Triangles)
+        val vertexFormat = PositionColorVertexFormat()
+
+        vertexFormat.initBuffer(filteredEntities.size * 4)
+
+        val indexBuffer = IndexBuffer(filteredEntities.size * 4 * 3, VertexFormatComponentDataType.GlUnsignedShort)
+
         val aspectRatio = mc.window.width.toFloat() / mc.window.height.toFloat()
 
-        val borderRenderTask = if (this.borderValue) {
-            ColoredPrimitiveRenderTask(filteredEntities.size * 4, PrimitiveType.Lines)
+        val (borderVertexFormat, borderIndexBuffer) = if (this.borderValue) {
+            val vf = PositionColorVertexFormat()
+
+            vf.initBuffer(filteredEntities.size * 4)
+
+            Pair(vf, IndexBuffer(filteredEntities.size * 4 * 2, VertexFormatComponentDataType.GlUnsignedShort))
         } else {
-            null
+            Pair(null, null)
         }
 
         val total = filteredEntities.size.toFloat()
@@ -128,12 +151,14 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
 
             val screenSpaceVec = Vec3(xWithoutAspectRatio * aspectRatio, -vec.y * factor, currZ)
 
-            renderTask.rect(
+            vertexFormat.rect(
+                indexBuffer,
                 screenSpaceVec + p1 * scale,
                 screenSpaceVec + p2 * scale,
                 Color4b(0, 0, 0, 127)
             )
-            borderRenderTask?.rect(
+            borderVertexFormat?.rect(
+                borderIndexBuffer!!,
                 screenSpaceVec + p1 * scale,
                 screenSpaceVec + p2 * scale,
                 Color4b(0, 0, 0, 255),
@@ -177,8 +202,8 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
             currIdx++
         }
 
-        RenderEngine.enqueueForRendering(RenderEngine.SCREEN_SPACE_LAYER, renderTask)
-        borderRenderTask?.let { RenderEngine.enqueueForRendering(RenderEngine.SCREEN_SPACE_LAYER, it) }
+        RenderEngine.enqueueForRendering(RenderEngine.SCREEN_SPACE_LAYER, VertexFormatRenderTask(vertexFormat, PrimitiveType.Triangles, ColoredPrimitiveShader, indexBuffer = indexBuffer, state = GlRenderState(lineWidth = 2.0f, lineSmooth = true, depthTest = true)))
+        borderVertexFormat?.let { RenderEngine.enqueueForRendering(RenderEngine.SCREEN_SPACE_LAYER, VertexFormatRenderTask(it, PrimitiveType.Lines, ColoredPrimitiveShader, indexBuffer = borderIndexBuffer!!, state = GlRenderState(lineWidth = 1.0f, lineSmooth = true, depthTest = true))) }
         RenderEngine.enqueueForRendering(RenderEngine.SCREEN_SPACE_LAYER, fontRenderer.commit())
     }
 

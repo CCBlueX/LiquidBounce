@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,27 +18,35 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.PlayerJumpEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.block.getBlock
-import net.ccbluex.liquidbounce.utils.block.toBlockPos
+import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
 import net.minecraft.block.BedBlock
-import net.minecraft.block.Block
-import net.minecraft.block.Blocks
+import net.minecraft.block.HoneyBlock
+import net.minecraft.block.SlimeBlock
+
+/**
+ * BlockBounce module
+ *
+ * Allows you to bounce higher on bouncy blocks.
+ */
 
 object ModuleBlockBounce : Module("BlockBounce", Category.MOVEMENT) {
 
-    private val motion by float("Motion", 0.42f, 0.2f..1f)
+    private val motion by float("Motion", 0.42f, 0.2f..2f)
 
-    val repeatable = repeatable {
-        val block = player.pos.toBlockPos().down().getBlock() ?: return@repeatable
-
-        if (isBouncingBlock(block) && mc.options.keyJump.isPressed) {
-            player.velocity.y += motion
+    val jumpHandler = handler<PlayerJumpEvent> { event ->
+        if (standingOnBouncyBlock()) {
+            event.motion += motion
         }
     }
 
-    private fun isBouncingBlock(block: Block) = block == Blocks.SLIME_BLOCK || block is BedBlock
+    fun standingOnBouncyBlock(): Boolean {
+        val boundingBox = player.boundingBox
+        val detectionBox = boundingBox.withMinY(boundingBox.minY - 0.01)
 
+        return isBlockAtPosition(detectionBox) { it is SlimeBlock || it is BedBlock || it is HoneyBlock }
+    }
 }

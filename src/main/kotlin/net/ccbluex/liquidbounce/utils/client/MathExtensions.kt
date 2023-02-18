@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 
 fun Float.toRadians() = this / 180.0F * Math.PI.toFloat()
+fun Float.toDegrees() = this / Math.PI.toFloat() * 180.0F
 
 fun Box.getFace(direction: Direction): ModuleScaffold.Face {
     return when (direction) {
@@ -36,19 +37,19 @@ fun Box.getFace(direction: Direction): ModuleScaffold.Face {
             Vec3d(this.minX, this.maxY, this.minZ),
             Vec3d(this.maxX, this.maxY, this.maxZ)
         )
-        Direction.NORTH -> ModuleScaffold.Face(
+        Direction.SOUTH -> ModuleScaffold.Face(
             Vec3d(this.minX, this.minY, this.maxZ),
             Vec3d(this.maxX, this.maxY, this.maxZ)
         )
-        Direction.SOUTH -> ModuleScaffold.Face(
+        Direction.NORTH -> ModuleScaffold.Face(
             Vec3d(this.minX, this.minY, this.minZ),
             Vec3d(this.maxX, this.maxY, this.minZ)
         )
-        Direction.WEST -> ModuleScaffold.Face(
+        Direction.EAST -> ModuleScaffold.Face(
             Vec3d(this.maxX, this.minY, this.minZ),
             Vec3d(this.maxX, this.maxY, this.maxZ)
         )
-        Direction.EAST -> ModuleScaffold.Face(
+        Direction.WEST -> ModuleScaffold.Face(
             Vec3d(this.minX, this.minY, this.minZ),
             Vec3d(this.minX, this.maxY, this.maxZ)
         )

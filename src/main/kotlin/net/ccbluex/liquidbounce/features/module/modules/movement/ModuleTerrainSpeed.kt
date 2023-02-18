@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,12 +19,17 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.BlockSlipperinessMultiplierEvent
 import net.ccbluex.liquidbounce.event.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTerrainSpeed.IceSpeed.Motion.motion
 import net.ccbluex.liquidbounce.utils.block.getBlock
+import net.minecraft.block.Block
+import net.minecraft.block.Blocks
 import net.minecraft.block.LadderBlock
 import net.minecraft.block.VineBlock
 import net.minecraft.util.math.BlockPos
@@ -42,16 +47,16 @@ object ModuleTerrainSpeed : Module("TerrainSpeed", Category.MOVEMENT) {
      */
     private object FastClimb : ToggleableConfigurable(this, "FastClimb", true) {
 
-        private val modes = choices("Mode", "Motion") {
-            Motion
-            Clip
-        }
+        private val modes = choices("Mode", Motion, arrayOf(Motion, Clip))
 
         /**
          * Not server or anti cheat-specific mode.
          * A basic motion fast climb, which should be configurable enough to bypass most anti-cheats.
          */
-        private object Motion : Choice("Motion", modes) {
+        private object Motion : Choice("Motion") {
+
+            override val parent: ChoiceConfigurable
+                get() = modes
 
             private val motion by float("Motion", 0.2872F, 0.1f..0.5f)
 
@@ -66,11 +71,14 @@ object ModuleTerrainSpeed : Module("TerrainSpeed", Category.MOVEMENT) {
         /**
          * A very vanilla-like fast climb. Not working on anti-cheats.
          */
-        private object Clip : Choice("Clip", modes) {
+        private object Clip : Choice("Clip") {
+
+            override val parent: ChoiceConfigurable
+                get() = modes
 
             val moveHandler = handler<PlayerMoveEvent> {
 
-                if (player.isClimbing && mc.options.keyForward.isPressed) {
+                if (player.isClimbing && mc.options.forwardKey.isPressed) {
                     val startPos = player.pos
 
                     for (y in 1..8) {
@@ -100,10 +108,35 @@ object ModuleTerrainSpeed : Module("TerrainSpeed", Category.MOVEMENT) {
 
     }
 
-    // todo: add other terrain speed options
+    /**
+     * Ice Speed allows you to manipulate slipperiness speed
+     */
+
+    private object IceSpeed : ToggleableConfigurable(this, "IceSpeed", true) {
+
+        val slipperiness by float("Slipperiness", 0.6f, 0.3f..1f)
+
+        object Motion : ToggleableConfigurable(ModuleTerrainSpeed, "Motion", false) {
+            val motion by float("Motion", 0.5f, 0.2f..1.5f)
+        }
+
+        val iceBlocks = hashSetOf<Block>(Blocks.ICE, Blocks.BLUE_ICE, Blocks.FROSTED_ICE, Blocks.PACKED_ICE)
+
+        val blockSlipperinessMultiplierHandler = handler<BlockSlipperinessMultiplierEvent> { event ->
+            if (event.block in iceBlocks) {
+                if (Motion.enabled) {
+                    player.velocity.x *= motion
+                    player.velocity.z *= motion
+                }
+                event.slipperiness = slipperiness
+            }
+        }
+    }
 
     init {
         tree(FastClimb)
+        tree(IceSpeed)
+        tree(IceSpeed.Motion)
     }
 
 }

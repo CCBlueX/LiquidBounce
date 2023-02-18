@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@ import net.minecraft.text.BaseText
 import net.minecraft.text.LiteralText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
+import net.minecraft.util.Util
 import org.apache.logging.log4j.Logger
 import org.lwjgl.glfw.GLFW
 
@@ -80,6 +81,9 @@ fun chat(text: String) = chat(text.asText())
 fun notification(title: Text, message: String, severity: NotificationEvent.Severity) =
     EventManager.callEvent(NotificationEvent(title.string, message, severity))
 
+fun notification(title: String, message: Text, severity: NotificationEvent.Severity) =
+    EventManager.callEvent(NotificationEvent(title, message.string, severity))
+
 fun notification(title: String, message: String, severity: NotificationEvent.Severity) =
     EventManager.callEvent(NotificationEvent(title, message, severity))
 
@@ -105,3 +109,8 @@ fun keyName(keyCode: Int) = when (keyCode) {
         .joinToString(separator = "_")
         .toUpperCase()
 }
+
+/**
+ * Open uri in browser
+ */
+fun browseUrl(url: String) = Util.getOperatingSystem().open(url)

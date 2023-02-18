@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,143 +20,116 @@
 package net.ccbluex.liquidbounce.render.utils
 
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.ColoredPrimitiveRenderTask
-import net.ccbluex.liquidbounce.render.engine.PrimitiveType
 import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.render.engine.memory.*
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 
-fun drawBox(box: Box, color: Color4b): ColoredPrimitiveRenderTask {
-    val renderTask = ColoredPrimitiveRenderTask(12, PrimitiveType.Triangles)
+fun drawBoxOutlineNew(box: Box, color: Color4b): Pair<VertexFormat, IndexBuffer> {
+    val vertexFormat = PositionColorVertexFormat()
 
-    val p0 = renderTask.vertex(Vec3(box.minX, box.minY, box.maxZ), color)
-    val p1 = renderTask.vertex(Vec3(box.maxX, box.minY, box.maxZ), color)
-    val p2 = renderTask.vertex(Vec3(box.minX, box.maxY, box.maxZ), color)
-    val p3 = renderTask.vertex(Vec3(box.maxX, box.maxY, box.maxZ), color)
+    vertexFormat.initBuffer(8)
 
-    val p4 = renderTask.vertex(Vec3(box.minX, box.minY, box.minZ), color)
-    val p5 = renderTask.vertex(Vec3(box.maxX, box.minY, box.minZ), color)
-    val p6 = renderTask.vertex(Vec3(box.minX, box.maxY, box.minZ), color)
-    val p7 = renderTask.vertex(Vec3(box.maxX, box.maxY, box.minZ), color)
+    val indexBuffer = IndexBuffer(6 * 6, VertexFormatComponentDataType.GlUnsignedByte)
 
-    renderTask.indexQuad(p2, p0, p1, p3)
-    renderTask.indexQuad(p6, p4, p0, p2)
-    renderTask.indexQuad(p7, p5, p4, p6)
-    renderTask.indexQuad(p3, p1, p5, p7)
-    renderTask.indexQuad(p6, p2, p3, p7)
-    renderTask.indexQuad(p0, p4, p5, p1)
+    val p0 = vertexFormat.putVertex { this.position = Vec3(box.minX, box.minY, box.maxZ); this.color = color }
+    val p1 = vertexFormat.putVertex { this.position = Vec3(box.maxX, box.minY, box.maxZ); this.color = color }
+    val p2 = vertexFormat.putVertex { this.position = Vec3(box.minX, box.maxY, box.maxZ); this.color = color }
+    val p3 = vertexFormat.putVertex { this.position = Vec3(box.maxX, box.maxY, box.maxZ); this.color = color }
 
-    return renderTask
+    val p4 = vertexFormat.putVertex { this.position = Vec3(box.minX, box.minY, box.minZ); this.color = color }
+    val p5 = vertexFormat.putVertex { this.position = Vec3(box.maxX, box.minY, box.minZ); this.color = color }
+    val p6 = vertexFormat.putVertex { this.position = Vec3(box.minX, box.maxY, box.minZ); this.color = color }
+    val p7 = vertexFormat.putVertex { this.position = Vec3(box.maxX, box.maxY, box.minZ); this.color = color }
+
+    indexBuffer.indexLine(p0, p1)
+    indexBuffer.indexLine(p2, p3)
+    indexBuffer.indexLine(p4, p5)
+    indexBuffer.indexLine(p6, p7)
+
+    indexBuffer.indexLine(p0, p4)
+    indexBuffer.indexLine(p1, p5)
+    indexBuffer.indexLine(p2, p6)
+    indexBuffer.indexLine(p3, p7)
+
+    indexBuffer.indexLine(p0, p2)
+    indexBuffer.indexLine(p1, p3)
+    indexBuffer.indexLine(p4, p6)
+    indexBuffer.indexLine(p5, p7)
+
+    return Pair(vertexFormat, indexBuffer)
 }
 
-fun drawBoxSide(box: Box, side: Direction, color: Color4b): ColoredPrimitiveRenderTask {
-    val renderTask = ColoredPrimitiveRenderTask(12, PrimitiveType.Triangles)
+fun drawBoxNew(box: Box, color: Color4b): Pair<VertexFormat, IndexBuffer> {
+    val vertexFormat = PositionColorVertexFormat()
 
-    if (side == Direction.SOUTH) renderTask.indexQuad(
-        renderTask.vertex(Vec3(box.minX, box.maxY, box.maxZ), color),
-        renderTask.vertex(Vec3(box.minX, box.minY, box.maxZ), color),
-        renderTask.vertex(Vec3(box.maxX, box.minY, box.maxZ), color),
-        renderTask.vertex(Vec3(box.maxX, box.maxY, box.maxZ), color)
-    )
-    if (side == Direction.WEST) renderTask.indexQuad(
-        renderTask.vertex(Vec3(box.minX, box.maxY, box.minZ), color),
-        renderTask.vertex(Vec3(box.minX, box.minY, box.minZ), color),
-        renderTask.vertex(Vec3(box.minX, box.minY, box.maxZ), color),
-        renderTask.vertex(Vec3(box.minX, box.maxY, box.maxZ), color)
-    )
-    if (side == Direction.NORTH) renderTask.indexQuad(
-        renderTask.vertex(Vec3(box.maxX, box.maxY, box.minZ), color),
-        renderTask.vertex(Vec3(box.maxX, box.minY, box.minZ), color),
-        renderTask.vertex(Vec3(box.minX, box.minY, box.minZ), color),
-        renderTask.vertex(Vec3(box.minX, box.maxY, box.minZ), color)
-    )
-    if (side == Direction.EAST) renderTask.indexQuad(
-        renderTask.vertex(Vec3(box.maxX, box.maxY, box.maxZ), color),
-        renderTask.vertex(Vec3(box.maxX, box.minY, box.maxZ), color),
-        renderTask.vertex(Vec3(box.maxX, box.minY, box.minZ), color),
-        renderTask.vertex(Vec3(box.maxX, box.maxY, box.minZ), color)
-    )
-    if (side == Direction.UP) renderTask.indexQuad(
-        renderTask.vertex(Vec3(box.minX, box.maxY, box.minZ), color),
-        renderTask.vertex(Vec3(box.minX, box.maxY, box.maxZ), color),
-        renderTask.vertex(Vec3(box.maxX, box.maxY, box.maxZ), color),
-        renderTask.vertex(Vec3(box.maxX, box.maxY, box.minZ), color)
-    )
-    if (side == Direction.DOWN) renderTask.indexQuad(
-        renderTask.vertex(Vec3(box.minX, box.minY, box.maxZ), color),
-        renderTask.vertex(Vec3(box.minX, box.minY, box.minZ), color),
-        renderTask.vertex(Vec3(box.maxX, box.minY, box.minZ), color),
-        renderTask.vertex(Vec3(box.maxX, box.minY, box.maxZ), color)
-    )
+    vertexFormat.initBuffer(8)
 
-    return renderTask
+    val indexBuffer = IndexBuffer(6 * 6, VertexFormatComponentDataType.GlUnsignedByte)
+
+    val p0 = vertexFormat.putVertex { this.position = Vec3(box.minX, box.minY, box.maxZ); this.color = color }
+    val p1 = vertexFormat.putVertex { this.position = Vec3(box.maxX, box.minY, box.maxZ); this.color = color }
+    val p2 = vertexFormat.putVertex { this.position = Vec3(box.minX, box.maxY, box.maxZ); this.color = color }
+    val p3 = vertexFormat.putVertex { this.position = Vec3(box.maxX, box.maxY, box.maxZ); this.color = color }
+
+    val p4 = vertexFormat.putVertex { this.position = Vec3(box.minX, box.minY, box.minZ); this.color = color }
+    val p5 = vertexFormat.putVertex { this.position = Vec3(box.maxX, box.minY, box.minZ); this.color = color }
+    val p6 = vertexFormat.putVertex { this.position = Vec3(box.minX, box.maxY, box.minZ); this.color = color }
+    val p7 = vertexFormat.putVertex { this.position = Vec3(box.maxX, box.maxY, box.minZ); this.color = color }
+
+    indexBuffer.indexQuad(p2, p0, p1, p3)
+    indexBuffer.indexQuad(p6, p4, p0, p2)
+    indexBuffer.indexQuad(p7, p5, p4, p6)
+    indexBuffer.indexQuad(p3, p1, p5, p7)
+    indexBuffer.indexQuad(p6, p2, p3, p7)
+    indexBuffer.indexQuad(p0, p4, p5, p1)
+
+    return Pair(vertexFormat, indexBuffer)
 }
 
-fun drawBoxOutline(box: Box, color: Color4b): ColoredPrimitiveRenderTask {
-    val renderTask = ColoredPrimitiveRenderTask(12, PrimitiveType.Lines)
+fun drawBoxSide(box: Box, side: Direction, color: Color4b): Pair<VertexFormat, IndexBuffer> {
+    val vertexFormat = PositionColorVertexFormat()
 
-    val p0 = renderTask.vertex(Vec3(box.minX, box.minY, box.maxZ), color)
-    val p1 = renderTask.vertex(Vec3(box.maxX, box.minY, box.maxZ), color)
-    val p2 = renderTask.vertex(Vec3(box.minX, box.maxY, box.maxZ), color)
-    val p3 = renderTask.vertex(Vec3(box.maxX, box.maxY, box.maxZ), color)
+    vertexFormat.initBuffer(4)
 
-    val p4 = renderTask.vertex(Vec3(box.minX, box.minY, box.minZ), color)
-    val p5 = renderTask.vertex(Vec3(box.maxX, box.minY, box.minZ), color)
-    val p6 = renderTask.vertex(Vec3(box.minX, box.maxY, box.minZ), color)
-    val p7 = renderTask.vertex(Vec3(box.maxX, box.maxY, box.minZ), color)
+    val indexBuffer = IndexBuffer(6, VertexFormatComponentDataType.GlUnsignedByte)
 
-    renderTask.indexLine(p0, p1)
-    renderTask.indexLine(p2, p3)
-    renderTask.indexLine(p4, p5)
-    renderTask.indexLine(p6, p7)
+    if (side == Direction.SOUTH) indexBuffer.indexQuad(
+        vertexFormat.putVertex { this.position = Vec3(box.minX, box.maxY, box.maxZ); this.color = color },
+        vertexFormat.putVertex { this.position = Vec3(box.minX, box.minY, box.maxZ); this.color = color },
+        vertexFormat.putVertex { this.position = Vec3(box.maxX, box.minY, box.maxZ); this.color = color },
+        vertexFormat.putVertex { this.position = Vec3(box.maxX, box.maxY, box.maxZ); this.color = color }
+    )
+    if (side == Direction.WEST) indexBuffer.indexQuad(
+        vertexFormat.putVertex { this.position = Vec3(box.minX, box.maxY, box.minZ); this.color = color },
+        vertexFormat.putVertex { this.position = Vec3(box.minX, box.minY, box.minZ); this.color = color },
+        vertexFormat.putVertex { this.position = Vec3(box.minX, box.minY, box.maxZ); this.color = color },
+        vertexFormat.putVertex { this.position = Vec3(box.minX, box.maxY, box.maxZ); this.color = color }
+    )
+    if (side == Direction.NORTH) indexBuffer.indexQuad(
+        vertexFormat.putVertex { this.position = Vec3(box.maxX, box.maxY, box.minZ); this.color = color },
+        vertexFormat.putVertex { this.position = Vec3(box.maxX, box.minY, box.minZ); this.color = color },
+        vertexFormat.putVertex { this.position = Vec3(box.minX, box.minY, box.minZ); this.color = color },
+        vertexFormat.putVertex { this.position = Vec3(box.minX, box.maxY, box.minZ); this.color = color }
+    )
+    if (side == Direction.EAST) indexBuffer.indexQuad(
+        vertexFormat.putVertex { this.position = Vec3(box.maxX, box.maxY, box.maxZ); this.color = color },
+        vertexFormat.putVertex { this.position = Vec3(box.maxX, box.minY, box.maxZ); this.color = color },
+        vertexFormat.putVertex { this.position = Vec3(box.maxX, box.minY, box.minZ); this.color = color },
+        vertexFormat.putVertex { this.position = Vec3(box.maxX, box.maxY, box.minZ); this.color = color }
+    )
+    if (side == Direction.UP) indexBuffer.indexQuad(
+        vertexFormat.putVertex { this.position = Vec3(box.minX, box.maxY, box.minZ); this.color = color },
+        vertexFormat.putVertex { this.position = Vec3(box.minX, box.maxY, box.maxZ); this.color = color },
+        vertexFormat.putVertex { this.position = Vec3(box.maxX, box.maxY, box.maxZ); this.color = color },
+        vertexFormat.putVertex { this.position = Vec3(box.maxX, box.maxY, box.minZ); this.color = color }
+    )
+    if (side == Direction.DOWN) indexBuffer.indexQuad(
+        vertexFormat.putVertex { this.position = Vec3(box.minX, box.minY, box.maxZ); this.color = color },
+        vertexFormat.putVertex { this.position = Vec3(box.minX, box.minY, box.minZ); this.color = color },
+        vertexFormat.putVertex { this.position = Vec3(box.maxX, box.minY, box.minZ); this.color = color },
+        vertexFormat.putVertex { this.position = Vec3(box.maxX, box.minY, box.maxZ); this.color = color }
+    )
 
-    renderTask.indexLine(p0, p4)
-    renderTask.indexLine(p1, p5)
-    renderTask.indexLine(p2, p6)
-    renderTask.indexLine(p3, p7)
-
-    renderTask.indexLine(p0, p2)
-    renderTask.indexLine(p1, p3)
-    renderTask.indexLine(p4, p6)
-    renderTask.indexLine(p5, p7)
-
-    return renderTask
-}
-
-fun ColoredPrimitiveRenderTask.indexQuad(p0: Int, p1: Int, p2: Int, p3: Int) {
-    index(p0)
-    index(p1)
-    index(p3)
-
-    index(p1)
-    index(p2)
-    index(p3)
-}
-
-fun ColoredPrimitiveRenderTask.indexLine(p0: Int, p1: Int) {
-    index(p0)
-    index(p1)
-}
-
-/**
- * Draws a rect along the X and Y axis
- */
-fun ColoredPrimitiveRenderTask.rect(p1: Vec3, p2: Vec3, color: Color4b, outline: Boolean = false) {
-    if (outline) {
-        this.outlineQuad(
-            Vec3(p1.x, p1.y, p1.z),
-            Vec3(p1.x, p2.y, p1.z),
-            Vec3(p2.x, p2.y, p1.z),
-            Vec3(p2.x, p1.y, p1.z),
-            color
-        )
-    } else {
-        this.quad(
-            Vec3(p1.x, p1.y, p1.z),
-            Vec3(p1.x, p2.y, p1.z),
-            Vec3(p2.x, p2.y, p1.z),
-            Vec3(p2.x, p1.y, p1.z),
-            color
-        )
-    }
+    return Pair(vertexFormat, indexBuffer)
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.utils.combat
 /**
  * A CPS scheduler
  *
- * Minecraft is counting every click until it they handle all inputs.
+ * Minecraft is counting every click until it handles all inputs.
  * code:
  * while(this.options.keyAttack.wasPressed()) {
  *     this.doAttack();
@@ -30,31 +30,22 @@ package net.ccbluex.liquidbounce.utils.combat
  */
 class CpsScheduler {
 
-    var lastClick = 0L
-    var clickTime = -1L
+    private var lastClick = 0L
+    private var clickTime = -1L
 
-    fun tick(click: () -> Unit, condition: () -> Boolean, cps: IntRange) {
-        val currTime = System.currentTimeMillis()
-
-        var timeLeft = currTime - lastClick
-        if (timeLeft > 1000) {
-            lastClick = System.currentTimeMillis()
-            return
-        }
-        if (clickTime < 0) {
-            clickTime = clickTime(cps)
-        }
-
+    fun clicks(condition: () -> Boolean, cps: IntRange): Int {
+        var timeLeft = System.currentTimeMillis() - lastClick
         var clicks = 0
 
-        while (timeLeft - clickTime > 0 && condition()) {
-            click()
-            timeLeft -= clickTime
+        while (timeLeft >= clickTime && condition()) {
+            timeLeft -= lastClick
             clicks++
 
             clickTime = clickTime(cps)
             lastClick = System.currentTimeMillis()
         }
+
+        return clicks
     }
 
     // TODO: Make more stamina like

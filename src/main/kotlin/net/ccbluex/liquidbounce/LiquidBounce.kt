@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce
 
+import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
+import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.chat.Chat
@@ -27,12 +29,14 @@ import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.tabs.Tabs
 import net.ccbluex.liquidbounce.render.engine.RenderEngine
-import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
-import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.block.ChunkScanner
+import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
+import net.ccbluex.liquidbounce.utils.mappings.McMappings
 import org.apache.logging.log4j.LogManager
+import kotlin.system.exitProcess
 
 /**
  * LiquidBounce
@@ -53,6 +57,8 @@ object LiquidBounce : Listenable {
     const val CLIENT_AUTHOR = "CCBlueX"
     const val CLIENT_CLOUD = "https://cloud.liquidbounce.net/LiquidBounce"
 
+    const val IN_DEVELOPMENT = true
+
     /**
      * Client logger to print out console messages
      */
@@ -62,49 +68,60 @@ object LiquidBounce : Listenable {
      * Should be executed to start the client.
      */
     val startHandler = handler<ClientStartEvent> {
-        logger.info("Launching $CLIENT_NAME v$CLIENT_VERSION by $CLIENT_AUTHOR")
-        logger.debug("Loading from cloud: '$CLIENT_CLOUD'")
+        runCatching {
+            logger.info("Launching $CLIENT_NAME v$CLIENT_VERSION by $CLIENT_AUTHOR")
+            logger.debug("Loading from cloud: '$CLIENT_CLOUD'")
 
-        // Initialize client features
-        EventManager
+            // Load mappings
+            McMappings.load()
 
-        // Config
-        ConfigSystem
-        globalEnemyConfigurable
+            // Initialize client features
+            EventManager
 
-        RotationManager
+            // Config
+            ConfigSystem
+            globalEnemyConfigurable
 
-        // Features
-        ModuleManager
-        CommandManager
-        ThemeManager
-        ScriptManager
-        RotationManager
-        FriendManager
-        ProxyManager
-        Tabs
-        Chat
+            RotationManager
 
-        // Initialize the render engine
-        RenderEngine.init()
+            ChunkScanner
+            WorldChangeNotifier
 
-        // Load up web platform
-        UltralightEngine.init()
+            // Features
+            ModuleManager
+            CommandManager
+            ThemeManager
+            ScriptManager
+            RotationManager
+            FriendManager
+            ProxyManager
+            Tabs
+            Chat
 
-        // Register commands and modules
-        CommandManager.registerInbuilt()
-        ModuleManager.registerInbuilt()
+            // Initialize the render engine
+            RenderEngine.init()
 
-        // Load user scripts
-        ScriptManager.loadScripts()
+            // Load up web platform
+            UltralightEngine.init()
 
-        // Load config system from disk
-        ConfigSystem.load()
+            // Register commands and modules
+            CommandManager.registerInbuilt()
+            ModuleManager.registerInbuilt()
 
-        // Connect to chat server
-        Chat.connect()
+            // Load user scripts
+            ScriptManager.loadScripts()
 
-        logger.info("Successfully loaded client!")
+            // Load config system from disk
+            ConfigSystem.load()
+
+            // Connect to chat server
+            Chat.connectAsync()
+        }.onSuccess {
+            logger.info("Successfully loaded client!")
+        }.onFailure {
+            logger.error("Unable to load client.", it)
+            exitProcess(1)
+        }
     }
 
     /**
@@ -112,8 +129,10 @@ object LiquidBounce : Listenable {
      */
     val shutdownHandler = handler<ClientShutdownEvent> {
         logger.info("Shutting down client...")
-        ConfigSystem.store()
+        ConfigSystem.storeAll()
         UltralightEngine.shutdown()
+
+        ChunkScanner.ChunkScannerThread.stopThread()
     }
 
 }

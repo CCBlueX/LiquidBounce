@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,17 +28,19 @@ import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.minecraft.entity.MovementType
 
 /**
- * A strafe module
+ * Strafe module
  *
- * Strafe into different directions while your mid-air
+ * Strafe into different directions while you're midair.
  */
 object ModuleStrafe : Module("Strafe", Category.MOVEMENT) {
+
+    private var strength by float("Strength", 1f, 0.1f..1f)
 
     val moveHandler = handler<PlayerMoveEvent> { event ->
         // Might just strafe when player controls itself
         if (event.type == MovementType.SELF && player.moving) {
             val movement = event.movement
-            movement.strafe(player.directionYaw)
+            movement.strafe(player.directionYaw, strength = strength.toDouble())
         }
     }
 

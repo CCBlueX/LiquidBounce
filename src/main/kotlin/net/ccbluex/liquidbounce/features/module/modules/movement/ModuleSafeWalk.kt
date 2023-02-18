@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,9 +25,9 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 
 /**
- * Freeze module
+ * SafeWalk module
  *
- * Allows you to freeze yourself without the server knowing.
+ * Prevents you from falling down as if you were sneaking.
  */
 object ModuleSafeWalk : Module("SafeWalk", Category.MOVEMENT) {
 

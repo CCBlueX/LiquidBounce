@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.event
 
 import net.ccbluex.liquidbounce.config.Value
+import net.ccbluex.liquidbounce.features.chat.client.packet.User
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.minecraft.block.Block
@@ -40,6 +41,18 @@ class GameTickEvent : Event()
 
 // Render events
 
+@Nameable("blockChangeEvent")
+class BlockChangeEvent(val blockPos: BlockPos, val newState: BlockState) : Event()
+
+@Nameable("chunkLoadEvent")
+class ChunkLoadEvent(val x: Int, val z: Int) : Event()
+
+@Nameable("chunkUnloadEvent")
+class ChunkUnloadEvent(val x: Int, val z: Int) : Event()
+
+@Nameable("worldDisconnectEvent")
+class WorldDisconnectEvent : Event()
+
 @Nameable("gameRender")
 class GameRenderEvent : Event()
 
@@ -47,7 +60,7 @@ class GameRenderEvent : Event()
 class EngineRenderEvent(val tickDelta: Float) : Event()
 
 @Nameable("overlayRender")
-class OverlayRenderEvent(val matrixStack: MatrixStack, val tickDelta: Float) : Event()
+class OverlayRenderEvent(val matrices: MatrixStack, val tickDelta: Float) : Event()
 
 @Nameable("screenRender")
 class ScreenRenderEvent(val screen: Screen, val matrices: MatrixStack, mouseX: Int, mouseY: Int, delta: Float) : Event()
@@ -78,6 +91,9 @@ class KeyboardCharEvent(val window: Long, val codepoint: Int) : Event()
 @Nameable("inputHandle")
 class InputHandleEvent : Event()
 
+@Nameable("movementInputEvent")
+class MovementInputEvent(var forwards: Boolean, var backwards: Boolean, var left: Boolean, var right: Boolean) : Event()
+
 @Nameable("key")
 class KeyEvent(val key: InputUtil.Key, val action: Int, val mods: Int) : Event()
 
@@ -107,10 +123,13 @@ class UseCooldownEvent(var cooldown: Int) : Event()
 class BlockShapeEvent(val state: BlockState, val pos: BlockPos, var shape: VoxelShape) : Event()
 
 @Nameable("blockAttack")
-class BlockAttackEvent(val pos: BlockPos) : Event()
+class BlockBreakingProgressEvent(val pos: BlockPos) : Event()
 
 @Nameable("blockMultiplier")
 class BlockVelocityMultiplierEvent(val block: Block, var multiplier: Float) : Event()
+
+@Nameable("blockSlipperinessMultiplier")
+class BlockSlipperinessMultiplierEvent(val block: Block, var slipperiness: Float) : Event()
 
 // Entity events
 
@@ -152,6 +171,12 @@ class PlayerSafeWalkEvent(var isSafeWalk: Boolean = false) : Event()
 @Nameable("cancelBlockBreaking")
 class CancelBlockBreakingEvent : CancellableEvent()
 
+@Nameable("playerStep")
+class PlayerStepEvent(var height: Float) : Event()
+
+@Nameable("FluidPushEvent")
+class FluidPushEvent : CancellableEvent()
+
 // Network events
 
 @Nameable("packet")
@@ -173,13 +198,21 @@ class ClientShutdownEvent : Event()
 class ValueChangedEvent(val value: Value<*>) : Event()
 
 @Nameable("toggleModule")
-class ToggleModuleEvent(val module: Module, val newState: Boolean) : Event()
+class ToggleModuleEvent(val module: Module, val newState: Boolean, val ignoreCondition: Boolean = false) : Event()
 
 @Nameable("notification")
 class NotificationEvent(val title: String, val message: String, val severity: Severity) : Event() {
     enum class Severity {
-        INFO,
-        SUCCESS,
-        ERROR
+        INFO, SUCCESS, ERROR
     }
 }
+
+@Nameable("clientChatMessage")
+class ClientChatMessageEvent(val user: User, val message: String, val chatGroup: ChatGroup) : Event() {
+    enum class ChatGroup {
+        PUBLIC_CHAT, PRIVATE_CHAT
+    }
+}
+
+@Nameable("clientChatError")
+class ClientChatErrorEvent(val error: String) : Event()

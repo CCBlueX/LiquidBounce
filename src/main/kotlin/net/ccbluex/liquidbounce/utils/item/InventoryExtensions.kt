@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@ fun convertClientSlotToServerSlot(slot: Int): Int {
 /**
  * Configurable to configure the dynamic rotation engine
  */
-class InventoryConstraintsConfigurable : Configurable("inventoryConstraints") {
+class InventoryConstraintsConfigurable : Configurable("InventoryConstraints") {
     internal var delay by intRange("Delay", 2..4, 0..20)
     internal val invOpen by boolean("InvOpen", false)
     internal val simulateInventory by boolean("SimulateInventory", true)

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ import net.minecraft.util.hit.HitResult
 /**
  * AutoBreak module
  *
- * Automatically breaks blocks
+ * Automatically breaks blocks.
  */
 object ModuleAutoBreak : Module("AutoBreak", Category.PLAYER) {
 
@@ -44,12 +44,12 @@ object ModuleAutoBreak : Module("AutoBreak", Category.PLAYER) {
             }
 
             // Start breaking
-            mc.options.keyAttack.isPressed = true
+            mc.options.attackKey.isPressed = true
             wasBreaking = true
         } else if (wasBreaking) {
             // Stop breaking
             wasBreaking = false
-            mc.options.keyAttack.isPressed = false
+            mc.options.attackKey.isPressed = false
         }
     }
 
@@ -61,7 +61,7 @@ object ModuleAutoBreak : Module("AutoBreak", Category.PLAYER) {
     override fun disable() {
         // Check if auto break was breaking a block
         if (wasBreaking) {
-            mc.options.keyAttack.isPressed = false
+            mc.options.attackKey.isPressed = false
             wasBreaking = false
         }
     }

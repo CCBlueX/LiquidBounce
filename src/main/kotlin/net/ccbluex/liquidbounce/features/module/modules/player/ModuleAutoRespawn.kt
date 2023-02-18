@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,9 +25,9 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.client.gui.screen.DeathScreen
 
 /**
- * A auto respawn module
+ * AutoRespawn module
  *
- * Automatically respawns the player after dying
+ * Automatically respawns the player after dying.
  */
 object ModuleAutoRespawn : Module("AutoRespawn", Category.PLAYER) {
 
@@ -41,7 +41,7 @@ object ModuleAutoRespawn : Module("AutoRespawn", Category.PLAYER) {
             }
 
             player.requestRespawn()
-            mc.openScreen(null)
+            mc.setScreen(null)
         }
     }
 

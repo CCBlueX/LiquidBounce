@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,39 +19,69 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.EngineRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.engine.*
+import net.ccbluex.liquidbounce.render.engine.memory.IndexBuffer
+import net.ccbluex.liquidbounce.render.engine.memory.PositionColorVertexFormat
+import net.ccbluex.liquidbounce.render.engine.memory.VertexFormatComponentDataType
+import net.ccbluex.liquidbounce.render.engine.memory.putVertex
+import net.ccbluex.liquidbounce.render.shaders.ColoredPrimitiveShader
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
+import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity
 import java.awt.Color
 import kotlin.math.sqrt
 
+/**
+ * Traces module
+ *
+ * Draws a line to every entity a certain radius.
+ */
+
 object ModuleTraces : Module("Traces", Category.RENDER) {
 
-    private val modes = choices("ColorMode", "Distance") {
-        DistanceColor
-        StaticColor
-        RainbowColor
-    }
+    private val modes = choices(
+        "ColorMode",
+        DistanceColor,
+        arrayOf(
+            DistanceColor,
+            StaticColor,
+            RainbowColor
+        )
+    )
 
-    private object DistanceColor : Choice("Distance", modes) {
+    private object DistanceColor : Choice("Distance") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
+
         val useViewDistance by boolean("UseViewDistance", true)
         val customViewDistance by float("CustomViewDistance", 128.0F, 1.0F..512.0F)
     }
 
-    private object StaticColor : Choice("Static", modes) {
+    private object StaticColor : Choice("Static") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
+
         val color by color("Color", Color4b(0, 160, 255, 255))
     }
 
-    private object RainbowColor : Choice("Rainbow", modes)
+    private object RainbowColor : Choice("Rainbow") {
+        override val parent: ChoiceConfigurable
+            get() = modes
+    }
 
     val renderHandler = handler<EngineRenderEvent> { event ->
+        val player = mc.player ?: return@handler
+
         val useDistanceColor = DistanceColor.isActive
 
         val baseColor = when {
@@ -64,15 +94,21 @@ object ModuleTraces : Module("Traces", Category.RENDER) {
             (if (DistanceColor.useViewDistance) mc.options.viewDistance.toFloat() else DistanceColor.customViewDistance) * 16 * sqrt(
                 2.0
             )
-        val player = mc.player!!
         val filteredEntities = world.entities.filter(this::shouldRenderTrace)
         val camera = mc.gameRenderer.camera
 
-        val renderTask = ColoredPrimitiveRenderTask(filteredEntities.size * 2, PrimitiveType.Lines)
+        if (filteredEntities.isEmpty()) {
+            return@handler
+        }
 
-        val eyeVector = Vec3(0.0, 0.0, 1.0)
-            .rotatePitch((-Math.toRadians(camera.pitch.toDouble())).toFloat())
-            .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat()) + Vec3(camera.pos) + Vec3(0.0, 0.0, -1.0)
+        val vertexFormat = PositionColorVertexFormat()
+
+        vertexFormat.initBuffer(filteredEntities.size * 3)
+
+        val indexBuffer = IndexBuffer(filteredEntities.size * 2 * 2, VertexFormatComponentDataType.GlUnsignedShort)
+
+        val eyeVector = Vec3(0.0, 0.0, 1.0).rotatePitch((-Math.toRadians(camera.pitch.toDouble())).toFloat())
+            .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat()) + Vec3(camera.pos)
 
         for (entity in filteredEntities) {
             val dist = player.distanceTo(entity) * 2.0
@@ -85,25 +121,31 @@ object ModuleTraces : Module("Traces", Category.RENDER) {
                         1.0f
                     )
                 )
-            } else if (entity is PlayerEntity && FriendManager.isFriend(entity)) {
+            } else if (entity is PlayerEntity && FriendManager.isFriend(entity.gameProfile.name)) {
                 Color4b(0, 0, 255)
             } else {
-                baseColor!!
+                ModuleMurderMystery.getColor(entity) ?: baseColor ?: return@handler
             }
 
-            val x = (entity.lastRenderX + (entity.x - entity.lastRenderX) * event.tickDelta)
-            val y = (entity.lastRenderY + (entity.y - entity.lastRenderY) * event.tickDelta)
-            val z = (entity.lastRenderZ + (entity.z - entity.lastRenderZ) * event.tickDelta) - 1.0
+            val pos = entity.interpolateCurrentPosition(event.tickDelta)
 
-            val v0 = renderTask.vertex(eyeVector, color)
-            val v1 = renderTask.vertex(Vec3(x, y, z), color)
-            val v2 = renderTask.vertex(Vec3(x, y + entity.height, z), color)
+            val v0 = vertexFormat.putVertex { this.position = eyeVector; this.color = color }
+            val v1 = vertexFormat.putVertex { this.position = pos; this.color = color }
+            val v2 = vertexFormat.putVertex { this.position = pos.add(Vec3(0f, entity.height, 0f)); this.color = color }
 
-            renderTask.index(v0)
-            renderTask.index(v1)
-            renderTask.index(v1)
-            renderTask.index(v2)
+            indexBuffer.index(v0)
+            indexBuffer.index(v1)
+            indexBuffer.index(v1)
+            indexBuffer.index(v2)
         }
+
+        val renderTask = VertexFormatRenderTask(
+            vertexFormat,
+            PrimitiveType.Lines,
+            ColoredPrimitiveShader,
+            indexBuffer = indexBuffer,
+            state = GlRenderState(lineWidth = 1.0f, lineSmooth = true)
+        )
 
         RenderEngine.enqueueForRendering(RenderEngine.CAMERA_VIEW_LAYER_WITHOUT_BOBBING, renderTask)
     }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,15 +19,16 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.*
-import net.ccbluex.liquidbounce.features.module.*
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.block.searchBlocks
+import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
+import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.entity.eyesPos
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.minecraft.block.Block
@@ -48,19 +49,31 @@ import net.minecraft.util.math.Box
 object ModuleChestAura : Module("ChestAura", Category.WORLD) {
 
     private val range by float("Range", 5F, 1F..6F)
+    private val wallRange by float("WallRange", 0f, 1F..6F).listen {
+        if (it > range) {
+            range
+        } else {
+            it
+        }
+    }
     private val delay by int("Delay", 5, 1..80)
     private val visualSwing by boolean("VisualSwing", true)
-    private val chest by blocks("Chest", mutableListOf(Blocks.CHEST))
-    private val throughWalls by boolean("ThroughWalls", false)
+    private val chest by blocks("Chest", hashSetOf(Blocks.CHEST))
 
     private object AwaitContainerOptions : ToggleableConfigurable(this, "AwaitContainer", true) {
         val timeout by int("Timeout", 10, 1..80)
         val maxRetrys by int("MaxRetries", 4, 1..10)
     }
+    private object CloseInstantlyOptions : ToggleableConfigurable(this, "CloseInstantly", false) { // FIXME: Close instantly
+        val timeout by int("Timeout", 2500, 100..10000)
+    }
 
     init {
         tree(AwaitContainerOptions)
+        tree(CloseInstantlyOptions)
     }
+
+    private val closeInstantlyTimeout = Chronometer()
 
     // Rotation
     private val rotations = RotationsConfigurable()
@@ -71,6 +84,14 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
     var currentRetries = 0
 
     val networkTickHandler = repeatable { event ->
+//        if (mc.currentScreen is HandledScreen<*>) {
+//            if (CloseInstantlyOptions.enabled && !closeInstantlyTimeout.hasElapsed(CloseInstantlyOptions.timeout.toLong())) {
+//                player.closeHandledScreen()
+//            }
+//
+//            wait { delay }
+//        }
+
         if (mc.currentScreen != null) {
             return@repeatable
         }
@@ -102,6 +123,8 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
                 rayTraceResult
             ) == ActionResult.SUCCESS
         ) {
+            closeInstantlyTimeout.reset()
+
             if (visualSwing) {
                 player.swingHand(Hand.MAIN_HAND)
             } else {
@@ -121,7 +144,7 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
                     }
                 }
             } else {
-                clickedBlocks.add(currentBlock!!)
+                clickedBlocks.add(curr)
                 currentBlock = null
                 success = true
 
@@ -129,7 +152,7 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
             }
 
             if (success || currentRetries >= AwaitContainerOptions.maxRetrys) {
-                clickedBlocks.add(currentBlock!!)
+                clickedBlocks.add(curr)
                 currentBlock = null
             } else {
                 currentRetries++
@@ -147,7 +170,7 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
         val radiusSquared = radius * radius
         val eyesPos = mc.player!!.eyesPos
 
-        val blocksToProcess = searchBlocks(radius.toInt()) { pos, state ->
+        val blocksToProcess = searchBlocksInCuboid(radius.toInt()) { pos, state ->
             targetedBlocks.contains(state.block) && pos !in clickedBlocks && getNearestPoint(
                 eyesPos,
                 Box(pos, pos.add(1, 1, 1))
@@ -161,8 +184,8 @@ object ModuleChestAura : Module("ChestAura", Category.WORLD) {
                 player.eyesPos,
                 pos,
                 state,
-                throughWalls = throughWalls,
-                range = range.toDouble()
+                range = range.toDouble(),
+                wallsRange = wallRange.toDouble()
             ) ?: continue
 
             // aim on target

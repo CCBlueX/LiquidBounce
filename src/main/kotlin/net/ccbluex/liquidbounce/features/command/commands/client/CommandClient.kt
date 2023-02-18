@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,11 +19,20 @@
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.base.ultralight.ScreenViewOverlay
+import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
+import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
+import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.render.screen.EmptyScreen
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
+import java.net.MalformedURLException
+import java.net.URL
 
 object CommandClient {
 
@@ -49,7 +58,49 @@ object CommandClient {
                     }
                     .build()
             )
+            .subcommand(
+                CommandBuilder
+                    .begin("ultralight")
+                    .hub()
+                    .subcommand(
+                        CommandBuilder
+                            .begin("show")
+                            .parameter(
+                                ParameterBuilder
+                                    .begin<String>("name")
+                                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                                    .required()
+                                    .build()
+                            )
+                            .handler { command, args ->
+                                val open: (ScreenViewOverlay) -> Unit = try {
+                                    val url = URL(args[0] as String)
 
+                                    (
+                                        {
+                                            it.loadUrl(url.toString())
+                                        }
+                                        )
+                                } catch (_: MalformedURLException) {
+                                    val name = args[0] as String
+                                    val page = ThemeManager.page(name)
+                                        ?: throw CommandException(command.result("pageNotFound", name))
+
+                                    (
+                                        {
+                                            it.loadPage(page)
+                                        }
+                                        )
+                                }
+
+                                val emptyScreen = EmptyScreen()
+                                open(UltralightEngine.newScreenView(emptyScreen))
+                                mc.setScreen(emptyScreen)
+                            }
+                            .build()
+                    )
+                    .build()
+            )
             // todo: contributors
             // todo: links
             // todo: instructions

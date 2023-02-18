@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,9 @@
  */
 package net.ccbluex.liquidbounce.config
 
-import com.google.gson.*
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonElement
+import com.google.gson.JsonParser
 import com.google.gson.reflect.TypeToken
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.adapter.*
@@ -39,8 +41,10 @@ import java.io.File
 object ConfigSystem {
 
     // Config directory folder
-    val rootFolder = File(mc.runDirectory, LiquidBounce.CLIENT_NAME).apply {
-        // Check if there is already a config folder and if not create new folder (mkdirs not needed - .minecraft should always exist)
+    val rootFolder = File(
+        mc.runDirectory,
+        LiquidBounce.CLIENT_NAME
+    ).apply { // Check if there is already a config folder and if not create new folder (mkdirs not needed - .minecraft should always exist)
         if (!exists()) {
             mkdir()
         }
@@ -60,45 +64,43 @@ object ConfigSystem {
         .registerTypeAdapter(ChoiceConfigurable::class.javaObjectType, ChoiceConfigurableSerializer)
         .registerTypeHierarchyAdapter(NamedChoice::class.javaObjectType, EnumChoiceSerializer)
         .registerTypeAdapter(IntRange::class.javaObjectType, IntRangeSerializer)
-        .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer)
-        .create()
+        .registerTypeHierarchyAdapter(Configurable::class.javaObjectType, ConfigurableSerializer).create()
 
     /**
      * Create a new root configurable
      */
-    fun root(name: String, tree: MutableList<out Configurable> = mutableListOf()) {
-        @Suppress("UNCHECKED_CAST")
-        root(Configurable(name, tree as MutableList<Value<*>>))
+    fun root(name: String, tree: MutableList<out Configurable> = mutableListOf()): Configurable {
+        @Suppress("UNCHECKED_CAST") return root(Configurable(name, tree as MutableList<Value<*>>))
     }
 
     /**
      * Add a root configurable
      */
-    fun root(configurable: Configurable) {
+    fun root(configurable: Configurable): Configurable {
         configurable.initConfigurable()
         configurables.add(configurable)
+        return configurable
     }
 
     /**
      * All configurables should load now.
      */
     fun load() {
-        for (configurable in configurables) {
-            // Make a new .json file to save our root configurable
-            File(rootFolder, "${configurable.name}.json").runCatching {
+        for (configurable in configurables) { // Make a new .json file to save our root configurable
+            File(rootFolder, "${configurable.name.lowercase()}.json").runCatching {
                 if (!exists()) {
-                    store()
+                    storeAll()
                     return@runCatching
                 }
 
                 logger.debug("Reading config ${configurable.name}...")
 
-                JsonParser().parse(gson.newJsonReader(reader()))?.let { deserializeConfigurable(configurable, it) }
+                JsonParser.parseReader(gson.newJsonReader(reader()))?.let { deserializeConfigurable(configurable, it) }
 
                 logger.info("Successfully loaded config '${configurable.name}'.")
             }.onFailure {
                 logger.error("Unable to load config ${configurable.name}", it)
-                store()
+                storeAll()
             }
         }
     }
@@ -111,9 +113,8 @@ object ConfigSystem {
                 throw IllegalStateException()
             }
 
-            val values = jsonObject.getAsJsonArray("value")
-                .map { it.asJsonObject }
-                .associateBy { it["name"].asString!! }
+            val values =
+                jsonObject.getAsJsonArray("value").map { it.asJsonObject }.associateBy { it["name"].asString!! }
 
             for (value in configurable.value) {
                 if (value is Configurable) {
@@ -121,18 +122,20 @@ object ConfigSystem {
 
                     runCatching {
                         if (value is ChoiceConfigurable) {
-                            val newActive = currentElement["active"].asString
+                            runCatching {
+                                val newActive = currentElement["active"].asString
 
-                            if (value.choices.any { it.name == newActive }) {
-                                value.active = newActive
-                            }
+                                value.setFromValueName(newActive)
+                            }.onFailure { it.printStackTrace() }
 
                             val choices = currentElement["choices"].asJsonObject
 
                             for (choice in value.choices) {
-                                val choiceElement = choices[choice.name]
+                                runCatching {
+                                    val choiceElement = choices[choice.name]
 
-                                deserializeConfigurable(choice, choiceElement)
+                                    deserializeConfigurable(choice, choiceElement)
+                                }.onFailure { it.printStackTrace() }
                             }
                         }
                     }.onFailure { it.printStackTrace() }
@@ -151,24 +154,33 @@ object ConfigSystem {
     }
 
     /**
-     * All configurables should store now.
+     * All configurables known to the config system should be stored now.
+     * This will overwrite all existing files with the new values.
+     *
+     * These configurables are root configurables, which always create a new file with their name.
      */
-    fun store() {
-        for (configurable in configurables) {
-            // Make a new .json file to save our root configurable
-            File(rootFolder, "${configurable.name}.json").runCatching {
-                if (!exists()) {
-                    createNewFile().let { logger.debug("Created new file (status: $it)") }
-                }
+    fun storeAll() {
+        configurables.forEach(::storeConfigurable)
+    }
 
-                logger.debug("Writing config ${configurable.name}...")
-                gson.newJsonWriter(writer()).use {
-                    gson.toJson(configurable, confType, it)
-                }
-                logger.info("Successfully saved config '${configurable.name}'.")
-            }.onFailure {
-                logger.error("Unable to store config ${configurable.name}", it)
+    /**
+     * Store a configurable to a file (will be created if not exists).
+     *
+     * The configurable should be known to the config system.
+     */
+    fun storeConfigurable(configurable: Configurable) { // Make a new .json file to save our root configurable
+        File(rootFolder, "${configurable.name.lowercase()}.json").runCatching {
+            if (!exists()) {
+                createNewFile().let { logger.debug("Created new file (status: $it)") }
             }
+
+            logger.debug("Writing config ${configurable.name}...")
+            gson.newJsonWriter(writer()).use {
+                gson.toJson(configurable, confType, it)
+            }
+            logger.info("Successfully saved config '${configurable.name}'.")
+        }.onFailure {
+            logger.error("Unable to store config ${configurable.name}", it)
         }
     }
 

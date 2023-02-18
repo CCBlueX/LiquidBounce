@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,6 +29,12 @@ import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
+/**
+ * NoClip module
+ *
+ * Allows you to fly through blocks.
+ */
+
 object ModuleNoClip : Module("NoClip", Category.MOVEMENT) {
 
     val speed by float("Speed", 0.32f, 0.1f..0.4f)
@@ -42,8 +48,8 @@ object ModuleNoClip : Module("NoClip", Category.MOVEMENT) {
         player.strafe(speed = speed)
 
         player.velocity.y = when {
-            mc.options.keyJump.isPressed -> speed
-            mc.options.keySneak.isPressed -> -speed
+            mc.options.jumpKey.isPressed -> speed
+            mc.options.sneakKey.isPressed -> -speed
             else -> 0.0
         }
     }

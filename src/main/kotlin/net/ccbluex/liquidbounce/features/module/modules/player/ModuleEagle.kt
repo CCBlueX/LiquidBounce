@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,32 +18,29 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.client.StateUpdateEvent
 import net.minecraft.block.SideShapeType
 import net.minecraft.util.math.Direction
 
 /**
  * A eagle module
  *
- * Legit trick to build faster
+ * Legit trick to build faster.
  */
 object ModuleEagle : Module("Eagle", Category.PLAYER) {
 
-    val repeatable = repeatable {
+    val repeatable = handler<StateUpdateEvent> {
         // Check if player is on the edge and is NOT flying
         val pos = player.blockPos.down()
-        val nothing = !pos.getState()!!.isSideSolid(mc.world!!, pos, Direction.UP, SideShapeType.CENTER) && player.canFly()
+        val isAir = !pos.getState()!!.isSideSolid(mc.world!!, pos, Direction.UP, SideShapeType.CENTER) && !player.abilities.flying
 
-        // Sneak when player is at the edge
-        mc.options.keySneak.isPressed = nothing
-    }
-
-    override fun disable() {
-        mc.options.keySneak.isPressed = false // Default back to off
-        super.disable()
+        if (isAir) {
+            it.state.enforceEagle = true
+        }
     }
 
 }

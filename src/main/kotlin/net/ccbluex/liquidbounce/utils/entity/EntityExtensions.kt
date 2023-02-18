@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.utils.entity
 
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.client.input.Input
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity
@@ -33,6 +34,9 @@ import kotlin.math.sqrt
 val ClientPlayerEntity.moving
     get() = input.movementForward != 0.0f || input.movementSideways != 0.0f
 
+val ClientPlayerEntity.pressingMovementButton
+    get() = input.pressingForward || input.pressingBack || input.pressingLeft || input.pressingRight
+
 val Entity.exactPosition
     get() = Triple(x, y, z)
 
@@ -42,24 +46,21 @@ val PlayerEntity.ping: Int
 val ClientPlayerEntity.directionYaw: Float
     get() {
         var rotationYaw = yaw
+        var forward = 1f
 
         // Check if client-user tries to walk backwards (+180 to turn around)
-        if (input.movementForward < 0f) {
+        if (input.pressingBack) {
             rotationYaw += 180f
-        }
-
-        // Check which direction the client-user tries to walk sideways
-        var forward = 1f
-        if (input.movementForward < 0f) {
             forward = -0.5f
-        } else if (input.movementForward > 0f) {
+        } else if (input.pressingForward) {
             forward = 0.5f
         }
 
-        if (input.movementSideways > 0f) {
+        // Check which direction the client-user tries to walk sideways
+        if (input.pressingLeft) {
             rotationYaw -= 90f * forward
         }
-        if (input.movementSideways < 0f) {
+        if (input.pressingRight) {
             rotationYaw += 90f * forward
         }
 
@@ -69,9 +70,9 @@ val ClientPlayerEntity.directionYaw: Float
 val PlayerEntity.sqrtSpeed: Double
     get() = velocity.sqrtSpeed
 
-fun ClientPlayerEntity.upwards(height: Float) {
+fun ClientPlayerEntity.upwards(height: Float, increment: Boolean = true) {
     // Might be a jump
-    if (isOnGround) {
+    if (isOnGround && increment) {
         // Allows to bypass modern anti cheat techniques
         incrementStat(Stats.JUMP)
     }
@@ -100,14 +101,37 @@ fun ClientPlayerEntity.strafe(yaw: Float = directionYaw, speed: Double = sqrtSpe
 val Vec3d.sqrtSpeed: Double
     get() = sqrt(x * x + z * z)
 
-fun Vec3d.strafe(yaw: Float, speed: Double = sqrtSpeed) {
+fun Vec3d.strafe(yaw: Float, speed: Double = sqrtSpeed, strength: Double = 1.0) {
+    val prevX = x * (1.0 - strength)
+    val prevZ = z * (1.0 - strength)
+    val useSpeed = speed * strength
+
     val angle = Math.toRadians(yaw.toDouble())
-    x = -sin(angle) * speed
-    z = cos(angle) * speed
+    x = (-sin(angle) * useSpeed) + prevX
+    z = (cos(angle) * useSpeed) + prevZ
+}
+
+fun Vec3d.strafe(yaw: Float, speed: Double = sqrtSpeed, strength: Double = 1.0, keyboardCheck: Boolean = false) {
+    val player = mc.player ?: return
+
+    if (keyboardCheck && !player.pressingMovementButton) {
+        x = 0.0
+        z = 0.0
+        return
+    }
+
+    this.strafe(yaw, speed, strength)
 }
 
 val ClientPlayerEntity.eyesPos: Vec3d
     get() = Vec3d(pos.x, boundingBox.minY + getEyeHeight(pose), pos.z)
+
+val Input.yAxisMovement: Float
+    get() = when {
+        jumping -> 1.0f
+        sneaking -> -1.0f
+        else -> 0.0f
+    }
 
 /**
  * Allows to calculate the distance between the current entity and [entity] from the nearest corner of the bounding box
@@ -131,7 +155,7 @@ fun Entity.interpolateCurrentPosition(tickDelta: Float): Vec3 {
     return Vec3(
         this.lastRenderX + (this.x - this.lastRenderX) * tickDelta,
         this.lastRenderY + (this.y - this.lastRenderY) * tickDelta,
-        this.lastRenderZ + (this.z - this.lastRenderZ) * tickDelta,
+        this.lastRenderZ + (this.z - this.lastRenderZ) * tickDelta
     )
 }
 
@@ -163,7 +187,7 @@ fun PlayerEntity.wouldBlockHit(source: PlayerEntity): Boolean {
     val vec3d = source.pos
 
     val facingVec = getRotationVec(1.0f)
-    var deltaPos = vec3d.reverseSubtract(pos).normalize()
+    var deltaPos = vec3d.relativize(pos).normalize()
 
     deltaPos = Vec3d(deltaPos.x, 0.0, deltaPos.z)
 

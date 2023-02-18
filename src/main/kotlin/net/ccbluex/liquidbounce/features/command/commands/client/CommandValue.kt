@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -58,17 +58,17 @@ object CommandValue {
                 val valueName = args[1] as String
                 val valueString = args[2] as String
 
-                val value = module.getContainedSettingsRecursively()
+                val value = module.getContainedValuesRecursively()
                     .firstOrNull { it.name.equals(valueName, true) }
                     ?: throw CommandException(command.result("valueNotFound", valueName))
 
                 try {
                     value.setByString(valueString)
                 } catch (e: Exception) {
-                    throw CommandException(command.result("valueError", e.message!!))
+                    throw CommandException(command.result("valueError", e.message ?: ""))
                 }
 
-                chat(regular("Value updated"))
+                chat(regular(command.result("success")))
             }
             .build()
     }

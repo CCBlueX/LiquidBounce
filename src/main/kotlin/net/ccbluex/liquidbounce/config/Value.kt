@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -102,23 +102,32 @@ open class Value<T : Any>(
         val currValue = this.value
 
         set(
-            if (currValue is List<*>) {
-                @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(
-                    mutableListOf()
-                ) { gson.fromJson(it, this.listType.type!!) } as T
-            } else if (currValue is Set<*>) {
-                @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(
-                    TreeSet()
-                ) { gson.fromJson(it, this.listType.type!!) } as T
-            } else {
-                gson.fromJson(element, currValue.javaClass)
+            when (currValue) {
+                is List<*> -> {
+                    @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(
+                        mutableListOf()
+                    ) { gson.fromJson(it, this.listType.type!!) } as T
+                }
+                is HashSet<*> -> {
+                    @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(
+                        HashSet()
+                    ) { gson.fromJson(it, this.listType.type!!) } as T
+                }
+                is Set<*> -> {
+                    @Suppress("UNCHECKED_CAST") element.asJsonArray.mapTo(
+                        TreeSet()
+                    ) { gson.fromJson(it, this.listType.type!!) } as T
+                }
+                else -> {
+                    gson.fromJson(element, currValue.javaClass)
+                }
             }
         )
     }
 
     open fun setByString(string: String) {
         if (this.value is Boolean) {
-            val newValue = when (string.toLowerCase(Locale.ROOT)) {
+            val newValue = when (string.lowercase(Locale.ROOT)) {
                 "true", "on" -> true
                 "false", "off" -> false
                 else -> throw IllegalArgumentException()
@@ -191,9 +200,9 @@ class RangedValue<T : Any>(
 
 class ChooseListValue<T : NamedChoice>(
     name: String,
-    selected: T,
+    value: T,
     @Exclude val choices: Array<T>
-) : Value<T>(name, selected, ValueType.CHOICE) {
+) : Value<T>(name, value, ValueType.CHOOSE) {
 
     override fun deserializeFrom(gson: Gson, element: JsonElement) {
         val name = element.asString
@@ -215,13 +224,12 @@ class ChooseListValue<T : NamedChoice>(
 }
 
 interface NamedChoice {
-
     val choiceName: String
 }
 
 enum class ValueType {
     BOOLEAN, FLOAT, FLOAT_RANGE, INT, INT_RANGE, TEXT, TEXT_ARRAY, CURVE, COLOR, BLOCK, BLOCKS, ITEM,
-    ITEMS, CHOICE, INVALID, CONFIGURABLE, TOGGLEABLE
+    ITEMS, CHOICE, CHOOSE, INVALID, CONFIGURABLE, TOGGLEABLE
 }
 
 enum class ListValueType(val type: Class<*>?) {

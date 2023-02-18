@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.NoneChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.AttackEvent
@@ -27,6 +28,8 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleFly
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleLiquidWalk
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.exactPosition
@@ -40,7 +43,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 /**
  * Criticals module
  *
- * Automatically crits every time you attack someone
+ * Automatically crits every time you attack someone.
  */
 object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
@@ -49,30 +52,41 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
      */
     private object ActiveOption : ToggleableConfigurable(this, "Active", true) {
 
-        val modes = choices("Mode", "Packet") {
-            NoneChoice(it)
-            PacketCrit
-            JumpCrit
+        val modes = choices("Mode", PacketCrit) {
+            arrayOf(
+                NoneChoice(it),
+                PacketCrit,
+                JumpCrit
+            )
         }
     }
 
-    private object PacketCrit : Choice("Packet", ActiveOption.modes) {
+    private object PacketCrit : Choice("Packet") {
+
+        override val parent: ChoiceConfigurable
+            get() = ActiveOption.modes
 
         val attackHandler = handler<AttackEvent> { event ->
             if (!ActiveOption.enabled || event.enemy !is LivingEntity) {
                 return@handler
             }
 
+            if (!canCrit(player, false)) {
+                return@handler
+            }
+
             val (x, y, z) = player.exactPosition
 
-            network.sendPacket(PlayerMoveC2SPacket.PositionOnly(x, y + 0.11, z, false))
-            network.sendPacket(PlayerMoveC2SPacket.PositionOnly(x, y + 0.1100013579, z, false))
-            network.sendPacket(PlayerMoveC2SPacket.PositionOnly(x, y + 0.0000013579, z, false))
+            network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(x, y + 0.11, z, false))
+            network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(x, y + 0.1100013579, z, false))
+            network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(x, y + 0.0000013579, z, false))
         }
-
     }
 
-    private object JumpCrit : Choice("Jump", ActiveOption.modes) {
+    private object JumpCrit : Choice("Jump") {
+
+        override val parent: ChoiceConfigurable
+            get() = ActiveOption.modes
 
         // There are diffrent possible jump heights to crit enemy
         //   Hop: 0.1 (like in Wurst-Client)
@@ -99,8 +113,10 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
             val (_, _) = world.findEnemy(range) ?: return@handler
 
             if (player.isOnGround) {
+                // Simulate player jumping and send jump stat increment
                 player.jump()
-                player.upwards(height)
+                // Jump upwards specific height, increment not needed because it has already been sent by jump function
+                player.upwards(height, increment = false)
             }
         }
 
@@ -143,11 +159,17 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
      */
     private object VisualsConfigurable : ToggleableConfigurable(this, "Visuals", true) {
 
+        val fake by boolean("Fake", false)
+
         val critParticles by int("CritParticles", 1, 0..20)
         val magicParticles by int("MagicParticles", 0, 0..20)
 
         val attackHandler = handler<AttackEvent> { event ->
             if (event.enemy !is LivingEntity) {
+                return@handler
+            }
+
+            if (!fake && !canCrit(player, ignoreOnGround = true)) {
                 return@handler
             }
 
@@ -191,7 +213,8 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
             return false
         }
 
-        val nextPossibleCrit = (player.attackCooldownProgressPerTick - 0.5f - player.lastAttackedTicks.toFloat()).coerceAtLeast(0.0f)
+        val nextPossibleCrit =
+            (player.attackCooldownProgressPerTick - 0.5f - player.lastAttackedTicks.toFloat()).coerceAtLeast(0.0f)
 
         val gravity = 0.08
 
@@ -215,9 +238,10 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
     }
 
     fun canCrit(player: ClientPlayerEntity, ignoreOnGround: Boolean = false) =
-        !player.isInLava && !player.isTouchingWater && !player.isClimbing && !player.hasNoGravity() && !player.hasStatusEffect(
-            StatusEffects.LEVITATION
-        ) && !player.hasStatusEffect(StatusEffects.BLINDNESS) && !player.hasStatusEffect(StatusEffects.SLOW_FALLING) && !player.isRiding && (!player.isOnGround || ignoreOnGround)
+        !player.isInLava && !player.isTouchingWater && !player.isClimbing && !player.hasNoGravity() &&
+            !player.hasStatusEffect(StatusEffects.LEVITATION) && !player.hasStatusEffect(StatusEffects.BLINDNESS) &&
+            !player.hasStatusEffect(StatusEffects.SLOW_FALLING) && !player.isRiding && (!player.isOnGround || ignoreOnGround) &&
+            !ModuleFly.enabled && !(ModuleLiquidWalk.enabled && ModuleLiquidWalk.standingOnWater())
 
     fun getCooldownDamageFactorWithCurrentTickDelta(player: PlayerEntity, tickDelta: Float): Float {
         val base = ((player.lastAttackedTicks.toFloat() + tickDelta + 0.5f) / player.attackCooldownProgressPerTick)

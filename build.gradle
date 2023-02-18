@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2020 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,11 +20,9 @@
 plugins {
     id "fabric-loom"
     id "org.jetbrains.kotlin.jvm"
-    id "com.github.johnrengelman.shadow" version "6.1.0"
-    id "org.jlleitschuh.gradle.ktlint" version "10.0.0"
+    id "com.github.johnrengelman.shadow" version "7.1.2"
+    id "org.jlleitschuh.gradle.ktlint" version "11.1.0"
 }
-
-import net.fabricmc.loom.task.RemapJarTask
 
 ktlint {
     enableExperimentalRules = true
@@ -38,22 +36,26 @@ ktlint {
 
 }
 
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
+sourceCompatibility = JavaVersion.VERSION_17
+targetCompatibility = JavaVersion.VERSION_17
 
 archivesBaseName = project.archives_base_name
 version = project.mod_version
 group = project.maven_group
 
-minecraft {
-    accessWidener "src/main/resources/liquidbounce.accesswidener"
+loom {
+    accessWidenerPath = file("src/main/resources/liquidbounce.accesswidener")
 }
 
 repositories {
     mavenCentral()
+    mavenLocal()
     maven { url = "https://maven.fabricmc.net/" }
     maven { url = "https://jitpack.io" }
-    maven { url = "https://maven.terraformersmc.com/" }
+    maven {
+        name = 'TerraformersMC'
+        url = 'https://maven.terraformersmc.com/'
+    }
 }
 
 dependencies {
@@ -68,37 +70,31 @@ dependencies {
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 
     // MultiConnect API
-    modImplementation "net.earthcomputer.multiconnect:multiconnect-api:${project.multiconnect_version}"
+    modImplementation ("net.earthcomputer.multiconnect:multiconnect-api:${project.multiconnect_version}") { transitive = false }
 
-    // Recommended mods (on IDE)
-    modRuntime "net.earthcomputer.multiconnect:multiconnect-slim:${project.multiconnect_version}"
-    modRuntime "com.terraformersmc:modmenu:${project.mod_menu_version}"
-    modRuntime "com.github.jellysquid3:sodium-fabric:${project.sodium_version}"
-    modRuntime "com.github.jellysquid3:lithium-fabric:${project.lithium_version}"
-    modRuntime "com.github.jellysquid3:phosphor-fabric:${project.phosphor_version}"
-    modRuntime ("com.github.CCBlueX:baritone:${project.minecraft_version}-SNAPSHOT") {
-        exclude group: "org.ow2.asm", module: "asm-debug-all"
+    /*
+        Recommended mods (on IDE)
+     */
+    // modRuntimeOnly ("net.earthcomputer.multiconnect:multiconnect:${project.multiconnect_version}") { transitive = false }
+    modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
+    // modRuntime "com.github.CaffeineMC:sodium-fabric:${project.sodium_version}"
+    // modRuntimeOnly "com.github.CaffeineMC:lithium-fabric:${project.lithium_version}"
+    // modRuntime "com.github.CaffeineMC:phosphor-fabric:${project.phosphor_version}"
 
-        exclude group: "org.lwjgl.lwjgl", module: "lwjgl"
-        exclude group: "org.lwjgl.lwjgl", module: "lwjgl-platform"
-
-        exclude group: "net.java.jinput", module: "jinput"
-        exclude group: "net.java.jinput", module: "jinput-platform"
-
-        exclude group: "net.sf.jopt-simple", module: "jopt-simple"
-    }
-
-    // Ignore in export
-    implementation "com.google.code.findbugs:jsr305:3.0.2" // to fix nullable imports
+    // fix nullable imports
+    implementation "com.google.code.findbugs:jsr305:3.0.2"
 
     // Client libraries
-
     implementation ('com.thealtening.api:api:4.1.0') {
         exclude group: 'com.google.code.gson', module: 'gson'
     }
 
-    implementation "com.labymedia:ultralight-java-base:0.4.4"
-    implementation "com.labymedia:ultralight-java-databind:0.4.4"
+    implementation "com.github.CCBlueX:Elixir:1.2.5"
+
+    implementation "com.labymedia:ultralight-java-base:0.4.12"
+    implementation "com.labymedia:ultralight-java-databind:0.4.12"
+    implementation "com.labymedia:ultralight-java-gpu:0.4.12"
+    implementation "com.labymedia:ultralight-java-glfw-opengl-util:0.4.12"
 
     implementation "org.graalvm.sdk:graal-sdk:21.0.0.2"
     implementation "org.graalvm.truffle:truffle-api:21.0.0.2"
@@ -107,49 +103,69 @@ dependencies {
     runtimeOnly "org.graalvm.tools:profiler:21.0.0.2"
     runtimeOnly "org.graalvm.tools:chromeinspector:21.0.0.2"
 
-    implementation project(":theme")
-
     // Test libraries
 
-    testImplementation "org.junit.jupiter:junit-jupiter:5.7.1"
+    testImplementation "org.junit.jupiter:junit-jupiter:5.9.2"
 }
 
 processResources {
     inputs.property "version", project.version
 
-    from(sourceSets.main.resources.srcDirs) {
-        include "fabric.mod.json"
+    filesMatching("fabric.mod.json") {
         expand "version": project.version
     }
+}
 
-    from(sourceSets.main.resources.srcDirs) {
-        exclude "fabric.mod.json"
+// The following code will include the theme into the build
+
+task makeTheme(type: Exec) {
+    workingDir file("src-theme")
+    commandLine "python", "build.py"
+    doLast {
+        println "Successfully exported theme.zip"
     }
 }
+
+sourceSets {
+    main {
+        resources {
+            srcDirs "src-theme/resources"
+        }
+    }
+}
+
+processResources.dependsOn makeTheme
 
 // ensure that the encoding is set to UTF-8, no matter what the system default is
 // this fixes some edge cases with special characters not displaying correctly
 // see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
-tasks.withType(JavaCompile) {
-    options.encoding = "UTF-8"
+tasks.withType(JavaCompile).configureEach {
+    // ensure that the encoding is set to UTF-8, no matter what the system default is
+    // this fixes some edge cases with special characters not displaying correctly
+    // see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
+    // If Javadoc is generated, this must be specified in that task too.
+    it.options.encoding = "UTF-8"
+
+    // Minecraft 1.18 upwards uses Java 17.
+    it.options.release = 17
 }
 
 tasks.withType(Test) {
     useJUnitPlatform()
 }
 
-compileKotlin {
-    kotlinOptions.suppressWarnings = true
-    kotlinOptions.jvmTarget = "1.8"
-    kotlinOptions.useIR = true
+java {
+    // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
+    // if it is present.
+    // If you remove this line, sources will not be generated.
+    withSourcesJar()
 }
 
-// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-// if it is present.
-// If you remove this task, sources will not be generated.
-task sourcesJar(type: Jar, dependsOn: classes) {
-    classifier = "sources"
-    from sourceSets.main.allSource
+compileKotlin {
+    kotlinOptions {
+        suppressWarnings = true
+        jvmTarget = 17
+    }
 }
 
 shadowJar {
@@ -161,20 +177,25 @@ shadowJar {
     dependencies {
         include(dependency('com.labymedia:ultralight-java-base'))
         include(dependency('com.labymedia:ultralight-java-databind'))
+        include(dependency('com.labymedia:ultralight-java-gpu'))
+        include(dependency('com.labymedia:ultralight-java-glfw-opengl-util'))
         include(dependency('com.thealtening.api:api'))
-        include(project(":theme"))
+        include(dependency('com.github.CCBlueX:Elixir'))
     }
+
 }
 
 jar {
     from "LICENSE"
 }
 
-task remapShadow(type: RemapJarTask, dependsOn: shadowJar) {
-    setInput(shadowJar.archiveFile)
-    remapAccessWidener.set(true)
-    addNestedDependencies.set(remapJar.addNestedDependencies)
+remapJar {
+    inputFile = shadowJar.archiveFile
 }
 
-build.dependsOn remapShadow
+task copyZipInclude(type: Copy) {
+    from 'zip_include/'
+    into 'build/libs/zip'
+}
 
+build.dependsOn copyZipInclude

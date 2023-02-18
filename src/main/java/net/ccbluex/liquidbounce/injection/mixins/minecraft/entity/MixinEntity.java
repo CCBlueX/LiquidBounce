@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,10 +21,14 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import net.ccbluex.liquidbounce.event.EntityMarginEvent;
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.PlayerStepEvent;
 import net.ccbluex.liquidbounce.event.PlayerVelocityStrafe;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleNoPitchLimit;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
+import net.minecraft.fluid.Fluid;
+import net.minecraft.tag.TagKey;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
@@ -37,34 +41,37 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(Entity.class)
 public abstract class MixinEntity {
 
-    @Shadow public abstract Vec3d getVelocity();
-
-    @Shadow public abstract void setVelocity(Vec3d velocity);
-
-    @Shadow public abstract boolean isSprinting();
-
-    @Shadow public float yaw;
-
-    @Shadow public boolean velocityDirty;
-
-    @Shadow public abstract void setVelocity(double x, double y, double z);
-
     @Shadow
-    protected static Vec3d movementInputToVelocity(Vec3d movementInput, float speed, float yaw) {
+    public static Vec3d movementInputToVelocity(Vec3d movementInput, float speed, float yaw) {
         return null;
     }
 
-    @Shadow public float pitch;
+    @Shadow
+    public abstract Vec3d getVelocity();
 
-    @Shadow protected boolean onGround;
+    @Shadow
+    public abstract void setVelocity(Vec3d velocity);
 
-    @Shadow public abstract boolean hasVehicle();
+    @Shadow
+    public abstract double getX();
 
-    @Shadow public abstract double getX();
+    @Shadow
+    public abstract double getY();
 
-    @Shadow public abstract double getY();
+    @Shadow
+    public abstract double getZ();
 
-    @Shadow public abstract double getZ();
+    @Shadow
+    public abstract float getYaw();
+
+    @Shadow
+    public boolean noClip;
+
+    @Shadow
+    public abstract boolean isOnGround();
+
+    @Shadow
+    public abstract boolean isSubmergedIn(TagKey<Fluid> fluidTag);
 
     /**
      * Hook entity margin modification event
@@ -83,8 +90,7 @@ public abstract class MixinEntity {
     public float hookNoPitchLimit(float value, float min, float max) {
         final boolean noLimit = ModuleNoPitchLimit.INSTANCE.getEnabled();
 
-        if (noLimit)
-            return value;
+        if (noLimit) return value;
         return MathHelper.clamp(value, min, max);
     }
 
@@ -98,5 +104,17 @@ public abstract class MixinEntity {
         }
 
         return movementInputToVelocity(movementInput, speed, yaw);
+    }
+
+    @Redirect(method = "adjustMovementForCollisions(Lnet/minecraft/util/math/Vec3d;)Lnet/minecraft/util/math/Vec3d;", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/Entity;stepHeight:F"))
+    private float hookStepHeight(Entity instance) {
+        final PlayerStepEvent stepEvent = new PlayerStepEvent(instance.stepHeight);
+        EventManager.INSTANCE.callEvent(stepEvent);
+        return stepEvent.getHeight();
+    }
+
+    @Inject(method = "getCameraPosVec", at = @At("RETURN"), cancellable = true)
+    private void hookFreeCamModifiedRaycast(float tickDelta, CallbackInfoReturnable<Vec3d> cir) {
+        cir.setReturnValue(ModuleFreeCam.INSTANCE.modifyRaycast(cir.getReturnValue(), (Entity) (Object) this, tickDelta));
     }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,22 +33,26 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
         }
     }
 
-    fun getContainedSettingsRecursively(): Array<Value<*>> {
+    @get:JvmName("getContainedValues")
+    val containedValues: Array<Value<*>>
+        get() = this.value.toTypedArray()
+
+    fun getContainedValuesRecursively(): Array<Value<*>> {
         val output = mutableListOf<Value<*>>()
 
-        this.getContainedSettingsRecursivelyInternal(output)
+        this.getContainedValuesRecursivelyInternal(output)
 
         return output.toTypedArray()
     }
 
-    fun getContainedSettingsRecursivelyInternal(output: MutableList<Value<*>>) {
+    fun getContainedValuesRecursivelyInternal(output: MutableList<Value<*>>) {
         for (currentValue in this.value) {
             if (currentValue is ToggleableConfigurable) {
                 output.add(currentValue)
                 output.addAll(currentValue.value.filter { it.name.equals("Enabled", true) })
             } else {
                 if (currentValue is Configurable) {
-                    currentValue.getContainedSettingsRecursivelyInternal(output)
+                    currentValue.getContainedValuesRecursivelyInternal(output)
                 } else {
                     output.add(currentValue)
                 }
@@ -58,7 +62,7 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
                 output.add(currentValue)
 
                 currentValue.choices.filter { it.isActive }.forEach {
-                    it.getContainedSettingsRecursivelyInternal(output)
+                    it.getContainedValuesRecursivelyInternal(output)
                 }
             }
         }
@@ -104,7 +108,7 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
 
     protected fun block(name: String, default: Block) = value(name, default, ValueType.BLOCK)
 
-    protected fun blocks(name: String, default: MutableList<Block>) = value(name, default, ValueType.BLOCKS, ListValueType.Block)
+    protected fun blocks(name: String, default: MutableSet<Block>) = value(name, default, ValueType.BLOCKS, ListValueType.Block)
 
     protected fun item(name: String, default: Item) = value(name, default, ValueType.ITEM)
 
@@ -116,7 +120,10 @@ open class Configurable(name: String, value: MutableList<Value<*>> = mutableList
     protected fun <T : NamedChoice> enumChoice(name: String, default: T, choices: Array<T>) =
         ChooseListValue(name, default, choices).apply { this@Configurable.value.add(this) }
 
-    protected fun Module.choices(name: String, active: String, initialize: (ChoiceConfigurable) -> Unit) =
-        ChoiceConfigurable(this, name, active, initialize).apply { this@Configurable.value.add(this) }
+    protected fun Module.choices(name: String, active: Choice, choices: Array<Choice>) =
+        ChoiceConfigurable(this, name, active) { choices }.apply { this@Configurable.value.add(this) }
+
+    protected fun Module.choices(name: String, active: Choice, choicesCallback: (ChoiceConfigurable) -> Array<Choice>) =
+        ChoiceConfigurable(this, name, active, choicesCallback).apply { this@Configurable.value.add(this) }
 
 }

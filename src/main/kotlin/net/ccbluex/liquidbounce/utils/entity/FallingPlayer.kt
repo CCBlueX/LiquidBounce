@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@ class FallingPlayer(
     private var motionX: Double,
     private var motionY: Double,
     private var motionZ: Double,
-    private val yaw: Float,
+    private val yaw: Float
 ) {
     companion object {
         fun fromPlayer(player: ClientPlayerEntity): FallingPlayer {
@@ -135,6 +135,7 @@ class FallingPlayer(
             val end = Vec3d(x, y, z)
             var raytracedBlock: BlockPos?
             val w = player.width / 2.0
+
             if (rayTrace(start, end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock, i)
             if (rayTrace(start.add(w, 0.0, w), end).also { raytracedBlock = it } != null) return CollisionResult(
                 raytracedBlock,

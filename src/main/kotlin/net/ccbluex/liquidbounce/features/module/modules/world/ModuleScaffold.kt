@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,30 +18,36 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.event.PlayerSafeWalkEvent
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raycast
+import net.ccbluex.liquidbounce.utils.block.canStandOn
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.client.StateUpdateEvent
 import net.ccbluex.liquidbounce.utils.entity.eyesPos
 import net.ccbluex.liquidbounce.utils.extensions.getFace
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.block.ShapeContext
 import net.minecraft.block.SideShapeType
+import net.minecraft.block.SlabBlock
+import net.minecraft.block.StairsBlock
 import net.minecraft.item.BlockItem
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.ItemStack
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
-import net.minecraft.util.math.*
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Direction
+import net.minecraft.util.math.Vec3d
+import net.minecraft.util.math.Vec3i
+import kotlin.math.abs
 import kotlin.math.absoluteValue
 
 /**
@@ -90,22 +96,41 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     val silent by boolean("Silent", true)
     var delay by intRange("Delay", 3..5, 0..40)
 
+    val eagle by boolean("Eagle", true)
+    val down by boolean("Down", false)
+
     // Rotation
     val rotationsConfigurable = tree(RotationsConfigurable())
 
+    val minDist by float("MinDist", 0.0f, 0.0f..0.25f)
+
     var currentTarget: Target? = null
 
-    val networkTickHandler = repeatable { event ->
-        currentTarget = updateTarget(player.blockPos.add(0, -1, 0))
+    val shouldGoDown: Boolean
+        get() = this.down && mc.options.sneakKey.isPressed
 
-        val target = currentTarget ?: return@repeatable
+    val rotationUpdateHandler = handler<PlayerNetworkMovementTickEvent> {
+        if (it.state != EventState.PRE) {
+            return@handler
+        }
+
+        currentTarget = updateTarget(getTargetedPosition())
+
+        val target = currentTarget ?: return@handler
 
         RotationManager.aimAt(target.rotation, ticks = 30, configurable = rotationsConfigurable)
+    }
+
+    val networkTickHandler = repeatable {
+        val target = currentTarget ?: return@repeatable
 
         val serverRotation = RotationManager.serverRotation ?: return@repeatable
-        val rayTraceResult = raycast(4.0, serverRotation) ?: return@repeatable
+        val rayTraceResult = raycast(4.5, serverRotation) ?: return@repeatable
 
-        if (rayTraceResult.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != target.blockPos || rayTraceResult.pos.y < target.minY) {
+        if (rayTraceResult.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != target.blockPos || rayTraceResult.side != target.direction || rayTraceResult.pos.y < target.minY || !isValidTarget(
+                rayTraceResult
+            )
+        ) {
             return@repeatable
         }
 
@@ -129,7 +154,9 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             SilentHotbar.resetSlot(this)
         }
 
-        if (!hasBlockInHand) return@repeatable
+        if (!hasBlockInHand) {
+            return@repeatable
+        }
 
         val result = interaction.interactBlock(
             player,
@@ -145,6 +172,35 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
             currentTarget = null
             wait(delay.random())
+        }
+    }
+
+    private fun isValidTarget(rayTraceResult: BlockHitResult): Boolean {
+        val eyesPos = player.eyesPos
+        val hitVec = rayTraceResult.pos
+
+        val diffX = hitVec.x - eyesPos.x
+        val diffZ = hitVec.z - eyesPos.z
+
+        val side = rayTraceResult.side
+
+        if (side != Direction.UP && side != Direction.DOWN) {
+            val diff: Double = abs(if (side == Direction.NORTH || side == Direction.SOUTH) diffZ else diffX)
+
+            if (diff < minDist) return false
+        }
+
+        return true
+    }
+
+    val repeatable = handler<StateUpdateEvent> {
+        // Check if player is on the edge and is NOT flying
+        val isAir = !player.blockPos.add(0, -1, 0).canStandOn() && !player.abilities.flying
+
+        if (shouldDisableSafeWalk()) {
+            it.state.enforceEagle = false
+        } else if (isAir && eagle) {
+            it.state.enforceEagle = true
         }
     }
 
@@ -164,6 +220,14 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         return block.defaultState.isSideSolid(world, target.blockPos, target.direction, SideShapeType.CENTER)
     }
 
+    fun getTargetedPosition(): BlockPos {
+        if (shouldGoDown) {
+            return player.blockPos.add(0, -2, 0)
+        }
+
+        return player.blockPos.add(0, -1, 0)
+    }
+
     fun updateTarget(pos: BlockPos, lavaBucket: Boolean = false): Target? {
         val state = pos.getState()
 
@@ -171,21 +235,24 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             return null
         }
 
-        val offsetsToInvestigate = if (lavaBucket) arrayOf(
+        val offsetsToInvestigate = if (lavaBucket) listOf(
             Vec3i(0, 0, 0)
         )
-        else arrayOf(
-            Vec3i(0, 0, 0),
-            Vec3i(-1, 0, 0),
-            Vec3i(1, 0, 0),
-            Vec3i(0, 0, -1),
-            Vec3i(0, 0, 1),
-            Vec3i(0, -1, 0),
-            Vec3i(-1, -1, 0),
-            Vec3i(1, -1, 0),
-            Vec3i(0, -1, -1),
-            Vec3i(0, -1, 1),
-        )
+        else {
+            val vec = if (shouldGoDown) {
+                listOf(0, -1, 1, -2, 2)
+            } else {
+                listOf(0, -1, 1)
+            }
+
+            vec.flatMap { x ->
+                vec.flatMap { z ->
+                    (0 downTo -1).flatMap { y ->
+                        listOf(Vec3i(x, y, z))
+                    }
+                }
+            }
+        }
 
         for (vec3i in offsetsToInvestigate) {
             val posToInvestigate = pos.add(vec3i)
@@ -222,16 +289,17 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 }.maxByOrNull { it.second }
             } else {
                 val directionsToInvestigate = arrayOf(
-                    Direction.DOWN,
+                    Direction.UP,
                     Direction.NORTH,
                     Direction.EAST,
                     Direction.SOUTH,
-                    Direction.WEST
+                    Direction.WEST,
+                    Direction.DOWN
                 )
 
                 directionsToInvestigate.mapNotNull { direction ->
-                    val normalVector = direction.opposite.vector
-                    val currPos = posToInvestigate.add(direction.vector)
+                    val normalVector = direction.vector
+                    val currPos = posToInvestigate.add(direction.opposite.vector)
                     val currState = currPos.getState() ?: return@mapNotNull null
 
                     if (currState.isAir || currState.material.isReplaceable) {
@@ -253,11 +321,12 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             if (first != null) {
                 val currPos = first.second
 
-                val truncate = true // TODO Find this out
+                val currState = currPos.getState()!!
+                val currBlock = currState.block
 
-                val currState = currPos.getState()
+                val truncate = currBlock is StairsBlock || currBlock is SlabBlock // TODO Find this out
 
-                val face = currState!!.getOutlineShape(
+                val face = currState.getOutlineShape(
                     mc.world,
                     currPos,
                     ShapeContext.of(player)
@@ -301,10 +370,28 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     val safeWalkHandler = handler<PlayerSafeWalkEvent> { event ->
-        event.isSafeWalk = true
+        event.isSafeWalk = !shouldDisableSafeWalk()
     }
 
+    private fun shouldDisableSafeWalk() = shouldGoDown && player.blockPos.add(0, -2, 0).canStandOn()
+
     data class Face(val from: Vec3d, val to: Vec3d) {
+
+        val area: Double
+            get() {
+                val l = to.x - from.x
+                val b = to.y - from.y
+                val h = to.z - from.z
+
+                return (l * b + b * h + l * h) * 2.0
+            }
+
+        val center: Vec3d
+            get() = Vec3d(
+                from.x + (to.x - from.x) * 0.5,
+                from.y + (to.y - from.y) * 0.5,
+                from.z + (to.z - from.z) * 0.5
+            )
 
         fun truncate(minY: Double): Face? {
             val newFace = Face(

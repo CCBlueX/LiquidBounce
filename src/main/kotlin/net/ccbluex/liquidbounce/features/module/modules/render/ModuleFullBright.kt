@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -29,16 +30,24 @@ import net.minecraft.entity.effect.StatusEffects
 /**
  * A full bright module
  *
- * Allows you to see in the dark
+ * Allows you to see in the dark.
  */
+
 object ModuleFullBright : Module("FullBright", Category.RENDER) {
 
-    private val modes = choices("Mode", "Gamma") {
-        FullBrightGamma
-        FullBrightNightVision
-    }
+    private val modes = choices(
+        "Mode",
+        FullBrightGamma,
+        arrayOf(
+            FullBrightGamma,
+            FullBrightNightVision
+        )
+    )
 
-    private object FullBrightGamma : Choice("Gamma", modes) {
+    private object FullBrightGamma : Choice("Gamma") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
 
         private var prevValue = 0.0
 
@@ -57,7 +66,10 @@ object ModuleFullBright : Module("FullBright", Category.RENDER) {
         }
     }
 
-    private object FullBrightNightVision : Choice("Night Vision", modes) {
+    private object FullBrightNightVision : Choice("Night Vision") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
 
         val tickHandler = sequenceHandler<PlayerTickEvent> {
             player.addStatusEffect(StatusEffectInstance(StatusEffects.NIGHT_VISION, 1337))

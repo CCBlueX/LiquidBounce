@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.event.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.minecraft.network.packet.c2s.play.TeleportConfirmC2SPacket
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
 /**
  * Freeze module
@@ -35,15 +35,15 @@ import net.minecraft.network.packet.c2s.play.TeleportConfirmC2SPacket
 object ModuleFreeze : Module("Freeze", Category.MOVEMENT) {
 
     val moveHandler = handler<PlayerMoveEvent> { event ->
-        // Just set motion to zero
+        // Set motion to zero
         event.movement.x = 0.0
         event.movement.y = 0.0
         event.movement.z = 0.0
     }
 
     val packetHandler = handler<PacketEvent> { event ->
-        if (mc.world != null && event.origin == TransferOrigin.SEND) {
-            if (event.packet is TeleportConfirmC2SPacket) {
+        if (mc.world != null && event.origin == TransferOrigin.RECEIVE) {
+            if (event.packet is PlayerPositionLookS2CPacket) {
                 enabled = false
 
                 return@handler

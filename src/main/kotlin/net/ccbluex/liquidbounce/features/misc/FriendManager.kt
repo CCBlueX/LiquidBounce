@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,10 +22,9 @@ package net.ccbluex.liquidbounce.features.misc
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.ListValueType
-import net.minecraft.entity.player.PlayerEntity
 import java.util.*
 
-object FriendManager : Configurable("friends") {
+object FriendManager : Configurable("Friends") {
 
     val friends by value(name, TreeSet<Friend>(), listType = ListValueType.Friend)
 
@@ -54,6 +53,6 @@ object FriendManager : Configurable("friends") {
 
     }
 
-    fun isFriend(entity: PlayerEntity): Boolean = friends.contains(Friend(entity.gameProfile.name, null))
+    fun isFriend(entity: String): Boolean = friends.contains(Friend(entity, null))
 
 }

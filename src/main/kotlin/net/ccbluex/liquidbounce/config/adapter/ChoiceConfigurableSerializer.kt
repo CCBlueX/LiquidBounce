@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2021 CCBlueX
+ * Copyright (c) 2016 - 2022 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ object ChoiceConfigurableSerializer : JsonSerializer<ChoiceConfigurable> {
         val obj = JsonObject()
 
         obj.addProperty("name", src.name)
-        obj.addProperty("active", src.active)
+        obj.addProperty("active", src.activeChoice.choiceName)
         obj.add("value", context.serialize(src.value))
 
         val choices = JsonObject()
