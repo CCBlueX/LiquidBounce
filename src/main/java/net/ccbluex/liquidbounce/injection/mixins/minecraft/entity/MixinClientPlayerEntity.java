@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
-import net.ccbluex.liquidbounce.utils.client.TickStateManager;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.input.Input;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
@@ -158,7 +157,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
 
     // Silent rotations (Rotation Manager)
 
-    @Redirect(method = "sendMovementPackets", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getYaw()F"))
+    @Redirect(method = {"sendMovementPackets", "tick"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getYaw()F"))
     private float hookSilentRotationYaw(ClientPlayerEntity instance) {
         RotationManager rotationManager = RotationManager.INSTANCE;
         Rotation rotation = rotationManager.getCurrentRotation();
@@ -169,7 +168,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
         return rotation.getYaw();
     }
 
-    @Redirect(method = "sendMovementPackets", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getPitch()F"))
+    @Redirect(method = {"sendMovementPackets", "tick"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getPitch()F"))
     private float hookSilentRotationPitch(ClientPlayerEntity instance) {
         RotationManager rotationManager = RotationManager.INSTANCE;
         Rotation rotation = rotationManager.getCurrentRotation();
