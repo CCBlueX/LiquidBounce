@@ -66,7 +66,7 @@ class TargetTracker(defaultPriority: PriorityEnum = PriorityEnum.HEALTH) : Confi
         }
 
         entities.minByOrNull { it.squaredBoxedDistanceTo(player) }
-            ?.let { maxDistanceSquared = it.squaredDistanceTo(player) }
+            ?.let { maxDistanceSquared = it.squaredBoxedDistanceTo(player) }
 
         return entities.asIterable()
     }
