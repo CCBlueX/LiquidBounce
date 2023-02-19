@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.PlayerVelocityStrafe
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.step
 import net.minecraft.block.BlockState
@@ -64,11 +65,7 @@ object RotationManager : Listenable {
     var deactivateManipulation = false
 
     fun raytraceBlock(
-        eyes: Vec3d,
-        pos: BlockPos,
-        state: BlockState,
-        range: Double,
-        wallsRange: Double
+        eyes: Vec3d, pos: BlockPos, state: BlockState, range: Double, wallsRange: Double
     ): VecRotation? {
         val offset = Vec3d(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
         val shape = state.getOutlineShape(mc.world, pos, ShapeContext.of(mc.player))
@@ -100,21 +97,31 @@ object RotationManager : Listenable {
         var visibleRot: VecRotation? = null
         var notVisibleRot: VecRotation? = null
 
-        // 0.0 to 1.0 for better reach results.
-        for (x in 0.1..0.9 step 0.1) {
-            for (y in 0.1..0.9 step 0.1) {
-                for (z in 0.1..0.9 step 0.1) {
-                    val vec3 = Vec3d(
+        val nearestSpot = getNearestPoint(eyes, box)
+        val nearestDistance = eyes.squaredDistanceTo(nearestSpot)
+
+        for (x in 0.0..1.0 step 0.1) {
+            for (y in 0.0..1.0 step 0.1) {
+                for (z in 0.0..1.0 step 0.1) {
+                    var vec3 = Vec3d(
                         box.minX + (box.maxX - box.minX) * x,
                         box.minY + (box.maxY - box.minY) * y,
                         box.minZ + (box.maxZ - box.minZ) * z
                     )
 
                     // skip because of out of range
-                    val distance = eyes.squaredDistanceTo(vec3)
+                    var distance = eyes.squaredDistanceTo(vec3)
+
+                    // if loop ended with no results, then make use of the nearest spot as last resort
+                    val useNearestSpot = (x + y + z).toFloat() == 3.0f && visibleRot == null && notVisibleRot == null
 
                     if (distance > rangeSquared) {
-                        continue
+                        if (useNearestSpot) {
+                            vec3 = nearestSpot
+                            distance = nearestDistance
+                        } else {
+                            continue
+                        }
                     }
 
                     // check if target is visible to eyes
@@ -134,8 +141,7 @@ object RotationManager : Listenable {
                     if (visible) {
                         // Calculate next spot to preferred spot
                         if (visibleRot == null || rotationDifference(rotation, preferredRotation) < rotationDifference(
-                                visibleRot.rotation,
-                                preferredRotation
+                                visibleRot.rotation, preferredRotation
                             )
                         ) {
                             visibleRot = VecRotation(rotation, vec3)
@@ -143,8 +149,7 @@ object RotationManager : Listenable {
                     } else {
                         // Calculate next spot to preferred spot
                         if (notVisibleRot == null || rotationDifference(
-                                rotation,
-                                preferredRotation
+                                rotation, preferredRotation
                             ) < rotationDifference(notVisibleRot.rotation, preferredRotation)
                         ) {
                             notVisibleRot = VecRotation(rotation, vec3)
@@ -161,10 +166,7 @@ object RotationManager : Listenable {
      * Find the best spot of the upper side of the block
      */
     fun canSeeBlockTop(
-        eyes: Vec3d,
-        pos: BlockPos,
-        range: Double,
-        wallsRange: Double
+        eyes: Vec3d, pos: BlockPos, range: Double, wallsRange: Double
     ): Boolean {
         val rangeSquared = range * range
         val wallsRangeSquared = wallsRange * wallsRange
@@ -176,9 +178,7 @@ object RotationManager : Listenable {
         for (x in 0.1..0.9 step 0.4) {
             for (z in 0.1..0.9 step 0.4) {
                 val vec3 = Vec3d(
-                    minX + x,
-                    y,
-                    minZ + z
+                    minX + x, y, minZ + z
                 )
 
                 // skip because of out of range
