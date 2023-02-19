@@ -22,7 +22,7 @@ class GuiMicrosoftLoginProgress(val updateStatus: (String) -> Unit, val done: ()
     private var oAuthServer: OAuthServer? = null
     private var loginUrl: String? = null
 
-    private var interrupted = false
+    private var serverStopAlreadyCalled: Boolean = false
 
     override fun initGui() {
         // This will start a login server and open the browser.
@@ -33,9 +33,8 @@ class GuiMicrosoftLoginProgress(val updateStatus: (String) -> Unit, val done: ()
                  * Called when the user has cancelled the authentication process or the thread has been interrupted
                  */
                 override fun authError(error: String) {
-                    if (!interrupted) {
-                        errorAndDone(error)
-                    }
+                    serverStopAlreadyCalled = true
+                    errorAndDone(error)
                     loginUrl = null
                 }
 
@@ -43,6 +42,8 @@ class GuiMicrosoftLoginProgress(val updateStatus: (String) -> Unit, val done: ()
                  * Called when the user has completed authentication
                  */
                 override fun authResult(account: MicrosoftAccount) {
+                    serverStopAlreadyCalled = true
+
                     loginUrl = null
                     if (LiquidBounce.fileManager.accountsConfig.accountExists(account)) {
                         errorAndDone("The account has already been added.")
@@ -100,7 +101,6 @@ class GuiMicrosoftLoginProgress(val updateStatus: (String) -> Unit, val done: ()
 
             1 -> {
                 errorAndDone("Cancelled.")
-                done()
             }
         }
 
@@ -109,8 +109,10 @@ class GuiMicrosoftLoginProgress(val updateStatus: (String) -> Unit, val done: ()
     }
 
     override fun onGuiClosed() {
-        interrupted = true
-        oAuthServer?.stop(isInterrupt = false)
+        if (!serverStopAlreadyCalled) {
+            oAuthServer?.stop(isInterrupt = false)
+        }
+
         super.onGuiClosed()
     }
 
