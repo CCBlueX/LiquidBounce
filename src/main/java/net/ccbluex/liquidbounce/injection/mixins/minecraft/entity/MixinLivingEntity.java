@@ -33,9 +33,9 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
-import org.jetbrains.annotations.Nullable;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -101,7 +101,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
     /**
      * Hook velocity rotation modification
      * <p>
-     * Jump according to modified rotation. Prevents detection by movement sensitive anticheats such as AAC, Hawk, Intave, Grim, etc.
+     * Jump according to modified rotation. Prevents detection by movement sensitive anticheats.
      */
     @Redirect(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/Vec3d;add(DDD)Lnet/minecraft/util/math/Vec3d;"))
     private Vec3d hookFixRotation(Vec3d instance, double x, double y, double z) {
