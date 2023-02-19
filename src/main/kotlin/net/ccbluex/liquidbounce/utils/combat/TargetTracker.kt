@@ -65,7 +65,8 @@ class TargetTracker(defaultPriority: PriorityEnum = PriorityEnum.HEALTH) : Confi
             PriorityEnum.HURT_TIME -> entities.sortedBy { if (it is LivingEntity) it.hurtTime else 0 } // Sort by hurt time
         }
 
-        entities.firstOrNull()?.let { maxDistanceSquared = it.squaredBoxedDistanceTo(player) }
+        entities.minByOrNull { it.squaredBoxedDistanceTo(player) }
+            ?.let { maxDistanceSquared = it.squaredDistanceTo(player) }
 
         return entities.asIterable()
     }
