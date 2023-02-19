@@ -49,8 +49,9 @@ object ModuleMobOwners : Module("MobOwners", Category.RENDER) {
     var asyncRequestExecutor = Executors.newSingleThreadExecutor()
 
     fun getOwnerInfoText(entity: Entity): OrderedText? {
-        if (!this.enabled)
+        if (!this.enabled) {
             return null
+        }
 
         val ownerId = when {
             entity is TameableEntity -> entity.ownerUuid
@@ -76,7 +77,6 @@ object ModuleMobOwners : Module("MobOwners", Category.RENDER) {
 
                     uuidNameCache[it] = OrderedText.styledForwardsVisitedString(entityName, Style.EMPTY)
                 } catch (e: InterruptedException) {
-
                 } catch (e: Exception) {
                     uuidNameCache[it] = OrderedText.styledForwardsVisitedString("Failed to query Mojang API", Style.EMPTY.withItalic(true).withColor(Formatting.RED))
                 }

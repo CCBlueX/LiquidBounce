@@ -18,6 +18,9 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
+/**
+ * Thread lock will bind a value to a thread and prevent it from being accessed by other threads.
+ */
 class ThreadLock<T> {
 
     private lateinit var lockedOnThread: Thread

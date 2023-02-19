@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -68,7 +68,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
             Items.SPLASH_POTION,
             Items.TRIDENT,
             Items.TNT,
-            Items.ELYTRA,
+            Items.ELYTRA
         )
     )
 
@@ -243,7 +243,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
         Pair(slotItem6, 5),
         Pair(slotItem7, 6),
         Pair(slotItem8, 7),
-        Pair(slotItem9, 8),
+        Pair(slotItem9, 8)
     ).groupBy { it.first.category }
 
     private fun executeAction(item: Int, clickData: Int, slotActionType: SlotActionType): Boolean {
@@ -371,13 +371,13 @@ class WeightedSwordItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStac
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SHARPNESS, 0.5f),
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SMITE, 2.0f * 0.05f),
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.BANE_OF_ARTHROPODS, 2.0f * 0.05f),
-            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.KNOCKBACK, 0.75f),
+            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.KNOCKBACK, 0.75f)
         )
         val SECONDARY_VALUE_ESTIMATOR = EnchantmentValueEstimator(
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.LOOTING, 0.05f),
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.05f),
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.VANISHING_CURSE, -0.1f),
-            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SWEEPING, 0.2f),
+            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SWEEPING, 0.2f)
         )
         private val COMPARATOR = ComparatorChain<WeightedSwordItem>(
             { o1, o2 ->
@@ -419,7 +419,7 @@ class WeightedBowItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack,
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.INFINITY, 4.0f),
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.1f),
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.VANISHING_CURSE, -0.1f),
-            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.MENDING, -0.2f),
+            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.MENDING, -0.2f)
         )
         private val COMPARATOR = ComparatorChain<WeightedBowItem>(
             { o1, o2 ->
@@ -446,7 +446,7 @@ class WeightedCrossbowItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemS
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.PIERCING, 1.0f),
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.MENDING, 0.2f),
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.1f),
-            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.VANISHING_CURSE, -0.25f),
+            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.VANISHING_CURSE, -0.25f)
         )
         private val COMPARATOR = ComparatorChain<WeightedCrossbowItem>(
             { o1, o2 ->
@@ -487,7 +487,7 @@ class WeightedToolItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack
         val VALUE_ESTIMATOR = EnchantmentValueEstimator(
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SILK_TOUCH, 1.0f),
             EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.2f),
-            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.FORTUNE, 0.33f),
+            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.FORTUNE, 0.33f)
         )
         private val COMPARATOR = ComparatorChain<WeightedToolItem>({ o1, o2 ->
             (o1.itemStack.item as ToolItem).material.miningLevel.compareTo((o2.itemStack.item as ToolItem).material.miningLevel)
@@ -508,7 +508,7 @@ class WeightedToolItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack
 class WeightedRodItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
     companion object {
         val VALUE_ESTIMATOR = EnchantmentValueEstimator(
-            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.4f),
+            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.4f)
         )
         private val COMPARATOR = ComparatorChain<WeightedRodItem>(
             { o1, o2 ->
@@ -528,7 +528,7 @@ class WeightedRodItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack,
 class WeightedShieldItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
     companion object {
         val VALUE_ESTIMATOR = EnchantmentValueEstimator(
-            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.4f),
+            EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.4f)
         )
         private val COMPARATOR = ComparatorChain<WeightedShieldItem>(
             { o1, o2 ->

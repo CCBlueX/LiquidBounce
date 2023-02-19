@@ -24,8 +24,11 @@ import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.PlayerStepEvent;
 import net.ccbluex.liquidbounce.event.PlayerVelocityStrafe;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleNoPitchLimit;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
+import net.minecraft.fluid.Fluid;
+import net.minecraft.tag.TagKey;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
@@ -39,24 +42,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class MixinEntity {
 
     @Shadow
+    public static Vec3d movementInputToVelocity(Vec3d movementInput, float speed, float yaw) {
+        return null;
+    }
+
+    @Shadow
     public abstract Vec3d getVelocity();
 
     @Shadow
     public abstract void setVelocity(Vec3d velocity);
-
-    @Shadow
-    public abstract boolean isSprinting();
-
-    @Shadow
-    public boolean velocityDirty;
-
-    @Shadow
-    public abstract void setVelocity(double x, double y, double z);
-
-    @Shadow
-    public static Vec3d movementInputToVelocity(Vec3d movementInput, float speed, float yaw) {
-        return null;
-    }
 
     @Shadow
     public abstract double getX();
@@ -69,6 +63,15 @@ public abstract class MixinEntity {
 
     @Shadow
     public abstract float getYaw();
+
+    @Shadow
+    public boolean noClip;
+
+    @Shadow
+    public abstract boolean isOnGround();
+
+    @Shadow
+    public abstract boolean isSubmergedIn(TagKey<Fluid> fluidTag);
 
     /**
      * Hook entity margin modification event
@@ -87,8 +90,7 @@ public abstract class MixinEntity {
     public float hookNoPitchLimit(float value, float min, float max) {
         final boolean noLimit = ModuleNoPitchLimit.INSTANCE.getEnabled();
 
-        if (noLimit)
-            return value;
+        if (noLimit) return value;
         return MathHelper.clamp(value, min, max);
     }
 
@@ -109,5 +111,10 @@ public abstract class MixinEntity {
         final PlayerStepEvent stepEvent = new PlayerStepEvent(instance.stepHeight);
         EventManager.INSTANCE.callEvent(stepEvent);
         return stepEvent.getHeight();
+    }
+
+    @Inject(method = "getCameraPosVec", at = @At("RETURN"), cancellable = true)
+    private void hookFreeCamModifiedRaycast(float tickDelta, CallbackInfoReturnable<Vec3d> cir) {
+        cir.setReturnValue(ModuleFreeCam.INSTANCE.modifyRaycast(cir.getReturnValue(), (Entity) (Object) this, tickDelta));
     }
 }

@@ -84,14 +84,17 @@ object Tabs {
             it.add(
                 PotionUtil.setCustomPotionEffects(
                     ItemStack(Items.SPLASH_POTION)
-                        .setCustomName("".asText()
-                            .styled { s -> s.withBold(true) }
-                            .append("Troll".asText()
-                                .styled { s -> s.withColor(Formatting.RED) }
-                            )
-                            .append("Potion".asText()
-                                .styled { s -> s.withColor(Formatting.GOLD) }
-                            )
+                        .setCustomName(
+                            "".asText()
+                                .styled { s -> s.withBold(true) }
+                                .append(
+                                    "Troll".asText()
+                                        .styled { s -> s.withColor(Formatting.RED) }
+                                )
+                                .append(
+                                    "Potion".asText()
+                                        .styled { s -> s.withColor(Formatting.GOLD) }
+                                )
                         ),
                     Registry.STATUS_EFFECT.map { e ->
                         StatusEffectInstance(e, Int.MAX_VALUE, 127)
@@ -102,14 +105,17 @@ object Tabs {
             it.add(
                 PotionUtil.setCustomPotionEffects(
                     ItemStack(Items.SPLASH_POTION)
-                        .setCustomName("".asText()
-                            .styled { s -> s.withBold(true) }
-                            .append("Kill".asText()
-                                .styled { s -> s.withColor(Formatting.RED) }
-                            )
-                            .append("Potion".asText()
-                                .styled { s -> s.withColor(Formatting.GOLD) }
-                            )
+                        .setCustomName(
+                            "".asText()
+                                .styled { s -> s.withBold(true) }
+                                .append(
+                                    "Kill".asText()
+                                        .styled { s -> s.withColor(Formatting.RED) }
+                                )
+                                .append(
+                                    "Potion".asText()
+                                        .styled { s -> s.withColor(Formatting.GOLD) }
+                                )
                         ),
                     listOf(
                         StatusEffectInstance(StatusEffects.INSTANT_HEALTH, 0, 125),
