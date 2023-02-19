@@ -78,7 +78,21 @@ public class Spammer extends Module {
 
         while(object.contains("%ls"))
             object = object.substring(0, object.indexOf("%ls")) + RandomUtils.randomString(r.nextInt(15) + 1) + object.substring(object.indexOf("%ls") + "%ls".length());
+
+        while(object.contains("%p"))
+            object = object.substring(0, object.indexOf("%p")) + randomPlayer() + object.substring(object.indexOf("%p") + "%p".length());
+
         return object;
+    }
+
+    private String randomPlayer() {
+        final String playerName = mc.getNetHandler().getPlayerInfoMap().stream()
+                .map(playerInfo -> playerInfo.getGameProfile().getName())
+                .filter(name -> !name.equalsIgnoreCase(mc.thePlayer.getName()))
+                .findAny()
+                .orElse("none");
+
+        return playerName;
     }
 
 }
