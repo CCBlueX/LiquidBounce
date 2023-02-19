@@ -1,13 +1,12 @@
 /*
- * LiquidBounce Hacked Client
- * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
- * https://github.com/CCBlueX/LiquidBounce/
- */
+    * LiquidBounce Hacked Client
+    * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+    * https://github.com/CCBlueX/LiquidBounce/
+    */
 package net.ccbluex.liquidbounce.ui.client.altmanager.menus
 
 import com.thealtening.AltService.EnumAltService
 import me.liuli.elixir.account.CrackedAccount
-import me.liuli.elixir.account.MicrosoftAccount
 import me.liuli.elixir.account.MojangAccount
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
@@ -15,7 +14,6 @@ import net.ccbluex.liquidbounce.ui.elements.GuiPasswordField
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.TabUtils
-import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiButton
@@ -30,12 +28,12 @@ import java.io.IOException
 import kotlin.concurrent.thread
 
 class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: Boolean = false) : GuiScreen() {
-    
+
     private lateinit var addButton: GuiButton
     private lateinit var clipboardButton: GuiButton
     private lateinit var username: GuiTextField
     private lateinit var password: GuiTextField
-    
+
     private var status = "§7Idle..."
 
     override fun initGui() {
@@ -48,9 +46,17 @@ class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: B
         buttonList.add(GuiButton(3, width / 2 - 100, 143, "Login with Microsoft"))
 
         // Add and back button
-        buttonList.add(GuiButton(1, width / 2 - 100, height - 54, 98, 20, if (directLogin) "Login" else "Add").also { addButton = it })
+        buttonList.add(
+            GuiButton(
+                1,
+                width / 2 - 100,
+                height - 54,
+                98,
+                20,
+                if (directLogin) "Login" else "Add"
+            ).also { addButton = it })
         buttonList.add(GuiButton(0, width / 2 + 2, height - 54, 98, 20, "Back"))
-        
+
         username = GuiTextField(2, Fonts.font40, width / 2 - 100, 60, 200, 20)
         username.isFocused = true
         username.maxStringLength = Int.MAX_VALUE
@@ -106,7 +112,8 @@ class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: B
             }
 
             2 -> try {
-                val clipboardData = Toolkit.getDefaultToolkit().systemClipboard.getData(DataFlavor.stringFlavor) as String
+                val clipboardData =
+                    Toolkit.getDefaultToolkit().systemClipboard.getData(DataFlavor.stringFlavor) as String
 
                 val accountData = clipboardData.split(":".toRegex(), limit = 2)
                 if (!clipboardData.contains(":") || accountData.size != 2) {
@@ -121,39 +128,14 @@ class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: B
             }
 
             3 -> {
-                MicrosoftAccount.buildFromOpenBrowser(object : MicrosoftAccount.OAuthHandler {
-
-                    /**
-                     * Called when the user has cancelled the authentication process or the thread has been interrupted
-                     */
-                    override fun authError(error: String) {
-                        status = "§c$error"
-                    }
-
-                    /**
-                     * Called when the user has completed authentication
-                     */
-                    override fun authResult(account: MicrosoftAccount) {
-                        if (LiquidBounce.fileManager.accountsConfig.accountExists(account)) {
-                            status = "§cThe account has already been added."
-                            return
-                        }
-
-                        LiquidBounce.fileManager.accountsConfig.addAccount(account)
-                        LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig)
-                        status = "§aThe account has been added."
+                mc.displayGuiScreen(
+                    GuiMicrosoftLoginProgress({
+                        status = it
+                    }, {
                         prevGui.status = status
                         mc.displayGuiScreen(prevGui)
-                    }
-
-                    /**
-                     * Called when the server has prepared the user for authentication
-                     */
-                    override fun openUrl(url: String) {
-                        MiscUtils.showURL(url)
-                    }
-
-                })
+                    })
+                )
             }
         }
     }
@@ -165,10 +147,12 @@ class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: B
                 mc.displayGuiScreen(prevGui)
                 return
             }
+
             Keyboard.KEY_TAB -> {
                 TabUtils.tab(username, password)
                 return
             }
+
             Keyboard.KEY_RETURN -> {
                 actionPerformed(addButton)
                 return
