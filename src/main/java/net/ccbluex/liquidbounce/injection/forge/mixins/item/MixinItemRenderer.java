@@ -101,8 +101,8 @@ public abstract class MixinItemRenderer {
 
             if(this.itemToRender.getItem() instanceof net.minecraft.item.ItemMap) {
                 this.renderItemMap(abstractclientplayer, f2, f, f1);
-            } else if (abstractclientplayer.getItemInUseCount() > 0 || (itemToRender.getItem() instanceof ItemSword && killAura.getBlockingStatus())) {
-                EnumAction enumaction = killAura.getBlockingStatus() ? EnumAction.BLOCK : this.itemToRender.getItemUseAction();
+            } else if (abstractclientplayer.getItemInUseCount() > 0 || (itemToRender.getItem() instanceof ItemSword && killAura.getRenderBlocking())) {
+                EnumAction enumaction = killAura.getRenderBlocking() ? EnumAction.BLOCK : this.itemToRender.getItemUseAction();
 
                 switch(enumaction) {
                     case NONE:

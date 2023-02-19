@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.client.gui.inventory.GuiContainer
 import net.minecraft.client.gui.inventory.GuiInventory
 import net.minecraft.enchantment.EnchantmentHelper
@@ -91,7 +90,7 @@ class KillAura : Module() {
     private val keepSprintValue = BoolValue("KeepSprint", true)
 
     // AutoBlock
-    private val autoBlockValue = ListValue("AutoBlock", arrayOf("Off", "Packet", "AfterTick"), "Packet")
+    private val autoBlockValue = ListValue("AutoBlock", arrayOf("Off", "Packet", "AfterTick", "Fake"), "Packet")
     private val interactAutoBlockValue = BoolValue("InteractAutoBlock", true)
     private val blockRate = IntegerValue("BlockRate", 100, 1, 100)
 
@@ -170,11 +169,11 @@ class KillAura : Module() {
     // Container Delay
     private var containerOpen = -1L
 
-    // Fake block status
-    var blockingStatus = false
-
-    // fix ncp
+    // Block status
+    var renderBlocking = false
+    var blockStatus = false
     var blockStopInDead = false
+
     /**
      * Enable kill aura module
      */
@@ -212,8 +211,15 @@ class KillAura : Module() {
             updateHitable()
 
             // AutoBlock
-            if (autoBlockValue.get().equals("AfterTick", true) && canBlock)
-                startBlocking(currentTarget!!, hitable)
+            if (canBlock) {
+                when {
+                    autoBlockValue.get().equals("AfterTick", true) ->
+                        startBlocking(currentTarget!!, hitable)
+                    autoBlockValue.get().equals("Fake", true) ->
+                        startBlocking(currentTarget!!, hitable, fake = true)
+                }
+
+            }
 
             return
         }
@@ -521,7 +527,7 @@ class KillAura : Module() {
         // Stop blocking
         val thePlayer = mc.thePlayer!!
 
-        if (thePlayer.isBlocking || blockingStatus)
+        if (thePlayer.isBlocking || renderBlocking)
             stopBlocking()
 
         // Call attack event
@@ -650,37 +656,41 @@ class KillAura : Module() {
     /**
      * Start blocking
      */
-    private fun startBlocking(interactEntity: Entity, interact: Boolean) {
-        if (!(blockRate.get() > 0 && Random().nextInt(100) <= blockRate.get()))
-            return
+    private fun startBlocking(interactEntity: Entity, interact: Boolean, fake: Boolean = false) {
+        if (!fake) {
+            if (!(blockRate.get() > 0 && Random().nextInt(100) <= blockRate.get()))
+                return
 
-        if (interact) {
-            val positionEye = mc.renderViewEntity?.getPositionEyes(1F)
+            if (interact) {
+                val positionEye = mc.renderViewEntity?.getPositionEyes(1F)
 
-            val expandSize = interactEntity.collisionBorderSize.toDouble()
-            val boundingBox = interactEntity.entityBoundingBox.expand(expandSize, expandSize, expandSize)
+                val expandSize = interactEntity.collisionBorderSize.toDouble()
+                val boundingBox = interactEntity.entityBoundingBox.expand(expandSize, expandSize, expandSize)
 
-            val (yaw, pitch) = RotationUtils.targetRotation ?: Rotation(mc.thePlayer!!.rotationYaw, mc.thePlayer!!.rotationPitch)
-            val yawCos = cos(-yaw * 0.017453292F - Math.PI.toFloat())
-            val yawSin = sin(-yaw * 0.017453292F - Math.PI.toFloat())
-            val pitchCos = -cos(-pitch * 0.017453292F)
-            val pitchSin = sin(-pitch * 0.017453292F)
-            val range = min(maxRange.toDouble(), mc.thePlayer!!.getDistanceToEntityBox(interactEntity)) + 1
-            val lookAt = positionEye!!.addVector(yawSin * pitchCos * range, pitchSin * range, yawCos * pitchCos * range)
+                val (yaw, pitch) = RotationUtils.targetRotation ?: Rotation(mc.thePlayer!!.rotationYaw, mc.thePlayer!!.rotationPitch)
+                val yawCos = cos(-yaw * 0.017453292F - Math.PI.toFloat())
+                val yawSin = sin(-yaw * 0.017453292F - Math.PI.toFloat())
+                val pitchCos = -cos(-pitch * 0.017453292F)
+                val pitchSin = sin(-pitch * 0.017453292F)
+                val range = min(maxRange.toDouble(), mc.thePlayer!!.getDistanceToEntityBox(interactEntity)) + 1
+                val lookAt = positionEye!!.addVector(yawSin * pitchCos * range, pitchSin * range, yawCos * pitchCos * range)
 
-            val movingObject = boundingBox.calculateIntercept(positionEye, lookAt) ?: return
-            val hitVec = movingObject.hitVec
+                val movingObject = boundingBox.calculateIntercept(positionEye, lookAt) ?: return
+                val hitVec = movingObject.hitVec
 
-            mc.netHandler.addToSendQueue(C02PacketUseEntity(interactEntity, Vec3(
+                mc.netHandler.addToSendQueue(C02PacketUseEntity(interactEntity, Vec3(
                     hitVec.xCoord - interactEntity.posX,
                     hitVec.yCoord - interactEntity.posY,
                     hitVec.zCoord - interactEntity.posZ)
-            ))
-            mc.netHandler.addToSendQueue(C02PacketUseEntity(interactEntity, C02PacketUseEntity.Action.INTERACT))
+                ))
+                mc.netHandler.addToSendQueue(C02PacketUseEntity(interactEntity, C02PacketUseEntity.Action.INTERACT))
+            }
+
+            mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, mc.thePlayer!!.inventory.getCurrentItem(), 0.0F, 0.0F, 0.0F))
+            blockStatus = true
         }
 
-        mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, mc.thePlayer!!.inventory.getCurrentItem(), 0.0F, 0.0F, 0.0F))
-        blockingStatus = true
+        renderBlocking = true
     }
 
 
@@ -688,10 +698,12 @@ class KillAura : Module() {
      * Stop blocking
      */
     private fun stopBlocking() {
-        if (blockingStatus) {
+        if (blockStatus) {
             mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
-            blockingStatus = false
+            blockStatus = false
         }
+
+        renderBlocking = false
     }
 
     /**

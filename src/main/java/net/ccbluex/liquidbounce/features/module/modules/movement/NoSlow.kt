@@ -54,7 +54,7 @@ class NoSlow : Module() {
             return
 
         val aura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
-        if (!thePlayer.isBlocking && !aura.blockingStatus)
+        if (!thePlayer.isBlocking && !aura.blockStatus)
             return
 
         if (this.packet.get()) {
