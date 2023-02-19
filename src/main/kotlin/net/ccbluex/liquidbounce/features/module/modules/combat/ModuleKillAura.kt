@@ -190,11 +190,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
             // Attack enemy according to cps and cooldown
             val clicks = cpsTimer.clicks(condition = {
-                (!cooldown || player.getAttackCooldownProgress(0.0f) >= 1.0f) && (!ModuleCriticals.shouldWaitForCrit() || raycastedEntity.velocity.lengthSquared() > 0.25 * 0.25) && (
-                    attackShielding || raycastedEntity !is PlayerEntity || player.mainHandStack.item !is AxeItem || !raycastedEntity.wouldBlockHit(
-                        player
-                    )
-                    )
+                (!cooldown || player.getAttackCooldownProgress(0.0f) >= 1.0f) && (!ModuleCriticals.shouldWaitForCrit() || raycastedEntity.velocity.lengthSquared() > 0.25 * 0.25) && (attackShielding || raycastedEntity !is PlayerEntity || player.mainHandStack.item !is AxeItem || !raycastedEntity.wouldBlockHit(
+                    player
+                ))
             }, cps)
 
             repeat(clicks) {
@@ -208,9 +206,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 if (blocking) {
                     network.sendPacket(
                         PlayerActionC2SPacket(
-                            PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
-                            BlockPos.ORIGIN,
-                            Direction.DOWN
+                            PlayerActionC2SPacket.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.DOWN
                         )
                     )
 
@@ -272,15 +268,11 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             val predictedTicks = predict.start + (predict.endInclusive - predict.start) * Math.random()
 
             val targetPrediction = Vec3d(
-                target.x - target.prevX,
-                target.y - target.prevY,
-                target.z - target.prevZ
+                target.x - target.prevX, target.y - target.prevY, target.z - target.prevZ
             ).multiply(predictedTicks)
 
             val playerPrediction = Vec3d(
-                player.x - player.prevX,
-                player.y - player.prevY,
-                player.z - player.prevZ
+                player.x - player.prevX, player.y - player.prevY, player.z - player.prevZ
             ).multiply(predictedTicks)
 
             val box = target.boundingBox.offset(targetPrediction)

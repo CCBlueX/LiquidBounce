@@ -97,6 +97,8 @@ object RotationManager : Listenable {
         var visibleRot: VecRotation? = null
         var notVisibleRot: VecRotation? = null
 
+        // There are some spots that loops cannot detect, therefore this is used
+        // since it finds the nearest spot. Should only be used when all loops have failed to find a spot.
         val nearestSpot = getNearestPoint(eyes, box)
         val nearestDistance = eyes.squaredDistanceTo(nearestSpot)
 
