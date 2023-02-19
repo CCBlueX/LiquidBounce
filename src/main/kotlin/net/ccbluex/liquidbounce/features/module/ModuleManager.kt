@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -177,7 +177,12 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleCameraClip,
             ModuleSprint,
             ModuleReach,
-            ModulePerfectHit
+            ModulePerfectHit,
+            ModuleAutoClicker,
+            ModuleAntiVanish,
+            ModuleQuickPerspectiveSwap,
+            ModuleMurderMystery,
+            ModuleAutoDodge
         )
 
         builtin.apply {
@@ -203,6 +208,9 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
         return filter { it.name.startsWith(begin, true) && validator(it) }.map { it.name }
     }
 
+    /**
+     * This is being used by UltralightJS for the implementation of the ClickGUI. DO NOT REMOVE!
+     */
     fun getCategories() = Category.values().map { it.readableName }.toTypedArray()
 
 }

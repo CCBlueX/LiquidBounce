@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.base.ultralight.glfw
+package net.ccbluex.liquidbounce.base.ultralight.impl.glfw
 
 import com.labymedia.ultralight.input.*
 import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
@@ -48,7 +48,7 @@ class GlfwInputAdapter {
             .modifiers(glfwToUltralightModifiers(mods))
 
         // Send the event
-        UltralightEngine.activeView?.fireKeyEvent(event)
+        UltralightEngine.inputAwareOverlay?.fireKeyEvent(event)
         if ((action == GLFW_PRESS || action == GLFW_REPEAT) && (key == GLFW_KEY_ENTER || key == GLFW.GLFW_KEY_TAB)) {
             // These keys need to be translated specially
             val text = if (key == GLFW_KEY_ENTER) "\r" else "\t"
@@ -58,7 +58,7 @@ class GlfwInputAdapter {
                 .unmodifiedText(text)
 
             // Fire the event
-            UltralightEngine.activeView?.fireKeyEvent(extraEvent)
+            UltralightEngine.inputAwareOverlay?.fireKeyEvent(extraEvent)
         }
     }
 
@@ -79,7 +79,7 @@ class GlfwInputAdapter {
             .unmodifiedText(text)
 
         // Fire the event
-        UltralightEngine.activeView?.fireKeyEvent(event)
+        UltralightEngine.inputAwareOverlay?.fireKeyEvent(event)
     }
 
     /**
@@ -105,7 +105,7 @@ class GlfwInputAdapter {
             )
 
         // Fire the event
-        UltralightEngine.activeView?.fireMouseEvent(event)
+        UltralightEngine.inputAwareOverlay?.fireMouseEvent(event)
     }
 
     /**
@@ -146,7 +146,7 @@ class GlfwInputAdapter {
         }
 
         // Fire the event
-        UltralightEngine.activeView?.fireMouseEvent(event)
+        UltralightEngine.inputAwareOverlay?.fireMouseEvent(event)
     }
 
     /**
@@ -164,7 +164,7 @@ class GlfwInputAdapter {
             .type(UltralightScrollEventType.BY_PIXEL)
 
         // Fire the event
-        UltralightEngine.activeView?.fireScrollEvent(event)
+        UltralightEngine.inputAwareOverlay?.fireScrollEvent(event)
     }
 
     /**
@@ -175,9 +175,9 @@ class GlfwInputAdapter {
      */
     fun focusCallback(window: Long, focus: Boolean) {
         if (focus) {
-            UltralightEngine.activeView?.focus()
+            UltralightEngine.inputAwareOverlay?.focus()
         } else {
-            UltralightEngine.activeView?.unfocus()
+            UltralightEngine.inputAwareOverlay?.unfocus()
         }
     }
 

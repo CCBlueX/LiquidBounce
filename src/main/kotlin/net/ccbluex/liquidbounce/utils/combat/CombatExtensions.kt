@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -116,13 +116,16 @@ class EnemyConfigurable : Configurable("Enemies") {
 fun Entity.shouldBeShown(enemyConf: EnemyConfigurable = globalEnemyConfigurable) = enemyConf.isTargeted(this)
 
 fun Entity.shouldBeAttacked(enemyConf: EnemyConfigurable = globalEnemyConfigurable) = enemyConf.isTargeted(
-    this, true
+    this,
+    true
 )
 
 /**
  * Find the best emeny in current world in a specific range.
  */
 fun ClientWorld.findEnemy(
-    range: Float, player: Entity = mc.player!!, enemyConf: EnemyConfigurable = globalEnemyConfigurable,
+    range: Float,
+    player: Entity = mc.player!!,
+    enemyConf: EnemyConfigurable = globalEnemyConfigurable
 ) = entities.filter { it.shouldBeAttacked(enemyConf) }.map { Pair(it, it.boxedDistanceTo(player)) }
     .filter { (_, distance) -> distance <= range }.minByOrNull { (_, distance) -> distance }

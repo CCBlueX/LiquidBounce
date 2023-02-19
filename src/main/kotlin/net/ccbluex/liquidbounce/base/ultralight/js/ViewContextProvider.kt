@@ -24,6 +24,7 @@ import com.labymedia.ultralight.databind.context.ContextProviderFactory
 import com.labymedia.ultralight.javascript.JavascriptContextLock
 import com.labymedia.ultralight.javascript.JavascriptValue
 import net.ccbluex.liquidbounce.utils.client.ThreadLock
+import net.ccbluex.liquidbounce.utils.client.logger
 import java.util.function.Consumer
 
 /**
@@ -32,7 +33,12 @@ import java.util.function.Consumer
 class ViewContextProvider(private val view: ThreadLock<UltralightView>) : ContextProvider {
 
     override fun syncWithJavascript(callback: Consumer<JavascriptContextLock>) {
-        view.get().lockJavascriptContext().use { lock -> callback.accept(lock) }
+        runCatching {
+            view.get().lockJavascriptContext().use { lock -> callback.accept(lock) }
+        }.onFailure {
+            logger.warn("An exception occurred which prevented a JavaScript action from being executed by Ultralight JS Engine.")
+            return@onFailure
+        }
     }
 
     class Factory(private val view: ThreadLock<UltralightView>) : ContextProviderFactory {
@@ -42,5 +48,6 @@ class ViewContextProvider(private val view: ThreadLock<UltralightView>) : Contex
             // Else use the formula pointed at above to find a view for a given value.
             return ViewContextProvider(view)
         }
+
     }
 }

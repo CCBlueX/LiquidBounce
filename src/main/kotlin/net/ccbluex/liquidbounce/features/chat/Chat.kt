@@ -1,3 +1,22 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2016 - 2022 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package net.ccbluex.liquidbounce.features.chat
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
@@ -5,7 +24,6 @@ import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.chat.client.Client
 import net.ccbluex.liquidbounce.features.chat.client.packet.*
-
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
@@ -146,7 +164,7 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
             return
         }
 
-        player.sendMessage("§7[§a§lChat§7] §9$message".asText(), false)
+        player.sendMessage("§9§lLiquidChat §8▸ §7$message".asText(), false)
     }
 
     internal fun onMessage(user: User, message: String) {
@@ -160,7 +178,8 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
             return
         }
 
-        player.sendMessage("§7[§a§lChat§7] §9${user.name}: §r$message".asText(), false)
+
+        player.sendMessage("§9§lLiquidChat §8▸ §9${user.name} §8▸§7 $message".asText(), false)
     }
 
     internal fun onPrivateMessage(user: User, message: String) {
@@ -174,7 +193,7 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
             return
         }
 
-        player.sendMessage("§7[§a§lChat§7] §9${user.name}: §r$message".asText(), false)
+        player.sendMessage("§9§lLiquidChat §8▸ §9${user.name} §8▸§7 $message".asText(), false)
     }
 
     internal fun onError(cause: Throwable) {
@@ -192,8 +211,6 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
         // Reconnect to chat server
         reconnect(async = true)
     }
-
-
 
     /**
      * Request Mojang authentication details for login
@@ -242,8 +259,6 @@ object Chat : ToggleableConfigurable(null, "chat", true) {
             is ClientNewJWTPacket -> onReceivedJwtToken(packet.token)
         }
     }
-
-
 
     /**
      * Send chat message to server

@@ -27,12 +27,20 @@
 		if (moving) {
 			left += e.screenX - prevX;
 			top += e.screenY - prevY;
+
+            // Panels should not go out of bounds
+            if (top < 0) {
+                top = 0;
+            }
+            if (left < 0) {
+                left = 0;
+            }
 		}
 
         prevX = e.screenX;
         prevY = e.screenY;
 	}
-	
+
 	function onMouseUp() {
 		moving = false;
         storage.setItem(`clickgui.panel.${name}.top`, top);

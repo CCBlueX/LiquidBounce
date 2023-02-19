@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.base.ultralight.js.bindings
 
 /**
- * A easy way to create kotlin things in JS
+ * An easy way to create kotlin things in JS
  */
 object UltralightJsKotlin {
 

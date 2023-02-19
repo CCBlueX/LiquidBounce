@@ -99,7 +99,8 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
         }
 
         val entity = targetTracker.lockedOnTarget ?: return
-        val clicks = cpsTimer.clicks(condition = { true },
+        val clicks = cpsTimer.clicks(
+            condition = { true },
             cps
         )
 
