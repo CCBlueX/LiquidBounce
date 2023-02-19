@@ -33,10 +33,8 @@ class GuiMicrosoftLoginProgress(val updateStatus: (String) -> Unit, val done: ()
                  * Called when the user has cancelled the authentication process or the thread has been interrupted
                  */
                 override fun authError(error: String) {
-                    errorAndDone(error)
-
                     if (!interrupted) {
-                        done()
+                        errorAndDone(error)
                     }
                     loginUrl = null
                 }
@@ -53,9 +51,7 @@ class GuiMicrosoftLoginProgress(val updateStatus: (String) -> Unit, val done: ()
 
                     LiquidBounce.fileManager.accountsConfig.addAccount(account)
                     LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig)
-
-                    updateStatus("Successfully logged in.")
-                    done()
+                    successAndDone()
                 }
 
                 /**
@@ -116,6 +112,11 @@ class GuiMicrosoftLoginProgress(val updateStatus: (String) -> Unit, val done: ()
         interrupted = true
         oAuthServer?.stop()
         super.onGuiClosed()
+    }
+
+    private fun successAndDone() {
+        updateStatus("§aSuccessfully logged in.")
+        done()
     }
 
     private fun errorAndDone(error: String) {
