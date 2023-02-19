@@ -110,7 +110,7 @@ class GuiMicrosoftLoginProgress(val updateStatus: (String) -> Unit, val done: ()
 
     override fun onGuiClosed() {
         interrupted = true
-        oAuthServer?.stop()
+        oAuthServer?.stop(isInterrupt = false)
         super.onGuiClosed()
     }
 
