@@ -7,6 +7,8 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.item;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura;
+import net.ccbluex.liquidbounce.features.module.modules.render.Animation;
+import net.ccbluex.liquidbounce.features.module.modules.render.Animations;
 import net.ccbluex.liquidbounce.features.module.modules.render.AntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.SwingAnimation;
 import net.minecraft.client.Minecraft;
@@ -66,9 +68,6 @@ public abstract class MixinItemRenderer {
     protected abstract void performDrinking(AbstractClientPlayer clientPlayer, float partialTicks);
 
     @Shadow
-    protected abstract void doBlockTransformations();
-
-    @Shadow
     protected abstract void doBowTransformations(float partialTicks, AbstractClientPlayer clientPlayer);
 
     @Shadow
@@ -114,17 +113,28 @@ public abstract class MixinItemRenderer {
                         this.transformFirstPersonItem(f, f1);
                         break;
                     case BLOCK:
-                        this.transformFirstPersonItem(f + 0.1F, f1);
-                        this.doBlockTransformations();
-                        GlStateManager.translate(-0.5F, 0.2F, 0.0F);
+                        final Animations animations = Animations.INSTANCE;
+                        final Animation animation;
+
+                        if (animations.getState()) {
+                            animation = animations.getAnimation();
+                        } else { // Use 1.7 animation
+                            animation = animations.getDefaultAnimation();
+                        }
+
+                        if (animation != null) {
+                            animation.transform(f1, f, abstractclientplayer);
+                        }
                         break;
                     case BOW:
                         this.transformFirstPersonItem(f, f1);
                         this.doBowTransformations(partialTicks, abstractclientplayer);
                 }
             }else{
-                if (!LiquidBounce.moduleManager.getModule(SwingAnimation.class).getState())
+                if (!LiquidBounce.moduleManager.getModule(SwingAnimation.class).getState()) {
                     this.doItemUsedTransformations(f1);
+                }
+
                 this.transformFirstPersonItem(f, f1);
             }
 
