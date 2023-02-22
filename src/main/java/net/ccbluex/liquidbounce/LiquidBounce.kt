@@ -14,7 +14,6 @@ import net.ccbluex.liquidbounce.features.special.AntiForge
 import net.ccbluex.liquidbounce.features.special.BungeeCordSpoof
 import net.ccbluex.liquidbounce.features.special.ClientRichPresence
 import net.ccbluex.liquidbounce.file.FileManager
-
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.script.remapper.Remapper.loadSrg
 import net.ccbluex.liquidbounce.tabs.BlocksTab
@@ -26,11 +25,11 @@ import net.ccbluex.liquidbounce.ui.client.hud.HUD
 import net.ccbluex.liquidbounce.ui.client.hud.HUD.Companion.createDefault
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.update.UpdateInfo.gitInfo
+import net.ccbluex.liquidbounce.utils.Background
 import net.ccbluex.liquidbounce.utils.ClassUtils.hasForge
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
-import net.minecraft.util.ResourceLocation
 import kotlin.concurrent.thread
 
 object LiquidBounce {
@@ -63,7 +62,7 @@ object LiquidBounce {
     lateinit var clickGui: ClickGui
 
     // Menu Background
-    var background: ResourceLocation? = null
+    var background: Background? = null
 
     // Discord RPC
     lateinit var clientRichPresence: ClientRichPresence

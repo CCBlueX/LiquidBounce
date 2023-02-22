@@ -9,10 +9,14 @@ import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.modules.misc.ComponentOnHover;
 import net.ccbluex.liquidbounce.features.module.modules.render.HUD;
 import net.ccbluex.liquidbounce.ui.client.GuiBackground;
+import net.ccbluex.liquidbounce.utils.Background;
 import net.ccbluex.liquidbounce.utils.render.ParticleUtils;
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.BackgroundShader;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.*;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldRenderer;
@@ -84,7 +88,11 @@ public abstract class MixinGuiScreen {
         GlStateManager.disableFog();
 
         if(GuiBackground.Companion.getEnabled()) {
-            if (LiquidBounce.INSTANCE.getBackground() == null) {
+            final Background background = LiquidBounce.INSTANCE.getBackground();
+
+            if (background == null) {
+                // Use default background shader
+
                 BackgroundShader.BACKGROUND_SHADER.startShader();
 
                 final Tessellator instance = Tessellator.getInstance();
@@ -98,17 +106,14 @@ public abstract class MixinGuiScreen {
 
                 BackgroundShader.BACKGROUND_SHADER.stopShader();
             }else{
-                final ScaledResolution scaledResolution = new ScaledResolution(mc);
-                final int width = scaledResolution.getScaledWidth();
-                final int height = scaledResolution.getScaledHeight();
-
-                mc.getTextureManager().bindTexture(LiquidBounce.INSTANCE.getBackground());
-                GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-                Gui.drawScaledCustomSizeModalRect(0, 0, 0.0F, 0.0F, width, height, width, height, width, height);
+                // Use custom background
+                background.drawBackground(width, height);
             }
 
-            if (GuiBackground.Companion.getParticles())
+            if (GuiBackground.Companion.getParticles()) {
                 ParticleUtils.drawParticles(Mouse.getX() * width / mc.displayWidth, height - Mouse.getY() * height / mc.displayHeight - 1);
+            }
+
             callbackInfo.cancel();
         }
     }

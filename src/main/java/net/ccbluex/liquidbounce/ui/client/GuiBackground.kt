@@ -6,18 +6,13 @@
 package net.ccbluex.liquidbounce.ui.client
 
 import net.ccbluex.liquidbounce.LiquidBounce
-
 import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.utils.Background
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
-import net.minecraft.client.renderer.texture.DynamicTexture
-import net.minecraft.util.ResourceLocation
 import org.lwjgl.input.Keyboard
-import java.io.FileInputStream
-import java.io.FileOutputStream
 import java.nio.file.Files
-import javax.imageio.ImageIO
 
 class GuiBackground(val prevGui: GuiScreen) : GuiScreen() {
 
@@ -52,26 +47,54 @@ class GuiBackground(val prevGui: GuiScreen) : GuiScreen() {
             }
             3 -> {
                 val file = MiscUtils.openFileChooser() ?: return
-                if (file.isDirectory) return
+
+                if (file.isDirectory)
+                    return
+
+                // Delete old files
+                LiquidBounce.background = null
+                LiquidBounce.fileManager.backgroundImageFile.delete()
+                LiquidBounce.fileManager.backgroundShaderFile.delete()
+
+                // Copy new file
+                val fileExtension = file.extension
 
                 try {
-                    Files.copy(file.toPath(), FileOutputStream(LiquidBounce.fileManager.backgroundFile))
+                    val destFile =  when (fileExtension) {
+                        "png" -> LiquidBounce.fileManager.backgroundImageFile
+                        "frag", "glsl", "shader" -> LiquidBounce.fileManager.backgroundShaderFile
+                        else -> {
+                            MiscUtils.showErrorPopup("Error", "Invalid file extension: $fileExtension")
+                            return
+                        }
+                    }
 
-                    val image = ImageIO.read(FileInputStream(LiquidBounce.fileManager.backgroundFile))
-                    val location = ResourceLocation(LiquidBounce.CLIENT_NAME.lowercase() + "/background.png")
+                    Files.copy(file.toPath(), destFile.outputStream())
 
-                    LiquidBounce.background = location
+                    // Load new background
+                    try {
+                        val background = Background.createBackground(destFile)
+                        LiquidBounce.background = background
+                    } catch (e: IllegalArgumentException) {
+                        LiquidBounce.background = null
+                        LiquidBounce.fileManager.backgroundImageFile.delete()
+                        LiquidBounce.fileManager.backgroundShaderFile.delete()
 
-                    mc.textureManager.loadTexture(location, DynamicTexture(image))
+                        MiscUtils.showErrorPopup("Error", "Invalid file extension: $fileExtension")
+                    }
                 } catch (e: Exception) {
                     e.printStackTrace()
                     MiscUtils.showErrorPopup("Error", "Exception class: " + e.javaClass.name + "\nMessage: " + e.message)
-                    LiquidBounce.fileManager.backgroundFile.delete()
+
+                    LiquidBounce.background = null
+                    LiquidBounce.fileManager.backgroundImageFile.delete()
+                    LiquidBounce.fileManager.backgroundShaderFile.delete()
                 }
             }
             4 -> {
                 LiquidBounce.background = null
-                LiquidBounce.fileManager.backgroundFile.delete()
+                LiquidBounce.fileManager.backgroundImageFile.delete()
+                LiquidBounce.fileManager.backgroundShaderFile.delete()
             }
             0 -> mc.displayGuiScreen(prevGui)
         }

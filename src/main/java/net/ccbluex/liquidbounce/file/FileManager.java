@@ -9,17 +9,13 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.file.configs.*;
+import net.ccbluex.liquidbounce.utils.Background;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.MinecraftInstance;
-import net.minecraft.client.renderer.texture.DynamicTexture;
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileInputStream;
 import java.lang.reflect.Field;
 
 @SideOnly(Side.CLIENT)
@@ -38,7 +34,8 @@ public class FileManager extends MinecraftInstance {
     public final FileConfig hudConfig = new HudConfig(new File(dir, "hud.json"));
     public final FileConfig shortcutsConfig = new ShortcutsConfig(new File(dir, "shortcuts.json"));
 
-    public final File backgroundFile = new File(dir, "userbackground.png");
+    public final File backgroundImageFile = new File(dir, "userbackground.png");
+    public final File backgroundShaderFile = new File(dir, "userbackground.frag");
 
     public boolean firstStart =  false;
 
@@ -184,15 +181,17 @@ public class FileManager extends MinecraftInstance {
      * Load background for background
      */
     public void loadBackground() {
-        if(backgroundFile.exists()) {
+        File backgroundFile = null;
+
+        if(backgroundImageFile.exists()) {
+            backgroundFile = backgroundImageFile;
+        }else if(backgroundShaderFile.exists()) {
+            backgroundFile = backgroundShaderFile;
+        }
+
+        if (backgroundFile != null) {
             try {
-                final BufferedImage bufferedImage = ImageIO.read(new FileInputStream(backgroundFile));
-
-                if(bufferedImage == null)
-                    return;
-
-                LiquidBounce.INSTANCE.setBackground(new ResourceLocation(LiquidBounce.CLIENT_NAME.toLowerCase() + "/background.png"));
-                mc.getTextureManager().loadTexture(LiquidBounce.INSTANCE.getBackground(), new DynamicTexture(bufferedImage));
+                LiquidBounce.INSTANCE.setBackground(Background.Companion.createBackground(backgroundFile));
                 ClientUtils.getLogger().info("[FileManager] Loaded background.");
             }catch(final Exception e) {
                 ClientUtils.getLogger().error("[FileManager] Failed to load background.", e);

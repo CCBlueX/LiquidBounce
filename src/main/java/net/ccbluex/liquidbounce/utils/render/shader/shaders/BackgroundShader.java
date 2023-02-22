@@ -10,6 +10,9 @@ import net.ccbluex.liquidbounce.utils.render.shader.Shader;
 import org.lwjgl.opengl.Display;
 import org.lwjgl.opengl.GL20;
 
+import java.io.File;
+import java.io.IOException;
+
 public final class BackgroundShader extends Shader {
 
     public final static BackgroundShader BACKGROUND_SHADER = new BackgroundShader();
@@ -18,6 +21,10 @@ public final class BackgroundShader extends Shader {
 
     public BackgroundShader() {
         super("background.frag");
+    }
+
+    public BackgroundShader(final File fragmentShader) throws IOException {
+        super(fragmentShader);
     }
 
     @Override

@@ -10,7 +10,10 @@ import net.ccbluex.liquidbounce.utils.MinecraftInstance;
 import org.apache.commons.io.IOUtils;
 import org.lwjgl.opengl.*;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -50,6 +53,34 @@ public abstract class Shader extends MinecraftInstance {
         ARBShaderObjects.glValidateProgramARB(program);
 
         ClientUtils.getLogger().info("[Shader] Successfully loaded: " + fragmentShader);
+    }
+
+    public Shader(final File fragmentShader) throws IOException {
+        int vertexShaderID, fragmentShaderID;
+
+        final InputStream vertexStream = getClass().getResourceAsStream("/assets/minecraft/liquidbounce/shader/vertex.vert");
+        vertexShaderID = createShader(IOUtils.toString(vertexStream), ARBVertexShader.GL_VERTEX_SHADER_ARB);
+        IOUtils.closeQuietly(vertexStream);
+
+        final InputStream fragmentStream = Files.newInputStream(fragmentShader.toPath());
+        fragmentShaderID = createShader(IOUtils.toString(fragmentStream), ARBFragmentShader.GL_FRAGMENT_SHADER_ARB);
+        IOUtils.closeQuietly(fragmentStream);
+
+        if(vertexShaderID == 0 || fragmentShaderID == 0)
+            return;
+
+        program = ARBShaderObjects.glCreateProgramObjectARB();
+
+        if(program == 0)
+            return;
+
+        ARBShaderObjects.glAttachObjectARB(program, vertexShaderID);
+        ARBShaderObjects.glAttachObjectARB(program, fragmentShaderID);
+
+        ARBShaderObjects.glLinkProgramARB(program);
+        ARBShaderObjects.glValidateProgramARB(program);
+
+        ClientUtils.getLogger().info("[Shader] Successfully loaded: " + fragmentShader.getName());
     }
 
     public void startShader() {
