@@ -22,7 +22,8 @@ public final class IconUtils {
         try {
             return new ByteBuffer[] {
                     readImageToBuffer(IconUtils.class.getResourceAsStream("/assets/minecraft/" + LiquidBounce.CLIENT_NAME.toLowerCase() + "/icon_16x16.png")),
-                    readImageToBuffer(IconUtils.class.getResourceAsStream("/assets/minecraft/" + LiquidBounce.CLIENT_NAME.toLowerCase() + "/icon_32x32.png"))
+                    readImageToBuffer(IconUtils.class.getResourceAsStream("/assets/minecraft/" + LiquidBounce.CLIENT_NAME.toLowerCase() + "/icon_32x32.png")),
+                    readImageToBuffer(IconUtils.class.getResourceAsStream("/assets/minecraft/" + LiquidBounce.CLIENT_NAME.toLowerCase() + "/icon_64x64.png"))
             };
         }catch(IOException e) {
             e.printStackTrace();
