@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.event.Listenable;
 import net.ccbluex.liquidbounce.event.PacketEvent;
 import net.ccbluex.liquidbounce.event.TickEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.FastBow;
+import net.ccbluex.liquidbounce.utils.misc.RandomUtils;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
 import net.minecraft.network.Packet;
@@ -168,16 +169,24 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
             return new VecRotation(vec3, toRotation(vec3, predict));
         }
 
-        final Vec3 randomVec = new Vec3(bb.minX + (bb.maxX - bb.minX) * x * 0.8, bb.minY + (bb.maxY - bb.minY) * y * 0.8, bb.minZ + (bb.maxZ - bb.minZ) * z * 0.8);
+        final Vec3 randomVec = new Vec3(bb.minX + (bb.maxX - bb.minX) * x * 0.8999D, bb.minY + (bb.maxY - bb.minY) * y * 0.8599D, bb.minZ + (bb.maxZ - bb.minZ) * z * 0.8999D);
         final Rotation randomRotation = toRotation(randomVec, predict);
 
         final Vec3 eyes = mc.thePlayer.getPositionEyes(1F);
 
         VecRotation vecRotation = null;
 
-        for(double xSearch = 0.15D; xSearch < 0.85D; xSearch += 0.1D) {
-            for (double ySearch = 0.15D; ySearch < 1D; ySearch += 0.1D) {
-                for (double zSearch = 0.15D; zSearch < 0.85D; zSearch += 0.1D) {
+        final double searchAreaHorizontalStart = random ?  RandomUtils.nextDouble(0.10D, 0.15D) : 0.15D;
+        final double searchAreaHorizontalEnd = random ? RandomUtils.nextDouble(0.10D, 0.15D) : 0.85D;
+
+        final double searchAreaVerticalStart = random ? RandomUtils.nextDouble(0.05D, 0.15D) : 0.15D;
+        final double searchAreaVerticalEnd = random ? RandomUtils.nextDouble(0.9D, 1D) : 1D;
+
+        // Random might increase steps which will affect performance
+
+        for(double xSearch = searchAreaHorizontalStart; xSearch < searchAreaHorizontalEnd; xSearch += random ? RandomUtils.nextDouble(0.05D, 0.1D) : 0.1D) {
+            for (double ySearch = searchAreaVerticalStart; ySearch < searchAreaVerticalEnd; ySearch += random ? RandomUtils.nextDouble(0.05D, 0.1D) : 0.1D) {
+                for (double zSearch = searchAreaHorizontalStart; zSearch < searchAreaHorizontalEnd; zSearch += random ? RandomUtils.nextDouble(0.05D, 0.1D) : 0.1D) {
                     final Vec3 vec3 = new Vec3(bb.minX + (bb.maxX - bb.minX) * xSearch,
                             bb.minY + (bb.maxY - bb.minY) * ySearch, bb.minZ + (bb.maxZ - bb.minZ) * zSearch);
                     final Rotation rotation = toRotation(vec3, predict);
@@ -287,6 +296,16 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
         return RaycastUtils.raycastEntity(blockReachDistance, entity -> targetEntity != null && targetEntity.equals(entity)) != null;
     }
 
+    /**
+     * Allows you to check if your crosshair is over your target entity
+     *
+     * @param targetEntity       your target entity
+     * @param blockReachDistance your reach
+     * @return if crosshair is over target
+     */
+    public static boolean isRotationFaced(final Entity targetEntity, double blockReachDistance, final Rotation rotation) {
+        return RaycastUtils.raycastEntity(blockReachDistance, rotation.getYaw(), rotation.getPitch(), entity -> targetEntity != null && targetEntity.equals(entity)) != null;
+    }
     /**
      * Allows you to check if your enemy is behind a wall
      */

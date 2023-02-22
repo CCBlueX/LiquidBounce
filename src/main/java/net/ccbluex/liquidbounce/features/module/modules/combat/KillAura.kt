@@ -117,9 +117,13 @@ class KillAura : Module() {
         }
     }
 
+    private val micronizedValue = BoolValue("Micronized", true)
+    private val micronizedStrength = FloatValue("MicronizedStrength", 0.8f, 0.2f, 2f)
+
     private val silentRotationValue = BoolValue("SilentRotation", true)
     private val rotationStrafeValue = ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off")
     private val randomCenterValue = BoolValue("RandomCenter", true)
+    private val randomMultiplier = FloatValue("RandomMultiplier", 0.8f, 0f, 1f)
     private val outborderValue = BoolValue("Outborder", false)
     private val fovValue = FloatValue("FOV", 180f, 0f, 180f)
 
@@ -596,12 +600,13 @@ class KillAura : Module() {
 
         var boundingBox = entity.entityBoundingBox
 
-        if (predictValue.get())
+        if (predictValue.get()) {
             boundingBox = boundingBox.offset(
-                    (entity.posX - entity.prevPosX - (mc.thePlayer!!.posX - mc.thePlayer!!.prevPosX)) * RandomUtils.nextFloat(minPredictSize.get(), maxPredictSize.get()),
-                    (entity.posY - entity.prevPosY - (mc.thePlayer!!.posY - mc.thePlayer!!.prevPosY)) * RandomUtils.nextFloat(minPredictSize.get(), maxPredictSize.get()),
-                    (entity.posZ - entity.prevPosZ - (mc.thePlayer!!.posZ - mc.thePlayer!!.prevPosZ)) * RandomUtils.nextFloat(minPredictSize.get(), maxPredictSize.get())
+                (entity.posX - entity.prevPosX - (mc.thePlayer!!.posX - mc.thePlayer!!.prevPosX)) * RandomUtils.nextFloat(minPredictSize.get(), maxPredictSize.get()),
+                (entity.posY - entity.prevPosY - (mc.thePlayer!!.posY - mc.thePlayer!!.prevPosY)) * RandomUtils.nextFloat(minPredictSize.get(), maxPredictSize.get()),
+                (entity.posZ - entity.prevPosZ - (mc.thePlayer!!.posZ - mc.thePlayer!!.prevPosZ)) * RandomUtils.nextFloat(minPredictSize.get(), maxPredictSize.get())
             )
+        }
 
         val (_, rotation) = RotationUtils.searchCenter(
                 boundingBox,
@@ -612,13 +617,28 @@ class KillAura : Module() {
                 maxRange
         ) ?: return false
 
-        val limitedRotation = RotationUtils.limitAngleChange(RotationUtils.serverRotation, rotation,
+        var limitedRotation = RotationUtils.limitAngleChange(RotationUtils.serverRotation, rotation,
                 (Math.random() * (maxTurnSpeed.get() - minTurnSpeed.get()) + minTurnSpeed.get()).toFloat())
 
-        if (silentRotationValue.get())
+        // Micronize rotations
+        if (micronizedValue.get()) {
+            // Get current target rotation if there are any
+            val targetRotation = RotationUtils.targetRotation ?: RotationUtils.serverRotation // If there are no target rotations, use server rotation.
+
+            // Does this rotation already face the target
+            val reach = min(maxRange.toDouble(), mc.thePlayer!!.getDistanceToEntityBox(entity)) + 1
+
+            if (RotationUtils.isRotationFaced(entity, reach, targetRotation)) {
+                // Micronize rotation
+                limitedRotation = RotationUtils.limitAngleChange(RotationUtils.serverRotation, rotation, (Math.random() * micronizedStrength.get()).toFloat())
+            }
+        }
+
+        if (silentRotationValue.get()) {
             RotationUtils.setTargetRotation(limitedRotation, if (aacValue.get()) 15 else 0)
-        else
+        } else {
             limitedRotation.toPlayer(mc.thePlayer!!)
+        }
 
         return true
     }
