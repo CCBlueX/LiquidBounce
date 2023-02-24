@@ -26,14 +26,30 @@ import java.awt.Color
 @ModuleInfo(name = "ItemESP", description = "Allows you to see items through walls.", category = ModuleCategory.RENDER)
 class ItemESP : Module() {
     private val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "Glow"), "Box")
-    private val glowRenderScale = FloatValue("Glow-Renderscale", 1f, 0.1f, 2f)
-    private val glowRadius = IntegerValue("Glow-Radius", 4, 1, 5)
-    private val glowFade = IntegerValue("Glow-Fade", 10, 0, 30)
-    private val glowTargetAlpha = FloatValue("Glow-Target-Alpha", 0f, 0f, 1f)
-    private val colorRedValue = IntegerValue("R", 0, 0, 255)
-    private val colorGreenValue = IntegerValue("G", 255, 0, 255)
-    private val colorBlueValue = IntegerValue("B", 0, 0, 255)
+
+    private val glowRenderScale = object : FloatValue("Glow-Renderscale", 1f, 0.1f, 2f) {
+        override fun isSupported() = modeValue.get() == "Glow"
+    }
+    private val glowRadius = object : IntegerValue("Glow-Radius", 4, 1, 5) {
+        override fun isSupported() = modeValue.get() == "Glow"
+    }
+    private val glowFade = object : IntegerValue("Glow-Fade", 10, 0, 30) {
+        override fun isSupported() = modeValue.get() == "Glow"
+    }
+    private val glowTargetAlpha = object : FloatValue("Glow-Target-Alpha", 0f, 0f, 1f) {
+        override fun isSupported() = modeValue.get() == "Glow"
+    }
+
     private val colorRainbow = BoolValue("Rainbow", true)
+    private val colorRedValue = object : IntegerValue("R", 0, 0, 255) {
+        override fun isSupported() = !colorRainbow.get()
+    }
+    private val colorGreenValue = object : IntegerValue("G", 255, 0, 255) {
+        override fun isSupported() = !colorRainbow.get()
+    }
+    private val colorBlueValue = object : IntegerValue("B", 0, 0, 255) {
+        override fun isSupported() = !colorRainbow.get()
+    }
 
     @EventTarget
     fun onRender3D(event: Render3DEvent?) {

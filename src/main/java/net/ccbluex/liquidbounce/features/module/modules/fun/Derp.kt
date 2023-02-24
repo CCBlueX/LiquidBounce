@@ -16,7 +16,9 @@ class Derp : Module() {
 
     private val headlessValue = BoolValue("Headless", false)
     private val spinnyValue = BoolValue("Spinny", false)
-    private val incrementValue = FloatValue("Increment", 1F, 0F, 50F)
+    private val incrementValue = object : FloatValue("Increment", 1F, 0F, 50F) {
+        override fun isSupported() = spinnyValue.get()
+    }
 
     private var currentSpin = 0F
 

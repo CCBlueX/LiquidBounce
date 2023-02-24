@@ -21,7 +21,9 @@ import net.minecraft.util.EnumFacing
 @ModuleInfo(name = "LongJump", description = "Allows you to jump further.", category = ModuleCategory.MOVEMENT)
 class LongJump : Module() {
     private val modeValue = ListValue("Mode", arrayOf("NCP", "AACv1", "AACv2", "AACv3", "Mineplex", "Mineplex2", "Mineplex3", "Redesky"), "NCP")
-    private val ncpBoostValue = FloatValue("NCPBoost", 4.25f, 1f, 10f)
+    private val ncpBoostValue = object : FloatValue("NCPBoost", 4.25f, 1f, 10f) {
+        override fun isSupported() = modeValue.get() == "NCP"
+    }
     private val autoJumpValue = BoolValue("AutoJump", false)
     private var jumped = false
     private var canBoost = false

@@ -27,25 +27,53 @@ import net.minecraft.util.BlockPos
 @ModuleInfo(name = "BufferSpeed", description = "Allows you to walk faster on slabs and stairs.", category = ModuleCategory.MOVEMENT)
 class BufferSpeed : Module() {
     private val speedLimitValue = BoolValue("SpeedLimit", true)
-    private val maxSpeedValue = FloatValue("MaxSpeed", 2.0f, 1.0f, 5f)
+    private val maxSpeedValue = object : FloatValue("MaxSpeed", 2.0f, 1.0f, 5f) {
+        override fun isSupported() = speedLimitValue.get()
+    }
     private val bufferValue = BoolValue("Buffer", true)
 
     private val stairsValue = BoolValue("Stairs", true)
-    private val stairsBoostValue = FloatValue("StairsBoost", 1.87f, 1f, 2f)
-    private val stairsModeValue = ListValue("StairsMode", arrayOf("Old", "New"), "New")
+    private val stairsModeValue = object : ListValue("StairsMode", arrayOf("Old", "New"), "New") {
+        override fun isSupported() = stairsValue.get()
+    }
+    private val stairsBoostValue = object : FloatValue("StairsBoost", 1.87f, 1f, 2f) {
+        override fun isSupported() = stairsValue.get() && stairsModeValue.get() == "Old"
+    }
+
     private val slabsValue = BoolValue("Slabs", true)
-    private val slabsBoostValue = FloatValue("SlabsBoost", 1.87f, 1f, 2f)
-    private val slabsModeValue = ListValue("SlabsMode", arrayOf("Old", "New"), "New")
+    private val slabsModeValue = object : ListValue("SlabsMode", arrayOf("Old", "New"), "New") {
+        override fun isSupported() = slabsValue.get()
+    }
+    private val slabsBoostValue = object : FloatValue("SlabsBoost", 1.87f, 1f, 2f) {
+        override fun isSupported() = slabsValue.get() && slabsModeValue.get() == "Old"
+    }
+
     private val iceValue = BoolValue("Ice", false)
-    private val iceBoostValue = FloatValue("IceBoost", 1.342f, 1f, 2f)
+    private val iceBoostValue = object : FloatValue("IceBoost", 1.342f, 1f, 2f) {
+        override fun isSupported() = iceValue.get()
+    }
+
     private val snowValue = BoolValue("Snow", true)
-    private val snowBoostValue = FloatValue("SnowBoost", 1.87f, 1f, 2f)
-    private val snowPortValue = BoolValue("SnowPort", true)
+    private val snowBoostValue = object : FloatValue("SnowBoost", 1.87f, 1f, 2f) {
+        override fun isSupported() = snowValue.get()
+    }
+    private val snowPortValue = object : BoolValue("SnowPort", true) {
+        override fun isSupported() = snowValue.get()
+    }
+
     private val wallValue = BoolValue("Wall", true)
-    private val wallBoostValue = FloatValue("WallBoost", 1.87f, 1f, 2f)
-    private val wallModeValue = ListValue("WallMode", arrayOf("Old", "New"), "New")
+    private val wallModeValue = object : ListValue("WallMode", arrayOf("Old", "New"), "New") {
+        override fun isSupported() = wallValue.get()
+    }
+    private val wallBoostValue = object : FloatValue("WallBoost", 1.87f, 1f, 2f) {
+        override fun isSupported() = wallValue.get() && wallModeValue.get() == "Old"
+    }
+
     private val headBlockValue = BoolValue("HeadBlock", true)
-    private val headBlockBoostValue = FloatValue("HeadBlockBoost", 1.87f, 1f, 2f)
+    private val headBlockBoostValue = object : FloatValue("HeadBlockBoost", 1.87f, 1f, 2f) {
+        override fun isSupported() = headBlockValue.get()
+    }
+
     private val slimeValue = BoolValue("Slime", true)
     private val airStrafeValue = BoolValue("AirStrafe", false)
     private val noHurtValue = BoolValue("NoHurt", true)

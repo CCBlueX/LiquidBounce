@@ -22,8 +22,10 @@ import net.minecraft.block.BlockPane
 
 @ModuleInfo(name = "HighJump", description = "Allows you to jump higher.", category = ModuleCategory.MOVEMENT)
 class HighJump : Module() {
-    private val heightValue = FloatValue("Height", 2f, 1.1f, 5f)
     private val modeValue = ListValue("Mode", arrayOf("Vanilla", "Damage", "AACv3", "DAC", "Mineplex"), "Vanilla")
+    private val heightValue = object : FloatValue("Height", 2f, 1.1f, 5f) {
+        override fun isSupported() = modeValue.get() in setOf("Vanilla", "Damage")
+    }
     private val glassValue = BoolValue("OnlyGlassPane", false)
 
     @EventTarget

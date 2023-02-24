@@ -29,6 +29,7 @@ import org.lwjgl.input.Mouse;
 import java.awt.*;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @SideOnly(Side.CLIENT)
 public class SlowlyStyle extends Style {
@@ -104,7 +105,7 @@ public class SlowlyStyle extends Style {
         Fonts.font35.drawString(moduleElement.getDisplayName(), moduleElement.getX() + 5, moduleElement.getY() + 5, Color.WHITE.getRGB());
 
         // Draw settings
-        final List<Value<?>> moduleValues = moduleElement.getModule().getValues();
+        final List<Value<?>> moduleValues = moduleElement.getModule().getValues().stream().filter(Value::isSupported).collect(Collectors.toList());
 
         if (!moduleValues.isEmpty()) {
             Fonts.font35.drawString(">", moduleElement.getX() + moduleElement.getWidth() - 8, moduleElement.getY() + 5, Color.WHITE.getRGB());

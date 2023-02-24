@@ -37,9 +37,15 @@ import kotlin.math.sqrt
 class Projectiles : Module() {
     private val colorMode = ListValue("Color", arrayOf("Custom", "BowPower", "Rainbow"), "Custom")
 
-    private val colorRedValue = IntegerValue("R", 0, 0, 255)
-    private val colorGreenValue = IntegerValue("G", 160, 0, 255)
-    private val colorBlueValue = IntegerValue("B", 255, 0, 255)
+    private val colorRedValue = object : IntegerValue("R", 0, 0, 255) {
+        override fun isSupported() = colorMode.get() == "Custom"
+    }
+    private val colorGreenValue = object : IntegerValue("G", 160, 0, 255) {
+        override fun isSupported() = colorMode.get() == "Custom"
+    }
+    private val colorBlueValue = object : IntegerValue("B", 255, 0, 255) {
+        override fun isSupported() = colorMode.get() == "Custom"
+    }
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {

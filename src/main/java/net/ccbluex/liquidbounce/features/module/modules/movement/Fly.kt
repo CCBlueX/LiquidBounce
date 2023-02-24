@@ -76,23 +76,51 @@ class Fly : Module() {
             "Jetpack", "KeepAlive", "Flag"
         ), "Vanilla"
     )
-    private val vanillaSpeedValue = FloatValue("VanillaSpeed", 2f, 0f, 5f)
-    private val vanillaKickBypassValue = BoolValue("VanillaKickBypass", false)
-    private val ncpMotionValue = FloatValue("NCPMotion", 0f, 0f, 1f)
+    private val vanillaSpeedValue = object : FloatValue("VanillaSpeed", 2f, 0f, 5f) {
+        override fun isSupported() = modeValue.get() in setOf("Vanilla", "KeepAlive", "MineSecure", "BugSpartan")
+    }
+    private val vanillaKickBypassValue = object : BoolValue("VanillaKickBypass", false) {
+        override fun isSupported() = modeValue.get() in setOf("Vanilla", "SmoothVanilla")
+    }
+    private val ncpMotionValue = object : FloatValue("NCPMotion", 0f, 0f, 1f) {
+        override fun isSupported() = modeValue.get() == "NCP"
+    }
 
     // AAC
-    private val aacSpeedValue = FloatValue("AAC1.9.10-Speed", 0.3f, 0f, 1f)
-    private val aacFast = BoolValue("AAC3.0.5-Fast", true)
-    private val aacMotion = FloatValue("AAC3.3.12-Motion", 10f, 0.1f, 10f)
-    private val aacMotion2 = FloatValue("AAC3.3.13-Motion", 10f, 0.1f, 10f)
+    private val aacSpeedValue = object : FloatValue("AAC1.9.10-Speed", 0.3f, 0f, 1f) {
+        override fun isSupported() = modeValue.get() == "AAC1.9.10"
+    }
+    private val aacFast = object : BoolValue("AAC3.0.5-Fast", true) {
+        override fun isSupported() = modeValue.get() == "AAC3.0.5"
+    }
+    private val aacMotion = object : FloatValue("AAC3.3.12-Motion", 10f, 0.1f, 10f) {
+        override fun isSupported() = modeValue.get() == "AAC3.3.12"
+    }
+    private val aacMotion2 = object : FloatValue("AAC3.3.13-Motion", 10f, 0.1f, 10f) {
+        override fun isSupported() = modeValue.get() == "AAC3.3.13"
+    }
 
     // Hypixel
-    private val hypixelBoost = BoolValue("Hypixel-Boost", true)
-    private val hypixelBoostDelay = IntegerValue("Hypixel-BoostDelay", 1200, 0, 2000)
-    private val hypixelBoostTimer = FloatValue("Hypixel-BoostTimer", 1f, 0f, 5f)
-    private val mineplexSpeedValue = FloatValue("MineplexSpeed", 1f, 0.5f, 10f)
-    private val neruxVaceTicks = IntegerValue("NeruxVace-Ticks", 6, 0, 20)
-    private val redeskyHeight = FloatValue("Redesky-Height", 4f, 1f, 7f)
+    private val hypixelBoost = object : BoolValue("Hypixel-Boost", true) {
+        override fun isSupported() = modeValue.get() == "Hypixel"
+    }
+    private val hypixelBoostDelay = object : IntegerValue("Hypixel-BoostDelay", 1200, 0, 2000) {
+        override fun isSupported() = modeValue.get() == "Hypixel"
+    }
+    private val hypixelBoostTimer = object : FloatValue("Hypixel-BoostTimer", 1f, 0f, 5f) {
+        override fun isSupported() = modeValue.get() == "Hypixel"
+    }
+
+    // Other
+    private val mineplexSpeedValue = object : FloatValue("MineplexSpeed", 1f, 0.5f, 10f) {
+        override fun isSupported() = modeValue.get() == "Mineplex"
+    }
+    private val neruxVaceTicks = object : IntegerValue("NeruxVace-Ticks", 6, 0, 20) {
+        override fun isSupported() = modeValue.get() == "NeruxVace"
+    }
+    private val redeskyHeight = object : FloatValue("Redesky-Height", 4f, 1f, 7f) {
+        override fun isSupported() = modeValue.get() == "Redesky"
+    }
 
     // Visuals
     private val markValue = BoolValue("Mark", true)

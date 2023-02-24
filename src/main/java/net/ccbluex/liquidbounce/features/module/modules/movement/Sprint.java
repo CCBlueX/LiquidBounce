@@ -21,31 +21,39 @@ import net.minecraft.potion.Potion;
 
 @ModuleInfo(name = "Sprint", description = "Automatically sprints all the time.", category = ModuleCategory.MOVEMENT)
 public class Sprint extends Module {
-    public final ListValue modeValue = new ListValue("Mode", new String[] {"Legit", "Vanilla"}, "Vanilla") {
+    public final ListValue modeValue = new ListValue("Mode", new String[] {"Legit", "Vanilla"}, "Vanilla");
+
+    public final BoolValue allDirectionsValue = new BoolValue("AllDirections", true) {
         @Override
-        protected void onUpdate(final String value) {
-            if (modeValue.get().equalsIgnoreCase("legit")) {
-                allDirectionsValue.setIsSupported(false);
-                blindnessValue.setIsSupported(false);
-                foodValue.setIsSupported(false);
-                checkServerSide.setIsSupported(false);
-                checkServerSideGround.setIsSupported(false);
-            } else {
-                allDirectionsValue.setIsSupported(true);
-                blindnessValue.setIsSupported(true);
-                foodValue.setIsSupported(true);
-                checkServerSide.setIsSupported(true);
-                checkServerSideGround.setIsSupported(true);
-            }
+        public boolean isSupported() {
+            return modeValue.get().equals("Vanilla");
+        }
+    };
+    public final BoolValue blindnessValue = new BoolValue("Blindness", true) {
+        @Override
+        public boolean isSupported() {
+            return modeValue.get().equals("Vanilla");
+        }
+    };
+    public final BoolValue foodValue = new BoolValue("Food", true) {
+        @Override
+        public boolean isSupported() {
+            return modeValue.get().equals("Vanilla");
         }
     };
 
-    public final BoolValue allDirectionsValue = new BoolValue("AllDirections", true);
-    public final BoolValue blindnessValue = new BoolValue("Blindness", true);
-    public final BoolValue foodValue = new BoolValue("Food", true);
-
-    public final BoolValue checkServerSide = new BoolValue("CheckServerSide", false);
-    public final BoolValue checkServerSideGround = new BoolValue("CheckServerSideOnlyGround", false);
+    public final BoolValue checkServerSide = new BoolValue("CheckServerSide", false) {
+        @Override
+        public boolean isSupported() {
+            return modeValue.get().equals("Vanilla");
+        }
+    };
+    public final BoolValue checkServerSideGround = new BoolValue("CheckServerSideOnlyGround", false) {
+        @Override
+        public boolean isSupported() {
+            return modeValue.get().equals("Vanilla") && checkServerSide.get();
+        }
+    };
 
     @Override
     public final String getTag() {

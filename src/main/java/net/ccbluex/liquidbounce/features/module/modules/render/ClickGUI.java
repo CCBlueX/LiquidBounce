@@ -40,10 +40,25 @@ public class ClickGUI extends Module {
 
     public final BoolValue scrollsValue = new BoolValue("Scrolls", false);
 
-    private static final IntegerValue colorRedValue = new IntegerValue("R", 0, 0, 255);
-    private static final IntegerValue colorGreenValue = new IntegerValue("G", 160, 0, 255);
-    private static final IntegerValue colorBlueValue = new IntegerValue("B", 255, 0, 255);
     private static final BoolValue colorRainbow = new BoolValue("Rainbow", false);
+    private static final IntegerValue colorRedValue = new IntegerValue("R", 0, 0, 255) {
+        @Override
+        public boolean isSupported() {
+            return !colorRainbow.get();
+        }
+    };
+    private static final IntegerValue colorGreenValue = new IntegerValue("G", 160, 0, 255) {
+        @Override
+        public boolean isSupported() {
+            return !colorRainbow.get();
+        }
+    };
+    private static final IntegerValue colorBlueValue = new IntegerValue("B", 255, 0, 255) {
+        @Override
+        public boolean isSupported() {
+            return !colorRainbow.get();
+        }
+    };
 
     public static Color generateColor() {
         return colorRainbow.get() ? ColorUtils.rainbow() : new Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get());

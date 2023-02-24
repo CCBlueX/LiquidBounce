@@ -32,8 +32,12 @@ class Step : Module() {
             "Vanilla", "Jump", "NCP", "MotionNCP", "OldNCP", "AAC", "LAAC", "AAC3.3.4", "Spartan", "Rewinside"
     ), "NCP")
 
-    private val heightValue = FloatValue("Height", 1F, 0.6F, 10F)
-    private val jumpHeightValue = FloatValue("JumpHeight", 0.42F, 0.37F, 0.42F)
+    private val heightValue = object : FloatValue("Height", 1F, 0.6F, 10F) {
+        override fun isSupported() = modeValue.get() !in setOf("Jump", "MotionNCP", "LAAC", "AAC3.3.4")
+    }
+    private val jumpHeightValue = object : FloatValue("JumpHeight", 0.42F, 0.37F, 0.42F) {
+        override fun isSupported() = modeValue.get() == "Jump"
+    }
     private val delayValue = IntegerValue("Delay", 0, 0, 500)
 
     /**
@@ -54,8 +58,8 @@ class Step : Module() {
     override fun onDisable() {
         val thePlayer = mc.thePlayer ?: return
 
-        // Change step height back to default (0.5 is default)
-        thePlayer.stepHeight = 0.5F
+        // Change step height back to default (0.6 is default)
+        thePlayer.stepHeight = 0.6F
     }
 
     @EventTarget
@@ -156,27 +160,19 @@ class Step : Module() {
 
         // Some fly modes should disable step
         val fly = LiquidBounce.moduleManager[Fly::class.java] as Fly
-        if (fly.state) {
-            val flyMode = fly.modeValue.get()
-
-            if (flyMode.equals("Hypixel", ignoreCase = true) ||
-                    flyMode.equals("OtherHypixel", ignoreCase = true) ||
-                    flyMode.equals("LatestHypixel", ignoreCase = true) ||
-                    flyMode.equals("Rewinside", ignoreCase = true) ||
-                    flyMode.equals("Mineplex", ignoreCase = true) && thePlayer.inventory.getCurrentItem() == null) {
-                event.stepHeight = 0F
-                return
-            }
+        if (fly.state && fly.modeValue.get() in setOf("Hypixel", "OtherHypixel", "LatestHypixel", "Rewinside", "Mineplex")
+            && thePlayer.inventory.getCurrentItem() == null) {
+            event.stepHeight = 0F
+            return
         }
 
         val mode = modeValue.get()
 
         // Set step to default in some cases
         if (!thePlayer.onGround || !timer.hasTimePassed(delayValue.get().toLong()) ||
-                mode.equals("Jump", ignoreCase = true) || mode.equals("MotionNCP", ignoreCase = true)
-                || mode.equals("LAAC", ignoreCase = true) || mode.equals("AAC3.3.4", ignoreCase = true)) {
-            thePlayer.stepHeight = 0.5F
-            event.stepHeight = 0.5F
+                mode in setOf("Jump", "MotionNCP", "LAAC", "AAC3.3.4")) {
+            thePlayer.stepHeight = 0.6F
+            event.stepHeight = 0.6F
             return
         }
 
@@ -186,7 +182,7 @@ class Step : Module() {
         event.stepHeight = height
 
         // Detect possible step
-        if (event.stepHeight > 0.5F) {
+        if (event.stepHeight > 0.6F) {
             isStep = true
             stepX = thePlayer.posX
             stepY = thePlayer.posY
@@ -201,7 +197,7 @@ class Step : Module() {
         if (thePlayer == null || !isStep) // Check if step
             return
 
-        if (thePlayer.entityBoundingBox.minY - stepY > 0.5) { // Check if full block step
+        if (thePlayer.entityBoundingBox.minY - stepY > 0.6) { // Check if full block step
             val mode = modeValue.get()
 
             when {

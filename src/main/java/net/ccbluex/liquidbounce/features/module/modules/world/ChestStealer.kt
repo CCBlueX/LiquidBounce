@@ -53,6 +53,8 @@ class ChestStealer : Module() {
 
             nextDelay = TimeUtils.randomDelay(get(), maxDelayValue.get())
         }
+
+        override fun isSupported() = !maxDelayValue.isMinimal()
     }
     private val delayOnFirstValue = BoolValue("DelayOnFirst", false)
 
@@ -67,6 +69,8 @@ class ChestStealer : Module() {
             if (i > newValue) set(i)
             nextCloseDelay = TimeUtils.randomDelay(autoCloseMinDelayValue.get(), this.get())
         }
+
+        override fun isSupported() = autoCloseValue.get()
     }
 
     private val autoCloseMinDelayValue: IntegerValue = object : IntegerValue("AutoCloseMinDelay", 0, 0, 400) {
@@ -75,6 +79,8 @@ class ChestStealer : Module() {
             if (i < newValue) set(i)
             nextCloseDelay = TimeUtils.randomDelay(this.get(), autoCloseMaxDelayValue.get())
         }
+
+        override fun isSupported() = autoCloseValue.get() && !autoCloseMaxDelayValue.isMinimal()
     }
 
     private val closeOnFullValue = BoolValue("CloseOnFull", true)

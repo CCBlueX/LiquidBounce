@@ -80,16 +80,37 @@ class Speed : Module() {
                 onEnable()
         }
     }
-    val customSpeedValue = FloatValue("CustomSpeed", 1.6f, 0.2f, 2f)
-    val customYValue = FloatValue("CustomY", 0f, 0f, 4f)
-    val customTimerValue = FloatValue("CustomTimer", 1f, 0.1f, 2f)
-    val customStrafeValue = BoolValue("CustomStrafe", true)
-    val resetXZValue = BoolValue("CustomResetXZ", false)
-    val resetYValue = BoolValue("CustomResetY", false)
-    val portMax = FloatValue("AAC-PortLength", 1f, 1f, 20f)
-    val aacGroundTimerValue = FloatValue("AACGround-Timer", 3f, 1.1f, 10f)
-    val cubecraftPortLengthValue = FloatValue("CubeCraft-PortLength", 1f, 0.1f, 2f)
-    val mineplexGroundSpeedValue = FloatValue("MineplexGround-Speed", 0.5f, 0.1f, 1f)
+    val customSpeedValue = object : FloatValue("CustomSpeed", 1.6f, 0.2f, 2f) {
+        override fun isSupported() = modeValue.get() == "Custom"
+    }
+    val customYValue = object : FloatValue("CustomY", 0f, 0f, 4f) {
+        override fun isSupported() = modeValue.get() == "Custom"
+    }
+    val customTimerValue = object : FloatValue("CustomTimer", 1f, 0.1f, 2f) {
+        override fun isSupported() = modeValue.get() == "Custom"
+    }
+    val customStrafeValue = object : BoolValue("CustomStrafe", true) {
+        override fun isSupported() = modeValue.get() == "Custom"
+    }
+    val resetXZValue = object : BoolValue("CustomResetXZ", false) {
+        override fun isSupported() = modeValue.get() == "Custom"
+    }
+    val resetYValue = object : BoolValue("CustomResetY", false) {
+        override fun isSupported() = modeValue.get() == "Custom"
+    }
+
+    val portMax = object : FloatValue("AAC-PortLength", 1f, 1f, 20f) {
+        override fun isSupported() = modeValue.get() == "AACPort"
+    }
+    val aacGroundTimerValue = object : FloatValue("AACGround-Timer", 3f, 1.1f, 10f){
+        override fun isSupported() = modeValue.get() in setOf("AACGround", "AACGround2")
+    }
+    val cubecraftPortLengthValue = object :  FloatValue("CubeCraft-PortLength", 1f, 0.1f, 2f){
+        override fun isSupported() = modeValue.get() == "TeleportCubeCraft"
+    }
+    val mineplexGroundSpeedValue = object : FloatValue("MineplexGround-Speed", 0.5f, 0.1f, 1f){
+        override fun isSupported() = modeValue.get() == "Mineplex"
+    }
 
     @EventTarget
     fun onUpdate(event: UpdateEvent?) {

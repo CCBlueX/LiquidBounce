@@ -71,6 +71,8 @@ class KillAura : Module() {
 
             attackDelay = TimeUtils.randomClickDelay(this.get(), maxCPS.get())
         }
+
+        override fun isSupported() = !maxCPS.isMinimal()
     }
 
     private val hurtTimeValue = IntegerValue("HurtTime", 10, 0, 10)
@@ -91,16 +93,29 @@ class KillAura : Module() {
 
     // AutoBlock
     private val autoBlockValue = ListValue("AutoBlock", arrayOf("Off", "Packet", "AfterTick", "Fake"), "Packet")
-    private val interactAutoBlockValue = BoolValue("InteractAutoBlock", true)
-    private val blockRate = IntegerValue("BlockRate", 100, 1, 100)
+    private val interactAutoBlockValue = object : BoolValue("InteractAutoBlock", true) {
+        override fun isSupported() = autoBlockValue.get() !in setOf("Off", "Fake")
+    }
+    private val blockRate = object : IntegerValue("BlockRate", 100, 1, 100) {
+        override fun isSupported() = autoBlockValue.get() !in setOf("Off", "Fake")
+    }
 
     // Raycast
-    private val raycastValue = BoolValue("RayCast", true)
-    private val raycastIgnoredValue = BoolValue("RayCastIgnored", false)
-    private val livingRaycastValue = BoolValue("LivingRayCast", true)
+    private val raycastValue = object : BoolValue("RayCast", true) {
+        override fun isSupported() = !maxTurnSpeed.isMinimal()
+    }
+    private val raycastIgnoredValue = object : BoolValue("RayCastIgnored", false) {
+        override fun isSupported() = !maxTurnSpeed.isMinimal() && raycastValue.get()
+    }
+    private val livingRaycastValue = object : BoolValue("LivingRayCast", true) {
+        override fun isSupported() = !maxTurnSpeed.isMinimal() && raycastValue.get()
+    }
 
     // Bypass
-    private val aacValue = BoolValue("AAC", false)
+    private val aacValue = object : BoolValue("AAC", false) {
+        override fun isSupported() = !maxTurnSpeed.isMinimal()
+        // AAC value also modifies target selection a bit, not just rotations, but it is minor
+    }
 
     // Turn Speed
     private val maxTurnSpeed: FloatValue = object : FloatValue("MaxTurnSpeed", 180f, 0f, 180f) {
@@ -115,26 +130,46 @@ class KillAura : Module() {
             val v = maxTurnSpeed.get()
             if (v < newValue) set(v)
         }
+
+        override fun isSupported() = !maxTurnSpeed.isMinimal()
     }
 
-    private val micronizedValue = BoolValue("Micronized", true)
-    private val micronizedStrength = FloatValue("MicronizedStrength", 0.8f, 0.2f, 2f)
+    private val micronizedValue = object : BoolValue("Micronized", true) {
+        override fun isSupported() = !maxTurnSpeed.isMinimal()
+    }
+    private val micronizedStrength = object : FloatValue("MicronizedStrength", 0.8f, 0.2f, 2f) {
+        override fun isSupported() = !maxTurnSpeed.isMinimal() && micronizedValue.get()
+    }
 
-    private val silentRotationValue = BoolValue("SilentRotation", true)
-    private val rotationStrafeValue = ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off")
-    private val randomCenterValue = BoolValue("RandomCenter", true)
-    private val randomMultiplier = FloatValue("RandomMultiplier", 0.8f, 0f, 1f)
-    private val outborderValue = BoolValue("Outborder", false)
+    private val silentRotationValue = object : BoolValue("SilentRotation", true) {
+        override fun isSupported() = !maxTurnSpeed.isMinimal()
+    }
+    private val rotationStrafeValue = object : ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") {
+        override fun isSupported() = !maxTurnSpeed.isMinimal() && silentRotationValue.get()
+    }
+    private val randomCenterValue = object : BoolValue("RandomCenter", true) {
+        override fun isSupported() = !maxTurnSpeed.isMinimal()
+    }
+    private val randomMultiplier = object : FloatValue("RandomMultiplier", 0.8f, 0f, 1f) {
+        override fun isSupported() = !maxTurnSpeed.isMinimal() && randomCenterValue.get()
+    }
+    private val outborderValue = object : BoolValue("Outborder", false) {
+        override fun isSupported() = !maxTurnSpeed.isMinimal()
+    }
     private val fovValue = FloatValue("FOV", 180f, 0f, 180f)
 
     // Predict
-    private val predictValue = BoolValue("Predict", true)
+    private val predictValue = object : BoolValue("Predict", true) {
+        override fun isSupported() = !maxTurnSpeed.isMinimal()
+    }
 
     private val maxPredictSize: FloatValue = object : FloatValue("MaxPredictSize", 1f, 0.1f, 5f) {
         override fun onChanged(oldValue: Float, newValue: Float) {
             val v = minPredictSize.get()
             if (v > newValue) set(v)
         }
+
+        override fun isSupported() = !maxTurnSpeed.isMinimal() && predictValue.get()
     }
 
     private val minPredictSize: FloatValue = object : FloatValue("MinPredictSize", 1f, 0.1f, 5f) {
@@ -142,14 +177,22 @@ class KillAura : Module() {
             val v = maxPredictSize.get()
             if (v < newValue) set(v)
         }
+
+        override fun isSupported() = !maxTurnSpeed.isMinimal() && predictValue.get() && !maxPredictSize.isMinimal()
     }
 
     // Bypass
     private val failRateValue = FloatValue("FailRate", 0f, 0f, 100f)
-    private val fakeSwingValue = BoolValue("FakeSwing", true)
+    private val fakeSwingValue = object : BoolValue("FakeSwing", true) {
+        override fun isSupported() = swingValue.get()
+    }
     private val noInventoryAttackValue = BoolValue("NoInvAttack", false)
-    private val noInventoryDelayValue = IntegerValue("NoInvDelay", 200, 0, 500)
-    private val limitedMultiTargetsValue = IntegerValue("LimitedMultiTargets", 0, 0, 50)
+    private val noInventoryDelayValue = object : IntegerValue("NoInvDelay", 200, 0, 500) {
+        override fun isSupported() = noInventoryAttackValue.get()
+    }
+    private val limitedMultiTargetsValue = object : IntegerValue("LimitedMultiTargets", 0, 0, 50) {
+        override fun isSupported() = targetModeValue.get() == "Multi"
+    }
 
     // Visuals
     private val markValue = BoolValue("Mark", true)
@@ -228,7 +271,7 @@ class KillAura : Module() {
             return
         }
 
-        if (rotationStrafeValue.get().equals("Off", true))
+        if (!silentRotationValue.get() || rotationStrafeValue.get().equals("Off", true))
             update()
     }
 
@@ -237,7 +280,7 @@ class KillAura : Module() {
      */
     @EventTarget
     fun onStrafe(event: StrafeEvent) {
-        if (rotationStrafeValue.get().equals("Off", true))
+        if (!silentRotationValue.get() || rotationStrafeValue.get().equals("Off", true))
             return
 
         update()
@@ -617,7 +660,7 @@ class KillAura : Module() {
      * Update killaura rotations to enemy
      */
     private fun updateRotations(entity: Entity): Boolean {
-        if (maxTurnSpeed.get() <= 0F)
+        if (maxTurnSpeed.isMinimal())
             return true
 
         var boundingBox = entity.entityBoundingBox
@@ -670,7 +713,7 @@ class KillAura : Module() {
      */
     private fun updateHitable() {
         // Disable hitable check if turn speed is zero
-        if (maxTurnSpeed.get() <= 0F) {
+        if (maxTurnSpeed.isMinimal()) {
             hitable = true
             return
         }

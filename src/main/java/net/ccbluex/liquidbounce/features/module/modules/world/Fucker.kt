@@ -43,7 +43,9 @@ object Fucker : Module() {
     private val throughWallsValue = ListValue("ThroughWalls", arrayOf("None", "Raycast", "Around"), "None")
     private val rangeValue = FloatValue("Range", 5F, 1F, 7F)
     private val actionValue = ListValue("Action", arrayOf("Destroy", "Use"), "Destroy")
-    private val instantValue = BoolValue("Instant", false)
+    private val instantValue = object : BoolValue("Instant", false) {
+        override fun isSupported() = actionValue.get() == "Destroy" || surroundingsValue.get()
+    }
     private val switchValue = IntegerValue("SwitchDelay", 250, 0, 1000)
     private val swingValue = BoolValue("Swing", true)
     private val rotationsValue = BoolValue("Rotations", true)

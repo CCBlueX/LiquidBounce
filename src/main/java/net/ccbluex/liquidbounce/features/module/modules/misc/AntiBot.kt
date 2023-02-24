@@ -27,11 +27,15 @@ import net.minecraft.network.play.server.S14PacketEntity
 object AntiBot : Module() {
 
     private val tabValue = BoolValue("Tab", true)
-    private val tabModeValue = ListValue("TabMode", arrayOf("Equals", "Contains"), "Contains")
+    private val tabModeValue = object : ListValue("TabMode", arrayOf("Equals", "Contains"), "Contains") {
+        override fun isSupported() = tabValue.get()
+    }
     private val entityIDValue = BoolValue("EntityID", true)
     private val colorValue = BoolValue("Color", false)
     private val livingTimeValue = BoolValue("LivingTime", false)
-    private val livingTimeTicksValue = IntegerValue("LivingTimeTicks", 40, 1, 200)
+    private val livingTimeTicksValue = object : IntegerValue("LivingTimeTicks", 40, 1, 200) {
+        override fun isSupported() = livingTimeValue.get()
+    }
     private val groundValue = BoolValue("Ground", true)
     private val airValue = BoolValue("Air", false)
     private val invalidGroundValue = BoolValue("InvalidGround", true)
@@ -44,15 +48,17 @@ object AntiBot : Module() {
     private val needHitValue = BoolValue("NeedHit", false)
     private val duplicateInWorldValue = BoolValue("DuplicateInWorld", false)
     private val duplicateInTabValue = BoolValue("DuplicateInTab", false)
-    private val allwaysInRadiusValue = BoolValue("AlwaysInRadius", false)
-    private val allwaysRadiusValue = FloatValue("AlwaysInRadiusBlocks", 20f, 5f, 30f)
+    private val alwaysInRadiusValue = BoolValue("AlwaysInRadius", false)
+    private val alwaysRadiusValue = object : FloatValue("AlwaysInRadiusBlocks", 20f, 5f, 30f) {
+        override fun isSupported() = alwaysInRadiusValue.get()
+    }
 
     private val ground = mutableListOf<Int>()
     private val air = mutableListOf<Int>()
     private val invalidGround = mutableMapOf<Int, Int>()
     private val swing = mutableListOf<Int>()
     private val invisible = mutableListOf<Int>()
-    private val hitted = mutableListOf<Int>()
+    private val hit = mutableListOf<Int>()
     private val notAlwaysInRadius = mutableListOf<Int>()
 
     @JvmStatic // TODO: Remove as soon EntityUtils is translated to kotlin
@@ -105,7 +111,7 @@ object AntiBot : Module() {
                 return true
         }
 
-        if (needHitValue.get() && !hitted.contains(entity.entityId))
+        if (needHitValue.get() && !hit.contains(entity.entityId))
             return true
 
         if (invalidGroundValue.get() && invalidGround.getOrDefault(entity.entityId, 0) >= 10)
@@ -135,7 +141,7 @@ object AntiBot : Module() {
                 mc.netHandler.playerInfoMap.filter { entity.name == stripColor(it.getFullName()) }.count() > 1)
             return true
 
-        if (allwaysInRadiusValue.get() && !notAlwaysInRadius.contains(entity.entityId))
+        if (alwaysInRadiusValue.get() && !notAlwaysInRadius.contains(entity.entityId))
             return true
 
         return entity.name!!.isEmpty() || entity.name == mc.thePlayer!!.name
@@ -177,7 +183,7 @@ object AntiBot : Module() {
                 if (entity.isInvisible && !invisible.contains(entity.entityId))
                     invisible.add(entity.entityId)
 
-                if (!notAlwaysInRadius.contains(entity.entityId) && mc.thePlayer!!.getDistanceToEntity(entity) > allwaysRadiusValue.get())
+                if (!notAlwaysInRadius.contains(entity.entityId) && mc.thePlayer!!.getDistanceToEntity(entity) > alwaysRadiusValue.get())
                     notAlwaysInRadius.add(entity.entityId);
             }
         }
@@ -195,8 +201,8 @@ object AntiBot : Module() {
     fun onAttack(e: AttackEvent) {
         val entity = e.targetEntity
 
-        if (entity != null && entity is EntityLivingBase && !hitted.contains(entity.entityId))
-            hitted.add(entity.entityId)
+        if (entity != null && entity is EntityLivingBase && !hit.contains(entity.entityId))
+            hit.add(entity.entityId)
     }
 
     @EventTarget
@@ -205,7 +211,7 @@ object AntiBot : Module() {
     }
 
     private fun clearAll() {
-        hitted.clear()
+        hit.clear()
         swing.clear()
         ground.clear()
         invalidGround.clear()

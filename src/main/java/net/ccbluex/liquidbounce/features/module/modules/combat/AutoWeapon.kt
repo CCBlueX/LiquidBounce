@@ -25,7 +25,9 @@ import net.minecraft.network.play.client.C09PacketHeldItemChange
 class AutoWeapon : Module() {
 
     private val silentValue = BoolValue("SpoofItem", false)
-    private val ticksValue = IntegerValue("SpoofTicks", 10, 1, 20)
+    private val ticksValue = object : IntegerValue("SpoofTicks", 10, 1, 20) {
+        override fun isSupported() = silentValue.get()
+    }
     private var attackEnemy = false
 
     private var spoofedSlot = 0
@@ -41,7 +43,7 @@ class AutoWeapon : Module() {
             && attackEnemy) {
             attackEnemy = false
 
-            // Find best weapon in hotbar (#Kotlin Style)
+            // Find the best weapon in hotbar (#Kotlin Style)
             val (slot, _) = (0..8)
                 .map { Pair(it, mc.thePlayer.inventory.getStackInSlot(it)) }
                 .filter { it.second != null && (it.second.item is ItemSword || it.second.item is ItemTool) }

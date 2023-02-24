@@ -54,28 +54,50 @@ class InventoryCleaner : Module() {
             val maxDelay = maxDelayValue.get()
             if (maxDelay < newValue) set(maxDelay)
         }
+
+        override fun isSupported() = !maxDelayValue.isMinimal()
     }
+    private val itemDelayValue = IntegerValue("ItemDelay", 0, 0, 5000)
 
     private val invOpenValue = BoolValue("InvOpen", false)
-    private val simulateInventory = BoolValue("SimulateInventory", true)
+    private val simulateInventory = object : BoolValue("SimulateInventory", true) {
+        override fun isSupported() = invOpenValue.get()
+    }
     private val noMoveValue = BoolValue("NoMove", false)
     private val ignoreVehiclesValue = BoolValue("IgnoreVehicles", false)
     private val hotbarValue = BoolValue("Hotbar", true)
     private val randomSlotValue = BoolValue("RandomSlot", false)
-    private val sortValue = BoolValue("Sort", true)
-    private val itemDelayValue = IntegerValue("ItemDelay", 0, 0, 5000)
 
     private val items =
         arrayOf("None", "Ignore", "Sword", "Bow", "Pickaxe", "Axe", "Food", "Block", "Water", "Gapple", "Pearl")
-    private val sortSlot1Value = ListValue("SortSlot-1", items, "Sword")
-    private val sortSlot2Value = ListValue("SortSlot-2", items, "Bow")
-    private val sortSlot3Value = ListValue("SortSlot-3", items, "Pickaxe")
-    private val sortSlot4Value = ListValue("SortSlot-4", items, "Axe")
-    private val sortSlot5Value = ListValue("SortSlot-5", items, "None")
-    private val sortSlot6Value = ListValue("SortSlot-6", items, "None")
-    private val sortSlot7Value = ListValue("SortSlot-7", items, "Food")
-    private val sortSlot8Value = ListValue("SortSlot-8", items, "Block")
-    private val sortSlot9Value = ListValue("SortSlot-9", items, "Block")
+    private val sortValue = BoolValue("Sort", true)
+    private val sortSlot1Value = object : ListValue("SortSlot-1", items, "Sword") {
+        override fun isSupported() = sortValue.get()
+    }
+    private val sortSlot2Value = object : ListValue("SortSlot-2", items, "Bow") {
+        override fun isSupported() = sortValue.get()
+    }
+    private val sortSlot3Value = object : ListValue("SortSlot-3", items, "Pickaxe") {
+        override fun isSupported() = sortValue.get()
+    }
+    private val sortSlot4Value = object : ListValue("SortSlot-4", items, "Axe") {
+        override fun isSupported() = sortValue.get()
+    }
+    private val sortSlot5Value = object : ListValue("SortSlot-5", items, "None") {
+        override fun isSupported() = sortValue.get()
+    }
+    private val sortSlot6Value = object : ListValue("SortSlot-6", items, "None") {
+        override fun isSupported() = sortValue.get()
+    }
+    private val sortSlot7Value = object : ListValue("SortSlot-7", items, "Food") {
+        override fun isSupported() = sortValue.get()
+    }
+    private val sortSlot8Value = object : ListValue("SortSlot-8", items, "Block") {
+        override fun isSupported() = sortValue.get()
+    }
+    private val sortSlot9Value = object : ListValue("SortSlot-9", items, "Block") {
+        override fun isSupported() = sortValue.get()
+    }
 
     /**
      * VALUES

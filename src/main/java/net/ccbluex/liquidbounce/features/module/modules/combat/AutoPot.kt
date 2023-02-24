@@ -37,7 +37,9 @@ class AutoPot : Module() {
     private val delayValue = IntegerValue("Delay", 500, 500, 1000)
 
     private val openInventoryValue = BoolValue("OpenInv", false)
-    private val simulateInventory = BoolValue("SimulateInventory", true)
+    private val simulateInventory = object : BoolValue("SimulateInventory", true) {
+        override fun isSupported() = !openInventoryValue.get()
+    }
 
     private val groundDistanceValue = FloatValue("GroundDistance", 2F, 0F, 5F)
     private val modeValue = ListValue("Mode", arrayOf("Normal", "Jump", "Port"), "Normal")

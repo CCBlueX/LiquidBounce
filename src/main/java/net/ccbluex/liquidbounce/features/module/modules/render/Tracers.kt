@@ -33,9 +33,15 @@ class Tracers : Module() {
 
     private val thicknessValue = FloatValue("Thickness", 2F, 1F, 5F)
 
-    private val colorRedValue = IntegerValue("R", 0, 0, 255)
-    private val colorGreenValue = IntegerValue("G", 160, 0, 255)
-    private val colorBlueValue = IntegerValue("B", 255, 0, 255)
+    private val colorRedValue = object : IntegerValue("R", 0, 0, 255) {
+        override fun isSupported() = colorMode.get() == "Custom"
+    }
+    private val colorGreenValue = object : IntegerValue("G", 160, 0, 255) {
+        override fun isSupported() = colorMode.get() == "Custom"
+    }
+    private val colorBlueValue = object : IntegerValue("B", 255, 0, 255) {
+        override fun isSupported() = colorMode.get() == "Custom"
+    }
 
     private val botValue = BoolValue("Bots", true)
 

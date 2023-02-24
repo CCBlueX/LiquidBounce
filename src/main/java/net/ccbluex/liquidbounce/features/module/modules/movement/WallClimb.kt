@@ -22,8 +22,12 @@ import kotlin.math.sin
 @ModuleInfo(name = "WallClimb", description = "Allows you to climb up walls like a spider.", category = ModuleCategory.MOVEMENT)
 class WallClimb : Module() {
     private val modeValue = ListValue("Mode", arrayOf("Simple", "CheckerClimb", "Clip", "AAC3.3.12", "AACGlide"), "Simple")
-    private val clipMode = ListValue("ClipMode", arrayOf("Jump", "Fast"), "Fast")
-    private val checkerClimbMotionValue = FloatValue("CheckerClimbMotion", 0f, 0f, 1f)
+    private val clipMode = object : ListValue("ClipMode", arrayOf("Jump", "Fast"), "Fast") {
+        override fun isSupported() = modeValue.get() == "Clip"
+    }
+    private val checkerClimbMotionValue = object : FloatValue("CheckerClimbMotion", 0f, 0f, 1f) {
+        override fun isSupported() = modeValue.get() == "CheckerClimb"
+    }
 
     private var glitch = false
     private var waited = 0

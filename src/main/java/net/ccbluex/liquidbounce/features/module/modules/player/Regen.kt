@@ -21,9 +21,11 @@ import net.minecraft.potion.Potion
 class Regen : Module() {
 
     private val modeValue = ListValue("Mode", arrayOf("Vanilla", "Spartan"), "Vanilla")
+    private val speedValue = object : IntegerValue("Speed", 100, 1, 100) {
+        override fun isSupported() = modeValue.get() == "Vanilla"
+    }
     private val healthValue = IntegerValue("Health", 18, 0, 20)
     private val foodValue = IntegerValue("Food", 18, 0, 20)
-    private val speedValue = IntegerValue("Speed", 100, 1, 100)
     private val noAirValue = BoolValue("NoAir", false)
     private val potionEffectValue = BoolValue("PotionEffect", false)
 
