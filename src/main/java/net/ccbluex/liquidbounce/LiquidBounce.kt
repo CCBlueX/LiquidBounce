@@ -19,6 +19,7 @@ import net.ccbluex.liquidbounce.script.remapper.Remapper.loadSrg
 import net.ccbluex.liquidbounce.tabs.BlocksTab
 import net.ccbluex.liquidbounce.tabs.ExploitsTab
 import net.ccbluex.liquidbounce.tabs.HeadsTab
+import net.ccbluex.liquidbounce.ui.client.GuiClientConfiguration
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.ui.client.hud.HUD
@@ -46,6 +47,8 @@ object LiquidBounce {
     const val MINECRAFT_VERSION = "1.8.9"
     const val CLIENT_CLOUD = "https://cloud.liquidbounce.net/LiquidBounce"
     const val CLIENT_API = "https://api.liquidbounce.net/api/v1"
+    @JvmField
+    val CLIENT_TITLE = CLIENT_NAME + " " + CLIENT_VERSION + " " + CLIENT_COMMIT + "  | " + MINECRAFT_VERSION + if (IN_DEV) " | DEVELOPMENT BUILD" else ""
 
     var isStarting = false
 
@@ -119,6 +122,9 @@ object LiquidBounce {
         // Load configs
         fileManager.loadConfigs(fileManager.modulesConfig, fileManager.valuesConfig, fileManager.accountsConfig,
                 fileManager.friendsConfig, fileManager.xrayConfig, fileManager.shortcutsConfig)
+
+        // Update client window
+        GuiClientConfiguration.updateClientWindow()
 
         // ClickGUI
         clickGui = ClickGui()

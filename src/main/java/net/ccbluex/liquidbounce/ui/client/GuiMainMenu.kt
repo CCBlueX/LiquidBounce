@@ -9,11 +9,7 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
-import net.minecraft.client.gui.GuiButton
-import net.minecraft.client.gui.GuiMultiplayer
-import net.minecraft.client.gui.GuiOptions
-import net.minecraft.client.gui.GuiScreen
-import net.minecraft.client.gui.GuiSelectWorld
+import net.minecraft.client.gui.*
 import net.minecraft.client.resources.I18n
 
 class GuiMainMenu : GuiScreen() {
@@ -24,7 +20,7 @@ class GuiMainMenu : GuiScreen() {
         buttonList.add(GuiButton(100, width / 2 - 100, defaultHeight + 24, 98, 20, "AltManager"))
         buttonList.add(GuiButton(103, width / 2 + 2, defaultHeight + 24, 98, 20, "Mods"))
         buttonList.add(GuiButton(108, width / 2 - 100, defaultHeight + 24 * 2, 98, 20, "Contributors"))
-        buttonList.add(GuiButton(102, width / 2 + 2, defaultHeight + 24 * 2, 98, 20, "Background"))
+        buttonList.add(GuiButton(102, width / 2 + 2, defaultHeight + 24 * 2, 98, 20, "Configuration"))
 
         buttonList.add(GuiButton(1, width / 2 - 100, defaultHeight, 98, 20, I18n.format("menu.singleplayer")))
         buttonList.add(GuiButton(2, width / 2 + 2, defaultHeight, 98, 20, I18n.format("menu.multiplayer")))
@@ -54,7 +50,7 @@ class GuiMainMenu : GuiScreen() {
             2 -> mc.displayGuiScreen(GuiMultiplayer(this))
             4 -> mc.shutdown()
             100 -> mc.displayGuiScreen(GuiAltManager(this))
-            102 -> mc.displayGuiScreen(GuiBackground(this))
+            102 -> mc.displayGuiScreen(GuiClientConfiguration(this))
             103 -> mc.displayGuiScreen(GuiModsMenu(this))
             108 -> mc.displayGuiScreen(GuiContributors(this))
         }

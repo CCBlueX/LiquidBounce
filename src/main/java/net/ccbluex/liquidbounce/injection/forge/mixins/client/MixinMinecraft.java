@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.AbortBreaking;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.MultiActions;
 import net.ccbluex.liquidbounce.features.module.modules.world.FastPlace;
 import net.ccbluex.liquidbounce.injection.forge.SplashProgressLock;
+import net.ccbluex.liquidbounce.ui.client.GuiClientConfiguration;
 import net.ccbluex.liquidbounce.ui.client.GuiMainMenu;
 import net.ccbluex.liquidbounce.ui.client.GuiUpdate;
 import net.ccbluex.liquidbounce.ui.client.GuiWelcome;
@@ -129,7 +130,9 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "createDisplay", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/Display;setTitle(Ljava/lang/String;)V", shift = At.Shift.AFTER))
     private void createDisplay(CallbackInfo callbackInfo) {
-        Display.setTitle(LiquidBounce.CLIENT_NAME + " " + LiquidBounce.CLIENT_VERSION + " " +  LiquidBounce.CLIENT_COMMIT + "  | " + LiquidBounce.MINECRAFT_VERSION + (LiquidBounce.IN_DEV ? " | DEVELOPMENT BUILD" : ""));
+        if (GuiClientConfiguration.Companion.getEnabledClientTitle()) {
+            Display.setTitle(LiquidBounce.CLIENT_TITLE);
+        }
     }
 
     @Inject(method = "displayGuiScreen", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;currentScreen:Lnet/minecraft/client/gui/GuiScreen;", shift = At.Shift.AFTER))
@@ -181,10 +184,12 @@ public abstract class MixinMinecraft {
     @Inject(method = "setWindowIcon", at = @At("HEAD"), cancellable = true)
     private void setWindowIcon(CallbackInfo callbackInfo) {
         if (Util.getOSType() != Util.EnumOS.OSX) {
-            final ByteBuffer[] liquidBounceFavicon = IconUtils.getFavicon();
-            if (liquidBounceFavicon != null) {
-                Display.setIcon(liquidBounceFavicon);
-                callbackInfo.cancel();
+            if (GuiClientConfiguration.Companion.getEnabledClientTitle()) {
+                final ByteBuffer[] liquidBounceFavicon = IconUtils.getFavicon();
+                if (liquidBounceFavicon != null) {
+                    Display.setIcon(liquidBounceFavicon);
+                    callbackInfo.cancel();
+                }
             }
         }
     }

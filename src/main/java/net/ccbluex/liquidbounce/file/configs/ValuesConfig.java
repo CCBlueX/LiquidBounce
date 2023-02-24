@@ -17,7 +17,7 @@ import net.ccbluex.liquidbounce.features.special.AutoReconnect;
 import net.ccbluex.liquidbounce.features.special.BungeeCordSpoof;
 import net.ccbluex.liquidbounce.file.FileConfig;
 import net.ccbluex.liquidbounce.file.FileManager;
-import net.ccbluex.liquidbounce.ui.client.GuiBackground;
+import net.ccbluex.liquidbounce.ui.client.GuiClientConfiguration;
 import net.ccbluex.liquidbounce.ui.client.altmanager.menus.GuiDonatorCape;
 import net.ccbluex.liquidbounce.ui.client.altmanager.menus.altgenerator.GuiTheAltening;
 import net.ccbluex.liquidbounce.utils.EntityUtils;
@@ -106,14 +106,25 @@ public class ValuesConfig extends FileConfig {
 
                 if (jsonValue.has("CapeEnabled"))
                     GuiDonatorCape.Companion.setCapeEnabled(jsonValue.get("CapeEnabled").getAsBoolean());
+            } else if (entry.getKey().equalsIgnoreCase("clientConfiguration")) { // Compatibility with old versions
+                JsonObject jsonValue = (JsonObject) entry.getValue();
+
+                if (jsonValue.has("EnabledClientTitle"))
+                    GuiClientConfiguration.Companion.setEnabledClientTitle(jsonValue.get("EnabledClientTitle").getAsBoolean());
+
+                if (jsonValue.has("EnabledBackground"))
+                    GuiClientConfiguration.Companion.setEnabledCustomBackground(jsonValue.get("EnabledBackground").getAsBoolean());
+
+                if (jsonValue.has("Particles"))
+                    GuiClientConfiguration.Companion.setParticles(jsonValue.get("Particles").getAsBoolean());
             } else if (entry.getKey().equalsIgnoreCase("Background")) {
                 JsonObject jsonValue = (JsonObject) entry.getValue();
 
                 if (jsonValue.has("Enabled"))
-                    GuiBackground.Companion.setEnabled(jsonValue.get("Enabled").getAsBoolean());
+                    GuiClientConfiguration.Companion.setEnabledCustomBackground(jsonValue.get("Enabled").getAsBoolean());
 
                 if (jsonValue.has("Particles"))
-                    GuiBackground.Companion.setParticles(jsonValue.get("Particles").getAsBoolean());
+                    GuiClientConfiguration.Companion.setParticles(jsonValue.get("Particles").getAsBoolean());
             } else {
                 final Module module = LiquidBounce.moduleManager.getModule(entry.getKey());
 
@@ -172,10 +183,11 @@ public class ValuesConfig extends FileConfig {
         capeObject.addProperty("CapeEnabled", GuiDonatorCape.Companion.getCapeEnabled());
         jsonObject.add("DonatorCape", capeObject);
 
-        final JsonObject backgroundObject = new JsonObject();
-        backgroundObject.addProperty("Enabled", GuiBackground.Companion.getEnabled());
-        backgroundObject.addProperty("Particles", GuiBackground.Companion.getParticles());
-        jsonObject.add("Background", backgroundObject);
+        final JsonObject clientObject = new JsonObject();
+        clientObject.addProperty("EnabledClientTitle", GuiClientConfiguration.Companion.getEnabledClientTitle());
+        clientObject.addProperty("EnabledBackground", GuiClientConfiguration.Companion.getEnabledCustomBackground());
+        clientObject.addProperty("Particles", GuiClientConfiguration.Companion.getParticles());
+        jsonObject.add("clientConfiguration", clientObject);
 
         LiquidBounce.moduleManager.getModules().stream().filter(module -> !module.getValues().isEmpty()).forEach(module -> {
             final JsonObject jsonModule = new JsonObject();
