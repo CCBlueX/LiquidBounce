@@ -16,8 +16,8 @@ import me.liuli.elixir.account.CrackedAccount;
 import me.liuli.elixir.account.MinecraftAccount;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.SessionEvent;
-import net.ccbluex.liquidbounce.features.special.AntiForge;
 import net.ccbluex.liquidbounce.features.special.AutoReconnect;
+import net.ccbluex.liquidbounce.features.special.ClientFixes;
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager;
 import net.ccbluex.liquidbounce.ui.client.altmanager.menus.GuiLoginProgress;
 import net.ccbluex.liquidbounce.ui.client.altmanager.menus.altgenerator.GuiTheAltening;
@@ -63,7 +63,7 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen {
 
         buttonList.add(new GuiButton(3, this.width / 2 - 100, this.height / 2 + field_175353_i / 2 + this.fontRendererObj.FONT_HEIGHT + 44, 98, 20, GuiTheAltening.Companion.getApiKey().isEmpty() ? "Random alt" : "New TheAltening alt"));
         buttonList.add(new GuiButton(4, this.width / 2 + 2, this.height / 2 + field_175353_i / 2 + this.fontRendererObj.FONT_HEIGHT + 44, 98, 20, "Random username"));
-        buttonList.add(forgeBypassButton = new GuiButton(5, this.width / 2 - 100, this.height / 2 + field_175353_i / 2 + this.fontRendererObj.FONT_HEIGHT + 66, "Bypass AntiForge: " + (AntiForge.enabled ? "On" : "Off")));
+        buttonList.add(forgeBypassButton = new GuiButton(5, this.width / 2 - 100, this.height / 2 + field_175353_i / 2 + this.fontRendererObj.FONT_HEIGHT + 66, "Bypass AntiForge: " + (ClientFixes.fmlFixesEnabled ? "On" : "Off")));
 
         updateSliderText();
     }
@@ -130,8 +130,8 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen {
                 ServerUtils.connectToLastServer();
                 break;
             case 5:
-                AntiForge.enabled = !AntiForge.enabled;
-                forgeBypassButton.displayString = "Bypass AntiForge: " + (AntiForge.enabled ? "On" : "Off");
+                ClientFixes.fmlFixesEnabled = !ClientFixes.fmlFixesEnabled;
+                forgeBypassButton.displayString = "Bypass AntiForge: " + (ClientFixes.fmlFixesEnabled ? "On" : "Off");
                 LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
                 break;
         }

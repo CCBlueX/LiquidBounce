@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.injection.transformers;
 
-import net.ccbluex.liquidbounce.features.special.AntiForge;
+import net.ccbluex.liquidbounce.features.special.ClientFixes;
 import net.ccbluex.liquidbounce.script.remapper.injection.utils.ClassUtils;
 import net.ccbluex.liquidbounce.script.remapper.injection.utils.NodeUtils;
 import net.minecraft.client.Minecraft;
@@ -79,6 +79,6 @@ public class ForgeNetworkTransformer implements IClassTransformer {
     }
 
     public static boolean returnMethod() {
-        return AntiForge.enabled && AntiForge.blockFML && !Minecraft.getMinecraft().isIntegratedServerRunning();
+        return ClientFixes.fmlFixesEnabled && ClientFixes.blockFML && !Minecraft.getMinecraft().isIntegratedServerRunning();
     }
 }

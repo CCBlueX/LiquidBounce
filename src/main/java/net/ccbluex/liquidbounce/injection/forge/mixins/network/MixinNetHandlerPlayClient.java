@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.network;
 import io.netty.buffer.Unpooled;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EntityMovementEvent;
-import net.ccbluex.liquidbounce.features.special.AntiForge;
+import net.ccbluex.liquidbounce.features.special.ClientFixes;
 import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.minecraft.client.ClientBrandRetriever;
 import net.minecraft.client.Minecraft;
@@ -57,25 +57,32 @@ public abstract class MixinNetHandlerPlayClient {
         final String url = p_handleResourcePack_1_.getURL();
         final String hash = p_handleResourcePack_1_.getHash();
 
-        try {
-            final String scheme = new URI(url).getScheme();
-            final boolean isLevelProtocol = "level".equals(scheme);
+        if (ClientFixes.blockResourcePackExploit) {
+            try {
+                final String scheme = new URI(url).getScheme();
+                final boolean isLevelProtocol = "level".equals(scheme);
 
-            if(!"http".equals(scheme) && !"https".equals(scheme) && !isLevelProtocol)
-                throw new URISyntaxException(url, "Wrong protocol");
+                if(!"http".equals(scheme) && !"https".equals(scheme) && !isLevelProtocol)
+                    throw new URISyntaxException(url, "Wrong protocol");
 
-            if(isLevelProtocol && (url.contains("..") || !url.endsWith("/resources.zip")))
-                throw new URISyntaxException(url, "Invalid levelstorage resourcepack path");
-        }catch(final URISyntaxException e) {
-            ClientUtils.getLogger().error("Failed to handle resource pack", e);
-            netManager.sendPacket(new C19PacketResourcePackStatus(hash, C19PacketResourcePackStatus.Action.FAILED_DOWNLOAD));
-            callbackInfo.cancel();
+                if(isLevelProtocol && (url.contains("..") || !url.endsWith("/resources.zip")))
+                    throw new URISyntaxException(url, "Invalid levelstorage resourcepack path");
+            }catch(final URISyntaxException e) {
+                ClientUtils.getLogger().error("Failed to handle resource pack", e);
+
+                // Accepted is always sent.
+                netManager.sendPacket(new C19PacketResourcePackStatus(hash, C19PacketResourcePackStatus.Action.ACCEPTED));
+                // But we fail of course.
+                netManager.sendPacket(new C19PacketResourcePackStatus(hash, C19PacketResourcePackStatus.Action.FAILED_DOWNLOAD));
+
+                callbackInfo.cancel();
+            }
         }
     }
 
     @Inject(method = "handleJoinGame", at = @At("HEAD"), cancellable = true)
     private void handleJoinGameWithAntiForge(S01PacketJoinGame packetIn, final CallbackInfo callbackInfo) {
-        if(!AntiForge.enabled || !AntiForge.blockFML || Minecraft.getMinecraft().isIntegratedServerRunning())
+        if(!ClientFixes.fmlFixesEnabled || !ClientFixes.blockFML || Minecraft.getMinecraft().isIntegratedServerRunning())
             return;
 
         PacketThreadUtil.checkThreadAndEnqueue(packetIn, (NetHandlerPlayClient) (Object) this, gameController);

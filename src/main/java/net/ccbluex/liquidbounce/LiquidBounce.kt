@@ -10,8 +10,8 @@ import net.ccbluex.liquidbounce.event.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.features.special.AntiForge
 import net.ccbluex.liquidbounce.features.special.BungeeCordSpoof
+import net.ccbluex.liquidbounce.features.special.ClientFixes
 import net.ccbluex.liquidbounce.features.special.ClientRichPresence
 import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.script.ScriptManager
@@ -86,7 +86,7 @@ object LiquidBounce {
 
         // Register listeners
         eventManager.registerListener(RotationUtils())
-        eventManager.registerListener(AntiForge())
+        eventManager.registerListener(ClientFixes())
         eventManager.registerListener(BungeeCordSpoof())
         eventManager.registerListener(CapeService)
         eventManager.registerListener(InventoryUtils())

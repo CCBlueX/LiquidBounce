@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.packets;
 
-import net.ccbluex.liquidbounce.features.special.AntiForge;
+import net.ccbluex.liquidbounce.features.special.ClientFixes;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.handshake.client.C00Handshake;
 import net.minecraftforge.fml.relauncher.Side;
@@ -23,6 +23,6 @@ public class MixinC00Handshake {
      */
     @ModifyConstant(method = "writePacketData", constant = @Constant(stringValue = "\u0000FML\u0000"))
     private String injectAntiForge(String constant) {
-        return AntiForge.enabled && AntiForge.blockFML && !Minecraft.getMinecraft().isIntegratedServerRunning() ? "" : "\u0000FML\u0000";
+        return ClientFixes.fmlFixesEnabled && ClientFixes.blockFML && !Minecraft.getMinecraft().isIntegratedServerRunning() ? "" : "\u0000FML\u0000";
     }
 }

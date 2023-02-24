@@ -14,18 +14,19 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.play.client.C17PacketCustomPayload;
 
-public class AntiForge extends MinecraftInstance implements Listenable {
+public class ClientFixes extends MinecraftInstance implements Listenable {
 
-    public static boolean enabled = true;
+    public static boolean fmlFixesEnabled = true;
     public static boolean blockFML = true;
     public static boolean blockProxyPacket = true;
     public static boolean blockPayloadPackets = true;
+    public static boolean blockResourcePackExploit = true;
 
     @EventTarget
     public void onPacket(PacketEvent event) {
         final Packet<?> packet = event.getPacket();
 
-        if (enabled && !mc.isIntegratedServerRunning()) {
+        if (fmlFixesEnabled && !mc.isIntegratedServerRunning()) {
             try {
                 if (blockProxyPacket && packet.getClass().getName().equals("net.minecraftforge.fml.common.network.internal.FMLProxyPacket"))
                     event.cancelEvent();
