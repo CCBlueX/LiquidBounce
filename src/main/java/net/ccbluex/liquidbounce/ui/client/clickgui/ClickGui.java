@@ -274,6 +274,10 @@ public class ClickGui extends GuiScreen {
         if (wheel == 0)
             return;
 
+        if (!((ClickGUI) Objects.requireNonNull(LiquidBounce.moduleManager.getModule(ClickGUI.class))).scrollsValue.get()) {
+            return;
+        }
+
         for(final Panel panel : panels)
             panel.setY(panel.getY() + wheel);
     }

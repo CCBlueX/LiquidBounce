@@ -38,6 +38,8 @@ public class ClickGUI extends Module {
     public final FloatValue scaleValue = new FloatValue("Scale", 1F, 0.7F, 2F);
     public final IntegerValue maxElementsValue = new IntegerValue("MaxElements", 15, 1, 20);
 
+    public final BoolValue scrollsValue = new BoolValue("Scrolls", false);
+
     private static final IntegerValue colorRedValue = new IntegerValue("R", 0, 0, 255);
     private static final IntegerValue colorGreenValue = new IntegerValue("G", 160, 0, 255);
     private static final IntegerValue colorBlueValue = new IntegerValue("B", 255, 0, 255);
