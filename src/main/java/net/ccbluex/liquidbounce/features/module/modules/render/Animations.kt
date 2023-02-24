@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.render.Animations.animations
 import net.ccbluex.liquidbounce.features.module.modules.render.Animations.defaultAnimation
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.entity.AbstractClientPlayer
 import net.minecraft.client.renderer.GlStateManager
@@ -47,6 +48,7 @@ object Animations : Module() {
     )
 
     private var animationMode = ListValue("Mode", animations.map { it.name }.toTypedArray(), "Pushdown")
+    var oddSwing = BoolValue("OddSwing", false)
 
     fun getAnimation() = animations.firstOrNull { it.name.equals(animationMode.get(), true) }
 

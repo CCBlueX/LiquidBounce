@@ -128,7 +128,6 @@ class ModuleManager : Listenable {
                 ServerCrasher::class.java,
                 NoFOV::class.java,
                 FastStairs::class.java,
-                SwingAnimation::class.java,
                 Derp::class.java,
                 ReverseStep::class.java,
                 TNTBlock::class.java,
