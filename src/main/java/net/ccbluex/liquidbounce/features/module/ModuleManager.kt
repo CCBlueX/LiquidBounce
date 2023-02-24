@@ -184,6 +184,7 @@ class ModuleManager : Listenable {
         registerModule(ChestAura)
         registerModule(AntiBot)
         registerModule(Animations)
+        registerModule(Backtrack)
 
         ClientUtils.getLogger().info("[ModuleManager] Loaded ${modules.size} modules.")
     }

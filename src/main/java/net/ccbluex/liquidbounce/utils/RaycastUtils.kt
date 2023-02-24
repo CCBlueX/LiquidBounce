@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.utils
 
+import net.ccbluex.liquidbounce.features.module.modules.combat.Backtrack
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.util.Vec3
@@ -43,28 +44,37 @@ object RaycastUtils : MinecraftInstance() {
                     continue
 
                 val collisionBorderSize = entity.collisionBorderSize.toDouble()
-                val axisAlignedBB = entity.entityBoundingBox.expand(collisionBorderSize, collisionBorderSize, collisionBorderSize)
 
-                val movingObjectPosition = axisAlignedBB.calculateIntercept(eyePosition, vector)
+                val checkEntity = {
+                    val axisAlignedBB = entity.entityBoundingBox.expand(collisionBorderSize, collisionBorderSize, collisionBorderSize)
 
-                if (axisAlignedBB.isVecInside(eyePosition)) {
-                    if (blockReachDistance >= 0.0) {
-                        pointedEntity = entity
-                        blockReachDistance = 0.0
-                    }
-                } else if (movingObjectPosition != null) {
-                    val eyeDistance = eyePosition.distanceTo(movingObjectPosition.hitVec)
+                    val movingObjectPosition = axisAlignedBB.calculateIntercept(eyePosition, vector)
 
-                    if (eyeDistance < blockReachDistance || blockReachDistance == 0.0) {
-                        if (entity == renderViewEntity.ridingEntity && !renderViewEntity.canRiderInteract()) {
-                            if (blockReachDistance == 0.0)
-                                pointedEntity = entity
-                        } else {
+                    if (axisAlignedBB.isVecInside(eyePosition)) {
+                        if (blockReachDistance >= 0.0) {
                             pointedEntity = entity
-                            blockReachDistance = eyeDistance
+                            blockReachDistance = 0.0
+                        }
+                    } else if (movingObjectPosition != null) {
+                        val eyeDistance = eyePosition.distanceTo(movingObjectPosition.hitVec)
+
+                        if (eyeDistance < blockReachDistance || blockReachDistance == 0.0) {
+                            if (entity == renderViewEntity.ridingEntity && !renderViewEntity.canRiderInteract()) {
+                                if (blockReachDistance == 0.0)
+                                    pointedEntity = entity
+                            } else {
+                                pointedEntity = entity
+                                blockReachDistance = eyeDistance
+                            }
                         }
                     }
+
+                    false
                 }
+
+                // Check newest entity first
+                checkEntity()
+                Backtrack.loopThroughBacktrackData(entity, checkEntity)
             }
 
             return pointedEntity

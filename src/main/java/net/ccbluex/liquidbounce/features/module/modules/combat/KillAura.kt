@@ -465,11 +465,19 @@ class KillAura : Module() {
             if (entity !is EntityLivingBase || !isEnemy(entity) || (switchMode && prevTargetEntities.contains(entity.entityId)))
                 continue
 
-            val distance = thePlayer.getDistanceToEntityBox(entity)
+            var distance = thePlayer.getDistanceToEntityBox(entity)
+            if (Backtrack.state) {
+                val trackedDistance = Backtrack.getNearestTrackedDistance(entity)
+
+                if (distance > trackedDistance) {
+                    distance = trackedDistance
+                }
+            }
             val entityFov = RotationUtils.getRotationDifference(entity)
 
-            if (distance <= maxRange && (fov == 180F || entityFov <= fov) && entity.hurtTime <= hurtTime)
+            if (distance <= maxRange && (fov == 180F || entityFov <= fov) && entity.hurtTime <= hurtTime) {
                 targets.add(entity)
+            }
         }
 
         // Sort targets by priority
@@ -483,8 +491,22 @@ class KillAura : Module() {
         // Find best target
         for (entity in targets) {
             // Update rotations to current target
-            if (!updateRotations(entity)) // when failed then try another target
-                continue
+            if (!updateRotations(entity)) {
+                var success = false
+                Backtrack.loopThroughBacktrackData(entity) {
+                    if (updateRotations(entity)) {
+                        success = true
+                        return@loopThroughBacktrackData true
+                    }
+
+                    return@loopThroughBacktrackData false
+                }
+
+                if (!success) {
+                    // when failed then try another target
+                    continue
+                }
+            }
 
             // Set target to current entity
             target = entity
