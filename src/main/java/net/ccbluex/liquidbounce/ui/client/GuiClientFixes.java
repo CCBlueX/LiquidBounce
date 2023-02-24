@@ -45,7 +45,7 @@ public class GuiClientFixes extends GuiScreen {
         switch (button.id) {
             case 1:
                 ClientFixes.fmlFixesEnabled = !ClientFixes.fmlFixesEnabled;
-                enabledButton.displayString = "Enabled (" + (ClientFixes.fmlFixesEnabled ? "On" : "Off") + ")";
+                enabledButton.displayString = "AntiForge (" + (ClientFixes.fmlFixesEnabled ? "On" : "Off") + ")";
                 LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
                 break;
             case 2:
