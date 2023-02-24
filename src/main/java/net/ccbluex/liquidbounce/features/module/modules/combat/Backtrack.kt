@@ -21,11 +21,11 @@ import java.util.*
 object Backtrack : Module() {
 
     // This will be used as maximum possible delay. (In milliseconds)
-    private val delay = IntegerValue("Delay", 250, 0, 1000)
+    private val maximumDelay = IntegerValue("MaxDelay", 250, 0, 1000)
 
     // This will be used to set the maximum data of a player. This can be used to prevent memory leaks and lag.
     // Might be useful on servers with a lot of players or AntiCheat plugins which try to cause issues by exploiting this.
-    private val maximumDataOfPlayer = IntegerValue("MaximumDataOfPlayer", 10, 1, 20)
+    private val maximumCachedPositions = IntegerValue("MaxCachedPositions", 10, 1, 20)
 
     private val backtrackedPlayer = mutableMapOf<UUID, MutableList<BacktrackData>>()
 
@@ -43,7 +43,7 @@ object Backtrack : Module() {
 
         backtrackedPlayer.forEach { (key, backtrackData) ->
             // Remove old data
-            backtrackData.removeIf { it.time + delay.get() < System.currentTimeMillis() }
+            backtrackData.removeIf { it.time + maximumDelay.get() < System.currentTimeMillis() }
 
             // Remove player if there is no data left. This prevents memory leaks.
             if (backtrackData.isEmpty()) {
@@ -113,7 +113,7 @@ object Backtrack : Module() {
         // Check if there is already data of the player
         if (backtrackData != null) {
             // Check if there is already enough data of the player
-            if (backtrackData.size >= maximumDataOfPlayer.get()) {
+            if (backtrackData.size >= maximumCachedPositions.get()) {
                 // Remove first data
                 backtrackData.removeAt(0)
             }
