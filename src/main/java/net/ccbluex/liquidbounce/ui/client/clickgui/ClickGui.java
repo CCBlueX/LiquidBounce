@@ -248,11 +248,18 @@ public class ClickGui extends GuiScreen {
 
         if (Mouse.hasWheel()) {
             int wheel = Mouse.getDWheel();
+            boolean handledScroll = false;
 
             for (int i = panels.size() - 1; i >= 0; i--)
-                if (panels.get(i).handleScroll(mouseX, mouseY, wheel))
+                if (panels.get(i).handleScroll(mouseX, mouseY, wheel)) {
+                    handledScroll = true;
                     break;
+                }
+
+            if (!handledScroll)
+                handleScroll(wheel);
         }
+        int finalMouseY = mouseY;
 
         GlStateManager.disableLighting();
         RenderHelper.disableStandardItemLighting();
@@ -263,6 +270,18 @@ public class ClickGui extends GuiScreen {
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
+    private void handleScroll(final int wheel) {
+        if (wheel == 0)
+            return;
+
+        if (!((ClickGUI) Objects.requireNonNull(LiquidBounce.moduleManager.getModule(ClickGUI.class))).scrollsValue.get()) {
+            return;
+        }
+
+        for(final Panel panel : panels)
+            panel.setY(panel.getY() + wheel);
+    }
+
     @Override
     public void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
         final double scale = ((ClickGUI) Objects.requireNonNull(LiquidBounce.moduleManager.getModule(ClickGUI.class))).scaleValue.get();
@@ -270,22 +289,14 @@ public class ClickGui extends GuiScreen {
         mouseX /= scale;
         mouseY /= scale;
 
-        for (int i = panels.size() - 1; i >= 0; i--) {
-            if (panels.get(i).mouseClicked(mouseX, mouseY, mouseButton)){
-                break;
-            }
-        }
-
-
         for (final Panel panel : panels) {
+            panel.mouseClicked(mouseX, mouseY, mouseButton);
+
             panel.drag = false;
 
-            if (mouseButton == 0 && panel.isHovering(mouseX, mouseY)) {
+            if (mouseButton == 0 && panel.isHovering(mouseX, mouseY))
                 clickedPanel = panel;
-                break;
-            }
         }
-
         if (clickedPanel != null) {
             clickedPanel.x2 = clickedPanel.x - mouseX;
             clickedPanel.y2 = clickedPanel.y - mouseY;
@@ -295,8 +306,6 @@ public class ClickGui extends GuiScreen {
             panels.add(clickedPanel);
             clickedPanel = null;
         }
-
-        super.mouseClicked(mouseX, mouseY, mouseButton);
     }
 
     @Override
