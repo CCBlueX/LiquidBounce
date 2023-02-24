@@ -39,6 +39,7 @@ class AutoClicker : Module() {
                 set(maxCPS)
         }
 
+        override fun isSupported() = !maxCPSValue.isMinimal()
     }
 
     private val rightValue = BoolValue("Right", true)

@@ -34,10 +34,20 @@ import java.awt.Color
 class StorageESP : Module() {
     private val modeValue =
         ListValue("Mode", arrayOf("Box", "OtherBox", "Outline", "Glow", "2D", "WireFrame"), "Outline")
-    private val glowRenderScale = FloatValue("Glow-Renderscale", 1f, 0.1f, 2f)
-    private val glowRadius = IntegerValue("Glow-Radius", 4, 1, 5)
-    private val glowFade = IntegerValue("Glow-Fade", 10, 0, 30)
-    private val glowTargetAlpha = FloatValue("Glow-Target-Alpha", 0f, 0f, 1f)
+
+    private val glowRenderScale = object : FloatValue("Glow-Renderscale", 1f, 0.1f, 2f) {
+        override fun isSupported() = modeValue.get() == "Glow"
+    }
+    private val glowRadius = object : IntegerValue("Glow-Radius", 4, 1, 5) {
+        override fun isSupported() = modeValue.get() == "Glow"
+    }
+    private val glowFade = object : IntegerValue("Glow-Fade", 10, 0, 30) {
+        override fun isSupported() = modeValue.get() == "Glow"
+    }
+    private val glowTargetAlpha = object : FloatValue("Glow-Target-Alpha", 0f, 0f, 1f) {
+        override fun isSupported() = modeValue.get() == "Glow"
+    }
+
     private val chestValue = BoolValue("Chest", true)
     private val enderChestValue = BoolValue("EnderChest", true)
     private val furnaceValue = BoolValue("Furnace", true)

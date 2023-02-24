@@ -44,6 +44,11 @@ public class Spammer extends Module {
                 set(maxDelayValueObject);
             delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get());
         }
+
+        @Override
+        public boolean isSupported() {
+            return !maxDelayValue.isMinimal();
+        };
     };
 
     private final TextValue messageValue = new TextValue("Message", LiquidBounce.CLIENT_NAME + " Client | liquidbounce(.net) | CCBlueX on yt");

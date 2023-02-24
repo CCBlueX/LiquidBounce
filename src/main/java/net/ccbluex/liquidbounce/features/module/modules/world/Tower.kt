@@ -64,25 +64,43 @@ class Tower : Module() {
     private val swingValue = BoolValue("Swing", true)
     private val stopWhenBlockAbove = BoolValue("StopWhenBlockAbove", false)
     private val rotationsValue = BoolValue("Rotations", true)
-    private val keepRotationValue = BoolValue("KeepRotation", false)
+    private val keepRotationValue = object : BoolValue("KeepRotation", false) {
+        override fun isSupported() = rotationsValue.get()
+    }
     private val onJumpValue = BoolValue("OnJump", false)
     private val matrixValue = BoolValue("Matrix", false)
     private val placeModeValue = ListValue("PlaceTiming", arrayOf("Pre", "Post"), "Post")
     private val timerValue = FloatValue("Timer", 1f, 0.01f, 10f)
 
     // Jump mode
-    private val jumpMotionValue = FloatValue("JumpMotion", 0.42f, 0.3681289f, 0.79f)
-    private val jumpDelayValue = IntegerValue("JumpDelay", 0, 0, 20)
+    private val jumpMotionValue = object : FloatValue("JumpMotion", 0.42f, 0.3681289f, 0.79f) {
+        override fun isSupported() = modeValue.get() == "Jump"
+    }
+    private val jumpDelayValue = object : IntegerValue("JumpDelay", 0, 0, 20) {
+        override fun isSupported() = modeValue.get() == "Jump"
+    }
 
     // ConstantMotion
-    private val constantMotionValue = FloatValue("ConstantMotion", 0.42f, 0.1f, 1f)
-    private val constantMotionJumpGroundValue = FloatValue("ConstantMotionJumpGround", 0.79f, 0.76f, 1f)
+    private val constantMotionValue = object : FloatValue("ConstantMotion", 0.42f, 0.1f, 1f) {
+        override fun isSupported() = modeValue.get() == "ConstantMotion"
+    }
+    private val constantMotionJumpGroundValue = object : FloatValue("ConstantMotionJumpGround", 0.79f, 0.76f, 1f) {
+        override fun isSupported() = modeValue.get() == "ConstantMotion"
+    }
 
     // Teleport
-    private val teleportHeightValue = FloatValue("TeleportHeight", 1.15f, 0.1f, 5f)
-    private val teleportDelayValue = IntegerValue("TeleportDelay", 0, 0, 20)
-    private val teleportGroundValue = BoolValue("TeleportGround", true)
-    private val teleportNoMotionValue = BoolValue("TeleportNoMotion", false)
+    private val teleportHeightValue = object :  FloatValue("TeleportHeight", 1.15f, 0.1f, 5f) {
+        override fun isSupported() = modeValue.get() == "Teleport"
+    }
+    private val teleportDelayValue = object :  IntegerValue("TeleportDelay", 0, 0, 20) {
+        override fun isSupported() = modeValue.get() == "Teleport"
+    }
+    private val teleportGroundValue = object : BoolValue("TeleportGround", true) {
+        override fun isSupported() = modeValue.get() == "Teleport"
+    }
+    private val teleportNoMotionValue = object :  BoolValue("TeleportNoMotion", false) {
+        override fun isSupported() = modeValue.get() == "Teleport"
+    }
 
     // Render
     private val counterDisplayValue = BoolValue("Counter", true)

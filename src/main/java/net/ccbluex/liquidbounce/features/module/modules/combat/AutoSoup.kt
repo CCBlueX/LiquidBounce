@@ -28,7 +28,9 @@ class AutoSoup : Module() {
     private val healthValue = FloatValue("Health", 15f, 0f, 20f)
     private val delayValue = IntegerValue("Delay", 150, 0, 500)
     private val openInventoryValue = BoolValue("OpenInv", false)
-    private val simulateInventoryValue = BoolValue("SimulateInventory", true)
+    private val simulateInventoryValue = object : BoolValue("SimulateInventory", true) {
+        override fun isSupported() = !openInventoryValue.get()
+    }
     private val bowlValue = ListValue("Bowl", arrayOf("Drop", "Move", "Stay"), "Drop")
 
     private val timer = MSTimer()

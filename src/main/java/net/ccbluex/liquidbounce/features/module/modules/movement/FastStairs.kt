@@ -22,7 +22,9 @@ import net.minecraft.util.BlockPos
 class FastStairs : Module() {
 
     private val modeValue = ListValue("Mode", arrayOf("Step", "NCP", "AAC3.1.0", "AAC3.3.6", "AAC3.3.13"), "NCP")
-    private val longJumpValue = BoolValue("LongJump", false)
+    private val longJumpValue = object : BoolValue("LongJump", false) {
+        override fun isSupported() = modeValue.get().startsWith("AAC")
+    }
 
     private var canJump = false
 
@@ -50,10 +52,10 @@ class FastStairs : Module() {
         if (getBlock(blockPos) is BlockStairs && !walkingDown) {
             thePlayer.setPosition(thePlayer.posX, thePlayer.posY + 0.5, thePlayer.posZ)
 
-            val motion = when {
-                mode.equals("NCP", ignoreCase = true) -> 1.4
-                mode.equals("AAC3.1.0", ignoreCase = true) -> 1.5
-                mode.equals("AAC3.3.13", ignoreCase = true) -> 1.2
+            val motion = when (mode) {
+                "NCP" -> 1.4
+                "AAC3.1.0" -> 1.5
+                "AAC3.3.13" -> 1.2
                 else -> 1.0
             }
 
@@ -63,28 +65,24 @@ class FastStairs : Module() {
 
         if (getBlock(blockPos.down()) is BlockStairs) {
             if (walkingDown) {
-                when {
-                    mode.equals("NCP", ignoreCase = true) ->
-                        thePlayer.motionY = -1.0
-                    mode.equals("AAC3.3.13", ignoreCase = true) ->
-                        thePlayer.motionY -= 0.014
+                when (mode) {
+                    "NCP" -> thePlayer.motionY = -1.0
+                    "AAC3.3.13" -> thePlayer.motionY -= 0.014
                 }
 
                 return
             }
 
-            val motion = when {
-                mode.equals("NCP", ignoreCase = true) -> 1.3
-                mode.equals("AAC3.1.0", ignoreCase = true) -> 1.3
-                mode.equals("AAC3.3.6", ignoreCase = true) -> 1.48
-                mode.equals("AAC3.3.13", ignoreCase = true) -> 1.52
+            val motion = when (mode) {
+                "AAC3.3.6" -> 1.48
+                "AAC3.3.13" -> 1.52
                 else -> 1.3
             }
 
             thePlayer.motionX *= motion
             thePlayer.motionZ *= motion
             canJump = true
-        } else if (mode.startsWith("AAC", ignoreCase = true) && canJump) {
+        } else if (mode.startsWith("AAC") && canJump) {
             if (longJumpValue.get()) {
                 thePlayer.jump()
                 thePlayer.motionX *= 1.35

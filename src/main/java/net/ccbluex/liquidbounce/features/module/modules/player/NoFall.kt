@@ -49,7 +49,9 @@ class NoFall : Module() {
             "Hypixel"
         ), "SpoofGround"
     )
-    private val minFallDistance = FloatValue("MinMLGHeight", 5f, 2f, 50f)
+    private val minFallDistance = object : FloatValue("MinMLGHeight", 5f, 2f, 50f) {
+        override fun isSupported() = modeValue.get() == "MLG"
+    }
     private val spartanTimer = TickTimer()
     private val mlgTimer = TickTimer()
     private var currentState = 0

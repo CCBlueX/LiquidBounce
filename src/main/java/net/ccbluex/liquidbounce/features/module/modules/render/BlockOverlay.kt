@@ -27,11 +27,18 @@ import java.awt.Color
 
 @ModuleInfo(name = "BlockOverlay", description = "Allows you to change the design of the block overlay.", category = ModuleCategory.RENDER)
 class BlockOverlay : Module() {
-    private val colorRedValue = IntegerValue("R", 68, 0, 255)
-    private val colorGreenValue = IntegerValue("G", 117, 0, 255)
-    private val colorBlueValue = IntegerValue("B", 255, 0, 255)
-    private val colorRainbow = BoolValue("Rainbow", false)
     val infoValue = BoolValue("Info", false)
+
+    private val colorRainbow = BoolValue("Rainbow", false)
+    private val colorRedValue = object : IntegerValue("R", 68, 0, 255) {
+        override fun isSupported() = !colorRainbow.get()
+    }
+    private val colorGreenValue = object : IntegerValue("G", 117, 0, 255) {
+        override fun isSupported() = !colorRainbow.get()
+    }
+    private val colorBlueValue = object : IntegerValue("B", 255, 0, 255) {
+        override fun isSupported() = !colorRainbow.get()
+    }
 
     val currentBlock: BlockPos?
         get() {

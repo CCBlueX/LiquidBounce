@@ -53,6 +53,9 @@ class Scaffold : Module() {
 
     private val modeValue = ListValue("Mode", arrayOf("Normal", "Rewinside", "Expand"), "Normal")
 
+    // Placeable delay
+    private val placeDelay = BoolValue("PlaceDelay", true)
+
     // Delay
     private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 0, 0, 1000) {
         override fun onChanged(oldValue: Int, newValue: Int) {
@@ -61,6 +64,8 @@ class Scaffold : Module() {
                 set(minDelay)
             }
         }
+
+        override fun isSupported() = placeDelay.get()
     }
 
     private val minDelayValue: IntegerValue = object : IntegerValue("MinDelay", 0, 0, 1000) {
@@ -70,10 +75,9 @@ class Scaffold : Module() {
                 set(maxDelay)
             }
         }
-    }
 
-    // Placeable delay
-    private val placeDelay = BoolValue("PlaceDelay", true)
+        override fun isSupported() = placeDelay.get() && !maxDelayValue.isMinimal()
+    }
 
     // Autoblock
     private val autoBlockValue = ListValue("AutoBlock", arrayOf("Off", "Pick", "Spoof", "Switch"), "Spoof")
@@ -88,8 +92,12 @@ class Scaffold : Module() {
 
     // Eagle
     private val eagleValue = ListValue("Eagle", arrayOf("Normal", "Silent", "Off"), "Normal")
-    private val blocksToEagleValue = IntegerValue("BlocksToEagle", 0, 0, 10)
-    private val edgeDistanceValue = FloatValue("EagleEdgeDistance", 0f, 0f, 0.5f)
+    private val blocksToEagleValue = object : IntegerValue("BlocksToEagle", 0, 0, 10) {
+        override fun isSupported() = eagleValue.get() != "Off"
+    }
+    private val edgeDistanceValue = object : FloatValue("EagleEdgeDistance", 0f, 0f, 0.5f) {
+        override fun isSupported() = eagleValue.get() != "Off"
+    }
 
     // Expand
     private val omniDirectionalExpand = BoolValue("OmniDirectionalExpand", false)
@@ -117,6 +125,8 @@ class Scaffold : Module() {
                 set(minimum)
             }
         }
+
+        override fun isSupported() = searchValue.get()
     }
 
     // Turn Speed
@@ -141,18 +151,26 @@ class Scaffold : Module() {
                 set(minimum)
             }
         }
+
+        override fun isSupported() = !maxTurnSpeedValue.isMinimal()
     }
 
     // Zitter
     private val zitterMode = ListValue("Zitter", arrayOf("Off", "Teleport", "Smooth"), "Off")
-    private val zitterSpeed = FloatValue("ZitterSpeed", 0.13f, 0.1f, 0.3f)
-    private val zitterStrength = FloatValue("ZitterStrength", 0.05f, 0f, 0.2f)
+    private val zitterSpeed = object : FloatValue("ZitterSpeed", 0.13f, 0.1f, 0.3f) {
+        override fun isSupported() = zitterMode.get() == "Teleport"
+    }
+    private val zitterStrength = object : FloatValue("ZitterStrength", 0.05f, 0f, 0.2f) {
+        override fun isSupported() = zitterMode.get() == "Teleport"
+    }
 
     // Game
     private val timerValue = FloatValue("Timer", 1f, 0.1f, 10f)
     private val speedModifierValue = FloatValue("SpeedModifier", 1f, 0f, 2f)
     private val slowValue = BoolValue("Slow", false)
-    private val slowSpeed = FloatValue("SlowSpeed", 0.6f, 0.2f, 0.8f)
+    private val slowSpeed = object : FloatValue("SlowSpeed", 0.6f, 0.2f, 0.8f) {
+        override fun isSupported() = slowValue.get()
+    }
 
     // Safety
     private val sameYValue = BoolValue("SameY", false)

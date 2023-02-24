@@ -26,7 +26,9 @@ import org.lwjgl.input.Keyboard
 class LiquidWalk : Module() {
     val modeValue = ListValue("Mode", arrayOf("Vanilla", "NCP", "AAC", "AAC3.3.11", "AACFly", "Spartan", "Dolphin"), "NCP")
     private val noJumpValue = BoolValue("NoJump", false)
-    private val aacFlyValue = FloatValue("AACFlyMotion", 0.5f, 0.1f, 1f)
+    private val aacFlyValue = object : FloatValue("AACFlyMotion", 0.5f, 0.1f, 1f) {
+        override fun isSupported() = modeValue.get() == "AACFly"
+    }
 
     private var nextTick = false
 

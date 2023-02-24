@@ -31,10 +31,18 @@ class BlockESP : Module() {
     private val blockValue = BlockValue("Block", 168)
     private val radiusValue = IntegerValue("Radius", 40, 5, 120)
     private val blockLimitValue = IntegerValue("BlockLimit", 256, 0, 2056)
-    private val colorRedValue = IntegerValue("R", 255, 0, 255)
-    private val colorGreenValue = IntegerValue("G", 179, 0, 255)
-    private val colorBlueValue = IntegerValue("B", 72, 0, 255)
+
     private val colorRainbow = BoolValue("Rainbow", false)
+    private val colorRedValue = object : IntegerValue("R", 255, 0, 255) {
+        override fun isSupported() = !colorRainbow.get()
+    }
+    private val colorGreenValue = object : IntegerValue("G", 179, 0, 255) {
+        override fun isSupported() = !colorRainbow.get()
+    }
+    private val colorBlueValue = object : IntegerValue("B", 72, 0, 255) {
+        override fun isSupported() = !colorRainbow.get()
+    }
+
     private val searchTimer = MSTimer()
     private val posList: MutableList<BlockPos> = ArrayList()
     private var thread: Thread? = null

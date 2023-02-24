@@ -28,9 +28,15 @@ class FastUse : Module() {
 
     private val noMoveValue = BoolValue("NoMove", false)
 
-    private val delayValue = IntegerValue("CustomDelay", 0, 0, 300)
-    private val customSpeedValue = IntegerValue("CustomSpeed", 2, 1, 35)
-    private val customTimer = FloatValue("CustomTimer", 1.1f, 0.5f, 2f)
+    private val delayValue = object : IntegerValue("CustomDelay", 0, 0, 300) {
+        override fun isSupported() = modeValue.get() == "Custom"
+    }
+    private val customSpeedValue = object : IntegerValue("CustomSpeed", 2, 1, 35) {
+        override fun isSupported() = modeValue.get() == "Custom"
+    }
+    private val customTimer = object : FloatValue("CustomTimer", 1.1f, 0.5f, 2f) {
+        override fun isSupported() = modeValue.get() == "Custom"
+    }
 
     private val msTimer = MSTimer()
     private var usedTimer = false

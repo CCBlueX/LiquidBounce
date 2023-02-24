@@ -32,6 +32,8 @@ class Trigger : Module() {
             if (i < newValue) set(i)
             delay = TimeUtils.randomClickDelay(this.get(), maxCPS.get())
         }
+
+        override fun isSupported() = !maxCPS.isMinimal()
     }
 
     private var delay = TimeUtils.randomClickDelay(minCPS.get(), maxCPS.get())

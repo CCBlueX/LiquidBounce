@@ -17,9 +17,6 @@ import java.util.*
 
 abstract class Value<T>(val name: String, protected var value: T) {
 
-    @set:JvmName("setIsSupported")
-    var isSupported = true
-
     fun set(newValue: T) {
         if (newValue == value)
             return
@@ -63,6 +60,7 @@ abstract class Value<T>(val name: String, protected var value: T) {
     protected open fun onUpdate(value: T) {}
     protected open fun onChange(oldValue: T, newValue: T) {}
     protected open fun onChanged(oldValue: T, newValue: T) {}
+    open fun isSupported() = true
 
 }
 
@@ -99,6 +97,7 @@ open class IntegerValue(name: String, value: Int, val minimum: Int = 0, val maxi
         return null
     }
 
+    fun isMinimal(): Boolean = value <= minimum
 }
 
 /**
@@ -119,6 +118,7 @@ open class FloatValue(name: String, value: Float, val minimum: Float = 0F, val m
         return null
     }
 
+    fun isMinimal(): Boolean = value <= minimum
 }
 
 /**

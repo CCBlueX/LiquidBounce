@@ -21,10 +21,16 @@ import java.util.*
 
 @ModuleInfo(name = "Breadcrumbs", description = "Leaves a trail behind you.", category = ModuleCategory.RENDER)
 class Breadcrumbs : Module() {
-    val colorRedValue = IntegerValue("R", 255, 0, 255)
-    val colorGreenValue = IntegerValue("G", 179, 0, 255)
-    val colorBlueValue = IntegerValue("B", 72, 0, 255)
     val colorRainbow = BoolValue("Rainbow", false)
+    val colorRedValue = object : IntegerValue("R", 255, 0, 255) {
+        override fun isSupported() = !colorRainbow.get()
+    }
+    val colorGreenValue = object : IntegerValue("G", 179, 0, 255) {
+        override fun isSupported() = !colorRainbow.get()
+    }
+    val colorBlueValue = object : IntegerValue("B", 72, 0, 255) {
+        override fun isSupported() = !colorRainbow.get()
+    }
     private val positions = LinkedList<DoubleArray>()
 
     @EventTarget

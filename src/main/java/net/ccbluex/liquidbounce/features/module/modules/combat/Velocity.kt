@@ -30,21 +30,36 @@ class Velocity : Module() {
     /**
      * OPTIONS
      */
-    private val horizontalValue = FloatValue("Horizontal", 0F, 0F, 1F)
-    private val verticalValue = FloatValue("Vertical", 0F, 0F, 1F)
     private val modeValue = ListValue("Mode", arrayOf("Simple", "AAC", "AACPush", "AACZero", "AACv4",
-            "Reverse", "SmoothReverse", "Jump", "Glitch"), "Simple")
+        "Reverse", "SmoothReverse", "Jump", "Glitch"), "Simple")
+
+    private val horizontalValue = object : FloatValue("Horizontal", 0F, 0F, 1F) {
+        override fun isSupported() = modeValue.get() in setOf("Simple", "AAC")
+    }
+    private val verticalValue = object : FloatValue("Vertical", 0F, 0F, 1F) {
+        override fun isSupported() = modeValue.get() == "Simple"
+    }
 
     // Reverse
-    private val reverseStrengthValue = FloatValue("ReverseStrength", 1F, 0.1F, 1F)
-    private val reverse2StrengthValue = FloatValue("SmoothReverseStrength", 0.05F, 0.02F, 0.1F)
+    private val reverseStrengthValue = object : FloatValue("ReverseStrength", 1F, 0.1F, 1F) {
+        override fun isSupported() = modeValue.get() == "Reverse"
+    }
+    private val reverse2StrengthValue = object : FloatValue("SmoothReverseStrength", 0.05F, 0.02F, 0.1F) {
+        override fun isSupported() = modeValue.get() == "SmoothReverse"
+    }
 
     // AAC Push
-    private val aacPushXZReducerValue = FloatValue("AACPushXZReducer", 2F, 1F, 3F)
-    private val aacPushYReducerValue = BoolValue("AACPushYReducer", true)
+    private val aacPushXZReducerValue = object : FloatValue("AACPushXZReducer", 2F, 1F, 3F) {
+        override fun isSupported() = modeValue.get() == "AACPush"
+    }
+    private val aacPushYReducerValue = object : BoolValue("AACPushYReducer", true) {
+        override fun isSupported() = modeValue.get() == "AACPush"
+    }
 
-    // AAc v4
-    private val aacv4MotionReducerValue = FloatValue("AACv4MotionReducer", 0.62F,0F,1F)
+    // AAC v4
+    private val aacv4MotionReducerValue = object : FloatValue("AACv4MotionReducer", 0.62F,0F,1F) {
+        override fun isSupported() = modeValue.get() == "AACv4"
+    }
 
     /**
      * VALUES

@@ -25,7 +25,9 @@ class FastClimb : Module() {
 
     val modeValue = ListValue("Mode",
             arrayOf("Vanilla", "Clip", "AAC3.0.0", "AAC3.0.5", "SAAC3.1.2", "AAC3.1.2"), "Vanilla")
-    private val speedValue = FloatValue("Speed", 0.2872F, 0.01F, 5F)
+    private val speedValue = object : FloatValue("Speed", 0.2872F, 0.01F, 5F) {
+        override fun isSupported() = modeValue.get() == "Vanilla"
+    }
 
     @EventTarget
     fun onMove(event: MoveEvent) {

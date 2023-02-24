@@ -27,14 +27,27 @@ class AntiAFK : Module() {
 
     private val modeValue = ListValue("Mode", arrayOf("Old", "Random", "Custom"), "Random")
 
-    private val swingDelayValue = IntegerValue("SwingDelay", 100, 0, 1000)
-    private val rotationDelayValue = IntegerValue("RotationDelay", 100, 0, 1000)
-    private val rotationAngleValue = FloatValue("RotationAngle", 1f, -180F, 180F)
-
-    private val jumpValue = BoolValue("Jump", true)
-    private val moveValue = BoolValue("Move", true)
-    private val rotateValue = BoolValue("Rotate", true)
-    private val swingValue = BoolValue("Swing", true)
+    private val rotateValue = object : BoolValue("Rotate", true) {
+        override fun isSupported() = modeValue.get() == "Custom"
+    }
+    private val rotationDelayValue = object : IntegerValue("RotationDelay", 100, 0, 1000) {
+        override fun isSupported() = modeValue.get() == "Custom" && rotateValue.get()
+    }
+    private val rotationAngleValue = object : FloatValue("RotationAngle", 1f, -180F, 180F) {
+        override fun isSupported() = modeValue.get() == "Custom" && rotateValue.get()
+    }
+    private val swingValue = object : BoolValue("Swing", true) {
+        override fun isSupported() = modeValue.get() == "Custom"
+    }
+    private val swingDelayValue = object : IntegerValue("SwingDelay", 100, 0, 1000) {
+        override fun isSupported() = modeValue.get() == "Custom" && swingValue.get()
+    }
+    private val jumpValue = object : BoolValue("Jump", true) {
+        override fun isSupported() = modeValue.get() == "Custom"
+    }
+    private val moveValue = object : BoolValue("Move", true) {
+        override fun isSupported() = modeValue.get() == "Custom"
+    }
 
     private var shouldMove = false
     private var randomTimerDelay = 500L

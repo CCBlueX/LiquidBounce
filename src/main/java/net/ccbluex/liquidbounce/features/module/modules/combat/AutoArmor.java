@@ -36,15 +36,6 @@ import java.util.stream.IntStream;
 public class AutoArmor extends Module {
 
     public static final ArmorComparator ARMOR_COMPARATOR = new ArmorComparator();
-    private final IntegerValue minDelayValue = new IntegerValue("MinDelay", 100, 0, 400) {
-
-        @Override
-        protected void onChanged(final Integer oldValue, final Integer newValue) {
-            final int maxDelay = maxDelayValue.get();
-
-            if (maxDelay < newValue) set(maxDelay);
-        }
-    };
     private final IntegerValue maxDelayValue = new IntegerValue("MaxDelay", 200, 0, 400) {
         @Override
         protected void onChanged(final Integer oldValue, final Integer newValue) {
@@ -53,8 +44,28 @@ public class AutoArmor extends Module {
             if (minDelay > newValue) set(minDelay);
         }
     };
+    private final IntegerValue minDelayValue = new IntegerValue("MinDelay", 100, 0, 400) {
+
+        @Override
+        protected void onChanged(final Integer oldValue, final Integer newValue) {
+            final int maxDelay = maxDelayValue.get();
+
+            if (maxDelay < newValue) set(maxDelay);
+        }
+
+        @Override
+        public boolean isSupported() {
+            return !maxDelayValue.isMinimal();
+        }
+    };
+
     private final BoolValue invOpenValue = new BoolValue("InvOpen", false);
-    private final BoolValue simulateInventory = new BoolValue("SimulateInventory", true);
+    private final BoolValue simulateInventory = new BoolValue("SimulateInventory", true) {
+        @Override
+        public boolean isSupported() {
+            return invOpenValue.get();
+        }
+    };
     private final BoolValue noMoveValue = new BoolValue("NoMove", false);
     private final IntegerValue itemDelayValue = new IntegerValue("ItemDelay", 0, 0, 5000);
     private final BoolValue hotbarValue = new BoolValue("Hotbar", true);

@@ -45,18 +45,39 @@ class ESP : Module() {
     )
 
     @JvmField
-    val outlineWidth = FloatValue("Outline-Width", 3f, 0.5f, 5f)
+    val outlineWidth = object : FloatValue("Outline-Width", 3f, 0.5f, 5f) {
+        override fun isSupported() = modeValue.get() == "Outline"
+    }
 
     @JvmField
-    val wireframeWidth = FloatValue("WireFrame-Width", 2f, 0.5f, 5f)
-    private val glowRenderScale = FloatValue("Glow-Renderscale", 1f, 0.1f, 2f)
-    private val glowRadius = IntegerValue("Glow-Radius", 4, 1, 5)
-    private val glowFade = IntegerValue("Glow-Fade", 10, 0, 30)
-    private val glowTargetAlpha = FloatValue("Glow-Target-Alpha", 0f, 0f, 1f)
-    private val colorRedValue = IntegerValue("R", 255, 0, 255)
-    private val colorGreenValue = IntegerValue("G", 255, 0, 255)
-    private val colorBlueValue = IntegerValue("B", 255, 0, 255)
+    val wireframeWidth = object : FloatValue("WireFrame-Width", 2f, 0.5f, 5f) {
+        override fun isSupported() = modeValue.get() == "WireFrame"
+    }
+
+    private val glowRenderScale = object : FloatValue("Glow-Renderscale", 1f, 0.1f, 2f) {
+        override fun isSupported() = modeValue.get() == "Glow"
+    }
+    private val glowRadius = object : IntegerValue("Glow-Radius", 4, 1, 5) {
+        override fun isSupported() = modeValue.get() == "Glow"
+    }
+    private val glowFade = object : IntegerValue("Glow-Fade", 10, 0, 30) {
+        override fun isSupported() = modeValue.get() == "Glow"
+    }
+    private val glowTargetAlpha = object : FloatValue("Glow-Target-Alpha", 0f, 0f, 1f) {
+        override fun isSupported() = modeValue.get() == "Glow"
+    }
+
     private val colorRainbow = BoolValue("Rainbow", false)
+    private val colorRedValue = object : IntegerValue("R", 255, 0, 255) {
+        override fun isSupported() = !colorRainbow.get()
+    }
+    private val colorGreenValue = object : IntegerValue("G", 255, 0, 255) {
+        override fun isSupported() = !colorRainbow.get()
+    }
+    private val colorBlueValue = object : IntegerValue("B", 255, 0, 255) {
+        override fun isSupported() = !colorRainbow.get()
+    }
+
     private val colorTeam = BoolValue("Team", false)
     private val botValue = BoolValue("Bots", true)
 
