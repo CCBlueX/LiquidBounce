@@ -86,7 +86,7 @@ object LiquidBounce {
 
         // Register listeners
         eventManager.registerListener(RotationUtils())
-        eventManager.registerListener(ClientFixes())
+        eventManager.registerListener(ClientFixes)
         eventManager.registerListener(BungeeCordSpoof())
         eventManager.registerListener(CapeService)
         eventManager.registerListener(InventoryUtils())

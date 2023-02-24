@@ -3,50 +3,76 @@
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
  * https://github.com/CCBlueX/LiquidBounce/
  */
-package net.ccbluex.liquidbounce.features.special;
+package net.ccbluex.liquidbounce.features.special
 
-import io.netty.buffer.Unpooled;
-import net.ccbluex.liquidbounce.event.EventTarget;
-import net.ccbluex.liquidbounce.event.Listenable;
-import net.ccbluex.liquidbounce.event.PacketEvent;
-import net.ccbluex.liquidbounce.utils.MinecraftInstance;
-import net.minecraft.network.Packet;
-import net.minecraft.network.PacketBuffer;
-import net.minecraft.network.play.client.C17PacketCustomPayload;
+import io.netty.buffer.Unpooled
+import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.PacketEvent
+import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.ccbluex.liquidbounce.utils.misc.RandomUtils
+import net.minecraft.network.PacketBuffer
+import net.minecraft.network.play.client.C17PacketCustomPayload
 
-public class ClientFixes extends MinecraftInstance implements Listenable {
+object ClientFixes : MinecraftInstance(), Listenable {
 
-    public static boolean fmlFixesEnabled = true;
-    public static boolean blockFML = true;
-    public static boolean blockProxyPacket = true;
-    public static boolean blockPayloadPackets = true;
-    public static boolean blockResourcePackExploit = true;
+    @JvmField
+    var fmlFixesEnabled = true
+    @JvmField
+    var blockFML = true
+    @JvmField
+    var blockProxyPacket = true
+    @JvmField
+    var blockPayloadPackets = true
+    @JvmField
+    var blockResourcePackExploit = true
+
+    @JvmField
+    var clientBrand = "Vanilla"
+
+    @JvmField
+    var possibleBrands = arrayOf(
+        "Vanilla",
+        "Forge",
+        "LunarClient",
+        "CheatBreaker"
+    )
 
     @EventTarget
-    public void onPacket(PacketEvent event) {
-        final Packet<?> packet = event.getPacket();
+    fun onPacket(event: PacketEvent) = runCatching {
+        val packet = event.packet
 
-        if (fmlFixesEnabled && !mc.isIntegratedServerRunning()) {
-            try {
-                if (blockProxyPacket && packet.getClass().getName().equals("net.minecraftforge.fml.common.network.internal.FMLProxyPacket"))
-                    event.cancelEvent();
+        if (mc.isIntegratedServerRunning || !fmlFixesEnabled) {
+            return@runCatching
+        }
 
-                if (blockPayloadPackets && packet instanceof C17PacketCustomPayload) {
-                    final C17PacketCustomPayload customPayload = (C17PacketCustomPayload) packet;
+        when {
+            blockProxyPacket && packet.javaClass.name == "net.minecraftforge.fml.common.network.internal.FMLProxyPacket" -> {
+                event.cancelEvent()
+                return@runCatching
+            }
 
-                    if (!customPayload.getChannelName().startsWith("MC|"))
-                        event.cancelEvent();
-                    else if (customPayload.getChannelName().equalsIgnoreCase("MC|Brand"))
-                        customPayload.data = new PacketBuffer(Unpooled.buffer()).writeString("vanilla");
+            packet is C17PacketCustomPayload -> {
+                if (blockPayloadPackets && !packet.channelName.startsWith("MC|")) {
+                    event.cancelEvent()
+                } else if (packet.channelName.equals("MC|Brand", ignoreCase = true)) {
+                    packet.data = PacketBuffer(Unpooled.buffer()).writeString(when (clientBrand) {
+                        "Vanilla" -> "vanilla"
+                        "LunarClient" -> "lunarclient:" + RandomUtils.randomString(7)
+                        "CheatBreaker" -> "CB"
+                        else -> {
+                            // do nothing
+                            return@runCatching
+                        }
+                    })
                 }
-            }catch(final Exception e) {
-                e.printStackTrace();
             }
         }
+    }.onFailure {
+        ClientUtils.getLogger().error("Failed to handle packet on client fixes.", it)
     }
 
-    @Override
-    public boolean handleEvents() {
-        return true;
-    }
+    override fun handleEvents() = true
+
 }
