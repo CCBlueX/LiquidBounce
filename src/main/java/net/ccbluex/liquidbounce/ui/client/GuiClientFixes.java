@@ -13,6 +13,8 @@ import net.minecraft.client.gui.GuiScreen;
 import org.lwjgl.input.Keyboard;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 public class GuiClientFixes extends GuiScreen {
 
@@ -22,7 +24,10 @@ public class GuiClientFixes extends GuiScreen {
     private GuiButton fmlButton;
     private GuiButton proxyButton;
     private GuiButton payloadButton;
+    private GuiButton customBrandButton;
     private GuiButton resourcePackButton;
+
+
 
     public GuiClientFixes(final GuiScreen prevGui) {
         this.prevGui = prevGui;
@@ -33,11 +38,12 @@ public class GuiClientFixes extends GuiScreen {
         buttonList.add(enabledButton = new GuiButton(1, width / 2 - 100, height / 4 + 35, "AntiForge (" + (ClientFixes.fmlFixesEnabled ? "On" : "Off") + ")"));
         buttonList.add(fmlButton = new GuiButton(2, width / 2 - 100, height / 4 + 35 + 25, "Block FML (" + (ClientFixes.blockFML ? "On" : "Off") + ")"));
         buttonList.add(proxyButton = new GuiButton(3, width / 2 - 100, height / 4 + 35 + 25 * 2, "Block FML Proxy Packet (" + (ClientFixes.blockProxyPacket ? "On" : "Off") + ")"));
-        buttonList.add(payloadButton = new GuiButton(4, width / 2 - 100, height / 4 + 35 + 25 * 3, "Block Payload Packets (" + (ClientFixes.blockPayloadPackets ? "On" : "Off") + ")"));
+        buttonList.add(payloadButton = new GuiButton(4, width / 2 - 100, height / 4 + 35 + 25 * 3, "Block Non-MC Payloads (" + (ClientFixes.blockPayloadPackets ? "On" : "Off") + ")"));
+        buttonList.add(customBrandButton = new GuiButton(5, width / 2 - 100, height / 4 + 35 + 25 * 4, "Brand (" + ClientFixes.clientBrand + ")"));
 
-        buttonList.add(resourcePackButton = new GuiButton(5, width / 2 - 100, height / 4 + 50 + 25 * 4, "Block Resource Pack Exploit (" + (ClientFixes.blockResourcePackExploit ? "On" : "Off") + ")"));
+        buttonList.add(resourcePackButton = new GuiButton(6, width / 2 - 100, height / 4 + 50 + 25 * 5, "Block Resource Pack Exploit (" + (ClientFixes.blockResourcePackExploit ? "On" : "Off") + ")"));
 
-        buttonList.add(new GuiButton(0, width / 2 - 100, height / 4 + 55 + 25 * 5 + 5, "Back"));
+        buttonList.add(new GuiButton(0, width / 2 - 100, height / 4 + 55 + 25 * 6 + 5, "Back"));
     }
 
     @Override
@@ -64,6 +70,19 @@ public class GuiClientFixes extends GuiScreen {
                 LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
                 break;
             case 5:
+                final List<String> brands = Arrays.asList(ClientFixes.possibleBrands);
+                final int index = brands.indexOf(ClientFixes.clientBrand);
+
+                if(index == brands.size() - 1) {
+                    ClientFixes.clientBrand = brands.get(0);
+                } else {
+                    ClientFixes.clientBrand = brands.get(index + 1);
+                }
+
+                customBrandButton.displayString = "Brand (" + ClientFixes.clientBrand + ")";
+                LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
+                break;
+            case 6:
                 ClientFixes.blockResourcePackExploit = !ClientFixes.blockResourcePackExploit;
                 resourcePackButton.displayString = "Block Resource Pack Exploit (" + (ClientFixes.blockResourcePackExploit ? "On" : "Off") + ")";
                 LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);

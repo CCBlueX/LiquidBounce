@@ -86,6 +86,8 @@ public class ValuesConfig extends FileConfig {
                     ClientFixes.blockPayloadPackets = jsonValue.get("AntiForgePayloads").getAsBoolean();
                 if (jsonValue.has("FixResourcePackExploit"))
                     ClientFixes.blockResourcePackExploit = jsonValue.get("FixResourcePackExploit").getAsBoolean();
+                if (jsonValue.has("ClientBrand"))
+                    ClientFixes.clientBrand = jsonValue.get("ClientBrand").getAsString();
                 if (jsonValue.has("BungeeSpoof"))
                     BungeeCordSpoof.enabled = jsonValue.get("BungeeSpoof").getAsBoolean();
                 if (jsonValue.has("AutoReconnectDelay"))
@@ -169,6 +171,7 @@ public class ValuesConfig extends FileConfig {
         jsonFeatures.addProperty("AntiForgeProxy", ClientFixes.blockProxyPacket);
         jsonFeatures.addProperty("AntiForgePayloads", ClientFixes.blockPayloadPackets);
         jsonFeatures.addProperty("FixResourcePackExploit", ClientFixes.blockResourcePackExploit);
+        jsonFeatures.addProperty("ClientBrand", ClientFixes.clientBrand);
         jsonFeatures.addProperty("BungeeSpoof", BungeeCordSpoof.enabled);
         jsonFeatures.addProperty("AutoReconnectDelay", AutoReconnect.INSTANCE.getDelay());
         jsonObject.add("features", jsonFeatures);
