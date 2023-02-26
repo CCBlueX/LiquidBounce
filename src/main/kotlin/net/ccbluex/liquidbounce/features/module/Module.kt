@@ -143,6 +143,12 @@ open class Module(
      */
     override fun handleEvents() = enabled && mc.player != null && mc.world != null
 
+    /**
+     * Returns if module is hidden. Hidden modules are not displayed in the module list.
+     * Used for HTML UI. DO NOT REMOVE!
+     */
+    fun isHidden() = hidden
+
     fun message(key: String, vararg args: Any): TranslatableText {
         return TranslatableText("$translationBaseKey.messages.$key", *args)
     }
