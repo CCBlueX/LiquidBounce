@@ -15,13 +15,16 @@ import me.liuli.elixir.account.MojangAccount
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.LiquidBounce.fileManager
 import net.ccbluex.liquidbounce.event.SessionEvent
-import net.ccbluex.liquidbounce.ui.client.altmanager.menus.*
+import net.ccbluex.liquidbounce.ui.client.altmanager.menus.GuiDonatorCape
+import net.ccbluex.liquidbounce.ui.client.altmanager.menus.GuiLoginIntoAccount
+import net.ccbluex.liquidbounce.ui.client.altmanager.menus.GuiSessionLogin
 import net.ccbluex.liquidbounce.ui.client.altmanager.menus.altgenerator.GuiTheAltening
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.login.UserUtils.isValidTokenOffline
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
+import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
@@ -34,7 +37,6 @@ import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
 import java.util.*
 import java.util.function.Consumer
-import javax.swing.JOptionPane
 import kotlin.concurrent.thread
 
 
@@ -43,7 +45,8 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
     var status = "§7Idle..."
 
     private lateinit var loginButton: GuiButton
-    private lateinit var randomButton: GuiButton
+    private lateinit var randomAltButton: GuiButton
+    private lateinit var randomNickButton: GuiButton
     private lateinit var altsList: GuiList
     private lateinit var searchField: GuiTextField
 
@@ -69,16 +72,16 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
         buttonList.add(GuiButton(8, width - 80, startPositionY + 24 * 5, 70, 20, "Copy"))
         buttonList.add(GuiButton(0, width - 80, height - 65, 70, 20, "Back"))
         buttonList.add(GuiButton(3, 5, startPositionY + 24, 90, 20, "Login").also { loginButton = it })
-        buttonList.add(GuiButton(4, 5, startPositionY + 24 * 2, 90, 20, "Random").also { randomButton = it })
-        buttonList.add(GuiButton(6, 5, startPositionY + 24 * 3, 90, 20, "Direct Login"))
-        buttonList.add(GuiButton(10, 5, startPositionY + 24 * 4, 90, 20, "Session Login"))
-        buttonList.add(GuiButton(88, 5, startPositionY + 24 * 5, 90, 20, "Change Name"))
+        buttonList.add(GuiButton(4, 5, startPositionY + 24 * 2, 90, 20, "Random alt").also { randomAltButton = it })
+        buttonList.add(GuiButton(5, 5, startPositionY + 24 * 3, 90, 20, "Random nick").also { randomNickButton = it })
+        buttonList.add(GuiButton(6, 5, startPositionY + 24 * 4, 90, 20, "Direct Login"))
+        buttonList.add(GuiButton(10, 5, startPositionY + 24 * 5, 90, 20, "Session Login"))
 
         if (activeGenerators.getOrDefault("thealtening", true)) {
-            buttonList.add(GuiButton(9, 5, startPositionY + 24 * 6 + 5, 90, 20, "TheAltening"))
+            buttonList.add(GuiButton(9, 5, startPositionY + 24 * 6, 90, 20, "TheAltening"))
         }
 
-        buttonList.add(GuiButton(11, 5, startPositionY + 24 * 7 + 10, 90, 20, "Cape"))
+        buttonList.add(GuiButton(11, 5, startPositionY + 24 * 7, 90, 20, "Cape"))
     }
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
@@ -130,7 +133,8 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
             3 -> {
                 status = altsList.selectedAccount?.let {
                     loginButton.enabled = false
-                    randomButton.enabled = false
+                    randomAltButton.enabled = false
+                    randomNickButton.enabled = false
 
                     login(it, {
                         status = "§aLogged into ${mc.session.username}."
@@ -138,7 +142,8 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
                         status = "§cLogin failed due to '${exception.message}'."
                     },{
                         loginButton.enabled = true
-                        randomButton.enabled = true
+                        randomAltButton.enabled = true
+                        randomNickButton.enabled = true
                     })
 
                     "§aLogging in..."
@@ -148,7 +153,8 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
             4 -> {
                 status = altsList.accounts.randomOrNull()?.let {
                     loginButton.enabled = false
-                    randomButton.enabled = false
+                    randomAltButton.enabled = false
+                    randomNickButton.enabled = false
 
                     login(it, {
                         status = "§aLogged into ${mc.session.username}."
@@ -156,12 +162,26 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
                         status = "§cLogin failed due to '${exception.message}'."
                     },{
                         loginButton.enabled = true
-                        randomButton.enabled = true
+                        randomAltButton.enabled = true
+                        randomNickButton.enabled = true
                     })
 
                     "§aLogging in..."
                 } ?: "§cYou do not have any accounts."
             }
+
+            5 -> {
+                val crackedAccount = CrackedAccount()
+                crackedAccount.name = RandomUtils.randomUsername()
+
+                mc.session = Session(
+                    crackedAccount.session.username, crackedAccount.session.uuid,
+                    crackedAccount.session.token, crackedAccount.session.type
+                )
+                LiquidBounce.eventManager.callEvent(SessionEvent())
+                status = "§aLogged into ${mc.session.username}."
+            }
+
             6 -> { // Direct login button
                 mc.displayGuiScreen(GuiLoginIntoAccount(this, directLogin = true))
             }
@@ -228,11 +248,8 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
                 }
 
                 // Copy to clipboard
-                Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(formattedData), null);
+                Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(formattedData), null)
                 status = "§aCopied account into your clipboard."
-            }
-            88 -> { // Gui Change Name Button
-                mc.displayGuiScreen(GuiChangeName(this))
             }
             9 -> { // Altening Button
                 mc.displayGuiScreen(GuiTheAltening(this))
@@ -334,7 +351,8 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
             if (doubleClick) {
                 status = altsList.selectedAccount?.let {
                     loginButton.enabled = false
-                    randomButton.enabled = false
+                    randomAltButton.enabled = false
+                    randomNickButton.enabled = false
 
                     login(it, {
                         status = "§aLogged into ${mc.session.username}."
@@ -342,7 +360,8 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
                         status = "§cLogin failed due to '${exception.message}'."
                     },{
                         loginButton.enabled = true
-                        randomButton.enabled = true
+                        randomAltButton.enabled = true
+                        randomNickButton.enabled = true
                     })
 
                     "§aLogging in..."

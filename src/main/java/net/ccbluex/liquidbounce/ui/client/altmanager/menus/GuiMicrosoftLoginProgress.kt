@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.ui.client.altmanager.menus
 import me.liuli.elixir.account.MicrosoftAccount
 import me.liuli.elixir.compat.OAuthServer
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
@@ -73,7 +74,7 @@ class GuiMicrosoftLoginProgress(val updateStatus: (String) -> Unit, val done: ()
         }
 
         buttonList.add(GuiButton(0, width / 2 - 100, height / 2 + 60, "Open URL"))
-        buttonList.add(GuiButton(1, width / 2 - 100, height / 2 + 100, "Cancel"))
+        buttonList.add(GuiButton(1, width / 2 - 100, height / 2 + 90, "Cancel"))
         super.initGui()
     }
 
@@ -82,7 +83,7 @@ class GuiMicrosoftLoginProgress(val updateStatus: (String) -> Unit, val done: ()
 
         drawDefaultBackground()
         RenderUtils.drawLoadingCircle((scaledResolution.scaledWidth / 2).toFloat(), (scaledResolution.scaledHeight / 4 + 70).toFloat())
-        drawCenteredString(fontRendererObj, "Logging into account...", width / 2, height / 2 - 60, 16777215)
+        Fonts.font40.drawCenteredString("Logging into account...", width / 2f, height / 2 - 60f, 0xffffff)
         super.drawScreen(mouseX, mouseY, partialTicks)
     }
 
