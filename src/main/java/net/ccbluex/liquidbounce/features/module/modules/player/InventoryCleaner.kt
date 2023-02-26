@@ -61,7 +61,7 @@ class InventoryCleaner : Module() {
 
     private val invOpenValue = BoolValue("InvOpen", false)
     private val simulateInventory = object : BoolValue("SimulateInventory", true) {
-        override fun isSupported() = invOpenValue.get()
+        override fun isSupported() = !invOpenValue.get()
     }
     private val noMoveValue = BoolValue("NoMove", false)
     private val ignoreVehiclesValue = BoolValue("IgnoreVehicles", false)

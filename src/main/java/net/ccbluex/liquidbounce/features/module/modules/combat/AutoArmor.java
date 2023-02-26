@@ -63,7 +63,7 @@ public class AutoArmor extends Module {
     private final BoolValue simulateInventory = new BoolValue("SimulateInventory", true) {
         @Override
         public boolean isSupported() {
-            return invOpenValue.get();
+            return !invOpenValue.get();
         }
     };
     private final BoolValue noMoveValue = new BoolValue("NoMove", false);

@@ -86,6 +86,9 @@ class KillAura : Module() {
     // Modes
     private val priorityValue = ListValue("Priority", arrayOf("Health", "Distance", "Direction", "LivingTime"), "Distance")
     private val targetModeValue = ListValue("TargetMode", arrayOf("Single", "Switch", "Multi"), "Switch")
+    private val limitedMultiTargetsValue = object : IntegerValue("LimitedMultiTargets", 0, 0, 50) {
+        override fun isSupported() = targetModeValue.get() == "Multi"
+    }
 
     // Bypass
     private val swingValue = BoolValue("Swing", true)
@@ -100,23 +103,6 @@ class KillAura : Module() {
         override fun isSupported() = autoBlockValue.get() !in setOf("Off", "Fake")
     }
 
-    // Raycast
-    private val raycastValue = object : BoolValue("RayCast", true) {
-        override fun isSupported() = !maxTurnSpeed.isMinimal()
-    }
-    private val raycastIgnoredValue = object : BoolValue("RayCastIgnored", false) {
-        override fun isSupported() = !maxTurnSpeed.isMinimal() && raycastValue.get()
-    }
-    private val livingRaycastValue = object : BoolValue("LivingRayCast", true) {
-        override fun isSupported() = !maxTurnSpeed.isMinimal() && raycastValue.get()
-    }
-
-    // Bypass
-    private val aacValue = object : BoolValue("AAC", false) {
-        override fun isSupported() = !maxTurnSpeed.isMinimal()
-        // AAC value also modifies target selection a bit, not just rotations, but it is minor
-    }
-
     // Turn Speed
     private val maxTurnSpeed: FloatValue = object : FloatValue("MaxTurnSpeed", 180f, 0f, 180f) {
         override fun onChanged(oldValue: Float, newValue: Float) {
@@ -124,7 +110,6 @@ class KillAura : Module() {
             if (v > newValue) set(v)
         }
     }
-
     private val minTurnSpeed: FloatValue = object : FloatValue("MinTurnSpeed", 180f, 0f, 180f) {
         override fun onChanged(oldValue: Float, newValue: Float) {
             val v = maxTurnSpeed.get()
@@ -134,24 +119,39 @@ class KillAura : Module() {
         override fun isSupported() = !maxTurnSpeed.isMinimal()
     }
 
+    // Raycast
+    private val raycastValue = object : BoolValue("RayCast", true) {
+        override fun isSupported() = !maxTurnSpeed.isMinimal()
+    }
+    private val raycastIgnoredValue = object : BoolValue("RayCastIgnored", false) {
+        override fun isSupported() = raycastValue.isActive()
+    }
+    private val livingRaycastValue = object : BoolValue("LivingRayCast", true) {
+        override fun isSupported() = raycastValue.isActive()
+    }
+
+    // Bypass
+    private val aacValue = object : BoolValue("AAC", false) {
+        override fun isSupported() = !maxTurnSpeed.isMinimal()
+        // AAC value also modifies target selection a bit, not just rotations, but it is minor
+    }
+
     private val micronizedValue = object : BoolValue("Micronized", true) {
         override fun isSupported() = !maxTurnSpeed.isMinimal()
     }
     private val micronizedStrength = object : FloatValue("MicronizedStrength", 0.8f, 0.2f, 2f) {
-        override fun isSupported() = !maxTurnSpeed.isMinimal() && micronizedValue.get()
+        override fun isSupported() = micronizedValue.isActive()
     }
 
+    // Rotations
     private val silentRotationValue = object : BoolValue("SilentRotation", true) {
         override fun isSupported() = !maxTurnSpeed.isMinimal()
     }
     private val rotationStrafeValue = object : ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") {
-        override fun isSupported() = !maxTurnSpeed.isMinimal() && silentRotationValue.get()
+        override fun isSupported() = silentRotationValue.isActive()
     }
     private val randomCenterValue = object : BoolValue("RandomCenter", true) {
         override fun isSupported() = !maxTurnSpeed.isMinimal()
-    }
-    private val randomMultiplier = object : FloatValue("RandomMultiplier", 0.8f, 0f, 1f) {
-        override fun isSupported() = !maxTurnSpeed.isMinimal() && randomCenterValue.get()
     }
     private val outborderValue = object : BoolValue("Outborder", false) {
         override fun isSupported() = !maxTurnSpeed.isMinimal()
@@ -162,27 +162,25 @@ class KillAura : Module() {
     private val predictValue = object : BoolValue("Predict", true) {
         override fun isSupported() = !maxTurnSpeed.isMinimal()
     }
-
     private val maxPredictSize: FloatValue = object : FloatValue("MaxPredictSize", 1f, 0.1f, 5f) {
         override fun onChanged(oldValue: Float, newValue: Float) {
             val v = minPredictSize.get()
             if (v > newValue) set(v)
         }
 
-        override fun isSupported() = !maxTurnSpeed.isMinimal() && predictValue.get()
+        override fun isSupported() = predictValue.isActive()
     }
-
     private val minPredictSize: FloatValue = object : FloatValue("MinPredictSize", 1f, 0.1f, 5f) {
         override fun onChanged(oldValue: Float, newValue: Float) {
             val v = maxPredictSize.get()
             if (v < newValue) set(v)
         }
 
-        override fun isSupported() = !maxTurnSpeed.isMinimal() && predictValue.get() && !maxPredictSize.isMinimal()
+        override fun isSupported() = predictValue.isActive() && !maxPredictSize.isMinimal()
     }
 
     // Bypass
-    private val failRateValue = FloatValue("FailRate", 0f, 0f, 100f)
+    private val failRateValue = FloatValue("FailRate", 0f, 0f, 99f)
     private val fakeSwingValue = object : BoolValue("FakeSwing", true) {
         override fun isSupported() = swingValue.get()
     }
@@ -190,14 +188,13 @@ class KillAura : Module() {
     private val noInventoryDelayValue = object : IntegerValue("NoInvDelay", 200, 0, 500) {
         override fun isSupported() = noInventoryAttackValue.get()
     }
-    private val limitedMultiTargetsValue = object : IntegerValue("LimitedMultiTargets", 0, 0, 50) {
-        override fun isSupported() = targetModeValue.get() == "Multi"
-    }
 
     // Visuals
     private val markValue = BoolValue("Mark", true)
     private val fakeSharpValue = BoolValue("FakeSharp", true)
 
+    //Doesn't do anything?
+    //private val randomMultiplier = FloatValue("RandomMultiplier", 0.8f, 0f, 1f)
     /**
      * MODULE
      */
