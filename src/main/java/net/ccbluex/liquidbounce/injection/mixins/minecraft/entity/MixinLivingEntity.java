@@ -48,13 +48,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class MixinLivingEntity extends MixinEntity {
 
     @Shadow
+    protected boolean jumping;
+    @Shadow
     private int jumpingCooldown;
 
     @Shadow
     public abstract float getJumpVelocity();
-
-    @Shadow
-    protected boolean jumping;
 
     @Shadow
     protected abstract void jump();
@@ -105,20 +104,17 @@ public abstract class MixinLivingEntity extends MixinEntity {
      */
     @Redirect(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/Vec3d;add(DDD)Lnet/minecraft/util/math/Vec3d;"))
     private Vec3d hookFixRotation(Vec3d instance, double x, double y, double z) {
+        RotationManager rotationManager = RotationManager.INSTANCE;
+        Rotation rotation = rotationManager.getCurrentRotation();
         if ((Object) this != MinecraftClient.getInstance().player) {
             return instance.add(x, y, z);
         }
 
-        if (RotationManager.INSTANCE.getActiveConfigurable() == null || !RotationManager.INSTANCE.getActiveConfigurable().getFixVelocity()) {
+        if (rotationManager.getActiveConfigurable() == null || !rotationManager.getActiveConfigurable().getFixVelocity() || rotation == null || !rotationManager.shouldUpdate()) {
             return instance.add(x, y, z);
         }
 
-        Rotation currentRotation = RotationManager.INSTANCE.getCurrentRotation();
-        if (currentRotation == null) {
-            return instance.add(x, y, z);
-        }
-
-        float yaw = currentRotation.getYaw() * 0.017453292F;
+        float yaw = rotation.getYaw() * 0.017453292F;
 
         return instance.add(-MathHelper.sin(yaw) * 0.2F, 0.0, MathHelper.cos(yaw) * 0.2F);
     }

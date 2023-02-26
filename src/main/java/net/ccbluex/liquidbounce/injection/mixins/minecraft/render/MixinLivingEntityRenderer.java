@@ -61,7 +61,7 @@ public class MixinLivingEntityRenderer<T extends LivingEntity> {
             return;
         }
 
-        if (!ModuleRotations.INSTANCE.getEnabled() || currentRotation == null) {
+        if (!ModuleRotations.INSTANCE.getEnabled() || !RotationManager.INSTANCE.shouldUpdate() || currentRotation == null) {
             return;
         }
 

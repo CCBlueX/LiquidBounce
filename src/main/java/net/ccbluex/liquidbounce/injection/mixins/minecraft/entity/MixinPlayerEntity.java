@@ -98,16 +98,13 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
      */
     @Redirect(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getYaw()F"))
     private float hookFixRotation(PlayerEntity entity) {
-        if (RotationManager.INSTANCE.getActiveConfigurable() == null || !RotationManager.INSTANCE.getActiveConfigurable().getFixVelocity()) {
+        RotationManager rotationManager = RotationManager.INSTANCE;
+        Rotation rotation = rotationManager.getCurrentRotation();
+        if (rotationManager.getActiveConfigurable() == null || !rotationManager.getActiveConfigurable().getFixVelocity() || rotation == null || !rotationManager.shouldUpdate()) {
             return entity.getYaw();
         }
 
-        Rotation currentRotation = RotationManager.INSTANCE.getCurrentRotation();
-        if (currentRotation == null) {
-            return entity.getYaw();
-        }
-
-        return currentRotation.getYaw();
+        return rotation.getYaw();
     }
 
     @Inject(method = "hasReducedDebugInfo", at = @At("HEAD"), cancellable = true)

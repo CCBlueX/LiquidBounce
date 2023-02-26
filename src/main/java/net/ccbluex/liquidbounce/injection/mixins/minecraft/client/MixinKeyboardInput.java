@@ -41,6 +41,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(KeyboardInput.class)
 public class MixinKeyboardInput extends MixinInput {
 
+    @Inject(method = "getMovementMultiplier", at = @At("RETURN"), cancellable = true)
+    private static void hookFreeCamCanceledMovementInput(boolean positive, boolean negative, CallbackInfoReturnable<Float> cir) {
+        cir.setReturnValue(ModuleFreeCam.INSTANCE.cancelMovementInput(cir.getReturnValue()));
+    }
+
     /**
      * Hook inventory move module
      */
@@ -48,6 +53,7 @@ public class MixinKeyboardInput extends MixinInput {
     private boolean hookInventoryMove(KeyBinding keyBinding) {
         return ModuleInventoryMove.INSTANCE.shouldHandleInputs(keyBinding) ? InputUtil.isKeyPressed(MinecraftClient.getInstance().getWindow().getHandle(), keyBinding.boundKey.getCode()) : keyBinding.isPressed();
     }
+
     @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;pressingRight:Z", shift = At.Shift.AFTER))
     private void injectMovementInputEvent(boolean slowDown, CallbackInfo ci) {
         var event = new MovementInputEvent(this.pressingForward, this.pressingBack, this.pressingLeft, this.pressingRight);
@@ -63,16 +69,13 @@ public class MixinKeyboardInput extends MixinInput {
     @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;sneaking:Z", shift = At.Shift.AFTER))
     private void injectStrafing(boolean slowDown, CallbackInfo ci) {
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
-        if (RotationManager.INSTANCE.getActiveConfigurable() == null || !RotationManager.INSTANCE.getActiveConfigurable().getFixVelocity() || player == null) {
+        RotationManager rotationManager = RotationManager.INSTANCE;
+        Rotation rotation = rotationManager.getCurrentRotation();
+        if (rotationManager.getActiveConfigurable() == null || !rotationManager.getActiveConfigurable().getFixVelocity() || rotation == null || !rotationManager.shouldUpdate() || player == null) {
             return;
         }
 
-        Rotation currentRotation = RotationManager.INSTANCE.getCurrentRotation();
-        if (currentRotation == null) {
-            return;
-        }
-
-        float deltaYaw = player.getYaw() - currentRotation.getYaw();
+        float deltaYaw = player.getYaw() - rotation.getYaw();
 
         float x = this.movementSideways;
         float z = this.movementForward;
@@ -88,11 +91,6 @@ public class MixinKeyboardInput extends MixinInput {
     private void injectForcedState(KeyboardInput instance, boolean value) {
         Boolean enforceEagle = TickStateManager.INSTANCE.getEnforcedState().getEnforceEagle();
         instance.sneaking = enforceEagle != null || value;
-    }
-
-    @Inject(method = "getMovementMultiplier", at = @At("RETURN"), cancellable = true)
-    private static void hookFreeCamCanceledMovementInput(boolean positive, boolean negative, CallbackInfoReturnable<Float> cir) {
-        cir.setReturnValue(ModuleFreeCam.INSTANCE.cancelMovementInput(cir.getReturnValue()));
     }
 
 }
