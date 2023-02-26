@@ -229,6 +229,17 @@
   "liquidbounce.command.enemy.subcommand.teammates.result.enabled": "Teammates are now considered to be your enemy.",
   "liquidbounce.command.enemy.subcommand.teammates.result.disabled": "Teammates are no longer considered to be your enemy.",
 
+  "liquidbounce.command.config.subcommand.load.description": "Loads a configuration file.",
+  "liquidbounce.command.config.subcommand.load.parameter.name.description": "Name of the configuration file.",
+  "liquidbounce.command.config.subcommand.load.result.notFound": "Configuration file named %s does not exist.",
+  "liquidbounce.command.config.subcommand.load.result.failedToLoad": "Failed to load configuration file named %s.",
+  "liquidbounce.command.config.subcommand.load.result.loaded": "Configuration file named %s has been loaded.",
+  "liquidbounce.command.config.subcommand.create.parameter.name.description": "Name of the configuration file.",
+  "liquidbounce.command.config.subcommand.create.parameter.overwrite.description": "Overwrite existing configuration file.",
+  "liquidbounce.command.config.subcommand.create.result.failedToCreate": "Failed to create configuration file named %s.",
+  "liquidbounce.command.config.subcommand.create.result.created": "Configuration file named %s has been created.",
+  "liquidbounce.command.config.subcommand.create.result.alreadyExists": "Configuration file named %s already exists.",
+
   "liquidbounce.liquidchat.states.connecting": "Connecting to chat server...",
   "liquidbounce.liquidchat.states.connected": "Connected to chat server!",
   "liquidbounce.liquidchat.states.disconnected": "Disconnected from chat server!",
