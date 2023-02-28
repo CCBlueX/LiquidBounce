@@ -15,10 +15,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
 import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam
 import net.ccbluex.liquidbounce.utils.*
-import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
-import net.ccbluex.liquidbounce.utils.extensions.isAnimal
-import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
-import net.ccbluex.liquidbounce.utils.extensions.isMob
+import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
@@ -660,7 +657,7 @@ class KillAura : Module() {
         if (maxTurnSpeed.isMinimal())
             return true
 
-        var boundingBox = entity.entityBoundingBox
+        var boundingBox = entity.hitBox
 
         if (predictValue.get()) {
             boundingBox = boundingBox.offset(
@@ -746,8 +743,7 @@ class KillAura : Module() {
             if (interact) {
                 val positionEye = mc.renderViewEntity?.getPositionEyes(1F)
 
-                val expandSize = interactEntity.collisionBorderSize.toDouble()
-                val boundingBox = interactEntity.entityBoundingBox.expand(expandSize, expandSize, expandSize)
+                val boundingBox = interactEntity.hitBox
 
                 val (yaw, pitch) = RotationUtils.targetRotation ?: Rotation(mc.thePlayer!!.rotationYaw, mc.thePlayer!!.rotationPitch)
                 val yawCos = cos(-yaw * 0.017453292F - Math.PI.toFloat())

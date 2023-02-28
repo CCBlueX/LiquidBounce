@@ -22,20 +22,14 @@ import net.minecraft.entity.passive.EntityVillager
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.Vec3
-import kotlin.math.abs
-import kotlin.math.pow
-import kotlin.math.sqrt
 
 /**
  * Allows to get the distance between the current entity and [entity] from the nearest corner of the bounding box
  */
 fun Entity.getDistanceToEntityBox(entity: Entity): Double {
     val eyes = this.getPositionEyes(1F)
-    val pos = getNearestPointBB(eyes, entity.entityBoundingBox)
-    val xDist = abs(pos.xCoord - eyes.xCoord)
-    val yDist = abs(pos.yCoord - eyes.yCoord)
-    val zDist = abs(pos.zCoord - eyes.zCoord)
-    return sqrt(xDist.pow(2) + yDist.pow(2) + zDist.pow(2))
+    val pos = getNearestPointBB(eyes, entity.hitBox)
+    return eyes.distanceTo(pos)
 }
 
 fun getNearestPointBB(eye: Vec3, box: AxisAlignedBB): Vec3 {
@@ -56,15 +50,15 @@ fun EntityPlayer.getPing(): Int {
 fun Entity.isAnimal(): Boolean {
     return this is EntityAnimal ||
             this is EntitySquid ||
-            this is EntityGolem||
+            this is EntityGolem ||
             this is EntityBat
 }
 
 fun Entity.isMob(): Boolean {
     return this is EntityMob ||
-            this is EntityVillager||
-            this is EntitySlime
-            || this is EntityGhast ||
+            this is EntityVillager ||
+            this is EntitySlime ||
+            this is EntityGhast ||
             this is EntityDragon
 }
 
@@ -76,3 +70,9 @@ fun EntityPlayer.isClientFriend(): Boolean {
 
 val Entity.rotation: Rotation
     get() = Rotation(rotationYaw, rotationPitch)
+
+val Entity.hitBox: AxisAlignedBB
+    get() {
+        val borderSize = collisionBorderSize.toDouble()
+        return entityBoundingBox.expand(borderSize, borderSize, borderSize)
+    }
