@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.event.Listenable;
 import net.ccbluex.liquidbounce.event.PacketEvent;
 import net.ccbluex.liquidbounce.event.TickEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.FastBow;
+import net.ccbluex.liquidbounce.utils.extensions.PlayerExtensionKt;
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
@@ -215,7 +216,7 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
      * @return difference between rotation
      */
     public static double getRotationDifference(final Entity entity) {
-        final Rotation rotation = toRotation(getCenter(entity.getEntityBoundingBox()), true);
+        final Rotation rotation = toRotation(getCenter(PlayerExtensionKt.getHitBox(entity)), true);
 
         return getRotationDifference(rotation, new Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch));
     }
