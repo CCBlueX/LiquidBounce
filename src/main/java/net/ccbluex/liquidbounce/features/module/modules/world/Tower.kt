@@ -69,7 +69,9 @@ class Tower : Module() {
     }
     private val onJumpValue = BoolValue("OnJump", false)
     private val matrixValue = BoolValue("Matrix", false)
-    private val placeModeValue = ListValue("PlaceTiming", arrayOf("Pre", "Post"), "Post")
+    private val placeModeValue = object : ListValue("PlaceTiming", arrayOf("Pre", "Post"), "Post") {
+        override fun isSupported() = modeValue.get() != "Packet"
+    }
     private val timerValue = FloatValue("Timer", 1f, 0.01f, 10f)
 
     // Jump mode
@@ -152,7 +154,7 @@ class Tower : Module() {
         mc.timer.timerSpeed = timerValue.get()
         val eventState = event.eventState
 
-        if (placeModeValue.get().equals(eventState.stateName, ignoreCase = true)) {
+        if (eventState.stateName.equals(if (modeValue.get() == "Packet") "POST" else placeModeValue.get(), true)) {
             place()
         }
 
@@ -349,7 +351,7 @@ class Tower : Module() {
             return false
         }
 
-        val eyesPos = Vec3(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight, thePlayer.posZ)
+        val eyesPos = thePlayer.getPositionEyes(1f)
         var placeRotation: PlaceRotation? = null
         for (facingType in EnumFacing.values()) {
             val neighbor = blockPosition.offset(facingType)

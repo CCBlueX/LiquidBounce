@@ -47,7 +47,7 @@ class FastStairs : Module() {
         if (!thePlayer.onGround)
             return
 
-        val blockPos = BlockPos(thePlayer.posX, thePlayer.entityBoundingBox.minY, thePlayer.posZ)
+        val blockPos = BlockPos(thePlayer)
 
         if (getBlock(blockPos) is BlockStairs && !walkingDown) {
             thePlayer.setPosition(thePlayer.posX, thePlayer.posY + 0.5, thePlayer.posZ)

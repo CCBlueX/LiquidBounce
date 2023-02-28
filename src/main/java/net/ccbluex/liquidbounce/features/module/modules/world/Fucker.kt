@@ -6,9 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.LiquidBounce
-
-import net.minecraft.util.BlockPos
-import net.minecraft.util.Vec3
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
@@ -29,7 +26,9 @@ import net.ccbluex.liquidbounce.value.*
 import net.minecraft.block.Block
 import net.minecraft.init.Blocks
 import net.minecraft.network.play.client.C07PacketPlayerDigging
+import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
+import net.minecraft.util.Vec3
 import java.awt.Color
 
 @ModuleInfo(name = "Fucker", description = "Destroys selected blocks around you. (aka.  IDNuker)", category = ModuleCategory.WORLD)
@@ -258,8 +257,7 @@ object Fucker : Module() {
 
         return when (throughWallsValue.get().lowercase()) {
             "raycast" -> {
-                val eyesPos = Vec3(thePlayer.posX, thePlayer.entityBoundingBox.minY +
-                        thePlayer.eyeHeight, thePlayer.posZ)
+                val eyesPos = thePlayer.getPositionEyes(1f)
                 val movingObjectPosition = mc.theWorld!!.rayTraceBlocks(eyesPos,
                         Vec3(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5), false, true, false)
 

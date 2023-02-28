@@ -46,12 +46,13 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
             return null;
 
         VecRotation vecRotation = null;
+        final Vec3 eyesPos = mc.thePlayer.getPositionEyes(1f);
+        final Vec3 startPos = new Vec3(blockPos);
 
         for (double xSearch = 0.1D; xSearch < 0.9D; xSearch += 0.1D) {
             for (double ySearch = 0.1D; ySearch < 0.9D; ySearch += 0.1D) {
                 for (double zSearch = 0.1D; zSearch < 0.9D; zSearch += 0.1D) {
-                    final Vec3 eyesPos = new Vec3(mc.thePlayer.posX, mc.thePlayer.getEntityBoundingBox().minY + mc.thePlayer.getEyeHeight(), mc.thePlayer.posZ);
-                    final Vec3 posVec = new Vec3(blockPos).addVector(xSearch, ySearch, zSearch);
+                    final Vec3 posVec = startPos.addVector(xSearch, ySearch, zSearch);
                     final double dist = eyesPos.distanceTo(posVec);
 
                     final double diffX = posVec.xCoord - eyesPos.xCoord;
@@ -125,8 +126,7 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
      * @return rotation
      */
     public static Rotation toRotation(final Vec3 vec, final boolean predict) {
-        final Vec3 eyesPos = new Vec3(mc.thePlayer.posX, mc.thePlayer.getEntityBoundingBox().minY +
-                mc.thePlayer.getEyeHeight(), mc.thePlayer.posZ);
+        final Vec3 eyesPos = mc.thePlayer.getPositionEyes(1f);
 
         if (predict)
             eyesPos.addVector(mc.thePlayer.motionX, mc.thePlayer.motionY, mc.thePlayer.motionZ);
@@ -310,7 +310,7 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
      * Allows you to check if your enemy is behind a wall
      */
     public static boolean isVisible(final Vec3 vec3) {
-        final Vec3 eyesPos = new Vec3(mc.thePlayer.posX, mc.thePlayer.getEntityBoundingBox().minY + mc.thePlayer.getEyeHeight(), mc.thePlayer.posZ);
+        final Vec3 eyesPos = mc.thePlayer.getPositionEyes(1f);
 
         return mc.theWorld.rayTraceBlocks(eyesPos, vec3) == null;
     }

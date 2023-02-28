@@ -41,7 +41,7 @@ class MineplexGround : SpeedMode("MineplexGround") {
             ClientUtils.displayChatMessage("§8[§c§lMineplex§aSpeed§8] §cYou need one empty slot.")
             return
         }
-        val blockPos = BlockPos(mc.thePlayer!!.posX, mc.thePlayer!!.entityBoundingBox.minY - 1, mc.thePlayer!!.posZ)
+        val blockPos = BlockPos(mc.thePlayer).down()
         val vec = Vec3(blockPos).addVector(0.4, 0.4, 0.4).add(Vec3(EnumFacing.UP.directionVec))
         mc.playerController.onPlayerRightClick(mc.thePlayer!!, mc.theWorld!!, null, blockPos, EnumFacing.UP, Vec3(vec.xCoord * 0.4f, vec.yCoord * 0.4f, vec.zCoord * 0.4f))
         val targetSpeed = (LiquidBounce.moduleManager.getModule(Speed::class.java) as Speed?)!!.mineplexGroundSpeedValue.get()
