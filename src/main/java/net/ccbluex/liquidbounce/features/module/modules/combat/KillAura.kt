@@ -97,7 +97,7 @@ class KillAura : Module() {
         override fun isSupported() = autoBlockValue.get() !in setOf("Off", "Fake")
     }
     private val blockRate = object : IntegerValue("BlockRate", 100, 1, 100) {
-        override fun isSupported() = autoBlockValue.get() !in setOf("Off", "Fake")
+        override fun isSupported() = autoBlockValue.get() !in setOf("Off")
     }
 
     // Raycast
