@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.entity;
 
 import com.mojang.authlib.GameProfile;
 import net.ccbluex.liquidbounce.utils.CooldownHelper;
+import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.entity.player.PlayerCapabilities;
@@ -57,15 +58,17 @@ public abstract class MixinEntityPlayer extends MixinEntityLivingBase {
 
     @Inject(method = "onUpdate", at = @At("RETURN"))
     private void injectCooldown(final CallbackInfo callbackInfo) {
-        CooldownHelper.INSTANCE.incrementLastAttackedTicks();
-        CooldownHelper.INSTANCE.updateGenericAttackSpeed(getHeldItem());
+        if (this.getGameProfile() == Minecraft.getMinecraft().thePlayer.getGameProfile()) {
+            CooldownHelper.INSTANCE.incrementLastAttackedTicks();
+            CooldownHelper.INSTANCE.updateGenericAttackSpeed(getHeldItem());
 
-        if (cooldownStackSlot != inventory.currentItem || !ItemStack.areItemStacksEqual(cooldownStack, getHeldItem())) {
-            CooldownHelper.INSTANCE.resetLastAttackedTicks();
+            if (cooldownStackSlot != inventory.currentItem || !ItemStack.areItemStacksEqual(cooldownStack, getHeldItem())) {
+                CooldownHelper.INSTANCE.resetLastAttackedTicks();
+            }
+
+            cooldownStack = getHeldItem();
+            cooldownStackSlot = inventory.currentItem;
         }
-
-        cooldownStack = getHeldItem();
-        cooldownStackSlot = inventory.currentItem;
     }
 
 }
