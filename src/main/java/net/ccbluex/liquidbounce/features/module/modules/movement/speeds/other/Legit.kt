@@ -6,7 +6,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 
 class Legit: SpeedMode("Legit") {
     override fun onMotion() {
-        TODO("Not yet implemented")
+        // NONE
     }
 
     override fun onUpdate() {
@@ -19,6 +19,6 @@ class Legit: SpeedMode("Legit") {
     }
 
     override fun onMove(event: MoveEvent) {
-        TODO("Not yet implemented")
+        // NONE
     }
 }

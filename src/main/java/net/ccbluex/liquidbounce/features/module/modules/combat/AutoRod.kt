@@ -10,7 +10,6 @@ import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.minecraft.enchantment.EnchantmentHelper
-import net.minecraft.entity.Entity
 import net.minecraft.entity.EnumCreatureAttribute
 import net.minecraft.entity.ai.attributes.AttributeModifier
 import net.minecraft.init.Items
@@ -37,7 +36,7 @@ class AutoRod: Module() {
         }
         if (!disable.get()) {
             if (!useRod && item == 346) {
-                Rod()
+                rod()
                 useRod = true
             }
             if (t1.hasTimePassed((rodDelay - 50).toLong()) && switchBack) {
@@ -50,11 +49,11 @@ class AutoRod: Module() {
         } else {
             if (item == 346) {
                 if (t2.hasTimePassed((rodDelay + 200).toLong())) {
-                    Rod()
+                    rod()
                     t2.reset()
                 }
                 if (t1.hasTimePassed(rodDelay.toLong())) {
-                    mc.thePlayer.inventory.currentItem = bestWeapon(mc.thePlayer)
+                    mc.thePlayer.inventory.currentItem = bestWeapon()
                     t1.reset()
                     toggle()
                 }
@@ -77,15 +76,15 @@ class AutoRod: Module() {
 
     private fun switchToRod() {
         for (i in 36..44) {
-            val itemstack = mc.thePlayer.inventoryContainer.getSlot(i).stack
-            if (itemstack != null && Item.getIdFromItem(itemstack.item) == 346) {
+            val stack = mc.thePlayer.inventoryContainer.getSlot(i).stack
+            if (stack != null && Item.getIdFromItem(stack.item) == 346) {
                 mc.thePlayer.inventory.currentItem = i - 36
                 break
             }
         }
     }
 
-    private fun Rod() {
+    private fun rod() {
         val rod = findRod(36, 45)
         mc.playerController.sendUseItem(mc.thePlayer, mc.theWorld, mc.thePlayer.inventoryContainer.getSlot(rod).stack)
         switchBack = true
@@ -93,10 +92,10 @@ class AutoRod: Module() {
     }
 
     private fun switchBack() {
-        mc.thePlayer.inventory.currentItem = bestWeapon(mc.thePlayer)
+        mc.thePlayer.inventory.currentItem = bestWeapon()
     }
 
-    fun bestWeapon(target: Entity?): Int {
+    private fun bestWeapon(): Int {
         mc.thePlayer.inventory.currentItem = 0
         val firstSlot = mc.thePlayer.inventory.currentItem
         var bestWeapon = -1
@@ -122,7 +121,7 @@ class AutoRod: Module() {
     }
 
 
-    fun getItemAtkDamage(itemStack: ItemStack): Float {
+    private fun getItemAtkDamage(itemStack: ItemStack): Float {
         val multimap: Multimap<*, *> = itemStack.attributeModifiers
         if (!multimap.isEmpty) {
             val iterator: Iterator<*> = multimap.entries().iterator()

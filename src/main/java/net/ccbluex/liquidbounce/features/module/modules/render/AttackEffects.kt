@@ -44,15 +44,12 @@ class AttackEffects : Module() {
                 if(mc.thePlayer!!.ticksExisted > 4){
                     when(atksound.get().lowercase(Locale.getDefault())) {
                         "knock" ->{
-
                             SoundPlayer().playSound(SoundPlayer.SoundType.Crack, volume.get())
                         }
                         "skeet" -> {
                             SoundPlayer().playSound(SoundPlayer.SoundType.SKEET, volume.get())
                         }
-
                         "neko" -> {
-
                             SoundPlayer().playSound(SoundPlayer.SoundType.NEKO, volume.get())
                         }
                     }
@@ -117,7 +114,7 @@ class AttackEffects : Module() {
 
 
     companion object {
-        val  atksound = ListValue("AttackSound", arrayOf(
+        val atksound = ListValue("AttackSound", arrayOf(
             "None",
             "Skeet",
             "Neko",
