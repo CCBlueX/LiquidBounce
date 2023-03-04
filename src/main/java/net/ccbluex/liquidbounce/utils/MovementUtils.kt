@@ -51,4 +51,11 @@ object MovementUtils : MinecraftInstance() {
             if (thePlayer.moveStrafing < 0f) rotationYaw += 90f * forward
             return Math.toRadians(rotationYaw.toDouble())
         }
+
+    fun isOnGround(height: Double): Boolean {
+        return mc.theWorld.getCollidingBoundingBoxes(
+                mc.thePlayer,
+                mc.thePlayer.entityBoundingBox.offset(0.0, -height, 0.0)
+            ).isNotEmpty()
+    }
 }

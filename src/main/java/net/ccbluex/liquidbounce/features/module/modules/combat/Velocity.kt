@@ -18,7 +18,9 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.client.entity.EntityPlayerSP
 import net.minecraft.network.play.server.S12PacketEntityVelocity
 import net.minecraft.network.play.server.S27PacketExplosion
 import kotlin.math.cos
@@ -31,7 +33,7 @@ class Velocity : Module() {
      * OPTIONS
      */
     private val modeValue = ListValue("Mode", arrayOf("Simple", "AAC", "AACPush", "AACZero", "AACv4",
-        "Reverse", "SmoothReverse", "Jump", "Glitch"), "Simple")
+        "Reverse", "SmoothReverse", "Jump", "Glitch", "Legit"), "Simple")
 
     private val horizontalValue = object : FloatValue("Horizontal", 0F, 0F, 1F) {
         override fun isSupported() = modeValue.get() in setOf("Simple", "AAC")
@@ -59,6 +61,14 @@ class Velocity : Module() {
     // AAC v4
     private val aacv4MotionReducerValue = object : FloatValue("AACv4MotionReducer", 0.62F,0F,1F) {
         override fun isSupported() = modeValue.get() == "AACv4"
+    }
+
+    // Legit
+    private val legitDisableInAirValue = object: BoolValue("DisableInAir", true) {
+        override fun isSupported() = modeValue.get() == "Legit"
+    }
+    private val legitChanceValue = object: IntegerValue("Chance", 100, 0, 100) {
+        override fun isSupported() = modeValue.get() == "Legit"
     }
 
     /**
@@ -182,6 +192,24 @@ class Velocity : Module() {
                 thePlayer.onGround = true
             } else
                 velocityInput = false
+
+            "legit" -> {
+                if (legitDisableInAirValue.get() && MovementUtils.isOnGround(0.5)) return
+                if (mc.thePlayer.maxHurtResistantTime != mc.thePlayer.hurtResistantTime || mc.thePlayer.maxHurtResistantTime == 0) {
+                    return
+                }
+                if (Math.random() * 100.0 < legitChanceValue.get()) {
+                    val n: Float = horizontalValue.get() / 100.0f
+                    val n2: Float = verticalValue.get() / 100.0f
+                    thePlayer.motionX *= n.toDouble()
+                    thePlayer.motionZ *= n.toDouble()
+                    thePlayer.motionY *= n2.toDouble()
+                } else {
+                    thePlayer.motionX *= 1.0
+                    thePlayer.motionY *= 1.0
+                    thePlayer.motionZ *= 1.0
+                }
+            }
         }
     }
 
