@@ -5,8 +5,7 @@
  */
 package net.ccbluex.liquidbounce.utils
 
-import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.utils.MinecraftInstance.mc
 import net.minecraft.item.Item
 import net.minecraft.item.ItemAxe
 import net.minecraft.item.ItemHoe
@@ -15,6 +14,8 @@ import net.minecraft.item.ItemSpade
 import net.minecraft.item.ItemStack
 import net.minecraft.item.ItemSword
 import net.minecraft.util.MathHelper
+import net.minecraft.potion.Potion
+import kotlin.math.min
 
 /**
  * Capable of simulating 1.9+ cooldowns for usage on 1.9+ servers while playing with 1.8.9.
@@ -51,6 +52,14 @@ object CooldownHelper {
             }
             else -> 4.0
         }
+        
+        if (mc.thePlayer.isPotionActive(Potion.digSlowdown)) {
+            genericAttackSpeed *= 1.0 - min(1.0, 0.1 * mc.thePlayer.getActivePotionEffect(Potion.digSlowdown).amplifier + 1)
+        }
+        
+        if (mc.thePlayer.isPotionActive(Potion.digSpeed)) {
+            genericAttackSpeed *= 1.0 + (0.1 * mc.thePlayer.getActivePotionEffect(Potion.digSpeed).amplifier + 1)
+        } 
     }
 
     fun getAttackCooldownProgressPerTick() = 1.0 / genericAttackSpeed * 20.0
