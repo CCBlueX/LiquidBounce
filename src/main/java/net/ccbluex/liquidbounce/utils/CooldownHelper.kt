@@ -5,9 +5,7 @@
  */
 package net.ccbluex.liquidbounce.utils
 
-import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.MinecraftInstance.mc
 import net.minecraft.item.Item
 import net.minecraft.item.ItemAxe
 import net.minecraft.item.ItemHoe
@@ -55,12 +53,12 @@ object CooldownHelper {
             else -> 4.0
         }
         
-        if (mc.player.isPotionActive(Potion.digSlowdown)) {
-            genericAttackSpeed *= 1.0 - min(1.0, 0.1 * mc.player.getActivePotionEffect(Potion.digSlowdown).getAmplifier() + 1)
+        if (mc.thePlayer.isPotionActive(Potion.digSlowdown)) {
+            genericAttackSpeed *= 1.0 - min(1.0, 0.1 * mc.thePlayer.getActivePotionEffect(Potion.digSlowdown).amplifier + 1)
         }
         
-        if (mc.player.isPotionActive(Potion.digSpeed)) {
-            genericAttackSpeed *= 1.0 + (0.1 * mc.player.getActivePotionEffect(Potion.digSpeed).getAmplifier() + 1)
+        if (mc.thePlayer.isPotionActive(Potion.digSpeed)) {
+            genericAttackSpeed *= 1.0 + (0.1 * mc.thePlayer.getActivePotionEffect(Potion.digSpeed).amplifier + 1)
         } 
     }
 
