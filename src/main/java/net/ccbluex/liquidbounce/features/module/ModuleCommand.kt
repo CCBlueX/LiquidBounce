@@ -111,10 +111,10 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
 
         return when (args.size) {
             1 -> values
-                .filter { it !is FontValue && it.name.startsWith(args[0], true) }
+                .filter { it !is FontValue && it.isSupported() && it.name.startsWith(args[0], true) }
                 .map { it.name.lowercase() }
             2 -> {
-                when(module.getValue(args[0])) {
+                when (module.getValue(args[0])) {
                     is BlockValue -> {
                         return Item.itemRegistry.keys
                                 .map { it.resourcePath.lowercase() }
