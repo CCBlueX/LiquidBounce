@@ -5,8 +5,6 @@
  */
 package net.ccbluex.liquidbounce.ui.client
 
-import com.google.gson.Gson
-
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
@@ -17,30 +15,54 @@ import java.awt.Color
 import java.io.IOException
 import kotlin.concurrent.thread
 
-@Deprecated("The server status service is not being provided by Mojang anymore.")
 class GuiServerStatus(private val prevGui: GuiScreen) : GuiScreen() {
-    private val status = HashMap<String, String>()
+    private val status = hashMapOf<String, String?>(
+        "https://api.mojang.com" to null,
+        "https://authserver.mojang.com" to null,
+        "http://session.minecraft.net" to null,
+        "https://textures.minecraft.net" to null,
+        "http://minecraft.net" to null,
+        "https://account.mojang.com" to null,
+        "https://sessionserver.mojang.com" to null,
+        "http://mojang.com" to null
+    )
 
     override fun initGui() {
         buttonList.add(GuiButton(1, width / 2 - 100, height / 4 + 145, "Back"))
 
-        thread { loadInformation() }
+        loadInformation()
     }
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
         drawBackground(0)
 
         var i = height / 4 + 40
-        RenderUtils.drawRect(width / 2.0f - 115, i - 5.0f, width / 2.0f + 115, height / 4.0f + 43 + if (status.keys.isEmpty()) 10 else status.keys.size * Fonts.font40.fontHeight, Integer.MIN_VALUE)
+        RenderUtils.drawRect(
+            width / 2.0f - 115,
+            i - 5.0f,
+            width / 2.0f + 115,
+            height / 4.0f + 43 + if (status.keys.isEmpty()) 10 else status.keys.size * Fonts.font40.fontHeight,
+            Integer.MIN_VALUE
+        )
 
-        if (status.isEmpty()) {
-            Fonts.font40.drawCenteredString("Loading...", width / 2.0f, height / 4.0f + 40, Color.WHITE.rgb)
-        } else {
-            for (server in status.keys) {
-                val color = status[server]
-                Fonts.font40.drawCenteredString("$server: ${if (color.equals("red", ignoreCase = true)) "§c" else if (color.equals("yellow", ignoreCase = true)) "§e" else "§a"}${if (color.equals("red", ignoreCase = true)) "Offline" else if (color.equals("yellow", ignoreCase = true)) "Slow" else "Online"}", width / 2.0f, i.toFloat(), Color.WHITE.rgb)
-                i += Fonts.font40.fontHeight
-            }
+        for (server in status.keys) {
+            val color = status[server] ?: "yellow"
+            Fonts.font40.drawCenteredString(
+                "${server.replaceFirst("^http[s]?://".toRegex(), "")}: ${
+                    if (color.equals(
+                            "red",
+                            ignoreCase = true
+                        )
+                    ) "§c" else if (color.equals("yellow", ignoreCase = true)) "§e" else "§a"
+                }${
+                    if (color.equals("red", ignoreCase = true)) "Offline" else if (color.equals(
+                            "yellow",
+                            ignoreCase = true
+                        )
+                    ) "Loading..." else "Online"
+                }", width / 2.0f, i.toFloat(), Color.WHITE.rgb
+            )
+            i += Fonts.font40.fontHeight
         }
 
         Fonts.fontBold180.drawCenteredString("Server Status", width / 2F, height / 8f + 5F, 4673984, true)
@@ -49,19 +71,18 @@ class GuiServerStatus(private val prevGui: GuiScreen) : GuiScreen() {
     }
 
     private fun loadInformation() {
-        status.clear()
+        status.replaceAll { _, _ -> null }
 
-        try {
-            val linkedTreeMaps = Gson().fromJson(HttpUtils.get("https://status.mojang.com/check"),
-                    List::class.java) as List<Map<String, String>>
-
-            for (linkedTreeMap in linkedTreeMaps)
-                for (entry in linkedTreeMap)
-                    status[entry.key] = entry.value
-        } catch (e: IOException) {
-            status["status.mojang.com/check"] = "red"
+        for (url in status.keys) {
+            thread {
+                try {
+                    val responseCode = HttpUtils.responseCode(url, "GET")
+                    status[url] = if (responseCode in 200..499) "green" else "red"
+                } catch (e: IOException) {
+                    status[url] = "red"
+                }
+            }
         }
-
     }
 
     override fun actionPerformed(button: GuiButton) {
