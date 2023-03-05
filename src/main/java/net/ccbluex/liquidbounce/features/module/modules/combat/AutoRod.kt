@@ -29,7 +29,7 @@ class AutoRod: Module() {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent?) {
-        val item = Item.getIdFromItem(mc.thePlayer.heldItem.item)
+        val item = Item.getIdFromItem((mc.thePlayer.heldItem ?: return).item)
         val rodDelay = delay.get()
         if (mc.currentScreen != null) {
             return
