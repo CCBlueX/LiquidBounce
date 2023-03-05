@@ -66,6 +66,14 @@ object HttpUtils {
 
     @Throws(IOException::class)
     @JvmStatic
+    fun responseCode(url: String, method: String,
+                     agent: String = DEFAULT_AGENT): Int {
+        val connection = make(url, method, agent)
+        return connection.responseCode
+    }
+
+    @Throws(IOException::class)
+    @JvmStatic
     fun download(url: String, file: File) = FileUtils.copyInputStreamToFile(make(url, "GET").inputStream, file)
 
 }
