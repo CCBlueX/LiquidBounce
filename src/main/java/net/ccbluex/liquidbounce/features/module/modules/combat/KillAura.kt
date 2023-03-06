@@ -78,7 +78,7 @@ class KillAura : Module() {
     // Range
     private val rangeValue = FloatValue("Range", 3.7f, 1f, 8f)
     private val throughWallsRangeValue = FloatValue("ThroughWallsRange", 3f, 0f, 8f)
-    private val rangeSprintReducementValue = FloatValue("RangeSprintReducement", 0f, 0f, 0.4f)
+    private val rangeSprintReductionValue = FloatValue("RangeSprintReduction", 0f, 0f, 0.4f)
 
     // Modes
     private val priorityValue = ListValue("Priority", arrayOf("Health", "Distance", "Direction", "LivingTime"), "Distance")
@@ -97,7 +97,7 @@ class KillAura : Module() {
         override fun isSupported() = autoBlockValue.get() !in setOf("Off", "Fake")
     }
     private val blockRate = object : IntegerValue("BlockRate", 100, 1, 100) {
-        override fun isSupported() = autoBlockValue.get() !in setOf("Off", "Fake")
+        override fun isSupported() = autoBlockValue.get() != "Off"
     }
 
     // Turn Speed
@@ -190,8 +190,6 @@ class KillAura : Module() {
     private val markValue = BoolValue("Mark", true)
     private val fakeSharpValue = BoolValue("FakeSharp", true)
 
-    //Doesn't do anything?
-    //private val randomMultiplier = FloatValue("RandomMultiplier", 0.8f, 0f, 1f)
     /**
      * MODULE
      */
@@ -810,7 +808,7 @@ class KillAura : Module() {
         get() = max(rangeValue.get(), throughWallsRangeValue.get())
 
     private fun getRange(entity: Entity) =
-            (if (mc.thePlayer!!.getDistanceToEntityBox(entity) >= throughWallsRangeValue.get()) rangeValue.get() else throughWallsRangeValue.get()) - if (mc.thePlayer!!.isSprinting) rangeSprintReducementValue.get() else 0F
+            (if (mc.thePlayer!!.getDistanceToEntityBox(entity) >= throughWallsRangeValue.get()) rangeValue.get() else throughWallsRangeValue.get()) - if (mc.thePlayer!!.isSprinting) rangeSprintReductionValue.get() else 0F
 
     /**
      * HUD Tag
