@@ -11,7 +11,7 @@ public class    SoundPlayer {
             AudioInputStream as;
             try {
                 as = AudioSystem.getAudioInputStream(new BufferedInputStream(Objects.requireNonNull(this.getClass()
-                        .getResourceAsStream("/assets/minecraft/pride/sound/" + st.getName()))));
+                        .getResourceAsStream("/assets/minecraft/liquidbounce/sound/" + st.getName()))));
                 Clip clip = AudioSystem.getClip();
                 clip.open(as);
                 clip.start();
@@ -24,6 +24,8 @@ public class    SoundPlayer {
             }
         }).start();
     }
+
+    // bruh no these files in resources, unusable
     public enum SoundType{
 
 
