@@ -194,7 +194,7 @@ class Velocity : Module() {
                 velocityInput = false
 
             "legit" -> {
-                if (legitDisableInAirValue.get() && MovementUtils.isOnGround(0.5)) return
+                if (legitDisableInAirValue.get() && !MovementUtils.isOnGround(0.5)) return
                 if (mc.thePlayer.maxHurtResistantTime != mc.thePlayer.hurtResistantTime || mc.thePlayer.maxHurtResistantTime == 0) {
                     return
                 }
