@@ -44,7 +44,8 @@ object Animations : Module() {
 
     private val animations = arrayOf(
         OneSevenAnimation(),
-        PushdownAnimation()
+        PushdownAnimation(),
+        OldAnimation()
     )
 
     private var animationMode = ListValue("Mode", animations.map { it.name }.toTypedArray(), "Pushdown")
@@ -108,6 +109,13 @@ class OneSevenAnimation : Animation("OneSeven") {
         GlStateManager.translate(-0.5f, 0.2f, 0.0f)
     }
 
+}
+
+class OldAnimation : Animation("Old") {
+    override fun transform(f1: Float, f: Float, clientPlayer: AbstractClientPlayer) {
+        transformFirstPersonItem(f, f1)
+        doBlockTransformations()
+    }
 }
 
 /**
