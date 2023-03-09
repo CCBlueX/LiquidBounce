@@ -15,7 +15,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 class NoBob : Module() {
 
     @EventTarget
-    fun onUpdate(event: UpdateEvent) {
-        mc.thePlayer?.distanceWalkedModified = 0f
+    fun onMotion(event: MotionEvent) {
+        mc.thePlayer?.distanceWalkedModified = -1f
     }
 }
