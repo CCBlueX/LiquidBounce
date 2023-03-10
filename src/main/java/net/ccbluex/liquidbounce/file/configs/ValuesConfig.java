@@ -110,7 +110,7 @@ public class ValuesConfig extends FileConfig {
 
                 if (jsonValue.has("CapeEnabled"))
                     GuiDonatorCape.Companion.setCapeEnabled(jsonValue.get("CapeEnabled").getAsBoolean());
-            } else if (entry.getKey().equalsIgnoreCase("clientConfiguration")) { // Compatibility with old versions
+            } else if (entry.getKey().equalsIgnoreCase("clientConfiguration")) {
                 JsonObject jsonValue = (JsonObject) entry.getValue();
 
                 if (jsonValue.has("EnabledClientTitle"))
@@ -121,7 +121,16 @@ public class ValuesConfig extends FileConfig {
 
                 if (jsonValue.has("Particles"))
                     GuiClientConfiguration.Companion.setParticles(jsonValue.get("Particles").getAsBoolean());
-            } else if (entry.getKey().equalsIgnoreCase("Background")) {
+
+                if (jsonValue.has("StylisedAlts"))
+                    GuiClientConfiguration.Companion.setStylisedAlts(jsonValue.get("StylisedAlts").getAsBoolean());
+
+                if (jsonValue.has("AltsLength"))
+                    GuiClientConfiguration.Companion.setAltsLength(jsonValue.get("AltsLength").getAsInt());
+
+                if (jsonValue.has("CleanAlts"))
+                    GuiClientConfiguration.Companion.setUnformattedAlts(jsonValue.get("CleanAlts").getAsBoolean());
+            } else if (entry.getKey().equalsIgnoreCase("Background")) { // Compatibility with old versions
                 JsonObject jsonValue = (JsonObject) entry.getValue();
 
                 if (jsonValue.has("Enabled"))
@@ -193,6 +202,9 @@ public class ValuesConfig extends FileConfig {
         clientObject.addProperty("EnabledClientTitle", GuiClientConfiguration.Companion.getEnabledClientTitle());
         clientObject.addProperty("EnabledBackground", GuiClientConfiguration.Companion.getEnabledCustomBackground());
         clientObject.addProperty("Particles", GuiClientConfiguration.Companion.getParticles());
+        clientObject.addProperty("StylisedAlts", GuiClientConfiguration.Companion.getStylisedAlts());
+        clientObject.addProperty("AltsLength", GuiClientConfiguration.Companion.getAltsLength());
+        clientObject.addProperty("CleanAlts", GuiClientConfiguration.Companion.getUnformattedAlts());
         jsonObject.add("clientConfiguration", clientObject);
 
         LiquidBounce.moduleManager.getModules().stream().filter(module -> !module.getValues().isEmpty()).forEach(module -> {

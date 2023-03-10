@@ -86,7 +86,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
         RenderUtils.drawRect(30.0f, 30.0f, width - 30.0f, height - 30.0f, Integer.MIN_VALUE)
 
         // Draw title and status
-        Fonts.font40.drawCenteredString("TheAltening", width / 2.0f, height / 2 - 200f, 0xffffff)
+        Fonts.font40.drawCenteredString("TheAltening", width / 2.0f, height / 2 - 180f, 0xffffff)
         Fonts.font35.drawCenteredString(status, width / 2.0f, height / 2 + 30f, 0xffffff)
 
         // Draw fields
@@ -98,7 +98,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
             Fonts.font40.drawCenteredString("§7Token", width / 2.0f - 82, height / 2 - 114f, 0xffffff)
         if (apiKeyField.text.isEmpty() && !apiKeyField.isFocused)
             Fonts.font40.drawCenteredString("§7API-Key", width / 2.0f - 78, height / 2 - 24f, 0xffffff)
-        Fonts.font40.drawCenteredString("§7Use coupon code 'liquidbounce' for 20% off!", width / 2.0f, height / 2 + 60f, 0xffffff)
+        Fonts.font40.drawCenteredString("§7Use coupon code 'liquidbounce' for 20% off!", width / 2.0f, height / 2 + 55f, 0xffffff)
         super.drawScreen(mouseX, mouseY, partialTicks)
     }
 

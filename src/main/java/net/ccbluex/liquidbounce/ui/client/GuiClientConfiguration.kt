@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.render.IconUtils
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
+import net.minecraftforge.fml.client.config.GuiSlider
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.Display
 import java.nio.file.Files
@@ -23,6 +24,9 @@ class GuiClientConfiguration(val prevGui: GuiScreen) : GuiScreen() {
         var enabledClientTitle = true
         var enabledCustomBackground = true
         var particles = false
+        var stylisedAlts = true
+        var unformattedAlts = false
+        var altsLength = 16
 
         fun updateClientWindow() {
             if (enabledClientTitle) {
@@ -42,35 +46,46 @@ class GuiClientConfiguration(val prevGui: GuiScreen) : GuiScreen() {
 
     }
 
-    private lateinit var enabledButton: GuiButton
+    private lateinit var backgroundButton: GuiButton
     private lateinit var particlesButton: GuiButton
+    private lateinit var altsModeButton: GuiButton
+    private lateinit var unformattedAltsButton: GuiButton
+    private lateinit var altsSlider: GuiSlider
 
     private lateinit var titleButton: GuiButton
 
     override fun initGui() {
         // Title button
         // Location > 1st row
-        titleButton = GuiButton(5, width / 2 - 100, height / 4 + 25, "Client title (${if (enabledClientTitle) "On" else "Off"})")
-        buttonList.add(titleButton)
+        buttonList.add(GuiButton(5, width / 2 - 100, height / 4 + 25, "Client title (${if (enabledClientTitle) "On" else "Off"})").also { titleButton = it })
 
         // Background configuration buttons
         // Button location > 2nd row
-        enabledButton = GuiButton(1, width / 2 - 100, height / 4 + 75, "Enabled background (${if (enabledCustomBackground) "On" else "Off"})")
-        buttonList.add(enabledButton)
-        particlesButton = GuiButton(2, width / 2 - 100, height / 4 + 75 + 25, "Particles (${if (particles) "On" else "Off"})")
-        buttonList.add(particlesButton)
+        buttonList.add(GuiButton(1, width / 2 - 100, height / 4 + 75, "Enabled background (${if (enabledCustomBackground) "On" else "Off"})").also { backgroundButton = it })
+        buttonList.add(GuiButton(2, width / 2 - 100, height / 4 + 75 + 25, "Particles (${if (particles) "On" else "Off"})").also { particlesButton = it })
         buttonList.add(GuiButton(3, width / 2 - 100, height / 4 + 75 + 25 * 2, 98, 20, "Change wallpaper"))
         buttonList.add(GuiButton(4, width / 2 + 2, height / 4 + 75 + 25 * 2, 98, 20, "Reset wallpaper"))
 
+        // AltManager configuration buttons
+        // Location > 3rd row
+        buttonList.add(GuiButton(7, width / 2 - 100, height / 4 + 185, "Random alts mode (${if (stylisedAlts) "Stylised" else "Legacy"})").also { altsModeButton = it })
+        buttonList.add(GuiSlider(-1, width / 2 - 100, height / 4 + 210, 200, 20, "${if (stylisedAlts && unformattedAlts) "Max random alt" else "Random alt"} length (", ")", 6.0, 16.0, altsLength.toDouble(), false, true) {
+            altsLength = it.valueInt
+        }.also { altsSlider = it })
+        buttonList.add(GuiButton(6, width / 2 - 100, height / 4 + 235, "Unformatted alt names (${if (unformattedAlts) "On" else "Off"})").also {
+            it.enabled = stylisedAlts
+            unformattedAltsButton = it
+        })
+
         // Back button
-        buttonList.add(GuiButton(0, width / 2 - 100, height / 4 + 75 + 25 * 4 + 5, "Back"))
+        buttonList.add(GuiButton(0, width / 2 - 100, height / 4 + 25 * 11, "Back"))
     }
 
     override fun actionPerformed(button: GuiButton) {
         when (button.id) {
             1 -> {
                 enabledCustomBackground = !enabledCustomBackground
-                enabledButton.displayString = "Enabled (${if (enabledCustomBackground) "On" else "Off"})"
+                backgroundButton.displayString = "Enabled (${if (enabledCustomBackground) "On" else "Off"})"
             }
             2 -> {
                 particles = !particles
@@ -80,6 +95,19 @@ class GuiClientConfiguration(val prevGui: GuiScreen) : GuiScreen() {
                 enabledClientTitle = !enabledClientTitle
                 titleButton.displayString = "Client title (${if (enabledClientTitle) "On" else "Off"})"
                 updateClientWindow()
+            }
+            6 -> {
+                unformattedAlts = !unformattedAlts
+                unformattedAltsButton.displayString = "Unformatted alt names (${if (unformattedAlts) "On" else "Off"})"
+                altsSlider.dispString = "${if (unformattedAlts) "Max random alt" else "Random alt"} length ("
+                altsSlider.updateSlider()
+            }
+            7 -> {
+                stylisedAlts = !stylisedAlts
+                altsModeButton.displayString = "Random alts mode (${if (stylisedAlts) "Stylised" else "Legacy"})"
+                altsSlider.dispString = "${if (stylisedAlts && unformattedAlts) "Max random alt" else "Random alt"} length ("
+                altsSlider.updateSlider()
+                unformattedAltsButton.enabled = stylisedAlts
             }
             3 -> {
                 val file = MiscUtils.openFileChooser() ?: return
@@ -149,6 +177,8 @@ class GuiClientConfiguration(val prevGui: GuiScreen) : GuiScreen() {
         Fonts.font35.drawString("Supported background types: (.png, .frag, .glsl)", this.width / 2F - 98F, height / 4F + 75 + 25 * 3,
             0xFFFFFF, true)
 
+        Fonts.font40.drawString("AltManager", this.width / 2F - 98F, height / 4F + 175F,
+            0xFFFFFF, true)
         super.drawScreen(mouseX, mouseY, partialTicks)
     }
 
@@ -161,4 +191,8 @@ class GuiClientConfiguration(val prevGui: GuiScreen) : GuiScreen() {
         super.keyTyped(typedChar, keyCode)
     }
 
+    override fun onGuiClosed() {
+        LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig)
+        super.onGuiClosed()
+    }
 }

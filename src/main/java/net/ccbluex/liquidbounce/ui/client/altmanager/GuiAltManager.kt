@@ -46,7 +46,8 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
 
     private lateinit var loginButton: GuiButton
     private lateinit var randomAltButton: GuiButton
-    private lateinit var randomNickButton: GuiButton
+    private lateinit var randomNameButton: GuiButton
+    private lateinit var removeButton: GuiButton
     private lateinit var altsList: GuiList
     private lateinit var searchField: GuiTextField
 
@@ -66,14 +67,14 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
 
         val startPositionY = 22
         buttonList.add(GuiButton(1, width - 80, startPositionY + 24, 70, 20, "Add"))
-        buttonList.add(GuiButton(2, width - 80, startPositionY + 24 * 2, 70, 20, "Remove"))
+        buttonList.add(GuiButton(2, width - 80, startPositionY + 24 * 2, 70, 20, "Remove").also { removeButton = it })
         buttonList.add(GuiButton(7, width - 80, startPositionY + 24 * 3, 70, 20, "Import"))
         buttonList.add(GuiButton(12, width - 80, startPositionY + 24 * 4, 70, 20, "Export"))
         buttonList.add(GuiButton(8, width - 80, startPositionY + 24 * 5, 70, 20, "Copy"))
         buttonList.add(GuiButton(0, width - 80, height - 65, 70, 20, "Back"))
         buttonList.add(GuiButton(3, 5, startPositionY + 24, 90, 20, "Login").also { loginButton = it })
-        buttonList.add(GuiButton(4, 5, startPositionY + 24 * 2, 90, 20, "Random alt").also { randomAltButton = it })
-        buttonList.add(GuiButton(5, 5, startPositionY + 24 * 3, 90, 20, "Random nick").also { randomNickButton = it })
+        buttonList.add(GuiButton(4, 5, startPositionY + 24 * 2, 90, 20, "Random Alt").also { randomAltButton = it })
+        buttonList.add(GuiButton(5, 5, startPositionY + 24 * 3, 90, 20, "Random Name").also { randomNameButton = it })
         buttonList.add(GuiButton(6, 5, startPositionY + 24 * 4, 90, 20, "Direct Login"))
         buttonList.add(GuiButton(10, 5, startPositionY + 24 * 5, 90, 20, "Session Login"))
 
@@ -120,7 +121,7 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
         when (button.id) {
             0 -> mc.displayGuiScreen(prevGui)
             1 -> mc.displayGuiScreen(GuiLoginIntoAccount(this))
-            2 -> {
+            2 -> { // Delete button
                 status = if (altsList.selectedSlot != -1 && altsList.selectedSlot < altsList.size) {
                     fileManager.accountsConfig.removeAccount(altsList.accounts[altsList.selectedSlot])
                     fileManager.saveConfig(fileManager.accountsConfig)
@@ -130,11 +131,11 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
                 }
             }
 
-            3 -> {
+            3 -> { // Login button
                 status = altsList.selectedAccount?.let {
                     loginButton.enabled = false
                     randomAltButton.enabled = false
-                    randomNickButton.enabled = false
+                    randomNameButton.enabled = false
 
                     login(it, {
                         status = "§aLogged into ${mc.session.username}."
@@ -143,18 +144,18 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
                     },{
                         loginButton.enabled = true
                         randomAltButton.enabled = true
-                        randomNickButton.enabled = true
+                        randomNameButton.enabled = true
                     })
 
                     "§aLogging in..."
                 } ?: "§cSelect an account."
             }
 
-            4 -> {
+            4 -> { // Random alt button
                 status = altsList.accounts.randomOrNull()?.let {
                     loginButton.enabled = false
                     randomAltButton.enabled = false
-                    randomNickButton.enabled = false
+                    randomNameButton.enabled = false
 
                     login(it, {
                         status = "§aLogged into ${mc.session.username}."
@@ -163,14 +164,14 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
                     },{
                         loginButton.enabled = true
                         randomAltButton.enabled = true
-                        randomNickButton.enabled = true
+                        randomNameButton.enabled = true
                     })
 
                     "§aLogging in..."
                 } ?: "§cYou do not have any accounts."
             }
 
-            5 -> {
+            5 -> { // Random name button
                 val crackedAccount = CrackedAccount()
                 crackedAccount.name = RandomUtils.randomUsername()
 
@@ -293,6 +294,9 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
                 altsList.scrollBy(-height + 100)
                 return
             }
+            Keyboard.KEY_DELETE -> { // Remove account
+                actionPerformed(removeButton)
+            }
         }
 
         super.keyTyped(typedChar, keyCode)
@@ -352,7 +356,7 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
                 status = altsList.selectedAccount?.let {
                     loginButton.enabled = false
                     randomAltButton.enabled = false
-                    randomNickButton.enabled = false
+                    randomNameButton.enabled = false
 
                     login(it, {
                         status = "§aLogged into ${mc.session.username}."
@@ -361,7 +365,7 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
                     },{
                         loginButton.enabled = true
                         randomAltButton.enabled = true
-                        randomNickButton.enabled = true
+                        randomNameButton.enabled = true
                     })
 
                     "§aLogging in..."

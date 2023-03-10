@@ -22,7 +22,6 @@ import java.io.IOException
 class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: Boolean = false) : GuiScreen() {
 
     private lateinit var addButton: GuiButton
-    private lateinit var randomUsernameButton: GuiButton
     private lateinit var username: GuiTextField
 
     private var status = ""
@@ -30,16 +29,18 @@ class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: B
     override fun initGui() {
         Keyboard.enableRepeatEvents(true)
 
-        // Clipboard login
-        buttonList.add(GuiButton(2, width / 2 - 100, height / 2 - 60, "Random username").also { randomUsernameButton = it })
+        // Add button
+        buttonList.add(GuiButton(1, width / 2 - 100, height / 2 - 60 , if (directLogin) "Login" else "Add")
+            .also { addButton = it })
+
+        // Random button
+        buttonList.add(GuiButton(2, width / 2 + 105, height / 2 - 90, 40, 20, "Random"))
 
         // Login via Microsoft account
-        buttonList.add(GuiButton(3, width / 2 - 100, height / 2 - 30, "Microsoft login"))
+        buttonList.add(GuiButton(3, width / 2 - 100, height / 2, "${if (directLogin) "Login to" else "Add"} a Microsoft account"))
 
-        // Add and back button
-        buttonList.add(GuiButton(1, width / 2 - 100, height / 2, 98, 20, if (directLogin) "Login" else "Add")
-            .also { addButton = it })
-        buttonList.add(GuiButton(0, width / 2 + 2, height / 2, 98, 20, "Back"))
+        // Back button
+        buttonList.add(GuiButton(0, width / 2 - 100, height / 2 + 30, "Back"))
 
         username = GuiTextField(2, Fonts.font40, width / 2 - 100, height / 2 - 90, 200, 20)
         username.isFocused = false
@@ -51,8 +52,8 @@ class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: B
 
         RenderUtils.drawRect(30, 30, width - 30, height - 30, Int.MIN_VALUE)
         Fonts.font40.drawCenteredString(if (directLogin) "Direct Login" else "Add Account", width / 2.0f, height / 2 - 170f, 0xffffff)
-        Fonts.font40.drawCenteredString("§7Cracked login", width / 2.0f, height / 2 - 110f, 0xffffff)
-        Fonts.font35.drawCenteredString(status, width / 2.0f, height / 2 + 30f, 0xffffff)
+        Fonts.font40.drawCenteredString("§7${if (directLogin) "Login to" else "Add"} an offline account", width / 2.0f, height / 2 - 110f, 0xffffff)
+        Fonts.font35.drawCenteredString(status, width / 2.0f, height / 2f - 30, 0xffffff)
 
         username.drawTextBox()
 
@@ -130,8 +131,8 @@ class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: B
     }
 
     private fun checkAndAddAccount(usernameText: String) {
-        if (usernameText.isEmpty()) {
-            // what?
+        if (usernameText.isEmpty() || usernameText.length < 3) {
+            status = "§cInput at least 3 characters long username."
             return
         }
 

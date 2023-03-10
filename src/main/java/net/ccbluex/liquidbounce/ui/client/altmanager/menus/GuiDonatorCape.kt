@@ -74,7 +74,7 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
         RenderUtils.drawRect(30.0f, 30.0f, width - 30.0f, height - 30.0f, Integer.MIN_VALUE)
 
         // Draw title and status
-        Fonts.font40.drawCenteredString("Donator Cape", width / 2.0f, height / 2 - 170f, 0xffffff)
+        Fonts.font40.drawCenteredString("Donator Cape", width / 2.0f, height / 2 - 150f, 0xffffff)
         Fonts.font35.drawCenteredString(status, width / 2.0f, height / 2.0f - 30, 0xffffff)
 
         // Draw fields
