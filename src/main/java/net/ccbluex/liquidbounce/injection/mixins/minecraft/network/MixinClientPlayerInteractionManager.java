@@ -113,7 +113,7 @@ public class MixinClientPlayerInteractionManager {
     private void hookFixRotation(Args args) {
         RotationManager rotationManager = RotationManager.INSTANCE;
         Rotation rotation = rotationManager.getCurrentRotation();
-        if (rotation == null || !rotationManager.shouldUpdate()) {
+        if (rotation == null) {
             return;
         }
 

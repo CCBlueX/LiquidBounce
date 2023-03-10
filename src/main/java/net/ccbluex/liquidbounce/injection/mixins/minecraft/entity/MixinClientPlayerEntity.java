@@ -161,7 +161,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     private float hookSilentRotationYaw(ClientPlayerEntity instance) {
         RotationManager rotationManager = RotationManager.INSTANCE;
         Rotation rotation = rotationManager.getCurrentRotation();
-        if (rotation == null || !rotationManager.shouldUpdate()) {
+        if (rotation == null) {
             return instance.getYaw();
         }
 
@@ -172,7 +172,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     private float hookSilentRotationPitch(ClientPlayerEntity instance) {
         RotationManager rotationManager = RotationManager.INSTANCE;
         Rotation rotation = rotationManager.getCurrentRotation();
-        if (rotation == null || !rotationManager.shouldUpdate()) {
+        if (rotation == null) {
             return instance.getPitch();
         }
 

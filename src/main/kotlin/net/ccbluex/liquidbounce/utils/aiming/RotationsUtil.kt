@@ -260,6 +260,10 @@ object RotationManager : Listenable {
         aimAt(makeRotation(vec, eyes), ticks, configurable)
 
     fun aimAt(rotation: Rotation, ticks: Int = 5, configurable: RotationsConfigurable) {
+        if (!shouldUpdate()) {
+            return
+        }
+
         activeConfigurable = configurable
         targetRotation = rotation
         ticksUntilReset = ticks
@@ -295,7 +299,7 @@ object RotationManager : Listenable {
 
         val playerRotation = mc.player?.rotation ?: return
 
-        if (ticksUntilReset == 0) {
+        if (ticksUntilReset == 0 || !shouldUpdate()) {
             val threshold = 2f // todo: might use turn speed
 
             if (rotationDifference(currentRotation ?: serverRotation, playerRotation) < threshold) {
