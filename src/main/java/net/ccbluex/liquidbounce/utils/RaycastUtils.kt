@@ -23,7 +23,7 @@ object RaycastUtils : MinecraftInstance() {
         if (renderViewEntity != null && mc.theWorld != null) {
             var blockReachDistance = range
             val eyePosition = renderViewEntity.getPositionEyes(1f)
-            val entityLook = renderViewEntity.lookVec
+            val entityLook = RotationUtils.getVectorForRotation(Rotation(yaw, pitch))
             val vector = eyePosition.addVector(entityLook.xCoord * blockReachDistance, entityLook.yCoord * blockReachDistance, entityLook.zCoord * blockReachDistance)
             val entityList = mc.theWorld!!.getEntitiesInAABBexcluding(renderViewEntity, renderViewEntity.entityBoundingBox.addCoord(entityLook.xCoord * blockReachDistance, entityLook.yCoord * blockReachDistance, entityLook.zCoord * blockReachDistance).expand(1.0, 1.0, 1.0)) {
                 it != null && (it !is EntityPlayer || !it.isSpectator) && it.canBeCollidedWith()
