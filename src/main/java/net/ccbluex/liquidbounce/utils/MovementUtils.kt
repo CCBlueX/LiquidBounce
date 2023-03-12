@@ -11,6 +11,7 @@ import kotlin.math.sqrt
 
 object MovementUtils : MinecraftInstance() {
 
+    @JvmStatic
     val speed: Float
         get() = sqrt(mc.thePlayer!!.motionX * mc.thePlayer!!.motionX + mc.thePlayer!!.motionZ * mc.thePlayer!!.motionZ).toFloat()
 
@@ -18,6 +19,7 @@ object MovementUtils : MinecraftInstance() {
     val isMoving: Boolean
         get() = mc.thePlayer != null && (mc.thePlayer!!.movementInput.moveForward != 0f || mc.thePlayer!!.movementInput.moveStrafe != 0f)
 
+    @JvmStatic
     fun hasMotion(): Boolean {
         return mc.thePlayer!!.motionX != 0.0 && mc.thePlayer!!.motionZ != 0.0 && mc.thePlayer!!.motionY != 0.0
     }

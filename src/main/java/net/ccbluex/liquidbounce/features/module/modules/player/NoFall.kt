@@ -220,13 +220,10 @@ class NoFall : Module() {
                 val collision =
                     fallingPlayer.findCollision(ceil(1.0 / mc.thePlayer!!.motionY * -maxDist).toInt()) ?: return
 
-                var ok: Boolean = Vec3(
-                    mc.thePlayer!!.posX, mc.thePlayer!!.posY + mc.thePlayer!!.eyeHeight, mc.thePlayer!!.posZ
-                ).distanceTo(
-                    Vec3(collision.pos).addVector(
-                        0.5, 0.5, 0.5
-                    )
-                ) < mc.playerController.blockReachDistance + sqrt(0.75)
+                var ok: Boolean = mc.thePlayer.getPositionEyes(1f)
+                    .distanceTo(
+                        Vec3(collision.pos).addVector(0.5, 0.5, 0.5)
+                    ) < mc.playerController.blockReachDistance + sqrt(0.75)
 
                 if (mc.thePlayer!!.motionY < collision.pos.y + 1 - mc.thePlayer!!.posY) {
                     ok = true

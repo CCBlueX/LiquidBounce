@@ -15,7 +15,7 @@ class Frame : SpeedMode("Frame") {
     private var move = false
     private val tickTimer = TickTimer()
     override fun onMotion() {
-        if (mc.thePlayer!!.movementInput.moveForward > 0.0f || mc.thePlayer!!.movementInput.moveStrafe > 0.0f) {
+        if (MovementUtils.isMoving) {
             val speed = 4.25
             if (mc.thePlayer!!.onGround) {
                 mc.thePlayer!!.jump()

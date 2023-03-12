@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.utils.render;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.MinecraftInstance;
 import net.ccbluex.liquidbounce.utils.block.BlockUtils;
+import net.ccbluex.liquidbounce.utils.extensions.PlayerExtensionKt;
 import net.minecraft.block.Block;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
@@ -174,7 +175,7 @@ public final class RenderUtils extends MinecraftInstance {
         final double z = entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * timer.renderPartialTicks
                 - renderManager.renderPosZ;
 
-        final AxisAlignedBB entityBox = entity.getEntityBoundingBox();
+        final AxisAlignedBB entityBox = PlayerExtensionKt.getHitBox(entity);
         final AxisAlignedBB axisAlignedBB = AxisAlignedBB.fromBounds(
                 entityBox.minX - entity.posX + x - 0.05D,
                 entityBox.minY - entity.posY + y,

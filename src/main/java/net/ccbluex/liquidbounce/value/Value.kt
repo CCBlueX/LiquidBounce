@@ -77,6 +77,8 @@ open class BoolValue(name: String, value: Boolean) : Value<Boolean>(name, value)
         return null
     }
 
+    fun isActive() = value && isSupported()
+
 }
 
 /**
@@ -98,6 +100,7 @@ open class IntegerValue(name: String, value: Int, val minimum: Int = 0, val maxi
     }
 
     fun isMinimal(): Boolean = value <= minimum
+    fun isMaximal(): Boolean = value >= maximum
 }
 
 /**
@@ -119,6 +122,7 @@ open class FloatValue(name: String, value: Float, val minimum: Float = 0F, val m
     }
 
     fun isMinimal(): Boolean = value <= minimum
+    fun isMaximal(): Boolean = value >= maximum
 }
 
 /**

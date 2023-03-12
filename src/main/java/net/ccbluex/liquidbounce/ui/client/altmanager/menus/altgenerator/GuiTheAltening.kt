@@ -47,31 +47,31 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
     private var status = ""
 
     /**
-     * Initialize The Altening Generator GUI
+     * Initialize TheAltening Generator GUI
      */
     override fun initGui() {
         // Enable keyboard repeat events
         Keyboard.enableRepeatEvents(true)
 
         // Login button
-        loginButton = GuiButton(2, width / 2 - 100, 75, "Login")
+        loginButton = GuiButton(2, width / 2 - 100, height / 2 - 90, "Login")
         buttonList.add(loginButton)
 
         // Generate button
-        generateButton = GuiButton(1, width / 2 - 100, 140, "Generate")
+        generateButton = GuiButton(1, width / 2 - 100, height / 2, "Generate")
         buttonList.add(generateButton)
 
         // Buy & Back buttons
-        buttonList.add(GuiButton(3, width / 2 - 100, height - 54, 98, 20, "Buy"))
-        buttonList.add(GuiButton(0, width / 2 + 2, height - 54, 98, 20, "Back"))
+        buttonList.add(GuiButton(3, width / 2 - 100, height / 2 + 70, 98, 20, "Buy"))
+        buttonList.add(GuiButton(0, width / 2 + 2, height / 2 + 70, 98, 20, "Back"))
 
         // Token text field
-        tokenField = GuiTextField(666, Fonts.font40, width / 2 - 100, 50, 200, 20)
-        tokenField.isFocused = true
-        tokenField.maxStringLength = Integer.MAX_VALUE
+        tokenField = GuiTextField(666, Fonts.font40, width / 2 - 100, height / 2 - 120, 200, 20)
+        tokenField.isFocused = false
+        tokenField.maxStringLength = 64
 
         // Api key password field
-        apiKeyField = GuiPasswordField(1337, Fonts.font40, width / 2 - 100, 115, 200, 20)
+        apiKeyField = GuiPasswordField(1337, Fonts.font40, width / 2 - 100, height / 2 - 30, 200, 20)
         apiKeyField.maxStringLength = 18
         apiKeyField.text = apiKey
         super.initGui()
@@ -86,17 +86,19 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
         RenderUtils.drawRect(30.0f, 30.0f, width - 30.0f, height - 30.0f, Integer.MIN_VALUE)
 
         // Draw title and status
-        Fonts.font35.drawCenteredString("TheAltening", width / 2.0f, 6.0f, 0xffffff)
-        Fonts.font35.drawCenteredString(status, width / 2.0f, 18.0f, 0xffffff)
+        Fonts.font40.drawCenteredString("TheAltening", width / 2.0f, height / 2 - 180f, 0xffffff)
+        Fonts.font35.drawCenteredString(status, width / 2.0f, height / 2 + 30f, 0xffffff)
 
         // Draw fields
         apiKeyField.drawTextBox()
         tokenField.drawTextBox()
 
         // Draw text
-        Fonts.font40.drawCenteredString("§7Token:", width / 2.0f - 84, 40.0f, 0xffffff)
-        Fonts.font40.drawCenteredString("§7API-Key:", width / 2.0f - 78, 105.0f, 0xffffff)
-        Fonts.font40.drawCenteredString("§7Use coupon code 'liquidbounce' for 20% off!", width / 2.0f, height - 65.0f, 0xffffff)
+        if (tokenField.text.isEmpty() && !tokenField.isFocused)
+            Fonts.font40.drawCenteredString("§7Token", width / 2.0f - 82, height / 2 - 114f, 0xffffff)
+        if (apiKeyField.text.isEmpty() && !apiKeyField.isFocused)
+            Fonts.font40.drawCenteredString("§7API-Key", width / 2.0f - 78, height / 2 - 24f, 0xffffff)
+        Fonts.font40.drawCenteredString("§7Use coupon code 'liquidbounce' for 20% off!", width / 2.0f, height / 2 + 55f, 0xffffff)
         super.drawScreen(mouseX, mouseY, partialTicks)
     }
 

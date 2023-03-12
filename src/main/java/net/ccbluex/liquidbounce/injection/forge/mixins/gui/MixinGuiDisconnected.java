@@ -121,8 +121,7 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen {
                 break;
             case 4:
                 final CrackedAccount crackedAccount = new CrackedAccount();
-                crackedAccount.setName(RandomUtils.randomString(RandomUtils.nextInt(5, 16)));
-                crackedAccount.update();
+                crackedAccount.setName(RandomUtils.randomUsername());
 
                 mc.session = new Session(crackedAccount.getSession().getUsername(), crackedAccount.getSession().getUuid(),
                         crackedAccount.getSession().getToken(), crackedAccount.getSession().getType());

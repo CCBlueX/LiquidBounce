@@ -652,7 +652,7 @@ class Scaffold : Module() {
         val xzSSV = calcStepSize(xzRV.toFloat())
         val yRV = yRangeValue.get().toDouble()
         val ySSV = calcStepSize(yRV.toFloat())
-        val eyesPos = Vec3(player.posX, player.entityBoundingBox.minY + player.eyeHeight, player.posZ)
+        val eyesPos = player.getPositionEyes(1f)
         var placeRotation: PlaceRotation? = null
         for (facingType in EnumFacing.values()) {
             val neighbor = blockPosition.offset(facingType)

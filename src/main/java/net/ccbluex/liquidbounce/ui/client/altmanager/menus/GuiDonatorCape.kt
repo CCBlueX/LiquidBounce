@@ -49,15 +49,15 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
         Keyboard.enableRepeatEvents(true)
 
         // Add buttons to screen
-        stateButton = GuiButton(1, width / 2 - 100, 105, "Disable Cape")
+        stateButton = GuiButton(1, width / 2 - 100, height / 2 - 60, "Disable Cape")
 
         buttonList.add(stateButton)
-        buttonList.add(GuiButton(2, width / 2 - 100, height / 4 + 96, "Donate to get Cape"))
-        buttonList.add(GuiButton(0, width / 2 - 100, height / 4 + 120, "Back"))
+        buttonList.add(GuiButton(2, width / 2 - 100, height / 2, "Donate to get Cape"))
+        buttonList.add(GuiButton(0, width / 2 - 100, height / 2 + 30, "Back"))
 
         // Add fields to screen
-        transferCodeField = GuiPasswordField(666, Fonts.font40, width / 2 - 100, 80, 200, 20)
-        transferCodeField.isFocused = true
+        transferCodeField = GuiPasswordField(666, Fonts.font40, width / 2 - 100, height / 2 - 90, 200, 20)
+        transferCodeField.isFocused = false
         transferCodeField.maxStringLength = Integer.MAX_VALUE
         transferCodeField.text = transferCode
 
@@ -74,13 +74,14 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
         RenderUtils.drawRect(30.0f, 30.0f, width - 30.0f, height - 30.0f, Integer.MIN_VALUE)
 
         // Draw title and status
-        Fonts.font35.drawCenteredString("Donator Cape", width / 2.0f, 36.0f, 0xffffff)
-        Fonts.font35.drawCenteredString(status, width / 2.0f, height / 4.0f + 80, 0xffffff)
+        Fonts.font40.drawCenteredString("Donator Cape", width / 2.0f, height / 2 - 150f, 0xffffff)
+        Fonts.font35.drawCenteredString(status, width / 2.0f, height / 2.0f - 30, 0xffffff)
 
         // Draw fields
         transferCodeField.drawTextBox()
 
-        Fonts.font40.drawCenteredString("§7Transfer Code:", width / 2.0f - 65, 66.0f, 0xffffff)
+        if (transferCodeField.text.isEmpty() && !transferCodeField.isFocused)
+            Fonts.font40.drawCenteredString("§7Transfer Code", width / 2.0f - 60.0f, height / 2 - 84f, 0xffffff)
 
         stateButton.displayString = if (capeEnabled) {
             "Disable Cape"

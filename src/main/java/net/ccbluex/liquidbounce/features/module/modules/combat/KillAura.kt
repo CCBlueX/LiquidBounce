@@ -15,10 +15,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
 import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam
 import net.ccbluex.liquidbounce.utils.*
-import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
-import net.ccbluex.liquidbounce.utils.extensions.isAnimal
-import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
-import net.ccbluex.liquidbounce.utils.extensions.isMob
+import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
@@ -81,11 +78,14 @@ class KillAura : Module() {
     // Range
     private val rangeValue = FloatValue("Range", 3.7f, 1f, 8f)
     private val throughWallsRangeValue = FloatValue("ThroughWallsRange", 3f, 0f, 8f)
-    private val rangeSprintReducementValue = FloatValue("RangeSprintReducement", 0f, 0f, 0.4f)
+    private val rangeSprintReductionValue = FloatValue("RangeSprintReduction", 0f, 0f, 0.4f)
 
     // Modes
     private val priorityValue = ListValue("Priority", arrayOf("Health", "Distance", "Direction", "LivingTime"), "Distance")
     private val targetModeValue = ListValue("TargetMode", arrayOf("Single", "Switch", "Multi"), "Switch")
+    private val limitedMultiTargetsValue = object : IntegerValue("LimitedMultiTargets", 0, 0, 50) {
+        override fun isSupported() = targetModeValue.get() == "Multi"
+    }
 
     // Bypass
     private val swingValue = BoolValue("Swing", true)
@@ -97,24 +97,7 @@ class KillAura : Module() {
         override fun isSupported() = autoBlockValue.get() !in setOf("Off", "Fake")
     }
     private val blockRate = object : IntegerValue("BlockRate", 100, 1, 100) {
-        override fun isSupported() = autoBlockValue.get() !in setOf("Off", "Fake")
-    }
-
-    // Raycast
-    private val raycastValue = object : BoolValue("RayCast", true) {
-        override fun isSupported() = !maxTurnSpeed.isMinimal()
-    }
-    private val raycastIgnoredValue = object : BoolValue("RayCastIgnored", false) {
-        override fun isSupported() = !maxTurnSpeed.isMinimal() && raycastValue.get()
-    }
-    private val livingRaycastValue = object : BoolValue("LivingRayCast", true) {
-        override fun isSupported() = !maxTurnSpeed.isMinimal() && raycastValue.get()
-    }
-
-    // Bypass
-    private val aacValue = object : BoolValue("AAC", false) {
-        override fun isSupported() = !maxTurnSpeed.isMinimal()
-        // AAC value also modifies target selection a bit, not just rotations, but it is minor
+        override fun isSupported() = autoBlockValue.get() != "Off"
     }
 
     // Turn Speed
@@ -124,7 +107,6 @@ class KillAura : Module() {
             if (v > newValue) set(v)
         }
     }
-
     private val minTurnSpeed: FloatValue = object : FloatValue("MinTurnSpeed", 180f, 0f, 180f) {
         override fun onChanged(oldValue: Float, newValue: Float) {
             val v = maxTurnSpeed.get()
@@ -134,24 +116,39 @@ class KillAura : Module() {
         override fun isSupported() = !maxTurnSpeed.isMinimal()
     }
 
+    // Raycast
+    private val raycastValue = object : BoolValue("RayCast", true) {
+        override fun isSupported() = !maxTurnSpeed.isMinimal()
+    }
+    private val raycastIgnoredValue = object : BoolValue("RayCastIgnored", false) {
+        override fun isSupported() = raycastValue.isActive()
+    }
+    private val livingRaycastValue = object : BoolValue("LivingRayCast", true) {
+        override fun isSupported() = raycastValue.isActive()
+    }
+
+    // Bypass
+    private val aacValue = object : BoolValue("AAC", false) {
+        override fun isSupported() = !maxTurnSpeed.isMinimal()
+        // AAC value also modifies target selection a bit, not just rotations, but it is minor
+    }
+
     private val micronizedValue = object : BoolValue("Micronized", true) {
         override fun isSupported() = !maxTurnSpeed.isMinimal()
     }
     private val micronizedStrength = object : FloatValue("MicronizedStrength", 0.8f, 0.2f, 2f) {
-        override fun isSupported() = !maxTurnSpeed.isMinimal() && micronizedValue.get()
+        override fun isSupported() = micronizedValue.isActive()
     }
 
+    // Rotations
     private val silentRotationValue = object : BoolValue("SilentRotation", true) {
         override fun isSupported() = !maxTurnSpeed.isMinimal()
     }
     private val rotationStrafeValue = object : ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") {
-        override fun isSupported() = !maxTurnSpeed.isMinimal() && silentRotationValue.get()
+        override fun isSupported() = silentRotationValue.isActive()
     }
     private val randomCenterValue = object : BoolValue("RandomCenter", true) {
         override fun isSupported() = !maxTurnSpeed.isMinimal()
-    }
-    private val randomMultiplier = object : FloatValue("RandomMultiplier", 0.8f, 0f, 1f) {
-        override fun isSupported() = !maxTurnSpeed.isMinimal() && randomCenterValue.get()
     }
     private val outborderValue = object : BoolValue("Outborder", false) {
         override fun isSupported() = !maxTurnSpeed.isMinimal()
@@ -162,36 +159,31 @@ class KillAura : Module() {
     private val predictValue = object : BoolValue("Predict", true) {
         override fun isSupported() = !maxTurnSpeed.isMinimal()
     }
-
     private val maxPredictSize: FloatValue = object : FloatValue("MaxPredictSize", 1f, 0.1f, 5f) {
         override fun onChanged(oldValue: Float, newValue: Float) {
             val v = minPredictSize.get()
             if (v > newValue) set(v)
         }
 
-        override fun isSupported() = !maxTurnSpeed.isMinimal() && predictValue.get()
+        override fun isSupported() = predictValue.isActive()
     }
-
     private val minPredictSize: FloatValue = object : FloatValue("MinPredictSize", 1f, 0.1f, 5f) {
         override fun onChanged(oldValue: Float, newValue: Float) {
             val v = maxPredictSize.get()
             if (v < newValue) set(v)
         }
 
-        override fun isSupported() = !maxTurnSpeed.isMinimal() && predictValue.get() && !maxPredictSize.isMinimal()
+        override fun isSupported() = predictValue.isActive() && !maxPredictSize.isMinimal()
     }
 
     // Bypass
-    private val failRateValue = FloatValue("FailRate", 0f, 0f, 100f)
+    private val failRateValue = FloatValue("FailRate", 0f, 0f, 99f)
     private val fakeSwingValue = object : BoolValue("FakeSwing", true) {
         override fun isSupported() = swingValue.get()
     }
     private val noInventoryAttackValue = BoolValue("NoInvAttack", false)
     private val noInventoryDelayValue = object : IntegerValue("NoInvDelay", 200, 0, 500) {
         override fun isSupported() = noInventoryAttackValue.get()
-    }
-    private val limitedMultiTargetsValue = object : IntegerValue("LimitedMultiTargets", 0, 0, 50) {
-        override fun isSupported() = targetModeValue.get() == "Multi"
     }
 
     // Visuals
@@ -663,7 +655,7 @@ class KillAura : Module() {
         if (maxTurnSpeed.isMinimal())
             return true
 
-        var boundingBox = entity.entityBoundingBox
+        var boundingBox = entity.hitBox
 
         if (predictValue.get()) {
             boundingBox = boundingBox.offset(
@@ -749,8 +741,7 @@ class KillAura : Module() {
             if (interact) {
                 val positionEye = mc.renderViewEntity?.getPositionEyes(1F)
 
-                val expandSize = interactEntity.collisionBorderSize.toDouble()
-                val boundingBox = interactEntity.entityBoundingBox.expand(expandSize, expandSize, expandSize)
+                val boundingBox = interactEntity.hitBox
 
                 val (yaw, pitch) = RotationUtils.targetRotation ?: Rotation(mc.thePlayer!!.rotationYaw, mc.thePlayer!!.rotationPitch)
                 val yawCos = cos(-yaw * 0.017453292F - Math.PI.toFloat())
@@ -817,7 +808,7 @@ class KillAura : Module() {
         get() = max(rangeValue.get(), throughWallsRangeValue.get())
 
     private fun getRange(entity: Entity) =
-            (if (mc.thePlayer!!.getDistanceToEntityBox(entity) >= throughWallsRangeValue.get()) rangeValue.get() else throughWallsRangeValue.get()) - if (mc.thePlayer!!.isSprinting) rangeSprintReducementValue.get() else 0F
+            (if (mc.thePlayer!!.getDistanceToEntityBox(entity) >= throughWallsRangeValue.get()) rangeValue.get() else throughWallsRangeValue.get()) - if (mc.thePlayer!!.isSprinting) rangeSprintReductionValue.get() else 0F
 
     /**
      * HUD Tag

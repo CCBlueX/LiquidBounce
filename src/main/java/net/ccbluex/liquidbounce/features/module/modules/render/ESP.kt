@@ -15,6 +15,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.ui.font.GameFontRenderer.Companion.getColorIndex
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.EntityUtils
+import net.ccbluex.liquidbounce.utils.extensions.hitBox
 import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
@@ -132,7 +133,7 @@ class ESP : Module() {
                     "real2d" -> {
                         val renderManager = mc.renderManager
                         val timer = mc.timer
-                        val bb = entity.entityBoundingBox
+                        val bb = entity.hitBox
                             .offset(-entity.posX, -entity.posY, -entity.posZ)
                             .offset(
                                 entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * timer.renderPartialTicks,

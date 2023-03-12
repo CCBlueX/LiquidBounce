@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
+import net.ccbluex.liquidbounce.utils.extensions.hitBox
 import net.ccbluex.liquidbounce.utils.extensions.rotation
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -57,7 +58,7 @@ class Aimbot : Module() {
             return
 
         // Look up required rotations to hit enemy
-        val boundingBox = entity.entityBoundingBox ?: return
+        val boundingBox = entity.hitBox
 
         val playerRotation = mc.thePlayer.rotation
         val destinationRotation = if (centerValue.get()) {

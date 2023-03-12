@@ -26,8 +26,8 @@ import java.awt.Color
 class BowAimbot : Module() {
 
     private val silentValue = BoolValue("Silent", true)
-    private val predictValue = BoolValue("Predict", true)
     private val throughWallsValue = BoolValue("ThroughWalls", false)
+    private val predictValue = BoolValue("Predict", true)
     private val predictSizeValue = object : FloatValue("PredictSize", 2F, 0.1F, 5F) {
         override fun isSupported() = predictValue.get()
     }

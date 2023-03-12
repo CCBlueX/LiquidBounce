@@ -31,16 +31,16 @@ class AntiAFK : Module() {
         override fun isSupported() = modeValue.get() == "Custom"
     }
     private val rotationDelayValue = object : IntegerValue("RotationDelay", 100, 0, 1000) {
-        override fun isSupported() = modeValue.get() == "Custom" && rotateValue.get()
+        override fun isSupported() = rotateValue.isActive()
     }
     private val rotationAngleValue = object : FloatValue("RotationAngle", 1f, -180F, 180F) {
-        override fun isSupported() = modeValue.get() == "Custom" && rotateValue.get()
+        override fun isSupported() = rotateValue.isActive()
     }
     private val swingValue = object : BoolValue("Swing", true) {
         override fun isSupported() = modeValue.get() == "Custom"
     }
     private val swingDelayValue = object : IntegerValue("SwingDelay", 100, 0, 1000) {
-        override fun isSupported() = modeValue.get() == "Custom" && swingValue.get()
+        override fun isSupported() = swingValue.isActive()
     }
     private val jumpValue = object : BoolValue("Jump", true) {
         override fun isSupported() = modeValue.get() == "Custom"

@@ -28,7 +28,6 @@ import net.minecraft.init.Blocks
 import net.minecraft.network.play.client.C0APacketAnimation
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
-import net.minecraft.util.Vec3
 
 @ModuleInfo(name = "ChestAura", description = "Automatically opens chests around you.", category = ModuleCategory.WORLD)
 object ChestAura : Module() {
@@ -60,8 +59,7 @@ object ChestAura : Module() {
 
                 val radius = rangeValue.get() + 1
 
-                val eyesPos = Vec3(thePlayer.posX, thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight,
-                        thePlayer.posZ)
+                val eyesPos = thePlayer.getPositionEyes(1f)
 
                 currentBlock = BlockUtils.searchBlocks(radius.toInt())
                         .filter {

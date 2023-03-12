@@ -8,13 +8,12 @@ package net.ccbluex.liquidbounce.ui.client.altmanager.menus
 import me.liuli.elixir.account.MicrosoftAccount
 import me.liuli.elixir.compat.OAuthServer
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
-import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
-import net.minecraft.client.gui.ScaledResolution
 import java.net.BindException
 
 class GuiMicrosoftLoginProgress(val updateStatus: (String) -> Unit, val done: () -> Unit) : GuiScreen() {
@@ -73,16 +72,14 @@ class GuiMicrosoftLoginProgress(val updateStatus: (String) -> Unit, val done: ()
         }
 
         buttonList.add(GuiButton(0, width / 2 - 100, height / 2 + 60, "Open URL"))
-        buttonList.add(GuiButton(1, width / 2 - 100, height / 2 + 100, "Cancel"))
+        buttonList.add(GuiButton(1, width / 2 - 100, height / 2 + 90, "Cancel"))
         super.initGui()
     }
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
-        val scaledResolution = ScaledResolution(Minecraft.getMinecraft())
-
         drawDefaultBackground()
-        RenderUtils.drawLoadingCircle((scaledResolution.scaledWidth / 2).toFloat(), (scaledResolution.scaledHeight / 4 + 70).toFloat())
-        drawCenteredString(fontRendererObj, "Logging into account...", width / 2, height / 2 - 60, 16777215)
+        RenderUtils.drawLoadingCircle(width / 2f, height / 4f + 70)
+        Fonts.font40.drawCenteredString("Logging into account...", width / 2f, height / 2 - 60f, 0xffffff)
         super.drawScreen(mouseX, mouseY, partialTicks)
     }
 
@@ -100,7 +97,7 @@ class GuiMicrosoftLoginProgress(val updateStatus: (String) -> Unit, val done: ()
             }
 
             1 -> {
-                errorAndDone("Cancelled.")
+                errorAndDone("Login cancelled.")
             }
         }
 

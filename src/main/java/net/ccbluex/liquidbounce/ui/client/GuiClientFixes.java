@@ -52,22 +52,18 @@ public class GuiClientFixes extends GuiScreen {
             case 1:
                 ClientFixes.fmlFixesEnabled = !ClientFixes.fmlFixesEnabled;
                 enabledButton.displayString = "AntiForge (" + (ClientFixes.fmlFixesEnabled ? "On" : "Off") + ")";
-                LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
                 break;
             case 2:
                 ClientFixes.blockFML = !ClientFixes.blockFML;
                 fmlButton.displayString = "Block FML (" + (ClientFixes.blockFML ? "On" : "Off") + ")";
-                LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
                 break;
             case 3:
                 ClientFixes.blockProxyPacket = !ClientFixes.blockProxyPacket;
                 proxyButton.displayString = "Block FML Proxy Packet (" + (ClientFixes.blockProxyPacket ? "On" : "Off") + ")";
-                LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
                 break;
             case 4:
                 ClientFixes.blockPayloadPackets = !ClientFixes.blockPayloadPackets;
                 payloadButton.displayString = "Block FML Payload Packets (" + (ClientFixes.blockPayloadPackets ? "On" : "Off") + ")";
-                LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
                 break;
             case 5:
                 final List<String> brands = Arrays.asList(ClientFixes.possibleBrands);
@@ -80,12 +76,10 @@ public class GuiClientFixes extends GuiScreen {
                 }
 
                 customBrandButton.displayString = "Brand (" + ClientFixes.clientBrand + ")";
-                LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
                 break;
             case 6:
                 ClientFixes.blockResourcePackExploit = !ClientFixes.blockResourcePackExploit;
                 resourcePackButton.displayString = "Block Resource Pack Exploit (" + (ClientFixes.blockResourcePackExploit ? "On" : "Off") + ")";
-                LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
                 break;
             case 0:
                 mc.displayGuiScreen(prevGui);
@@ -109,5 +103,11 @@ public class GuiClientFixes extends GuiScreen {
         }
 
         super.keyTyped(typedChar, keyCode);
+    }
+
+    @Override
+    public void onGuiClosed() {
+        LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
+        super.onGuiClosed();
     }
 }
