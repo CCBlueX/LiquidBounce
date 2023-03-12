@@ -44,7 +44,8 @@ object Animations : Module() {
 
     private val animations = arrayOf(
         OneSevenAnimation(),
-        PushdownAnimation()
+        PushdownAnimation(),
+        OldAnimation()
     )
 
     private var animationMode = ListValue("Mode", animations.map { it.name }.toTypedArray(), "Pushdown")
@@ -103,11 +104,18 @@ abstract class Animation(val name: String) : MinecraftInstance() {
  */
 class OneSevenAnimation : Animation("OneSeven") {
     override fun transform(f1: Float, f: Float, clientPlayer: AbstractClientPlayer) {
-        transformFirstPersonItem(f + 0.1f, f1)
+        transformFirstPersonItem(f, f1)
         doBlockTransformations()
         GlStateManager.translate(-0.5f, 0.2f, 0.0f)
     }
 
+}
+
+class OldAnimation : Animation("Old") {
+    override fun transform(f1: Float, f: Float, clientPlayer: AbstractClientPlayer) {
+        transformFirstPersonItem(f, f1)
+        doBlockTransformations()
+    }
 }
 
 /**
@@ -120,7 +128,7 @@ class PushdownAnimation : Animation("Pushdown") {
      */
     override fun transform(f1: Float, f: Float, clientPlayer: AbstractClientPlayer) {
         GlStateManager.translate(0.56, -0.52, -0.5)
-        GlStateManager.translate(0.0, f * -0.0, 0.0)
+        GlStateManager.translate(0.0, -f.toDouble() * 0.3, 0.0)
         GlStateManager.rotate(45.5f, 0.0f, 1.0f, 0.0f)
         val var3 = MathHelper.sin(0f)
         val var4 = MathHelper.sin(0f)
@@ -136,7 +144,7 @@ class PushdownAnimation : Animation("Pushdown") {
         GlStateManager.rotate(-80.0f, 1.0f, 0.0f, 0.0f)
         GlStateManager.rotate(60.0f, 0.0f, 1.0f, 0.0f)
         GL11.glTranslated(1.05, 0.35, 0.4)
-        GL11.glTranslatef(-1f, (if (clientPlayer.isSneaking) 0.0f else 0.0f), 0f)
+        GL11.glTranslatef(-1f, 0.0f, 0f)
     }
 
 }
