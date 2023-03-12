@@ -66,7 +66,8 @@ class Speed : Module() {
             MineplexGround(),  // Other
             Matrix(),
             SlowHop(),
-            CustomSpeed()
+            CustomSpeed(),
+            Legit()
     )
 
     val modeValue: ListValue = object : ListValue("Mode", modes, "NCPBHop") {
