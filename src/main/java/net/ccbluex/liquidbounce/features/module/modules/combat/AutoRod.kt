@@ -1,69 +1,125 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import com.google.common.collect.Multimap
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.EntityUtils
+import net.ccbluex.liquidbounce.utils.RaycastUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.minecraft.enchantment.EnchantmentHelper
-import net.minecraft.entity.EnumCreatureAttribute
-import net.minecraft.entity.ai.attributes.AttributeModifier
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.minecraft.entity.Entity
+import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.item.EntityArmorStand
 import net.minecraft.init.Items
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
+import net.minecraft.network.play.client.C09PacketHeldItemChange
 
 @ModuleInfo(name = "AutoRod", description = "Auto use fishing rod to PVP", category = ModuleCategory.COMBAT)
-class AutoRod: Module() {
-    private val t1 = MSTimer()
-    private val t2 = MSTimer()
+class AutoRod : Module() {
 
-    private var switchBack = false
-    private var useRod = false
+    private val facingEnemy = BoolValue("FacingEnemy", true)
 
-    private val delay = FloatValue("Delay", 100f, 50f, 1000f)
-    private val disable = BoolValue("AutoDisable", false)
+    private val pushDelay = IntegerValue("PushDelay", 100, 50, 1000)
+    private val pullbackDelay = IntegerValue("PullbackDelay", 500, 50, 1000)
+
+    private val pushTimer = MSTimer()
+    private val rodPullTimer = MSTimer()
+
+    private var rodInUse = false
+    private var switchBack = -1
 
     @EventTarget
-    fun onUpdate(event: UpdateEvent?) {
-        val item = Item.getIdFromItem((mc.thePlayer.heldItem ?: return).item)
-        val rodDelay = delay.get()
-        if (mc.currentScreen != null) {
-            return
-        }
-        if (!disable.get()) {
-            if (!useRod && item == 346) {
-                rod()
-                useRod = true
-            }
-            if (t1.hasTimePassed((rodDelay - 50).toLong()) && switchBack) {
-                switchBack()
-                switchBack = false
-            }
-            if (t1.hasTimePassed(rodDelay.toLong()) && useRod) {
-                useRod = false
+    fun onUpdate(event: UpdateEvent) {
+        // Check if player is using rod
+        val usingRod = (mc.thePlayer.isUsingItem && mc.thePlayer.heldItem?.item == Items.fishing_rod) || rodInUse
+
+        if (usingRod) {
+            // Check if rod pull timer has reached delay
+            // mc.thePlayer.fishEntity?.caughtEntity != null is always null
+
+            if (rodPullTimer.hasTimePassed(pullbackDelay.get())) {
+                if (switchBack != -1 && mc.thePlayer.inventory.currentItem != switchBack) {
+                    // Switch back to previous item
+                    mc.thePlayer.inventory.currentItem = switchBack
+                    mc.playerController.updateController()
+                } else {
+                    // Stop using rod
+                    mc.thePlayer.stopUsingItem()
+                }
+
+                switchBack = -1
+                rodInUse = false
+
+                // Reset push timer. Push will always wait for pullback delay.
+                pushTimer.reset()
             }
         } else {
-            if (item == 346) {
-                if (t2.hasTimePassed((rodDelay + 200).toLong())) {
-                    rod()
-                    t2.reset()
+            var rod = false
+
+            if (facingEnemy.get()) {
+                // Check if player is facing enemy
+                var facingEntity = mc.objectMouseOver?.entityHit
+
+                if (facingEntity == null) {
+                    // Check if player is looking at enemy, 8 blocks should be enough
+                    facingEntity = RaycastUtils.raycastEntity(8.0, object : RaycastUtils.EntityFilter {
+                        override fun canRaycast(entity: Entity?): Boolean {
+                            return EntityUtils.isSelected(entity, true)
+                        }
+                    })
                 }
-                if (t1.hasTimePassed(rodDelay.toLong())) {
-                    mc.thePlayer.inventory.currentItem = bestWeapon()
-                    t1.reset()
-                    toggle()
+
+                if (EntityUtils.isSelected(facingEntity, true)) {
+                    rod = true
                 }
-            } else if (t1.hasTimePassed(100)) {
-                switchToRod()
-                t1.reset()
+            } else {
+                // Rod anyway, spam it.
+                rod = true
+            }
+
+            if (rod && pushTimer.hasTimePassed(pushDelay.get())) {
+                // Check if player has rod in hand
+                if (mc.thePlayer.heldItem?.item != Items.fishing_rod) {
+                    // Check if player has rod in hotbar
+                    val rod = findRod(36, 45)
+
+                    if (rod == -1) {
+                        // There is no rod in hotbar
+                        return
+                    }
+
+                    // Switch to rod
+                    switchBack = mc.thePlayer.inventory.currentItem
+
+                    mc.thePlayer.inventory.currentItem = rod - 36
+                    mc.playerController.updateController()
+                }
+
+                rod()
             }
         }
     }
 
+    /**
+     * Use rod
+     */
+    private fun rod() {
+        val rod = findRod(36, 45)
+
+        mc.thePlayer.inventory.currentItem = rod - 36
+        // We do not need to send our own packet, because sendUseItem will handle it for us.
+        mc.playerController.sendUseItem(mc.thePlayer, mc.theWorld, mc.thePlayer.inventoryContainer.getSlot(rod).stack)
+
+        rodInUse = true
+        rodPullTimer.reset()
+    }
+
+    /**
+     * Find rod in inventory
+     */
     private fun findRod(startSlot: Int, endSlot: Int): Int {
         for (i in startSlot until endSlot) {
             val stack = mc.thePlayer.inventoryContainer.getSlot(i).stack
@@ -74,67 +130,4 @@ class AutoRod: Module() {
         return -1
     }
 
-    private fun switchToRod() {
-        for (i in 36..44) {
-            val stack = mc.thePlayer.inventoryContainer.getSlot(i).stack
-            if (stack != null && Item.getIdFromItem(stack.item) == 346) {
-                mc.thePlayer.inventory.currentItem = i - 36
-                break
-            }
-        }
-    }
-
-    private fun rod() {
-        val rod = findRod(36, 45)
-        mc.playerController.sendUseItem(mc.thePlayer, mc.theWorld, mc.thePlayer.inventoryContainer.getSlot(rod).stack)
-        switchBack = true
-        t1.reset()
-    }
-
-    private fun switchBack() {
-        mc.thePlayer.inventory.currentItem = bestWeapon()
-    }
-
-    private fun bestWeapon(): Int {
-        mc.thePlayer.inventory.currentItem = 0
-        val firstSlot = mc.thePlayer.inventory.currentItem
-        var bestWeapon = -1
-        var j = 1
-        for (i in 0..8) {
-            mc.thePlayer.inventory.currentItem = i
-            val itemStack = mc.thePlayer.heldItem
-            if (itemStack != null) {
-                var itemAtkDamage = getItemAtkDamage(itemStack).toInt()
-                itemAtkDamage += EnchantmentHelper.getModifierForCreature(itemStack, EnumCreatureAttribute.UNDEFINED)
-                    .toInt()
-                if (itemAtkDamage > j) {
-                    j = itemAtkDamage
-                    bestWeapon = i
-                }
-            }
-        }
-        return if (bestWeapon != -1) {
-            bestWeapon
-        } else {
-            firstSlot
-        }
-    }
-
-
-    private fun getItemAtkDamage(itemStack: ItemStack): Float {
-        val multimap: Multimap<*, *> = itemStack.attributeModifiers
-        if (!multimap.isEmpty) {
-            val iterator: Iterator<*> = multimap.entries().iterator()
-            if (iterator.hasNext()) {
-                val (_, value) = iterator.next() as Map.Entry<*, *>
-                val attributeModifier = value as AttributeModifier
-                val damage =
-                    if (attributeModifier.operation != 1 && attributeModifier.operation != 2) attributeModifier.amount else attributeModifier.amount * 100.0
-                return if (attributeModifier.amount > 1.0) {
-                    1.0f + damage.toFloat()
-                } else 1.0f
-            }
-        }
-        return 1.0f
-    }
 }
