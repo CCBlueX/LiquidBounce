@@ -145,7 +145,11 @@ object SettingsUtils {
             it.category != ModuleCategory.RENDER && it !is NameProtect && it !is Spammer
         }.forEach {
             if (values)
-                it.values.filter { all || it.isSupported() }.forEach { value -> stringBuilder.append(it.name).append(" ").append(value.name).append(" ").append(value.get()).append("\n") }
+                it.values.forEach { value ->
+                    // Skip hidden values in ClickGUI
+                    if (all || value.isSupported())
+                        stringBuilder.append(it.name).append(" ").append(value.name).append(" ").append(value.get()).append("\n")
+                }
 
             if (states)
                 stringBuilder.append(it.name).append(" toggle ").append(it.state).append("\n")
