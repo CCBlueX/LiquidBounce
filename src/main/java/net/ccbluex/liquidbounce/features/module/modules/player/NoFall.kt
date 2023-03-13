@@ -203,17 +203,7 @@ class NoFall : Module() {
             if (!mlgTimer.hasTimePassed(10)) return
 
             if (mc.thePlayer!!.fallDistance > minFallDistance.get()) {
-                val fallingPlayer = FallingPlayer(
-                    mc.thePlayer!!.posX,
-                    mc.thePlayer!!.posY,
-                    mc.thePlayer!!.posZ,
-                    mc.thePlayer!!.motionX,
-                    mc.thePlayer!!.motionY,
-                    mc.thePlayer!!.motionZ,
-                    mc.thePlayer!!.rotationYaw,
-                    mc.thePlayer!!.moveStrafing,
-                    mc.thePlayer!!.moveForward
-                )
+                val fallingPlayer = FallingPlayer(mc.thePlayer)
 
                 val maxDist: Double = mc.playerController.blockReachDistance + 1.5
 
