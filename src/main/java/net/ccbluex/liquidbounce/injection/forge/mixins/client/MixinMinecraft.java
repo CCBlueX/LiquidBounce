@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.utils.render.IconUtils;
 import net.ccbluex.liquidbounce.utils.render.MiniMapRegister;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.GuiScreen;
@@ -30,6 +31,7 @@ import net.minecraft.client.multiplayer.PlayerControllerMP;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.particle.EffectRenderer;
 import net.minecraft.client.settings.GameSettings;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Util;
@@ -216,8 +218,24 @@ public abstract class MixinMinecraft {
         CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT);
 
         final FastPlace fastPlace = (FastPlace) LiquidBounce.moduleManager.getModule(FastPlace.class);
+        if (!fastPlace.getState())
+            return;
 
-        if (fastPlace.getState()) rightClickDelayTimer = fastPlace.getSpeedValue().get();
+        // Don't spam-click when the player isn't holding blocks
+        if (fastPlace.getOnlyBlocksValue().get()
+                && (thePlayer.getHeldItem() == null || !(thePlayer.getHeldItem().getItem() instanceof ItemBlock)))
+            return;
+
+        if (this.objectMouseOver != null && this.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+            BlockPos blockPos = this.objectMouseOver.getBlockPos();
+            IBlockState blockState = theWorld.getBlockState(blockPos);
+            // Don't spam-click when interacting with a TileEntity (chests, ...)
+            // Doesn't prevent spam-clicking anvils, crafting tables, ... (couldn't figure out a non-hacky way)
+            if (blockState.getBlock().hasTileEntity(blockState)) return;
+        // Return if not facing a block
+        } else if (fastPlace.getFacingBlocksValue().get()) return;
+
+        rightClickDelayTimer = fastPlace.getSpeedValue().get();
     }
 
     @Inject(method = "loadWorld(Lnet/minecraft/client/multiplayer/WorldClient;Ljava/lang/String;)V", at = @At("HEAD"))
