@@ -177,7 +177,8 @@ class ModuleManager : Listenable {
                 NoSlowBreak::class.java,
                 PortalMenu::class.java,
                 AutoRod::class.java,
-                AttackEffects::class.java
+                AttackEffects::class.java,
+                NoBooks::class.java,
         )
 
         registerModule(NoScoreboard)
