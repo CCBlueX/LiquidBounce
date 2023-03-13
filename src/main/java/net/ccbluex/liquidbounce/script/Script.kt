@@ -44,7 +44,7 @@ class Script(val scriptFile: File) : MinecraftInstance() {
 
     init {
         val engineFlags = getMagicComment("engine_flags")?.split(",")?.toTypedArray() ?: emptyArray()
-        scriptEngine = NashornScriptEngineFactory().getScriptEngine(*engineFlags)
+        scriptEngine = NashornScriptEngineFactory().getScriptEngine(*engineFlags.plus("--language=es6"))
 
         // Global classes
         scriptEngine.put("Chat", StaticClass.forClass(Chat::class.java))
