@@ -1,4 +1,4 @@
-package net.ccbluex.liquidbounce.features.module.modules.world
+package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
@@ -12,7 +12,7 @@ import net.minecraft.potion.Potion
 import net.minecraft.world.WorldSettings
 import org.lwjgl.input.Keyboard
 
-@ModuleInfo("GameDetector", "Detects if you are in-game.", ModuleCategory.WORLD, Keyboard.CHAR_NONE, false)
+@ModuleInfo("GameDetector", "Detects if you are in an ongoing game.", ModuleCategory.MISC, Keyboard.CHAR_NONE, false)
 object GameDetector: Module() {
     private val gameModeValue = BoolValue("GameModeCheck", true)
     private val capabilitiesValue = BoolValue("CapabilitiesCheck", true)
