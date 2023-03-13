@@ -139,12 +139,17 @@ object SettingsUtils {
      */
     fun generateScript(values: Boolean, binds: Boolean, states: Boolean): String {
         val stringBuilder = StringBuilder()
+        val all = values && binds && states
 
         LiquidBounce.moduleManager.modules.filter {
             it.category != ModuleCategory.RENDER && it !is NameProtect && it !is Spammer
         }.forEach {
             if (values)
-                it.values.forEach { value -> stringBuilder.append(it.name).append(" ").append(value.name).append(" ").append(value.get()).append("\n") }
+                it.values.forEach { value ->
+                    // Skip hidden values in ClickGUI
+                    if (all || value.isSupported())
+                        stringBuilder.append(it.name).append(" ").append(value.name).append(" ").append(value.get()).append("\n")
+                }
 
             if (states)
                 stringBuilder.append(it.name).append(" toggle ").append(it.state).append("\n")

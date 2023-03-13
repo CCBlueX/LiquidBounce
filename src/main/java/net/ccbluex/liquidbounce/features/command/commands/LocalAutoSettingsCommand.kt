@@ -59,9 +59,10 @@ class LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "l
                             scriptFile.createNewFile()
 
                             val option = if (args.size > 3) StringUtils.toCompleteString(args, 3).lowercase() else "values"
-                            val values = option.contains("all") || option.contains("values")
-                            val binds = option.contains("all") || option.contains("binds")
-                            val states = option.contains("all") || option.contains("states")
+                            val all = "all" in option
+                            val values = all || "values" in option
+                            val binds = all || "binds" in option
+                            val states = all || "states" in option
                             if (!values && !binds && !states) {
                                 chatSyntaxError()
                                 return
