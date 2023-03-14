@@ -4,7 +4,12 @@
  * https://github.com/CCBlueX/LiquidBounce/
  */
 package net.ccbluex.liquidbounce.utils.misc
+import me.liuli.elixir.account.CrackedAccount
+import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.event.SessionEvent
 import net.ccbluex.liquidbounce.ui.client.GuiClientConfiguration
+import net.ccbluex.liquidbounce.utils.MinecraftInstance.mc
+import net.minecraft.util.Session
 import kotlin.random.Random
 
 object RandomUtils {
@@ -42,6 +47,24 @@ object RandomUtils {
         val stringBuilder = StringBuilder()
         for (i in 0 until length) stringBuilder.append(chars[Random.nextInt(chars.size)])
         return stringBuilder.toString()
+    }
+
+    @JvmStatic
+    @JvmOverloads
+    fun randomAccount(changeSession: Boolean = true): CrackedAccount {
+        val crackedAccount = CrackedAccount()
+        crackedAccount.name = randomUsername()
+
+        if (changeSession) {
+            mc.session = Session(
+                crackedAccount.session.username, crackedAccount.session.uuid,
+                crackedAccount.session.token, crackedAccount.session.type
+            )
+
+            LiquidBounce.eventManager.callEvent(SessionEvent())
+        }
+
+        return crackedAccount
     }
 
     /**

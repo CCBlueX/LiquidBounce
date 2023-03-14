@@ -179,6 +179,7 @@ class ModuleManager : Listenable {
                 AutoRod::class.java,
                 AttackEffects::class.java,
                 NoBooks::class.java,
+                AutoAccount::class.java
         )
 
         registerModule(NoScoreboard)

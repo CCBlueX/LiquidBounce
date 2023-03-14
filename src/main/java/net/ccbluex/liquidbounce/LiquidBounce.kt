@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce
 import net.ccbluex.liquidbounce.cape.CapeService
 import net.ccbluex.liquidbounce.event.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.StartupEvent
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.special.BungeeCordSpoof
@@ -165,6 +166,8 @@ object LiquidBounce {
 
         // Set is starting status
         isStarting = false
+
+        eventManager.callEvent(StartupEvent())
     }
 
     /**
