@@ -32,7 +32,10 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.ShapeContext
 import net.minecraft.util.math.*
 import org.apache.commons.lang3.RandomUtils
-import kotlin.math.*
+import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.hypot
+import kotlin.math.sqrt
 
 /**
  * Configurable to configure the dynamic rotation engine
@@ -350,22 +353,17 @@ object RotationManager : Listenable {
      * Limit your rotations
      */
     fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation, turnSpeed: Float): Rotation {
-        val peristrofhX = angleDifference(targetRotation.yaw, currentRotation.yaw)
-        val peristrofhY = angleDifference(targetRotation.pitch, currentRotation.pitch)
+        val yawDifference = angleDifference(targetRotation.yaw, currentRotation.yaw)
+        val pitchDifference = angleDifference(targetRotation.pitch, currentRotation.pitch)
 
-        val diafora = rotationDifference(targetRotation, currentRotation)
+        val rotationDifference = hypot(yawDifference, pitchDifference)
 
-        //
-        val grammhyaw = peristrofhX/ diafora * turnSpeed
-        val grammhY = peristrofhY / diafora * turnSpeed
+        val straightLineYaw = abs(yawDifference / rotationDifference) * turnSpeed
+        val straightLinePitch = abs(pitchDifference / rotationDifference) * turnSpeed
 
         return Rotation(
-            currentRotation.yaw + peristrofhX.coerceIn(min(grammhyaw, -grammhyaw).toFloat(),
-                max(grammhyaw, -grammhyaw).toFloat()
-            ),
-            currentRotation.pitch + peristrofhY.coerceIn(min(grammhY, -grammhY).toFloat(),
-                max(grammhY, -grammhY).toFloat()
-            )
+            currentRotation.yaw + yawDifference.coerceIn(-straightLineYaw, straightLineYaw),
+            currentRotation.pitch + pitchDifference.coerceIn(-straightLinePitch, straightLinePitch)
         )
     }
 
