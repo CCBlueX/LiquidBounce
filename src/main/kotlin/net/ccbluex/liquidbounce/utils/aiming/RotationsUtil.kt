@@ -32,9 +32,7 @@ import net.minecraft.block.BlockState
 import net.minecraft.block.ShapeContext
 import net.minecraft.util.math.*
 import org.apache.commons.lang3.RandomUtils
-import kotlin.math.atan2
-import kotlin.math.hypot
-import kotlin.math.sqrt
+import kotlin.math.*
 
 /**
  * Configurable to configure the dynamic rotation engine
@@ -352,12 +350,22 @@ object RotationManager : Listenable {
      * Limit your rotations
      */
     fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation, turnSpeed: Float): Rotation {
-        val yawDifference = angleDifference(targetRotation.yaw, currentRotation.yaw)
-        val pitchDifference = angleDifference(targetRotation.pitch, currentRotation.pitch)
+        val peristrofhX = angleDifference(targetRotation.yaw, currentRotation.yaw)
+        val peristrofhY = angleDifference(targetRotation.pitch, currentRotation.pitch)
+
+        val diafora = rotationDifference(targetRotation, currentRotation)
+
+        //
+        val grammhyaw = peristrofhX/ diafora * turnSpeed
+        val grammhY = peristrofhY / diafora * turnSpeed
 
         return Rotation(
-            currentRotation.yaw + yawDifference.coerceIn(-turnSpeed, turnSpeed),
-            currentRotation.pitch + pitchDifference.coerceIn(-turnSpeed, turnSpeed)
+            currentRotation.yaw + peristrofhX.coerceIn(min(grammhyaw, -grammhyaw).toFloat(),
+                max(grammhyaw, -grammhyaw).toFloat()
+            ),
+            currentRotation.pitch + peristrofhY.coerceIn(min(grammhY, -grammhY).toFloat(),
+                max(grammhY, -grammhY).toFloat()
+            )
         )
     }
 

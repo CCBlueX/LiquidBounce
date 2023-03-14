@@ -111,8 +111,7 @@ public class MixinClientPlayerInteractionManager {
      */
     @ModifyArgs(method = "interactItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket$Full;<init>(DDDFFZ)V"))
     private void hookFixRotation(Args args) {
-        RotationManager rotationManager = RotationManager.INSTANCE;
-        Rotation rotation = rotationManager.getCurrentRotation();
+        Rotation rotation = RotationManager.INSTANCE.getCurrentRotation();
         if (rotation == null) {
             return;
         }

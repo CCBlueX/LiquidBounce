@@ -159,8 +159,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
 
     @Redirect(method = {"sendMovementPackets", "tick"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getYaw()F"))
     private float hookSilentRotationYaw(ClientPlayerEntity instance) {
-        RotationManager rotationManager = RotationManager.INSTANCE;
-        Rotation rotation = rotationManager.getCurrentRotation();
+        Rotation rotation = RotationManager.INSTANCE.getCurrentRotation();
         if (rotation == null) {
             return instance.getYaw();
         }
@@ -170,10 +169,9 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
 
     @Redirect(method = {"sendMovementPackets", "tick"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getPitch()F"))
     private float hookSilentRotationPitch(ClientPlayerEntity instance) {
-        RotationManager rotationManager = RotationManager.INSTANCE;
-        Rotation rotation = rotationManager.getCurrentRotation();
+        Rotation rotation = RotationManager.INSTANCE.getCurrentRotation();
         if (rotation == null) {
-            return instance.getPitch();
+            return instance.getYaw();
         }
 
         return rotation.getPitch();
