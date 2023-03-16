@@ -1,13 +1,13 @@
 [
   {
     "modid": "liquidbounce",
-    "name": "LiquidBounce",
-    "description": "A free mixin-based injection hacked-client",
+    "name": "LiquidZ",
+    "description": "A Minecraft hacked client based on LiquidBounce",
     "version": "${version}",
     "mcversion": "1.8.9",
-    "url": "https://liquidbounce.net",
+    "url": "",
     "updateUrl": "",
-    "authorList": ["CCBlueX"],
+    "authorList": ["CCBlueX, DiotekDon"],
     "credits": "",
     "logoFile": "",
     "screenshots": [],
