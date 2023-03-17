@@ -83,7 +83,7 @@ class ESP : Module() {
     private val botValue = BoolValue("Bots", true)
 
     @EventTarget
-    fun onRender3D(event: Render3DEvent?) {
+    fun onRender3D(event: Render3DEvent) {
         val mode = modeValue.get()
         val mvMatrix = WorldToScreen.getMatrix(GL11.GL_MODELVIEW_MATRIX)
         val projectionMatrix = WorldToScreen.getMatrix(GL11.GL_PROJECTION_MATRIX)
@@ -108,7 +108,7 @@ class ESP : Module() {
             GL11.glLineWidth(1.0f)
         }
 
-        for (entity in mc.theWorld!!.loadedEntityList) {
+        for (entity in mc.theWorld.loadedEntityList) {
             if (entity !is EntityLivingBase || !botValue.get() && AntiBot.isBot(entity)) continue
             if (entity != mc.thePlayer && EntityUtils.isSelected(entity, false)) {
                 val color = getColor(entity)
@@ -201,7 +201,7 @@ class ESP : Module() {
         shader.startDraw(event.partialTicks, glowRenderScale.get())
         renderNameTags = false
 
-        if(mc.theWorld == null) return;
+        if(mc.theWorld == null) return
 
         try {
             val entityMap = mutableMapOf<Color, ArrayList<Entity>>()

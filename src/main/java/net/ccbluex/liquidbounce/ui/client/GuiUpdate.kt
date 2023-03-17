@@ -6,8 +6,6 @@
 package net.ccbluex.liquidbounce.ui.client
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.chat.Client
-
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.update.UpdateInfo
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils

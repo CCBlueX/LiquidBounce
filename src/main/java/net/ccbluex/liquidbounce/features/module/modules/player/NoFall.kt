@@ -61,90 +61,90 @@ class NoFall : Module() {
     private var currentMlgBlock: BlockPos? = null
 
     @EventTarget(ignoreCondition = true)
-    fun onUpdate(event: UpdateEvent?) {
-        if (mc.thePlayer!!.onGround) jumped = false
+    fun onUpdate(event: UpdateEvent) {
+        if (mc.thePlayer.onGround) jumped = false
 
-        if (mc.thePlayer!!.motionY > 0) jumped = true
+        if (mc.thePlayer.motionY > 0) jumped = true
 
         if (!state || LiquidBounce.moduleManager.getModule(FreeCam::class.java).state) return
 
-        if (collideBlock(mc.thePlayer!!.entityBoundingBox) { it is BlockLiquid } || collideBlock(
+        if (collideBlock(mc.thePlayer.entityBoundingBox) { it is BlockLiquid } || collideBlock(
                 AxisAlignedBB.fromBounds(
-                    mc.thePlayer!!.entityBoundingBox.maxX,
-                    mc.thePlayer!!.entityBoundingBox.maxY,
-                    mc.thePlayer!!.entityBoundingBox.maxZ,
-                    mc.thePlayer!!.entityBoundingBox.minX,
-                    mc.thePlayer!!.entityBoundingBox.minY - 0.01,
-                    mc.thePlayer!!.entityBoundingBox.minZ
+                    mc.thePlayer.entityBoundingBox.maxX,
+                    mc.thePlayer.entityBoundingBox.maxY,
+                    mc.thePlayer.entityBoundingBox.maxZ,
+                    mc.thePlayer.entityBoundingBox.minX,
+                    mc.thePlayer.entityBoundingBox.minY - 0.01,
+                    mc.thePlayer.entityBoundingBox.minZ
                 )
             ) { it is BlockLiquid }
         ) return
 
         when (modeValue.get().lowercase()) {
             "packet" -> {
-                if (mc.thePlayer!!.fallDistance > 2f) {
+                if (mc.thePlayer.fallDistance > 2f) {
                     mc.netHandler.addToSendQueue(C03PacketPlayer(true))
                 }
             }
-            "cubecraft" -> if (mc.thePlayer!!.fallDistance > 2f) {
-                mc.thePlayer!!.onGround = false
-                mc.thePlayer!!.sendQueue.addToSendQueue(C03PacketPlayer(true))
+            "cubecraft" -> if (mc.thePlayer.fallDistance > 2f) {
+                mc.thePlayer.onGround = false
+                mc.thePlayer.sendQueue.addToSendQueue(C03PacketPlayer(true))
             }
             "aac" -> {
-                if (mc.thePlayer!!.fallDistance > 2f) {
+                if (mc.thePlayer.fallDistance > 2f) {
                     mc.netHandler.addToSendQueue(C03PacketPlayer(true))
                     currentState = 2
-                } else if (currentState == 2 && mc.thePlayer!!.fallDistance < 2) {
-                    mc.thePlayer!!.motionY = 0.1
+                } else if (currentState == 2 && mc.thePlayer.fallDistance < 2) {
+                    mc.thePlayer.motionY = 0.1
                     currentState = 3
                     return
                 }
                 when (currentState) {
                     3 -> {
-                        mc.thePlayer!!.motionY = 0.1
+                        mc.thePlayer.motionY = 0.1
                         currentState = 4
                     }
                     4 -> {
-                        mc.thePlayer!!.motionY = 0.1
+                        mc.thePlayer.motionY = 0.1
                         currentState = 5
                     }
                     5 -> {
-                        mc.thePlayer!!.motionY = 0.1
+                        mc.thePlayer.motionY = 0.1
                         currentState = 1
                     }
                 }
             }
-            "laac" -> if (!jumped && mc.thePlayer!!.onGround && !mc.thePlayer!!.isOnLadder && !mc.thePlayer!!.isInWater && !mc.thePlayer!!.isInWeb) mc.thePlayer!!.motionY =
+            "laac" -> if (!jumped && mc.thePlayer.onGround && !mc.thePlayer.isOnLadder && !mc.thePlayer.isInWater && !mc.thePlayer.isInWeb) mc.thePlayer.motionY =
                 (-6).toDouble()
-            "aac3.3.11" -> if (mc.thePlayer!!.fallDistance > 2) {
-                mc.thePlayer!!.motionZ = 0.0
-                mc.thePlayer!!.motionX = mc.thePlayer!!.motionZ
+            "aac3.3.11" -> if (mc.thePlayer.fallDistance > 2) {
+                mc.thePlayer.motionZ = 0.0
+                mc.thePlayer.motionX = mc.thePlayer.motionZ
                 mc.netHandler.addToSendQueue(
                     C03PacketPlayer.C04PacketPlayerPosition(
-                        mc.thePlayer!!.posX, mc.thePlayer!!.posY - 10E-4, mc.thePlayer!!.posZ, mc.thePlayer!!.onGround
+                        mc.thePlayer.posX, mc.thePlayer.posY - 10E-4, mc.thePlayer.posZ, mc.thePlayer.onGround
                     )
                 )
                 mc.netHandler.addToSendQueue(C03PacketPlayer(true))
             }
-            "aac3.3.15" -> if (mc.thePlayer!!.fallDistance > 2) {
+            "aac3.3.15" -> if (mc.thePlayer.fallDistance > 2) {
                 if (!mc.isIntegratedServerRunning) mc.netHandler.addToSendQueue(
                     C03PacketPlayer.C04PacketPlayerPosition(
-                        mc.thePlayer!!.posX, Double.NaN, mc.thePlayer!!.posZ, false
+                        mc.thePlayer.posX, Double.NaN, mc.thePlayer.posZ, false
                     )
                 )
-                mc.thePlayer!!.fallDistance = (-9999).toFloat()
+                mc.thePlayer.fallDistance = (-9999).toFloat()
             }
             "spartan" -> {
                 spartanTimer.update()
-                if (mc.thePlayer!!.fallDistance > 1.5 && spartanTimer.hasTimePassed(10)) {
+                if (mc.thePlayer.fallDistance > 1.5 && spartanTimer.hasTimePassed(10)) {
                     mc.netHandler.addToSendQueue(
                         C03PacketPlayer.C04PacketPlayerPosition(
-                            mc.thePlayer!!.posX, mc.thePlayer!!.posY + 10, mc.thePlayer!!.posZ, true
+                            mc.thePlayer.posX, mc.thePlayer.posY + 10, mc.thePlayer.posZ, true
                         )
                     )
                     mc.netHandler.addToSendQueue(
                         C03PacketPlayer.C04PacketPlayerPosition(
-                            mc.thePlayer!!.posX, mc.thePlayer!!.posY - 10, mc.thePlayer!!.posZ, true
+                            mc.thePlayer.posX, mc.thePlayer.posY - 10, mc.thePlayer.posZ, true
                         )
                     )
                     spartanTimer.reset()
@@ -162,29 +162,29 @@ class NoFall : Module() {
             if (mode.equals("NoGround", ignoreCase = true)) packet.onGround = false
             if (mode.equals(
                     "Hypixel", ignoreCase = true
-                ) && mc.thePlayer != null && mc.thePlayer!!.fallDistance > 1.5
-            ) packet.onGround = mc.thePlayer!!.ticksExisted % 2 == 0
+                ) && mc.thePlayer != null && mc.thePlayer.fallDistance > 1.5
+            ) packet.onGround = mc.thePlayer.ticksExisted % 2 == 0
         }
     }
 
     @EventTarget
     fun onMove(event: MoveEvent) {
         if (collideBlock(
-                mc.thePlayer!!.entityBoundingBox
+                mc.thePlayer.entityBoundingBox
             ) { it is BlockLiquid } || collideBlock(
                 AxisAlignedBB.fromBounds(
-                    mc.thePlayer!!.entityBoundingBox.maxX,
-                    mc.thePlayer!!.entityBoundingBox.maxY,
-                    mc.thePlayer!!.entityBoundingBox.maxZ,
-                    mc.thePlayer!!.entityBoundingBox.minX,
-                    mc.thePlayer!!.entityBoundingBox.minY - 0.01,
-                    mc.thePlayer!!.entityBoundingBox.minZ
+                    mc.thePlayer.entityBoundingBox.maxX,
+                    mc.thePlayer.entityBoundingBox.maxY,
+                    mc.thePlayer.entityBoundingBox.maxZ,
+                    mc.thePlayer.entityBoundingBox.minX,
+                    mc.thePlayer.entityBoundingBox.minY - 0.01,
+                    mc.thePlayer.entityBoundingBox.minZ
                 )
             ) { it is BlockLiquid }
         ) return
 
         if (modeValue.get().equals("laac", ignoreCase = true)) {
-            if (!jumped && !mc.thePlayer!!.onGround && !mc.thePlayer!!.isOnLadder && !mc.thePlayer!!.isInWater && !mc.thePlayer!!.isInWeb && mc.thePlayer!!.motionY < 0.0) {
+            if (!jumped && !mc.thePlayer.onGround && !mc.thePlayer.isOnLadder && !mc.thePlayer.isInWater && !mc.thePlayer.isInWeb && mc.thePlayer.motionY < 0.0) {
                 event.x = 0.0
                 event.z = 0.0
             }
@@ -202,20 +202,20 @@ class NoFall : Module() {
 
             if (!mlgTimer.hasTimePassed(10)) return
 
-            if (mc.thePlayer!!.fallDistance > minFallDistance.get()) {
+            if (mc.thePlayer.fallDistance > minFallDistance.get()) {
                 val fallingPlayer = FallingPlayer(mc.thePlayer)
 
                 val maxDist: Double = mc.playerController.blockReachDistance + 1.5
 
                 val collision =
-                    fallingPlayer.findCollision(ceil(1.0 / mc.thePlayer!!.motionY * -maxDist).toInt()) ?: return
+                    fallingPlayer.findCollision(ceil(1.0 / mc.thePlayer.motionY * -maxDist).toInt()) ?: return
 
                 var ok: Boolean = mc.thePlayer.getPositionEyes(1f)
                     .distanceTo(
                         Vec3(collision.pos).addVector(0.5, 0.5, 0.5)
                     ) < mc.playerController.blockReachDistance + sqrt(0.75)
 
-                if (mc.thePlayer!!.motionY < collision.pos.y + 1 - mc.thePlayer!!.posY) {
+                if (mc.thePlayer.motionY < collision.pos.y + 1 - mc.thePlayer.posY) {
                     ok = true
                 }
 
@@ -224,13 +224,13 @@ class NoFall : Module() {
                 var index = -1
 
                 for (i in 36..44) {
-                    val itemStack = mc.thePlayer!!.inventoryContainer.getSlot(i).stack
+                    val itemStack = mc.thePlayer.inventoryContainer.getSlot(i).stack
 
                     if (itemStack != null && (itemStack.item == Items.water_bucket || itemStack.item is ItemBlock && (itemStack.item as ItemBlock).block == Blocks.web)
                     ) {
                         index = i - 36
 
-                        if (mc.thePlayer!!.inventory.currentItem == index) break
+                        if (mc.thePlayer.inventory.currentItem == index) break
                     }
                 }
                 if (index == -1) return
@@ -238,31 +238,31 @@ class NoFall : Module() {
                 currentMlgItemIndex = index
                 currentMlgBlock = collision.pos
 
-                if (mc.thePlayer!!.inventory.currentItem != index) {
-                    mc.thePlayer!!.sendQueue.addToSendQueue(C09PacketHeldItemChange(index))
+                if (mc.thePlayer.inventory.currentItem != index) {
+                    mc.thePlayer.sendQueue.addToSendQueue(C09PacketHeldItemChange(index))
                 }
 
                 currentMlgRotation = RotationUtils.faceBlock(collision.pos)
-                currentMlgRotation!!.rotation.toPlayer(mc.thePlayer!!)
+                currentMlgRotation?.rotation?.toPlayer(mc.thePlayer)
             }
         } else if (currentMlgRotation != null) {
-            val stack = mc.thePlayer!!.inventory.getStackInSlot(currentMlgItemIndex)
+            val stack = mc.thePlayer.inventory.getStackInSlot(currentMlgItemIndex)
 
-            if (stack!!.item is ItemBucket) {
-                mc.playerController.sendUseItem(mc.thePlayer!!, mc.theWorld!!, stack)
+            if (stack.item is ItemBucket) {
+                mc.playerController.sendUseItem(mc.thePlayer, mc.theWorld, stack)
             } else {
-                if (mc.playerController.sendUseItem(mc.thePlayer!!, mc.theWorld!!, stack)) {
+                if (mc.playerController.sendUseItem(mc.thePlayer, mc.theWorld, stack)) {
                     mlgTimer.reset()
                 }
             }
-            if (mc.thePlayer!!.inventory.currentItem != currentMlgItemIndex) mc.thePlayer!!.sendQueue.addToSendQueue(
-                C09PacketHeldItemChange(mc.thePlayer!!.inventory.currentItem)
+            if (mc.thePlayer.inventory.currentItem != currentMlgItemIndex) mc.thePlayer.sendQueue.addToSendQueue(
+                C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem)
             )
         }
     }
 
     @EventTarget(ignoreCondition = true)
-    fun onJump(event: JumpEvent?) {
+    fun onJump(event: JumpEvent) {
         jumped = true
     }
 

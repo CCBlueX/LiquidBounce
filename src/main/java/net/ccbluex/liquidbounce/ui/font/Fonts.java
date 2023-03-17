@@ -15,6 +15,8 @@ import net.minecraft.client.gui.FontRenderer;
 import java.awt.*;
 import java.io.*;
 import java.lang.reflect.Field;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.*;
 import java.util.zip.ZipEntry;
@@ -163,7 +165,7 @@ public class Fonts extends MinecraftInstance {
 
     private static Font getFont(final String fontName, final int size) {
         try {
-            final InputStream inputStream = new FileInputStream(new File(LiquidBounce.fileManager.fontsDir, fontName));
+            final InputStream inputStream = Files.newInputStream(new File(LiquidBounce.fileManager.fontsDir, fontName).toPath());
             Font awtClientFont = Font.createFont(Font.TRUETYPE_FONT, inputStream);
             awtClientFont = awtClientFont.deriveFont(Font.PLAIN, size);
             inputStream.close();
@@ -183,7 +185,7 @@ public class Fonts extends MinecraftInstance {
 
             if (!folder.exists()) folder.mkdir();
 
-            final ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(zipFile));
+            final ZipInputStream zipInputStream = new ZipInputStream(Files.newInputStream(Paths.get(zipFile)));
 
             ZipEntry zipEntry = zipInputStream.getNextEntry();
             while (zipEntry != null) {

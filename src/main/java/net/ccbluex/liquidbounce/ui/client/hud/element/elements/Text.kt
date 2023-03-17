@@ -153,7 +153,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
     /**
      * Draw element
      */
-    override fun drawElement(): Border? {
+    override fun drawElement(): Border {
         val color = Color(redValue.get(), greenValue.get(), blueValue.get()).rgb
 
         val fontRenderer = fontValue.get()

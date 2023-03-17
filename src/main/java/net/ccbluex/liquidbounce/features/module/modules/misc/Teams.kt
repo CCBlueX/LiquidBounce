@@ -25,13 +25,13 @@ class Teams : Module() {
         val thePlayer = mc.thePlayer ?: return false
 
         if (scoreboardValue.get() && thePlayer.team != null && entity.team != null &&
-                thePlayer.team!!.isSameTeam(entity.team!!))
+                thePlayer.team.isSameTeam(entity.team))
             return true
 
         val displayName = thePlayer.displayName
 
         if (gommeSWValue.get() && displayName != null && entity.displayName != null) {
-            val targetName = entity.displayName!!.formattedText.replace("§r", "")
+            val targetName = entity.displayName.formattedText.replace("§r", "")
             val clientName = displayName.formattedText.replace("§r", "")
             if (targetName.startsWith("T") && clientName.startsWith("T"))
                 if (targetName[1].isDigit() && clientName[1].isDigit())
@@ -39,7 +39,7 @@ class Teams : Module() {
         }
 
         if (colorValue.get() && displayName != null && entity.displayName != null) {
-            val targetName = entity.displayName!!.formattedText.replace("§r", "")
+            val targetName = entity.displayName.formattedText.replace("§r", "")
             val clientName = displayName.formattedText.replace("§r", "")
             return targetName.startsWith("§${clientName[1]}")
         }

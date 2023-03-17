@@ -28,12 +28,12 @@ class YPort : SpeedMode("YPort") {
     private var timerDelay = 0
     private var safeJump = false
     override fun onMotion() {
-        if (!safeJump && !mc.gameSettings.keyBindJump.isKeyDown && !mc.thePlayer!!.isOnLadder && !mc.thePlayer!!.isInsideOfMaterial(
-                Material.water) && !mc.thePlayer!!.isInsideOfMaterial(Material.lava) && !mc.thePlayer!!.isInWater && (this.getBlock(-1.1) != Blocks.air && this.getBlock(-1.1) != Blocks.air || this.getBlock(-0.1) != Blocks.air && mc.thePlayer!!.motionX != 0.0 && mc.thePlayer!!.motionZ != 0.0 && !mc.thePlayer!!.onGround && mc.thePlayer!!.fallDistance < 3.0f && mc.thePlayer!!.fallDistance > 0.05) && level == 3) mc.thePlayer!!.motionY = -0.3994
-        val xDist = mc.thePlayer!!.posX - mc.thePlayer!!.prevPosX
-        val zDist = mc.thePlayer!!.posZ - mc.thePlayer!!.prevPosZ
+        if (!safeJump && !mc.gameSettings.keyBindJump.isKeyDown && !mc.thePlayer.isOnLadder && !mc.thePlayer.isInsideOfMaterial(
+                Material.water) && !mc.thePlayer.isInsideOfMaterial(Material.lava) && !mc.thePlayer.isInWater && (this.getBlock(-1.1) != Blocks.air && this.getBlock(-1.1) != Blocks.air || this.getBlock(-0.1) != Blocks.air && mc.thePlayer.motionX != 0.0 && mc.thePlayer.motionZ != 0.0 && !mc.thePlayer.onGround && mc.thePlayer.fallDistance < 3.0f && mc.thePlayer.fallDistance > 0.05) && level == 3) mc.thePlayer.motionY = -0.3994
+        val xDist = mc.thePlayer.posX - mc.thePlayer.prevPosX
+        val zDist = mc.thePlayer.posZ - mc.thePlayer.prevPosZ
         lastDist = sqrt(xDist * xDist + zDist * zDist)
-        if (!MovementUtils.isMoving) safeJump = true else if (mc.thePlayer!!.onGround) safeJump = false
+        if (!MovementUtils.isMoving) safeJump = true else if (mc.thePlayer.onGround) safeJump = false
     }
 
     override fun onUpdate() {}
@@ -46,22 +46,22 @@ class YPort : SpeedMode("YPort") {
             if (MovementUtils.hasMotion()) mc.timer.timerSpeed = 32767f
             if (MovementUtils.hasMotion()) {
                 mc.timer.timerSpeed = 1.3f
-                mc.thePlayer!!.motionX *= 1.0199999809265137
-                mc.thePlayer!!.motionZ *= 1.0199999809265137
+                mc.thePlayer.motionX *= 1.0199999809265137
+                mc.thePlayer.motionZ *= 1.0199999809265137
             }
         }
-        if (mc.thePlayer!!.onGround && MovementUtils.hasMotion()) level = 2
-        if (round(mc.thePlayer!!.posY - mc.thePlayer!!.posY.toInt()) == round(0.138)) {
-            mc.thePlayer!!.motionY -= 0.08
-            event.y = event.y - 0.09316090325960147
-            mc.thePlayer!!.posY -= 0.09316090325960147
+        if (mc.thePlayer.onGround && MovementUtils.hasMotion()) level = 2
+        if (round(mc.thePlayer.posY - mc.thePlayer.posY.toInt()) == round(0.138)) {
+            mc.thePlayer.motionY -= 0.08
+            event.y -= 0.09316090325960147
+            mc.thePlayer.posY -= 0.09316090325960147
         }
-        if (level == 1 && (mc.thePlayer!!.moveForward != 0.0f || mc.thePlayer!!.moveStrafing != 0.0f)) {
+        if (level == 1 && (mc.thePlayer.moveForward != 0.0f || mc.thePlayer.moveStrafing != 0.0f)) {
             level = 2
             moveSpeed = 1.38 * baseMoveSpeed - 0.01
         } else if (level == 2) {
             level = 3
-            mc.thePlayer!!.motionY = 0.399399995803833
+            mc.thePlayer.motionY = 0.399399995803833
             event.y = 0.399399995803833
             moveSpeed *= 2.149
         } else if (level == 3) {
@@ -69,13 +69,13 @@ class YPort : SpeedMode("YPort") {
             val difference = 0.66 * (lastDist - baseMoveSpeed)
             moveSpeed = lastDist - difference
         } else {
-            if (mc.theWorld!!.getCollidingBoundingBoxes(mc.thePlayer!!, mc.thePlayer!!.entityBoundingBox.offset(0.0, mc.thePlayer!!.motionY, 0.0)).size > 0 || mc.thePlayer!!.isCollidedVertically) level = 1
+            if (mc.theWorld.getCollidingBoundingBoxes(mc.thePlayer, mc.thePlayer.entityBoundingBox.offset(0.0, mc.thePlayer.motionY, 0.0)).size > 0 || mc.thePlayer.isCollidedVertically) level = 1
             moveSpeed = lastDist - lastDist / 159.0
         }
         moveSpeed = moveSpeed.coerceAtLeast(baseMoveSpeed)
-        var forward: Float = mc.thePlayer!!.movementInput.moveForward
-        var strafe: Float = mc.thePlayer!!.movementInput.moveStrafe
-        var yaw = mc.thePlayer!!.rotationYaw
+        var forward = mc.thePlayer.movementInput.moveForward
+        var strafe = mc.thePlayer.movementInput.moveStrafe
+        var yaw = mc.thePlayer.rotationYaw
         if (forward == 0f && strafe == 0f) {
             event.x = 0.0
             event.z = 0.0
@@ -93,7 +93,7 @@ class YPort : SpeedMode("YPort") {
         val mz = sin(Math.toRadians(yaw + 90.0f.toDouble()))
         event.x = forward * moveSpeed * mx + strafe * moveSpeed * mz
         event.z = forward * moveSpeed * mz - strafe * moveSpeed * mx
-        mc.thePlayer!!.stepHeight = 0.6f
+        mc.thePlayer.stepHeight = 0.6f
         if (forward == 0f && strafe == 0f) {
             event.x = 0.0
             event.z = 0.0
@@ -103,8 +103,8 @@ class YPort : SpeedMode("YPort") {
     private val baseMoveSpeed: Double
         get() {
             var baseSpeed = 0.2873
-            if (mc.thePlayer!!.isPotionActive(Potion.moveSpeed)) {
-                val amplifier: Int = mc.thePlayer!!.getActivePotionEffect(Potion.moveSpeed)!!.amplifier
+            if (mc.thePlayer.isPotionActive(Potion.moveSpeed)) {
+                val amplifier = mc.thePlayer.getActivePotionEffect(Potion.moveSpeed).amplifier
                 baseSpeed *= 1.0 + 0.2 * (amplifier + 1)
             }
             return baseSpeed
@@ -113,7 +113,7 @@ class YPort : SpeedMode("YPort") {
     private fun getBlock(axisAlignedBB: AxisAlignedBB): Block? {
         for (x in floor(axisAlignedBB.minX).toInt() until floor(axisAlignedBB.maxX).toInt() + 1) {
             for (z in floor(axisAlignedBB.minZ).toInt() until floor(axisAlignedBB.maxZ).toInt() + 1) {
-                val block = mc.theWorld!!.getBlockState(BlockPos(x, axisAlignedBB.minY.toInt(), z)).block
+                val block = mc.theWorld.getBlockState(BlockPos(x, axisAlignedBB.minY.toInt(), z)).block
 
                 if (block != null)
                     return block
@@ -122,9 +122,7 @@ class YPort : SpeedMode("YPort") {
         return null
     }
 
-    private fun getBlock(offset: Double): Block? {
-        return this.getBlock(mc.thePlayer!!.entityBoundingBox.offset(0.0, offset, 0.0))
-    }
+    private fun getBlock(offset: Double): Block? = this.getBlock(mc.thePlayer.entityBoundingBox.offset(0.0, offset, 0.0))
 
     private fun round(value: Double): Double {
         var bd = BigDecimal(value)

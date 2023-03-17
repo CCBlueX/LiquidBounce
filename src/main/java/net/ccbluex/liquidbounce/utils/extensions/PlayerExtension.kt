@@ -6,9 +6,11 @@
 package net.ccbluex.liquidbounce.utils.extensions
 
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.ccbluex.liquidbounce.utils.MinecraftInstance.mc
 import net.ccbluex.liquidbounce.utils.Rotation
+import net.ccbluex.liquidbounce.utils.RotationUtils.getFixedSensitivityAngle
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
+import net.minecraft.client.entity.EntityPlayerSP
 import net.minecraft.entity.Entity
 import net.minecraft.entity.boss.EntityDragon
 import net.minecraft.entity.monster.EntityGhast
@@ -43,7 +45,7 @@ fun getNearestPointBB(eye: Vec3, box: AxisAlignedBB): Vec3 {
 }
 
 fun EntityPlayer.getPing(): Int {
-    val playerInfo = MinecraftInstance.mc.netHandler.getPlayerInfo(uniqueID)
+    val playerInfo = mc.netHandler.getPlayerInfo(uniqueID)
     return playerInfo?.responseTime ?: 0
 }
 
@@ -76,3 +78,34 @@ val Entity.hitBox: AxisAlignedBB
         val borderSize = collisionBorderSize.toDouble()
         return entityBoundingBox.expand(borderSize, borderSize, borderSize)
     }
+
+/**
+ * Setting yaw to a fixed sensitivity angle
+ */
+
+fun EntityPlayerSP.setFixedSensitivityAngles(yaw: Float? = null, pitch: Float? = null) {
+    if (yaw != null)
+        mc.thePlayer.fixedSensitivityYaw = yaw
+
+    if (pitch != null)
+        mc.thePlayer.fixedSensitivityPitch = pitch
+}
+
+var EntityPlayerSP.fixedSensitivityYaw: Float
+    get() = getFixedSensitivityAngle(mc.thePlayer.rotationYaw)
+    set(yaw) {
+        mc.thePlayer.rotationYaw = getFixedSensitivityAngle(yaw, mc.thePlayer.rotationYaw)
+    }
+
+var EntityPlayerSP.fixedSensitivityPitch: Float
+    get() = getFixedSensitivityAngle(mc.thePlayer.rotationPitch)
+    set(pitch) {
+        val clampedPitch = if (pitch > 90f) 90f else if (pitch < -90f) -90f else pitch
+        mc.thePlayer.rotationPitch = getFixedSensitivityAngle(clampedPitch, mc.thePlayer.rotationPitch)
+    }
+
+// Makes fixedSensitivityYaw, ... += work
+operator fun EntityPlayerSP.plusAssign(value: Float) {
+    fixedSensitivityYaw += value
+    fixedSensitivityPitch += value
+}

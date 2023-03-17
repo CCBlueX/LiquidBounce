@@ -46,11 +46,11 @@ class Blink : Module() {
         if (!pulseValue.get()) {
             val faker = EntityOtherPlayerMP(mc.theWorld, thePlayer.gameProfile)
 
-            faker.rotationYawHead = thePlayer.rotationYawHead;
-            faker.renderYawOffset = thePlayer.renderYawOffset;
+            faker.rotationYawHead = thePlayer.rotationYawHead
+            faker.renderYawOffset = thePlayer.renderYawOffset
             faker.copyLocationAndAnglesFrom(thePlayer)
             faker.rotationYawHead = thePlayer.rotationYawHead
-            mc.theWorld!!.addEntityToWorld(-1337, faker)
+            mc.theWorld.addEntityToWorld(-1337, faker)
 
             fakePlayer = faker
         }
@@ -102,7 +102,7 @@ class Blink : Module() {
     }
 
     @EventTarget
-    fun onUpdate(event: UpdateEvent?) {
+    fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer ?: return
 
         synchronized(positions) {
@@ -121,9 +121,9 @@ class Blink : Module() {
     }
 
     @EventTarget
-    fun onRender3D(event: Render3DEvent?) {
-        val breadcrumbs = LiquidBounce.moduleManager.getModule(Breadcrumbs::class.java) as Breadcrumbs?
-        val color = if (breadcrumbs!!.colorRainbow.get()) rainbow() else Color(
+    fun onRender3D(event: Render3DEvent) {
+        val breadcrumbs = LiquidBounce.moduleManager.getModule(Breadcrumbs::class.java) as Breadcrumbs
+        val color = if (breadcrumbs.colorRainbow.get()) rainbow() else Color(
             breadcrumbs.colorRedValue.get(),
             breadcrumbs.colorGreenValue.get(),
             breadcrumbs.colorBlueValue.get()

@@ -337,7 +337,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
         final Sprint sprint = (Sprint) LiquidBounce.moduleManager.getModule(Sprint.class);
 
-        final Boolean legitSprint = sprint.modeValue.get().equalsIgnoreCase("legit");
+        final boolean legitSprint = sprint.modeValue.get().equalsIgnoreCase("legit");
 
         boolean flag3 = !(sprint.getState() && !legitSprint && sprint.foodValue.get()) || (float) this.getFoodStats().getFoodLevel() > 6.0F || this.capabilities.allowFlying;
 

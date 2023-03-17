@@ -26,7 +26,7 @@ class AutoBow : Module() {
     fun onUpdate(event: UpdateEvent) {
         val bowAimbot = LiquidBounce.moduleManager[BowAimbot::class.java] as BowAimbot
 
-        val thePlayer = mc.thePlayer!!
+        val thePlayer = mc.thePlayer
 
         if (thePlayer.isUsingItem && thePlayer.heldItem?.item is ItemBow &&
                 thePlayer.itemInUseDuration > 20 && (!waitForBowAimbot.get() || !bowAimbot.state || bowAimbot.hasTarget())) {

@@ -19,7 +19,7 @@ class Boost : SpeedMode("Boost") {
         var offset = 4.69
         var shouldOffset = true
 
-        if (mc.theWorld!!.getCollidingBoundingBoxes(thePlayer, thePlayer.entityBoundingBox.offset(thePlayer.motionX / offset, 0.0, thePlayer.motionZ / offset)).isNotEmpty()) {
+        if (mc.theWorld.getCollidingBoundingBoxes(thePlayer, thePlayer.entityBoundingBox.offset(thePlayer.motionX / offset, 0.0, thePlayer.motionZ / offset)).isNotEmpty()) {
             shouldOffset = false
         }
 
@@ -62,6 +62,6 @@ class Boost : SpeedMode("Boost") {
     override fun onMove(event: MoveEvent) {}
 
     private fun shouldSpeedUp(): Boolean {
-        return !mc.thePlayer!!.isInLava && !mc.thePlayer!!.isOnLadder && !mc.thePlayer!!.isSneaking && MovementUtils.isMoving
+        return !mc.thePlayer.isInLava && !mc.thePlayer.isOnLadder && !mc.thePlayer.isSneaking && MovementUtils.isMoving
     }
 }

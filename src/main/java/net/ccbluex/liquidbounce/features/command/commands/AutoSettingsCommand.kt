@@ -74,7 +74,7 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
     }
 
     private fun loadSettings(useCached: Boolean, join: Long? = null, callback: (List<String>) -> Unit) {
-        var thread = thread {
+        val thread = thread {
             // Prevent the settings from being loaded twice
             synchronized(loadingLock) {
                 if (useCached && autoSettingFiles != null) {

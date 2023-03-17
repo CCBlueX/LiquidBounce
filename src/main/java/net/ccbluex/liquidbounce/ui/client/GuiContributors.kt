@@ -107,7 +107,7 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
             Fonts.font40.drawString("${credit.commits} commits §a${DECIMAL_FORMAT.format(credit.additions)}++ §4${DECIMAL_FORMAT.format(credit.deletions)}--", (x + infoOffset + 5).toFloat(), (y - Fonts.font40.fontHeight).toFloat(), Color.WHITE.rgb, true)
 
             for (s in credit.contributions) {
-                y += Fonts.font40.fontHeight.toInt() + 2
+                y += Fonts.font40.fontHeight + 2
 
                 GlStateManager.disableTexture2D()
                 GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
@@ -210,9 +210,9 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
             for (credit in credits) {
                 try {
                     HttpUtils.requestStream("${credit.avatarUrl}?s=${fontRendererObj.FONT_HEIGHT * 4}", "GET")?.use {
-                        credit.avatar = CustomTexture(ImageIO.read(it)!!)
+                        credit.avatar = CustomTexture(ImageIO.read(it))
                     }
-                } catch (e: Exception) {
+                } catch (_: Exception) {
 
                 }
             }
@@ -245,7 +245,7 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
 
         override fun getSize() = credits.size
 
-        internal fun getSelectedSlot() = if (selectedSlot > credits.size) -1 else selectedSlot
+        fun getSelectedSlot() = if (selectedSlot > credits.size) -1 else selectedSlot
 
         public override fun elementClicked(index: Int, doubleClick: Boolean, var3: Int, var4: Int) {
             selectedSlot = index

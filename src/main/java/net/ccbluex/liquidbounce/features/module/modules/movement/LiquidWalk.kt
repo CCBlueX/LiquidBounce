@@ -33,7 +33,7 @@ class LiquidWalk : Module() {
     private var nextTick = false
 
     @EventTarget
-    fun onUpdate(event: UpdateEvent?) {
+    fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer
 
         if (thePlayer == null || thePlayer.isSneaking) return
@@ -81,7 +81,7 @@ class LiquidWalk : Module() {
                 thePlayer.motionZ *= 1.17
                 if (thePlayer.isCollidedHorizontally)
                     thePlayer.motionY = 0.24
-                else if (mc.theWorld!!.getBlockState(BlockPos(thePlayer.posX, thePlayer.posY + 1.0, thePlayer.posZ)).block != Blocks.air)
+                else if (mc.theWorld.getBlockState(BlockPos(thePlayer.posX, thePlayer.posY + 1.0, thePlayer.posZ)).block != Blocks.air)
                     thePlayer.motionY += 0.04
             }
             "dolphin" -> if (thePlayer.isInWater) thePlayer.motionY += 0.03999999910593033
@@ -90,9 +90,9 @@ class LiquidWalk : Module() {
 
     @EventTarget
     fun onMove(event: MoveEvent) {
-        if ("aacfly" == modeValue.get().lowercase() && mc.thePlayer!!.isInWater) {
+        if ("aacfly" == modeValue.get().lowercase() && mc.thePlayer.isInWater) {
             event.y = aacFlyValue.get().toDouble()
-            mc.thePlayer!!.motionY = aacFlyValue.get().toDouble()
+            mc.thePlayer.motionY = aacFlyValue.get().toDouble()
         }
     }
 
@@ -101,7 +101,7 @@ class LiquidWalk : Module() {
         if (mc.thePlayer == null)
             return
 
-        if (event.block is BlockLiquid && !collideBlock(mc.thePlayer!!.entityBoundingBox) { it is BlockLiquid } && !mc.thePlayer!!.isSneaking) {
+        if (event.block is BlockLiquid && !collideBlock(mc.thePlayer.entityBoundingBox) { it is BlockLiquid } && !mc.thePlayer.isSneaking) {
             when (modeValue.get().lowercase()) {
                 "ncp", "vanilla" -> event.boundingBox = AxisAlignedBB.fromBounds(event.x.toDouble(), event.y.toDouble(), event.z.toDouble(), event.x + 1.toDouble(), event.y + 1.toDouble(), event.z + 1.toDouble())
             }

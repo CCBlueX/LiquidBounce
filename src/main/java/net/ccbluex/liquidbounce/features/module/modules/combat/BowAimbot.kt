@@ -48,7 +48,7 @@ class BowAimbot : Module() {
             val entity = getTarget(throughWallsValue.get(), priorityValue.get()) ?: return
 
             target = entity
-            RotationUtils.faceBow(target, silentValue.get(), predictValue.get(), predictSizeValue.get())
+            RotationUtils.faceBow(entity, silentValue.get(), predictValue.get(), predictSizeValue.get())
         }
     }
 
@@ -72,5 +72,5 @@ class BowAimbot : Module() {
         }
     }
 
-    fun hasTarget() = target != null && mc.thePlayer!!.canEntityBeSeen(target!!)
+    fun hasTarget() = target != null && mc.thePlayer.canEntityBeSeen(target)
 }

@@ -65,7 +65,7 @@ data class ClientMessagePacket(
 ) : Packet
 
 /**
- * This packet will be sent to a authenticated client with allow_messages turned on,
+ * This packet will be sent to an authenticated client with allow_messages turned on,
  * if another client successfully sent a private message to the server with the id.
  *
  * @param id author_id is an Id.

@@ -12,16 +12,16 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 class MiJump : SpeedMode("MiJump") {
     override fun onMotion() {
         if (!MovementUtils.isMoving) return
-        if (mc.thePlayer!!.onGround && !mc.thePlayer!!.movementInput.jump) {
-            mc.thePlayer!!.motionY += 0.1
+        if (mc.thePlayer.onGround && !mc.thePlayer.movementInput.jump) {
+            mc.thePlayer.motionY += 0.1
             val multiplier = 1.8
-            mc.thePlayer!!.motionX *= multiplier
-            mc.thePlayer!!.motionZ *= multiplier
+            mc.thePlayer.motionX *= multiplier
+            mc.thePlayer.motionZ *= multiplier
             val currentSpeed = MovementUtils.speed
             val maxSpeed = 0.66
             if (currentSpeed > maxSpeed) {
-                mc.thePlayer!!.motionX = mc.thePlayer!!.motionX / currentSpeed * maxSpeed
-                mc.thePlayer!!.motionZ = mc.thePlayer!!.motionZ / currentSpeed * maxSpeed
+                mc.thePlayer.motionX = mc.thePlayer.motionX / currentSpeed * maxSpeed
+                mc.thePlayer.motionZ = mc.thePlayer.motionZ / currentSpeed * maxSpeed
             }
         }
         MovementUtils.strafe()

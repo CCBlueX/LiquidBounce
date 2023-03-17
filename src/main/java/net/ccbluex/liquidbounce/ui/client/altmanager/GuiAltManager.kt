@@ -192,7 +192,7 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
                 file.readLines().forEach {
                     val accountData = it.split(":".toRegex(), limit = 2)
                     if (accountData.size > 1) {
-                        // Most likely mojang account
+                        // Most likely a mojang account
                         fileManager.accountsConfig.addMojangAccount(accountData[0], accountData[1])
                     } else if (accountData[0].length < 16) {
                         // Might be cracked account

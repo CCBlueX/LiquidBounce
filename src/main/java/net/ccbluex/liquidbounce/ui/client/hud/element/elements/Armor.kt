@@ -33,7 +33,7 @@ class Armor(x: Double = -8.0, y: Double = 57.0, scale: Float = 1F,
             GL11.glPushMatrix()
 
             val renderItem = mc.renderItem
-            val isInsideWater = mc.thePlayer!!.isInsideOfMaterial(Material.water)
+            val isInsideWater = mc.thePlayer.isInsideOfMaterial(Material.water)
 
             var x = 1
             var y = if (isInsideWater) -10 else 0
@@ -41,7 +41,7 @@ class Armor(x: Double = -8.0, y: Double = 57.0, scale: Float = 1F,
             val mode = modeValue.get()
 
             for (index in 3 downTo 0) {
-                val stack = mc.thePlayer!!.inventory.armorInventory[index] ?: continue
+                val stack = mc.thePlayer.inventory.armorInventory[index] ?: continue
 
                 renderItem.renderItemIntoGUI(stack, x, y)
                 renderItem.renderItemOverlays(mc.fontRendererObj, stack, x, y)

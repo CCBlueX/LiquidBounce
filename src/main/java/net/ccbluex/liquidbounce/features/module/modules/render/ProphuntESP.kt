@@ -59,9 +59,9 @@ class ProphuntESP : Module() {
     }
 
     @EventTarget
-    fun onRender3D(event: Render3DEvent?) {
+    fun onRender3D(event: Render3DEvent) {
         val mode = modeValue.get()
-        for (entity in mc.theWorld!!.loadedEntityList) {
+        for (entity in mc.theWorld.loadedEntityList) {
             if(!mode.equals("Box", true) || !mode.equals("OtherBox", true)) break
             if (entity !is EntityFallingBlock) continue
 

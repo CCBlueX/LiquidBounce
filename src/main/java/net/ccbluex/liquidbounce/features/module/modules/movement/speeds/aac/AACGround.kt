@@ -17,14 +17,9 @@ class AACGround : SpeedMode("AACGround") {
         if (!MovementUtils.isMoving)
             return
 
-        mc.timer.timerSpeed = (LiquidBounce.moduleManager.getModule(Speed::class.java) as Speed?)!!.aacGroundTimerValue.get()
+        mc.timer.timerSpeed = (LiquidBounce.moduleManager.getModule(Speed::class.java) as Speed).aacGroundTimerValue.get()
         mc.netHandler.addToSendQueue(
-            C03PacketPlayer.C04PacketPlayerPosition(
-                mc.thePlayer!!.posX,
-                mc.thePlayer!!.posY,
-                mc.thePlayer!!.posZ,
-                true
-            )
+            C03PacketPlayer.C04PacketPlayerPosition(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ, true)
         )
     }
 
