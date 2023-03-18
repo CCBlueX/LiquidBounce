@@ -12,7 +12,6 @@ import com.mojang.authlib.yggdrasil.YggdrasilUserAuthentication;
 import com.thealtening.AltService;
 import com.thealtening.api.TheAltening;
 import com.thealtening.api.data.AccountData;
-import me.liuli.elixir.account.CrackedAccount;
 import me.liuli.elixir.account.MinecraftAccount;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.SessionEvent;
@@ -120,12 +119,7 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen {
 
                 break;
             case 4:
-                final CrackedAccount crackedAccount = new CrackedAccount();
-                crackedAccount.setName(RandomUtils.randomUsername());
-
-                mc.session = new Session(crackedAccount.getSession().getUsername(), crackedAccount.getSession().getUuid(),
-                        crackedAccount.getSession().getToken(), crackedAccount.getSession().getType());
-                LiquidBounce.eventManager.callEvent(new SessionEvent());
+                RandomUtils.randomAccount();
                 ServerUtils.connectToLastServer();
                 break;
             case 5:

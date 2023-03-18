@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.login.UserUtils.isValidTokenOffline
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
-import net.ccbluex.liquidbounce.utils.misc.RandomUtils
+import net.ccbluex.liquidbounce.utils.misc.RandomUtils.randomAccount
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
@@ -172,15 +172,7 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
             }
 
             5 -> { // Random name button
-                val crackedAccount = CrackedAccount()
-                crackedAccount.name = RandomUtils.randomUsername()
-
-                mc.session = Session(
-                    crackedAccount.session.username, crackedAccount.session.uuid,
-                    crackedAccount.session.token, crackedAccount.session.type
-                )
-                LiquidBounce.eventManager.callEvent(SessionEvent())
-                status = "§aLogged into ${mc.session.username}."
+                status = "§aLogged into ${randomAccount().name}."
             }
 
             6 -> { // Direct login button

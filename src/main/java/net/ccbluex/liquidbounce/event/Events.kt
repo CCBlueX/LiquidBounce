@@ -175,3 +175,8 @@ class WorldEvent(val worldClient: WorldClient?) : Event()
  * Called when window clicked
  */
 class ClickWindowEvent(val windowId: Int, val slotId: Int, val mouseButtonClicked: Int, val mode: Int) : CancellableEvent()
+
+/**
+ * Called when LiquidBounce finishes starting up
+ */
+class StartupEvent : Event()
