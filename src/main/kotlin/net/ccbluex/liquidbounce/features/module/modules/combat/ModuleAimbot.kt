@@ -81,8 +81,8 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
 
             val (yaw, pitch) = Rotation(rotation.yaw - player.yaw, rotation.pitch - player.pitch)
 
-            event.cursorDeltaX += round(yaw) * gcd
-            event.cursorDeltaY += round(pitch) * gcd
+            event.cursorDeltaX += round(yaw / gcd) * gcd
+            event.cursorDeltaY += round(pitch / gcd) * gcd
         }
     }
 
