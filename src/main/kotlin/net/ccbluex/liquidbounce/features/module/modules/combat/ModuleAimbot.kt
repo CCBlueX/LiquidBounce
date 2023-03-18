@@ -25,11 +25,12 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.applyRotation
 import net.ccbluex.liquidbounce.utils.combat.PriorityEnum
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.eyesPos
+import net.ccbluex.liquidbounce.utils.entity.rotation
+import kotlin.math.round
 
 /**
  * Aimbot module
@@ -43,7 +44,7 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
 
     private val targetTracker = tree(TargetTracker(PriorityEnum.DIRECTION))
 
-    private var currentRotation: Rotation? = null
+    private var targetRotation: Rotation? = null
 
     val repeatable = repeatable {
         val eyes = player.eyesPos
@@ -55,20 +56,28 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
 
             val box = target.boundingBox
 
-            if (fov >= RotationManager.rotationDifference(RotationManager.makeRotation(box.center, eyes), Rotation(player.yaw, player.pitch))) {
-                val (rotation, _) = RotationManager.raytraceBox(eyes, box, range = range.toDouble(), wallsRange = 0.0) ?: continue
+            if (fov >= RotationManager.rotationDifference(RotationManager.makeRotation(box.center, eyes), player.rotation)) {
+                val (rotation, _) = RotationManager.raytraceBox(eyes, box, range = range.toDouble(), wallsRange = 0.0) ?: break
 
-                currentRotation = rotation
+                targetRotation = rotation
                 return@repeatable
             }
         }
 
-        currentRotation = null
+        targetRotation = null
     }
 
-    val mouseRotationHandler = handler<MouseRotationEvent> {
-        currentRotation?.let {
-            player.applyRotation(RotationManager.limitAngleChange(Rotation(player.yaw, player.pitch), it, 0.12f))
+    val mouseRotationHandler = handler<MouseRotationEvent> { event ->
+        targetRotation?.let {
+            val f = mc.options.mouseSensitivity * 0.6F.toDouble() + 0.2F.toDouble()
+            val gcd = f * f * f * 8.0
+
+            val rotation = RotationManager.limitAngleChange(player.rotation, it, 13.37f)
+
+            val (yaw, pitch) = Rotation(rotation.yaw - player.yaw, rotation.pitch - player.pitch)
+
+            event.cursorDeltaX += round(yaw) * gcd
+            event.cursorDeltaY += round(pitch) * gcd
         }
     }
 
