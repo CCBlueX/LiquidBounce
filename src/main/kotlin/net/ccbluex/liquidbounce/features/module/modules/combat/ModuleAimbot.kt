@@ -18,9 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MouseRotationEvent
+import net.ccbluex.liquidbounce.event.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
@@ -46,7 +47,11 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
 
     private var targetRotation: Rotation? = null
 
-    val repeatable = repeatable {
+    val tickHandler = handler<PlayerNetworkMovementTickEvent> {
+        if (it.state != EventState.PRE) {
+            return@handler
+        }
+
         val eyes = player.eyesPos
 
         for (target in targetTracker.enemies()) {
@@ -60,7 +65,7 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
                 val (rotation, _) = RotationManager.raytraceBox(eyes, box, range = range.toDouble(), wallsRange = 0.0) ?: break
 
                 targetRotation = rotation
-                return@repeatable
+                return@handler
             }
         }
 
