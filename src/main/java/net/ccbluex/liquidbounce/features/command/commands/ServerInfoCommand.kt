@@ -31,7 +31,7 @@ class ServerInfoCommand : Command("serverinfo"), Listenable {
 
         val data = mc.currentServerData ?: return
 
-        chat("Server infos:")
+        chat("Server info:")
         chat("§7Name: §8${data.serverName}")
         chat("§7IP: §8$ip:$port")
         chat("§7Players: §8${data.populationInfo}")

@@ -83,9 +83,9 @@ class Step : Module() {
                     fakeJump()
                     thePlayer.motionY += 0.620000001490116
 
-                    val f = thePlayer.rotationYaw * 0.017453292F
-                    thePlayer.motionX -= sin(f) * 0.2
-                    thePlayer.motionZ += cos(f) * 0.2
+                    val yaw = MovementUtils.direction
+                    thePlayer.motionX -= sin(yaw) * 0.2
+                    thePlayer.motionZ += cos(yaw) * 0.2
                     timer.reset()
                 }
 
@@ -153,7 +153,7 @@ class Step : Module() {
         val thePlayer = mc.thePlayer ?: return
 
         // Phase should disable step
-        if (LiquidBounce.moduleManager[Phase::class.java]!!.state) {
+        if (LiquidBounce.moduleManager[Phase::class.java].state) {
             event.stepHeight = 0F
             return
         }
@@ -316,7 +316,7 @@ class Step : Module() {
         val x = -sin(yaw) * 0.4
         val z = cos(yaw) * 0.4
 
-        return mc.theWorld!!.getCollisionBoxes(mc.thePlayer!!.entityBoundingBox.offset(x, 1.001335979112147, z))
+        return mc.theWorld.getCollisionBoxes(mc.thePlayer.entityBoundingBox.offset(x, 1.001335979112147, z))
                 .isEmpty()
     }
 

@@ -161,7 +161,7 @@ public class FriendsConfig extends FileConfig {
         return friends;
     }
 
-    public class Friend {
+    public static class Friend {
 
         private final String playerName;
         private final String alias;

@@ -24,10 +24,10 @@ class AutoTool : Module() {
         var bestSpeed = 1F
         var bestSlot = -1
 
-        val blockState = mc.theWorld!!.getBlockState(blockPos)
+        val blockState = mc.theWorld.getBlockState(blockPos)
 
         for (i in 0..8) {
-            val item = mc.thePlayer!!.inventory.getStackInSlot(i) ?: continue
+            val item = mc.thePlayer.inventory.getStackInSlot(i) ?: continue
             val speed = item.getStrVsBlock(blockState.block)
 
             if (speed > bestSpeed) {
@@ -37,7 +37,7 @@ class AutoTool : Module() {
         }
 
         if (bestSlot != -1)
-            mc.thePlayer!!.inventory.currentItem = bestSlot
+            mc.thePlayer.inventory.currentItem = bestSlot
     }
 
 }

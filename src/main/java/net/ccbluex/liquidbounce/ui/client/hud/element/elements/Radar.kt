@@ -65,7 +65,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y) {
     private var fovMarkerVertexBuffer: VertexBuffer? = null
     private var lastFov = 0f
 
-    override fun drawElement(): Border? {
+    override fun drawElement(): Border {
         MiniMapRegister.updateChunks()
 
         val fovAngle = fovAngleValue.get()
@@ -78,7 +78,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y) {
             lastFov = fovAngle
         }
 
-        val renderViewEntity = mc.renderViewEntity!!
+        val renderViewEntity = mc.renderViewEntity
 
         val size = sizeValue.get()
 
@@ -174,7 +174,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y) {
             glPointSize(playerSize)
         }
 
-        for (entity in mc.theWorld!!.loadedEntityList) {
+        for (entity in mc.theWorld.loadedEntityList) {
             if (entity != mc.thePlayer && EntityUtils.isSelected(entity, false)) {
                 val positionRelativeToPlayer = Vector2f((renderViewEntity.posX - entity.posX).toFloat(),
                         (renderViewEntity.posZ - entity.posZ).toFloat())

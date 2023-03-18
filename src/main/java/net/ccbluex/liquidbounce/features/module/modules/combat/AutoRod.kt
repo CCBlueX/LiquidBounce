@@ -5,17 +5,12 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.RaycastUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
-import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityLivingBase
-import net.minecraft.entity.item.EntityArmorStand
 import net.minecraft.init.Items
-import net.minecraft.network.play.client.C09PacketHeldItemChange
 
 @ModuleInfo(name = "AutoRod", description = "Auto use fishing rod to PVP", category = ModuleCategory.COMBAT)
 class AutoRod : Module() {
@@ -65,11 +60,7 @@ class AutoRod : Module() {
 
                 if (facingEntity == null) {
                     // Check if player is looking at enemy, 8 blocks should be enough
-                    facingEntity = RaycastUtils.raycastEntity(8.0, object : RaycastUtils.EntityFilter {
-                        override fun canRaycast(entity: Entity?): Boolean {
-                            return EntityUtils.isSelected(entity, true)
-                        }
-                    })
+                    facingEntity = RaycastUtils.raycastEntity(8.0) { EntityUtils.isSelected(it, true) }
                 }
 
                 if (EntityUtils.isSelected(facingEntity, true)) {

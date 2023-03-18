@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 class AAC2BHop : SpeedMode("AAC2BHop") {
 
     override fun onMotion() {
-        val thePlayer = mc.thePlayer!!
+        val thePlayer = mc.thePlayer
 
         if (thePlayer.isInWater)
             return
@@ -24,7 +24,7 @@ class AAC2BHop : SpeedMode("AAC2BHop") {
                 thePlayer.motionZ *= 1.02
             } else if (thePlayer.motionY > -0.2) {
                 thePlayer.jumpMovementFactor = 0.08f
-                thePlayer.motionY += 0.0143099999999999999999999999999
+                thePlayer.motionY += 0.01430999999999999
                 thePlayer.jumpMovementFactor = 0.07f
             }
         } else {

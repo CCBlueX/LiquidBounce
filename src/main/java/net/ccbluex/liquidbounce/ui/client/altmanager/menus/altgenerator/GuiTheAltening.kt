@@ -171,7 +171,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
                 loginButton.enabled = false
                 generateButton.enabled = false
 
-                Thread(Runnable {
+                Thread {
                     try {
                         status = "§cSwitching Alt Service..."
 
@@ -208,7 +208,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
 
                     loginButton.enabled = true
                     generateButton.enabled = true
-                }).start()
+                }.start()
             }
             3 -> MiscUtils.showURL("https://thealtening.com/?ref=liquidbounce")
         }

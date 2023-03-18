@@ -79,7 +79,9 @@ class AutoPot : Module() {
                     mc.netHandler.addToSendQueue(C09PacketHeldItemChange(potion - 36))
 
                     if (thePlayer.rotationPitch <= 80F) {
-                        RotationUtils.setTargetRotation(Rotation(thePlayer.rotationYaw, RandomUtils.nextFloat(80F, 90F)))
+                        RotationUtils.setTargetRotation(
+                            Rotation(thePlayer.rotationYaw, RandomUtils.nextFloat(80F, 90F)).fixedSensitivity()
+                        )
                     }
                     return
                 }
@@ -121,7 +123,7 @@ class AutoPot : Module() {
     }
 
     private fun findPotion(startSlot: Int, endSlot: Int): Int {
-        val thePlayer = mc.thePlayer!!
+        val thePlayer = mc.thePlayer
 
         for (i in startSlot until endSlot) {
             val stack = thePlayer.inventoryContainer.getSlot(i).stack
@@ -129,7 +131,7 @@ class AutoPot : Module() {
             if (stack == null || stack.item !is ItemPotion || !ItemPotion.isSplash(stack.metadata))
                 continue
 
-            val itemPotion = stack.item!! as ItemPotion
+            val itemPotion = stack.item as ItemPotion
 
             for (potionEffect in itemPotion.getEffects(stack))
                 if (potionEffect.potionID == Potion.heal.id)
@@ -144,7 +146,7 @@ class AutoPot : Module() {
         return -1
     }
 
-    override val tag: String?
+    override val tag: String
         get() = healthValue.get().toString()
 
 }

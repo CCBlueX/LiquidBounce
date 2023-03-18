@@ -86,7 +86,7 @@ class BufferSpeed : Module() {
     private var legitHop = false
 
     @EventTarget
-    fun onUpdate(event: UpdateEvent?) {
+    fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer ?: return
 
         if (LiquidBounce.moduleManager.getModule(Speed::class.java).state || noHurtValue.get() && thePlayer.hurtTime > 0) {
@@ -259,7 +259,7 @@ class BufferSpeed : Module() {
     }
 
     private inline fun boost(boost: Float) {
-        val thePlayer = mc.thePlayer!!
+        val thePlayer = mc.thePlayer
 
         thePlayer.motionX = thePlayer.motionX * boost
         thePlayer.motionZ = thePlayer.motionX * boost
@@ -275,12 +275,12 @@ class BufferSpeed : Module() {
             val thePlayer = mc.thePlayer
             val theWorld = mc.theWorld
             val blocks: MutableList<BlockPos> = ArrayList()
-            blocks.add(BlockPos(thePlayer!!.posX, thePlayer.posY + 1, thePlayer.posZ - 0.7))
+            blocks.add(BlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ - 0.7))
             blocks.add(BlockPos(thePlayer.posX + 0.7, thePlayer.posY + 1, thePlayer.posZ))
             blocks.add(BlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ + 0.7))
             blocks.add(BlockPos(thePlayer.posX - 0.7, thePlayer.posY + 1, thePlayer.posZ))
             for (blockPos in blocks) {
-                val blockState = theWorld!!.getBlockState(blockPos)
+                val blockState = theWorld.getBlockState(blockPos)
 
                 val collisionBoundingBox = blockState.block.getCollisionBoundingBox(theWorld, blockPos, blockState)
 

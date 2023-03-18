@@ -16,7 +16,7 @@ class NCPHop : SpeedMode("NCPHop") {
     }
 
     override fun onDisable() {
-        mc.thePlayer!!.speedInAir = 0.02f
+        mc.thePlayer.speedInAir = 0.02f
         mc.timer.timerSpeed = 1f
         super.onDisable()
     }
@@ -24,14 +24,14 @@ class NCPHop : SpeedMode("NCPHop") {
     override fun onMotion() {}
     override fun onUpdate() {
         if (MovementUtils.isMoving) {
-            if (mc.thePlayer!!.onGround) {
-                mc.thePlayer!!.jump()
-                mc.thePlayer!!.speedInAir = 0.0223f
+            if (mc.thePlayer.onGround) {
+                mc.thePlayer.jump()
+                mc.thePlayer.speedInAir = 0.0223f
             }
             MovementUtils.strafe()
         } else {
-            mc.thePlayer!!.motionX = 0.0
-            mc.thePlayer!!.motionZ = 0.0
+            mc.thePlayer.motionX = 0.0
+            mc.thePlayer.motionZ = 0.0
         }
     }
 

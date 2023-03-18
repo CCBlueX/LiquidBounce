@@ -395,9 +395,9 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
                     val fontRenderer = value.get()
 
                     // Title
-                    val text = when {
-                        fontRenderer is GameFontRenderer -> "Font: ${fontRenderer.defaultFont.font.name} - ${fontRenderer.defaultFont.font.size}"
-                        fontRenderer == Fonts.minecraftFont -> "Font: Minecraft"
+                    val text = when (fontRenderer) {
+                        is GameFontRenderer -> "Font: ${fontRenderer.defaultFont.font.name} - ${fontRenderer.defaultFont.font.size}"
+                        Fonts.minecraftFont -> "Font: Minecraft"
                         else -> "Font: Unknown"
                     }
 

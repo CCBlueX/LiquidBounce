@@ -11,6 +11,7 @@ import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.util.MathHelper
 import net.minecraft.util.Vec3
 import kotlin.math.cos
+import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.math.sqrt
 
@@ -23,10 +24,10 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
      * Set rotations to [player]
      */
     fun toPlayer(player: EntityPlayer) {
-        if (yaw.isNaN() || pitch.isNaN())
+        if (yaw.isNaN() || pitch.isNaN() || pitch > 90 || pitch < -90)
             return
 
-        fixedSensitivity(mc.gameSettings.mouseSensitivity)
+        fixedSensitivity()
 
         player.rotationYaw = yaw
         player.rotationPitch = pitch
@@ -37,22 +38,25 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
      *
      * @see net.minecraft.client.renderer.EntityRenderer.updateCameraAndRender
      */
-    fun fixedSensitivity(sensitivity: Float) {
-        val f = sensitivity * 0.6F + 0.2F
-        val gcd = f * f * f * 1.2F
+    @JvmOverloads
+    fun fixedSensitivity(sensitivity: Float = mc.gameSettings.mouseSensitivity): Rotation {
+        val gcd = RotationUtils.getFixedAngleDelta(sensitivity)
 
         // get previous rotation
         val rotation = RotationUtils.serverRotation
 
+        // Previous implementation essentially floored the subtraction.
+        // This way it returns rotations closer to the original.
+
         // fix yaw
-        var deltaYaw = yaw - rotation.yaw
-        deltaYaw -= deltaYaw % gcd
-        yaw = rotation.yaw + deltaYaw
+        val deltaYaw = yaw - rotation.yaw
+        yaw = rotation.yaw + (deltaYaw / gcd).roundToInt() * gcd
 
         // fix pitch
-        var deltaPitch = pitch - rotation.pitch
-        deltaPitch -= deltaPitch % gcd
-        pitch = rotation.pitch + deltaPitch
+        val deltaPitch = pitch - rotation.pitch
+        pitch = rotation.pitch + (deltaPitch / gcd).roundToInt() * gcd
+
+        return this
     }
 
     /**
@@ -61,11 +65,9 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
      * @author bestnub
      */
     fun applyStrafeToPlayer(event: StrafeEvent) {
-        val player = mc.thePlayer!!
+        val player = mc.thePlayer
 
-        val dif = ((MathHelper.wrapAngleTo180_float(player.rotationYaw - this.yaw
-                - 23.5f - 135)
-                + 180) / 45).toInt()
+        val diff = ((MathHelper.wrapAngleTo180_float(player.rotationYaw - this.yaw - 23.5f - 135) + 180) / 45).toInt()
 
         val yaw = this.yaw
 
@@ -76,7 +78,7 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
         var calcForward = 0f
         var calcStrafe = 0f
 
-        when (dif) {
+        when (diff) {
             0 -> {
                 calcForward = forward
                 calcStrafe = strafe
@@ -135,10 +137,10 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
             d = friction / d
             calcStrafe *= d
             calcForward *= d
-            val yawSin = sin((yaw * Math.PI / 180f).toFloat())
-            val yawCos = cos((yaw * Math.PI / 180f).toFloat())
-            player.motionX += calcStrafe * yawCos - calcForward * yawSin.toDouble()
-            player.motionZ += calcForward * yawCos + calcStrafe * yawSin.toDouble()
+            val yawSin = sin(yaw * Math.PI / 180f)
+            val yawCos = cos(yaw * Math.PI / 180f)
+            player.motionX += calcStrafe * yawCos - calcForward * yawSin
+            player.motionZ += calcForward * yawCos + calcStrafe * yawSin
         }
     }
 }

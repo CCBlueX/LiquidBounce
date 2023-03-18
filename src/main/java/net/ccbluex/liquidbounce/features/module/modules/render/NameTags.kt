@@ -55,7 +55,7 @@ class NameTags : Module() {
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
-        for (entity in mc.theWorld!!.loadedEntityList) {
+        for (entity in mc.theWorld.loadedEntityList) {
             if (entity !is EntityLivingBase) continue
             if (!EntityUtils.isSelected(entity, false)) continue
             if (AntiBot.isBot(entity) && !botValue.get()) continue

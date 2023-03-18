@@ -31,7 +31,7 @@ class LongJump : Module() {
     private var canMineplexBoost = false
 
     @EventTarget
-    fun onUpdate(event: UpdateEvent?) {
+    fun onUpdate(event: UpdateEvent) {
         if (LadderJump.jumped)
             MovementUtils.strafe(MovementUtils.speed * 1.08f)
 
@@ -62,7 +62,7 @@ class LongJump : Module() {
                     }
                     "aacv2", "mineplex3" -> {
                         thePlayer.jumpMovementFactor = 0.09f
-                        thePlayer.motionY += 0.0132099999999999999999999999999
+                        thePlayer.motionY += 0.01320999999999999
                         thePlayer.jumpMovementFactor = 0.08f
                         MovementUtils.strafe()
                     }
@@ -87,7 +87,7 @@ class LongJump : Module() {
                         }
                     }
                     "mineplex" -> {
-                        thePlayer.motionY += 0.0132099999999999999999999999999
+                        thePlayer.motionY += 0.01320999999999999
                         thePlayer.jumpMovementFactor = 0.08f
                         MovementUtils.strafe()
                     }
@@ -141,10 +141,10 @@ class LongJump : Module() {
             when (modeValue.get().lowercase()) {
                 "mineplex" -> event.motion = event.motion * 4.08f
                 "mineplex2" -> {
-                    if (mc.thePlayer!!.isCollidedHorizontally) {
+                    if (mc.thePlayer.isCollidedHorizontally) {
                         event.motion = 2.31f
                         canMineplexBoost = true
-                        mc.thePlayer!!.onGround = false
+                        mc.thePlayer.onGround = false
                     }
                 }
             }

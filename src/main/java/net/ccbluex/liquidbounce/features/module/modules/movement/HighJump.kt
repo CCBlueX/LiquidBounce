@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.minecraft.util.BlockPos
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.MoveEvent
@@ -19,6 +18,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockPane
+import net.minecraft.util.BlockPos
 
 @ModuleInfo(name = "HighJump", description = "Allows you to jump higher.", category = ModuleCategory.MOVEMENT)
 class HighJump : Module() {
@@ -29,8 +29,8 @@ class HighJump : Module() {
     private val glassValue = BoolValue("OnlyGlassPane", false)
 
     @EventTarget
-    fun onUpdate(event: UpdateEvent?) {
-        val thePlayer = mc.thePlayer!!
+    fun onUpdate(event: UpdateEvent) {
+        val thePlayer = mc.thePlayer
 
         if (glassValue.get() && getBlock(BlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)) !is BlockPane)
             return
@@ -44,7 +44,7 @@ class HighJump : Module() {
     }
 
     @EventTarget
-    fun onMove(event: MoveEvent?) {
+    fun onMove(event: MoveEvent) {
         val thePlayer = mc.thePlayer ?: return
 
         if (glassValue.get() && getBlock(BlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)) !is BlockPane)

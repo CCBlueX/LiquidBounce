@@ -73,7 +73,7 @@ object AntiBot : Module() {
 
         // Anti Bot checks
 
-        if (colorValue.get() && !entity.displayName!!.formattedText.replace("§r", "").contains("§"))
+        if (colorValue.get() && !entity.displayName.formattedText.replace("§r", "").contains("§"))
             return true
 
         if (livingTimeValue.get() && entity.ticksExisted < livingTimeTicksValue.get())
@@ -119,7 +119,7 @@ object AntiBot : Module() {
 
         if (tabValue.get()) {
             val equals = tabModeValue.get().equals("Equals", ignoreCase = true)
-            val targetName = stripColor(entity.displayName!!.formattedText)
+            val targetName = stripColor(entity.displayName.formattedText)
 
             if (targetName != null) {
                 for (networkPlayerInfo in mc.netHandler.playerInfoMap) {
@@ -134,17 +134,17 @@ object AntiBot : Module() {
         }
 
         if (duplicateInWorldValue.get() &&
-                mc.theWorld!!.loadedEntityList.filter { it is EntityPlayer && it.displayNameString == it.displayNameString }.count() > 1) // TODO: I'm 99% certain this doesn't make sense
+            mc.theWorld.loadedEntityList.count { it is EntityPlayer && it.displayNameString == it.displayNameString } > 1) // TODO: I'm 99% certain this doesn't make sense
             return true
 
         if (duplicateInTabValue.get() &&
-                mc.netHandler.playerInfoMap.filter { entity.name == stripColor(it.getFullName()) }.count() > 1)
+            mc.netHandler.playerInfoMap.count { entity.name == stripColor(it.getFullName()) } > 1)
             return true
 
         if (alwaysInRadiusValue.get() && !notAlwaysInRadius.contains(entity.entityId))
             return true
 
-        return entity.name!!.isEmpty() || entity.name == mc.thePlayer!!.name
+        return entity.name.isEmpty() || entity.name == mc.thePlayer.name
     }
 
     override fun onDisable() {
@@ -160,7 +160,7 @@ object AntiBot : Module() {
         val packet = event.packet
 
         if (packet is S14PacketEntity) {
-            val entity = packet.getEntity(mc.theWorld!!)
+            val entity = packet.getEntity(mc.theWorld)
 
             if (entity is EntityPlayer && entity != null) {
                 if (entity.onGround && !ground.contains(entity.entityId))
@@ -183,13 +183,13 @@ object AntiBot : Module() {
                 if (entity.isInvisible && !invisible.contains(entity.entityId))
                     invisible.add(entity.entityId)
 
-                if (!notAlwaysInRadius.contains(entity.entityId) && mc.thePlayer!!.getDistanceToEntity(entity) > alwaysRadiusValue.get())
-                    notAlwaysInRadius.add(entity.entityId);
+                if (!notAlwaysInRadius.contains(entity.entityId) && mc.thePlayer.getDistanceToEntity(entity) > alwaysRadiusValue.get())
+                    notAlwaysInRadius.add(entity.entityId)
             }
         }
 
         if (packet is S0BPacketAnimation) {
-            val entity = mc.theWorld!!.getEntityByID(packet.entityID)
+            val entity = mc.theWorld.getEntityByID(packet.entityID)
 
             if (entity != null && entity is EntityLivingBase && packet.animationType == 0
                     && !swing.contains(entity.entityId))
@@ -206,7 +206,7 @@ object AntiBot : Module() {
     }
 
     @EventTarget
-    fun onWorld(event: WorldEvent?) {
+    fun onWorld(event: WorldEvent) {
         clearAll()
     }
 
@@ -216,7 +216,7 @@ object AntiBot : Module() {
         ground.clear()
         invalidGround.clear()
         invisible.clear()
-        notAlwaysInRadius.clear();
+        notAlwaysInRadius.clear()
     }
 
 }

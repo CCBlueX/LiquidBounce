@@ -91,13 +91,12 @@ public class Spammer extends Module {
     }
 
     private String randomPlayer() {
-        final String playerName = mc.getNetHandler().getPlayerInfoMap().stream()
+
+        return mc.getNetHandler().getPlayerInfoMap().stream()
                 .map(playerInfo -> playerInfo.getGameProfile().getName())
                 .filter(name -> !name.equalsIgnoreCase(mc.thePlayer.getName()))
                 .findAny()
                 .orElse("none");
-
-        return playerName;
     }
 
 }

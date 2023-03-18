@@ -44,8 +44,8 @@ class CivBreak : Module() {
         enumFacing = event.WEnumFacing ?: return
 
         // Break
-        mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, blockPos!!, enumFacing!!))
-        mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK, blockPos!!, enumFacing!!))
+        mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK, blockPos, enumFacing))
+        mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK, blockPos, enumFacing))
     }
 
     @EventTarget
@@ -67,16 +67,16 @@ class CivBreak : Module() {
 
             EventState.POST -> {
                 if (visualSwingValue.get())
-                    mc.thePlayer!!.swingItem()
+                    mc.thePlayer.swingItem()
                 else
                     mc.netHandler.addToSendQueue(C0APacketAnimation())
 
                 // Break
                 mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK,
-                        blockPos!!, enumFacing!!))
+                        blockPos, enumFacing))
                 mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK,
-                        blockPos!!, enumFacing!!))
-                mc.playerController.clickBlock(blockPos!!, enumFacing!!)
+                        blockPos, enumFacing))
+                mc.playerController.clickBlock(blockPos, enumFacing)
             }
         }
     }

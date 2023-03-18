@@ -78,7 +78,7 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
     }
 
     /**
-     * Adds client command auto completion and cancels sending an auto completion request packet
+     * Adds client command auto-completion and cancels sending an auto-completion request packet
      * to the server if the message contains a client command.
      *
      * @author NurMarvin

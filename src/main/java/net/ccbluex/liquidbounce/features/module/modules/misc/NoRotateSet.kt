@@ -34,8 +34,7 @@ class NoRotateSet : Module() {
                 return
 
             if (illegalRotationValue.get() || packet.pitch <= 90 && packet.pitch >= -90 &&
-                    RotationUtils.serverRotation != null && packet.yaw != RotationUtils.serverRotation.yaw &&
-                    packet.pitch != RotationUtils.serverRotation.pitch) {
+                    packet.yaw != RotationUtils.serverRotation.yaw && packet.pitch != RotationUtils.serverRotation.pitch) {
 
                 if (confirmValue.get())
                     mc.netHandler.addToSendQueue(C05PacketPlayerLook(packet.yaw, packet.pitch, thePlayer.onGround))

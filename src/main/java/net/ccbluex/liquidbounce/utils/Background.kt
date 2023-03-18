@@ -37,9 +37,9 @@ abstract class Background(val backgroundFile: File) {
 
     }
 
-    protected abstract fun initBackground();
+    protected abstract fun initBackground()
 
-    abstract fun drawBackground(width: Int, height: Int);
+    abstract fun drawBackground(width: Int, height: Int)
 
 }
 

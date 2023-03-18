@@ -35,7 +35,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
@@ -152,7 +151,7 @@ public abstract class MixinGuiScreen {
      * @reason Making it possible for other mixins to receive actions
      */
     @Overwrite
-    protected void actionPerformed(GuiButton button) throws IOException {
+    protected void actionPerformed(GuiButton button) {
         this.injectedActionPerformed(button);
     }
 

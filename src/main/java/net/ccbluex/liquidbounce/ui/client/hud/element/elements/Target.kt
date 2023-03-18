@@ -72,7 +72,7 @@ class Target : Element() {
             easingHealth += ((target.health - easingHealth) / 2.0F.pow(10.0F - fadeSpeed.get())) * RenderUtils.deltaTime
 
             target.name?.let { Fonts.font40.drawString(it, 36, 3, 0xffffff) }
-            Fonts.font35.drawString("Distance: ${decimalFormat.format(mc.thePlayer!!.getDistanceToEntityBox(target))}", 36, 15, 0xffffff)
+            Fonts.font35.drawString("Distance: ${decimalFormat.format(mc.thePlayer.getDistanceToEntityBox(target))}", 36, 15, 0xffffff)
 
             // Draw info
             val playerInfo = mc.netHandler.getPlayerInfo(target.uniqueID)

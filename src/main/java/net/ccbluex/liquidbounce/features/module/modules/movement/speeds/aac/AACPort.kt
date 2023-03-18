@@ -28,9 +28,9 @@ class AACPort : SpeedMode("AACPort") {
         val f = thePlayer.rotationYaw * 0.017453292f
         var d = 0.2
 
-        while (d <= (LiquidBounce.moduleManager.getModule(Speed::class.java) as Speed?)!!.portMax.get()) {
-            val x: Double = thePlayer.posX - sin(f) * d
-            val z: Double = thePlayer.posZ + cos(f) * d
+        while (d <= (LiquidBounce.moduleManager.getModule(Speed::class.java) as Speed).portMax.get()) {
+            val x = thePlayer.posX - sin(f) * d
+            val z = thePlayer.posZ + cos(f) * d
 
             if (thePlayer.posY < thePlayer.posY.toInt() + 0.5 && getBlock(BlockPos(x, thePlayer.posY, z)) != Blocks.air)
                 break

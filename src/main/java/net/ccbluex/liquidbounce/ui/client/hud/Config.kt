@@ -63,12 +63,12 @@ class Config {
                         if (classType == type) {
                             val element = elementClass.newInstance()
 
-                            element.x = jsonObject["X"].asInt.toDouble()
-                            element.y = jsonObject["Y"].asInt.toDouble()
+                            element.x = jsonObject["X"].asDouble
+                            element.y = jsonObject["Y"].asDouble
                             element.scale = jsonObject["Scale"].asFloat
                             element.side = Side(
-                                    Side.Horizontal.getByName(jsonObject["HorizontalFacing"].asString)!!,
-                                    Side.Vertical.getByName(jsonObject["VerticalFacing"].asString)!!
+                                    Side.Horizontal.getByName(jsonObject["HorizontalFacing"].asString) ?: Side.Horizontal.RIGHT,
+                                    Side.Vertical.getByName(jsonObject["VerticalFacing"].asString) ?: Side.Vertical.UP
                             )
 
                             for (value in element.values) {

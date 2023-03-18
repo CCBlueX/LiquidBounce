@@ -54,7 +54,7 @@ class AtAllProvider : Module() {
     }
 
     @EventTarget
-    fun onUpdate(event: UpdateEvent?) {
+    fun onUpdate(event: UpdateEvent) {
         if (!msTimer.hasTimePassed(delay))
             return
 
@@ -67,7 +67,7 @@ class AtAllProvider : Module() {
                         sendQueue.addAll(retryQueue)
                 }
 
-                mc.thePlayer!!.sendChatMessage(sendQueue.take())
+                mc.thePlayer.sendChatMessage(sendQueue.take())
                 msTimer.reset()
 
                 delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
@@ -87,7 +87,7 @@ class AtAllProvider : Module() {
                     for (playerInfo in mc.netHandler.playerInfoMap) {
                         val playerName = playerInfo.gameProfile.name
 
-                        if (playerName == mc.thePlayer!!.name)
+                        if (playerName == mc.thePlayer.name)
                             continue
 
                         sendQueue.add(message.replace("@a", playerName))

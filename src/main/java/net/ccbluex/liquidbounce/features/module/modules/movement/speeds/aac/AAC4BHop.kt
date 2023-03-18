@@ -13,7 +13,7 @@ class AAC4BHop : SpeedMode("AAC4BHop") {
     private var legitHop = false
 
     override fun onDisable() {
-        mc.thePlayer!!.speedInAir = 0.02f
+        mc.thePlayer.speedInAir = 0.02f
     }
 
     override fun onTick() {

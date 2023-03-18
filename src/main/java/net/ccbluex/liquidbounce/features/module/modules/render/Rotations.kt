@@ -12,9 +12,9 @@ import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.features.module.modules.`fun`.Derp
 import net.ccbluex.liquidbounce.features.module.modules.combat.BowAimbot
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
+import net.ccbluex.liquidbounce.features.module.modules.`fun`.Derp
 import net.ccbluex.liquidbounce.features.module.modules.world.*
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -29,8 +29,7 @@ class Rotations : Module() {
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        if (RotationUtils.serverRotation != null && !bodyValue.get())
-            mc.thePlayer?.rotationYawHead = RotationUtils.serverRotation.yaw
+        mc.thePlayer?.rotationYawHead = RotationUtils.serverRotation.yaw
     }
 
     @EventTarget
@@ -42,8 +41,8 @@ class Rotations : Module() {
 
         val packet = event.packet
 
-        if (packet is C03PacketPlayer.C06PacketPlayerPosLook || packet is C03PacketPlayer.C05PacketPlayerLook) {
-            playerYaw = (packet as C03PacketPlayer).yaw
+        if (packet is C03PacketPlayer && packet.rotating) {
+            playerYaw = packet.yaw
             mc.thePlayer.renderYawOffset = packet.getYaw()
             mc.thePlayer.rotationYawHead = packet.getYaw()
         } else {
@@ -54,7 +53,7 @@ class Rotations : Module() {
         }
     }
 
-    private fun getState(module: Class<*>) = LiquidBounce.moduleManager[module]!!.state
+    private fun getState(module: Class<*>) = LiquidBounce.moduleManager[module].state
 
     private fun shouldRotate(): Boolean {
         val killAura = LiquidBounce.moduleManager.getModule(KillAura::class.java) as KillAura

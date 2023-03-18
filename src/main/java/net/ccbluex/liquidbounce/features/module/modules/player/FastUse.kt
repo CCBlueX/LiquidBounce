@@ -55,7 +55,7 @@ class FastUse : Module() {
             return
         }
 
-        val usingItem = thePlayer.itemInUse!!.item
+        val usingItem = thePlayer.itemInUse.item
 
         if (usingItem is ItemFood || usingItem is ItemBucketMilk || usingItem is ItemPotion) {
             when (modeValue.get().lowercase()) {
@@ -98,17 +98,15 @@ class FastUse : Module() {
     }
 
     @EventTarget
-    fun onMove(event: MoveEvent?) {
-        val thePlayer = mc.thePlayer
+    fun onMove(event: MoveEvent) {
+        val thePlayer = mc.thePlayer ?: return
 
-        if (thePlayer == null || event == null)
-            return
         if (!state || !thePlayer.isUsingItem || !noMoveValue.get())
             return
 
-        val usingItem = thePlayer.itemInUse!!.item
+        val usingItem = thePlayer.itemInUse.item
 
-        if ((usingItem is ItemFood || usingItem is ItemBucketMilk || usingItem is ItemPotion))
+        if (usingItem is ItemFood || usingItem is ItemBucketMilk || usingItem is ItemPotion)
             event.zero()
     }
 
@@ -119,6 +117,6 @@ class FastUse : Module() {
         }
     }
 
-    override val tag: String?
+    override val tag: String
         get() = modeValue.get()
 }

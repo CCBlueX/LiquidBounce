@@ -75,7 +75,7 @@ object Fucker : Module() {
 
         val targetId = blockValue.get()
 
-        if (pos == null || Block.getIdFromBlock(getBlock(pos!!)!!) != targetId ||
+        if (pos == null || Block.getIdFromBlock(getBlock(pos!!)) != targetId ||
                 getCenterDistance(pos!!) > rangeValue.get())
             pos = find(targetId)
 
@@ -93,7 +93,7 @@ object Fucker : Module() {
 
         if (surroundingsValue.get()) {
             val eyes = thePlayer.getPositionEyes(1F)
-            val blockPos = mc.theWorld!!.rayTraceBlocks(eyes, rotations.vec, false,
+            val blockPos = mc.theWorld.rayTraceBlocks(eyes, rotations.vec, false,
                     false, true)?.blockPos
 
             if (blockPos != null && blockPos.getBlock() != Blocks.air) {
@@ -128,7 +128,7 @@ object Fucker : Module() {
             RotationUtils.setTargetRotation(rotations.rotation)
 
         when {
-            // Destory block
+            // Destroy block
             actionValue.get().equals("destroy", true) || surroundings -> {
                 // Auto Tool
                 val autoTool = LiquidBounce.moduleManager[AutoTool::class.java] as AutoTool
@@ -158,10 +158,10 @@ object Fucker : Module() {
                             currentPos, EnumFacing.DOWN))
 
                     if (thePlayer.capabilities.isCreativeMode ||
-                            block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld!!, pos!!) >= 1.0F) {
+                            block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld, pos) >= 1.0F) {
                         if (swingValue.get())
                             thePlayer.swingItem()
-                        mc.playerController.onPlayerDestroyBlock(pos!!, EnumFacing.DOWN)
+                        mc.playerController.onPlayerDestroyBlock(pos, EnumFacing.DOWN)
 
                         currentDamage = 0F
                         pos = null
@@ -172,8 +172,8 @@ object Fucker : Module() {
                 if (swingValue.get())
                     thePlayer.swingItem()
 
-                currentDamage += block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld!!, currentPos)
-                mc.theWorld!!.sendBlockBreakProgress(thePlayer.entityId, currentPos, (currentDamage * 10F).toInt() - 1)
+                currentDamage += block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld, currentPos)
+                mc.theWorld.sendBlockBreakProgress(thePlayer.entityId, currentPos, (currentDamage * 10F).toInt() - 1)
 
                 if (currentDamage >= 1F) {
                     mc.netHandler.addToSendQueue(C07PacketPlayerDigging(
@@ -188,7 +188,7 @@ object Fucker : Module() {
 
             // Use block
             actionValue.get().equals("use", true) -> if (mc.playerController.onPlayerRightClick(
-                            thePlayer, mc.theWorld!!, thePlayer.heldItem!!, pos!!, EnumFacing.DOWN,
+                            thePlayer, mc.theWorld, thePlayer.heldItem, pos, EnumFacing.DOWN,
                             Vec3(currentPos.x.toDouble(), currentPos.y.toDouble(), currentPos.z.toDouble()))) {
                 if (swingValue.get())
                     thePlayer.swingItem()
@@ -258,7 +258,7 @@ object Fucker : Module() {
         return when (throughWallsValue.get().lowercase()) {
             "raycast" -> {
                 val eyesPos = thePlayer.getPositionEyes(1f)
-                val movingObjectPosition = mc.theWorld!!.rayTraceBlocks(eyesPos,
+                val movingObjectPosition = mc.theWorld.rayTraceBlocks(eyesPos,
                         Vec3(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5), false, true, false)
 
                 movingObjectPosition != null && movingObjectPosition.blockPos == blockPos

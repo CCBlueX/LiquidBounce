@@ -50,20 +50,20 @@ object BlockUtils : MinecraftInstance() {
      */
     @JvmStatic
     fun canBeClicked(blockPos: BlockPos) = getBlock(blockPos)?.canCollideCheck(getState(blockPos), false) ?: false &&
-            mc.theWorld!!.worldBorder.contains(blockPos)
+            mc.theWorld.worldBorder.contains(blockPos)
 
     /**
      * Get block name by [id]
      */
     @JvmStatic
-    fun getBlockName(id: Int): String = Block.getBlockById(id)!!.localizedName
+    fun getBlockName(id: Int): String = Block.getBlockById(id).localizedName
 
     /**
      * Check if block is full block
      */
     @JvmStatic
     fun isFullBlock(blockPos: BlockPos): Boolean {
-        val axisAlignedBB = getBlock(blockPos)?.getCollisionBoundingBox(mc.theWorld!!, blockPos, getState(blockPos)
+        val axisAlignedBB = getBlock(blockPos)?.getCollisionBoundingBox(mc.theWorld, blockPos, getState(blockPos)
                 ?: return false)
                 ?: return false
         return axisAlignedBB.maxX - axisAlignedBB.minX == 1.0 && axisAlignedBB.maxY - axisAlignedBB.minY == 1.0 && axisAlignedBB.maxZ - axisAlignedBB.minZ == 1.0
@@ -74,7 +74,7 @@ object BlockUtils : MinecraftInstance() {
      */
     @JvmStatic
     fun getCenterDistance(blockPos: BlockPos) =
-            mc.thePlayer!!.getDistance(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5)
+            mc.thePlayer.getDistance(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5)
 
     /**
      * Search blocks around the player in a specific [radius]
@@ -105,7 +105,7 @@ object BlockUtils : MinecraftInstance() {
      */
     @JvmStatic
     fun collideBlock(axisAlignedBB: AxisAlignedBB, collide: Collidable): Boolean {
-        val thePlayer = mc.thePlayer!!
+        val thePlayer = mc.thePlayer
 
         for (x in floor(thePlayer.entityBoundingBox.minX).toInt() until
                 floor(thePlayer.entityBoundingBox.maxX).toInt() + 1L) {
@@ -126,8 +126,8 @@ object BlockUtils : MinecraftInstance() {
      */
     @JvmStatic
     fun collideBlockIntersects(axisAlignedBB: AxisAlignedBB, collide: Collidable): Boolean {
-        val thePlayer = mc.thePlayer!!
-        val world = mc.theWorld!!
+        val thePlayer = mc.thePlayer
+        val world = mc.theWorld
 
         for (x in floor(thePlayer.entityBoundingBox.minX).toInt() until
                 floor(thePlayer.entityBoundingBox.maxX).toInt() + 1) {

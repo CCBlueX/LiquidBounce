@@ -119,7 +119,7 @@ class FastClimb : Module() {
     @EventTarget
     fun onBlockBB(event: BlockBBEvent) {
         if (mc.thePlayer != null && (event.block is BlockLadder|| event.block is BlockVine) &&
-                modeValue.get().equals("AAC3.0.5", ignoreCase = true) && mc.thePlayer!!.isOnLadder)
+                modeValue.get().equals("AAC3.0.5", ignoreCase = true) && mc.thePlayer.isOnLadder)
             event.boundingBox = null
     }
 

@@ -23,7 +23,7 @@ class ReverseStep : Module() {
     private var jumped = false
 
     @EventTarget(ignoreCondition = true)
-    fun onUpdate(event: UpdateEvent?) {
+    fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer ?: return
 
         if (thePlayer.onGround)
@@ -45,7 +45,7 @@ class ReverseStep : Module() {
     }
 
     @EventTarget(ignoreCondition = true)
-    fun onJump(event: JumpEvent?) {
+    fun onJump(event: JumpEvent) {
         jumped = true
     }
 

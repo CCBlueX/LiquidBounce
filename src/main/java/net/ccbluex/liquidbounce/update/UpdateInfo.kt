@@ -74,6 +74,4 @@ data class Build(@SerializedName("build_id")
                  val release: Boolean,
                  val date: String,
                  val message: String,
-                 val url: String) {
-
-}
+                 val url: String)

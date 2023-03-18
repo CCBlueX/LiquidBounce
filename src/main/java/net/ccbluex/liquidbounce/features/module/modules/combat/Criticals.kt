@@ -31,7 +31,7 @@ class Criticals : Module() {
 
     override fun onEnable() {
         if (modeValue.get().equals("NoGround", ignoreCase = true))
-            mc.thePlayer!!.jump()
+            mc.thePlayer.jump()
     }
 
     @EventTarget
@@ -90,6 +90,6 @@ class Criticals : Module() {
             packet.onGround = false
     }
 
-    override val tag: String?
+    override val tag: String
         get() = modeValue.get()
 }

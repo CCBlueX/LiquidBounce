@@ -21,12 +21,12 @@ class MidClick : Module() {
     private var wasDown = false
 
     @EventTarget
-    fun onRender(event: Render2DEvent?) {
+    fun onRender(event: Render2DEvent) {
         if (mc.currentScreen != null)
             return
 
         if (!wasDown && Mouse.isButtonDown(2)) {
-            val entity = mc.objectMouseOver!!.entityHit
+            val entity = mc.objectMouseOver.entityHit
 
             if (entity is EntityPlayer) {
                 val playerName = stripColor(entity.name)

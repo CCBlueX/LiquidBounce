@@ -6,7 +6,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.LiquidChat
 
 class ChatAdminCommand : Command("chatadmin") {
 
-    val lChat = LiquidBounce.moduleManager.getModule(LiquidChat::class.java) as LiquidChat
+    private val lChat = LiquidBounce.moduleManager.getModule(LiquidChat::class.java) as LiquidChat
 
     /**
      * Execute commands with provided [args]

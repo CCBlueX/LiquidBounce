@@ -46,6 +46,6 @@ class AACHop3313 : SpeedMode("AACHop3.3.13") {
 
     override fun onMove(event: MoveEvent) {}
     override fun onDisable() {
-        mc.thePlayer!!.jumpMovementFactor = 0.02f
+        mc.thePlayer.jumpMovementFactor = 0.02f
     }
 }

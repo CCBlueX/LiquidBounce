@@ -52,7 +52,7 @@ class ItemESP : Module() {
     }
 
     @EventTarget
-    fun onRender3D(event: Render3DEvent?) {
+    fun onRender3D(event: Render3DEvent) {
 
         if(mc.theWorld == null) return
 

@@ -14,7 +14,7 @@ object ColorUtils {
     val allowedCharactersArray = charArrayOf('/', '\n', '\r', '\t', '\u0000', '', '`', '?', '*', '\\', '<', '>', '|', '\"', ':')
 
     fun isAllowedCharacter(character: Char): Boolean {
-        return character.toInt() != 167 && character.toInt() >= 32 && character.toInt() != 127
+        return character.code != 167 && character.code >= 32 && character.code != 127
     }
 
     private val COLOR_PATTERN = Pattern.compile("(?i)§[0-9A-FK-OR]")

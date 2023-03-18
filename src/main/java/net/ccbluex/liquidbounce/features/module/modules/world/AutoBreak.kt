@@ -17,7 +17,7 @@ class AutoBreak : Module() {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        if (mc.objectMouseOver == null || mc.objectMouseOver!!.blockPos == null || mc.theWorld == null)
+        if (mc.objectMouseOver == null || mc.objectMouseOver.blockPos == null || mc.theWorld == null)
             return
 
         mc.gameSettings.keyBindAttack.pressed = mc.theWorld.getBlockState(mc.objectMouseOver.blockPos).block != Blocks.air

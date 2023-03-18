@@ -5,8 +5,6 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.entity;
 
-import kotlin.Unit;
-import kotlin.jvm.functions.Function1;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.cape.CapeAPI;
 import net.ccbluex.liquidbounce.cape.CapeInfo;

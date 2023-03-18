@@ -34,7 +34,7 @@ class Particle {
     }
 
     private float lint1(float f) {
-        return ((float) 1.02 * (1.0f - f)) + ((float) 1.0 * f);
+        return ((float) 1.02 * (1.0f - f)) + f;
     }
 
     private float lint2(float f) {

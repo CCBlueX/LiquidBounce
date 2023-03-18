@@ -65,9 +65,7 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
             try {
                 when (value) {
                     is BlockValue -> {
-                        var id: Int
-
-                        id = try {
+                        val id = try {
                             args[2].toInt()
                         } catch (exception: NumberFormatException) {
                             val tmpId = Block.getBlockFromName(args[2])?.let { Block.getIdFromBlock(it) }

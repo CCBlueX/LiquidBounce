@@ -31,7 +31,7 @@ class PacketDeserializer : JsonDeserializer<Packet> {
      *
      * In the implementation of this call-back method, you should consider invoking
      * [JsonDeserializationContext.deserialize] method to create objects
-     * for any non-trivial field of the returned object. However, you should never invoke it on the
+     * for any non-trivial field of the returned object. However, you should never invoke it on
      * the same type passing `json` since that will cause an infinite loop (Gson will call your
      * call-back method again).
      *

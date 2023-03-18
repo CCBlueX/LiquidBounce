@@ -15,7 +15,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 class LadderJump : Module() {
 
     @EventTarget
-    fun onUpdate(event: UpdateEvent?) {
+    fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer ?: return
 
         if (thePlayer.onGround) {
