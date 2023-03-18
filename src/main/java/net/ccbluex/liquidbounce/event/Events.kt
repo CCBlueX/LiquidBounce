@@ -45,7 +45,7 @@ class ClickBlockEvent(val clickedBlock: BlockPos?, val WEnumFacing: EnumFacing?)
 class ClientShutdownEvent : Event()
 
 /**
- * Called when an other entity moves
+ * Called when another entity moves
  */
 data class EntityMovementEvent(val movedEntity: Entity) : Event()
 

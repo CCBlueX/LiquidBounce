@@ -161,7 +161,7 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
 
         override fun isSelected(id: Int) = selectedSlot == id
 
-        internal fun getSelectedSlot() = if (selectedSlot > LiquidBounce.scriptManager.scripts.size) -1 else selectedSlot
+        fun getSelectedSlot() = if (selectedSlot > LiquidBounce.scriptManager.scripts.size) -1 else selectedSlot
 
         override fun getSize() = LiquidBounce.scriptManager.scripts.size
 

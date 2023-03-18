@@ -23,7 +23,7 @@ import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 
-@ModuleInfo(name = "NoSlow", description = "Cancels slowness effects caused by soulsand and using items.",
+@ModuleInfo(name = "NoSlow", description = "Cancels slowness effects caused by Soul Sand and using items.",
         category = ModuleCategory.MOVEMENT)
 class NoSlow : Module() {
 
@@ -64,7 +64,7 @@ class NoSlow : Module() {
                     mc.netHandler.addToSendQueue(digging)
                 }
                 EventState.POST -> {
-                    val blockPlace = C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, mc.thePlayer!!.inventory.getCurrentItem(), 0.0F, 0.0F, 0.0F)
+                    val blockPlace = C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, mc.thePlayer.inventory.getCurrentItem(), 0.0F, 0.0F, 0.0F)
                     mc.netHandler.addToSendQueue(blockPlace)
                 }
             }
@@ -73,23 +73,23 @@ class NoSlow : Module() {
 
     @EventTarget
     fun onSlowDown(event: SlowDownEvent) {
-        val heldItem = mc.thePlayer!!.heldItem?.item
+        val heldItem = mc.thePlayer.heldItem?.item
 
         event.forward = getMultiplier(heldItem, true)
         event.strafe = getMultiplier(heldItem, false)
     }
 
     private fun getMultiplier(item: Item?, isForward: Boolean): Float {
-        return when {
-            item is ItemFood || item is ItemPotion || item is ItemBucketMilk -> {
+        return when (item) {
+            is ItemFood, is ItemPotion, is ItemBucketMilk ->
                 if (isForward) this.consumeForwardMultiplier.get() else this.consumeStrafeMultiplier.get()
-            }
-            item is ItemSword -> {
+
+            is ItemSword ->
                 if (isForward) this.blockForwardMultiplier.get() else this.blockStrafeMultiplier.get()
-            }
-            item is ItemBow -> {
+
+            is ItemBow ->
                 if (isForward) this.bowForwardMultiplier.get() else this.bowStrafeMultiplier.get()
-            }
+
             else -> 0.2F
         }
     }

@@ -12,9 +12,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
-import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
-import net.ccbluex.liquidbounce.utils.extensions.hitBox
-import net.ccbluex.liquidbounce.utils.extensions.rotation
+import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -62,7 +60,7 @@ class Aimbot : Module() {
 
         val playerRotation = mc.thePlayer.rotation
         val destinationRotation = if (centerValue.get()) {
-            RotationUtils.toRotation(RotationUtils.getCenter(boundingBox) ?: return, true)
+            RotationUtils.toRotation(RotationUtils.getCenter(boundingBox), true)
         } else {
             RotationUtils.searchCenter(boundingBox, false, false, true, false, range)?.rotation ?: return
         }
@@ -93,15 +91,11 @@ class Aimbot : Module() {
             val pitch = random.nextBoolean()
 
             if (yaw) {
-                mc.thePlayer.rotationYaw += (random.nextGaussian() - 0.5).toFloat()
+                mc.thePlayer.fixedSensitivityYaw += (random.nextGaussian() - 0.5).toFloat()
             }
 
             if (pitch) {
-                mc.thePlayer.rotationPitch += (random.nextGaussian() - 0.5).toFloat()
-                if (mc.thePlayer.rotationPitch > 90)
-                    mc.thePlayer.rotationPitch = 90F
-                else if (mc.thePlayer.rotationPitch < -90)
-                    mc.thePlayer.rotationPitch = -90F
+                mc.thePlayer.fixedSensitivityPitch += (random.nextGaussian() - 0.5).toFloat()
             }
         }
     }

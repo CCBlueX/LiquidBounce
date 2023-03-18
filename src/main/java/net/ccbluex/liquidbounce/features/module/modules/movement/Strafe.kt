@@ -37,15 +37,15 @@ class Strafe : Module() {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        if (mc.thePlayer!!.onGround && mc.gameSettings.keyBindJump.isKeyDown && allDirectionsJumpValue.get() && MovementUtils.isMoving && !(mc.thePlayer!!.isInWater || mc.thePlayer!!.isInLava || mc.thePlayer!!.isOnLadder || mc.thePlayer!!.isInWeb)) {
+        if (mc.thePlayer.onGround && mc.gameSettings.keyBindJump.isKeyDown && allDirectionsJumpValue.get() && MovementUtils.isMoving && !(mc.thePlayer.isInWater || mc.thePlayer.isInLava || mc.thePlayer.isOnLadder || mc.thePlayer.isInWeb)) {
             if (mc.gameSettings.keyBindJump.isKeyDown) {
                 mc.gameSettings.keyBindJump.pressed = false
                 wasDown = true
             }
-            val yaw = mc.thePlayer!!.rotationYaw
-            mc.thePlayer!!.rotationYaw = Math.toDegrees(MovementUtils.direction).toFloat()
-            mc.thePlayer!!.jump()
-            mc.thePlayer!!.rotationYaw = yaw
+            val yaw = mc.thePlayer.rotationYaw
+            mc.thePlayer.rotationYaw = Math.toDegrees(MovementUtils.direction).toFloat()
+            mc.thePlayer.jump()
+            mc.thePlayer.rotationYaw = yaw
             jump = true
             if (wasDown) {
                 mc.gameSettings.keyBindJump.pressed = true
@@ -60,21 +60,21 @@ class Strafe : Module() {
     fun onStrafe(event: StrafeEvent) {
         if (!MovementUtils.isMoving) {
             if (noMoveStopValue.get()) {
-                mc.thePlayer!!.motionX = .0
-                mc.thePlayer!!.motionZ = .0
+                mc.thePlayer.motionX = .0
+                mc.thePlayer.motionZ = .0
             }
             return
         }
 
         val shotSpeed = MovementUtils.speed
         val speed = shotSpeed * strengthValue.get()
-        val motionX = mc.thePlayer!!.motionX * (1 - strengthValue.get())
-        val motionZ = mc.thePlayer!!.motionZ * (1 - strengthValue.get())
+        val motionX = mc.thePlayer.motionX * (1 - strengthValue.get())
+        val motionZ = mc.thePlayer.motionZ * (1 - strengthValue.get())
 
-        if (!mc.thePlayer!!.onGround || onGroundStrafeValue.get()) {
+        if (!mc.thePlayer.onGround || onGroundStrafeValue.get()) {
             val yaw = MovementUtils.direction
-            mc.thePlayer!!.motionX = -sin(yaw) * speed + motionX
-            mc.thePlayer!!.motionZ = cos(yaw) * speed + motionZ
+            mc.thePlayer.motionX = -sin(yaw) * speed + motionX
+            mc.thePlayer.motionZ = cos(yaw) * speed + motionZ
         }
     }
 }

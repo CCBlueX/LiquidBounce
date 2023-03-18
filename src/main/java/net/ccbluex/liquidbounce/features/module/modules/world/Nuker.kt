@@ -64,7 +64,7 @@ class Nuker : Module() {
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         // Block hit delay
-        if (blockHitDelay > 0 && !LiquidBounce.moduleManager[FastBreak::class.java]!!.state) {
+        if (blockHitDelay > 0 && !LiquidBounce.moduleManager[FastBreak::class.java].state) {
             blockHitDelay--
             return
         }
@@ -79,7 +79,7 @@ class Nuker : Module() {
         // Clear blocks
         attackedBlocks.clear()
 
-        val thePlayer = mc.thePlayer!!
+        val thePlayer = mc.thePlayer
 
         if (!mc.playerController.isInCreativeMode) {
             // Default nuker
@@ -95,7 +95,7 @@ class Nuker : Module() {
                             if (!throughWallsValue.get()) { // ThroughWalls: Just break blocks in your sight
                                 // Raytrace player eyes to block position (through walls check)
                                 val blockVec = Vec3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5)
-                                val rayTrace = mc.theWorld!!.rayTraceBlocks(eyesPos, blockVec,
+                                val rayTrace = mc.theWorld.rayTraceBlocks(eyesPos, blockVec,
                                         false, true, false)
 
                                 // Check if block is visible
@@ -116,7 +116,7 @@ class Nuker : Module() {
                             distance
                     }
                     "Hardness" -> validBlocks.maxByOrNull { (pos, block) ->
-                        val hardness = block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld!!, pos).toDouble()
+                        val hardness = block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld, pos).toDouble()
 
                         val safePos = BlockPos(thePlayer.posX, thePlayer.posY - 1, thePlayer.posZ)
                         if (pos.x == safePos.x && safePos.y <= pos.y && pos.z == safePos.z)
@@ -154,7 +154,7 @@ class Nuker : Module() {
                     )
 
                     // End block break if able to break instant
-                    if (block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld!!, blockPos) >= 1F) {
+                    if (block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld, blockPos) >= 1F) {
                         currentDamage = 0F
                         thePlayer.swingItem()
                         mc.playerController.onPlayerDestroyBlock(blockPos, EnumFacing.DOWN)
@@ -167,8 +167,8 @@ class Nuker : Module() {
 
                 // Break block
                 thePlayer.swingItem()
-                currentDamage += block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld!!, blockPos)
-                mc.theWorld!!.sendBlockBreakProgress(thePlayer.entityId, blockPos, (currentDamage * 10F).toInt() - 1)
+                currentDamage += block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld, blockPos)
+                mc.theWorld.sendBlockBreakProgress(thePlayer.entityId, blockPos, (currentDamage * 10F).toInt() - 1)
 
                 // End of breaking block
                 if (currentDamage >= 1F) {
@@ -198,7 +198,7 @@ class Nuker : Module() {
                                 // Raytrace player eyes to block position (through walls check)
                                 val eyesPos = thePlayer.getPositionEyes(1f)
                                 val blockVec = Vec3(thePlayer.position)
-                                val rayTrace = mc.theWorld!!.rayTraceBlocks(eyesPos, blockVec,
+                                val rayTrace = mc.theWorld.rayTraceBlocks(eyesPos, blockVec,
                                         false, true, false)
 
                                 // Check if block is visible
@@ -222,7 +222,7 @@ class Nuker : Module() {
     fun onRender3D(event: Render3DEvent) {
         // Safe block
         if (!layerValue.get()) {
-            val safePos = BlockPos(mc.thePlayer!!.posX, mc.thePlayer!!.posY - 1, mc.thePlayer!!.posZ)
+            val safePos = BlockPos(mc.thePlayer.posX, mc.thePlayer.posY - 1, mc.thePlayer.posZ)
             val safeBlock = BlockUtils.getBlock(safePos)
             if (safeBlock != null && validBlock(safeBlock))
                 RenderUtils.drawBlockBox(safePos, Color.GREEN, true)

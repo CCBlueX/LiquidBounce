@@ -36,7 +36,7 @@ class Fullbright : Module() {
     }
 
     @EventTarget(ignoreCondition = true)
-    fun onUpdate(event: UpdateEvent?) {
+    fun onUpdate(event: UpdateEvent) {
         if (state || LiquidBounce.moduleManager.getModule(XRay::class.java).state) {
             when (modeValue.get().lowercase()) {
                 "gamma" -> when {
@@ -51,7 +51,7 @@ class Fullbright : Module() {
     }
 
     @EventTarget(ignoreCondition = true)
-    fun onShutdown(event: ClientShutdownEvent?) {
+    fun onShutdown(event: ClientShutdownEvent) {
         onDisable()
     }
 }

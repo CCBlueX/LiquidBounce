@@ -393,7 +393,7 @@ class Scaffold : Module() {
     fun update() {
         val player = mc.thePlayer ?: return
 
-        val holdingItem = player.heldItem != null && player.heldItem!!.item is ItemBlock
+        val holdingItem = player.heldItem?.item is ItemBlock
         if (if (!autoBlockValue.get()
                     .equals("off", true)
             ) InventoryUtils.findAutoBlockBlock() == -1 && !holdingItem else !holdingItem
@@ -456,7 +456,7 @@ class Scaffold : Module() {
         }
     }
 
-    fun place() {
+    private fun place() {
         val player = mc.thePlayer ?: return
         val world = mc.theWorld ?: return
 
@@ -472,7 +472,8 @@ class Scaffold : Module() {
         }
 
         var itemStack = player.heldItem
-        if (itemStack == null || itemStack.item !is ItemBlock|| (itemStack.item!! as ItemBlock).block is BlockBush || player.heldItem!!.stackSize <= 0) {
+        //TODO: blacklist more blocks than only bushes
+        if (itemStack == null || itemStack.item !is ItemBlock || (itemStack.item as ItemBlock).block is BlockBush || player.heldItem.stackSize <= 0) {
             val blockSlot = InventoryUtils.findAutoBlockBlock()
 
             if (blockSlot == -1) {
@@ -781,11 +782,11 @@ class Scaffold : Module() {
         get() {
             var amount = 0
             for (i in 36..44) {
-                val itemStack = mc.thePlayer!!.inventoryContainer.getSlot(i).stack
+                val itemStack = mc.thePlayer.inventoryContainer.getSlot(i).stack
                 val itemStackItem = itemStack?.item
                 if (itemStackItem is ItemBlock) {
                     val block = itemStackItem.block
-                    val heldItem = mc.thePlayer!!.heldItem
+                    val heldItem = mc.thePlayer.heldItem
                     if (heldItem != null && heldItem == itemStack || !InventoryUtils.BLOCK_BLACKLIST.contains(block) && block !is BlockBush) {
                         amount += itemStack.stackSize
                     }

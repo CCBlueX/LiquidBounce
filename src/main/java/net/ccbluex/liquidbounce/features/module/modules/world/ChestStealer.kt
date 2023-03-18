@@ -99,8 +99,8 @@ class ChestStealer : Module() {
     private var contentReceived = 0
 
     @EventTarget
-    fun onRender3D(event: Render3DEvent?) {
-        val thePlayer = mc.thePlayer!!
+    fun onRender3D(event: Render3DEvent) {
+        val thePlayer = mc.thePlayer
 
         val screen = mc.currentScreen ?: return
 
@@ -123,8 +123,8 @@ class ChestStealer : Module() {
             return
 
         // Chest title
-        if (chestTitleValue.get() && (screen.lowerChestInventory == null || !screen.lowerChestInventory!!.name.contains(
-                ItemStack(Item.itemRegistry.getObject(ResourceLocation("minecraft:chest"))!!).displayName)))
+        if (chestTitleValue.get() && (screen.lowerChestInventory == null || !screen.lowerChestInventory.name.contains(
+                ItemStack(Item.itemRegistry.getObject(ResourceLocation("minecraft:chest"))).displayName)))
             return
 
         // inventory cleaner
@@ -140,7 +140,7 @@ class ChestStealer : Module() {
                     val items = mutableListOf<Slot>()
 
                     for (slotIndex in 0 until screen.inventoryRows * 9) {
-                        val slot = screen.inventorySlots!!.getSlot(slotIndex)
+                        val slot = screen.inventorySlots.getSlot(slotIndex)
 
                         val stack = slot.stack
 
@@ -158,7 +158,7 @@ class ChestStealer : Module() {
 
             // Non randomized
             for (slotIndex in 0 until screen.inventoryRows * 9) {
-                val slot = screen.inventorySlots!!.getSlot(slotIndex)
+                val slot = screen.inventorySlots.getSlot(slotIndex)
 
                 val stack = slot.stack
 
@@ -166,7 +166,7 @@ class ChestStealer : Module() {
                     move(screen, slot)
                 }
             }
-        } else if (autoCloseValue.get() && screen.inventorySlots!!.windowId == contentReceived && autoCloseTimer.hasTimePassed(nextCloseDelay)) {
+        } else if (autoCloseValue.get() && screen.inventorySlots.windowId == contentReceived && autoCloseTimer.hasTimePassed(nextCloseDelay)) {
             thePlayer.closeScreen()
             nextCloseDelay = TimeUtils.randomDelay(autoCloseMinDelayValue.get(), autoCloseMaxDelayValue.get())
         }
@@ -195,7 +195,7 @@ class ChestStealer : Module() {
         val inventoryCleaner = LiquidBounce.moduleManager[InventoryCleaner::class.java] as InventoryCleaner
 
         for (i in 0 until chest.inventoryRows * 9) {
-            val slot = chest.inventorySlots!!.getSlot(i)
+            val slot = chest.inventorySlots.getSlot(i)
 
             val stack = slot.stack
 

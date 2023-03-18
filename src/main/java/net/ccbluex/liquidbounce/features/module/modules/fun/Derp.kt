@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.`fun`
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.utils.RotationUtils.getFixedSensitivityAngle
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 
@@ -24,7 +25,7 @@ class Derp : Module() {
 
     val rotation: FloatArray
         get() {
-            val derpRotations = floatArrayOf(mc.thePlayer!!.rotationYaw + (Math.random() * 360 - 180).toFloat(), (Math.random() * 180 - 90).toFloat())
+            val derpRotations = floatArrayOf(mc.thePlayer.rotationYaw + (Math.random() * 360 - 180).toFloat(), (Math.random() * 180 - 90).toFloat())
 
             if (headlessValue.get())
                 derpRotations[1] = 180F
@@ -33,6 +34,9 @@ class Derp : Module() {
                 derpRotations[0] = currentSpin + incrementValue.get()
                 currentSpin = derpRotations[0]
             }
+
+            derpRotations[0] = getFixedSensitivityAngle(derpRotations[0], mc.thePlayer.rotationYaw)
+            derpRotations[1] = getFixedSensitivityAngle(derpRotations[1], mc.thePlayer.rotationPitch)
 
             return derpRotations
         }

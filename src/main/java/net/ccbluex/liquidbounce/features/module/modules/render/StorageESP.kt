@@ -94,7 +94,7 @@ class StorageESP : Module() {
 
             mc.gameSettings.gammaSetting = 100000.0f
 
-            for (tileEntity in mc.theWorld!!.loadedTileEntityList) {
+            for (tileEntity in mc.theWorld.loadedTileEntityList) {
                 val color: Color = getColor(tileEntity) ?: continue
 
                 if (!(tileEntity is TileEntityChest || tileEntity is TileEntityEnderChest)) {
@@ -112,18 +112,18 @@ class StorageESP : Module() {
 
                     "2d" -> RenderUtils.draw2D(tileEntity.pos, color.rgb, Color.BLACK.rgb)
                     "outline" -> {
-                        RenderUtils.glColor(color);
-                        OutlineUtils.renderOne(3F);
-                        TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1);
-                        OutlineUtils.renderTwo();
-                        TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1);
-                        OutlineUtils.renderThree();
-                        TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1);
-                        OutlineUtils.renderFour(color);
-                        TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1);
-                        OutlineUtils.renderFive();
+                        RenderUtils.glColor(color)
+                        OutlineUtils.renderOne(3F)
+                        TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1)
+                        OutlineUtils.renderTwo()
+                        TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1)
+                        OutlineUtils.renderThree()
+                        TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1)
+                        OutlineUtils.renderFour(color)
+                        TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1)
+                        OutlineUtils.renderFive()
 
-                        OutlineUtils.setColor(Color.WHITE);
+                        OutlineUtils.setColor(Color.WHITE)
                     }
 
                     "wireframe" -> {
@@ -148,7 +148,7 @@ class StorageESP : Module() {
                     }
                 }
             }
-            for (entity in mc.theWorld!!.loadedEntityList) {
+            for (entity in mc.theWorld.loadedEntityList) {
                 if (entity is EntityMinecartChest) {
                     when (mode.lowercase()) {
                         "otherbox", "box" -> RenderUtils.drawEntityBox(

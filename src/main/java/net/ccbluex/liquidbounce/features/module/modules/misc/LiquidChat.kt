@@ -178,7 +178,7 @@ class LiquidChat : Module() {
 
     @EventTarget
     fun onUpdate(updateEvent: UpdateEvent) {
-        if (client.isConnected() || (loginThread != null && loginThread!!.isAlive)) return
+        if (client.isConnected() || (loginThread?.isAlive == true)) return
 
         if (connectTimer.hasTimePassed(5000)) {
             connect()
@@ -187,7 +187,7 @@ class LiquidChat : Module() {
     }
 
     private fun connect() {
-        if (client.isConnected() || (loginThread != null && loginThread!!.isAlive)) return
+        if (client.isConnected() || (loginThread?.isAlive == true)) return
 
         if (jwtValue.get() && jwtToken.isEmpty()) {
             ClientUtils.displayChatMessage("§7[§a§lChat§7] §cError: §7No token provided!")
@@ -232,7 +232,7 @@ class LiquidChat : Module() {
             val start = matcher.start()
             val end = matcher.end()
 
-            // Append the previous left overs.
+            // Append the previous leftovers.
             val part = string.substring(lastEnd, start)
             if (part.isNotEmpty()) {
                 if (component == null) {
@@ -261,8 +261,7 @@ class LiquidChat : Module() {
                         component.appendSibling(link)
                     continue
                 }
-            } catch (e: URISyntaxException) {
-            }
+            } catch (_: URISyntaxException) { }
 
             if (component == null) {
                 component = ChatComponentText(url)

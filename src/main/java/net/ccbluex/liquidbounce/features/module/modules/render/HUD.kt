@@ -23,7 +23,7 @@ class HUD : Module() {
     val fontChatValue = BoolValue("FontChat", false)
 
     @EventTarget
-    fun onRender2D(event: Render2DEvent?) {
+    fun onRender2D(event: Render2DEvent) {
         if (mc.currentScreen is GuiHudDesigner)
             return
 
@@ -31,7 +31,7 @@ class HUD : Module() {
     }
 
     @EventTarget
-    fun onUpdate(event: UpdateEvent?) {
+    fun onUpdate(event: UpdateEvent) {
         LiquidBounce.hud.update()
     }
 
@@ -43,11 +43,11 @@ class HUD : Module() {
     @EventTarget(ignoreCondition = true)
     fun onScreen(event: ScreenEvent) {
         if (mc.theWorld == null || mc.thePlayer == null) return
-        if (state && blurValue.get() && !mc.entityRenderer.isShaderActive() && event.guiScreen != null &&
+        if (state && blurValue.get() && !mc.entityRenderer.isShaderActive && event.guiScreen != null &&
                 !(event.guiScreen is GuiChat || event.guiScreen is GuiHudDesigner)) mc.entityRenderer.loadShader(
             ResourceLocation(LiquidBounce.CLIENT_NAME.lowercase() + "/blur.json")
         ) else if (mc.entityRenderer.shaderGroup != null &&
-                mc.entityRenderer.shaderGroup!!.shaderGroupName.contains("liquidbounce/blur.json")) mc.entityRenderer.stopUseShader()
+                mc.entityRenderer.shaderGroup.shaderGroupName.contains("liquidbounce/blur.json")) mc.entityRenderer.stopUseShader()
     }
 
     init {

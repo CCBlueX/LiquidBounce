@@ -42,18 +42,18 @@ class Sneak : Module() {
                 if (sneaking)
                     return
 
-                mc.netHandler.addToSendQueue(C0BPacketEntityAction(mc.thePlayer!!, C0BPacketEntityAction.Action.START_SNEAKING))
+                mc.netHandler.addToSendQueue(C0BPacketEntityAction(mc.thePlayer, C0BPacketEntityAction.Action.START_SNEAKING))
             }
 
             "switch" -> {
                 when (event.eventState) {
                     EventState.PRE -> {
-                        mc.netHandler.addToSendQueue(C0BPacketEntityAction(mc.thePlayer!!, C0BPacketEntityAction.Action.START_SNEAKING))
-                        mc.netHandler.addToSendQueue(C0BPacketEntityAction(mc.thePlayer!!, C0BPacketEntityAction.Action.STOP_SNEAKING))
+                        mc.netHandler.addToSendQueue(C0BPacketEntityAction(mc.thePlayer, C0BPacketEntityAction.Action.START_SNEAKING))
+                        mc.netHandler.addToSendQueue(C0BPacketEntityAction(mc.thePlayer, C0BPacketEntityAction.Action.STOP_SNEAKING))
                     }
                     EventState.POST -> {
-                        mc.netHandler.addToSendQueue(C0BPacketEntityAction(mc.thePlayer!!, C0BPacketEntityAction.Action.STOP_SNEAKING))
-                        mc.netHandler.addToSendQueue(C0BPacketEntityAction(mc.thePlayer!!, C0BPacketEntityAction.Action.START_SNEAKING))
+                        mc.netHandler.addToSendQueue(C0BPacketEntityAction(mc.thePlayer, C0BPacketEntityAction.Action.STOP_SNEAKING))
+                        mc.netHandler.addToSendQueue(C0BPacketEntityAction(mc.thePlayer, C0BPacketEntityAction.Action.START_SNEAKING))
                     }
                 }
             }
@@ -62,7 +62,7 @@ class Sneak : Module() {
                 if (event.eventState == EventState.PRE)
                     return
 
-                mc.netHandler.addToSendQueue(C0BPacketEntityAction(mc.thePlayer!!, C0BPacketEntityAction.Action.START_SNEAKING))
+                mc.netHandler.addToSendQueue(C0BPacketEntityAction(mc.thePlayer, C0BPacketEntityAction.Action.START_SNEAKING))
             }
         }
     }

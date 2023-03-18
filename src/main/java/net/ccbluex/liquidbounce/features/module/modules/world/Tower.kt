@@ -147,37 +147,29 @@ class Tower : Module() {
         val thePlayer = mc.thePlayer ?: return
 
         // Lock Rotation
-        if (rotationsValue.get() && keepRotationValue.get() && lockRotation != null) {
-            RotationUtils.setTargetRotation(lockRotation)
-        }
+        if (rotationsValue.get() && keepRotationValue.get() && lockRotation != null)
+            RotationUtils.setTargetRotation(lockRotation!!)
+
 
         mc.timer.timerSpeed = timerValue.get()
         val eventState = event.eventState
 
-        if (eventState.stateName.equals(if (modeValue.get() == "Packet") "POST" else placeModeValue.get(), true)) {
+        // Force use of POST event when Packet mode is selected, it doesn't work with PRE mode
+        if (eventState.stateName.equals(if (modeValue.get() == "Packet") "POST" else placeModeValue.get(), true))
             place()
-        }
 
         if (eventState == EventState.PRE) {
             placeInfo = null
             timer.update()
 
-            val update = if (!autoBlockValue.get().equals("Off", ignoreCase = true)) {
-                InventoryUtils.findAutoBlockBlock() != -1 || thePlayer.heldItem != null && thePlayer.heldItem!!.item is ItemBlock
-            } else {
-                thePlayer.heldItem != null && thePlayer.heldItem!!.item is ItemBlock
-            }
+            val update = (autoBlockValue.get() != "Off" && InventoryUtils.findAutoBlockBlock() != -1)
+                    || thePlayer.heldItem?.item is ItemBlock
 
             if (update) {
-                if (!stopWhenBlockAbove.get() || getBlock(
-                        BlockPos(
-                            thePlayer.posX, thePlayer.posY + 2, thePlayer.posZ
-                        )
-                    ) == Blocks.air
-                ) {
+                if (!stopWhenBlockAbove.get() || getBlock(BlockPos(thePlayer).up(2)) == Blocks.air)
                     move()
-                }
-                val blockPos = BlockPos(thePlayer.posX, thePlayer.posY - 1.0, thePlayer.posZ)
+
+                val blockPos = BlockPos(thePlayer).down(1)
                 if (blockPos.getBlock() == Blocks.air) {
                     if (search(blockPos) && rotationsValue.get()) {
                         val vecRotation = RotationUtils.faceBlock(blockPos)
@@ -193,8 +185,8 @@ class Tower : Module() {
 
     //Send jump packets, bypasses Hypixel.
     private fun fakeJump() {
-        mc.thePlayer!!.isAirBorne = true
-        mc.thePlayer!!.triggerAchievement(StatList.jumpStat)
+        mc.thePlayer.isAirBorne = true
+        mc.thePlayer.triggerAchievement(StatList.jumpStat)
     }
 
     /**
@@ -301,7 +293,7 @@ class Tower : Module() {
             when (autoBlockValue.get()) {
                 "Off" -> return
                 "Pick" -> {
-                    mc.thePlayer!!.inventory.currentItem = blockSlot - 36
+                    mc.thePlayer.inventory.currentItem = blockSlot - 36
                     mc.playerController.updateController()
                 }
                 "Spoof" -> {
@@ -330,11 +322,8 @@ class Tower : Module() {
             }
         }
         if (autoBlockValue.get().equals("Switch", true)) {
-            if (slot != mc.thePlayer!!.inventory.currentItem) mc.netHandler.addToSendQueue(
-                C09PacketHeldItemChange(
-                    mc.thePlayer!!.inventory.currentItem
-                )
-            )
+            if (slot != mc.thePlayer.inventory.currentItem)
+                mc.netHandler.addToSendQueue(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
         }
         placeInfo = null
     }
@@ -371,15 +360,9 @@ class Tower : Module() {
                         )
                         val distanceSqPosVec = eyesPos.squareDistanceTo(posVec)
                         val hitVec = posVec.add(Vec3(dirVec.xCoord * 0.5, dirVec.yCoord * 0.5, dirVec.zCoord * 0.5))
-                        if (eyesPos.distanceTo(hitVec) > 4.25 || distanceSqPosVec > eyesPos.squareDistanceTo(
-                                posVec.add(dirVec)
-                            ) || mc.theWorld!!.rayTraceBlocks(
-                                eyesPos,
-                                hitVec,
-                                false,
-                                true,
-                                false
-                            ) != null
+                        if (eyesPos.distanceTo(hitVec) > 4.25
+                            || distanceSqPosVec > eyesPos.squareDistanceTo(posVec.add(dirVec))
+                            || mc.theWorld.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null
                         ) {
                             zSearch += 0.1
                             continue
@@ -392,25 +375,18 @@ class Tower : Module() {
                         val vector = eyesPos.addVector(
                             rotationVector.xCoord * 4.25, rotationVector.yCoord * 4.25, rotationVector.zCoord * 4.25
                         )
-                        val obj = mc.theWorld!!.rayTraceBlocks(
-                            eyesPos,
-                            vector,
-                            false,
-                            false,
-                            true
-                        ) ?: continue
+                        val obj = mc.theWorld.rayTraceBlocks(eyesPos, vector, false, false, true) ?: continue
 
                         if (obj.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK || obj.blockPos != neighbor) {
                             zSearch += 0.1
                             continue
                         }
 
-                        if (placeRotation == null || RotationUtils.getRotationDifference(rotation) < RotationUtils.getRotationDifference(
-                                placeRotation.rotation
-                            )
-                        ) {
+                        if (placeRotation == null || RotationUtils.getRotationDifference(rotation)
+                            < RotationUtils.getRotationDifference(placeRotation.rotation)
+                        )
                             placeRotation = PlaceRotation(PlaceInfo(neighbor, facingType.opposite, hitVec), rotation)
-                        }
+
                         zSearch += 0.1
                     }
                     ySearch += 0.1
@@ -486,11 +462,11 @@ class Tower : Module() {
         get() {
             var amount = 0
             for (i in 36..44) {
-                val itemStack = mc.thePlayer!!.inventoryContainer.getSlot(i).stack
+                val itemStack = mc.thePlayer.inventoryContainer.getSlot(i).stack
                 val item = itemStack?.item
                 if (itemStack != null && item is ItemBlock) {
                     val block = item.block
-                    if (mc.thePlayer!!.heldItem == itemStack || !InventoryUtils.BLOCK_BLACKLIST.contains(block)) {
+                    if (mc.thePlayer.heldItem == itemStack || !InventoryUtils.BLOCK_BLACKLIST.contains(block)) {
                         amount += itemStack.stackSize
                     }
                 }

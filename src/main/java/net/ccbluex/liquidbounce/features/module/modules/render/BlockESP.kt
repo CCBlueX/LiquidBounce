@@ -48,21 +48,21 @@ class BlockESP : Module() {
     private var thread: Thread? = null
 
     @EventTarget
-    fun onUpdate(event: UpdateEvent?) {
-        if (searchTimer.hasTimePassed(1000L) && (thread == null || !thread!!.isAlive)) {
+    fun onUpdate(event: UpdateEvent) {
+        if (searchTimer.hasTimePassed(1000L) && (thread?.isAlive != true)) {
             val radius = radiusValue.get()
-            val selectedBlock = Block.getBlockById(blockValue.get());
+            val selectedBlock = Block.getBlockById(blockValue.get())
 
             if (selectedBlock == null || selectedBlock == Blocks.air)
-                return;
+                return
 
-            thread = Thread(Runnable {
+            thread = Thread({
                 val blockList: MutableList<BlockPos> = ArrayList()
 
                 for (x in -radius until radius) {
                     for (y in radius downTo -radius + 1) {
                         for (z in -radius until radius) {
-                            val thePlayer = mc.thePlayer!!
+                            val thePlayer = mc.thePlayer
 
                             val xPos = thePlayer.posX.toInt() + x
                             val yPos = thePlayer.posY.toInt() + y
@@ -88,7 +88,7 @@ class BlockESP : Module() {
     }
 
     @EventTarget
-    fun onRender3D(event: Render3DEvent?) {
+    fun onRender3D(event: Render3DEvent) {
         synchronized(posList) {
             val color = if (colorRainbow.get()) rainbow() else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
             for (blockPos in posList) {

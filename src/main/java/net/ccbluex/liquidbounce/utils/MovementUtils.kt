@@ -13,15 +13,15 @@ object MovementUtils : MinecraftInstance() {
 
     @JvmStatic
     val speed: Float
-        get() = sqrt(mc.thePlayer!!.motionX * mc.thePlayer!!.motionX + mc.thePlayer!!.motionZ * mc.thePlayer!!.motionZ).toFloat()
+        get() = sqrt(mc.thePlayer.motionX * mc.thePlayer.motionX + mc.thePlayer.motionZ * mc.thePlayer.motionZ).toFloat()
 
     @JvmStatic
     val isMoving: Boolean
-        get() = mc.thePlayer != null && (mc.thePlayer!!.movementInput.moveForward != 0f || mc.thePlayer!!.movementInput.moveStrafe != 0f)
+        get() = mc.thePlayer != null && (mc.thePlayer.movementInput.moveForward != 0f || mc.thePlayer.movementInput.moveStrafe != 0f)
 
     @JvmStatic
     fun hasMotion(): Boolean {
-        return mc.thePlayer!!.motionX != 0.0 && mc.thePlayer!!.motionZ != 0.0 && mc.thePlayer!!.motionY != 0.0
+        return mc.thePlayer.motionX != 0.0 && mc.thePlayer.motionZ != 0.0 && mc.thePlayer.motionY != 0.0
     }
 
     @JvmStatic
@@ -29,14 +29,14 @@ object MovementUtils : MinecraftInstance() {
     fun strafe(speed: Float = this.speed) {
         if (!isMoving) return
         val yaw = direction
-        val thePlayer = mc.thePlayer!!
+        val thePlayer = mc.thePlayer
         thePlayer.motionX = -sin(yaw) * speed
         thePlayer.motionZ = cos(yaw) * speed
     }
 
     @JvmStatic
     fun forward(length: Double) {
-        val thePlayer = mc.thePlayer!!
+        val thePlayer = mc.thePlayer
         val yaw = Math.toRadians(thePlayer.rotationYaw.toDouble())
         thePlayer.setPosition(thePlayer.posX + -sin(yaw) * length, thePlayer.posY, thePlayer.posZ + cos(yaw) * length)
     }
@@ -44,7 +44,7 @@ object MovementUtils : MinecraftInstance() {
     @JvmStatic
     val direction: Double
         get() {
-            val thePlayer = mc.thePlayer!!
+            val thePlayer = mc.thePlayer
             var rotationYaw = thePlayer.rotationYaw
             if (thePlayer.moveForward < 0f) rotationYaw += 180f
             var forward = 1f

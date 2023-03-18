@@ -7,7 +7,7 @@ import net.minecraft.block.Block
 
 class XrayCommand : Command("xray") {
 
-    val xRay = LiquidBounce.moduleManager.getModule(XRay::class.java) as XRay
+    private val xRay = LiquidBounce.moduleManager.getModule(XRay::class.java) as XRay
 
     /**
      * Execute commands with provided [args]

@@ -15,7 +15,7 @@ import net.minecraft.item.ItemStack
 class ScriptTab(private val tabObject: JSObject) : CreativeTabs(tabObject.getMember("name") as String) {
     val items = ScriptUtils.convert(tabObject.getMember("items"), Array<ItemStack>::class.java) as Array<ItemStack>
 
-    override fun getTabIconItem() = ItemUtils.createItem(tabObject.getMember("icon") as String)?.item!!
+    override fun getTabIconItem() = ItemUtils.createItem(tabObject.getMember("icon") as String)?.item
 
     override fun getTranslatedTabLabel() = tabObject.getMember("name") as String
 

@@ -40,7 +40,7 @@ open class Module : MinecraftInstance(), Listenable {
     var slideStep = 0F
 
     init {
-        val moduleInfo = javaClass.getAnnotation(ModuleInfo::class.java)!!
+        val moduleInfo = javaClass.getAnnotation(ModuleInfo::class.java)
 
         name = moduleInfo.name
         description = moduleInfo.description

@@ -92,7 +92,7 @@ class GuiMicrosoftLoginProgress(val updateStatus: (String) -> Unit, val done: ()
         when (button.id) {
             0 -> {
                 if (loginUrl != null) {
-                    MiscUtils.showURL(loginUrl!!)
+                    MiscUtils.showURL(loginUrl)
                 }
             }
 

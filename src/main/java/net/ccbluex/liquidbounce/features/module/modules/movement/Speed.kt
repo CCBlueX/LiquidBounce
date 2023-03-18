@@ -114,7 +114,7 @@ class Speed : Module() {
     }
 
     @EventTarget
-    fun onUpdate(event: UpdateEvent?) {
+    fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer ?: return
 
         if (thePlayer.isSneaking)
@@ -141,15 +141,16 @@ class Speed : Module() {
     }
 
     @EventTarget
-    fun onMove(event: MoveEvent?) {
-        if (mc.thePlayer!!.isSneaking)
+    fun onMove(event: MoveEvent) {
+        if (mc.thePlayer.isSneaking)
             return
-        mode?.onMove(event!!)
+
+        mode?.onMove(event)
     }
 
     @EventTarget
-    fun onTick(event: TickEvent?) {
-        if (mc.thePlayer!!.isSneaking)
+    fun onTick(event: TickEvent) {
+        if (mc.thePlayer.isSneaking)
             return
 
         mode?.onTick()

@@ -40,12 +40,12 @@ class FreeCam : Module() {
         val playerMP = EntityOtherPlayerMP(mc.theWorld, thePlayer.gameProfile)
 
 
-        playerMP.rotationYawHead = thePlayer.rotationYawHead;
-        playerMP.renderYawOffset = thePlayer.renderYawOffset;
+        playerMP.rotationYawHead = thePlayer.rotationYawHead
+        playerMP.renderYawOffset = thePlayer.renderYawOffset
         playerMP.rotationYawHead = thePlayer.rotationYawHead
         playerMP.copyLocationAndAnglesFrom(thePlayer)
 
-        mc.theWorld!!.addEntityToWorld(-1000, playerMP)
+        mc.theWorld.addEntityToWorld(-1000, playerMP)
 
         if (noClipValue.get())
             thePlayer.noClip = true
@@ -61,7 +61,7 @@ class FreeCam : Module() {
 
         thePlayer.setPositionAndRotation(oldX, oldY, oldZ, thePlayer.rotationYaw, thePlayer.rotationPitch)
 
-        mc.theWorld!!.removeEntityFromWorld(fakePlayer!!.entityId)
+        mc.theWorld.removeEntityFromWorld(fakePlayer!!.entityId)
         fakePlayer = null
 
         thePlayer.motionX = 0.0
@@ -70,8 +70,8 @@ class FreeCam : Module() {
     }
 
     @EventTarget
-    fun onUpdate(event: UpdateEvent?) {
-        val thePlayer = mc.thePlayer!!
+    fun onUpdate(event: UpdateEvent) {
+        val thePlayer = mc.thePlayer
 
         if (noClipValue.get())
             thePlayer.noClip = true

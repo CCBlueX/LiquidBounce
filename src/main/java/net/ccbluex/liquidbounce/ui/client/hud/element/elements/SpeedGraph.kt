@@ -35,12 +35,12 @@ class SpeedGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F,
     private val colorBlueValue = IntegerValue("B", 255, 0, 255)
 
     private val speedList = ArrayList<Double>()
-    private var lastTick = -1;
+    private var lastTick = -1
 
     override fun drawElement(): Border {
         val width = width.get()
 
-        val player = mc.thePlayer!!
+        val player = mc.thePlayer
 
         if (lastTick != player.ticksExisted) {
             lastTick = player.ticksExisted

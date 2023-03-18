@@ -29,7 +29,7 @@ class IceSpeed : Module() {
     }
 
     @EventTarget
-    fun onUpdate(event: UpdateEvent?) {
+    fun onUpdate(event: UpdateEvent) {
         val mode = modeValue.get()
         if (mode.equals("NCP", ignoreCase = true)) {
             Blocks.ice.slipperiness = 0.39f

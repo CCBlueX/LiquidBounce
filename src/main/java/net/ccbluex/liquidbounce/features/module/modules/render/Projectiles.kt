@@ -98,18 +98,12 @@ class Projectiles : Module() {
         }
 
         // Yaw and pitch of player
-        val yaw = if (RotationUtils.targetRotation != null)
-            RotationUtils.targetRotation.yaw
-        else
-            thePlayer.rotationYaw
+        val yaw = RotationUtils.targetRotation?.yaw ?: thePlayer.rotationYaw
 
-        val pitch = if (RotationUtils.targetRotation != null)
-            RotationUtils.targetRotation.pitch
-        else
-            thePlayer.rotationPitch
+        val pitch = RotationUtils.targetRotation?.pitch ?: thePlayer.rotationPitch
 
-        val yawRadians = yaw / 180f * Math.PI.toFloat()
-        val pitchRadians = pitch / 180f * Math.PI.toFloat()
+        val yawRadians = Math.toRadians(yaw.toDouble())
+        val pitchRadians = Math.toRadians(pitch.toDouble())
 
         // Positions
         var posX = renderManager.renderPosX - cos(yawRadians) * 0.16F
@@ -252,7 +246,7 @@ class Projectiles : Module() {
                 2 -> GL11.glRotatef(90F, 1F, 0F, 0F)
             }
 
-            // Check if hitting a entity
+            // Check if hitting an entity
             if (hitEntity)
                 RenderUtils.glColor(Color(255, 0, 0, 150))
         }

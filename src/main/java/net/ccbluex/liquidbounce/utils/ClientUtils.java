@@ -35,7 +35,7 @@ public final class ClientUtils extends MinecraftInstance {
             }
 
             fastRenderField = declaredField;
-        } catch (NoSuchFieldException e) { }
+        } catch (NoSuchFieldException ignored) { }
     }
 
     private static final Logger logger = LogManager.getLogger("LiquidBounce");
@@ -58,9 +58,9 @@ public final class ClientUtils extends MinecraftInstance {
     }
 
     public static void sendEncryption(final NetworkManager networkManager, final SecretKey secretKey, final PublicKey publicKey, final S01PacketEncryptionRequest encryptionRequest) {
-        networkManager.sendPacket(new C01PacketEncryptionResponse(secretKey, publicKey, encryptionRequest.getVerifyToken()), future -> {
-            networkManager.enableEncryption(secretKey);
-        });
+        networkManager.sendPacket(new C01PacketEncryptionResponse(secretKey, publicKey, encryptionRequest.getVerifyToken()),
+            future -> networkManager.enableEncryption(secretKey)
+        );
     }
 
     public static void displayChatMessage(final String message) {

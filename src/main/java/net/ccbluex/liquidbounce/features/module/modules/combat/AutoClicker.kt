@@ -11,6 +11,8 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.utils.extensions.fixedSensitivityPitch
+import net.ccbluex.liquidbounce.utils.extensions.fixedSensitivityYaw
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -57,19 +59,19 @@ class AutoClicker : Module() {
     private var isBreakingBlock = false
     private var wasBreakingBlock = false
 
-    fun leftCanAutoClick(currentTime: Long): Boolean {
+    private fun leftCanAutoClick(currentTime: Long): Boolean {
         return !isBreakingBlock
                 && !(currentTime - blockLastBroken < blockBrokenDelay &&
-                mc.objectMouseOver != null && mc.objectMouseOver!!.blockPos != null && mc.theWorld != null &&
+                mc.objectMouseOver != null && mc.objectMouseOver.blockPos != null && mc.theWorld != null &&
                 mc.theWorld.getBlockState(mc.objectMouseOver.blockPos).block != Blocks.air)
     }
 
-    fun rightCanAutoClick(): Boolean {
-        return !mc.thePlayer!!.isUsingItem
+    private fun rightCanAutoClick(): Boolean {
+        return !mc.thePlayer.isUsingItem
     }
 
     // BUG: There is no delay between breaking blocks in creative mode
-    fun leftClick(currentTime: Long) {
+    private fun leftClick(currentTime: Long) {
         if (leftValue.get() && mc.gameSettings.keyBindAttack.isKeyDown) {
             isBreakingBlock = mc.playerController.curBlockDamageMP != 0F
             if (!isBreakingBlock && wasBreakingBlock) {
@@ -87,7 +89,7 @@ class AutoClicker : Module() {
         }
     }
 
-    fun rightClick(currentTime: Long) {
+    private fun rightClick(currentTime: Long) {
         if (rightValue.get() && mc.gameSettings.keyBindUseItem.isKeyDown && currentTime - rightLastSwing >= rightDelay && rightCanAutoClick()) {
             KeyBinding.onTick(mc.gameSettings.keyBindUseItem.keyCode) // Minecraft Click Handling
 
@@ -98,7 +100,7 @@ class AutoClicker : Module() {
 
     @EventTarget
     fun onRender(event: Render3DEvent) {
-        var currentTime = System.currentTimeMillis()
+        val currentTime = System.currentTimeMillis()
         leftClick(currentTime)
         rightClick(currentTime)
     }
@@ -108,16 +110,10 @@ class AutoClicker : Module() {
         if (jitterValue.get() && ((leftValue.get() && mc.gameSettings.keyBindAttack.isKeyDown && leftCanAutoClick(System.currentTimeMillis()))
                 || (rightValue.get() && mc.gameSettings.keyBindUseItem.isKeyDown && rightCanAutoClick()))) {
             val thePlayer = mc.thePlayer ?: return
-            if (Random.nextBoolean()) thePlayer.rotationYaw += if (Random.nextBoolean()) -RandomUtils.nextFloat(0F, 1F) else RandomUtils.nextFloat(0F, 1F)
+            if (Random.nextBoolean()) thePlayer.fixedSensitivityYaw += RandomUtils.nextFloat(-1F, 1F)
 
             if (Random.nextBoolean()) {
-                thePlayer.rotationPitch += if (Random.nextBoolean()) -RandomUtils.nextFloat(0F, 1F) else RandomUtils.nextFloat(0F, 1F)
-
-                // Make sure pitch is not going into unlegit values
-                if (thePlayer.rotationPitch > 90)
-                    thePlayer.rotationPitch = 90F
-                else if (thePlayer.rotationPitch < -90)
-                    thePlayer.rotationPitch = -90F
+                thePlayer.fixedSensitivityPitch += RandomUtils.nextFloat(-1F, 1F)
             }
         }
     }
