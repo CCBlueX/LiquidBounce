@@ -47,6 +47,10 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
 
     private var targetRotation: Rotation? = null
 
+    override fun disable() {
+        targetRotation = null
+    }
+
     val tickHandler = handler<PlayerNetworkMovementTickEvent> {
         if (it.state != EventState.PRE) {
             return@handler
