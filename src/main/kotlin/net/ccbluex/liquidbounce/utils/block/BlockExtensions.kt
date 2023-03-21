@@ -25,7 +25,7 @@ import net.minecraft.block.SideShapeType
 import net.minecraft.util.math.*
 import kotlin.math.ceil
 
-fun Vec3d.toBlockPos() = BlockPos(this)
+fun Vec3i.toBlockPos() = BlockPos(this)
 
 fun BlockPos.getState() = mc.world?.getBlockState(this)
 
@@ -102,7 +102,7 @@ fun BlockPos.canStandOn(): Boolean {
 fun isBlockAtPosition(box: Box, isCorrectBlock: (Block?) -> Boolean): Boolean {
     for (x in MathHelper.floor(box.minX) until MathHelper.floor(box.maxX) + 1) {
         for (z in MathHelper.floor(box.minZ) until MathHelper.floor(box.maxZ) + 1) {
-            val block = BlockPos(x.toDouble(), box.minY, z.toDouble()).getBlock()
+            val block = BlockPos(x.toDouble().toInt(), box.minY.toInt(), z.toDouble().toInt()).getBlock()
 
             if (isCorrectBlock(block)) {
                 return true
@@ -119,7 +119,7 @@ fun isBlockAtPosition(box: Box, isCorrectBlock: (Block?) -> Boolean): Boolean {
 fun collideBlockIntersects(box: Box, isCorrectBlock: (Block?) -> Boolean): Boolean {
     for (x in MathHelper.floor(box.minX) until MathHelper.floor(box.maxX) + 1) {
         for (z in MathHelper.floor(box.minZ) until MathHelper.floor(box.maxZ) + 1) {
-            val blockPos = BlockPos(x.toDouble(), box.minY, z.toDouble())
+            val blockPos = BlockPos(x.toDouble().toInt(), box.minY.toInt(), z.toDouble().toInt())
             val blockState = blockPos.getState() ?: continue
             val block = blockPos.getBlock() ?: continue
 

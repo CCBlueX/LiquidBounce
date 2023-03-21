@@ -34,7 +34,6 @@ import net.minecraft.item.Items
 import net.minecraft.potion.PotionUtil
 import net.minecraft.registry.Registries
 import net.minecraft.util.Formatting
-import net.minecraft.util.collection.DefaultedList
 import java.util.*
 
 /**
@@ -187,7 +186,7 @@ open class LiquidsItemGroup(
         return ItemGroup.create(ItemGroup.Row.TOP, 0)
             .displayName(plainName.asText())
             .icon(icon)
-            .entries { enabledFeatures, entries, operatorEnabled ->
+            .entries { displayContext, entries ->
                 items(entries)
             }
             .build()

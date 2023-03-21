@@ -153,8 +153,8 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     /**
      * Hook sprint affect from NoSlow module
      */
-    @Redirect(method = "tickMovement", slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;canSprint()Z"), to = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isFallFlying()Z")), at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z"), require = 2, allow = 2)
-    private boolean hookSprintAffect(ClientPlayerEntity playerEntity) {
+    @Redirect(method = "canStartSprinting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z"))
+    private boolean hookSprintAffectStart(ClientPlayerEntity playerEntity) {
         if (ModuleNoSlow.INSTANCE.getEnabled()) {
             return false;
         }
@@ -272,7 +272,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
         return ModuleSprint.INSTANCE.shouldSprintOmnidirectionally() ? modifiedIsWalking : this.isWalking();
     }
 
-    @Redirect(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;hasStatusEffect(Lnet/minecraft/entity/effect/StatusEffect;)Z"))
+    @Redirect(method = "canStartSprinting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;hasStatusEffect(Lnet/minecraft/entity/effect/StatusEffect;)Z"))
     private boolean hookSprintIgnoreBlindness(ClientPlayerEntity instance, StatusEffect statusEffect) {
         return !ModuleSprint.INSTANCE.shouldIgnoreBlindness() && instance.hasStatusEffect(statusEffect);
     }

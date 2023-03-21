@@ -103,9 +103,9 @@ public abstract class MixinEntity {
         return movementInputToVelocity(movementInput, speed, yaw);
     }
 
-    @Redirect(method = "adjustMovementForCollisions(Lnet/minecraft/util/math/Vec3d;)Lnet/minecraft/util/math/Vec3d;", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/Entity;stepHeight:F"))
+    @Redirect(method = "adjustMovementForCollisions(Lnet/minecraft/util/math/Vec3d;)Lnet/minecraft/util/math/Vec3d;", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getStepHeight()F"))
     private float hookStepHeight(Entity instance) {
-        final PlayerStepEvent stepEvent = new PlayerStepEvent(instance.stepHeight);
+        final PlayerStepEvent stepEvent = new PlayerStepEvent(instance.getStepHeight());
         EventManager.INSTANCE.callEvent(stepEvent);
         return stepEvent.getHeight();
     }

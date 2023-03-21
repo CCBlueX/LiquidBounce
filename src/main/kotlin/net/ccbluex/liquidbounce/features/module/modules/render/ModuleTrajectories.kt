@@ -281,7 +281,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
             posY += motionY
             posZ += motionZ
 
-            val blockState = theWorld.getBlockState(BlockPos(posX, posY, posZ))
+            val blockState = theWorld.getBlockState(BlockPos.ofFloored(posX, posY, posZ))
 
             // Check is next position water
             if (!blockState.fluidState.isEmpty) { // Update motion

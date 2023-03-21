@@ -63,7 +63,6 @@ class CpuViewRenderer : ViewRenderer {
         val height = view.height().toInt()
 
         // Prepare OpenGL for 2D textures and bind our texture
-        RenderSystem.enableTexture()
         RenderSystem.bindTexture(glTexture)
 
         val dirtyBounds = surface.dirtyBounds()

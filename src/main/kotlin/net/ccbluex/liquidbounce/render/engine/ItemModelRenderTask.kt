@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.render.engine
 
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNametags
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.math.Mat4
 import net.minecraft.item.ItemStack
 
@@ -31,13 +30,14 @@ class ItemModelRenderTask(val stack: ItemStack, val x: Int, val y: Int) : Render
     override fun getBatchRenderer(): BatchRenderer? = null
 
     override fun initRendering(level: OpenGLLevel, mvpMatrix: Mat4) {
-        mc.itemRenderer.zOffset = -147F
+        // mc.itemRenderer.zOffset = -147F
 
 //        pushMVP(mvpMatrix)
     }
 
     override fun draw(level: OpenGLLevel) {
-        mc.itemRenderer.renderInGui(stack, x, y)
+        // matrices needed for rendering
+        // mc.itemRenderer.renderInGui(stack, x, y)
     }
 
     override fun cleanupRendering(level: OpenGLLevel) {

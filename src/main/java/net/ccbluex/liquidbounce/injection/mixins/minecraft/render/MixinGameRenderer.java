@@ -59,9 +59,6 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
     private int ticks;
 
     @Shadow
-    protected abstract void bobViewWhenHurt(MatrixStack matrixStack, float f);
-
-    @Shadow
     protected abstract void bobView(MatrixStack matrixStack, float f);
 
     @Shadow
@@ -69,6 +66,8 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
 
     @Shadow
     protected abstract double getFov(Camera camera, float tickDelta, boolean changingFov);
+
+    @Shadow protected abstract void tiltViewWhenHurt(MatrixStack matrices, float tickDelta);
 
     /**
      * Hook game render event
@@ -94,7 +93,7 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
         matrixStack.peek().getPositionMatrix().mul(this.getBasicProjectionMatrix(this.getFov(camera, tickDelta, true)));
 
         if (bobbing) {
-            this.bobViewWhenHurt(matrixStack, tickDelta);
+            this.tiltViewWhenHurt(matrixStack, tickDelta);
 
             if (this.client.options.getBobView().getValue()) {
                 this.bobView(matrixStack, tickDelta);
@@ -127,7 +126,7 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
         return model;
     }
 
-    @Inject(method = "bobViewWhenHurt", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "tiltViewWhenHurt", at = @At("HEAD"), cancellable = true)
     private void injectHurtCam(MatrixStack matrixStack, float f, CallbackInfo callbackInfo) {
         if (ModuleNoHurtCam.INSTANCE.getEnabled()) {
             callbackInfo.cancel();

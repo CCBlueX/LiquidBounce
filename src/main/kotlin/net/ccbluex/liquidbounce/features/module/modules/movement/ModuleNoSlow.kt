@@ -28,7 +28,6 @@ import net.minecraft.block.SlimeBlock
 import net.minecraft.block.SoulSandBlock
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
-import net.minecraft.util.Hand
 import net.minecraft.util.UseAction
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
@@ -149,7 +148,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
             Consume.forwardMultiplier,
             Consume.sidewaysMultiplier
         ) else Pair(0.2f, 0.2f)
-        UseAction.BLOCK, UseAction.SPYGLASS, UseAction.TOOT_HORN -> if (Block.enabled) Pair(
+        UseAction.BLOCK, UseAction.SPYGLASS, UseAction.TOOT_HORN, UseAction.BRUSH -> if (Block.enabled) Pair(
             Block.forwardMultiplier,
             Block.sidewaysMultiplier
         ) else Pair(0.2f, 0.2f)
