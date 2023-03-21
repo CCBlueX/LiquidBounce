@@ -88,15 +88,15 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
 
     @Override
     public Matrix4f getCameraMVPMatrix(float tickDelta, boolean bobbing) {
-        MatrixStack matrixStack = new MatrixStack();
+        MatrixStack matrices = new MatrixStack();
 
-        matrixStack.peek().getPositionMatrix().mul(this.getBasicProjectionMatrix(this.getFov(camera, tickDelta, true)));
+        matrices.multiplyPositionMatrix(this.getBasicProjectionMatrix(this.getFov(camera, tickDelta, true)));
 
         if (bobbing) {
-            this.tiltViewWhenHurt(matrixStack, tickDelta);
+            this.tiltViewWhenHurt(matrices, tickDelta);
 
             if (this.client.options.getBobView().getValue()) {
-                this.bobView(matrixStack, tickDelta);
+                this.bobView(matrices, tickDelta);
             }
 
             float f = MathHelper.lerp(tickDelta, this.client.player.lastNauseaStrength, this.client.player.nextNauseaStrength) * this.client.options.getDistortionEffectScale().getValue().floatValue() * this.client.options.getDistortionEffectScale().getValue().floatValue();
@@ -106,24 +106,18 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
                 g *= g;
 
                 RotationAxis vec3f = RotationAxis.of(new Vector3f(0.0F, MathHelper.SQUARE_ROOT_OF_TWO / 2.0F, MathHelper.SQUARE_ROOT_OF_TWO / 2.0F));
-                matrixStack.multiply(vec3f.rotationDegrees(((float) this.ticks + tickDelta) * (float) i));
-                matrixStack.scale(1.0F / g, 1.0F, 1.0F);
+                matrices.multiply(vec3f.rotationDegrees(((float) this.ticks + tickDelta) * (float) i));
+                matrices.scale(1.0F / g, 1.0F, 1.0F);
                 float h = -((float) this.ticks + tickDelta) * (float) i;
-                matrixStack.multiply(vec3f.rotationDegrees(h));
+                matrices.multiply(vec3f.rotationDegrees(h));
             }
         }
 
-        matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(camera.getPitch()));
-        matrixStack.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(camera.getYaw() + 180.0F));
-
-        Vec3d pos = this.camera.getPos();
-
-        Matrix4f model = matrixStack.peek().getPositionMatrix();
-
-        // todo: what
-        // model.mul(Matrix4f.translate(-(float) pos.x, -(float) pos.y, -(float) pos.z));
-
-        return model;
+        matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(camera.getPitch()));
+        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(camera.getYaw() + 180.0f));
+        final Vec3d cameraPosition = this.camera.getPos();
+        matrices.translate(-cameraPosition.x, -cameraPosition.y, -cameraPosition.z);
+        return matrices.peek().getPositionMatrix();
     }
 
     @Inject(method = "tiltViewWhenHurt", at = @At("HEAD"), cancellable = true)

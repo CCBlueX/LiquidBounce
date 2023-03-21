@@ -213,9 +213,9 @@ object RenderEngine : Listenable {
             }
 
             for (renderTask in layer.renderTasks) {
-                // renderTask.initRendering(lvl, settings.mvpMatrix)
-                // renderTask.draw(lvl)
-                // renderTask.cleanupRendering(lvl)
+                renderTask.initRendering(lvl, settings.mvpMatrix)
+                renderTask.draw(lvl)
+                renderTask.cleanupRendering(lvl)
             }
 
             layer.renderTasks.clear()
