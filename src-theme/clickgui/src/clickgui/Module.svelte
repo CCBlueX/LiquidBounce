@@ -63,7 +63,7 @@
         position: relative;
 
         &.enabled {
-            color: white;   
+            color: white;
         }
 
         &:hover {

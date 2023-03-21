@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.event.EventManager
@@ -39,7 +40,7 @@ import net.minecraft.text.TranslatableTextContent
 import org.lwjgl.glfw.GLFW
 
 /**
- * A module also called 'hack' is able to be enabled and handle events
+ * A module also called 'hack' can be enabled and handle events
  */
 open class Module(
     name: String, // name parameter in configurable
@@ -47,7 +48,7 @@ open class Module(
     bind: Int = GLFW.GLFW_KEY_UNKNOWN, // default bind
     state: Boolean = false, // default state
     @Exclude val disableActivation: Boolean = false, // disable activation
-    hide: Boolean = false, // default hide
+    hide: Boolean = false // default hide
 ) : Listenable, Configurable(name) {
 
     open val translationBaseKey: String
@@ -70,6 +71,9 @@ open class Module(
             } else {
                 disable()
             }
+
+            // If successful might store configuration
+            ConfigSystem.storeConfigurable(ModuleManager.modulesConfigurable)
         }.onSuccess {
             // Save new module state when module activation is enabled
             if (disableActivation) {

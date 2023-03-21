@@ -29,6 +29,14 @@ def npm_build(f):
 if os.path.exists("theme.zip"):
     os.remove("theme.zip")
 
+# Delete tmp folder
+if os.path.exists("tmp"):
+    shutil.rmtree("tmp")
+
+# Copy theme bundle to jar structure
+if os.path.exists("resources"):
+    shutil.rmtree("resources")
+
 # Go through every folder and copy public folder to tmp folder with name of folder
 for folder in os.listdir("."):
     if os.path.isdir(folder):

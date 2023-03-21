@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,41 +61,42 @@ object ModuleNotifier : Module("Notifier", Category.MISC) {
         val packet = event.packet
 
         if (packet is PlayerListS2CPacket) {
-            // todo:
-//            when (packet.action) {
-//                PlayerListS2CPacket.Action.ADD_PLAYER -> {
-//                    for (entry in packet.entries) {
-//                        uuidNameCache[entry.profile.id] = entry.profile.name
-//
-//                        if (joinMessages) {
-//                            val message = joinMessageFormat.format(entry.profile.name)
-//
-//                            if (useNotification) {
-//                                notification("Notifier", message, NotificationEvent.Severity.INFO)
-//                            } else {
-//                                chat(regular(message))
-//                            }
-//                        }
-//                    }
-//                }
-//                PlayerListS2CPacket.Action.REMOVE_PLAYER -> {
-//                    for (entry in packet.entries) {
-//                        if (leaveMessages) {
-//                            val message = leaveMessageFormat.format(uuidNameCache[entry.profile.id])
-//
-//                            if (useNotification) {
-//                                notification("Notifier", message, NotificationEvent.Severity.INFO)
-//                            } else {
-//                                chat(regular(message))
-//                            }
-//                        }
-//
-//                        uuidNameCache.remove(entry.profile.id)
-//                    }
-//                }
-//                else -> {
-//                }
-//            }
+            when (packet.action) {
+                PlayerListS2CPacket.Action.ADD_PLAYER -> {
+                    for (entry in packet.entries) {
+                        if (entry.profile.name != null && entry.profile.name.length > 2) {
+                            uuidNameCache[entry.profile.id] = entry.profile.name
+                            if (joinMessages) {
+                                val message = joinMessageFormat.format(entry.profile.name)
+
+                                if (useNotification) {
+                                    notification("Notifier", message, NotificationEvent.Severity.INFO)
+                                } else {
+                                    chat(regular(message))
+                                }
+                            }
+                        }
+                    }
+                }
+                PlayerListS2CPacket.Action.REMOVE_PLAYER -> {
+                    for (entry in packet.entries) {
+                        if (entry.profile.name != null && entry.profile.name.length > 2) {
+                            if (leaveMessages) {
+                                val message = leaveMessageFormat.format(uuidNameCache[entry.profile.id])
+                                if (useNotification) {
+                                    notification("Notifier", message, NotificationEvent.Severity.INFO)
+                                } else {
+                                    chat(regular(message))
+                                }
+                            }
+
+                            uuidNameCache.remove(entry.profile.id)
+                        }
+                    }
+                }
+                else -> {
+                }
+            }
         }
     }
 

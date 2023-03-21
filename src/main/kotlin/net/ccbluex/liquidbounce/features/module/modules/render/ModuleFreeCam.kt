@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -65,7 +65,7 @@ object ModuleFreeCam : Module("FreeCam", Category.RENDER) {
 
         val speed = this.speed.toDouble()
 
-        val velocity = Vec3d.of(Vec3i.ZERO).apply { strafe(player.directionYaw, speed, true) }
+        val velocity = Vec3d.of(Vec3i.ZERO).apply { strafe(player.directionYaw, speed, keyboardCheck = true) }
             .withAxis(Direction.Axis.Y, player.input.yAxisMovement * speed)
 
         updatePosition(velocity, lastPosBeforePos = true, increase = true)

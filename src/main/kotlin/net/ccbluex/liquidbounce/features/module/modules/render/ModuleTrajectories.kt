@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.utils.render.espBoxRenderTask
 import net.ccbluex.liquidbounce.utils.render.rect
 import net.minecraft.block.ShapeContext
 import net.minecraft.client.world.ClientWorld
+import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.projectile.ArrowEntity
 import net.minecraft.entity.projectile.ProjectileUtil
@@ -70,7 +71,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
         val theWorld = mc.world ?: return@handler
 
         theWorld.entities.filter { it is ArrowEntity && !it.inGround }.forEach {
-            val landingPosition = drawTrajectoryForProjectile(it.velocity, TrajectoryInfo(0.05F, 0.3F), it.pos, world, player, Vec3(0.0, 0.0, 0.0), Color4b(255, 0, 0, 200))
+            val landingPosition = drawTrajectoryForProjectile(it.velocity, TrajectoryInfo(0.05F, 0.3F), it.pos, world, it, Vec3(0.0, 0.0, 0.0), Color4b(255, 0, 0, 200))
 
             if (landingPosition is EntityHitResult) {
                 if (landingPosition.entity != player) {
@@ -83,7 +84,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
 
                 val indexBuffer = IndexBuffer(8, VertexFormatComponentDataType.GlUnsignedShort)
 
-                vertexFormat.rect(indexBuffer, Vec3(-2.0, -1.0, 0.0), Vec3(2.0, 1.0, 0.0), Color4b(255, 0, 0, 120))
+                vertexFormat.rect(indexBuffer, Vec3(-10.0, -10.0, 0.0), Vec3(10.0, 10.0, 0.0), Color4b(255, 0, 0, 120))
 
                 RenderEngine.enqueueForRendering(RenderEngine.SCREEN_SPACE_LAYER, VertexFormatRenderTask(vertexFormat, PrimitiveType.Triangles, ColoredPrimitiveShader))
             }
@@ -165,7 +166,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
         val interpolatedOffset = Vec3(
             otherPlayer.lastRenderX + (otherPlayer.x - otherPlayer.lastRenderX) * event.tickDelta - otherPlayer.x,
             otherPlayer.lastRenderY + (otherPlayer.y - otherPlayer.lastRenderY) * event.tickDelta - otherPlayer.y,
-            otherPlayer.lastRenderZ + (otherPlayer.z - otherPlayer.lastRenderZ) * event.tickDelta - otherPlayer.z,
+            otherPlayer.lastRenderZ + (otherPlayer.z - otherPlayer.lastRenderZ) * event.tickDelta - otherPlayer.z
         )
 
         // Positions
@@ -204,7 +205,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
         trajectoryInfo: TrajectoryInfo,
         pos: Vec3d,
         theWorld: ClientWorld,
-        player: PlayerEntity,
+        player: Entity,
         interpolatedOffset: Vec3,
         color: Color4b
     ): HitResult? { // Normalize the motion vector
@@ -227,7 +228,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
 
         var currTicks = 0
 
-        while (!hasLanded && posY > 0.0 && currTicks < MAX_SIMULATED_TICKS) { // Set pos before and after
+        while (!hasLanded && posY > world.bottomY && currTicks < MAX_SIMULATED_TICKS) { // Set pos before and after
             val posBefore = Vec3d(posX, posY, posZ)
             var posAfter = Vec3d(posX + motionX, posY + motionY, posZ + motionZ)
 
@@ -353,6 +354,6 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
         var motionSlowdown: Float = 0.99F,
         var pitchSubtrahend: Float = 0.0F,
         var angle: Float = 0.99F,
-        val isBow: Boolean = false,
+        val isBow: Boolean = false
     )
 }

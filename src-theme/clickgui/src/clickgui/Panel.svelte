@@ -1,18 +1,20 @@
 <script>
-    import { sineInOut } from "svelte/easing";
-    import { slide } from "svelte/transition";
+    import {sineInOut} from "svelte/easing";
+    import {slide} from "svelte/transition";
     import Module from "./Module.svelte";
 
-    export let category;
+    export let name;
     export let modules;
 
-    let expanded = localStorage.getItem(`clickgui.panel.${category}.expanded`) === "true" 
-        || localStorage.getItem(`clickgui.panel.${category}.expanded`) === null;
+    export let startTop;
+    export let startLeft;
 
-    let renderedModules = modules;
+    let expanded = storage.getItem(`clickgui.panel.${name}.expanded`) === "true" || false;
 
-    let top = parseInt(localStorage.getItem(`clickgui.panel.${category}.top`)) || 0;
-    let left = parseInt(localStorage.getItem(`clickgui.panel.${category}.left`)) || 0;
+    let renderedModules = expanded ? modules : [];
+
+    let top = parseInt(storage.getItem(`clickgui.panel.${name}.top`)) || startTop;
+    let left = parseInt(storage.getItem(`clickgui.panel.${name}.left`)) || startLeft;
     let moving = false;
     let prevX = 0;
     let prevY = 0;
@@ -25,16 +27,24 @@
 		if (moving) {
 			left += e.screenX - prevX;
 			top += e.screenY - prevY;
+
+            // Panels should not go out of bounds
+            if (top < 0) {
+                top = 0;
+            }
+            if (left < 0) {
+                left = 0;
+            }
 		}
 
         prevX = e.screenX;
         prevY = e.screenY;
 	}
-	
+
 	function onMouseUp() {
 		moving = false;
-        localStorage.setItem(`clickgui.panel.${category}.top`, top);
-        localStorage.setItem(`clickgui.panel.${category}.left`, left);
+        storage.setItem(`clickgui.panel.${name}.top`, top);
+        storage.setItem(`clickgui.panel.${name}.left`, left);
 	}
 
     function toggleExpanded(e) {
@@ -45,7 +55,7 @@
             expanded = true;
             renderedModules = modules;
         }
-        localStorage.setItem(`clickgui.panel.${category}.expanded`, expanded);
+        storage.setItem(`clickgui.panel.${name}.expanded`, expanded);
     }
 
     window.addEventListener("mouseup", onMouseUp);
@@ -74,8 +84,8 @@
 
 <div class="panel" style="left: {left}px; top: {top}px;">
     <div on:mousedown={handleToggleClick} on:mousedown={onMouseDown} class="title-wrapper">
-        <img class="icon" src="img/{category.toLowerCase()}.svg" alt="icon" />
-        <div class="title">{category}</div>
+        <img class="icon" src="img/{name.toLowerCase()}.svg" alt="icon" />
+        <div class="title">{name}</div>
         <div on:click={toggleExpanded} class="visibility-toggle" class:expanded={expanded}></div>
     </div>
     <div class="modules">

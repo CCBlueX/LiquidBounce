@@ -3,16 +3,15 @@
 
     let clickGuiOpened = true;
 
-    const categories = [
-        "Movement",
-        "Combat",
-        "Render",
-        "Exploit",
-        "Player",
-        "World",
-        "Misc",
-        "Fun",
-    ];
+    const categories = client.getModuleManager().getCategories();
+    const panels = client.getModuleManager().getCategories()
+        .map(category => {
+            return {
+                name: category,
+                top: 30 + categories.indexOf(category) * 45,
+                left: 30
+            }
+        });
     const modules = [];
     
     try {
@@ -39,8 +38,8 @@
 <main>
     {#if clickGuiOpened}
         <div class="clickgui-container">
-            {#each categories as category}
-                <Panel category={category} modules={getModulesOfCategory(category)} />
+            {#each panels as panel}
+                <Panel name={panel.name} modules={getModulesOfCategory(panel.name)} startTop={panel.top} startLeft={panel.left} />
             {/each}
         </div>
     {/if}
@@ -48,7 +47,6 @@
 
 <style>
     .clickgui-container {
-        background-color: rgba(0, 0, 0, .4);
         height: 100vh;
         width: 100vw;
         -webkit-user-select: none;

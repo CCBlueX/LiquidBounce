@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,8 +54,9 @@ object ModuleTimer : Module("Timer", Category.WORLD) {
                     currentTimerState = TimerState.NormalSpeed
                 }
             }
-        } else
+        } else {
             mc.timer.timerSpeed = 1f
+        }
     }
 
     override fun disable() {

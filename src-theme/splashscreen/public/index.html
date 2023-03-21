@@ -24,56 +24,56 @@
             }
         }
 
+        .fade-out {
+            animation: fade 1.5s forwards;
+        }
 
-        /*        .fade-out {
-                    animation: fade 3s forwards;
-                }
+        .background-fade-out {
+            animation: color-fade 0.5s forwards;
+        }
 
-                .background-fade-out {
-                    animation: color-fade 2s forwards;
-                }*/
+        @keyframes color-fade {
+            0% {
+                background-color: #1e1e1e;
+            }
+            100% {
+                background-color: #1e1e1e00;
+            }
+        }
 
-        /*        @keyframes color-fade {
-                    0% {
-                        background-color: #1e1e1e;
-                    }
-                    100% {
-                        background-color: #1e1e1e00;
-                    }
-                }
-
-                @keyframes fade {
-                    0% {
-                        opacity: 100;
-                    }
-                    100% {
-                        opacity: 0;
-                    }
-        }*/
+        @keyframes fade {
+            0% {
+                opacity: 100;
+            }
+            100% {
+                opacity: 0;
+            }
+        }
     </style>
 
     <script>
-        // todo: remap minecraft
-        /* events.on("close", (event) => {
+        events.on("close", (event) => {
             event.cancelEvent();
 
-            let circle = document.getElementById("circle");
-            circle.addEventListener("animationend", (ev) => {
+            view.state("transitioning");
+
+            document.getElementById("background")
+                .classList.add("background-fade-out");
+
+            let logo = document.getElementById("logo");
+            logo.addEventListener("animationend", (ev) => {
                 if (ev.animationName === "fade") {
-                    minecraft.setOverlay(null);
-                    engine.removeView(view);
+                    view.state("end");
                 }
             });
-            circle.classList.add("fade-out");
-
-            document.getElementById("background").classList.add("background-fade-out");
-        }); */
+            logo.classList.add("fade-out");
+        });
     </script>
 </head>
 
 <body id="background">
     <div class="center">
-        <img src="img/logo.svg" alt="logo" class="flash">
+        <img id="logo" src="img/logo.svg" alt="logo" class="flash">
     </div>
 </body>
 

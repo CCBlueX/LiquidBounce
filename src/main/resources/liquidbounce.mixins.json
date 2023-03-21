@@ -3,6 +3,7 @@
   "minVersion": "0.8",
   "package": "net.ccbluex.liquidbounce.injection.mixins",
   "compatibilityLevel": "JAVA_8",
+  "priority": 1337,
   "client": [
     "minecraft.block.MixinAbstractBlock",
     "minecraft.block.MixinBlock",

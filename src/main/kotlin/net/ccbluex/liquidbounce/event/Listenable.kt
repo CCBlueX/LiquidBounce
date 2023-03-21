@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ class EventHook<T : Event>(
     val handlerClass: Listenable,
     val handler: Handler<T>,
     val ignoresCondition: Boolean,
-    val priority: Int = 0,
+    val priority: Int = 0
 )
 
 interface Listenable {
@@ -39,12 +39,17 @@ interface Listenable {
      */
     fun parent(): Listenable? = null
 
+    /**
+     * Children listenables
+     */
+    fun children(): List<Listenable> = emptyList()
+
 }
 
 inline fun <reified T : Event> Listenable.handler(
     ignoreCondition: Boolean = false,
     priority: Int = 0,
-    noinline handler: Handler<T>,
+    noinline handler: Handler<T>
 ) {
     EventManager.registerEventHook(T::class.java, EventHook(this, handler, ignoreCondition, priority))
 }
@@ -54,7 +59,7 @@ inline fun <reified T : Event> Listenable.handler(
  */
 inline fun <reified T : Event> Listenable.sequenceHandler(
     ignoreCondition: Boolean = false,
-    noinline eventHandler: SuspendableHandler<T>,
+    noinline eventHandler: SuspendableHandler<T>
 ) {
     handler<T>(ignoreCondition) { event -> Sequence(eventHandler, event) }
 }
@@ -63,18 +68,24 @@ inline fun <reified T : Event> Listenable.sequenceHandler(
  * Registers a repeatable sequence which repeats the execution of code.
  */
 fun Listenable.repeatable(eventHandler: SuspendableHandler<DummyEvent>) {
+    // We store our sequence in this variable. That can be done because our variable will survive the scope of this function
+    // and can be used in the event handler function. This is a very useful pattern to use in Kotlin.
     var sequence: RepeatingSequence? = RepeatingSequence(eventHandler)
 
-    handler<ToggleModuleEvent>(ignoreCondition = true) {
-        if (this == it.module || this.parent() == it.module) {
-            if (this.handleEvents()) {
-                if (sequence == null) {
-                    sequence = RepeatingSequence(eventHandler)
-                }
-            } else if (sequence != null && !it.ignoreCondition) {
-                sequence?.cancel()
-                sequence = null
+    // Ignore condition makes sense because we do not want our sequence to run after we do not handle events anymore
+    handler<GameTickEvent>(ignoreCondition = true) {
+        // Check if we should start or stop the sequence
+        if (this.handleEvents()) {
+            // Check if the sequence is already running
+            if (sequence == null) {
+                // If not, start it
+                // This will start a new repeating sequence which will run until the condition is false
+                sequence = RepeatingSequence(eventHandler)
             }
+        } else if (sequence != null) { // This condition is only true if the sequence is running
+            // If the sequence is running, we should stop it
+            sequence?.cancel()
+            sequence = null
         }
     }
 }

@@ -155,11 +155,27 @@
         }
 
     </style>
+    <script>
+        const random = (length = 8) => {
+            // Declare all characters
+            let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+            // Pick characers randomly
+            let str = '';
+            for (let i = 0; i < length; i++) {
+                str += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+
+            return str;
+
+        };
+    </script>
 </head>
 <body>
 <div class="scale">
     <div class="wrapper">
         <h1 id="title">Alt Manager</h1>
+
         <div id="buttongrid">
             <div class="Button">
                 <h2>Cracked Login</h2>
@@ -168,6 +184,10 @@
                                                          placeholder="type username here..."><br>
                     <button onclick="document.getElementById('response').innerText = client.getSessionService().loginCracked(document.getElementById('username').value);">
                         Login
+                    </button>
+
+                    <button onclick="document.getElementById('response').innerText = client.getSessionService().loginCracked(random(16));">
+                        Random
                     </button>
                 </div>
             </div>

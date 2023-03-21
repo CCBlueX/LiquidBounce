@@ -51,7 +51,7 @@ val protocolVersion: Int
 const val MC_1_8: Int = 47
 
 // Chat formatting
-private val clientPrefix = "§8[§9§l${LiquidBounce.CLIENT_NAME}§8] ".asText()
+private val clientPrefix = "§f§lLiquid§9§lBounce §8▸ §7".asText()
 
 fun dot() = regular(".")
 
