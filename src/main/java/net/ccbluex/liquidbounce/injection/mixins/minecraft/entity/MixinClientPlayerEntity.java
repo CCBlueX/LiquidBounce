@@ -169,13 +169,12 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     /**
      * Hook silent rotations
      */
-//    todo: fix
-//    @ModifyVariable(method = "sendMovementPackets", at = @At("STORE"), ordinal = 3)
-//    private boolean hookSilentRotationsCheck(boolean bl4) {
-//        boolean shouldDisableRotations = ModuleFreeCam.INSTANCE.shouldDisableRotations();
-//        updatedSilent = RotationManager.INSTANCE.needsUpdate(lastYaw, lastPitch);
-//        return !shouldDisableRotations && ((bl4 && RotationManager.INSTANCE.getCurrentRotation() == null) || updatedSilent);
-//    }
+    @ModifyVariable(method = "sendMovementPackets", at = @At("STORE"), ordinal = 2)
+    private boolean hookSilentRotationsCheck(boolean bl4) {
+        boolean shouldDisableRotations = ModuleFreeCam.INSTANCE.shouldDisableRotations();
+        updatedSilent = RotationManager.INSTANCE.needsUpdate(lastYaw, lastPitch);
+        return !shouldDisableRotations && ((bl4 && RotationManager.INSTANCE.getCurrentRotation() == null) || updatedSilent);
+    }
 
     /**
      * Hook silent rotations
