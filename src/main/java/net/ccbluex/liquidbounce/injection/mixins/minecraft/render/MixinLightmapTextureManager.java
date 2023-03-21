@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
-import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.option.SimpleOption;
 import net.minecraft.client.render.LightmapTextureManager;
 import org.spongepowered.asm.mixin.Mixin;
@@ -29,14 +28,13 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(LightmapTextureManager.class)
 public class MixinLightmapTextureManager {
 
-//    todo: return max gamma
-//    @Redirect(method = "update(F)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/GameOptions;getGamma()Lnet/minecraft/client/option/SimpleOption;"))
-//    private SimpleOption<Double> injectXRayFullBright(GameOptions instance) {
-//        ModuleXRay module = ModuleXRay.INSTANCE;
-//        if (!module.getEnabled() || !module.getFullBright()) {
-//            return instance.getGamma();
-//        }
-//
-//        return SimpleOption.ofBoolean()Byte.MAX_VALUE;
-//    }
+    @Redirect(method = "update(F)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/SimpleOption;getValue()Ljava/lang/Object;", ordinal = 1))
+    private Object injectXRayFullBright(SimpleOption option) {
+        ModuleXRay module = ModuleXRay.INSTANCE;
+        if (!module.getEnabled() || !module.getFullBright()) {
+            return option.getValue();
+        }
+
+        return Double.MAX_VALUE;
+    }
 }
