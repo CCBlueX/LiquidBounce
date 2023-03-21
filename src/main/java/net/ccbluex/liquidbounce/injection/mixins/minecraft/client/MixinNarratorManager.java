@@ -43,10 +43,9 @@ public class MixinNarratorManager {
     /**
      * This removes the narrator notifications
      */
-//    todo: fix
-//    @Inject(method = "addToast", at = @At("HEAD"), cancellable = true)
-//    private void cancelToast(CallbackInfo callback) {
-//        callback.cancel();
-//    }
+    @Inject(method = { "narrate(Lnet/minecraft/text/Text;)V", "narrate(Lnet/minecraft/text/Text;)V", "narrate(Lnet/minecraft/text/Text;)V", "narrateChatMessage" }, at = @At("HEAD"), cancellable = true)
+    private void cancelToast(CallbackInfo callback) {
+        callback.cancel();
+    }
 
 }
