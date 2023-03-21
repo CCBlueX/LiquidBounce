@@ -96,7 +96,7 @@ class SimulatedArrow(val world: ClientWorld, var pos: Vec3d, var velocity: Vec3d
                     +size
                 ).offset(pos).stretch(newPos.subtract(pos)).expand(1.0)
             ) {
-                if (!it.isSpectator && it.isAlive && (it.isCollidable || arrowEntity != mc.player && it == arrowEntity)) {
+                if (!it.isSpectator && it.isAlive && (it.canHit() || arrowEntity != mc.player && it == arrowEntity)) {
                     if (arrowEntity.isConnectedThroughVehicle(it)) return@getEntityCollision false
                 } else {
                     return@getEntityCollision false

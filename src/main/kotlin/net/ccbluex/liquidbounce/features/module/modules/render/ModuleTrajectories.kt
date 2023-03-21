@@ -257,7 +257,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                     +trajectoryInfo.size.toDouble()
                 ).offset(posX, posY, posZ).stretch(Vec3d(motionX, motionY, motionZ)).expand(1.0)
             ) {
-                if (!it.isSpectator && it.isAlive && (/*it.collides() todo: collides with what || */ player != mc.player && it == mc.player)) {
+                if (!it.isSpectator && it.isAlive && (it.canHit() || player != mc.player && it == mc.player)) {
                     if (player.isConnectedThroughVehicle(it)) return@getEntityCollision false
                 } else {
                     return@getEntityCollision false
