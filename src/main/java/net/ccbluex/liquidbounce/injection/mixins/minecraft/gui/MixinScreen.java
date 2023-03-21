@@ -18,15 +18,10 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
-import net.ccbluex.liquidbounce.event.ChatSendEvent;
-import net.ccbluex.liquidbounce.event.EventManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import javax.annotation.Nullable;
 
@@ -35,24 +30,5 @@ public abstract class MixinScreen {
 
     @Shadow @Nullable
     protected MinecraftClient client;
-
-    /**
-     * Handle user chat messages
-     *
-     * @param message chat message by client user
-     * @param callbackInfo callback
-     */
-//    todo: where are the chat messages
-//    @Inject(method = "sendMessage(Ljava/lang/String;)V", at = @At("HEAD"), cancellable = true)
-//    private void handleChatMessage(String message, CallbackInfo callbackInfo) {
-//        ChatSendEvent chatSendEvent = new ChatSendEvent(message);
-//
-//        EventManager.INSTANCE.callEvent(chatSendEvent);
-//
-//        if (chatSendEvent.isCancelled()) {
-//            client.inGameHud.getChatHud().addToMessageHistory(message);
-//            callbackInfo.cancel();
-//        }
-//    }
 
 }
