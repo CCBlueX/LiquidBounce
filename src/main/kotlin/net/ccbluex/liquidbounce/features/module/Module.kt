@@ -34,9 +34,7 @@ import net.minecraft.client.network.ClientPlayNetworkHandler
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.network.ClientPlayerInteractionManager
 import net.minecraft.client.world.ClientWorld
-import net.minecraft.text.MutableText
 import net.minecraft.text.Text
-import net.minecraft.text.TranslatableTextContent
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -44,18 +42,14 @@ import org.lwjgl.glfw.GLFW
  */
 open class Module(
     name: String, // name parameter in configurable
-    @Exclude val category: Category, // module category
+    @Exclude
+    val category: Category, // module category
     bind: Int = GLFW.GLFW_KEY_UNKNOWN, // default bind
     state: Boolean = false, // default state
-    @Exclude val disableActivation: Boolean = false, // disable activation
+    @Exclude
+    val disableActivation: Boolean = false, // disable activation
     hide: Boolean = false // default hide
 ) : Listenable, Configurable(name) {
-
-    open val translationBaseKey: String
-        get() = "liquidbounce.module.${name.toLowerCamelCase()}"
-
-    val description: String
-        get() = "$translationBaseKey.description"
 
     // Module options
     var enabled by boolean("Enabled", state).listen { new ->
@@ -107,6 +101,12 @@ open class Module(
     var bind by int("Bind", bind, 0..0)
     var hidden by boolean("Hidden", hide)
 
+    open val translationBaseKey: String
+        get() = "liquidbounce.module.${name.toLowerCamelCase()}"
+
+    val description: String
+        get() = "$translationBaseKey.description"
+
     // Tag to be displayed on the HUD
     open val tag: String?
         get() = null
@@ -145,8 +145,6 @@ open class Module(
      */
     override fun handleEvents() = enabled && mc.player != null && mc.world != null
 
-    fun message(key: String, vararg args: Any): MutableText {
-        return Text.translatable("$translationBaseKey.messages.$key", *args)
-    }
+    fun message(key: String, vararg args: Any) = Text.translatable("$translationBaseKey.messages.$key", *args)
 
 }
