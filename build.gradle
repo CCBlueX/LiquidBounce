@@ -21,7 +21,7 @@ plugins {
     id "fabric-loom"
     id "org.jetbrains.kotlin.jvm"
     id "com.github.johnrengelman.shadow" version "7.1.2"
-    id "org.jlleitschuh.gradle.ktlint" version "11.2.0"
+    id "org.jlleitschuh.gradle.ktlint" version "11.3.1"
 }
 
 ktlint {
@@ -89,7 +89,7 @@ dependencies {
         exclude group: 'com.google.code.gson', module: 'gson'
     }
 
-    implementation "com.github.CCBlueX:Elixir:1.2.5"
+    implementation "com.github.CCBlueX:Elixir:1.2.6"
 
     implementation "com.labymedia:ultralight-java-base:0.4.12"
     implementation "com.labymedia:ultralight-java-databind:0.4.12"

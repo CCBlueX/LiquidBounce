@@ -42,12 +42,10 @@ import org.lwjgl.glfw.GLFW
  */
 open class Module(
     name: String, // name parameter in configurable
-    @Exclude
-    val category: Category, // module category
+    @Exclude val category: Category, // module category
     bind: Int = GLFW.GLFW_KEY_UNKNOWN, // default bind
     state: Boolean = false, // default state
-    @Exclude
-    val disableActivation: Boolean = false, // disable activation
+    @Exclude val disableActivation: Boolean = false, // disable activation
     hide: Boolean = false // default hide
 ) : Listenable, Configurable(name) {
 
@@ -144,6 +142,12 @@ open class Module(
      * Events should be handled when module is enabled
      */
     override fun handleEvents() = enabled && mc.player != null && mc.world != null
+
+    /**
+     * Returns if module is hidden. Hidden modules are not displayed in the module list.
+     * Used for HTML UI. DO NOT REMOVE!
+     */
+    fun isHidden() = hidden
 
     fun message(key: String, vararg args: Any) = Text.translatable("$translationBaseKey.messages.$key", *args)
 

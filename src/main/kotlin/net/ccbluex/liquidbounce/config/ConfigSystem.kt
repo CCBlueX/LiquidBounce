@@ -32,6 +32,8 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.block.Block
 import net.minecraft.item.Item
 import java.io.File
+import java.io.Reader
+import java.io.Writer
 
 /**
  * A config system which uses configurables
@@ -44,6 +46,16 @@ object ConfigSystem {
     val rootFolder = File(
         mc.runDirectory,
         LiquidBounce.CLIENT_NAME
+    ).apply { // Check if there is already a config folder and if not create new folder (mkdirs not needed - .minecraft should always exist)
+        if (!exists()) {
+            mkdir()
+        }
+    }
+
+    // User config directory folder
+    val userConfigsFolder = File(
+        rootFolder,
+        "configs"
     ).apply { // Check if there is already a config folder and if not create new folder (mkdirs not needed - .minecraft should always exist)
         if (!exists()) {
             mkdir()
@@ -94,9 +106,7 @@ object ConfigSystem {
                 }
 
                 logger.debug("Reading config ${configurable.name}...")
-
-                JsonParser.parseReader(gson.newJsonReader(reader()))?.let { deserializeConfigurable(configurable, it) }
-
+                deserializeConfigurable(configurable, reader())
                 logger.info("Successfully loaded config '${configurable.name}'.")
             }.onFailure {
                 logger.error("Unable to load config ${configurable.name}", it)
@@ -105,7 +115,57 @@ object ConfigSystem {
         }
     }
 
-    private fun deserializeConfigurable(configurable: Configurable, jsonElement: JsonElement) {
+    /**
+     * All configurables known to the config system should be stored now.
+     * This will overwrite all existing files with the new values.
+     *
+     * These configurables are root configurables, which always create a new file with their name.
+     */
+    fun storeAll() {
+        configurables.forEach(::storeConfigurable)
+    }
+
+    /**
+     * Store a configurable to a file (will be created if not exists).
+     *
+     * The configurable should be known to the config system.
+     */
+    fun storeConfigurable(configurable: Configurable) { // Make a new .json file to save our root configurable
+        File(rootFolder, "${configurable.name.lowercase()}.json").runCatching {
+            if (!exists()) {
+                createNewFile().let { logger.debug("Created new file (status: $it)") }
+            }
+
+            logger.debug("Writing config ${configurable.name}...")
+            serializeConfigurable(configurable, writer())
+            logger.info("Successfully saved config '${configurable.name}'.")
+        }.onFailure {
+            logger.error("Unable to store config ${configurable.name}", it)
+        }
+    }
+
+    /**
+     * Serialize a configurable to a writer
+     */
+    fun serializeConfigurable(configurable: Configurable, writer: Writer) {
+        gson.newJsonWriter(writer).use {
+            gson.toJson(configurable, confType, it)
+        }
+    }
+
+    /**
+     * Deserialize a configurable from a reader
+     */
+    fun deserializeConfigurable(configurable: Configurable, reader: Reader) {
+        JsonParser.parseReader(gson.newJsonReader(reader))?.let {
+            deserializeConfigurable(configurable, it)
+        }
+    }
+
+    /**
+     * Deserialize a configurable from a json element
+     */
+    fun deserializeConfigurable(configurable: Configurable, jsonElement: JsonElement) {
         runCatching {
             val jsonObject = jsonElement.asJsonObject
 
@@ -151,37 +211,6 @@ object ConfigSystem {
 
             }
         }.onFailure { it.printStackTrace() }
-    }
-
-    /**
-     * All configurables known to the config system should be stored now.
-     * This will overwrite all existing files with the new values.
-     *
-     * These configurables are root configurables, which always create a new file with their name.
-     */
-    fun storeAll() {
-        configurables.forEach(::storeConfigurable)
-    }
-
-    /**
-     * Store a configurable to a file (will be created if not exists).
-     *
-     * The configurable should be known to the config system.
-     */
-    fun storeConfigurable(configurable: Configurable) { // Make a new .json file to save our root configurable
-        File(rootFolder, "${configurable.name.lowercase()}.json").runCatching {
-            if (!exists()) {
-                createNewFile().let { logger.debug("Created new file (status: $it)") }
-            }
-
-            logger.debug("Writing config ${configurable.name}...")
-            gson.newJsonWriter(writer()).use {
-                gson.toJson(configurable, confType, it)
-            }
-            logger.info("Successfully saved config '${configurable.name}'.")
-        }.onFailure {
-            logger.error("Unable to store config ${configurable.name}", it)
-        }
     }
 
 }

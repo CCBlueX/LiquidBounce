@@ -137,6 +137,7 @@ object CommandManager : Iterable<Command> {
         addCommand(CommandRemoteView.createCommand())
         addCommand(CommandXRay.createCommand())
         addCommand(CommandEnemy.createCommand())
+        addCommand(CommandConfig.createCommand())
 
         // creative commands
         addCommand(CommandItemRename.createCommand())

@@ -74,6 +74,9 @@ open class Value<T : Any>(
     fun get() = value
 
     fun set(t: T) { // temporary set value
+        // Do nothing if value is the same
+        if (t == value) return
+
         value = t
 
         // check if value is really accepted
