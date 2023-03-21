@@ -102,7 +102,7 @@ fun BlockPos.canStandOn(): Boolean {
 fun isBlockAtPosition(box: Box, isCorrectBlock: (Block?) -> Boolean): Boolean {
     for (x in MathHelper.floor(box.minX) until MathHelper.floor(box.maxX) + 1) {
         for (z in MathHelper.floor(box.minZ) until MathHelper.floor(box.maxZ) + 1) {
-            val block = BlockPos(x.toDouble().toInt(), box.minY.toInt(), z.toDouble().toInt()).getBlock()
+            val block = BlockPos.ofFloored(x.toDouble(), box.minY, z.toDouble()).getBlock()
 
             if (isCorrectBlock(block)) {
                 return true
@@ -119,7 +119,7 @@ fun isBlockAtPosition(box: Box, isCorrectBlock: (Block?) -> Boolean): Boolean {
 fun collideBlockIntersects(box: Box, isCorrectBlock: (Block?) -> Boolean): Boolean {
     for (x in MathHelper.floor(box.minX) until MathHelper.floor(box.maxX) + 1) {
         for (z in MathHelper.floor(box.minZ) until MathHelper.floor(box.maxZ) + 1) {
-            val blockPos = BlockPos(x.toDouble().toInt(), box.minY.toInt(), z.toDouble().toInt())
+            val blockPos = BlockPos.ofFloored(x.toDouble(), box.minY, z.toDouble())
             val blockState = blockPos.getState() ?: continue
             val block = blockPos.getBlock() ?: continue
 
