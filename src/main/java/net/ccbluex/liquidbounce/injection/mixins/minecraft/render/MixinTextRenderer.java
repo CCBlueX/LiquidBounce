@@ -26,7 +26,7 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.text.CharacterVisitor;
 import net.minecraft.text.OrderedText;
-import net.minecraft.util.math.Matrix4f;
+import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -36,9 +36,9 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public abstract class MixinTextRenderer implements IMixinGameRenderer {
     @Shadow protected abstract float drawLayer(String text, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light);
 
-    @Redirect(method = "drawInternal(Ljava/lang/String;FFIZLnet/minecraft/util/math/Matrix4f;Lnet/minecraft/client/render/VertexConsumerProvider;ZIIZ)I", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/font/TextRenderer;drawLayer(Ljava/lang/String;FFIZLnet/minecraft/util/math/Matrix4f;Lnet/minecraft/client/render/VertexConsumerProvider;ZII)F"))
-    private float injectNameProtectA(TextRenderer textRenderer, String text, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int underlineColor, int light) {
-        return this.drawLayer(ModuleNameProtect.INSTANCE.replace(text), x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, underlineColor, light);
+    @Redirect(method = "drawInternal(Ljava/lang/String;FFIZLorg/joml/Matrix4f;Lnet/minecraft/client/render/VertexConsumerProvider;ZIIZ)I", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/font/TextRenderer;drawLayer(Ljava/lang/String;FFIZLorg/joml/Matrix4f;Lnet/minecraft/client/render/VertexConsumerProvider;ZII)F"))
+    private float injectNameProtectA(TextRenderer textRenderer, String text, float x, float y, int color, boolean shadow, Matrix4f matrix, VertexConsumerProvider vertexConsumerProvider, boolean seeThrough, int backgroundColor, int light) {
+        return this.drawLayer(ModuleNameProtect.INSTANCE.replace(text), x, y, color, shadow, matrix, vertexConsumerProvider, seeThrough, backgroundColor, light);
     }
 
     @Redirect(method = "getWidth(Ljava/lang/String;)I", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/font/TextHandler;getWidth(Ljava/lang/String;)F"))
@@ -46,7 +46,7 @@ public abstract class MixinTextRenderer implements IMixinGameRenderer {
         return textHandler.getWidth(ModuleNameProtect.INSTANCE.replace(text));
     }
 
-    @Redirect(method = "drawLayer(Lnet/minecraft/text/OrderedText;FFIZLnet/minecraft/util/math/Matrix4f;Lnet/minecraft/client/render/VertexConsumerProvider;ZII)F", at = @At(value = "INVOKE", target = "Lnet/minecraft/text/OrderedText;accept(Lnet/minecraft/text/CharacterVisitor;)Z"))
+    @Redirect(method = "drawLayer(Lnet/minecraft/text/OrderedText;FFIZLorg/joml/Matrix4f;Lnet/minecraft/client/render/VertexConsumerProvider;ZII)F", at = @At(value = "INVOKE", target = "Lnet/minecraft/text/OrderedText;accept(Lnet/minecraft/text/CharacterVisitor;)Z"))
     private boolean injectNameProtectB(OrderedText orderedText, CharacterVisitor visitor) {
         if (ModuleNameProtect.INSTANCE.getEnabled()) {
             final OrderedText wrapped = new ModuleNameProtect.NameProtectOrderedText(orderedText);

@@ -19,14 +19,9 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.event.NotificationEvent
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.client.regular
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket
 import java.util.*
 
@@ -61,7 +56,7 @@ object ModuleNotifier : Module("Notifier", Category.MISC) {
         val packet = event.packet
 
         if (packet is PlayerListS2CPacket) {
-            when (packet.action) {
+/*            when (packet.action) {
                 PlayerListS2CPacket.Action.ADD_PLAYER -> {
                     for (entry in packet.entries) {
                         if (entry.profile.name != null && entry.profile.name.length > 2) {
@@ -96,7 +91,7 @@ object ModuleNotifier : Module("Notifier", Category.MISC) {
                 }
                 else -> {
                 }
-            }
+            }*/
         }
     }
 

@@ -248,7 +248,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
         return !ModuleFreeCam.INSTANCE.getEnabled() && instance.allowFlying;
     }
 
-    @ModifyConstant(method = "tickMovement", constant = @Constant(floatValue = 6.0F), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/HungerManager;getFoodLevel()I", ordinal = 0)))
+    @ModifyConstant(method = "canSprint", constant = @Constant(floatValue = 6.0F), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/HungerManager;getFoodLevel()I", ordinal = 0)))
     private float hookSprintIgnoreHunger(float constant) {
         return ModuleSprint.INSTANCE.shouldIgnoreHunger() ? -1F : constant;
     }

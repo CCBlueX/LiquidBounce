@@ -26,8 +26,8 @@ import net.minecraft.entity.effect.StatusEffect
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.fluid.Fluid
-import net.minecraft.tag.FluidTags
-import net.minecraft.tag.TagKey
+import net.minecraft.registry.tag.FluidTags
+import net.minecraft.registry.tag.TagKey
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.MathHelper
