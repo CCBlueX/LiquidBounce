@@ -35,6 +35,7 @@ public class MixinLightmapTextureManager {
             return option.getValue();
         }
 
-        return Double.MAX_VALUE;
+        // They use .floatValue() afterward on the return value, so we need to return a value which is not bigger than Float.MAX_VALUE
+        return (double) Float.MAX_VALUE;
     }
 }
