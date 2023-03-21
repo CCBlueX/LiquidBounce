@@ -6,7 +6,6 @@ accessible field net/minecraft/client/MinecraftClient sessionService Lcom/mojang
 mutable field net/minecraft/client/MinecraftClient sessionService Lcom/mojang/authlib/minecraft/MinecraftSessionService;
 
 accessible method net/minecraft/entity/LivingEntity tickActiveItemStack ()V
-accessible field net/minecraft/client/network/ClientPlayerEntity lastSprinting Z
 
 mutable field net/minecraft/util/math/Vec3d x D
 mutable field net/minecraft/util/math/Vec3d y D
@@ -103,3 +102,5 @@ accessible method net/minecraft/client/render/Camera setPos (Lnet/minecraft/util
 accessible method net/minecraft/client/network/ClientPlayerInteractionManager sendSequencedPacket (Lnet/minecraft/client/world/ClientWorld;Lnet/minecraft/client/network/SequencedPacketCreator;)V
 
 accessible field net/minecraft/client/gui/screen/ingame/CreativeInventoryScreen selectedTab Lnet/minecraft/item/ItemGroup;
+
+accessible field net/minecraft/client/gl/PostEffectProcessor passes Ljava/util/List;
