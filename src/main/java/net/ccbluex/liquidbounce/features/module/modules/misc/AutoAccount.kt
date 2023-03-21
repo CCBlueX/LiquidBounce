@@ -51,9 +51,9 @@ class AutoAccount : Module() {
         override fun isSupported() = passwordValue.isSupported()
     }
 
-    private val autoSessionValue = BoolValue("AutoSession", true)
+    private val autoSessionValue = BoolValue("AutoSession", false)
 
-    private val startupValue = object : BoolValue("RandomAccountOnStart", true) {
+    private val startupValue = object : BoolValue("RandomAccountOnStart", false) {
         override fun isSupported() = autoSessionValue.get()
     }
 
