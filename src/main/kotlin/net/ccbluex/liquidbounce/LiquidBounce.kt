@@ -95,8 +95,11 @@ object LiquidBounce : Listenable {
             RotationManager
             FriendManager
             ProxyManager
-            if (Class.forName("net.fabricmc.fabric.impl.itemgroup") != null) {
+            runCatching {
+                Class.forName("net.fabricmc.fabric.impl.itemgroup")
                 Tabs
+            }.onFailure {
+                logger.warn("Unable to load tabs. Are you using Fabric API?")
             }
             Chat
 
