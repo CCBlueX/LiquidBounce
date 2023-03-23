@@ -95,7 +95,9 @@ object LiquidBounce : Listenable {
             RotationManager
             FriendManager
             ProxyManager
-            Tabs
+            if (Class.forName("net.fabricmc.fabric.impl.itemgroup") != null) {
+                Tabs
+            }
             Chat
 
             // Initialize the render engine
