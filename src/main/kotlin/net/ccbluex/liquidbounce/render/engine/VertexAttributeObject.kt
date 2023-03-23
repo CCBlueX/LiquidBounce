@@ -20,7 +20,9 @@
 package net.ccbluex.liquidbounce.render.engine
 
 import net.ccbluex.liquidbounce.render.engine.memory.VertexFormat
+import org.lwjgl.opengl.GL20
 import org.lwjgl.opengl.GL32
+import org.lwjgl.opengl.GL33
 
 data class VertexAttribute(
     val vertexFormat: VertexFormat,
@@ -56,6 +58,14 @@ class VertexAttributeObject(private vararg val attribs: VertexAttribute) {
             attrib.vbo.bind()
 
             attrib.vertexFormat.components.forEach {
+                GL20.glEnableVertexAttribArray(attribIndex)
+
+                GL20.glVertexAttribPointer(attribIndex, it.count, it.type.openGlEnum, it.normalized, attrib.vertexFormat.length, it.offset.toLong())
+
+                if (attrib.isPerInstance) {
+                    GL33.glVertexAttribDivisor(attribIndex, 1)
+                }
+
                 attribIndex++
             }
         }
