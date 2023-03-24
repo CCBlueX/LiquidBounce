@@ -34,6 +34,7 @@ import net.minecraft.item.ArmorItem
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.s2c.play.EntityS2CPacket
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket
+import net.minecraft.network.packet.s2c.play.PlayerRemoveS2CPacket
 import java.util.*
 import kotlin.math.abs
 
@@ -108,42 +109,35 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
         val botList = ArrayList<UUID>()
 
         val packetHandler = handler<PacketEvent> {
-            if (it.packet !is PlayerListS2CPacket) {
-                return@handler
+            val packet = it.packet
+
+            if (packet is PlayerListS2CPacket) {
+                for (entry in packet.playerAdditionEntries) {
+                    if (entry.latency < 2 || !entry.profile.properties.isEmpty || isTheSamePlayer(entry.profile)) {
+                        continue
+                    }
+
+                    if (isADuplicate(entry.profile)) {
+                        botList.add(entry.profile.id)
+                        continue
+                    }
+
+                    suspectList.add(entry.profile.id)
+                }
+            } else if (packet is PlayerRemoveS2CPacket) {
+                for (uuid in packet.profileIds) {
+                    val entry = network.playerList.find { it.profile.id == uuid } ?: continue
+
+                    if (suspectList.contains(entry.profile.id)) {
+                        suspectList.remove(entry.profile.id)
+                    }
+
+                    if (botList.contains(entry.profile.id)) {
+                        botList.remove(entry.profile.id)
+                    }
+                }
             }
-//
-//            for (action in it.packet.actions) {
-//                when (action) {
-//                    PlayerListS2CPacket.Action.ADD_PLAYER -> {
-//                        for (entry in it.packet.entries) {
-//                            if (entry.latency < 2 || !entry.profile.properties.isEmpty || isTheSamePlayer(entry.profile)) {
-//                                continue
-//                            }
-//
-//                            if (isADuplicate(entry.profile)) {
-//                                botList.add(entry.profile.id)
-//                                continue
-//                            }
-//
-//                            suspectList.add(entry.profile.id)
-//                        }
-//                    }
-//
-//                    PlayerListS2CPacket.Action.REMOVE_PLAYER -> {
-//                        for (entry in it.packet.entries) {
-//                            if (suspectList.contains(entry.profile.id)) {
-//                                suspectList.remove(entry.profile.id)
-//                            }
-//
-//                            if (botList.contains(entry.profile.id)) {
-//                                botList.remove(entry.profile.id)
-//                            }
-//                        }
-//                    }
-//
-//                    else -> {}
-//                }
-//            }
+
 
         }
 
