@@ -46,7 +46,7 @@ class PacketDeserializer : JsonDeserializer<Packet> {
         val packetObject = json.asJsonObject
         val packetName = packetObject.get("m").asString
 
-        if(!packetRegistry.containsKey(packetName)) return null
+        if(packetName !in packetRegistry) return null
 
         if(!packetObject.has("c")) packetObject.add("c", JsonObject())
 

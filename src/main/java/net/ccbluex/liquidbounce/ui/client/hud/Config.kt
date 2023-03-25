@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.HUD.Companion.createDefault
 import net.ccbluex.liquidbounce.ui.client.hud.HUD.Companion.elements
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.value.FontValue
 
 class Config {
@@ -85,7 +85,7 @@ class Config {
                         }
                     }
                 } catch (e: Exception) {
-                    ClientUtils.getLogger().error("Error while loading custom hud element from config.", e)
+                    LOGGER.error("Error while loading custom hud element from config.", e)
                 }
             }
 
@@ -97,7 +97,7 @@ class Config {
                 }
             }
         } catch (e: Exception) {
-            ClientUtils.getLogger().error("Error while loading custom hud config.", e)
+            LOGGER.error("Error while loading custom hud config.", e)
             return createDefault()
         }
 

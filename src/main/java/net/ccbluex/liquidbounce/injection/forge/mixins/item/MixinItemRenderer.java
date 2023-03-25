@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.item;
 
-import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura;
 import net.ccbluex.liquidbounce.features.module.modules.render.Animation;
 import net.ccbluex.liquidbounce.features.module.modules.render.Animations;
@@ -30,6 +29,8 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
 
 @Mixin(ItemRenderer.class)
 @SideOnly(Side.CLIENT)
@@ -95,7 +96,7 @@ public abstract class MixinItemRenderer {
         GlStateManager.pushMatrix();
 
         if(this.itemToRender != null) {
-            final KillAura killAura = (KillAura) LiquidBounce.moduleManager.getModule(KillAura.class);
+            final KillAura killAura = (KillAura) moduleManager.getModule(KillAura.class);
 
             if(this.itemToRender.getItem() instanceof net.minecraft.item.ItemMap) {
                 this.renderItemMap(abstractclientplayer, f2, f, f1);
@@ -151,7 +152,7 @@ public abstract class MixinItemRenderer {
 
     @Inject(method = "renderFireInFirstPerson", at = @At("HEAD"), cancellable = true)
     private void renderFireInFirstPerson(final CallbackInfo callbackInfo) {
-        final AntiBlind antiBlind = (AntiBlind) LiquidBounce.moduleManager.getModule(AntiBlind.class);
+        final AntiBlind antiBlind = (AntiBlind) moduleManager.getModule(AntiBlind.class);
 
         if(antiBlind.getState() && antiBlind.getFireEffect().get()) {
             //vanilla's method

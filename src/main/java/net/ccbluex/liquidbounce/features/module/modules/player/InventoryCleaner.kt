@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.AutoArmor
 import net.ccbluex.liquidbounce.injection.implementations.IMixinItemStack
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
@@ -109,7 +109,7 @@ class InventoryCleaner : Module() {
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        if (!InventoryUtils.CLICK_TIMER.hasTimePassed(delay) || mc.currentScreen !is GuiInventory && invOpenValue.get() || noMoveValue.get() && MovementUtils.isMoving || thePlayer.openContainer != null && thePlayer.openContainer.windowId != 0 || (LiquidBounce.moduleManager[AutoArmor::class.java] as AutoArmor).isLocked) {
+        if (!InventoryUtils.CLICK_TIMER.hasTimePassed(delay) || mc.currentScreen !is GuiInventory && invOpenValue.get() || noMoveValue.get() && MovementUtils.isMoving || thePlayer.openContainer != null && thePlayer.openContainer.windowId != 0 || (moduleManager[AutoArmor::class.java] as AutoArmor).isLocked) {
             return
         }
 
@@ -208,7 +208,7 @@ class InventoryCleaner : Module() {
                 items(0, 45).none { (_, stack) -> itemStack != stack && stack.unlocalizedName == "item.compass" }
             } else item is ItemFood || itemStack.unlocalizedName == "item.arrow" || item is ItemBlock && item.block !is BlockBush || item is ItemBed || itemStack.unlocalizedName == "item.diamond" || itemStack.unlocalizedName == "item.ingotIron" || item is ItemPotion || item is ItemEnderPearl || item is ItemEnchantedBook || item is ItemBucket || itemStack.unlocalizedName == "item.stick" || ignoreVehiclesValue.get() && (item is ItemBoat || item is ItemMinecart)
         } catch (ex: Exception) {
-            ClientUtils.getLogger().error("(InventoryCleaner) Failed to check item: ${itemStack.unlocalizedName}.", ex)
+            LOGGER.error("(InventoryCleaner) Failed to check item: ${itemStack.unlocalizedName}.", ex)
 
             true
         }
@@ -327,7 +327,7 @@ class InventoryCleaner : Module() {
                     if (stack != null) {
                         val item = stack.item
 
-                        if (item is ItemBlock && !InventoryUtils.BLOCK_BLACKLIST.contains(item.block) && !type(index).equals(
+                        if (item is ItemBlock && item.block !in InventoryUtils.BLOCK_BLACKLIST && !type(index).equals(
                                 "Block", ignoreCase = true
                             )
                         ) {

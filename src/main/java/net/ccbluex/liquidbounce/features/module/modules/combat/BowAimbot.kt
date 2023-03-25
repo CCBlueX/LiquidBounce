@@ -25,13 +25,13 @@ import java.awt.Color
 @ModuleInfo(name = "BowAimbot", description = "Automatically aims at players when using a bow.", category = ModuleCategory.COMBAT)
 class BowAimbot : Module() {
 
-    private val silentValue = BoolValue("Silent", true)
-    private val throughWallsValue = BoolValue("ThroughWalls", false)
+    private val priorityValue = ListValue("Priority", arrayOf("Health", "Distance", "Direction"), "Direction")
     private val predictValue = BoolValue("Predict", true)
     private val predictSizeValue = object : FloatValue("PredictSize", 2F, 0.1F, 5F) {
         override fun isSupported() = predictValue.get()
     }
-    private val priorityValue = ListValue("Priority", arrayOf("Health", "Distance", "Direction"), "Direction")
+    private val silentValue = BoolValue("Silent", true)
+    private val throughWallsValue = BoolValue("ThroughWalls", false)
     private val markValue = BoolValue("Mark", true)
 
     private var target: Entity? = null
@@ -55,7 +55,7 @@ class BowAimbot : Module() {
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
         if (target != null && !priorityValue.get().equals("Multi", ignoreCase = true) && markValue.get())
-            RenderUtils.drawPlatform(target, Color(37, 126, 255, 70))
+            RenderUtils.drawPlatform(target!!, Color(37, 126, 255, 70))
     }
 
     private fun getTarget(throughWalls: Boolean, priorityMode: String): Entity? {

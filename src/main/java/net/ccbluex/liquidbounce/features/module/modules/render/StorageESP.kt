@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.world.ChestAura.clickedBlocks
 import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.GlowShader
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -59,21 +60,12 @@ class StorageESP : Module() {
 
     private fun getColor(tileEntity: TileEntity): Color? {
         return when {
-            chestValue.get() && tileEntity is TileEntityChest && !clickedBlocks.contains(tileEntity.pos) -> Color(
-                0,
-                66,
-                255
-            )
-
-            enderChestValue.get() && tileEntity is TileEntityEnderChest && !clickedBlocks.contains(tileEntity.pos) -> Color.MAGENTA
+            chestValue.get() && tileEntity is TileEntityChest && tileEntity.pos !in clickedBlocks -> Color(0, 66, 255)
+            enderChestValue.get() && tileEntity is TileEntityEnderChest && tileEntity.pos !in clickedBlocks -> Color.MAGENTA
             furnaceValue.get() && tileEntity is TileEntityFurnace -> Color.BLACK
             dispenserValue.get() && tileEntity is TileEntityDispenser -> Color.BLACK
             hopperValue.get() && tileEntity is TileEntityHopper -> Color.GRAY
-            enchantmentTableValue.get() && tileEntity is TileEntityEnchantmentTable -> Color(
-                166,
-                202,
-                240
-            ) // Light blue
+            enchantmentTableValue.get() && tileEntity is TileEntityEnchantmentTable -> Color(166, 202, 240) // Light blue
             brewingStandValue.get() && tileEntity is TileEntityBrewingStand -> Color.ORANGE
             signValue.get() && tileEntity is TileEntitySign -> Color.RED
             else -> null
@@ -220,7 +212,7 @@ class StorageESP : Module() {
 
             mc.theWorld.loadedTileEntityList.forEach { tileEntity ->
                 val color: Color = getColor(tileEntity) ?: return@forEach
-                if (!tileEntityMap.containsKey(color)) {
+                if (color !in tileEntityMap) {
                     tileEntityMap[color] = ArrayList()
                 }
 
@@ -242,7 +234,7 @@ class StorageESP : Module() {
                 shader.stopDraw(color, glowRadius.get(), glowFade.get(), glowTargetAlpha.get())
             }
         } catch (ex: Exception) {
-            ClientUtils.getLogger().error("An error occurred while rendering all storages for shader esp", ex)
+            LOGGER.error("An error occurred while rendering all storages for shader esp", ex)
         }
 
         shader.stopDraw(Color(0, 66, 255), glowRadius.get(), glowFade.get(), glowTargetAlpha.get())

@@ -14,7 +14,7 @@ object ClassUtils {
      */
     @JvmStatic
     fun hasClass(className: String): Boolean {
-        return if (cachedClasses.containsKey(className))
+        return if (className in cachedClasses)
             cachedClasses[className]!!
         else try {
             Class.forName(className)

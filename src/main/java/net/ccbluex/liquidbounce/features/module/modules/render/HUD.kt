@@ -5,7 +5,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
+import net.ccbluex.liquidbounce.LiquidBounce.hud
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -27,17 +28,17 @@ class HUD : Module() {
         if (mc.currentScreen is GuiHudDesigner)
             return
 
-        LiquidBounce.hud.render(false)
+        hud.render(false)
     }
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        LiquidBounce.hud.update()
+        hud.update()
     }
 
     @EventTarget
     fun onKey(event: KeyEvent) {
-        LiquidBounce.hud.handleKey('a', event.key)
+        hud.handleKey('a', event.key)
     }
 
     @EventTarget(ignoreCondition = true)
@@ -45,9 +46,9 @@ class HUD : Module() {
         if (mc.theWorld == null || mc.thePlayer == null) return
         if (state && blurValue.get() && !mc.entityRenderer.isShaderActive && event.guiScreen != null &&
                 !(event.guiScreen is GuiChat || event.guiScreen is GuiHudDesigner)) mc.entityRenderer.loadShader(
-            ResourceLocation(LiquidBounce.CLIENT_NAME.lowercase() + "/blur.json")
+            ResourceLocation(CLIENT_NAME.lowercase() + "/blur.json")
         ) else if (mc.entityRenderer.shaderGroup != null &&
-                mc.entityRenderer.shaderGroup.shaderGroupName.contains("liquidbounce/blur.json")) mc.entityRenderer.stopUseShader()
+            "liquidbounce/blur.json" in mc.entityRenderer.shaderGroup.shaderGroupName) mc.entityRenderer.stopUseShader()
     }
 
     init {

@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.VecRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlock
+import net.ccbluex.liquidbounce.utils.extensions.eyes
 import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -66,7 +67,7 @@ class NoFall : Module() {
 
         if (mc.thePlayer.motionY > 0) jumped = true
 
-        if (!state || LiquidBounce.moduleManager.getModule(FreeCam::class.java).state) return
+        if (!state || moduleManager[FreeCam::class.java].state) return
 
         if (collideBlock(mc.thePlayer.entityBoundingBox) { it is BlockLiquid } || collideBlock(
                 AxisAlignedBB.fromBounds(
@@ -210,7 +211,7 @@ class NoFall : Module() {
                 val collision =
                     fallingPlayer.findCollision(ceil(1.0 / mc.thePlayer.motionY * -maxDist).toInt()) ?: return
 
-                var ok: Boolean = mc.thePlayer.getPositionEyes(1f)
+                var ok: Boolean = mc.thePlayer.eyes
                     .distanceTo(
                         Vec3(collision.pos).addVector(0.5, 0.5, 0.5)
                     ) < mc.playerController.blockReachDistance + sqrt(0.75)

@@ -5,8 +5,10 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.commandManager
 import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.file.FileManager.saveConfig
+import net.ccbluex.liquidbounce.file.FileManager.valuesConfig
 
 class PrefixCommand : Command("prefix") {
     /**
@@ -25,8 +27,8 @@ class PrefixCommand : Command("prefix") {
             return
         }
 
-        LiquidBounce.commandManager.prefix = prefix.single()
-        LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig)
+        commandManager.prefix = prefix.single()
+        saveConfig(valuesConfig)
 
         chat("Successfully changed command prefix to '§8$prefix§3'")
     }

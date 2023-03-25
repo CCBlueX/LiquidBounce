@@ -6,16 +6,14 @@
 package net.ccbluex.liquidbounce.update
 
 import com.google.gson.Gson
-
 import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_API
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_VERSION_INT
-import net.ccbluex.liquidbounce.utils.ClientUtils
-
+import net.ccbluex.liquidbounce.LiquidBounce.IN_DEV
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import java.text.SimpleDateFormat
-
 import java.util.*
 
 object UpdateInfo {
@@ -33,9 +31,9 @@ object UpdateInfo {
     val newestVersion by lazy {
         // https://api.liquidbounce.net/api/v1/version/builds/legacy
         try {
-            Gson().fromJson(HttpUtils.get("$CLIENT_API/version/newest/${gitInfo["git.branch"]}${if (LiquidBounce.IN_DEV) "" else "/release" }"), Build::class.java)
+            Gson().fromJson(HttpUtils.get("$CLIENT_API/version/newest/${gitInfo["git.branch"]}${if (IN_DEV) "" else "/release" }"), Build::class.java)
         } catch (e: Exception) {
-            ClientUtils.getLogger().error("Unable to receive update information", e)
+            LOGGER.error("Unable to receive update information", e)
             return@lazy null
         }
     }
@@ -45,7 +43,7 @@ object UpdateInfo {
             val newestVersion = newestVersion ?: return false
             val actualVersionNumber = newestVersion.lbVersion.substring(1).toIntOrNull() ?: 0 // version format: "b<VERSION>" on legacy
 
-            return if (LiquidBounce.IN_DEV) { // check if new build is newer than current build
+            return if (IN_DEV) { // check if new build is newer than current build
                 val newestVersionDate = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(newestVersion.date)
                 val currentVersionDate = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").parse(gitInfo["git.commit.time"].toString())
 
@@ -55,7 +53,7 @@ object UpdateInfo {
                 newestVersion.release && actualVersionNumber > CLIENT_VERSION_INT
             }
         } catch (e: Exception) {
-            ClientUtils.getLogger().error("Unable to check for update", e)
+            LOGGER.error("Unable to check for update", e)
             return false
         }
     }

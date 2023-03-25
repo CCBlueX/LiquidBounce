@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.GlowShader
@@ -78,7 +78,7 @@ class ItemESP : Module() {
                 mc.renderManager.renderEntityStatic(entity, event.partialTicks, true)
             }
         } catch (ex: Exception) {
-            ClientUtils.getLogger().error("An error occurred while rendering all item entities for shader esp", ex)
+            LOGGER.error("An error occurred while rendering all item entities for shader esp", ex)
         }
         shader.stopDraw(getColor(), glowRadius.get(), glowFade.get(), glowTargetAlpha.get())
     }

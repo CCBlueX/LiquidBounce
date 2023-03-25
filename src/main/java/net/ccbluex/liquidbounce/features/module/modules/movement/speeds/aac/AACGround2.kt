@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
@@ -17,7 +17,7 @@ class AACGround2 : SpeedMode("AACGround2") {
         if (!MovementUtils.isMoving)
             return
 
-        mc.timer.timerSpeed = (LiquidBounce.moduleManager.getModule(Speed::class.java) as Speed).aacGroundTimerValue.get()
+        mc.timer.timerSpeed = (moduleManager[Speed::class.java] as Speed).aacGroundTimerValue.get()
         MovementUtils.strafe(0.02f)
     }
 

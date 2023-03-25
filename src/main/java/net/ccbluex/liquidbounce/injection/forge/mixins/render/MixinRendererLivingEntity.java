@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.render;
 
 import co.uk.hexeption.utils.OutlineUtils;
-import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.modules.render.Chams;
 import net.ccbluex.liquidbounce.features.module.modules.render.ESP;
 import net.ccbluex.liquidbounce.features.module.modules.render.NameTags;
@@ -31,6 +30,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.awt.*;
 
+import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
+
 @Mixin(RendererLivingEntity.class)
 @SideOnly(Side.CLIENT)
 public abstract class MixinRendererLivingEntity extends MixinRender {
@@ -40,7 +41,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
 
     @Inject(method = "doRender(Lnet/minecraft/entity/EntityLivingBase;DDDFF)V", at = @At("HEAD"))
     private <T extends EntityLivingBase> void injectChamsPre(T entity, double x, double y, double z, float entityYaw, float partialTicks, CallbackInfo callbackInfo) {
-        final Chams chams = (Chams) LiquidBounce.moduleManager.getModule(Chams.class);
+        final Chams chams = (Chams) moduleManager.getModule(Chams.class);
 
         if (chams.getState() && chams.getTargetsValue().get() && EntityUtils.isSelected(entity, false)) {
             GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);
@@ -50,7 +51,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
 
     @Inject(method = "doRender(Lnet/minecraft/entity/EntityLivingBase;DDDFF)V", at = @At("RETURN"))
     private <T extends EntityLivingBase> void injectChamsPost(T entity, double x, double y, double z, float entityYaw, float partialTicks, CallbackInfo callbackInfo) {
-        final Chams chams = (Chams) LiquidBounce.moduleManager.getModule(Chams.class);
+        final Chams chams = (Chams) moduleManager.getModule(Chams.class);
 
         if (chams.getState() && chams.getTargetsValue().get() && EntityUtils.isSelected(entity, false)) {
             GL11.glPolygonOffset(1.0F, 1000000F);
@@ -60,7 +61,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
 
     @Inject(method = "canRenderName(Lnet/minecraft/entity/EntityLivingBase;)Z", at = @At("HEAD"), cancellable = true)
     private <T extends EntityLivingBase> void canRenderName(T entity, CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
-        if (!ESP.renderNameTags || (LiquidBounce.moduleManager.getModule(NameTags.class).getState() && EntityUtils.isSelected(entity, false))) {
+        if (!ESP.renderNameTags || (moduleManager.getModule(NameTags.class).getState() && EntityUtils.isSelected(entity, false))) {
             callbackInfoReturnable.setReturnValue(false);
         }
     }
@@ -71,7 +72,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
     @Inject(method = "renderModel", at = @At("HEAD"), cancellable = true)
     private <T extends EntityLivingBase> void renderModel(T p_renderModel_1_, float p_renderModel_2_, float p_renderModel_3_, float p_renderModel_4_, float p_renderModel_5_, float p_renderModel_6_, float p_renderModel_7_, CallbackInfo ci) {
         boolean visible = !p_renderModel_1_.isInvisible();
-        final TrueSight trueSight = (TrueSight) LiquidBounce.moduleManager.getModule(TrueSight.class);
+        final TrueSight trueSight = (TrueSight) moduleManager.getModule(TrueSight.class);
         boolean semiVisible = !visible && (!p_renderModel_1_.isInvisibleToPlayer(Minecraft.getMinecraft().thePlayer) || (trueSight.getState() && trueSight.getEntitiesValue().get()));
 
         if (visible || semiVisible) {
@@ -88,7 +89,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
                 GlStateManager.alphaFunc(516, 0.003921569F);
             }
 
-            final ESP esp = (ESP) LiquidBounce.moduleManager.getModule(ESP.class);
+            final ESP esp = (ESP) moduleManager.getModule(ESP.class);
             if (esp.getState() && EntityUtils.isSelected(p_renderModel_1_, false)) {
                 Minecraft mc = Minecraft.getMinecraft();
                 boolean fancyGraphics = mc.gameSettings.fancyGraphics;

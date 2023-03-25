@@ -11,16 +11,15 @@ import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService
 import com.mojang.authlib.yggdrasil.YggdrasilUserAuthentication
 import com.thealtening.AltService
 import com.thealtening.api.TheAltening
-import net.ccbluex.liquidbounce.LiquidBounce
-
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
+import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.SessionEvent
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.elements.GuiPasswordField
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
-
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiTextField
@@ -133,7 +132,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
                         // Set token as username
                         val yggdrasilUserAuthentication = YggdrasilUserAuthentication(YggdrasilAuthenticationService(NO_PROXY, ""), MINECRAFT)
                         yggdrasilUserAuthentication.setUsername(account.token)
-                        yggdrasilUserAuthentication.setPassword(LiquidBounce.CLIENT_NAME)
+                        yggdrasilUserAuthentication.setPassword(CLIENT_NAME)
 
                         status = try {
                             yggdrasilUserAuthentication.logIn()
@@ -141,7 +140,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
                             mc.session = Session(yggdrasilUserAuthentication.selectedProfile.name, yggdrasilUserAuthentication
                                     .selectedProfile.id.toString(),
                                     yggdrasilUserAuthentication.authenticatedToken, "mojang")
-                            LiquidBounce.eventManager.callEvent(SessionEvent())
+                            callEvent(SessionEvent())
 
                             prevGui.status = "§aYour name is now §b§l${yggdrasilUserAuthentication.selectedProfile.name}§c."
                             mc.displayGuiScreen(prevGui)
@@ -149,19 +148,19 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
                         } catch (e: AuthenticationException) {
                             GuiAltManager.altService.switchService(AltService.EnumAltService.MOJANG)
 
-                            ClientUtils.getLogger().error("Failed to login.", e)
+                            LOGGER.error("Failed to login.", e)
                             "§cFailed to login: ${e.message}"
                         }
                     } catch (throwable: Throwable) {
                         status = "§cFailed to login. Unknown error."
-                        ClientUtils.getLogger().error("Failed to login.", throwable)
+                        LOGGER.error("Failed to login.", throwable)
                     }
 
                     loginButton.enabled = true
                     generateButton.enabled = true
                 }.handle { _, err ->
                     status = "§cFailed to generate account."
-                    ClientUtils.getLogger().error("Failed to generate account.", err)
+                    LOGGER.error("Failed to generate account.", err)
                 }.whenComplete { _, _ ->
                     loginButton.enabled = true
                     generateButton.enabled = true
@@ -182,7 +181,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
                         // Set token as username
                         val yggdrasilUserAuthentication = YggdrasilUserAuthentication(YggdrasilAuthenticationService(NO_PROXY, ""), MINECRAFT)
                         yggdrasilUserAuthentication.setUsername(tokenField.text)
-                        yggdrasilUserAuthentication.setPassword(LiquidBounce.CLIENT_NAME)
+                        yggdrasilUserAuthentication.setPassword(CLIENT_NAME)
 
                         status = try {
                             yggdrasilUserAuthentication.logIn()
@@ -190,7 +189,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
                             mc.session = Session(yggdrasilUserAuthentication.selectedProfile.name, yggdrasilUserAuthentication
                                     .selectedProfile.id.toString(),
                                     yggdrasilUserAuthentication.authenticatedToken, "mojang")
-                            LiquidBounce.eventManager.callEvent(SessionEvent())
+                            callEvent(SessionEvent())
 
                             prevGui.status = "§aYour name is now §b§l${yggdrasilUserAuthentication.selectedProfile.name}§c."
                             mc.displayGuiScreen(prevGui)
@@ -198,11 +197,11 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
                         } catch (e: AuthenticationException) {
                             GuiAltManager.altService.switchService(AltService.EnumAltService.MOJANG)
 
-                            ClientUtils.getLogger().error("Failed to login.", e)
+                            LOGGER.error("Failed to login.", e)
                             "§cFailed to login: ${e.message}"
                         }
                     } catch (throwable: Throwable) {
-                        ClientUtils.getLogger().error("Failed to login.", throwable)
+                        LOGGER.error("Failed to login.", throwable)
                         status = "§cFailed to login. Unknown error."
                     }
 

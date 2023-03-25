@@ -6,7 +6,7 @@
 
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ESP
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
@@ -217,7 +217,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y) {
 
                 if (triangleMode) {
                     if (useESPColorsValue.get()) {
-                        val color = (LiquidBounce.moduleManager[ESP::class.java] as ESP).getColor(entity)
+                        val color = (moduleManager[ESP::class.java] as ESP).getColor(entity)
 
                         glColor4f(color.red / 255.0f, color.green / 255.0f, color.blue / 255.0f, 1.0f)
                     } else {
@@ -232,7 +232,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y) {
 
                     glEnd()
                 } else {
-                    val color = (LiquidBounce.moduleManager[ESP::class.java] as ESP).getColor(entity)
+                    val color = (moduleManager[ESP::class.java] as ESP).getColor(entity)
 
                     worldRenderer.pos(((positionRelativeToPlayer.x / viewDistance) * size).toDouble(), ((positionRelativeToPlayer.y / viewDistance) * size).toDouble(), 0.0)
                             .color(color.red / 255.0f, color.green / 255.0f,

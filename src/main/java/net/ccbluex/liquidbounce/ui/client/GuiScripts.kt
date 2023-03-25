@@ -5,10 +5,18 @@
  */
 package net.ccbluex.liquidbounce.ui.client
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.clickGui
+import net.ccbluex.liquidbounce.LiquidBounce.scriptManager
+import net.ccbluex.liquidbounce.file.FileManager.clickGuiConfig
+import net.ccbluex.liquidbounce.file.FileManager.hudConfig
+import net.ccbluex.liquidbounce.file.FileManager.loadConfig
+import net.ccbluex.liquidbounce.file.FileManager.loadConfigs
+import net.ccbluex.liquidbounce.script.ScriptManager.reloadScripts
+import net.ccbluex.liquidbounce.script.ScriptManager.scripts
+import net.ccbluex.liquidbounce.script.ScriptManager.scriptsFolder
 import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
@@ -59,10 +67,10 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
                 val fileName = file.name
 
                 if (fileName.endsWith(".js")) {
-                    LiquidBounce.scriptManager.importScript(file)
+                    scriptManager.importScript(file)
 
-                    LiquidBounce.clickGui = ClickGui()
-                    LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.clickGuiConfig)
+                    clickGui = ClickGui()
+                    loadConfig(clickGuiConfig)
                     return
                 } else if (fileName.endsWith(".zip")) {
                     val zipFile = ZipFile(file)
@@ -72,7 +80,7 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
                     while (entries.hasMoreElements()) {
                         val entry = entries.nextElement()
                         val entryName = entry.name
-                        val entryFile = File(LiquidBounce.scriptManager.scriptsFolder, entryName)
+                        val entryFile = File(scriptsFolder, entryName)
 
                         if (entry.isDirectory) {
                             entryFile.mkdir()
@@ -86,48 +94,46 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
                         fileOutputStream.close()
                         fileStream.close()
 
-                        if (!entryName.contains("/"))
+                        if ("/" !in entryName)
                             scriptFiles.add(entryFile)
                     }
 
-                    scriptFiles.forEach { scriptFile -> LiquidBounce.scriptManager.loadScript(scriptFile) }
+                    scriptFiles.forEach { scriptFile -> scriptManager.loadScript(scriptFile) }
 
-                    LiquidBounce.clickGui = ClickGui()
-                    LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.clickGuiConfig)
-                    LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.hudConfig)
+                    clickGui = ClickGui()
+                    loadConfigs(clickGuiConfig, hudConfig)
                     return
                 }
 
                 MiscUtils.showErrorPopup("Wrong file extension.", "The file extension has to be .js or .zip")
             } catch (t: Throwable) {
-                ClientUtils.getLogger().error("Something went wrong while importing a script.", t)
+                LOGGER.error("Something went wrong while importing a script.", t)
                 MiscUtils.showErrorPopup(t.javaClass.name, t.message)
             }
 
             2 -> try {
                 if (list.getSelectedSlot() != -1) {
-                    val script = LiquidBounce.scriptManager.scripts[list.getSelectedSlot()]
+                    val script = scripts[list.getSelectedSlot()]
 
-                    LiquidBounce.scriptManager.deleteScript(script)
+                    scriptManager.deleteScript(script)
 
-                    LiquidBounce.clickGui = ClickGui()
-                    LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.clickGuiConfig)
-                    LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.hudConfig)
+                    clickGui = ClickGui()
+                    loadConfigs(clickGuiConfig, hudConfig)
                 }
             } catch (t: Throwable) {
-                ClientUtils.getLogger().error("Something went wrong while deleting a script.", t)
+                LOGGER.error("Something went wrong while deleting a script.", t)
                 MiscUtils.showErrorPopup(t.javaClass.name, t.message)
             }
             3 -> try {
-                LiquidBounce.scriptManager.reloadScripts()
+                reloadScripts()
             } catch (t: Throwable) {
-                ClientUtils.getLogger().error("Something went wrong while reloading all scripts.", t)
+                LOGGER.error("Something went wrong while reloading all scripts.", t)
                 MiscUtils.showErrorPopup(t.javaClass.name, t.message)
             }
             4 -> try {
-                Desktop.getDesktop().open(LiquidBounce.scriptManager.scriptsFolder)
+                Desktop.getDesktop().open(scriptsFolder)
             } catch (t: Throwable) {
-                ClientUtils.getLogger().error("Something went wrong while trying to open your scripts folder.", t)
+                LOGGER.error("Something went wrong while trying to open your scripts folder.", t)
                 MiscUtils.showErrorPopup(t.javaClass.name, t.message)
             }
             5 -> try {
@@ -161,16 +167,16 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
 
         override fun isSelected(id: Int) = selectedSlot == id
 
-        fun getSelectedSlot() = if (selectedSlot > LiquidBounce.scriptManager.scripts.size) -1 else selectedSlot
+        fun getSelectedSlot() = if (selectedSlot > scripts.size) -1 else selectedSlot
 
-        override fun getSize() = LiquidBounce.scriptManager.scripts.size
+        override fun getSize() = scripts.size
 
         public override fun elementClicked(id: Int, doubleClick: Boolean, var3: Int, var4: Int) {
             selectedSlot = id
         }
 
         override fun drawSlot(id: Int, x: Int, y: Int, var4: Int, var5: Int, var6: Int) {
-            val script = LiquidBounce.scriptManager.scripts[id]
+            val script = scripts[id]
 
             Fonts.font40.drawCenteredString("§9" + script.scriptName + " §7v" + script.scriptVersion, width / 2.0f, y + 2.0f, Color.LIGHT_GRAY.rgb)
             Fonts.font40.drawCenteredString("by §c" + script.scriptAuthors.joinToString(", "), width / 2.0f, y + 15.0f, Color.LIGHT_GRAY.rgb).coerceAtLeast(x)

@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.entity;
 
-import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.AntiHunger;
@@ -52,6 +51,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
+
+import static net.ccbluex.liquidbounce.LiquidBounce.eventManager;
+import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
 
 @Mixin(EntityPlayerSP.class)
 @SideOnly(Side.CLIENT)
@@ -138,11 +140,11 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
      */
     @Inject(method = "onUpdateWalkingPlayer", at = @At("HEAD"), cancellable = true)
     private void onUpdateWalkingPlayer(CallbackInfo ci) {
-        LiquidBounce.eventManager.callEvent(new MotionEvent(EventState.PRE));
+        eventManager.callEvent(new MotionEvent(EventState.PRE));
 
-        final InventoryMove inventoryMove = (InventoryMove) LiquidBounce.moduleManager.getModule(InventoryMove.class);
-        final Sneak sneak = (Sneak) LiquidBounce.moduleManager.getModule(Sneak.class);
-        final boolean fakeSprint = (inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get()) || LiquidBounce.moduleManager.getModule(AntiHunger.class).getState() || (sneak.getState() && (!MovementUtils.isMoving() || !sneak.stopMoveValue.get()) && sneak.modeValue.get().equalsIgnoreCase("MineSecure"));
+        final InventoryMove inventoryMove = (InventoryMove) moduleManager.getModule(InventoryMove.class);
+        final Sneak sneak = (Sneak) moduleManager.getModule(Sneak.class);
+        final boolean fakeSprint = (inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get()) || moduleManager.getModule(AntiHunger.class).getState() || (sneak.getState() && (!MovementUtils.isMoving() || !sneak.stopMoveValue.get()) && sneak.modeValue.get().equalsIgnoreCase("MineSecure"));
 
         boolean sprinting = this.isSprinting() && !fakeSprint;
 
@@ -172,7 +174,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             float lastReportedYaw = RotationUtils.serverRotation.getYaw();
             float lastReportedPitch = RotationUtils.serverRotation.getPitch();
 
-            final Derp derp = (Derp) LiquidBounce.moduleManager.getModule(Derp.class);
+            final Derp derp = (Derp) moduleManager.getModule(Derp.class);
             if (derp.getState()) {
                 float[] rot = derp.getRotation();
                 yaw = rot[0];
@@ -222,14 +224,14 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             }
         }
 
-        LiquidBounce.eventManager.callEvent(new MotionEvent(EventState.POST));
+        eventManager.callEvent(new MotionEvent(EventState.POST));
 
         ci.cancel();
     }
 
     @Inject(method = "swingItem", at = @At("HEAD"), cancellable = true)
     private void swingItem(CallbackInfo callbackInfo) {
-        final NoSwing noSwing = (NoSwing) LiquidBounce.moduleManager.getModule(NoSwing.class);
+        final NoSwing noSwing = (NoSwing) moduleManager.getModule(NoSwing.class);
 
         if (noSwing.getState()) {
             callbackInfo.cancel();
@@ -249,7 +251,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         if (this.noClip) {
             event.cancelEvent();
         }
-        LiquidBounce.eventManager.callEvent(event);
+        eventManager.callEvent(event);
 
         if (event.isCancelled()) {
             callbackInfoReturnable.setReturnValue(false);
@@ -261,7 +263,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
      */
     @Overwrite
     public void onLivingUpdate() {
-        LiquidBounce.eventManager.callEvent(new UpdateEvent());
+        eventManager.callEvent(new UpdateEvent());
 
         if (this.sprintingTicksLeft > 0) {
             --this.sprintingTicksLeft;
@@ -278,7 +280,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         this.prevTimeInPortal = this.timeInPortal;
 
         if (this.inPortal) {
-            if (this.mc.currentScreen != null && !this.mc.currentScreen.doesGuiPauseGame() && !LiquidBounce.moduleManager.getModule(PortalMenu.class).getState()) {
+            if (this.mc.currentScreen != null && !this.mc.currentScreen.doesGuiPauseGame() && !moduleManager.getModule(PortalMenu.class).getState()) {
                 this.mc.displayGuiScreen(null);
             }
 
@@ -319,12 +321,12 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         boolean flag2 = this.movementInput.moveForward >= f;
         this.movementInput.updatePlayerMoveState();
 
-        final NoSlow noSlow = (NoSlow) LiquidBounce.moduleManager.getModule(NoSlow.class);
-        final KillAura killAura = (KillAura) LiquidBounce.moduleManager.getModule(KillAura.class);
+        final NoSlow noSlow = (NoSlow) moduleManager.getModule(NoSlow.class);
+        final KillAura killAura = (KillAura) moduleManager.getModule(KillAura.class);
 
         if (getHeldItem() != null && (this.isUsingItem() || (getHeldItem().getItem() instanceof ItemSword && killAura.getBlockStatus())) && !this.isRiding()) {
             final SlowDownEvent slowDownEvent = new SlowDownEvent(0.2F, 0.2F);
-            LiquidBounce.eventManager.callEvent(slowDownEvent);
+            eventManager.callEvent(slowDownEvent);
             this.movementInput.moveStrafe *= slowDownEvent.getStrafe();
             this.movementInput.moveForward *= slowDownEvent.getForward();
             this.sprintToggleTimer = 0;
@@ -335,7 +337,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         this.pushOutOfBlocks(this.posX + (double) this.width * 0.35D, this.getEntityBoundingBox().minY + 0.5D, this.posZ - (double) this.width * 0.35D);
         this.pushOutOfBlocks(this.posX + (double) this.width * 0.35D, this.getEntityBoundingBox().minY + 0.5D, this.posZ + (double) this.width * 0.35D);
 
-        final Sprint sprint = (Sprint) LiquidBounce.moduleManager.getModule(Sprint.class);
+        final Sprint sprint = (Sprint) moduleManager.getModule(Sprint.class);
 
         final boolean legitSprint = sprint.modeValue.get().equalsIgnoreCase("legit");
 
@@ -353,7 +355,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             this.setSprinting(true);
         }
 
-        final Scaffold scaffold = (Scaffold) LiquidBounce.moduleManager.getModule(Scaffold.class);
+        final Scaffold scaffold = (Scaffold) moduleManager.getModule(Scaffold.class);
         if ((scaffold.getState() && !scaffold.sprintValue.get()) || (sprint.getState() && !legitSprint && sprint.checkServerSide.get() && (onGround || !sprint.checkServerSideGround.get()) && !sprint.allDirectionsValue.get() && RotationUtils.targetRotation != null && RotationUtils.getRotationDifference(new Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)) > 30))
             this.setSprinting(false);
 
@@ -427,7 +429,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
     @Override
     public void moveEntity(double x, double y, double z) {
         MoveEvent moveEvent = new MoveEvent(x, y, z);
-        LiquidBounce.eventManager.callEvent(moveEvent);
+        eventManager.callEvent(moveEvent);
 
         if (moveEvent.isCancelled()) return;
 
@@ -533,7 +535,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
             if (this.stepHeight > 0.0F && flag1 && (d3 != x || d5 != z)) {
                 StepEvent stepEvent = new StepEvent(this.stepHeight);
-                LiquidBounce.eventManager.callEvent(stepEvent);
+                eventManager.callEvent(stepEvent);
                 double d11 = x;
                 double d7 = y;
                 double d8 = z;
@@ -614,7 +616,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                     z = d8;
                     this.setEntityBoundingBox(axisalignedbb3);
                 } else {
-                    LiquidBounce.eventManager.callEvent(new StepConfirmEvent());
+                    eventManager.callEvent(new StepConfirmEvent());
                 }
             }
 

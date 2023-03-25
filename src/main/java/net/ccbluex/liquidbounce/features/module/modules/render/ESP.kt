@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
 import net.ccbluex.liquidbounce.ui.font.GameFontRenderer.Companion.getColorIndex
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.extensions.hitBox
 import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
@@ -210,7 +210,7 @@ class ESP : Module() {
                 .filterIsInstance<EntityLivingBase>()
                 .filterNot { AntiBot.isBot(it) && botValue.get() }.forEach { entity ->
                 val color = getColor(entity)
-                if (!entityMap.containsKey(color)) {
+                if (color !in entityMap) {
                     entityMap[color] = ArrayList()
                 }
                 entityMap[color]!!.add(entity)
@@ -224,7 +224,7 @@ class ESP : Module() {
                 shader.stopDraw(color, glowRadius.get(), glowFade.get(), glowTargetAlpha.get())
             }
         } catch (ex: Exception) {
-            ClientUtils.getLogger().error("An error occurred while rendering all entities for shader esp", ex)
+            LOGGER.error("An error occurred while rendering all entities for shader esp", ex)
         }
         renderNameTags = true
         shader.stopDraw(getColor(null), glowRadius.get(), glowFade.get(), glowTargetAlpha.get())

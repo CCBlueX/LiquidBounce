@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
@@ -19,6 +19,7 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getCenterDistance
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.isFullBlock
+import net.ccbluex.liquidbounce.utils.extensions.eyes
 import net.ccbluex.liquidbounce.utils.extensions.getBlock
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
@@ -67,7 +68,7 @@ object Fucker : Module() {
         val thePlayer = mc.thePlayer ?: return
 
         if (noHitValue.get()) {
-            val killAura = LiquidBounce.moduleManager.getModule(KillAura::class.java) as KillAura
+            val killAura = moduleManager[KillAura::class.java] as KillAura
 
             if (killAura.state && killAura.target != null)
                 return
@@ -92,7 +93,7 @@ object Fucker : Module() {
         var surroundings = false
 
         if (surroundingsValue.get()) {
-            val eyes = thePlayer.getPositionEyes(1F)
+            val eyes = thePlayer.eyes
             val blockPos = mc.theWorld.rayTraceBlocks(eyes, rotations.vec, false,
                     false, true)?.blockPos
 
@@ -131,7 +132,7 @@ object Fucker : Module() {
             // Destroy block
             actionValue.get().equals("destroy", true) || surroundings -> {
                 // Auto Tool
-                val autoTool = LiquidBounce.moduleManager[AutoTool::class.java] as AutoTool
+                val autoTool = moduleManager[AutoTool::class.java] as AutoTool
                 if (autoTool.state)
                     autoTool.switchSlot(currentPos)
 
@@ -257,7 +258,7 @@ object Fucker : Module() {
 
         return when (throughWallsValue.get().lowercase()) {
             "raycast" -> {
-                val eyesPos = thePlayer.getPositionEyes(1f)
+                val eyesPos = thePlayer.eyes
                 val movingObjectPosition = mc.theWorld.rayTraceBlocks(eyesPos,
                         Vec3(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5), false, true, false)
 

@@ -5,13 +5,12 @@
  */
 package net.ccbluex.liquidbounce.utils
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.utils.MinecraftInstance.mc
 import net.ccbluex.liquidbounce.utils.render.shader.Shader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.BackgroundShader
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.Gui
-
 import net.minecraft.client.renderer.GlStateManager
 import net.minecraft.client.renderer.Tessellator
 import net.minecraft.client.renderer.texture.DynamicTexture
@@ -45,7 +44,7 @@ abstract class Background(val backgroundFile: File) {
 
 class ImageBackground(backgroundFile: File) : Background(backgroundFile) {
 
-    private val resourceLocation = ResourceLocation(LiquidBounce.CLIENT_NAME.lowercase() + "/background.png")
+    private val resourceLocation = ResourceLocation("${CLIENT_NAME.lowercase()}/background.png")
 
     override fun initBackground() {
         val image = ImageIO.read(backgroundFile.inputStream())

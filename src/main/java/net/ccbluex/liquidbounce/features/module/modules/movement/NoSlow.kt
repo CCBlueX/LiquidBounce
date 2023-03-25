@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
@@ -53,7 +53,7 @@ class NoSlow : Module() {
         if (heldItem.item !is ItemSword || !MovementUtils.isMoving)
             return
 
-        val aura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
+        val aura = moduleManager[KillAura::class.java] as KillAura
         if (!thePlayer.isBlocking && !aura.blockStatus)
             return
 

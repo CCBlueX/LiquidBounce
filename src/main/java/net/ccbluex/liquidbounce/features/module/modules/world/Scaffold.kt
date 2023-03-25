@@ -6,7 +6,7 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.canBeClicked
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.isReplaceable
 import net.ccbluex.liquidbounce.utils.block.PlaceInfo
+import net.ccbluex.liquidbounce.utils.extensions.eyes
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
@@ -578,7 +579,7 @@ class Scaffold : Module() {
     fun onRender2D(event: Render2DEvent) {
         if (counterDisplayValue.get()) {
             GL11.glPushMatrix()
-            val blockOverlay = LiquidBounce.moduleManager.getModule(BlockOverlay::class.java) as BlockOverlay
+            val blockOverlay = moduleManager[BlockOverlay::class.java] as BlockOverlay
             if (blockOverlay.state && blockOverlay.infoValue.get() && blockOverlay.currentBlock != null) {
                 GL11.glTranslatef(0f, 15f, 0f)
             }
@@ -653,7 +654,7 @@ class Scaffold : Module() {
         val xzSSV = calcStepSize(xzRV.toFloat())
         val yRV = yRangeValue.get().toDouble()
         val ySSV = calcStepSize(yRV.toFloat())
-        val eyesPos = player.getPositionEyes(1f)
+        val eyesPos = player.eyes
         var placeRotation: PlaceRotation? = null
         for (facingType in EnumFacing.values()) {
             val neighbor = blockPosition.offset(facingType)
@@ -674,15 +675,10 @@ class Scaffold : Module() {
                         )
                         val distanceSqPosVec = eyesPos.squareDistanceTo(posVec)
                         val hitVec = posVec.add(Vec3(dirVec.xCoord * 0.5, dirVec.yCoord * 0.5, dirVec.zCoord * 0.5))
-                        if (raycast && (eyesPos.distanceTo(hitVec) > 4.25 || distanceSqPosVec > eyesPos.squareDistanceTo(
-                                posVec.add(dirVec)
-                            ) || world.rayTraceBlocks(
-                                eyesPos,
-                                hitVec,
-                                false,
-                                true,
-                                false
-                            ) != null)
+                        if (raycast && (
+                            eyesPos.distanceTo(hitVec) > 4.25 || distanceSqPosVec > eyesPos.squareDistanceTo(posVec.add(dirVec))
+                            || world.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null
+                            )
                         ) {
                             zSearch += if (auto) 0.1 else xzSSV
                             continue
@@ -787,7 +783,7 @@ class Scaffold : Module() {
                 if (itemStackItem is ItemBlock) {
                     val block = itemStackItem.block
                     val heldItem = mc.thePlayer.heldItem
-                    if (heldItem != null && heldItem == itemStack || !InventoryUtils.BLOCK_BLACKLIST.contains(block) && block !is BlockBush) {
+                    if (heldItem != null && heldItem == itemStack || block !in InventoryUtils.BLOCK_BLACKLIST && block !is BlockBush) {
                         amount += itemStack.stackSize
                     }
                 }

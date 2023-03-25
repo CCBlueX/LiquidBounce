@@ -135,7 +135,6 @@ abstract class Element(var x: Double = 2.0, var y: Double = 2.0, scale: Float = 
 /**
  * Element info
  */
-@Retention(AnnotationRetention.RUNTIME)
 annotation class ElementInfo(val name: String, val single: Boolean = false, val force: Boolean = false, val disableScale: Boolean = false, val priority: Int = 0)
 
 /**
@@ -164,8 +163,6 @@ class Side(var horizontal: Horizontal, var vertical: Vertical) {
         RIGHT("Right");
 
         companion object {
-
-            @JvmStatic
             fun getByName(name: String) = values().find { it.sideName == name }
 
         }
@@ -182,8 +179,6 @@ class Side(var horizontal: Horizontal, var vertical: Vertical) {
         DOWN("Down");
 
         companion object {
-
-            @JvmStatic
             fun getByName(name: String) = values().find { it.sideName == name }
 
         }

@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.GlowShader
@@ -96,7 +96,7 @@ class ProphuntESP : Module() {
                 mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
             }
         } catch (ex: Exception) {
-            ClientUtils.getLogger().error("An error occurred while rendering all entities for shader esp", ex)
+            LOGGER.error("An error occurred while rendering all entities for shader esp", ex)
         }
 
 

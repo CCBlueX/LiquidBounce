@@ -62,7 +62,7 @@ class NameTags : Module() {
 
             renderNameTag(entity,
                     if (clearNamesValue.get())
-                        ColorUtils.stripColor(entity.displayName?.unformattedText) ?: continue
+                        ColorUtils.stripColor(entity.displayName?.unformattedText ?: continue)
                     else
                         (entity.displayName ?: continue).unformattedText
             )

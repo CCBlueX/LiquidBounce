@@ -5,12 +5,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.TextEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.file.FileManager.friendsConfig
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.translateAlternateColorCodes
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -29,10 +30,10 @@ class NameProtect : Module() {
     fun onText(event: TextEvent) {
         val thePlayer = mc.thePlayer
 
-        if (thePlayer == null || event.text!!.contains("§8[§9§l" + LiquidBounce.CLIENT_NAME + "§8] §3"))
+        if (thePlayer == null || "§8[§9§l$CLIENT_NAME§8] §3" in event.text!!)
             return
 
-        for (friend in LiquidBounce.fileManager.friendsConfig.friends)
+        for (friend in friendsConfig.friends)
             event.text = StringUtils.replace(event.text, friend.playerName, translateAlternateColorCodes(friend.alias) + "§f")
 
         if (!state)

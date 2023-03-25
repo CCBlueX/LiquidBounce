@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.extensions.eyes
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
@@ -475,8 +476,8 @@ class Fly : Module() {
                     if (!mc.gameSettings.keyBindForward.isKeyDown) return@run
 
                     if (System.currentTimeMillis() - minesuchtTP > 99) {
-                        val vec3: Vec3 = thePlayer.getPositionEyes(0.0f)
-                        val vec31: Vec3 = mc.thePlayer.getLook(0.0f)
+                        val vec3: Vec3 = thePlayer.eyes
+                        val vec31: Vec3 = mc.thePlayer.getLook(1f)
                         val vec32: Vec3 = vec3.addVector(vec31.xCoord * 7, vec31.yCoord * 7, vec31.zCoord * 7)
                         if (thePlayer.fallDistance > 0.8) {
                             thePlayer.sendQueue.addToSendQueue(

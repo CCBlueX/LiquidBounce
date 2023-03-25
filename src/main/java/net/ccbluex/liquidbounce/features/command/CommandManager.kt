@@ -5,11 +5,12 @@
  */
 package net.ccbluex.liquidbounce.features.command
 
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.commands.*
 import net.ccbluex.liquidbounce.features.command.shortcuts.Shortcut
 import net.ccbluex.liquidbounce.features.command.shortcuts.ShortcutParser
 import net.ccbluex.liquidbounce.features.command.special.*
+import net.ccbluex.liquidbounce.file.FileManager.saveConfig
+import net.ccbluex.liquidbounce.file.FileManager.shortcutsConfig
 import net.ccbluex.liquidbounce.utils.ClientUtils
 
 class CommandManager {
@@ -151,7 +152,7 @@ class CommandManager {
                 Pair(command, it.toTypedArray())
             }))
 
-            LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.shortcutsConfig)
+            saveConfig(shortcutsConfig)
         } else {
             throw IllegalArgumentException("Command already exists!")
         }
@@ -162,7 +163,7 @@ class CommandManager {
             it is Shortcut && it.command.equals(name, ignoreCase = true)
         }
 
-        LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.shortcutsConfig)
+        saveConfig(shortcutsConfig)
 
         return removed
     }

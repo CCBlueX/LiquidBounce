@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -24,7 +24,7 @@ class AutoBow : Module() {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val bowAimbot = LiquidBounce.moduleManager[BowAimbot::class.java] as BowAimbot
+        val bowAimbot = moduleManager[BowAimbot::class.java] as BowAimbot
 
         val thePlayer = mc.thePlayer
 

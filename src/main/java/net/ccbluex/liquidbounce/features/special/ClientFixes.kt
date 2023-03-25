@@ -9,7 +9,7 @@ import io.netty.buffer.Unpooled
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.PacketEvent
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.minecraft.network.PacketBuffer
@@ -70,7 +70,7 @@ object ClientFixes : MinecraftInstance(), Listenable {
             }
         }
     }.onFailure {
-        ClientUtils.getLogger().error("Failed to handle packet on client fixes.", it)
+        LOGGER.error("Failed to handle packet on client fixes.", it)
     }
 
     override fun handleEvents() = true

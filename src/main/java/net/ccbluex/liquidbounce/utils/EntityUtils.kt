@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.utils
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.features.module.modules.combat.NoFriends
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
@@ -42,11 +42,11 @@ object EntityUtils : MinecraftInstance() {
                         if (isBot(entity))
                             return false
 
-                        if (entity.isClientFriend() && !LiquidBounce.moduleManager.getModule(NoFriends::class.java).state)
+                        if (entity.isClientFriend() && !moduleManager[NoFriends::class.java].state)
                             return false
 
                         if (entity.isSpectator) return false
-                        val teams = LiquidBounce.moduleManager.getModule(Teams::class.java) as Teams
+                        val teams = moduleManager[Teams::class.java] as Teams
                         return !teams.state || !teams.isInYourTeam(entity)
                     }
                     return true

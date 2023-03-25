@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
@@ -122,7 +122,7 @@ class Blink : Module() {
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        val breadcrumbs = LiquidBounce.moduleManager.getModule(Breadcrumbs::class.java) as Breadcrumbs
+        val breadcrumbs = moduleManager[Breadcrumbs::class.java] as Breadcrumbs
         val color = if (breadcrumbs.colorRainbow.get()) rainbow() else Color(
             breadcrumbs.colorRedValue.get(),
             breadcrumbs.colorGreenValue.get(),

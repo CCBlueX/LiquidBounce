@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
-import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.modules.render.HUD;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.minecraft.client.Minecraft;
@@ -25,6 +24,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
+
+import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
 
 @Mixin(GuiNewChat.class)
 public abstract class MixinGuiNewChat {
@@ -63,7 +64,7 @@ public abstract class MixinGuiNewChat {
 
     @Inject(method = "drawChat", at = @At("HEAD"), cancellable = true)
     private void drawChat(int p_drawChat_1_, final CallbackInfo callbackInfo) {
-        final HUD hud = (HUD) LiquidBounce.moduleManager.getModule(HUD.class);
+        final HUD hud = (HUD) moduleManager.getModule(HUD.class);
 
         if (hud.getState() && hud.getFontChatValue().get()) {
             callbackInfo.cancel();
@@ -141,7 +142,7 @@ public abstract class MixinGuiNewChat {
     // TODO: Make real fix
     /*@Inject(method = "setChatLine", at = @At("HEAD"), cancellable = true)
     private void setChatLine(IChatComponent p_setChatLine_1_, int p_setChatLine_2_, int p_setChatLine_3_, boolean p_setChatLine_4_, final CallbackInfo callbackInfo) {
-        final HUD hud = (HUD) LiquidBounce.moduleManager.getModule(HUD.class);
+        final HUD hud = (HUD) moduleManager.getModule(HUD.class);
 
         if(hud.getState() && hud.fontChatValue.asBoolean()) {
             callbackInfo.cancel();
@@ -179,7 +180,7 @@ public abstract class MixinGuiNewChat {
 
     @Inject(method = "getChatComponent", at = @At("HEAD"), cancellable = true)
     private void getChatComponent(int p_getChatComponent_1_, int p_getChatComponent_2_, final CallbackInfoReturnable<IChatComponent> callbackInfo) {
-        final HUD hud = (HUD) LiquidBounce.moduleManager.getModule(HUD.class);
+        final HUD hud = (HUD) moduleManager.getModule(HUD.class);
 
         if (hud.getState() && hud.getFontChatValue().get()) {
             if (this.getChatOpen()) {

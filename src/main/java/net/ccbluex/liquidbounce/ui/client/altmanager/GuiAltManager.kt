@@ -12,15 +12,18 @@ import me.liuli.elixir.account.CrackedAccount
 import me.liuli.elixir.account.MicrosoftAccount
 import me.liuli.elixir.account.MinecraftAccount
 import me.liuli.elixir.account.MojangAccount
-import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.LiquidBounce.fileManager
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_CLOUD
+import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.SessionEvent
+import net.ccbluex.liquidbounce.file.FileManager.accountsConfig
+import net.ccbluex.liquidbounce.file.FileManager.saveConfig
 import net.ccbluex.liquidbounce.ui.client.altmanager.menus.GuiDonatorCape
 import net.ccbluex.liquidbounce.ui.client.altmanager.menus.GuiLoginIntoAccount
 import net.ccbluex.liquidbounce.ui.client.altmanager.menus.GuiSessionLogin
 import net.ccbluex.liquidbounce.ui.client.altmanager.menus.altgenerator.GuiTheAltening
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
+import net.ccbluex.liquidbounce.utils.MinecraftInstance.mc
 import net.ccbluex.liquidbounce.utils.login.UserUtils.isValidTokenOffline
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
@@ -59,7 +62,7 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
         altsList = GuiList(this)
         altsList.registerScrollButtons(7, 8)
         
-        val mightBeTheCurrentAccount = fileManager.accountsConfig.accounts.indexOfFirst { it.name == mc.session.username }
+        val mightBeTheCurrentAccount = accountsConfig.accounts.indexOfFirst { it.name == mc.session.username }
         altsList.elementClicked(mightBeTheCurrentAccount, false, 0, 0)
         altsList.scrollBy(mightBeTheCurrentAccount * altsList.getSlotHeight())
 
@@ -90,7 +93,7 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
         altsList.drawScreen(mouseX, mouseY, partialTicks)
         Fonts.font40.drawCenteredString("AltManager", width / 2.0f, 6f, 0xffffff)
         Fonts.font35.drawCenteredString(
-            if (searchField.text.isEmpty()) "${fileManager.accountsConfig.accounts.size} Alts" else altsList.accounts.size.toString() + " Search Results",
+            if (searchField.text.isEmpty()) "${accountsConfig.accounts.size} Alts" else altsList.accounts.size.toString() + " Search Results",
             width / 2.0f,
             18f,
             0xffffff
@@ -123,8 +126,8 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
             1 -> mc.displayGuiScreen(GuiLoginIntoAccount(this))
             2 -> { // Delete button
                 status = if (altsList.selectedSlot != -1 && altsList.selectedSlot < altsList.size) {
-                    fileManager.accountsConfig.removeAccount(altsList.accounts[altsList.selectedSlot])
-                    fileManager.saveConfig(fileManager.accountsConfig)
+                    accountsConfig.removeAccount(altsList.accounts[altsList.selectedSlot])
+                    saveConfig(accountsConfig)
                     "§aThe account has been removed."
                 } else {
                     "§cSelect an account."
@@ -185,18 +188,18 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
                     val accountData = it.split(":".toRegex(), limit = 2)
                     if (accountData.size > 1) {
                         // Most likely a mojang account
-                        fileManager.accountsConfig.addMojangAccount(accountData[0], accountData[1])
+                        accountsConfig.addMojangAccount(accountData[0], accountData[1])
                     } else if (accountData[0].length < 16) {
                         // Might be cracked account
-                        fileManager.accountsConfig.addCrackedAccount(accountData[0])
+                        accountsConfig.addCrackedAccount(accountData[0])
                     } // skip account
                 }
 
-                fileManager.saveConfig(fileManager.accountsConfig)
+                saveConfig(accountsConfig)
                 status = "§aThe accounts were imported successfully."
             }
             12-> { // Export button
-                if (fileManager.accountsConfig.accounts.isEmpty()) {
+                if (accountsConfig.accounts.isEmpty()) {
                     status = "§cYou do not have any accounts to export."
                     return
                 }
@@ -211,7 +214,7 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
                         file.createNewFile()
                     }
 
-                    val accounts = fileManager.accountsConfig.accounts.joinToString(separator = "\n") { account ->
+                    val accounts = accountsConfig.accounts.joinToString(separator = "\n") { account ->
                         when (account) {
                             is MojangAccount -> "${account.email}:${account.password}" // EMAIL:PASSWORD
                             is MicrosoftAccount -> "${account.name}:${account.session.token}" // NAME:SESSION
@@ -314,11 +317,11 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
             get() {
                 var search = searchField.text
                 if (search == null || search.isEmpty()) {
-                    return fileManager.accountsConfig.accounts
+                    return accountsConfig.accounts
                 }
                 search = search.lowercase(Locale.getDefault())
 
-                return fileManager.accountsConfig.accounts.filter { it.name.contains(search, ignoreCase = true) || (it is MojangAccount && it.email.contains(search, ignoreCase = true)) }
+                return accountsConfig.accounts.filter { it.name.contains(search, ignoreCase = true) || (it is MojangAccount && it.email.contains(search, ignoreCase = true)) }
             }
 
         var selectedSlot = 0
@@ -388,7 +391,7 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
         fun loadActiveGenerators() {
             try {
                 // Read versions json from cloud
-                val jsonElement = JsonParser().parse(get(LiquidBounce.CLIENT_CLOUD + "/generators.json"))
+                val jsonElement = JsonParser().parse(get("$CLIENT_CLOUD/generators.json"))
 
                 // Check json is valid object
                 if (jsonElement.isJsonObject) {
@@ -400,7 +403,7 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
                 }
             } catch (throwable: Throwable) {
                 // Print throwable to console
-                ClientUtils.getLogger().error("Failed to load enabled generators.", throwable)
+                LOGGER.error("Failed to load enabled generators.", throwable)
             }
         }
 
@@ -410,20 +413,20 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
                     altService.switchService(AltService.EnumAltService.MOJANG)
                 } catch (e: NoSuchFieldException) {
                     error(e)
-                    ClientUtils.getLogger().error("Something went wrong while trying to switch alt service.", e)
+                    LOGGER.error("Something went wrong while trying to switch alt service.", e)
                 } catch (e: IllegalAccessException) {
                     error(e)
-                    ClientUtils.getLogger().error("Something went wrong while trying to switch alt service.", e)
+                    LOGGER.error("Something went wrong while trying to switch alt service.", e)
                 }
             }
 
             try {
                 minecraftAccount.update()
-                Minecraft.getMinecraft().session = Session(
+                mc.session = Session(
                     minecraftAccount.session.username,
                     minecraftAccount.session.uuid, minecraftAccount.session.token, "mojang"
                 )
-                LiquidBounce.eventManager.callEvent(SessionEvent())
+                callEvent(SessionEvent())
 
                 success()
             } catch (exception: Exception) {

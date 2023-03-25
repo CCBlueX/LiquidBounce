@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.*
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Target
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.minecraft.client.gui.ScaledResolution
 import org.lwjgl.opengl.GL11
@@ -74,8 +74,7 @@ open class HUD : MinecraftInstance() {
                         if (designer)
                             it.border?.draw()
                     } catch (ex: Exception) {
-                        ClientUtils.getLogger()
-                                .error("Something went wrong while drawing ${it.name} element in HUD.", ex)
+                        LOGGER.error("Something went wrong while drawing ${it.name} element in HUD.", ex)
                     }
 
                     GL11.glPopMatrix()

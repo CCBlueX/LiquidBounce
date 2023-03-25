@@ -6,13 +6,11 @@
 package net.ccbluex.liquidbounce.ui.client.altmanager.menus
 
 import com.thealtening.AltService
-
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.login.LoginUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
-
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiTextField
@@ -98,9 +96,9 @@ class GuiSessionLogin(private val prevGui: GuiAltManager) : GuiScreen() {
                                 try {
                                     GuiAltManager.altService.switchService(AltService.EnumAltService.MOJANG)
                                 } catch (e: NoSuchFieldException) {
-                                    ClientUtils.getLogger().error("Something went wrong while trying to switch alt service.", e)
+                                    LOGGER.error("Something went wrong while trying to switch alt service.", e)
                                 } catch (e: IllegalAccessException) {
-                                    ClientUtils.getLogger().error("Something went wrong while trying to switch alt service.", e)
+                                    LOGGER.error("Something went wrong while trying to switch alt service.", e)
                                 }
                             }
 

@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
@@ -74,7 +74,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
         // Slide animation - update every render
         val delta = RenderUtils.deltaTime
 
-        for (module in LiquidBounce.moduleManager.modules) {
+        for (module in moduleManager.modules) {
             if (!module.array || (!module.state && module.slide == 0F)) continue
 
             var displayString = if (!tags.get())
@@ -284,7 +284,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
     }
 
     override fun updateElement() {
-        modules = LiquidBounce.moduleManager.modules
+        modules = moduleManager.modules
                 .filter { it.array && it.slide > 0 }
                 .sortedBy { -fontValue.get().getStringWidth(if (upperCaseValue.get()) (if (!tags.get()) it.name else if (tagsArrayColor.get()) it.colorlessTagName else it.tagName).uppercase() else if (!tags.get()) it.name else if (tagsArrayColor.get()) it.colorlessTagName else it.tagName) }
     }

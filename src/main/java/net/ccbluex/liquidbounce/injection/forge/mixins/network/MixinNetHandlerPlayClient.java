@@ -6,10 +6,7 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.network;
 
 import io.netty.buffer.Unpooled;
-import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EntityMovementEvent;
-import net.ccbluex.liquidbounce.features.special.ClientFixes;
-import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.minecraft.client.ClientBrandRetriever;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiDownloadTerrain;
@@ -36,6 +33,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import static net.ccbluex.liquidbounce.LiquidBounce.eventManager;
+import static net.ccbluex.liquidbounce.features.special.ClientFixes.*;
+import static net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER;
+
 @Mixin(NetHandlerPlayClient.class)
 public abstract class MixinNetHandlerPlayClient {
 
@@ -57,7 +58,7 @@ public abstract class MixinNetHandlerPlayClient {
         final String url = p_handleResourcePack_1_.getURL();
         final String hash = p_handleResourcePack_1_.getHash();
 
-        if (ClientFixes.blockResourcePackExploit) {
+        if (blockResourcePackExploit) {
             try {
                 final String scheme = new URI(url).getScheme();
                 final boolean isLevelProtocol = "level".equals(scheme);
@@ -68,7 +69,7 @@ public abstract class MixinNetHandlerPlayClient {
                 if(isLevelProtocol && (url.contains("..") || !url.endsWith("/resources.zip")))
                     throw new URISyntaxException(url, "Invalid levelstorage resourcepack path");
             }catch(final URISyntaxException e) {
-                ClientUtils.getLogger().error("Failed to handle resource pack", e);
+                LOGGER.error("Failed to handle resource pack", e);
 
                 // Accepted is always sent.
                 netManager.sendPacket(new C19PacketResourcePackStatus(hash, C19PacketResourcePackStatus.Action.ACCEPTED));
@@ -82,7 +83,7 @@ public abstract class MixinNetHandlerPlayClient {
 
     @Inject(method = "handleJoinGame", at = @At("HEAD"), cancellable = true)
     private void handleJoinGameWithAntiForge(S01PacketJoinGame packetIn, final CallbackInfo callbackInfo) {
-        if(!ClientFixes.fmlFixesEnabled || !ClientFixes.blockFML || Minecraft.getMinecraft().isIntegratedServerRunning())
+        if(!fmlFixesEnabled || !blockFML || Minecraft.getMinecraft().isIntegratedServerRunning())
             return;
 
         PacketThreadUtil.checkThreadAndEnqueue(packetIn, (NetHandlerPlayClient) (Object) this, gameController);
@@ -106,6 +107,6 @@ public abstract class MixinNetHandlerPlayClient {
         final Entity entity = packetIn.getEntity(this.clientWorldController);
 
         if(entity != null)
-            LiquidBounce.eventManager.callEvent(new EntityMovementEvent(entity));
+            eventManager.callEvent(new EntityMovementEvent(entity));
     }
 }

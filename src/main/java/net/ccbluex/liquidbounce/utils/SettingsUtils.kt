@@ -6,10 +6,13 @@
 
 package net.ccbluex.liquidbounce.utils
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_CLOUD
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.misc.NameProtect
 import net.ccbluex.liquidbounce.features.module.modules.misc.Spammer
+import net.ccbluex.liquidbounce.file.FileManager.saveConfig
+import net.ccbluex.liquidbounce.file.FileManager.valuesConfig
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.translateAlternateColorCodes
@@ -27,7 +30,9 @@ object SettingsUtils {
      * Execute settings [script]
      */
     fun executeScript(script: String) {
-        script.lines().filter { it.isNotEmpty() && !it.startsWith('#') }.forEachIndexed { index, s ->
+        script.lines().forEachIndexed { index, s ->
+            if (s.isEmpty() || s.startsWith('#')) return@forEachIndexed
+
             val args = s.split(" ").toTypedArray()
 
             if (args.size <= 1) {
@@ -44,7 +49,7 @@ object SettingsUtils {
                     val url = if (urlRaw.startsWith("http"))
                         urlRaw
                     else
-                        "${LiquidBounce.CLIENT_CLOUD}/settings/${urlRaw.lowercase()}"
+                        "$CLIENT_CLOUD/settings/${urlRaw.lowercase()}"
 
                     try {
                         ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §7Loading settings from §a§l$url§7...")
@@ -81,15 +86,16 @@ object SettingsUtils {
                 }
 
                 else -> {
-                    if (args.size != 3) {
+                    // Text values can have spaces in them
+                    if (args.size < 3) {
                         ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §cSyntax error at line '$index' in setting script.\n§8§lLine: §7$s")
                         return@forEachIndexed
                     }
 
                     val moduleName = args[0]
                     val valueName = args[1]
-                    val value = args[2]
-                    val module = LiquidBounce.moduleManager.getModule(moduleName)
+                    var value = args[2]
+                    val module = moduleManager[moduleName]
 
                     if (module == null) {
                         ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §cModule §a§l$moduleName§c was not found!")
@@ -108,7 +114,7 @@ object SettingsUtils {
                         return@forEachIndexed
                     }
 
-                    val moduleValue = module.getValue(valueName)
+                    val moduleValue = module[valueName]
                     if (moduleValue == null) {
                         ClientUtils.displayChatMessage("§7[§3§lAutoSettings§7] §cValue §a§l$valueName§c don't found in module §a§l$moduleName§c.")
                         return@forEachIndexed
@@ -119,7 +125,11 @@ object SettingsUtils {
                             is BoolValue -> moduleValue.changeValue(value.toBoolean())
                             is FloatValue -> moduleValue.changeValue(value.toFloat())
                             is IntegerValue -> moduleValue.changeValue(value.toInt())
-                            is TextValue -> moduleValue.changeValue(value)
+                            is TextValue -> {
+                                // Load text values with spaces
+                                value = StringUtils.toCompleteString(args, 2)
+                                moduleValue.changeValue(value)
+                            }
                             is ListValue -> moduleValue.changeValue(value)
                         }
 
@@ -131,33 +141,33 @@ object SettingsUtils {
             }
         }
 
-        LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig)
+        saveConfig(valuesConfig)
     }
 
     /**
      * Generate settings script
      */
     fun generateScript(values: Boolean, binds: Boolean, states: Boolean): String {
-        val stringBuilder = StringBuilder()
+        var string = ""
         val all = values && binds && states
 
-        LiquidBounce.moduleManager.modules.filter {
-            it.category != ModuleCategory.RENDER && it !is NameProtect && it !is Spammer
-        }.forEach {
+        for (module in moduleManager.modules) {
+            if (module.category == ModuleCategory.RENDER || module is NameProtect || module is Spammer) continue
+
             if (values)
-                it.values.forEach { value ->
+                for (value in module.values) {
                     // Skip hidden values in ClickGUI
                     if (all || value.isSupported())
-                        stringBuilder.append(it.name).append(" ").append(value.name).append(" ").append(value.get()).append("\n")
+                        string += "${module.name} ${value.name} ${value.get()}\n"
                 }
 
             if (states)
-                stringBuilder.append(it.name).append(" toggle ").append(it.state).append("\n")
+                string += "${module.name} toggle ${module.state}\n"
 
             if (binds)
-                stringBuilder.append(it.name).append(" bind ").append(Keyboard.getKeyName(it.keyBind)).append("\n")
+                string += "${module.name} bind ${Keyboard.getKeyName(module.keyBind)}\n"
         }
 
-        return stringBuilder.toString()
+        return string
     }
 }

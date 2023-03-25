@@ -35,9 +35,7 @@ object ColorUtils {
     }
 
     @JvmStatic
-    fun stripColor(input: String?): String? {
-        return COLOR_PATTERN.matcher(input ?: return null).replaceAll("")
-    }
+    fun stripColor(input: String): String = COLOR_PATTERN.matcher(input).replaceAll("")
 
     @JvmStatic
     fun translateAlternateColorCodes(textToTranslate: String): String {
@@ -95,5 +93,19 @@ object ColorUtils {
     fun rainbow(offset: Long, alpha: Float): Color {
         val currentColor = Color(Color.HSBtoRGB((System.nanoTime() + offset) / 10000000000F % 1, 1F, 1F))
         return Color(currentColor.red / 255F * 1F, currentColor.green / 255f * 1F, currentColor.blue / 255F * 1F, alpha)
+    }
+
+    fun interpolateHSB(startColor: Color, endColor: Color, process: Float): Color {
+        val startHSB = Color.RGBtoHSB(startColor.red, startColor.green, startColor.blue, null)
+        val endHSB = Color.RGBtoHSB(endColor.red, endColor.green, endColor.blue, null)
+
+        val brightness = (startHSB[2] + endHSB[2]) / 2
+        val saturation = (startHSB[1] + endHSB[1]) / 2
+
+        val hueMax = if (startHSB[0] > endHSB[0]) startHSB[0] else endHSB[0]
+        val hueMin = if (startHSB[0] > endHSB[0]) endHSB[0] else startHSB[0]
+
+        val hue = (hueMax - hueMin) * process + hueMin
+        return Color.getHSBColor(hue, saturation, brightness)
     }
 }

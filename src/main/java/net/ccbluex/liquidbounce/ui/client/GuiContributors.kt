@@ -9,9 +9,8 @@ import com.google.gson.Gson
 import com.google.gson.JsonParser
 import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.injection.implementations.IMixinGuiSlot
-
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import net.ccbluex.liquidbounce.utils.render.CustomTexture
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
@@ -217,7 +216,7 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
                 }
             }
         } catch (e: Exception) {
-            ClientUtils.getLogger().error("Failed to load credits.", e)
+            LOGGER.error("Failed to load credits.", e)
             failed = true
         }
     }

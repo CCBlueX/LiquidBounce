@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -153,13 +153,13 @@ class Step : Module() {
         val thePlayer = mc.thePlayer ?: return
 
         // Phase should disable step
-        if (LiquidBounce.moduleManager[Phase::class.java].state) {
+        if (moduleManager[Phase::class.java].state) {
             event.stepHeight = 0F
             return
         }
 
         // Some fly modes should disable step
-        val fly = LiquidBounce.moduleManager[Fly::class.java] as Fly
+        val fly = moduleManager[Fly::class.java] as Fly
         if (fly.state && fly.modeValue.get() in setOf("Hypixel", "OtherHypixel", "LatestHypixel", "Rewinside", "Mineplex")
             && thePlayer.inventory.getCurrentItem() == null) {
             event.stepHeight = 0F

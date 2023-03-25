@@ -5,17 +5,17 @@
  */
 package net.ccbluex.liquidbounce.script
 
-import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.file.FileManager.dir
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import java.io.File
 import java.io.FileFilter
 
-class ScriptManager {
+object ScriptManager {
 
     val scripts = mutableListOf<Script>()
 
-    val scriptsFolder = File(LiquidBounce.fileManager.dir, "scripts")
-    private val scriptFileExtension = ".js"
+    val scriptsFolder = File(dir, "scripts")
+    private const val scriptFileExtension = ".js"
 
     /**
      * Loads all scripts inside the scripts folder.
@@ -43,7 +43,7 @@ class ScriptManager {
             script.initScript()
             scripts.add(script)
         } catch (t: Throwable) {
-            ClientUtils.getLogger().error("[ScriptAPI] Failed to load script '${scriptFile.name}'.", t)
+            LOGGER.error("[ScriptAPI] Failed to load script '${scriptFile.name}'.", t)
         }
     }
 
@@ -70,7 +70,7 @@ class ScriptManager {
         file.copyTo(scriptFile)
 
         loadScript(scriptFile)
-        ClientUtils.getLogger().info("[ScriptAPI] Successfully imported script '${scriptFile.name}'.")
+        LOGGER.info("[ScriptAPI] Successfully imported script '${scriptFile.name}'.")
     }
 
     /**
@@ -82,7 +82,7 @@ class ScriptManager {
         scripts.remove(script)
         script.scriptFile.delete()
 
-        ClientUtils.getLogger().info("[ScriptAPI]  Successfully deleted script '${script.scriptFile.name}'.")
+        LOGGER.info("[ScriptAPI]  Successfully deleted script '${script.scriptFile.name}'.")
     }
 
     /**
@@ -94,6 +94,6 @@ class ScriptManager {
         loadScripts()
         enableScripts()
 
-        ClientUtils.getLogger().info("[ScriptAPI]  Successfully reloaded scripts.")
+        LOGGER.info("[ScriptAPI]  Successfully reloaded scripts.")
     }
 }

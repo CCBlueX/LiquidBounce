@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.utils.login
 
 import com.google.gson.JsonParser
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.SessionEvent
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.minecraft.util.Session
@@ -39,7 +39,7 @@ object LoginUtils : MinecraftInstance() {
         val username = UserUtils.getUsername(uuid) ?: return LoginResult.INVALID_ACCOUNT_DATA
 
         mc.session = Session(username, uuid, accessToken, "mojang")
-        LiquidBounce.eventManager.callEvent(SessionEvent())
+        callEvent(SessionEvent())
 
         return LoginResult.LOGGED
     }

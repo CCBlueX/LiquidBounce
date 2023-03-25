@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
@@ -89,7 +89,7 @@ class BufferSpeed : Module() {
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        if (LiquidBounce.moduleManager.getModule(Speed::class.java).state || noHurtValue.get() && thePlayer.hurtTime > 0) {
+        if (moduleManager[Speed::class.java].state || noHurtValue.get() && thePlayer.hurtTime > 0) {
             reset()
             return
         }

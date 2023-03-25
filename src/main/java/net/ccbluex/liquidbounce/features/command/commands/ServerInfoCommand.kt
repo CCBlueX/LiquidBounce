@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.event.EventManager.registerListener
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.PacketEvent
@@ -14,7 +14,7 @@ import net.minecraft.network.handshake.client.C00Handshake
 
 class ServerInfoCommand : Command("serverinfo"), Listenable {
     init {
-        LiquidBounce.eventManager.registerListener(this)
+        registerListener(this)
     }
 
     private var ip = ""

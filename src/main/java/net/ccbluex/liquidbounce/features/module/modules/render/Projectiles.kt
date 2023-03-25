@@ -11,7 +11,9 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
+import net.ccbluex.liquidbounce.utils.render.ColorUtils.interpolateHSB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -212,10 +214,8 @@ class Projectiles : Module() {
             posY += motionY
             posZ += motionZ
 
-            val blockState = theWorld.getBlockState(BlockPos(posX, posY, posZ))
-
             // Check is next position water
-            if (mc.theWorld.getBlockState(BlockPos(posX, posY, posZ)).block.material === Material.water) {
+            if (BlockUtils.getState(BlockPos(posX, posY, posZ))!!.block.material === Material.water) {
                 // Update motion
                 motionX *= 0.6
                 motionY *= 0.6
@@ -262,19 +262,5 @@ class Projectiles : Module() {
         GL11.glDepthMask(true)
         RenderUtils.resetCaps()
         GL11.glColor4f(1F, 1F, 1F, 1F)
-    }
-
-    fun interpolateHSB(startColor: Color, endColor: Color, process: Float): Color? {
-        val startHSB = Color.RGBtoHSB(startColor.red, startColor.green, startColor.blue, null)
-        val endHSB = Color.RGBtoHSB(endColor.red, endColor.green, endColor.blue, null)
-
-        val brightness = (startHSB[2] + endHSB[2]) / 2
-        val saturation = (startHSB[1] + endHSB[1]) / 2
-
-        val hueMax = if (startHSB[0] > endHSB[0]) startHSB[0] else endHSB[0]
-        val hueMin = if (startHSB[0] > endHSB[0]) endHSB[0] else startHSB[0]
-
-        val hue = (hueMax - hueMin) * process + hueMin
-        return Color.getHSBColor(hue, saturation, brightness)
     }
 }

@@ -20,12 +20,12 @@ object RandomUtils {
     }
 
     @JvmStatic
-    fun nextDouble(startInclusive: Double, endInclusive: Double): Double {
+    fun nextDouble(startInclusive: Double = 0.0, endInclusive: Double = 1.0): Double {
         return if (startInclusive == endInclusive || endInclusive - startInclusive <= 0.0) startInclusive else startInclusive + (endInclusive - startInclusive) * Math.random()
     }
 
     @JvmStatic
-    fun nextFloat(startInclusive: Float, endInclusive: Float): Float {
+    fun nextFloat(startInclusive: Float = 0f, endInclusive: Float = 1f): Float {
         return if (startInclusive == endInclusive || endInclusive - startInclusive <= 0f) startInclusive else (startInclusive + (endInclusive - startInclusive) * Math.random()).toFloat()
     }
 
@@ -39,10 +39,12 @@ object RandomUtils {
         return random(length, "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
     }
 
+    @JvmStatic
     fun random(length: Int, chars: String): String {
         return random(length, chars.toCharArray())
     }
 
+    @JvmStatic
     fun random(length: Int, chars: CharArray): String {
         val stringBuilder = StringBuilder()
         for (i in 0 until length) stringBuilder.append(chars[Random.nextInt(chars.size)])

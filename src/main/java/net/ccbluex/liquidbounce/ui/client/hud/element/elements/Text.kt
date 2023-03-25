@@ -5,7 +5,10 @@
  */
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_COMMIT
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_CREATOR
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_VERSION
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
@@ -105,10 +108,10 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
 
         return when (str.lowercase()) {
             "username" -> mc.session.username
-            "clientname" -> LiquidBounce.CLIENT_NAME
-            "clientversion" -> LiquidBounce.CLIENT_VERSION
-            "clientcommit" -> LiquidBounce.CLIENT_COMMIT
-            "clientcreator" -> LiquidBounce.CLIENT_CREATOR
+            "clientname" -> CLIENT_NAME
+            "clientversion" -> CLIENT_VERSION
+            "clientcommit" -> CLIENT_COMMIT
+            "clientcreator" -> CLIENT_CREATOR
             "fps" -> Minecraft.getDebugFPS().toString()
             "date" -> DATE_FORMAT.format(System.currentTimeMillis())
             "time" -> HOUR_FORMAT.format(System.currentTimeMillis())

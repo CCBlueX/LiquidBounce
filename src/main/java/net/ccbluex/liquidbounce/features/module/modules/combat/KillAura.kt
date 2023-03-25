@@ -5,8 +5,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
@@ -226,7 +227,7 @@ class KillAura : Module() {
     // Block status
     var renderBlocking = false
     var blockStatus = false
-    var blockStopInDead = false
+    private var blockStopInDead = false
 
     /**
      * Enable kill aura module
@@ -412,7 +413,7 @@ class KillAura : Module() {
         target ?: return
 
         if (markValue.get() && !targetModeValue.get().equals("Multi", ignoreCase = true))
-            RenderUtils.drawPlatform(target, if (hitable) Color(37, 126, 255, 70) else Color(255, 0, 0, 70))
+            RenderUtils.drawPlatform(target!!, if (hitable) Color(37, 126, 255, 70) else Color(255, 0, 0, 70))
 
         if (currentTarget != null && attackTimer.hasTimePassed(attackDelay) &&
                 currentTarget!!.hurtTime <= hurtTimeValue.get()) {
@@ -512,7 +513,7 @@ class KillAura : Module() {
         val thePlayer = mc.thePlayer
 
         for (entity in theWorld.loadedEntityList) {
-            if (entity !is EntityLivingBase || !isEnemy(entity) || (switchMode && prevTargetEntities.contains(entity.entityId)))
+            if (entity !is EntityLivingBase || !isEnemy(entity) || (switchMode && entity.entityId in prevTargetEntities))
                 continue
 
             var distance = thePlayer.getDistanceToEntityBox(entity)
@@ -582,10 +583,10 @@ class KillAura : Module() {
                 if (entity.isSpectator || AntiBot.isBot(entity))
                     return false
 
-                if (entity.isClientFriend() && !LiquidBounce.moduleManager[NoFriends::class.java].state)
+                if (entity.isClientFriend() && !moduleManager[NoFriends::class.java].state)
                     return false
 
-                val teams = LiquidBounce.moduleManager[Teams::class.java] as Teams
+                val teams = moduleManager[Teams::class.java] as Teams
 
                 return !teams.state || !teams.isInYourTeam(entity)
             }
@@ -607,7 +608,7 @@ class KillAura : Module() {
             stopBlocking()
 
         // Call attack event
-        LiquidBounce.eventManager.callEvent(AttackEvent(entity))
+        callEvent(AttackEvent(entity))
 
         // Attack target
         if (swingValue.get())
@@ -630,7 +631,7 @@ class KillAura : Module() {
         }
 
         // Extra critical effects
-        val criticals = LiquidBounce.moduleManager[Criticals::class.java] as Criticals
+        val criticals = moduleManager[Criticals::class.java] as Criticals
 
         for (i in 0..2) {
             // Critical Effect
@@ -734,10 +735,10 @@ class KillAura : Module() {
             }
 
             if (raycastValue.get() && raycastedEntity != null && raycastedEntity is EntityLivingBase
-                    && (LiquidBounce.moduleManager[NoFriends::class.java].state || !(raycastedEntity is EntityPlayer && raycastedEntity.isClientFriend())))
+                    && (moduleManager[NoFriends::class.java].state || !(raycastedEntity is EntityPlayer && raycastedEntity.isClientFriend())))
                 currentTarget = raycastedEntity
 
-            hitable = if (maxTurnSpeed.get() > 0F) currentTarget == raycastedEntity else true
+            hitable = currentTarget == raycastedEntity
         } else
             hitable = isFaced(currentTarget!!, reach)
     }
@@ -799,7 +800,7 @@ class KillAura : Module() {
      */
     private val cancelRun: Boolean
         inline get() = mc.thePlayer.isSpectator || !isAlive(mc.thePlayer)
-                || LiquidBounce.moduleManager[Blink::class.java].state || LiquidBounce.moduleManager[FreeCam::class.java].state
+                || moduleManager[Blink::class.java].state || moduleManager[FreeCam::class.java].state
 
     /**
      * Check if [entity] is alive

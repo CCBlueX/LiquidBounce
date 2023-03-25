@@ -2,12 +2,12 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import me.liuli.elixir.account.CrackedAccount
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.LiquidBounce.fileManager
 import net.ccbluex.liquidbounce.LiquidBounce.hud
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.file.FileManager.accountsConfig
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.ServerUtils
@@ -32,14 +32,14 @@ class AutoAccount : Module() {
 
     // Gamster requires 8 chars+
     private val passwordValue = object : TextValue("Password", "axolotlaxolotl") {
-        override fun changeValue(value: String) {
+        override fun changeValue(newValue: String) {
             when {
-                value.equals("reset", true) -> {
+                newValue.equals("reset", true) -> {
                     super.changeValue("axolotlaxolotl")
                     ClientUtils.displayChatMessage("§7[§a§lAutoAccount§7] §3Password reset to its default value.")
                 }
-                value.length < 4 -> ClientUtils.displayChatMessage("§7[§a§lAutoAccount§7] §cPassword must be longer than 4 characters!")
-                else -> super.changeValue(value)
+                newValue.length < 4 -> ClientUtils.displayChatMessage("§7[§a§lAutoAccount§7] §cPassword must be longer than 4 characters!")
+                else -> super.changeValue(newValue)
             }
         }
 
@@ -72,10 +72,10 @@ class AutoAccount : Module() {
     private val accountModeValue = object : ListValue("AccountMode", arrayOf("RandomName", "RandomAlt"), "RandomName") {
         override fun isSupported() = reconnectDelayValue.isSupported() || startupValue.isActive()
 
-        override fun changeValue(value: String) {
-            if (value == "RandomAlt" && fileManager.accountsConfig.accounts.filterIsInstance<CrackedAccount>().size <= 1)
+        override fun changeValue(newValue: String) {
+            if (newValue == "RandomAlt" && accountsConfig.accounts.filterIsInstance<CrackedAccount>().size <= 1)
                 ClientUtils.displayChatMessage("§7[§a§lAutoAccount§7] §cAdd more cracked accounts in AltManager to use RandomAlt option!")
-            else super.changeValue(value)
+            else super.changeValue(newValue)
         }
     }
 
@@ -220,8 +220,8 @@ class AutoAccount : Module() {
 
     private fun changeAccount() {
         if (accountModeValue.get() == "RandomAlt") {
-            val account = fileManager.accountsConfig.accounts.filter { it is CrackedAccount && it.name != mc.session.username }
-                .random() ?: return
+            val account = accountsConfig.accounts.filter { it is CrackedAccount && it.name != mc.session.username }
+                .randomOrNull() ?: return
             mc.session = Session(
                 account.session.username, account.session.uuid,
                 account.session.token, account.session.type
@@ -234,9 +234,10 @@ class AutoAccount : Module() {
         val account = randomAccount()
 
         // Save as a new account if SaveToAlts is enabled
-        if (saveValue.isActive() && !fileManager.accountsConfig.accountExists(account)) {
-            fileManager.accountsConfig.addAccount(account)
-            fileManager.saveConfig(fileManager.accountsConfig)
+        if (saveValue.isActive() && !accountsConfig.accountExists(account)) {
+            accountsConfig.addAccount(account)
+            accountsConfig.saveConfig()
+
             hud.addNotification(Notification("Saved alt ${account.name}"))
         }
     }

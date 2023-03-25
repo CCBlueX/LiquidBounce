@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.ui.client
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.IN_DEV
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.update.UpdateInfo
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
@@ -27,7 +27,7 @@ class GuiUpdate : GuiScreen() {
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
         drawBackground(0)
 
-        if (!LiquidBounce.IN_DEV) {
+        if (!IN_DEV) {
             Fonts.font35.drawCenteredString("${UpdateInfo.newestVersion?.lbVersion} got released!", width / 2.0f, height / 8.0f + 80, 0xffffff)
         } else {
             Fonts.font35.drawCenteredString("New build available!", width / 2.0f, height / 8.0f + 80, 0xffffff)

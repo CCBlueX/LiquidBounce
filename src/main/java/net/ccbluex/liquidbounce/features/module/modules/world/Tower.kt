@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -20,6 +20,7 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.canBeClicked
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.isReplaceable
 import net.ccbluex.liquidbounce.utils.block.PlaceInfo
+import net.ccbluex.liquidbounce.utils.extensions.eyes
 import net.ccbluex.liquidbounce.utils.extensions.getBlock
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
@@ -340,7 +341,7 @@ class Tower : Module() {
             return false
         }
 
-        val eyesPos = thePlayer.getPositionEyes(1f)
+        val eyesPos = thePlayer.eyes
         var placeRotation: PlaceRotation? = null
         for (facingType in EnumFacing.values()) {
             val neighbor = blockPosition.offset(facingType)
@@ -421,7 +422,7 @@ class Tower : Module() {
     fun onRender2D(event: Render2DEvent) {
         if (counterDisplayValue.get()) {
             GL11.glPushMatrix()
-            val blockOverlay = LiquidBounce.moduleManager.getModule(BlockOverlay::class.java) as BlockOverlay
+            val blockOverlay = moduleManager[BlockOverlay::class.java] as BlockOverlay
             if (blockOverlay.state && blockOverlay.infoValue.get() && blockOverlay.currentBlock != null) {
                 GL11.glTranslatef(0f, 15f, 0f)
             }
@@ -466,7 +467,7 @@ class Tower : Module() {
                 val item = itemStack?.item
                 if (itemStack != null && item is ItemBlock) {
                     val block = item.block
-                    if (mc.thePlayer.heldItem == itemStack || !InventoryUtils.BLOCK_BLACKLIST.contains(block)) {
+                    if (mc.thePlayer.heldItem == itemStack || block !in InventoryUtils.BLOCK_BLACKLIST) {
                         amount += itemStack.stackSize
                     }
                 }

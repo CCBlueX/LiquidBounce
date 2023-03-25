@@ -6,12 +6,12 @@
 package net.ccbluex.liquidbounce.cape
 
 import com.google.gson.JsonParser
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_API
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.SessionEvent
 import net.ccbluex.liquidbounce.ui.client.altmanager.menus.GuiDonatorCape
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.login.UserUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
@@ -37,7 +37,7 @@ import kotlin.concurrent.thread
  */
 object CapeService : Listenable, MinecraftInstance() {
 
-    private const val CAPE_CARRIERS_URL: String = "${LiquidBounce.CLIENT_API}/cape/carriers"
+    private const val CAPE_CARRIERS_URL: String = "${CLIENT_API}/cape/carriers"
 
     /**
      * I would prefer to use CLIENT_API but due to Cloudflare causing issues with SSL and their browser integrity check,
@@ -98,7 +98,7 @@ object CapeService : Listenable, MinecraftInstance() {
                             done()
                         }
                     }.onFailure {
-                        ClientUtils.getLogger().error("Failed to refresh cape carriers due to error.", it)
+                        LOGGER.error("Failed to refresh cape carriers due to error.", it)
                     }
                 }
             } else {
@@ -148,7 +148,7 @@ object CapeService : Listenable, MinecraftInstance() {
             val response = httpClient.execute(request)
             val statusCode = response.statusLine.statusCode
 
-            ClientUtils.getLogger().info(
+            LOGGER.info(
                 if(statusCode == HttpStatus.SC_NO_CONTENT) {
                     "[Donator Cape] Successfully transferred cape to $uuid ($username)"
                 } else {

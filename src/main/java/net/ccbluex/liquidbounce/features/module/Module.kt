@@ -5,8 +5,11 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.hud
+import net.ccbluex.liquidbounce.LiquidBounce.isStarting
 import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.file.FileManager.modulesConfig
+import net.ccbluex.liquidbounce.file.FileManager.saveConfig
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
@@ -25,15 +28,15 @@ open class Module : MinecraftInstance(), Listenable {
         set(keyBind) {
             field = keyBind
 
-            if (!LiquidBounce.isStarting)
-                LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.modulesConfig)
+            if (!isStarting)
+                saveConfig(modulesConfig)
         }
     var array = true
         set(array) {
             field = array
 
-            if (!LiquidBounce.isStarting)
-                LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.modulesConfig)
+            if (!isStarting)
+                saveConfig(modulesConfig)
         }
     private val canEnable: Boolean
 
@@ -60,11 +63,11 @@ open class Module : MinecraftInstance(), Listenable {
             onToggle(value)
 
             // Play sound and add notification
-            if (!LiquidBounce.isStarting) {
+            if (!isStarting) {
                 mc.soundHandler.playSound(PositionedSoundRecord.create(
                     ResourceLocation("random.click"),
                     1F))
-                LiquidBounce.hud.addNotification(Notification("${if (value) "Enabled " else "Disabled "}$name"))
+                hud.addNotification(Notification("${if (value) "Enabled " else "Disabled "}$name"))
             }
 
             // Call on enabled or disabled
@@ -79,7 +82,7 @@ open class Module : MinecraftInstance(), Listenable {
             }
 
             // Save module state
-            LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.modulesConfig)
+            saveConfig(modulesConfig)
         }
 
 
@@ -95,7 +98,7 @@ open class Module : MinecraftInstance(), Listenable {
         get() = "$name${if (tag == null) "" else " §7$tag"}"
 
     val colorlessTagName: String
-        get() = "$name${if (tag == null) "" else " " + stripColor(tag)}"
+        get() = "$name${if (tag == null) "" else " " + stripColor(tag!!)}"
 
     /**
      * Toggle module
@@ -120,9 +123,12 @@ open class Module : MinecraftInstance(), Listenable {
     open fun onDisable() {}
 
     /**
-     * Get module by [valueName]
+     * Get value by [valueName]
      */
     open fun getValue(valueName: String) = values.find { it.name.equals(valueName, ignoreCase = true) }
+
+    // Get value using: module[valueName]
+    operator fun get(valueName: String) = getValue(valueName)
 
     /**
      * Get all values of module

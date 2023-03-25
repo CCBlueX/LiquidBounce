@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
+import net.ccbluex.liquidbounce.utils.extensions.eyes
 import net.ccbluex.liquidbounce.utils.extensions.getVec
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BlockValue
@@ -46,7 +47,7 @@ object ChestAura : Module() {
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
-        if (LiquidBounce.moduleManager[Blink::class.java].state || (LiquidBounce.moduleManager[KillAura::class.java] as KillAura).isBlockingChestAura)
+        if (moduleManager[Blink::class.java].state || (moduleManager[KillAura::class.java] as KillAura).isBlockingChestAura)
             return
 
         val thePlayer = mc.thePlayer
@@ -59,11 +60,11 @@ object ChestAura : Module() {
 
                 val radius = rangeValue.get() + 1
 
-                val eyesPos = thePlayer.getPositionEyes(1f)
+                val eyesPos = thePlayer.eyes
 
                 currentBlock = BlockUtils.searchBlocks(radius.toInt())
                         .filter {
-                            Block.getIdFromBlock(it.value) == chestValue.get() && !clickedBlocks.contains(it.key)
+                            Block.getIdFromBlock(it.value) == chestValue.get() && it.key !in clickedBlocks
                                     && BlockUtils.getCenterDistance(it.key) < rangeValue.get()
                         }
                         .filter {

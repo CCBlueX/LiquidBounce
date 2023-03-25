@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.login.UserUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -91,7 +92,7 @@ class LiquidChat : Module() {
                     val thePlayer = mc.thePlayer
 
                     if (thePlayer == null) {
-                        ClientUtils.getLogger().info("[LiquidChat] ${packet.user.name}: ${packet.content}")
+                        LOGGER.info("[LiquidChat] ${packet.user.name}: ${packet.content}")
                         return
                     }
 
@@ -207,7 +208,7 @@ class LiquidChat : Module() {
                     client.loginMojang()
                 }
             } catch (cause: Exception) {
-                ClientUtils.getLogger().error("LiquidChat error", cause)
+                LOGGER.error("LiquidChat error", cause)
                 ClientUtils.displayChatMessage("§7[§a§lChat§7] §cError: §7${cause.javaClass.name}: ${cause.message}")
             }
 

@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.ClientUtils
@@ -20,14 +20,14 @@ class HideCommand : Command("hide") {
             when {
                 args[1].equals("list", true) -> {
                     chat("§c§lHidden")
-                    LiquidBounce.moduleManager.modules.filter { !it.array }.forEach {
+                    moduleManager.modules.filter { !it.array }.forEach {
                         ClientUtils.displayChatMessage("§6> §c${it.name}")
                     }
                     return
                 }
 
                 args[1].equals("clear", true) -> {
-                    for (module in LiquidBounce.moduleManager.modules)
+                    for (module in moduleManager.modules)
                         module.array = true
 
                     chat("Cleared hidden modules.")
@@ -35,7 +35,7 @@ class HideCommand : Command("hide") {
                 }
 
                 args[1].equals("reset", true) -> {
-                    for (module in LiquidBounce.moduleManager.modules)
+                    for (module in moduleManager.modules)
                         module.array = module::class.java.getAnnotation(ModuleInfo::class.java).array
 
                     chat("Reset hidden modules.")
@@ -44,7 +44,7 @@ class HideCommand : Command("hide") {
 
                 else -> {
                     // Get module by name
-                    val module = LiquidBounce.moduleManager.getModule(args[1])
+                    val module = moduleManager[args[1]]
 
                     if (module == null) {
                         chat("Module §a§l${args[1]}§3 not found.")
@@ -71,7 +71,7 @@ class HideCommand : Command("hide") {
         val moduleName = args[0]
 
         return when (args.size) {
-            1 -> LiquidBounce.moduleManager.modules
+            1 -> moduleManager.modules
                     .map { it.name }
                     .filter { it.startsWith(moduleName, true) }
                     .toList()

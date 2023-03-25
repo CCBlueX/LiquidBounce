@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.render;
 
-import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.modules.render.Rotations;
 import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.minecraft.client.Minecraft;
@@ -20,6 +19,8 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
 
 @Mixin(ModelBiped.class)
 @SideOnly(Side.CLIENT)
@@ -39,7 +40,7 @@ public class MixinModelBiped {
         if(heldItemRight == 3)
             this.bipedRightArm.rotateAngleY = 0F;
 
-        if (LiquidBounce.moduleManager.getModule(Rotations.class).getState() && p_setRotationAngles_7_ instanceof EntityPlayer
+        if (moduleManager.getModule(Rotations.class).getState() && p_setRotationAngles_7_ instanceof EntityPlayer
                 && p_setRotationAngles_7_.equals(Minecraft.getMinecraft().thePlayer)) {
             this.bipedHead.rotateAngleX = RotationUtils.serverRotation.getPitch() / (180F / (float) Math.PI);
         }

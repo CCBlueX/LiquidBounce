@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
@@ -28,7 +28,7 @@ class AACHop3313 : SpeedMode("AACHop3.3.13") {
             thePlayer.motionX -= sin(yawRad) * 0.202f
             thePlayer.motionZ += cos(yawRad) * 0.202f
             thePlayer.motionY = 0.405
-            LiquidBounce.eventManager.callEvent(JumpEvent(0.405f))
+            callEvent(JumpEvent(0.405f))
             MovementUtils.strafe()
         } else if (thePlayer.fallDistance < 0.31f) {
             if (getBlock(thePlayer.position) is BlockCarpet) // why?

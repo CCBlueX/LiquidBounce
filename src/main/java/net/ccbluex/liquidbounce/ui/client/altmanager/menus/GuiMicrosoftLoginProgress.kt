@@ -7,9 +7,10 @@ package net.ccbluex.liquidbounce.ui.client.altmanager.menus
 
 import me.liuli.elixir.account.MicrosoftAccount
 import me.liuli.elixir.compat.OAuthServer
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.file.FileManager.accountsConfig
+import net.ccbluex.liquidbounce.file.FileManager.saveConfig
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.minecraft.client.gui.GuiButton
@@ -44,13 +45,13 @@ class GuiMicrosoftLoginProgress(val updateStatus: (String) -> Unit, val done: ()
                     serverStopAlreadyCalled = true
 
                     loginUrl = null
-                    if (LiquidBounce.fileManager.accountsConfig.accountExists(account)) {
+                    if (accountsConfig.accountExists(account)) {
                         errorAndDone("The account has already been added.")
                         return
                     }
 
-                    LiquidBounce.fileManager.accountsConfig.addAccount(account)
-                    LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig)
+                    accountsConfig.addAccount(account)
+                    saveConfig(accountsConfig)
                     successAndDone()
                 }
 
@@ -65,10 +66,10 @@ class GuiMicrosoftLoginProgress(val updateStatus: (String) -> Unit, val done: ()
             })
         } catch (bindException: BindException) {
             errorAndDone("Failed to start login server. (Port already in use)")
-            ClientUtils.getLogger().error("Failed to start login server.", bindException)
+            LOGGER.error("Failed to start login server.", bindException)
         } catch (e: Exception) {
             errorAndDone("Failed to start login server.")
-            ClientUtils.getLogger().error("Failed to start login server.", e)
+            LOGGER.error("Failed to start login server.", e)
         }
 
         buttonList.add(GuiButton(0, width / 2 - 100, height / 2 + 60, "Open URL"))

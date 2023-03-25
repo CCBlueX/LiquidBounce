@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
@@ -123,12 +123,12 @@ class ChestStealer : Module() {
             return
 
         // Chest title
-        if (chestTitleValue.get() && (screen.lowerChestInventory == null || !screen.lowerChestInventory.name.contains(
-                ItemStack(Item.itemRegistry.getObject(ResourceLocation("minecraft:chest"))).displayName)))
+        if (chestTitleValue.get() && (screen.lowerChestInventory == null ||
+            ItemStack(Item.itemRegistry.getObject(ResourceLocation("minecraft:chest"))).displayName !in screen.lowerChestInventory.name))
             return
 
         // inventory cleaner
-        val inventoryCleaner = LiquidBounce.moduleManager[InventoryCleaner::class.java] as InventoryCleaner
+        val inventoryCleaner = moduleManager[InventoryCleaner::class.java] as InventoryCleaner
 
         // Is empty?
         if (!isEmpty(screen) && (!closeOnFullValue.get() || !fullInventory)) {
@@ -181,8 +181,9 @@ class ChestStealer : Module() {
         }
     }
 
-    private inline fun shouldTake(stack: ItemStack?, inventoryCleaner: InventoryCleaner): Boolean {
-        return stack != null && !ItemUtils.isStackEmpty(stack) && (!onlyItemsValue.get() || stack.item !is ItemBlock) && (!inventoryCleaner.state || inventoryCleaner.isUseful(stack, -1))
+    private fun shouldTake(stack: ItemStack?, inventoryCleaner: InventoryCleaner): Boolean {
+        return stack != null && !ItemUtils.isStackEmpty(stack) && (!onlyItemsValue.get() || stack.item !is ItemBlock)
+                && (!inventoryCleaner.state || inventoryCleaner.isUseful(stack, -1))
     }
 
     private fun move(screen: GuiChest, slot: Slot) {
@@ -192,7 +193,7 @@ class ChestStealer : Module() {
     }
 
     private fun isEmpty(chest: GuiChest): Boolean {
-        val inventoryCleaner = LiquidBounce.moduleManager[InventoryCleaner::class.java] as InventoryCleaner
+        val inventoryCleaner = moduleManager[InventoryCleaner::class.java] as InventoryCleaner
 
         for (i in 0 until chest.inventoryRows * 9) {
             val slot = chest.inventorySlots.getSlot(i)

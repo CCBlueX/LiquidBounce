@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -34,7 +34,7 @@ class FastStairs : Module() {
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        if (!MovementUtils.isMoving || LiquidBounce.moduleManager[Speed::class.java].state)
+        if (!MovementUtils.isMoving || moduleManager[Speed::class.java].state)
             return
 
         if (thePlayer.fallDistance > 0 && !walkingDown)

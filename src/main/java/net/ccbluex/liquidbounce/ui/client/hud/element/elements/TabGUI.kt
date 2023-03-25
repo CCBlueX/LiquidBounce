@@ -5,8 +5,7 @@
  */
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
-import net.ccbluex.liquidbounce.LiquidBounce
-
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
@@ -69,7 +68,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
         for (category in ModuleCategory.values()) {
             val tab = Tab(category.displayName)
 
-            LiquidBounce.moduleManager.modules
+            moduleManager.modules
                     .filter { module: Module -> category == module.category }
                     .forEach { e: Module -> tab.modules.add(e) }
 

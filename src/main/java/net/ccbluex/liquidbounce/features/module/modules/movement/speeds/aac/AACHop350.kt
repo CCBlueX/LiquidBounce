@@ -5,8 +5,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EventManager.registerListener
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils
 
@@ -53,6 +53,6 @@ class AACHop350 : SpeedMode("AACHop3.5.0"), Listenable {
     }
 
     init {
-        LiquidBounce.eventManager.registerListener(this)
+        registerListener(this)
     }
 }

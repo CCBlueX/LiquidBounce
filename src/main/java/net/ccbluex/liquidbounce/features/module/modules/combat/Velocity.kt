@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.PacketEvent
@@ -169,7 +169,7 @@ class Velocity : Module() {
 
                     // Reduce Y
                     if (thePlayer.hurtResistantTime > 0 && aacPushYReducerValue.get()
-                            && !LiquidBounce.moduleManager[Speed::class.java].state)
+                            && !moduleManager[Speed::class.java].state)
                         thePlayer.motionY -= 0.014999993
                 }
 

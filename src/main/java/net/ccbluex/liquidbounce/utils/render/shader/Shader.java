@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.utils.render.shader;
 
-import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.MinecraftInstance;
 import org.apache.commons.io.IOUtils;
 import org.lwjgl.opengl.*;
@@ -16,6 +15,8 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
+
+import static net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER;
 
 public abstract class Shader extends MinecraftInstance {
     private int program;
@@ -52,7 +53,7 @@ public abstract class Shader extends MinecraftInstance {
         ARBShaderObjects.glLinkProgramARB(program);
         ARBShaderObjects.glValidateProgramARB(program);
 
-        ClientUtils.getLogger().info("[Shader] Successfully loaded: " + fragmentShader);
+        LOGGER.info("[Shader] Successfully loaded: " + fragmentShader);
     }
 
     public Shader(final File fragmentShader) throws IOException {
@@ -80,7 +81,7 @@ public abstract class Shader extends MinecraftInstance {
         ARBShaderObjects.glLinkProgramARB(program);
         ARBShaderObjects.glValidateProgramARB(program);
 
-        ClientUtils.getLogger().info("[Shader] Successfully loaded: " + fragmentShader.getName());
+        LOGGER.info("[Shader] Successfully loaded: " + fragmentShader.getName());
     }
 
     public void startShader() {

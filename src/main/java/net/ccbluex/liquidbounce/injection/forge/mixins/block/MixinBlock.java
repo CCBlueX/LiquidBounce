@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.block;
 
-import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.BlockBBEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.Criticals;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.GhostHand;
@@ -38,6 +37,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.List;
 import java.util.Objects;
 
+import static net.ccbluex.liquidbounce.LiquidBounce.eventManager;
+import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
+
 @Mixin(Block.class)
 @SideOnly(Side.CLIENT)
 public abstract class MixinBlock {
@@ -65,7 +67,7 @@ public abstract class MixinBlock {
     public void addCollisionBoxesToList(World worldIn, BlockPos pos, IBlockState state, AxisAlignedBB mask, List<AxisAlignedBB> list, Entity collidingEntity) {
         AxisAlignedBB axisalignedbb = this.getCollisionBoundingBox(worldIn, pos, state);
         BlockBBEvent blockBBEvent = new BlockBBEvent(pos, blockState.getBlock(), axisalignedbb);
-        LiquidBounce.eventManager.callEvent(blockBBEvent);
+        eventManager.callEvent(blockBBEvent);
 
         axisalignedbb = blockBBEvent.getBoundingBox();
 
@@ -74,7 +76,7 @@ public abstract class MixinBlock {
 
     @Inject(method = "shouldSideBeRendered", at = @At("HEAD"), cancellable = true)
     private void shouldSideBeRendered(IBlockAccess p_shouldSideBeRendered_1_, BlockPos p_shouldSideBeRendered_2_, EnumFacing p_shouldSideBeRendered_3_, CallbackInfoReturnable<Boolean> cir) {
-        final XRay xray = (XRay) LiquidBounce.moduleManager.getModule(XRay.class);
+        final XRay xray = (XRay) moduleManager.getModule(XRay.class);
 
         if (xray.getState()) {
             cir.setReturnValue(xray.getXrayBlocks().contains((Block) (Object) this));
@@ -83,7 +85,7 @@ public abstract class MixinBlock {
 
     @Inject(method = "isCollidable", at = @At("HEAD"), cancellable = true)
     private void isCollidable(CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
-        final GhostHand ghostHand = (GhostHand) LiquidBounce.moduleManager.getModule(GhostHand.class);
+        final GhostHand ghostHand = (GhostHand) moduleManager.getModule(GhostHand.class);
 
         if (Objects.requireNonNull(ghostHand).getState() && !(ghostHand.getBlockValue().get() == Block.getIdFromBlock((Block) (Object) this))) {
             callbackInfoReturnable.setReturnValue(false);
@@ -92,7 +94,7 @@ public abstract class MixinBlock {
 
     @Inject(method = "getAmbientOcclusionLightValue", at = @At("HEAD"), cancellable = true)
     private void getAmbientOcclusionLightValue(CallbackInfoReturnable<Float> cir) {
-        if (LiquidBounce.moduleManager.getModule(XRay.class).getState()) {
+        if (moduleManager.getModule(XRay.class).getState()) {
             cir.setReturnValue(1F);
         }
     }
@@ -102,7 +104,7 @@ public abstract class MixinBlock {
         float f = callbackInfo.getReturnValue();
 
         // NoSlowBreak
-        final NoSlowBreak noSlowBreak = (NoSlowBreak) LiquidBounce.moduleManager.getModule(NoSlowBreak.class);
+        final NoSlowBreak noSlowBreak = (NoSlowBreak) moduleManager.getModule(NoSlowBreak.class);
         if (Objects.requireNonNull(noSlowBreak).getState()) {
             if (noSlowBreak.getWaterValue().get() && playerIn.isInsideOfMaterial(Material.water) && !EnchantmentHelper.getAquaAffinityModifier(playerIn)) {
                 f *= 5.0F;
@@ -112,8 +114,8 @@ public abstract class MixinBlock {
                 f *= 5.0F;
             }
         } else if (playerIn.onGround) { // NoGround
-            final NoFall noFall = (NoFall) LiquidBounce.moduleManager.getModule(NoFall.class);
-            final Criticals criticals = (Criticals) LiquidBounce.moduleManager.getModule(Criticals.class);
+            final NoFall noFall = (NoFall) moduleManager.getModule(NoFall.class);
+            final Criticals criticals = (Criticals) moduleManager.getModule(Criticals.class);
 
             if (Objects.requireNonNull(noFall).getState() && noFall.modeValue.get().equalsIgnoreCase("NoGround") || Objects.requireNonNull(criticals).getState() && criticals.getModeValue().get().equalsIgnoreCase("NoGround")) {
                 f /= 5F;

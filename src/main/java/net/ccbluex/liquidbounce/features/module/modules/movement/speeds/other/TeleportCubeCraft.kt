@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
@@ -21,7 +21,7 @@ class TeleportCubeCraft : SpeedMode("TeleportCubeCraft") {
     override fun onMove(event: MoveEvent) {
         if (MovementUtils.isMoving && mc.thePlayer.onGround && timer.hasTimePassed(300L)) {
             val yaw = MovementUtils.direction
-            val length = (LiquidBounce.moduleManager.getModule(Speed::class.java) as Speed).cubecraftPortLengthValue.get()
+            val length = (moduleManager[Speed::class.java] as Speed).cubecraftPortLengthValue.get()
             event.x = -sin(yaw) * length
             event.z = cos(yaw) * length
             timer.reset()
