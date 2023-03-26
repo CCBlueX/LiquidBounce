@@ -92,16 +92,16 @@ class Tower : Module() {
     }
 
     // Teleport
-    private val teleportHeightValue = object :  FloatValue("TeleportHeight", 1.15f, 0.1f, 5f) {
+    private val teleportHeightValue = object : FloatValue("TeleportHeight", 1.15f, 0.1f, 5f) {
         override fun isSupported() = modeValue.get() == "Teleport"
     }
-    private val teleportDelayValue = object :  IntegerValue("TeleportDelay", 0, 0, 20) {
+    private val teleportDelayValue = object : IntegerValue("TeleportDelay", 0, 0, 20) {
         override fun isSupported() = modeValue.get() == "Teleport"
     }
     private val teleportGroundValue = object : BoolValue("TeleportGround", true) {
         override fun isSupported() = modeValue.get() == "Teleport"
     }
-    private val teleportNoMotionValue = object :  BoolValue("TeleportNoMotion", false) {
+    private val teleportNoMotionValue = object : BoolValue("TeleportNoMotion", false) {
         override fun isSupported() = modeValue.get() == "Teleport"
     }
 
@@ -148,27 +148,29 @@ class Tower : Module() {
         val thePlayer = mc.thePlayer ?: return
 
         // Lock Rotation
-        if (rotationsValue.get() && keepRotationValue.get() && lockRotation != null)
-            RotationUtils.setTargetRotation(lockRotation!!)
+        if (rotationsValue.get() && keepRotationValue.get() && lockRotation != null) RotationUtils.setTargetRotation(
+            lockRotation!!
+        )
 
 
         mc.timer.timerSpeed = timerValue.get()
         val eventState = event.eventState
 
         // Force use of POST event when Packet mode is selected, it doesn't work with PRE mode
-        if (eventState.stateName.equals(if (modeValue.get() == "Packet") "POST" else placeModeValue.get(), true))
-            place()
+        if (eventState.stateName.equals(
+                if (modeValue.get() == "Packet") "POST" else placeModeValue.get(), true
+            )
+        ) place()
 
         if (eventState == EventState.PRE) {
             placeInfo = null
             timer.update()
 
-            val update = (autoBlockValue.get() != "Off" && InventoryUtils.findAutoBlockBlock() != -1)
-                    || thePlayer.heldItem?.item is ItemBlock
+            val update =
+                (autoBlockValue.get() != "Off" && InventoryUtils.findAutoBlockBlock() != -1) || thePlayer.heldItem?.item is ItemBlock
 
             if (update) {
-                if (!stopWhenBlockAbove.get() || getBlock(BlockPos(thePlayer).up(2)) == Blocks.air)
-                    move()
+                if (!stopWhenBlockAbove.get() || getBlock(BlockPos(thePlayer).up(2)) == Blocks.air) move()
 
                 val blockPos = BlockPos(thePlayer).down(1)
                 if (blockPos.getBlock() == Blocks.air) {
@@ -202,18 +204,21 @@ class Tower : Module() {
                 thePlayer.motionY = jumpMotionValue.get().toDouble()
                 timer.reset()
             }
+
             "motion" -> if (thePlayer.onGround) {
                 fakeJump()
                 thePlayer.motionY = 0.42
             } else if (thePlayer.motionY < 0.1) {
                 thePlayer.motionY = -0.3
             }
+
             "motiontp" -> if (thePlayer.onGround) {
                 fakeJump()
                 thePlayer.motionY = 0.42
             } else if (thePlayer.motionY < 0.23) {
                 thePlayer.setPosition(thePlayer.posX, truncate(thePlayer.posY), thePlayer.posZ)
             }
+
             "packet" -> if (thePlayer.onGround && timer.hasTimePassed(2)) {
                 fakeJump()
                 mc.netHandler.addToSendQueue(
@@ -229,6 +234,7 @@ class Tower : Module() {
                 thePlayer.setPosition(thePlayer.posX, thePlayer.posY + 1.0, thePlayer.posZ)
                 timer.reset()
             }
+
             "teleport" -> {
                 if (teleportNoMotionValue.get()) {
                     thePlayer.motionY = 0.0
@@ -241,6 +247,7 @@ class Tower : Module() {
                     timer.reset()
                 }
             }
+
             "constantmotion" -> {
                 if (thePlayer.onGround) {
                     fakeJump()
@@ -256,6 +263,7 @@ class Tower : Module() {
                     jumpGround = thePlayer.posY
                 }
             }
+
             "aac3.3.9" -> {
                 if (thePlayer.onGround) {
                     fakeJump()
@@ -267,6 +275,7 @@ class Tower : Module() {
                     mc.timer.timerSpeed = 1.6f
                 }
             }
+
             "aac3.6.4" -> if (thePlayer.ticksExisted % 4 == 1) {
                 thePlayer.motionY = 0.4195464
                 thePlayer.setPosition(thePlayer.posX - 0.035, thePlayer.posY, thePlayer.posZ)
@@ -297,11 +306,13 @@ class Tower : Module() {
                     mc.thePlayer.inventory.currentItem = blockSlot - 36
                     mc.playerController.updateController()
                 }
+
                 "Spoof" -> {
                     if (blockSlot - 36 != slot) {
                         mc.netHandler.addToSendQueue(C09PacketHeldItemChange(blockSlot - 36))
                     }
                 }
+
                 "Switch" -> {
                     if (blockSlot - 36 != slot) {
                         mc.netHandler.addToSendQueue(C09PacketHeldItemChange(blockSlot - 36))
@@ -323,8 +334,7 @@ class Tower : Module() {
             }
         }
         if (autoBlockValue.get().equals("Switch", true)) {
-            if (slot != mc.thePlayer.inventory.currentItem)
-                mc.netHandler.addToSendQueue(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
+            if (slot != mc.thePlayer.inventory.currentItem) mc.netHandler.addToSendQueue(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
         }
         placeInfo = null
     }
@@ -361,9 +371,11 @@ class Tower : Module() {
                         )
                         val distanceSqPosVec = eyesPos.squareDistanceTo(posVec)
                         val hitVec = posVec.add(Vec3(dirVec.xCoord * 0.5, dirVec.yCoord * 0.5, dirVec.zCoord * 0.5))
-                        if (eyesPos.distanceTo(hitVec) > 4.25
-                            || distanceSqPosVec > eyesPos.squareDistanceTo(posVec.add(dirVec))
-                            || mc.theWorld.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null
+                        if (eyesPos.distanceTo(hitVec) > 4.25 || distanceSqPosVec > eyesPos.squareDistanceTo(
+                                posVec.add(
+                                    dirVec
+                                )
+                            ) || mc.theWorld.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null
                         ) {
                             zSearch += 0.1
                             continue
@@ -383,10 +395,10 @@ class Tower : Module() {
                             continue
                         }
 
-                        if (placeRotation == null || RotationUtils.getRotationDifference(rotation)
-                            < RotationUtils.getRotationDifference(placeRotation.rotation)
-                        )
-                            placeRotation = PlaceRotation(PlaceInfo(neighbor, facingType.opposite, hitVec), rotation)
+                        if (placeRotation == null || RotationUtils.getRotationDifference(rotation) < RotationUtils.getRotationDifference(
+                                placeRotation.rotation
+                            )
+                        ) placeRotation = PlaceRotation(PlaceInfo(neighbor, facingType.opposite, hitVec), rotation)
 
                         zSearch += 0.1
                     }
@@ -397,7 +409,7 @@ class Tower : Module() {
         }
         if (placeRotation == null) return false
         if (rotationsValue.get()) {
-            RotationUtils.setTargetRotation(placeRotation.rotation, 0)
+            RotationUtils.setTargetRotation(placeRotation.rotation)
             lockRotation = placeRotation.rotation
         }
         placeInfo = placeRotation.placeInfo

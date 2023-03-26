@@ -9,11 +9,12 @@ import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.PacketEvent
-import net.ccbluex.liquidbounce.event.TickEvent
+import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.modules.combat.FastBow
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
 import net.ccbluex.liquidbounce.utils.extensions.eyes
 import net.ccbluex.liquidbounce.utils.extensions.hitBox
+import net.ccbluex.liquidbounce.utils.extensions.rotation
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextDouble
 import net.minecraft.entity.Entity
 import net.minecraft.network.play.client.C03PacketPlayer
@@ -25,13 +26,16 @@ object RotationUtils : MinecraftInstance(), Listenable {
     /**
      * Handle minecraft tick
      *
-     * @param event Tick event
+     * @param event Update event
      */
     @EventTarget
-    fun onTick(event: TickEvent) {
+    fun onUpdate(event: UpdateEvent) {
         if (targetRotation != null) {
-            keepLength--
-            if (keepLength <= 0) reset()
+            if (keepLength > 0) {
+                keepLength--
+            } else {
+                reset()
+            }
         }
         if (random.nextGaussian() > 0.8) x = Math.random()
         if (random.nextGaussian() > 0.8) y = Math.random()
@@ -46,17 +50,19 @@ object RotationUtils : MinecraftInstance(), Listenable {
     @EventTarget
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
-        if (packet is C03PacketPlayer) {
-            targetRotation?.let { targetRotation ->
-                if (!keepCurrentRotation && (targetRotation.yaw != serverRotation.yaw || targetRotation.pitch != serverRotation.pitch)) {
-                    packet.yaw = targetRotation.yaw
-                    packet.pitch = targetRotation.pitch
-                    packet.rotating = true
-                }
-            }
 
-            if (packet.rotating) serverRotation = Rotation(packet.getYaw(), packet.getPitch())
+        if (packet !is C03PacketPlayer || !packet.rotating) {
+            return
         }
+
+        targetRotation?.let {
+            if (!keepCurrentRotation && (it.yaw != serverRotation.yaw || it.pitch != serverRotation.pitch)) {
+                packet.yaw = it.yaw
+                packet.pitch = it.pitch
+            }
+        }
+
+        serverRotation = Rotation(packet.yaw, packet.pitch)
     }
 
     /**
@@ -64,11 +70,14 @@ object RotationUtils : MinecraftInstance(), Listenable {
      */
     override fun handleEvents() = true
 
-    private var keepLength = 0
+    var keepLength = 0
+
     @JvmField
     var targetRotation: Rotation? = null
+
     @JvmField
     var serverRotation: Rotation = Rotation(0f, 0f)
+
     @JvmField
     var keepCurrentRotation = false
 
@@ -109,16 +118,16 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
                     val rotationVector = getVectorForRotation(rotation)
                     val vector = eyesPos.addVector(
-                        rotationVector.xCoord * dist,
-                        rotationVector.yCoord * dist,
-                        rotationVector.zCoord * dist
+                        rotationVector.xCoord * dist, rotationVector.yCoord * dist, rotationVector.zCoord * dist
                     )
 
                     mc.theWorld.rayTraceBlocks(eyesPos, vector, false, false, true)?.let {
                         if (it.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
                             val currentVec = VecRotation(posVec, rotation)
-                            if (vecRotation == null || getRotationDifference(currentVec.rotation) < getRotationDifference(vecRotation!!.rotation))
-                                vecRotation = currentVec
+                            if (vecRotation == null || getRotationDifference(currentVec.rotation) < getRotationDifference(
+                                    vecRotation!!.rotation
+                                )
+                            ) vecRotation = currentVec
                         }
                     }
                     zSearch += 0.1
@@ -142,9 +151,12 @@ object RotationUtils : MinecraftInstance(), Listenable {
     fun faceBow(target: Entity, silent: Boolean, predict: Boolean, predictSize: Float) {
         val player = mc.thePlayer
 
-        val posX = target.posX + (if (predict) (target.posX - target.prevPosX) * predictSize else .0) - (player.posX + if (predict) player.posX - player.prevPosX else .0)
-        val posY = target.entityBoundingBox.minY + (if (predict) (target.entityBoundingBox.minY - target.prevPosY) * predictSize else .0) + target.eyeHeight - 0.15 - (player.entityBoundingBox.minY + (if (predict) player.posY - player.prevPosY else .0)) - player.getEyeHeight()
-        val posZ = target.posZ + (if (predict) (target.posZ - target.prevPosZ) * predictSize else .0) - (player.posZ + if (predict) player.posZ - player.prevPosZ else .0)
+        val posX =
+            target.posX + (if (predict) (target.posX - target.prevPosX) * predictSize else .0) - (player.posX + if (predict) player.posX - player.prevPosX else .0)
+        val posY =
+            target.entityBoundingBox.minY + (if (predict) (target.entityBoundingBox.minY - target.prevPosY) * predictSize else .0) + target.eyeHeight - 0.15 - (player.entityBoundingBox.minY + (if (predict) player.posY - player.prevPosY else .0)) - player.getEyeHeight()
+        val posZ =
+            target.posZ + (if (predict) (target.posZ - target.prevPosZ) * predictSize else .0) - (player.posZ + if (predict) player.posZ - player.prevPosZ else .0)
         val posSqrt = sqrt(posX * posX + posZ * posZ)
 
         var velocity = if (moduleManager[FastBow::class.java].state) 1f else player.itemInUseDuration / 20f
@@ -152,14 +164,12 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
         val rotation = Rotation(
             Math.toDegrees(atan2(posZ, posX)).toFloat() - 90,
-            -Math.toDegrees(atan((velocity * velocity - sqrt(velocity * velocity * velocity * velocity - 0.006f * (0.006f * posSqrt * posSqrt + 2 * posY * velocity * velocity))) / (0.006f * posSqrt))).toFloat()
+            -Math.toDegrees(atan((velocity * velocity - sqrt(velocity * velocity * velocity * velocity - 0.006f * (0.006f * posSqrt * posSqrt + 2 * posY * velocity * velocity))) / (0.006f * posSqrt)))
+                .toFloat()
         )
-        if (silent)
-            setTargetRotation(rotation)
+        if (silent) setTargetRotation(rotation)
         else limitAngleChange(
-            Rotation(player.rotationYaw, player.rotationPitch),
-            rotation,
-            10f + Random().nextInt(6)
+            player.rotation, rotation, 10f + Random().nextInt(6)
         ).toPlayer(mc.thePlayer)
     }
 
@@ -180,8 +190,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         return Rotation(
             MathHelper.wrapAngleTo180_float(
                 Math.toDegrees(atan2(diffZ, diffX)).toFloat() - 90f
-            ),
-            MathHelper.wrapAngleTo180_float(
+            ), MathHelper.wrapAngleTo180_float(
                 -Math.toDegrees(atan2(diffY, sqrt(diffX * diffX + diffZ * diffZ))).toFloat()
             )
         )
@@ -213,8 +222,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
      */
     @JvmStatic
     fun searchCenter(
-        bb: AxisAlignedBB, outborder: Boolean, random: Boolean,
-        predict: Boolean, throughWalls: Boolean, distance: Float
+        bb: AxisAlignedBB, outborder: Boolean, random: Boolean, predict: Boolean, throughWalls: Boolean, distance: Float
     ): VecRotation? {
         if (outborder) {
             val vec3 = Vec3(
@@ -262,10 +270,13 @@ object RotationUtils : MinecraftInstance(), Listenable {
                     if (vecDist < distance) {
                         if (throughWalls || isVisible(vec)) {
                             val currentVec = VecRotation(vec, rotation)
-                            if (vecRotation == null || (
-                                        if (random) getRotationDifference(currentVec.rotation, randomRotation) < getRotationDifference(vecRotation.rotation, randomRotation)
-                                        else getRotationDifference(currentVec.rotation) < getRotationDifference(vecRotation.rotation)
-                                        )) vecRotation = currentVec
+                            if (vecRotation == null || (if (random) getRotationDifference(
+                                    currentVec.rotation, randomRotation
+                                ) < getRotationDifference(vecRotation.rotation, randomRotation)
+                                else getRotationDifference(currentVec.rotation) < getRotationDifference(
+                                    vecRotation.rotation
+                                ))
+                            ) vecRotation = currentVec
                         }
                     }
                     z += if (random) nextDouble(0.05, 0.1) else 0.1
@@ -305,6 +316,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param b rotation
      * @return difference between rotation
      */
+    @JvmStatic
     fun getRotationDifference(a: Rotation, b: Rotation) = hypot(getAngleDifference(a.yaw, b.yaw), (a.pitch - b.pitch))
 
     /**
@@ -321,8 +333,8 @@ object RotationUtils : MinecraftInstance(), Listenable {
         val pitchDifference = getAngleDifference(targetRotation.pitch, currentRotation.pitch)
 
         return Rotation(
-            currentRotation.yaw + if (yawDifference > turnSpeed) turnSpeed else max(yawDifference, -turnSpeed),
-            currentRotation.pitch + if (pitchDifference > turnSpeed) turnSpeed else max(pitchDifference, -turnSpeed)
+            currentRotation.yaw + yawDifference.coerceIn(-turnSpeed, turnSpeed),
+            currentRotation.pitch + pitchDifference.coerceIn(-turnSpeed, turnSpeed)
         )
     }
 
@@ -372,9 +384,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
     @JvmStatic
     fun isRotationFaced(targetEntity: Entity, blockReachDistance: Double, rotation: Rotation) =
         raycastEntity(
-            blockReachDistance,
-            rotation.yaw,
-            rotation.pitch
+            blockReachDistance, rotation.yaw, rotation.pitch
         ) { entity: Entity -> targetEntity == entity } != null
 
     /**
@@ -391,10 +401,11 @@ object RotationUtils : MinecraftInstance(), Listenable {
      */
     @JvmStatic
     @JvmOverloads
-    fun setTargetRotation(rotation: Rotation, keepLength: Int = 0) {
-        if (rotation.yaw.isNaN() || rotation.pitch.isNaN() || rotation.pitch > 90 || rotation.pitch < -90) return
-        rotation.fixedSensitivity()
-        targetRotation = rotation
+    fun setTargetRotation(rotation: Rotation, keepLength: Int = 1) {
+        if (rotation.yaw.isNaN() || rotation.pitch.isNaN() || rotation.pitch > 90 || rotation.pitch < -90)
+            return
+
+        targetRotation = rotation.fixedSensitivity()
         this.keepLength = keepLength
     }
 
