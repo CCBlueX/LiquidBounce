@@ -84,11 +84,6 @@ object RenderEngine : Listenable {
     val deferredForRenderThread: LinkedBlockingQueue<Runnable> = LinkedBlockingQueue()
 
     /**
-     * What OpenGL level is this client supposed to use? Determined when initialized
-     */
-    var openglLevel: OpenGLLevel = OpenGLLevel.OPENGL3_3
-
-    /**
      * Used to recognize what GL version we are on
      */
     val openGlVersionRegex = Pattern.compile("(\\d+)\\.(\\d+)(\\.(\\d+))?(.*)")
@@ -152,16 +147,13 @@ object RenderEngine : Listenable {
         val minorVersion = matcher.group(2).toInt()
         val patchVersion = if (matcher.groupCount() >= 5) matcher.group(4)?.toInt() else null
 
-        // At the moment there is only one GL backend to be used and most graphic cards do not support 3.3+. So yeah, try it. If it doesn't work. I don't care.
-        // openglLevel = OpenGLLevel.getBestLevelFor(majorVersion, minorVersion) ?: error("Not supported graphics card")
-
-        logger.info("Found out OpenGL version to be $majorVersion.$minorVersion${if (patchVersion != null) ".$patchVersion" else ""}. Using backend for ${openglLevel.backendInfo}")
+        logger.info("Found out OpenGL version to be $majorVersion.$minorVersion${if (patchVersion != null) ".$patchVersion" else ""}.")
     }
 
     /**
      * Enqueues a task for rendering
      *
-     * @param layer The layer it is suppose to be rendered on (See this class's description)
+     * @param layer The layer it is supposed to be rendered on (See this class's description)
      */
     fun enqueueForRendering(layer: Int, task: RenderTask) {
         this.renderTaskTable[layer].renderTasks.add(task)
@@ -188,8 +180,6 @@ object RenderEngine : Listenable {
      * Draws all enqueued render tasks.
      */
     fun render(tickDelta: Float) {
-        val lvl = this.openglLevel
-
         // Get bound VAO
         val oldVAO = GL30.glGetInteger(GL30.GL_VERTEX_ARRAY_BINDING)
         // Get bound shader
@@ -231,9 +221,9 @@ object RenderEngine : Listenable {
             }
 
             for (renderTask in layer.renderTasks) {
-                renderTask.initRendering(lvl, settings.mvpMatrix)
-                renderTask.draw(lvl)
-                renderTask.cleanupRendering(lvl)
+                renderTask.initRendering(settings.mvpMatrix)
+                renderTask.draw()
+                renderTask.cleanupRendering()
             }
 
             layer.renderTasks.clear()

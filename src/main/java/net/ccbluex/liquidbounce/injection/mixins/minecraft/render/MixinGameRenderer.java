@@ -88,9 +88,10 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
 
     @Override
     public Matrix4f getCameraMVPMatrix(float tickDelta, boolean bobbing) {
-        MatrixStack matrices = new MatrixStack();
+        final MatrixStack matrices = new MatrixStack();
 
-        matrices.multiplyPositionMatrix(this.getBasicProjectionMatrix(this.getFov(camera, tickDelta, true)));
+        final double fov = this.getFov(camera, tickDelta, true);
+        matrices.multiplyPositionMatrix(this.getBasicProjectionMatrix(fov));
 
         if (bobbing) {
             this.tiltViewWhenHurt(matrices, tickDelta);
@@ -115,9 +116,12 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
 
         matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(camera.getPitch()));
         matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(camera.getYaw() + 180.0f));
+
         final Vec3d cameraPosition = this.camera.getPos();
-        matrices.translate(-cameraPosition.x, -cameraPosition.y, -cameraPosition.z);
-        return matrices.peek().getPositionMatrix();
+
+        final Matrix4f matrix4f = matrices.peek().getPositionMatrix();
+        matrix4f.mul(new Matrix4f().translate((float) -cameraPosition.x, (float) -cameraPosition.y, (float) -cameraPosition.z));
+        return matrix4f;
     }
 
     @Inject(method = "tiltViewWhenHurt", at = @At("HEAD"), cancellable = true)
