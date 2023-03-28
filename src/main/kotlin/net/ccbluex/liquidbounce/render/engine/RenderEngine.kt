@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.math.Mat4
 import net.ccbluex.liquidbounce.utils.math.toMat4
 import net.minecraft.client.MinecraftClient
-import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.*
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.regex.Pattern
@@ -190,7 +190,25 @@ object RenderEngine : Listenable {
     fun render(tickDelta: Float) {
         val lvl = this.openglLevel
 
-        GL11.glEnable(GL11.GL_BLEND)
+        // Get bound VAO
+        val oldVAO = GL30.glGetInteger(GL30.GL_VERTEX_ARRAY_BINDING)
+        // Get bound shader
+        val oldShader = GL20.glGetInteger(GL20.GL_CURRENT_PROGRAM)
+        // Get bound texture
+        val oldTexture = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D)
+        // Get bound framebuffer
+        val oldFramebuffer = GL30.glGetInteger(GL30.GL_FRAMEBUFFER_BINDING)
+        // Get bound array buffer
+        val oldArrayBuffer = GL15.glGetInteger(GL15.GL_ARRAY_BUFFER_BINDING)
+        // Get bound element array buffer
+        val oldElementArrayBuffer = GL15.glGetInteger(GL15.GL_ELEMENT_ARRAY_BUFFER_BINDING)
+
+        // Get blend state
+        val oldBlendState = GL11.glGetBoolean(GL11.GL_BLEND)
+
+        if (!oldBlendState) {
+            GL11.glEnable(GL11.GL_BLEND)
+        }
 
         for ((idx, layer) in renderTaskTable.withIndex()) {
             // Don't calculate mvp matrices for empty layers
@@ -219,6 +237,17 @@ object RenderEngine : Listenable {
             }
 
             layer.renderTasks.clear()
+        }
+
+        GL32.glBindVertexArray(oldVAO)
+        GL20.glUseProgram(oldShader)
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, oldTexture)
+        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, oldFramebuffer)
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, oldArrayBuffer)
+        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, oldElementArrayBuffer)
+
+        if (!oldBlendState) {
+            GL11.glDisable(GL11.GL_BLEND)
         }
     }
 
