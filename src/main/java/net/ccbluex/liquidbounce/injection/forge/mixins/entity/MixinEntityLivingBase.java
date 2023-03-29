@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.AirJump;
 import net.ccbluex.liquidbounce.features.module.modules.movement.LiquidWalk;
 import net.ccbluex.liquidbounce.features.module.modules.movement.NoJumpDelay;
 import net.ccbluex.liquidbounce.features.module.modules.render.AntiBlind;
+import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.minecraft.block.Block;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.EntityLivingBase;
@@ -34,6 +35,11 @@ import java.util.Objects;
 public abstract class MixinEntityLivingBase extends MixinEntity {
 
     @Shadow
+    protected boolean isJumping;
+    @Shadow
+    private int jumpTicks;
+
+    @Shadow
     protected abstract float getJumpUpwardsMotion();
 
     @Shadow
@@ -41,12 +47,6 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
 
     @Shadow
     public abstract boolean isPotionActive(Potion potionIn);
-
-    @Shadow
-    private int jumpTicks;
-
-    @Shadow
-    protected boolean isJumping;
 
     @Shadow
     public void onLivingUpdate() {
@@ -61,7 +61,8 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
     @Shadow
     public abstract ItemStack getHeldItem();
 
-    @Shadow protected abstract void updateAITick();
+    @Shadow
+    protected abstract void updateAITick();
 
     /**
      * @author CCBlueX
@@ -70,16 +71,15 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
     protected void jump() {
         final JumpEvent jumpEvent = new JumpEvent(this.getJumpUpwardsMotion());
         LiquidBounce.eventManager.callEvent(jumpEvent);
-        if(jumpEvent.isCancelled())
-            return;
+        if (jumpEvent.isCancelled()) return;
 
         this.motionY = jumpEvent.getMotion();
 
-        if(this.isPotionActive(Potion.jump))
+        if (this.isPotionActive(Potion.jump))
             this.motionY += (float) (this.getActivePotionEffect(Potion.jump).getAmplifier() + 1) * 0.1F;
 
-        if(this.isSprinting()) {
-            float f = this.rotationYaw * 0.017453292F;
+        if (this.isSprinting()) {
+            float f = (RotationUtils.targetRotation != null ? RotationUtils.targetRotation.getYaw() : this.rotationYaw) * 0.017453292F;
             this.motionX -= MathHelper.sin(f) * 0.2F;
             this.motionZ += MathHelper.cos(f) * 0.2F;
         }
@@ -89,8 +89,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
 
     @Inject(method = "onLivingUpdate", at = @At("HEAD"))
     private void headLiving(CallbackInfo callbackInfo) {
-        if (Objects.requireNonNull(LiquidBounce.moduleManager.getModule(NoJumpDelay.class)).getState())
-            jumpTicks = 0;
+        if (Objects.requireNonNull(LiquidBounce.moduleManager.getModule(NoJumpDelay.class)).getState()) jumpTicks = 0;
     }
 
     @Inject(method = "onLivingUpdate", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/EntityLivingBase;isJumping:Z", ordinal = 1))
@@ -102,8 +101,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
 
         final LiquidWalk liquidWalk = (LiquidWalk) LiquidBounce.moduleManager.getModule(LiquidWalk.class);
 
-        if (Objects.requireNonNull(liquidWalk).getState() && !isJumping && !isSneaking() && isInWater() &&
-                liquidWalk.getModeValue().get().equalsIgnoreCase("Swim")) {
+        if (Objects.requireNonNull(liquidWalk).getState() && !isJumping && !isSneaking() && isInWater() && liquidWalk.getModeValue().get().equalsIgnoreCase("Swim")) {
             this.updateAITick();
         }
     }
@@ -111,7 +109,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
     @Inject(method = "getLook", at = @At("HEAD"), cancellable = true)
     private void getLook(CallbackInfoReturnable<Vec3> callbackInfoReturnable) {
         //noinspection ConstantConditions
-        if(((EntityLivingBase) (Object) this) instanceof EntityPlayerSP)
+        if (((EntityLivingBase) (Object) this) instanceof EntityPlayerSP)
             callbackInfoReturnable.setReturnValue(getVectorForRotation(this.rotationPitch, this.rotationYaw));
     }
 

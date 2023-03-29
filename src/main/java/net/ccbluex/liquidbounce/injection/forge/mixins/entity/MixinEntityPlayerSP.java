@@ -19,7 +19,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.NoSwing;
 import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold;
 import net.ccbluex.liquidbounce.utils.CooldownHelper;
 import net.ccbluex.liquidbounce.utils.MovementUtils;
-import net.ccbluex.liquidbounce.utils.Rotation;
 import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFence;
@@ -59,27 +58,42 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
     @Shadow
     public boolean serverSprintState;
+    @Shadow
+    public int sprintingTicksLeft;
+    @Shadow
+    public float timeInPortal;
+    @Shadow
+    public float prevTimeInPortal;
+    @Shadow
+    public MovementInput movementInput;
+    @Shadow
+    public float horseJumpPower;
+    @Shadow
+    public int horseJumpPowerCounter;
+    @Shadow
+    @Final
+    public NetHandlerPlayClient sendQueue;
+    @Shadow
+    protected int sprintToggleTimer;
+    @Shadow
+    protected Minecraft mc;
+    @Shadow
+    private boolean serverSneakState;
+    @Shadow
+    private double lastReportedPosX;
+    @Shadow
+    private int positionUpdateTicks;
+    @Shadow
+    private double lastReportedPosY;
+    @Shadow
+    private double lastReportedPosZ;
+    @Shadow
+    private float lastReportedYaw;
+    @Shadow
+    private float lastReportedPitch;
 
     @Shadow
     public abstract void playSound(String name, float volume, float pitch);
-
-    @Shadow
-    public int sprintingTicksLeft;
-
-    @Shadow
-    protected int sprintToggleTimer;
-
-    @Shadow
-    public float timeInPortal;
-
-    @Shadow
-    public float prevTimeInPortal;
-
-    @Shadow
-    protected Minecraft mc;
-
-    @Shadow
-    public MovementInput movementInput;
 
     @Shadow
     public abstract void setSprinting(boolean sprinting);
@@ -91,47 +105,16 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
     public abstract void sendPlayerAbilities();
 
     @Shadow
-    public float horseJumpPower;
-
-    @Shadow
-    public int horseJumpPowerCounter;
-
-    @Shadow
     protected abstract void sendHorseJump();
 
     @Shadow
     public abstract boolean isRidingHorse();
 
     @Shadow
-    @Final
-    public NetHandlerPlayClient sendQueue;
-
-    @Shadow
-    private boolean serverSneakState;
-
-    @Shadow
     public abstract boolean isSneaking();
 
     @Shadow
     protected abstract boolean isCurrentViewEntity();
-
-    @Shadow
-    private double lastReportedPosX;
-
-    @Shadow
-    private int positionUpdateTicks;
-
-    @Shadow
-    private double lastReportedPosY;
-
-    @Shadow
-    private double lastReportedPosZ;
-
-    @Shadow
-    private float lastReportedYaw;
-
-    @Shadow
-    private float lastReportedPitch;
 
     /**
      * @author CCBlueX
@@ -169,8 +152,6 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         if (this.isCurrentViewEntity()) {
             float yaw = rotationYaw;
             float pitch = rotationPitch;
-            float lastReportedYaw = RotationUtils.serverRotation.getYaw();
-            float lastReportedPitch = RotationUtils.serverRotation.getPitch();
 
             final Derp derp = (Derp) LiquidBounce.moduleManager.getModule(Derp.class);
             if (derp.getState()) {
@@ -187,8 +168,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             double xDiff = this.posX - this.lastReportedPosX;
             double yDiff = this.getEntityBoundingBox().minY - this.lastReportedPosY;
             double zDiff = this.posZ - this.lastReportedPosZ;
-            double yawDiff = yaw - lastReportedYaw;
-            double pitchDiff = pitch - lastReportedPitch;
+            double yawDiff = yaw - this.lastReportedYaw;
+            double pitchDiff = pitch - this.lastReportedPitch;
             boolean moved = xDiff * xDiff + yDiff * yDiff + zDiff * zDiff > 9.0E-4D || this.positionUpdateTicks >= 20;
             boolean rotated = yawDiff != 0.0D || pitchDiff != 0.0D;
 
@@ -217,8 +198,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             }
 
             if (rotated) {
-                this.lastReportedYaw = this.rotationYaw;
-                this.lastReportedPitch = this.rotationPitch;
+                this.lastReportedYaw = yaw;
+                this.lastReportedPitch = pitch;
             }
         }
 
@@ -354,7 +335,10 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         }
 
         final Scaffold scaffold = (Scaffold) LiquidBounce.moduleManager.getModule(Scaffold.class);
-        if ((scaffold.getState() && !scaffold.sprintValue.get()) || (sprint.getState() && !legitSprint && sprint.checkServerSide.get() && (onGround || !sprint.checkServerSideGround.get()) && !sprint.allDirectionsValue.get() && RotationUtils.targetRotation != null && RotationUtils.getRotationDifference(new Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)) > 30))
+
+        boolean shouldStop = RotationUtils.targetRotation != null && this.movementInput.moveForward * MathHelper.cos((this.rotationYaw - RotationUtils.targetRotation.getYaw()) * 3.1415927F / 180.0F) + this.movementInput.moveStrafe * MathHelper.sin((this.rotationYaw - RotationUtils.targetRotation.getYaw()) * 3.1415927F / 180.0F) < 0.8;
+
+        if ((scaffold.getState() && !scaffold.sprintValue.get()) || (sprint.getState() && !legitSprint && sprint.checkServerSide.get() && (onGround || !sprint.checkServerSideGround.get()) && !sprint.allDirectionsValue.get() && shouldStop))
             this.setSprinting(false);
 
         if (this.isSprinting() && ((!(sprint.getState() && !legitSprint && sprint.allDirectionsValue.get()) && this.movementInput.moveForward < f) || this.isCollidedHorizontally || !flag3)) {

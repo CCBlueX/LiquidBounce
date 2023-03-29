@@ -319,18 +319,6 @@ class Scaffold : Module() {
     }
 
     @EventTarget
-    fun onStrafe(event: StrafeEvent) {
-        if (!strafeValue.get()) {
-            return
-        }
-
-        val rotation = RotationUtils.targetRotation ?: return
-
-        rotation.applyStrafeToPlayer(event)
-        event.cancelEvent()
-    }
-
-    @EventTarget
     fun onMotion(event: MotionEvent) {
         val rotation = RotationUtils.targetRotation
 
@@ -386,7 +374,7 @@ class Scaffold : Module() {
         val player = mc.thePlayer ?: return
 
         if (silentRotationValue.get()) {
-            RotationUtils.setTargetRotation(rotation, ticks)
+            RotationUtils.setTargetRotation(rotation, ticks, strafeValue.get())
         } else {
             rotation.fixedSensitivity().let {
                 player.rotationYaw = it.yaw
@@ -529,8 +517,6 @@ class Scaffold : Module() {
         if (slot != player.inventory.currentItem) {
             mc.netHandler.addToSendQueue(C09PacketHeldItemChange(player.inventory.currentItem))
         }
-
-        RotationUtils.reset()
     }
 
     // Entity movement event
