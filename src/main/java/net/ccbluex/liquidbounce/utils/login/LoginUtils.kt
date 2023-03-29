@@ -16,7 +16,6 @@ fun me.liuli.elixir.compat.Session.intoMinecraftSession(): Session = Session(use
 
 object LoginUtils : MinecraftInstance() {
 
-    @JvmStatic
     fun loginSessionId(sessionId: String): LoginResult {
         val decodedSessionData = try {
             String(Base64.getDecoder().decode(sessionId.split(".")[1]), Charsets.UTF_8)

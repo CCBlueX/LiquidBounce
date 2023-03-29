@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.event.WorldEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.settings.GameSettings
@@ -30,7 +30,7 @@ class Sneak : Module() {
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
-        if (stopMoveValue.get() && MovementUtils.isMoving) {
+        if (stopMoveValue.get() && isMoving) {
             if (sneaking)
                 onDisable()
             return

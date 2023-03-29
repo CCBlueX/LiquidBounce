@@ -62,10 +62,10 @@ class ProphuntESP : Module() {
     fun onRender3D(event: Render3DEvent) {
         val mode = modeValue.get()
         for (entity in mc.theWorld.loadedEntityList) {
-            if(!mode.equals("Box", true) || !mode.equals("OtherBox", true)) break
+            if (mode != "Box" && mode != "OtherBox") break
             if (entity !is EntityFallingBlock) continue
 
-            RenderUtils.drawEntityBox(entity, getColor(), mode.equals("Box", true))
+            RenderUtils.drawEntityBox(entity, getColor(), mode == "Box")
         }
         synchronized(blocks) {
             val iterator: MutableIterator<Map.Entry<BlockPos, Long>> = blocks.entries.iterator()
@@ -78,7 +78,7 @@ class ProphuntESP : Module() {
                     continue
                 }
 
-                RenderUtils.drawBlockBox(entry.key, getColor(), mode.equals("Box", true))
+                RenderUtils.drawBlockBox(entry.key, getColor(), mode == "Box")
             }
         }
     }
@@ -103,8 +103,6 @@ class ProphuntESP : Module() {
         shader.stopDraw(color, glowRadius.get(), glowFade.get(), glowTargetAlpha.get())
     }
 
-    private fun getColor():Color{
-        return if (colorRainbow.get()) rainbow() else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
-    }
+    private fun getColor() = if (colorRainbow.get()) rainbow() else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
 
 }

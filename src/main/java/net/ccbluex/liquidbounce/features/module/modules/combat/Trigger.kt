@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.EntityUtils
+import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.client.settings.KeyBinding
@@ -44,7 +44,7 @@ class Trigger : Module() {
         val objectMouseOver = mc.objectMouseOver
 
         if (objectMouseOver != null && System.currentTimeMillis() - lastSwing >= delay &&
-                EntityUtils.isSelected(objectMouseOver.entityHit, true)) {
+                isSelected(objectMouseOver.entityHit, true)) {
             KeyBinding.onTick(mc.gameSettings.keyBindAttack.keyCode) // Minecraft Click handling
 
             lastSwing = System.currentTimeMillis()

@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.features.command
 
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.LiquidBounce.commandManager
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.minecraft.client.audio.PositionedSoundRecord
 import net.minecraft.util.ResourceLocation
@@ -26,34 +26,32 @@ abstract class Command(val command: String, vararg val alias: String) : Minecraf
      * @return a list of matching completions for the command the player is trying to autocomplete
      * @author NurMarvin
      */
-    open fun tabComplete(args: Array<String>): List<String> {
-        return emptyList()
-    }
+    open fun tabComplete(args: Array<String>) = emptyList<String>()
 
     /**
      * Print [msg] to chat
      */
-    protected fun chat(msg: String) = ClientUtils.displayChatMessage("§8[§9§l${CLIENT_NAME}§8] §3$msg")
+    protected fun chat(msg: String) = displayChatMessage("§8[§9§l$CLIENT_NAME§8] §3$msg")
 
     /**
      * Print [syntax] of command to chat
      */
-    protected fun chatSyntax(syntax: String) = ClientUtils.displayChatMessage("§8[§9§l${CLIENT_NAME}§8] §3Syntax: §7${commandManager.prefix}$syntax")
+    protected fun chatSyntax(syntax: String) = displayChatMessage("§8[§9§l$CLIENT_NAME§8] §3Syntax: §7${commandManager.prefix}$syntax")
 
     /**
      * Print [syntaxes] of command to chat
      */
     protected fun chatSyntax(syntaxes: Array<String>) {
-        ClientUtils.displayChatMessage("§8[§9§l${CLIENT_NAME}§8] §3Syntax:")
+        displayChatMessage("§8[§9§l$CLIENT_NAME§8] §3Syntax:")
 
         for (syntax in syntaxes)
-            ClientUtils.displayChatMessage("§8> §7${commandManager.prefix}$command ${syntax.lowercase()}")
+            displayChatMessage("§8> §7${commandManager.prefix}$command ${syntax.lowercase()}")
     }
 
     /**
      * Print a syntax error to chat
      */
-    protected fun chatSyntaxError() = ClientUtils.displayChatMessage("§8[§9§l${CLIENT_NAME}§8] §3Syntax error")
+    protected fun chatSyntaxError() = displayChatMessage("§8[§9§l$CLIENT_NAME§8] §3Syntax error")
 
     /**
      * Play edit sound

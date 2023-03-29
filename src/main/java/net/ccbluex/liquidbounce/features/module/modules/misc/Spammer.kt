@@ -51,6 +51,7 @@ class Spammer : Module() {
 
     private val msTimer = MSTimer()
     private var delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         if (msTimer.hasTimePassed(delay)) {

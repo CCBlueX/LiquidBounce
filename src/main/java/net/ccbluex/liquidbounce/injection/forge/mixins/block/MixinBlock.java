@@ -117,7 +117,7 @@ public abstract class MixinBlock {
             final NoFall noFall = (NoFall) moduleManager.getModule(NoFall.class);
             final Criticals criticals = (Criticals) moduleManager.getModule(Criticals.class);
 
-            if (Objects.requireNonNull(noFall).getState() && noFall.modeValue.get().equalsIgnoreCase("NoGround") || Objects.requireNonNull(criticals).getState() && criticals.getModeValue().get().equalsIgnoreCase("NoGround")) {
+            if (Objects.requireNonNull(noFall).getState() && noFall.modeValue.get().equals("NoGround") || Objects.requireNonNull(criticals).getState() && criticals.getModeValue().get().equals("NoGround")) {
                 f /= 5F;
             }
         }

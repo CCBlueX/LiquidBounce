@@ -85,9 +85,7 @@ class AccountsConfig(file: File) : FileConfig(file) {
         for (minecraftAccount in accounts)
             jsonArray.add(toJson(minecraftAccount))
 
-        val printWriter = PrintWriter(FileWriter(file))
-        printWriter.println(PRETTY_GSON.toJson(jsonArray))
-        printWriter.close()
+        file.writeText(PRETTY_GSON.toJson(accounts))
     }
 
     /**

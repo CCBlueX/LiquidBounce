@@ -114,7 +114,7 @@ class Blink : Module() {
                 )
             )
         }
-        if (pulseValue.get() && pulseTimer.hasTimePassed(pulseDelayValue.get().toLong())) {
+        if (pulseValue.get() && pulseTimer.hasTimePassed(pulseDelayValue.get())) {
             blink()
             pulseTimer.reset()
         }
@@ -152,7 +152,7 @@ class Blink : Module() {
         }
     }
 
-    override val tag: String
+    override val tag
         get() = packets.size.toString()
 
     private fun blink() {

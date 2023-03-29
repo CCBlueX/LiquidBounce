@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.player.InventoryCleaner
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
+import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -25,7 +26,6 @@ import net.minecraft.item.ItemBlock
 import net.minecraft.item.ItemStack
 import net.minecraft.network.play.server.S30PacketWindowItems
 import net.minecraft.util.ResourceLocation
-import kotlin.random.Random
 
 @ModuleInfo(name = "ChestStealer", description = "Automatically steals all items from a chest.", category = ModuleCategory.WORLD)
 class ChestStealer : Module() {
@@ -148,7 +148,7 @@ class ChestStealer : Module() {
                             items.add(slot)
                     }
 
-                    val randomSlot = Random.nextInt(items.size)
+                    val randomSlot = nextInt(endExclusive = items.size)
                     val slot = items[randomSlot]
 
                     move(screen, slot)

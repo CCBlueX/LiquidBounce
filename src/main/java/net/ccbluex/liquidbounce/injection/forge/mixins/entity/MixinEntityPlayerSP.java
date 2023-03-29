@@ -17,9 +17,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.Sprint;
 import net.ccbluex.liquidbounce.features.module.modules.render.NoSwing;
 import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold;
 import net.ccbluex.liquidbounce.utils.CooldownHelper;
-import net.ccbluex.liquidbounce.utils.MovementUtils;
 import net.ccbluex.liquidbounce.utils.Rotation;
-import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFence;
 import net.minecraft.block.BlockFenceGate;
@@ -54,6 +52,8 @@ import java.util.List;
 
 import static net.ccbluex.liquidbounce.LiquidBounce.eventManager;
 import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
+import static net.ccbluex.liquidbounce.utils.MovementUtils.isMoving;
+import static net.ccbluex.liquidbounce.utils.RotationUtils.*;
 
 @Mixin(EntityPlayerSP.class)
 @SideOnly(Side.CLIENT)
@@ -144,7 +144,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
         final InventoryMove inventoryMove = (InventoryMove) moduleManager.getModule(InventoryMove.class);
         final Sneak sneak = (Sneak) moduleManager.getModule(Sneak.class);
-        final boolean fakeSprint = (inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get()) || moduleManager.getModule(AntiHunger.class).getState() || (sneak.getState() && (!MovementUtils.isMoving() || !sneak.stopMoveValue.get()) && sneak.modeValue.get().equalsIgnoreCase("MineSecure"));
+        final boolean fakeSprint = (inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get()) || moduleManager.getModule(AntiHunger.class).getState() || (sneak.getState() && (!isMoving() || !sneak.stopMoveValue.get()) && sneak.modeValue.get().equals("MineSecure"));
 
         boolean sprinting = this.isSprinting() && !fakeSprint;
 
@@ -159,7 +159,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
         boolean sneaking = this.isSneaking();
 
-        if (sneaking != this.serverSneakState && (!sneak.getState() || sneak.modeValue.get().equalsIgnoreCase("Legit"))) {
+        if (sneaking != this.serverSneakState && (!sneak.getState() || sneak.modeValue.get().equals("Legit"))) {
             if (sneaking)
                 this.sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, C0BPacketEntityAction.Action.START_SNEAKING));
             else
@@ -171,8 +171,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         if (this.isCurrentViewEntity()) {
             float yaw = rotationYaw;
             float pitch = rotationPitch;
-            float lastReportedYaw = RotationUtils.serverRotation.getYaw();
-            float lastReportedPitch = RotationUtils.serverRotation.getPitch();
+            float lastReportedYaw = serverRotation.getYaw();
+            float lastReportedPitch = serverRotation.getPitch();
 
             final Derp derp = (Derp) moduleManager.getModule(Derp.class);
             if (derp.getState()) {
@@ -181,9 +181,9 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 pitch = rot[1];
             }
 
-            if (RotationUtils.targetRotation != null) {
-                yaw = RotationUtils.targetRotation.getYaw();
-                pitch = RotationUtils.targetRotation.getPitch();
+            if (targetRotation != null) {
+                yaw = targetRotation.getYaw();
+                pitch = targetRotation.getPitch();
             }
 
             double xDiff = this.posX - this.lastReportedPosX;
@@ -339,7 +339,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
         final Sprint sprint = (Sprint) moduleManager.getModule(Sprint.class);
 
-        final boolean legitSprint = sprint.modeValue.get().equalsIgnoreCase("legit");
+        final boolean legitSprint = sprint.modeValue.get().equals("Legit");
 
         boolean flag3 = !(sprint.getState() && !legitSprint && sprint.foodValue.get()) || (float) this.getFoodStats().getFoodLevel() > 6.0F || this.capabilities.allowFlying;
 
@@ -356,7 +356,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         }
 
         final Scaffold scaffold = (Scaffold) moduleManager.getModule(Scaffold.class);
-        if ((scaffold.getState() && !scaffold.sprintValue.get()) || (sprint.getState() && !legitSprint && sprint.checkServerSide.get() && (onGround || !sprint.checkServerSideGround.get()) && !sprint.allDirectionsValue.get() && RotationUtils.targetRotation != null && RotationUtils.getRotationDifference(new Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)) > 30))
+        if ((scaffold.getState() && !scaffold.sprintValue.get()) || (sprint.getState() && !legitSprint && sprint.checkServerSide.get() && (onGround || !sprint.checkServerSideGround.get()) && !sprint.allDirectionsValue.get() && targetRotation != null && getRotationDifference(new Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)) > 30))
             this.setSprinting(false);
 
         if (this.isSprinting() && ((!(sprint.getState() && !legitSprint && sprint.allDirectionsValue.get()) && this.movementInput.moveForward < f) || this.isCollidedHorizontally || !flag3)) {

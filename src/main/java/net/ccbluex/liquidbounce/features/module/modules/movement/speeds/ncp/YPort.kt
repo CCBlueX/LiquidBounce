@@ -7,7 +7,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp
 
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.hasMotion
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.minecraft.block.Block
 import net.minecraft.block.material.Material
 import net.minecraft.init.Blocks
@@ -33,7 +34,7 @@ class YPort : SpeedMode("YPort") {
         val xDist = mc.thePlayer.posX - mc.thePlayer.prevPosX
         val zDist = mc.thePlayer.posZ - mc.thePlayer.prevPosZ
         lastDist = sqrt(xDist * xDist + zDist * zDist)
-        if (!MovementUtils.isMoving) safeJump = true else if (mc.thePlayer.onGround) safeJump = false
+        if (!isMoving) safeJump = true else if (mc.thePlayer.onGround) safeJump = false
     }
 
     override fun onUpdate() {}
@@ -43,14 +44,16 @@ class YPort : SpeedMode("YPort") {
         if (timerDelay != 0) {
             mc.timer.timerSpeed = 1f
         } else {
-            if (MovementUtils.hasMotion()) mc.timer.timerSpeed = 32767f
-            if (MovementUtils.hasMotion()) {
+            if (hasMotion) {
+                mc.timer.timerSpeed = 32767f
+            }
+            if (hasMotion) {
                 mc.timer.timerSpeed = 1.3f
                 mc.thePlayer.motionX *= 1.0199999809265137
                 mc.thePlayer.motionZ *= 1.0199999809265137
             }
         }
-        if (mc.thePlayer.onGround && MovementUtils.hasMotion()) level = 2
+        if (mc.thePlayer.onGround && hasMotion) level = 2
         if (round(mc.thePlayer.posY - mc.thePlayer.posY.toInt()) == round(0.138)) {
             mc.thePlayer.motionY -= 0.08
             event.y -= 0.09316090325960147

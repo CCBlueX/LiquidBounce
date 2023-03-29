@@ -182,7 +182,6 @@ class BlockValue(name: String, value: Int) : IntegerValue(name, value, 1, 197)
  */
 open class ListValue(name: String, val values: Array<String>, override var value: String) : Value<String>(name, value) {
 
-    @JvmField
     var openList = false
 
     operator fun contains(string: String?) = values.any { it.equals(string, true) }

@@ -14,7 +14,8 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
-import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
+import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.extensions.eyes
 import net.ccbluex.liquidbounce.utils.extensions.getVec
@@ -79,11 +80,11 @@ object ChestAura : Module() {
                         .minByOrNull { BlockUtils.getCenterDistance(it.key) }?.key
 
                 if (rotationsValue.get())
-                    RotationUtils.setTargetRotation((RotationUtils.faceBlock(currentBlock ?: return)
+                    setTargetRotation((faceBlock(currentBlock ?: return)
                             ?: return).rotation)
             }
 
-            EventState.POST -> if (currentBlock != null && timer.hasTimePassed(delayValue.get().toLong())) {
+            EventState.POST -> if (currentBlock != null && timer.hasTimePassed(delayValue.get())) {
                 if (mc.playerController.onPlayerRightClick(thePlayer, mc.theWorld, thePlayer.heldItem, currentBlock!!,
                                 EnumFacing.DOWN, currentBlock!!.getVec())) {
                     if (visualSwing.get())

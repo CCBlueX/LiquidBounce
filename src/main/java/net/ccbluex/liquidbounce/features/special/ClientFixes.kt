@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
-import net.ccbluex.liquidbounce.utils.misc.RandomUtils
+import net.ccbluex.liquidbounce.utils.misc.RandomUtils.randomString
 import net.minecraft.network.PacketBuffer
 import net.minecraft.network.play.client.C17PacketCustomPayload
 
@@ -21,17 +21,15 @@ object ClientFixes : MinecraftInstance(), Listenable {
     var fmlFixesEnabled = true
     @JvmField
     var blockFML = true
-    @JvmField
+
     var blockProxyPacket = true
-    @JvmField
+
     var blockPayloadPackets = true
     @JvmField
     var blockResourcePackExploit = true
 
-    @JvmField
     var clientBrand = "Vanilla"
 
-    @JvmField
     var possibleBrands = arrayOf(
         "Vanilla",
         "Forge",
@@ -56,16 +54,18 @@ object ClientFixes : MinecraftInstance(), Listenable {
             packet is C17PacketCustomPayload -> {
                 if (blockPayloadPackets && !packet.channelName.startsWith("MC|")) {
                     event.cancelEvent()
-                } else if (packet.channelName.equals("MC|Brand", ignoreCase = true)) {
-                    packet.data = PacketBuffer(Unpooled.buffer()).writeString(when (clientBrand) {
-                        "Vanilla" -> "vanilla"
-                        "LunarClient" -> "lunarclient:" + RandomUtils.randomString(7)
-                        "CheatBreaker" -> "CB"
-                        else -> {
-                            // do nothing
-                            return@runCatching
+                } else if (packet.channelName == "MC|Brand") {
+                    packet.data = PacketBuffer(Unpooled.buffer()).writeString(
+                        when (clientBrand) {
+                            "Vanilla" -> "vanilla"
+                            "LunarClient" -> "lunarclient:" + randomString(7)
+                            "CheatBreaker" -> "CB"
+                            else -> {
+                                // do nothing
+                                return@runCatching
+                            }
                         }
-                    })
+                    )
                 }
             }
         }

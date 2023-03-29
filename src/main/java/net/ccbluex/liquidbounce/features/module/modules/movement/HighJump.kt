@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -39,7 +39,7 @@ class HighJump : Module() {
             "damage" -> if (thePlayer.hurtTime > 0 && thePlayer.onGround) thePlayer.motionY += 0.42f * heightValue.get()
             "aacv3" -> if (!thePlayer.onGround) thePlayer.motionY += 0.059
             "dac" -> if (!thePlayer.onGround) thePlayer.motionY += 0.049999
-            "mineplex" -> if (!thePlayer.onGround) MovementUtils.strafe(0.35f)
+            "mineplex" -> if (!thePlayer.onGround) strafe(0.35f)
         }
     }
 
@@ -68,6 +68,6 @@ class HighJump : Module() {
         }
     }
 
-    override val tag: String
+    override val tag
         get() = modeValue.get()
 }

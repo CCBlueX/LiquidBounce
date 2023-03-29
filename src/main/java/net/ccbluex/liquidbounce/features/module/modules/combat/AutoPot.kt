@@ -14,7 +14,8 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.Rotation
-import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
+import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
@@ -49,7 +50,7 @@ class AutoPot : Module() {
 
     @EventTarget
     fun onMotion(motionEvent: MotionEvent) {
-        if (!msTimer.hasTimePassed(delayValue.get().toLong()) || mc.playerController.isInCreativeMode)
+        if (!msTimer.hasTimePassed(delayValue.get()) || mc.playerController.isInCreativeMode)
             return
 
         val thePlayer = mc.thePlayer ?: return
@@ -79,7 +80,7 @@ class AutoPot : Module() {
                     mc.netHandler.addToSendQueue(C09PacketHeldItemChange(potion - 36))
 
                     if (thePlayer.rotationPitch <= 80F) {
-                        RotationUtils.setTargetRotation(
+                        setTargetRotation(
                             Rotation(thePlayer.rotationYaw, RandomUtils.nextFloat(80F, 90F)).fixedSensitivity()
                         )
                     }
@@ -106,7 +107,7 @@ class AutoPot : Module() {
                 }
             }
             POST -> {
-                if (potion >= 0 && RotationUtils.serverRotation.pitch >= 75F) {
+                if (potion >= 0 && serverRotation.pitch >= 75F) {
                     val itemStack = thePlayer.inventory.getStackInSlot(potion)
 
                     if (itemStack != null) {
@@ -146,7 +147,7 @@ class AutoPot : Module() {
         return -1
     }
 
-    override val tag: String
+    override val tag
         get() = healthValue.get().toString()
 
 }

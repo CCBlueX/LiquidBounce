@@ -51,7 +51,7 @@ object Animations : Module() {
     private var animationMode = ListValue("Mode", animations.map { it.name }.toTypedArray(), "Pushdown")
     var oddSwing = BoolValue("OddSwing", false)
 
-    fun getAnimation() = animations.firstOrNull { it.name.equals(animationMode.get(), true) }
+    fun getAnimation() = animations.firstOrNull { it.name == animationMode.get() }
 
 }
 

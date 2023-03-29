@@ -11,10 +11,10 @@ import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
+import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
 import net.ccbluex.liquidbounce.ui.font.GameFontRenderer.Companion.getColorIndex
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
-import net.ccbluex.liquidbounce.utils.EntityUtils
+import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.extensions.hitBox
 import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
@@ -87,7 +87,7 @@ class ESP : Module() {
         val mode = modeValue.get()
         val mvMatrix = WorldToScreen.getMatrix(GL11.GL_MODELVIEW_MATRIX)
         val projectionMatrix = WorldToScreen.getMatrix(GL11.GL_PROJECTION_MATRIX)
-        val real2d = mode.equals("real2d", ignoreCase = true)
+        val real2d = mode == "Real2D"
 
         if (real2d) {
             GL11.glPushAttrib(GL11.GL_ENABLE_BIT)
@@ -109,16 +109,12 @@ class ESP : Module() {
         }
 
         for (entity in mc.theWorld.loadedEntityList) {
-            if (entity !is EntityLivingBase || !botValue.get() && AntiBot.isBot(entity)) continue
-            if (entity != mc.thePlayer && EntityUtils.isSelected(entity, false)) {
+            if (entity !is EntityLivingBase || !botValue.get() && isBot(entity)) continue
+            if (entity != mc.thePlayer && isSelected(entity, false)) {
                 val color = getColor(entity)
 
                 when (mode.lowercase()) {
-                    "box", "otherbox" -> RenderUtils.drawEntityBox(
-                        entity,
-                        color,
-                        !mode.equals("otherbox", ignoreCase = true)
-                    )
+                    "box", "otherbox" -> RenderUtils.drawEntityBox(entity, color, mode != "OtherBox")
                     "2d" -> {
                         val renderManager = mc.renderManager
                         val timer = mc.timer
@@ -206,9 +202,9 @@ class ESP : Module() {
         try {
             val entityMap = mutableMapOf<Color, ArrayList<Entity>>()
             mc.theWorld.loadedEntityList
-                .filter { EntityUtils.isSelected(it, false) }
+                .filter { isSelected(it, false) }
                 .filterIsInstance<EntityLivingBase>()
-                .filterNot { AntiBot.isBot(it) && botValue.get() }.forEach { entity ->
+                .filterNot { isBot(it) && botValue.get() }.forEach { entity ->
                 val color = getColor(entity)
                 if (color !in entityMap) {
                     entityMap[color] = ArrayList()
@@ -230,7 +226,7 @@ class ESP : Module() {
         shader.stopDraw(getColor(null), glowRadius.get(), glowFade.get(), glowTargetAlpha.get())
     }
 
-    override val tag: String
+    override val tag
         get() = modeValue.get()
 
     fun getColor(entity: Entity?): Color {

@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -34,7 +34,7 @@ class FastStairs : Module() {
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        if (!MovementUtils.isMoving || moduleManager[Speed::class.java].state)
+        if (!isMoving || moduleManager[Speed::class.java].state)
             return
 
         if (thePlayer.fallDistance > 0 && !walkingDown)
@@ -93,6 +93,6 @@ class FastStairs : Module() {
         }
     }
 
-    override val tag: String
+    override val tag
         get() = modeValue.get()
 }

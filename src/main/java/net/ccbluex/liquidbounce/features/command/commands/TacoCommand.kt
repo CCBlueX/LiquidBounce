@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.Render2DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.util.ResourceLocation
@@ -44,7 +44,7 @@ class TacoCommand : Command("taco"), Listenable {
      */
     override fun execute(args: Array<String>) {
         toggle = !toggle
-        ClientUtils.displayChatMessage(if (toggle) "§aTACO TACO TACO. :)" else "§cYou made the little taco sad! :(")
+        displayChatMessage(if (toggle) "§aTACO TACO TACO. :)" else "§cYou made the little taco sad! :(")
     }
 
     @EventTarget
@@ -72,7 +72,5 @@ class TacoCommand : Command("taco"), Listenable {
 
     override fun handleEvents() = true
 
-    override fun tabComplete(args: Array<String>): List<String> {
-        return listOf("TACO")
-    }
+    override fun tabComplete(args: Array<String>) = listOf("TACO")
 }

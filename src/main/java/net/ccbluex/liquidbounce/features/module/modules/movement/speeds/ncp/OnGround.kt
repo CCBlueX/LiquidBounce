@@ -7,13 +7,13 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp
 
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 
 class OnGround : SpeedMode("OnGround") {
     override fun onMotion() {
         val thePlayer = mc.thePlayer
 
-        if (thePlayer == null || !MovementUtils.isMoving)
+        if (thePlayer == null || !isMoving)
             return
 
         if (thePlayer.fallDistance > 3.994)

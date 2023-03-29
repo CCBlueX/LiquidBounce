@@ -18,19 +18,14 @@ import net.minecraft.entity.player.EntityPlayer
 
 object EntityUtils : MinecraftInstance() {
 
-    @JvmField
     var targetInvisible = false
 
-    @JvmField
     var targetPlayer = true
 
-    @JvmField
     var targetMobs = true
 
-    @JvmField
     var targetAnimals = false
 
-    @JvmField
     var targetDead = false
 
     @JvmStatic

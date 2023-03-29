@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getMaterial
 import net.ccbluex.liquidbounce.value.ListValue
@@ -21,7 +21,7 @@ import net.minecraft.util.BlockPos
 class IceSpeed : Module() {
     private val modeValue = ListValue("Mode", arrayOf("NCP", "AAC", "Spartan"), "NCP")
     override fun onEnable() {
-        if (modeValue.get().equals("NCP", ignoreCase = true)) {
+        if (modeValue.get() == "NCP") {
             Blocks.ice.slipperiness = 0.39f
             Blocks.packed_ice.slipperiness = 0.39f
         }
@@ -31,7 +31,7 @@ class IceSpeed : Module() {
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         val mode = modeValue.get()
-        if (mode.equals("NCP", ignoreCase = true)) {
+        if (mode == "NCP") {
             Blocks.ice.slipperiness = 0.39f
             Blocks.packed_ice.slipperiness = 0.39f
         } else {
@@ -41,8 +41,8 @@ class IceSpeed : Module() {
 
         val thePlayer = mc.thePlayer ?: return
 
-        if (thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isSneaking && thePlayer.isSprinting && MovementUtils.isMoving) {
-            if (mode.equals("AAC", ignoreCase = true)) {
+        if (thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isSneaking && thePlayer.isSprinting && isMoving) {
+            if (mode == "AAC") {
                 getMaterial(thePlayer.position.down()).let {
                     if (it == Blocks.ice || it == Blocks.packed_ice) {
                         thePlayer.motionX *= 1.342
@@ -52,7 +52,7 @@ class IceSpeed : Module() {
                     }
                 }
             }
-            if (mode.equals("Spartan", ignoreCase = true)) {
+            if (mode == "Spartan") {
                 getMaterial(thePlayer.position.down()).let {
                     if (it == Blocks.ice || it == Blocks.packed_ice) {
                         val upBlock = getBlock(BlockPos(thePlayer.posX, thePlayer.posY + 2.0, thePlayer.posZ))

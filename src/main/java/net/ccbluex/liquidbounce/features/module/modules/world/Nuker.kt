@@ -13,7 +13,8 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.player.AutoTool
-import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
+import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getCenterDistance
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.searchBlocks
@@ -134,8 +135,8 @@ class Nuker : Module() {
 
                 // Change head rotations to next block
                 if (rotationsValue.get()) {
-                    val rotation = RotationUtils.faceBlock(blockPos) ?: return // In case of a mistake. Prevent flag.
-                    RotationUtils.setTargetRotation(rotation.rotation)
+                    val rotation = faceBlock(blockPos) ?: return // In case of a mistake. Prevent flag.
+                    setTargetRotation(rotation.rotation)
                 }
 
                 // Set next target block

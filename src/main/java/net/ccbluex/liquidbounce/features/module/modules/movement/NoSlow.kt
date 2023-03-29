@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.minecraft.item.*
@@ -50,7 +50,7 @@ class NoSlow : Module() {
         val thePlayer = mc.thePlayer ?: return
         val heldItem = thePlayer.heldItem ?: return
 
-        if (heldItem.item !is ItemSword || !MovementUtils.isMoving)
+        if (heldItem.item !is ItemSword || !isMoving)
             return
 
         val aura = moduleManager[KillAura::class.java] as KillAura

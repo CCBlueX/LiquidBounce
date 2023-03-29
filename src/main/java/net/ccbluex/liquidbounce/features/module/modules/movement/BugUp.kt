@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
@@ -93,7 +93,7 @@ class BugUp : Module() {
                         mc.netHandler.addToSendQueue(C04PacketPlayerPosition(thePlayer.posX, thePlayer.posY, thePlayer.posZ, true))
                         thePlayer.motionY = 0.1
 
-                        MovementUtils.strafe()
+                        strafe()
                         thePlayer.fallDistance = 0f
                     }
                 }

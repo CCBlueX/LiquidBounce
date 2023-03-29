@@ -10,8 +10,8 @@ import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
-import net.ccbluex.liquidbounce.utils.EntityUtils
+import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
+import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
@@ -60,8 +60,8 @@ class Tracers : Module() {
         GL11.glBegin(GL11.GL_LINES)
 
         for (entity in mc.theWorld.loadedEntityList) {
-            if (entity !is EntityLivingBase || !botValue.get() && AntiBot.isBot(entity)) continue
-            if (entity != thePlayer && EntityUtils.isSelected(entity, false)) {
+            if (entity !is EntityLivingBase || !botValue.get() && isBot(entity)) continue
+            if (entity != thePlayer && isSelected(entity, false)) {
                 var dist = (thePlayer.getDistanceToEntity(entity) * 2).toInt()
 
                 if (dist > 255) dist = 255

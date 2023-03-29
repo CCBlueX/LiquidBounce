@@ -54,8 +54,6 @@ class XRayConfig(file: File) : FileConfig(file) {
         val jsonArray = JsonArray()
         for (block in xRay.xrayBlocks) jsonArray.add(PRETTY_GSON.toJsonTree(Block.getIdFromBlock(block)))
 
-        val printWriter = PrintWriter(FileWriter(file))
-        printWriter.println(PRETTY_GSON.toJson(jsonArray))
-        printWriter.close()
+        file.writeText(PRETTY_GSON.toJson(jsonArray))
     }
 }

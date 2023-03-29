@@ -62,7 +62,6 @@ object RenderUtils : MinecraftInstance() {
         GL11.glEndList()
     }
 
-    @JvmStatic
     fun drawBlockBox(blockPos: BlockPos, color: Color, outline: Boolean) {
         val renderManager = mc.renderManager
         val timer = mc.timer
@@ -103,7 +102,6 @@ object RenderUtils : MinecraftInstance() {
         resetCaps()
     }
 
-    @JvmStatic
     fun drawSelectionBoundingBox(boundingBox: AxisAlignedBB) {
         val tessellator = Tessellator.getInstance()
         val worldRenderer = tessellator.worldRenderer
@@ -133,7 +131,6 @@ object RenderUtils : MinecraftInstance() {
         tessellator.draw()
     }
 
-    @JvmStatic
     fun drawEntityBox(entity: Entity, color: Color, outline: Boolean) {
         val renderManager = mc.renderManager
         val timer = mc.timer
@@ -169,7 +166,6 @@ object RenderUtils : MinecraftInstance() {
         resetCaps()
     }
 
-    @JvmStatic
     fun drawAxisAlignedBB(axisAlignedBB: AxisAlignedBB, color: Color) {
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
         GL11.glEnable(GL11.GL_BLEND)
@@ -186,14 +182,12 @@ object RenderUtils : MinecraftInstance() {
         GL11.glDisable(GL11.GL_BLEND)
     }
 
-    @JvmStatic
     fun drawPlatform(y: Double, color: Color, size: Double) {
         val renderManager = mc.renderManager
         val renderY = y - renderManager.renderPosY
         drawAxisAlignedBB(AxisAlignedBB.fromBounds(size, renderY + 0.02, size, -size, renderY, -size), color)
     }
 
-    @JvmStatic
     fun drawPlatform(entity: Entity, color: Color) {
         val renderManager = mc.renderManager
         val timer = mc.timer
@@ -271,7 +265,6 @@ object RenderUtils : MinecraftInstance() {
         tessellator.draw()
     }
 
-    @JvmStatic
     fun quickDrawRect(x: Float, y: Float, x2: Float, y2: Float) {
         GL11.glBegin(GL11.GL_QUADS)
         GL11.glVertex2d(x2.toDouble(), y.toDouble())
@@ -281,7 +274,6 @@ object RenderUtils : MinecraftInstance() {
         GL11.glEnd()
     }
 
-    @JvmStatic
     fun drawRect(x: Float, y: Float, x2: Float, y2: Float, color: Int) {
         GL11.glEnable(GL11.GL_BLEND)
         GL11.glDisable(GL11.GL_TEXTURE_2D)
@@ -299,7 +291,6 @@ object RenderUtils : MinecraftInstance() {
         GL11.glDisable(GL11.GL_LINE_SMOOTH)
     }
 
-    @JvmStatic
     fun drawRect(x: Int, y: Int, x2: Int, y2: Int, color: Int) {
         GL11.glEnable(GL11.GL_BLEND)
         GL11.glDisable(GL11.GL_TEXTURE_2D)
@@ -320,7 +311,6 @@ object RenderUtils : MinecraftInstance() {
     /**
      * Like [.drawRect], but without setup
      */
-    @JvmStatic
     fun quickDrawRect(x: Float, y: Float, x2: Float, y2: Float, color: Int) {
         glColor(color)
         GL11.glBegin(GL11.GL_QUADS)
@@ -331,22 +321,18 @@ object RenderUtils : MinecraftInstance() {
         GL11.glEnd()
     }
 
-    @JvmStatic
     fun drawRect(x: Float, y: Float, x2: Float, y2: Float, color: Color) = drawRect(x, y, x2, y2, color.rgb)
 
-    @JvmStatic
     fun drawBorderedRect(x: Float, y: Float, x2: Float, y2: Float, width: Float, color1: Int, color2: Int) {
         drawRect(x, y, x2, y2, color2)
         drawBorder(x, y, x2, y2, width, color1)
     }
 
-    @JvmStatic
     fun drawBorderedRect(x: Int, y: Int, x2: Int, y2: Int, width: Int, borderColor: Int, rectColor: Int) {
         drawRect(x, y, x2, y2, rectColor)
         drawBorder(x, y, x2, y2, width, borderColor)
     }
 
-    @JvmStatic
     fun drawBorder(x: Float, y: Float, x2: Float, y2: Float, width: Float, color: Int) {
         GL11.glEnable(GL11.GL_BLEND)
         GL11.glDisable(GL11.GL_TEXTURE_2D)
@@ -365,7 +351,6 @@ object RenderUtils : MinecraftInstance() {
         GL11.glDisable(GL11.GL_LINE_SMOOTH)
     }
 
-    @JvmStatic
     fun drawBorder(x: Int, y: Int, x2: Int, y2: Int, width: Int, color: Int) {
         GL11.glEnable(GL11.GL_BLEND)
         GL11.glDisable(GL11.GL_TEXTURE_2D)
@@ -384,7 +369,6 @@ object RenderUtils : MinecraftInstance() {
         GL11.glDisable(GL11.GL_LINE_SMOOTH)
     }
 
-    @JvmStatic
     fun quickDrawBorderedRect(x: Float, y: Float, x2: Float, y2: Float, width: Float, color1: Int, color2: Int) {
         quickDrawRect(x, y, x2, y2, color2)
         glColor(color1)
@@ -405,7 +389,6 @@ object RenderUtils : MinecraftInstance() {
         }
     }
 
-    @JvmStatic
     fun drawCircle(x: Float, y: Float, radius: Float, start: Int, end: Int) {
         GlStateManager.enableBlend()
         GlStateManager.disableTexture2D()
@@ -428,7 +411,6 @@ object RenderUtils : MinecraftInstance() {
         GlStateManager.disableBlend()
     }
 
-    @JvmStatic
     fun drawFilledCircle(xx: Int, yy: Int, radius: Float, color: Color) {
         val sections = 50
         val dAngle = 2 * Math.PI / sections
@@ -451,7 +433,6 @@ object RenderUtils : MinecraftInstance() {
         GL11.glPopAttrib()
     }
 
-    @JvmStatic
     fun drawImage(image: ResourceLocation?, x: Int, y: Int, width: Int, height: Int) {
         GL11.glDisable(GL11.GL_DEPTH_TEST)
         GL11.glEnable(GL11.GL_BLEND)
@@ -477,7 +458,6 @@ object RenderUtils : MinecraftInstance() {
     /**
      * Draws a textured rectangle at z = 0. Args: x, y, u, v, width, height, textureWidth, textureHeight
      */
-    @JvmStatic
     fun drawModalRectWithCustomSizedTexture(
         x: Float,
         y: Float,
@@ -503,7 +483,6 @@ object RenderUtils : MinecraftInstance() {
         tessellator.draw()
     }
 
-    @JvmStatic
     fun glColor(red: Int, green: Int, blue: Int, alpha: Int) {
         GL11.glColor4f(red / 255f, green / 255f, blue / 255f, alpha / 255f)
     }
@@ -517,7 +496,6 @@ object RenderUtils : MinecraftInstance() {
         glColor(hex shr 16 and 0xFF, hex shr 8 and 0xFF, hex and 0xFF, hex shr 24 and 0xFF)
     }
 
-    @JvmStatic
     fun draw2D(entity: EntityLivingBase, posX: Double, posY: Double, posZ: Double, color: Int, backgroundColor: Int) {
         GL11.glPushMatrix()
         GL11.glTranslated(posX, posY, posZ)
@@ -545,7 +523,6 @@ object RenderUtils : MinecraftInstance() {
         GL11.glPopMatrix()
     }
 
-    @JvmStatic
     fun draw2D(blockPos: BlockPos, color: Int, backgroundColor: Int) {
         val renderManager = mc.renderManager
         val posX = blockPos.x + 0.5 - renderManager.renderPosX
@@ -578,7 +555,7 @@ object RenderUtils : MinecraftInstance() {
     }
 
     @JvmStatic
-    fun renderNameTag(string: String?, x: Double, y: Double, z: Double) {
+    fun renderNameTag(string: String, x: Double, y: Double, z: Double) {
         val renderManager = mc.renderManager
         GL11.glPushMatrix()
         GL11.glTranslated(x - renderManager.renderPosX, y - renderManager.renderPosY, z - renderManager.renderPosZ)
@@ -598,7 +575,6 @@ object RenderUtils : MinecraftInstance() {
         GL11.glPopMatrix()
     }
 
-    @JvmStatic
     fun drawLine(x: Double, y: Double, x1: Double, y1: Double, width: Float) {
         GL11.glDisable(GL11.GL_TEXTURE_2D)
         GL11.glLineWidth(width)
@@ -628,35 +604,27 @@ object RenderUtils : MinecraftInstance() {
      * TODO: Remove gl cap manager and replace by something better
      */
 
-    @JvmStatic
     fun resetCaps() = glCapMap.forEach { (cap, state) -> setGlState(cap, state) }
 
-    @JvmStatic
     fun enableGlCap(cap: Int) = setGlCap(cap, true)
 
-    @JvmStatic
     fun enableGlCap(vararg caps: Int) {
         for (cap in caps) setGlCap(cap, true)
     }
 
-    @JvmStatic
     fun disableGlCap(cap: Int) = setGlCap(cap, true)
 
-    @JvmStatic
     fun disableGlCap(vararg caps: Int) {
         for (cap in caps) setGlCap(cap, false)
     }
 
-    @JvmStatic
     fun setGlCap(cap: Int, state: Boolean) {
         glCapMap[cap] = GL11.glGetBoolean(cap)
         setGlState(cap, state)
     }
 
-    @JvmStatic
     fun setGlState(cap: Int, state: Boolean) = if (state) GL11.glEnable(cap) else GL11.glDisable(cap)
 
-    @JvmStatic
     fun drawScaledCustomSizeModalRect(
         x: Int,
         y: Int,

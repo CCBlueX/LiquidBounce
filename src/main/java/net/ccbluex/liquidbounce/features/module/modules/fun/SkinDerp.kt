@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.entity.player.EnumPlayerModelParts
-import kotlin.random.Random
+import kotlin.random.Random.Default.nextBoolean
 
 @ModuleInfo(name = "SkinDerp", description = "Makes your skin blink (Requires multi-layer skin).", category = ModuleCategory.FUN)
 class SkinDerp : Module() {
@@ -52,19 +52,19 @@ class SkinDerp : Module() {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        if (timer.hasTimePassed(delayValue.get().toLong())) {
+        if (timer.hasTimePassed(delayValue.get())) {
             if (hatValue.get())
-                mc.gameSettings.setModelPartEnabled(EnumPlayerModelParts.HAT, Random.nextBoolean())
+                mc.gameSettings.setModelPartEnabled(EnumPlayerModelParts.HAT, nextBoolean())
             if (jacketValue.get())
-                mc.gameSettings.setModelPartEnabled(EnumPlayerModelParts.JACKET, Random.nextBoolean())
+                mc.gameSettings.setModelPartEnabled(EnumPlayerModelParts.JACKET, nextBoolean())
             if (leftPantsValue.get())
-                mc.gameSettings.setModelPartEnabled(EnumPlayerModelParts.LEFT_PANTS_LEG, Random.nextBoolean())
+                mc.gameSettings.setModelPartEnabled(EnumPlayerModelParts.LEFT_PANTS_LEG, nextBoolean())
             if (rightPantsValue.get())
-                mc.gameSettings.setModelPartEnabled(EnumPlayerModelParts.RIGHT_PANTS_LEG, Random.nextBoolean())
+                mc.gameSettings.setModelPartEnabled(EnumPlayerModelParts.RIGHT_PANTS_LEG, nextBoolean())
             if (leftSleeveValue.get())
-                mc.gameSettings.setModelPartEnabled(EnumPlayerModelParts.LEFT_SLEEVE, Random.nextBoolean())
+                mc.gameSettings.setModelPartEnabled(EnumPlayerModelParts.LEFT_SLEEVE, nextBoolean())
             if (rightSleeveValue.get())
-                mc.gameSettings.setModelPartEnabled(EnumPlayerModelParts.RIGHT_SLEEVE, Random.nextBoolean())
+                mc.gameSettings.setModelPartEnabled(EnumPlayerModelParts.RIGHT_SLEEVE, nextBoolean())
             timer.reset()
         }
     }

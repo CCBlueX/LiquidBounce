@@ -51,7 +51,7 @@ object UserUtils {
 
     fun getUsername(uuid: String): String? {
         val client = HttpClients.createDefault()
-        val request = HttpGet("https://api.mojang.com/user/profiles/${uuid}/names")
+        val request = HttpGet("https://api.mojang.com/user/profiles/$uuid/names")
         val response = client.execute(request)
 
         if (response.statusLine.statusCode != 200) {

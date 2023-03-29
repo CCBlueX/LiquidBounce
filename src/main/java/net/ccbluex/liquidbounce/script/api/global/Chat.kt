@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.script.api.global
 
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 
 /**
  * Object used by the script API to provide an easier way of calling chat-related methods.
@@ -18,7 +18,5 @@ object Chat {
      */
     @Suppress("unused")
     @JvmStatic
-    fun print(message : String) {
-        ClientUtils.displayChatMessage(message)
-    }
+    fun print(message : String) = displayChatMessage(message)
 }

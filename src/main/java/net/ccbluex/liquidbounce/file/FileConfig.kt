@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.file
 import java.io.File
 import java.io.IOException
 
-abstract class FileConfig(@JvmField val file: File) {
+abstract class FileConfig(val file: File) {
 
     /**
      * Load config from file

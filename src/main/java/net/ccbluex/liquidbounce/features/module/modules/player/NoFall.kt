@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam
-import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
 import net.ccbluex.liquidbounce.utils.VecRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlock
 import net.ccbluex.liquidbounce.utils.extensions.eyes
@@ -159,12 +159,10 @@ class NoFall : Module() {
         val packet = event.packet
         val mode = modeValue.get()
         if (packet is C03PacketPlayer) {
-            if (mode.equals("SpoofGround", ignoreCase = true)) packet.onGround = true
-            if (mode.equals("NoGround", ignoreCase = true)) packet.onGround = false
-            if (mode.equals(
-                    "Hypixel", ignoreCase = true
-                ) && mc.thePlayer != null && mc.thePlayer.fallDistance > 1.5
-            ) packet.onGround = mc.thePlayer.ticksExisted % 2 == 0
+            if (mode == "SpoofGround") packet.onGround = true
+            if (mode == "NoGround") packet.onGround = false
+            if (mode == "Hypixel" && mc.thePlayer != null && mc.thePlayer.fallDistance > 1.5)
+                packet.onGround = mc.thePlayer.ticksExisted % 2 == 0
         }
     }
 
@@ -184,7 +182,7 @@ class NoFall : Module() {
             ) { it is BlockLiquid }
         ) return
 
-        if (modeValue.get().equals("laac", ignoreCase = true)) {
+        if (modeValue.get() == "LAAC") {
             if (!jumped && !mc.thePlayer.onGround && !mc.thePlayer.isOnLadder && !mc.thePlayer.isInWater && !mc.thePlayer.isInWeb && mc.thePlayer.motionY < 0.0) {
                 event.x = 0.0
                 event.z = 0.0
@@ -194,7 +192,7 @@ class NoFall : Module() {
 
     @EventTarget
     private fun onMotionUpdate(event: MotionEvent) {
-        if (!modeValue.get().equals("MLG", ignoreCase = true)) return
+        if (modeValue.get() != "MLG") return
 
         if (event.eventState == EventState.PRE) {
             currentMlgRotation = null
@@ -243,7 +241,7 @@ class NoFall : Module() {
                     mc.thePlayer.sendQueue.addToSendQueue(C09PacketHeldItemChange(index))
                 }
 
-                currentMlgRotation = RotationUtils.faceBlock(collision.pos)
+                currentMlgRotation = faceBlock(collision.pos)
                 currentMlgRotation?.rotation?.toPlayer(mc.thePlayer)
             }
         } else if (currentMlgRotation != null) {
@@ -267,6 +265,6 @@ class NoFall : Module() {
         jumped = true
     }
 
-    override val tag: String
+    override val tag
         get() = modeValue.get()
 }

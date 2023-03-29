@@ -50,8 +50,6 @@ class ModulesConfig(file: File) : FileConfig(file) {
             jsonMod.addProperty("Array", module.array)
             jsonObject.add(module.name, jsonMod)
         }
-        val printWriter = PrintWriter(FileWriter(file))
-        printWriter.println(PRETTY_GSON.toJson(jsonObject))
-        printWriter.close()
+        file.writeText(PRETTY_GSON.toJson(jsonObject))
     }
 }

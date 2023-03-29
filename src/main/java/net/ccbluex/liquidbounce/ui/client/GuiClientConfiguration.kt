@@ -74,7 +74,7 @@ class GuiClientConfiguration(val prevGui: GuiScreen) : GuiScreen() {
         // AltManager configuration buttons
         // Location > 3rd row
         buttonList.add(GuiButton(7, width / 2 - 100, height / 4 + 185, "Random alts mode (${if (stylisedAlts) "Stylised" else "Legacy"})").also { altsModeButton = it })
-        buttonList.add(GuiSlider(-1, width / 2 - 100, height / 4 + 210, 200, 20, "${if (stylisedAlts && unformattedAlts) "Max random alt" else "Random alt"} length (", ")", 6.0, 16.0, altsLength.toDouble(), false, true) {
+        buttonList.add(GuiSlider(-1, width / 2 - 100, height / 4 + 210, 200, 20, "${if (stylisedAlts && unformattedAlts) "Random alt max" else "Random alt"} length (", ")", 6.0, 16.0, altsLength.toDouble(), false, true) {
             altsLength = it.valueInt
         }.also { altsSlider = it })
         buttonList.add(GuiButton(6, width / 2 - 100, height / 4 + 235, "Unformatted alt names (${if (unformattedAlts) "On" else "Off"})").also {

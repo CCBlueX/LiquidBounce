@@ -49,7 +49,7 @@ class BlockESP : Module() {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        if (searchTimer.hasTimePassed(1000L) && (thread?.isAlive != true)) {
+        if (searchTimer.hasTimePassed(1000) && (thread?.isAlive != true)) {
             val radius = radiusValue.get()
             val selectedBlock = Block.getBlockById(blockValue.get())
 
@@ -100,6 +100,6 @@ class BlockESP : Module() {
         }
     }
 
-    override val tag: String
+    override val tag
         get() = getBlockName(blockValue.get())
 }

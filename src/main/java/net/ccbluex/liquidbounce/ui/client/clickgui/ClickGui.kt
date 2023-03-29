@@ -19,7 +19,11 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.style.Style
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.SlowlyStyle
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer.Companion.assumeNonVolatile
-import net.ccbluex.liquidbounce.utils.EntityUtils
+import net.ccbluex.liquidbounce.utils.EntityUtils.targetAnimals
+import net.ccbluex.liquidbounce.utils.EntityUtils.targetDead
+import net.ccbluex.liquidbounce.utils.EntityUtils.targetInvisible
+import net.ccbluex.liquidbounce.utils.EntityUtils.targetMobs
+import net.ccbluex.liquidbounce.utils.EntityUtils.targetPlayer
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.renderer.GlStateManager
@@ -57,11 +61,11 @@ class ClickGui : GuiScreen() {
             override val elements = listOf(
                 object : ButtonElement("Players") {
                     override val color
-                        get() = if (EntityUtils.targetPlayer) guiColor else Int.MAX_VALUE
+                        get() = if (targetPlayer) guiColor else Int.MAX_VALUE
 
                     override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int): Boolean {
                         if (mouseButton == 0 && isHovered(mouseX, mouseY)) {
-                            EntityUtils.targetPlayer = !EntityUtils.targetPlayer
+                            targetPlayer = !targetPlayer
                             style.clickSound()
                             return true
                         }
@@ -70,11 +74,11 @@ class ClickGui : GuiScreen() {
                 },
                 object : ButtonElement("Mobs") {
                     override val color
-                        get() = if (EntityUtils.targetMobs) guiColor else Int.MAX_VALUE
+                        get() = if (targetMobs) guiColor else Int.MAX_VALUE
 
                     override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int): Boolean {
                         if (mouseButton == 0 && isHovered(mouseX, mouseY)) {
-                            EntityUtils.targetMobs = !EntityUtils.targetMobs
+                            targetMobs = !targetMobs
                             style.clickSound()
                             return true
                         }
@@ -83,11 +87,11 @@ class ClickGui : GuiScreen() {
                 },
                 object : ButtonElement("Animals") {
                     override val color
-                        get() = if (EntityUtils.targetAnimals) guiColor else Int.MAX_VALUE
+                        get() = if (targetAnimals) guiColor else Int.MAX_VALUE
 
                     override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int): Boolean {
                         if (mouseButton == 0 && isHovered(mouseX, mouseY)) {
-                            EntityUtils.targetAnimals = !EntityUtils.targetAnimals
+                            targetAnimals = !targetAnimals
                             style.clickSound()
                             return true
                         }
@@ -96,11 +100,11 @@ class ClickGui : GuiScreen() {
                 },
                 object : ButtonElement("Invisible") {
                     override val color
-                        get() = if (EntityUtils.targetInvisible) guiColor else Int.MAX_VALUE
+                        get() = if (targetInvisible) guiColor else Int.MAX_VALUE
 
                     override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int): Boolean {
                         if (mouseButton == 0 && isHovered(mouseX, mouseY)) {
-                            EntityUtils.targetInvisible = !EntityUtils.targetInvisible
+                            targetInvisible = !targetInvisible
                             style.clickSound()
                             return true
                         }
@@ -109,11 +113,11 @@ class ClickGui : GuiScreen() {
                 },
                 object : ButtonElement("Dead") {
                     override val color
-                        get() = if (EntityUtils.targetDead) guiColor else Int.MAX_VALUE
+                        get() = if (targetDead) guiColor else Int.MAX_VALUE
 
                     override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int): Boolean {
                         if (mouseButton == 0 && isHovered(mouseX, mouseY)) {
-                            EntityUtils.targetDead = !EntityUtils.targetDead
+                            targetDead = !targetDead
                             style.clickSound()
                             return true
                         }

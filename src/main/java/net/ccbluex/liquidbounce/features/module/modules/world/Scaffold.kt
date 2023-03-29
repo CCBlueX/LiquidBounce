@@ -13,12 +13,24 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.render.BlockOverlay
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.*
+import net.ccbluex.liquidbounce.utils.InventoryUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
+import net.ccbluex.liquidbounce.utils.PlaceRotation
+import net.ccbluex.liquidbounce.utils.Rotation
+import net.ccbluex.liquidbounce.utils.RotationUtils.getRotationDifference
+import net.ccbluex.liquidbounce.utils.RotationUtils.getVectorForRotation
+import net.ccbluex.liquidbounce.utils.RotationUtils.limitAngleChange
+import net.ccbluex.liquidbounce.utils.RotationUtils.resetRotation
+import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
+import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
+import net.ccbluex.liquidbounce.utils.RotationUtils.targetRotation
+import net.ccbluex.liquidbounce.utils.RotationUtils.toRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.canBeClicked
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.isReplaceable
 import net.ccbluex.liquidbounce.utils.block.PlaceInfo
-import net.ccbluex.liquidbounce.utils.extensions.rotation
 import net.ccbluex.liquidbounce.utils.extensions.eyes
+import net.ccbluex.liquidbounce.utils.extensions.rotation
+import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
@@ -38,7 +50,6 @@ import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 import net.minecraft.util.MovingObjectPosition
 import net.minecraft.util.Vec3
-import org.apache.commons.lang3.RandomUtils
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
 import java.awt.Color
@@ -183,7 +194,7 @@ class Scaffold : Module() {
 
     // Current rotation
     private val currRotation: Rotation
-        get() = RotationUtils.targetRotation ?: mc.thePlayer?.rotation ?: RotationUtils.serverRotation
+        get() = targetRotation ?: mc.thePlayer?.rotation ?: serverRotation
 
     // Enabling module
     override fun onEnable() {
@@ -210,7 +221,7 @@ class Scaffold : Module() {
         }
 
         // Eagle
-        if (!eagleValue.get().equals("Off", true) && !shouldGoDown) {
+        if (eagleValue.get() != "Off" && !shouldGoDown) {
             var dif = 0.5
             val blockPos = BlockPos(player).down()
 
@@ -236,7 +247,7 @@ class Scaffold : Module() {
 
             if (placedBlocksWithoutEagle >= blocksToEagleValue.get()) {
                 val shouldEagle = isReplaceable(blockPos) || dif < edgeDistanceValue.get()
-                if (eagleValue.get().equals("Silent", true)) {
+                if (eagleValue.get() == "Silent") {
                     if (eagleSneaking != shouldEagle) {
                         mc.netHandler.addToSendQueue(
                             C0BPacketEntityAction(
@@ -259,8 +270,8 @@ class Scaffold : Module() {
         }
 
         if (player.onGround) {
-            if (modeValue.get().equals("rewinside", true)) {
-                MovementUtils.strafe(0.2F)
+            if (modeValue.get() == "Rewinside") {
+                strafe(0.2F)
                 player.motionY = 0.0
             }
             when (zitterMode.get().lowercase()) {
@@ -291,7 +302,7 @@ class Scaffold : Module() {
                 }
 
                 "teleport" -> {
-                    MovementUtils.strafe(zitterSpeed.get())
+                    strafe(zitterSpeed.get())
                     val yaw = Math.toRadians(player.rotationYaw + if (zitterDirection) 90.0 else -90.0)
                     player.motionX -= sin(yaw) * zitterStrength.get()
                     player.motionZ += cos(yaw) * zitterStrength.get()
@@ -325,7 +336,7 @@ class Scaffold : Module() {
             return
         }
 
-        val rotation = RotationUtils.targetRotation ?: return
+        val rotation = targetRotation ?: return
 
         rotation.applyStrafeToPlayer(event)
         event.cancelEvent()
@@ -333,7 +344,7 @@ class Scaffold : Module() {
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
-        val rotation = RotationUtils.targetRotation
+        val rotation = targetRotation
 
         if (rotationsValue.get() && keepRotationValue.get() && rotation != null) {
             setRotation(rotation, keepTicksValue.minimum)
@@ -355,7 +366,7 @@ class Scaffold : Module() {
             return
         }
 
-        val raycastProperly = !(modeValue.get().equals("expand", true) && expandLengthValue.get() > 1 || shouldGoDown)
+        val raycastProperly = !(modeValue.get() == "Expand" && expandLengthValue.get() > 1 || shouldGoDown)
 
         performBlockRaytrace(currRotation, mc.playerController.blockReachDistance).let {
             if (it != null && it.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK && it.blockPos == target.blockPos && (!raycastProperly || it.sideHit == target.enumFacing)) {
@@ -374,20 +385,18 @@ class Scaffold : Module() {
         val player = mc.thePlayer ?: return
         val holdingItem = player.heldItem?.item is ItemBlock
 
-        if (!holdingItem && (autoBlockValue.get().equals("Off", true) || InventoryUtils.findAutoBlockBlock() == -1)) {
+        if (!holdingItem && (autoBlockValue.get() == "Off" || InventoryUtils.findAutoBlockBlock() == -1)) {
             return
         }
 
-        findBlock(
-            modeValue.get().equals("expand", true) && expandLengthValue.get() > 1, searchMode.get().equals("Area", true)
-        )
+        findBlock(modeValue.get() == "Expand" && expandLengthValue.get() > 1, searchMode.get() == "Area")
     }
 
     private fun setRotation(rotation: Rotation, ticks: Int) {
         val player = mc.thePlayer ?: return
 
         if (silentRotationValue.get()) {
-            RotationUtils.setTargetRotation(rotation, ticks)
+            setTargetRotation(rotation, ticks)
         } else {
             rotation.fixedSensitivity().let {
                 player.rotationYaw = it.yaw
@@ -456,9 +465,7 @@ class Scaffold : Module() {
             }
 
             when (autoBlockValue.get().lowercase()) {
-                "off" -> {
-                    return
-                }
+                "off" -> return
 
                 "pick" -> {
                     player.inventory.currentItem = blockSlot - 36
@@ -493,7 +500,7 @@ class Scaffold : Module() {
             }
         }
 
-        if (autoBlockValue.get().equals("Switch", true)) {
+        if (autoBlockValue.get() == "Switch") {
             if (slot != player.inventory.currentItem) {
                 mc.netHandler.addToSendQueue(C09PacketHeldItemChange(player.inventory.currentItem))
             }
@@ -531,7 +538,7 @@ class Scaffold : Module() {
             mc.netHandler.addToSendQueue(C09PacketHeldItemChange(player.inventory.currentItem))
         }
 
-        RotationUtils.reset()
+        resetRotation()
     }
 
     // Entity movement event
@@ -591,7 +598,7 @@ class Scaffold : Module() {
             return
         }
 
-        for (i in 0 until if (modeValue.get().equals("Expand", true)) expandLengthValue.get() + 1 else 2) {
+        for (i in 0 until if (modeValue.get() == "Expand") expandLengthValue.get() + 1 else 2) {
             val yaw = Math.toRadians(player.rotationYaw.toDouble())
             val x = if (omniDirectionalExpand.get()) -sin(yaw).roundToInt() else player.horizontalFacing.directionVec.x
             val z = if (omniDirectionalExpand.get()) cos(yaw).roundToInt() else player.horizontalFacing.directionVec.z
@@ -627,7 +634,7 @@ class Scaffold : Module() {
 
         val maxReach = mc.playerController.blockReachDistance
 
-        val eyes = player.getPositionEyes(1F)
+        val eyes = player.eyes
         var placeRotation: PlaceRotation? = null
 
         var currPlaceRotation: PlaceRotation?
@@ -643,9 +650,9 @@ class Scaffold : Module() {
                     findTargetPlace(blockPosition, neighbor, Vec3(0.5, 0.5, 0.5), side, eyes, maxReach, raycast)
                         ?: continue
 
-                if (placeRotation == null || RotationUtils.getRotationDifference(
+                if (placeRotation == null || getRotationDifference(
                         currPlaceRotation.rotation, currRotation
-                    ) < RotationUtils.getRotationDifference(placeRotation.rotation, currRotation)
+                    ) < getRotationDifference(placeRotation.rotation, currRotation)
                 ) {
                     placeRotation = currPlaceRotation
                 }
@@ -664,9 +671,9 @@ class Scaffold : Module() {
                                 continue
                             }
 
-                            if (placeRotation == null || RotationUtils.getRotationDifference(
+                            if (placeRotation == null || getRotationDifference(
                                     currPlaceRotation.rotation, currRotation
-                                ) < RotationUtils.getRotationDifference(placeRotation.rotation, currRotation)
+                                ) < getRotationDifference(placeRotation.rotation, currRotation)
                             ) {
                                 placeRotation = currPlaceRotation
                             }
@@ -683,10 +690,10 @@ class Scaffold : Module() {
         placeRotation ?: return false
 
         if (rotationsValue.get()) {
-            val limitedRotation = RotationUtils.limitAngleChange(
+            val limitedRotation = limitAngleChange(
                 currRotation,
                 placeRotation.rotation,
-                RandomUtils.nextFloat(minTurnSpeedValue.get(), maxTurnSpeedValue.get())
+                nextFloat(minTurnSpeedValue.get(), maxTurnSpeedValue.get())
             )
 
             setRotation(limitedRotation, keepTicksValue.get())
@@ -742,7 +749,7 @@ class Scaffold : Module() {
             }
         }
 
-        var rotation = RotationUtils.toRotation(vec, false)
+        var rotation = toRotation(vec, false)
 
         rotation = if (stabilizedRotation.get()) {
             Rotation((rotation.yaw / 45f).roundToInt() * 45f, rotation.pitch)
@@ -767,8 +774,8 @@ class Scaffold : Module() {
         val player = mc.thePlayer ?: return null
         val world = mc.theWorld ?: return null
 
-        val eyes = player.getPositionEyes(1f)
-        val rotationVec = RotationUtils.getVectorForRotation(rotation)
+        val eyes = player.eyes
+        val rotationVec = getVectorForRotation(rotation)
 
         val reach =
             eyes.addVector(rotationVec.xCoord * maxReach, rotationVec.yCoord * maxReach, rotationVec.zCoord * maxReach)
@@ -788,13 +795,13 @@ class Scaffold : Module() {
                 if (item is ItemBlock) {
                     val block = item.block
                     val heldItem = mc.thePlayer.heldItem
-                    if (heldItem != null && heldItem == stack || !InventoryUtils.BLOCK_BLACKLIST.contains(block) && block !is BlockBush) {
+                    if (heldItem != null && heldItem == stack || block !in InventoryUtils.BLOCK_BLACKLIST && block !is BlockBush) {
                         amount += stack.stackSize
                     }
                 }
             }
             return amount
         }
-    override val tag: String
+    override val tag
         get() = modeValue.get()
 }

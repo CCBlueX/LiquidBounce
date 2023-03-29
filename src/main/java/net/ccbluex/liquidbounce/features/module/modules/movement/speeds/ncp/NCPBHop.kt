@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp
 
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.minecraft.potion.Potion
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -45,14 +45,14 @@ class NCPBHop : SpeedMode("NCPBHop") {
         if (timerDelay != 0) {
             mc.timer.timerSpeed = 1f
         } else {
-            if (MovementUtils.isMoving) mc.timer.timerSpeed = 32767f
-            if (MovementUtils.isMoving) {
+            if (isMoving) mc.timer.timerSpeed = 32767f
+            if (isMoving) {
                 mc.timer.timerSpeed = 1.3f
                 mc.thePlayer.motionX *= 1.0199999809265137
                 mc.thePlayer.motionZ *= 1.0199999809265137
             }
         }
-        if (mc.thePlayer.onGround && MovementUtils.isMoving) level = 2
+        if (mc.thePlayer.onGround && isMoving) level = 2
         if (round(mc.thePlayer.posY - mc.thePlayer.posY.toInt().toDouble()) == round(0.138)) {
             val thePlayer = mc.thePlayer
 

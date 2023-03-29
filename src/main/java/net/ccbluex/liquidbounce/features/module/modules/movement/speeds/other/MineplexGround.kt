@@ -9,8 +9,9 @@ import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.ClientUtils
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.minecraft.network.play.client.C09PacketHeldItemChange
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
@@ -21,7 +22,7 @@ class MineplexGround : SpeedMode("MineplexGround") {
     private var speed = 0f
 
     override fun onMotion() {
-        if (!MovementUtils.isMoving || !mc.thePlayer.onGround || mc.thePlayer.heldItem == null || mc.thePlayer.isUsingItem) return
+        if (!isMoving || !mc.thePlayer.onGround || mc.thePlayer.heldItem == null || mc.thePlayer.isUsingItem) return
         spoofSlot = false
         for (i in 36..44) {
             val itemStack = mc.thePlayer.inventory.getStackInSlot(i)
@@ -33,12 +34,12 @@ class MineplexGround : SpeedMode("MineplexGround") {
     }
 
     override fun onUpdate() {
-        if (!MovementUtils.isMoving || !mc.thePlayer.onGround || mc.thePlayer.isUsingItem) {
+        if (!isMoving || !mc.thePlayer.onGround || mc.thePlayer.isUsingItem) {
             speed = 0f
             return
         }
         if (!spoofSlot && mc.thePlayer.inventory.getCurrentItem() != null) {
-            ClientUtils.displayChatMessage("§8[§c§lMineplex§aSpeed§8] §cYou need one empty slot.")
+            displayChatMessage("§8[§c§lMineplex§aSpeed§8] §cYou need one empty slot.")
             return
         }
         val blockPos = BlockPos(mc.thePlayer).down()
@@ -47,7 +48,7 @@ class MineplexGround : SpeedMode("MineplexGround") {
         val targetSpeed = (moduleManager[Speed::class.java] as Speed).mineplexGroundSpeedValue.get()
         if (targetSpeed > speed) speed += targetSpeed / 8
         if (speed >= targetSpeed) speed = targetSpeed
-        MovementUtils.strafe(speed)
+        strafe(speed)
         if (!spoofSlot) mc.netHandler.addToSendQueue(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
     }
 

@@ -5,7 +5,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.EntityUtils
+import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.RaycastUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -60,10 +60,10 @@ class AutoRod : Module() {
 
                 if (facingEntity == null) {
                     // Check if player is looking at enemy, 8 blocks should be enough
-                    facingEntity = RaycastUtils.raycastEntity(8.0) { EntityUtils.isSelected(it, true) }
+                    facingEntity = RaycastUtils.raycastEntity(8.0) { isSelected(it, true) }
                 }
 
-                if (EntityUtils.isSelected(facingEntity, true)) {
+                if (isSelected(facingEntity, true)) {
                     rod = true
                 }
             } else {

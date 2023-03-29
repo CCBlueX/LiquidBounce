@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.network.play.client.C03PacketPlayer.C05PacketPlayerLook
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
@@ -34,7 +34,7 @@ class NoRotateSet : Module() {
                 return
 
             if (illegalRotationValue.get() || packet.pitch <= 90 && packet.pitch >= -90 &&
-                    packet.yaw != RotationUtils.serverRotation.yaw && packet.pitch != RotationUtils.serverRotation.pitch) {
+                    packet.yaw != serverRotation.yaw && packet.pitch != serverRotation.pitch) {
 
                 if (confirmValue.get())
                     mc.netHandler.addToSendQueue(C05PacketPlayerLook(packet.yaw, packet.pitch, thePlayer.onGround))

@@ -10,8 +10,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.Chams;
 import net.ccbluex.liquidbounce.features.module.modules.render.ESP;
 import net.ccbluex.liquidbounce.features.module.modules.render.NameTags;
 import net.ccbluex.liquidbounce.features.module.modules.render.TrueSight;
-import net.ccbluex.liquidbounce.utils.ClientUtils;
-import net.ccbluex.liquidbounce.utils.EntityUtils;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBase;
@@ -31,6 +29,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.awt.*;
 
 import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
+import static net.ccbluex.liquidbounce.utils.ClientUtils.disableFastRender;
+import static net.ccbluex.liquidbounce.utils.EntityUtils.isSelected;
 
 @Mixin(RendererLivingEntity.class)
 @SideOnly(Side.CLIENT)
@@ -43,7 +43,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
     private <T extends EntityLivingBase> void injectChamsPre(T entity, double x, double y, double z, float entityYaw, float partialTicks, CallbackInfo callbackInfo) {
         final Chams chams = (Chams) moduleManager.getModule(Chams.class);
 
-        if (chams.getState() && chams.getTargetsValue().get() && EntityUtils.isSelected(entity, false)) {
+        if (chams.getState() && chams.getTargetsValue().get() && isSelected(entity, false)) {
             GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);
             GL11.glPolygonOffset(1.0F, -1000000F);
         }
@@ -53,7 +53,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
     private <T extends EntityLivingBase> void injectChamsPost(T entity, double x, double y, double z, float entityYaw, float partialTicks, CallbackInfo callbackInfo) {
         final Chams chams = (Chams) moduleManager.getModule(Chams.class);
 
-        if (chams.getState() && chams.getTargetsValue().get() && EntityUtils.isSelected(entity, false)) {
+        if (chams.getState() && chams.getTargetsValue().get() && isSelected(entity, false)) {
             GL11.glPolygonOffset(1.0F, 1000000F);
             GL11.glDisable(GL11.GL_POLYGON_OFFSET_FILL);
         }
@@ -61,7 +61,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
 
     @Inject(method = "canRenderName(Lnet/minecraft/entity/EntityLivingBase;)Z", at = @At("HEAD"), cancellable = true)
     private <T extends EntityLivingBase> void canRenderName(T entity, CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
-        if (!ESP.renderNameTags || (moduleManager.getModule(NameTags.class).getState() && EntityUtils.isSelected(entity, false))) {
+        if (!ESP.renderNameTags || (moduleManager.getModule(NameTags.class).getState() && isSelected(entity, false))) {
             callbackInfoReturnable.setReturnValue(false);
         }
     }
@@ -90,7 +90,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
             }
 
             final ESP esp = (ESP) moduleManager.getModule(ESP.class);
-            if (esp.getState() && EntityUtils.isSelected(p_renderModel_1_, false)) {
+            if (esp.getState() && isSelected(p_renderModel_1_, false)) {
                 Minecraft mc = Minecraft.getMinecraft();
                 boolean fancyGraphics = mc.gameSettings.fancyGraphics;
                 mc.gameSettings.fancyGraphics = false;
@@ -116,7 +116,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
                         GL11.glPopMatrix();
                         break;
                     case "outline":
-                        ClientUtils.disableFastRender();
+                        disableFastRender();
                         GlStateManager.resetColor();
 
                         final Color color = esp.getColor(p_renderModel_1_);

@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.forward
 
 class HClipCommand : Command("hclip") {
     /**
@@ -15,7 +15,7 @@ class HClipCommand : Command("hclip") {
     override fun execute(args: Array<String>) {
         if (args.size > 1) {
             try {
-                MovementUtils.forward(args[1].toDouble())
+                forward(args[1].toDouble())
                 chat("You were teleported.")
             } catch (exception: NumberFormatException) {
                 chatSyntaxError()

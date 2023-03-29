@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.features.command.commands
 import joptsimple.internal.Strings
 import net.ccbluex.liquidbounce.LiquidBounce.commandManager
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 
 class HelpCommand : Command("help") {
     /**
@@ -43,7 +43,7 @@ class HelpCommand : Command("help") {
         }
 
         chat("§c§lHelp")
-        ClientUtils.displayChatMessage("§7> Page: §8$page / $maxPage")
+        displayChatMessage("§7> Page: §8$page / $maxPage")
 
         val commands = commandManager.commands.sortedBy { it.command }
 
@@ -51,10 +51,10 @@ class HelpCommand : Command("help") {
         while (i < 8 * page && i < commands.size) {
             val command = commands[i]
 
-            ClientUtils.displayChatMessage("§6> §7${commandManager.prefix}${command.command}${if (command.alias.isEmpty()) "" else " §7(§8" + Strings.join(command.alias, "§7, §8") + "§7)"}")
+            displayChatMessage("§6> §7${commandManager.prefix}${command.command}${if (command.alias.isEmpty()) "" else " §7(§8" + Strings.join(command.alias, "§7, §8") + "§7)"}")
             i++
         }
 
-        ClientUtils.displayChatMessage("§a------------\n§7> §c${commandManager.prefix}help §8<§7§lpage§8>")
+        displayChatMessage("§a------------\n§7> §c${commandManager.prefix}help §8<§7§lpage§8>")
     }
 }

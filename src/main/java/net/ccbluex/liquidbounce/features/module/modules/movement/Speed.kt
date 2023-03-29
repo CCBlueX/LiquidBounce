@@ -17,7 +17,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spartan.
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre.SpectreBHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre.SpectreLowHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre.SpectreOnGround
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -120,7 +120,7 @@ class Speed : Module() {
         if (thePlayer.isSneaking)
             return
 
-        if (MovementUtils.isMoving) {
+        if (isMoving) {
             thePlayer.isSprinting = true
         }
 
@@ -134,7 +134,7 @@ class Speed : Module() {
         if (thePlayer.isSneaking || event.eventState != EventState.PRE)
             return
 
-        if (MovementUtils.isMoving)
+        if (isMoving)
             thePlayer.isSprinting = true
 
         mode?.onMotion()
@@ -174,23 +174,16 @@ class Speed : Module() {
         mode?.onDisable()
     }
 
-    override val tag: String
+    override val tag
         get() = modeValue.get()
 
     private val mode: SpeedMode?
         get() {
             val mode = modeValue.get()
 
-            for (speedMode in speedModes) if (speedMode.modeName.equals(mode, ignoreCase = true))
-                return speedMode
-
-            return null
+            return speedModes.find { it.modeName == mode }
         }
 
-    private val modes: Array<String>
-        get() {
-            val list: MutableList<String> = ArrayList()
-            for (speedMode in speedModes) list.add(speedMode.modeName)
-            return list.toTypedArray()
-        }
+    private val modes
+        get() = speedModes.map { it.modeName }.toTypedArray()
 }

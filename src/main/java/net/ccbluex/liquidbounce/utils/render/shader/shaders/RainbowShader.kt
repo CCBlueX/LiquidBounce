@@ -45,7 +45,6 @@ class RainbowShader : Shader("rainbow_shader.frag"), Closeable {
     }
 
     companion object {
-        @JvmField
         val INSTANCE = RainbowShader()
 
         @Suppress("NOTHING_TO_INLINE")

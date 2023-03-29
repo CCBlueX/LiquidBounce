@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.RotationUtils.targetRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.interpolateHSB
@@ -100,9 +100,9 @@ class Projectiles : Module() {
         }
 
         // Yaw and pitch of player
-        val yaw = RotationUtils.targetRotation?.yaw ?: thePlayer.rotationYaw
+        val yaw = targetRotation?.yaw ?: thePlayer.rotationYaw
 
-        val pitch = RotationUtils.targetRotation?.pitch ?: thePlayer.rotationPitch
+        val pitch = targetRotation?.pitch ?: thePlayer.rotationPitch
 
         val yawRadians = Math.toRadians(yaw.toDouble())
         val pitchRadians = Math.toRadians(pitch.toDouble())

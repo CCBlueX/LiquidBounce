@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ModuleElement
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
+import org.lwjgl.input.Mouse
 import java.util.*
 import kotlin.math.max
 import kotlin.math.min
@@ -28,6 +29,8 @@ abstract class Panel(val name: String, x: Int, y: Int, val width: Int, val heigh
 
     var x = x
         get() {
+            if (!drag && !Mouse.isButtonDown(1)) return field
+
             val settingsWidth =
                 if (open) elements.filterIsInstance<ModuleElement>().maxOfOrNull { if (it.showSettings) it.settingsWidth else 0 } ?: 0
                 else 0
@@ -38,6 +41,8 @@ abstract class Panel(val name: String, x: Int, y: Int, val width: Int, val heigh
 
     var y = y
         get() {
+            if (!drag && !Mouse.isButtonDown(1)) return field
+
             var yPos = height + 4
             var panelHeight = height + fade
 
@@ -67,7 +72,7 @@ abstract class Panel(val name: String, x: Int, y: Int, val width: Int, val heigh
         }
     private var elementsHeight = 0
 
-    private var scroll: Int = 0
+    private var scroll = 0
         set(value) {
             // How many elements should be hidden
             val hiddenCount = elements.size - maxElementsValue.get()
@@ -98,10 +103,10 @@ abstract class Panel(val name: String, x: Int, y: Int, val width: Int, val heigh
                 element.setLocation(x, yPos)
                 element.width = width
 
+                // If mouse wasn't hovering above any ButtonElement, drawScreenAndClick got called with mouseButton != null.
+                // Mouse was detected to be hovering above a value while rendering it.
+                // True was returned to stop any further values from getting clicked.
                 if (yPos <= y + fade && element.drawScreenAndClick(mouseX, mouseY, mouseButton))
-                    // If mouse wasn't hovering above any ButtonElement, drawScreenAndClick got called with mouseButton != null.
-                    // Mouse was detected to be hovering above a value while rendering it.
-                    // True was returned to stop any further values from getting clicked.
                     return true
 
                 yPos += element.height + 1
@@ -139,13 +144,9 @@ abstract class Panel(val name: String, x: Int, y: Int, val width: Int, val heigh
 
     fun handleScroll(mouseX: Int, mouseY: Int, wheel: Int): Boolean {
         if (mouseX in x..x + width && mouseY in y..y + height + elementsHeight) {
-            if (wheel < 0) {
-                if (scroll < elements.size - maxElementsValue.get())
-                    ++scroll
-            } else {
-                if (scroll >= 1)
-                    --scroll
-            }
+            if (wheel < 0) scroll++
+            else scroll--
+
             return true
         }
         return false

@@ -9,7 +9,8 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
+import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -63,7 +64,7 @@ class CivBreak : Module() {
 
         when (event.eventState) {
             EventState.PRE -> if (rotationsValue.get())
-                RotationUtils.setTargetRotation((RotationUtils.faceBlock(pos) ?: return).rotation)
+                setTargetRotation((faceBlock(pos) ?: return).rotation)
 
             EventState.POST -> {
                 if (visualSwingValue.get())

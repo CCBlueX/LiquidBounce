@@ -6,9 +6,9 @@
 package net.ccbluex.liquidbounce.file.configs
 
 import com.google.gson.*
+import com.google.gson.reflect.TypeToken
 import net.ccbluex.liquidbounce.file.FileConfig
 import net.ccbluex.liquidbounce.file.FileManager.PRETTY_GSON
-import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import java.io.*
 
 class FriendsConfig(file: File) : FileConfig(file) {
@@ -22,51 +22,8 @@ class FriendsConfig(file: File) : FileConfig(file) {
     @Throws(IOException::class)
     override fun loadConfig() {
         clearFriends()
-        try {
-            val jsonElement = JsonParser().parse(file.bufferedReader())
-            if (jsonElement is JsonNull) return
-            for (friendElement in jsonElement.asJsonArray) {
-                val friendObject = friendElement.asJsonObject
-                addFriend(friendObject["playerName"].asString, friendObject["alias"].asString)
-            }
-        } catch (ex: JsonSyntaxException) {
-            //When the JSON Parse fail, the client try to load and update the old config
-            LOGGER.info("[FileManager] Try to load old Friends config...")
-            val bufferedReader = file.bufferedReader()
-            var line: String
-            while (bufferedReader.readLine().also { line = it } != null) {
-                if ("{" !in line && "}" !in line) {
-                    line = line.replace(" ", "").replace("\"", "").replace(",", "")
-                    if (":" in line) {
-                        val data = line.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                        addFriend(data[0], data[1])
-                    } else addFriend(line)
-                }
-            }
-            bufferedReader.close()
-            LOGGER.info("[FileManager] Loaded old Friends config...")
 
-            //Save the friends into a new valid JSON file
-            saveConfig()
-            LOGGER.info("[FileManager] Saved Friends to new config...")
-        } catch (ex: IllegalStateException) {
-            LOGGER.info("[FileManager] Try to load old Friends config...")
-            val bufferedReader = file.bufferedReader()
-            var line: String
-            while (bufferedReader.readLine().also { line = it } != null) {
-                if ("{" !in line && "}" !in line) {
-                    line = line.replace(" ", "").replace("\"", "").replace(",", "")
-                    if (":" in line) {
-                        val data = line.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-                        addFriend(data[0], data[1])
-                    } else addFriend(line)
-                }
-            }
-            bufferedReader.close()
-            LOGGER.info("[FileManager] Loaded old Friends config...")
-            saveConfig()
-            LOGGER.info("[FileManager] Saved Friends to new config...")
-        }
+        friends.addAll(PRETTY_GSON.fromJson(file.bufferedReader(), object : TypeToken<List<Friend>>() {}.type))
     }
 
     /**
@@ -75,18 +32,7 @@ class FriendsConfig(file: File) : FileConfig(file) {
      * @throws IOException
      */
     @Throws(IOException::class)
-    override fun saveConfig() {
-        val jsonArray = JsonArray()
-        for (friend in friends) {
-            val friendObject = JsonObject()
-            friendObject.addProperty("playerName", friend.playerName)
-            friendObject.addProperty("alias", friend.alias)
-            jsonArray.add(friendObject)
-        }
-        val printWriter = PrintWriter(FileWriter(file))
-        printWriter.println(PRETTY_GSON.toJson(jsonArray))
-        printWriter.close()
-    }
+    override fun saveConfig() = file.writeText(PRETTY_GSON.toJson(friends))
 
     /**
      * Add friend to config
@@ -95,13 +41,6 @@ class FriendsConfig(file: File) : FileConfig(file) {
      * @param alias      of friend
      * @return of successfully added friend
      */
-    /**
-     * Add friend to config
-     *
-     * @param playerName of friend
-     * @return of successfully added friend
-     */
-
     fun addFriend(playerName: String, alias: String = playerName): Boolean {
         if (isFriend(playerName)) return false
 
@@ -133,9 +72,5 @@ class FriendsConfig(file: File) : FileConfig(file) {
      * @param playerName of friend
      * @param alias      of friend
      */
-    class Friend
-        internal constructor(
-            val playerName: String,
-            val alias: String
-        )
+    data class Friend(val playerName: String, val alias: String)
 }

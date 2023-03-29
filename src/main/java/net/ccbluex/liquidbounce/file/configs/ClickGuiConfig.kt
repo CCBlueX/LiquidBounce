@@ -78,8 +78,6 @@ class ClickGuiConfig(file: File) : FileConfig(file) {
             jsonObject.add(panel.name, panelObject)
         }
 
-        val printWriter = PrintWriter(FileWriter(file))
-        printWriter.println(PRETTY_GSON.toJson(jsonObject))
-        printWriter.close()
+        file.writeText(PRETTY_GSON.toJson(jsonObject))
     }
 }

@@ -112,7 +112,7 @@ class LiquidWalk : Module() {
     fun onPacket(event: PacketEvent) {
         val thePlayer = mc.thePlayer
 
-        if (thePlayer == null || !modeValue.get().equals("NCP", ignoreCase = true))
+        if (thePlayer == null || modeValue.get() != "NCP")
             return
 
         if (event.packet is C03PacketPlayer) {
@@ -135,6 +135,6 @@ class LiquidWalk : Module() {
             event.cancelEvent()
     }
 
-    override val tag: String
+    override val tag
         get() = modeValue.get()
 }

@@ -13,8 +13,8 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.world.ChestAura.clickedBlocks
-import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
+import net.ccbluex.liquidbounce.utils.ClientUtils.disableFastRender
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.GlowShader
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -77,8 +77,8 @@ class StorageESP : Module() {
         try {
             val mode = modeValue.get()
 
-            if (mode.equals("outline", ignoreCase = true)) {
-                ClientUtils.disableFastRender()
+            if (mode == "Outline") {
+                disableFastRender()
                 OutlineUtils.checkSetupFBO()
             }
 
@@ -90,17 +90,13 @@ class StorageESP : Module() {
                 val color: Color = getColor(tileEntity) ?: continue
 
                 if (!(tileEntity is TileEntityChest || tileEntity is TileEntityEnderChest)) {
-                    RenderUtils.drawBlockBox(tileEntity.pos, color, !mode.equals("otherbox", ignoreCase = true))
+                    RenderUtils.drawBlockBox(tileEntity.pos, color, mode != "OtherBox")
                     if (tileEntity !is TileEntityEnchantmentTable) {
                         continue
                     }
                 }
                 when (mode.lowercase()) {
-                    "otherbox", "box" -> RenderUtils.drawBlockBox(
-                        tileEntity.pos,
-                        color,
-                        !mode.equals("otherbox", ignoreCase = true)
-                    )
+                    "otherbox", "box" -> RenderUtils.drawBlockBox(tileEntity.pos, color, mode != "OtherBox")
 
                     "2d" -> RenderUtils.draw2D(tileEntity.pos, color.rgb, Color.BLACK.rgb)
                     "outline" -> {
@@ -143,11 +139,7 @@ class StorageESP : Module() {
             for (entity in mc.theWorld.loadedEntityList) {
                 if (entity is EntityMinecartChest) {
                     when (mode.lowercase()) {
-                        "otherbox", "box" -> RenderUtils.drawEntityBox(
-                            entity,
-                            Color(0, 66, 255),
-                            !mode.equals("otherbox", ignoreCase = true)
-                        )
+                        "otherbox", "box" -> RenderUtils.drawEntityBox(entity, Color(0, 66, 255), mode != "OtherBox")
 
                         "2d" -> RenderUtils.draw2D(entity.position, Color(0, 66, 255).rgb, Color.BLACK.rgb)
                         "outline" -> {

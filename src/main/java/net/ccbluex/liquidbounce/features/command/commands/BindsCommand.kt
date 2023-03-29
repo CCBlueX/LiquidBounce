@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 import org.lwjgl.input.Keyboard
 
 class BindsCommand : Command("binds") {
@@ -27,7 +27,7 @@ class BindsCommand : Command("binds") {
 
         chat("§c§lBinds")
         moduleManager.modules.filter { it.keyBind != Keyboard.KEY_NONE }.forEach {
-            ClientUtils.displayChatMessage("§6> §c${it.name}: §a§l${Keyboard.getKeyName(it.keyBind)}")
+            displayChatMessage("§6> §c${it.name}: §a§l${Keyboard.getKeyName(it.keyBind)}")
         }
         chatSyntax("binds clear")
     }

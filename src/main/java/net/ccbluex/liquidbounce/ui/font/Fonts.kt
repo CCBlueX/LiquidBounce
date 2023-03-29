@@ -5,22 +5,27 @@
  */
 package net.ccbluex.liquidbounce.ui.font
 
-import com.google.gson.*
+import com.google.gson.JsonArray
+import com.google.gson.JsonNull
+import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_CLOUD
+import net.ccbluex.liquidbounce.file.FileManager.PRETTY_GSON
 import net.ccbluex.liquidbounce.file.FileManager.fontsDir
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils.download
 import net.minecraft.client.gui.FontRenderer
 import java.awt.Font
-import java.io.*
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.zip.ZipInputStream
 
 object Fonts : MinecraftInstance() {
     @FontDetails(fontName = "Minecraft Font")
-    @JvmStatic
     val minecraftFont: FontRenderer = mc.fontRendererObj
 
     @FontDetails(fontName = "Roboto Medium", fontSize = 35)
@@ -32,12 +37,10 @@ object Fonts : MinecraftInstance() {
     lateinit var font40: GameFontRenderer
 
     @FontDetails(fontName = "Roboto Bold", fontSize = 180)
-    @JvmStatic
     lateinit var fontBold180: GameFontRenderer
 
     private val CUSTOM_FONT_RENDERERS = HashMap<FontInfo, FontRenderer>()
 
-    @JvmStatic
     fun loadFonts() {
         val l = System.currentTimeMillis()
         LOGGER.info("Loading Fonts.")
@@ -62,9 +65,8 @@ object Fonts : MinecraftInstance() {
                 }
             } else {
                 fontsFile.createNewFile()
-                val printWriter = PrintWriter(FileWriter(fontsFile))
-                printWriter.println(GsonBuilder().setPrettyPrinting().create().toJson(JsonArray()))
-                printWriter.close()
+
+                fontsFile.writeText(PRETTY_GSON.toJson(JsonArray()))
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -87,7 +89,6 @@ object Fonts : MinecraftInstance() {
         }
     }
 
-    @JvmStatic
     fun getFontRenderer(name: String, size: Int): FontRenderer {
         for (field in Fonts::class.java.declaredFields) {
             try {
@@ -104,7 +105,6 @@ object Fonts : MinecraftInstance() {
         return CUSTOM_FONT_RENDERERS.getOrDefault(FontInfo(name, size), minecraftFont)
     }
 
-    @JvmStatic
     fun getFontDetails(fontRenderer: FontRenderer): FontInfo? {
         for (field in Fonts::class.java.declaredFields) {
             try {
@@ -124,7 +124,6 @@ object Fonts : MinecraftInstance() {
         return null
     }
 
-    @JvmStatic
     val fonts: List<FontRenderer>
         get() {
             val fonts: MutableList<FontRenderer> = ArrayList()

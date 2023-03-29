@@ -15,7 +15,11 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.PlaceRotation
 import net.ccbluex.liquidbounce.utils.Rotation
-import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
+import net.ccbluex.liquidbounce.utils.RotationUtils.getRotationDifference
+import net.ccbluex.liquidbounce.utils.RotationUtils.getVectorForRotation
+import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
+import net.ccbluex.liquidbounce.utils.RotationUtils.toRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.canBeClicked
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.isReplaceable
@@ -148,19 +152,14 @@ class Tower : Module() {
         val thePlayer = mc.thePlayer ?: return
 
         // Lock Rotation
-        if (rotationsValue.get() && keepRotationValue.get() && lockRotation != null) RotationUtils.setTargetRotation(
-            lockRotation!!
-        )
-
+        if (rotationsValue.get() && keepRotationValue.get() && lockRotation != null) setTargetRotation(lockRotation!!)
 
         mc.timer.timerSpeed = timerValue.get()
         val eventState = event.eventState
 
         // Force use of POST event when Packet mode is selected, it doesn't work with PRE mode
-        if (eventState.stateName.equals(
-                if (modeValue.get() == "Packet") "POST" else placeModeValue.get(), true
-            )
-        ) place()
+        if (eventState.stateName == (if (modeValue.get() == "Packet") "POST" else placeModeValue.get()))
+            place()
 
         if (eventState == EventState.PRE) {
             placeInfo = null
@@ -175,9 +174,9 @@ class Tower : Module() {
                 val blockPos = BlockPos(thePlayer).down(1)
                 if (blockPos.getBlock() == Blocks.air) {
                     if (search(blockPos) && rotationsValue.get()) {
-                        val vecRotation = RotationUtils.faceBlock(blockPos)
+                        val vecRotation = faceBlock(blockPos)
                         if (vecRotation != null) {
-                            RotationUtils.setTargetRotation(vecRotation.rotation)
+                            setTargetRotation(vecRotation.rotation)
                             placeInfo!!.vec3 = vecRotation.vec
                         }
                     }
@@ -333,9 +332,9 @@ class Tower : Module() {
                 mc.netHandler.addToSendQueue(C0APacketAnimation())
             }
         }
-        if (autoBlockValue.get().equals("Switch", true)) {
-            if (slot != mc.thePlayer.inventory.currentItem) mc.netHandler.addToSendQueue(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
-        }
+        if (autoBlockValue.get() == "Switch" && slot != mc.thePlayer.inventory.currentItem)
+            mc.netHandler.addToSendQueue(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
+
         placeInfo = null
     }
 
@@ -382,9 +381,9 @@ class Tower : Module() {
                         }
 
                         // face block
-                        val rotation = RotationUtils.toRotation(hitVec, false)
+                        val rotation = toRotation(hitVec, false)
 
-                        val rotationVector = RotationUtils.getVectorForRotation(rotation)
+                        val rotationVector = getVectorForRotation(rotation)
                         val vector = eyesPos.addVector(
                             rotationVector.xCoord * 4.25, rotationVector.yCoord * 4.25, rotationVector.zCoord * 4.25
                         )
@@ -395,10 +394,8 @@ class Tower : Module() {
                             continue
                         }
 
-                        if (placeRotation == null || RotationUtils.getRotationDifference(rotation) < RotationUtils.getRotationDifference(
-                                placeRotation.rotation
-                            )
-                        ) placeRotation = PlaceRotation(PlaceInfo(neighbor, facingType.opposite, hitVec), rotation)
+                        if (placeRotation == null || getRotationDifference(rotation) < getRotationDifference(placeRotation.rotation))
+                            placeRotation = PlaceRotation(PlaceInfo(neighbor, facingType.opposite, hitVec), rotation)
 
                         zSearch += 0.1
                     }
@@ -409,7 +406,7 @@ class Tower : Module() {
         }
         if (placeRotation == null) return false
         if (rotationsValue.get()) {
-            RotationUtils.setTargetRotation(placeRotation.rotation)
+            setTargetRotation(placeRotation.rotation)
             lockRotation = placeRotation.rotation
         }
         placeInfo = placeRotation.placeInfo
@@ -442,10 +439,10 @@ class Tower : Module() {
             val scaledResolution = ScaledResolution(mc)
 
             RenderUtils.drawBorderedRect(
-                scaledResolution.scaledWidth / 2 - 2.toFloat(),
-                scaledResolution.scaledHeight / 2 + 5.toFloat(),
-                scaledResolution.scaledWidth / 2 + Fonts.font40.getStringWidth(info) + 2.toFloat(),
-                scaledResolution.scaledHeight / 2 + 16.toFloat(),
+                scaledResolution.scaledWidth / 2f - 2,
+                scaledResolution.scaledHeight / 2f + 5,
+                scaledResolution.scaledWidth / 2f + Fonts.font40.getStringWidth(info) + 2,
+                scaledResolution.scaledHeight / 2f + 16,
                 3f,
                 Color.BLACK.rgb,
                 Color.BLACK.rgb
@@ -476,8 +473,8 @@ class Tower : Module() {
             var amount = 0
             for (i in 36..44) {
                 val itemStack = mc.thePlayer.inventoryContainer.getSlot(i).stack
-                val item = itemStack?.item
-                if (itemStack != null && item is ItemBlock) {
+                val item = itemStack?.item ?: continue
+                if (item is ItemBlock) {
                     val block = item.block
                     if (mc.thePlayer.heldItem == itemStack || block !in InventoryUtils.BLOCK_BLACKLIST) {
                         amount += itemStack.stackSize
@@ -487,6 +484,6 @@ class Tower : Module() {
             return amount
         }
 
-    override val tag: String
+    override val tag
         get() = modeValue.get()
 }

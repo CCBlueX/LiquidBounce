@@ -10,9 +10,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.features.module.ModuleInfo;
-import net.ccbluex.liquidbounce.utils.EntityUtils;
 import net.ccbluex.liquidbounce.utils.InventoryUtils;
-import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.ccbluex.liquidbounce.utils.block.BlockUtils;
 import net.ccbluex.liquidbounce.utils.timer.MSTimer;
 import net.ccbluex.liquidbounce.value.BoolValue;
@@ -30,6 +28,9 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 
+import static net.ccbluex.liquidbounce.utils.EntityUtils.isSelected;
+import static net.ccbluex.liquidbounce.utils.RotationUtils.keepCurrentRotation;
+
 @ModuleInfo(name = "Ignite", description = "Automatically sets targets around you on fire.", category = ModuleCategory.COMBAT)
 public class Ignite extends Module {
    private final BoolValue lighterValue = new BoolValue("Lighter", true);
@@ -39,7 +40,7 @@ public class Ignite extends Module {
 
    @EventTarget
    public void onUpdate(final UpdateEvent event) {
-       if (!msTimer.hasTimePassed(500L))
+       if (!msTimer.hasTimePassed(500))
            return;
 
        EntityPlayerSP thePlayer = mc.thePlayer;
@@ -59,7 +60,7 @@ public class Ignite extends Module {
        final int fireInHotbar = lighterInHotbar != -1 ? lighterInHotbar : lavaInHotbar;
 
        for (final Entity entity : theWorld.getLoadedEntityList()) {
-           if (EntityUtils.isSelected(entity, true) && !entity.isBurning()) {
+           if (isSelected(entity, true) && !entity.isBurning()) {
                BlockPos blockPos = entity.getPosition();
 
                if (mc.thePlayer.getDistanceSq(blockPos) >= 22.3D ||
@@ -67,7 +68,7 @@ public class Ignite extends Module {
                        !(BlockUtils.getBlock(blockPos) instanceof BlockAir))
                    continue;
 
-               RotationUtils.keepCurrentRotation = true;
+               keepCurrentRotation = true;
 
                mc.getNetHandler().addToSendQueue(new C09PacketHeldItemChange(fireInHotbar - 36));
 
@@ -124,7 +125,7 @@ public class Ignite extends Module {
 
                mc.getNetHandler()
                        .addToSendQueue(new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem));
-               RotationUtils.keepCurrentRotation = false;
+               keepCurrentRotation = false;
                mc.getNetHandler().addToSendQueue(
                        new C03PacketPlayer.C05PacketPlayerLook(mc.thePlayer.rotationYaw,
                                mc.thePlayer.rotationPitch,

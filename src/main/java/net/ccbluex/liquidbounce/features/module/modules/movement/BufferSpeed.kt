@@ -12,7 +12,8 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -110,7 +111,7 @@ class BufferSpeed : Module() {
             hadFastHop = false
         }
 
-        if (!MovementUtils.isMoving || thePlayer.isSneaking || thePlayer.isInWater || mc.gameSettings.keyBindJump.isKeyDown) {
+        if (!isMoving || thePlayer.isSneaking || thePlayer.isInWater || mc.gameSettings.keyBindJump.isKeyDown) {
             reset()
             return
         }
@@ -144,7 +145,7 @@ class BufferSpeed : Module() {
                         }
                         thePlayer.onGround = false
 
-                        MovementUtils.strafe(0.375f)
+                        strafe(0.375f)
 
                         thePlayer.jump()
                         thePlayer.motionY = 0.41
@@ -169,7 +170,7 @@ class BufferSpeed : Module() {
                         }
 
                         thePlayer.onGround = false
-                        MovementUtils.strafe(0.375f)
+                        strafe(0.375f)
                         thePlayer.jump()
                         thePlayer.motionY = 0.41
                         return
@@ -215,20 +216,20 @@ class BufferSpeed : Module() {
                         }
                 }
             }
-            val currentSpeed = MovementUtils.speed
+            val currentSpeed = speed
 
             if (speed < currentSpeed)
-                speed = currentSpeed.toDouble()
+                speed = currentSpeed
 
             if (bufferValue.get() && speed > 0.2f) {
                 speed /= 1.0199999809265137
-                MovementUtils.strafe(speed.toFloat())
+                strafe(speed.toFloat())
             }
         } else {
             speed = 0.0
 
             if (airStrafeValue.get())
-                MovementUtils.strafe()
+                strafe()
         }
     }
 
@@ -239,13 +240,9 @@ class BufferSpeed : Module() {
             speed = 0.0
     }
 
-    override fun onEnable() {
-        reset()
-    }
+    override fun onEnable() = reset()
 
-    override fun onDisable() {
-        reset()
-    }
+    override fun onDisable() = reset()
 
     private fun reset() {
         val thePlayer = mc.thePlayer ?: return
@@ -258,13 +255,13 @@ class BufferSpeed : Module() {
         }
     }
 
-    private inline fun boost(boost: Float) {
+    private fun boost(boost: Float) {
         val thePlayer = mc.thePlayer
 
         thePlayer.motionX = thePlayer.motionX * boost
         thePlayer.motionZ = thePlayer.motionX * boost
 
-        speed = MovementUtils.speed.toDouble()
+        speed = speed
 
         if (speedLimitValue.get() && speed > maxSpeedValue.get())
             speed = maxSpeedValue.get().toDouble()

@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.file.FileManager.accountsConfig
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 import net.ccbluex.liquidbounce.utils.ServerUtils
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.randomAccount
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -36,9 +36,9 @@ class AutoAccount : Module() {
             when {
                 newValue.equals("reset", true) -> {
                     super.changeValue("axolotlaxolotl")
-                    ClientUtils.displayChatMessage("§7[§a§lAutoAccount§7] §3Password reset to its default value.")
+                    displayChatMessage("§7[§a§lAutoAccount§7] §3Password reset to its default value.")
                 }
-                newValue.length < 4 -> ClientUtils.displayChatMessage("§7[§a§lAutoAccount§7] §cPassword must be longer than 4 characters!")
+                newValue.length < 4 -> displayChatMessage("§7[§a§lAutoAccount§7] §cPassword must be longer than 4 characters!")
                 else -> super.changeValue(newValue)
             }
         }
@@ -74,7 +74,7 @@ class AutoAccount : Module() {
 
         override fun changeValue(newValue: String) {
             if (newValue == "RandomAlt" && accountsConfig.accounts.filterIsInstance<CrackedAccount>().size <= 1)
-                ClientUtils.displayChatMessage("§7[§a§lAutoAccount§7] §cAdd more cracked accounts in AltManager to use RandomAlt option!")
+                displayChatMessage("§7[§a§lAutoAccount§7] §cAdd more cracked accounts in AltManager to use RandomAlt option!")
             else super.changeValue(newValue)
         }
     }

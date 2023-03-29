@@ -42,7 +42,6 @@ open class HUD : MinecraftInstance() {
         /**
          * Create default HUD
          */
-        @JvmStatic
         fun createDefault() = HUD()
                 .addElement(Text.defaultClient())
                 .addElement(TabGUI())

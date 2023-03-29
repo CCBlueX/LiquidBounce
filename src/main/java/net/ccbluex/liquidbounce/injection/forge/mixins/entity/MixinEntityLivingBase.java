@@ -105,7 +105,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
         final LiquidWalk liquidWalk = (LiquidWalk) moduleManager.getModule(LiquidWalk.class);
 
         if (Objects.requireNonNull(liquidWalk).getState() && !isJumping && !isSneaking() && isInWater() &&
-                liquidWalk.getModeValue().get().equalsIgnoreCase("Swim")) {
+                liquidWalk.getModeValue().get().equals("Swim")) {
             this.updateAITick();
         }
     }

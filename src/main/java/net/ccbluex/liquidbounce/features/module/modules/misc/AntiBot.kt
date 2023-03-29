@@ -61,7 +61,6 @@ object AntiBot : Module() {
     private val hit = mutableListOf<Int>()
     private val notAlwaysInRadius = mutableListOf<Int>()
 
-    @JvmStatic // TODO: Remove as soon EntityUtils is translated to kotlin
     fun isBot(entity: EntityLivingBase): Boolean {
         // Check if entity is a player
         if (entity !is EntityPlayer)
@@ -118,7 +117,7 @@ object AntiBot : Module() {
             return true
 
         if (tabValue.get()) {
-            val equals = tabModeValue.get().equals("Equals", ignoreCase = true)
+            val equals = tabModeValue.get() == "Equals"
             val targetName = stripColor(entity.displayName.formattedText)
 
             for (networkPlayerInfo in mc.netHandler.playerInfoMap) {

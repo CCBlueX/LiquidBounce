@@ -26,29 +26,27 @@ object ClientUtils : MinecraftInstance() {
     init {
         try {
             val declaredField = GameSettings::class.java.getDeclaredField("ofFastRender")
-            if (!declaredField.isAccessible) {
-                declaredField.isAccessible = true
-            }
+
             fastRenderField = declaredField
         } catch (ignored: NoSuchFieldException) { }
     }
 
     @JvmField
     val LOGGER: Logger = LogManager.getLogger("LiquidBounce")
+
     @JvmStatic
     fun disableFastRender() {
         try {
-            if (fastRenderField != null) {
-                if (!fastRenderField!!.isAccessible) {
-                    fastRenderField!!.isAccessible = true
-                }
-                fastRenderField!!.setBoolean(mc.gameSettings, false)
+            fastRenderField?.let {
+                if (!it.isAccessible)
+                    it.isAccessible = true
+
+                it.setBoolean(mc.gameSettings, false)
             }
         } catch (ignored: IllegalAccessException) {
         }
     }
 
-    @JvmStatic
     fun sendEncryption(
         networkManager: NetworkManager,
         secretKey: SecretKey?,

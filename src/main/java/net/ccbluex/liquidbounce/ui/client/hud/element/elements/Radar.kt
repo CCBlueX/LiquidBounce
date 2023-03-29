@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ESP
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
-import net.ccbluex.liquidbounce.utils.EntityUtils
+import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.render.MiniMapRegister
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.SafeVertexBuffer
@@ -153,8 +153,8 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y) {
         glDisable(GL_TEXTURE_2D)
         glEnable(GL_LINE_SMOOTH)
 
-        val triangleMode = playerShapeValue.get().equals("triangle", true)
-        val circleMode = playerShapeValue.get().equals("circle", true)
+        val triangleMode = playerShapeValue.get() == "Triangle"
+        val circleMode = playerShapeValue.get() == "Circle"
 
         val tessellator = Tessellator.getInstance()
         val worldRenderer = tessellator.worldRenderer
@@ -175,7 +175,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y) {
         }
 
         for (entity in mc.theWorld.loadedEntityList) {
-            if (entity != mc.thePlayer && EntityUtils.isSelected(entity, false)) {
+            if (entity != mc.thePlayer && isSelected(entity, false)) {
                 val positionRelativeToPlayer = Vector2f((renderViewEntity.posX - entity.posX).toFloat(),
                         (renderViewEntity.posZ - entity.posZ).toFloat())
 

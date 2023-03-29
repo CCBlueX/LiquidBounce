@@ -16,7 +16,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.BowAimbot
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.Derp
 import net.ccbluex.liquidbounce.features.module.modules.world.*
-import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.network.play.client.C03PacketPlayer
 
@@ -29,7 +29,7 @@ class Rotations : Module() {
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        mc.thePlayer?.rotationYawHead = RotationUtils.serverRotation.yaw
+        mc.thePlayer?.rotationYawHead = serverRotation.yaw
     }
 
     @EventTarget
@@ -43,8 +43,8 @@ class Rotations : Module() {
 
         if (packet is C03PacketPlayer && packet.rotating) {
             playerYaw = packet.yaw
-            mc.thePlayer.renderYawOffset = packet.getYaw()
-            mc.thePlayer.rotationYawHead = packet.getYaw()
+            mc.thePlayer.renderYawOffset = packet.yaw
+            mc.thePlayer.rotationYawHead = packet.yaw
         } else {
             if (playerYaw != null)
                 thePlayer.renderYawOffset = this.playerYaw!!

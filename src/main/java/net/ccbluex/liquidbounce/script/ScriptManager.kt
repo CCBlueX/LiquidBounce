@@ -30,9 +30,7 @@ object ScriptManager {
     /**
      * Unloads all scripts.
      */
-    fun unloadScripts() {
-        scripts.clear()
-    }
+    fun unloadScripts() = scripts.clear()
 
     /**
      * Loads a script from a file.
@@ -50,16 +48,12 @@ object ScriptManager {
     /**
      * Enables all scripts.
      */
-    fun enableScripts() {
-        scripts.forEach { it.onEnable() }
-    }
+    fun enableScripts() = scripts.forEach { it.onEnable() }
 
     /**
      * Disables all scripts.
      */
-    fun disableScripts() {
-        scripts.forEach { it.onDisable() }
-    }
+    fun disableScripts() = scripts.forEach { it.onDisable() }
 
     /**
      * Imports a script.

@@ -44,8 +44,8 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.update.UpdateInfo.gitInfo
 import net.ccbluex.liquidbounce.utils.Background
 import net.ccbluex.liquidbounce.utils.ClassUtils.hasForge
-import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
+import net.ccbluex.liquidbounce.utils.ClientUtils.disableFastRender
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import kotlin.concurrent.thread
@@ -65,7 +65,6 @@ object LiquidBounce {
     @JvmField
     val CLIENT_TITLE = CLIENT_NAME + " " + CLIENT_VERSION + " " + CLIENT_COMMIT + "  | " + MINECRAFT_VERSION + if (IN_DEV) " | DEVELOPMENT BUILD" else ""
 
-    @JvmField
     var isStarting = false
 
     // Managers
@@ -101,7 +100,7 @@ object LiquidBounce {
         // Register listeners
         registerListener(RotationUtils)
         registerListener(ClientFixes)
-        registerListener(BungeeCordSpoof())
+        registerListener(BungeeCordSpoof)
         registerListener(CapeService)
         registerListener(InventoryUtils())
 
@@ -154,7 +153,7 @@ object LiquidBounce {
         loadConfig(hudConfig)
 
         // Disable optifine fastrender
-        ClientUtils.disableFastRender()
+        disableFastRender()
 
         // Load generators
         GuiAltManager.loadActiveGenerators()

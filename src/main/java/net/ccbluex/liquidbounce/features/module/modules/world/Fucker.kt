@@ -14,7 +14,8 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.AutoTool
-import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
+import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getCenterDistance
@@ -87,7 +88,7 @@ object Fucker : Module() {
         }
 
         var currentPos = pos ?: return
-        var rotations = RotationUtils.faceBlock(currentPos) ?: return
+        var rotations = faceBlock(currentPos) ?: return
 
         // Surroundings
         var surroundings = false
@@ -103,7 +104,7 @@ object Fucker : Module() {
 
                 pos = blockPos
                 currentPos = pos ?: return
-                rotations = RotationUtils.faceBlock(currentPos) ?: return
+                rotations = faceBlock(currentPos) ?: return
             }
         }
 
@@ -115,7 +116,7 @@ object Fucker : Module() {
 
         oldPos = currentPos
 
-        if (!switchTimer.hasTimePassed(switchValue.get().toLong()))
+        if (!switchTimer.hasTimePassed(switchValue.get()))
             return
 
         // Block hit delay
@@ -126,11 +127,11 @@ object Fucker : Module() {
 
         // Face block
         if (rotationsValue.get())
-            RotationUtils.setTargetRotation(rotations.rotation)
+            setTargetRotation(rotations.rotation)
 
         when {
             // Destroy block
-            actionValue.get().equals("destroy", true) || surroundings -> {
+            actionValue.get() == "Destroy" || surroundings -> {
                 // Auto Tool
                 val autoTool = moduleManager[AutoTool::class.java] as AutoTool
                 if (autoTool.state)
@@ -188,7 +189,7 @@ object Fucker : Module() {
             }
 
             // Use block
-            actionValue.get().equals("use", true) -> if (mc.playerController.onPlayerRightClick(
+            actionValue.get() == "Use" -> if (mc.playerController.onPlayerRightClick(
                             thePlayer, mc.theWorld, thePlayer.heldItem, pos, EnumFacing.DOWN,
                             Vec3(currentPos.x.toDouble(), currentPos.y.toDouble(), currentPos.z.toDouble()))) {
                 if (swingValue.get())
@@ -270,6 +271,6 @@ object Fucker : Module() {
         }
     }
 
-    override val tag: String
+    override val tag
         get() = getBlockName(blockValue.get())
 }

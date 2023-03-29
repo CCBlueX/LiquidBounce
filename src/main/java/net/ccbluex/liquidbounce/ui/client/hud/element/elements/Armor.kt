@@ -38,17 +38,16 @@ class Armor(x: Double = -8.0, y: Double = 57.0, scale: Float = 1F,
             var x = 1
             var y = if (isInsideWater) -10 else 0
 
-            val mode = modeValue.get()
-
             for (index in 3 downTo 0) {
                 val stack = mc.thePlayer.inventory.armorInventory[index] ?: continue
 
                 renderItem.renderItemIntoGUI(stack, x, y)
                 renderItem.renderItemOverlays(mc.fontRendererObj, stack, x, y)
-                if (mode.equals("Horizontal", true))
-                    x += 18
-                else if (mode.equals("Vertical", true))
-                    y += 18
+
+                when (modeValue.get()) {
+                    "Horizontal" -> x += 18
+                    "Vertical" -> y += 18
+                }
             }
 
             GlStateManager.enableAlpha()
@@ -58,9 +57,9 @@ class Armor(x: Double = -8.0, y: Double = 57.0, scale: Float = 1F,
             GL11.glPopMatrix()
         }
 
-        return if (modeValue.get().equals("Horizontal", true))
-            Border(0F, 0F, 72F, 17F)
-        else
-            Border(0F, 0F, 18F, 72F)
+        return when (modeValue.get()) {
+            "Horizontal" -> Border(0F, 0F, 72F, 17F)
+            else -> Border(0F, 0F, 18F, 72F)
+        }
     }
 }

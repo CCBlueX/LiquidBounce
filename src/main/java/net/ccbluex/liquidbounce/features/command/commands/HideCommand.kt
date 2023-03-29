@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.features.command.commands
 import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 
 class HideCommand : Command("hide") {
 
@@ -21,7 +21,7 @@ class HideCommand : Command("hide") {
                 args[1].equals("list", true) -> {
                     chat("§c§lHidden")
                     moduleManager.modules.filter { !it.array }.forEach {
-                        ClientUtils.displayChatMessage("§6> §c${it.name}")
+                        displayChatMessage("§6> §c${it.name}")
                     }
                     return
                 }

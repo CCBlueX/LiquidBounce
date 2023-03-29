@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.utils.extensions.eyes
 import net.ccbluex.liquidbounce.utils.extensions.hitBox
 import net.ccbluex.liquidbounce.utils.extensions.rotation
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextDouble
+import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
 import net.minecraft.entity.Entity
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.util.*
@@ -34,12 +35,12 @@ object RotationUtils : MinecraftInstance(), Listenable {
             if (keepLength > 0) {
                 keepLength--
             } else {
-                reset()
+                resetRotation()
             }
         }
-        if (random.nextGaussian() > 0.8) x = Math.random()
-        if (random.nextGaussian() > 0.8) y = Math.random()
-        if (random.nextGaussian() > 0.8) z = Math.random()
+        if (random.nextGaussian() > 0.8) x = random.nextDouble()
+        if (random.nextGaussian() > 0.8) y = random.nextDouble()
+        if (random.nextGaussian() > 0.8) z = random.nextDouble()
     }
 
     /**
@@ -70,13 +71,13 @@ object RotationUtils : MinecraftInstance(), Listenable {
      */
     override fun handleEvents() = true
 
-    var keepLength = 0
+    private var keepLength = 0
 
     @JvmField
     var targetRotation: Rotation? = null
 
     @JvmField
-    var serverRotation: Rotation = Rotation(0f, 0f)
+    var serverRotation = Rotation(0f, 0f)
 
     @JvmField
     var keepCurrentRotation = false
@@ -91,7 +92,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
      *
      * @param blockPos target block
      */
-    @JvmStatic
     fun faceBlock(blockPos: BlockPos?): VecRotation? {
         if (blockPos == null) return null
         var vecRotation: VecRotation? = null
@@ -147,7 +147,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param predict     predict new enemy position
      * @param predictSize predict size of predict
      */
-    @JvmStatic
     fun faceBow(target: Entity, silent: Boolean, predict: Boolean, predictSize: Float) {
         val player = mc.thePlayer
 
@@ -169,7 +168,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         )
         if (silent) setTargetRotation(rotation)
         else limitAngleChange(
-            player.rotation, rotation, 10f + Random().nextInt(6)
+            player.rotation, rotation, 10f + nextInt(endExclusive = 6)
         ).toPlayer(mc.thePlayer)
     }
 
@@ -180,7 +179,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param predict predict new location of your body
      * @return rotation
      */
-    @JvmStatic
     fun toRotation(vec: Vec3, predict: Boolean): Rotation {
         val eyesPos = mc.thePlayer.eyes
         if (predict) eyesPos.addVector(mc.thePlayer.motionX, mc.thePlayer.motionY, mc.thePlayer.motionZ)
@@ -202,7 +200,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param bb your box
      * @return center of box
      */
-    @JvmStatic
     fun getCenter(bb: AxisAlignedBB) =
         Vec3(
             bb.minX + (bb.maxX - bb.minX) * 0.5,
@@ -220,7 +217,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param throughWalls throughWalls option
      * @return center
      */
-    @JvmStatic
     fun searchCenter(
         bb: AxisAlignedBB, outborder: Boolean, random: Boolean, predict: Boolean, throughWalls: Boolean, distance: Float
     ): VecRotation? {
@@ -294,7 +290,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param entity your entity
      * @return difference between rotation
      */
-    @JvmStatic
     fun getRotationDifference(entity: Entity): Float {
         val rotation = toRotation(getCenter(entity.hitBox), true)
         return getRotationDifference(rotation, Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch))
@@ -316,7 +311,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param b rotation
      * @return difference between rotation
      */
-    @JvmStatic
     fun getRotationDifference(a: Rotation, b: Rotation) = hypot(getAngleDifference(a.yaw, b.yaw), (a.pitch - b.pitch))
 
     /**
@@ -327,7 +321,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param turnSpeed your turn speed
      * @return limited rotation
      */
-    @JvmStatic
     fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation, turnSpeed: Float): Rotation {
         val yawDifference = getAngleDifference(targetRotation.yaw, currentRotation.yaw)
         val pitchDifference = getAngleDifference(targetRotation.pitch, currentRotation.pitch)
@@ -345,7 +338,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param b angle point
      * @return difference between angle points
      */
-    @JvmStatic
     fun getAngleDifference(a: Float, b: Float) = ((a - b) % 360f + 540f) % 360f - 180f
 
     /**
@@ -370,7 +362,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param blockReachDistance your reach
      * @return if crosshair is over target
      */
-    @JvmStatic
     fun isFaced(targetEntity: Entity, blockReachDistance: Double) =
         raycastEntity(blockReachDistance) { entity: Entity -> targetEntity == entity } != null
 
@@ -381,7 +372,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param blockReachDistance your reach
      * @return if crosshair is over target
      */
-    @JvmStatic
     fun isRotationFaced(targetEntity: Entity, blockReachDistance: Double, rotation: Rotation) =
         raycastEntity(
             blockReachDistance, rotation.yaw, rotation.pitch
@@ -390,7 +380,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
     /**
      * Allows you to check if your enemy is behind a wall
      */
-    @JvmStatic
     fun isVisible(vec3: Vec3) =
         mc.theWorld.rayTraceBlocks(mc.thePlayer.eyes, vec3) == null
 
@@ -399,8 +388,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
      *
      * @param rotation your target rotation
      */
-    @JvmStatic
-    @JvmOverloads
     fun setTargetRotation(rotation: Rotation, keepLength: Int = 1) {
         if (rotation.yaw.isNaN() || rotation.pitch.isNaN() || rotation.pitch > 90 || rotation.pitch < -90)
             return
@@ -409,20 +396,12 @@ object RotationUtils : MinecraftInstance(), Listenable {
         this.keepLength = keepLength
     }
 
-    /**
-     * Reset your target rotation
-     */
-    @JvmStatic
-    fun reset() {
+    fun resetRotation() {
         keepLength = 0
         targetRotation = null
     }
 
-    /**
-     * Returns the smallest angle change possible with a sensitivity
-     */
-    @JvmStatic
-    @JvmOverloads
+
     fun getFixedAngleDelta(sensitivity: Float = mc.gameSettings.mouseSensitivity): Float {
         val f = sensitivity * 0.6f + 0.2f
         return f * f * f * 1.2f
@@ -431,8 +410,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
     /**
      * Returns angle that is legitimately accomplishable with player's current sensitivity
      */
-    @JvmStatic
-    @JvmOverloads
     fun getFixedSensitivityAngle(targetAngle: Float, startAngle: Float = 0f, gcd: Float = getFixedAngleDelta()): Float {
         val angleDelta = targetAngle - startAngle
         return startAngle + (angleDelta / gcd).roundToInt() * gcd

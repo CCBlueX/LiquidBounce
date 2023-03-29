@@ -37,7 +37,7 @@ import kotlin.concurrent.thread
  */
 object CapeService : Listenable, MinecraftInstance() {
 
-    private const val CAPE_CARRIERS_URL: String = "${CLIENT_API}/cape/carriers"
+    private const val CAPE_CARRIERS_URL: String = "$CLIENT_API/cape/carriers"
 
     /**
      * I would prefer to use CLIENT_API but due to Cloudflare causing issues with SSL and their browser integrity check,

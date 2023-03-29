@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.file.FileManager.modulesConfig
 import net.ccbluex.liquidbounce.file.FileManager.saveConfig
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
 import net.ccbluex.liquidbounce.value.Value
 import net.minecraft.client.audio.PositionedSoundRecord
@@ -87,7 +88,7 @@ open class Module : MinecraftInstance(), Listenable {
 
 
     // HUD
-    val hue = Math.random().toFloat()
+    val hue = nextFloat()
     var slide = 0F
 
     // Tag

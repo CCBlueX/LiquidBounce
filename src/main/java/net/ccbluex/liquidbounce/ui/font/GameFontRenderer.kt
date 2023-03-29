@@ -27,31 +27,31 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
     private var italicFont = AWTFontRenderer(font.deriveFont(Font.ITALIC))
     private var boldItalicFont = AWTFontRenderer(font.deriveFont(Font.BOLD or Font.ITALIC))
 
-    val height: Int
+    val height
         get() = defaultFont.height / 2
 
-    val size: Int
+    val size
         get() = defaultFont.font.size
 
     init {
         fontHeight = height
     }
 
-    fun drawString(s: String?, x: Float, y: Float, color: Int) = drawString(s, x, y, color, false)
+    fun drawString(s: String, x: Float, y: Float, color: Int) = drawString(s, x, y, color, false)
 
-    override fun drawStringWithShadow(text: String?, x: Float, y: Float, color: Int) = drawString(text, x, y, color, true)
+    override fun drawStringWithShadow(text: String, x: Float, y: Float, color: Int) = drawString(text, x, y, color, true)
 
     fun drawCenteredString(s: String, x: Float, y: Float, color: Int, shadow: Boolean) = drawString(s, x - getStringWidth(s) / 2F, y, color, shadow)
 
     fun drawCenteredString(s: String, x: Float, y: Float, color: Int) =
             drawStringWithShadow(s, x - getStringWidth(s) / 2F, y, color)
 
-    override fun drawString(text: String?, x: Float, y: Float, color: Int, shadow: Boolean): Int {
+    override fun drawString(text: String, x: Float, y: Float, color: Int, shadow: Boolean): Int {
         var currentText = text
 
         val event = TextEvent(currentText)
         callEvent(event)
-        currentText = event.text ?: return 0
+        currentText = event.text
 
         val currY = y - 3F
 
@@ -66,9 +66,7 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
         return drawText(currentText, x, currY, color, false, rainbow)
     }
 
-    private fun drawText(text: String?, x: Float, y: Float, color: Int, ignoreColor: Boolean, rainbow: Boolean = false): Int {
-        if (text == null)
-            return 0
+    private fun drawText(text: String, x: Float, y: Float, color: Int, ignoreColor: Boolean, rainbow: Boolean = false): Int {
         if (text.isEmpty())
             return x.toInt()
 
@@ -190,17 +188,16 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
         return (x + getStringWidth(text)).toInt()
     }
 
-    override fun getColorCode(charCode: Char) =
-            ColorUtils.hexColors[getColorIndex(charCode)]
+    override fun getColorCode(charCode: Char) = ColorUtils.hexColors[getColorIndex(charCode)]
 
-    override fun getStringWidth(text: String?): Int {
+    override fun getStringWidth(text: String): Int {
         var currentText = text
 
         val event = TextEvent(currentText)
         callEvent(event)
-        currentText = event.text ?: return 0
+        currentText = event.text
 
-        return if (currentText.contains("§")) {
+        return if ("§" in currentText) {
             val parts = currentText.split("§")
 
             var currentFont = defaultFont
@@ -253,14 +250,13 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
 
     companion object {
         @JvmStatic
-        fun getColorIndex(type: Char): Int {
-            return when (type) {
+        fun getColorIndex(type: Char) =
+            when (type) {
                 in '0'..'9' -> type - '0'
                 in 'a'..'f' -> type - 'a' + 10
                 in 'k'..'o' -> type - 'k' + 16
                 'r' -> 21
                 else -> -1
             }
-        }
     }
 }
