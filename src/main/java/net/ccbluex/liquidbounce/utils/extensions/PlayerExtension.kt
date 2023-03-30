@@ -38,7 +38,7 @@ fun getNearestPointBB(eye: Vec3, box: AxisAlignedBB): Vec3 {
     val destMins = doubleArrayOf(box.minX, box.minY, box.minZ)
     val destMaxs = doubleArrayOf(box.maxX, box.maxY, box.maxZ)
     for (i in 0..2) {
-        if (origin[i] > destMaxs[i]) origin[i] = destMaxs[i] else if (origin[i] < destMins[i]) origin[i] = destMins[i]
+        origin[i] = origin[i].coerceIn(destMins[i], destMaxs[i])
     }
     return Vec3(origin[0], origin[1], origin[2])
 }

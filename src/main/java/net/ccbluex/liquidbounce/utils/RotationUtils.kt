@@ -253,7 +253,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
         val randomRotation = toRotation(randomVec, predict)
 
-        val eyes = mc.thePlayer.getPositionEyes(1f)
+        val eyes = mc.thePlayer.eyes
         var vecRotation: VecRotation? = null
 
         if (random) {
