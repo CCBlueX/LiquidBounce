@@ -139,7 +139,13 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "displayGuiScreen", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;currentScreen:Lnet/minecraft/client/gui/GuiScreen;", shift = At.Shift.AFTER))
     private void handleDisplayGuiScreen(CallbackInfo callbackInfo) {
+        if (currentScreen instanceof net.minecraft.client.gui.GuiMainMenu || (currentScreen != null && currentScreen.getClass().getName().startsWith("net.labymod") && currentScreen.getClass().getSimpleName().equals("ModGuiMainMenu"))) {
+            currentScreen = new GuiMainMenu();
 
+            ScaledResolution scaledResolution = new ScaledResolution(Minecraft.getMinecraft());
+            currentScreen.setWorldAndResolution(Minecraft.getMinecraft(), scaledResolution.getScaledWidth(), scaledResolution.getScaledHeight());
+            skipRenderWorld = false;
+        }
 
         LiquidBounce.eventManager.callEvent(new ScreenEvent(currentScreen));
     }
@@ -212,12 +218,10 @@ public abstract class MixinMinecraft {
         CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT);
 
         final FastPlace fastPlace = (FastPlace) LiquidBounce.moduleManager.getModule(FastPlace.class);
-        if (!fastPlace.getState())
-            return;
+        if (!fastPlace.getState()) return;
 
         // Don't spam-click when the player isn't holding blocks
-        if (fastPlace.getOnlyBlocksValue().get()
-                && (thePlayer.getHeldItem() == null || !(thePlayer.getHeldItem().getItem() instanceof ItemBlock)))
+        if (fastPlace.getOnlyBlocksValue().get() && (thePlayer.getHeldItem() == null || !(thePlayer.getHeldItem().getItem() instanceof ItemBlock)))
             return;
 
         if (this.objectMouseOver != null && this.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
@@ -226,7 +230,7 @@ public abstract class MixinMinecraft {
             // Don't spam-click when interacting with a TileEntity (chests, ...)
             // Doesn't prevent spam-clicking anvils, crafting tables, ... (couldn't figure out a non-hacky way)
             if (blockState.getBlock().hasTileEntity(blockState)) return;
-        // Return if not facing a block
+            // Return if not facing a block
         } else if (fastPlace.getFacingBlocksValue().get()) return;
 
         rightClickDelayTimer = fastPlace.getSpeedValue().get();
