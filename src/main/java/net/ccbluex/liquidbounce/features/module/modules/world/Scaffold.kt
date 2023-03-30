@@ -20,7 +20,6 @@ import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.getRotationDifference
 import net.ccbluex.liquidbounce.utils.RotationUtils.getVectorForRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.limitAngleChange
-import net.ccbluex.liquidbounce.utils.RotationUtils.resetRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.targetRotation
@@ -567,10 +566,7 @@ class Scaffold : Module() {
             resetColor()
 
             Fonts.font40.drawString(
-                info,
-                scaledResolution.scaledWidth / 2,
-                scaledResolution.scaledHeight / 2 + 7,
-                Color.WHITE.rgb
+                info, scaledResolution.scaledWidth / 2, scaledResolution.scaledHeight / 2 + 7, Color.WHITE.rgb
             )
             glPopMatrix()
         }
@@ -678,9 +674,7 @@ class Scaffold : Module() {
 
         if (rotationsValue.get()) {
             val limitedRotation = limitAngleChange(
-                currRotation,
-                placeRotation.rotation,
-                nextFloat(minTurnSpeedValue.get(), maxTurnSpeedValue.get())
+                currRotation, placeRotation.rotation, nextFloat(minTurnSpeedValue.get(), maxTurnSpeedValue.get())
             )
 
             setRotation(limitedRotation, keepTicksValue.get())

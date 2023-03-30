@@ -407,7 +407,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
      *
      * @param rotation your target rotation
      */
-    fun setTargetRotation(rotation: Rotation, keepLength: Int = 1) {
+    fun setTargetRotation(rotation: Rotation, keepLength: Int = 1, strafe: Boolean = false, strict: Boolean = false) {
         if (rotation.yaw.isNaN() || rotation.pitch.isNaN() || rotation.pitch > 90 || rotation.pitch < -90) return
 
         targetRotation = rotation.fixedSensitivity()
