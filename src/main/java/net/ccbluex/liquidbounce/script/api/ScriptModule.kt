@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.value.Value
 
 @Suppress("unused")
@@ -46,10 +46,8 @@ class ScriptModule(private val moduleObject: JSObject) : Module() {
             _tag = moduleObject.getMember("tag") as String
     }
 
-    override val values: List<Value<*>>
-        get() {
-            return _values.values.toList()
-        }
+    override val values
+        get() = _values.values.toList()
 
     override var tag: String?
         get() = _tag
@@ -133,7 +131,7 @@ class ScriptModule(private val moduleObject: JSObject) : Module() {
         try {
             events[eventName]?.call(moduleObject, payload)
         } catch (throwable: Throwable) {
-            ClientUtils.getLogger().error("[ScriptAPI] Exception in module '$name'!", throwable)
+            LOGGER.error("[ScriptAPI] Exception in module '$name'!", throwable)
         }
     }
 }

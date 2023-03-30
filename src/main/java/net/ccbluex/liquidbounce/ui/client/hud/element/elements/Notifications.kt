@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.hud
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
@@ -13,8 +13,9 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.AnimationUtils
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
-import org.lwjgl.opengl.GL11
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
+import org.lwjgl.opengl.GL11.glColor4f
 import java.awt.Color
 
 /**
@@ -33,12 +34,12 @@ class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F,
      * Draw element
      */
     override fun drawElement(): Border? {
-        if (LiquidBounce.hud.notifications.size > 0)
-            LiquidBounce.hud.notifications[0].drawNotification()
+        if (hud.notifications.size > 0)
+            hud.notifications[0].drawNotification()
 
         if (mc.currentScreen is GuiHudDesigner) {
-            if (!LiquidBounce.hud.notifications.contains(exampleNotification))
-                LiquidBounce.hud.addNotification(exampleNotification)
+            if (exampleNotification !in hud.notifications)
+                hud.addNotification(exampleNotification)
 
             exampleNotification.fadeState = Notification.FadeState.STAY
             exampleNotification.x = exampleNotification.textLength + 8F
@@ -73,13 +74,13 @@ class Notification(private val message: String) {
      */
     fun drawNotification() {
         // Draw notification
-        RenderUtils.drawRect(-x + 8 + textLength, 0F, -x, -20F, Color.BLACK.rgb)
-        RenderUtils.drawRect(-x, 0F, -x - 5, -20F, Color(0, 160, 255).rgb)
+        drawRect(-x + 8 + textLength, 0F, -x, -20F, Color.BLACK.rgb)
+        drawRect(-x, 0F, -x - 5, -20F, Color(0, 160, 255).rgb)
         Fonts.font35.drawString(message, -x + 4, -14F, Int.MAX_VALUE)
-        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+        glColor4f(1f, 1f, 1f, 1f)
 
         // Animation
-        val delta = RenderUtils.deltaTime
+        val delta = deltaTime
         val width = textLength + 8F
 
         when (fadeState) {
@@ -108,7 +109,7 @@ class Notification(private val message: String) {
             } else
                 fadeState = FadeState.END
 
-            FadeState.END -> LiquidBounce.hud.removeNotification(this)
+            FadeState.END -> hud.removeNotification(this)
         }
     }
 }

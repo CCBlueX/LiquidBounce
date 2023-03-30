@@ -1,13 +1,13 @@
 package net.ccbluex.liquidbounce.features.command.special
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.modules.misc.LiquidChat
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 
 class LiquidChatCommand : Command("chat", "lc", "irc") {
 
-    private val lChat = LiquidBounce.moduleManager.getModule(LiquidChat::class.java) as LiquidChat
+    private val lChat = moduleManager[LiquidChat::class.java] as LiquidChat
 
     /**
      * Execute commands with provided [args]

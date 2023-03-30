@@ -7,17 +7,18 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre
 
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 
 class SpectreBHop : SpeedMode("SpectreBHop") {
     override fun onMotion() {
-        if (!MovementUtils.isMoving || mc.thePlayer.movementInput.jump) return
+        if (!isMoving || mc.thePlayer.movementInput.jump) return
         if (mc.thePlayer.onGround) {
-            MovementUtils.strafe(1.1f)
+            strafe(1.1f)
             mc.thePlayer.motionY = 0.44
             return
         }
-        MovementUtils.strafe()
+        strafe()
     }
 
     override fun onUpdate() {}

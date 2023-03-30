@@ -19,7 +19,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.client.settings.KeyBinding
 import net.minecraft.init.Blocks
-import kotlin.random.Random
+import kotlin.random.Random.Default.nextBoolean
 
 @ModuleInfo(name = "AutoClicker", description = "Constantly clicks when holding down a mouse button.", category = ModuleCategory.COMBAT)
 class AutoClicker : Module() {
@@ -110,11 +110,10 @@ class AutoClicker : Module() {
         if (jitterValue.get() && ((leftValue.get() && mc.gameSettings.keyBindAttack.isKeyDown && leftCanAutoClick(System.currentTimeMillis()))
                 || (rightValue.get() && mc.gameSettings.keyBindUseItem.isKeyDown && rightCanAutoClick()))) {
             val thePlayer = mc.thePlayer ?: return
-            if (Random.nextBoolean()) thePlayer.fixedSensitivityYaw += RandomUtils.nextFloat(-1F, 1F)
 
-            if (Random.nextBoolean()) {
-                thePlayer.fixedSensitivityPitch += RandomUtils.nextFloat(-1F, 1F)
-            }
+            if (nextBoolean()) thePlayer.fixedSensitivityYaw += RandomUtils.nextFloat(-1F, 1F)
+
+            if (nextBoolean()) thePlayer.fixedSensitivityPitch += RandomUtils.nextFloat(-1F, 1F)
         }
     }
 }

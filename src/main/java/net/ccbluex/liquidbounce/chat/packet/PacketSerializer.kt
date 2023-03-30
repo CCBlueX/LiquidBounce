@@ -5,11 +5,11 @@
  */
 package net.ccbluex.liquidbounce.chat.packet
 
-import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
 import net.ccbluex.liquidbounce.chat.packet.packets.Packet
+import net.ccbluex.liquidbounce.file.FileManager.PRETTY_GSON
 import java.lang.reflect.Type
 
 /**
@@ -47,7 +47,7 @@ class PacketSerializer : JsonSerializer<Packet> {
         val packetName = packetRegistry.getOrDefault(src.javaClass, "UNKNOWN")
         val serializedPacket = SerializedPacket(packetName, if(src.javaClass.constructors.none { it.parameterCount != 0 }) null else src )
 
-        return Gson().toJsonTree(serializedPacket)
+        return PRETTY_GSON.toJsonTree(serializedPacket)
     }
 
 }

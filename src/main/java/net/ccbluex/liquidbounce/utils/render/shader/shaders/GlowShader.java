@@ -6,7 +6,8 @@
 package net.ccbluex.liquidbounce.utils.render.shader.shaders;
 
 import net.ccbluex.liquidbounce.utils.render.shader.FramebufferShader;
-import org.lwjgl.opengl.GL20;
+
+import static org.lwjgl.opengl.GL20.*;
 
 public final class GlowShader extends FramebufferShader {
 
@@ -28,11 +29,11 @@ public final class GlowShader extends FramebufferShader {
 
     @Override
     public void updateUniforms() {
-        GL20.glUniform1i(getUniform("texture"), 0);
-        GL20.glUniform2f(getUniform("texelSize"), 1F / mc.displayWidth * renderScale, 1F / mc.displayHeight * renderScale);
-        GL20.glUniform3f(getUniform("color"), red, green, blue);
-        GL20.glUniform1f(getUniform("fade"), fade);
-        GL20.glUniform1i(getUniform("radius"), radius);
-        GL20.glUniform1f(getUniform("targetAlpha"), targetAlpha);
+        glUniform1i(getUniform("texture"), 0);
+        glUniform2f(getUniform("texelSize"), 1F / mc.displayWidth * renderScale, 1F / mc.displayHeight * renderScale);
+        glUniform3f(getUniform("color"), red, green, blue);
+        glUniform1f(getUniform("fade"), fade);
+        glUniform1i(getUniform("radius"), radius);
+        glUniform1f(getUniform("targetAlpha"), targetAlpha);
     }
 }

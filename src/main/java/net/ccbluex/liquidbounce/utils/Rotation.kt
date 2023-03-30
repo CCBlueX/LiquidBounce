@@ -6,12 +6,14 @@
 package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.event.StrafeEvent
+import net.ccbluex.liquidbounce.utils.RotationUtils.getFixedAngleDelta
+import net.ccbluex.liquidbounce.utils.RotationUtils.getFixedSensitivityAngle
+import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
 import net.ccbluex.liquidbounce.utils.block.PlaceInfo
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.util.MathHelper
 import net.minecraft.util.Vec3
 import kotlin.math.cos
-import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.math.sqrt
 
@@ -40,21 +42,14 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
      */
     @JvmOverloads
     fun fixedSensitivity(sensitivity: Float = mc.gameSettings.mouseSensitivity): Rotation {
-        val gcd = RotationUtils.getFixedAngleDelta(sensitivity)
-
-        // get previous rotation
-        val rotation = RotationUtils.serverRotation
-
         // Previous implementation essentially floored the subtraction.
         // This way it returns rotations closer to the original.
 
-        // fix yaw
-        val deltaYaw = yaw - rotation.yaw
-        yaw = rotation.yaw + (deltaYaw / gcd).roundToInt() * gcd
+        // Only calculate GCD once
+        val gcd = getFixedAngleDelta(sensitivity)
 
-        // fix pitch
-        val deltaPitch = pitch - rotation.pitch
-        pitch = rotation.pitch + (deltaPitch / gcd).roundToInt() * gcd
+        yaw = getFixedSensitivityAngle(yaw, serverRotation.yaw, gcd)
+        pitch = getFixedSensitivityAngle(pitch, serverRotation.pitch, gcd)
 
         return this
     }
@@ -133,7 +128,7 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
 
         if (d >= 1.0E-4f) {
             d = sqrt(d)
-            if (d < 1.0f) d = 1.0f
+            if (d < 1f) d = 1f
             d = friction / d
             calcStrafe *= d
             calcForward *= d

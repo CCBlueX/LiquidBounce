@@ -5,7 +5,12 @@
  */
 package net.ccbluex.liquidbounce.ui.client
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_TITLE
+import net.ccbluex.liquidbounce.LiquidBounce.background
+import net.ccbluex.liquidbounce.file.FileManager.backgroundImageFile
+import net.ccbluex.liquidbounce.file.FileManager.backgroundShaderFile
+import net.ccbluex.liquidbounce.file.FileManager.saveConfig
+import net.ccbluex.liquidbounce.file.FileManager.valuesConfig
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.Background
 import net.ccbluex.liquidbounce.utils.MinecraftInstance.mc
@@ -31,7 +36,7 @@ class GuiClientConfiguration(val prevGui: GuiScreen) : GuiScreen() {
         fun updateClientWindow() {
             if (enabledClientTitle) {
                 // Set LiquidBounce title
-                Display.setTitle(LiquidBounce.CLIENT_TITLE)
+                Display.setTitle(CLIENT_TITLE)
                 // Update favicon
                 IconUtils.getFavicon()?.let { icons ->
                     Display.setIcon(icons)
@@ -69,7 +74,7 @@ class GuiClientConfiguration(val prevGui: GuiScreen) : GuiScreen() {
         // AltManager configuration buttons
         // Location > 3rd row
         buttonList.add(GuiButton(7, width / 2 - 100, height / 4 + 185, "Random alts mode (${if (stylisedAlts) "Stylised" else "Legacy"})").also { altsModeButton = it })
-        buttonList.add(GuiSlider(-1, width / 2 - 100, height / 4 + 210, 200, 20, "${if (stylisedAlts && unformattedAlts) "Max random alt" else "Random alt"} length (", ")", 6.0, 16.0, altsLength.toDouble(), false, true) {
+        buttonList.add(GuiSlider(-1, width / 2 - 100, height / 4 + 210, 200, 20, "${if (stylisedAlts && unformattedAlts) "Random alt max" else "Random alt"} length (", ")", 6.0, 16.0, altsLength.toDouble(), false, true) {
             altsLength = it.valueInt
         }.also { altsSlider = it })
         buttonList.add(GuiButton(6, width / 2 - 100, height / 4 + 235, "Unformatted alt names (${if (unformattedAlts) "On" else "Off"})").also {
@@ -116,17 +121,17 @@ class GuiClientConfiguration(val prevGui: GuiScreen) : GuiScreen() {
                     return
 
                 // Delete old files
-                LiquidBounce.background = null
-                LiquidBounce.fileManager.backgroundImageFile.delete()
-                LiquidBounce.fileManager.backgroundShaderFile.delete()
+                background = null
+                backgroundImageFile.delete()
+                backgroundShaderFile.delete()
 
                 // Copy new file
                 val fileExtension = file.extension
 
                 try {
                     val destFile =  when (fileExtension) {
-                        "png" -> LiquidBounce.fileManager.backgroundImageFile
-                        "frag", "glsl", "shader" -> LiquidBounce.fileManager.backgroundShaderFile
+                        "png" -> backgroundImageFile
+                        "frag", "glsl", "shader" -> backgroundShaderFile
                         else -> {
                             MiscUtils.showErrorPopup("Error", "Invalid file extension: $fileExtension")
                             return
@@ -137,12 +142,11 @@ class GuiClientConfiguration(val prevGui: GuiScreen) : GuiScreen() {
 
                     // Load new background
                     try {
-                        val background = Background.createBackground(destFile)
-                        LiquidBounce.background = background
+                        background = Background.createBackground(destFile)
                     } catch (e: IllegalArgumentException) {
-                        LiquidBounce.background = null
-                        LiquidBounce.fileManager.backgroundImageFile.delete()
-                        LiquidBounce.fileManager.backgroundShaderFile.delete()
+                        background = null
+                        backgroundImageFile.delete()
+                        backgroundShaderFile.delete()
 
                         MiscUtils.showErrorPopup("Error", "Invalid file extension: $fileExtension")
                     }
@@ -150,15 +154,15 @@ class GuiClientConfiguration(val prevGui: GuiScreen) : GuiScreen() {
                     e.printStackTrace()
                     MiscUtils.showErrorPopup("Error", "Exception class: " + e.javaClass.name + "\nMessage: " + e.message)
 
-                    LiquidBounce.background = null
-                    LiquidBounce.fileManager.backgroundImageFile.delete()
-                    LiquidBounce.fileManager.backgroundShaderFile.delete()
+                    background = null
+                    backgroundImageFile.delete()
+                    backgroundShaderFile.delete()
                 }
             }
             4 -> {
-                LiquidBounce.background = null
-                LiquidBounce.fileManager.backgroundImageFile.delete()
-                LiquidBounce.fileManager.backgroundShaderFile.delete()
+                background = null
+                backgroundImageFile.delete()
+                backgroundShaderFile.delete()
             }
             0 -> mc.displayGuiScreen(prevGui)
         }
@@ -192,7 +196,7 @@ class GuiClientConfiguration(val prevGui: GuiScreen) : GuiScreen() {
     }
 
     override fun onGuiClosed() {
-        LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig)
+        saveConfig(valuesConfig)
         super.onGuiClosed()
     }
 }

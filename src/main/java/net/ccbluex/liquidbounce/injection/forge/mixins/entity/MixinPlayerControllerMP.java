@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.entity;
 
-import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.AttackEvent;
 import net.ccbluex.liquidbounce.event.ClickWindowEvent;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.AbortBreaking;
@@ -22,26 +21,29 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import static net.ccbluex.liquidbounce.LiquidBounce.eventManager;
+import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
+
 @Mixin(PlayerControllerMP.class)
 @SideOnly(Side.CLIENT)
 public class MixinPlayerControllerMP {
 
     @Inject(method = "attackEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/PlayerControllerMP;syncCurrentPlayItem()V"))
     private void attackEntity(EntityPlayer entityPlayer, Entity targetEntity, CallbackInfo callbackInfo) {
-        LiquidBounce.eventManager.callEvent(new AttackEvent(targetEntity));
+        eventManager.callEvent(new AttackEvent(targetEntity));
         CooldownHelper.INSTANCE.resetLastAttackedTicks();
     }
 
     @Inject(method = "getIsHittingBlock", at = @At("HEAD"), cancellable = true)
     private void getIsHittingBlock(CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
-        if (LiquidBounce.moduleManager.getModule(AbortBreaking.class).getState())
+        if (moduleManager.getModule(AbortBreaking.class).getState())
             callbackInfoReturnable.setReturnValue(false);
     }
 
     @Inject(method = "windowClick", at = @At("HEAD"), cancellable = true)
     private void windowClick(int windowId, int slotId, int mouseButtonClicked, int mode, EntityPlayer playerIn, CallbackInfoReturnable<ItemStack> callbackInfo) {
         final ClickWindowEvent event = new ClickWindowEvent(windowId, slotId, mouseButtonClicked, mode);
-        LiquidBounce.eventManager.callEvent(event);
+        eventManager.callEvent(event);
 
         if (event.isCancelled())
             callbackInfo.cancel();

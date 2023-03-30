@@ -84,7 +84,7 @@ class FastUse : Module() {
                     mc.timer.timerSpeed = customTimer.get()
                     usedTimer = true
 
-                    if (!msTimer.hasTimePassed(delayValue.get().toLong()))
+                    if (!msTimer.hasTimePassed(delayValue.get()))
                         return
 
                     repeat(customSpeedValue.get()) {
@@ -117,6 +117,6 @@ class FastUse : Module() {
         }
     }
 
-    override val tag: String
+    override val tag
         get() = modeValue.get()
 }

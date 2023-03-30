@@ -6,20 +6,22 @@
 
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
-import net.ccbluex.liquidbounce.LiquidBounce
-
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawScaledCustomSizeModalRect
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.util.ResourceLocation
-import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL11.glColor4f
 import java.awt.Color
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
@@ -40,7 +42,7 @@ class Target : Element() {
     private var lastTarget: Entity? = null
 
     override fun drawElement(): Border {
-        val target = (LiquidBounce.moduleManager[KillAura::class.java] as KillAura).target
+        val target = (moduleManager[KillAura::class.java] as KillAura).target
 
         if (target is EntityPlayer) {
             if (target != lastTarget || easingHealth < 0 || easingHealth > target.maxHealth ||
@@ -53,23 +55,23 @@ class Target : Element() {
                     .toFloat()
 
             // Draw rect box
-            RenderUtils.drawBorderedRect(0F, 0F, width, 36F, 3F, Color.BLACK.rgb, Color.BLACK.rgb)
+            drawBorderedRect(0F, 0F, width, 36F, 3F, Color.BLACK.rgb, Color.BLACK.rgb)
 
             // Damage animation
             if (easingHealth > target.health)
-                RenderUtils.drawRect(0F, 34F, (easingHealth / target.maxHealth) * width,
+                drawRect(0F, 34F, (easingHealth / target.maxHealth) * width,
                         36F, Color(252, 185, 65).rgb)
 
             // Health bar
-            RenderUtils.drawRect(0F, 34F, (target.health / target.maxHealth) * width,
+            drawRect(0F, 34F, (target.health / target.maxHealth) * width,
                     36F, Color(252, 96, 66).rgb)
 
             // Heal animation
             if (easingHealth < target.health)
-                RenderUtils.drawRect((easingHealth / target.maxHealth) * width, 34F,
+                drawRect((easingHealth / target.maxHealth) * width, 34F,
                         (target.health / target.maxHealth) * width, 36F, Color(44, 201, 144).rgb)
 
-            easingHealth += ((target.health - easingHealth) / 2.0F.pow(10.0F - fadeSpeed.get())) * RenderUtils.deltaTime
+            easingHealth += ((target.health - easingHealth) / 2f.pow(10f - fadeSpeed.get())) * deltaTime
 
             target.name?.let { Fonts.font40.drawString(it, 36, 3, 0xffffff) }
             Fonts.font35.drawString("Distance: ${decimalFormat.format(mc.thePlayer.getDistanceToEntityBox(target))}", 36, 15, 0xffffff)
@@ -91,9 +93,9 @@ class Target : Element() {
     }
 
     private fun drawHead(skin: ResourceLocation, width: Int, height: Int) {
-        GL11.glColor4f(1F, 1F, 1F, 1F)
+        glColor4f(1F, 1F, 1F, 1F)
         mc.textureManager.bindTexture(skin)
-        RenderUtils.drawScaledCustomSizeModalRect(2, 2, 8F, 8F, 8, 8, width, height,
+        drawScaledCustomSizeModalRect(2, 2, 8F, 8F, 8, 8, width, height,
                 64F, 64F)
     }
 

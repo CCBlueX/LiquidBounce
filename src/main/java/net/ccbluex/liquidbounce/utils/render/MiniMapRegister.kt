@@ -24,9 +24,7 @@ object MiniMapRegister : MinecraftInstance() {
         }
     }
 
-    fun getChunkTextureAt(x: Int, z: Int): MiniMapTexture? {
-        return chunkTextureMap[ChunkLocation(x, z)]
-    }
+    fun getChunkTextureAt(x: Int, z: Int) = chunkTextureMap[ChunkLocation(x, z)]
 
     fun updateChunks() {
         synchronized(queuedChunkUpdates) {
@@ -60,9 +58,7 @@ object MiniMapRegister : MinecraftInstance() {
         }
     }
 
-    fun getLoadedChunkCount(): Int {
-        return chunkTextureMap.size
-    }
+    fun getLoadedChunkCount() = chunkTextureMap.size
 
     fun unloadChunk(x: Int, z: Int) {
         synchronized(queuedChunkDeletions) {
@@ -70,9 +66,7 @@ object MiniMapRegister : MinecraftInstance() {
         }
     }
 
-    fun unloadAllChunks() {
-        deleteAllChunks.set(true)
-    }
+    fun unloadAllChunks() = deleteAllChunks.set(true)
 
     class MiniMapTexture {
         val texture = DynamicTexture(16, 16)

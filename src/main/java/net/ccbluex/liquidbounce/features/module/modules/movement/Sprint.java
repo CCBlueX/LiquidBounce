@@ -11,13 +11,15 @@ import net.ccbluex.liquidbounce.event.UpdateEvent;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.features.module.ModuleInfo;
-import net.ccbluex.liquidbounce.utils.MovementUtils;
 import net.ccbluex.liquidbounce.utils.Rotation;
-import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.ccbluex.liquidbounce.value.BoolValue;
 import net.ccbluex.liquidbounce.value.ListValue;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.potion.Potion;
+
+import static net.ccbluex.liquidbounce.utils.MovementUtils.isMoving;
+import static net.ccbluex.liquidbounce.utils.RotationUtils.getRotationDifference;
+import static net.ccbluex.liquidbounce.utils.RotationUtils.targetRotation;
 
 @ModuleInfo(name = "Sprint", description = "Automatically sprints all the time.", category = ModuleCategory.MOVEMENT)
 public class Sprint extends Module {
@@ -62,14 +64,14 @@ public class Sprint extends Module {
 
     @EventTarget
     public void onTick(final TickEvent event) {
-        if (modeValue.get().equalsIgnoreCase("legit")) {
+        if (modeValue.get().equals("Legit")) {
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindSprint.getKeyCode(), true);
         }
     }
 
     @Override
     public void onDisable() {
-        if (modeValue.get().equalsIgnoreCase("legit")) {
+        if (modeValue.get().equals("Legit")) {
             final int keyCode = mc.gameSettings.keyBindSprint.getKeyCode();
             KeyBinding.setKeyBindState(keyCode, keyCode > 0 && mc.gameSettings.keyBindSprint.isKeyDown());
         }
@@ -77,13 +79,13 @@ public class Sprint extends Module {
 
     @EventTarget
     public void onUpdate(final UpdateEvent event) {
-        if (modeValue.get().equalsIgnoreCase("vanilla")) {
-            if (!MovementUtils.isMoving() || mc.thePlayer.isSneaking() ||
+        if (modeValue.get().equals("Vanilla")) {
+            if (!isMoving() || mc.thePlayer.isSneaking() ||
                     (blindnessValue.get() && mc.thePlayer.isPotionActive(Potion.blindness)) ||
-                    (foodValue.get() && !(mc.thePlayer.getFoodStats().getFoodLevel() > 6.0F || mc.thePlayer.capabilities.allowFlying))
+                    (foodValue.get() && !(mc.thePlayer.getFoodStats().getFoodLevel() > 6f || mc.thePlayer.capabilities.allowFlying))
                     || (checkServerSide.get() && (mc.thePlayer.onGround || !checkServerSideGround.get())
-                    && !allDirectionsValue.get() && RotationUtils.targetRotation != null &&
-                    RotationUtils.getRotationDifference(new Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)) > 30)) {
+                    && !allDirectionsValue.get() && targetRotation != null &&
+                    getRotationDifference(new Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)) > 30)) {
                 mc.thePlayer.setSprinting(false);
                 return;
             }

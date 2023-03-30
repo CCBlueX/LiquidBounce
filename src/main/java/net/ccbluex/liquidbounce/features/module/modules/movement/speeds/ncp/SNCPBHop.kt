@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp
 
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.minecraft.potion.Potion
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -40,26 +40,28 @@ class SNCPBHop : SpeedMode("SNCPBHop") {
     }
 
     override fun onUpdate() {}
+
+    // TODO: Recode this mess
     override fun onMove(event: MoveEvent) {
         ++timerDelay
         timerDelay %= 5
         if (timerDelay != 0) {
             mc.timer.timerSpeed = 1f
         } else {
-            if (MovementUtils.isMoving) mc.timer.timerSpeed = 32767f
-            if (MovementUtils.isMoving) {
+            if (isMoving) mc.timer.timerSpeed = 32767f
+            if (isMoving) {
                 mc.timer.timerSpeed = 1.3f
                 mc.thePlayer.motionX *= 1.0199999809265137
                 mc.thePlayer.motionZ *= 1.0199999809265137
             }
         }
-        if (mc.thePlayer.onGround && MovementUtils.isMoving) level = 2
+        if (mc.thePlayer.onGround && isMoving) level = 2
         if (round(mc.thePlayer.posY - mc.thePlayer.posY.toInt().toDouble()) == round(0.138)) {
             mc.thePlayer.motionY -= 0.08
             event.y = event.y - 0.09316090325960147
             mc.thePlayer.posY -= 0.09316090325960147
         }
-        if (level == 1 && (mc.thePlayer.moveForward != 0.0f || mc.thePlayer.moveStrafing != 0.0f)) {
+        if (level == 1 && isMoving) {
             level = 2
             moveSpeed = 1.35 * baseMoveSpeed - 0.01
         } else if (level == 2) {
@@ -92,8 +94,8 @@ class SNCPBHop : SpeedMode("SNCPBHop") {
         moveSpeed = moveSpeed.coerceAtLeast(baseMoveSpeed)
 
         val movementInput = mc.thePlayer.movementInput
-        var forward: Float = movementInput.moveForward
-        var strafe: Float = movementInput.moveStrafe
+        var forward = movementInput.moveForward
+        var strafe = movementInput.moveStrafe
         var yaw = mc.thePlayer.rotationYaw
         if (forward == 0.0f && strafe == 0.0f) {
             event.x = 0.0
@@ -117,7 +119,8 @@ class SNCPBHop : SpeedMode("SNCPBHop") {
         event.x = forward * moveSpeed * mx2 + strafe * moveSpeed * mz2
         event.z = forward * moveSpeed * mz2 - strafe * moveSpeed * mx2
         mc.thePlayer.stepHeight = 0.6f
-        if (forward == 0.0f && strafe == 0.0f) event.zeroXZ()
+
+        if (!isMoving) event.zeroXZ()
     }
 
     private val baseMoveSpeed: Double

@@ -6,13 +6,11 @@
 package net.ccbluex.liquidbounce.ui.client.altmanager.menus
 
 import com.thealtening.AltService
-
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.login.LoginUtils
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
-
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiTextField
@@ -61,17 +59,17 @@ class GuiSessionLogin(private val prevGui: GuiAltManager) : GuiScreen() {
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
         // Draw background to screen
         drawBackground(0)
-        RenderUtils.drawRect(30.0f, 30.0f, width - 30.0f, height - 30.0f, Integer.MIN_VALUE)
+        drawRect(30f, 30f, width - 30f, height - 30f, Integer.MIN_VALUE)
 
         // Draw title and status
-        Fonts.font40.drawCenteredString("Session Login", width / 2.0f, height / 2 - 150f, 0xffffff)
-        Fonts.font35.drawCenteredString(status, width / 2.0f, height / 2f, 0xffffff)
+        Fonts.font40.drawCenteredString("Session Login", width / 2f, height / 2 - 150f, 0xffffff)
+        Fonts.font35.drawCenteredString(status, width / 2f, height / 2f, 0xffffff)
 
         // Draw fields
         sessionTokenField.drawTextBox()
 
         if (sessionTokenField.text.isEmpty() && !sessionTokenField.isFocused)
-            Fonts.font40.drawCenteredString("§7Session Token", width / 2.0f - 60.0f, height / 2 - 84f, 0xffffff)
+            Fonts.font40.drawCenteredString("§7Session Token", width / 2f - 60f, height / 2 - 84f, 0xffffff)
 
         // Call sub method
         super.drawScreen(mouseX, mouseY, partialTicks)
@@ -98,9 +96,9 @@ class GuiSessionLogin(private val prevGui: GuiAltManager) : GuiScreen() {
                                 try {
                                     GuiAltManager.altService.switchService(AltService.EnumAltService.MOJANG)
                                 } catch (e: NoSuchFieldException) {
-                                    ClientUtils.getLogger().error("Something went wrong while trying to switch alt service.", e)
+                                    LOGGER.error("Something went wrong while trying to switch alt service.", e)
                                 } catch (e: IllegalAccessException) {
-                                    ClientUtils.getLogger().error("Something went wrong while trying to switch alt service.", e)
+                                    LOGGER.error("Something went wrong while trying to switch alt service.", e)
                                 }
                             }
 

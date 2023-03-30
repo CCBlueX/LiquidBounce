@@ -7,7 +7,6 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.entity;
 
 import com.mojang.authlib.GameProfile;
 import net.ccbluex.liquidbounce.utils.CooldownHelper;
-import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.entity.player.PlayerCapabilities;
@@ -18,6 +17,8 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
 
 @Mixin(EntityPlayer.class)
 public abstract class MixinEntityPlayer extends MixinEntityLivingBase {
@@ -58,7 +59,7 @@ public abstract class MixinEntityPlayer extends MixinEntityLivingBase {
 
     @Inject(method = "onUpdate", at = @At("RETURN"))
     private void injectCooldown(final CallbackInfo callbackInfo) {
-        if (this.getGameProfile() == Minecraft.getMinecraft().thePlayer.getGameProfile()) {
+        if (this.getGameProfile() == mc.thePlayer.getGameProfile()) {
             CooldownHelper.INSTANCE.incrementLastAttackedTicks();
             CooldownHelper.INSTANCE.updateGenericAttackSpeed(getHeldItem());
 

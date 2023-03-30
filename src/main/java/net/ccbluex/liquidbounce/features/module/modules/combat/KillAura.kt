@@ -5,16 +5,18 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
+import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
 import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam
-import net.ccbluex.liquidbounce.utils.CooldownHelper
+import net.ccbluex.liquidbounce.utils.CooldownHelper.getAttackCooldownProgress
+import net.ccbluex.liquidbounce.utils.CooldownHelper.resetLastAttackedTicks
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetAnimals
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetDead
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetInvisible
@@ -31,8 +33,9 @@ import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.targetRotation
 import net.ccbluex.liquidbounce.utils.extensions.*
-import net.ccbluex.liquidbounce.utils.misc.RandomUtils
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
+import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawPlatform
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -55,7 +58,6 @@ import net.minecraft.util.Vec3
 import net.minecraft.world.WorldSettings
 import org.lwjgl.input.Keyboard
 import java.awt.Color
-import java.util.*
 import kotlin.math.*
 
 @ModuleInfo(name = "KillAura", description = "Automatically attacks targets around you.",
@@ -226,7 +228,7 @@ class KillAura : Module() {
     // Block status
     var renderBlocking = false
     var blockStatus = false
-    var blockStopInDead = false
+    private var blockStopInDead = false
 
     /**
      * Enable kill aura module
@@ -266,11 +268,9 @@ class KillAura : Module() {
 
             // AutoBlock
             if (canBlock) {
-                when {
-                    autoBlockValue.get().equals("AfterTick", true) ->
-                        startBlocking(currentTarget!!, hitable)
-                    autoBlockValue.get().equals("Fake", true) ->
-                        startBlocking(currentTarget!!, hitable, fake = true)
+                when (autoBlockValue.get()) {
+                    "AfterTick" -> startBlocking(currentTarget!!, hitable)
+                    "Fake" -> startBlocking(currentTarget!!, hitable, fake = true)
                 }
 
             }
@@ -278,7 +278,7 @@ class KillAura : Module() {
             return
         }
 
-        if (!silentRotationValue.get() || rotationStrafeValue.get().equals("Off", true))
+        if (!silentRotationValue.get() || rotationStrafeValue.get() == "Off")
             update()
     }
 
@@ -287,7 +287,7 @@ class KillAura : Module() {
      */
     @EventTarget
     fun onStrafe(event: StrafeEvent) {
-        if (!silentRotationValue.get() || rotationStrafeValue.get().equals("Off", true))
+        if (!silentRotationValue.get() || rotationStrafeValue.get() == "Off")
             return
 
         update()
@@ -305,15 +305,15 @@ class KillAura : Module() {
                     if (f >= 1.0E-4F) {
                         f = sqrt(f)
 
-                        if (f < 1.0F)
-                            f = 1.0F
+                        if (f < 1f)
+                            f = 1f
 
                         f = friction / f
                         strafe *= f
                         forward *= f
 
-                        val yawSin = sin((yaw * Math.PI / 180F).toFloat())
-                        val yawCos = cos((yaw * Math.PI / 180F).toFloat())
+                        val yawSin = sin(yaw * Math.PI / 180f)
+                        val yawCos = cos(yaw * Math.PI / 180f)
 
                         val player = mc.thePlayer
 
@@ -349,8 +349,12 @@ class KillAura : Module() {
         // Target
         currentTarget = target
 
-        if (!targetModeValue.get().equals("Switch", ignoreCase = true) && isEnemy(currentTarget))
+        /*
+        TODO: Remove? -> currentTarget = target = currentTarget
+
+        if (targetModeValue.get() != "Switch" && isEnemy(currentTarget))
             target = currentTarget
+         */
     }
 
     /**
@@ -375,7 +379,7 @@ class KillAura : Module() {
             return
         }
 
-        if (simulateCooldown.get() && CooldownHelper.getAttackCooldownProgress() < 1.0f) {
+        if (simulateCooldown.get() && getAttackCooldownProgress() < 1f) {
             return
         }
 
@@ -411,8 +415,8 @@ class KillAura : Module() {
 
         target ?: return
 
-        if (markValue.get() && !targetModeValue.get().equals("Multi", ignoreCase = true))
-            RenderUtils.drawPlatform(target, if (hitable) Color(37, 126, 255, 70) else Color(255, 0, 0, 70))
+        if (markValue.get() && targetModeValue.get() != "Multi")
+            drawPlatform(target!!, if (hitable) Color(37, 126, 255, 70) else Color(255, 0, 0, 70))
 
         if (currentTarget != null && attackTimer.hasTimePassed(attackDelay) &&
                 currentTarget!!.hurtTime <= hurtTimeValue.get()) {
@@ -447,9 +451,9 @@ class KillAura : Module() {
         // Settings
         val failRate = failRateValue.get()
         val swing = swingValue.get()
-        val multi = targetModeValue.get().equals("Multi", ignoreCase = true)
+        val multi = targetModeValue.get() == "Multi"
         val openInventory = aacValue.get() && mc.currentScreen is GuiInventory
-        val failHit = failRate > 0 && Random().nextInt(100) <= failRate
+        val failHit = failRate > 0 && nextInt(endExclusive = 100) <= failRate
 
         // Close inventory when open
         if (openInventory)
@@ -503,7 +507,7 @@ class KillAura : Module() {
         // Settings
         val hurtTime = hurtTimeValue.get()
         val fov = fovValue.get()
-        val switchMode = targetModeValue.get().equals("Switch", ignoreCase = true)
+        val switchMode = targetModeValue.get() == "Switch"
 
         // Find possible targets
         val targets = mutableListOf<EntityLivingBase>()
@@ -512,7 +516,7 @@ class KillAura : Module() {
         val thePlayer = mc.thePlayer
 
         for (entity in theWorld.loadedEntityList) {
-            if (entity !is EntityLivingBase || !isEnemy(entity) || (switchMode && prevTargetEntities.contains(entity.entityId)))
+            if (entity !is EntityLivingBase || !isEnemy(entity) || (switchMode && entity.entityId in prevTargetEntities))
                 continue
 
             var distance = thePlayer.getDistanceToEntityBox(entity)
@@ -579,13 +583,13 @@ class KillAura : Module() {
                 return false
 
             if (targetPlayer && entity is EntityPlayer) {
-                if (entity.isSpectator || AntiBot.isBot(entity))
+                if (entity.isSpectator || isBot(entity))
                     return false
 
-                if (entity.isClientFriend() && !LiquidBounce.moduleManager[NoFriends::class.java].state)
+                if (entity.isClientFriend() && !moduleManager[NoFriends::class.java].state)
                     return false
 
-                val teams = LiquidBounce.moduleManager[Teams::class.java] as Teams
+                val teams = moduleManager[Teams::class.java] as Teams
 
                 return !teams.state || !teams.isInYourTeam(entity)
             }
@@ -607,7 +611,7 @@ class KillAura : Module() {
             stopBlocking()
 
         // Call attack event
-        LiquidBounce.eventManager.callEvent(AttackEvent(entity))
+        callEvent(AttackEvent(entity))
 
         // Attack target
         if (swingValue.get())
@@ -630,15 +634,15 @@ class KillAura : Module() {
         }
 
         // Extra critical effects
-        val criticals = LiquidBounce.moduleManager[Criticals::class.java] as Criticals
+        val criticals = moduleManager[Criticals::class.java] as Criticals
 
         for (i in 0..2) {
             // Critical Effect
-            if (thePlayer.fallDistance > 0F && !thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isPotionActive(Potion.blindness) && thePlayer.ridingEntity == null || criticals.state && criticals.msTimer.hasTimePassed(criticals.delayValue.get().toLong()) && !thePlayer.isInWater && !thePlayer.isInLava && !thePlayer.isInWeb)
+            if (thePlayer.fallDistance > 0F && !thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isPotionActive(Potion.blindness) && thePlayer.ridingEntity == null || criticals.state && criticals.msTimer.hasTimePassed(criticals.delayValue.get()) && !thePlayer.isInWater && !thePlayer.isInLava && !thePlayer.isInWeb)
                 thePlayer.onCriticalHit(target)
 
             // Enchant Effect
-            if (EnchantmentHelper.getModifierForCreature(thePlayer.heldItem, target!!.creatureAttribute) > 0.0f || fakeSharpValue.get())
+            if (EnchantmentHelper.getModifierForCreature(thePlayer.heldItem, target!!.creatureAttribute) > 0f || fakeSharpValue.get())
                 thePlayer.onEnchantmentCritical(target)
         }
 
@@ -657,10 +661,10 @@ class KillAura : Module() {
         }
          */
         // Start blocking after attack
-        if (autoBlockValue.get().equals("Packet", true) && (thePlayer.isBlocking || canBlock))
+        if (autoBlockValue.get() == "Packet" && (thePlayer.isBlocking || canBlock))
             startBlocking(entity, interactAutoBlockValue.get())
 
-        CooldownHelper.resetLastAttackedTicks()
+        resetLastAttackedTicks()
     }
 
     /**
@@ -674,9 +678,9 @@ class KillAura : Module() {
 
         if (predictValue.get()) {
             boundingBox = boundingBox.offset(
-                (entity.posX - entity.prevPosX - (mc.thePlayer.posX - mc.thePlayer.prevPosX)) * RandomUtils.nextFloat(minPredictSize.get(), maxPredictSize.get()),
-                (entity.posY - entity.prevPosY - (mc.thePlayer.posY - mc.thePlayer.prevPosY)) * RandomUtils.nextFloat(minPredictSize.get(), maxPredictSize.get()),
-                (entity.posZ - entity.prevPosZ - (mc.thePlayer.posZ - mc.thePlayer.prevPosZ)) * RandomUtils.nextFloat(minPredictSize.get(), maxPredictSize.get())
+                (entity.posX - entity.prevPosX - (mc.thePlayer.posX - mc.thePlayer.prevPosX)) * nextFloat(minPredictSize.get(), maxPredictSize.get()),
+                (entity.posY - entity.prevPosY - (mc.thePlayer.posY - mc.thePlayer.prevPosY)) * nextFloat(minPredictSize.get(), maxPredictSize.get()),
+                (entity.posZ - entity.prevPosZ - (mc.thePlayer.posZ - mc.thePlayer.prevPosZ)) * nextFloat(minPredictSize.get(), maxPredictSize.get())
             )
         }
 
@@ -689,8 +693,7 @@ class KillAura : Module() {
                 maxRange
         ) ?: return false
 
-        var limitedRotation = limitAngleChange(serverRotation, rotation,
-                RandomUtils.nextFloat(minTurnSpeed.get(), maxTurnSpeed.get()))
+        var limitedRotation = limitAngleChange(serverRotation, rotation, nextFloat(minTurnSpeed.get(), maxTurnSpeed.get()))
 
         // Micronize rotations
         if (micronizedValue.get()) {
@@ -702,7 +705,7 @@ class KillAura : Module() {
 
             if (isRotationFaced(entity, reach, targetRotation)) {
                 // Micronize rotation
-                limitedRotation = limitAngleChange(serverRotation, rotation, (Math.random() * micronizedStrength.get()).toFloat())
+                limitedRotation = limitAngleChange(serverRotation, rotation, nextFloat(endInclusive = micronizedStrength.get()))
             }
         }
 
@@ -734,10 +737,10 @@ class KillAura : Module() {
             }
 
             if (raycastValue.get() && raycastedEntity != null && raycastedEntity is EntityLivingBase
-                    && (LiquidBounce.moduleManager[NoFriends::class.java].state || !(raycastedEntity is EntityPlayer && raycastedEntity.isClientFriend())))
+                    && (moduleManager[NoFriends::class.java].state || !(raycastedEntity is EntityPlayer && raycastedEntity.isClientFriend())))
                 currentTarget = raycastedEntity
 
-            hitable = if (maxTurnSpeed.get() > 0F) currentTarget == raycastedEntity else true
+            hitable = currentTarget == raycastedEntity
         } else
             hitable = isFaced(currentTarget!!, reach)
     }
@@ -747,11 +750,11 @@ class KillAura : Module() {
      */
     private fun startBlocking(interactEntity: Entity, interact: Boolean, fake: Boolean = false) {
         if (!fake) {
-            if (!(blockRate.get() > 0 && Random().nextInt(100) <= blockRate.get()))
+            if (!(blockRate.get() > 0 && nextInt(endExclusive = 100) <= blockRate.get()))
                 return
 
             if (interact) {
-                val positionEye = mc.thePlayer.getPositionEyes(1F)
+                val positionEye = mc.thePlayer.eyes
 
                 val boundingBox = interactEntity.hitBox
 
@@ -774,7 +777,7 @@ class KillAura : Module() {
                 mc.netHandler.addToSendQueue(C02PacketUseEntity(interactEntity, C02PacketUseEntity.Action.INTERACT))
             }
 
-            mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, mc.thePlayer.inventory.getCurrentItem(), 0.0F, 0.0F, 0.0F))
+            mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, mc.thePlayer.inventory.getCurrentItem(), 0f, 0f, 0f))
             blockStatus = true
         }
 
@@ -799,7 +802,7 @@ class KillAura : Module() {
      */
     private val cancelRun: Boolean
         inline get() = mc.thePlayer.isSpectator || !isAlive(mc.thePlayer)
-                || LiquidBounce.moduleManager[Blink::class.java].state || LiquidBounce.moduleManager[FreeCam::class.java].state
+                || moduleManager[Blink::class.java].state || moduleManager[FreeCam::class.java].state
 
     /**
      * Check if [entity] is alive
@@ -825,7 +828,7 @@ class KillAura : Module() {
     /**
      * HUD Tag
      */
-    override val tag: String
+    override val tag
         get() = targetModeValue.get()
 
     val isBlockingChestAura: Boolean

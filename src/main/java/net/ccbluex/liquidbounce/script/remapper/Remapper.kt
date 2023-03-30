@@ -5,9 +5,10 @@
  */
 package net.ccbluex.liquidbounce.script.remapper
 
-import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.utils.ClientUtils
-import net.ccbluex.liquidbounce.utils.misc.HttpUtils
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_CLOUD
+import net.ccbluex.liquidbounce.file.FileManager.dir
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
+import net.ccbluex.liquidbounce.utils.misc.HttpUtils.download
 import java.io.File
 
 /**
@@ -18,7 +19,7 @@ import java.io.File
 object Remapper {
 
     private const val srgName = "stable_22"
-    private val srgFile = File(LiquidBounce.fileManager.dir, "mcp-$srgName.srg")
+    private val srgFile = File(dir, "mcp-$srgName.srg")
 
     private val fields : HashMap<String, HashMap<String, String>> = hashMapOf()
     private val methods : HashMap<String, HashMap<String, String>> = hashMapOf()
@@ -28,19 +29,19 @@ object Remapper {
      */
     fun loadSrg() {
         // Check if srg file is already downloaded
-        if(!srgFile.exists()) {
+        if (!srgFile.exists()) {
             // Download srg file
             srgFile.createNewFile()
 
-            ClientUtils.getLogger().info("[Remapper] Downloading $srgName srg...")
-            HttpUtils.download("${LiquidBounce.CLIENT_CLOUD}/srgs/mcp-$srgName.srg", srgFile)
-            ClientUtils.getLogger().info("[Remapper] Downloaded $srgName.")
+            LOGGER.info("[Remapper] Downloading $srgName srg...")
+            download("$CLIENT_CLOUD/srgs/mcp-$srgName.srg", srgFile)
+            LOGGER.info("[Remapper] Downloaded $srgName.")
         }
 
         // Load srg
-        ClientUtils.getLogger().info("[Remapper] Loading srg...")
+        LOGGER.info("[Remapper] Loading srg...")
         parseSrg()
-        ClientUtils.getLogger().info("[Remapper] Loaded srg.")
+        LOGGER.info("[Remapper] Loaded srg.")
     }
 
     private fun parseSrg() {
@@ -56,7 +57,7 @@ object Remapper {
                     val fieldName = name.substring(name.lastIndexOf('/') + 1)
                     val fieldSrg = srg.substring(srg.lastIndexOf('/') + 1)
 
-                    if(!fields.contains(className))
+                    if (className !in fields)
                         fields[className] = hashMapOf()
 
                     fields[className]!![fieldSrg] = fieldName
@@ -71,7 +72,7 @@ object Remapper {
                     val methodName = name.substring(name.lastIndexOf('/') + 1)
                     val methodSrg = srg.substring(srg.lastIndexOf('/') + 1)
 
-                    if(!methods.contains(className))
+                    if (className !in methods)
                         methods[className] = hashMapOf()
 
                     methods[className]!![methodSrg + desc] = methodName

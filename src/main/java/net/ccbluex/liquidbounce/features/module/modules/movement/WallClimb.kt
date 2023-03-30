@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.direction
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlockIntersects
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -39,7 +39,7 @@ class WallClimb : Module() {
         if (!thePlayer.isCollidedHorizontally || thePlayer.isOnLadder || thePlayer.isInWater || thePlayer.isInLava)
             return
 
-        if ("simple".equals(modeValue.get(), ignoreCase = true)) {
+        if (modeValue.get() == "Simple") {
             event.y = 0.2
             thePlayer.motionY = 0.0
         }
@@ -103,7 +103,7 @@ class WallClimb : Module() {
 
         if (packet is C03PacketPlayer) {
             if (glitch) {
-                val yaw = MovementUtils.direction.toFloat()
+                val yaw = direction
                 packet.x = packet.x - sin(yaw) * 0.00000001
                 packet.z = packet.z + cos(yaw) * 0.00000001
                 glitch = false
@@ -119,7 +119,11 @@ class WallClimb : Module() {
 
         when (mode.lowercase()) {
             "checkerclimb" -> if (event.y > thePlayer.posY) event.boundingBox = null
-            "clip" -> if (event.block != null && mc.thePlayer != null && event.block == Blocks.air && event.y < thePlayer.posY && thePlayer.isCollidedHorizontally && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isInLava) event.boundingBox = AxisAlignedBB.fromBounds(0.0, 0.0, 0.0, 1.0, 1.0, 1.0).offset(thePlayer.posX, thePlayer.posY.toInt() - 1.0, thePlayer.posZ)
+            "clip" ->
+                if (event.block == Blocks.air && event.y < thePlayer.posY && thePlayer.isCollidedHorizontally
+                    && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isInLava)
+                    event.boundingBox = AxisAlignedBB.fromBounds(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
+                        .offset(thePlayer.posX, thePlayer.posY.toInt() - 1.0, thePlayer.posZ)
         }
     }
 }

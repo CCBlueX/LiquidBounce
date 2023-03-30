@@ -5,8 +5,9 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands
 
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.file.FileManager.friendsConfig
+import net.ccbluex.liquidbounce.file.FileManager.saveConfig
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 
 class FriendCommand : Command("friend", "friends") {
@@ -15,7 +16,7 @@ class FriendCommand : Command("friend", "friends") {
      */
     override fun execute(args: Array<String>) {
         if (args.size > 1) {
-            val friendsConfig = LiquidBounce.fileManager.friendsConfig
+            val friendsConfig = friendsConfig
 
             when {
                 args[1].equals("add", ignoreCase = true) -> {
@@ -28,7 +29,7 @@ class FriendCommand : Command("friend", "friends") {
                         }
 
                         if (if (args.size > 3) friendsConfig.addFriend(name, StringUtils.toCompleteString(args, 3)) else friendsConfig.addFriend(name)) {
-                            LiquidBounce.fileManager.saveConfig(friendsConfig)
+                            saveConfig(friendsConfig)
                             chat("§a§l$name§3 was added to your friend list.")
                             playEdit()
                         } else
@@ -44,7 +45,7 @@ class FriendCommand : Command("friend", "friends") {
                         val name = args[2]
 
                         if (friendsConfig.removeFriend(name)) {
-                            LiquidBounce.fileManager.saveConfig(friendsConfig)
+                            saveConfig(friendsConfig)
                             chat("§a§l$name§3 was removed from your friend list.")
                             playEdit()
                         } else
@@ -58,7 +59,7 @@ class FriendCommand : Command("friend", "friends") {
                 args[1].equals("clear", ignoreCase = true) -> {
                     val friends = friendsConfig.friends.size
                     friendsConfig.clearFriends()
-                    LiquidBounce.fileManager.saveConfig(friendsConfig)
+                    saveConfig(friendsConfig)
                     chat("Removed $friends friend(s).")
                     return
                 }
@@ -91,7 +92,7 @@ class FriendCommand : Command("friend", "friends") {
                                 .map { it.name }
                     }
                     "remove" -> {
-                        return LiquidBounce.fileManager.friendsConfig.friends
+                        return friendsConfig.friends
                                 .map { it.playerName }
                                 .filter { it.startsWith(args[1], true) }
                     }

@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
@@ -13,11 +13,13 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.player.AutoTool
-import net.ccbluex.liquidbounce.utils.RotationUtils
-import net.ccbluex.liquidbounce.utils.block.BlockUtils
+import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
+import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getCenterDistance
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.searchBlocks
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.extensions.eyes
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBlockBox
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -64,7 +66,7 @@ class Nuker : Module() {
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         // Block hit delay
-        if (blockHitDelay > 0 && !LiquidBounce.moduleManager[FastBreak::class.java].state) {
+        if (blockHitDelay > 0 && !moduleManager[FastBreak::class.java].state) {
             blockHitDelay--
             return
         }
@@ -84,7 +86,7 @@ class Nuker : Module() {
         if (!mc.playerController.isInCreativeMode) {
             // Default nuker
 
-            val eyesPos = thePlayer.getPositionEyes(1f)
+            val eyesPos = thePlayer.eyes
             val validBlocks = searchBlocks(radiusValue.get().roundToInt() + 1)
                     .filter { (pos, block) ->
                         if (getCenterDistance(pos) <= radiusValue.get() && validBlock(block)) {
@@ -133,8 +135,8 @@ class Nuker : Module() {
 
                 // Change head rotations to next block
                 if (rotationsValue.get()) {
-                    val rotation = RotationUtils.faceBlock(blockPos) ?: return // In case of a mistake. Prevent flag.
-                    RotationUtils.setTargetRotation(rotation.rotation)
+                    val rotation = faceBlock(blockPos) ?: return // In case of a mistake. Prevent flag.
+                    setTargetRotation(rotation.rotation)
                 }
 
                 // Set next target block
@@ -142,7 +144,7 @@ class Nuker : Module() {
                 attackedBlocks.add(blockPos)
 
                 // Call auto tool
-                val autoTool = LiquidBounce.moduleManager.getModule(AutoTool::class.java) as AutoTool
+                val autoTool = moduleManager[AutoTool::class.java] as AutoTool
                 if (autoTool.state)
                     autoTool.switchSlot(blockPos)
 
@@ -196,7 +198,7 @@ class Nuker : Module() {
 
                             if (!throughWallsValue.get()) { // ThroughWalls: Just break blocks in your sight
                                 // Raytrace player eyes to block position (through walls check)
-                                val eyesPos = thePlayer.getPositionEyes(1f)
+                                val eyesPos = thePlayer.eyes
                                 val blockVec = Vec3(thePlayer.position)
                                 val rayTrace = mc.theWorld.rayTraceBlocks(eyesPos, blockVec,
                                         false, true, false)
@@ -223,14 +225,14 @@ class Nuker : Module() {
         // Safe block
         if (!layerValue.get()) {
             val safePos = BlockPos(mc.thePlayer.posX, mc.thePlayer.posY - 1, mc.thePlayer.posZ)
-            val safeBlock = BlockUtils.getBlock(safePos)
+            val safeBlock = getBlock(safePos)
             if (safeBlock != null && validBlock(safeBlock))
-                RenderUtils.drawBlockBox(safePos, Color.GREEN, true)
+                drawBlockBox(safePos, Color.GREEN, true)
         }
 
         // Just draw all blocks
         for (blockPos in attackedBlocks)
-            RenderUtils.drawBlockBox(blockPos, Color.RED, true)
+            drawBlockBox(blockPos, Color.RED, true)
     }
 
     /**

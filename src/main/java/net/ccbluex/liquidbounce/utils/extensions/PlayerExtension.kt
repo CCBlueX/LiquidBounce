@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.utils.extensions
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.file.FileManager.friendsConfig
 import net.ccbluex.liquidbounce.utils.MinecraftInstance.mc
 import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.getFixedSensitivityAngle
@@ -29,7 +29,6 @@ import net.minecraft.util.Vec3
  * Allows to get the distance between the current entity and [entity] from the nearest corner of the bounding box
  */
 fun Entity.getDistanceToEntityBox(entity: Entity): Double {
-    val eyes = this.getPositionEyes(1F)
     val pos = getNearestPointBB(eyes, entity.hitBox)
     return eyes.distanceTo(pos)
 }
@@ -67,7 +66,7 @@ fun Entity.isMob(): Boolean {
 fun EntityPlayer.isClientFriend(): Boolean {
     val entityName = name ?: return false
 
-    return LiquidBounce.fileManager.friendsConfig.isFriend(stripColor(entityName))
+    return friendsConfig.isFriend(stripColor(entityName))
 }
 
 val Entity.rotation: Rotation
@@ -79,29 +78,29 @@ val Entity.hitBox: AxisAlignedBB
         return entityBoundingBox.expand(borderSize, borderSize, borderSize)
     }
 
+val Entity.eyes: Vec3
+    get() = getPositionEyes(1f)
+
 /**
  * Setting yaw to a fixed sensitivity angle
  */
 
 fun EntityPlayerSP.setFixedSensitivityAngles(yaw: Float? = null, pitch: Float? = null) {
-    if (yaw != null)
-        mc.thePlayer.fixedSensitivityYaw = yaw
+    if (yaw != null) fixedSensitivityYaw = yaw
 
-    if (pitch != null)
-        mc.thePlayer.fixedSensitivityPitch = pitch
+    if (pitch != null) fixedSensitivityPitch = pitch
 }
 
 var EntityPlayerSP.fixedSensitivityYaw: Float
     get() = getFixedSensitivityAngle(mc.thePlayer.rotationYaw)
     set(yaw) {
-        mc.thePlayer.rotationYaw = getFixedSensitivityAngle(yaw, mc.thePlayer.rotationYaw)
+        rotationYaw = getFixedSensitivityAngle(yaw, rotationYaw)
     }
 
 var EntityPlayerSP.fixedSensitivityPitch: Float
-    get() = getFixedSensitivityAngle(mc.thePlayer.rotationPitch)
+    get() = getFixedSensitivityAngle(rotationPitch)
     set(pitch) {
-        val clampedPitch = if (pitch > 90f) 90f else if (pitch < -90f) -90f else pitch
-        mc.thePlayer.rotationPitch = getFixedSensitivityAngle(clampedPitch, mc.thePlayer.rotationPitch)
+        rotationPitch = getFixedSensitivityAngle(pitch.coerceIn(-90f, 90f), rotationPitch)
     }
 
 // Makes fixedSensitivityYaw, ... += work

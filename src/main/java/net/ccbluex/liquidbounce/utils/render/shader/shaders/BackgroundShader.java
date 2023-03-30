@@ -5,13 +5,15 @@
  */
 package net.ccbluex.liquidbounce.utils.render.shader.shaders;
 
-import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.ccbluex.liquidbounce.utils.render.shader.Shader;
 import org.lwjgl.opengl.Display;
-import org.lwjgl.opengl.GL20;
 
 import java.io.File;
 import java.io.IOException;
+
+import static net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime;
+import static org.lwjgl.opengl.GL20.glUniform1f;
+import static org.lwjgl.opengl.GL20.glUniform2f;
 
 public final class BackgroundShader extends Shader {
 
@@ -37,11 +39,11 @@ public final class BackgroundShader extends Shader {
     public void updateUniforms() {
         final int resolutionID = getUniform("iResolution");
         if(resolutionID > -1)
-            GL20.glUniform2f(resolutionID, (float) Display.getWidth(), (float) Display.getHeight());
+            glUniform2f(resolutionID, (float) Display.getWidth(), (float) Display.getHeight());
         final int timeID = getUniform("iTime");
-        if(timeID > -1) GL20.glUniform1f(timeID, time);
+        if(timeID > -1) glUniform1f(timeID, time);
 
-        time += 0.003F * RenderUtils.deltaTime;
+        time += 0.003F * deltaTime;
     }
 
 }

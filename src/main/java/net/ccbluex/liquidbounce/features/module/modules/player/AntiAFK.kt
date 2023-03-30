@@ -92,11 +92,11 @@ class AntiAFK : Module() {
                             delayTimer.reset()
                         }
                         4 -> {
-                            thePlayer.fixedSensitivityYaw += RandomUtils.nextFloat(-180.0F, 180.0F)
+                            thePlayer.fixedSensitivityYaw += RandomUtils.nextFloat(-180f, 180f)
                             delayTimer.reset()
                         }
                         5 -> {
-                            thePlayer.fixedSensitivityPitch += RandomUtils.nextFloat(-10.0F, 10.0F)
+                            thePlayer.fixedSensitivityPitch += RandomUtils.nextFloat(-10f, 10f)
                             delayTimer.reset()
                         }
                     }
@@ -108,13 +108,13 @@ class AntiAFK : Module() {
                 if (jumpValue.get() && thePlayer.onGround)
                     thePlayer.jump()
 
-                if (rotateValue.get() && delayTimer.hasTimePassed(rotationDelayValue.get().toLong())) {
+                if (rotateValue.get() && delayTimer.hasTimePassed(rotationDelayValue.get())) {
                     thePlayer.fixedSensitivityYaw += rotationAngleValue.get()
                     thePlayer.fixedSensitivityPitch += RandomUtils.nextFloat(0F, 1F) * 2 - 1
                     delayTimer.reset()
                 }
 
-                if (swingValue.get() && !thePlayer.isSwingInProgress && swingDelayTimer.hasTimePassed(swingDelayValue.get().toLong())) {
+                if (swingValue.get() && !thePlayer.isSwingInProgress && swingDelayTimer.hasTimePassed(swingDelayValue.get())) {
                     thePlayer.swingItem()
                     swingDelayTimer.reset()
                 }

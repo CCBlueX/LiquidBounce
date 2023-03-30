@@ -28,7 +28,7 @@ public class AnimationUtils {
      * @return A value larger than 0
      */
     public static float easeOutElastic(float x) {
-        double c4 = (2 * Math.PI) / 3.0f;
+        double c4 = (2 * Math.PI) / 3f;
 
         return x == 0
                 ? 0

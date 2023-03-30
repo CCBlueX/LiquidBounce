@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.PacketEvent
@@ -14,7 +14,9 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isOnGround
+import net.ccbluex.liquidbounce.utils.MovementUtils.speed
+import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -35,10 +37,10 @@ class Velocity : Module() {
         "Reverse", "SmoothReverse", "Jump", "Glitch", "Legit"), "Simple")
 
     private val horizontalValue = object : FloatValue("Horizontal", 0F, 0F, 1F) {
-        override fun isSupported() = modeValue.get() in setOf("Simple", "AAC")
+        override fun isSupported() = modeValue.get() in setOf("Simple", "AAC", "Legit")
     }
     private val verticalValue = object : FloatValue("Vertical", 0F, 0F, 1F) {
-        override fun isSupported() = modeValue.get() == "Simple"
+        override fun isSupported() = modeValue.get() in setOf("Simple", "Legit")
     }
 
     // Reverse
@@ -82,7 +84,7 @@ class Velocity : Module() {
     // AACPush
     private var jump = false
 
-    override val tag: String
+    override val tag
         get() = modeValue.get()
 
     override fun onDisable() {
@@ -97,14 +99,15 @@ class Velocity : Module() {
             return
 
         when (modeValue.get().lowercase()) {
-            "jump" -> if (thePlayer.hurtTime > 0 && thePlayer.onGround) {
-                thePlayer.motionY = 0.42
+            "jump" ->
+                if (thePlayer.hurtTime > 0 && thePlayer.onGround) {
+                    thePlayer.motionY = 0.42
 
-                val yaw = thePlayer.rotationYaw * 0.017453292F
+                    val yaw = thePlayer.rotationYaw * 0.017453292F
 
-                thePlayer.motionX -= sin(yaw) * 0.2
-                thePlayer.motionZ += cos(yaw) * 0.2
-            }
+                    thePlayer.motionX -= sin(yaw) * 0.2
+                    thePlayer.motionZ += cos(yaw) * 0.2
+                }
 
             "glitch" -> {
                 thePlayer.noClip = velocityInput
@@ -120,8 +123,8 @@ class Velocity : Module() {
                     return
 
                 if (!thePlayer.onGround) {
-                    MovementUtils.strafe(MovementUtils.speed * reverseStrengthValue.get())
-                } else if (velocityTimer.hasTimePassed(80L))
+                    speed *= reverseStrengthValue.get()
+                } else if (velocityTimer.hasTimePassed(80))
                     velocityInput = false
             }
 
@@ -137,26 +140,25 @@ class Velocity : Module() {
                 if (!thePlayer.onGround) {
                     if (reverseHurt)
                         thePlayer.speedInAir = reverse2StrengthValue.get()
-                } else if (velocityTimer.hasTimePassed(80L)) {
+                } else if (velocityTimer.hasTimePassed(80)) {
                     velocityInput = false
                     reverseHurt = false
                 }
             }
 
-            "aac" -> if (velocityInput && velocityTimer.hasTimePassed(80L)) {
+            "aac" -> if (velocityInput && velocityTimer.hasTimePassed(80)) {
                 thePlayer.motionX *= horizontalValue.get()
                 thePlayer.motionZ *= horizontalValue.get()
                 //mc.thePlayer.motionY *= verticalValue.get() ?
                 velocityInput = false
             }
 
-            "aacv4" -> {
+            "aacv4" ->
                 if (thePlayer.hurtTime>0 && !thePlayer.onGround){
                     val reduce = aacv4MotionReducerValue.get()
                     thePlayer.motionX *= reduce
                     thePlayer.motionZ *= reduce
                 }
-            }
 
             "aacpush" -> {
                 if (jump) {
@@ -169,7 +171,7 @@ class Velocity : Module() {
 
                     // Reduce Y
                     if (thePlayer.hurtResistantTime > 0 && aacPushYReducerValue.get()
-                            && !LiquidBounce.moduleManager[Speed::class.java].state)
+                            && !moduleManager[Speed::class.java].state)
                         thePlayer.motionY -= 0.014999993
                 }
 
@@ -182,31 +184,31 @@ class Velocity : Module() {
                 }
             }
 
-            "aaczero" -> if (thePlayer.hurtTime > 0) {
-                if (!velocityInput || thePlayer.onGround || thePlayer.fallDistance > 2F)
-                    return
+            "aaczero" ->
+                if (thePlayer.hurtTime > 0) {
+                    if (!velocityInput || thePlayer.onGround || thePlayer.fallDistance > 2F)
+                        return
 
-                thePlayer.motionY -= 1.0
-                thePlayer.isAirBorne = true
-                thePlayer.onGround = true
-            } else
-                velocityInput = false
+                    thePlayer.motionY -= 1.0
+                    thePlayer.isAirBorne = true
+                    thePlayer.onGround = true
+                } else
+                    velocityInput = false
 
             "legit" -> {
-                if (legitDisableInAirValue.get() && !MovementUtils.isOnGround(0.5)) return
-                if (mc.thePlayer.maxHurtResistantTime != mc.thePlayer.hurtResistantTime || mc.thePlayer.maxHurtResistantTime == 0) {
+                if (legitDisableInAirValue.get() && !isOnGround(0.5))
                     return
-                }
-                if (Math.random() * 100.0 < legitChanceValue.get()) {
-                    val n: Float = horizontalValue.get() / 100.0f
-                    val n2: Float = verticalValue.get() / 100.0f
-                    thePlayer.motionX *= n.toDouble()
-                    thePlayer.motionZ *= n.toDouble()
-                    thePlayer.motionY *= n2.toDouble()
-                } else {
-                    thePlayer.motionX *= 1.0
-                    thePlayer.motionY *= 1.0
-                    thePlayer.motionZ *= 1.0
+
+                if (mc.thePlayer.maxHurtResistantTime != mc.thePlayer.hurtResistantTime || mc.thePlayer.maxHurtResistantTime == 0)
+                    return
+
+                if (nextInt(endExclusive = 100) < legitChanceValue.get()) {
+                    val horizontal = horizontalValue.get() / 100f
+                    val vertical = verticalValue.get() / 100f
+
+                    thePlayer.motionX *= horizontal.toDouble()
+                    thePlayer.motionZ *= horizontal.toDouble()
+                    thePlayer.motionY *= vertical.toDouble()
                 }
             }
         }
@@ -218,10 +220,7 @@ class Velocity : Module() {
 
         val packet = event.packet
 
-        if (packet is S12PacketEntityVelocity) {
-            if ((mc.theWorld?.getEntityByID(packet.entityID) ?: return) != thePlayer)
-                return
-
+        if (packet is S12PacketEntityVelocity && (mc.theWorld?.getEntityByID(packet.entityID) ?: return) != thePlayer) {
             velocityTimer.reset()
 
             when (modeValue.get().lowercase()) {
@@ -290,8 +289,9 @@ class Velocity : Module() {
                 if (!thePlayer.isCollidedVertically)
                     event.cancelEvent()
             }
-            "aaczero" -> if (thePlayer.hurtTime > 0)
-                event.cancelEvent()
+            "aaczero" ->
+                if (thePlayer.hurtTime > 0)
+                    event.cancelEvent()
         }
     }
 }

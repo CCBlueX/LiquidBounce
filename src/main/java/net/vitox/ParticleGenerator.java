@@ -1,13 +1,14 @@
 package net.vitox;
 
-import net.minecraft.client.Minecraft;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import net.vitox.particle.util.RenderUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+
+import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
+import static net.vitox.particle.util.RenderUtils.drawCircle;
 
 /**
  * Particle API This Api is free2use But u have to mention me.
@@ -29,13 +30,13 @@ public class ParticleGenerator {
     }
 
     public void draw(final int mouseX, final int mouseY) {
-        if(particles.isEmpty() || prevWidth != Minecraft.getMinecraft().displayWidth || prevHeight != Minecraft.getMinecraft().displayHeight) {
+        if(particles.isEmpty() || prevWidth != mc.displayWidth || prevHeight != mc.displayHeight) {
             particles.clear();
             create();
         }
 
-        prevWidth = Minecraft.getMinecraft().displayWidth;
-        prevHeight = Minecraft.getMinecraft().displayHeight;
+        prevWidth = mc.displayWidth;
+        prevHeight = mc.displayHeight;
 
         for(final Particle particle : particles) {
             particle.fall();
@@ -53,7 +54,7 @@ public class ParticleGenerator {
                         .forEach(connectable -> particle.connect(connectable.getX(), connectable.getY()));
             }
 
-            RenderUtils.drawCircle(particle.getX(), particle.getY(), particle.size, 0xffFFFFFF);
+            drawCircle(particle.getX(), particle.getY(), particle.size, 0xffFFFFFF);
         }
     }
 
@@ -61,6 +62,6 @@ public class ParticleGenerator {
         final Random random = new Random();
 
         for(int i = 0; i < amount; i++)
-            particles.add(new Particle(random.nextInt(Minecraft.getMinecraft().displayWidth), random.nextInt(Minecraft.getMinecraft().displayHeight)));
+            particles.add(new Particle(random.nextInt(mc.displayWidth), random.nextInt(mc.displayHeight)));
     }
 }

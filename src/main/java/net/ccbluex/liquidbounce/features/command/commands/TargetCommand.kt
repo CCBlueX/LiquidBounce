@@ -6,7 +6,10 @@
 package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.utils.EntityUtils
+import net.ccbluex.liquidbounce.utils.EntityUtils.targetAnimals
+import net.ccbluex.liquidbounce.utils.EntityUtils.targetInvisible
+import net.ccbluex.liquidbounce.utils.EntityUtils.targetMobs
+import net.ccbluex.liquidbounce.utils.EntityUtils.targetPlayer
 
 class TargetCommand : Command("target") {
     /**
@@ -16,29 +19,29 @@ class TargetCommand : Command("target") {
         if (args.size > 1) {
             when {
                 args[1].equals("players", ignoreCase = true) -> {
-                    EntityUtils.targetPlayer = !EntityUtils.targetPlayer
-                    chat("§7Target player toggled ${if (EntityUtils.targetPlayer) "on" else "off"}.")
+                    targetPlayer = !targetPlayer
+                    chat("§7Target player toggled ${if (targetPlayer) "on" else "off"}.")
                     playEdit()
                     return
                 }
 
                 args[1].equals("mobs", ignoreCase = true) -> {
-                    EntityUtils.targetMobs = !EntityUtils.targetMobs
-                    chat("§7Target mobs toggled ${if (EntityUtils.targetMobs) "on" else "off"}.")
+                    targetMobs = !targetMobs
+                    chat("§7Target mobs toggled ${if (targetMobs) "on" else "off"}.")
                     playEdit()
                     return
                 }
 
                 args[1].equals("animals", ignoreCase = true) -> {
-                    EntityUtils.targetAnimals = !EntityUtils.targetAnimals
-                    chat("§7Target animals toggled ${if (EntityUtils.targetAnimals) "on" else "off"}.")
+                    targetAnimals = !targetAnimals
+                    chat("§7Target animals toggled ${if (targetAnimals) "on" else "off"}.")
                     playEdit()
                     return
                 }
 
                 args[1].equals("invisible", ignoreCase = true) -> {
-                    EntityUtils.targetInvisible = !EntityUtils.targetInvisible
-                    chat("§7Target Invisible toggled ${if (EntityUtils.targetInvisible) "on" else "off"}.")
+                    targetInvisible = !targetInvisible
+                    chat("§7Target Invisible toggled ${if (targetInvisible) "on" else "off"}.")
                     playEdit()
                     return
                 }

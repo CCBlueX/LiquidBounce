@@ -5,11 +5,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.minecraft.init.Blocks
 import net.minecraft.network.play.client.C03PacketPlayer
@@ -22,13 +22,13 @@ class AACPort : SpeedMode("AACPort") {
     override fun onUpdate() {
         val thePlayer = mc.thePlayer ?: return
 
-        if (!MovementUtils.isMoving)
+        if (!isMoving)
             return
 
         val f = thePlayer.rotationYaw * 0.017453292f
         var d = 0.2
 
-        while (d <= (LiquidBounce.moduleManager.getModule(Speed::class.java) as Speed).portMax.get()) {
+        while (d <= (moduleManager[Speed::class.java] as Speed).portMax.get()) {
             val x = thePlayer.posX - sin(f) * d
             val z = thePlayer.posZ + cos(f) * d
 

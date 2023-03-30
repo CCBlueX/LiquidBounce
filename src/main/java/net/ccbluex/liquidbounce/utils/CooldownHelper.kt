@@ -6,15 +6,9 @@
 package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.utils.MinecraftInstance.mc
-import net.minecraft.item.Item
-import net.minecraft.item.ItemAxe
-import net.minecraft.item.ItemHoe
-import net.minecraft.item.ItemPickaxe
-import net.minecraft.item.ItemSpade
-import net.minecraft.item.ItemStack
-import net.minecraft.item.ItemSword
-import net.minecraft.util.MathHelper
+import net.minecraft.item.*
 import net.minecraft.potion.Potion
+import net.minecraft.util.MathHelper
 import kotlin.math.min
 
 /**
@@ -64,14 +58,14 @@ object CooldownHelper {
 
     fun getAttackCooldownProgressPerTick() = 1.0 / genericAttackSpeed * 20.0
 
-    fun getAttackCooldownProgress() = MathHelper.clamp_double(this.lastAttackedTicks / getAttackCooldownProgressPerTick(), 0.0, 1.0)
+    fun getAttackCooldownProgress() = MathHelper.clamp_double(lastAttackedTicks / getAttackCooldownProgressPerTick(), 0.0, 1.0)
 
     fun resetLastAttackedTicks() {
-        this.lastAttackedTicks = 0
+        lastAttackedTicks = 0
     }
 
     fun incrementLastAttackedTicks() {
-        this.lastAttackedTicks++
+        lastAttackedTicks++
     }
 
 }

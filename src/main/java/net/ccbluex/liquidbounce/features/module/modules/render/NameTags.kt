@@ -10,10 +10,10 @@ import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
+import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.EntityUtils
+import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.extensions.getPing
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.quickDrawBorderedRect
@@ -57,12 +57,12 @@ class NameTags : Module() {
 
         for (entity in mc.theWorld.loadedEntityList) {
             if (entity !is EntityLivingBase) continue
-            if (!EntityUtils.isSelected(entity, false)) continue
-            if (AntiBot.isBot(entity) && !botValue.get()) continue
+            if (!isSelected(entity, false)) continue
+            if (isBot(entity) && !botValue.get()) continue
 
             renderNameTag(entity,
                     if (clearNamesValue.get())
-                        ColorUtils.stripColor(entity.displayName?.unformattedText) ?: continue
+                        ColorUtils.stripColor(entity.displayName?.unformattedText ?: continue)
                     else
                         (entity.displayName ?: continue).unformattedText
             )
@@ -81,7 +81,7 @@ class NameTags : Module() {
         val fontRenderer = fontValue.get()
 
         // Modify tag
-        val bot = AntiBot.isBot(entity)
+        val bot = isBot(entity)
         val nameColor = if (bot) "§3" else if (entity.isInvisible) "§6" else if (entity.isSneaking) "§4" else "§7"
         val ping = if (entity is EntityPlayer) entity.getPing() else 0
 

@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.event
 
-class EventManager {
+object EventManager {
 
     private val registry = HashMap<Class<out Event>, MutableList<EventHook>>()
 

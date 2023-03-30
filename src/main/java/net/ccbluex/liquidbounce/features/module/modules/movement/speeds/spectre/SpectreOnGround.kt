@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spectre
 
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -16,7 +16,7 @@ class SpectreOnGround : SpeedMode("SpectreOnGround") {
     override fun onMotion() {}
     override fun onUpdate() {}
     override fun onMove(event: MoveEvent) {
-        if (!MovementUtils.isMoving || mc.thePlayer.movementInput.jump) return
+        if (!isMoving || mc.thePlayer.movementInput.jump) return
         if (speedUp >= 10) {
             if (mc.thePlayer.onGround) {
                 mc.thePlayer.motionX = 0.0

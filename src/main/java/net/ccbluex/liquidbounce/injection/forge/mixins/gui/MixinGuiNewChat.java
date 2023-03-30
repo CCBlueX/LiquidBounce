@@ -5,17 +5,14 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
-import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.modules.render.HUD;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.*;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.util.MathHelper;
-import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -25,6 +22,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
+
+import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
+import static net.minecraft.client.renderer.GlStateManager.*;
+import static org.lwjgl.opengl.GL11.glColor4f;
 
 @Mixin(GuiNewChat.class)
 public abstract class MixinGuiNewChat {
@@ -63,7 +64,7 @@ public abstract class MixinGuiNewChat {
 
     @Inject(method = "drawChat", at = @At("HEAD"), cancellable = true)
     private void drawChat(int p_drawChat_1_, final CallbackInfo callbackInfo) {
-        final HUD hud = (HUD) LiquidBounce.moduleManager.getModule(HUD.class);
+        final HUD hud = (HUD) moduleManager.getModule(HUD.class);
 
         if (hud.getState() && hud.getFontChatValue().get()) {
             callbackInfo.cancel();
@@ -80,9 +81,9 @@ public abstract class MixinGuiNewChat {
 
                     float lvt_7_1_ = this.getChatScale();
                     int lvt_8_1_ = MathHelper.ceiling_float_int((float) this.getChatWidth() / lvt_7_1_);
-                    GlStateManager.pushMatrix();
-                    GlStateManager.translate(2.0F, 20.0F, 0.0F);
-                    GlStateManager.scale(lvt_7_1_, lvt_7_1_, 1.0F);
+                    pushMatrix();
+                    translate(2f, 20f, 0f);
+                    scale(lvt_7_1_, lvt_7_1_, 1f);
 
                     int lvt_9_1_;
                     int lvt_11_1_;
@@ -110,8 +111,8 @@ public abstract class MixinGuiNewChat {
                                     Gui.drawRect(lvt_15_1_, lvt_16_1_ - 9, lvt_15_1_ + lvt_8_1_ + 4, lvt_16_1_, lvt_14_1_ / 2 << 24);
                                     String lvt_17_1_ = lvt_10_1_.getChatComponent().getFormattedText();
                                     Fonts.font40.drawStringWithShadow(lvt_17_1_, lvt_15_1_ + 2, (lvt_16_1_ - 8), 16777215 + (lvt_14_1_ << 24));
-                                    GL11.glColor4f(1, 1, 1, 1);
-                                    GlStateManager.resetColor();
+                                    glColor4f(1, 1, 1, 1);
+                                    resetColor();
                                 }
                             }
                         }
@@ -119,7 +120,7 @@ public abstract class MixinGuiNewChat {
 
                     if (lvt_3_1_) {
                         lvt_9_1_ = Fonts.font40.getFontHeight();
-                        GlStateManager.translate(-3.0F, 0.0F, 0.0F);
+                        translate(-3f, 0f, 0f);
                         int lvt_10_2_ = lvt_5_1_ * lvt_9_1_ + lvt_5_1_;
                         lvt_11_1_ = lvt_4_1_ * lvt_9_1_ + lvt_4_1_;
                         int lvt_12_2_ = this.scrollPos * lvt_11_1_ / lvt_5_1_;
@@ -132,7 +133,7 @@ public abstract class MixinGuiNewChat {
                         }
                     }
 
-                    GlStateManager.popMatrix();
+                    popMatrix();
                 }
             }
         }
@@ -141,7 +142,7 @@ public abstract class MixinGuiNewChat {
     // TODO: Make real fix
     /*@Inject(method = "setChatLine", at = @At("HEAD"), cancellable = true)
     private void setChatLine(IChatComponent p_setChatLine_1_, int p_setChatLine_2_, int p_setChatLine_3_, boolean p_setChatLine_4_, final CallbackInfo callbackInfo) {
-        final HUD hud = (HUD) LiquidBounce.moduleManager.getModule(HUD.class);
+        final HUD hud = (HUD) moduleManager.getModule(HUD.class);
 
         if(hud.getState() && hud.fontChatValue.asBoolean()) {
             callbackInfo.cancel();
@@ -179,7 +180,7 @@ public abstract class MixinGuiNewChat {
 
     @Inject(method = "getChatComponent", at = @At("HEAD"), cancellable = true)
     private void getChatComponent(int p_getChatComponent_1_, int p_getChatComponent_2_, final CallbackInfoReturnable<IChatComponent> callbackInfo) {
-        final HUD hud = (HUD) LiquidBounce.moduleManager.getModule(HUD.class);
+        final HUD hud = (HUD) moduleManager.getModule(HUD.class);
 
         if (hud.getState() && hud.getFontChatValue().get()) {
             if (this.getChatOpen()) {

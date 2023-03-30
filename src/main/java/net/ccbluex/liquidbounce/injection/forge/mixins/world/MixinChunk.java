@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.world;
 
-import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.modules.render.ProphuntESP;
 import net.ccbluex.liquidbounce.utils.render.MiniMapRegister;
 import net.minecraft.block.state.IBlockState;
@@ -20,6 +19,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Objects;
+
+import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
 
 @Mixin(Chunk.class)
 public class MixinChunk {
@@ -36,7 +37,7 @@ public class MixinChunk {
         //noinspection ConstantConditions
         MiniMapRegister.INSTANCE.updateChunk((Chunk) ((Object) this));
 
-        final ProphuntESP prophuntESP = (ProphuntESP) LiquidBounce.moduleManager.getModule(ProphuntESP.class);
+        final ProphuntESP prophuntESP = (ProphuntESP) moduleManager.getModule(ProphuntESP.class);
 
         if (Objects.requireNonNull(prophuntESP).getState()) {
             synchronized (prophuntESP.getBlocks()) {

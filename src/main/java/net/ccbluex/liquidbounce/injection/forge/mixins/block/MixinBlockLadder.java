@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.block;
 
-import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.modules.movement.FastClimb;
 import net.minecraft.block.BlockLadder;
 import net.minecraft.block.properties.PropertyDirection;
@@ -20,6 +19,8 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.Objects;
+
+import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
 
 @Mixin(BlockLadder.class)
 @SideOnly(Side.CLIENT)
@@ -37,22 +38,22 @@ public abstract class MixinBlockLadder extends MixinBlock {
         final IBlockState blockState = worldIn.getBlockState(pos);
 
         if(blockState.getBlock() instanceof BlockLadder) {
-            final FastClimb fastClimb = (FastClimb) LiquidBounce.moduleManager.getModule(FastClimb.class);
-            final float f = Objects.requireNonNull(fastClimb).getState() && fastClimb.getModeValue().get().equalsIgnoreCase("AAC3.0.0") ? 0.99f : 0.125f;
+            final FastClimb fastClimb = (FastClimb) moduleManager.getModule(FastClimb.class);
+            final float f = Objects.requireNonNull(fastClimb).getState() && fastClimb.getModeValue().get().equals("AAC3.0.0") ? 0.99f : 0.125f;
 
             switch(blockState.getValue(FACING)) {
                 case NORTH:
-                    this.setBlockBounds(0.0F, 0.0F, 1.0F - f, 1.0F, 1.0F, 1.0F);
+                    this.setBlockBounds(0f, 0f, 1f - f, 1f, 1f, 1f);
                     break;
                 case SOUTH:
-                    this.setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, f);
+                    this.setBlockBounds(0f, 0f, 0f, 1f, 1f, f);
                     break;
                 case WEST:
-                    this.setBlockBounds(1.0F - f, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F);
+                    this.setBlockBounds(1f - f, 0f, 0f, 1f, 1f, 1f);
                     break;
                 case EAST:
                 default:
-                    this.setBlockBounds(0.0F, 0.0F, 0.0F, f, 1.0F, 1.0F);
+                    this.setBlockBounds(0f, 0f, 0f, f, 1f, 1f);
             }
         }
     }

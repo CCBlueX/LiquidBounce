@@ -6,24 +6,24 @@
 package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.features.module.modules.combat.Backtrack
+import net.ccbluex.liquidbounce.utils.RotationUtils.getVectorForRotation
+import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
+import net.ccbluex.liquidbounce.utils.extensions.eyes
 import net.ccbluex.liquidbounce.utils.extensions.hitBox
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.EntityPlayer
 
 
 object RaycastUtils : MinecraftInstance() {
-
     @JvmStatic
-    fun raycastEntity(range: Double, entityFilter: (Entity) -> Boolean) = raycastEntity(range, RotationUtils.serverRotation.yaw, RotationUtils.serverRotation.pitch, entityFilter)
-
-    @JvmStatic
-    fun raycastEntity(range: Double, yaw: Float, pitch: Float, entityFilter: (Entity) -> Boolean): Entity? {
+    @JvmOverloads
+    fun raycastEntity(range: Double, yaw: Float = serverRotation.yaw, pitch: Float = serverRotation.pitch, entityFilter: (Entity) -> Boolean): Entity? {
         val renderViewEntity = mc.renderViewEntity
 
         if (renderViewEntity != null && mc.theWorld != null) {
             var blockReachDistance = range
-            val eyePosition = renderViewEntity.getPositionEyes(1f)
-            val entityLook = RotationUtils.getVectorForRotation(Rotation(yaw, pitch))
+            val eyePosition = renderViewEntity.eyes
+            val entityLook = getVectorForRotation(Rotation(yaw, pitch))
             val vec = eyePosition.addVector(
                 entityLook.xCoord * blockReachDistance,
                 entityLook.yCoord * blockReachDistance,

@@ -1,12 +1,13 @@
 package net.vitox;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import net.vitox.particle.util.RenderUtils;
 
 import java.util.Random;
+
+import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
+import static net.vitox.particle.util.RenderUtils.connectPoints;
 
 /**
  * Particle API
@@ -34,7 +35,7 @@ class Particle {
     }
 
     private float lint1(float f) {
-        return ((float) 1.02 * (1.0f - f)) + f;
+        return ((float) 1.02 * (1f - f)) + f;
     }
 
     private float lint2(float f) {
@@ -42,7 +43,7 @@ class Particle {
     }
 
     void connect(float x, float y) {
-        RenderUtils.connectPoints(getX(), getY(), x, y);
+        connectPoints(getX(), getY(), x, y);
     }
 
     public int getHeight() {
@@ -79,7 +80,7 @@ class Particle {
 
     void interpolation() {
         for(int n = 0; n <= 64; ++n) {
-            final float f = n / 64.0f;
+            final float f = n / 64f;
             final float p1 = lint1(f);
             final float p2 = lint2(f);
 
@@ -91,7 +92,6 @@ class Particle {
     }
 
     void fall() {
-        final Minecraft mc = Minecraft.getMinecraft();
         final ScaledResolution scaledResolution = new ScaledResolution(mc);
         y = (y + ySpeed);
         x = (x + xSpeed);
@@ -110,7 +110,7 @@ class Particle {
     }
 
     private float genRandom() {
-        return (float) (0.3f + Math.random() * (0.6f - 0.3f + 1.0F));
+        return (float) (0.3f + Math.random() * (0.6f - 0.3f + 1f));
     }
 }
 

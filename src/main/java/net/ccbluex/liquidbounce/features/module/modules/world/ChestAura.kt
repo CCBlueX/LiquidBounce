@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
@@ -14,8 +14,11 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
-import net.ccbluex.liquidbounce.utils.RotationUtils
-import net.ccbluex.liquidbounce.utils.block.BlockUtils
+import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
+import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.getCenterDistance
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.searchBlocks
+import net.ccbluex.liquidbounce.utils.extensions.eyes
 import net.ccbluex.liquidbounce.utils.extensions.getVec
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BlockValue
@@ -46,7 +49,7 @@ object ChestAura : Module() {
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
-        if (LiquidBounce.moduleManager[Blink::class.java].state || (LiquidBounce.moduleManager[KillAura::class.java] as KillAura).isBlockingChestAura)
+        if (moduleManager[Blink::class.java].state || (moduleManager[KillAura::class.java] as KillAura).isBlockingChestAura)
             return
 
         val thePlayer = mc.thePlayer
@@ -59,12 +62,12 @@ object ChestAura : Module() {
 
                 val radius = rangeValue.get() + 1
 
-                val eyesPos = thePlayer.getPositionEyes(1f)
+                val eyesPos = thePlayer.eyes
 
-                currentBlock = BlockUtils.searchBlocks(radius.toInt())
+                currentBlock = searchBlocks(radius.toInt())
                         .filter {
-                            Block.getIdFromBlock(it.value) == chestValue.get() && !clickedBlocks.contains(it.key)
-                                    && BlockUtils.getCenterDistance(it.key) < rangeValue.get()
+                            Block.getIdFromBlock(it.value) == chestValue.get() && it.key !in clickedBlocks
+                                    && getCenterDistance(it.key) < rangeValue.get()
                         }
                         .filter {
                             if (throughWallsValue.get())
@@ -75,14 +78,14 @@ object ChestAura : Module() {
 
                             movingObjectPosition != null && movingObjectPosition.blockPos == blockPos
                         }
-                        .minByOrNull { BlockUtils.getCenterDistance(it.key) }?.key
+                        .minByOrNull { getCenterDistance(it.key) }?.key
 
                 if (rotationsValue.get())
-                    RotationUtils.setTargetRotation((RotationUtils.faceBlock(currentBlock ?: return)
+                    setTargetRotation((faceBlock(currentBlock ?: return)
                             ?: return).rotation)
             }
 
-            EventState.POST -> if (currentBlock != null && timer.hasTimePassed(delayValue.get().toLong())) {
+            EventState.POST -> if (currentBlock != null && timer.hasTimePassed(delayValue.get())) {
                 if (mc.playerController.onPlayerRightClick(thePlayer, mc.theWorld, thePlayer.heldItem, currentBlock!!,
                                 EnumFacing.DOWN, currentBlock!!.getVec())) {
                     if (visualSwing.get())

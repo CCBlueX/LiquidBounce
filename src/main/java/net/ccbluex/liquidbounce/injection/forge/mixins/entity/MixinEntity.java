@@ -5,13 +5,11 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.entity;
 
-import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.StrafeEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.HitBox;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.NoPitchLimit;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
-import net.minecraft.client.Minecraft;
 import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.AxisAlignedBB;
@@ -30,6 +28,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.Objects;
 import java.util.Random;
 import java.util.UUID;
+
+import static net.ccbluex.liquidbounce.LiquidBounce.eventManager;
+import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
+import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
 
 @Mixin(Entity.class)
 @SideOnly(Side.CLIENT)
@@ -185,7 +187,7 @@ public abstract class MixinEntity {
 
     @Inject(method = "getCollisionBorderSize", at = @At("HEAD"), cancellable = true)
     private void getCollisionBorderSize(final CallbackInfoReturnable<Float> callbackInfoReturnable) {
-        final HitBox hitBox = (HitBox) LiquidBounce.moduleManager.getModule(HitBox.class);
+        final HitBox hitBox = (HitBox) moduleManager.getModule(HitBox.class);
 
         if (Objects.requireNonNull(hitBox).getState())
             callbackInfoReturnable.setReturnValue(0.1F + hitBox.getSizeValue().get());
@@ -193,7 +195,7 @@ public abstract class MixinEntity {
 
     @Inject(method = "setAngles", at = @At("HEAD"), cancellable = true)
     private void setAngles(final float yaw, final float pitch, final CallbackInfo callbackInfo) {
-        if (Objects.requireNonNull(LiquidBounce.moduleManager.getModule(NoPitchLimit.class)).getState()) {
+        if (moduleManager.getModule(NoPitchLimit.class).getState()) {
             callbackInfo.cancel();
 
             float f = this.rotationPitch;
@@ -208,11 +210,11 @@ public abstract class MixinEntity {
     @Inject(method = "moveFlying", at = @At("HEAD"), cancellable = true)
     private void handleRotations(float strafe, float forward, float friction, final CallbackInfo callbackInfo) {
         //noinspection ConstantConditions
-        if ((Object) this != Minecraft.getMinecraft().thePlayer)
+        if ((Object) this != mc.thePlayer)
             return;
 
         final StrafeEvent strafeEvent = new StrafeEvent(strafe, forward, friction);
-        LiquidBounce.eventManager.callEvent(strafeEvent);
+        eventManager.callEvent(strafeEvent);
 
         if (strafeEvent.isCancelled())
             callbackInfo.cancel();

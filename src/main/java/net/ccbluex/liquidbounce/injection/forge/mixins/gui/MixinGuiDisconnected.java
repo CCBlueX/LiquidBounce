@@ -13,14 +13,11 @@ import com.thealtening.AltService;
 import com.thealtening.api.TheAltening;
 import com.thealtening.api.data.AccountData;
 import me.liuli.elixir.account.MinecraftAccount;
-import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.SessionEvent;
 import net.ccbluex.liquidbounce.features.special.AutoReconnect;
-import net.ccbluex.liquidbounce.features.special.ClientFixes;
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager;
 import net.ccbluex.liquidbounce.ui.client.altmanager.menus.GuiLoginProgress;
 import net.ccbluex.liquidbounce.ui.client.altmanager.menus.altgenerator.GuiTheAltening;
-import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.ServerUtils;
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils;
 import net.minecraft.client.gui.GuiButton;
@@ -36,10 +33,15 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.io.IOException;
 import java.net.Proxy;
 import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Random;
+
+import static net.ccbluex.liquidbounce.LiquidBounce.*;
+import static net.ccbluex.liquidbounce.features.special.ClientFixes.fmlFixesEnabled;
+import static net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER;
 
 @Mixin(GuiDisconnected.class)
 public abstract class MixinGuiDisconnected extends MixinGuiScreen {
@@ -62,13 +64,13 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen {
 
         buttonList.add(new GuiButton(3, this.width / 2 - 100, this.height / 2 + field_175353_i / 2 + this.fontRendererObj.FONT_HEIGHT + 44, 98, 20, GuiTheAltening.Companion.getApiKey().isEmpty() ? "Random alt" : "New TheAltening alt"));
         buttonList.add(new GuiButton(4, this.width / 2 + 2, this.height / 2 + field_175353_i / 2 + this.fontRendererObj.FONT_HEIGHT + 44, 98, 20, "Random username"));
-        buttonList.add(forgeBypassButton = new GuiButton(5, this.width / 2 - 100, this.height / 2 + field_175353_i / 2 + this.fontRendererObj.FONT_HEIGHT + 66, "Bypass AntiForge: " + (ClientFixes.fmlFixesEnabled ? "On" : "Off")));
+        buttonList.add(forgeBypassButton = new GuiButton(5, this.width / 2 - 100, this.height / 2 + field_175353_i / 2 + this.fontRendererObj.FONT_HEIGHT + 66, "Bypass AntiForge: " + (fmlFixesEnabled ? "On" : "Off")));
 
         updateSliderText();
     }
 
     @Inject(method = "actionPerformed", at = @At("HEAD"))
-    private void actionPerformed(GuiButton button, CallbackInfo callbackInfo) {
+    private void actionPerformed(GuiButton button, CallbackInfo callbackInfo) throws IOException {
         switch (button.id) {
             case 1:
                 ServerUtils.connectToLastServer();
@@ -84,26 +86,26 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen {
 
                         final YggdrasilUserAuthentication yggdrasilUserAuthentication = new YggdrasilUserAuthentication(new YggdrasilAuthenticationService(Proxy.NO_PROXY, ""), Agent.MINECRAFT);
                         yggdrasilUserAuthentication.setUsername(account.getToken());
-                        yggdrasilUserAuthentication.setPassword(LiquidBounce.CLIENT_NAME);
+                        yggdrasilUserAuthentication.setPassword(CLIENT_NAME);
                         yggdrasilUserAuthentication.logIn();
 
                         mc.session = new Session(yggdrasilUserAuthentication.getSelectedProfile().getName(), yggdrasilUserAuthentication.getSelectedProfile().getId().toString(), yggdrasilUserAuthentication.getAuthenticatedToken(), "mojang");
-                        LiquidBounce.eventManager.callEvent(new SessionEvent());
+                        eventManager.callEvent(new SessionEvent());
                         ServerUtils.connectToLastServer();
                         break;
                     } catch (final Throwable throwable) {
-                        ClientUtils.getLogger().error("Failed to login into random account from TheAltening.", throwable);
+                        LOGGER.error("Failed to login into random account from TheAltening.", throwable);
                     }
                 }
 
-                final List<MinecraftAccount> accounts = LiquidBounce.fileManager.accountsConfig.getAccounts();
+                final List<MinecraftAccount> accounts = fileManager.getAccountsConfig().getAccounts();
                 if (accounts.isEmpty())
                     break;
                 final MinecraftAccount minecraftAccount = accounts.get(new Random().nextInt(accounts.size()));
 
                 mc.displayGuiScreen(new GuiLoginProgress(minecraftAccount, () -> {
                     mc.addScheduledTask(() -> {
-                        LiquidBounce.eventManager.callEvent(new SessionEvent());
+                        eventManager.callEvent(new SessionEvent());
                         ServerUtils.connectToLastServer();
                     });
                     return null;
@@ -123,9 +125,9 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen {
                 ServerUtils.connectToLastServer();
                 break;
             case 5:
-                ClientFixes.fmlFixesEnabled = !ClientFixes.fmlFixesEnabled;
-                forgeBypassButton.displayString = "Bypass AntiForge: " + (ClientFixes.fmlFixesEnabled ? "On" : "Off");
-                LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
+                fmlFixesEnabled = !fmlFixesEnabled;
+                forgeBypassButton.displayString = "Bypass AntiForge: " + (fmlFixesEnabled ? "On" : "Off");
+                fileManager.getValuesConfig().saveConfig();
                 break;
         }
     }
