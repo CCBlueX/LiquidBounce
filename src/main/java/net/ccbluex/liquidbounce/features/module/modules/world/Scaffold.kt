@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.render.BlockOverlay
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.InventoryUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.PlaceRotation
 import net.ccbluex.liquidbounce.utils.Rotation
@@ -71,6 +72,25 @@ class Scaffold : Module() {
 
     // Placeable delay
     private val placeDelay = BoolValue("PlaceDelay", true)
+
+    private val simulateStruggle = BoolValue("SimulateStruggle", false)
+
+    private val struggleMaxCPS: IntegerValue = object : IntegerValue("StruggleMaxCPS", 7, 0, 20) {
+        override fun onChanged(oldValue: Int, newValue: Int) {
+            set(newValue.coerceAtLeast(struggleMinCPS.get()))
+        }
+
+        override fun isSupported() = simulateStruggle.isActive()
+
+    }
+
+    private val struggleMinCPS: IntegerValue = object : IntegerValue("StruggleMinCPS", 3, 0, 20) {
+        override fun onChanged(oldValue: Int, newValue: Int) {
+            set(newValue.coerceAtMost(struggleMaxCPS.get()))
+        }
+
+        override fun isSupported() = simulateStruggle.isActive() && !struggleMaxCPS.isMinimal()
+    }
 
     // Delay
     private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 0, 0, 1000) {
@@ -196,6 +216,10 @@ class Scaffold : Module() {
     // Current rotation
     private val currRotation: Rotation
         get() = targetRotation ?: mc.thePlayer?.rotation ?: serverRotation
+
+    // Click struggle simulation
+    private var extraClick: ExtraClickInfo =
+        ExtraClickInfo(TimeUtils.randomClickDelay(struggleMinCPS.get(), struggleMaxCPS.get()), 0L, 0)
 
     // Enabling module
     override fun onEnable() {
@@ -360,6 +384,14 @@ class Scaffold : Module() {
     fun onTick(event: TickEvent) {
         val target = targetPlace
 
+        if (simulateStruggle.get()) {
+            while (extraClick.clicks > 0) {
+                extraClick.clicks--
+
+                strugglePlace()
+            }
+        }
+
         if (target == null) {
             if (placeDelay.get()) {
                 delayTimer.reset()
@@ -510,6 +542,57 @@ class Scaffold : Module() {
         targetPlace = null
     }
 
+    private fun strugglePlace() {
+        val player = mc.thePlayer ?: return
+        val world = mc.theWorld ?: return
+
+        if (slot == -1) {
+            return
+        }
+
+        val stack = player.inventoryContainer.getSlot(slot + 36).stack ?: return
+
+        if (stack.item !is ItemBlock || InventoryUtils.BLOCK_BLACKLIST.contains((stack.item as ItemBlock).block)) {
+            return
+        }
+
+        val rotation = targetRotation ?: return
+
+        val raytrace = performBlockRaytrace(rotation, mc.playerController.blockReachDistance) ?: return
+
+        val shouldHelpWithDelay =
+            !delayTimer.hasTimePassed(delay) && (raytrace.sideHit.axis != EnumFacing.Axis.Y || !sameYValue.get() && raytrace.blockPos.y < player.posY - 1)
+
+        if (raytrace.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK || (stack.item as ItemBlock).canPlaceBlockOnSide(
+                world, raytrace.blockPos, raytrace.sideHit, player, stack
+            ) && !shouldHelpWithDelay
+        ) {
+            return
+        }
+
+        // This should only occur when delay is not catching up
+        if (mc.playerController.onPlayerRightClick(
+                player, world, stack, raytrace.blockPos, raytrace.sideHit, raytrace.hitVec
+            )
+        ) {
+            if (shouldHelpWithDelay) {
+                delayTimer.reset()
+                delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+            }
+
+            if (swingValue.get()) {
+                player.swingItem()
+            } else {
+                mc.netHandler.addToSendQueue(C0APacketAnimation())
+            }
+        }
+
+        // This however must occur.
+        if (mc.playerController.sendUseItem(player, world, stack)) {
+            mc.entityRenderer.itemRenderer.resetEquippedProgress2()
+        }
+    }
+
     // Disabling module
     override fun onDisable() {
         val player = mc.thePlayer ?: return
@@ -581,10 +664,7 @@ class Scaffold : Module() {
             resetColor()
 
             Fonts.font40.drawString(
-                info,
-                scaledResolution.scaledWidth / 2,
-                scaledResolution.scaledHeight / 2 + 7,
-                Color.WHITE.rgb
+                info, scaledResolution.scaledWidth / 2, scaledResolution.scaledHeight / 2 + 7, Color.WHITE.rgb
             )
             glPopMatrix()
         }
@@ -594,6 +674,25 @@ class Scaffold : Module() {
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
         val player = mc.thePlayer ?: return
+
+        val shouldBother =
+            !(shouldGoDown || modeValue.get() == "Expand" && expandLengthValue.get() > 1) && simulateStruggle.get() && MovementUtils.isMoving
+
+        if (shouldBother) {
+            targetRotation?.let {
+                performBlockRaytrace(it, mc.playerController.blockReachDistance)?.let { raytrace ->
+                    val timePassed = System.currentTimeMillis() - extraClick.lastClick >= extraClick.delay
+
+                    if (raytrace.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK && timePassed) {
+                        extraClick = ExtraClickInfo(
+                            TimeUtils.randomClickDelay(struggleMinCPS.get(), struggleMaxCPS.get()),
+                            System.currentTimeMillis(),
+                            extraClick.clicks + 1
+                        )
+                    }
+                }
+            }
+        }
 
         if (!markValue.get()) {
             return
@@ -693,7 +792,7 @@ class Scaffold : Module() {
         if (rotationsValue.get()) {
             val limitedRotation = limitAngleChange(
                 currRotation,
-                placeRotation.rotation,
+                Rotation(placeRotation.rotation.yaw, placeRotation.rotation.pitch),
                 nextFloat(minTurnSpeedValue.get(), maxTurnSpeedValue.get())
             )
 
@@ -805,4 +904,6 @@ class Scaffold : Module() {
         }
     override val tag
         get() = modeValue.get()
+
+    data class ExtraClickInfo(val delay: Long, val lastClick: Long, var clicks: Int)
 }
