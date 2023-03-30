@@ -163,7 +163,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
 
         val rainbow = rainbow.get()
 
-        RainbowFontShader.begin(rainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
+        RainbowFontShader.begin(rainbow, if (rainbowX.get() == 0f) 0f else 1f / rainbowX.get(), if (rainbowY.get() == 0f) 0f else 1f / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
             fontRenderer.drawString(displayText, 0F, 0F, if (rainbow)
                 0 else color, shadow.get())
 

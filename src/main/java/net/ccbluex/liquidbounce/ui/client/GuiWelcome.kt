@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import org.lwjgl.input.Keyboard
-import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL11.glScalef
 import java.awt.Color
 
 class GuiWelcome : GuiScreen() {
@@ -45,7 +45,7 @@ class GuiWelcome : GuiScreen() {
         super.drawScreen(mouseX, mouseY, partialTicks)
 
         // Title
-        GL11.glScalef(2F, 2F, 2F)
+        glScalef(2F, 2F, 2F)
         Fonts.font40.drawCenteredString("Welcome!", width / 2 / 2F, height / 8F / 2 + 20, Color(0, 140, 255).rgb, true)
     }
 

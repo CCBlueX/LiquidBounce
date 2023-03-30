@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.LiquidBounce.hud
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.SettingsUtils
-import net.ccbluex.liquidbounce.utils.misc.HttpUtils
+import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
 import kotlin.concurrent.thread
 
 class AutoSettingsCommand : Command("autosettings", "setting", "settings", "config", "autosetting") {
@@ -48,7 +48,7 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
                 thread {
                     try {
                         // Load settings and apply them
-                        val settings = HttpUtils.get(url)
+                        val settings = get(url)
 
                         chat("Applying settings...")
                         SettingsUtils.executeScript(settings)
@@ -84,7 +84,7 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
                 }
 
                 try {
-                    val json = JsonParser().parse(HttpUtils.get(
+                    val json = JsonParser().parse(get(
                             // TODO: Add another way to get all settings
                             "https://api.github.com/repos/CCBlueX/LiquidCloud/contents/LiquidBounce/settings"
                     ))

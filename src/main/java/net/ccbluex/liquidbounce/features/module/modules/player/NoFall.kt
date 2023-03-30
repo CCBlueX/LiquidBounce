@@ -133,7 +133,7 @@ class NoFall : Module() {
                         mc.thePlayer.posX, Double.NaN, mc.thePlayer.posZ, false
                     )
                 )
-                mc.thePlayer.fallDistance = (-9999).toFloat()
+                mc.thePlayer.fallDistance = -9999f
             }
             "spartan" -> {
                 spartanTimer.update()

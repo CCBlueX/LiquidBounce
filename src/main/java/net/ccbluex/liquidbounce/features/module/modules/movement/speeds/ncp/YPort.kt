@@ -30,7 +30,7 @@ class YPort : SpeedMode("YPort") {
     private var safeJump = false
     override fun onMotion() {
         if (!safeJump && !mc.gameSettings.keyBindJump.isKeyDown && !mc.thePlayer.isOnLadder && !mc.thePlayer.isInsideOfMaterial(
-                Material.water) && !mc.thePlayer.isInsideOfMaterial(Material.lava) && !mc.thePlayer.isInWater && (this.getBlock(-1.1) != Blocks.air && this.getBlock(-1.1) != Blocks.air || this.getBlock(-0.1) != Blocks.air && mc.thePlayer.motionX != 0.0 && mc.thePlayer.motionZ != 0.0 && !mc.thePlayer.onGround && mc.thePlayer.fallDistance < 3.0f && mc.thePlayer.fallDistance > 0.05) && level == 3) mc.thePlayer.motionY = -0.3994
+                Material.water) && !mc.thePlayer.isInsideOfMaterial(Material.lava) && !mc.thePlayer.isInWater && (this.getBlock(-1.1) != Blocks.air && this.getBlock(-1.1) != Blocks.air || this.getBlock(-0.1) != Blocks.air && mc.thePlayer.motionX != 0.0 && mc.thePlayer.motionZ != 0.0 && !mc.thePlayer.onGround && mc.thePlayer.fallDistance < 3f && mc.thePlayer.fallDistance > 0.05) && level == 3) mc.thePlayer.motionY = -0.3994
         val xDist = mc.thePlayer.posX - mc.thePlayer.prevPosX
         val zDist = mc.thePlayer.posZ - mc.thePlayer.prevPosZ
         lastDist = sqrt(xDist * xDist + zDist * zDist)
@@ -38,6 +38,8 @@ class YPort : SpeedMode("YPort") {
     }
 
     override fun onUpdate() {}
+
+    //TODO: Recode this mess
     override fun onMove(event: MoveEvent) {
         timerDelay += 1
         timerDelay %= 5
@@ -59,7 +61,7 @@ class YPort : SpeedMode("YPort") {
             event.y -= 0.09316090325960147
             mc.thePlayer.posY -= 0.09316090325960147
         }
-        if (level == 1 && (mc.thePlayer.moveForward != 0.0f || mc.thePlayer.moveStrafing != 0.0f)) {
+        if (level == 1 && isMoving) {
             level = 2
             moveSpeed = 1.38 * baseMoveSpeed - 0.01
         } else if (level == 2) {
@@ -79,9 +81,9 @@ class YPort : SpeedMode("YPort") {
         var forward = mc.thePlayer.movementInput.moveForward
         var strafe = mc.thePlayer.movementInput.moveStrafe
         var yaw = mc.thePlayer.rotationYaw
-        if (forward == 0f && strafe == 0f) {
-            event.x = 0.0
-            event.z = 0.0
+
+        if (!isMoving) {
+            event.zeroXZ()
         } else if (forward != 0f) {
             if (strafe >= 1f) {
                 yaw += (if (forward > 0f) -45 else 45).toFloat()
@@ -96,11 +98,9 @@ class YPort : SpeedMode("YPort") {
         val mz = sin(Math.toRadians(yaw + 90.0f.toDouble()))
         event.x = forward * moveSpeed * mx + strafe * moveSpeed * mz
         event.z = forward * moveSpeed * mz - strafe * moveSpeed * mx
+
         mc.thePlayer.stepHeight = 0.6f
-        if (forward == 0f && strafe == 0f) {
-            event.x = 0.0
-            event.z = 0.0
-        }
+        if (!isMoving) event.zeroXZ()
     }
 
     private val baseMoveSpeed: Double

@@ -24,14 +24,15 @@ import net.ccbluex.liquidbounce.utils.EntityUtils.targetDead
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetInvisible
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetMobs
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetPlayer
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawImage
 import net.minecraft.client.gui.GuiScreen
-import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.client.renderer.GlStateManager.disableLighting
 import net.minecraft.client.renderer.RenderHelper
 import net.minecraft.util.ResourceLocation
 import org.lwjgl.input.Keyboard
 import org.lwjgl.input.Mouse
-import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL11.glScaled
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -136,13 +137,13 @@ class ClickGui : GuiScreen() {
         mouseY = (y / scaleValue.get()).roundToInt()
 
         drawDefaultBackground()
-        RenderUtils.drawImage(hudIcon, 9, height - 41, 32, 32)
+        drawImage(hudIcon, 9, height - 41, 32, 32)
 
         val scale = scaleValue.get().toDouble()
-        GL11.glScaled(scale, scale, scale)
+        glScaled(scale, scale, scale)
 
         for (panel in panels) {
-            panel.updateFade(RenderUtils.deltaTime)
+            panel.updateFade(deltaTime)
             panel.drawScreenAndClick(mouseX, mouseY)
         }
 
@@ -172,9 +173,9 @@ class ClickGui : GuiScreen() {
             }
         }
 
-        GlStateManager.disableLighting()
+        disableLighting()
         RenderHelper.disableStandardItemLighting()
-        GL11.glScaled(1.0, 1.0, 1.0)
+        glScaled(1.0, 1.0, 1.0)
 
         assumeNonVolatile = false
 

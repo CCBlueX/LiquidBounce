@@ -52,6 +52,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.nio.ByteBuffer;
 
 import static net.ccbluex.liquidbounce.LiquidBounce.*;
+import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
 
 @Mixin(Minecraft.class)
 @SideOnly(Side.CLIENT)
@@ -144,8 +145,8 @@ public abstract class MixinMinecraft {
         if (currentScreen instanceof net.minecraft.client.gui.GuiMainMenu || (currentScreen != null && currentScreen.getClass().getName().startsWith("net.labymod") && currentScreen.getClass().getSimpleName().equals("ModGuiMainMenu"))) {
             currentScreen = new GuiMainMenu();
 
-            ScaledResolution scaledResolution = new ScaledResolution(Minecraft.getMinecraft());
-            currentScreen.setWorldAndResolution(Minecraft.getMinecraft(), scaledResolution.getScaledWidth(), scaledResolution.getScaledHeight());
+            ScaledResolution scaledResolution = new ScaledResolution(mc);
+            currentScreen.setWorldAndResolution(mc, scaledResolution.getScaledWidth(), scaledResolution.getScaledHeight());
             skipRenderWorld = false;
         }
 

@@ -15,7 +15,8 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
 import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam
-import net.ccbluex.liquidbounce.utils.CooldownHelper
+import net.ccbluex.liquidbounce.utils.CooldownHelper.getAttackCooldownProgress
+import net.ccbluex.liquidbounce.utils.CooldownHelper.resetLastAttackedTicks
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetAnimals
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetDead
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetInvisible
@@ -34,7 +35,7 @@ import net.ccbluex.liquidbounce.utils.RotationUtils.targetRotation
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawPlatform
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -304,15 +305,15 @@ class KillAura : Module() {
                     if (f >= 1.0E-4F) {
                         f = sqrt(f)
 
-                        if (f < 1.0F)
-                            f = 1.0F
+                        if (f < 1f)
+                            f = 1f
 
                         f = friction / f
                         strafe *= f
                         forward *= f
 
-                        val yawSin = sin((yaw * Math.PI / 180F).toFloat())
-                        val yawCos = cos((yaw * Math.PI / 180F).toFloat())
+                        val yawSin = sin(yaw * Math.PI / 180f)
+                        val yawCos = cos(yaw * Math.PI / 180f)
 
                         val player = mc.thePlayer
 
@@ -348,8 +349,12 @@ class KillAura : Module() {
         // Target
         currentTarget = target
 
+        /*
+        TODO: Remove? -> currentTarget = target = currentTarget
+
         if (targetModeValue.get() != "Switch" && isEnemy(currentTarget))
             target = currentTarget
+         */
     }
 
     /**
@@ -374,7 +379,7 @@ class KillAura : Module() {
             return
         }
 
-        if (simulateCooldown.get() && CooldownHelper.getAttackCooldownProgress() < 1.0f) {
+        if (simulateCooldown.get() && getAttackCooldownProgress() < 1f) {
             return
         }
 
@@ -411,7 +416,7 @@ class KillAura : Module() {
         target ?: return
 
         if (markValue.get() && targetModeValue.get() != "Multi")
-            RenderUtils.drawPlatform(target!!, if (hitable) Color(37, 126, 255, 70) else Color(255, 0, 0, 70))
+            drawPlatform(target!!, if (hitable) Color(37, 126, 255, 70) else Color(255, 0, 0, 70))
 
         if (currentTarget != null && attackTimer.hasTimePassed(attackDelay) &&
                 currentTarget!!.hurtTime <= hurtTimeValue.get()) {
@@ -637,7 +642,7 @@ class KillAura : Module() {
                 thePlayer.onCriticalHit(target)
 
             // Enchant Effect
-            if (EnchantmentHelper.getModifierForCreature(thePlayer.heldItem, target!!.creatureAttribute) > 0.0f || fakeSharpValue.get())
+            if (EnchantmentHelper.getModifierForCreature(thePlayer.heldItem, target!!.creatureAttribute) > 0f || fakeSharpValue.get())
                 thePlayer.onEnchantmentCritical(target)
         }
 
@@ -659,7 +664,7 @@ class KillAura : Module() {
         if (autoBlockValue.get() == "Packet" && (thePlayer.isBlocking || canBlock))
             startBlocking(entity, interactAutoBlockValue.get())
 
-        CooldownHelper.resetLastAttackedTicks()
+        resetLastAttackedTicks()
     }
 
     /**
@@ -772,7 +777,7 @@ class KillAura : Module() {
                 mc.netHandler.addToSendQueue(C02PacketUseEntity(interactEntity, C02PacketUseEntity.Action.INTERACT))
             }
 
-            mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, mc.thePlayer.inventory.getCurrentItem(), 0.0F, 0.0F, 0.0F))
+            mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, mc.thePlayer.inventory.getCurrentItem(), 0f, 0f, 0f))
             blockStatus = true
         }
 

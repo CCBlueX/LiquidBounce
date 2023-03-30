@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawEntityBox
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.GlowShader
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -58,8 +58,8 @@ class ItemESP : Module() {
 
         mc.theWorld.loadedEntityList.filter { it is EntityItem || it is EntityArrow }.forEach { entity ->
             when (modeValue.get().lowercase()) {
-                "box" -> RenderUtils.drawEntityBox(entity, getColor(), true)
-                "otherbox" -> RenderUtils.drawEntityBox(entity, getColor(), false)
+                "box" -> drawEntityBox(entity, getColor(), true)
+                "otherbox" -> drawEntityBox(entity, getColor(), false)
             }
         }
     }

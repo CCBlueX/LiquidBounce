@@ -15,11 +15,11 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.player.AutoTool
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
-import net.ccbluex.liquidbounce.utils.block.BlockUtils
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getCenterDistance
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.searchBlocks
 import net.ccbluex.liquidbounce.utils.extensions.eyes
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBlockBox
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -225,14 +225,14 @@ class Nuker : Module() {
         // Safe block
         if (!layerValue.get()) {
             val safePos = BlockPos(mc.thePlayer.posX, mc.thePlayer.posY - 1, mc.thePlayer.posZ)
-            val safeBlock = BlockUtils.getBlock(safePos)
+            val safeBlock = getBlock(safePos)
             if (safeBlock != null && validBlock(safeBlock))
-                RenderUtils.drawBlockBox(safePos, Color.GREEN, true)
+                drawBlockBox(safePos, Color.GREEN, true)
         }
 
         // Just draw all blocks
         for (blockPos in attackedBlocks)
-            RenderUtils.drawBlockBox(blockPos, Color.RED, true)
+            drawBlockBox(blockPos, Color.RED, true)
     }
 
     /**

@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.isReplaceable
 import net.ccbluex.liquidbounce.utils.block.PlaceInfo
 import net.ccbluex.liquidbounce.utils.extensions.eyes
 import net.ccbluex.liquidbounce.utils.extensions.getBlock
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -34,7 +34,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockBush
 import net.minecraft.client.gui.ScaledResolution
-import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.client.renderer.GlStateManager.resetColor
 import net.minecraft.init.Blocks
 import net.minecraft.item.ItemBlock
 import net.minecraft.network.play.client.C03PacketPlayer
@@ -46,7 +46,7 @@ import net.minecraft.util.EnumFacing
 import net.minecraft.util.MovingObjectPosition
 import net.minecraft.util.Vec3
 import org.lwjgl.input.Keyboard
-import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import kotlin.math.truncate
 
@@ -430,15 +430,15 @@ class Tower : Module() {
     @EventTarget
     fun onRender2D(event: Render2DEvent) {
         if (counterDisplayValue.get()) {
-            GL11.glPushMatrix()
+            glPushMatrix()
             val blockOverlay = moduleManager[BlockOverlay::class.java] as BlockOverlay
             if (blockOverlay.state && blockOverlay.infoValue.get() && blockOverlay.currentBlock != null) {
-                GL11.glTranslatef(0f, 15f, 0f)
+                glTranslatef(0f, 15f, 0f)
             }
             val info = "Blocks: §7$blocksAmount"
             val scaledResolution = ScaledResolution(mc)
 
-            RenderUtils.drawBorderedRect(
+            drawBorderedRect(
                 scaledResolution.scaledWidth / 2f - 2,
                 scaledResolution.scaledHeight / 2f + 5,
                 scaledResolution.scaledWidth / 2f + Fonts.font40.getStringWidth(info) + 2,
@@ -448,7 +448,7 @@ class Tower : Module() {
                 Color.BLACK.rgb
             )
 
-            GlStateManager.resetColor()
+            resetColor()
 
             Fonts.font40.drawString(
                 info,
@@ -456,7 +456,7 @@ class Tower : Module() {
                 scaledResolution.scaledHeight / 2 + 7.toFloat(),
                 Color.WHITE.rgb
             )
-            GL11.glPopMatrix()
+            glPopMatrix()
         }
     }
 

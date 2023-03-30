@@ -23,12 +23,12 @@ class Boost : SpeedMode("Boost") {
             shouldOffset = false
         }
 
-        if (thePlayer.onGround && ground < 1.0f)
+        if (thePlayer.onGround && ground < 1f)
             ground += 0.2f
         if (!thePlayer.onGround)
-            ground = 0.0f
+            ground = 0f
 
-        if (ground == 1.0f && shouldSpeedUp()) {
+        if (ground == 1f && shouldSpeedUp()) {
             if (!thePlayer.isSprinting)
                 offset += 0.8
 

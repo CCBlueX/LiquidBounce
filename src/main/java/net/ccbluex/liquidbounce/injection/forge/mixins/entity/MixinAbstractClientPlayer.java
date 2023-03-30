@@ -9,7 +9,6 @@ import net.ccbluex.liquidbounce.cape.CapeAPI;
 import net.ccbluex.liquidbounce.cape.CapeInfo;
 import net.ccbluex.liquidbounce.features.module.modules.misc.NameProtect;
 import net.ccbluex.liquidbounce.features.module.modules.render.NoFOV;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.init.Items;
@@ -24,6 +23,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.Objects;
 
 import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
+import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
 
 @Mixin(AbstractClientPlayer.class)
 @SideOnly(Side.CLIENT)
@@ -63,9 +63,9 @@ public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer {
             }
 
             int i = this.getItemInUseDuration();
-            float f1 = (float) i / 20.0f;
-            f1 = f1 > 1.0f ? 1.0f : f1 * f1;
-            newFOV *= 1.0f - f1 * 0.15f;
+            float f1 = (float) i / 20f;
+            f1 = f1 > 1f ? 1f : f1 * f1;
+            newFOV *= 1f - f1 * 0.15f;
             callbackInfoReturnable.setReturnValue(newFOV);
         }
     }
@@ -75,7 +75,7 @@ public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer {
         final NameProtect nameProtect = (NameProtect) moduleManager.getModule(NameProtect.class);
 
         if (Objects.requireNonNull(nameProtect).getState() && nameProtect.skinProtectValue.get()) {
-            if (!nameProtect.allPlayersValue.get() && !Objects.equals(getGameProfile().getName(), Minecraft.getMinecraft().thePlayer.getGameProfile().getName()))
+            if (!nameProtect.allPlayersValue.get() && !Objects.equals(getGameProfile().getName(), mc.thePlayer.getGameProfile().getName()))
                 return;
 
             callbackInfoReturnable.setReturnValue(DefaultPlayerSkin.getDefaultSkin(getUniqueID()));

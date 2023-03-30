@@ -11,7 +11,6 @@ import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.features.module.ModuleInfo;
 import net.ccbluex.liquidbounce.utils.InventoryUtils;
-import net.ccbluex.liquidbounce.utils.block.BlockUtils;
 import net.ccbluex.liquidbounce.utils.timer.MSTimer;
 import net.ccbluex.liquidbounce.value.BoolValue;
 import net.minecraft.block.BlockAir;
@@ -30,6 +29,7 @@ import net.minecraft.util.Vec3;
 
 import static net.ccbluex.liquidbounce.utils.EntityUtils.isSelected;
 import static net.ccbluex.liquidbounce.utils.RotationUtils.keepCurrentRotation;
+import static net.ccbluex.liquidbounce.utils.block.BlockUtils.*;
 
 @ModuleInfo(name = "Ignite", description = "Automatically sets targets around you on fire.", category = ModuleCategory.COMBAT)
 public class Ignite extends Module {
@@ -64,8 +64,8 @@ public class Ignite extends Module {
                BlockPos blockPos = entity.getPosition();
 
                if (mc.thePlayer.getDistanceSq(blockPos) >= 22.3D ||
-                       !BlockUtils.isReplaceable(blockPos) ||
-                       !(BlockUtils.getBlock(blockPos) instanceof BlockAir))
+                       !isReplaceable(blockPos) ||
+                       !(getBlock(blockPos) instanceof BlockAir))
                    continue;
 
                keepCurrentRotation = true;
@@ -97,7 +97,7 @@ public class Ignite extends Module {
                    for (final EnumFacing side : EnumFacing.values()) {
                        final BlockPos neighbor = blockPos.offset(side);
 
-                       if (!BlockUtils.canBeClicked(neighbor)) continue;
+                       if (!canBeClicked(neighbor)) continue;
 
                        final double diffX = neighbor.getX() + 0.5D - thePlayer.posX;
                        final double diffY = neighbor.getY() + 0.5D -

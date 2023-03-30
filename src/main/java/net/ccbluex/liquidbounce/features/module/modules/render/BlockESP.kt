@@ -14,7 +14,8 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.draw2D
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBlockBox
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BlockValue
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -93,8 +94,8 @@ class BlockESP : Module() {
             val color = if (colorRainbow.get()) rainbow() else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
             for (blockPos in posList) {
                 when (modeValue.get().lowercase()) {
-                    "box" -> RenderUtils.drawBlockBox(blockPos, color, true)
-                    "2d" -> RenderUtils.draw2D(blockPos, color.rgb, Color.BLACK.rgb)
+                    "box" -> drawBlockBox(blockPos, color, true)
+                    "2d" -> draw2D(blockPos, color.rgb, Color.BLACK.rgb)
                 }
             }
         }

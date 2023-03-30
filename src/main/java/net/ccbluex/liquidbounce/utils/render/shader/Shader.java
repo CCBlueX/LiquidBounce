@@ -7,7 +7,9 @@ package net.ccbluex.liquidbounce.utils.render.shader;
 
 import net.ccbluex.liquidbounce.utils.MinecraftInstance;
 import org.apache.commons.io.IOUtils;
-import org.lwjgl.opengl.*;
+import org.lwjgl.opengl.ARBFragmentShader;
+import org.lwjgl.opengl.ARBShaderObjects;
+import org.lwjgl.opengl.ARBVertexShader;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,6 +19,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER;
+import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL20.glGetUniformLocation;
+import static org.lwjgl.opengl.GL20.glUseProgram;
 
 public abstract class Shader extends MinecraftInstance {
     private int program;
@@ -85,8 +90,8 @@ public abstract class Shader extends MinecraftInstance {
     }
 
     public void startShader() {
-        GL11.glPushMatrix();
-        GL20.glUseProgram(program);
+        glPushMatrix();
+        glUseProgram(program);
 
         if(uniformsMap == null) {
             uniformsMap = new HashMap<>();
@@ -97,8 +102,8 @@ public abstract class Shader extends MinecraftInstance {
     }
 
     public void stopShader() {
-        GL20.glUseProgram(0);
-        GL11.glPopMatrix();
+        glUseProgram(0);
+        glPopMatrix();
     }
 
     public abstract void setupUniforms();
@@ -117,7 +122,7 @@ public abstract class Shader extends MinecraftInstance {
             ARBShaderObjects.glShaderSourceARB(shader, shaderSource);
             ARBShaderObjects.glCompileShaderARB(shader);
 
-            if(ARBShaderObjects.glGetObjectParameteriARB(shader, ARBShaderObjects.GL_OBJECT_COMPILE_STATUS_ARB) == GL11.GL_FALSE)
+            if(ARBShaderObjects.glGetObjectParameteriARB(shader, ARBShaderObjects.GL_OBJECT_COMPILE_STATUS_ARB) == GL_FALSE)
                 throw new RuntimeException("Error creating shader: " + getLogInfo(shader));
 
             return shader;
@@ -137,7 +142,7 @@ public abstract class Shader extends MinecraftInstance {
     }
 
     public void setupUniform(final String uniformName) {
-        setUniform(uniformName, GL20.glGetUniformLocation(program, uniformName));
+        setUniform(uniformName, glGetUniformLocation(program, uniformName));
     }
 
     public int getUniform(final String uniformName) {

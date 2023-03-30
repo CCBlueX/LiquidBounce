@@ -128,7 +128,7 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
 
         if (d >= 1.0E-4f) {
             d = sqrt(d)
-            if (d < 1.0f) d = 1.0f
+            if (d < 1f) d = 1f
             d = friction / d
             calcStrafe *= d
             calcForward *= d

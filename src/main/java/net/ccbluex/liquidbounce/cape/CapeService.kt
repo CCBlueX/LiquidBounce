@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.ui.client.altmanager.menus.GuiDonatorCape
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.login.UserUtils
-import net.ccbluex.liquidbounce.utils.misc.HttpUtils
+import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import org.apache.http.HttpHeaders
 import org.apache.http.HttpStatus
@@ -70,7 +70,7 @@ object CapeService : Listenable, MinecraftInstance() {
                 task = thread(name = "UpdateCarriersTask") {
                     runCatching {
                         // Capture data from API and parse JSON
-                        val parsedJson = JsonParser().parse(HttpUtils.get(CAPE_CARRIERS_URL))
+                        val parsedJson = JsonParser().parse(get(CAPE_CARRIERS_URL))
 
                         // Should be a JSON Array. It will fail if not.
                         // Format: [["8f617b6abea04af58e4bd026d8fa9de8", "marco"], ...]

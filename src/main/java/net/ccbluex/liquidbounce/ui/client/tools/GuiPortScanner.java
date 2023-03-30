@@ -76,8 +76,8 @@ public class GuiPortScanner extends GuiScreen {
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
         drawBackground(0);
 
-        Fonts.font40.drawCenteredString("Port Scanner", width / 2.0f, 34, 0xffffff);
-        Fonts.font35.drawCenteredString(running ? "§7" + checkedPort + " §8/ §7" + maxPort : status == null ? "" : status, width / 2.0f, height / 4.0f + 80, 0xffffff);
+        Fonts.font40.drawCenteredString("Port Scanner", width / 2f, 34, 0xffffff);
+        Fonts.font35.drawCenteredString(running ? "§7" + checkedPort + " §8/ §7" + maxPort : status == null ? "" : status, width / 2f, height / 4f + 80, 0xffffff);
 
         buttonToggle.displayString = running ? "Stop" : "Start";
 

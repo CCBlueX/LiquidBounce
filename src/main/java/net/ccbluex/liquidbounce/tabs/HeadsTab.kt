@@ -9,7 +9,7 @@ import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_CLOUD
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
-import net.ccbluex.liquidbounce.utils.misc.HttpUtils
+import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
 import net.minecraft.creativetab.CreativeTabs
 import net.minecraft.init.Items
 import net.minecraft.item.Item
@@ -36,7 +36,7 @@ class HeadsTab : CreativeTabs("Heads") {
         try {
             LOGGER.info("Loading heads...")
 
-            val headsConfiguration = JsonParser().parse(HttpUtils.get("$CLIENT_CLOUD/heads.json"))
+            val headsConfiguration = JsonParser().parse(get("$CLIENT_CLOUD/heads.json"))
 
             if (!headsConfiguration.isJsonObject) return
 
@@ -47,7 +47,7 @@ class HeadsTab : CreativeTabs("Heads") {
 
                 LOGGER.info("Loading heads from $url...")
 
-                val headsElement = JsonParser().parse(HttpUtils.get(url))
+                val headsElement = JsonParser().parse(get(url))
 
                 if (!headsElement.isJsonObject) {
                     LOGGER.error("Something is wrong, the heads json is not a JsonObject!")

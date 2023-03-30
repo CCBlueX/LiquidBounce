@@ -5,14 +5,14 @@
  */
 package net.ccbluex.liquidbounce.update
 
-import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_API
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_VERSION_INT
 import net.ccbluex.liquidbounce.LiquidBounce.IN_DEV
+import net.ccbluex.liquidbounce.file.FileManager.PRETTY_GSON
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
-import net.ccbluex.liquidbounce.utils.misc.HttpUtils
+import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -31,7 +31,7 @@ object UpdateInfo {
     val newestVersion by lazy {
         // https://api.liquidbounce.net/api/v1/version/builds/legacy
         try {
-            Gson().fromJson(HttpUtils.get("$CLIENT_API/version/newest/${gitInfo["git.branch"]}${if (IN_DEV) "" else "/release" }"), Build::class.java)
+            PRETTY_GSON.fromJson(get("$CLIENT_API/version/newest/${gitInfo["git.branch"]}${if (IN_DEV) "" else "/release" }"), Build::class.java)
         } catch (e: Exception) {
             LOGGER.error("Unable to receive update information", e)
             return@lazy null

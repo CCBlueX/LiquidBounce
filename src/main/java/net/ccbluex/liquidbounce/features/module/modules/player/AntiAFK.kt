@@ -92,11 +92,11 @@ class AntiAFK : Module() {
                             delayTimer.reset()
                         }
                         4 -> {
-                            thePlayer.fixedSensitivityYaw += RandomUtils.nextFloat(-180.0F, 180.0F)
+                            thePlayer.fixedSensitivityYaw += RandomUtils.nextFloat(-180f, 180f)
                             delayTimer.reset()
                         }
                         5 -> {
-                            thePlayer.fixedSensitivityPitch += RandomUtils.nextFloat(-10.0F, 10.0F)
+                            thePlayer.fixedSensitivityPitch += RandomUtils.nextFloat(-10f, 10f)
                             delayTimer.reset()
                         }
                     }

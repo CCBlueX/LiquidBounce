@@ -51,7 +51,7 @@ class HighJump : Module() {
             return
         if (!thePlayer.onGround) {
             if ("mineplex" == modeValue.get().lowercase()) {
-                thePlayer.motionY += if (thePlayer.fallDistance == 0.0f) 0.0499 else 0.05
+                thePlayer.motionY += if (thePlayer.fallDistance == 0f) 0.0499 else 0.05
             }
         }
     }

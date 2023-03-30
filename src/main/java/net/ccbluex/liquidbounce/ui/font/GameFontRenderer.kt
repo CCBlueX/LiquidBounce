@@ -7,19 +7,19 @@ package net.ccbluex.liquidbounce.ui.font
 
 import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.TextEvent
+import net.ccbluex.liquidbounce.utils.MinecraftInstance.mc
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawLine
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
-import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.FontRenderer
-import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.client.renderer.GlStateManager.*
 import net.minecraft.util.ResourceLocation
-import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL11.*
 import org.lwjgl.opengl.GL20.glUseProgram
 import java.awt.Color
 import java.awt.Font
 
-class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameSettings, ResourceLocation("textures/font/ascii.png"), Minecraft.getMinecraft().textureManager, false) {
+class GameFontRenderer(font: Font) : FontRenderer(mc.gameSettings, ResourceLocation("textures/font/ascii.png"), mc.textureManager, false) {
 
     val fontHeight: Int
     var defaultFont = AWTFontRenderer(font)
@@ -75,11 +75,11 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
         if (rainbow)
             glUseProgram(rainbowShaderId)
 
-        GL11.glTranslated(x - 1.5, y + 0.5, 0.0)
-        GlStateManager.enableAlpha()
-        GlStateManager.enableBlend()
-        GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
-        GlStateManager.enableTexture2D()
+        glTranslated(x - 1.5, y + 0.5, 0.0)
+        enableAlpha()
+        enableBlend()
+        tryBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO)
+        enableTexture2D()
 
         var currentColor = color
 
@@ -164,12 +164,12 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
                     currentFont.drawString(if (randomCase) ColorUtils.randomMagicText(words) else words, width, 0.0, currentColor)
 
                     if (strikeThrough)
-                        RenderUtils.drawLine(width / 2.0 + 1, currentFont.height / 3.0,
+                        drawLine(width / 2.0 + 1, currentFont.height / 3.0,
                                 (width + currentFont.getStringWidth(words)) / 2.0 + 1, currentFont.height / 3.0,
                                 fontHeight / 16F)
 
                     if (underline)
-                        RenderUtils.drawLine(width / 2.0 + 1, currentFont.height / 2.0,
+                        drawLine(width / 2.0 + 1, currentFont.height / 2.0,
                                 (width + currentFont.getStringWidth(words)) / 2.0 + 1, currentFont.height / 2.0,
                                 fontHeight / 16F)
 
@@ -181,9 +181,9 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
             defaultFont.drawString(text, 0.0, 0.0, currentColor)
         }
 
-        GlStateManager.disableBlend()
-        GL11.glTranslated(-(x - 1.5), -(y + 0.5), 0.0)
-        GL11.glColor4f(1f, 1f, 1f, 1f)
+        disableBlend()
+        glTranslated(-(x - 1.5), -(y + 0.5), 0.0)
+        glColor4f(1f, 1f, 1f, 1f)
 
         return (x + getStringWidth(text)).toInt()
     }

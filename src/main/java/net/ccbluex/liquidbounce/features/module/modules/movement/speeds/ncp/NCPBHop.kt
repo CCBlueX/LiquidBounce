@@ -39,13 +39,15 @@ class NCPBHop : SpeedMode("NCPBHop") {
     }
 
     override fun onUpdate() {}
+
+    //TODO: Recode this mess
     override fun onMove(event: MoveEvent) {
         ++timerDelay
         timerDelay %= 5
         if (timerDelay != 0) {
             mc.timer.timerSpeed = 1f
         } else {
-            if (isMoving) mc.timer.timerSpeed = 32767f
+            if (isMoving) mc.timer.timerSpeed = 32767f // What?
             if (isMoving) {
                 mc.timer.timerSpeed = 1.3f
                 mc.thePlayer.motionX *= 1.0199999809265137
@@ -60,7 +62,7 @@ class NCPBHop : SpeedMode("NCPBHop") {
             event.y = event.y - 0.09316090325960147
             thePlayer.posY -= 0.09316090325960147
         }
-        if (level == 1 && (mc.thePlayer.moveForward != 0.0f || mc.thePlayer.moveStrafing != 0.0f)) {
+        if (level == 1 && isMoving) {
             level = 2
             moveSpeed = 1.35 * baseMoveSpeed - 0.01
         } else if (level == 2) {
@@ -103,10 +105,8 @@ class NCPBHop : SpeedMode("NCPBHop") {
         event.x = forward.toDouble() * moveSpeed * mx2 + strafe.toDouble() * moveSpeed * mz2
         event.z = forward.toDouble() * moveSpeed * mz2 - strafe.toDouble() * moveSpeed * mx2
         mc.thePlayer.stepHeight = 0.6f
-        if (forward == 0.0f && strafe == 0.0f) {
-            event.x = 0.0
-            event.z = 0.0
-        }
+
+        if (!isMoving) event.zeroXZ()
     }
 
     private val baseMoveSpeed: Double

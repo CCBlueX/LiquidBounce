@@ -12,7 +12,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.AntiBlind;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.entity.EntityPlayerSP;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.ItemRenderer;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
@@ -31,6 +30,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
+import static net.minecraft.client.renderer.GlStateManager.*;
 
 @Mixin(ItemRenderer.class)
 @SideOnly(Side.CLIENT)
@@ -84,7 +84,7 @@ public abstract class MixinItemRenderer {
      */
     @Overwrite
     public void renderItemInFirstPerson(float partialTicks) {
-        float f = 1.0F - (this.prevEquippedProgress + (this.equippedProgress - this.prevEquippedProgress) * partialTicks);
+        float f = 1f - (this.prevEquippedProgress + (this.equippedProgress - this.prevEquippedProgress) * partialTicks);
         EntityPlayerSP abstractclientplayer = this.mc.thePlayer;
         float f1 = abstractclientplayer.getSwingProgress(partialTicks);
         float f2 = abstractclientplayer.prevRotationPitch + (abstractclientplayer.rotationPitch - abstractclientplayer.prevRotationPitch) * partialTicks;
@@ -92,8 +92,8 @@ public abstract class MixinItemRenderer {
         this.rotateArroundXAndY(f2, f3);
         this.setLightMapFromPlayer(abstractclientplayer);
         this.rotateWithPlayerRotations(abstractclientplayer, partialTicks);
-        GlStateManager.enableRescaleNormal();
-        GlStateManager.pushMatrix();
+        enableRescaleNormal();
+        pushMatrix();
 
         if(this.itemToRender != null) {
             final KillAura killAura = (KillAura) moduleManager.getModule(KillAura.class);
@@ -105,7 +105,7 @@ public abstract class MixinItemRenderer {
 
                 switch(enumaction) {
                     case NONE:
-                        this.transformFirstPersonItem(f, 0.0F);
+                        this.transformFirstPersonItem(f, 0f);
                         break;
                     case EAT:
                     case DRINK:
@@ -145,8 +145,8 @@ public abstract class MixinItemRenderer {
             this.renderPlayerArm(abstractclientplayer, f, f1);
         }
 
-        GlStateManager.popMatrix();
-        GlStateManager.disableRescaleNormal();
+        popMatrix();
+        disableRescaleNormal();
         RenderHelper.disableStandardItemLighting();
     }
 
@@ -156,15 +156,15 @@ public abstract class MixinItemRenderer {
 
         if(antiBlind.getState() && antiBlind.getFireEffect().get()) {
             //vanilla's method
-            GlStateManager.color(1.0F, 1.0F, 1.0F, 0.9F);
-            GlStateManager.depthFunc(519);
-            GlStateManager.depthMask(false);
-            GlStateManager.enableBlend();
-            GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
-            GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
-            GlStateManager.disableBlend();
-            GlStateManager.depthMask(true);
-            GlStateManager.depthFunc(515);
+            color(1f, 1f, 1f, 0.9F);
+            depthFunc(519);
+            depthMask(false);
+            enableBlend();
+            tryBlendFuncSeparate(770, 771, 1, 0);
+            color(1f, 1f, 1f, 1f);
+            disableBlend();
+            depthMask(true);
+            depthFunc(515);
             callbackInfo.cancel();
         }
     }

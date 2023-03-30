@@ -11,8 +11,9 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.material.Material
-import net.minecraft.client.renderer.GlStateManager
-import org.lwjgl.opengl.GL11
+import net.minecraft.client.renderer.GlStateManager.*
+import org.lwjgl.opengl.GL11.glPopMatrix
+import org.lwjgl.opengl.GL11.glPushMatrix
 
 /**
  * CustomHUD Armor element
@@ -30,7 +31,7 @@ class Armor(x: Double = -8.0, y: Double = 57.0, scale: Float = 1F,
      */
     override fun drawElement(): Border {
         if (mc.playerController.isNotCreative) {
-            GL11.glPushMatrix()
+            glPushMatrix()
 
             val renderItem = mc.renderItem
             val isInsideWater = mc.thePlayer.isInsideOfMaterial(Material.water)
@@ -50,11 +51,11 @@ class Armor(x: Double = -8.0, y: Double = 57.0, scale: Float = 1F,
                 }
             }
 
-            GlStateManager.enableAlpha()
-            GlStateManager.disableBlend()
-            GlStateManager.disableLighting()
-            GlStateManager.disableCull()
-            GL11.glPopMatrix()
+            enableAlpha()
+            disableBlend()
+            disableLighting()
+            disableCull()
+            glPopMatrix()
         }
 
         return when (modeValue.get()) {

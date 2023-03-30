@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.script.remapper
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_CLOUD
 import net.ccbluex.liquidbounce.file.FileManager.dir
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
-import net.ccbluex.liquidbounce.utils.misc.HttpUtils
+import net.ccbluex.liquidbounce.utils.misc.HttpUtils.download
 import java.io.File
 
 /**
@@ -34,7 +34,7 @@ object Remapper {
             srgFile.createNewFile()
 
             LOGGER.info("[Remapper] Downloading $srgName srg...")
-            HttpUtils.download("$CLIENT_CLOUD/srgs/mcp-$srgName.srg", srgFile)
+            download("$CLIENT_CLOUD/srgs/mcp-$srgName.srg", srgFile)
             LOGGER.info("[Remapper] Downloaded $srgName.")
         }
 

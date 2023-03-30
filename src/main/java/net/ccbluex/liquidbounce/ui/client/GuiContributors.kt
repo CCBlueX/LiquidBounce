@@ -5,21 +5,23 @@
  */
 package net.ccbluex.liquidbounce.ui.client
 
-import com.google.gson.Gson
 import com.google.gson.JsonParser
 import com.google.gson.annotations.SerializedName
+import net.ccbluex.liquidbounce.file.FileManager.PRETTY_GSON
 import net.ccbluex.liquidbounce.injection.implementations.IMixinGuiSlot
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
-import net.ccbluex.liquidbounce.utils.misc.HttpUtils
+import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
+import net.ccbluex.liquidbounce.utils.misc.HttpUtils.requestStream
 import net.ccbluex.liquidbounce.utils.render.CustomTexture
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawLoadingCircle
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiSlot
-import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.client.renderer.GlStateManager.*
 import org.lwjgl.input.Keyboard
-import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.text.DecimalFormat
 import java.text.NumberFormat
@@ -32,13 +34,12 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
     private val DECIMAL_FORMAT = NumberFormat.getInstance(Locale.US) as DecimalFormat
     private lateinit var list: GuiList
 
-    private var credits: List<Credit> = Collections.emptyList()
+    private var credits = emptyList<Credit>()
     private var failed = false
 
     override fun initGui() {
         list = GuiList(this)
         list.registerScrollButtons(7, 8)
-        list.elementClicked(-1, false, 0, 0)
 
         buttonList.add(GuiButton(1, width / 2 - 100, height - 30, "Back"))
 
@@ -52,10 +53,10 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
 
         list.drawScreen(mouseX, mouseY, partialTicks)
 
-        RenderUtils.drawRect(width / 4.0f, 40.0f, width.toFloat(), height - 40.0f, Integer.MIN_VALUE)
+        drawRect(width / 4f, 40f, width.toFloat(), height - 40f, Integer.MIN_VALUE)
 
-        if (list.getSelectedSlot() != -1) {
-            val credit = credits[list.getSelectedSlot()]
+        if (credits.isNotEmpty()) {
+            val credit = credits[list.selectedSlot]
 
             var y = 45
             val x = width / 4 + 5
@@ -66,56 +67,56 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
             val imageSize = fontRendererObj.FONT_HEIGHT * 4
 
             if (avatar != null) {
-                GL11.glPushAttrib(GL11.GL_ALL_ATTRIB_BITS)
+                glPushAttrib(GL_ALL_ATTRIB_BITS)
 
-                GlStateManager.enableAlpha()
-                GlStateManager.enableBlend()
-                GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
-                GlStateManager.enableTexture2D()
+                enableAlpha()
+                enableBlend()
+                tryBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO)
+                enableTexture2D()
 
-                GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+                glColor4f(1f, 1f, 1f, 1f)
 
-                GlStateManager.bindTexture(avatar.textureId)
+                bindTexture(avatar.textureId)
 
 
-                GL11.glBegin(GL11.GL_QUADS)
+                glBegin(GL_QUADS)
 
-                GL11.glTexCoord2f(0f, 0f)
-                GL11.glVertex2i(x, y)
-                GL11.glTexCoord2f(0f, 1f)
-                GL11.glVertex2i(x, y + imageSize)
-                GL11.glTexCoord2f(1f, 1f)
-                GL11.glVertex2i(x + imageSize, y + imageSize)
-                GL11.glTexCoord2f(1f, 0f)
-                GL11.glVertex2i(x + imageSize, y)
+                glTexCoord2f(0f, 0f)
+                glVertex2i(x, y)
+                glTexCoord2f(0f, 1f)
+                glVertex2i(x, y + imageSize)
+                glTexCoord2f(1f, 1f)
+                glVertex2i(x + imageSize, y + imageSize)
+                glTexCoord2f(1f, 0f)
+                glVertex2i(x + imageSize, y)
 
-                GL11.glEnd()
+                glEnd()
 
-                GlStateManager.bindTexture(0)
+                bindTexture(0)
 
-                GlStateManager.disableBlend()
+                disableBlend()
 
                 infoOffset = imageSize
 
-                GL11.glPopAttrib()
+                glPopAttrib()
             }
 
             y += imageSize
 
-            Fonts.font40.drawString("@" + credit.name, (x + infoOffset + 5).toFloat(), 48f, Color.WHITE.rgb, true)
-            Fonts.font40.drawString("${credit.commits} commits §a${DECIMAL_FORMAT.format(credit.additions)}++ §4${DECIMAL_FORMAT.format(credit.deletions)}--", (x + infoOffset + 5).toFloat(), (y - Fonts.font40.fontHeight).toFloat(), Color.WHITE.rgb, true)
+            Fonts.font40.drawString("@" + credit.name, x + infoOffset + 5f, 48f, Color.WHITE.rgb, true)
+            Fonts.font40.drawString("${credit.commits} commits §a${DECIMAL_FORMAT.format(credit.additions)}++ §4${DECIMAL_FORMAT.format(credit.deletions)}--", x + infoOffset + 5f, (y - Fonts.font40.fontHeight).toFloat(), Color.WHITE.rgb, true)
 
             for (s in credit.contributions) {
                 y += Fonts.font40.fontHeight + 2
 
-                GlStateManager.disableTexture2D()
-                GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
-                GL11.glBegin(GL11.GL_LINES)
+                disableTexture2D()
+                glColor4f(1f, 1f, 1f, 1f)
+                glBegin(GL_LINES)
 
-                GL11.glVertex2f(x.toFloat(), y + Fonts.font40.fontHeight / 2.0f - 1)
-                GL11.glVertex2f(x + 3.0f, y + Fonts.font40.fontHeight / 2.0f - 1)
+                glVertex2f(x.toFloat(), y + Fonts.font40.fontHeight / 2f - 1)
+                glVertex2f(x + 3f, y + Fonts.font40.fontHeight / 2f - 1)
 
-                GL11.glEnd()
+                glEnd()
 
                 Fonts.font40.drawString(s, (x + 5f), y.toFloat(), Color.WHITE.rgb, true)
             }
@@ -126,10 +127,10 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
         if (credits.isEmpty()) {
             if (failed) {
                 val gb = ((sin(System.currentTimeMillis() * (1 / 333.0)) + 1) * (0.5 * 255)).toInt()
-                Fonts.font40.drawCenteredString("Failed to load", width / 8.0f, height / 2.0f, Color(255, gb, gb).rgb)
+                Fonts.font40.drawCenteredString("Failed to load", width / 8f, height / 2f, Color(255, gb, gb).rgb)
             } else {
-                Fonts.font40.drawCenteredString("Loading...", width / 8.0f, height / 2.0f, Color.WHITE.rgb)
-                RenderUtils.drawLoadingCircle((width / 8).toFloat(), (height / 2 - 40).toFloat())
+                Fonts.font40.drawCenteredString("Loading...", width / 8f, height / 2f, Color.WHITE.rgb)
+                drawLoadingCircle(width / 8f, height / 2f - 40)
             }
         }
 
@@ -143,12 +144,15 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
     }
 
     override fun keyTyped(typedChar: Char, keyCode: Int) {
-        if (Keyboard.KEY_ESCAPE == keyCode) {
-            mc.displayGuiScreen(prevGui)
-            return
-        }
+        when (keyCode) {
+            Keyboard.KEY_ESCAPE -> mc.displayGuiScreen(prevGui)
+            Keyboard.KEY_UP -> list.selectedSlot -= 1
+            Keyboard.KEY_DOWN -> list.selectedSlot += 1
+            Keyboard.KEY_TAB ->
+                list.selectedSlot += if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) -1 else 1
 
-        super.keyTyped(typedChar, keyCode)
+            else -> super.keyTyped(typedChar, keyCode)
+        }
     }
 
     override fun handleMouseInput() {
@@ -158,11 +162,10 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
 
     private fun loadCredits() {
         try {
-            val gson = Gson()
             val jsonParser = JsonParser()
 
-            val gitHubContributors = gson.fromJson(HttpUtils.get("https://api.github.com/repos/CCBlueX/LiquidBounce/stats/contributors"), Array<GitHubContributor>::class.java)
-            val additionalInformation = jsonParser.parse(HttpUtils.get("https://raw.githubusercontent.com/CCBlueX/LiquidCloud/master/LiquidBounce/contributors.json")).asJsonObject
+            val gitHubContributors = PRETTY_GSON.fromJson(get("https://api.github.com/repos/CCBlueX/LiquidBounce/stats/contributors"), Array<GitHubContributor>::class.java)
+            val additionalInformation = jsonParser.parse(get("https://raw.githubusercontent.com/CCBlueX/LiquidCloud/master/LiquidBounce/contributors.json")).asJsonObject
 
             val credits = ArrayList<Credit>(gitHubContributors.size)
 
@@ -171,7 +174,7 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
                 val jsonElement = additionalInformation[gitHubContributor.author.id.toString()]
 
                 if (jsonElement != null) {
-                    contributorInformation = gson.fromJson(jsonElement, ContributorInformation::class.java)
+                    contributorInformation = PRETTY_GSON.fromJson(jsonElement, ContributorInformation::class.java)
                 }
 
                 var additions = 0
@@ -185,7 +188,7 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
                 }
 
                 credits.add(Credit(gitHubContributor.author.name, gitHubContributor.author.avatarUrl, null, additions, deletions, commits, contributorInformation?.teamMember
-                        ?: false, contributorInformation?.contributions ?: Collections.emptyList()))
+                        ?: false, contributorInformation?.contributions ?: emptyList()))
             }
 
             credits.sortWith(object : Comparator<Credit> {
@@ -208,7 +211,7 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
 
             for (credit in credits) {
                 try {
-                    HttpUtils.requestStream("${credit.avatarUrl}?s=${fontRendererObj.FONT_HEIGHT * 4}", "GET")?.use {
+                    requestStream("${credit.avatarUrl}?s=${fontRendererObj.FONT_HEIGHT * 4}", "GET")?.use {
                         credit.avatar = CustomTexture(ImageIO.read(it))
                     }
                 } catch (_: Exception) {
@@ -238,13 +241,14 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
             mixin.setEnableScissor(true)
         }
 
-        private var selectedSlot = 0
+        var selectedSlot: Int = 0
+            set(value) {
+                field = value.coerceIn(0, credits.lastIndex)
+            }
 
         override fun isSelected(id: Int) = selectedSlot == id
 
         override fun getSize() = credits.size
-
-        fun getSelectedSlot() = if (selectedSlot > credits.size) -1 else selectedSlot
 
         public override fun elementClicked(index: Int, doubleClick: Boolean, var3: Int, var4: Int) {
             selectedSlot = index

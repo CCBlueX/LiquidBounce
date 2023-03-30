@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceBow
 import net.ccbluex.liquidbounce.utils.RotationUtils.getRotationDifference
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawPlatform
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -56,7 +56,7 @@ class BowAimbot : Module() {
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
         if (target != null && priorityValue.get() != "Multi" && markValue.get())
-            RenderUtils.drawPlatform(target!!, Color(37, 126, 255, 70))
+            drawPlatform(target!!, Color(37, 126, 255, 70))
     }
 
     private fun getTarget(throughWalls: Boolean, priorityMode: String): Entity? {

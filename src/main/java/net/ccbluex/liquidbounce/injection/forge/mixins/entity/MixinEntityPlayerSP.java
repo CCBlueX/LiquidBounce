@@ -284,30 +284,30 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 this.mc.displayGuiScreen(null);
             }
 
-            if (this.timeInPortal == 0.0F) {
+            if (this.timeInPortal == 0f) {
                 this.mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("portal.trigger"), this.rand.nextFloat() * 0.4F + 0.8F));
             }
 
             this.timeInPortal += 0.0125F;
 
-            if (this.timeInPortal >= 1.0F) {
-                this.timeInPortal = 1.0F;
+            if (this.timeInPortal >= 1f) {
+                this.timeInPortal = 1f;
             }
 
             this.inPortal = false;
         } else if (this.isPotionActive(Potion.confusion) && this.getActivePotionEffect(Potion.confusion).getDuration() > 60) {
             this.timeInPortal += 0.006666667F;
 
-            if (this.timeInPortal > 1.0F) {
-                this.timeInPortal = 1.0F;
+            if (this.timeInPortal > 1f) {
+                this.timeInPortal = 1f;
             }
         } else {
-            if (this.timeInPortal > 0.0F) {
+            if (this.timeInPortal > 0f) {
                 this.timeInPortal -= 0.05F;
             }
 
-            if (this.timeInPortal < 0.0F) {
-                this.timeInPortal = 0.0F;
+            if (this.timeInPortal < 0f) {
+                this.timeInPortal = 0f;
             }
         }
 
@@ -341,7 +341,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
         final boolean legitSprint = sprint.modeValue.get().equals("Legit");
 
-        boolean flag3 = !(sprint.getState() && !legitSprint && sprint.foodValue.get()) || (float) this.getFoodStats().getFoodLevel() > 6.0F || this.capabilities.allowFlying;
+        boolean flag3 = !(sprint.getState() && !legitSprint && sprint.foodValue.get()) || (float) this.getFoodStats().getFoodLevel() > 6f || this.capabilities.allowFlying;
 
         if (this.onGround && !flag1 && !flag2 && this.movementInput.moveForward >= f && !this.isSprinting() && flag3 && !this.isUsingItem() && !this.isPotionActive(Potion.blindness)) {
             if (this.sprintToggleTimer <= 0 && !this.mc.gameSettings.keyBindSprint.isKeyDown()) {
@@ -382,11 +382,11 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
         if (this.capabilities.isFlying && this.isCurrentViewEntity()) {
             if (this.movementInput.sneak) {
-                this.motionY -= this.capabilities.getFlySpeed() * 3.0F;
+                this.motionY -= this.capabilities.getFlySpeed() * 3f;
             }
 
             if (this.movementInput.jump) {
-                this.motionY += this.capabilities.getFlySpeed() * 3.0F;
+                this.motionY += this.capabilities.getFlySpeed() * 3f;
             }
         }
 
@@ -395,7 +395,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 ++this.horseJumpPowerCounter;
 
                 if (this.horseJumpPowerCounter == 0) {
-                    this.horseJumpPower = 0.0F;
+                    this.horseJumpPower = 0f;
                 }
             }
 
@@ -404,18 +404,18 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 this.sendHorseJump();
             } else if (!flag && this.movementInput.jump) {
                 this.horseJumpPowerCounter = 0;
-                this.horseJumpPower = 0.0F;
+                this.horseJumpPower = 0f;
             } else if (flag) {
                 ++this.horseJumpPowerCounter;
 
                 if (this.horseJumpPowerCounter < 10) {
                     this.horseJumpPower = (float) this.horseJumpPowerCounter * 0.1F;
                 } else {
-                    this.horseJumpPower = 0.8F + 2.0F / (float) (this.horseJumpPowerCounter - 9) * 0.1F;
+                    this.horseJumpPower = 0.8F + 2f / (float) (this.horseJumpPowerCounter - 9) * 0.1F;
                 }
             }
         } else {
-            this.horseJumpPower = 0.0F;
+            this.horseJumpPower = 0f;
         }
 
         super.onLivingUpdate();
@@ -533,7 +533,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
             this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, 0.0D, z));
 
-            if (this.stepHeight > 0.0F && flag1 && (d3 != x || d5 != z)) {
+            if (this.stepHeight > 0f && flag1 && (d3 != x || d5 != z)) {
                 StepEvent stepEvent = new StepEvent(this.stepHeight);
                 eventManager.callEvent(stepEvent);
                 double d11 = x;
@@ -682,11 +682,11 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                     if (this.isInWater()) {
                         float f = MathHelper.sqrt_double(this.motionX * this.motionX * 0.20000000298023224D + this.motionY * this.motionY + this.motionZ * this.motionZ * 0.20000000298023224D) * 0.35F;
 
-                        if (f > 1.0F) {
-                            f = 1.0F;
+                        if (f > 1f) {
+                            f = 1f;
                         }
 
-                        this.playSound(this.getSwimSound(), f, 1.0F + (this.rand.nextFloat() - this.rand.nextFloat()) * 0.4F);
+                        this.playSound(this.getSwimSound(), f, 1f + (this.rand.nextFloat() - this.rand.nextFloat()) * 0.4F);
                     }
 
                     this.playStepSound(blockpos, block1);

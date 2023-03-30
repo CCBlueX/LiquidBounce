@@ -13,7 +13,8 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBlockBox
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawEntityBox
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.GlowShader
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -65,7 +66,7 @@ class ProphuntESP : Module() {
             if (mode != "Box" && mode != "OtherBox") break
             if (entity !is EntityFallingBlock) continue
 
-            RenderUtils.drawEntityBox(entity, getColor(), mode == "Box")
+            drawEntityBox(entity, getColor(), mode == "Box")
         }
         synchronized(blocks) {
             val iterator: MutableIterator<Map.Entry<BlockPos, Long>> = blocks.entries.iterator()
@@ -78,7 +79,7 @@ class ProphuntESP : Module() {
                     continue
                 }
 
-                RenderUtils.drawBlockBox(entry.key, getColor(), mode == "Box")
+                drawBlockBox(entry.key, getColor(), mode == "Box")
             }
         }
     }

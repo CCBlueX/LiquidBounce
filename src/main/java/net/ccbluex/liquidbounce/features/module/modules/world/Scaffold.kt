@@ -31,7 +31,8 @@ import net.ccbluex.liquidbounce.utils.block.PlaceInfo
 import net.ccbluex.liquidbounce.utils.extensions.eyes
 import net.ccbluex.liquidbounce.utils.extensions.rotation
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBlockBox
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -40,7 +41,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockBush
 import net.minecraft.client.gui.ScaledResolution
-import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.client.renderer.GlStateManager.resetColor
 import net.minecraft.client.settings.GameSettings
 import net.minecraft.item.ItemBlock
 import net.minecraft.network.play.client.C09PacketHeldItemChange
@@ -51,7 +52,7 @@ import net.minecraft.util.EnumFacing
 import net.minecraft.util.MovingObjectPosition
 import net.minecraft.util.Vec3
 import org.lwjgl.input.Keyboard
-import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import kotlin.math.abs
 import kotlin.math.cos
@@ -125,7 +126,7 @@ class Scaffold : Module() {
 
     // Search options
     private val searchMode = ListValue("SearchMode", arrayOf("Area", "Center"), "Area")
-    private val minDistValue = FloatValue("MinDist", 0.0f, 0.0f, 0.2f)
+    private val minDistValue = FloatValue("MinDist", 0f, 0f, 0.2f)
 
     // Turn Speed
     private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 180f, 1f, 180f) {
@@ -559,33 +560,33 @@ class Scaffold : Module() {
     @EventTarget
     fun onRender2D(event: Render2DEvent) {
         if (counterDisplayValue.get()) {
-            GL11.glPushMatrix()
+            glPushMatrix()
             val blockOverlay = moduleManager[BlockOverlay::class.java] as BlockOverlay
             if (blockOverlay.state && blockOverlay.infoValue.get() && blockOverlay.currentBlock != null) {
-                GL11.glTranslatef(0f, 15f, 0f)
+                glTranslatef(0f, 15f, 0f)
             }
             val info = "Blocks: §7$blocksAmount"
             val scaledResolution = ScaledResolution(mc)
 
-            RenderUtils.drawBorderedRect(
-                scaledResolution.scaledWidth / 2 - 2.toFloat(),
-                scaledResolution.scaledHeight / 2 + 5.toFloat(),
-                scaledResolution.scaledWidth / 2 + Fonts.font40.getStringWidth(info) + 2.toFloat(),
-                scaledResolution.scaledHeight / 2 + 16.toFloat(),
-                3f,
+            drawBorderedRect(
+                scaledResolution.scaledWidth / 2 - 2,
+                scaledResolution.scaledHeight / 2 + 5,
+                scaledResolution.scaledWidth / 2 + Fonts.font40.getStringWidth(info) + 2,
+                scaledResolution.scaledHeight / 2 + 16,
+                3,
                 Color.BLACK.rgb,
                 Color.BLACK.rgb
             )
 
-            GlStateManager.resetColor()
+            resetColor()
 
             Fonts.font40.drawString(
                 info,
-                scaledResolution.scaledWidth / 2.toFloat(),
-                scaledResolution.scaledHeight / 2 + 7.toFloat(),
+                scaledResolution.scaledWidth / 2,
+                scaledResolution.scaledHeight / 2 + 7,
                 Color.WHITE.rgb
             )
-            GL11.glPopMatrix()
+            glPopMatrix()
         }
     }
 
@@ -610,7 +611,7 @@ class Scaffold : Module() {
             val placeInfo = PlaceInfo.get(blockPos)
 
             if (isReplaceable(blockPos) && placeInfo != null) {
-                RenderUtils.drawBlockBox(blockPos, Color(68, 117, 255, 100), false)
+                drawBlockBox(blockPos, Color(68, 117, 255, 100), false)
                 break
             }
         }

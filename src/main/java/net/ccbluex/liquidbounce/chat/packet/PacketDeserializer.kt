@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.chat.packet
 
 import com.google.gson.*
 import net.ccbluex.liquidbounce.chat.packet.packets.Packet
+import net.ccbluex.liquidbounce.file.FileManager.PRETTY_GSON
 import java.lang.reflect.Type
 
 /**
@@ -50,7 +51,7 @@ class PacketDeserializer : JsonDeserializer<Packet> {
 
         if(!packetObject.has("c")) packetObject.add("c", JsonObject())
 
-        return Gson().fromJson(packetObject.get("c"), packetRegistry[packetName])
+        return PRETTY_GSON.fromJson(packetObject.get("c"), packetRegistry[packetName])
 
     }
 

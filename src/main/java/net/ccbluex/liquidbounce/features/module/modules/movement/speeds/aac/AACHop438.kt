@@ -14,7 +14,7 @@ class AACHop438 : SpeedMode("AACHop4.3.8") {
     override fun onUpdate() {
         val thePlayer = mc.thePlayer ?: return
 
-        mc.timer.timerSpeed = 1.0f
+        mc.timer.timerSpeed = 1f
 
         if (!isMoving || thePlayer.isInWater || thePlayer.isInLava || thePlayer.isOnLadder || thePlayer.isRiding)
             return

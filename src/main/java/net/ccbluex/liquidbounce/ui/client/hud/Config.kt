@@ -5,10 +5,9 @@
  */
 package net.ccbluex.liquidbounce.ui.client.hud
 
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import net.ccbluex.liquidbounce.file.FileManager.PRETTY_GSON
 import net.ccbluex.liquidbounce.ui.client.hud.HUD.Companion.createDefault
 import net.ccbluex.liquidbounce.ui.client.hud.HUD.Companion.elements
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
@@ -21,7 +20,7 @@ class Config {
     private var jsonArray = JsonArray()
 
     constructor(config: String) {
-        jsonArray = Gson().fromJson(config, JsonArray::class.java)
+        jsonArray = PRETTY_GSON.fromJson(config, JsonArray::class.java)
     }
 
     constructor(hud: HUD) {
@@ -41,7 +40,7 @@ class Config {
         }
     }
 
-    fun toJson(): String = GsonBuilder().setPrettyPrinting().create().toJson(jsonArray)
+    fun toJson(): String = PRETTY_GSON.toJson(jsonArray)
 
     fun toHUD(): HUD {
         val hud = HUD()

@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.utils.login.UserUtils.isValidTokenOffline
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.randomAccount
-import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiSlot
@@ -91,14 +90,14 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
         drawBackground(0)
         altsList.drawScreen(mouseX, mouseY, partialTicks)
-        Fonts.font40.drawCenteredString("AltManager", width / 2.0f, 6f, 0xffffff)
+        Fonts.font40.drawCenteredString("AltManager", width / 2f, 6f, 0xffffff)
         Fonts.font35.drawCenteredString(
             if (searchField.text.isEmpty()) "${accountsConfig.accounts.size} Alts" else altsList.accounts.size.toString() + " Search Results",
-            width / 2.0f,
+            width / 2f,
             18f,
             0xffffff
         )
-        Fonts.font35.drawCenteredString(status, width / 2.0f, 32f, 0xffffff)
+        Fonts.font35.drawCenteredString(status, width / 2f, 32f, 0xffffff)
         Fonts.font35.drawStringWithShadow(
             "§7User: §a${mc.getSession().username}",
             6f,
@@ -109,7 +108,7 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
         searchField.drawTextBox()
         if (searchField.text.isEmpty() && !searchField.isFocused) Fonts.font40.drawStringWithShadow(
             "§7Search...",
-            (searchField.xPosition + 4).toFloat(),
+            searchField.xPosition + 4f,
             17f,
             0xffffff
         )
@@ -265,36 +264,25 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
         }
 
         when (keyCode) {
-            Keyboard.KEY_ESCAPE -> { // Go back
-                mc.displayGuiScreen(prevGui)
-                return
-            }
-            Keyboard.KEY_UP -> { // Go one up in account list
-                var i = altsList.selectedSlot - 1
-                if (i < 0) i = 0
-                altsList.elementClicked(i, false, 0, 0)
-            }
-            Keyboard.KEY_DOWN -> { // Go one down in account list
-                var i = altsList.selectedSlot + 1
-                if (i >= altsList.size) i = altsList.size - 1
-                altsList.elementClicked(i, false, 0, 0)
-            }
-            Keyboard.KEY_RETURN -> { // Login into account
-                altsList.elementClicked(altsList.selectedSlot, true, 0, 0)
-            }
-            Keyboard.KEY_NEXT -> { // Scroll account list
-                altsList.scrollBy(height - 100)
-            }
-            Keyboard.KEY_PRIOR -> { // Scroll account list
-                altsList.scrollBy(-height + 100)
-                return
-            }
-            Keyboard.KEY_DELETE -> { // Remove account
-                actionPerformed(removeButton)
-            }
-        }
+            // Go back
+            Keyboard.KEY_ESCAPE -> mc.displayGuiScreen(prevGui)
+            // Go one up in account list
+            Keyboard.KEY_UP -> altsList.selectedSlot -= 1
+            // Go one down in account list
+            Keyboard.KEY_DOWN -> altsList.selectedSlot += 1
+            Keyboard.KEY_TAB ->
+                altsList.selectedSlot += if (Keyboard.isKeyDown(Keyboard.KEY_LSHIFT)) -1 else 1
+            // Login into account
+            Keyboard.KEY_RETURN -> altsList.elementClicked(altsList.selectedSlot, true, 0, 0)
+            // Scroll account list
+            Keyboard.KEY_NEXT -> altsList.scrollBy(height - 100)
+            // Scroll account list
+            Keyboard.KEY_PRIOR -> altsList.scrollBy(-height + 100)
+            // Remove account
+            Keyboard.KEY_DELETE -> actionPerformed(removeButton)
 
-        super.keyTyped(typedChar, keyCode)
+            else -> super.keyTyped(typedChar, keyCode)
+        }
     }
 
     override fun handleMouseInput() {
@@ -325,6 +313,9 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
             }
 
         var selectedSlot = 0
+            set(value) {
+                field = value.coerceIn(0, accounts.lastIndex)
+            }
             get() {
                 return if (field > accounts.size) {
                     -1

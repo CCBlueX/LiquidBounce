@@ -16,7 +16,8 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
-import net.ccbluex.liquidbounce.utils.block.BlockUtils
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.getCenterDistance
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.searchBlocks
 import net.ccbluex.liquidbounce.utils.extensions.eyes
 import net.ccbluex.liquidbounce.utils.extensions.getVec
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
@@ -63,10 +64,10 @@ object ChestAura : Module() {
 
                 val eyesPos = thePlayer.eyes
 
-                currentBlock = BlockUtils.searchBlocks(radius.toInt())
+                currentBlock = searchBlocks(radius.toInt())
                         .filter {
                             Block.getIdFromBlock(it.value) == chestValue.get() && it.key !in clickedBlocks
-                                    && BlockUtils.getCenterDistance(it.key) < rangeValue.get()
+                                    && getCenterDistance(it.key) < rangeValue.get()
                         }
                         .filter {
                             if (throughWallsValue.get())
@@ -77,7 +78,7 @@ object ChestAura : Module() {
 
                             movingObjectPosition != null && movingObjectPosition.blockPos == blockPos
                         }
-                        .minByOrNull { BlockUtils.getCenterDistance(it.key) }?.key
+                        .minByOrNull { getCenterDistance(it.key) }?.key
 
                 if (rotationsValue.get())
                     setTargetRotation((faceBlock(currentBlock ?: return)

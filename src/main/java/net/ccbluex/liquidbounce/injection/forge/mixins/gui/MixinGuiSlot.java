@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
 import net.ccbluex.liquidbounce.injection.implementations.IMixinGuiSlot;
-import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiSlot;
@@ -18,11 +17,14 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.MathHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+
+import static net.ccbluex.liquidbounce.utils.render.RenderUtils.makeScissorBox;
+import static net.minecraft.client.renderer.GlStateManager.*;
+import static org.lwjgl.opengl.GL11.*;
 
 @Mixin(GuiSlot.class)
 @SideOnly(Side.CLIENT)
@@ -101,7 +103,7 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot {
             int j = i + 6;
             this.bindAmountScrolled();
             GlStateManager.disableLighting();
-            GlStateManager.disableFog();
+            disableFog();
             Tessellator tessellator = Tessellator.getInstance();
             WorldRenderer worldrenderer = tessellator.getWorldRenderer();
             int k = this.left + this.width / 2 - this.getListWidth() / 2 + 2;
@@ -110,15 +112,15 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot {
                 this.drawListHeader(k, l, tessellator);
             }
 
-            RenderUtils.makeScissorBox(left, top, right, bottom);
+            makeScissorBox(left, top, right, bottom);
 
-            GL11.glEnable(GL11.GL_SCISSOR_TEST);
+            glEnable(GL_SCISSOR_TEST);
 
             this.drawSelectionBox(k, l + 2, mouseXIn, mouseYIn + 2);
 
-            GL11.glDisable(GL11.GL_SCISSOR_TEST);
+            glDisable(GL_SCISSOR_TEST);
 
-            GlStateManager.disableDepth();
+            disableDepth();
             int i1 = 4;
 
             // ClientCode
@@ -126,11 +128,11 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot {
             Gui.drawRect(0, 0, scaledResolution.getScaledWidth(), this.top, Integer.MIN_VALUE);
             Gui.drawRect(0, this.bottom, scaledResolution.getScaledWidth(), this.height, Integer.MIN_VALUE);
 
-            GL11.glEnable(GL11.GL_BLEND);
-            GlStateManager.tryBlendFuncSeparate(770, 771, 0, 1);
-            GlStateManager.disableAlpha();
-            GlStateManager.shadeModel(7425);
-            GlStateManager.disableTexture2D();
+            glEnable(GL_BLEND);
+            tryBlendFuncSeparate(770, 771, 0, 1);
+            disableAlpha();
+            shadeModel(7425);
+            disableTexture2D();
             worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
             worldrenderer.pos(this.left, this.top + i1, 0.0D).tex(0.0D, 1.0D).color(0, 0, 0, 0).endVertex();
             worldrenderer.pos(this.right, this.top + i1, 0.0D).tex(1.0D, 1.0D).color(0, 0, 0, 0).endVertex();
@@ -173,10 +175,10 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot {
             }
 
             this.func_148142_b(mouseXIn, mouseYIn);
-            GlStateManager.enableTexture2D();
-            GlStateManager.shadeModel(7424);
-            GlStateManager.enableAlpha();
-            GlStateManager.disableBlend();
+            enableTexture2D();
+            shadeModel(7424);
+            enableAlpha();
+            disableBlend();
         }
     }
 

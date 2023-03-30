@@ -6,7 +6,8 @@
 package net.ccbluex.liquidbounce.utils.render.shader.shaders
 
 import net.ccbluex.liquidbounce.utils.render.shader.Shader
-import org.lwjgl.opengl.GL20
+import org.lwjgl.opengl.GL20.glUniform1f
+import org.lwjgl.opengl.GL20.glUniform2f
 import java.io.Closeable
 
 class RainbowShader : Shader("rainbow_shader.frag"), Closeable {
@@ -23,8 +24,8 @@ class RainbowShader : Shader("rainbow_shader.frag"), Closeable {
     }
 
     override fun updateUniforms() {
-        GL20.glUniform2f(getUniform("strength"), strengthX, strengthY)
-        GL20.glUniform1f(getUniform("offset"), offset)
+        glUniform2f(getUniform("strength"), strengthX, strengthY)
+        glUniform1f(getUniform("offset"), offset)
     }
 
     override fun startShader() {

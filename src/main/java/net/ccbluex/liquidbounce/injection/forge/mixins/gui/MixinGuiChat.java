@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
-import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.gui.GuiTextField;
@@ -26,6 +25,7 @@ import java.util.List;
 
 import static net.ccbluex.liquidbounce.LiquidBounce.commandManager;
 import static net.ccbluex.liquidbounce.LiquidBounce.fileManager;
+import static net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime;
 
 @Mixin(GuiChat.class)
 @SideOnly(Side.CLIENT)
@@ -62,7 +62,7 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
 
     @Inject(method = "updateScreen", at = @At("HEAD"))
     private void updateScreen(CallbackInfo callbackInfo) {
-        final int delta = RenderUtils.deltaTime;
+        final int delta = deltaTime;
 
         if (fade < 14) fade += 0.4F * delta;
         if (fade > 14) fade = 14;

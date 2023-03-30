@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
@@ -28,7 +29,7 @@ import net.minecraft.util.BlockPos
 @ModuleInfo(name = "BufferSpeed", description = "Allows you to walk faster on slabs and stairs.", category = ModuleCategory.MOVEMENT)
 class BufferSpeed : Module() {
     private val speedLimitValue = BoolValue("SpeedLimit", true)
-    private val maxSpeedValue = object : FloatValue("MaxSpeed", 2.0f, 1.0f, 5f) {
+    private val maxSpeedValue = object : FloatValue("MaxSpeed", 2f, 1f, 5f) {
         override fun isSupported() = speedLimitValue.get()
     }
     private val bufferValue = BoolValue("Buffer", true)
@@ -221,7 +222,7 @@ class BufferSpeed : Module() {
             if (speed < currentSpeed)
                 speed = currentSpeed
 
-            if (bufferValue.get() && speed > 0.2f) {
+            if (bufferValue.get() && speed > 0.2) {
                 speed /= 1.0199999809265137
                 strafe(speed.toFloat())
             }
@@ -261,7 +262,7 @@ class BufferSpeed : Module() {
         thePlayer.motionX = thePlayer.motionX * boost
         thePlayer.motionZ = thePlayer.motionX * boost
 
-        speed = speed
+        speed = MovementUtils.speed.toDouble()
 
         if (speedLimitValue.get() && speed > maxSpeedValue.get())
             speed = maxSpeedValue.get().toDouble()

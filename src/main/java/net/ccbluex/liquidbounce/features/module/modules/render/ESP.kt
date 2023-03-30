@@ -19,18 +19,19 @@ import net.ccbluex.liquidbounce.utils.extensions.hitBox
 import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.draw2D
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawEntityBox
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.GlowShader
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.client.renderer.GlStateManager.enableTexture2D
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.player.EntityPlayer
-import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL11.*
 import org.lwjgl.util.vector.Vector3f
 import java.awt.Color
 import kotlin.math.max
@@ -85,27 +86,27 @@ class ESP : Module() {
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
         val mode = modeValue.get()
-        val mvMatrix = WorldToScreen.getMatrix(GL11.GL_MODELVIEW_MATRIX)
-        val projectionMatrix = WorldToScreen.getMatrix(GL11.GL_PROJECTION_MATRIX)
+        val mvMatrix = WorldToScreen.getMatrix(GL_MODELVIEW_MATRIX)
+        val projectionMatrix = WorldToScreen.getMatrix(GL_PROJECTION_MATRIX)
         val real2d = mode == "Real2D"
 
         if (real2d) {
-            GL11.glPushAttrib(GL11.GL_ENABLE_BIT)
-            GL11.glEnable(GL11.GL_BLEND)
-            GL11.glDisable(GL11.GL_TEXTURE_2D)
-            GL11.glDisable(GL11.GL_DEPTH_TEST)
-            GL11.glMatrixMode(GL11.GL_PROJECTION)
-            GL11.glPushMatrix()
-            GL11.glLoadIdentity()
-            GL11.glOrtho(0.0, mc.displayWidth.toDouble(), mc.displayHeight.toDouble(), 0.0, -1.0, 1.0)
-            GL11.glMatrixMode(GL11.GL_MODELVIEW)
-            GL11.glPushMatrix()
-            GL11.glLoadIdentity()
-            GL11.glDisable(GL11.GL_DEPTH_TEST)
-            GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-            GlStateManager.enableTexture2D()
-            GL11.glDepthMask(true)
-            GL11.glLineWidth(1.0f)
+            glPushAttrib(GL_ENABLE_BIT)
+            glEnable(GL_BLEND)
+            glDisable(GL_TEXTURE_2D)
+            glDisable(GL_DEPTH_TEST)
+            glMatrixMode(GL_PROJECTION)
+            glPushMatrix()
+            glLoadIdentity()
+            glOrtho(0.0, mc.displayWidth.toDouble(), mc.displayHeight.toDouble(), 0.0, -1.0, 1.0)
+            glMatrixMode(GL_MODELVIEW)
+            glPushMatrix()
+            glLoadIdentity()
+            glDisable(GL_DEPTH_TEST)
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+            enableTexture2D()
+            glDepthMask(true)
+            glLineWidth(1f)
         }
 
         for (entity in mc.theWorld.loadedEntityList) {
@@ -114,7 +115,7 @@ class ESP : Module() {
                 val color = getColor(entity)
 
                 when (mode.lowercase()) {
-                    "box", "otherbox" -> RenderUtils.drawEntityBox(entity, color, mode != "OtherBox")
+                    "box", "otherbox" -> drawEntityBox(entity, color, mode != "OtherBox")
                     "2d" -> {
                         val renderManager = mc.renderManager
                         val timer = mc.timer
@@ -124,7 +125,7 @@ class ESP : Module() {
                             entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * timer.renderPartialTicks - renderManager.renderPosY
                         val posZ: Double =
                             entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * timer.renderPartialTicks - renderManager.renderPosZ
-                        RenderUtils.draw2D(entity, posX, posY, posZ, color.rgb, Color.BLACK.rgb)
+                        draw2D(entity, posX, posY, posZ, color.rgb, Color.BLACK.rgb)
                     }
                     "real2d" -> {
                         val renderManager = mc.renderManager
@@ -166,13 +167,13 @@ class ESP : Module() {
                             maxY = max(screenPos.y, maxY)
                         }
                         if (minX > 0 || minY > 0 || maxX <= mc.displayWidth || maxY <= mc.displayWidth) {
-                            GL11.glColor4f(color.red / 255.0f, color.green / 255.0f, color.blue / 255.0f, 1.0f)
-                            GL11.glBegin(GL11.GL_LINE_LOOP)
-                            GL11.glVertex2f(minX, minY)
-                            GL11.glVertex2f(minX, maxY)
-                            GL11.glVertex2f(maxX, maxY)
-                            GL11.glVertex2f(maxX, minY)
-                            GL11.glEnd()
+                            glColor4f(color.red / 255f, color.green / 255f, color.blue / 255f, 1f)
+                            glBegin(GL_LINE_LOOP)
+                            glVertex2f(minX, minY)
+                            glVertex2f(minX, maxY)
+                            glVertex2f(maxX, maxY)
+                            glVertex2f(maxX, minY)
+                            glEnd()
                         }
                     }
                 }
@@ -180,12 +181,12 @@ class ESP : Module() {
         }
 
         if (real2d) {
-            GL11.glEnable(GL11.GL_DEPTH_TEST)
-            GL11.glMatrixMode(GL11.GL_PROJECTION)
-            GL11.glPopMatrix()
-            GL11.glMatrixMode(GL11.GL_MODELVIEW)
-            GL11.glPopMatrix()
-            GL11.glPopAttrib()
+            glEnable(GL_DEPTH_TEST)
+            glMatrixMode(GL_PROJECTION)
+            glPopMatrix()
+            glMatrixMode(GL_MODELVIEW)
+            glPopMatrix()
+            glPopAttrib()
         }
     }
 

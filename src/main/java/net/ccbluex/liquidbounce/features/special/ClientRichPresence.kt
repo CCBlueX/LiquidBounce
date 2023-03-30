@@ -18,7 +18,7 @@ import net.ccbluex.liquidbounce.LiquidBounce.MINECRAFT_VERSION
 import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
-import net.ccbluex.liquidbounce.utils.misc.HttpUtils
+import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
 import org.json.JSONObject
 import java.io.IOException
 import java.time.OffsetDateTime
@@ -135,7 +135,7 @@ class ClientRichPresence : MinecraftInstance() {
      */
     private fun loadConfiguration() {
         // Read from web and convert to json object
-        val json = JsonParser().parse(HttpUtils.get("$CLIENT_CLOUD/discord.json"))
+        val json = JsonParser().parse(get("$CLIENT_CLOUD/discord.json"))
 
         if (json !is JsonObject)
             return

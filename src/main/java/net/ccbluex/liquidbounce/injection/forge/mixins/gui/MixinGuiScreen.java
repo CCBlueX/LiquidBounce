@@ -17,7 +17,6 @@ import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
@@ -40,6 +39,8 @@ import java.util.List;
 
 import static net.ccbluex.liquidbounce.LiquidBounce.commandManager;
 import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
+import static net.minecraft.client.renderer.GlStateManager.disableFog;
+import static net.minecraft.client.renderer.GlStateManager.disableLighting;
 
 @Mixin(GuiScreen.class)
 @SideOnly(Side.CLIENT)
@@ -86,8 +87,8 @@ public abstract class MixinGuiScreen {
      */
     @Inject(method = "drawBackground", at = @At("HEAD"), cancellable = true)
     private void drawClientBackground(final CallbackInfo callbackInfo) {
-        GlStateManager.disableLighting();
-        GlStateManager.disableFog();
+        disableLighting();
+        disableFog();
 
         if(GuiClientConfiguration.Companion.getEnabledCustomBackground()) {
             final Background background = LiquidBounce.INSTANCE.getBackground();

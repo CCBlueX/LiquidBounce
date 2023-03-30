@@ -82,7 +82,7 @@ public class Sprint extends Module {
         if (modeValue.get().equals("Vanilla")) {
             if (!isMoving() || mc.thePlayer.isSneaking() ||
                     (blindnessValue.get() && mc.thePlayer.isPotionActive(Potion.blindness)) ||
-                    (foodValue.get() && !(mc.thePlayer.getFoodStats().getFoodLevel() > 6.0F || mc.thePlayer.capabilities.allowFlying))
+                    (foodValue.get() && !(mc.thePlayer.getFoodStats().getFoodLevel() > 6f || mc.thePlayer.capabilities.allowFlying))
                     || (checkServerSide.get() && (mc.thePlayer.onGround || !checkServerSideGround.get())
                     && !allDirectionsValue.get() && targetRotation != null &&
                     getRotationDifference(new Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)) > 30)) {

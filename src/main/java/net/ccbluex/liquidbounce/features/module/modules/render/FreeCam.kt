@@ -76,7 +76,7 @@ class FreeCam : Module() {
         if (noClipValue.get())
             thePlayer.noClip = true
 
-        thePlayer.fallDistance = 0.0f
+        thePlayer.fallDistance = 0f
 
         if (flyValue.get()) {
             val value = speedValue.get()

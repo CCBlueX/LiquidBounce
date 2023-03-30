@@ -10,7 +10,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.HitBox;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.NoPitchLimit;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
-import net.minecraft.client.Minecraft;
 import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.AxisAlignedBB;
@@ -32,6 +31,7 @@ import java.util.UUID;
 
 import static net.ccbluex.liquidbounce.LiquidBounce.eventManager;
 import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
+import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
 
 @Mixin(Entity.class)
 @SideOnly(Side.CLIENT)
@@ -210,7 +210,7 @@ public abstract class MixinEntity {
     @Inject(method = "moveFlying", at = @At("HEAD"), cancellable = true)
     private void handleRotations(float strafe, float forward, float friction, final CallbackInfo callbackInfo) {
         //noinspection ConstantConditions
-        if ((Object) this != Minecraft.getMinecraft().thePlayer)
+        if ((Object) this != mc.thePlayer)
             return;
 
         final StrafeEvent strafeEvent = new StrafeEvent(strafe, forward, friction);

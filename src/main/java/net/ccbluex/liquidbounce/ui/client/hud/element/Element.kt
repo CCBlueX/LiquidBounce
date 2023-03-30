@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.ui.client.hud.element
 
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
 import net.ccbluex.liquidbounce.value.Value
 import net.minecraft.client.gui.ScaledResolution
 import kotlin.math.max
@@ -29,7 +29,7 @@ abstract class Element(var x: Double = 2.0, var y: Double = 2.0, scale: Float = 
         }
         get() {
             if (info.disableScale)
-                return 1.0f
+                return 1f
             return field
         }
 
@@ -192,6 +192,6 @@ class Side(var horizontal: Horizontal, var vertical: Vertical) {
  */
 data class Border(val x: Float, val y: Float, val x2: Float, val y2: Float) {
 
-    fun draw() = RenderUtils.drawBorderedRect(x, y, x2, y2, 3F, Int.MIN_VALUE, 0)
+    fun draw() = drawBorderedRect(x, y, x2, y2, 3F, Int.MIN_VALUE, 0)
 
 }

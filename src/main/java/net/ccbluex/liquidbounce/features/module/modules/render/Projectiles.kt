@@ -11,10 +11,13 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.RotationUtils.targetRotation
-import net.ccbluex.liquidbounce.utils.block.BlockUtils
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.getState
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.interpolateHSB
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.disableGlCap
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.enableGlCap
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.resetCaps
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.material.Material
@@ -26,7 +29,7 @@ import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.BlockPos
 import net.minecraft.util.MovingObjectPosition
 import net.minecraft.util.Vec3
-import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL11.*
 import org.lwjgl.util.glu.Cylinder
 import org.lwjgl.util.glu.GLU
 import java.awt.Color
@@ -138,25 +141,25 @@ class Projectiles : Module() {
         val worldRenderer = tessellator.worldRenderer
 
         // Start drawing of path
-        GL11.glDepthMask(false)
-        RenderUtils.enableGlCap(GL11.GL_BLEND, GL11.GL_LINE_SMOOTH)
-        RenderUtils.disableGlCap(GL11.GL_DEPTH_TEST, GL11.GL_ALPHA_TEST, GL11.GL_TEXTURE_2D)
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-        GL11.glHint(GL11.GL_LINE_SMOOTH_HINT, GL11.GL_NICEST)
+        glDepthMask(false)
+        enableGlCap(GL_BLEND, GL_LINE_SMOOTH)
+        disableGlCap(GL_DEPTH_TEST, GL_ALPHA_TEST, GL_TEXTURE_2D)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
         when (colorMode.get().lowercase()) {
             "custom" -> {
-                RenderUtils.glColor(Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), 255))
+                glColor(Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), 255))
             }
             "bowpower" -> {
-                RenderUtils.glColor(interpolateHSB(Color.RED, Color.GREEN, (motionFactor / 30) * 10))
+                glColor(interpolateHSB(Color.RED, Color.GREEN, (motionFactor / 30) * 10))
             }
             "rainbow" -> {
-                RenderUtils.glColor(ColorUtils.rainbow())
+                glColor(ColorUtils.rainbow())
             }
         }
-        GL11.glLineWidth(2f)
+        glLineWidth(2f)
 
-        worldRenderer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION)
+        worldRenderer.begin(GL_LINE_STRIP, DefaultVertexFormats.POSITION)
 
         while (!hasLanded && posY > 0.0) {
             // Set pos before and after
@@ -215,7 +218,7 @@ class Projectiles : Module() {
             posZ += motionZ
 
             // Check is next position water
-            if (BlockUtils.getState(BlockPos(posX, posY, posZ))!!.block.material === Material.water) {
+            if (getState(BlockPos(posX, posY, posZ))!!.block.material === Material.water) {
                 // Update motion
                 motionX *= 0.6
                 motionY *= 0.6
@@ -235,32 +238,32 @@ class Projectiles : Module() {
 
         // End the rendering of the path
         tessellator.draw()
-        GL11.glPushMatrix()
-        GL11.glTranslated(posX - renderManager.renderPosX, posY - renderManager.renderPosY,
+        glPushMatrix()
+        glTranslated(posX - renderManager.renderPosX, posY - renderManager.renderPosY,
                 posZ - renderManager.renderPosZ)
 
         if (landingPosition != null) {
             // Switch rotation of hit cylinder of the hit axis
             when (landingPosition.sideHit.ordinal) {
-                0 -> GL11.glRotatef(90F, 0F, 0F, 1F)
-                2 -> GL11.glRotatef(90F, 1F, 0F, 0F)
+                0 -> glRotatef(90F, 0F, 0F, 1F)
+                2 -> glRotatef(90F, 1F, 0F, 0F)
             }
 
             // Check if hitting an entity
             if (hitEntity)
-                RenderUtils.glColor(Color(255, 0, 0, 150))
+                glColor(Color(255, 0, 0, 150))
         }
 
         // Rendering hit cylinder
-        GL11.glRotatef(-90F, 1F, 0F, 0F)
+        glRotatef(-90F, 1F, 0F, 0F)
 
         val cylinder = Cylinder()
         cylinder.drawStyle = GLU.GLU_LINE
         cylinder.draw(0.2F, 0F, 0F, 60, 1)
 
-        GL11.glPopMatrix()
-        GL11.glDepthMask(true)
-        RenderUtils.resetCaps()
-        GL11.glColor4f(1F, 1F, 1F, 1F)
+        glPopMatrix()
+        glDepthMask(true)
+        resetCaps()
+        glColor4f(1F, 1F, 1F, 1F)
     }
 }

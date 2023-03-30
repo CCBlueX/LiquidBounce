@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.getCenterDistance
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.isFullBlock
 import net.ccbluex.liquidbounce.utils.extensions.eyes
 import net.ccbluex.liquidbounce.utils.extensions.getBlock
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBlockBox
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.block.Block
@@ -160,7 +160,7 @@ object Fucker : Module() {
                             currentPos, EnumFacing.DOWN))
 
                     if (thePlayer.capabilities.isCreativeMode ||
-                            block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld, pos) >= 1.0F) {
+                            block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld, pos) >= 1f) {
                         if (swingValue.get())
                             thePlayer.swingItem()
                         mc.playerController.onPlayerDestroyBlock(pos, EnumFacing.DOWN)
@@ -204,7 +204,7 @@ object Fucker : Module() {
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        RenderUtils.drawBlockBox(pos ?: return, Color.RED, true)
+        drawBlockBox(pos ?: return, Color.RED, true)
     }
 
     /**

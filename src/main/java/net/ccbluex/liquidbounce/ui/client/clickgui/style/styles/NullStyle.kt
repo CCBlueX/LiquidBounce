@@ -24,9 +24,6 @@ import kotlin.math.roundToInt
 
 @SideOnly(Side.CLIENT)
 object NullStyle : Style() {
-    private var mouseDown = false
-    private var rightMouseDown = false
-
     private fun getNegatedColor() = guiColor.inv()
     override fun drawPanel(mouseX: Int, mouseY: Int, panel: Panel) {
         drawRect(panel.x - 3, panel.y, panel.x + panel.width + 3, panel.y + 19, guiColor)

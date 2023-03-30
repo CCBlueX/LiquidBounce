@@ -57,15 +57,15 @@ public class FallingPlayer extends MinecraftInstance {
         if (v >= 0.0001f) {
             v = (float) Math.sqrt(v);
 
-            if (v < 1.0F) {
-                v = 1.0F;
+            if (v < 1f) {
+                v = 1f;
             }
 
             v = mc.thePlayer.jumpMovementFactor / v;
             strafe = strafe * v;
             forward = forward * v;
-            float f1 = (float) Math.sin(yaw * (float) Math.PI / 180.0F);
-            float f2 = (float) Math.cos(yaw * (float) Math.PI / 180.0F);
+            float f1 = (float) Math.sin(yaw * (float) Math.PI / 180f);
+            float f2 = (float) Math.cos(yaw * (float) Math.PI / 180f);
             this.motionX += strafe * f2 - forward * f1;
             this.motionZ += forward * f2 + strafe * f1;
         }

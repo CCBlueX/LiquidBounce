@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.utils.block.BlockUtils
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.block.Block
@@ -79,7 +79,7 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
                         }
 
                         value.set(id)
-                        chat("§7${module.name} §8${args[1].lowercase()}§7 was set to §8${BlockUtils.getBlockName(id)}§7.")
+                        chat("§7${module.name} §8${args[1].lowercase()}§7 was set to §8${getBlockName(id)}§7.")
                         playEdit()
                         return
                     }

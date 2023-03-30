@@ -15,7 +15,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.extensions.eyes
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextDouble
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawPlatform
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -358,7 +358,7 @@ class Fly : Module() {
                 "aac3.0.5" -> {
                     if (aac3delay == 2) thePlayer.motionY = 0.1 else if (aac3delay > 2) aac3delay = 0
                     if (aacFast.get()) {
-                        if (thePlayer.movementInput.moveStrafe == 0.0f) thePlayer.jumpMovementFactor = 0.08f
+                        if (thePlayer.movementInput.moveStrafe == 0f) thePlayer.jumpMovementFactor = 0.08f
                         else thePlayer.jumpMovementFactor = 0f
                     }
                     aac3delay++
@@ -486,8 +486,8 @@ class Fly : Module() {
                                     posX, posY + 50, posZ, false
                                 )
                             )
-                            mc.thePlayer.fall(100.0f, 100.0f)
-                            thePlayer.fallDistance = 0.0f
+                            mc.thePlayer.fall(100f, 100f)
+                            thePlayer.fallDistance = 0f
                             thePlayer.sendQueue.addToSendQueue(
                                 C04PacketPlayerPosition(
                                     posX, posY + 20, posZ, true
@@ -557,7 +557,7 @@ class Fly : Module() {
                     strafe(0.27f)
                     mc.timer.timerSpeed = 1 + mineplexSpeedValue.get()
                 } else {
-                    mc.timer.timerSpeed = 1.0f
+                    mc.timer.timerSpeed = 1f
                     state = false
                     displayChatMessage("§8[§c§lMineplex-§a§lFly§8] §aSelect an empty slot to fly.")
                 }
@@ -639,7 +639,7 @@ class Fly : Module() {
                     val boostDelay = hypixelBoostDelay.get()
                     if (hypixelBoost.get() && !flyTimer.hasTimePassed(boostDelay)) {
                         mc.timer.timerSpeed = 1f + hypixelBoostTimer.get() * (flyTimer.hasTimeLeft(boostDelay.toLong())
-                            .toFloat() / boostDelay.toFloat())
+                            .toFloat() / boostDelay)
                     }
                     hypixelTimer.update()
                     if (hypixelTimer.hasTimePassed(2)) {
@@ -714,12 +714,12 @@ class Fly : Module() {
         if (!markValue.get() || mode == "Vanilla" || mode == "SmoothVanilla")
             return
         val y = startY + 2.0
-        RenderUtils.drawPlatform(
+        drawPlatform(
             y, if (mc.thePlayer.entityBoundingBox.maxY < y) Color(0, 255, 0, 90) else Color(255, 0, 0, 90), 1.0
         )
         when (mode.lowercase()) {
-            "aac1.9.10" -> RenderUtils.drawPlatform(startY + aacJump, Color(0, 0, 255, 90), 1.0)
-            "aac3.3.12" -> RenderUtils.drawPlatform(-70.0, Color(0, 0, 255, 90), 1.0)
+            "aac1.9.10" -> drawPlatform(startY + aacJump, Color(0, 0, 255, 90), 1.0)
+            "aac3.3.12" -> drawPlatform(-70.0, Color(0, 0, 255, 90), 1.0)
         }
     }
 

@@ -13,7 +13,6 @@ import net.ccbluex.liquidbounce.file.FileManager.saveConfig
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiTextField
@@ -52,10 +51,10 @@ class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: B
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
         drawBackground(0)
 
-        RenderUtils.drawRect(30, 30, width - 30, height - 30, Int.MIN_VALUE)
-        Fonts.font40.drawCenteredString(if (directLogin) "Direct Login" else "Add Account", width / 2.0f, height / 2 - 170f, 0xffffff)
-        Fonts.font40.drawCenteredString("§7${if (directLogin) "Login to" else "Add"} an offline account", width / 2.0f, height / 2 - 110f, 0xffffff)
-        Fonts.font35.drawCenteredString(status, width / 2.0f, height / 2f - 30, 0xffffff)
+        drawRect(30, 30, width - 30, height - 30, Int.MIN_VALUE)
+        Fonts.font40.drawCenteredString(if (directLogin) "Direct Login" else "Add Account", width / 2f, height / 2 - 170f, 0xffffff)
+        Fonts.font40.drawCenteredString("§7${if (directLogin) "Login to" else "Add"} an offline account", width / 2f, height / 2 - 110f, 0xffffff)
+        Fonts.font35.drawCenteredString(status, width / 2f, height / 2f - 30, 0xffffff)
 
         username.drawTextBox()
 

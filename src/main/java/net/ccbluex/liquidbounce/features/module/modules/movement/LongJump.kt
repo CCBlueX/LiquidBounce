@@ -124,7 +124,7 @@ class LongJump : Module() {
         val mode = modeValue.get()
 
         if (mode == "Mineplex3") {
-            if (thePlayer.fallDistance != 0.0f)
+            if (thePlayer.fallDistance != 0f)
                 thePlayer.motionY += 0.037
         } else if (mode == "NCP" && !isMoving && jumped) {
             thePlayer.motionX = 0.0

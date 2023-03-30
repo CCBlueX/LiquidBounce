@@ -7,7 +7,6 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.render;
 
 import com.mojang.authlib.GameProfile;
 import net.minecraft.block.Block;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.tileentity.TileEntityItemStackRenderer;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.client.renderer.tileentity.TileEntitySkullRenderer;
@@ -26,6 +25,8 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+
+import static net.minecraft.client.renderer.GlStateManager.*;
 
 @Mixin(TileEntityItemStackRenderer.class)
 @SideOnly(Side.CLIENT)
@@ -50,7 +51,7 @@ public class MixinTileEntityItemStackRenderer {
     public void renderByItem(ItemStack itemStackIn) {
         if(itemStackIn.getItem() == Items.banner) {
             this.banner.setItemValues(itemStackIn);
-            TileEntityRendererDispatcher.instance.renderTileEntityAt(this.banner, 0.0D, 0.0D, 0.0D, 0.0F);
+            TileEntityRendererDispatcher.instance.renderTileEntityAt(this.banner, 0.0D, 0.0D, 0.0D, 0f);
         }else if(itemStackIn.getItem() == Items.skull) {
             GameProfile gameprofile = null;
 
@@ -71,25 +72,25 @@ public class MixinTileEntityItemStackRenderer {
             }
 
             if(TileEntitySkullRenderer.instance != null) {
-                GlStateManager.pushMatrix();
-                GlStateManager.translate(-0.5F, 0.0F, -0.5F);
-                GlStateManager.scale(2.0F, 2.0F, 2.0F);
-                GlStateManager.disableCull();
-                TileEntitySkullRenderer.instance.renderSkull(0.0F, 0.0F, 0.0F, EnumFacing.UP, 0.0F, itemStackIn.getMetadata(), gameprofile, -1);
-                GlStateManager.enableCull();
-                GlStateManager.popMatrix();
+                pushMatrix();
+                translate(-0.5F, 0f, -0.5F);
+                scale(2f, 2f, 2f);
+                disableCull();
+                TileEntitySkullRenderer.instance.renderSkull(0f, 0f, 0f, EnumFacing.UP, 0f, itemStackIn.getMetadata(), gameprofile, -1);
+                enableCull();
+                popMatrix();
             }
         }else{
             Block block = Block.getBlockFromItem(itemStackIn.getItem());
 
             if(block == Blocks.ender_chest) {
-                TileEntityRendererDispatcher.instance.renderTileEntityAt(this.enderChest, 0.0D, 0.0D, 0.0D, 0.0F);
+                TileEntityRendererDispatcher.instance.renderTileEntityAt(this.enderChest, 0.0D, 0.0D, 0.0D, 0f);
             }else if(block == Blocks.trapped_chest) {
-                TileEntityRendererDispatcher.instance.renderTileEntityAt(this.field_147718_c, 0.0D, 0.0D, 0.0D, 0.0F);
+                TileEntityRendererDispatcher.instance.renderTileEntityAt(this.field_147718_c, 0.0D, 0.0D, 0.0D, 0f);
             }else if(block != Blocks.chest)
                 net.minecraftforge.client.ForgeHooksClient.renderTileItem(itemStackIn.getItem(), itemStackIn.getMetadata());
             else{
-                TileEntityRendererDispatcher.instance.renderTileEntityAt(this.field_147717_b, 0.0D, 0.0D, 0.0D, 0.0F);
+                TileEntityRendererDispatcher.instance.renderTileEntityAt(this.field_147717_b, 0.0D, 0.0D, 0.0D, 0f);
             }
         }
     }

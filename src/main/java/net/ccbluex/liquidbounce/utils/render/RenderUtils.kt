@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.extensions.hitBox
 import net.minecraft.client.gui.ScaledResolution
-import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.client.renderer.GlStateManager.*
 import net.minecraft.client.renderer.Tessellator
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats
 import net.minecraft.entity.Entity
@@ -19,7 +19,7 @@ import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.BlockPos
 import net.minecraft.util.ResourceLocation
-import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL11.*
 import org.lwjgl.opengl.GL14
 import java.awt.Color
 import kotlin.math.cos
@@ -33,33 +33,33 @@ object RenderUtils : MinecraftInstance() {
 
     init {
         for (i in DISPLAY_LISTS_2D.indices) {
-            DISPLAY_LISTS_2D[i] = GL11.glGenLists(1)
+            DISPLAY_LISTS_2D[i] = glGenLists(1)
         }
 
-        GL11.glNewList(DISPLAY_LISTS_2D[0], GL11.GL_COMPILE)
+        glNewList(DISPLAY_LISTS_2D[0], GL_COMPILE)
         quickDrawRect(-7f, 2f, -4f, 3f)
         quickDrawRect(4f, 2f, 7f, 3f)
         quickDrawRect(-7f, 0.5f, -6f, 3f)
         quickDrawRect(6f, 0.5f, 7f, 3f)
-        GL11.glEndList()
-        GL11.glNewList(DISPLAY_LISTS_2D[1], GL11.GL_COMPILE)
+        glEndList()
+        glNewList(DISPLAY_LISTS_2D[1], GL_COMPILE)
         quickDrawRect(-7f, 3f, -4f, 3.3f)
         quickDrawRect(4f, 3f, 7f, 3.3f)
         quickDrawRect(-7.3f, 0.5f, -7f, 3.3f)
         quickDrawRect(7f, 0.5f, 7.3f, 3.3f)
-        GL11.glEndList()
-        GL11.glNewList(DISPLAY_LISTS_2D[2], GL11.GL_COMPILE)
+        glEndList()
+        glNewList(DISPLAY_LISTS_2D[2], GL_COMPILE)
         quickDrawRect(4f, -20f, 7f, -19f)
         quickDrawRect(-7f, -20f, -4f, -19f)
         quickDrawRect(6f, -20f, 7f, -17.5f)
         quickDrawRect(-7f, -20f, -6f, -17.5f)
-        GL11.glEndList()
-        GL11.glNewList(DISPLAY_LISTS_2D[3], GL11.GL_COMPILE)
+        glEndList()
+        glNewList(DISPLAY_LISTS_2D[3], GL_COMPILE)
         quickDrawRect(7f, -20f, 7.3f, -17.5f)
         quickDrawRect(-7.3f, -20f, -7f, -17.5f)
         quickDrawRect(4f, -20.3f, 7.3f, -20f)
         quickDrawRect(-7.3f, -20.3f, -4f, -20f)
-        GL11.glEndList()
+        glEndList()
     }
 
     fun drawBlockBox(blockPos: BlockPos, color: Color, outline: Boolean) {
@@ -83,29 +83,29 @@ object RenderUtils : MinecraftInstance() {
                 .offset(-posX, -posY, -posZ)
         }
 
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-        enableGlCap(GL11.GL_BLEND)
-        disableGlCap(GL11.GL_TEXTURE_2D, GL11.GL_DEPTH_TEST)
-        GL11.glDepthMask(false)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        enableGlCap(GL_BLEND)
+        disableGlCap(GL_TEXTURE_2D, GL_DEPTH_TEST)
+        glDepthMask(false)
         glColor(color.red, color.green, color.blue, if (color.alpha != 255) color.alpha else if (outline) 26 else 35)
         drawFilledBox(axisAlignedBB)
 
         if (outline) {
-            GL11.glLineWidth(1f)
-            enableGlCap(GL11.GL_LINE_SMOOTH)
+            glLineWidth(1f)
+            enableGlCap(GL_LINE_SMOOTH)
             glColor(color)
             drawSelectionBoundingBox(axisAlignedBB)
         }
 
-        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
-        GL11.glDepthMask(true)
+        glColor4f(1f, 1f, 1f, 1f)
+        glDepthMask(true)
         resetCaps()
     }
 
     fun drawSelectionBoundingBox(boundingBox: AxisAlignedBB) {
         val tessellator = Tessellator.getInstance()
         val worldRenderer = tessellator.worldRenderer
-        worldRenderer.begin(GL11.GL_LINE_STRIP, DefaultVertexFormats.POSITION)
+        worldRenderer.begin(GL_LINE_STRIP, DefaultVertexFormats.POSITION)
 
         // Lower Rectangle
         worldRenderer.pos(boundingBox.minX, boundingBox.minY, boundingBox.minZ).endVertex()
@@ -134,10 +134,10 @@ object RenderUtils : MinecraftInstance() {
     fun drawEntityBox(entity: Entity, color: Color, outline: Boolean) {
         val renderManager = mc.renderManager
         val timer = mc.timer
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-        enableGlCap(GL11.GL_BLEND)
-        disableGlCap(GL11.GL_TEXTURE_2D, GL11.GL_DEPTH_TEST)
-        GL11.glDepthMask(false)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        enableGlCap(GL_BLEND)
+        disableGlCap(GL_TEXTURE_2D, GL_DEPTH_TEST)
+        glDepthMask(false)
         val x = (entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * timer.renderPartialTicks
                 - renderManager.renderPosX)
         val y = (entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * timer.renderPartialTicks
@@ -154,32 +154,32 @@ object RenderUtils : MinecraftInstance() {
             entityBox.maxZ - entity.posZ + z + 0.05
         )
         if (outline) {
-            GL11.glLineWidth(1f)
-            enableGlCap(GL11.GL_LINE_SMOOTH)
+            glLineWidth(1f)
+            enableGlCap(GL_LINE_SMOOTH)
             glColor(color.red, color.green, color.blue, 95)
             drawSelectionBoundingBox(axisAlignedBB)
         }
         glColor(color.red, color.green, color.blue, if (outline) 26 else 35)
         drawFilledBox(axisAlignedBB)
-        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
-        GL11.glDepthMask(true)
+        glColor4f(1f, 1f, 1f, 1f)
+        glDepthMask(true)
         resetCaps()
     }
 
     fun drawAxisAlignedBB(axisAlignedBB: AxisAlignedBB, color: Color) {
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-        GL11.glEnable(GL11.GL_BLEND)
-        GL11.glLineWidth(2f)
-        GL11.glDisable(GL11.GL_TEXTURE_2D)
-        GL11.glDisable(GL11.GL_DEPTH_TEST)
-        GL11.glDepthMask(false)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glEnable(GL_BLEND)
+        glLineWidth(2f)
+        glDisable(GL_TEXTURE_2D)
+        glDisable(GL_DEPTH_TEST)
+        glDepthMask(false)
         glColor(color)
         drawFilledBox(axisAlignedBB)
-        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
-        GL11.glEnable(GL11.GL_TEXTURE_2D)
-        GL11.glEnable(GL11.GL_DEPTH_TEST)
-        GL11.glDepthMask(true)
-        GL11.glDisable(GL11.GL_BLEND)
+        glColor4f(1f, 1f, 1f, 1f)
+        glEnable(GL_TEXTURE_2D)
+        glEnable(GL_DEPTH_TEST)
+        glDepthMask(true)
+        glDisable(GL_BLEND)
     }
 
     fun drawPlatform(y: Double, color: Color, size: Double) {
@@ -266,46 +266,46 @@ object RenderUtils : MinecraftInstance() {
     }
 
     fun quickDrawRect(x: Float, y: Float, x2: Float, y2: Float) {
-        GL11.glBegin(GL11.GL_QUADS)
-        GL11.glVertex2d(x2.toDouble(), y.toDouble())
-        GL11.glVertex2d(x.toDouble(), y.toDouble())
-        GL11.glVertex2d(x.toDouble(), y2.toDouble())
-        GL11.glVertex2d(x2.toDouble(), y2.toDouble())
-        GL11.glEnd()
+        glBegin(GL_QUADS)
+        glVertex2d(x2.toDouble(), y.toDouble())
+        glVertex2d(x.toDouble(), y.toDouble())
+        glVertex2d(x.toDouble(), y2.toDouble())
+        glVertex2d(x2.toDouble(), y2.toDouble())
+        glEnd()
     }
 
     fun drawRect(x: Float, y: Float, x2: Float, y2: Float, color: Int) {
-        GL11.glEnable(GL11.GL_BLEND)
-        GL11.glDisable(GL11.GL_TEXTURE_2D)
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-        GL11.glEnable(GL11.GL_LINE_SMOOTH)
+        glEnable(GL_BLEND)
+        glDisable(GL_TEXTURE_2D)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glEnable(GL_LINE_SMOOTH)
         glColor(color)
-        GL11.glBegin(GL11.GL_QUADS)
-        GL11.glVertex2f(x2, y)
-        GL11.glVertex2f(x, y)
-        GL11.glVertex2f(x, y2)
-        GL11.glVertex2f(x2, y2)
-        GL11.glEnd()
-        GL11.glEnable(GL11.GL_TEXTURE_2D)
-        GL11.glDisable(GL11.GL_BLEND)
-        GL11.glDisable(GL11.GL_LINE_SMOOTH)
+        glBegin(GL_QUADS)
+        glVertex2f(x2, y)
+        glVertex2f(x, y)
+        glVertex2f(x, y2)
+        glVertex2f(x2, y2)
+        glEnd()
+        glEnable(GL_TEXTURE_2D)
+        glDisable(GL_BLEND)
+        glDisable(GL_LINE_SMOOTH)
     }
 
     fun drawRect(x: Int, y: Int, x2: Int, y2: Int, color: Int) {
-        GL11.glEnable(GL11.GL_BLEND)
-        GL11.glDisable(GL11.GL_TEXTURE_2D)
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-        GL11.glEnable(GL11.GL_LINE_SMOOTH)
+        glEnable(GL_BLEND)
+        glDisable(GL_TEXTURE_2D)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glEnable(GL_LINE_SMOOTH)
         glColor(color)
-        GL11.glBegin(GL11.GL_QUADS)
-        GL11.glVertex2i(x2, y)
-        GL11.glVertex2i(x, y)
-        GL11.glVertex2i(x, y2)
-        GL11.glVertex2i(x2, y2)
-        GL11.glEnd()
-        GL11.glEnable(GL11.GL_TEXTURE_2D)
-        GL11.glDisable(GL11.GL_BLEND)
-        GL11.glDisable(GL11.GL_LINE_SMOOTH)
+        glBegin(GL_QUADS)
+        glVertex2i(x2, y)
+        glVertex2i(x, y)
+        glVertex2i(x, y2)
+        glVertex2i(x2, y2)
+        glEnd()
+        glEnable(GL_TEXTURE_2D)
+        glDisable(GL_BLEND)
+        glDisable(GL_LINE_SMOOTH)
     }
 
     /**
@@ -313,12 +313,12 @@ object RenderUtils : MinecraftInstance() {
      */
     fun quickDrawRect(x: Float, y: Float, x2: Float, y2: Float, color: Int) {
         glColor(color)
-        GL11.glBegin(GL11.GL_QUADS)
-        GL11.glVertex2d(x2.toDouble(), y.toDouble())
-        GL11.glVertex2d(x.toDouble(), y.toDouble())
-        GL11.glVertex2d(x.toDouble(), y2.toDouble())
-        GL11.glVertex2d(x2.toDouble(), y2.toDouble())
-        GL11.glEnd()
+        glBegin(GL_QUADS)
+        glVertex2d(x2.toDouble(), y.toDouble())
+        glVertex2d(x.toDouble(), y.toDouble())
+        glVertex2d(x.toDouble(), y2.toDouble())
+        glVertex2d(x2.toDouble(), y2.toDouble())
+        glEnd()
     }
 
     fun drawRect(x: Float, y: Float, x2: Float, y2: Float, color: Color) = drawRect(x, y, x2, y2, color.rgb)
@@ -334,51 +334,51 @@ object RenderUtils : MinecraftInstance() {
     }
 
     fun drawBorder(x: Float, y: Float, x2: Float, y2: Float, width: Float, color: Int) {
-        GL11.glEnable(GL11.GL_BLEND)
-        GL11.glDisable(GL11.GL_TEXTURE_2D)
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-        GL11.glEnable(GL11.GL_LINE_SMOOTH)
+        glEnable(GL_BLEND)
+        glDisable(GL_TEXTURE_2D)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glEnable(GL_LINE_SMOOTH)
         glColor(color)
-        GL11.glLineWidth(width)
-        GL11.glBegin(GL11.GL_LINE_LOOP)
-        GL11.glVertex2d(x2.toDouble(), y.toDouble())
-        GL11.glVertex2d(x.toDouble(), y.toDouble())
-        GL11.glVertex2d(x.toDouble(), y2.toDouble())
-        GL11.glVertex2d(x2.toDouble(), y2.toDouble())
-        GL11.glEnd()
-        GL11.glEnable(GL11.GL_TEXTURE_2D)
-        GL11.glDisable(GL11.GL_BLEND)
-        GL11.glDisable(GL11.GL_LINE_SMOOTH)
+        glLineWidth(width)
+        glBegin(GL_LINE_LOOP)
+        glVertex2d(x2.toDouble(), y.toDouble())
+        glVertex2d(x.toDouble(), y.toDouble())
+        glVertex2d(x.toDouble(), y2.toDouble())
+        glVertex2d(x2.toDouble(), y2.toDouble())
+        glEnd()
+        glEnable(GL_TEXTURE_2D)
+        glDisable(GL_BLEND)
+        glDisable(GL_LINE_SMOOTH)
     }
 
     fun drawBorder(x: Int, y: Int, x2: Int, y2: Int, width: Int, color: Int) {
-        GL11.glEnable(GL11.GL_BLEND)
-        GL11.glDisable(GL11.GL_TEXTURE_2D)
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-        GL11.glEnable(GL11.GL_LINE_SMOOTH)
+        glEnable(GL_BLEND)
+        glDisable(GL_TEXTURE_2D)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glEnable(GL_LINE_SMOOTH)
         glColor(color)
-        GL11.glLineWidth(width.toFloat())
-        GL11.glBegin(GL11.GL_LINE_LOOP)
-        GL11.glVertex2i(x2, y)
-        GL11.glVertex2i(x, y)
-        GL11.glVertex2i(x, y2)
-        GL11.glVertex2i(x2, y2)
-        GL11.glEnd()
-        GL11.glEnable(GL11.GL_TEXTURE_2D)
-        GL11.glDisable(GL11.GL_BLEND)
-        GL11.glDisable(GL11.GL_LINE_SMOOTH)
+        glLineWidth(width.toFloat())
+        glBegin(GL_LINE_LOOP)
+        glVertex2i(x2, y)
+        glVertex2i(x, y)
+        glVertex2i(x, y2)
+        glVertex2i(x2, y2)
+        glEnd()
+        glEnable(GL_TEXTURE_2D)
+        glDisable(GL_BLEND)
+        glDisable(GL_LINE_SMOOTH)
     }
 
     fun quickDrawBorderedRect(x: Float, y: Float, x2: Float, y2: Float, width: Float, color1: Int, color2: Int) {
         quickDrawRect(x, y, x2, y2, color2)
         glColor(color1)
-        GL11.glLineWidth(width)
-        GL11.glBegin(GL11.GL_LINE_LOOP)
-        GL11.glVertex2d(x2.toDouble(), y.toDouble())
-        GL11.glVertex2d(x.toDouble(), y.toDouble())
-        GL11.glVertex2d(x.toDouble(), y2.toDouble())
-        GL11.glVertex2d(x2.toDouble(), y2.toDouble())
-        GL11.glEnd()
+        glLineWidth(width)
+        glBegin(GL_LINE_LOOP)
+        glVertex2d(x2.toDouble(), y.toDouble())
+        glVertex2d(x.toDouble(), y.toDouble())
+        glVertex2d(x.toDouble(), y2.toDouble())
+        glVertex2d(x2.toDouble(), y2.toDouble())
+        glEnd()
     }
 
     @JvmStatic
@@ -390,25 +390,25 @@ object RenderUtils : MinecraftInstance() {
     }
 
     fun drawCircle(x: Float, y: Float, radius: Float, start: Int, end: Int) {
-        GlStateManager.enableBlend()
-        GlStateManager.disableTexture2D()
-        GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
+        enableBlend()
+        disableTexture2D()
+        tryBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO)
         glColor(Color.WHITE)
-        GL11.glEnable(GL11.GL_LINE_SMOOTH)
-        GL11.glLineWidth(2f)
-        GL11.glBegin(GL11.GL_LINE_STRIP)
+        glEnable(GL_LINE_SMOOTH)
+        glLineWidth(2f)
+        glBegin(GL_LINE_STRIP)
         var i = end.toFloat()
         while (i >= start) {
-            GL11.glVertex2f(
+            glVertex2f(
                 (x + cos(i * Math.PI / 180) * (radius * 1.001f)).toFloat(),
                 (y + sin(i * Math.PI / 180) * (radius * 1.001f)).toFloat()
             )
-            i -= 360 / 90.0f
+            i -= 360 / 90f
         }
-        GL11.glEnd()
-        GL11.glDisable(GL11.GL_LINE_SMOOTH)
-        GlStateManager.enableTexture2D()
-        GlStateManager.disableBlend()
+        glEnd()
+        glDisable(GL_LINE_SMOOTH)
+        enableTexture2D()
+        disableBlend()
     }
 
     fun drawFilledCircle(xx: Int, yy: Int, radius: Float, color: Color) {
@@ -416,29 +416,29 @@ object RenderUtils : MinecraftInstance() {
         val dAngle = 2 * Math.PI / sections
         var x: Float
         var y: Float
-        GL11.glPushAttrib(GL11.GL_ENABLE_BIT)
-        GL11.glEnable(GL11.GL_BLEND)
-        GL11.glDisable(GL11.GL_TEXTURE_2D)
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-        GL11.glEnable(GL11.GL_LINE_SMOOTH)
-        GL11.glBegin(GL11.GL_TRIANGLE_FAN)
+        glPushAttrib(GL_ENABLE_BIT)
+        glEnable(GL_BLEND)
+        glDisable(GL_TEXTURE_2D)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glEnable(GL_LINE_SMOOTH)
+        glBegin(GL_TRIANGLE_FAN)
         for (i in 0 until sections) {
             x = (radius * sin(i * dAngle)).toFloat()
             y = (radius * cos(i * dAngle)).toFloat()
-            GL11.glColor4f(color.red / 255f, color.green / 255f, color.blue / 255f, color.alpha / 255f)
-            GL11.glVertex2f(xx + x, yy + y)
+            glColor4f(color.red / 255f, color.green / 255f, color.blue / 255f, color.alpha / 255f)
+            glVertex2f(xx + x, yy + y)
         }
-        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
-        GL11.glEnd()
-        GL11.glPopAttrib()
+        glColor4f(1f, 1f, 1f, 1f)
+        glEnd()
+        glPopAttrib()
     }
 
     fun drawImage(image: ResourceLocation?, x: Int, y: Int, width: Int, height: Int) {
-        GL11.glDisable(GL11.GL_DEPTH_TEST)
-        GL11.glEnable(GL11.GL_BLEND)
-        GL11.glDepthMask(false)
-        GL14.glBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
-        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+        glDisable(GL_DEPTH_TEST)
+        glEnable(GL_BLEND)
+        glDepthMask(false)
+        GL14.glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO)
+        glColor4f(1f, 1f, 1f, 1f)
         mc.textureManager.bindTexture(image)
         drawModalRectWithCustomSizedTexture(
             x.toFloat(),
@@ -450,9 +450,9 @@ object RenderUtils : MinecraftInstance() {
             width.toFloat(),
             height.toFloat()
         )
-        GL11.glDepthMask(true)
-        GL11.glDisable(GL11.GL_BLEND)
-        GL11.glEnable(GL11.GL_DEPTH_TEST)
+        glDepthMask(true)
+        glDisable(GL_BLEND)
+        glEnable(GL_DEPTH_TEST)
     }
 
     /**
@@ -468,8 +468,8 @@ object RenderUtils : MinecraftInstance() {
         textureWidth: Float,
         textureHeight: Float
     ) {
-        val f = 1.0f / textureWidth
-        val f1 = 1.0f / textureHeight
+        val f = 1f / textureWidth
+        val f1 = 1f / textureHeight
         val tessellator = Tessellator.getInstance()
         val worldrenderer = tessellator.worldRenderer
         worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX)
@@ -484,7 +484,7 @@ object RenderUtils : MinecraftInstance() {
     }
 
     fun glColor(red: Int, green: Int, blue: Int, alpha: Int) {
-        GL11.glColor4f(red / 255f, green / 255f, blue / 255f, alpha / 255f)
+        glColor4f(red / 255f, green / 255f, blue / 255f, alpha / 255f)
     }
 
     @JvmStatic
@@ -497,30 +497,30 @@ object RenderUtils : MinecraftInstance() {
     }
 
     fun draw2D(entity: EntityLivingBase, posX: Double, posY: Double, posZ: Double, color: Int, backgroundColor: Int) {
-        GL11.glPushMatrix()
-        GL11.glTranslated(posX, posY, posZ)
-        GL11.glRotated(-mc.renderManager.playerViewY.toDouble(), 0.0, 1.0, 0.0)
-        GL11.glScaled(-0.1, -0.1, 0.1)
-        GL11.glDisable(GL11.GL_DEPTH_TEST)
-        GL11.glEnable(GL11.GL_BLEND)
-        GL11.glDisable(GL11.GL_TEXTURE_2D)
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-        GL11.glDepthMask(true)
+        glPushMatrix()
+        glTranslated(posX, posY, posZ)
+        glRotated(-mc.renderManager.playerViewY.toDouble(), 0.0, 1.0, 0.0)
+        glScaled(-0.1, -0.1, 0.1)
+        glDisable(GL_DEPTH_TEST)
+        glEnable(GL_BLEND)
+        glDisable(GL_TEXTURE_2D)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glDepthMask(true)
         glColor(color)
-        GL11.glCallList(DISPLAY_LISTS_2D[0])
+        glCallList(DISPLAY_LISTS_2D[0])
         glColor(backgroundColor)
-        GL11.glCallList(DISPLAY_LISTS_2D[1])
-        GL11.glTranslated(0.0, 21 + -(entity.entityBoundingBox.maxY - entity.entityBoundingBox.minY) * 12, 0.0)
+        glCallList(DISPLAY_LISTS_2D[1])
+        glTranslated(0.0, 21 + -(entity.entityBoundingBox.maxY - entity.entityBoundingBox.minY) * 12, 0.0)
         glColor(color)
-        GL11.glCallList(DISPLAY_LISTS_2D[2])
+        glCallList(DISPLAY_LISTS_2D[2])
         glColor(backgroundColor)
-        GL11.glCallList(DISPLAY_LISTS_2D[3])
+        glCallList(DISPLAY_LISTS_2D[3])
 
         // Stop render
-        GL11.glEnable(GL11.GL_DEPTH_TEST)
-        GL11.glEnable(GL11.GL_TEXTURE_2D)
-        GL11.glDisable(GL11.GL_BLEND)
-        GL11.glPopMatrix()
+        glEnable(GL_DEPTH_TEST)
+        glEnable(GL_TEXTURE_2D)
+        glDisable(GL_BLEND)
+        glPopMatrix()
     }
 
     fun draw2D(blockPos: BlockPos, color: Int, backgroundColor: Int) {
@@ -528,68 +528,68 @@ object RenderUtils : MinecraftInstance() {
         val posX = blockPos.x + 0.5 - renderManager.renderPosX
         val posY = blockPos.y - renderManager.renderPosY
         val posZ = blockPos.z + 0.5 - renderManager.renderPosZ
-        GL11.glPushMatrix()
-        GL11.glTranslated(posX, posY, posZ)
-        GL11.glRotated(-mc.renderManager.playerViewY.toDouble(), 0.0, 1.0, 0.0)
-        GL11.glScaled(-0.1, -0.1, 0.1)
-        GL11.glDisable(GL11.GL_DEPTH_TEST)
-        GL11.glEnable(GL11.GL_BLEND)
-        GL11.glDisable(GL11.GL_TEXTURE_2D)
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-        GL11.glDepthMask(true)
+        glPushMatrix()
+        glTranslated(posX, posY, posZ)
+        glRotated(-mc.renderManager.playerViewY.toDouble(), 0.0, 1.0, 0.0)
+        glScaled(-0.1, -0.1, 0.1)
+        glDisable(GL_DEPTH_TEST)
+        glEnable(GL_BLEND)
+        glDisable(GL_TEXTURE_2D)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glDepthMask(true)
         glColor(color)
-        GL11.glCallList(DISPLAY_LISTS_2D[0])
+        glCallList(DISPLAY_LISTS_2D[0])
         glColor(backgroundColor)
-        GL11.glCallList(DISPLAY_LISTS_2D[1])
-        GL11.glTranslated(0.0, 9.0, 0.0)
+        glCallList(DISPLAY_LISTS_2D[1])
+        glTranslated(0.0, 9.0, 0.0)
         glColor(color)
-        GL11.glCallList(DISPLAY_LISTS_2D[2])
+        glCallList(DISPLAY_LISTS_2D[2])
         glColor(backgroundColor)
-        GL11.glCallList(DISPLAY_LISTS_2D[3])
+        glCallList(DISPLAY_LISTS_2D[3])
 
         // Stop render
-        GL11.glEnable(GL11.GL_DEPTH_TEST)
-        GL11.glEnable(GL11.GL_TEXTURE_2D)
-        GL11.glDisable(GL11.GL_BLEND)
-        GL11.glPopMatrix()
+        glEnable(GL_DEPTH_TEST)
+        glEnable(GL_TEXTURE_2D)
+        glDisable(GL_BLEND)
+        glPopMatrix()
     }
 
     @JvmStatic
     fun renderNameTag(string: String, x: Double, y: Double, z: Double) {
         val renderManager = mc.renderManager
-        GL11.glPushMatrix()
-        GL11.glTranslated(x - renderManager.renderPosX, y - renderManager.renderPosY, z - renderManager.renderPosZ)
-        GL11.glNormal3f(0f, 1f, 0f)
-        GL11.glRotatef(-mc.renderManager.playerViewY, 0f, 1f, 0f)
-        GL11.glRotatef(mc.renderManager.playerViewX, 1f, 0f, 0f)
-        GL11.glScalef(-0.05f, -0.05f, 0.05f)
-        setGlCap(GL11.GL_LIGHTING, false)
-        setGlCap(GL11.GL_DEPTH_TEST, false)
-        setGlCap(GL11.GL_BLEND, true)
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
+        glPushMatrix()
+        glTranslated(x - renderManager.renderPosX, y - renderManager.renderPosY, z - renderManager.renderPosZ)
+        glNormal3f(0f, 1f, 0f)
+        glRotatef(-mc.renderManager.playerViewY, 0f, 1f, 0f)
+        glRotatef(mc.renderManager.playerViewX, 1f, 0f, 0f)
+        glScalef(-0.05f, -0.05f, 0.05f)
+        setGlCap(GL_LIGHTING, false)
+        setGlCap(GL_DEPTH_TEST, false)
+        setGlCap(GL_BLEND, true)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         val width = Fonts.font35.getStringWidth(string) / 2
         drawRect(-width - 1, -1, width + 1, Fonts.font35.FONT_HEIGHT, Int.MIN_VALUE)
         Fonts.font35.drawString(string, -width.toFloat(), 1.5f, Color.WHITE.rgb, true)
         resetCaps()
-        GL11.glColor4f(1f, 1f, 1f, 1f)
-        GL11.glPopMatrix()
+        glColor4f(1f, 1f, 1f, 1f)
+        glPopMatrix()
     }
 
     fun drawLine(x: Double, y: Double, x1: Double, y1: Double, width: Float) {
-        GL11.glDisable(GL11.GL_TEXTURE_2D)
-        GL11.glLineWidth(width)
-        GL11.glBegin(GL11.GL_LINES)
-        GL11.glVertex2d(x, y)
-        GL11.glVertex2d(x1, y1)
-        GL11.glEnd()
-        GL11.glEnable(GL11.GL_TEXTURE_2D)
+        glDisable(GL_TEXTURE_2D)
+        glLineWidth(width)
+        glBegin(GL_LINES)
+        glVertex2d(x, y)
+        glVertex2d(x1, y1)
+        glEnd()
+        glEnable(GL_TEXTURE_2D)
     }
 
     @JvmStatic
     fun makeScissorBox(x: Float, y: Float, x2: Float, y2: Float) {
         val scaledResolution = ScaledResolution(mc)
         val factor = scaledResolution.scaleFactor
-        GL11.glScissor(
+        glScissor(
             (x * factor).toInt(),
             ((scaledResolution.scaledHeight - y2) * factor).toInt(),
             ((x2 - x) * factor).toInt(),
@@ -619,11 +619,11 @@ object RenderUtils : MinecraftInstance() {
     }
 
     fun setGlCap(cap: Int, state: Boolean) {
-        glCapMap[cap] = GL11.glGetBoolean(cap)
+        glCapMap[cap] = glGetBoolean(cap)
         setGlState(cap, state)
     }
 
-    fun setGlState(cap: Int, state: Boolean) = if (state) GL11.glEnable(cap) else GL11.glDisable(cap)
+    fun setGlState(cap: Int, state: Boolean) = if (state) glEnable(cap) else glDisable(cap)
 
     fun drawScaledCustomSizeModalRect(
         x: Int,
@@ -637,8 +637,8 @@ object RenderUtils : MinecraftInstance() {
         tileWidth: Float,
         tileHeight: Float
     ) {
-        val f = 1.0f / tileWidth
-        val f1 = 1.0f / tileHeight
+        val f = 1f / tileWidth
+        val f1 = 1f / tileHeight
         val tessellator = Tessellator.getInstance()
         val worldRenderer = tessellator.worldRenderer
         worldRenderer.begin(7, DefaultVertexFormats.POSITION_TEX)

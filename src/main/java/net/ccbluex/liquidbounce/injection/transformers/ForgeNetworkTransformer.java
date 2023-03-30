@@ -7,12 +7,12 @@ package net.ccbluex.liquidbounce.injection.transformers;
 
 import net.ccbluex.liquidbounce.script.remapper.injection.utils.ClassUtils;
 import net.ccbluex.liquidbounce.script.remapper.injection.utils.NodeUtils;
-import net.minecraft.client.Minecraft;
 import net.minecraft.launchwrapper.IClassTransformer;
 import org.objectweb.asm.tree.*;
 
 import static net.ccbluex.liquidbounce.features.special.ClientFixes.blockFML;
 import static net.ccbluex.liquidbounce.features.special.ClientFixes.fmlFixesEnabled;
+import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
 import static org.objectweb.asm.Opcodes.*;
 
 /**
@@ -80,6 +80,6 @@ public class ForgeNetworkTransformer implements IClassTransformer {
     }
 
     public static boolean returnMethod() {
-        return fmlFixesEnabled && blockFML && !Minecraft.getMinecraft().isIntegratedServerRunning();
+        return fmlFixesEnabled && blockFML && !mc.isIntegratedServerRunning();
     }
 }

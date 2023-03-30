@@ -33,7 +33,7 @@ class NoWeb : Module() {
                     thePlayer.motionY = 0.0
             }
             "laac" -> {
-                thePlayer.jumpMovementFactor = if (thePlayer.movementInput.moveStrafe != 0f) 1.0f else 1.21f
+                thePlayer.jumpMovementFactor = if (thePlayer.movementInput.moveStrafe != 0f) 1f else 1.21f
 
                 if (!mc.gameSettings.keyBindSneak.isKeyDown)
                     thePlayer.motionY = 0.0

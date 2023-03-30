@@ -13,8 +13,9 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.AnimationUtils
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
-import org.lwjgl.opengl.GL11
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
+import org.lwjgl.opengl.GL11.glColor4f
 import java.awt.Color
 
 /**
@@ -73,13 +74,13 @@ class Notification(private val message: String) {
      */
     fun drawNotification() {
         // Draw notification
-        RenderUtils.drawRect(-x + 8 + textLength, 0F, -x, -20F, Color.BLACK.rgb)
-        RenderUtils.drawRect(-x, 0F, -x - 5, -20F, Color(0, 160, 255).rgb)
+        drawRect(-x + 8 + textLength, 0F, -x, -20F, Color.BLACK.rgb)
+        drawRect(-x, 0F, -x - 5, -20F, Color(0, 160, 255).rgb)
         Fonts.font35.drawString(message, -x + 4, -14F, Int.MAX_VALUE)
-        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+        glColor4f(1f, 1f, 1f, 1f)
 
         // Animation
-        val delta = RenderUtils.deltaTime
+        val delta = deltaTime
         val width = textLength + 8F
 
         when (fadeState) {

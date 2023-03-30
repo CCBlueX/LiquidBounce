@@ -27,9 +27,9 @@ abstract class Style : MinecraftInstance() {
     abstract fun drawButtonElement(mouseX: Int, mouseY: Int, buttonElement: ButtonElement)
     abstract fun drawModuleElementAndClick(mouseX: Int, mouseY: Int, moduleElement: ModuleElement, mouseButton: Int?): Boolean
 
-    fun clickSound() = mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("gui.button.press"), 1.0f))
+    fun clickSound() = mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("gui.button.press"), 1f))
 
-    fun showSettingsSound() = mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("random.bow"), 1.0f))
+    fun showSettingsSound() = mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("random.bow"), 1f))
 
     fun round(v: Float): Float {
         var bigDecimal = BigDecimal(v.toString())

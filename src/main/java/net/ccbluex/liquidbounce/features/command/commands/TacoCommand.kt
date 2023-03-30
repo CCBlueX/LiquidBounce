@@ -12,7 +12,8 @@ import net.ccbluex.liquidbounce.event.Render2DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawImage
 import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.util.ResourceLocation
 
@@ -52,9 +53,9 @@ class TacoCommand : Command("taco"), Listenable {
         if (!toggle)
             return
 
-        running += 0.15f * RenderUtils.deltaTime
+        running += 0.15f * deltaTime
         val scaledResolution = ScaledResolution(mc)
-        RenderUtils.drawImage(tacoTextures[image], running.toInt(), scaledResolution.scaledHeight - 60, 64, 32)
+        drawImage(tacoTextures[image], running.toInt(), scaledResolution.scaledHeight - 60, 64, 32)
         if (scaledResolution.scaledWidth <= running)
             running = -64f
     }

@@ -83,7 +83,7 @@ public abstract class MixinNetHandlerPlayClient {
 
     @Inject(method = "handleJoinGame", at = @At("HEAD"), cancellable = true)
     private void handleJoinGameWithAntiForge(S01PacketJoinGame packetIn, final CallbackInfo callbackInfo) {
-        if(!fmlFixesEnabled || !blockFML || Minecraft.getMinecraft().isIntegratedServerRunning())
+        if(!fmlFixesEnabled || !blockFML || mc.isIntegratedServerRunning())
             return;
 
         PacketThreadUtil.checkThreadAndEnqueue(packetIn, (NetHandlerPlayClient) (Object) this, gameController);

@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import org.lwjgl.input.Keyboard
-import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL11.glScalef
 import java.awt.Color
 
 class GuiUpdate : GuiScreen() {
@@ -28,18 +28,18 @@ class GuiUpdate : GuiScreen() {
         drawBackground(0)
 
         if (!IN_DEV) {
-            Fonts.font35.drawCenteredString("${UpdateInfo.newestVersion?.lbVersion} got released!", width / 2.0f, height / 8.0f + 80, 0xffffff)
+            Fonts.font35.drawCenteredString("${UpdateInfo.newestVersion?.lbVersion} got released!", width / 2f, height / 8f + 80, 0xffffff)
         } else {
-            Fonts.font35.drawCenteredString("New build available!", width / 2.0f, height / 8.0f + 80, 0xffffff)
+            Fonts.font35.drawCenteredString("New build available!", width / 2f, height / 8f + 80, 0xffffff)
         }
 
-        Fonts.font35.drawCenteredString("Press \"Download\" to visit our website or dismiss this message by pressing \"OK\".", width / 2.0f, height / 8.0f + 80 + Fonts.font35.fontHeight, 0xffffff)
+        Fonts.font35.drawCenteredString("Press \"Download\" to visit our website or dismiss this message by pressing \"OK\".", width / 2f, height / 8f + 80 + Fonts.font35.fontHeight, 0xffffff)
 
         super.drawScreen(mouseX, mouseY, partialTicks)
 
         // Title
-        GL11.glScalef(2F, 2F, 2F)
-        Fonts.font35.drawCenteredString("New update available!", width / 4.0f, height / 16.0f + 20, Color(255, 0, 0).rgb)
+        glScalef(2F, 2F, 2F)
+        Fonts.font35.drawCenteredString("New update available!", width / 4f, height / 16f + 20, Color(255, 0, 0).rgb)
     }
 
     override fun actionPerformed(button: GuiButton) {

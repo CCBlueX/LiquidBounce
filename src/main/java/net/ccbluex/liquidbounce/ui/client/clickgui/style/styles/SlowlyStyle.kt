@@ -12,11 +12,10 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.style.Style
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer.Companion.assumeNonVolatile
 import net.ccbluex.liquidbounce.ui.font.Fonts.font35
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawFilledCircle
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.gui.Gui.drawRect
-import net.minecraft.client.renderer.GlStateManager.resetColor
 import net.minecraft.util.StringUtils
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
@@ -34,8 +33,6 @@ object SlowlyStyle : Style() {
             drawBorderedRect(panel.x, panel.y + 17 + panel.fade, panel.x + panel.width, panel.y + 24 + panel.fade, 3, Color(42, 57, 79).rgb, Color(42, 57, 79).rgb)
         }
 
-        resetColor()
-
         val xPos = panel.x - (font35.getStringWidth("§f" + StringUtils.stripControlCodes(panel.name)) - 100) / 2
         font35.drawString(panel.name, xPos, panel.y + 4, Color.WHITE.rgb)
     }
@@ -43,8 +40,6 @@ object SlowlyStyle : Style() {
     override fun drawDescription(mouseX: Int, mouseY: Int, text: String) {
         val xPos = mouseX + font35.getStringWidth(text) + 14
         drawBorderedRect(mouseX + 9, mouseY, xPos, mouseY + font35.fontHeight + 3, 3, Color(42, 57, 79).rgb, Color(42, 57, 79).rgb)
-
-        resetColor()
 
         font35.drawString(text, mouseX + 12, mouseY + font35.fontHeight / 2, Color.WHITE.rgb)
     }
@@ -57,16 +52,12 @@ object SlowlyStyle : Style() {
             )
         )
 
-        resetColor()
-
         font35.drawString(buttonElement.displayName, buttonElement.x + 5, buttonElement.y + 5, Color.WHITE.rgb)
     }
 
     override fun drawModuleElementAndClick(mouseX: Int, mouseY: Int, moduleElement: ModuleElement, mouseButton: Int?): Boolean {
         drawRect(moduleElement.x - 1, moduleElement.y - 1, moduleElement.x + moduleElement.width + 1, moduleElement.y + moduleElement.height + 1, getHoverColor(Color(54, 71, 96), moduleElement.hoverTime))
         drawRect(moduleElement.x - 1, moduleElement.y - 1, moduleElement.x + moduleElement.width + 1, moduleElement.y + moduleElement.height + 1, getHoverColor(Color(7, 152, 252, moduleElement.slowlyFade), moduleElement.hoverTime))
-
-        resetColor()
 
         font35.drawString(moduleElement.displayName, moduleElement.x + 5, moduleElement.y + 5, Color.WHITE.rgb)
 
@@ -146,8 +137,6 @@ object SlowlyStyle : Style() {
                                         return true
                                     }
 
-                                    resetColor()
-
                                     font35.drawString("> $valueOfList", minX + 2, yPos + 2,
                                         if (value.get() == valueOfList) Color.WHITE.rgb else Int.MAX_VALUE
                                     )
@@ -186,9 +175,9 @@ object SlowlyStyle : Style() {
                                 if (mouseButton == 0) return true
                             }
 
-                            RenderUtils.drawRect(x, y, x + width, y + 2, Int.MAX_VALUE)
-                            RenderUtils.drawRect(x, y, sliderValue, y + 2, color.rgb)
-                            RenderUtils.drawFilledCircle(sliderValue, y + 1, 3f, color)
+                            drawRect(x, y, x + width, y + 2, Int.MAX_VALUE)
+                            drawRect(x, y, sliderValue, y + 2, color.rgb)
+                            drawFilledCircle(sliderValue, y + 1, 3f, color)
 
                             font35.drawString(text, minX + 2, yPos + 3, Color.WHITE.rgb)
 
@@ -221,9 +210,9 @@ object SlowlyStyle : Style() {
                                 if (mouseButton == 0) return true
                             }
 
-                            RenderUtils.drawRect(x, y, x + width, y + 2, Int.MAX_VALUE)
-                            RenderUtils.drawRect(x, y, sliderValue, y + 2, color.rgb)
-                            RenderUtils.drawFilledCircle(sliderValue, y + 1, 3f, color)
+                            drawRect(x, y, x + width, y + 2, Int.MAX_VALUE)
+                            drawRect(x, y, sliderValue, y + 2, color.rgb)
+                            drawFilledCircle(sliderValue, y + 1, 3f, color)
 
                             font35.drawString(text, minX + 2, yPos + 3, Color.WHITE.rgb)
 
@@ -251,8 +240,6 @@ object SlowlyStyle : Style() {
                             val text = value.name + "§f: " + value.get()
 
                             moduleElement.settingsWidth = font35.getStringWidth(text) + 8
-
-                            resetColor()
 
                             font35.drawString(text, minX + 2, yPos + 4, Color.WHITE.rgb)
 

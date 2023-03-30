@@ -2,7 +2,6 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.network;
 
 import com.mojang.authlib.GameProfile;
 import net.ccbluex.liquidbounce.features.module.modules.misc.NameProtect;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.util.ResourceLocation;
@@ -16,6 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.Objects;
 
 import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
+import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
 
 @Mixin(NetworkPlayerInfo.class)
 public class MixinNetworkPlayerInfo {
@@ -28,7 +28,7 @@ public class MixinNetworkPlayerInfo {
         NameProtect nameProtect = (NameProtect) moduleManager.getModule(NameProtect.class);
 
         if (nameProtect.getState() && nameProtect.skinProtectValue.get()) {
-            if (nameProtect.allPlayersValue.get() || Objects.equals(gameProfile.getId(), Minecraft.getMinecraft().getSession().getProfile().getId())) {
+            if (nameProtect.allPlayersValue.get() || Objects.equals(gameProfile.getId(), mc.getSession().getProfile().getId())) {
                 cir.setReturnValue(DefaultPlayerSkin.getDefaultSkin(this.gameProfile.getId()));
                 cir.cancel();
             }

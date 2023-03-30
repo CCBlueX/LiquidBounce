@@ -53,8 +53,8 @@ public class TeleportHit extends Module {
 
             if (thePlayer.fallDistance > 0F) {
                 final Vec3 rotationVector = RotationUtils.getVectorForRotation(new Rotation(mc.thePlayer.rotationYaw, 0F));
-                final double x = mc.thePlayer.posX + rotationVector.xCoord * (mc.thePlayer.getDistanceToEntity(targetEntity) - 1.0F);
-                final double z = mc.thePlayer.posZ + rotationVector.zCoord * (mc.thePlayer.getDistanceToEntity(targetEntity) - 1.0F);
+                final double x = mc.thePlayer.posX + rotationVector.xCoord * (mc.thePlayer.getDistanceToEntity(targetEntity) - 1f);
+                final double z = mc.thePlayer.posZ + rotationVector.zCoord * (mc.thePlayer.getDistanceToEntity(targetEntity) - 1f);
                 final double y = targetEntity.getPosition().getY() + 0.25D;
 
                 PathUtils.findPath(x, y + 1.0D, z, 4D).forEach(pos -> mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(pos.getX(), pos.getY(), pos.getZ(), false)));

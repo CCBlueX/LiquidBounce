@@ -203,8 +203,8 @@ class Velocity : Module() {
                     return
 
                 if (nextInt(endExclusive = 100) < legitChanceValue.get()) {
-                    val horizontal = horizontalValue.get() / 100.0f
-                    val vertical = verticalValue.get() / 100.0f
+                    val horizontal = horizontalValue.get() / 100f
+                    val vertical = verticalValue.get() / 100f
 
                     thePlayer.motionX *= horizontal.toDouble()
                     thePlayer.motionZ *= horizontal.toDouble()

@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.file.FileManager.saveConfig
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawLoadingCircle
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import java.net.BindException
@@ -79,7 +79,7 @@ class GuiMicrosoftLoginProgress(val updateStatus: (String) -> Unit, val done: ()
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
         drawDefaultBackground()
-        RenderUtils.drawLoadingCircle(width / 2f, height / 4f + 70)
+        drawLoadingCircle(width / 2f, height / 4f + 70)
         Fonts.font40.drawCenteredString("Logging into account...", width / 2f, height / 2 - 60f, 0xffffff)
         super.drawScreen(mouseX, mouseY, partialTicks)
     }

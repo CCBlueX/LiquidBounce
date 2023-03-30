@@ -19,7 +19,7 @@ import net.ccbluex.liquidbounce.ui.elements.GuiPasswordField
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiTextField
@@ -82,11 +82,11 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
         // Draw background to screen
         drawBackground(0)
-        RenderUtils.drawRect(30.0f, 30.0f, width - 30.0f, height - 30.0f, Integer.MIN_VALUE)
+        drawRect(30f, 30f, width - 30f, height - 30f, Integer.MIN_VALUE)
 
         // Draw title and status
-        Fonts.font40.drawCenteredString("TheAltening", width / 2.0f, height / 2 - 180f, 0xffffff)
-        Fonts.font35.drawCenteredString(status, width / 2.0f, height / 2 + 30f, 0xffffff)
+        Fonts.font40.drawCenteredString("TheAltening", width / 2f, height / 2 - 180f, 0xffffff)
+        Fonts.font35.drawCenteredString(status, width / 2f, height / 2 + 30f, 0xffffff)
 
         // Draw fields
         apiKeyField.drawTextBox()
@@ -94,10 +94,10 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
 
         // Draw text
         if (tokenField.text.isEmpty() && !tokenField.isFocused)
-            Fonts.font40.drawCenteredString("§7Token", width / 2.0f - 82, height / 2 - 114f, 0xffffff)
+            Fonts.font40.drawCenteredString("§7Token", width / 2f - 82, height / 2 - 114f, 0xffffff)
         if (apiKeyField.text.isEmpty() && !apiKeyField.isFocused)
-            Fonts.font40.drawCenteredString("§7API-Key", width / 2.0f - 78, height / 2 - 24f, 0xffffff)
-        Fonts.font40.drawCenteredString("§7Use coupon code 'liquidbounce' for 20% off!", width / 2.0f, height / 2 + 55f, 0xffffff)
+            Fonts.font40.drawCenteredString("§7API-Key", width / 2f - 78, height / 2 - 24f, 0xffffff)
+        Fonts.font40.drawCenteredString("§7Use coupon code 'liquidbounce' for 20% off!", width / 2f, height / 2 + 55f, 0xffffff)
         super.drawScreen(mouseX, mouseY, partialTicks)
     }
 

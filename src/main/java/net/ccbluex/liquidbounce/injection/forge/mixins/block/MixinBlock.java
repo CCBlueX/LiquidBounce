@@ -107,11 +107,11 @@ public abstract class MixinBlock {
         final NoSlowBreak noSlowBreak = (NoSlowBreak) moduleManager.getModule(NoSlowBreak.class);
         if (Objects.requireNonNull(noSlowBreak).getState()) {
             if (noSlowBreak.getWaterValue().get() && playerIn.isInsideOfMaterial(Material.water) && !EnchantmentHelper.getAquaAffinityModifier(playerIn)) {
-                f *= 5.0F;
+                f *= 5f;
             }
 
             if (noSlowBreak.getAirValue().get() && !playerIn.onGround) {
-                f *= 5.0F;
+                f *= 5f;
             }
         } else if (playerIn.onGround) { // NoGround
             final NoFall noFall = (NoFall) moduleManager.getModule(NoFall.class);

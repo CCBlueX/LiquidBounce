@@ -9,9 +9,8 @@ import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.utils.MinecraftInstance.mc
 import net.ccbluex.liquidbounce.utils.render.shader.Shader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.BackgroundShader
-import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.Gui
-import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.client.renderer.GlStateManager.color
 import net.minecraft.client.renderer.Tessellator
 import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats
@@ -48,13 +47,13 @@ class ImageBackground(backgroundFile: File) : Background(backgroundFile) {
 
     override fun initBackground() {
         val image = ImageIO.read(backgroundFile.inputStream())
-        Minecraft.getMinecraft().textureManager.loadTexture(resourceLocation, DynamicTexture(image))
+        mc.textureManager.loadTexture(resourceLocation, DynamicTexture(image))
     }
 
     override fun drawBackground(width: Int, height: Int) {
         mc.textureManager.bindTexture(resourceLocation)
-        GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f)
-        Gui.drawScaledCustomSizeModalRect(0, 0, 0.0f, 0.0f, width, height, width, height, width.toFloat(), height.toFloat())
+        color(1f, 1f, 1f, 1f)
+        Gui.drawScaledCustomSizeModalRect(0, 0, 0f, 0f, width, height, width, height, width.toFloat(), height.toFloat())
     }
 
 
