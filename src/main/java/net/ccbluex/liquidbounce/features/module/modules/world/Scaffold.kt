@@ -73,23 +73,23 @@ class Scaffold : Module() {
     // Placeable delay
     private val placeDelay = BoolValue("PlaceDelay", true)
 
-    private val simulateStruggle = BoolValue("SimulateStruggle", false)
+    private val extraClicks = BoolValue("DoExtraClicks", false)
 
-    private val struggleMaxCPS: IntegerValue = object : IntegerValue("StruggleMaxCPS", 7, 0, 20) {
+    private val extraClickMaxCPS: IntegerValue = object : IntegerValue("ExtraClickMaxCPS", 7, 0, 20) {
         override fun onChanged(oldValue: Int, newValue: Int) {
-            set(newValue.coerceAtLeast(struggleMinCPS.get()))
+            set(newValue.coerceAtLeast(extraClickMinCPS.get()))
         }
 
-        override fun isSupported() = simulateStruggle.isActive()
+        override fun isSupported() = extraClicks.isActive()
 
     }
 
-    private val struggleMinCPS: IntegerValue = object : IntegerValue("StruggleMinCPS", 3, 0, 20) {
+    private val extraClickMinCPS: IntegerValue = object : IntegerValue("ExtraClickMinCPS", 3, 0, 20) {
         override fun onChanged(oldValue: Int, newValue: Int) {
-            set(newValue.coerceAtMost(struggleMaxCPS.get()))
+            set(newValue.coerceAtMost(extraClickMaxCPS.get()))
         }
 
-        override fun isSupported() = simulateStruggle.isActive() && !struggleMaxCPS.isMinimal()
+        override fun isSupported() = extraClicks.isActive() && !extraClickMaxCPS.isMinimal()
     }
 
     // Delay
@@ -217,9 +217,9 @@ class Scaffold : Module() {
     private val currRotation: Rotation
         get() = targetRotation ?: mc.thePlayer?.rotation ?: serverRotation
 
-    // Click struggle simulation
+    // Extra clicks
     private var extraClick: ExtraClickInfo =
-        ExtraClickInfo(TimeUtils.randomClickDelay(struggleMinCPS.get(), struggleMaxCPS.get()), 0L, 0)
+        ExtraClickInfo(TimeUtils.randomClickDelay(extraClickMinCPS.get(), extraClickMaxCPS.get()), 0L, 0)
 
     // Enabling module
     override fun onEnable() {
@@ -384,11 +384,11 @@ class Scaffold : Module() {
     fun onTick(event: TickEvent) {
         val target = targetPlace
 
-        if (simulateStruggle.get()) {
+        if (extraClicks.get()) {
             while (extraClick.clicks > 0) {
                 extraClick.clicks--
 
-                strugglePlace()
+                doPlaceAttempt()
             }
         }
 
@@ -542,7 +542,7 @@ class Scaffold : Module() {
         targetPlace = null
     }
 
-    private fun strugglePlace() {
+    private fun doPlaceAttempt() {
         val player = mc.thePlayer ?: return
         val world = mc.theWorld ?: return
 
@@ -676,7 +676,7 @@ class Scaffold : Module() {
         val player = mc.thePlayer ?: return
 
         val shouldBother =
-            !(shouldGoDown || modeValue.get() == "Expand" && expandLengthValue.get() > 1) && simulateStruggle.get() && MovementUtils.isMoving
+            !(shouldGoDown || modeValue.get() == "Expand" && expandLengthValue.get() > 1) && extraClicks.get() && MovementUtils.isMoving
 
         if (shouldBother) {
             targetRotation?.let {
@@ -685,7 +685,7 @@ class Scaffold : Module() {
 
                     if (raytrace.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK && timePassed) {
                         extraClick = ExtraClickInfo(
-                            TimeUtils.randomClickDelay(struggleMinCPS.get(), struggleMaxCPS.get()),
+                            TimeUtils.randomClickDelay(extraClickMinCPS.get(), extraClickMaxCPS.get()),
                             System.currentTimeMillis(),
                             extraClick.clicks + 1
                         )
