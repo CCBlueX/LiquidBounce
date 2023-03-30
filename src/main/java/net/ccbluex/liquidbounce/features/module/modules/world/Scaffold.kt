@@ -792,7 +792,7 @@ class Scaffold : Module() {
         if (rotationsValue.get()) {
             val limitedRotation = limitAngleChange(
                 currRotation,
-                Rotation(placeRotation.rotation.yaw, placeRotation.rotation.pitch),
+                placeRotation.rotation,
                 nextFloat(minTurnSpeedValue.get(), maxTurnSpeedValue.get())
             )
 
