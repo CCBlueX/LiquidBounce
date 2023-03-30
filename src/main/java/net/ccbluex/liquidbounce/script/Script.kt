@@ -10,16 +10,19 @@ import jdk.nashorn.api.scripting.JSObject
 import jdk.nashorn.api.scripting.NashornScriptEngineFactory
 import jdk.nashorn.api.scripting.ScriptUtils
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.commandManager
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
+import net.ccbluex.liquidbounce.LiquidBounce.scriptManager
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.Module
-
+import net.ccbluex.liquidbounce.script.ScriptManager.scriptsFolder
 import net.ccbluex.liquidbounce.script.api.ScriptCommand
 import net.ccbluex.liquidbounce.script.api.ScriptModule
 import net.ccbluex.liquidbounce.script.api.ScriptTab
 import net.ccbluex.liquidbounce.script.api.global.Chat
 import net.ccbluex.liquidbounce.script.api.global.Item
 import net.ccbluex.liquidbounce.script.api.global.Setting
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import java.io.File
 import java.util.function.Function
@@ -54,9 +57,9 @@ class Script(val scriptFile: File) : MinecraftInstance() {
         // Global instances
         scriptEngine.put("mc", mc)
 
-        scriptEngine.put("moduleManager", LiquidBounce.moduleManager)
-        scriptEngine.put("commandManager", LiquidBounce.commandManager)
-        scriptEngine.put("scriptManager", LiquidBounce.scriptManager)
+        scriptEngine.put("moduleManager", moduleManager)
+        scriptEngine.put("commandManager", commandManager)
+        scriptEngine.put("scriptManager", scriptManager)
 
         // Global functions
         scriptEngine.put("registerScript", RegisterScript())
@@ -69,7 +72,7 @@ class Script(val scriptFile: File) : MinecraftInstance() {
 
         callEvent("load")
 
-        ClientUtils.getLogger().info("[ScriptAPI] Successfully loaded script '${scriptFile.name}'.")
+        LOGGER.info("[ScriptAPI] Successfully loaded script '${scriptFile.name}'.")
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -97,7 +100,7 @@ class Script(val scriptFile: File) : MinecraftInstance() {
     @Suppress("unused")
     fun registerModule(moduleObject: JSObject, callback: JSObject) {
         val module = ScriptModule(moduleObject)
-        LiquidBounce.moduleManager.registerModule(module)
+        moduleManager.registerModule(module)
         registeredModules += module
         callback.call(moduleObject, module)
     }
@@ -111,7 +114,7 @@ class Script(val scriptFile: File) : MinecraftInstance() {
     @Suppress("unused")
     fun registerCommand(commandObject: JSObject, callback: JSObject) {
         val command = ScriptCommand(commandObject)
-        LiquidBounce.commandManager.registerCommand(command)
+        commandManager.registerCommand(command)
         registeredCommands += command
         callback.call(commandObject, command)
     }
@@ -152,7 +155,7 @@ class Script(val scriptFile: File) : MinecraftInstance() {
      */
     private fun supportLegacyScripts() {
         if (getMagicComment("api_version") != "2") {
-            ClientUtils.getLogger().info("[ScriptAPI] Running script '${scriptFile.name}' with legacy support.")
+            LOGGER.info("[ScriptAPI] Running script '${scriptFile.name}' with legacy support.")
             val legacyScript = LiquidBounce::class.java.getResource("/assets/minecraft/liquidbounce/scriptapi/legacy.js").readText()
             scriptEngine.eval(legacyScript)
         }
@@ -184,8 +187,8 @@ class Script(val scriptFile: File) : MinecraftInstance() {
     fun onDisable() {
         if (!state) return
 
-        registeredModules.forEach { LiquidBounce.moduleManager.unregisterModule(it) }
-        registeredCommands.forEach { LiquidBounce.commandManager.unregisterCommand(it) }
+        registeredModules.forEach { moduleManager.unregisterModule(it) }
+        registeredCommands.forEach { commandManager.unregisterCommand(it) }
 
         callEvent("disable")
         state = false
@@ -196,7 +199,7 @@ class Script(val scriptFile: File) : MinecraftInstance() {
      * @param scriptFile Path to the file to be imported.
      */
     fun import(scriptFile: String) {
-        val scriptText = File(LiquidBounce.scriptManager.scriptsFolder, scriptFile).readText()
+        val scriptText = File(scriptsFolder, scriptFile).readText()
 
         scriptEngine.eval(scriptText)
     }
@@ -209,7 +212,7 @@ class Script(val scriptFile: File) : MinecraftInstance() {
         try {
             events[eventName]?.call(null)
         } catch (throwable: Throwable) {
-            ClientUtils.getLogger().error("[ScriptAPI] Exception in script '$scriptName'!", throwable)
+            LOGGER.error("[ScriptAPI] Exception in script '$scriptName'!", throwable)
         }
     }
 }

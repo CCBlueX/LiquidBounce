@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.utils.block.BlockUtils
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.block.Block
@@ -40,7 +40,7 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
             return
         }
 
-        val value = module.getValue(args[1])
+        val value = module[args[1]]
 
         if (value == null) {
             chatSyntax("$moduleName <$valueNames>")
@@ -79,14 +79,14 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
                         }
 
                         value.set(id)
-                        chat("§7${module.name} §8${args[1].lowercase()}§7 was set to §8${BlockUtils.getBlockName(id)}§7.")
+                        chat("§7${module.name} §8${args[1].lowercase()}§7 was set to §8${getBlockName(id)}§7.")
                         playEdit()
                         return
                     }
                     is IntegerValue -> value.set(args[2].toInt())
                     is FloatValue -> value.set(args[2].toFloat())
                     is ListValue -> {
-                        if (!value.contains(args[2])) {
+                        if (args[2] !in value) {
                             chatSyntax("$moduleName ${args[1].lowercase()} <${value.values.joinToString(separator = "/").lowercase()}>")
                             return
                         }
@@ -112,7 +112,7 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
                 .filter { it !is FontValue && it.isSupported() && it.name.startsWith(args[0], true) }
                 .map { it.name.lowercase() }
             2 -> {
-                when (module.getValue(args[0])) {
+                when (module[args[0]]) {
                     is BlockValue -> {
                         return Item.itemRegistry.keys
                                 .map { it.resourcePath.lowercase() }

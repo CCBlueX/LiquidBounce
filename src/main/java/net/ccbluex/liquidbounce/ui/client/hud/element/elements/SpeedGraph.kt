@@ -9,11 +9,11 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
-import net.minecraft.client.renderer.GlStateManager
-import org.lwjgl.opengl.GL11
+import net.minecraft.client.renderer.GlStateManager.resetColor
+import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import kotlin.math.sqrt
 
@@ -57,15 +57,15 @@ class SpeedGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F,
                 speedList.removeAt(0)
             }
         }
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-        GL11.glEnable(GL11.GL_BLEND)
-        GL11.glEnable(GL11.GL_LINE_SMOOTH)
-        GL11.glLineWidth(thickness.get())
-        GL11.glDisable(GL11.GL_TEXTURE_2D)
-        GL11.glDisable(GL11.GL_DEPTH_TEST)
-        GL11.glDepthMask(false)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glEnable(GL_BLEND)
+        glEnable(GL_LINE_SMOOTH)
+        glLineWidth(thickness.get())
+        glDisable(GL_TEXTURE_2D)
+        glDisable(GL_DEPTH_TEST)
+        glDepthMask(false)
 
-        GL11.glBegin(GL11.GL_LINES)
+        glBegin(GL_LINES)
 
         val size = speedList.size
 
@@ -74,19 +74,19 @@ class SpeedGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F,
             val y = speedList[i] * 10 * yMultiplier.get()
             val y1 = speedList[i + 1] * 10 * yMultiplier.get()
 
-            RenderUtils.glColor(Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), 255))
-            GL11.glVertex2d(i.toDouble() - start, height.get() + 1 - y.coerceAtMost(height.get().toDouble()))
-            GL11.glVertex2d(i + 1.0 - start, height.get() + 1 - y1.coerceAtMost(height.get().toDouble()))
+            glColor(Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), 255))
+            glVertex2d(i.toDouble() - start, height.get() + 1 - y.coerceAtMost(height.get().toDouble()))
+            glVertex2d(i + 1.0 - start, height.get() + 1 - y1.coerceAtMost(height.get().toDouble()))
         }
 
-        GL11.glEnd()
+        glEnd()
 
-        GL11.glEnable(GL11.GL_TEXTURE_2D)
-        GL11.glDisable(GL11.GL_LINE_SMOOTH)
-        GL11.glEnable(GL11.GL_DEPTH_TEST)
-        GL11.glDepthMask(true)
-        GL11.glDisable(GL11.GL_BLEND)
-        GlStateManager.resetColor()
+        glEnable(GL_TEXTURE_2D)
+        glDisable(GL_LINE_SMOOTH)
+        glEnable(GL_DEPTH_TEST)
+        glDepthMask(true)
+        glDisable(GL_BLEND)
+        resetColor()
 
         return Border(0F, 0F, width.toFloat(), height.get().toFloat() + 2)
     }

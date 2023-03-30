@@ -7,7 +7,9 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.direction
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.MovementUtils.speed
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import kotlin.math.cos
@@ -37,13 +39,13 @@ class Strafe : Module() {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        if (mc.thePlayer.onGround && mc.gameSettings.keyBindJump.isKeyDown && allDirectionsJumpValue.get() && MovementUtils.isMoving && !(mc.thePlayer.isInWater || mc.thePlayer.isInLava || mc.thePlayer.isOnLadder || mc.thePlayer.isInWeb)) {
+        if (mc.thePlayer.onGround && mc.gameSettings.keyBindJump.isKeyDown && allDirectionsJumpValue.get() && isMoving && !(mc.thePlayer.isInWater || mc.thePlayer.isInLava || mc.thePlayer.isOnLadder || mc.thePlayer.isInWeb)) {
             if (mc.gameSettings.keyBindJump.isKeyDown) {
                 mc.gameSettings.keyBindJump.pressed = false
                 wasDown = true
             }
             val yaw = mc.thePlayer.rotationYaw
-            mc.thePlayer.rotationYaw = Math.toDegrees(MovementUtils.direction).toFloat()
+            mc.thePlayer.rotationYaw = Math.toDegrees(direction).toFloat()
             mc.thePlayer.jump()
             mc.thePlayer.rotationYaw = yaw
             jump = true
@@ -58,7 +60,7 @@ class Strafe : Module() {
 
     @EventTarget
     fun onStrafe(event: StrafeEvent) {
-        if (!MovementUtils.isMoving) {
+        if (!isMoving) {
             if (noMoveStopValue.get()) {
                 mc.thePlayer.motionX = .0
                 mc.thePlayer.motionZ = .0
@@ -66,13 +68,13 @@ class Strafe : Module() {
             return
         }
 
-        val shotSpeed = MovementUtils.speed
+        val shotSpeed = speed
         val speed = shotSpeed * strengthValue.get()
         val motionX = mc.thePlayer.motionX * (1 - strengthValue.get())
         val motionZ = mc.thePlayer.motionZ * (1 - strengthValue.get())
 
         if (!mc.thePlayer.onGround || onGroundStrafeValue.get()) {
-            val yaw = MovementUtils.direction
+            val yaw = direction
             mc.thePlayer.motionX = -sin(yaw) * speed + motionX
             mc.thePlayer.motionZ = cos(yaw) * speed + motionZ
         }

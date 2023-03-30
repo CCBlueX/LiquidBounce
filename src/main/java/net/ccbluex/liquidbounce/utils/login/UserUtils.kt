@@ -5,9 +5,9 @@
  */
 package net.ccbluex.liquidbounce.utils.login
 
-import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import net.ccbluex.liquidbounce.file.FileManager.PRETTY_GSON
 import org.apache.http.HttpHeaders
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
@@ -42,7 +42,7 @@ object UserUtils {
 
         val body = JsonObject()
         body.addProperty("accessToken", token)
-        request.entity = StringEntity(Gson().toJson(body))
+        request.entity = StringEntity(PRETTY_GSON.toJson(body))
 
         val response = client.execute(request)
 
@@ -51,7 +51,7 @@ object UserUtils {
 
     fun getUsername(uuid: String): String? {
         val client = HttpClients.createDefault()
-        val request = HttpGet("https://api.mojang.com/user/profiles/${uuid}/names")
+        val request = HttpGet("https://api.mojang.com/user/profiles/$uuid/names")
         val response = client.execute(request)
 
         if (response.statusLine.statusCode != 200) {

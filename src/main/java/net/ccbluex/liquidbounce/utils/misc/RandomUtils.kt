@@ -15,33 +15,20 @@ import kotlin.random.Random
 object RandomUtils {
 
     @JvmStatic
-    fun nextInt(startInclusive: Int, endExclusive: Int): Int {
-        return if (endExclusive - startInclusive <= 0) startInclusive else startInclusive + Random.nextInt(endExclusive - startInclusive)
-    }
+    fun nextInt(startInclusive: Int = 0, endExclusive: Int = Int.MAX_VALUE) =
+        if (endExclusive - startInclusive <= 0) startInclusive else startInclusive + Random.nextInt(endExclusive - startInclusive)
 
-    @JvmStatic
-    fun nextDouble(startInclusive: Double, endInclusive: Double): Double {
-        return if (startInclusive == endInclusive || endInclusive - startInclusive <= 0.0) startInclusive else startInclusive + (endInclusive - startInclusive) * Math.random()
-    }
+    fun nextDouble(startInclusive: Double = 0.0, endInclusive: Double = 1.0) =
+        if (startInclusive == endInclusive || endInclusive - startInclusive <= 0.0) startInclusive else startInclusive + (endInclusive - startInclusive) * Math.random()
 
-    @JvmStatic
-    fun nextFloat(startInclusive: Float, endInclusive: Float): Float {
-        return if (startInclusive == endInclusive || endInclusive - startInclusive <= 0f) startInclusive else (startInclusive + (endInclusive - startInclusive) * Math.random()).toFloat()
-    }
+    fun nextFloat(startInclusive: Float = 0f, endInclusive: Float = 1f) =
+        if (startInclusive == endInclusive || endInclusive - startInclusive <= 0f) startInclusive else (startInclusive + (endInclusive - startInclusive) * Math.random()).toFloat()
 
-    @JvmStatic
-    fun randomNumber(length: Int): String {
-        return random(length, "123456789")
-    }
+    fun randomNumber(length: Int) = random(length, "123456789")
 
-    @JvmStatic
-    fun randomString(length: Int): String {
-        return random(length, "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
-    }
+    fun randomString(length: Int) = random(length, "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
 
-    fun random(length: Int, chars: String): String {
-        return random(length, chars.toCharArray())
-    }
+    fun random(length: Int, chars: String)= random(length, chars.toCharArray())
 
     fun random(length: Int, chars: CharArray): String {
         val stringBuilder = StringBuilder()
@@ -80,8 +67,6 @@ object RandomUtils {
      * 68 332 277 724 combinations (@see https://github.com/CCBlueX/LiquidBounce/pull/923#issuecomment-145525193)
      */
 
-    @JvmStatic
-    @JvmOverloads
     fun randomUsername(maxLength: Int = GuiClientConfiguration.altsLength, raw: Boolean = GuiClientConfiguration.unformattedAlts): String {
         //Returns classic random username if stylised alts aren't enabled.
         if (!GuiClientConfiguration.stylisedAlts)

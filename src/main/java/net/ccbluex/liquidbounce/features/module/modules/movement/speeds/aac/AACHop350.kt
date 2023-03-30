@@ -5,10 +5,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EventManager.registerListener
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 
 class AACHop350 : SpeedMode("AACHop3.5.0"), Listenable {
     override fun onMotion() {}
@@ -19,7 +19,7 @@ class AACHop350 : SpeedMode("AACHop3.5.0"), Listenable {
     fun onMotion(event: MotionEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        if (event.eventState == EventState.POST && MovementUtils.isMoving && !thePlayer.isInWater && !thePlayer.isInLava) {
+        if (event.eventState == EventState.POST && isMoving && !thePlayer.isInWater && !thePlayer.isInLava) {
             thePlayer.jumpMovementFactor += 0.00208f
             if (thePlayer.fallDistance <= 1f) {
                 if (thePlayer.onGround) {
@@ -53,6 +53,6 @@ class AACHop350 : SpeedMode("AACHop3.5.0"), Listenable {
     }
 
     init {
-        LiquidBounce.eventManager.registerListener(this)
+        registerListener(this)
     }
 }

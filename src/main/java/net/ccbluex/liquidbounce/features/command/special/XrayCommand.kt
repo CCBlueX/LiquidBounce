@@ -1,13 +1,15 @@
 package net.ccbluex.liquidbounce.features.command.special
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.modules.render.XRay
+import net.ccbluex.liquidbounce.file.FileManager.saveConfig
+import net.ccbluex.liquidbounce.file.FileManager.xrayConfig
 import net.minecraft.block.Block
 
 class XrayCommand : Command("xray") {
 
-    private val xRay = LiquidBounce.moduleManager.getModule(XRay::class.java) as XRay
+    private val xRay = moduleManager[XRay::class.java] as XRay
 
     /**
      * Execute commands with provided [args]
@@ -30,13 +32,13 @@ class XrayCommand : Command("xray") {
                             tmpBlock
                         }
 
-                        if (block == null || xRay.xrayBlocks.contains(block)) {
+                        if (block == null || block in xRay.xrayBlocks) {
                             chat("This block is already on the list.")
                             return
                         }
 
                         xRay.xrayBlocks.add(block)
-                        LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.xrayConfig)
+                        saveConfig(xrayConfig)
                         chat("§7Added block §8${block.localizedName}§7.")
                         playEdit()
                     } catch (exception: NumberFormatException) {
@@ -66,13 +68,13 @@ class XrayCommand : Command("xray") {
                             tmpBlock
                         }
 
-                        if (block == null || !xRay.xrayBlocks.contains(block)) {
+                        if (block == null || block !in xRay.xrayBlocks) {
                             chat("This block is not on the list.")
                             return
                         }
 
                         xRay.xrayBlocks.remove(block)
-                        LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.xrayConfig)
+                        saveConfig(xrayConfig)
                         chat("§7Removed block §8${block.localizedName}§7.")
                         playEdit()
                     } catch (exception: NumberFormatException) {
@@ -110,13 +112,13 @@ class XrayCommand : Command("xray") {
                         return Block.blockRegistry.keys
                             .map { it.resourcePath.lowercase() }
                             .filter { Block.getBlockFromName(it.lowercase()) != null }
-                            .filter { !xRay.xrayBlocks.contains(Block.getBlockFromName(it.lowercase())) }
+                            .filter { Block.getBlockFromName(it.lowercase()) !in xRay.xrayBlocks }
                             .filter { it.startsWith(args[1], true) }
                     }
                     "remove" -> {
                         return Block.blockRegistry.keys
                             .map { it.resourcePath.lowercase() }
-                            .filter { xRay.xrayBlocks.contains(Block.getBlockFromName(it)) }
+                            .filter { Block.getBlockFromName(it) in xRay.xrayBlocks }
                             .filter { it.startsWith(args[1], true) }
                     }
                     else -> emptyList()

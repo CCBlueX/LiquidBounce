@@ -7,11 +7,12 @@ package net.ccbluex.liquidbounce.features.command.commands
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonParser
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_CLOUD
+import net.ccbluex.liquidbounce.LiquidBounce.hud
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.SettingsUtils
-import net.ccbluex.liquidbounce.utils.misc.HttpUtils
+import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
 import kotlin.concurrent.thread
 
 class AutoSettingsCommand : Command("autosettings", "setting", "settings", "config", "autosetting") {
@@ -40,19 +41,19 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
                 val url = if (args[2].startsWith("http"))
                     args[2]
                 else
-                    "${LiquidBounce.CLIENT_CLOUD}/settings/${args[2].lowercase()}"
+                    "${CLIENT_CLOUD}/settings/${args[2].lowercase()}"
 
                 chat("Loading settings...")
 
                 thread {
                     try {
                         // Load settings and apply them
-                        val settings = HttpUtils.get(url)
+                        val settings = get(url)
 
                         chat("Applying settings...")
                         SettingsUtils.executeScript(settings)
                         chat("§6Settings applied successfully")
-                        LiquidBounce.hud.addNotification(Notification("Updated Settings"))
+                        hud.addNotification(Notification("Updated Settings"))
                         playEdit()
                     } catch (exception: Exception) {
                         exception.printStackTrace()
@@ -83,7 +84,7 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
                 }
 
                 try {
-                    val json = JsonParser().parse(HttpUtils.get(
+                    val json = JsonParser().parse(get(
                             // TODO: Add another way to get all settings
                             "https://api.github.com/repos/CCBlueX/LiquidCloud/contents/LiquidBounce/settings"
                     ))

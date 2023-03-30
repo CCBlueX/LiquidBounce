@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.utils.extensions
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.file.FileManager.friendsConfig
 import net.ccbluex.liquidbounce.utils.MinecraftInstance.mc
 import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.getFixedSensitivityAngle
@@ -29,7 +29,6 @@ import net.minecraft.util.Vec3
  * Allows to get the distance between the current entity and [entity] from the nearest corner of the bounding box
  */
 fun Entity.getDistanceToEntityBox(entity: Entity): Double {
-    val eyes = this.getPositionEyes(1F)
     val pos = getNearestPointBB(eyes, entity.hitBox)
     return eyes.distanceTo(pos)
 }
@@ -39,7 +38,7 @@ fun getNearestPointBB(eye: Vec3, box: AxisAlignedBB): Vec3 {
     val destMins = doubleArrayOf(box.minX, box.minY, box.minZ)
     val destMaxs = doubleArrayOf(box.maxX, box.maxY, box.maxZ)
     for (i in 0..2) {
-        origin[i] = origin[i].coerceIn(destMins[i], destMaxs[i])
+        if (origin[i] > destMaxs[i]) origin[i] = destMaxs[i] else if (origin[i] < destMins[i]) origin[i] = destMins[i]
     }
     return Vec3(origin[0], origin[1], origin[2])
 }
@@ -50,17 +49,24 @@ fun EntityPlayer.getPing(): Int {
 }
 
 fun Entity.isAnimal(): Boolean {
-    return this is EntityAnimal || this is EntitySquid || this is EntityGolem || this is EntityBat
+    return this is EntityAnimal ||
+            this is EntitySquid ||
+            this is EntityGolem ||
+            this is EntityBat
 }
 
 fun Entity.isMob(): Boolean {
-    return this is EntityMob || this is EntityVillager || this is EntitySlime || this is EntityGhast || this is EntityDragon
+    return this is EntityMob ||
+            this is EntityVillager ||
+            this is EntitySlime ||
+            this is EntityGhast ||
+            this is EntityDragon
 }
 
 fun EntityPlayer.isClientFriend(): Boolean {
     val entityName = name ?: return false
 
-    return LiquidBounce.fileManager.friendsConfig.isFriend(stripColor(entityName))
+    return friendsConfig.isFriend(stripColor(entityName))
 }
 
 val Entity.rotation: Rotation
@@ -72,26 +78,29 @@ val Entity.hitBox: AxisAlignedBB
         return entityBoundingBox.expand(borderSize, borderSize, borderSize)
     }
 
+val Entity.eyes: Vec3
+    get() = getPositionEyes(1f)
+
 /**
  * Setting yaw to a fixed sensitivity angle
  */
 
 fun EntityPlayerSP.setFixedSensitivityAngles(yaw: Float? = null, pitch: Float? = null) {
-    if (yaw != null) mc.thePlayer.fixedSensitivityYaw = yaw
+    if (yaw != null) fixedSensitivityYaw = yaw
 
-    if (pitch != null) mc.thePlayer.fixedSensitivityPitch = pitch
+    if (pitch != null) fixedSensitivityPitch = pitch
 }
 
 var EntityPlayerSP.fixedSensitivityYaw: Float
     get() = getFixedSensitivityAngle(mc.thePlayer.rotationYaw)
     set(yaw) {
-        mc.thePlayer.rotationYaw = getFixedSensitivityAngle(yaw, mc.thePlayer.rotationYaw)
+        rotationYaw = getFixedSensitivityAngle(yaw, rotationYaw)
     }
 
 var EntityPlayerSP.fixedSensitivityPitch: Float
-    get() = getFixedSensitivityAngle(mc.thePlayer.rotationPitch)
+    get() = getFixedSensitivityAngle(rotationPitch)
     set(pitch) {
-        mc.thePlayer.rotationPitch = getFixedSensitivityAngle(pitch.coerceIn(-90f, 90f), mc.thePlayer.rotationPitch)
+        rotationPitch = getFixedSensitivityAngle(pitch.coerceIn(-90f, 90f), rotationPitch)
     }
 
 // Makes fixedSensitivityYaw, ... += work

@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.minecraft.client.entity.EntityOtherPlayerMP
@@ -76,7 +76,7 @@ class FreeCam : Module() {
         if (noClipValue.get())
             thePlayer.noClip = true
 
-        thePlayer.fallDistance = 0.0f
+        thePlayer.fallDistance = 0f
 
         if (flyValue.get()) {
             val value = speedValue.get()
@@ -91,7 +91,7 @@ class FreeCam : Module() {
             if (mc.gameSettings.keyBindSneak.isKeyDown)
                 thePlayer.motionY -= value
 
-            MovementUtils.strafe(value)
+            strafe(value)
         }
     }
 

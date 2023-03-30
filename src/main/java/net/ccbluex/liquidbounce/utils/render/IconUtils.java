@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.utils.render;
 
-import net.ccbluex.liquidbounce.LiquidBounce;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -15,15 +14,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
+import static net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME;
+
 @SideOnly(Side.CLIENT)
 public final class IconUtils {
 
     public static ByteBuffer[] getFavicon() {
         try {
             return new ByteBuffer[] {
-                    readImageToBuffer(IconUtils.class.getResourceAsStream("/assets/minecraft/" + LiquidBounce.CLIENT_NAME.toLowerCase() + "/icon_16x16.png")),
-                    readImageToBuffer(IconUtils.class.getResourceAsStream("/assets/minecraft/" + LiquidBounce.CLIENT_NAME.toLowerCase() + "/icon_32x32.png")),
-                    readImageToBuffer(IconUtils.class.getResourceAsStream("/assets/minecraft/" + LiquidBounce.CLIENT_NAME.toLowerCase() + "/icon_64x64.png"))
+                    readImageToBuffer(IconUtils.class.getResourceAsStream("/assets/minecraft/" + CLIENT_NAME.toLowerCase() + "/icon_16x16.png")),
+                    readImageToBuffer(IconUtils.class.getResourceAsStream("/assets/minecraft/" + CLIENT_NAME.toLowerCase() + "/icon_32x32.png")),
+                    readImageToBuffer(IconUtils.class.getResourceAsStream("/assets/minecraft/" + CLIENT_NAME.toLowerCase() + "/icon_64x64.png"))
             };
         }catch(IOException e) {
             e.printStackTrace();

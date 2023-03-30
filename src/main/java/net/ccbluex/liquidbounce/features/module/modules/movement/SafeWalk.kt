@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.block.BlockUtils
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -32,7 +32,7 @@ class SafeWalk : Module() {
         if (player.capabilities.allowFlying || player.capabilities.isFlying
             || !mc.playerController.gameIsSurvivalOrAdventure()) return
 
-        if (!maxFallDistanceValue.isMinimal() && player.onGround && BlockUtils.getBlock(BlockPos(player).down(1)) !is BlockAir) {
+        if (!maxFallDistanceValue.isMinimal() && player.onGround && getBlock(BlockPos(player).down(1)) !is BlockAir) {
             lastGroundY = player.posY
             lastCollisionY = FallingPlayer(player, true).findCollision(60)?.pos?.y
         }

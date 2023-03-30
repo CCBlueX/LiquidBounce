@@ -6,8 +6,8 @@
 package net.ccbluex.liquidbounce.ui.client
 
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.misc.HttpUtils
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.misc.HttpUtils.responseCode
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import org.lwjgl.input.Keyboard
@@ -37,11 +37,11 @@ class GuiServerStatus(private val prevGui: GuiScreen) : GuiScreen() {
         drawBackground(0)
 
         var i = height / 4 + 40
-        RenderUtils.drawRect(
-            width / 2.0f - 115,
-            i - 5.0f,
-            width / 2.0f + 115,
-            height / 4.0f + 43 + if (status.keys.isEmpty()) 10 else status.keys.size * Fonts.font40.fontHeight,
+        drawRect(
+            width / 2f - 115,
+            i - 5f,
+            width / 2f + 115,
+            height / 4f + 43 + if (status.keys.isEmpty()) 10 else status.keys.size * Fonts.font40.fontHeight,
             Integer.MIN_VALUE
         )
 
@@ -60,7 +60,7 @@ class GuiServerStatus(private val prevGui: GuiScreen) : GuiScreen() {
                             ignoreCase = true
                         )
                     ) "Loading..." else "Online"
-                }", width / 2.0f, i.toFloat(), Color.WHITE.rgb
+                }", width / 2f, i.toFloat(), Color.WHITE.rgb
             )
             i += Fonts.font40.fontHeight
         }
@@ -76,7 +76,7 @@ class GuiServerStatus(private val prevGui: GuiScreen) : GuiScreen() {
         for (url in status.keys) {
             thread {
                 try {
-                    val responseCode = HttpUtils.responseCode(url, "GET")
+                    val responseCode = responseCode(url, "GET")
                     status[url] = if (responseCode in 200..499) "green" else "red"
                 } catch (e: IOException) {
                     status[url] = "red"

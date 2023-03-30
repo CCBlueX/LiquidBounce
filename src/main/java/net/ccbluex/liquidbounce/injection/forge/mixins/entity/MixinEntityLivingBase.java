@@ -5,13 +5,11 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.entity;
 
-import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.JumpEvent;
 import net.ccbluex.liquidbounce.features.module.modules.movement.AirJump;
 import net.ccbluex.liquidbounce.features.module.modules.movement.LiquidWalk;
 import net.ccbluex.liquidbounce.features.module.modules.movement.NoJumpDelay;
 import net.ccbluex.liquidbounce.features.module.modules.render.AntiBlind;
-import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.minecraft.block.Block;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.EntityLivingBase;
@@ -30,6 +28,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Objects;
+
+import static net.ccbluex.liquidbounce.LiquidBounce.eventManager;
+import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
+import static net.ccbluex.liquidbounce.utils.RotationUtils.targetRotation;
 
 @Mixin(EntityLivingBase.class)
 public abstract class MixinEntityLivingBase extends MixinEntity {
@@ -70,7 +72,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
     @Overwrite
     protected void jump() {
         final JumpEvent jumpEvent = new JumpEvent(this.getJumpUpwardsMotion());
-        LiquidBounce.eventManager.callEvent(jumpEvent);
+        eventManager.callEvent(jumpEvent);
         if (jumpEvent.isCancelled()) return;
 
         this.motionY = jumpEvent.getMotion();
@@ -79,7 +81,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
             this.motionY += (float) (this.getActivePotionEffect(Potion.jump).getAmplifier() + 1) * 0.1F;
 
         if (this.isSprinting()) {
-            float f = (RotationUtils.targetRotation != null ? RotationUtils.targetRotation.getYaw() : this.rotationYaw) * 0.017453292F;
+            float f = (targetRotation != null ? targetRotation.getYaw() : this.rotationYaw) * 0.017453292F;
             this.motionX -= MathHelper.sin(f) * 0.2F;
             this.motionZ += MathHelper.cos(f) * 0.2F;
         }
@@ -89,19 +91,19 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
 
     @Inject(method = "onLivingUpdate", at = @At("HEAD"))
     private void headLiving(CallbackInfo callbackInfo) {
-        if (Objects.requireNonNull(LiquidBounce.moduleManager.getModule(NoJumpDelay.class)).getState()) jumpTicks = 0;
+        if (moduleManager.getModule(NoJumpDelay.class).getState()) jumpTicks = 0;
     }
 
     @Inject(method = "onLivingUpdate", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/EntityLivingBase;isJumping:Z", ordinal = 1))
     private void onJumpSection(CallbackInfo callbackInfo) {
-        if (Objects.requireNonNull(LiquidBounce.moduleManager.getModule(AirJump.class)).getState() && isJumping && this.jumpTicks == 0) {
+        if (moduleManager.getModule(AirJump.class).getState() && isJumping && this.jumpTicks == 0) {
             this.jump();
             this.jumpTicks = 10;
         }
 
-        final LiquidWalk liquidWalk = (LiquidWalk) LiquidBounce.moduleManager.getModule(LiquidWalk.class);
+        final LiquidWalk liquidWalk = (LiquidWalk) moduleManager.getModule(LiquidWalk.class);
 
-        if (Objects.requireNonNull(liquidWalk).getState() && !isJumping && !isSneaking() && isInWater() && liquidWalk.getModeValue().get().equalsIgnoreCase("Swim")) {
+        if (Objects.requireNonNull(liquidWalk).getState() && !isJumping && !isSneaking() && isInWater() && liquidWalk.getModeValue().get().equals("Swim")) {
             this.updateAITick();
         }
     }
@@ -115,7 +117,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
 
     @Inject(method = "isPotionActive(Lnet/minecraft/potion/Potion;)Z", at = @At("HEAD"), cancellable = true)
     private void isPotionActive(Potion p_isPotionActive_1_, final CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
-        final AntiBlind antiBlind = (AntiBlind) LiquidBounce.moduleManager.getModule(AntiBlind.class);
+        final AntiBlind antiBlind = (AntiBlind) moduleManager.getModule(AntiBlind.class);
 
         if ((p_isPotionActive_1_ == Potion.confusion || p_isPotionActive_1_ == Potion.blindness) && Objects.requireNonNull(antiBlind).getState() && antiBlind.getConfusionEffect().get())
             callbackInfoReturnable.setReturnValue(false);

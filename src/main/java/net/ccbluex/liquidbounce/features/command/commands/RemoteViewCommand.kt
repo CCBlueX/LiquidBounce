@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.commandManager
 import net.ccbluex.liquidbounce.features.command.Command
 
 class RemoteViewCommand : Command("remoteview", "rv") {
@@ -28,7 +28,7 @@ class RemoteViewCommand : Command("remoteview", "rv") {
             if (targetName == entity.name) {
                 mc.renderViewEntity = entity
                 chat("Now viewing perspective of §8${entity.name}§3.")
-                chat("Execute §8${LiquidBounce.commandManager.prefix}remoteview §3again to go back to yours.")
+                chat("Execute §8${commandManager.prefix}remoteview §3again to go back to yours.")
                 break
             }
         }

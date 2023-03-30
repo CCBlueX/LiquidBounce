@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.event.WorldEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 
@@ -30,7 +30,7 @@ class Timer : Module() {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        if(MovementUtils.isMoving || !onMoveValue.get()) {
+        if (isMoving || !onMoveValue.get()) {
             mc.timer.timerSpeed = speedValue.get()
             return
         }

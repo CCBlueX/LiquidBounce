@@ -7,7 +7,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other
 
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import kotlin.math.hypot
 import kotlin.math.max
 import kotlin.math.min
@@ -23,7 +24,7 @@ class Mineplex : SpeedMode("Mineplex") {
         val x = mc.thePlayer.posX - mc.thePlayer.prevPosX
         val z = mc.thePlayer.posZ - mc.thePlayer.prevPosZ
         val distance = hypot(x, z)
-        if (MovementUtils.isMoving && mc.thePlayer.onGround) {
+        if (isMoving && mc.thePlayer.onGround) {
             mc.thePlayer.motionY = 0.4052393
             wfg = true
             speed2 = speed1
@@ -36,7 +37,7 @@ class Mineplex : SpeedMode("Mineplex") {
             fallDistance = mc.thePlayer.fallDistance
         }
         val minimum = if (!wfg) 0.3999001f else 0f
-        MovementUtils.strafe(max(min(speed1, 2f), minimum))
+        strafe(max(min(speed1, 2f), minimum))
     }
 
     override fun onMotion() {

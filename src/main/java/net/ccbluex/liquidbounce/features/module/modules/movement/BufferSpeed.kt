@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
@@ -13,6 +13,8 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -27,7 +29,7 @@ import net.minecraft.util.BlockPos
 @ModuleInfo(name = "BufferSpeed", description = "Allows you to walk faster on slabs and stairs.", category = ModuleCategory.MOVEMENT)
 class BufferSpeed : Module() {
     private val speedLimitValue = BoolValue("SpeedLimit", true)
-    private val maxSpeedValue = object : FloatValue("MaxSpeed", 2.0f, 1.0f, 5f) {
+    private val maxSpeedValue = object : FloatValue("MaxSpeed", 2f, 1f, 5f) {
         override fun isSupported() = speedLimitValue.get()
     }
     private val bufferValue = BoolValue("Buffer", true)
@@ -89,7 +91,7 @@ class BufferSpeed : Module() {
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        if (LiquidBounce.moduleManager.getModule(Speed::class.java).state || noHurtValue.get() && thePlayer.hurtTime > 0) {
+        if (moduleManager[Speed::class.java].state || noHurtValue.get() && thePlayer.hurtTime > 0) {
             reset()
             return
         }
@@ -110,7 +112,7 @@ class BufferSpeed : Module() {
             hadFastHop = false
         }
 
-        if (!MovementUtils.isMoving || thePlayer.isSneaking || thePlayer.isInWater || mc.gameSettings.keyBindJump.isKeyDown) {
+        if (!isMoving || thePlayer.isSneaking || thePlayer.isInWater || mc.gameSettings.keyBindJump.isKeyDown) {
             reset()
             return
         }
@@ -144,7 +146,7 @@ class BufferSpeed : Module() {
                         }
                         thePlayer.onGround = false
 
-                        MovementUtils.strafe(0.375f)
+                        strafe(0.375f)
 
                         thePlayer.jump()
                         thePlayer.motionY = 0.41
@@ -169,7 +171,7 @@ class BufferSpeed : Module() {
                         }
 
                         thePlayer.onGround = false
-                        MovementUtils.strafe(0.375f)
+                        strafe(0.375f)
                         thePlayer.jump()
                         thePlayer.motionY = 0.41
                         return
@@ -215,20 +217,20 @@ class BufferSpeed : Module() {
                         }
                 }
             }
-            val currentSpeed = MovementUtils.speed
+            val currentSpeed = speed
 
             if (speed < currentSpeed)
-                speed = currentSpeed.toDouble()
+                speed = currentSpeed
 
-            if (bufferValue.get() && speed > 0.2f) {
+            if (bufferValue.get() && speed > 0.2) {
                 speed /= 1.0199999809265137
-                MovementUtils.strafe(speed.toFloat())
+                strafe(speed.toFloat())
             }
         } else {
             speed = 0.0
 
             if (airStrafeValue.get())
-                MovementUtils.strafe()
+                strafe()
         }
     }
 
@@ -239,13 +241,9 @@ class BufferSpeed : Module() {
             speed = 0.0
     }
 
-    override fun onEnable() {
-        reset()
-    }
+    override fun onEnable() = reset()
 
-    override fun onDisable() {
-        reset()
-    }
+    override fun onDisable() = reset()
 
     private fun reset() {
         val thePlayer = mc.thePlayer ?: return
@@ -258,7 +256,7 @@ class BufferSpeed : Module() {
         }
     }
 
-    private inline fun boost(boost: Float) {
+    private fun boost(boost: Float) {
         val thePlayer = mc.thePlayer
 
         thePlayer.motionX = thePlayer.motionX * boost

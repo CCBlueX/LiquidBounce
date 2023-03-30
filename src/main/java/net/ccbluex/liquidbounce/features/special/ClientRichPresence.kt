@@ -11,10 +11,14 @@ import com.jagrosh.discordipc.IPCClient
 import com.jagrosh.discordipc.IPCListener
 import com.jagrosh.discordipc.entities.RichPresence
 import com.jagrosh.discordipc.entities.pipe.PipeStatus
-import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_CLOUD
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_VERSION
+import net.ccbluex.liquidbounce.LiquidBounce.MINECRAFT_VERSION
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
-import net.ccbluex.liquidbounce.utils.misc.HttpUtils
+import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
 import org.json.JSONObject
 import java.io.IOException
 import java.time.OffsetDateTime
@@ -77,7 +81,7 @@ class ClientRichPresence : MinecraftInstance() {
             })
             ipcClient?.connect()
         } catch (e: Throwable) {
-            ClientUtils.getLogger().error("Failed to setup Discord RPC.", e)
+            LOGGER.error("Failed to setup Discord RPC.", e)
         }
 
     }
@@ -92,8 +96,8 @@ class ClientRichPresence : MinecraftInstance() {
         builder.setStartTimestamp(timestamp)
 
         // Check assets contains logo and set logo
-        if (assets.containsKey("logo"))
-            builder.setLargeImage(assets["logo"], "MC ${LiquidBounce.MINECRAFT_VERSION} - ${LiquidBounce.CLIENT_NAME} ${LiquidBounce.CLIENT_VERSION}")
+        if ("logo" in assets)
+            builder.setLargeImage(assets["logo"], "MC $MINECRAFT_VERSION - $CLIENT_NAME $CLIENT_VERSION")
 
         // Check user is in-game
         if (mc.thePlayer != null) {
@@ -101,7 +105,7 @@ class ClientRichPresence : MinecraftInstance() {
 
             // Set display info
             builder.setDetails("Server: ${if (mc.isIntegratedServerRunning || serverData == null) "Singleplayer" else serverData.serverIP}")
-            builder.setState("Enabled ${LiquidBounce.moduleManager.modules.count { it.state }} of ${LiquidBounce.moduleManager.modules.size} modules")
+            builder.setState("Enabled ${moduleManager.modules.count { it.state }} of ${moduleManager.modules.size} modules")
         }
 
         // Check ipc client is connected and send rpc
@@ -120,7 +124,7 @@ class ClientRichPresence : MinecraftInstance() {
         try {
             ipcClient?.close()
         } catch (e: Throwable) {
-            ClientUtils.getLogger().error("Failed to close Discord RPC.", e)
+            LOGGER.error("Failed to close Discord RPC.", e)
         }
     }
 
@@ -131,7 +135,7 @@ class ClientRichPresence : MinecraftInstance() {
      */
     private fun loadConfiguration() {
         // Read from web and convert to json object
-        val json = JsonParser().parse(HttpUtils.get("${LiquidBounce.CLIENT_CLOUD}/discord.json"))
+        val json = JsonParser().parse(get("$CLIENT_CLOUD/discord.json"))
 
         if (json !is JsonObject)
             return

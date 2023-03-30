@@ -5,15 +5,12 @@
  */
 package net.ccbluex.liquidbounce.ui.client
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_VERSION
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
-import net.minecraft.client.gui.GuiButton
-import net.minecraft.client.gui.GuiMultiplayer
-import net.minecraft.client.gui.GuiOptions
-import net.minecraft.client.gui.GuiScreen
-import net.minecraft.client.gui.GuiSelectWorld
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
+import net.minecraft.client.gui.*
 import net.minecraft.client.resources.I18n
 
 class GuiMainMenu : GuiScreen() {
@@ -40,10 +37,10 @@ class GuiMainMenu : GuiScreen() {
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
         drawBackground(0)
 
-        RenderUtils.drawRect(width / 2.0f - 115, height / 4.0f + 35, width / 2.0f + 115, height / 4.0f + 175, Integer.MIN_VALUE)
+        drawRect(width / 2f - 115, height / 4f + 35, width / 2f + 115, height / 4f + 175, Integer.MIN_VALUE)
 
-        Fonts.fontBold180.drawCenteredString(LiquidBounce.CLIENT_NAME, width / 2F, height / 8F, 4673984, true)
-        Fonts.font35.drawCenteredString(LiquidBounce.CLIENT_VERSION, width / 2F + 148, height / 8F + Fonts.font35.fontHeight, 0xffffff, true)
+        Fonts.fontBold180.drawCenteredString(CLIENT_NAME, width / 2F, height / 8F, 4673984, true)
+        Fonts.font35.drawCenteredString(CLIENT_VERSION, width / 2F + 148, height / 8F + Fonts.font35.fontHeight, 0xffffff, true)
 
         super.drawScreen(mouseX, mouseY, partialTicks)
     }

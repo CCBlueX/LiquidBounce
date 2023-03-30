@@ -11,18 +11,16 @@ import kotlin.math.sqrt
 
 object MovementUtils : MinecraftInstance() {
 
-    @JvmStatic
-    val speed: Float
+    var speed
         get() = sqrt(mc.thePlayer.motionX * mc.thePlayer.motionX + mc.thePlayer.motionZ * mc.thePlayer.motionZ).toFloat()
+        set(value) = strafe(value)
 
     @JvmStatic
-    val isMoving: Boolean
+    val isMoving
         get() = mc.thePlayer != null && (mc.thePlayer.movementInput.moveForward != 0f || mc.thePlayer.movementInput.moveStrafe != 0f)
 
-    @JvmStatic
-    fun hasMotion(): Boolean {
-        return mc.thePlayer.motionX != 0.0 && mc.thePlayer.motionZ != 0.0 && mc.thePlayer.motionY != 0.0
-    }
+    val hasMotion
+        get() = mc.thePlayer.motionX != 0.0 && mc.thePlayer.motionZ != 0.0 && mc.thePlayer.motionY != 0.0
 
     @JvmStatic
     @JvmOverloads
@@ -54,10 +52,9 @@ object MovementUtils : MinecraftInstance() {
             return Math.toRadians(rotationYaw.toDouble())
         }
 
-    fun isOnGround(height: Double): Boolean {
-        return mc.theWorld.getCollidingBoundingBoxes(
+    fun isOnGround(height: Double) =
+        mc.theWorld.getCollidingBoundingBoxes(
                 mc.thePlayer,
                 mc.thePlayer.entityBoundingBox.offset(0.0, -height, 0.0)
             ).isNotEmpty()
-    }
 }

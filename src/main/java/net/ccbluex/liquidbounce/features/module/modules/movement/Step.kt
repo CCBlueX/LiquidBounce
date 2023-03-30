@@ -5,13 +5,14 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.exploit.Phase
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.direction
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -68,82 +69,76 @@ class Step : Module() {
         val thePlayer = mc.thePlayer ?: return
 
         // Motion steps
-        when {
-            mode.equals("jump", true) && thePlayer.isCollidedHorizontally && thePlayer.onGround
-                    && !mc.gameSettings.keyBindJump.isKeyDown -> {
-                fakeJump()
-                thePlayer.motionY = jumpHeightValue.get().toDouble()
-            }
-
-            mode.equals("laac", true) -> if (thePlayer.isCollidedHorizontally && !thePlayer.isOnLadder
-                    && !thePlayer.isInWater && !thePlayer.isInLava && !thePlayer.isInWeb) {
-                if (thePlayer.onGround && timer.hasTimePassed(delayValue.get().toLong())) {
-                    isStep = true
-
+        when (mode) {
+            "Jump" ->
+                if (thePlayer.isCollidedHorizontally && thePlayer.onGround && !mc.gameSettings.keyBindJump.isKeyDown) {
                     fakeJump()
-                    thePlayer.motionY += 0.620000001490116
-
-                    val yaw = MovementUtils.direction
-                    thePlayer.motionX -= sin(yaw) * 0.2
-                    thePlayer.motionZ += cos(yaw) * 0.2
-                    timer.reset()
+                    thePlayer.motionY = jumpHeightValue.get().toDouble()
                 }
+            "LAAC" ->
+                if (thePlayer.isCollidedHorizontally && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isInLava && !thePlayer.isInWeb) {
+                    if (thePlayer.onGround && timer.hasTimePassed(delayValue.get())) {
+                        isStep = true
 
-                thePlayer.onGround = true
-            } else
-                isStep = false
+                        fakeJump()
+                        thePlayer.motionY += 0.620000001490116
 
-            mode.equals("aac3.3.4", true) -> if (thePlayer.isCollidedHorizontally
-                    && MovementUtils.isMoving) {
-                if (thePlayer.onGround && couldStep()) {
-                    thePlayer.motionX *= 1.26
-                    thePlayer.motionZ *= 1.26
-                    thePlayer.jump()
-                    isAACStep = true
-                }
+                        val yaw = direction
+                        thePlayer.motionX -= sin(yaw) * 0.2
+                        thePlayer.motionZ += cos(yaw) * 0.2
+                        timer.reset()
+                    }
 
-                if (isAACStep) {
-                    thePlayer.motionY -= 0.015
+                    thePlayer.onGround = true
+                } else isStep = false
+            "AAC3.3.4" ->
+                if (thePlayer.isCollidedHorizontally && isMoving) {
+                    if (thePlayer.onGround && couldStep()) {
+                        thePlayer.motionX *= 1.26
+                        thePlayer.motionZ *= 1.26
+                        thePlayer.jump()
+                        isAACStep = true
+                    }
 
-                    if (!thePlayer.isUsingItem && thePlayer.movementInput.moveStrafe == 0F)
-                        thePlayer.jumpMovementFactor = 0.3F
-                }
-            } else
-                isAACStep = false
+                    if (isAACStep) {
+                        thePlayer.motionY -= 0.015
+
+                        if (!thePlayer.isUsingItem && thePlayer.movementInput.moveStrafe == 0F)
+                            thePlayer.jumpMovementFactor = 0.3F
+                    }
+                } else isAACStep = false
         }
     }
 
     @EventTarget
     fun onMove(event: MoveEvent) {
-        val mode = modeValue.get()
         val thePlayer = mc.thePlayer ?: return
+
+        if (modeValue.get() != "MotionNCP" || !thePlayer.isCollidedHorizontally || mc.gameSettings.keyBindJump.isKeyDown)
+            return
 
         // Motion steps
         when {
-            mode.equals("motionncp", true) && thePlayer.isCollidedHorizontally && !mc.gameSettings.keyBindJump.isKeyDown -> {
-                when {
-                    thePlayer.onGround && couldStep() -> {
-                        fakeJump()
-                        thePlayer.motionY = 0.0
-                        event.y = 0.41999998688698
-                        ncpNextStep = 1
-                    }
+            thePlayer.onGround && couldStep() -> {
+                fakeJump()
+                thePlayer.motionY = 0.0
+                event.y = 0.41999998688698
+                ncpNextStep = 1
+            }
 
-                    ncpNextStep == 1 -> {
-                        event.y = 0.7531999805212 - 0.41999998688698
-                        ncpNextStep = 2
-                    }
+            ncpNextStep == 1 -> {
+                event.y = 0.7531999805212 - 0.41999998688698
+                ncpNextStep = 2
+            }
 
-                    ncpNextStep == 2 -> {
-                        val yaw = MovementUtils.direction
+            ncpNextStep == 2 -> {
+                val yaw = direction
 
-                        event.y = 1.001335979112147 - 0.7531999805212
-                        event.x = -sin(yaw) * 0.7
-                        event.z = cos(yaw) * 0.7
+                event.y = 1.001335979112147 - 0.7531999805212
+                event.x = -sin(yaw) * 0.7
+                event.z = cos(yaw) * 0.7
 
-                        ncpNextStep = 0
-                    }
-                }
+                ncpNextStep = 0
             }
         }
     }
@@ -153,13 +148,13 @@ class Step : Module() {
         val thePlayer = mc.thePlayer ?: return
 
         // Phase should disable step
-        if (LiquidBounce.moduleManager[Phase::class.java].state) {
+        if (moduleManager[Phase::class.java].state) {
             event.stepHeight = 0F
             return
         }
 
         // Some fly modes should disable step
-        val fly = LiquidBounce.moduleManager[Fly::class.java] as Fly
+        val fly = moduleManager[Fly::class.java] as Fly
         if (fly.state && fly.modeValue.get() in setOf("Hypixel", "OtherHypixel", "LatestHypixel", "Rewinside", "Mineplex")
             && thePlayer.inventory.getCurrentItem() == null) {
             event.stepHeight = 0F
@@ -169,7 +164,7 @@ class Step : Module() {
         val mode = modeValue.get()
 
         // Set step to default in some cases
-        if (!thePlayer.onGround || !timer.hasTimePassed(delayValue.get().toLong()) ||
+        if (!thePlayer.onGround || !timer.hasTimePassed(delayValue.get()) ||
                 mode in setOf("Jump", "MotionNCP", "LAAC", "AAC3.3.4")) {
             thePlayer.stepHeight = 0.6F
             event.stepHeight = 0.6F
@@ -198,10 +193,9 @@ class Step : Module() {
             return
 
         if (thePlayer.entityBoundingBox.minY - stepY > 0.6) { // Check if full block step
-            val mode = modeValue.get()
 
-            when {
-                mode.equals("NCP", ignoreCase = true) || mode.equals("AAC", ignoreCase = true) -> {
+            when (modeValue.get()) {
+                "NCP", "AAC" -> {
                     fakeJump()
 
                     // Half legit step (1 packet missing) [COULD TRIGGER TOO MANY PACKETS]
@@ -219,8 +213,7 @@ class Step : Module() {
                     )
                     timer.reset()
                 }
-
-                mode.equals("Spartan", ignoreCase = true) -> {
+                "Spartan" -> {
                     fakeJump()
 
                     if (spartanSwitch) {
@@ -257,8 +250,7 @@ class Step : Module() {
                     // Reset timer
                     timer.reset()
                 }
-
-                mode.equals("Rewinside", ignoreCase = true) -> {
+                "Rewinside" -> {
                     fakeJump()
 
                     // Vanilla step (3 packets) [COULD TRIGGER TOO MANY PACKETS]
@@ -297,7 +289,7 @@ class Step : Module() {
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (packet is C03PacketPlayer && isStep && modeValue.get().equals("OldNCP", ignoreCase = true)) {
+        if (packet is C03PacketPlayer && isStep && modeValue.get() == "OldNCP") {
             packet.y += 0.07
             isStep = false
         }
@@ -312,7 +304,7 @@ class Step : Module() {
     }
 
     private fun couldStep(): Boolean {
-        val yaw = MovementUtils.direction
+        val yaw = direction
         val x = -sin(yaw) * 0.4
         val z = cos(yaw) * 0.4
 
@@ -320,6 +312,6 @@ class Step : Module() {
                 .isEmpty()
     }
 
-    override val tag: String
+    override val tag
         get() = modeValue.get()
 }

@@ -5,10 +5,9 @@
  */
 package net.ccbluex.liquidbounce.ui.client
 
-import net.ccbluex.liquidbounce.LiquidBounce
-
+import net.ccbluex.liquidbounce.LiquidBounce.clientRichPresence
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import net.minecraftforge.fml.client.GuiModList
@@ -20,7 +19,7 @@ class GuiModsMenu(private val prevGui: GuiScreen) : GuiScreen() {
     override fun initGui() {
         buttonList.add(GuiButton(0, width / 2 - 100, height / 4 + 48, "Forge Mods"))
         buttonList.add(GuiButton(1, width / 2 - 100, height / 4 + 48 + 25, "Scripts"))
-        buttonList.add(GuiButton(2, width / 2 - 100, height / 4 + 48 + 50, "Rich Presence: ${if (LiquidBounce.clientRichPresence.showRichPresenceValue) "§aON" else "§cOFF"}"))
+        buttonList.add(GuiButton(2, width / 2 - 100, height / 4 + 48 + 50, "Rich Presence: ${if (clientRichPresence.showRichPresenceValue) "§aON" else "§cOFF"}"))
         buttonList.add(GuiButton(3, width / 2 - 100, height / 4 + 48 + 75, "Back"))
     }
 
@@ -29,7 +28,7 @@ class GuiModsMenu(private val prevGui: GuiScreen) : GuiScreen() {
             0 -> mc.displayGuiScreen(GuiModList(this))
             1 -> mc.displayGuiScreen(GuiScripts(this))
             2 -> {
-                val rpc = LiquidBounce.clientRichPresence
+                val rpc = clientRichPresence
                 rpc.showRichPresenceValue = when (val state = !rpc.showRichPresenceValue) {
                     false -> {
                         rpc.shutdown()
@@ -43,7 +42,7 @@ class GuiModsMenu(private val prevGui: GuiScreen) : GuiScreen() {
                                 rpc.setup()
                                 true
                             } catch (throwable: Throwable) {
-                                ClientUtils.getLogger().error("Failed to setup Discord RPC.", throwable)
+                                LOGGER.error("Failed to setup Discord RPC.", throwable)
                                 false
                             }
                         }

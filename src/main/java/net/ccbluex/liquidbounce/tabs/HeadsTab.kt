@@ -6,11 +6,10 @@
 package net.ccbluex.liquidbounce.tabs
 
 import com.google.gson.JsonParser
-import net.ccbluex.liquidbounce.LiquidBounce
-
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_CLOUD
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
-import net.ccbluex.liquidbounce.utils.misc.HttpUtils
+import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
 import net.minecraft.creativetab.CreativeTabs
 import net.minecraft.init.Items
 import net.minecraft.item.Item
@@ -35,9 +34,9 @@ class HeadsTab : CreativeTabs("Heads") {
      */
     private fun loadHeads() {
         try {
-            ClientUtils.getLogger().info("Loading heads...")
+            LOGGER.info("Loading heads...")
 
-            val headsConfiguration = JsonParser().parse(HttpUtils.get("${LiquidBounce.CLIENT_CLOUD}/heads.json"))
+            val headsConfiguration = JsonParser().parse(get("$CLIENT_CLOUD/heads.json"))
 
             if (!headsConfiguration.isJsonObject) return
 
@@ -46,12 +45,12 @@ class HeadsTab : CreativeTabs("Heads") {
             if (headsConf.get("enabled").asBoolean) {
                 val url = headsConf.get("url").asString
 
-                ClientUtils.getLogger().info("Loading heads from $url...")
+                LOGGER.info("Loading heads from $url...")
 
-                val headsElement = JsonParser().parse(HttpUtils.get(url))
+                val headsElement = JsonParser().parse(get(url))
 
                 if (!headsElement.isJsonObject) {
-                    ClientUtils.getLogger().error("Something is wrong, the heads json is not a JsonObject!")
+                    LOGGER.error("Something is wrong, the heads json is not a JsonObject!")
                     return
                 }
 
@@ -63,11 +62,11 @@ class HeadsTab : CreativeTabs("Heads") {
                     heads.add(ItemUtils.createItem("skull 1 3 {display:{Name:\"${headElement.get("name").asString}\"},SkullOwner:{Id:\"${headElement.get("uuid").asString}\",Properties:{textures:[{Value:\"${headElement.get("value").asString}\"}]}}}"))
                 }
 
-                ClientUtils.getLogger().info("Loaded " + heads.size + " heads from HeadDB.")
+                LOGGER.info("Loaded " + heads.size + " heads from HeadDB.")
             } else
-                ClientUtils.getLogger().info("Heads are disabled.")
+                LOGGER.info("Heads are disabled.")
         } catch (e: Exception) {
-            ClientUtils.getLogger().error("Error while reading heads.", e)
+            LOGGER.error("Error while reading heads.", e)
         }
     }
 

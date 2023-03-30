@@ -5,7 +5,9 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.commandManager
+import net.ccbluex.liquidbounce.event.EventManager.registerListener
+import net.ccbluex.liquidbounce.event.EventManager.unregisterListener
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.KeyEvent
 import net.ccbluex.liquidbounce.event.Listenable
@@ -19,7 +21,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.*
 import net.ccbluex.liquidbounce.features.module.modules.render.*
 import net.ccbluex.liquidbounce.features.module.modules.world.*
 import net.ccbluex.liquidbounce.features.module.modules.world.Timer
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import java.util.*
 
 
@@ -29,14 +31,14 @@ class ModuleManager : Listenable {
     private val moduleClassMap = hashMapOf<Class<*>, Module>()
 
     init {
-        LiquidBounce.eventManager.registerListener(this)
+        registerListener(this)
     }
 
     /**
      * Register all modules
      */
     fun registerModules() {
-        ClientUtils.getLogger().info("[ModuleManager] Loading modules...")
+        LOGGER.info("[ModuleManager] Loading modules...")
 
         registerModules(
                 AutoArmor::class.java,
@@ -51,7 +53,6 @@ class ModuleManager : Listenable {
                 Trigger::class.java,
                 Velocity::class.java,
                 Fly::class.java,
-                ClickGUI::class.java,
                 HighJump::class.java,
                 InventoryMove::class.java,
                 NoSlow::class.java,
@@ -188,8 +189,9 @@ class ModuleManager : Listenable {
         registerModule(AntiBot)
         registerModule(Animations)
         registerModule(Backtrack)
+        registerModule(ClickGUI)
 
-        ClientUtils.getLogger().info("[ModuleManager] Loaded ${modules.size} modules.")
+        LOGGER.info("[ModuleManager] Loaded ${modules.size} modules.")
     }
 
     /**
@@ -200,7 +202,7 @@ class ModuleManager : Listenable {
         moduleClassMap[module.javaClass] = module
 
         generateCommand(module)
-        LiquidBounce.eventManager.registerListener(module)
+        registerListener(module)
     }
 
     /**
@@ -210,7 +212,7 @@ class ModuleManager : Listenable {
         try {
             registerModule(moduleClass.newInstance())
         } catch (e: Throwable) {
-            ClientUtils.getLogger().error("Failed to load module: ${moduleClass.name} (${e.javaClass.name}: ${e.message})")
+            LOGGER.error("Failed to load module: ${moduleClass.name} (${e.javaClass.name}: ${e.message})")
         }
     }
 
@@ -218,9 +220,7 @@ class ModuleManager : Listenable {
      * Register a list of modules
      */
     @SafeVarargs
-    fun registerModules(vararg modules: Class<out Module>) {
-        modules.forEach(this::registerModule)
-    }
+    fun registerModules(vararg modules: Class<out Module>) = modules.forEach(this::registerModule)
 
     /**
      * Unregister module
@@ -228,7 +228,7 @@ class ModuleManager : Listenable {
     fun unregisterModule(module: Module) {
         modules.remove(module)
         moduleClassMap.remove(module::class.java)
-        LiquidBounce.eventManager.unregisterListener(module)
+        unregisterListener(module)
     }
 
     /**
@@ -240,7 +240,7 @@ class ModuleManager : Listenable {
         if (values.isEmpty())
             return
 
-        LiquidBounce.commandManager.registerCommand(ModuleCommand(module, values))
+        commandManager.registerCommand(ModuleCommand(module, values))
     }
 
     /**
@@ -261,6 +261,8 @@ class ModuleManager : Listenable {
      */
     fun getModule(moduleName: String?) = modules.find { it.name.equals(moduleName, ignoreCase = true) }
 
+    operator fun get(name: String) = getModule(name)
+
     /**
      * Module related events
      */
@@ -269,7 +271,7 @@ class ModuleManager : Listenable {
      * Handle incoming key presses
      */
     @EventTarget
-    private fun onKey(event: KeyEvent) = modules.filter { it.keyBind == event.key }.forEach { it.toggle() }
+    private fun onKey(event: KeyEvent) = modules.forEach { if (it.keyBind == event.key) it.toggle() }
 
     override fun handleEvents() = true
 }

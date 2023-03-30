@@ -9,9 +9,11 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.RotationUtils
-import net.ccbluex.liquidbounce.utils.block.BlockUtils
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
+import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.getCenterDistance
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBlockBox
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.minecraft.init.Blocks
@@ -37,7 +39,7 @@ class CivBreak : Module() {
 
     @EventTarget
     fun onBlockClick(event: ClickBlockEvent) {
-        if (event.clickedBlock?.let { BlockUtils.getBlock(it) } == Blocks.bedrock)
+        if (event.clickedBlock?.let { getBlock(it) } == Blocks.bedrock)
             return
 
         blockPos = event.clickedBlock ?: return
@@ -52,18 +54,18 @@ class CivBreak : Module() {
     fun onUpdate(event: MotionEvent) {
         val pos = blockPos ?: return
 
-        if (airResetValue.get() && BlockUtils.getBlock(pos) == Blocks.air ||
-                rangeResetValue.get() && BlockUtils.getCenterDistance(pos) > range.get()) {
+        if (airResetValue.get() && getBlock(pos) == Blocks.air ||
+                rangeResetValue.get() && getCenterDistance(pos) > range.get()) {
             blockPos = null
             return
         }
 
-        if (BlockUtils.getBlock(pos) == Blocks.air || BlockUtils.getCenterDistance(pos) > range.get())
+        if (getBlock(pos) == Blocks.air || getCenterDistance(pos) > range.get())
             return
 
         when (event.eventState) {
             EventState.PRE -> if (rotationsValue.get())
-                RotationUtils.setTargetRotation((RotationUtils.faceBlock(pos) ?: return).rotation)
+                setTargetRotation((faceBlock(pos) ?: return).rotation)
 
             EventState.POST -> {
                 if (visualSwingValue.get())
@@ -83,6 +85,6 @@ class CivBreak : Module() {
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        RenderUtils.drawBlockBox(blockPos ?: return, Color.RED, true)
+        drawBlockBox(blockPos ?: return, Color.RED, true)
     }
 }

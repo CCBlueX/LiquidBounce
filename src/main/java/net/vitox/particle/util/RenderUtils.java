@@ -7,7 +7,7 @@ public class RenderUtils {
     public static void connectPoints(float xOne, float yOne, float xTwo, float yTwo) {
         glPushMatrix();
         glEnable(GL_LINE_SMOOTH);
-        glColor4f(1.0F, 1.0F, 1.0F, 0.8F);
+        glColor4f(1f, 1f, 1f, 0.8F);
         glDisable(GL_TEXTURE_2D);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_BLEND);
@@ -16,17 +16,17 @@ public class RenderUtils {
         glVertex2f(xOne, yOne);
         glVertex2f(xTwo, yTwo);
         glEnd();
-        glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
+        glColor4f(1f, 1f, 1f, 1f);
         glDisable(GL_LINE_SMOOTH);
         glEnable(GL_TEXTURE_2D);
         glPopMatrix();
     }
 
     public static void drawCircle(float x, float y, float radius, int color) {
-        float alpha = (color >> 24 & 0xFF) / 255.0F;
-        float red = (color >> 16 & 0xFF) / 255.0F;
-        float green = (color >> 8 & 0xFF) / 255.0F;
-        float blue = (color & 0xFF) / 255.0F;
+        float alpha = (color >> 24 & 0xFF) / 255f;
+        float red = (color >> 16 & 0xFF) / 255f;
+        float green = (color >> 8 & 0xFF) / 255f;
+        float blue = (color & 0xFF) / 255f;
 
         glColor4f(red, green, blue, alpha);
         glEnable(GL_BLEND);

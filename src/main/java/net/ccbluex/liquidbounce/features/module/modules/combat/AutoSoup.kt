@@ -35,12 +35,12 @@ class AutoSoup : Module() {
 
     private val timer = MSTimer()
 
-    override val tag: String
+    override val tag
         get() = healthValue.get().toString()
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        if (!timer.hasTimePassed(delayValue.get().toLong()))
+        if (!timer.hasTimePassed(delayValue.get()))
             return
 
         val thePlayer = mc.thePlayer ?: return
@@ -51,7 +51,7 @@ class AutoSoup : Module() {
             mc.netHandler.addToSendQueue(C09PacketHeldItemChange(soupInHotbar - 36))
             mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(thePlayer.inventory.getStackInSlot(soupInHotbar)))
 
-            if (bowlValue.get().equals("Drop", true))
+            if (bowlValue.get() == "Drop")
                 mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.DROP_ITEM,
                     BlockPos.ORIGIN, EnumFacing.DOWN))
 
@@ -61,7 +61,7 @@ class AutoSoup : Module() {
         }
 
         val bowlInHotbar = InventoryUtils.findItem(36, 45, Items.bowl)
-        if (bowlValue.get().equals("Move", true) && bowlInHotbar != -1) {
+        if (bowlValue.get() == "Move" && bowlInHotbar != -1) {
             if (openInventoryValue.get() && mc.currentScreen !is GuiInventory)
                 return
 

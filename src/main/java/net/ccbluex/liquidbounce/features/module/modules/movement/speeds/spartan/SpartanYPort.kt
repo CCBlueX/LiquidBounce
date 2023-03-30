@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.spartan
 
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
+import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextDouble
 
 class SpartanYPort : SpeedMode("SpartanYPort") {
     private var airMoves = 0
@@ -18,8 +19,8 @@ class SpartanYPort : SpeedMode("SpartanYPort") {
             } else {
                 mc.timer.timerSpeed = 1.08f
                 if (airMoves >= 3) mc.thePlayer.jumpMovementFactor = 0.0275f
-                if (airMoves >= 4 && airMoves % 2.toDouble() == 0.0) {
-                    mc.thePlayer.motionY = -0.32f - 0.009 * Math.random()
+                if (airMoves >= 4 && airMoves % 2 == 0) {
+                    mc.thePlayer.motionY = -0.32 - nextDouble(endInclusive = 0.009)
                     mc.thePlayer.jumpMovementFactor = 0.0238f
                 }
                 airMoves++

@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.minecraft.item.*
@@ -29,14 +29,14 @@ class NoSlow : Module() {
 
     // Highly customizable values
 
-    private val blockForwardMultiplier = FloatValue("BlockForwardMultiplier", 1.0F, 0.2F, 1.0F)
-    private val blockStrafeMultiplier = FloatValue("BlockStrafeMultiplier", 1.0F, 0.2F, 1.0F)
+    private val blockForwardMultiplier = FloatValue("BlockForwardMultiplier", 1f, 0.2F, 1f)
+    private val blockStrafeMultiplier = FloatValue("BlockStrafeMultiplier", 1f, 0.2F, 1f)
 
-    private val consumeForwardMultiplier = FloatValue("ConsumeForwardMultiplier", 1.0F, 0.2F, 1.0F)
-    private val consumeStrafeMultiplier = FloatValue("ConsumeStrafeMultiplier", 1.0F, 0.2F, 1.0F)
+    private val consumeForwardMultiplier = FloatValue("ConsumeForwardMultiplier", 1f, 0.2F, 1f)
+    private val consumeStrafeMultiplier = FloatValue("ConsumeStrafeMultiplier", 1f, 0.2F, 1f)
 
-    private val bowForwardMultiplier = FloatValue("BowForwardMultiplier", 1.0F, 0.2F, 1.0F)
-    private val bowStrafeMultiplier = FloatValue("BowStrafeMultiplier", 1.0F, 0.2F, 1.0F)
+    private val bowForwardMultiplier = FloatValue("BowForwardMultiplier", 1f, 0.2F, 1f)
+    private val bowStrafeMultiplier = FloatValue("BowStrafeMultiplier", 1f, 0.2F, 1f)
 
     // NCP mode
     private val packet = BoolValue("Packet", true)
@@ -50,10 +50,10 @@ class NoSlow : Module() {
         val thePlayer = mc.thePlayer ?: return
         val heldItem = thePlayer.heldItem ?: return
 
-        if (heldItem.item !is ItemSword || !MovementUtils.isMoving)
+        if (heldItem.item !is ItemSword || !isMoving)
             return
 
-        val aura = LiquidBounce.moduleManager[KillAura::class.java] as KillAura
+        val aura = moduleManager[KillAura::class.java] as KillAura
         if (!thePlayer.isBlocking && !aura.blockStatus)
             return
 
@@ -64,7 +64,7 @@ class NoSlow : Module() {
                     mc.netHandler.addToSendQueue(digging)
                 }
                 EventState.POST -> {
-                    val blockPlace = C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, mc.thePlayer.inventory.getCurrentItem(), 0.0F, 0.0F, 0.0F)
+                    val blockPlace = C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, mc.thePlayer.inventory.getCurrentItem(), 0f, 0f, 0f)
                     mc.netHandler.addToSendQueue(blockPlace)
                 }
             }

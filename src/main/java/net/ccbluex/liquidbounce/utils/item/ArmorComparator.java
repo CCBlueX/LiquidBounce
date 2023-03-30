@@ -22,7 +22,7 @@ public class ArmorComparator extends MinecraftInstance implements Comparator<Arm
     private static final float[] ENCHANTMENT_FACTORS = {1.5f, 0.4f, 0.39f, 0.38f};
     private static final float[] ENCHANTMENT_DAMAGE_REDUCTION_FACTOR = {0.04f, 0.08f, 0.15f, 0.08f};
     private static final Enchantment[] OTHER_ENCHANTMENTS = {Enchantment.featherFalling, Enchantment.thorns, Enchantment.respiration, Enchantment.aquaAffinity, Enchantment.unbreaking};
-    private static final float[] OTHER_ENCHANTMENT_FACTORS = {3.0f, 1.0f, 0.1f, 0.05f, 0.01f};
+    private static final float[] OTHER_ENCHANTMENT_FACTORS = {3f, 1f, 0.1f, 0.05f, 0.01f};
 
     /**
      * Rounds a double. From https://stackoverflow.com/a/2808648/9140494
@@ -85,11 +85,11 @@ public class ArmorComparator extends MinecraftInstance implements Comparator<Arm
     }
 
     private float getDamageReduction(int defensePoints, int toughness) {
-        return 1 - Math.min(20.0f, Math.max(defensePoints / 5.0f, defensePoints - 1 / (2 + toughness / 4.0f))) / 25.0f;
+        return 1 - Math.min(20f, Math.max(defensePoints / 5f, defensePoints - 1 / (2 + toughness / 4f))) / 25f;
     }
 
     private float getThresholdedEnchantmentDamageReduction(ItemStack itemStack) {
-        float sum = 0.0f;
+        float sum = 0f;
 
         for (int i = 0; i < DAMAGE_REDUCTION_ENCHANTMENTS.length; i++) {
             sum += ItemUtils.getEnchantment(itemStack, DAMAGE_REDUCTION_ENCHANTMENTS[i]) * ENCHANTMENT_FACTORS[i] * ENCHANTMENT_DAMAGE_REDUCTION_FACTOR[i];
@@ -100,7 +100,7 @@ public class ArmorComparator extends MinecraftInstance implements Comparator<Arm
     }
 
     private float getEnchantmentThreshold(ItemStack itemStack) {
-        float sum = 0.0f;
+        float sum = 0f;
 
         for (int i = 0; i < OTHER_ENCHANTMENTS.length; i++) {
             sum += ItemUtils.getEnchantment(itemStack, OTHER_ENCHANTMENTS[i]) * OTHER_ENCHANTMENT_FACTORS[i];

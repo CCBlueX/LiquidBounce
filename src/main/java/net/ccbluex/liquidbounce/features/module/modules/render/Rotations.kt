@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -13,6 +13,9 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.Derp
 import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.features.module.modules.world.*
+import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
+import net.ccbluex.liquidbounce.utils.RotationUtils.targetRotation
 import net.ccbluex.liquidbounce.value.BoolValue
 
 @ModuleInfo(
@@ -32,19 +35,19 @@ class Rotations : Module() {
             return
         }
 
-        thePlayer.rotationYawHead = RotationUtils.serverRotation.yaw
+        thePlayer.rotationYawHead = serverRotation.yaw
 
         if (bodyValue.get()) {
             thePlayer.renderYawOffset = thePlayer.rotationYawHead
         }
     }
 
-    private fun getState(module: Class<*>) = LiquidBounce.moduleManager[module].state
+    private fun getState(module: Class<*>) = moduleManager[module].state
 
     /**
      * Rotate when current rotation is not null or special modules which do not make use of RotationUtils like Derp are enabled.
      */
     fun shouldRotate(): Boolean {
-        return state && (getState(Derp::class.java) || RotationUtils.targetRotation != null)
+        return state && (getState(Derp::class.java) || targetRotation != null)
     }
 }

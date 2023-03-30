@@ -7,11 +7,11 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 
 class AACYPort2 : SpeedMode("AACYPort2") {
     override fun onMotion() {
-        if (MovementUtils.isMoving) {
+        if (isMoving) {
             val thePlayer = mc.thePlayer ?: return
 
             thePlayer.cameraPitch = 0f

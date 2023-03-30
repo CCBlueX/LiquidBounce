@@ -5,7 +5,10 @@
  */
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_COMMIT
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_CREATOR
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_VERSION
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
@@ -13,7 +16,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.CPSCounter
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.speed
 import net.ccbluex.liquidbounce.utils.ServerUtils
 import net.ccbluex.liquidbounce.utils.extensions.getPing
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
@@ -95,7 +98,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
                 "xdp" -> return thePlayer.posX.toString()
                 "ydp" -> return thePlayer.posY.toString()
                 "zdp" -> return thePlayer.posZ.toString()
-                "velocity" -> return DECIMAL_FORMAT.format(MovementUtils.speed)
+                "velocity" -> return DECIMAL_FORMAT.format(speed)
                 "ping" -> return thePlayer.getPing().toString()
                 "health" -> return DECIMAL_FORMAT.format(thePlayer.health)
                 "maxhealth" -> return DECIMAL_FORMAT.format(thePlayer.maxHealth)
@@ -105,10 +108,10 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
 
         return when (str.lowercase()) {
             "username" -> mc.session.username
-            "clientname" -> LiquidBounce.CLIENT_NAME
-            "clientversion" -> LiquidBounce.CLIENT_VERSION
-            "clientcommit" -> LiquidBounce.CLIENT_COMMIT
-            "clientcreator" -> LiquidBounce.CLIENT_CREATOR
+            "clientname" -> CLIENT_NAME
+            "clientversion" -> CLIENT_VERSION
+            "clientcommit" -> CLIENT_COMMIT
+            "clientcreator" -> CLIENT_CREATOR
             "fps" -> Minecraft.getDebugFPS().toString()
             "date" -> DATE_FORMAT.format(System.currentTimeMillis())
             "time" -> HOUR_FORMAT.format(System.currentTimeMillis())
@@ -160,7 +163,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
 
         val rainbow = rainbow.get()
 
-        RainbowFontShader.begin(rainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
+        RainbowFontShader.begin(rainbow, if (rainbowX.get() == 0f) 0f else 1f / rainbowX.get(), if (rainbowY.get() == 0f) 0f else 1f / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
             fontRenderer.drawString(displayText, 0F, 0F, if (rainbow)
                 0 else color, shadow.get())
 

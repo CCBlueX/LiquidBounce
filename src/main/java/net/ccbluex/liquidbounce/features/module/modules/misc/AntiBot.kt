@@ -61,7 +61,6 @@ object AntiBot : Module() {
     private val hit = mutableListOf<Int>()
     private val notAlwaysInRadius = mutableListOf<Int>()
 
-    @JvmStatic // TODO: Remove as soon EntityUtils is translated to kotlin
     fun isBot(entity: EntityLivingBase): Boolean {
         // Check if entity is a player
         if (entity !is EntityPlayer)
@@ -73,19 +72,19 @@ object AntiBot : Module() {
 
         // Anti Bot checks
 
-        if (colorValue.get() && !entity.displayName.formattedText.replace("§r", "").contains("§"))
+        if (colorValue.get() && "§" !in entity.displayName.formattedText.replace("§r", ""))
             return true
 
         if (livingTimeValue.get() && entity.ticksExisted < livingTimeTicksValue.get())
             return true
 
-        if (groundValue.get() && !ground.contains(entity.entityId))
+        if (groundValue.get() && entity.entityId !in ground)
             return true
 
-        if (airValue.get() && !air.contains(entity.entityId))
+        if (airValue.get() && entity.entityId !in air)
             return true
 
-        if (swingValue.get() && !swing.contains(entity.entityId))
+        if (swingValue.get() && entity.entityId !in swing)
             return true
 
         if (healthValue.get() && entity.health > 20F)
@@ -97,7 +96,7 @@ object AntiBot : Module() {
         if (derpValue.get() && (entity.rotationPitch > 90F || entity.rotationPitch < -90F))
             return true
 
-        if (wasInvisibleValue.get() && invisible.contains(entity.entityId))
+        if (wasInvisibleValue.get() && entity.entityId in invisible)
             return true
 
         if (armorValue.get()) {
@@ -111,26 +110,24 @@ object AntiBot : Module() {
                 return true
         }
 
-        if (needHitValue.get() && !hit.contains(entity.entityId))
+        if (needHitValue.get() && entity.entityId !in hit)
             return true
 
         if (invalidGroundValue.get() && invalidGround.getOrDefault(entity.entityId, 0) >= 10)
             return true
 
         if (tabValue.get()) {
-            val equals = tabModeValue.get().equals("Equals", ignoreCase = true)
+            val equals = tabModeValue.get() == "Equals"
             val targetName = stripColor(entity.displayName.formattedText)
 
-            if (targetName != null) {
-                for (networkPlayerInfo in mc.netHandler.playerInfoMap) {
-                    val networkName = stripColor(networkPlayerInfo.getFullName()) ?: continue
+            for (networkPlayerInfo in mc.netHandler.playerInfoMap) {
+                val networkName = stripColor(networkPlayerInfo.getFullName())
 
-                    if (if (equals) targetName == networkName else targetName.contains(networkName))
-                        return false
-                }
-
-                return true
+                if (if (equals) targetName == networkName else networkName in targetName)
+                    return false
             }
+
+            return true
         }
 
         if (duplicateInWorldValue.get() &&
@@ -141,7 +138,7 @@ object AntiBot : Module() {
             mc.netHandler.playerInfoMap.count { entity.name == stripColor(it.getFullName()) } > 1)
             return true
 
-        if (alwaysInRadiusValue.get() && !notAlwaysInRadius.contains(entity.entityId))
+        if (alwaysInRadiusValue.get() && entity.entityId !in notAlwaysInRadius)
             return true
 
         return entity.name.isEmpty() || entity.name == mc.thePlayer.name
@@ -162,11 +159,11 @@ object AntiBot : Module() {
         if (packet is S14PacketEntity) {
             val entity = packet.getEntity(mc.theWorld)
 
-            if (entity is EntityPlayer && entity != null) {
-                if (entity.onGround && !ground.contains(entity.entityId))
+            if (entity is EntityPlayer) {
+                if (entity.onGround && entity.entityId !in ground)
                     ground.add(entity.entityId)
 
-                if (!entity.onGround && !air.contains(entity.entityId))
+                if (!entity.onGround && entity.entityId !in air)
                     air.add(entity.entityId)
 
                 if (entity.onGround) {
@@ -180,10 +177,10 @@ object AntiBot : Module() {
                         invalidGround[entity.entityId] = currentVL
                 }
 
-                if (entity.isInvisible && !invisible.contains(entity.entityId))
+                if (entity.isInvisible && entity.entityId !in invisible)
                     invisible.add(entity.entityId)
 
-                if (!notAlwaysInRadius.contains(entity.entityId) && mc.thePlayer.getDistanceToEntity(entity) > alwaysRadiusValue.get())
+                if (entity.entityId !in notAlwaysInRadius && mc.thePlayer.getDistanceToEntity(entity) > alwaysRadiusValue.get())
                     notAlwaysInRadius.add(entity.entityId)
             }
         }
@@ -192,7 +189,7 @@ object AntiBot : Module() {
             val entity = mc.theWorld.getEntityByID(packet.entityID)
 
             if (entity != null && entity is EntityLivingBase && packet.animationType == 0
-                    && !swing.contains(entity.entityId))
+                    && entity.entityId !in swing)
                 swing.add(entity.entityId)
         }
     }
@@ -201,7 +198,7 @@ object AntiBot : Module() {
     fun onAttack(e: AttackEvent) {
         val entity = e.targetEntity
 
-        if (entity != null && entity is EntityLivingBase && !hit.contains(entity.entityId))
+        if (entity != null && entity is EntityLivingBase && entity.entityId !in hit)
             hit.add(entity.entityId)
     }
 

@@ -7,7 +7,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 
 class AACLowHop2 : SpeedMode("AACLowHop2") {
     private var legitJump = false
@@ -29,7 +30,7 @@ class AACLowHop2 : SpeedMode("AACLowHop2") {
         if (thePlayer.isInWater)
             return
 
-        if (MovementUtils.isMoving) {
+        if (isMoving) {
             mc.timer.timerSpeed = 1.09f
 
             if (thePlayer.onGround) {
@@ -41,7 +42,7 @@ class AACLowHop2 : SpeedMode("AACLowHop2") {
                 }
 
                 thePlayer.motionY = 0.343
-                MovementUtils.strafe(0.534f)
+                strafe(0.534f)
             }
         } else {
             legitJump = true

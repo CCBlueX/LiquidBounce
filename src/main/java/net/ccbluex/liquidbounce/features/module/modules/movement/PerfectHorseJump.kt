@@ -19,6 +19,6 @@ class PerfectHorseJump : Module() {
         val thePlayer = mc.thePlayer ?: return
 
         thePlayer.horseJumpPowerCounter = 9
-        thePlayer.horseJumpPower = 1.0f
+        thePlayer.horseJumpPower = 1f
     }
 }

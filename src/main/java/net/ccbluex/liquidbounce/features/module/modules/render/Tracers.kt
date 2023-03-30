@@ -10,11 +10,11 @@ import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
-import net.ccbluex.liquidbounce.utils.EntityUtils
+import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
+import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -23,7 +23,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.util.Vec3
-import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
 @ModuleInfo(name = "Tracers", description = "Draws a line to targets around you.", category = ModuleCategory.RENDER)
@@ -49,19 +49,19 @@ class Tracers : Module() {
     fun onRender3D(event: Render3DEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-        GL11.glEnable(GL11.GL_BLEND)
-        GL11.glEnable(GL11.GL_LINE_SMOOTH)
-        GL11.glLineWidth(thicknessValue.get())
-        GL11.glDisable(GL11.GL_TEXTURE_2D)
-        GL11.glDisable(GL11.GL_DEPTH_TEST)
-        GL11.glDepthMask(false)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glEnable(GL_BLEND)
+        glEnable(GL_LINE_SMOOTH)
+        glLineWidth(thicknessValue.get())
+        glDisable(GL_TEXTURE_2D)
+        glDisable(GL_DEPTH_TEST)
+        glDepthMask(false)
 
-        GL11.glBegin(GL11.GL_LINES)
+        glBegin(GL_LINES)
 
         for (entity in mc.theWorld.loadedEntityList) {
-            if (entity !is EntityLivingBase || !botValue.get() && AntiBot.isBot(entity)) continue
-            if (entity != thePlayer && EntityUtils.isSelected(entity, false)) {
+            if (entity !is EntityLivingBase || !botValue.get() && isBot(entity)) continue
+            if (entity != thePlayer && isSelected(entity, false)) {
                 var dist = (thePlayer.getDistanceToEntity(entity) * 2).toInt()
 
                 if (dist > 255) dist = 255
@@ -79,14 +79,14 @@ class Tracers : Module() {
             }
         }
 
-        GL11.glEnd()
+        glEnd()
 
-        GL11.glEnable(GL11.GL_TEXTURE_2D)
-        GL11.glDisable(GL11.GL_LINE_SMOOTH)
-        GL11.glEnable(GL11.GL_DEPTH_TEST)
-        GL11.glDepthMask(true)
-        GL11.glDisable(GL11.GL_BLEND)
-        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+        glEnable(GL_TEXTURE_2D)
+        glDisable(GL_LINE_SMOOTH)
+        glEnable(GL_DEPTH_TEST)
+        glDepthMask(true)
+        glDisable(GL_BLEND)
+        glColor4f(1f, 1f, 1f, 1f)
     }
 
     private fun drawTraces(entity: Entity, color: Color) {
@@ -103,11 +103,11 @@ class Tracers : Module() {
                 .rotatePitch((-Math.toRadians(thePlayer.rotationPitch.toDouble())).toFloat())
                 .rotateYaw((-Math.toRadians(thePlayer.rotationYaw.toDouble())).toFloat())
 
-        RenderUtils.glColor(color)
+        glColor(color)
 
-        GL11.glVertex3d(eyeVector.xCoord, thePlayer.eyeHeight.toDouble() + eyeVector.yCoord, eyeVector.zCoord)
-        GL11.glVertex3d(x, y, z)
-        GL11.glVertex3d(x, y, z)
-        GL11.glVertex3d(x, y + entity.height, z)
+        glVertex3d(eyeVector.xCoord, thePlayer.eyeHeight.toDouble() + eyeVector.yCoord, eyeVector.zCoord)
+        glVertex3d(x, y, z)
+        glVertex3d(x, y, z)
+        glVertex3d(x, y + entity.height, z)
     }
 }

@@ -82,7 +82,7 @@ class AtAllProvider : Module() {
         if (event.packet is C01PacketChatMessage) {
             val message = event.packet.message
 
-            if (message.contains("@a")) {
+            if ("@a" in message) {
                 synchronized(sendQueue) {
                     for (playerInfo in mc.netHandler.playerInfoMap) {
                         val playerName = playerInfo.gameProfile.name

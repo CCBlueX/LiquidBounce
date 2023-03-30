@@ -5,21 +5,21 @@
  */
 package net.ccbluex.liquidbounce.ui.font
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.TextEvent
+import net.ccbluex.liquidbounce.utils.MinecraftInstance.mc
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawLine
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
-import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.FontRenderer
-import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.client.renderer.GlStateManager.*
 import net.minecraft.util.ResourceLocation
-import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL11.*
 import org.lwjgl.opengl.GL20.glUseProgram
 import java.awt.Color
 import java.awt.Font
 
-class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameSettings, ResourceLocation("textures/font/ascii.png"), Minecraft.getMinecraft().textureManager, false) {
+class GameFontRenderer(font: Font) : FontRenderer(mc.gameSettings, ResourceLocation("textures/font/ascii.png"), mc.textureManager, false) {
 
     val fontHeight: Int
     var defaultFont = AWTFontRenderer(font)
@@ -27,31 +27,31 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
     private var italicFont = AWTFontRenderer(font.deriveFont(Font.ITALIC))
     private var boldItalicFont = AWTFontRenderer(font.deriveFont(Font.BOLD or Font.ITALIC))
 
-    val height: Int
+    val height
         get() = defaultFont.height / 2
 
-    val size: Int
+    val size
         get() = defaultFont.font.size
 
     init {
         fontHeight = height
     }
 
-    fun drawString(s: String?, x: Float, y: Float, color: Int) = drawString(s, x, y, color, false)
+    fun drawString(s: String, x: Float, y: Float, color: Int) = drawString(s, x, y, color, false)
 
-    override fun drawStringWithShadow(text: String?, x: Float, y: Float, color: Int) = drawString(text, x, y, color, true)
+    override fun drawStringWithShadow(text: String, x: Float, y: Float, color: Int) = drawString(text, x, y, color, true)
 
     fun drawCenteredString(s: String, x: Float, y: Float, color: Int, shadow: Boolean) = drawString(s, x - getStringWidth(s) / 2F, y, color, shadow)
 
     fun drawCenteredString(s: String, x: Float, y: Float, color: Int) =
             drawStringWithShadow(s, x - getStringWidth(s) / 2F, y, color)
 
-    override fun drawString(text: String?, x: Float, y: Float, color: Int, shadow: Boolean): Int {
+    override fun drawString(text: String, x: Float, y: Float, color: Int, shadow: Boolean): Int {
         var currentText = text
 
         val event = TextEvent(currentText)
-        LiquidBounce.eventManager.callEvent(event)
-        currentText = event.text ?: return 0
+        callEvent(event)
+        currentText = event.text
 
         val currY = y - 3F
 
@@ -66,9 +66,7 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
         return drawText(currentText, x, currY, color, false, rainbow)
     }
 
-    private fun drawText(text: String?, x: Float, y: Float, color: Int, ignoreColor: Boolean, rainbow: Boolean = false): Int {
-        if (text == null)
-            return 0
+    private fun drawText(text: String, x: Float, y: Float, color: Int, ignoreColor: Boolean, rainbow: Boolean = false): Int {
         if (text.isEmpty())
             return x.toInt()
 
@@ -77,11 +75,11 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
         if (rainbow)
             glUseProgram(rainbowShaderId)
 
-        GL11.glTranslated(x - 1.5, y + 0.5, 0.0)
-        GlStateManager.enableAlpha()
-        GlStateManager.enableBlend()
-        GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
-        GlStateManager.enableTexture2D()
+        glTranslated(x - 1.5, y + 0.5, 0.0)
+        enableAlpha()
+        enableBlend()
+        tryBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO)
+        enableTexture2D()
 
         var currentColor = color
 
@@ -92,7 +90,7 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
 
         val alpha: Int = (currentColor shr 24 and 0xff)
 
-        if (text.contains("§")) {
+        if ("§" in text) {
             val parts = text.split("§")
 
             var currentFont = defaultFont
@@ -166,12 +164,12 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
                     currentFont.drawString(if (randomCase) ColorUtils.randomMagicText(words) else words, width, 0.0, currentColor)
 
                     if (strikeThrough)
-                        RenderUtils.drawLine(width / 2.0 + 1, currentFont.height / 3.0,
+                        drawLine(width / 2.0 + 1, currentFont.height / 3.0,
                                 (width + currentFont.getStringWidth(words)) / 2.0 + 1, currentFont.height / 3.0,
                                 fontHeight / 16F)
 
                     if (underline)
-                        RenderUtils.drawLine(width / 2.0 + 1, currentFont.height / 2.0,
+                        drawLine(width / 2.0 + 1, currentFont.height / 2.0,
                                 (width + currentFont.getStringWidth(words)) / 2.0 + 1, currentFont.height / 2.0,
                                 fontHeight / 16F)
 
@@ -183,24 +181,23 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
             defaultFont.drawString(text, 0.0, 0.0, currentColor)
         }
 
-        GlStateManager.disableBlend()
-        GL11.glTranslated(-(x - 1.5), -(y + 0.5), 0.0)
-        GL11.glColor4f(1f, 1f, 1f, 1f)
+        disableBlend()
+        glTranslated(-(x - 1.5), -(y + 0.5), 0.0)
+        glColor4f(1f, 1f, 1f, 1f)
 
         return (x + getStringWidth(text)).toInt()
     }
 
-    override fun getColorCode(charCode: Char) =
-            ColorUtils.hexColors[getColorIndex(charCode)]
+    override fun getColorCode(charCode: Char) = ColorUtils.hexColors[getColorIndex(charCode)]
 
-    override fun getStringWidth(text: String?): Int {
+    override fun getStringWidth(text: String): Int {
         var currentText = text
 
         val event = TextEvent(currentText)
-        LiquidBounce.eventManager.callEvent(event)
-        currentText = event.text ?: return 0
+        callEvent(event)
+        currentText = event.text
 
-        return if (currentText.contains("§")) {
+        return if ("§" in currentText) {
             val parts = currentText.split("§")
 
             var currentFont = defaultFont
@@ -253,14 +250,13 @@ class GameFontRenderer(font: Font) : FontRenderer(Minecraft.getMinecraft().gameS
 
     companion object {
         @JvmStatic
-        fun getColorIndex(type: Char): Int {
-            return when (type) {
+        fun getColorIndex(type: Char) =
+            when (type) {
                 in '0'..'9' -> type - '0'
                 in 'a'..'f' -> type - 'a' + 10
                 in 'k'..'o' -> type - 'k' + 16
                 'r' -> 21
                 else -> -1
             }
-        }
     }
 }

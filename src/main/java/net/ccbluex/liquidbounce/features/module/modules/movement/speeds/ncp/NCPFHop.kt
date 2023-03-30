@@ -7,7 +7,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp
 
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 
 class NCPFHop : SpeedMode("NCPFHop") {
     override fun onEnable() {
@@ -23,7 +24,7 @@ class NCPFHop : SpeedMode("NCPFHop") {
 
     override fun onMotion() {}
     override fun onUpdate() {
-        if (MovementUtils.isMoving) {
+        if (isMoving) {
             if (mc.thePlayer.onGround) {
                 mc.thePlayer.jump()
                 mc.thePlayer.motionX *= 1.01
@@ -31,7 +32,7 @@ class NCPFHop : SpeedMode("NCPFHop") {
                 mc.thePlayer.speedInAir = 0.0223f
             }
             mc.thePlayer.motionY -= 0.00099999
-            MovementUtils.strafe()
+            strafe()
         } else {
             mc.thePlayer.motionX = 0.0
             mc.thePlayer.motionZ = 0.0

@@ -11,9 +11,10 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.EntityUtils
-import net.ccbluex.liquidbounce.utils.RotationUtils
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
+import net.ccbluex.liquidbounce.utils.RotationUtils.faceBow
+import net.ccbluex.liquidbounce.utils.RotationUtils.getRotationDifference
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawPlatform
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -25,13 +26,13 @@ import java.awt.Color
 @ModuleInfo(name = "BowAimbot", description = "Automatically aims at players when using a bow.", category = ModuleCategory.COMBAT)
 class BowAimbot : Module() {
 
-    private val silentValue = BoolValue("Silent", true)
-    private val throughWallsValue = BoolValue("ThroughWalls", false)
+    private val priorityValue = ListValue("Priority", arrayOf("Health", "Distance", "Direction"), "Direction")
     private val predictValue = BoolValue("Predict", true)
     private val predictSizeValue = object : FloatValue("PredictSize", 2F, 0.1F, 5F) {
         override fun isSupported() = predictValue.get()
     }
-    private val priorityValue = ListValue("Priority", arrayOf("Health", "Distance", "Direction"), "Direction")
+    private val silentValue = BoolValue("Silent", true)
+    private val throughWallsValue = BoolValue("ThroughWalls", false)
     private val markValue = BoolValue("Mark", true)
 
     private var target: Entity? = null
@@ -48,25 +49,25 @@ class BowAimbot : Module() {
             val entity = getTarget(throughWallsValue.get(), priorityValue.get()) ?: return
 
             target = entity
-            RotationUtils.faceBow(entity, silentValue.get(), predictValue.get(), predictSizeValue.get())
+            faceBow(entity, silentValue.get(), predictValue.get(), predictSizeValue.get())
         }
     }
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        if (target != null && !priorityValue.get().equals("Multi", ignoreCase = true) && markValue.get())
-            RenderUtils.drawPlatform(target, Color(37, 126, 255, 70))
+        if (target != null && priorityValue.get() != "Multi" && markValue.get())
+            drawPlatform(target!!, Color(37, 126, 255, 70))
     }
 
     private fun getTarget(throughWalls: Boolean, priorityMode: String): Entity? {
         val targets = mc.theWorld.loadedEntityList.filter {
-            it is EntityLivingBase && EntityUtils.isSelected(it, true) &&
+            it is EntityLivingBase && isSelected(it, true) &&
                     (throughWalls || mc.thePlayer.canEntityBeSeen(it))
         }
 
         return when (priorityMode.uppercase()) {
             "DISTANCE" -> targets.minByOrNull { mc.thePlayer.getDistanceToEntity(it) }
-            "DIRECTION" -> targets.minByOrNull { RotationUtils.getRotationDifference(it) }
+            "DIRECTION" -> targets.minByOrNull { getRotationDifference(it) }
             "HEALTH" -> targets.minByOrNull { (it as EntityLivingBase).health }
             else -> null
         }

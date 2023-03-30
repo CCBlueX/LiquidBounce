@@ -1,6 +1,7 @@
 package net.ccbluex.liquidbounce.features.command.special
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.commandManager
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.chat.packet.packets.ServerRequestJWTPacket
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.modules.misc.LiquidChat
@@ -10,7 +11,7 @@ import java.awt.datatransfer.StringSelection
 
 class ChatTokenCommand : Command("chattoken") {
 
-    private val lChat = LiquidBounce.moduleManager.getModule(LiquidChat::class.java) as LiquidChat
+    private val lChat = moduleManager[LiquidChat::class.java] as LiquidChat
 
     /**
      * Execute commands with provided [args]
@@ -42,7 +43,7 @@ class ChatTokenCommand : Command("chattoken") {
 
                 args[1].equals("copy", true) -> {
                     if (LiquidChat.jwtToken.isEmpty()) {
-                        chat("§cError: §7No token set! Generate one first using '${LiquidBounce.commandManager.prefix}chattoken generate'.")
+                        chat("§cError: §7No token set! Generate one first using '${commandManager.prefix}chattoken generate'.")
                         return
                     }
                     val stringSelection = StringSelection(LiquidChat.jwtToken)

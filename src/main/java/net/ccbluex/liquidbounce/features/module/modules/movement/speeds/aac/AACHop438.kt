@@ -7,17 +7,17 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 
 class AACHop438 : SpeedMode("AACHop4.3.8") {
     override fun onMotion() {}
     override fun onUpdate() {
         val thePlayer = mc.thePlayer ?: return
 
-        mc.timer.timerSpeed = 1.0f
+        mc.timer.timerSpeed = 1f
 
-        if (!MovementUtils.isMoving || thePlayer.isInWater || thePlayer.isInLava ||
-                thePlayer.isOnLadder || thePlayer.isRiding) return
+        if (!isMoving || thePlayer.isInWater || thePlayer.isInLava || thePlayer.isOnLadder || thePlayer.isRiding)
+            return
 
         if (thePlayer.onGround)
             thePlayer.jump()

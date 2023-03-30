@@ -10,8 +10,13 @@ import net.ccbluex.liquidbounce.event.StrafeEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.EntityUtils
-import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
+import net.ccbluex.liquidbounce.utils.RotationUtils.getCenter
+import net.ccbluex.liquidbounce.utils.RotationUtils.getRotationDifference
+import net.ccbluex.liquidbounce.utils.RotationUtils.isFaced
+import net.ccbluex.liquidbounce.utils.RotationUtils.limitAngleChange
+import net.ccbluex.liquidbounce.utils.RotationUtils.searchCenter
+import net.ccbluex.liquidbounce.utils.RotationUtils.toRotation
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -38,7 +43,7 @@ class Aimbot : Module() {
         if (mc.gameSettings.keyBindAttack.isKeyDown)
             clickTimer.reset()
 
-        if (onClickValue.get() && clickTimer.hasTimePassed(500L))
+        if (onClickValue.get() && clickTimer.hasTimePassed(500))
             return
 
         // Search for the best enemy to target
@@ -46,13 +51,13 @@ class Aimbot : Module() {
         val range = rangeValue.get()
         val entity = mc.theWorld.loadedEntityList
                 .filter {
-                    EntityUtils.isSelected(it, true) && mc.thePlayer.canEntityBeSeen(it) &&
-                            mc.thePlayer.getDistanceToEntityBox(it) <= range && RotationUtils.getRotationDifference(it) <= fovValue.get()
+                    isSelected(it, true) && mc.thePlayer.canEntityBeSeen(it) &&
+                            mc.thePlayer.getDistanceToEntityBox(it) <= range && getRotationDifference(it) <= fovValue.get()
                 }
-                .minByOrNull { RotationUtils.getRotationDifference(it) } ?: return
+                .minByOrNull { getRotationDifference(it) } ?: return
 
         // Should it always keep trying to lock on the enemy or just try to assist you?
-        if (!lockValue.get() && RotationUtils.isFaced(entity, range.toDouble()))
+        if (!lockValue.get() && isFaced(entity, range.toDouble()))
             return
 
         // Look up required rotations to hit enemy
@@ -60,14 +65,14 @@ class Aimbot : Module() {
 
         val playerRotation = mc.thePlayer.rotation
         val destinationRotation = if (centerValue.get()) {
-            RotationUtils.toRotation(RotationUtils.getCenter(boundingBox), true)
+            toRotation(getCenter(boundingBox), true)
         } else {
-            RotationUtils.searchCenter(boundingBox, false, false, true, false, range)?.rotation ?: return
+            searchCenter(boundingBox, false, false, true, false, range)?.rotation ?: return
         }
 
         // Figure out the best turn speed suitable for the distance and configured turn speed
 
-        val rotationDiff = RotationUtils.getRotationDifference(playerRotation, destinationRotation)
+        val rotationDiff = getRotationDifference(playerRotation, destinationRotation)
 
         // is enemy visible to player on screen. Fov is about to be right with that you can actually see on the screen. Still not 100% accurate, but it is fast check.
         val supposedTurnSpeed = if (rotationDiff < mc.gameSettings.fovSetting) {
@@ -80,7 +85,7 @@ class Aimbot : Module() {
         val gaussian = random.nextGaussian()
 
         val realisticTurnSpeed = rotationDiff * ((supposedTurnSpeed + (gaussian - 0.5)) / 180)
-        val rotation = RotationUtils.limitAngleChange(mc.thePlayer.rotation, destinationRotation, realisticTurnSpeed.toFloat())
+        val rotation = limitAngleChange(mc.thePlayer.rotation, destinationRotation, realisticTurnSpeed.toFloat())
 
         rotation.toPlayer(mc.thePlayer)
 

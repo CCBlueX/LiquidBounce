@@ -5,11 +5,24 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.clickGui
+import net.ccbluex.liquidbounce.LiquidBounce.commandManager
+import net.ccbluex.liquidbounce.LiquidBounce.isStarting
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
+import net.ccbluex.liquidbounce.LiquidBounce.scriptManager
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandManager
+import net.ccbluex.liquidbounce.file.FileManager.clickGuiConfig
+import net.ccbluex.liquidbounce.file.FileManager.hudConfig
+import net.ccbluex.liquidbounce.file.FileManager.loadConfig
+import net.ccbluex.liquidbounce.file.FileManager.loadConfigs
+import net.ccbluex.liquidbounce.file.FileManager.modulesConfig
+import net.ccbluex.liquidbounce.file.FileManager.valuesConfig
+import net.ccbluex.liquidbounce.script.ScriptManager.reloadScripts
+import net.ccbluex.liquidbounce.script.ScriptManager.scripts
+import net.ccbluex.liquidbounce.script.ScriptManager.scriptsFolder
 import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import org.apache.commons.io.IOUtils
 import java.awt.Desktop
@@ -30,10 +43,11 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts") {
                         val fileName = file.name
 
                         if (fileName.endsWith(".js")) {
-                            LiquidBounce.scriptManager.importScript(file)
+                            scriptManager.importScript(file)
 
-                            LiquidBounce.clickGui = ClickGui()
-                            LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.clickGuiConfig)
+                            clickGui = ClickGui()
+                            loadConfig(clickGuiConfig)
+
 
                             chat("Successfully imported script.")
                             return
@@ -45,7 +59,7 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts") {
                             while (entries.hasMoreElements()) {
                                 val entry = entries.nextElement()
                                 val entryName = entry.name
-                                val entryFile = File(LiquidBounce.scriptManager.scriptsFolder, entryName)
+                                val entryFile = File(scriptsFolder, entryName)
 
                                 if (entry.isDirectory) {
                                     entryFile.mkdir()
@@ -59,15 +73,15 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts") {
                                 fileOutputStream.close()
                                 fileStream.close()
 
-                                if (!entryName.contains("/"))
+                                if ("/" in entryName)
                                     scriptFiles.add(entryFile)
                             }
 
-                            scriptFiles.forEach { scriptFile -> LiquidBounce.scriptManager.loadScript(scriptFile) }
+                            scriptFiles.forEach { scriptFile -> scriptManager.loadScript(scriptFile) }
 
-                            LiquidBounce.clickGui = ClickGui()
-                            LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.clickGuiConfig)
-                            LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.hudConfig)
+                            clickGui = ClickGui()
+                            loadConfigs(clickGuiConfig, hudConfig)
+
 
                             chat("Successfully imported script.")
                             return
@@ -75,7 +89,7 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts") {
 
                         chat("The file extension has to be .js or .zip")
                     } catch (t: Throwable) {
-                        ClientUtils.getLogger().error("Something went wrong while importing a script.", t)
+                        LOGGER.error("Something went wrong while importing a script.", t)
                         chat("${t.javaClass.name}: ${t.message}")
                     }
                 }
@@ -88,7 +102,6 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts") {
                         }
 
                         val scriptIndex = args[2].toInt()
-                        val scripts = LiquidBounce.scriptManager.scripts
 
                         if (scriptIndex >= scripts.size) {
                             chat("Index $scriptIndex is too high.")
@@ -97,46 +110,51 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts") {
 
                         val script = scripts[scriptIndex]
 
-                        LiquidBounce.scriptManager.deleteScript(script)
+                        scriptManager.deleteScript(script)
 
-                        LiquidBounce.clickGui = ClickGui()
-                        LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.clickGuiConfig)
-                        LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.hudConfig)
+                        clickGui = ClickGui()
+                        loadConfigs(clickGuiConfig, hudConfig)
+
                         chat("Successfully deleted script.")
                     } catch (numberFormat: NumberFormatException) {
                         chatSyntaxError()
                     } catch (t: Throwable) {
-                        ClientUtils.getLogger().error("Something went wrong while deleting a script.", t)
+                        LOGGER.error("Something went wrong while deleting a script.", t)
                         chat("${t.javaClass.name}: ${t.message}")
                     }
                 }
 
                 args[1].equals("reload", true) -> {
                     try {
-                        LiquidBounce.commandManager = CommandManager()
-                        LiquidBounce.commandManager.registerCommands()
-                        LiquidBounce.isStarting = true
-                        LiquidBounce.scriptManager.reloadScripts()
-                        for(module in LiquidBounce.moduleManager.modules)
-                        LiquidBounce.moduleManager.generateCommand(module)        
-                        LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.modulesConfig)
-                        LiquidBounce.isStarting = false
-                        LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.valuesConfig)
-                        LiquidBounce.clickGui = ClickGui()
-                        LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.clickGuiConfig)
+                        commandManager = CommandManager()
+                        commandManager.registerCommands()
+
+                        isStarting = true
+
+                        reloadScripts()
+
+                        for (module in moduleManager.modules) moduleManager.generateCommand(module)
+                        loadConfig(modulesConfig)
+
+                        isStarting = false
+                        loadConfig(valuesConfig)
+
+                        clickGui = ClickGui()
+                        loadConfig(clickGuiConfig)
+
                         chat("Successfully reloaded all scripts.")
                     } catch (t: Throwable) {
-                        ClientUtils.getLogger().error("Something went wrong while reloading all scripts.", t)
+                        LOGGER.error("Something went wrong while reloading all scripts.", t)
                         chat("${t.javaClass.name}: ${t.message}")
                     }
                 }
 
                 args[1].equals("folder", true) -> {
                     try {
-                        Desktop.getDesktop().open(LiquidBounce.scriptManager.scriptsFolder)
+                        Desktop.getDesktop().open(scriptsFolder)
                         chat("Successfully opened scripts folder.")
                     } catch (t: Throwable) {
-                        ClientUtils.getLogger().error("Something went wrong while trying to open your scripts folder.", t)
+                        LOGGER.error("Something went wrong while trying to open your scripts folder.", t)
                         chat("${t.javaClass.name}: ${t.message}")
                     }
                 }
@@ -145,7 +163,7 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts") {
             return
         }
 
-        val scriptManager = LiquidBounce.scriptManager
+        val scriptManager = scriptManager
 
         if (scriptManager.scripts.isNotEmpty()) {
             chat("§c§lScripts")

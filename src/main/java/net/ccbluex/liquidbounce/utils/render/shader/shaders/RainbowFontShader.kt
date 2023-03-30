@@ -6,7 +6,8 @@
 package net.ccbluex.liquidbounce.utils.render.shader.shaders
 
 import net.ccbluex.liquidbounce.utils.render.shader.Shader
-import org.lwjgl.opengl.GL20
+import org.lwjgl.opengl.GL20.glUniform1f
+import org.lwjgl.opengl.GL20.glUniform2f
 import java.io.Closeable
 
 object RainbowFontShader : Shader("rainbow_font_shader.frag"), Closeable {
@@ -23,8 +24,8 @@ object RainbowFontShader : Shader("rainbow_font_shader.frag"), Closeable {
     }
 
     override fun updateUniforms() {
-        GL20.glUniform2f(getUniform("strength"), strengthX, strengthY)
-        GL20.glUniform1f(getUniform("offset"), offset)
+        glUniform2f(getUniform("strength"), strengthX, strengthY)
+        glUniform1f(getUniform("offset"), offset)
     }
 
     override fun startShader() {
@@ -45,7 +46,6 @@ object RainbowFontShader : Shader("rainbow_font_shader.frag"), Closeable {
     }
 
     @Suppress("NOTHING_TO_INLINE")
-    @JvmStatic
     inline fun begin(enable: Boolean, x: Float, y: Float, offset: Float): RainbowFontShader {
         if (enable) {
             strengthX = x

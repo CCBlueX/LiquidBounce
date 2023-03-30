@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
@@ -15,14 +15,14 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.render.Breadcrumbs
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.client.entity.EntityOtherPlayerMP
 import net.minecraft.network.Packet
 import net.minecraft.network.play.client.*
-import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
@@ -114,7 +114,7 @@ class Blink : Module() {
                 )
             )
         }
-        if (pulseValue.get() && pulseTimer.hasTimePassed(pulseDelayValue.get().toLong())) {
+        if (pulseValue.get() && pulseTimer.hasTimePassed(pulseDelayValue.get())) {
             blink()
             pulseTimer.reset()
         }
@@ -122,37 +122,37 @@ class Blink : Module() {
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        val breadcrumbs = LiquidBounce.moduleManager.getModule(Breadcrumbs::class.java) as Breadcrumbs
+        val breadcrumbs = moduleManager[Breadcrumbs::class.java] as Breadcrumbs
         val color = if (breadcrumbs.colorRainbow.get()) rainbow() else Color(
             breadcrumbs.colorRedValue.get(),
             breadcrumbs.colorGreenValue.get(),
             breadcrumbs.colorBlueValue.get()
         )
         synchronized(positions) {
-            GL11.glPushMatrix()
-            GL11.glDisable(GL11.GL_TEXTURE_2D)
-            GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-            GL11.glEnable(GL11.GL_LINE_SMOOTH)
-            GL11.glEnable(GL11.GL_BLEND)
-            GL11.glDisable(GL11.GL_DEPTH_TEST)
+            glPushMatrix()
+            glDisable(GL_TEXTURE_2D)
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+            glEnable(GL_LINE_SMOOTH)
+            glEnable(GL_BLEND)
+            glDisable(GL_DEPTH_TEST)
             mc.entityRenderer.disableLightmap()
-            GL11.glBegin(GL11.GL_LINE_STRIP)
-            RenderUtils.glColor(color)
+            glBegin(GL_LINE_STRIP)
+            glColor(color)
             val renderPosX: Double = mc.renderManager.viewerPosX
             val renderPosY: Double = mc.renderManager.viewerPosY
             val renderPosZ: Double = mc.renderManager.viewerPosZ
-            for (pos in positions) GL11.glVertex3d(pos[0] - renderPosX, pos[1] - renderPosY, pos[2] - renderPosZ)
-            GL11.glColor4d(1.0, 1.0, 1.0, 1.0)
-            GL11.glEnd()
-            GL11.glEnable(GL11.GL_DEPTH_TEST)
-            GL11.glDisable(GL11.GL_LINE_SMOOTH)
-            GL11.glDisable(GL11.GL_BLEND)
-            GL11.glEnable(GL11.GL_TEXTURE_2D)
-            GL11.glPopMatrix()
+            for (pos in positions) glVertex3d(pos[0] - renderPosX, pos[1] - renderPosY, pos[2] - renderPosZ)
+            glColor4d(1.0, 1.0, 1.0, 1.0)
+            glEnd()
+            glEnable(GL_DEPTH_TEST)
+            glDisable(GL_LINE_SMOOTH)
+            glDisable(GL_BLEND)
+            glEnable(GL_TEXTURE_2D)
+            glPopMatrix()
         }
     }
 
-    override val tag: String
+    override val tag
         get() = packets.size.toString()
 
     private fun blink() {

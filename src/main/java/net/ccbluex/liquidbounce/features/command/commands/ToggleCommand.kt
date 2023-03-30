@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.features.command.Command
 
 class ToggleCommand : Command("toggle", "t") {
@@ -14,7 +14,7 @@ class ToggleCommand : Command("toggle", "t") {
      */
     override fun execute(args: Array<String>) {
         if (args.size > 1) {
-            val module = LiquidBounce.moduleManager.getModule(args[1])
+            val module = moduleManager[args[1]]
 
             if (module == null) {
                 chat("Module '${args[1]}' not found.")
@@ -47,7 +47,7 @@ class ToggleCommand : Command("toggle", "t") {
         val moduleName = args[0]
 
         return when (args.size) {
-            1 -> LiquidBounce.moduleManager.modules
+            1 -> moduleManager.modules
                     .map { it.name }
                     .filter { it.startsWith(moduleName, true) }
                     .toList()
