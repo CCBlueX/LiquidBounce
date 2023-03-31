@@ -69,8 +69,6 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y) {
     private var lastFov = 0f
 
     override fun drawElement(): Border {
-        MiniMapRegister.updateChunks()
-
         val fovAngle = fovAngleValue.get()
 
         if (lastFov != fovAngle || fovMarkerVertexBuffer == null) {

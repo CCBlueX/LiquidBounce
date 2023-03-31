@@ -48,6 +48,7 @@ import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.ClientUtils.disableFastRender
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.render.MiniMapRegister
 import kotlin.concurrent.thread
 
 object LiquidBounce {
@@ -103,6 +104,7 @@ object LiquidBounce {
         registerListener(BungeeCordSpoof)
         registerListener(CapeService)
         registerListener(InventoryUtils())
+        registerListener(MiniMapRegister)
 
         // Init Discord RPC
         clientRichPresence = ClientRichPresence()
