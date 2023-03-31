@@ -73,7 +73,7 @@ class AutoPot : Module() {
 
                     val collisionBlock = fallingPlayer.findCollision(20)?.pos
 
-                    if (thePlayer.posY - (collisionBlock?.y ?: 0) >= groundDistanceValue.get())
+                    if (thePlayer.posY - (collisionBlock?.y ?: return) - 1 > groundDistanceValue.get())
                         return
 
                     potion = potionInHotbar
@@ -108,7 +108,7 @@ class AutoPot : Module() {
             }
             POST -> {
                 if (potion >= 0 && serverRotation.pitch >= 75F) {
-                    val itemStack = thePlayer.inventory.getStackInSlot(potion)
+                    val itemStack = thePlayer.inventoryContainer.getSlot(potion).stack
 
                     if (itemStack != null) {
                         mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(itemStack))
