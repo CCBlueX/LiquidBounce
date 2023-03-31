@@ -295,9 +295,7 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
         super.mouseClicked(mouseX, mouseY, mouseButton)
     }
 
-    override fun updateScreen() {
-        searchField.updateCursorCounter()
-    }
+    override fun updateScreen() = searchField.updateCursorCounter()
 
     private inner class GuiList constructor(prevGui: GuiScreen) : GuiSlot(mc, prevGui.width, prevGui.height, 40, prevGui.height - 40, 30) {
 
@@ -314,7 +312,7 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
 
         var selectedSlot = 0
             set(value) {
-                field = value.coerceIn(0, accounts.lastIndex)
+                field = value.coerceIn(0, accounts.lastIndex.coerceAtLeast(0))
             }
             get() {
                 return if (field > accounts.size) {
