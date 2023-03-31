@@ -93,7 +93,6 @@ class ModuleManager : Listenable {
                 Regen::class.java,
                 NoFall::class.java,
                 Blink::class.java,
-                NameProtect::class.java,
                 NoHurtCam::class.java,
                 Ghost::class.java,
                 MidClick::class.java,
@@ -190,6 +189,7 @@ class ModuleManager : Listenable {
         registerModule(Animations)
         registerModule(Backtrack)
         registerModule(ClickGUI)
+        registerModule(NameProtect)
 
         LOGGER.info("[ModuleManager] Loaded ${modules.size} modules.")
     }

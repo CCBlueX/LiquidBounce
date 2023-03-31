@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.file.FileManager.saveConfig
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ButtonElement
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ModuleElement
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.Style
+import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.LiquidBounceStyle
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.SlowlyStyle
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer.Companion.assumeNonVolatile
@@ -38,11 +39,11 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 
 class ClickGui : GuiScreen() {
-    val panels: MutableList<Panel> = ArrayList()
+    val panels = mutableListOf<Panel>()
     private val hudIcon = ResourceLocation("${CLIENT_NAME.lowercase()}/custom_hud_icon.png")
-    var style: Style = SlowlyStyle
-    private var mouseX = 0
-    private var mouseY = 0
+    var style: Style = LiquidBounceStyle
+    var mouseX = 0
+    var mouseY = 0
 
     init {
         val width = 100

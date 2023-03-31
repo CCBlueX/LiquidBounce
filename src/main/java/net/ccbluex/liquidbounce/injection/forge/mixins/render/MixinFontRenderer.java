@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.render;
 
-import net.ccbluex.liquidbounce.event.TextEvent;
+import net.ccbluex.liquidbounce.features.module.modules.misc.NameProtect;
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraftforge.fml.relauncher.Side;
@@ -18,7 +18,6 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import static net.ccbluex.liquidbounce.LiquidBounce.eventManager;
 import static org.lwjgl.opengl.GL20.glUseProgram;
 
 @Mixin(FontRenderer.class)
@@ -83,9 +82,7 @@ public class MixinFontRenderer {
         if (string == null)
             return null;
 
-        final TextEvent textEvent = new TextEvent(string);
-        eventManager.callEvent(textEvent);
-        return textEvent.getText();
+        return NameProtect.handleTextMessage(string);
     }
 
     @ModifyVariable(method = "getStringWidth", at = @At("HEAD"), require = 1, ordinal = 0)
@@ -93,8 +90,6 @@ public class MixinFontRenderer {
         if (string == null)
             return null;
 
-        final TextEvent textEvent = new TextEvent(string);
-        eventManager.callEvent(textEvent);
-        return textEvent.getText();
+        return NameProtect.handleTextMessage(string);
     }
 }

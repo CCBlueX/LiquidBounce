@@ -126,12 +126,6 @@ class Render2DEvent(val partialTicks: Float) : Event()
 class Render3DEvent(val partialTicks: Float) : Event()
 
 /**
- * Called when entity is going to be rendered
- */
-class RenderEntityEvent(val entity: Entity, val x: Double, val y: Double, val z: Double, val entityYaw: Float,
-                        val partialTicks: Float) : Event()
-
-/**
  * Called when the screen changes
  */
 class ScreenEvent(val guiScreen: GuiScreen?) : Event()
@@ -150,11 +144,6 @@ class StepEvent(var stepHeight: Float) : Event()
  * Called when player step is confirmed
  */
 class StepConfirmEvent : Event()
-
-/**
- * Called when a text is going to be rendered
- */
-class TextEvent(var text: String) : Event()
 
 /**
  * tick... tack... tick... tack
