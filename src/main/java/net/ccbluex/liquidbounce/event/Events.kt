@@ -152,11 +152,6 @@ class StepEvent(var stepHeight: Float) : Event()
 class StepConfirmEvent : Event()
 
 /**
- * Called when a text is going to be rendered
- */
-class TextEvent(var text: String) : Event()
-
-/**
  * tick... tack... tick... tack
  */
 class TickEvent : Event()

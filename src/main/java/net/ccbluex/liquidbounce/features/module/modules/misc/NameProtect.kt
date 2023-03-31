@@ -6,8 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
-import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.TextEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
@@ -17,7 +15,8 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.TextValue
 
 @ModuleInfo(name = "NameProtect", description = "Changes player names clientside.", category = ModuleCategory.MISC)
-class NameProtect : Module() {
+object NameProtect : Module() {
+
     @JvmField
     val allPlayersValue = BoolValue("AllPlayers", false)
 
@@ -25,24 +24,41 @@ class NameProtect : Module() {
     val skinProtectValue = BoolValue("SkinProtect", true)
     private val fakeNameValue = TextValue("FakeName", "&cMe")
 
-    @EventTarget(ignoreCondition = true)
-    fun onText(event: TextEvent) {
-        val thePlayer = mc.thePlayer ?: return
+    /**
+     * Handle text messages from font renderer
+     */
+    @JvmStatic
+    fun handleTextMessage(text: String): String {
+        val p = mc.thePlayer ?: return text
 
-        if ("§8[§9§l$CLIENT_NAME§8] §3" in event.text)
-            return
-
-        for (friend in friendsConfig.friends)
-            event.text = event.text.replace(friend.playerName, translateAlternateColorCodes(friend.alias) + "§f")
-
-        if (!state)
-            return
-
-        event.text = event.text.replace(thePlayer.name, translateAlternateColorCodes(fakeNameValue.get()) + "§f")
-
-        if (allPlayersValue.get()) {
-            for (playerInfo in mc.netHandler.playerInfoMap)
-                event.text = event.text.replace(playerInfo.gameProfile.name , "Protected User")
+        // If the message includes the client name, don't change it
+        if ("§8[§9§l$CLIENT_NAME§8] §3" in text) {
+            return text
         }
+
+        // Modify
+        var newText = text
+
+        for (friend in friendsConfig.friends) {
+            newText = newText.replace(friend.playerName, translateAlternateColorCodes(friend.alias) + "§f")
+        }
+
+        // If the Name Protect module is disabled, return the text already without further processing
+        if (!state) {
+            return newText
+        }
+
+        // Replace original name with fake name
+        newText = newText.replace(p.name, translateAlternateColorCodes(fakeNameValue.get()) + "§f")
+
+        // Replace all other player names with "Protected User"
+        if (allPlayersValue.get()) {
+            for (playerInfo in mc.netHandler.playerInfoMap) {
+                newText = newText.replace(playerInfo.gameProfile.name, "Protected User")
+            }
+        }
+
+        return newText
     }
+
 }
