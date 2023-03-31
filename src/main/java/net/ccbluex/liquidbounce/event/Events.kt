@@ -126,12 +126,6 @@ class Render2DEvent(val partialTicks: Float) : Event()
 class Render3DEvent(val partialTicks: Float) : Event()
 
 /**
- * Called when entity is going to be rendered
- */
-class RenderEntityEvent(val entity: Entity, val x: Double, val y: Double, val z: Double, val entityYaw: Float,
-                        val partialTicks: Float) : Event()
-
-/**
  * Called when the screen changes
  */
 class ScreenEvent(val guiScreen: GuiScreen?) : Event()
