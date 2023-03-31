@@ -86,7 +86,7 @@ abstract class Panel(val name: String, x: Int, y: Int, val width: Int, val heigh
             // How many elements should be hidden
             val hiddenCount = elements.size - maxElementsValue.get()
             // Don't overscroll
-            field = if (hiddenCount > 0) min(hiddenCount, value) else 0
+            field = if (hiddenCount > 0) min(hiddenCount, value.coerceAtLeast(0)) else 0
         }
 
     fun drawScreenAndClick(mouseX: Int, mouseY: Int, mouseButton: Int? = null): Boolean {
