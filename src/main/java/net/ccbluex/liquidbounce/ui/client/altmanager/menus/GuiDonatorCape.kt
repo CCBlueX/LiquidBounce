@@ -82,7 +82,7 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
             }
         }
 
-        upperButton.displayString = if (loggedIntoAccount)
+        upperButton.displayString = if (!loggedIntoAccount)
             "Login"
         else if (CapeService.clientCapeUser?.enabled == true)
             "Disable Cape"
@@ -91,7 +91,6 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
 
         lowerButton.displayString = if (loggedIntoAccount) "Logout" else "Donate to get Cape"
 
-        // Call sub method
         super.drawScreen(mouseX, mouseY, partialTicks)
     }
 
@@ -147,7 +146,7 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
             }
         }
 
-        // Call sub method
+        super.actionPerformed(button)
     }
 
     /**
@@ -164,7 +163,8 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
         }
 
         // Check if field is focused, then call key typed
-        if(transferCodeField.isFocused) transferCodeField.textboxKeyTyped(typedChar, keyCode)
+        if(!loggedIntoAccount && transferCodeField.isFocused)
+            transferCodeField.textboxKeyTyped(typedChar, keyCode)
 
         // Call sub method
         super.keyTyped(typedChar, keyCode)
@@ -175,7 +175,9 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
      */
     override fun mouseClicked(mouseX : Int, mouseY : Int, mouseButton : Int) {
         // Call mouse clicked to field
-        transferCodeField.mouseClicked(mouseX, mouseY, mouseButton)
+        if (!loggedIntoAccount) {
+            transferCodeField.mouseClicked(mouseX, mouseY, mouseButton)
+        }
 
         // Call sub method
         super.mouseClicked(mouseX, mouseY, mouseButton)
@@ -185,7 +187,9 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
      * Handle screen update
      */
     override fun updateScreen() {
-        transferCodeField.updateCursorCounter()
+        if (!loggedIntoAccount) {
+            transferCodeField.updateCursorCounter()
+        }
         super.updateScreen()
     }
 
