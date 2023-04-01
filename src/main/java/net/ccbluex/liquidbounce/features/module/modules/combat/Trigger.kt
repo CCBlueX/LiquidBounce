@@ -22,7 +22,7 @@ class Trigger : Module() {
         override fun onChanged(oldValue: Int, newValue: Int) {
             val i = minCPS.get()
             if (i > newValue) set(i)
-            delay = TimeUtils.randomClickDelay(minCPS.get(), this.get())
+            delay = TimeUtils.randomClickDelay(minCPS.get(), get())
         }
     }
 
@@ -30,7 +30,7 @@ class Trigger : Module() {
         override fun onChanged(oldValue: Int, newValue: Int) {
             val i = maxCPS.get()
             if (i < newValue) set(i)
-            delay = TimeUtils.randomClickDelay(this.get(), maxCPS.get())
+            delay = TimeUtils.randomClickDelay(get(), maxCPS.get())
         }
 
         override fun isSupported() = !maxCPS.isMinimal()

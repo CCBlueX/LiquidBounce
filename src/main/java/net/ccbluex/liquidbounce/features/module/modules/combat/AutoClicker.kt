@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.extensions.fixedSensitivityPitch
 import net.ccbluex.liquidbounce.utils.extensions.fixedSensitivityYaw
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
@@ -63,12 +64,10 @@ class AutoClicker : Module() {
         return !isBreakingBlock
                 && !(currentTime - blockLastBroken < blockBrokenDelay &&
                 mc.objectMouseOver != null && mc.objectMouseOver.blockPos != null && mc.theWorld != null &&
-                mc.theWorld.getBlockState(mc.objectMouseOver.blockPos).block != Blocks.air)
+                getBlock(mc.objectMouseOver.blockPos) != Blocks.air)
     }
 
-    private fun rightCanAutoClick(): Boolean {
-        return !mc.thePlayer.isUsingItem
-    }
+    private fun rightCanAutoClick() = !mc.thePlayer.isUsingItem
 
     // BUG: There is no delay between breaking blocks in creative mode
     private fun leftClick(currentTime: Long) {

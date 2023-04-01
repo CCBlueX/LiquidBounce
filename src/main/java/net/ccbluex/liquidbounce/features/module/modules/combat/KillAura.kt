@@ -74,7 +74,7 @@ class KillAura : Module() {
             val i = minCPS.get()
             if (i > newValue) set(i)
 
-            attackDelay = TimeUtils.randomClickDelay(minCPS.get(), this.get())
+            attackDelay = TimeUtils.randomClickDelay(minCPS.get(), get())
         }
     }
 
@@ -83,7 +83,7 @@ class KillAura : Module() {
             val i = maxCPS.get()
             if (i < newValue) set(i)
 
-            attackDelay = TimeUtils.randomClickDelay(this.get(), maxCPS.get())
+            attackDelay = TimeUtils.randomClickDelay(get(), maxCPS.get())
         }
 
         override fun isSupported() = !maxCPS.isMinimal()
@@ -777,7 +777,7 @@ class KillAura : Module() {
                 mc.netHandler.addToSendQueue(C02PacketUseEntity(interactEntity, C02PacketUseEntity.Action.INTERACT))
             }
 
-            mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, mc.thePlayer.inventory.getCurrentItem(), 0f, 0f, 0f))
+            mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, mc.thePlayer.heldItem, 0f, 0f, 0f))
             blockStatus = true
         }
 

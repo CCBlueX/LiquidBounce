@@ -17,7 +17,7 @@ public class RollingArrayLongBuffer {
     private int currentIndex = 0;
 
     public RollingArrayLongBuffer(int length) {
-        this.contents = new long[length];
+        contents = new long[length];
     }
 
     /**

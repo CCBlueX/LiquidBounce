@@ -20,7 +20,7 @@ abstract class Element(var x: Double = 2.0, var y: Double = 2.0, scale: Float = 
     val info = javaClass.getAnnotation(ElementInfo::class.java)
             ?: throw IllegalArgumentException("Passed element with missing element info")
 
-    var scale: Float = 1F
+    var scale = 1F
         set(value) {
             if (info.disableScale)
                 return

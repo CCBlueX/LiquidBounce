@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import org.apache.commons.io.IOUtils
 import java.awt.Desktop
 import java.io.File
-import java.io.FileOutputStream
 import java.util.zip.ZipFile
 
 class ScriptManagerCommand : Command("scriptmanager", "scripts") {
@@ -67,7 +66,7 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts") {
                                 }
 
                                 val fileStream = zipFile.getInputStream(entry)
-                                val fileOutputStream = FileOutputStream(entryFile)
+                                val fileOutputStream = entryFile.outputStream()
 
                                 IOUtils.copy(fileStream, fileOutputStream)
                                 fileOutputStream.close()

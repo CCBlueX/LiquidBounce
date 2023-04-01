@@ -67,7 +67,7 @@ class ChestStealer : Module() {
         override fun onChanged(oldValue: Int, newValue: Int) {
             val i = autoCloseMinDelayValue.get()
             if (i > newValue) set(i)
-            nextCloseDelay = TimeUtils.randomDelay(autoCloseMinDelayValue.get(), this.get())
+            nextCloseDelay = TimeUtils.randomDelay(autoCloseMinDelayValue.get(), get())
         }
 
         override fun isSupported() = autoCloseValue.get()
@@ -77,7 +77,7 @@ class ChestStealer : Module() {
         override fun onChanged(oldValue: Int, newValue: Int) {
             val i = autoCloseMaxDelayValue.get()
             if (i < newValue) set(i)
-            nextCloseDelay = TimeUtils.randomDelay(this.get(), autoCloseMaxDelayValue.get())
+            nextCloseDelay = TimeUtils.randomDelay(get(), autoCloseMaxDelayValue.get())
         }
 
         override fun isSupported() = autoCloseValue.get() && !autoCloseMaxDelayValue.isMinimal()

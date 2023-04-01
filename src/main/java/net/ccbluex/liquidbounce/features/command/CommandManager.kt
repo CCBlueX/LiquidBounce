@@ -15,7 +15,7 @@ import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 
 class CommandManager {
     val commands = mutableListOf<Command>()
-    var latestAutoComplete: Array<String> = emptyArray()
+    var latestAutoComplete = emptyArray<String>()
 
     var prefix = '.'
 
@@ -88,8 +88,8 @@ class CommandManager {
      * @author NurMarvin
      */
     fun autoComplete(input: String): Boolean {
-        this.latestAutoComplete = this.getCompletions(input) ?: emptyArray()
-        return input.startsWith(this.prefix) && this.latestAutoComplete.isNotEmpty()
+        latestAutoComplete = getCompletions(input) ?: emptyArray()
+        return input.startsWith(prefix) && latestAutoComplete.isNotEmpty()
     }
 
     /**
@@ -99,7 +99,7 @@ class CommandManager {
      * @author NurMarvin
      */
     private fun getCompletions(input: String): Array<String>? {
-        if (input.isNotEmpty() && input.toCharArray()[0] == this.prefix) {
+        if (input.isNotEmpty() && input.toCharArray()[0] == prefix) {
             val args = input.split(" ")
 
             return if (args.size > 1) {
@@ -121,7 +121,7 @@ class CommandManager {
                             it.alias.first { alias -> alias.startsWith(rawInput, true) }
                         }
 
-                        this.prefix + alias
+                        prefix + alias
                     }
                     .toTypedArray()
             }
@@ -132,12 +132,11 @@ class CommandManager {
     /**
      * Get command instance by given [name]
      */
-    fun getCommand(name: String): Command? {
-        return commands.find {
+    fun getCommand(name: String) =
+        commands.find {
             it.command.equals(name, ignoreCase = true)
                 || it.alias.any { alias -> alias.equals(name, true) }
         }
-    }
 
     /**
      * Register [command] by just adding it to the commands registry

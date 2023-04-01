@@ -19,7 +19,7 @@ class GuiTools(private val prevGui: GuiScreen) : GuiScreen() {
 
     override fun actionPerformed(button: GuiButton) {
         when (button.id) {
-            1 -> mc.displayGuiScreen(GuiPortScanner(this.prevGui))
+            1 -> mc.displayGuiScreen(GuiPortScanner(prevGui))
             0 -> mc.displayGuiScreen(prevGui)
         }
     }

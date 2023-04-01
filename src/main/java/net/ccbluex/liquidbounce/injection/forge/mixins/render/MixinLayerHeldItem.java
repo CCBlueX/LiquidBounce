@@ -6,7 +6,6 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.render;
 
 import net.minecraft.block.Block;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.entity.RendererLivingEntity;
@@ -47,7 +46,7 @@ public class MixinLayerHeldItem {
         if(itemstack != null) {
             pushMatrix();
 
-            if(this.livingEntityRenderer.getMainModel().isChild) {
+            if(livingEntityRenderer.getMainModel().isChild) {
                 float f = 0.5F;
                 translate(0f, 0.625F, 0f);
                 rotate(-20f, -1f, 0f, 0f);
@@ -59,16 +58,16 @@ public class MixinLayerHeldItem {
 
             if(entityplayer != null && entityplayer.isBlocking()) {
                 if(entitylivingbaseIn.isSneaking()) {
-                    ((ModelBiped) this.livingEntityRenderer.getMainModel()).postRenderArm(0.0325F);
+                    ((ModelBiped) livingEntityRenderer.getMainModel()).postRenderArm(0.0325F);
                     translate(-0.58F, 0.3F, -0.2F);
                     rotate(-24390f, 137290f, -2009900f, -2054900f);
                 }else{
-                    ((ModelBiped) this.livingEntityRenderer.getMainModel()).postRenderArm(0.0325F);
+                    ((ModelBiped) livingEntityRenderer.getMainModel()).postRenderArm(0.0325F);
                     translate(-0.48F, 0.2F, -0.2F);
                     rotate(-24390f, 137290f, -2009900f, -2054900f);
                 }
             }else{
-                ((ModelBiped) this.livingEntityRenderer.getMainModel()).postRenderArm(0.0625F);
+                ((ModelBiped) livingEntityRenderer.getMainModel()).postRenderArm(0.0625F);
             }
 
             translate(-0.0625F, 0.4375F, 0.0625F);
@@ -78,7 +77,6 @@ public class MixinLayerHeldItem {
             }
 
             Item item = itemstack.getItem();
-            Minecraft minecraft = mc;
 
             if(item instanceof ItemBlock && Block.getBlockFromItem(item).getRenderType() == 2) {
                 translate(0f, 0.1875F, -0.3125F);
@@ -92,7 +90,7 @@ public class MixinLayerHeldItem {
                 translate(0f, 0.203125F, 0f);
             }
 
-            minecraft.getItemRenderer().renderItem(entitylivingbaseIn, itemstack, ItemCameraTransforms.TransformType.THIRD_PERSON);
+            mc.getItemRenderer().renderItem(entitylivingbaseIn, itemstack, ItemCameraTransforms.TransformType.THIRD_PERSON);
             popMatrix();
         }
     }

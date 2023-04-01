@@ -57,14 +57,14 @@ class NoSlow : Module() {
         if (!thePlayer.isBlocking && !aura.blockStatus)
             return
 
-        if (this.packet.get()) {
+        if (packet.get()) {
             when (event.eventState) {
                 EventState.PRE -> {
                     val digging = C07PacketPlayerDigging(C07PacketPlayerDigging.Action.RELEASE_USE_ITEM, BlockPos(0, 0, 0), EnumFacing.DOWN)
                     mc.netHandler.addToSendQueue(digging)
                 }
                 EventState.POST -> {
-                    val blockPlace = C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, mc.thePlayer.inventory.getCurrentItem(), 0f, 0f, 0f)
+                    val blockPlace = C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, mc.thePlayer.heldItem, 0f, 0f, 0f)
                     mc.netHandler.addToSendQueue(blockPlace)
                 }
             }
@@ -82,13 +82,13 @@ class NoSlow : Module() {
     private fun getMultiplier(item: Item?, isForward: Boolean): Float {
         return when (item) {
             is ItemFood, is ItemPotion, is ItemBucketMilk ->
-                if (isForward) this.consumeForwardMultiplier.get() else this.consumeStrafeMultiplier.get()
+                if (isForward) consumeForwardMultiplier.get() else consumeStrafeMultiplier.get()
 
             is ItemSword ->
-                if (isForward) this.blockForwardMultiplier.get() else this.blockStrafeMultiplier.get()
+                if (isForward) blockForwardMultiplier.get() else blockStrafeMultiplier.get()
 
             is ItemBow ->
-                if (isForward) this.bowForwardMultiplier.get() else this.bowStrafeMultiplier.get()
+                if (isForward) bowForwardMultiplier.get() else bowStrafeMultiplier.get()
 
             else -> 0.2F
         }

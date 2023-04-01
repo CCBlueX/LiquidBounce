@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.minecraft.util.Session
 import java.util.*
 
-fun me.liuli.elixir.compat.Session.intoMinecraftSession(): Session = Session(username, uuid, token, type)
+fun me.liuli.elixir.compat.Session.intoMinecraftSession() = Session(username, uuid, token, type)
 
 object LoginUtils : MinecraftInstance() {
 

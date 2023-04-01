@@ -7,7 +7,6 @@ package net.ccbluex.liquidbounce.utils.block
 
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.minecraft.block.Block
-import net.minecraft.block.state.IBlockState
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.BlockPos
 import kotlin.math.floor
@@ -36,7 +35,7 @@ object BlockUtils : MinecraftInstance() {
     /**
      * Get state from [blockPos]
      */
-    fun getState(blockPos: BlockPos): IBlockState? = mc.theWorld?.getBlockState(blockPos)
+    fun getState(blockPos: BlockPos) = mc.theWorld?.getBlockState(blockPos)
 
     /**
      * Check if [blockPos] is clickable

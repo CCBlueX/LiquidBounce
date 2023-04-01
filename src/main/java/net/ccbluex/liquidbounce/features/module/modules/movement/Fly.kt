@@ -732,7 +732,7 @@ class Fly : Module() {
 
             val mode = modeValue.get()
 
-            if (mode == "NCP" || mode == "Rewinside" || mode == "Mineplex" && mc.thePlayer.inventory.getCurrentItem() == null)
+            if (mode == "NCP" || mode == "Rewinside" || mode == "Mineplex" && mc.thePlayer.heldItem == null)
                 packetPlayer.onGround = true
 
             if (mode == "Hypixel" || mode == "BoostHypixel")
@@ -813,7 +813,7 @@ class Fly : Module() {
         val mode = modeValue.get()
         if (event.block == Blocks.air &&
             (mode == "Hypixel" || mode == "BoostHypixel" || mode == "Rewinside"
-                    || mode == "Mineplex" && mc.thePlayer.inventory.getCurrentItem() == null
+                    || mode == "Mineplex" && mc.thePlayer.heldItem == null
             ) && event.y < mc.thePlayer.posY
         )
             event.boundingBox = AxisAlignedBB.fromBounds(
@@ -830,7 +830,7 @@ class Fly : Module() {
     fun onJump(e: JumpEvent) {
         val mode = modeValue.get()
         if (mode == "Hypixel" || mode == "BoostHypixel" || mode == "Rewinside" || mode == "Mineplex"
-            && mc.thePlayer.inventory.getCurrentItem() == null)
+            && mc.thePlayer.heldItem == null)
             e.cancelEvent()
     }
 
@@ -838,7 +838,7 @@ class Fly : Module() {
     fun onStep(e: StepEvent) {
         val mode = modeValue.get()
         if (mode == "Hypixel" || mode == "BoostHypixel" || mode == "Rewinside" || mode == "Mineplex"
-            && mc.thePlayer.inventory.getCurrentItem() == null)
+            && mc.thePlayer.heldItem == null)
             e.stepHeight = 0f
     }
 

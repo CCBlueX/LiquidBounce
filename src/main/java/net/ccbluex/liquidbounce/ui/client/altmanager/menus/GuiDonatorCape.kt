@@ -26,8 +26,8 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
 
     // Data Storage
     companion object {
-        var transferCode: String = ""
-        var capeEnabled: Boolean = true
+        var transferCode = ""
+        var capeEnabled = true
     }
 
     // Buttons

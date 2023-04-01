@@ -76,7 +76,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
         boolean semiVisible = !visible && (!p_renderModel_1_.isInvisibleToPlayer(mc.thePlayer) || (trueSight.getState() && trueSight.getEntitiesValue().get()));
 
         if (visible || semiVisible) {
-            if (!this.bindEntityTexture(p_renderModel_1_)) {
+            if (!bindEntityTexture(p_renderModel_1_)) {
                 return;
             }
 
@@ -110,7 +110,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
                         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
                         glColor(esp.getColor(p_renderModel_1_));
                         glLineWidth(esp.wireframeWidth.get());
-                        this.mainModel.render(p_renderModel_1_, p_renderModel_2_, p_renderModel_3_, p_renderModel_4_, p_renderModel_5_, p_renderModel_6_, p_renderModel_7_);
+                        mainModel.render(p_renderModel_1_, p_renderModel_2_, p_renderModel_3_, p_renderModel_4_, p_renderModel_5_, p_renderModel_6_, p_renderModel_7_);
                         glPopAttrib();
                         glPopMatrix();
                         break;
@@ -121,16 +121,16 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
                         final Color color = esp.getColor(p_renderModel_1_);
                         OutlineUtils.setColor(color);
                         OutlineUtils.renderOne(esp.outlineWidth.get());
-                        this.mainModel.render(p_renderModel_1_, p_renderModel_2_, p_renderModel_3_, p_renderModel_4_, p_renderModel_5_, p_renderModel_6_, p_renderModel_7_);
+                        mainModel.render(p_renderModel_1_, p_renderModel_2_, p_renderModel_3_, p_renderModel_4_, p_renderModel_5_, p_renderModel_6_, p_renderModel_7_);
                         OutlineUtils.setColor(color);
                         OutlineUtils.renderTwo();
-                        this.mainModel.render(p_renderModel_1_, p_renderModel_2_, p_renderModel_3_, p_renderModel_4_, p_renderModel_5_, p_renderModel_6_, p_renderModel_7_);
+                        mainModel.render(p_renderModel_1_, p_renderModel_2_, p_renderModel_3_, p_renderModel_4_, p_renderModel_5_, p_renderModel_6_, p_renderModel_7_);
                         OutlineUtils.setColor(color);
                         OutlineUtils.renderThree();
-                        this.mainModel.render(p_renderModel_1_, p_renderModel_2_, p_renderModel_3_, p_renderModel_4_, p_renderModel_5_, p_renderModel_6_, p_renderModel_7_);
+                        mainModel.render(p_renderModel_1_, p_renderModel_2_, p_renderModel_3_, p_renderModel_4_, p_renderModel_5_, p_renderModel_6_, p_renderModel_7_);
                         OutlineUtils.setColor(color);
                         OutlineUtils.renderFour(color);
-                        this.mainModel.render(p_renderModel_1_, p_renderModel_2_, p_renderModel_3_, p_renderModel_4_, p_renderModel_5_, p_renderModel_6_, p_renderModel_7_);
+                        mainModel.render(p_renderModel_1_, p_renderModel_2_, p_renderModel_3_, p_renderModel_4_, p_renderModel_5_, p_renderModel_6_, p_renderModel_7_);
                         OutlineUtils.setColor(color);
                         OutlineUtils.renderFive();
                         OutlineUtils.setColor(Color.WHITE);
@@ -139,7 +139,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
                 mc.gameSettings.gammaSetting = gamma;
             }
 
-            this.mainModel.render(p_renderModel_1_, p_renderModel_2_, p_renderModel_3_, p_renderModel_4_, p_renderModel_5_, p_renderModel_6_, p_renderModel_7_);
+            mainModel.render(p_renderModel_1_, p_renderModel_2_, p_renderModel_3_, p_renderModel_4_, p_renderModel_5_, p_renderModel_6_, p_renderModel_7_);
 
             if (semiVisible) {
                 disableBlend();

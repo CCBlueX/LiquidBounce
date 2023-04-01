@@ -31,7 +31,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
 
     // Data Storage
     companion object {
-        var apiKey: String = ""
+        var apiKey = ""
     }
 
     // Buttons

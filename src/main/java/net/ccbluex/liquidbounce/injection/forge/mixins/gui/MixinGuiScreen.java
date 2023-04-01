@@ -130,7 +130,7 @@ public abstract class MixinGuiScreen {
     @Inject(method = "sendChatMessage(Ljava/lang/String;Z)V", at = @At("HEAD"), cancellable = true)
     private void messageSend(String msg, boolean addToChat, final CallbackInfo callbackInfo) {
         if (msg.startsWith(String.valueOf(commandManager.getPrefix())) && addToChat) {
-            this.mc.ingameGUI.getChatGUI().addToSentMessages(msg);
+            mc.ingameGUI.getChatGUI().addToSentMessages(msg);
 
             commandManager.executeCommands(msg);
             callbackInfo.cancel();
@@ -156,7 +156,7 @@ public abstract class MixinGuiScreen {
      */
     @Overwrite
     protected void actionPerformed(GuiButton button) {
-        this.injectedActionPerformed(button);
+        injectedActionPerformed(button);
     }
 
     protected void injectedActionPerformed(GuiButton button) {

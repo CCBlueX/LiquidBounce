@@ -21,8 +21,8 @@ class AirLadder : Module() {
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        val currBlock = getBlock(BlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ))
-        val block = getBlock(BlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ))
+        val currBlock = getBlock(BlockPos(thePlayer))
+        val block = getBlock(BlockPos(thePlayer).up())
         if ((block is BlockLadder && thePlayer.isCollidedHorizontally) || (block is BlockVine || currBlock is BlockVine)) {
             thePlayer.motionY = 0.15
             thePlayer.motionX = 0.0

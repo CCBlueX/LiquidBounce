@@ -22,7 +22,7 @@ class GuiMicrosoftLoginProgress(val updateStatus: (String) -> Unit, val done: ()
     private var oAuthServer: OAuthServer? = null
     private var loginUrl: String? = null
 
-    private var serverStopAlreadyCalled: Boolean = false
+    private var serverStopAlreadyCalled = false
 
     override fun initGui() {
         // This will start a login server and open the browser.

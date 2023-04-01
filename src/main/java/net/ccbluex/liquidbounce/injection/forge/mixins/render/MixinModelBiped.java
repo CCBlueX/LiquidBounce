@@ -38,11 +38,11 @@ public class MixinModelBiped {
     @Inject(method = "setRotationAngles", at = @At(value = "FIELD", target = "Lnet/minecraft/client/model/ModelBiped;swingProgress:F"))
     private void revertSwordAnimation(float p_setRotationAngles_1_, float p_setRotationAngles_2_, float p_setRotationAngles_3_, float p_setRotationAngles_4_, float p_setRotationAngles_5_, float p_setRotationAngles_6_, Entity p_setRotationAngles_7_, CallbackInfo callbackInfo) {
         if(heldItemRight == 3)
-            this.bipedRightArm.rotateAngleY = 0F;
+            bipedRightArm.rotateAngleY = 0F;
 
         if (moduleManager.getModule(Rotations.class).getState() && p_setRotationAngles_7_ instanceof EntityPlayer
                 && p_setRotationAngles_7_.equals(mc.thePlayer)) {
-            this.bipedHead.rotateAngleX = serverRotation.getPitch() / (180F / (float) Math.PI);
+            bipedHead.rotateAngleX = serverRotation.getPitch() / (180F / (float) Math.PI);
         }
     }
 }

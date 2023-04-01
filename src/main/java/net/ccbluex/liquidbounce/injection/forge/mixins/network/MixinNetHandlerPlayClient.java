@@ -87,24 +87,24 @@ public abstract class MixinNetHandlerPlayClient {
             return;
 
         PacketThreadUtil.checkThreadAndEnqueue(packetIn, (NetHandlerPlayClient) (Object) this, gameController);
-        this.gameController.playerController = new PlayerControllerMP(gameController, (NetHandlerPlayClient) (Object) this);
-        this.clientWorldController = new WorldClient((NetHandlerPlayClient) (Object) this, new WorldSettings(0L, packetIn.getGameType(), false, packetIn.isHardcoreMode(), packetIn.getWorldType()), packetIn.getDimension(), packetIn.getDifficulty(), this.gameController.mcProfiler);
-        this.gameController.gameSettings.difficulty = packetIn.getDifficulty();
-        this.gameController.loadWorld(this.clientWorldController);
-        this.gameController.thePlayer.dimension = packetIn.getDimension();
-        this.gameController.displayGuiScreen(new GuiDownloadTerrain((NetHandlerPlayClient) (Object) this));
-        this.gameController.thePlayer.setEntityId(packetIn.getEntityId());
-        this.currentServerMaxPlayers = packetIn.getMaxPlayers();
-        this.gameController.thePlayer.setReducedDebug(packetIn.isReducedDebugInfo());
-        this.gameController.playerController.setGameType(packetIn.getGameType());
-        this.gameController.gameSettings.sendSettingsToServer();
-        this.netManager.sendPacket(new C17PacketCustomPayload("MC|Brand", (new PacketBuffer(Unpooled.buffer())).writeString(ClientBrandRetriever.getClientModName())));
+        gameController.playerController = new PlayerControllerMP(gameController, (NetHandlerPlayClient) (Object) this);
+        clientWorldController = new WorldClient((NetHandlerPlayClient) (Object) this, new WorldSettings(0L, packetIn.getGameType(), false, packetIn.isHardcoreMode(), packetIn.getWorldType()), packetIn.getDimension(), packetIn.getDifficulty(), gameController.mcProfiler);
+        gameController.gameSettings.difficulty = packetIn.getDifficulty();
+        gameController.loadWorld(clientWorldController);
+        gameController.thePlayer.dimension = packetIn.getDimension();
+        gameController.displayGuiScreen(new GuiDownloadTerrain((NetHandlerPlayClient) (Object) this));
+        gameController.thePlayer.setEntityId(packetIn.getEntityId());
+        currentServerMaxPlayers = packetIn.getMaxPlayers();
+        gameController.thePlayer.setReducedDebug(packetIn.isReducedDebugInfo());
+        gameController.playerController.setGameType(packetIn.getGameType());
+        gameController.gameSettings.sendSettingsToServer();
+        netManager.sendPacket(new C17PacketCustomPayload("MC|Brand", (new PacketBuffer(Unpooled.buffer())).writeString(ClientBrandRetriever.getClientModName())));
         callbackInfo.cancel();
     }
 
     @Inject(method = "handleEntityMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/Entity;onGround:Z"))
     private void handleEntityMovementEvent(S14PacketEntity packetIn, final CallbackInfo callbackInfo) {
-        final Entity entity = packetIn.getEntity(this.clientWorldController);
+        final Entity entity = packetIn.getEntity(clientWorldController);
 
         if(entity != null)
             eventManager.callEvent(new EntityMovementEvent(entity));

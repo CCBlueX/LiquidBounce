@@ -31,7 +31,7 @@ class Particle {
     Particle(int x, int y) {
         this.x = x;
         this.y = y;
-        this.size = genRandom();
+        size = genRandom();
     }
 
     private float lint1(float f) {

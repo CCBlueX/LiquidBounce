@@ -20,7 +20,7 @@ public class SafeVertexBuffer extends VertexBuffer {
 
     @Override
     protected void finalize() {
-        this.deleteGlBuffers();
+        deleteGlBuffers();
     }
 
 }

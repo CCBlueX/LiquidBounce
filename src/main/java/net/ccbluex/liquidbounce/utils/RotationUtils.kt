@@ -290,10 +290,11 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param entity your entity
      * @return difference between rotation
      */
-    fun getRotationDifference(entity: Entity): Float {
-        val rotation = toRotation(getCenter(entity.hitBox), true)
-        return getRotationDifference(rotation, Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch))
-    }
+    fun getRotationDifference(entity: Entity) =
+        getRotationDifference(
+            toRotation(getCenter(entity.hitBox), true),
+            Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)
+        )
 
     /**
      * Calculate difference between the server rotation and your rotation
@@ -321,15 +322,13 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param turnSpeed your turn speed
      * @return limited rotation
      */
-    fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation, turnSpeed: Float): Rotation {
-        val yawDifference = getAngleDifference(targetRotation.yaw, currentRotation.yaw)
-        val pitchDifference = getAngleDifference(targetRotation.pitch, currentRotation.pitch)
-
-        return Rotation(
-            currentRotation.yaw + yawDifference.coerceIn(-turnSpeed, turnSpeed),
-            currentRotation.pitch + pitchDifference.coerceIn(-turnSpeed, turnSpeed)
+    fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation, turnSpeed: Float) =
+        Rotation(
+            currentRotation.yaw + getAngleDifference(targetRotation.yaw, currentRotation.yaw)
+                .coerceIn(-turnSpeed, turnSpeed),
+            currentRotation.pitch + getAngleDifference(targetRotation.pitch, currentRotation.pitch)
+                .coerceIn(-turnSpeed, turnSpeed)
         )
-    }
 
     /**
      * Calculate difference between two angle points

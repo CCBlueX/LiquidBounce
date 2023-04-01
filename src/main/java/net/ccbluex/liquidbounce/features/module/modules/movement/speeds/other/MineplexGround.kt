@@ -38,7 +38,7 @@ class MineplexGround : SpeedMode("MineplexGround") {
             speed = 0f
             return
         }
-        if (!spoofSlot && mc.thePlayer.inventory.getCurrentItem() != null) {
+        if (!spoofSlot && mc.thePlayer.heldItem != null) {
             displayChatMessage("§8[§c§lMineplex§aSpeed§8] §cYou need one empty slot.")
             return
         }

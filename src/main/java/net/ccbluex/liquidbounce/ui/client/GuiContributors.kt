@@ -167,7 +167,7 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
             val gitHubContributors = PRETTY_GSON.fromJson(get("https://api.github.com/repos/CCBlueX/LiquidBounce/stats/contributors"), Array<GitHubContributor>::class.java)
             val additionalInformation = jsonParser.parse(get("https://raw.githubusercontent.com/CCBlueX/LiquidCloud/master/LiquidBounce/contributors.json")).asJsonObject
 
-            val credits = ArrayList<Credit>(gitHubContributors.size)
+            val credits = mutableListOf<Credit>()
 
             for (gitHubContributor in gitHubContributors) {
                 var contributorInformation: ContributorInformation? = null
@@ -211,7 +211,7 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
 
             for (credit in credits) {
                 try {
-                    requestStream("${credit.avatarUrl}?s=${fontRendererObj.FONT_HEIGHT * 4}", "GET")?.use {
+                    requestStream("${credit.avatarUrl}?s=${fontRendererObj.FONT_HEIGHT * 4}", "GET").use {
                         credit.avatar = CustomTexture(ImageIO.read(it))
                     }
                 } catch (_: Exception) {
@@ -241,7 +241,7 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
             mixin.setEnableScissor(true)
         }
 
-        var selectedSlot: Int = 0
+        var selectedSlot = 0
             set(value) {
                 field = value.coerceIn(0, credits.lastIndex)
             }

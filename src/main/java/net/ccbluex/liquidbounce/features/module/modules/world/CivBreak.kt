@@ -53,14 +53,15 @@ class CivBreak : Module() {
     @EventTarget
     fun onUpdate(event: MotionEvent) {
         val pos = blockPos ?: return
+        val isAirBlock = getBlock(pos) == Blocks.air
 
-        if (airResetValue.get() && getBlock(pos) == Blocks.air ||
+        if (airResetValue.get() && isAirBlock ||
                 rangeResetValue.get() && getCenterDistance(pos) > range.get()) {
             blockPos = null
             return
         }
 
-        if (getBlock(pos) == Blocks.air || getCenterDistance(pos) > range.get())
+        if (isAirBlock || getCenterDistance(pos) > range.get())
             return
 
         when (event.eventState) {

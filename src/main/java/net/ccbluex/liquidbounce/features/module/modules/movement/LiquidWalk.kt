@@ -63,7 +63,7 @@ class LiquidWalk : Module() {
                     thePlayer.motionY += 0.15
                     return
                 }
-                val block = getBlock(BlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ))
+                val block = getBlock(BlockPos(thePlayer).up())
                 val blockUp = getBlock(BlockPos(thePlayer.posX, thePlayer.posY + 1.1, thePlayer.posZ))
 
                 if (blockUp is BlockLiquid) {
@@ -81,7 +81,7 @@ class LiquidWalk : Module() {
                 thePlayer.motionZ *= 1.17
                 if (thePlayer.isCollidedHorizontally)
                     thePlayer.motionY = 0.24
-                else if (mc.theWorld.getBlockState(BlockPos(thePlayer.posX, thePlayer.posY + 1.0, thePlayer.posZ)).block != Blocks.air)
+                else if (getBlock(BlockPos(thePlayer).up()) != Blocks.air)
                     thePlayer.motionY += 0.04
             }
             "dolphin" -> if (thePlayer.isInWater) thePlayer.motionY += 0.03999999910593033

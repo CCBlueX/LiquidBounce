@@ -170,18 +170,18 @@ class GuiClientConfiguration(val prevGui: GuiScreen) : GuiScreen() {
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
         drawBackground(0)
-        Fonts.fontBold180.drawCenteredString("Configuration", this.width / 2F, height / 8F + 5F,
+        Fonts.fontBold180.drawCenteredString("Configuration", width / 2F, height / 8F + 5F,
                 4673984, true)
 
-        Fonts.font40.drawString("Window", this.width / 2F - 98F, height / 4F + 15F,
+        Fonts.font40.drawString("Window", width / 2F - 98F, height / 4F + 15F,
             0xFFFFFF, true)
 
-        Fonts.font40.drawString("Background", this.width / 2F - 98F, height / 4F + 65F,
+        Fonts.font40.drawString("Background", width / 2F - 98F, height / 4F + 65F,
             0xFFFFFF, true)
-        Fonts.font35.drawString("Supported background types: (.png, .frag, .glsl)", this.width / 2F - 98F, height / 4F + 75 + 25 * 3,
+        Fonts.font35.drawString("Supported background types: (.png, .frag, .glsl)", width / 2F - 98F, height / 4F + 75 + 25 * 3,
             0xFFFFFF, true)
 
-        Fonts.font40.drawString("AltManager", this.width / 2F - 98F, height / 4F + 175F,
+        Fonts.font40.drawString("AltManager", width / 2F - 98F, height / 4F + 175F,
             0xFFFFFF, true)
         super.drawScreen(mouseX, mouseY, partialTicks)
     }

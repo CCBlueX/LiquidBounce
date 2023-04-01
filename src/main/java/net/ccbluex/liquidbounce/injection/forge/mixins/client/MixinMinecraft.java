@@ -181,8 +181,8 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "sendClickBlockToController", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/MovingObjectPosition;getBlockPos()Lnet/minecraft/util/BlockPos;"))
     private void onClickBlock(CallbackInfo callbackInfo) {
-        if (this.leftClickCounter == 0 && theWorld.getBlockState(objectMouseOver.getBlockPos()).getBlock().getMaterial() != Material.air) {
-            eventManager.callEvent(new ClickBlockEvent(objectMouseOver.getBlockPos(), this.objectMouseOver.sideHit));
+        if (leftClickCounter == 0 && theWorld.getBlockState(objectMouseOver.getBlockPos()).getBlock().getMaterial() != Material.air) {
+            eventManager.callEvent(new ClickBlockEvent(objectMouseOver.getBlockPos(), objectMouseOver.sideHit));
         }
     }
 
@@ -229,8 +229,8 @@ public abstract class MixinMinecraft {
                 && (thePlayer.getHeldItem() == null || !(thePlayer.getHeldItem().getItem() instanceof ItemBlock)))
             return;
 
-        if (this.objectMouseOver != null && this.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
-            BlockPos blockPos = this.objectMouseOver.getBlockPos();
+        if (objectMouseOver != null && objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+            BlockPos blockPos = objectMouseOver.getBlockPos();
             IBlockState blockState = theWorld.getBlockState(blockPos);
             // Don't spam-click when interacting with a TileEntity (chests, ...)
             // Doesn't prevent spam-clicking anvils, crafting tables, ... (couldn't figure out a non-hacky way)
@@ -255,22 +255,22 @@ public abstract class MixinMinecraft {
      */
     @Overwrite
     private void sendClickBlockToController(boolean leftClick) {
-        if (!leftClick) this.leftClickCounter = 0;
+        if (!leftClick) leftClickCounter = 0;
 
-        if (this.leftClickCounter <= 0 && (!this.thePlayer.isUsingItem() || moduleManager.getModule(MultiActions.class).getState())) {
-            if (leftClick && this.objectMouseOver != null && this.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
-                BlockPos blockPos = this.objectMouseOver.getBlockPos();
+        if (leftClickCounter <= 0 && (!thePlayer.isUsingItem() || moduleManager.getModule(MultiActions.class).getState())) {
+            if (leftClick && objectMouseOver != null && objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+                BlockPos blockPos = objectMouseOver.getBlockPos();
 
-                if (this.leftClickCounter == 0)
-                    eventManager.callEvent(new ClickBlockEvent(blockPos, this.objectMouseOver.sideHit));
+                if (leftClickCounter == 0)
+                    eventManager.callEvent(new ClickBlockEvent(blockPos, objectMouseOver.sideHit));
 
 
-                if (this.theWorld.getBlockState(blockPos).getBlock().getMaterial() != Material.air && this.playerController.onPlayerDamageBlock(blockPos, this.objectMouseOver.sideHit)) {
-                    this.effectRenderer.addBlockHitEffects(blockPos, this.objectMouseOver.sideHit);
-                    this.thePlayer.swingItem();
+                if (theWorld.getBlockState(blockPos).getBlock().getMaterial() != Material.air && playerController.onPlayerDamageBlock(blockPos, objectMouseOver.sideHit)) {
+                    effectRenderer.addBlockHitEffects(blockPos, objectMouseOver.sideHit);
+                    thePlayer.swingItem();
                 }
             } else if (!moduleManager.getModule(AbortBreaking.class).getState()) {
-                this.playerController.resetBlockRemoving();
+                playerController.resetBlockRemoving();
             }
         }
     }

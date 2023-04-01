@@ -21,12 +21,12 @@ import java.awt.image.BufferedImage
  * Generate new bitmap based font renderer
  */
 @SideOnly(Side.CLIENT)
-class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, var loadingScreen: Boolean = false) : MinecraftInstance() {
+class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, private var loadingScreen: Boolean = false) : MinecraftInstance() {
     companion object {
-        var assumeNonVolatile: Boolean = false
-        val activeFontRenderers: ArrayList<AWTFontRenderer> = ArrayList()
+        var assumeNonVolatile = false
+        val activeFontRenderers = mutableListOf<AWTFontRenderer>()
 
-        private var gcTicks: Int = 0
+        private var gcTicks = 0
         private const val GC_TICKS = 600 // Start garbage collection every 600 frames
         private const val CACHED_FONT_REMOVAL_TIME = 30000 // Remove cached texts after 30s of not being used
 
@@ -54,7 +54,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, v
     private var fontHeight = -1
     private val charLocations = arrayOfNulls<CharLocation>(stopChar)
 
-    private val cachedStrings: HashMap<String, CachedFont> = HashMap()
+    private val cachedStrings = mutableMapOf<String, CachedFont>()
 
     private var textureID = -1
     private var textureWidth = 0
@@ -85,15 +85,15 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, v
         glScaled(scale, scale, scale)
         glTranslated(x * 2F, y * 2.0 - 2.0, 0.0)
 
-        if (this.loadingScreen)
+        if (loadingScreen)
             glBindTexture(GL_TEXTURE_2D, textureID)
         else
             bindTexture(textureID)
 
-        val red: Float = (color shr 16 and 0xff) / 255F
-        val green: Float = (color shr 8 and 0xff) / 255F
-        val blue: Float = (color and 0xff) / 255F
-        val alpha: Float = (color shr 24 and 0xff) / 255F
+        val red = (color shr 16 and 0xff) / 255F
+        val green = (color shr 8 and 0xff) / 255F
+        val blue = (color and 0xff) / 255F
+        val alpha = (color shr 24 and 0xff) / 255F
 
         glColor4f(red, green, blue, alpha)
 
@@ -132,7 +132,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, v
 
                 glScaled(scale, scale, scale)
 
-                if (this.loadingScreen)
+                if (loadingScreen)
                     glBindTexture(GL_TEXTURE_2D, textureID)
                 else
                     bindTexture(textureID)

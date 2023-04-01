@@ -55,7 +55,7 @@ class IceSpeed : Module() {
             if (mode == "Spartan") {
                 getMaterial(thePlayer.position.down()).let {
                     if (it == Blocks.ice || it == Blocks.packed_ice) {
-                        val upBlock = getBlock(BlockPos(thePlayer.posX, thePlayer.posY + 2.0, thePlayer.posZ))
+                        val upBlock = getBlock(BlockPos(thePlayer).up(2))
 
                         if (upBlock != Blocks.air) {
                             thePlayer.motionX *= 1.342

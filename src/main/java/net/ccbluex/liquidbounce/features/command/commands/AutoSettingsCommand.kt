@@ -89,7 +89,7 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
                             "https://api.github.com/repos/CCBlueX/LiquidCloud/contents/LiquidBounce/settings"
                     ))
 
-                    val autoSettings: MutableList<String> = mutableListOf()
+                    val autoSettings = mutableListOf<String>()
 
                     if (json is JsonArray) {
                         for (setting in json)
@@ -98,7 +98,7 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
 
                     callback(autoSettings)
 
-                    this.autoSettingFiles = autoSettings
+                    autoSettingFiles = autoSettings
                 } catch (e: Exception) {
                     chat("Failed to fetch auto settings list.")
                 }
@@ -118,7 +118,7 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
             2 -> {
                 if (args[0].equals("load", true)) {
                     if (autoSettingFiles == null) {
-                        this.loadSettings(true, 500) {}
+                        loadSettings(true, 500) {}
                     }
 
                     if (autoSettingFiles != null) {

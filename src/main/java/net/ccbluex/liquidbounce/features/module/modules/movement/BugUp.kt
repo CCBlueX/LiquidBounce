@@ -59,7 +59,7 @@ class BugUp : Module() {
 
         val thePlayer = mc.thePlayer ?: return
 
-        if (thePlayer.onGround && getBlock(BlockPos(thePlayer).down(1)) !is BlockAir) {
+        if (thePlayer.onGround && getBlock(BlockPos(thePlayer).down()) !is BlockAir) {
             prevX = thePlayer.prevPosX
             prevY = thePlayer.prevPosY
             prevZ = thePlayer.prevPosZ
