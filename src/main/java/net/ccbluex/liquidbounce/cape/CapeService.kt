@@ -37,6 +37,10 @@ import kotlin.concurrent.thread
  */
 object CapeService : Listenable, MinecraftInstance() {
 
+    /**
+     * The API URL to get all cape carriers.
+     * Format: [["8f617b6abea04af58e4bd026d8fa9de8", "marco"], ...]
+     */
     private const val CAPE_CARRIERS_URL = "$CLIENT_API/cape/carriers"
 
     /**
@@ -45,10 +49,13 @@ object CapeService : Listenable, MinecraftInstance() {
      */
     private const val CAPE_API = "http://capes.liquidbounce.net/api/v1/cape"
 
+    @Deprecated("Use CAPE_CARRIERS_URL instead.")
     private const val CAPE_UUID_DL_BASE_URL = "$CAPE_API/uuid/%s"
     private const val CAPE_NAME_DL_BASE_URL = "$CAPE_API/name/%s"
 
     private const val REFRESH_DELAY = 60000L // Every minute should update
+
+    private const val CAPE_UPDATE_SELF = "$CAPE_API/self"
 
     /**
      * Collection of all cape carriers on the API.
@@ -62,11 +69,11 @@ object CapeService : Listenable, MinecraftInstance() {
      * Refresh cape carriers, capture from the API.
      * It will take a list of (uuid, cape_name) tuples.
      */
-    fun refreshCapeCarriers(done: () -> Unit) {
+    fun refreshCapeCarriers(force: Boolean = false, done: () -> Unit) {
         // Check if there is not another task running which could conflict.
         if (task == null) {
             // Check if the required time in milliseconds has passed of the REFRESH_DELAY
-            if (lastUpdate.hasTimePassed(REFRESH_DELAY)) {
+            if (lastUpdate.hasTimePassed(REFRESH_DELAY) || force) {
                 task = thread(name = "UpdateCarriersTask") {
                     runCatching {
                         // Capture data from API and parse JSON
@@ -138,7 +145,7 @@ object CapeService : Listenable, MinecraftInstance() {
                 BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json"),
                 BasicHeader(HttpHeaders.AUTHORIZATION, GuiDonatorCape.transferCode)
             )
-            val request = HttpPatch("http://capes.liquidbounce.net/api/v1/cape/self")
+            val request = HttpPatch(CAPE_UPDATE_SELF)
             request.setHeaders(headers)
 
             val body = JSONObject()
@@ -156,8 +163,10 @@ object CapeService : Listenable, MinecraftInstance() {
                 }
             )
 
-            // Reset cape carrier update
-            lastUpdate.zero()
+            // Refresh cape carriers
+            refreshCapeCarriers(force = true) {
+                LOGGER.info("Successfully loaded ${capeCarriers.count()} cape carriers.")
+            }
         }
     }
 
