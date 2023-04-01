@@ -5,9 +5,11 @@
  */
 package net.ccbluex.liquidbounce.ui.client.altmanager.menus
 
+import net.ccbluex.liquidbounce.cape.CapeService
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.elements.GuiPasswordField
 import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.minecraft.client.gui.GuiButton
@@ -110,6 +112,7 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
                             BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json"),
                             BasicHeader(HttpHeaders.AUTHORIZATION, transferCodeField.text)
                     )
+
                     val request = if (capeEnabled) {
                         HttpDelete("http://capes.liquidbounce.net/api/v1/cape/self")
                     } else {
@@ -128,6 +131,11 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
                         }
                     } else {
                         "§cFailed to toggle cape ($statusCode)"
+                    }
+
+                    // Refresh cape carriers
+                    CapeService.refreshCapeCarriers(force = true) {
+                        ClientUtils.LOGGER.info("Successfully loaded ${CapeService.capeCarriers.count()} cape carriers.")
                     }
 
                     stateButton.enabled = true
