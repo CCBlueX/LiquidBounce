@@ -57,7 +57,7 @@ class BlockOverlay : Module() {
     fun onRender3D(event: Render3DEvent) {
         val blockPos = currentBlock ?: return
 
-        val block = mc.theWorld.getBlockState(blockPos).block
+        val block = getBlock(blockPos) ?: return
         val partialTicks = event.partialTicks
 
         val color = if (colorRainbow.get()) rainbow(alpha = 0.4F) else Color(colorRedValue.get(),

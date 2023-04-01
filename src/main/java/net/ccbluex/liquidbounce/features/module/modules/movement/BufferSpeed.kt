@@ -202,7 +202,7 @@ class BufferSpeed : Module() {
 
             if (wallValue.get()) {
                 when (wallModeValue.get().lowercase()) {
-                    "old" -> if (thePlayer.isCollidedVertically && isNearBlock || getBlock(BlockPos(thePlayer.posX, thePlayer.posY + 2.0, thePlayer.posZ)) != Blocks.air) {
+                    "old" -> if (thePlayer.isCollidedVertically && isNearBlock || getBlock(BlockPos(thePlayer).up(2)) != Blocks.air) {
                         boost(wallBoostValue.get())
                         return
                     }

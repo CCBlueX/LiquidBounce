@@ -37,7 +37,7 @@ import kotlin.concurrent.thread
  */
 object CapeService : Listenable, MinecraftInstance() {
 
-    private const val CAPE_CARRIERS_URL: String = "$CLIENT_API/cape/carriers"
+    private const val CAPE_CARRIERS_URL = "$CLIENT_API/cape/carriers"
 
     /**
      * I would prefer to use CLIENT_API but due to Cloudflare causing issues with SSL and their browser integrity check,
@@ -45,10 +45,10 @@ object CapeService : Listenable, MinecraftInstance() {
      */
     private const val CAPE_API = "http://capes.liquidbounce.net/api/v1/cape"
 
-    private const val CAPE_UUID_DL_BASE_URL: String = "$CAPE_API/uuid/%s"
-    private const val CAPE_NAME_DL_BASE_URL: String = "$CAPE_API/name/%s"
+    private const val CAPE_UUID_DL_BASE_URL = "$CAPE_API/uuid/%s"
+    private const val CAPE_NAME_DL_BASE_URL = "$CAPE_API/name/%s"
 
-    private const val REFRESH_DELAY: Long = 60000L // Every minute should update
+    private const val REFRESH_DELAY = 60000L // Every minute should update
 
     /**
      * Collection of all cape carriers on the API.

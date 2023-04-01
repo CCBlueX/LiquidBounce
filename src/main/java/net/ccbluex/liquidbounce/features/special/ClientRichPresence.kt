@@ -36,7 +36,7 @@ class ClientRichPresence : MinecraftInstance() {
     private val timestamp = OffsetDateTime.now()
 
     // Status of running
-    private var running: Boolean = false
+    private var running = false
 
     /**
      * Setup Discord RPC

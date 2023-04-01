@@ -120,7 +120,7 @@ class Nuker : Module() {
                     "Hardness" -> validBlocks.maxByOrNull { (pos, block) ->
                         val hardness = block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld, pos).toDouble()
 
-                        val safePos = BlockPos(thePlayer.posX, thePlayer.posY - 1, thePlayer.posZ)
+                        val safePos = BlockPos(thePlayer).down()
                         if (pos.x == safePos.x && safePos.y <= pos.y && pos.z == safePos.z)
                             Double.MIN_VALUE + hardness // Last block
                         else
@@ -224,7 +224,7 @@ class Nuker : Module() {
     fun onRender3D(event: Render3DEvent) {
         // Safe block
         if (!layerValue.get()) {
-            val safePos = BlockPos(mc.thePlayer.posX, mc.thePlayer.posY - 1, mc.thePlayer.posZ)
+            val safePos = BlockPos(mc.thePlayer).down()
             val safeBlock = getBlock(safePos)
             if (safeBlock != null && validBlock(safeBlock))
                 drawBlockBox(safePos, Color.GREEN, true)

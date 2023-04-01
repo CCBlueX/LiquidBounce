@@ -198,12 +198,12 @@ public abstract class MixinEntity {
         if (moduleManager.getModule(NoPitchLimit.class).getState()) {
             callbackInfo.cancel();
 
-            float f = this.rotationPitch;
-            float f1 = this.rotationYaw;
-            this.rotationYaw = (float) ((double) this.rotationYaw + (double) yaw * 0.15D);
-            this.rotationPitch = (float) ((double) this.rotationPitch - (double) pitch * 0.15D);
-            this.prevRotationPitch += this.rotationPitch - f;
-            this.prevRotationYaw += this.rotationYaw - f1;
+            float f = rotationPitch;
+            float f1 = rotationYaw;
+            rotationYaw = (float) ((double) rotationYaw + (double) yaw * 0.15D);
+            rotationPitch = (float) ((double) rotationPitch - (double) pitch * 0.15D);
+            prevRotationPitch += rotationPitch - f;
+            prevRotationYaw += rotationYaw - f1;
         }
     }
 

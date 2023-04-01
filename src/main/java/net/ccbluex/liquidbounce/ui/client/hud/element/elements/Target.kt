@@ -38,7 +38,7 @@ class Target : Element() {
     private val decimalFormat = DecimalFormat("##0.00", DecimalFormatSymbols(Locale.ENGLISH))
     private val fadeSpeed = FloatValue("FadeSpeed", 2F, 1F, 9F)
 
-    private var easingHealth: Float = 0F
+    private var easingHealth = 0F
     private var lastTarget: Entity? = null
 
     override fun drawElement(): Border {

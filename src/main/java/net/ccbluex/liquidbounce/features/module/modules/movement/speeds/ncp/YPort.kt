@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.hasMotion
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.minecraft.block.Block
 import net.minecraft.block.material.Material
 import net.minecraft.init.Blocks
@@ -30,7 +31,7 @@ class YPort : SpeedMode("YPort") {
     private var safeJump = false
     override fun onMotion() {
         if (!safeJump && !mc.gameSettings.keyBindJump.isKeyDown && !mc.thePlayer.isOnLadder && !mc.thePlayer.isInsideOfMaterial(
-                Material.water) && !mc.thePlayer.isInsideOfMaterial(Material.lava) && !mc.thePlayer.isInWater && (this.getBlock(-1.1) != Blocks.air && this.getBlock(-1.1) != Blocks.air || this.getBlock(-0.1) != Blocks.air && mc.thePlayer.motionX != 0.0 && mc.thePlayer.motionZ != 0.0 && !mc.thePlayer.onGround && mc.thePlayer.fallDistance < 3f && mc.thePlayer.fallDistance > 0.05) && level == 3) mc.thePlayer.motionY = -0.3994
+                Material.water) && !mc.thePlayer.isInsideOfMaterial(Material.lava) && !mc.thePlayer.isInWater && (getBlock(-1.1) != Blocks.air && getBlock(-1.1) != Blocks.air || getBlock(-0.1) != Blocks.air && mc.thePlayer.motionX != 0.0 && mc.thePlayer.motionZ != 0.0 && !mc.thePlayer.onGround && mc.thePlayer.fallDistance < 3f && mc.thePlayer.fallDistance > 0.05) && level == 3) mc.thePlayer.motionY = -0.3994
         val xDist = mc.thePlayer.posX - mc.thePlayer.prevPosX
         val zDist = mc.thePlayer.posZ - mc.thePlayer.prevPosZ
         lastDist = sqrt(xDist * xDist + zDist * zDist)
@@ -116,7 +117,7 @@ class YPort : SpeedMode("YPort") {
     private fun getBlock(axisAlignedBB: AxisAlignedBB): Block? {
         for (x in floor(axisAlignedBB.minX).toInt() until floor(axisAlignedBB.maxX).toInt() + 1) {
             for (z in floor(axisAlignedBB.minZ).toInt() until floor(axisAlignedBB.maxZ).toInt() + 1) {
-                val block = mc.theWorld.getBlockState(BlockPos(x, axisAlignedBB.minY.toInt(), z)).block
+                val block = BlockUtils.getBlock(BlockPos(x, axisAlignedBB.minY.toInt(), z))
 
                 if (block != null)
                     return block
@@ -125,7 +126,7 @@ class YPort : SpeedMode("YPort") {
         return null
     }
 
-    private fun getBlock(offset: Double): Block? = this.getBlock(mc.thePlayer.entityBoundingBox.offset(0.0, offset, 0.0))
+    private fun getBlock(offset: Double) = getBlock(mc.thePlayer.entityBoundingBox.offset(0.0, offset, 0.0))
 
     private fun round(value: Double): Double {
         var bd = BigDecimal(value)

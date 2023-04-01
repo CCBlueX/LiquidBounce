@@ -48,7 +48,7 @@ public class MixinChunk {
 
     @Inject(method = "onChunkUnload", at = @At("HEAD"))
     private void injectFillChunk(CallbackInfo ci) {
-        MiniMapRegister.INSTANCE.unloadChunk(this.xPosition, this.zPosition);
+        MiniMapRegister.INSTANCE.unloadChunk(xPosition, zPosition);
     }
 
     @Inject(method = "fillChunk", at = @At("RETURN"))

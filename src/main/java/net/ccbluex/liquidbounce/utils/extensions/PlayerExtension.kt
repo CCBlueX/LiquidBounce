@@ -28,10 +28,7 @@ import net.minecraft.util.Vec3
 /**
  * Allows to get the distance between the current entity and [entity] from the nearest corner of the bounding box
  */
-fun Entity.getDistanceToEntityBox(entity: Entity): Double {
-    val pos = getNearestPointBB(eyes, entity.hitBox)
-    return eyes.distanceTo(pos)
-}
+fun Entity.getDistanceToEntityBox(entity: Entity) = eyes.distanceTo(getNearestPointBB(eyes, entity.hitBox))
 
 fun getNearestPointBB(eye: Vec3, box: AxisAlignedBB): Vec3 {
     val origin = doubleArrayOf(eye.xCoord, eye.yCoord, eye.zCoord)
@@ -43,25 +40,20 @@ fun getNearestPointBB(eye: Vec3, box: AxisAlignedBB): Vec3 {
     return Vec3(origin[0], origin[1], origin[2])
 }
 
-fun EntityPlayer.getPing(): Int {
-    val playerInfo = mc.netHandler.getPlayerInfo(uniqueID)
-    return playerInfo?.responseTime ?: 0
-}
+fun EntityPlayer.getPing() = mc.netHandler.getPlayerInfo(uniqueID)?.responseTime ?: 0
 
-fun Entity.isAnimal(): Boolean {
-    return this is EntityAnimal ||
-            this is EntitySquid ||
-            this is EntityGolem ||
-            this is EntityBat
-}
+fun Entity.isAnimal() =
+    this is EntityAnimal
+        || this is EntitySquid
+        || this is EntityGolem
+        || this is EntityBat
 
-fun Entity.isMob(): Boolean {
-    return this is EntityMob ||
-            this is EntityVillager ||
-            this is EntitySlime ||
-            this is EntityGhast ||
-            this is EntityDragon
-}
+fun Entity.isMob() =
+    this is EntityMob
+        || this is EntityVillager
+        || this is EntitySlime
+        || this is EntityGhast
+        || this is EntityDragon
 
 fun EntityPlayer.isClientFriend(): Boolean {
     val entityName = name ?: return false
@@ -69,7 +61,7 @@ fun EntityPlayer.isClientFriend(): Boolean {
     return friendsConfig.isFriend(stripColor(entityName))
 }
 
-val Entity.rotation: Rotation
+val Entity.rotation
     get() = Rotation(rotationYaw, rotationPitch)
 
 val Entity.hitBox: AxisAlignedBB
@@ -91,13 +83,13 @@ fun EntityPlayerSP.setFixedSensitivityAngles(yaw: Float? = null, pitch: Float? =
     if (pitch != null) fixedSensitivityPitch = pitch
 }
 
-var EntityPlayerSP.fixedSensitivityYaw: Float
+var EntityPlayerSP.fixedSensitivityYaw
     get() = getFixedSensitivityAngle(mc.thePlayer.rotationYaw)
     set(yaw) {
         rotationYaw = getFixedSensitivityAngle(yaw, rotationYaw)
     }
 
-var EntityPlayerSP.fixedSensitivityPitch: Float
+var EntityPlayerSP.fixedSensitivityPitch
     get() = getFixedSensitivityAngle(rotationPitch)
     set(pitch) {
         rotationPitch = getFixedSensitivityAngle(pitch.coerceIn(-90f, 90f), rotationPitch)

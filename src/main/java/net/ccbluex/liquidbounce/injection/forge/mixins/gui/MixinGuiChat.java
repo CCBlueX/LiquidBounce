@@ -95,7 +95,7 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
             if (full.toLowerCase().endsWith(latestAutoComplete[latestAutoComplete.length - 1].toLowerCase()))
                 return;
 
-            this.onAutocompleteResponse(latestAutoComplete);
+            onAutocompleteResponse(latestAutoComplete);
 
             callbackInfo.cancel();
         }
@@ -117,8 +117,8 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
      */
     @Overwrite
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        Gui.drawRect(2, this.height - (int) fade, this.width - 2, this.height, Integer.MIN_VALUE);
-        this.inputField.drawTextBox();
+        Gui.drawRect(2, height - (int) fade, width - 2, height, Integer.MIN_VALUE);
+        inputField.drawTextBox();
 
         if (commandManager.getLatestAutoComplete().length > 0 && !inputField.getText().isEmpty() && inputField.getText().startsWith(String.valueOf(commandManager.getPrefix()))) {
             String[] latestAutoComplete = commandManager.getLatestAutoComplete();
@@ -129,9 +129,9 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
         }
 
         IChatComponent ichatcomponent =
-                this.mc.ingameGUI.getChatGUI().getChatComponent(Mouse.getX(), Mouse.getY());
+                mc.ingameGUI.getChatGUI().getChatComponent(Mouse.getX(), Mouse.getY());
 
         if (ichatcomponent != null)
-            this.handleComponentHover(ichatcomponent, mouseX, mouseY);
+            handleComponentHover(ichatcomponent, mouseX, mouseY);
     }
 }

@@ -26,7 +26,6 @@ import org.lwjgl.input.Keyboard
 import java.awt.Color
 import java.awt.Desktop
 import java.io.File
-import java.io.FileOutputStream
 import java.net.URL
 import java.util.zip.ZipFile
 
@@ -88,7 +87,7 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
                         }
 
                         val fileStream = zipFile.getInputStream(entry)
-                        val fileOutputStream = FileOutputStream(entryFile)
+                        val fileOutputStream = entryFile.outputStream()
 
                         IOUtils.copy(fileStream, fileOutputStream)
                         fileOutputStream.close()

@@ -43,17 +43,17 @@ public abstract class MixinBlockLadder extends MixinBlock {
 
             switch(blockState.getValue(FACING)) {
                 case NORTH:
-                    this.setBlockBounds(0f, 0f, 1f - f, 1f, 1f, 1f);
+                    setBlockBounds(0f, 0f, 1f - f, 1f, 1f, 1f);
                     break;
                 case SOUTH:
-                    this.setBlockBounds(0f, 0f, 0f, 1f, 1f, f);
+                    setBlockBounds(0f, 0f, 0f, 1f, 1f, f);
                     break;
                 case WEST:
-                    this.setBlockBounds(1f - f, 0f, 0f, 1f, 1f, 1f);
+                    setBlockBounds(1f - f, 0f, 0f, 1f, 1f, 1f);
                     break;
                 case EAST:
                 default:
-                    this.setBlockBounds(0f, 0f, 0f, f, 1f, 1f);
+                    setBlockBounds(0f, 0f, 0f, f, 1f, 1f);
             }
         }
     }

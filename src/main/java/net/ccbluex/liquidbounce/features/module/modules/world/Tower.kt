@@ -171,7 +171,7 @@ class Tower : Module() {
             if (update) {
                 if (!stopWhenBlockAbove.get() || getBlock(BlockPos(thePlayer).up(2)) == Blocks.air) move()
 
-                val blockPos = BlockPos(thePlayer).down(1)
+                val blockPos = BlockPos(thePlayer).down()
                 if (blockPos.getBlock() == Blocks.air) {
                     if (search(blockPos) && rotationsValue.get()) {
                         val vecRotation = faceBlock(blockPos)

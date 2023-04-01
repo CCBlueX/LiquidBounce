@@ -27,7 +27,7 @@ class Spammer : Module() {
             val minDelay = minDelayValue.get()
             if (minDelay > newValue) {
                 set(minDelay)
-                delay = TimeUtils.randomDelay(minDelayValue.get(), this.get())
+                delay = TimeUtils.randomDelay(minDelayValue.get(), get())
             }
         }
     }
@@ -37,7 +37,7 @@ class Spammer : Module() {
             val maxDelay = maxDelayValue.get()
             if (maxDelay < newValue) {
                 set(maxDelay)
-                delay = TimeUtils.randomDelay(this.get(), maxDelayValue.get())
+                delay = TimeUtils.randomDelay(get(), maxDelayValue.get())
             }
         }
 

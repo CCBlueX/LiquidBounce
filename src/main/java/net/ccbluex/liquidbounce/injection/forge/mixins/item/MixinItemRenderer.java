@@ -17,6 +17,7 @@ import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.EnumAction;
+import net.minecraft.item.ItemMap;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
 import net.minecraftforge.fml.relauncher.Side;
@@ -84,33 +85,33 @@ public abstract class MixinItemRenderer {
      */
     @Overwrite
     public void renderItemInFirstPerson(float partialTicks) {
-        float f = 1f - (this.prevEquippedProgress + (this.equippedProgress - this.prevEquippedProgress) * partialTicks);
-        EntityPlayerSP abstractclientplayer = this.mc.thePlayer;
+        float f = 1f - (prevEquippedProgress + (equippedProgress - prevEquippedProgress) * partialTicks);
+        EntityPlayerSP abstractclientplayer = mc.thePlayer;
         float f1 = abstractclientplayer.getSwingProgress(partialTicks);
         float f2 = abstractclientplayer.prevRotationPitch + (abstractclientplayer.rotationPitch - abstractclientplayer.prevRotationPitch) * partialTicks;
         float f3 = abstractclientplayer.prevRotationYaw + (abstractclientplayer.rotationYaw - abstractclientplayer.prevRotationYaw) * partialTicks;
-        this.rotateArroundXAndY(f2, f3);
-        this.setLightMapFromPlayer(abstractclientplayer);
-        this.rotateWithPlayerRotations(abstractclientplayer, partialTicks);
+        rotateArroundXAndY(f2, f3);
+        setLightMapFromPlayer(abstractclientplayer);
+        rotateWithPlayerRotations(abstractclientplayer, partialTicks);
         enableRescaleNormal();
         pushMatrix();
 
-        if(this.itemToRender != null) {
+        if(itemToRender != null) {
             final KillAura killAura = (KillAura) moduleManager.getModule(KillAura.class);
 
-            if(this.itemToRender.getItem() instanceof net.minecraft.item.ItemMap) {
-                this.renderItemMap(abstractclientplayer, f2, f, f1);
+            if(itemToRender.getItem() instanceof ItemMap) {
+                renderItemMap(abstractclientplayer, f2, f, f1);
             } else if (abstractclientplayer.getItemInUseCount() > 0 || (itemToRender.getItem() instanceof ItemSword && killAura.getRenderBlocking())) {
-                EnumAction enumaction = killAura.getRenderBlocking() ? EnumAction.BLOCK : this.itemToRender.getItemUseAction();
+                EnumAction enumaction = killAura.getRenderBlocking() ? EnumAction.BLOCK : itemToRender.getItemUseAction();
 
                 switch(enumaction) {
                     case NONE:
-                        this.transformFirstPersonItem(f, 0f);
+                        transformFirstPersonItem(f, 0f);
                         break;
                     case EAT:
                     case DRINK:
-                        this.performDrinking(abstractclientplayer, partialTicks);
-                        this.transformFirstPersonItem(f, f1);
+                        performDrinking(abstractclientplayer, partialTicks);
+                        transformFirstPersonItem(f, f1);
                         break;
                     case BLOCK:
                         final Animations animations = Animations.INSTANCE;
@@ -127,22 +128,22 @@ public abstract class MixinItemRenderer {
                         }
                         break;
                     case BOW:
-                        this.transformFirstPersonItem(f, f1);
-                        this.doBowTransformations(partialTicks, abstractclientplayer);
+                        transformFirstPersonItem(f, f1);
+                        doBowTransformations(partialTicks, abstractclientplayer);
                 }
             }else{
                 final Animations animations = Animations.INSTANCE;
 
                 if (!animations.getState() || !animations.getOddSwing().get()) {
-                    this.doItemUsedTransformations(f1);
+                    doItemUsedTransformations(f1);
                 }
 
-                this.transformFirstPersonItem(f, f1);
+                transformFirstPersonItem(f, f1);
             }
 
-            this.renderItem(abstractclientplayer, this.itemToRender, ItemCameraTransforms.TransformType.FIRST_PERSON);
+            renderItem(abstractclientplayer, itemToRender, ItemCameraTransforms.TransformType.FIRST_PERSON);
         }else if(!abstractclientplayer.isInvisible()) {
-            this.renderPlayerArm(abstractclientplayer, f, f1);
+            renderPlayerArm(abstractclientplayer, f, f1);
         }
 
         popMatrix();
