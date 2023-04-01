@@ -41,7 +41,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
 
     @Inject(method = "doRender(Lnet/minecraft/entity/EntityLivingBase;DDDFF)V", at = @At("HEAD"))
     private <T extends EntityLivingBase> void injectChamsPre(T entity, double x, double y, double z, float entityYaw, float partialTicks, CallbackInfo callbackInfo) {
-        final Chams chams = (Chams) moduleManager.getModule(Chams.class);
+        final Chams chams = Chams.INSTANCE;
 
         if (chams.getState() && chams.getTargetsValue().get() && isSelected(entity, false)) {
             glEnable(GL_POLYGON_OFFSET_FILL);
@@ -51,7 +51,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
 
     @Inject(method = "doRender(Lnet/minecraft/entity/EntityLivingBase;DDDFF)V", at = @At("RETURN"))
     private <T extends EntityLivingBase> void injectChamsPost(T entity, double x, double y, double z, float entityYaw, float partialTicks, CallbackInfo callbackInfo) {
-        final Chams chams = (Chams) moduleManager.getModule(Chams.class);
+        final Chams chams = Chams.INSTANCE;
 
         if (chams.getState() && chams.getTargetsValue().get() && isSelected(entity, false)) {
             glPolygonOffset(1f, 1000000F);
@@ -61,7 +61,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
 
     @Inject(method = "canRenderName(Lnet/minecraft/entity/EntityLivingBase;)Z", at = @At("HEAD"), cancellable = true)
     private <T extends EntityLivingBase> void canRenderName(T entity, CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
-        if (!ESP.renderNameTags || (moduleManager.getModule(NameTags.class).getState() && isSelected(entity, false))) {
+        if (!ESP.renderNameTags || (NameTags.INSTANCE.getState() && isSelected(entity, false))) {
             callbackInfoReturnable.setReturnValue(false);
         }
     }
@@ -72,7 +72,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
     @Inject(method = "renderModel", at = @At("HEAD"), cancellable = true)
     private <T extends EntityLivingBase> void renderModel(T p_renderModel_1_, float p_renderModel_2_, float p_renderModel_3_, float p_renderModel_4_, float p_renderModel_5_, float p_renderModel_6_, float p_renderModel_7_, CallbackInfo ci) {
         boolean visible = !p_renderModel_1_.isInvisible();
-        final TrueSight trueSight = (TrueSight) moduleManager.getModule(TrueSight.class);
+        final TrueSight trueSight = TrueSight.INSTANCE;
         boolean semiVisible = !visible && (!p_renderModel_1_.isInvisibleToPlayer(mc.thePlayer) || (trueSight.getState() && trueSight.getEntitiesValue().get()));
 
         if (visible || semiVisible) {
@@ -89,7 +89,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
                 alphaFunc(516, 0.003921569F);
             }
 
-            final ESP esp = (ESP) moduleManager.getModule(ESP.class);
+            final ESP esp = ESP.INSTANCE;
             if (esp.getState() && isSelected(p_renderModel_1_, false)) {
                 boolean fancyGraphics = mc.gameSettings.fancyGraphics;
                 mc.gameSettings.fancyGraphics = false;

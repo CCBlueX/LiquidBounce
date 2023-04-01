@@ -23,7 +23,8 @@ import net.minecraft.util.BlockPos
 import org.lwjgl.input.Keyboard
 
 @ModuleInfo(name = "LiquidWalk", description = "Allows you to walk on water.", category = ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_J)
-class LiquidWalk : Module() {
+object LiquidWalk : Module() {
+
     val modeValue = ListValue("Mode", arrayOf("Vanilla", "NCP", "AAC", "AAC3.3.11", "AACFly", "Spartan", "Dolphin"), "NCP")
     private val noJumpValue = BoolValue("NoJump", false)
     private val aacFlyValue = object : FloatValue("AACFlyMotion", 0.5f, 0.1f, 1f) {

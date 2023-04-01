@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 
 @ModuleInfo(name = "PerfectHorseJump", description = "Automatically jumps when the jump bar of a horse is filled up completely.", category = ModuleCategory.MOVEMENT)
-class PerfectHorseJump : Module() {
+object PerfectHorseJump : Module() {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {

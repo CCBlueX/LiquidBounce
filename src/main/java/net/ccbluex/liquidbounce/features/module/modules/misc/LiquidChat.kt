@@ -28,7 +28,7 @@ import java.util.regex.Pattern
 import kotlin.concurrent.thread
 
 @ModuleInfo(name = "LiquidChat", description = "Allows you to chat with other LiquidBounce users.", category = ModuleCategory.MISC)
-class LiquidChat : Module() {
+object LiquidChat : Module() {
 
     init {
         state = true
@@ -44,9 +44,7 @@ class LiquidChat : Module() {
         }
     }
 
-    companion object {
-        var jwtToken = ""
-    }
+    var jwtToken = ""
 
     val client = object : Client() {
 

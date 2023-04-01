@@ -29,7 +29,7 @@ import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
 @ModuleInfo(name = "BlockOverlay", description = "Allows you to change the design of the block overlay.", category = ModuleCategory.RENDER)
-class BlockOverlay : Module() {
+object BlockOverlay : Module() {
     val infoValue = BoolValue("Info", false)
 
     private val colorRainbow = BoolValue("Rainbow", false)

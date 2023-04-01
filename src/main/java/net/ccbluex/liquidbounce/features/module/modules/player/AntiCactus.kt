@@ -14,7 +14,7 @@ import net.minecraft.block.BlockCactus
 import net.minecraft.util.AxisAlignedBB
 
 @ModuleInfo(name = "AntiCactus", description = "Prevents cacti from damaging you.", category = ModuleCategory.PLAYER)
-class AntiCactus : Module() {
+object AntiCactus : Module() {
 
     @EventTarget
     fun onBlockBB(event: BlockBBEvent) {

@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.value.BoolValue
 
 @ModuleInfo(name = "TrueSight", description = "Allows you to see invisible entities and barriers.", category = ModuleCategory.RENDER)
-class TrueSight : Module() {
+object TrueSight : Module() {
     val barriersValue = BoolValue("Barriers", true)
     val entitiesValue = BoolValue("Entities", true)
 }

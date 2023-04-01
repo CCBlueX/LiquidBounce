@@ -27,7 +27,7 @@ import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import net.minecraft.util.BlockPos
 
 @ModuleInfo(name = "BufferSpeed", description = "Allows you to walk faster on slabs and stairs.", category = ModuleCategory.MOVEMENT)
-class BufferSpeed : Module() {
+object BufferSpeed : Module() {
     private val speedLimitValue = BoolValue("SpeedLimit", true)
     private val maxSpeedValue = object : FloatValue("MaxSpeed", 2f, 1f, 5f) {
         override fun isSupported() = speedLimitValue.get()

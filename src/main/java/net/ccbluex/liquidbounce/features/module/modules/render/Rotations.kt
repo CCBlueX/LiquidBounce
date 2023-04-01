@@ -21,7 +21,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.network.play.client.C03PacketPlayer
 
 @ModuleInfo(name = "Rotations", description = "Allows you to see server-sided head and body rotations.", category = ModuleCategory.RENDER)
-class Rotations : Module() {
+object Rotations : Module() {
 
     private val bodyValue = BoolValue("Body", true)
 

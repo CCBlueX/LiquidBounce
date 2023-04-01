@@ -66,7 +66,7 @@ import kotlin.math.sin
     category = ModuleCategory.WORLD,
     keyBind = Keyboard.KEY_I
 )
-class Scaffold : Module() {
+object Scaffold : Module() {
 
     private val modeValue = ListValue("Mode", arrayOf("Normal", "Rewinside", "Expand"), "Normal")
 

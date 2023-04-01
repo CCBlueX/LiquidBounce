@@ -38,7 +38,8 @@ import kotlin.math.max
 import kotlin.math.min
 
 @ModuleInfo(name = "ESP", description = "Allows you to see targets through walls.", category = ModuleCategory.RENDER)
-class ESP : Module() {
+object ESP : Module() {
+
     @JvmField
     val modeValue = ListValue(
         "Mode",
@@ -82,6 +83,10 @@ class ESP : Module() {
 
     private val colorTeam = BoolValue("Team", false)
     private val botValue = BoolValue("Bots", true)
+
+
+    @JvmField
+    var renderNameTags = true
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
@@ -261,8 +266,4 @@ class ESP : Module() {
         )
     }
 
-    companion object {
-        @JvmField
-        var renderNameTags = true
-    }
 }

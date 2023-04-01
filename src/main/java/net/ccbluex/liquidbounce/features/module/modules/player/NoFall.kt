@@ -33,7 +33,8 @@ import kotlin.math.ceil
 import kotlin.math.sqrt
 
 @ModuleInfo(name = "NoFall", description = "Prevents you from taking fall damage.", category = ModuleCategory.PLAYER)
-class NoFall : Module() {
+object NoFall : Module() {
+
     @JvmField
     val modeValue = ListValue(
         "Mode", arrayOf(

@@ -38,8 +38,8 @@ public abstract class MixinBlockLadder extends MixinBlock {
         final IBlockState blockState = worldIn.getBlockState(pos);
 
         if(blockState.getBlock() instanceof BlockLadder) {
-            final FastClimb fastClimb = (FastClimb) moduleManager.getModule(FastClimb.class);
-            final float f = Objects.requireNonNull(fastClimb).getState() && fastClimb.getModeValue().get().equals("AAC3.0.0") ? 0.99f : 0.125f;
+            final FastClimb fastClimb = FastClimb.INSTANCE;
+            final float f = fastClimb.getState() && fastClimb.getModeValue().get().equals("AAC3.0.0") ? 0.99f : 0.125f;
 
             switch(blockState.getValue(FACING)) {
                 case NORTH:

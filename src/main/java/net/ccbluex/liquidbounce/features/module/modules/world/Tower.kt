@@ -56,7 +56,7 @@ import kotlin.math.truncate
     category = ModuleCategory.WORLD,
     keyBind = Keyboard.KEY_O
 )
-class Tower : Module() {
+object Tower : Module() {
     /**
      * OPTIONS
      */

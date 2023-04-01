@@ -20,7 +20,7 @@ import java.awt.Color
 import java.util.*
 
 @ModuleInfo(name = "Breadcrumbs", description = "Leaves a trail behind you.", category = ModuleCategory.RENDER)
-class Breadcrumbs : Module() {
+object Breadcrumbs : Module() {
     val colorRainbow = BoolValue("Rainbow", false)
     val colorRedValue = object : IntegerValue("R", 255, 0, 255) {
         override fun isSupported() = !colorRainbow.get()

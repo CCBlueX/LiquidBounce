@@ -24,7 +24,7 @@ public class MixinSkinManager {
         if (gameProfile == null)
             return;
         
-        NameProtect nameProtect = (NameProtect) moduleManager.getModule(NameProtect.class);
+        NameProtect nameProtect = NameProtect.INSTANCE;
 
         if (nameProtect.getState() && nameProtect.skinProtectValue.get()) {
             if (nameProtect.allPlayersValue.get() || Objects.equals(gameProfile.getId(), mc.getSession().getProfile().getId())) {

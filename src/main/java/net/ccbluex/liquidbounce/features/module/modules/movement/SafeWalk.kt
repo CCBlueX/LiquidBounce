@@ -18,7 +18,7 @@ import net.minecraft.block.BlockAir
 import net.minecraft.util.BlockPos
 
 @ModuleInfo(name = "SafeWalk", description = "Prevents you from falling down as if you were sneaking.", category = ModuleCategory.MOVEMENT)
-class SafeWalk : Module() {
+object SafeWalk : Module() {
 
     private val airSafeValue = BoolValue("AirSafe", false)
     private val maxFallDistanceValue = IntegerValue("MaxFallDistance", 5, 0, 100)

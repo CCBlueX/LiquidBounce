@@ -24,7 +24,7 @@ import net.minecraft.util.EnumFacing
 import java.awt.Color
 
 @ModuleInfo(name = "CivBreak", description = "Allows you to break blocks instantly.", category = ModuleCategory.WORLD)
-class CivBreak : Module() {
+object CivBreak : Module() {
 
     private var blockPos: BlockPos? = null
     private var enumFacing: EnumFacing? = null

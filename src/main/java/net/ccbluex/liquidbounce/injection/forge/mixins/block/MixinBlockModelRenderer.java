@@ -24,7 +24,7 @@ public class MixinBlockModelRenderer {
 
     @Inject(method = "renderModelAmbientOcclusion", at = @At("HEAD"), cancellable = true)
     private void renderModelAmbientOcclusion(IBlockAccess p_renderModelAmbientOcclusion_1_, IBakedModel p_renderModelAmbientOcclusion_2_, Block p_renderModelAmbientOcclusion_3_, BlockPos p_renderModelAmbientOcclusion_4_, WorldRenderer p_renderModelAmbientOcclusion_5_, boolean p_renderModelAmbientOcclusion_6_, CallbackInfoReturnable<Boolean> cir) {
-        final XRay xray = (XRay) moduleManager.getModule(XRay.class);
+        final XRay xray = XRay.INSTANCE;
 
         if (xray.getState()) {
             cir.setReturnValue(xray.getXrayBlocks().contains(p_renderModelAmbientOcclusion_3_));
@@ -33,7 +33,7 @@ public class MixinBlockModelRenderer {
 
     @Inject(method = "renderModelStandard", at = @At("HEAD"), cancellable = true)
     private void renderModelStandard(IBlockAccess p_renderModelStandard_1_, IBakedModel p_renderModelStandard_2_, Block p_renderModelStandard_3_, BlockPos p_renderModelStandard_4_, WorldRenderer p_renderModelStandard_5_, boolean p_renderModelStandard_6_, CallbackInfoReturnable<Boolean> cir) {
-        final XRay xray = (XRay) moduleManager.getModule(XRay.class);
+        final XRay xray = XRay.INSTANCE;
 
         if (xray.getState()) {
             cir.setReturnValue(xray.getXrayBlocks().contains(p_renderModelStandard_3_));

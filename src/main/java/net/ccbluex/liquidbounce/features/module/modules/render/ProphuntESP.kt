@@ -25,7 +25,7 @@ import net.minecraft.util.BlockPos
 import java.awt.Color
 
 @ModuleInfo(name = "ProphuntESP", description = "Allows you to see disguised players in PropHunt.", category = ModuleCategory.RENDER)
-class ProphuntESP : Module() {
+object ProphuntESP : Module() {
     val blocks: MutableMap<BlockPos, Long> = HashMap()
 
     private val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "Glow"), "OtherBox")

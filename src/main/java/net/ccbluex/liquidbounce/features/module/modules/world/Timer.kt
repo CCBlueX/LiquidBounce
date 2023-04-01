@@ -16,7 +16,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 
 @ModuleInfo(name = "Timer", description = "Changes the speed of the entire game.", category = ModuleCategory.WORLD)
-class Timer : Module() {
+object Timer : Module() {
 
     private val speedValue = FloatValue("Speed", 2F, 0.1F, 10F)
     private val onMoveValue = BoolValue("OnMove", true)

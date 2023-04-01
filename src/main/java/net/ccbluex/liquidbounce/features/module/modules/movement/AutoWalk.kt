@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.minecraft.client.settings.GameSettings
 
 @ModuleInfo(name = "AutoWalk", description = "Automatically makes you walk.", category = ModuleCategory.MOVEMENT)
-class AutoWalk : Module() {
+object AutoWalk : Module() {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {

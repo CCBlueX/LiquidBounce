@@ -28,7 +28,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 @ModuleInfo(name = "Velocity", description = "Allows you to modify the amount of knockback you take.", category = ModuleCategory.COMBAT)
-class Velocity : Module() {
+object Velocity : Module() {
 
     /**
      * OPTIONS

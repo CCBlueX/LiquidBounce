@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.init.Items
 
 @ModuleInfo(name = "AutoRod", description = "Auto use fishing rod to PVP", category = ModuleCategory.COMBAT)
-class AutoRod : Module() {
+object AutoRod : Module() {
 
     private val facingEnemy = BoolValue("FacingEnemy", true)
 

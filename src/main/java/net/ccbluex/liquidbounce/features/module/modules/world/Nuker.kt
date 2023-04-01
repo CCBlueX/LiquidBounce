@@ -37,7 +37,7 @@ import java.awt.Color
 import kotlin.math.roundToInt
 
 @ModuleInfo(name = "Nuker", description = "Breaks all blocks around you.", category = ModuleCategory.WORLD)
-class Nuker : Module() {
+object Nuker : Module() {
 
     /**
      * OPTIONS
@@ -62,6 +62,8 @@ class Nuker : Module() {
 
     private var nukeTimer = TickTimer()
     private var nuke = 0
+
+    var currentDamage = 0F
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
@@ -240,7 +242,4 @@ class Nuker : Module() {
      */
     private fun validBlock(block: Block) = block != Blocks.air && block !is BlockLiquid && block != Blocks.bedrock
 
-    companion object {
-        var currentDamage = 0F
-    }
 }

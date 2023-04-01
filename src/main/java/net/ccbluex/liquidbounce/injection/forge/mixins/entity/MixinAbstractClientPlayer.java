@@ -49,9 +49,9 @@ public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer {
 
     @Inject(method = "getFovModifier", at = @At("HEAD"), cancellable = true)
     private void getFovModifier(CallbackInfoReturnable<Float> callbackInfoReturnable) {
-        final NoFOV fovModule = (NoFOV) moduleManager.getModule(NoFOV.class);
+        final NoFOV fovModule = NoFOV.INSTANCE;
 
-        if (Objects.requireNonNull(fovModule).getState()) {
+        if (fovModule.getState()) {
             float newFOV = fovModule.getFovValue().get();
 
             if (!isUsingItem()) {

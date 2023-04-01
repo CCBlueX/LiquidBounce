@@ -11,7 +11,7 @@ import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.LiquidBounce.clientRichPresence
 import net.ccbluex.liquidbounce.LiquidBounce.commandManager
 import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
-import net.ccbluex.liquidbounce.features.module.modules.misc.LiquidChat.Companion.jwtToken
+import net.ccbluex.liquidbounce.features.module.modules.misc.LiquidChat.jwtToken
 import net.ccbluex.liquidbounce.features.special.AutoReconnect.delay
 import net.ccbluex.liquidbounce.features.special.BungeeCordSpoof
 import net.ccbluex.liquidbounce.features.special.ClientFixes.blockFML

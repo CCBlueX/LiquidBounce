@@ -20,7 +20,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 @ModuleInfo(name = "WallClimb", description = "Allows you to climb up walls like a spider.", category = ModuleCategory.MOVEMENT)
-class WallClimb : Module() {
+object WallClimb : Module() {
     private val modeValue = ListValue("Mode", arrayOf("Simple", "CheckerClimb", "Clip", "AAC3.3.12", "AACGlide"), "Simple")
     private val clipMode = object : ListValue("ClipMode", arrayOf("Jump", "Fast"), "Fast") {
         override fun isSupported() = modeValue.get() == "Clip"

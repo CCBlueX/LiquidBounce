@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.entity.EntityLivingBase
 
 @ModuleInfo(name = "Teams", description = "Prevents Killaura from attacking team mates.", category = ModuleCategory.MISC)
-class Teams : Module() {
+object Teams : Module() {
 
     private val scoreboardValue = BoolValue("ScoreboardTeam", true)
     private val colorValue = BoolValue("Color", true)

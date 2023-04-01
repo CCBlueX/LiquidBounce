@@ -72,7 +72,7 @@ public abstract class MixinGuiScreen {
 
     @Inject(method = "drawWorldBackground", at = @At("HEAD"))
     private void drawWorldBackground(final CallbackInfo callbackInfo) {
-        final HUD hud = (HUD) moduleManager.getModule(HUD.class);
+        final HUD hud = HUD.INSTANCE;
 
         if(hud.getInventoryParticle().get() && mc.thePlayer != null) {
             final ScaledResolution scaledResolution = new ScaledResolution(mc);
@@ -139,7 +139,7 @@ public abstract class MixinGuiScreen {
 
     @Inject(method = "handleComponentHover", at = @At("HEAD"))
     private void handleHoverOverComponent(IChatComponent component, int x, int y, final CallbackInfo callbackInfo) {
-        if (component == null || component.getChatStyle().getChatClickEvent() == null || !moduleManager.getModule(ComponentOnHover.class).getState())
+        if (component == null || component.getChatStyle().getChatClickEvent() == null || !ComponentOnHover.INSTANCE.getState())
             return;
 
         final ChatStyle chatStyle = component.getChatStyle();

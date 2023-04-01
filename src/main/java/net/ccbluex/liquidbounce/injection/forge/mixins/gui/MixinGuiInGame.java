@@ -39,13 +39,13 @@ public abstract class MixinGuiInGame {
 
     @Inject(method = "renderScoreboard", at = @At("HEAD"), cancellable = true)
     private void renderScoreboard(CallbackInfo callbackInfo) {
-        if (moduleManager.getModule(HUD.class).getState() || NoScoreboard.INSTANCE.getState())
+        if (HUD.INSTANCE.getState() || NoScoreboard.INSTANCE.getState())
             callbackInfo.cancel();
     }
 
     @Inject(method = "renderTooltip", at = @At("HEAD"), cancellable = true)
     private void renderTooltip(ScaledResolution sr, float partialTicks, CallbackInfo callbackInfo) {
-        final HUD hud = (HUD) moduleManager.getModule(HUD.class);
+        final HUD hud = HUD.INSTANCE;
 
         if (mc.getRenderViewEntity() instanceof EntityPlayer && hud.getState() && hud.getBlackHotbarValue().get()) {
             EntityPlayer entityPlayer = (EntityPlayer) mc.getRenderViewEntity();
@@ -87,7 +87,7 @@ public abstract class MixinGuiInGame {
 
     @Inject(method = "renderPumpkinOverlay", at = @At("HEAD"), cancellable = true)
     private void renderPumpkinOverlay(final CallbackInfo callbackInfo) {
-        final AntiBlind antiBlind = (AntiBlind) moduleManager.getModule(AntiBlind.class);
+        final AntiBlind antiBlind = AntiBlind.INSTANCE;
 
         if(antiBlind.getState() && antiBlind.getPumpkinEffect().get())
             callbackInfo.cancel();

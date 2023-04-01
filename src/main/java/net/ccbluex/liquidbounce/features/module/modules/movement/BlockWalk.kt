@@ -15,7 +15,7 @@ import net.minecraft.init.Blocks
 import net.minecraft.util.AxisAlignedBB
 
 @ModuleInfo(name = "BlockWalk", description = "Allows you to walk on non-fullblock blocks.", category = ModuleCategory.MOVEMENT)
-class BlockWalk : Module() {
+object BlockWalk : Module() {
     private val cobwebValue = BoolValue("Cobweb", true)
     private val snowValue = BoolValue("Snow", true)
 

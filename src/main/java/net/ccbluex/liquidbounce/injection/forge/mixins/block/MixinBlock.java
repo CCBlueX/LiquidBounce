@@ -76,25 +76,23 @@ public abstract class MixinBlock {
 
     @Inject(method = "shouldSideBeRendered", at = @At("HEAD"), cancellable = true)
     private void shouldSideBeRendered(IBlockAccess p_shouldSideBeRendered_1_, BlockPos p_shouldSideBeRendered_2_, EnumFacing p_shouldSideBeRendered_3_, CallbackInfoReturnable<Boolean> cir) {
-        final XRay xray = (XRay) moduleManager.getModule(XRay.class);
-
-        if (xray.getState()) {
-            cir.setReturnValue(xray.getXrayBlocks().contains((Block) (Object) this));
+        if (XRay.INSTANCE.getState()) {
+            cir.setReturnValue(XRay.INSTANCE.getXrayBlocks().contains((Block) (Object) this));
         }
     }
 
     @Inject(method = "isCollidable", at = @At("HEAD"), cancellable = true)
     private void isCollidable(CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
-        final GhostHand ghostHand = (GhostHand) moduleManager.getModule(GhostHand.class);
+        final GhostHand ghostHand = GhostHand.INSTANCE;
 
-        if (Objects.requireNonNull(ghostHand).getState() && !(ghostHand.getBlockValue().get() == Block.getIdFromBlock((Block) (Object) this))) {
+        if (ghostHand.getState() && !(ghostHand.getBlockValue().get() == Block.getIdFromBlock((Block) (Object) this))) {
             callbackInfoReturnable.setReturnValue(false);
         }
     }
 
     @Inject(method = "getAmbientOcclusionLightValue", at = @At("HEAD"), cancellable = true)
     private void getAmbientOcclusionLightValue(CallbackInfoReturnable<Float> cir) {
-        if (moduleManager.getModule(XRay.class).getState()) {
+        if (XRay.INSTANCE.getState()) {
             cir.setReturnValue(1F);
         }
     }
@@ -104,7 +102,7 @@ public abstract class MixinBlock {
         float f = callbackInfo.getReturnValue();
 
         // NoSlowBreak
-        final NoSlowBreak noSlowBreak = (NoSlowBreak) moduleManager.getModule(NoSlowBreak.class);
+        final NoSlowBreak noSlowBreak = NoSlowBreak.INSTANCE;
         if (Objects.requireNonNull(noSlowBreak).getState()) {
             if (noSlowBreak.getWaterValue().get() && playerIn.isInsideOfMaterial(Material.water) && !EnchantmentHelper.getAquaAffinityModifier(playerIn)) {
                 f *= 5f;
@@ -114,8 +112,8 @@ public abstract class MixinBlock {
                 f *= 5f;
             }
         } else if (playerIn.onGround) { // NoGround
-            final NoFall noFall = (NoFall) moduleManager.getModule(NoFall.class);
-            final Criticals criticals = (Criticals) moduleManager.getModule(Criticals.class);
+            final NoFall noFall = NoFall.INSTANCE;
+            final Criticals criticals = Criticals.INSTANCE;
 
             if (Objects.requireNonNull(noFall).getState() && noFall.modeValue.get().equals("NoGround") || Objects.requireNonNull(criticals).getState() && criticals.getModeValue().get().equals("NoGround")) {
                 f /= 5F;

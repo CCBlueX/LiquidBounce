@@ -142,9 +142,9 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
     private void onUpdateWalkingPlayer(CallbackInfo ci) {
         eventManager.callEvent(new MotionEvent(EventState.PRE));
 
-        final InventoryMove inventoryMove = (InventoryMove) moduleManager.getModule(InventoryMove.class);
-        final Sneak sneak = (Sneak) moduleManager.getModule(Sneak.class);
-        final boolean fakeSprint = (inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get()) || moduleManager.getModule(AntiHunger.class).getState() || (sneak.getState() && (!isMoving() || !sneak.stopMoveValue.get()) && sneak.modeValue.get().equals("MineSecure"));
+        final InventoryMove inventoryMove = InventoryMove.INSTANCE;
+        final Sneak sneak = Sneak.INSTANCE;
+        final boolean fakeSprint = (inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get()) || AntiHunger.INSTANCE.getState() || (sneak.getState() && (!isMoving() || !sneak.stopMoveValue.get()) && sneak.modeValue.get().equals("MineSecure"));
 
         boolean sprinting = isSprinting() && !fakeSprint;
 
@@ -174,7 +174,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             float lastReportedYaw = serverRotation.getYaw();
             float lastReportedPitch = serverRotation.getPitch();
 
-            final Derp derp = (Derp) moduleManager.getModule(Derp.class);
+            final Derp derp = Derp.INSTANCE;
             if (derp.getState()) {
                 float[] rot = derp.getRotation();
                 yaw = rot[0];
@@ -231,7 +231,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
     @Inject(method = "swingItem", at = @At("HEAD"), cancellable = true)
     private void swingItem(CallbackInfo callbackInfo) {
-        final NoSwing noSwing = (NoSwing) moduleManager.getModule(NoSwing.class);
+        final NoSwing noSwing = NoSwing.INSTANCE;
 
         if (noSwing.getState()) {
             callbackInfo.cancel();
@@ -280,7 +280,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         prevTimeInPortal = timeInPortal;
 
         if (inPortal) {
-            if (mc.currentScreen != null && !mc.currentScreen.doesGuiPauseGame() && !moduleManager.getModule(PortalMenu.class).getState()) {
+            if (mc.currentScreen != null && !mc.currentScreen.doesGuiPauseGame() && !PortalMenu.INSTANCE.getState()) {
                 mc.displayGuiScreen(null);
             }
 
@@ -321,8 +321,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         boolean flag2 = movementInput.moveForward >= f;
         movementInput.updatePlayerMoveState();
 
-        final NoSlow noSlow = (NoSlow) moduleManager.getModule(NoSlow.class);
-        final KillAura killAura = (KillAura) moduleManager.getModule(KillAura.class);
+        final NoSlow noSlow = NoSlow.INSTANCE;
+        final KillAura killAura = KillAura.INSTANCE;
 
         if (getHeldItem() != null && (isUsingItem() || (getHeldItem().getItem() instanceof ItemSword && killAura.getBlockStatus())) && !isRiding()) {
             final SlowDownEvent slowDownEvent = new SlowDownEvent(0.2F, 0.2F);
@@ -355,7 +355,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             setSprinting(true);
         }
 
-        final Scaffold scaffold = (Scaffold) moduleManager.getModule(Scaffold.class);
+        final Scaffold scaffold = Scaffold.INSTANCE;
         if ((scaffold.getState() && !scaffold.sprintValue.get()) || (sprint.getState() && !legitSprint && sprint.checkServerSide.get() && (onGround || !sprint.checkServerSideGround.get()) && !sprint.allDirectionsValue.get() && targetRotation != null && getRotationDifference(new Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)) > 30))
             setSprinting(false);
 

@@ -34,7 +34,7 @@ import kotlin.math.floor
 import kotlin.math.max
 
 @ModuleInfo(name = "BugUp", description = "Automatically setbacks you after falling a certain distance.", category = ModuleCategory.MOVEMENT)
-class BugUp : Module() {
+object BugUp : Module() {
 
     private val modeValue = ListValue("Mode", arrayOf("TeleportBack", "FlyFlag", "OnGroundSpoof", "MotionTeleport-Flag"), "FlyFlag")
     private val maxFallDistance = IntegerValue("MaxFallDistance", 10, 2, 255)

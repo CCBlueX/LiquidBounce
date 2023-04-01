@@ -21,7 +21,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.TextValue
 
 @ModuleInfo(name = "Spammer", description = "Spams the chat with a given message.", category = ModuleCategory.MISC)
-class Spammer : Module() {
+object Spammer : Module() {
     private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 1000, 0, 5000) {
         override fun onChanged(oldValue: Int, newValue: Int) {
             val minDelay = minDelayValue.get()

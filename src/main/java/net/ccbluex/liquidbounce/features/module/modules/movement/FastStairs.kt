@@ -19,7 +19,7 @@ import net.minecraft.block.BlockStairs
 import net.minecraft.util.BlockPos
 
 @ModuleInfo(name = "FastStairs", description = "Allows you to climb up stairs faster.", category = ModuleCategory.MOVEMENT)
-class FastStairs : Module() {
+object FastStairs : Module() {
 
     private val modeValue = ListValue("Mode", arrayOf("Step", "NCP", "AAC3.1.0", "AAC3.3.6", "AAC3.3.13"), "NCP")
     private val longJumpValue = object : BoolValue("LongJump", false) {

@@ -25,7 +25,7 @@ import net.minecraft.util.EnumFacing
 
 @ModuleInfo(name = "NoSlow", description = "Cancels slowness effects caused by Soul Sand and using items.",
         category = ModuleCategory.MOVEMENT)
-class NoSlow : Module() {
+object NoSlow : Module() {
 
     // Highly customizable values
 

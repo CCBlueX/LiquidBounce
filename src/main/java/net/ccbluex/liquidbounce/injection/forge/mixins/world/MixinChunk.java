@@ -37,9 +37,9 @@ public class MixinChunk {
         //noinspection ConstantConditions
         MiniMapRegister.INSTANCE.updateChunk((Chunk) ((Object) this));
 
-        final ProphuntESP prophuntESP = (ProphuntESP) moduleManager.getModule(ProphuntESP.class);
+        final ProphuntESP prophuntESP = ProphuntESP.INSTANCE;
 
-        if (Objects.requireNonNull(prophuntESP).getState()) {
+        if (prophuntESP.getState()) {
             synchronized (prophuntESP.getBlocks()) {
                 prophuntESP.getBlocks().put(pos, System.currentTimeMillis());
             }

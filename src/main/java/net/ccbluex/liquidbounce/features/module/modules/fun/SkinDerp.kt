@@ -17,7 +17,7 @@ import net.minecraft.entity.player.EnumPlayerModelParts
 import kotlin.random.Random.Default.nextBoolean
 
 @ModuleInfo(name = "SkinDerp", description = "Makes your skin blink (Requires multi-layer skin).", category = ModuleCategory.FUN)
-class SkinDerp : Module() {
+object SkinDerp : Module() {
 
     private val delayValue = IntegerValue("Delay", 0, 0, 1000)
     private val hatValue = BoolValue("Hat", true)

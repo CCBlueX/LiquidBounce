@@ -19,7 +19,8 @@ import net.minecraft.network.play.client.C01PacketChatMessage
 import java.util.concurrent.LinkedBlockingQueue
 
 @ModuleInfo(name = "AtAllProvider", description = "Automatically mentions everyone on the server when using '@a' in your message.", category = ModuleCategory.MISC)
-class AtAllProvider : Module() {
+object AtAllProvider : Module() {
+
     private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 1000, 0, 20000) {
         override fun onChanged(oldValue: Int, newValue: Int) {
             val i = minDelayValue.get()

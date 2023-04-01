@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.minecraft.init.Blocks
 
 @ModuleInfo(name = "AutoBreak", description = "Automatically breaks the block you are looking at.", category = ModuleCategory.WORLD)
-class AutoBreak : Module() {
+object AutoBreak : Module() {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {

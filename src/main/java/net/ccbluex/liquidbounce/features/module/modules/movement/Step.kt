@@ -23,7 +23,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 @ModuleInfo(name = "Step", description = "Allows you to step up blocks.", category = ModuleCategory.MOVEMENT)
-class Step : Module() {
+object Step : Module() {
 
     /**
      * OPTIONS

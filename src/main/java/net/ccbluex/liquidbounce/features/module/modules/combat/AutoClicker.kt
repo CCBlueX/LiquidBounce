@@ -23,7 +23,7 @@ import net.minecraft.init.Blocks
 import kotlin.random.Random.Default.nextBoolean
 
 @ModuleInfo(name = "AutoClicker", description = "Constantly clicks when holding down a mouse button.", category = ModuleCategory.COMBAT)
-class AutoClicker : Module() {
+object AutoClicker : Module() {
     private val maxCPSValue: IntegerValue = object : IntegerValue("MaxCPS", 8, 1, 20) {
 
         override fun onChanged(oldValue: Int, newValue: Int) {

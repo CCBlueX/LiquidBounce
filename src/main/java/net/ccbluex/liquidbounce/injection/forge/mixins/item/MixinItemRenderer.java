@@ -97,7 +97,7 @@ public abstract class MixinItemRenderer {
         pushMatrix();
 
         if(itemToRender != null) {
-            final KillAura killAura = (KillAura) moduleManager.getModule(KillAura.class);
+            final KillAura killAura = KillAura.INSTANCE;
 
             if(itemToRender.getItem() instanceof ItemMap) {
                 renderItemMap(abstractclientplayer, f2, f, f1);
@@ -153,7 +153,7 @@ public abstract class MixinItemRenderer {
 
     @Inject(method = "renderFireInFirstPerson", at = @At("HEAD"), cancellable = true)
     private void renderFireInFirstPerson(final CallbackInfo callbackInfo) {
-        final AntiBlind antiBlind = (AntiBlind) moduleManager.getModule(AntiBlind.class);
+        final AntiBlind antiBlind = AntiBlind.INSTANCE;
 
         if(antiBlind.getState() && antiBlind.getFireEffect().get()) {
             //vanilla's method

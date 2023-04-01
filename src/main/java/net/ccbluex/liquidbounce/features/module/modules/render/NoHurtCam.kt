@@ -10,4 +10,4 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 
 @ModuleInfo(name = "NoHurtCam", description = "Disables hurt cam effect when getting hurt.", category = ModuleCategory.RENDER)
-class NoHurtCam : Module()
+object NoHurtCam : Module()

@@ -19,7 +19,7 @@ public class MixinVisGraph {
 
     @Inject(method = "func_178606_a", at = @At("HEAD"), cancellable = true)
     private void func_178606_a(final CallbackInfo callbackInfo) {
-        if (moduleManager.getModule(XRay.class).getState()) {
+        if (XRay.INSTANCE.getState()) {
             callbackInfo.cancel();
         }
     }

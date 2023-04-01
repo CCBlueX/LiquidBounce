@@ -20,7 +20,7 @@ public class MixinTileEntityChestRenderer {
 
     @Inject(method = "renderTileEntityAt", at = @At("HEAD"))
     private void injectChamsPre(CallbackInfo callbackInfo) {
-        final Chams chams = (Chams) moduleManager.getModule(Chams.class);
+        final Chams chams = Chams.INSTANCE;
 
         if (chams.getState() && chams.getChestsValue().get()) {
             glEnable(GL_POLYGON_OFFSET_FILL);
@@ -30,7 +30,7 @@ public class MixinTileEntityChestRenderer {
 
     @Inject(method = "renderTileEntityAt", at = @At("RETURN"))
     private void injectChamsPost(CallbackInfo callbackInfo) {
-        final Chams chams = (Chams) moduleManager.getModule(Chams.class);
+        final Chams chams = Chams.INSTANCE;
 
         if (chams.getState() && chams.getChestsValue().get()) {
             glPolygonOffset(1f, 1000000F);

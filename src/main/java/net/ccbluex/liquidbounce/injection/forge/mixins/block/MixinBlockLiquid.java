@@ -24,13 +24,13 @@ public class MixinBlockLiquid {
 
     @Inject(method = "canCollideCheck", at = @At("HEAD"), cancellable = true)
     private void onCollideCheck(CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
-        if (moduleManager.getModule(Liquids.class).getState())
+        if (Liquids.INSTANCE.getState())
             callbackInfoReturnable.setReturnValue(true);
     }
 
     @Inject(method = "modifyAcceleration", at = @At("HEAD"), cancellable = true)
     private void onModifyAcceleration(CallbackInfoReturnable<Vec3> callbackInfoReturnable) {
-        final NoSlow noSlow = (NoSlow) moduleManager.getModule(NoSlow.class);
+        final NoSlow noSlow = NoSlow.INSTANCE;
 
         if (noSlow.getState() && noSlow.getLiquidPushValue().get()) {
             callbackInfoReturnable.setReturnValue(new Vec3(0.0D, 0.0D, 0.0D));

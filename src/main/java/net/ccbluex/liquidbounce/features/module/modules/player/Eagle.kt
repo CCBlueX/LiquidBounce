@@ -16,7 +16,7 @@ import net.minecraft.init.Blocks
 import net.minecraft.util.BlockPos
 
 @ModuleInfo(name = "Eagle", description = "Makes you eagle (aka. FastBridge).", category = ModuleCategory.PLAYER)
-class Eagle : Module() {
+object Eagle : Module() {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {

@@ -17,7 +17,7 @@ import net.minecraft.potion.Potion
 import net.minecraft.potion.PotionEffect
 
 @ModuleInfo(name = "Fullbright", description = "Brightens up the world around you.", category = ModuleCategory.RENDER)
-class Fullbright : Module() {
+object Fullbright : Module() {
     private val modeValue = ListValue("Mode", arrayOf("Gamma", "NightVision"), "Gamma")
     private var prevGamma = -1f
 

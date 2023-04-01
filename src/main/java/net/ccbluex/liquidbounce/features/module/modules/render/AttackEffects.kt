@@ -14,7 +14,7 @@ import net.minecraft.network.play.server.S2CPacketSpawnGlobalEntity
 import net.minecraft.util.EnumParticleTypes
 
 @ModuleInfo(name = "AttackEffects", description = "Show effect when you attack", category = ModuleCategory.RENDER)
-class AttackEffects : Module() {
+object AttackEffects : Module() {
 
     private val particle = ListValue(
         "Particle", arrayOf(

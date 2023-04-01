@@ -36,7 +36,7 @@ import net.minecraft.network.play.client.C16PacketClientStatus
     description = "Automatically throws away useless items.",
     category = ModuleCategory.PLAYER
 )
-class InventoryCleaner : Module() {
+object InventoryCleaner : Module() {
 
     /**
      * OPTIONS

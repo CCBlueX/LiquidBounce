@@ -18,7 +18,7 @@ import net.minecraft.init.Blocks
 import net.minecraft.util.BlockPos
 
 @ModuleInfo(name = "IceSpeed", description = "Allows you to walk faster on ice.", category = ModuleCategory.MOVEMENT)
-class IceSpeed : Module() {
+object IceSpeed : Module() {
     private val modeValue = ListValue("Mode", arrayOf("NCP", "AAC", "Spartan"), "NCP")
     override fun onEnable() {
         if (modeValue.get() == "NCP") {

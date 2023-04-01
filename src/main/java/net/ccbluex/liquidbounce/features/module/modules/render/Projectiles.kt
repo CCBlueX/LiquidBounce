@@ -39,7 +39,7 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 @ModuleInfo(name = "Projectiles", description = "Allows you to see where arrows will land.", category = ModuleCategory.RENDER)
-class Projectiles : Module() {
+object Projectiles : Module() {
     private val colorMode = ListValue("Color", arrayOf("Custom", "BowPower", "Rainbow"), "Custom")
 
     private val colorRedValue = object : IntegerValue("R", 0, 0, 255) {

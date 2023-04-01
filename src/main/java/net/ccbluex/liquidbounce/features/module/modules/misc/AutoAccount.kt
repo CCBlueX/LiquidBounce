@@ -24,7 +24,7 @@ import java.util.*
 import kotlin.concurrent.schedule
 
 @ModuleInfo("AutoAccount", "Most feature-packed auto register/login & account manager.", ModuleCategory.MISC)
-class AutoAccount : Module() {
+object AutoAccount : Module() {
 
     private val registerValue = BoolValue("AutoRegister", true)
 

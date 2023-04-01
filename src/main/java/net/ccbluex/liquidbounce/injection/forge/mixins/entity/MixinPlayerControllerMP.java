@@ -36,7 +36,7 @@ public class MixinPlayerControllerMP {
 
     @Inject(method = "getIsHittingBlock", at = @At("HEAD"), cancellable = true)
     private void getIsHittingBlock(CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
-        if (moduleManager.getModule(AbortBreaking.class).getState())
+        if (AbortBreaking.INSTANCE.getState())
             callbackInfoReturnable.setReturnValue(false);
     }
 
@@ -45,7 +45,8 @@ public class MixinPlayerControllerMP {
         final ClickWindowEvent event = new ClickWindowEvent(windowId, slotId, mouseButtonClicked, mode);
         eventManager.callEvent(event);
 
-        if (event.isCancelled())
+        if (event.isCancelled()) {
             callbackInfo.cancel();
+        }
     }
 }

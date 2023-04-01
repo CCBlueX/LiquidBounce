@@ -20,7 +20,7 @@ import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 
 @ModuleInfo(name = "FastBow", description = "Turns your bow into a machine gun.", category = ModuleCategory.COMBAT)
-class FastBow : Module() {
+object FastBow : Module() {
 
     private val packetsValue = IntegerValue("Packets", 20, 3, 20)
 

@@ -47,7 +47,7 @@ import kotlin.math.sqrt
     category = ModuleCategory.MOVEMENT,
     keyBind = Keyboard.KEY_F
 )
-class Fly : Module() {
+object Fly : Module() {
     val modeValue = ListValue(
         "Mode", arrayOf(
             "Vanilla", "SmoothVanilla",

@@ -27,7 +27,7 @@ import net.minecraft.util.BlockPos
 import java.awt.Color
 
 @ModuleInfo(name = "BlockESP", description = "Allows you to see a selected block through walls.", category = ModuleCategory.RENDER)
-class BlockESP : Module() {
+object BlockESP : Module() {
     private val modeValue = ListValue("Mode", arrayOf("Box", "2D"), "Box")
     private val blockValue = BlockValue("Block", 168)
     private val radiusValue = IntegerValue("Radius", 40, 5, 120)

@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.minecraft.network.play.server.S3FPacketCustomPayload
 
 @ModuleInfo(name = "NoBooks", description = "Blocks server from opening books (forced ads, ...)", category = ModuleCategory.RENDER)
-class NoBooks : Module() {
+object NoBooks : Module() {
     @EventTarget
     fun onPacket(event: PacketEvent) {
         val packet = event.packet

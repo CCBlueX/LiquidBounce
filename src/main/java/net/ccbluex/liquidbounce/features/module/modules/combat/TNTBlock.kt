@@ -22,7 +22,7 @@ import net.minecraft.item.ItemSword
     description = "Automatically blocks with your sword when TNT around you explodes.",
     category = ModuleCategory.COMBAT
 )
-class TNTBlock : Module() {
+object TNTBlock : Module() {
     private val fuseValue = IntegerValue("Fuse", 10, 0, 80)
     private val rangeValue = FloatValue("Range", 9F, 1F, 20F)
     private val autoSwordValue = BoolValue("AutoSword", true)

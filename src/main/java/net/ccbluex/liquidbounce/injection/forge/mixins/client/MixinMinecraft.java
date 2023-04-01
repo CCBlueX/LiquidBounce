@@ -208,7 +208,9 @@ public abstract class MixinMinecraft {
     private void clickMouse(CallbackInfo callbackInfo) {
         CPSCounter.registerClick(CPSCounter.MouseButton.LEFT);
 
-        if (moduleManager.getModule(AutoClicker.class).getState()) leftClickCounter = 0;
+        if (AutoClicker.INSTANCE.getState()) {
+            leftClickCounter = 0;
+        }
     }
 
     @Inject(method = "middleClickMouse", at = @At("HEAD"))
@@ -220,7 +222,7 @@ public abstract class MixinMinecraft {
     private void rightClickMouse(final CallbackInfo callbackInfo) {
         CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT);
 
-        final FastPlace fastPlace = (FastPlace) moduleManager.getModule(FastPlace.class);
+        final FastPlace fastPlace = FastPlace.INSTANCE;
         if (!fastPlace.getState())
             return;
 
@@ -235,7 +237,7 @@ public abstract class MixinMinecraft {
             // Don't spam-click when interacting with a TileEntity (chests, ...)
             // Doesn't prevent spam-clicking anvils, crafting tables, ... (couldn't figure out a non-hacky way)
             if (blockState.getBlock().hasTileEntity(blockState)) return;
-        // Return if not facing a block
+            // Return if not facing a block
         } else if (fastPlace.getFacingBlocksValue().get()) return;
 
         rightClickDelayTimer = fastPlace.getSpeedValue().get();
@@ -257,7 +259,7 @@ public abstract class MixinMinecraft {
     private void sendClickBlockToController(boolean leftClick) {
         if (!leftClick) leftClickCounter = 0;
 
-        if (leftClickCounter <= 0 && (!thePlayer.isUsingItem() || moduleManager.getModule(MultiActions.class).getState())) {
+        if (leftClickCounter <= 0 && (!thePlayer.isUsingItem() || MultiActions.INSTANCE.getState())) {
             if (leftClick && objectMouseOver != null && objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
                 BlockPos blockPos = objectMouseOver.getBlockPos();
 
@@ -269,7 +271,7 @@ public abstract class MixinMinecraft {
                     effectRenderer.addBlockHitEffects(blockPos, objectMouseOver.sideHit);
                     thePlayer.swingItem();
                 }
-            } else if (!moduleManager.getModule(AbortBreaking.class).getState()) {
+            } else if (!AbortBreaking.INSTANCE.getState()) {
                 playerController.resetBlockRemoving();
             }
         }
