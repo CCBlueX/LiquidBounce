@@ -40,7 +40,7 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
         Keyboard.enableRepeatEvents(true)
 
         // Add buttons to screen
-        val upperButtonText = if (loggedIntoAccount)
+        val upperButtonText = if (!loggedIntoAccount)
             "Login"
         else if (CapeService.clientCapeUser?.enabled == true)
             "Disable Cape"
@@ -48,7 +48,7 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
             "Enable Cape"
 
         buttonList.add(GuiButton(1, width / 2 - 100, height / 2 - 60, upperButtonText).apply { upperButton = this })
-        buttonList.add(GuiButton(2, width / 2 - 100, height / 2 - 40, if (loggedIntoAccount) "Logout" else "Donate to get Cape").apply { lowerButton = this })
+        buttonList.add(GuiButton(2, width / 2 - 100, height / 2 - 35, if (loggedIntoAccount) "Logout" else "Donate to get Cape").apply { lowerButton = this })
         buttonList.add(GuiButton(0, width / 2 - 100, height / 2 + 30, "Back"))
 
         // Add fields to screen
@@ -74,7 +74,7 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
         Fonts.font35.drawCenteredString(status, width / 2f, height / 2f - 30, 0xffffff)
 
         // Draw fields
-        if (loggedIntoAccount) {
+        if (!loggedIntoAccount) {
             transferCodeField.drawTextBox()
 
             if (transferCodeField.text.isEmpty() && !transferCodeField.isFocused) {
