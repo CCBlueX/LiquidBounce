@@ -11,6 +11,7 @@ import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.LiquidBounce.clientRichPresence
 import net.ccbluex.liquidbounce.LiquidBounce.commandManager
 import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
+import net.ccbluex.liquidbounce.cape.CapeService
 import net.ccbluex.liquidbounce.features.module.modules.misc.LiquidChat.jwtToken
 import net.ccbluex.liquidbounce.features.special.AutoReconnect.delay
 import net.ccbluex.liquidbounce.features.special.BungeeCordSpoof
@@ -28,8 +29,6 @@ import net.ccbluex.liquidbounce.ui.client.GuiClientConfiguration.Companion.enabl
 import net.ccbluex.liquidbounce.ui.client.GuiClientConfiguration.Companion.particles
 import net.ccbluex.liquidbounce.ui.client.GuiClientConfiguration.Companion.stylisedAlts
 import net.ccbluex.liquidbounce.ui.client.GuiClientConfiguration.Companion.unformattedAlts
-import net.ccbluex.liquidbounce.ui.client.altmanager.menus.GuiDonatorCape.Companion.capeEnabled
-import net.ccbluex.liquidbounce.ui.client.altmanager.menus.GuiDonatorCape.Companion.transferCode
 import net.ccbluex.liquidbounce.ui.client.altmanager.menus.altgenerator.GuiTheAltening.Companion.apiKey
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetAnimals
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetDead
@@ -53,9 +52,9 @@ class ValuesConfig(file: File) : FileConfig(file) {
         val jsonObject = jsonElement as JsonObject
         for ((key, value) in jsonObject.entrySet()) {
             when (key.lowercase()) {
-                "commandprefix" ->
+                "CommandPrefix" ->
                     commandManager.prefix = value.asCharacter
-                "showrichpresence" ->
+                "ShowRichPresence" ->
                     clientRichPresence.showRichPresenceValue = value.asBoolean
                 "targets" -> {
                     val jsonValue = value as JsonObject
@@ -84,12 +83,13 @@ class ValuesConfig(file: File) : FileConfig(file) {
                     val jsonValue = value as JsonObject
                     if (jsonValue.has("token")) jwtToken = jsonValue["token"].asString
                 }
-                "donatorcape" -> {
+                "DonatorCape" -> {
                     val jsonValue = value as JsonObject
-                    if (jsonValue.has("TransferCode")) transferCode = jsonValue["TransferCode"].asString
-                    if (jsonValue.has("CapeEnabled")) capeEnabled = jsonValue["CapeEnabled"].asBoolean
+                    if (jsonValue.has("TransferCode")) {
+                        CapeService.knownToken = jsonValue["TransferCode"].asString
+                    }
                 }
-                "clientconfiguration" -> {
+                "clientConfiguration" -> {
                     val jsonValue = value as JsonObject
                     if (jsonValue.has("EnabledClientTitle")) enabledClientTitle = jsonValue["EnabledClientTitle"].asBoolean
                     if (jsonValue.has("EnabledBackground")) enabledCustomBackground = jsonValue["EnabledBackground"].asBoolean
@@ -155,8 +155,7 @@ class ValuesConfig(file: File) : FileConfig(file) {
         jsonObject.add("liquidchat", liquidChatObject)
 
         val capeObject = JsonObject()
-        capeObject.addProperty("TransferCode", transferCode)
-        capeObject.addProperty("CapeEnabled", capeEnabled)
+        capeObject.addProperty("TransferCode", CapeService.knownToken)
         jsonObject.add("DonatorCape", capeObject)
 
         val clientObject = JsonObject()

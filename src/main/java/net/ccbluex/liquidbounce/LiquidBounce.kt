@@ -171,6 +171,11 @@ object LiquidBounce {
             }
         }
 
+        // Login into known token if not empty
+        if (CapeService.knownToken.isNotBlank()) {
+            CapeService.login(CapeService.knownToken)
+        }
+
         // Refresh cape service
         CapeService.refreshCapeCarriers {
             LOGGER.info("Successfully loaded ${CapeService.capeCarriers.count()} cape carriers.")
