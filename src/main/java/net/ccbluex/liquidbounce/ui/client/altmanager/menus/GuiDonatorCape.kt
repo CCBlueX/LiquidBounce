@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.ui.client.altmanager.menus
 
 import net.ccbluex.liquidbounce.cape.CapeService
+import net.ccbluex.liquidbounce.file.FileManager.valuesConfig
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.elements.GuiPasswordField
 import net.ccbluex.liquidbounce.ui.font.Fonts
@@ -43,9 +44,9 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
         val upperButtonText = if (!loggedIntoAccount)
             "Login"
         else if (CapeService.clientCapeUser?.enabled == true)
-            "Disable Cape"
+            "Disable visibility"
         else
-            "Enable Cape"
+            "Enable visibility"
 
         buttonList.add(GuiButton(1, width / 2 - 100, height / 2 - 60, upperButtonText).apply { upperButton = this })
         buttonList.add(GuiButton(2, width / 2 - 100, height / 2 - 35, if (loggedIntoAccount) "Logout" else "Donate to get Cape").apply { lowerButton = this })
@@ -70,8 +71,15 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
         drawRect(30f, 30f, width - 30f, height - 30f, Integer.MIN_VALUE)
 
         // Draw title and status
-        Fonts.font40.drawCenteredString("Donator Cape", width / 2f, height / 2 - 150f, 0xffffff)
-        Fonts.font35.drawCenteredString(status, width / 2f, height / 2f - 30, 0xffffff)
+        Fonts.font40.drawCenteredString("Donator Cape", width / 2f, 45f, 0xffffff)
+        if (loggedIntoAccount) {
+            CapeService.clientCapeUser?.run {
+                Fonts.font40.drawCenteredString("§cCape: §f$capeName", width / 2f, height / 2 - 100f, 0xffffff)
+                Fonts.font40.drawCenteredString("§cVisible to others: §f${if (enabled) "Yes" else "No"}", width / 2f, height / 2 - 90f, 0xffffff)
+                Fonts.font40.drawCenteredString("§cOn account: §f$uuid", width / 2f, height / 2 - 80f, 0xffffff)
+            }
+        }
+        Fonts.font35.drawCenteredString(status, width / 2f, height / 2f - 5, 0xffffff)
 
         // Draw fields
         if (!loggedIntoAccount) {
@@ -85,9 +93,9 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
         upperButton.displayString = if (!loggedIntoAccount)
             "Login"
         else if (CapeService.clientCapeUser?.enabled == true)
-            "Disable Cape"
+            "Disable visibility"
         else
-            "Enable Cape"
+            "Enable visibility"
 
         lowerButton.displayString = if (loggedIntoAccount) "Logout" else "Donate to get Cape"
 
@@ -111,9 +119,9 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
                     CapeService.toggleCapeState { enabled, success, statusCode ->
                         status = if (success) {
                             if (enabled) {
-                                "§aSuccessfully enabled cape"
+                                "§aSuccessfully enabled visibility"
                             } else {
-                                "§aSuccessfully disabled cape"
+                                "§aSuccessfully disabled visibility"
                             }
                         } else {
                             "§cFailed to toggle cape ($statusCode)"
@@ -199,6 +207,9 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
     override fun onGuiClosed() {
         // Disable keyboard repeat events
         Keyboard.enableRepeatEvents(false)
+
+        // Save values config
+        valuesConfig.saveConfig()
 
         // Call sub method
         super.onGuiClosed()

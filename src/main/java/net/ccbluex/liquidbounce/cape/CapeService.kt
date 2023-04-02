@@ -45,7 +45,7 @@ object CapeService : Listenable, MinecraftInstance() {
      * The client cape user
      */
     var knownToken = ""
-        get() = clientCapeUser.takeIf { it != null }?.token ?: field
+        get() = clientCapeUser?.token ?: field
 
     var clientCapeUser: CapeSelfUser? = null
 
@@ -239,6 +239,7 @@ object CapeService : Listenable, MinecraftInstance() {
 
             LOGGER.info(
                 if(statusCode == HttpStatus.SC_NO_CONTENT) {
+                    capeUser.uuid = uuid
                     "[Donator Cape] Successfully transferred cape to $uuid ($username)"
                 } else {
                     "[Donator Cape] Failed to transfer cape ($statusCode)"
@@ -256,6 +257,6 @@ object CapeService : Listenable, MinecraftInstance() {
 
 }
 
-data class CapeSelfUser(val token: String, var enabled: Boolean, val uuid: String, val capeName: String)
+data class CapeSelfUser(val token: String, var enabled: Boolean, var uuid: String, val capeName: String)
 
 data class CapeCarrier(val uuid: UUID, val capeName: String)

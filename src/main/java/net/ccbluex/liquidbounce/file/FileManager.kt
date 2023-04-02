@@ -86,7 +86,7 @@ object FileManager : MinecraftInstance() {
      *
      * @param configs list
      */
-        fun loadConfigs(vararg configs: FileConfig) {
+    fun loadConfigs(vararg configs: FileConfig) {
         for (fileConfig in configs) loadConfig(fileConfig)
     }
 
