@@ -192,7 +192,8 @@ class ModuleManager : Listenable {
             Animations,
             Backtrack,
             ClickGUI,
-            NameProtect
+            NameProtect,
+            NoFluid
         )
 
         LOGGER.info("[ModuleManager] Loaded ${modules.size} modules.")
