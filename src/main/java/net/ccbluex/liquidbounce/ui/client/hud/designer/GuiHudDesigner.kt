@@ -5,9 +5,9 @@
  */
 package net.ccbluex.liquidbounce.ui.client.hud.designer
 
-import net.ccbluex.liquidbounce.LiquidBounce.hud
 import net.ccbluex.liquidbounce.file.FileManager.hudConfig
 import net.ccbluex.liquidbounce.file.FileManager.saveConfig
+import net.ccbluex.liquidbounce.ui.client.hud.HUD
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.minecraft.client.gui.GuiScreen
 import org.lwjgl.input.Keyboard
@@ -27,10 +27,10 @@ class GuiHudDesigner : GuiScreen() {
     }
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
-        hud.render(true)
-        hud.handleMouseMove(mouseX, mouseY)
+        HUD.render(true)
+        HUD.handleMouseMove(mouseX, mouseY)
 
-        if (selectedElement !in hud.elements)
+        if (selectedElement !in HUD.elements)
             selectedElement = null
 
         val wheel = Mouse.getDWheel()
@@ -38,7 +38,7 @@ class GuiHudDesigner : GuiScreen() {
         editorPanel.drawPanel(mouseX, mouseY, wheel)
 
         if (wheel != 0) {
-            for (element in hud.elements) {
+            for (element in HUD.elements) {
                 if (element.isInBorder(mouseX / element.scale - element.renderX,
                                 mouseY / element.scale - element.renderY)) {
                     element.scale = element.scale + if (wheel > 0) 0.05f else -0.05f
@@ -56,7 +56,7 @@ class GuiHudDesigner : GuiScreen() {
             return
         }
 
-        hud.handleMouseClick(mouseX, mouseY, mouseButton)
+        HUD.handleMouseClick(mouseX, mouseY, mouseButton)
 
         if (!(mouseX in editorPanel.x..editorPanel.x + editorPanel.width
                     && mouseY in editorPanel.y..editorPanel.y + min(editorPanel.realHeight, 200))
@@ -66,7 +66,7 @@ class GuiHudDesigner : GuiScreen() {
         }
 
         if (mouseButton == 0) {
-            for (element in hud.elements) {
+            for (element in HUD.elements) {
                 if (element.isInBorder(mouseX / element.scale - element.renderX, mouseY / element.scale - element.renderY)) {
                     selectedElement = element
                     break
@@ -78,7 +78,7 @@ class GuiHudDesigner : GuiScreen() {
     override fun mouseReleased(mouseX: Int, mouseY: Int, state: Int) {
         super.mouseReleased(mouseX, mouseY, state)
 
-        hud.handleMouseReleased()
+        HUD.handleMouseReleased()
     }
 
     override fun onGuiClosed() {
@@ -91,14 +91,14 @@ class GuiHudDesigner : GuiScreen() {
     override fun keyTyped(typedChar: Char, keyCode: Int) {
         when (keyCode) {
             Keyboard.KEY_DELETE ->
-                if (selectedElement != null) hud.removeElement(selectedElement!!)
+                if (selectedElement != null) HUD.removeElement(selectedElement!!)
 
             Keyboard.KEY_ESCAPE -> {
                 selectedElement = null
                 editorPanel.create = false
             }
 
-            else -> hud.handleKey(typedChar, keyCode)
+            else -> HUD.handleKey(typedChar, keyCode)
         }
 
         super.keyTyped(typedChar, keyCode)

@@ -16,6 +16,10 @@ abstract class ButtonElement(val displayName: String) : Element() {
         get() = Color.WHITE.rgb
 
     var hoverTime = 0
+        set(value) {
+            field = value.coerceIn(0, 7)
+        }
+
     override val height = 16
 
     override fun drawScreenAndClick(mouseX: Int, mouseY: Int, mouseButton: Int?): Boolean {

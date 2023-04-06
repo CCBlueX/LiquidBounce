@@ -40,19 +40,16 @@ import kotlin.math.min
 @ModuleInfo(name = "ESP", description = "Allows you to see targets through walls.", category = ModuleCategory.RENDER)
 object ESP : Module() {
 
-    @JvmField
     val modeValue = ListValue(
         "Mode",
         arrayOf("Box", "OtherBox", "WireFrame", "2D", "Real2D", "Outline", "Glow"),
         "Box"
     )
 
-    @JvmField
     val outlineWidth = object : FloatValue("Outline-Width", 3f, 0.5f, 5f) {
         override fun isSupported() = modeValue.get() == "Outline"
     }
 
-    @JvmField
     val wireframeWidth = object : FloatValue("WireFrame-Width", 2f, 0.5f, 5f) {
         override fun isSupported() = modeValue.get() == "WireFrame"
     }
@@ -84,8 +81,6 @@ object ESP : Module() {
     private val colorTeam = BoolValue("Team", false)
     private val botValue = BoolValue("Bots", true)
 
-
-    @JvmField
     var renderNameTags = true
 
     @EventTarget

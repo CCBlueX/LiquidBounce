@@ -17,8 +17,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
-
 @Mixin(BlockModelRenderer.class)
 public class MixinBlockModelRenderer {
 

@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -37,7 +36,7 @@ import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawPlatform
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils
+import net.ccbluex.liquidbounce.utils.timer.TimeUtils.randomClickDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -74,7 +73,7 @@ object KillAura : Module() {
             val i = minCPS.get()
             if (i > newValue) set(i)
 
-            attackDelay = TimeUtils.randomClickDelay(minCPS.get(), get())
+            attackDelay = randomClickDelay(minCPS.get(), get())
         }
     }
 
@@ -83,7 +82,7 @@ object KillAura : Module() {
             val i = maxCPS.get()
             if (i < newValue) set(i)
 
-            attackDelay = TimeUtils.randomClickDelay(get(), maxCPS.get())
+            attackDelay = randomClickDelay(get(), maxCPS.get())
         }
 
         override fun isSupported() = !maxCPS.isMinimal()
@@ -219,7 +218,7 @@ object KillAura : Module() {
 
     // Attack delay
     private val attackTimer = MSTimer()
-    private var attackDelay = 0L
+    private var attackDelay = 0
     private var clicks = 0
 
     // Container Delay
@@ -422,7 +421,7 @@ object KillAura : Module() {
                 currentTarget!!.hurtTime <= hurtTimeValue.get()) {
             clicks++
             attackTimer.reset()
-            attackDelay = TimeUtils.randomClickDelay(minCPS.get(), maxCPS.get())
+            attackDelay = randomClickDelay(minCPS.get(), maxCPS.get())
         }
     }
 
@@ -586,12 +585,10 @@ object KillAura : Module() {
                 if (entity.isSpectator || isBot(entity))
                     return false
 
-                if (entity.isClientFriend() && !moduleManager[NoFriends::class.java].state)
+                if (entity.isClientFriend() && !NoFriends.state)
                     return false
 
-                val teams = moduleManager[Teams::class.java] as Teams
-
-                return !teams.state || !teams.isInYourTeam(entity)
+                return !Teams.state || !Teams.isInYourTeam(entity)
             }
 
             return targetMobs && entity.isMob() || targetAnimals && entity.isAnimal()
@@ -634,11 +631,9 @@ object KillAura : Module() {
         }
 
         // Extra critical effects
-        val criticals = moduleManager[Criticals::class.java] as Criticals
-
         for (i in 0..2) {
             // Critical Effect
-            if (thePlayer.fallDistance > 0F && !thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isPotionActive(Potion.blindness) && thePlayer.ridingEntity == null || criticals.state && criticals.msTimer.hasTimePassed(criticals.delayValue.get()) && !thePlayer.isInWater && !thePlayer.isInLava && !thePlayer.isInWeb)
+            if (thePlayer.fallDistance > 0F && !thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isPotionActive(Potion.blindness) && thePlayer.ridingEntity == null || Criticals.state && Criticals.msTimer.hasTimePassed(Criticals.delayValue.get()) && !thePlayer.isInWater && !thePlayer.isInLava && !thePlayer.isInWeb)
                 thePlayer.onCriticalHit(target)
 
             // Enchant Effect
@@ -737,7 +732,7 @@ object KillAura : Module() {
             }
 
             if (raycastValue.get() && raycastedEntity != null && raycastedEntity is EntityLivingBase
-                    && (moduleManager[NoFriends::class.java].state || !(raycastedEntity is EntityPlayer && raycastedEntity.isClientFriend())))
+                    && (NoFriends.state || !(raycastedEntity is EntityPlayer && raycastedEntity.isClientFriend())))
                 currentTarget = raycastedEntity
 
             hitable = currentTarget == raycastedEntity
@@ -800,9 +795,9 @@ object KillAura : Module() {
     /**
      * Check if run should be cancelled
      */
-    private val cancelRun: Boolean
+    private val cancelRun
         inline get() = mc.thePlayer.isSpectator || !isAlive(mc.thePlayer)
-                || moduleManager[Blink::class.java].state || moduleManager[FreeCam::class.java].state
+                || Blink.state || FreeCam.state
 
     /**
      * Check if [entity] is alive
@@ -813,13 +808,13 @@ object KillAura : Module() {
     /**
      * Check if player is able to block
      */
-    private val canBlock: Boolean
+    private val canBlock
         inline get() = mc.thePlayer?.heldItem?.item is ItemSword
 
     /**
      * Range
      */
-    private val maxRange: Float
+    private val maxRange
         get() = max(rangeValue.get(), throughWallsRangeValue.get())
 
     private fun getRange(entity: Entity) =
@@ -831,6 +826,6 @@ object KillAura : Module() {
     override val tag
         get() = targetModeValue.get()
 
-    val isBlockingChestAura: Boolean
+    val isBlockingChestAura
         get() = state && target != null
 }

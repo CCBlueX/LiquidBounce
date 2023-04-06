@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -431,10 +430,10 @@ object Tower : Module() {
     fun onRender2D(event: Render2DEvent) {
         if (counterDisplayValue.get()) {
             glPushMatrix()
-            val blockOverlay = moduleManager[BlockOverlay::class.java] as BlockOverlay
-            if (blockOverlay.state && blockOverlay.infoValue.get() && blockOverlay.currentBlock != null) {
+
+            if (BlockOverlay.state && BlockOverlay.infoValue.get() && BlockOverlay.currentBlock != null)
                 glTranslatef(0f, 15f, 0f)
-            }
+
             val info = "Blocks: §7$blocksAmount"
             val scaledResolution = ScaledResolution(mc)
 

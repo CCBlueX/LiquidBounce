@@ -5,7 +5,9 @@
  */
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
-import net.ccbluex.liquidbounce.LiquidBounce.hud
+
+import net.ccbluex.liquidbounce.ui.client.hud.HUD
+import net.ccbluex.liquidbounce.ui.client.hud.HUD.addNotification
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
@@ -34,12 +36,11 @@ class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F,
      * Draw element
      */
     override fun drawElement(): Border? {
-        if (hud.notifications.size > 0)
-            hud.notifications[0].drawNotification()
+        HUD.notifications.firstOrNull()?.drawNotification()
 
         if (mc.currentScreen is GuiHudDesigner) {
-            if (exampleNotification !in hud.notifications)
-                hud.addNotification(exampleNotification)
+            if (exampleNotification !in HUD.notifications)
+                addNotification(exampleNotification)
 
             exampleNotification.fadeState = Notification.FadeState.STAY
             exampleNotification.x = exampleNotification.textLength + 8F
@@ -109,7 +110,7 @@ class Notification(private val message: String) {
             } else
                 fadeState = FadeState.END
 
-            FadeState.END -> hud.removeNotification(this)
+            FadeState.END -> HUD.removeNotification(this)
         }
     }
 }

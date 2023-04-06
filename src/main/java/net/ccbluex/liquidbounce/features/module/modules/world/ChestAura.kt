@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
@@ -49,7 +48,7 @@ object ChestAura : Module() {
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
-        if (moduleManager[Blink::class.java].state || (moduleManager[KillAura::class.java] as KillAura).isBlockingChestAura)
+        if (Blink.state || KillAura.isBlockingChestAura)
             return
 
         val thePlayer = mc.thePlayer
@@ -101,7 +100,5 @@ object ChestAura : Module() {
         }
     }
 
-    override fun onDisable() {
-        clickedBlocks.clear()
-    }
+    override fun onDisable() = clickedBlocks.clear()
 }

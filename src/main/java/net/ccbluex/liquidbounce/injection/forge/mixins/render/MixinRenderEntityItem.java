@@ -12,7 +12,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
 import static org.lwjgl.opengl.GL11.*;
 
 @Mixin(RenderEntityItem.class)

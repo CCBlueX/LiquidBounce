@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other
 
-import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
@@ -15,14 +14,13 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 class CustomSpeed : SpeedMode("Custom") {
     override fun onMotion() {
         if (isMoving) {
-            val speed = moduleManager[Speed::class.java] as Speed
-            mc.timer.timerSpeed = speed.customTimerValue.get()
+            mc.timer.timerSpeed = Speed.customTimerValue.get()
             when {
                 mc.thePlayer.onGround -> {
-                    strafe(speed.customSpeedValue.get())
-                    mc.thePlayer.motionY = speed.customYValue.get().toDouble()
+                    strafe(Speed.customSpeedValue.get())
+                    mc.thePlayer.motionY = Speed.customYValue.get().toDouble()
                 }
-                speed.customStrafeValue.get() -> strafe(speed.customSpeedValue.get())
+                Speed.customStrafeValue.get() -> strafe(Speed.customSpeedValue.get())
                 else -> strafe()
             }
         } else {
@@ -32,12 +30,11 @@ class CustomSpeed : SpeedMode("Custom") {
     }
 
     override fun onEnable() {
-        val speed = moduleManager[Speed::class.java] as Speed
-        if (speed.resetXZValue.get()) {
+        if (Speed.resetXZValue.get()) {
             mc.thePlayer.motionZ = 0.0
             mc.thePlayer.motionX = mc.thePlayer.motionZ
         }
-        if (speed.resetYValue.get()) mc.thePlayer.motionY = 0.0
+        if (Speed.resetYValue.get()) mc.thePlayer.motionY = 0.0
         super.onEnable()
     }
 

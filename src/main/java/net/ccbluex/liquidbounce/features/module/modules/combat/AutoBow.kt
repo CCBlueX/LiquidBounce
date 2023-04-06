@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -24,12 +23,10 @@ object AutoBow : Module() {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val bowAimbot = moduleManager[BowAimbot::class.java] as BowAimbot
-
         val thePlayer = mc.thePlayer
 
         if (thePlayer.isUsingItem && thePlayer.heldItem?.item is ItemBow &&
-                thePlayer.itemInUseDuration > 20 && (!waitForBowAimbot.get() || !bowAimbot.state || bowAimbot.hasTarget())) {
+                thePlayer.itemInUseDuration > 20 && (!waitForBowAimbot.get() || !BowAimbot.state || BowAimbot.hasTarget())) {
             thePlayer.stopUsingItem()
             mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
         }

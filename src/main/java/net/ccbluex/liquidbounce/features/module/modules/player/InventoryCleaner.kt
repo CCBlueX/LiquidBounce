@@ -18,7 +18,7 @@ import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils
+import net.ccbluex.liquidbounce.utils.timer.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -103,7 +103,7 @@ object InventoryCleaner : Module() {
      * VALUES
      */
 
-    private var delay = 0L
+    private var delay = 0
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
@@ -141,7 +141,7 @@ object InventoryCleaner : Module() {
                 mc.netHandler.addToSendQueue(C0DPacketCloseWindow())
             }
 
-            delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+            delay = randomDelay(minDelayValue.get(), maxDelayValue.get())
         }
     }
 
@@ -229,7 +229,7 @@ object InventoryCleaner : Module() {
 
                 if (openInventory) mc.netHandler.addToSendQueue(C0DPacketCloseWindow())
 
-                delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+                delay = randomDelay(minDelayValue.get(), maxDelayValue.get())
                 break
             }
         }

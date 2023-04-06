@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.render;
 
 import com.google.common.base.Predicates;
+import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.Render3DEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.Backtrack;
 import net.ccbluex.liquidbounce.features.module.modules.player.Reach;
@@ -34,8 +35,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static net.ccbluex.liquidbounce.LiquidBounce.eventManager;
-import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
 import static net.minecraft.client.renderer.GlStateManager.rotate;
 import static net.minecraft.client.renderer.GlStateManager.translate;
 import static org.lwjgl.opengl.GL11.glPopMatrix;
@@ -62,7 +61,7 @@ public abstract class MixinEntityRenderer {
 
     @Inject(method = "renderWorldPass", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/EntityRenderer;renderHand:Z", shift = At.Shift.BEFORE))
     private void renderWorldPass(int pass, float partialTicks, long finishTimeNano, CallbackInfo callbackInfo) {
-        eventManager.callEvent(new Render3DEvent(partialTicks));
+        EventManager.INSTANCE.callEvent(new Render3DEvent(partialTicks));
     }
 
     @Inject(method = "hurtCameraEffect", at = @At("HEAD"), cancellable = true)

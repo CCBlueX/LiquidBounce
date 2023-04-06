@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.utils
 
-import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.PacketEvent
@@ -73,13 +72,10 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
     private var keepLength = 0
 
-    @JvmField
     var targetRotation: Rotation? = null
 
-    @JvmField
     var serverRotation = Rotation(0f, 0f)
 
-    @JvmField
     var keepCurrentRotation = false
 
     private val random = Random()
@@ -158,7 +154,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
             target.posZ + (if (predict) (target.posZ - target.prevPosZ) * predictSize else .0) - (player.posZ + if (predict) player.posZ - player.prevPosZ else .0)
         val posSqrt = sqrt(posX * posX + posZ * posZ)
 
-        var velocity = if (moduleManager[FastBow::class.java].state) 1f else player.itemInUseDuration / 20f
+        var velocity = if (FastBow.state) 1f else player.itemInUseDuration / 20f
         velocity = min((velocity * velocity + velocity * 2) / 3, 1f)
 
         val rotation = Rotation(
@@ -302,7 +298,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param rotation your rotation
      * @return difference between rotation
      */
-    @JvmStatic
     fun getRotationDifference(rotation: Rotation) = getRotationDifference(rotation, serverRotation)
 
     /**
@@ -345,7 +340,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param rotation your rotation
      * @return target vector
      */
-    @JvmStatic
     fun getVectorForRotation(rotation: Rotation): Vec3 {
         val yawCos = cos(-rotation.yaw * 0.017453292 - Math.PI)
         val yawSin = sin(-rotation.yaw * 0.017453292 - Math.PI)

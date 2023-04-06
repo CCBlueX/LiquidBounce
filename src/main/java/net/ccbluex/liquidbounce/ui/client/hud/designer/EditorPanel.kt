@@ -5,10 +5,9 @@
  */
 package net.ccbluex.liquidbounce.ui.client.hud.designer
 
-import net.ccbluex.liquidbounce.LiquidBounce.hud
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.guiColor
-import net.ccbluex.liquidbounce.ui.client.hud.HUD.Companion.createDefault
-import net.ccbluex.liquidbounce.ui.client.hud.HUD.Companion.elements
+import net.ccbluex.liquidbounce.ui.client.hud.HUD
+import net.ccbluex.liquidbounce.ui.client.hud.HUD.ELEMENTS
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
@@ -116,10 +115,10 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
         realHeight = 15
         width = 90
 
-        for (element in elements) {
+        for (element in ELEMENTS) {
             val info = element.getAnnotation(ElementInfo::class.java) ?: continue
 
-            if (info.single && hud.elements.any { it.javaClass == element })
+            if (info.single && HUD.elements.any { it.javaClass == element })
                 continue
 
             val name = info.name
@@ -135,7 +134,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
                     val newElement = element.newInstance()
 
                     if (newElement.createElement())
-                        hud.addElement(newElement)
+                        HUD.addElement(newElement)
                 } catch (e: InstantiationException) {
                     e.printStackTrace()
                 } catch (e: IllegalAccessException) {
@@ -170,7 +169,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 
         Fonts.font35.drawString("§lReset", x + 2f, y.toFloat() + height, Color.WHITE.rgb)
         if (Mouse.isButtonDown(0) && !mouseDown && mouseX in x..x + width && mouseY in y + height..y + height + 10)
-            hud = createDefault()
+            HUD.setToDefault()
 
         height += 15
         realHeight += 15
@@ -179,7 +178,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
         height += 10
         realHeight += 10
 
-        for (element in hud.elements) {
+        for (element in HUD.elements) {
             Fonts.font35.drawString(element.name, x + 2, y + height, Color.WHITE.rgb)
 
             val stringWidth = Fonts.font35.getStringWidth(element.name)
@@ -418,7 +417,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
             val deleteWidth = x + width - Fonts.font35.getStringWidth("§lDelete") - 2
             Fonts.font35.drawString("§lDelete", deleteWidth.toFloat(), y + 3.5F, Color.WHITE.rgb)
             if (Mouse.isButtonDown(0) && !mouseDown && mouseX in deleteWidth..x + width && mouseY in y..y + 10)
-                hud.removeElement(element)
+                HUD.removeElement(element)
         }
     }
 

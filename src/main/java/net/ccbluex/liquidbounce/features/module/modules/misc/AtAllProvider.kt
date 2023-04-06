@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils
+import net.ccbluex.liquidbounce.utils.timer.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.network.play.client.C01PacketChatMessage
@@ -39,9 +39,9 @@ object AtAllProvider : Module() {
 
     private val retryValue = BoolValue("Retry", false)
     private val sendQueue = LinkedBlockingQueue<String>()
-    private val retryQueue: MutableList<String> = ArrayList()
+    private val retryQueue = mutableListOf<String>()
     private val msTimer = MSTimer()
-    private var delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+    private var delay = randomDelay(minDelayValue.get(), maxDelayValue.get())
 
     override fun onDisable() {
         synchronized(sendQueue) {
@@ -71,7 +71,7 @@ object AtAllProvider : Module() {
                 mc.thePlayer.sendChatMessage(sendQueue.take())
                 msTimer.reset()
 
-                delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+                delay = randomDelay(minDelayValue.get(), maxDelayValue.get())
             }
         } catch (e: InterruptedException) {
             e.printStackTrace()

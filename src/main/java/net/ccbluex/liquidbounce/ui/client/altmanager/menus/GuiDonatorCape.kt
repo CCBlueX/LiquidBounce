@@ -16,7 +16,6 @@ import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiTextField
 import org.lwjgl.input.Keyboard
-import kotlin.math.log
 
 class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
 

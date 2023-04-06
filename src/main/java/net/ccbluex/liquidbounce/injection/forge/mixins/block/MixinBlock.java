@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.block;
 
 import net.ccbluex.liquidbounce.event.BlockBBEvent;
+import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.features.module.modules.combat.Criticals;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.GhostHand;
 import net.ccbluex.liquidbounce.features.module.modules.player.NoFall;
@@ -35,10 +36,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
-import java.util.Objects;
-
-import static net.ccbluex.liquidbounce.LiquidBounce.eventManager;
-import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
 
 @Mixin(Block.class)
 @SideOnly(Side.CLIENT)
@@ -67,7 +64,7 @@ public abstract class MixinBlock {
     public void addCollisionBoxesToList(World worldIn, BlockPos pos, IBlockState state, AxisAlignedBB mask, List<AxisAlignedBB> list, Entity collidingEntity) {
         AxisAlignedBB axisalignedbb = getCollisionBoundingBox(worldIn, pos, state);
         BlockBBEvent blockBBEvent = new BlockBBEvent(pos, blockState.getBlock(), axisalignedbb);
-        eventManager.callEvent(blockBBEvent);
+        EventManager.INSTANCE.callEvent(blockBBEvent);
 
         axisalignedbb = blockBBEvent.getBoundingBox();
 
@@ -103,7 +100,7 @@ public abstract class MixinBlock {
 
         // NoSlowBreak
         final NoSlowBreak noSlowBreak = NoSlowBreak.INSTANCE;
-        if (Objects.requireNonNull(noSlowBreak).getState()) {
+        if (noSlowBreak.getState()) {
             if (noSlowBreak.getWaterValue().get() && playerIn.isInsideOfMaterial(Material.water) && !EnchantmentHelper.getAquaAffinityModifier(playerIn)) {
                 f *= 5f;
             }
@@ -115,7 +112,7 @@ public abstract class MixinBlock {
             final NoFall noFall = NoFall.INSTANCE;
             final Criticals criticals = Criticals.INSTANCE;
 
-            if (Objects.requireNonNull(noFall).getState() && noFall.modeValue.get().equals("NoGround") || Objects.requireNonNull(criticals).getState() && criticals.getModeValue().get().equals("NoGround")) {
+            if (noFall.getState() && noFall.getModeValue().get().equals("NoGround") || criticals.getState() && criticals.getModeValue().get().equals("NoGround")) {
                 f /= 5F;
             }
         }

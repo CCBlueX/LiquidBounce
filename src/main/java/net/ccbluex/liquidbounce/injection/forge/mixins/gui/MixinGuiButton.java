@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
+import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
@@ -21,7 +22,6 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import java.awt.*;
 
-import static net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime;
 import static net.minecraft.client.renderer.GlStateManager.resetColor;
 
 @Mixin(GuiButton.class)
@@ -70,6 +70,7 @@ public abstract class MixinGuiButton extends Gui {
          final FontRenderer fontRenderer = mc.getLanguageManager().isCurrentLocaleUnicode() ? mc.fontRendererObj : Fonts.font35;
          hovered = (mouseX >= xPosition && mouseY >= yPosition &&
                     mouseX < xPosition + width && mouseY < yPosition + height);
+         final float deltaTime = RenderUtils.INSTANCE.getDeltaTime();
 
          if (enabled && hovered) {
             cut += 0.05F * deltaTime;

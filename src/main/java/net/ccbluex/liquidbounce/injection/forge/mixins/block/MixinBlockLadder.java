@@ -18,10 +18,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-import java.util.Objects;
-
-import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
-
 @Mixin(BlockLadder.class)
 @SideOnly(Side.CLIENT)
 public abstract class MixinBlockLadder extends MixinBlock {
