@@ -15,7 +15,6 @@ import net.minecraft.entity.player.EntityPlayer
 
 
 object RaycastUtils : MinecraftInstance() {
-    @JvmStatic
     @JvmOverloads
     fun raycastEntity(range: Double, yaw: Float = serverRotation.yaw, pitch: Float = serverRotation.pitch, entityFilter: (Entity) -> Boolean): Entity? {
         val renderViewEntity = mc.renderViewEntity

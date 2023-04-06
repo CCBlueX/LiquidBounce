@@ -10,6 +10,9 @@ import net.ccbluex.liquidbounce.features.module.modules.render.Chams;
 import net.ccbluex.liquidbounce.features.module.modules.render.ESP;
 import net.ccbluex.liquidbounce.features.module.modules.render.NameTags;
 import net.ccbluex.liquidbounce.features.module.modules.render.TrueSight;
+import net.ccbluex.liquidbounce.utils.ClientUtils;
+import net.ccbluex.liquidbounce.utils.EntityUtils;
+import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.model.ModelBase;
 import net.minecraft.client.renderer.entity.RendererLivingEntity;
 import net.minecraft.entity.EntityLivingBase;
@@ -24,11 +27,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.awt.Color;
 
-import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
-import static net.ccbluex.liquidbounce.utils.ClientUtils.disableFastRender;
-import static net.ccbluex.liquidbounce.utils.EntityUtils.isSelected;
 import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
-import static net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor;
 import static net.minecraft.client.renderer.GlStateManager.*;
 import static org.lwjgl.opengl.GL11.*;
 
@@ -43,7 +42,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
     private <T extends EntityLivingBase> void injectChamsPre(T entity, double x, double y, double z, float entityYaw, float partialTicks, CallbackInfo callbackInfo) {
         final Chams chams = Chams.INSTANCE;
 
-        if (chams.getState() && chams.getTargetsValue().get() && isSelected(entity, false)) {
+        if (chams.getState() && chams.getTargetsValue().get() && EntityUtils.INSTANCE.isSelected(entity, false)) {
             glEnable(GL_POLYGON_OFFSET_FILL);
             glPolygonOffset(1f, -1000000F);
         }
@@ -53,7 +52,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
     private <T extends EntityLivingBase> void injectChamsPost(T entity, double x, double y, double z, float entityYaw, float partialTicks, CallbackInfo callbackInfo) {
         final Chams chams = Chams.INSTANCE;
 
-        if (chams.getState() && chams.getTargetsValue().get() && isSelected(entity, false)) {
+        if (chams.getState() && chams.getTargetsValue().get() && EntityUtils.INSTANCE.isSelected(entity, false)) {
             glPolygonOffset(1f, 1000000F);
             glDisable(GL_POLYGON_OFFSET_FILL);
         }
@@ -61,7 +60,7 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
 
     @Inject(method = "canRenderName(Lnet/minecraft/entity/EntityLivingBase;)Z", at = @At("HEAD"), cancellable = true)
     private <T extends EntityLivingBase> void canRenderName(T entity, CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
-        if (!ESP.renderNameTags || (NameTags.INSTANCE.getState() && isSelected(entity, false))) {
+        if (!ESP.INSTANCE.getRenderNameTags() || (NameTags.INSTANCE.getState() && EntityUtils.INSTANCE.isSelected(entity, false))) {
             callbackInfoReturnable.setReturnValue(false);
         }
     }
@@ -90,14 +89,14 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
             }
 
             final ESP esp = ESP.INSTANCE;
-            if (esp.getState() && isSelected(p_renderModel_1_, false)) {
+            if (esp.getState() && EntityUtils.INSTANCE.isSelected(p_renderModel_1_, false)) {
                 boolean fancyGraphics = mc.gameSettings.fancyGraphics;
                 mc.gameSettings.fancyGraphics = false;
 
                 float gamma = mc.gameSettings.gammaSetting;
                 mc.gameSettings.gammaSetting = 100000F;
 
-                switch (esp.modeValue.get().toLowerCase()) {
+                switch (esp.getModeValue().get().toLowerCase()) {
                     case "wireframe":
                         glPushMatrix();
                         glPushAttrib(GL_ALL_ATTRIB_BITS);
@@ -108,19 +107,19 @@ public abstract class MixinRendererLivingEntity extends MixinRender {
                         glEnable(GL_LINE_SMOOTH);
                         glEnable(GL_BLEND);
                         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                        glColor(esp.getColor(p_renderModel_1_));
-                        glLineWidth(esp.wireframeWidth.get());
+                        RenderUtils.INSTANCE.glColor(esp.getColor(p_renderModel_1_));
+                        glLineWidth(esp.getWireframeWidth().get());
                         mainModel.render(p_renderModel_1_, p_renderModel_2_, p_renderModel_3_, p_renderModel_4_, p_renderModel_5_, p_renderModel_6_, p_renderModel_7_);
                         glPopAttrib();
                         glPopMatrix();
                         break;
                     case "outline":
-                        disableFastRender();
+                        ClientUtils.INSTANCE.disableFastRender();
                         resetColor();
 
                         final Color color = esp.getColor(p_renderModel_1_);
                         OutlineUtils.setColor(color);
-                        OutlineUtils.renderOne(esp.outlineWidth.get());
+                        OutlineUtils.renderOne(esp.getOutlineWidth().get());
                         mainModel.render(p_renderModel_1_, p_renderModel_2_, p_renderModel_3_, p_renderModel_4_, p_renderModel_5_, p_renderModel_6_, p_renderModel_7_);
                         OutlineUtils.setColor(color);
                         OutlineUtils.renderTwo();

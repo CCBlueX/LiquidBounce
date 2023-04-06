@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
 import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
 
 @Mixin(SkinManager.class)
@@ -26,8 +25,8 @@ public class MixinSkinManager {
         
         NameProtect nameProtect = NameProtect.INSTANCE;
 
-        if (nameProtect.getState() && nameProtect.skinProtectValue.get()) {
-            if (nameProtect.allPlayersValue.get() || Objects.equals(gameProfile.getId(), mc.getSession().getProfile().getId())) {
+        if (nameProtect.getState() && nameProtect.getSkinProtectValue().get()) {
+            if (nameProtect.getAllPlayersValue().get() || Objects.equals(gameProfile.getId(), mc.getSession().getProfile().getId())) {
                 cir.setReturnValue(new HashMap<>());
                 cir.cancel();
             }

@@ -34,18 +34,18 @@ import net.minecraft.util.ResourceLocation
 import org.lwjgl.input.Keyboard
 import org.lwjgl.input.Mouse
 import org.lwjgl.opengl.GL11.glScaled
-import kotlin.math.max
-import kotlin.math.min
 import kotlin.math.roundToInt
 
-class ClickGui : GuiScreen() {
+object ClickGui : GuiScreen() {
     val panels = mutableListOf<Panel>()
     private val hudIcon = ResourceLocation("${CLIENT_NAME.lowercase()}/custom_hud_icon.png")
     var style: Style = LiquidBounceStyle
     var mouseX = 0
     var mouseY = 0
 
-    init {
+    fun setToDefault() {
+        panels.clear()
+
         val width = 100
         val height = 18
         var yPos = 5
@@ -228,19 +228,11 @@ class ClickGui : GuiScreen() {
         if (style is SlowlyStyle) {
             for (panel in panels) {
                 for (element in panel.elements) {
-                    if (element is ButtonElement) {
-                        if (element.isHovered(mouseX, mouseY)) {
-                            if (element.hoverTime < 7) element.hoverTime++
-                        } else if (element.hoverTime > 0) element.hoverTime--
-                    }
+                    if (element is ButtonElement)
+                        element.hoverTime += if (element.isHovered(mouseX, mouseY)) 1 else -1
 
-                    if (element is ModuleElement) {
-                        if (element.module.state) {
-                            if (element.slowlyFade < 255)
-                                element.slowlyFade = min(element.slowlyFade + 20, 255)
-                        } else if (element.slowlyFade > 0)
-                            element.slowlyFade = max(0, element.slowlyFade - 20)
-                    }
+                    if (element is ModuleElement)
+                        element.slowlyFade += if (element.module.state) 20 else -20
                 }
             }
         }

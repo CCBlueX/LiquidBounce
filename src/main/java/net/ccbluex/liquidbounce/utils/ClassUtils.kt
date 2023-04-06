@@ -12,7 +12,6 @@ object ClassUtils {
     /**
      * Allows you to check for existing classes with the [className]
      */
-    @JvmStatic
     fun hasClass(className: String) =
         if (className in cachedClasses)
             cachedClasses[className]!!

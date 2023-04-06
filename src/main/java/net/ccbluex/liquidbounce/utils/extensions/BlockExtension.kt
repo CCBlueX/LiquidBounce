@@ -18,3 +18,7 @@ fun BlockPos.getBlock() = BlockUtils.getBlock(this)
  * Get vector of block position
  */
 fun BlockPos.getVec() = Vec3(x + 0.5, y + 0.5, z + 0.5)
+
+fun BlockPos.isReplaceable() = BlockUtils.isReplaceable(this)
+
+fun BlockPos.canBeClicked() = BlockUtils.canBeClicked(this)

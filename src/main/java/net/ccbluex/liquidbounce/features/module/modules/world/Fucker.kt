@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
@@ -68,12 +67,8 @@ object Fucker : Module() {
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        if (noHitValue.get()) {
-            val killAura = moduleManager[KillAura::class.java] as KillAura
-
-            if (killAura.state && killAura.target != null)
-                return
-        }
+        if (noHitValue.get() && KillAura.state && KillAura.target != null)
+            return
 
         val targetId = blockValue.get()
 
@@ -133,9 +128,8 @@ object Fucker : Module() {
             // Destroy block
             actionValue.get() == "Destroy" || surroundings -> {
                 // Auto Tool
-                val autoTool = moduleManager[AutoTool::class.java] as AutoTool
-                if (autoTool.state)
-                    autoTool.switchSlot(currentPos)
+                if (AutoTool.state)
+                    AutoTool.switchSlot(currentPos)
 
                 // Break block
                 if (instantValue.get()) {

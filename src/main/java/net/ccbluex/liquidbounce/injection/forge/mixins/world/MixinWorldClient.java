@@ -11,8 +11,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
-import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
-
 @Mixin(WorldClient.class)
 public class MixinWorldClient {
 

@@ -240,7 +240,6 @@ class GameFontRenderer(font: Font) : FontRenderer(mc.gameSettings, ResourceLocat
     override fun getCharWidth(character: Char) = getStringWidth(character.toString())
 
     companion object {
-        @JvmStatic
         fun getColorIndex(type: Char) =
             when (type) {
                 in '0'..'9' -> type - '0'

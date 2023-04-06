@@ -17,17 +17,14 @@ import net.ccbluex.liquidbounce.value.TextValue
 @ModuleInfo(name = "NameProtect", description = "Changes player names clientside.", category = ModuleCategory.MISC)
 object NameProtect : Module() {
 
-    @JvmField
     val allPlayersValue = BoolValue("AllPlayers", false)
 
-    @JvmField
     val skinProtectValue = BoolValue("SkinProtect", true)
     private val fakeNameValue = TextValue("FakeName", "&cMe")
 
     /**
      * Handle text messages from font renderer
      */
-    @JvmStatic
     fun handleTextMessage(text: String): String {
         val p = mc.thePlayer ?: return text
 

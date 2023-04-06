@@ -21,10 +21,8 @@ import java.net.InetAddress
 
 @SideOnly(Side.CLIENT)
 object ServerUtils : MinecraftInstance() {
-    @JvmField
     var serverData: ServerData? = null
 
-    @JvmStatic
     @JvmOverloads
     fun connectToLastServer(noGLContext: Boolean = false) {
         if (serverData == null) return

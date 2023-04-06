@@ -1,7 +1,6 @@
 package net.ccbluex.liquidbounce.features.command.special
 
 import net.ccbluex.liquidbounce.LiquidBounce.commandManager
-import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.chat.packet.packets.ServerRequestJWTPacket
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.modules.misc.LiquidChat
@@ -10,8 +9,6 @@ import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
 
 class ChatTokenCommand : Command("chattoken") {
-
-    private val lChat = moduleManager[LiquidChat::class.java] as LiquidChat
 
     /**
      * Execute commands with provided [args]
@@ -22,23 +19,23 @@ class ChatTokenCommand : Command("chattoken") {
                 args[1].equals("set", true) -> {
                     if (args.size > 2) {
                         LiquidChat.jwtToken = StringUtils.toCompleteString(args, 2)
-                        lChat.jwtValue.set(true)
+                        LiquidChat.jwtValue.set(true)
 
-                        if (lChat.state) {
-                            lChat.state = false
-                            lChat.state = true
+                        if (LiquidChat.state) {
+                            LiquidChat.state = false
+                            LiquidChat.state = true
                         }
                     } else
                         chatSyntax("chattoken set <token>")
                 }
 
                 args[1].equals("generate", true) -> {
-                    if (!lChat.state) {
+                    if (!LiquidChat.state) {
                         chat("§cError: §7LiquidChat is disabled!")
                         return
                     }
 
-                    lChat.client.sendPacket(ServerRequestJWTPacket())
+                    LiquidChat.client.sendPacket(ServerRequestJWTPacket())
                 }
 
                 args[1].equals("copy", true) -> {

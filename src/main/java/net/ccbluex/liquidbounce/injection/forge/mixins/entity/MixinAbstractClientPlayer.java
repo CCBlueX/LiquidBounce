@@ -22,9 +22,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Objects;
 
-import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
-import static net.ccbluex.liquidbounce.features.module.modules.misc.NameProtect.allPlayersValue;
-import static net.ccbluex.liquidbounce.features.module.modules.misc.NameProtect.skinProtectValue;
 import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
 
 @Mixin(AbstractClientPlayer.class)
@@ -74,8 +71,10 @@ public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer {
 
     @Inject(method = "getLocationSkin()Lnet/minecraft/util/ResourceLocation;", at = @At("HEAD"), cancellable = true)
     private void getSkin(CallbackInfoReturnable<ResourceLocation> callbackInfoReturnable) {
-        if (NameProtect.INSTANCE.getState() && skinProtectValue.get()) {
-            if (!allPlayersValue.get() && !Objects.equals(getGameProfile().getName(), mc.thePlayer.getGameProfile().getName()))
+        final NameProtect nameProtect = NameProtect.INSTANCE;
+
+        if (nameProtect.getState() && nameProtect.getSkinProtectValue().get()) {
+            if (!nameProtect.getAllPlayersValue().get() && !Objects.equals(getGameProfile().getName(), mc.thePlayer.getGameProfile().getName()))
                 return;
 
             callbackInfoReturnable.setReturnValue(DefaultPlayerSkin.getDefaultSkin(getUniqueID()));

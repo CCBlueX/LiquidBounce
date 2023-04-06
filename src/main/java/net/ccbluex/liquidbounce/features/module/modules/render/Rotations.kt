@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
@@ -53,14 +52,7 @@ object Rotations : Module() {
         }
     }
 
-    private fun getState(module: Class<*>) = moduleManager[module].state
-
-    private fun shouldRotate(): Boolean {
-        val killAura = moduleManager[KillAura::class.java] as KillAura
-        return getState(Scaffold::class.java) || getState(Tower::class.java) ||
-                (getState(KillAura::class.java) && killAura.target != null) ||
-                getState(Derp::class.java) || getState(BowAimbot::class.java) ||
-                getState(Fucker::class.java) || getState(CivBreak::class.java) || getState(Nuker::class.java) ||
-                getState(ChestAura::class.java)
-    }
+    private fun shouldRotate() =
+        Scaffold.state || Tower.state || (KillAura.state && KillAura.target != null) || Derp.state || BowAimbot.state
+                || Fucker.state || CivBreak.state || Nuker.state || ChestAura.state
 }

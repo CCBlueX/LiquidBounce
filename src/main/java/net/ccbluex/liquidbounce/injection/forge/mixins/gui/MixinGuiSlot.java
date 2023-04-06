@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
 import net.ccbluex.liquidbounce.injection.implementations.IMixinGuiSlot;
+import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiSlot;
@@ -22,7 +23,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-import static net.ccbluex.liquidbounce.utils.render.RenderUtils.makeScissorBox;
 import static net.minecraft.client.renderer.GlStateManager.*;
 import static org.lwjgl.opengl.GL11.*;
 
@@ -112,7 +112,7 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot {
                 drawListHeader(k, l, tessellator);
             }
 
-            makeScissorBox(left, top, right, bottom);
+            RenderUtils.INSTANCE.makeScissorBox(left, top, right, bottom);
 
             glEnable(GL_SCISSOR_TEST);
 

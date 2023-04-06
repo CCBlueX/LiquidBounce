@@ -31,10 +31,8 @@ object ClientUtils : MinecraftInstance() {
         } catch (ignored: NoSuchFieldException) { }
     }
 
-    @JvmField
     val LOGGER: Logger = LogManager.getLogger("LiquidBounce")
 
-    @JvmStatic
     fun disableFastRender() {
         try {
             fastRenderField?.let {
@@ -58,7 +56,6 @@ object ClientUtils : MinecraftInstance() {
         )
     }
 
-    @JvmStatic
     fun displayChatMessage(message: String) {
         if (mc.thePlayer == null) {
             LOGGER.info("(MCChat) $message")

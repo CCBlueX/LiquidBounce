@@ -5,11 +5,11 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
-import net.ccbluex.liquidbounce.LiquidBounce.hud
 import net.ccbluex.liquidbounce.LiquidBounce.isStarting
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.file.FileManager.modulesConfig
 import net.ccbluex.liquidbounce.file.FileManager.saveConfig
+import net.ccbluex.liquidbounce.ui.client.hud.HUD.addNotification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
@@ -29,15 +29,13 @@ open class Module : MinecraftInstance(), Listenable {
         set(keyBind) {
             field = keyBind
 
-            if (!isStarting)
-                saveConfig(modulesConfig)
+            saveConfig(modulesConfig)
         }
     var array = true
         set(array) {
             field = array
 
-            if (!isStarting)
-                saveConfig(modulesConfig)
+            saveConfig(modulesConfig)
         }
     private val canEnable: Boolean
 
@@ -65,10 +63,8 @@ open class Module : MinecraftInstance(), Listenable {
 
             // Play sound and add notification
             if (!isStarting) {
-                mc.soundHandler.playSound(PositionedSoundRecord.create(
-                    ResourceLocation("random.click"),
-                    1F))
-                hud.addNotification(Notification("${if (value) "Enabled " else "Disabled "}$name"))
+                mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("random.click"), 1F))
+                addNotification(Notification("${if (value) "Enabled " else "Disabled "}$name"))
             }
 
             // Call on enabled or disabled
@@ -95,10 +91,10 @@ open class Module : MinecraftInstance(), Listenable {
     open val tag: String?
         get() = null
 
-    val tagName: String
+    val tagName
         get() = "$name${if (tag == null) "" else " §7$tag"}"
 
-    val colorlessTagName: String
+    val colorlessTagName
         get() = "$name${if (tag == null) "" else " " + stripColor(tag!!)}"
 
     /**

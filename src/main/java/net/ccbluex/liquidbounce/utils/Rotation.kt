@@ -40,7 +40,6 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
      *
      * @see net.minecraft.client.renderer.EntityRenderer.updateCameraAndRender
      */
-    @JvmOverloads
     fun fixedSensitivity(sensitivity: Float = mc.gameSettings.mouseSensitivity): Rotation {
         // Previous implementation essentially floored the subtraction.
         // This way it returns rotations closer to the original.
