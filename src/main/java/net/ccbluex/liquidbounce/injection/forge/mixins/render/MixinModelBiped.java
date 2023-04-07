@@ -19,7 +19,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
 import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
 
 @Mixin(ModelBiped.class)
@@ -37,12 +36,9 @@ public class MixinModelBiped {
 
     @Inject(method = "setRotationAngles", at = @At(value = "FIELD", target = "Lnet/minecraft/client/model/ModelBiped;swingProgress:F"))
     private void revertSwordAnimation(float p_setRotationAngles_1_, float p_setRotationAngles_2_, float p_setRotationAngles_3_, float p_setRotationAngles_4_, float p_setRotationAngles_5_, float p_setRotationAngles_6_, Entity p_setRotationAngles_7_, CallbackInfo callbackInfo) {
-        if(heldItemRight == 3)
-            bipedRightArm.rotateAngleY = 0F;
+        if (heldItemRight == 3) bipedRightArm.rotateAngleY = 0F;
 
-        Rotations rotations = (Rotations) moduleManager.getModule(Rotations.class);
-
-        if (rotations.shouldRotate() && p_setRotationAngles_7_ instanceof EntityPlayer && p_setRotationAngles_7_.equals(mc.thePlayer)) {
+        if (Rotations.INSTANCE.shouldRotate() && p_setRotationAngles_7_ instanceof EntityPlayer && p_setRotationAngles_7_.equals(mc.thePlayer)) {
             bipedHead.rotateAngleX = (float) Math.toDegrees(RotationUtils.INSTANCE.getServerRotation().getPitch());
         }
     }

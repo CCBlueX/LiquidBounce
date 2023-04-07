@@ -88,13 +88,9 @@ object RotationUtils : MinecraftInstance(), Listenable {
     var strafe = false
     var strict = false
 
-    @JvmField
     var targetRotation: Rotation? = null
-
-    @JvmField
     var serverRotation = Rotation(0f, 0f)
 
-    @JvmField
     var keepCurrentRotation = false
 
     private val random = Random()
@@ -215,12 +211,9 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param bb your box
      * @return center of box
      */
-    fun getCenter(bb: AxisAlignedBB) =
-        Vec3(
-            bb.minX + (bb.maxX - bb.minX) * 0.5,
-            bb.minY + (bb.maxY - bb.minY) * 0.5,
-            bb.minZ + (bb.maxZ - bb.minZ) * 0.5
-        )
+    fun getCenter(bb: AxisAlignedBB) = Vec3(
+        bb.minX + (bb.maxX - bb.minX) * 0.5, bb.minY + (bb.maxY - bb.minY) * 0.5, bb.minZ + (bb.maxZ - bb.minZ) * 0.5
+    )
 
     /**
      * Search good center
@@ -308,11 +301,9 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param entity your entity
      * @return difference between rotation
      */
-    fun getRotationDifference(entity: Entity) =
-        getRotationDifference(
-            toRotation(getCenter(entity.hitBox), true),
-            Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)
-        )
+    fun getRotationDifference(entity: Entity) = getRotationDifference(
+        toRotation(getCenter(entity.hitBox), true), Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)
+    )
 
     /**
      * Calculate difference between the server rotation and your rotation
@@ -339,13 +330,13 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param turnSpeed your turn speed
      * @return limited rotation
      */
-    fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation, turnSpeed: Float) =
-        Rotation(
-            currentRotation.yaw + getAngleDifference(targetRotation.yaw, currentRotation.yaw)
-                .coerceIn(-turnSpeed, turnSpeed),
-            currentRotation.pitch + getAngleDifference(targetRotation.pitch, currentRotation.pitch)
-                .coerceIn(-turnSpeed, turnSpeed)
+    fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation, turnSpeed: Float) = Rotation(
+        currentRotation.yaw + getAngleDifference(targetRotation.yaw, currentRotation.yaw).coerceIn(
+            -turnSpeed, turnSpeed
+        ), currentRotation.pitch + getAngleDifference(targetRotation.pitch, currentRotation.pitch).coerceIn(
+            -turnSpeed, turnSpeed
         )
+    )
 
     /**
      * Calculate difference between two angle points
@@ -387,16 +378,14 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param blockReachDistance your reach
      * @return if crosshair is over target
      */
-    fun isRotationFaced(targetEntity: Entity, blockReachDistance: Double, rotation: Rotation) =
-        raycastEntity(
-            blockReachDistance, rotation.yaw, rotation.pitch
-        ) { entity: Entity -> targetEntity == entity } != null
+    fun isRotationFaced(targetEntity: Entity, blockReachDistance: Double, rotation: Rotation) = raycastEntity(
+        blockReachDistance, rotation.yaw, rotation.pitch
+    ) { entity: Entity -> targetEntity == entity } != null
 
     /**
      * Allows you to check if your enemy is behind a wall
      */
-    fun isVisible(vec3: Vec3) =
-        mc.theWorld.rayTraceBlocks(mc.thePlayer.eyes, vec3) == null
+    fun isVisible(vec3: Vec3) = mc.theWorld.rayTraceBlocks(mc.thePlayer.eyes, vec3) == null
 
     /**
      * Set your target rotation
