@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 
 @ModuleInfo(name = "Parkour", description = "Automatically jumps when reaching the edge of a block.", category = ModuleCategory.MOVEMENT)
-class Parkour : Module() {
+object Parkour : Module() {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {

@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.minecraft.util.BlockPos
 
 @ModuleInfo(name = "AutoTool", description = "Automatically selects the best tool in your inventory to mine a block.", category = ModuleCategory.PLAYER)
-class AutoTool : Module() {
+object AutoTool : Module() {
 
     @EventTarget
     fun onClick(event: ClickBlockEvent) {

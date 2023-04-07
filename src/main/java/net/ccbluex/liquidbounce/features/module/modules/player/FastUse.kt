@@ -22,7 +22,7 @@ import net.minecraft.item.ItemPotion
 import net.minecraft.network.play.client.C03PacketPlayer
 
 @ModuleInfo(name = "FastUse", description = "Allows you to use items faster.", category = ModuleCategory.PLAYER)
-class FastUse : Module() {
+object FastUse : Module() {
 
     private val modeValue = ListValue("Mode", arrayOf("Instant", "NCP", "AAC", "Custom"), "NCP")
 

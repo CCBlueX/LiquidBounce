@@ -13,11 +13,15 @@ import com.thealtening.AltService;
 import com.thealtening.api.TheAltening;
 import com.thealtening.api.data.AccountData;
 import me.liuli.elixir.account.MinecraftAccount;
+import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.SessionEvent;
 import net.ccbluex.liquidbounce.features.special.AutoReconnect;
+import net.ccbluex.liquidbounce.features.special.ClientFixes;
+import net.ccbluex.liquidbounce.file.FileManager;
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager;
 import net.ccbluex.liquidbounce.ui.client.altmanager.menus.GuiLoginProgress;
 import net.ccbluex.liquidbounce.ui.client.altmanager.menus.altgenerator.GuiTheAltening;
+import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.ServerUtils;
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils;
 import net.minecraft.client.gui.GuiButton;
@@ -39,9 +43,7 @@ import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Random;
 
-import static net.ccbluex.liquidbounce.LiquidBounce.*;
-import static net.ccbluex.liquidbounce.features.special.ClientFixes.fmlFixesEnabled;
-import static net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER;
+import static net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME;
 
 @Mixin(GuiDisconnected.class)
 public abstract class MixinGuiDisconnected extends MixinGuiScreen {
@@ -58,13 +60,13 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen {
     @Inject(method = "initGui", at = @At("RETURN"))
     private void initGui(CallbackInfo callbackInfo) {
         reconnectTimer = 0;
-        buttonList.add(reconnectButton = new GuiButton(1, this.width / 2 - 100, this.height / 2 + field_175353_i / 2 + this.fontRendererObj.FONT_HEIGHT + 22, 98, 20, "Reconnect"));
+        buttonList.add(reconnectButton = new GuiButton(1, width / 2 - 100, height / 2 + field_175353_i / 2 + fontRendererObj.FONT_HEIGHT + 22, 98, 20, "Reconnect"));
 
-        this.drawReconnectDelaySlider();
+        drawReconnectDelaySlider();
 
-        buttonList.add(new GuiButton(3, this.width / 2 - 100, this.height / 2 + field_175353_i / 2 + this.fontRendererObj.FONT_HEIGHT + 44, 98, 20, GuiTheAltening.Companion.getApiKey().isEmpty() ? "Random alt" : "New TheAltening alt"));
-        buttonList.add(new GuiButton(4, this.width / 2 + 2, this.height / 2 + field_175353_i / 2 + this.fontRendererObj.FONT_HEIGHT + 44, 98, 20, "Random username"));
-        buttonList.add(forgeBypassButton = new GuiButton(5, this.width / 2 - 100, this.height / 2 + field_175353_i / 2 + this.fontRendererObj.FONT_HEIGHT + 66, "Bypass AntiForge: " + (fmlFixesEnabled ? "On" : "Off")));
+        buttonList.add(new GuiButton(3, width / 2 - 100, height / 2 + field_175353_i / 2 + fontRendererObj.FONT_HEIGHT + 44, 98, 20, GuiTheAltening.Companion.getApiKey().isEmpty() ? "Random alt" : "New TheAltening alt"));
+        buttonList.add(new GuiButton(4, width / 2 + 2, height / 2 + field_175353_i / 2 + fontRendererObj.FONT_HEIGHT + 44, 98, 20, "Random username"));
+        buttonList.add(forgeBypassButton = new GuiButton(5, width / 2 - 100, height / 2 + field_175353_i / 2 + fontRendererObj.FONT_HEIGHT + 66, "Bypass AntiForge: " + (ClientFixes.INSTANCE.getFmlFixesEnabled() ? "On" : "Off")));
 
         updateSliderText();
     }
@@ -73,7 +75,7 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen {
     private void actionPerformed(GuiButton button, CallbackInfo callbackInfo) throws IOException {
         switch (button.id) {
             case 1:
-                ServerUtils.connectToLastServer();
+                ServerUtils.INSTANCE.connectToLastServer();
                 break;
             case 3:
                 if (!GuiTheAltening.Companion.getApiKey().isEmpty()) {
@@ -90,23 +92,23 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen {
                         yggdrasilUserAuthentication.logIn();
 
                         mc.session = new Session(yggdrasilUserAuthentication.getSelectedProfile().getName(), yggdrasilUserAuthentication.getSelectedProfile().getId().toString(), yggdrasilUserAuthentication.getAuthenticatedToken(), "mojang");
-                        eventManager.callEvent(new SessionEvent());
-                        ServerUtils.connectToLastServer();
+                        EventManager.INSTANCE.callEvent(new SessionEvent());
+                        ServerUtils.INSTANCE.connectToLastServer();
                         break;
                     } catch (final Throwable throwable) {
-                        LOGGER.error("Failed to login into random account from TheAltening.", throwable);
+                        ClientUtils.INSTANCE.getLOGGER().error("Failed to login into random account from TheAltening.", throwable);
                     }
                 }
 
-                final List<MinecraftAccount> accounts = fileManager.getAccountsConfig().getAccounts();
+                final List<MinecraftAccount> accounts = FileManager.INSTANCE.getAccountsConfig().getAccounts();
                 if (accounts.isEmpty())
                     break;
                 final MinecraftAccount minecraftAccount = accounts.get(new Random().nextInt(accounts.size()));
 
                 mc.displayGuiScreen(new GuiLoginProgress(minecraftAccount, () -> {
                     mc.addScheduledTask(() -> {
-                        eventManager.callEvent(new SessionEvent());
-                        ServerUtils.connectToLastServer();
+                        EventManager.INSTANCE.callEvent(new SessionEvent());
+                        ServerUtils.INSTANCE.connectToLastServer();
                     });
                     return null;
                 }, e -> {
@@ -121,13 +123,13 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen {
 
                 break;
             case 4:
-                RandomUtils.randomAccount();
-                ServerUtils.connectToLastServer();
+                RandomUtils.INSTANCE.randomAccount();
+                ServerUtils.INSTANCE.connectToLastServer();
                 break;
             case 5:
-                fmlFixesEnabled = !fmlFixesEnabled;
-                forgeBypassButton.displayString = "Bypass AntiForge: " + (fmlFixesEnabled ? "On" : "Off");
-                fileManager.getValuesConfig().saveConfig();
+                ClientFixes.INSTANCE.setFmlFixesEnabled(!ClientFixes.INSTANCE.getFmlFixesEnabled());
+                forgeBypassButton.displayString = "Bypass AntiForge: " + (ClientFixes.INSTANCE.getFmlFixesEnabled() ? "On" : "Off");
+                FileManager.INSTANCE.getValuesConfig().saveConfig();
                 break;
         }
     }
@@ -137,39 +139,39 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen {
         if (AutoReconnect.INSTANCE.isEnabled()) {
             reconnectTimer++;
             if (reconnectTimer > AutoReconnect.INSTANCE.getDelay() / 50)
-                ServerUtils.connectToLastServer();
+                ServerUtils.INSTANCE.connectToLastServer();
         }
     }
 
     @Inject(method = "drawScreen", at = @At("RETURN"))
     private void drawScreen(CallbackInfo callbackInfo) {
         if (AutoReconnect.INSTANCE.isEnabled()) {
-            this.updateReconnectButton();
+            updateReconnectButton();
         }
     }
 
     private void drawReconnectDelaySlider() {
         buttonList.add(autoReconnectDelaySlider =
-                new GuiSlider(2, this.width / 2 + 2, this.height / 2 + field_175353_i / 2
-                        + this.fontRendererObj.FONT_HEIGHT + 22, 98, 20, "AutoReconnect: ",
+                new GuiSlider(2, width / 2 + 2, height / 2 + field_175353_i / 2
+                        + fontRendererObj.FONT_HEIGHT + 22, 98, 20, "AutoReconnect: ",
                         "ms", AutoReconnect.MIN, AutoReconnect.MAX, AutoReconnect.INSTANCE.getDelay(), false, true,
                         guiSlider -> {
                             AutoReconnect.INSTANCE.setDelay(guiSlider.getValueInt());
 
-                            this.reconnectTimer = 0;
-                            this.updateReconnectButton();
-                            this.updateSliderText();
+                            reconnectTimer = 0;
+                            updateReconnectButton();
+                            updateSliderText();
                         }));
     }
 
     private void updateSliderText() {
-        if (this.autoReconnectDelaySlider == null)
+        if (autoReconnectDelaySlider == null)
             return;
 
         if (!AutoReconnect.INSTANCE.isEnabled()) {
-            this.autoReconnectDelaySlider.displayString = "AutoReconnect: Off";
+            autoReconnectDelaySlider.displayString = "AutoReconnect: Off";
         } else {
-            this.autoReconnectDelaySlider.displayString = "AutoReconnect: " + DECIMAL_FORMAT.format(AutoReconnect.INSTANCE.getDelay() / 1000.0) + "s";
+            autoReconnectDelaySlider.displayString = "AutoReconnect: " + DECIMAL_FORMAT.format(AutoReconnect.INSTANCE.getDelay() / 1000.0) + "s";
         }
     }
 

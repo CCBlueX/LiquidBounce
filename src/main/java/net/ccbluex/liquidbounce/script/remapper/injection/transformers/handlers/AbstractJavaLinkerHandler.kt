@@ -34,13 +34,13 @@ object AbstractJavaLinkerHandler {
             return name
 
         var currentClass = clazz
-        while(currentClass.name != "java.lang.Object") {
+        while (currentClass.name != "java.lang.Object") {
             val remapped = Remapper.remapMethod(currentClass, name, Type.getMethodDescriptor(accessibleObject))
 
-            if(remapped != name)
+            if (remapped != name)
                 return remapped
 
-            if(currentClass.superclass == null)
+            if (currentClass.superclass == null)
                 break
 
             currentClass = currentClass.superclass
@@ -62,13 +62,13 @@ object AbstractJavaLinkerHandler {
     @JvmStatic
     fun addMember(clazz : Class<*>, name : String) : String {
         var currentClass = clazz
-        while(currentClass.name != "java.lang.Object") {
+        while (currentClass.name != "java.lang.Object") {
             val remapped = Remapper.remapField(currentClass, name)
 
-            if(remapped != name)
+            if (remapped != name)
                 return remapped
 
-            if(currentClass.superclass == null)
+            if (currentClass.superclass == null)
                 break
 
             currentClass = currentClass.superclass
@@ -90,13 +90,13 @@ object AbstractJavaLinkerHandler {
     @JvmStatic
     fun setPropertyGetter(clazz : Class<*>, name : String) : String {
         var currentClass = clazz
-        while(currentClass.name != "java.lang.Object") {
+        while (currentClass.name != "java.lang.Object") {
             val remapped = Remapper.remapField(currentClass, name)
 
-            if(remapped != name)
+            if (remapped != name)
                 return remapped
 
-            if(currentClass.superclass == null)
+            if (currentClass.superclass == null)
                 break
 
             currentClass = currentClass.superclass

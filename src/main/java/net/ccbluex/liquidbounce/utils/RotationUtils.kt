@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.utils
 
-import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.FastBow
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
@@ -174,7 +173,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
             target.posZ + (if (predict) (target.posZ - target.prevPosZ) * predictSize else .0) - (player.posZ + if (predict) player.posZ - player.prevPosZ else .0)
         val posSqrt = sqrt(posX * posX + posZ * posZ)
 
-        var velocity = if (moduleManager[FastBow::class.java].state) 1f else player.itemInUseDuration / 20f
+        var velocity = if (FastBow.state) 1f else player.itemInUseDuration / 20f
         velocity = min((velocity * velocity + velocity * 2) / 3, 1f)
 
         val rotation = Rotation(
@@ -216,9 +215,12 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param bb your box
      * @return center of box
      */
-    fun getCenter(bb: AxisAlignedBB) = Vec3(
-        bb.minX + (bb.maxX - bb.minX) * 0.5, bb.minY + (bb.maxY - bb.minY) * 0.5, bb.minZ + (bb.maxZ - bb.minZ) * 0.5
-    )
+    fun getCenter(bb: AxisAlignedBB) =
+        Vec3(
+            bb.minX + (bb.maxX - bb.minX) * 0.5,
+            bb.minY + (bb.maxY - bb.minY) * 0.5,
+            bb.minZ + (bb.maxZ - bb.minZ) * 0.5
+        )
 
     /**
      * Search good center
@@ -306,10 +308,11 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param entity your entity
      * @return difference between rotation
      */
-    fun getRotationDifference(entity: Entity): Float {
-        val rotation = toRotation(getCenter(entity.hitBox), true)
-        return getRotationDifference(rotation, Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch))
-    }
+    fun getRotationDifference(entity: Entity) =
+        getRotationDifference(
+            toRotation(getCenter(entity.hitBox), true),
+            Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)
+        )
 
     /**
      * Calculate difference between the server rotation and your rotation
@@ -317,7 +320,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param rotation your rotation
      * @return difference between rotation
      */
-    @JvmStatic
     fun getRotationDifference(rotation: Rotation) = getRotationDifference(rotation, serverRotation)
 
     /**
@@ -337,15 +339,13 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param turnSpeed your turn speed
      * @return limited rotation
      */
-    fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation, turnSpeed: Float): Rotation {
-        val yawDifference = getAngleDifference(targetRotation.yaw, currentRotation.yaw)
-        val pitchDifference = getAngleDifference(targetRotation.pitch, currentRotation.pitch)
-
-        return Rotation(
-            currentRotation.yaw + yawDifference.coerceIn(-turnSpeed, turnSpeed),
-            currentRotation.pitch + pitchDifference.coerceIn(-turnSpeed, turnSpeed)
+    fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation, turnSpeed: Float) =
+        Rotation(
+            currentRotation.yaw + getAngleDifference(targetRotation.yaw, currentRotation.yaw)
+                .coerceIn(-turnSpeed, turnSpeed),
+            currentRotation.pitch + getAngleDifference(targetRotation.pitch, currentRotation.pitch)
+                .coerceIn(-turnSpeed, turnSpeed)
         )
-    }
 
     /**
      * Calculate difference between two angle points
@@ -362,7 +362,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param rotation your rotation
      * @return target vector
      */
-    @JvmStatic
     fun getVectorForRotation(rotation: Rotation): Vec3 {
         val yawCos = cos(-rotation.yaw * 0.017453292 - Math.PI)
         val yawSin = sin(-rotation.yaw * 0.017453292 - Math.PI)
@@ -388,14 +387,16 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param blockReachDistance your reach
      * @return if crosshair is over target
      */
-    fun isRotationFaced(targetEntity: Entity, blockReachDistance: Double, rotation: Rotation) = raycastEntity(
-        blockReachDistance, rotation.yaw, rotation.pitch
-    ) { entity: Entity -> targetEntity == entity } != null
+    fun isRotationFaced(targetEntity: Entity, blockReachDistance: Double, rotation: Rotation) =
+        raycastEntity(
+            blockReachDistance, rotation.yaw, rotation.pitch
+        ) { entity: Entity -> targetEntity == entity } != null
 
     /**
      * Allows you to check if your enemy is behind a wall
      */
-    fun isVisible(vec3: Vec3) = mc.theWorld.rayTraceBlocks(mc.thePlayer.eyes, vec3) == null
+    fun isVisible(vec3: Vec3) =
+        mc.theWorld.rayTraceBlocks(mc.thePlayer.eyes, vec3) == null
 
     /**
      * Set your target rotation

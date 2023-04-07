@@ -10,7 +10,6 @@ import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_API
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.SessionEvent
-import net.ccbluex.liquidbounce.ui.client.altmanager.menus.GuiDonatorCape
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.login.UserUtils
@@ -18,10 +17,14 @@ import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import org.apache.http.HttpHeaders
 import org.apache.http.HttpStatus
+import org.apache.http.client.methods.HttpDelete
+import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPatch
+import org.apache.http.client.methods.HttpPut
 import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.message.BasicHeader
+import org.apache.http.util.EntityUtils
 import org.json.JSONObject
 import java.util.*
 import kotlin.concurrent.thread
@@ -37,7 +40,19 @@ import kotlin.concurrent.thread
  */
 object CapeService : Listenable, MinecraftInstance() {
 
-    private const val CAPE_CARRIERS_URL: String = "$CLIENT_API/cape/carriers"
+    /**
+     * The client cape user
+     */
+    var knownToken = ""
+        get() = clientCapeUser?.token ?: field
+
+    var clientCapeUser: CapeSelfUser? = null
+
+    /**
+     * The API URL to get all cape carriers.
+     * Format: [["8f617b6abea04af58e4bd026d8fa9de8", "marco"], ...]
+     */
+    private const val CAPE_CARRIERS_URL = "$CLIENT_API/cape/carriers"
 
     /**
      * I would prefer to use CLIENT_API but due to Cloudflare causing issues with SSL and their browser integrity check,
@@ -45,10 +60,13 @@ object CapeService : Listenable, MinecraftInstance() {
      */
     private const val CAPE_API = "http://capes.liquidbounce.net/api/v1/cape"
 
-    private const val CAPE_UUID_DL_BASE_URL: String = "$CAPE_API/uuid/%s"
-    private const val CAPE_NAME_DL_BASE_URL: String = "$CAPE_API/name/%s"
+    private const val SELF_CAPE_URL = "$CAPE_API/self"
 
-    private const val REFRESH_DELAY: Long = 60000L // Every minute should update
+    @Deprecated("Use CAPE_CARRIERS_URL instead.")
+    private const val CAPE_UUID_DL_BASE_URL = "$CAPE_API/uuid/%s"
+    private const val CAPE_NAME_DL_BASE_URL = "$CAPE_API/name/%s"
+
+    private const val REFRESH_DELAY = 60000L // Every minute should update
 
     /**
      * Collection of all cape carriers on the API.
@@ -62,11 +80,11 @@ object CapeService : Listenable, MinecraftInstance() {
      * Refresh cape carriers, capture from the API.
      * It will take a list of (uuid, cape_name) tuples.
      */
-    fun refreshCapeCarriers(done: () -> Unit) {
+    fun refreshCapeCarriers(force: Boolean = false, done: () -> Unit) {
         // Check if there is not another task running which could conflict.
         if (task == null) {
             // Check if the required time in milliseconds has passed of the REFRESH_DELAY
-            if (lastUpdate.hasTimePassed(REFRESH_DELAY)) {
+            if (lastUpdate.hasTimePassed(REFRESH_DELAY) || force) {
                 task = thread(name = "UpdateCarriersTask") {
                     runCatching {
                         // Capture data from API and parse JSON
@@ -112,10 +130,79 @@ object CapeService : Listenable, MinecraftInstance() {
      * Get the download url to cape of UUID
      */
     fun getCapeDownload(uuid: UUID): Pair<String, String>? {
+        val clientCapeUser = clientCapeUser
+
+        if (uuid == mc.session.profile.id && clientCapeUser != null) {
+            // If the UUID is the same as the current user, we can use the clientCapeUser
+            val capeName = clientCapeUser.capeName
+            return Pair(capeName, String.format(CAPE_NAME_DL_BASE_URL, capeName))
+        }
+
         // Lookup cape carrier by UUID, if UUID is matching
         val capeCarrier = capeCarriers.find { it.uuid == uuid } ?: return null
 
         return Pair(capeCarrier.capeName, String.format(CAPE_NAME_DL_BASE_URL, capeCarrier.capeName))
+    }
+
+    fun login(token: String) {
+        val httpClient = HttpClients.createDefault()
+        val headers = arrayOf(
+            BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json"),
+            BasicHeader(HttpHeaders.AUTHORIZATION, token)
+        )
+
+        val request = HttpGet(SELF_CAPE_URL)
+        request.setHeaders(headers)
+
+        val response = httpClient.execute(request)
+        val statusCode = response.statusLine.statusCode
+
+        if (statusCode == HttpStatus.SC_OK) {
+            val json = JSONObject(EntityUtils.toString(response.entity))
+            val capeName = json.getString("cape")
+            val enabled = json.getBoolean("enabled")
+            val uuid = json.getString("uuid")
+
+            clientCapeUser = CapeSelfUser(token, enabled, uuid, capeName)
+        } else {
+            error("Failed to get self cape. Status code: $statusCode")
+        }
+    }
+
+    fun logout() {
+        clientCapeUser = null
+    }
+
+    /**
+     * Update the cape state of the user
+     */
+    fun toggleCapeState(done: (Boolean, Boolean, Int) -> Unit) {
+        thread {
+            val capeUser = clientCapeUser ?: return@thread
+
+            val httpClient = HttpClients.createDefault()
+            val headers = arrayOf(
+                BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json"),
+                BasicHeader(HttpHeaders.AUTHORIZATION, capeUser.token)
+            )
+
+            val request = if (!capeUser.enabled) {
+                HttpPut(SELF_CAPE_URL)
+            } else {
+                HttpDelete(SELF_CAPE_URL)
+            }
+            request.setHeaders(headers)
+            val response = httpClient.execute(request)
+            val statusCode = response.statusLine.statusCode
+
+            // Refresh cape carriers
+            refreshCapeCarriers(force = true) {
+                LOGGER.info("Successfully loaded ${CapeService.capeCarriers.count()} cape carriers.")
+            }
+
+            capeUser.enabled = !capeUser.enabled
+            done(capeUser.enabled, statusCode == HttpStatus.SC_NO_CONTENT, statusCode)
+        }
     }
 
     /**
@@ -124,8 +211,9 @@ object CapeService : Listenable, MinecraftInstance() {
     @EventTarget
     fun handleNewSession(sessionEvent: SessionEvent) {
         // Check if donator cape is actually enabled and has a transfer code, also make sure the account used is premium.
-        if (!GuiDonatorCape.capeEnabled || GuiDonatorCape.transferCode.isEmpty()
-            || !UserUtils.isValidTokenOffline(mc.session.token))
+        val capeUser = clientCapeUser ?: return
+
+        if (!UserUtils.isValidTokenOffline(mc.session.token))
             return
 
         thread(name = "CapeUpdate") {
@@ -136,9 +224,9 @@ object CapeService : Listenable, MinecraftInstance() {
             val httpClient = HttpClients.createDefault()
             val headers = arrayOf(
                 BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json"),
-                BasicHeader(HttpHeaders.AUTHORIZATION, GuiDonatorCape.transferCode)
+                BasicHeader(HttpHeaders.AUTHORIZATION, capeUser.token)
             )
-            val request = HttpPatch("http://capes.liquidbounce.net/api/v1/cape/self")
+            val request = HttpPatch(SELF_CAPE_URL)
             request.setHeaders(headers)
 
             val body = JSONObject()
@@ -150,19 +238,24 @@ object CapeService : Listenable, MinecraftInstance() {
 
             LOGGER.info(
                 if(statusCode == HttpStatus.SC_NO_CONTENT) {
+                    capeUser.uuid = uuid
                     "[Donator Cape] Successfully transferred cape to $uuid ($username)"
                 } else {
                     "[Donator Cape] Failed to transfer cape ($statusCode)"
                 }
             )
 
-            // Reset cape carrier update
-            lastUpdate.zero()
+            // Refresh cape carriers
+            refreshCapeCarriers(force = true) {
+                LOGGER.info("Successfully loaded ${capeCarriers.count()} cape carriers.")
+            }
         }
     }
 
     override fun handleEvents() = true
 
 }
+
+data class CapeSelfUser(val token: String, var enabled: Boolean, var uuid: String, val capeName: String)
 
 data class CapeCarrier(val uuid: UUID, val capeName: String)

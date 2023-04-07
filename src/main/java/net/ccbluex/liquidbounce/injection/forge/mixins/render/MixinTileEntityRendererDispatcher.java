@@ -13,14 +13,12 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
-
 @Mixin(TileEntityRendererDispatcher.class)
 public class MixinTileEntityRendererDispatcher {
 
     @Inject(method = "renderTileEntity", at = @At("HEAD"), cancellable = true)
     private void renderTileEntity(TileEntity p_renderTileEntity_1_, float p_renderTileEntity_2_, int p_renderTileEntity_3_, CallbackInfo ci) {
-        final XRay xray = (XRay) moduleManager.getModule(XRay.class);
+        final XRay xray = XRay.INSTANCE;
 
         if (xray.getState() && !xray.getXrayBlocks().contains(p_renderTileEntity_1_.getBlockType())) {
             ci.cancel();

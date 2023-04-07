@@ -18,7 +18,7 @@ import net.minecraft.init.Blocks
 import net.minecraft.util.BlockPos
 
 @ModuleInfo(name = "IceSpeed", description = "Allows you to walk faster on ice.", category = ModuleCategory.MOVEMENT)
-class IceSpeed : Module() {
+object IceSpeed : Module() {
     private val modeValue = ListValue("Mode", arrayOf("NCP", "AAC", "Spartan"), "NCP")
     override fun onEnable() {
         if (modeValue.get() == "NCP") {
@@ -55,7 +55,7 @@ class IceSpeed : Module() {
             if (mode == "Spartan") {
                 getMaterial(thePlayer.position.down()).let {
                     if (it == Blocks.ice || it == Blocks.packed_ice) {
-                        val upBlock = getBlock(BlockPos(thePlayer.posX, thePlayer.posY + 2.0, thePlayer.posZ))
+                        val upBlock = getBlock(BlockPos(thePlayer).up(2))
 
                         if (upBlock != Blocks.air) {
                             thePlayer.motionX *= 1.342

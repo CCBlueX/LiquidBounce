@@ -17,7 +17,7 @@ import net.minecraft.client.gui.GuiChat
 import net.minecraft.util.ResourceLocation
 
 @ModuleInfo(name = "HUD", description = "Toggles visibility of the HUD.", category = ModuleCategory.RENDER, array = false)
-class HUD : Module() {
+object HUD : Module() {
     val blackHotbarValue = BoolValue("BlackHotbar", true)
     val inventoryParticle = BoolValue("InventoryParticle", false)
     private val blurValue = BoolValue("Blur", false)

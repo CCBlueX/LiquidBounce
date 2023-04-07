@@ -7,7 +7,6 @@ package net.ccbluex.liquidbounce.utils.block
 
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.minecraft.block.Block
-import net.minecraft.block.state.IBlockState
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.BlockPos
 import kotlin.math.floor
@@ -19,7 +18,6 @@ object BlockUtils : MinecraftInstance() {
     /**
      * Get block from [blockPos]
      */
-    @JvmStatic
     fun getBlock(blockPos: BlockPos) = mc.theWorld?.getBlockState(blockPos)?.block
 
     /**
@@ -30,18 +28,16 @@ object BlockUtils : MinecraftInstance() {
     /**
      * Check [blockPos] is replaceable
      */
-    @JvmStatic
     fun isReplaceable(blockPos: BlockPos) = getMaterial(blockPos)?.isReplaceable ?: false
 
     /**
      * Get state from [blockPos]
      */
-    fun getState(blockPos: BlockPos): IBlockState? = mc.theWorld?.getBlockState(blockPos)
+    fun getState(blockPos: BlockPos) = mc.theWorld?.getBlockState(blockPos)
 
     /**
      * Check if [blockPos] is clickable
      */
-    @JvmStatic
     fun canBeClicked(blockPos: BlockPos) =
         getBlock(blockPos)?.canCollideCheck(getState(blockPos), false) ?: false &&
             mc.theWorld.worldBorder.contains(blockPos)
@@ -113,7 +109,6 @@ object BlockUtils : MinecraftInstance() {
     /**
      * Check if [axisAlignedBB] has collidable blocks using custom [collide] check
      */
-    @JvmStatic
     fun collideBlockIntersects(axisAlignedBB: AxisAlignedBB, collide: Collidable): Boolean {
         val thePlayer = mc.thePlayer
         val world = mc.theWorld

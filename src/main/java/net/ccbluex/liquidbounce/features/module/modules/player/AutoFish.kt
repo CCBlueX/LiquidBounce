@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.minecraft.item.ItemFishingRod
 
 @ModuleInfo(name = "AutoFish", description = "Automatically catches fish when using a rod.", category = ModuleCategory.PLAYER)
-class AutoFish : Module() {
+object AutoFish : Module() {
 
     private val rodOutTimer = MSTimer()
 

@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.features.command.CommandManager;
 import net.ccbluex.liquidbounce.features.module.modules.misc.ComponentOnHover;
 import net.ccbluex.liquidbounce.features.module.modules.render.HUD;
 import net.ccbluex.liquidbounce.ui.client.GuiClientConfiguration;
@@ -37,8 +38,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Collections;
 import java.util.List;
 
-import static net.ccbluex.liquidbounce.LiquidBounce.commandManager;
-import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
 import static net.minecraft.client.renderer.GlStateManager.disableFog;
 import static net.minecraft.client.renderer.GlStateManager.disableLighting;
 
@@ -72,7 +71,7 @@ public abstract class MixinGuiScreen {
 
     @Inject(method = "drawWorldBackground", at = @At("HEAD"))
     private void drawWorldBackground(final CallbackInfo callbackInfo) {
-        final HUD hud = (HUD) moduleManager.getModule(HUD.class);
+        final HUD hud = HUD.INSTANCE;
 
         if(hud.getInventoryParticle().get() && mc.thePlayer != null) {
             final ScaledResolution scaledResolution = new ScaledResolution(mc);
@@ -129,17 +128,17 @@ public abstract class MixinGuiScreen {
 
     @Inject(method = "sendChatMessage(Ljava/lang/String;Z)V", at = @At("HEAD"), cancellable = true)
     private void messageSend(String msg, boolean addToChat, final CallbackInfo callbackInfo) {
-        if (msg.startsWith(String.valueOf(commandManager.getPrefix())) && addToChat) {
-            this.mc.ingameGUI.getChatGUI().addToSentMessages(msg);
+        if (msg.startsWith(String.valueOf(CommandManager.INSTANCE.getPrefix())) && addToChat) {
+            mc.ingameGUI.getChatGUI().addToSentMessages(msg);
 
-            commandManager.executeCommands(msg);
+            CommandManager.INSTANCE.executeCommands(msg);
             callbackInfo.cancel();
         }
     }
 
     @Inject(method = "handleComponentHover", at = @At("HEAD"))
     private void handleHoverOverComponent(IChatComponent component, int x, int y, final CallbackInfo callbackInfo) {
-        if (component == null || component.getChatStyle().getChatClickEvent() == null || !moduleManager.getModule(ComponentOnHover.class).getState())
+        if (component == null || component.getChatStyle().getChatClickEvent() == null || !ComponentOnHover.INSTANCE.getState())
             return;
 
         final ChatStyle chatStyle = component.getChatStyle();
@@ -156,7 +155,7 @@ public abstract class MixinGuiScreen {
      */
     @Overwrite
     protected void actionPerformed(GuiButton button) {
-        this.injectedActionPerformed(button);
+        injectedActionPerformed(button);
     }
 
     protected void injectedActionPerformed(GuiButton button) {

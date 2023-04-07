@@ -7,6 +7,7 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
 import net.ccbluex.liquidbounce.ui.font.Fonts;
+import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
@@ -19,7 +20,6 @@ import org.spongepowered.asm.mixin.Overwrite;
 
 import java.awt.*;
 
-import static net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime;
 import static net.minecraft.client.renderer.GlStateManager.resetColor;
 
 @Mixin(GuiButtonExt.class)
@@ -44,8 +44,9 @@ public abstract class MixinGuiButtonExt extends GuiButton {
    public void drawButton(Minecraft mc, int mouseX, int mouseY) {
       if (visible) {
          final FontRenderer fontRenderer = mc.getLanguageManager().isCurrentLocaleUnicode() ? mc.fontRendererObj : Fonts.font35;
-         hovered = (mouseX >= this.xPosition && mouseY >= this.yPosition &&
-                    mouseX < this.xPosition + this.width && mouseY < this.yPosition + this.height);
+         hovered = (mouseX >= xPosition && mouseY >= yPosition &&
+                    mouseX < xPosition + width && mouseY < yPosition + height);
+          final float deltaTime = RenderUtils.INSTANCE.getDeltaTime();
 
          if (enabled && hovered) {
             cut += 0.05F * deltaTime;
@@ -65,18 +66,18 @@ public abstract class MixinGuiButtonExt extends GuiButton {
             if (alpha <= 120) alpha = 120;
          }
 
-         Gui.drawRect(this.xPosition + (int) this.cut, this.yPosition,
-                      this.xPosition + this.width - (int) this.cut, this.yPosition + this.height,
-                      this.enabled ? new Color(0F, 0F, 0F, this.alpha / 255F).getRGB() :
+         Gui.drawRect(xPosition + (int) cut, yPosition,
+                      xPosition + width - (int) cut, yPosition + height,
+                      enabled ? new Color(0F, 0F, 0F, alpha / 255F).getRGB() :
                       new Color(0.5F, 0.5F, 0.5F, 0.5F).getRGB());
 
          mc.getTextureManager().bindTexture(buttonTextures);
          mouseDragged(mc, mouseX, mouseY);
 
          fontRenderer.drawStringWithShadow(displayString,
-                                           (float) ((this.xPosition + this.width / 2) -
+                                           (float) ((xPosition + width / 2) -
                                                     fontRenderer.getStringWidth(displayString) / 2),
-                                           this.yPosition + (this.height - 5) / 2F, 14737632);
+                                           yPosition + (height - 5) / 2F, 14737632);
          resetColor();
       }
    }

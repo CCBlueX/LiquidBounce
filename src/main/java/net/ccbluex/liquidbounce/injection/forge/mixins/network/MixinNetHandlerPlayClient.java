@@ -7,6 +7,9 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.network;
 
 import io.netty.buffer.Unpooled;
 import net.ccbluex.liquidbounce.event.EntityMovementEvent;
+import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.features.special.ClientFixes;
+import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.minecraft.client.ClientBrandRetriever;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiDownloadTerrain;
@@ -33,9 +36,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import static net.ccbluex.liquidbounce.LiquidBounce.eventManager;
-import static net.ccbluex.liquidbounce.features.special.ClientFixes.*;
-import static net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER;
+import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
 
 @Mixin(NetHandlerPlayClient.class)
 public abstract class MixinNetHandlerPlayClient {
@@ -58,7 +59,7 @@ public abstract class MixinNetHandlerPlayClient {
         final String url = p_handleResourcePack_1_.getURL();
         final String hash = p_handleResourcePack_1_.getHash();
 
-        if (blockResourcePackExploit) {
+        if (ClientFixes.INSTANCE.getBlockResourcePackExploit()) {
             try {
                 final String scheme = new URI(url).getScheme();
                 final boolean isLevelProtocol = "level".equals(scheme);
@@ -68,8 +69,8 @@ public abstract class MixinNetHandlerPlayClient {
 
                 if(isLevelProtocol && (url.contains("..") || !url.endsWith("/resources.zip")))
                     throw new URISyntaxException(url, "Invalid levelstorage resourcepack path");
-            }catch(final URISyntaxException e) {
-                LOGGER.error("Failed to handle resource pack", e);
+            } catch (final URISyntaxException e) {
+                ClientUtils.INSTANCE.getLOGGER().error("Failed to handle resource pack", e);
 
                 // Accepted is always sent.
                 netManager.sendPacket(new C19PacketResourcePackStatus(hash, C19PacketResourcePackStatus.Action.ACCEPTED));
@@ -83,30 +84,30 @@ public abstract class MixinNetHandlerPlayClient {
 
     @Inject(method = "handleJoinGame", at = @At("HEAD"), cancellable = true)
     private void handleJoinGameWithAntiForge(S01PacketJoinGame packetIn, final CallbackInfo callbackInfo) {
-        if(!fmlFixesEnabled || !blockFML || mc.isIntegratedServerRunning())
+        if (!ClientFixes.INSTANCE.getFmlFixesEnabled() || !ClientFixes.INSTANCE.getBlockFML() || mc.isIntegratedServerRunning())
             return;
 
         PacketThreadUtil.checkThreadAndEnqueue(packetIn, (NetHandlerPlayClient) (Object) this, gameController);
-        this.gameController.playerController = new PlayerControllerMP(gameController, (NetHandlerPlayClient) (Object) this);
-        this.clientWorldController = new WorldClient((NetHandlerPlayClient) (Object) this, new WorldSettings(0L, packetIn.getGameType(), false, packetIn.isHardcoreMode(), packetIn.getWorldType()), packetIn.getDimension(), packetIn.getDifficulty(), this.gameController.mcProfiler);
-        this.gameController.gameSettings.difficulty = packetIn.getDifficulty();
-        this.gameController.loadWorld(this.clientWorldController);
-        this.gameController.thePlayer.dimension = packetIn.getDimension();
-        this.gameController.displayGuiScreen(new GuiDownloadTerrain((NetHandlerPlayClient) (Object) this));
-        this.gameController.thePlayer.setEntityId(packetIn.getEntityId());
-        this.currentServerMaxPlayers = packetIn.getMaxPlayers();
-        this.gameController.thePlayer.setReducedDebug(packetIn.isReducedDebugInfo());
-        this.gameController.playerController.setGameType(packetIn.getGameType());
-        this.gameController.gameSettings.sendSettingsToServer();
-        this.netManager.sendPacket(new C17PacketCustomPayload("MC|Brand", (new PacketBuffer(Unpooled.buffer())).writeString(ClientBrandRetriever.getClientModName())));
+        gameController.playerController = new PlayerControllerMP(gameController, (NetHandlerPlayClient) (Object) this);
+        clientWorldController = new WorldClient((NetHandlerPlayClient) (Object) this, new WorldSettings(0L, packetIn.getGameType(), false, packetIn.isHardcoreMode(), packetIn.getWorldType()), packetIn.getDimension(), packetIn.getDifficulty(), gameController.mcProfiler);
+        gameController.gameSettings.difficulty = packetIn.getDifficulty();
+        gameController.loadWorld(clientWorldController);
+        gameController.thePlayer.dimension = packetIn.getDimension();
+        gameController.displayGuiScreen(new GuiDownloadTerrain((NetHandlerPlayClient) (Object) this));
+        gameController.thePlayer.setEntityId(packetIn.getEntityId());
+        currentServerMaxPlayers = packetIn.getMaxPlayers();
+        gameController.thePlayer.setReducedDebug(packetIn.isReducedDebugInfo());
+        gameController.playerController.setGameType(packetIn.getGameType());
+        gameController.gameSettings.sendSettingsToServer();
+        netManager.sendPacket(new C17PacketCustomPayload("MC|Brand", (new PacketBuffer(Unpooled.buffer())).writeString(ClientBrandRetriever.getClientModName())));
         callbackInfo.cancel();
     }
 
     @Inject(method = "handleEntityMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/Entity;onGround:Z"))
     private void handleEntityMovementEvent(S14PacketEntity packetIn, final CallbackInfo callbackInfo) {
-        final Entity entity = packetIn.getEntity(this.clientWorldController);
+        final Entity entity = packetIn.getEntity(clientWorldController);
 
         if(entity != null)
-            eventManager.callEvent(new EntityMovementEvent(entity));
+            EventManager.INSTANCE.callEvent(new EntityMovementEvent(entity));
     }
 }

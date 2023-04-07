@@ -23,7 +23,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 
-import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
 import static net.minecraft.client.renderer.GlStateManager.*;
 import static org.lwjgl.opengl.GL11.glColor4f;
 
@@ -64,23 +63,23 @@ public abstract class MixinGuiNewChat {
 
     @Inject(method = "drawChat", at = @At("HEAD"), cancellable = true)
     private void drawChat(int p_drawChat_1_, final CallbackInfo callbackInfo) {
-        final HUD hud = (HUD) moduleManager.getModule(HUD.class);
+        final HUD hud = HUD.INSTANCE;
 
         if (hud.getState() && hud.getFontChatValue().get()) {
             callbackInfo.cancel();
-            if (this.mc.gameSettings.chatVisibility != EntityPlayer.EnumChatVisibility.HIDDEN) {
-                int lvt_2_1_ = this.getLineCount();
+            if (mc.gameSettings.chatVisibility != EntityPlayer.EnumChatVisibility.HIDDEN) {
+                int lvt_2_1_ = getLineCount();
                 boolean lvt_3_1_ = false;
                 int lvt_4_1_ = 0;
-                int lvt_5_1_ = this.drawnChatLines.size();
-                float lvt_6_1_ = this.mc.gameSettings.chatOpacity * 0.9F + 0.1F;
+                int lvt_5_1_ = drawnChatLines.size();
+                float lvt_6_1_ = mc.gameSettings.chatOpacity * 0.9F + 0.1F;
                 if (lvt_5_1_ > 0) {
-                    if (this.getChatOpen()) {
+                    if (getChatOpen()) {
                         lvt_3_1_ = true;
                     }
 
-                    float lvt_7_1_ = this.getChatScale();
-                    int lvt_8_1_ = MathHelper.ceiling_float_int((float) this.getChatWidth() / lvt_7_1_);
+                    float lvt_7_1_ = getChatScale();
+                    int lvt_8_1_ = MathHelper.ceiling_float_int((float) getChatWidth() / lvt_7_1_);
                     pushMatrix();
                     translate(2f, 20f, 0f);
                     scale(lvt_7_1_, lvt_7_1_, 1f);
@@ -88,8 +87,8 @@ public abstract class MixinGuiNewChat {
                     int lvt_9_1_;
                     int lvt_11_1_;
                     int lvt_14_1_;
-                    for (lvt_9_1_ = 0; lvt_9_1_ + this.scrollPos < this.drawnChatLines.size() && lvt_9_1_ < lvt_2_1_; ++lvt_9_1_) {
-                        ChatLine lvt_10_1_ = this.drawnChatLines.get(lvt_9_1_ + this.scrollPos);
+                    for (lvt_9_1_ = 0; lvt_9_1_ + scrollPos < drawnChatLines.size() && lvt_9_1_ < lvt_2_1_; ++lvt_9_1_) {
+                        ChatLine lvt_10_1_ = drawnChatLines.get(lvt_9_1_ + scrollPos);
                         if (lvt_10_1_ != null) {
                             lvt_11_1_ = p_drawChat_1_ - lvt_10_1_.getUpdatedCounter();
                             if (lvt_11_1_ < 200 || lvt_3_1_) {
@@ -123,11 +122,11 @@ public abstract class MixinGuiNewChat {
                         translate(-3f, 0f, 0f);
                         int lvt_10_2_ = lvt_5_1_ * lvt_9_1_ + lvt_5_1_;
                         lvt_11_1_ = lvt_4_1_ * lvt_9_1_ + lvt_4_1_;
-                        int lvt_12_2_ = this.scrollPos * lvt_11_1_ / lvt_5_1_;
+                        int lvt_12_2_ = scrollPos * lvt_11_1_ / lvt_5_1_;
                         int lvt_13_1_ = lvt_11_1_ * lvt_11_1_ / lvt_10_2_;
                         if (lvt_10_2_ != lvt_11_1_) {
                             lvt_14_1_ = lvt_12_2_ > 0 ? 170 : 96;
-                            int lvt_15_2_ = this.isScrolled ? 13382451 : 3355562;
+                            int lvt_15_2_ = isScrolled ? 13382451 : 3355562;
                             Gui.drawRect(0, -lvt_12_2_, 2, -lvt_12_2_ - lvt_13_1_, lvt_15_2_ + (lvt_14_1_ << 24));
                             Gui.drawRect(2, -lvt_12_2_, 1, -lvt_12_2_ - lvt_13_1_, 13421772 + (lvt_14_1_ << 24));
                         }
@@ -180,23 +179,23 @@ public abstract class MixinGuiNewChat {
 
     @Inject(method = "getChatComponent", at = @At("HEAD"), cancellable = true)
     private void getChatComponent(int p_getChatComponent_1_, int p_getChatComponent_2_, final CallbackInfoReturnable<IChatComponent> callbackInfo) {
-        final HUD hud = (HUD) moduleManager.getModule(HUD.class);
+        final HUD hud = HUD.INSTANCE;
 
         if (hud.getState() && hud.getFontChatValue().get()) {
-            if (this.getChatOpen()) {
-                ScaledResolution lvt_3_1_ = new ScaledResolution(this.mc);
+            if (getChatOpen()) {
+                ScaledResolution lvt_3_1_ = new ScaledResolution(mc);
                 int lvt_4_1_ = lvt_3_1_.getScaleFactor();
-                float lvt_5_1_ = this.getChatScale();
+                float lvt_5_1_ = getChatScale();
                 int lvt_6_1_ = p_getChatComponent_1_ / lvt_4_1_ - 3;
                 int lvt_7_1_ = p_getChatComponent_2_ / lvt_4_1_ - 27;
                 lvt_6_1_ = MathHelper.floor_float((float) lvt_6_1_ / lvt_5_1_);
                 lvt_7_1_ = MathHelper.floor_float((float) lvt_7_1_ / lvt_5_1_);
                 if (lvt_6_1_ >= 0 && lvt_7_1_ >= 0) {
-                    int lvt_8_1_ = Math.min(this.getLineCount(), this.drawnChatLines.size());
-                    if (lvt_6_1_ <= MathHelper.floor_float((float) this.getChatWidth() / this.getChatScale()) && lvt_7_1_ < Fonts.font40.getFontHeight() * lvt_8_1_ + lvt_8_1_) {
-                        int lvt_9_1_ = lvt_7_1_ / Fonts.font40.getFontHeight() + this.scrollPos;
-                        if (lvt_9_1_ >= 0 && lvt_9_1_ < this.drawnChatLines.size()) {
-                            ChatLine lvt_10_1_ = this.drawnChatLines.get(lvt_9_1_);
+                    int lvt_8_1_ = Math.min(getLineCount(), drawnChatLines.size());
+                    if (lvt_6_1_ <= MathHelper.floor_float((float) getChatWidth() / getChatScale()) && lvt_7_1_ < Fonts.font40.getFontHeight() * lvt_8_1_ + lvt_8_1_) {
+                        int lvt_9_1_ = lvt_7_1_ / Fonts.font40.getFontHeight() + scrollPos;
+                        if (lvt_9_1_ >= 0 && lvt_9_1_ < drawnChatLines.size()) {
+                            ChatLine lvt_10_1_ = drawnChatLines.get(lvt_9_1_);
                             int lvt_11_1_ = 0;
 
                             for (IChatComponent lvt_13_1_ : lvt_10_1_.getChatComponent()) {

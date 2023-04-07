@@ -82,7 +82,7 @@ public class MixinFontRenderer {
         if (string == null)
             return null;
 
-        return NameProtect.handleTextMessage(string);
+        return NameProtect.INSTANCE.handleTextMessage(string);
     }
 
     @ModifyVariable(method = "getStringWidth", at = @At("HEAD"), require = 1, ordinal = 0)
@@ -90,6 +90,6 @@ public class MixinFontRenderer {
         if (string == null)
             return null;
 
-        return NameProtect.handleTextMessage(string);
+        return NameProtect.INSTANCE.handleTextMessage(string);
     }
 }

@@ -23,7 +23,8 @@ import net.minecraft.util.BlockPos
 import org.lwjgl.input.Keyboard
 
 @ModuleInfo(name = "LiquidWalk", description = "Allows you to walk on water.", category = ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_J)
-class LiquidWalk : Module() {
+object LiquidWalk : Module() {
+
     val modeValue = ListValue("Mode", arrayOf("Vanilla", "NCP", "AAC", "AAC3.3.11", "AACFly", "Spartan", "Dolphin"), "NCP")
     private val noJumpValue = BoolValue("NoJump", false)
     private val aacFlyValue = object : FloatValue("AACFlyMotion", 0.5f, 0.1f, 1f) {
@@ -63,7 +64,7 @@ class LiquidWalk : Module() {
                     thePlayer.motionY += 0.15
                     return
                 }
-                val block = getBlock(BlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ))
+                val block = getBlock(BlockPos(thePlayer).up())
                 val blockUp = getBlock(BlockPos(thePlayer.posX, thePlayer.posY + 1.1, thePlayer.posZ))
 
                 if (blockUp is BlockLiquid) {
@@ -81,7 +82,7 @@ class LiquidWalk : Module() {
                 thePlayer.motionZ *= 1.17
                 if (thePlayer.isCollidedHorizontally)
                     thePlayer.motionY = 0.24
-                else if (mc.theWorld.getBlockState(BlockPos(thePlayer.posX, thePlayer.posY + 1.0, thePlayer.posZ)).block != Blocks.air)
+                else if (getBlock(BlockPos(thePlayer).up()) != Blocks.air)
                     thePlayer.motionY += 0.04
             }
             "dolphin" -> if (thePlayer.isInWater) thePlayer.motionY += 0.03999999910593033

@@ -6,7 +6,6 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -34,7 +33,8 @@ import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBlockBox
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils
+import net.ccbluex.liquidbounce.utils.timer.TimeUtils.randomClickDelay
+import net.ccbluex.liquidbounce.utils.timer.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -65,7 +65,7 @@ import kotlin.math.sin
     category = ModuleCategory.WORLD,
     keyBind = Keyboard.KEY_I
 )
-class Scaffold : Module() {
+object Scaffold : Module() {
 
     private val modeValue = ListValue("Mode", arrayOf("Normal", "Rewinside", "Expand"), "Normal")
 
@@ -112,7 +112,6 @@ class Scaffold : Module() {
     private val autoBlockValue = ListValue("AutoBlock", arrayOf("Off", "Pick", "Spoof", "Switch"), "Spoof")
 
     // Basic stuff
-    @JvmField
     val sprintValue = BoolValue("Sprint", false)
     private val swingValue = BoolValue("Swing", true)
     private val searchValue = BoolValue("Search", true)
@@ -202,7 +201,7 @@ class Scaffold : Module() {
     // Delay
     private val delayTimer = MSTimer()
     private val zitterTimer = MSTimer()
-    private var delay = 0L
+    private var delay = 0
 
     // Eagle
     private var placedBlocksWithoutEagle = 0
@@ -217,8 +216,8 @@ class Scaffold : Module() {
         get() = targetRotation ?: mc.thePlayer?.rotation ?: serverRotation
 
     // Extra clicks
-    private var extraClick: ExtraClickInfo =
-        ExtraClickInfo(TimeUtils.randomClickDelay(extraClickMinCPS.get(), extraClickMaxCPS.get()), 0L, 0)
+    private var extraClick =
+        ExtraClickInfo(randomClickDelay(extraClickMinCPS.get(), extraClickMaxCPS.get()), 0L, 0)
 
     // Enabling module
     override fun onEnable() {
@@ -506,7 +505,7 @@ class Scaffold : Module() {
             )
         ) {
             delayTimer.reset()
-            delay = if (!placeDelay.get()) 0 else TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+            delay = if (!placeDelay.get()) 0 else randomDelay(minDelayValue.get(), maxDelayValue.get())
 
             if (player.onGround) {
                 player.motionX *= speedModifierValue.get()
@@ -564,7 +563,7 @@ class Scaffold : Module() {
         ) {
             if (shouldHelpWithDelay) {
                 delayTimer.reset()
-                delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+                delay = randomDelay(minDelayValue.get(), maxDelayValue.get())
             }
 
             if (swingValue.get()) {
@@ -629,10 +628,10 @@ class Scaffold : Module() {
     fun onRender2D(event: Render2DEvent) {
         if (counterDisplayValue.get()) {
             glPushMatrix()
-            val blockOverlay = moduleManager[BlockOverlay::class.java] as BlockOverlay
-            if (blockOverlay.state && blockOverlay.infoValue.get() && blockOverlay.currentBlock != null) {
+
+            if (BlockOverlay.state && BlockOverlay.infoValue.get() && BlockOverlay.currentBlock != null)
                 glTranslatef(0f, 15f, 0f)
-            }
+
             val info = "Blocks: §7$blocksAmount"
             val scaledResolution = ScaledResolution(mc)
 
@@ -670,7 +669,7 @@ class Scaffold : Module() {
 
                     if (raytrace.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK && timePassed) {
                         extraClick = ExtraClickInfo(
-                            TimeUtils.randomClickDelay(extraClickMinCPS.get(), extraClickMaxCPS.get()),
+                            randomClickDelay(extraClickMinCPS.get(), extraClickMaxCPS.get()),
                             System.currentTimeMillis(),
                             extraClick.clicks + 1
                         )
@@ -888,5 +887,5 @@ class Scaffold : Module() {
     override val tag
         get() = modeValue.get()
 
-    data class ExtraClickInfo(val delay: Long, val lastClick: Long, var clicks: Int)
+    data class ExtraClickInfo(val delay: Int, val lastClick: Long, var clicks: Int)
 }

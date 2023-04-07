@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import java.util.*
 
 @ModuleInfo(name = "Aimbot", description = "Automatically faces selected entities around you.", category = ModuleCategory.COMBAT)
-class Aimbot : Module() {
+object Aimbot : Module() {
 
     private val rangeValue = FloatValue("Range", 4.4F, 1F, 8F)
     private val turnSpeedValue = FloatValue("TurnSpeed", 10f, 1F, 180F)

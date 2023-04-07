@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.AttackEvent
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
@@ -21,7 +20,7 @@ import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 
 @ModuleInfo(name = "Criticals", description = "Automatically deals critical hits.", category = ModuleCategory.COMBAT)
-class Criticals : Module() {
+object Criticals : Module() {
 
     val modeValue = ListValue("Mode", arrayOf("Packet", "NcpPacket", "NoGround", "Hop", "TPHop", "Jump", "LowJump", "Visual"), "Packet")
     val delayValue = IntegerValue("Delay", 0, 0, 500)
@@ -42,7 +41,7 @@ class Criticals : Module() {
 
             if (!thePlayer.onGround || thePlayer.isOnLadder || thePlayer.isInWeb || thePlayer.isInWater ||
                     thePlayer.isInLava || thePlayer.ridingEntity != null || entity.hurtTime > hurtTimeValue.get() ||
-                    moduleManager[Fly::class.java].state || !msTimer.hasTimePassed(delayValue.get()))
+                    Fly.state || !msTimer.hasTimePassed(delayValue.get()))
                 return
 
             val x = thePlayer.posX

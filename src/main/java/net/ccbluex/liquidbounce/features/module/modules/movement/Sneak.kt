@@ -19,11 +19,9 @@ import net.minecraft.client.settings.GameSettings
 import net.minecraft.network.play.client.C0BPacketEntityAction
 
 @ModuleInfo(name = "Sneak", description = "Automatically sneaks all the time.", category = ModuleCategory.MOVEMENT)
-class Sneak : Module() {
+object Sneak : Module() {
 
-    @JvmField
     val modeValue = ListValue("Mode", arrayOf("Legit", "Vanilla", "Switch", "MineSecure"), "MineSecure")
-    @JvmField
     val stopMoveValue = BoolValue("StopMove", false)
 
     private var sneaking = false

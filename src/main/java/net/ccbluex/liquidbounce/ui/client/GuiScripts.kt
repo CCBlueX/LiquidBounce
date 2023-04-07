@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.ui.client
 
-import net.ccbluex.liquidbounce.LiquidBounce.clickGui
 import net.ccbluex.liquidbounce.LiquidBounce.scriptManager
 import net.ccbluex.liquidbounce.file.FileManager.clickGuiConfig
 import net.ccbluex.liquidbounce.file.FileManager.hudConfig
@@ -14,7 +13,6 @@ import net.ccbluex.liquidbounce.file.FileManager.loadConfigs
 import net.ccbluex.liquidbounce.script.ScriptManager.reloadScripts
 import net.ccbluex.liquidbounce.script.ScriptManager.scripts
 import net.ccbluex.liquidbounce.script.ScriptManager.scriptsFolder
-import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
@@ -26,7 +24,6 @@ import org.lwjgl.input.Keyboard
 import java.awt.Color
 import java.awt.Desktop
 import java.io.File
-import java.io.FileOutputStream
 import java.net.URL
 import java.util.zip.ZipFile
 
@@ -69,7 +66,6 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
                 if (fileName.endsWith(".js")) {
                     scriptManager.importScript(file)
 
-                    clickGui = ClickGui()
                     loadConfig(clickGuiConfig)
                     return
                 } else if (fileName.endsWith(".zip")) {
@@ -88,7 +84,7 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
                         }
 
                         val fileStream = zipFile.getInputStream(entry)
-                        val fileOutputStream = FileOutputStream(entryFile)
+                        val fileOutputStream = entryFile.outputStream()
 
                         IOUtils.copy(fileStream, fileOutputStream)
                         fileOutputStream.close()
@@ -100,7 +96,6 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
 
                     scriptFiles.forEach { scriptFile -> scriptManager.loadScript(scriptFile) }
 
-                    clickGui = ClickGui()
                     loadConfigs(clickGuiConfig, hudConfig)
                     return
                 }
@@ -117,7 +112,6 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
 
                     scriptManager.deleteScript(script)
 
-                    clickGui = ClickGui()
                     loadConfigs(clickGuiConfig, hudConfig)
                 }
             } catch (t: Throwable) {

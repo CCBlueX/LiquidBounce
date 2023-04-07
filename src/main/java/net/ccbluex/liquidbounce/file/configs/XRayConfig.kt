@@ -7,7 +7,6 @@ package net.ccbluex.liquidbounce.file.configs
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonParser
-import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.features.module.modules.render.XRay
 import net.ccbluex.liquidbounce.file.FileConfig
 import net.ccbluex.liquidbounce.file.FileManager.PRETTY_GSON
@@ -24,18 +23,17 @@ class XRayConfig(file: File) : FileConfig(file) {
      */
     @Throws(IOException::class)
     override fun loadConfig() {
-        val xRay = moduleManager[XRay::class.java] as XRay
         val jsonArray = JsonParser().parse(file.bufferedReader()).asJsonArray
 
-        xRay.xrayBlocks.clear()
+        XRay.xrayBlocks.clear()
         for (jsonElement in jsonArray) {
             try {
                 val block = Block.getBlockFromName(jsonElement.asString)
-                if (block in xRay.xrayBlocks) {
+                if (block in XRay.xrayBlocks) {
                     LOGGER.error("[FileManager] Skipped xray block '${block.registryName}' because the block is already added.")
                     continue
                 }
-                xRay.xrayBlocks.add(block)
+                XRay.xrayBlocks.add(block)
             } catch (throwable: Throwable) {
                 LOGGER.error("[FileManager] Failed to add block to xray.", throwable)
             }
@@ -49,10 +47,8 @@ class XRayConfig(file: File) : FileConfig(file) {
      */
     @Throws(IOException::class)
     override fun saveConfig() {
-        val xRay = moduleManager[XRay::class.java] as XRay
-
         val jsonArray = JsonArray()
-        for (block in xRay.xrayBlocks) jsonArray.add(PRETTY_GSON.toJsonTree(Block.getIdFromBlock(block)))
+        for (block in XRay.xrayBlocks) jsonArray.add(PRETTY_GSON.toJsonTree(Block.getIdFromBlock(block)))
 
         file.writeText(PRETTY_GSON.toJson(jsonArray))
     }

@@ -12,7 +12,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
 import static org.lwjgl.opengl.GL11.*;
 
 @Mixin(RenderEntityItem.class)
@@ -20,7 +19,7 @@ public class MixinRenderEntityItem {
 
     @Inject(method = "doRender", at = @At("HEAD"))
     private void injectChamsPre(CallbackInfo callbackInfo) {
-        final Chams chams = (Chams) moduleManager.getModule(Chams.class);
+        final Chams chams = Chams.INSTANCE;
 
         if (chams.getState() && chams.getItemsValue().get()) {
             glEnable(GL_POLYGON_OFFSET_FILL);
@@ -30,7 +29,7 @@ public class MixinRenderEntityItem {
 
     @Inject(method = "doRender", at = @At("RETURN"))
     private void injectChamsPost(CallbackInfo callbackInfo) {
-        final Chams chams = (Chams) moduleManager.getModule(Chams.class);
+        final Chams chams = Chams.INSTANCE;
 
         if (chams.getState() && chams.getItemsValue().get()) {
             glPolygonOffset(1f, 1000000F);

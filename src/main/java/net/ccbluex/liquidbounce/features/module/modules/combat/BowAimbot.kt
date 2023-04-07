@@ -24,7 +24,7 @@ import net.minecraft.item.ItemBow
 import java.awt.Color
 
 @ModuleInfo(name = "BowAimbot", description = "Automatically aims at players when using a bow.", category = ModuleCategory.COMBAT)
-class BowAimbot : Module() {
+object BowAimbot : Module() {
 
     private val priorityValue = ListValue("Priority", arrayOf("Health", "Distance", "Direction"), "Direction")
     private val predictValue = BoolValue("Predict", true)

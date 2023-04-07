@@ -1,13 +1,13 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import me.liuli.elixir.account.CrackedAccount
-import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.LiquidBounce.hud
 import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.file.FileManager.accountsConfig
+import net.ccbluex.liquidbounce.ui.client.hud.HUD.addNotification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 import net.ccbluex.liquidbounce.utils.ServerUtils
@@ -24,7 +24,7 @@ import java.util.*
 import kotlin.concurrent.schedule
 
 @ModuleInfo("AutoAccount", "Most feature-packed auto register/login & account manager.", ModuleCategory.MISC)
-class AutoAccount : Module() {
+object AutoAccount : Module() {
 
     private val registerValue = BoolValue("AutoRegister", true)
 
@@ -109,13 +109,13 @@ class AutoAccount : Module() {
 
         when {
             registerValue.get() && "/reg" in msg -> {
-                hud.addNotification(Notification("Trying to register."))
+                addNotification(Notification("Trying to register."))
                 Timer().schedule(sendDelayValue.get().toLong()) {
                     mc.thePlayer.sendChatMessage("/register ${passwordValue.get()} ${passwordValue.get()}")
                 }
             }
             loginValue.get() && "/log" in msg -> {
-                hud.addNotification(Notification("Trying to log in."))
+                addNotification(Notification("Trying to log in."))
                 Timer().schedule(sendDelayValue.get().toLong()) {
                     mc.thePlayer.sendChatMessage("/login ${passwordValue.get()}")
                 }
@@ -198,7 +198,7 @@ class AutoAccount : Module() {
     // Login succeeded
     private fun success() {
         if (status == Status.SENT_COMMAND) {
-            hud.addNotification(Notification("Logged in as ${mc.session.username}"))
+            addNotification(Notification("Logged in as ${mc.session.username}"))
 
             // Stop waiting for response
             status = Status.STOPPED
@@ -208,7 +208,7 @@ class AutoAccount : Module() {
     // Login failed
     private fun fail() {
         if (status == Status.SENT_COMMAND) {
-            hud.addNotification(Notification("Failed to log in as ${mc.session.username}"))
+            addNotification(Notification("Failed to log in as ${mc.session.username}"))
 
             // Stop waiting for response
             status = Status.STOPPED
@@ -226,7 +226,7 @@ class AutoAccount : Module() {
                 account.session.username, account.session.uuid,
                 account.session.token, account.session.type
             )
-            LiquidBounce.eventManager.callEvent(SessionEvent())
+            callEvent(SessionEvent())
             return
         }
 
@@ -238,7 +238,7 @@ class AutoAccount : Module() {
             accountsConfig.addAccount(account)
             accountsConfig.saveConfig()
 
-            hud.addNotification(Notification("Saved alt ${account.name}"))
+            addNotification(Notification("Saved alt ${account.name}"))
         }
     }
 

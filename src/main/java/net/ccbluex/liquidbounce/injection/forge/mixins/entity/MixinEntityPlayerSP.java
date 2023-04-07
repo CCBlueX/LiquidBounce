@@ -17,6 +17,9 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.Sprint;
 import net.ccbluex.liquidbounce.features.module.modules.render.NoSwing;
 import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold;
 import net.ccbluex.liquidbounce.utils.CooldownHelper;
+import net.ccbluex.liquidbounce.utils.MovementUtils;
+import net.ccbluex.liquidbounce.utils.Rotation;
+import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFence;
 import net.minecraft.block.BlockFenceGate;
@@ -49,14 +52,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 
-import static net.ccbluex.liquidbounce.LiquidBounce.eventManager;
-import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
-import static net.ccbluex.liquidbounce.utils.MovementUtils.isMoving;
-import static net.ccbluex.liquidbounce.utils.RotationUtils.targetRotation;
-
 @Mixin(EntityPlayerSP.class)
 @SideOnly(Side.CLIENT)
 public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
+
     @Shadow
     public boolean serverSprintState;
 
@@ -138,39 +137,45 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
      */
     @Inject(method = "onUpdateWalkingPlayer", at = @At("HEAD"), cancellable = true)
     private void onUpdateWalkingPlayer(CallbackInfo ci) {
-        eventManager.callEvent(new MotionEvent(EventState.PRE));
+        EventManager.INSTANCE.callEvent(new MotionEvent(EventState.PRE));
 
-        final InventoryMove inventoryMove = (InventoryMove) moduleManager.getModule(InventoryMove.class);
-        final Sneak sneak = (Sneak) moduleManager.getModule(Sneak.class);
-        final boolean fakeSprint = (inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get()) || moduleManager.getModule(AntiHunger.class).getState() || (sneak.getState() && (!isMoving() || !sneak.stopMoveValue.get()) && sneak.modeValue.get().equals("MineSecure"));
+        final InventoryMove inventoryMove = InventoryMove.INSTANCE;
+        final Sneak sneak = Sneak.INSTANCE;
+        final boolean fakeSprint = (inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get()) || AntiHunger.INSTANCE.getState() || (sneak.getState() && (!MovementUtils.INSTANCE.isMoving() || !sneak.getStopMoveValue().get()) && sneak.getModeValue().get().equals("MineSecure"));
 
-        boolean sprinting = this.isSprinting() && !fakeSprint;
+        boolean sprinting = isSprinting() && !fakeSprint;
 
-        if (sprinting != this.serverSprintState) {
+        if (sprinting != serverSprintState) {
             if (sprinting)
-                this.sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, C0BPacketEntityAction.Action.START_SPRINTING));
+                sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, C0BPacketEntityAction.Action.START_SPRINTING));
             else
-                this.sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, C0BPacketEntityAction.Action.STOP_SPRINTING));
+                sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, C0BPacketEntityAction.Action.STOP_SPRINTING));
 
-            this.serverSprintState = sprinting;
+            serverSprintState = sprinting;
         }
 
-        boolean sneaking = this.isSneaking();
+        boolean sneaking = isSneaking();
 
-        if (sneaking != this.serverSneakState && (!sneak.getState() || sneak.modeValue.get().equals("Legit"))) {
+        if (sneaking != serverSneakState && (!sneak.getState() || sneak.getModeValue().get().equals("Legit"))) {
             if (sneaking)
-                this.sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, C0BPacketEntityAction.Action.START_SNEAKING));
+                sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, C0BPacketEntityAction.Action.START_SNEAKING));
             else
-                this.sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, C0BPacketEntityAction.Action.STOP_SNEAKING));
+                sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, C0BPacketEntityAction.Action.STOP_SNEAKING));
 
-            this.serverSneakState = sneaking;
+            serverSneakState = sneaking;
         }
 
-        if (this.isCurrentViewEntity()) {
+        if (isCurrentViewEntity()) {
             float yaw = rotationYaw;
             float pitch = rotationPitch;
 
-            final Derp derp = (Derp) moduleManager.getModule(Derp.class);
+            final Rotation serverRotation = RotationUtils.INSTANCE.getServerRotation();
+            final Rotation targetRotation = RotationUtils.INSTANCE.getTargetRotation();
+
+            float lastReportedYaw = serverRotation.getYaw();
+            float lastReportedPitch = serverRotation.getPitch();
+
+            final Derp derp = Derp.INSTANCE;
             if (derp.getState()) {
                 float[] rot = derp.getRotation();
                 yaw = rot[0];
@@ -182,58 +187,58 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 pitch = targetRotation.getPitch();
             }
 
-            double xDiff = this.posX - this.lastReportedPosX;
-            double yDiff = this.getEntityBoundingBox().minY - this.lastReportedPosY;
-            double zDiff = this.posZ - this.lastReportedPosZ;
-            double yawDiff = yaw - this.lastReportedYaw;
-            double pitchDiff = pitch - this.lastReportedPitch;
-            boolean moved = xDiff * xDiff + yDiff * yDiff + zDiff * zDiff > 9.0E-4D || this.positionUpdateTicks >= 20;
+            double xDiff = posX - lastReportedPosX;
+            double yDiff = getEntityBoundingBox().minY - lastReportedPosY;
+            double zDiff = posZ - lastReportedPosZ;
+            double yawDiff = yaw - lastReportedYaw;
+            double pitchDiff = pitch - lastReportedPitch;
+            boolean moved = xDiff * xDiff + yDiff * yDiff + zDiff * zDiff > 9.0E-4D || positionUpdateTicks >= 20;
             boolean rotated = yawDiff != 0.0D || pitchDiff != 0.0D;
 
-            if (this.ridingEntity == null) {
+            if (ridingEntity == null) {
                 if (moved && rotated) {
-                    this.sendQueue.addToSendQueue(new C03PacketPlayer.C06PacketPlayerPosLook(this.posX, this.getEntityBoundingBox().minY, this.posZ, yaw, pitch, this.onGround));
+                    sendQueue.addToSendQueue(new C03PacketPlayer.C06PacketPlayerPosLook(posX, getEntityBoundingBox().minY, posZ, yaw, pitch, onGround));
                 } else if (moved) {
-                    this.sendQueue.addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(this.posX, this.getEntityBoundingBox().minY, this.posZ, this.onGround));
+                    sendQueue.addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(posX, getEntityBoundingBox().minY, posZ, onGround));
                 } else if (rotated) {
-                    this.sendQueue.addToSendQueue(new C03PacketPlayer.C05PacketPlayerLook(yaw, pitch, this.onGround));
+                    sendQueue.addToSendQueue(new C03PacketPlayer.C05PacketPlayerLook(yaw, pitch, onGround));
                 } else {
-                    this.sendQueue.addToSendQueue(new C03PacketPlayer(this.onGround));
+                    sendQueue.addToSendQueue(new C03PacketPlayer(onGround));
                 }
             } else {
-                this.sendQueue.addToSendQueue(new C03PacketPlayer.C06PacketPlayerPosLook(this.motionX, -999.0D, this.motionZ, yaw, pitch, this.onGround));
+                sendQueue.addToSendQueue(new C03PacketPlayer.C06PacketPlayerPosLook(motionX, -999.0D, motionZ, yaw, pitch, onGround));
                 moved = false;
             }
 
-            ++this.positionUpdateTicks;
+            ++positionUpdateTicks;
 
             if (moved) {
-                this.lastReportedPosX = this.posX;
-                this.lastReportedPosY = this.getEntityBoundingBox().minY;
-                this.lastReportedPosZ = this.posZ;
-                this.positionUpdateTicks = 0;
+                lastReportedPosX = posX;
+                lastReportedPosY = getEntityBoundingBox().minY;
+                lastReportedPosZ = posZ;
+                positionUpdateTicks = 0;
             }
 
             if (rotated) {
-                this.lastReportedYaw = yaw;
-                this.lastReportedPitch = pitch;
+                this.lastReportedYaw = rotationYaw;
+                this.lastReportedPitch = rotationPitch;
             }
         }
 
-        eventManager.callEvent(new MotionEvent(EventState.POST));
+        EventManager.INSTANCE.callEvent(new MotionEvent(EventState.POST));
 
         ci.cancel();
     }
 
     @Inject(method = "swingItem", at = @At("HEAD"), cancellable = true)
     private void swingItem(CallbackInfo callbackInfo) {
-        final NoSwing noSwing = (NoSwing) moduleManager.getModule(NoSwing.class);
+        final NoSwing noSwing = NoSwing.INSTANCE;
 
         if (noSwing.getState()) {
             callbackInfo.cancel();
 
             if (!noSwing.getServerSideValue().get()) {
-                this.sendQueue.addToSendQueue(new C0APacketAnimation());
+                sendQueue.addToSendQueue(new C0APacketAnimation());
                 CooldownHelper.INSTANCE.resetLastAttackedTicks();
             }
         } else {
@@ -244,10 +249,10 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
     @Inject(method = "pushOutOfBlocks", at = @At("HEAD"), cancellable = true)
     private void onPushOutOfBlocks(CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
         PushOutEvent event = new PushOutEvent();
-        if (this.noClip) {
+        if (noClip) {
             event.cancelEvent();
         }
-        eventManager.callEvent(event);
+        EventManager.INSTANCE.callEvent(event);
 
         if (event.isCancelled()) {
             callbackInfoReturnable.setReturnValue(false);
@@ -259,176 +264,173 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
      */
     @Overwrite
     public void onLivingUpdate() {
-        eventManager.callEvent(new UpdateEvent());
+        EventManager.INSTANCE.callEvent(new UpdateEvent());
 
-        if (this.sprintingTicksLeft > 0) {
-            --this.sprintingTicksLeft;
+        if (sprintingTicksLeft > 0) {
+            --sprintingTicksLeft;
 
-            if (this.sprintingTicksLeft == 0) {
-                this.setSprinting(false);
+            if (sprintingTicksLeft == 0) {
+                setSprinting(false);
             }
         }
 
-        if (this.sprintToggleTimer > 0) {
-            --this.sprintToggleTimer;
+        if (sprintToggleTimer > 0) {
+            --sprintToggleTimer;
         }
 
-        this.prevTimeInPortal = this.timeInPortal;
+        prevTimeInPortal = timeInPortal;
 
-        if (this.inPortal) {
-            if (this.mc.currentScreen != null && !this.mc.currentScreen.doesGuiPauseGame() && !moduleManager.getModule(PortalMenu.class).getState()) {
-                this.mc.displayGuiScreen(null);
+        if (inPortal) {
+            if (mc.currentScreen != null && !mc.currentScreen.doesGuiPauseGame() && !PortalMenu.INSTANCE.getState()) {
+                mc.displayGuiScreen(null);
             }
 
-            if (this.timeInPortal == 0f) {
-                this.mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("portal.trigger"), this.rand.nextFloat() * 0.4F + 0.8F));
+            if (timeInPortal == 0f) {
+                mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("portal.trigger"), rand.nextFloat() * 0.4F + 0.8F));
             }
 
-            this.timeInPortal += 0.0125F;
+            timeInPortal += 0.0125F;
 
-            if (this.timeInPortal >= 1f) {
-                this.timeInPortal = 1f;
+            if (timeInPortal >= 1f) {
+                timeInPortal = 1f;
             }
 
-            this.inPortal = false;
-        } else if (this.isPotionActive(Potion.confusion) && this.getActivePotionEffect(Potion.confusion).getDuration() > 60) {
-            this.timeInPortal += 0.006666667F;
+            inPortal = false;
+        } else if (isPotionActive(Potion.confusion) && getActivePotionEffect(Potion.confusion).getDuration() > 60) {
+            timeInPortal += 0.006666667F;
 
-            if (this.timeInPortal > 1f) {
-                this.timeInPortal = 1f;
+            if (timeInPortal > 1f) {
+                timeInPortal = 1f;
             }
         } else {
-            if (this.timeInPortal > 0f) {
-                this.timeInPortal -= 0.05F;
+            if (timeInPortal > 0f) {
+                timeInPortal -= 0.05F;
             }
 
-            if (this.timeInPortal < 0f) {
-                this.timeInPortal = 0f;
+            if (timeInPortal < 0f) {
+                timeInPortal = 0f;
             }
         }
 
-        if (this.timeUntilPortal > 0) {
-            --this.timeUntilPortal;
+        if (timeUntilPortal > 0) {
+            --timeUntilPortal;
         }
 
-        boolean flag = this.movementInput.jump;
-        boolean flag1 = this.movementInput.sneak;
+        boolean flag = movementInput.jump;
+        boolean flag1 = movementInput.sneak;
         float f = 0.8F;
-        boolean flag2 = this.movementInput.moveForward >= f;
-        this.movementInput.updatePlayerMoveState();
+        boolean flag2 = movementInput.moveForward >= f;
+        movementInput.updatePlayerMoveState();
 
-        final NoSlow noSlow = (NoSlow) moduleManager.getModule(NoSlow.class);
-        final KillAura killAura = (KillAura) moduleManager.getModule(KillAura.class);
+        final NoSlow noSlow = NoSlow.INSTANCE;
+        final KillAura killAura = KillAura.INSTANCE;
 
-        if (getHeldItem() != null && (this.isUsingItem() || (getHeldItem().getItem() instanceof ItemSword && killAura.getBlockStatus())) && !this.isRiding()) {
+        if (getHeldItem() != null && (isUsingItem() || (getHeldItem().getItem() instanceof ItemSword && killAura.getBlockStatus())) && !isRiding()) {
             final SlowDownEvent slowDownEvent = new SlowDownEvent(0.2F, 0.2F);
-            eventManager.callEvent(slowDownEvent);
-            this.movementInput.moveStrafe *= slowDownEvent.getStrafe();
-            this.movementInput.moveForward *= slowDownEvent.getForward();
-            this.sprintToggleTimer = 0;
+            EventManager.INSTANCE.callEvent(slowDownEvent);
+            movementInput.moveStrafe *= slowDownEvent.getStrafe();
+            movementInput.moveForward *= slowDownEvent.getForward();
+            sprintToggleTimer = 0;
         }
 
-        this.pushOutOfBlocks(this.posX - (double) this.width * 0.35D, this.getEntityBoundingBox().minY + 0.5D, this.posZ + (double) this.width * 0.35D);
-        this.pushOutOfBlocks(this.posX - (double) this.width * 0.35D, this.getEntityBoundingBox().minY + 0.5D, this.posZ - (double) this.width * 0.35D);
-        this.pushOutOfBlocks(this.posX + (double) this.width * 0.35D, this.getEntityBoundingBox().minY + 0.5D, this.posZ - (double) this.width * 0.35D);
-        this.pushOutOfBlocks(this.posX + (double) this.width * 0.35D, this.getEntityBoundingBox().minY + 0.5D, this.posZ + (double) this.width * 0.35D);
+        pushOutOfBlocks(posX - (double) width * 0.35D, getEntityBoundingBox().minY + 0.5D, posZ + (double) width * 0.35D);
+        pushOutOfBlocks(posX - (double) width * 0.35D, getEntityBoundingBox().minY + 0.5D, posZ - (double) width * 0.35D);
+        pushOutOfBlocks(posX + (double) width * 0.35D, getEntityBoundingBox().minY + 0.5D, posZ - (double) width * 0.35D);
+        pushOutOfBlocks(posX + (double) width * 0.35D, getEntityBoundingBox().minY + 0.5D, posZ + (double) width * 0.35D);
 
-        final Sprint sprint = (Sprint) moduleManager.getModule(Sprint.class);
+        final Sprint sprint = Sprint.INSTANCE;
 
-        final boolean legitSprint = sprint.modeValue.get().equals("Legit");
+        final boolean legitSprint = sprint.getModeValue().get().equals("Legit");
 
-        boolean flag3 = !(sprint.getState() && !legitSprint && sprint.foodValue.get()) || (float) this.getFoodStats().getFoodLevel() > 6f || this.capabilities.allowFlying;
+        boolean flag3 = !(sprint.getState() && !legitSprint && sprint.getFoodValue().get()) || (float) getFoodStats().getFoodLevel() > 6f || capabilities.allowFlying;
 
-        if (this.onGround && !flag1 && !flag2 && this.movementInput.moveForward >= f && !this.isSprinting() && flag3 && !this.isUsingItem() && !this.isPotionActive(Potion.blindness)) {
-            if (this.sprintToggleTimer <= 0 && !this.mc.gameSettings.keyBindSprint.isKeyDown()) {
-                this.sprintToggleTimer = 7;
+        if (onGround && !flag1 && !flag2 && movementInput.moveForward >= f && !isSprinting() && flag3 && !isUsingItem() && !isPotionActive(Potion.blindness)) {
+            if (sprintToggleTimer <= 0 && !mc.gameSettings.keyBindSprint.isKeyDown()) {
+                sprintToggleTimer = 7;
             } else {
-                this.setSprinting(true);
+                setSprinting(true);
             }
         }
 
-        if (!this.isSprinting() && this.movementInput.moveForward >= f && flag3 && (noSlow.getState() || !this.isUsingItem()) && !this.isPotionActive(Potion.blindness) && this.mc.gameSettings.keyBindSprint.isKeyDown()) {
-            this.setSprinting(true);
+        if (!isSprinting() && movementInput.moveForward >= f && flag3 && (noSlow.getState() || !isUsingItem()) && !isPotionActive(Potion.blindness) && mc.gameSettings.keyBindSprint.isKeyDown()) {
+            setSprinting(true);
         }
 
-        final Scaffold scaffold = (Scaffold) moduleManager.getModule(Scaffold.class);
+        final Scaffold scaffold = Scaffold.INSTANCE;
+        if ((scaffold.getState() && !scaffold.getSprintValue().get()) || (sprint.getState() && !legitSprint && sprint.getCheckServerSide().get() && (onGround || !sprint.getCheckServerSideGround().get()) && !sprint.getAllDirectionsValue().get() && RotationUtils.INSTANCE.getTargetRotation() != null && RotationUtils.INSTANCE.getRotationDifference(new Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)) > 30))
+            setSprinting(false);
 
-        boolean shouldStop = targetRotation != null && this.movementInput.moveForward * MathHelper.cos((this.rotationYaw - targetRotation.getYaw()) * 3.1415927F / 180.0F) + this.movementInput.moveStrafe * MathHelper.sin((this.rotationYaw - targetRotation.getYaw()) * 3.1415927F / 180.0F) < 0.8;
-
-        if ((scaffold.getState() && !scaffold.sprintValue.get()) || (sprint.getState() && !legitSprint && sprint.checkServerSide.get() && (onGround || !sprint.checkServerSideGround.get()) && !sprint.allDirectionsValue.get() && shouldStop))
-            this.setSprinting(false);
-
-        if (this.isSprinting() && ((!(sprint.getState() && !legitSprint && sprint.allDirectionsValue.get()) && this.movementInput.moveForward < f) || this.isCollidedHorizontally || !flag3)) {
-            this.setSprinting(false);
+        if (isSprinting() && ((!(sprint.getState() && !legitSprint && sprint.getAllDirectionsValue().get()) && movementInput.moveForward < f) || isCollidedHorizontally || !flag3)) {
+            setSprinting(false);
         }
 
-        if (this.capabilities.allowFlying) {
-            if (this.mc.playerController.isSpectatorMode()) {
-                if (!this.capabilities.isFlying) {
-                    this.capabilities.isFlying = true;
-                    this.sendPlayerAbilities();
+        if (capabilities.allowFlying) {
+            if (mc.playerController.isSpectatorMode()) {
+                if (!capabilities.isFlying) {
+                    capabilities.isFlying = true;
+                    sendPlayerAbilities();
                 }
-            } else if (!flag && this.movementInput.jump) {
-                if (this.flyToggleTimer == 0) {
-                    this.flyToggleTimer = 7;
+            } else if (!flag && movementInput.jump) {
+                if (flyToggleTimer == 0) {
+                    flyToggleTimer = 7;
                 } else {
-                    this.capabilities.isFlying = !this.capabilities.isFlying;
-                    this.sendPlayerAbilities();
-                    this.flyToggleTimer = 0;
+                    capabilities.isFlying = !capabilities.isFlying;
+                    sendPlayerAbilities();
+                    flyToggleTimer = 0;
                 }
             }
         }
 
-        if (this.capabilities.isFlying && this.isCurrentViewEntity()) {
-            if (this.movementInput.sneak) {
-                this.motionY -= this.capabilities.getFlySpeed() * 3f;
+        if (capabilities.isFlying && isCurrentViewEntity()) {
+            if (movementInput.sneak) {
+                motionY -= capabilities.getFlySpeed() * 3f;
             }
 
-            if (this.movementInput.jump) {
-                this.motionY += this.capabilities.getFlySpeed() * 3f;
+            if (movementInput.jump) {
+                motionY += capabilities.getFlySpeed() * 3f;
             }
         }
 
-        if (this.isRidingHorse()) {
-            if (this.horseJumpPowerCounter < 0) {
-                ++this.horseJumpPowerCounter;
+        if (isRidingHorse()) {
+            if (horseJumpPowerCounter < 0) {
+                ++horseJumpPowerCounter;
 
-                if (this.horseJumpPowerCounter == 0) {
-                    this.horseJumpPower = 0f;
+                if (horseJumpPowerCounter == 0) {
+                    horseJumpPower = 0f;
                 }
             }
 
-            if (flag && !this.movementInput.jump) {
-                this.horseJumpPowerCounter = -10;
-                this.sendHorseJump();
-            } else if (!flag && this.movementInput.jump) {
-                this.horseJumpPowerCounter = 0;
-                this.horseJumpPower = 0f;
+            if (flag && !movementInput.jump) {
+                horseJumpPowerCounter = -10;
+                sendHorseJump();
+            } else if (!flag && movementInput.jump) {
+                horseJumpPowerCounter = 0;
+                horseJumpPower = 0f;
             } else if (flag) {
-                ++this.horseJumpPowerCounter;
+                ++horseJumpPowerCounter;
 
-                if (this.horseJumpPowerCounter < 10) {
-                    this.horseJumpPower = (float) this.horseJumpPowerCounter * 0.1F;
+                if (horseJumpPowerCounter < 10) {
+                    horseJumpPower = (float) horseJumpPowerCounter * 0.1F;
                 } else {
-                    this.horseJumpPower = 0.8F + 2f / (float) (this.horseJumpPowerCounter - 9) * 0.1F;
+                    horseJumpPower = 0.8F + 2f / (float) (horseJumpPowerCounter - 9) * 0.1F;
                 }
             }
         } else {
-            this.horseJumpPower = 0f;
+            horseJumpPower = 0f;
         }
 
         super.onLivingUpdate();
 
-        if (this.onGround && this.capabilities.isFlying && !this.mc.playerController.isSpectatorMode()) {
-            this.capabilities.isFlying = false;
-            this.sendPlayerAbilities();
+        if (onGround && capabilities.isFlying && !mc.playerController.isSpectatorMode()) {
+            capabilities.isFlying = false;
+            sendPlayerAbilities();
         }
     }
 
     @Override
     public void moveEntity(double x, double y, double z) {
         MoveEvent moveEvent = new MoveEvent(x, y, z);
-        eventManager.callEvent(moveEvent);
+        EventManager.INSTANCE.callEvent(moveEvent);
 
         if (moveEvent.isCancelled()) return;
 
@@ -436,37 +438,37 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         y = moveEvent.getY();
         z = moveEvent.getZ();
 
-        if (this.noClip) {
-            this.setEntityBoundingBox(this.getEntityBoundingBox().offset(x, y, z));
-            this.posX = (this.getEntityBoundingBox().minX + this.getEntityBoundingBox().maxX) / 2.0D;
-            this.posY = this.getEntityBoundingBox().minY;
-            this.posZ = (this.getEntityBoundingBox().minZ + this.getEntityBoundingBox().maxZ) / 2.0D;
+        if (noClip) {
+            setEntityBoundingBox(getEntityBoundingBox().offset(x, y, z));
+            posX = (getEntityBoundingBox().minX + getEntityBoundingBox().maxX) / 2.0D;
+            posY = getEntityBoundingBox().minY;
+            posZ = (getEntityBoundingBox().minZ + getEntityBoundingBox().maxZ) / 2.0D;
         } else {
-            this.worldObj.theProfiler.startSection("move");
-            double d0 = this.posX;
-            double d1 = this.posY;
-            double d2 = this.posZ;
+            worldObj.theProfiler.startSection("move");
+            double d0 = posX;
+            double d1 = posY;
+            double d2 = posZ;
 
-            if (this.isInWeb) {
-                this.isInWeb = false;
+            if (isInWeb) {
+                isInWeb = false;
                 x *= 0.25D;
                 y *= 0.05000000074505806D;
                 z *= 0.25D;
-                this.motionX = 0.0D;
-                this.motionY = 0.0D;
-                this.motionZ = 0.0D;
+                motionX = 0.0D;
+                motionY = 0.0D;
+                motionZ = 0.0D;
             }
 
             double d3 = x;
             double d4 = y;
             double d5 = z;
-            boolean flag = this.onGround && this.isSneaking();
+            boolean flag = onGround && isSneaking();
 
             if (flag || moveEvent.isSafeWalk()) {
                 double d6;
 
                 //noinspection ConstantConditions
-                for (d6 = 0.05D; x != 0.0D && this.worldObj.getCollidingBoundingBoxes((Entity) (Object) this, this.getEntityBoundingBox().offset(x, -1.0D, 0.0D)).isEmpty(); d3 = x) {
+                for (d6 = 0.05D; x != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(x, -1.0D, 0.0D)).isEmpty(); d3 = x) {
                     if (x < d6 && x >= -d6) {
                         x = 0.0D;
                     } else if (x > 0.0D) {
@@ -477,7 +479,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 }
 
                 //noinspection ConstantConditions
-                for (; z != 0.0D && this.worldObj.getCollidingBoundingBoxes((Entity) (Object) this, this.getEntityBoundingBox().offset(0.0D, -1.0D, z)).isEmpty(); d5 = z) {
+                for (; z != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(0.0D, -1.0D, z)).isEmpty(); d5 = z) {
                     if (z < d6 && z >= -d6) {
                         z = 0.0D;
                     } else if (z > 0.0D) {
@@ -488,7 +490,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 }
 
                 //noinspection ConstantConditions
-                for (; x != 0.0D && z != 0.0D && this.worldObj.getCollidingBoundingBoxes((Entity) (Object) this, this.getEntityBoundingBox().offset(x, -1.0D, z)).isEmpty(); d5 = z) {
+                for (; x != 0.0D && z != 0.0D && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(x, -1.0D, z)).isEmpty(); d5 = z) {
                     if (x < d6 && x >= -d6) {
                         x = 0.0D;
                     } else if (x > 0.0D) {
@@ -510,40 +512,40 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             }
 
             //noinspection ConstantConditions
-            List<AxisAlignedBB> list1 = this.worldObj.getCollidingBoundingBoxes((Entity) (Object) this, this.getEntityBoundingBox().addCoord(x, y, z));
-            AxisAlignedBB axisalignedbb = this.getEntityBoundingBox();
+            List<AxisAlignedBB> list1 = worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().addCoord(x, y, z));
+            AxisAlignedBB axisalignedbb = getEntityBoundingBox();
 
             for (AxisAlignedBB axisalignedbb1 : list1) {
-                y = axisalignedbb1.calculateYOffset(this.getEntityBoundingBox(), y);
+                y = axisalignedbb1.calculateYOffset(getEntityBoundingBox(), y);
             }
 
-            this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, y, 0.0D));
-            boolean flag1 = this.onGround || d4 != y && d4 < 0.0D;
+            setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, y, 0.0D));
+            boolean flag1 = onGround || d4 != y && d4 < 0.0D;
 
             for (AxisAlignedBB axisalignedbb2 : list1) {
-                x = axisalignedbb2.calculateXOffset(this.getEntityBoundingBox(), x);
+                x = axisalignedbb2.calculateXOffset(getEntityBoundingBox(), x);
             }
 
-            this.setEntityBoundingBox(this.getEntityBoundingBox().offset(x, 0.0D, 0.0D));
+            setEntityBoundingBox(getEntityBoundingBox().offset(x, 0.0D, 0.0D));
 
             for (AxisAlignedBB axisalignedbb13 : list1) {
-                z = axisalignedbb13.calculateZOffset(this.getEntityBoundingBox(), z);
+                z = axisalignedbb13.calculateZOffset(getEntityBoundingBox(), z);
             }
 
-            this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, 0.0D, z));
+            setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, 0.0D, z));
 
-            if (this.stepHeight > 0f && flag1 && (d3 != x || d5 != z)) {
-                StepEvent stepEvent = new StepEvent(this.stepHeight);
-                eventManager.callEvent(stepEvent);
+            if (stepHeight > 0f && flag1 && (d3 != x || d5 != z)) {
+                StepEvent stepEvent = new StepEvent(stepHeight);
+                EventManager.INSTANCE.callEvent(stepEvent);
                 double d11 = x;
                 double d7 = y;
                 double d8 = z;
-                AxisAlignedBB axisalignedbb3 = this.getEntityBoundingBox();
-                this.setEntityBoundingBox(axisalignedbb);
+                AxisAlignedBB axisalignedbb3 = getEntityBoundingBox();
+                setEntityBoundingBox(axisalignedbb);
                 y = stepEvent.getStepHeight();
                 //noinspection ConstantConditions
-                List<AxisAlignedBB> list = this.worldObj.getCollidingBoundingBoxes((Entity) (Object) this, this.getEntityBoundingBox().addCoord(d3, y, d5));
-                AxisAlignedBB axisalignedbb4 = this.getEntityBoundingBox();
+                List<AxisAlignedBB> list = worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().addCoord(d3, y, d5));
+                AxisAlignedBB axisalignedbb4 = getEntityBoundingBox();
                 AxisAlignedBB axisalignedbb5 = axisalignedbb4.addCoord(d3, 0.0D, d5);
                 double d9 = y;
 
@@ -566,7 +568,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 }
 
                 axisalignedbb4 = axisalignedbb4.offset(0.0D, 0.0D, d16);
-                AxisAlignedBB axisalignedbb14 = this.getEntityBoundingBox();
+                AxisAlignedBB axisalignedbb14 = getEntityBoundingBox();
                 double d17 = y;
 
                 for (AxisAlignedBB axisalignedbb9 : list) {
@@ -595,47 +597,47 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                     x = d15;
                     z = d16;
                     y = -d9;
-                    this.setEntityBoundingBox(axisalignedbb4);
+                    setEntityBoundingBox(axisalignedbb4);
                 } else {
                     x = d18;
                     z = d19;
                     y = -d17;
-                    this.setEntityBoundingBox(axisalignedbb14);
+                    setEntityBoundingBox(axisalignedbb14);
                 }
 
                 for (AxisAlignedBB axisalignedbb12 : list) {
-                    y = axisalignedbb12.calculateYOffset(this.getEntityBoundingBox(), y);
+                    y = axisalignedbb12.calculateYOffset(getEntityBoundingBox(), y);
                 }
 
-                this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0D, y, 0.0D));
+                setEntityBoundingBox(getEntityBoundingBox().offset(0.0D, y, 0.0D));
 
                 if (d11 * d11 + d8 * d8 >= x * x + z * z) {
                     x = d11;
                     y = d7;
                     z = d8;
-                    this.setEntityBoundingBox(axisalignedbb3);
+                    setEntityBoundingBox(axisalignedbb3);
                 } else {
-                    eventManager.callEvent(new StepConfirmEvent());
+                    EventManager.INSTANCE.callEvent(new StepConfirmEvent());
                 }
             }
 
-            this.worldObj.theProfiler.endSection();
-            this.worldObj.theProfiler.startSection("rest");
-            this.posX = (this.getEntityBoundingBox().minX + this.getEntityBoundingBox().maxX) / 2.0D;
-            this.posY = this.getEntityBoundingBox().minY;
-            this.posZ = (this.getEntityBoundingBox().minZ + this.getEntityBoundingBox().maxZ) / 2.0D;
-            this.isCollidedHorizontally = d3 != x || d5 != z;
-            this.isCollidedVertically = d4 != y;
-            this.onGround = this.isCollidedVertically && d4 < 0.0D;
-            this.isCollided = this.isCollidedHorizontally || this.isCollidedVertically;
-            int i = MathHelper.floor_double(this.posX);
-            int j = MathHelper.floor_double(this.posY - 0.20000000298023224D);
-            int k = MathHelper.floor_double(this.posZ);
+            worldObj.theProfiler.endSection();
+            worldObj.theProfiler.startSection("rest");
+            posX = (getEntityBoundingBox().minX + getEntityBoundingBox().maxX) / 2.0D;
+            posY = getEntityBoundingBox().minY;
+            posZ = (getEntityBoundingBox().minZ + getEntityBoundingBox().maxZ) / 2.0D;
+            isCollidedHorizontally = d3 != x || d5 != z;
+            isCollidedVertically = d4 != y;
+            onGround = isCollidedVertically && d4 < 0.0D;
+            isCollided = isCollidedHorizontally || isCollidedVertically;
+            int i = MathHelper.floor_double(posX);
+            int j = MathHelper.floor_double(posY - 0.20000000298023224D);
+            int k = MathHelper.floor_double(posZ);
             BlockPos blockpos = new BlockPos(i, j, k);
-            Block block1 = this.worldObj.getBlockState(blockpos).getBlock();
+            Block block1 = worldObj.getBlockState(blockpos).getBlock();
 
             if (block1.getMaterial() == Material.air) {
-                Block block = this.worldObj.getBlockState(blockpos.down()).getBlock();
+                Block block = worldObj.getBlockState(blockpos.down()).getBlock();
 
                 if (block instanceof BlockFence || block instanceof BlockWall || block instanceof BlockFenceGate) {
                     block1 = block;
@@ -643,86 +645,86 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 }
             }
 
-            this.updateFallState(y, this.onGround, block1, blockpos);
+            updateFallState(y, onGround, block1, blockpos);
 
             if (d3 != x) {
-                this.motionX = 0.0D;
+                motionX = 0.0D;
             }
 
             if (d5 != z) {
-                this.motionZ = 0.0D;
+                motionZ = 0.0D;
             }
 
             if (d4 != y) {
                 //noinspection ConstantConditions
-                block1.onLanded(this.worldObj, (Entity) (Object) this);
+                block1.onLanded(worldObj, (Entity) (Object) this);
             }
 
-            if (this.canTriggerWalking() && !flag && this.ridingEntity == null) {
-                double d12 = this.posX - d0;
-                double d13 = this.posY - d1;
-                double d14 = this.posZ - d2;
+            if (canTriggerWalking() && !flag && ridingEntity == null) {
+                double d12 = posX - d0;
+                double d13 = posY - d1;
+                double d14 = posZ - d2;
 
                 if (block1 != Blocks.ladder) {
                     d13 = 0.0D;
                 }
 
-                if (this.onGround) {
+                if (onGround) {
                     //noinspection ConstantConditions
-                    block1.onEntityCollidedWithBlock(this.worldObj, blockpos, (Entity) (Object) this);
+                    block1.onEntityCollidedWithBlock(worldObj, blockpos, (Entity) (Object) this);
                 }
 
-                this.distanceWalkedModified = (float) ((double) this.distanceWalkedModified + (double) MathHelper.sqrt_double(d12 * d12 + d14 * d14) * 0.6D);
-                this.distanceWalkedOnStepModified = (float) ((double) this.distanceWalkedOnStepModified + (double) MathHelper.sqrt_double(d12 * d12 + d13 * d13 + d14 * d14) * 0.6D);
+                distanceWalkedModified = (float) ((double) distanceWalkedModified + (double) MathHelper.sqrt_double(d12 * d12 + d14 * d14) * 0.6D);
+                distanceWalkedOnStepModified = (float) ((double) distanceWalkedOnStepModified + (double) MathHelper.sqrt_double(d12 * d12 + d13 * d13 + d14 * d14) * 0.6D);
 
-                if (this.distanceWalkedOnStepModified > (float) getNextStepDistance() && block1.getMaterial() != Material.air) {
-                    setNextStepDistance((int) this.distanceWalkedOnStepModified + 1);
+                if (distanceWalkedOnStepModified > (float) getNextStepDistance() && block1.getMaterial() != Material.air) {
+                    setNextStepDistance((int) distanceWalkedOnStepModified + 1);
 
-                    if (this.isInWater()) {
-                        float f = MathHelper.sqrt_double(this.motionX * this.motionX * 0.20000000298023224D + this.motionY * this.motionY + this.motionZ * this.motionZ * 0.20000000298023224D) * 0.35F;
+                    if (isInWater()) {
+                        float f = MathHelper.sqrt_double(motionX * motionX * 0.20000000298023224D + motionY * motionY + motionZ * motionZ * 0.20000000298023224D) * 0.35F;
 
                         if (f > 1f) {
                             f = 1f;
                         }
 
-                        this.playSound(this.getSwimSound(), f, 1f + (this.rand.nextFloat() - this.rand.nextFloat()) * 0.4F);
+                        playSound(getSwimSound(), f, 1f + (rand.nextFloat() - rand.nextFloat()) * 0.4F);
                     }
 
-                    this.playStepSound(blockpos, block1);
+                    playStepSound(blockpos, block1);
                 }
             }
 
             try {
-                this.doBlockCollisions();
+                doBlockCollisions();
             } catch (Throwable throwable) {
                 CrashReport crashreport = CrashReport.makeCrashReport(throwable, "Checking entity block collision");
                 CrashReportCategory crashreportcategory = crashreport.makeCategory("Entity being checked for collision");
-                this.addEntityCrashInfo(crashreportcategory);
+                addEntityCrashInfo(crashreportcategory);
                 throw new ReportedException(crashreport);
             }
 
-            boolean flag2 = this.isWet();
+            boolean flag2 = isWet();
 
-            if (this.worldObj.isFlammableWithin(this.getEntityBoundingBox().contract(0.001D, 0.001D, 0.001D))) {
-                this.dealFireDamage(1);
+            if (worldObj.isFlammableWithin(getEntityBoundingBox().contract(0.001D, 0.001D, 0.001D))) {
+                dealFireDamage(1);
 
                 if (!flag2) {
                     setFire(getFire() + 1);
 
                     if (getFire() == 0) {
-                        this.setFire(8);
+                        setFire(8);
                     }
                 }
             } else if (getFire() <= 0) {
-                setFire(-this.fireResistance);
+                setFire(-fireResistance);
             }
 
             if (flag2 && getFire() > 0) {
-                this.playSound("random.fizz", 0.7F, 1.6F + (this.rand.nextFloat() - this.rand.nextFloat()) * 0.4F);
-                setFire(-this.fireResistance);
+                playSound("random.fizz", 0.7F, 1.6F + (rand.nextFloat() - rand.nextFloat()) * 0.4F);
+                setFire(-fireResistance);
             }
 
-            this.worldObj.theProfiler.endSection();
+            worldObj.theProfiler.endSection();
         }
     }
 }

@@ -23,7 +23,8 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 
 @ModuleInfo(name = "Speed", description = "Allows you to move faster.", category = ModuleCategory.MOVEMENT)
-class Speed : Module() {
+object Speed : Module() {
+
     private val speedModes = arrayOf( // NCP
             NCPBHop(),
             NCPFHop(),
@@ -35,7 +36,8 @@ class Speed : Module() {
             Boost(),
             Frame(),
             MiJump(),
-            OnGround(),  // AAC
+            OnGround(),
+            // AAC
             AACBHop(),
             AAC2BHop(),
             AAC3BHop(),
@@ -54,16 +56,20 @@ class Speed : Module() {
             AACYPort(),
             AACYPort2(),
             AACPort(),
-            OldAACBHop(),  // Spartan
-            SpartanYPort(),  // Spectre
+            OldAACBHop(),
+            // Spartan
+            SpartanYPort(),
+            // Spectre
             SpectreLowHop(),
             SpectreBHop(),
             SpectreOnGround(),
-            TeleportCubeCraft(),  // Server
+            TeleportCubeCraft(),
+            // Server
             HiveHop(),
             HypixelHop(),
             Mineplex(),
-            MineplexGround(),  // Other
+            MineplexGround(),
+            // Other
             Matrix(),
             SlowHop(),
             CustomSpeed(),

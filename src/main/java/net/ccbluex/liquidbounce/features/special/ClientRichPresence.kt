@@ -24,7 +24,7 @@ import java.io.IOException
 import java.time.OffsetDateTime
 import kotlin.concurrent.thread
 
-class ClientRichPresence : MinecraftInstance() {
+object ClientRichPresence : MinecraftInstance() {
 
     var showRichPresenceValue = true
 
@@ -36,7 +36,7 @@ class ClientRichPresence : MinecraftInstance() {
     private val timestamp = OffsetDateTime.now()
 
     // Status of running
-    private var running: Boolean = false
+    private var running = false
 
     /**
      * Setup Discord RPC

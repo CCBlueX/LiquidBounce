@@ -22,7 +22,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Objects;
 
-import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
 import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
 
 @Mixin(AbstractClientPlayer.class)
@@ -47,22 +46,22 @@ public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer {
 
     @Inject(method = "getFovModifier", at = @At("HEAD"), cancellable = true)
     private void getFovModifier(CallbackInfoReturnable<Float> callbackInfoReturnable) {
-        final NoFOV fovModule = (NoFOV) moduleManager.getModule(NoFOV.class);
+        final NoFOV fovModule = NoFOV.INSTANCE;
 
-        if (Objects.requireNonNull(fovModule).getState()) {
+        if (fovModule.getState()) {
             float newFOV = fovModule.getFovValue().get();
 
-            if (!this.isUsingItem()) {
+            if (!isUsingItem()) {
                 callbackInfoReturnable.setReturnValue(newFOV);
                 return;
             }
 
-            if (this.getItemInUse().getItem() != Items.bow) {
+            if (getItemInUse().getItem() != Items.bow) {
                 callbackInfoReturnable.setReturnValue(newFOV);
                 return;
             }
 
-            int i = this.getItemInUseDuration();
+            int i = getItemInUseDuration();
             float f1 = (float) i / 20f;
             f1 = f1 > 1f ? 1f : f1 * f1;
             newFOV *= 1f - f1 * 0.15f;
@@ -72,10 +71,10 @@ public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer {
 
     @Inject(method = "getLocationSkin()Lnet/minecraft/util/ResourceLocation;", at = @At("HEAD"), cancellable = true)
     private void getSkin(CallbackInfoReturnable<ResourceLocation> callbackInfoReturnable) {
-        final NameProtect nameProtect = (NameProtect) moduleManager.getModule(NameProtect.class);
+        final NameProtect nameProtect = NameProtect.INSTANCE;
 
-        if (Objects.requireNonNull(nameProtect).getState() && nameProtect.skinProtectValue.get()) {
-            if (!nameProtect.allPlayersValue.get() && !Objects.equals(getGameProfile().getName(), mc.thePlayer.getGameProfile().getName()))
+        if (nameProtect.getState() && nameProtect.getSkinProtectValue().get()) {
+            if (!nameProtect.getAllPlayersValue().get() && !Objects.equals(getGameProfile().getName(), mc.thePlayer.getGameProfile().getName()))
                 return;
 
             callbackInfoReturnable.setReturnValue(DefaultPlayerSkin.getDefaultSkin(getUniqueID()));

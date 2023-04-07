@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.PacketEvent
@@ -28,7 +27,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 @ModuleInfo(name = "Velocity", description = "Allows you to modify the amount of knockback you take.", category = ModuleCategory.COMBAT)
-class Velocity : Module() {
+object Velocity : Module() {
 
     /**
      * OPTIONS
@@ -170,8 +169,7 @@ class Velocity : Module() {
                         thePlayer.onGround = true
 
                     // Reduce Y
-                    if (thePlayer.hurtResistantTime > 0 && aacPushYReducerValue.get()
-                            && !moduleManager[Speed::class.java].state)
+                    if (thePlayer.hurtResistantTime > 0 && aacPushYReducerValue.get() && !Speed.state)
                         thePlayer.motionY -= 0.014999993
                 }
 

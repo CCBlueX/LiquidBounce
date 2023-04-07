@@ -23,6 +23,6 @@ public abstract class MixinServerSelectionList extends GuiSlot {
      */
     @Overwrite
     protected int getScrollBarX() {
-        return this.width - 5;
+        return width - 5;
     }
 }

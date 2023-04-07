@@ -130,7 +130,7 @@ object SlowlyStyle : Style() {
                                 if (value.openList) {
                                     if (mouseButton == 0
                                         && mouseX in minX..maxX
-                                        && mouseY in yPos + 2..yPos + 14
+                                        && mouseY in yPos..yPos + 9
                                     ) {
                                         value.set(valueOfList)
                                         clickSound()

@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.utils.misc
 import me.liuli.elixir.account.CrackedAccount
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.SessionEvent
 import net.ccbluex.liquidbounce.ui.client.GuiClientConfiguration
 import net.ccbluex.liquidbounce.utils.MinecraftInstance.mc
@@ -14,7 +14,6 @@ import kotlin.random.Random
 
 object RandomUtils {
 
-    @JvmStatic
     fun nextInt(startInclusive: Int = 0, endExclusive: Int = Int.MAX_VALUE) =
         if (endExclusive - startInclusive <= 0) startInclusive else startInclusive + Random.nextInt(endExclusive - startInclusive)
 
@@ -36,7 +35,6 @@ object RandomUtils {
         return stringBuilder.toString()
     }
 
-    @JvmStatic
     @JvmOverloads
     fun randomAccount(changeSession: Boolean = true): CrackedAccount {
         val crackedAccount = CrackedAccount()
@@ -48,7 +46,7 @@ object RandomUtils {
                 crackedAccount.session.token, crackedAccount.session.type
             )
 
-            LiquidBounce.eventManager.callEvent(SessionEvent())
+            callEvent(SessionEvent())
         }
 
         return crackedAccount

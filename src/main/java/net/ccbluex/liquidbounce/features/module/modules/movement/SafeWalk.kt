@@ -18,7 +18,7 @@ import net.minecraft.block.BlockAir
 import net.minecraft.util.BlockPos
 
 @ModuleInfo(name = "SafeWalk", description = "Prevents you from falling down as if you were sneaking.", category = ModuleCategory.MOVEMENT)
-class SafeWalk : Module() {
+object SafeWalk : Module() {
 
     private val airSafeValue = BoolValue("AirSafe", false)
     private val maxFallDistanceValue = IntegerValue("MaxFallDistance", 5, 0, 100)
@@ -32,7 +32,7 @@ class SafeWalk : Module() {
         if (player.capabilities.allowFlying || player.capabilities.isFlying
             || !mc.playerController.gameIsSurvivalOrAdventure()) return
 
-        if (!maxFallDistanceValue.isMinimal() && player.onGround && getBlock(BlockPos(player).down(1)) !is BlockAir) {
+        if (!maxFallDistanceValue.isMinimal() && player.onGround && getBlock(BlockPos(player).down()) !is BlockAir) {
             lastGroundY = player.posY
             lastCollisionY = FallingPlayer(player, true).findCollision(60)?.pos?.y
         }

@@ -1,6 +1,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.AttackEvent
+import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
@@ -14,7 +15,7 @@ import net.minecraft.network.play.server.S2CPacketSpawnGlobalEntity
 import net.minecraft.util.EnumParticleTypes
 
 @ModuleInfo(name = "AttackEffects", description = "Show effect when you attack", category = ModuleCategory.RENDER)
-class AttackEffects : Module() {
+object AttackEffects : Module() {
 
     private val particle = ListValue(
         "Particle", arrayOf(

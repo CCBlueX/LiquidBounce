@@ -24,7 +24,7 @@ import net.minecraft.util.EnumFacing
 import java.awt.Color
 
 @ModuleInfo(name = "CivBreak", description = "Allows you to break blocks instantly.", category = ModuleCategory.WORLD)
-class CivBreak : Module() {
+object CivBreak : Module() {
 
     private var blockPos: BlockPos? = null
     private var enumFacing: EnumFacing? = null
@@ -53,14 +53,15 @@ class CivBreak : Module() {
     @EventTarget
     fun onUpdate(event: MotionEvent) {
         val pos = blockPos ?: return
+        val isAirBlock = getBlock(pos) == Blocks.air
 
-        if (airResetValue.get() && getBlock(pos) == Blocks.air ||
+        if (airResetValue.get() && isAirBlock ||
                 rangeResetValue.get() && getCenterDistance(pos) > range.get()) {
             blockPos = null
             return
         }
 
-        if (getBlock(pos) == Blocks.air || getCenterDistance(pos) > range.get())
+        if (isAirBlock || getCenterDistance(pos) > range.get())
             return
 
         when (event.eventState) {

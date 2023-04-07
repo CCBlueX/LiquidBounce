@@ -12,22 +12,16 @@ import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.EventManager.registerListener
 import net.ccbluex.liquidbounce.event.StartupEvent
 import net.ccbluex.liquidbounce.features.command.CommandManager
+import net.ccbluex.liquidbounce.features.command.CommandManager.registerCommands
 import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.features.module.ModuleManager.registerModules
 import net.ccbluex.liquidbounce.features.special.BungeeCordSpoof
 import net.ccbluex.liquidbounce.features.special.ClientFixes
 import net.ccbluex.liquidbounce.features.special.ClientRichPresence
+import net.ccbluex.liquidbounce.features.special.ClientRichPresence.showRichPresenceValue
 import net.ccbluex.liquidbounce.file.FileManager
-import net.ccbluex.liquidbounce.file.FileManager.accountsConfig
-import net.ccbluex.liquidbounce.file.FileManager.clickGuiConfig
-import net.ccbluex.liquidbounce.file.FileManager.friendsConfig
-import net.ccbluex.liquidbounce.file.FileManager.hudConfig
-import net.ccbluex.liquidbounce.file.FileManager.loadConfig
-import net.ccbluex.liquidbounce.file.FileManager.loadConfigs
-import net.ccbluex.liquidbounce.file.FileManager.modulesConfig
+import net.ccbluex.liquidbounce.file.FileManager.loadAllConfigs
 import net.ccbluex.liquidbounce.file.FileManager.saveAllConfigs
-import net.ccbluex.liquidbounce.file.FileManager.shortcutsConfig
-import net.ccbluex.liquidbounce.file.FileManager.valuesConfig
-import net.ccbluex.liquidbounce.file.FileManager.xrayConfig
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.script.ScriptManager.enableScripts
 import net.ccbluex.liquidbounce.script.ScriptManager.loadScripts
@@ -35,12 +29,11 @@ import net.ccbluex.liquidbounce.script.remapper.Remapper.loadSrg
 import net.ccbluex.liquidbounce.tabs.BlocksTab
 import net.ccbluex.liquidbounce.tabs.ExploitsTab
 import net.ccbluex.liquidbounce.tabs.HeadsTab
-import net.ccbluex.liquidbounce.ui.client.GuiClientConfiguration
-import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
+import net.ccbluex.liquidbounce.ui.client.GuiClientConfiguration.Companion.updateClientWindow
+import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager.Companion.loadActiveGenerators
 import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.ui.client.hud.HUD
-import net.ccbluex.liquidbounce.ui.client.hud.HUD.Companion.createDefault
-import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.ui.font.Fonts.loadFonts
 import net.ccbluex.liquidbounce.update.UpdateInfo.gitInfo
 import net.ccbluex.liquidbounce.utils.Background
 import net.ccbluex.liquidbounce.utils.ClassUtils.hasForge
@@ -63,32 +56,27 @@ object LiquidBounce {
     const val MINECRAFT_VERSION = "1.8.9"
     const val CLIENT_CLOUD = "https://cloud.liquidbounce.net/LiquidBounce"
     const val CLIENT_API = "https://api.liquidbounce.net/api/v1"
-    @JvmField
     val CLIENT_TITLE = CLIENT_NAME + " " + CLIENT_VERSION + " " + CLIENT_COMMIT + "  | " + MINECRAFT_VERSION + if (IN_DEV) " | DEVELOPMENT BUILD" else ""
 
-    var isStarting = false
+    var isStarting = true
 
     // Managers
-    lateinit var moduleManager: ModuleManager
-    lateinit var commandManager: CommandManager
-
-    @JvmField
+    val moduleManager = ModuleManager
+    val commandManager = CommandManager
     val eventManager = EventManager
-    @JvmField
     val fileManager = FileManager
-    @JvmField
     val scriptManager = ScriptManager
 
     // HUD & ClickGUI
-    lateinit var hud: HUD
+    val hud = HUD
 
-    lateinit var clickGui: ClickGui
+    val clickGui = ClickGui
 
     // Menu Background
     var background: Background? = null
 
     // Discord RPC
-    lateinit var clientRichPresence: ClientRichPresence
+    val clientRichPresence = ClientRichPresence
 
     /**
      * Execute if client will be started
@@ -106,18 +94,14 @@ object LiquidBounce {
         registerListener(InventoryUtils())
         registerListener(MiniMapRegister)
 
-        // Init Discord RPC
-        clientRichPresence = ClientRichPresence()
-
-        // Create command manager
-        commandManager = CommandManager()
-
         // Load client fonts
-        Fonts.loadFonts()
+        loadFonts()
+
+        // Register commands
+        registerCommands()
 
         // Setup module manager and register modules
-        moduleManager = ModuleManager()
-        moduleManager.registerModules()
+        registerModules()
 
         try {
             // Remapper
@@ -130,18 +114,11 @@ object LiquidBounce {
             LOGGER.error("Failed to load scripts.", throwable)
         }
 
-        // Register commands
-        commandManager.registerCommands()
-
         // Load configs
-        loadConfigs(modulesConfig, valuesConfig, accountsConfig, friendsConfig, xrayConfig, shortcutsConfig)
+        loadAllConfigs()
 
         // Update client window
-        GuiClientConfiguration.updateClientWindow()
-
-        // ClickGUI
-        clickGui = ClickGui()
-        loadConfig(clickGuiConfig)
+        updateClientWindow()
 
         // Tabs (Only for Forge!)
         if (hasForge()) {
@@ -150,18 +127,14 @@ object LiquidBounce {
             HeadsTab()
         }
 
-        // Set HUD
-        hud = createDefault()
-        loadConfig(hudConfig)
-
         // Disable optifine fastrender
         disableFastRender()
 
-        // Load generators
-        GuiAltManager.loadActiveGenerators()
+        // Load alt generators
+        loadActiveGenerators()
 
         // Setup Discord RPC
-        if (clientRichPresence.showRichPresenceValue) {
+        if (showRichPresenceValue) {
             thread {
                 try {
                     clientRichPresence.setup()
@@ -169,6 +142,11 @@ object LiquidBounce {
                     LOGGER.error("Failed to setup Discord RPC.", throwable)
                 }
             }
+        }
+
+        // Login into known token if not empty
+        if (CapeService.knownToken.isNotBlank()) {
+            CapeService.login(CapeService.knownToken)
         }
 
         // Refresh cape service
@@ -179,7 +157,7 @@ object LiquidBounce {
         // Set is starting status
         isStarting = false
 
-        eventManager.callEvent(StartupEvent())
+        callEvent(StartupEvent())
     }
 
     /**

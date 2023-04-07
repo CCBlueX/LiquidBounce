@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
@@ -28,7 +27,7 @@ import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
 
 @ModuleInfo(name = "Blink", description = "Suspends all movement packets.", category = ModuleCategory.PLAYER)
-class Blink : Module() {
+object Blink : Module() {
 
     private val packets = LinkedBlockingQueue<Packet<*>>()
     private var fakePlayer: EntityOtherPlayerMP? = null
@@ -122,11 +121,10 @@ class Blink : Module() {
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        val breadcrumbs = moduleManager[Breadcrumbs::class.java] as Breadcrumbs
-        val color = if (breadcrumbs.colorRainbow.get()) rainbow() else Color(
-            breadcrumbs.colorRedValue.get(),
-            breadcrumbs.colorGreenValue.get(),
-            breadcrumbs.colorBlueValue.get()
+        val color = if (Breadcrumbs.colorRainbow.get()) rainbow() else Color(
+            Breadcrumbs.colorRedValue.get(),
+            Breadcrumbs.colorGreenValue.get(),
+            Breadcrumbs.colorBlueValue.get()
         )
         synchronized(positions) {
             glPushMatrix()

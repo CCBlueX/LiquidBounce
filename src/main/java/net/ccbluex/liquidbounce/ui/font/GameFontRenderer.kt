@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.ui.font
 
-import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.features.module.modules.misc.NameProtect
 import net.ccbluex.liquidbounce.utils.MinecraftInstance.mc
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
@@ -47,7 +46,7 @@ class GameFontRenderer(font: Font) : FontRenderer(mc.gameSettings, ResourceLocat
             drawStringWithShadow(s, x - getStringWidth(s) / 2F, y, color)
 
     override fun drawString(text: String, x: Float, y: Float, color: Int, shadow: Boolean): Int {
-        var currentText = NameProtect.handleTextMessage(text)
+        val currentText = NameProtect.handleTextMessage(text)
 
         val currY = y - 3F
 
@@ -84,7 +83,7 @@ class GameFontRenderer(font: Font) : FontRenderer(mc.gameSettings, ResourceLocat
 
         val defaultColor = currentColor
 
-        val alpha: Int = (currentColor shr 24 and 0xff)
+        val alpha = (currentColor shr 24 and 0xff)
 
         if ("§" in text) {
             val parts = text.split("§")
@@ -187,7 +186,7 @@ class GameFontRenderer(font: Font) : FontRenderer(mc.gameSettings, ResourceLocat
     override fun getColorCode(charCode: Char) = ColorUtils.hexColors[getColorIndex(charCode)]
 
     override fun getStringWidth(text: String): Int {
-        var currentText = NameProtect.handleTextMessage(text)
+        val currentText = NameProtect.handleTextMessage(text)
 
         return if ("§" in currentText) {
             val parts = currentText.split("§")
@@ -241,7 +240,6 @@ class GameFontRenderer(font: Font) : FontRenderer(mc.gameSettings, ResourceLocat
     override fun getCharWidth(character: Char) = getStringWidth(character.toString())
 
     companion object {
-        @JvmStatic
         fun getColorIndex(type: Char) =
             when (type) {
                 in '0'..'9' -> type - '0'

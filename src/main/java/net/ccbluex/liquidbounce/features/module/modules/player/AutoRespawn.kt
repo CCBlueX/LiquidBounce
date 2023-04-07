@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
@@ -16,7 +15,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.client.gui.GuiGameOver
 
 @ModuleInfo(name = "AutoRespawn", description = "Automatically respawns you after dying.", category = ModuleCategory.PLAYER)
-class AutoRespawn : Module() {
+object AutoRespawn : Module() {
 
     private val instantValue = BoolValue("Instant", true)
 
@@ -24,7 +23,7 @@ class AutoRespawn : Module() {
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer
 
-        if (thePlayer == null || moduleManager[Ghost::class.java].state)
+        if (thePlayer == null || Ghost.state)
             return
 
         if (if (instantValue.get()) mc.thePlayer.health == 0F || mc.thePlayer.isDead else mc.currentScreen is GuiGameOver

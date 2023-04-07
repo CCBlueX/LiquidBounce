@@ -5,8 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands
 
-import net.ccbluex.liquidbounce.LiquidBounce.clickGui
-import net.ccbluex.liquidbounce.LiquidBounce.commandManager
 import net.ccbluex.liquidbounce.LiquidBounce.isStarting
 import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.LiquidBounce.scriptManager
@@ -21,13 +19,11 @@ import net.ccbluex.liquidbounce.file.FileManager.valuesConfig
 import net.ccbluex.liquidbounce.script.ScriptManager.reloadScripts
 import net.ccbluex.liquidbounce.script.ScriptManager.scripts
 import net.ccbluex.liquidbounce.script.ScriptManager.scriptsFolder
-import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import org.apache.commons.io.IOUtils
 import java.awt.Desktop
 import java.io.File
-import java.io.FileOutputStream
 import java.util.zip.ZipFile
 
 class ScriptManagerCommand : Command("scriptmanager", "scripts") {
@@ -45,9 +41,7 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts") {
                         if (fileName.endsWith(".js")) {
                             scriptManager.importScript(file)
 
-                            clickGui = ClickGui()
                             loadConfig(clickGuiConfig)
-
 
                             chat("Successfully imported script.")
                             return
@@ -67,7 +61,7 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts") {
                                 }
 
                                 val fileStream = zipFile.getInputStream(entry)
-                                val fileOutputStream = FileOutputStream(entryFile)
+                                val fileOutputStream = entryFile.outputStream()
 
                                 IOUtils.copy(fileStream, fileOutputStream)
                                 fileOutputStream.close()
@@ -79,9 +73,7 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts") {
 
                             scriptFiles.forEach { scriptFile -> scriptManager.loadScript(scriptFile) }
 
-                            clickGui = ClickGui()
                             loadConfigs(clickGuiConfig, hudConfig)
-
 
                             chat("Successfully imported script.")
                             return
@@ -112,7 +104,6 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts") {
 
                         scriptManager.deleteScript(script)
 
-                        clickGui = ClickGui()
                         loadConfigs(clickGuiConfig, hudConfig)
 
                         chat("Successfully deleted script.")
@@ -126,8 +117,7 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts") {
 
                 args[1].equals("reload", true) -> {
                     try {
-                        commandManager = CommandManager()
-                        commandManager.registerCommands()
+                        CommandManager.registerCommands()
 
                         isStarting = true
 
@@ -139,7 +129,6 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts") {
                         isStarting = false
                         loadConfig(valuesConfig)
 
-                        clickGui = ClickGui()
                         loadConfig(clickGuiConfig)
 
                         chat("Successfully reloaded all scripts.")

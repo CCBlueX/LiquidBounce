@@ -4,11 +4,7 @@ class EasingObject(var lastTime: Long = 0, var lastValue: Float = -1f, var curre
 
     fun update(currentValue: Float): Float {
         if (currentValue != this.currentValue) {
-            if (currentValue < this.currentValue) {
-                this.lastValue = currentValue
-            } else {
-                this.lastValue = this.currentValue
-            }
+            lastValue = currentValue.coerceAtMost(this.currentValue)
 
             this.currentValue = currentValue
 

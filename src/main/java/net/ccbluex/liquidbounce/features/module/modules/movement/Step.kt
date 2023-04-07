@@ -23,7 +23,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 @ModuleInfo(name = "Step", description = "Allows you to step up blocks.", category = ModuleCategory.MOVEMENT)
-class Step : Module() {
+object Step : Module() {
 
     /**
      * OPTIONS
@@ -154,8 +154,7 @@ class Step : Module() {
         }
 
         // Some fly modes should disable step
-        val fly = moduleManager[Fly::class.java] as Fly
-        if (fly.state && fly.modeValue.get() in setOf("Hypixel", "OtherHypixel", "LatestHypixel", "Rewinside", "Mineplex")
+        if (Fly.state && Fly.modeValue.get() in setOf("Hypixel", "OtherHypixel", "LatestHypixel", "Rewinside", "Mineplex")
             && thePlayer.inventory.getCurrentItem() == null) {
             event.stepHeight = 0F
             return

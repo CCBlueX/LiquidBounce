@@ -66,8 +66,8 @@ public class FallingPlayer extends MinecraftInstance {
             forward = forward * v;
             float f1 = (float) Math.sin(yaw * (float) Math.PI / 180f);
             float f2 = (float) Math.cos(yaw * (float) Math.PI / 180f);
-            this.motionX += strafe * f2 - forward * f1;
-            this.motionZ += forward * f2 + strafe * f1;
+            motionX += strafe * f2 - forward * f1;
+            motionZ += forward * f2 + strafe * f1;
         }
 
 

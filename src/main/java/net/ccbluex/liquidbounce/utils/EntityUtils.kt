@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.utils
 
-import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.features.module.modules.combat.NoFriends
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
@@ -28,7 +27,6 @@ object EntityUtils : MinecraftInstance() {
 
     var targetDead = false
 
-    @JvmStatic
     fun isSelected(entity: Entity?, canAttackCheck: Boolean): Boolean {
         if (entity is EntityLivingBase && (targetDead || entity.isEntityAlive) && entity != mc.thePlayer) {
             if (targetInvisible || !entity.isInvisible) {
@@ -37,12 +35,12 @@ object EntityUtils : MinecraftInstance() {
                         if (isBot(entity))
                             return false
 
-                        if (entity.isClientFriend() && !moduleManager[NoFriends::class.java].state)
+                        if (entity.isClientFriend() && !NoFriends.state)
                             return false
 
                         if (entity.isSpectator) return false
-                        val teams = moduleManager[Teams::class.java] as Teams
-                        return !teams.state || !teams.isInYourTeam(entity)
+
+                        return !Teams.state || !Teams.isInYourTeam(entity)
                     }
                     return true
                 }

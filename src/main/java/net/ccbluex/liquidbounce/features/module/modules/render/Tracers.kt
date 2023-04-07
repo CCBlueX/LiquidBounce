@@ -27,7 +27,7 @@ import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
 @ModuleInfo(name = "Tracers", description = "Draws a line to targets around you.", category = ModuleCategory.RENDER)
-class Tracers : Module() {
+object Tracers : Module() {
 
     private val colorMode = ListValue("Color", arrayOf("Custom", "DistanceColor", "Rainbow"), "Custom")
 

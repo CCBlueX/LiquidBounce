@@ -18,22 +18,19 @@ import net.ccbluex.liquidbounce.utils.misc.HttpUtils.download
 import net.minecraft.client.gui.FontRenderer
 import java.awt.Font
 import java.io.File
-import java.io.FileOutputStream
 import java.io.IOException
-import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.zip.ZipInputStream
+import kotlin.io.path.inputStream
 
 object Fonts : MinecraftInstance() {
     @FontDetails(fontName = "Minecraft Font")
     val minecraftFont: FontRenderer = mc.fontRendererObj
 
     @FontDetails(fontName = "Roboto Medium", fontSize = 35)
-    @JvmStatic
     lateinit var font35: GameFontRenderer
 
     @FontDetails(fontName = "Roboto Medium", fontSize = 40)
-    @JvmStatic
     lateinit var font40: GameFontRenderer
 
     @FontDetails(fontName = "Roboto Bold", fontSize = 180)
@@ -140,9 +137,9 @@ object Fonts : MinecraftInstance() {
             return fonts
         }
 
-    private fun getFont(fontName: String, size: Int): Font {
-        return try {
-            val inputStream = Files.newInputStream(File(fontsDir, fontName).toPath())
+    private fun getFont(fontName: String, size: Int) =
+        try {
+            val inputStream = File(fontsDir, fontName).inputStream()
             var awtClientFont = Font.createFont(Font.TRUETYPE_FONT, inputStream)
             awtClientFont = awtClientFont.deriveFont(Font.PLAIN, size.toFloat())
             inputStream.close()
@@ -151,19 +148,18 @@ object Fonts : MinecraftInstance() {
             e.printStackTrace()
             Font("default", Font.PLAIN, size)
         }
-    }
 
     private fun extractZip(zipFile: String, outputFolder: String) {
         val buffer = ByteArray(1024)
         try {
             val folder = File(outputFolder)
             if (!folder.exists()) folder.mkdir()
-            val zipInputStream = ZipInputStream(Files.newInputStream(Paths.get(zipFile)))
+            val zipInputStream = ZipInputStream(Paths.get(zipFile).inputStream())
             var zipEntry = zipInputStream.nextEntry
             while (zipEntry != null) {
                 val newFile = File(outputFolder + File.separator + zipEntry.name)
                 File(newFile.parent).mkdirs()
-                val fileOutputStream = FileOutputStream(newFile)
+                val fileOutputStream = newFile.outputStream()
                 var i: Int
                 while (zipInputStream.read(buffer).also { i = it } > 0) fileOutputStream.write(buffer, 0, i)
                 fileOutputStream.close()

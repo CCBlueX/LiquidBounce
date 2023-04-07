@@ -29,7 +29,7 @@ import java.awt.Color
 import kotlin.math.roundToInt
 
 @ModuleInfo(name = "NameTags", description = "Changes the scale of the nametags so you can always read them.", category = ModuleCategory.RENDER)
-class NameTags : Module() {
+object NameTags : Module() {
     private val healthValue = BoolValue("Health", true)
     private val pingValue = BoolValue("Ping", true)
     private val distanceValue = BoolValue("Distance", false)

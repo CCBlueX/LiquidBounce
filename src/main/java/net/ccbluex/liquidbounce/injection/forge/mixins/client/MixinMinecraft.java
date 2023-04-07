@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.AutoClicker;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.AbortBreaking;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.MultiActions;
 import net.ccbluex.liquidbounce.features.module.modules.world.FastPlace;
+import net.ccbluex.liquidbounce.file.FileManager;
 import net.ccbluex.liquidbounce.injection.forge.SplashProgressLock;
 import net.ccbluex.liquidbounce.ui.client.GuiClientConfiguration;
 import net.ccbluex.liquidbounce.ui.client.GuiMainMenu;
@@ -51,7 +52,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.nio.ByteBuffer;
 
-import static net.ccbluex.liquidbounce.LiquidBounce.*;
 import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
 
 @Mixin(Minecraft.class)
@@ -126,7 +126,7 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "startGame", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;displayGuiScreen(Lnet/minecraft/client/gui/GuiScreen;)V", shift = At.Shift.AFTER))
     private void afterMainScreen(CallbackInfo callbackInfo) {
-        if (fileManager.getFirstStart()) {
+        if (FileManager.INSTANCE.getFirstStart()) {
             displayGuiScreen(new GuiWelcome());
         } else if (UpdateInfo.INSTANCE.hasUpdate()) {
             displayGuiScreen(new GuiUpdate());
@@ -136,7 +136,7 @@ public abstract class MixinMinecraft {
     @Inject(method = "createDisplay", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/Display;setTitle(Ljava/lang/String;)V", shift = At.Shift.AFTER))
     private void createDisplay(CallbackInfo callbackInfo) {
         if (GuiClientConfiguration.Companion.getEnabledClientTitle()) {
-            Display.setTitle(CLIENT_TITLE);
+            Display.setTitle(LiquidBounce.INSTANCE.getCLIENT_TITLE());
         }
     }
 
@@ -150,7 +150,7 @@ public abstract class MixinMinecraft {
             skipRenderWorld = false;
         }
 
-        eventManager.callEvent(new ScreenEvent(currentScreen));
+        EventManager.INSTANCE.callEvent(new ScreenEvent(currentScreen));
     }
 
     private long lastFrame = getTime();
@@ -161,7 +161,7 @@ public abstract class MixinMinecraft {
         final int deltaTime = (int) (currentTime - lastFrame);
         lastFrame = currentTime;
 
-        RenderUtils.deltaTime = deltaTime;
+        RenderUtils.INSTANCE.setDeltaTime(deltaTime);
     }
 
     public long getTime() {
@@ -170,19 +170,19 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "runTick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;joinPlayerCounter:I", shift = At.Shift.BEFORE))
     private void onTick(final CallbackInfo callbackInfo) {
-        eventManager.callEvent(new TickEvent());
+        EventManager.INSTANCE.callEvent(new TickEvent());
     }
 
     @Inject(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;dispatchKeypresses()V", shift = At.Shift.AFTER))
     private void onKey(CallbackInfo callbackInfo) {
         if (Keyboard.getEventKeyState() && currentScreen == null)
-            eventManager.callEvent(new KeyEvent(Keyboard.getEventKey() == 0 ? Keyboard.getEventCharacter() + 256 : Keyboard.getEventKey()));
+            EventManager.INSTANCE.callEvent(new KeyEvent(Keyboard.getEventKey() == 0 ? Keyboard.getEventCharacter() + 256 : Keyboard.getEventKey()));
     }
 
     @Inject(method = "sendClickBlockToController", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/MovingObjectPosition;getBlockPos()Lnet/minecraft/util/BlockPos;"))
     private void onClickBlock(CallbackInfo callbackInfo) {
-        if (this.leftClickCounter == 0 && theWorld.getBlockState(objectMouseOver.getBlockPos()).getBlock().getMaterial() != Material.air) {
-            eventManager.callEvent(new ClickBlockEvent(objectMouseOver.getBlockPos(), this.objectMouseOver.sideHit));
+        if (leftClickCounter == 0 && theWorld.getBlockState(objectMouseOver.getBlockPos()).getBlock().getMaterial() != Material.air) {
+            EventManager.INSTANCE.callEvent(new ClickBlockEvent(objectMouseOver.getBlockPos(), objectMouseOver.sideHit));
         }
     }
 
@@ -208,7 +208,9 @@ public abstract class MixinMinecraft {
     private void clickMouse(CallbackInfo callbackInfo) {
         CPSCounter.registerClick(CPSCounter.MouseButton.LEFT);
 
-        if (moduleManager.getModule(AutoClicker.class).getState()) leftClickCounter = 0;
+        if (AutoClicker.INSTANCE.getState()) {
+            leftClickCounter = 0;
+        }
     }
 
     @Inject(method = "middleClickMouse", at = @At("HEAD"))
@@ -220,15 +222,17 @@ public abstract class MixinMinecraft {
     private void rightClickMouse(final CallbackInfo callbackInfo) {
         CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT);
 
-        final FastPlace fastPlace = (FastPlace) moduleManager.getModule(FastPlace.class);
-        if (!fastPlace.getState()) return;
-
-        // Don't spam-click when the player isn't holding blocks
-        if (fastPlace.getOnlyBlocksValue().get() && (thePlayer.getHeldItem() == null || !(thePlayer.getHeldItem().getItem() instanceof ItemBlock)))
+        final FastPlace fastPlace = FastPlace.INSTANCE;
+        if (!fastPlace.getState())
             return;
 
-        if (this.objectMouseOver != null && this.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
-            BlockPos blockPos = this.objectMouseOver.getBlockPos();
+        // Don't spam-click when the player isn't holding blocks
+        if (fastPlace.getOnlyBlocksValue().get()
+                && (thePlayer.getHeldItem() == null || !(thePlayer.getHeldItem().getItem() instanceof ItemBlock)))
+            return;
+
+        if (objectMouseOver != null && objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+            BlockPos blockPos = objectMouseOver.getBlockPos();
             IBlockState blockState = theWorld.getBlockState(blockPos);
             // Don't spam-click when interacting with a TileEntity (chests, ...)
             // Doesn't prevent spam-clicking anvils, crafting tables, ... (couldn't figure out a non-hacky way)
@@ -245,7 +249,7 @@ public abstract class MixinMinecraft {
             MiniMapRegister.INSTANCE.unloadAllChunks();
         }
 
-        eventManager.callEvent(new WorldEvent(p_loadWorld_1_));
+        EventManager.INSTANCE.callEvent(new WorldEvent(p_loadWorld_1_));
     }
 
     /**
@@ -253,22 +257,22 @@ public abstract class MixinMinecraft {
      */
     @Overwrite
     private void sendClickBlockToController(boolean leftClick) {
-        if (!leftClick) this.leftClickCounter = 0;
+        if (!leftClick) leftClickCounter = 0;
 
-        if (this.leftClickCounter <= 0 && (!this.thePlayer.isUsingItem() || moduleManager.getModule(MultiActions.class).getState())) {
-            if (leftClick && this.objectMouseOver != null && this.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
-                BlockPos blockPos = this.objectMouseOver.getBlockPos();
+        if (leftClickCounter <= 0 && (!thePlayer.isUsingItem() || MultiActions.INSTANCE.getState())) {
+            if (leftClick && objectMouseOver != null && objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+                BlockPos blockPos = objectMouseOver.getBlockPos();
 
-                if (this.leftClickCounter == 0)
-                    eventManager.callEvent(new ClickBlockEvent(blockPos, this.objectMouseOver.sideHit));
+                if (leftClickCounter == 0)
+                    EventManager.INSTANCE.callEvent(new ClickBlockEvent(blockPos, objectMouseOver.sideHit));
 
 
-                if (this.theWorld.getBlockState(blockPos).getBlock().getMaterial() != Material.air && this.playerController.onPlayerDamageBlock(blockPos, this.objectMouseOver.sideHit)) {
-                    this.effectRenderer.addBlockHitEffects(blockPos, this.objectMouseOver.sideHit);
-                    this.thePlayer.swingItem();
+                if (theWorld.getBlockState(blockPos).getBlock().getMaterial() != Material.air && playerController.onPlayerDamageBlock(blockPos, objectMouseOver.sideHit)) {
+                    effectRenderer.addBlockHitEffects(blockPos, objectMouseOver.sideHit);
+                    thePlayer.swingItem();
                 }
-            } else if (!moduleManager.getModule(AbortBreaking.class).getState()) {
-                this.playerController.resetBlockRemoving();
+            } else if (!AbortBreaking.INSTANCE.getState()) {
+                playerController.resetBlockRemoving();
             }
         }
     }

@@ -14,7 +14,7 @@ import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.client.C03PacketPlayer.*
 
 @ModuleInfo(name = "PotionSaver", description = "Freezes all potion effects while you are standing still.", category = ModuleCategory.PLAYER)
-class PotionSaver : Module() {
+object PotionSaver : Module() {
 
     @EventTarget
     fun onPacket(e: PacketEvent) {

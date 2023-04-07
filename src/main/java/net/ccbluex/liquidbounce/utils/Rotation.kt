@@ -39,7 +39,6 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
      *
      * @see net.minecraft.client.renderer.EntityRenderer.updateCameraAndRender
      */
-    @JvmOverloads
     fun fixedSensitivity(sensitivity: Float = mc.gameSettings.mouseSensitivity): Rotation {
         // Previous implementation essentially floored the subtraction.
         // This way it returns rotations closer to the original.
@@ -61,7 +60,7 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
     fun applyStrafeToPlayer(event: StrafeEvent, strict: Boolean = false) {
         val player = mc.thePlayer
 
-        val diff = ((MathHelper.wrapAngleTo180_float(player.rotationYaw - this.yaw - 23.5f - 135) + 180) / 45).toInt()
+        val diff = ((MathHelper.wrapAngleTo180_float(player.rotationYaw - yaw - 23.5f - 135) + 180) / 45).toInt()
 
         val yaw = this.yaw
 

@@ -18,10 +18,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.Objects;
-
-import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
-
 @Mixin(Chunk.class)
 public class MixinChunk {
     @Shadow
@@ -37,9 +33,9 @@ public class MixinChunk {
         //noinspection ConstantConditions
         MiniMapRegister.INSTANCE.updateChunk((Chunk) ((Object) this));
 
-        final ProphuntESP prophuntESP = (ProphuntESP) moduleManager.getModule(ProphuntESP.class);
+        final ProphuntESP prophuntESP = ProphuntESP.INSTANCE;
 
-        if (Objects.requireNonNull(prophuntESP).getState()) {
+        if (prophuntESP.getState()) {
             synchronized (prophuntESP.getBlocks()) {
                 prophuntESP.getBlocks().put(pos, System.currentTimeMillis());
             }
@@ -48,7 +44,7 @@ public class MixinChunk {
 
     @Inject(method = "onChunkUnload", at = @At("HEAD"))
     private void injectFillChunk(CallbackInfo ci) {
-        MiniMapRegister.INSTANCE.unloadChunk(this.xPosition, this.zPosition);
+        MiniMapRegister.INSTANCE.unloadChunk(xPosition, zPosition);
     }
 
     @Inject(method = "fillChunk", at = @At("RETURN"))

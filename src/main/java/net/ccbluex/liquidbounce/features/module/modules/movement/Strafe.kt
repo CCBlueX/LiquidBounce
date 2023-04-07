@@ -16,7 +16,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 @ModuleInfo(name = "Strafe", description = "Allows you to freely move in mid air.", category = ModuleCategory.MOVEMENT)
-class Strafe : Module() {
+object Strafe : Module() {
 
     private var strengthValue= FloatValue("Strength", 0.5F, 0F, 1F)
     private var noMoveStopValue = BoolValue("NoMoveStop", false)

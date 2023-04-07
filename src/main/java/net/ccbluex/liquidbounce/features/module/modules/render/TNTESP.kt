@@ -15,7 +15,7 @@ import net.minecraft.entity.item.EntityTNTPrimed
 import java.awt.Color
 
 @ModuleInfo(name = "TNTESP", description = "Allows you to see ignited TNT blocks through walls.", category = ModuleCategory.RENDER)
-class TNTESP : Module() {
+object TNTESP : Module() {
 
     @EventTarget
     fun onRender3D(event : Render3DEvent) {

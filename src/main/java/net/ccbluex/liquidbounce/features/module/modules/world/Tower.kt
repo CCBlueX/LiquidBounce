@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -56,7 +55,7 @@ import kotlin.math.truncate
     category = ModuleCategory.WORLD,
     keyBind = Keyboard.KEY_O
 )
-class Tower : Module() {
+object Tower : Module() {
     /**
      * OPTIONS
      */
@@ -171,7 +170,7 @@ class Tower : Module() {
             if (update) {
                 if (!stopWhenBlockAbove.get() || getBlock(BlockPos(thePlayer).up(2)) == Blocks.air) move()
 
-                val blockPos = BlockPos(thePlayer).down(1)
+                val blockPos = BlockPos(thePlayer).down()
                 if (blockPos.getBlock() == Blocks.air) {
                     if (search(blockPos) && rotationsValue.get()) {
                         val vecRotation = faceBlock(blockPos)
@@ -431,10 +430,10 @@ class Tower : Module() {
     fun onRender2D(event: Render2DEvent) {
         if (counterDisplayValue.get()) {
             glPushMatrix()
-            val blockOverlay = moduleManager[BlockOverlay::class.java] as BlockOverlay
-            if (blockOverlay.state && blockOverlay.infoValue.get() && blockOverlay.currentBlock != null) {
+
+            if (BlockOverlay.state && BlockOverlay.infoValue.get() && BlockOverlay.currentBlock != null)
                 glTranslatef(0f, 15f, 0f)
-            }
+
             val info = "Blocks: §7$blocksAmount"
             val scaledResolution = ScaledResolution(mc)
 

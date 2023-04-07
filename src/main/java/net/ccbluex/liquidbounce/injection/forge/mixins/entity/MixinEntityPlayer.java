@@ -59,7 +59,7 @@ public abstract class MixinEntityPlayer extends MixinEntityLivingBase {
 
     @Inject(method = "onUpdate", at = @At("RETURN"))
     private void injectCooldown(final CallbackInfo callbackInfo) {
-        if (this.getGameProfile() == mc.thePlayer.getGameProfile()) {
+        if (getGameProfile() == mc.thePlayer.getGameProfile()) {
             CooldownHelper.INSTANCE.incrementLastAttackedTicks();
             CooldownHelper.INSTANCE.updateGenericAttackSpeed(getHeldItem());
 

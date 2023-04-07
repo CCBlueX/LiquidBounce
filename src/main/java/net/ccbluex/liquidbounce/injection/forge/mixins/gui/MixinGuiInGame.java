@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
+import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.Render2DEvent;
 import net.ccbluex.liquidbounce.features.module.modules.render.AntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.HUD;
@@ -23,8 +24,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static net.ccbluex.liquidbounce.LiquidBounce.eventManager;
-import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
 import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
 import static net.minecraft.client.renderer.GlStateManager.*;
 import static org.lwjgl.opengl.GL11.GL_BLEND;
@@ -39,13 +38,13 @@ public abstract class MixinGuiInGame {
 
     @Inject(method = "renderScoreboard", at = @At("HEAD"), cancellable = true)
     private void renderScoreboard(CallbackInfo callbackInfo) {
-        if (moduleManager.getModule(HUD.class).getState() || NoScoreboard.INSTANCE.getState())
+        if (HUD.INSTANCE.getState() || NoScoreboard.INSTANCE.getState())
             callbackInfo.cancel();
     }
 
     @Inject(method = "renderTooltip", at = @At("HEAD"), cancellable = true)
     private void renderTooltip(ScaledResolution sr, float partialTicks, CallbackInfo callbackInfo) {
-        final HUD hud = (HUD) moduleManager.getModule(HUD.class);
+        final HUD hud = HUD.INSTANCE;
 
         if (mc.getRenderViewEntity() instanceof EntityPlayer && hud.getState() && hud.getBlackHotbarValue().get()) {
             EntityPlayer entityPlayer = (EntityPlayer) mc.getRenderViewEntity();
@@ -64,14 +63,14 @@ public abstract class MixinGuiInGame {
             for(int j = 0; j < 9; ++j) {
                 int k = sr.getScaledWidth() / 2 - 90 + j * 20 + 2;
                 int l = sr.getScaledHeight() - 16 - 3;
-                this.renderHotbarItem(j, k, l, partialTicks, entityPlayer);
+                renderHotbarItem(j, k, l, partialTicks, entityPlayer);
             }
 
             RenderHelper.disableStandardItemLighting();
             disableRescaleNormal();
             disableBlend();
 
-            eventManager.callEvent(new Render2DEvent(partialTicks));
+            EventManager.INSTANCE.callEvent(new Render2DEvent(partialTicks));
             AWTFontRenderer.Companion.garbageCollectionTick();
             callbackInfo.cancel();
         }
@@ -79,15 +78,15 @@ public abstract class MixinGuiInGame {
 
     @Inject(method = "renderTooltip", at = @At("RETURN"))
     private void renderTooltipPost(ScaledResolution sr, float partialTicks, CallbackInfo callbackInfo) {
-        if (!ClassUtils.hasClass("net.labymod.api.LabyModAPI")) {
-            eventManager.callEvent(new Render2DEvent(partialTicks));
+        if (!ClassUtils.INSTANCE.hasClass("net.labymod.api.LabyModAPI")) {
+            EventManager.INSTANCE.callEvent(new Render2DEvent(partialTicks));
             AWTFontRenderer.Companion.garbageCollectionTick();
         }
     }
 
     @Inject(method = "renderPumpkinOverlay", at = @At("HEAD"), cancellable = true)
     private void renderPumpkinOverlay(final CallbackInfo callbackInfo) {
-        final AntiBlind antiBlind = (AntiBlind) moduleManager.getModule(AntiBlind.class);
+        final AntiBlind antiBlind = AntiBlind.INSTANCE;
 
         if(antiBlind.getState() && antiBlind.getPumpkinEffect().get())
             callbackInfo.cancel();

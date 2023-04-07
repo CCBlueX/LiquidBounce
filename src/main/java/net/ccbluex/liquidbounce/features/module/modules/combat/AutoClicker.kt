@@ -11,10 +11,11 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.extensions.fixedSensitivityPitch
 import net.ccbluex.liquidbounce.utils.extensions.fixedSensitivityYaw
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils
+import net.ccbluex.liquidbounce.utils.timer.TimeUtils.randomClickDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.client.settings.KeyBinding
@@ -22,7 +23,7 @@ import net.minecraft.init.Blocks
 import kotlin.random.Random.Default.nextBoolean
 
 @ModuleInfo(name = "AutoClicker", description = "Constantly clicks when holding down a mouse button.", category = ModuleCategory.COMBAT)
-class AutoClicker : Module() {
+object AutoClicker : Module() {
     private val maxCPSValue: IntegerValue = object : IntegerValue("MaxCPS", 8, 1, 20) {
 
         override fun onChanged(oldValue: Int, newValue: Int) {
@@ -48,9 +49,9 @@ class AutoClicker : Module() {
     private val leftValue = BoolValue("Left", true)
     private val jitterValue = BoolValue("Jitter", false)
 
-    private var rightDelay = TimeUtils.randomClickDelay(minCPSValue.get(), maxCPSValue.get())
+    private var rightDelay = randomClickDelay(minCPSValue.get(), maxCPSValue.get())
     private var rightLastSwing = 0L
-    private var leftDelay = TimeUtils.randomClickDelay(minCPSValue.get(), maxCPSValue.get())
+    private var leftDelay = randomClickDelay(minCPSValue.get(), maxCPSValue.get())
     private var leftLastSwing = 0L
 
     private var blockBrokenDelay = 1000L / 20 * (6 + 2) // 6 ticks and 2 more, so autoclicker
@@ -63,12 +64,10 @@ class AutoClicker : Module() {
         return !isBreakingBlock
                 && !(currentTime - blockLastBroken < blockBrokenDelay &&
                 mc.objectMouseOver != null && mc.objectMouseOver.blockPos != null && mc.theWorld != null &&
-                mc.theWorld.getBlockState(mc.objectMouseOver.blockPos).block != Blocks.air)
+                getBlock(mc.objectMouseOver.blockPos) != Blocks.air)
     }
 
-    private fun rightCanAutoClick(): Boolean {
-        return !mc.thePlayer.isUsingItem
-    }
+    private fun rightCanAutoClick() = !mc.thePlayer.isUsingItem
 
     // BUG: There is no delay between breaking blocks in creative mode
     private fun leftClick(currentTime: Long) {
@@ -85,7 +84,7 @@ class AutoClicker : Module() {
 
             leftLastSwing = currentTime
             blockLastBroken = 0L
-            leftDelay = TimeUtils.randomClickDelay(minCPSValue.get(), maxCPSValue.get())
+            leftDelay = randomClickDelay(minCPSValue.get(), maxCPSValue.get())
         }
     }
 
@@ -94,7 +93,7 @@ class AutoClicker : Module() {
             KeyBinding.onTick(mc.gameSettings.keyBindUseItem.keyCode) // Minecraft Click Handling
 
             rightLastSwing = currentTime
-            rightDelay = TimeUtils.randomClickDelay(minCPSValue.get(), maxCPSValue.get())
+            rightDelay = randomClickDelay(minCPSValue.get(), maxCPSValue.get())
         }
     }
 

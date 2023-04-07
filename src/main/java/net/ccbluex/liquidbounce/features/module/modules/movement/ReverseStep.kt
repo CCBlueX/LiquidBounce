@@ -17,7 +17,7 @@ import net.minecraft.block.BlockLiquid
 import net.minecraft.util.AxisAlignedBB
 
 @ModuleInfo(name = "ReverseStep", description = "Allows you to step down blocks faster.", category = ModuleCategory.MOVEMENT)
-class ReverseStep : Module() {
+object ReverseStep : Module() {
 
     private val motionValue = FloatValue("Motion", 1f, 0.21f, 1f)
     private var jumped = false

@@ -21,7 +21,7 @@ import net.minecraft.block.BlockPane
 import net.minecraft.util.BlockPos
 
 @ModuleInfo(name = "HighJump", description = "Allows you to jump higher.", category = ModuleCategory.MOVEMENT)
-class HighJump : Module() {
+object HighJump : Module() {
     private val modeValue = ListValue("Mode", arrayOf("Vanilla", "Damage", "AACv3", "DAC", "Mineplex"), "Vanilla")
     private val heightValue = object : FloatValue("Height", 2f, 1.1f, 5f) {
         override fun isSupported() = modeValue.get() in setOf("Vanilla", "Damage")
@@ -32,7 +32,7 @@ class HighJump : Module() {
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer
 
-        if (glassValue.get() && getBlock(BlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)) !is BlockPane)
+        if (glassValue.get() && getBlock(BlockPos(thePlayer)) !is BlockPane)
             return
 
         when (modeValue.get().lowercase()) {
@@ -47,7 +47,7 @@ class HighJump : Module() {
     fun onMove(event: MoveEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        if (glassValue.get() && getBlock(BlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)) !is BlockPane)
+        if (glassValue.get() && getBlock(BlockPos(thePlayer)) !is BlockPane)
             return
         if (!thePlayer.onGround) {
             if ("mineplex" == modeValue.get().lowercase()) {
@@ -60,7 +60,7 @@ class HighJump : Module() {
     fun onJump(event: JumpEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        if (glassValue.get() && getBlock(BlockPos(thePlayer.posX, thePlayer.posY, thePlayer.posZ)) !is BlockPane)
+        if (glassValue.get() && getBlock(BlockPos(thePlayer)) !is BlockPane)
             return
         when (modeValue.get().lowercase()) {
             "vanilla" -> event.motion = event.motion * heightValue.get()

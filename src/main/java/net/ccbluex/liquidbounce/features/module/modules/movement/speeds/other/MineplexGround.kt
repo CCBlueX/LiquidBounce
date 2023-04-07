@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other
 
-import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
@@ -38,14 +37,14 @@ class MineplexGround : SpeedMode("MineplexGround") {
             speed = 0f
             return
         }
-        if (!spoofSlot && mc.thePlayer.inventory.getCurrentItem() != null) {
+        if (!spoofSlot && mc.thePlayer.heldItem != null) {
             displayChatMessage("§8[§c§lMineplex§aSpeed§8] §cYou need one empty slot.")
             return
         }
         val blockPos = BlockPos(mc.thePlayer).down()
         val vec = Vec3(blockPos).addVector(0.4, 0.4, 0.4).add(Vec3(EnumFacing.UP.directionVec))
         mc.playerController.onPlayerRightClick(mc.thePlayer, mc.theWorld, null, blockPos, EnumFacing.UP, Vec3(vec.xCoord * 0.4f, vec.yCoord * 0.4f, vec.zCoord * 0.4f))
-        val targetSpeed = (moduleManager[Speed::class.java] as Speed).mineplexGroundSpeedValue.get()
+        val targetSpeed = Speed.mineplexGroundSpeedValue.get()
         if (targetSpeed > speed) speed += targetSpeed / 8
         if (speed >= targetSpeed) speed = targetSpeed
         strafe(speed)

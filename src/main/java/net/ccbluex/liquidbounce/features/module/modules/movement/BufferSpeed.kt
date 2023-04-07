@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
@@ -27,7 +26,7 @@ import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import net.minecraft.util.BlockPos
 
 @ModuleInfo(name = "BufferSpeed", description = "Allows you to walk faster on slabs and stairs.", category = ModuleCategory.MOVEMENT)
-class BufferSpeed : Module() {
+object BufferSpeed : Module() {
     private val speedLimitValue = BoolValue("SpeedLimit", true)
     private val maxSpeedValue = object : FloatValue("MaxSpeed", 2f, 1f, 5f) {
         override fun isSupported() = speedLimitValue.get()
@@ -91,7 +90,7 @@ class BufferSpeed : Module() {
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        if (moduleManager[Speed::class.java].state || noHurtValue.get() && thePlayer.hurtTime > 0) {
+        if (Speed.state || noHurtValue.get() && thePlayer.hurtTime > 0) {
             reset()
             return
         }
@@ -202,7 +201,7 @@ class BufferSpeed : Module() {
 
             if (wallValue.get()) {
                 when (wallModeValue.get().lowercase()) {
-                    "old" -> if (thePlayer.isCollidedVertically && isNearBlock || getBlock(BlockPos(thePlayer.posX, thePlayer.posY + 2.0, thePlayer.posZ)) != Blocks.air) {
+                    "old" -> if (thePlayer.isCollidedVertically && isNearBlock || getBlock(BlockPos(thePlayer).up(2)) != Blocks.air) {
                         boost(wallBoostValue.get())
                         return
                     }

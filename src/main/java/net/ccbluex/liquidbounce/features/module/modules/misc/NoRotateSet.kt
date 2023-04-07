@@ -16,7 +16,7 @@ import net.minecraft.network.play.client.C03PacketPlayer.C05PacketPlayerLook
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 
 @ModuleInfo(name = "NoRotateSet", description = "Prevents the server from rotating your head.", category = ModuleCategory.MISC)
-class NoRotateSet : Module() {
+object NoRotateSet : Module() {
     private val confirmValue = BoolValue("Confirm", true)
     private val illegalRotationValue = object : BoolValue("ConfirmIllegalRotation", false) {
         override fun isSupported() = confirmValue.get()

@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
@@ -37,7 +36,7 @@ import java.awt.Color
 import kotlin.math.roundToInt
 
 @ModuleInfo(name = "Nuker", description = "Breaks all blocks around you.", category = ModuleCategory.WORLD)
-class Nuker : Module() {
+object Nuker : Module() {
 
     /**
      * OPTIONS
@@ -63,10 +62,12 @@ class Nuker : Module() {
     private var nukeTimer = TickTimer()
     private var nuke = 0
 
+    var currentDamage = 0F
+
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         // Block hit delay
-        if (blockHitDelay > 0 && !moduleManager[FastBreak::class.java].state) {
+        if (blockHitDelay > 0 && !FastBreak.state) {
             blockHitDelay--
             return
         }
@@ -120,7 +121,7 @@ class Nuker : Module() {
                     "Hardness" -> validBlocks.maxByOrNull { (pos, block) ->
                         val hardness = block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld, pos).toDouble()
 
-                        val safePos = BlockPos(thePlayer.posX, thePlayer.posY - 1, thePlayer.posZ)
+                        val safePos = BlockPos(thePlayer).down()
                         if (pos.x == safePos.x && safePos.y <= pos.y && pos.z == safePos.z)
                             Double.MIN_VALUE + hardness // Last block
                         else
@@ -144,9 +145,8 @@ class Nuker : Module() {
                 attackedBlocks.add(blockPos)
 
                 // Call auto tool
-                val autoTool = moduleManager[AutoTool::class.java] as AutoTool
-                if (autoTool.state)
-                    autoTool.switchSlot(blockPos)
+                if (AutoTool.state)
+                    AutoTool.switchSlot(blockPos)
 
                 // Start block breaking
                 if (currentDamage == 0F) {
@@ -224,7 +224,7 @@ class Nuker : Module() {
     fun onRender3D(event: Render3DEvent) {
         // Safe block
         if (!layerValue.get()) {
-            val safePos = BlockPos(mc.thePlayer.posX, mc.thePlayer.posY - 1, mc.thePlayer.posZ)
+            val safePos = BlockPos(mc.thePlayer).down()
             val safeBlock = getBlock(safePos)
             if (safeBlock != null && validBlock(safeBlock))
                 drawBlockBox(safePos, Color.GREEN, true)
@@ -240,7 +240,4 @@ class Nuker : Module() {
      */
     private fun validBlock(block: Block) = block != Blocks.air && block !is BlockLiquid && block != Blocks.bedrock
 
-    companion object {
-        var currentDamage = 0F
-    }
 }

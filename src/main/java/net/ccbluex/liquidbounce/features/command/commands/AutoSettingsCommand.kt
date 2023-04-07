@@ -8,8 +8,8 @@ package net.ccbluex.liquidbounce.features.command.commands
 import com.google.gson.JsonArray
 import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_CLOUD
-import net.ccbluex.liquidbounce.LiquidBounce.hud
 import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.ui.client.hud.HUD.addNotification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.SettingsUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
@@ -53,7 +53,7 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
                         chat("Applying settings...")
                         SettingsUtils.executeScript(settings)
                         chat("§6Settings applied successfully")
-                        hud.addNotification(Notification("Updated Settings"))
+                        addNotification(Notification("Updated Settings"))
                         playEdit()
                     } catch (exception: Exception) {
                         exception.printStackTrace()
@@ -89,7 +89,7 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
                             "https://api.github.com/repos/CCBlueX/LiquidCloud/contents/LiquidBounce/settings"
                     ))
 
-                    val autoSettings: MutableList<String> = mutableListOf()
+                    val autoSettings = mutableListOf<String>()
 
                     if (json is JsonArray) {
                         for (setting in json)
@@ -98,7 +98,7 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
 
                     callback(autoSettings)
 
-                    this.autoSettingFiles = autoSettings
+                    autoSettingFiles = autoSettings
                 } catch (e: Exception) {
                     chat("Failed to fetch auto settings list.")
                 }
@@ -118,7 +118,7 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
             2 -> {
                 if (args[0].equals("load", true)) {
                     if (autoSettingFiles == null) {
-                        this.loadSettings(true, 500) {}
+                        loadSettings(true, 500) {}
                     }
 
                     if (autoSettingFiles != null) {

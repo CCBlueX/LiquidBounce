@@ -29,7 +29,7 @@ import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
 @ModuleInfo(name = "BlockOverlay", description = "Allows you to change the design of the block overlay.", category = ModuleCategory.RENDER)
-class BlockOverlay : Module() {
+object BlockOverlay : Module() {
     val infoValue = BoolValue("Info", false)
 
     private val colorRainbow = BoolValue("Rainbow", false)
@@ -57,7 +57,7 @@ class BlockOverlay : Module() {
     fun onRender3D(event: Render3DEvent) {
         val blockPos = currentBlock ?: return
 
-        val block = mc.theWorld.getBlockState(blockPos).block
+        val block = getBlock(blockPos) ?: return
         val partialTicks = event.partialTicks
 
         val color = if (colorRainbow.get()) rainbow(alpha = 0.4F) else Color(colorRedValue.get(),

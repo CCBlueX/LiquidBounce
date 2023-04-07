@@ -15,19 +15,19 @@ import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.randomString
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils
+import net.ccbluex.liquidbounce.utils.timer.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.TextValue
 
 @ModuleInfo(name = "Spammer", description = "Spams the chat with a given message.", category = ModuleCategory.MISC)
-class Spammer : Module() {
+object Spammer : Module() {
     private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 1000, 0, 5000) {
         override fun onChanged(oldValue: Int, newValue: Int) {
             val minDelay = minDelayValue.get()
             if (minDelay > newValue) {
                 set(minDelay)
-                delay = TimeUtils.randomDelay(minDelayValue.get(), this.get())
+                delay = randomDelay(minDelayValue.get(), get())
             }
         }
     }
@@ -37,7 +37,7 @@ class Spammer : Module() {
             val maxDelay = maxDelayValue.get()
             if (maxDelay < newValue) {
                 set(maxDelay)
-                delay = TimeUtils.randomDelay(this.get(), maxDelayValue.get())
+                delay = randomDelay(get(), maxDelayValue.get())
             }
         }
 
@@ -50,7 +50,7 @@ class Spammer : Module() {
     private val customValue = BoolValue("Custom", false)
 
     private val msTimer = MSTimer()
-    private var delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+    private var delay = randomDelay(minDelayValue.get(), maxDelayValue.get())
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
@@ -60,7 +60,7 @@ class Spammer : Module() {
                 else messageValue.get() + " >" + randomString(nextInt(5, 11)) + "<"
             )
             msTimer.reset()
-            delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+            delay = randomDelay(minDelayValue.get(), maxDelayValue.get())
         }
     }
 

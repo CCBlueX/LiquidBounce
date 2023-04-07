@@ -35,7 +35,7 @@ import java.awt.Color
     description = "Allows you to see chests, dispensers, etc. through walls.",
     category = ModuleCategory.RENDER
 )
-class StorageESP : Module() {
+object StorageESP : Module() {
     private val modeValue =
         ListValue("Mode", arrayOf("Box", "OtherBox", "Outline", "Glow", "2D", "WireFrame"), "Outline")
 

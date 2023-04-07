@@ -14,7 +14,6 @@ import net.minecraft.network.EnumConnectionState
 import net.minecraft.network.handshake.client.C00Handshake
 
 object BungeeCordSpoof : MinecraftInstance(), Listenable {
-    @JvmField
     var enabled = false
 
     @EventTarget

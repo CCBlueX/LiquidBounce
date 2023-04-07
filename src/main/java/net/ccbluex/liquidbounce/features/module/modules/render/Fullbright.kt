@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
@@ -17,7 +16,7 @@ import net.minecraft.potion.Potion
 import net.minecraft.potion.PotionEffect
 
 @ModuleInfo(name = "Fullbright", description = "Brightens up the world around you.", category = ModuleCategory.RENDER)
-class Fullbright : Module() {
+object Fullbright : Module() {
     private val modeValue = ListValue("Mode", arrayOf("Gamma", "NightVision"), "Gamma")
     private var prevGamma = -1f
 
@@ -37,7 +36,7 @@ class Fullbright : Module() {
 
     @EventTarget(ignoreCondition = true)
     fun onUpdate(event: UpdateEvent) {
-        if (state || moduleManager[XRay::class.java].state) {
+        if (state || XRay.state) {
             when (modeValue.get().lowercase()) {
                 "gamma" -> when {
                     mc.gameSettings.gammaSetting <= 100f -> mc.gameSettings.gammaSetting++
