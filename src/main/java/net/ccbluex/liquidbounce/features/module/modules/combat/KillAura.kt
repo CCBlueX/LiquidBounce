@@ -24,11 +24,9 @@ import net.ccbluex.liquidbounce.utils.EntityUtils.targetPlayer
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
 import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.getRotationDifference
-import net.ccbluex.liquidbounce.utils.RotationUtils.isFaced
 import net.ccbluex.liquidbounce.utils.RotationUtils.isRotationFaced
 import net.ccbluex.liquidbounce.utils.RotationUtils.limitAngleChange
 import net.ccbluex.liquidbounce.utils.RotationUtils.searchCenter
-import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.targetRotation
 import net.ccbluex.liquidbounce.utils.extensions.*
@@ -57,7 +55,10 @@ import net.minecraft.util.Vec3
 import net.minecraft.world.WorldSettings
 import org.lwjgl.input.Keyboard
 import java.awt.Color
-import kotlin.math.*
+import kotlin.math.cos
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.sin
 
 @ModuleInfo(
     name = "KillAura",
@@ -74,8 +75,7 @@ object KillAura : Module() {
     // CPS - Attack speed
     private val maxCPS: IntegerValue = object : IntegerValue("MaxCPS", 8, 1, 20) {
         override fun onChanged(oldValue: Int, newValue: Int) {
-            val i = minCPS.get()
-            if (i > newValue) set(i)
+            set(newValue.coerceAtLeast(minCPS.get()))
 
             attackDelay = randomClickDelay(minCPS.get(), get())
         }
@@ -83,8 +83,7 @@ object KillAura : Module() {
 
     private val minCPS: IntegerValue = object : IntegerValue("MinCPS", 5, 1, 20) {
         override fun onChanged(oldValue: Int, newValue: Int) {
-            val i = maxCPS.get()
-            if (i < newValue) set(i)
+            set(newValue.coerceAtMost(maxCPS.get()))
 
             attackDelay = randomClickDelay(get(), maxCPS.get())
         }
@@ -124,14 +123,12 @@ object KillAura : Module() {
     // Turn Speed
     private val maxTurnSpeed: FloatValue = object : FloatValue("MaxTurnSpeed", 180f, 0f, 180f) {
         override fun onChanged(oldValue: Float, newValue: Float) {
-            val v = minTurnSpeed.get()
-            if (v > newValue) set(v)
+            set(newValue.coerceAtLeast(minTurnSpeed.get()))
         }
     }
     private val minTurnSpeed: FloatValue = object : FloatValue("MinTurnSpeed", 180f, 0f, 180f) {
         override fun onChanged(oldValue: Float, newValue: Float) {
-            val v = maxTurnSpeed.get()
-            if (v < newValue) set(v)
+            set(newValue.coerceAtMost(maxTurnSpeed.get()))
         }
 
         override fun isSupported() = !maxTurnSpeed.isMinimal()
@@ -152,6 +149,14 @@ object KillAura : Module() {
     private val aacValue = object : BoolValue("AAC", false) {
         override fun isSupported() = !maxTurnSpeed.isMinimal()
         // AAC value also modifies target selection a bit, not just rotations, but it is minor
+    }
+
+    private val keepRotationTicks = object : IntegerValue("KeepRotationTicks", 5, 1, 20) {
+        override fun isSupported() = !aacValue.isActive()
+
+        override fun onChanged(oldValue: Int, newValue: Int) {
+            set(newValue.coerceAtLeast(minimum))
+        }
     }
 
     private val micronizedValue = object : BoolValue("Micronized", true) {
@@ -182,16 +187,14 @@ object KillAura : Module() {
     }
     private val maxPredictSize: FloatValue = object : FloatValue("MaxPredictSize", 1f, 0.1f, 5f) {
         override fun onChanged(oldValue: Float, newValue: Float) {
-            val v = minPredictSize.get()
-            if (v > newValue) set(v)
+            set(newValue.coerceAtLeast(minPredictSize.get()))
         }
 
         override fun isSupported() = predictValue.isActive()
     }
     private val minPredictSize: FloatValue = object : FloatValue("MinPredictSize", 1f, 0.1f, 5f) {
         override fun onChanged(oldValue: Float, newValue: Float) {
-            val v = maxPredictSize.get()
-            if (v < newValue) set(v)
+            set(newValue.coerceAtMost(maxPredictSize.get()))
         }
 
         override fun isSupported() = predictValue.isActive() && !maxPredictSize.isMinimal()
@@ -264,6 +267,10 @@ object KillAura : Module() {
     @EventTarget
     fun onMotion(event: MotionEvent) {
         if (event.eventState == EventState.POST) {
+            if (!silentRotationValue.get() || rotationStrafeValue.get() == "Off") {
+                update()
+            }
+
             target ?: return
             currentTarget ?: return
 
@@ -276,61 +283,9 @@ object KillAura : Module() {
                     "AfterTick" -> startBlocking(currentTarget!!, hitable)
                     "Fake" -> startBlocking(currentTarget!!, hitable, fake = true)
                 }
-
             }
 
             return
-        }
-
-        if (!silentRotationValue.get() || rotationStrafeValue.get() == "Off") update()
-    }
-
-    /**
-     * Strafe event
-     */
-    @EventTarget
-    fun onStrafe(event: StrafeEvent) {
-        if (!silentRotationValue.get() || rotationStrafeValue.get() == "Off") return
-
-        update()
-
-        if (currentTarget != null && targetRotation != null) {
-            when (rotationStrafeValue.get().lowercase()) {
-                "strict" -> {
-                    val (yaw) = targetRotation ?: return
-                    var strafe = event.strafe
-                    var forward = event.forward
-                    val friction = event.friction
-
-                    var f = strafe * strafe + forward * forward
-
-                    if (f >= 1.0E-4F) {
-                        f = sqrt(f)
-
-                        if (f < 1f) f = 1f
-
-                        f = friction / f
-                        strafe *= f
-                        forward *= f
-
-                        val yawSin = sin(yaw * Math.PI / 180f)
-                        val yawCos = cos(yaw * Math.PI / 180f)
-
-                        val player = mc.thePlayer
-
-                        player.motionX += strafe * yawCos - forward * yawSin
-                        player.motionZ += forward * yawCos + strafe * yawSin
-                    }
-                    event.cancelEvent()
-                }
-
-                "silent" -> {
-                    update()
-
-                    targetRotation?.applyStrafeToPlayer(event)
-                    event.cancelEvent()
-                }
-            }
         }
     }
 
@@ -687,27 +642,31 @@ object KillAura : Module() {
             maxRange
         ) ?: return false
 
-        var limitedRotation =
-            limitAngleChange(serverRotation, rotation, nextFloat(minTurnSpeed.get(), maxTurnSpeed.get()))
+        // Get our current rotation. Otherwise, player rotation.
+        val currentRotation = targetRotation ?: mc.thePlayer.rotation
 
-        // Micronize rotations
+        var limitedRotation = limitAngleChange(
+            currentRotation, rotation, nextFloat(minTurnSpeed.get(), maxTurnSpeed.get())
+        )
+
         if (micronizedValue.get()) {
-            // Get current target rotation if there are any
-            val targetRotation =
-                targetRotation ?: serverRotation // If there are no target rotations, use server rotation.
-
-            // Does this rotation already face the target
             val reach = min(maxRange.toDouble(), mc.thePlayer.getDistanceToEntityBox(entity)) + 1
 
-            if (isRotationFaced(entity, reach, targetRotation)) {
-                // Micronize rotation
+            // Is player facing the entity with current rotation?
+            if (isRotationFaced(entity, reach, currentRotation)) {
+                // Limit angle change but this time modify the turn speed.
                 limitedRotation =
-                    limitAngleChange(serverRotation, rotation, nextFloat(endInclusive = micronizedStrength.get()))
+                    limitAngleChange(currentRotation, rotation, nextFloat(endInclusive = micronizedStrength.get()))
             }
         }
 
         if (silentRotationValue.get()) {
-            setTargetRotation(limitedRotation, if (aacValue.get()) 15 else 0)
+            setTargetRotation(
+                limitedRotation,
+                if (aacValue.get()) 10 else keepRotationTicks.get(),
+                !(!silentRotationValue.get() || rotationStrafeValue.get() == "Off"),
+                rotationStrafeValue.get() == "Strict"
+            )
         } else {
             limitedRotation.toPlayer(mc.thePlayer)
         }
@@ -740,7 +699,7 @@ object KillAura : Module() {
                 raycastedEntity
 
             hitable = currentTarget == raycastedEntity
-        } else hitable = isFaced(currentTarget!!, reach)
+        } else hitable = isRotationFaced(currentTarget!!, reach, targetRotation ?: mc.thePlayer.rotation)
     }
 
     /**
