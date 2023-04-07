@@ -8,7 +8,6 @@ package net.ccbluex.liquidbounce.utils
 import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.FastBow
-import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
 import net.ccbluex.liquidbounce.utils.extensions.eyes
 import net.ccbluex.liquidbounce.utils.extensions.hitBox
@@ -21,8 +20,6 @@ import java.util.*
 import kotlin.math.*
 
 object RotationUtils : MinecraftInstance(), Listenable {
-    private val randomGaussian
-        get() = abs(random.nextGaussian() % 1.0)
 
     /**
      * Handle minecraft tick
@@ -39,11 +36,9 @@ object RotationUtils : MinecraftInstance(), Listenable {
             }
         }
 
-        val killAura = moduleManager.getModule(KillAura::class.java) as KillAura
-
-        if (1.0 - killAura.randomCenterXChance.get() / 100 <= randomGaussian) x += (Math.random() - x) * killAura.randomCenterXSpeed.get() / 100
-        if (1.0 - killAura.randomCenterYChance.get() / 100 <= randomGaussian) y += (Math.random() - y) * killAura.randomCenterYSpeed.get() / 100
-        if (1.0 - killAura.randomCenterZChance.get() / 100 <= randomGaussian) z += (Math.random() - z) * killAura.randomCenterZSpeed.get() / 100
+        if (random.nextGaussian() > 0.8) x = Math.random()
+        if (random.nextGaussian() > 0.8) y = Math.random()
+        if (random.nextGaussian() > 0.8) z = Math.random()
     }
 
     /**

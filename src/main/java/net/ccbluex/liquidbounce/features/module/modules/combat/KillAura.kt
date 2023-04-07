@@ -163,32 +163,22 @@ class KillAura : Module() {
     }
 
     // Rotations
+    private val micronizedValue = object : BoolValue("Micronized", true) {
+        override fun isSupported() = !maxTurnSpeed.isMinimal()
+    }
+    private val micronizedStrength = object : FloatValue("MicronizedStrength", 0.8f, 0.2f, 2f) {
+        override fun isSupported() = micronizedValue.isActive()
+    }
+
     private val silentRotationValue = object : BoolValue("SilentRotation", true) {
         override fun isSupported() = !maxTurnSpeed.isMinimal()
     }
     private val rotationStrafeValue = object : ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") {
         override fun isSupported() = silentRotationValue.isActive()
     }
+
     private val randomCenterValue = object : BoolValue("RandomCenter", true) {
         override fun isSupported() = !maxTurnSpeed.isMinimal()
-    }
-    val randomCenterXChance = object : FloatValue("RandomCenterXChance", 80f, 0f, 100f) {
-        override fun isSupported() = randomCenterValue.isActive()
-    }
-    val randomCenterYChance = object : FloatValue("RandomCenterYChance", 80f, 0f, 100f) {
-        override fun isSupported() = randomCenterValue.isActive()
-    }
-    val randomCenterZChance = object : FloatValue("RandomCenterZChance", 80f, 0f, 100f) {
-        override fun isSupported() = randomCenterValue.isActive()
-    }
-    val randomCenterXSpeed = object : FloatValue("RandomCenterXSpeed", 40f, 0f, 100f) {
-        override fun isSupported() = randomCenterValue.isActive() && !randomCenterXChance.isMinimal()
-    }
-    val randomCenterYSpeed = object : FloatValue("RandomCenterYSpeed", 20f, 0f, 100f) {
-        override fun isSupported() = randomCenterValue.isActive() && !randomCenterYChance.isMinimal()
-    }
-    val randomCenterZSpeed = object : FloatValue("RandomCenterZSpeed", 40f, 0f, 100f) {
-        override fun isSupported() = randomCenterValue.isActive() && !randomCenterZChance.isMinimal()
     }
     private val outborderValue = object : BoolValue("Outborder", false) {
         override fun isSupported() = !maxTurnSpeed.isMinimal()
@@ -660,9 +650,23 @@ class KillAura : Module() {
             maxRange
         ) ?: return false
 
-        val limitedRotation = limitAngleChange(
-            targetRotation ?: mc.thePlayer.rotation, rotation, nextFloat(minTurnSpeed.get(), maxTurnSpeed.get())
+        // Get our current rotation. Otherwise, player rotation.
+        val currentRotation = targetRotation ?: mc.thePlayer.rotation
+
+        var limitedRotation = limitAngleChange(
+            currentRotation, rotation, nextFloat(minTurnSpeed.get(), maxTurnSpeed.get())
         )
+
+        if (micronizedValue.get()) {
+            val reach = min(maxRange.toDouble(), mc.thePlayer.getDistanceToEntityBox(entity)) + 1
+
+            // Is player facing the entity with current rotation?
+            if (isRotationFaced(entity, reach, currentRotation)) {
+                // Do angle limit changes using current rotation.
+                limitedRotation =
+                    limitAngleChange(currentRotation, rotation, nextFloat(endInclusive = micronizedStrength.get()))
+            }
+        }
 
         if (silentRotationValue.get()) {
             setTargetRotation(
