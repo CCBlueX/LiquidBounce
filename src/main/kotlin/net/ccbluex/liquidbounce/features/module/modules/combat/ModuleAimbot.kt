@@ -65,10 +65,13 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
 
             val box = target.boundingBox
 
-            if (fov >= RotationManager.rotationDifference(RotationManager.makeRotation(box.center, eyes), player.rotation)) {
-                val (rotation, _) = RotationManager.raytraceBox(eyes, box, range = range.toDouble(), wallsRange = 0.0) ?: break
+            if (fov >= RotationManager.rotationDifference(
+                    RotationManager.makeRotation(box.center, eyes), player.rotation
+                )
+            ) {
+                val spot = RotationManager.raytraceBox(eyes, box, range = range.toDouble(), wallsRange = 0.0) ?: break
 
-                targetRotation = rotation
+                targetRotation = spot.rotation
                 return@handler
             }
         }

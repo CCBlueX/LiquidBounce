@@ -172,7 +172,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         // Did you ever send a rotation before?
         val rotation = RotationManager.currentRotation ?: return@repeatable
 
-        if (target.boxedDistanceTo(player) <= range && facingEnemy(target, range.toDouble(), rotation)) {
+        if (target.boxedDistanceTo(player) <= range && facingEnemy(target, rotation, range.toDouble(), wallRange.toDouble())) {
             // Check if between enemy and player is another entity
             val raycastedEntity = raytraceEntity(range.toDouble(), rotation, filter = {
                 when (raycast) {
@@ -280,13 +280,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             // find best spot
             val spot = RotationManager.raytraceBox(
                 eyes.add(playerPrediction), box, range = sqrt(scanRange), wallsRange = wallRange.toDouble()
-            )
-
-            // skip if no spot was found
-            if (spot == null) {
-                targetTracker.cleanup()
-                continue
-            }
+            ) ?: continue
 
             // lock on target tracker
             targetTracker.lock(target)

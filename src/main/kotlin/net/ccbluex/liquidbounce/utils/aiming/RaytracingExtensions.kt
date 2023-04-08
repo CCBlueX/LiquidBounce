@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.aiming
 
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.entity.eyesPos
 import net.minecraft.block.BlockState
 import net.minecraft.block.ShapeContext
 import net.minecraft.entity.Entity
@@ -88,6 +89,26 @@ fun isVisible(eyes: Vec3d, vec3: Vec3d) = mc.world?.raycast(
  */
 fun facingEnemy(enemy: Entity, range: Double, rotation: Rotation): Boolean {
     return raytraceEntity(range, rotation) { it == enemy } != null
+}
+
+fun facingEnemy(enemy: Entity, rotation: Rotation, range: Double, wallsRange: Double): Boolean {
+    val player = mc.player ?: return false
+    val eyes = player.eyesPos
+
+    val rangeSquared = range * range
+    val wallsRangeSquared = wallsRange * wallsRange
+
+    val reach = eyes.add(rotation.rotationVec.multiply(range))
+
+    val vec = enemy.boundingBox.raycast(eyes, reach).let { if (it.isPresent) it.get() else null } ?: return false
+
+    val distance = eyes.squaredDistanceTo(vec)
+
+    if (distance <= rangeSquared && isVisible(eyes, vec) || distance <= wallsRangeSquared) {
+        return true
+    }
+
+    return false
 }
 
 /**

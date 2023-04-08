@@ -89,11 +89,24 @@ object RotationManager : Listenable {
         expectedTarget: BlockPos? = null,
         pattern: Pattern = GaussianPattern,
     ): VecRotation? {
-        val preferredSpot = pattern.spot(box)
-        val preferredRotation = makeRotation(preferredSpot, eyes)
-
         val rangeSquared = range * range
         val wallsRangeSquared = wallsRange * wallsRange
+
+        val preferredSpot = pattern.spot(box)
+        val preferredRotation = makeRotation(preferredSpot, eyes)
+        val preferredDistance = eyes.squaredDistanceTo(preferredSpot)
+
+        val isPreferredSpotVisible = if (expectedTarget != null) {
+            facingBlock(eyes, preferredSpot, expectedTarget)
+        } else {
+            preferredDistance <= rangeSquared && isVisible(eyes, preferredSpot)
+        }
+
+        // If pattern-generated spot is visible or its distance is within wall range, then return right here.
+        // No need to enter the loop when we already have a result.
+        if (isPreferredSpotVisible || preferredDistance <= wallsRangeSquared) {
+            return VecRotation(preferredRotation, preferredSpot)
+        }
 
         var visibleRot: VecRotation? = null
         var notVisibleRot: VecRotation? = null
@@ -103,59 +116,62 @@ object RotationManager : Listenable {
         val nearestSpot = getNearestPoint(eyes, box)
         val nearestDistance = eyes.squaredDistanceTo(nearestSpot)
 
-        for (x in 0.0..1.0 step 0.1) {
-            for (y in 0.0..1.0 step 0.1) {
-                for (z in 0.0..1.0 step 0.1) {
+        val epsilon = 1.0E-7
+
+        val min = 0.0 + epsilon
+        val max = 1.0 - epsilon
+        val inc = 0.1 - epsilon
+
+        var timesRan = 0
+
+        for (x in min..max step inc) {
+            for (y in min..max step inc) {
+                for (z in min..max step inc) {
+                    timesRan++
+
                     var vec3 = Vec3d(
                         box.minX + (box.maxX - box.minX) * x,
                         box.minY + (box.maxY - box.minY) * y,
                         box.minZ + (box.maxZ - box.minZ) * z
                     )
 
-                    // skip because of out of range
                     var distance = eyes.squaredDistanceTo(vec3)
 
-                    // if loop ended with no results, then make use of the nearest spot as last resort
-                    val useNearestSpot = (x + y + z).toFloat() == 3.0f && visibleRot == null && notVisibleRot == null
+                    // If loop ended with no results, then make use of the nearest spot as last resort
+                    // 1331 is the amount of times these loops will run
+                    val useNearestSpot = timesRan == 1331 && visibleRot == null && notVisibleRot == null
 
-                    if (distance > rangeSquared) {
-                        if (useNearestSpot) {
-                            vec3 = nearestSpot
-                            distance = nearestDistance
-                        } else {
-                            continue
-                        }
+                    // Before going through raycast and wall range checks, make sure we use the nearest distance and spot
+                    if (distance > rangeSquared && useNearestSpot) {
+                        distance = nearestDistance
+                        vec3 = nearestSpot
                     }
 
-                    // check if target is visible to eyes
                     val visible = if (expectedTarget != null) {
                         facingBlock(eyes, vec3, expectedTarget)
                     } else {
-                        isVisible(eyes, vec3)
+                        distance <= rangeSquared && isVisible(eyes, vec3)
                     }
 
-                    // skip because not visible in range
-                    if (!visible && distance > wallsRangeSquared) {
-                        continue
-                    }
+                    // Is either spot visible or distance within wall range?
+                    if (visible || distance <= wallsRangeSquared) {
+                        val rotation = makeRotation(vec3, eyes)
+                        val currentRotation = currentRotation ?: serverRotation
 
-                    val rotation = makeRotation(vec3, eyes)
-
-                    if (visible) {
-                        // Calculate next spot to preferred spot
-                        if (visibleRot == null || rotationDifference(rotation, preferredRotation) < rotationDifference(
-                                visibleRot.rotation, preferredRotation
-                            )
-                        ) {
-                            visibleRot = VecRotation(rotation, vec3)
-                        }
-                    } else {
-                        // Calculate next spot to preferred spot
-                        if (notVisibleRot == null || rotationDifference(
-                                rotation, preferredRotation
-                            ) < rotationDifference(notVisibleRot.rotation, preferredRotation)
-                        ) {
-                            notVisibleRot = VecRotation(rotation, vec3)
+                        if (visible) {
+                            if (visibleRot == null || rotationDifference(
+                                    rotation, currentRotation
+                                ) < rotationDifference(visibleRot.rotation, currentRotation)
+                            ) {
+                                visibleRot = VecRotation(rotation, vec3)
+                            }
+                        } else {
+                            if (notVisibleRot == null || rotationDifference(
+                                    rotation, currentRotation
+                                ) < rotationDifference(notVisibleRot.rotation, currentRotation)
+                            ) {
+                                notVisibleRot = VecRotation(rotation, vec3)
+                            }
                         }
                     }
                 }

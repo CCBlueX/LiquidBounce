@@ -57,6 +57,9 @@ import net.minecraft.world.RaycastContext
  * Automatically places and destroys End Crystals.
  */
 
+// TODO: This module is being recoded by superblaubeere27:
+//  https://github.com/CCBlueX/LiquidBounce/pull/607
+
 object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
 
     private val swing by boolean("Swing", true)
