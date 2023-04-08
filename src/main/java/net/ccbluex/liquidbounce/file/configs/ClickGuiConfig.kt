@@ -24,8 +24,6 @@ class ClickGuiConfig(file: File) : FileConfig(file) {
      */
     @Throws(IOException::class)
     override fun loadConfig() {
-        ClickGui.setToDefault()
-
         val jsonElement = JsonParser().parse(file.bufferedReader())
         if (jsonElement is JsonNull) return
 
