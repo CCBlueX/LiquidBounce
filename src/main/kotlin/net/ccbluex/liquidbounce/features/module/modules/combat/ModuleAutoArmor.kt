@@ -102,7 +102,7 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
                     network.sendPacket(UpdateSelectedSlotC2SPacket(item))
                 }
 
-                val interact = interaction.interactItem(player, world, Hand.MAIN_HAND)
+                val interact = interaction.interactItem(player, Hand.MAIN_HAND)
 
                 if (interact.shouldSwingHand()) {
                     player.swingHand(Hand.MAIN_HAND)
@@ -114,7 +114,7 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
 
                 return true
             } else if (slot == 45) {
-                val interact = interaction.interactItem(player, world, Hand.OFF_HAND)
+                val interact = interaction.interactItem(player, Hand.OFF_HAND)
 
                 if (interact.shouldSwingHand()) {
                     player.swingHand(Hand.OFF_HAND)
