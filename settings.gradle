@@ -24,4 +24,4 @@ pluginManagement {
     }
 }
 
-rootProject.name = 'LiquidBounce Legacy'
+rootProject.name = 'LiquidBounce'
