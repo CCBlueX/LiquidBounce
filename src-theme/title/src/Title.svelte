@@ -10,27 +10,27 @@
     import ButtonWrapperRight from "../../shared_res/src/menus/buttons/ButtonWrapperRight.svelte";
 
     function openProxyManager() {
-        ui.open("proxymanager", screen);
+        pages.open("proxymanager", screen);
     }
 
     function openAltManager() {
-        ui.open("altmanager", screen);
+        pages.open("altmanager", screen);
     }
 
     function openSingleplayer() {
-        ui.open("singleplayer", screen);
+        pages.open("singleplayer", screen);
     }
 
     function openMultiplayer() {
-        ui.open("multiplayer", screen);
+        pages.open("multiplayer", screen);
     }
 
     function openRealms() {
-        ui.open("multiplayer_realms", screen);
+        pages.open("multiplayer_realms", screen);
     }
 
     function openOptions() {
-        ui.open("options", screen);
+        pages.open("options", screen);
     }
 
     function scheduleStop() {

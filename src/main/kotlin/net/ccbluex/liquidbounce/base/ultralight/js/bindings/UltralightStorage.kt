@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.config.Configurable
  * Ultralight storage
  * a replacement for the JS LocalStorage
  **/
-object UltralightStorage : Configurable("ultralight_storage") {
+object UltralightStorage : Configurable("storage") {
 
     var map by value("map", mutableMapOf<String, String>())
 

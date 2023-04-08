@@ -118,7 +118,7 @@ object UltralightEngine {
      *
      * This will download the required natives and resources and load them.
      */
-    fun initNatives() {
+    private fun initNatives() {
         // Check resources
         logger.info("Checking resources...")
         resources.downloadResources()

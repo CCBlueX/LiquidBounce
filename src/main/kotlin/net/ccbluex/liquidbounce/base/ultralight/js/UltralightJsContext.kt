@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
 import net.ccbluex.liquidbounce.base.ultralight.ViewOverlay
 import net.ccbluex.liquidbounce.base.ultralight.js.bindings.*
 import net.ccbluex.liquidbounce.utils.client.ThreadLock
-import net.ccbluex.liquidbounce.utils.client.mc
 
 /**
  * Context setup
@@ -49,14 +48,14 @@ class UltralightJsContext(viewOverlay: ViewOverlay, ulView: ThreadLock<Ultraligh
         val globalContext = context.globalContext
         val globalObject = globalContext.globalObject
 
-        setProperty(globalObject, context, "engine", UltralightEngine)
+        // Pass the view to the context
         setProperty(globalObject, context, "view", viewOverlay)
+
+        setProperty(globalObject, context, "engine", UltralightEngine)
         setProperty(globalObject, context, "client", UltralightJsClient)
         setProperty(globalObject, context, "storage", UltralightStorage)
         setProperty(globalObject, context, "events", events)
-
-        setProperty(globalObject, context, "minecraft", mc) // todo: remap minecraft functions or do not use any minecraft functions
-        setProperty(globalObject, context, "ui", UltralightJsUi)
+        setProperty(globalObject, context, "pages", UltralightJsPages)
         setProperty(globalObject, context, "kotlin", UltralightJsKotlin)
         setProperty(globalObject, context, "utils", UltralightJsUtils)
 
