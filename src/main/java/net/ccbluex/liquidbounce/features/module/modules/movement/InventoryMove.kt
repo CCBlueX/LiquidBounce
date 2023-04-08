@@ -23,23 +23,26 @@ object InventoryMove : Module() {
 
     private val undetectable = BoolValue("Undetectable", false)
     val aacAdditionProValue = BoolValue("AACAdditionPro", false)
+
     private val noMoveClicksValue = BoolValue("NoMoveClicks", false)
+    private val noClicksAirValue = object : BoolValue("NoClicksInAir", false) {
+        override fun isSupported() = noMoveClicksValue.get()
+    }
+    private val noClicksGroundValue = object : BoolValue("NoClicksOnGround", true) {
+        override fun isSupported() = noMoveClicksValue.get()
+    }
 
     private val affectedBindings = arrayOf(
-            mc.gameSettings.keyBindForward,
-            mc.gameSettings.keyBindBack,
-            mc.gameSettings.keyBindRight,
-            mc.gameSettings.keyBindLeft,
-            mc.gameSettings.keyBindJump,
-            mc.gameSettings.keyBindSprint
+        mc.gameSettings.keyBindForward,
+        mc.gameSettings.keyBindBack,
+        mc.gameSettings.keyBindRight,
+        mc.gameSettings.keyBindLeft,
+        mc.gameSettings.keyBindJump,
+        mc.gameSettings.keyBindSprint
     )
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        tick()
-    }
-
-    fun tick() {
         if (mc.currentScreen !is GuiChat && mc.currentScreen !is GuiIngameMenu && (!undetectable.get() || mc.currentScreen !is GuiContainer)) {
             for (affectedBinding in affectedBindings) {
                 affectedBinding.pressed = GameSettings.isKeyDown(affectedBinding)
@@ -49,8 +52,10 @@ object InventoryMove : Module() {
 
     @EventTarget
     fun onClick(event: ClickWindowEvent) {
-        if (noMoveClicksValue.get() && isMoving)
-            event.cancelEvent()
+        if (noMoveClicksValue.get() && isMoving &&
+            if (mc.thePlayer.onGround) noClicksGroundValue.get()
+            else noClicksAirValue.get()
+        ) event.cancelEvent()
     }
 
     override fun onDisable() {
