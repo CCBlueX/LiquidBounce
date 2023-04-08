@@ -142,6 +142,7 @@ object ModuleManager : Listenable {
             NoClip,
             NoFOV,
             NoFall,
+            NoFluid,
             NoFriends,
             NoHurtCam,
             NoJumpDelay,
@@ -162,6 +163,7 @@ object ModuleManager : Listenable {
             Projectiles,
             ProphuntESP,
             Reach,
+            Refill,
             Regen,
             ResourcePackSpoof,
             ReverseStep,
@@ -192,8 +194,7 @@ object ModuleManager : Listenable {
             WallClimb,
             WaterSpeed,
             XRay,
-            Zoot,
-            NoFluid
+            Zoot
         )
 
         LOGGER.info("[ModuleManager] Loaded ${modules.size} modules.")

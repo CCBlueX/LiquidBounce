@@ -32,14 +32,10 @@ object HUD : Module() {
     }
 
     @EventTarget
-    fun onUpdate(event: UpdateEvent) {
-        hud.update()
-    }
+    fun onUpdate(event: UpdateEvent) = hud.update()
 
     @EventTarget
-    fun onKey(event: KeyEvent) {
-        hud.handleKey('a', event.key)
-    }
+    fun onKey(event: KeyEvent) = hud.handleKey('a', event.key)
 
     @EventTarget(ignoreCondition = true)
     fun onScreen(event: ScreenEvent) {
