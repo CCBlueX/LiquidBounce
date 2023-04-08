@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
-import net.ccbluex.liquidbounce.utils.client.TickStateManager;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.input.Input;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
@@ -207,7 +206,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
         return !ModuleFreeCam.INSTANCE.getEnabled() && instance.allowFlying;
     }
 
-    @ModifyVariable(method = "sendMovementPackets", at = @At("STORE"), ordinal = 3)
+    @ModifyVariable(method = "sendMovementPackets", at = @At("STORE"), ordinal = 2)
     private boolean hookFreeCamPreventRotations(boolean bl4) {
         return !ModuleFreeCam.INSTANCE.shouldDisableRotations() && bl4;
     }

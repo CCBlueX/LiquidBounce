@@ -81,7 +81,7 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
 
     val mouseRotationHandler = handler<MouseRotationEvent> { event ->
         targetRotation?.let {
-            val f = mc.options.mouseSensitivity * 0.6F.toDouble() + 0.2F.toDouble()
+            val f = mc.options.mouseSensitivity.value * 0.6F.toDouble() + 0.2F.toDouble()
             val gcd = f * f * f * 8.0
 
             val rotation = RotationManager.limitAngleChange(player.rotation, it, 13.37f)
