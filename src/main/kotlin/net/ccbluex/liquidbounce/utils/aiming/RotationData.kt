@@ -39,7 +39,7 @@ data class Rotation(var yaw: Float, var pitch: Float) {
      * Fix rotation based on sensitivity
      */
     fun fixedSensitivity(): Rotation {
-        val f = mc.options.mouseSensitivity * 0.6F.toDouble() + 0.2F.toDouble()
+        val f = mc.options.mouseSensitivity.value.toFloat() * 0.6F.toDouble() + 0.2F.toDouble()
         val gcd = f * f * f * 8.0 * 0.15F
 
         // get previous rotation

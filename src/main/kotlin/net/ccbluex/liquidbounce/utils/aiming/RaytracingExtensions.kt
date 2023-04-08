@@ -41,7 +41,12 @@ fun raytraceEntity(range: Double, rotation: Rotation, filter: (Entity) -> Boolea
     val box = entity.boundingBox.stretch(rotationVec.multiply(range)).expand(1.0, 1.0, 1.0)
 
     val entityHitResult = ProjectileUtil.raycast(
-        entity, cameraVec, vec3d3, box, { !it.isSpectator && it.collides() && filter(it) }, range * range
+        entity,
+        cameraVec,
+        vec3d3,
+        box,
+        { !it.isSpectator && it.canHit() && filter(it) },
+        range * range
     )
 
     return entityHitResult?.entity

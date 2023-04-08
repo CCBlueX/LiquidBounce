@@ -34,7 +34,7 @@ import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.math.times
 import net.minecraft.client.network.OtherClientPlayerEntity
 import net.minecraft.entity.Entity
-import net.minecraft.network.Packet
+import net.minecraft.network.packet.Packet
 import net.minecraft.network.packet.c2s.play.*
 import net.minecraft.util.math.Vec3d
 import java.util.*

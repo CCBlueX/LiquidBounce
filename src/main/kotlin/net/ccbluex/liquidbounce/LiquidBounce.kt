@@ -95,7 +95,12 @@ object LiquidBounce : Listenable {
             RotationManager
             FriendManager
             ProxyManager
-            Tabs
+            runCatching {
+                Class.forName("net.fabricmc.fabric.impl.itemgroup.ItemGroupHelper")
+                Tabs
+            }.onFailure {
+                logger.warn("Unable to load tabs. Are you using Fabric API?")
+            }
             Chat
 
             // Initialize the render engine

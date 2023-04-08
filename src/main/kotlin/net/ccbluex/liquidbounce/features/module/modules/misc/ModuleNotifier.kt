@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket
+import net.minecraft.network.packet.s2c.play.PlayerRemoveS2CPacket
 import java.util.*
 
 /**
@@ -61,40 +62,35 @@ object ModuleNotifier : Module("Notifier", Category.MISC) {
         val packet = event.packet
 
         if (packet is PlayerListS2CPacket) {
-            when (packet.action) {
-                PlayerListS2CPacket.Action.ADD_PLAYER -> {
-                    for (entry in packet.entries) {
-                        if (entry.profile.name != null && entry.profile.name.length > 2) {
-                            uuidNameCache[entry.profile.id] = entry.profile.name
-                            if (joinMessages) {
-                                val message = joinMessageFormat.format(entry.profile.name)
+            for (entry in packet.playerAdditionEntries) {
+                if (entry.profile.name != null && entry.profile.name.length > 2) {
+                    uuidNameCache[entry.profile.id] = entry.profile.name
+                    if (joinMessages) {
+                        val message = joinMessageFormat.format(entry.profile.name)
 
-                                if (useNotification) {
-                                    notification("Notifier", message, NotificationEvent.Severity.INFO)
-                                } else {
-                                    chat(regular(message))
-                                }
-                            }
+                        if (useNotification) {
+                            notification("Notifier", message, NotificationEvent.Severity.INFO)
+                        } else {
+                            chat(regular(message))
                         }
                     }
                 }
-                PlayerListS2CPacket.Action.REMOVE_PLAYER -> {
-                    for (entry in packet.entries) {
-                        if (entry.profile.name != null && entry.profile.name.length > 2) {
-                            if (leaveMessages) {
-                                val message = leaveMessageFormat.format(uuidNameCache[entry.profile.id])
-                                if (useNotification) {
-                                    notification("Notifier", message, NotificationEvent.Severity.INFO)
-                                } else {
-                                    chat(regular(message))
-                                }
-                            }
+            }
+        } else if (packet is PlayerRemoveS2CPacket) {
+            for (uuid in packet.profileIds) {
+                val entry = network.playerList.find { it.profile.id == uuid } ?: continue
 
-                            uuidNameCache.remove(entry.profile.id)
+                if (entry.profile.name != null && entry.profile.name.length > 2) {
+                    if (leaveMessages) {
+                        val message = leaveMessageFormat.format(uuidNameCache[entry.profile.id])
+                        if (useNotification) {
+                            notification("Notifier", message, NotificationEvent.Severity.INFO)
+                        } else {
+                            chat(regular(message))
                         }
                     }
-                }
-                else -> {
+
+                    uuidNameCache.remove(entry.profile.id)
                 }
             }
         }

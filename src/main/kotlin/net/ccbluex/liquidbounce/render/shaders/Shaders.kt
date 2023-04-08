@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.render.shaders
 
-import net.ccbluex.liquidbounce.render.engine.RenderEngine
 import net.ccbluex.liquidbounce.render.engine.ShaderProgram
 import net.ccbluex.liquidbounce.render.engine.memory.PositionColorUVVertexFormat
 import net.ccbluex.liquidbounce.render.engine.memory.PositionColorVertexFormat
@@ -40,11 +39,6 @@ object Shaders {
      * @throws IllegalStateException When one of the program fails to initialize
      */
     fun init() {
-        // Don't try to load shaders if they are not supported
-        if (!RenderEngine.openglLevel.supportsShaders()) {
-            return
-        }
-
         try {
             InstancedColoredPrimitiveShader
             ColoredPrimitiveShader

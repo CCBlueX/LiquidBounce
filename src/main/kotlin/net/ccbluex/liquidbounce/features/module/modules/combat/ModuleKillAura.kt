@@ -238,7 +238,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                         wait(blockingTicks)
                     }
 
-                    network.sendPacket(PlayerInteractItemC2SPacket(player.activeHand))
+                    interaction.sendSequencedPacket(world) { sequence ->
+                        PlayerInteractItemC2SPacket(player.activeHand, sequence)
+                    }
                 }
             }
         }

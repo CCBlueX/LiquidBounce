@@ -55,7 +55,7 @@ public class MixinKeyboardInput extends MixinInput {
     }
 
     @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;pressingRight:Z", shift = At.Shift.AFTER))
-    private void injectMovementInputEvent(boolean slowDown, CallbackInfo ci) {
+    private void injectMovementInputEvent(boolean slowDown, float f, CallbackInfo ci) {
         var event = new MovementInputEvent(this.pressingForward, this.pressingBack, this.pressingLeft, this.pressingRight);
 
         EventManager.INSTANCE.callEvent(event);
@@ -67,7 +67,7 @@ public class MixinKeyboardInput extends MixinInput {
     }
 
     @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;sneaking:Z", shift = At.Shift.AFTER))
-    private void injectStrafing(boolean slowDown, CallbackInfo ci) {
+    private void injectStrafing(boolean slowDown, float f, CallbackInfo ci) {
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         RotationManager rotationManager = RotationManager.INSTANCE;
         Rotation rotation = rotationManager.getCurrentRotation();

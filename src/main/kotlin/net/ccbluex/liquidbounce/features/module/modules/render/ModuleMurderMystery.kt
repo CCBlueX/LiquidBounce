@@ -79,13 +79,13 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
 
     private val gameRenderEvent = handler<GameRenderEvent> {
         if (playHurt) {
-            mc.soundManager.play(PositionedSoundInstance.master(SoundEvent(Identifier("entity.villager.hurt")), 1F))
+            mc.soundManager.play(PositionedSoundInstance.master(SoundEvent.of(Identifier("entity.villager.hurt")), 1F))
 
             playHurt = false
         }
 
         if (playBow) {
-            mc.soundManager.play(PositionedSoundInstance.master(SoundEvent(Identifier("item.crossbow.shoot")), 1F))
+            mc.soundManager.play(PositionedSoundInstance.master(SoundEvent.of(Identifier("item.crossbow.shoot")), 1F))
 
             playBow = false
         }
