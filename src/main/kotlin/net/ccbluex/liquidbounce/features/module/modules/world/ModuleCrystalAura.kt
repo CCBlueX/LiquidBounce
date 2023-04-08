@@ -92,13 +92,10 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
 
             updateTarget()
             val curr = currentBlock ?: return@repeatable
-            val serverRotation = RotationManager.serverRotation ?: return@repeatable
+            val currentRotation = RotationManager.currentRotation ?: return@repeatable
 
             val rayTraceResult = raytraceBlock(
-                range.toDouble(),
-                serverRotation,
-                curr,
-                curr.getState() ?: return@repeatable
+                range.toDouble(), currentRotation, curr, curr.getState() ?: return@repeatable
             )
 
             if (rayTraceResult?.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != curr) {
@@ -110,10 +107,7 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
             }
 
             if (interaction.interactBlock(
-                    player,
-                    world,
-                    Hand.MAIN_HAND,
-                    rayTraceResult
+                    player, Hand.MAIN_HAND, rayTraceResult
                 ) == ActionResult.SUCCESS
             ) {
                 if (swing) {
@@ -143,10 +137,7 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
                 }
                 // find best spot (and skip if no spot was found)
                 val (rotation, _) = RotationManager.raytraceBox(
-                    player.eyesPos,
-                    block.boundingBox,
-                    range = range.toDouble(),
-                    wallsRange = 0.0
+                    player.eyesPos, block.boundingBox, range = range.toDouble(), wallsRange = 0.0
                 ) ?: continue
 
                 // lock on target tracker
@@ -194,19 +185,14 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
 
         val blockToProcess = searchBlocksInRadius(radius) { pos, state ->
             targetedBlocks.contains(state.block) && getNearestPoint(
-                eyesPos,
-                Box(pos, pos.add(1, 1, 1))
+                eyesPos, Box(pos, pos.add(1, 1, 1))
             ).squaredDistanceTo(eyesPos) <= radiusSquared
         }.minByOrNull { it.first.getCenterDistanceSquared() } ?: return
 
         val (pos, state) = blockToProcess
 
         val rt = RotationManager.raytraceBlock(
-            player.eyesPos,
-            pos,
-            state,
-            range = range.toDouble(),
-            wallsRange = 0.0
+            player.eyesPos, pos, state, range = range.toDouble(), wallsRange = 0.0
         )
 
         // We got a free angle at the block? Cool.

@@ -63,7 +63,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     private val action by enumChoice("Action", DestroyAction.USE, DestroyAction.values())
     private val throughWalls by boolean("ThroughWalls", false)
 
-//    private val instant by boolean("Instant", false) // TODO: Instant option
+    //    private val instant by boolean("Instant", false) // TODO: Instant option
     private val delay by int("SwitchDelay", 0, 0..20)
 
     // Rotation
@@ -84,13 +84,10 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         }
 
         val curr = currentTarget ?: return@repeatable
-        val serverRotation = RotationManager.serverRotation ?: return@repeatable
+        val currentRotation = RotationManager.currentRotation ?: return@repeatable
 
         val rayTraceResult = raytraceBlock(
-            range.toDouble(),
-            serverRotation,
-            curr.pos,
-            curr.pos.getState() ?: return@repeatable
+            range.toDouble(), currentRotation, curr.pos, curr.pos.getState() ?: return@repeatable
         )
 
         if (rayTraceResult?.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != curr.pos) {
@@ -99,9 +96,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
 
         if (curr.action == DestroyAction.USE) {
             if (interaction.interactBlock(
-                    player,
-                    Hand.MAIN_HAND,
-                    rayTraceResult
+                    player, Hand.MAIN_HAND, rayTraceResult
                 ) == ActionResult.SUCCESS
             ) {
                 player.swingHand(Hand.MAIN_HAND)
@@ -140,19 +135,14 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
 
         val blockToProcess = searchBlocksInCuboid(radius.toInt()) { pos, state ->
             targetedBlocks.contains(state.block) && getNearestPoint(
-                eyesPos,
-                Box(pos, pos.add(1, 1, 1))
+                eyesPos, Box(pos, pos.add(1, 1, 1))
             ).squaredDistanceTo(eyesPos) <= radiusSquared
         }.minByOrNull { it.first.getCenterDistanceSquared() } ?: return
 
         val (pos, state) = blockToProcess
 
         val rt = RotationManager.raytraceBlock(
-            player.eyesPos,
-            pos,
-            state,
-            range = range.toDouble(),
-            wallsRange = wallRange.toDouble()
+            player.eyesPos, pos, state, range = range.toDouble(), wallsRange = wallRange.toDouble()
         )
 
         // We got a free angle at the block? Cool.
