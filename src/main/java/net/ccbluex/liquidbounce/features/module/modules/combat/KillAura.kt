@@ -267,9 +267,7 @@ object KillAura : Module() {
     @EventTarget
     fun onMotion(event: MotionEvent) {
         if (event.eventState == EventState.POST) {
-            if (!silentRotationValue.get() || rotationStrafeValue.get() == "Off") {
-                update()
-            }
+            update()
 
             target ?: return
             currentTarget ?: return
