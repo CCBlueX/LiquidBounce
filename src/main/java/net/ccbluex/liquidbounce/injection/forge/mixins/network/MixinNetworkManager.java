@@ -23,8 +23,9 @@ public class MixinNetworkManager {
         final PacketEvent event = new PacketEvent(packet);
         EventManager.INSTANCE.callEvent(event);
 
-        if(event.isCancelled())
+        if(event.isCancelled()) {
             callback.cancel();
+        }
     }
 
     @Inject(method = "sendPacket(Lnet/minecraft/network/Packet;)V", at = @At("HEAD"), cancellable = true)
@@ -32,7 +33,8 @@ public class MixinNetworkManager {
         final PacketEvent event = new PacketEvent(packet);
         EventManager.INSTANCE.callEvent(event);
 
-        if(event.isCancelled())
+        if(event.isCancelled()) {
             callback.cancel();
+        }
     }
 }
