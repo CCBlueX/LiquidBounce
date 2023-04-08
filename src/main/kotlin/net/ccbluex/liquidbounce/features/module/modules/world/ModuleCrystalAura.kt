@@ -108,7 +108,6 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
 
             if (interaction.interactBlock(
                     player,
-                    world,
                     Hand.MAIN_HAND,
                     rayTraceResult
                 ) == ActionResult.SUCCESS

@@ -84,7 +84,7 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
             instanceBuffer.initBuffer(blocksToRender.size)
             instanceBufferOutline.initBuffer(blocksToRender.size)
 
-            for ((pos, type) in locations) {
+            for ((pos, type) in blocksToRender) {
                 val base = type.color
 
                 val baseColor = Color4b(base.r, base.g, base.b, 50)
@@ -137,14 +137,16 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
             locations.entries.removeIf { it.key.x shr 4 == x && it.key.z shr 4 == z }
 
             // Chunk was unloaded? Don't rescan then
-            if (!rescan)
-                return;
+            if (!rescan) {
+                return
+            }
 
             val chunk = world.getChunk(x, z)
 
             // Don't scan empty chunks (might be a noop)
-            if (chunk.isEmpty)
+            if (chunk.isEmpty) {
                 return
+            }
 
             for ((pos, blockEntity) in chunk.blockEntities.entries) {
                 val type = categorizeBlockEntity(blockEntity) ?: continue

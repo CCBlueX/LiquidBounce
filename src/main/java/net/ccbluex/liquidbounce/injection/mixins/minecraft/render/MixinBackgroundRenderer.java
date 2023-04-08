@@ -26,14 +26,17 @@ import net.minecraft.client.render.BackgroundRenderer;
 import net.minecraft.client.render.BackgroundRenderer.FogType;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.CameraSubmersionType;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
+import net.minecraft.entity.effect.StatusEffects;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.List;
+import java.util.stream.Stream;
 
 import static java.lang.Float.MAX_VALUE;
 import static net.minecraft.client.render.CameraSubmersionType.LAVA;
@@ -43,16 +46,17 @@ import static org.spongepowered.asm.mixin.injection.At.Shift.AFTER;
 @Mixin(BackgroundRenderer.class)
 public abstract class MixinBackgroundRenderer implements IMixinGameRenderer {
 
-    @Redirect(method = "applyFog", at = @At(value = "INVOKE", ordinal = 1, target = "Lnet/minecraft/entity/LivingEntity;hasStatusEffect"
-        + "(Lnet/minecraft/entity/effect/StatusEffect;)Z"))
-    private static boolean injectAntiBlind(LivingEntity livingEntity, StatusEffect effect) {
-        ModuleAntiBlind module = ModuleAntiBlind.INSTANCE;
-        return (!module.getEnabled() || !module.getAntiBlind())
-            && livingEntity.hasStatusEffect(effect);
+    @Redirect(method = "getFogModifier", at = @At(value = "INVOKE", target = "Ljava/util/List;stream()Ljava/util/stream/Stream;"))
+    private static Stream<BackgroundRenderer.StatusEffectFogModifier> injectAntiBlind(List<BackgroundRenderer.StatusEffectFogModifier> list) {
+        return list.stream().filter(modifier -> {
+            final StatusEffect effect = modifier.getStatusEffect();
+
+            return !(effect == StatusEffects.BLINDNESS && ModuleAntiBlind.INSTANCE.getEnabled() && ModuleAntiBlind.INSTANCE.getAntiBlind());
+        });
     }
 
-    @Inject(method = "applyFog", at = @At(value = "INVOKE", shift = AFTER, ordinal = 1, target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderFogStart(F)V", remap = false))
-    private static void injectLiquidsFog(Camera camera, FogType fogType, float viewDistance, boolean thickFog, CallbackInfo callback) {
+    @Inject(method = "applyFog", at = @At(value = "INVOKE", shift = AFTER, ordinal = 0, target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderFogStart(F)V", remap = false))
+    private static void injectLiquidsFog(Camera camera, FogType fogType, float viewDistance, boolean thickFog, float tickDelta, CallbackInfo callback) {
         if (isLiquidsFogEnabled(camera)) {
             RenderSystem.setShaderFogStart(MAX_VALUE);
             RenderSystem.setShaderFogEnd(MAX_VALUE);
@@ -60,7 +64,7 @@ public abstract class MixinBackgroundRenderer implements IMixinGameRenderer {
     }
 
     @Inject(method = "applyFog", at = @At(value = "INVOKE", shift = AFTER, ordinal = 0, target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderFogEnd(F)V", remap = false))
-    private static void injectLiquidsFogUnderwater(Camera camera, FogType fogType, float viewDistance, boolean thickFog, CallbackInfo info) {
+    private static void injectLiquidsFogUnderwater(Camera camera, FogType fogType, float viewDistance, boolean thickFog, float tickDelta, CallbackInfo info) {
         if (isLiquidsFogEnabled(camera)) {
             RenderSystem.setShaderFogEnd(MAX_VALUE);
         }

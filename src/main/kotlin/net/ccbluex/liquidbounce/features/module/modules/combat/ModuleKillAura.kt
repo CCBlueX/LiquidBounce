@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -52,6 +52,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.GameMode
+import kotlin.math.sqrt
 import kotlin.random.Random
 
 /**
@@ -171,17 +172,13 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         if (target.boxedDistanceTo(player) <= range && facingEnemy(target, range.toDouble(), rotation)) {
             // Check if between enemy and player is another entity
-            val raycastedEntity = raytraceEntity(
-                range.toDouble(),
-                rotation,
-                filter = {
-                    when (raycast) {
-                        TRACE_NONE -> false
-                        TRACE_ONLYENEMY -> it.shouldBeAttacked()
-                        TRACE_ALL -> true
-                    }
+            val raycastedEntity = raytraceEntity(range.toDouble(), rotation, filter = {
+                when (raycast) {
+                    TRACE_NONE -> false
+                    TRACE_ONLYENEMY -> it.shouldBeAttacked()
+                    TRACE_ALL -> true
                 }
-            ) ?: target
+            }) ?: target
 
             // Swap enemy if there is a better enemy
             // todo: compare current target to locked target
@@ -191,8 +188,11 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
             // Attack enemy according to cps and cooldown
             val clicks = cpsTimer.clicks(condition = {
-                !cooldown || (player.getAttackCooldownProgress(0.0f) >= 1.0f && (!ModuleCriticals.shouldWaitForCrit() || raycastedEntity.velocity.lengthSquared() > 0.25 * 0.25))
-                    && (attackShielding || raycastedEntity !is PlayerEntity || player.mainHandStack.item is AxeItem || !raycastedEntity.wouldBlockHit(player))
+                (!cooldown || player.getAttackCooldownProgress(0.0f) >= 1.0f) && (!ModuleCriticals.shouldWaitForCrit() || raycastedEntity.velocity.lengthSquared() > 0.25 * 0.25) && (
+                    attackShielding || raycastedEntity !is PlayerEntity || player.mainHandStack.item !is AxeItem || !raycastedEntity.wouldBlockHit(
+                        player
+                    )
+                    )
             }, cps)
 
             repeat(clicks) {
@@ -240,7 +240,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                         wait(blockingTicks)
                     }
 
-                    network.sendPacket(PlayerInteractItemC2SPacket(player.activeHand))
+                    interaction.sendSequencedPacket(world) { sequence ->
+                        PlayerInteractItemC2SPacket(player.activeHand, sequence)
+                    }
                 }
 
                 // Make sure to reopen inventory
@@ -292,14 +294,14 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             val (rotation, _) = RotationManager.raytraceBox(
                 eyes.add(playerPrediction),
                 box,
-                range = scanRange,
+                range = sqrt(scanRange),
                 wallsRange = wallRange.toDouble()
             ) ?: continue
 
             // lock on target tracker
             targetTracker.lock(target)
 
-            // aim on target
+            // aim at target
             RotationManager.aimAt(rotation, configurable = rotations)
             break
         }
@@ -351,8 +353,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     }
 
     enum class RaycastMode(override val choiceName: String) : NamedChoice {
-        TRACE_NONE("None"),
-        TRACE_ONLYENEMY("Enemy"), TRACE_ALL("All")
+        TRACE_NONE("None"), TRACE_ONLYENEMY("Enemy"), TRACE_ALL("All")
     }
 
 }

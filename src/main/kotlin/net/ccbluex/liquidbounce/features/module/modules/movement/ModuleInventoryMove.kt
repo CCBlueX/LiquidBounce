@@ -26,6 +26,7 @@ import net.minecraft.client.gui.screen.ingame.CreativeInventoryScreen
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.item.ItemGroup
+import net.minecraft.item.ItemGroups
 
 /**
  * InventoryMove module
@@ -39,12 +40,12 @@ object ModuleInventoryMove : Module("InventoryMove", Category.MOVEMENT) {
     val passthroughSneak by boolean("PassthroughSneak", false)
 
     fun shouldHandleInputs(keyBinding: KeyBinding) = enabled && mc.currentScreen !is ChatScreen && !isInCreativeSearchField() &&
-        (!undetectable || mc.currentScreen !is HandledScreen<*>) && (passthroughSneak || keyBinding != mc.options.keySneak)
+        (!undetectable || mc.currentScreen !is HandledScreen<*>) && (passthroughSneak || keyBinding != mc.options.sneakKey)
 
     private fun isInCreativeSearchField(): Boolean {
         val currentScreen = mc.currentScreen
 
-        return currentScreen is CreativeInventoryScreen && currentScreen.selectedTab == ItemGroup.SEARCH.index
+        return currentScreen is CreativeInventoryScreen && CreativeInventoryScreen.selectedTab == ItemGroups.SEARCH
     }
 
 }

@@ -36,7 +36,9 @@ public class MixinRenderTickCounter {
      */
     @Inject(method = "beginRenderTick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/RenderTickCounter;lastFrameDuration:F", shift = At.Shift.AFTER))
     private void hookTimer(CallbackInfoReturnable<Integer> callback) {
-        lastFrameDuration *= Timer.INSTANCE.getTimerSpeed();
+        float customTimer = Timer.INSTANCE.getTimerSpeed();
+        if (customTimer>0)
+            lastFrameDuration *= customTimer;
     }
 
 }

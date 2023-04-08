@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -276,7 +276,7 @@ object RotationManager : Listenable {
     /**
      * Update current rotation to new rotation step
      */
-    private fun update() {
+    fun update() {
         // Update reset ticks
         if (ticksUntilReset > 0) {
             ticksUntilReset--
@@ -295,30 +295,25 @@ object RotationManager : Listenable {
         if (ticksUntilReset == 0) {
             val threshold = 2f // todo: might use turn speed
 
-            if (rotationDifference(this.currentRotation ?: serverRotation ?: return, playerRotation) < threshold) {
+            if (rotationDifference(currentRotation ?: serverRotation ?: return, playerRotation) < threshold) {
                 ticksUntilReset = -1
 
-                this.targetRotation = null
-                this.currentRotation = null
+                targetRotation = null
+                currentRotation = null
                 return
             }
 
-            this.currentRotation =
-                limitAngleChange(this.currentRotation ?: serverRotation ?: return, playerRotation, turnSpeed)
+            currentRotation = limitAngleChange(currentRotation ?: serverRotation ?: return, playerRotation, turnSpeed)
         } else if (targetRotation != null) {
             targetRotation?.let { targetRotation ->
-                this.currentRotation =
-                    limitAngleChange(this.currentRotation ?: playerRotation, targetRotation, turnSpeed)
+                currentRotation = limitAngleChange(currentRotation ?: playerRotation, targetRotation, turnSpeed)
             }
         }
     }
 
     fun needsUpdate(lastYaw: Float, lastPitch: Float): Boolean {
-        // Update current rotation
-        update()
-
         // Check if something changed
-        val (currYaw, currPitch) = currentRotation ?: return false
+        val (currYaw, currPitch) = currentRotation?.fixedSensitivity() ?: return false
 
         return lastYaw != currYaw || lastPitch != currPitch
     }
@@ -327,7 +322,7 @@ object RotationManager : Listenable {
      * Calculate difference between the server rotation and your rotation
      */
     fun rotationDifference(rotation: Rotation): Double {
-        return if (serverRotation == null) 0.0 else rotationDifference(rotation, serverRotation!!)
+        return rotationDifference(rotation, serverRotation ?: Rotation(0f, 0f))
     }
 
     /**
@@ -397,9 +392,7 @@ object RotationManager : Listenable {
             return if (d < 1.0E-7) {
                 Vec3d.ZERO
             } else {
-                var vec3d = (if (d > 1.0) movementInput.normalize() else movementInput)
-
-                vec3d = vec3d.multiply(speed.toDouble())
+                val vec3d = (if (d > 1.0) movementInput.normalize() else movementInput).multiply(speed.toDouble())
 
                 val f = MathHelper.sin(yaw * 0.017453292f)
                 val g = MathHelper.cos(yaw * 0.017453292f)

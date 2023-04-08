@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -107,7 +107,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     var currentTarget: Target? = null
 
     val shouldGoDown: Boolean
-        get() = this.down && mc.options.keySneak.isPressed
+        get() = this.down && mc.options.sneakKey.isPressed
 
     val rotationUpdateHandler = handler<PlayerNetworkMovementTickEvent> {
         if (it.state != EventState.PRE) {
@@ -121,13 +121,16 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         RotationManager.aimAt(target.rotation, ticks = 30, configurable = rotationsConfigurable)
     }
 
-    val networkTickHandler = repeatable { event ->
+    val networkTickHandler = repeatable {
         val target = currentTarget ?: return@repeatable
 
         val serverRotation = RotationManager.serverRotation ?: return@repeatable
         val rayTraceResult = raycast(4.5, serverRotation) ?: return@repeatable
 
-        if (rayTraceResult.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != target.blockPos || rayTraceResult.side != target.direction || rayTraceResult.pos.y < target.minY || !isValidTarget(rayTraceResult)) {
+        if (rayTraceResult.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != target.blockPos || rayTraceResult.side != target.direction || rayTraceResult.pos.y < target.minY || !isValidTarget(
+                rayTraceResult
+            )
+        ) {
             return@repeatable
         }
 
@@ -157,7 +160,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         val result = interaction.interactBlock(
             player,
-            world,
             Hand.MAIN_HAND,
             rayTraceResult
         )

@@ -78,7 +78,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
     internal fun createBreadcrumbsRenderTask(color: Color4b, positions: List<Double>, tickDelta: Float): RenderTask {
         val vertexFormat = PositionColorVertexFormat()
 
-        vertexFormat.initBuffer(this.positions.size + 1)
+        vertexFormat.initBuffer(positions.size + 2)
 
         for (i in 0 until positions.size / 3) {
             vertexFormat.putVertex {
