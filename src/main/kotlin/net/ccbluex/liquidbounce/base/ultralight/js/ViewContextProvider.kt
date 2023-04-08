@@ -36,7 +36,7 @@ class ViewContextProvider(private val view: ThreadLock<UltralightView>) : Contex
         runCatching {
             view.get().lockJavascriptContext().use { lock -> callback.accept(lock) }
         }.onFailure {
-            logger.warn("An exception occurred which prevented a JavaScript action from being executed by Ultralight JS Engine.")
+            logger.error("An exception occurred which prevented a JavaScript action from being executed by Ultralight JS Engine.", it)
             return@onFailure
         }
     }

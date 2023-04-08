@@ -138,9 +138,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
 
                 arrow.tick()
 
-                players.forEach { pair ->
-                    val player = pair.second
-
+                players.forEach { (entity, player) ->
                     player.tick()
 
                     val playerHitBox = Box(-0.3, 0.0, -0.3, 0.3, 1.8, 0.3).expand(0.3).offset(player.pos)
@@ -148,7 +146,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
                     val raycastResult = playerHitBox.raycast(lastPos, arrow.pos)
 
                     raycastResult.orElse(null)?.let {
-                        return pair.first
+                        return entity
                     }
                 }
             }

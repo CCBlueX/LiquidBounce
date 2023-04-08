@@ -86,8 +86,9 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
                     waitUntil { !player.isBlocking }
                 }
 
-                network.sendPacket(PlayerInteractItemC2SPacket(Hand.MAIN_HAND))
-
+                interaction.sendSequencedPacket(world) { sequence ->
+                    PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence)
+                }
                 if (potHotBar != player.inventory.selectedSlot) {
                     network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
                 }

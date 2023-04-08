@@ -153,8 +153,8 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     /**
      * Hook sprint affect from NoSlow module
      */
-    @Redirect(method = "tickMovement", slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/HungerManager;getFoodLevel()I"), to = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isFallFlying()Z")), at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z"), require = 2, allow = 2)
-    private boolean hookSprintAffect(ClientPlayerEntity playerEntity) {
+    @Redirect(method = "canStartSprinting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z"))
+    private boolean hookSprintAffectStart(ClientPlayerEntity playerEntity) {
         if (ModuleNoSlow.INSTANCE.getEnabled()) {
             return false;
         }
@@ -169,7 +169,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     /**
      * Hook silent rotations
      */
-    @ModifyVariable(method = "sendMovementPackets", at = @At("STORE"), ordinal = 3)
+    @ModifyVariable(method = "sendMovementPackets", at = @At("STORE"), ordinal = 2)
     private boolean hookSilentRotationsCheck(boolean bl4) {
         boolean shouldDisableRotations = ModuleFreeCam.INSTANCE.shouldDisableRotations();
         updatedSilent = RotationManager.INSTANCE.needsUpdate(lastYaw, lastPitch);
@@ -242,12 +242,12 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
         }
     }
 
-    @Redirect(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerAbilities;allowFlying:Z", ordinal = 1))
+    @Redirect(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerAbilities;allowFlying:Z"))
     private boolean hookFreeCamPreventCreativeFly(PlayerAbilities instance) {
         return !ModuleFreeCam.INSTANCE.getEnabled() && instance.allowFlying;
     }
 
-    @ModifyConstant(method = "tickMovement", constant = @Constant(floatValue = 6.0F), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/HungerManager;getFoodLevel()I", ordinal = 0)))
+    @ModifyConstant(method = "canSprint", constant = @Constant(floatValue = 6.0F), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/HungerManager;getFoodLevel()I", ordinal = 0)))
     private float hookSprintIgnoreHunger(float constant) {
         return ModuleSprint.INSTANCE.shouldIgnoreHunger() ? -1F : constant;
     }
@@ -271,7 +271,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
         return ModuleSprint.INSTANCE.shouldSprintOmnidirectionally() ? modifiedIsWalking : this.isWalking();
     }
 
-    @Redirect(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;hasStatusEffect(Lnet/minecraft/entity/effect/StatusEffect;)Z"))
+    @Redirect(method = "canStartSprinting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;hasStatusEffect(Lnet/minecraft/entity/effect/StatusEffect;)Z"))
     private boolean hookSprintIgnoreBlindness(ClientPlayerEntity instance, StatusEffect statusEffect) {
         return !ModuleSprint.INSTANCE.shouldIgnoreBlindness() && instance.hasStatusEffect(statusEffect);
     }

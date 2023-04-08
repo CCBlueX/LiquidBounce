@@ -1,6 +1,6 @@
 <script>
-    import { flip } from "svelte/animate";
-    import { fly } from "svelte/transition";
+    import {flip} from "svelte/animate";
+    import {fly} from "svelte/transition";
     import Module from "./Module.svelte";
 
     function getTextWidth(s) {
@@ -21,9 +21,10 @@
     }
 
     function handleToggleModule(event) {
-        const m = event.getModule().getName();
+        const module = event.getModule();
+        const m = module.getName();
 
-        if (event.getNewState()) {
+        if (event.getNewState() && !module.isHidden()) {
             modules.push({
                 name: m,
             });
@@ -42,7 +43,7 @@
         while (moduleIterator.hasNext()) {
             const m = moduleIterator.next();
 
-            if (!m.getEnabled()) {
+            if (!m.getEnabled() || m.isHidden()) {
                 continue;
             }
 

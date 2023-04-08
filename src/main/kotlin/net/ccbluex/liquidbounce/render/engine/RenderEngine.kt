@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.math.Mat4
 import net.ccbluex.liquidbounce.utils.math.toMat4
 import net.minecraft.client.MinecraftClient
-import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.*
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.regex.Pattern
@@ -82,11 +82,6 @@ object RenderEngine : Listenable {
      * Contains runnables with tasks to run when the render engine ticks the next time
      */
     val deferredForRenderThread: LinkedBlockingQueue<Runnable> = LinkedBlockingQueue()
-
-    /**
-     * What OpenGL level is this client supposed to use? Determined when initialized
-     */
-    var openglLevel: OpenGLLevel = OpenGLLevel.OPENGL3_3
 
     /**
      * Used to recognize what GL version we are on
@@ -152,16 +147,13 @@ object RenderEngine : Listenable {
         val minorVersion = matcher.group(2).toInt()
         val patchVersion = if (matcher.groupCount() >= 5) matcher.group(4)?.toInt() else null
 
-        // At the moment there is only one GL backend to be used and most graphic cards do not support 3.3+. So yeah, try it. If it doesn't work. I don't care.
-        // openglLevel = OpenGLLevel.getBestLevelFor(majorVersion, minorVersion) ?: error("Not supported graphics card")
-
-        logger.info("Found out OpenGL version to be $majorVersion.$minorVersion${if (patchVersion != null) ".$patchVersion" else ""}. Using backend for ${openglLevel.backendInfo}")
+        logger.info("Found out OpenGL version to be $majorVersion.$minorVersion${if (patchVersion != null) ".$patchVersion" else ""}.")
     }
 
     /**
      * Enqueues a task for rendering
      *
-     * @param layer The layer it is suppose to be rendered on (See this class's description)
+     * @param layer The layer it is supposed to be rendered on (See this class's description)
      */
     fun enqueueForRendering(layer: Int, task: RenderTask) {
         this.renderTaskTable[layer].renderTasks.add(task)
@@ -188,9 +180,25 @@ object RenderEngine : Listenable {
      * Draws all enqueued render tasks.
      */
     fun render(tickDelta: Float) {
-        val lvl = this.openglLevel
+        // Get bound VAO
+        val oldVAO = GL30.glGetInteger(GL30.GL_VERTEX_ARRAY_BINDING)
+        // Get bound shader
+        val oldShader = GL20.glGetInteger(GL20.GL_CURRENT_PROGRAM)
+        // Get bound texture
+        val oldTexture = GL11.glGetInteger(GL11.GL_TEXTURE_BINDING_2D)
+        // Get bound framebuffer
+        val oldFramebuffer = GL30.glGetInteger(GL30.GL_FRAMEBUFFER_BINDING)
+        // Get bound array buffer
+        val oldArrayBuffer = GL15.glGetInteger(GL15.GL_ARRAY_BUFFER_BINDING)
+        // Get bound element array buffer
+        val oldElementArrayBuffer = GL15.glGetInteger(GL15.GL_ELEMENT_ARRAY_BUFFER_BINDING)
 
-        GL11.glEnable(GL11.GL_BLEND)
+        // Get blend state
+        val oldBlendState = GL11.glGetBoolean(GL11.GL_BLEND)
+
+        if (!oldBlendState) {
+            GL11.glEnable(GL11.GL_BLEND)
+        }
 
         for ((idx, layer) in renderTaskTable.withIndex()) {
             // Don't calculate mvp matrices for empty layers
@@ -213,12 +221,23 @@ object RenderEngine : Listenable {
             }
 
             for (renderTask in layer.renderTasks) {
-                renderTask.initRendering(lvl, settings.mvpMatrix)
-                renderTask.draw(lvl)
-                renderTask.cleanupRendering(lvl)
+                renderTask.initRendering(settings.mvpMatrix)
+                renderTask.draw()
+                renderTask.cleanupRendering()
             }
 
             layer.renderTasks.clear()
+        }
+
+        GL32.glBindVertexArray(oldVAO)
+        GL20.glUseProgram(oldShader)
+        GL11.glBindTexture(GL11.GL_TEXTURE_2D, oldTexture)
+        GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, oldFramebuffer)
+        GL15.glBindBuffer(GL15.GL_ARRAY_BUFFER, oldArrayBuffer)
+        GL15.glBindBuffer(GL15.GL_ELEMENT_ARRAY_BUFFER, oldElementArrayBuffer)
+
+        if (!oldBlendState) {
+            GL11.glDisable(GL11.GL_BLEND)
         }
     }
 

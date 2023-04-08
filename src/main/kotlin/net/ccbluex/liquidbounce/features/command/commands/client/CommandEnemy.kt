@@ -56,7 +56,7 @@ object CommandEnemy {
             )
             .subcommand(
                 CommandBuilder
-                    .begin("players")
+                    .begin("mobs")
                     .handler { command, _ ->
                         globalEnemyConfigurable.mobs = !globalEnemyConfigurable.mobs
 
