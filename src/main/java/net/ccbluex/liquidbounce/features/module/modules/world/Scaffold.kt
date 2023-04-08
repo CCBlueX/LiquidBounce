@@ -20,7 +20,6 @@ import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.getRotationDifference
 import net.ccbluex.liquidbounce.utils.RotationUtils.getVectorForRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.limitAngleChange
-import net.ccbluex.liquidbounce.utils.RotationUtils.resetRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.targetRotation
@@ -355,18 +354,6 @@ object Scaffold : Module() {
     }
 
     @EventTarget
-    fun onStrafe(event: StrafeEvent) {
-        if (!strafeValue.get()) {
-            return
-        }
-
-        val rotation = targetRotation ?: return
-
-        rotation.applyStrafeToPlayer(event)
-        event.cancelEvent()
-    }
-
-    @EventTarget
     fun onMotion(event: MotionEvent) {
         val rotation = targetRotation
 
@@ -428,7 +415,7 @@ object Scaffold : Module() {
         val player = mc.thePlayer ?: return
 
         if (silentRotationValue.get()) {
-            setTargetRotation(rotation, ticks)
+            setTargetRotation(rotation, ticks, strafeValue.get())
         } else {
             rotation.fixedSensitivity().let {
                 player.rotationYaw = it.yaw
@@ -620,8 +607,6 @@ object Scaffold : Module() {
         if (slot != player.inventory.currentItem) {
             mc.netHandler.addToSendQueue(C09PacketHeldItemChange(player.inventory.currentItem))
         }
-
-        resetRotation()
     }
 
     // Entity movement event
@@ -790,9 +775,7 @@ object Scaffold : Module() {
 
         if (rotationsValue.get()) {
             val limitedRotation = limitAngleChange(
-                currRotation,
-                placeRotation.rotation,
-                nextFloat(minTurnSpeedValue.get(), maxTurnSpeedValue.get())
+                currRotation, placeRotation.rotation, nextFloat(minTurnSpeedValue.get(), maxTurnSpeedValue.get())
             )
 
             setRotation(limitedRotation, keepTicksValue.get())

@@ -169,11 +169,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             float yaw = rotationYaw;
             float pitch = rotationPitch;
 
-            final Rotation serverRotation = RotationUtils.INSTANCE.getServerRotation();
             final Rotation targetRotation = RotationUtils.INSTANCE.getTargetRotation();
-
-            float lastReportedYaw = serverRotation.getYaw();
-            float lastReportedPitch = serverRotation.getPitch();
 
             final Derp derp = Derp.INSTANCE;
             if (derp.getState()) {
@@ -190,8 +186,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             double xDiff = posX - lastReportedPosX;
             double yDiff = getEntityBoundingBox().minY - lastReportedPosY;
             double zDiff = posZ - lastReportedPosZ;
-            double yawDiff = yaw - lastReportedYaw;
-            double pitchDiff = pitch - lastReportedPitch;
+            double yawDiff = yaw - this.lastReportedYaw;
+            double pitchDiff = pitch - this.lastReportedPitch;
             boolean moved = xDiff * xDiff + yDiff * yDiff + zDiff * zDiff > 9.0E-4D || positionUpdateTicks >= 20;
             boolean rotated = yawDiff != 0.0D || pitchDiff != 0.0D;
 
@@ -220,8 +216,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             }
 
             if (rotated) {
-                this.lastReportedYaw = rotationYaw;
-                this.lastReportedPitch = rotationPitch;
+                this.lastReportedYaw = yaw;
+                this.lastReportedPitch = pitch;
             }
         }
 
@@ -357,7 +353,12 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         }
 
         final Scaffold scaffold = Scaffold.INSTANCE;
-        if ((scaffold.getState() && !scaffold.getSprintValue().get()) || (sprint.getState() && !legitSprint && sprint.getCheckServerSide().get() && (onGround || !sprint.getCheckServerSideGround().get()) && !sprint.getAllDirectionsValue().get() && RotationUtils.INSTANCE.getTargetRotation() != null && RotationUtils.INSTANCE.getRotationDifference(new Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)) > 30))
+
+        final Rotation targetRotation = RotationUtils.INSTANCE.getTargetRotation();
+
+        boolean shouldStop = targetRotation != null && movementInput.moveForward * MathHelper.cos((rotationYaw - targetRotation.getYaw()) * 3.1415927F / 180.0F) + movementInput.moveStrafe * MathHelper.sin((rotationYaw - targetRotation.getYaw()) * 3.1415927F / 180.0F) < 0.8;
+
+        if ((scaffold.getState() && !scaffold.getSprintValue().get()) || (sprint.getState() && !legitSprint && sprint.getCheckServerSide().get() && (onGround || !sprint.getCheckServerSideGround().get()) && !sprint.getAllDirectionsValue().get() && shouldStop))
             setSprinting(false);
 
         if (isSprinting() && ((!(sprint.getState() && !legitSprint && sprint.getAllDirectionsValue().get()) && movementInput.moveForward < f) || isCollidedHorizontally || !flag3)) {
