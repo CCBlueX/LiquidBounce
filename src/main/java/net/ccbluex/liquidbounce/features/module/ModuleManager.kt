@@ -192,7 +192,8 @@ object ModuleManager : Listenable {
             WallClimb,
             WaterSpeed,
             XRay,
-            Zoot
+            Zoot,
+            NoFluid
         )
 
         LOGGER.info("[ModuleManager] Loaded ${modules.size} modules.")
