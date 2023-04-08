@@ -28,11 +28,9 @@ object Fonts : MinecraftInstance() {
     val minecraftFont: FontRenderer = mc.fontRendererObj
 
     @FontDetails(fontName = "Roboto Medium", fontSize = 35)
-    @JvmStatic
     lateinit var font35: GameFontRenderer
 
     @FontDetails(fontName = "Roboto Medium", fontSize = 40)
-    @JvmStatic
     lateinit var font40: GameFontRenderer
 
     @FontDetails(fontName = "Roboto Bold", fontSize = 180)

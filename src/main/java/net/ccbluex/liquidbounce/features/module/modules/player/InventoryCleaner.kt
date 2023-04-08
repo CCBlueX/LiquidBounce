@@ -12,13 +12,14 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.AutoArmor
+import net.ccbluex.liquidbounce.features.module.modules.combat.AutoArmor.ARMOR_COMPARATOR
 import net.ccbluex.liquidbounce.injection.implementations.IMixinItemStack
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils
+import net.ccbluex.liquidbounce.utils.timer.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -29,6 +30,7 @@ import net.minecraft.init.Blocks
 import net.minecraft.item.*
 import net.minecraft.network.play.client.C0DPacketCloseWindow
 import net.minecraft.network.play.client.C16PacketClientStatus
+import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT
 
 
 @ModuleInfo(
@@ -63,7 +65,15 @@ object InventoryCleaner : Module() {
     private val simulateInventory = object : BoolValue("SimulateInventory", true) {
         override fun isSupported() = !invOpenValue.get()
     }
-    private val noMoveValue = BoolValue("NoMove", false)
+
+    private val noMoveValue = BoolValue("NoMoveClicks", false)
+    private val noMoveAirValue = object : BoolValue("NoClicksInAir", false) {
+        override fun isSupported() = noMoveValue.get()
+    }
+    private val noMoveGroundValue = object : BoolValue("NoClicksOnGround", true) {
+        override fun isSupported() = noMoveValue.get()
+    }
+
     private val ignoreVehiclesValue = BoolValue("IgnoreVehicles", false)
     private val hotbarValue = BoolValue("Hotbar", true)
     private val randomSlotValue = BoolValue("RandomSlot", false)
@@ -103,13 +113,18 @@ object InventoryCleaner : Module() {
      * VALUES
      */
 
-    private var delay = 0L
+    private var delay = 0
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        if (!InventoryUtils.CLICK_TIMER.hasTimePassed(delay) || mc.currentScreen !is GuiInventory && invOpenValue.get() || noMoveValue.get() && isMoving || thePlayer.openContainer != null && thePlayer.openContainer.windowId != 0 || (moduleManager[AutoArmor::class.java] as AutoArmor).isLocked) {
+        if (!InventoryUtils.CLICK_TIMER.hasTimePassed(delay)
+            || mc.currentScreen !is GuiInventory && invOpenValue.get()
+            || noMoveValue.get() && isMoving &&
+                    if (mc.thePlayer.onGround) noMoveGroundValue.get() else noMoveAirValue.get()
+            || thePlayer.openContainer != null && thePlayer.openContainer.windowId != 0
+            || (moduleManager[AutoArmor::class.java] as AutoArmor).isLocked) {
             return
         }
 
@@ -132,7 +147,7 @@ object InventoryCleaner : Module() {
             val openInventory = mc.currentScreen !is GuiInventory && simulateInventory.get()
 
             if (openInventory) {
-                mc.netHandler.addToSendQueue(C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT))
+                mc.netHandler.addToSendQueue(C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT))
             }
 
             mc.playerController.windowClick(thePlayer.openContainer.windowId, garbageItem, 1, 4, thePlayer)
@@ -141,7 +156,7 @@ object InventoryCleaner : Module() {
                 mc.netHandler.addToSendQueue(C0DPacketCloseWindow())
             }
 
-            delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+            delay = randomDelay(minDelayValue.get(), maxDelayValue.get())
         }
     }
 
@@ -163,7 +178,7 @@ object InventoryCleaner : Module() {
 
                 for (i in 0..8) {
                     if ((type(i) == "Sword" && item is ItemSword || type(i) == "Pickaxe" && item is ItemPickaxe
-                        || type(i) == "Axe" && item is ItemAxe) && findBetterItem(i, thePlayer.inventory.getStackInSlot(i)) == null)
+                                || type(i) == "Axe" && item is ItemAxe) && findBetterItem(i, thePlayer.inventory.getStackInSlot(i)) == null)
                         return true
                 }
 
@@ -192,7 +207,7 @@ object InventoryCleaner : Module() {
                         val armor = ArmorPiece(stack, slot)
 
                         if (armor.armorType != currArmor.armorType) false
-                        else AutoArmor.ARMOR_COMPARATOR.compare(currArmor, armor) <= 0
+                        else ARMOR_COMPARATOR.compare(currArmor, armor) <= 0
                     } else false
                 }
             } else if (itemStack.unlocalizedName == "item.compass") {
@@ -221,7 +236,7 @@ object InventoryCleaner : Module() {
             if (bestItem != index) {
                 val openInventory = mc.currentScreen !is GuiInventory && simulateInventory.get()
 
-                if (openInventory) mc.netHandler.addToSendQueue(C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT))
+                if (openInventory) mc.netHandler.addToSendQueue(C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT))
 
                 mc.playerController.windowClick(
                     0, if (bestItem < 9) bestItem + 36 else bestItem, index, 2, thePlayer
@@ -229,7 +244,7 @@ object InventoryCleaner : Module() {
 
                 if (openInventory) mc.netHandler.addToSendQueue(C0DPacketCloseWindow())
 
-                delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+                delay = randomDelay(minDelayValue.get(), maxDelayValue.get())
                 break
             }
         }

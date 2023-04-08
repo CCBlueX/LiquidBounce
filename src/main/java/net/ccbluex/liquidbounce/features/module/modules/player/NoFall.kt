@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
@@ -35,7 +34,6 @@ import kotlin.math.sqrt
 @ModuleInfo(name = "NoFall", description = "Prevents you from taking fall damage.", category = ModuleCategory.PLAYER)
 object NoFall : Module() {
 
-    @JvmField
     val modeValue = ListValue(
         "Mode", arrayOf(
             "SpoofGround",
@@ -68,7 +66,7 @@ object NoFall : Module() {
 
         if (mc.thePlayer.motionY > 0) jumped = true
 
-        if (!state || moduleManager[FreeCam::class.java].state) return
+        if (!state || FreeCam.state) return
 
         if (collideBlock(mc.thePlayer.entityBoundingBox) { it is BlockLiquid } || collideBlock(
                 AxisAlignedBB.fromBounds(

@@ -27,7 +27,6 @@ import kotlin.math.sin
 object RenderUtils : MinecraftInstance() {
     private val glCapMap: MutableMap<Int, Boolean> = HashMap()
     private val DISPLAY_LISTS_2D = IntArray(4)
-    @JvmField
     var deltaTime = 0
 
     init {
@@ -208,7 +207,6 @@ object RenderUtils : MinecraftInstance() {
         )
     }
 
-    @JvmStatic
     fun drawFilledBox(axisAlignedBB: AxisAlignedBB) {
         val tessellator = Tessellator.getInstance()
         val worldRenderer = tessellator.worldRenderer
@@ -380,7 +378,6 @@ object RenderUtils : MinecraftInstance() {
         glEnd()
     }
 
-    @JvmStatic
     fun drawLoadingCircle(x: Float, y: Float) {
         for (i in 0..3) {
             val rot = (System.nanoTime() / 5000000 * i % 360).toInt()
@@ -482,18 +479,13 @@ object RenderUtils : MinecraftInstance() {
         tessellator.draw()
     }
 
-    fun glColor(red: Int, green: Int, blue: Int, alpha: Int) {
+    fun glColor(red: Int, green: Int, blue: Int, alpha: Int) =
         glColor4f(red / 255f, green / 255f, blue / 255f, alpha / 255f)
-    }
 
-    @JvmStatic
-    fun glColor(color: Color) {
-        glColor(color.red, color.green, color.blue, color.alpha)
-    }
+    fun glColor(color: Color) = glColor(color.red, color.green, color.blue, color.alpha)
 
-    private fun glColor(hex: Int) {
+    private fun glColor(hex: Int) =
         glColor(hex shr 16 and 0xFF, hex shr 8 and 0xFF, hex and 0xFF, hex shr 24 and 0xFF)
-    }
 
     fun draw2D(entity: EntityLivingBase, posX: Double, posY: Double, posZ: Double, color: Int, backgroundColor: Int) {
         glPushMatrix()
@@ -553,7 +545,6 @@ object RenderUtils : MinecraftInstance() {
         glPopMatrix()
     }
 
-    @JvmStatic
     fun renderNameTag(string: String, x: Double, y: Double, z: Double) {
         val renderManager = mc.renderManager
         glPushMatrix()
@@ -584,7 +575,6 @@ object RenderUtils : MinecraftInstance() {
         glEnable(GL_TEXTURE_2D)
     }
 
-    @JvmStatic
     fun makeScissorBox(x: Float, y: Float, x2: Float, y2: Float) {
         val scaledResolution = ScaledResolution(mc)
         val factor = scaledResolution.scaleFactor

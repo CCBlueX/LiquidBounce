@@ -15,9 +15,13 @@ import net.minecraft.entity.player.EntityPlayer
 
 
 object RaycastUtils : MinecraftInstance() {
-    @JvmStatic
     @JvmOverloads
-    fun raycastEntity(range: Double, yaw: Float = serverRotation.yaw, pitch: Float = serverRotation.pitch, entityFilter: (Entity) -> Boolean): Entity? {
+    fun raycastEntity(
+        range: Double,
+        yaw: Float = serverRotation.yaw,
+        pitch: Float = serverRotation.pitch,
+        entityFilter: (Entity) -> Boolean
+    ): Entity? {
         val renderViewEntity = mc.renderViewEntity
 
         if (renderViewEntity != null && mc.theWorld != null) {
@@ -30,21 +34,20 @@ object RaycastUtils : MinecraftInstance() {
                 entityLook.zCoord * blockReachDistance
             )
 
-            val entityList = mc.theWorld.getEntitiesInAABBexcluding(renderViewEntity,
-                renderViewEntity.entityBoundingBox.addCoord(
+            val entityList = mc.theWorld.getEntitiesInAABBexcluding(
+                renderViewEntity, renderViewEntity.entityBoundingBox.addCoord(
                     entityLook.xCoord * blockReachDistance,
                     entityLook.yCoord * blockReachDistance,
                     entityLook.zCoord * blockReachDistance
-                ).expand(1.0, 1.0, 1.0))
-            {
+                ).expand(1.0, 1.0, 1.0)
+            ) {
                 it != null && (it !is EntityPlayer || !it.isSpectator) && it.canBeCollidedWith()
             }
 
             var pointedEntity: Entity? = null
 
             for (entity in entityList) {
-                if (!entityFilter(entity))
-                    continue
+                if (!entityFilter(entity)) continue
 
                 val checkEntity = {
                     val axisAlignedBB = entity.hitBox
@@ -61,8 +64,7 @@ object RaycastUtils : MinecraftInstance() {
 
                         if (eyeDistance < blockReachDistance || blockReachDistance == 0.0) {
                             if (entity == renderViewEntity.ridingEntity && !renderViewEntity.canRiderInteract()) {
-                                if (blockReachDistance == 0.0)
-                                    pointedEntity = entity
+                                if (blockReachDistance == 0.0) pointedEntity = entity
                             } else {
                                 pointedEntity = entity
                                 blockReachDistance = eyeDistance

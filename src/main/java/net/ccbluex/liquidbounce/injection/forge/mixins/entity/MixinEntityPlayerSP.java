@@ -17,7 +17,9 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.Sprint;
 import net.ccbluex.liquidbounce.features.module.modules.render.NoSwing;
 import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold;
 import net.ccbluex.liquidbounce.utils.CooldownHelper;
+import net.ccbluex.liquidbounce.utils.MovementUtils;
 import net.ccbluex.liquidbounce.utils.Rotation;
+import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockFence;
 import net.minecraft.block.BlockFenceGate;
@@ -49,11 +51,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
-
-import static net.ccbluex.liquidbounce.LiquidBounce.eventManager;
-import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
-import static net.ccbluex.liquidbounce.utils.MovementUtils.isMoving;
-import static net.ccbluex.liquidbounce.utils.RotationUtils.*;
 
 @Mixin(EntityPlayerSP.class)
 @SideOnly(Side.CLIENT)
@@ -140,11 +137,11 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
      */
     @Inject(method = "onUpdateWalkingPlayer", at = @At("HEAD"), cancellable = true)
     private void onUpdateWalkingPlayer(CallbackInfo ci) {
-        eventManager.callEvent(new MotionEvent(EventState.PRE));
+        EventManager.INSTANCE.callEvent(new MotionEvent(EventState.PRE));
 
         final InventoryMove inventoryMove = InventoryMove.INSTANCE;
         final Sneak sneak = Sneak.INSTANCE;
-        final boolean fakeSprint = (inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get()) || AntiHunger.INSTANCE.getState() || (sneak.getState() && (!isMoving() || !sneak.stopMoveValue.get()) && sneak.modeValue.get().equals("MineSecure"));
+        final boolean fakeSprint = (inventoryMove.getState() && inventoryMove.getAacAdditionProValue().get()) || AntiHunger.INSTANCE.getState() || (sneak.getState() && (!MovementUtils.INSTANCE.isMoving() || !sneak.getStopMoveValue().get()) && sneak.getModeValue().get().equals("MineSecure"));
 
         boolean sprinting = isSprinting() && !fakeSprint;
 
@@ -159,7 +156,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
         boolean sneaking = isSneaking();
 
-        if (sneaking != serverSneakState && (!sneak.getState() || sneak.modeValue.get().equals("Legit"))) {
+        if (sneaking != serverSneakState && (!sneak.getState() || sneak.getModeValue().get().equals("Legit"))) {
             if (sneaking)
                 sendQueue.addToSendQueue(new C0BPacketEntityAction((EntityPlayerSP) (Object) this, C0BPacketEntityAction.Action.START_SNEAKING));
             else
@@ -171,8 +168,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         if (isCurrentViewEntity()) {
             float yaw = rotationYaw;
             float pitch = rotationPitch;
-            float lastReportedYaw = serverRotation.getYaw();
-            float lastReportedPitch = serverRotation.getPitch();
+
+            final Rotation targetRotation = RotationUtils.INSTANCE.getTargetRotation();
 
             final Derp derp = Derp.INSTANCE;
             if (derp.getState()) {
@@ -189,8 +186,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             double xDiff = posX - lastReportedPosX;
             double yDiff = getEntityBoundingBox().minY - lastReportedPosY;
             double zDiff = posZ - lastReportedPosZ;
-            double yawDiff = yaw - lastReportedYaw;
-            double pitchDiff = pitch - lastReportedPitch;
+            double yawDiff = yaw - this.lastReportedYaw;
+            double pitchDiff = pitch - this.lastReportedPitch;
             boolean moved = xDiff * xDiff + yDiff * yDiff + zDiff * zDiff > 9.0E-4D || positionUpdateTicks >= 20;
             boolean rotated = yawDiff != 0.0D || pitchDiff != 0.0D;
 
@@ -219,12 +216,12 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             }
 
             if (rotated) {
-                this.lastReportedYaw = rotationYaw;
-                this.lastReportedPitch = rotationPitch;
+                this.lastReportedYaw = yaw;
+                this.lastReportedPitch = pitch;
             }
         }
 
-        eventManager.callEvent(new MotionEvent(EventState.POST));
+        EventManager.INSTANCE.callEvent(new MotionEvent(EventState.POST));
 
         ci.cancel();
     }
@@ -251,7 +248,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         if (noClip) {
             event.cancelEvent();
         }
-        eventManager.callEvent(event);
+        EventManager.INSTANCE.callEvent(event);
 
         if (event.isCancelled()) {
             callbackInfoReturnable.setReturnValue(false);
@@ -263,7 +260,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
      */
     @Overwrite
     public void onLivingUpdate() {
-        eventManager.callEvent(new UpdateEvent());
+        EventManager.INSTANCE.callEvent(new UpdateEvent());
 
         if (sprintingTicksLeft > 0) {
             --sprintingTicksLeft;
@@ -326,7 +323,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
         if (getHeldItem() != null && (isUsingItem() || (getHeldItem().getItem() instanceof ItemSword && killAura.getBlockStatus())) && !isRiding()) {
             final SlowDownEvent slowDownEvent = new SlowDownEvent(0.2F, 0.2F);
-            eventManager.callEvent(slowDownEvent);
+            EventManager.INSTANCE.callEvent(slowDownEvent);
             movementInput.moveStrafe *= slowDownEvent.getStrafe();
             movementInput.moveForward *= slowDownEvent.getForward();
             sprintToggleTimer = 0;
@@ -337,11 +334,11 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         pushOutOfBlocks(posX + (double) width * 0.35D, getEntityBoundingBox().minY + 0.5D, posZ - (double) width * 0.35D);
         pushOutOfBlocks(posX + (double) width * 0.35D, getEntityBoundingBox().minY + 0.5D, posZ + (double) width * 0.35D);
 
-        final Sprint sprint = (Sprint) moduleManager.getModule(Sprint.class);
+        final Sprint sprint = Sprint.INSTANCE;
 
-        final boolean legitSprint = sprint.modeValue.get().equals("Legit");
+        final boolean legitSprint = sprint.getModeValue().get().equals("Legit");
 
-        boolean flag3 = !(sprint.getState() && !legitSprint && sprint.foodValue.get()) || (float) getFoodStats().getFoodLevel() > 6f || capabilities.allowFlying;
+        boolean flag3 = !(sprint.getState() && !legitSprint && sprint.getFoodValue().get()) || (float) getFoodStats().getFoodLevel() > 6f || capabilities.allowFlying;
 
         if (onGround && !flag1 && !flag2 && movementInput.moveForward >= f && !isSprinting() && flag3 && !isUsingItem() && !isPotionActive(Potion.blindness)) {
             if (sprintToggleTimer <= 0 && !mc.gameSettings.keyBindSprint.isKeyDown()) {
@@ -356,10 +353,15 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         }
 
         final Scaffold scaffold = Scaffold.INSTANCE;
-        if ((scaffold.getState() && !scaffold.sprintValue.get()) || (sprint.getState() && !legitSprint && sprint.checkServerSide.get() && (onGround || !sprint.checkServerSideGround.get()) && !sprint.allDirectionsValue.get() && targetRotation != null && getRotationDifference(new Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)) > 30))
+
+        final Rotation targetRotation = RotationUtils.INSTANCE.getTargetRotation();
+
+        boolean shouldStop = targetRotation != null && movementInput.moveForward * MathHelper.cos((rotationYaw - targetRotation.getYaw()) * 3.1415927F / 180.0F) + movementInput.moveStrafe * MathHelper.sin((rotationYaw - targetRotation.getYaw()) * 3.1415927F / 180.0F) < 0.8;
+
+        if ((scaffold.getState() && !scaffold.getSprintValue().get()) || (sprint.getState() && !legitSprint && sprint.getCheckServerSide().get() && (onGround || !sprint.getCheckServerSideGround().get()) && !sprint.getAllDirectionsValue().get() && shouldStop))
             setSprinting(false);
 
-        if (isSprinting() && ((!(sprint.getState() && !legitSprint && sprint.allDirectionsValue.get()) && movementInput.moveForward < f) || isCollidedHorizontally || !flag3)) {
+        if (isSprinting() && ((!(sprint.getState() && !legitSprint && sprint.getAllDirectionsValue().get()) && movementInput.moveForward < f) || isCollidedHorizontally || !flag3)) {
             setSprinting(false);
         }
 
@@ -429,7 +431,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
     @Override
     public void moveEntity(double x, double y, double z) {
         MoveEvent moveEvent = new MoveEvent(x, y, z);
-        eventManager.callEvent(moveEvent);
+        EventManager.INSTANCE.callEvent(moveEvent);
 
         if (moveEvent.isCancelled()) return;
 
@@ -535,7 +537,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
             if (stepHeight > 0f && flag1 && (d3 != x || d5 != z)) {
                 StepEvent stepEvent = new StepEvent(stepHeight);
-                eventManager.callEvent(stepEvent);
+                EventManager.INSTANCE.callEvent(stepEvent);
                 double d11 = x;
                 double d7 = y;
                 double d8 = z;
@@ -616,7 +618,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                     z = d8;
                     setEntityBoundingBox(axisalignedbb3);
                 } else {
-                    eventManager.callEvent(new StepConfirmEvent());
+                    EventManager.INSTANCE.callEvent(new StepConfirmEvent());
                 }
             }
 

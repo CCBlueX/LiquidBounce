@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.file.FileManager.saveConfig
 import net.ccbluex.liquidbounce.file.FileManager.shortcutsConfig
 import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 
-class CommandManager {
+object CommandManager {
     val commands = mutableListOf<Command>()
     var latestAutoComplete = emptyArray<String>()
 
@@ -23,6 +23,8 @@ class CommandManager {
      * Register all default commands
      */
     fun registerCommands() {
+        commands.clear()
+
         registerCommand(BindCommand())
         registerCommand(VClipCommand())
         registerCommand(HClipCommand())

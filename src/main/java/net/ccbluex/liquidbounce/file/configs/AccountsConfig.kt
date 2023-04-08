@@ -20,7 +20,7 @@ import java.io.*
 
 class AccountsConfig(file: File) : FileConfig(file) {
 
-    val accounts: MutableList<MinecraftAccount> = ArrayList()
+    val accounts = mutableListOf<MinecraftAccount>()
 
     /**
      * Load config from file
@@ -85,7 +85,7 @@ class AccountsConfig(file: File) : FileConfig(file) {
         for (minecraftAccount in accounts)
             jsonArray.add(toJson(minecraftAccount))
 
-        file.writeText(PRETTY_GSON.toJson(accounts))
+        file.writeText(PRETTY_GSON.toJson(jsonArray))
     }
 
     /**

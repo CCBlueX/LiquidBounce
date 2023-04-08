@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils
+import net.ccbluex.liquidbounce.utils.timer.TimeUtils.randomClickDelay
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.client.settings.KeyBinding
 
@@ -22,7 +22,7 @@ object Trigger : Module() {
         override fun onChanged(oldValue: Int, newValue: Int) {
             val i = minCPS.get()
             if (i > newValue) set(i)
-            delay = TimeUtils.randomClickDelay(minCPS.get(), get())
+            delay = randomClickDelay(minCPS.get(), get())
         }
     }
 
@@ -30,13 +30,13 @@ object Trigger : Module() {
         override fun onChanged(oldValue: Int, newValue: Int) {
             val i = maxCPS.get()
             if (i < newValue) set(i)
-            delay = TimeUtils.randomClickDelay(get(), maxCPS.get())
+            delay = randomClickDelay(get(), maxCPS.get())
         }
 
         override fun isSupported() = !maxCPS.isMinimal()
     }
 
-    private var delay = TimeUtils.randomClickDelay(minCPS.get(), maxCPS.get())
+    private var delay = randomClickDelay(minCPS.get(), maxCPS.get())
     private var lastSwing = 0L
 
     @EventTarget
@@ -48,7 +48,7 @@ object Trigger : Module() {
             KeyBinding.onTick(mc.gameSettings.keyBindAttack.keyCode) // Minecraft Click handling
 
             lastSwing = System.currentTimeMillis()
-            delay = TimeUtils.randomClickDelay(minCPS.get(), maxCPS.get())
+            delay = randomClickDelay(minCPS.get(), maxCPS.get())
         }
     }
 }

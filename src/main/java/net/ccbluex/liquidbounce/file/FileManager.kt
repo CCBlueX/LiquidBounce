@@ -69,7 +69,7 @@ object FileManager : MinecraftInstance() {
      */
     fun loadAllConfigs() {
         for (field in javaClass.declaredFields) {
-            if (field.type == FileConfig::class.java) {
+            if (FileConfig::class.java.isAssignableFrom(field.type)) {
                 try {
                     if (!field.isAccessible) field.isAccessible = true
                     val fileConfig = field[this] as FileConfig
@@ -114,7 +114,7 @@ object FileManager : MinecraftInstance() {
      */
     fun saveAllConfigs() {
         for (field in javaClass.declaredFields) {
-            if (field.type == FileConfig::class.java) {
+            if (FileConfig::class.java.isAssignableFrom(field.type)) {
                 try {
                     if (!field.isAccessible) field.isAccessible = true
                     val fileConfig = field[this] as FileConfig
@@ -138,28 +138,18 @@ object FileManager : MinecraftInstance() {
     /**
      * Save one config
      *
-     * @param config to save
-     */
-    fun saveConfig(config: FileConfig) = saveConfig(config, false)
-
-    /**
-     * Save one config
-     *
      * @param config         to save
      * @param ignoreStarting check starting
      */
-    private fun saveConfig(config: FileConfig, ignoreStarting: Boolean) {
-        if (!ignoreStarting && isStarting) return
+    fun saveConfig(config: FileConfig, ignoreStarting: Boolean = true) {
+        if (ignoreStarting && isStarting) return
 
         try {
             if (!config.hasConfig()) config.createConfig()
             config.saveConfig()
-            LOGGER.info("[FileManager] Saved config: " + config.file.name + ".")
+            LOGGER.info("[FileManager] Saved config: ${config.file.name}.")
         } catch (t: Throwable) {
-            LOGGER.error(
-                "[FileManager] Failed to save config file: " +
-                        config.file.name + ".", t
-            )
+            LOGGER.error("[FileManager] Failed to save config file: ${config.file.name}.", t)
         }
     }
 

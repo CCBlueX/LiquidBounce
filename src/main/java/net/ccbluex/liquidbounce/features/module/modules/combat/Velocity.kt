@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.PacketEvent
@@ -170,8 +169,7 @@ object Velocity : Module() {
                         thePlayer.onGround = true
 
                     // Reduce Y
-                    if (thePlayer.hurtResistantTime > 0 && aacPushYReducerValue.get()
-                            && !moduleManager[Speed::class.java].state)
+                    if (thePlayer.hurtResistantTime > 0 && aacPushYReducerValue.get() && !Speed.state)
                         thePlayer.motionY -= 0.014999993
                 }
 
@@ -220,7 +218,7 @@ object Velocity : Module() {
 
         val packet = event.packet
 
-        if (packet is S12PacketEntityVelocity && (mc.theWorld?.getEntityByID(packet.entityID) ?: return) != thePlayer) {
+        if (packet is S12PacketEntityVelocity && (mc.theWorld?.getEntityByID(packet.entityID) ?: return) == thePlayer) {
             velocityTimer.reset()
 
             when (modeValue.get().lowercase()) {
@@ -228,12 +226,13 @@ object Velocity : Module() {
                     val horizontal = horizontalValue.get()
                     val vertical = verticalValue.get()
 
-                    if (horizontal == 0F && vertical == 0F)
+                    if (horizontal + vertical > 0.0) {
+                        packet.motionX = (packet.motionX * horizontal).toInt()
+                        packet.motionY = (packet.motionY * vertical).toInt()
+                        packet.motionZ = (packet.motionZ * horizontal).toInt()
+                    } else {
                         event.cancelEvent()
-
-                    packet.motionX = (packet.motionX * horizontal).toInt()
-                    packet.motionY = (packet.motionY * vertical).toInt()
-                    packet.motionZ = (packet.motionZ * horizontal).toInt()
+                    }
                 }
 
                 "aac", "reverse", "smoothreverse", "aaczero" -> velocityInput = true
@@ -252,12 +251,13 @@ object Velocity : Module() {
                     val horizontal = horizontalValue.get()
                     val vertical = verticalValue.get()
 
-                    if (horizontal + vertical > 0) {
+                    if (horizontal + vertical > 0.0) {
                         mc.thePlayer.motionX += packet.func_149149_c() * horizontal
                         mc.thePlayer.motionY += packet.func_149144_d() * vertical
                         mc.thePlayer.motionZ += packet.func_149147_e() * horizontal
+                    } else {
+                        event.cancelEvent()
                     }
-                    event.cancelEvent()
                 }
 
                 "aac", "reverse", "smoothreverse", "aaczero" -> velocityInput = true

@@ -17,15 +17,14 @@ import net.minecraft.network.play.client.C17PacketCustomPayload
 
 object ClientFixes : MinecraftInstance(), Listenable {
 
-    @JvmField
     var fmlFixesEnabled = true
-    @JvmField
+
     var blockFML = true
 
     var blockProxyPacket = true
 
     var blockPayloadPackets = true
-    @JvmField
+
     var blockResourcePackExploit = true
 
     var clientBrand = "Vanilla"

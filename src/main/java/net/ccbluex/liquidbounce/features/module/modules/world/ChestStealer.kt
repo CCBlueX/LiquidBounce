@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
@@ -16,7 +15,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.InventoryCleaner
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils
+import net.ccbluex.liquidbounce.utils.timer.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.client.gui.inventory.GuiChest
@@ -40,7 +39,7 @@ object ChestStealer : Module() {
             if (i > newValue)
                 set(i)
 
-            nextDelay = TimeUtils.randomDelay(minDelayValue.get(), get())
+            nextDelay = randomDelay(minDelayValue.get(), get())
         }
     }
 
@@ -51,7 +50,7 @@ object ChestStealer : Module() {
             if (i < newValue)
                 set(i)
 
-            nextDelay = TimeUtils.randomDelay(get(), maxDelayValue.get())
+            nextDelay = randomDelay(get(), maxDelayValue.get())
         }
 
         override fun isSupported() = !maxDelayValue.isMinimal()
@@ -67,7 +66,7 @@ object ChestStealer : Module() {
         override fun onChanged(oldValue: Int, newValue: Int) {
             val i = autoCloseMinDelayValue.get()
             if (i > newValue) set(i)
-            nextCloseDelay = TimeUtils.randomDelay(autoCloseMinDelayValue.get(), get())
+            nextCloseDelay = randomDelay(autoCloseMinDelayValue.get(), get())
         }
 
         override fun isSupported() = autoCloseValue.get()
@@ -77,7 +76,7 @@ object ChestStealer : Module() {
         override fun onChanged(oldValue: Int, newValue: Int) {
             val i = autoCloseMaxDelayValue.get()
             if (i < newValue) set(i)
-            nextCloseDelay = TimeUtils.randomDelay(get(), autoCloseMaxDelayValue.get())
+            nextCloseDelay = randomDelay(get(), autoCloseMaxDelayValue.get())
         }
 
         override fun isSupported() = autoCloseValue.get() && !autoCloseMaxDelayValue.isMinimal()
@@ -91,10 +90,10 @@ object ChestStealer : Module() {
      */
 
     private val delayTimer = MSTimer()
-    private var nextDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+    private var nextDelay = randomDelay(minDelayValue.get(), maxDelayValue.get())
 
     private val autoCloseTimer = MSTimer()
-    private var nextCloseDelay = TimeUtils.randomDelay(autoCloseMinDelayValue.get(), autoCloseMaxDelayValue.get())
+    private var nextCloseDelay = randomDelay(autoCloseMinDelayValue.get(), autoCloseMaxDelayValue.get())
 
     private var contentReceived = 0
 
@@ -127,9 +126,6 @@ object ChestStealer : Module() {
             ItemStack(Item.itemRegistry.getObject(ResourceLocation("minecraft:chest"))).displayName !in screen.lowerChestInventory.name))
             return
 
-        // inventory cleaner
-        val inventoryCleaner = moduleManager[InventoryCleaner::class.java] as InventoryCleaner
-
         // Is empty?
         if (!isEmpty(screen) && (!closeOnFullValue.get() || !fullInventory)) {
             autoCloseTimer.reset()
@@ -144,7 +140,7 @@ object ChestStealer : Module() {
 
                         val stack = slot.stack
 
-                        if (stack != null && (!onlyItemsValue.get() || stack.item !is ItemBlock) && (!inventoryCleaner.state || inventoryCleaner.isUseful(stack, -1)))
+                        if (stack != null && (!onlyItemsValue.get() || stack.item !is ItemBlock) && (!InventoryCleaner.state || InventoryCleaner.isUseful(stack, -1)))
                             items.add(slot)
                     }
 
@@ -162,13 +158,13 @@ object ChestStealer : Module() {
 
                 val stack = slot.stack
 
-                if (delayTimer.hasTimePassed(nextDelay) && shouldTake(stack, inventoryCleaner)) {
+                if (delayTimer.hasTimePassed(nextDelay) && shouldTake(stack)) {
                     move(screen, slot)
                 }
             }
         } else if (autoCloseValue.get() && screen.inventorySlots.windowId == contentReceived && autoCloseTimer.hasTimePassed(nextCloseDelay)) {
             thePlayer.closeScreen()
-            nextCloseDelay = TimeUtils.randomDelay(autoCloseMinDelayValue.get(), autoCloseMaxDelayValue.get())
+            nextCloseDelay = randomDelay(autoCloseMinDelayValue.get(), autoCloseMaxDelayValue.get())
         }
     }
 
@@ -181,32 +177,30 @@ object ChestStealer : Module() {
         }
     }
 
-    private fun shouldTake(stack: ItemStack?, inventoryCleaner: InventoryCleaner): Boolean {
+    private fun shouldTake(stack: ItemStack?): Boolean {
         return stack != null && !ItemUtils.isStackEmpty(stack) && (!onlyItemsValue.get() || stack.item !is ItemBlock)
-                && (!inventoryCleaner.state || inventoryCleaner.isUseful(stack, -1))
+                && (!InventoryCleaner.state || InventoryCleaner.isUseful(stack, -1))
     }
 
     private fun move(screen: GuiChest, slot: Slot) {
         screen.handleMouseClick(slot, slot.slotNumber, 0, 1)
         delayTimer.reset()
-        nextDelay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+        nextDelay = randomDelay(minDelayValue.get(), maxDelayValue.get())
     }
 
     private fun isEmpty(chest: GuiChest): Boolean {
-        val inventoryCleaner = moduleManager[InventoryCleaner::class.java] as InventoryCleaner
-
         for (i in 0 until chest.inventoryRows * 9) {
             val slot = chest.inventorySlots.getSlot(i)
 
             val stack = slot.stack
 
-            if (shouldTake(stack, inventoryCleaner))
+            if (shouldTake(stack))
                 return false
         }
 
         return true
     }
 
-    private val fullInventory: Boolean
+    private val fullInventory
         get() = mc.thePlayer?.inventory?.mainInventory?.none(ItemUtils::isStackEmpty) ?: false
 }

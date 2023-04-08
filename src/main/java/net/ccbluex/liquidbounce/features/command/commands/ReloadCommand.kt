@@ -5,8 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands
 
-import net.ccbluex.liquidbounce.LiquidBounce.clickGui
-import net.ccbluex.liquidbounce.LiquidBounce.commandManager
 import net.ccbluex.liquidbounce.LiquidBounce.isStarting
 import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.features.command.Command
@@ -22,7 +20,6 @@ import net.ccbluex.liquidbounce.file.FileManager.xrayConfig
 import net.ccbluex.liquidbounce.script.ScriptManager.disableScripts
 import net.ccbluex.liquidbounce.script.ScriptManager.reloadScripts
 import net.ccbluex.liquidbounce.script.ScriptManager.unloadScripts
-import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.ui.font.Fonts
 
 class ReloadCommand : Command("reload", "configreload") {
@@ -34,8 +31,7 @@ class ReloadCommand : Command("reload", "configreload") {
         isStarting = true
 
         chat("§c§lReloading commands...")
-        commandManager = CommandManager()
-        commandManager.registerCommands()
+        CommandManager.registerCommands()
 
         disableScripts()
         unloadScripts()
@@ -69,7 +65,6 @@ class ReloadCommand : Command("reload", "configreload") {
         loadConfig(hudConfig)
 
         chat("§c§lReloading ClickGUI...")
-        clickGui = ClickGui()
         loadConfig(clickGuiConfig)
 
         isStarting = false

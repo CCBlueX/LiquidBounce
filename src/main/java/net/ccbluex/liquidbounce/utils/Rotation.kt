@@ -26,8 +26,7 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
      * Set rotations to [player]
      */
     fun toPlayer(player: EntityPlayer) {
-        if (yaw.isNaN() || pitch.isNaN() || pitch > 90 || pitch < -90)
-            return
+        if (yaw.isNaN() || pitch.isNaN() || pitch > 90 || pitch < -90) return
 
         fixedSensitivity()
 
@@ -40,7 +39,6 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
      *
      * @see net.minecraft.client.renderer.EntityRenderer.updateCameraAndRender
      */
-    @JvmOverloads
     fun fixedSensitivity(sensitivity: Float = mc.gameSettings.mouseSensitivity): Rotation {
         // Previous implementation essentially floored the subtraction.
         // This way it returns rotations closer to the original.
@@ -59,7 +57,7 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
      *
      * @author bestnub
      */
-    fun applyStrafeToPlayer(event: StrafeEvent) {
+    fun applyStrafeToPlayer(event: StrafeEvent, strict: Boolean = false) {
         val player = mc.thePlayer
 
         val diff = ((MathHelper.wrapAngleTo180_float(player.rotationYaw - yaw - 23.5f - 135) + 180) / 45).toInt()
@@ -73,55 +71,67 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
         var calcForward = 0f
         var calcStrafe = 0f
 
-        when (diff) {
-            0 -> {
-                calcForward = forward
-                calcStrafe = strafe
-            }
-            1 -> {
-                calcForward += forward
-                calcStrafe -= forward
-                calcForward += strafe
-                calcStrafe += strafe
-            }
-            2 -> {
-                calcForward = strafe
-                calcStrafe = -forward
-            }
-            3 -> {
-                calcForward -= forward
-                calcStrafe -= forward
-                calcForward += strafe
-                calcStrafe -= strafe
-            }
-            4 -> {
-                calcForward = -forward
-                calcStrafe = -strafe
-            }
-            5 -> {
-                calcForward -= forward
-                calcStrafe += forward
-                calcForward -= strafe
-                calcStrafe -= strafe
-            }
-            6 -> {
-                calcForward = -strafe
-                calcStrafe = forward
-            }
-            7 -> {
-                calcForward += forward
-                calcStrafe += forward
-                calcForward -= strafe
-                calcStrafe += strafe
-            }
-        }
+        if (!strict) {
+            when (diff) {
+                0 -> {
+                    calcForward = forward
+                    calcStrafe = strafe
+                }
 
-        if (calcForward > 1f || calcForward < 0.9f && calcForward > 0.3f || calcForward < -1f || calcForward > -0.9f && calcForward < -0.3f) {
-            calcForward *= 0.5f
-        }
+                1 -> {
+                    calcForward += forward
+                    calcStrafe -= forward
+                    calcForward += strafe
+                    calcStrafe += strafe
+                }
 
-        if (calcStrafe > 1f || calcStrafe < 0.9f && calcStrafe > 0.3f || calcStrafe < -1f || calcStrafe > -0.9f && calcStrafe < -0.3f) {
-            calcStrafe *= 0.5f
+                2 -> {
+                    calcForward = strafe
+                    calcStrafe = -forward
+                }
+
+                3 -> {
+                    calcForward -= forward
+                    calcStrafe -= forward
+                    calcForward += strafe
+                    calcStrafe -= strafe
+                }
+
+                4 -> {
+                    calcForward = -forward
+                    calcStrafe = -strafe
+                }
+
+                5 -> {
+                    calcForward -= forward
+                    calcStrafe += forward
+                    calcForward -= strafe
+                    calcStrafe -= strafe
+                }
+
+                6 -> {
+                    calcForward = -strafe
+                    calcStrafe = forward
+                }
+
+                7 -> {
+                    calcForward += forward
+                    calcStrafe += forward
+                    calcForward -= strafe
+                    calcStrafe += strafe
+                }
+            }
+
+            if (calcForward > 1f || calcForward < 0.9f && calcForward > 0.3f || calcForward < -1f || calcForward > -0.9f && calcForward < -0.3f) {
+                calcForward *= 0.5f
+            }
+
+            if (calcStrafe > 1f || calcStrafe < 0.9f && calcStrafe > 0.3f || calcStrafe < -1f || calcStrafe > -0.9f && calcStrafe < -0.3f) {
+                calcStrafe *= 0.5f
+            }
+        } else {
+            calcForward = event.forward
+            calcStrafe = event.strafe
         }
 
         var d = calcStrafe * calcStrafe + calcForward * calcForward

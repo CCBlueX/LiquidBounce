@@ -5,6 +5,9 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
+import net.ccbluex.liquidbounce.features.command.CommandManager;
+import net.ccbluex.liquidbounce.file.FileManager;
+import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.gui.GuiTextField;
@@ -22,10 +25,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.awt.*;
 import java.util.Comparator;
 import java.util.List;
-
-import static net.ccbluex.liquidbounce.LiquidBounce.commandManager;
-import static net.ccbluex.liquidbounce.LiquidBounce.fileManager;
-import static net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime;
 
 @Mixin(GuiChat.class)
 @SideOnly(Side.CLIENT)
@@ -51,10 +50,10 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
 
     @Inject(method = "keyTyped", at = @At("RETURN"))
     private void updateLength(CallbackInfo callbackInfo) {
-        if (!inputField.getText().startsWith(String.valueOf(commandManager.getPrefix()))) return;
-        commandManager.autoComplete(inputField.getText());
+        if (!inputField.getText().startsWith(String.valueOf(CommandManager.INSTANCE.getPrefix()))) return;
+        CommandManager.INSTANCE.autoComplete(inputField.getText());
 
-        if (!inputField.getText().startsWith(commandManager.getPrefix() + "lc"))
+        if (!inputField.getText().startsWith(CommandManager.INSTANCE.getPrefix() + "lc"))
             inputField.setMaxStringLength(10000);
         else
             inputField.setMaxStringLength(100);
@@ -62,7 +61,7 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
 
     @Inject(method = "updateScreen", at = @At("HEAD"))
     private void updateScreen(CallbackInfo callbackInfo) {
-        final int delta = deltaTime;
+        final int delta = RenderUtils.INSTANCE.getDeltaTime();
 
         if (fade < 14) fade += 0.4F * delta;
         if (fade > 14) fade = 14;
@@ -76,7 +75,7 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
     @Inject(method = "autocompletePlayerNames", at = @At("HEAD"))
     private void prioritizeClientFriends(final CallbackInfo callbackInfo) {
         foundPlayerNames.sort(
-                Comparator.comparing(s -> !fileManager.getFriendsConfig().isFriend(s)));
+                Comparator.comparing(s -> !FileManager.INSTANCE.getFriendsConfig().isFriend(s)));
     }
 
     /**
@@ -87,10 +86,10 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
      */
     @Inject(method = "sendAutocompleteRequest", at = @At("HEAD"), cancellable = true)
     private void handleClientCommandCompletion(String full, final String ignored, CallbackInfo callbackInfo) {
-        if (commandManager.autoComplete(full)) {
+        if (CommandManager.INSTANCE.autoComplete(full)) {
             waitingOnAutocomplete = true;
 
-            String[] latestAutoComplete = commandManager.getLatestAutoComplete();
+            String[] latestAutoComplete = CommandManager.INSTANCE.getLatestAutoComplete();
 
             if (full.toLowerCase().endsWith(latestAutoComplete[latestAutoComplete.length - 1].toLowerCase()))
                 return;
@@ -109,7 +108,7 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
      */
     @Inject(method = "onAutocompleteResponse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiChat;autocompletePlayerNames()V", shift = At.Shift.BEFORE), cancellable = true)
     private void onAutocompleteResponse(String[] autoCompleteResponse, CallbackInfo callbackInfo) {
-        if (commandManager.getLatestAutoComplete().length != 0) callbackInfo.cancel();
+        if (CommandManager.INSTANCE.getLatestAutoComplete().length != 0) callbackInfo.cancel();
     }
 
     /**
@@ -120,8 +119,8 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
         Gui.drawRect(2, height - (int) fade, width - 2, height, Integer.MIN_VALUE);
         inputField.drawTextBox();
 
-        if (commandManager.getLatestAutoComplete().length > 0 && !inputField.getText().isEmpty() && inputField.getText().startsWith(String.valueOf(commandManager.getPrefix()))) {
-            String[] latestAutoComplete = commandManager.getLatestAutoComplete();
+        if (CommandManager.INSTANCE.getLatestAutoComplete().length > 0 && !inputField.getText().isEmpty() && inputField.getText().startsWith(String.valueOf(CommandManager.INSTANCE.getPrefix()))) {
+            String[] latestAutoComplete = CommandManager.INSTANCE.getLatestAutoComplete();
             String[] textArray = inputField.getText().split(" ");
             String trimmedString = latestAutoComplete[0].replaceFirst("(?i)" + textArray[textArray.length - 1], "");
 

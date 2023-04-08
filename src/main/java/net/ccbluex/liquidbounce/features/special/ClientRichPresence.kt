@@ -24,7 +24,7 @@ import java.io.IOException
 import java.time.OffsetDateTime
 import kotlin.concurrent.thread
 
-class ClientRichPresence : MinecraftInstance() {
+object ClientRichPresence : MinecraftInstance() {
 
     var showRichPresenceValue = true
 

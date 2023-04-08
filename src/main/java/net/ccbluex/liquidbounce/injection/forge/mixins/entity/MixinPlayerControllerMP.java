@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.entity;
 
 import net.ccbluex.liquidbounce.event.AttackEvent;
 import net.ccbluex.liquidbounce.event.ClickWindowEvent;
+import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.AbortBreaking;
 import net.ccbluex.liquidbounce.utils.CooldownHelper;
 import net.minecraft.client.multiplayer.PlayerControllerMP;
@@ -21,16 +22,13 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import static net.ccbluex.liquidbounce.LiquidBounce.eventManager;
-import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
-
 @Mixin(PlayerControllerMP.class)
 @SideOnly(Side.CLIENT)
 public class MixinPlayerControllerMP {
 
     @Inject(method = "attackEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/multiplayer/PlayerControllerMP;syncCurrentPlayItem()V"))
     private void attackEntity(EntityPlayer entityPlayer, Entity targetEntity, CallbackInfo callbackInfo) {
-        eventManager.callEvent(new AttackEvent(targetEntity));
+        EventManager.INSTANCE.callEvent(new AttackEvent(targetEntity));
         CooldownHelper.INSTANCE.resetLastAttackedTicks();
     }
 
@@ -43,7 +41,7 @@ public class MixinPlayerControllerMP {
     @Inject(method = "windowClick", at = @At("HEAD"), cancellable = true)
     private void windowClick(int windowId, int slotId, int mouseButtonClicked, int mode, EntityPlayer playerIn, CallbackInfoReturnable<ItemStack> callbackInfo) {
         final ClickWindowEvent event = new ClickWindowEvent(windowId, slotId, mouseButtonClicked, mode);
-        eventManager.callEvent(event);
+        EventManager.INSTANCE.callEvent(event);
 
         if (event.isCancelled()) {
             callbackInfo.cancel();

@@ -18,10 +18,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.Objects;
-
-import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
-
 @Mixin(Chunk.class)
 public class MixinChunk {
     @Shadow

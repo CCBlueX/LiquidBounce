@@ -14,10 +14,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Objects;
-
-import static net.ccbluex.liquidbounce.LiquidBounce.moduleManager;
-
 @Mixin(BlockSoulSand.class)
 @SideOnly(Side.CLIENT)
 public class MixinBlockSoulSand {

@@ -23,6 +23,9 @@ class ModuleElement(val module: Module) : ButtonElement(module.name) {
 
     private var wasPressed = false
     var slowlyFade = 0
+        set(value) {
+            field = value.coerceIn(0, 255)
+        }
 
     override fun drawScreenAndClick(mouseX: Int, mouseY: Int, mouseButton: Int?) =
         clickGui.style.drawModuleElementAndClick(mouseX, mouseY, this, mouseButton)

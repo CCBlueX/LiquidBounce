@@ -18,7 +18,6 @@ object BlockUtils : MinecraftInstance() {
     /**
      * Get block from [blockPos]
      */
-    @JvmStatic
     fun getBlock(blockPos: BlockPos) = mc.theWorld?.getBlockState(blockPos)?.block
 
     /**
@@ -29,7 +28,6 @@ object BlockUtils : MinecraftInstance() {
     /**
      * Check [blockPos] is replaceable
      */
-    @JvmStatic
     fun isReplaceable(blockPos: BlockPos) = getMaterial(blockPos)?.isReplaceable ?: false
 
     /**
@@ -40,7 +38,6 @@ object BlockUtils : MinecraftInstance() {
     /**
      * Check if [blockPos] is clickable
      */
-    @JvmStatic
     fun canBeClicked(blockPos: BlockPos) =
         getBlock(blockPos)?.canCollideCheck(getState(blockPos), false) ?: false &&
             mc.theWorld.worldBorder.contains(blockPos)
@@ -112,7 +109,6 @@ object BlockUtils : MinecraftInstance() {
     /**
      * Check if [axisAlignedBB] has collidable blocks using custom [collide] check
      */
-    @JvmStatic
     fun collideBlockIntersects(axisAlignedBB: AxisAlignedBB, collide: Collidable): Boolean {
         val thePlayer = mc.thePlayer
         val world = mc.theWorld
