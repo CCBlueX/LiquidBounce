@@ -171,6 +171,7 @@ object CapeService : Listenable, MinecraftInstance() {
 
     fun logout() {
         clientCapeUser = null
+        knownToken = "" // Blank token
     }
 
     /**
