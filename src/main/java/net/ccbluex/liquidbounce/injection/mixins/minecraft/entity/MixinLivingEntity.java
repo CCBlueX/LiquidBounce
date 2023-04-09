@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAntiLevit
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoJumpDelay;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPush;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.client.MinecraftClient;
@@ -41,6 +42,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -139,5 +141,29 @@ public abstract class MixinLivingEntity extends MixinEntity {
             this.jump();
             jumpingCooldown = 10;
         }
+    }
+
+    /**
+     * Body rotation yaw injection hook
+     */
+    @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getYaw()F"), slice = @Slice(to = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getYaw()F", ordinal = 1)))
+    private float hookBodyRotationsA(LivingEntity instance) {
+        if ((Object) this != MinecraftClient.getInstance().player) {
+            return instance.getYaw();
+        }
+
+        return ModuleRotations.INSTANCE.shouldDisplayRotations() ? RotationManager.INSTANCE.getServerRotation().getYaw() : instance.getYaw();
+    }
+
+    /**
+     * Body rotation yaw injection hook
+     */
+    @Redirect(method = "turnHead", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;getYaw()F"))
+    private float hookBodyRotationsB(LivingEntity instance) {
+        if ((Object) this != MinecraftClient.getInstance().player) {
+            return instance.getYaw();
+        }
+
+        return ModuleRotations.INSTANCE.shouldDisplayRotations() ? RotationManager.INSTANCE.getServerRotation().getYaw() : instance.getYaw();
     }
 }

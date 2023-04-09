@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.PlayerJumpEvent;
 import net.ccbluex.liquidbounce.event.PlayerSafeWalkEvent;
 import net.ccbluex.liquidbounce.event.PlayerStrideEvent;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAntiReducedDebugInfo;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleNoSlowBreak;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
@@ -37,6 +38,7 @@ import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.Pair;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -163,5 +165,26 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
         }
 
         cir.setReturnValue(f);
+    }
+
+    /**
+     * Head rotations injection hook
+     */
+    @Redirect(method = "tickNewAi", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getYaw()F"))
+    private float hookHeadRotations(PlayerEntity instance) {
+        Pair<Float, Float> pitch = ModuleRotations.INSTANCE.getRotationPitch();
+        if ((Object) this != MinecraftClient.getInstance().player) {
+            return instance.getYaw();
+        }
+
+        // Update pitch regardless.
+        pitch.setLeft(pitch.getRight());
+        pitch.setRight(RotationManager.INSTANCE.getServerRotation().getPitch());
+
+        if (ModuleRotations.INSTANCE.shouldDisplayRotations()) {
+            return RotationManager.INSTANCE.getServerRotation().getYaw();
+        }
+
+        return instance.getYaw();
     }
 }

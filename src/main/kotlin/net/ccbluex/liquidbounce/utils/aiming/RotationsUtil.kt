@@ -56,7 +56,6 @@ object RotationManager : Listenable {
 
     // Current rotation
     var currentRotation: Rotation? = null
-    var lastRotation: Rotation? = null
     var ticksUntilReset: Int = 0
 
     // Active configurable
@@ -331,17 +330,14 @@ object RotationManager : Listenable {
                     }
                 }
                 currentRotation = null
-                lastRotation = null
                 return
             }
 
-            lastRotation = currentRotation ?: serverRotation
             currentRotation =
                 limitAngleChange(currentRotation ?: serverRotation, playerRotation, turnSpeed).fixedSensitivity()
             return
         }
         targetRotation?.let { targetRotation ->
-            lastRotation = currentRotation ?: playerRotation
             currentRotation =
                 limitAngleChange(currentRotation ?: playerRotation, targetRotation, turnSpeed).fixedSensitivity()
         }

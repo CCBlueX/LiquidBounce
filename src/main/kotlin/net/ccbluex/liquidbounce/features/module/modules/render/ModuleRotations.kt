@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.render.engine.memory.putVertex
 import net.ccbluex.liquidbounce.render.shaders.ColoredPrimitiveShader
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.math.times
+import net.minecraft.util.Pair
 
 /**
  * Rotations module
@@ -39,6 +40,8 @@ import net.ccbluex.liquidbounce.utils.math.times
 object ModuleRotations : Module("Rotations", Category.RENDER) {
 
     val showRotationVector by boolean("ShowRotationVector", false)
+
+    var rotationPitch: Pair<Float, Float> = Pair(0f, 0f)
 
     val renderHandler = handler<EngineRenderEvent> {
         if (!showRotationVector) {
@@ -69,6 +72,15 @@ object ModuleRotations : Module("Rotations", Category.RENDER) {
                 state = GlRenderState(lineWidth = 2.0f, lineSmooth = true)
             )
         )
+    }
+
+    /**
+     * Should server-side rotations be shown?
+     */
+    fun shouldDisplayRotations(): Boolean {
+        val priority = ModuleFreeCam.shouldDisableRotations()
+
+        return priority || enabled && RotationManager.currentRotation != null
     }
 
 }
