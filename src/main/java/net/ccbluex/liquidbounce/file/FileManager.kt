@@ -21,11 +21,6 @@ import java.io.File
 
 @SideOnly(Side.CLIENT)
 object FileManager : MinecraftInstance() {
-    /**
-     * Can't annotate these with @JvmField because scripts may try to access file manager via `LiquidBounce.fileManager`.
-     * However, for `LiquidBounce.fileManager` to work, it has to be annotated with @JvmField itself...
-     * And therefore `LiquidBounce.fileManager` compiles to `FileManager.INSTANCE` which wouldn't contain these if they were annotated.
-     */
 
     val dir = File(mc.mcDataDir, "$CLIENT_NAME-$MINECRAFT_VERSION")
     val fontsDir = File(dir, "fonts")
