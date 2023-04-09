@@ -391,7 +391,7 @@ object RotationManager : Listenable {
     }
 
     val tickHandler = handler<GameTickEvent> {
-        if (targetRotation == null) {
+        if (targetRotation == null || mc.isPaused) {
             return@handler
         }
 
