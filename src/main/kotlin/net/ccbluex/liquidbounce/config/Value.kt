@@ -50,6 +50,9 @@ open class Value<T : Any>(
     @Exclude val listType: ListValueType = ListValueType.None
 ) {
 
+    internal val loweredName
+        get() = name.lowercase()
+
     @Exclude
     private val listeners = mutableListOf<ValueListener<T>>()
 
