@@ -111,23 +111,13 @@ object RotationManager : Listenable {
         var notVisibleRot: VecRotation? = null
 
         // There are some spots that loops cannot detect, therefore this is used
-        // since it finds the nearest spot. Should only be used when all loops have failed to find a spot.
+        // since it finds the nearest spot within the requested range.
         val nearestSpot = getNearestPoint(eyes, box)
         val nearestDistance = eyes.squaredDistanceTo(nearestSpot)
 
-        val epsilon = 1.0E-7
-
-        val min = 0.0 + epsilon
-        val max = 1.0 - epsilon
-        val inc = 0.1 - epsilon
-
-        var timesRan = 0
-
-        for (x in min..max step inc) {
-            for (y in min..max step inc) {
-                for (z in min..max step inc) {
-                    timesRan++
-
+        for (x in 0.0..1.0 step 0.1) {
+            for (y in 0.0..1.0 step 0.1) {
+                for (z in 0.0..1.0 step 0.1) {
                     var vec3 = Vec3d(
                         box.minX + (box.maxX - box.minX) * x,
                         box.minY + (box.maxY - box.minY) * y,
@@ -136,11 +126,10 @@ object RotationManager : Listenable {
 
                     var distance = eyes.squaredDistanceTo(vec3)
 
-                    // If loop ended with no results, then make use of the nearest spot as last resort
-                    // 1331 is the amount of times these loops will run
-                    val useNearestSpot = timesRan == 1331 && visibleRot == null && notVisibleRot == null
+                    // Start off with the nearest spot, then see which is better
+                    val useNearestSpot = visibleRot == null && notVisibleRot == null
 
-                    // Before going through raycast and wall range checks, make sure we use the nearest distance and spot
+                    // If the distance is greater than range, use the nearest spot.
                     if (distance > rangeSquared && useNearestSpot) {
                         distance = nearestDistance
                         vec3 = nearestSpot

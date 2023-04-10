@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.utils.aiming
 
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.entity.eyesPos
 import net.minecraft.block.BlockState
 import net.minecraft.block.ShapeContext
 import net.minecraft.entity.Entity
@@ -41,12 +40,7 @@ fun raytraceEntity(range: Double, rotation: Rotation, filter: (Entity) -> Boolea
     val box = entity.boundingBox.stretch(rotationVec.multiply(range)).expand(1.0, 1.0, 1.0)
 
     val entityHitResult = ProjectileUtil.raycast(
-        entity,
-        cameraVec,
-        vec3d3,
-        box,
-        { !it.isSpectator && it.canHit() && filter(it) },
-        range * range
+        entity, cameraVec, vec3d3, box, { !it.isSpectator && it.canHit() && filter(it) }, range * range
     )
 
     return entityHitResult?.entity
@@ -97,19 +91,24 @@ fun facingEnemy(enemy: Entity, range: Double, rotation: Rotation): Boolean {
 }
 
 fun facingEnemy(enemy: Entity, rotation: Rotation, range: Double, wallsRange: Double): Boolean {
-    val player = mc.player ?: return false
-    val eyes = player.eyesPos
+    val entity = mc.cameraEntity ?: return false
+
+    val cameraVec = entity.getCameraPosVec(1f)
+    val rotationVec = rotation.rotationVec
 
     val rangeSquared = range * range
     val wallsRangeSquared = wallsRange * wallsRange
 
-    val reach = eyes.add(rotation.rotationVec.multiply(range))
+    val vec3d3 = cameraVec.add(rotationVec.x * range, rotationVec.y * range, rotationVec.z * range)
+    val box = entity.boundingBox.stretch(rotationVec.multiply(range)).expand(1.0, 1.0, 1.0)
 
-    val vec = enemy.boundingBox.raycast(eyes, reach).let { if (it.isPresent) it.get() else null } ?: return false
+    val entityHitResult = ProjectileUtil.raycast(
+        entity, cameraVec, vec3d3, box, { !it.isSpectator && it.canHit() && it == enemy }, rangeSquared
+    ) ?: return false
 
-    val distance = eyes.squaredDistanceTo(vec)
+    val distance = cameraVec.squaredDistanceTo(entityHitResult.pos)
 
-    if (distance <= rangeSquared && isVisible(eyes, vec) || distance <= wallsRangeSquared) {
+    if (distance <= rangeSquared && isVisible(cameraVec, entityHitResult.pos) || distance <= wallsRangeSquared) {
         return true
     }
 
