@@ -27,11 +27,11 @@ import net.minecraft.entity.projectile.EntityFireball
 import net.minecraft.network.play.client.C02PacketUseEntity
 import net.minecraft.network.play.client.C0APacketAnimation
 
-@ModuleInfo(name = "AntiFireBall", description = "Automatically punch fireballs away from you.", category = ModuleCategory.PLAYER)
+@ModuleInfo(name = "AntiFireBall", description = "Automatically punches fireballs away from you.", category = ModuleCategory.PLAYER)
 object AntiFireBall : Module() {
     private val timer = MSTimer()
 
-    private val rangeValue = FloatValue("Range", 5.5f, 3f, 8f)
+    private val rangeValue = FloatValue("Range", 4.5f, 3f, 8f)
     private val delayValue = IntegerValue("Delay", 300, 50, 1000)
     private val swingValue = ListValue("Swing", arrayOf("Normal", "Packet", "None"), "Normal")
     private val rotationsValue = BoolValue("Rotations", true)
