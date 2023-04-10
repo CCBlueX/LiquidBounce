@@ -62,6 +62,7 @@ object ModuleManager : Listenable {
             AntiBot,
             AntiCactus,
             AntiHunger,
+            AntiFireBall,
             AtAllProvider,
             AttackEffects,
             AutoAccount,
