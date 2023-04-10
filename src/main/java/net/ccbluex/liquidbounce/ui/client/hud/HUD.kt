@@ -38,7 +38,7 @@ object HUD : MinecraftInstance() {
           Cooldown::class.java)
 
   /** Create default HUD */
-  fun setToDefault() {
+  fun setDefault() {
     elements.clear()
 
     addElement(Text.defaultClient())

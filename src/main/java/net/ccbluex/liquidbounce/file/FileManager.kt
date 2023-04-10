@@ -93,7 +93,8 @@ object FileManager : MinecraftInstance() {
     fun loadConfig(config: FileConfig) {
         if (!config.hasConfig()) {
             LOGGER.info("[FileManager] Skipped loading config: ${config.file.name}.")
-            saveConfig(config, true)
+            config.loadDefault()
+            saveConfig(config, false)
             return
         }
         try {

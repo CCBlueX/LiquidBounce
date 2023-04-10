@@ -43,7 +43,7 @@ object ClickGui : GuiScreen() {
     var mouseX = 0
     var mouseY = 0
 
-    fun setToDefault() {
+    fun setDefault() {
         panels.clear()
 
         val width = 100

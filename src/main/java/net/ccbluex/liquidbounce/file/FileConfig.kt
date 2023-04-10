@@ -38,4 +38,9 @@ abstract class FileConfig(val file: File) {
      * @return config file exist
      */
     fun hasConfig() = file.exists() && file.length() > 0
+
+    /**
+     * Load defaults when config file doesn't exist.
+     */
+    open fun loadDefault() {}
 }

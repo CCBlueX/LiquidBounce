@@ -169,7 +169,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 
         Fonts.font35.drawString("§lReset", x + 2f, y.toFloat() + height, Color.WHITE.rgb)
         if (Mouse.isButtonDown(0) && !mouseDown && mouseX in x..x + width && mouseY in y + height..y + height + 10)
-            HUD.setToDefault()
+            HUD.setDefault()
 
         height += 15
         realHeight += 15

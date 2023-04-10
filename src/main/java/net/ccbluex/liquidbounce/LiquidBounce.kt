@@ -114,10 +114,6 @@ object LiquidBounce {
             LOGGER.error("Failed to load scripts.", throwable)
         }
 
-        // Set defaults
-        HUD.setToDefault()
-        ClickGui.setToDefault()
-
         // Load configs
         loadAllConfigs()
 
