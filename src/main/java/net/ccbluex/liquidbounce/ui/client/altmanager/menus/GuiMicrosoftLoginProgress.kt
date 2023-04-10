@@ -7,14 +7,14 @@ package net.ccbluex.liquidbounce.ui.client.altmanager.menus
 
 import me.liuli.elixir.account.MicrosoftAccount
 import me.liuli.elixir.compat.OAuthServer
-import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.file.FileManager.accountsConfig
+import net.ccbluex.liquidbounce.file.FileManager.saveConfig
+import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
-import net.minecraft.client.Minecraft
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawLoadingCircle
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
-import net.minecraft.client.gui.ScaledResolution
 import java.net.BindException
 
 class GuiMicrosoftLoginProgress(val updateStatus: (String) -> Unit, val done: () -> Unit) : GuiScreen() {
@@ -22,7 +22,7 @@ class GuiMicrosoftLoginProgress(val updateStatus: (String) -> Unit, val done: ()
     private var oAuthServer: OAuthServer? = null
     private var loginUrl: String? = null
 
-    private var serverStopAlreadyCalled: Boolean = false
+    private var serverStopAlreadyCalled = false
 
     override fun initGui() {
         // This will start a login server and open the browser.
@@ -45,13 +45,13 @@ class GuiMicrosoftLoginProgress(val updateStatus: (String) -> Unit, val done: ()
                     serverStopAlreadyCalled = true
 
                     loginUrl = null
-                    if (LiquidBounce.fileManager.accountsConfig.accountExists(account)) {
+                    if (accountsConfig.accountExists(account)) {
                         errorAndDone("The account has already been added.")
                         return
                     }
 
-                    LiquidBounce.fileManager.accountsConfig.addAccount(account)
-                    LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig)
+                    accountsConfig.addAccount(account)
+                    saveConfig(accountsConfig)
                     successAndDone()
                 }
 
@@ -66,23 +66,21 @@ class GuiMicrosoftLoginProgress(val updateStatus: (String) -> Unit, val done: ()
             })
         } catch (bindException: BindException) {
             errorAndDone("Failed to start login server. (Port already in use)")
-            ClientUtils.getLogger().error("Failed to start login server.", bindException)
+            LOGGER.error("Failed to start login server.", bindException)
         } catch (e: Exception) {
             errorAndDone("Failed to start login server.")
-            ClientUtils.getLogger().error("Failed to start login server.", e)
+            LOGGER.error("Failed to start login server.", e)
         }
 
         buttonList.add(GuiButton(0, width / 2 - 100, height / 2 + 60, "Open URL"))
-        buttonList.add(GuiButton(1, width / 2 - 100, height / 2 + 100, "Cancel"))
+        buttonList.add(GuiButton(1, width / 2 - 100, height / 2 + 90, "Cancel"))
         super.initGui()
     }
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
-        val scaledResolution = ScaledResolution(Minecraft.getMinecraft())
-
         drawDefaultBackground()
-        RenderUtils.drawLoadingCircle((scaledResolution.scaledWidth / 2).toFloat(), (scaledResolution.scaledHeight / 4 + 70).toFloat())
-        drawCenteredString(fontRendererObj, "Logging into account...", width / 2, height / 2 - 60, 16777215)
+        drawLoadingCircle(width / 2f, height / 4f + 70)
+        Fonts.font40.drawCenteredString("Logging into account...", width / 2f, height / 2 - 60f, 0xffffff)
         super.drawScreen(mouseX, mouseY, partialTicks)
     }
 
@@ -95,12 +93,12 @@ class GuiMicrosoftLoginProgress(val updateStatus: (String) -> Unit, val done: ()
         when (button.id) {
             0 -> {
                 if (loginUrl != null) {
-                    MiscUtils.showURL(loginUrl!!)
+                    MiscUtils.showURL(loginUrl)
                 }
             }
 
             1 -> {
-                errorAndDone("Cancelled.")
+                errorAndDone("Login cancelled.")
             }
         }
 

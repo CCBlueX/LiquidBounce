@@ -16,7 +16,8 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockSlime
 
 @ModuleInfo(name = "SlimeJump", description = "Allows you to to jump higher on slime blocks.", category = ModuleCategory.MOVEMENT)
-class SlimeJump : Module() {
+object SlimeJump : Module() {
+
     private val motionValue = FloatValue("Motion", 0.42f, 0.2f, 1f)
     private val modeValue = ListValue("Mode", arrayOf("Set", "Add"), "Add")
 

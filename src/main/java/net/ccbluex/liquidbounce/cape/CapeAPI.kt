@@ -5,9 +5,8 @@
  */
 package net.ccbluex.liquidbounce.cape
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.file.FileManager.dir
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
-
 import net.minecraft.client.renderer.IImageBuffer
 import net.minecraft.client.renderer.ThreadDownloadImageData
 import net.minecraft.util.ResourceLocation
@@ -17,7 +16,7 @@ import java.util.*
 
 object CapeAPI : MinecraftInstance() {
 
-    private val capesCache = File(LiquidBounce.fileManager.dir, "capes").apply {
+    private val capesCache = File(dir, "capes").apply {
         mkdir()
     }
 
@@ -38,9 +37,7 @@ object CapeAPI : MinecraftInstance() {
             val capeInfo = CapeInfo(resourceLocation)
             val threadDownloadImageData = ThreadDownloadImageData(cacheFile, url, null, object : IImageBuffer {
 
-                override fun parseUserSkin(image: BufferedImage?): BufferedImage? {
-                    return image
-                }
+                override fun parseUserSkin(image: BufferedImage?) = image
 
                 override fun skinAvailable() {
                     capeInfo.isCapeAvailable = true

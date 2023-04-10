@@ -15,23 +15,33 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.canBeClicked
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawFilledBox
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawSelectionBoundingBox
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.block.Block
 import net.minecraft.client.gui.ScaledResolution
-import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.client.renderer.GlStateManager.*
 import net.minecraft.util.BlockPos
-import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
 @ModuleInfo(name = "BlockOverlay", description = "Allows you to change the design of the block overlay.", category = ModuleCategory.RENDER)
-class BlockOverlay : Module() {
-    private val colorRedValue = IntegerValue("R", 68, 0, 255)
-    private val colorGreenValue = IntegerValue("G", 117, 0, 255)
-    private val colorBlueValue = IntegerValue("B", 255, 0, 255)
-    private val colorRainbow = BoolValue("Rainbow", false)
+object BlockOverlay : Module() {
     val infoValue = BoolValue("Info", false)
+
+    private val colorRainbow = BoolValue("Rainbow", false)
+    private val colorRedValue = object : IntegerValue("R", 68, 0, 255) {
+        override fun isSupported() = !colorRainbow.get()
+    }
+    private val colorGreenValue = object : IntegerValue("G", 117, 0, 255) {
+        override fun isSupported() = !colorRainbow.get()
+    }
+    private val colorBlueValue = object : IntegerValue("B", 255, 0, 255) {
+        override fun isSupported() = !colorRainbow.get()
+    }
 
     val currentBlock: BlockPos?
         get() {
@@ -47,18 +57,18 @@ class BlockOverlay : Module() {
     fun onRender3D(event: Render3DEvent) {
         val blockPos = currentBlock ?: return
 
-        val block = mc.theWorld.getBlockState(blockPos).block
+        val block = getBlock(blockPos) ?: return
         val partialTicks = event.partialTicks
 
-        val color = if (colorRainbow.get()) rainbow(0.4F) else Color(colorRedValue.get(),
+        val color = if (colorRainbow.get()) rainbow(alpha = 0.4F) else Color(colorRedValue.get(),
                 colorGreenValue.get(), colorBlueValue.get(), (0.4F * 255).toInt())
 
-        GlStateManager.enableBlend()
-        GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
-        RenderUtils.glColor(color)
-        GL11.glLineWidth(2F)
-        GlStateManager.disableTexture2D()
-        GL11.glDepthMask(false)
+        enableBlend()
+        tryBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO)
+        glColor(color)
+        glLineWidth(2F)
+        disableTexture2D()
+        glDepthMask(false)
 
         block.setBlockBoundsBasedOnState(mc.theWorld, blockPos)
 
@@ -73,12 +83,12 @@ class BlockOverlay : Module() {
             .expand(0.0020000000949949026, 0.0020000000949949026, 0.0020000000949949026)
             .offset(-x, -y, -z)
 
-        RenderUtils.drawSelectionBoundingBox(axisAlignedBB)
-        RenderUtils.drawFilledBox(axisAlignedBB)
-        GL11.glDepthMask(true)
-        GlStateManager.enableTexture2D()
-        GlStateManager.disableBlend()
-        GlStateManager.resetColor()
+        drawSelectionBoundingBox(axisAlignedBB)
+        drawFilledBox(axisAlignedBB)
+        glDepthMask(true)
+        enableTexture2D()
+        disableBlend()
+        resetColor()
     }
 
     @EventTarget
@@ -90,7 +100,7 @@ class BlockOverlay : Module() {
             val info = "${block.localizedName} §7ID: ${Block.getIdFromBlock(block)}"
             val scaledResolution = ScaledResolution(mc)
 
-            RenderUtils.drawBorderedRect(
+            drawBorderedRect(
                     scaledResolution.scaledWidth / 2 - 2F,
                     scaledResolution.scaledHeight / 2 + 5F,
                     scaledResolution.scaledWidth / 2 + Fonts.font40.getStringWidth(info) + 2F,
@@ -98,7 +108,7 @@ class BlockOverlay : Module() {
                     3F, Color.BLACK.rgb, Color.BLACK.rgb
             )
 
-            GlStateManager.resetColor()
+            resetColor()
             Fonts.font40.drawString(info, scaledResolution.scaledWidth / 2f, scaledResolution.scaledHeight / 2f + 7f, Color.WHITE.rgb, false)
         }
     }

@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -18,7 +18,7 @@ class AACBHop : SpeedMode("AACBHop") {
         if (thePlayer.isInWater)
             return
 
-        if (MovementUtils.isMoving) {
+        if (isMoving) {
             mc.timer.timerSpeed = 1.08f
 
             if (thePlayer.onGround) {

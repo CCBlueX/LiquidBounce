@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.RotationUtils.targetRotation
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.item.ItemBow
 import net.minecraft.network.play.client.C03PacketPlayer.C05PacketPlayerLook
@@ -20,7 +20,7 @@ import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 
 @ModuleInfo(name = "FastBow", description = "Turns your bow into a machine gun.", category = ModuleCategory.COMBAT)
-class FastBow : Module() {
+object FastBow : Module() {
 
     private val packetsValue = IntegerValue("Packets", 20, 3, 20)
 
@@ -36,15 +36,9 @@ class FastBow : Module() {
         if (currentItem != null && currentItem.item is ItemBow) {
             mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(BlockPos.ORIGIN, 255, mc.thePlayer.currentEquippedItem, 0F, 0F, 0F))
 
-            val yaw = if (RotationUtils.targetRotation != null)
-                RotationUtils.targetRotation.yaw
-            else
-                thePlayer.rotationYaw
+            val yaw = targetRotation?.yaw ?: thePlayer.rotationYaw
 
-            val pitch = if (RotationUtils.targetRotation != null)
-                RotationUtils.targetRotation.pitch
-            else
-                thePlayer.rotationPitch
+            val pitch = targetRotation?.pitch ?: thePlayer.rotationPitch
 
             for (i in 0 until packetsValue.get())
                 mc.netHandler.addToSendQueue(C05PacketPlayerLook(yaw, pitch, true))

@@ -5,13 +5,13 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.entity;
 
-import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.StrafeEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.HitBox;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.NoPitchLimit;
+import net.ccbluex.liquidbounce.features.module.modules.movement.NoFluid;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
-import net.minecraft.client.Minecraft;
 import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.AxisAlignedBB;
@@ -27,9 +27,10 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.Objects;
 import java.util.Random;
 import java.util.UUID;
+
+import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
 
 @Mixin(Entity.class)
 @SideOnly(Side.CLIENT)
@@ -185,36 +186,50 @@ public abstract class MixinEntity {
 
     @Inject(method = "getCollisionBorderSize", at = @At("HEAD"), cancellable = true)
     private void getCollisionBorderSize(final CallbackInfoReturnable<Float> callbackInfoReturnable) {
-        final HitBox hitBox = (HitBox) LiquidBounce.moduleManager.getModule(HitBox.class);
+        final HitBox hitBox = HitBox.INSTANCE;
 
-        if (Objects.requireNonNull(hitBox).getState())
+        if (hitBox.getState())
             callbackInfoReturnable.setReturnValue(0.1F + hitBox.getSizeValue().get());
     }
 
     @Inject(method = "setAngles", at = @At("HEAD"), cancellable = true)
     private void setAngles(final float yaw, final float pitch, final CallbackInfo callbackInfo) {
-        if (Objects.requireNonNull(LiquidBounce.moduleManager.getModule(NoPitchLimit.class)).getState()) {
+        if (NoPitchLimit.INSTANCE.getState()) {
             callbackInfo.cancel();
 
-            float f = this.rotationPitch;
-            float f1 = this.rotationYaw;
-            this.rotationYaw = (float) ((double) this.rotationYaw + (double) yaw * 0.15D);
-            this.rotationPitch = (float) ((double) this.rotationPitch - (double) pitch * 0.15D);
-            this.prevRotationPitch += this.rotationPitch - f;
-            this.prevRotationYaw += this.rotationYaw - f1;
+            float f = rotationPitch;
+            float f1 = rotationYaw;
+            rotationYaw = (float) ((double) rotationYaw + (double) yaw * 0.15D);
+            rotationPitch = (float) ((double) rotationPitch - (double) pitch * 0.15D);
+            prevRotationPitch += rotationPitch - f;
+            prevRotationYaw += rotationYaw - f1;
         }
     }
 
     @Inject(method = "moveFlying", at = @At("HEAD"), cancellable = true)
     private void handleRotations(float strafe, float forward, float friction, final CallbackInfo callbackInfo) {
         //noinspection ConstantConditions
-        if ((Object) this != Minecraft.getMinecraft().thePlayer)
+        if ((Object) this != mc.thePlayer)
             return;
 
         final StrafeEvent strafeEvent = new StrafeEvent(strafe, forward, friction);
-        LiquidBounce.eventManager.callEvent(strafeEvent);
+        EventManager.INSTANCE.callEvent(strafeEvent);
 
         if (strafeEvent.isCancelled())
             callbackInfo.cancel();
+    }
+
+    @Inject(method = "isInWater", at = @At("HEAD"), cancellable = true)
+    private void isInWater(final CallbackInfoReturnable<Boolean> cir) {
+        if (NoFluid.INSTANCE.getState() && NoFluid.INSTANCE.getWaterValue().get()) {
+            cir.setReturnValue(false);
+        }
+    }
+
+    @Inject(method = "isInLava", at = @At("HEAD"), cancellable = true)
+    private void isInLava(final CallbackInfoReturnable<Boolean> cir) {
+        if (NoFluid.INSTANCE.getState() && NoFluid.INSTANCE.getLavaValue().get()) {
+            cir.setReturnValue(false);
+        }
     }
 }

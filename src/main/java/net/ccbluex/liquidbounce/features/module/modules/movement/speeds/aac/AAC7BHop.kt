@@ -7,7 +7,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.MovementUtils.speed
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -15,7 +16,7 @@ class AAC7BHop : SpeedMode("AAC7BHop") {
     override fun onUpdate() {
         val thePlayer = mc.thePlayer ?: return
 
-        if (!MovementUtils.isMoving || thePlayer.ridingEntity != null || thePlayer.hurtTime > 0)
+        if (!isMoving || thePlayer.ridingEntity != null || thePlayer.hurtTime > 0)
             return
 
         if (thePlayer.onGround) {
@@ -26,7 +27,7 @@ class AAC7BHop : SpeedMode("AAC7BHop") {
             return
         }
 
-        val speed = MovementUtils.speed * 1.0072
+        val speed = speed * 1.0072
         val yaw = Math.toRadians(thePlayer.rotationYaw.toDouble())
 
         thePlayer.motionX = -sin(yaw) * speed

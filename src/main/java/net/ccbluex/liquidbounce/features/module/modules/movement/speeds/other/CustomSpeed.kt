@@ -5,38 +5,36 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other
 
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 
 class CustomSpeed : SpeedMode("Custom") {
     override fun onMotion() {
-        if (MovementUtils.isMoving) {
-            val speed = LiquidBounce.moduleManager.getModule(Speed::class.java) as Speed? ?: return
-            mc.timer.timerSpeed = speed.customTimerValue.get()
+        if (isMoving) {
+            mc.timer.timerSpeed = Speed.customTimerValue.get()
             when {
-                mc.thePlayer!!.onGround -> {
-                    MovementUtils.strafe(speed.customSpeedValue.get())
-                    mc.thePlayer!!.motionY = speed.customYValue.get().toDouble()
+                mc.thePlayer.onGround -> {
+                    strafe(Speed.customSpeedValue.get())
+                    mc.thePlayer.motionY = Speed.customYValue.get().toDouble()
                 }
-                speed.customStrafeValue.get() -> MovementUtils.strafe(speed.customSpeedValue.get())
-                else -> MovementUtils.strafe()
+                Speed.customStrafeValue.get() -> strafe(Speed.customSpeedValue.get())
+                else -> strafe()
             }
         } else {
-            mc.thePlayer!!.motionZ = 0.0
-            mc.thePlayer!!.motionX = mc.thePlayer!!.motionZ
+            mc.thePlayer.motionZ = 0.0
+            mc.thePlayer.motionX = mc.thePlayer.motionZ
         }
     }
 
     override fun onEnable() {
-        val speed = LiquidBounce.moduleManager.getModule(Speed::class.java) as Speed? ?: return
-        if (speed.resetXZValue.get()) {
-            mc.thePlayer!!.motionZ = 0.0
-            mc.thePlayer!!.motionX = mc.thePlayer!!.motionZ
+        if (Speed.resetXZValue.get()) {
+            mc.thePlayer.motionZ = 0.0
+            mc.thePlayer.motionX = mc.thePlayer.motionZ
         }
-        if (speed.resetYValue.get()) mc.thePlayer!!.motionY = 0.0
+        if (Speed.resetYValue.get()) mc.thePlayer.motionY = 0.0
         super.onEnable()
     }
 

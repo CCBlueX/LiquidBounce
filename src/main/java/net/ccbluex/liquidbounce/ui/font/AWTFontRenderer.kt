@@ -6,11 +6,11 @@
 package net.ccbluex.liquidbounce.ui.font
 
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
-import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.client.renderer.GlStateManager.bindTexture
 import net.minecraft.client.renderer.texture.TextureUtil
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
-import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.awt.Font
 import java.awt.Graphics2D
@@ -21,12 +21,12 @@ import java.awt.image.BufferedImage
  * Generate new bitmap based font renderer
  */
 @SideOnly(Side.CLIENT)
-class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, var loadingScreen: Boolean = false) : MinecraftInstance() {
+class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, private var loadingScreen: Boolean = false) : MinecraftInstance() {
     companion object {
-        var assumeNonVolatile: Boolean = false
-        val activeFontRenderers: ArrayList<AWTFontRenderer> = ArrayList()
+        var assumeNonVolatile = false
+        val activeFontRenderers = mutableListOf<AWTFontRenderer>()
 
-        private var gcTicks: Int = 0
+        private var gcTicks = 0
         private const val GC_TICKS = 600 // Start garbage collection every 600 frames
         private const val CACHED_FONT_REMOVAL_TIME = 30000 // Remove cached texts after 30s of not being used
 
@@ -43,7 +43,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, v
         val currentTime = System.currentTimeMillis()
 
         cachedStrings.filter { currentTime - it.value.lastUsage > CACHED_FONT_REMOVAL_TIME }.forEach {
-            GL11.glDeleteLists(it.value.displayList, 1)
+            glDeleteLists(it.value.displayList, 1)
 
             it.value.deleted = true
 
@@ -54,7 +54,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, v
     private var fontHeight = -1
     private val charLocations = arrayOfNulls<CharLocation>(stopChar)
 
-    private val cachedStrings: HashMap<String, CachedFont> = HashMap()
+    private val cachedStrings = mutableMapOf<String, CachedFont>()
 
     private var textureID = -1
     private var textureWidth = 0
@@ -81,32 +81,32 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, v
         val scale = 0.25
         val reverse = 1 / scale
 
-        GL11.glPushMatrix()
-        GL11.glScaled(scale, scale, scale)
-        GL11.glTranslated(x * 2F, y * 2.0 - 2.0, 0.0)
+        glPushMatrix()
+        glScaled(scale, scale, scale)
+        glTranslated(x * 2F, y * 2.0 - 2.0, 0.0)
 
-        if (this.loadingScreen)
-            GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID);
+        if (loadingScreen)
+            glBindTexture(GL_TEXTURE_2D, textureID)
         else
-            GlStateManager.bindTexture(textureID)
+            bindTexture(textureID)
 
-        val red: Float = (color shr 16 and 0xff) / 255F
-        val green: Float = (color shr 8 and 0xff) / 255F
-        val blue: Float = (color and 0xff) / 255F
-        val alpha: Float = (color shr 24 and 0xff) / 255F
+        val red = (color shr 16 and 0xff) / 255F
+        val green = (color shr 8 and 0xff) / 255F
+        val blue = (color and 0xff) / 255F
+        val alpha = (color shr 24 and 0xff) / 255F
 
-        GL11.glColor4f(red, green, blue, alpha)
+        glColor4f(red, green, blue, alpha)
 
         var currX = 0.0
 
         val cached: CachedFont? = cachedStrings[text]
 
         if (cached != null) {
-            GL11.glCallList(cached.displayList)
+            glCallList(cached.displayList)
 
             cached.lastUsage = System.currentTimeMillis()
 
-            GL11.glPopMatrix()
+            glPopMatrix()
 
             return
         }
@@ -114,48 +114,48 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, v
         var list = -1
 
         if (assumeNonVolatile) {
-            list = GL11.glGenLists(1)
+            list = glGenLists(1)
 
-            GL11.glNewList(list, GL11.GL_COMPILE_AND_EXECUTE)
+            glNewList(list, GL_COMPILE_AND_EXECUTE)
         }
 
-        GL11.glBegin(GL11.GL_QUADS)
+        glBegin(GL_QUADS)
 
         for (char in text.toCharArray()) {
-            if (char.toInt() >= charLocations.size) {
-                GL11.glEnd()
+            if (char.code >= charLocations.size) {
+                glEnd()
 
                 // Ugly solution, because floating point numbers, but I think that shouldn't be that much of a problem
-                GL11.glScaled(reverse, reverse, reverse)
+                glScaled(reverse, reverse, reverse)
                 mc.fontRendererObj.drawString("$char", currX.toFloat() * scale.toFloat() + 1, 2f, color, false)
                 currX += mc.fontRendererObj.getStringWidth("$char") * reverse
 
-                GL11.glScaled(scale, scale, scale)
+                glScaled(scale, scale, scale)
 
-                if (this.loadingScreen)
-                    GL11.glBindTexture(GL11.GL_TEXTURE_2D, textureID);
+                if (loadingScreen)
+                    glBindTexture(GL_TEXTURE_2D, textureID)
                 else
-                    GlStateManager.bindTexture(textureID)
+                    bindTexture(textureID)
 
-                GL11.glColor4f(red, green, blue, alpha)
+                glColor4f(red, green, blue, alpha)
 
-                GL11.glBegin(GL11.GL_QUADS)
+                glBegin(GL_QUADS)
             } else {
-                val fontChar = charLocations[char.toInt()] ?: continue
+                val fontChar = charLocations[char.code] ?: continue
 
                 drawChar(fontChar, currX.toFloat(), 0f)
                 currX += fontChar.width - 8.0
             }
         }
 
-        GL11.glEnd()
+        glEnd()
 
         if (assumeNonVolatile) {
             cachedStrings[text] = CachedFont(list, System.currentTimeMillis())
-            GL11.glEndList()
+            glEndList()
         }
 
-        GL11.glPopMatrix()
+        glPopMatrix()
     }
 
     /**
@@ -175,14 +175,14 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, v
         val renderWidth = width / textureWidth
         val renderHeight = height / textureHeight
 
-        GL11.glTexCoord2f(renderX, renderY)
-        GL11.glVertex2f(x, y)
-        GL11.glTexCoord2f(renderX, renderY + renderHeight)
-        GL11.glVertex2f(x, y + height)
-        GL11.glTexCoord2f(renderX + renderWidth, renderY + renderHeight)
-        GL11.glVertex2f(x + width, y + height)
-        GL11.glTexCoord2f(renderX + renderWidth, renderY)
-        GL11.glVertex2f(x + width, y)
+        glTexCoord2f(renderX, renderY)
+        glVertex2f(x, y)
+        glTexCoord2f(renderX, renderY + renderHeight)
+        glVertex2f(x, y + height)
+        glTexCoord2f(renderX + renderWidth, renderY + renderHeight)
+        glVertex2f(x + width, y + height)
+        glTexCoord2f(renderX + renderWidth, renderY)
+        glVertex2f(x + width, y)
     }
 
     /**
@@ -278,10 +278,10 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, v
 
         for (c in text.toCharArray()) {
             val fontChar = charLocations[
-                    if (c.toInt() < charLocations.size)
-                        c.toInt()
+                    if (c.code < charLocations.size)
+                        c.code
                     else
-                        '\u0003'.toInt()
+                        '\u0003'.code
             ] ?: continue
 
             width += fontChar.width - 8
@@ -292,7 +292,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, v
 
     fun delete() {
         if (textureID != -1) {
-            GL11.glDeleteTextures(textureID)
+            glDeleteTextures(textureID)
             textureID = -1
         }
 

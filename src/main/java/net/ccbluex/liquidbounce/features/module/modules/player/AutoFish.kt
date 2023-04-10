@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.minecraft.item.ItemFishingRod
 
 @ModuleInfo(name = "AutoFish", description = "Automatically catches fish when using a rod.", category = ModuleCategory.PLAYER)
-class AutoFish : Module() {
+object AutoFish : Module() {
 
     private val rodOutTimer = MSTimer()
 
@@ -27,7 +27,7 @@ class AutoFish : Module() {
 
         val fishEntity = thePlayer.fishEntity
 
-        if (rodOutTimer.hasTimePassed(500L) && fishEntity == null || (fishEntity != null && fishEntity.motionX == 0.0 && fishEntity.motionZ == 0.0 && fishEntity.motionY != 0.0)) {
+        if (rodOutTimer.hasTimePassed(500) && fishEntity == null || (fishEntity != null && fishEntity.motionX == 0.0 && fishEntity.motionZ == 0.0 && fishEntity.motionY != 0.0)) {
             mc.rightClickMouse()
             rodOutTimer.reset()
         }

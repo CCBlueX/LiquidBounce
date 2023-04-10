@@ -5,10 +5,12 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.event.EventManager.registerListener
+import net.ccbluex.liquidbounce.event.EventManager.unregisterListener
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.KeyEvent
 import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.Derp
@@ -19,173 +21,183 @@ import net.ccbluex.liquidbounce.features.module.modules.player.*
 import net.ccbluex.liquidbounce.features.module.modules.render.*
 import net.ccbluex.liquidbounce.features.module.modules.world.*
 import net.ccbluex.liquidbounce.features.module.modules.world.Timer
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import java.util.*
 
 
-class ModuleManager : Listenable {
+object ModuleManager : Listenable {
 
     val modules = TreeSet<Module> { module1, module2 -> module1.name.compareTo(module2.name) }
     private val moduleClassMap = hashMapOf<Class<*>, Module>()
 
     init {
-        LiquidBounce.eventManager.registerListener(this)
+        registerListener(this)
     }
 
     /**
      * Register all modules
      */
     fun registerModules() {
-        ClientUtils.getLogger().info("[ModuleManager] Loading modules...")
+        LOGGER.info("[ModuleManager] Loading modules...")
 
+        // Register modules which need to be instanced (Java classes)
         registerModules(
-                AutoArmor::class.java,
-                AutoBow::class.java,
-                AutoLeave::class.java,
-                AutoPot::class.java,
-                AutoSoup::class.java,
-                AutoWeapon::class.java,
-                BowAimbot::class.java,
-                Criticals::class.java,
-                KillAura::class.java,
-                Trigger::class.java,
-                Velocity::class.java,
-                Fly::class.java,
-                ClickGUI::class.java,
-                HighJump::class.java,
-                InventoryMove::class.java,
-                NoSlow::class.java,
-                LiquidWalk::class.java,
-                SafeWalk::class.java,
-                WallClimb::class.java,
-                Strafe::class.java,
-                Sprint::class.java,
-                Teams::class.java,
-                NoRotateSet::class.java,
-                ChestStealer::class.java,
-                Scaffold::class.java,
-                CivBreak::class.java,
-                Tower::class.java,
-                FastBreak::class.java,
-                FastPlace::class.java,
-                ESP::class.java,
-                Speed::class.java,
-                Tracers::class.java,
-                NameTags::class.java,
-                FastUse::class.java,
-                Teleport::class.java,
-                Fullbright::class.java,
-                ItemESP::class.java,
-                StorageESP::class.java,
-                Projectiles::class.java,
-                NoClip::class.java,
-                Nuker::class.java,
-                PingSpoof::class.java,
-                FastClimb::class.java,
-                Step::class.java,
-                AutoRespawn::class.java,
-                AutoTool::class.java,
-                NoWeb::class.java,
-                Spammer::class.java,
-                IceSpeed::class.java,
-                Zoot::class.java,
-                Regen::class.java,
-                NoFall::class.java,
-                Blink::class.java,
-                NameProtect::class.java,
-                NoHurtCam::class.java,
-                Ghost::class.java,
-                MidClick::class.java,
-                XRay::class.java,
-                Timer::class.java,
-                Sneak::class.java,
-                SkinDerp::class.java,
-                GhostHand::class.java,
-                AutoWalk::class.java,
-                AutoBreak::class.java,
-                FreeCam::class.java,
-                Aimbot::class.java,
-                Eagle::class.java,
-                HitBox::class.java,
-                AntiCactus::class.java,
-                Plugins::class.java,
-                AntiHunger::class.java,
-                ConsoleSpammer::class.java,
-                LongJump::class.java,
-                Parkour::class.java,
-                LadderJump::class.java,
-                FastBow::class.java,
-                MultiActions::class.java,
-                AirJump::class.java,
-                AutoClicker::class.java,
-                NoBob::class.java,
-                BlockOverlay::class.java,
-                NoFriends::class.java,
-                BlockESP::class.java,
-                Chams::class.java,
-                Clip::class.java,
-                Phase::class.java,
-                ServerCrasher::class.java,
-                NoFOV::class.java,
-                FastStairs::class.java,
-                SwingAnimation::class.java,
-                Derp::class.java,
-                ReverseStep::class.java,
-                TNTBlock::class.java,
-                InventoryCleaner::class.java,
-                TrueSight::class.java,
-                LiquidChat::class.java,
-                AntiBlind::class.java,
-                NoSwing::class.java,
-                BedGodMode::class.java,
-                BugUp::class.java,
-                Breadcrumbs::class.java,
-                AbortBreaking::class.java,
-                PotionSaver::class.java,
-                CameraClip::class.java,
-                WaterSpeed::class.java,
-                Ignite::class.java,
-                SlimeJump::class.java,
-                MoreCarry::class.java,
-                NoPitchLimit::class.java,
-                Kick::class.java,
-                Liquids::class.java,
-                AtAllProvider::class.java,
-                AirLadder::class.java,
-                GodMode::class.java,
-                TeleportHit::class.java,
-                ForceUnicodeChat::class.java,
-                ItemTeleport::class.java,
-                BufferSpeed::class.java,
-                SuperKnockback::class.java,
-                ProphuntESP::class.java,
-                AutoFish::class.java,
-                Damage::class.java,
-                Freeze::class.java,
-                KeepContainer::class.java,
-                VehicleOneHit::class.java,
-                Reach::class.java,
-                Rotations::class.java,
-                NoJumpDelay::class.java,
-                BlockWalk::class.java,
-                AntiAFK::class.java,
-                PerfectHorseJump::class.java,
-                HUD::class.java,
-                TNTESP::class.java,
-                ComponentOnHover::class.java,
-                KeepAlive::class.java,
-                ResourcePackSpoof::class.java,
-                NoSlowBreak::class.java,
-                PortalMenu::class.java,
+            AutoArmor::class.java,
+            Ignite::class.java,
+            ItemTeleport::class.java,
+            Phase::class.java,
+            Teleport::class.java,
+            TeleportHit::class.java
         )
 
-        registerModule(NoScoreboard)
-        registerModule(Fucker)
-        registerModule(ChestAura)
-        registerModule(AntiBot)
-        registerModule(Animations)
+        // Register modules which have already been instanced (Kotlin objects)
+        registerModules(
+            AbortBreaking,
+            Aimbot,
+            AirJump,
+            AirLadder,
+            Animations,
+            AntiAFK,
+            AntiBlind,
+            AntiBot,
+            AntiCactus,
+            AntiHunger,
+            AtAllProvider,
+            AttackEffects,
+            AutoAccount,
+            AutoBow,
+            AutoBreak,
+            AutoClicker,
+            AutoFish,
+            AutoLeave,
+            AutoPot,
+            AutoRespawn,
+            AutoRod,
+            AutoSoup,
+            AutoTool,
+            AutoWalk,
+            AutoWeapon,
+            Backtrack,
+            BedGodMode,
+            Blink,
+            BlockESP,
+            BlockOverlay,
+            BlockWalk,
+            BowAimbot,
+            Breadcrumbs,
+            BufferSpeed,
+            BugUp,
+            CameraClip,
+            Chams,
+            ChestAura,
+            ChestStealer,
+            CivBreak,
+            ClickGUI,
+            Clip,
+            ComponentOnHover,
+            ConsoleSpammer,
+            Criticals,
+            Damage,
+            Derp,
+            ESP,
+            Eagle,
+            FastBow,
+            FastBreak,
+            FastClimb,
+            FastPlace,
+            FastStairs,
+            FastUse,
+            Fly,
+            ForceUnicodeChat,
+            FreeCam,
+            Freeze,
+            Fucker,
+            Fullbright,
+            Ghost,
+            GhostHand,
+            GodMode,
+            HUD,
+            HighJump,
+            HitBox,
+            IceSpeed,
+            InventoryCleaner,
+            InventoryMove,
+            ItemESP,
+            KeepAlive,
+            KeepContainer,
+            Kick,
+            KillAura,
+            LadderJump,
+            LiquidChat,
+            LiquidWalk,
+            Liquids,
+            LongJump,
+            MidClick,
+            MoreCarry,
+            MultiActions,
+            NameProtect,
+            NameTags,
+            NoBob,
+            NoBooks,
+            NoClip,
+            NoFOV,
+            NoFall,
+            NoFluid,
+            NoFriends,
+            NoHurtCam,
+            NoJumpDelay,
+            NoPitchLimit,
+            NoRotateSet,
+            NoScoreboard,
+            NoSlow,
+            NoSlowBreak,
+            NoSwing,
+            NoWeb,
+            Nuker,
+            Parkour,
+            PerfectHorseJump,
+            PingSpoof,
+            Plugins,
+            PortalMenu,
+            PotionSaver,
+            Projectiles,
+            ProphuntESP,
+            Reach,
+            Refill,
+            Regen,
+            ResourcePackSpoof,
+            ReverseStep,
+            Rotations,
+            SafeWalk,
+            Scaffold,
+            ServerCrasher,
+            SkinDerp,
+            SlimeJump,
+            Sneak,
+            Spammer,
+            Speed,
+            Sprint,
+            Step,
+            StorageESP,
+            Strafe,
+            SuperKnockback,
+            TNTBlock,
+            TNTESP,
+            Teams,
+            Timer,
+            Tower,
+            Tracers,
+            Trigger,
+            TrueSight,
+            VehicleOneHit,
+            Velocity,
+            WallClimb,
+            WaterSpeed,
+            XRay,
+            Zoot
+        )
 
-        ClientUtils.getLogger().info("[ModuleManager] Loaded ${modules.size} modules.")
+        LOGGER.info("[ModuleManager] Loaded ${modules.size} modules.")
     }
 
     /**
@@ -196,17 +208,17 @@ class ModuleManager : Listenable {
         moduleClassMap[module.javaClass] = module
 
         generateCommand(module)
-        LiquidBounce.eventManager.registerListener(module)
+        registerListener(module)
     }
 
     /**
-     * Register [moduleClass]
+     * Register [moduleClass] with new instance
      */
     private fun registerModule(moduleClass: Class<out Module>) {
         try {
             registerModule(moduleClass.newInstance())
         } catch (e: Throwable) {
-            ClientUtils.getLogger().error("Failed to load module: ${moduleClass.name} (${e.javaClass.name}: ${e.message})")
+            LOGGER.error("Failed to load module: ${moduleClass.name} (${e.javaClass.name}: ${e.message})")
         }
     }
 
@@ -214,9 +226,14 @@ class ModuleManager : Listenable {
      * Register a list of modules
      */
     @SafeVarargs
-    fun registerModules(vararg modules: Class<out Module>) {
-        modules.forEach(this::registerModule)
-    }
+    fun registerModules(vararg modules: Class<out Module>) = modules.forEach(this::registerModule)
+
+
+    /**
+     * Register a list of modules
+     */
+    @SafeVarargs
+    fun registerModules(vararg modules: Module) = modules.forEach(this::registerModule)
 
     /**
      * Unregister module
@@ -224,7 +241,7 @@ class ModuleManager : Listenable {
     fun unregisterModule(module: Module) {
         modules.remove(module)
         moduleClassMap.remove(module::class.java)
-        LiquidBounce.eventManager.unregisterListener(module)
+        unregisterListener(module)
     }
 
     /**
@@ -236,14 +253,8 @@ class ModuleManager : Listenable {
         if (values.isEmpty())
             return
 
-        LiquidBounce.commandManager.registerCommand(ModuleCommand(module, values))
+        CommandManager.registerCommand(ModuleCommand(module, values))
     }
-
-    /**
-     * Legacy stuff
-     *
-     * TODO: Remove later when everything is translated to Kotlin
-     */
 
     /**
      * Get module by [moduleClass]
@@ -257,6 +268,8 @@ class ModuleManager : Listenable {
      */
     fun getModule(moduleName: String?) = modules.find { it.name.equals(moduleName, ignoreCase = true) }
 
+    operator fun get(name: String) = getModule(name)
+
     /**
      * Module related events
      */
@@ -265,7 +278,7 @@ class ModuleManager : Listenable {
      * Handle incoming key presses
      */
     @EventTarget
-    private fun onKey(event: KeyEvent) = modules.filter { it.keyBind == event.key }.forEach { it.toggle() }
+    private fun onKey(event: KeyEvent) = modules.forEach { if (it.keyBind == event.key) it.toggle() }
 
     override fun handleEvents() = true
 }

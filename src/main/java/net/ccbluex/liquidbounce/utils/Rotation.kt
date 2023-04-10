@@ -6,6 +6,9 @@
 package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.event.StrafeEvent
+import net.ccbluex.liquidbounce.utils.RotationUtils.getFixedAngleDelta
+import net.ccbluex.liquidbounce.utils.RotationUtils.getFixedSensitivityAngle
+import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
 import net.ccbluex.liquidbounce.utils.block.PlaceInfo
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.util.MathHelper
@@ -23,10 +26,9 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
      * Set rotations to [player]
      */
     fun toPlayer(player: EntityPlayer) {
-        if (yaw.isNaN() || pitch.isNaN())
-            return
+        if (yaw.isNaN() || pitch.isNaN() || pitch > 90 || pitch < -90) return
 
-        fixedSensitivity(mc.gameSettings.mouseSensitivity)
+        fixedSensitivity()
 
         player.rotationYaw = yaw
         player.rotationPitch = pitch
@@ -37,22 +39,17 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
      *
      * @see net.minecraft.client.renderer.EntityRenderer.updateCameraAndRender
      */
-    fun fixedSensitivity(sensitivity: Float) {
-        val f = sensitivity * 0.6F + 0.2F
-        val gcd = f * f * f * 1.2F
+    fun fixedSensitivity(sensitivity: Float = mc.gameSettings.mouseSensitivity): Rotation {
+        // Previous implementation essentially floored the subtraction.
+        // This way it returns rotations closer to the original.
 
-        // get previous rotation
-        val rotation = RotationUtils.serverRotation
+        // Only calculate GCD once
+        val gcd = getFixedAngleDelta(sensitivity)
 
-        // fix yaw
-        var deltaYaw = yaw - rotation.yaw
-        deltaYaw -= deltaYaw % gcd
-        yaw = rotation.yaw + deltaYaw
+        yaw = getFixedSensitivityAngle(yaw, serverRotation.yaw, gcd)
+        pitch = getFixedSensitivityAngle(pitch, serverRotation.pitch, gcd)
 
-        // fix pitch
-        var deltaPitch = pitch - rotation.pitch
-        deltaPitch -= deltaPitch % gcd
-        pitch = rotation.pitch + deltaPitch
+        return this
     }
 
     /**
@@ -60,12 +57,10 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
      *
      * @author bestnub
      */
-    fun applyStrafeToPlayer(event: StrafeEvent) {
-        val player = mc.thePlayer!!
+    fun applyStrafeToPlayer(event: StrafeEvent, strict: Boolean = false) {
+        val player = mc.thePlayer
 
-        val dif = ((MathHelper.wrapAngleTo180_float(player.rotationYaw - this.yaw
-                - 23.5f - 135)
-                + 180) / 45).toInt()
+        val diff = ((MathHelper.wrapAngleTo180_float(player.rotationYaw - yaw - 23.5f - 135) + 180) / 45).toInt()
 
         val yaw = this.yaw
 
@@ -76,69 +71,81 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
         var calcForward = 0f
         var calcStrafe = 0f
 
-        when (dif) {
-            0 -> {
-                calcForward = forward
-                calcStrafe = strafe
-            }
-            1 -> {
-                calcForward += forward
-                calcStrafe -= forward
-                calcForward += strafe
-                calcStrafe += strafe
-            }
-            2 -> {
-                calcForward = strafe
-                calcStrafe = -forward
-            }
-            3 -> {
-                calcForward -= forward
-                calcStrafe -= forward
-                calcForward += strafe
-                calcStrafe -= strafe
-            }
-            4 -> {
-                calcForward = -forward
-                calcStrafe = -strafe
-            }
-            5 -> {
-                calcForward -= forward
-                calcStrafe += forward
-                calcForward -= strafe
-                calcStrafe -= strafe
-            }
-            6 -> {
-                calcForward = -strafe
-                calcStrafe = forward
-            }
-            7 -> {
-                calcForward += forward
-                calcStrafe += forward
-                calcForward -= strafe
-                calcStrafe += strafe
-            }
-        }
+        if (!strict) {
+            when (diff) {
+                0 -> {
+                    calcForward = forward
+                    calcStrafe = strafe
+                }
 
-        if (calcForward > 1f || calcForward < 0.9f && calcForward > 0.3f || calcForward < -1f || calcForward > -0.9f && calcForward < -0.3f) {
-            calcForward *= 0.5f
-        }
+                1 -> {
+                    calcForward += forward
+                    calcStrafe -= forward
+                    calcForward += strafe
+                    calcStrafe += strafe
+                }
 
-        if (calcStrafe > 1f || calcStrafe < 0.9f && calcStrafe > 0.3f || calcStrafe < -1f || calcStrafe > -0.9f && calcStrafe < -0.3f) {
-            calcStrafe *= 0.5f
+                2 -> {
+                    calcForward = strafe
+                    calcStrafe = -forward
+                }
+
+                3 -> {
+                    calcForward -= forward
+                    calcStrafe -= forward
+                    calcForward += strafe
+                    calcStrafe -= strafe
+                }
+
+                4 -> {
+                    calcForward = -forward
+                    calcStrafe = -strafe
+                }
+
+                5 -> {
+                    calcForward -= forward
+                    calcStrafe += forward
+                    calcForward -= strafe
+                    calcStrafe -= strafe
+                }
+
+                6 -> {
+                    calcForward = -strafe
+                    calcStrafe = forward
+                }
+
+                7 -> {
+                    calcForward += forward
+                    calcStrafe += forward
+                    calcForward -= strafe
+                    calcStrafe += strafe
+                }
+            }
+
+            if (calcForward > 1f || calcForward < 0.9f && calcForward > 0.3f || calcForward < -1f || calcForward > -0.9f && calcForward < -0.3f) {
+                calcForward *= 0.5f
+            }
+
+            if (calcStrafe > 1f || calcStrafe < 0.9f && calcStrafe > 0.3f || calcStrafe < -1f || calcStrafe > -0.9f && calcStrafe < -0.3f) {
+                calcStrafe *= 0.5f
+            }
+        } else {
+            calcForward = event.forward
+            calcStrafe = event.strafe
         }
 
         var d = calcStrafe * calcStrafe + calcForward * calcForward
 
         if (d >= 1.0E-4f) {
             d = sqrt(d)
-            if (d < 1.0f) d = 1.0f
+            if (d < 1f) d = 1f
             d = friction / d
             calcStrafe *= d
             calcForward *= d
-            val yawSin = sin((yaw * Math.PI / 180f).toFloat())
-            val yawCos = cos((yaw * Math.PI / 180f).toFloat())
-            player.motionX += calcStrafe * yawCos - calcForward * yawSin.toDouble()
-            player.motionZ += calcForward * yawCos + calcStrafe * yawSin.toDouble()
+            val yawSin = sin(yaw * Math.PI / 180f)
+            val yawCos = cos(yaw * Math.PI / 180f)
+            player.motionX += calcStrafe * yawCos - calcForward * yawSin
+            player.motionZ += calcForward * yawCos + calcStrafe * yawSin
         }
     }
 }

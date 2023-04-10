@@ -5,7 +5,8 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
-import net.ccbluex.liquidbounce.LiquidBounce;
+import net.ccbluex.liquidbounce.features.command.CommandManager;
+import net.ccbluex.liquidbounce.file.FileManager;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiChat;
@@ -49,10 +50,10 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
 
     @Inject(method = "keyTyped", at = @At("RETURN"))
     private void updateLength(CallbackInfo callbackInfo) {
-        if (!inputField.getText().startsWith(String.valueOf(LiquidBounce.commandManager.getPrefix()))) return;
-        LiquidBounce.commandManager.autoComplete(inputField.getText());
+        if (!inputField.getText().startsWith(String.valueOf(CommandManager.INSTANCE.getPrefix()))) return;
+        CommandManager.INSTANCE.autoComplete(inputField.getText());
 
-        if (!inputField.getText().startsWith(LiquidBounce.commandManager.getPrefix() + "lc"))
+        if (!inputField.getText().startsWith(CommandManager.INSTANCE.getPrefix() + "lc"))
             inputField.setMaxStringLength(10000);
         else
             inputField.setMaxStringLength(100);
@@ -60,7 +61,7 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
 
     @Inject(method = "updateScreen", at = @At("HEAD"))
     private void updateScreen(CallbackInfo callbackInfo) {
-        final int delta = RenderUtils.deltaTime;
+        final int delta = RenderUtils.INSTANCE.getDeltaTime();
 
         if (fade < 14) fade += 0.4F * delta;
         if (fade > 14) fade = 14;
@@ -74,26 +75,26 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
     @Inject(method = "autocompletePlayerNames", at = @At("HEAD"))
     private void prioritizeClientFriends(final CallbackInfo callbackInfo) {
         foundPlayerNames.sort(
-                Comparator.comparing(s -> !LiquidBounce.fileManager.friendsConfig.isFriend(s)));
+                Comparator.comparing(s -> !FileManager.INSTANCE.getFriendsConfig().isFriend(s)));
     }
 
     /**
-     * Adds client command auto completion and cancels sending an auto completion request packet
+     * Adds client command auto-completion and cancels sending an auto-completion request packet
      * to the server if the message contains a client command.
      *
      * @author NurMarvin
      */
     @Inject(method = "sendAutocompleteRequest", at = @At("HEAD"), cancellable = true)
     private void handleClientCommandCompletion(String full, final String ignored, CallbackInfo callbackInfo) {
-        if (LiquidBounce.commandManager.autoComplete(full)) {
+        if (CommandManager.INSTANCE.autoComplete(full)) {
             waitingOnAutocomplete = true;
 
-            String[] latestAutoComplete = LiquidBounce.commandManager.getLatestAutoComplete();
+            String[] latestAutoComplete = CommandManager.INSTANCE.getLatestAutoComplete();
 
             if (full.toLowerCase().endsWith(latestAutoComplete[latestAutoComplete.length - 1].toLowerCase()))
                 return;
 
-            this.onAutocompleteResponse(latestAutoComplete);
+            onAutocompleteResponse(latestAutoComplete);
 
             callbackInfo.cancel();
         }
@@ -107,7 +108,7 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
      */
     @Inject(method = "onAutocompleteResponse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiChat;autocompletePlayerNames()V", shift = At.Shift.BEFORE), cancellable = true)
     private void onAutocompleteResponse(String[] autoCompleteResponse, CallbackInfo callbackInfo) {
-        if (LiquidBounce.commandManager.getLatestAutoComplete().length != 0) callbackInfo.cancel();
+        if (CommandManager.INSTANCE.getLatestAutoComplete().length != 0) callbackInfo.cancel();
     }
 
     /**
@@ -115,11 +116,11 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
      */
     @Overwrite
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        Gui.drawRect(2, this.height - (int) fade, this.width - 2, this.height, Integer.MIN_VALUE);
-        this.inputField.drawTextBox();
+        Gui.drawRect(2, height - (int) fade, width - 2, height, Integer.MIN_VALUE);
+        inputField.drawTextBox();
 
-        if (LiquidBounce.commandManager.getLatestAutoComplete().length > 0 && !inputField.getText().isEmpty() && inputField.getText().startsWith(String.valueOf(LiquidBounce.commandManager.getPrefix()))) {
-            String[] latestAutoComplete = LiquidBounce.commandManager.getLatestAutoComplete();
+        if (CommandManager.INSTANCE.getLatestAutoComplete().length > 0 && !inputField.getText().isEmpty() && inputField.getText().startsWith(String.valueOf(CommandManager.INSTANCE.getPrefix()))) {
+            String[] latestAutoComplete = CommandManager.INSTANCE.getLatestAutoComplete();
             String[] textArray = inputField.getText().split(" ");
             String trimmedString = latestAutoComplete[0].replaceFirst("(?i)" + textArray[textArray.length - 1], "");
 
@@ -127,9 +128,9 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
         }
 
         IChatComponent ichatcomponent =
-                this.mc.ingameGUI.getChatGUI().getChatComponent(Mouse.getX(), Mouse.getY());
+                mc.ingameGUI.getChatGUI().getChatComponent(Mouse.getX(), Mouse.getY());
 
         if (ichatcomponent != null)
-            this.handleComponentHover(ichatcomponent, mouseX, mouseY);
+            handleComponentHover(ichatcomponent, mouseX, mouseY);
     }
 }

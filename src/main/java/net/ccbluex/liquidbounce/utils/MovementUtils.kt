@@ -11,38 +11,33 @@ import kotlin.math.sqrt
 
 object MovementUtils : MinecraftInstance() {
 
-    val speed: Float
-        get() = sqrt(mc.thePlayer!!.motionX * mc.thePlayer!!.motionX + mc.thePlayer!!.motionZ * mc.thePlayer!!.motionZ).toFloat()
+    var speed
+        get() = sqrt(mc.thePlayer.motionX * mc.thePlayer.motionX + mc.thePlayer.motionZ * mc.thePlayer.motionZ).toFloat()
+        set(value) = strafe(value)
 
-    @JvmStatic
-    val isMoving: Boolean
-        get() = mc.thePlayer != null && (mc.thePlayer!!.movementInput.moveForward != 0f || mc.thePlayer!!.movementInput.moveStrafe != 0f)
+    val isMoving
+        get() = mc.thePlayer != null && (mc.thePlayer.movementInput.moveForward != 0f || mc.thePlayer.movementInput.moveStrafe != 0f)
 
-    fun hasMotion(): Boolean {
-        return mc.thePlayer!!.motionX != 0.0 && mc.thePlayer!!.motionZ != 0.0 && mc.thePlayer!!.motionY != 0.0
-    }
+    val hasMotion
+        get() = mc.thePlayer.motionX != 0.0 && mc.thePlayer.motionZ != 0.0 && mc.thePlayer.motionY != 0.0
 
-    @JvmStatic
-    @JvmOverloads
     fun strafe(speed: Float = this.speed) {
         if (!isMoving) return
         val yaw = direction
-        val thePlayer = mc.thePlayer!!
+        val thePlayer = mc.thePlayer
         thePlayer.motionX = -sin(yaw) * speed
         thePlayer.motionZ = cos(yaw) * speed
     }
 
-    @JvmStatic
     fun forward(length: Double) {
-        val thePlayer = mc.thePlayer!!
+        val thePlayer = mc.thePlayer
         val yaw = Math.toRadians(thePlayer.rotationYaw.toDouble())
         thePlayer.setPosition(thePlayer.posX + -sin(yaw) * length, thePlayer.posY, thePlayer.posZ + cos(yaw) * length)
     }
 
-    @JvmStatic
     val direction: Double
         get() {
-            val thePlayer = mc.thePlayer!!
+            val thePlayer = mc.thePlayer
             var rotationYaw = thePlayer.rotationYaw
             if (thePlayer.moveForward < 0f) rotationYaw += 180f
             var forward = 1f
@@ -51,4 +46,10 @@ object MovementUtils : MinecraftInstance() {
             if (thePlayer.moveStrafing < 0f) rotationYaw += 90f * forward
             return Math.toRadians(rotationYaw.toDouble())
         }
+
+    fun isOnGround(height: Double) =
+        mc.theWorld.getCollidingBoundingBoxes(
+                mc.thePlayer,
+                mc.thePlayer.entityBoundingBox.offset(0.0, -height, 0.0)
+            ).isNotEmpty()
 }

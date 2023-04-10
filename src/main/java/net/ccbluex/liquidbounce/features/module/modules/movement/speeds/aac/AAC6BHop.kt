@@ -7,7 +7,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 
 class AAC6BHop : SpeedMode("AAC6BHop") {
     private var legitJump = false
@@ -18,18 +19,18 @@ class AAC6BHop : SpeedMode("AAC6BHop") {
 
         if (thePlayer.isInWater)
             return
-        if (MovementUtils.isMoving) {
+        if (isMoving) {
             if (thePlayer.onGround) {
                 if (legitJump) {
                     thePlayer.motionY = 0.4
-                    MovementUtils.strafe(0.15f)
+                    strafe(0.15f)
                     thePlayer.onGround = false
                     legitJump = false
 
                     return
                 }
                 thePlayer.motionY = 0.41
-                MovementUtils.strafe(0.47458485f)
+                strafe(0.47458485f)
             }
 
             if (thePlayer.motionY < 0 && thePlayer.motionY > -0.2)

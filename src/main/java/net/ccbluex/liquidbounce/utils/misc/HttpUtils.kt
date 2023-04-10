@@ -6,7 +6,7 @@
 
 package net.ccbluex.liquidbounce.utils.misc
 
-import org.apache.commons.io.FileUtils
+import org.apache.commons.io.FileUtils.copyInputStreamToFile
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -28,8 +28,7 @@ object HttpUtils {
         HttpURLConnection.setFollowRedirects(true)
     }
 
-    private fun make(url: String, method: String,
-                     agent: String = DEFAULT_AGENT): HttpURLConnection {
+    private fun make(url: String, method: String, agent: String = DEFAULT_AGENT): HttpURLConnection {
         val httpConnection = URL(url).openConnection() as HttpURLConnection
 
         httpConnection.requestMethod = method
@@ -45,27 +44,22 @@ object HttpUtils {
     }
 
     @Throws(IOException::class)
-    fun request(url: String, method: String,
-                agent: String = DEFAULT_AGENT): String {
-        val connection = make(url, method, agent)
-
-        return connection.inputStream.reader().readText()
-    }
+    fun request(url: String, method: String, agent: String = DEFAULT_AGENT) =
+        requestStream(url, method, agent).reader().readText()
 
     @Throws(IOException::class)
-    fun requestStream(url: String, method: String,
-                      agent: String = DEFAULT_AGENT): InputStream? {
-        val connection = make(url, method, agent)
-
-        return connection.inputStream
-    }
+    fun requestStream(url: String, method: String, agent: String = DEFAULT_AGENT): InputStream =
+        make(url, method, agent).inputStream
 
     @Throws(IOException::class)
-    @JvmStatic
     fun get(url: String) = request(url, "GET")
 
     @Throws(IOException::class)
-    @JvmStatic
-    fun download(url: String, file: File) = FileUtils.copyInputStreamToFile(make(url, "GET").inputStream, file)
+    fun responseCode(url: String, method: String, agent: String = DEFAULT_AGENT) =
+        make(url, method, agent).responseCode
+
+    @Throws(IOException::class)
+    fun download(url: String, file: File) =
+        copyInputStreamToFile(requestStream(url, "GET"), file)
 
 }

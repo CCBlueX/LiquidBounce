@@ -9,6 +9,10 @@ public final class MSTimer {
 
     private long time = -1L;
 
+    public boolean hasTimePassed(final int MS) {
+        return hasTimePassed((long) MS);
+    }
+
     public boolean hasTimePassed(final long MS) {
         return System.currentTimeMillis() >= time + MS;
     }

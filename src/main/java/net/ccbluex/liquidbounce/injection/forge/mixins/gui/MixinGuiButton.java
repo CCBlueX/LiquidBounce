@@ -12,7 +12,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiButton;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -22,6 +21,8 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 import java.awt.*;
+
+import static net.minecraft.client.renderer.GlStateManager.resetColor;
 
 @Mixin(GuiButton.class)
 @SideOnly(Side.CLIENT)
@@ -67,32 +68,31 @@ public abstract class MixinGuiButton extends Gui {
    public void drawButton(Minecraft mc, int mouseX, int mouseY) {
       if (visible) {
          final FontRenderer fontRenderer = mc.getLanguageManager().isCurrentLocaleUnicode() ? mc.fontRendererObj : Fonts.font35;
-         hovered = (mouseX >= this.xPosition && mouseY >= this.yPosition &&
-                    mouseX < this.xPosition + this.width && mouseY < this.yPosition + this.height);
-
-         final int delta = RenderUtils.deltaTime;
+         hovered = (mouseX >= xPosition && mouseY >= yPosition &&
+                    mouseX < xPosition + width && mouseY < yPosition + height);
+         final float deltaTime = RenderUtils.INSTANCE.getDeltaTime();
 
          if (enabled && hovered) {
-            cut += 0.05F * delta;
+            cut += 0.05F * deltaTime;
 
             if (cut >= 4) cut = 4;
 
-            alpha += 0.3F * delta;
+            alpha += 0.3F * deltaTime;
 
             if (alpha >= 210) alpha = 210;
          } else {
-            cut -= 0.05F * delta;
+            cut -= 0.05F * deltaTime;
 
             if (cut <= 0) cut = 0;
 
-            alpha -= 0.3F * delta;
+            alpha -= 0.3F * deltaTime;
 
             if (alpha <= 120) alpha = 120;
          }
 
-         Gui.drawRect(this.xPosition + (int) this.cut, this.yPosition,
-                 this.xPosition + this.width - (int) this.cut, this.yPosition + this.height,
-                 this.enabled ? new Color(0F, 0F, 0F, this.alpha / 255F).getRGB() :
+         Gui.drawRect(xPosition + (int) cut, yPosition,
+                 xPosition + width - (int) cut, yPosition + height,
+                 enabled ? new Color(0F, 0F, 0F, alpha / 255F).getRGB() :
                          new Color(0.5F, 0.5F, 0.5F, 0.5F).getRGB());
 
          mc.getTextureManager().bindTexture(buttonTextures);
@@ -101,13 +101,13 @@ public abstract class MixinGuiButton extends Gui {
          AWTFontRenderer.Companion.setAssumeNonVolatile(true);
 
          fontRenderer.drawStringWithShadow(displayString,
-                 (float) ((this.xPosition + this.width / 2) -
+                 (float) ((xPosition + width / 2) -
                          fontRenderer.getStringWidth(displayString) / 2),
-                 this.yPosition + (this.height - 5) / 2F, 14737632);
+                 yPosition + (height - 5) / 2F, 14737632);
 
          AWTFontRenderer.Companion.setAssumeNonVolatile(false);
 
-         GlStateManager.resetColor();
+         resetColor();
       }
    }
 }

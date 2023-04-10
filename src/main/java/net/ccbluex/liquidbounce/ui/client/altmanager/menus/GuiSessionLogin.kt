@@ -6,13 +6,11 @@
 package net.ccbluex.liquidbounce.ui.client.altmanager.menus
 
 import com.thealtening.AltService
-
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.login.LoginUtils
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
-
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiTextField
@@ -40,18 +38,16 @@ class GuiSessionLogin(private val prevGui: GuiAltManager) : GuiScreen() {
 
         // Add buttons to screen
 
-
-        loginButton = GuiButton(1, width / 2 - 100, height / 4 + 96, "Login")
+        loginButton = GuiButton(1, width / 2 - 100, height / 2 - 60, "Login")
         buttonList.add(loginButton)
 
 
-        buttonList.add(GuiButton(0, width / 2 - 100, height / 4 + 120, "Back"))
+        buttonList.add(GuiButton(0, width / 2 - 100, height / 2 - 30, "Back"))
 
         // Add fields to screen
-        sessionTokenField = GuiTextField(666, Fonts.font40, width / 2 - 100, 80, 200, 20)
-        sessionTokenField.isFocused = true
-        sessionTokenField.maxStringLength = Integer.MAX_VALUE
-        sessionTokenField
+        sessionTokenField = GuiTextField(666, Fonts.font40, width / 2 - 100, height / 2 - 90, 200, 20)
+        sessionTokenField.isFocused = false
+        sessionTokenField.maxStringLength = 32
 
         // Call sub method
         super.initGui()
@@ -63,16 +59,17 @@ class GuiSessionLogin(private val prevGui: GuiAltManager) : GuiScreen() {
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
         // Draw background to screen
         drawBackground(0)
-        RenderUtils.drawRect(30.0f, 30.0f, width - 30.0f, height - 30.0f, Integer.MIN_VALUE)
+        drawRect(30f, 30f, width - 30f, height - 30f, Integer.MIN_VALUE)
 
         // Draw title and status
-        Fonts.font35.drawCenteredString("Session Login", width / 2.0f, 36.0f, 0xffffff)
-        Fonts.font35.drawCenteredString(status, width / 2.0f, height / 4.0f + 80.0f, 0xffffff)
+        Fonts.font40.drawCenteredString("Session Login", width / 2f, height / 2 - 150f, 0xffffff)
+        Fonts.font35.drawCenteredString(status, width / 2f, height / 2f, 0xffffff)
 
         // Draw fields
         sessionTokenField.drawTextBox()
 
-        Fonts.font40.drawCenteredString("§7Session Token:", width / 2.0f - 65.0f, 66.0f, 0xffffff)
+        if (sessionTokenField.text.isEmpty() && !sessionTokenField.isFocused)
+            Fonts.font40.drawCenteredString("§7Session Token", width / 2f - 60f, height / 2 - 84f, 0xffffff)
 
         // Call sub method
         super.drawScreen(mouseX, mouseY, partialTicks)
@@ -99,9 +96,9 @@ class GuiSessionLogin(private val prevGui: GuiAltManager) : GuiScreen() {
                                 try {
                                     GuiAltManager.altService.switchService(AltService.EnumAltService.MOJANG)
                                 } catch (e: NoSuchFieldException) {
-                                    ClientUtils.getLogger().error("Something went wrong while trying to switch alt service.", e)
+                                    LOGGER.error("Something went wrong while trying to switch alt service.", e)
                                 } catch (e: IllegalAccessException) {
-                                    ClientUtils.getLogger().error("Something went wrong while trying to switch alt service.", e)
+                                    LOGGER.error("Something went wrong while trying to switch alt service.", e)
                                 }
                             }
 

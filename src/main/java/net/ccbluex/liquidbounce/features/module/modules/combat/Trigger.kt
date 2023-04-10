@@ -10,19 +10,19 @@ import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.EntityUtils
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils
+import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
+import net.ccbluex.liquidbounce.utils.timer.TimeUtils.randomClickDelay
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.client.settings.KeyBinding
 
 @ModuleInfo(name = "Trigger", description = "Automatically attacks the entity you are looking at.", category = ModuleCategory.COMBAT)
-class Trigger : Module() {
+object Trigger : Module() {
 
     private val maxCPS: IntegerValue = object : IntegerValue("MaxCPS", 8, 1, 20) {
         override fun onChanged(oldValue: Int, newValue: Int) {
             val i = minCPS.get()
             if (i > newValue) set(i)
-            delay = TimeUtils.randomClickDelay(minCPS.get(), this.get())
+            delay = randomClickDelay(minCPS.get(), get())
         }
     }
 
@@ -30,11 +30,13 @@ class Trigger : Module() {
         override fun onChanged(oldValue: Int, newValue: Int) {
             val i = maxCPS.get()
             if (i < newValue) set(i)
-            delay = TimeUtils.randomClickDelay(this.get(), maxCPS.get())
+            delay = randomClickDelay(get(), maxCPS.get())
         }
+
+        override fun isSupported() = !maxCPS.isMinimal()
     }
 
-    private var delay = TimeUtils.randomClickDelay(minCPS.get(), maxCPS.get())
+    private var delay = randomClickDelay(minCPS.get(), maxCPS.get())
     private var lastSwing = 0L
 
     @EventTarget
@@ -42,11 +44,11 @@ class Trigger : Module() {
         val objectMouseOver = mc.objectMouseOver
 
         if (objectMouseOver != null && System.currentTimeMillis() - lastSwing >= delay &&
-                EntityUtils.isSelected(objectMouseOver.entityHit, true)) {
+                isSelected(objectMouseOver.entityHit, true)) {
             KeyBinding.onTick(mc.gameSettings.keyBindAttack.keyCode) // Minecraft Click handling
 
             lastSwing = System.currentTimeMillis()
-            delay = TimeUtils.randomClickDelay(minCPS.get(), maxCPS.get())
+            delay = randomClickDelay(minCPS.get(), maxCPS.get())
         }
     }
 }

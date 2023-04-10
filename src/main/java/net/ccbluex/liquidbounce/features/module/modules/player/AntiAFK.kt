@@ -10,6 +10,8 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
+import net.ccbluex.liquidbounce.utils.extensions.fixedSensitivityPitch
+import net.ccbluex.liquidbounce.utils.extensions.fixedSensitivityYaw
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -17,24 +19,36 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.settings.GameSettings
-import net.minecraft.client.settings.KeyBinding
 
 @ModuleInfo(name = "AntiAFK", description = "Prevents you from getting kicked for being AFK.", category = ModuleCategory.PLAYER)
-class AntiAFK : Module() {
+object AntiAFK : Module() {
 
     private val swingDelayTimer = MSTimer()
     private val delayTimer = MSTimer()
 
     private val modeValue = ListValue("Mode", arrayOf("Old", "Random", "Custom"), "Random")
 
-    private val swingDelayValue = IntegerValue("SwingDelay", 100, 0, 1000)
-    private val rotationDelayValue = IntegerValue("RotationDelay", 100, 0, 1000)
-    private val rotationAngleValue = FloatValue("RotationAngle", 1f, -180F, 180F)
-
-    private val jumpValue = BoolValue("Jump", true)
-    private val moveValue = BoolValue("Move", true)
-    private val rotateValue = BoolValue("Rotate", true)
-    private val swingValue = BoolValue("Swing", true)
+    private val rotateValue = object : BoolValue("Rotate", true) {
+        override fun isSupported() = modeValue.get() == "Custom"
+    }
+    private val rotationDelayValue = object : IntegerValue("RotationDelay", 100, 0, 1000) {
+        override fun isSupported() = rotateValue.isActive()
+    }
+    private val rotationAngleValue = object : FloatValue("RotationAngle", 1f, -180F, 180F) {
+        override fun isSupported() = rotateValue.isActive()
+    }
+    private val swingValue = object : BoolValue("Swing", true) {
+        override fun isSupported() = modeValue.get() == "Custom"
+    }
+    private val swingDelayValue = object : IntegerValue("SwingDelay", 100, 0, 1000) {
+        override fun isSupported() = swingValue.isActive()
+    }
+    private val jumpValue = object : BoolValue("Jump", true) {
+        override fun isSupported() = modeValue.get() == "Custom"
+    }
+    private val moveValue = object : BoolValue("Move", true) {
+        override fun isSupported() = modeValue.get() == "Custom"
+    }
 
     private var shouldMove = false
     private var randomTimerDelay = 500L
@@ -48,12 +62,12 @@ class AntiAFK : Module() {
                 mc.gameSettings.keyBindForward.pressed = true
 
                 if (delayTimer.hasTimePassed(500)) {
-                    thePlayer.rotationYaw += 180F
+                    thePlayer.fixedSensitivityYaw += 180F
                     delayTimer.reset()
                 }
             }
             "random" -> {
-                getRandomMoveKeyBind()!!.pressed = shouldMove
+                getRandomMoveKeyBind().pressed = shouldMove
 
                 if (!delayTimer.hasTimePassed(randomTimerDelay)) return
                 shouldMove = false
@@ -78,12 +92,11 @@ class AntiAFK : Module() {
                             delayTimer.reset()
                         }
                         4 -> {
-                            thePlayer.rotationYaw += RandomUtils.nextFloat(-180.0F, 180.0F)
+                            thePlayer.fixedSensitivityYaw += RandomUtils.nextFloat(-180f, 180f)
                             delayTimer.reset()
                         }
                         5 -> {
-                            if (thePlayer.rotationPitch <= -90 || thePlayer.rotationPitch >= 90) thePlayer.rotationPitch = 0F
-                            thePlayer.rotationPitch += RandomUtils.nextFloat(-10.0F, 10.0F)
+                            thePlayer.fixedSensitivityPitch += RandomUtils.nextFloat(-10f, 10f)
                             delayTimer.reset()
                         }
                     }
@@ -95,14 +108,13 @@ class AntiAFK : Module() {
                 if (jumpValue.get() && thePlayer.onGround)
                     thePlayer.jump()
 
-                if (rotateValue.get() && delayTimer.hasTimePassed(rotationDelayValue.get().toLong())) {
-                    thePlayer.rotationYaw += rotationAngleValue.get()
-                    if (thePlayer.rotationPitch <= -90 || thePlayer.rotationPitch >= 90) thePlayer.rotationPitch = 0F
-                    thePlayer.rotationPitch += RandomUtils.nextFloat(0F, 1F) * 2 - 1
+                if (rotateValue.get() && delayTimer.hasTimePassed(rotationDelayValue.get())) {
+                    thePlayer.fixedSensitivityYaw += rotationAngleValue.get()
+                    thePlayer.fixedSensitivityPitch += RandomUtils.nextFloat(0F, 1F) * 2 - 1
                     delayTimer.reset()
                 }
 
-                if (swingValue.get() && !thePlayer.isSwingInProgress && swingDelayTimer.hasTimePassed(swingDelayValue.get().toLong())) {
+                if (swingValue.get() && !thePlayer.isSwingInProgress && swingDelayTimer.hasTimePassed(swingDelayValue.get())) {
                     thePlayer.swingItem()
                     swingDelayTimer.reset()
                 }
@@ -110,25 +122,10 @@ class AntiAFK : Module() {
         }
     }
 
-    private fun getRandomMoveKeyBind(): KeyBinding? {
-        when (RandomUtils.nextInt(0, 4)) {
-            0 -> {
-                return mc.gameSettings.keyBindRight
-            }
-            1 -> {
-                return mc.gameSettings.keyBindLeft
-            }
-            2 -> {
-                return mc.gameSettings.keyBindBack
-            }
-            3 -> {
-                return mc.gameSettings.keyBindForward
-            }
-            else -> {
-                return null
-            }
-        }
-    }
+    private val moveKeyBindings =
+        setOf(mc.gameSettings.keyBindForward,mc.gameSettings.keyBindLeft, mc.gameSettings.keyBindBack, mc.gameSettings.keyBindRight)
+
+    private fun getRandomMoveKeyBind() = moveKeyBindings.random()
 
     override fun onDisable() {
         if (!GameSettings.isKeyDown(mc.gameSettings.keyBindForward))

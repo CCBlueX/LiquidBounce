@@ -22,15 +22,21 @@ import net.minecraft.item.ItemPotion
 import net.minecraft.network.play.client.C03PacketPlayer
 
 @ModuleInfo(name = "FastUse", description = "Allows you to use items faster.", category = ModuleCategory.PLAYER)
-class FastUse : Module() {
+object FastUse : Module() {
 
     private val modeValue = ListValue("Mode", arrayOf("Instant", "NCP", "AAC", "Custom"), "NCP")
 
     private val noMoveValue = BoolValue("NoMove", false)
 
-    private val delayValue = IntegerValue("CustomDelay", 0, 0, 300)
-    private val customSpeedValue = IntegerValue("CustomSpeed", 2, 1, 35)
-    private val customTimer = FloatValue("CustomTimer", 1.1f, 0.5f, 2f)
+    private val delayValue = object : IntegerValue("CustomDelay", 0, 0, 300) {
+        override fun isSupported() = modeValue.get() == "Custom"
+    }
+    private val customSpeedValue = object : IntegerValue("CustomSpeed", 2, 1, 35) {
+        override fun isSupported() = modeValue.get() == "Custom"
+    }
+    private val customTimer = object : FloatValue("CustomTimer", 1.1f, 0.5f, 2f) {
+        override fun isSupported() = modeValue.get() == "Custom"
+    }
 
     private val msTimer = MSTimer()
     private var usedTimer = false
@@ -49,7 +55,7 @@ class FastUse : Module() {
             return
         }
 
-        val usingItem = thePlayer.itemInUse!!.item
+        val usingItem = thePlayer.itemInUse.item
 
         if (usingItem is ItemFood || usingItem is ItemBucketMilk || usingItem is ItemPotion) {
             when (modeValue.get().lowercase()) {
@@ -78,7 +84,7 @@ class FastUse : Module() {
                     mc.timer.timerSpeed = customTimer.get()
                     usedTimer = true
 
-                    if (!msTimer.hasTimePassed(delayValue.get().toLong()))
+                    if (!msTimer.hasTimePassed(delayValue.get()))
                         return
 
                     repeat(customSpeedValue.get()) {
@@ -92,17 +98,15 @@ class FastUse : Module() {
     }
 
     @EventTarget
-    fun onMove(event: MoveEvent?) {
-        val thePlayer = mc.thePlayer
+    fun onMove(event: MoveEvent) {
+        val thePlayer = mc.thePlayer ?: return
 
-        if (thePlayer == null || event == null)
-            return
         if (!state || !thePlayer.isUsingItem || !noMoveValue.get())
             return
 
-        val usingItem = thePlayer.itemInUse!!.item
+        val usingItem = thePlayer.itemInUse.item
 
-        if ((usingItem is ItemFood || usingItem is ItemBucketMilk || usingItem is ItemPotion))
+        if (usingItem is ItemFood || usingItem is ItemBucketMilk || usingItem is ItemPotion)
             event.zero()
     }
 
@@ -113,6 +117,6 @@ class FastUse : Module() {
         }
     }
 
-    override val tag: String?
+    override val tag
         get() = modeValue.get()
 }

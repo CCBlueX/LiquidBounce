@@ -8,11 +8,11 @@ package net.ccbluex.liquidbounce.file.configs
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.commandManager
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.shortcuts.Shortcut
 import net.ccbluex.liquidbounce.file.FileConfig
-import net.ccbluex.liquidbounce.file.FileManager
+import net.ccbluex.liquidbounce.file.FileManager.PRETTY_GSON
 import java.io.File
 import java.io.IOException
 
@@ -45,12 +45,12 @@ class ShortcutsConfig(file: File) : FileConfig(file) {
                 val commandName = scriptCommand.get("name")?.asString ?: continue
                 val arguments = scriptCommand.get("arguments")?.asJsonArray ?: continue
 
-                val command = LiquidBounce.commandManager.getCommand(commandName) ?: continue
+                val command = commandManager.getCommand(commandName) ?: continue
 
                 script.add(Pair(command, arguments.map { it.asString }.toTypedArray()))
             }
 
-            LiquidBounce.commandManager.registerCommand(Shortcut(name, script))
+            commandManager.registerCommand(Shortcut(name, script))
         }
     }
 
@@ -62,7 +62,7 @@ class ShortcutsConfig(file: File) : FileConfig(file) {
     override fun saveConfig() {
         val jsonArray = JsonArray()
 
-        for (command in LiquidBounce.commandManager.commands) {
+        for (command in commandManager.commands) {
             if (command !is Shortcut)
                 continue
 
@@ -77,9 +77,9 @@ class ShortcutsConfig(file: File) : FileConfig(file) {
                 pairObject.addProperty("name", pair.first.command)
 
                 val argumentsObject = JsonArray()
-                for (argument in pair.second) {
+                /*for (argument in pair.second) {
                     // argumentsObject.add(argument)
-                }
+                }*/
 
                 pairObject.add("arguments", argumentsObject)
 
@@ -91,7 +91,7 @@ class ShortcutsConfig(file: File) : FileConfig(file) {
             jsonArray.add(jsonCommand)
         }
 
-        file.writeText(FileManager.PRETTY_GSON.toJson(jsonArray))
+        file.writeText(PRETTY_GSON.toJson(jsonArray))
     }
 
 }

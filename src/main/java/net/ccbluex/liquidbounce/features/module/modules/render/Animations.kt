@@ -11,11 +11,13 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.render.Animations.animations
 import net.ccbluex.liquidbounce.features.module.modules.render.Animations.defaultAnimation
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.entity.AbstractClientPlayer
-import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.client.renderer.GlStateManager.*
 import net.minecraft.util.MathHelper
-import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL11.glTranslated
+import org.lwjgl.opengl.GL11.glTranslatef
 
 /**
  * Animations module
@@ -43,12 +45,14 @@ object Animations : Module() {
 
     private val animations = arrayOf(
         OneSevenAnimation(),
-        PushdownAnimation()
+        PushdownAnimation(),
+        OldAnimation()
     )
 
     private var animationMode = ListValue("Mode", animations.map { it.name }.toTypedArray(), "Pushdown")
+    var oddSwing = BoolValue("OddSwing", false)
 
-    fun getAnimation() = animations.firstOrNull { it.name.equals(animationMode.get(), true) }
+    fun getAnimation() = animations.firstOrNull { it.name == animationMode.get() }
 
 }
 
@@ -69,10 +73,10 @@ abstract class Animation(val name: String) : MinecraftInstance() {
      * @author Mojang
      */
     protected fun doBlockTransformations() {
-        GlStateManager.translate(-0.5f, 0.2f, 0.0f)
-        GlStateManager.rotate(30.0f, 0.0f, 1.0f, 0.0f)
-        GlStateManager.rotate(-80.0f, 1.0f, 0.0f, 0.0f)
-        GlStateManager.rotate(60.0f, 0.0f, 1.0f, 0.0f)
+        translate(-0.5f, 0.2f, 0f)
+        rotate(30f, 0f, 1f, 0f)
+        rotate(-80f, 1f, 0f, 0f)
+        rotate(60f, 0f, 1f, 0f)
     }
 
     /**
@@ -81,15 +85,15 @@ abstract class Animation(val name: String) : MinecraftInstance() {
      * @author Mojang
      */
     protected fun transformFirstPersonItem(equipProgress: Float, swingProgress: Float) {
-        GlStateManager.translate(0.56f, -0.52f, -0.71999997f)
-        GlStateManager.translate(0.0f, equipProgress * -0.6f, 0.0f)
-        GlStateManager.rotate(45.0f, 0.0f, 1.0f, 0.0f)
+        translate(0.56f, -0.52f, -0.71999997f)
+        translate(0f, equipProgress * -0.6f, 0f)
+        rotate(45f, 0f, 1f, 0f)
         val f = MathHelper.sin(swingProgress * swingProgress * 3.1415927f)
         val f1 = MathHelper.sin(MathHelper.sqrt_float(swingProgress) * 3.1415927f)
-        GlStateManager.rotate(f * -20.0f, 0.0f, 1.0f, 0.0f)
-        GlStateManager.rotate(f1 * -20.0f, 0.0f, 0.0f, 1.0f)
-        GlStateManager.rotate(f1 * -80.0f, 1.0f, 0.0f, 0.0f)
-        GlStateManager.scale(0.4f, 0.4f, 0.4f)
+        rotate(f * -20f, 0f, 1f, 0f)
+        rotate(f1 * -20f, 0f, 0f, 1f)
+        rotate(f1 * -80f, 1f, 0f, 0f)
+        scale(0.4f, 0.4f, 0.4f)
     }
 
 }
@@ -101,11 +105,18 @@ abstract class Animation(val name: String) : MinecraftInstance() {
  */
 class OneSevenAnimation : Animation("OneSeven") {
     override fun transform(f1: Float, f: Float, clientPlayer: AbstractClientPlayer) {
-        transformFirstPersonItem(f + 0.1f, f1)
+        transformFirstPersonItem(f, f1)
         doBlockTransformations()
-        GlStateManager.translate(-0.5f, 0.2f, 0.0f)
+        translate(-0.5f, 0.2f, 0f)
     }
 
+}
+
+class OldAnimation : Animation("Old") {
+    override fun transform(f1: Float, f: Float, clientPlayer: AbstractClientPlayer) {
+        transformFirstPersonItem(f, f1)
+        doBlockTransformations()
+    }
 }
 
 /**
@@ -117,24 +128,24 @@ class PushdownAnimation : Animation("Pushdown") {
      * @author CzechHek. Taken from Animations script.
      */
     override fun transform(f1: Float, f: Float, clientPlayer: AbstractClientPlayer) {
-        GlStateManager.translate(0.56, -0.52, -0.5)
-        GlStateManager.translate(0.0, f * -0.0, 0.0)
-        GlStateManager.rotate(45.5f, 0.0f, 1.0f, 0.0f)
+        translate(0.56, -0.52, -0.5)
+        translate(0.0, -f.toDouble() * 0.3, 0.0)
+        rotate(45.5f, 0f, 1f, 0f)
         val var3 = MathHelper.sin(0f)
         val var4 = MathHelper.sin(0f)
-        GlStateManager.rotate((var3 * -20.0f), 0.0f, 1.0f, 0.0f)
-        GlStateManager.rotate((var4 * -20.0f), 0.0f, 0.0f, 1.0f)
-        GlStateManager.rotate((var4 * -80.0f), 1.0f, 0.0f, 0.0f)
-        GlStateManager.scale(0.32, 0.32, 0.32)
+        rotate((var3 * -20f), 0f, 1f, 0f)
+        rotate((var4 * -20f), 0f, 0f, 1f)
+        rotate((var4 * -80f), 1f, 0f, 0f)
+        scale(0.32, 0.32, 0.32)
         val var15 = MathHelper.sin((MathHelper.sqrt_float(f1) * 3.1415927f))
-        GlStateManager.rotate((-var15 * 125 / 1.75f), 3.95f, 0.35f, 8.0f)
-        GlStateManager.rotate(-var15 * 35, 0.0f, (var15 / 100.0f), -10.0f)
-        GlStateManager.translate(-1.0, 0.6, -0.0)
-        GlStateManager.rotate(30.0f, 0.0f, 1.0f, 0.0f)
-        GlStateManager.rotate(-80.0f, 1.0f, 0.0f, 0.0f)
-        GlStateManager.rotate(60.0f, 0.0f, 1.0f, 0.0f)
-        GL11.glTranslated(1.05, 0.35, 0.4)
-        GL11.glTranslatef(-1f, (if (clientPlayer.isSneaking) 0.0f else 0.0f), 0f)
+        rotate((-var15 * 125 / 1.75f), 3.95f, 0.35f, 8f)
+        rotate(-var15 * 35, 0f, (var15 / 100f), -10f)
+        translate(-1.0, 0.6, -0.0)
+        rotate(30f, 0f, 1f, 0f)
+        rotate(-80f, 1f, 0f, 0f)
+        rotate(60f, 0f, 1f, 0f)
+        glTranslated(1.05, 0.35, 0.4)
+        glTranslatef(-1f, 0f, 0f)
     }
 
 }

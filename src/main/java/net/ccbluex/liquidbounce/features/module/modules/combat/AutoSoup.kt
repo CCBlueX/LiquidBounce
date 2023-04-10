@@ -23,22 +23,24 @@ import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 
 @ModuleInfo(name = "AutoSoup", description = "Makes you automatically eat soup whenever your health is low.", category = ModuleCategory.COMBAT)
-class AutoSoup : Module() {
+object AutoSoup : Module() {
 
     private val healthValue = FloatValue("Health", 15f, 0f, 20f)
     private val delayValue = IntegerValue("Delay", 150, 0, 500)
     private val openInventoryValue = BoolValue("OpenInv", false)
-    private val simulateInventoryValue = BoolValue("SimulateInventory", true)
+    private val simulateInventoryValue = object : BoolValue("SimulateInventory", true) {
+        override fun isSupported() = !openInventoryValue.get()
+    }
     private val bowlValue = ListValue("Bowl", arrayOf("Drop", "Move", "Stay"), "Drop")
 
     private val timer = MSTimer()
 
-    override val tag: String
+    override val tag
         get() = healthValue.get().toString()
 
     @EventTarget
-    fun onUpdate(event: UpdateEvent?) {
-        if (!timer.hasTimePassed(delayValue.get().toLong()))
+    fun onUpdate(event: UpdateEvent) {
+        if (!timer.hasTimePassed(delayValue.get()))
             return
 
         val thePlayer = mc.thePlayer ?: return
@@ -49,7 +51,7 @@ class AutoSoup : Module() {
             mc.netHandler.addToSendQueue(C09PacketHeldItemChange(soupInHotbar - 36))
             mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(thePlayer.inventory.getStackInSlot(soupInHotbar)))
 
-            if (bowlValue.get().equals("Drop", true))
+            if (bowlValue.get() == "Drop")
                 mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.DROP_ITEM,
                     BlockPos.ORIGIN, EnumFacing.DOWN))
 
@@ -59,7 +61,7 @@ class AutoSoup : Module() {
         }
 
         val bowlInHotbar = InventoryUtils.findItem(36, 45, Items.bowl)
-        if (bowlValue.get().equals("Move", true) && bowlInHotbar != -1) {
+        if (bowlValue.get() == "Move" && bowlInHotbar != -1) {
             if (openInventoryValue.get() && mc.currentScreen !is GuiInventory)
                 return
 

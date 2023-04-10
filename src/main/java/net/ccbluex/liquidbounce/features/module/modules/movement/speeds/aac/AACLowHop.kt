@@ -7,7 +7,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 
 class AACLowHop : SpeedMode("AACLowHop") {
     private var legitJump = false
@@ -19,7 +20,7 @@ class AACLowHop : SpeedMode("AACLowHop") {
     override fun onMotion() {
         val thePlayer = mc.thePlayer ?: return
 
-        if (MovementUtils.isMoving) {
+        if (isMoving) {
             if (thePlayer.onGround) {
                 if (legitJump) {
                     thePlayer.jump()
@@ -27,7 +28,7 @@ class AACLowHop : SpeedMode("AACLowHop") {
                     return
                 }
                 thePlayer.motionY = 0.343
-                MovementUtils.strafe(0.534f)
+                strafe(0.534f)
             }
         } else {
             legitJump = true

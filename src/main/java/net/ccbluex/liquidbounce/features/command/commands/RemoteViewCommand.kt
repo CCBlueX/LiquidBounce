@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.commandManager
 import net.ccbluex.liquidbounce.features.command.Command
 
 class RemoteViewCommand : Command("remoteview", "rv") {
@@ -24,11 +24,11 @@ class RemoteViewCommand : Command("remoteview", "rv") {
 
         val targetName = args[1]
 
-        for (entity in mc.theWorld!!.loadedEntityList) {
+        for (entity in mc.theWorld.loadedEntityList) {
             if (targetName == entity.name) {
                 mc.renderViewEntity = entity
                 chat("Now viewing perspective of §8${entity.name}§3.")
-                chat("Execute §8${LiquidBounce.commandManager.prefix}remoteview §3again to go back to yours.")
+                chat("Execute §8${commandManager.prefix}remoteview §3again to go back to yours.")
                 break
             }
         }
@@ -38,9 +38,9 @@ class RemoteViewCommand : Command("remoteview", "rv") {
         if (args.isEmpty()) return emptyList()
 
         return when (args.size) {
-            1 -> return mc.theWorld!!.playerEntities
-                    .filter { it.name != null && it.name!!.startsWith(args[0], true) }
-                    .map { it.name!! }
+            1 -> return mc.theWorld.playerEntities
+                    .filter { it.name != null && it.name.startsWith(args[0], true) }
+                    .map { it.name }
             else -> emptyList()
         }
     }

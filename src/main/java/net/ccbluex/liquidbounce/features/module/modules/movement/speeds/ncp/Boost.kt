@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp
 
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 
 class Boost : SpeedMode("Boost") {
     private var motionDelay = 0
@@ -19,16 +19,16 @@ class Boost : SpeedMode("Boost") {
         var offset = 4.69
         var shouldOffset = true
 
-        if (mc.theWorld!!.getCollidingBoundingBoxes(thePlayer, thePlayer.entityBoundingBox.offset(thePlayer.motionX / offset, 0.0, thePlayer.motionZ / offset)).isNotEmpty()) {
+        if (mc.theWorld.getCollidingBoundingBoxes(thePlayer, thePlayer.entityBoundingBox.offset(thePlayer.motionX / offset, 0.0, thePlayer.motionZ / offset)).isNotEmpty()) {
             shouldOffset = false
         }
 
-        if (thePlayer.onGround && ground < 1.0f)
+        if (thePlayer.onGround && ground < 1f)
             ground += 0.2f
         if (!thePlayer.onGround)
-            ground = 0.0f
+            ground = 0f
 
-        if (ground == 1.0f && shouldSpeedUp()) {
+        if (ground == 1f && shouldSpeedUp()) {
             if (!thePlayer.isSprinting)
                 offset += 0.8
 
@@ -61,7 +61,6 @@ class Boost : SpeedMode("Boost") {
     override fun onUpdate() {}
     override fun onMove(event: MoveEvent) {}
 
-    private fun shouldSpeedUp(): Boolean {
-        return !mc.thePlayer!!.isInLava && !mc.thePlayer!!.isOnLadder && !mc.thePlayer!!.isSneaking && MovementUtils.isMoving
-    }
+    private fun shouldSpeedUp() =
+        !mc.thePlayer.isInLava && !mc.thePlayer.isOnLadder && !mc.thePlayer.isSneaking && isMoving
 }

@@ -15,7 +15,7 @@ import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.potion.Potion
 
 @ModuleInfo(name = "Zoot", description = "Removes all bad potion effects/fire.", category = ModuleCategory.PLAYER)
-class Zoot : Module() {
+object Zoot : Module() {
 
     private val badEffectsValue = BoolValue("BadEffects", true)
     private val fireValue = BoolValue("Fire", true)

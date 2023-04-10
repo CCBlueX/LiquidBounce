@@ -5,10 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.LiquidBounce
-
-import net.minecraft.util.BlockPos
-import net.minecraft.util.Vec3
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
@@ -17,19 +13,23 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.AutoTool
-import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
+import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getCenterDistance
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.isFullBlock
+import net.ccbluex.liquidbounce.utils.extensions.eyes
 import net.ccbluex.liquidbounce.utils.extensions.getBlock
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBlockBox
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.block.Block
 import net.minecraft.init.Blocks
 import net.minecraft.network.play.client.C07PacketPlayerDigging
+import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
+import net.minecraft.util.Vec3
 import java.awt.Color
 
 @ModuleInfo(name = "Fucker", description = "Destroys selected blocks around you. (aka.  IDNuker)", category = ModuleCategory.WORLD)
@@ -43,7 +43,9 @@ object Fucker : Module() {
     private val throughWallsValue = ListValue("ThroughWalls", arrayOf("None", "Raycast", "Around"), "None")
     private val rangeValue = FloatValue("Range", 5F, 1F, 7F)
     private val actionValue = ListValue("Action", arrayOf("Destroy", "Use"), "Destroy")
-    private val instantValue = BoolValue("Instant", false)
+    private val instantValue = object : BoolValue("Instant", false) {
+        override fun isSupported() = actionValue.get() == "Destroy" || surroundingsValue.get()
+    }
     private val switchValue = IntegerValue("SwitchDelay", 250, 0, 1000)
     private val swingValue = BoolValue("Swing", true)
     private val rotationsValue = BoolValue("Rotations", true)
@@ -65,16 +67,12 @@ object Fucker : Module() {
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        if (noHitValue.get()) {
-            val killAura = LiquidBounce.moduleManager.getModule(KillAura::class.java) as KillAura
-
-            if (killAura.state && killAura.target != null)
-                return
-        }
+        if (noHitValue.get() && KillAura.state && KillAura.target != null)
+            return
 
         val targetId = blockValue.get()
 
-        if (pos == null || Block.getIdFromBlock(getBlock(pos!!)!!) != targetId ||
+        if (pos == null || Block.getIdFromBlock(getBlock(pos!!)) != targetId ||
                 getCenterDistance(pos!!) > rangeValue.get())
             pos = find(targetId)
 
@@ -85,14 +83,14 @@ object Fucker : Module() {
         }
 
         var currentPos = pos ?: return
-        var rotations = RotationUtils.faceBlock(currentPos) ?: return
+        var rotations = faceBlock(currentPos) ?: return
 
         // Surroundings
         var surroundings = false
 
         if (surroundingsValue.get()) {
-            val eyes = thePlayer.getPositionEyes(1F)
-            val blockPos = mc.theWorld!!.rayTraceBlocks(eyes, rotations.vec, false,
+            val eyes = thePlayer.eyes
+            val blockPos = mc.theWorld.rayTraceBlocks(eyes, rotations.vec, false,
                     false, true)?.blockPos
 
             if (blockPos != null && blockPos.getBlock() != Blocks.air) {
@@ -101,7 +99,7 @@ object Fucker : Module() {
 
                 pos = blockPos
                 currentPos = pos ?: return
-                rotations = RotationUtils.faceBlock(currentPos) ?: return
+                rotations = faceBlock(currentPos) ?: return
             }
         }
 
@@ -113,7 +111,7 @@ object Fucker : Module() {
 
         oldPos = currentPos
 
-        if (!switchTimer.hasTimePassed(switchValue.get().toLong()))
+        if (!switchTimer.hasTimePassed(switchValue.get()))
             return
 
         // Block hit delay
@@ -124,15 +122,14 @@ object Fucker : Module() {
 
         // Face block
         if (rotationsValue.get())
-            RotationUtils.setTargetRotation(rotations.rotation)
+            setTargetRotation(rotations.rotation)
 
         when {
-            // Destory block
-            actionValue.get().equals("destroy", true) || surroundings -> {
+            // Destroy block
+            actionValue.get() == "Destroy" || surroundings -> {
                 // Auto Tool
-                val autoTool = LiquidBounce.moduleManager[AutoTool::class.java] as AutoTool
-                if (autoTool.state)
-                    autoTool.switchSlot(currentPos)
+                if (AutoTool.state)
+                    AutoTool.switchSlot(currentPos)
 
                 // Break block
                 if (instantValue.get()) {
@@ -157,10 +154,10 @@ object Fucker : Module() {
                             currentPos, EnumFacing.DOWN))
 
                     if (thePlayer.capabilities.isCreativeMode ||
-                            block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld!!, pos!!) >= 1.0F) {
+                            block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld, pos) >= 1f) {
                         if (swingValue.get())
                             thePlayer.swingItem()
-                        mc.playerController.onPlayerDestroyBlock(pos!!, EnumFacing.DOWN)
+                        mc.playerController.onPlayerDestroyBlock(pos, EnumFacing.DOWN)
 
                         currentDamage = 0F
                         pos = null
@@ -171,8 +168,8 @@ object Fucker : Module() {
                 if (swingValue.get())
                     thePlayer.swingItem()
 
-                currentDamage += block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld!!, currentPos)
-                mc.theWorld!!.sendBlockBreakProgress(thePlayer.entityId, currentPos, (currentDamage * 10F).toInt() - 1)
+                currentDamage += block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld, currentPos)
+                mc.theWorld.sendBlockBreakProgress(thePlayer.entityId, currentPos, (currentDamage * 10F).toInt() - 1)
 
                 if (currentDamage >= 1F) {
                     mc.netHandler.addToSendQueue(C07PacketPlayerDigging(
@@ -186,8 +183,8 @@ object Fucker : Module() {
             }
 
             // Use block
-            actionValue.get().equals("use", true) -> if (mc.playerController.onPlayerRightClick(
-                            thePlayer, mc.theWorld!!, thePlayer.heldItem!!, pos!!, EnumFacing.DOWN,
+            actionValue.get() == "Use" -> if (mc.playerController.onPlayerRightClick(
+                            thePlayer, mc.theWorld, thePlayer.heldItem, pos, EnumFacing.DOWN,
                             Vec3(currentPos.x.toDouble(), currentPos.y.toDouble(), currentPos.z.toDouble()))) {
                 if (swingValue.get())
                     thePlayer.swingItem()
@@ -201,7 +198,7 @@ object Fucker : Module() {
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        RenderUtils.drawBlockBox(pos ?: return, Color.RED, true)
+        drawBlockBox(pos ?: return, Color.RED, true)
     }
 
     /**
@@ -256,9 +253,8 @@ object Fucker : Module() {
 
         return when (throughWallsValue.get().lowercase()) {
             "raycast" -> {
-                val eyesPos = Vec3(thePlayer.posX, thePlayer.entityBoundingBox.minY +
-                        thePlayer.eyeHeight, thePlayer.posZ)
-                val movingObjectPosition = mc.theWorld!!.rayTraceBlocks(eyesPos,
+                val eyesPos = thePlayer.eyes
+                val movingObjectPosition = mc.theWorld.rayTraceBlocks(eyesPos,
                         Vec3(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5), false, true, false)
 
                 movingObjectPosition != null && movingObjectPosition.blockPos == blockPos
@@ -269,6 +265,6 @@ object Fucker : Module() {
         }
     }
 
-    override val tag: String
+    override val tag
         get() = getBlockName(blockValue.get())
 }

@@ -7,9 +7,10 @@
 package net.ccbluex.liquidbounce.utils.render;
 
 import net.minecraft.client.renderer.texture.TextureUtil;
-import org.lwjgl.opengl.GL11;
 
 import java.awt.image.BufferedImage;
+
+import static org.lwjgl.opengl.GL11.glDeleteTextures;
 
 public class CustomTexture {
     private final BufferedImage image;
@@ -36,7 +37,7 @@ public class CustomTexture {
 
     public void unload() {
         if (!unloaded) {
-            GL11.glDeleteTextures(textureId);
+            glDeleteTextures(textureId);
             unloaded = true;
         }
     }

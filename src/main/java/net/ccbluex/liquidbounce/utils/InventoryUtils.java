@@ -60,7 +60,7 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
 
     public static boolean hasSpaceHotbar() {
         for (int i = 36; i < 45; i++) {
-            final ItemStack stack = mc.thePlayer.inventory.getStackInSlot(i);
+            final ItemStack stack = mc.thePlayer.inventoryContainer.getSlot(i).getStack();
 
             if (stack == null)
                 return true;

@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.minecraft.client.entity.EntityOtherPlayerMP
@@ -19,7 +19,7 @@ import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.client.C0BPacketEntityAction
 
 @ModuleInfo(name = "FreeCam", description = "Allows you to move out of your body.", category = ModuleCategory.RENDER)
-class FreeCam : Module() {
+object FreeCam : Module() {
     private val speedValue = FloatValue("Speed", 0.8f, 0.1f, 2f)
     private val flyValue = BoolValue("Fly", true)
     private val noClipValue = BoolValue("NoClip", true)
@@ -40,12 +40,12 @@ class FreeCam : Module() {
         val playerMP = EntityOtherPlayerMP(mc.theWorld, thePlayer.gameProfile)
 
 
-        playerMP.rotationYawHead = thePlayer.rotationYawHead;
-        playerMP.renderYawOffset = thePlayer.renderYawOffset;
+        playerMP.rotationYawHead = thePlayer.rotationYawHead
+        playerMP.renderYawOffset = thePlayer.renderYawOffset
         playerMP.rotationYawHead = thePlayer.rotationYawHead
         playerMP.copyLocationAndAnglesFrom(thePlayer)
 
-        mc.theWorld!!.addEntityToWorld(-1000, playerMP)
+        mc.theWorld.addEntityToWorld(-1000, playerMP)
 
         if (noClipValue.get())
             thePlayer.noClip = true
@@ -61,7 +61,7 @@ class FreeCam : Module() {
 
         thePlayer.setPositionAndRotation(oldX, oldY, oldZ, thePlayer.rotationYaw, thePlayer.rotationPitch)
 
-        mc.theWorld!!.removeEntityFromWorld(fakePlayer!!.entityId)
+        mc.theWorld.removeEntityFromWorld(fakePlayer!!.entityId)
         fakePlayer = null
 
         thePlayer.motionX = 0.0
@@ -70,13 +70,13 @@ class FreeCam : Module() {
     }
 
     @EventTarget
-    fun onUpdate(event: UpdateEvent?) {
-        val thePlayer = mc.thePlayer!!
+    fun onUpdate(event: UpdateEvent) {
+        val thePlayer = mc.thePlayer
 
         if (noClipValue.get())
             thePlayer.noClip = true
 
-        thePlayer.fallDistance = 0.0f
+        thePlayer.fallDistance = 0f
 
         if (flyValue.get()) {
             val value = speedValue.get()
@@ -91,7 +91,7 @@ class FreeCam : Module() {
             if (mc.gameSettings.keyBindSneak.isKeyDown)
                 thePlayer.motionY -= value
 
-            MovementUtils.strafe(value)
+            strafe(value)
         }
     }
 

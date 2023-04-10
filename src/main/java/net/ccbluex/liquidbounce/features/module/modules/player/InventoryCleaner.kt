@@ -5,20 +5,21 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.AutoArmor
+import net.ccbluex.liquidbounce.features.module.modules.combat.AutoArmor.ARMOR_COMPARATOR
 import net.ccbluex.liquidbounce.injection.implementations.IMixinItemStack
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.InventoryUtils
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils
+import net.ccbluex.liquidbounce.utils.timer.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -29,6 +30,7 @@ import net.minecraft.init.Blocks
 import net.minecraft.item.*
 import net.minecraft.network.play.client.C0DPacketCloseWindow
 import net.minecraft.network.play.client.C16PacketClientStatus
+import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT
 
 
 @ModuleInfo(
@@ -36,7 +38,7 @@ import net.minecraft.network.play.client.C16PacketClientStatus
     description = "Automatically throws away useless items.",
     category = ModuleCategory.PLAYER
 )
-class InventoryCleaner : Module() {
+object InventoryCleaner : Module() {
 
     /**
      * OPTIONS
@@ -54,40 +56,75 @@ class InventoryCleaner : Module() {
             val maxDelay = maxDelayValue.get()
             if (maxDelay < newValue) set(maxDelay)
         }
+
+        override fun isSupported() = !maxDelayValue.isMinimal()
     }
+    private val itemDelayValue = IntegerValue("ItemDelay", 0, 0, 5000)
 
     private val invOpenValue = BoolValue("InvOpen", false)
-    private val simulateInventory = BoolValue("SimulateInventory", true)
-    private val noMoveValue = BoolValue("NoMove", false)
+    private val simulateInventory = object : BoolValue("SimulateInventory", true) {
+        override fun isSupported() = !invOpenValue.get()
+    }
+
+    private val noMoveValue = BoolValue("NoMoveClicks", false)
+    private val noMoveAirValue = object : BoolValue("NoClicksInAir", false) {
+        override fun isSupported() = noMoveValue.get()
+    }
+    private val noMoveGroundValue = object : BoolValue("NoClicksOnGround", true) {
+        override fun isSupported() = noMoveValue.get()
+    }
+
     private val ignoreVehiclesValue = BoolValue("IgnoreVehicles", false)
     private val hotbarValue = BoolValue("Hotbar", true)
     private val randomSlotValue = BoolValue("RandomSlot", false)
-    private val sortValue = BoolValue("Sort", true)
-    private val itemDelayValue = IntegerValue("ItemDelay", 0, 0, 5000)
 
     private val items =
         arrayOf("None", "Ignore", "Sword", "Bow", "Pickaxe", "Axe", "Food", "Block", "Water", "Gapple", "Pearl")
-    private val sortSlot1Value = ListValue("SortSlot-1", items, "Sword")
-    private val sortSlot2Value = ListValue("SortSlot-2", items, "Bow")
-    private val sortSlot3Value = ListValue("SortSlot-3", items, "Pickaxe")
-    private val sortSlot4Value = ListValue("SortSlot-4", items, "Axe")
-    private val sortSlot5Value = ListValue("SortSlot-5", items, "None")
-    private val sortSlot6Value = ListValue("SortSlot-6", items, "None")
-    private val sortSlot7Value = ListValue("SortSlot-7", items, "Food")
-    private val sortSlot8Value = ListValue("SortSlot-8", items, "Block")
-    private val sortSlot9Value = ListValue("SortSlot-9", items, "Block")
+    private val sortValue = BoolValue("Sort", true)
+    private val sortSlot1Value = object : ListValue("SortSlot-1", items, "Sword") {
+        override fun isSupported() = sortValue.get()
+    }
+    private val sortSlot2Value = object : ListValue("SortSlot-2", items, "Bow") {
+        override fun isSupported() = sortValue.get()
+    }
+    private val sortSlot3Value = object : ListValue("SortSlot-3", items, "Pickaxe") {
+        override fun isSupported() = sortValue.get()
+    }
+    private val sortSlot4Value = object : ListValue("SortSlot-4", items, "Axe") {
+        override fun isSupported() = sortValue.get()
+    }
+    private val sortSlot5Value = object : ListValue("SortSlot-5", items, "None") {
+        override fun isSupported() = sortValue.get()
+    }
+    private val sortSlot6Value = object : ListValue("SortSlot-6", items, "None") {
+        override fun isSupported() = sortValue.get()
+    }
+    private val sortSlot7Value = object : ListValue("SortSlot-7", items, "Food") {
+        override fun isSupported() = sortValue.get()
+    }
+    private val sortSlot8Value = object : ListValue("SortSlot-8", items, "Block") {
+        override fun isSupported() = sortValue.get()
+    }
+    private val sortSlot9Value = object : ListValue("SortSlot-9", items, "Block") {
+        override fun isSupported() = sortValue.get()
+    }
 
     /**
      * VALUES
      */
 
-    private var delay = 0L
+    private var delay = 0
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        if (!InventoryUtils.CLICK_TIMER.hasTimePassed(delay) || mc.currentScreen !is GuiInventory && invOpenValue.get() || noMoveValue.get() && MovementUtils.isMoving || thePlayer.openContainer != null && thePlayer.openContainer.windowId != 0 || (LiquidBounce.moduleManager[AutoArmor::class.java] as AutoArmor).isLocked) {
+        if (!InventoryUtils.CLICK_TIMER.hasTimePassed(delay)
+            || mc.currentScreen !is GuiInventory && invOpenValue.get()
+            || noMoveValue.get() && isMoving &&
+                    if (mc.thePlayer.onGround) noMoveGroundValue.get() else noMoveAirValue.get()
+            || thePlayer.openContainer != null && thePlayer.openContainer.windowId != 0
+            || (moduleManager[AutoArmor::class.java] as AutoArmor).isLocked) {
             return
         }
 
@@ -110,7 +147,7 @@ class InventoryCleaner : Module() {
             val openInventory = mc.currentScreen !is GuiInventory && simulateInventory.get()
 
             if (openInventory) {
-                mc.netHandler.addToSendQueue(C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT))
+                mc.netHandler.addToSendQueue(C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT))
             }
 
             mc.playerController.windowClick(thePlayer.openContainer.windowId, garbageItem, 1, 4, thePlayer)
@@ -119,7 +156,7 @@ class InventoryCleaner : Module() {
                 mc.netHandler.addToSendQueue(C0DPacketCloseWindow())
             }
 
-            delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+            delay = randomDelay(minDelayValue.get(), maxDelayValue.get())
         }
     }
 
@@ -136,22 +173,13 @@ class InventoryCleaner : Module() {
             if (item is ItemSword || item is ItemTool) {
                 val thePlayer = mc.thePlayer ?: return true
 
-                if (slot >= 36 && findBetterItem(
-                        slot - 36, thePlayer.inventory.getStackInSlot(slot - 36)
-                    ) == slot - 36
-                ) return true
+                if (slot >= 36 && findBetterItem(slot - 36, thePlayer.inventory.getStackInSlot(slot - 36)) == slot - 36)
+                    return true
 
                 for (i in 0..8) {
-                    if (type(i).equals("sword", true) && item is ItemSword || type(i).equals(
-                            "pickaxe", true
-                        ) && item is ItemPickaxe || type(i).equals(
-                            "axe", true
-                        ) && item is ItemAxe
-                    ) {
-                        if (findBetterItem(i, thePlayer.inventory.getStackInSlot(i)) == null) {
-                            return true
-                        }
-                    }
+                    if ((type(i) == "Sword" && item is ItemSword || type(i) == "Pickaxe" && item is ItemPickaxe
+                                || type(i) == "Axe" && item is ItemAxe) && findBetterItem(i, thePlayer.inventory.getStackInSlot(i)) == null)
+                        return true
                 }
 
                 val damage = (itemStack.attributeModifiers["generic.attackDamage"].firstOrNull()?.amount
@@ -179,14 +207,14 @@ class InventoryCleaner : Module() {
                         val armor = ArmorPiece(stack, slot)
 
                         if (armor.armorType != currArmor.armorType) false
-                        else AutoArmor.ARMOR_COMPARATOR.compare(currArmor, armor) <= 0
+                        else ARMOR_COMPARATOR.compare(currArmor, armor) <= 0
                     } else false
                 }
             } else if (itemStack.unlocalizedName == "item.compass") {
                 items(0, 45).none { (_, stack) -> itemStack != stack && stack.unlocalizedName == "item.compass" }
             } else item is ItemFood || itemStack.unlocalizedName == "item.arrow" || item is ItemBlock && item.block !is BlockBush || item is ItemBed || itemStack.unlocalizedName == "item.diamond" || itemStack.unlocalizedName == "item.ingotIron" || item is ItemPotion || item is ItemEnderPearl || item is ItemEnchantedBook || item is ItemBucket || itemStack.unlocalizedName == "item.stick" || ignoreVehiclesValue.get() && (item is ItemBoat || item is ItemMinecart)
         } catch (ex: Exception) {
-            ClientUtils.getLogger().error("(InventoryCleaner) Failed to check item: ${itemStack.unlocalizedName}.", ex)
+            LOGGER.error("(InventoryCleaner) Failed to check item: ${itemStack.unlocalizedName}.", ex)
 
             true
         }
@@ -208,7 +236,7 @@ class InventoryCleaner : Module() {
             if (bestItem != index) {
                 val openInventory = mc.currentScreen !is GuiInventory && simulateInventory.get()
 
-                if (openInventory) mc.netHandler.addToSendQueue(C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT))
+                if (openInventory) mc.netHandler.addToSendQueue(C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT))
 
                 mc.playerController.windowClick(
                     0, if (bestItem < 9) bestItem + 36 else bestItem, index, 2, thePlayer
@@ -216,7 +244,7 @@ class InventoryCleaner : Module() {
 
                 if (openInventory) mc.netHandler.addToSendQueue(C0DPacketCloseWindow())
 
-                delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+                delay = randomDelay(minDelayValue.get(), maxDelayValue.get())
                 break
             }
         }
@@ -229,20 +257,17 @@ class InventoryCleaner : Module() {
 
         when (type.lowercase()) {
             "sword", "pickaxe", "axe" -> {
-                val currentTypeChecker: ((Item?) -> Boolean) = when {
-                    type.equals("Sword", ignoreCase = true) -> { item: Item? -> item is ItemSword }
-                    type.equals("Pickaxe", ignoreCase = true) -> { obj: Item? -> obj is ItemPickaxe }
-                    type.equals("Axe", ignoreCase = true) -> { obj: Item? -> obj is ItemAxe }
+                val currentTypeChecker: ((Item?) -> Boolean) = when (type) {
+                    "Sword" -> { item: Item? -> item is ItemSword }
+                    "Pickaxe" -> { obj: Item? -> obj is ItemPickaxe }
+                    "Axe" -> { obj: Item? -> obj is ItemAxe }
                     else -> return null
                 }
 
                 var bestWeapon = if (currentTypeChecker(slotStack?.item)) targetSlot else -1
 
                 thePlayer.inventory.mainInventory.forEachIndexed { index, itemStack ->
-                    if (itemStack != null && currentTypeChecker(itemStack.item) && !type(index).equals(
-                            type, ignoreCase = true
-                        )
-                    ) {
+                    if (itemStack != null && currentTypeChecker(itemStack.item) && type(index) != type) {
                         if (bestWeapon == -1) {
                             bestWeapon = index
                         } else {
@@ -266,7 +291,7 @@ class InventoryCleaner : Module() {
                 var bestPower = if (bestBow != -1) ItemUtils.getEnchantment(slotStack, Enchantment.power) else 0
 
                 thePlayer.inventory.mainInventory.forEachIndexed { index, itemStack ->
-                    if (itemStack?.item is ItemBow && !type(index).equals(type, ignoreCase = true)) {
+                    if (itemStack?.item is ItemBow && type(index) != type) {
                         if (bestBow == -1) {
                             bestBow = index
                         } else {
@@ -288,10 +313,7 @@ class InventoryCleaner : Module() {
                     if (stack != null) {
                         val item = stack.item
 
-                        if (item is ItemFood && item !is ItemAppleGold && !type(index).equals(
-                                "Food", ignoreCase = true
-                            )
-                        ) {
+                        if (item is ItemFood && item !is ItemAppleGold && type(index) != "Food") {
                             val replaceCurr = ItemUtils.isStackEmpty(slotStack) || slotStack?.item !is ItemFood
 
                             return if (replaceCurr) index else null
@@ -305,10 +327,7 @@ class InventoryCleaner : Module() {
                     if (stack != null) {
                         val item = stack.item
 
-                        if (item is ItemBlock && !InventoryUtils.BLOCK_BLACKLIST.contains(item.block) && !type(index).equals(
-                                "Block", ignoreCase = true
-                            )
-                        ) {
+                        if (item is ItemBlock && item.block !in InventoryUtils.BLOCK_BLACKLIST && type(index) != "Block") {
                             val replaceCurr = ItemUtils.isStackEmpty(slotStack) || slotStack?.item !is ItemBlock
 
                             return if (replaceCurr) index else null
@@ -322,10 +341,7 @@ class InventoryCleaner : Module() {
                     if (stack != null) {
                         val item = stack.item
 
-                        if (item is ItemBucket && item.isFull == Blocks.flowing_water && !type(index).equals(
-                                "Water", ignoreCase = true
-                            )
-                        ) {
+                        if (item is ItemBucket && item.isFull == Blocks.flowing_water && type(index) != "Water") {
                             val replaceCurr =
                                 ItemUtils.isStackEmpty(slotStack) || slotStack?.item !is ItemBucket || (slotStack.item as ItemBucket).isFull != Blocks.flowing_water
 
@@ -340,7 +356,7 @@ class InventoryCleaner : Module() {
                     if (stack != null) {
                         val item = stack.item
 
-                        if (item is ItemAppleGold && !type(index).equals("Gapple", ignoreCase = true)) {
+                        if (item is ItemAppleGold && type(index) != "Gapple") {
                             val replaceCurr = ItemUtils.isStackEmpty(slotStack) || slotStack?.item !is ItemAppleGold
 
                             return if (replaceCurr) index else null
@@ -354,7 +370,7 @@ class InventoryCleaner : Module() {
                     if (stack != null) {
                         val item = stack.item
 
-                        if (item is ItemEnderPearl && !type(index).equals("Pearl", ignoreCase = true)) {
+                        if (item is ItemEnderPearl && type(index) != "Pearl") {
                             val replaceCurr = ItemUtils.isStackEmpty(slotStack) || slotStack?.item !is ItemEnderPearl
 
                             return if (replaceCurr) index else null
@@ -380,7 +396,7 @@ class InventoryCleaner : Module() {
                 continue
             }
 
-            if (type(i).equals("Ignore", ignoreCase = true)) {
+            if (type(i) == "Ignore") {
                 continue
             }
 

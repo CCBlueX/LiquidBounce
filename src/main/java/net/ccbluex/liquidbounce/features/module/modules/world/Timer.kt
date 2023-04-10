@@ -11,12 +11,12 @@ import net.ccbluex.liquidbounce.event.WorldEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 
 @ModuleInfo(name = "Timer", description = "Changes the speed of the entire game.", category = ModuleCategory.WORLD)
-class Timer : Module() {
+object Timer : Module() {
 
     private val speedValue = FloatValue("Speed", 2F, 0.1F, 10F)
     private val onMoveValue = BoolValue("OnMove", true)
@@ -30,7 +30,7 @@ class Timer : Module() {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        if(MovementUtils.isMoving || !onMoveValue.get()) {
+        if (isMoving || !onMoveValue.get()) {
             mc.timer.timerSpeed = speedValue.get()
             return
         }

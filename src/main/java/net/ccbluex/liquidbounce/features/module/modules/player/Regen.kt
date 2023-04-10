@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -18,12 +18,14 @@ import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.potion.Potion
 
 @ModuleInfo(name = "Regen", description = "Regenerates your health much faster.", category = ModuleCategory.PLAYER)
-class Regen : Module() {
+object Regen : Module() {
 
     private val modeValue = ListValue("Mode", arrayOf("Vanilla", "Spartan"), "Vanilla")
+    private val speedValue = object : IntegerValue("Speed", 100, 1, 100) {
+        override fun isSupported() = modeValue.get() == "Vanilla"
+    }
     private val healthValue = IntegerValue("Health", 18, 0, 20)
     private val foodValue = IntegerValue("Food", 18, 0, 20)
-    private val speedValue = IntegerValue("Speed", 100, 1, 100)
     private val noAirValue = BoolValue("NoAir", false)
     private val potionEffectValue = BoolValue("PotionEffect", false)
 
@@ -48,7 +50,7 @@ class Regen : Module() {
                 }
 
                 "spartan" -> {
-                    if (MovementUtils.isMoving || !mc.thePlayer.onGround)
+                    if (isMoving || !mc.thePlayer.onGround)
                         return
 
                     repeat(9) {

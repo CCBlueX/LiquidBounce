@@ -6,15 +6,15 @@
 package net.ccbluex.liquidbounce.utils.render.shader;
 
 import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.client.shader.Framebuffer;
 
-import java.awt.*;
+import java.awt.Color;
 
+import static net.minecraft.client.renderer.GlStateManager.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.glUseProgram;
 
@@ -40,9 +40,9 @@ public abstract class FramebufferShader extends Shader {
     public void startDraw(float partialTicks, float renderScale) {
         this.renderScale = renderScale;
 
-        GlStateManager.pushMatrix();
-        GlStateManager.enableAlpha();
-        GlStateManager.pushAttrib();
+        pushMatrix();
+        enableAlpha();
+        pushAttrib();
 
         framebuffer = setupFrameBuffer(framebuffer, renderScale);
         framebuffer.framebufferClear();
@@ -76,8 +76,8 @@ public abstract class FramebufferShader extends Shader {
 
         mc.entityRenderer.disableLightmap();
 
-        GlStateManager.popMatrix();
-        GlStateManager.popAttrib();
+        popMatrix();
+        popAttrib();
     }
 
     /**

@@ -5,21 +5,19 @@
  */
 package net.ccbluex.liquidbounce.utils.render
 
+import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
 import java.awt.Color
-import java.util.*
 import java.util.regex.Pattern
 
 object ColorUtils {
     /** Array of the special characters that are allowed in any text drawing of Minecraft.  */
     val allowedCharactersArray = charArrayOf('/', '\n', '\r', '\t', '\u0000', '', '`', '?', '*', '\\', '<', '>', '|', '\"', ':')
 
-    fun isAllowedCharacter(character: Char): Boolean {
-        return character.toInt() != 167 && character.toInt() >= 32 && character.toInt() != 127
-    }
+    fun isAllowedCharacter(character: Char) =
+        character.code != 167 && character.code >= 32 && character.code != 127
 
     private val COLOR_PATTERN = Pattern.compile("(?i)§[0-9A-FK-OR]")
 
-    @JvmField
     val hexColors = IntArray(16)
 
     init {
@@ -34,16 +32,12 @@ object ColorUtils {
         }
     }
 
-    @JvmStatic
-    fun stripColor(input: String?): String? {
-        return COLOR_PATTERN.matcher(input ?: return null).replaceAll("")
-    }
+    fun stripColor(input: String): String = COLOR_PATTERN.matcher(input).replaceAll("")
 
-    @JvmStatic
     fun translateAlternateColorCodes(textToTranslate: String): String {
         val chars = textToTranslate.toCharArray()
 
-        for (i in 0 until chars.size - 1) {
+        for (i in 0 until chars.lastIndex) {
             if (chars[i] == '&' && "0123456789AaBbCcDdEeFfKkLlMmNnOoRr".contains(chars[i + 1], true)) {
                 chars[i] = '§'
                 chars[i + 1] = Character.toLowerCase(chars[i + 1])
@@ -59,7 +53,7 @@ object ColorUtils {
 
         for (c in text.toCharArray()) {
             if (isAllowedCharacter(c)) {
-                val index = Random().nextInt(allowedCharacters.length)
+                val index = nextInt(endExclusive = allowedCharacters.length)
                 stringBuilder.append(allowedCharacters.toCharArray()[index])
             }
         }
@@ -67,33 +61,22 @@ object ColorUtils {
         return stringBuilder.toString()
     }
 
-    @JvmStatic
-    fun rainbow(): Color {
-        val currentColor = Color(Color.HSBtoRGB((System.nanoTime() + 400000L) / 10000000000F % 1, 1F, 1F))
-        return Color(currentColor.red / 255F * 1F, currentColor.green / 255f * 1F, currentColor.blue / 255F * 1F, currentColor.alpha / 255F)
-    }
-
-    // TODO: Use kotlin optional argument feature
-
-    @JvmStatic
-    fun rainbow(offset: Long): Color {
-        val currentColor = Color(Color.HSBtoRGB((System.nanoTime() + offset) / 10000000000F % 1, 1F, 1F))
-        return Color(currentColor.red / 255F * 1F, currentColor.green / 255F * 1F, currentColor.blue / 255F * 1F,
-                currentColor.alpha / 255F)
-    }
-
-    @JvmStatic
-    fun rainbow(alpha: Float) = rainbow(400000L, alpha)
-
-    @JvmStatic
-    fun rainbow(alpha: Int) = rainbow(400000L, alpha / 255)
-
-    @JvmStatic
-    fun rainbow(offset: Long, alpha: Int) = rainbow(offset, alpha.toFloat() / 255)
-
-    @JvmStatic
-    fun rainbow(offset: Long, alpha: Float): Color {
+    fun rainbow(offset: Long = 400000L, alpha: Float = 1f): Color {
         val currentColor = Color(Color.HSBtoRGB((System.nanoTime() + offset) / 10000000000F % 1, 1F, 1F))
         return Color(currentColor.red / 255F * 1F, currentColor.green / 255f * 1F, currentColor.blue / 255F * 1F, alpha)
+    }
+
+    fun interpolateHSB(startColor: Color, endColor: Color, process: Float): Color {
+        val startHSB = Color.RGBtoHSB(startColor.red, startColor.green, startColor.blue, null)
+        val endHSB = Color.RGBtoHSB(endColor.red, endColor.green, endColor.blue, null)
+
+        val brightness = (startHSB[2] + endHSB[2]) / 2
+        val saturation = (startHSB[1] + endHSB[1]) / 2
+
+        val hueMax = if (startHSB[0] > endHSB[0]) startHSB[0] else endHSB[0]
+        val hueMin = if (startHSB[0] > endHSB[0]) endHSB[0] else startHSB[0]
+
+        val hue = (hueMax - hueMin) * process + hueMin
+        return Color.getHSBColor(hue, saturation, brightness)
     }
 }

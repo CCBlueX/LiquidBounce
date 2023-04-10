@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.value.ListValue
 
 @ModuleInfo(name = "NoWeb", description = "Prevents you from getting slowed down in webs.", category = ModuleCategory.MOVEMENT)
-class NoWeb : Module() {
+object NoWeb : Module() {
 
     private val modeValue = ListValue("Mode", arrayOf("None", "AAC", "LAAC", "Rewi"), "None")
 
@@ -33,7 +33,7 @@ class NoWeb : Module() {
                     thePlayer.motionY = 0.0
             }
             "laac" -> {
-                thePlayer.jumpMovementFactor = if (thePlayer.movementInput.moveStrafe != 0f) 1.0f else 1.21f
+                thePlayer.jumpMovementFactor = if (thePlayer.movementInput.moveStrafe != 0f) 1f else 1.21f
 
                 if (!mc.gameSettings.keyBindSneak.isKeyDown)
                     thePlayer.motionY = 0.0
@@ -50,6 +50,6 @@ class NoWeb : Module() {
         }
     }
 
-    override val tag: String
+    override val tag
         get() = modeValue.get()
 }

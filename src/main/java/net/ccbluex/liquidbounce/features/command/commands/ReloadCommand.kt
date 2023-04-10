@@ -5,10 +5,21 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.isStarting
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandManager
-import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
+import net.ccbluex.liquidbounce.file.FileManager.accountsConfig
+import net.ccbluex.liquidbounce.file.FileManager.clickGuiConfig
+import net.ccbluex.liquidbounce.file.FileManager.friendsConfig
+import net.ccbluex.liquidbounce.file.FileManager.hudConfig
+import net.ccbluex.liquidbounce.file.FileManager.loadConfig
+import net.ccbluex.liquidbounce.file.FileManager.modulesConfig
+import net.ccbluex.liquidbounce.file.FileManager.valuesConfig
+import net.ccbluex.liquidbounce.file.FileManager.xrayConfig
+import net.ccbluex.liquidbounce.script.ScriptManager.disableScripts
+import net.ccbluex.liquidbounce.script.ScriptManager.reloadScripts
+import net.ccbluex.liquidbounce.script.ScriptManager.unloadScripts
 import net.ccbluex.liquidbounce.ui.font.Fonts
 
 class ReloadCommand : Command("reload", "configreload") {
@@ -17,35 +28,46 @@ class ReloadCommand : Command("reload", "configreload") {
      */
     override fun execute(args: Array<String>) {
         chat("Reloading...")
+        isStarting = true
+
         chat("§c§lReloading commands...")
-        LiquidBounce.commandManager = CommandManager()
-        LiquidBounce.commandManager.registerCommands()
-        LiquidBounce.isStarting = true
-        LiquidBounce.scriptManager.disableScripts()
-        LiquidBounce.scriptManager.unloadScripts()
-        for(module in LiquidBounce.moduleManager.modules)
-            LiquidBounce.moduleManager.generateCommand(module)
+        CommandManager.registerCommands()
+
+        disableScripts()
+        unloadScripts()
+
+        for(module in moduleManager.modules)
+            moduleManager.generateCommand(module)
+
         chat("§c§lReloading scripts...")
-        LiquidBounce.scriptManager.reloadScripts()
+        reloadScripts()
+
         chat("§c§lReloading fonts...")
         Fonts.loadFonts()
+
         chat("§c§lReloading modules...")
-        LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.modulesConfig)
-        LiquidBounce.isStarting = false
+        loadConfig(modulesConfig)
+
+
         chat("§c§lReloading values...")
-        LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.valuesConfig)
+        loadConfig(valuesConfig)
+
         chat("§c§lReloading accounts...")
-        LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.accountsConfig)
+        loadConfig(accountsConfig)
+
         chat("§c§lReloading friends...")
-        LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.friendsConfig)
+        loadConfig(friendsConfig)
+
         chat("§c§lReloading xray...")
-        LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.xrayConfig)
+        loadConfig(xrayConfig)
+
         chat("§c§lReloading HUD...")
-        LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.hudConfig)
+        loadConfig(hudConfig)
+
         chat("§c§lReloading ClickGUI...")
-        LiquidBounce.clickGui = ClickGui()
-        LiquidBounce.fileManager.loadConfig(LiquidBounce.fileManager.clickGuiConfig)
-        LiquidBounce.isStarting = false
+        loadConfig(clickGuiConfig)
+
+        isStarting = false
         chat("Reloaded.")
     }
 }

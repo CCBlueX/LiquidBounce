@@ -10,4 +10,4 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 
 @ModuleInfo(name = "AirJump", description = "Allows you to jump in the mid air", category = ModuleCategory.MOVEMENT)
-class AirJump : Module()
+object AirJump : Module()

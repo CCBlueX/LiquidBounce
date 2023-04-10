@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.event.EventManager.registerListener
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.PacketEvent
@@ -14,7 +14,7 @@ import net.minecraft.network.handshake.client.C00Handshake
 
 class ServerInfoCommand : Command("serverinfo"), Listenable {
     init {
-        LiquidBounce.eventManager.registerListener(this)
+        registerListener(this)
     }
 
     private var ip = ""
@@ -31,7 +31,7 @@ class ServerInfoCommand : Command("serverinfo"), Listenable {
 
         val data = mc.currentServerData ?: return
 
-        chat("Server infos:")
+        chat("Server info:")
         chat("§7Name: §8${data.serverName}")
         chat("§7IP: §8$ip:$port")
         chat("§7Players: §8${data.populationInfo}")

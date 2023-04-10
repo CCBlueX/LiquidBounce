@@ -14,7 +14,7 @@ open class CancellableEvent : Event() {
      *
      * @return state of cancel
      */
-    var isCancelled: Boolean = false
+    var isCancelled = false
         private set
 
     /**

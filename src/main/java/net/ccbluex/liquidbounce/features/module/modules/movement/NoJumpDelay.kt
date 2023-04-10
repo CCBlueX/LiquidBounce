@@ -10,4 +10,4 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 
 @ModuleInfo(name = "NoJumpDelay", description = "Removes delay between jumps.", category = ModuleCategory.MOVEMENT)
-class NoJumpDelay : Module()
+object NoJumpDelay : Module()

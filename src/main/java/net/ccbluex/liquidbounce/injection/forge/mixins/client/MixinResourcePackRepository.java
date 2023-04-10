@@ -17,8 +17,6 @@ import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
 import java.io.File;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 @Mixin(ResourcePackRepository.class)
@@ -39,14 +37,12 @@ public class MixinResourcePackRepository {
     @Overwrite
     private void deleteOldServerResourcesPacks() {
         try {
-            List<File> lvt_1_1_ = Lists.newArrayList(FileUtils.listFiles(this.dirServerResourcepacks, TrueFileFilter.TRUE, null));
-            Collections.sort(lvt_1_1_, LastModifiedFileComparator.LASTMODIFIED_REVERSE);
+            List<File> lvt_1_1_ = Lists.newArrayList(FileUtils.listFiles(dirServerResourcepacks, TrueFileFilter.TRUE, null));
+            lvt_1_1_.sort(LastModifiedFileComparator.LASTMODIFIED_REVERSE);
             int lvt_2_1_ = 0;
-            Iterator lvt_3_1_ = lvt_1_1_.iterator();
 
-            while(lvt_3_1_.hasNext()) {
-                File lvt_4_1_ = (File) lvt_3_1_.next();
-                if(lvt_2_1_++ >= 10) {
+            for (File lvt_4_1_ : lvt_1_1_) {
+                if (lvt_2_1_++ >= 10) {
                     logger.info("Deleting old server resource pack " + lvt_4_1_.getName());
                     FileUtils.deleteQuietly(lvt_4_1_);
                 }

@@ -5,14 +5,12 @@
  */
 package net.ccbluex.liquidbounce.ui.client
 
-import net.ccbluex.liquidbounce.LiquidBounce
-
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import org.lwjgl.input.Keyboard
-import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL11.glScalef
 import java.awt.Color
 
 class GuiWelcome : GuiScreen() {
@@ -30,7 +28,7 @@ class GuiWelcome : GuiScreen() {
         font.drawCenteredString("Here is some information you might find useful if you are using LiquidBounce for the first time.", width / 2F, height / 8F + 70 + font.fontHeight, 0xffffff, true)
 
         font.drawCenteredString("§lClickGUI:", width / 2F, height / 8F + 80 + font.fontHeight * 3, 0xffffff, true)
-        font.drawCenteredString("Press ${Keyboard.getKeyName(LiquidBounce.moduleManager[ClickGUI::class.java]!!.keyBind)} to open up the ClickGUI", width / 2F, height / 8 + 80F + font.fontHeight * 4, 0xffffff, true)
+        font.drawCenteredString("Press ${Keyboard.getKeyName(ClickGUI.keyBind)} to open up the ClickGUI", width / 2F, height / 8 + 80F + font.fontHeight * 4, 0xffffff, true)
         font.drawCenteredString("Right-click modules with a '+' next to them to edit their settings.", width / 2F, height / 8F + 80 + font.fontHeight * 5, 0xffffff, true)
         font.drawCenteredString("Hover a module to see it's description.", width / 2F, height / 8F + 80 + font.fontHeight * 6, 0xffffff, true)
 
@@ -46,7 +44,7 @@ class GuiWelcome : GuiScreen() {
         super.drawScreen(mouseX, mouseY, partialTicks)
 
         // Title
-        GL11.glScalef(2F, 2F, 2F)
+        glScalef(2F, 2F, 2F)
         Fonts.font40.drawCenteredString("Welcome!", width / 2 / 2F, height / 8F / 2 + 20, Color(0, 140, 255).rgb, true)
     }
 

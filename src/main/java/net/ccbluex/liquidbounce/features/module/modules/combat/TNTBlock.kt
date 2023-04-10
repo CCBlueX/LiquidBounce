@@ -22,14 +22,14 @@ import net.minecraft.item.ItemSword
     description = "Automatically blocks with your sword when TNT around you explodes.",
     category = ModuleCategory.COMBAT
 )
-class TNTBlock : Module() {
+object TNTBlock : Module() {
     private val fuseValue = IntegerValue("Fuse", 10, 0, 80)
     private val rangeValue = FloatValue("Range", 9F, 1F, 20F)
     private val autoSwordValue = BoolValue("AutoSword", true)
     private var blocked = false
 
     @EventTarget
-    fun onMotionUpdate(event: MotionEvent?) {
+    fun onMotionUpdate(event: MotionEvent) {
         val thePlayer = mc.thePlayer ?: return
         val theWorld = mc.theWorld ?: return
 
@@ -42,8 +42,8 @@ class TNTBlock : Module() {
                         for (i in 0..8) {
                             val itemStack = thePlayer.inventory.getStackInSlot(i)
 
-                            if (itemStack != null && itemStack.getItem() is ItemSword) {
-                                val itemDamage = (itemStack.getItem() as ItemSword).damageVsEntity + 4F;
+                            if (itemStack?.item is ItemSword) {
+                                val itemDamage = (itemStack.item as ItemSword).damageVsEntity + 4F
 
                                 if (itemDamage > bestDamage) {
                                     bestDamage = itemDamage
@@ -58,7 +58,7 @@ class TNTBlock : Module() {
                         }
                     }
 
-                    if (mc.thePlayer.getHeldItem() != null && mc.thePlayer.getHeldItem().getItem() is ItemSword) {
+                    if (mc.thePlayer.heldItem?.item is ItemSword) {
                         mc.gameSettings.keyBindUseItem.pressed = true
                         blocked = true
                     }

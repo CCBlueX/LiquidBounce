@@ -5,10 +5,12 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands
 
-import net.ccbluex.liquidbounce.LiquidBounce
+
 import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.file.FileManager.settingsDir
+import net.ccbluex.liquidbounce.ui.client.hud.HUD.addNotification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.SettingsUtils
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import java.io.File
@@ -23,7 +25,7 @@ class LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "l
             when {
                 args[1].equals("load", ignoreCase = true) -> {
                     if (args.size > 2) {
-                        val scriptFile = File(LiquidBounce.fileManager.settingsDir, args[2])
+                        val scriptFile = File(settingsDir, args[2])
 
                         if (scriptFile.exists()) {
                             try {
@@ -32,7 +34,7 @@ class LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "l
                                 chat("§9Set settings...")
                                 SettingsUtils.executeScript(settings)
                                 chat("§6Settings applied successfully.")
-                                LiquidBounce.hud.addNotification(Notification("Updated Settings"))
+                                addNotification(Notification("Updated Settings"))
                                 playEdit()
                             } catch (e: IOException) {
                                 e.printStackTrace()
@@ -51,7 +53,7 @@ class LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "l
 
                 args[1].equals("save", ignoreCase = true) -> {
                     if (args.size > 2) {
-                        val scriptFile = File(LiquidBounce.fileManager.settingsDir, args[2])
+                        val scriptFile = File(settingsDir, args[2])
 
                         try {
                             if (scriptFile.exists())
@@ -59,9 +61,10 @@ class LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "l
                             scriptFile.createNewFile()
 
                             val option = if (args.size > 3) StringUtils.toCompleteString(args, 3).lowercase() else "values"
-                            val values = option.contains("all") || option.contains("values")
-                            val binds = option.contains("all") || option.contains("binds")
-                            val states = option.contains("all") || option.contains("states")
+                            val all = "all" in option
+                            val values = all || "values" in option
+                            val binds = all || "binds" in option
+                            val states = all || "states" in option
                             if (!values && !binds && !states) {
                                 chatSyntaxError()
                                 return
@@ -74,7 +77,7 @@ class LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "l
                             chat("§6Settings saved successfully.")
                         } catch (throwable: Throwable) {
                             chat("§cFailed to create local config: §3${throwable.message}")
-                            ClientUtils.getLogger().error("Failed to create local config.", throwable)
+                            LOGGER.error("Failed to create local config.", throwable)
                         }
                         return
                     }
@@ -85,7 +88,7 @@ class LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "l
 
                 args[1].equals("delete", ignoreCase = true) -> {
                     if (args.size > 2) {
-                        val scriptFile = File(LiquidBounce.fileManager.settingsDir, args[2])
+                        val scriptFile = File(settingsDir, args[2])
 
                         if (scriptFile.exists()) {
                             scriptFile.delete()
@@ -104,7 +107,7 @@ class LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "l
                 args[1].equals("list", ignoreCase = true) -> {
                     chat("§cSettings:")
 
-                    val settings = this.getLocalSettings() ?: return
+                    val settings = getLocalSettings() ?: return
 
                     for (file in settings)
                         chat("> " + file.name)
@@ -123,7 +126,7 @@ class LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "l
             2 -> {
                 when (args[0].lowercase()) {
                     "delete", "load" -> {
-                        val settings = this.getLocalSettings() ?: return emptyList()
+                        val settings = getLocalSettings() ?: return emptyList()
 
                         return settings
                             .map { it.name }
@@ -136,5 +139,5 @@ class LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "l
         }
     }
 
-    private fun getLocalSettings(): Array<File>? = LiquidBounce.fileManager.settingsDir.listFiles()
+    private fun getLocalSettings(): Array<File>? = settingsDir.listFiles()
 }

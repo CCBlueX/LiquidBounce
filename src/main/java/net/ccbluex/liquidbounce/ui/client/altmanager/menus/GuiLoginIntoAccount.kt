@@ -5,93 +5,61 @@
     */
 package net.ccbluex.liquidbounce.ui.client.altmanager.menus
 
-import com.thealtening.AltService.EnumAltService
 import me.liuli.elixir.account.CrackedAccount
-import me.liuli.elixir.account.MojangAccount
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.event.EventManager.callEvent
+import net.ccbluex.liquidbounce.event.SessionEvent
+import net.ccbluex.liquidbounce.file.FileManager.accountsConfig
+import net.ccbluex.liquidbounce.file.FileManager.saveConfig
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
-import net.ccbluex.liquidbounce.ui.elements.GuiPasswordField
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.ClientUtils
-import net.ccbluex.liquidbounce.utils.TabUtils
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
-import net.minecraft.client.Minecraft
+import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiTextField
 import net.minecraft.util.Session
 import org.lwjgl.input.Keyboard
-import java.awt.Toolkit
-import java.awt.datatransfer.DataFlavor
-import java.awt.datatransfer.UnsupportedFlavorException
 import java.io.IOException
-import kotlin.concurrent.thread
 
 class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: Boolean = false) : GuiScreen() {
 
     private lateinit var addButton: GuiButton
-    private lateinit var clipboardButton: GuiButton
     private lateinit var username: GuiTextField
-    private lateinit var password: GuiTextField
 
-    private var status = "§7Idle..."
+    private var status = ""
 
     override fun initGui() {
         Keyboard.enableRepeatEvents(true)
 
-        // Clipboard login
-        buttonList.add(GuiButton(2, width / 2 - 100, 113, "Clipboard").also { clipboardButton = it })
+        // Add button
+        buttonList.add(GuiButton(1, width / 2 - 100, height / 2 - 60 , if (directLogin) "Login" else "Add")
+            .also { addButton = it })
+
+        // Random button
+        buttonList.add(GuiButton(2, width / 2 + 105, height / 2 - 90, 40, 20, "Random"))
 
         // Login via Microsoft account
-        buttonList.add(GuiButton(3, width / 2 - 100, 143, "Login with Microsoft"))
+        buttonList.add(GuiButton(3, width / 2 - 100, height / 2, "${if (directLogin) "Login to" else "Add"} a Microsoft account"))
 
-        // Add and back button
-        buttonList.add(
-            GuiButton(
-                1,
-                width / 2 - 100,
-                height - 54,
-                98,
-                20,
-                if (directLogin) "Login" else "Add"
-            ).also { addButton = it })
-        buttonList.add(GuiButton(0, width / 2 + 2, height - 54, 98, 20, "Back"))
+        // Back button
+        buttonList.add(GuiButton(0, width / 2 - 100, height / 2 + 30, "Back"))
 
-        username = GuiTextField(2, Fonts.font40, width / 2 - 100, 60, 200, 20)
-        username.isFocused = true
-        username.maxStringLength = Int.MAX_VALUE
-        password = GuiPasswordField(3, Fonts.font40, width / 2 - 100, 85, 200, 20)
-        password.maxStringLength = Int.MAX_VALUE
+        username = GuiTextField(2, Fonts.font40, width / 2 - 100, height / 2 - 90, 200, 20)
+        username.isFocused = false
+        username.maxStringLength = 16
     }
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
         drawBackground(0)
 
-        RenderUtils.drawRect(30, 30, width - 30, height - 30, Int.MIN_VALUE)
-        Fonts.font40.drawCenteredString(if (directLogin) "Direct Login" else "Add Account", width / 2.0f, 34f, 0xffffff)
-        Fonts.font40.drawCenteredString("§7Login with Mojang", width / 2.0f, 49f, 0xffffff)
-        Fonts.font35.drawCenteredString(status, width / 2.0f, height - 64f, 0xffffff)
+        drawRect(30, 30, width - 30, height - 30, Int.MIN_VALUE)
+        Fonts.font40.drawCenteredString(if (directLogin) "Direct Login" else "Add Account", width / 2f, height / 2 - 170f, 0xffffff)
+        Fonts.font40.drawCenteredString("§7${if (directLogin) "Login to" else "Add"} an offline account", width / 2f, height / 2 - 110f, 0xffffff)
+        Fonts.font35.drawCenteredString(status, width / 2f, height / 2f - 30, 0xffffff)
 
         username.drawTextBox()
-        password.drawTextBox()
 
-        if (username.text.isEmpty() && !username.isFocused) {
-            Fonts.font40.drawCenteredString(
-                "§7Username / E-Mail",
-                (width / 2 - 55).toFloat(),
-                66f,
-                0xffffff
-            )
-        }
-
-        if (password.text.isEmpty() && !password.isFocused) {
-            Fonts.font40.drawCenteredString(
-                "§7Password",
-                (width / 2 - 74).toFloat(),
-                91f,
-                0xffffff
-            )
-        }
+        if (username.text.isEmpty() && !username.isFocused)
+            Fonts.font40.drawCenteredString("§7Username", width / 2 - 72f, height / 2 - 84f, 0xffffff)
 
         super.drawScreen(mouseX, mouseY, partialTicks)
     }
@@ -107,24 +75,11 @@ class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: B
 
             1 -> {
                 val usernameText = username.text
-                val passwordText = password.text
-                checkAndAddAccount(usernameText, passwordText)
+                checkAndAddAccount(usernameText)
             }
 
-            2 -> try {
-                val clipboardData =
-                    Toolkit.getDefaultToolkit().systemClipboard.getData(DataFlavor.stringFlavor) as String
-
-                val accountData = clipboardData.split(":".toRegex(), limit = 2)
-                if (!clipboardData.contains(":") || accountData.size != 2) {
-                    status = "§cInvalid clipboard data. (Use: E-Mail:Password)"
-                    return
-                }
-
-                checkAndAddAccount(accountData[0], accountData[1])
-            } catch (e: UnsupportedFlavorException) {
-                status = "§cClipboard flavor unsupported!"
-                ClientUtils.getLogger().error("Failed to read data from clipboard.", e)
+            2 -> {
+                username.text = RandomUtils.randomUsername()
             }
 
             3 -> {
@@ -148,11 +103,6 @@ class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: B
                 return
             }
 
-            Keyboard.KEY_TAB -> {
-                TabUtils.tab(username, password)
-                return
-            }
-
             Keyboard.KEY_RETURN -> {
                 actionPerformed(addButton)
                 return
@@ -163,22 +113,17 @@ class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: B
             username.textboxKeyTyped(typedChar, keyCode)
         }
 
-        if (password.isFocused) {
-            password.textboxKeyTyped(typedChar, keyCode)
-        }
         super.keyTyped(typedChar, keyCode)
     }
 
     @Throws(IOException::class)
     public override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int) {
         username.mouseClicked(mouseX, mouseY, mouseButton)
-        password.mouseClicked(mouseX, mouseY, mouseButton)
         super.mouseClicked(mouseX, mouseY, mouseButton)
     }
 
     override fun updateScreen() {
         username.updateCursorCounter()
-        password.updateCursorCounter()
         super.updateScreen()
     }
 
@@ -186,67 +131,37 @@ class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: B
         Keyboard.enableRepeatEvents(false)
     }
 
-    private fun checkAndAddAccount(usernameText: String, passwordText: String) {
-        if (usernameText.isEmpty()) {
-            // what?
+    private fun checkAndAddAccount(usernameText: String) {
+        if (usernameText.isEmpty() || usernameText.length < 3) {
+            status = "§cInput at least 3 characters long username."
             return
         }
 
-        val minecraftAccount = if (passwordText.isEmpty()) {
-            // cracked account
-            val crackedAccount = CrackedAccount()
-            crackedAccount.name = usernameText
+        val crackedAccount = CrackedAccount()
+        crackedAccount.name = usernameText
 
-            crackedAccount
-        } else {
-            // mojang account
-            val mojangAccount = MojangAccount()
-            mojangAccount.email = usernameText
-            mojangAccount.password = passwordText
-
-            mojangAccount
-        }
-
-        if (LiquidBounce.fileManager.accountsConfig.accountExists(minecraftAccount)) {
-            status = "§cThe account has already been added."
+        if (accountsConfig.accountExists(crackedAccount)) {
+            status = "§cThis account already exists."
             return
         }
 
-        clipboardButton.enabled = false
         addButton.enabled = false
 
-        thread(name = "Account-Checking-Task") {
-            try {
-                // Switch back to Mojang auth service
-                val oldService = GuiAltManager.altService.currentService
-                if (oldService != EnumAltService.MOJANG) {
-                    GuiAltManager.altService.switchService(EnumAltService.MOJANG)
-                }
-
-                // Update account (login)
-                minecraftAccount.update()
-            } catch (e: Exception) {
-                status = "§c" + e.message
-
-                clipboardButton.enabled = true
-                addButton.enabled = true
-                return@thread
-            }
-
+        if (directLogin) {
             // Login directly into account
-            if (directLogin) {
-                Minecraft.getMinecraft().session = Session(
-                    minecraftAccount.session.username,
-                    minecraftAccount.session.uuid, minecraftAccount.session.token, "mojang"
-                )
-                status = "§aLogged into ${mc.session.username}."
-            } else {
-                LiquidBounce.fileManager.accountsConfig.addAccount(minecraftAccount)
-                LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.accountsConfig)
-                status = "§aThe account has been added."
-            }
-            prevGui.status = status
-            mc.displayGuiScreen(prevGui)
+            mc.session = Session(
+                crackedAccount.session.username, crackedAccount.session.uuid,
+                crackedAccount.session.token, crackedAccount.session.type
+            )
+            callEvent(SessionEvent())
+            status = "§aLogged into ${mc.session.username}."
+        } else {
+            accountsConfig.addAccount(crackedAccount)
+            saveConfig(accountsConfig)
+            status = "§aThe account has been added."
         }
+
+        prevGui.status = status
+        mc.displayGuiScreen(prevGui)
     }
 }

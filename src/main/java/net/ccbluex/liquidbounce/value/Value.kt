@@ -8,17 +8,14 @@ package net.ccbluex.liquidbounce.value
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
-import net.ccbluex.liquidbounce.LiquidBounce
-
+import net.ccbluex.liquidbounce.file.FileManager.saveConfig
+import net.ccbluex.liquidbounce.file.FileManager.valuesConfig
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.ui.font.GameFontRenderer
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.minecraft.client.gui.FontRenderer
-import java.util.*
 
-abstract class Value<T>(val name: String, protected var value: T) {
-
-    @set:JvmName("setIsSupported")
-    var isSupported = true
+abstract class Value<T>(val name: String, protected open var value: T) {
 
     fun set(newValue: T) {
         if (newValue == value)
@@ -31,29 +28,28 @@ abstract class Value<T>(val name: String, protected var value: T) {
             changeValue(newValue)
             onChanged(oldValue, newValue)
             onUpdate(newValue)
-            LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig)
+            saveConfig(valuesConfig)
         } catch (e: Exception) {
-            ClientUtils.getLogger().error("[ValueSystem ($name)]: ${e.javaClass.name} (${e.message}) [$oldValue >> $newValue]")
+            LOGGER.error("[ValueSystem ($name)]: ${e.javaClass.name} (${e.message}) [$oldValue >> $newValue]")
         }
     }
 
     fun get() = value
 
-    open fun changeValue(value: T) {
-        this.value = value
+    open fun changeValue(newValue: T) {
+        value = newValue
     }
 
-    open fun toJson(): JsonElement? {
-        return toJsonF()
-    }
+    open fun toJson() = toJsonF()
 
     open fun fromJson(element: JsonElement) {
         val result = fromJsonF(element)
-        if (result != null) {
-            changeValue(result)
-        }
+        if (result != null) changeValue(result)
+
         onInit(value)
         onUpdate(value)
+
+        val range = 0..1
     }
 
     abstract fun toJsonF(): JsonElement?
@@ -63,6 +59,7 @@ abstract class Value<T>(val name: String, protected var value: T) {
     protected open fun onUpdate(value: T) {}
     protected open fun onChange(oldValue: T, newValue: T) {}
     protected open fun onChanged(oldValue: T, newValue: T) {}
+    open fun isSupported() = true
 
 }
 
@@ -79,6 +76,10 @@ open class BoolValue(name: String, value: Boolean) : Value<Boolean>(name, value)
         return null
     }
 
+    fun toggle() = changeValue(!value)
+
+    fun isActive() = value && isSupported()
+
 }
 
 /**
@@ -87,18 +88,16 @@ open class BoolValue(name: String, value: Boolean) : Value<Boolean>(name, value)
 open class IntegerValue(name: String, value: Int, val minimum: Int = 0, val maximum: Int = Integer.MAX_VALUE)
     : Value<Int>(name, value) {
 
-    fun set(newValue: Number) {
-        set(newValue.toInt())
-    }
+    fun set(newValue: Number) = set(newValue.toInt())
 
     override fun toJsonF() = JsonPrimitive(value)
 
-    override fun fromJsonF(element: JsonElement): Int? {
-        if (element.isJsonPrimitive)
-            return element.asInt
-        return null
-    }
+    override fun fromJsonF(element: JsonElement) = if (element.isJsonPrimitive) element.asInt else null
 
+    fun isMinimal() = value <= minimum
+    fun isMaximal() = value >= maximum
+
+    val range = minimum..maximum
 }
 
 /**
@@ -107,18 +106,16 @@ open class IntegerValue(name: String, value: Int, val minimum: Int = 0, val maxi
 open class FloatValue(name: String, value: Float, val minimum: Float = 0F, val maximum: Float = Float.MAX_VALUE)
     : Value<Float>(name, value) {
 
-    fun set(newValue: Number) {
-        set(newValue.toFloat())
-    }
+    fun set(newValue: Number) = set(newValue.toFloat())
 
     override fun toJsonF() = JsonPrimitive(value)
 
-    override fun fromJsonF(element: JsonElement): Float? {
-        if (element.isJsonPrimitive)
-            return element.asFloat
-        return null
-    }
+    override fun fromJsonF(element: JsonElement) = if (element.isJsonPrimitive) element.asFloat else null
 
+    fun isMinimal() = value <= minimum
+    fun isMaximal() = value >= maximum
+
+    val range = minimum..maximum
 }
 
 /**
@@ -128,11 +125,7 @@ open class TextValue(name: String, value: String) : Value<String>(name, value) {
 
     override fun toJsonF() = JsonPrimitive(value)
 
-    override fun fromJsonF(element: JsonElement): String? {
-        if (element.isJsonPrimitive)
-            return element.asString
-        return null
-    }
+    override fun fromJsonF(element: JsonElement) = if (element.isJsonPrimitive) element.asString else null
 }
 
 /**
@@ -155,6 +148,28 @@ class FontValue(valueName: String, value: FontRenderer) : Value<FontRenderer>(va
         }
         return null
     }
+
+    val displayName: String
+        get() = when (value) {
+            is GameFontRenderer -> "Font: ${(value as GameFontRenderer).defaultFont.font.name} - ${(value as GameFontRenderer).defaultFont.font.size}"
+            Fonts.minecraftFont -> "Font: Minecraft"
+            else -> {
+                val fontInfo = Fonts.getFontDetails(value)
+                fontInfo?.let {
+                    "${it.name}${if (it.fontSize != -1) " - ${it.fontSize}" else ""}"
+                } ?: "Font: Unknown"
+            }
+        }
+
+    fun next() {
+        val fonts = Fonts.fonts
+        value = fonts[(fonts.indexOf(value) + 1) % fonts.size]
+    }
+
+    fun previous() {
+        val fonts = Fonts.fonts.reversed()
+        value = fonts[(fonts.indexOf(value) + 1) % fonts.size]
+    }
 }
 
 /**
@@ -165,33 +180,17 @@ class BlockValue(name: String, value: Int) : IntegerValue(name, value, 1, 197)
 /**
  * List value represents a selectable list of values
  */
-open class ListValue(name: String, val values: Array<String>, value: String) : Value<String>(name, value) {
+open class ListValue(name: String, val values: Array<String>, override var value: String) : Value<String>(name, value) {
 
-    @JvmField
     var openList = false
 
-    init {
-        this.value = value
-    }
+    operator fun contains(string: String?) = values.any { it.equals(string, true) }
 
-    operator fun contains(string: String?): Boolean {
-        return Arrays.stream(values).anyMatch { s: String -> s.equals(string, ignoreCase = true) }
-    }
-
-    override fun changeValue(value: String) {
-        for (element in values) {
-            if (element.equals(value, ignoreCase = true)) {
-                this.value = element
-                break
-            }
-        }
+    override fun changeValue(newValue: String) {
+        values.find { it.equals(newValue, true) }?.let { value = it }
     }
 
     override fun toJsonF() = JsonPrimitive(value)
 
-    override fun fromJsonF(element: JsonElement): String? {
-        if (element.isJsonPrimitive)
-            return element.asString
-        return null
-    }
+    override fun fromJsonF(element: JsonElement) = if (element.isJsonPrimitive) element.asString else null
 }

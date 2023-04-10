@@ -14,7 +14,8 @@ import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.draw2D
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBlockBox
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BlockValue
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -26,35 +27,43 @@ import net.minecraft.util.BlockPos
 import java.awt.Color
 
 @ModuleInfo(name = "BlockESP", description = "Allows you to see a selected block through walls.", category = ModuleCategory.RENDER)
-class BlockESP : Module() {
+object BlockESP : Module() {
     private val modeValue = ListValue("Mode", arrayOf("Box", "2D"), "Box")
     private val blockValue = BlockValue("Block", 168)
     private val radiusValue = IntegerValue("Radius", 40, 5, 120)
     private val blockLimitValue = IntegerValue("BlockLimit", 256, 0, 2056)
-    private val colorRedValue = IntegerValue("R", 255, 0, 255)
-    private val colorGreenValue = IntegerValue("G", 179, 0, 255)
-    private val colorBlueValue = IntegerValue("B", 72, 0, 255)
+
     private val colorRainbow = BoolValue("Rainbow", false)
+    private val colorRedValue = object : IntegerValue("R", 255, 0, 255) {
+        override fun isSupported() = !colorRainbow.get()
+    }
+    private val colorGreenValue = object : IntegerValue("G", 179, 0, 255) {
+        override fun isSupported() = !colorRainbow.get()
+    }
+    private val colorBlueValue = object : IntegerValue("B", 72, 0, 255) {
+        override fun isSupported() = !colorRainbow.get()
+    }
+
     private val searchTimer = MSTimer()
     private val posList: MutableList<BlockPos> = ArrayList()
     private var thread: Thread? = null
 
     @EventTarget
-    fun onUpdate(event: UpdateEvent?) {
-        if (searchTimer.hasTimePassed(1000L) && (thread == null || !thread!!.isAlive)) {
+    fun onUpdate(event: UpdateEvent) {
+        if (searchTimer.hasTimePassed(1000) && (thread?.isAlive != true)) {
             val radius = radiusValue.get()
-            val selectedBlock = Block.getBlockById(blockValue.get());
+            val selectedBlock = Block.getBlockById(blockValue.get())
 
             if (selectedBlock == null || selectedBlock == Blocks.air)
-                return;
+                return
 
-            thread = Thread(Runnable {
+            thread = Thread({
                 val blockList: MutableList<BlockPos> = ArrayList()
 
                 for (x in -radius until radius) {
                     for (y in radius downTo -radius + 1) {
                         for (z in -radius until radius) {
-                            val thePlayer = mc.thePlayer!!
+                            val thePlayer = mc.thePlayer
 
                             val xPos = thePlayer.posX.toInt() + x
                             val yPos = thePlayer.posY.toInt() + y
@@ -80,18 +89,18 @@ class BlockESP : Module() {
     }
 
     @EventTarget
-    fun onRender3D(event: Render3DEvent?) {
+    fun onRender3D(event: Render3DEvent) {
         synchronized(posList) {
             val color = if (colorRainbow.get()) rainbow() else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
             for (blockPos in posList) {
                 when (modeValue.get().lowercase()) {
-                    "box" -> RenderUtils.drawBlockBox(blockPos, color, true)
-                    "2d" -> RenderUtils.draw2D(blockPos, color.rgb, Color.BLACK.rgb)
+                    "box" -> drawBlockBox(blockPos, color, true)
+                    "2d" -> draw2D(blockPos, color.rgb, Color.BLACK.rgb)
                 }
             }
         }
     }
 
-    override val tag: String
+    override val tag
         get() = getBlockName(blockValue.get())
 }

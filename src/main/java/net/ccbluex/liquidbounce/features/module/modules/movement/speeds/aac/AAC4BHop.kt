@@ -7,19 +7,20 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 
 class AAC4BHop : SpeedMode("AAC4BHop") {
     private var legitHop = false
 
     override fun onDisable() {
-        mc.thePlayer!!.speedInAir = 0.02f
+        mc.thePlayer.speedInAir = 0.02f
     }
 
     override fun onTick() {
         val thePlayer = mc.thePlayer ?: return
 
-        if (MovementUtils.isMoving) {
+        if (isMoving) {
             if (legitHop) {
                 if (thePlayer.onGround) {
                     thePlayer.jump()
@@ -30,7 +31,7 @@ class AAC4BHop : SpeedMode("AAC4BHop") {
             }
             if (thePlayer.onGround) {
                 thePlayer.onGround = false
-                MovementUtils.strafe(0.375f)
+                strafe(0.375f)
                 thePlayer.jump()
                 thePlayer.motionY = 0.41
             } else thePlayer.speedInAir = 0.0211f

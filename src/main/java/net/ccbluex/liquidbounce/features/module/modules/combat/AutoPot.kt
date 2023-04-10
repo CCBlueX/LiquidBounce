@@ -14,7 +14,8 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.Rotation
-import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
+import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
@@ -31,13 +32,15 @@ import net.minecraft.network.play.client.C16PacketClientStatus
 import net.minecraft.potion.Potion
 
 @ModuleInfo(name = "AutoPot", description = "Automatically throws healing potions.", category = ModuleCategory.COMBAT)
-class AutoPot : Module() {
+object AutoPot : Module() {
 
     private val healthValue = FloatValue("Health", 15F, 1F, 20F)
     private val delayValue = IntegerValue("Delay", 500, 500, 1000)
 
     private val openInventoryValue = BoolValue("OpenInv", false)
-    private val simulateInventory = BoolValue("SimulateInventory", true)
+    private val simulateInventory = object : BoolValue("SimulateInventory", true) {
+        override fun isSupported() = !openInventoryValue.get()
+    }
 
     private val groundDistanceValue = FloatValue("GroundDistance", 2F, 0F, 5F)
     private val modeValue = ListValue("Mode", arrayOf("Normal", "Jump", "Port"), "Normal")
@@ -47,7 +50,7 @@ class AutoPot : Module() {
 
     @EventTarget
     fun onMotion(motionEvent: MotionEvent) {
-        if (!msTimer.hasTimePassed(delayValue.get().toLong()) || mc.playerController.isInCreativeMode)
+        if (!msTimer.hasTimePassed(delayValue.get()) || mc.playerController.isInCreativeMode)
             return
 
         val thePlayer = mc.thePlayer ?: return
@@ -66,28 +69,20 @@ class AutoPot : Module() {
                     }
 
                     // Prevent throwing potions into the void
-                    val fallingPlayer = FallingPlayer(
-                            thePlayer.posX,
-                            thePlayer.posY,
-                            thePlayer.posZ,
-                            thePlayer.motionX,
-                            thePlayer.motionY,
-                            thePlayer.motionZ,
-                            thePlayer.rotationYaw,
-                            thePlayer.moveStrafing,
-                            thePlayer.moveForward
-                    )
+                    val fallingPlayer = FallingPlayer(thePlayer)
 
                     val collisionBlock = fallingPlayer.findCollision(20)?.pos
 
-                    if (thePlayer.posY - (collisionBlock?.y ?: 0) >= groundDistanceValue.get())
+                    if (thePlayer.posY - (collisionBlock?.y ?: return) - 1 > groundDistanceValue.get())
                         return
 
                     potion = potionInHotbar
                     mc.netHandler.addToSendQueue(C09PacketHeldItemChange(potion - 36))
 
                     if (thePlayer.rotationPitch <= 80F) {
-                        RotationUtils.setTargetRotation(Rotation(thePlayer.rotationYaw, RandomUtils.nextFloat(80F, 90F)))
+                        setTargetRotation(
+                            Rotation(thePlayer.rotationYaw, RandomUtils.nextFloat(80F, 90F)).fixedSensitivity()
+                        )
                     }
                     return
                 }
@@ -112,8 +107,8 @@ class AutoPot : Module() {
                 }
             }
             POST -> {
-                if (potion >= 0 && RotationUtils.serverRotation.pitch >= 75F) {
-                    val itemStack = thePlayer.inventory.getStackInSlot(potion)
+                if (potion >= 0 && serverRotation.pitch >= 75F) {
+                    val itemStack = thePlayer.inventoryContainer.getSlot(potion).stack
 
                     if (itemStack != null) {
                         mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(itemStack))
@@ -129,7 +124,7 @@ class AutoPot : Module() {
     }
 
     private fun findPotion(startSlot: Int, endSlot: Int): Int {
-        val thePlayer = mc.thePlayer!!
+        val thePlayer = mc.thePlayer
 
         for (i in startSlot until endSlot) {
             val stack = thePlayer.inventoryContainer.getSlot(i).stack
@@ -137,7 +132,7 @@ class AutoPot : Module() {
             if (stack == null || stack.item !is ItemPotion || !ItemPotion.isSplash(stack.metadata))
                 continue
 
-            val itemPotion = stack.item!! as ItemPotion
+            val itemPotion = stack.item as ItemPotion
 
             for (potionEffect in itemPotion.getEffects(stack))
                 if (potionEffect.potionID == Potion.heal.id)
@@ -152,7 +147,7 @@ class AutoPot : Module() {
         return -1
     }
 
-    override val tag: String?
+    override val tag
         get() = healthValue.get().toString()
 
 }

@@ -6,9 +6,7 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.render;
 
 import net.minecraft.block.Block;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.ModelBiped;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.entity.RendererLivingEntity;
 import net.minecraft.client.renderer.entity.layers.LayerHeldItem;
@@ -27,6 +25,9 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import java.util.UUID;
 
+import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
+import static net.minecraft.client.renderer.GlStateManager.*;
+
 @Mixin(LayerHeldItem.class)
 @SideOnly(Side.CLIENT)
 public class MixinLayerHeldItem {
@@ -43,55 +44,54 @@ public class MixinLayerHeldItem {
         ItemStack itemstack = entitylivingbaseIn.getHeldItem();
 
         if(itemstack != null) {
-            GlStateManager.pushMatrix();
+            pushMatrix();
 
-            if(this.livingEntityRenderer.getMainModel().isChild) {
+            if(livingEntityRenderer.getMainModel().isChild) {
                 float f = 0.5F;
-                GlStateManager.translate(0.0F, 0.625F, 0.0F);
-                GlStateManager.rotate(-20.0F, -1.0F, 0.0F, 0.0F);
-                GlStateManager.scale(f, f, f);
+                translate(0f, 0.625F, 0f);
+                rotate(-20f, -1f, 0f, 0f);
+                scale(f, f, f);
             }
 
             final UUID uuid = entitylivingbaseIn.getUniqueID();
-            final EntityPlayer entityplayer = Minecraft.getMinecraft().theWorld.getPlayerEntityByUUID(uuid);
+            final EntityPlayer entityplayer = mc.theWorld.getPlayerEntityByUUID(uuid);
 
             if(entityplayer != null && entityplayer.isBlocking()) {
                 if(entitylivingbaseIn.isSneaking()) {
-                    ((ModelBiped) this.livingEntityRenderer.getMainModel()).postRenderArm(0.0325F);
-                    GlStateManager.translate(-0.58F, 0.3F, -0.2F);
-                    GlStateManager.rotate(-24390.0F, 137290.0F, -2009900.0F, -2054900.0F);
+                    ((ModelBiped) livingEntityRenderer.getMainModel()).postRenderArm(0.0325F);
+                    translate(-0.58F, 0.3F, -0.2F);
+                    rotate(-24390f, 137290f, -2009900f, -2054900f);
                 }else{
-                    ((ModelBiped) this.livingEntityRenderer.getMainModel()).postRenderArm(0.0325F);
-                    GlStateManager.translate(-0.48F, 0.2F, -0.2F);
-                    GlStateManager.rotate(-24390.0F, 137290.0F, -2009900.0F, -2054900.0F);
+                    ((ModelBiped) livingEntityRenderer.getMainModel()).postRenderArm(0.0325F);
+                    translate(-0.48F, 0.2F, -0.2F);
+                    rotate(-24390f, 137290f, -2009900f, -2054900f);
                 }
             }else{
-                ((ModelBiped) this.livingEntityRenderer.getMainModel()).postRenderArm(0.0625F);
+                ((ModelBiped) livingEntityRenderer.getMainModel()).postRenderArm(0.0625F);
             }
 
-            GlStateManager.translate(-0.0625F, 0.4375F, 0.0625F);
+            translate(-0.0625F, 0.4375F, 0.0625F);
 
             if(entitylivingbaseIn instanceof EntityPlayer && ((EntityPlayer) entitylivingbaseIn).fishEntity != null) {
                 itemstack = new ItemStack(Items.fishing_rod, 0);
             }
 
             Item item = itemstack.getItem();
-            Minecraft minecraft = Minecraft.getMinecraft();
 
             if(item instanceof ItemBlock && Block.getBlockFromItem(item).getRenderType() == 2) {
-                GlStateManager.translate(0.0F, 0.1875F, -0.3125F);
-                GlStateManager.rotate(20.0F, 1.0F, 0.0F, 0.0F);
-                GlStateManager.rotate(45.0F, 0.0F, 1.0F, 0.0F);
+                translate(0f, 0.1875F, -0.3125F);
+                rotate(20f, 1f, 0f, 0f);
+                rotate(45f, 0f, 1f, 0f);
                 float f1 = 0.375F;
-                GlStateManager.scale(-f1, -f1, f1);
+                scale(-f1, -f1, f1);
             }
 
             if(entitylivingbaseIn.isSneaking()) {
-                GlStateManager.translate(0.0F, 0.203125F, 0.0F);
+                translate(0f, 0.203125F, 0f);
             }
 
-            minecraft.getItemRenderer().renderItem(entitylivingbaseIn, itemstack, ItemCameraTransforms.TransformType.THIRD_PERSON);
-            GlStateManager.popMatrix();
+            mc.getItemRenderer().renderItem(entitylivingbaseIn, itemstack, ItemCameraTransforms.TransformType.THIRD_PERSON);
+            popMatrix();
         }
     }
 }

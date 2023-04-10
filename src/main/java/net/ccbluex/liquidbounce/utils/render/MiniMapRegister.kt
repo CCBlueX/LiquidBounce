@@ -6,13 +6,17 @@
 
 package net.ccbluex.liquidbounce.utils.render
 
+import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.Render2DEvent
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.util.BlockPos
 import net.minecraft.world.chunk.Chunk
 import java.util.concurrent.atomic.AtomicBoolean
 
-object MiniMapRegister : MinecraftInstance() {
+object MiniMapRegister : MinecraftInstance(), Listenable {
+
     private val chunkTextureMap = HashMap<ChunkLocation, MiniMapTexture>()
     private val queuedChunkUpdates = HashSet<Chunk>(256)
     private val queuedChunkDeletions = HashSet<ChunkLocation>(256)
@@ -24,8 +28,11 @@ object MiniMapRegister : MinecraftInstance() {
         }
     }
 
-    fun getChunkTextureAt(x: Int, z: Int): MiniMapTexture? {
-        return chunkTextureMap[ChunkLocation(x, z)]
+    fun getChunkTextureAt(x: Int, z: Int) = chunkTextureMap[ChunkLocation(x, z)]
+
+    @EventTarget
+    fun onRender2D(render2DEvent: Render2DEvent) {
+        updateChunks()
     }
 
     fun updateChunks() {
@@ -60,9 +67,7 @@ object MiniMapRegister : MinecraftInstance() {
         }
     }
 
-    fun getLoadedChunkCount(): Int {
-        return chunkTextureMap.size
-    }
+    fun getLoadedChunkCount() = chunkTextureMap.size
 
     fun unloadChunk(x: Int, z: Int) {
         synchronized(queuedChunkDeletions) {
@@ -70,9 +75,7 @@ object MiniMapRegister : MinecraftInstance() {
         }
     }
 
-    fun unloadAllChunks() {
-        deleteAllChunks.set(true)
-    }
+    fun unloadAllChunks() = deleteAllChunks.set(true)
 
     class MiniMapTexture {
         val texture = DynamicTexture(16, 16)
@@ -108,4 +111,7 @@ object MiniMapRegister : MinecraftInstance() {
     }
 
     data class ChunkLocation(val x: Int, val z: Int)
+
+    override fun handleEvents() = true
+
 }

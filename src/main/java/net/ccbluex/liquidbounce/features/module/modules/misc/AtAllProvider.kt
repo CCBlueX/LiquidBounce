@@ -12,20 +12,15 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
-import net.ccbluex.liquidbounce.utils.timer.TimeUtils
+import net.ccbluex.liquidbounce.utils.timer.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.network.play.client.C01PacketChatMessage
 import java.util.concurrent.LinkedBlockingQueue
 
 @ModuleInfo(name = "AtAllProvider", description = "Automatically mentions everyone on the server when using '@a' in your message.", category = ModuleCategory.MISC)
-class AtAllProvider : Module() {
-    private val minDelayValue: IntegerValue = object : IntegerValue("MinDelay", 500, 0, 20000) {
-        override fun onChanged(oldValue: Int, newValue: Int) {
-            val i = maxDelayValue.get()
-            if (i < newValue) set(i)
-        }
-    }
+object AtAllProvider : Module() {
+
     private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 1000, 0, 20000) {
         override fun onChanged(oldValue: Int, newValue: Int) {
             val i = minDelayValue.get()
@@ -33,11 +28,20 @@ class AtAllProvider : Module() {
         }
     }
 
+    private val minDelayValue: IntegerValue = object : IntegerValue("MinDelay", 500, 0, 20000) {
+        override fun onChanged(oldValue: Int, newValue: Int) {
+            val i = maxDelayValue.get()
+            if (i < newValue) set(i)
+        }
+
+        override fun isSupported() = !maxDelayValue.isMinimal()
+    }
+
     private val retryValue = BoolValue("Retry", false)
     private val sendQueue = LinkedBlockingQueue<String>()
-    private val retryQueue: MutableList<String> = ArrayList()
+    private val retryQueue = mutableListOf<String>()
     private val msTimer = MSTimer()
-    private var delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+    private var delay = randomDelay(minDelayValue.get(), maxDelayValue.get())
 
     override fun onDisable() {
         synchronized(sendQueue) {
@@ -51,7 +55,7 @@ class AtAllProvider : Module() {
     }
 
     @EventTarget
-    fun onUpdate(event: UpdateEvent?) {
+    fun onUpdate(event: UpdateEvent) {
         if (!msTimer.hasTimePassed(delay))
             return
 
@@ -64,10 +68,10 @@ class AtAllProvider : Module() {
                         sendQueue.addAll(retryQueue)
                 }
 
-                mc.thePlayer!!.sendChatMessage(sendQueue.take())
+                mc.thePlayer.sendChatMessage(sendQueue.take())
                 msTimer.reset()
 
-                delay = TimeUtils.randomDelay(minDelayValue.get(), maxDelayValue.get())
+                delay = randomDelay(minDelayValue.get(), maxDelayValue.get())
             }
         } catch (e: InterruptedException) {
             e.printStackTrace()
@@ -79,12 +83,12 @@ class AtAllProvider : Module() {
         if (event.packet is C01PacketChatMessage) {
             val message = event.packet.message
 
-            if (message.contains("@a")) {
+            if ("@a" in message) {
                 synchronized(sendQueue) {
                     for (playerInfo in mc.netHandler.playerInfoMap) {
                         val playerName = playerInfo.gameProfile.name
 
-                        if (playerName == mc.thePlayer!!.name)
+                        if (playerName == mc.thePlayer.name)
                             continue
 
                         sendQueue.add(message.replace("@a", playerName))

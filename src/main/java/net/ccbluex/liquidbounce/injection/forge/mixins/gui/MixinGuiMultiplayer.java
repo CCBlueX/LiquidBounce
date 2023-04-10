@@ -5,9 +5,9 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
-import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.special.BungeeCordSpoof;
-import net.ccbluex.liquidbounce.ui.client.GuiAntiForge;
+import net.ccbluex.liquidbounce.file.FileManager;
+import net.ccbluex.liquidbounce.ui.client.GuiClientFixes;
 import net.ccbluex.liquidbounce.ui.client.tools.GuiTools;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.GuiMultiplayer;
@@ -17,6 +17,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.io.IOException;
+
 @Mixin(GuiMultiplayer.class)
 public abstract class MixinGuiMultiplayer extends MixinGuiScreen {
 
@@ -24,21 +26,21 @@ public abstract class MixinGuiMultiplayer extends MixinGuiScreen {
 
     @Inject(method = "initGui", at = @At("RETURN"))
     private void initGui(CallbackInfo callbackInfo) {
-        buttonList.add(new GuiButton(997, 5, 8, 98, 20, "AntiForge"));
-        buttonList.add(bungeeCordSpoofButton = new GuiButton(998, 108, 8, 98, 20, "BungeeCord Spoof: " + (BungeeCordSpoof.enabled ? "On" : "Off")));
+        buttonList.add(new GuiButton(997, 5, 8, 45, 20, "Fixes"));
+        buttonList.add(bungeeCordSpoofButton = new GuiButton(998, 55, 8, 98, 20, "BungeeCord Spoof: " + (BungeeCordSpoof.INSTANCE.getEnabled() ? "On" : "Off")));
         buttonList.add(new GuiButton(999, width - 104, 8, 98, 20, "Tools"));
     }
 
     @Inject(method = "actionPerformed", at = @At("HEAD"))
-    private void actionPerformed(GuiButton button, CallbackInfo callbackInfo) {
+    private void actionPerformed(GuiButton button, CallbackInfo callbackInfo) throws IOException {
         switch (button.id) {
             case 997:
-                mc.displayGuiScreen(new GuiAntiForge((GuiScreen) (Object) this));
+                mc.displayGuiScreen(new GuiClientFixes((GuiScreen) (Object) this));
                 break;
             case 998:
-                BungeeCordSpoof.enabled = !BungeeCordSpoof.enabled;
-                bungeeCordSpoofButton.displayString = "BungeeCord Spoof: " + (BungeeCordSpoof.enabled ? "On" : "Off");
-                LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.valuesConfig);
+                BungeeCordSpoof.INSTANCE.setEnabled(!BungeeCordSpoof.INSTANCE.getEnabled());
+                bungeeCordSpoofButton.displayString = "BungeeCord Spoof: " + (BungeeCordSpoof.INSTANCE.getEnabled() ? "On" : "Off");
+                FileManager.INSTANCE.getValuesConfig().saveConfig();
                 break;
             case 999:
                 mc.displayGuiScreen(new GuiTools((GuiScreen) (Object) this));

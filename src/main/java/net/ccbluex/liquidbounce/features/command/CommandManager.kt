@@ -5,16 +5,17 @@
  */
 package net.ccbluex.liquidbounce.features.command
 
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.features.command.commands.*
 import net.ccbluex.liquidbounce.features.command.shortcuts.Shortcut
 import net.ccbluex.liquidbounce.features.command.shortcuts.ShortcutParser
 import net.ccbluex.liquidbounce.features.command.special.*
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.file.FileManager.saveConfig
+import net.ccbluex.liquidbounce.file.FileManager.shortcutsConfig
+import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 
-class CommandManager {
+object CommandManager {
     val commands = mutableListOf<Command>()
-    var latestAutoComplete: Array<String> = emptyArray()
+    var latestAutoComplete = emptyArray<String>()
 
     var prefix = '.'
 
@@ -22,6 +23,8 @@ class CommandManager {
      * Register all default commands
      */
     fun registerCommands() {
+        commands.clear()
+
         registerCommand(BindCommand())
         registerCommand(VClipCommand())
         registerCommand(HClipCommand())
@@ -77,7 +80,7 @@ class CommandManager {
             }
         }
 
-        ClientUtils.displayChatMessage("§cCommand not found. Type ${prefix}help to view all commands.")
+        displayChatMessage("§cCommand not found. Type ${prefix}help to view all commands.")
     }
 
     /**
@@ -87,8 +90,8 @@ class CommandManager {
      * @author NurMarvin
      */
     fun autoComplete(input: String): Boolean {
-        this.latestAutoComplete = this.getCompletions(input) ?: emptyArray()
-        return input.startsWith(this.prefix) && this.latestAutoComplete.isNotEmpty()
+        latestAutoComplete = getCompletions(input) ?: emptyArray()
+        return input.startsWith(prefix) && latestAutoComplete.isNotEmpty()
     }
 
     /**
@@ -98,7 +101,7 @@ class CommandManager {
      * @author NurMarvin
      */
     private fun getCompletions(input: String): Array<String>? {
-        if (input.isNotEmpty() && input.toCharArray()[0] == this.prefix) {
+        if (input.isNotEmpty() && input.toCharArray()[0] == prefix) {
             val args = input.split(" ")
 
             return if (args.size > 1) {
@@ -120,7 +123,7 @@ class CommandManager {
                             it.alias.first { alias -> alias.startsWith(rawInput, true) }
                         }
 
-                        this.prefix + alias
+                        prefix + alias
                     }
                     .toTypedArray()
             }
@@ -131,12 +134,11 @@ class CommandManager {
     /**
      * Get command instance by given [name]
      */
-    fun getCommand(name: String): Command? {
-        return commands.find {
+    fun getCommand(name: String) =
+        commands.find {
             it.command.equals(name, ignoreCase = true)
                 || it.alias.any { alias -> alias.equals(name, true) }
         }
-    }
 
     /**
      * Register [command] by just adding it to the commands registry
@@ -151,7 +153,7 @@ class CommandManager {
                 Pair(command, it.toTypedArray())
             }))
 
-            LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.shortcutsConfig)
+            saveConfig(shortcutsConfig)
         } else {
             throw IllegalArgumentException("Command already exists!")
         }
@@ -162,7 +164,7 @@ class CommandManager {
             it is Shortcut && it.command.equals(name, ignoreCase = true)
         }
 
-        LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.shortcutsConfig)
+        saveConfig(shortcutsConfig)
 
         return removed
     }

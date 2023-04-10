@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.ui.client.hud.element
 
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
 import net.ccbluex.liquidbounce.value.Value
 import net.minecraft.client.gui.ScaledResolution
 import kotlin.math.max
@@ -20,7 +20,7 @@ abstract class Element(var x: Double = 2.0, var y: Double = 2.0, scale: Float = 
     val info = javaClass.getAnnotation(ElementInfo::class.java)
             ?: throw IllegalArgumentException("Passed element with missing element info")
 
-    var scale: Float = 1F
+    var scale = 1F
         set(value) {
             if (info.disableScale)
                 return
@@ -29,7 +29,7 @@ abstract class Element(var x: Double = 2.0, var y: Double = 2.0, scale: Float = 
         }
         get() {
             if (info.disableScale)
-                return 1.0f
+                return 1f
             return field
         }
 
@@ -135,7 +135,6 @@ abstract class Element(var x: Double = 2.0, var y: Double = 2.0, scale: Float = 
 /**
  * Element info
  */
-@kotlin.annotation.Retention(AnnotationRetention.RUNTIME)
 annotation class ElementInfo(val name: String, val single: Boolean = false, val force: Boolean = false, val disableScale: Boolean = false, val priority: Int = 0)
 
 /**
@@ -164,8 +163,6 @@ class Side(var horizontal: Horizontal, var vertical: Vertical) {
         RIGHT("Right");
 
         companion object {
-
-            @JvmStatic
             fun getByName(name: String) = values().find { it.sideName == name }
 
         }
@@ -182,8 +179,6 @@ class Side(var horizontal: Horizontal, var vertical: Vertical) {
         DOWN("Down");
 
         companion object {
-
-            @JvmStatic
             fun getByName(name: String) = values().find { it.sideName == name }
 
         }
@@ -197,6 +192,6 @@ class Side(var horizontal: Horizontal, var vertical: Vertical) {
  */
 data class Border(val x: Float, val y: Float, val x2: Float, val y2: Float) {
 
-    fun draw() = RenderUtils.drawBorderedRect(x, y, x2, y2, 3F, Int.MIN_VALUE, 0)
+    fun draw() = drawBorderedRect(x, y, x2, y2, 3F, Int.MIN_VALUE, 0)
 
 }

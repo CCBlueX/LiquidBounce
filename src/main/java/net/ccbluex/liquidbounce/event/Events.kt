@@ -45,7 +45,7 @@ class ClickBlockEvent(val clickedBlock: BlockPos?, val WEnumFacing: EnumFacing?)
 class ClientShutdownEvent : Event()
 
 /**
- * Called when an other entity moves
+ * Called when another entity moves
  */
 data class EntityMovementEvent(val movedEntity: Entity) : Event()
 
@@ -126,12 +126,6 @@ class Render2DEvent(val partialTicks: Float) : Event()
 class Render3DEvent(val partialTicks: Float) : Event()
 
 /**
- * Called when entity is going to be rendered
- */
-class RenderEntityEvent(val entity: Entity, val x: Double, val y: Double, val z: Double, val entityYaw: Float,
-                        val partialTicks: Float) : Event()
-
-/**
  * Called when the screen changes
  */
 class ScreenEvent(val guiScreen: GuiScreen?) : Event()
@@ -152,11 +146,6 @@ class StepEvent(var stepHeight: Float) : Event()
 class StepConfirmEvent : Event()
 
 /**
- * Called when a text is going to be rendered
- */
-class TextEvent(var text: String?) : Event()
-
-/**
  * tick... tack... tick... tack
  */
 class TickEvent : Event()
@@ -175,3 +164,8 @@ class WorldEvent(val worldClient: WorldClient?) : Event()
  * Called when window clicked
  */
 class ClickWindowEvent(val windowId: Int, val slotId: Int, val mouseButtonClicked: Int, val mode: Int) : CancellableEvent()
+
+/**
+ * Called when LiquidBounce finishes starting up
+ */
+class StartupEvent : Event()

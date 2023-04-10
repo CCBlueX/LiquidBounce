@@ -11,92 +11,111 @@ import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot
+import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
 import net.ccbluex.liquidbounce.ui.font.GameFontRenderer.Companion.getColorIndex
-import net.ccbluex.liquidbounce.utils.ClientUtils
-import net.ccbluex.liquidbounce.utils.EntityUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
+import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
+import net.ccbluex.liquidbounce.utils.extensions.hitBox
 import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.draw2D
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawEntityBox
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.GlowShader
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.client.renderer.GlStateManager
+import net.minecraft.client.renderer.GlStateManager.enableTexture2D
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.player.EntityPlayer
-import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL11.*
 import org.lwjgl.util.vector.Vector3f
 import java.awt.Color
 import kotlin.math.max
 import kotlin.math.min
 
 @ModuleInfo(name = "ESP", description = "Allows you to see targets through walls.", category = ModuleCategory.RENDER)
-class ESP : Module() {
-    @JvmField
+object ESP : Module() {
+
     val modeValue = ListValue(
         "Mode",
         arrayOf("Box", "OtherBox", "WireFrame", "2D", "Real2D", "Outline", "Glow"),
         "Box"
     )
 
-    @JvmField
-    val outlineWidth = FloatValue("Outline-Width", 3f, 0.5f, 5f)
+    val outlineWidth = object : FloatValue("Outline-Width", 3f, 0.5f, 5f) {
+        override fun isSupported() = modeValue.get() == "Outline"
+    }
 
-    @JvmField
-    val wireframeWidth = FloatValue("WireFrame-Width", 2f, 0.5f, 5f)
-    private val glowRenderScale = FloatValue("Glow-Renderscale", 1f, 0.1f, 2f)
-    private val glowRadius = IntegerValue("Glow-Radius", 4, 1, 5)
-    private val glowFade = IntegerValue("Glow-Fade", 10, 0, 30)
-    private val glowTargetAlpha = FloatValue("Glow-Target-Alpha", 0f, 0f, 1f)
-    private val colorRedValue = IntegerValue("R", 255, 0, 255)
-    private val colorGreenValue = IntegerValue("G", 255, 0, 255)
-    private val colorBlueValue = IntegerValue("B", 255, 0, 255)
+    val wireframeWidth = object : FloatValue("WireFrame-Width", 2f, 0.5f, 5f) {
+        override fun isSupported() = modeValue.get() == "WireFrame"
+    }
+
+    private val glowRenderScale = object : FloatValue("Glow-Renderscale", 1f, 0.1f, 2f) {
+        override fun isSupported() = modeValue.get() == "Glow"
+    }
+    private val glowRadius = object : IntegerValue("Glow-Radius", 4, 1, 5) {
+        override fun isSupported() = modeValue.get() == "Glow"
+    }
+    private val glowFade = object : IntegerValue("Glow-Fade", 10, 0, 30) {
+        override fun isSupported() = modeValue.get() == "Glow"
+    }
+    private val glowTargetAlpha = object : FloatValue("Glow-Target-Alpha", 0f, 0f, 1f) {
+        override fun isSupported() = modeValue.get() == "Glow"
+    }
+
     private val colorRainbow = BoolValue("Rainbow", false)
+    private val colorRedValue = object : IntegerValue("R", 255, 0, 255) {
+        override fun isSupported() = !colorRainbow.get()
+    }
+    private val colorGreenValue = object : IntegerValue("G", 255, 0, 255) {
+        override fun isSupported() = !colorRainbow.get()
+    }
+    private val colorBlueValue = object : IntegerValue("B", 255, 0, 255) {
+        override fun isSupported() = !colorRainbow.get()
+    }
+
     private val colorTeam = BoolValue("Team", false)
     private val botValue = BoolValue("Bots", true)
 
+    var renderNameTags = true
+
     @EventTarget
-    fun onRender3D(event: Render3DEvent?) {
+    fun onRender3D(event: Render3DEvent) {
         val mode = modeValue.get()
-        val mvMatrix = WorldToScreen.getMatrix(GL11.GL_MODELVIEW_MATRIX)
-        val projectionMatrix = WorldToScreen.getMatrix(GL11.GL_PROJECTION_MATRIX)
-        val real2d = mode.equals("real2d", ignoreCase = true)
+        val mvMatrix = WorldToScreen.getMatrix(GL_MODELVIEW_MATRIX)
+        val projectionMatrix = WorldToScreen.getMatrix(GL_PROJECTION_MATRIX)
+        val real2d = mode == "Real2D"
 
         if (real2d) {
-            GL11.glPushAttrib(GL11.GL_ENABLE_BIT)
-            GL11.glEnable(GL11.GL_BLEND)
-            GL11.glDisable(GL11.GL_TEXTURE_2D)
-            GL11.glDisable(GL11.GL_DEPTH_TEST)
-            GL11.glMatrixMode(GL11.GL_PROJECTION)
-            GL11.glPushMatrix()
-            GL11.glLoadIdentity()
-            GL11.glOrtho(0.0, mc.displayWidth.toDouble(), mc.displayHeight.toDouble(), 0.0, -1.0, 1.0)
-            GL11.glMatrixMode(GL11.GL_MODELVIEW)
-            GL11.glPushMatrix()
-            GL11.glLoadIdentity()
-            GL11.glDisable(GL11.GL_DEPTH_TEST)
-            GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
-            GlStateManager.enableTexture2D()
-            GL11.glDepthMask(true)
-            GL11.glLineWidth(1.0f)
+            glPushAttrib(GL_ENABLE_BIT)
+            glEnable(GL_BLEND)
+            glDisable(GL_TEXTURE_2D)
+            glDisable(GL_DEPTH_TEST)
+            glMatrixMode(GL_PROJECTION)
+            glPushMatrix()
+            glLoadIdentity()
+            glOrtho(0.0, mc.displayWidth.toDouble(), mc.displayHeight.toDouble(), 0.0, -1.0, 1.0)
+            glMatrixMode(GL_MODELVIEW)
+            glPushMatrix()
+            glLoadIdentity()
+            glDisable(GL_DEPTH_TEST)
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+            enableTexture2D()
+            glDepthMask(true)
+            glLineWidth(1f)
         }
 
-        for (entity in mc.theWorld!!.loadedEntityList) {
-            if (entity !is EntityLivingBase || !botValue.get() && AntiBot.isBot(entity)) continue
-            if (entity != mc.thePlayer && EntityUtils.isSelected(entity, false)) {
+        for (entity in mc.theWorld.loadedEntityList) {
+            if (entity !is EntityLivingBase || !botValue.get() && isBot(entity)) continue
+            if (entity != mc.thePlayer && isSelected(entity, false)) {
                 val color = getColor(entity)
 
                 when (mode.lowercase()) {
-                    "box", "otherbox" -> RenderUtils.drawEntityBox(
-                        entity,
-                        color,
-                        !mode.equals("otherbox", ignoreCase = true)
-                    )
+                    "box", "otherbox" -> drawEntityBox(entity, color, mode != "OtherBox")
                     "2d" -> {
                         val renderManager = mc.renderManager
                         val timer = mc.timer
@@ -106,12 +125,12 @@ class ESP : Module() {
                             entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * timer.renderPartialTicks - renderManager.renderPosY
                         val posZ: Double =
                             entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * timer.renderPartialTicks - renderManager.renderPosZ
-                        RenderUtils.draw2D(entity, posX, posY, posZ, color.rgb, Color.BLACK.rgb)
+                        draw2D(entity, posX, posY, posZ, color.rgb, Color.BLACK.rgb)
                     }
                     "real2d" -> {
                         val renderManager = mc.renderManager
                         val timer = mc.timer
-                        val bb = entity.entityBoundingBox
+                        val bb = entity.hitBox
                             .offset(-entity.posX, -entity.posY, -entity.posZ)
                             .offset(
                                 entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * timer.renderPartialTicks,
@@ -148,13 +167,13 @@ class ESP : Module() {
                             maxY = max(screenPos.y, maxY)
                         }
                         if (minX > 0 || minY > 0 || maxX <= mc.displayWidth || maxY <= mc.displayWidth) {
-                            GL11.glColor4f(color.red / 255.0f, color.green / 255.0f, color.blue / 255.0f, 1.0f)
-                            GL11.glBegin(GL11.GL_LINE_LOOP)
-                            GL11.glVertex2f(minX, minY)
-                            GL11.glVertex2f(minX, maxY)
-                            GL11.glVertex2f(maxX, maxY)
-                            GL11.glVertex2f(maxX, minY)
-                            GL11.glEnd()
+                            glColor4f(color.red / 255f, color.green / 255f, color.blue / 255f, 1f)
+                            glBegin(GL_LINE_LOOP)
+                            glVertex2f(minX, minY)
+                            glVertex2f(minX, maxY)
+                            glVertex2f(maxX, maxY)
+                            glVertex2f(maxX, minY)
+                            glEnd()
                         }
                     }
                 }
@@ -162,12 +181,12 @@ class ESP : Module() {
         }
 
         if (real2d) {
-            GL11.glEnable(GL11.GL_DEPTH_TEST)
-            GL11.glMatrixMode(GL11.GL_PROJECTION)
-            GL11.glPopMatrix()
-            GL11.glMatrixMode(GL11.GL_MODELVIEW)
-            GL11.glPopMatrix()
-            GL11.glPopAttrib()
+            glEnable(GL_DEPTH_TEST)
+            glMatrixMode(GL_PROJECTION)
+            glPopMatrix()
+            glMatrixMode(GL_MODELVIEW)
+            glPopMatrix()
+            glPopAttrib()
         }
     }
 
@@ -179,16 +198,16 @@ class ESP : Module() {
         shader.startDraw(event.partialTicks, glowRenderScale.get())
         renderNameTags = false
 
-        if(mc.theWorld == null) return;
+        if(mc.theWorld == null) return
 
         try {
             val entityMap = mutableMapOf<Color, ArrayList<Entity>>()
             mc.theWorld.loadedEntityList
-                .filter { EntityUtils.isSelected(it, false) }
+                .filter { isSelected(it, false) }
                 .filterIsInstance<EntityLivingBase>()
-                .filterNot { AntiBot.isBot(it) && botValue.get() }.forEach { entity ->
+                .filterNot { isBot(it) && botValue.get() }.forEach { entity ->
                 val color = getColor(entity)
-                if (!entityMap.containsKey(color)) {
+                if (color !in entityMap) {
                     entityMap[color] = ArrayList()
                 }
                 entityMap[color]!!.add(entity)
@@ -202,13 +221,13 @@ class ESP : Module() {
                 shader.stopDraw(color, glowRadius.get(), glowFade.get(), glowTargetAlpha.get())
             }
         } catch (ex: Exception) {
-            ClientUtils.getLogger().error("An error occurred while rendering all entities for shader esp", ex)
+            LOGGER.error("An error occurred while rendering all entities for shader esp", ex)
         }
         renderNameTags = true
         shader.stopDraw(getColor(null), glowRadius.get(), glowFade.get(), glowTargetAlpha.get())
     }
 
-    override val tag: String
+    override val tag
         get() = modeValue.get()
 
     fun getColor(entity: Entity?): Color {
@@ -242,8 +261,4 @@ class ESP : Module() {
         )
     }
 
-    companion object {
-        @JvmField
-        var renderNameTags = true
-    }
 }

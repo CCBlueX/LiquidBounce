@@ -8,9 +8,8 @@ package net.ccbluex.liquidbounce.script.api
 import jdk.nashorn.api.scripting.JSObject
 import jdk.nashorn.api.scripting.ScriptUtils
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 
-@Suppress("UNCHECKED_CAST", "unused")
 class ScriptCommand(private val commandObject: JSObject) : Command(commandObject.getMember("name") as String,
         *ScriptUtils.convert(commandObject.getMember("aliases"), Array<String>::class.java) as Array<out String>) {
 
@@ -29,7 +28,7 @@ class ScriptCommand(private val commandObject: JSObject) : Command(commandObject
         try {
             events["execute"]?.call(commandObject, args)
         } catch (throwable: Throwable) {
-            ClientUtils.getLogger().error("[ScriptAPI] Exception in command '$command'!", throwable)
+            LOGGER.error("[ScriptAPI] Exception in command '$command'!", throwable)
         }
     }
 }

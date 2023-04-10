@@ -55,7 +55,7 @@ class EnchantCommand : Command("enchant") {
             }
 
             item.addEnchantment(enchantment, level)
-            mc.netHandler.addToSendQueue(C10PacketCreativeInventoryAction(36 + mc.thePlayer!!.inventory.currentItem, item))
+            mc.netHandler.addToSendQueue(C10PacketCreativeInventoryAction(36 + mc.thePlayer.inventory.currentItem, item))
             chat("${enchantment.getTranslatedName(level)} added to ${item.displayName}.")
             return
         }

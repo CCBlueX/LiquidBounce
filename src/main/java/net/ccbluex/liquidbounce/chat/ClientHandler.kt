@@ -13,14 +13,14 @@ import io.netty.handler.codec.http.websocketx.CloseWebSocketFrame
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import io.netty.handler.codec.http.websocketx.WebSocketClientHandshaker
 import io.netty.handler.codec.http.websocketx.WebSocketHandshakeException
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 
 class ClientHandler(val client: Client, private val handshaker: WebSocketClientHandshaker) : SimpleChannelInboundHandler<Any>() {
 
     lateinit var handshakeFuture: ChannelPromise
 
     /**
-     * Do nothing by default, sub-classes may override this method.
+     * Do nothing by default, subclasses may override this method.
      */
     override fun handlerAdded(ctx: ChannelHandlerContext) {
         handshakeFuture = ctx.newPromise()
@@ -30,7 +30,7 @@ class ClientHandler(val client: Client, private val handshaker: WebSocketClientH
      * Calls [ChannelHandlerContext.fireChannelActive] to forward
      * to the next [ChannelInboundHandler] in the [ChannelPipeline].
      *
-     * Sub-classes may override this method to change behavior.
+     * Subclasses may override this method to change behavior.
      */
     override fun channelActive(ctx: ChannelHandlerContext) {
         handshaker.handshake(ctx.channel())
@@ -40,7 +40,7 @@ class ClientHandler(val client: Client, private val handshaker: WebSocketClientH
      * Calls [ChannelHandlerContext.fireChannelInactive] to forward
      * to the next [ChannelInboundHandler] in the [ChannelPipeline].
      *
-     * Sub-classes may override this method to change behavior.
+     * Subclasses may override this method to change behavior.
      */
     override fun channelInactive(ctx: ChannelHandlerContext) {
         client.onDisconnect()
@@ -53,10 +53,10 @@ class ClientHandler(val client: Client, private val handshaker: WebSocketClientH
      * Calls [ChannelHandlerContext.fireExceptionCaught] to forward
      * to the next [ChannelHandler] in the [ChannelPipeline].
      *
-     * Sub-classes may override this method to change behavior.
+     * Subclasses may override this method to change behavior.
      */
     override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
-        ClientUtils.getLogger().error("LiquidChat error", cause)
+        LOGGER.error("LiquidChat error", cause)
         client.onError(cause)
         if(!handshakeFuture.isDone) handshakeFuture.setFailure(cause)
         ctx.close()

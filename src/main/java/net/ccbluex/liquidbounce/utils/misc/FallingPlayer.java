@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.utils.misc;
 
 import net.ccbluex.liquidbounce.utils.MinecraftInstance;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MovingObjectPosition;
@@ -39,6 +40,14 @@ public class FallingPlayer extends MinecraftInstance {
         this.forward = forward;
     }
 
+    public FallingPlayer(EntityPlayerSP player) {
+        this(player.posX, player.posY, player.posZ, player.motionX, player.motionY, player.motionZ, player.rotationYaw, player.moveStrafing, player.moveForward);
+    }
+
+    public FallingPlayer(EntityPlayerSP player, Boolean predict) {
+        this(player.posX + player.motionX, player.posY + player.motionY, player.posZ + player.motionZ, player.motionX, player.motionY, player.motionZ, player.rotationYaw, player.moveStrafing, player.moveForward);
+    }
+
     private void calculateForTick() {
         strafe *= 0.98F;
         forward *= 0.98F;
@@ -48,17 +57,17 @@ public class FallingPlayer extends MinecraftInstance {
         if (v >= 0.0001f) {
             v = (float) Math.sqrt(v);
 
-            if (v < 1.0F) {
-                v = 1.0F;
+            if (v < 1f) {
+                v = 1f;
             }
 
             v = mc.thePlayer.jumpMovementFactor / v;
             strafe = strafe * v;
             forward = forward * v;
-            float f1 = (float) Math.sin(yaw * (float) Math.PI / 180.0F);
-            float f2 = (float) Math.cos(yaw * (float) Math.PI / 180.0F);
-            this.motionX += strafe * f2 - forward * f1;
-            this.motionZ += forward * f2 + strafe * f1;
+            float f1 = (float) Math.sin(yaw * (float) Math.PI / 180f);
+            float f2 = (float) Math.cos(yaw * (float) Math.PI / 180f);
+            motionX += strafe * f2 - forward * f1;
+            motionZ += forward * f2 + strafe * f1;
         }
 
 

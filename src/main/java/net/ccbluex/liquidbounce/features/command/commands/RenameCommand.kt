@@ -21,7 +21,7 @@ class RenameCommand : Command("rename") {
                 return
             }
 
-            val item = mc.thePlayer!!.heldItem
+            val item = mc.thePlayer.heldItem
 
             if (item?.item == null) {
                 chat("§c§lError: §3You need to hold a item.")
@@ -29,7 +29,7 @@ class RenameCommand : Command("rename") {
             }
 
             item.setStackDisplayName(ColorUtils.translateAlternateColorCodes(StringUtils.toCompleteString(args, 1)))
-            mc.netHandler.addToSendQueue(C10PacketCreativeInventoryAction(36 + mc.thePlayer!!.inventory.currentItem, item))
+            mc.netHandler.addToSendQueue(C10PacketCreativeInventoryAction(36 + mc.thePlayer.inventory.currentItem, item))
             chat("§3Item renamed to '${item.displayName}§3'")
             return
         }

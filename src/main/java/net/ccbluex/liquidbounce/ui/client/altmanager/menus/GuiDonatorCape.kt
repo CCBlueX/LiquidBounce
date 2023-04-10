@@ -5,33 +5,23 @@
  */
 package net.ccbluex.liquidbounce.ui.client.altmanager.menus
 
+import net.ccbluex.liquidbounce.cape.CapeService
+import net.ccbluex.liquidbounce.file.FileManager.valuesConfig
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.elements.GuiPasswordField
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiTextField
-import org.apache.http.HttpHeaders
-import org.apache.http.HttpStatus
-import org.apache.http.client.methods.HttpDelete
-import org.apache.http.client.methods.HttpPut
-import org.apache.http.impl.client.HttpClients
-import org.apache.http.message.BasicHeader
 import org.lwjgl.input.Keyboard
-import kotlin.concurrent.thread
 
 class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
 
-    // Data Storage
-    companion object {
-        var transferCode: String = ""
-        var capeEnabled: Boolean = true
-    }
-
     // Buttons
-    private lateinit var stateButton: GuiButton
+    private lateinit var upperButton: GuiButton
+    private lateinit var lowerButton: GuiButton
 
     // User Input Fields
     private lateinit var transferCodeField: GuiTextField
@@ -39,7 +29,8 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
     // Status
     private var status = ""
 
-    // Donator Cape
+    private val loggedIntoAccount: Boolean
+        get() = CapeService.clientCapeUser != null
 
     /**
      * Initialize Donator Cape GUI
@@ -49,17 +40,22 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
         Keyboard.enableRepeatEvents(true)
 
         // Add buttons to screen
-        stateButton = GuiButton(1, width / 2 - 100, 105, "Disable Cape")
+        val upperButtonText = if (!loggedIntoAccount)
+            "Login"
+        else if (CapeService.clientCapeUser?.enabled == true)
+            "Disable visibility"
+        else
+            "Enable visibility"
 
-        buttonList.add(stateButton)
-        buttonList.add(GuiButton(2, width / 2 - 100, height / 4 + 96, "Donate to get Cape"))
-        buttonList.add(GuiButton(0, width / 2 - 100, height / 4 + 120, "Back"))
+        buttonList.add(GuiButton(1, width / 2 - 100, height / 2 - 60, upperButtonText).apply { upperButton = this })
+        buttonList.add(GuiButton(2, width / 2 - 100, height / 2 - 35, if (loggedIntoAccount) "Logout" else "Donate to get Cape").apply { lowerButton = this })
+        buttonList.add(GuiButton(0, width / 2 - 100, height / 2 + 30, "Back"))
 
         // Add fields to screen
-        transferCodeField = GuiPasswordField(666, Fonts.font40, width / 2 - 100, 80, 200, 20)
-        transferCodeField.isFocused = true
+        transferCodeField = GuiPasswordField(666, Fonts.font40, width / 2 - 100, height / 2 - 90, 200, 20)
+        transferCodeField.isFocused = false
         transferCodeField.maxStringLength = Integer.MAX_VALUE
-        transferCodeField.text = transferCode
+        transferCodeField.text = CapeService.clientCapeUser?.token ?: ""
 
         // Call sub method
         super.initGui()
@@ -71,24 +67,37 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
     override fun drawScreen(mouseX : Int, mouseY : Int, partialTicks : Float) {
         // Draw background to screen
         drawBackground(0)
-        RenderUtils.drawRect(30.0f, 30.0f, width - 30.0f, height - 30.0f, Integer.MIN_VALUE)
+        drawRect(30f, 30f, width - 30f, height - 30f, Integer.MIN_VALUE)
 
         // Draw title and status
-        Fonts.font35.drawCenteredString("Donator Cape", width / 2.0f, 36.0f, 0xffffff)
-        Fonts.font35.drawCenteredString(status, width / 2.0f, height / 4.0f + 80, 0xffffff)
+        Fonts.font40.drawCenteredString("Donator Cape", width / 2f, 45f, 0xffffff)
+        if (loggedIntoAccount) {
+            CapeService.clientCapeUser?.run {
+                Fonts.font40.drawCenteredString("§cCape: §f$capeName", width / 2f, height / 2 - 100f, 0xffffff)
+                Fonts.font40.drawCenteredString("§cVisible to others: §f${if (enabled) "Yes" else "No"}", width / 2f, height / 2 - 90f, 0xffffff)
+                Fonts.font40.drawCenteredString("§cOn account: §f$uuid", width / 2f, height / 2 - 80f, 0xffffff)
+            }
+        }
+        Fonts.font35.drawCenteredString(status, width / 2f, height / 2f - 5, 0xffffff)
 
         // Draw fields
-        transferCodeField.drawTextBox()
+        if (!loggedIntoAccount) {
+            transferCodeField.drawTextBox()
 
-        Fonts.font40.drawCenteredString("§7Transfer Code:", width / 2.0f - 65, 66.0f, 0xffffff)
-
-        stateButton.displayString = if (capeEnabled) {
-            "Disable Cape"
-        } else {
-            "Enable Cape"
+            if (transferCodeField.text.isEmpty() && !transferCodeField.isFocused) {
+                Fonts.font40.drawCenteredString("§7Transfer Code", width / 2f - 60f, height / 2 - 84f, 0xffffff)
+            }
         }
 
-        // Call sub method
+        upperButton.displayString = if (!loggedIntoAccount)
+            "Login"
+        else if (CapeService.clientCapeUser?.enabled == true)
+            "Disable visibility"
+        else
+            "Enable visibility"
+
+        lowerButton.displayString = if (loggedIntoAccount) "Logout" else "Donate to get Cape"
+
         super.drawScreen(mouseX, mouseY, partialTicks)
     }
 
@@ -96,48 +105,55 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
      * Handle button actions
      */
     override fun actionPerformed(button: GuiButton) {
-        if (!button.enabled) return
+        if (!button.enabled) {
+            return
+        }
 
         when (button.id) {
             0 -> mc.displayGuiScreen(prevGui)
             1 -> {
-                stateButton.enabled = false
+                if (loggedIntoAccount) {
+                    upperButton.enabled = false
 
-                thread {
-                    val httpClient = HttpClients.createDefault()
-                    val headers = arrayOf(
-                            BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json"),
-                            BasicHeader(HttpHeaders.AUTHORIZATION, transferCodeField.text)
-                    )
-                    val request = if (capeEnabled) {
-                        HttpDelete("http://capes.liquidbounce.net/api/v1/cape/self")
-                    } else {
-                        HttpPut("http://capes.liquidbounce.net/api/v1/cape/self")
-                    }
-                    request.setHeaders(headers)
-                    val response = httpClient.execute(request)
-                    val statusCode = response.statusLine.statusCode
-
-                    status = if (statusCode == HttpStatus.SC_NO_CONTENT) {
-                        capeEnabled = !capeEnabled
-                        if (capeEnabled) {
-                            "§aSuccessfully enabled cape"
+                    CapeService.toggleCapeState { enabled, success, statusCode ->
+                        status = if (success) {
+                            if (enabled) {
+                                "§aSuccessfully enabled visibility"
+                            } else {
+                                "§aSuccessfully disabled visibility"
+                            }
                         } else {
-                            "§aSuccessfully disabled cape"
+                            "§cFailed to toggle cape ($statusCode)"
                         }
-                    } else {
-                        "§cFailed to toggle cape ($statusCode)"
+
+                        upperButton.enabled = true
+                    }
+                } else {
+                    if (transferCodeField.text.isBlank()) {
+                        status = "§cTransfer code can't be blank"
+                        return
                     }
 
-                    stateButton.enabled = true
+                    runCatching {
+                        CapeService.login(transferCodeField.text)
+                    }.onSuccess {
+                        status = "§aSuccessfully logged in"
+                    }.onFailure {
+                        status = "§cFailed to login (${it.message})"
+                    }
                 }
             }
             2 -> {
-                MiscUtils.showURL("https://donate.liquidbounce.net")
+                if (loggedIntoAccount) {
+                    CapeService.logout()
+                    status = "§aSuccessfully logged out"
+                } else {
+                    MiscUtils.showURL("https://donate.liquidbounce.net")
+                }
             }
         }
 
-        // Call sub method
+        super.actionPerformed(button)
     }
 
     /**
@@ -154,7 +170,8 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
         }
 
         // Check if field is focused, then call key typed
-        if(transferCodeField.isFocused) transferCodeField.textboxKeyTyped(typedChar, keyCode)
+        if(!loggedIntoAccount && transferCodeField.isFocused)
+            transferCodeField.textboxKeyTyped(typedChar, keyCode)
 
         // Call sub method
         super.keyTyped(typedChar, keyCode)
@@ -165,7 +182,9 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
      */
     override fun mouseClicked(mouseX : Int, mouseY : Int, mouseButton : Int) {
         // Call mouse clicked to field
-        transferCodeField.mouseClicked(mouseX, mouseY, mouseButton)
+        if (!loggedIntoAccount) {
+            transferCodeField.mouseClicked(mouseX, mouseY, mouseButton)
+        }
 
         // Call sub method
         super.mouseClicked(mouseX, mouseY, mouseButton)
@@ -175,7 +194,9 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
      * Handle screen update
      */
     override fun updateScreen() {
-        transferCodeField.updateCursorCounter()
+        if (!loggedIntoAccount) {
+            transferCodeField.updateCursorCounter()
+        }
         super.updateScreen()
     }
 
@@ -186,8 +207,8 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
         // Disable keyboard repeat events
         Keyboard.enableRepeatEvents(false)
 
-        // Set API key
-        transferCode = transferCodeField.text
+        // Save values config
+        valuesConfig.saveConfig()
 
         // Call sub method
         super.onGuiClosed()

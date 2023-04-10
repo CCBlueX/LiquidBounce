@@ -11,16 +11,15 @@ import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService
 import com.mojang.authlib.yggdrasil.YggdrasilUserAuthentication
 import com.thealtening.AltService
 import com.thealtening.api.TheAltening
-import net.ccbluex.liquidbounce.LiquidBounce
-
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
+import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.SessionEvent
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.elements.GuiPasswordField
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
-
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiTextField
@@ -32,7 +31,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
 
     // Data Storage
     companion object {
-        var apiKey: String = ""
+        var apiKey = ""
     }
 
     // Buttons
@@ -47,31 +46,31 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
     private var status = ""
 
     /**
-     * Initialize The Altening Generator GUI
+     * Initialize TheAltening Generator GUI
      */
     override fun initGui() {
         // Enable keyboard repeat events
         Keyboard.enableRepeatEvents(true)
 
         // Login button
-        loginButton = GuiButton(2, width / 2 - 100, 75, "Login")
+        loginButton = GuiButton(2, width / 2 - 100, height / 2 - 90, "Login")
         buttonList.add(loginButton)
 
         // Generate button
-        generateButton = GuiButton(1, width / 2 - 100, 140, "Generate")
+        generateButton = GuiButton(1, width / 2 - 100, height / 2, "Generate")
         buttonList.add(generateButton)
 
         // Buy & Back buttons
-        buttonList.add(GuiButton(3, width / 2 - 100, height - 54, 98, 20, "Buy"))
-        buttonList.add(GuiButton(0, width / 2 + 2, height - 54, 98, 20, "Back"))
+        buttonList.add(GuiButton(3, width / 2 - 100, height / 2 + 70, 98, 20, "Buy"))
+        buttonList.add(GuiButton(0, width / 2 + 2, height / 2 + 70, 98, 20, "Back"))
 
         // Token text field
-        tokenField = GuiTextField(666, Fonts.font40, width / 2 - 100, 50, 200, 20)
-        tokenField.isFocused = true
-        tokenField.maxStringLength = Integer.MAX_VALUE
+        tokenField = GuiTextField(666, Fonts.font40, width / 2 - 100, height / 2 - 120, 200, 20)
+        tokenField.isFocused = false
+        tokenField.maxStringLength = 64
 
         // Api key password field
-        apiKeyField = GuiPasswordField(1337, Fonts.font40, width / 2 - 100, 115, 200, 20)
+        apiKeyField = GuiPasswordField(1337, Fonts.font40, width / 2 - 100, height / 2 - 30, 200, 20)
         apiKeyField.maxStringLength = 18
         apiKeyField.text = apiKey
         super.initGui()
@@ -83,20 +82,22 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
         // Draw background to screen
         drawBackground(0)
-        RenderUtils.drawRect(30.0f, 30.0f, width - 30.0f, height - 30.0f, Integer.MIN_VALUE)
+        drawRect(30f, 30f, width - 30f, height - 30f, Integer.MIN_VALUE)
 
         // Draw title and status
-        Fonts.font35.drawCenteredString("TheAltening", width / 2.0f, 6.0f, 0xffffff)
-        Fonts.font35.drawCenteredString(status, width / 2.0f, 18.0f, 0xffffff)
+        Fonts.font40.drawCenteredString("TheAltening", width / 2f, height / 2 - 180f, 0xffffff)
+        Fonts.font35.drawCenteredString(status, width / 2f, height / 2 + 30f, 0xffffff)
 
         // Draw fields
         apiKeyField.drawTextBox()
         tokenField.drawTextBox()
 
         // Draw text
-        Fonts.font40.drawCenteredString("§7Token:", width / 2.0f - 84, 40.0f, 0xffffff)
-        Fonts.font40.drawCenteredString("§7API-Key:", width / 2.0f - 78, 105.0f, 0xffffff)
-        Fonts.font40.drawCenteredString("§7Use coupon code 'liquidbounce' for 20% off!", width / 2.0f, height - 65.0f, 0xffffff)
+        if (tokenField.text.isEmpty() && !tokenField.isFocused)
+            Fonts.font40.drawCenteredString("§7Token", width / 2f - 82, height / 2 - 114f, 0xffffff)
+        if (apiKeyField.text.isEmpty() && !apiKeyField.isFocused)
+            Fonts.font40.drawCenteredString("§7API-Key", width / 2f - 78, height / 2 - 24f, 0xffffff)
+        Fonts.font40.drawCenteredString("§7Use coupon code 'liquidbounce' for 20% off!", width / 2f, height / 2 + 55f, 0xffffff)
         super.drawScreen(mouseX, mouseY, partialTicks)
     }
 
@@ -131,7 +132,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
                         // Set token as username
                         val yggdrasilUserAuthentication = YggdrasilUserAuthentication(YggdrasilAuthenticationService(NO_PROXY, ""), MINECRAFT)
                         yggdrasilUserAuthentication.setUsername(account.token)
-                        yggdrasilUserAuthentication.setPassword(LiquidBounce.CLIENT_NAME)
+                        yggdrasilUserAuthentication.setPassword(CLIENT_NAME)
 
                         status = try {
                             yggdrasilUserAuthentication.logIn()
@@ -139,7 +140,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
                             mc.session = Session(yggdrasilUserAuthentication.selectedProfile.name, yggdrasilUserAuthentication
                                     .selectedProfile.id.toString(),
                                     yggdrasilUserAuthentication.authenticatedToken, "mojang")
-                            LiquidBounce.eventManager.callEvent(SessionEvent())
+                            callEvent(SessionEvent())
 
                             prevGui.status = "§aYour name is now §b§l${yggdrasilUserAuthentication.selectedProfile.name}§c."
                             mc.displayGuiScreen(prevGui)
@@ -147,19 +148,19 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
                         } catch (e: AuthenticationException) {
                             GuiAltManager.altService.switchService(AltService.EnumAltService.MOJANG)
 
-                            ClientUtils.getLogger().error("Failed to login.", e)
+                            LOGGER.error("Failed to login.", e)
                             "§cFailed to login: ${e.message}"
                         }
                     } catch (throwable: Throwable) {
                         status = "§cFailed to login. Unknown error."
-                        ClientUtils.getLogger().error("Failed to login.", throwable)
+                        LOGGER.error("Failed to login.", throwable)
                     }
 
                     loginButton.enabled = true
                     generateButton.enabled = true
                 }.handle { _, err ->
                     status = "§cFailed to generate account."
-                    ClientUtils.getLogger().error("Failed to generate account.", err)
+                    LOGGER.error("Failed to generate account.", err)
                 }.whenComplete { _, _ ->
                     loginButton.enabled = true
                     generateButton.enabled = true
@@ -169,7 +170,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
                 loginButton.enabled = false
                 generateButton.enabled = false
 
-                Thread(Runnable {
+                Thread {
                     try {
                         status = "§cSwitching Alt Service..."
 
@@ -180,7 +181,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
                         // Set token as username
                         val yggdrasilUserAuthentication = YggdrasilUserAuthentication(YggdrasilAuthenticationService(NO_PROXY, ""), MINECRAFT)
                         yggdrasilUserAuthentication.setUsername(tokenField.text)
-                        yggdrasilUserAuthentication.setPassword(LiquidBounce.CLIENT_NAME)
+                        yggdrasilUserAuthentication.setPassword(CLIENT_NAME)
 
                         status = try {
                             yggdrasilUserAuthentication.logIn()
@@ -188,7 +189,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
                             mc.session = Session(yggdrasilUserAuthentication.selectedProfile.name, yggdrasilUserAuthentication
                                     .selectedProfile.id.toString(),
                                     yggdrasilUserAuthentication.authenticatedToken, "mojang")
-                            LiquidBounce.eventManager.callEvent(SessionEvent())
+                            callEvent(SessionEvent())
 
                             prevGui.status = "§aYour name is now §b§l${yggdrasilUserAuthentication.selectedProfile.name}§c."
                             mc.displayGuiScreen(prevGui)
@@ -196,17 +197,17 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
                         } catch (e: AuthenticationException) {
                             GuiAltManager.altService.switchService(AltService.EnumAltService.MOJANG)
 
-                            ClientUtils.getLogger().error("Failed to login.", e)
+                            LOGGER.error("Failed to login.", e)
                             "§cFailed to login: ${e.message}"
                         }
                     } catch (throwable: Throwable) {
-                        ClientUtils.getLogger().error("Failed to login.", throwable)
+                        LOGGER.error("Failed to login.", throwable)
                         status = "§cFailed to login. Unknown error."
                     }
 
                     loginButton.enabled = true
                     generateButton.enabled = true
-                }).start()
+                }.start()
             }
             3 -> MiscUtils.showURL("https://thealtening.com/?ref=liquidbounce")
         }

@@ -5,10 +5,14 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
-import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.isStarting
 import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.file.FileManager.modulesConfig
+import net.ccbluex.liquidbounce.file.FileManager.saveConfig
+import net.ccbluex.liquidbounce.ui.client.hud.HUD.addNotification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
 import net.ccbluex.liquidbounce.value.Value
 import net.minecraft.client.audio.PositionedSoundRecord
@@ -25,22 +29,20 @@ open class Module : MinecraftInstance(), Listenable {
         set(keyBind) {
             field = keyBind
 
-            if (!LiquidBounce.isStarting)
-                LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.modulesConfig)
+            saveConfig(modulesConfig)
         }
     var array = true
         set(array) {
             field = array
 
-            if (!LiquidBounce.isStarting)
-                LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.modulesConfig)
+            saveConfig(modulesConfig)
         }
     private val canEnable: Boolean
 
     var slideStep = 0F
 
     init {
-        val moduleInfo = javaClass.getAnnotation(ModuleInfo::class.java)!!
+        val moduleInfo = javaClass.getAnnotation(ModuleInfo::class.java)
 
         name = moduleInfo.name
         description = moduleInfo.description
@@ -60,11 +62,9 @@ open class Module : MinecraftInstance(), Listenable {
             onToggle(value)
 
             // Play sound and add notification
-            if (!LiquidBounce.isStarting) {
-                mc.soundHandler.playSound(PositionedSoundRecord.create(
-                    ResourceLocation("random.click"),
-                    1F))
-                LiquidBounce.hud.addNotification(Notification("${if (value) "Enabled " else "Disabled "}$name"))
+            if (!isStarting) {
+                mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("random.click"), 1F))
+                addNotification(Notification("${if (value) "Enabled " else "Disabled "}$name"))
             }
 
             // Call on enabled or disabled
@@ -79,23 +79,23 @@ open class Module : MinecraftInstance(), Listenable {
             }
 
             // Save module state
-            LiquidBounce.fileManager.saveConfig(LiquidBounce.fileManager.modulesConfig)
+            saveConfig(modulesConfig)
         }
 
 
     // HUD
-    val hue = Math.random().toFloat()
+    val hue = nextFloat()
     var slide = 0F
 
     // Tag
     open val tag: String?
         get() = null
 
-    val tagName: String
+    val tagName
         get() = "$name${if (tag == null) "" else " §7$tag"}"
 
-    val colorlessTagName: String
-        get() = "$name${if (tag == null) "" else " " + stripColor(tag)}"
+    val colorlessTagName
+        get() = "$name${if (tag == null) "" else " " + stripColor(tag!!)}"
 
     /**
      * Toggle module
@@ -120,9 +120,12 @@ open class Module : MinecraftInstance(), Listenable {
     open fun onDisable() {}
 
     /**
-     * Get module by [valueName]
+     * Get value by [valueName]
      */
     open fun getValue(valueName: String) = values.find { it.name.equals(valueName, ignoreCase = true) }
+
+    // Get value using: module[valueName]
+    operator fun get(valueName: String) = getValue(valueName)
 
     /**
      * Get all values of module
@@ -131,7 +134,7 @@ open class Module : MinecraftInstance(), Listenable {
         get() = javaClass.declaredFields.map { valueField ->
             valueField.isAccessible = true
             valueField[this]
-        }.filterIsInstance<Value<*>>().filter { it.isSupported }
+        }.filterIsInstance<Value<*>>()
 
     /**
      * Events should be handled when module is enabled

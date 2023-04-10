@@ -21,11 +21,13 @@ import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 
 @ModuleInfo(name = "FastClimb", description = "Allows you to climb up ladders and vines faster.", category = ModuleCategory.MOVEMENT)
-class FastClimb : Module() {
+object FastClimb : Module() {
 
     val modeValue = ListValue("Mode",
             arrayOf("Vanilla", "Clip", "AAC3.0.0", "AAC3.0.5", "SAAC3.1.2", "AAC3.1.2"), "Vanilla")
-    private val speedValue = FloatValue("Speed", 0.2872F, 0.01F, 5F)
+    private val speedValue = object : FloatValue("Speed", 0.2872F, 0.01F, 5F) {
+        override fun isSupported() = modeValue.get() == "Vanilla"
+    }
 
     @EventTarget
     fun onMove(event: MoveEvent) {
@@ -34,24 +36,22 @@ class FastClimb : Module() {
         val thePlayer = mc.thePlayer ?: return
 
         when {
-            mode.equals("Vanilla", ignoreCase = true) && thePlayer.isCollidedHorizontally &&
+            mode == "Vanilla" && thePlayer.isCollidedHorizontally &&
                     thePlayer.isOnLadder -> {
                 event.y = speedValue.get().toDouble()
                 thePlayer.motionY = 0.0
             }
 
-            mode.equals("AAC3.0.0", ignoreCase = true) && thePlayer.isCollidedHorizontally -> {
+            mode == "AAC3.0.0" && thePlayer.isCollidedHorizontally -> {
                 var x = 0.0
                 var z = 0.0
 
-                val horizontalFacing = thePlayer.horizontalFacing
-
-                when(horizontalFacing) {
+                when (thePlayer.horizontalFacing) {
                     EnumFacing.NORTH -> z = -0.99
                     EnumFacing.EAST -> x = +0.99
                     EnumFacing.SOUTH -> z = +0.99
                     EnumFacing.WEST -> x = -0.99
-                    else -> { }
+                    else -> {}
                 }
 
                 val block = getBlock(BlockPos(thePlayer.posX + x, thePlayer.posY, thePlayer.posZ + z))
@@ -62,7 +62,7 @@ class FastClimb : Module() {
                 }
             }
 
-            mode.equals("AAC3.0.5", ignoreCase = true) && mc.gameSettings.keyBindForward.isKeyDown &&
+            mode == "AAC3.0.5" && mc.gameSettings.keyBindForward.isKeyDown &&
                     collideBlockIntersects(thePlayer.entityBoundingBox) {
                         it is BlockLadder || it is BlockVine
                     } -> {
@@ -75,28 +75,27 @@ class FastClimb : Module() {
                 thePlayer.motionZ = 0.0
             }
 
-            mode.equals("SAAC3.1.2", ignoreCase = true) && thePlayer.isCollidedHorizontally &&
+            mode == "SAAC3.1.2" && thePlayer.isCollidedHorizontally &&
                     thePlayer.isOnLadder -> {
                 event.y = 0.1649
                 thePlayer.motionY = 0.0
             }
 
-            mode.equals("AAC3.1.2", ignoreCase = true) && thePlayer.isCollidedHorizontally &&
+            mode == "AAC3.1.2" && thePlayer.isCollidedHorizontally &&
                     thePlayer.isOnLadder -> {
                 event.y = 0.1699
                 thePlayer.motionY = 0.0
             }
 
-            mode.equals("Clip", ignoreCase = true) && thePlayer.isOnLadder && mc.gameSettings.keyBindForward.isKeyDown -> {
+            mode == "Clip" && thePlayer.isOnLadder && mc.gameSettings.keyBindForward.isKeyDown -> {
                 for (i in thePlayer.posY.toInt()..thePlayer.posY.toInt() + 8) {
                     val block = getBlock(BlockPos(thePlayer.posX, i.toDouble(), thePlayer.posZ))
 
                     if (block !is BlockLadder) {
                         var x = 0.0
                         var z = 0.0
-                        val horizontalFacing = thePlayer.horizontalFacing
 
-                        when(horizontalFacing) {
+                        when(thePlayer.horizontalFacing) {
                             EnumFacing.NORTH -> z = -1.0
                             EnumFacing.EAST -> x = +1.0
                             EnumFacing.SOUTH -> z = +1.0
@@ -117,10 +116,10 @@ class FastClimb : Module() {
     @EventTarget
     fun onBlockBB(event: BlockBBEvent) {
         if (mc.thePlayer != null && (event.block is BlockLadder|| event.block is BlockVine) &&
-                modeValue.get().equals("AAC3.0.5", ignoreCase = true) && mc.thePlayer!!.isOnLadder)
+                modeValue.get() == "AAC3.0.5" && mc.thePlayer.isOnLadder)
             event.boundingBox = null
     }
 
-    override val tag: String
+    override val tag
         get() = modeValue.get()
 }

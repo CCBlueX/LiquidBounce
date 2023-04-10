@@ -5,8 +5,7 @@
  */
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
-import net.ccbluex.liquidbounce.LiquidBounce
-
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
@@ -15,7 +14,9 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorder
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -23,7 +24,7 @@ import net.ccbluex.liquidbounce.value.FontValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.client.gui.FontRenderer
 import org.lwjgl.input.Keyboard
-import org.lwjgl.opengl.GL11
+import org.lwjgl.opengl.GL11.glColor4f
 import java.awt.Color
 
 @ElementInfo(name = "TabGUI")
@@ -69,7 +70,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
         for (category in ModuleCategory.values()) {
             val tab = Tab(category.displayName)
 
-            LiquidBounce.moduleManager.modules
+            moduleManager.modules
                     .filter { module: Module -> category == module.category }
                     .forEach { e: Module -> tab.modules.add(e) }
 
@@ -77,7 +78,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
         }
     }
 
-    override fun drawElement(): Border? {
+    override fun drawElement(): Border {
         updateAnimation()
 
         AWTFontRenderer.assumeNonVolatile = true
@@ -97,11 +98,11 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
         // Draw
         val guiHeight = tabs.size * tabHeight.get()
 
-        RenderUtils.drawRect(1F, 0F, width.get(), guiHeight, backgroundColor.rgb)
+        drawRect(1F, 0F, width.get(), guiHeight, backgroundColor.rgb)
 
         if (borderValue.get()) {
-            RainbowShader.begin(borderRainbow.get(), if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
-                RenderUtils.drawBorder(1F, 0F, width.get(), guiHeight, borderStrength.get(), borderColor.rgb)
+            RainbowShader.begin(borderRainbow.get(), if (rainbowX.get() == 0f) 0f else 1f / rainbowX.get(), if (rainbowY.get() == 0f) 0f else 1f / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
+                drawBorder(1F, 0F, width.get(), guiHeight, borderStrength.get(), borderColor.rgb)
             }
         }
 
@@ -112,11 +113,11 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
             Color.black
         }
 
-        RainbowShader.begin(rectangleRainbowEnabled, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
-            RenderUtils.drawRect(1F, 1 + tabY - 1, width.get(), tabY + tabHeight.get(), rectColor)
+        RainbowShader.begin(rectangleRainbowEnabled, if (rainbowX.get() == 0f) 0f else 1f / rainbowX.get(), if (rainbowY.get() == 0f) 0f else 1f / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
+            drawRect(1F, 1 + tabY - 1, width.get(), tabY + tabHeight.get(), rectColor)
         }
 
-        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+        glColor4f(1f, 1f, 1f, 1f)
 
         var y = 1F
         tabs.forEachIndexed { index, tab ->
@@ -182,7 +183,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
     }
 
     private fun updateAnimation() {
-        val delta = RenderUtils.deltaTime
+        val delta = deltaTime
 
         val xPos = tabHeight.get() * selectedCategory
         if (tabY.toInt() != xPos.toInt()) {
@@ -309,18 +310,18 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
             val menuHeight = modules.size * tabHeight.get()
 
             if (borderValue.get()) {
-                RainbowShader.begin(borderRainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
-                    RenderUtils.drawBorder(x - 1F, y - 1F, x + menuWidth - 2F, y + menuHeight - 1F, borderStrength, borderColor)
+                RainbowShader.begin(borderRainbow, if (rainbowX.get() == 0f) 0f else 1f / rainbowX.get(), if (rainbowY.get() == 0f) 0f else 1f / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
+                    drawBorder(x - 1F, y - 1F, x + menuWidth - 2F, y + menuHeight - 1F, borderStrength, borderColor)
                 }
             }
-            RenderUtils.drawRect(x - 1F, y - 1F, x + menuWidth - 2F, y + menuHeight - 1F, backgroundColor)
+            drawRect(x - 1F, y - 1F, x + menuWidth - 2F, y + menuHeight - 1F, backgroundColor)
 
 
-            RainbowShader.begin(rectRainbow, if (rainbowX.get() == 0.0F) 0.0F else 1.0F / rainbowX.get(), if (rainbowY.get() == 0.0F) 0.0F else 1.0F / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
-                RenderUtils.drawRect(x - 1.toFloat(), y + itemY - 1, x + menuWidth - 2F, y + itemY + tabHeight.get() - 1, color)
+            RainbowShader.begin(rectRainbow, if (rainbowX.get() == 0f) 0f else 1f / rainbowX.get(), if (rainbowY.get() == 0f) 0f else 1f / rainbowY.get(), System.currentTimeMillis() % 10000 / 10000F).use {
+                drawRect(x - 1f, y + itemY - 1, x + menuWidth - 2F, y + itemY + tabHeight.get() - 1, color)
             }
 
-            GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f)
+            glColor4f(1f, 1f, 1f, 1f)
 
             modules.forEachIndexed { index, module ->
                 val moduleColor = if (module.state) 0xffffff else Color(205, 205, 205).rgb

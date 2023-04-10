@@ -1,0 +1,57 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
+package net.ccbluex.liquidbounce.ui.client.clickgui.elements
+
+import net.ccbluex.liquidbounce.LiquidBounce.clickGui
+import net.ccbluex.liquidbounce.features.module.Module
+import net.minecraftforge.fml.relauncher.Side
+import net.minecraftforge.fml.relauncher.SideOnly
+import org.lwjgl.input.Mouse
+
+@SideOnly(Side.CLIENT)
+class ModuleElement(val module: Module) : ButtonElement(module.name) {
+    var showSettings = false
+    var settingsWidth = 0
+        set(value) {
+            if (value > settingsWidth) field = value
+        }
+
+    var settingsHeight = 0
+
+    private var wasPressed = false
+    var slowlyFade = 0
+        set(value) {
+            field = value.coerceIn(0, 255)
+        }
+
+    override fun drawScreenAndClick(mouseX: Int, mouseY: Int, mouseButton: Int?) =
+        clickGui.style.drawModuleElementAndClick(mouseX, mouseY, this, mouseButton)
+
+    override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int): Boolean {
+        if (!isHovered(mouseX, mouseY)) return false
+
+        when (mouseButton) {
+            0 -> {
+                module.toggle()
+                clickGui.style.clickSound()
+            }
+            1 -> {
+                if (module.values.isNotEmpty()) {
+                    showSettings = !showSettings
+                    clickGui.style.showSettingsSound()
+                }
+            }
+        }
+
+        return true
+    }
+
+    fun notPressed() = !wasPressed
+
+    fun updatePressed() {
+        wasPressed = Mouse.isButtonDown(0)
+    }
+}

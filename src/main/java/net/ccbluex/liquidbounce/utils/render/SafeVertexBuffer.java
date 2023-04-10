@@ -9,7 +9,7 @@ import net.minecraft.client.renderer.vertex.VertexBuffer;
 import net.minecraft.client.renderer.vertex.VertexFormat;
 
 /**
- * Like {@link VertexBuffer}, but it deletes it's contents when it is deleted
+ * Like {@link VertexBuffer}, but it deletes its contents when it is deleted
  * by the garbage collector
  */
 public class SafeVertexBuffer extends VertexBuffer {
@@ -19,8 +19,8 @@ public class SafeVertexBuffer extends VertexBuffer {
     }
 
     @Override
-    protected void finalize() throws Throwable {
-        this.deleteGlBuffers();
+    protected void finalize() {
+        deleteGlBuffers();
     }
 
 }

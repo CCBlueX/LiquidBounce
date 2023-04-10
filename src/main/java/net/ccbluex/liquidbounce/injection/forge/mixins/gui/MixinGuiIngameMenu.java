@@ -18,12 +18,12 @@ public abstract class MixinGuiIngameMenu extends MixinGuiScreen {
 
     @Inject(method = "initGui", at = @At("RETURN"))
     private void initGui(CallbackInfo callbackInfo) {
-        if(!this.mc.isIntegratedServerRunning()) {
-            final GuiButton disconnectButton = this.buttonList.get(0);
-            disconnectButton.xPosition = this.width / 2 + 2;
+        if(!mc.isIntegratedServerRunning()) {
+            final GuiButton disconnectButton = buttonList.get(0);
+            disconnectButton.xPosition = width / 2 + 2;
             disconnectButton.width = 98;
             disconnectButton.height = 20;
-            this.buttonList.add(new GuiButton(1337, this.width / 2 - 100, this.height / 4 + 120 - 16, 98, 20, "Reconnect"));
+            buttonList.add(new GuiButton(1337, width / 2 - 100, height / 4 + 120 - 16, 98, 20, "Reconnect"));
         }
     }
 
@@ -31,7 +31,7 @@ public abstract class MixinGuiIngameMenu extends MixinGuiScreen {
     private void actionPerformed(GuiButton button, CallbackInfo callbackInfo) {
         if (button.id == 1337) {
             mc.theWorld.sendQuittingDisconnectingPacket();
-            ServerUtils.connectToLastServer();
+            ServerUtils.INSTANCE.connectToLastServer();
         }
     }
 }

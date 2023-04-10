@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.AttackEvent
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
@@ -21,7 +20,7 @@ import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 
 @ModuleInfo(name = "Criticals", description = "Automatically deals critical hits.", category = ModuleCategory.COMBAT)
-class Criticals : Module() {
+object Criticals : Module() {
 
     val modeValue = ListValue("Mode", arrayOf("Packet", "NcpPacket", "NoGround", "Hop", "TPHop", "Jump", "LowJump", "Visual"), "Packet")
     val delayValue = IntegerValue("Delay", 0, 0, 500)
@@ -30,8 +29,8 @@ class Criticals : Module() {
     val msTimer = MSTimer()
 
     override fun onEnable() {
-        if (modeValue.get().equals("NoGround", ignoreCase = true))
-            mc.thePlayer!!.jump()
+        if (modeValue.get() == "NoGround")
+            mc.thePlayer.jump()
     }
 
     @EventTarget
@@ -42,7 +41,7 @@ class Criticals : Module() {
 
             if (!thePlayer.onGround || thePlayer.isOnLadder || thePlayer.isInWeb || thePlayer.isInWater ||
                     thePlayer.isInLava || thePlayer.ridingEntity != null || entity.hurtTime > hurtTimeValue.get() ||
-                    LiquidBounce.moduleManager[Fly::class.java].state || !msTimer.hasTimePassed(delayValue.get().toLong()))
+                    Fly.state || !msTimer.hasTimePassed(delayValue.get()))
                 return
 
             val x = thePlayer.posX
@@ -86,10 +85,10 @@ class Criticals : Module() {
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (packet is C03PacketPlayer && modeValue.get().equals("NoGround", ignoreCase = true))
+        if (packet is C03PacketPlayer && modeValue.get() == "NoGround")
             packet.onGround = false
     }
 
-    override val tag: String?
+    override val tag
         get() = modeValue.get()
 }

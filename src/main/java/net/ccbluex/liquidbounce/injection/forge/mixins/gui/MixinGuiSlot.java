@@ -18,11 +18,13 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.MathHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+
+import static net.minecraft.client.renderer.GlStateManager.*;
+import static org.lwjgl.opengl.GL11.*;
 
 @Mixin(GuiSlot.class)
 @SideOnly(Side.CLIENT)
@@ -93,70 +95,70 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot {
      */
     @Overwrite
     public void drawScreen(int mouseXIn, int mouseYIn, float p_148128_3_) {
-        if(this.field_178041_q) {
-            this.mouseX = mouseXIn;
-            this.mouseY = mouseYIn;
-            this.drawBackground();
-            int i = this.getScrollBarX();
+        if(field_178041_q) {
+            mouseX = mouseXIn;
+            mouseY = mouseYIn;
+            drawBackground();
+            int i = getScrollBarX();
             int j = i + 6;
-            this.bindAmountScrolled();
+            bindAmountScrolled();
             GlStateManager.disableLighting();
-            GlStateManager.disableFog();
+            disableFog();
             Tessellator tessellator = Tessellator.getInstance();
             WorldRenderer worldrenderer = tessellator.getWorldRenderer();
-            int k = this.left + this.width / 2 - this.getListWidth() / 2 + 2;
-            int l = this.top + 4 - (int) this.amountScrolled;
-            if (this.hasListHeader) {
-                this.drawListHeader(k, l, tessellator);
+            int k = left + width / 2 - getListWidth() / 2 + 2;
+            int l = top + 4 - (int) amountScrolled;
+            if (hasListHeader) {
+                drawListHeader(k, l, tessellator);
             }
 
-            RenderUtils.makeScissorBox(left, top, right, bottom);
+            RenderUtils.INSTANCE.makeScissorBox(left, top, right, bottom);
 
-            GL11.glEnable(GL11.GL_SCISSOR_TEST);
+            glEnable(GL_SCISSOR_TEST);
 
-            this.drawSelectionBox(k, l + 2, mouseXIn, mouseYIn + 2);
+            drawSelectionBox(k, l + 2, mouseXIn, mouseYIn + 2);
 
-            GL11.glDisable(GL11.GL_SCISSOR_TEST);
+            glDisable(GL_SCISSOR_TEST);
 
-            GlStateManager.disableDepth();
+            disableDepth();
             int i1 = 4;
 
             // ClientCode
             ScaledResolution scaledResolution = new ScaledResolution(mc);
-            Gui.drawRect(0, 0, scaledResolution.getScaledWidth(), this.top, Integer.MIN_VALUE);
-            Gui.drawRect(0, this.bottom, scaledResolution.getScaledWidth(), this.height, Integer.MIN_VALUE);
+            Gui.drawRect(0, 0, scaledResolution.getScaledWidth(), top, Integer.MIN_VALUE);
+            Gui.drawRect(0, bottom, scaledResolution.getScaledWidth(), height, Integer.MIN_VALUE);
 
-            GL11.glEnable(GL11.GL_BLEND);
-            GlStateManager.tryBlendFuncSeparate(770, 771, 0, 1);
-            GlStateManager.disableAlpha();
-            GlStateManager.shadeModel(7425);
-            GlStateManager.disableTexture2D();
+            glEnable(GL_BLEND);
+            tryBlendFuncSeparate(770, 771, 0, 1);
+            disableAlpha();
+            shadeModel(7425);
+            disableTexture2D();
             worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
-            worldrenderer.pos(this.left, this.top + i1, 0.0D).tex(0.0D, 1.0D).color(0, 0, 0, 0).endVertex();
-            worldrenderer.pos(this.right, this.top + i1, 0.0D).tex(1.0D, 1.0D).color(0, 0, 0, 0).endVertex();
-            worldrenderer.pos(this.right, this.top, 0.0D).tex(1.0D, 0.0D).color(0, 0, 0, 255).endVertex();
-            worldrenderer.pos(this.left, this.top, 0.0D).tex(0.0D, 0.0D).color(0, 0, 0, 255).endVertex();
+            worldrenderer.pos(left, top + i1, 0.0D).tex(0.0D, 1.0D).color(0, 0, 0, 0).endVertex();
+            worldrenderer.pos(right, top + i1, 0.0D).tex(1.0D, 1.0D).color(0, 0, 0, 0).endVertex();
+            worldrenderer.pos(right, top, 0.0D).tex(1.0D, 0.0D).color(0, 0, 0, 255).endVertex();
+            worldrenderer.pos(left, top, 0.0D).tex(0.0D, 0.0D).color(0, 0, 0, 255).endVertex();
             tessellator.draw();
             worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
-            worldrenderer.pos(this.left, this.bottom, 0.0D).tex(0.0D, 1.0D).color(0, 0, 0, 255).endVertex();
-            worldrenderer.pos(this.right, this.bottom, 0.0D).tex(1.0D, 1.0D).color(0, 0, 0, 255).endVertex();
-            worldrenderer.pos(this.right, this.bottom - i1, 0.0D).tex(1.0D, 0.0D).color(0, 0, 0, 0).endVertex();
-            worldrenderer.pos(this.left, this.bottom - i1, 0.0D).tex(0.0D, 0.0D).color(0, 0, 0, 0).endVertex();
+            worldrenderer.pos(left, bottom, 0.0D).tex(0.0D, 1.0D).color(0, 0, 0, 255).endVertex();
+            worldrenderer.pos(right, bottom, 0.0D).tex(1.0D, 1.0D).color(0, 0, 0, 255).endVertex();
+            worldrenderer.pos(right, bottom - i1, 0.0D).tex(1.0D, 0.0D).color(0, 0, 0, 0).endVertex();
+            worldrenderer.pos(left, bottom - i1, 0.0D).tex(0.0D, 0.0D).color(0, 0, 0, 0).endVertex();
             tessellator.draw();
-            int j1 = this.func_148135_f();
+            int j1 = func_148135_f();
             if (j1 > 0) {
-                int k1 = (this.bottom - this.top) * (this.bottom - this.top) / this.getContentHeight();
-                k1 = MathHelper.clamp_int(k1, 32, this.bottom - this.top - 8);
-                int l1 = (int) this.amountScrolled * (this.bottom - this.top - k1) / j1 + this.top;
-                if (l1 < this.top) {
-                    l1 = this.top;
+                int k1 = (bottom - top) * (bottom - top) / getContentHeight();
+                k1 = MathHelper.clamp_int(k1, 32, bottom - top - 8);
+                int l1 = (int) amountScrolled * (bottom - top - k1) / j1 + top;
+                if (l1 < top) {
+                    l1 = top;
                 }
 
                 worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
-                worldrenderer.pos(i, this.bottom, 0.0D).tex(0.0D, 1.0D).color(0, 0, 0, 255).endVertex();
-                worldrenderer.pos(j, this.bottom, 0.0D).tex(1.0D, 1.0D).color(0, 0, 0, 255).endVertex();
-                worldrenderer.pos(j, this.top, 0.0D).tex(1.0D, 0.0D).color(0, 0, 0, 255).endVertex();
-                worldrenderer.pos(i, this.top, 0.0D).tex(0.0D, 0.0D).color(0, 0, 0, 255).endVertex();
+                worldrenderer.pos(i, bottom, 0.0D).tex(0.0D, 1.0D).color(0, 0, 0, 255).endVertex();
+                worldrenderer.pos(j, bottom, 0.0D).tex(1.0D, 1.0D).color(0, 0, 0, 255).endVertex();
+                worldrenderer.pos(j, top, 0.0D).tex(1.0D, 0.0D).color(0, 0, 0, 255).endVertex();
+                worldrenderer.pos(i, top, 0.0D).tex(0.0D, 0.0D).color(0, 0, 0, 255).endVertex();
                 tessellator.draw();
                 worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
                 worldrenderer.pos(i, l1 + k1, 0.0D).tex(0.0D, 1.0D).color(128, 128, 128, 255).endVertex();
@@ -172,11 +174,11 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot {
                 tessellator.draw();
             }
 
-            this.func_148142_b(mouseXIn, mouseYIn);
-            GlStateManager.enableTexture2D();
-            GlStateManager.shadeModel(7424);
-            GlStateManager.enableAlpha();
-            GlStateManager.disableBlend();
+            func_148142_b(mouseXIn, mouseYIn);
+            enableTexture2D();
+            shadeModel(7424);
+            enableAlpha();
+            disableBlend();
         }
     }
 
@@ -185,7 +187,7 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot {
      */
     @Overwrite
     protected int getScrollBarX() {
-        return this.width - 5;
+        return width - 5;
     }
 
     @Override
@@ -198,7 +200,7 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot {
      */
     @Overwrite
     public int getListWidth() {
-        return this.listWidth;
+        return listWidth;
     }
 
     @Override

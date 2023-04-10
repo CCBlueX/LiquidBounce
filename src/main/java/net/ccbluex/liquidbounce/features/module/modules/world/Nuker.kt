@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
@@ -13,11 +12,13 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.player.AutoTool
-import net.ccbluex.liquidbounce.utils.RotationUtils
-import net.ccbluex.liquidbounce.utils.block.BlockUtils
+import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
+import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getCenterDistance
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.searchBlocks
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.extensions.eyes
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBlockBox
 import net.ccbluex.liquidbounce.utils.timer.TickTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -35,7 +36,7 @@ import java.awt.Color
 import kotlin.math.roundToInt
 
 @ModuleInfo(name = "Nuker", description = "Breaks all blocks around you.", category = ModuleCategory.WORLD)
-class Nuker : Module() {
+object Nuker : Module() {
 
     /**
      * OPTIONS
@@ -61,10 +62,12 @@ class Nuker : Module() {
     private var nukeTimer = TickTimer()
     private var nuke = 0
 
+    var currentDamage = 0F
+
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         // Block hit delay
-        if (blockHitDelay > 0 && !LiquidBounce.moduleManager[FastBreak::class.java]!!.state) {
+        if (blockHitDelay > 0 && !FastBreak.state) {
             blockHitDelay--
             return
         }
@@ -79,11 +82,12 @@ class Nuker : Module() {
         // Clear blocks
         attackedBlocks.clear()
 
-        val thePlayer = mc.thePlayer!!
+        val thePlayer = mc.thePlayer
 
         if (!mc.playerController.isInCreativeMode) {
             // Default nuker
 
+            val eyesPos = thePlayer.eyes
             val validBlocks = searchBlocks(radiusValue.get().roundToInt() + 1)
                     .filter { (pos, block) ->
                         if (getCenterDistance(pos) <= radiusValue.get() && validBlock(block)) {
@@ -93,10 +97,8 @@ class Nuker : Module() {
 
                             if (!throughWallsValue.get()) { // ThroughWalls: Just break blocks in your sight
                                 // Raytrace player eyes to block position (through walls check)
-                                val eyesPos = Vec3(thePlayer.posX, thePlayer.entityBoundingBox.minY +
-                                        thePlayer.eyeHeight, thePlayer.posZ)
                                 val blockVec = Vec3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5)
-                                val rayTrace = mc.theWorld!!.rayTraceBlocks(eyesPos, blockVec,
+                                val rayTrace = mc.theWorld.rayTraceBlocks(eyesPos, blockVec,
                                         false, true, false)
 
                                 // Check if block is visible
@@ -109,7 +111,7 @@ class Nuker : Module() {
                 val (blockPos, block) = when(priorityValue.get()) {
                     "Distance" -> validBlocks.minByOrNull { (pos, block) ->
                         val distance = getCenterDistance(pos)
-                        val safePos = BlockPos(thePlayer.posX, thePlayer.posY - 1, thePlayer.posZ)
+                        val safePos = BlockPos(thePlayer).down()
 
                         if (pos.x == safePos.x && safePos.y <= pos.y && pos.z == safePos.z)
                             Double.MAX_VALUE - distance // Last block
@@ -117,9 +119,9 @@ class Nuker : Module() {
                             distance
                     }
                     "Hardness" -> validBlocks.maxByOrNull { (pos, block) ->
-                        val hardness = block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld!!, pos).toDouble()
+                        val hardness = block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld, pos).toDouble()
 
-                        val safePos = BlockPos(thePlayer.posX, thePlayer.posY - 1, thePlayer.posZ)
+                        val safePos = BlockPos(thePlayer).down()
                         if (pos.x == safePos.x && safePos.y <= pos.y && pos.z == safePos.z)
                             Double.MIN_VALUE + hardness // Last block
                         else
@@ -134,8 +136,8 @@ class Nuker : Module() {
 
                 // Change head rotations to next block
                 if (rotationsValue.get()) {
-                    val rotation = RotationUtils.faceBlock(blockPos) ?: return // In case of a mistake. Prevent flag.
-                    RotationUtils.setTargetRotation(rotation.rotation)
+                    val rotation = faceBlock(blockPos) ?: return // In case of a mistake. Prevent flag.
+                    setTargetRotation(rotation.rotation)
                 }
 
                 // Set next target block
@@ -143,9 +145,8 @@ class Nuker : Module() {
                 attackedBlocks.add(blockPos)
 
                 // Call auto tool
-                val autoTool = LiquidBounce.moduleManager.getModule(AutoTool::class.java) as AutoTool
-                if (autoTool.state)
-                    autoTool.switchSlot(blockPos)
+                if (AutoTool.state)
+                    AutoTool.switchSlot(blockPos)
 
                 // Start block breaking
                 if (currentDamage == 0F) {
@@ -155,7 +156,7 @@ class Nuker : Module() {
                     )
 
                     // End block break if able to break instant
-                    if (block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld!!, blockPos) >= 1F) {
+                    if (block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld, blockPos) >= 1F) {
                         currentDamage = 0F
                         thePlayer.swingItem()
                         mc.playerController.onPlayerDestroyBlock(blockPos, EnumFacing.DOWN)
@@ -168,8 +169,8 @@ class Nuker : Module() {
 
                 // Break block
                 thePlayer.swingItem()
-                currentDamage += block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld!!, blockPos)
-                mc.theWorld!!.sendBlockBreakProgress(thePlayer.entityId, blockPos, (currentDamage * 10F).toInt() - 1)
+                currentDamage += block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld, blockPos)
+                mc.theWorld.sendBlockBreakProgress(thePlayer.entityId, blockPos, (currentDamage * 10F).toInt() - 1)
 
                 // End of breaking block
                 if (currentDamage >= 1F) {
@@ -197,10 +198,9 @@ class Nuker : Module() {
 
                             if (!throughWallsValue.get()) { // ThroughWalls: Just break blocks in your sight
                                 // Raytrace player eyes to block position (through walls check)
-                                val eyesPos = Vec3(thePlayer.posX, thePlayer.entityBoundingBox.minY +
-                                        thePlayer.eyeHeight, thePlayer.posZ)
-                                val blockVec = Vec3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5)
-                                val rayTrace = mc.theWorld!!.rayTraceBlocks(eyesPos, blockVec,
+                                val eyesPos = thePlayer.eyes
+                                val blockVec = Vec3(thePlayer.position)
+                                val rayTrace = mc.theWorld.rayTraceBlocks(eyesPos, blockVec,
                                         false, true, false)
 
                                 // Check if block is visible
@@ -224,15 +224,15 @@ class Nuker : Module() {
     fun onRender3D(event: Render3DEvent) {
         // Safe block
         if (!layerValue.get()) {
-            val safePos = BlockPos(mc.thePlayer!!.posX, mc.thePlayer!!.posY - 1, mc.thePlayer!!.posZ)
-            val safeBlock = BlockUtils.getBlock(safePos)
+            val safePos = BlockPos(mc.thePlayer).down()
+            val safeBlock = getBlock(safePos)
             if (safeBlock != null && validBlock(safeBlock))
-                RenderUtils.drawBlockBox(safePos, Color.GREEN, true)
+                drawBlockBox(safePos, Color.GREEN, true)
         }
 
         // Just draw all blocks
         for (blockPos in attackedBlocks)
-            RenderUtils.drawBlockBox(blockPos, Color.RED, true)
+            drawBlockBox(blockPos, Color.RED, true)
     }
 
     /**
@@ -240,7 +240,4 @@ class Nuker : Module() {
      */
     private fun validBlock(block: Block) = block != Blocks.air && block !is BlockLiquid && block != Blocks.bedrock
 
-    companion object {
-        var currentDamage = 0F
-    }
 }

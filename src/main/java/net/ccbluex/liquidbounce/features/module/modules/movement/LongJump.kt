@@ -12,16 +12,21 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.MovementUtils.speed
+import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.util.EnumFacing
 
 @ModuleInfo(name = "LongJump", description = "Allows you to jump further.", category = ModuleCategory.MOVEMENT)
-class LongJump : Module() {
+object LongJump : Module() {
+
     private val modeValue = ListValue("Mode", arrayOf("NCP", "AACv1", "AACv2", "AACv3", "Mineplex", "Mineplex2", "Mineplex3", "Redesky"), "NCP")
-    private val ncpBoostValue = FloatValue("NCPBoost", 4.25f, 1f, 10f)
+    private val ncpBoostValue = object : FloatValue("NCPBoost", 4.25f, 1f, 10f) {
+        override fun isSupported() = modeValue.get() == "NCP"
+    }
     private val autoJumpValue = BoolValue("AutoJump", false)
     private var jumped = false
     private var canBoost = false
@@ -29,9 +34,9 @@ class LongJump : Module() {
     private var canMineplexBoost = false
 
     @EventTarget
-    fun onUpdate(event: UpdateEvent?) {
+    fun onUpdate(event: UpdateEvent) {
         if (LadderJump.jumped)
-            MovementUtils.strafe(MovementUtils.speed * 1.08f)
+            speed *= 1.08f
 
         val thePlayer = mc.thePlayer ?: return
 
@@ -42,7 +47,7 @@ class LongJump : Module() {
                 jumped = false
                 canMineplexBoost = false
 
-                if (mode.equals("NCP", ignoreCase = true)) {
+                if (mode == "NCP") {
                     thePlayer.motionX = 0.0
                     thePlayer.motionZ = 0.0
                 }
@@ -51,18 +56,18 @@ class LongJump : Module() {
             run {
                 when (mode.lowercase()) {
                     "ncp" -> {
-                        MovementUtils.strafe(MovementUtils.speed * if (canBoost) ncpBoostValue.get() else 1f)
+                        speed *= if (canBoost) ncpBoostValue.get() else 1f
                         canBoost = false
                     }
                     "aacv1" -> {
                         thePlayer.motionY += 0.05999
-                        MovementUtils.strafe(MovementUtils.speed * 1.08f)
+                        speed *= 1.08f
                     }
                     "aacv2", "mineplex3" -> {
                         thePlayer.jumpMovementFactor = 0.09f
-                        thePlayer.motionY += 0.0132099999999999999999999999999
+                        thePlayer.motionY += 0.01320999999999999
                         thePlayer.jumpMovementFactor = 0.08f
-                        MovementUtils.strafe()
+                        strafe()
                     }
                     "aacv3" -> {
                         if (thePlayer.fallDistance > 0.5f && !teleported) {
@@ -85,9 +90,9 @@ class LongJump : Module() {
                         }
                     }
                     "mineplex" -> {
-                        thePlayer.motionY += 0.0132099999999999999999999999999
+                        thePlayer.motionY += 0.01320999999999999
                         thePlayer.jumpMovementFactor = 0.08f
-                        MovementUtils.strafe()
+                        strafe()
                     }
                     "mineplex2" -> {
                         if (!canMineplexBoost)
@@ -99,7 +104,7 @@ class LongJump : Module() {
                             thePlayer.motionY = (-10f).toDouble()
                         }
 
-                        MovementUtils.strafe()
+                        strafe()
                     }
                     "redesky" -> {
                         thePlayer.jumpMovementFactor = 0.15f
@@ -108,7 +113,7 @@ class LongJump : Module() {
                 }
             }
         }
-        if (autoJumpValue.get() && thePlayer.onGround && MovementUtils.isMoving) {
+        if (autoJumpValue.get() && thePlayer.onGround && isMoving) {
             jumped = true
             thePlayer.jump()
         }
@@ -119,10 +124,10 @@ class LongJump : Module() {
         val thePlayer = mc.thePlayer ?: return
         val mode = modeValue.get()
 
-        if (mode.equals("mineplex3", ignoreCase = true)) {
-            if (thePlayer.fallDistance != 0.0f)
+        if (mode == "Mineplex3") {
+            if (thePlayer.fallDistance != 0f)
                 thePlayer.motionY += 0.037
-        } else if (mode.equals("ncp", ignoreCase = true) && !MovementUtils.isMoving && jumped) {
+        } else if (mode == "NCP" && !isMoving && jumped) {
             thePlayer.motionX = 0.0
             thePlayer.motionZ = 0.0
             event.zeroXZ()
@@ -139,16 +144,16 @@ class LongJump : Module() {
             when (modeValue.get().lowercase()) {
                 "mineplex" -> event.motion = event.motion * 4.08f
                 "mineplex2" -> {
-                    if (mc.thePlayer!!.isCollidedHorizontally) {
+                    if (mc.thePlayer.isCollidedHorizontally) {
                         event.motion = 2.31f
                         canMineplexBoost = true
-                        mc.thePlayer!!.onGround = false
+                        mc.thePlayer.onGround = false
                     }
                 }
             }
         }
     }
 
-    override val tag: String
+    override val tag
         get() = modeValue.get()
 }
