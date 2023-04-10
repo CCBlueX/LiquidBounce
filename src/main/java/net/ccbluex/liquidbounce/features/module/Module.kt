@@ -19,38 +19,33 @@ import net.minecraft.client.audio.PositionedSoundRecord
 import net.minecraft.util.ResourceLocation
 import org.lwjgl.input.Keyboard
 
-open class Module : MinecraftInstance(), Listenable {
+// TODO: Remove @JvmOverloads when all modules are ported to kotlin.
+open class Module @JvmOverloads constructor(
+
+    val name: String,
+    val description: String,
+    val category: ModuleCategory,
+    keyBind: Int = Keyboard.KEY_NONE,
+    val defaultInArray: Boolean = true, // Used in HideCommand to reset modules visibility.
+    private val canEnable: Boolean = true,
+
+    ) : MinecraftInstance(), Listenable {
+
     // Module information
-    // TODO: Remove ModuleInfo and change to constructor (#Kotlin)
-    var name: String
-    var description: String
-    var category: ModuleCategory
-    var keyBind = Keyboard.CHAR_NONE
+    var keyBind = keyBind
         set(keyBind) {
             field = keyBind
 
             saveConfig(modulesConfig)
         }
-    var array = true
-        set(array) {
-            field = array
+    var inArray = defaultInArray
+        set(value) {
+            field = value
 
             saveConfig(modulesConfig)
         }
-    private val canEnable: Boolean
 
     var slideStep = 0F
-
-    init {
-        val moduleInfo = javaClass.getAnnotation(ModuleInfo::class.java)
-
-        name = moduleInfo.name
-        description = moduleInfo.description
-        category = moduleInfo.category
-        keyBind = moduleInfo.keyBind
-        array = moduleInfo.array
-        canEnable = moduleInfo.canEnable
-    }
 
     // Current state of module
     var state = false

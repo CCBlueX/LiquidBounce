@@ -31,7 +31,7 @@ class ModulesConfig(file: File) : FileConfig(file) {
             val jsonModule = value as JsonObject
             module.state = jsonModule["State"].asBoolean
             module.keyBind = jsonModule["KeyBind"].asInt
-            if (jsonModule.has("Array")) module.array = jsonModule["Array"].asBoolean
+            if (jsonModule.has("Array")) module.inArray = jsonModule["Array"].asBoolean
         }
     }
 
@@ -47,7 +47,7 @@ class ModulesConfig(file: File) : FileConfig(file) {
             val jsonMod = JsonObject()
             jsonMod.addProperty("State", module.state)
             jsonMod.addProperty("KeyBind", module.keyBind)
-            jsonMod.addProperty("Array", module.array)
+            jsonMod.addProperty("Array", module.inArray)
             jsonObject.add(module.name, jsonMod)
         }
         file.writeText(PRETTY_GSON.toJson(jsonObject))

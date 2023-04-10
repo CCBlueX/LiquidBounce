@@ -8,7 +8,6 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
 import net.ccbluex.liquidbounce.utils.VecRotation
@@ -31,8 +30,7 @@ import net.minecraft.util.Vec3
 import kotlin.math.ceil
 import kotlin.math.sqrt
 
-@ModuleInfo(name = "NoFall", description = "Prevents you from taking fall damage.", category = ModuleCategory.PLAYER)
-object NoFall : Module() {
+object NoFall : Module("NoFall", "Prevents you from taking fall damage.", ModuleCategory.PLAYER) {
 
     val modeValue = ListValue(
         "Mode", arrayOf(

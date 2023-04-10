@@ -5,7 +5,6 @@ import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.injection.implementations.IMixinItemStack
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
@@ -19,8 +18,7 @@ import net.minecraft.network.play.client.C0EPacketClickWindow
 import net.minecraft.network.play.client.C16PacketClientStatus
 import net.minecraft.network.play.server.S2EPacketCloseWindow
 
-@ModuleInfo(name = "Refill", description = "Refills items such as blocks and food from inventory to hotbar.", category = ModuleCategory.PLAYER)
-object Refill : Module() {
+object Refill : Module("Refill", "Refills items such as blocks and food from inventory to hotbar.", ModuleCategory.PLAYER) {
     private val delayValue = IntegerValue("Delay", 400, 10, 1000)
 
     private val itemDelayValue = IntegerValue("ItemDelay", 400, 0, 1000)

@@ -9,13 +9,11 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.potion.Potion
 
-@ModuleInfo(name = "Zoot", description = "Removes all bad potion effects/fire.", category = ModuleCategory.PLAYER)
-object Zoot : Module() {
+object Zoot : Module("Zoot", "Removes all bad potion effects/fire.", ModuleCategory.PLAYER) {
 
     private val badEffectsValue = BoolValue("BadEffects", true)
     private val fireValue = BoolValue("Fire", true)

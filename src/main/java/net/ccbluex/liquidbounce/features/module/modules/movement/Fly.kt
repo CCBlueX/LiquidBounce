@@ -8,7 +8,6 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 import net.ccbluex.liquidbounce.utils.MovementUtils.direction
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
@@ -41,13 +40,7 @@ import kotlin.math.max
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-@ModuleInfo(
-    name = "Fly",
-    description = "Allows you to fly in survival mode.",
-    category = ModuleCategory.MOVEMENT,
-    keyBind = Keyboard.KEY_F
-)
-object Fly : Module() {
+object Fly : Module("Fly", "Allows you to fly in survival mode.", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
     val modeValue = ListValue(
         "Mode", arrayOf(
             "Vanilla", "SmoothVanilla",

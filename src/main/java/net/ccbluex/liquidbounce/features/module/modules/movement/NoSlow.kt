@@ -11,7 +11,6 @@ import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.event.SlowDownEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -22,9 +21,7 @@ import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 
-@ModuleInfo(name = "NoSlow", description = "Cancels slowness effects caused by Soul Sand and using items.",
-        category = ModuleCategory.MOVEMENT)
-object NoSlow : Module() {
+object NoSlow : Module("NoSlow", "Cancels slowness effects caused by Soul Sand and using items.", ModuleCategory.MOVEMENT) {
 
     // Highly customizable values
 

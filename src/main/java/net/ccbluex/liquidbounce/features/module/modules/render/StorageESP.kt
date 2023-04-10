@@ -11,7 +11,6 @@ import net.ccbluex.liquidbounce.event.Render2DEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.world.ChestAura.clickedBlocks
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.ClientUtils.disableFastRender
@@ -30,12 +29,7 @@ import net.minecraft.tileentity.*
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
-@ModuleInfo(
-    name = "StorageESP",
-    description = "Allows you to see chests, dispensers, etc. through walls.",
-    category = ModuleCategory.RENDER
-)
-object StorageESP : Module() {
+object StorageESP : Module("StorageESP", "Allows you to see chests, etc. through walls.", ModuleCategory.RENDER) {
     private val modeValue =
         ListValue("Mode", arrayOf("Box", "OtherBox", "Outline", "Glow", "2D", "WireFrame"), "Outline")
 

@@ -12,7 +12,6 @@ import net.ccbluex.liquidbounce.event.SessionEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 import net.ccbluex.liquidbounce.utils.login.UserUtils
@@ -27,12 +26,11 @@ import java.net.URISyntaxException
 import java.util.regex.Pattern
 import kotlin.concurrent.thread
 
-@ModuleInfo(name = "LiquidChat", description = "Allows you to chat with other LiquidBounce users.", category = ModuleCategory.MISC)
-object LiquidChat : Module() {
+object LiquidChat : Module("LiquidChat", "Allows you to chat with other LiquidBounce users.", ModuleCategory.MISC) {
 
     init {
         state = true
-        array = false
+        inArray = false
     }
 
     val jwtValue = object : BoolValue("JWT", false) {

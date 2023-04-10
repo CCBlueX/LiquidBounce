@@ -9,7 +9,6 @@ import net.ccbluex.liquidbounce.event.EventTarget;
 import net.ccbluex.liquidbounce.event.Render3DEvent;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
-import net.ccbluex.liquidbounce.features.module.ModuleInfo;
 import net.ccbluex.liquidbounce.injection.implementations.IMixinItemStack;
 import net.ccbluex.liquidbounce.utils.InventoryUtils;
 import net.ccbluex.liquidbounce.utils.MovementUtils;
@@ -32,8 +31,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-@ModuleInfo(name = "AutoArmor", description = "Automatically equips the best armor in your inventory.", category = ModuleCategory.COMBAT)
 public class AutoArmor extends Module {
+
+    public AutoArmor() {
+        super("AutoArmor", "Automatically equips the best armor in your inventory.", ModuleCategory.COMBAT);
+    }
 
     public static final ArmorComparator ARMOR_COMPARATOR = new ArmorComparator();
     private final IntegerValue maxDelayValue = new IntegerValue("MaxDelay", 200, 0, 400) {
