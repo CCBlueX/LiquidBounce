@@ -9,7 +9,6 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.RotationUtils.targetRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getState
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
@@ -38,8 +37,7 @@ import kotlin.math.floor
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-@ModuleInfo(name = "Projectiles", description = "Allows you to see where arrows will land.", category = ModuleCategory.RENDER)
-object Projectiles : Module() {
+object Projectiles : Module("Projectiles", "Allows you to see where arrows will land.", ModuleCategory.RENDER) {
     private val colorMode = ListValue("Color", arrayOf("Custom", "BowPower", "Rainbow"), "Custom")
 
     private val colorRedValue = object : IntegerValue("R", 0, 0, 255) {

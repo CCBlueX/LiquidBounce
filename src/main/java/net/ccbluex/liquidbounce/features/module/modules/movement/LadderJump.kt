@@ -9,10 +9,8 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.ModuleInfo
 
-@ModuleInfo(name = "LadderJump", description = "Boosts you up when touching a ladder. (AAC)", category = ModuleCategory.MOVEMENT)
-object LadderJump : Module() {
+object LadderJump : Module("LadderJump", "Boosts you up when touching a ladder. (AAC)", ModuleCategory.MOVEMENT) {
 
     var jumped = false
 

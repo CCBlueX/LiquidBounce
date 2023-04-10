@@ -9,13 +9,10 @@ import jdk.nashorn.api.scripting.JSObject
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.value.Value
 
-@Suppress("unused")
-@ModuleInfo(name = "ScriptModule", description = "Empty", category = ModuleCategory.MISC)
-class ScriptModule(private val moduleObject: JSObject) : Module() {
+class ScriptModule(name: String, description: String, category: ModuleCategory, private val moduleObject: JSObject) : Module(name, description, category) {
 
     private val events = HashMap<String, JSObject>()
     private val _values = LinkedHashMap<String, Value<*>>()
@@ -27,14 +24,6 @@ class ScriptModule(private val moduleObject: JSObject) : Module() {
     val settings by lazy { _values }
 
     init {
-        name = moduleObject.getMember("name") as String
-        description = moduleObject.getMember("description") as String
-
-        val categoryString = moduleObject.getMember("category") as String
-        for (category in ModuleCategory.values())
-            if (categoryString.equals(category.displayName, true))
-                this.category = category
-
         if (moduleObject.hasMember("settings")) {
             val settings = moduleObject.getMember("settings") as JSObject
 

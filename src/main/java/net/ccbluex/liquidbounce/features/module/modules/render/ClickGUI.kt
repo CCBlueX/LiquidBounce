@@ -10,7 +10,6 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.LiquidBounceStyle
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.NullStyle
@@ -24,14 +23,7 @@ import net.minecraft.network.play.server.S2EPacketCloseWindow
 import org.lwjgl.input.Keyboard
 import java.awt.Color
 
-@ModuleInfo(
-    name = "ClickGUI",
-    description = "Opens the ClickGUI.",
-    category = ModuleCategory.RENDER,
-    keyBind = Keyboard.KEY_RSHIFT,
-    canEnable = false
-)
-object ClickGUI : Module() {
+object ClickGUI : Module("ClickGUI", "Opens the ClickGUI.", ModuleCategory.RENDER, Keyboard.KEY_RSHIFT, defaultInArray = false, canEnable = false) {
     private val styleValue: ListValue =
         object : ListValue("Style", arrayOf("LiquidBounce", "Null", "Slowly"), "LiquidBounce") {
             override fun onChanged(oldValue: String, newValue: String) = updateStyle()

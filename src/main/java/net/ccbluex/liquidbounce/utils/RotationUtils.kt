@@ -429,21 +429,4 @@ object RotationUtils : MinecraftInstance(), Listenable {
         val angleDelta = targetAngle - startAngle
         return startAngle + (angleDelta / gcd).roundToInt() * gcd
     }
-
-    fun getRotations(ent: Entity): Rotation? {
-        val x = ent.posX
-        val z = ent.posZ
-        val y = ent.posY + (ent.eyeHeight / 2.0f).toDouble()
-        return RotationUtils.getRotationFromPosition(x, z, y)
-    }
-
-    fun getRotationFromPosition(x: Double, z: Double, y: Double): Rotation? {
-        val xDiff = x - mc.thePlayer.posX
-        val zDiff = z - mc.thePlayer.posZ
-        val yDiff = y - mc.thePlayer.posY - 1.2
-        val dist = MathHelper.sqrt_double(xDiff * xDiff + zDiff * zDiff).toDouble()
-        val yaw = (Math.atan2(zDiff, xDiff) * 180.0 / Math.PI).toFloat() - 90.0f
-        val pitch = (-Math.atan2(yDiff, dist) * 180.0 / Math.PI).toFloat()
-        return Rotation(yaw, pitch)
-    }
 }

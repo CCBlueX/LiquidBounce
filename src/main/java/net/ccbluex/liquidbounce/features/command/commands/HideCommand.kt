@@ -7,7 +7,6 @@ package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 
 class HideCommand : Command("hide") {
@@ -20,7 +19,7 @@ class HideCommand : Command("hide") {
             when {
                 args[1].equals("list", true) -> {
                     chat("§c§lHidden")
-                    moduleManager.modules.filter { !it.array }.forEach {
+                    moduleManager.modules.filter { !it.inArray }.forEach {
                         displayChatMessage("§6> §c${it.name}")
                     }
                     return
@@ -28,7 +27,7 @@ class HideCommand : Command("hide") {
 
                 args[1].equals("clear", true) -> {
                     for (module in moduleManager.modules)
-                        module.array = true
+                        module.inArray = true
 
                     chat("Cleared hidden modules.")
                     return
@@ -36,7 +35,7 @@ class HideCommand : Command("hide") {
 
                 args[1].equals("reset", true) -> {
                     for (module in moduleManager.modules)
-                        module.array = module::class.java.getAnnotation(ModuleInfo::class.java).array
+                        module.inArray = module.defaultInArray
 
                     chat("Reset hidden modules.")
                     return
@@ -52,10 +51,10 @@ class HideCommand : Command("hide") {
                     }
 
                     // Find key by name and change
-                    module.array = !module.array
+                    module.inArray = !module.inArray
 
                     // Response to user
-                    chat("Module §a§l${module.name}§3 is now §a§l${if (module.array) "visible" else "invisible"}§3 on the array list.")
+                    chat("Module §a§l${module.name}§3 is now §a§l${if (module.inArray) "visible" else "invisible"}§3 on the array list.")
                     playEdit()
                     return
                 }

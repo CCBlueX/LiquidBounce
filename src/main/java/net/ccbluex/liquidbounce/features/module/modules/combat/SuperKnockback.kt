@@ -9,13 +9,11 @@ import net.ccbluex.liquidbounce.event.AttackEvent
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.network.play.client.C0BPacketEntityAction
 
-@ModuleInfo(name = "SuperKnockback", description = "Increases knockback dealt to other entities.", category = ModuleCategory.COMBAT)
-object SuperKnockback : Module() {
+object SuperKnockback : Module("SuperKnockback", "Increases knockback dealt to other entities.", ModuleCategory.COMBAT) {
 
     private val hurtTimeValue = IntegerValue("HurtTime", 10, 0, 10)
 

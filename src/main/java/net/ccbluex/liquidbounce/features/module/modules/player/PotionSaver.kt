@@ -9,11 +9,9 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.minecraft.network.play.client.C03PacketPlayer
 
-@ModuleInfo(name = "PotionSaver", description = "Freezes all potion effects while you are standing still.", category = ModuleCategory.PLAYER)
-object PotionSaver : Module() {
+object PotionSaver : Module("PotionSaver", "Freezes all potion effects while you are standing still.", ModuleCategory.PLAYER) {
 
     @EventTarget
     fun onPacket(e: PacketEvent) {
