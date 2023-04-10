@@ -15,6 +15,7 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.extensions.fixedSensitivityPitch
 import net.ccbluex.liquidbounce.utils.extensions.fixedSensitivityYaw
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
+import net.ccbluex.liquidbounce.utils.timer.TickTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils.randomClickDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -48,6 +49,7 @@ object AutoClicker : Module() {
     private val rightValue = BoolValue("Right", true)
     private val leftValue = BoolValue("Left", true)
     private val jitterValue = BoolValue("Jitter", false)
+    private val blockValue = BoolValue("AutoBlock", false)
 
     private var rightDelay = randomClickDelay(minCPSValue.get(), maxCPSValue.get())
     private var rightLastSwing = 0L
@@ -59,6 +61,8 @@ object AutoClicker : Module() {
     private var blockLastBroken = 0L
     private var isBreakingBlock = false
     private var wasBreakingBlock = false
+
+    private val timer = TickTimer()
 
     private fun leftCanAutoClick(currentTime: Long): Boolean {
         return !isBreakingBlock
@@ -114,5 +118,10 @@ object AutoClicker : Module() {
 
             if (nextBoolean()) thePlayer.fixedSensitivityPitch += RandomUtils.nextFloat(-1F, 1F)
         }
+
+        if (blockValue.get() && timer.hasTimePassed(1) && mc.gameSettings.keyBindAttack.isKeyDown && leftValue.get()) {
+            KeyBinding.onTick(mc.gameSettings.keyBindUseItem.keyCode)
+        }
     }
+
 }
