@@ -9,7 +9,6 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.RotationUtils.limitAngleChange
 import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
@@ -27,8 +26,7 @@ import net.minecraft.entity.projectile.EntityFireball
 import net.minecraft.network.play.client.C02PacketUseEntity
 import net.minecraft.network.play.client.C0APacketAnimation
 
-@ModuleInfo(name = "AntiFireBall", description = "Automatically punches fireballs away from you.", category = ModuleCategory.PLAYER)
-object AntiFireBall : Module() {
+object AntiFireBall : Module("AntiFireBall", "Automatically punches fireballs away from you.", ModuleCategory.PLAYER) {
     private val timer = MSTimer()
 
     private val rangeValue = FloatValue("Range", 4.5f, 3f, 8f)
