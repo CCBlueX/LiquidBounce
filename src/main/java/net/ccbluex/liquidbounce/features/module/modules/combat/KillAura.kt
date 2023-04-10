@@ -93,6 +93,7 @@ object KillAura : Module() {
 
     private val hurtTimeValue = IntegerValue("HurtTime", 10, 0, 10)
     private val simulateCooldown = BoolValue("SimulateCooldown", false)
+    private val clickOnly = BoolValue("ClickOnly", false)
 
     // Range
     private val rangeValue = FloatValue("Range", 3.7f, 1f, 8f)
@@ -101,7 +102,7 @@ object KillAura : Module() {
 
     // Modes
     private val priorityValue =
-        ListValue("Priority", arrayOf("Health", "Distance", "Direction", "LivingTime"), "Distance")
+        ListValue("Priority", arrayOf("Health", "Distance", "Direction", "LivingTime", "Armor", "HurtResistance", "HurtTime", "HealthAbsorption", "RegenAmplifier"), "Distance")
     private val targetModeValue = ListValue("TargetMode", arrayOf("Single", "Switch", "Multi"), "Switch")
     private val limitedMultiTargetsValue = object : IntegerValue("LimitedMultiTargets", 0, 0, 50) {
         override fun isSupported() = targetModeValue.get() == "Multi"
@@ -315,6 +316,8 @@ object KillAura : Module() {
      */
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
+        if (clickOnly.get() && !mc.gameSettings.keyBindAttack.isKeyDown) return
+        
         if (cancelRun) {
             target = null
             currentTarget = null
@@ -484,6 +487,12 @@ object KillAura : Module() {
             "health" -> targets.sortBy { it.health } // Sort by health
             "direction" -> targets.sortBy { getRotationDifference(it) } // Sort by FOV
             "livingtime" -> targets.sortBy { -it.ticksExisted } // Sort by existence
+            "armor" -> targets.sortBy { it.totalArmorValue } // Sort by armor
+            "hurtresistance" -> targets.sortBy { it.hurtResistantTime } // Sort by armor hurt time
+            "hurttime" -> targets.sortBy { it.hurtTime } // Sort by hurt time
+            "healthabsorption" -> targets.sortBy { it.health + it.absorptionAmount } // Sort by full health with absorption effect
+            "regenamplifier" -> targets.sortBy { if (it.isPotionActive(Potion.regeneration)) it.getActivePotionEffect(Potion.regeneration).amplifier else -1 }
+            
         }
 
         // Find best target
