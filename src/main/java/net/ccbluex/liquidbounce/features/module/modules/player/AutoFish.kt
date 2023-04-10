@@ -9,12 +9,10 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.minecraft.item.ItemFishingRod
 
-@ModuleInfo(name = "AutoFish", description = "Automatically catches fish when using a rod.", category = ModuleCategory.PLAYER)
-object AutoFish : Module() {
+object AutoFish : Module("AutoFish", "Automatically catches fish when using a rod.", ModuleCategory.PLAYER) {
 
     private val rodOutTimer = MSTimer()
 

@@ -11,7 +11,6 @@ import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -20,8 +19,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockPane
 import net.minecraft.util.BlockPos
 
-@ModuleInfo(name = "HighJump", description = "Allows you to jump higher.", category = ModuleCategory.MOVEMENT)
-object HighJump : Module() {
+object HighJump : Module("HighJump", "Allows you to jump higher.", ModuleCategory.MOVEMENT) {
     private val modeValue = ListValue("Mode", arrayOf("Vanilla", "Damage", "AACv3", "DAC", "Mineplex"), "Vanilla")
     private val heightValue = object : FloatValue("Height", 2f, 1.1f, 5f) {
         override fun isSupported() = modeValue.get() in setOf("Vanilla", "Damage")

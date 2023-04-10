@@ -9,7 +9,6 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -17,8 +16,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.block.BlockAir
 import net.minecraft.util.BlockPos
 
-@ModuleInfo(name = "SafeWalk", description = "Prevents you from falling down as if you were sneaking.", category = ModuleCategory.MOVEMENT)
-object SafeWalk : Module() {
+object SafeWalk : Module("SafeWalk", "Prevents you from falling down as if you were sneaking.", ModuleCategory.MOVEMENT) {
 
     private val airSafeValue = BoolValue("AirSafe", false)
     private val maxFallDistanceValue = IntegerValue("MaxFallDistance", 5, 0, 100)

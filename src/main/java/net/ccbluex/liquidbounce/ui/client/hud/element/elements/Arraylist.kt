@@ -76,7 +76,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
         val delta = deltaTime
 
         for (module in moduleManager.modules) {
-            if (!module.array || (!module.state && module.slide == 0F)) continue
+            if (!module.inArray || (!module.state && module.slide == 0F)) continue
 
             var displayString = if (!tags.get())
                 module.name
@@ -285,7 +285,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
 
     override fun updateElement() {
         modules = moduleManager.modules
-                .filter { it.array && it.slide > 0 }
+                .filter { it.inArray && it.slide > 0 }
                 .sortedBy { -fontValue.get().getStringWidth(if (upperCaseValue.get()) (if (!tags.get()) it.name else if (tagsArrayColor.get()) it.colorlessTagName else it.tagName).uppercase() else if (!tags.get()) it.name else if (tagsArrayColor.get()) it.colorlessTagName else it.tagName) }
     }
 }

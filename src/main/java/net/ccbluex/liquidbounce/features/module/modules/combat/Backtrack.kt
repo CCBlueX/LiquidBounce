@@ -6,7 +6,6 @@ import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -17,8 +16,8 @@ import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.util.*
 
-@ModuleInfo(name = "Backtrack", description = "Allows you to hit players on .", category = ModuleCategory.COMBAT)
-object Backtrack : Module() {
+// TODO: Proper description?
+object Backtrack : Module("Backtrack", "Allows you to hit players by attacking their previous cached positions.", ModuleCategory.COMBAT) {
 
     // This will be used as maximum possible delay. (In milliseconds)
     private val maximumDelay = IntegerValue("MaxDelay", 250, 0, 1000)

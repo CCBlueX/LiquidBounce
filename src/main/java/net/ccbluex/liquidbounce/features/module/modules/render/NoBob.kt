@@ -9,10 +9,8 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.ModuleInfo
 
-@ModuleInfo(name = "NoBob", description = "Disables the view bobbing effect.", category = ModuleCategory.RENDER)
-object NoBob : Module() {
+object NoBob : Module("NoBob", "Disables the view bobbing effect.", ModuleCategory.RENDER) {
 
     @EventTarget
     fun onMotion(event: MotionEvent) {

@@ -9,18 +9,13 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.Derp
 import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.targetRotation
 import net.ccbluex.liquidbounce.value.BoolValue
 
-@ModuleInfo(
-    name = "Rotations",
-    description = "Allows you to see server-sided head and body rotations.",
-    category = ModuleCategory.RENDER
-)
-object Rotations : Module() {
+object Rotations : Module("Rotations", "Allows you to see server-sided head and body rotations.", ModuleCategory.RENDER
+) {
 
     private val bodyValue = BoolValue("Body", true)
 
