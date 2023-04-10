@@ -17,6 +17,9 @@ import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import java.io.*
 
 class ClickGuiConfig(file: File) : FileConfig(file) {
+
+    override fun loadDefault() = ClickGui.setDefault()
+
     /**
      * Load config from file
      *
@@ -24,6 +27,9 @@ class ClickGuiConfig(file: File) : FileConfig(file) {
      */
     @Throws(IOException::class)
     override fun loadConfig() {
+        // Regenerate panels and elements in case a script got loaded or removed.
+        loadDefault()
+
         val jsonElement = JsonParser().parse(file.bufferedReader())
         if (jsonElement is JsonNull) return
 

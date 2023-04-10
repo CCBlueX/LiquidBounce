@@ -127,9 +127,7 @@ class ScriptManagerCommand : Command("scriptmanager", "scripts") {
                         loadConfig(modulesConfig)
 
                         isStarting = false
-                        loadConfig(valuesConfig)
-
-                        loadConfig(clickGuiConfig)
+                        loadConfigs(valuesConfig, clickGuiConfig, hudConfig)
 
                         chat("Successfully reloaded all scripts.")
                     } catch (t: Throwable) {

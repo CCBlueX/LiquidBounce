@@ -19,6 +19,8 @@ import java.io.IOException
 
 class HudConfig(file: File) : FileConfig(file) {
 
+    override fun loadDefault() = HUD.setDefault()
+
     /**
      * Load config from file
      *
@@ -82,7 +84,7 @@ class HudConfig(file: File) : FileConfig(file) {
             }
         } catch (e: Exception) {
             ClientUtils.LOGGER.error("Error while loading custom hud config.", e)
-            HUD.setToDefault()
+            HUD.setDefault()
         }
     }
 
