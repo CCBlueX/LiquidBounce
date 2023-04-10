@@ -9,7 +9,6 @@ import net.ccbluex.liquidbounce.event.EventTarget;
 import net.ccbluex.liquidbounce.event.UpdateEvent;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
-import net.ccbluex.liquidbounce.features.module.ModuleInfo;
 import net.ccbluex.liquidbounce.utils.EntityUtils;
 import net.ccbluex.liquidbounce.utils.InventoryUtils;
 import net.ccbluex.liquidbounce.utils.RotationUtils;
@@ -31,8 +30,11 @@ import net.minecraft.util.Vec3;
 
 import static net.ccbluex.liquidbounce.utils.extensions.BlockExtensionKt.*;
 
-@ModuleInfo(name = "Ignite", description = "Automatically sets targets around you on fire.", category = ModuleCategory.COMBAT)
 public class Ignite extends Module {
+    public Ignite() {
+        super("Ignite", "Automatically sets targets around you on fire.", ModuleCategory.COMBAT);
+    }
+
    private final BoolValue lighterValue = new BoolValue("Lighter", true);
    private final BoolValue lavaBucketValue = new BoolValue("Lava", true);
 

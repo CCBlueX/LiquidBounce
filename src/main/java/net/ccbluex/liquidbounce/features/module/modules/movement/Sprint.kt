@@ -10,7 +10,6 @@ import net.ccbluex.liquidbounce.event.TickEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.RotationUtils.getRotationDifference
 import net.ccbluex.liquidbounce.utils.RotationUtils.targetRotation
@@ -20,8 +19,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.settings.KeyBinding.setKeyBindState
 import net.minecraft.potion.Potion
 
-@ModuleInfo(name = "Sprint", description = "Automatically sprints all the time.", category = ModuleCategory.MOVEMENT)
-object Sprint : Module() {
+object Sprint : Module("Sprint", "Automatically sprints all the time.", ModuleCategory.MOVEMENT) {
     val modeValue = ListValue("Mode", arrayOf("Legit", "Vanilla"), "Vanilla")
 
     val allDirectionsValue = object : BoolValue("AllDirections", true) {

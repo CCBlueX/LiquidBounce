@@ -9,13 +9,11 @@ import net.ccbluex.liquidbounce.event.BlockBBEvent
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.init.Blocks
 import net.minecraft.util.AxisAlignedBB
 
-@ModuleInfo(name = "BlockWalk", description = "Allows you to walk on non-fullblock blocks.", category = ModuleCategory.MOVEMENT)
-object BlockWalk : Module() {
+object BlockWalk : Module("BlockWalk", "Allows you to walk on non-fullblock blocks.", ModuleCategory.MOVEMENT) {
     private val cobwebValue = BoolValue("Cobweb", true)
     private val snowValue = BoolValue("Snow", true)
 

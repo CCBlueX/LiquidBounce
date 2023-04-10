@@ -9,7 +9,6 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.ModuleInfo
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -17,12 +16,7 @@ import net.minecraft.client.settings.GameSettings
 import net.minecraft.entity.item.EntityTNTPrimed
 import net.minecraft.item.ItemSword
 
-@ModuleInfo(
-    name = "TNTBlock",
-    description = "Automatically blocks with your sword when TNT around you explodes.",
-    category = ModuleCategory.COMBAT
-)
-object TNTBlock : Module() {
+object TNTBlock : Module("TNTBlock", "Automatically blocks with your sword when TNT around you explodes.", ModuleCategory.COMBAT) {
     private val fuseValue = IntegerValue("Fuse", 10, 0, 80)
     private val rangeValue = FloatValue("Range", 9F, 1F, 20F)
     private val autoSwordValue = BoolValue("AutoSword", true)
