@@ -389,6 +389,32 @@ public final class RotationUtils extends MinecraftInstance implements Listenable
         targetRotation = null;
     }
 
+    public static Rotation getRotations(Entity ent) {
+        double x = ent.posX;
+        double z = ent.posZ;
+        double y = ent.posY + (double)(ent.getEyeHeight() / 2.0f);
+        return RotationUtils.getRotationFromPosition(x, z, y);
+    }
+
+
+    /**
+     *
+     * posX
+     * posY
+     * posZ
+     * @return
+     */
+
+    public static Rotation getRotationFromPosition(double x, double z, double y) {
+        double xDiff = x - mc.thePlayer.posX;
+        double zDiff = z - mc.thePlayer.posZ;
+        double yDiff = y - mc.thePlayer.posY - 1.2;
+        double dist = MathHelper.sqrt_double(xDiff * xDiff + zDiff * zDiff);
+        float yaw = (float)(Math.atan2(zDiff, xDiff) * 180.0 / Math.PI) - 90.0f;
+        float pitch = (float)(- Math.atan2(yDiff, dist) * 180.0 / Math.PI);
+        return new Rotation(yaw,pitch);
+    }
+
     /**
      * @return YESSSS!!!
      */
