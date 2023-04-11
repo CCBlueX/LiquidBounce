@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.features.special.ClientRichPresence.showRichPres
 import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.file.FileManager.loadAllConfigs
 import net.ccbluex.liquidbounce.file.FileManager.saveAllConfigs
+import net.ccbluex.liquidbounce.lang.LanguageManager.loadLanguages
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.script.ScriptManager.enableScripts
 import net.ccbluex.liquidbounce.script.ScriptManager.loadScripts
@@ -85,6 +86,9 @@ object LiquidBounce {
         isStarting = true
 
         LOGGER.info("Starting $CLIENT_NAME $CLIENT_VERSION $CLIENT_COMMIT, by $CLIENT_CREATOR")
+
+        // Load languages
+        loadLanguages()
 
         // Register listeners
         registerListener(RotationUtils)

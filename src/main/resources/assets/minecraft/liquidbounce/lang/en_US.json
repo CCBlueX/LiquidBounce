@@ -1,0 +1,54 @@
+{
+    "locale": "en_US",
+    "contributors": [
+        "1zuna"
+    ],
+    "translations": {
+        "menu.altManager": "Alt Manager",
+        "menu.mods": "Mods",
+        "menu.serverStatus": "Server Status",
+        "menu.configuration": "Configuration",
+        "menu.contributors": "Contributors",
+
+        "notification.moduleEnabled": "Enabled %s",
+        "notification.moduleDisabled": "Disabled %s",
+
+        "module.aimbot.description": "Automatically faces selected entities around you.",
+
+        "module.autoArmor.description": "Automatically equips the best armor in your inventory.",
+
+        "module.autoBow.description": "Automatically shoots an arrow whenever your bow is fully loaded.",
+
+        "module.autoClicker.description": "Constantly clicks when holding down a mouse button.",
+
+        "module.autoLeave.description": "Automatically makes you leave the server whenever your health is low.",
+
+        "module.autoPot.description": "Automatically throws healing potions.",
+
+        "module.autoRod.description": "Auto use fishing rod to PVP.",
+
+        "module.autoSoup.description": "Makes you automatically eat soup whenever your health is low.",
+
+        "module.autoWeapon.description": "Automatically selects the best weapon in your hotbar.",
+
+        "module.backtrack.description": "Allows you to hit players by attacking their previous cached positions.",
+
+        "module.bowAimbot.description": "Automatically aims at players when using a bow.",
+
+        "module.criticals.description": "Automatically deals critical hits.",
+
+        "module.fastBow.description": "Turns your bow into a machine gun.",
+
+        "module.hitBox.description": "Makes hitboxes of targets bigger.",
+
+        "module.ignite.description": "Automatically sets targets around you on fire.",
+
+        "module.killAura.description": "Automatically attacks targets around you.",
+
+        "module.noFriends.description": "Allows you to attack friends.",
+
+        "module.superKnockback.description": "Increases knockback dealt to other entities.",
+
+        "module.teleportHit.description": "Allows to hit entities from far away."
+    }
+}

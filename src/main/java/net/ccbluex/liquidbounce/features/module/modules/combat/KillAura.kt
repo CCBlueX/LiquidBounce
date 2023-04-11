@@ -59,7 +59,7 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sin
 
-object KillAura : Module("KillAura", "Automatically attacks targets around you.", ModuleCategory.COMBAT, Keyboard.KEY_R) {
+object KillAura : Module("KillAura", category = ModuleCategory.COMBAT, keyBind = Keyboard.KEY_R) {
     /**
      * OPTIONS
      */

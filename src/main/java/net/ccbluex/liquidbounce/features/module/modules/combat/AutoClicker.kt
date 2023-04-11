@@ -22,7 +22,7 @@ import net.minecraft.client.settings.KeyBinding
 import net.minecraft.init.Blocks
 import kotlin.random.Random.Default.nextBoolean
 
-object AutoClicker : Module("AutoClicker", "Constantly clicks when holding down a mouse button.", ModuleCategory.COMBAT) {
+object AutoClicker : Module("AutoClicker", category = ModuleCategory.COMBAT) {
     private val maxCPSValue: IntegerValue = object : IntegerValue("MaxCPS", 8, 1, 20) {
 
         override fun onChanged(oldValue: Int, newValue: Int) {

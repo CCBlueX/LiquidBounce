@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.network.play.client.C0BPacketEntityAction
 
-object SuperKnockback : Module("SuperKnockback", "Increases knockback dealt to other entities.", ModuleCategory.COMBAT) {
+object SuperKnockback : Module("SuperKnockback", "", ModuleCategory.COMBAT) {
 
     private val hurtTimeValue = IntegerValue("HurtTime", 10, 0, 10)
 

@@ -20,7 +20,7 @@ import net.minecraft.item.ItemTool
 import net.minecraft.network.play.client.C02PacketUseEntity
 import net.minecraft.network.play.client.C09PacketHeldItemChange
 
-object AutoWeapon : Module("AutoWeapon", "Automatically selects the best weapon in your hotbar.", ModuleCategory.COMBAT) {
+object AutoWeapon : Module("AutoWeapon", category = ModuleCategory.COMBAT) {
 
     private val silentValue = BoolValue("SpoofItem", false)
     private val ticksValue = object : IntegerValue("SpoofTicks", 10, 1, 20) {

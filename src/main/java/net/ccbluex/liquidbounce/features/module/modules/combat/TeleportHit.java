@@ -21,7 +21,7 @@ import net.minecraft.util.Vec3;
 public class TeleportHit extends Module {
 
     public TeleportHit() {
-        super("TeleportHit", "Allows to hit entities from far away.", ModuleCategory.COMBAT);
+        super("TeleportHit", ModuleCategory.COMBAT);
     }
     private EntityLivingBase targetEntity;
     private boolean shouldHit;

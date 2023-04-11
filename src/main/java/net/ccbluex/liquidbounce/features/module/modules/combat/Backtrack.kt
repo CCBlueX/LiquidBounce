@@ -17,7 +17,7 @@ import java.awt.Color
 import java.util.*
 
 // TODO: Proper description?
-object Backtrack : Module("Backtrack", "Allows you to hit players by attacking their previous cached positions.", ModuleCategory.COMBAT) {
+object Backtrack : Module("Backtrack", category = ModuleCategory.COMBAT) {
 
     // This will be used as maximum possible delay. (In milliseconds)
     private val maximumDelay = IntegerValue("MaxDelay", 250, 0, 1000)

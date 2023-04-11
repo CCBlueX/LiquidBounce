@@ -34,7 +34,7 @@ import java.util.stream.IntStream;
 public class AutoArmor extends Module {
 
     public AutoArmor() {
-        super("AutoArmor", "Automatically equips the best armor in your inventory.", ModuleCategory.COMBAT);
+        super("AutoArmor", ModuleCategory.COMBAT);
     }
 
     public static final ArmorComparator ARMOR_COMPARATOR = new ArmorComparator();

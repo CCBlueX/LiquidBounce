@@ -32,7 +32,7 @@ import static net.ccbluex.liquidbounce.utils.extensions.BlockExtensionKt.*;
 
 public class Ignite extends Module {
     public Ignite() {
-        super("Ignite", "Automatically sets targets around you on fire.", ModuleCategory.COMBAT);
+        super("Ignite", ModuleCategory.COMBAT);
     }
 
    private final BoolValue lighterValue = new BoolValue("Lighter", true);

@@ -15,7 +15,7 @@ import net.minecraft.network.play.client.C07PacketPlayerDigging
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 
-object AutoBow : Module("AutoBow", "Automatically shoots an arrow whenever your bow is fully loaded.", ModuleCategory.COMBAT) {
+object AutoBow : Module("AutoBow", category = ModuleCategory.COMBAT) {
 
     private val waitForBowAimbot = BoolValue("WaitForBowAimbot", true)
 
