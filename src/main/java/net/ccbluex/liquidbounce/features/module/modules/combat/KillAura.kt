@@ -100,6 +100,11 @@ object KillAura : Module("KillAura", "Automatically attacks targets around you."
         override fun isSupported() = targetModeValue.get() == "Multi"
     }
 
+    // Delay
+    private val switchDelayValue  = object : IntegerValue("SwitchDelay", 15, 1, 1000) {
+        override fun isSupported() = targetModeValue.get() == "Switch"
+    }
+
     // Bypass
     private val swingValue = BoolValue("Swing", true)
     private val keepSprintValue = BoolValue("KeepSprint", true)
@@ -431,6 +436,13 @@ object KillAura : Module("KillAura", "Automatically attacks targets around you."
             prevTargetEntities.add(if (aacValue.get()) target!!.entityId else currentTarget!!.entityId)
 
             if (target == currentTarget) target = null
+        }
+
+        if(targetModeValue.get().equals("Switch", ignoreCase = true) && attackTimer.hasTimePassed((switchDelayValue.get()).toLong())) {
+            if(switchDelayValue.get() != 0) {
+                prevTargetEntities.add(if (aacValue.get()) target!!.entityId else currentTarget!!.entityId)
+                attackTimer.reset()
+            }
         }
 
         // Open inventory
