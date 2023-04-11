@@ -1,0 +1,58 @@
+{
+    "locale": "pt_BR",
+    "contributors": [
+        "Zywl"
+    ],
+    "translations": {
+        "menu.altManager": "Gerenciador de Autenticação",
+        "menu.mods": "Mods",
+        "menu.serverStatus": "Status do Servidor",
+        "menu.configuration": "Configuração",
+        "menu.contributors": "Contribuidores",
+
+        "notification.moduleEnabled": "Ativado %s",
+        "notification.moduleDisabled": "Desativado %s",
+
+        "module.aimbot.description": "Enfrenta automaticamente as entidades selecionadas ao seu redor.",
+
+        "module.autoArmor.description": "Equipa automaticamente a melhor armadura em seu inventário.",
+
+        "module.autoBow.description": "Atira uma flecha automaticamente sempre que seu arco estiver totalmente carregado.",
+
+        "module.autoClicker.description": "Clica constantemente ao segurar um botão do mouse.",
+
+        "module.autoLeave.description": "Automaticamente faz você sair do servidor sempre que sua saúde estiver baixa.",
+
+        "module.autoPot.description": "Jogue poções automaticamente.",
+
+        "module.autoRod.description": "Vara de pesca de uso automático para PVP.",
+
+        "module.autoSoup.description": "Faz você tomar sopa automaticamente sempre que sua saúde estiver fraca.",
+
+        "module.autoWeapon.description": "Seleciona automaticamente a melhor arma em sua hotbar.",
+
+        "module.backtrack.description": "Permite que você atinja os jogadores atacando suas posições anteriores em cache.",
+
+        "module.bowAimbot.description": "Mira automaticamente os jogadores ao usar um arco.",
+
+        "module.criticals.description": "Permite que você dê danos criticos.",
+
+        "module.fastBow.description": "Transforma seu arco em uma metralhadora.",
+
+        "module.hitBox.description": "Torna hitboxes de alvos maiores.",
+
+        "module.ignite.description": "Define automaticamente os alvos ao seu redor em chamas.",
+
+        "module.killAura.description": "Ataca automaticamente os alvos ao seu redor.",
+
+        "module.noFriends.description": "Permite atacar amigos.",
+
+        "module.superKnockback.description": "Aumenta o knockback negociado para outras entidades.",
+
+        "module.teleportHit.description": "Permite atingir entidades de longe."
+      
+        "module.speed.description": "Permite que você se mova mais rápido."
+      
+        "module.Sprint.description": "Corre automaticamente o tempo todo."
+    }
+}
