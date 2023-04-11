@@ -23,6 +23,7 @@ object LanguageManager : MinecraftInstance() {
     // List of all languages
     val knownLanguages = arrayOf(
         "en_US",
+        "pt_BR"
     )
     private val languageMap = mutableMapOf<String, Language>()
 
