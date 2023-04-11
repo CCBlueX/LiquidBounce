@@ -35,7 +35,8 @@ import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager.Companion.loa
 import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.ui.client.hud.HUD
 import net.ccbluex.liquidbounce.ui.font.Fonts.loadFonts
-import net.ccbluex.liquidbounce.update.UpdateInfo.gitInfo
+import net.ccbluex.liquidbounce.api.UpdateInfo.gitInfo
+import net.ccbluex.liquidbounce.api.messageOfTheDay
 import net.ccbluex.liquidbounce.utils.Background
 import net.ccbluex.liquidbounce.utils.ClassUtils.hasForge
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
@@ -43,7 +44,6 @@ import net.ccbluex.liquidbounce.utils.ClientUtils.disableFastRender
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.render.MiniMapRegister
-import net.ccbluex.liquidbounce.utils.toLowerCamelCase
 import kotlin.concurrent.thread
 
 object LiquidBounce {
@@ -137,6 +137,9 @@ object LiquidBounce {
 
         // Load alt generators
         loadActiveGenerators()
+
+        // Load message of the day
+        messageOfTheDay?.message?.let { LOGGER.info("Message of the day: $it") }
 
         // Setup Discord RPC
         if (showRichPresenceValue) {
