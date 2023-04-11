@@ -16,7 +16,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.init.Blocks
 import net.minecraft.util.BlockPos
 
-object IceSpeed : Module("IceSpeed", "Allows you to walk faster on ice.", ModuleCategory.MOVEMENT) {
+object IceSpeed : Module("IceSpeed", ModuleCategory.MOVEMENT) {
     private val modeValue = ListValue("Mode", arrayOf("NCP", "AAC", "Spartan"), "NCP")
     override fun onEnable() {
         if (modeValue.get() == "NCP") {

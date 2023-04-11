@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.minecraft.network.play.client.C03PacketPlayer
 
-object PotionSaver : Module("PotionSaver", "Freezes all potion effects while you are standing still.", ModuleCategory.PLAYER) {
+object PotionSaver : Module("PotionSaver", ModuleCategory.PLAYER) {
 
     @EventTarget
     fun onPacket(e: PacketEvent) {

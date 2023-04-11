@@ -43,6 +43,7 @@ import net.ccbluex.liquidbounce.utils.ClientUtils.disableFastRender
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.render.MiniMapRegister
+import net.ccbluex.liquidbounce.utils.toLowerCamelCase
 import kotlin.concurrent.thread
 
 object LiquidBounce {
@@ -160,6 +161,12 @@ object LiquidBounce {
 
         // Set is starting status
         isStarting = false
+
+        for (module in moduleManager.modules) {
+            if (module.forcedDescription.isNotBlank()) {
+                println("\"module.${module.name.toLowerCamelCase()}.description\" = \"${module.forcedDescription}\"")
+            }
+        }
 
         callEvent(StartupEvent())
     }

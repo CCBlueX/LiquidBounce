@@ -17,7 +17,7 @@ import net.minecraft.client.gui.GuiIngameMenu
 import net.minecraft.client.gui.inventory.GuiContainer
 import net.minecraft.client.settings.GameSettings
 
-object InventoryMove : Module("InventoryMove", "Allows you to walk while an inventory is opened.", ModuleCategory.MOVEMENT) {
+object InventoryMove : Module("InventoryMove", ModuleCategory.MOVEMENT) {
 
     private val undetectable = BoolValue("Undetectable", false)
     val aacAdditionProValue = BoolValue("AACAdditionPro", false)

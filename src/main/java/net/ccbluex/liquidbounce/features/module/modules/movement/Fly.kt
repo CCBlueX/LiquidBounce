@@ -40,7 +40,7 @@ import kotlin.math.max
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-object Fly : Module("Fly", "Allows you to fly in survival mode.", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
+object Fly : Module("Fly", ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_F) {
     val modeValue = ListValue(
         "Mode", arrayOf(
             "Vanilla", "SmoothVanilla",

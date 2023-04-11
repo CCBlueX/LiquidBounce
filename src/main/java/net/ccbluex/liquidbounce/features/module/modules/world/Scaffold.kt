@@ -58,7 +58,7 @@ import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
 
-object Scaffold : Module("Scaffold", "Automatically places blocks beneath your feet.", ModuleCategory.WORLD, Keyboard.KEY_I) {
+object Scaffold : Module("Scaffold", ModuleCategory.WORLD, keyBind = Keyboard.KEY_I) {
 
     private val modeValue = ListValue("Mode", arrayOf("Normal", "Rewinside", "Expand"), "Normal")
 

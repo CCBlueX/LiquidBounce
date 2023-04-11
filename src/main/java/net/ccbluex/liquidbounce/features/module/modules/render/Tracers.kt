@@ -25,7 +25,7 @@ import net.minecraft.util.Vec3
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
-object Tracers : Module("Tracers", "Draws a line to targets around you.", ModuleCategory.RENDER) {
+object Tracers : Module("Tracers", ModuleCategory.RENDER) {
 
     private val colorMode = ListValue("Color", arrayOf("Custom", "DistanceColor", "Rainbow"), "Custom")
 

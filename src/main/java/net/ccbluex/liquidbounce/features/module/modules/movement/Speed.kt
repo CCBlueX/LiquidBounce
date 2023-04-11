@@ -21,7 +21,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 
-object Speed : Module("Speed", "Allows you to move faster.", ModuleCategory.MOVEMENT) {
+object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
 
     private val speedModes = arrayOf( // NCP
             NCPBHop(),

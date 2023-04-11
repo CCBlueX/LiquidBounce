@@ -36,7 +36,7 @@ import java.awt.Color
 import kotlin.math.max
 import kotlin.math.min
 
-object ESP : Module("ESP", "Allows you to see targets through walls.", ModuleCategory.RENDER) {
+object ESP : Module("ESP", ModuleCategory.RENDER) {
 
     val modeValue = ListValue(
         "Mode",

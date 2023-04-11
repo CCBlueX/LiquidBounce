@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import kotlin.math.cos
 import kotlin.math.sin
 
-object Strafe : Module("Strafe", "Allows you to freely move in mid air.", ModuleCategory.MOVEMENT) {
+object Strafe : Module("Strafe", ModuleCategory.MOVEMENT) {
 
     private var strengthValue= FloatValue("Strength", 0.5F, 0F, 1F)
     private var noMoveStopValue = BoolValue("NoMoveStop", false)

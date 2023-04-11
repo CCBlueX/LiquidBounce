@@ -20,7 +20,7 @@ import net.minecraft.item.ItemFood
 import net.minecraft.item.ItemPotion
 import net.minecraft.network.play.client.C03PacketPlayer
 
-object FastUse : Module("FastUse", "Allows you to use items faster.", ModuleCategory.PLAYER) {
+object FastUse : Module("FastUse", ModuleCategory.PLAYER) {
 
     private val modeValue = ListValue("Mode", arrayOf("Instant", "NCP", "AAC", "Custom"), "NCP")
 

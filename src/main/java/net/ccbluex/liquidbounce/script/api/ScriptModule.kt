@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.value.Value
 
-class ScriptModule(name: String, description: String, category: ModuleCategory, private val moduleObject: JSObject) : Module(name, description, category) {
+class ScriptModule(name: String, description: String, category: ModuleCategory, private val moduleObject: JSObject) : Module(name, category, description) {
 
     private val events = HashMap<String, JSObject>()
     private val _values = LinkedHashMap<String, Value<*>>()

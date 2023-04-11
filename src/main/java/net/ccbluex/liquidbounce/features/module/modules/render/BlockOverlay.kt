@@ -27,7 +27,7 @@ import net.minecraft.util.BlockPos
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
-object BlockOverlay : Module("BlockOverlay", "Allows you to change the design of the block overlay.", ModuleCategory.RENDER) {
+object BlockOverlay : Module("BlockOverlay", ModuleCategory.RENDER) {
     val infoValue = BoolValue("Info", false)
 
     private val colorRainbow = BoolValue("Rainbow", false)

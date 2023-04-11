@@ -19,7 +19,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.settings.KeyBinding.setKeyBindState
 import net.minecraft.potion.Potion
 
-object Sprint : Module("Sprint", "Automatically sprints all the time.", ModuleCategory.MOVEMENT) {
+object Sprint : Module("Sprint", ModuleCategory.MOVEMENT) {
     val modeValue = ListValue("Mode", arrayOf("Legit", "Vanilla"), "Vanilla")
 
     val allDirectionsValue = object : BoolValue("AllDirections", true) {

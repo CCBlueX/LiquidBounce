@@ -48,7 +48,7 @@ import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import kotlin.math.truncate
 
-object Tower : Module("Tower", "Automatically builds a tower beneath you.", ModuleCategory.WORLD, Keyboard.KEY_O) {
+object Tower : Module("Tower", ModuleCategory.WORLD, keyBind = Keyboard.KEY_O) {
     /**
      * OPTIONS
      */

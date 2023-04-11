@@ -36,7 +36,7 @@ import org.lwjgl.opengl.GL11.glTranslatef
  *
  * @author CCBlueX
  */
-object Animations : Module("Animations", "Customizes your blocking animation.", ModuleCategory.RENDER) {
+object Animations : Module("Animations", ModuleCategory.RENDER) {
 
     // Default animation
     val defaultAnimation = OneSevenAnimation()

@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.value.BoolValue
 
-object AntiBlind : Module("AntiBlind", "Cancels blindness effects.", ModuleCategory.RENDER) {
+object AntiBlind : Module("AntiBlind", ModuleCategory.RENDER) {
     val confusionEffect = BoolValue("Confusion", true)
     val pumpkinEffect = BoolValue("Pumpkin", true)
     val fireEffect = BoolValue("Fire", false)

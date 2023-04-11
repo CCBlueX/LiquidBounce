@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.targetRotation
 import net.ccbluex.liquidbounce.value.BoolValue
 
-object Rotations : Module("Rotations", "Allows you to see server-sided head and body rotations.", ModuleCategory.RENDER
+object Rotations : Module("Rotations", ModuleCategory.RENDER
 ) {
 
     private val bodyValue = BoolValue("Body", true)

@@ -23,7 +23,7 @@ import net.minecraft.network.play.server.S2EPacketCloseWindow
 import org.lwjgl.input.Keyboard
 import java.awt.Color
 
-object ClickGUI : Module("ClickGUI", "Opens the ClickGUI.", ModuleCategory.RENDER, Keyboard.KEY_RSHIFT, defaultInArray = false, canEnable = false) {
+object ClickGUI : Module("ClickGUI", ModuleCategory.RENDER, keyBind = Keyboard.KEY_RSHIFT, defaultInArray = false, canEnable = false) {
     private val styleValue: ListValue =
         object : ListValue("Style", arrayOf("LiquidBounce", "Null", "Slowly"), "LiquidBounce") {
             override fun onChanged(oldValue: String, newValue: String) = updateStyle()

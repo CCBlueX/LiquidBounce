@@ -19,7 +19,7 @@ import net.minecraft.block.BlockVine
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 
-object FastClimb : Module("FastClimb", "Allows you to climb up ladders and vines faster.", ModuleCategory.MOVEMENT) {
+object FastClimb : Module("FastClimb", ModuleCategory.MOVEMENT) {
 
     val modeValue = ListValue("Mode",
             arrayOf("Vanilla", "Clip", "AAC3.0.0", "AAC3.0.5", "SAAC3.1.2", "AAC3.1.2"), "Vanilla")

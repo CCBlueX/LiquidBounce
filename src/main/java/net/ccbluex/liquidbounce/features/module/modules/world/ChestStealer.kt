@@ -25,7 +25,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.network.play.server.S30PacketWindowItems
 import net.minecraft.util.ResourceLocation
 
-object ChestStealer : Module("ChestStealer", "Automatically steals all items from a chest.", ModuleCategory.WORLD) {
+object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
 
     /**
      * OPTIONS

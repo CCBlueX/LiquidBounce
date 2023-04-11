@@ -21,7 +21,7 @@ import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 
-object NoSlow : Module("NoSlow", "Cancels slowness effects caused by Soul Sand and using items.", ModuleCategory.MOVEMENT) {
+object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
 
     // Highly customizable values
 

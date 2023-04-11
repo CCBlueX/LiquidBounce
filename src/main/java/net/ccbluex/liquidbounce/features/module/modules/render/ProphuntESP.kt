@@ -23,7 +23,7 @@ import net.minecraft.entity.item.EntityFallingBlock
 import net.minecraft.util.BlockPos
 import java.awt.Color
 
-object ProphuntESP : Module("ProphuntESP", "Allows you to see disguised players in PropHunt.", ModuleCategory.RENDER) {
+object ProphuntESP : Module("ProphuntESP", ModuleCategory.RENDER) {
     val blocks: MutableMap<BlockPos, Long> = HashMap()
 
     private val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "Glow"), "OtherBox")

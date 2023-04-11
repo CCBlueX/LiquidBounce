@@ -18,7 +18,7 @@ import net.minecraft.util.AxisAlignedBB
 import kotlin.math.cos
 import kotlin.math.sin
 
-object WallClimb : Module("WallClimb", "Allows you to climb up walls like a spider.", ModuleCategory.MOVEMENT) {
+object WallClimb : Module("WallClimb", ModuleCategory.MOVEMENT) {
     private val modeValue = ListValue("Mode", arrayOf("Simple", "CheckerClimb", "Clip", "AAC3.3.12", "AACGlide"), "Simple")
     private val clipMode = object : ListValue("ClipMode", arrayOf("Jump", "Fast"), "Fast") {
         override fun isSupported() = modeValue.get() == "Clip"

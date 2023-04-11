@@ -17,7 +17,7 @@ import net.minecraft.client.entity.EntityOtherPlayerMP
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.client.C0BPacketEntityAction
 
-object FreeCam : Module("FreeCam", "Allows you to move out of your body.", ModuleCategory.RENDER) {
+object FreeCam : Module("FreeCam", ModuleCategory.RENDER) {
     private val speedValue = FloatValue("Speed", 0.8f, 0.1f, 2f)
     private val flyValue = BoolValue("Fly", true)
     private val noClipValue = BoolValue("NoClip", true)

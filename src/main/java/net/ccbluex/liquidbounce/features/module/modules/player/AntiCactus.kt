@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.minecraft.block.BlockCactus
 import net.minecraft.util.AxisAlignedBB
 
-object AntiCactus : Module("AntiCactus", "Prevents cacti from damaging you.", ModuleCategory.PLAYER) {
+object AntiCactus : Module("AntiCactus", ModuleCategory.PLAYER) {
 
     @EventTarget
     fun onBlockBB(event: BlockBBEvent) {

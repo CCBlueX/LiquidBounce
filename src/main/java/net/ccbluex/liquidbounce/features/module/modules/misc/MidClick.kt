@@ -16,7 +16,7 @@ import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
 import net.minecraft.entity.player.EntityPlayer
 import org.lwjgl.input.Mouse
 
-object MidClick : Module("MidClick", "Allows you to add a player as a friend by right clicking him.", ModuleCategory.MISC) {
+object MidClick : Module("MidClick", ModuleCategory.MISC) {
     private var wasDown = false
 
     @EventTarget

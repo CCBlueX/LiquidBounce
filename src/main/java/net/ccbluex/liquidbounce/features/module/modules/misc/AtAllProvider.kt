@@ -17,7 +17,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.network.play.client.C01PacketChatMessage
 import java.util.concurrent.LinkedBlockingQueue
 
-object AtAllProvider : Module("AtAllProvider", "Automatically mentions everyone on the server when using '@a' in your message.", ModuleCategory.MISC) {
+object AtAllProvider : Module("AtAllProvider", ModuleCategory.MISC) {
 
     private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 1000, 0, 20000) {
         override fun onChanged(oldValue: Int, newValue: Int) {

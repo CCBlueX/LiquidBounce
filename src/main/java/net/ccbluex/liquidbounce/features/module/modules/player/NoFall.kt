@@ -30,7 +30,7 @@ import net.minecraft.util.Vec3
 import kotlin.math.ceil
 import kotlin.math.sqrt
 
-object NoFall : Module("NoFall", "Prevents you from taking fall damage.", ModuleCategory.PLAYER) {
+object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
 
     val modeValue = ListValue(
         "Mode", arrayOf(

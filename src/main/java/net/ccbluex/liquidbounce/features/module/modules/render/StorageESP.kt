@@ -29,7 +29,7 @@ import net.minecraft.tileentity.*
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
-object StorageESP : Module("StorageESP", "Allows you to see chests, etc. through walls.", ModuleCategory.RENDER) {
+object StorageESP : Module("StorageESP", ModuleCategory.RENDER) {
     private val modeValue =
         ListValue("Mode", arrayOf("Box", "OtherBox", "Outline", "Glow", "2D", "WireFrame"), "Outline")
 

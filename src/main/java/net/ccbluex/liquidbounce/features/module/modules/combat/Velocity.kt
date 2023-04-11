@@ -25,7 +25,7 @@ import net.minecraft.network.play.server.S27PacketExplosion
 import kotlin.math.cos
 import kotlin.math.sin
 
-object Velocity : Module("Velocity", "Allows you to modify the amount of knockback you take.", ModuleCategory.COMBAT) {
+object Velocity : Module("Velocity", category = ModuleCategory.COMBAT) {
 
     /**
      * OPTIONS

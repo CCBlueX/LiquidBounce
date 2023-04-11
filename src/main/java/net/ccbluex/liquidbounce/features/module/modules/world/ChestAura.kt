@@ -30,7 +30,7 @@ import net.minecraft.network.play.client.C0APacketAnimation
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 
-object ChestAura : Module("ChestAura", "Automatically opens chests around you.", ModuleCategory.WORLD) {
+object ChestAura : Module("ChestAura", ModuleCategory.WORLD) {
 
     private val rangeValue = FloatValue("Range", 5F, 1F, 6F)
     private val delayValue = IntegerValue("Delay", 100, 50, 200)

@@ -32,8 +32,7 @@ import net.minecraft.network.play.client.C16PacketClientStatus
 import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT
 
 
-object InventoryCleaner : Module("InventoryCleaner", "Automatically throws away useless items.", ModuleCategory.PLAYER
-) {
+object InventoryCleaner : Module("InventoryCleaner", ModuleCategory.PLAYER) {
 
     /**
      * OPTIONS

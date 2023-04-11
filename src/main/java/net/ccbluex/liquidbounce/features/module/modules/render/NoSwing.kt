@@ -9,6 +9,6 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.value.BoolValue
 
-object NoSwing : Module("NoSwing", "Disabled swing effect when hitting an entity/mining a block.", ModuleCategory.RENDER) {
+object NoSwing : Module("NoSwing", ModuleCategory.RENDER) {
     val serverSideValue = BoolValue("ServerSide", true)
 }

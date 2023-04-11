@@ -25,8 +25,8 @@ import org.lwjgl.input.Keyboard
 open class Module @JvmOverloads constructor(
 
     val name: String,
-    val forcedDescription: String = "",
     val category: ModuleCategory,
+    val forcedDescription: String = "",
     keyBind: Int = Keyboard.KEY_NONE,
     val defaultInArray: Boolean = true, // Used in HideCommand to reset modules visibility.
     private val canEnable: Boolean = true,
