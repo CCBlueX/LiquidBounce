@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.utils.block.canStandOn
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.StateUpdateEvent
-import net.ccbluex.liquidbounce.utils.entity.eyesPos
+import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.extensions.getFace
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
@@ -175,7 +175,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     private fun isValidTarget(rayTraceResult: BlockHitResult): Boolean {
-        val eyesPos = player.eyesPos
+        val eyesPos = player.eyes
         val hitVec = rayTraceResult.pos
 
         val diffX = hitVec.x - eyesPos.x
@@ -263,20 +263,20 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
             val first = if (!blockStateToInvestigate.isAir && blockStateToInvestigate.canReplace(
                     ItemPlacementContext(
-                            player,
-                            Hand.MAIN_HAND,
-                            player.inventory.getStack(SilentHotbar.serversideSlot),
-                            BlockHitResult(
-                                    Vec3d.of(posToInvestigate),
-                                    Direction.UP,
-                                    posToInvestigate,
-                                    false
-                                )
+                        player,
+                        Hand.MAIN_HAND,
+                        player.inventory.getStack(SilentHotbar.serversideSlot),
+                        BlockHitResult(
+                            Vec3d.of(posToInvestigate),
+                            Direction.UP,
+                            posToInvestigate,
+                            false
                         )
+                    )
                 )
             ) {
                 Direction.values().mapNotNull { direction ->
-                    val delta = player.eyesPos.subtract(
+                    val delta = player.eyes.subtract(
                         Vec3d.of(posToInvestigate).add(0.5, 0.5, 0.5).add(Vec3d.of(direction.vector).multiply(0.5))
                     )
 
@@ -305,7 +305,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                         return@mapNotNull null
                     }
 
-                    val delta = player.eyesPos.subtract(
+                    val delta = player.eyes.subtract(
                         Vec3d.of(currPos).add(0.5, 0.5, 0.5).add(Vec3d.of(normalVector).multiply(0.5))
                     )
 
@@ -360,7 +360,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                     currPos,
                     first.first,
                     face.first.from.y + currPos.y,
-                    RotationManager.makeRotation(face.second.add(Vec3d.of(currPos)), player.eyesPos)
+                    RotationManager.makeRotation(face.second.add(Vec3d.of(currPos)), player.eyes)
                 )
             }
         }

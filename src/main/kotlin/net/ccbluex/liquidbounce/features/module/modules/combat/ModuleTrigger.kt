@@ -104,6 +104,7 @@ object ModuleTrigger : Module("Trigger", Category.COMBAT) {
 
                 true
             }
+
             Use.STOP -> {
                 network.sendPacket(
                     PlayerActionC2SPacket(
@@ -120,6 +121,7 @@ object ModuleTrigger : Module("Trigger", Category.COMBAT) {
 
                 true
             }
+
             Use.IGNORE -> false
         }
     }

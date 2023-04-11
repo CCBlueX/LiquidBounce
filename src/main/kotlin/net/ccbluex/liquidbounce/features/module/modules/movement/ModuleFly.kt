@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
+import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
 import net.minecraft.block.Block
@@ -202,7 +203,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
         fun isABitAboveGround(): Boolean {
             for (y in 0..5) {
-                val boundingBox = player.boundingBox
+                val boundingBox = player.box
                 val detectionBox = boundingBox.withMinY(boundingBox.minY - y)
 
                 return isBlockAtPosition(detectionBox) { it is Block }

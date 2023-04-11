@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.aiming
 
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.minecraft.block.BlockState
 import net.minecraft.block.ShapeContext
 import net.minecraft.entity.Entity
@@ -33,7 +34,7 @@ import net.minecraft.world.RaycastContext
 fun raytraceEntity(range: Double, rotation: Rotation, filter: (Entity) -> Boolean): Entity? {
     val entity = mc.cameraEntity ?: return null
 
-    val cameraVec = entity.getCameraPosVec(1f)
+    val cameraVec = entity.eyes
     val rotationVec = rotation.rotationVec
 
     val vec3d3 = cameraVec.add(rotationVec.x * range, rotationVec.y * range, rotationVec.z * range)
@@ -49,7 +50,7 @@ fun raytraceEntity(range: Double, rotation: Rotation, filter: (Entity) -> Boolea
 fun raytraceBlock(range: Double, rotation: Rotation, pos: BlockPos, state: BlockState): BlockHitResult? {
     val entity: Entity = mc.cameraEntity ?: return null
 
-    val start = entity.getCameraPosVec(1f)
+    val start = entity.eyes
     val rotationVec = rotation.rotationVec
 
     val end = start.add(rotationVec.x * range, rotationVec.y * range, rotationVec.z * range)
@@ -62,7 +63,7 @@ fun raytraceBlock(range: Double, rotation: Rotation, pos: BlockPos, state: Block
 fun raycast(range: Double, rotation: Rotation): BlockHitResult? {
     val entity = mc.cameraEntity ?: return null
 
-    val start = entity.getCameraPosVec(1f)
+    val start = entity.eyes
     val rotationVec = rotation.rotationVec
 
     val end = start.add(rotationVec.x * range, rotationVec.y * range, rotationVec.z * range)
@@ -93,7 +94,7 @@ fun facingEnemy(enemy: Entity, range: Double, rotation: Rotation): Boolean {
 fun facingEnemy(enemy: Entity, rotation: Rotation, range: Double, wallsRange: Double): Boolean {
     val entity = mc.cameraEntity ?: return false
 
-    val cameraVec = entity.getCameraPosVec(1f)
+    val cameraVec = entity.eyes
     val rotationVec = rotation.rotationVec
 
     val rangeSquared = range * range

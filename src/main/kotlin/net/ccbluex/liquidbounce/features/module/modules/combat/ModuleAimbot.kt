@@ -28,8 +28,9 @@ import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.combat.PriorityEnum
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
+import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
-import net.ccbluex.liquidbounce.utils.entity.eyesPos
+import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import kotlin.math.round
 
@@ -56,14 +57,14 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
             return@handler
         }
 
-        val eyes = player.eyesPos
+        val eyes = player.eyes
 
         for (target in targetTracker.enemies()) {
             if (target.boxedDistanceTo(player) > range) {
                 continue
             }
 
-            val box = target.boundingBox
+            val box = target.box
 
             if (fov >= RotationManager.rotationDifference(
                     RotationManager.makeRotation(box.center, eyes), player.rotation

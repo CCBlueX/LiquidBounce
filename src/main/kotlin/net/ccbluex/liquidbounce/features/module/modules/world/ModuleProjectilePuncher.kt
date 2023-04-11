@@ -29,8 +29,9 @@ import net.ccbluex.liquidbounce.utils.client.MC_1_8
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import net.ccbluex.liquidbounce.utils.combat.CpsScheduler
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
+import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
-import net.ccbluex.liquidbounce.utils.entity.eyesPos
+import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.minecraft.entity.Entity
 import net.minecraft.entity.projectile.FireballEntity
@@ -82,7 +83,6 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
 
         if (clicks > 0) {
             attackEntity(target)
-            targetTracker.cleanup()
         }
     }
 
@@ -105,7 +105,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
 
             // find best spot
             val spot = RotationManager.raytraceBox(
-                player.eyesPos, entity.boundingBox, range = range.toDouble(), wallsRange = 0.0
+                player.eyes, entity.box, range = range.toDouble(), wallsRange = 0.0
             ) ?: continue
 
             // lock on target tracker

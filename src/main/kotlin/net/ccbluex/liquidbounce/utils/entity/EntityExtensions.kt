@@ -124,8 +124,8 @@ fun Vec3d.strafe(yaw: Float, speed: Double = sqrtSpeed, strength: Double = 1.0, 
     this.strafe(yaw, speed, strength)
 }
 
-val ClientPlayerEntity.eyesPos: Vec3d
-    get() = Vec3d(pos.x, boundingBox.minY + getEyeHeight(pose), pos.z)
+val Entity.eyes: Vec3d
+    get() = getCameraPosVec(mc.tickDelta)
 
 val Input.yAxisMovement: Float
     get() = when {
@@ -137,6 +137,9 @@ val Input.yAxisMovement: Float
 val Entity.rotation: Rotation
     get() = Rotation(yaw, pitch)
 
+val Entity.box: Box
+    get() = boundingBox.expand(targetingMargin.toDouble())
+
 /**
  * Allows to calculate the distance between the current entity and [entity] from the nearest corner of the bounding box
  */
@@ -145,8 +148,8 @@ fun Entity.boxedDistanceTo(entity: Entity): Double {
 }
 
 fun Entity.squaredBoxedDistanceTo(entity: Entity): Double {
-    val eyes = entity.getCameraPosVec(1F)
-    val pos = getNearestPoint(eyes, boundingBox)
+    val eyes = entity.eyes
+    val pos = getNearestPoint(eyes, box)
 
     val xDist = pos.x - eyes.x
     val yDist = pos.y - eyes.y

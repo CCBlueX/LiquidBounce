@@ -32,8 +32,9 @@ import net.ccbluex.liquidbounce.utils.block.searchBlocksInRadius
 import net.ccbluex.liquidbounce.utils.client.MC_1_8
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
+import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
-import net.ccbluex.liquidbounce.utils.entity.eyesPos
+import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.minecraft.block.Block
 import net.minecraft.block.Blocks
@@ -137,7 +138,7 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
                 }
                 // find best spot (and skip if no spot was found)
                 val (rotation, _) = RotationManager.raytraceBox(
-                    player.eyesPos, block.boundingBox, range = range.toDouble(), wallsRange = 0.0
+                    player.eyes, block.box, range = range.toDouble(), wallsRange = 0.0
                 ) ?: continue
 
                 // lock on target tracker
@@ -181,7 +182,7 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
 
         val radius = range + 1
         val radiusSquared = radius * radius
-        val eyesPos = player.eyesPos
+        val eyesPos = player.eyes
 
         val blockToProcess = searchBlocksInRadius(radius) { pos, state ->
             targetedBlocks.contains(state.block) && getNearestPoint(
@@ -192,7 +193,7 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
         val (pos, state) = blockToProcess
 
         val rt = RotationManager.raytraceBlock(
-            player.eyesPos, pos, state, range = range.toDouble(), wallsRange = 0.0
+            player.eyes, pos, state, range = range.toDouble(), wallsRange = 0.0
         )
 
         // We got a free angle at the block? Cool.
@@ -205,7 +206,7 @@ object ModuleCrystalAura : Module("CrystalAura", Category.WORLD) {
 
         val raytraceResult = world.raycast(
             RaycastContext(
-                player.eyesPos,
+                player.eyes,
                 Vec3d.of(pos).add(0.5, 0.5, 0.5),
                 RaycastContext.ShapeType.COLLIDER,
                 RaycastContext.FluidHandling.NONE,

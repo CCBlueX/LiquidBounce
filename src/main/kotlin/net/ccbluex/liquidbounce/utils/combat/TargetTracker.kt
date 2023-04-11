@@ -23,7 +23,8 @@ import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.entity.eyesPos
+import net.ccbluex.liquidbounce.utils.entity.box
+import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.minecraft.entity.Entity
@@ -56,7 +57,7 @@ class TargetTracker(defaultPriority: PriorityEnum = PriorityEnum.HEALTH) : Confi
             PriorityEnum.DIRECTION -> entities.sortedBy {
                 RotationManager.rotationDifference(
                     RotationManager.makeRotation(
-                        it.boundingBox.center, player.eyesPos
+                        it.box.center, player.eyes
                     ), player.rotation
                 )
             } // Sort by FOV

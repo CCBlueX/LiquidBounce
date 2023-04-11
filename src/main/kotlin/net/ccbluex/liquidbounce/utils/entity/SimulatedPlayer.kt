@@ -381,6 +381,7 @@ class SimulatedPlayer(
     private fun swimUpward(water: TagKey<Fluid>?) {
         // TODO: Not yet implemented
     }
+
     private fun getSwimHeight(): Double = 0.0
     private fun isTouchingWater(): Boolean = false
     private fun isInLava(): Boolean = false
@@ -388,7 +389,7 @@ class SimulatedPlayer(
 
     private fun getRotationVector() = getRotationVector(this.pitch, this.yaw)
 
-    fun getVelocityAffectingPos() = BlockPos.ofFloored(this.pos.x, this.player.boundingBox.minY - 0.5000001, this.pos.z)
+    fun getVelocityAffectingPos() = BlockPos.ofFloored(this.pos.x, this.player.box.minY - 0.5000001, this.pos.z)
 
     private fun getRotationVector(pitch: Float, yaw: Float): Vec3d {
         val f = pitch * (Math.PI.toFloat() / 180)
@@ -485,7 +486,14 @@ class SimulatedPlayer(
 
                 val jumping = !entity.isOnGround
 
-                return SimulatedPlayerInput(forwards, backwards, left, right, jumping, sprinting).apply { this.slowDown = entity.isSneaking }
+                return SimulatedPlayerInput(
+                    forwards,
+                    backwards,
+                    left,
+                    right,
+                    jumping,
+                    sprinting
+                ).apply { this.slowDown = entity.isSneaking }
             }
         }
 

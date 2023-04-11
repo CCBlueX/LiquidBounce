@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
-import net.ccbluex.liquidbounce.utils.entity.eyesPos
+import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.minecraft.block.Block
 import net.minecraft.block.Blocks
@@ -131,7 +131,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
 
         val radius = range + 1
         val radiusSquared = radius * radius
-        val eyesPos = mc.player!!.eyesPos
+        val eyesPos = mc.player!!.eyes
 
         val blockToProcess = searchBlocksInCuboid(radius.toInt()) { pos, state ->
             targetedBlocks.contains(state.block) && getNearestPoint(
@@ -142,7 +142,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         val (pos, state) = blockToProcess
 
         val rt = RotationManager.raytraceBlock(
-            player.eyesPos, pos, state, range = range.toDouble(), wallsRange = wallRange.toDouble()
+            player.eyes, pos, state, range = range.toDouble(), wallsRange = wallRange.toDouble()
         )
 
         // We got a free angle at the block? Cool.
@@ -156,7 +156,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
 
         val raytraceResult = mc.world?.raycast(
             RaycastContext(
-                player.eyesPos,
+                player.eyes,
                 Vec3d.of(pos).add(0.5, 0.5, 0.5),
                 RaycastContext.ShapeType.COLLIDER,
                 RaycastContext.FluidHandling.NONE,
