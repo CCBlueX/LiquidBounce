@@ -162,12 +162,6 @@ object LiquidBounce {
         // Set is starting status
         isStarting = false
 
-        for (module in moduleManager.modules) {
-            if (module.forcedDescription.isNotBlank()) {
-                println("\"module.${module.name.toLowerCamelCase()}.description\" = \"${module.forcedDescription}\"")
-            }
-        }
-
         callEvent(StartupEvent())
     }
 
