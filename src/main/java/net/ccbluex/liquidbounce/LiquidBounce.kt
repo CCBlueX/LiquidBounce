@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.ui.client.hud.HUD
 import net.ccbluex.liquidbounce.ui.font.Fonts.loadFonts
 import net.ccbluex.liquidbounce.api.UpdateInfo.gitInfo
+import net.ccbluex.liquidbounce.api.loadSettings
 import net.ccbluex.liquidbounce.api.messageOfTheDay
 import net.ccbluex.liquidbounce.utils.Background
 import net.ccbluex.liquidbounce.utils.ClassUtils.hasForge
@@ -137,6 +138,11 @@ object LiquidBounce {
 
         // Load alt generators
         loadActiveGenerators()
+
+        // Load settings
+        loadSettings(false) {
+            LOGGER.info("Successfully loaded ${it.count()} settings.")
+        }
 
         // Load message of the day
         messageOfTheDay?.message?.let { LOGGER.info("Message of the day: $it") }

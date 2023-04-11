@@ -8,6 +8,8 @@ package net.ccbluex.liquidbounce.features.command.commands
 import com.google.gson.JsonArray
 import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_CLOUD
+import net.ccbluex.liquidbounce.api.autoSettingFiles
+import net.ccbluex.liquidbounce.api.loadSettings
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.ui.client.hud.HUD.addNotification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
@@ -16,8 +18,6 @@ import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
 import kotlin.concurrent.thread
 
 class AutoSettingsCommand : Command("autosettings", "setting", "settings", "config", "autosetting") {
-    private val loadingLock = Object()
-    private var autoSettingFiles: MutableList<String>? = null
 
     /**
      * Execute commands with provided [args]
@@ -38,10 +38,11 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
                 }
 
                 // Settings url
-                val url = if (args[2].startsWith("http"))
+                val url = if (args[2].startsWith("http")) {
                     args[2]
-                else
+                } else {
                     "${CLIENT_CLOUD}/settings/${args[2].lowercase()}"
+                }
 
                 chat("Loading settings...")
 
@@ -68,45 +69,9 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
 
                 loadSettings(false) {
                     for (setting in it)
-                        chat("> $setting")
+                        chat("> ${setting.name} (last updated: ${setting.lastModified})")
                 }
             }
-        }
-    }
-
-    private fun loadSettings(useCached: Boolean, join: Long? = null, callback: (List<String>) -> Unit) {
-        val thread = thread {
-            // Prevent the settings from being loaded twice
-            synchronized(loadingLock) {
-                if (useCached && autoSettingFiles != null) {
-                    callback(autoSettingFiles!!)
-                    return@thread
-                }
-
-                try {
-                    val json = JsonParser().parse(get(
-                            // TODO: Add another way to get all settings
-                            "https://api.github.com/repos/CCBlueX/LiquidCloud/contents/LiquidBounce/settings"
-                    ))
-
-                    val autoSettings = mutableListOf<String>()
-
-                    if (json is JsonArray) {
-                        for (setting in json)
-                            autoSettings.add(setting.asJsonObject["name"].asString)
-                    }
-
-                    callback(autoSettings)
-
-                    autoSettingFiles = autoSettings
-                } catch (e: Exception) {
-                    chat("Failed to fetch auto settings list.")
-                }
-            }
-        }
-
-        if (join != null) {
-            thread.join(join)
         }
     }
 
@@ -122,7 +87,7 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
                     }
 
                     if (autoSettingFiles != null) {
-                        return autoSettingFiles!!.filter { it.startsWith(args[1], true) }
+                        return autoSettingFiles!!.filter { it.name.startsWith(args[1], true) }.map { it.name }
                     }
                 }
                 return emptyList()
