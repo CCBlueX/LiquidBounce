@@ -23,6 +23,8 @@ import net.ccbluex.liquidbounce.features.special.ClientFixes.clientBrand
 import net.ccbluex.liquidbounce.features.special.ClientFixes.fmlFixesEnabled
 import net.ccbluex.liquidbounce.file.FileConfig
 import net.ccbluex.liquidbounce.file.FileManager.PRETTY_GSON
+import net.ccbluex.liquidbounce.lang.LanguageManager
+import net.ccbluex.liquidbounce.lang.LanguageManager.overrideLanguage
 import net.ccbluex.liquidbounce.ui.client.GuiClientConfiguration.Companion.altsLength
 import net.ccbluex.liquidbounce.ui.client.GuiClientConfiguration.Companion.enabledClientTitle
 import net.ccbluex.liquidbounce.ui.client.GuiClientConfiguration.Companion.enabledCustomBackground
@@ -97,6 +99,7 @@ class ValuesConfig(file: File) : FileConfig(file) {
                     if (jsonValue.has("StylisedAlts")) stylisedAlts = jsonValue["StylisedAlts"].asBoolean
                     if (jsonValue.has("AltsLength")) altsLength = jsonValue["AltsLength"].asInt
                     if (jsonValue.has("CleanAlts")) unformattedAlts = jsonValue["CleanAlts"].asBoolean
+                    if (jsonValue.has("OverrideLanguage")) overrideLanguage = jsonValue["OverrideLanguage"].asString
                 }
                 key.equals("background", true) -> { // Compatibility with old versions
                     val jsonValue = value as JsonObject
@@ -165,6 +168,7 @@ class ValuesConfig(file: File) : FileConfig(file) {
         clientObject.addProperty("StylisedAlts", stylisedAlts)
         clientObject.addProperty("AltsLength", altsLength)
         clientObject.addProperty("CleanAlts", unformattedAlts)
+        clientObject.addProperty("OverrideLanguage", overrideLanguage)
         jsonObject.add("clientConfiguration", clientObject)
 
         for (module in moduleManager.modules) {

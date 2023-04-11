@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.ui.client
 
+import net.ccbluex.liquidbounce.lang.translationMenu
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils.responseCode
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
@@ -65,7 +66,7 @@ class GuiServerStatus(private val prevGui: GuiScreen) : GuiScreen() {
             i += Fonts.font40.fontHeight
         }
 
-        Fonts.fontBold180.drawCenteredString("Server Status", width / 2F, height / 8f + 5F, 4673984, true)
+        Fonts.fontBold180.drawCenteredString(translationMenu("serverStatus"), width / 2F, height / 8f + 5F, 4673984, true)
 
         super.drawScreen(mouseX, mouseY, partialTicks)
     }

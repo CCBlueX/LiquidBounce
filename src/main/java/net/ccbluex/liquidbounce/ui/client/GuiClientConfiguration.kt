@@ -11,6 +11,8 @@ import net.ccbluex.liquidbounce.file.FileManager.backgroundImageFile
 import net.ccbluex.liquidbounce.file.FileManager.backgroundShaderFile
 import net.ccbluex.liquidbounce.file.FileManager.saveConfig
 import net.ccbluex.liquidbounce.file.FileManager.valuesConfig
+import net.ccbluex.liquidbounce.lang.LanguageManager
+import net.ccbluex.liquidbounce.lang.translationMenu
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.Background
 import net.ccbluex.liquidbounce.utils.MinecraftInstance.mc
@@ -51,6 +53,8 @@ class GuiClientConfiguration(val prevGui: GuiScreen) : GuiScreen() {
 
     }
 
+    private lateinit var languageButton: GuiButton
+
     private lateinit var backgroundButton: GuiButton
     private lateinit var particlesButton: GuiButton
     private lateinit var altsModeButton: GuiButton
@@ -60,30 +64,33 @@ class GuiClientConfiguration(val prevGui: GuiScreen) : GuiScreen() {
     private lateinit var titleButton: GuiButton
 
     override fun initGui() {
+        buttonList.clear()
+
         // Title button
         // Location > 1st row
         buttonList.add(GuiButton(5, width / 2 - 100, height / 4 + 25, "Client title (${if (enabledClientTitle) "On" else "Off"})").also { titleButton = it })
+        buttonList.add(GuiButton(8, width / 2 - 100, height / 4 + 50, "Language (${LanguageManager.overrideLanguage.ifBlank { "Game" }})").also { languageButton = it })
 
         // Background configuration buttons
         // Button location > 2nd row
-        buttonList.add(GuiButton(1, width / 2 - 100, height / 4 + 75, "Enabled background (${if (enabledCustomBackground) "On" else "Off"})").also { backgroundButton = it })
-        buttonList.add(GuiButton(2, width / 2 - 100, height / 4 + 75 + 25, "Particles (${if (particles) "On" else "Off"})").also { particlesButton = it })
-        buttonList.add(GuiButton(3, width / 2 - 100, height / 4 + 75 + 25 * 2, 98, 20, "Change wallpaper"))
-        buttonList.add(GuiButton(4, width / 2 + 2, height / 4 + 75 + 25 * 2, 98, 20, "Reset wallpaper"))
+        buttonList.add(GuiButton(1, width / 2 - 100, height / 4 + 25 + 75, "Enabled background (${if (enabledCustomBackground) "On" else "Off"})").also { backgroundButton = it })
+        buttonList.add(GuiButton(2, width / 2 - 100, height / 4 + 25 + 75 + 25, "Particles (${if (particles) "On" else "Off"})").also { particlesButton = it })
+        buttonList.add(GuiButton(3, width / 2 - 100, height / 4 + 25 + 75 + 25 * 2, 98, 20, "Change wallpaper"))
+        buttonList.add(GuiButton(4, width / 2 + 2, height / 4 + 25 + 75 + 25 * 2, 98, 20, "Reset wallpaper"))
 
         // AltManager configuration buttons
         // Location > 3rd row
-        buttonList.add(GuiButton(7, width / 2 - 100, height / 4 + 185, "Random alts mode (${if (stylisedAlts) "Stylised" else "Legacy"})").also { altsModeButton = it })
-        buttonList.add(GuiSlider(-1, width / 2 - 100, height / 4 + 210, 200, 20, "${if (stylisedAlts && unformattedAlts) "Random alt max" else "Random alt"} length (", ")", 6.0, 16.0, altsLength.toDouble(), false, true) {
+        buttonList.add(GuiButton(7, width / 2 - 100, height / 4 + 25 + 185, "Random alts mode (${if (stylisedAlts) "Stylised" else "Legacy"})").also { altsModeButton = it })
+        buttonList.add(GuiSlider(-1, width / 2 - 100, height / 4 + 210 + 25, 200, 20, "${if (stylisedAlts && unformattedAlts) "Random alt max" else "Random alt"} length (", ")", 6.0, 16.0, altsLength.toDouble(), false, true) {
             altsLength = it.valueInt
         }.also { altsSlider = it })
-        buttonList.add(GuiButton(6, width / 2 - 100, height / 4 + 235, "Unformatted alt names (${if (unformattedAlts) "On" else "Off"})").also {
+        buttonList.add(GuiButton(6, width / 2 - 100, height / 4 + 235 + 25, "Unformatted alt names (${if (unformattedAlts) "On" else "Off"})").also {
             it.enabled = stylisedAlts
             unformattedAltsButton = it
         })
 
         // Back button
-        buttonList.add(GuiButton(0, width / 2 - 100, height / 4 + 25 * 11, "Back"))
+        buttonList.add(GuiButton(0, width / 2 - 100, height / 4 + 25 + 25 * 11, "Back"))
     }
 
     override fun actionPerformed(button: GuiButton) {
@@ -164,24 +171,43 @@ class GuiClientConfiguration(val prevGui: GuiScreen) : GuiScreen() {
                 backgroundImageFile.delete()
                 backgroundShaderFile.delete()
             }
+            8 -> {
+                val languageIndex = LanguageManager.knownLanguages.indexOf(LanguageManager.overrideLanguage)
+
+                // If the language is not found, set it to the first language
+                if (languageIndex == -1) {
+                    LanguageManager.overrideLanguage = LanguageManager.knownLanguages.first()
+                } else {
+                    // If the language is the last one, set it to blank
+                    if (languageIndex == LanguageManager.knownLanguages.size - 1) {
+                        LanguageManager.overrideLanguage = ""
+                    } else {
+                        // Otherwise, set it to the next language
+                        LanguageManager.overrideLanguage = LanguageManager.knownLanguages[languageIndex + 1]
+                    }
+                }
+
+                initGui()
+            }
             0 -> mc.displayGuiScreen(prevGui)
         }
     }
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
         drawBackground(0)
-        Fonts.fontBold180.drawCenteredString("Configuration", width / 2F, height / 8F + 5F,
+        Fonts.fontBold180.drawCenteredString(
+            translationMenu("configuration"), width / 2F, height / 8F + 5F,
                 4673984, true)
 
         Fonts.font40.drawString("Window", width / 2F - 98F, height / 4F + 15F,
             0xFFFFFF, true)
 
-        Fonts.font40.drawString("Background", width / 2F - 98F, height / 4F + 65F,
+        Fonts.font40.drawString("Background", width / 2F - 98F, height / 4F + 90F,
             0xFFFFFF, true)
-        Fonts.font35.drawString("Supported background types: (.png, .frag, .glsl)", width / 2F - 98F, height / 4F + 75 + 25 * 3,
+        Fonts.font35.drawString("Supported background types: (.png, .frag, .glsl)", width / 2F - 98F, height / 4F + 100 + 25 * 3,
             0xFFFFFF, true)
 
-        Fonts.font40.drawString("AltManager", width / 2F - 98F, height / 4F + 175F,
+        Fonts.font40.drawString(translationMenu("altManager"), width / 2F - 98F, height / 4F + 200F,
             0xFFFFFF, true)
         super.drawScreen(mouseX, mouseY, partialTicks)
     }

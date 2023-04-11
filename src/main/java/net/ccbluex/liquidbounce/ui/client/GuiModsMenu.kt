@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.ui.client
 
 import net.ccbluex.liquidbounce.LiquidBounce.clientRichPresence
+import net.ccbluex.liquidbounce.lang.translationMenu
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.minecraft.client.gui.GuiButton
@@ -67,7 +68,7 @@ class GuiModsMenu(private val prevGui: GuiScreen) : GuiScreen() {
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
         drawBackground(0)
 
-        Fonts.fontBold180.drawCenteredString("Mods", width / 2F, height / 8F + 5F, 4673984, true)
+        Fonts.fontBold180.drawCenteredString(translationMenu("mods"), width / 2F, height / 8F + 5F, 4673984, true)
 
         super.drawScreen(mouseX, mouseY, partialTicks)
     }

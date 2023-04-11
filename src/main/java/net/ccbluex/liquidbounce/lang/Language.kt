@@ -21,7 +21,7 @@ object LanguageManager : MinecraftInstance() {
     private const val COMMON_UNDERSTOOD_LANGUAGE = "en_US"
 
     // List of all languages
-    private val knownLanguages = arrayOf(
+    val knownLanguages = arrayOf(
         "en_US",
     )
     private val languageMap = mutableMapOf<String, Language>()

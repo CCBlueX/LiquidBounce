@@ -9,6 +9,7 @@ import com.google.gson.JsonParser
 import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.file.FileManager.PRETTY_GSON
 import net.ccbluex.liquidbounce.injection.implementations.IMixinGuiSlot
+import net.ccbluex.liquidbounce.lang.translationMenu
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
@@ -122,7 +123,7 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
             }
         }
 
-        Fonts.font40.drawCenteredString("Contributors", width / 2F, 6F, 0xffffff)
+        Fonts.font40.drawCenteredString(translationMenu("contributors"), width / 2F, 6F, 0xffffff)
 
         if (credits.isEmpty()) {
             if (failed) {
