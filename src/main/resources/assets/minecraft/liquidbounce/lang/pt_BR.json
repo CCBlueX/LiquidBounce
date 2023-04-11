@@ -49,9 +49,9 @@
 
         "module.superKnockback.description": "Aumenta o knockback negociado para outras entidades.",
 
-        "module.teleportHit.description": "Permite atingir entidades de longe."
+        "module.teleportHit.description": "Permite atingir entidades de longe.",
       
-        "module.speed.description": "Permite que você se mova mais rápido."
+        "module.speed.description": "Permite que você se mova mais rápido.",
       
         "module.Sprint.description": "Corre automaticamente o tempo todo."
     }
