@@ -125,7 +125,7 @@ fun Vec3d.strafe(yaw: Float, speed: Double = sqrtSpeed, strength: Double = 1.0, 
 }
 
 val Entity.eyes: Vec3d
-    get() = getCameraPosVec(mc.tickDelta)
+    get() = eyePos
 
 val Input.yAxisMovement: Float
     get() = when {
