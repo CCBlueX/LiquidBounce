@@ -144,12 +144,12 @@ object RotationManager : Listenable {
                     // Is either spot visible or distance within wall range?
                     if (visible || distance <= wallsRangeSquared) {
                         val rotation = makeRotation(vec3, eyes)
-                        val currentRotation = currentRotation ?: serverRotation
+                        val currentRotation = currentRotation ?: mc.player?.rotation ?: return null
 
                         if (visible) {
                             if (visibleRot == null || rotationDifference(
                                     rotation, currentRotation
-                                ) < rotationDifference(visibleRot.rotation, currentRotation)
+                                ) <= rotationDifference(visibleRot.rotation, currentRotation)
                             ) {
                                 visibleRot = VecRotation(rotation, vec3)
                             }
