@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.render.engine.*
 import net.ccbluex.liquidbounce.render.engine.memory.PositionColorVertexFormat
 import net.ccbluex.liquidbounce.render.engine.memory.putVertex
 import net.ccbluex.liquidbounce.render.shaders.ColoredPrimitiveShader
+import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.math.times
 import net.minecraft.util.Pair
@@ -80,7 +81,21 @@ object ModuleRotations : Module("Rotations", Category.RENDER) {
     fun shouldDisplayRotations(): Boolean {
         val priority = ModuleFreeCam.shouldDisableRotations()
 
-        return priority || enabled && RotationManager.currentRotation != null
+        val special = false // arrayOf<Module>().any { it.enabled }
+
+        return priority || enabled && (RotationManager.currentRotation != null || special)
+    }
+
+    /**
+     * Display case-represented rotations
+     */
+    fun displayRotations(): Rotation {
+        val priority = ModuleFreeCam.shouldDisableRotations()
+
+        val server = RotationManager.serverRotation
+        val current = RotationManager.currentRotation
+
+        return if (priority) server else current ?: server
     }
 
 }

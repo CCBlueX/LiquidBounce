@@ -172,19 +172,17 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
      */
     @Redirect(method = "tickNewAi", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getYaw()F"))
     private float hookHeadRotations(PlayerEntity instance) {
-        Pair<Float, Float> pitch = ModuleRotations.INSTANCE.getRotationPitch();
         if ((Object) this != MinecraftClient.getInstance().player) {
             return instance.getYaw();
         }
 
-        // Update pitch regardless.
-        pitch.setLeft(pitch.getRight());
-        pitch.setRight(RotationManager.INSTANCE.getServerRotation().getPitch());
+        Pair<Float, Float> pitch = ModuleRotations.INSTANCE.getRotationPitch();
+        ModuleRotations rotations = ModuleRotations.INSTANCE;
+        Rotation rotation = rotations.displayRotations();
 
-        if (ModuleRotations.INSTANCE.shouldDisplayRotations()) {
-            return RotationManager.INSTANCE.getServerRotation().getYaw();
-        }
+        // Update pitch here
+        rotations.setRotationPitch(new Pair<>(pitch.getRight(), rotation.getPitch()));
 
-        return instance.getYaw();
+        return rotations.shouldDisplayRotations() ? rotation.getYaw() : instance.getYaw();
     }
 }

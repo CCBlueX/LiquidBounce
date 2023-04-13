@@ -50,9 +50,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class MixinLivingEntity extends MixinEntity {
 
     @Shadow
-    protected boolean jumping;
+    public boolean jumping;
+
     @Shadow
-    private int jumpingCooldown;
+    public int jumpingCooldown;
 
     @Shadow
     public abstract float getJumpVelocity();
@@ -152,7 +153,10 @@ public abstract class MixinLivingEntity extends MixinEntity {
             return instance.getYaw();
         }
 
-        return ModuleRotations.INSTANCE.shouldDisplayRotations() ? RotationManager.INSTANCE.getServerRotation().getYaw() : instance.getYaw();
+        ModuleRotations rotations = ModuleRotations.INSTANCE;
+        Rotation rotation = rotations.displayRotations();
+
+        return rotations.shouldDisplayRotations() ? rotation.getYaw() : instance.getYaw();
     }
 
     /**
@@ -164,6 +168,9 @@ public abstract class MixinLivingEntity extends MixinEntity {
             return instance.getYaw();
         }
 
-        return ModuleRotations.INSTANCE.shouldDisplayRotations() ? RotationManager.INSTANCE.getServerRotation().getYaw() : instance.getYaw();
+        ModuleRotations rotations = ModuleRotations.INSTANCE;
+        Rotation rotation = rotations.displayRotations();
+
+        return rotations.shouldDisplayRotations() ? rotation.getYaw() : instance.getYaw();
     }
 }
