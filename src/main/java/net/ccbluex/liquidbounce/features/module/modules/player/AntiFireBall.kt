@@ -26,7 +26,11 @@ import net.minecraft.entity.projectile.EntityFireball
 import net.minecraft.network.play.client.C02PacketUseEntity
 import net.minecraft.network.play.client.C0APacketAnimation
 
+<<<<<<< HEAD
 object AntiFireBall : Module("AntiFireBall", "Automatically punches fireballs away from you.", ModuleCategory.PLAYER) {
+=======
+object AntiFireBall : Module("AntiFireBall", ModuleCategory.PLAYER) {
+>>>>>>> origin/legacy
     private val timer = MSTimer()
 
     private val rangeValue = FloatValue("Range", 4.5f, 3f, 8f)

@@ -9,11 +9,13 @@ import net.ccbluex.liquidbounce.LiquidBounce.isStarting
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.file.FileManager.modulesConfig
 import net.ccbluex.liquidbounce.file.FileManager.saveConfig
+import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.ui.client.hud.HUD.addNotification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
+import net.ccbluex.liquidbounce.utils.toLowerCamelCase
 import net.ccbluex.liquidbounce.value.Value
 import net.minecraft.client.audio.PositionedSoundRecord
 import net.minecraft.util.ResourceLocation
@@ -23,8 +25,8 @@ import org.lwjgl.input.Keyboard
 open class Module @JvmOverloads constructor(
 
     val name: String,
-    val description: String,
     val category: ModuleCategory,
+    val forcedDescription: String = "",
     keyBind: Int = Keyboard.KEY_NONE,
     val defaultInArray: Boolean = true, // Used in HideCommand to reset modules visibility.
     private val canEnable: Boolean = true,
@@ -45,6 +47,9 @@ open class Module @JvmOverloads constructor(
             saveConfig(modulesConfig)
         }
 
+    val description: String
+        get() = forcedDescription.ifBlank { translation("module.${name.toLowerCamelCase()}.description") }
+
     var slideStep = 0F
 
     // Current state of module
@@ -59,7 +64,7 @@ open class Module @JvmOverloads constructor(
             // Play sound and add notification
             if (!isStarting) {
                 mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("random.click"), 1F))
-                addNotification(Notification("${if (value) "Enabled " else "Disabled "}$name"))
+                addNotification(Notification(if (value) translation("notification.moduleEnabled", name) else translation("notification.moduleDisabled", name)))
             }
 
             // Call on enabled or disabled

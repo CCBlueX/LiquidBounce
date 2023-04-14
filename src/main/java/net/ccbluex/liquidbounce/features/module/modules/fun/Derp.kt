@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 
-object Derp : Module("Derp", "Makes it look like you were derping around.", ModuleCategory.FUN) {
+object Derp : Module("Derp", ModuleCategory.FUN) {
 
     private val headlessValue = BoolValue("Headless", false)
     private val spinnyValue = BoolValue("Spinny", false)

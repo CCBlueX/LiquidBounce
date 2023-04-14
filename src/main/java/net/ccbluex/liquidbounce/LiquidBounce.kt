@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.features.special.ClientRichPresence.showRichPres
 import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.file.FileManager.loadAllConfigs
 import net.ccbluex.liquidbounce.file.FileManager.saveAllConfigs
+import net.ccbluex.liquidbounce.lang.LanguageManager.loadLanguages
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.script.ScriptManager.enableScripts
 import net.ccbluex.liquidbounce.script.ScriptManager.loadScripts
@@ -34,7 +35,9 @@ import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager.Companion.loa
 import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.ui.client.hud.HUD
 import net.ccbluex.liquidbounce.ui.font.Fonts.loadFonts
-import net.ccbluex.liquidbounce.update.UpdateInfo.gitInfo
+import net.ccbluex.liquidbounce.api.UpdateInfo.gitInfo
+import net.ccbluex.liquidbounce.api.loadSettings
+import net.ccbluex.liquidbounce.api.messageOfTheDay
 import net.ccbluex.liquidbounce.utils.Background
 import net.ccbluex.liquidbounce.utils.ClassUtils.hasForge
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
@@ -86,6 +89,9 @@ object LiquidBounce {
 
         LOGGER.info("Starting $CLIENT_NAME $CLIENT_VERSION $CLIENT_COMMIT, by $CLIENT_CREATOR")
 
+        // Load languages
+        loadLanguages()
+
         // Register listeners
         registerListener(RotationUtils)
         registerListener(ClientFixes)
@@ -132,6 +138,14 @@ object LiquidBounce {
 
         // Load alt generators
         loadActiveGenerators()
+
+        // Load settings
+        loadSettings(false) {
+            LOGGER.info("Successfully loaded ${it.count()} settings.")
+        }
+
+        // Load message of the day
+        messageOfTheDay?.message?.let { LOGGER.info("Message of the day: $it") }
 
         // Setup Discord RPC
         if (showRichPresenceValue) {

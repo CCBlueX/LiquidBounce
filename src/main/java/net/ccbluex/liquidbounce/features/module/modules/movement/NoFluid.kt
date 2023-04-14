@@ -4,7 +4,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.value.BoolValue
 
-object NoFluid : Module("NoFluid", "Ignore fluids like water and lava.", ModuleCategory.MOVEMENT) {
+object NoFluid : Module("NoFluid", ModuleCategory.MOVEMENT) {
 
     val waterValue = BoolValue("Water", true)
     val lavaValue = BoolValue("Lava", true)

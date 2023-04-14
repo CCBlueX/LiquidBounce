@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.SessionEvent
 import net.ccbluex.liquidbounce.file.FileManager.accountsConfig
 import net.ccbluex.liquidbounce.file.FileManager.saveConfig
+import net.ccbluex.liquidbounce.lang.translationMenu
 import net.ccbluex.liquidbounce.ui.client.altmanager.menus.GuiDonatorCape
 import net.ccbluex.liquidbounce.ui.client.altmanager.menus.GuiLoginIntoAccount
 import net.ccbluex.liquidbounce.ui.client.altmanager.menus.GuiSessionLogin
@@ -90,7 +91,7 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
         drawBackground(0)
         altsList.drawScreen(mouseX, mouseY, partialTicks)
-        Fonts.font40.drawCenteredString("AltManager", width / 2f, 6f, 0xffffff)
+        Fonts.font40.drawCenteredString(translationMenu("altManager"), width / 2f, 6f, 0xffffff)
         Fonts.font35.drawCenteredString(
             if (searchField.text.isEmpty()) "${accountsConfig.accounts.size} Alts" else altsList.accounts.size.toString() + " Search Results",
             width / 2f,

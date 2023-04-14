@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.value.BoolValue
 
-object NoSlowBreak : Module("NoSlowBreak", "Automatically adjusts breaking speed when using modules that influence it.", ModuleCategory.WORLD) {
+object NoSlowBreak : Module("NoSlowBreak", ModuleCategory.WORLD) {
     val airValue = BoolValue("Air", true)
     val waterValue = BoolValue("Water", false)
 }

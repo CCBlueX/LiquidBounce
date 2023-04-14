@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.utils.render.ColorUtils.translateAlternateColorC
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.TextValue
 
-object NameProtect : Module("NameProtect", "Changes player names clientside.", ModuleCategory.MISC) {
+object NameProtect : Module("NameProtect", ModuleCategory.MISC) {
 
     val allPlayersValue = BoolValue("AllPlayers", false)
 

@@ -17,7 +17,7 @@ import net.ccbluex.liquidbounce.ui.client.GuiClientConfiguration;
 import net.ccbluex.liquidbounce.ui.client.GuiMainMenu;
 import net.ccbluex.liquidbounce.ui.client.GuiUpdate;
 import net.ccbluex.liquidbounce.ui.client.GuiWelcome;
-import net.ccbluex.liquidbounce.update.UpdateInfo;
+import net.ccbluex.liquidbounce.api.UpdateInfo;
 import net.ccbluex.liquidbounce.utils.CPSCounter;
 import net.ccbluex.liquidbounce.utils.render.IconUtils;
 import net.ccbluex.liquidbounce.utils.render.MiniMapRegister;

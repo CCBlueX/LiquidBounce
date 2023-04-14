@@ -8,4 +8,4 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 
-object CameraClip : Module("CameraClip", "Allows you to see through walls in third person view.", ModuleCategory.RENDER)
+object CameraClip : Module("CameraClip", ModuleCategory.RENDER)

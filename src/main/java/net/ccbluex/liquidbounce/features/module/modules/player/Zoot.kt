@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.potion.Potion
 
-object Zoot : Module("Zoot", "Removes all bad potion effects/fire.", ModuleCategory.PLAYER) {
+object Zoot : Module("Zoot", ModuleCategory.PLAYER) {
 
     private val badEffectsValue = BoolValue("BadEffects", true)
     private val fireValue = BoolValue("Fire", true)

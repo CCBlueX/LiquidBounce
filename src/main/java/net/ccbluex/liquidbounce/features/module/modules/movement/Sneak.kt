@@ -17,7 +17,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.settings.GameSettings
 import net.minecraft.network.play.client.C0BPacketEntityAction
 
-object Sneak : Module("Sneak", "Automatically sneaks all the time.", ModuleCategory.MOVEMENT) {
+object Sneak : Module("Sneak", ModuleCategory.MOVEMENT) {
 
     val modeValue = ListValue("Mode", arrayOf("Legit", "Vanilla", "Switch", "MineSecure"), "MineSecure")
     val stopMoveValue = BoolValue("StopMove", false)

@@ -15,7 +15,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.minecraft.block.BlockLiquid
 import net.minecraft.util.AxisAlignedBB
 
-object ReverseStep : Module("ReverseStep", "Allows you to step down blocks faster.", ModuleCategory.MOVEMENT) {
+object ReverseStep : Module("ReverseStep", ModuleCategory.MOVEMENT) {
 
     private val motionValue = FloatValue("Motion", 1f, 0.21f, 1f)
     private var jumped = false

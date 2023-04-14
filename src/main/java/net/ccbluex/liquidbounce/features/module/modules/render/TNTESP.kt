@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawEntityBox
 import net.minecraft.entity.item.EntityTNTPrimed
 import java.awt.Color
 
-object TNTESP : Module("TNTESP", "Allows you to see ignited TNT blocks through walls.", ModuleCategory.RENDER) {
+object TNTESP : Module("TNTESP", ModuleCategory.RENDER) {
 
     @EventTarget
     fun onRender3D(event : Render3DEvent) {

@@ -16,7 +16,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockStairs
 import net.minecraft.util.BlockPos
 
-object FastStairs : Module("FastStairs", "Allows you to climb up stairs faster.", ModuleCategory.MOVEMENT) {
+object FastStairs : Module("FastStairs", ModuleCategory.MOVEMENT) {
 
     private val modeValue = ListValue("Mode", arrayOf("Step", "NCP", "AAC3.1.0", "AAC3.3.6", "AAC3.3.13"), "NCP")
     private val longJumpValue = object : BoolValue("LongJump", false) {

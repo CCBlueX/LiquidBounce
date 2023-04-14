@@ -18,7 +18,7 @@ import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.util.*
 
-object Breadcrumbs : Module("Breadcrumbs", "Leaves a trail behind you.", ModuleCategory.RENDER) {
+object Breadcrumbs : Module("Breadcrumbs", ModuleCategory.RENDER) {
     val colorRainbow = BoolValue("Rainbow", false)
     val colorRedValue = object : IntegerValue("R", 255, 0, 255) {
         override fun isSupported() = !colorRainbow.get()

@@ -18,7 +18,7 @@ import net.minecraft.entity.EntityLivingBase
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 
-object Criticals : Module("Criticals", "Automatically deals critical hits.", ModuleCategory.COMBAT) {
+object Criticals : Module("Criticals", category = ModuleCategory.COMBAT) {
 
     val modeValue = ListValue("Mode", arrayOf("Packet", "NcpPacket", "NoGround", "Hop", "TPHop", "Jump", "LowJump", "Visual"), "Packet")
     val delayValue = IntegerValue("Delay", 0, 0, 500)

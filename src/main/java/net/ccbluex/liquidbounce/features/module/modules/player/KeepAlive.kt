@@ -16,7 +16,7 @@ import net.minecraft.init.Items
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.network.play.client.C09PacketHeldItemChange
 
-object KeepAlive : Module("KeepAlive", "Tries to prevent you from dying.", ModuleCategory.PLAYER) {
+object KeepAlive : Module("KeepAlive", ModuleCategory.PLAYER) {
 
     val modeValue = ListValue("Mode", arrayOf("/heal", "Soup"), "/heal")
 

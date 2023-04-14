@@ -30,7 +30,7 @@ import net.minecraft.network.play.client.C0DPacketCloseWindow
 import net.minecraft.network.play.client.C16PacketClientStatus
 import net.minecraft.potion.Potion
 
-object AutoPot : Module("AutoPot", "Automatically throws healing potions.", ModuleCategory.COMBAT) {
+object AutoPot : Module("AutoPot", category = ModuleCategory.COMBAT) {
 
     private val healthValue = FloatValue("Health", 15F, 1F, 20F)
     private val delayValue = IntegerValue("Delay", 500, 500, 1000)

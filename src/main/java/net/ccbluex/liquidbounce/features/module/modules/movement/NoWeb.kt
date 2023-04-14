@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.value.ListValue
 
-object NoWeb : Module("NoWeb", "Prevents you from getting slowed down in webs.", ModuleCategory.MOVEMENT) {
+object NoWeb : Module("NoWeb", ModuleCategory.MOVEMENT) {
 
     private val modeValue = ListValue("Mode", arrayOf("None", "AAC", "LAAC", "Rewi"), "None")
 

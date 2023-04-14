@@ -22,7 +22,7 @@ import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.network.play.server.S0BPacketAnimation
 import net.minecraft.network.play.server.S14PacketEntity
 
-object AntiBot : Module("AntiBot", "Prevents KillAura from attacking AntiCheat bots.", ModuleCategory.MISC) {
+object AntiBot : Module("AntiBot", ModuleCategory.MISC) {
 
     private val tabValue = BoolValue("Tab", true)
     private val tabModeValue = object : ListValue("TabMode", arrayOf("Equals", "Contains"), "Contains") {

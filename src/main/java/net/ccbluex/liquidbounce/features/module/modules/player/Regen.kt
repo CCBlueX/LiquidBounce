@@ -16,7 +16,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.potion.Potion
 
-object Regen : Module("Regen", "Regenerates your health much faster.", ModuleCategory.PLAYER) {
+object Regen : Module("Regen", ModuleCategory.PLAYER) {
 
     private val modeValue = ListValue("Mode", arrayOf("Vanilla", "Spartan"), "Vanilla")
     private val speedValue = object : IntegerValue("Speed", 100, 1, 100) {

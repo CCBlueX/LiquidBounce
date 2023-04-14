@@ -18,7 +18,7 @@ import net.minecraft.network.play.client.C0EPacketClickWindow
 import net.minecraft.network.play.client.C16PacketClientStatus
 import net.minecraft.network.play.server.S2EPacketCloseWindow
 
-object Refill : Module("Refill", "Refills items such as blocks and food from inventory to hotbar.", ModuleCategory.PLAYER) {
+object Refill : Module("Refill", ModuleCategory.PLAYER) {
     private val delayValue = IntegerValue("Delay", 400, 10, 1000)
 
     private val itemDelayValue = IntegerValue("ItemDelay", 400, 0, 1000)

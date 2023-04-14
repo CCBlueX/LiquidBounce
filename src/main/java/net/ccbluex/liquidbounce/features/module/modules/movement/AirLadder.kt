@@ -14,7 +14,7 @@ import net.minecraft.block.BlockLadder
 import net.minecraft.block.BlockVine
 import net.minecraft.util.BlockPos
 
-object AirLadder : Module("AirLadder", "Allows you to climb up ladders/vines without touching them.", ModuleCategory.MOVEMENT) {
+object AirLadder : Module("AirLadder", ModuleCategory.MOVEMENT) {
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer ?: return

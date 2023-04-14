@@ -21,7 +21,7 @@ import net.minecraft.stats.StatList
 import kotlin.math.cos
 import kotlin.math.sin
 
-object Step : Module("Step", "Allows you to step up blocks.", ModuleCategory.MOVEMENT) {
+object Step : Module("Step", ModuleCategory.MOVEMENT) {
 
     /**
      * OPTIONS

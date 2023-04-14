@@ -14,7 +14,7 @@ import net.minecraft.client.settings.GameSettings
 import net.minecraft.init.Blocks
 import net.minecraft.util.BlockPos
 
-object Eagle : Module("Eagle", "Makes you eagle (aka. FastBridge).", ModuleCategory.PLAYER) {
+object Eagle : Module("Eagle", ModuleCategory.PLAYER) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {

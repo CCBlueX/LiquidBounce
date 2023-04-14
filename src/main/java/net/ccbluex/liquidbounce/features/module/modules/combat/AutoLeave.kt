@@ -15,7 +15,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.network.play.client.C02PacketUseEntity
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 
-object AutoLeave : Module("AutoLeave", "Automatically makes you leave the server whenever your health is low.", ModuleCategory.COMBAT) {
+object AutoLeave : Module("AutoLeave", category = ModuleCategory.COMBAT) {
     private val healthValue = FloatValue("Health", 8f, 0f, 20f)
     private val modeValue = ListValue("Mode", arrayOf("Quit", "InvalidPacket", "SelfHurt", "IllegalChat"), "Quit")
 

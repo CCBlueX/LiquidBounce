@@ -13,7 +13,7 @@ import net.minecraft.init.Blocks
 import net.minecraft.network.play.server.S2CPacketSpawnGlobalEntity
 import net.minecraft.util.EnumParticleTypes
 
-object AttackEffects : Module("AttackEffects", "Show effect when you attack", ModuleCategory.RENDER) {
+object AttackEffects : Module("AttackEffects", ModuleCategory.RENDER) {
 
     private val particle = ListValue(
         "Particle", arrayOf(

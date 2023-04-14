@@ -19,7 +19,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.settings.GameSettings
 
-object AntiAFK : Module("AntiAFK", "Prevents you from getting kicked for being AFK.", ModuleCategory.PLAYER) {
+object AntiAFK : Module("AntiAFK", ModuleCategory.PLAYER) {
 
     private val swingDelayTimer = MSTimer()
     private val delayTimer = MSTimer()

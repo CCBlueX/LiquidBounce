@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.utils.timer.TimeUtils.randomClickDelay
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.client.settings.KeyBinding
 
-object Trigger : Module("Trigger", "Automatically attacks the entity you are looking at.", ModuleCategory.COMBAT) {
+object Trigger : Module("Trigger", category = ModuleCategory.COMBAT) {
 
     private val maxCPS: IntegerValue = object : IntegerValue("MaxCPS", 8, 1, 20) {
         override fun onChanged(oldValue: Int, newValue: Int) {

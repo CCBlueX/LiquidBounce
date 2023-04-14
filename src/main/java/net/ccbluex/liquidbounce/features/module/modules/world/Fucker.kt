@@ -31,7 +31,7 @@ import net.minecraft.util.EnumFacing
 import net.minecraft.util.Vec3
 import java.awt.Color
 
-object Fucker : Module("Fucker", "Destroys selected blocks around you. (aka.  IDNuker)", ModuleCategory.WORLD) {
+object Fucker : Module("Fucker", ModuleCategory.WORLD) {
 
     /**
      * SETTINGS

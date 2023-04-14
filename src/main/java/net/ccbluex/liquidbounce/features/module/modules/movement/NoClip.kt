@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 
-object NoClip : Module("NoClip", "Allows you to freely move through walls (A sandblock has to fall on your head).", ModuleCategory.MOVEMENT) {
+object NoClip : Module("NoClip", ModuleCategory.MOVEMENT) {
 
     override fun onDisable() {
         mc.thePlayer?.noClip = false

@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.value.BoolValue
 
-object Chams : Module("Chams", "Allows you to see targets through blocks.", ModuleCategory.RENDER) {
+object Chams : Module("Chams", ModuleCategory.RENDER) {
     val targetsValue = BoolValue("Targets", true)
     val chestsValue = BoolValue("Chests", true)
     val itemsValue = BoolValue("Items", true)

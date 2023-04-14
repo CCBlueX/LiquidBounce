@@ -22,7 +22,7 @@ import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 import java.awt.Color
 
-object CivBreak : Module("CivBreak", "Allows you to break blocks instantly.", ModuleCategory.WORLD) {
+object CivBreak : Module("CivBreak", ModuleCategory.WORLD) {
 
     private var blockPos: BlockPos? = null
     private var enumFacing: EnumFacing? = null

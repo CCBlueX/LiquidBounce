@@ -21,7 +21,7 @@ import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.BlockPos
 import org.lwjgl.input.Keyboard
 
-object LiquidWalk : Module("LiquidWalk", "Allows you to walk on water.", ModuleCategory.MOVEMENT, Keyboard.KEY_J) {
+object LiquidWalk : Module("LiquidWalk", ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_J) {
 
     val modeValue = ListValue("Mode", arrayOf("Vanilla", "NCP", "AAC", "AAC3.3.11", "AACFly", "Spartan", "Dolphin"), "NCP")
     private val noJumpValue = BoolValue("NoJump", false)
