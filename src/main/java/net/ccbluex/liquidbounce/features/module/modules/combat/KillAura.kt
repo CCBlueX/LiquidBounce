@@ -20,14 +20,17 @@ import net.ccbluex.liquidbounce.utils.EntityUtils.targetDead
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetInvisible
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetMobs
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetPlayer
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
 import net.ccbluex.liquidbounce.utils.Rotation
+import net.ccbluex.liquidbounce.utils.RotationUtils.getCenter
 import net.ccbluex.liquidbounce.utils.RotationUtils.getRotationDifference
 import net.ccbluex.liquidbounce.utils.RotationUtils.isRotationFaced
 import net.ccbluex.liquidbounce.utils.RotationUtils.limitAngleChange
 import net.ccbluex.liquidbounce.utils.RotationUtils.searchCenter
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.targetRotation
+import net.ccbluex.liquidbounce.utils.RotationUtils.toRotation
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
@@ -45,6 +48,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.item.EntityArmorStand
 import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.item.ItemAxe
 import net.minecraft.item.ItemSword
 import net.minecraft.network.play.client.*
 import net.minecraft.potion.Potion
@@ -64,31 +68,42 @@ object KillAura : Module("KillAura", category = ModuleCategory.COMBAT, keyBind =
      * OPTIONS
      */
 
+    private val simulateCooldown = BoolValue("SimulateCooldown", false)
+
     // CPS - Attack speed
     private val maxCPS: IntegerValue = object : IntegerValue("MaxCPS", 8, 1, 20) {
-        override fun onChanged(oldValue: Int, newValue: Int) {
-            set(newValue.coerceAtLeast(minCPS.get()))
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minCPS.get())
 
-            attackDelay = randomClickDelay(minCPS.get(), get())
+        override fun onChanged(oldValue: Int, newValue: Int) {
+            attackDelay = randomClickDelay(minCPS.get(), newValue)
         }
+
+        override fun isSupported() = !simulateCooldown.get()
     }
 
     private val minCPS: IntegerValue = object : IntegerValue("MinCPS", 5, 1, 20) {
-        override fun onChanged(oldValue: Int, newValue: Int) {
-            set(newValue.coerceAtMost(maxCPS.get()))
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxCPS.get())
 
-            attackDelay = randomClickDelay(get(), maxCPS.get())
+        override fun onChanged(oldValue: Int, newValue: Int) {
+            attackDelay = randomClickDelay(newValue, maxCPS.get())
         }
 
-        override fun isSupported() = !maxCPS.isMinimal()
+        override fun isSupported() = !maxCPS.isMinimal() && !simulateCooldown.get()
     }
 
-    private val hurtTimeValue = IntegerValue("HurtTime", 10, 0, 10)
-    private val simulateCooldown = BoolValue("SimulateCooldown", false)
+    private val hurtTimeValue = object : IntegerValue("HurtTime", 10, 0, 10) {
+        override fun isSupported() = !simulateCooldown.get()
+    }
+
     private val clickOnly = BoolValue("ClickOnly", false)
 
     // Range
-    private val rangeValue = FloatValue("Range", 3.7f, 1f, 8f)
+    // TODO: Make block range independent from attack range
+    private val rangeValue : FloatValue = object : FloatValue("Range", 3.7f, 1f, 8f) {
+        override fun onChanged(oldValue: Float, newValue: Float) {
+            blockRangeValue.set(blockRangeValue.get().coerceAtMost(newValue))
+        }
+    }
     private val throughWallsRangeValue = FloatValue("ThroughWallsRange", 3f, 0f, 8f)
     private val rangeSprintReductionValue = FloatValue("RangeSprintReduction", 0f, 0f, 0.4f)
 
@@ -114,20 +129,43 @@ object KillAura : Module("KillAura", category = ModuleCategory.COMBAT, keyBind =
     private val interactAutoBlockValue = object : BoolValue("InteractAutoBlock", true) {
         override fun isSupported() = autoBlockValue.get() !in setOf("Off", "Fake")
     }
+
+    // AutoBlock conditions
+    private val smartAutoBlockValue = object : BoolValue("SmartAutoBlock", false) {
+        override fun isSupported() = autoBlockValue.get() != "Off"
+    }
+    // Ignore all blocking conditions, except for block rate, when standing still
+    private val forceBlockValue = object : BoolValue("ForceBlockWhenStill", true) {
+        override fun isSupported() = smartAutoBlockValue.get()
+    }
+    // Don't block if target isn't holding a sword or an axe
+    private val checkWeaponValue = object : BoolValue("CheckEnemyWeapon", true) {
+        override fun isSupported() = smartAutoBlockValue.get()
+    }
+    // TODO: Make block range independent from attack range
+    private val blockRangeValue = object : FloatValue("BlockRange", rangeValue.get(), 1f, 8f) {
+        override fun isSupported() = smartAutoBlockValue.get()
+
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(rangeValue.get())
+    }
+    // Don't block when you can't get damaged
+    private val maxSelfHurtTimeValue = object : IntegerValue("MaxSelfHurtTime", 3, 0, 10) {
+        override fun isSupported() = smartAutoBlockValue.get()
+    }
+    // Don't block if target isn't looking at you
+    private val maxDirectionDiffValue = object : FloatValue("MaxOpponentDirectionDiff", 60f, 30f, 180f) {
+        override fun isSupported() = smartAutoBlockValue.get()
+    }
     private val blockRate = object : IntegerValue("BlockRate", 100, 1, 100) {
         override fun isSupported() = autoBlockValue.get() != "Off"
     }
 
     // Turn Speed
     private val maxTurnSpeed: FloatValue = object : FloatValue("MaxTurnSpeed", 180f, 0f, 180f) {
-        override fun onChanged(oldValue: Float, newValue: Float) {
-            set(newValue.coerceAtLeast(minTurnSpeed.get()))
-        }
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minTurnSpeed.get())
     }
     private val minTurnSpeed: FloatValue = object : FloatValue("MinTurnSpeed", 180f, 0f, 180f) {
-        override fun onChanged(oldValue: Float, newValue: Float) {
-            set(newValue.coerceAtMost(maxTurnSpeed.get()))
-        }
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxTurnSpeed.get())
 
         override fun isSupported() = !maxTurnSpeed.isMinimal()
     }
@@ -152,9 +190,7 @@ object KillAura : Module("KillAura", category = ModuleCategory.COMBAT, keyBind =
     private val keepRotationTicks = object : IntegerValue("KeepRotationTicks", 5, 1, 20) {
         override fun isSupported() = !aacValue.isActive()
 
-        override fun onChanged(oldValue: Int, newValue: Int) {
-            set(newValue.coerceAtLeast(minimum))
-        }
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minimum)
     }
 
     private val micronizedValue = object : BoolValue("Micronized", true) {
@@ -184,16 +220,12 @@ object KillAura : Module("KillAura", category = ModuleCategory.COMBAT, keyBind =
         override fun isSupported() = !maxTurnSpeed.isMinimal()
     }
     private val maxPredictSize: FloatValue = object : FloatValue("MaxPredictSize", 1f, 0.1f, 5f) {
-        override fun onChanged(oldValue: Float, newValue: Float) {
-            set(newValue.coerceAtLeast(minPredictSize.get()))
-        }
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minPredictSize.get())
 
         override fun isSupported() = predictValue.isActive()
     }
     private val minPredictSize: FloatValue = object : FloatValue("MinPredictSize", 1f, 0.1f, 5f) {
-        override fun onChanged(oldValue: Float, newValue: Float) {
-            set(newValue.coerceAtMost(maxPredictSize.get()))
-        }
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxPredictSize.get())
 
         override fun isSupported() = predictValue.isActive() && !maxPredictSize.isMinimal()
     }
@@ -792,8 +824,34 @@ object KillAura : Module("KillAura", category = ModuleCategory.COMBAT, keyBind =
     /**
      * Check if player is able to block
      */
-    private val canBlock
-        inline get() = mc.thePlayer?.heldItem?.item is ItemSword
+    private val canBlock: Boolean
+        get() {
+            if (currentTarget != null && mc.thePlayer?.heldItem?.item is ItemSword) {
+                if (smartAutoBlockValue.get()) {
+                    if (!isMoving && forceBlockValue.get())
+                        return true
+
+                    if (checkWeaponValue.get() && (currentTarget!!.heldItem?.item !is ItemSword && currentTarget!!.heldItem?.item !is ItemAxe))
+                        return false
+
+                    if (mc.thePlayer.hurtTime > maxSelfHurtTimeValue.get())
+                        return false
+
+                    val rotationToPlayer = toRotation(getCenter(mc.thePlayer.hitBox), true, currentTarget!!)
+
+                    if (getRotationDifference(rotationToPlayer, currentTarget!!.rotation) > maxDirectionDiffValue.get())
+                        return false
+
+                    if (currentTarget!!.getDistanceToEntityBox(mc.thePlayer) > blockRangeValue.get())
+                        return false
+                }
+
+
+                return true
+            }
+
+            return false
+        }
 
     /**
      * Range

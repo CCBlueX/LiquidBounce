@@ -17,20 +17,25 @@ import net.minecraft.client.gui.FontRenderer
 
 abstract class Value<T>(val name: String, protected open var value: T) {
 
-    fun set(newValue: T) {
+    fun set(newValue: T): Boolean {
         if (newValue == value)
-            return
+            return false
 
-        val oldValue = get()
+        val oldValue = value
 
         try {
-            onChange(oldValue, newValue)
-            changeValue(newValue)
-            onChanged(oldValue, newValue)
-            onUpdate(newValue)
+            val handledValue = onChange(oldValue, newValue)
+            if (handledValue == oldValue) return false
+
+            changeValue(handledValue)
+            onChanged(oldValue, handledValue)
+            onUpdate(handledValue)
+
             saveConfig(valuesConfig)
+            return true
         } catch (e: Exception) {
             LOGGER.error("[ValueSystem ($name)]: ${e.javaClass.name} (${e.message}) [$oldValue >> $newValue]")
+            return false
         }
     }
 
@@ -48,8 +53,6 @@ abstract class Value<T>(val name: String, protected open var value: T) {
 
         onInit(value)
         onUpdate(value)
-
-        val range = 0..1
     }
 
     abstract fun toJsonF(): JsonElement?
@@ -57,7 +60,7 @@ abstract class Value<T>(val name: String, protected open var value: T) {
 
     protected open fun onInit(value: T) {}
     protected open fun onUpdate(value: T) {}
-    protected open fun onChange(oldValue: T, newValue: T) {}
+    protected open fun onChange(oldValue: T, newValue: T) = newValue
     protected open fun onChanged(oldValue: T, newValue: T) {}
     open fun isSupported() = true
 

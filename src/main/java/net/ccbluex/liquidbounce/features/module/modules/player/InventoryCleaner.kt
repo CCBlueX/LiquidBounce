@@ -39,17 +39,11 @@ object InventoryCleaner : Module("InventoryCleaner", ModuleCategory.PLAYER) {
      */
 
     private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 600, 0, 1000) {
-        override fun onChanged(oldValue: Int, newValue: Int) {
-            val minCPS = minDelayValue.get()
-            if (minCPS > newValue) set(minCPS)
-        }
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minDelayValue.get())
     }
 
     private val minDelayValue: IntegerValue = object : IntegerValue("MinDelay", 400, 0, 1000) {
-        override fun onChanged(oldValue: Int, newValue: Int) {
-            val maxDelay = maxDelayValue.get()
-            if (maxDelay < newValue) set(maxDelay)
-        }
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxDelayValue.get())
 
         override fun isSupported() = !maxDelayValue.isMinimal()
     }
