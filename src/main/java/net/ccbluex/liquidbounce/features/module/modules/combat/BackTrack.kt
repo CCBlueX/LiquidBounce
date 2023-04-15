@@ -26,7 +26,7 @@ object BackTrack : Module("BackTrack", category = ModuleCategory.COMBAT) {
     // Might be useful on servers with a lot of players or AntiCheat plugins which try to cause issues by exploiting this.
     private val maximumCachedPositions = IntegerValue("MaxCachedPositions", 10, 1, 20)
 
-    private val backtrackedPlayer = mutableMapOf<UUID, MutableList<BacktrackData>>()
+    private val backTrackedPlayer = mutableMapOf<UUID, MutableList<BackTrackData>>()
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
@@ -36,17 +36,17 @@ object BackTrack : Module("BackTrack", category = ModuleCategory.COMBAT) {
             // Check if packet is a spawn player packet
             is S0CPacketSpawnPlayer -> {
                 // Insert first backtrack data
-                addBacktrackData(packet.player, packet.x / 32.0, packet.y / 32.0, packet.z / 32.0, System.currentTimeMillis())
+                addBackTrackData(packet.player, packet.x / 32.0, packet.y / 32.0, packet.z / 32.0, System.currentTimeMillis())
             }
         }
 
-        backtrackedPlayer.forEach { (key, backtrackData) ->
+        backTrackedPlayer.forEach { (key, backtrackData) ->
             // Remove old data
-            backtrackData.removeIf { it.time + maximumDelay.get() < System.currentTimeMillis() }
+            backTrackData.removeIf { it.time + maximumDelay.get() < System.currentTimeMillis() }
 
             // Remove player if there is no data left. This prevents memory leaks.
-            if (backtrackData.isEmpty()) {
-                removeBacktrackData(key)
+            if (backTrackData.isEmpty()) {
+                removeBackTrackData(key)
             }
         }
     }
@@ -63,7 +63,7 @@ object BackTrack : Module("BackTrack", category = ModuleCategory.COMBAT) {
         // Check if entity is a player
         if (entity is EntityPlayer) {
             // Add new data
-            addBacktrackData(entity.uniqueID, entity.posX, entity.posY, entity.posZ, System.currentTimeMillis())
+            addBackTrackData(entity.uniqueID, entity.posX, entity.posY, entity.posZ, System.currentTimeMillis())
         }
     }
 
@@ -89,7 +89,7 @@ object BackTrack : Module("BackTrack", category = ModuleCategory.COMBAT) {
                 val renderPosY = mc.renderManager.viewerPosY
                 val renderPosZ = mc.renderManager.viewerPosZ
 
-                loopThroughBacktrackData(entity) {
+                loopThroughBackTrackData(entity) {
                     glVertex3d(entity.posX - renderPosX, entity.posY - renderPosY, entity.posZ - renderPosZ)
                     false
                 }
@@ -105,30 +105,30 @@ object BackTrack : Module("BackTrack", category = ModuleCategory.COMBAT) {
         }
     }
 
-    private fun addBacktrackData(id: UUID, x: Double, y: Double, z: Double, time: Long) {
+    private fun addBackTrackData(id: UUID, x: Double, y: Double, z: Double, time: Long) {
         // Get backtrack data of player
-        val backtrackData = getBacktrackData(id)
+        val backTrackData = getBackTrackData(id)
 
         // Check if there is already data of the player
-        if (backtrackData != null) {
+        if (backTrackData != null) {
             // Check if there is already enough data of the player
-            if (backtrackData.size >= maximumCachedPositions.get()) {
+            if (backTrackData.size >= maximumCachedPositions.get()) {
                 // Remove first data
-                backtrackData.removeAt(0)
+                backTrackData.removeAt(0)
             }
 
             // Insert new data
-            backtrackData.add(BacktrackData(x, y, z, time))
+            backTrackData.add(BacktrackData(x, y, z, time))
         } else {
             // Create new list
-            backtrackedPlayer[id] = mutableListOf(BacktrackData(x, y, z, time))
+            backTrackedPlayer[id] = mutableListOf(BackTrackData(x, y, z, time))
         }
     }
 
-    fun getBacktrackData(id: UUID) = backtrackedPlayer[id]
+    fun getBackTrackData(id: UUID) = backTrackedPlayer[id]
 
-    fun removeBacktrackData(id: UUID) {
-        backtrackedPlayer.remove(id)
+    fun removeBackTrackData(id: UUID) {
+        backTrackedPlayer.remove(id)
     }
 
     /**
@@ -137,7 +137,7 @@ object BackTrack : Module("BackTrack", category = ModuleCategory.COMBAT) {
     fun getNearestTrackedDistance(entity: Entity): Double {
         var nearestRange = 0.0
 
-        loopThroughBacktrackData(entity) {
+        loopThroughBackTrackData(entity) {
             val range = entity.getDistanceToEntityBox(mc.thePlayer)
 
             if (range < nearestRange || nearestRange == 0.0) {
@@ -153,21 +153,21 @@ object BackTrack : Module("BackTrack", category = ModuleCategory.COMBAT) {
     /**
      * This function will loop through the backtrack data of an entity.
      */
-    fun loopThroughBacktrackData(entity: Entity, action: () -> Boolean) {
-        if (!Backtrack.state || entity !is EntityPlayer) {
+    fun loopThroughBackTrackData(entity: Entity, action: () -> Boolean) {
+        if (!BackTrack.state || entity !is EntityPlayer) {
             return
         }
 
-        val backtrackDataArray = getBacktrackData(entity.uniqueID) ?: return
+        val backTrackDataArray = getBackTrackData(entity.uniqueID) ?: return
         val entityPosition = entity.positionVector
         val prevPosition = Triple(entity.prevPosX, entity.prevPosY, entity.prevPosZ)
 
         // This will loop through the backtrack data. We are using reversed() to loop through the data from the newest to the oldest.
-        for (backtrackData in backtrackDataArray.reversed()) {
-            entity.setPosition(backtrackData.x, backtrackData.y, backtrackData.z)
-            entity.prevPosX = backtrackData.x
-            entity.prevPosY = backtrackData.y
-            entity.prevPosZ = backtrackData.z
+        for (backTrackData in backTrackDataArray.reversed()) {
+            entity.setPosition(backTrackData.x, backTrackData.y, backTrackData.z)
+            entity.prevPosX = backTrackData.x
+            entity.prevPosY = backTrackData.y
+            entity.prevPosZ = backTrackData.z
             if (action()) {
                 break
             }
@@ -184,4 +184,4 @@ object BackTrack : Module("BackTrack", category = ModuleCategory.COMBAT) {
 
 }
 
-data class BacktrackData(val x: Double, val y: Double, val z: Double, val time: Long)
+data class BackTrackData(val x: Double, val y: Double, val z: Double, val time: Long)
