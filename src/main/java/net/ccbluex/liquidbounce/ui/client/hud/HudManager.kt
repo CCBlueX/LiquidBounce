@@ -16,7 +16,7 @@ import org.lwjgl.opengl.GL11.*
 import kotlin.math.max
 import kotlin.math.min
 
-object HUD : MinecraftInstance() {
+object HudManager : MinecraftInstance() {
 
   val elements = mutableListOf<Element>()
   val notifications = mutableListOf<Notification>()
@@ -37,7 +37,7 @@ object HUD : MinecraftInstance() {
           SpeedGraph::class.java,
           Cooldown::class.java)
 
-  /** Create default HUD */
+  /** Create default HudManager */
   fun setDefault() {
     elements.clear()
 
@@ -67,7 +67,7 @@ object HUD : MinecraftInstance() {
 
             if (designer) it.border?.draw()
           } catch (ex: Exception) {
-            LOGGER.error("Something went wrong while drawing ${it.name} element in HUD.", ex)
+            LOGGER.error("Something went wrong while drawing ${it.name} element in HudManager.", ex)
           }
 
           glPopMatrix()
@@ -152,15 +152,15 @@ object HUD : MinecraftInstance() {
     for (element in elements) element.handleKey(c, keyCode)
   }
 
-  /** Add [element] to HUD */
-  fun addElement(element: Element): HUD {
+  /** Add [element] to HudManager */
+  fun addElement(element: Element): HudManager {
     elements.add(element)
     element.updateElement()
     return this
   }
 
-  /** Remove [element] from HUD */
-  fun removeElement(element: Element): HUD {
+  /** Remove [element] from HudManager */
+  fun removeElement(element: Element): HudManager {
     element.destroyElement()
     elements.remove(element)
     return this

@@ -61,7 +61,7 @@ class ReloadCommand : Command("reload", "configreload") {
         chat("§c§lReloading xray...")
         loadConfig(xrayConfig)
 
-        chat("§c§lReloading HUD...")
+        chat("§c§lReloading HudManager...")
         loadConfig(hudConfig)
 
         chat("§c§lReloading ClickGUI...")

@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.file.FileManager.modulesConfig
 import net.ccbluex.liquidbounce.file.FileManager.saveConfig
 import net.ccbluex.liquidbounce.lang.translation
-import net.ccbluex.liquidbounce.ui.client.hud.HUD.addNotification
+import net.ccbluex.liquidbounce.ui.client.hud.HudManager.addNotification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
@@ -83,7 +83,7 @@ open class Module @JvmOverloads constructor(
         }
 
 
-    // HUD
+    // HudManager
     val hue = nextFloat()
     var slide = 0F
 

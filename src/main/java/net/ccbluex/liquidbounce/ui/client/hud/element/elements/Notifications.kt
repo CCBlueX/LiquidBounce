@@ -6,8 +6,8 @@
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
 
-import net.ccbluex.liquidbounce.ui.client.hud.HUD
-import net.ccbluex.liquidbounce.ui.client.hud.HUD.addNotification
+import net.ccbluex.liquidbounce.ui.client.hud.HudManager
+import net.ccbluex.liquidbounce.ui.client.hud.HudManager.addNotification
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
@@ -36,10 +36,10 @@ class Notifications(x: Double = 0.0, y: Double = 30.0, scale: Float = 1F,
      * Draw element
      */
     override fun drawElement(): Border? {
-        HUD.notifications.firstOrNull()?.drawNotification()
+        HudManager.notifications.firstOrNull()?.drawNotification()
 
         if (mc.currentScreen is GuiHudDesigner) {
-            if (exampleNotification !in HUD.notifications)
+            if (exampleNotification !in HudManager.notifications)
                 addNotification(exampleNotification)
 
             exampleNotification.fadeState = Notification.FadeState.STAY
@@ -110,7 +110,7 @@ class Notification(private val message: String) {
             } else
                 fadeState = FadeState.END
 
-            FadeState.END -> HUD.removeNotification(this)
+            FadeState.END -> HudManager.removeNotification(this)
         }
     }
 }

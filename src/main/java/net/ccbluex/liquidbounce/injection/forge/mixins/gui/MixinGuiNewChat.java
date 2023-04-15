@@ -141,7 +141,7 @@ public abstract class MixinGuiNewChat {
     // TODO: Make real fix
     /*@Inject(method = "setChatLine", at = @At("HEAD"), cancellable = true)
     private void setChatLine(IChatComponent p_setChatLine_1_, int p_setChatLine_2_, int p_setChatLine_3_, boolean p_setChatLine_4_, final CallbackInfo callbackInfo) {
-        final HUD hud = (HUD) moduleManager.getModule(HUD.class);
+        final HudManager hud = (HudManager) moduleManager.getModule(HudManager.class);
 
         if(hud.getState() && hud.fontChatValue.asBoolean()) {
             callbackInfo.cancel();

@@ -22,7 +22,7 @@ import kotlin.math.atan
 /**
  * CustomHUD Model element
  *
- * Draw mini figure of your character to the HUD
+ * Draw mini figure of your character to the HudManager
  */
 @ElementInfo(name = "Model")
 class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y) {

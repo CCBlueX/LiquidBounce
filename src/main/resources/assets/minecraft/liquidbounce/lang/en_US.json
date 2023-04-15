@@ -248,6 +248,8 @@
         "module.portalMenu.description": "Allows you to open a menu while being in a portal.",
         
         "module.potionSaver.description": "Freezes all potion effects while you are standing still.",
+
+        "module.potionSpoof.description": "Allows the player to have potion effects without actually having the potion.",
         
         "module.projectiles.description": "Allows you to see where arrows will land.",
         
@@ -312,5 +314,5 @@
         "module.xRay.description": "Allows you to see ores through walls.",
         
         "module.zoot.description": "Removes all bad potion effects/fire."
-}
+    }
 }

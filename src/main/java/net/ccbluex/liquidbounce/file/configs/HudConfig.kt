@@ -9,7 +9,7 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.file.FileConfig
 import net.ccbluex.liquidbounce.file.FileManager.PRETTY_GSON
-import net.ccbluex.liquidbounce.ui.client.hud.HUD
+import net.ccbluex.liquidbounce.ui.client.hud.HudManager
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.utils.ClientUtils
@@ -19,7 +19,7 @@ import java.io.IOException
 
 class HudConfig(file: File) : FileConfig(file) {
 
-    override fun loadDefault() = HUD.setDefault()
+    override fun loadDefault() = HudManager.setDefault()
 
     /**
      * Load config from file
@@ -30,7 +30,7 @@ class HudConfig(file: File) : FileConfig(file) {
     override fun loadConfig() {
         val jsonArray = PRETTY_GSON.fromJson(file.bufferedReader(), JsonArray::class.java)
 
-        HUD.clearElements()
+        HudManager.clearElements()
 
         try {
             for (jsonObject in jsonArray) {
@@ -43,7 +43,7 @@ class HudConfig(file: File) : FileConfig(file) {
 
                     val type = jsonObject["Type"].asString
 
-                    for (elementClass in HUD.ELEMENTS) {
+                    for (elementClass in HudManager.ELEMENTS) {
                         val classType = elementClass.getAnnotation(ElementInfo::class.java).name
 
                         if (classType == type) {
@@ -62,11 +62,11 @@ class HudConfig(file: File) : FileConfig(file) {
                                     value.fromJson(jsonObject[value.name])
                             }
 
-                            // Support for old HUD files
+                            // Support for old HudManager files
                             if (jsonObject.has("font"))
                                 element.values.find { it is FontValue }?.fromJson(jsonObject["font"])
 
-                            HUD.addElement(element)
+                            HudManager.addElement(element)
                             break
                         }
                     }
@@ -76,15 +76,15 @@ class HudConfig(file: File) : FileConfig(file) {
             }
 
             // Add forced elements when missing
-            for (elementClass in HUD.ELEMENTS) {
+            for (elementClass in HudManager.ELEMENTS) {
                 if (elementClass.getAnnotation(ElementInfo::class.java).force
-                    && HUD.elements.none { it.javaClass == elementClass }) {
-                    HUD.addElement(elementClass.newInstance())
+                    && HudManager.elements.none { it.javaClass == elementClass }) {
+                    HudManager.addElement(elementClass.newInstance())
                 }
             }
         } catch (e: Exception) {
             ClientUtils.LOGGER.error("Error while loading custom hud config.", e)
-            HUD.setDefault()
+            HudManager.setDefault()
         }
     }
 
@@ -97,7 +97,7 @@ class HudConfig(file: File) : FileConfig(file) {
     override fun saveConfig() {
         val jsonArray = JsonArray()
 
-        for (element in HUD.elements) {
+        for (element in HudManager.elements) {
             val elementObject = JsonObject()
             elementObject.addProperty("Type", element.name)
             elementObject.addProperty("X", element.x)

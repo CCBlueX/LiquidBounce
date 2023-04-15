@@ -805,7 +805,7 @@ object KillAura : Module("KillAura", category = ModuleCategory.COMBAT, keyBind =
         (if (mc.thePlayer.getDistanceToEntityBox(entity) >= throughWallsRangeValue.get()) rangeValue.get() else throughWallsRangeValue.get()) - if (mc.thePlayer.isSprinting) rangeSprintReductionValue.get() else 0F
 
     /**
-     * HUD Tag
+     * HudManager Tag
      */
     override val tag
         get() = targetModeValue.get()

@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.tabs.HeadsTab
 import net.ccbluex.liquidbounce.ui.client.GuiClientConfiguration.Companion.updateClientWindow
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager.Companion.loadActiveGenerators
 import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
-import net.ccbluex.liquidbounce.ui.client.hud.HUD
+import net.ccbluex.liquidbounce.ui.client.hud.HudManager
 import net.ccbluex.liquidbounce.ui.font.Fonts.loadFonts
 import net.ccbluex.liquidbounce.api.UpdateInfo.gitInfo
 import net.ccbluex.liquidbounce.api.loadSettings
@@ -70,8 +70,8 @@ object LiquidBounce {
     val fileManager = FileManager
     val scriptManager = ScriptManager
 
-    // HUD & ClickGUI
-    val hud = HUD
+    // HudManager & ClickGUI
+    val hud = HudManager
 
     val clickGui = ClickGui
 
