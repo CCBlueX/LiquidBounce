@@ -30,14 +30,21 @@ object AutoAccount : Module("AutoAccount", ModuleCategory.MISC) {
 
     // Gamster requires 8 chars+
     private val passwordValue = object : TextValue("Password", "axolotlaxolotl") {
-        override fun changeValue(newValue: String) {
-            when {
-                newValue.equals("reset", true) -> {
-                    super.changeValue("axolotlaxolotl")
-                    displayChatMessage("§7[§a§lAutoAccount§7] §3Password reset to its default value.")
+        override fun onChange(oldValue: String, newValue: String): String {
+            return when {
+                " " in newValue -> {
+                    displayChatMessage("§7[§a§lAutoAccount§7] §cPassword cannot contain a space!")
+                    oldValue
                 }
-                newValue.length < 4 -> displayChatMessage("§7[§a§lAutoAccount§7] §cPassword must be longer than 4 characters!")
-                else -> super.changeValue(newValue)
+                newValue.equals("reset", true) -> {
+                    displayChatMessage("§7[§a§lAutoAccount§7] §3Password reset to its default value.")
+                    "axolotlaxolotl"
+                }
+                newValue.length < 4 -> {
+                    displayChatMessage("§7[§a§lAutoAccount§7] §cPassword must be longer than 4 characters!")
+                    oldValue
+                }
+                else -> super.onChange(oldValue, newValue)
             }
         }
 
@@ -70,10 +77,13 @@ object AutoAccount : Module("AutoAccount", ModuleCategory.MISC) {
     private val accountModeValue = object : ListValue("AccountMode", arrayOf("RandomName", "RandomAlt"), "RandomName") {
         override fun isSupported() = reconnectDelayValue.isSupported() || startupValue.isActive()
 
-        override fun changeValue(newValue: String) {
-            if (newValue == "RandomAlt" && accountsConfig.accounts.filterIsInstance<CrackedAccount>().size <= 1)
+        override fun onChange(oldValue: String, newValue: String): String {
+            if (newValue == "RandomAlt" && accountsConfig.accounts.filterIsInstance<CrackedAccount>().size <= 1) {
                 displayChatMessage("§7[§a§lAutoAccount§7] §cAdd more cracked accounts in AltManager to use RandomAlt option!")
-            else super.changeValue(newValue)
+                return oldValue
+            }
+
+            return super.onChange(oldValue, newValue)
         }
     }
 

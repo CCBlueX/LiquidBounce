@@ -20,17 +20,11 @@ import java.util.concurrent.LinkedBlockingQueue
 object AtAllProvider : Module("AtAllProvider", ModuleCategory.MISC) {
 
     private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 1000, 0, 20000) {
-        override fun onChanged(oldValue: Int, newValue: Int) {
-            val i = minDelayValue.get()
-            if (i > newValue) set(i)
-        }
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minDelayValue.get())
     }
 
     private val minDelayValue: IntegerValue = object : IntegerValue("MinDelay", 500, 0, 20000) {
-        override fun onChanged(oldValue: Int, newValue: Int) {
-            val i = maxDelayValue.get()
-            if (i < newValue) set(i)
-        }
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxDelayValue.get())
 
         override fun isSupported() = !maxDelayValue.isMinimal()
     }

@@ -21,22 +21,18 @@ import net.ccbluex.liquidbounce.value.TextValue
 
 object Spammer : Module("Spammer", ModuleCategory.MISC) {
     private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 1000, 0, 5000) {
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minDelayValue.get())
+
         override fun onChanged(oldValue: Int, newValue: Int) {
-            val minDelay = minDelayValue.get()
-            if (minDelay > newValue) {
-                set(minDelay)
-                delay = randomDelay(minDelayValue.get(), get())
-            }
+            delay = randomDelay(minDelayValue.get(), get())
         }
     }
 
     private val minDelayValue: IntegerValue = object : IntegerValue("MinDelay", 500, 0, 5000) {
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxDelayValue.get())
+
         override fun onChanged(oldValue: Int, newValue: Int) {
-            val maxDelay = maxDelayValue.get()
-            if (maxDelay < newValue) {
-                set(maxDelay)
-                delay = randomDelay(get(), maxDelayValue.get())
-            }
+            delay = randomDelay(get(), maxDelayValue.get())
         }
 
         override fun isSupported() = !maxDelayValue.isMinimal()

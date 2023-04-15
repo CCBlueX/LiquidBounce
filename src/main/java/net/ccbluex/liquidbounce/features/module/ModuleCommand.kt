@@ -17,8 +17,7 @@ import net.minecraft.item.Item
  *
  * @author SenkJu
  */
-class ModuleCommand(val module: Module, val values: List<Value<*>> = module.values) :
-        Command(module.name.lowercase()) {
+class ModuleCommand(val module: Module, val values: List<Value<*>> = module.values) : Command(module.name.lowercase()) {
 
     init {
         if (values.isEmpty())
@@ -41,65 +40,93 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
         }
 
         val value = module[args[1]]
+        when (value) {
+            null -> chatSyntax("$moduleName <$valueNames>")
 
-        if (value == null) {
-            chatSyntax("$moduleName <$valueNames>")
-            return
-        }
+            is BoolValue -> {
+                if (args.size != 2) {
+                    chatSyntax("$moduleName ${args[1].lowercase()}")
+                    return
+                }
 
-        if (value is BoolValue) {
-            val newValue = !value.get()
-            value.set(newValue)
+                val newValue = !value.get()
+                value.set(newValue)
 
-            chat("§7${module.name} §8${args[1]}§7 was toggled ${if (newValue) "§8on§7" else "§8off§7" + "."}")
-            playEdit()
-        } else {
-            if (args.size < 3) {
-                if (value is IntegerValue || value is FloatValue || value is TextValue)
-                    chatSyntax("$moduleName ${args[1].lowercase()} <value>")
-                else if (value is ListValue)
-                    chatSyntax("$moduleName ${args[1].lowercase()} <${value.values.joinToString(separator = "/").lowercase()}>")
-                return
+                chat("§7${module.name} §8${args[1]}§7 was toggled ${if (newValue) "§8on§7" else "§8off§7" + "."}")
+                playEdit()
             }
 
-            try {
-                when (value) {
-                    is BlockValue -> {
-                        val id = try {
-                            args[2].toInt()
-                        } catch (exception: NumberFormatException) {
-                            val tmpId = Block.getBlockFromName(args[2])?.let { Block.getIdFromBlock(it) }
+            else -> {
+                if (
+                    if (value is TextValue) args.size < 3
+                    else args.size != 3
+                ) {
+                    when (value) {
+                        is IntegerValue, is FloatValue, is TextValue ->
+                            chatSyntax("$moduleName ${args[1].lowercase()} <value>")
 
-                            if (tmpId == null || tmpId <= 0) {
-                                chat("§7Block §8${args[2]}§7 does not exist!")
+                        is ListValue ->
+                            chatSyntax("$moduleName ${args[1].lowercase()} <${value.values.joinToString(separator = "/").lowercase()}>")
+                    }
+
+                    return
+                }
+
+                try {
+                    val pair: Pair<Boolean, String> = when (value) {
+                        is BlockValue -> {
+                            val id = try {
+                                args[2].toInt()
+                            } catch (exception: NumberFormatException) {
+                                val tmpId = Block.getBlockFromName(args[2])?.let { Block.getIdFromBlock(it) }
+
+                                if (tmpId == null || tmpId <= 0) {
+                                    chat("§7Block §8${args[2]}§7 does not exist!")
+                                    return
+                                }
+
+                                tmpId
+                            }
+
+                            if (!value.set(id)) {
+                                chatInvalid(id.toString(), value)
                                 return
                             }
 
-                            tmpId
-                        }
+                            chat("§7${module.name} §8${args[1].lowercase()}§7 was set to §8${getBlockName(id)}§7.")
+                            playEdit()
 
-                        value.set(id)
-                        chat("§7${module.name} §8${args[1].lowercase()}§7 was set to §8${getBlockName(id)}§7.")
-                        playEdit()
-                        return
-                    }
-                    is IntegerValue -> value.set(args[2].toInt())
-                    is FloatValue -> value.set(args[2].toFloat())
-                    is ListValue -> {
-                        if (args[2] !in value) {
-                            chatSyntax("$moduleName ${args[1].lowercase()} <${value.values.joinToString(separator = "/").lowercase()}>")
                             return
                         }
+                        is IntegerValue -> value.set(args[2].toInt()) to args[2]
+                        is FloatValue -> value.set(args[2].toFloat()) to args[2]
+                        is ListValue -> {
+                            if (args[2] !in value) {
+                                chatSyntax("$moduleName ${args[1].lowercase()} <${value.values.joinToString(separator = "/").lowercase()}>")
+                                return
+                            }
 
-                        value.set(args[2])
+                            value.set(args[2]) to args[2]
+                        }
+                        is TextValue -> {
+                            val string = StringUtils.toCompleteString(args, 2)
+                            value.set(string) to string
+                        }
+
+                        else -> return
                     }
-                    is TextValue -> value.set(StringUtils.toCompleteString(args, 2))
-                }
 
-                chat("§7${module.name} §8${args[1]}§7 was set to §8${value.get()}§7.")
-                playEdit()
-            } catch (e: NumberFormatException) {
-                chat("§8${args[2]}§7 cannot be converted to number!")
+                    // If value wasn't changed successfully, write that previous argument isn't valid
+                    if (!pair.first) {
+                        chatInvalid(pair.second, value)
+                        return
+                    }
+
+                    chat("§7${module.name} §8${args[1]}§7 was set to §8${value.get()}§7.")
+                    playEdit()
+                } catch (e: NumberFormatException) {
+                    chatInvalid(args[2], value, "cannot be converted to a number for")
+                }
             }
         }
     }
@@ -133,4 +160,13 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
             else -> emptyList()
         }
     }
+
+    private fun chatInvalid(arg: String, value: Value<*>, reason: String? = null) {
+        val finalReason = reason ?:
+            if (value.get().toString().equals(arg, true)) "is already the value of"
+            else "isn't a valid value for"
+
+        chat("§8$arg§7 $finalReason §8${value.name}§7!")
+    }
+
 }

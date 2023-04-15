@@ -40,19 +40,19 @@ public class AutoArmor extends Module {
     public static final ArmorComparator ARMOR_COMPARATOR = new ArmorComparator();
     private final IntegerValue maxDelayValue = new IntegerValue("MaxDelay", 200, 0, 400) {
         @Override
-        protected void onChanged(final Integer oldValue, final Integer newValue) {
+        protected Integer onChange(final Integer oldValue, final Integer newValue) {
             final int minDelay = minDelayValue.get();
 
-            if (minDelay > newValue) set(minDelay);
+            return newValue > minDelay ? newValue : minDelay;
         }
     };
     private final IntegerValue minDelayValue = new IntegerValue("MinDelay", 100, 0, 400) {
 
         @Override
-        protected void onChanged(final Integer oldValue, final Integer newValue) {
+        protected Integer onChange(final Integer oldValue, final Integer newValue) {
             final int maxDelay = maxDelayValue.get();
 
-            if (maxDelay < newValue) set(maxDelay);
+            return newValue < maxDelay ? newValue : maxDelay;
         }
 
         @Override

@@ -36,17 +36,11 @@ object AntiFireBall : Module("AntiFireBall", ModuleCategory.PLAYER) {
 
     private val maxTurnSpeedValue: FloatValue =
         object : FloatValue("MaxTurnSpeed", 120f, 0f, 180f) {
-            override fun onChanged(oldValue: Float, newValue: Float) {
-                val i = minTurnSpeedValue.get()
-                if (i > newValue) set(i)
-            }
+            override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minTurnSpeedValue.get())
         }
     private val minTurnSpeedValue: FloatValue =
         object : FloatValue("MinTurnSpeed", 80f, 0f, 180f) {
-            override fun onChanged(oldValue: Float, newValue: Float) {
-                val i = maxTurnSpeedValue.get()
-                if (i < newValue) set(i)
-            }
+            override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxTurnSpeedValue.get())
 
             override fun isSupported() = !maxTurnSpeedValue.isMinimal()
         }

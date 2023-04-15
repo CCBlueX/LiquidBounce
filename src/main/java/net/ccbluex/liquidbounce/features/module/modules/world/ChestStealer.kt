@@ -32,23 +32,18 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
      */
 
     private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 200, 0, 400) {
-        override fun onChanged(oldValue: Int, newValue: Int) {
-            val i = minDelayValue.get()
-            if (i > newValue)
-                set(i)
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minDelayValue.get())
 
-            nextDelay = randomDelay(minDelayValue.get(), get())
+        override fun onChanged(oldValue: Int, newValue: Int) {
+            nextDelay = randomDelay(minDelayValue.get(), newValue)
         }
     }
 
     private val minDelayValue: IntegerValue = object : IntegerValue("MinDelay", 150, 0, 400) {
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxDelayValue.get())
+
         override fun onChanged(oldValue: Int, newValue: Int) {
-            val i = maxDelayValue.get()
-
-            if (i < newValue)
-                set(i)
-
-            nextDelay = randomDelay(get(), maxDelayValue.get())
+            nextDelay = randomDelay(newValue, maxDelayValue.get())
         }
 
         override fun isSupported() = !maxDelayValue.isMinimal()
@@ -61,20 +56,20 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
     private val autoCloseValue = BoolValue("AutoClose", true)
 
     private val autoCloseMaxDelayValue: IntegerValue = object : IntegerValue("AutoCloseMaxDelay", 0, 0, 400) {
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(autoCloseMinDelayValue.get())
+
         override fun onChanged(oldValue: Int, newValue: Int) {
-            val i = autoCloseMinDelayValue.get()
-            if (i > newValue) set(i)
-            nextCloseDelay = randomDelay(autoCloseMinDelayValue.get(), get())
+            nextCloseDelay = randomDelay(autoCloseMinDelayValue.get(), newValue)
         }
 
         override fun isSupported() = autoCloseValue.get()
     }
 
     private val autoCloseMinDelayValue: IntegerValue = object : IntegerValue("AutoCloseMinDelay", 0, 0, 400) {
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(autoCloseMaxDelayValue.get())
+
         override fun onChanged(oldValue: Int, newValue: Int) {
-            val i = autoCloseMaxDelayValue.get()
-            if (i < newValue) set(i)
-            nextCloseDelay = randomDelay(get(), autoCloseMaxDelayValue.get())
+            nextCloseDelay = randomDelay(newValue, autoCloseMaxDelayValue.get())
         }
 
         override fun isSupported() = autoCloseValue.get() && !autoCloseMaxDelayValue.isMinimal()
