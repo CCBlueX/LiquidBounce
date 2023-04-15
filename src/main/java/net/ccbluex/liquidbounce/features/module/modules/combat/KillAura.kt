@@ -149,11 +149,15 @@ object KillAura : Module("KillAura", category = ModuleCategory.COMBAT, keyBind =
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(rangeValue.get())
     }
     // Don't block when you can't get damaged
-    private val maxSelfHurtTimeValue = object : IntegerValue("MaxSelfHurtTime", 3, 0, 10) {
+    private val maxOwnHurtTimeValue = object : IntegerValue("MaxOwnHurtTime", 3, 0, 10) {
         override fun isSupported() = smartAutoBlockValue.get()
     }
     // Don't block if target isn't looking at you
     private val maxDirectionDiffValue = object : FloatValue("MaxOpponentDirectionDiff", 60f, 30f, 180f) {
+        override fun isSupported() = smartAutoBlockValue.get()
+    }
+    // Don't block if target is swinging an item and therefore cannot attack
+    private val maxSwingProgressValue = object : IntegerValue("MaxOpponentSwingProgress", 1, 0, 5) {
         override fun isSupported() = smartAutoBlockValue.get()
     }
     private val blockRate = object : IntegerValue("BlockRate", 100, 1, 100) {
@@ -346,7 +350,7 @@ object KillAura : Module("KillAura", category = ModuleCategory.COMBAT, keyBind =
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         if (clickOnly.get() && !mc.gameSettings.keyBindAttack.isKeyDown) return
-        
+
         if (cancelRun) {
             target = null
             currentTarget = null
@@ -528,7 +532,7 @@ object KillAura : Module("KillAura", category = ModuleCategory.COMBAT, keyBind =
             "hurttime" -> targets.sortBy { it.hurtTime } // Sort by hurt time
             "healthabsorption" -> targets.sortBy { it.health + it.absorptionAmount } // Sort by full health with absorption effect
             "regenamplifier" -> targets.sortBy { if (it.isPotionActive(Potion.regeneration)) it.getActivePotionEffect(Potion.regeneration).amplifier else -1 }
-            
+
         }
 
         // Find best target
@@ -834,12 +838,15 @@ object KillAura : Module("KillAura", category = ModuleCategory.COMBAT, keyBind =
                     if (checkWeaponValue.get() && (currentTarget!!.heldItem?.item !is ItemSword && currentTarget!!.heldItem?.item !is ItemAxe))
                         return false
 
-                    if (mc.thePlayer.hurtTime > maxSelfHurtTimeValue.get())
+                    if (mc.thePlayer.hurtTime > maxOwnHurtTimeValue.get())
                         return false
 
                     val rotationToPlayer = toRotation(getCenter(mc.thePlayer.hitBox), true, currentTarget!!)
 
                     if (getRotationDifference(rotationToPlayer, currentTarget!!.rotation) > maxDirectionDiffValue.get())
+                        return false
+
+                    if (currentTarget!!.swingProgressInt > maxSwingProgressValue.get())
                         return false
 
                     if (currentTarget!!.getDistanceToEntityBox(mc.thePlayer) > blockRangeValue.get())
