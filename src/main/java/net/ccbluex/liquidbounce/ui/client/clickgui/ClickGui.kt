@@ -13,7 +13,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.scaleVal
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.scrollsValue
 import net.ccbluex.liquidbounce.file.FileManager.clickGuiConfig
 import net.ccbluex.liquidbounce.file.FileManager.saveConfig
-import net.ccbluex.liquidbounce.ui.client.GuiClientSettings
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ButtonElement
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ModuleElement
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.Style
@@ -40,7 +39,6 @@ import kotlin.math.roundToInt
 object ClickGui : GuiScreen() {
     val panels = mutableListOf<Panel>()
     private val hudIcon = ResourceLocation("${CLIENT_NAME.lowercase()}/custom_hud_icon.png")
-    private val settingsIcon = ResourceLocation("${CLIENT_NAME.lowercase()}/settings_icon.png")
     var style: Style = LiquidBounceStyle
     var mouseX = 0
     var mouseY = 0
@@ -141,7 +139,6 @@ object ClickGui : GuiScreen() {
 
         drawDefaultBackground()
         drawImage(hudIcon, 9, height - 41, 32, 32)
-        drawImage(settingsIcon, 46, height - 41, 32, 32)
 
         val scale = scaleValue.get().toDouble()
         glScaled(scale, scale, scale)
@@ -198,9 +195,6 @@ object ClickGui : GuiScreen() {
     public override fun mouseClicked(x: Int, y: Int, mouseButton: Int) {
         if (mouseButton == 0 && x in 5..50 && y in height - 50..height - 5) {
             mc.displayGuiScreen(GuiHudDesigner())
-            return
-        } else if (mouseButton == 0 && x in 42..87 && y in height - 50..height - 5) {
-            mc.displayGuiScreen(GuiClientSettings())
             return
         }
 
