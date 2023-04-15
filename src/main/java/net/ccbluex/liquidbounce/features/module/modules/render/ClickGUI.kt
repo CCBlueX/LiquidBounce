@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
+import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.BlackStyle
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.LiquidBounceStyle
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.NullStyle
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.SlowlyStyle
@@ -25,7 +26,7 @@ import java.awt.Color
 
 object ClickGUI : Module("ClickGUI", ModuleCategory.RENDER, keyBind = Keyboard.KEY_RSHIFT, defaultInArray = false, canEnable = false) {
     private val styleValue: ListValue =
-        object : ListValue("Style", arrayOf("LiquidBounce", "Null", "Slowly"), "LiquidBounce") {
+        object : ListValue("Style", arrayOf("LiquidBounce", "Null", "Slowly", "Black"), "LiquidBounce") {
             override fun onChanged(oldValue: String, newValue: String) = updateStyle()
         }
     val scaleValue = FloatValue("Scale", 0.8f, 0.5f, 1.5f)
@@ -62,6 +63,7 @@ object ClickGUI : Module("ClickGUI", ModuleCategory.RENDER, keyBind = Keyboard.K
             "LiquidBounce" -> clickGui.style = LiquidBounceStyle
             "Null" -> clickGui.style = NullStyle
             "Slowly" -> clickGui.style = SlowlyStyle
+            "Black" -> clickGui.style = BlackStyle
         }
     }
 

@@ -161,6 +161,7 @@ object ModuleManager : Listenable {
             Plugins,
             PortalMenu,
             PotionSaver,
+            PotionSpoof,
             Projectiles,
             ProphuntESP,
             Reach,
