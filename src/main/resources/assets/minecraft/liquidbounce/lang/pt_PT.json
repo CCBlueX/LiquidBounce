@@ -7,24 +7,24 @@
     "translations": {
         "menu.altManager": "Alt Manager",
         "menu.mods": "Mods",
-        "menu.serverStatus": "Server Status",
+        "menu.serverStatus": "Status do Servidor",
         "menu.configuration": "Configuração",
         "menu.contributors": "Contribuidores",
 
         "notification.moduleEnabled": "Ligaste %s",
         "notification.moduleDisabled": "Desligastes %s",
 
-        "module.aimbot.description": "Automaticamente Automatically faces selected entities around you.",
+        "module.aimbot.description": "Automaticamente olha nas entidades selecionadas á volta de tí.",
 
         "module.autoArmor.description": "Automaticamente equipa a melhor armadura no teu inventário.",
 
         "module.autoBow.description": "Automaticamente dispara uma seta sempre que o teu árco estiver completamente carregado.",
 
-        "module.autoClicker.description": "Constantly clicks when holding down a mouse button.",
+        "module.autoClicker.description": "Constantemente cliqua quando se preme num botão dum rato.",
 
-        "module.autoLeave.description": "Automatically makes you leave the server whenever your health is low.",
+        "module.autoLeave.description": "Automaticamente faz te deixar um servidor quando a tua vida está baixa.",
 
-        "module.autoPot.description": "Automatically throws healing potions.",
+        "module.autoPot.description": "Automaticamente atira poções de regeneração.",
 
         "module.autoRod.description": "Automaticamente usa uma cana de pesca contra alvos.",
 
@@ -34,19 +34,19 @@
 
         "module.backtrack.description": "Allows you to hit players by attacking their previous cached positions.",
 
-        "module.bowAimbot.description": "Automatically aims at players when using a bow.",
+        "module.bowAimbot.description": "Automaicamente olha nas entidades selecionadas enquanto se usa um arco.",
 
         "module.criticals.description": "Automatically deals critical hits.",
 
-        "module.fastBow.description": "Turns your bow into a machine gun.",
+        "module.fastBow.description": "Torna o teu arco em uma metrelhadora.",
 
         "module.hitBox.description": "Makes hitboxes of targets bigger.",
 
         "module.ignite.description": "Automatically sets targets around you on fire.",
 
-        "module.killAura.description": "Automatically attacks targets around you.",
+        "module.killAura.description": "Automaticamente ataca alvos á volta de tí.",
 
-        "module.noFriends.description": "Allows you to attack friends.",
+        "module.noFriends.description": "Permite que tú ataques amigos.",
 
         "module.superKnockback.description": "Increases knockback dealt to other entities.",
 
@@ -66,7 +66,7 @@
 
         "module.clip.description": "Allows you to clip through blocks.",
         
-        "module.airJump.description": "Allows you to jump in the mid air",
+        "module.airJump.description": "Permite que tú saltes no meio do ár",
         
         "module.airLadder.description": "Allows you to climb up ladders/vines without touching them.",
         
@@ -74,11 +74,11 @@
         
         "module.antiAFK.description": "Prevents you from getting kicked for being AFK.",
         
-        "module.antiBlind.description": "Cancels blindness effects.",
+        "module.antiBlind.description": "Cancela efeitos de cegueira.",
         
-        "module.antiBot.description": "Prevents KillAura from attacking AntiCheat bots.",
+        "module.antiBot.description": "Prevém o KillAura de atacar bots dos AntiCheats.",
         
-        "module.antiCactus.description": "Prevents cacti from damaging you.",
+        "module.antiCactus.description": "Prevém cactus de te magoar.",
         
         "module.antiFireBall.description": "Automatically punches fireballs away from you.",
         
