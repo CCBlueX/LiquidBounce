@@ -75,9 +75,11 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
     )
 
     val modeValue: ListValue = object : ListValue("Mode", modes, "NCPBHop") {
-        override fun onChange(oldValue: String, newValue: String) {
+        override fun onChange(oldValue: String, newValue: String): String {
             if (state)
                 onDisable()
+
+            return super.onChange(oldValue, newValue)
         }
 
         override fun onChanged(oldValue: String, newValue: String) {

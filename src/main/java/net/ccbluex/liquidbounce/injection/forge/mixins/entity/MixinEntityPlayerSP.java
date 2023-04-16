@@ -173,9 +173,9 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
             final Derp derp = Derp.INSTANCE;
             if (derp.getState()) {
-                float[] rot = derp.getRotation();
-                yaw = rot[0];
-                pitch = rot[1];
+                Rotation rot = derp.getRotation();
+                yaw = rot.getYaw();
+                pitch = rot.getPitch();
             }
 
             if (targetRotation != null) {

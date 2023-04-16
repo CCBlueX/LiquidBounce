@@ -68,35 +68,27 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, keyBind = Keyboard.KE
     private val extraClicks = BoolValue("DoExtraClicks", false)
 
     private val extraClickMaxCPS: IntegerValue = object : IntegerValue("ExtraClickMaxCPS", 7, 0, 20) {
-        override fun onChanged(oldValue: Int, newValue: Int) {
-            set(newValue.coerceAtLeast(extraClickMinCPS.get()))
-        }
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(extraClickMinCPS.get())
 
         override fun isSupported() = extraClicks.isActive()
 
     }
 
     private val extraClickMinCPS: IntegerValue = object : IntegerValue("ExtraClickMinCPS", 3, 0, 20) {
-        override fun onChanged(oldValue: Int, newValue: Int) {
-            set(newValue.coerceAtMost(extraClickMaxCPS.get()))
-        }
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(extraClickMaxCPS.get())
 
         override fun isSupported() = extraClicks.isActive() && !extraClickMaxCPS.isMinimal()
     }
 
     // Delay
     private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 0, 0, 1000) {
-        override fun onChanged(oldValue: Int, newValue: Int) {
-            set(newValue.coerceAtLeast(minDelayValue.get()))
-        }
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minDelayValue.get())
 
         override fun isSupported() = placeDelay.get()
     }
 
     private val minDelayValue: IntegerValue = object : IntegerValue("MinDelay", 0, 0, 1000) {
-        override fun onChanged(oldValue: Int, newValue: Int) {
-            set(newValue.coerceAtMost(maxDelayValue.get()))
-        }
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxDelayValue.get())
 
         override fun isSupported() = placeDelay.get() && !maxDelayValue.isMinimal()
     }
@@ -130,9 +122,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, keyBind = Keyboard.KE
     private val silentRotationValue = BoolValue("SilentRotation", true)
     private val keepRotationValue = BoolValue("KeepRotation", true)
     private val keepTicksValue = object : IntegerValue("KeepTicks", 1, 1, 20) {
-        override fun onChanged(oldValue: Int, newValue: Int) {
-            set(newValue.coerceAtLeast(minimum))
-        }
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minimum)
     }
 
     // Search options
@@ -141,14 +131,10 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, keyBind = Keyboard.KE
 
     // Turn Speed
     private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 180f, 1f, 180f) {
-        override fun onChanged(oldValue: Float, newValue: Float) {
-            set(newValue.coerceAtLeast(minTurnSpeedValue.get()))
-        }
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minTurnSpeedValue.get())
     }
     private val minTurnSpeedValue: FloatValue = object : FloatValue("MinTurnSpeed", 180f, 1f, 180f) {
-        override fun onChanged(oldValue: Float, newValue: Float) {
-            set(newValue.coerceAtMost(maxTurnSpeedValue.get()))
-        }
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxTurnSpeedValue.get())
 
         override fun isSupported() = !maxTurnSpeedValue.isMinimal()
     }

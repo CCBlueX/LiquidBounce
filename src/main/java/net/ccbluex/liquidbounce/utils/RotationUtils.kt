@@ -190,9 +190,9 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param predict predict new location of your body
      * @return rotation
      */
-    fun toRotation(vec: Vec3, predict: Boolean): Rotation {
-        val eyesPos = mc.thePlayer.eyes
-        if (predict) eyesPos.addVector(mc.thePlayer.motionX, mc.thePlayer.motionY, mc.thePlayer.motionZ)
+    fun toRotation(vec: Vec3, predict: Boolean, fromEntity: Entity = mc.thePlayer): Rotation {
+        val eyesPos = fromEntity.eyes
+        if (predict) eyesPos.addVector(fromEntity.motionX, fromEntity.motionY, fromEntity.motionZ)
         val diffX = vec.xCoord - eyesPos.xCoord
         val diffY = vec.yCoord - eyesPos.yCoord
         val diffZ = vec.zCoord - eyesPos.zCoord
@@ -212,7 +212,9 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @return center of box
      */
     fun getCenter(bb: AxisAlignedBB) = Vec3(
-        bb.minX + (bb.maxX - bb.minX) * 0.5, bb.minY + (bb.maxY - bb.minY) * 0.5, bb.minZ + (bb.maxZ - bb.minZ) * 0.5
+        (bb.minX + bb.maxX) * 0.5,
+        (bb.minY + bb.maxY) * 0.5,
+        (bb.minZ + bb.maxZ) * 0.5
     )
 
     /**
@@ -302,16 +304,9 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @return difference between rotation
      */
     fun getRotationDifference(entity: Entity) = getRotationDifference(
-        toRotation(getCenter(entity.hitBox), true), Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)
+        toRotation(getCenter(entity.hitBox), true),
+        Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)
     )
-
-    /**
-     * Calculate difference between the server rotation and your rotation
-     *
-     * @param rotation your rotation
-     * @return difference between rotation
-     */
-    fun getRotationDifference(rotation: Rotation) = getRotationDifference(rotation, serverRotation)
 
     /**
      * Calculate difference between two rotations
@@ -320,7 +315,8 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param b rotation
      * @return difference between rotation
      */
-    fun getRotationDifference(a: Rotation, b: Rotation) = hypot(getAngleDifference(a.yaw, b.yaw), (a.pitch - b.pitch))
+    fun getRotationDifference(a: Rotation, b: Rotation = serverRotation) =
+        hypot(getAngleDifference(a.yaw, b.yaw), a.pitch - b.pitch)
 
     /**
      * Limit your rotation using a turn speed
@@ -378,9 +374,9 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param blockReachDistance your reach
      * @return if crosshair is over target
      */
-    fun isRotationFaced(targetEntity: Entity, blockReachDistance: Double, rotation: Rotation) = raycastEntity(
-        blockReachDistance, rotation.yaw, rotation.pitch
-    ) { entity: Entity -> targetEntity == entity } != null
+    fun isRotationFaced(targetEntity: Entity, blockReachDistance: Double, rotation: Rotation) =
+        raycastEntity(blockReachDistance, rotation.yaw, rotation.pitch)
+            { entity: Entity -> targetEntity == entity } != null
 
     /**
      * Allows you to check if your enemy is behind a wall
@@ -417,16 +413,15 @@ object RotationUtils : MinecraftInstance(), Listenable {
     }
 
 
-    fun getFixedAngleDelta(sensitivity: Float = mc.gameSettings.mouseSensitivity): Float {
-        val f = sensitivity * 0.6f + 0.2f
-        return f * f * f * 1.2f
-    }
+    /**
+     * Returns smallest angle difference possible with a specific sensitivity ("gcd")
+     */
+    fun getFixedAngleDelta(sensitivity: Float = mc.gameSettings.mouseSensitivity) =
+        (sensitivity * 0.6f + 0.2f).pow(3) * 1.2f
 
     /**
      * Returns angle that is legitimately accomplishable with player's current sensitivity
      */
-    fun getFixedSensitivityAngle(targetAngle: Float, startAngle: Float = 0f, gcd: Float = getFixedAngleDelta()): Float {
-        val angleDelta = targetAngle - startAngle
-        return startAngle + (angleDelta / gcd).roundToInt() * gcd
-    }
+    fun getFixedSensitivityAngle(targetAngle: Float, startAngle: Float = 0f, gcd: Float = getFixedAngleDelta()) =
+        startAngle + ((targetAngle - startAngle) / gcd).roundToInt() * gcd
 }

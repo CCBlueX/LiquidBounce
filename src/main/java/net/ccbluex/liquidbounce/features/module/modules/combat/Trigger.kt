@@ -17,17 +17,17 @@ import net.minecraft.client.settings.KeyBinding
 object Trigger : Module("Trigger", category = ModuleCategory.COMBAT) {
 
     private val maxCPS: IntegerValue = object : IntegerValue("MaxCPS", 8, 1, 20) {
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minCPS.get())
+
         override fun onChanged(oldValue: Int, newValue: Int) {
-            val i = minCPS.get()
-            if (i > newValue) set(i)
             delay = randomClickDelay(minCPS.get(), get())
         }
     }
 
     private val minCPS: IntegerValue = object : IntegerValue("MinCPS", 5, 1, 20) {
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxCPS.get())
+
         override fun onChanged(oldValue: Int, newValue: Int) {
-            val i = maxCPS.get()
-            if (i < newValue) set(i)
             delay = randomClickDelay(get(), maxCPS.get())
         }
 
