@@ -19,6 +19,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawTexturedModalRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.enableGlCap
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.quickDrawBorderedRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.quickDrawRect
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.resetCaps
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.FontValue
@@ -28,7 +29,6 @@ import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.potion.Potion
 import net.minecraft.potion.PotionEffect
-import net.minecraft.util.EnumChatFormatting
 import net.minecraft.util.ResourceLocation
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
@@ -117,6 +117,22 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
         // Set fontrenderer local
         val fontRenderer = fontValue.get()
 
+        // Push
+        glPushMatrix()
+
+        // Translate to player position
+        val timer = mc.timer
+        val renderManager = mc.renderManager
+
+        glTranslated( // Translate to player position with render pos and interpolate it
+                entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * timer.renderPartialTicks - renderManager.renderPosX,
+                entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * timer.renderPartialTicks - renderManager.renderPosY + entity.eyeHeight.toDouble() + 0.55,
+                entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * timer.renderPartialTicks - renderManager.renderPosZ
+        )
+
+        glRotatef(-mc.renderManager.playerViewY, 0F, 1F, 0F)
+        glRotatef(mc.renderManager.playerViewX, 1F, 0F, 0F)
+
         // Scale
         var distance = mc.thePlayer.getDistanceToEntity(entity) / 4F
 
@@ -135,7 +151,7 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
 
         // Modify tag
         val bot = isBot(entity)
-        val nameColor = EnumChatFormatting.GRAY
+        val nameColor = if (bot) "§3" else if (entity.isInvisible) "§6" else if (entity.isSneaking) "§4" else "§7"
         val ping = if (entity is EntityPlayer) entity.getPing() else 0
 
         val distanceText = if (distanceValue.get()) "§7 [§a${mc.thePlayer.getDistanceToEntity(entity).roundToInt()}§7]" else ""
@@ -225,5 +241,15 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
             disableBlend()
             enableTexture2D()
         }
+
+        // Reset caps
+        resetCaps()
+
+        // Reset color
+        resetColor()
+        glColor4f(1F, 1F, 1F, 1F)
+
+        // Pop
+        glPopMatrix()
     }
 }
