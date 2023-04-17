@@ -10,94 +10,104 @@ import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
+import net.ccbluex.liquidbounce.utils.MovementUtils
+import net.ccbluex.liquidbounce.utils.PacketUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.minecraft.client.entity.EntityOtherPlayerMP
 import net.minecraft.network.play.client.C03PacketPlayer
-import net.minecraft.network.play.client.C0BPacketEntityAction
+import net.minecraft.network.play.server.S08PacketPlayerPosLook
 
 object FreeCam : Module("FreeCam", ModuleCategory.RENDER) {
     private val speedValue = FloatValue("Speed", 0.8f, 0.1f, 2f)
     private val flyValue = BoolValue("Fly", true)
     private val noClipValue = BoolValue("NoClip", true)
+    private val motionValue = BoolValue("RecordMotion", true)
+    private val c03SpoofValue = BoolValue("C03Spoof", false)
 
     private var fakePlayer: EntityOtherPlayerMP? = null
-
-    private var oldX = 0.0
-    private var oldY = 0.0
-    private var oldZ = 0.0
+    private var motionX = 0.0
+    private var motionY = 0.0
+    private var motionZ = 0.0
+    private var packetCount = 0
 
     override fun onEnable() {
-        val thePlayer = mc.thePlayer ?: return
+        if (mc.thePlayer == null) return
 
-        oldX = thePlayer.posX
-        oldY = thePlayer.posY
-        oldZ = thePlayer.posZ
+        if (motionValue.get()) {
+            motionX = mc.thePlayer.motionX
+            motionY = mc.thePlayer.motionY
+            motionZ = mc.thePlayer.motionZ
+        } else {
+            motionX = 0.0
+            motionY = 0.0
+            motionZ = 0.0
+        }
 
-        val playerMP = EntityOtherPlayerMP(mc.theWorld, thePlayer.gameProfile)
-
-
-        playerMP.rotationYawHead = thePlayer.rotationYawHead
-        playerMP.renderYawOffset = thePlayer.renderYawOffset
-        playerMP.rotationYawHead = thePlayer.rotationYawHead
-        playerMP.copyLocationAndAnglesFrom(thePlayer)
-
-        mc.theWorld.addEntityToWorld(-1000, playerMP)
-
-        if (noClipValue.get())
-            thePlayer.noClip = true
-
-        fakePlayer = playerMP
+        packetCount = 0
+        fakePlayer = EntityOtherPlayerMP(mc.theWorld, mc.thePlayer.gameProfile)
+        fakePlayer!!.clonePlayer(mc.thePlayer, true)
+        fakePlayer!!.rotationYawHead = mc.thePlayer.rotationYawHead
+        fakePlayer!!.copyLocationAndAnglesFrom(mc.thePlayer)
+        mc.theWorld.addEntityToWorld(-(Math.random() * 10000).toInt(), fakePlayer)
+        if (noClipValue.get()) mc.thePlayer.noClip = true
     }
 
     override fun onDisable() {
-        val thePlayer = mc.thePlayer
-
-        if (thePlayer == null || fakePlayer == null)
-            return
-
-        thePlayer.setPositionAndRotation(oldX, oldY, oldZ, thePlayer.rotationYaw, thePlayer.rotationPitch)
-
+        if (mc.thePlayer == null || fakePlayer == null) return
+        mc.thePlayer.setPositionAndRotation(fakePlayer!!.posX, fakePlayer!!.posY, fakePlayer!!.posZ, mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)
         mc.theWorld.removeEntityFromWorld(fakePlayer!!.entityId)
         fakePlayer = null
-
-        thePlayer.motionX = 0.0
-        thePlayer.motionY = 0.0
-        thePlayer.motionZ = 0.0
+        mc.thePlayer.motionX = motionX
+        mc.thePlayer.motionY = motionY
+        mc.thePlayer.motionZ = motionZ
     }
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer
-
-        if (noClipValue.get())
-            thePlayer.noClip = true
-
-        thePlayer.fallDistance = 0f
-
+        if (noClipValue.get()) mc.thePlayer.noClip = true
+        mc.thePlayer.fallDistance = 0f
         if (flyValue.get()) {
             val value = speedValue.get()
-
-            thePlayer.motionY = 0.0
-            thePlayer.motionX = 0.0
-            thePlayer.motionZ = 0.0
-
-            if (mc.gameSettings.keyBindJump.isKeyDown)
-                thePlayer.motionY += value
-
-            if (mc.gameSettings.keyBindSneak.isKeyDown)
-                thePlayer.motionY -= value
-
-            strafe(value)
+            mc.thePlayer.motionY = 0.0
+            mc.thePlayer.motionX = 0.0
+            mc.thePlayer.motionZ = 0.0
+            if (mc.gameSettings.keyBindJump.isKeyDown) mc.thePlayer.motionY += value.toDouble()
+            if (mc.gameSettings.keyBindSneak.isKeyDown) mc.thePlayer.motionY -= value.toDouble()
+            MovementUtils.strafe(value)
         }
     }
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
-
-        if (packet is C03PacketPlayer || packet is C0BPacketEntityAction)
+        if (c03SpoofValue.get()) {
+            if (packet is C03PacketPlayer.C04PacketPlayerPosition || packet is C03PacketPlayer.C05PacketPlayerLook || packet is C03PacketPlayer.C06PacketPlayerPosLook) {
+                if (packetCount >= 20) {
+                    packetCount = 0
+                    PacketUtils.sendPacketNoEvent(C03PacketPlayer.C06PacketPlayerPosLook(fakePlayer!!.posX, fakePlayer!!.posY, fakePlayer!!.posZ, fakePlayer!!.rotationYaw, fakePlayer!!.rotationPitch, fakePlayer!!.onGround))
+                } else {
+                    packetCount++
+                    PacketUtils.sendPacketNoEvent(C03PacketPlayer(fakePlayer!!.onGround))
+                }
+                event.cancelEvent()
+            }
+        } else if (packet is C03PacketPlayer) {
             event.cancelEvent()
+        }
+
+        if (packet is S08PacketPlayerPosLook) {
+            fakePlayer!!.setPosition(packet.x, packet.y, packet.z)
+            // when teleport,motion reset
+
+            motionX = 0.0
+            motionY = 0.0
+            motionZ = 0.0
+
+            // apply the flag to bypass some anticheat
+            PacketUtils.sendPacketNoEvent(C03PacketPlayer.C06PacketPlayerPosLook(fakePlayer!!.posX, fakePlayer!!.posY, fakePlayer!!.posZ, fakePlayer!!.rotationYaw, fakePlayer!!.rotationPitch, fakePlayer!!.onGround))
+
+            event.cancelEvent()
+        }
     }
 }

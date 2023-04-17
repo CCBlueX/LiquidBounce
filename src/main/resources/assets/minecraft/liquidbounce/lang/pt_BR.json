@@ -57,6 +57,8 @@
 
         "module.abortBreaking.description:": "Permite interromper a quebra de blocos.",
 
+        "module.ambience.description:" : "Permite que você possa trocar o horário e o clima.",
+
         "module.antiHunger.description": "Impede que você fique com fome.",
 
         "module.bedGodMode.description": "Permite andar deitado em uma cama. (Para a versão 1.9)",
