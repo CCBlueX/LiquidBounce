@@ -9,9 +9,10 @@ import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed.portMax
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.minecraft.init.Blocks
-import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 import net.minecraft.util.BlockPos
 import kotlin.math.cos
 import kotlin.math.sin
@@ -33,7 +34,7 @@ class AACPort : SpeedMode("AACPort") {
 
             if (thePlayer.posY < thePlayer.posY.toInt() + 0.5 && getBlock(BlockPos(x, thePlayer.posY, z)) != Blocks.air)
                 break
-            thePlayer.sendQueue.addToSendQueue(C03PacketPlayer.C04PacketPlayerPosition(x, thePlayer.posY, z, true))
+            sendPacket(C04PacketPlayerPosition(x, thePlayer.posY, z, true))
             d += 0.2
         }
     }

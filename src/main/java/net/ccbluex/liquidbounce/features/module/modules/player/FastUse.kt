@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -59,7 +60,7 @@ object FastUse : Module("FastUse", ModuleCategory.PLAYER) {
             when (modeValue.get().lowercase()) {
                 "instant" -> {
                     repeat(35) {
-                        mc.netHandler.addToSendQueue(C03PacketPlayer(thePlayer.onGround))
+                        sendPacket(C03PacketPlayer(thePlayer.onGround))
                     }
 
                     mc.playerController.onStoppedUsingItem(thePlayer)
@@ -67,7 +68,7 @@ object FastUse : Module("FastUse", ModuleCategory.PLAYER) {
 
                 "ncp" -> if (thePlayer.itemInUseDuration > 14) {
                     repeat(20) {
-                        mc.netHandler.addToSendQueue(C03PacketPlayer(thePlayer.onGround))
+                        sendPacket(C03PacketPlayer(thePlayer.onGround))
                     }
 
                     mc.playerController.onStoppedUsingItem(thePlayer)
@@ -86,7 +87,7 @@ object FastUse : Module("FastUse", ModuleCategory.PLAYER) {
                         return
 
                     repeat(customSpeedValue.get()) {
-                        mc.netHandler.addToSendQueue(C03PacketPlayer(thePlayer.onGround))
+                        sendPacket(C03PacketPlayer(thePlayer.onGround))
                     }
 
                     msTimer.reset()

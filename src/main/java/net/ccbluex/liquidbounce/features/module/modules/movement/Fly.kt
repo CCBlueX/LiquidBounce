@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 import net.ccbluex.liquidbounce.utils.MovementUtils.direction
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.extensions.eyes
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextDouble
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawPlatform
@@ -163,11 +164,11 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_F) {
                     if (!thePlayer.onGround) return@run
 
                     for (i in 0..64) {
-                        mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y + 0.049, z, false))
-                        mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y, z, false))
+                        sendPacket(C04PacketPlayerPosition(x, y + 0.049, z, false))
+                        sendPacket(C04PacketPlayerPosition(x, y, z, false))
                     }
 
-                    mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y + 0.1, z, true))
+                    sendPacket(C04PacketPlayerPosition(x, y + 0.1, z, true))
 
                     thePlayer.motionX *= 0.1
                     thePlayer.motionZ *= 0.1
@@ -177,8 +178,8 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_F) {
                     if (!thePlayer.onGround) return@run
 
                     for (i in 0..3) {
-                        mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y + 1.01, z, false))
-                        mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y, z, false))
+                        sendPacket(C04PacketPlayerPosition(x, y + 1.01, z, false))
+                        sendPacket(C04PacketPlayerPosition(x, y, z, false))
                     }
 
                     thePlayer.jump()
@@ -186,11 +187,11 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_F) {
                 }
                 "bugspartan" -> {
                     for (i in 0..64) {
-                        mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y + 0.049, z, false))
-                        mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y, z, false))
+                        sendPacket(C04PacketPlayerPosition(x, y + 0.049, z, false))
+                        sendPacket(C04PacketPlayerPosition(x, y, z, false))
                     }
 
-                    mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y + 0.1, z, true))
+                    sendPacket(C04PacketPlayerPosition(x, y + 0.1, z, true))
 
                     thePlayer.motionX *= 0.1
                     thePlayer.motionZ *= 0.1
@@ -207,44 +208,20 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_F) {
 
                     for (i in 0..9) {
                         //Imagine flagging to NCP.
-                        mc.netHandler.addToSendQueue(
-                            C04PacketPlayerPosition(
-                                thePlayer.posX, thePlayer.posY, thePlayer.posZ, true
-                            )
-                        )
+                        sendPacket(C04PacketPlayerPosition(thePlayer.posX, thePlayer.posY, thePlayer.posZ, true))
                     }
 
                     var fallDistance = 3.0125 //add 0.0125 to ensure we get the fall dmg
 
                     while (fallDistance > 0) {
-                        mc.netHandler.addToSendQueue(
-                            C04PacketPlayerPosition(
-                                thePlayer.posX, thePlayer.posY + 0.0624986421, thePlayer.posZ, false
-                            )
-                        )
-                        mc.netHandler.addToSendQueue(
-                            C04PacketPlayerPosition(
-                                thePlayer.posX, thePlayer.posY + 0.0625, thePlayer.posZ, false
-                            )
-                        )
-                        mc.netHandler.addToSendQueue(
-                            C04PacketPlayerPosition(
-                                thePlayer.posX, thePlayer.posY + 0.0624986421, thePlayer.posZ, false
-                            )
-                        )
-                        mc.netHandler.addToSendQueue(
-                            C04PacketPlayerPosition(
-                                thePlayer.posX, thePlayer.posY + 0.0000013579, thePlayer.posZ, false
-                            )
-                        )
+                        sendPacket(C04PacketPlayerPosition(thePlayer.posX, thePlayer.posY + 0.0624986421, thePlayer.posZ, false))
+                        sendPacket(C04PacketPlayerPosition(thePlayer.posX, thePlayer.posY + 0.0625, thePlayer.posZ, false))
+                        sendPacket(C04PacketPlayerPosition(thePlayer.posX, thePlayer.posY + 0.0624986421, thePlayer.posZ, false))
+                        sendPacket(C04PacketPlayerPosition(thePlayer.posX, thePlayer.posY + 0.0000013579, thePlayer.posZ, false))
                         fallDistance -= 0.0624986421
                     }
 
-                    mc.netHandler.addToSendQueue(
-                        C04PacketPlayerPosition(
-                            thePlayer.posX, thePlayer.posY, thePlayer.posZ, true
-                        )
-                    )
+                    sendPacket(C04PacketPlayerPosition(thePlayer.posX, thePlayer.posY, thePlayer.posZ, true))
 
                     thePlayer.jump()
 
@@ -342,7 +319,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_F) {
                     if (mc.gameSettings.keyBindSneak.isKeyDown) aacJump -= 0.2
 
                     if (startY + aacJump > thePlayer.posY) {
-                        mc.netHandler.addToSendQueue(C03PacketPlayer(true))
+                        sendPacket(C03PacketPlayer(true))
                         thePlayer.motionY = 0.8
                         strafe(aacSpeedValue.get())
                     }
@@ -365,7 +342,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_F) {
                         aac3delay = 0
                     }
                     aac3delay++
-                    if (!noFlag) mc.netHandler.addToSendQueue(
+                    if (!noFlag) sendPacket(
                         C04PacketPlayerPosition(
                             thePlayer.posX, thePlayer.posY, thePlayer.posZ, thePlayer.onGround
                         )
@@ -373,7 +350,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_F) {
                     if (thePlayer.posY <= 0.0) noFlag = true
                 }
                 "flag" -> {
-                    mc.netHandler.addToSendQueue(
+                    sendPacket(
                         C06PacketPlayerPosLook(
                             thePlayer.posX + thePlayer.motionX * 999,
                             thePlayer.posY + (if (mc.gameSettings.keyBindJump.isKeyDown) 1.5624 else 0.00000001) - if (mc.gameSettings.keyBindSneak.isKeyDown) 0.0624 else 0.00000002,
@@ -383,7 +360,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_F) {
                             true
                         )
                     )
-                    mc.netHandler.addToSendQueue(
+                    sendPacket(
                         C06PacketPlayerPosLook(
                             thePlayer.posX + thePlayer.motionX * 999,
                             thePlayer.posY - 6969,
@@ -399,7 +376,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_F) {
                     thePlayer.motionY = 0.0
                 }
                 "keepalive" -> {
-                    mc.netHandler.addToSendQueue(C00PacketKeepAlive())
+                    sendPacket(C00PacketKeepAlive())
                     thePlayer.capabilities.isFlying = false
                     thePlayer.motionY = 0.0
                     thePlayer.motionX = 0.0
@@ -416,16 +393,8 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_F) {
                     thePlayer.motionZ = 0.0
                     strafe(vanillaSpeed)
                     if (mineSecureVClipTimer.hasTimePassed(150) && mc.gameSettings.keyBindJump.isKeyDown) {
-                        mc.netHandler.addToSendQueue(
-                            C04PacketPlayerPosition(
-                                thePlayer.posX, thePlayer.posY + 5, thePlayer.posZ, false
-                            )
-                        )
-                        mc.netHandler.addToSendQueue(
-                            C04PacketPlayerPosition(
-                                0.5, -1000.0, 0.5, false
-                            )
-                        )
+                        sendPacket(C04PacketPlayerPosition(thePlayer.posX, thePlayer.posY + 5, thePlayer.posZ, false))
+                        sendPacket(C04PacketPlayerPosition(0.5, -1000.0, 0.5, false))
                         val yaw = Math.toRadians(thePlayer.rotationYaw.toDouble())
                         val x = -sin(yaw) * 0.4
                         val z = cos(yaw) * 0.4
@@ -450,16 +419,8 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_F) {
                         sin(Math.toRadians(pitch.toDouble())) * length + vectorStart.yCoord,
                         cos(Math.toRadians(yaw.toDouble())) * cos(Math.toRadians(pitch.toDouble())) * length + vectorStart.zCoord
                     )
-                    mc.netHandler.addToSendQueue(
-                        C04PacketPlayerPosition(
-                            vectorEnd.xCoord, thePlayer.posY + 2, vectorEnd.zCoord, true
-                        )
-                    )
-                    mc.netHandler.addToSendQueue(
-                        C04PacketPlayerPosition(
-                            vectorStart.xCoord, thePlayer.posY + 2, vectorStart.zCoord, true
-                        )
-                    )
+                    sendPacket(C04PacketPlayerPosition(vectorEnd.xCoord, thePlayer.posY + 2, vectorEnd.zCoord, true))
+                    sendPacket(C04PacketPlayerPosition(vectorStart.xCoord, thePlayer.posY + 2, vectorStart.zCoord, true))
                     thePlayer.motionY = 0.0
                 }
                 "minesucht" -> {
@@ -474,51 +435,19 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_F) {
                         val vec31: Vec3 = mc.thePlayer.getLook(1f)
                         val vec32: Vec3 = vec3.addVector(vec31.xCoord * 7, vec31.yCoord * 7, vec31.zCoord * 7)
                         if (thePlayer.fallDistance > 0.8) {
-                            thePlayer.sendQueue.addToSendQueue(
-                                C04PacketPlayerPosition(
-                                    posX, posY + 50, posZ, false
-                                )
-                            )
+                            sendPacket(C04PacketPlayerPosition(posX, posY + 50, posZ, false))
                             mc.thePlayer.fall(100f, 100f)
                             thePlayer.fallDistance = 0f
-                            thePlayer.sendQueue.addToSendQueue(
-                                C04PacketPlayerPosition(
-                                    posX, posY + 20, posZ, true
-                                )
-                            )
+                            sendPacket(C04PacketPlayerPosition(posX, posY + 20, posZ, true))
                         }
-                        thePlayer.sendQueue.addToSendQueue(
-                            C04PacketPlayerPosition(
-                                vec32.xCoord, thePlayer.posY + 50, vec32.zCoord, true
-                            )
-                        )
-                        thePlayer.sendQueue.addToSendQueue(
-                            C04PacketPlayerPosition(
-                                posX, posY, posZ, false
-                            )
-                        )
-                        thePlayer.sendQueue.addToSendQueue(
-                            C04PacketPlayerPosition(
-                                vec32.xCoord, posY, vec32.zCoord, true
-                            )
-                        )
-                        thePlayer.sendQueue.addToSendQueue(
-                            C04PacketPlayerPosition(
-                                posX, posY, posZ, false
-                            )
-                        )
+                        sendPacket(C04PacketPlayerPosition(vec32.xCoord, thePlayer.posY + 50, vec32.zCoord, true))
+                        sendPacket(C04PacketPlayerPosition(posX, posY, posZ, false))
+                        sendPacket(C04PacketPlayerPosition(vec32.xCoord, posY, vec32.zCoord, true))
+                        sendPacket(C04PacketPlayerPosition(posX, posY, posZ, false))
                         minesuchtTP = System.currentTimeMillis()
                     } else {
-                        thePlayer.sendQueue.addToSendQueue(
-                            C04PacketPlayerPosition(
-                                thePlayer.posX, thePlayer.posY, thePlayer.posZ, false
-                            )
-                        )
-                        thePlayer.sendQueue.addToSendQueue(
-                            C04PacketPlayerPosition(
-                                posX, posY, posZ, true
-                            )
-                        )
+                        sendPacket(C04PacketPlayerPosition(thePlayer.posX, thePlayer.posY, thePlayer.posZ, false))
+                        sendPacket(C04PacketPlayerPosition(posX, posY, posZ, true))
                     }
                 }
                 "jetpack" -> if (mc.gameSettings.keyBindJump.isKeyDown) {
@@ -600,12 +529,12 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_F) {
 
                     spartanTimer.update()
                     if (spartanTimer.hasTimePassed(12)) {
-                        mc.netHandler.addToSendQueue(
+                        sendPacket(
                             C04PacketPlayerPosition(
                                 thePlayer.posX, thePlayer.posY + 8, thePlayer.posZ, true
                             )
                         )
-                        mc.netHandler.addToSendQueue(
+                        sendPacket(
                             C04PacketPlayerPosition(
                                 thePlayer.posX, thePlayer.posY - 8, thePlayer.posZ, true
                             )
@@ -615,7 +544,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_F) {
                 }
                 "spartan2" -> {
                     strafe(0.264f)
-                    if (thePlayer.ticksExisted % 8 == 0) thePlayer.sendQueue.addToSendQueue(
+                    if (thePlayer.ticksExisted % 8 == 0) sendPacket(
                         C04PacketPlayerPosition(
                             thePlayer.posX, thePlayer.posY + 10, thePlayer.posZ, true
                         )
@@ -841,7 +770,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_F) {
         run {
             var posY = mc.thePlayer.posY
             while (posY > ground) {
-                mc.netHandler.addToSendQueue(
+                sendPacket(
                     C04PacketPlayerPosition(
                         mc.thePlayer.posX, posY, mc.thePlayer.posZ, true
                     )
@@ -850,14 +779,14 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_F) {
                 posY -= 8.0
             }
         }
-        mc.netHandler.addToSendQueue(
+        sendPacket(
             C04PacketPlayerPosition(
                 mc.thePlayer.posX, ground, mc.thePlayer.posZ, true
             )
         )
         var posY = ground
         while (posY < mc.thePlayer.posY) {
-            mc.netHandler.addToSendQueue(
+            sendPacket(
                 C04PacketPlayerPosition(
                     mc.thePlayer.posX, posY, mc.thePlayer.posZ, true
                 )
@@ -865,7 +794,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_F) {
             if (posY + 8.0 > mc.thePlayer.posY) break // Prevent next step
             posY += 8.0
         }
-        mc.netHandler.addToSendQueue(
+        sendPacket(
             C04PacketPlayerPosition(
                 mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ, true
             )
@@ -888,7 +817,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_F) {
 
     private fun redeskyHClip2(horizontal: Double) {
         val playerYaw = Math.toRadians(mc.thePlayer.rotationYaw.toDouble())
-        mc.netHandler.addToSendQueue(
+        sendPacket(
             C04PacketPlayerPosition(
                 mc.thePlayer.posX + horizontal * -sin(
                     playerYaw
@@ -898,7 +827,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, keyBind = Keyboard.KEY_F) {
     }
 
     private fun redeskyVClip2(vertical: Double) {
-        mc.netHandler.addToSendQueue(
+        sendPacket(
             C04PacketPlayerPosition(
                 mc.thePlayer.posX, mc.thePlayer.posY + vertical, mc.thePlayer.posZ, false
             )

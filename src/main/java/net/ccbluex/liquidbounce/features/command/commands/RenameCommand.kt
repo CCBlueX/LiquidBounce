@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.minecraft.network.play.client.C10PacketCreativeInventoryAction
@@ -29,7 +30,7 @@ class RenameCommand : Command("rename") {
             }
 
             item.setStackDisplayName(ColorUtils.translateAlternateColorCodes(StringUtils.toCompleteString(args, 1)))
-            mc.netHandler.addToSendQueue(C10PacketCreativeInventoryAction(36 + mc.thePlayer.inventory.currentItem, item))
+            sendPacket(C10PacketCreativeInventoryAction(36 + mc.thePlayer.inventory.currentItem, item))
             chat("§3Item renamed to '${item.displayName}§3'")
             return
         }

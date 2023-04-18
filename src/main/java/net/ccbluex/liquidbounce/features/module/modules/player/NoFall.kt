@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
 import net.ccbluex.liquidbounce.utils.VecRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlock
@@ -23,6 +24,7 @@ import net.minecraft.init.Items
 import net.minecraft.item.ItemBlock
 import net.minecraft.item.ItemBucket
 import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 import net.minecraft.network.play.client.C09PacketHeldItemChange
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.BlockPos
@@ -81,16 +83,16 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
         when (modeValue.get().lowercase()) {
             "packet" -> {
                 if (mc.thePlayer.fallDistance > 2f) {
-                    mc.netHandler.addToSendQueue(C03PacketPlayer(true))
+                    sendPacket(C03PacketPlayer(true))
                 }
             }
             "cubecraft" -> if (mc.thePlayer.fallDistance > 2f) {
                 mc.thePlayer.onGround = false
-                mc.thePlayer.sendQueue.addToSendQueue(C03PacketPlayer(true))
+                sendPacket(C03PacketPlayer(true))
             }
             "aac" -> {
                 if (mc.thePlayer.fallDistance > 2f) {
-                    mc.netHandler.addToSendQueue(C03PacketPlayer(true))
+                    sendPacket(C03PacketPlayer(true))
                     currentState = 2
                 } else if (currentState == 2 && mc.thePlayer.fallDistance < 2) {
                     mc.thePlayer.motionY = 0.1
@@ -112,21 +114,21 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
                     }
                 }
             }
-            "laac" -> if (!jumped && mc.thePlayer.onGround && !mc.thePlayer.isOnLadder && !mc.thePlayer.isInWater && !mc.thePlayer.isInWeb) mc.thePlayer.motionY =
-                (-6).toDouble()
+            "laac" -> if (!jumped && mc.thePlayer.onGround && !mc.thePlayer.isOnLadder && !mc.thePlayer.isInWater && !mc.thePlayer.isInWeb)
+                mc.thePlayer.motionY = -6.0
             "aac3.3.11" -> if (mc.thePlayer.fallDistance > 2) {
                 mc.thePlayer.motionZ = 0.0
                 mc.thePlayer.motionX = mc.thePlayer.motionZ
-                mc.netHandler.addToSendQueue(
-                    C03PacketPlayer.C04PacketPlayerPosition(
+                sendPacket(
+                    C04PacketPlayerPosition(
                         mc.thePlayer.posX, mc.thePlayer.posY - 10E-4, mc.thePlayer.posZ, mc.thePlayer.onGround
                     )
                 )
-                mc.netHandler.addToSendQueue(C03PacketPlayer(true))
+                sendPacket(C03PacketPlayer(true))
             }
             "aac3.3.15" -> if (mc.thePlayer.fallDistance > 2) {
-                if (!mc.isIntegratedServerRunning) mc.netHandler.addToSendQueue(
-                    C03PacketPlayer.C04PacketPlayerPosition(
+                if (!mc.isIntegratedServerRunning) sendPacket(
+                    C04PacketPlayerPosition(
                         mc.thePlayer.posX, Double.NaN, mc.thePlayer.posZ, false
                     )
                 )
@@ -135,13 +137,13 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
             "spartan" -> {
                 spartanTimer.update()
                 if (mc.thePlayer.fallDistance > 1.5 && spartanTimer.hasTimePassed(10)) {
-                    mc.netHandler.addToSendQueue(
-                        C03PacketPlayer.C04PacketPlayerPosition(
+                    sendPacket(
+                        C04PacketPlayerPosition(
                             mc.thePlayer.posX, mc.thePlayer.posY + 10, mc.thePlayer.posZ, true
                         )
                     )
-                    mc.netHandler.addToSendQueue(
-                        C03PacketPlayer.C04PacketPlayerPosition(
+                    sendPacket(
+                        C04PacketPlayerPosition(
                             mc.thePlayer.posX, mc.thePlayer.posY - 10, mc.thePlayer.posZ, true
                         )
                     )
@@ -235,7 +237,7 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
                 currentMlgBlock = collision.pos
 
                 if (mc.thePlayer.inventory.currentItem != index) {
-                    mc.thePlayer.sendQueue.addToSendQueue(C09PacketHeldItemChange(index))
+                    sendPacket(C09PacketHeldItemChange(index))
                 }
 
                 currentMlgRotation = faceBlock(collision.pos)
@@ -251,7 +253,7 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
                     mlgTimer.reset()
                 }
             }
-            if (mc.thePlayer.inventory.currentItem != currentMlgItemIndex) mc.thePlayer.sendQueue.addToSendQueue(
+            if (mc.thePlayer.inventory.currentItem != currentMlgItemIndex) sendPacket(
                 C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem)
             )
         }

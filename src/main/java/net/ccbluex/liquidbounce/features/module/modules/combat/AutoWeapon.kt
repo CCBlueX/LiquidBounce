@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -55,7 +56,7 @@ object AutoWeapon : Module("AutoWeapon", category = ModuleCategory.COMBAT) {
 
             // Switch to best weapon
             if (silentValue.get()) {
-                mc.netHandler.addToSendQueue(C09PacketHeldItemChange(slot))
+                sendPacket(C09PacketHeldItemChange(slot))
                 spoofedSlot = ticksValue.get()
             } else {
                 mc.thePlayer.inventory.currentItem = slot
@@ -63,7 +64,7 @@ object AutoWeapon : Module("AutoWeapon", category = ModuleCategory.COMBAT) {
             }
 
             // Resend attack packet
-            mc.netHandler.addToSendQueue(event.packet)
+            sendPacket(event.packet)
             event.cancelEvent()
         }
     }
@@ -73,7 +74,7 @@ object AutoWeapon : Module("AutoWeapon", category = ModuleCategory.COMBAT) {
         // Switch back to old item after some time
         if (spoofedSlot > 0) {
             if (spoofedSlot == 1)
-                mc.netHandler.addToSendQueue(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
+                sendPacket(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
             spoofedSlot--
         }
     }

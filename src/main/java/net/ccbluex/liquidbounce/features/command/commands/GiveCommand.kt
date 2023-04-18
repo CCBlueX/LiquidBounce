@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.minecraft.item.Item
@@ -50,7 +51,7 @@ class GiveCommand : Command("give", "item", "i", "get") {
             }
 
             if (emptySlot != -1) {
-                mc.netHandler.addToSendQueue(C10PacketCreativeInventoryAction(emptySlot, itemStack))
+                sendPacket(C10PacketCreativeInventoryAction(emptySlot, itemStack))
                 chat("§7Given [§8${itemStack.displayName}§7] * §8${itemStack.stackSize}§7 to §8${mc.session.username}§7.")
             } else
                 chat("Your inventory is full.")

@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.InventoryUtils
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -18,6 +19,8 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.gui.inventory.GuiInventory
 import net.minecraft.init.Items
 import net.minecraft.network.play.client.*
+import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.DROP_ITEM
+import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 
@@ -46,14 +49,14 @@ object AutoSoup : Module("AutoSoup", category = ModuleCategory.COMBAT) {
         val soupInHotbar = InventoryUtils.findItem(36, 45, Items.mushroom_stew)
 
         if (thePlayer.health <= healthValue.get() && soupInHotbar != -1) {
-            mc.netHandler.addToSendQueue(C09PacketHeldItemChange(soupInHotbar - 36))
-            mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(thePlayer.inventory.getStackInSlot(soupInHotbar)))
+            sendPacket(C09PacketHeldItemChange(soupInHotbar - 36))
+            sendPacket(C08PacketPlayerBlockPlacement(thePlayer.inventory.getStackInSlot(soupInHotbar)))
 
             if (bowlValue.get() == "Drop")
-                mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.DROP_ITEM,
+                sendPacket(C07PacketPlayerDigging(DROP_ITEM,
                     BlockPos.ORIGIN, EnumFacing.DOWN))
 
-            mc.netHandler.addToSendQueue(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
+            sendPacket(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
             timer.reset()
             return
         }
@@ -81,7 +84,7 @@ object AutoSoup : Module("AutoSoup", category = ModuleCategory.COMBAT) {
                 val openInventory = mc.currentScreen !is GuiInventory && simulateInventoryValue.get()
 
                 if (openInventory)
-                    mc.netHandler.addToSendQueue(C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT))
+                    sendPacket(C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT))
 
                 mc.playerController.windowClick(0, bowlInHotbar, 0, 1, thePlayer)
             }
@@ -95,12 +98,12 @@ object AutoSoup : Module("AutoSoup", category = ModuleCategory.COMBAT) {
 
             val openInventory = mc.currentScreen !is GuiInventory && simulateInventoryValue.get()
             if (openInventory)
-                mc.netHandler.addToSendQueue(C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT))
+                sendPacket(C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT))
 
             mc.playerController.windowClick(0, soupInInventory, 0, 1, thePlayer)
 
             if (openInventory)
-                mc.netHandler.addToSendQueue(C0DPacketCloseWindow())
+                sendPacket(C0DPacketCloseWindow())
 
             timer.reset()
         }
