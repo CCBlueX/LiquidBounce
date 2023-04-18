@@ -26,7 +26,7 @@ open class Module @JvmOverloads constructor(
 
     val name: String,
     val category: ModuleCategory,
-    private val forcedDescription: String?,
+    private val forcedDescription: String? = null,
     keyBind: Int = Keyboard.KEY_NONE,
     val defaultInArray: Boolean = true, // Used in HideCommand to reset modules visibility.
     private val canEnable: Boolean = true,
