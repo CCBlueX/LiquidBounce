@@ -12,7 +12,7 @@ import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
 
 @SideOnly(Side.CLIENT)
-class ModuleElement(val module: Module) : ButtonElement(module.getName(spacedModulesValue.get())) {
+class ModuleElement(val module: Module) : ButtonElement(module.name) {
     override val displayName: String
         get() = module.getName(spacedModulesValue.get())
 
