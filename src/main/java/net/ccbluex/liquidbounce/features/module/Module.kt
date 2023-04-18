@@ -26,7 +26,7 @@ open class Module @JvmOverloads constructor(
 
     val name: String,
     val category: ModuleCategory,
-    val description: String = translation("module.${name.toLowerCamelCase()}.description"),
+    private val forcedDescription: String?,
     keyBind: Int = Keyboard.KEY_NONE,
     val defaultInArray: Boolean = true, // Used in HideCommand to reset modules visibility.
     private val canEnable: Boolean = true,
@@ -44,12 +44,16 @@ open class Module @JvmOverloads constructor(
 
             saveConfig(modulesConfig)
         }
+
     var inArray = defaultInArray
         set(value) {
             field = value
 
             saveConfig(modulesConfig)
         }
+
+    val description: String
+        get() = forcedDescription ?: translation("module.${name.toLowerCamelCase()}.description")
 
     var slideStep = 0F
 
