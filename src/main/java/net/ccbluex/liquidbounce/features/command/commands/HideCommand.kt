@@ -20,7 +20,7 @@ class HideCommand : Command("hide") {
                 args[1].equals("list", true) -> {
                     chat("§c§lHidden")
                     moduleManager.modules.filter { !it.inArray }.forEach {
-                        displayChatMessage("§6> §c${it.name}")
+                        displayChatMessage("§6> §c${it.getName()}")
                     }
                     return
                 }
@@ -54,7 +54,7 @@ class HideCommand : Command("hide") {
                     module.inArray = !module.inArray
 
                     // Response to user
-                    chat("Module §a§l${module.name}§3 is now §a§l${if (module.inArray) "visible" else "invisible"}§3 on the array list.")
+                    chat("Module §a§l${module.getName()}§3 is now §a§l${if (module.inArray) "visible" else "invisible"}§3 on the array list.")
                     playEdit()
                     return
                 }

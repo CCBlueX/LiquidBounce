@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.ui.font.GameFontRenderer
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.minecraft.client.gui.FontRenderer
+import kotlin.reflect.KProperty
 
 abstract class Value<T>(val name: String, protected open var value: T) {
 
@@ -64,6 +65,10 @@ abstract class Value<T>(val name: String, protected open var value: T) {
     protected open fun onChanged(oldValue: T, newValue: T) {}
     open fun isSupported() = true
 
+    operator fun getValue(u: Any?, property: KProperty<*>) = value
+
+    operator fun setValue(u: Any?, property: KProperty<*>, t: T) = set(t)
+
 }
 
 /**
@@ -79,7 +84,7 @@ open class BoolValue(name: String, value: Boolean) : Value<Boolean>(name, value)
         return null
     }
 
-    fun toggle() = changeValue(!value)
+    fun toggle() = set(!value)
 
     fun isActive() = value && isSupported()
 

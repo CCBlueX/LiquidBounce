@@ -52,7 +52,7 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
                 val newValue = !value.get()
                 value.set(newValue)
 
-                chat("§7${module.name} §8${args[1]}§7 was toggled ${if (newValue) "§8on§7" else "§8off§7" + "."}")
+                chat("§7${module.getName()} §8${args[1]}§7 was toggled ${if (newValue) "§8on§7" else "§8off§7" + "."}")
                 playEdit()
             }
 
@@ -93,7 +93,7 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
                                 return
                             }
 
-                            chat("§7${module.name} §8${args[1].lowercase()}§7 was set to §8${getBlockName(id)}§7.")
+                            chat("§7${module.getName()} §8${args[1].lowercase()}§7 was set to §8${getBlockName(id)}§7.")
                             playEdit()
 
                             return
@@ -122,7 +122,7 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
                         return
                     }
 
-                    chat("§7${module.name} §8${args[1]}§7 was set to §8${value.get()}§7.")
+                    chat("§7${module.getName()} §8${args[1]}§7 was set to §8${value.get()}§7.")
                     playEdit()
                 } catch (e: NumberFormatException) {
                     chatInvalid(args[2], value, "cannot be converted to a number for")

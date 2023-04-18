@@ -51,7 +51,7 @@ class ClickGuiConfig(file: File) : FileConfig(file) {
                         element.showSettings = elementObject["Settings"].asBoolean
                     } catch (e: Exception) {
                         LOGGER.error(
-                            "Error while loading clickgui module element with the name '" + element.module.name + "' (Panel Name: " + panel.name + ").", e
+                            "Error while loading clickgui module element with the name '" + element.module.getName() + "' (Panel Name: " + panel.name + ").", e
                         )
                     }
                 }

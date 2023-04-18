@@ -11,7 +11,7 @@ import net.minecraftforge.fml.relauncher.SideOnly
 import java.awt.Color
 
 @SideOnly(Side.CLIENT)
-abstract class ButtonElement(val displayName: String) : Element() {
+abstract class ButtonElement(open val displayName: String) : Element() {
     open val color: Int
         get() = Color.WHITE.rgb
 

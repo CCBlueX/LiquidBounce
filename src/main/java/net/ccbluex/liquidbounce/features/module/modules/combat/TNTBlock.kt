@@ -16,7 +16,7 @@ import net.minecraft.client.settings.GameSettings
 import net.minecraft.entity.item.EntityTNTPrimed
 import net.minecraft.item.ItemSword
 
-object TNTBlock : Module("TNTBlock", category = ModuleCategory.COMBAT) {
+object TNTBlock : Module("TNTBlock", category = ModuleCategory.COMBAT, spacedName = "TNT Block") {
     private val fuseValue = IntegerValue("Fuse", 10, 0, 80)
     private val rangeValue = FloatValue("Range", 9F, 1F, 20F)
     private val autoSwordValue = BoolValue("AutoSword", true)

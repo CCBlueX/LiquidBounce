@@ -33,9 +33,12 @@ object ClickGUI : Module("ClickGUI", ModuleCategory.RENDER, keyBind = Keyboard.K
     val maxElementsValue = IntegerValue("MaxElements", 15, 1, 30)
     val fadeSpeedValue = FloatValue("FadeSpeed", 1f, 0.5f, 2f)
     val scrollsValue = BoolValue("Scrolls", false)
+    val spacedModulesValue = BoolValue("SpacedModules", true)
+    val panelsBorderValue = BoolValue("PanelsNotBeyondBorder", true)
+
 
     private val colorRainbow = object : BoolValue("Rainbow", false) {
-        override fun isSupported() = styleValue.get() != "Slowly"
+        override fun isSupported() = styleValue.get() !in arrayOf("Slowly", "Black")
     }
     private val colorRedValue = object : IntegerValue("R", 0, 0, 255) {
         override fun isSupported() = colorRainbow.isSupported() && !colorRainbow.get()
@@ -59,11 +62,12 @@ object ClickGUI : Module("ClickGUI", ModuleCategory.RENDER, keyBind = Keyboard.K
     }
 
     private fun updateStyle() {
-        when (styleValue.get()) {
-            "LiquidBounce" -> clickGui.style = LiquidBounceStyle
-            "Null" -> clickGui.style = NullStyle
-            "Slowly" -> clickGui.style = SlowlyStyle
-            "Black" -> clickGui.style = BlackStyle
+        clickGui.style = when (styleValue.get()) {
+            "LiquidBounce" -> LiquidBounceStyle
+            "Null" -> NullStyle
+            "Slowly" -> SlowlyStyle
+            "Black" -> BlackStyle
+            else -> return
         }
     }
 
