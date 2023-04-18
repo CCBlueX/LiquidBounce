@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.InventoryUtils
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
@@ -28,6 +29,7 @@ import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.network.play.client.C09PacketHeldItemChange
 import net.minecraft.network.play.client.C0DPacketCloseWindow
 import net.minecraft.network.play.client.C16PacketClientStatus
+import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT
 import net.minecraft.potion.Potion
 
 object AutoPot : Module("AutoPot", category = ModuleCategory.COMBAT) {
@@ -75,7 +77,7 @@ object AutoPot : Module("AutoPot", category = ModuleCategory.COMBAT) {
                         return
 
                     potion = potionInHotbar
-                    mc.netHandler.addToSendQueue(C09PacketHeldItemChange(potion - 36))
+                    sendPacket(C09PacketHeldItemChange(potion - 36))
 
                     if (thePlayer.rotationPitch <= 80F) {
                         setTargetRotation(
@@ -94,12 +96,12 @@ object AutoPot : Module("AutoPot", category = ModuleCategory.COMBAT) {
                     val openInventory = mc.currentScreen !is GuiInventory && simulateInventory.get()
 
                     if (openInventory)
-                        mc.netHandler.addToSendQueue(C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT))
+                        sendPacket(C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT))
 
                     mc.playerController.windowClick(0, potionInInventory, 0, 1, thePlayer)
 
                     if (openInventory)
-                        mc.netHandler.addToSendQueue(C0DPacketCloseWindow())
+                        sendPacket(C0DPacketCloseWindow())
 
                     msTimer.reset()
                 }
@@ -109,8 +111,8 @@ object AutoPot : Module("AutoPot", category = ModuleCategory.COMBAT) {
                     val itemStack = thePlayer.inventoryContainer.getSlot(potion).stack
 
                     if (itemStack != null) {
-                        mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(itemStack))
-                        mc.netHandler.addToSendQueue(C09PacketHeldItemChange(thePlayer.inventory.currentItem))
+                        sendPacket(C08PacketPlayerBlockPlacement(itemStack))
+                        sendPacket(C09PacketHeldItemChange(thePlayer.inventory.currentItem))
 
                         msTimer.reset()
                     }

@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.AutoTool
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
@@ -26,6 +27,7 @@ import net.ccbluex.liquidbounce.value.*
 import net.minecraft.block.Block
 import net.minecraft.init.Blocks
 import net.minecraft.network.play.client.C07PacketPlayerDigging
+import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.*
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 import net.minecraft.util.Vec3
@@ -132,13 +134,13 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
                 // Break block
                 if (instantValue.get()) {
                     // CivBreak style block breaking
-                    mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK,
+                    sendPacket(C07PacketPlayerDigging(START_DESTROY_BLOCK,
                             currentPos, EnumFacing.DOWN))
 
                     if (swingValue.get())
                         thePlayer.swingItem()
 
-                    mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK,
+                    sendPacket(C07PacketPlayerDigging(STOP_DESTROY_BLOCK,
                             currentPos, EnumFacing.DOWN))
                     currentDamage = 0F
                     return
@@ -148,7 +150,7 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
                 val block = currentPos.getBlock() ?: return
 
                 if (currentDamage == 0F) {
-                    mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK,
+                    sendPacket(C07PacketPlayerDigging(START_DESTROY_BLOCK,
                             currentPos, EnumFacing.DOWN))
 
                     if (thePlayer.capabilities.isCreativeMode ||
@@ -170,8 +172,8 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
                 mc.theWorld.sendBlockBreakProgress(thePlayer.entityId, currentPos, (currentDamage * 10F).toInt() - 1)
 
                 if (currentDamage >= 1F) {
-                    mc.netHandler.addToSendQueue(C07PacketPlayerDigging(
-                        C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK,
+                    sendPacket(C07PacketPlayerDigging(
+                        STOP_DESTROY_BLOCK,
                             currentPos, EnumFacing.DOWN))
                     mc.playerController.onPlayerDestroyBlock(currentPos, EnumFacing.DOWN)
                     blockHitDelay = 4

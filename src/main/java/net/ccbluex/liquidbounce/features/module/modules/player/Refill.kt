@@ -7,6 +7,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.injection.implementations.IMixinItemStack
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -16,6 +17,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.network.play.client.C0DPacketCloseWindow
 import net.minecraft.network.play.client.C0EPacketClickWindow
 import net.minecraft.network.play.client.C16PacketClientStatus
+import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT
 import net.minecraft.network.play.server.S2EPacketCloseWindow
 
 object Refill : Module("Refill", ModuleCategory.PLAYER) {
@@ -99,7 +101,7 @@ object Refill : Module("Refill", ModuleCategory.PLAYER) {
         }
 
         if (simulateInventoryValue.get() && openInv && mc.currentScreen !is GuiInventory)
-            mc.netHandler.addToSendQueue(C0DPacketCloseWindow(mc.thePlayer.openContainer.windowId))
+            sendPacket(C0DPacketCloseWindow(mc.thePlayer.openContainer.windowId))
     }
 
     @EventTarget(ignoreCondition = true)
@@ -109,7 +111,7 @@ object Refill : Module("Refill", ModuleCategory.PLAYER) {
 
         when (packet) {
             is C16PacketClientStatus ->
-                if (packet.status == C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT)
+                if (packet.status == OPEN_INVENTORY_ACHIEVEMENT)
                     openInv = true
             is C0DPacketCloseWindow, is S2EPacketCloseWindow -> openInv = false
         }
@@ -117,9 +119,9 @@ object Refill : Module("Refill", ModuleCategory.PLAYER) {
 
     fun click(slot: Int, button: Int, mode: Int, stack: ItemStack) {
         if (simulateInventoryValue.get() && !openInv)
-            mc.netHandler.addToSendQueue(C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT))
+            sendPacket(C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT))
 
-        mc.netHandler.addToSendQueue(
+        sendPacket(
             C0EPacketClickWindow(mc.thePlayer.openContainer.windowId, slot, button, mode, stack,
                 mc.thePlayer.openContainer.getNextTransactionID(mc.thePlayer.inventory))
         )

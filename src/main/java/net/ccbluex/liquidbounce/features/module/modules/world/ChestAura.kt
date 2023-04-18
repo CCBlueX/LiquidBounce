@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getCenterDistance
@@ -88,7 +89,7 @@ object ChestAura : Module("ChestAura", ModuleCategory.WORLD) {
                     if (visualSwing.get())
                         thePlayer.swingItem()
                     else
-                        mc.netHandler.addToSendQueue(C0APacketAnimation())
+                        sendPacket(C0APacketAnimation())
 
                     clickedBlocks.add(currentBlock!!)
                     currentBlock = null

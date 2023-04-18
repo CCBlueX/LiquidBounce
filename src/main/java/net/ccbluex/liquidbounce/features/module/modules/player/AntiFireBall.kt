@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.RotationUtils.limitAngleChange
 import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
@@ -63,11 +64,11 @@ object AntiFireBall : Module("AntiFireBall", ModuleCategory.PLAYER) {
                     )
                 )
 
-            mc.thePlayer.sendQueue.addToSendQueue(C02PacketUseEntity(entity, C02PacketUseEntity.Action.ATTACK))
+            sendPacket(C02PacketUseEntity(entity, C02PacketUseEntity.Action.ATTACK))
 
             when (swingValue.get()) {
                 "Normal" -> mc.thePlayer.swingItem()
-                "Packet" -> mc.netHandler.addToSendQueue(C0APacketAnimation())
+                "Packet" -> sendPacket(C0APacketAnimation())
             }
 
             timer.reset()

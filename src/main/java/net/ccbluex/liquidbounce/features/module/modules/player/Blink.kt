@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.render.Breadcrumbs
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
@@ -20,6 +21,8 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.client.entity.EntityOtherPlayerMP
 import net.minecraft.network.Packet
 import net.minecraft.network.play.client.*
+import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.play.client.C03PacketPlayer.C06PacketPlayerPosLook
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.util.*
@@ -88,7 +91,7 @@ object Blink : Module("Blink", ModuleCategory.PLAYER) {
         if (packet is C03PacketPlayer) // Cancel all movement stuff
             event.cancelEvent()
 
-        if (packet is C03PacketPlayer.C04PacketPlayerPosition || packet is C03PacketPlayer.C06PacketPlayerPosLook ||
+        if (packet is C04PacketPlayerPosition || packet is C06PacketPlayerPosLook ||
             packet is C08PacketPlayerBlockPlacement ||
             packet is C0APacketAnimation ||
             packet is C0BPacketEntityAction || packet is C02PacketUseEntity
@@ -155,9 +158,8 @@ object Blink : Module("Blink", ModuleCategory.PLAYER) {
         try {
             disableLogger = true
 
-            while (!packets.isEmpty()) {
-                mc.netHandler.networkManager.sendPacket(packets.take())
-            }
+            while (!packets.isEmpty())
+                sendPacket(packets.take())
 
             disableLogger = false
         } catch (e: Exception) {

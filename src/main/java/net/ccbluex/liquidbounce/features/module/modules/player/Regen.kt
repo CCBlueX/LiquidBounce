@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -43,7 +44,7 @@ object Regen : Module("Regen", ModuleCategory.PLAYER) {
             when (modeValue.get().lowercase()) {
                 "vanilla" -> {
                     repeat(speedValue.get()) {
-                        mc.netHandler.addToSendQueue(C03PacketPlayer(mc.thePlayer.onGround))
+                        sendPacket(C03PacketPlayer(mc.thePlayer.onGround))
                     }
                 }
 
@@ -52,7 +53,7 @@ object Regen : Module("Regen", ModuleCategory.PLAYER) {
                         return
 
                     repeat(9) {
-                        mc.netHandler.addToSendQueue(C03PacketPlayer(mc.thePlayer.onGround))
+                        sendPacket(C03PacketPlayer(mc.thePlayer.onGround))
                     }
 
                     mc.timer.timerSpeed = 0.45F

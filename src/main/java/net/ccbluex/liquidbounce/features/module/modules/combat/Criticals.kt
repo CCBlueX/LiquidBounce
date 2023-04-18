@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -48,16 +49,16 @@ object Criticals : Module("Criticals", category = ModuleCategory.COMBAT) {
 
             when (modeValue.get().lowercase()) {
                 "packet" -> {
-                    mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y + 0.0625, z, true))
-                    mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y, z, false))
-                    mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y + 1.1E-5, z, false))
-                    mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y, z, false))
+                    sendPacket(C04PacketPlayerPosition(x, y + 0.0625, z, true))
+                    sendPacket(C04PacketPlayerPosition(x, y, z, false))
+                    sendPacket(C04PacketPlayerPosition(x, y + 1.1E-5, z, false))
+                    sendPacket(C04PacketPlayerPosition(x, y, z, false))
                     thePlayer.onCriticalHit(entity)
                 }
                 "ncppacket" -> {
-                    mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y + 0.11, z, false))
-                    mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y + 0.1100013579, z, false))
-                    mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y + 0.0000013579, z, false))
+                    sendPacket(C04PacketPlayerPosition(x, y + 0.11, z, false))
+                    sendPacket(C04PacketPlayerPosition(x, y + 0.1100013579, z, false))
+                    sendPacket(C04PacketPlayerPosition(x, y + 0.0000013579, z, false))
                     mc.thePlayer.onCriticalHit(entity)
                 }
                 "hop" -> {
@@ -66,8 +67,8 @@ object Criticals : Module("Criticals", category = ModuleCategory.COMBAT) {
                     thePlayer.onGround = false
                 }
                 "tphop" -> {
-                    mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y + 0.02, z, false))
-                    mc.netHandler.addToSendQueue(C04PacketPlayerPosition(x, y + 0.01, z, false))
+                    sendPacket(C04PacketPlayerPosition(x, y + 0.02, z, false))
+                    sendPacket(C04PacketPlayerPosition(x, y + 0.01, z, false))
                     thePlayer.setPosition(x, y + 0.01, z)
                 }
                 "jump" -> thePlayer.motionY = 0.42

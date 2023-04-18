@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawFilledBox
@@ -86,11 +87,11 @@ object BugUp : Module("BugUp", ModuleCategory.MOVEMENT) {
                         thePlayer.motionY += 0.1
                         thePlayer.fallDistance = 0F
                     }
-                    "ongroundspoof" -> mc.netHandler.addToSendQueue(C03PacketPlayer(true))
+                    "ongroundspoof" -> sendPacket(C03PacketPlayer(true))
 
                     "motionteleport-flag" -> {
                         thePlayer.setPositionAndUpdate(thePlayer.posX, thePlayer.posY + 1f, thePlayer.posZ)
-                        mc.netHandler.addToSendQueue(C04PacketPlayerPosition(thePlayer.posX, thePlayer.posY, thePlayer.posZ, true))
+                        sendPacket(C04PacketPlayerPosition(thePlayer.posX, thePlayer.posY, thePlayer.posZ, true))
                         thePlayer.motionY = 0.1
 
                         strafe()

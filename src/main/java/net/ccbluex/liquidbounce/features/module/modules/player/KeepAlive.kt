@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 
 import net.ccbluex.liquidbounce.utils.InventoryUtils
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.init.Items
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
@@ -35,9 +36,9 @@ object KeepAlive : Module("KeepAlive", ModuleCategory.PLAYER) {
                     val soupInHotbar = InventoryUtils.findItem(36, 45, Items.mushroom_stew)
 
                     if (soupInHotbar != -1) {
-                        mc.netHandler.addToSendQueue(C09PacketHeldItemChange(soupInHotbar - 36))
-                        mc.netHandler.addToSendQueue(C08PacketPlayerBlockPlacement(thePlayer.inventory.getStackInSlot(soupInHotbar)))
-                        mc.netHandler.addToSendQueue(C09PacketHeldItemChange(thePlayer.inventory.currentItem))
+                        sendPacket(C09PacketHeldItemChange(soupInHotbar - 36))
+                        sendPacket(C08PacketPlayerBlockPlacement(thePlayer.inventory.getStackInSlot(soupInHotbar)))
+                        sendPacket(C09PacketHeldItemChange(thePlayer.inventory.currentItem))
                     }
                 }
             }
