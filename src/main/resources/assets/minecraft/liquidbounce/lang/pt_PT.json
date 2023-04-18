@@ -32,17 +32,17 @@
 
         "module.autoWeapon.description": "Automaticamente escolhe a melhor arma no teu Automatically selects the best weapon in your hotbar.",
 
-        "module.backtrack.description": "Allows you to hit players by attacking their previous cached positions.",
+        "module.backtrack.description": "Permite que tu ataques jogadores por clicar nas posições anteriores registades deles.",
 
-        "module.bowAimbot.description": "Automaicamente olha nas entidades selecionadas enquanto se usa um arco.",
+        "module.bowAimbot.description": "Automaticamente olha nas entidades selecionadas enquanto se usa um arco.",
 
-        "module.criticals.description": "Automatically deals critical hits.",
+        "module.criticals.description": "Automaticamente dá ataques críticos.",
 
         "module.fastBow.description": "Torna o teu arco em uma metrelhadora.",
 
-        "module.hitBox.description": "Makes hitboxes of targets bigger.",
+        "module.hitBox.description": "Torna as ""hitboxes"" dos alvos maiores.",
 
-        "module.ignite.description": "Automatically sets targets around you on fire.",
+        "module.ignite.description": "Automaticamente mete os teus alvos á volta de tí em fogo.",
 
         "module.killAura.description": "Automaticamente ataca alvos á volta de tí.",
 
@@ -50,23 +50,23 @@
 
         "module.superKnockback.description": "Increases knockback dealt to other entities.",
 
-        "module.teleportHit.description": "Allows to hit entities from far away.",
+        "module.teleportHit.description": "Permite que tu ataques jogadores de longe.",
 
         "module.tNTBlock.description": "Automatically blocks with your sword when TNT around you explodes.",
 
-        "module.trigger.description": "Automatically attacks the entity you are looking at.",
+        "module.trigger.description": "Automaticamente ataca as entidates de que estás a olhar em.",
 
-        "module.velocity.description": "Allows you to modify the amount of knockback you take.",
+        "module.velocity.description": "Permite que tu modifiques a quantidade de ""knockback"" que tu levas.",
 
         "module.abortBreaking.description:": "Allows you to abort breaking.",
 
-        "module.antiHunger.description": "Prevents you from getting hungry.",
+        "module.antiHunger.description": "Prevém que tu fiques com fome.",
 
-        "module.bedGodMode.description": "Allows you to walk around lying in a bed. (For 1.9)",
+        "module.bedGodMode.description": "Permite que tu andes enquanto estás numa cama (Para 1.9)",
 
         "module.clip.description": "Allows you to clip through blocks.",
         
-        "module.airJump.description": "Permite que tú saltes no meio do ár",
+        "module.airJump.description": "Permite que tu saltes no meio do ár",
         
         "module.airLadder.description": "Allows you to climb up ladders/vines without touching them.",
         
@@ -78,11 +78,11 @@
         
         "module.antiBot.description": "Prevém o KillAura de atacar bots dos AntiCheats.",
         
-        "module.antiCactus.description": "Prevém cactus de te magoar.",
+        "module.antiCactus.description": "Prevém cactús de te magoar.",
         
-        "module.antiFireBall.description": "Automatically punches fireballs away from you.",
+        "module.antiFireBall.description": "Automaticamente ataqua ""fireballs"" para fora do teu redor.",
         
-        "module.atAllProvider.description": "Automatically mentions everyone on the server when using '@a' in your message.",
+        "module.atAllProvider.description": "Automaticamente menciona todos no servidor quando for utilizado '@a' na tua mensagem.",
         
         "module.attackEffects.description": "Show effect when you attack",
         
@@ -98,7 +98,7 @@
         
         "module.autoWalk.description": "Automatically makes you walk.",
         
-        "module.blink.description": "Suspends all movement packets.",
+        "module.blink.description": "Suspende todos os ""packets"" de movimento.",
         
         "module.blockESP.description": "Allows you to see a selected block through walls.",
         
@@ -122,7 +122,7 @@
         
         "module.civBreak.description": "Allows you to break blocks instantly.",
         
-        "module.clickGUI.description": "Opens the ClickGUI.",
+        "module.clickGUI.description": "Abre o ClickGUI.",
         
         "module.componentOnHover.description": "Allows you to see onclick action and value of chat message components when hovered.",
         
@@ -132,7 +132,7 @@
         
         "module.derp.description": "Makes it look like you were derping around.",
         
-        "module.eSP.description": "Allows you to see targets through walls.",
+        "module.eSP.description": "Permite que tu vejas álvos através de paredes.",
         
         "module.eagle.description": "Makes you eagle (aka. FastBridge).",
         
