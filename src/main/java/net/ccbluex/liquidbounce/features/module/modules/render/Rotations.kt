@@ -37,5 +37,5 @@ object Rotations : Module("Rotations", ModuleCategory.RENDER
     /**
      * Rotate when current rotation is not null or special modules which do not make use of RotationUtils like Derp are enabled.
      */
-    fun shouldRotate() = Derp.state || targetRotation != null
+    fun shouldRotate() = state && (Derp.state || targetRotation != null)
 }
