@@ -149,7 +149,7 @@ object RotationManager : Listenable {
                         if (visible) {
                             if (visibleRot == null || rotationDifference(
                                     rotation, currentRotation
-                                ) <= rotationDifference(visibleRot.rotation, currentRotation)
+                                ) < rotationDifference(visibleRot.rotation, currentRotation)
                             ) {
                                 visibleRot = VecRotation(rotation, vec3)
                             }
