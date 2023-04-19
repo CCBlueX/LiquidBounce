@@ -74,7 +74,7 @@ object KillAura : Module("KillAura", category = ModuleCategory.COMBAT, keyBind =
     private val simulateCooldown = BoolValue("SimulateCooldown", false)
 
     // CPS - Attack speed
-    private val maxCPS: IntegerValue = object : IntegerValue("MaxCPS", 8, 1, 20) {
+    private val maxCPS: IntegerValue = object : IntegerValue("MaxCPS", 12, 1, 20) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minCPS.get())
 
         override fun onChanged(oldValue: Int, newValue: Int) {
@@ -84,7 +84,7 @@ object KillAura : Module("KillAura", category = ModuleCategory.COMBAT, keyBind =
         override fun isSupported() = !simulateCooldown.get()
     }
 
-    private val minCPS: IntegerValue = object : IntegerValue("MinCPS", 5, 1, 20) {
+    private val minCPS: IntegerValue = object : IntegerValue("MinCPS", 8, 1, 20) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxCPS.get())
 
         override fun onChanged(oldValue: Int, newValue: Int) {
@@ -102,7 +102,7 @@ object KillAura : Module("KillAura", category = ModuleCategory.COMBAT, keyBind =
 
     // Range
     // TODO: Make block range independent from attack range
-    private val rangeValue : FloatValue = object : FloatValue("Range", 3.7f, 1f, 8f) {
+    private val rangeValue : FloatValue = object : FloatValue("Range", 3f, 1f, 8f) {
         override fun onChanged(oldValue: Float, newValue: Float) {
             blockRangeValue.set(blockRangeValue.get().coerceAtMost(newValue))
         }
@@ -125,11 +125,11 @@ object KillAura : Module("KillAura", category = ModuleCategory.COMBAT, keyBind =
 
     // Bypass
     private val swingValue = BoolValue("Swing", true)
-    private val keepSprintValue = BoolValue("KeepSprint", true)
+    private val keepSprintValue = BoolValue("KeepSprint", false)
 
     // AutoBlock
-    private val autoBlockValue = ListValue("AutoBlock", arrayOf("Off", "Packet", "AfterTick", "Fake"), "Packet")
-    private val interactAutoBlockValue = object : BoolValue("InteractAutoBlock", true) {
+    private val autoBlockValue = ListValue("AutoBlock", arrayOf("Off", "Packet", "AfterTick", "Fake"), "Fake")
+    private val interactAutoBlockValue = object : BoolValue("InteractAutoBlock", false) {
         override fun isSupported() = autoBlockValue.get() !in setOf("Off", "Fake")
     }
 
@@ -168,10 +168,10 @@ object KillAura : Module("KillAura", category = ModuleCategory.COMBAT, keyBind =
     }
 
     // Turn Speed
-    private val maxTurnSpeed: FloatValue = object : FloatValue("MaxTurnSpeed", 180f, 0f, 180f) {
+    private val maxTurnSpeed: FloatValue = object : FloatValue("MaxTurnSpeed", 120f, 0f, 180f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minTurnSpeed.get())
     }
-    private val minTurnSpeed: FloatValue = object : FloatValue("MinTurnSpeed", 180f, 0f, 180f) {
+    private val minTurnSpeed: FloatValue = object : FloatValue("MinTurnSpeed", 40f, 0f, 180f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxTurnSpeed.get())
 
         override fun isSupported() = !maxTurnSpeed.isMinimal()
@@ -211,7 +211,7 @@ object KillAura : Module("KillAura", category = ModuleCategory.COMBAT, keyBind =
     private val silentRotationValue = object : BoolValue("SilentRotation", true) {
         override fun isSupported() = !maxTurnSpeed.isMinimal()
     }
-    private val rotationStrafeValue = object : ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") {
+    private val rotationStrafeValue = object : ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Strict") {
         override fun isSupported() = silentRotationValue.isActive()
     }
     private val randomCenterValue = object : BoolValue("RandomCenter", true) {
@@ -226,12 +226,12 @@ object KillAura : Module("KillAura", category = ModuleCategory.COMBAT, keyBind =
     private val predictValue = object : BoolValue("Predict", true) {
         override fun isSupported() = !maxTurnSpeed.isMinimal()
     }
-    private val maxPredictSize: FloatValue = object : FloatValue("MaxPredictSize", 1f, 0.1f, 5f) {
+    private val maxPredictSize: FloatValue = object : FloatValue("MaxPredictSize", 1.25f, 0.1f, 5f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minPredictSize.get())
 
         override fun isSupported() = predictValue.isActive()
     }
-    private val minPredictSize: FloatValue = object : FloatValue("MinPredictSize", 1f, 0.1f, 5f) {
+    private val minPredictSize: FloatValue = object : FloatValue("MinPredictSize", 0.75f, 0.1f, 5f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxPredictSize.get())
 
         override fun isSupported() = predictValue.isActive() && !maxPredictSize.isMinimal()
