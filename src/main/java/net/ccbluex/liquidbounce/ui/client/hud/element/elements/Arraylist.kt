@@ -111,7 +111,7 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
     private val textY by FloatValue("TextY", 1F, 0F, 20F)
 
     companion object {
-        val spacedModules by BoolValue("SpacedModules", true)
+        val spacedModules by BoolValue("SpacedModules", false)
     }
 
     private var x2 = 0
