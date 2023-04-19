@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMod
 import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.minecraft.network.play.client.C09PacketHeldItemChange
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
@@ -26,7 +27,7 @@ class MineplexGround : SpeedMode("MineplexGround") {
         for (i in 36..44) {
             val itemStack = mc.thePlayer.inventory.getStackInSlot(i)
             if (itemStack != null) continue
-            mc.netHandler.addToSendQueue(C09PacketHeldItemChange(i - 36))
+            sendPacket(C09PacketHeldItemChange(i - 36))
             spoofSlot = true
             break
         }
@@ -48,12 +49,12 @@ class MineplexGround : SpeedMode("MineplexGround") {
         if (targetSpeed > speed) speed += targetSpeed / 8
         if (speed >= targetSpeed) speed = targetSpeed
         strafe(speed)
-        if (!spoofSlot) mc.netHandler.addToSendQueue(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
+        if (!spoofSlot) sendPacket(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
     }
 
     override fun onMove(event: MoveEvent) {}
     override fun onDisable() {
         speed = 0f
-        mc.netHandler.addToSendQueue(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
+        sendPacket(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
     }
 }

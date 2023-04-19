@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PlaceRotation
 import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.getRotationDifference
@@ -251,7 +252,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, keyBind = Keyboard.KE
                 val shouldEagle = isReplaceable(blockPos) || dif < edgeDistanceValue.get()
                 if (eagleValue.get() == "Silent") {
                     if (eagleSneaking != shouldEagle) {
-                        mc.netHandler.addToSendQueue(
+                        sendPacket(
                             C0BPacketEntityAction(
                                 player, if (shouldEagle) {
                                     C0BPacketEntityAction.Action.START_SNEAKING
@@ -472,7 +473,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, keyBind = Keyboard.KE
 
                 "spoof", "switch" -> {
                     if (blockSlot - 36 != slot) {
-                        mc.netHandler.addToSendQueue(C09PacketHeldItemChange(blockSlot - 36))
+                        sendPacket(C09PacketHeldItemChange(blockSlot - 36))
                     }
                 }
             }
@@ -494,13 +495,13 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, keyBind = Keyboard.KE
             if (swingValue.get()) {
                 player.swingItem()
             } else {
-                mc.netHandler.addToSendQueue(C0APacketAnimation())
+                sendPacket(C0APacketAnimation())
             }
         }
 
         if (autoBlockValue.get() == "Switch") {
             if (slot != player.inventory.currentItem) {
-                mc.netHandler.addToSendQueue(C09PacketHeldItemChange(player.inventory.currentItem))
+                sendPacket(C09PacketHeldItemChange(player.inventory.currentItem))
             }
         }
 
@@ -548,7 +549,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, keyBind = Keyboard.KE
             if (swingValue.get()) {
                 player.swingItem()
             } else {
-                mc.netHandler.addToSendQueue(C0APacketAnimation())
+                sendPacket(C0APacketAnimation())
             }
         }
 
@@ -565,7 +566,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, keyBind = Keyboard.KE
         if (!GameSettings.isKeyDown(mc.gameSettings.keyBindSneak)) {
             mc.gameSettings.keyBindSneak.pressed = false
             if (eagleSneaking) {
-                mc.netHandler.addToSendQueue(
+                sendPacket(
                     C0BPacketEntityAction(
                         player, C0BPacketEntityAction.Action.STOP_SNEAKING
                     )
@@ -584,7 +585,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, keyBind = Keyboard.KE
         mc.timer.timerSpeed = 1f
 
         if (slot != player.inventory.currentItem) {
-            mc.netHandler.addToSendQueue(C09PacketHeldItemChange(player.inventory.currentItem))
+            sendPacket(C09PacketHeldItemChange(player.inventory.currentItem))
         }
     }
 

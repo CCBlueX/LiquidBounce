@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.player.AutoTool
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
@@ -28,6 +29,7 @@ import net.minecraft.block.BlockLiquid
 import net.minecraft.init.Blocks
 import net.minecraft.item.ItemSword
 import net.minecraft.network.play.client.C07PacketPlayerDigging
+import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.*
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 import net.minecraft.util.Vec3
@@ -148,8 +150,8 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD) {
 
                 // Start block breaking
                 if (currentDamage == 0F) {
-                    mc.netHandler.addToSendQueue(
-                        C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK,
+                    sendPacket(
+                        C07PacketPlayerDigging(START_DESTROY_BLOCK,
                             blockPos, EnumFacing.DOWN)
                     )
 
@@ -172,7 +174,7 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD) {
 
                 // End of breaking block
                 if (currentDamage >= 1F) {
-                    mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK, blockPos, EnumFacing.DOWN))
+                    sendPacket(C07PacketPlayerDigging(STOP_DESTROY_BLOCK, blockPos, EnumFacing.DOWN))
                     mc.playerController.onPlayerDestroyBlock(blockPos, EnumFacing.DOWN)
                     blockHitDelay = hitDelayValue.get()
                     currentDamage = 0F
@@ -208,10 +210,10 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD) {
                     }
                     .forEach { (pos, _) ->
                         // Instant break block
-                        mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.START_DESTROY_BLOCK,
+                        sendPacket(C07PacketPlayerDigging(START_DESTROY_BLOCK,
                                 pos, EnumFacing.DOWN))
                         thePlayer.swingItem()
-                        mc.netHandler.addToSendQueue(C07PacketPlayerDigging(C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK,
+                        sendPacket(C07PacketPlayerDigging(STOP_DESTROY_BLOCK,
                                 pos, EnumFacing.DOWN))
                         attackedBlocks.add(pos)
                     }

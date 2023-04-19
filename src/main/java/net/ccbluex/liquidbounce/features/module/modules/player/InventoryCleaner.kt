@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.injection.implementations.IMixinItemStack
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
 import net.ccbluex.liquidbounce.utils.item.ItemUtils
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils.randomDelay
@@ -135,13 +136,13 @@ object InventoryCleaner : Module("InventoryCleaner", ModuleCategory.PLAYER) {
             val openInventory = mc.currentScreen !is GuiInventory && simulateInventory.get()
 
             if (openInventory) {
-                mc.netHandler.addToSendQueue(C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT))
+                sendPacket(C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT))
             }
 
             mc.playerController.windowClick(thePlayer.openContainer.windowId, garbageItem, 1, 4, thePlayer)
 
             if (openInventory) {
-                mc.netHandler.addToSendQueue(C0DPacketCloseWindow())
+                sendPacket(C0DPacketCloseWindow())
             }
 
             delay = randomDelay(minDelayValue.get(), maxDelayValue.get())
@@ -224,13 +225,13 @@ object InventoryCleaner : Module("InventoryCleaner", ModuleCategory.PLAYER) {
             if (bestItem != index) {
                 val openInventory = mc.currentScreen !is GuiInventory && simulateInventory.get()
 
-                if (openInventory) mc.netHandler.addToSendQueue(C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT))
+                if (openInventory) sendPacket(C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT))
 
                 mc.playerController.windowClick(
                     0, if (bestItem < 9) bestItem + 36 else bestItem, index, 2, thePlayer
                 )
 
-                if (openInventory) mc.netHandler.addToSendQueue(C0DPacketCloseWindow())
+                if (openInventory) sendPacket(C0DPacketCloseWindow())
 
                 delay = randomDelay(minDelayValue.get(), maxDelayValue.get())
                 break

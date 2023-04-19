@@ -9,7 +9,8 @@ import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed.aacGroundTimerValue
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
-import net.minecraft.network.play.client.C03PacketPlayer
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 
 class AACGround : SpeedMode("AACGround") {
     override fun onUpdate() {
@@ -17,9 +18,7 @@ class AACGround : SpeedMode("AACGround") {
             return
 
         mc.timer.timerSpeed = aacGroundTimerValue.get()
-        mc.netHandler.addToSendQueue(
-            C03PacketPlayer.C04PacketPlayerPosition(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ, true)
-        )
+        sendPacket(C04PacketPlayerPosition(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ, true))
     }
 
     override fun onMotion() {}

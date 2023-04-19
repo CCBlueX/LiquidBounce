@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.minecraft.init.Items
 import net.minecraft.item.ItemStack
@@ -46,7 +47,7 @@ class HoloStandCommand : Command("holostand") {
                 base.setTag("EntityTag", entityTag)
                 itemStack.tagCompound = base
                 itemStack.setStackDisplayName("§c§lHolo§eStand")
-                mc.netHandler.addToSendQueue(C10PacketCreativeInventoryAction(36, itemStack))
+                sendPacket(C10PacketCreativeInventoryAction(36, itemStack))
 
                 chat("The HoloStand was successfully added to your inventory.")
             } catch (exception: NumberFormatException) {

@@ -21,6 +21,7 @@ import net.ccbluex.liquidbounce.utils.EntityUtils.targetInvisible
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetMobs
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetPlayer
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
 import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.getCenter
@@ -51,6 +52,8 @@ import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.ItemAxe
 import net.minecraft.item.ItemSword
 import net.minecraft.network.play.client.*
+import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.RELEASE_USE_ITEM
+import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT
 import net.minecraft.potion.Potion
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
@@ -442,7 +445,7 @@ object KillAura : Module("KillAura", category = ModuleCategory.COMBAT, keyBind =
         val failHit = failRate > 0 && nextInt(endExclusive = 100) <= failRate
 
         // Close inventory when open
-        if (openInventory) mc.netHandler.addToSendQueue(C0DPacketCloseWindow())
+        if (openInventory) sendPacket(C0DPacketCloseWindow())
 
         // Check is not hitable or check failrate
 
@@ -482,7 +485,7 @@ object KillAura : Module("KillAura", category = ModuleCategory.COMBAT, keyBind =
         }
 
         // Open inventory
-        if (openInventory) mc.netHandler.addToSendQueue(C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT))
+        if (openInventory) sendPacket(C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT))
     }
 
     /**
@@ -603,7 +606,7 @@ object KillAura : Module("KillAura", category = ModuleCategory.COMBAT, keyBind =
         // Attack target
         if (swingValue.get()) thePlayer.swingItem()
 
-        mc.netHandler.addToSendQueue(C02PacketUseEntity(entity, C02PacketUseEntity.Action.ATTACK))
+        sendPacket(C02PacketUseEntity(entity, C02PacketUseEntity.Action.ATTACK))
 
         if (keepSprintValue.get()) {
             // Critical Effect
@@ -773,7 +776,7 @@ object KillAura : Module("KillAura", category = ModuleCategory.COMBAT, keyBind =
                 val movingObject = boundingBox.calculateIntercept(positionEye, lookAt) ?: return
                 val hitVec = movingObject.hitVec
 
-                mc.netHandler.addToSendQueue(
+                sendPacket(
                     C02PacketUseEntity(
                         interactEntity, Vec3(
                             hitVec.xCoord - interactEntity.posX,
@@ -782,10 +785,10 @@ object KillAura : Module("KillAura", category = ModuleCategory.COMBAT, keyBind =
                         )
                     )
                 )
-                mc.netHandler.addToSendQueue(C02PacketUseEntity(interactEntity, C02PacketUseEntity.Action.INTERACT))
+                sendPacket(C02PacketUseEntity(interactEntity, C02PacketUseEntity.Action.INTERACT))
             }
 
-            mc.netHandler.addToSendQueue(
+            sendPacket(
                 C08PacketPlayerBlockPlacement(
                     BlockPos(-1, -1, -1), 255, mc.thePlayer.heldItem, 0f, 0f, 0f
                 )
@@ -802,11 +805,7 @@ object KillAura : Module("KillAura", category = ModuleCategory.COMBAT, keyBind =
      */
     private fun stopBlocking() {
         if (blockStatus) {
-            mc.netHandler.addToSendQueue(
-                C07PacketPlayerDigging(
-                    C07PacketPlayerDigging.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN
-                )
-            )
+            sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
             blockStatus = false
         }
 

@@ -1,7 +1,8 @@
 {
     "locale": "en_US",
     "contributors": [
-        "1zuna"
+        "1zuna",
+        "Zywl"
     ],
     "translations": {
         "menu.altManager": "Alt Manager",
@@ -58,6 +59,8 @@
         "module.velocity.description": "Allows you to modify the amount of knockback you take.",
 
         "module.abortBreaking.description:": "Allows you to abort breaking.",
+
+        "module.ambience.description:" : "Change your world time and weather client-side.",
 
         "module.antiHunger.description": "Prevents you from getting hungry.",
 

@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.render.BlockOverlay
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.InventoryUtils
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PlaceRotation
 import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
@@ -35,7 +36,7 @@ import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.client.renderer.GlStateManager.resetColor
 import net.minecraft.init.Blocks
 import net.minecraft.item.ItemBlock
-import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 import net.minecraft.network.play.client.C09PacketHeldItemChange
 import net.minecraft.network.play.client.C0APacketAnimation
 import net.minecraft.stats.StatList
@@ -134,7 +135,7 @@ object Tower : Module("Tower", ModuleCategory.WORLD, keyBind = Keyboard.KEY_O) {
         lockRotation = null
 
         if (slot != thePlayer.inventory.currentItem) {
-            mc.netHandler.addToSendQueue(C09PacketHeldItemChange(thePlayer.inventory.currentItem))
+            sendPacket(C09PacketHeldItemChange(thePlayer.inventory.currentItem))
         }
     }
 
@@ -212,13 +213,13 @@ object Tower : Module("Tower", ModuleCategory.WORLD, keyBind = Keyboard.KEY_O) {
 
             "packet" -> if (thePlayer.onGround && timer.hasTimePassed(2)) {
                 fakeJump()
-                mc.netHandler.addToSendQueue(
-                    C03PacketPlayer.C04PacketPlayerPosition(
+                sendPacket(
+                    C04PacketPlayerPosition(
                         thePlayer.posX, thePlayer.posY + 0.42, thePlayer.posZ, false
                     )
                 )
-                mc.netHandler.addToSendQueue(
-                    C03PacketPlayer.C04PacketPlayerPosition(
+                sendPacket(
+                    C04PacketPlayerPosition(
                         thePlayer.posX, thePlayer.posY + 0.753, thePlayer.posZ, false
                     )
                 )
@@ -300,13 +301,13 @@ object Tower : Module("Tower", ModuleCategory.WORLD, keyBind = Keyboard.KEY_O) {
 
                 "Spoof" -> {
                     if (blockSlot - 36 != slot) {
-                        mc.netHandler.addToSendQueue(C09PacketHeldItemChange(blockSlot - 36))
+                        sendPacket(C09PacketHeldItemChange(blockSlot - 36))
                     }
                 }
 
                 "Switch" -> {
                     if (blockSlot - 36 != slot) {
-                        mc.netHandler.addToSendQueue(C09PacketHeldItemChange(blockSlot - 36))
+                        sendPacket(C09PacketHeldItemChange(blockSlot - 36))
                     }
                 }
             }
@@ -321,11 +322,11 @@ object Tower : Module("Tower", ModuleCategory.WORLD, keyBind = Keyboard.KEY_O) {
             if (swingValue.get()) {
                 thePlayer.swingItem()
             } else {
-                mc.netHandler.addToSendQueue(C0APacketAnimation())
+                sendPacket(C0APacketAnimation())
             }
         }
         if (autoBlockValue.get() == "Switch" && slot != mc.thePlayer.inventory.currentItem)
-            mc.netHandler.addToSendQueue(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
+            sendPacket(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
 
         placeInfo = null
     }
