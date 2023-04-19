@@ -177,12 +177,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
             updateElement()
         }
 
-        return Border(
-                -2F,
-                -2F,
-                fontRenderer.getStringWidth(displayText) + 2F,
-                fontRenderer.FONT_HEIGHT.toFloat()
-        )
+        return Border(-2F, -2F, fontRenderer.getStringWidth(displayText) + 2F, fontRenderer.FONT_HEIGHT.toFloat())
     }
 
     override fun updateElement() {

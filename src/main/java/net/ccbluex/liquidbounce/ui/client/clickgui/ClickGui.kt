@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.ui.client.GuiClientSettings
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ButtonElement
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ModuleElement
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.Style
+import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.BlackStyle
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.LiquidBounceStyle
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.SlowlyStyle
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
@@ -231,7 +232,7 @@ object ClickGui : GuiScreen() {
     }
 
     override fun updateScreen() {
-        if (style is SlowlyStyle) {
+        if (style is SlowlyStyle || style is BlackStyle) {
             for (panel in panels) {
                 for (element in panel.elements) {
                     if (element is ButtonElement)

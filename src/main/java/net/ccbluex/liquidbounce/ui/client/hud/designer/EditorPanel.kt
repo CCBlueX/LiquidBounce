@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.ui.client.hud.designer
 
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.guiColor
+import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.ui.client.hud.HUD
 import net.ccbluex.liquidbounce.ui.client.hud.HUD.ELEMENTS
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
@@ -271,6 +272,8 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 
         // Values
         for (value in element.values) {
+            if (!value.isSupported()) continue
+
             when (value) {
                 is BoolValue -> {
                     // Title
@@ -281,9 +284,11 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
                         width = stringWidth + 8
 
                     // Toggle value
-                    if (Mouse.isButtonDown(0) && !mouseDown && mouseX in x..x + width &&
-                            mouseY in y + height..y + height + 10)
+                    if (Mouse.isButtonDown(0) && !mouseDown && mouseX in x..x + width && mouseY in y + height..y + height + 10) {
                         value.toggle()
+                        element.updateElement()
+                        ClickGui.style.clickSound()
+                    }
 
                     // Change pos
                     height += 10
@@ -317,6 +322,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
                         val curr = MathHelper.clamp_float((mouseX - x - 8F) / (prevWidth - 18F), 0F, 1F)
 
                         value.set(min + (max - min) * curr)
+                        element.updateElement()
                     }
 
                     // Change pos
@@ -351,6 +357,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
                         val curr = MathHelper.clamp_float((mouseX - x - 8F) / (prevWidth - 18F), 0F, 1F)
 
                         value.set((min + (max - min) * curr).toInt())
+                        element.updateElement()
                     }
 
                     // Change pos
@@ -376,8 +383,11 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
                             width = stringWidth + 8
 
                         // Select value
-                        if (Mouse.isButtonDown(0) && !mouseDown && mouseX in x..x + width&& mouseY in y + height..y + height + 10)
+                        if (Mouse.isButtonDown(0) && !mouseDown && mouseX in x..x + width&& mouseY in y + height..y + height + 10) {
                             value.set(s)
+                            element.updateElement()
+                            ClickGui.style.clickSound()
+                        }
 
                         // Change pos
                         height += 10
@@ -400,6 +410,8 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
                     ) {
                         if (Mouse.isButtonDown(0)) value.next()
                         else value.previous()
+                        element.updateElement()
+                        ClickGui.style.clickSound()
                     }
 
                     height += 10

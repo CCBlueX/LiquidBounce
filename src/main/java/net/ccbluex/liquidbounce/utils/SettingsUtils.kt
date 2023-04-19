@@ -110,19 +110,19 @@ object SettingsUtils {
 
                     if (valueName.equals("toggle", ignoreCase = true)) {
                         module.state = value.equals("true", ignoreCase = true)
-                        displayChatMessage("§7[§3§lAutoSettings§7] §a§l${module.name} §7was toggled §c§l${if (module.state) "on" else "off"}§7.")
+                        displayChatMessage("§7[§3§lAutoSettings§7] §a§l${module.getName()} §7was toggled §c§l${if (module.state) "on" else "off"}§7.")
                         return@forEachIndexed
                     }
 
                     if (valueName.equals("bind", ignoreCase = true)) {
                         module.keyBind = Keyboard.getKeyIndex(value)
-                        displayChatMessage("§7[§3§lAutoSettings§7] §a§l${module.name} §7was bound to §c§l${Keyboard.getKeyName(module.keyBind)}§7.")
+                        displayChatMessage("§7[§3§lAutoSettings§7] §a§l${module.getName()} §7was bound to §c§l${Keyboard.getKeyName(module.keyBind)}§7.")
                         return@forEachIndexed
                     }
 
                     val moduleValue = module[valueName]
                     if (moduleValue == null) {
-                        displayChatMessage("§7[§3§lAutoSettings§7] §cValue §a§l$valueName§c don't found in module §a§l$moduleName§c.")
+                        displayChatMessage("§7[§3§lAutoSettings§7] §cValue §a§l$valueName§c wasn't found in module §a§l${module.getName()}§c.")
                         return@forEachIndexed
                     }
 
@@ -139,9 +139,9 @@ object SettingsUtils {
                             is ListValue -> moduleValue.changeValue(value)
                         }
 
-                        displayChatMessage("§7[§3§lAutoSettings§7] §a§l${module.name}§7 value §8§l${moduleValue.name}§7 set to §c§l$value§7.")
+                        displayChatMessage("§7[§3§lAutoSettings§7] §a§l${module.getName()}§7 value §8§l${moduleValue.name}§7 set to §c§l$value§7.")
                     } catch (e: Exception) {
-                        displayChatMessage("§7[§3§lAutoSettings§7] §a§l${e.javaClass.name}§7(${e.message}) §cAn Exception occurred while setting §a§l$value§c to §a§l${moduleValue.name}§c in §a§l${module.name}§c.")
+                        displayChatMessage("§7[§3§lAutoSettings§7] §a§l${e.javaClass.name}§7(${e.message}) §cAn Exception occurred while setting §a§l$value§c to §a§l${moduleValue.name}§c in §a§l${module.getName()}§c.")
                     }
                 }
             }

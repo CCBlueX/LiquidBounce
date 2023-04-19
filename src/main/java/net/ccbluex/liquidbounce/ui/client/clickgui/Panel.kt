@@ -8,13 +8,13 @@ package net.ccbluex.liquidbounce.ui.client.clickgui
 import net.ccbluex.liquidbounce.LiquidBounce.clickGui
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.fadeSpeedValue
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.maxElementsValue
+import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.panelsBorderValue
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.scaleValue
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.Element
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ModuleElement
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
-import org.lwjgl.input.Mouse
 import java.util.*
 import kotlin.math.max
 import kotlin.math.min
@@ -28,25 +28,26 @@ abstract class Panel(val name: String, x: Int, y: Int, val width: Int, val heigh
     var y2 = 0
 
     var x = x
-        get() {
+        set(value) {
             // Don't rearrange panels when not interacting with ClickGUI.
-            if (!drag && !Mouse.isButtonDown(0) && !Mouse.isButtonDown(1)) return field
+            if (mc.currentScreen !is ClickGui || !panelsBorderValue.get()) {
+                field = value
+                return
+            }
 
             val settingsWidth =
                 if (open) elements.filterIsInstance<ModuleElement>().maxOfOrNull { if (it.showSettings) it.settingsWidth else 0 } ?: 0
                 else 0
 
-            return field.coerceIn(0, (mc.displayWidth / 2f / scaleValue.get() - width - settingsWidth).roundToInt().coerceAtLeast(0)).also {
-                if (it != field) {
-                    Mouse.setCursorPosition(Mouse.getX() + ((it - field) / scaleValue.get()).roundToInt(), Mouse.getY())
-                    field = it
-                }
-            }
+            field = value.coerceIn(0, (mc.displayWidth / 2f / scaleValue.get() - width - settingsWidth).roundToInt().coerceAtLeast(0))
         }
 
     var y = y
-        get() {
-            if (!drag && !Mouse.isButtonDown(0) && !Mouse.isButtonDown(1)) return field
+        set(value) {
+            if (mc.currentScreen !is ClickGui || !panelsBorderValue.get()) {
+                field = value
+                return
+            }
 
             var yPos = height + 4
             var panelHeight = height + fade
@@ -62,12 +63,7 @@ abstract class Panel(val name: String, x: Int, y: Int, val width: Int, val heigh
                     }
                 }
 
-            return field.coerceIn(0, (mc.displayHeight / 2f / scaleValue.get() - panelHeight).roundToInt().coerceAtLeast(0)).also {
-                if (it != field) {
-                    Mouse.setCursorPosition(Mouse.getX(), Mouse.getY() + ((field - it) / scaleValue.get()).roundToInt())
-                    field = it
-                }
-            }
+            field = value.coerceIn(0, (mc.displayHeight / 2f / scaleValue.get() - panelHeight).roundToInt().coerceAtLeast(0))
         }
 
     var drag = false
@@ -79,6 +75,7 @@ abstract class Panel(val name: String, x: Int, y: Int, val width: Int, val heigh
         set(value) {
             field = value.coerceIn(0, elementsHeight.coerceAtLeast(0))
         }
+
     private var elementsHeight = 0
 
     private var scroll = 0

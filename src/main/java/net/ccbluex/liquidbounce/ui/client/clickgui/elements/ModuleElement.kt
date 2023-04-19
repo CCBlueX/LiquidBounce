@@ -7,12 +7,15 @@ package net.ccbluex.liquidbounce.ui.client.clickgui.elements
 
 import net.ccbluex.liquidbounce.LiquidBounce.clickGui
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.spacedModulesValue
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
-import org.lwjgl.input.Mouse
 
 @SideOnly(Side.CLIENT)
 class ModuleElement(val module: Module) : ButtonElement(module.name) {
+    override val displayName: String
+        get() = module.getName(spacedModulesValue.get())
+
     var showSettings = false
     var settingsWidth = 0
         set(value) {
@@ -21,7 +24,6 @@ class ModuleElement(val module: Module) : ButtonElement(module.name) {
 
     var settingsHeight = 0
 
-    private var wasPressed = false
     var slowlyFade = 0
         set(value) {
             field = value.coerceIn(0, 255)
@@ -47,11 +49,5 @@ class ModuleElement(val module: Module) : ButtonElement(module.name) {
         }
 
         return true
-    }
-
-    fun notPressed() = !wasPressed
-
-    fun updatePressed() {
-        wasPressed = Mouse.isButtonDown(0)
     }
 }

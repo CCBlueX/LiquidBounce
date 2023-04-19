@@ -27,7 +27,7 @@ class BindsCommand : Command("binds") {
 
         chat("§c§lBinds")
         moduleManager.modules.filter { it.keyBind != Keyboard.KEY_NONE }.forEach {
-            displayChatMessage("§6> §c${it.name}: §a§l${Keyboard.getKeyName(it.keyBind)}")
+            displayChatMessage("§6> §c${it.getName()}: §a§l${Keyboard.getKeyName(it.keyBind)}")
         }
         chatSyntax("binds clear")
     }

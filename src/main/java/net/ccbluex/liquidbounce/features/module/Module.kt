@@ -11,10 +11,10 @@ import net.ccbluex.liquidbounce.file.FileManager.modulesConfig
 import net.ccbluex.liquidbounce.file.FileManager.saveConfig
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.ui.client.hud.HUD.addNotification
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Arraylist.Companion.spacedModules
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
-import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
 import net.ccbluex.liquidbounce.utils.toLowerCamelCase
 import net.ccbluex.liquidbounce.value.Value
 import net.minecraft.client.audio.PositionedSoundRecord
@@ -26,20 +26,25 @@ open class Module @JvmOverloads constructor(
 
     val name: String,
     val category: ModuleCategory,
-    val forcedDescription: String = "",
+    private val forcedDescription: String? = null,
     keyBind: Int = Keyboard.KEY_NONE,
     val defaultInArray: Boolean = true, // Used in HideCommand to reset modules visibility.
     private val canEnable: Boolean = true,
+    // Adds spaces between lowercase and uppercase letters (KillAura -> Kill Aura)
+    val spacedName: String = name.split("(?<=[a-z])(?=[A-Z])".toRegex()).joinToString(separator = " ")
 
-    ) : MinecraftInstance(), Listenable {
+) : MinecraftInstance(), Listenable {
 
     // Module information
+    fun getName(spaced: Boolean = spacedModules) = if (spaced) spacedName else name
+
     var keyBind = keyBind
         set(keyBind) {
             field = keyBind
 
             saveConfig(modulesConfig)
         }
+
     var inArray = defaultInArray
         set(value) {
             field = value
@@ -48,7 +53,7 @@ open class Module @JvmOverloads constructor(
         }
 
     val description: String
-        get() = forcedDescription.ifBlank { translation("module.${name.toLowerCamelCase()}.description") }
+        get() = forcedDescription ?: translation("module.${name.toLowerCamelCase()}.description")
 
     var slideStep = 0F
 
@@ -64,7 +69,7 @@ open class Module @JvmOverloads constructor(
             // Play sound and add notification
             if (!isStarting) {
                 mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("random.click"), 1F))
-                addNotification(Notification(if (value) translation("notification.moduleEnabled", name) else translation("notification.moduleDisabled", name)))
+                addNotification(Notification(if (value) translation("notification.moduleEnabled", getName()) else translation("notification.moduleDisabled", getName())))
             }
 
             // Call on enabled or disabled
@@ -90,12 +95,6 @@ open class Module @JvmOverloads constructor(
     // Tag
     open val tag: String?
         get() = null
-
-    val tagName
-        get() = "$name${if (tag == null) "" else " §7$tag"}"
-
-    val colorlessTagName
-        get() = "$name${if (tag == null) "" else " " + stripColor(tag!!)}"
 
     /**
      * Toggle module
@@ -124,7 +123,9 @@ open class Module @JvmOverloads constructor(
      */
     open fun getValue(valueName: String) = values.find { it.name.equals(valueName, ignoreCase = true) }
 
-    // Get value using: module[valueName]
+    /**
+     * Get value via `module[valueName]`
+     */
     operator fun get(valueName: String) = getValue(valueName)
 
     /**

@@ -221,6 +221,7 @@ object LiquidBounceStyle : Style() {
                                 // Cycle to next font when left-clicked, previous when right-clicked.
                                 if (mouseButton == 0) value.next()
                                 else value.previous()
+                                clickSound()
                                 return true
                             }
 
