@@ -33,7 +33,7 @@ object ClickGUI : Module("ClickGUI", ModuleCategory.RENDER, keyBind = Keyboard.K
     val maxElementsValue = IntegerValue("MaxElements", 15, 1, 30)
     val fadeSpeedValue = FloatValue("FadeSpeed", 1f, 0.5f, 2f)
     val scrollsValue = BoolValue("Scrolls", false)
-    val spacedModulesValue = BoolValue("SpacedModules", true)
+    val spacedModulesValue = BoolValue("SpacedModules", false)
     val panelsBorderValue = BoolValue("PanelsNotBeyondBorder", true)
 
 
