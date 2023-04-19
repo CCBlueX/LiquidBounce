@@ -66,7 +66,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, keyBind = Keyboard.KE
     // Placeable delay
     private val placeDelay = BoolValue("PlaceDelay", true)
 
-    private val extraClicks = BoolValue("DoExtraClicks", false)
+    private val extraClicks = BoolValue("DoExtraClicks", true)
 
     private val extraClickMaxCPS: IntegerValue = object : IntegerValue("ExtraClickMaxCPS", 7, 0, 20) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(extraClickMinCPS.get())
@@ -82,7 +82,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, keyBind = Keyboard.KE
     }
 
     // Delay
-    private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 0, 0, 1000) {
+    private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 50, 0, 1000) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minDelayValue.get())
 
         override fun isSupported() = placeDelay.get()
@@ -105,10 +105,10 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, keyBind = Keyboard.KE
 
     // Eagle
     private val eagleValue = ListValue("Eagle", arrayOf("Normal", "Silent", "Off"), "Normal")
-    private val blocksToEagleValue = object : IntegerValue("BlocksToEagle", 0, 0, 10) {
+    private val blocksToEagleValue = object : IntegerValue("BlocksToEagle", 1, 0, 10) {
         override fun isSupported() = eagleValue.get() != "Off"
     }
-    private val edgeDistanceValue = object : FloatValue("EagleEdgeDistance", 0f, 0f, 0.5f) {
+    private val edgeDistanceValue = object : FloatValue("EagleEdgeDistance", 0.1f, 0f, 0.5f) {
         override fun isSupported() = eagleValue.get() != "Off"
     }
 
@@ -119,7 +119,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, keyBind = Keyboard.KE
     // Rotation Options
     private val rotationsValue = BoolValue("Rotations", true)
     private val strafeValue = BoolValue("Strafe", false)
-    private val stabilizedRotation = BoolValue("StabilizedRotation", false)
+    private val stabilizedRotation = BoolValue("StabilizedRotation", true)
     private val silentRotationValue = BoolValue("SilentRotation", true)
     private val keepRotationValue = BoolValue("KeepRotation", true)
     private val keepTicksValue = object : IntegerValue("KeepTicks", 1, 1, 20) {
@@ -131,10 +131,10 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, keyBind = Keyboard.KE
     private val minDistValue = FloatValue("MinDist", 0f, 0f, 0.2f)
 
     // Turn Speed
-    private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 180f, 1f, 180f) {
+    private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 120f, 1f, 180f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minTurnSpeedValue.get())
     }
-    private val minTurnSpeedValue: FloatValue = object : FloatValue("MinTurnSpeed", 180f, 1f, 180f) {
+    private val minTurnSpeedValue: FloatValue = object : FloatValue("MinTurnSpeed", 60f, 1f, 180f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxTurnSpeedValue.get())
 
         override fun isSupported() = !maxTurnSpeedValue.isMinimal()
@@ -159,7 +159,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, keyBind = Keyboard.KE
 
     // Safety
     private val sameYValue = BoolValue("SameY", false)
-    private val safeWalkValue = BoolValue("SafeWalk", true)
+    private val safeWalkValue = BoolValue("SafeWalk", false)
     private val airSafeValue = BoolValue("AirSafe", false)
 
     // Visuals
