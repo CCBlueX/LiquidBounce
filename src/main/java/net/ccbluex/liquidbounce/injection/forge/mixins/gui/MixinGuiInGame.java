@@ -91,4 +91,12 @@ public abstract class MixinGuiInGame {
         if(antiBlind.getState() && antiBlind.getPumpkinEffect().get())
             callbackInfo.cancel();
     }
+
+    @Inject(method = "renderBossHealth", at = @At("HEAD"), cancellable = true)
+    private void renderBossHealth(CallbackInfo callbackInfo) {
+        final AntiBlind antiBlind = AntiBlind.INSTANCE;
+        
+        if (antiBlind.getState() && antiBlind.getBossHealth().get())
+            callbackInfo.cancel();
+    }
 }

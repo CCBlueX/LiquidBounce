@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.event.Render3DEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.Backtrack;
 import net.ccbluex.liquidbounce.features.module.modules.player.Reach;
 import net.ccbluex.liquidbounce.features.module.modules.render.CameraClip;
-import net.ccbluex.liquidbounce.features.module.modules.render.NoHurtCam;
+import net.ccbluex.liquidbounce.features.module.modules.render.HurtCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.Tracers;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -66,7 +66,7 @@ public abstract class MixinEntityRenderer {
 
     @Inject(method = "hurtCameraEffect", at = @At("HEAD"), cancellable = true)
     private void injectHurtCameraEffect(CallbackInfo callbackInfo) {
-        if (NoHurtCam.INSTANCE.getState()) {
+        if (HurtCam.INSTANCE.getState()) {
             callbackInfo.cancel();
         }
     }

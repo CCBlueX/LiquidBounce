@@ -156,7 +156,7 @@ object BlackStyle : Style() {
                             val x = minX + 4
                             val y = yPos + 14
                             val width = moduleElement.settingsWidth - 12
-                            val color = Color(7, 152, 252)
+                            val color = Color(20, 20, 20)
 
                             val displayValue = value.get().coerceIn(value.range)
                             val sliderValue = (x + width * (displayValue - value.minimum) / (value.maximum - value.minimum)).roundToInt()
@@ -191,7 +191,7 @@ object BlackStyle : Style() {
                             val x = minX + 4
                             val y = yPos + 14
                             val width = moduleElement.settingsWidth - 12
-                            val color = Color(7, 152, 252)
+                            val color = Color(20, 20, 20)
 
                             val displayValue = value.get().coerceIn(value.range)
                             val sliderValue = x + width * (displayValue - value.minimum) / (value.maximum - value.minimum)
