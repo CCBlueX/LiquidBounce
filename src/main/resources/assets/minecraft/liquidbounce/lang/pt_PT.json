@@ -46,7 +46,7 @@
 
         "module.killAura.description": "Automaticamente ataca alvos á volta de tí.",
 
-        "module.noFriends.description": "Permite que tú ataques amigos.",
+        "module.noFriends.description": "Permite que tu ataques amigos.",
 
         "module.superKnockback.description": "Increases knockback dealt to other entities.",
 
@@ -94,33 +94,33 @@
         
         "module.autoRespawn.description": "Automatically respawns you after dying.",
         
-        "module.autoTool.description": "Automatically selects the best tool in your inventory to mine a block.",
+        "module.autoTool.description": "Automaticamente seleciona o melhor instrumento no teu inventário para destruir um bloco.",
         
-        "module.autoWalk.description": "Automatically makes you walk.",
+        "module.autoWalk.description": "Automaticamente faz te andar.",
         
         "module.blink.description": "Suspende todos os ""packets"" de movimento.",
         
-        "module.blockESP.description": "Allows you to see a selected block through walls.",
+        "module.blockESP.description": "Permite que tu vejas um bloco selecionado através de paredes.",
         
-        "module.blockOverlay.description": "Allows you to change the design of the block overlay.",
+        "module.blockOverlay.description": "Permite que tu mudes o design do ""block overlay"".",
         
-        "module.blockWalk.description": "Allows you to walk on non-fullblock blocks.",
+        "module.blockWalk.description": "Permite que tu andes em não-fullblock blocos.",
 
-        "module.breadcrumbs.description": "Leaves a trail behind you.",
+        "module.breadcrumbs.description": "Deixa uma trilha atrás de tí.",
         
-        "module.bufferSpeed.description": "Allows you to walk faster on slabs and stairs.",
+        "module.bufferSpeed.description": "Permite que tu andes mais rápido em lajes e escadas.",
         
         "module.bugUp.description": "Automatically setbacks you after falling a certain distance.",
         
-        "module.cameraClip.description": "Allows you to see through walls in third person view.",
+        "module.cameraClip.description": "Permite que tu vejas atráves de paredes na vista de terceira pessoa.",
         
-        "module.chams.description": "Allows you to see targets through blocks.",
+        "module.chams.description": "Permite que tu vejas alvos através de blocos.",
         
-        "module.chestAura.description": "Automatically opens chests around you.",
+        "module.chestAura.description": "Automaticamente abre cofres á volta de tí.",
         
-        "module.chestStealer.description": "Automatically steals all items from a chest.",
+        "module.chestStealer.description": "Automaticamente rouba todos os items de um cofre.",
         
-        "module.civBreak.description": "Allows you to break blocks instantly.",
+        "module.civBreak.description": "Permite que tu quebres blocos instantaneamente.",
         
         "module.clickGUI.description": "Abre o ClickGUI.",
         
@@ -136,7 +136,7 @@
         
         "module.eagle.description": "Makes you eagle (aka. FastBridge).",
         
-        "module.fastBreak.description": "Allows you to break blocks faster.",
+        "module.fastBreak.description": "Permite que tu quebres blocos mais rápido.",
         
         "module.fastClimb.description": "Allows you to climb up ladders and vines faster.",
         
@@ -150,9 +150,9 @@
         
         "module.forceUnicodeChat.description": "Allows you to send unicode messages in chat.",
         
-        "module.freeCam.description": "Allows you to move out of your body.",
+        "module.freeCam.description": "Permite que tu mexas enquanto fora do teu corpo.",
         
-        "module.freeze.description": "Allows you to stay stuck in mid air.",
+        "module.freeze.description": "Permite que tu estejas parado no meio do ár.",
         
         "module.fucker.description": "Destroys selected blocks around you. (aka.  IDNuker)",
         
@@ -166,19 +166,19 @@
         
         "module.hUD.description": "Toggles visibility of the HUD.",
         
-        "module.highJump.description": "Allows you to jump higher.",
+        "module.highJump.description": "Permite que tu saltes mais alto.",
         
-        "module.iceSpeed.description": "Allows you to walk faster on ice.",
+        "module.iceSpeed.description": "Permite que tu andes mais rápido em gelo.",
         
         "module.inventoryCleaner.description": "Automatically throws away useless items.",
         
-        "module.inventoryMove.description": "Allows you to walk while an inventory is opened.",
+        "module.inventoryMove.description": "Permite que tu andes enquanto estás num inventário.",
         
-        "module.itemESP.description": "Allows you to see items through walls.",
+        "module.itemESP.description": "Permite que tu vejas itens através de paredes.",
         
         "module.itemTeleport.description": "Allows you to pick up items far away.",
         
-        "module.keepAlive.description": "Tries to prevent you from dying.",
+        "module.keepAlive.description": "Tenta prevenir que tu morras.",
         
         "module.keepContainer.description": "Allows you to open a formerly closed inventory container everywhere. (Press INSERT Key to open)",
         
@@ -188,19 +188,19 @@
         
         "module.liquidChat.description": "Allows you to chat with other LiquidBounce users.",
         
-        "module.liquidWalk.description": "Allows you to walk on water.",
+        "module.liquidWalk.description": "Permite que tu andes em água.",
         
-        "module.liquids.description": "Allows you to interact with liquids.",
+        "module.liquids.description": "Permite que tu interajas com líquidos.",
         
         "module.longJump.description": "Allows you to jump further.",
         
-        "module.midClick.description": "Allows you to add a player as a friend by right clicking him.",
+        "module.midClick.description": "Permite que tu adiciones um amigo por usar o botão direito nele.",
         
         "module.moreCarry.description": "Allows you to store items in your crafting slots.",
         
-        "module.multiActions.description": "Allows you to use items while breaking blocks.",
+        "module.multiActions.description": "Permite que tu uses itens enquanto quebras bloosAllows you to use items while breaking blocks.",
         
-        "module.nameProtect.description": "Changes player names clientside.",
+        "module.nameProtect.description": "Muda os nomes dos jogadores no clientside.",
         
         "module.nameTags.description": "Changes the scale of the nametags so you can always read them.",
         
