@@ -45,34 +45,37 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
     private val clearNamesValue = BoolValue("ClearNames", false)
     private val fontValue = FontValue("Font", Fonts.font40)
     private val scaleValue = FloatValue("Scale", 1F, 1F, 4F)
-    private val borderValue = BoolValue("Border", false)
     private val fontShadowValue = BoolValue("Shadow", true)
-    private val backgroundValue = BoolValue("Background", true)
 
-    private val backgroundColorRedValue = object : IntegerValue("Background-R", 0, 0, 255) {
-        override fun isSupported() = !backgroundValue.get()
+    private val backgroundValue = BoolValue("Background", true)
+    private val backgroundColorRedValue = object : IntegerValue("Background-R", 255, 0, 255) {
+        override fun isSupported() = backgroundValue.get()
     }
-    private val backgroundColorGreenValue = object : IntegerValue("Background-G", 0, 0, 255) {
-        override fun isSupported() = !backgroundValue.get()
+
+    private val backgroundColorGreenValue = object : IntegerValue("Background-G", 179, 0, 255) {
+        override fun isSupported() = backgroundValue.get()
     }
-    private val backgroundColorBlueValue = object : IntegerValue("Background-B", 0, 0, 255) {
-        override fun isSupported() = !backgroundValue.get()
+    private val backgroundColorBlueValue = object : IntegerValue("Background-B", 72, 0, 255) {
+        override fun isSupported() = backgroundValue.get()
     }
-    private val backgroundColorAlphaValue = object : IntegerValue("Background-Alpha", 0, 0, 255) {
-        override fun isSupported() = !backgroundValue.get()
+    private val backgroundColorAlphaValue = object : IntegerValue("Background-Alpha", 100, 0, 255) {
+        override fun isSupported() = backgroundValue.get()
     }
-    private val borderColorRedValue = object : IntegerValue("Border-R", 0, 0, 255) {
-        override fun isSupported() = !borderValue.get()
+
+    private val borderValue = BoolValue("Border", true)
+    private val borderColorRedValue = object : IntegerValue("Border-R", 255, 0, 255) {
+        override fun isSupported() = borderValue.get()
     }
-    private val borderColorGreenValue = object : IntegerValue("Border-G", 0, 0, 255) {
-        override fun isSupported() = !borderValue.get()
+    private val borderColorGreenValue = object : IntegerValue("Border-G", 179, 0, 255) {
+        override fun isSupported() = borderValue.get()
     }
-    private val borderColorBlueValue = object : IntegerValue("Border-B", 0, 0, 255) {
-        override fun isSupported() = !borderValue.get()
+    private val borderColorBlueValue = object : IntegerValue("Border-B", 72, 0, 255) {
+        override fun isSupported() = borderValue.get()
     }
-    private val borderColorAlphaValue = object : IntegerValue("Border-Alpha", 0, 0, 255) {
-        override fun isSupported() = !borderValue.get()
+    private val borderColorAlphaValue = object : IntegerValue("Border-Alpha", 100, 0, 255) {
+        override fun isSupported() = borderValue.get()
     }
+
 
     private val inventoryBackground = ResourceLocation("textures/gui/container/inventory.png")
 
@@ -154,7 +157,7 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
         val nameColor = if (bot) "§3" else if (entity.isInvisible) "§6" else if (entity.isSneaking) "§4" else "§7"
         val ping = if (entity is EntityPlayer) entity.getPing() else 0
 
-        val distanceText = if (distanceValue.get()) "§7 [§a${mc.thePlayer.getDistanceToEntity(entity).roundToInt()}§7]" else ""
+        val distanceText = if (distanceValue.get()) "§7${thePlayer.getDistanceToEntity(entity).roundToInt()}m " else ""
         val pingText = if (pingValue.get() && entity is EntityPlayer) " §7[" + (if (ping > 200) "§c" else if (ping > 100) "§e" else "§a") + ping + "ms§7]" else ""
         val healthText = if (healthValue.get()) "§7§c " + entity.health.toInt() + " HP" else ""
         val botText = if (bot) " §c§lBot" else ""
