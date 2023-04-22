@@ -83,7 +83,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
         }
 
         // Draw panel
-        drawRect(x, y + 12, x + width, y + realHeight, Color(27, 34, 40).rgb)
+        drawRect(x, y + 12, x + width, y + realHeight, Color(0, 0, 0, 150).rgb)
         when {
             create -> drawCreate(mouseX, currMouseY)
             currentElement != null -> drawEditor(mouseX, currMouseY)

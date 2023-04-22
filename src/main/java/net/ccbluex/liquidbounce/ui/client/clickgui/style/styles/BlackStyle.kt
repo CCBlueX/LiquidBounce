@@ -59,7 +59,7 @@ object BlackStyle : Style() {
         drawRect(moduleElement.x - 1, moduleElement.y - 1, moduleElement.x + moduleElement.width + 1, moduleElement.y + moduleElement.height + 1, getHoverColor(Color(40, 40, 40), moduleElement.hoverTime))
         drawRect(moduleElement.x - 1, moduleElement.y - 1, moduleElement.x + moduleElement.width + 1, moduleElement.y + moduleElement.height + 1, getHoverColor(Color(20, 20, 20, moduleElement.slowlyFade), moduleElement.hoverTime))
 
-        font35.drawString(moduleElement.displayName, moduleElement.x + 5, moduleElement.y + 7, Color.WHITE.rgb)
+        font35.drawString(moduleElement.displayName, moduleElement.x + 5, moduleElement.y + 5, Color.WHITE.rgb)
 
         // Draw settings
         val moduleValues = moduleElement.module.values.filter { it.isSupported() }
@@ -156,7 +156,7 @@ object BlackStyle : Style() {
                             val x = minX + 4
                             val y = yPos + 14
                             val width = moduleElement.settingsWidth - 12
-                            val color = Color(7, 152, 252)
+                            val color = Color(20, 20, 20)
 
                             val displayValue = value.get().coerceIn(value.range)
                             val sliderValue = (x + width * (displayValue - value.minimum) / (value.maximum - value.minimum)).roundToInt()
@@ -191,7 +191,7 @@ object BlackStyle : Style() {
                             val x = minX + 4
                             val y = yPos + 14
                             val width = moduleElement.settingsWidth - 12
-                            val color = Color(7, 152, 252)
+                            val color = Color(20, 20, 20)
 
                             val displayValue = value.get().coerceIn(value.range)
                             val sliderValue = x + width * (displayValue - value.minimum) / (value.maximum - value.minimum)

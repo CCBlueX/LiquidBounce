@@ -34,7 +34,7 @@ object PacketUtils : MinecraftInstance() {
 
     fun sendPacket(packet: Packet<*>, triggerEvent: Boolean = true) {
         this.triggerEvent = triggerEvent
-        sendPacket(packet)
+        mc.netHandler.addToSendQueue(packet)
     }
 
     fun handlePacket(packet: Packet<INetHandlerPlayClient>?) = packet?.processPacket(mc.netHandler)

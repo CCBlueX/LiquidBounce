@@ -88,7 +88,15 @@ public abstract class MixinGuiInGame {
     private void renderPumpkinOverlay(final CallbackInfo callbackInfo) {
         final AntiBlind antiBlind = AntiBlind.INSTANCE;
 
-        if(antiBlind.getState() && antiBlind.getPumpkinEffect().get())
+        if(antiBlind.getState() && antiBlind.getPumpkinEffectValue().get())
+            callbackInfo.cancel();
+    }
+
+    @Inject(method = "renderBossHealth", at = @At("HEAD"), cancellable = true)
+    private void renderBossHealth(CallbackInfo callbackInfo) {
+        final AntiBlind antiBlind = AntiBlind.INSTANCE;
+        
+        if (antiBlind.getState() && antiBlind.getBossHealth().get())
             callbackInfo.cancel();
     }
 }
