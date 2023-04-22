@@ -180,7 +180,14 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
         glDisable(GL_TEXTURE_2D)
         glEnable(GL_BLEND)
 
-        val bgColor = Color(backgroundColorRedValue.get(), backgroundColorGreenValue.get(), backgroundColorBlueValue.get(), backgroundColorAlphaValue.get())
+        val bgColor = if (backgroundValue.get()) {
+            // Background
+            Color(backgroundColorRedValue.get(), backgroundColorGreenValue.get(), backgroundColorBlueValue.get(), backgroundColorAlphaValue.get())
+        } else {
+            // Transparent
+            Color(0, 0, 0, 0)
+        }
+
         val borderColor = Color(borderColorRedValue.get(), borderColorGreenValue.get(), borderColorBlueValue.get(), borderColorAlphaValue.get())
 
         if (borderValue.get())
