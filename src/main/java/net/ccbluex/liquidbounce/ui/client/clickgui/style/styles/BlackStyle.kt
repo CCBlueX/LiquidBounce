@@ -59,7 +59,7 @@ object BlackStyle : Style() {
         drawRect(moduleElement.x - 1, moduleElement.y - 1, moduleElement.x + moduleElement.width + 1, moduleElement.y + moduleElement.height + 1, getHoverColor(Color(40, 40, 40), moduleElement.hoverTime))
         drawRect(moduleElement.x - 1, moduleElement.y - 1, moduleElement.x + moduleElement.width + 1, moduleElement.y + moduleElement.height + 1, getHoverColor(Color(20, 20, 20, moduleElement.slowlyFade), moduleElement.hoverTime))
 
-        font35.drawString(moduleElement.displayName, moduleElement.x + 5, moduleElement.y + 7, Color.WHITE.rgb)
+        font35.drawString(moduleElement.displayName, moduleElement.x + 5, moduleElement.y + 5, Color.WHITE.rgb)
 
         // Draw settings
         val moduleValues = moduleElement.module.values.filter { it.isSupported() }
