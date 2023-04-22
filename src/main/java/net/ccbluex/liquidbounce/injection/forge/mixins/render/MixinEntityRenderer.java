@@ -180,9 +180,7 @@ public abstract class MixinEntityRenderer {
             }
 
             if (reach.getState()) {
-                d1 = reach.getCombatReachValue().get();
-
-                final MovingObjectPosition movingObjectPosition = entity.rayTrace(d1, p_getMouseOver_1_);
+                final MovingObjectPosition movingObjectPosition = entity.rayTrace(reach.getBuildReachValue().get(), p_getMouseOver_1_);
 
                 if (movingObjectPosition != null) d1 = movingObjectPosition.hitVec.distanceTo(vec3);
             }
