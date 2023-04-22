@@ -179,6 +179,7 @@ object ESP : Module("ESP", ModuleCategory.RENDER) {
         }
 
         if (real2d) {
+            glColor4f(1f, 1f, 1f, 1f)
             glEnable(GL_DEPTH_TEST)
             glMatrixMode(GL_PROJECTION)
             glPopMatrix()
