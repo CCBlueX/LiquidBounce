@@ -30,41 +30,43 @@ import net.minecraft.network.play.client.C0APacketAnimation
 object AntiFireBall : Module("AntiFireBall", ModuleCategory.PLAYER, spacedName = "Anti FireBall") {
     private val timer = MSTimer()
 
-    private val rangeValue = FloatValue("Range", 4.5f, 3f, 8f)
-    private val delayValue = IntegerValue("Delay", 300, 50, 1000)
-    private val swingValue = ListValue("Swing", arrayOf("Normal", "Packet", "None"), "Normal")
-    private val rotationsValue = BoolValue("Rotations", true)
+    private val range by FloatValue("Range", 4.5f, 3f..8f)
+    private val delay by IntegerValue("Delay", 300, 50..1000)
+    private val swing by ListValue("Swing", arrayOf("Normal", "Packet", "None"), "Normal")
+    private val rotations by BoolValue("Rotations", true)
 
-    private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 120f, 0f, 180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minTurnSpeedValue.get())
+    private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 120f, 0f..180f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minTurnSpeed)
     }
-    private val minTurnSpeedValue: FloatValue = object : FloatValue("MinTurnSpeed", 80f, 0f, 180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxTurnSpeedValue.get())
+    private val maxTurnSpeed by maxTurnSpeedValue
+
+    private val minTurnSpeed by object : FloatValue("MinTurnSpeed", 80f, 0f..180f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxTurnSpeed)
 
         override fun isSupported() = !maxTurnSpeedValue.isMinimal()
     }
 
     @EventTarget
     private fun onUpdate(event: UpdateEvent) {
-        if (!timer.hasTimePassed(delayValue.get())) return
+        if (!timer.hasTimePassed(delay)) return
 
         val eyesVec = mc.thePlayer.eyes
 
         mc.theWorld.loadedEntityList.filterIsInstance<EntityFireball>().forEach { entity ->
             val nearestPoint = getNearestPointBB(eyesVec, entity.hitBox)
 
-            if (eyesVec.distanceTo(nearestPoint) > rangeValue.get()) return@forEach
+            if (eyesVec.distanceTo(nearestPoint) > range) return@forEach
 
-            if (rotationsValue.get())
+            if (rotations)
                 setTargetRotation(
                     limitAngleChange(serverRotation, toRotation(nearestPoint, true),
-                        nextFloat(minTurnSpeedValue.get(), maxTurnSpeedValue.get())
+                        nextFloat(minTurnSpeed, maxTurnSpeed)
                     )
                 )
 
             sendPacket(C02PacketUseEntity(entity, C02PacketUseEntity.Action.ATTACK))
 
-            when (swingValue.get()) {
+            when (swing) {
                 "Normal" -> mc.thePlayer.swingItem()
                 "Packet" -> sendPacket(C0APacketAnimation())
             }

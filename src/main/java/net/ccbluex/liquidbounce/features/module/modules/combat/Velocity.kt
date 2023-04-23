@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.utils.MovementUtils.isOnGround
 import net.ccbluex.liquidbounce.utils.MovementUtils.speed
+import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -25,49 +26,31 @@ import net.minecraft.network.play.server.S27PacketExplosion
 import kotlin.math.cos
 import kotlin.math.sin
 
-object Velocity : Module("Velocity", category = ModuleCategory.COMBAT) {
+object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
 
     /**
      * OPTIONS
      */
-    private val modeValue = ListValue("Mode", arrayOf("Simple", "AAC", "AACPush", "AACZero", "AACv4",
+    private val mode by ListValue("Mode", arrayOf("Simple", "AAC", "AACPush", "AACZero", "AACv4",
         "Reverse", "SmoothReverse", "Jump", "Glitch", "Legit"), "Simple")
 
-    private val horizontalValue = object : FloatValue("Horizontal", 0F, 0F, 1F) {
-        override fun isSupported() = modeValue.get() in setOf("Simple", "AAC", "Legit")
-    }
-    private val verticalValue = object : FloatValue("Vertical", 0F, 0F, 1F) {
-        override fun isSupported() = modeValue.get() in setOf("Simple", "Legit")
-    }
+    private val horizontal by FloatValue("Horizontal", 0F, 0F..1F) { mode in arrayOf("Simple", "AAC", "Legit") }
+    private val vertical by FloatValue("Vertical", 0F, 0F..1F) { mode in arrayOf("Simple", "Legit") }
 
     // Reverse
-    private val reverseStrengthValue = object : FloatValue("ReverseStrength", 1F, 0.1F, 1F) {
-        override fun isSupported() = modeValue.get() == "Reverse"
-    }
-    private val reverse2StrengthValue = object : FloatValue("SmoothReverseStrength", 0.05F, 0.02F, 0.1F) {
-        override fun isSupported() = modeValue.get() == "SmoothReverse"
-    }
+    private val reverseStrength by FloatValue("ReverseStrength", 1F, 0.1F..1F) { mode == "Reverse" }
+    private val reverse2Strength by FloatValue("SmoothReverseStrength", 0.05F, 0.02F..0.1F) { mode == "SmoothReverse" }
 
     // AAC Push
-    private val aacPushXZReducerValue = object : FloatValue("AACPushXZReducer", 2F, 1F, 3F) {
-        override fun isSupported() = modeValue.get() == "AACPush"
-    }
-    private val aacPushYReducerValue = object : BoolValue("AACPushYReducer", true) {
-        override fun isSupported() = modeValue.get() == "AACPush"
-    }
+    private val aacPushXZReducer by FloatValue("AACPushXZReducer", 2F, 1F..3F) { mode == "AACPush" }
+    private val aacPushYReducer by BoolValue("AACPushYReducer", true) { mode == "AACPush" }
 
     // AAC v4
-    private val aacv4MotionReducerValue = object : FloatValue("AACv4MotionReducer", 0.62F,0F,1F) {
-        override fun isSupported() = modeValue.get() == "AACv4"
-    }
+    private val aacv4MotionReducer by FloatValue("AACv4MotionReducer", 0.62F, 0F..1F) { mode == "AACv4" }
 
     // Legit
-    private val legitDisableInAirValue = object: BoolValue("DisableInAir", true) {
-        override fun isSupported() = modeValue.get() == "Legit"
-    }
-    private val legitChanceValue = object: IntegerValue("Chance", 100, 0, 100) {
-        override fun isSupported() = modeValue.get() == "Legit"
-    }
+    private val legitDisableInAir by BoolValue("DisableInAir", true) { mode == "Legit" }
+    private val legitChance by IntegerValue("Chance", 100, 0..100) { mode == "Legit" }
 
     /**
      * VALUES
@@ -82,7 +65,7 @@ object Velocity : Module("Velocity", category = ModuleCategory.COMBAT) {
     private var jump = false
 
     override val tag
-        get() = modeValue.get()
+        get() = mode
 
     override fun onDisable() {
         mc.thePlayer?.speedInAir = 0.02F
@@ -95,12 +78,12 @@ object Velocity : Module("Velocity", category = ModuleCategory.COMBAT) {
         if (thePlayer.isInWater || thePlayer.isInLava || thePlayer.isInWeb)
             return
 
-        when (modeValue.get().lowercase()) {
+        when (mode.lowercase()) {
             "jump" ->
                 if (thePlayer.hurtTime > 0 && thePlayer.onGround) {
                     thePlayer.motionY = 0.42
 
-                    val yaw = thePlayer.rotationYaw * 0.017453292F
+                    val yaw = thePlayer.rotationYaw.toRadians()
 
                     thePlayer.motionX -= sin(yaw) * 0.2
                     thePlayer.motionZ += cos(yaw) * 0.2
@@ -120,7 +103,7 @@ object Velocity : Module("Velocity", category = ModuleCategory.COMBAT) {
                     return
 
                 if (!thePlayer.onGround) {
-                    speed *= reverseStrengthValue.get()
+                    speed *= reverseStrength
                 } else if (velocityTimer.hasTimePassed(80))
                     velocityInput = false
             }
@@ -136,7 +119,7 @@ object Velocity : Module("Velocity", category = ModuleCategory.COMBAT) {
 
                 if (!thePlayer.onGround) {
                     if (reverseHurt)
-                        thePlayer.speedInAir = reverse2StrengthValue.get()
+                        thePlayer.speedInAir = reverse2Strength
                 } else if (velocityTimer.hasTimePassed(80)) {
                     velocityInput = false
                     reverseHurt = false
@@ -144,15 +127,15 @@ object Velocity : Module("Velocity", category = ModuleCategory.COMBAT) {
             }
 
             "aac" -> if (velocityInput && velocityTimer.hasTimePassed(80)) {
-                thePlayer.motionX *= horizontalValue.get()
-                thePlayer.motionZ *= horizontalValue.get()
-                //mc.thePlayer.motionY *= verticalValue.get() ?
+                thePlayer.motionX *= horizontal
+                thePlayer.motionZ *= horizontal
+                //mc.thePlayer.motionY *= vertical ?
                 velocityInput = false
             }
 
             "aacv4" ->
                 if (thePlayer.hurtTime>0 && !thePlayer.onGround){
-                    val reduce = aacv4MotionReducerValue.get()
+                    val reduce = aacv4MotionReducer
                     thePlayer.motionX *= reduce
                     thePlayer.motionZ *= reduce
                 }
@@ -167,13 +150,13 @@ object Velocity : Module("Velocity", category = ModuleCategory.COMBAT) {
                         thePlayer.onGround = true
 
                     // Reduce Y
-                    if (thePlayer.hurtResistantTime > 0 && aacPushYReducerValue.get() && !Speed.state)
+                    if (thePlayer.hurtResistantTime > 0 && aacPushYReducer && !Speed.state)
                         thePlayer.motionY -= 0.014999993
                 }
 
                 // Reduce XZ
                 if (thePlayer.hurtResistantTime >= 19) {
-                    val reduce = aacPushXZReducerValue.get()
+                    val reduce = aacPushXZReducer
 
                     thePlayer.motionX /= reduce
                     thePlayer.motionZ /= reduce
@@ -192,15 +175,15 @@ object Velocity : Module("Velocity", category = ModuleCategory.COMBAT) {
                     velocityInput = false
 
             "legit" -> {
-                if (legitDisableInAirValue.get() && !isOnGround(0.5))
+                if (legitDisableInAir && !isOnGround(0.5))
                     return
 
                 if (mc.thePlayer.maxHurtResistantTime != mc.thePlayer.hurtResistantTime || mc.thePlayer.maxHurtResistantTime == 0)
                     return
 
-                if (nextInt(endExclusive = 100) < legitChanceValue.get()) {
-                    val horizontal = horizontalValue.get() / 100f
-                    val vertical = verticalValue.get() / 100f
+                if (nextInt(endExclusive = 100) < legitChance) {
+                    val horizontal = horizontal / 100f
+                    val vertical = vertical / 100f
 
                     thePlayer.motionX *= horizontal.toDouble()
                     thePlayer.motionZ *= horizontal.toDouble()
@@ -219,10 +202,10 @@ object Velocity : Module("Velocity", category = ModuleCategory.COMBAT) {
         if (packet is S12PacketEntityVelocity && (mc.theWorld?.getEntityByID(packet.entityID) ?: return) == thePlayer) {
             velocityTimer.reset()
 
-            when (modeValue.get().lowercase()) {
+            when (mode.lowercase()) {
                 "simple" -> {
-                    val horizontal = horizontalValue.get()
-                    val vertical = verticalValue.get()
+                    val horizontal = horizontal
+                    val vertical = vertical
 
                     if (horizontal + vertical > 0.0) {
                         packet.motionX = (packet.motionX * horizontal).toInt()
@@ -244,10 +227,10 @@ object Velocity : Module("Velocity", category = ModuleCategory.COMBAT) {
                 }
             }
         } else if (packet is S27PacketExplosion) {
-            when (modeValue.get().lowercase()) {
+            when (mode.lowercase()) {
                 "simple" -> {
-                    val horizontal = horizontalValue.get()
-                    val vertical = verticalValue.get()
+                    val horizontal = horizontal
+                    val vertical = vertical
 
                     if (horizontal + vertical > 0.0) {
                         mc.thePlayer.motionX += packet.func_149149_c() * horizontal
@@ -280,7 +263,7 @@ object Velocity : Module("Velocity", category = ModuleCategory.COMBAT) {
         if (thePlayer == null || thePlayer.isInWater || thePlayer.isInLava || thePlayer.isInWeb)
             return
 
-        when (modeValue.get().lowercase()) {
+        when (mode.lowercase()) {
             "aacpush" -> {
                 jump = true
 

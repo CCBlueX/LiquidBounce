@@ -9,7 +9,6 @@ import io.netty.channel.ChannelHandlerContext;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.EventState;
 import net.ccbluex.liquidbounce.event.PacketEvent;
-import net.ccbluex.liquidbounce.utils.PacketUtils;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.Packet;
 import org.spongepowered.asm.mixin.Mixin;
@@ -32,11 +31,6 @@ public class MixinNetworkManager {
 
     @Inject(method = "sendPacket(Lnet/minecraft/network/Packet;)V", at = @At("HEAD"), cancellable = true)
     private void send(Packet<?> packet, CallbackInfo callback) {
-        if (!PacketUtils.INSTANCE.getTriggerEvent()) {
-            PacketUtils.INSTANCE.setTriggerEvent(true);
-            return;
-        }
-
         final PacketEvent event = new PacketEvent(packet, EventState.SEND);
         EventManager.INSTANCE.callEvent(event);
 

@@ -117,7 +117,7 @@ object CommandManager {
                             || it.alias.any { alias -> alias.startsWith(rawInput, true) }
                     }
                     .map {
-                        val alias: String = if (it.command.startsWith(rawInput, true))
+                        val alias = if (it.command.startsWith(rawInput, true))
                             it.command
                         else {
                             it.alias.first { alias -> alias.startsWith(rawInput, true) }

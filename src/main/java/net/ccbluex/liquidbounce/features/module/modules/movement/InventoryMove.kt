@@ -20,15 +20,11 @@ import net.minecraft.client.settings.GameSettings
 object InventoryMove : Module("InventoryMove", ModuleCategory.MOVEMENT) {
 
     private val undetectable = BoolValue("Undetectable", false)
-    val aacAdditionProValue = BoolValue("AACAdditionPro", false)
+    val aacAdditionPro by BoolValue("AACAdditionPro", false)
 
-    private val noMoveClicksValue = BoolValue("NoMoveClicks", false)
-    private val noClicksAirValue = object : BoolValue("NoClicksInAir", false) {
-        override fun isSupported() = noMoveClicksValue.get()
-    }
-    private val noClicksGroundValue = object : BoolValue("NoClicksOnGround", true) {
-        override fun isSupported() = noMoveClicksValue.get()
-    }
+    private val noMoveClicks by BoolValue("NoMoveClicks", false)
+    private val noClicksAir by BoolValue("NoClicksInAir", false) { noMoveClicks }
+    private val noClicksGround by BoolValue("NoClicksOnGround", true) { noMoveClicks }
 
     private val affectedBindings = arrayOf(
         mc.gameSettings.keyBindForward,
@@ -50,9 +46,9 @@ object InventoryMove : Module("InventoryMove", ModuleCategory.MOVEMENT) {
 
     @EventTarget
     fun onClick(event: ClickWindowEvent) {
-        if (noMoveClicksValue.get() && isMoving &&
-            if (mc.thePlayer.onGround) noClicksGroundValue.get()
-            else noClicksAirValue.get()
+        if (noMoveClicks && isMoving &&
+            if (mc.thePlayer.onGround) noClicksGround
+            else noClicksAir
         ) event.cancelEvent()
     }
 
@@ -66,5 +62,5 @@ object InventoryMove : Module("InventoryMove", ModuleCategory.MOVEMENT) {
     }
 
     override val tag
-        get() = if (aacAdditionProValue.get()) "AACAdditionPro" else null
+        get() = if (aacAdditionPro) "AACAdditionPro" else null
 }

@@ -39,64 +39,41 @@ object InventoryCleaner : Module("InventoryCleaner", ModuleCategory.PLAYER) {
      * OPTIONS
      */
 
-    private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 600, 0, 1000) {
-        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minDelayValue.get())
+    private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 600, 0..1000) {
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minDelay)
     }
+    private val maxDelay by maxDelayValue
 
-    private val minDelayValue: IntegerValue = object : IntegerValue("MinDelay", 400, 0, 1000) {
-        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxDelayValue.get())
+    private val minDelay by object : IntegerValue("MinDelay", 400, 0..1000) {
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxDelay)
 
         override fun isSupported() = !maxDelayValue.isMinimal()
     }
-    private val itemDelayValue = IntegerValue("ItemDelay", 0, 0, 5000)
+    private val itemDelay by IntegerValue("ItemDelay", 0, 0..5000)
 
-    private val invOpenValue = BoolValue("InvOpen", false)
-    private val simulateInventory = object : BoolValue("SimulateInventory", true) {
-        override fun isSupported() = !invOpenValue.get()
-    }
+    private val invOpen by BoolValue("InvOpen", false)
+    private val simulateInventory = BoolValue("SimulateInventory", true) { !invOpen }
 
-    private val noMoveValue = BoolValue("NoMoveClicks", false)
-    private val noMoveAirValue = object : BoolValue("NoClicksInAir", false) {
-        override fun isSupported() = noMoveValue.get()
-    }
-    private val noMoveGroundValue = object : BoolValue("NoClicksOnGround", true) {
-        override fun isSupported() = noMoveValue.get()
-    }
+    private val noMove by BoolValue("NoMoveClicks", false)
+    private val noMoveAir by BoolValue("NoClicksInAir", false) { noMove }
+    private val noMoveGround by BoolValue("NoClicksOnGround", true) { noMove }
 
-    private val ignoreVehiclesValue = BoolValue("IgnoreVehicles", false)
-    private val hotbarValue = BoolValue("Hotbar", true)
-    private val randomSlotValue = BoolValue("RandomSlot", false)
+    private val ignoreVehicles by BoolValue("IgnoreVehicles", false)
+    private val hotbar by BoolValue("Hotbar", true)
+    private val randomSlot by BoolValue("RandomSlot", false)
 
     private val items =
         arrayOf("None", "Ignore", "Sword", "Bow", "Pickaxe", "Axe", "Food", "Block", "Water", "Gapple", "Pearl")
-    private val sortValue = BoolValue("Sort", true)
-    private val sortSlot1Value = object : ListValue("SortSlot-1", items, "Sword") {
-        override fun isSupported() = sortValue.get()
-    }
-    private val sortSlot2Value = object : ListValue("SortSlot-2", items, "Bow") {
-        override fun isSupported() = sortValue.get()
-    }
-    private val sortSlot3Value = object : ListValue("SortSlot-3", items, "Pickaxe") {
-        override fun isSupported() = sortValue.get()
-    }
-    private val sortSlot4Value = object : ListValue("SortSlot-4", items, "Axe") {
-        override fun isSupported() = sortValue.get()
-    }
-    private val sortSlot5Value = object : ListValue("SortSlot-5", items, "None") {
-        override fun isSupported() = sortValue.get()
-    }
-    private val sortSlot6Value = object : ListValue("SortSlot-6", items, "None") {
-        override fun isSupported() = sortValue.get()
-    }
-    private val sortSlot7Value = object : ListValue("SortSlot-7", items, "Food") {
-        override fun isSupported() = sortValue.get()
-    }
-    private val sortSlot8Value = object : ListValue("SortSlot-8", items, "Block") {
-        override fun isSupported() = sortValue.get()
-    }
-    private val sortSlot9Value = object : ListValue("SortSlot-9", items, "Block") {
-        override fun isSupported() = sortValue.get()
-    }
+    private val sort by BoolValue("Sort", true)
+    private val sortSlot1 by ListValue("SortSlot-1", items, "Sword") { sort }
+    private val sortSlot2 by ListValue("SortSlot-2", items, "Bow") { sort }
+    private val sortSlot3 by ListValue("SortSlot-3", items, "Pickaxe") { sort }
+    private val sortSlot4 by ListValue("SortSlot-4", items, "Axe") { sort }
+    private val sortSlot5 by ListValue("SortSlot-5", items, "None") { sort }
+    private val sortSlot6 by ListValue("SortSlot-6", items, "None") { sort }
+    private val sortSlot7 by ListValue("SortSlot-7", items, "Food") { sort }
+    private val sortSlot8 by ListValue("SortSlot-8", items, "Block") { sort }
+    private val sortSlot9 by ListValue("SortSlot-9", items, "Block") { sort }
 
     /**
      * VALUES
@@ -109,24 +86,24 @@ object InventoryCleaner : Module("InventoryCleaner", ModuleCategory.PLAYER) {
         val thePlayer = mc.thePlayer ?: return
 
         if (!InventoryUtils.CLICK_TIMER.hasTimePassed(delay)
-            || mc.currentScreen !is GuiInventory && invOpenValue.get()
-            || noMoveValue.get() && isMoving &&
-                    if (mc.thePlayer.onGround) noMoveGroundValue.get() else noMoveAirValue.get()
+            || mc.currentScreen !is GuiInventory && invOpen
+            || noMove && isMoving &&
+                    if (mc.thePlayer.onGround) noMoveGround else noMoveAir
             || thePlayer.openContainer != null && thePlayer.openContainer.windowId != 0
             || (moduleManager[AutoArmor::class.java] as AutoArmor).isLocked) {
             return
         }
 
-        if (sortValue.get()) {
+        if (sort) {
             sortHotbar()
         }
 
         while (InventoryUtils.CLICK_TIMER.hasTimePassed(delay)) {
             val garbageItems =
-                items(9, if (hotbarValue.get()) 45 else 36).filter { !isUseful(it.value, it.key) }.keys.toMutableList()
+                items(9, if (hotbar) 45 else 36).filter { !isUseful(it.value, it.key) }.keys.toMutableList()
 
             // Shuffle items
-            if (randomSlotValue.get()) {
+            if (randomSlot) {
                 garbageItems.shuffle()
             }
 
@@ -145,7 +122,7 @@ object InventoryCleaner : Module("InventoryCleaner", ModuleCategory.PLAYER) {
                 sendPacket(C0DPacketCloseWindow())
             }
 
-            delay = randomDelay(minDelayValue.get(), maxDelayValue.get())
+            delay = randomDelay(minDelay, maxDelay)
         }
     }
 
@@ -201,7 +178,7 @@ object InventoryCleaner : Module("InventoryCleaner", ModuleCategory.PLAYER) {
                 }
             } else if (itemStack.unlocalizedName == "item.compass") {
                 items(0, 45).none { (_, stack) -> itemStack != stack && stack.unlocalizedName == "item.compass" }
-            } else item is ItemFood || itemStack.unlocalizedName == "item.arrow" || item is ItemBlock && item.block !is BlockBush || item is ItemBed || itemStack.unlocalizedName == "item.diamond" || itemStack.unlocalizedName == "item.ingotIron" || item is ItemPotion || item is ItemEnderPearl || item is ItemEnchantedBook || item is ItemBucket || itemStack.unlocalizedName == "item.stick" || ignoreVehiclesValue.get() && (item is ItemBoat || item is ItemMinecart)
+            } else item is ItemFood || itemStack.unlocalizedName == "item.arrow" || item is ItemBlock && item.block !is BlockBush || item is ItemBed || itemStack.unlocalizedName == "item.diamond" || itemStack.unlocalizedName == "item.ingotIron" || item is ItemPotion || item is ItemEnderPearl || item is ItemEnchantedBook || item is ItemBucket || itemStack.unlocalizedName == "item.stick" || ignoreVehicles && (item is ItemBoat || item is ItemMinecart)
         } catch (ex: Exception) {
             LOGGER.error("(InventoryCleaner) Failed to check item: ${itemStack.unlocalizedName}.", ex)
 
@@ -233,7 +210,7 @@ object InventoryCleaner : Module("InventoryCleaner", ModuleCategory.PLAYER) {
 
                 if (openInventory) sendPacket(C0DPacketCloseWindow())
 
-                delay = randomDelay(minDelayValue.get(), maxDelayValue.get())
+                delay = randomDelay(minDelay, maxDelay)
                 break
             }
         }
@@ -389,7 +366,7 @@ object InventoryCleaner : Module("InventoryCleaner", ModuleCategory.PLAYER) {
                 continue
             }
 
-            if (System.currentTimeMillis() - (itemStack as IMixinItemStack).itemDelay >= itemDelayValue.get()) {
+            if (System.currentTimeMillis() - (itemStack as IMixinItemStack).itemDelay >= itemDelay) {
                 items[i] = itemStack
             }
         }
@@ -401,15 +378,15 @@ object InventoryCleaner : Module("InventoryCleaner", ModuleCategory.PLAYER) {
      * Get type of [targetSlot]
      */
     private fun type(targetSlot: Int) = when (targetSlot) {
-        0 -> sortSlot1Value.get()
-        1 -> sortSlot2Value.get()
-        2 -> sortSlot3Value.get()
-        3 -> sortSlot4Value.get()
-        4 -> sortSlot5Value.get()
-        5 -> sortSlot6Value.get()
-        6 -> sortSlot7Value.get()
-        7 -> sortSlot8Value.get()
-        8 -> sortSlot9Value.get()
+        0 -> sortSlot1
+        1 -> sortSlot2
+        2 -> sortSlot3
+        3 -> sortSlot4
+        4 -> sortSlot5
+        5 -> sortSlot6
+        6 -> sortSlot7
+        7 -> sortSlot8
+        8 -> sortSlot9
         else -> ""
     }
 }

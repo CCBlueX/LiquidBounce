@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMod
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
+import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.minecraft.init.Blocks
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 import net.minecraft.util.BlockPos
@@ -25,7 +26,7 @@ class AACPort : SpeedMode("AACPort") {
         if (!isMoving)
             return
 
-        val f = thePlayer.rotationYaw * 0.017453292f
+        val f = thePlayer.rotationYaw.toRadians()
         var d = 0.2
 
         while (d <= portMax.get()) {

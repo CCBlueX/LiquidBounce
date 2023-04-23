@@ -29,9 +29,7 @@ object AttackEffects : Module("AttackEffects", ModuleCategory.RENDER) {
         ), "Blood"
     )
 
-    private val amount = object : IntegerValue("ParticleAmount", 5, 1, 20) {
-        override fun isSupported() = particle.get() != "None"
-    }
+    private val amount = IntegerValue("ParticleAmount", 5, 1..20) { particle.get() != "None" }
 
     private val sound = ListValue("Sound", arrayOf("None", "Hit", "Orb"), "Hit")
 

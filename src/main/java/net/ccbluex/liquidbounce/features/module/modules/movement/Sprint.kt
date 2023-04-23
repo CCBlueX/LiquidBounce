@@ -20,38 +20,28 @@ import net.minecraft.client.settings.KeyBinding.setKeyBindState
 import net.minecraft.potion.Potion
 
 object Sprint : Module("Sprint", ModuleCategory.MOVEMENT) {
-    val modeValue = ListValue("Mode", arrayOf("Legit", "Vanilla"), "Vanilla")
+    val mode by ListValue("Mode", arrayOf("Legit", "Vanilla"), "Vanilla")
 
-    val allDirectionsValue = object : BoolValue("AllDirections", true) {
-        override fun isSupported() =modeValue.get() == "Vanilla"
-    }
+    val allDirections by BoolValue("AllDirections", true) { mode == "Vanilla" }
 
-    private val blindnessValue = object : BoolValue("Blindness", true) {
-        override fun isSupported() = modeValue.get() == "Vanilla"
-    }
+    private val blindness by BoolValue("Blindness", true) { mode == "Vanilla" }
 
-    val foodValue = object : BoolValue("Food", true) {
-        override fun isSupported() = modeValue.get() == "Vanilla"
-    }
+    val food by BoolValue("Food", true) { mode == "Vanilla" }
 
-    val checkServerSide = object : BoolValue("CheckServerSide", false) {
-        override fun isSupported() = modeValue.get() == "Vanilla"
-    }
+    val checkServerSide = BoolValue("CheckServerSide", false) { mode == "Vanilla" }
 
-    val checkServerSideGround = object : BoolValue("CheckServerSideOnlyGround", false) {
-        override fun isSupported() = modeValue.get() == "Vanilla" && checkServerSide.get()
-    }
+    val checkServerSideGround = BoolValue("CheckServerSideOnlyGround", false) { mode == "Vanilla" && checkServerSide.get() }
     override val tag
-        get() = modeValue.get()
+        get() = mode
 
     @EventTarget
     fun onTick(event: TickEvent) {
-        if (modeValue.get() == "Legit")
+        if (mode == "Legit")
             setKeyBindState(mc.gameSettings.keyBindSprint.keyCode, true)
     }
 
     override fun onDisable() {
-        if (modeValue.get() == "Legit") {
+        if (mode == "Legit") {
             val keyCode = mc.gameSettings.keyBindSprint.keyCode
             setKeyBindState(keyCode, keyCode > 0 && mc.gameSettings.keyBindSprint.isKeyDown)
         }
@@ -59,19 +49,19 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        if (modeValue.get() == "Vanilla") {
-            if (!isMoving || mc.thePlayer.isSneaking || blindnessValue.get()
-                && mc.thePlayer.isPotionActive(Potion.blindness) || foodValue.get()
+        if (mode == "Vanilla") {
+            if (!isMoving || mc.thePlayer.isSneaking || blindness
+                && mc.thePlayer.isPotionActive(Potion.blindness) || food
                 && !(mc.thePlayer.foodStats.foodLevel > 6f || mc.thePlayer.capabilities.allowFlying)
                     || (checkServerSide.get() && (mc.thePlayer.onGround || !checkServerSideGround.get())
-                        && !allDirectionsValue.get() && targetRotation != null)
+                        && !allDirections && targetRotation != null)
                     && getRotationDifference(mc.thePlayer.rotation) > 30
             ) {
                 mc.thePlayer.isSprinting = false
                 return
             } else
 
-            if (allDirectionsValue.get() || mc.thePlayer.movementInput.moveForward >= 0.8f)
+            if (allDirections || mc.thePlayer.movementInput.moveForward >= 0.8f)
                 mc.thePlayer.isSprinting = true
         }
     }

@@ -26,31 +26,17 @@ import java.awt.Color
 object ProphuntESP : Module("ProphuntESP", ModuleCategory.RENDER) {
     val blocks: MutableMap<BlockPos, Long> = HashMap()
 
-    private val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "Glow"), "OtherBox")
+    private val mode by ListValue("Mode", arrayOf("Box", "OtherBox", "Glow"), "OtherBox")
 
-    private val glowRenderScale = object : FloatValue("Glow-Renderscale", 1f, 0.1f, 2f) {
-        override fun isSupported() = modeValue.get() == "Glow"
-    }
-    private val glowRadius = object : IntegerValue("Glow-Radius", 4, 1, 5) {
-        override fun isSupported() = modeValue.get() == "Glow"
-    }
-    private val glowFade = object : IntegerValue("Glow-Fade", 10, 0, 30) {
-        override fun isSupported() = modeValue.get() == "Glow"
-    }
-    private val glowTargetAlpha = object : FloatValue("Glow-Target-Alpha", 0f, 0f, 1f) {
-        override fun isSupported() = modeValue.get() == "Glow"
-    }
+    private val glowRenderScale = FloatValue("Glow-Renderscale", 1f, 0.1f..2f) { mode == "Glow" }
+    private val glowRadius = IntegerValue("Glow-Radius", 4, 1..5) { mode == "Glow" }
+    private val glowFade = IntegerValue("Glow-Fade", 10, 0..30) { mode == "Glow" }
+    private val glowTargetAlpha = FloatValue("Glow-Target-Alpha", 0f, 0f..1f) { mode == "Glow" }
 
     private val colorRainbow = BoolValue("Rainbow", false)
-    private val colorRedValue = object : IntegerValue("R", 0, 0, 255) {
-        override fun isSupported() = !colorRainbow.get()
-    }
-    private val colorGreenValue = object : IntegerValue("G", 90, 0, 255) {
-        override fun isSupported() = !colorRainbow.get()
-    }
-    private val colorBlueValue = object : IntegerValue("B", 255, 0, 255) {
-        override fun isSupported() = !colorRainbow.get()
-    }
+    private val colorRed by IntegerValue("R", 0, 0..255) { !colorRainbow.get() }
+    private val colorGreen by IntegerValue("G", 90, 0..255) { !colorRainbow.get() }
+    private val colorBlue by IntegerValue("B", 255, 0..255) { !colorRainbow.get() }
 
 
     override fun onDisable() {
@@ -59,7 +45,7 @@ object ProphuntESP : Module("ProphuntESP", ModuleCategory.RENDER) {
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        val mode = modeValue.get()
+        val mode = mode
         for (entity in mc.theWorld.loadedEntityList) {
             if (mode != "Box" && mode != "OtherBox") break
             if (entity !is EntityFallingBlock) continue
@@ -83,9 +69,9 @@ object ProphuntESP : Module("ProphuntESP", ModuleCategory.RENDER) {
     }
     @EventTarget
     fun onRender2D(event: Render2DEvent) {
-        val mode = modeValue.get().lowercase()
+        val mode = mode.lowercase()
         val shader = if (mode == "glow") GlowShader.GLOW_SHADER else null ?: return
-        val color = if (colorRainbow.get()) rainbow() else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
+        val color = if (colorRainbow.get()) rainbow() else Color(colorRed, colorGreen, colorBlue)
 
         if(mc.theWorld == null) return
 
@@ -102,6 +88,6 @@ object ProphuntESP : Module("ProphuntESP", ModuleCategory.RENDER) {
         shader.stopDraw(color, glowRadius.get(), glowFade.get(), glowTargetAlpha.get())
     }
 
-    private fun getColor() = if (colorRainbow.get()) rainbow() else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
+    private fun getColor() = if (colorRainbow.get()) rainbow() else Color(colorRed, colorGreen, colorBlue)
 
 }

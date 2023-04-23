@@ -14,11 +14,9 @@ import net.ccbluex.liquidbounce.value.FloatValue
 
 object Derp : Module("Derp", ModuleCategory.FUN) {
 
-    private val headlessValue = BoolValue("Headless", false)
-    private val spinnyValue = BoolValue("Spinny", false)
-    private val incrementValue = object : FloatValue("Increment", 1F, 0F, 50F) {
-        override fun isSupported() = spinnyValue.get()
-    }
+    private val headless by BoolValue("Headless", false)
+    private val spinny by BoolValue("Spinny", false)
+    private val increment by FloatValue("Increment", 1F, 0F..50F) { spinny }
 
     private var currentSpin = 0F
 
@@ -26,11 +24,11 @@ object Derp : Module("Derp", ModuleCategory.FUN) {
         get() {
             val rot = Rotation(mc.thePlayer.rotationYaw + nextFloat(-180f, 180f), nextFloat(-90f, 90f))
 
-            if (headlessValue.get())
+            if (headless)
                 rot.pitch = 180F
 
-            if (spinnyValue.get()) {
-                currentSpin += incrementValue.get()
+            if (spinny) {
+                currentSpin += increment
                 rot.yaw = currentSpin
             }
 

@@ -11,7 +11,10 @@ import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
-import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
+import net.ccbluex.liquidbounce.utils.extensions.component1
+import net.ccbluex.liquidbounce.utils.extensions.component2
+import net.ccbluex.liquidbounce.utils.extensions.component3
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -19,16 +22,16 @@ import net.minecraft.entity.EntityLivingBase
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 
-object Criticals : Module("Criticals", category = ModuleCategory.COMBAT) {
+object Criticals : Module("Criticals", ModuleCategory.COMBAT) {
 
-    val modeValue = ListValue("Mode", arrayOf("Packet", "NcpPacket", "NoGround", "Hop", "TPHop", "Jump", "LowJump", "Visual"), "Packet")
-    val delayValue = IntegerValue("Delay", 0, 0, 500)
-    private val hurtTimeValue = IntegerValue("HurtTime", 10, 0, 10)
+    val mode by ListValue("Mode", arrayOf("Packet", "NcpPacket", "NoGround", "Hop", "TPHop", "Jump", "LowJump", "Visual"), "Packet")
+    val delay by IntegerValue("Delay", 0, 0..500)
+    private val hurtTime by IntegerValue("HurtTime", 10, 0..10)
 
     val msTimer = MSTimer()
 
     override fun onEnable() {
-        if (modeValue.get() == "NoGround")
+        if (mode == "NoGround")
             mc.thePlayer.jump()
     }
 
@@ -39,26 +42,28 @@ object Criticals : Module("Criticals", category = ModuleCategory.COMBAT) {
             val entity = event.targetEntity
 
             if (!thePlayer.onGround || thePlayer.isOnLadder || thePlayer.isInWeb || thePlayer.isInWater ||
-                    thePlayer.isInLava || thePlayer.ridingEntity != null || entity.hurtTime > hurtTimeValue.get() ||
-                    Fly.state || !msTimer.hasTimePassed(delayValue.get()))
+                    thePlayer.isInLava || thePlayer.ridingEntity != null || entity.hurtTime > hurtTime ||
+                    Fly.state || !msTimer.hasTimePassed(delay))
                 return
 
-            val x = thePlayer.posX
-            val y = thePlayer.posY
-            val z = thePlayer.posZ
+            val (x, y, z) = thePlayer
 
-            when (modeValue.get().lowercase()) {
+            when (mode.lowercase()) {
                 "packet" -> {
-                    sendPacket(C04PacketPlayerPosition(x, y + 0.0625, z, true))
-                    sendPacket(C04PacketPlayerPosition(x, y, z, false))
-                    sendPacket(C04PacketPlayerPosition(x, y + 1.1E-5, z, false))
-                    sendPacket(C04PacketPlayerPosition(x, y, z, false))
+                    sendPackets(
+                        C04PacketPlayerPosition(x, y + 0.0625, z, true),
+                        C04PacketPlayerPosition(x, y, z, false),
+                        C04PacketPlayerPosition(x, y + 1.1E-5, z, false),
+                        C04PacketPlayerPosition(x, y, z, false)
+                    )
                     thePlayer.onCriticalHit(entity)
                 }
                 "ncppacket" -> {
-                    sendPacket(C04PacketPlayerPosition(x, y + 0.11, z, false))
-                    sendPacket(C04PacketPlayerPosition(x, y + 0.1100013579, z, false))
-                    sendPacket(C04PacketPlayerPosition(x, y + 0.0000013579, z, false))
+                    sendPackets(
+                        C04PacketPlayerPosition(x, y + 0.11, z, false),
+                        C04PacketPlayerPosition(x, y + 0.1100013579, z, false),
+                        C04PacketPlayerPosition(x, y + 0.0000013579, z, false)
+                    )
                     mc.thePlayer.onCriticalHit(entity)
                 }
                 "hop" -> {
@@ -67,8 +72,10 @@ object Criticals : Module("Criticals", category = ModuleCategory.COMBAT) {
                     thePlayer.onGround = false
                 }
                 "tphop" -> {
-                    sendPacket(C04PacketPlayerPosition(x, y + 0.02, z, false))
-                    sendPacket(C04PacketPlayerPosition(x, y + 0.01, z, false))
+                    sendPackets(
+                        C04PacketPlayerPosition(x, y + 0.02, z, false),
+                        C04PacketPlayerPosition(x, y + 0.01, z, false)
+                    )
                     thePlayer.setPosition(x, y + 0.01, z)
                 }
                 "jump" -> thePlayer.motionY = 0.42
@@ -84,10 +91,10 @@ object Criticals : Module("Criticals", category = ModuleCategory.COMBAT) {
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (packet is C03PacketPlayer && modeValue.get() == "NoGround")
+        if (packet is C03PacketPlayer && mode == "NoGround")
             packet.onGround = false
     }
 
     override val tag
-        get() = modeValue.get()
+        get() = mode
 }

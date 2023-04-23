@@ -18,20 +18,14 @@ import net.minecraft.network.play.server.S2BPacketChangeGameState
 
 object Ambience : Module("Ambience", ModuleCategory.RENDER) {
 
-    private val timeModeValue = ListValue("Mode", arrayOf("None", "Normal", "Custom"), "Custom")
-    private val weatherModeValue = ListValue("WeatherMode", arrayOf("None", "Sun", "Rain", "Thunder"), "None")
+    private val timeMode by ListValue("Mode", arrayOf("None", "Normal", "Custom"), "Custom")
+    private val weatherMode by ListValue("WeatherMode", arrayOf("None", "Sun", "Rain", "Thunder"), "None")
 
-    private val customWorldTimeValue  = object : IntegerValue("Time", 19000, 0, 24000) {
-        override fun isSupported() = timeModeValue.get() != "Custom"
-    }
+    private val customWorldTime by IntegerValue("Time", 19000, 0..24000) { timeMode != "Custom" }
 
-    private val changeWorldTimeSpeedValue = object : IntegerValue("TimeSpeed", 150, 10, 500) {
-        override fun isSupported() = timeModeValue.get() != "None"
-    }
+    private val changeWorldTimeSpeed by IntegerValue("TimeSpeed", 150, 10..500) { timeMode != "None" }
 
-    private val weatherStrengthValue = object : FloatValue("WeatherStrength", 1f, 0f, 1f) {
-        override fun isSupported() = weatherModeValue.get() != "None"
-    }
+    private val weatherStrength by FloatValue("WeatherStrength", 1f, 0f..1f) { weatherMode != "None" }
 
     var i = 0L
 
@@ -41,32 +35,32 @@ object Ambience : Module("Ambience", ModuleCategory.RENDER) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        when (timeModeValue.get().lowercase()) {
+        when (timeMode.lowercase()) {
             "normal" -> {
                 if (i < 24000) {
-                    i += changeWorldTimeSpeedValue.get()
+                    i += changeWorldTimeSpeed
                 } else {
                     i = 0
                 }
                 mc.theWorld.worldTime = i
             }
             "custom" -> {
-                mc.theWorld.worldTime = customWorldTimeValue.get().toLong()
+                mc.theWorld.worldTime = customWorldTime.toLong()
             }
         }
 
-        when (weatherModeValue.get().lowercase()) {
+        when (weatherMode.lowercase()) {
             "sun" -> {
                 mc.theWorld.setRainStrength(0f)
                 mc.theWorld.setThunderStrength(0f)
             }
             "rain" -> {
-                mc.theWorld.setRainStrength(weatherStrengthValue.get())
+                mc.theWorld.setRainStrength(weatherStrength)
                 mc.theWorld.setThunderStrength(0f)
             }
             "thunder" -> {
-                mc.theWorld.setRainStrength(weatherStrengthValue.get())
-                mc.theWorld.setThunderStrength(weatherStrengthValue.get())
+                mc.theWorld.setRainStrength(weatherStrength)
+                mc.theWorld.setThunderStrength(weatherStrength)
             }
         }
     }
@@ -75,11 +69,10 @@ object Ambience : Module("Ambience", ModuleCategory.RENDER) {
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (!timeModeValue.equals("none") && packet is S03PacketTimeUpdate) {
+        if (timeMode != "None" && packet is S03PacketTimeUpdate)
             event.cancelEvent()
-        }
 
-        if (!weatherModeValue.equals("none") && packet is S2BPacketChangeGameState) {
+        if (weatherMode != "None" && packet is S2BPacketChangeGameState) {
             if (packet.gameState in 7..8) { // change weather packet
                 event.cancelEvent()
             }

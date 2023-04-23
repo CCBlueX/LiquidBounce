@@ -19,7 +19,7 @@ class ChatTokenCommand : Command("chattoken") {
                 args[1].equals("set", true) -> {
                     if (args.size > 2) {
                         LiquidChat.jwtToken = StringUtils.toCompleteString(args, 2)
-                        LiquidChat.jwtValue.set(true)
+                        LiquidChat.jwt = true
 
                         if (LiquidChat.state) {
                             LiquidChat.state = false

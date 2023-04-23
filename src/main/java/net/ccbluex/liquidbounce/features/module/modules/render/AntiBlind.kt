@@ -11,8 +11,8 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 
 object AntiBlind : Module("AntiBlind", ModuleCategory.RENDER) {
-    val confusionEffectValue = BoolValue("Confusion", true)
-    val pumpkinEffectValue = BoolValue("Pumpkin", true)
-    val fireEffectValue = FloatValue("FireAlpha", 0.3f, 0f, 1f)
+    val confusionEffect by BoolValue("Confusion", true)
+    val pumpkinEffect by BoolValue("Pumpkin", true)
+    val fireEffect by FloatValue("FireAlpha", 0.3f, 0f..1f)
     val bossHealth = BoolValue("BossHealth", true)
 }

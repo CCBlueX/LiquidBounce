@@ -34,16 +34,14 @@ object Blink : Module("Blink", ModuleCategory.PLAYER) {
     private var fakePlayer: EntityOtherPlayerMP? = null
     private var disableLogger = false
     private val positions = LinkedList<DoubleArray>()
-    private val pulseValue = BoolValue("Pulse", false)
-    private val pulseDelayValue = object : IntegerValue("PulseDelay", 1000, 500, 5000) {
-        override fun isSupported() = pulseValue.get()
-    }
+    private val pulse by BoolValue("Pulse", false)
+    private val pulseDelay by IntegerValue("PulseDelay", 1000, 500..5000) { pulse }
     private val pulseTimer = MSTimer()
 
     override fun onEnable() {
         val thePlayer = mc.thePlayer ?: return
 
-        if (!pulseValue.get()) {
+        if (!pulse) {
             val faker = EntityOtherPlayerMP(mc.theWorld, thePlayer.gameProfile)
 
             faker.rotationYawHead = thePlayer.rotationYawHead
@@ -114,7 +112,7 @@ object Blink : Module("Blink", ModuleCategory.PLAYER) {
                 )
             )
         }
-        if (pulseValue.get() && pulseTimer.hasTimePassed(pulseDelayValue.get())) {
+        if (pulse && pulseTimer.hasTimePassed(pulseDelay)) {
             blink()
             pulseTimer.reset()
         }
@@ -123,9 +121,9 @@ object Blink : Module("Blink", ModuleCategory.PLAYER) {
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
         val color = if (Breadcrumbs.colorRainbow.get()) rainbow() else Color(
-            Breadcrumbs.colorRedValue.get(),
-            Breadcrumbs.colorGreenValue.get(),
-            Breadcrumbs.colorBlueValue.get()
+            Breadcrumbs.colorRed,
+            Breadcrumbs.colorGreen,
+            Breadcrumbs.colorBlue
         )
         synchronized(positions) {
             glPushMatrix()
@@ -137,9 +135,9 @@ object Blink : Module("Blink", ModuleCategory.PLAYER) {
             mc.entityRenderer.disableLightmap()
             glBegin(GL_LINE_STRIP)
             glColor(color)
-            val renderPosX: Double = mc.renderManager.viewerPosX
-            val renderPosY: Double = mc.renderManager.viewerPosY
-            val renderPosZ: Double = mc.renderManager.viewerPosZ
+            val renderPosX = mc.renderManager.viewerPosX
+            val renderPosY = mc.renderManager.viewerPosY
+            val renderPosZ = mc.renderManager.viewerPosZ
             for (pos in positions) glVertex3d(pos[0] - renderPosX, pos[1] - renderPosY, pos[2] - renderPosZ)
             glColor4d(1.0, 1.0, 1.0, 1.0)
             glEnd()

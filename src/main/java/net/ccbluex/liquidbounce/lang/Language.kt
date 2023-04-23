@@ -3,7 +3,6 @@ package net.ccbluex.liquidbounce.lang
 import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
-import net.minecraft.client.resources.I18n
 
 fun translationMenu(key: String, vararg args: Any) = LanguageManager.getTranslation("menu.$key", *args)
 fun translation(key: String, vararg args: Any) = LanguageManager.getTranslation(key, *args)
@@ -59,8 +58,8 @@ object LanguageManager : MinecraftInstance() {
 
 class Language(val locale: String, val contributors: List<String>, val translations: Map<String, String>) {
 
-    fun getTranslation(key: String, vararg args: Any): String? = translations[key]?.format(*args)
+    fun getTranslation(key: String, vararg args: Any) = translations[key]?.format(*args)
 
-    override fun toString(): String = locale
+    override fun toString() = locale
 
 }

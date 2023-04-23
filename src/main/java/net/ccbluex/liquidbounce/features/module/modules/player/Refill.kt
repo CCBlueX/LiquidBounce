@@ -21,24 +21,18 @@ import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_IN
 import net.minecraft.network.play.server.S2EPacketCloseWindow
 
 object Refill : Module("Refill", ModuleCategory.PLAYER) {
-    private val delayValue = IntegerValue("Delay", 400, 10, 1000)
+    private val delay by IntegerValue("Delay", 400, 10..1000)
 
-    private val itemDelayValue = IntegerValue("ItemDelay", 400, 0, 1000)
+    private val itemDelay by IntegerValue("ItemDelay", 400, 0..1000)
 
-    private val modeValue = ListValue("Mode", arrayOf("Swap", "Merge"), "Swap")
+    private val mode by ListValue("Mode", arrayOf("Swap", "Merge"), "Swap")
 
-    private val invOpenValue = BoolValue("InvOpen", false)
-    private val simulateInventoryValue = object : BoolValue("SimulateInventory", false) {
-        override fun isSupported() = !invOpenValue.get()
-    }
+    private val invOpen by BoolValue("InvOpen", false)
+    private val simulateInventory by BoolValue("SimulateInventory", false) { !invOpen }
 
-    private val noMoveValue = BoolValue("NoMoveClicks", false)
-    private val noMoveAirValue = object : BoolValue("NoClicksInAir", false) {
-        override fun isSupported() = noMoveValue.get()
-    }
-    private val noMoveGroundValue = object : BoolValue("NoClicksOnGround", true) {
-        override fun isSupported() = noMoveValue.get()
-    }
+    private val noMove by BoolValue("NoMoveClicks", false)
+    private val noMoveAir by BoolValue("NoClicksInAir", false) { noMove }
+    private val noMoveGround by BoolValue("NoClicksOnGround", true) { noMove }
 
     private val timer = MSTimer()
 
@@ -46,21 +40,21 @@ object Refill : Module("Refill", ModuleCategory.PLAYER) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        if (!timer.hasTimePassed(delayValue.get()))
+        if (!timer.hasTimePassed(delay))
             return
 
-        if (invOpenValue.get() && mc.currentScreen !is GuiInventory)
+        if (invOpen && mc.currentScreen !is GuiInventory)
             return
 
-        if (noMoveValue.get() && isMoving && if (mc.thePlayer.onGround) noMoveGroundValue.get() else noMoveAirValue.get())
+        if (noMove && isMoving && if (mc.thePlayer.onGround) noMoveGround else noMoveAir)
             return
 
         for (slot in 36..44) {
             val stack = mc.thePlayer.inventoryContainer.getSlot(slot).stack ?: continue
             if (stack.stackSize == stack.maxStackSize
-                || (System.currentTimeMillis() - (stack as IMixinItemStack).itemDelay) < itemDelayValue.get()) continue
+                || (System.currentTimeMillis() - (stack as IMixinItemStack).itemDelay) < itemDelay) continue
 
-            when (modeValue.get()) {
+            when (mode) {
                 "Swap" -> {
                     val bestOption = mc.thePlayer.inventoryContainer.inventory.withIndex()
                         .filter { (index, searchStack) ->
@@ -100,7 +94,7 @@ object Refill : Module("Refill", ModuleCategory.PLAYER) {
             }
         }
 
-        if (simulateInventoryValue.get() && openInv && mc.currentScreen !is GuiInventory)
+        if (simulateInventory && openInv && mc.currentScreen !is GuiInventory)
             sendPacket(C0DPacketCloseWindow(mc.thePlayer.openContainer.windowId))
     }
 
@@ -118,7 +112,7 @@ object Refill : Module("Refill", ModuleCategory.PLAYER) {
     }
 
     fun click(slot: Int, button: Int, mode: Int, stack: ItemStack) {
-        if (simulateInventoryValue.get() && !openInv)
+        if (simulateInventory && !openInv)
             sendPacket(C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT))
 
         sendPacket(

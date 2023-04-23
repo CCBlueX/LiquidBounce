@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.event.EntityMovementEvent
@@ -17,14 +22,14 @@ import java.awt.Color
 import java.util.*
 
 // TODO: Proper description?
-object Backtrack : Module("Backtrack", category = ModuleCategory.COMBAT) {
+object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
 
     // This will be used as maximum possible delay. (In milliseconds)
-    private val maximumDelay = IntegerValue("MaxDelay", 250, 0, 1000)
+    private val maximumDelay by IntegerValue("MaxDelay", 250, 0..1000)
 
     // This will be used to set the maximum data of a player. This can be used to prevent memory leaks and lag.
     // Might be useful on servers with a lot of players or AntiCheat plugins which try to cause issues by exploiting this.
-    private val maximumCachedPositions = IntegerValue("MaxCachedPositions", 10, 1, 20)
+    private val maximumCachedPositions by IntegerValue("MaxCachedPositions", 10, 1..20)
 
     private val backtrackedPlayer = mutableMapOf<UUID, MutableList<BacktrackData>>()
 
@@ -42,7 +47,7 @@ object Backtrack : Module("Backtrack", category = ModuleCategory.COMBAT) {
 
         backtrackedPlayer.forEach { (key, backtrackData) ->
             // Remove old data
-            backtrackData.removeIf { it.time + maximumDelay.get() < System.currentTimeMillis() }
+            backtrackData.removeIf { it.time + maximumDelay < System.currentTimeMillis() }
 
             // Remove player if there is no data left. This prevents memory leaks.
             if (backtrackData.isEmpty()) {
@@ -112,7 +117,7 @@ object Backtrack : Module("Backtrack", category = ModuleCategory.COMBAT) {
         // Check if there is already data of the player
         if (backtrackData != null) {
             // Check if there is already enough data of the player
-            if (backtrackData.size >= maximumCachedPositions.get()) {
+            if (backtrackData.size >= maximumCachedPositions) {
                 // Remove first data
                 backtrackData.removeAt(0)
             }

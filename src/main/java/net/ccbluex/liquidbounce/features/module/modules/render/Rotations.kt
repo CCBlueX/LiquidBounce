@@ -17,7 +17,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 object Rotations : Module("Rotations", ModuleCategory.RENDER
 ) {
 
-    private val bodyValue = BoolValue("Body", true)
+    private val body by BoolValue("Body", true)
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
@@ -29,7 +29,7 @@ object Rotations : Module("Rotations", ModuleCategory.RENDER
 
         thePlayer.rotationYawHead = serverRotation.yaw
 
-        if (bodyValue.get()) {
+        if (body) {
             thePlayer.renderYawOffset = thePlayer.rotationYawHead
         }
     }

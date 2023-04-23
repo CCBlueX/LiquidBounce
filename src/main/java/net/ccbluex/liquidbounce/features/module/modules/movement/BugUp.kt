@@ -13,6 +13,9 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
+import net.ccbluex.liquidbounce.utils.extensions.component1
+import net.ccbluex.liquidbounce.utils.extensions.component2
+import net.ccbluex.liquidbounce.utils.extensions.component3
 import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawFilledBox
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
@@ -35,9 +38,9 @@ import kotlin.math.max
 
 object BugUp : Module("BugUp", ModuleCategory.MOVEMENT) {
 
-    private val modeValue = ListValue("Mode", arrayOf("TeleportBack", "FlyFlag", "OnGroundSpoof", "MotionTeleport-Flag"), "FlyFlag")
-    private val maxFallDistance = IntegerValue("MaxFallDistance", 10, 2, 255)
-    private val maxDistanceWithoutGround = FloatValue("MaxDistanceToSetback", 2.5f, 1f, 30f)
+    private val mode by ListValue("Mode", arrayOf("TeleportBack", "FlyFlag", "OnGroundSpoof", "MotionTeleport-Flag"), "FlyFlag")
+    private val maxFallDistance = IntegerValue("MaxFallDistance", 10, 2..255)
+    private val maxDistanceWithoutGround = FloatValue("MaxDistanceToSetback", 2.5f, 1f..30f)
     private val indicator = BoolValue("Indicator", true)
 
     private var detectedLocation: BlockPos? = null
@@ -75,7 +78,7 @@ object BugUp : Module("BugUp", ModuleCategory.MOVEMENT) {
             }
 
             if (thePlayer.fallDistance - lastFound > maxDistanceWithoutGround.get()) {
-                val mode = modeValue.get()
+                val mode = mode
 
                 when (mode.lowercase()) {
                     "teleportback" -> {
@@ -110,9 +113,7 @@ object BugUp : Module("BugUp", ModuleCategory.MOVEMENT) {
                 thePlayer.fallDistance + (thePlayer.posY - (detectedLocation!!.y + 1)) < 3)
             return
 
-        val x = detectedLocation!!.x
-        val y = detectedLocation!!.y
-        val z = detectedLocation!!.z
+        val (x, y, z) = detectedLocation!!
 
         val renderManager = mc.renderManager
 

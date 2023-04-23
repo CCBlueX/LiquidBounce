@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.utils
 
+import net.ccbluex.liquidbounce.utils.extensions.toRadiansD
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -30,8 +31,8 @@ object MovementUtils : MinecraftInstance() {
     }
 
     fun forward(length: Double) {
-        val thePlayer = mc.thePlayer
-        val yaw = Math.toRadians(thePlayer.rotationYaw.toDouble())
+        val thePlayer = mc.thePlayer ?: return
+        val yaw = thePlayer.rotationYaw.toRadiansD()
         thePlayer.setPosition(thePlayer.posX + -sin(yaw) * length, thePlayer.posY, thePlayer.posZ + cos(yaw) * length)
     }
 
@@ -44,7 +45,7 @@ object MovementUtils : MinecraftInstance() {
             if (thePlayer.moveForward < 0f) forward = -0.5f else if (thePlayer.moveForward > 0f) forward = 0.5f
             if (thePlayer.moveStrafing > 0f) rotationYaw -= 90f * forward
             if (thePlayer.moveStrafing < 0f) rotationYaw += 90f * forward
-            return Math.toRadians(rotationYaw.toDouble())
+            return rotationYaw.toRadiansD()
         }
 
     fun isOnGround(height: Double) =

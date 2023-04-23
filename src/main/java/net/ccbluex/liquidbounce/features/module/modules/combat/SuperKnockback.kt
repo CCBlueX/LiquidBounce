@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -30,9 +31,7 @@ object SuperKnockback : Module("SuperKnockback", ModuleCategory.COMBAT) {
     private val onlyGround by BoolValue("OnlyGround", false)
 
     private val onlyMove by BoolValue("OnlyMove", true)
-    private val onlyMoveForward by object : BoolValue("OnlyMoveForward", true) {
-        override fun isSupported() = onlyMove
-    }
+    private val onlyMoveForward by BoolValue("OnlyMoveForward", true) { onlyMove }
 
     private var ticks = 0
 
@@ -53,15 +52,19 @@ object SuperKnockback : Module("SuperKnockback", ModuleCategory.COMBAT) {
             "Legit", "Silent" -> ticks = 2
 
             "Packet" -> {
-                sendPacket(C0BPacketEntityAction(mc.thePlayer, STOP_SPRINTING))
-                sendPacket(C0BPacketEntityAction(mc.thePlayer, START_SPRINTING))
+                sendPackets(
+                    C0BPacketEntityAction(mc.thePlayer, STOP_SPRINTING),
+                    C0BPacketEntityAction(mc.thePlayer, START_SPRINTING)
+                )
             }
 
             "SneakPacket" -> {
-                sendPacket(C0BPacketEntityAction(mc.thePlayer, STOP_SPRINTING))
-                sendPacket(C0BPacketEntityAction(mc.thePlayer, START_SNEAKING))
-                sendPacket(C0BPacketEntityAction(mc.thePlayer, START_SPRINTING))
-                sendPacket(C0BPacketEntityAction(mc.thePlayer, STOP_SNEAKING))
+                sendPackets(
+                    C0BPacketEntityAction(mc.thePlayer, STOP_SPRINTING),
+                    C0BPacketEntityAction(mc.thePlayer, START_SNEAKING),
+                    C0BPacketEntityAction(mc.thePlayer, START_SPRINTING),
+                    C0BPacketEntityAction(mc.thePlayer, STOP_SNEAKING)
+                )
             }
         }
 

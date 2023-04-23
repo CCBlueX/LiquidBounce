@@ -20,11 +20,11 @@ import net.minecraft.network.play.client.C03PacketPlayer.*
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 
 object FreeCam : Module("FreeCam", ModuleCategory.RENDER) {
-    private val speedValue = FloatValue("Speed", 0.8f, 0.1f, 2f)
-    private val flyValue = BoolValue("Fly", true)
-    private val noClipValue = BoolValue("NoClip", true)
-    private val motionValue = BoolValue("RecordMotion", true)
-    private val c03SpoofValue = BoolValue("C03Spoof", false)
+    private val speed by FloatValue("Speed", 0.8f, 0.1f..2f)
+    private val fly by BoolValue("Fly", true)
+    private val noClip by BoolValue("NoClip", true)
+    private val motion by BoolValue("RecordMotion", true)
+    private val c03Spoof by BoolValue("C03Spoof", false)
 
     private lateinit var fakePlayer: EntityOtherPlayerMP
     private var motionX = 0.0
@@ -35,7 +35,7 @@ object FreeCam : Module("FreeCam", ModuleCategory.RENDER) {
     override fun onEnable() {
         if (mc.thePlayer == null) return
 
-        if (motionValue.get()) {
+        if (motion) {
             motionX = mc.thePlayer.motionX
             motionY = mc.thePlayer.motionY
             motionZ = mc.thePlayer.motionZ
@@ -51,7 +51,7 @@ object FreeCam : Module("FreeCam", ModuleCategory.RENDER) {
         fakePlayer.rotationYawHead = mc.thePlayer.rotationYawHead
         fakePlayer.copyLocationAndAnglesFrom(mc.thePlayer)
         mc.theWorld.addEntityToWorld(-1000, fakePlayer)
-        if (noClipValue.get()) mc.thePlayer.noClip = true
+        if (noClip) mc.thePlayer.noClip = true
     }
 
     override fun onDisable() {
@@ -65,23 +65,22 @@ object FreeCam : Module("FreeCam", ModuleCategory.RENDER) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        if (noClipValue.get()) mc.thePlayer.noClip = true
+        if (noClip) mc.thePlayer.noClip = true
         mc.thePlayer.fallDistance = 0f
-        if (flyValue.get()) {
-            val value = speedValue.get()
+        if (fly) {
             mc.thePlayer.motionY = 0.0
             mc.thePlayer.motionX = 0.0
             mc.thePlayer.motionZ = 0.0
-            if (mc.gameSettings.keyBindJump.isKeyDown) mc.thePlayer.motionY += value.toDouble()
-            if (mc.gameSettings.keyBindSneak.isKeyDown) mc.thePlayer.motionY -= value.toDouble()
-            strafe(value)
+            if (mc.gameSettings.keyBindJump.isKeyDown) mc.thePlayer.motionY += speed
+            if (mc.gameSettings.keyBindSneak.isKeyDown) mc.thePlayer.motionY -= speed
+            strafe(speed)
         }
     }
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
-        if (c03SpoofValue.get()) {
+        if (c03Spoof) {
             if (packet is C04PacketPlayerPosition || packet is C05PacketPlayerLook || packet is C06PacketPlayerPosLook) {
                 if (packetCount >= 20) {
                     packetCount = 0

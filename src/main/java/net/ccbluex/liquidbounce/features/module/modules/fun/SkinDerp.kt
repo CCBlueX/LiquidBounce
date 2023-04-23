@@ -17,13 +17,13 @@ import kotlin.random.Random.Default.nextBoolean
 
 object SkinDerp : Module("SkinDerp", ModuleCategory.FUN) {
 
-    private val delayValue = IntegerValue("Delay", 0, 0, 1000)
-    private val hatValue = BoolValue("Hat", true)
-    private val jacketValue = BoolValue("Jacket", true)
-    private val leftPantsValue = BoolValue("LeftPants", true)
-    private val rightPantsValue = BoolValue("RightPants", true)
-    private val leftSleeveValue = BoolValue("LeftSleeve", true)
-    private val rightSleeveValue = BoolValue("RightSleeve", true)
+    private val delay by IntegerValue("Delay", 0, 0..1000)
+    private val hat by BoolValue("Hat", true)
+    private val jacket by BoolValue("Jacket", true)
+    private val leftPants by BoolValue("LeftPants", true)
+    private val rightPants by BoolValue("RightPants", true)
+    private val leftSleeve by BoolValue("LeftSleeve", true)
+    private val rightSleeve by BoolValue("RightSleeve", true)
 
     private var prevModelParts = emptySet<EnumPlayerModelParts>()
 
@@ -50,18 +50,18 @@ object SkinDerp : Module("SkinDerp", ModuleCategory.FUN) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        if (timer.hasTimePassed(delayValue.get())) {
-            if (hatValue.get())
+        if (timer.hasTimePassed(delay)) {
+            if (hat)
                 mc.gameSettings.setModelPartEnabled(EnumPlayerModelParts.HAT, nextBoolean())
-            if (jacketValue.get())
+            if (jacket)
                 mc.gameSettings.setModelPartEnabled(EnumPlayerModelParts.JACKET, nextBoolean())
-            if (leftPantsValue.get())
+            if (leftPants)
                 mc.gameSettings.setModelPartEnabled(EnumPlayerModelParts.LEFT_PANTS_LEG, nextBoolean())
-            if (rightPantsValue.get())
+            if (rightPants)
                 mc.gameSettings.setModelPartEnabled(EnumPlayerModelParts.RIGHT_PANTS_LEG, nextBoolean())
-            if (leftSleeveValue.get())
+            if (leftSleeve)
                 mc.gameSettings.setModelPartEnabled(EnumPlayerModelParts.LEFT_SLEEVE, nextBoolean())
-            if (rightSleeveValue.get())
+            if (rightSleeve)
                 mc.gameSettings.setModelPartEnabled(EnumPlayerModelParts.RIGHT_SLEEVE, nextBoolean())
             timer.reset()
         }

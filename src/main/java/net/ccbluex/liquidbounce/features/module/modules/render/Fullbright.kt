@@ -15,7 +15,7 @@ import net.minecraft.potion.Potion
 import net.minecraft.potion.PotionEffect
 
 object Fullbright : Module("Fullbright", ModuleCategory.RENDER) {
-    private val modeValue = ListValue("Mode", arrayOf("Gamma", "NightVision"), "Gamma")
+    private val mode by ListValue("Mode", arrayOf("Gamma", "NightVision"), "Gamma")
     private var prevGamma = -1f
 
     override fun onEnable() {
@@ -35,7 +35,7 @@ object Fullbright : Module("Fullbright", ModuleCategory.RENDER) {
     @EventTarget(ignoreCondition = true)
     fun onUpdate(event: UpdateEvent) {
         if (state || XRay.state) {
-            when (modeValue.get().lowercase()) {
+            when (mode.lowercase()) {
                 "gamma" -> when {
                     mc.gameSettings.gammaSetting <= 100f -> mc.gameSettings.gammaSetting++
                 }

@@ -27,21 +27,21 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
 
     // Highly customizable values
 
-    private val blockForwardMultiplier = FloatValue("BlockForwardMultiplier", 1f, 0.2F, 1f)
-    private val blockStrafeMultiplier = FloatValue("BlockStrafeMultiplier", 1f, 0.2F, 1f)
+    private val blockForwardMultiplier = FloatValue("BlockForwardMultiplier", 1f, 0.2F..1f)
+    private val blockStrafeMultiplier = FloatValue("BlockStrafeMultiplier", 1f, 0.2F..1f)
 
-    private val consumeForwardMultiplier = FloatValue("ConsumeForwardMultiplier", 1f, 0.2F, 1f)
-    private val consumeStrafeMultiplier = FloatValue("ConsumeStrafeMultiplier", 1f, 0.2F, 1f)
+    private val consumeForwardMultiplier = FloatValue("ConsumeForwardMultiplier", 1f, 0.2F..1f)
+    private val consumeStrafeMultiplier = FloatValue("ConsumeStrafeMultiplier", 1f, 0.2F..1f)
 
-    private val bowForwardMultiplier = FloatValue("BowForwardMultiplier", 1f, 0.2F, 1f)
-    private val bowStrafeMultiplier = FloatValue("BowStrafeMultiplier", 1f, 0.2F, 1f)
+    private val bowForwardMultiplier = FloatValue("BowForwardMultiplier", 1f, 0.2F..1f)
+    private val bowStrafeMultiplier = FloatValue("BowStrafeMultiplier", 1f, 0.2F..1f)
 
     // NCP mode
     private val packet = BoolValue("Packet", true)
 
     // Blocks
-    val soulsandValue = BoolValue("Soulsand", true)
-    val liquidPushValue = BoolValue("LiquidPush", true)
+    val soulsand by BoolValue("Soulsand", true)
+    val liquidPush by BoolValue("LiquidPush", true)
 
     @EventTarget
     fun onMotion(event: MotionEvent) {

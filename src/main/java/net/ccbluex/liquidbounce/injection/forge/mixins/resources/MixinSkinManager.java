@@ -25,8 +25,8 @@ public class MixinSkinManager {
         
         NameProtect nameProtect = NameProtect.INSTANCE;
 
-        if (nameProtect.getState() && nameProtect.getSkinProtectValue().get()) {
-            if (nameProtect.getAllPlayersValue().get() || Objects.equals(gameProfile.getId(), mc.getSession().getProfile().getId())) {
+        if (nameProtect.getState() && nameProtect.getSkinProtect()) {
+            if (nameProtect.getAllPlayers() || Objects.equals(gameProfile.getId(), mc.getSession().getProfile().getId())) {
                 cir.setReturnValue(new HashMap<>());
                 cir.cancel();
             }

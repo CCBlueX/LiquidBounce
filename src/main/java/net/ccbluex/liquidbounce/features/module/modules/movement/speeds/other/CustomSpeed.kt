@@ -14,13 +14,13 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 class CustomSpeed : SpeedMode("Custom") {
     override fun onMotion() {
         if (isMoving) {
-            mc.timer.timerSpeed = Speed.customTimerValue.get()
+            mc.timer.timerSpeed = Speed.customTimer
             when {
                 mc.thePlayer.onGround -> {
-                    strafe(Speed.customSpeedValue.get())
-                    mc.thePlayer.motionY = Speed.customYValue.get().toDouble()
+                    strafe(Speed.customSpeed)
+                    mc.thePlayer.motionY = Speed.customY.toDouble()
                 }
-                Speed.customStrafeValue.get() -> strafe(Speed.customSpeedValue.get())
+                Speed.customStrafe -> strafe(Speed.customSpeed)
                 else -> strafe()
             }
         } else {
@@ -30,11 +30,11 @@ class CustomSpeed : SpeedMode("Custom") {
     }
 
     override fun onEnable() {
-        if (Speed.resetXZValue.get()) {
+        if (Speed.resetXZ) {
             mc.thePlayer.motionZ = 0.0
             mc.thePlayer.motionX = mc.thePlayer.motionZ
         }
-        if (Speed.resetYValue.get()) mc.thePlayer.motionY = 0.0
+        if (Speed.resetY) mc.thePlayer.motionY = 0.0
         super.onEnable()
     }
 

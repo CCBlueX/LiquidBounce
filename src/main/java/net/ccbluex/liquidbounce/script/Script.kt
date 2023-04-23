@@ -32,7 +32,7 @@ import javax.script.ScriptEngine
 class Script(val scriptFile: File) : MinecraftInstance() {
 
     private val scriptEngine: ScriptEngine
-    private val scriptText: String = scriptFile.readText()
+    private val scriptText = scriptFile.readText()
 
     // Script information
     lateinit var scriptName: String

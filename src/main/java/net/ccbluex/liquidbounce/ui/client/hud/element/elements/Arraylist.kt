@@ -35,61 +35,31 @@ import java.awt.Color
 class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                 side: Side = Side(Horizontal.RIGHT, Vertical.UP)) : Element(x, y, scale, side) {
 
-    private val colorMode by ListValue("Text-Color", arrayOf("Custom", "Random", "Rainbow"), "Custom")
-    private val colorRedValue = object : IntegerValue("Text-R", 0, 0, 255) {
-        override fun isSupported() = colorMode == "Custom"
-    }
-    private val colorGreenValue = object : IntegerValue("Text-G", 111, 0, 255) {
-        override fun isSupported() = colorMode == "Custom"
-    }
-    private val colorBlueValue = object : IntegerValue("Text-B", 255, 0, 255) {
-        override fun isSupported() = colorMode == "Custom"
-    }
+    private val textColorMode by ListValue("Text-Color", arrayOf("Custom", "Random", "Rainbow"), "Custom")
+    private val textRed by IntegerValue("Text-R", 0, 0..255) { textColorMode == "Custom" }
+    private val textGreen by IntegerValue("Text-G", 111, 0..255) { textColorMode == "Custom" }
+    private val textBlue by IntegerValue("Text-B", 255, 0..255) { textColorMode == "Custom" }
 
     private val rectMode by ListValue("Rect", arrayOf("None", "Left", "Right"), "None")
-    private val rectColorMode by object : ListValue("Rect-Color", arrayOf("Custom", "Random", "Rainbow"), "Rainbow") {
-        override fun isSupported() = rectMode != "None"
-    }
-    private val rectColorRedValue = object : IntegerValue("Rect-R", 255, 0, 255) {
-        override fun isSupported() = rectMode != "None" && rectColorMode == "Custom"
-    }
-    private val rectColorGreenValue = object : IntegerValue("Rect-G", 255, 0, 255) {
-        override fun isSupported() = rectColorRedValue.isSupported()
-    }
-    private val rectColorBlueValue = object : IntegerValue("Rect-B", 255, 0, 255) {
-        override fun isSupported() = rectColorRedValue.isSupported()
-    }
-    private val rectColorAlphaValue = object : IntegerValue("Rect-Alpha", 255, 0, 255) {
-        override fun isSupported() = rectColorRedValue.isSupported()
-    }
+    private val rectColorMode by ListValue("Rect-Color", arrayOf("Custom", "Random", "Rainbow"), "Rainbow") { rectMode != "None" }
+    
+    private val isCustomRectSupported = { rectMode != "None" && rectColorMode == "Custom" }
+    private val rectRed by IntegerValue("Rect-R", 255, 0..255, isCustomRectSupported)
+    private val rectGreen by IntegerValue("Rect-G", 255, 0..255, isCustomRectSupported)
+    private val rectBlue by IntegerValue("Rect-B", 255, 0..255, isCustomRectSupported)
+    private val rectAlpha by IntegerValue("Rect-Alpha", 255, 0..255, isCustomRectSupported)
 
-    private val backgroundColorMode by ListValue("Background-Color", arrayOf("Custom", "Random", "Rainbow"), "Custom")
-    private val backgroundColorRedValue = object : IntegerValue("Background-R", 0, 0, 255) {
-        override fun isSupported() = backgroundColorMode == "Custom"
-    }
-    private val backgroundColorGreenValue = object : IntegerValue("Background-G", 0, 0, 255) {
-        override fun isSupported() = backgroundColorRedValue.isSupported()
-    }
-    private val backgroundColorBlueValue = object : IntegerValue("Background-B", 0, 0, 255) {
-        override fun isSupported() = backgroundColorRedValue.isSupported()
-    }
-    private val backgroundColorAlphaValue = object : IntegerValue("Background-Alpha", 0, 0, 255) {
-        override fun isSupported() = backgroundColorRedValue.isSupported()
-    }
+    private val backgroundMode by ListValue("Background-Color", arrayOf("Custom", "Random", "Rainbow"), "Custom")
+    private val backgroundRed by IntegerValue("Background-R", 0, 0..255) { backgroundMode == "Custom" }
+    private val backgroundGreen by IntegerValue("Background-G", 0, 0..255) { backgroundMode == "Custom" }
+    private val backgroundBlue by IntegerValue("Background-B", 0, 0..255) { backgroundMode == "Custom" }
+    private val backgroundAlpha by IntegerValue("Background-Alpha", 0, 0..255) { backgroundMode == "Custom" }
 
-    private val saturation by object : FloatValue("Random-Saturation", 0.9f, 0f, 1f) {
-        override fun isSupported() = colorMode == "Random" || rectColorMode == "Random" || backgroundColorMode == "Random"
-    }
-    private val brightness by object : FloatValue("Random-Brightness", 1f, 0f, 1f) {
-        override fun isSupported() = colorMode == "Random" || rectColorMode == "Random" || backgroundColorMode == "Random"
-    }
-
-    private val rainbowX by object : FloatValue("Rainbow-X", -1000F, -2000F, 2000F) {
-        override fun isSupported() = colorMode == "Rainbow" || rectColorMode == "Rainbow" || backgroundColorMode == "Rainbow"
-    }
-    private val rainbowY by object : FloatValue("Rainbow-Y", -1000F, -2000F, 2000F) {
-        override fun isSupported() = colorMode == "Rainbow" || rectColorMode == "Rainbow" || backgroundColorMode == "Rainbow"
-    }
+    private fun isColorModeUsed(value: String) = textColorMode == value || rectMode == value || backgroundMode == value
+    private val saturation by FloatValue("Random-Saturation", 0.9f, 0f..1f) { isColorModeUsed("Random") }
+    private val brightness by FloatValue("Random-Brightness", 1f, 0f..1f) { isColorModeUsed("Random") }
+    private val rainbowX by FloatValue("Rainbow-X", -1000F, -2000F..2000F) { isColorModeUsed("Rainbow") }
+    private val rainbowY by FloatValue("Rainbow-Y", -1000F, -2000F..2000F) { isColorModeUsed("Rainbow") }
 
     private val tags by BoolValue("Tags", true)
     private val tagsStyle by object : ListValue("TagsStyle", arrayOf("[]", "()", "<>", "-", "|", "Space"), "Space") {
@@ -106,9 +76,9 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
     private val font by FontValue("Font", Fonts.font40)
     private val textShadow by BoolValue("ShadowText", true)
     private val upperCase by BoolValue("UpperCase", false)
-    private val space by FloatValue("Space", 0F, 0F, 5F)
-    private val textHeight by FloatValue("TextHeight", 11F, 1F, 20F)
-    private val textY by FloatValue("TextY", 1F, 0F, 20F)
+    private val space by FloatValue("Space", 0F, 0F..5F)
+    private val textHeight by FloatValue("TextHeight", 11F, 1F..20F)
+    private val textY by FloatValue("TextY", 1F, 0F..20F)
 
     companion object {
         val spacedModules by BoolValue("SpacedModules", false)
@@ -177,11 +147,9 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
         }
 
         // Draw arraylist
-        val customColor = Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), 1).rgb
-        val rectCustomColor = Color(rectColorRedValue.get(), rectColorGreenValue.get(), rectColorBlueValue.get(),
-                rectColorAlphaValue.get()).rgb
-        val backgroundCustomColor = Color(backgroundColorRedValue.get(), backgroundColorGreenValue.get(),
-                backgroundColorBlueValue.get(), backgroundColorAlphaValue.get()).rgb
+        val customColor = Color(textRed, textGreen, textBlue, 1).rgb
+        val rectCustomColor = Color(rectRed, rectGreen, rectBlue, rectAlpha).rgb
+        val backgroundCustomColor = Color(backgroundRed, backgroundGreen, backgroundBlue, backgroundAlpha).rgb
         val textSpacer = textHeight + space
 
         when (side.horizontal) {
@@ -194,9 +162,9 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                             if (side.vertical == Vertical.DOWN) index + 1 else index
                     val moduleColor = Color.getHSBColor(module.hue, saturation, brightness).rgb
 
-                    RainbowShader.begin(backgroundColorMode == "Rainbow", if (rainbowX == 0f) 0f else 1f / rainbowX, if (rainbowY == 0f) 0f else 1f / rainbowY, System.currentTimeMillis() % 10000 / 10000F).use {
+                    RainbowShader.begin(backgroundMode == "Rainbow", if (rainbowX == 0f) 0f else 1f / rainbowX, if (rainbowY == 0f) 0f else 1f / rainbowY, System.currentTimeMillis() % 10000 / 10000F).use {
                         drawRect(xPos - if (rectMode == "Right") 5 else 2, yPos, if (rectMode == "Right") -3F else 0F, yPos + textHeight,
-                            when (backgroundColorMode) {
+                            when (backgroundMode) {
                                 "Rainbow" -> 0xFF shl 24
                                 "Random" -> moduleColor
                                 else -> backgroundCustomColor
@@ -205,9 +173,9 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                     }
 
                     resetColor()
-                    RainbowFontShader.begin(colorMode == "Rainbow", if (rainbowX == 0f) 0f else 1f / rainbowX, if (rainbowY == 0f) 0f else 1f / rainbowY, System.currentTimeMillis() % 10000 / 10000F).use {
+                    RainbowFontShader.begin(textColorMode == "Rainbow", if (rainbowX == 0f) 0f else 1f / rainbowX, if (rainbowY == 0f) 0f else 1f / rainbowY, System.currentTimeMillis() % 10000 / 10000F).use {
                         font.drawString(displayString, xPos - if (rectMode == "Right") 3 else 0, yPos + textY,
-                            when (colorMode) {
+                            when (textColorMode) {
                                 "Rainbow" -> 0
                                 "Random" -> moduleColor
                                 else -> customColor
@@ -242,9 +210,9 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                             if (side.vertical == Vertical.DOWN) index + 1 else index
                     val moduleColor = Color.getHSBColor(module.hue, saturation, brightness).rgb
 
-                    RainbowShader.begin(backgroundColorMode == "Rainbow", if (rainbowX == 0f) 0f else 1f / rainbowX, if (rainbowY == 0f) 0f else 1f / rainbowY, System.currentTimeMillis() % 10000 / 10000F).use {
+                    RainbowShader.begin(backgroundMode == "Rainbow", if (rainbowX == 0f) 0f else 1f / rainbowX, if (rainbowY == 0f) 0f else 1f / rainbowY, System.currentTimeMillis() % 10000 / 10000F).use {
                         drawRect(0F, yPos, xPos + width + if (rectMode == "Right") 5 else 2, yPos + textHeight,
-                            when (backgroundColorMode) {
+                            when (backgroundMode) {
                                 "Rainbow" -> 0
                                 "Random" -> moduleColor
                                 else -> backgroundCustomColor
@@ -253,9 +221,9 @@ class Arraylist(x: Double = 1.0, y: Double = 2.0, scale: Float = 1F,
                     }
 
                     resetColor()
-                    RainbowFontShader.begin(colorMode == "Rainbow", if (rainbowX == 0f) 0f else 1f / rainbowX, if (rainbowY == 0f) 0f else 1f / rainbowY, System.currentTimeMillis() % 10000 / 10000F).use {
+                    RainbowFontShader.begin(textColorMode == "Rainbow", if (rainbowX == 0f) 0f else 1f / rainbowX, if (rainbowY == 0f) 0f else 1f / rainbowY, System.currentTimeMillis() % 10000 / 10000F).use {
                         font.drawString(displayString, xPos, yPos + textY,
-                            when (colorMode) {
+                            when (textColorMode) {
                                 "Rainbow" -> 0
                                 "Random" -> moduleColor
                                 else -> customColor

@@ -99,7 +99,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
 
         var currX = 0.0
 
-        val cached: CachedFont? = cachedStrings[text]
+        val cached = cachedStrings[text]
 
         if (cached != null) {
             glCallList(cached.displayList)

@@ -21,22 +21,20 @@ import net.minecraft.util.EnumFacing
 
 object FastClimb : Module("FastClimb", ModuleCategory.MOVEMENT) {
 
-    val modeValue = ListValue("Mode",
+    val mode by ListValue("Mode",
             arrayOf("Vanilla", "Clip", "AAC3.0.0", "AAC3.0.5", "SAAC3.1.2", "AAC3.1.2"), "Vanilla")
-    private val speedValue = object : FloatValue("Speed", 0.2872F, 0.01F, 5F) {
-        override fun isSupported() = modeValue.get() == "Vanilla"
-    }
+    private val speed by FloatValue("Speed", 0.2872F, 0.01F..5F) { mode == "Vanilla" }
 
     @EventTarget
     fun onMove(event: MoveEvent) {
-        val mode = modeValue.get()
+        val mode = mode
 
         val thePlayer = mc.thePlayer ?: return
 
         when {
             mode == "Vanilla" && thePlayer.isCollidedHorizontally &&
                     thePlayer.isOnLadder -> {
-                event.y = speedValue.get().toDouble()
+                event.y = speed.toDouble()
                 thePlayer.motionY = 0.0
             }
 
@@ -114,10 +112,10 @@ object FastClimb : Module("FastClimb", ModuleCategory.MOVEMENT) {
     @EventTarget
     fun onBlockBB(event: BlockBBEvent) {
         if (mc.thePlayer != null && (event.block is BlockLadder|| event.block is BlockVine) &&
-                modeValue.get() == "AAC3.0.5" && mc.thePlayer.isOnLadder)
+                mode == "AAC3.0.5" && mc.thePlayer.isOnLadder)
             event.boundingBox = null
     }
 
     override val tag
-        get() = modeValue.get()
+        get() = mode
 }

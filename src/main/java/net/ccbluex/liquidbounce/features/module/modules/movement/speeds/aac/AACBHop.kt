@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -23,7 +24,7 @@ class AACBHop : SpeedMode("AACBHop") {
 
             if (thePlayer.onGround) {
                 thePlayer.motionY = 0.399
-                val f = thePlayer.rotationYaw * 0.017453292f
+                val f = thePlayer.rotationYaw.toRadians()
                 thePlayer.motionX -= sin(f) * 0.2f
                 thePlayer.motionZ += cos(f) * 0.2f
                 mc.timer.timerSpeed = 2f

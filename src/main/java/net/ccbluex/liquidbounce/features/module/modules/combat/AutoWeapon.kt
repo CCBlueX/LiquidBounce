@@ -21,15 +21,14 @@ import net.minecraft.item.ItemTool
 import net.minecraft.network.play.client.C02PacketUseEntity
 import net.minecraft.network.play.client.C09PacketHeldItemChange
 
-object AutoWeapon : Module("AutoWeapon", category = ModuleCategory.COMBAT) {
+object AutoWeapon : Module("AutoWeapon", ModuleCategory.COMBAT) {
 
-    private val silentValue = BoolValue("SpoofItem", false)
-    private val ticksValue = object : IntegerValue("SpoofTicks", 10, 1, 20) {
-        override fun isSupported() = silentValue.get()
-    }
+    private val spoof by BoolValue("SpoofItem", false)
+    private val spoofTicks by IntegerValue("SpoofTicks", 10, 1..20) { spoof }
+    
     private var attackEnemy = false
 
-    private var spoofedSlot = 0
+    private var ticks = 0
 
     @EventTarget
     fun onAttack(event: AttackEvent) {
@@ -55,9 +54,9 @@ object AutoWeapon : Module("AutoWeapon", category = ModuleCategory.COMBAT) {
                 return
 
             // Switch to best weapon
-            if (silentValue.get()) {
+            if (spoof) {
                 sendPacket(C09PacketHeldItemChange(slot))
-                spoofedSlot = ticksValue.get()
+                ticks = spoofTicks
             } else {
                 mc.thePlayer.inventory.currentItem = slot
                 mc.playerController.updateController()
@@ -72,10 +71,10 @@ object AutoWeapon : Module("AutoWeapon", category = ModuleCategory.COMBAT) {
     @EventTarget
     fun onUpdate(update: UpdateEvent) {
         // Switch back to old item after some time
-        if (spoofedSlot > 0) {
-            if (spoofedSlot == 1)
+        if (ticks > 0) {
+            if (ticks == 1)
                 sendPacket(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
-            spoofedSlot--
+            ticks--
         }
     }
 }

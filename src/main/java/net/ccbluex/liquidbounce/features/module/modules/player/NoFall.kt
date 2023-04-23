@@ -34,7 +34,7 @@ import kotlin.math.sqrt
 
 object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
 
-    val modeValue = ListValue(
+    val mode by ListValue(
         "Mode", arrayOf(
             "SpoofGround",
             "NoGround",
@@ -49,9 +49,7 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
             "Hypixel"
         ), "SpoofGround"
     )
-    private val minFallDistance = object : FloatValue("MinMLGHeight", 5f, 2f, 50f) {
-        override fun isSupported() = modeValue.get() == "MLG"
-    }
+    private val minFallDistance = FloatValue("MinMLGHeight", 5f, 2f..50f) { mode == "MLG" }
     private val spartanTimer = TickTimer()
     private val mlgTimer = TickTimer()
     private var currentState = 0
@@ -80,7 +78,7 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
             ) { it is BlockLiquid }
         ) return
 
-        when (modeValue.get().lowercase()) {
+        when (mode.lowercase()) {
             "packet" -> {
                 if (mc.thePlayer.fallDistance > 2f) {
                     sendPacket(C03PacketPlayer(true))
@@ -156,7 +154,7 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
     @EventTarget
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
-        val mode = modeValue.get()
+        val mode = mode
         if (packet is C03PacketPlayer) {
             if (mode == "SpoofGround") packet.onGround = true
             if (mode == "NoGround") packet.onGround = false
@@ -181,17 +179,15 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
             ) { it is BlockLiquid }
         ) return
 
-        if (modeValue.get() == "LAAC") {
-            if (!jumped && !mc.thePlayer.onGround && !mc.thePlayer.isOnLadder && !mc.thePlayer.isInWater && !mc.thePlayer.isInWeb && mc.thePlayer.motionY < 0.0) {
-                event.x = 0.0
-                event.z = 0.0
-            }
+        if (mode == "LAAC") {
+            if (!jumped && !mc.thePlayer.onGround && !mc.thePlayer.isOnLadder && !mc.thePlayer.isInWater && !mc.thePlayer.isInWeb && mc.thePlayer.motionY < 0.0)
+                event.zeroXZ()
         }
     }
 
     @EventTarget
     private fun onMotionUpdate(event: MotionEvent) {
-        if (modeValue.get() != "MLG") return
+        if (mode != "MLG") return
 
         if (event.eventState == EventState.PRE) {
             currentMlgRotation = null
@@ -203,12 +199,12 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
             if (mc.thePlayer.fallDistance > minFallDistance.get()) {
                 val fallingPlayer = FallingPlayer(mc.thePlayer)
 
-                val maxDist: Double = mc.playerController.blockReachDistance + 1.5
+                val maxDist = mc.playerController.blockReachDistance + 1.5
 
                 val collision =
                     fallingPlayer.findCollision(ceil(1.0 / mc.thePlayer.motionY * -maxDist).toInt()) ?: return
 
-                var ok: Boolean = mc.thePlayer.eyes
+                var ok = mc.thePlayer.eyes
                     .distanceTo(
                         Vec3(collision.pos).addVector(0.5, 0.5, 0.5)
                     ) < mc.playerController.blockReachDistance + sqrt(0.75)
@@ -265,5 +261,5 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
     }
 
     override val tag
-        get() = modeValue.get()
+        get() = mode
 }

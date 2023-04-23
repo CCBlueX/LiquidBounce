@@ -6,6 +6,6 @@ import net.ccbluex.liquidbounce.value.BoolValue
 
 object NoFluid : Module("NoFluid", ModuleCategory.MOVEMENT) {
 
-    val waterValue = BoolValue("Water", true)
-    val lavaValue = BoolValue("Lava", true)
+    val water by BoolValue("Water", true)
+    val lava by BoolValue("Lava", true)
 }

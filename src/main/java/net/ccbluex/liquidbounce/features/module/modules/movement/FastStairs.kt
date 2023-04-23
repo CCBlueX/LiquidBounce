@@ -18,10 +18,8 @@ import net.minecraft.util.BlockPos
 
 object FastStairs : Module("FastStairs", ModuleCategory.MOVEMENT) {
 
-    private val modeValue = ListValue("Mode", arrayOf("Step", "NCP", "AAC3.1.0", "AAC3.3.6", "AAC3.3.13"), "NCP")
-    private val longJumpValue = object : BoolValue("LongJump", false) {
-        override fun isSupported() = modeValue.get().startsWith("AAC")
-    }
+    private val mode by ListValue("Mode", arrayOf("Step", "NCP", "AAC3.1.0", "AAC3.3.6", "AAC3.3.13"), "NCP")
+    private val longJump by BoolValue("LongJump", false) { mode.startsWith("AAC") }
 
     private var canJump = false
 
@@ -39,7 +37,7 @@ object FastStairs : Module("FastStairs", ModuleCategory.MOVEMENT) {
         else if (thePlayer.posY > thePlayer.prevChasingPosY)
             walkingDown = false
 
-        val mode = modeValue.get()
+        val mode = mode
 
         if (!thePlayer.onGround)
             return
@@ -80,7 +78,7 @@ object FastStairs : Module("FastStairs", ModuleCategory.MOVEMENT) {
             thePlayer.motionZ *= motion
             canJump = true
         } else if (mode.startsWith("AAC") && canJump) {
-            if (longJumpValue.get()) {
+            if (longJump) {
                 thePlayer.jump()
                 thePlayer.motionX *= 1.35
                 thePlayer.motionZ *= 1.35
@@ -91,5 +89,5 @@ object FastStairs : Module("FastStairs", ModuleCategory.MOVEMENT) {
     }
 
     override val tag
-        get() = modeValue.get()
+        get() = mode
 }

@@ -61,12 +61,12 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F,
     }
 
     private val displayString = TextValue("DisplayText", "")
-    private val redValue = IntegerValue("Red", 255, 0, 255)
-    private val greenValue = IntegerValue("Green", 255, 0, 255)
-    private val blueValue = IntegerValue("Blue", 255, 0, 255)
+    private val redValue = IntegerValue("Red", 255, 0..255)
+    private val greenValue = IntegerValue("Green", 255, 0..255)
+    private val blueValue = IntegerValue("Blue", 255, 0..255)
     private val rainbow = BoolValue("Rainbow", false)
-    private val rainbowX = FloatValue("Rainbow-X", -1000F, -2000F, 2000F)
-    private val rainbowY = FloatValue("Rainbow-Y", -1000F, -2000F, 2000F)
+    private val rainbowX = FloatValue("Rainbow-X", -1000F, -2000F..2000F)
+    private val rainbowY = FloatValue("Rainbow-Y", -1000F, -2000F..2000F)
     private val shadow = BoolValue("Shadow", true)
     private var fontValue = FontValue("Font", Fonts.font40)
 

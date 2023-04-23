@@ -49,61 +49,41 @@ import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import kotlin.math.truncate
 
-object Tower : Module("Tower", ModuleCategory.WORLD, keyBind = Keyboard.KEY_O) {
+object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O) {
     /**
      * OPTIONS
      */
-    private val modeValue = ListValue(
+    private val mode by ListValue(
         "Mode",
         arrayOf("Jump", "Motion", "ConstantMotion", "MotionTP", "Packet", "Teleport", "AAC3.3.9", "AAC3.6.4"),
         "Motion"
     )
-    private val autoBlockValue = ListValue("AutoBlock", arrayOf("Off", "Pick", "Spoof", "Switch"), "Spoof")
-    private val swingValue = BoolValue("Swing", true)
+    private val autoBlock by ListValue("AutoBlock", arrayOf("Off", "Pick", "Spoof", "Switch"), "Spoof")
+    private val swing by BoolValue("Swing", true)
     private val stopWhenBlockAbove = BoolValue("StopWhenBlockAbove", false)
-    private val rotationsValue = BoolValue("Rotations", true)
-    private val keepRotationValue = object : BoolValue("KeepRotation", false) {
-        override fun isSupported() = rotationsValue.get()
-    }
-    private val onJumpValue = BoolValue("OnJump", false)
-    private val matrixValue = BoolValue("Matrix", false)
-    private val placeModeValue = object : ListValue("PlaceTiming", arrayOf("Pre", "Post"), "Post") {
-        override fun isSupported() = modeValue.get() != "Packet"
-    }
-    private val timerValue = FloatValue("Timer", 1f, 0.01f, 10f)
+    private val rotations by BoolValue("Rotations", true)
+    private val keepRotation by BoolValue("KeepRotation", false) { rotations }
+    private val onJump by BoolValue("OnJump", false)
+    private val matrix by BoolValue("Matrix", false)
+    private val placeMode by ListValue("PlaceTiming", arrayOf("Pre", "Post"), "Post") { mode != "Packet" }
+    private val timer by FloatValue("Timer", 1f, 0.01f..10f)
 
     // Jump mode
-    private val jumpMotionValue = object : FloatValue("JumpMotion", 0.42f, 0.3681289f, 0.79f) {
-        override fun isSupported() = modeValue.get() == "Jump"
-    }
-    private val jumpDelayValue = object : IntegerValue("JumpDelay", 0, 0, 20) {
-        override fun isSupported() = modeValue.get() == "Jump"
-    }
+    private val jumpMotion by FloatValue("JumpMotion", 0.42f, 0.3681289f..0.79f) { mode == "Jump" }
+    private val jumpDelay by IntegerValue("JumpDelay", 0, 0..20) { mode == "Jump" }
 
     // ConstantMotion
-    private val constantMotionValue = object : FloatValue("ConstantMotion", 0.42f, 0.1f, 1f) {
-        override fun isSupported() = modeValue.get() == "ConstantMotion"
-    }
-    private val constantMotionJumpGroundValue = object : FloatValue("ConstantMotionJumpGround", 0.79f, 0.76f, 1f) {
-        override fun isSupported() = modeValue.get() == "ConstantMotion"
-    }
+    private val constantMotion by FloatValue("ConstantMotion", 0.42f, 0.1f..1f) { mode == "ConstantMotion" }
+    private val constantMotionJumpGround by FloatValue("ConstantMotionJumpGround", 0.79f, 0.76f..1f) { mode == "ConstantMotion" }
 
     // Teleport
-    private val teleportHeightValue = object : FloatValue("TeleportHeight", 1.15f, 0.1f, 5f) {
-        override fun isSupported() = modeValue.get() == "Teleport"
-    }
-    private val teleportDelayValue = object : IntegerValue("TeleportDelay", 0, 0, 20) {
-        override fun isSupported() = modeValue.get() == "Teleport"
-    }
-    private val teleportGroundValue = object : BoolValue("TeleportGround", true) {
-        override fun isSupported() = modeValue.get() == "Teleport"
-    }
-    private val teleportNoMotionValue = object : BoolValue("TeleportNoMotion", false) {
-        override fun isSupported() = modeValue.get() == "Teleport"
-    }
+    private val teleportHeight by FloatValue("TeleportHeight", 1.15f, 0.1f..5f) { mode == "Teleport" }
+    private val teleportDelay by IntegerValue("TeleportDelay", 0, 0..20) { mode == "Teleport" }
+    private val teleportGround by BoolValue("TeleportGround", true) { mode == "Teleport" }
+    private val teleportNoMotion by BoolValue("TeleportNoMotion", false) { mode == "Teleport" }
 
     // Render
-    private val counterDisplayValue = BoolValue("Counter", true)
+    private val counterDisplay by BoolValue("Counter", true)
 
     /**
      * MODULE
@@ -115,7 +95,7 @@ object Tower : Module("Tower", ModuleCategory.WORLD, keyBind = Keyboard.KEY_O) {
     private var lockRotation: Rotation? = null
 
     // Mode stuff
-    private val timer = TickTimer()
+    private val tickTimer = TickTimer()
     private var jumpGround = 0.0
 
     // AutoBlock
@@ -141,32 +121,32 @@ object Tower : Module("Tower", ModuleCategory.WORLD, keyBind = Keyboard.KEY_O) {
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
-        if (onJumpValue.get() && !mc.gameSettings.keyBindJump.isKeyDown) return
+        if (onJump && !mc.gameSettings.keyBindJump.isKeyDown) return
         val thePlayer = mc.thePlayer ?: return
 
         // Lock Rotation
-        if (rotationsValue.get() && keepRotationValue.get() && lockRotation != null) setTargetRotation(lockRotation!!)
+        if (rotations && keepRotation && lockRotation != null) setTargetRotation(lockRotation!!)
 
-        mc.timer.timerSpeed = timerValue.get()
+        mc.timer.timerSpeed = timer
         val eventState = event.eventState
 
         // Force use of POST event when Packet mode is selected, it doesn't work with PRE mode
-        if (eventState.stateName == (if (modeValue.get() == "Packet") "POST" else placeModeValue.get()))
+        if (eventState.stateName == (if (mode == "Packet") "POST" else placeMode))
             place()
 
         if (eventState == EventState.PRE) {
             placeInfo = null
-            timer.update()
+            tickTimer.update()
 
             val update =
-                (autoBlockValue.get() != "Off" && InventoryUtils.findAutoBlockBlock() != -1) || thePlayer.heldItem?.item is ItemBlock
+                (autoBlock != "Off" && InventoryUtils.findAutoBlockBlock() != -1) || thePlayer.heldItem?.item is ItemBlock
 
             if (update) {
                 if (!stopWhenBlockAbove.get() || getBlock(BlockPos(thePlayer).up(2)) == Blocks.air) move()
 
                 val blockPos = BlockPos(thePlayer).down()
                 if (blockPos.getBlock() == Blocks.air) {
-                    if (search(blockPos) && rotationsValue.get()) {
+                    if (search(blockPos) && rotations) {
                         val vecRotation = faceBlock(blockPos)
                         if (vecRotation != null) {
                             setTargetRotation(vecRotation.rotation)
@@ -190,11 +170,11 @@ object Tower : Module("Tower", ModuleCategory.WORLD, keyBind = Keyboard.KEY_O) {
     private fun move() {
         val thePlayer = mc.thePlayer ?: return
 
-        when (modeValue.get().lowercase()) {
-            "jump" -> if (thePlayer.onGround && timer.hasTimePassed(jumpDelayValue.get())) {
+        when (mode.lowercase()) {
+            "jump" -> if (thePlayer.onGround && tickTimer.hasTimePassed(jumpDelay)) {
                 fakeJump()
-                thePlayer.motionY = jumpMotionValue.get().toDouble()
-                timer.reset()
+                thePlayer.motionY = jumpMotion.toDouble()
+                tickTimer.reset()
             }
 
             "motion" -> if (thePlayer.onGround) {
@@ -211,7 +191,7 @@ object Tower : Module("Tower", ModuleCategory.WORLD, keyBind = Keyboard.KEY_O) {
                 thePlayer.setPosition(thePlayer.posX, truncate(thePlayer.posY), thePlayer.posZ)
             }
 
-            "packet" -> if (thePlayer.onGround && timer.hasTimePassed(2)) {
+            "packet" -> if (thePlayer.onGround && tickTimer.hasTimePassed(2)) {
                 fakeJump()
                 sendPacket(
                     C04PacketPlayerPosition(
@@ -224,19 +204,19 @@ object Tower : Module("Tower", ModuleCategory.WORLD, keyBind = Keyboard.KEY_O) {
                     )
                 )
                 thePlayer.setPosition(thePlayer.posX, thePlayer.posY + 1.0, thePlayer.posZ)
-                timer.reset()
+                tickTimer.reset()
             }
 
             "teleport" -> {
-                if (teleportNoMotionValue.get()) {
+                if (teleportNoMotion) {
                     thePlayer.motionY = 0.0
                 }
-                if ((thePlayer.onGround || !teleportGroundValue.get()) && timer.hasTimePassed(teleportDelayValue.get())) {
+                if ((thePlayer.onGround || !teleportGround) && tickTimer.hasTimePassed(teleportDelay)) {
                     fakeJump()
                     thePlayer.setPositionAndUpdate(
-                        thePlayer.posX, thePlayer.posY + teleportHeightValue.get(), thePlayer.posZ
+                        thePlayer.posX, thePlayer.posY + teleportHeight, thePlayer.posZ
                     )
-                    timer.reset()
+                    tickTimer.reset()
                 }
             }
 
@@ -244,14 +224,14 @@ object Tower : Module("Tower", ModuleCategory.WORLD, keyBind = Keyboard.KEY_O) {
                 if (thePlayer.onGround) {
                     fakeJump()
                     jumpGround = thePlayer.posY
-                    thePlayer.motionY = constantMotionValue.get().toDouble()
+                    thePlayer.motionY = constantMotion.toDouble()
                 }
-                if (thePlayer.posY > jumpGround + constantMotionJumpGroundValue.get()) {
+                if (thePlayer.posY > jumpGround + constantMotionJumpGround) {
                     fakeJump()
                     thePlayer.setPosition(
                         thePlayer.posX, truncate(thePlayer.posY), thePlayer.posZ
                     ) // TODO: toInt() required?
-                    thePlayer.motionY = constantMotionValue.get().toDouble()
+                    thePlayer.motionY = constantMotion.toDouble()
                     jumpGround = thePlayer.posY
                 }
             }
@@ -292,7 +272,7 @@ object Tower : Module("Tower", ModuleCategory.WORLD, keyBind = Keyboard.KEY_O) {
 
             if (blockSlot == -1) return
 
-            when (autoBlockValue.get()) {
+            when (autoBlock) {
                 "Off" -> return
                 "Pick" -> {
                     mc.thePlayer.inventory.currentItem = blockSlot - 36
@@ -319,13 +299,13 @@ object Tower : Module("Tower", ModuleCategory.WORLD, keyBind = Keyboard.KEY_O) {
                 thePlayer, mc.theWorld!!, itemStack!!, placeInfo!!.blockPos, placeInfo!!.enumFacing, placeInfo!!.vec3
             )
         ) {
-            if (swingValue.get()) {
+            if (swing) {
                 thePlayer.swingItem()
             } else {
                 sendPacket(C0APacketAnimation())
             }
         }
-        if (autoBlockValue.get() == "Switch" && slot != mc.thePlayer.inventory.currentItem)
+        if (autoBlock == "Switch" && slot != mc.thePlayer.inventory.currentItem)
             sendPacket(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
 
         placeInfo = null
@@ -351,7 +331,7 @@ object Tower : Module("Tower", ModuleCategory.WORLD, keyBind = Keyboard.KEY_O) {
                 continue
             }
             val dirVec = Vec3(facingType.directionVec)
-            val matrix = matrixValue.get()
+            val matrix = matrix
             var xSearch = 0.1
             while (xSearch < 0.9) {
                 var ySearch = 0.1
@@ -398,7 +378,7 @@ object Tower : Module("Tower", ModuleCategory.WORLD, keyBind = Keyboard.KEY_O) {
             }
         }
         if (placeRotation == null) return false
-        if (rotationsValue.get()) {
+        if (rotations) {
             setTargetRotation(placeRotation.rotation)
             lockRotation = placeRotation.rotation
         }
@@ -422,10 +402,10 @@ object Tower : Module("Tower", ModuleCategory.WORLD, keyBind = Keyboard.KEY_O) {
      */
     @EventTarget
     fun onRender2D(event: Render2DEvent) {
-        if (counterDisplayValue.get()) {
+        if (counterDisplay) {
             glPushMatrix()
 
-            if (BlockOverlay.state && BlockOverlay.infoValue.get() && BlockOverlay.currentBlock != null)
+            if (BlockOverlay.state && BlockOverlay.info && BlockOverlay.currentBlock != null)
                 glTranslatef(0f, 15f, 0f)
 
             val info = "Blocks: §7$blocksAmount"
@@ -455,7 +435,7 @@ object Tower : Module("Tower", ModuleCategory.WORLD, keyBind = Keyboard.KEY_O) {
 
     @EventTarget
     fun onJump(event: JumpEvent) {
-        if (onJumpValue.get()) event.cancelEvent()
+        if (onJump) event.cancelEvent()
     }
 
     /**
@@ -478,5 +458,5 @@ object Tower : Module("Tower", ModuleCategory.WORLD, keyBind = Keyboard.KEY_O) {
         }
 
     override val tag
-        get() = modeValue.get()
+        get() = mode
 }
