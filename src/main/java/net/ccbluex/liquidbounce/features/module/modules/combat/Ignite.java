@@ -21,14 +21,15 @@ import net.minecraft.entity.Entity;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemBucket;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.play.client.C03PacketPlayer;
 import net.minecraft.network.play.client.C09PacketHeldItemChange;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 
+import static net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket;
 import static net.ccbluex.liquidbounce.utils.extensions.BlockExtensionKt.*;
+import static net.minecraft.network.play.client.C03PacketPlayer.C05PacketPlayerLook;
 
 public class Ignite extends Module {
     public Ignite() {
@@ -72,7 +73,7 @@ public class Ignite extends Module {
 
                RotationUtils.INSTANCE.setKeepCurrentRotation(true);
 
-               mc.getNetHandler().addToSendQueue(new C09PacketHeldItemChange(fireInHotbar - 36));
+               sendPacket(new C09PacketHeldItemChange(fireInHotbar - 36));
 
                final ItemStack itemStack =
                        mc.thePlayer.inventoryContainer.getSlot(fireInHotbar).getStack();
@@ -87,7 +88,7 @@ public class Ignite extends Module {
                    final float yaw = (float) (Math.atan2(diffZ, diffX) * 180.0D / Math.PI) - 90F;
                    final float pitch = (float) -(Math.atan2(diffY, sqrt) * 180.0D / Math.PI);
 
-                   mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C05PacketPlayerLook(
+                   sendPacket(new C05PacketPlayerLook(
                            mc.thePlayer.rotationYaw +
                                    MathHelper.wrapAngleTo180_float(yaw - mc.thePlayer.rotationYaw),
                            mc.thePlayer.rotationPitch +
@@ -110,7 +111,7 @@ public class Ignite extends Module {
                        final float yaw = (float) (Math.atan2(diffZ, diffX) * 180.0D / Math.PI) - 90F;
                        final float pitch = (float) -(Math.atan2(diffY, sqrt) * 180.0D / Math.PI);
 
-                       mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C05PacketPlayerLook(
+                       sendPacket(new C05PacketPlayerLook(
                                mc.thePlayer.rotationYaw +
                                        MathHelper.wrapAngleTo180_float(yaw - mc.thePlayer.rotationYaw),
                                mc.thePlayer.rotationPitch +
@@ -125,10 +126,10 @@ public class Ignite extends Module {
                    }
                }
 
-               mc.getNetHandler().addToSendQueue(new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem));
+               sendPacket(new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem));
                RotationUtils.INSTANCE.setKeepCurrentRotation(false);
-               mc.getNetHandler().addToSendQueue(
-                       new C03PacketPlayer.C05PacketPlayerLook(mc.thePlayer.rotationYaw,
+               sendPacket(
+                       new C05PacketPlayerLook(mc.thePlayer.rotationYaw,
                                mc.thePlayer.rotationPitch,
                                mc.thePlayer.onGround));
 

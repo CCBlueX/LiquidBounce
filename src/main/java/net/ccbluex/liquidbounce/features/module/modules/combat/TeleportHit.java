@@ -15,8 +15,11 @@ import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.network.play.client.C02PacketUseEntity;
-import net.minecraft.network.play.client.C03PacketPlayer;
 import net.minecraft.util.Vec3;
+
+import static net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket;
+import static net.minecraft.network.play.client.C02PacketUseEntity.Action.ATTACK;
+import static net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition;
 
 public class TeleportHit extends Module {
 
@@ -54,10 +57,10 @@ public class TeleportHit extends Module {
                 final double z = mc.thePlayer.posZ + rotationVector.zCoord * (mc.thePlayer.getDistanceToEntity(targetEntity) - 1f);
                 final double y = targetEntity.getPosition().getY() + 0.25D;
 
-                PathUtils.findPath(x, y + 1.0D, z, 4D).forEach(pos -> mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(pos.getX(), pos.getY(), pos.getZ(), false)));
+                PathUtils.findPath(x, y + 1.0D, z, 4D).forEach(pos -> sendPacket(new C04PacketPlayerPosition(pos.getX(), pos.getY(), pos.getZ(), false)));
 
                 thePlayer.swingItem();
-                mc.thePlayer.sendQueue.addToSendQueue(new C02PacketUseEntity(targetEntity, C02PacketUseEntity.Action.ATTACK));
+                mc.thePlayer.sendQueue.addToSendQueue(new C02PacketUseEntity(targetEntity, ATTACK));
                 thePlayer.onCriticalHit(targetEntity);
                 shouldHit = false;
                 targetEntity = null;

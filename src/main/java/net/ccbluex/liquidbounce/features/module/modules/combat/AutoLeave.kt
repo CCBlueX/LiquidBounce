@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.network.play.client.C02PacketUseEntity
+import net.minecraft.network.play.client.C02PacketUseEntity.Action.ATTACK
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 
 object AutoLeave : Module("AutoLeave", ModuleCategory.COMBAT) {
@@ -28,7 +29,7 @@ object AutoLeave : Module("AutoLeave", ModuleCategory.COMBAT) {
             when (mode.lowercase()) {
                 "quit" -> mc.theWorld.sendQuittingDisconnectingPacket()
                 "invalidpacket" -> sendPacket(C04PacketPlayerPosition(Double.NaN, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, !mc.thePlayer.onGround))
-                "selfhurt" -> sendPacket(C02PacketUseEntity(mc.thePlayer, C02PacketUseEntity.Action.ATTACK))
+                "selfhurt" -> sendPacket(C02PacketUseEntity(mc.thePlayer, ATTACK))
                 "illegalchat" -> thePlayer.sendChatMessage(nextInt().toString() + "§§§" + nextInt())
             }
 

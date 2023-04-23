@@ -19,6 +19,7 @@ import net.minecraft.enchantment.Enchantment
 import net.minecraft.item.ItemSword
 import net.minecraft.item.ItemTool
 import net.minecraft.network.play.client.C02PacketUseEntity
+import net.minecraft.network.play.client.C02PacketUseEntity.Action.ATTACK
 import net.minecraft.network.play.client.C09PacketHeldItemChange
 
 object AutoWeapon : Module("AutoWeapon", ModuleCategory.COMBAT) {
@@ -37,7 +38,7 @@ object AutoWeapon : Module("AutoWeapon", ModuleCategory.COMBAT) {
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        if (event.packet is C02PacketUseEntity && event.packet.action == C02PacketUseEntity.Action.ATTACK
+        if (event.packet is C02PacketUseEntity && event.packet.action == ATTACK
             && attackEnemy) {
             attackEnemy = false
 

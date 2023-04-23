@@ -31,6 +31,9 @@ object PacketUtils : MinecraftInstance() {
             motionX = (value * 8000f).roundToInt()
         }
 
+    // TODO: Remove annotations once all modules are converted to kotlin.
+    @JvmStatic
+    @JvmOverloads
     fun sendPacket(packet: Packet<*>, triggerEvent: Boolean = true) {
         if (triggerEvent) {
             mc.netHandler?.addToSendQueue(packet)

@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.projectile.EntityFireball
 import net.minecraft.network.play.client.C02PacketUseEntity
+import net.minecraft.network.play.client.C02PacketUseEntity.Action.ATTACK
 import net.minecraft.network.play.client.C0APacketAnimation
 
 object AntiFireBall : Module("AntiFireBall", ModuleCategory.PLAYER, spacedName = "Anti FireBall") {
@@ -64,7 +65,7 @@ object AntiFireBall : Module("AntiFireBall", ModuleCategory.PLAYER, spacedName =
                     )
                 )
 
-            sendPacket(C02PacketUseEntity(entity, C02PacketUseEntity.Action.ATTACK))
+            sendPacket(C02PacketUseEntity(entity, ATTACK))
 
             when (swing) {
                 "Normal" -> mc.thePlayer.swingItem()

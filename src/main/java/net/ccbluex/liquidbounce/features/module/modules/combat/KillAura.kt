@@ -52,6 +52,8 @@ import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.ItemAxe
 import net.minecraft.item.ItemSword
 import net.minecraft.network.play.client.*
+import net.minecraft.network.play.client.C02PacketUseEntity.Action.ATTACK
+import net.minecraft.network.play.client.C02PacketUseEntity.Action.INTERACT
 import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.RELEASE_USE_ITEM
 import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT
 import net.minecraft.potion.Potion
@@ -570,7 +572,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         // Attack target
         if (swing) thePlayer.swingItem()
 
-        sendPacket(C02PacketUseEntity(entity, C02PacketUseEntity.Action.ATTACK))
+        sendPacket(C02PacketUseEntity(entity, ATTACK))
 
         if (keepSprint) {
             // Critical Effect
@@ -743,7 +745,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
                 sendPacket(
                     C02PacketUseEntity(interactEntity, hitVec.subtract(interactEntity.positionVector))
                 )
-                sendPacket(C02PacketUseEntity(interactEntity, C02PacketUseEntity.Action.INTERACT))
+                sendPacket(C02PacketUseEntity(interactEntity, INTERACT))
             }
 
             sendPacket(

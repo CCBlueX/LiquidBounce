@@ -49,6 +49,8 @@ import net.minecraft.item.ItemBlock
 import net.minecraft.network.play.client.C09PacketHeldItemChange
 import net.minecraft.network.play.client.C0APacketAnimation
 import net.minecraft.network.play.client.C0BPacketEntityAction
+import net.minecraft.network.play.client.C0BPacketEntityAction.Action.START_SNEAKING
+import net.minecraft.network.play.client.C0BPacketEntityAction.Action.STOP_SNEAKING
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 import net.minecraft.util.MovingObjectPosition
@@ -247,13 +249,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                 if (eagle == "Silent") {
                     if (eagleSneaking != shouldEagle) {
                         sendPacket(
-                            C0BPacketEntityAction(
-                                player, if (shouldEagle) {
-                                    C0BPacketEntityAction.Action.START_SNEAKING
-                                } else {
-                                    C0BPacketEntityAction.Action.STOP_SNEAKING
-                                }
-                            )
+                            C0BPacketEntityAction(player, if (shouldEagle) START_SNEAKING else STOP_SNEAKING)
                         )
                     }
                     eagleSneaking = shouldEagle
@@ -562,7 +558,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             if (eagleSneaking) {
                 sendPacket(
                     C0BPacketEntityAction(
-                        player, C0BPacketEntityAction.Action.STOP_SNEAKING
+                        player, STOP_SNEAKING
                     )
                 )
             }

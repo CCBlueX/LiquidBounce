@@ -18,6 +18,8 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.settings.GameSettings
 import net.minecraft.network.play.client.C0BPacketEntityAction
+import net.minecraft.network.play.client.C0BPacketEntityAction.Action.START_SNEAKING
+import net.minecraft.network.play.client.C0BPacketEntityAction.Action.STOP_SNEAKING
 
 object Sneak : Module("Sneak", ModuleCategory.MOVEMENT) {
 
@@ -40,21 +42,21 @@ object Sneak : Module("Sneak", ModuleCategory.MOVEMENT) {
                 if (sneaking)
                     return
 
-                sendPacket(C0BPacketEntityAction(mc.thePlayer, C0BPacketEntityAction.Action.START_SNEAKING))
+                sendPacket(C0BPacketEntityAction(mc.thePlayer, START_SNEAKING))
             }
 
             "switch" -> {
                 when (event.eventState) {
                     EventState.PRE -> {
                         sendPackets(
-                            C0BPacketEntityAction(mc.thePlayer, C0BPacketEntityAction.Action.START_SNEAKING),
-                            C0BPacketEntityAction(mc.thePlayer, C0BPacketEntityAction.Action.STOP_SNEAKING)
+                            C0BPacketEntityAction(mc.thePlayer, START_SNEAKING),
+                            C0BPacketEntityAction(mc.thePlayer, STOP_SNEAKING)
                         )
                     }
                     EventState.POST -> {
                         sendPackets(
-                            C0BPacketEntityAction(mc.thePlayer, C0BPacketEntityAction.Action.STOP_SNEAKING),
-                            C0BPacketEntityAction(mc.thePlayer, C0BPacketEntityAction.Action.START_SNEAKING)
+                            C0BPacketEntityAction(mc.thePlayer, STOP_SNEAKING),
+                            C0BPacketEntityAction(mc.thePlayer, START_SNEAKING)
                         )
                     }
                 }
@@ -64,7 +66,7 @@ object Sneak : Module("Sneak", ModuleCategory.MOVEMENT) {
                 if (event.eventState == EventState.PRE)
                     return
 
-                sendPacket(C0BPacketEntityAction(mc.thePlayer, C0BPacketEntityAction.Action.START_SNEAKING))
+                sendPacket(C0BPacketEntityAction(mc.thePlayer, START_SNEAKING))
             }
         }
     }
@@ -83,7 +85,7 @@ object Sneak : Module("Sneak", ModuleCategory.MOVEMENT) {
                     mc.gameSettings.keyBindSneak.pressed = false
                 }
             }
-            "vanilla", "switch", "minesecure" -> sendPacket(C0BPacketEntityAction(player, C0BPacketEntityAction.Action.STOP_SNEAKING))
+            "vanilla", "switch", "minesecure" -> sendPacket(C0BPacketEntityAction(player, STOP_SNEAKING))
         }
         sneaking = false
     }
