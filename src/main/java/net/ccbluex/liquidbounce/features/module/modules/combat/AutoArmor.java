@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket;
+import static net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets;
 import static net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT;
 
 public class AutoArmor extends Module {
@@ -136,9 +137,11 @@ public class AutoArmor extends Module {
      */
     private boolean move(int item, boolean isArmorSlot) {
         if (!isArmorSlot && item < 9 && hotbarValue.get() && !(mc.currentScreen instanceof GuiInventory)) {
-            sendPacket(new C09PacketHeldItemChange(item));
-            sendPacket(new C08PacketPlayerBlockPlacement(mc.thePlayer.inventoryContainer.getSlot(item).getStack()));
-            sendPacket(new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem));
+            sendPackets(
+                new C09PacketHeldItemChange(item),
+                new C08PacketPlayerBlockPlacement(mc.thePlayer.inventoryContainer.getSlot(item).getStack()),
+                new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem)
+            );
 
             delay = TimeUtils.INSTANCE.randomDelay(minDelayValue.get(), maxDelayValue.get());
 

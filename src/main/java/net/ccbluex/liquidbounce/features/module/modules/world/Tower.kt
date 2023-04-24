@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.BlockOverlay
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.PlaceRotation
 import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
@@ -193,15 +194,9 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O) {
 
             "packet" -> if (thePlayer.onGround && tickTimer.hasTimePassed(2)) {
                 fakeJump()
-                sendPacket(
-                    C04PacketPlayerPosition(
-                        thePlayer.posX, thePlayer.posY + 0.42, thePlayer.posZ, false
-                    )
-                )
-                sendPacket(
-                    C04PacketPlayerPosition(
-                        thePlayer.posX, thePlayer.posY + 0.753, thePlayer.posZ, false
-                    )
+                sendPackets(
+                    C04PacketPlayerPosition(thePlayer.posX, thePlayer.posY + 0.42, thePlayer.posZ, false),
+                    C04PacketPlayerPosition(thePlayer.posX, thePlayer.posY + 0.753, thePlayer.posZ, false)
                 )
                 thePlayer.setPosition(thePlayer.posX, thePlayer.posY + 1.0, thePlayer.posZ)
                 tickTimer.reset()
@@ -279,13 +274,7 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O) {
                     mc.playerController.updateController()
                 }
 
-                "Spoof" -> {
-                    if (blockSlot - 36 != slot) {
-                        sendPacket(C09PacketHeldItemChange(blockSlot - 36))
-                    }
-                }
-
-                "Switch" -> {
+                "Spoof", "Switch" -> {
                     if (blockSlot - 36 != slot) {
                         sendPacket(C09PacketHeldItemChange(blockSlot - 36))
                     }

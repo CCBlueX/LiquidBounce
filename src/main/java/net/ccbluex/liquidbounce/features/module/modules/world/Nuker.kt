@@ -151,10 +151,7 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD) {
 
                 // Start block breaking
                 if (currentDamage == 0F) {
-                    sendPacket(
-                        C07PacketPlayerDigging(START_DESTROY_BLOCK,
-                            blockPos, EnumFacing.DOWN)
-                    )
+                    sendPacket(C07PacketPlayerDigging(START_DESTROY_BLOCK, blockPos, EnumFacing.DOWN))
 
                     // End block break if able to break instant
                     if (block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld, blockPos) >= 1F) {
@@ -211,11 +208,9 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD) {
                     }
                     .forEach { (pos, _) ->
                         // Instant break block
-                        sendPacket(C07PacketPlayerDigging(START_DESTROY_BLOCK,
-                                pos, EnumFacing.DOWN))
+                        sendPacket(C07PacketPlayerDigging(START_DESTROY_BLOCK, pos, EnumFacing.DOWN))
                         thePlayer.swingItem()
-                        sendPacket(C07PacketPlayerDigging(STOP_DESTROY_BLOCK,
-                                pos, EnumFacing.DOWN))
+                        sendPacket(C07PacketPlayerDigging(STOP_DESTROY_BLOCK, pos, EnumFacing.DOWN))
                         attackedBlocks.add(pos)
                     }
         }

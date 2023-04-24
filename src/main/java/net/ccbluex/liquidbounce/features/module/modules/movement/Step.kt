@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.Phase
 import net.ccbluex.liquidbounce.utils.MovementUtils.direction
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -194,17 +195,9 @@ object Step : Module("Step", ModuleCategory.MOVEMENT) {
                     fakeJump()
 
                     // Half legit step (1 packet missing) [COULD TRIGGER TOO MANY PACKETS]
-                    sendPacket(
-                        C04PacketPlayerPosition(
-                            stepX,
-                            stepY + 0.41999998688698, stepZ, false
-                        )
-                    )
-                    sendPacket(
-                        C04PacketPlayerPosition(
-                            stepX,
-                            stepY + 0.7531999805212, stepZ, false
-                        )
+                    sendPackets(
+                        C04PacketPlayerPosition(stepX, stepY + 0.41999998688698, stepZ, false),
+                        C04PacketPlayerPosition(stepX, stepY + 0.7531999805212, stepZ, false)
                     )
                     timer.reset()
                 }
@@ -213,31 +206,13 @@ object Step : Module("Step", ModuleCategory.MOVEMENT) {
 
                     if (spartanSwitch) {
                         // Vanilla step (3 packets) [COULD TRIGGER TOO MANY PACKETS]
-                        sendPacket(
-                            C04PacketPlayerPosition(
-                                stepX,
-                                stepY + 0.41999998688698, stepZ, false
-                            )
-                        )
-                        sendPacket(
-                            C04PacketPlayerPosition(
-                                stepX,
-                                stepY + 0.7531999805212, stepZ, false
-                            )
-                        )
-                        sendPacket(
-                            C04PacketPlayerPosition(
-                                stepX,
-                                stepY + 1.001335979112147, stepZ, false
-                            )
+                        sendPackets(
+                            C04PacketPlayerPosition(stepX, stepY + 0.41999998688698, stepZ, false),
+                            C04PacketPlayerPosition(stepX, stepY + 0.7531999805212, stepZ, false),
+                            C04PacketPlayerPosition(stepX, stepY + 1.001335979112147, stepZ, false)
                         )
                     } else // Force step
-                        sendPacket(
-                            C04PacketPlayerPosition(
-                                stepX,
-                                stepY + 0.6, stepZ, false
-                            )
-                        )
+                        sendPacket(C04PacketPlayerPosition(stepX, stepY + 0.6, stepZ, false))
 
                     // Spartan allows one unlegit step so just swap between legit and unlegit
                     spartanSwitch = !spartanSwitch
@@ -249,23 +224,10 @@ object Step : Module("Step", ModuleCategory.MOVEMENT) {
                     fakeJump()
 
                     // Vanilla step (3 packets) [COULD TRIGGER TOO MANY PACKETS]
-                    sendPacket(
-                        C04PacketPlayerPosition(
-                            stepX,
-                            stepY + 0.41999998688698, stepZ, false
-                        )
-                    )
-                    sendPacket(
-                        C04PacketPlayerPosition(
-                            stepX,
-                            stepY + 0.7531999805212, stepZ, false
-                        )
-                    )
-                    sendPacket(
-                        C04PacketPlayerPosition(
-                            stepX,
-                            stepY + 1.001335979112147, stepZ, false
-                        )
+                    sendPackets(
+                        C04PacketPlayerPosition(stepX, stepY + 0.41999998688698, stepZ, false),
+                        C04PacketPlayerPosition(stepX, stepY + 0.7531999805212, stepZ, false),
+                        C04PacketPlayerPosition(stepX, stepY + 1.001335979112147, stepZ, false)
                     )
 
                     // Reset timer

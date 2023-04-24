@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
 import net.ccbluex.liquidbounce.utils.VecRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlock
@@ -79,15 +80,17 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
         ) return
 
         when (mode.lowercase()) {
-            "packet" -> {
+            "packet" ->
                 if (mc.thePlayer.fallDistance > 2f) {
                     sendPacket(C03PacketPlayer(true))
                 }
-            }
-            "cubecraft" -> if (mc.thePlayer.fallDistance > 2f) {
-                mc.thePlayer.onGround = false
-                sendPacket(C03PacketPlayer(true))
-            }
+
+            "cubecraft" ->
+                if (mc.thePlayer.fallDistance > 2f) {
+                    mc.thePlayer.onGround = false
+                    sendPacket(C03PacketPlayer(true))
+                }
+
             "aac" -> {
                 if (mc.thePlayer.fallDistance > 2f) {
                     sendPacket(C03PacketPlayer(true))
@@ -112,38 +115,35 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
                     }
                 }
             }
-            "laac" -> if (!jumped && mc.thePlayer.onGround && !mc.thePlayer.isOnLadder && !mc.thePlayer.isInWater && !mc.thePlayer.isInWeb)
-                mc.thePlayer.motionY = -6.0
-            "aac3.3.11" -> if (mc.thePlayer.fallDistance > 2) {
-                mc.thePlayer.motionZ = 0.0
-                mc.thePlayer.motionX = mc.thePlayer.motionZ
-                sendPacket(
-                    C04PacketPlayerPosition(
-                        mc.thePlayer.posX, mc.thePlayer.posY - 10E-4, mc.thePlayer.posZ, mc.thePlayer.onGround
+
+            "laac" ->
+                if (!jumped && mc.thePlayer.onGround && !mc.thePlayer.isOnLadder && !mc.thePlayer.isInWater && !mc.thePlayer.isInWeb)
+                    mc.thePlayer.motionY = -6.0
+
+            "aac3.3.11" ->
+                if (mc.thePlayer.fallDistance > 2) {
+                    mc.thePlayer.motionZ = 0.0
+                    mc.thePlayer.motionX = mc.thePlayer.motionZ
+                    sendPackets(
+                        C04PacketPlayerPosition(mc.thePlayer.posX, mc.thePlayer.posY - 10E-4, mc.thePlayer.posZ, mc.thePlayer.onGround),
+                        C03PacketPlayer(true)
                     )
-                )
-                sendPacket(C03PacketPlayer(true))
-            }
-            "aac3.3.15" -> if (mc.thePlayer.fallDistance > 2) {
-                if (!mc.isIntegratedServerRunning) sendPacket(
-                    C04PacketPlayerPosition(
-                        mc.thePlayer.posX, Double.NaN, mc.thePlayer.posZ, false
-                    )
-                )
-                mc.thePlayer.fallDistance = -9999f
-            }
+                }
+
+            "aac3.3.15" ->
+                if (mc.thePlayer.fallDistance > 2) {
+                    if (!mc.isIntegratedServerRunning)
+                        sendPacket(C04PacketPlayerPosition(mc.thePlayer.posX, Double.NaN, mc.thePlayer.posZ, false))
+
+                    mc.thePlayer.fallDistance = -9999f
+                }
+
             "spartan" -> {
                 spartanTimer.update()
                 if (mc.thePlayer.fallDistance > 1.5 && spartanTimer.hasTimePassed(10)) {
-                    sendPacket(
-                        C04PacketPlayerPosition(
-                            mc.thePlayer.posX, mc.thePlayer.posY + 10, mc.thePlayer.posZ, true
-                        )
-                    )
-                    sendPacket(
-                        C04PacketPlayerPosition(
-                            mc.thePlayer.posX, mc.thePlayer.posY - 10, mc.thePlayer.posZ, true
-                        )
+                    sendPackets(
+                        C04PacketPlayerPosition(mc.thePlayer.posX, mc.thePlayer.posY + 10, mc.thePlayer.posZ, true),
+                        C04PacketPlayerPosition(mc.thePlayer.posX, mc.thePlayer.posY - 10, mc.thePlayer.posZ, true)
                     )
                     spartanTimer.reset()
                 }
@@ -249,8 +249,8 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
                     mlgTimer.reset()
                 }
             }
-            if (mc.thePlayer.inventory.currentItem != currentMlgItemIndex) sendPacket(
-                C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem)
+            if (mc.thePlayer.inventory.currentItem != currentMlgItemIndex)
+                sendPacket(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem)
             )
         }
     }

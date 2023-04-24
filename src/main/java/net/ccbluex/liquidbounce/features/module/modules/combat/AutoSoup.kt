@@ -54,8 +54,7 @@ object AutoSoup : Module("AutoSoup", ModuleCategory.COMBAT) {
             )
 
             if (bowl == "Drop")
-                sendPacket(C07PacketPlayerDigging(DROP_ITEM,
-                    BlockPos.ORIGIN, EnumFacing.DOWN))
+                sendPacket(C07PacketPlayerDigging(DROP_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
 
             sendPacket(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
             timer.reset()

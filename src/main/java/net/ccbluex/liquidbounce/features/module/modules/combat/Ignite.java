@@ -28,6 +28,7 @@ import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 
 import static net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket;
+import static net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets;
 import static net.ccbluex.liquidbounce.utils.extensions.BlockExtensionKt.*;
 import static net.minecraft.network.play.client.C03PacketPlayer.C05PacketPlayerLook;
 
@@ -126,12 +127,11 @@ public class Ignite extends Module {
                    }
                }
 
-               sendPacket(new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem));
                RotationUtils.INSTANCE.setKeepCurrentRotation(false);
-               sendPacket(
-                       new C05PacketPlayerLook(mc.thePlayer.rotationYaw,
-                               mc.thePlayer.rotationPitch,
-                               mc.thePlayer.onGround));
+               sendPackets(
+                       new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem),
+                       new C05PacketPlayerLook(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch, mc.thePlayer.onGround)
+               );
 
                msTimer.reset();
                break;

@@ -60,7 +60,7 @@ public class TeleportHit extends Module {
                 PathUtils.findPath(x, y + 1.0D, z, 4D).forEach(pos -> sendPacket(new C04PacketPlayerPosition(pos.getX(), pos.getY(), pos.getZ(), false)));
 
                 thePlayer.swingItem();
-                mc.thePlayer.sendQueue.addToSendQueue(new C02PacketUseEntity(targetEntity, ATTACK));
+                sendPacket(new C02PacketUseEntity(targetEntity, ATTACK));
                 thePlayer.onCriticalHit(targetEntity);
                 shouldHit = false;
                 targetEntity = null;

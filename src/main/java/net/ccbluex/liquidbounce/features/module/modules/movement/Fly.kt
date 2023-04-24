@@ -143,7 +143,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
                 "ncp" -> {
                     if (!thePlayer.onGround) return@run
 
-                    for (i in 0..64) {
+                    repeat(65) {
                         sendPackets(
                             C04PacketPlayerPosition(x, y + 0.049, z, false),
                             C04PacketPlayerPosition(x, y, z, false)
@@ -331,11 +331,10 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
                         aac3delay = 0
                     }
                     aac3delay++
-                    if (!noFlag) sendPacket(
-                        C04PacketPlayerPosition(
-                            thePlayer.posX, thePlayer.posY, thePlayer.posZ, thePlayer.onGround
-                        )
-                    )
+
+                    if (!noFlag)
+                        sendPacket(C04PacketPlayerPosition(thePlayer.posX, thePlayer.posY, thePlayer.posZ, thePlayer.onGround))
+
                     if (thePlayer.posY <= 0.0) noFlag = true
                 }
                 "flag" -> {
@@ -427,10 +426,12 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
                         val vec31 = mc.thePlayer.getLook(1f)
                         val vec32 = vec3.addVector(vec31.xCoord * 7, vec31.yCoord * 7, vec31.zCoord * 7)
                         if (thePlayer.fallDistance > 0.8) {
-                            sendPacket(C04PacketPlayerPosition(posX, posY + 50, posZ, false))
+                            sendPackets(
+                                C04PacketPlayerPosition(posX, posY + 50, posZ, false),
+                                C04PacketPlayerPosition(posX, posY + 20, posZ, true)
+                            )
                             mc.thePlayer.fall(100f, 100f)
                             thePlayer.fallDistance = 0f
-                            sendPacket(C04PacketPlayerPosition(posX, posY + 20, posZ, true))
                         }
                         sendPackets(
                             C04PacketPlayerPosition(vec32.xCoord, posY + 50, vec32.zCoord, true),
@@ -525,25 +526,17 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
 
                     spartanTimer.update()
                     if (spartanTimer.hasTimePassed(12)) {
-                        sendPacket(
-                            C04PacketPlayerPosition(
-                                thePlayer.posX, thePlayer.posY + 8, thePlayer.posZ, true
-                            )
-                        )
-                        sendPacket(
-                            C04PacketPlayerPosition(
-                                thePlayer.posX, thePlayer.posY - 8, thePlayer.posZ, true
-                            )
+                        sendPackets(
+                            C04PacketPlayerPosition(thePlayer.posX, thePlayer.posY + 8, thePlayer.posZ, true),
+                            C04PacketPlayerPosition(thePlayer.posX, thePlayer.posY - 8, thePlayer.posZ, true)
                         )
                         spartanTimer.reset()
                     }
                 }
                 "spartan2" -> {
                     strafe(0.264f)
-                    if (thePlayer.ticksExisted % 8 == 0) sendPacket(
-                        C04PacketPlayerPosition(
-                            thePlayer.posX, thePlayer.posY + 10, thePlayer.posZ, true
-                        )
+                    if (thePlayer.ticksExisted % 8 == 0)
+                        sendPacket(C04PacketPlayerPosition(thePlayer.posX, thePlayer.posY + 10, thePlayer.posZ, true)
                     )
                 }
                 "neruxvace" -> {
@@ -766,35 +759,19 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
         run {
             var posY = mc.thePlayer.posY
             while (posY > ground) {
-                sendPacket(
-                    C04PacketPlayerPosition(
-                        mc.thePlayer.posX, posY, mc.thePlayer.posZ, true
-                    )
-                )
+                sendPacket(C04PacketPlayerPosition(mc.thePlayer.posX, posY, mc.thePlayer.posZ, true))
                 if (posY - 8.0 < ground) break // Prevent next step
                 posY -= 8.0
             }
         }
-        sendPacket(
-            C04PacketPlayerPosition(
-                mc.thePlayer.posX, ground, mc.thePlayer.posZ, true
-            )
-        )
+        sendPacket(C04PacketPlayerPosition(mc.thePlayer.posX, ground, mc.thePlayer.posZ, true))
         var posY = ground
         while (posY < mc.thePlayer.posY) {
-            sendPacket(
-                C04PacketPlayerPosition(
-                    mc.thePlayer.posX, posY, mc.thePlayer.posZ, true
-                )
-            )
+            sendPacket(C04PacketPlayerPosition(mc.thePlayer.posX, posY, mc.thePlayer.posZ, true))
             if (posY + 8.0 > mc.thePlayer.posY) break // Prevent next step
             posY += 8.0
         }
-        sendPacket(
-            C04PacketPlayerPosition(
-                mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ, true
-            )
-        )
+        sendPacket(C04PacketPlayerPosition(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ, true))
         groundTimer.reset()
     }
 
@@ -815,20 +792,15 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
         val playerYaw = mc.thePlayer.rotationYaw.toRadiansD()
         sendPacket(
             C04PacketPlayerPosition(
-                mc.thePlayer.posX + horizontal * -sin(
-                    playerYaw
-                ), mc.thePlayer.posY, mc.thePlayer.posZ + horizontal * cos(playerYaw), false
+                mc.thePlayer.posX + horizontal * -sin(playerYaw),
+                mc.thePlayer.posY,
+                mc.thePlayer.posZ + horizontal * cos(playerYaw), false
             )
         )
     }
 
-    private fun redeskyVClip2(vertical: Double) {
-        sendPacket(
-            C04PacketPlayerPosition(
-                mc.thePlayer.posX, mc.thePlayer.posY + vertical, mc.thePlayer.posZ, false
-            )
-        )
-    }
+    private fun redeskyVClip2(vertical: Double) =
+        sendPacket(C04PacketPlayerPosition(mc.thePlayer.posX, mc.thePlayer.posY + vertical, mc.thePlayer.posZ, false))
 
     private fun redeskySpeed(speed: Int) {
         val playerYaw = mc.thePlayer.rotationYaw.toRadiansD()

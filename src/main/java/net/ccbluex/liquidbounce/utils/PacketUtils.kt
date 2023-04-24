@@ -56,6 +56,8 @@ object PacketUtils : MinecraftInstance() {
         }
     }
 
+    @JvmStatic
+    @JvmOverloads
     fun sendPackets(vararg packets: Packet<*>, triggerEvents: Boolean = true) =
         packets.forEach { sendPacket(it, triggerEvents) }
 

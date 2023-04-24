@@ -248,9 +248,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                 val shouldEagle = isReplaceable(blockPos) || dif < edgeDistance
                 if (eagle == "Silent") {
                     if (eagleSneaking != shouldEagle) {
-                        sendPacket(
-                            C0BPacketEntityAction(player, if (shouldEagle) START_SNEAKING else STOP_SNEAKING)
-                        )
+                        sendPacket(C0BPacketEntityAction(player, if (shouldEagle) START_SNEAKING else STOP_SNEAKING))
                     }
                     eagleSneaking = shouldEagle
                 } else {
@@ -556,11 +554,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         if (!GameSettings.isKeyDown(mc.gameSettings.keyBindSneak)) {
             mc.gameSettings.keyBindSneak.pressed = false
             if (eagleSneaking) {
-                sendPacket(
-                    C0BPacketEntityAction(
-                        player, STOP_SNEAKING
-                    )
-                )
+                sendPacket(C0BPacketEntityAction(player, STOP_SNEAKING))
             }
         }
 

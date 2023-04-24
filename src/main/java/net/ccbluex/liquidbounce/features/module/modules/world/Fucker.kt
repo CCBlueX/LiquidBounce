@@ -132,14 +132,12 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
                 // Break block
                 if (instant) {
                     // CivBreak style block breaking
-                    sendPacket(C07PacketPlayerDigging(START_DESTROY_BLOCK,
-                            currentPos, EnumFacing.DOWN))
+                    sendPacket(C07PacketPlayerDigging(START_DESTROY_BLOCK, currentPos, EnumFacing.DOWN))
 
                     if (swing)
                         thePlayer.swingItem()
 
-                    sendPacket(C07PacketPlayerDigging(STOP_DESTROY_BLOCK,
-                            currentPos, EnumFacing.DOWN))
+                    sendPacket(C07PacketPlayerDigging(STOP_DESTROY_BLOCK, currentPos, EnumFacing.DOWN))
                     currentDamage = 0F
                     return
                 }
@@ -148,8 +146,7 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
                 val block = currentPos.getBlock() ?: return
 
                 if (currentDamage == 0F) {
-                    sendPacket(C07PacketPlayerDigging(START_DESTROY_BLOCK,
-                            currentPos, EnumFacing.DOWN))
+                    sendPacket(C07PacketPlayerDigging(START_DESTROY_BLOCK, currentPos, EnumFacing.DOWN))
 
                     if (thePlayer.capabilities.isCreativeMode ||
                             block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld, pos) >= 1f) {
@@ -170,9 +167,7 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
                 mc.theWorld.sendBlockBreakProgress(thePlayer.entityId, currentPos, (currentDamage * 10F).toInt() - 1)
 
                 if (currentDamage >= 1F) {
-                    sendPacket(C07PacketPlayerDigging(
-                        STOP_DESTROY_BLOCK,
-                            currentPos, EnumFacing.DOWN))
+                    sendPacket(C07PacketPlayerDigging(STOP_DESTROY_BLOCK, currentPos, EnumFacing.DOWN))
                     mc.playerController.onPlayerDestroyBlock(currentPos, EnumFacing.DOWN)
                     blockHitDelay = 4
                     currentDamage = 0F

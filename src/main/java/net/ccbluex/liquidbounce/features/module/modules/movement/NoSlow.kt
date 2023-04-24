@@ -56,14 +56,10 @@ object NoSlow : Module("NoSlow", ModuleCategory.MOVEMENT) {
 
         if (packet.get()) {
             when (event.eventState) {
-                EventState.PRE -> {
-                    val digging = C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos(0, 0, 0), EnumFacing.DOWN)
-                    sendPacket(digging)
-                }
-                EventState.POST -> {
-                    val blockPlace = C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, mc.thePlayer.heldItem, 0f, 0f, 0f)
-                    sendPacket(blockPlace)
-                }
+                EventState.PRE ->
+                    sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos(0, 0, 0), EnumFacing.DOWN))
+                EventState.POST ->
+                    sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, mc.thePlayer.heldItem, 0f, 0f, 0f))
             }
         }
     }

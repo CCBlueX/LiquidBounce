@@ -16,7 +16,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.minecraft.client.entity.EntityOtherPlayerMP
 import net.minecraft.network.play.client.C03PacketPlayer
-import net.minecraft.network.play.client.C03PacketPlayer.*
+import net.minecraft.network.play.client.C03PacketPlayer.C06PacketPlayerPosLook
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 
 object FreeCam : Module("FreeCam", ModuleCategory.RENDER) {
@@ -81,7 +81,7 @@ object FreeCam : Module("FreeCam", ModuleCategory.RENDER) {
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
         if (c03Spoof) {
-            if (packet is C04PacketPlayerPosition || packet is C05PacketPlayerLook || packet is C06PacketPlayerPosLook) {
+            if (packet is C03PacketPlayer && (packet.rotating || packet.isMoving)) {
                 if (packetCount >= 20) {
                     packetCount = 0
                     sendPacket(C06PacketPlayerPosLook(fakePlayer.posX, fakePlayer.posY, fakePlayer.posZ, fakePlayer.rotationYaw, fakePlayer.rotationPitch, fakePlayer.onGround), false)

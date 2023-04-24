@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.utils.EntityUtils.targetMobs
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetPlayer
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
 import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.getCenter
@@ -742,17 +743,13 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
                 val movingObject = boundingBox.calculateIntercept(positionEye, lookAt) ?: return
                 val hitVec = movingObject.hitVec
 
-                sendPacket(
-                    C02PacketUseEntity(interactEntity, hitVec.subtract(interactEntity.positionVector))
+                sendPackets(
+                    C02PacketUseEntity(interactEntity, hitVec.subtract(interactEntity.positionVector)),
+                    C02PacketUseEntity(interactEntity, INTERACT)
                 )
-                sendPacket(C02PacketUseEntity(interactEntity, INTERACT))
             }
 
-            sendPacket(
-                C08PacketPlayerBlockPlacement(
-                    BlockPos(-1, -1, -1), 255, mc.thePlayer.heldItem, 0f, 0f, 0f
-                )
-            )
+            sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, mc.thePlayer.heldItem, 0f, 0f, 0f))
             blockStatus = true
         }
 
