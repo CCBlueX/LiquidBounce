@@ -257,12 +257,6 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
         return ModuleSprint.INSTANCE.getEnabled() || instance.isPressed();
     }
 
-    @Redirect(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/input/Input;hasForwardMovement()Z"))
-    private boolean hookOmnidirectionalSprintA(Input instance) {
-        boolean hasMovement = Math.abs(instance.movementForward) > 1.0E-5F || Math.abs(instance.movementSideways) > 1.0E-5F;
-        return !ModuleSprint.INSTANCE.shouldPreventSprint() && (ModuleSprint.INSTANCE.shouldSprintOmnidirectionally() ? hasMovement : instance.hasForwardMovement());
-    }
-
     @Redirect(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isWalking()Z"))
     private boolean hookOmnidirectionalSprintB(ClientPlayerEntity instance) {
         boolean hasMovement = Math.abs(instance.input.movementForward) > 1.0E-5F || Math.abs(instance.input.movementSideways) > 1.0E-5F;

@@ -56,6 +56,7 @@ repositories {
         name = 'TerraformersMC'
         url = 'https://maven.terraformersmc.com/'
     }
+    maven { url = "https://repo.viaversion.com/" }
 }
 
 dependencies {
@@ -69,9 +70,10 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 
-    /*
-        Recommended mods (on IDE)
-     */
+    modImplementation "com.viaversion:viaversion:4.7.0-23w17a-SNAPSHOT"
+    modImplementation "com.github.FlorianMichael:ViaLoadingBase:4.4.8"
+
+    // Recommended mods (on IDE)
     modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
 
     modRuntimeOnly "com.github.CaffeineMC:sodium-fabric:${project.sodium_version}"

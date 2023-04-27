@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.client
 
+import de.florianmichael.vialoadingbase.ViaLoadingBase
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.NotificationEvent
@@ -43,12 +44,11 @@ val logger: Logger
  * Get current protocol version
  *
  * @return protocol version
- *
- * Todo: Implement support for ViaFabric / ViaFabricPlus
- *  https://github.com/FlorianMichael/ViaLoadingBase -> ViaLoadingBase.getInstance().getTargetVersion()
  */
 val protocolVersion: Int
-    get() = MC_1_19_4
+    get() = runCatching {
+        ViaLoadingBase.getInstance().targetVersion.index
+    }.getOrElse { MC_1_19_4 }
 
 const val MC_1_19_4: Int = 762
 const val MC_1_8: Int = 47
