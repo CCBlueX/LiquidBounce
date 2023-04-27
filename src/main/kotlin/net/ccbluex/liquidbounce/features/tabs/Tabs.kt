@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.io.HttpClient
 import net.ccbluex.liquidbounce.utils.item.createItem
+import net.fabricmc.fabric.impl.itemgroup.ItemGroupHelper
 import net.minecraft.block.Blocks
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.entity.effect.StatusEffectInstance
@@ -32,9 +33,8 @@ import net.minecraft.item.ItemGroup
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.potion.PotionUtil
+import net.minecraft.registry.Registries
 import net.minecraft.util.Formatting
-import net.minecraft.util.collection.DefaultedList
-import net.minecraft.util.registry.Registry
 import java.util.*
 
 /**
@@ -45,10 +45,16 @@ import java.util.*
  */
 object Tabs {
 
+    init {
+        setupSpecial()
+        setupExploits()
+        setupHeads()
+    }
+
     /**
      * Special item group is useful to get blocks or items which you are not able to get without give command
      */
-    val special = LiquidsItemGroup(
+    private fun setupSpecial() =  LiquidsItemGroup(
         "Special",
         icon = {
             ItemStack(Blocks.COMMAND_BLOCK).apply {
@@ -74,7 +80,7 @@ object Tabs {
     /**
      * Exploits item group allows you to get items which are able to exploit bugs (like crash exploits or render issues)
      */
-    val exploits = LiquidsItemGroup(
+    private fun setupExploits() = LiquidsItemGroup(
         "Exploits",
         icon = { ItemStack(Items.LINGERING_POTION) },
         items = {
@@ -96,7 +102,7 @@ object Tabs {
                                         .styled { s -> s.withColor(Formatting.GOLD) }
                                 )
                         ),
-                    Registry.STATUS_EFFECT.map { e ->
+                    Registries.STATUS_EFFECT.map { e ->
                         StatusEffectInstance(e, Int.MAX_VALUE, 127)
                     }
                 )
@@ -131,7 +137,8 @@ object Tabs {
      */
     private class Head(val name: String, val uuid: UUID, val value: String)
     private class HeadsService(val enabled: Boolean, val url: String)
-    private var headsCollection: Array<Head> = runCatching {
+
+    private var headsDb = runCatching {
         logger.info("Loading heads...")
         // Load head service from cloud
         //  Makes it possible to disable service or change domain in case of an emergency
@@ -154,13 +161,15 @@ object Tabs {
         logger.error("Unable to load heads database", it)
     }.getOrElse { emptyArray() }
 
-    val heads = LiquidsItemGroup(
+    private fun setupHeads() = LiquidsItemGroup(
         "Heads",
         icon = { ItemStack(Items.SKELETON_SKULL) },
         items = {
-            it += headsCollection.map { head ->
+            it.addAll(headsDb
+                .distinctBy { it.name }
+                .map { head ->
                 createItem("minecraft:player_head{display:{Name:\"{\\\"text\\\":\\\"${head.name}\\\"}\"},SkullOwner:{Id:[I;0,0,0,0],Properties:{textures:[{Value:\"${head.value}\"}]}}}")
-            }
+            })
         }
     ).create()
 
@@ -172,30 +181,28 @@ object Tabs {
 open class LiquidsItemGroup(
     val plainName: String,
     val icon: () -> ItemStack,
-    val items: (items: MutableList<ItemStack>) -> Unit
+    val items: (items: ItemGroup.Entries) -> Unit
 ) {
 
     // Create item group and assign to minecraft groups
     fun create(): ItemGroup {
         // Expand array
-        ItemGroup.GROUPS = ItemGroup.GROUPS.copyOf(ItemGroup.GROUPS.size + 1)
-
-        // Build item group
-        return object : ItemGroup(GROUPS.size - 1, plainName) {
-
-            override fun getName() = plainName
-
-            override fun getDisplayName() = plainName.asText()
-
-            override fun shouldRenderName() = true
-
-            override fun createIcon() = icon()
-
-            override fun appendStacks(stacks: DefaultedList<ItemStack>) {
-                items(stacks)
+        val itemGroup = ItemGroup.create(ItemGroup.Row.TOP, -1)
+            .displayName(plainName.asText())
+            .icon(icon)
+            .entries { displayContext, entries ->
+                runCatching {
+                    items(entries)
+                }.onFailure {
+                    logger.error("Unable to create item group $plainName", it)
+                }
             }
+            .build()
 
-        }
+        // Uses FabricAPI to add tab to creative inventory
+        ItemGroupHelper.appendItemGroup(itemGroup)
+
+        return itemGroup
     }
 
 }

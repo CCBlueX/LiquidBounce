@@ -141,7 +141,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
     }
 
     private fun drawTrajectory(otherPlayer: PlayerEntity, event: EngineRenderEvent): HitResult? {
-        val heldItem = otherPlayer.itemsHand.find { shouldDrawTrajectory(otherPlayer, it.item) } ?: return null
+        val heldItem = otherPlayer.handItems.find { shouldDrawTrajectory(otherPlayer, it.item) } ?: return null
 
         val item = heldItem.item
 
@@ -257,7 +257,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                     +trajectoryInfo.size.toDouble()
                 ).offset(posX, posY, posZ).stretch(Vec3d(motionX, motionY, motionZ)).expand(1.0)
             ) {
-                if (!it.isSpectator && it.isAlive && (it.collides() || player != mc.player && it == mc.player)) {
+                if (!it.isSpectator && it.isAlive && (it.canHit() || player != mc.player && it == mc.player)) {
                     if (player.isConnectedThroughVehicle(it)) return@getEntityCollision false
                 } else {
                     return@getEntityCollision false
@@ -281,7 +281,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
             posY += motionY
             posZ += motionZ
 
-            val blockState = theWorld.getBlockState(BlockPos(posX, posY, posZ))
+            val blockState = theWorld.getBlockState(BlockPos.ofFloored(posX, posY, posZ))
 
             // Check is next position water
             if (!blockState.fluidState.isEmpty) { // Update motion

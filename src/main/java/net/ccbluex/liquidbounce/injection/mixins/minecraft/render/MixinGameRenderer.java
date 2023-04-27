@@ -36,9 +36,10 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Matrix4f;
+import net.minecraft.util.math.RotationAxis;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.Vec3f;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -58,9 +59,6 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
     private int ticks;
 
     @Shadow
-    protected abstract void bobViewWhenHurt(MatrixStack matrixStack, float f);
-
-    @Shadow
     protected abstract void bobView(MatrixStack matrixStack, float f);
 
     @Shadow
@@ -68,6 +66,8 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
 
     @Shadow
     protected abstract double getFov(Camera camera, float tickDelta, boolean changingFov);
+
+    @Shadow protected abstract void tiltViewWhenHurt(MatrixStack matrices, float tickDelta);
 
     /**
      * Hook game render event
@@ -80,7 +80,7 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
     /**
      * Hook screen render event
      */
-    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;render(Lnet/minecraft/client/util/math/MatrixStack;IIF)V"))
+    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;renderWithTooltip(Lnet/minecraft/client/util/math/MatrixStack;IIF)V"))
     public void hookScreenRender(Screen screen, MatrixStack matrices, int mouseX, int mouseY, float delta) {
         screen.render(matrices, mouseX, mouseY, delta);
         EventManager.INSTANCE.callEvent(new ScreenRenderEvent(screen, matrices, mouseX, mouseY, delta));
@@ -88,43 +88,43 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
 
     @Override
     public Matrix4f getCameraMVPMatrix(float tickDelta, boolean bobbing) {
-        MatrixStack matrixStack = new MatrixStack();
+        final MatrixStack matrices = new MatrixStack();
 
-        matrixStack.peek().getPositionMatrix().multiply(this.getBasicProjectionMatrix(this.getFov(camera, tickDelta, true)));
+        final double fov = this.getFov(camera, tickDelta, true);
+        matrices.multiplyPositionMatrix(this.getBasicProjectionMatrix(fov));
 
         if (bobbing) {
-            this.bobViewWhenHurt(matrixStack, tickDelta);
+            this.tiltViewWhenHurt(matrices, tickDelta);
 
-            if (this.client.options.bobView) {
-                this.bobView(matrixStack, tickDelta);
+            if (this.client.options.getBobView().getValue()) {
+                this.bobView(matrices, tickDelta);
             }
 
-            float f = MathHelper.lerp(tickDelta, this.client.player.lastNauseaStrength, this.client.player.nextNauseaStrength) * this.client.options.distortionEffectScale * this.client.options.distortionEffectScale;
+            float f = MathHelper.lerp(tickDelta, this.client.player.lastNauseaStrength, this.client.player.nextNauseaStrength) * this.client.options.getDistortionEffectScale().getValue().floatValue() * this.client.options.getDistortionEffectScale().getValue().floatValue();
             if (f > 0.0F) {
                 int i = this.client.player.hasStatusEffect(StatusEffects.NAUSEA) ? 7 : 20;
                 float g = 5.0F / (f * f + 5.0F) - f * 0.04F;
                 g *= g;
-                Vec3f vec3f = new Vec3f(0.0F, MathHelper.SQUARE_ROOT_OF_TWO / 2.0F, MathHelper.SQUARE_ROOT_OF_TWO / 2.0F);
-                matrixStack.multiply(vec3f.getDegreesQuaternion(((float) this.ticks + tickDelta) * (float) i));
-                matrixStack.scale(1.0F / g, 1.0F, 1.0F);
+
+                RotationAxis vec3f = RotationAxis.of(new Vector3f(0.0F, MathHelper.SQUARE_ROOT_OF_TWO / 2.0F, MathHelper.SQUARE_ROOT_OF_TWO / 2.0F));
+                matrices.multiply(vec3f.rotationDegrees(((float) this.ticks + tickDelta) * (float) i));
+                matrices.scale(1.0F / g, 1.0F, 1.0F);
                 float h = -((float) this.ticks + tickDelta) * (float) i;
-                matrixStack.multiply(vec3f.getDegreesQuaternion(h));
+                matrices.multiply(vec3f.rotationDegrees(h));
             }
         }
 
-        matrixStack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(camera.getPitch()));
-        matrixStack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(camera.getYaw() + 180.0F));
+        matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(camera.getPitch()));
+        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(camera.getYaw() + 180.0f));
 
-        Vec3d pos = this.camera.getPos();
+        final Vec3d cameraPosition = this.camera.getPos();
 
-        Matrix4f model = matrixStack.peek().getPositionMatrix();
-
-        model.multiply(Matrix4f.translate(-(float) pos.x, -(float) pos.y, -(float) pos.z));
-
-        return model;
+        final Matrix4f matrix4f = matrices.peek().getPositionMatrix();
+        matrix4f.mul(new Matrix4f().translate((float) -cameraPosition.x, (float) -cameraPosition.y, (float) -cameraPosition.z));
+        return matrix4f;
     }
 
-    @Inject(method = "bobViewWhenHurt", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "tiltViewWhenHurt", at = @At("HEAD"), cancellable = true)
     private void injectHurtCam(MatrixStack matrixStack, float f, CallbackInfo callbackInfo) {
         if (ModuleNoHurtCam.INSTANCE.getEnabled()) {
             callbackInfo.cancel();
@@ -152,8 +152,8 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
         float h = -(playerEntity.horizontalSpeed + g * f);
         float i = MathHelper.lerp(f, playerEntity.prevStrideDistance, playerEntity.strideDistance);
         matrixStack.translate((MathHelper.sin(h * MathHelper.PI) * i * 0.5F), -Math.abs(MathHelper.cos(h * MathHelper.PI) * i), 0.0D);
-        matrixStack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(MathHelper.sin(h * MathHelper.PI) * i * (3.0F + additionalBobbing)));
-        matrixStack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(Math.abs(MathHelper.cos(h * MathHelper.PI - (0.2F + additionalBobbing)) * i) * 5.0F));
+        matrixStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(MathHelper.sin(h * MathHelper.PI) * i * (3.0F + additionalBobbing)));
+        matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(Math.abs(MathHelper.cos(h * MathHelper.PI - (0.2F + additionalBobbing)) * i) * 5.0F));
 
         callbackInfo.cancel();
     }

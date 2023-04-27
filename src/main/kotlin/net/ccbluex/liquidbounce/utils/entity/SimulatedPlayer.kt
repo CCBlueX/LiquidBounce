@@ -26,8 +26,8 @@ import net.minecraft.entity.effect.StatusEffect
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.fluid.Fluid
-import net.minecraft.tag.FluidTags
-import net.minecraft.tag.TagKey
+import net.minecraft.registry.tag.FluidTags
+import net.minecraft.registry.tag.TagKey
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.MathHelper
@@ -386,13 +386,9 @@ class SimulatedPlayer(
     private fun isInLava(): Boolean = false
     private fun getFluidHeight(tags: TagKey<Fluid>): Double = 0.0
 
-    private fun getRotationVector(): Vec3d {
-        return getRotationVector(this.pitch, this.yaw)
-    }
+    private fun getRotationVector() = getRotationVector(this.pitch, this.yaw)
 
-    fun getVelocityAffectingPos(): BlockPos {
-        return BlockPos(this.pos.x, this.player.boundingBox.minY - 0.5000001, this.pos.z)
-    }
+    fun getVelocityAffectingPos() = BlockPos.ofFloored(this.pos.x, this.player.boundingBox.minY - 0.5000001, this.pos.z)
 
     private fun getRotationVector(pitch: Float, yaw: Float): Vec3d {
         val f = pitch * (Math.PI.toFloat() / 180)

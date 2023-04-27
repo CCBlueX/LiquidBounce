@@ -180,10 +180,10 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModulePerfectHit,
             ModuleAutoClicker,
             ModuleAntiVanish,
-            ModuleXRay,
             ModuleQuickPerspectiveSwap,
             ModuleMurderMystery,
-            ModuleAutoDodge
+            ModuleAutoDodge,
+            ModuleAutoWeapon
         )
 
         builtin.apply {

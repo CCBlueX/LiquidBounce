@@ -32,6 +32,7 @@ import net.minecraft.client.network.ServerInfo;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.util.Window;
 import net.minecraft.entity.Entity;
+import net.minecraft.resource.InputSupplier;
 import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.util.hit.HitResult;
 import org.spongepowered.asm.mixin.Mixin;
@@ -60,10 +61,6 @@ public abstract class MixinMinecraftClient {
     public abstract boolean isConnectedToRealms();
 
     @Shadow
-    @Nullable
-    private ServerInfo currentServerEntry;
-
-    @Shadow
     private int itemUseCooldown;
 
     @Shadow
@@ -73,6 +70,8 @@ public abstract class MixinMinecraftClient {
     @Shadow
     @Nullable
     public HitResult crosshairTarget;
+
+    @Shadow public abstract @org.jetbrains.annotations.Nullable ServerInfo getCurrentServerEntry();
 
     @Inject(method = "isAmbientOcclusionEnabled()Z", at = @At("HEAD"), cancellable = true)
     private static void injectXRayFullBright(CallbackInfoReturnable<Boolean> callback) {
@@ -134,7 +133,7 @@ public abstract class MixinMinecraftClient {
                 titleBuilder.append(I18n.translate("title.singleplayer"));
             } else if (this.isConnectedToRealms()) {
                 titleBuilder.append(I18n.translate("title.multiplayer.realms"));
-            } else if (this.server == null && (this.currentServerEntry == null || !this.currentServerEntry.isLocal())) {
+            } else if (this.server == null && (this.getCurrentServerEntry() == null || !this.getCurrentServerEntry().isLocal())) {
                 titleBuilder.append(I18n.translate("title.multiplayer.other"));
             } else {
                 titleBuilder.append(I18n.translate("title.multiplayer.lan"));
@@ -147,8 +146,8 @@ public abstract class MixinMinecraftClient {
     /**
      * Set window icon to our client icon.
      */
-    @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/Window;setIcon(Ljava/io/InputStream;Ljava/io/InputStream;)V"))
-    private void setupIcon(Window instance, InputStream icon16, InputStream icon32) {
+    @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/Window;setIcon(Lnet/minecraft/resource/InputSupplier;Lnet/minecraft/resource/InputSupplier;)V"))
+    private void setupIcon(Window instance, InputSupplier<InputStream> icon16, InputSupplier<InputStream> icon32) {
         LiquidBounce.INSTANCE.getLogger().debug("Loading client icons");
 
         // Find client icons
@@ -164,7 +163,7 @@ public abstract class MixinMinecraftClient {
         }
 
         // Load client icons
-        instance.setIcon(stream16, stream32);
+        instance.setIcon(() -> stream16, () -> stream32);
     }
 
     /**

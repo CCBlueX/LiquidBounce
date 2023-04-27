@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 import com.mojang.brigadier.ParseResults;
 import com.mojang.brigadier.suggestion.Suggestions;
 import net.ccbluex.liquidbounce.features.command.CommandManager;
-import net.minecraft.client.gui.screen.CommandSuggestor;
+import net.minecraft.client.gui.screen.ChatInputSuggestor;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.command.CommandSource;
 import org.spongepowered.asm.mixin.Final;
@@ -35,8 +35,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.concurrent.CompletableFuture;
 
-@Mixin(CommandSuggestor.class)
-public class MixinCommandSuggestor {
+@Mixin(ChatInputSuggestor.class)
+public class MixinChatInputSuggestor {
 
     @Shadow @Final private boolean slashOptional;
 
@@ -46,8 +46,8 @@ public class MixinCommandSuggestor {
 
     @Shadow private ParseResults<CommandSource> parse;
 
-    @Redirect(method = "refresh", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/screen/CommandSuggestor;slashOptional:Z"))
-    private boolean injectAutoCompletionA(CommandSuggestor suggestor) {
+    @Redirect(method = "refresh", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/screen/ChatInputSuggestor;slashOptional:Z"))
+    private boolean injectAutoCompletionA(ChatInputSuggestor suggestor) {
         return this.slashOptional || this.textField.getText().startsWith(CommandManager.Options.INSTANCE.getPrefix());
     }
 
@@ -60,4 +60,5 @@ public class MixinCommandSuggestor {
             ci.cancel();
         }
     }
+
 }
