@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.utils.client
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.NotificationEvent
-import net.earthcomputer.multiconnect.api.MultiConnectAPI
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.util.InputUtil
 import net.minecraft.text.MutableText
@@ -41,13 +40,17 @@ val logger: Logger
     get() = LiquidBounce.logger
 
 /**
- * Get current protocol version depending on Multi Connect
+ * Get current protocol version
+ *
+ * @return protocol version
+ *
+ * Todo: Implement support for ViaFabric / ViaFabricPlus
+ *  https://github.com/FlorianMichael/ViaLoadingBase -> ViaLoadingBase.getInstance().getTargetVersion()
  */
 val protocolVersion: Int
-    get() = runCatching {
-        MultiConnectAPI.instance().protocolVersion
-    }.getOrElse { 754 }
+    get() = MC_1_19_4
 
+const val MC_1_19_4: Int = 762
 const val MC_1_8: Int = 47
 
 // Chat formatting
