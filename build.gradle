@@ -69,17 +69,14 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 
-    // MultiConnect API
-    modImplementation ("net.earthcomputer.multiconnect:multiconnect-api:${project.multiconnect_version}") { transitive = false }
-
     /*
         Recommended mods (on IDE)
      */
-    // modRuntimeOnly ("net.earthcomputer.multiconnect:multiconnect:${project.multiconnect_version}") { transitive = false }
-    // modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
-    // modRuntime "com.github.CaffeineMC:sodium-fabric:${project.sodium_version}"
-    // modRuntimeOnly "com.github.CaffeineMC:lithium-fabric:${project.lithium_version}"
-    // modRuntime "com.github.CaffeineMC:phosphor-fabric:${project.phosphor_version}"
+    modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
+
+    modRuntimeOnly "com.github.CaffeineMC:sodium-fabric:${project.sodium_version}"
+    modRuntimeOnly "com.github.CaffeineMC:lithium-fabric:${project.lithium_version}"
+    // modRuntimeOnly "com.github.CaffeineMC:phosphor-fabric:${project.phosphor_version}"
 
     // fix nullable imports
     implementation "com.google.code.findbugs:jsr305:3.0.2"
