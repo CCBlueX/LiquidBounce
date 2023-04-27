@@ -18,13 +18,14 @@
  */
 package net.ccbluex.liquidbounce.script.bindings.features
 
-import com.oracle.truffle.api.`object`.DynamicObject
 import net.ccbluex.liquidbounce.config.Value
+import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.event.EventHook
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.logger
+import java.util.function.Function
 
 @Suppress("unused")
 class JsModule(private val moduleObject: Map<String, Any>) : Module(
@@ -32,7 +33,7 @@ class JsModule(private val moduleObject: Map<String, Any>) : Module(
     category = Category.fromReadableName(moduleObject["category"] as String)!!
 ) {
 
-    private val events = HashMap<String, DynamicObject>()
+    private val events = hashMapOf<String, Function<Event?, Void>>()
 
     private var _tag: String? = null
     override val tag: String?
@@ -69,10 +70,8 @@ class JsModule(private val moduleObject: Map<String, Any>) : Module(
      * @param eventName Name of the event.
      * @param handler JavaScript function used to handle the event.
      */
-    fun on(eventName: String, handler: Any) {
-        println("$eventName $handler " + handler.javaClass.name)
-
-        events[eventName] = handler as DynamicObject
+    fun on(eventName: String, handler: Function<Event?, Void>) {
+        events[eventName] = handler
         hookHandler(eventName)
     }
 
@@ -83,9 +82,9 @@ class JsModule(private val moduleObject: Map<String, Any>) : Module(
     /**
      * Calls the function of the [event]  with the [payload] of the event.
      */
-    private fun callEvent(event: String, payload: Any? = null) {
+    private fun callEvent(event: String, payload: Event? = null) {
         try {
-            // events[event]?.call(moduleObject, payload)
+            events[event]?.apply(payload)
         } catch (throwable: Throwable) {
             logger.error("Script caused exception in module $name on $event event!", throwable)
         }
