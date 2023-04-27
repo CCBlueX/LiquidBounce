@@ -5,6 +5,8 @@
   "compatibilityLevel": "JAVA_8",
   "priority": 1337,
   "client": [
+    "graaljs.MixinHostContext",
+    "graaljs.MixinHostInteropReflect",
     "minecraft.block.MixinAbstractBlock",
     "minecraft.block.MixinBlock",
     "minecraft.block.MixinBlockView",
