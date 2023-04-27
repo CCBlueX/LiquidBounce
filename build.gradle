@@ -103,7 +103,7 @@ dependencies {
     // https://mvnrepository.com/artifact/io.netty/netty-codec-http
     implementation 'io.netty:netty-codec-http:4.1.82.Final'
     // https://mvnrepository.com/artifact/io.netty/netty-handler-proxy
-    implementation 'io.netty:netty-handler-proxy:4.1.82.Final'
+    implementation 'io.netty:netty-handler-proxy:4.1.92.Final'
 
     // Test libraries
 
