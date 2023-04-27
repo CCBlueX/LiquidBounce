@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import java.util.function.Function
 
 @Suppress("unused")
-class JsModule(private val moduleObject: Map<String, Any>) : Module(
+class JsModule(moduleObject: Map<String, Any>) : Module(
     name = moduleObject["name"] as String,
     category = Category.fromReadableName(moduleObject["category"] as String)!!
 ) {
