@@ -52,8 +52,9 @@ class JsModule(private val moduleObject: Map<String, Any>) : Module(
         if (moduleObject.containsKey("settings")) {
             val settingsObject = moduleObject["settings"] as Map<String, Value<*>>
 
-            for ((_, value) in settingsObject)
+            for ((_, value) in settingsObject) {
                 settings.add(value)
+            }
         }
 
         if (moduleObject.containsKey("tag")) {
