@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.logger
-import java.util.function.Function
 
 @Suppress("unused")
 class JsModule(moduleObject: Map<String, Any>) : Module(
@@ -33,7 +32,7 @@ class JsModule(moduleObject: Map<String, Any>) : Module(
     category = Category.fromReadableName(moduleObject["category"] as String)!!
 ) {
 
-    private val events = hashMapOf<String, Function<Event?, Void>>()
+    private val events = hashMapOf<String, (Any?) -> Unit>()
 
     private var _tag: String? = null
     override val tag: String?
@@ -71,7 +70,7 @@ class JsModule(moduleObject: Map<String, Any>) : Module(
      * @param eventName Name of the event.
      * @param handler JavaScript function used to handle the event.
      */
-    fun on(eventName: String, handler: Function<Event?, Void>) {
+    fun on(eventName: String, handler: (Any?) -> Unit) {
         events[eventName] = handler
         hookHandler(eventName)
     }
@@ -85,7 +84,7 @@ class JsModule(moduleObject: Map<String, Any>) : Module(
      */
     private fun callEvent(event: String, payload: Event? = null) {
         try {
-            events[event]?.apply(payload)
+            events[event]?.invoke(payload)
         } catch (throwable: Throwable) {
             logger.error("Script caused exception in module $name on $event event!", throwable)
         }

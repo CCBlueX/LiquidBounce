@@ -37,11 +37,13 @@ import java.util.function.Function
 class Script(val scriptFile: File) {
 
     private val context: Context = Context.newBuilder("js")
-        .allowHostAccess(HostAccess.ALL)
-        .allowHostClassLookup { true }
-        .allowExperimentalOptions(true)
-        .option("js.nashorn-compat", "true")
-        .option("js.ecmascript-version", "2021")
+        .allowHostAccess(HostAccess.ALL) // Allow access to all Java classes
+        .allowCreateProcess(false) // Disable process creation
+        .allowCreateThread(false) // Disable thread creation
+        .allowNativeAccess(false) // Disable native access
+        .allowExperimentalOptions(true) // Allow experimental options
+        .option("js.nashorn-compat", "true") // Enable Nashorn compatibility
+        .option("js.ecmascript-version", "2022") // Enable ECMAScript 2022
         .build().apply {
             // Global instances
             val jsBindings = getBindings("js")
@@ -73,7 +75,7 @@ class Script(val scriptFile: File) {
      */
     private var scriptEnabled = false
 
-    private val globalEvents = mutableMapOf<String, Runnable>()
+    private val globalEvents = mutableMapOf<String, () -> Unit>()
     private val registeredModules = mutableListOf<Module>()
 
     /**
@@ -122,11 +124,11 @@ class Script(val scriptFile: File) {
      * @see JsModule
      */
     @Suppress("unused")
-    fun registerModule(moduleObject: Map<String, Any>, callback: Function<Module, Void>) {
+    fun registerModule(moduleObject: Map<String, Any>, callback: (Module) -> Unit) {
         val module = JsModule(moduleObject)
         ModuleManager.addModule(module)
         registeredModules += module
-        callback.apply(module)
+        callback(module)
     }
 
     /**
@@ -137,11 +139,11 @@ class Script(val scriptFile: File) {
      * @see JsModule
      */
     @Suppress("unused")
-    fun registerCommand(commandObject: Map<String, Any>, callback: Function<CommandBuilder, Void>) {
+    fun registerCommand(commandObject: Map<String, Any>, callback: (CommandBuilder) -> Unit) {
         val command = CommandBuilder
             .begin(commandObject["name"] as String)
             .alias(*((commandObject["aliases"] as? Array<*>) ?: emptyArray<String>()).map { it as String }.toTypedArray())
-            .apply { callback.apply(this) }
+            .apply { callback(this) }
             .build()
 
         CommandManager.addCommand(command)
@@ -152,7 +154,7 @@ class Script(val scriptFile: File) {
      * @param eventName Name of the event.
      * @param handler JavaScript function used to handle the event.
      */
-    fun on(eventName: String, handler: Runnable) {
+    fun on(eventName: String, handler: () -> Unit) {
         globalEvents[eventName] = handler
     }
 
@@ -197,7 +199,7 @@ class Script(val scriptFile: File) {
      */
     private fun callGlobalEvent(eventName: String) {
         try {
-            globalEvents[eventName]?.run()
+            globalEvents[eventName]?.invoke()
         } catch (throwable: Throwable) {
             logger.error("[ScriptAPI] Exception in script '$scriptName'!", throwable)
         }
