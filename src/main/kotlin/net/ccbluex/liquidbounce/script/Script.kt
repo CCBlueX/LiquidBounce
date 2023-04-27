@@ -18,6 +18,9 @@
  */
 package net.ccbluex.liquidbounce.script
 
+import net.ccbluex.liquidbounce.features.command.CommandManager
+import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
+import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.script.bindings.features.JsModule
@@ -45,11 +48,17 @@ class Script(val scriptFile: File) {
             jsBindings.putMember("Setting", JsSetting)
             jsBindings.putMember("Item", JsItem)
 
+            // Direct access to CommandBuilder and ParameterBuilder required for commands
+            // todo: remove this as soon we figured out a more JS-like way to create commands
+            jsBindings.putMember("CommandBuilder", CommandBuilder)
+            jsBindings.putMember("ParameterBuilder", ParameterBuilder)
+
             jsBindings.putMember("mc", mc)
             jsBindings.putMember("client", JsClient)
 
             // Global functions
             jsBindings.putMember("registerScript", RegisterScript())
+
         }
 
     private val scriptText: String = scriptFile.readText()
@@ -118,6 +127,24 @@ class Script(val scriptFile: File) {
         ModuleManager.addModule(module)
         registeredModules += module
         callback.apply(module)
+    }
+
+    /**
+     * Registers a new script command
+     *
+     * @param commandObject JavaScript object containing information about the command.
+     * @param callback JavaScript function to which the corresponding instance of [JsModule] is passed.
+     * @see JsModule
+     */
+    @Suppress("unused")
+    fun registerCommand(commandObject: Map<String, Any>, callback: Function<CommandBuilder, Void>) {
+        val command = CommandBuilder
+            .begin(commandObject["name"] as String)
+            .alias(*((commandObject["aliases"] as? Array<*>) ?: emptyArray<String>()).map { it as String }.toTypedArray())
+            .apply { callback.apply(this) }
+            .build()
+
+        CommandManager.addCommand(command)
     }
 
     /**
