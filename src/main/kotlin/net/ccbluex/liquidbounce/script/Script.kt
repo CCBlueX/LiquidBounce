@@ -99,6 +99,7 @@ class Script(val scriptFile: File) {
             scriptAuthors = when (authors) {
                 is String -> arrayOf(authors)
                 is Array<*> -> authors as Array<String>
+                is List<*> -> (authors as List<String>).toTypedArray()
                 else -> error("Not valid authors type")
             }
 
