@@ -18,13 +18,10 @@
  */
 package net.ccbluex.liquidbounce.script
 
-import net.ccbluex.liquidbounce.event.Event
-import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.script.bindings.features.JsModule
 import net.ccbluex.liquidbounce.script.bindings.features.JsSetting
-import net.ccbluex.liquidbounce.script.bindings.globals.JsChat
 import net.ccbluex.liquidbounce.script.bindings.globals.JsClient
 import net.ccbluex.liquidbounce.script.bindings.globals.JsItem
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -36,7 +33,24 @@ import java.util.function.Function
 
 class Script(val scriptFile: File) {
 
-    private val context: Context
+    private val context: Context = Context.newBuilder("js")
+        .allowHostAccess(HostAccess.ALL)
+        .allowHostClassLookup { true }
+        .allowExperimentalOptions(true)
+        .option("js.nashorn-compat", "true")
+        .option("js.ecmascript-version", "2021")
+        .build().apply {
+            // Global instances
+            val jsBindings = getBindings("js")
+            jsBindings.putMember("Setting", JsSetting)
+            jsBindings.putMember("Item", JsItem)
+
+            jsBindings.putMember("mc", mc)
+            jsBindings.putMember("client", JsClient)
+
+            // Global functions
+            jsBindings.putMember("registerScript", RegisterScript())
+        }
 
     private val scriptText: String = scriptFile.readText()
 
@@ -45,41 +59,24 @@ class Script(val scriptFile: File) {
     lateinit var scriptVersion: String
     lateinit var scriptAuthors: Array<String>
 
-    private var state = false
+    /**
+     * Whether the script is enabled
+     */
+    private var scriptEnabled = false
 
-    private val events = HashMap<String, Function<Event?, Void>>()
-
+    private val globalEvents = mutableMapOf<String, Runnable>()
     private val registeredModules = mutableListOf<Module>()
-    private val registeredCommands = mutableListOf<Command>()
-
-    init {
-        context = Context.newBuilder("js")
-            .allowHostAccess(HostAccess.ALL)
-            .allowHostClassLookup { true }
-            .allowExperimentalOptions(true)
-            .option("js.nashorn-compat", "true")
-            .option("js.ecmascript-version", "2021")
-            .build()
-
-        // Global instances
-        val jsBindings = context.getBindings("js")
-        jsBindings.putMember("Chat", JsChat)
-        jsBindings.putMember("Setting", JsSetting)
-        jsBindings.putMember("Item", JsItem)
-
-        jsBindings.putMember("mc", mc)
-        jsBindings.putMember("client", JsClient)
-
-        // Global functions
-        jsBindings.putMember("registerScript", RegisterScript())
-    }
 
     /**
      * Initialization of script
      */
     fun initScript() {
+        // Evaluate script
         context.eval("js", scriptText)
-        callEvent("load")
+
+        // Call load event
+        callGlobalEvent("load")
+
         logger.info("[ScriptAPI] Successfully loaded script '${scriptFile.name}'.")
     }
 
@@ -124,44 +121,24 @@ class Script(val scriptFile: File) {
     }
 
     /**
-     * Gets the value of a magic comment from the script. Used for specifying additional information about the script.
-     *
-     * @param name Name of the comment.
-     * @return Value of the comment.
-     */
-    private fun getMagicComment(name: String): String? {
-        val magicPrefix = "///"
-
-        scriptText.lines().forEach {
-            if (!it.startsWith(magicPrefix)) return null
-
-            val commentData = it.substring(magicPrefix.length).split("=", limit = 2)
-
-            if (commentData.first().trim() == name) {
-                return commentData.last().trim()
-            }
-        }
-
-        return null
-    }
-
-    /**
      * Called from inside the script to register a new event handler.
      * @param eventName Name of the event.
      * @param handler JavaScript function used to handle the event.
      */
-    fun on(eventName: String, handler: Function<Event?, Void>) {
-        events[eventName] = handler
+    fun on(eventName: String, handler: Runnable) {
+        globalEvents[eventName] = handler
     }
 
     /**
      * Called when the client enables the script.
      */
     fun enable() {
-        if (state) return
+        if (scriptEnabled) {
+            return
+        }
 
-        callEvent("enable")
-        state = true
+        callGlobalEvent("enable")
+        scriptEnabled = true
     }
 
     /**
@@ -169,10 +146,12 @@ class Script(val scriptFile: File) {
      * created with this script.
      */
     fun disable() {
-        if (!state) return
+        if (!scriptEnabled) {
+            return
+        }
 
-        callEvent("disable")
-        state = false
+        callGlobalEvent("disable")
+        scriptEnabled = false
     }
 
     /**
@@ -189,9 +168,9 @@ class Script(val scriptFile: File) {
      * Calls the handler of a registered event.
      * @param eventName Name of the event to be called.
      */
-    private fun callEvent(eventName: String) {
+    private fun callGlobalEvent(eventName: String) {
         try {
-            events[eventName]?.apply(null)
+            globalEvents[eventName]?.run()
         } catch (throwable: Throwable) {
             logger.error("[ScriptAPI] Exception in script '$scriptName'!", throwable)
         }

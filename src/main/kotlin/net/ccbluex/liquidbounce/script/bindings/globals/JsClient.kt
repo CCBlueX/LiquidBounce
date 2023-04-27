@@ -6,6 +6,7 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.script.ScriptManager
+import net.ccbluex.liquidbounce.utils.client.chat
 
 object JsClient {
 
@@ -16,5 +17,11 @@ object JsClient {
     val commandManager = CommandManager
     val themeManager = ThemeManager
     val scriptManager = ScriptManager
+
+    /**
+     * Shows [message] in the client-chat
+     */
+    @Suppress("unused")
+    fun displayChatMessage(message: String) = chat(message)
 
 }
