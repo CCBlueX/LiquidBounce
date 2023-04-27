@@ -18,8 +18,7 @@
  */
 package net.ccbluex.liquidbounce.script
 
-import com.oracle.truffle.js.runtime.builtins.JSFunction
-import com.oracle.truffle.js.runtime.objects.JSObject
+import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleManager
@@ -48,7 +47,7 @@ class Script(val scriptFile: File) {
 
     private var state = false
 
-    private val events = HashMap<String, JSObject>()
+    private val events = HashMap<String, Function<Event?, Void>>()
 
     private val registeredModules = mutableListOf<Module>()
     private val registeredCommands = mutableListOf<Command>()
@@ -56,6 +55,7 @@ class Script(val scriptFile: File) {
     init {
         context = Context.newBuilder("js")
             .allowHostAccess(HostAccess.ALL)
+            .allowHostClassLookup { true }
             .allowExperimentalOptions(true)
             .option("js.nashorn-compat", "true")
             .option("js.ecmascript-version", "2021")
@@ -116,13 +116,11 @@ class Script(val scriptFile: File) {
      * @see JsModule
      */
     @Suppress("unused")
-    fun registerModule(moduleObject: Map<String, Any>, callback: JSFunction) {
-        println(moduleObject)
-        println(callback)
+    fun registerModule(moduleObject: Map<String, Any>, callback: Function<Module, Void>) {
         val module = JsModule(moduleObject)
         ModuleManager.addModule(module)
         registeredModules += module
-        // callback.(moduleObject, module)
+        callback.apply(module)
     }
 
     /**
@@ -152,7 +150,7 @@ class Script(val scriptFile: File) {
      * @param eventName Name of the event.
      * @param handler JavaScript function used to handle the event.
      */
-    fun on(eventName: String, handler: JSObject) {
+    fun on(eventName: String, handler: Function<Event?, Void>) {
         events[eventName] = handler
     }
 
@@ -193,7 +191,7 @@ class Script(val scriptFile: File) {
      */
     private fun callEvent(eventName: String) {
         try {
-            // events[eventName]?.call(null)
+            events[eventName]?.apply(null)
         } catch (throwable: Throwable) {
             logger.error("[ScriptAPI] Exception in script '$scriptName'!", throwable)
         }
