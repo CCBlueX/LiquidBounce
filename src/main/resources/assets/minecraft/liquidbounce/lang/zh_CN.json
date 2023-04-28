@@ -101,7 +101,7 @@
         
         "module.blink.description": "挂起所有移动数据包.",
         
-        "module.blockESP.description": "允许你透过墙看到你选定的方块.",
+        "module.blockESP.description": "允许你透过墙壁看到你选定的方块.",
         
         "module.blockOverlay.description": "允许你改变方块叠加层的设计.",
         
@@ -133,9 +133,9 @@
         
         "module.derp.description": "让你看起来像是在瞎折腾.",
         
-        "module.eSP.description": "允许你透过墙看到目标.",
+        "module.eSP.description": "允许你透过墙壁看到目标.",
         
-        "module.eagle.description": "自动在方块边缘潜行.(别名：FastBridge)",
+        "module.eagle.description": "到方块边缘自动潜行.(别名：FastBridge)",
         
         "module.fastBreak.description": "允许你更快地破坏方块.",
         
@@ -161,7 +161,7 @@
         
         "module.ghost.description": "允许你在死亡后四处走动并与环境互动.",
         
-        "module.ghostHand.description": "允许你透过墙与选定的方块交互.",
+        "module.ghostHand.description": "允许你透过墙壁与选定的方块交互.",
         
         "module.godMode.description": "AAC的GodMode漏洞.",
         
@@ -175,7 +175,7 @@
         
         "module.inventoryMove.description": "允许你在打开背包时行走.",
         
-        "module.itemESP.description": "允许你透过墙看到物品.",
+        "module.itemESP.description": "允许你透过墙壁看到物品.",
         
         "module.itemTeleport.description": "允许你捡起远处的物品.",
         
@@ -185,7 +185,7 @@
         
         "module.kick.description": "让你把自己从服务器中踢出去.",
         
-        "module.ladderJump.description": "碰到梯子时把你发射到天上",
+        "module.ladderJump.description": "碰到梯子时把你发射到天上.（AAC）",
         
         "module.liquidChat.description": "允许你与其他LiquidBounce用户聊天.",
         
@@ -205,7 +205,7 @@
         
         "module.nameTags.description": "更改名称标签的比例，以便你始终可以阅读它们.",
         
-        "module.noBob.description": "禁用视角晃动效果.",
+        "module.noBob.description": "禁用视角摇晃效果.",
         
         "module.noBooks.description": "阻止服务器打开书籍（强制广告，…）.",
         
@@ -229,7 +229,7 @@
         
         "module.noSlow.description": "取消灵魂沙和使用物品造成的减速效果.",
         
-        "module.noSlowBreak.description": "使用影响破坏速度的模块时自动调整破坏速度.",
+        "module.noSlowBreak.description": "在有负面影响的情况下，自动调整破坏速度.",
         
         "module.noSwing.description": "禁用击打实体/挖方块时的摆臂效果.",
         
@@ -239,7 +239,7 @@
         
         "module.parkour.description": "到方块边缘自动跳跃.",
         
-        "module.perfectHorseJump.description": "自动在当马的跳跃进度条完全充满时跳跃.",
+        "module.perfectHorseJump.description": "自动在马的跳跃进度条完全充满时跳跃.",
         
         "module.phase.description": "允许你穿过方块.",
         
@@ -269,7 +269,7 @@
         
         "module.rotations.description": "允许你看到你在服务器侧的头部和身体旋转.",
         
-        "module.safeWalk.description": "防止你坠落，如同潜行.",
+        "module.safeWalk.description": "防止你脚滑坠落，就像在潜行.",
         
         "module.scaffold.description": "自动在你的脚下放方块.",
         
