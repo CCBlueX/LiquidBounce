@@ -4,7 +4,7 @@
         "guosic"
     ],
     "translations": {
-        "menu.altManager": "账号管理器",
+        "menu.altManager": "帐号管理器",
         "menu.mods": "Mods",
         "menu.serverStatus": "服务器状态",
         "menu.configuration": "配置",
@@ -87,7 +87,7 @@
         
         "module.attackEffects.description": "自定义攻击时显示的效果.",
         
-        "module.autoAccount.description": "功能丰富的自动注册/登录和账户管理器.",
+        "module.autoAccount.description": "功能丰富的自动注册/登录和帐号管理器.",
         
         "module.autoBreak.description": "自动破坏你瞄准的方块.",
         
