@@ -100,7 +100,7 @@ dependencies {
     implementation "org.graalvm.js:js:22.3.2"
 
     runtimeOnly "org.graalvm.tools:profiler:21.0.0.2"
-    runtimeOnly "org.graalvm.tools:chromeinspector:21.0.0.2"
+    runtimeOnly "org.graalvm.tools:chromeinspector:22.3.2"
 
     // https://mvnrepository.com/artifact/io.netty/netty-codec-http
     implementation 'io.netty:netty-codec-http:4.1.82.Final'
