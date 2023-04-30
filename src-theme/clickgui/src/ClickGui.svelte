@@ -1,22 +1,23 @@
 <script>
     import Panel from "./clickgui/Panel.svelte";
+    import SearchBar from "./SearchBar.svelte";
 
     let clickGuiOpened = true;
-
-    const categories = client.getModuleManager().getCategories();
-    const panels = client.getModuleManager().getCategories()
-        .map(category => {
-            return {
-                name: category,
-                top: 30 + categories.indexOf(category) * 45,
-                left: 30
-            }
-        });
+    let categories = [];
+    let panels;
     const modules = [];
-    
-    try {
-        const moduleIterator = client.getModuleManager().iterator();
 
+    try {
+        categories = client.getModuleManager().getCategories();
+        panels = client.getModuleManager().getCategories()
+            .map(category => {
+                return {
+                    name: category,
+                    top: 30 + categories.indexOf(category) * 45,
+                    left: 30
+                }
+            });
+        const moduleIterator = client.getModuleManager().iterator();
         while (moduleIterator.hasNext()) {
             const m = moduleIterator.next();
             modules.push({
@@ -38,8 +39,9 @@
 <main>
     {#if clickGuiOpened}
         <div class="clickgui-container">
+            <SearchBar modules={modules}/>
             {#each panels as panel}
-                <Panel name={panel.name} modules={getModulesOfCategory(panel.name)} startTop={panel.top} startLeft={panel.left} />
+                <Panel name={panel.name} modules={getModulesOfCategory(panel.name)} startTop={panel.top} startLeft={panel.left}/>
             {/each}
         </div>
     {/if}
@@ -50,8 +52,8 @@
         height: 100vh;
         width: 100vw;
         -webkit-user-select: none;
-        -ms-user-select: none; 
-        user-select: none; 
+        -ms-user-select: none;
+        user-select: none;
         cursor: default;
     }
 </style>
