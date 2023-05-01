@@ -23,19 +23,13 @@ import net.minecraft.network.play.client.C03PacketPlayer
 
 object FastUse : Module("FastUse", ModuleCategory.PLAYER) {
 
-    private val modeValue = ListValue("Mode", arrayOf("Instant", "NCP", "AAC", "Custom"), "NCP")
+    private val mode by ListValue("Mode", arrayOf("Instant", "NCP", "AAC", "Custom"), "NCP")
 
-    private val noMoveValue = BoolValue("NoMove", false)
+    private val noMove by BoolValue("NoMove", false)
 
-    private val delayValue = object : IntegerValue("CustomDelay", 0, 0, 300) {
-        override fun isSupported() = modeValue.get() == "Custom"
-    }
-    private val customSpeedValue = object : IntegerValue("CustomSpeed", 2, 1, 35) {
-        override fun isSupported() = modeValue.get() == "Custom"
-    }
-    private val customTimer = object : FloatValue("CustomTimer", 1.1f, 0.5f, 2f) {
-        override fun isSupported() = modeValue.get() == "Custom"
-    }
+    private val delay by IntegerValue("CustomDelay", 0, 0..300) { mode == "Custom" }
+    private val customSpeed by IntegerValue("CustomSpeed", 2, 1..35) { mode == "Custom" }
+    private val customTimer = FloatValue("CustomTimer", 1.1f, 0.5f..2f) { mode == "Custom" }
 
     private val msTimer = MSTimer()
     private var usedTimer = false
@@ -57,7 +51,7 @@ object FastUse : Module("FastUse", ModuleCategory.PLAYER) {
         val usingItem = thePlayer.itemInUse.item
 
         if (usingItem is ItemFood || usingItem is ItemBucketMilk || usingItem is ItemPotion) {
-            when (modeValue.get().lowercase()) {
+            when (mode.lowercase()) {
                 "instant" -> {
                     repeat(35) {
                         sendPacket(C03PacketPlayer(thePlayer.onGround))
@@ -83,10 +77,10 @@ object FastUse : Module("FastUse", ModuleCategory.PLAYER) {
                     mc.timer.timerSpeed = customTimer.get()
                     usedTimer = true
 
-                    if (!msTimer.hasTimePassed(delayValue.get()))
+                    if (!msTimer.hasTimePassed(delay))
                         return
 
-                    repeat(customSpeedValue.get()) {
+                    repeat(customSpeed) {
                         sendPacket(C03PacketPlayer(thePlayer.onGround))
                     }
 
@@ -100,7 +94,7 @@ object FastUse : Module("FastUse", ModuleCategory.PLAYER) {
     fun onMove(event: MoveEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        if (!state || !thePlayer.isUsingItem || !noMoveValue.get())
+        if (!state || !thePlayer.isUsingItem || !noMove)
             return
 
         val usingItem = thePlayer.itemInUse.item
@@ -117,5 +111,5 @@ object FastUse : Module("FastUse", ModuleCategory.PLAYER) {
     }
 
     override val tag
-        get() = modeValue.get()
+        get() = mode
 }

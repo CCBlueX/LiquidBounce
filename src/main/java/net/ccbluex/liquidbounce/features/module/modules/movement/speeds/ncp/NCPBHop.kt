@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.minecraft.potion.Potion
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -80,28 +81,27 @@ class NCPBHop : SpeedMode("NCPBHop") {
         }
         moveSpeed = max(moveSpeed, baseMoveSpeed)
         val movementInput = mc.thePlayer.movementInput
-        var forward: Float = movementInput.moveForward
-        var strafe: Float = movementInput.moveStrafe
+        var forward = movementInput.moveForward
+        var strafe = movementInput.moveStrafe
         var yaw = mc.thePlayer.rotationYaw
-        if (forward == 0.0f && strafe == 0.0f) {
-            event.x = 0.0
-            event.z = 0.0
-        } else if (forward != 0.0f) {
-            if (strafe >= 1.0f) {
-                yaw += (if (forward > 0.0f) -45 else 45).toFloat()
-                strafe = 0.0f
-            } else if (strafe <= -1.0f) {
-                yaw += (if (forward > 0.0f) 45 else -45).toFloat()
-                strafe = 0.0f
+        if (forward == 0f && strafe == 0f) {
+            event.zeroXZ()
+        } else if (forward != 0f) {
+            if (strafe >= 1f) {
+                yaw += (if (forward > 0f) -45 else 45).toFloat()
+                strafe = 0f
+            } else if (strafe <= -1f) {
+                yaw += (if (forward > 0f) 45 else -45).toFloat()
+                strafe = 0f
             }
-            if (forward > 0.0f) {
-                forward = 1.0f
-            } else if (forward < 0.0f) {
-                forward = -1.0f
+            if (forward > 0f) {
+                forward = 1f
+            } else if (forward < 0f) {
+                forward = -1f
             }
         }
-        val mx2 = cos(Math.toRadians(yaw + 90.0))
-        val mz2 = sin(Math.toRadians(yaw + 90.0))
+        val mx2 = cos((yaw + 90.0).toRadians())
+        val mz2 = sin((yaw + 90.0).toRadians())
         event.x = forward.toDouble() * moveSpeed * mx2 + strafe.toDouble() * moveSpeed * mz2
         event.z = forward.toDouble() * moveSpeed * mz2 - strafe.toDouble() * moveSpeed * mx2
         mc.thePlayer.stepHeight = 0.6f

@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
+import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -29,19 +30,13 @@ object Tracers : Module("Tracers", ModuleCategory.RENDER) {
 
     private val colorMode = ListValue("Color", arrayOf("Custom", "DistanceColor", "Rainbow"), "Custom")
 
-    private val thicknessValue = FloatValue("Thickness", 2F, 1F, 5F)
+    private val thickness by FloatValue("Thickness", 2F, 1F..5F)
 
-    private val colorRedValue = object : IntegerValue("R", 0, 0, 255) {
-        override fun isSupported() = colorMode.get() == "Custom"
-    }
-    private val colorGreenValue = object : IntegerValue("G", 160, 0, 255) {
-        override fun isSupported() = colorMode.get() == "Custom"
-    }
-    private val colorBlueValue = object : IntegerValue("B", 255, 0, 255) {
-        override fun isSupported() = colorMode.get() == "Custom"
-    }
+    private val colorRed by IntegerValue("R", 0, 0..255) { colorMode.get() == "Custom" }
+    private val colorGreen by IntegerValue("G", 160, 0..255) { colorMode.get() == "Custom" }
+    private val colorBlue by IntegerValue("B", 255, 0..255) { colorMode.get() == "Custom" }
 
-    private val botValue = BoolValue("Bots", true)
+    private val bot by BoolValue("Bots", true)
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
@@ -50,7 +45,7 @@ object Tracers : Module("Tracers", ModuleCategory.RENDER) {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glEnable(GL_BLEND)
         glEnable(GL_LINE_SMOOTH)
-        glLineWidth(thicknessValue.get())
+        glLineWidth(thickness)
         glDisable(GL_TEXTURE_2D)
         glDisable(GL_DEPTH_TEST)
         glDepthMask(false)
@@ -58,7 +53,7 @@ object Tracers : Module("Tracers", ModuleCategory.RENDER) {
         glBegin(GL_LINES)
 
         for (entity in mc.theWorld.loadedEntityList) {
-            if (entity !is EntityLivingBase || !botValue.get() && isBot(entity)) continue
+            if (entity !is EntityLivingBase || !bot && isBot(entity)) continue
             if (entity != thePlayer && isSelected(entity, false)) {
                 var dist = (thePlayer.getDistanceToEntity(entity) * 2).toInt()
 
@@ -67,7 +62,7 @@ object Tracers : Module("Tracers", ModuleCategory.RENDER) {
                 val colorMode = colorMode.get().lowercase()
                 val color = when {
                     entity is EntityPlayer && entity.isClientFriend() -> Color(0, 0, 255, 150)
-                    colorMode == "custom" -> Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), 150)
+                    colorMode == "custom" -> Color(colorRed, colorGreen, colorBlue, 150)
                     colorMode == "distancecolor" -> Color(255 - dist, dist, 0, 150)
                     colorMode == "rainbow" -> ColorUtils.rainbow()
                     else -> Color(255, 255, 255, 150)
@@ -98,8 +93,8 @@ object Tracers : Module("Tracers", ModuleCategory.RENDER) {
                 - mc.renderManager.renderPosZ)
 
         val eyeVector = Vec3(0.0, 0.0, 1.0)
-                .rotatePitch((-Math.toRadians(thePlayer.rotationPitch.toDouble())).toFloat())
-                .rotateYaw((-Math.toRadians(thePlayer.rotationYaw.toDouble())).toFloat())
+                .rotatePitch(-thePlayer.rotationPitch.toRadians())
+                .rotateYaw(thePlayer.rotationYaw.toRadians())
 
         glColor(color)
 

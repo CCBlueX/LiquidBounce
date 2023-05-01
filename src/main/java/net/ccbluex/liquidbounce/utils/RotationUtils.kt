@@ -8,9 +8,7 @@ package net.ccbluex.liquidbounce.utils
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.FastBow
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
-import net.ccbluex.liquidbounce.utils.extensions.eyes
-import net.ccbluex.liquidbounce.utils.extensions.hitBox
-import net.ccbluex.liquidbounce.utils.extensions.rotation
+import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
 import net.minecraft.entity.Entity
 import net.minecraft.network.play.client.C03PacketPlayer
@@ -117,14 +115,12 @@ object RotationUtils : MinecraftInstance(), Listenable {
                     val posVec = startPos.addVector(xSearch, ySearch, zSearch)
                     val dist = eyesPos.distanceTo(posVec)
 
-                    val diffX = posVec.xCoord - eyesPos.xCoord
-                    val diffY = posVec.yCoord - eyesPos.yCoord
-                    val diffZ = posVec.zCoord - eyesPos.zCoord
+                    val (diffX, diffY, diffZ) = posVec.subtract(eyesPos)
                     val diffXZ = sqrt(diffX * diffX + diffZ * diffZ)
 
                     val rotation = Rotation(
-                        MathHelper.wrapAngleTo180_float(Math.toDegrees(atan2(diffZ, diffX)).toFloat() - 90f),
-                        MathHelper.wrapAngleTo180_float(-Math.toDegrees(atan2(diffY, diffXZ)).toFloat())
+                        MathHelper.wrapAngleTo180_float(atan2(diffZ, diffX).toDegreesF() - 90f),
+                        MathHelper.wrapAngleTo180_float(-atan2(diffY, diffXZ).toDegreesF())
                     )
 
                     val rotationVector = getVectorForRotation(rotation)
@@ -173,9 +169,8 @@ object RotationUtils : MinecraftInstance(), Listenable {
         velocity = min((velocity * velocity + velocity * 2) / 3, 1f)
 
         val rotation = Rotation(
-            Math.toDegrees(atan2(posZ, posX)).toFloat() - 90,
-            -Math.toDegrees(atan((velocity * velocity - sqrt(velocity * velocity * velocity * velocity - 0.006f * (0.006f * posSqrt * posSqrt + 2 * posY * velocity * velocity))) / (0.006f * posSqrt)))
-                .toFloat()
+            atan2(posZ, posX).toDegreesF() - 90f,
+            atan((velocity * velocity - sqrt(velocity * velocity * velocity * velocity - 0.006f * (0.006f * posSqrt * posSqrt + 2 * posY * velocity * velocity))) / (0.006f * posSqrt)).toDegreesF()
         )
         if (silent) setTargetRotation(rotation)
         else limitAngleChange(
@@ -193,14 +188,13 @@ object RotationUtils : MinecraftInstance(), Listenable {
     fun toRotation(vec: Vec3, predict: Boolean, fromEntity: Entity = mc.thePlayer): Rotation {
         val eyesPos = fromEntity.eyes
         if (predict) eyesPos.addVector(fromEntity.motionX, fromEntity.motionY, fromEntity.motionZ)
-        val diffX = vec.xCoord - eyesPos.xCoord
-        val diffY = vec.yCoord - eyesPos.yCoord
-        val diffZ = vec.zCoord - eyesPos.zCoord
+
+        val (diffX, diffY, diffZ) = vec.subtract(eyesPos)
         return Rotation(
             MathHelper.wrapAngleTo180_float(
-                Math.toDegrees(atan2(diffZ, diffX)).toFloat() - 90f
+                atan2(diffZ, diffX).toDegreesF() - 90f
             ), MathHelper.wrapAngleTo180_float(
-                -Math.toDegrees(atan2(diffY, sqrt(diffX * diffX + diffZ * diffZ))).toFloat()
+                -atan2(diffY, sqrt(diffX * diffX + diffZ * diffZ)).toDegreesF()
             )
         )
     }
@@ -350,10 +344,10 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @return target vector
      */
     fun getVectorForRotation(rotation: Rotation): Vec3 {
-        val yawCos = cos(-rotation.yaw * 0.017453292 - Math.PI)
-        val yawSin = sin(-rotation.yaw * 0.017453292 - Math.PI)
-        val pitchCos = -cos(-rotation.pitch * 0.017453292)
-        val pitchSin = sin(-rotation.pitch * 0.017453292)
+        val yawCos = cos(-rotation.yaw.toRadians() - Math.PI)
+        val yawSin = sin(-rotation.yaw.toRadians() - Math.PI)
+        val pitchCos = -cos(-rotation.pitch.toRadians()).toDouble()
+        val pitchSin = sin(-rotation.pitch.toRadians()).toDouble()
         return Vec3(yawSin * pitchCos, pitchSin, yawCos * pitchCos)
     }
 

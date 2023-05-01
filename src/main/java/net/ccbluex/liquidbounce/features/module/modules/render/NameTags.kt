@@ -35,47 +35,29 @@ import java.awt.Color
 import kotlin.math.roundToInt
 
 object NameTags : Module("NameTags", ModuleCategory.RENDER) {
-    private val healthValue = BoolValue("Health", true)
-    private val pingValue = BoolValue("Ping", false)
-    private val healthBarValue = BoolValue("Bar", false)
-    private val distanceValue = BoolValue("Distance", false)
-    private val armorValue = BoolValue("Armor", true)
-    private val botValue = BoolValue("Bots", true)
-    private val potionValue = BoolValue("Potions", true)
-    private val clearNamesValue = BoolValue("ClearNames", false)
-    private val fontValue = FontValue("Font", Fonts.font40)
-    private val scaleValue = FloatValue("Scale", 1F, 1F, 4F)
-    private val fontShadowValue = BoolValue("Shadow", true)
+    private val health by BoolValue("Health", true)
+    private val ping by BoolValue("Ping", false)
+    private val healthBar by BoolValue("Bar", false)
+    private val distance by BoolValue("Distance", false)
+    private val armor by BoolValue("Armor", true)
+    private val bot by BoolValue("Bots", true)
+    private val potion by BoolValue("Potions", true)
+    private val clearNames by BoolValue("ClearNames", false)
+    private val font by FontValue("Font", Fonts.font40)
+    private val scale by FloatValue("Scale", 1F, 1F..4F)
+    private val fontShadow by BoolValue("Shadow", true)
 
-    private val backgroundValue = BoolValue("Background", true)
-    private val backgroundColorRedValue = object : IntegerValue("Background-R", 255, 0, 255) {
-        override fun isSupported() = backgroundValue.get()
-    }
+    private val background by BoolValue("Background", true)
+    private val backgroundColorRed by IntegerValue("Background-R", 255, 0..255) { background }
+    private val backgroundColorGreen by IntegerValue("Background-G", 179, 0..255) { background }
+    private val backgroundColorBlue by IntegerValue("Background-B", 72, 0..255) { background }
+    private val backgroundColorAlpha by IntegerValue("Background-Alpha", 100, 0..255) { background }
 
-    private val backgroundColorGreenValue = object : IntegerValue("Background-G", 179, 0, 255) {
-        override fun isSupported() = backgroundValue.get()
-    }
-    private val backgroundColorBlueValue = object : IntegerValue("Background-B", 72, 0, 255) {
-        override fun isSupported() = backgroundValue.get()
-    }
-    private val backgroundColorAlphaValue = object : IntegerValue("Background-Alpha", 100, 0, 255) {
-        override fun isSupported() = backgroundValue.get()
-    }
-
-    private val borderValue = BoolValue("Border", true)
-    private val borderColorRedValue = object : IntegerValue("Border-R", 255, 0, 255) {
-        override fun isSupported() = borderValue.get()
-    }
-    private val borderColorGreenValue = object : IntegerValue("Border-G", 179, 0, 255) {
-        override fun isSupported() = borderValue.get()
-    }
-    private val borderColorBlueValue = object : IntegerValue("Border-B", 72, 0, 255) {
-        override fun isSupported() = borderValue.get()
-    }
-    private val borderColorAlphaValue = object : IntegerValue("Border-Alpha", 100, 0, 255) {
-        override fun isSupported() = borderValue.get()
-    }
-
+    private val border by BoolValue("Border", true)
+    private val borderColorRed by IntegerValue("Border-R", 255, 0..255) { border }
+    private val borderColorGreen by IntegerValue("Border-G", 179, 0..255) { border }
+    private val borderColorBlue by IntegerValue("Border-B", 72, 0..255) { border }
+    private val borderColorAlpha by IntegerValue("Border-Alpha", 100, 0..255) { border }
 
     private val inventoryBackground = ResourceLocation("textures/gui/container/inventory.png")
 
@@ -97,10 +79,10 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
         for (entity in mc.theWorld.loadedEntityList) {
             if (entity !is EntityLivingBase) continue
             if (!isSelected(entity, false)) continue
-            if (isBot(entity) && !botValue.get()) continue
+            if (isBot(entity) && !bot) continue
 
             renderNameTag(entity,
-                    if (clearNamesValue.get())
+                    if (clearNames)
                         ColorUtils.stripColor(entity.displayName?.unformattedText ?: continue)
                     else
                         (entity.displayName ?: continue).unformattedText
@@ -118,7 +100,7 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
         val thePlayer = mc.thePlayer ?: return
 
         // Set fontrenderer local
-        val fontRenderer = fontValue.get()
+        val fontRenderer = font
 
         // Push
         glPushMatrix()
@@ -136,15 +118,6 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
         glRotatef(-mc.renderManager.playerViewY, 0F, 1F, 0F)
         glRotatef(mc.renderManager.playerViewX, 1F, 0F, 0F)
 
-        // Scale
-        var distance = mc.thePlayer.getDistanceToEntity(entity) / 4F
-
-        if (distance < 1F) {
-            distance = 1F
-        }
-
-        val scale = (distance / 150F) * scaleValue.get()
-
         // Disable lightning and depth test
         disableGlCap(GL_LIGHTING, GL_DEPTH_TEST)
 
@@ -155,58 +128,56 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
         // Modify tag
         val bot = isBot(entity)
         val nameColor = if (bot) "§3" else if (entity.isInvisible) "§6" else if (entity.isSneaking) "§4" else "§7"
-        val ping = if (entity is EntityPlayer) entity.getPing() else 0
+        val playerPing = if (entity is EntityPlayer) entity.getPing() else 0
+        val playerDistance = thePlayer.getDistanceToEntity(entity)
 
-        val distanceText = if (distanceValue.get()) "§7${thePlayer.getDistanceToEntity(entity).roundToInt()}m " else ""
-        val pingText = if (pingValue.get() && entity is EntityPlayer) " §7[" + (if (ping > 200) "§c" else if (ping > 100) "§e" else "§a") + ping + "ms§7]" else ""
-        val healthText = if (healthValue.get()) "§7§c " + entity.health.toInt() + " HP" else ""
+        val distanceText = if (distance) "§7${playerDistance.roundToInt()}m " else ""
+        val pingText = if (ping && entity is EntityPlayer) " §7[" + (if (playerPing > 200) "§c" else if (playerPing > 100) "§e" else "§a") + playerPing + "ms§7]" else ""
+        val healthText = if (health) "§7§c " + entity.health.toInt() + " HP" else ""
         val botText = if (bot) " §c§lBot" else ""
 
         val text = "$distanceText$pingText$nameColor$tag$healthText$botText"
 
+        // Scale
+        val scale = ((playerDistance / 4F).coerceAtLeast(1F) / 150F) * scale
+
         glScalef(-scale, -scale, scale)
 
         val width = fontRenderer.getStringWidth(text) * 0.5f
-        fontRenderer.drawString(
-                text,
-                1F + -width,
-                if (fontRenderer == Fonts.minecraftFont) 1F else 1.5F,
-                0xFFFFFF,
-                true
-        )
+        fontRenderer.drawString(text, 1F + -width, if (fontRenderer == Fonts.minecraftFont) 1F else 1.5F, 0xFFFFFF, true)
 
         val dist = width + 4F - (-width - 2F)
 
         glDisable(GL_TEXTURE_2D)
         glEnable(GL_BLEND)
 
-        val bgColor = if (backgroundValue.get()) {
+        val bgColor = if (background) {
             // Background
-            Color(backgroundColorRedValue.get(), backgroundColorGreenValue.get(), backgroundColorBlueValue.get(), backgroundColorAlphaValue.get())
+            Color(backgroundColorRed, backgroundColorGreen, backgroundColorBlue, backgroundColorAlpha)
         } else {
             // Transparent
             Color(0, 0, 0, 0)
         }
 
-        val borderColor = Color(borderColorRedValue.get(), borderColorGreenValue.get(), borderColorBlueValue.get(), borderColorAlphaValue.get())
+        val borderColor = Color(borderColorRed, borderColorGreen, borderColorBlue, borderColorAlpha)
 
-        if (borderValue.get())
-            quickDrawBorderedRect(-width - 2F, -2F, width + 4F, fontRenderer.FONT_HEIGHT + 2F + if (healthBarValue.get()) 2F else 0F, 2F, borderColor.rgb, bgColor.rgb)
+        if (border)
+            quickDrawBorderedRect(-width - 2F, -2F, width + 4F, fontRenderer.FONT_HEIGHT + 2F + if (healthBar) 2F else 0F, 2F, borderColor.rgb, bgColor.rgb)
         else
-            quickDrawRect(-width - 2F, -2F, width + 4F, fontRenderer.FONT_HEIGHT + 2F + if (healthBarValue.get()) 2F else 0F, bgColor.rgb)
+            quickDrawRect(-width - 2F, -2F, width + 4F, fontRenderer.FONT_HEIGHT + 2F + if (healthBar) 2F else 0F, bgColor.rgb)
 
-        if (healthBarValue.get()) {
+        if (healthBar) {
             quickDrawRect(-width - 2F, fontRenderer.FONT_HEIGHT + 3F, -width - 2F + dist, fontRenderer.FONT_HEIGHT + 4F, Color(10, 155, 10).rgb)
-            quickDrawRect(-width - 2F, fontRenderer.FONT_HEIGHT + 3F, -width - 2F + (dist * (entity.health.toFloat() / entity.maxHealth.toFloat()).coerceIn(0F, 1F)), fontRenderer.FONT_HEIGHT + 4F, Color(10, 255, 10).rgb)
+            quickDrawRect(-width - 2F, fontRenderer.FONT_HEIGHT + 3F, -width - 2F + (dist * (entity.health / entity.maxHealth).coerceIn(0F, 1F)), fontRenderer.FONT_HEIGHT + 4F, Color(10, 255, 10).rgb)
         }
 
         glEnable(GL_TEXTURE_2D)
 
         fontRenderer.drawString(text, 1F + -width, if (fontRenderer == Fonts.minecraftFont) 1F else 1.5F,
-                0xFFFFFF, fontShadowValue.get())
+                0xFFFFFF, fontShadow)
 
         var foundPotion = false
-        if (potionValue.get() && entity is EntityPlayer) {
+        if (potion && entity is EntityPlayer) {
             val potions = (entity.getActivePotionEffects() as Collection<PotionEffect>).map { Potion.potionTypes[it.getPotionID()] }.filter { it.hasStatusIcon() }
             if (!potions.isEmpty()) {
                 foundPotion = true
@@ -237,14 +208,14 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
             }
         }
 
-        if (armorValue.get() && entity is EntityPlayer) {
+        if (armor && entity is EntityPlayer) {
             for (index in 0..4) {
                 if (entity.getEquipmentInSlot(index) == null) {
                     continue
                 }
 
                 mc.renderItem.zLevel = -147F
-                mc.renderItem.renderItemAndEffectIntoGUI(entity.getEquipmentInSlot(index), -50 + index * 20, if (potionValue.get() && foundPotion) -42 else -22)
+                mc.renderItem.renderItemAndEffectIntoGUI(entity.getEquipmentInSlot(index), -50 + index * 20, if (potion && foundPotion) -42 else -22)
             }
 
             enableAlpha()

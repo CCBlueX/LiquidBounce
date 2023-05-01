@@ -37,6 +37,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
+import static net.minecraft.network.play.client.C19PacketResourcePackStatus.Action.ACCEPTED;
+import static net.minecraft.network.play.client.C19PacketResourcePackStatus.Action.FAILED_DOWNLOAD;
 
 @Mixin(NetHandlerPlayClient.class)
 public abstract class MixinNetHandlerPlayClient {
@@ -73,9 +75,9 @@ public abstract class MixinNetHandlerPlayClient {
                 ClientUtils.INSTANCE.getLOGGER().error("Failed to handle resource pack", e);
 
                 // Accepted is always sent.
-                netManager.sendPacket(new C19PacketResourcePackStatus(hash, C19PacketResourcePackStatus.Action.ACCEPTED));
+                netManager.sendPacket(new C19PacketResourcePackStatus(hash, ACCEPTED));
                 // But we fail of course.
-                netManager.sendPacket(new C19PacketResourcePackStatus(hash, C19PacketResourcePackStatus.Action.FAILED_DOWNLOAD));
+                netManager.sendPacket(new C19PacketResourcePackStatus(hash, FAILED_DOWNLOAD));
 
                 callbackInfo.cancel();
             }

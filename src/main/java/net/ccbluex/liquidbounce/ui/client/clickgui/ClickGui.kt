@@ -8,9 +8,10 @@ package net.ccbluex.liquidbounce.ui.client.clickgui
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.guiColor
-import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.scaleValue
-import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.scrollsValue
+import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.scale
+import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.scrolls
 import net.ccbluex.liquidbounce.file.FileManager.clickGuiConfig
 import net.ccbluex.liquidbounce.file.FileManager.saveConfig
 import net.ccbluex.liquidbounce.ui.client.GuiClientSettings
@@ -43,8 +44,12 @@ object ClickGui : GuiScreen() {
     private val hudIcon = ResourceLocation("${CLIENT_NAME.lowercase()}/custom_hud_icon.png")
     private val settingsIcon = ResourceLocation("${CLIENT_NAME.lowercase()}/settings_icon.png")
     var style: Style = LiquidBounceStyle
-    var mouseX = 0
-    var mouseY = 0
+    private var mouseX = 0
+    private var mouseY = 0
+
+    // Used when closing ClickGui using its key bind, prevents it from getting closed instantly.
+    // Caused by keyTyped being called along with onKey that opens the ClickGui.
+    private var ignoreClosing = false
 
     fun setDefault() {
         panels.clear()
@@ -137,14 +142,14 @@ object ClickGui : GuiScreen() {
         // Enable DisplayList optimization
         assumeNonVolatile = true
 
-        mouseX = (x / scaleValue.get()).roundToInt()
-        mouseY = (y / scaleValue.get()).roundToInt()
+        mouseX = (x / scale).roundToInt()
+        mouseY = (y / scale).roundToInt()
 
         drawDefaultBackground()
         drawImage(hudIcon, 9, height - 41, 32, 32)
         drawImage(settingsIcon, 46, height - 41, 32, 32)
 
-        val scale = scaleValue.get().toDouble()
+        val scale = scale.toDouble()
         glScaled(scale, scale, scale)
 
         for (panel in panels) {
@@ -152,11 +157,18 @@ object ClickGui : GuiScreen() {
             panel.drawScreenAndClick(mouseX, mouseY)
         }
 
-        for (panel in panels) {
+        descriptions@ for (panel in panels.reversed()) {
+            // Don't draw descriptions when hovering over a panel header.
+            if (panel.isHovered(mouseX, mouseY))
+                break
+
             for (element in panel.elements) {
                 if (element is ModuleElement) {
-                    if (element.isVisible && element.isHovered(mouseX, mouseY) && element.y <= panel.y + panel.fade)
+                    if (element.isVisible && element.isHovered(mouseX, mouseY) && element.y <= panel.y + panel.fade) {
                         style.drawDescription(mouseX, mouseY, element.module.description)
+                        // Don't draw descriptions for any module elements below.
+                        break@descriptions
+                    }
                 }
             }
         }
@@ -189,10 +201,10 @@ object ClickGui : GuiScreen() {
 
     private fun handleScroll(wheel: Int) {
         if (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)) {
-            scaleValue.set(scaleValue.get() + wheel * 0.0001)
+            scale += wheel * 0.0001f
         }
-        else if (scrollsValue.get()) {
-            for (panel in panels) panel.y += wheel / 10
+        else if (scrolls) {
+            for (panel in panels) panel.y = panel.parseY(panel.y + wheel / 10)
         }
     }
 
@@ -205,11 +217,11 @@ object ClickGui : GuiScreen() {
             return
         }
 
-        mouseX = (x / scaleValue.get()).roundToInt()
-        mouseY = (y / scaleValue.get()).roundToInt()
+        mouseX = (x / scale).roundToInt()
+        mouseY = (y / scale).roundToInt()
 
         // Handle foremost panel.
-        for (panel in panels.reversed()) {
+        panels.reversed().forEachIndexed { index, panel ->
             if (panel.mouseClicked(mouseX, mouseY, mouseButton))
                 return
 
@@ -219,14 +231,18 @@ object ClickGui : GuiScreen() {
                 panel.x2 = panel.x - mouseX
                 panel.y2 = panel.y - mouseY
                 panel.drag = true
+
+                // Move dragged panel to top.
+                panels.removeAt(panels.lastIndex - index)
+                panels.add(panel)
                 return
             }
         }
     }
 
     public override fun mouseReleased(x: Int, y: Int, state: Int) {
-        mouseX = (x / scaleValue.get()).roundToInt()
-        mouseY = (y / scaleValue.get()).roundToInt()
+        mouseX = (x / scale).roundToInt()
+        mouseY = (y / scale).roundToInt()
 
         for (panel in panels) panel.mouseReleased(mouseX, mouseY, state)
     }
@@ -247,9 +263,25 @@ object ClickGui : GuiScreen() {
         super.updateScreen()
     }
 
+    override fun keyTyped(typedChar: Char, keyCode: Int) {
+        // Close ClickGUI by using its key bind.
+        if (keyCode == ClickGUI.keyBind) {
+            if (ignoreClosing) ignoreClosing = false
+            else mc.displayGuiScreen(null)
+
+            return
+        }
+
+        super.keyTyped(typedChar, keyCode)
+    }
+
     override fun onGuiClosed() {
         saveConfig(clickGuiConfig)
         for (panel in panels) panel.fade = 0
+    }
+
+    override fun initGui() {
+        ignoreClosing = true
     }
 
     override fun doesGuiPauseGame() = false

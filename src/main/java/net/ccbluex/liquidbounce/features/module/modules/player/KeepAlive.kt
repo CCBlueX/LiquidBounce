@@ -9,9 +9,8 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-
 import net.ccbluex.liquidbounce.utils.InventoryUtils
-import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.init.Items
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
@@ -19,7 +18,7 @@ import net.minecraft.network.play.client.C09PacketHeldItemChange
 
 object KeepAlive : Module("KeepAlive", ModuleCategory.PLAYER) {
 
-    val modeValue = ListValue("Mode", arrayOf("/heal", "Soup"), "/heal")
+    val mode by ListValue("Mode", arrayOf("/heal", "Soup"), "/heal")
 
     private var runOnce = false
 
@@ -30,15 +29,17 @@ object KeepAlive : Module("KeepAlive", ModuleCategory.PLAYER) {
         if (thePlayer.isDead || thePlayer.health <= 0) {
             if (runOnce) return
 
-            when (modeValue.get().lowercase()) {
+            when (mode.lowercase()) {
                 "/heal" -> thePlayer.sendChatMessage("/heal")
                 "soup" -> {
                     val soupInHotbar = InventoryUtils.findItem(36, 45, Items.mushroom_stew)
 
                     if (soupInHotbar != -1) {
-                        sendPacket(C09PacketHeldItemChange(soupInHotbar - 36))
-                        sendPacket(C08PacketPlayerBlockPlacement(thePlayer.inventory.getStackInSlot(soupInHotbar)))
-                        sendPacket(C09PacketHeldItemChange(thePlayer.inventory.currentItem))
+                        sendPackets(
+                            C09PacketHeldItemChange(soupInHotbar - 36),
+                            C08PacketPlayerBlockPlacement(thePlayer.inventory.getStackInSlot(soupInHotbar)),
+                            C09PacketHeldItemChange(thePlayer.inventory.currentItem)
+                        )
                     }
                 }
             }

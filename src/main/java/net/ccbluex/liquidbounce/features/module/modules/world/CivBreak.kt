@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
@@ -30,12 +31,12 @@ object CivBreak : Module("CivBreak", ModuleCategory.WORLD) {
     private var blockPos: BlockPos? = null
     private var enumFacing: EnumFacing? = null
 
-    private val range = FloatValue("Range", 5F, 1F, 6F)
-    private val rotationsValue = BoolValue("Rotations", true)
-    private val visualSwingValue = BoolValue("VisualSwing", true)
+    private val range = FloatValue("Range", 5F, 1F..6F)
+    private val rotations by BoolValue("Rotations", true)
+    private val visualSwing by BoolValue("VisualSwing", true)
 
-    private val airResetValue = BoolValue("Air-Reset", true)
-    private val rangeResetValue = BoolValue("Range-Reset", true)
+    private val airReset by BoolValue("Air-Reset", true)
+    private val rangeReset by BoolValue("Range-Reset", true)
 
 
     @EventTarget
@@ -47,8 +48,10 @@ object CivBreak : Module("CivBreak", ModuleCategory.WORLD) {
         enumFacing = event.WEnumFacing ?: return
 
         // Break
-        sendPacket(C07PacketPlayerDigging(START_DESTROY_BLOCK, blockPos, enumFacing))
-        sendPacket(C07PacketPlayerDigging(STOP_DESTROY_BLOCK, blockPos, enumFacing))
+        sendPackets(
+            C07PacketPlayerDigging(START_DESTROY_BLOCK, blockPos, enumFacing),
+            C07PacketPlayerDigging(STOP_DESTROY_BLOCK, blockPos, enumFacing)
+        )
     }
 
     @EventTarget
@@ -56,8 +59,8 @@ object CivBreak : Module("CivBreak", ModuleCategory.WORLD) {
         val pos = blockPos ?: return
         val isAirBlock = getBlock(pos) == Blocks.air
 
-        if (airResetValue.get() && isAirBlock ||
-                rangeResetValue.get() && getCenterDistance(pos) > range.get()) {
+        if (airReset && isAirBlock ||
+                rangeReset && getCenterDistance(pos) > range.get()) {
             blockPos = null
             return
         }
@@ -66,20 +69,20 @@ object CivBreak : Module("CivBreak", ModuleCategory.WORLD) {
             return
 
         when (event.eventState) {
-            EventState.PRE -> if (rotationsValue.get())
+            EventState.PRE -> if (rotations)
                 setTargetRotation((faceBlock(pos) ?: return).rotation)
 
             EventState.POST -> {
-                if (visualSwingValue.get())
+                if (visualSwing)
                     mc.thePlayer.swingItem()
                 else
                     sendPacket(C0APacketAnimation())
 
                 // Break
-                sendPacket(C07PacketPlayerDigging(START_DESTROY_BLOCK,
-                        blockPos, enumFacing))
-                sendPacket(C07PacketPlayerDigging(STOP_DESTROY_BLOCK,
-                        blockPos, enumFacing))
+                sendPackets(
+                    C07PacketPlayerDigging(START_DESTROY_BLOCK, blockPos, enumFacing),
+                    C07PacketPlayerDigging(STOP_DESTROY_BLOCK, blockPos, enumFacing)
+                )
                 mc.playerController.clickBlock(blockPos, enumFacing)
             }
         }

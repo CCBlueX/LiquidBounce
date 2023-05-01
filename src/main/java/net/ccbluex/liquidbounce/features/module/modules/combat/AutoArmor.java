@@ -31,6 +31,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket;
+import static net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets;
+import static net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT;
+
 public class AutoArmor extends Module {
 
     public AutoArmor() {
@@ -133,9 +137,11 @@ public class AutoArmor extends Module {
      */
     private boolean move(int item, boolean isArmorSlot) {
         if (!isArmorSlot && item < 9 && hotbarValue.get() && !(mc.currentScreen instanceof GuiInventory)) {
-            mc.getNetHandler().addToSendQueue(new C09PacketHeldItemChange(item));
-            mc.getNetHandler().addToSendQueue(new C08PacketPlayerBlockPlacement(mc.thePlayer.inventoryContainer.getSlot(item).getStack()));
-            mc.getNetHandler().addToSendQueue(new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem));
+            sendPackets(
+                new C09PacketHeldItemChange(item),
+                new C08PacketPlayerBlockPlacement(mc.thePlayer.inventoryContainer.getSlot(item).getStack()),
+                new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem)
+            );
 
             delay = TimeUtils.INSTANCE.randomDelay(minDelayValue.get(), maxDelayValue.get());
 
@@ -143,7 +149,7 @@ public class AutoArmor extends Module {
         } else if (!(noMoveValue.get() && MovementUtils.INSTANCE.isMoving()) && (!invOpenValue.get() || mc.currentScreen instanceof GuiInventory) && item != -1) {
             final boolean openInventory = simulateInventory.get() && !(mc.currentScreen instanceof GuiInventory);
 
-            if (openInventory) mc.getNetHandler().addToSendQueue(new C16PacketClientStatus(C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT));
+            if (openInventory) sendPacket(new C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT));
 
             boolean full = isArmorSlot;
 
@@ -165,7 +171,7 @@ public class AutoArmor extends Module {
             delay = TimeUtils.INSTANCE.randomDelay(minDelayValue.get(), maxDelayValue.get());
 
             if (openInventory)
-                mc.getNetHandler().addToSendQueue(new C0DPacketCloseWindow());
+                sendPacket(new C0DPacketCloseWindow());
 
             return true;
         }

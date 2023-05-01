@@ -164,7 +164,7 @@ public abstract class MixinEntityRenderer {
             final Reach reach = Reach.INSTANCE;
 
             double d0 = reach.getState() ? reach.getMaxRange() : (double) mc.playerController.getBlockReachDistance();
-            mc.objectMouseOver = entity.rayTrace(reach.getState() ? reach.getBuildReachValue().get() : d0, p_getMouseOver_1_);
+            mc.objectMouseOver = entity.rayTrace(reach.getState() ? reach.getBuildReach() : d0, p_getMouseOver_1_);
             double d1 = d0;
             Vec3 vec3 = entity.getPositionEyes(p_getMouseOver_1_);
             boolean flag = false;
@@ -180,7 +180,7 @@ public abstract class MixinEntityRenderer {
             }
 
             if (reach.getState()) {
-                final MovingObjectPosition movingObjectPosition = entity.rayTrace(reach.getBuildReachValue().get(), p_getMouseOver_1_);
+                final MovingObjectPosition movingObjectPosition = entity.rayTrace(reach.getBuildReach(), p_getMouseOver_1_);
 
                 if (movingObjectPosition != null) d1 = movingObjectPosition.hitVec.distanceTo(vec3);
             }
@@ -229,7 +229,7 @@ public abstract class MixinEntityRenderer {
                 }
             }
 
-            if (pointedEntity != null && flag && vec3.distanceTo(vec33) > (reach.getState() ? reach.getCombatReachValue().get() : 3.0D)) {
+            if (pointedEntity != null && flag && vec3.distanceTo(vec33) > (reach.getState() ? reach.getCombatReach() : 3.0D)) {
                 pointedEntity = null;
                 mc.objectMouseOver = new MovingObjectPosition(MovingObjectPosition.MovingObjectType.MISS, Objects.requireNonNull(vec33), null, new BlockPos(vec33));
             }

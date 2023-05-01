@@ -23,31 +23,17 @@ import net.minecraft.entity.projectile.EntityArrow
 import java.awt.Color
 
 object ItemESP : Module("ItemESP", ModuleCategory.RENDER) {
-    private val modeValue = ListValue("Mode", arrayOf("Box", "OtherBox", "Glow"), "Box")
+    private val mode by ListValue("Mode", arrayOf("Box", "OtherBox", "Glow"), "Box")
 
-    private val glowRenderScale = object : FloatValue("Glow-Renderscale", 1f, 0.1f, 2f) {
-        override fun isSupported() = modeValue.get() == "Glow"
-    }
-    private val glowRadius = object : IntegerValue("Glow-Radius", 4, 1, 5) {
-        override fun isSupported() = modeValue.get() == "Glow"
-    }
-    private val glowFade = object : IntegerValue("Glow-Fade", 10, 0, 30) {
-        override fun isSupported() = modeValue.get() == "Glow"
-    }
-    private val glowTargetAlpha = object : FloatValue("Glow-Target-Alpha", 0f, 0f, 1f) {
-        override fun isSupported() = modeValue.get() == "Glow"
-    }
+    private val glowRenderScale = FloatValue("Glow-Renderscale", 1f, 0.1f..2f) { mode == "Glow" }
+    private val glowRadius = IntegerValue("Glow-Radius", 4, 1..5) { mode == "Glow" }
+    private val glowFade = IntegerValue("Glow-Fade", 10, 0..30) { mode == "Glow" }
+    private val glowTargetAlpha = FloatValue("Glow-Target-Alpha", 0f, 0f..1f) { mode == "Glow" }
 
     private val colorRainbow = BoolValue("Rainbow", true)
-    private val colorRedValue = object : IntegerValue("R", 0, 0, 255) {
-        override fun isSupported() = !colorRainbow.get()
-    }
-    private val colorGreenValue = object : IntegerValue("G", 255, 0, 255) {
-        override fun isSupported() = !colorRainbow.get()
-    }
-    private val colorBlueValue = object : IntegerValue("B", 0, 0, 255) {
-        override fun isSupported() = !colorRainbow.get()
-    }
+    private val colorRed by IntegerValue("R", 0, 0..255) { !colorRainbow.get() }
+    private val colorGreen by IntegerValue("G", 255, 0..255) { !colorRainbow.get() }
+    private val colorBlue by IntegerValue("B", 0, 0..255) { !colorRainbow.get() }
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
@@ -55,7 +41,7 @@ object ItemESP : Module("ItemESP", ModuleCategory.RENDER) {
         if(mc.theWorld == null) return
 
         mc.theWorld.loadedEntityList.filter { it is EntityItem || it is EntityArrow }.forEach { entity ->
-            when (modeValue.get().lowercase()) {
+            when (mode.lowercase()) {
                 "box" -> drawEntityBox(entity, getColor(), true)
                 "otherbox" -> drawEntityBox(entity, getColor(), false)
             }
@@ -64,7 +50,7 @@ object ItemESP : Module("ItemESP", ModuleCategory.RENDER) {
 
     @EventTarget
     fun onRender2D(event: Render2DEvent) {
-        val mode = modeValue.get().lowercase()
+        val mode = mode.lowercase()
         val partialTicks = event.partialTicks
         val shader = if (mode == "glow") GlowShader.GLOW_SHADER else null ?: return
 
@@ -82,7 +68,7 @@ object ItemESP : Module("ItemESP", ModuleCategory.RENDER) {
     }
 
     private fun getColor():Color{
-        return if (colorRainbow.get()) rainbow() else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
+        return if (colorRainbow.get()) rainbow() else Color(colorRed, colorGreen, colorBlue)
     }
 
 }

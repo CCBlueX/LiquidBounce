@@ -5,15 +5,14 @@
  */
 package net.ccbluex.liquidbounce.utils
 
-import net.ccbluex.liquidbounce.utils.PacketUtils.realMotionX
+import net.minecraft.network.NetworkManager
 import net.minecraft.network.Packet
 import net.minecraft.network.play.INetHandlerPlayClient
-import net.minecraft.network.play.server.*
+import net.minecraft.network.play.server.S12PacketEntityVelocity
 import kotlin.math.roundToInt
 
-object PacketUtils : MinecraftInstance() {
-    var triggerEvent = true
 
+object PacketUtils : MinecraftInstance() {
     var S12PacketEntityVelocity.realMotionX: Float
         get() = motionX / 8000f
         set(value) {
@@ -32,10 +31,35 @@ object PacketUtils : MinecraftInstance() {
             motionX = (value * 8000f).roundToInt()
         }
 
+    // TODO: Remove annotations once all modules are converted to kotlin.
+    @JvmStatic
+    @JvmOverloads
     fun sendPacket(packet: Packet<*>, triggerEvent: Boolean = true) {
-        this.triggerEvent = triggerEvent
-        mc.netHandler.addToSendQueue(packet)
+        if (triggerEvent) {
+            mc.netHandler?.addToSendQueue(packet)
+            return
+        }
+
+        val netManager = mc.netHandler?.networkManager ?: return
+        if (netManager.isChannelOpen) {
+            netManager.flushOutboundQueue()
+            netManager.dispatchPacket(packet, null)
+        } else {
+            netManager.readWriteLock.writeLock().lock()
+            try {
+                netManager.outboundPacketsQueue.add(
+                    NetworkManager.InboundHandlerTuplePacketListener(packet, null)
+                )
+            } finally {
+                netManager.readWriteLock.writeLock().unlock()
+            }
+        }
     }
+
+    @JvmStatic
+    @JvmOverloads
+    fun sendPackets(vararg packets: Packet<*>, triggerEvents: Boolean = true) =
+        packets.forEach { sendPacket(it, triggerEvents) }
 
     fun handlePacket(packet: Packet<INetHandlerPlayClient>?) = packet?.processPacket(mc.netHandler)
 
@@ -46,9 +70,5 @@ object PacketUtils : MinecraftInstance() {
             else -> PacketType.UNKNOWN
         }
 
-    enum class PacketType {
-        SERVER,
-        CLIENT,
-        UNKNOWN
-    }
+    enum class PacketType { CLIENT, SERVER, UNKNOWN }
 }

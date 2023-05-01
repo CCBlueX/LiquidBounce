@@ -21,7 +21,7 @@ class TeleportCubeCraft : SpeedMode("TeleportCubeCraft") {
     override fun onMove(event: MoveEvent) {
         if (isMoving && mc.thePlayer.onGround && timer.hasTimePassed(300)) {
             val yaw = direction
-            val length = Speed.cubecraftPortLengthValue.get()
+            val length = Speed.cubecraftPortLength
             event.x = -sin(yaw) * length
             event.z = cos(yaw) * length
             timer.reset()

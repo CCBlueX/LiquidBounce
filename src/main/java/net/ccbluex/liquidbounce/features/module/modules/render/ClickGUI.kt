@@ -24,36 +24,28 @@ import net.minecraft.network.play.server.S2EPacketCloseWindow
 import org.lwjgl.input.Keyboard
 import java.awt.Color
 
-object ClickGUI : Module("ClickGUI", ModuleCategory.RENDER, keyBind = Keyboard.KEY_RSHIFT, defaultInArray = false, canEnable = false) {
-    private val styleValue: ListValue =
+object ClickGUI : Module("ClickGUI", ModuleCategory.RENDER, Keyboard.KEY_RSHIFT, defaultInArray = false, canEnable = false) {
+    private val style by
         object : ListValue("Style", arrayOf("LiquidBounce", "Null", "Slowly", "Black"), "LiquidBounce") {
             override fun onChanged(oldValue: String, newValue: String) = updateStyle()
         }
-    val scaleValue = FloatValue("Scale", 0.8f, 0.5f, 1.5f)
-    val maxElementsValue = IntegerValue("MaxElements", 15, 1, 30)
-    val fadeSpeedValue = FloatValue("FadeSpeed", 1f, 0.5f, 2f)
-    val scrollsValue = BoolValue("Scrolls", false)
-    val spacedModulesValue = BoolValue("SpacedModules", false)
-    val panelsBorderValue = BoolValue("PanelsNotBeyondBorder", true)
+    var scale by FloatValue("Scale", 0.8f, 0.5f..1.5f)
+    val maxElements by IntegerValue("MaxElements", 15, 1..30)
+    val fadeSpeed by FloatValue("FadeSpeed", 1f, 0.5f..2f)
+    val scrolls by BoolValue("Scrolls", false)
+    val spacedModules by BoolValue("SpacedModules", false)
+    val panelsBorder by BoolValue("PanelsNotBeyondBorder", true)
 
 
-    private val colorRainbow = object : BoolValue("Rainbow", false) {
-        override fun isSupported() = styleValue.get() !in arrayOf("Slowly", "Black")
-    }
-    private val colorRedValue = object : IntegerValue("R", 0, 0, 255) {
-        override fun isSupported() = colorRainbow.isSupported() && !colorRainbow.get()
-    }
-    private val colorGreenValue = object : IntegerValue("G", 160, 0, 255) {
-        override fun isSupported() = colorRainbow.isSupported() && !colorRainbow.get()
-    }
-    private val colorBlueValue = object : IntegerValue("B", 255, 0, 255) {
-        override fun isSupported() = colorRainbow.isSupported() && !colorRainbow.get()
-    }
+    private val colorRainbow = BoolValue("Rainbow", false) { style !in arrayOf("Slowly", "Black") }
+    private val colorRed by IntegerValue("R", 0, 0..255) { colorRainbow.isSupported() && !colorRainbow.get() }
+    private val colorGreen by IntegerValue("G", 160, 0..255) { colorRainbow.isSupported() && !colorRainbow.get() }
+    private val colorBlue by IntegerValue("B", 255, 0..255) { colorRainbow.isSupported() && !colorRainbow.get() }
 
     val guiColor: Int
         get() {
             return if (colorRainbow.get()) ColorUtils.rainbow().rgb
-            else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get()).rgb
+            else Color(colorRed, colorGreen, colorBlue).rgb
         }
 
     override fun onEnable() {
@@ -62,7 +54,7 @@ object ClickGUI : Module("ClickGUI", ModuleCategory.RENDER, keyBind = Keyboard.K
     }
 
     private fun updateStyle() {
-        clickGui.style = when (styleValue.get()) {
+        clickGui.style = when (style) {
             "LiquidBounce" -> LiquidBounceStyle
             "Null" -> NullStyle
             "Slowly" -> SlowlyStyle

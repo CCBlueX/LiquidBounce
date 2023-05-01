@@ -14,12 +14,12 @@ import net.minecraft.init.Blocks
 import net.minecraft.util.AxisAlignedBB
 
 object BlockWalk : Module("BlockWalk", ModuleCategory.MOVEMENT) {
-    private val cobwebValue = BoolValue("Cobweb", true)
-    private val snowValue = BoolValue("Snow", true)
+    private val cobweb by BoolValue("Cobweb", true)
+    private val snow by BoolValue("Snow", true)
 
     @EventTarget
     fun onBlockBB(event: BlockBBEvent) {
-        if (cobwebValue.get() && event.block == Blocks.web || snowValue.get() && event.block == Blocks.snow_layer)
+        if (cobweb && event.block == Blocks.web || snow && event.block == Blocks.snow_layer)
             event.boundingBox = AxisAlignedBB.fromBounds(event.x.toDouble(), event.y.toDouble(), event.z.toDouble(),
                     event.x + 1.0, event.y + 1.0, event.z + 1.0)
     }

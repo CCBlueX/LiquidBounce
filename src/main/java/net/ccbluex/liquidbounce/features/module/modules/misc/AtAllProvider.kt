@@ -19,21 +19,22 @@ import java.util.concurrent.LinkedBlockingQueue
 
 object AtAllProvider : Module("AtAllProvider", ModuleCategory.MISC) {
 
-    private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 1000, 0, 20000) {
-        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minDelayValue.get())
+    private val maxDelayValue: IntegerValue = object : IntegerValue("MaxDelay", 1000, 0..20000) {
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minDelay)
     }
+    private val maxDelay by maxDelayValue
 
-    private val minDelayValue: IntegerValue = object : IntegerValue("MinDelay", 500, 0, 20000) {
-        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxDelayValue.get())
+    private val minDelay by object : IntegerValue("MinDelay", 500, 0..20000) {
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxDelay)
 
         override fun isSupported() = !maxDelayValue.isMinimal()
     }
 
-    private val retryValue = BoolValue("Retry", false)
+    private val retry by BoolValue("Retry", false)
     private val sendQueue = LinkedBlockingQueue<String>()
     private val retryQueue = mutableListOf<String>()
     private val msTimer = MSTimer()
-    private var delay = randomDelay(minDelayValue.get(), maxDelayValue.get())
+    private var delay = randomDelay(minDelay, maxDelay)
 
     override fun onDisable() {
         synchronized(sendQueue) {
@@ -54,7 +55,7 @@ object AtAllProvider : Module("AtAllProvider", ModuleCategory.MISC) {
         try {
             synchronized(sendQueue) {
                 if (sendQueue.isEmpty()) {
-                    if (!retryValue.get() || retryQueue.isEmpty())
+                    if (!retry || retryQueue.isEmpty())
                         return
                     else
                         sendQueue.addAll(retryQueue)
@@ -63,7 +64,7 @@ object AtAllProvider : Module("AtAllProvider", ModuleCategory.MISC) {
                 mc.thePlayer.sendChatMessage(sendQueue.take())
                 msTimer.reset()
 
-                delay = randomDelay(minDelayValue.get(), maxDelayValue.get())
+                delay = randomDelay(minDelay, maxDelay)
             }
         } catch (e: InterruptedException) {
             e.printStackTrace()
@@ -85,7 +86,7 @@ object AtAllProvider : Module("AtAllProvider", ModuleCategory.MISC) {
 
                         sendQueue.add(message.replace("@a", playerName))
                     }
-                    if (retryValue.get()) {
+                    if (retry) {
                         synchronized(retryQueue) {
                             retryQueue.clear()
                             retryQueue.addAll(listOf(*sendQueue.toTypedArray()))

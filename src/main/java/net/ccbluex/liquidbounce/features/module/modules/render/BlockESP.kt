@@ -26,21 +26,15 @@ import net.minecraft.util.BlockPos
 import java.awt.Color
 
 object BlockESP : Module("BlockESP", ModuleCategory.RENDER) {
-    private val modeValue = ListValue("Mode", arrayOf("Box", "2D"), "Box")
-    private val blockValue = BlockValue("Block", 168)
-    private val radiusValue = IntegerValue("Radius", 40, 5, 120)
-    private val blockLimitValue = IntegerValue("BlockLimit", 256, 0, 2056)
+    private val mode by ListValue("Mode", arrayOf("Box", "2D"), "Box")
+    private val block by BlockValue("Block", 168)
+    private val radius by IntegerValue("Radius", 40, 5..120)
+    private val blockLimit by IntegerValue("BlockLimit", 256, 0..2056)
 
     private val colorRainbow = BoolValue("Rainbow", false)
-    private val colorRedValue = object : IntegerValue("R", 255, 0, 255) {
-        override fun isSupported() = !colorRainbow.get()
-    }
-    private val colorGreenValue = object : IntegerValue("G", 179, 0, 255) {
-        override fun isSupported() = !colorRainbow.get()
-    }
-    private val colorBlueValue = object : IntegerValue("B", 72, 0, 255) {
-        override fun isSupported() = !colorRainbow.get()
-    }
+    private val colorRed by IntegerValue("R", 255, 0..255) { !colorRainbow.get() }
+    private val colorGreen by IntegerValue("G", 179, 0..255) { !colorRainbow.get() }
+    private val colorBlue by IntegerValue("B", 72, 0..255) { !colorRainbow.get() }
 
     private val searchTimer = MSTimer()
     private val posList: MutableList<BlockPos> = ArrayList()
@@ -49,8 +43,8 @@ object BlockESP : Module("BlockESP", ModuleCategory.RENDER) {
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         if (searchTimer.hasTimePassed(1000) && (thread?.isAlive != true)) {
-            val radius = radiusValue.get()
-            val selectedBlock = Block.getBlockById(blockValue.get())
+            val radius = radius
+            val selectedBlock = Block.getBlockById(block)
 
             if (selectedBlock == null || selectedBlock == Blocks.air)
                 return
@@ -70,7 +64,7 @@ object BlockESP : Module("BlockESP", ModuleCategory.RENDER) {
                             val blockPos = BlockPos(xPos, yPos, zPos)
                             val block = getBlock(blockPos)
 
-                            if (block == selectedBlock && blockList.size < blockLimitValue.get()) blockList.add(blockPos)
+                            if (block == selectedBlock && blockList.size < blockLimit) blockList.add(blockPos)
                         }
                     }
                 }
@@ -89,9 +83,9 @@ object BlockESP : Module("BlockESP", ModuleCategory.RENDER) {
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
         synchronized(posList) {
-            val color = if (colorRainbow.get()) rainbow() else Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get())
+            val color = if (colorRainbow.get()) rainbow() else Color(colorRed, colorGreen, colorBlue)
             for (blockPos in posList) {
-                when (modeValue.get().lowercase()) {
+                when (mode.lowercase()) {
                     "box" -> drawBlockBox(blockPos, color, true)
                     "2d" -> draw2D(blockPos, color.rgb, Color.BLACK.rgb)
                 }
@@ -100,5 +94,5 @@ object BlockESP : Module("BlockESP", ModuleCategory.RENDER) {
     }
 
     override val tag
-        get() = getBlockName(blockValue.get())
+        get() = getBlockName(block)
 }

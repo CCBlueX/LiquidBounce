@@ -14,27 +14,28 @@ import net.ccbluex.liquidbounce.utils.timer.TimeUtils.randomClickDelay
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.client.settings.KeyBinding
 
-object Trigger : Module("Trigger", category = ModuleCategory.COMBAT) {
+object Trigger : Module("Trigger", ModuleCategory.COMBAT) {
 
-    private val maxCPS: IntegerValue = object : IntegerValue("MaxCPS", 8, 1, 20) {
-        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minCPS.get())
-
-        override fun onChanged(oldValue: Int, newValue: Int) {
-            delay = randomClickDelay(minCPS.get(), get())
-        }
-    }
-
-    private val minCPS: IntegerValue = object : IntegerValue("MinCPS", 5, 1, 20) {
-        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxCPS.get())
+    private val maxCPSValue: IntegerValue = object : IntegerValue("MaxCPS", 8, 1..20) {
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minCPS)
 
         override fun onChanged(oldValue: Int, newValue: Int) {
-            delay = randomClickDelay(get(), maxCPS.get())
+            delay = randomClickDelay(minCPS, get())
+        }
+    }
+    private val maxCPS by maxCPSValue
+
+    private val minCPS: Int by object : IntegerValue("MinCPS", 5, 1..20) {
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxCPS)
+
+        override fun onChanged(oldValue: Int, newValue: Int) {
+            delay = randomClickDelay(get(), maxCPS)
         }
 
-        override fun isSupported() = !maxCPS.isMinimal()
+        override fun isSupported() = !maxCPSValue.isMinimal()
     }
 
-    private var delay = randomClickDelay(minCPS.get(), maxCPS.get())
+    private var delay = randomClickDelay(minCPS, maxCPS)
     private var lastSwing = 0L
 
     @EventTarget
@@ -46,7 +47,7 @@ object Trigger : Module("Trigger", category = ModuleCategory.COMBAT) {
             KeyBinding.onTick(mc.gameSettings.keyBindAttack.keyCode) // Minecraft Click handling
 
             lastSwing = System.currentTimeMillis()
-            delay = randomClickDelay(minCPS.get(), maxCPS.get())
+            delay = randomClickDelay(minCPS, maxCPS)
         }
     }
 }

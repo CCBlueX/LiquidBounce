@@ -12,9 +12,9 @@ import net.minecraft.entity.EntityLivingBase
 
 object Teams : Module("Teams", ModuleCategory.MISC) {
 
-    private val scoreboardValue = BoolValue("ScoreboardTeam", true)
-    private val colorValue = BoolValue("Color", true)
-    private val gommeSWValue = BoolValue("GommeSW", false)
+    private val scoreboard by BoolValue("ScoreboardTeam", true)
+    private val color by BoolValue("Color", true)
+    private val gommeSW by BoolValue("GommeSW", false)
 
     /**
      * Check if [entity] is in your own team using scoreboard, name color or team prefix
@@ -22,13 +22,13 @@ object Teams : Module("Teams", ModuleCategory.MISC) {
     fun isInYourTeam(entity: EntityLivingBase): Boolean {
         val thePlayer = mc.thePlayer ?: return false
 
-        if (scoreboardValue.get() && thePlayer.team != null && entity.team != null &&
+        if (scoreboard && thePlayer.team != null && entity.team != null &&
                 thePlayer.team.isSameTeam(entity.team))
             return true
 
         val displayName = thePlayer.displayName
 
-        if (gommeSWValue.get() && displayName != null && entity.displayName != null) {
+        if (gommeSW && displayName != null && entity.displayName != null) {
             val targetName = entity.displayName.formattedText.replace("§r", "")
             val clientName = displayName.formattedText.replace("§r", "")
             if (targetName.startsWith("T") && clientName.startsWith("T"))
@@ -36,7 +36,7 @@ object Teams : Module("Teams", ModuleCategory.MISC) {
                     return targetName[1] == clientName[1]
         }
 
-        if (colorValue.get() && displayName != null && entity.displayName != null) {
+        if (color && displayName != null && entity.displayName != null) {
             val targetName = entity.displayName.formattedText.replace("§r", "")
             val clientName = displayName.formattedText.replace("§r", "")
             return targetName.startsWith("§${clientName[1]}")

@@ -7,14 +7,14 @@ package net.ccbluex.liquidbounce.ui.client.clickgui.elements
 
 import net.ccbluex.liquidbounce.LiquidBounce.clickGui
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.spacedModulesValue
+import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.spacedModules
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
 
 @SideOnly(Side.CLIENT)
 class ModuleElement(val module: Module) : ButtonElement(module.name) {
     override val displayName: String
-        get() = module.getName(spacedModulesValue.get())
+        get() = module.getName(spacedModules)
 
     var showSettings = false
     var settingsWidth = 0

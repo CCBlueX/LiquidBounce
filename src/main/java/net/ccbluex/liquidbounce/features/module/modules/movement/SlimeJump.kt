@@ -16,8 +16,8 @@ import net.minecraft.block.BlockSlime
 
 object SlimeJump : Module("SlimeJump", ModuleCategory.MOVEMENT) {
 
-    private val motionValue = FloatValue("Motion", 0.42f, 0.2f, 1f)
-    private val modeValue = ListValue("Mode", arrayOf("Set", "Add"), "Add")
+    private val motion by FloatValue("Motion", 0.42f, 0.2f..1f)
+    private val mode by ListValue("Mode", arrayOf("Set", "Add"), "Add")
 
     @EventTarget
     fun onJump(event: JumpEvent) {
@@ -26,9 +26,9 @@ object SlimeJump : Module("SlimeJump", ModuleCategory.MOVEMENT) {
         if (mc.thePlayer != null && mc.theWorld != null && getBlock(thePlayer.position.down()) is BlockSlime) {
             event.cancelEvent()
 
-            when (modeValue.get().lowercase()) {
-                "set" -> thePlayer.motionY = motionValue.get().toDouble()
-                "add" -> thePlayer.motionY += motionValue.get()
+            when (mode.lowercase()) {
+                "set" -> thePlayer.motionY = motion.toDouble()
+                "add" -> thePlayer.motionY += motion
             }
         }
     }

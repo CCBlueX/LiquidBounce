@@ -15,10 +15,10 @@ import net.ccbluex.liquidbounce.value.TextValue
 
 object NameProtect : Module("NameProtect", ModuleCategory.MISC) {
 
-    val allPlayersValue = BoolValue("AllPlayers", false)
+    val allPlayers by BoolValue("AllPlayers", false)
 
-    val skinProtectValue = BoolValue("SkinProtect", true)
-    private val fakeNameValue = TextValue("FakeName", "&cMe")
+    val skinProtect by BoolValue("SkinProtect", true)
+    private val fakeName by TextValue("FakeName", "&cMe")
 
     /**
      * Handle text messages from font renderer
@@ -44,10 +44,10 @@ object NameProtect : Module("NameProtect", ModuleCategory.MISC) {
         }
 
         // Replace original name with fake name
-        newText = newText.replace(p.name, translateAlternateColorCodes(fakeNameValue.get()) + "§f")
+        newText = newText.replace(p.name, translateAlternateColorCodes(fakeName) + "§f")
 
         // Replace all other player names with "Protected User"
-        if (allPlayersValue.get()) {
+        if (allPlayers) {
             for (playerInfo in mc.netHandler.playerInfoMap) {
                 newText = newText.replace(playerInfo.gameProfile.name, "Protected User")
             }

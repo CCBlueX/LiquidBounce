@@ -39,18 +39,16 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
      * SETTINGS
      */
 
-    private val blockValue = BlockValue("Block", 26)
-    private val throughWallsValue = ListValue("ThroughWalls", arrayOf("None", "Raycast", "Around"), "None")
-    private val rangeValue = FloatValue("Range", 5F, 1F, 7F)
-    private val actionValue = ListValue("Action", arrayOf("Destroy", "Use"), "Destroy")
-    private val instantValue = object : BoolValue("Instant", false) {
-        override fun isSupported() = actionValue.get() == "Destroy" || surroundingsValue.get()
-    }
-    private val switchValue = IntegerValue("SwitchDelay", 250, 0, 1000)
-    private val swingValue = BoolValue("Swing", true)
-    private val rotationsValue = BoolValue("Rotations", true)
-    private val surroundingsValue = BoolValue("Surroundings", true)
-    private val noHitValue = BoolValue("NoHit", false)
+    private val block by BlockValue("Block", 26)
+    private val throughWalls by ListValue("ThroughWalls", arrayOf("None", "Raycast", "Around"), "None")
+    private val range by FloatValue("Range", 5F, 1F..7F)
+    private val action by ListValue("Action", arrayOf("Destroy", "Use"), "Destroy")
+    private val instant by BoolValue("Instant", false) { action == "Destroy" || surroundings }
+    private val switch by IntegerValue("SwitchDelay", 250, 0..1000)
+    private val swing by BoolValue("Swing", true)
+    private val rotations by BoolValue("Rotations", true)
+    private val surroundings by BoolValue("Surroundings", true)
+    private val noHit by BoolValue("NoHit", false)
 
 
     /**
@@ -67,13 +65,13 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        if (noHitValue.get() && KillAura.state && KillAura.target != null)
+        if (noHit && KillAura.state && KillAura.target != null)
             return
 
-        val targetId = blockValue.get()
+        val targetId = block
 
         if (pos == null || Block.getIdFromBlock(getBlock(pos!!)) != targetId ||
-                getCenterDistance(pos!!) > rangeValue.get())
+                getCenterDistance(pos!!) > range)
             pos = find(targetId)
 
         // Reset current breaking when there is no target block
@@ -83,23 +81,23 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
         }
 
         var currentPos = pos ?: return
-        var rotations = faceBlock(currentPos) ?: return
+        var rotation = faceBlock(currentPos) ?: return
 
         // Surroundings
-        var surroundings = false
+        var areSurroundings = false
 
-        if (surroundingsValue.get()) {
+        if (surroundings) {
             val eyes = thePlayer.eyes
-            val blockPos = mc.theWorld.rayTraceBlocks(eyes, rotations.vec, false,
+            val blockPos = mc.theWorld.rayTraceBlocks(eyes, rotation.vec, false,
                     false, true)?.blockPos
 
             if (blockPos != null && blockPos.getBlock() != Blocks.air) {
                 if (currentPos.x != blockPos.x || currentPos.y != blockPos.y || currentPos.z != blockPos.z)
-                    surroundings = true
+                    areSurroundings = true
 
                 pos = blockPos
                 currentPos = pos ?: return
-                rotations = faceBlock(currentPos) ?: return
+                rotation = faceBlock(currentPos) ?: return
             }
         }
 
@@ -111,7 +109,7 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
 
         oldPos = currentPos
 
-        if (!switchTimer.hasTimePassed(switchValue.get()))
+        if (!switchTimer.hasTimePassed(switch))
             return
 
         // Block hit delay
@@ -121,27 +119,25 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
         }
 
         // Face block
-        if (rotationsValue.get())
-            setTargetRotation(rotations.rotation)
+        if (rotations)
+            setTargetRotation(rotation.rotation)
 
         when {
             // Destroy block
-            actionValue.get() == "Destroy" || surroundings -> {
+            action == "Destroy" || areSurroundings -> {
                 // Auto Tool
                 if (AutoTool.state)
                     AutoTool.switchSlot(currentPos)
 
                 // Break block
-                if (instantValue.get()) {
+                if (instant) {
                     // CivBreak style block breaking
-                    sendPacket(C07PacketPlayerDigging(START_DESTROY_BLOCK,
-                            currentPos, EnumFacing.DOWN))
+                    sendPacket(C07PacketPlayerDigging(START_DESTROY_BLOCK, currentPos, EnumFacing.DOWN))
 
-                    if (swingValue.get())
+                    if (swing)
                         thePlayer.swingItem()
 
-                    sendPacket(C07PacketPlayerDigging(STOP_DESTROY_BLOCK,
-                            currentPos, EnumFacing.DOWN))
+                    sendPacket(C07PacketPlayerDigging(STOP_DESTROY_BLOCK, currentPos, EnumFacing.DOWN))
                     currentDamage = 0F
                     return
                 }
@@ -150,12 +146,11 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
                 val block = currentPos.getBlock() ?: return
 
                 if (currentDamage == 0F) {
-                    sendPacket(C07PacketPlayerDigging(START_DESTROY_BLOCK,
-                            currentPos, EnumFacing.DOWN))
+                    sendPacket(C07PacketPlayerDigging(START_DESTROY_BLOCK, currentPos, EnumFacing.DOWN))
 
                     if (thePlayer.capabilities.isCreativeMode ||
                             block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld, pos) >= 1f) {
-                        if (swingValue.get())
+                        if (swing)
                             thePlayer.swingItem()
                         mc.playerController.onPlayerDestroyBlock(pos, EnumFacing.DOWN)
 
@@ -165,16 +160,14 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
                     }
                 }
 
-                if (swingValue.get())
+                if (swing)
                     thePlayer.swingItem()
 
                 currentDamage += block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld, currentPos)
                 mc.theWorld.sendBlockBreakProgress(thePlayer.entityId, currentPos, (currentDamage * 10F).toInt() - 1)
 
                 if (currentDamage >= 1F) {
-                    sendPacket(C07PacketPlayerDigging(
-                        STOP_DESTROY_BLOCK,
-                            currentPos, EnumFacing.DOWN))
+                    sendPacket(C07PacketPlayerDigging(STOP_DESTROY_BLOCK, currentPos, EnumFacing.DOWN))
                     mc.playerController.onPlayerDestroyBlock(currentPos, EnumFacing.DOWN)
                     blockHitDelay = 4
                     currentDamage = 0F
@@ -183,16 +176,16 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
             }
 
             // Use block
-            actionValue.get() == "Use" -> if (mc.playerController.onPlayerRightClick(
-                            thePlayer, mc.theWorld, thePlayer.heldItem, pos, EnumFacing.DOWN,
+            action == "Use" ->
+                if (mc.playerController.onPlayerRightClick(thePlayer, mc.theWorld, thePlayer.heldItem, pos, EnumFacing.DOWN,
                             Vec3(currentPos.x.toDouble(), currentPos.y.toDouble(), currentPos.z.toDouble()))) {
-                if (swingValue.get())
-                    thePlayer.swingItem()
+                    if (swing)
+                        thePlayer.swingItem()
 
-                blockHitDelay = 4
-                currentDamage = 0F
-                pos = null
-            }
+                    blockHitDelay = 4
+                    currentDamage = 0F
+                    pos = null
+                }
         }
     }
 
@@ -217,7 +210,7 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
     private fun find(targetID: Int): BlockPos? {
         val thePlayer = mc.thePlayer ?: return null
 
-        val radius = rangeValue.get().toInt() + 1
+        val radius = range.toInt() + 1
 
         var nearestBlockDistance = Double.MAX_VALUE
         var nearestBlock: BlockPos? = null
@@ -232,9 +225,9 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
                     if (Block.getIdFromBlock(block) != targetID) continue
 
                     val distance = getCenterDistance(blockPos)
-                    if (distance > rangeValue.get()) continue
+                    if (distance > range) continue
                     if (nearestBlockDistance < distance) continue
-                    if (!isHitable(blockPos) && !surroundingsValue.get()) continue
+                    if (!isHitable(blockPos) && !surroundings) continue
 
                     nearestBlockDistance = distance
                     nearestBlock = blockPos
@@ -251,7 +244,7 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
     private fun isHitable(blockPos: BlockPos): Boolean {
         val thePlayer = mc.thePlayer ?: return false
 
-        return when (throughWallsValue.get().lowercase()) {
+        return when (throughWalls.lowercase()) {
             "raycast" -> {
                 val eyesPos = thePlayer.eyes
                 val movingObjectPosition = mc.theWorld.rayTraceBlocks(eyesPos,
@@ -266,5 +259,5 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD) {
     }
 
     override val tag
-        get() = getBlockName(blockValue.get())
+        get() = getBlockName(block)
 }

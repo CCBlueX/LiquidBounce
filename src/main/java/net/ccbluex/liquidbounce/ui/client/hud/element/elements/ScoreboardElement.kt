@@ -34,21 +34,21 @@ import java.awt.Color
 class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F,
                         side: Side = Side(Side.Horizontal.RIGHT, Side.Vertical.MIDDLE)) : Element(x, y, scale, side) {
 
-    private val textRedValue = IntegerValue("Text-R", 255, 0, 255)
-    private val textGreenValue = IntegerValue("Text-G", 255, 0, 255)
-    private val textBlueValue = IntegerValue("Text-B", 255, 0, 255)
+    private val textRedValue = IntegerValue("Text-R", 255, 0..255)
+    private val textGreenValue = IntegerValue("Text-G", 255, 0..255)
+    private val textBlueValue = IntegerValue("Text-B", 255, 0..255)
 
-    private val backgroundColorRedValue = IntegerValue("Background-R", 0, 0, 255)
-    private val backgroundColorGreenValue = IntegerValue("Background-G", 0, 0, 255)
-    private val backgroundColorBlueValue = IntegerValue("Background-B", 0, 0, 255)
-    private val backgroundColorAlphaValue = IntegerValue("Background-Alpha", 95, 0, 255)
+    private val backgroundColorRedValue = IntegerValue("Background-R", 0, 0..255)
+    private val backgroundColorGreenValue = IntegerValue("Background-G", 0, 0..255)
+    private val backgroundColorBlueValue = IntegerValue("Background-B", 0, 0..255)
+    private val backgroundColorAlphaValue = IntegerValue("Background-Alpha", 95, 0..255)
 
     private val rectValue = BoolValue("Rect", false)
     private val rectColorModeValue = ListValue("Rect-Color", arrayOf("Custom", "Rainbow"), "Custom")
-    private val rectColorRedValue = IntegerValue("Rect-R", 0, 0, 255)
-    private val rectColorGreenValue = IntegerValue("Rect-G", 111, 0, 255)
-    private val rectColorBlueValue = IntegerValue("Rect-B", 255, 0, 255)
-    private val rectColorBlueAlpha = IntegerValue("Rect-Alpha", 255, 0, 255)
+    private val rectColorRedValue = IntegerValue("Rect-R", 0, 0..255)
+    private val rectColorGreenValue = IntegerValue("Rect-G", 111, 0..255)
+    private val rectColorBlueValue = IntegerValue("Rect-B", 255, 0..255)
+    private val rectColorBlueAlpha = IntegerValue("Rect-Alpha", 255, 0..255)
 
     private val shadowValue = BoolValue("Shadow", false)
     private val fontValue = FontValue("Font", Fonts.minecraftFont)

@@ -31,58 +31,34 @@ import java.awt.Color
 class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
 
     private val rectRainbow by BoolValue("Rectangle Rainbow", false)
-    private val rectRed by object : IntegerValue("Rectangle Red", 0, 0, 255) {
-        override fun isSupported() = !rectRainbow
-    }
-    private val rectGreen by object : IntegerValue("Rectangle Green", 148, 0, 255) {
-        override fun isSupported() = !rectRainbow
-    }
-    private val rectBlue by object : IntegerValue("Rectangle Blue", 255, 0, 255) {
-        override fun isSupported() = !rectRainbow
-    }
-    private val rectAlpha by object : IntegerValue("Rectangle Alpha", 140, 0, 255) {
-        override fun isSupported() = !rectRainbow
-    }
+    private val rectRed by IntegerValue("Rectangle Red", 0, 0..255) { !rectRainbow }
+    private val rectGreen by IntegerValue("Rectangle Green", 148, 0..255) { !rectRainbow }
+    private val rectBlue by IntegerValue("Rectangle Blue", 255, 0..255) { !rectRainbow }
+    private val rectAlpha by IntegerValue("Rectangle Alpha", 140, 0..255) { !rectRainbow }
 
-    private val backgroundRed by IntegerValue("Background Red", 0, 0, 255)
-    private val backgroundGreen by IntegerValue("Background Green", 0, 0, 255)
-    private val backgroundBlue by IntegerValue("Background Blue", 0, 0, 255)
-    private val backgroundAlpha by IntegerValue("Background Alpha", 150, 0, 255)
+    private val backgroundRed by IntegerValue("Background Red", 0, 0..255)
+    private val backgroundGreen by IntegerValue("Background Green", 0, 0..255)
+    private val backgroundBlue by IntegerValue("Background Blue", 0, 0..255)
+    private val backgroundAlpha by IntegerValue("Background Alpha", 150, 0..255)
 
     private val borderValue by BoolValue("Border", true)
-    private val borderStrength by object : FloatValue("Border Strength", 2F, 1F, 5F) {
-        override fun isSupported() = borderValue
-    }
-    private val borderRainbow by object : BoolValue("Border Rainbow", false) {
-        override fun isSupported() = borderValue
-    }
-    private val borderRed by object : IntegerValue("Border Red", 0, 0, 255) {
-        override fun isSupported() = borderValue && !borderRainbow
-    }
-    private val borderGreen by object : IntegerValue("Border Green", 0, 0, 255) {
-        override fun isSupported() = borderValue && !borderRainbow
-    }
-    private val borderBlue by object : IntegerValue("Border Blue", 0, 0, 255) {
-        override fun isSupported() = borderValue && !borderRainbow
-    }
-    private val borderAlpha by object : IntegerValue("Border Alpha", 150, 0, 255) {
-        override fun isSupported() = borderValue && !borderRainbow
-    }
+    private val borderStrength by FloatValue("Border Strength", 2F, 1F..5F) { borderValue }
+    private val borderRainbow by BoolValue("Border Rainbow", false) { borderValue }
+    private val borderRed by IntegerValue("Border Red", 0, 0..255) { borderValue && !borderRainbow }
+    private val borderGreen by IntegerValue("Border Green", 0, 0..255) { borderValue && !borderRainbow }
+    private val borderBlue by IntegerValue("Border Blue", 0, 0..255) { borderValue && !borderRainbow }
+    private val borderAlpha by IntegerValue("Border Alpha", 150, 0..255) { borderValue && !borderRainbow }
 
-    private val rainbowX by object : FloatValue("Rainbow-X", -1000F, -2000F, 2000F) {
-        override fun isSupported() = rectRainbow || (borderValue && borderRainbow)
-    }
-    private val rainbowY by object : FloatValue("Rainbow-Y", -1000F, -2000F, 2000F) {
-        override fun isSupported() = rectRainbow || (borderValue && borderRainbow)
-    }
+    private val rainbowX by FloatValue("Rainbow-X", -1000F, -2000F..2000F) { rectRainbow || (borderValue && borderRainbow) }
+    private val rainbowY by FloatValue("Rainbow-Y", -1000F, -2000F..2000F) { rectRainbow || (borderValue && borderRainbow) }
 
     private val arrows by BoolValue("Arrows", true)
     private val font by FontValue("Font", Fonts.font35)
     private val textShadow by BoolValue("TextShadow", false)
     private val textFade by BoolValue("TextFade", true)
-    private val textPositionY by FloatValue("TextPosition-Y", 2F, 0F, 5F)
-    private val width by FloatValue("Width", 60F, 55F, 100F)
-    private val tabHeight by FloatValue("TabHeight", 12F, 10F, 15F)
+    private val textPositionY by FloatValue("TextPosition-Y", 2F, 0F..5F)
+    private val width by FloatValue("Width", 60F, 55F..100F)
+    private val tabHeight by FloatValue("TabHeight", 12F, 10F..15F)
     private val upperCase by BoolValue("UpperCase", false)
 
     private val tabs = mutableListOf<Tab>()

@@ -39,7 +39,7 @@ object Setting {
         val min = (settingInfo.getMember("min") as Number).toInt()
         val max = (settingInfo.getMember("max") as Number).toInt()
 
-        return IntegerValue(name, default, min, max)
+        return IntegerValue(name, default, min..max)
     }
 
     /**
@@ -54,7 +54,7 @@ object Setting {
         val min = (settingInfo.getMember("min") as Number).toFloat()
         val max = (settingInfo.getMember("max") as Number).toFloat()
 
-        return FloatValue(name, default, min, max)
+        return FloatValue(name, default, min..max)
     }
 
     /**

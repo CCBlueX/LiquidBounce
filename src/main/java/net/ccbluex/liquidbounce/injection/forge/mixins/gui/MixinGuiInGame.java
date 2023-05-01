@@ -46,7 +46,7 @@ public abstract class MixinGuiInGame {
     private void renderTooltip(ScaledResolution sr, float partialTicks, CallbackInfo callbackInfo) {
         final HUD hud = HUD.INSTANCE;
 
-        if (mc.getRenderViewEntity() instanceof EntityPlayer && hud.getState() && hud.getBlackHotbarValue().get()) {
+        if (mc.getRenderViewEntity() instanceof EntityPlayer && hud.getState() && hud.getBlackHotbar()) {
             EntityPlayer entityPlayer = (EntityPlayer) mc.getRenderViewEntity();
 
             int middleScreen = sr.getScaledWidth() / 2;
@@ -88,7 +88,7 @@ public abstract class MixinGuiInGame {
     private void renderPumpkinOverlay(final CallbackInfo callbackInfo) {
         final AntiBlind antiBlind = AntiBlind.INSTANCE;
 
-        if(antiBlind.getState() && antiBlind.getPumpkinEffectValue().get())
+        if(antiBlind.getState() && antiBlind.getPumpkinEffect())
             callbackInfo.cancel();
     }
 

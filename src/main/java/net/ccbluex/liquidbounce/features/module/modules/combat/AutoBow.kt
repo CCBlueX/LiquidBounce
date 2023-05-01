@@ -17,16 +17,16 @@ import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.RELEASE_U
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 
-object AutoBow : Module("AutoBow", category = ModuleCategory.COMBAT) {
+object AutoBow : Module("AutoBow", ModuleCategory.COMBAT) {
 
-    private val waitForBowAimbot = BoolValue("WaitForBowAimbot", true)
+    private val waitForBowAimbot by BoolValue("WaitForBowAimbot", true)
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer
 
         if (thePlayer.isUsingItem && thePlayer.heldItem?.item is ItemBow &&
-                thePlayer.itemInUseDuration > 20 && (!waitForBowAimbot.get() || !BowAimbot.state || BowAimbot.hasTarget())) {
+                thePlayer.itemInUseDuration > 20 && (!waitForBowAimbot || !BowAimbot.state || BowAimbot.hasTarget())) {
             thePlayer.stopUsingItem()
             sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
         }

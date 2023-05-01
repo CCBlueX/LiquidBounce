@@ -13,11 +13,12 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
-import net.ccbluex.liquidbounce.utils.misc.RandomUtils
+import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -32,25 +33,23 @@ import net.minecraft.network.play.client.C16PacketClientStatus
 import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT
 import net.minecraft.potion.Potion
 
-object AutoPot : Module("AutoPot", category = ModuleCategory.COMBAT) {
+object AutoPot : Module("AutoPot", ModuleCategory.COMBAT) {
 
-    private val healthValue = FloatValue("Health", 15F, 1F, 20F)
-    private val delayValue = IntegerValue("Delay", 500, 500, 1000)
+    private val health by FloatValue("Health", 15F, 1F..20F)
+    private val delay by IntegerValue("Delay", 500, 500..1000)
 
-    private val openInventoryValue = BoolValue("OpenInv", false)
-    private val simulateInventory = object : BoolValue("SimulateInventory", true) {
-        override fun isSupported() = !openInventoryValue.get()
-    }
+    private val openInventory by BoolValue("OpenInv", false)
+    private val simulateInventory by BoolValue("SimulateInventory", true) { !openInventory }
 
-    private val groundDistanceValue = FloatValue("GroundDistance", 2F, 0F, 5F)
-    private val modeValue = ListValue("Mode", arrayOf("Normal", "Jump", "Port"), "Normal")
+    private val groundDistance by FloatValue("GroundDistance", 2F, 0F..5F)
+    private val mode by ListValue("Mode", arrayOf("Normal", "Jump", "Port"), "Normal")
 
     private val msTimer = MSTimer()
     private var potion = -1
 
     @EventTarget
     fun onMotion(motionEvent: MotionEvent) {
-        if (!msTimer.hasTimePassed(delayValue.get()) || mc.playerController.isInCreativeMode)
+        if (!msTimer.hasTimePassed(delay) || mc.playerController.isInCreativeMode)
             return
 
         val thePlayer = mc.thePlayer ?: return
@@ -60,9 +59,9 @@ object AutoPot : Module("AutoPot", category = ModuleCategory.COMBAT) {
                 // Hotbar Potion
                 val potionInHotbar = findPotion(36, 45)
 
-                if (thePlayer.health <= healthValue.get() && potionInHotbar != -1) {
+                if (thePlayer.health <= health && potionInHotbar != -1) {
                     if (thePlayer.onGround) {
-                        when (modeValue.get().lowercase()) {
+                        when (mode.lowercase()) {
                             "jump" -> thePlayer.jump()
                             "port" -> thePlayer.moveEntity(0.0, 0.42, 0.0)
                         }
@@ -73,16 +72,14 @@ object AutoPot : Module("AutoPot", category = ModuleCategory.COMBAT) {
 
                     val collisionBlock = fallingPlayer.findCollision(20)?.pos
 
-                    if (thePlayer.posY - (collisionBlock?.y ?: return) - 1 > groundDistanceValue.get())
+                    if (thePlayer.posY - (collisionBlock?.y ?: return) - 1 > groundDistance)
                         return
 
                     potion = potionInHotbar
                     sendPacket(C09PacketHeldItemChange(potion - 36))
 
                     if (thePlayer.rotationPitch <= 80F) {
-                        setTargetRotation(
-                            Rotation(thePlayer.rotationYaw, RandomUtils.nextFloat(80F, 90F)).fixedSensitivity()
-                        )
+                        setTargetRotation(Rotation(thePlayer.rotationYaw, nextFloat(80F, 90F)).fixedSensitivity())
                     }
                     return
                 }
@@ -90,10 +87,10 @@ object AutoPot : Module("AutoPot", category = ModuleCategory.COMBAT) {
                 // Inventory Potion -> Hotbar Potion
                 val potionInInventory = findPotion(9, 36)
                 if (potionInInventory != -1 && InventoryUtils.hasSpaceHotbar()) {
-                    if (openInventoryValue.get() && mc.currentScreen !is GuiInventory)
+                    if (openInventory && mc.currentScreen !is GuiInventory)
                         return
 
-                    val openInventory = mc.currentScreen !is GuiInventory && simulateInventory.get()
+                    val openInventory = mc.currentScreen !is GuiInventory && simulateInventory
 
                     if (openInventory)
                         sendPacket(C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT))
@@ -111,8 +108,10 @@ object AutoPot : Module("AutoPot", category = ModuleCategory.COMBAT) {
                     val itemStack = thePlayer.inventoryContainer.getSlot(potion).stack
 
                     if (itemStack != null) {
-                        sendPacket(C08PacketPlayerBlockPlacement(itemStack))
-                        sendPacket(C09PacketHeldItemChange(thePlayer.inventory.currentItem))
+                        sendPackets(
+                            C08PacketPlayerBlockPlacement(itemStack),
+                            C09PacketHeldItemChange(thePlayer.inventory.currentItem)
+                        )
 
                         msTimer.reset()
                     }
@@ -148,6 +147,6 @@ object AutoPot : Module("AutoPot", category = ModuleCategory.COMBAT) {
     }
 
     override val tag
-        get() = healthValue.get().toString()
+        get() = health.toString()
 
 }

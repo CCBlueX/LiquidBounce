@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac
 
 import net.ccbluex.liquidbounce.event.MoveEvent
-import net.ccbluex.liquidbounce.features.module.modules.movement.Speed.aacGroundTimerValue
+import net.ccbluex.liquidbounce.features.module.modules.movement.Speed.aacGroundTimer
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
@@ -17,7 +17,7 @@ class AACGround2 : SpeedMode("AACGround2") {
         if (!isMoving)
             return
 
-        mc.timer.timerSpeed = aacGroundTimerValue.get()
+        mc.timer.timerSpeed = aacGroundTimer
         strafe(0.02f)
     }
 

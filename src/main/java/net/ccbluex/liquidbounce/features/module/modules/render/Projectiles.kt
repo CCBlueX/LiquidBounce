@@ -11,6 +11,8 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.RotationUtils.targetRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getState
+import net.ccbluex.liquidbounce.utils.extensions.toRadians
+import net.ccbluex.liquidbounce.utils.extensions.toRadiansD
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.interpolateHSB
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.disableGlCap
@@ -33,22 +35,15 @@ import org.lwjgl.util.glu.Cylinder
 import org.lwjgl.util.glu.GLU
 import java.awt.Color
 import kotlin.math.cos
-import kotlin.math.floor
 import kotlin.math.sin
 import kotlin.math.sqrt
 
 object Projectiles : Module("Projectiles", ModuleCategory.RENDER) {
     private val colorMode = ListValue("Color", arrayOf("Custom", "BowPower", "Rainbow"), "Custom")
 
-    private val colorRedValue = object : IntegerValue("R", 0, 0, 255) {
-        override fun isSupported() = colorMode.get() == "Custom"
-    }
-    private val colorGreenValue = object : IntegerValue("G", 160, 0, 255) {
-        override fun isSupported() = colorMode.get() == "Custom"
-    }
-    private val colorBlueValue = object : IntegerValue("B", 255, 0, 255) {
-        override fun isSupported() = colorMode.get() == "Custom"
-    }
+    private val colorRed by IntegerValue("R", 0, 0..255) { colorMode.get() == "Custom" }
+    private val colorGreen by IntegerValue("G", 160, 0..255) { colorMode.get() == "Custom" }
+    private val colorBlue by IntegerValue("B", 255, 0..255) { colorMode.get() == "Custom" }
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
@@ -105,8 +100,8 @@ object Projectiles : Module("Projectiles", ModuleCategory.RENDER) {
 
         val pitch = targetRotation?.pitch ?: thePlayer.rotationPitch
 
-        val yawRadians = Math.toRadians(yaw.toDouble())
-        val pitchRadians = Math.toRadians(pitch.toDouble())
+        val yawRadians = yaw.toRadiansD()
+        val pitchRadians = pitch.toRadiansD()
 
         // Positions
         var posX = renderManager.renderPosX - cos(yawRadians) * 0.16F
@@ -114,13 +109,11 @@ object Projectiles : Module("Projectiles", ModuleCategory.RENDER) {
         var posZ = renderManager.renderPosZ - sin(yawRadians) * 0.16F
 
         // Motions
-        var motionX = (-sin(yawRadians) * cos(pitchRadians)
-                * if (isBow) 1.0 else 0.4)
-        var motionY = -sin((pitch +
-                if (item is ItemPotion && ItemPotion.isSplash(mc.thePlayer.heldItem.itemDamage)) -20 else 0)
-                / 180f * 3.1415927f) * if (isBow) 1.0 else 0.4
-        var motionZ = (cos(yawRadians) * cos(pitchRadians)
-                * if (isBow) 1.0 else 0.4)
+        var motionX = -sin(yawRadians) * cos(pitchRadians) * if (isBow) 1.0 else 0.4
+        var motionY = -sin(
+                (pitch + if (item is ItemPotion && ItemPotion.isSplash(mc.thePlayer.heldItem.itemDamage)) -20 else 0).toRadians()
+            ) * if (isBow) 1.0 else 0.4
+        var motionZ = cos(yawRadians) * cos(pitchRadians) * if (isBow) 1.0 else 0.4
         val distance = sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ)
 
         motionX /= distance
@@ -146,7 +139,7 @@ object Projectiles : Module("Projectiles", ModuleCategory.RENDER) {
         glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
         when (colorMode.get().lowercase()) {
             "custom" -> {
-                glColor(Color(colorRedValue.get(), colorGreenValue.get(), colorBlueValue.get(), 255))
+                glColor(Color(colorRed, colorGreen, colorBlue, 255))
             }
             "bowpower" -> {
                 glColor(interpolateHSB(Color.RED, Color.GREEN, (motionFactor / 30) * 10))
@@ -182,10 +175,10 @@ object Projectiles : Module("Projectiles", ModuleCategory.RENDER) {
             val arrowBox = AxisAlignedBB(posX - size, posY - size, posZ - size, posX + size,
                 posY + size, posZ + size).addCoord(motionX, motionY, motionZ).expand(1.0, 1.0, 1.0)
 
-            val chunkMinX = floor((arrowBox.minX - 2.0) / 16.0).toInt()
-            val chunkMaxX = floor((arrowBox.maxX + 2.0) / 16.0).toInt()
-            val chunkMinZ = floor((arrowBox.minZ - 2.0) / 16.0).toInt()
-            val chunkMaxZ = floor((arrowBox.maxZ + 2.0) / 16.0).toInt()
+            val chunkMinX = ((arrowBox.minX - 2) / 16).toInt()
+            val chunkMaxX = ((arrowBox.maxX + 2.0) / 16.0).toInt()
+            val chunkMinZ = ((arrowBox.minZ - 2.0) / 16.0).toInt()
+            val chunkMaxZ = ((arrowBox.maxZ + 2.0) / 16.0).toInt()
 
             // Check which entities colliding with the arrow
             val collidedEntities = mutableListOf<Entity>()

@@ -14,8 +14,8 @@ import net.ccbluex.liquidbounce.ui.client.hud.HUD.addNotification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Arraylist.Companion.spacedModules
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.ccbluex.liquidbounce.utils.extensions.toLowerCamelCase
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
-import net.ccbluex.liquidbounce.utils.toLowerCamelCase
 import net.ccbluex.liquidbounce.value.Value
 import net.minecraft.client.audio.PositionedSoundRecord
 import net.minecraft.util.ResourceLocation
@@ -26,10 +26,10 @@ open class Module @JvmOverloads constructor(
 
     val name: String,
     val category: ModuleCategory,
-    private val forcedDescription: String? = null,
     keyBind: Int = Keyboard.KEY_NONE,
     val defaultInArray: Boolean = true, // Used in HideCommand to reset modules visibility.
     private val canEnable: Boolean = true,
+    private val forcedDescription: String? = null,
     // Adds spaces between lowercase and uppercase letters (KillAura -> Kill Aura)
     val spacedName: String = name.split("(?<=[a-z])(?=[A-Z])".toRegex()).joinToString(separator = " ")
 
@@ -129,13 +129,13 @@ open class Module @JvmOverloads constructor(
     operator fun get(valueName: String) = getValue(valueName)
 
     /**
-     * Get all values of module
+     * Get all values of module with unique names
      */
-    open val values: List<Value<*>>
+    open val values
         get() = javaClass.declaredFields.map { valueField ->
             valueField.isAccessible = true
             valueField[this]
-        }.filterIsInstance<Value<*>>()
+        }.filterIsInstance<Value<*>>().distinctBy { it.name }
 
     /**
      * Events should be handled when module is enabled

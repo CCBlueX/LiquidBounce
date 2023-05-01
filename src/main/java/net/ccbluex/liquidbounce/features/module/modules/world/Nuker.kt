@@ -29,7 +29,8 @@ import net.minecraft.block.BlockLiquid
 import net.minecraft.init.Blocks
 import net.minecraft.item.ItemSword
 import net.minecraft.network.play.client.C07PacketPlayerDigging
-import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.*
+import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.START_DESTROY_BLOCK
+import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 import net.minecraft.util.Vec3
@@ -42,14 +43,14 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD) {
      * OPTIONS
      */
 
-    private val radiusValue = FloatValue("Radius", 5.2F, 1F, 6F)
-    private val throughWallsValue = BoolValue("ThroughWalls", false)
-    private val priorityValue = ListValue("Priority", arrayOf("Distance", "Hardness"), "Distance")
-    private val rotationsValue = BoolValue("Rotations", true)
-    private val layerValue = BoolValue("Layer", false)
-    private val hitDelayValue = IntegerValue("HitDelay", 4, 0, 20)
-    private val nukeValue = IntegerValue("Nuke", 1, 1, 20)
-    private val nukeDelay = IntegerValue("NukeDelay", 1, 1, 20)
+    private val radius by FloatValue("Radius", 5.2F, 1F..6F)
+    private val throughWalls by BoolValue("ThroughWalls", false)
+    private val priority by ListValue("Priority", arrayOf("Distance", "Hardness"), "Distance")
+    private val rotations by BoolValue("Rotations", true)
+    private val layer by BoolValue("Layer", false)
+    private val hitDelay by IntegerValue("HitDelay", 4, 0..20)
+    private val nuke by IntegerValue("Nuke", 1, 1..20)
+    private val nukeDelay = IntegerValue("NukeDelay", 1, 1..20)
 
     /**
      * VALUES
@@ -60,7 +61,7 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD) {
     private var blockHitDelay = 0
 
     private var nukeTimer = TickTimer()
-    private var nuke = 0
+    private var nukedCount = 0
 
     var currentDamage = 0F
 
@@ -75,7 +76,7 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD) {
         // Reset bps
         nukeTimer.update()
         if (nukeTimer.hasTimePassed(nukeDelay.get())) {
-            nuke = 0
+            nukedCount = 0
             nukeTimer.reset()
         }
 
@@ -88,14 +89,14 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD) {
             // Default nuker
 
             val eyesPos = thePlayer.eyes
-            val validBlocks = searchBlocks(radiusValue.get().roundToInt() + 1)
+            val validBlocks = searchBlocks(radius.roundToInt() + 1)
                     .filter { (pos, block) ->
-                        if (getCenterDistance(pos) <= radiusValue.get() && validBlock(block)) {
-                            if (layerValue.get() && pos.y < thePlayer.posY) { // Layer: Break all blocks above you
+                        if (getCenterDistance(pos) <= radius && validBlock(block)) {
+                            if (layer && pos.y < thePlayer.posY) { // Layer: Break all blocks above you
                                 return@filter false
                             }
 
-                            if (!throughWallsValue.get()) { // ThroughWalls: Just break blocks in your sight
+                            if (!throughWalls) { // ThroughWalls: Just break blocks in your sight
                                 // Raytrace player eyes to block position (through walls check)
                                 val blockVec = Vec3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5)
                                 val rayTrace = mc.theWorld.rayTraceBlocks(eyesPos, blockVec,
@@ -107,9 +108,9 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD) {
                         }else false // Bad block
                     }.toMutableMap()
 
-            do{
-                val (blockPos, block) = when(priorityValue.get()) {
-                    "Distance" -> validBlocks.minByOrNull { (pos, block) ->
+            while (nukedCount < nuke) {
+                val (blockPos, block) = when (priority) {
+                    "Distance" -> validBlocks.minByOrNull { (pos) ->
                         val distance = getCenterDistance(pos)
                         val safePos = BlockPos(thePlayer).down()
 
@@ -135,7 +136,7 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD) {
                     currentDamage = 0F
 
                 // Change head rotations to next block
-                if (rotationsValue.get()) {
+                if (rotations) {
                     val rotation = faceBlock(blockPos) ?: return // In case of a mistake. Prevent flag.
                     setTargetRotation(rotation.rotation)
                 }
@@ -150,19 +151,16 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD) {
 
                 // Start block breaking
                 if (currentDamage == 0F) {
-                    sendPacket(
-                        C07PacketPlayerDigging(START_DESTROY_BLOCK,
-                            blockPos, EnumFacing.DOWN)
-                    )
+                    sendPacket(C07PacketPlayerDigging(START_DESTROY_BLOCK, blockPos, EnumFacing.DOWN))
 
                     // End block break if able to break instant
                     if (block.getPlayerRelativeBlockHardness(thePlayer, mc.theWorld, blockPos) >= 1F) {
                         currentDamage = 0F
                         thePlayer.swingItem()
                         mc.playerController.onPlayerDestroyBlock(blockPos, EnumFacing.DOWN)
-                        blockHitDelay = hitDelayValue.get()
+                        blockHitDelay = hitDelay
                         validBlocks -= blockPos
-                        nuke++
+                        nukedCount++
                         continue // Next break
                     }
                 }
@@ -176,11 +174,11 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD) {
                 if (currentDamage >= 1F) {
                     sendPacket(C07PacketPlayerDigging(STOP_DESTROY_BLOCK, blockPos, EnumFacing.DOWN))
                     mc.playerController.onPlayerDestroyBlock(blockPos, EnumFacing.DOWN)
-                    blockHitDelay = hitDelayValue.get()
+                    blockHitDelay = hitDelay
                     currentDamage = 0F
                 }
                 return // Break out
-            } while (nuke < nukeValue.get())
+            }
         } else {
             // Fast creative mode nuker (CreativeStorm option)
 
@@ -189,14 +187,14 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD) {
                 return
 
             // Search for new blocks to break
-            searchBlocks(radiusValue.get().roundToInt() + 1)
+            searchBlocks(radius.roundToInt() + 1)
                     .filter { (pos, block) ->
-                        if (getCenterDistance(pos) <= radiusValue.get() && validBlock(block)) {
-                            if (layerValue.get() && pos.y < thePlayer.posY) { // Layer: Break all blocks above you
+                        if (getCenterDistance(pos) <= radius && validBlock(block)) {
+                            if (layer && pos.y < thePlayer.posY) { // Layer: Break all blocks above you
                                 return@filter false
                             }
 
-                            if (!throughWallsValue.get()) { // ThroughWalls: Just break blocks in your sight
+                            if (!throughWalls) { // ThroughWalls: Just break blocks in your sight
                                 // Raytrace player eyes to block position (through walls check)
                                 val eyesPos = thePlayer.eyes
                                 val blockVec = Vec3(thePlayer.position)
@@ -210,11 +208,9 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD) {
                     }
                     .forEach { (pos, _) ->
                         // Instant break block
-                        sendPacket(C07PacketPlayerDigging(START_DESTROY_BLOCK,
-                                pos, EnumFacing.DOWN))
+                        sendPacket(C07PacketPlayerDigging(START_DESTROY_BLOCK, pos, EnumFacing.DOWN))
                         thePlayer.swingItem()
-                        sendPacket(C07PacketPlayerDigging(STOP_DESTROY_BLOCK,
-                                pos, EnumFacing.DOWN))
+                        sendPacket(C07PacketPlayerDigging(STOP_DESTROY_BLOCK, pos, EnumFacing.DOWN))
                         attackedBlocks.add(pos)
                     }
         }
@@ -223,7 +219,7 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD) {
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
         // Safe block
-        if (!layerValue.get()) {
+        if (!layer) {
             val safePos = BlockPos(mc.thePlayer).down()
             val safeBlock = getBlock(safePos)
             if (safeBlock != null && validBlock(safeBlock))
