@@ -1,11 +1,13 @@
 <script>
-    import {onMount} from "svelte";
-
+    export let root;
     export let modules;
+
+    // Initial state of search bar visibility.
+    let visible = root.instance.getSearchAlwaysOnTop();
+
     let value = "";
     let filteredModules = [];
     let selectedModule = null;
-    let inputRef;
 
     const filterModules = () => {
         // If the input is empty, show nothing
@@ -30,6 +32,17 @@
     } catch (error) {
         console.log(error);
     }
+
+    window.addEventListener("keydown", event => {
+        if (visible) {
+            return;
+        }
+        const key = event.which;
+        const ctrlKey = event.ctrlKey ? event.ctrlKey : 17 === key;
+        if (ctrlKey && 70 === key) {
+            visible = true;
+        }
+    });
 
     window.addEventListener("keydown", event => {
         const key = event.which;
@@ -78,39 +91,35 @@
             element.scrollIntoView({behavior: "smooth", block: "nearest", inline: "start"});
         }
     });
-
-    onMount(() => {
-        inputRef.focus();
-    });
 </script>
 
-<div class="search-bar">
-    <div class="search-bar-input-container">
-        <input bind:value bind:this={inputRef}
-               on:blur={setTimeout(() => inputRef.focus(), 0)}
-               type="text" placeholder="Search">
-    </div>
-    {#if 0 < filteredModules.length}
-        <div class="search-bar-list">
-            {#each filteredModules as module}
-                <div class="search-bar-list-item" on:mousedown={() => handleToggleClick(module)}
-                     class:selected={selectedModule === module}>
+{#if visible}
+    <div class="search-bar">
+        <div class="search-bar-input-container">
+            <input bind:value type="text" placeholder="Search" autofocus>
+        </div>
+        {#if 0 < filteredModules.length}
+            <div class="search-bar-list">
+                {#each filteredModules as module}
+                    <div class="search-bar-list-item" on:mousedown={() => handleToggleClick(module)}
+                         class:selected={selectedModule === module}>
                         <span class:active={module.enabled}>
                             {module.name}
                         </span>
-                </div>
-            {/each}
-        </div>
-    {:else}
-        {#if 0 < value.length}
-            <div class="search-bar-list">
-                <div class="search-bar-list-item">
-                    No modules found
-                </div>
+                    </div>
+                {/each}
             </div>
+        {:else}
+            {#if 0 < value.length}
+                <div class="search-bar-list">
+                    <div class="search-bar-list-item">
+                        No modules found
+                    </div>
+                </div>
+            {/if}
         {/if}
-    {/if}
-</div>
+    </div>
+{/if}
 
 <style lang="scss">
   .search-bar {

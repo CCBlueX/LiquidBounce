@@ -7,6 +7,8 @@
     let panels;
     const modules = [];
 
+    let clickGuiModule;
+
     try {
         categories = client.getModuleManager().getCategories();
         panels = client.getModuleManager().getCategories()
@@ -17,15 +19,20 @@
                     left: 30
                 }
             });
+
         const moduleIterator = client.getModuleManager().iterator();
         while (moduleIterator.hasNext()) {
-            const m = moduleIterator.next();
-            modules.push({
-                category: m.getCategory().getReadableName(),
-                name: m.getName(),
-                instance: m,
-                enabled: m.getEnabled()
-            });
+            const next = moduleIterator.next();
+            const module = {
+                category: next.getCategory().getReadableName(),
+                name: next.getName(),
+                instance: next,
+                enabled: next.getEnabled()
+            };
+            modules.push(module);
+            if ("clickgui" === module.name.toLowerCase()) {
+                clickGuiModule = module;
+            }
         }
     } catch (err) {
         console.log(err);
@@ -39,7 +46,7 @@
 <main>
     {#if clickGuiOpened}
         <div class="clickgui-container">
-            <SearchBar modules={modules}/>
+            <SearchBar root="{clickGuiModule}" modules={modules}/>
             {#each panels as panel}
                 <Panel name={panel.name} modules={getModulesOfCategory(panel.name)} startTop={panel.top} startLeft={panel.left}/>
             {/each}
