@@ -8,9 +8,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
 
-object LadderJump : Module("LadderJump", ModuleCategory.MOVEMENT) {
+object LadderJump : Module() {
 
     var jumped = false
 

@@ -7,7 +7,6 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -21,7 +20,7 @@ import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.BlockPos
 import org.lwjgl.input.Keyboard
 
-object LiquidWalk : Module("LiquidWalk", ModuleCategory.MOVEMENT, Keyboard.KEY_J) {
+object LiquidWalk : Module(defaultKeyBind = Keyboard.KEY_J) {
 
     val mode by ListValue("Mode", arrayOf("Vanilla", "NCP", "AAC", "AAC3.3.11", "AACFly", "Spartan", "Dolphin"), "NCP")
     private val noJump by BoolValue("NoJump", false)

@@ -60,7 +60,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
     private var textureWidth = 0
     private var textureHeight = 0
 
-    val height: Int
+    val height
         get() = (fontHeight - 8) / 2
 
     init {

@@ -134,16 +134,16 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot {
             shadeModel(7425);
             disableTexture2D();
             worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
-            worldrenderer.pos(left, top + i1, 0.0D).tex(0.0D, 1.0D).color(0, 0, 0, 0).endVertex();
-            worldrenderer.pos(right, top + i1, 0.0D).tex(1.0D, 1.0D).color(0, 0, 0, 0).endVertex();
-            worldrenderer.pos(right, top, 0.0D).tex(1.0D, 0.0D).color(0, 0, 0, 255).endVertex();
-            worldrenderer.pos(left, top, 0.0D).tex(0.0D, 0.0D).color(0, 0, 0, 255).endVertex();
+            worldrenderer.pos(left, top + i1, 0).tex(0, 1).color(0, 0, 0, 0).endVertex();
+            worldrenderer.pos(right, top + i1, 0).tex(1, 1).color(0, 0, 0, 0).endVertex();
+            worldrenderer.pos(right, top, 0).tex(1, 0).color(0, 0, 0, 255).endVertex();
+            worldrenderer.pos(left, top, 0).tex(0, 0).color(0, 0, 0, 255).endVertex();
             tessellator.draw();
             worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
-            worldrenderer.pos(left, bottom, 0.0D).tex(0.0D, 1.0D).color(0, 0, 0, 255).endVertex();
-            worldrenderer.pos(right, bottom, 0.0D).tex(1.0D, 1.0D).color(0, 0, 0, 255).endVertex();
-            worldrenderer.pos(right, bottom - i1, 0.0D).tex(1.0D, 0.0D).color(0, 0, 0, 0).endVertex();
-            worldrenderer.pos(left, bottom - i1, 0.0D).tex(0.0D, 0.0D).color(0, 0, 0, 0).endVertex();
+            worldrenderer.pos(left, bottom, 0).tex(0, 1).color(0, 0, 0, 255).endVertex();
+            worldrenderer.pos(right, bottom, 0).tex(1, 1).color(0, 0, 0, 255).endVertex();
+            worldrenderer.pos(right, bottom - i1, 0).tex(1, 0).color(0, 0, 0, 0).endVertex();
+            worldrenderer.pos(left, bottom - i1, 0).tex(0, 0).color(0, 0, 0, 0).endVertex();
             tessellator.draw();
             int j1 = func_148135_f();
             if (j1 > 0) {
@@ -155,22 +155,22 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot {
                 }
 
                 worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
-                worldrenderer.pos(i, bottom, 0.0D).tex(0.0D, 1.0D).color(0, 0, 0, 255).endVertex();
-                worldrenderer.pos(j, bottom, 0.0D).tex(1.0D, 1.0D).color(0, 0, 0, 255).endVertex();
-                worldrenderer.pos(j, top, 0.0D).tex(1.0D, 0.0D).color(0, 0, 0, 255).endVertex();
-                worldrenderer.pos(i, top, 0.0D).tex(0.0D, 0.0D).color(0, 0, 0, 255).endVertex();
+                worldrenderer.pos(i, bottom, 0).tex(0, 1).color(0, 0, 0, 255).endVertex();
+                worldrenderer.pos(j, bottom, 0).tex(1, 1).color(0, 0, 0, 255).endVertex();
+                worldrenderer.pos(j, top, 0).tex(1, 0).color(0, 0, 0, 255).endVertex();
+                worldrenderer.pos(i, top, 0).tex(0, 0).color(0, 0, 0, 255).endVertex();
                 tessellator.draw();
                 worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
-                worldrenderer.pos(i, l1 + k1, 0.0D).tex(0.0D, 1.0D).color(128, 128, 128, 255).endVertex();
-                worldrenderer.pos(j, l1 + k1, 0.0D).tex(1.0D, 1.0D).color(128, 128, 128, 255).endVertex();
-                worldrenderer.pos(j, l1, 0.0D).tex(1.0D, 0.0D).color(128, 128, 128, 255).endVertex();
-                worldrenderer.pos(i, l1, 0.0D).tex(0.0D, 0.0D).color(128, 128, 128, 255).endVertex();
+                worldrenderer.pos(i, l1 + k1, 0).tex(0, 1).color(128, 128, 128, 255).endVertex();
+                worldrenderer.pos(j, l1 + k1, 0).tex(1, 1).color(128, 128, 128, 255).endVertex();
+                worldrenderer.pos(j, l1, 0).tex(1, 0).color(128, 128, 128, 255).endVertex();
+                worldrenderer.pos(i, l1, 0).tex(0, 0).color(128, 128, 128, 255).endVertex();
                 tessellator.draw();
                 worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX_COLOR);
-                worldrenderer.pos(i, l1 + k1 - 1, 0.0D).tex(0.0D, 1.0D).color(192, 192, 192, 255).endVertex();
-                worldrenderer.pos(j - 1, l1 + k1 - 1, 0.0D).tex(1.0D, 1.0D).color(192, 192, 192, 255).endVertex();
-                worldrenderer.pos(j - 1, l1, 0.0D).tex(1.0D, 0.0D).color(192, 192, 192, 255).endVertex();
-                worldrenderer.pos(i, l1, 0.0D).tex(0.0D, 0.0D).color(192, 192, 192, 255).endVertex();
+                worldrenderer.pos(i, l1 + k1 - 1, 0).tex(0, 1).color(192, 192, 192, 255).endVertex();
+                worldrenderer.pos(j - 1, l1 + k1 - 1, 0).tex(1, 1).color(192, 192, 192, 255).endVertex();
+                worldrenderer.pos(j - 1, l1, 0).tex(1, 0).color(192, 192, 192, 255).endVertex();
+                worldrenderer.pos(i, l1, 0).tex(0, 0).color(192, 192, 192, 255).endVertex();
                 tessellator.draw();
             }
 

@@ -8,7 +8,6 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
@@ -25,7 +24,7 @@ import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_IN
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 
-object AutoSoup : Module("AutoSoup", ModuleCategory.COMBAT) {
+object AutoSoup : Module() {
 
     private val health by FloatValue("Health", 15f, 0f..20f)
     private val delay by IntegerValue("Delay", 150, 0..500)

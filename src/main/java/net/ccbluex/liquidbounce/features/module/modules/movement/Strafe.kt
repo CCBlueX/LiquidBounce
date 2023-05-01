@@ -5,7 +5,6 @@ import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.StrafeEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.MovementUtils.direction
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.speed
@@ -15,7 +14,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import kotlin.math.cos
 import kotlin.math.sin
 
-object Strafe : Module("Strafe", ModuleCategory.MOVEMENT) {
+object Strafe : Module() {
 
     private var strength by FloatValue("Strength", 0.5F, 0F..1F)
     private var noMoveStop by BoolValue("NoMoveStop", false)

@@ -10,7 +10,6 @@ import net.ccbluex.liquidbounce.event.EventState.PRE
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.InventoryUtils
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
@@ -33,7 +32,7 @@ import net.minecraft.network.play.client.C16PacketClientStatus
 import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT
 import net.minecraft.potion.Potion
 
-object AutoPot : Module("AutoPot", ModuleCategory.COMBAT) {
+object AutoPot : Module() {
 
     private val health by FloatValue("Health", 15F, 1F..20F)
     private val delay by IntegerValue("Delay", 500, 500..1000)

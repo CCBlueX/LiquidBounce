@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.utils.misc;
 
 import net.ccbluex.liquidbounce.utils.MinecraftInstance;
+import net.ccbluex.liquidbounce.utils.extensions.MathExtensionsKt;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
@@ -64,8 +65,8 @@ public class FallingPlayer extends MinecraftInstance {
             v = mc.thePlayer.jumpMovementFactor / v;
             strafe = strafe * v;
             forward = forward * v;
-            float f1 = (float) Math.sin(yaw * (float) Math.PI / 180f);
-            float f2 = (float) Math.cos(yaw * (float) Math.PI / 180f);
+            float f1 = (float) Math.sin(MathExtensionsKt.toRadians(yaw));
+            float f2 = (float) Math.cos(MathExtensionsKt.toRadians(yaw));
             motionX += strafe * f2 - forward * f1;
             motionZ += forward * f2 + strafe * f1;
         }
@@ -74,7 +75,7 @@ public class FallingPlayer extends MinecraftInstance {
         motionY -= 0.08;
 
         motionX *= 0.91;
-        motionY *= 0.9800000190734863D;
+        motionY *= 0.9800000190734863;
         motionY *= 0.91;
         motionZ *= 0.91;
 

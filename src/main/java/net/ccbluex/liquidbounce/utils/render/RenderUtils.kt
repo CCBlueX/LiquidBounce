@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.extensions.hitBox
+import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.client.renderer.GlStateManager.*
 import net.minecraft.client.renderer.Tessellator
@@ -395,9 +396,10 @@ object RenderUtils : MinecraftInstance() {
         glBegin(GL_LINE_STRIP)
         var i = end.toFloat()
         while (i >= start) {
+            val rad = i.toRadians()
             glVertex2f(
-                (x + cos(i * Math.PI / 180) * (radius * 1.001f)).toFloat(),
-                (y + sin(i * Math.PI / 180) * (radius * 1.001f)).toFloat()
+                x + cos(rad) * (radius * 1.001f),
+                y + sin(rad) * (radius * 1.001f)
             )
             i -= 360 / 90f
         }

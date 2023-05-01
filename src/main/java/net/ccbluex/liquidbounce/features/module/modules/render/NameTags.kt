@@ -8,7 +8,6 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
@@ -34,7 +33,7 @@ import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import kotlin.math.roundToInt
 
-object NameTags : Module("NameTags", ModuleCategory.RENDER) {
+object NameTags : Module() {
     private val health by BoolValue("Health", true)
     private val ping by BoolValue("Ping", false)
     private val healthBar by BoolValue("Bar", false)

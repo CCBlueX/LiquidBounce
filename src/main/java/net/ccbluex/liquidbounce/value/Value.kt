@@ -165,7 +165,7 @@ class FontValue(valueName: String, value: FontRenderer, isSupported: (() -> Bool
             Fonts.getFontRenderer(valueObject["fontName"].asString, valueObject["fontSize"].asInt)
         } else null
 
-    val displayName: String
+    val displayName
         get() = when (value) {
             is GameFontRenderer -> "Font: ${(value as GameFontRenderer).defaultFont.font.name} - ${(value as GameFontRenderer).defaultFont.font.size}"
             Fonts.minecraftFont -> "Font: Minecraft"

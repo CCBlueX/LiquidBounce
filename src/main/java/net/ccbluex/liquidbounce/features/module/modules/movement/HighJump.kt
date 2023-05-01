@@ -10,7 +10,6 @@ import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -19,7 +18,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockPane
 import net.minecraft.util.BlockPos
 
-object HighJump : Module("HighJump", ModuleCategory.MOVEMENT) {
+object HighJump : Module() {
     private val mode by ListValue("Mode", arrayOf("Vanilla", "Damage", "AACv3", "DAC", "Mineplex"), "Vanilla")
     private val height by FloatValue("Height", 2f, 1.1f..5f) { mode in arrayOf("Vanilla", "Damage") }
     private val glass by BoolValue("OnlyGlassPane", false)

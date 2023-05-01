@@ -9,13 +9,12 @@ import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.LiquidBounce.hud
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.client.gui.GuiChat
 import net.minecraft.util.ResourceLocation
 
-object HUD : Module("HUD", ModuleCategory.RENDER, defaultInArray = false) {
+object HUD : Module(defaultInArray = false) {
     val blackHotbar by BoolValue("BlackHotbar", true)
     val inventoryParticle = BoolValue("InventoryParticle", false)
     private val blur by BoolValue("Blur", false)

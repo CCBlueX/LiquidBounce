@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
+import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.ccbluex.liquidbounce.utils.render.MiniMapRegister
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorder
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
@@ -302,8 +303,8 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y) {
 
         worldRenderer.begin(GL_TRIANGLE_FAN, DefaultVertexFormats.POSITION)
 
-        val start = (90f - (angle * 0.5f)) / 180f * Math.PI.toFloat()
-        val end = (90f + (angle * 0.5f)) / 180f * Math.PI.toFloat()
+        val start = (90f - (angle * 0.5f)).toRadians()
+        val end = (90f + (angle * 0.5f)).toRadians()
 
         var curr = end
         val radius = 1.0

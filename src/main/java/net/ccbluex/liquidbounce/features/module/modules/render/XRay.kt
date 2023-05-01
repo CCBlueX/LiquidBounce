@@ -6,10 +6,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.minecraft.init.Blocks
 
-object XRay : Module("XRay", ModuleCategory.RENDER) {
+object XRay : Module() {
 
     val xrayBlocks = mutableListOf(
         Blocks.coal_ore,

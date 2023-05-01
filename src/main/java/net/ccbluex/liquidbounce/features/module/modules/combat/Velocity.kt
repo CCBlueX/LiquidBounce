@@ -10,7 +10,6 @@ import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.utils.MovementUtils.isOnGround
 import net.ccbluex.liquidbounce.utils.MovementUtils.speed
@@ -26,7 +25,7 @@ import net.minecraft.network.play.server.S27PacketExplosion
 import kotlin.math.cos
 import kotlin.math.sin
 
-object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
+object Velocity : Module() {
 
     /**
      * OPTIONS

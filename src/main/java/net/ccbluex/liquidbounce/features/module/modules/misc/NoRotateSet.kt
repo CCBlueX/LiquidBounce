@@ -8,14 +8,13 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.network.play.client.C03PacketPlayer.C05PacketPlayerLook
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 
-object NoRotateSet : Module("NoRotateSet", ModuleCategory.MISC) {
+object NoRotateSet : Module() {
     private val confirm by BoolValue("Confirm", true)
     private val illegalRotation by BoolValue("ConfirmIllegalRotation", false) { confirm }
     private val noZero by BoolValue("NoZero", false)

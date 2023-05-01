@@ -108,7 +108,7 @@ class Script(val scriptFile: File) : MinecraftInstance() {
         } ?: ModuleCategory.FUN
 
 
-        val module = ScriptModule(name, description, category, moduleObject)
+        val module = ScriptModule(name, category, description, moduleObject)
         moduleManager.registerModule(module)
         registeredModules += module
         callback.call(moduleObject, module)

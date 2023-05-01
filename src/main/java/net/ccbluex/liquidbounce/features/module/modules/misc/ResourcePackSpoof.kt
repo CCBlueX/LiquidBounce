@@ -8,7 +8,6 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
@@ -18,7 +17,7 @@ import net.minecraft.network.play.server.S48PacketResourcePackSend
 import java.net.URI
 import java.net.URISyntaxException
 
-object ResourcePackSpoof : Module("ResourcePackSpoof", ModuleCategory.MISC) {
+object ResourcePackSpoof : Module() {
 
     @EventTarget
     fun onPacket(event: PacketEvent) {

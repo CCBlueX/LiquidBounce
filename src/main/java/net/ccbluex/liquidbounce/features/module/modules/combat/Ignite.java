@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.utils.EntityUtils;
 import net.ccbluex.liquidbounce.utils.InventoryUtils;
 import net.ccbluex.liquidbounce.utils.RotationUtils;
+import net.ccbluex.liquidbounce.utils.extensions.MathExtensionsKt;
 import net.ccbluex.liquidbounce.utils.timer.MSTimer;
 import net.ccbluex.liquidbounce.value.BoolValue;
 import net.minecraft.block.BlockAir;
@@ -67,7 +68,7 @@ public class Ignite extends Module {
            if (EntityUtils.INSTANCE.isSelected(entity, true) && !entity.isBurning()) {
                BlockPos blockPos = entity.getPosition();
 
-               if (mc.thePlayer.getDistanceSq(blockPos) >= 22.3D ||
+               if (mc.thePlayer.getDistanceSq(blockPos) >= 22.3 ||
                        !isReplaceable(blockPos) ||
                        !(getBlock(blockPos) instanceof BlockAir))
                    continue;
@@ -80,14 +81,14 @@ public class Ignite extends Module {
                        mc.thePlayer.inventoryContainer.getSlot(fireInHotbar).getStack();
 
                if (itemStack.getItem() instanceof ItemBucket) {
-                   final double diffX = blockPos.getX() + 0.5D - mc.thePlayer.posX;
-                   final double diffY = blockPos.getY() + 0.5D -
+                   final double diffX = blockPos.getX() + 0.5 - mc.thePlayer.posX;
+                   final double diffY = blockPos.getY() + 0.5 -
                            (thePlayer.getEntityBoundingBox().minY +
                                    thePlayer.getEyeHeight());
-                   final double diffZ = blockPos.getZ() + 0.5D - thePlayer.posZ;
+                   final double diffZ = blockPos.getZ() + 0.5 - thePlayer.posZ;
                    final double sqrt = Math.sqrt(diffX * diffX + diffZ * diffZ);
-                   final float yaw = (float) (Math.atan2(diffZ, diffX) * 180.0D / Math.PI) - 90F;
-                   final float pitch = (float) -(Math.atan2(diffY, sqrt) * 180.0D / Math.PI);
+                   final float yaw = MathExtensionsKt.toDegreesF(Math.atan2(diffZ, diffX)) - 90F;
+                   final float pitch = -MathExtensionsKt.toDegreesF(Math.atan2(diffY, sqrt));
 
                    sendPacket(new C05PacketPlayerLook(
                            mc.thePlayer.rotationYaw +
@@ -103,14 +104,14 @@ public class Ignite extends Module {
 
                        if (!canBeClicked(neighbor)) continue;
 
-                       final double diffX = neighbor.getX() + 0.5D - thePlayer.posX;
-                       final double diffY = neighbor.getY() + 0.5D -
+                       final double diffX = neighbor.getX() + 0.5 - thePlayer.posX;
+                       final double diffY = neighbor.getY() + 0.5 -
                                (thePlayer.getEntityBoundingBox().minY +
                                        thePlayer.getEyeHeight());
-                       final double diffZ = neighbor.getZ() + 0.5D - thePlayer.posZ;
+                       final double diffZ = neighbor.getZ() + 0.5 - thePlayer.posZ;
                        final double sqrt = Math.sqrt(diffX * diffX + diffZ * diffZ);
-                       final float yaw = (float) (Math.atan2(diffZ, diffX) * 180.0D / Math.PI) - 90F;
-                       final float pitch = (float) -(Math.atan2(diffY, sqrt) * 180.0D / Math.PI);
+                       final float yaw = MathExtensionsKt.toDegreesF(Math.atan2(diffZ, diffX)) - 90F;
+                       final float pitch = -MathExtensionsKt.toDegreesF(Math.atan2(diffY, sqrt));
 
                        sendPacket(new C05PacketPlayerLook(
                                mc.thePlayer.rotationYaw +

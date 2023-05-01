@@ -1,6 +1,6 @@
 package net.ccbluex.liquidbounce.lang
 
-import net.ccbluex.liquidbounce.file.FileManager
+import net.ccbluex.liquidbounce.file.FileManager.PRETTY_GSON
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 
@@ -36,7 +36,7 @@ object LanguageManager : MinecraftInstance() {
         for (language in knownLanguages) {
             runCatching {
                 val languageFile = javaClass.getResourceAsStream("/assets/minecraft/liquidbounce/lang/$language.json")
-                val languageJson = FileManager.PRETTY_GSON.fromJson(languageFile.bufferedReader(), Language::class.java)
+                val languageJson = PRETTY_GSON.fromJson(languageFile.bufferedReader(), Language::class.java)
                 languageMap[language] = languageJson
             }.onSuccess {
                 LOGGER.info("Loaded language $language")

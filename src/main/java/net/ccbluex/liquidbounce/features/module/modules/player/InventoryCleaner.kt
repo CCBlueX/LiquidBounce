@@ -9,7 +9,6 @@ import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.combat.AutoArmor
 import net.ccbluex.liquidbounce.features.module.modules.combat.AutoArmor.ARMOR_COMPARATOR
 import net.ccbluex.liquidbounce.injection.implementations.IMixinItemStack
@@ -33,7 +32,7 @@ import net.minecraft.network.play.client.C16PacketClientStatus
 import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT
 
 
-object InventoryCleaner : Module("InventoryCleaner", ModuleCategory.PLAYER) {
+object InventoryCleaner : Module() {
 
     /**
      * OPTIONS

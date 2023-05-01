@@ -9,7 +9,6 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -19,7 +18,7 @@ import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.client.C03PacketPlayer.C06PacketPlayerPosLook
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 
-object FreeCam : Module("FreeCam", ModuleCategory.RENDER) {
+object FreeCam : Module() {
     private val speed by FloatValue("Speed", 0.8f, 0.1f..2f)
     private val fly by BoolValue("Fly", true)
     private val noClip by BoolValue("NoClip", true)

@@ -7,7 +7,6 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
@@ -33,7 +32,7 @@ import net.minecraft.util.Vec3
 import kotlin.math.ceil
 import kotlin.math.sqrt
 
-object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
+object NoFall : Module() {
 
     val mode by ListValue(
         "Mode", arrayOf(

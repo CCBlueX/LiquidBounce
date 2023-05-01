@@ -9,7 +9,6 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render2DEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBlockBox
@@ -23,7 +22,7 @@ import net.minecraft.entity.item.EntityFallingBlock
 import net.minecraft.util.BlockPos
 import java.awt.Color
 
-object ProphuntESP : Module("ProphuntESP", ModuleCategory.RENDER) {
+object ProphuntESP : Module() {
     val blocks: MutableMap<BlockPos, Long> = HashMap()
 
     private val mode by ListValue("Mode", arrayOf("Box", "OtherBox", "Glow"), "OtherBox")

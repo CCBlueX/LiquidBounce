@@ -9,7 +9,6 @@ import net.ccbluex.liquidbounce.event.ClickWindowEvent
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.client.gui.GuiChat
@@ -17,7 +16,7 @@ import net.minecraft.client.gui.GuiIngameMenu
 import net.minecraft.client.gui.inventory.GuiContainer
 import net.minecraft.client.settings.GameSettings
 
-object InventoryMove : Module("InventoryMove", ModuleCategory.MOVEMENT) {
+object InventoryMove : Module() {
 
     private val undetectable = BoolValue("Undetectable", false)
     val aacAdditionPro by BoolValue("AACAdditionPro", false)

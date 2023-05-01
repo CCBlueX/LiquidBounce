@@ -9,7 +9,6 @@ import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
@@ -31,7 +30,7 @@ import net.minecraft.network.play.client.C0APacketAnimation
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 
-object ChestAura : Module("ChestAura", ModuleCategory.WORLD) {
+object ChestAura : Module() {
 
     private val range by FloatValue("Range", 5F, 1F..6F)
     private val delay by IntegerValue("Delay", 100, 50..200)

@@ -8,7 +8,6 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.StrafeEvent
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.RotationUtils.getCenter
 import net.ccbluex.liquidbounce.utils.RotationUtils.getRotationDifference
@@ -22,7 +21,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import java.util.*
 
-object Aimbot : Module("Aimbot", ModuleCategory.COMBAT) {
+object Aimbot : Module() {
 
     private val range by FloatValue("Range", 4.4F, 1F..8F)
     private val turnSpeed by FloatValue("TurnSpeed", 10f, 1F..180F)

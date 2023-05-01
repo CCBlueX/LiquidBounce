@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.utils.RotationUtils.getFixedAngleDelta
 import net.ccbluex.liquidbounce.utils.RotationUtils.getFixedSensitivityAngle
 import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
 import net.ccbluex.liquidbounce.utils.block.PlaceInfo
+import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.util.MathHelper
 import net.minecraft.util.Vec3
@@ -61,8 +62,6 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
         val player = mc.thePlayer
 
         val diff = ((MathHelper.wrapAngleTo180_float(player.rotationYaw - yaw - 23.5f - 135) + 180) / 45).toInt()
-
-        val yaw = this.yaw
 
         val strafe = event.strafe
         val forward = event.forward
@@ -137,13 +136,15 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
         var d = calcStrafe * calcStrafe + calcForward * calcForward
 
         if (d >= 1.0E-4f) {
-            d = sqrt(d)
-            if (d < 1f) d = 1f
-            d = friction / d
+            d = friction / sqrt(d).coerceAtLeast(1f)
+
             calcStrafe *= d
             calcForward *= d
-            val yawSin = sin(yaw * Math.PI / 180f)
-            val yawCos = cos(yaw * Math.PI / 180f)
+
+            val yawRad = yaw.toRadians()
+            val yawSin = sin(yawRad)
+            val yawCos = cos(yawRad)
+
             player.motionX += calcStrafe * yawCos - calcForward * yawSin
             player.motionZ += calcForward * yawCos + calcStrafe * yawSin
         }

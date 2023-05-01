@@ -8,12 +8,11 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.event.BlockBBEvent
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.init.Blocks
 import net.minecraft.util.AxisAlignedBB
 
-object BlockWalk : Module("BlockWalk", ModuleCategory.MOVEMENT) {
+object BlockWalk : Module() {
     private val cobweb by BoolValue("Cobweb", true)
     private val snow by BoolValue("Snow", true)
 

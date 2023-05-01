@@ -12,8 +12,8 @@ object EventManager {
     /**
      * Register [listener]
      */
-    fun registerListener(listener: Listenable) {
-        for (method in listener.javaClass.declaredMethods) {
+    fun registerListener(listener: Listenable) =
+        listener.javaClass.declaredMethods.forEach { method ->
             if (method.isAnnotationPresent(EventTarget::class.java) && method.parameterTypes.size == 1) {
                 if (!method.isAccessible)
                     method.isAccessible = true
@@ -26,20 +26,18 @@ object EventManager {
                 registry[eventClass] = invokableEventTargets
             }
         }
-    }
 
     /**
      * Unregister listener
      *
      * @param listenable for unregister
      */
-    fun unregisterListener(listenable: Listenable) {
-        for ((key, targets) in registry) {
+    fun unregisterListener(listenable: Listenable) =
+        registry.forEach { (key, targets) ->
             targets.removeIf { it.eventClass == listenable }
 
             registry[key] = targets
         }
-    }
 
     /**
      * Call event to listeners

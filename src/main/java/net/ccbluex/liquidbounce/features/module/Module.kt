@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.file.FileManager.modulesConfig
 import net.ccbluex.liquidbounce.file.FileManager.saveConfig
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.ui.client.hud.HUD.addNotification
-import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Arraylist.Companion.spacedModules
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Arraylist
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.extensions.toLowerCamelCase
@@ -21,24 +21,36 @@ import net.minecraft.client.audio.PositionedSoundRecord
 import net.minecraft.util.ResourceLocation
 import org.lwjgl.input.Keyboard
 
-// TODO: Remove @JvmOverloads when all modules are ported to kotlin.
+// TODO: Remove @JvmOverloads when all modules are ported to kotlin. defaultKeyBind can then also be put as the first parameter
 open class Module @JvmOverloads constructor(
 
-    val name: String,
-    val category: ModuleCategory,
-    keyBind: Int = Keyboard.KEY_NONE,
+    name: String? = null,
+    category: ModuleCategory? = null,
+    defaultKeyBind: Int = Keyboard.KEY_NONE,
     val defaultInArray: Boolean = true, // Used in HideCommand to reset modules visibility.
-    private val canEnable: Boolean = true,
+    private val canBeEnabled: Boolean = true,
     private val forcedDescription: String? = null,
-    // Adds spaces between lowercase and uppercase letters (KillAura -> Kill Aura)
-    val spacedName: String = name.split("(?<=[a-z])(?=[A-Z])".toRegex()).joinToString(separator = " ")
+    spacedName: String? = null
 
 ) : MinecraftInstance(), Listenable {
 
     // Module information
-    fun getName(spaced: Boolean = spacedModules) = if (spaced) spacedName else name
 
-    var keyBind = keyBind
+    // Detect category based on class name.
+    val name: String = name ?: javaClass.simpleName
+
+    // Adds spaces between lowercase and uppercase letters (KillAura -> Kill Aura)
+    val spacedName: String by lazy {
+        spacedName ?: this.name.split("(?<=[a-z])(?=[A-Z])".toRegex()).joinToString(separator = " ")
+    }
+
+    // Detect category based on directory.
+    val category = category ?: ModuleCategory.valueOf(javaClass.`package`.name.split('.').last().uppercase())
+
+    // Get normal or spaced name
+    fun getName(spaced: Boolean = Arraylist.spacedModules) = if (spaced) spacedName else name
+
+    var keyBind = defaultKeyBind
         set(keyBind) {
             field = keyBind
 
@@ -52,7 +64,8 @@ open class Module @JvmOverloads constructor(
             saveConfig(modulesConfig)
         }
 
-    val description: String
+    // TODO: Fixnout description kdyz je modul pojmenovan automaticky
+    val description
         get() = forcedDescription ?: translation("module.${name.toLowerCamelCase()}.description")
 
     var slideStep = 0F
@@ -69,14 +82,14 @@ open class Module @JvmOverloads constructor(
             // Play sound and add notification
             if (!isStarting) {
                 mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("random.click"), 1F))
-                addNotification(Notification(if (value) translation("notification.moduleEnabled", getName()) else translation("notification.moduleDisabled", getName())))
+                addNotification(Notification(translation("notification.module" + if (value) "Enabled" else "Disabled", getName())))
             }
 
             // Call on enabled or disabled
             if (value) {
                 onEnable()
 
-                if (canEnable)
+                if (canBeEnabled)
                     field = true
             } else {
                 onDisable()
