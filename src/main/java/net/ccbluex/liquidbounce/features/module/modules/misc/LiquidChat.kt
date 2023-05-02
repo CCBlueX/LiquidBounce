@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.SessionEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 import net.ccbluex.liquidbounce.utils.login.UserUtils
@@ -25,7 +26,7 @@ import java.net.URISyntaxException
 import java.util.regex.Pattern
 import kotlin.concurrent.thread
 
-object LiquidChat : Module() {
+object LiquidChat : Module("LiquidChat", ModuleCategory.MISC) {
 
     init {
         state = true

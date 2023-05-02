@@ -6,10 +6,11 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.entity.EntityLivingBase
 
-object Teams : Module() {
+object Teams : Module("Teams", ModuleCategory.MISC) {
 
     private val scoreboard by BoolValue("ScoreboardTeam", true)
     private val color by BoolValue("Color", true)

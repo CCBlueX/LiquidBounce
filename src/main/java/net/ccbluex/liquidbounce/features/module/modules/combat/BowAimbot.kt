@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceBow
 import net.ccbluex.liquidbounce.utils.RotationUtils.getRotationDifference
@@ -21,7 +22,7 @@ import net.minecraft.entity.EntityLivingBase
 import net.minecraft.item.ItemBow
 import java.awt.Color
 
-object BowAimbot : Module() {
+object BowAimbot : Module("BowAimbot", ModuleCategory.COMBAT) {
 
     private val priority by ListValue("Priority", arrayOf("Health", "Distance", "Direction"), "Direction")
     private val predict by BoolValue("Predict", true)

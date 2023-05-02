@@ -8,9 +8,10 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.minecraft.network.play.client.C03PacketPlayer
 
-object PotionSaver : Module() {
+object PotionSaver : Module("PotionSaver", ModuleCategory.PLAYER) {
 
     @EventTarget
     fun onPacket(e: PacketEvent) {

@@ -4,6 +4,7 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.injection.implementations.IMixinItemStack
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
@@ -19,7 +20,7 @@ import net.minecraft.network.play.client.C16PacketClientStatus
 import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT
 import net.minecraft.network.play.server.S2EPacketCloseWindow
 
-object Refill : Module() {
+object Refill : Module("Refill", ModuleCategory.PLAYER) {
     private val delay by IntegerValue("Delay", 400, 10..1000)
 
     private val itemDelay by IntegerValue("ItemDelay", 400, 0..1000)

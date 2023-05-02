@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
@@ -35,7 +36,7 @@ import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.max
 
-object BugUp : Module() {
+object BugUp : Module("BugUp", ModuleCategory.MOVEMENT) {
 
     private val mode by ListValue("Mode", arrayOf("TeleportBack", "FlyFlag", "OnGroundSpoof", "MotionTeleport-Flag"), "FlyFlag")
     private val maxFallDistance = IntegerValue("MaxFallDistance", 10, 2..255)

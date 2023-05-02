@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
@@ -67,7 +68,7 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sin
 
-object KillAura : Module(defaultKeyBind = Keyboard.KEY_R) {
+object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
     /**
      * OPTIONS
      */

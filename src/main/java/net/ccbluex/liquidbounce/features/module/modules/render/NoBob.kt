@@ -8,8 +8,9 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ModuleCategory
 
-object NoBob : Module() {
+object NoBob : Module("NoBob", ModuleCategory.RENDER) {
 
     @EventTarget
     fun onMotion(event: MotionEvent) {

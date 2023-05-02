@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.render.BlockOverlay
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.InventoryUtils
@@ -49,7 +50,7 @@ import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import kotlin.math.truncate
 
-object Tower : Module(defaultKeyBind = Keyboard.KEY_O) {
+object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O) {
     /**
      * OPTIONS
      */

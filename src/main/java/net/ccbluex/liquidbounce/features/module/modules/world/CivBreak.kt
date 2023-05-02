@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
@@ -25,7 +26,7 @@ import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 import java.awt.Color
 
-object CivBreak : Module() {
+object CivBreak : Module("CivBreak", ModuleCategory.WORLD) {
 
     private var blockPos: BlockPos? = null
     private var enumFacing: EnumFacing? = null

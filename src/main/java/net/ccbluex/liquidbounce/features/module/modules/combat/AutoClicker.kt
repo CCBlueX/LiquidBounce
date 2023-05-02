@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.extensions.fixedSensitivityPitch
 import net.ccbluex.liquidbounce.utils.extensions.fixedSensitivityYaw
@@ -21,7 +22,7 @@ import net.minecraft.client.settings.KeyBinding
 import net.minecraft.init.Blocks
 import kotlin.random.Random.Default.nextBoolean
 
-object AutoClicker : Module() {
+object AutoClicker : Module("AutoClicker", ModuleCategory.COMBAT) {
     private val maxCPSValue: IntegerValue = object : IntegerValue("MaxCPS", 8, 1..20) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minCPS)
     }

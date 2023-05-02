@@ -8,9 +8,10 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.minecraft.client.settings.GameSettings
 
-object AutoWalk : Module() {
+object AutoWalk : Module("AutoWalk", ModuleCategory.MOVEMENT) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {

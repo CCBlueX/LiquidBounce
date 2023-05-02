@@ -4,6 +4,7 @@ import me.liuli.elixir.account.CrackedAccount
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.file.FileManager.accountsConfig
 import net.ccbluex.liquidbounce.ui.client.hud.HUD.addNotification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
@@ -21,7 +22,7 @@ import net.minecraft.util.Session
 import java.util.*
 import kotlin.concurrent.schedule
 
-object AutoAccount : Module() {
+object AutoAccount : Module("AutoAccount", ModuleCategory.MISC) {
 
     private val register by BoolValue("AutoRegister", true)
 

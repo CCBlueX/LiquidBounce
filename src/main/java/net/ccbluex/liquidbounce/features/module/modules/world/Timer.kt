@@ -9,11 +9,12 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.event.WorldEvent
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 
-object Timer : Module() {
+object Timer : Module("Timer", ModuleCategory.WORLD) {
 
     private val speed by FloatValue("Speed", 2F, 0.1F..10F)
     private val onMove by BoolValue("OnMove", true)

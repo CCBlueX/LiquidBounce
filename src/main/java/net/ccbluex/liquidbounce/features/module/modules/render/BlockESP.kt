@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
@@ -24,7 +25,7 @@ import net.minecraft.init.Blocks
 import net.minecraft.util.BlockPos
 import java.awt.Color
 
-object BlockESP : Module() {
+object BlockESP : Module("BlockESP", ModuleCategory.RENDER) {
     private val mode by ListValue("Mode", arrayOf("Box", "2D"), "Box")
     private val block by BlockValue("Block", 168)
     private val radius by IntegerValue("Radius", 40, 5..120)

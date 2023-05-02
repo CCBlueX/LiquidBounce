@@ -21,31 +21,21 @@ import net.minecraft.client.audio.PositionedSoundRecord
 import net.minecraft.util.ResourceLocation
 import org.lwjgl.input.Keyboard
 
-// TODO: Remove @JvmOverloads when all modules are ported to kotlin. defaultKeyBind can then also be put as the first parameter
+// TODO: Remove @JvmOverloads when all modules are ported to kotlin.
 open class Module @JvmOverloads constructor(
 
-    name: String? = null,
-    category: ModuleCategory? = null,
+    val name: String,
+    val category: ModuleCategory,
     defaultKeyBind: Int = Keyboard.KEY_NONE,
     val defaultInArray: Boolean = true, // Used in HideCommand to reset modules visibility.
     private val canBeEnabled: Boolean = true,
     private val forcedDescription: String? = null,
-    spacedName: String? = null
+    // Adds spaces between lowercase and uppercase letters (KillAura -> Kill Aura)
+    val spacedName: String = name.split("(?<=[a-z])(?=[A-Z])".toRegex()).joinToString(separator = " ")
 
 ) : MinecraftInstance(), Listenable {
 
     // Module information
-
-    // Detect category based on class name.
-    val name: String = name ?: javaClass.simpleName
-
-    // Adds spaces between lowercase and uppercase letters (KillAura -> Kill Aura)
-    val spacedName: String by lazy {
-        spacedName ?: this.name.split("(?<=[a-z])(?=[A-Z])".toRegex()).joinToString(separator = " ")
-    }
-
-    // Detect category based on directory.
-    val category = category ?: ModuleCategory.valueOf(javaClass.`package`.name.split('.').last().uppercase())
 
     // Get normal or spaced name
     fun getName(spaced: Boolean = Arraylist.spacedModules) = if (spaced) spacedName else name
@@ -64,7 +54,6 @@ open class Module @JvmOverloads constructor(
             saveConfig(modulesConfig)
         }
 
-    // TODO: Fixnout description kdyz je modul pojmenovan automaticky
     val description
         get() = forcedDescription ?: translation("module.${name.toLowerCamelCase()}.description")
 

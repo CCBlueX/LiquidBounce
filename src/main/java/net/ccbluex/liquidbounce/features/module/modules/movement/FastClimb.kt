@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.event.BlockBBEvent
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlockIntersects
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -18,7 +19,7 @@ import net.minecraft.block.BlockVine
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 
-object FastClimb : Module() {
+object FastClimb : Module("FastClimb", ModuleCategory.MOVEMENT) {
 
     val mode by ListValue("Mode",
             arrayOf("Vanilla", "Clip", "AAC3.0.0", "AAC3.0.5", "SAAC3.1.2", "AAC3.1.2"), "Vanilla")

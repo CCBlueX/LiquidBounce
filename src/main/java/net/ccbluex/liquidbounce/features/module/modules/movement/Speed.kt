@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.aac.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.ncp.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.other.*
@@ -19,7 +20,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 
-object Speed : Module() {
+object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
 
     private val speedModes = arrayOf( // NCP
             NCPBHop(),
