@@ -1,66 +1,70 @@
 package net.ccbluex.liquidbounce.features.module.modules.fun
 
-import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.UpdateEvent
+import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.event.Render3DEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleInfo
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.utils.RotationUtils
-import net.minecraft.entity.EntityLivingBase
+import net.ccbluex.liquidbounce.utils.render.RenderUtils
+import net.ccbluex.liquidbounce.utils.render.Colors
+import net.ccbluex.liquidbounce.utils.render.gl.GL11.*
+import net.minecraft.client.renderer.GlStateManager
 import net.minecraft.entity.player.EntityPlayer
 
-@ModuleInfo(name = "FakeHackers", description = "Type .fakehacker <name> and record him! ;-)", category = ModuleCategory.FUN)
-class FakeHackers : Module() {
+@ModuleInfo(name = "FakeHackers", description = "module.fakeHackers.description", category = Category.FUN)
+object FakeHackers : Module() {
 
-    companion object {
-        val fakeHackers = ArrayList<String>()
+private val mode by choose("Mode", "KillAura", arrayOf("KillAura"))
+private val range by float("Range", 6f, 1f..10f)
 
-        fun isFakeHacker(player: EntityPlayer): Boolean {
-            for (name in fakeHackers) {
-                val en = mc.theWorld.getPlayerEntityByName(name) ?: continue
-                if (player.isEntityEqual(en)) {
-                    return true
-                }
-            }
-            return false
-        }
+private val fakeHackers = mutableListOf<EntityPlayer>() // list of fake hackers
+private val targets = mutableListOf<EntityPlayer>() // list of targets
 
-        fun removeHacker(en: EntityPlayer) {
-            fakeHackers.removeIf { name -> en.isEntityEqual(mc.theWorld.getPlayerEntityByName(name)) }
-            en.setSneaking(false)
-        }
-    }
+val renderHandler = handler<Render3DEvent> { event ->
+for (fakeHacker in fakeHackers) {
+// find the closest target in range using maxByOrNull function
+val target = targets.maxByOrNull { range - fakeHacker.getDistanceToEntityBox(it) }
+?.takeIf { fakeHacker.getDistanceToEntityBox(it) <= range }
 
-    override fun onDisable() {
-        if (state) {
-            for (name in fakeHackers) {
-                val player = mc.theWorld.getPlayerEntityByName(name)
-                player?.setSneaking(false)
-            }
-        }
-        super.onDisable()
-    }
+if (target != null) {
+// draw a line from the fake hacker to the target
+RenderUtils.drawLine(fakeHacker.posX, fakeHacker.posY + fakeHacker.eyeHeight, fakeHacker.posZ,
+target.posX, target.posY + target.eyeHeight / 2, target.posZ, 2f, Colors.RED)
 
-    override fun onEnable() {
-        fakeHackers.clear()
-        super.onEnable()
-    }
+// calculate the rotations for the fake hacker to face the target using LiquidBounce API function
+val rotations = LiquidBounce.combatManager.getRotationsToEntity(target)
 
-    @EventTarget
-    fun onUpdate(event: UpdateEvent) {
-        for (name in fakeHackers) {
-            val player = mc.theWorld.getPlayerEntityByName(name) ?: continue
-            if (mode.equals("KillAura", ignoreCase = true)) {
-                val toFace = RotationUtils.getClosestEntityToEntity(6f, player) as? EntityLivingBase ?: continue
-                val rots = RotationUtils.getFacePosEntityRemote(player, toFace)
-                player.swingItem()
-                player.rotationYawHead = rots[0]
-                player.rotationPitch = rots[1]
-            }
-        }
-    }
+// save the original rotations of the fake hacker using destructuring declaration
+val (prevYaw, prevPitch) = fakeHacker.rotationYaw to fakeHacker.rotationPitch
 
-    override fun getModes(): Array<String> {
-        return arrayOf("KillAura")
-    }
+// set the rotations of the fake hacker to face the target using named arguments
+fakeHacker.setRotation(yaw = rotations.yaw, pitch = rotations.pitch)
+
+// save the original state of OpenGL
+GlStateManager.pushMatrix()
+GlStateManager.disableCull()
+GlStateManager.enablePolygonOffset()
+GlStateManager.doPolygonOffset(1f, -1500000f)
+
+// render the fake hacker with the new rotations using string template
+mc.renderManager.renderEntityWithPosYaw(fakeHacker, "${event.partialTicks}")
+
+// restore the original state of OpenGL
+GlStateManager.doPolygonOffset(1f, 1500000f)
+GlStateManager.disablePolygonOffset()
+GlStateManager.enableCull()
+GlStateManager.popMatrix()
+
+// restore the original rotations of the fake hacker using infix notation
+fakeHacker setRotation prevYaw to prevPitch
+}
+}
+}
+}
+
+// use infix notation to simplify setRotation call
+infix fun EntityPlayer.setRotation(rotations: Pair<Float, Float>) {
+this.rotationYaw = rotations.first
+this.rotationPitch = rotations.second
 }
