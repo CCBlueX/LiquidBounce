@@ -57,9 +57,9 @@
 
         "module.velocity.description": "允许修改你所承受的击退量.",
 
-        "module.abortBreaking.description:": "允许你停止破坏方块而不会丢失破坏进度.",
+        "module.abortBreaking.description": "允许你停止破坏方块而不会丢失破坏进度.",
 
-        "module.ambience.description:" : "改变你的世界时间和天气.（客户端）",
+        "module.ambience.description": "改变你的世界时间和天气.（客户端）",
 
         "module.antiHunger.description": "防止你饥饿.",
 
