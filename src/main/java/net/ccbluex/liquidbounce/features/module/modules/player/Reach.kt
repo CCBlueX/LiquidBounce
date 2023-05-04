@@ -15,6 +15,6 @@ object Reach : Module("Reach", ModuleCategory.PLAYER) {
     val combatReach by FloatValue("CombatReach", 3.5f, 3f..7f)
     val buildReach by FloatValue("BuildReach", 5f, 4.5f..7f)
 
-    val maxRange: Float
+    val maxRange
         get() = max(combatReach, buildReach)
 }

@@ -732,10 +732,12 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
                 val boundingBox = interactEntity.hitBox
 
                 val (yaw, pitch) = targetRotation ?: Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)
-                val yawCos = cos(-yaw.toRadians() - Math.PI)
-                val yawSin = sin(-yaw.toRadians() - Math.PI)
-                val pitchCos = -cos(-pitch.toRadians())
-                val pitchSin = sin(-pitch.toRadians())
+                val yawRad = -yaw.toRadians() - Math.PI
+                val pitchRad = -pitch.toRadians()
+                val yawCos = cos(yawRad)
+                val yawSin = sin(yawRad)
+                val pitchCos = -cos(pitchRad)
+                val pitchSin = sin(pitchRad)
                 val range = min(maxRange.toDouble(), mc.thePlayer.getDistanceToEntityBox(interactEntity)) + 1
                 val lookAt =
                     positionEye.addVector(yawSin * pitchCos * range, pitchSin * range, yawCos * pitchCos * range)

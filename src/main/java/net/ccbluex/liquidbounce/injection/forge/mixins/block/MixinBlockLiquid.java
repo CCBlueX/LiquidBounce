@@ -31,7 +31,7 @@ public class MixinBlockLiquid {
         final NoSlow noSlow = NoSlow.INSTANCE;
 
         if (noSlow.getState() && noSlow.getLiquidPush()) {
-            callbackInfoReturnable.setReturnValue(new Vec3(0.0D, 0.0D, 0.0D));
+            callbackInfoReturnable.setReturnValue(new Vec3(0, 0, 0));
         }
     }
 }

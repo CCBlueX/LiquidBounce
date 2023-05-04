@@ -98,6 +98,6 @@ object SuperKnockback : Module("SuperKnockback", ModuleCategory.COMBAT) {
         }
     }
 
-    override val tag: String
+    override val tag
         get() = mode
 }

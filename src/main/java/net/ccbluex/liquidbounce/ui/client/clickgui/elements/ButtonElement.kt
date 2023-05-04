@@ -12,7 +12,7 @@ import java.awt.Color
 
 @SideOnly(Side.CLIENT)
 abstract class ButtonElement(open val displayName: String) : Element() {
-    open val color: Int
+    open val color
         get() = Color.WHITE.rgb
 
     var hoverTime = 0

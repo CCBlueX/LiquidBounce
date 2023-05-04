@@ -29,7 +29,7 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
     // Status
     private var status = ""
 
-    private val loggedIntoAccount: Boolean
+    private val loggedIntoAccount
         get() = CapeService.clientCapeUser != null
 
     /**

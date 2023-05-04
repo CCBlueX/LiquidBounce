@@ -14,8 +14,7 @@ import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.targetRotation
 import net.ccbluex.liquidbounce.value.BoolValue
 
-object Rotations : Module("Rotations", ModuleCategory.RENDER
-) {
+object Rotations : Module("Rotations", ModuleCategory.RENDER) {
 
     private val body by BoolValue("Body", true)
 

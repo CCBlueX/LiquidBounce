@@ -148,8 +148,8 @@ open class TextValue(name: String, value: String, isSupported: (() -> Boolean)? 
 /**
  * Font value represents a value with a font
  */
-class FontValue(valueName: String, value: FontRenderer, isSupported: (() -> Boolean)? = null)
-    : Value<FontRenderer>(valueName, value, isSupported) {
+open class FontValue(name: String, value: FontRenderer, isSupported: (() -> Boolean)? = null)
+    : Value<FontRenderer>(name, value, isSupported) {
 
     override fun toJsonF(): JsonElement? {
         val fontDetails = Fonts.getFontDetails(value) ?: return null
@@ -165,7 +165,7 @@ class FontValue(valueName: String, value: FontRenderer, isSupported: (() -> Bool
             Fonts.getFontRenderer(valueObject["fontName"].asString, valueObject["fontSize"].asInt)
         } else null
 
-    val displayName: String
+    val displayName
         get() = when (value) {
             is GameFontRenderer -> "Font: ${(value as GameFontRenderer).defaultFont.font.name} - ${(value as GameFontRenderer).defaultFont.font.size}"
             Fonts.minecraftFont -> "Font: Minecraft"
@@ -191,7 +191,7 @@ class FontValue(valueName: String, value: FontRenderer, isSupported: (() -> Bool
 /**
  * Block value represents a value with a block
  */
-class BlockValue(name: String, value: Int, isSupported: (() -> Boolean)? = null) : IntegerValue(name, value, 1..197, isSupported)
+open class BlockValue(name: String, value: Int, isSupported: (() -> Boolean)? = null) : IntegerValue(name, value, 1..197, isSupported)
 
 /**
  * List value represents a selectable list of values

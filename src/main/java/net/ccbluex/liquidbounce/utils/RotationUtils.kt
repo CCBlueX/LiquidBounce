@@ -344,10 +344,13 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @return target vector
      */
     fun getVectorForRotation(rotation: Rotation): Vec3 {
-        val yawCos = cos(-rotation.yaw.toRadians() - Math.PI)
-        val yawSin = sin(-rotation.yaw.toRadians() - Math.PI)
-        val pitchCos = -cos(-rotation.pitch.toRadians()).toDouble()
-        val pitchSin = sin(-rotation.pitch.toRadians()).toDouble()
+        val yawRad = -rotation.yaw.toRadiansD() - Math.PI
+        val pitchRad = -rotation.pitch.toRadiansD()
+        val yawCos = cos(yawRad)
+        val yawSin = sin(yawRad)
+        val pitchCos = -cos(pitchRad)
+        val pitchSin = sin(pitchRad)
+
         return Vec3(yawSin * pitchCos, pitchSin, yawCos * pitchCos)
     }
 

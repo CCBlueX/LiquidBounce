@@ -323,7 +323,7 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
                 }
             }
 
-        val selectedAccount: MinecraftAccount?
+        val selectedAccount
             get() = if (selectedSlot >= 0 && selectedSlot < accounts.size) {
                 accounts[selectedSlot]
             } else {

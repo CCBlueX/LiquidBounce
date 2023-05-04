@@ -13,19 +13,19 @@ import kotlin.math.roundToInt
 
 
 object PacketUtils : MinecraftInstance() {
-    var S12PacketEntityVelocity.realMotionX: Float
+    var S12PacketEntityVelocity.realMotionX
         get() = motionX / 8000f
         set(value) {
             motionX = (value * 8000f).roundToInt()
         }
 
-    var S12PacketEntityVelocity.realMotionY: Float
+    var S12PacketEntityVelocity.realMotionY
         get() = motionY / 8000f
         set(value) {
             motionX = (value * 8000f).roundToInt()
         }
 
-    var S12PacketEntityVelocity.realMotionZ: Float
+    var S12PacketEntityVelocity.realMotionZ
         get() = motionZ / 8000f
         set(value) {
             motionX = (value * 8000f).roundToInt()

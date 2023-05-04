@@ -92,12 +92,12 @@ public abstract class MixinGuiNewChat {
                         if (lvt_10_1_ != null) {
                             lvt_11_1_ = p_drawChat_1_ - lvt_10_1_.getUpdatedCounter();
                             if (lvt_11_1_ < 200 || lvt_3_1_) {
-                                double lvt_12_1_ = (double) lvt_11_1_ / 200.0D;
-                                lvt_12_1_ = 1.0D - lvt_12_1_;
-                                lvt_12_1_ *= 10.0D;
-                                lvt_12_1_ = MathHelper.clamp_double(lvt_12_1_, 0.0D, 1.0D);
+                                double lvt_12_1_ = (double) lvt_11_1_ / 200;
+                                lvt_12_1_ = 1 - lvt_12_1_;
+                                lvt_12_1_ *= 10;
+                                lvt_12_1_ = MathHelper.clamp_double(lvt_12_1_, 0, 1);
                                 lvt_12_1_ *= lvt_12_1_;
-                                lvt_14_1_ = (int) (255.0D * lvt_12_1_);
+                                lvt_14_1_ = (int) (255 * lvt_12_1_);
                                 if (lvt_3_1_) {
                                     lvt_14_1_ = 255;
                                 }

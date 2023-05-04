@@ -188,7 +188,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         get() = down && !sameY && GameSettings.isKeyDown(mc.gameSettings.keyBindSneak) && blocksAmount > 1
 
     // Current rotation
-    private val currRotation: Rotation
+    private val currRotation
         get() = targetRotation ?: mc.thePlayer?.rotation ?: serverRotation
 
     // Extra clicks

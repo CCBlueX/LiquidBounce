@@ -80,7 +80,7 @@ public abstract class MixinEntityRenderer {
             float f = entity.getEyeHeight();
 
             if (entity instanceof EntityLivingBase && ((EntityLivingBase) entity).isPlayerSleeping()) {
-                f = (float) ((double) f + 1D);
+                f += 1;
                 translate(0F, 0.3F, 0f);
 
                 if (!mc.gameSettings.debugCamEnable) {
@@ -130,9 +130,9 @@ public abstract class MixinEntityRenderer {
             }
 
             translate(0f, -f, 0f);
-            double d0 = entity.prevPosX + (entity.posX - entity.prevPosX) * (double) partialTicks;
-            double d1 = entity.prevPosY + (entity.posY - entity.prevPosY) * (double) partialTicks + (double) f;
-            double d2 = entity.prevPosZ + (entity.posZ - entity.prevPosZ) * (double) partialTicks;
+            double d0 = entity.prevPosX + (entity.posX - entity.prevPosX) * partialTicks;
+            double d1 = entity.prevPosY + (entity.posY - entity.prevPosY) * partialTicks + f;
+            double d2 = entity.prevPosZ + (entity.posZ - entity.prevPosZ) * partialTicks;
             cloudFog = mc.renderGlobal.hasCloudFog(d0, d1, d2, partialTicks);
         }
     }
@@ -163,15 +163,15 @@ public abstract class MixinEntityRenderer {
 
             final Reach reach = Reach.INSTANCE;
 
-            double d0 = reach.getState() ? reach.getMaxRange() : (double) mc.playerController.getBlockReachDistance();
+            double d0 = reach.getState() ? reach.getMaxRange() : mc.playerController.getBlockReachDistance();
             mc.objectMouseOver = entity.rayTrace(reach.getState() ? reach.getBuildReach() : d0, p_getMouseOver_1_);
             double d1 = d0;
             Vec3 vec3 = entity.getPositionEyes(p_getMouseOver_1_);
             boolean flag = false;
             if (mc.playerController.extendedReach()) {
-                d0 = 6.0D;
-                d1 = 6.0D;
-            } else if (d0 > 3.0D) {
+                d0 = 6;
+                d1 = 6;
+            } else if (d0 > 3) {
                 flag = true;
             }
 
@@ -206,16 +206,16 @@ public abstract class MixinEntityRenderer {
                 for (final AxisAlignedBB axisalignedbb : boxes) {
                     MovingObjectPosition movingobjectposition = axisalignedbb.calculateIntercept(vec3, vec32);
                     if (axisalignedbb.isVecInside(vec3)) {
-                        if (d2 >= 0.0D) {
+                        if (d2 >= 0) {
                             pointedEntity = entity1;
                             vec33 = movingobjectposition == null ? vec3 : movingobjectposition.hitVec;
-                            d2 = 0.0D;
+                            d2 = 0;
                         }
                     } else if (movingobjectposition != null) {
                         double d3 = vec3.distanceTo(movingobjectposition.hitVec);
-                        if (d3 < d2 || d2 == 0.0D) {
+                        if (d3 < d2 || d2 == 0) {
                             if (entity1 == entity.ridingEntity && !entity.canRiderInteract()) {
-                                if (d2 == 0.0D) {
+                                if (d2 == 0) {
                                     pointedEntity = entity1;
                                     vec33 = movingobjectposition.hitVec;
                                 }
@@ -229,7 +229,7 @@ public abstract class MixinEntityRenderer {
                 }
             }
 
-            if (pointedEntity != null && flag && vec3.distanceTo(vec33) > (reach.getState() ? reach.getCombatReach() : 3.0D)) {
+            if (pointedEntity != null && flag && vec3.distanceTo(vec33) > (reach.getState() ? reach.getCombatReach() : 3)) {
                 pointedEntity = null;
                 mc.objectMouseOver = new MovingObjectPosition(MovingObjectPosition.MovingObjectType.MISS, Objects.requireNonNull(vec33), null, new BlockPos(vec33));
             }

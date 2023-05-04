@@ -24,7 +24,7 @@ import net.minecraft.network.play.server.S2EPacketCloseWindow
 import org.lwjgl.input.Keyboard
 import java.awt.Color
 
-object ClickGUI : Module("ClickGUI", ModuleCategory.RENDER, Keyboard.KEY_RSHIFT, defaultInArray = false, canEnable = false) {
+object ClickGUI : Module("ClickGUI", ModuleCategory.RENDER, Keyboard.KEY_RSHIFT, canBeEnabled = false) {
     private val style by
         object : ListValue("Style", arrayOf("LiquidBounce", "Null", "Slowly", "Black"), "LiquidBounce") {
             override fun onChanged(oldValue: String, newValue: String) = updateStyle()
@@ -42,11 +42,9 @@ object ClickGUI : Module("ClickGUI", ModuleCategory.RENDER, Keyboard.KEY_RSHIFT,
     private val colorGreen by IntegerValue("G", 160, 0..255) { colorRainbow.isSupported() && !colorRainbow.get() }
     private val colorBlue by IntegerValue("B", 255, 0..255) { colorRainbow.isSupported() && !colorRainbow.get() }
 
-    val guiColor: Int
-        get() {
-            return if (colorRainbow.get()) ColorUtils.rainbow().rgb
-            else Color(colorRed, colorGreen, colorBlue).rgb
-        }
+    val guiColor
+        get() = if (colorRainbow.get()) ColorUtils.rainbow().rgb
+        else Color(colorRed, colorGreen, colorBlue).rgb
 
     override fun onEnable() {
         updateStyle()
