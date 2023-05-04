@@ -27,7 +27,7 @@ object SuperKnockback : Module("SuperKnockback", ModuleCategory.COMBAT) {
 
     private val delay by IntegerValue("Delay", 0, 0, 500)
     private val hurtTime by IntegerValue("HurtTime", 10, 0, 10)
-    private val mode by ListValue("Mode", arrayOf("Legit", "Silent", "Packet", "SneakPacket"), "Silent")
+    private val mode by ListValue("Mode", arrayOf("Legit", "Old", "Silent", "Packet", "SneakPacket"), "Old")
     private val onlyGround by BoolValue("OnlyGround", false)
 
     private val onlyMove by BoolValue("OnlyMove", true)
@@ -49,6 +49,22 @@ object SuperKnockback : Module("SuperKnockback", ModuleCategory.COMBAT) {
             return
 
         when (mode) {
+            "Old" -> {
+                // Users reported that this mode is better than the other ones
+
+                if (mc.thePlayer.isSprinting) {
+                    sendPacket(C0BPacketEntityAction(mc.thePlayer, C0BPacketEntityAction.Action.STOP_SPRINTING))
+                }
+
+                sendPackets(
+                    C0BPacketEntityAction(mc.thePlayer, C0BPacketEntityAction.Action.START_SPRINTING),
+                    C0BPacketEntityAction(mc.thePlayer, C0BPacketEntityAction.Action.STOP_SPRINTING),
+                    C0BPacketEntityAction(mc.thePlayer, C0BPacketEntityAction.Action.START_SPRINTING)
+                )
+                mc.thePlayer.isSprinting = true
+                mc.thePlayer.serverSprintState = true
+            }
+
             "Legit", "Silent" -> ticks = 2
 
             "Packet" -> {
