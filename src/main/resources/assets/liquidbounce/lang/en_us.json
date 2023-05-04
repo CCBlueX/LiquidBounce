@@ -152,6 +152,13 @@
   "liquidbounce.command.skull.result.noEmptySlot": "There are no empty slots in your inventory.",
   "liquidbounce.command.skull.result.skullGiven": "Gave you the skull of %s.",
 
+  "liquidbounce.command.enchant.description": "Enchants the currently selected item.",
+  "liquidbounce.command.enchant.parameter.enchantment.description": "Enchantment name.",
+  "liquidbounce.command.enchant.parameter.level.description": "Enchantment level.",
+  "liquidbounce.command.enchant.result.mustBeCreative": "Creative mode required!",
+  "liquidbounce.command.enchant.result.enchantmentNotExists": "Enchantment \"%s\" do not exists.",
+  "liquidbounce.command.enchant.result.enchantedItem": "Item has been enchanted with %s enchantment on the %s level.",
+
   "liquidbounce.command.position.description": "Copies your current coordinates to the clipboard.",
   "liquidbounce.command.position.result.position": "Position: %s",
 
@@ -507,5 +514,7 @@
 
   "liquidbounce.module.antiVanish.description": "Allows you to see which players are in vanish on some servers.",
   "liquidbounce.module.antiVanish.messages.staffDetected": "We have detect a vanished staff member.",
-  "liquidbounce.module.antiVanish.messages.allClear": "No vanished player was found."
+  "liquidbounce.module.antiVanish.messages.allClear": "No vanished player was found.",
+
+  "liquidbounce.module.autoWeapon.description": "Automatically selects the best weapon in your hotbar."
 }

@@ -19,9 +19,13 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSprint;
 import net.minecraft.client.input.Input;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Input.class)
 public class MixinInput {
@@ -31,4 +35,12 @@ public class MixinInput {
     @Shadow public boolean pressingForward;
     @Shadow public float movementForward;
     @Shadow public float movementSideways;
+
+    @Inject(method = "hasForwardMovement", cancellable = true, at = @At("RETURN"))
+    private void hookOmnidirectionalSprintA(final CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
+        final boolean hasMovement = Math.abs(movementForward) > 1.0E-5F || Math.abs(movementSideways) > 1.0E-5F;
+
+        callbackInfoReturnable.setReturnValue(!ModuleSprint.INSTANCE.shouldPreventSprint() && (ModuleSprint.INSTANCE.shouldSprintOmnidirectionally() ? hasMovement : callbackInfoReturnable.getReturnValue()));
+    }
+
 }

@@ -32,9 +32,9 @@ import net.minecraft.client.gui.screen.world.SelectWorldScreen
 import net.minecraft.client.realms.gui.screen.RealmsMainScreen
 
 /**
- * Referenced by JS as `ui`
+ * Referenced by JS as `pages`
  */
-object UltralightJsUi {
+object UltralightJsPages {
 
     // A collection of minecraft screens
     private val _jsScreens = arrayOf(

@@ -21,7 +21,7 @@ plugins {
     id "fabric-loom"
     id "org.jetbrains.kotlin.jvm"
     id "com.github.johnrengelman.shadow" version "7.1.2"
-    id "org.jlleitschuh.gradle.ktlint" version "11.3.1"
+    id "org.jlleitschuh.gradle.ktlint" version "11.3.2"
 }
 
 ktlint {
@@ -56,6 +56,7 @@ repositories {
         name = 'TerraformersMC'
         url = 'https://maven.terraformersmc.com/'
     }
+    maven { url = "https://repo.viaversion.com/" }
 }
 
 dependencies {
@@ -69,17 +70,15 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 
-    // MultiConnect API
-    modImplementation ("net.earthcomputer.multiconnect:multiconnect-api:${project.multiconnect_version}") { transitive = false }
+    modImplementation "com.viaversion:viaversion:4.7.0-23w17a-SNAPSHOT"
+    modImplementation "com.github.FlorianMichael:ViaLoadingBase:4.4.8"
 
-    /*
-        Recommended mods (on IDE)
-     */
-    // modRuntimeOnly ("net.earthcomputer.multiconnect:multiconnect:${project.multiconnect_version}") { transitive = false }
-    // modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
-    // modRuntime "com.github.CaffeineMC:sodium-fabric:${project.sodium_version}"
-    // modRuntimeOnly "com.github.CaffeineMC:lithium-fabric:${project.lithium_version}"
-    // modRuntime "com.github.CaffeineMC:phosphor-fabric:${project.phosphor_version}"
+    // Recommended mods (on IDE)
+    modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
+
+    modRuntimeOnly "com.github.CaffeineMC:sodium-fabric:${project.sodium_version}"
+    modRuntimeOnly "com.github.CaffeineMC:lithium-fabric:${project.lithium_version}"
+    // modRuntimeOnly "com.github.CaffeineMC:phosphor-fabric:${project.phosphor_version}"
 
     // fix nullable imports
     implementation "com.google.code.findbugs:jsr305:3.0.2"
@@ -96,7 +95,12 @@ dependencies {
     implementation "com.labymedia:ultralight-java-gpu:0.4.12"
     implementation "com.labymedia:ultralight-java-glfw-opengl-util:0.4.12"
 
-    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "org.graalvm.sdk:graal-sdk:22.3.2"
+    implementation "org.graalvm.truffle:truffle-api:22.3.2"
+    implementation "org.graalvm.js:js:22.3.2"
+
+    runtimeOnly "org.graalvm.tools:profiler:22.3.2"
+    runtimeOnly "org.graalvm.tools:chromeinspector:22.3.2"
 
     // https://mvnrepository.com/artifact/io.netty/netty-codec-http
     implementation 'io.netty:netty-codec-http:4.1.82.Final'
@@ -181,6 +185,9 @@ shadowJar {
         include(dependency('com.labymedia:ultralight-java-glfw-opengl-util'))
         include(dependency('com.thealtening.api:api'))
         include(dependency('com.github.CCBlueX:Elixir'))
+        include(dependency("org.graalvm.sdk:graal-sdk:22.3.2"))
+        include(dependency("org.graalvm.truffle:truffle-api:22.3.2"))
+        include(dependency("org.graalvm.js:js:22.3.2"))
         include(dependency('io.netty:netty-codec-http'))
         include(dependency('io.netty:netty-handler-proxy'))
     }

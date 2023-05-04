@@ -19,13 +19,9 @@
 
 package net.ccbluex.liquidbounce.features.misc
 
-import io.netty.channel.*
-import io.netty.handler.proxy.Socks5ProxyHandler
-import io.netty.handler.timeout.ReadTimeoutHandler
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.ListValueType
-import net.minecraft.network.*
 import java.net.InetSocketAddress
 import java.util.*
 
@@ -42,35 +38,18 @@ object ProxyManager : Configurable("Proxies") {
         ConfigSystem.root(this)
     }
 
-    fun setupConnect(clientConnection: ClientConnection) = object : ChannelInitializer<Channel>() {
-        @Throws(Exception::class)
-        override fun initChannel(channel: Channel) {
-            try {
-                channel.config().setOption(ChannelOption.TCP_NODELAY, true)
-            } catch (var3: ChannelException) {
-            }
-
-            val p = channel.pipeline()
-                .addLast("timeout", ReadTimeoutHandler(30) as ChannelHandler)
-                .addLast("splitter", SplitterHandler() as ChannelHandler)
-                .addLast("decoder", DecoderHandler(NetworkSide.CLIENTBOUND) as ChannelHandler)
-                .addLast("prepender", SizePrepender() as ChannelHandler)
-                .addLast("encoder", PacketEncoder(NetworkSide.SERVERBOUND) as ChannelHandler)
-                .addLast("packet_handler", clientConnection as ChannelHandler?)
-
-            val proxy = currentProxy
-            if (proxy != null) {
-                p.addFirst(
-                    "proxy",
-                    if (proxy.credentials != null) {
-                        Socks5ProxyHandler(proxy.address, proxy.credentials.username, proxy.credentials.password)
-                    } else {
-                        Socks5ProxyHandler(proxy.address)
-                    }
-                )
-            }
-        }
-    }
+    // todo: hook into ChannelInitializer
+    // val proxy = currentProxy
+    //            if (proxy != null) {
+    //                p.addFirst(
+    //                    "proxy",
+    //                    if (proxy.credentials != null) {
+    //                        Socks5ProxyHandler(proxy.address, proxy.credentials.username, proxy.credentials.password)
+    //                    } else {
+    //                        Socks5ProxyHandler(proxy.address)
+    //                    }
+    //                )
+    //            }
 
     data class Proxy(val address: InetSocketAddress, val credentials: ProxyCredentials?)
 

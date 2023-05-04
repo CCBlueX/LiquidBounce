@@ -62,7 +62,7 @@ object ConfigSystem {
         }
     }
 
-    // A mutable list of all root configurable classes (and their sub classes)
+    // A mutable list of all root configurable classes (and their sub-classes)
     private val configurables: MutableList<Configurable> = mutableListOf()
 
     // Gson
@@ -99,17 +99,17 @@ object ConfigSystem {
      */
     fun load() {
         for (configurable in configurables) { // Make a new .json file to save our root configurable
-            File(rootFolder, "${configurable.name.lowercase()}.json").runCatching {
+            File(rootFolder, "${configurable.loweredName}.json").runCatching {
                 if (!exists()) {
                     storeAll()
                     return@runCatching
                 }
 
-                logger.debug("Reading config ${configurable.name}...")
+                logger.debug("Reading config ${configurable.loweredName}...")
                 deserializeConfigurable(configurable, reader())
-                logger.info("Successfully loaded config '${configurable.name}'.")
+                logger.info("Successfully loaded config '${configurable.loweredName}'.")
             }.onFailure {
-                logger.error("Unable to load config ${configurable.name}", it)
+                logger.error("Unable to load config ${configurable.loweredName}", it)
                 storeAll()
             }
         }
@@ -131,16 +131,16 @@ object ConfigSystem {
      * The configurable should be known to the config system.
      */
     fun storeConfigurable(configurable: Configurable) { // Make a new .json file to save our root configurable
-        File(rootFolder, "${configurable.name.lowercase()}.json").runCatching {
+        File(rootFolder, "${configurable.loweredName}.json").runCatching {
             if (!exists()) {
                 createNewFile().let { logger.debug("Created new file (status: $it)") }
             }
 
-            logger.debug("Writing config ${configurable.name}...")
+            logger.debug("Writing config ${configurable.loweredName}...")
             serializeConfigurable(configurable, writer())
-            logger.info("Successfully saved config '${configurable.name}'.")
+            logger.info("Successfully saved config '${configurable.loweredName}'.")
         }.onFailure {
-            logger.error("Unable to store config ${configurable.name}", it)
+            logger.error("Unable to store config ${configurable.loweredName}", it)
         }
     }
 
