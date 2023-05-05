@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.item.convertClientSlotToServerSlot
+import net.ccbluex.liquidbounce.utils.item.openInventorySilently
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
@@ -50,7 +51,11 @@ object ModuleAutoTotem : Module("AutoTotem", Category.PLAYER) {
         } ?: return@repeatable
 
         val serverSlot = convertClientSlotToServerSlot(slot)
-        val isInInventoryScreen = mc.currentScreen !is InventoryScreen
+        val isInInventoryScreen = mc.currentScreen is InventoryScreen
+
+        if (!isInInventoryScreen) {
+            openInventorySilently()
+        }
 
         interaction.clickSlot(0, serverSlot, 40, SlotActionType.SWAP, player)
 

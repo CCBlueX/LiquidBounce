@@ -128,6 +128,10 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
             // Should the item be just thrown out of the inventory
             val shouldThrow = isObsolete && player.inventory.main.none { it.isEmpty }
 
+            if (!isInInventoryScreen) {
+                openInventorySilently()
+            }
+
             if (shouldThrow) {
                 interaction.clickSlot(0, slot, 1, SlotActionType.THROW, player)
             } else {

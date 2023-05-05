@@ -19,7 +19,14 @@
 
 package net.ccbluex.liquidbounce.utils.item
 
+import com.viaversion.viaversion.api.connection.UserConnection
+import com.viaversion.viaversion.api.protocol.packet.PacketWrapper
+import com.viaversion.viaversion.api.type.Type
+import com.viaversion.viaversion.protocols.protocol1_12to1_11_1.Protocol1_12To1_11_1
+import com.viaversion.viaversion.protocols.protocol1_9_3to1_9_1_2.ServerboundPackets1_9_3
+import io.netty.util.AttributeKey
 import net.ccbluex.liquidbounce.config.Configurable
+import net.minecraft.client.MinecraftClient
 
 fun convertClientSlotToServerSlot(slot: Int): Int {
     return when (slot) {
@@ -28,6 +35,29 @@ fun convertClientSlotToServerSlot(slot: Int): Int {
         in 36..39 -> 39 - slot + 5
         40 -> 45
         else -> throw IllegalArgumentException()
+    }
+}
+
+/**
+ * Sends an open inventory packet using ViaFabricPlus code. This is only for older versions.
+ */
+fun openInventorySilently() {
+    runCatching {
+        val LOCAL_VIA_CONNECTION = AttributeKey.valueOf<UserConnection>("viafabricplus-via-connection")
+
+        val viaConnection: UserConnection? =
+            MinecraftClient.getInstance().networkHandler!!.connection.channel.attr(LOCAL_VIA_CONNECTION).get()
+
+        if (viaConnection != null && viaConnection.protocolInfo.pipeline.contains(Protocol1_12To1_11_1::class.java)) {
+            viaConnection.channel!!.eventLoop().submit {
+                val clientStatus = PacketWrapper.create(ServerboundPackets1_9_3.CLIENT_STATUS, viaConnection)
+                clientStatus.write(Type.VAR_INT, 2) // Open Inventory Achievement
+
+                runCatching {
+                    clientStatus.sendToServer(Protocol1_12To1_11_1::class.java)
+                }
+            }
+        }
     }
 }
 

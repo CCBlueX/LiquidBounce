@@ -23,10 +23,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.item.InventoryConstraintsConfigurable
-import net.ccbluex.liquidbounce.utils.item.convertClientSlotToServerSlot
-import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
-import net.ccbluex.liquidbounce.utils.item.findInventorySlot
+import net.ccbluex.liquidbounce.utils.item.*
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.client.util.InputUtil
 import net.minecraft.item.Items
@@ -101,6 +98,10 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
     ) {
         val slot = convertClientSlotToServerSlot(item)
         val isInInventoryScreen = mc.currentScreen is InventoryScreen
+
+        if (!isInInventoryScreen) {
+            openInventorySilently()
+        }
 
         if (!(inventoryConstraints.noMove && player.moving) && (!inventoryConstraints.invOpen || isInInventoryScreen)) {
             interaction.clickSlot(0, slot, button, slotActionType, player)

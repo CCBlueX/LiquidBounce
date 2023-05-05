@@ -250,6 +250,10 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
         val slot = convertClientSlotToServerSlot(item)
         val isInInventoryScreen = mc.currentScreen is InventoryScreen
 
+        if (!isInInventoryScreen) {
+            openInventorySilently()
+        }
+
         if (!(inventoryConstraints.noMove && player.moving) && (!inventoryConstraints.invOpen || isInInventoryScreen)) {
             interaction.clickSlot(0, slot, clickData, slotActionType, player)
 
@@ -286,6 +290,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
 
                     WeightedToolItem(stack, slotId)
                 }
+
                 is FishingRodItem -> WeightedRodItem(stack, slotId)
                 is ShieldItem -> WeightedShieldItem(stack, slotId)
                 is BlockItem -> WeightedBlockItem(stack, slotId)
@@ -297,12 +302,14 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
                         else -> WeightedPrimitiveItem(stack, slotId, ItemCategory(ItemType.BUCKET, 3))
                     }
                 }
+
                 is EnderPearlItem -> WeightedPrimitiveItem(stack, slotId, ItemCategory(ItemType.PEARL, 0))
                 Items.GOLDEN_APPLE -> {
                     items.add(WeightedFoodItem(stack, slotId))
 
                     WeightedPrimitiveItem(stack, slotId, ItemCategory(ItemType.GAPPLE, 0))
                 }
+
                 Items.ENCHANTED_GOLDEN_APPLE -> {
                     items.add(WeightedFoodItem(stack, slotId))
 
@@ -310,6 +317,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
                         stack, slotId, ItemCategory(ItemType.GAPPLE, 0), 1
                     )
                 }
+
                 else -> {
                     if (stack.isFood) {
                         WeightedFoodItem(stack, slotId)
@@ -382,10 +390,10 @@ class WeightedSwordItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStac
         private val COMPARATOR = ComparatorChain<WeightedSwordItem>(
             { o1, o2 ->
                 (
-                        // TODO: Attack Speed
-                        o1.itemStack.item.attackDamage * (1.0f + DAMAGE_ESTIMATOR.estimateValue(o1.itemStack)) + o1.itemStack.getEnchantment(
-                            Enchantments.FIRE_ASPECT
-                        ) * 4.0f * 0.625f * 0.9f).compareTo(
+                    // TODO: Attack Speed
+                    o1.itemStack.item.attackDamage * (1.0f + DAMAGE_ESTIMATOR.estimateValue(o1.itemStack)) + o1.itemStack.getEnchantment(
+                        Enchantments.FIRE_ASPECT
+                    ) * 4.0f * 0.625f * 0.9f).compareTo(
                     o2.itemStack.item.attackDamage * (1.0f + DAMAGE_ESTIMATOR.estimateValue(
                         o2.itemStack
                     ) + o2.itemStack.getEnchantment(Enchantments.FIRE_ASPECT) * 4.0f * 0.625f * 0.9f)

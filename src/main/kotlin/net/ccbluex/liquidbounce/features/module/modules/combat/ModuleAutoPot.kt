@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.item.convertClientSlotToServerSlot
+import net.ccbluex.liquidbounce.utils.item.openInventorySilently
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.SplashPotionItem
@@ -99,7 +100,11 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
                 return@repeatable
             } else if (potInvSlot != null) {
                 val serverSlot = convertClientSlotToServerSlot(potInvSlot)
-                val isInInventoryScreen = mc.currentScreen !is InventoryScreen
+                val isInInventoryScreen = mc.currentScreen is InventoryScreen
+
+                if (!isInInventoryScreen) {
+                    openInventorySilently()
+                }
 
                 interaction.clickSlot(0, serverSlot, 0, SlotActionType.QUICK_MOVE, player)
 
