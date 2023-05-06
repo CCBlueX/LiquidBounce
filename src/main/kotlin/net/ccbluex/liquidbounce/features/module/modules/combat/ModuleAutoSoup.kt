@@ -52,7 +52,7 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
         val bowlHotbarSlot = findHotbarSlot(Items.BOWL)
         val bowlInvSlot = findInventorySlot(Items.MUSHROOM_STEW)
 
-        if (mushroomStewSlot == null && bowlInvSlot == null && bowlHotbarSlot == null) {
+        if (mushroomStewSlot == null && bowlInvSlot == null && bowlHotbarSlot == null || interaction.hasRidingInventory()) {
             return@repeatable
         }
 
@@ -64,7 +64,11 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
                     Direction.DOWN
                 )
             )
-            network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
+
+            if (bowlHotbarSlot != player.inventory.selectedSlot) {
+                network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
+            }
+
             when (bowl) {
                 BowlMode.DROP -> {
                     utilizeInventory(bowlHotbarSlot, 1, SlotActionType.THROW, inventoryConstraints)

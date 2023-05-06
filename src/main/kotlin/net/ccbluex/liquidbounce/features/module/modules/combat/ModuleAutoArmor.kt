@@ -27,9 +27,7 @@ import net.ccbluex.liquidbounce.utils.item.*
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.item.ArmorItem
 import net.minecraft.item.Items
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.screen.slot.SlotActionType
 import net.minecraft.util.Hand
@@ -41,36 +39,28 @@ import net.minecraft.util.Hand
  */
 object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
 
-    private val inventoryConstraints = InventoryConstraintsConfigurable()
+    private val inventoryConstraints = tree(InventoryConstraintsConfigurable())
     private val hotbar by boolean("Hotbar", true)
-
-    init {
-        tree(inventoryConstraints)
-    }
 
     var locked = false
 
     val repeatable = repeatable {
         val player = mc.player ?: return@repeatable
 
-        if (player.currentScreenHandler.syncId != 0) {
+        if (player.currentScreenHandler.syncId != 0 || interaction.hasRidingInventory()) {
             return@repeatable
         }
 
-        val bestArmor = (0..41)
-            .mapNotNull { slot ->
-                val stack = player.inventory.getStack(slot)
+        val bestArmor = (0..41).mapNotNull { slot ->
+            val stack = player.inventory.getStack(slot)
 
-                return@mapNotNull when (stack?.item) {
-                    is ArmorItem -> ArmorPiece(stack, slot)
-                    else -> null
-                }
+            return@mapNotNull when (stack?.item) {
+                is ArmorItem -> ArmorPiece(stack, slot)
+                else -> null
             }
-            .groupBy(ArmorPiece::entitySlotId)
-            .values
-            .mapNotNull {
-                it.maxWithOrNull(ArmorComparator)
-            }
+        }.groupBy(ArmorPiece::entitySlotId).values.mapNotNull {
+            it.maxWithOrNull(ArmorComparator)
+        }
 
         for (armorPiece in bestArmor) {
             if (armorPiece.isAlreadyEquipped) {
@@ -83,8 +73,9 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
                 continue
             }
 
-            if (!stackInArmor.isNothing() && move(armorPiece.inventorySlot, true) ||
-                stackInArmor.isNothing() && move(armorPiece.slot, false)
+            if (!stackInArmor.isNothing() && move(armorPiece.inventorySlot, true) || stackInArmor.isNothing() && move(
+                    armorPiece.slot, false
+                )
             ) {
                 locked = true
                 wait(inventoryConstraints.delay.random())
@@ -107,16 +98,26 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
 
         if (!isObsolete && hotbar && !isInInventoryScreen) {
             if (slot in 36..44) {
-                network.sendPacket(UpdateSelectedSlotC2SPacket(item))
-                interaction.sendSequencedPacket(world) { sequence ->
-                    PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence)
+                if (item != player.inventory.selectedSlot) {
+                    network.sendPacket(UpdateSelectedSlotC2SPacket(item))
                 }
-                network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
+
+                val interact = interaction.interactItem(player, Hand.MAIN_HAND)
+
+                if (interact.shouldSwingHand()) {
+                    player.swingHand(Hand.MAIN_HAND)
+                }
+
+                if (item != player.inventory.selectedSlot) {
+                    network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
+                }
 
                 return true
             } else if (slot == 45) {
-                interaction.sendSequencedPacket(world) { sequence ->
-                    PlayerInteractItemC2SPacket(Hand.OFF_HAND, sequence)
+                val interact = interaction.interactItem(player, Hand.OFF_HAND)
+
+                if (interact.shouldSwingHand()) {
+                    player.swingHand(Hand.OFF_HAND)
                 }
 
                 return true
@@ -124,14 +125,12 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
         }
 
         if (!(inventoryConstraints.noMove && player.moving) && (!inventoryConstraints.invOpen || isInInventoryScreen)) {
-            val openInventory = inventoryConstraints.simulateInventory && !isInInventoryScreen
-
-            if (openInventory) {
-                network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.OPEN_INVENTORY))
-            }
-
             // Should the item be just thrown out of the inventory
             val shouldThrow = isObsolete && player.inventory.main.none { it.isEmpty }
+
+            if (!isInInventoryScreen) {
+                openInventorySilently()
+            }
 
             if (shouldThrow) {
                 interaction.clickSlot(0, slot, 1, SlotActionType.THROW, player)
@@ -139,7 +138,7 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
                 interaction.clickSlot(0, slot, 0, SlotActionType.QUICK_MOVE, player)
             }
 
-            if (openInventory) {
+            if (!isInInventoryScreen) {
                 network.sendPacket(CloseHandledScreenC2SPacket(0))
             }
 

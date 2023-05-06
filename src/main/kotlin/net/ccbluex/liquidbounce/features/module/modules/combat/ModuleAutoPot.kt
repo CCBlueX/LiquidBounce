@@ -27,10 +27,10 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.item.convertClientSlotToServerSlot
+import net.ccbluex.liquidbounce.utils.item.openInventorySilently
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.SplashPotionItem
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
@@ -79,13 +79,14 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
 
                 if (player.pitch <= 80) {
                     RotationManager.aimAt(
-                        Rotation(player.yaw, RandomUtils.nextFloat(80f, 90f)),
-                        configurable = rotations
+                        Rotation(player.yaw, RandomUtils.nextFloat(80f, 90f)), configurable = rotations
                     )
                 }
 
-                // Using timer so as to avoid sword shield
-                wait(2)
+                if (player.isBlocking) {
+                    waitUntil { !player.isBlocking }
+                }
+
                 interaction.sendSequencedPacket(world) { sequence ->
                     PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence)
                 }
@@ -97,23 +98,17 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
                 wait(delay)
 
                 return@repeatable
-            } else {
-                val serverSlot = convertClientSlotToServerSlot(potInvSlot!!)
+            } else if (potInvSlot != null) {
+                val serverSlot = convertClientSlotToServerSlot(potInvSlot)
+                val isInInventoryScreen = mc.currentScreen is InventoryScreen
 
-                val openInventory = mc.currentScreen !is InventoryScreen
-
-                if (openInventory) {
-                    network.sendPacket(
-                        ClientCommandC2SPacket(
-                            player,
-                            ClientCommandC2SPacket.Mode.OPEN_INVENTORY
-                        )
-                    )
+                if (!isInInventoryScreen) {
+                    openInventorySilently()
                 }
 
                 interaction.clickSlot(0, serverSlot, 0, SlotActionType.QUICK_MOVE, player)
 
-                if (openInventory) {
+                if (!isInInventoryScreen) {
                     network.sendPacket(CloseHandledScreenC2SPacket(0))
                 }
 

@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.combat.CpsScheduler
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.*
+import net.ccbluex.liquidbounce.utils.item.openInventorySilently
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
@@ -170,10 +171,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         val rotation = RotationManager.currentRotation ?: return@repeatable
 
         if (target.boxedDistanceTo(player) <= range && facingEnemy(
-                target,
-                rotation,
-                range.toDouble(),
-                wallRange.toDouble()
+                target, rotation, range.toDouble(), wallRange.toDouble()
             )
         ) {
             // Check if between enemy and player is another entity
@@ -244,6 +242,11 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                     interaction.sendSequencedPacket(world) { sequence ->
                         PlayerInteractItemC2SPacket(player.activeHand, sequence)
                     }
+
+                    if (simulateInventoryClosing && isInInventoryScreen) {
+                        openInventorySilently()
+                    }
+
                 }
             }
         }

@@ -106,14 +106,7 @@ object ModuleTrigger : Module("Trigger", Category.COMBAT) {
             }
 
             Use.STOP -> {
-                network.sendPacket(
-                    PlayerActionC2SPacket(
-                        PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
-                        BlockPos.ORIGIN,
-                        Direction.DOWN
-                    )
-                )
-                player.stopUsingItem()
+                interaction.stopUsingItem(player)
 
                 if (delayPostStopUse > 0) {
                     wait(delayPostStopUse)

@@ -23,14 +23,10 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.item.InventoryConstraintsConfigurable
-import net.ccbluex.liquidbounce.utils.item.convertClientSlotToServerSlot
-import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
-import net.ccbluex.liquidbounce.utils.item.findInventorySlot
+import net.ccbluex.liquidbounce.utils.item.*
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.client.util.InputUtil
 import net.minecraft.item.Items
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.screen.slot.SlotActionType
 
@@ -51,7 +47,7 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
         val slot = findHotbarSlot(Items.GOLDEN_APPLE)
         val invSlot = findInventorySlot(Items.GOLDEN_APPLE)
 
-        if (slot == null && invSlot == null) {
+        if (slot == null && invSlot == null || interaction.hasRidingInventory()) {
             if (lastSlot != -1) {
                 player.inventory.selectedSlot = lastSlot
                 lastSlot = -1
@@ -98,22 +94,20 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
         button: Int,
         slotActionType: SlotActionType,
         inventoryConstraints: InventoryConstraintsConfigurable,
-        close: Boolean = true
+        close: Boolean = true,
     ) {
         val slot = convertClientSlotToServerSlot(item)
         val isInInventoryScreen = mc.currentScreen is InventoryScreen
 
+        if (!isInInventoryScreen) {
+            openInventorySilently()
+        }
+
         if (!(inventoryConstraints.noMove && player.moving) && (!inventoryConstraints.invOpen || isInInventoryScreen)) {
-            val openInventory = inventoryConstraints.simulateInventory && !isInInventoryScreen
-
-            if (openInventory) {
-                network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.OPEN_INVENTORY))
-            }
-
             interaction.clickSlot(0, slot, button, slotActionType, player)
 
             if (close) {
-                if (openInventory) {
+                if (!isInInventoryScreen) {
                     network.sendPacket(CloseHandledScreenC2SPacket(0))
                 }
             }
