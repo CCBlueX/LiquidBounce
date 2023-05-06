@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.EngineRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDerp
 import net.ccbluex.liquidbounce.render.engine.*
 import net.ccbluex.liquidbounce.render.engine.memory.PositionColorVertexFormat
 import net.ccbluex.liquidbounce.render.engine.memory.putVertex
@@ -81,7 +82,7 @@ object ModuleRotations : Module("Rotations", Category.RENDER) {
     fun shouldDisplayRotations(): Boolean {
         val priority = ModuleFreeCam.shouldDisableRotations()
 
-        val special = false // arrayOf<Module>().any { it.enabled }
+        val special = arrayOf(ModuleDerp).any { it.enabled }
 
         return priority || enabled && (RotationManager.currentRotation != null || special)
     }
