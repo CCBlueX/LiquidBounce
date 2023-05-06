@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePortalMenu;
+import net.ccbluex.liquidbounce.features.module.modules.fun.ModuleDerp;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoSlow;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModulePerfectHorseJump;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSprint;
@@ -161,7 +162,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     private float hookSilentRotationYaw(ClientPlayerEntity instance) {
         Rotation rotation = RotationManager.INSTANCE.getCurrentRotation();
         if (rotation == null) {
-            return instance.getYaw();
+            return ModuleDerp.INSTANCE.getEnabled() ? ModuleDerp.INSTANCE.getRotation()[0] : instance.getYaw();
         }
 
         return rotation.getYaw();
@@ -171,7 +172,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     private float hookSilentRotationPitch(ClientPlayerEntity instance) {
         Rotation rotation = RotationManager.INSTANCE.getCurrentRotation();
         if (rotation == null) {
-            return instance.getPitch();
+            return ModuleDerp.INSTANCE.getEnabled() ? ModuleDerp.INSTANCE.getRotation()[1] : instance.getPitch();
         }
 
         return rotation.getPitch();
