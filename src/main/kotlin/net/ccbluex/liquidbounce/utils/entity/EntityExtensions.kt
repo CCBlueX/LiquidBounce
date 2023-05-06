@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.entity
 
 import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.input.Input
 import net.minecraft.client.network.ClientPlayerEntity
@@ -123,8 +124,8 @@ fun Vec3d.strafe(yaw: Float, speed: Double = sqrtSpeed, strength: Double = 1.0, 
     this.strafe(yaw, speed, strength)
 }
 
-val ClientPlayerEntity.eyesPos: Vec3d
-    get() = Vec3d(pos.x, boundingBox.minY + getEyeHeight(pose), pos.z)
+val Entity.eyes: Vec3d
+    get() = eyePos
 
 val Input.yAxisMovement: Float
     get() = when {
@@ -132,6 +133,12 @@ val Input.yAxisMovement: Float
         sneaking -> -1.0f
         else -> 0.0f
     }
+
+val Entity.rotation: Rotation
+    get() = Rotation(yaw, pitch)
+
+val Entity.box: Box
+    get() = boundingBox.expand(targetingMargin.toDouble())
 
 /**
  * Allows to calculate the distance between the current entity and [entity] from the nearest corner of the bounding box
@@ -141,8 +148,8 @@ fun Entity.boxedDistanceTo(entity: Entity): Double {
 }
 
 fun Entity.squaredBoxedDistanceTo(entity: Entity): Double {
-    val eyes = entity.getCameraPosVec(1F)
-    val pos = getNearestPoint(eyes, boundingBox)
+    val eyes = entity.eyes
+    val pos = getNearestPoint(eyes, box)
 
     val xDist = pos.x - eyes.x
     val yDist = pos.y - eyes.y
@@ -169,11 +176,7 @@ fun getNearestPoint(eyes: Vec3d, box: Box): Vec3d {
 
     // It loops through every coordinate of the double arrays and picks the nearest point
     for (i in 0..2) {
-        if (origin[i] > destMaxs[i]) {
-            origin[i] = destMaxs[i]
-        } else if (origin[i] < destMins[i]) {
-            origin[i] = destMins[i]
-        }
+        origin[i] = origin[i].coerceIn(destMins[i], destMaxs[i])
     }
 
     return Vec3d(origin[0], origin[1], origin[2])

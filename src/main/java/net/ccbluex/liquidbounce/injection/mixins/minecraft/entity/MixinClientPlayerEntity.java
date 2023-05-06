@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
-import net.ccbluex.liquidbounce.utils.client.TickStateManager;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.input.Input;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
@@ -50,12 +49,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ClientPlayerEntity.class)
 public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
-
-    @Shadow
-    public float lastYaw;
-
-    @Shadow
-    public float lastPitch;
 
     @Shadow
     public Input input;
@@ -164,58 +157,24 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
 
     // Silent rotations (Rotation Manager)
 
-    private boolean updatedSilent;
-
-    /**
-     * Hook silent rotations
-     */
-    @ModifyVariable(method = "sendMovementPackets", at = @At("STORE"), ordinal = 2)
-    private boolean hookSilentRotationsCheck(boolean bl4) {
-        boolean shouldDisableRotations = ModuleFreeCam.INSTANCE.shouldDisableRotations();
-        updatedSilent = RotationManager.INSTANCE.needsUpdate(lastYaw, lastPitch);
-        return !shouldDisableRotations && ((bl4 && RotationManager.INSTANCE.getCurrentRotation() == null) || updatedSilent);
-    }
-
-    /**
-     * Hook silent rotations
-     */
-    @Inject(method = "sendMovementPackets", at = @At(value = "FIELD", target = "Lnet/minecraft/client/network/ClientPlayerEntity;lastPitch:F", ordinal = 1, shift = At.Shift.AFTER))
-    private void hookLastSilentRotations(CallbackInfo ci) {
-        if (updatedSilent) {
-            updatedSilent = false;
-
-            Rotation currRotation = RotationManager.INSTANCE.getCurrentRotation();
-            if (currRotation == null) {
-                return;
-            }
-
-            currRotation = currRotation.fixedSensitivity();
-            if (currRotation == null) {
-                return;
-            }
-
-            this.lastYaw = currRotation.getYaw();
-            this.lastPitch = currRotation.getPitch();
-        }
-    }
-
-    @Inject(method = "sendMovementPackets", at = @At(value = "FIELD", target = "Lnet/minecraft/client/network/ClientPlayerEntity;lastOnGround:Z", ordinal = 1, shift = At.Shift.BEFORE))
-    private void hookSilentRotationsUpdate(CallbackInfo ci) {
-        if (RotationManager.INSTANCE.getCurrentRotation() == null) {
-            return;
+    @Redirect(method = {"sendMovementPackets", "tick"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getYaw()F"))
+    private float hookSilentRotationYaw(ClientPlayerEntity instance) {
+        Rotation rotation = RotationManager.INSTANCE.getCurrentRotation();
+        if (rotation == null) {
+            return instance.getYaw();
         }
 
-        RotationManager.INSTANCE.update();
+        return rotation.getYaw();
     }
 
-    @Inject(method = "isSneaking", at = @At("HEAD"), cancellable = true)
-    private void injectForcedState(CallbackInfoReturnable<Boolean> cir) {
-        Boolean enforceEagle = TickStateManager.INSTANCE.getEnforcedState().getEnforceEagle();
-
-        if (enforceEagle != null) {
-            cir.setReturnValue(enforceEagle);
-            cir.cancel();
+    @Redirect(method = {"sendMovementPackets", "tick"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getPitch()F"))
+    private float hookSilentRotationPitch(ClientPlayerEntity instance) {
+        Rotation rotation = RotationManager.INSTANCE.getCurrentRotation();
+        if (rotation == null) {
+            return instance.getPitch();
         }
+
+        return rotation.getPitch();
     }
 
     @Inject(method = "isAutoJumpEnabled", cancellable = true, at = @At("HEAD"))
@@ -245,6 +204,11 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     @Redirect(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerAbilities;allowFlying:Z"))
     private boolean hookFreeCamPreventCreativeFly(PlayerAbilities instance) {
         return !ModuleFreeCam.INSTANCE.getEnabled() && instance.allowFlying;
+    }
+
+    @ModifyVariable(method = "sendMovementPackets", at = @At("STORE"), ordinal = 2)
+    private boolean hookFreeCamPreventRotations(boolean bl4) {
+        return !ModuleFreeCam.INSTANCE.shouldDisableRotations() && bl4;
     }
 
     @ModifyConstant(method = "canSprint", constant = @Constant(floatValue = 6.0F), slice = @Slice(from = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/HungerManager;getFoodLevel()I", ordinal = 0)))

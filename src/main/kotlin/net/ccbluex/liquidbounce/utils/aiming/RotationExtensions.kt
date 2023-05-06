@@ -22,7 +22,7 @@ package net.ccbluex.liquidbounce.utils.aiming
 import net.minecraft.entity.player.PlayerEntity
 
 fun PlayerEntity.applyRotation(rotation: Rotation) {
-    rotation.fixedSensitivity()?.let {
+    rotation.fixedSensitivity().let {
         prevPitch = pitch
         prevYaw = yaw
 

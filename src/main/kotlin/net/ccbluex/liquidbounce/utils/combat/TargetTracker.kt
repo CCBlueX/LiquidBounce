@@ -23,7 +23,9 @@ import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.entity.eyesPos
+import net.ccbluex.liquidbounce.utils.entity.box
+import net.ccbluex.liquidbounce.utils.entity.eyes
+import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
@@ -45,22 +47,27 @@ class TargetTracker(defaultPriority: PriorityEnum = PriorityEnum.HEALTH) : Confi
      * Update should be called to always pick the best target out of the current world context
      */
     fun enemies(enemyConf: EnemyConfigurable = globalEnemyConfigurable): Iterable<Entity> {
-        val player = mc.player!!
+        val player = mc.player ?: return emptyList()
+        val world = mc.world ?: return emptyList()
 
-        val entities = mc.world!!.entities
-            .filter { it.shouldBeAttacked(enemyConf) }
-            .sortedBy { player.squaredBoxedDistanceTo(it) } // Sort by distance
+        var entities = world.entities.filter { it.shouldBeAttacked(enemyConf) }
 
-        entities.lastOrNull()?.let { maxDistanceSquared = it.squaredBoxedDistanceTo(player) }
-
-        val eyePos = player.eyesPos
-
-        when (priority) {
+        entities = when (priority) {
             PriorityEnum.HEALTH -> entities.sortedBy { if (it is LivingEntity) it.health else 0f } // Sort by health
-            PriorityEnum.DIRECTION -> entities.sortedBy { RotationManager.rotationDifference(RotationManager.makeRotation(it.boundingBox.center, eyePos)) } // Sort by FOV
+            PriorityEnum.DIRECTION -> entities.sortedBy {
+                RotationManager.rotationDifference(
+                    RotationManager.makeRotation(
+                        it.box.center, player.eyes
+                    ), player.rotation
+                )
+            } // Sort by FOV
             PriorityEnum.AGE -> entities.sortedBy { -it.age } // Sort by existence
-            else -> {}
+            PriorityEnum.DISTANCE -> entities.sortedBy { it.squaredBoxedDistanceTo(player) }  // Sort by distance
+            PriorityEnum.HURT_TIME -> entities.sortedBy { if (it is LivingEntity) it.hurtTime else 0 } // Sort by hurt time
         }
+
+        entities.minByOrNull { it.squaredBoxedDistanceTo(player) }
+            ?.let { maxDistanceSquared = it.squaredBoxedDistanceTo(player) }
 
         return entities.asIterable()
     }
@@ -82,9 +89,5 @@ class TargetTracker(defaultPriority: PriorityEnum = PriorityEnum.HEALTH) : Confi
 }
 
 enum class PriorityEnum(override val choiceName: String) : NamedChoice {
-    HEALTH("Health"),
-    DISTANCE("Distance"),
-    DIRECTION("Direction"),
-    HURT_TIME("HurtTime"),
-    AGE("Age")
+    HEALTH("Health"), DISTANCE("Distance"), DIRECTION("Direction"), HURT_TIME("HurtTime"), AGE("Age")
 }

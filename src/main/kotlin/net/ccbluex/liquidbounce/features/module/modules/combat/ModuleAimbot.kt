@@ -18,18 +18,21 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.MouseRotationEvent
+import net.ccbluex.liquidbounce.event.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.applyRotation
 import net.ccbluex.liquidbounce.utils.combat.PriorityEnum
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
+import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
-import net.ccbluex.liquidbounce.utils.entity.eyesPos
+import net.ccbluex.liquidbounce.utils.entity.eyes
+import net.ccbluex.liquidbounce.utils.entity.rotation
+import kotlin.math.round
 
 /**
  * Aimbot module
@@ -43,32 +46,51 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
 
     private val targetTracker = tree(TargetTracker(PriorityEnum.DIRECTION))
 
-    private var currentRotation: Rotation? = null
+    private var targetRotation: Rotation? = null
 
-    val repeatable = repeatable {
-        val eyes = player.eyesPos
+    override fun disable() {
+        targetRotation = null
+    }
+
+    val tickHandler = handler<PlayerNetworkMovementTickEvent> {
+        if (it.state != EventState.PRE) {
+            return@handler
+        }
+
+        val eyes = player.eyes
 
         for (target in targetTracker.enemies()) {
             if (target.boxedDistanceTo(player) > range) {
                 continue
             }
 
-            val box = target.boundingBox
+            val box = target.box
 
-            if (fov >= RotationManager.rotationDifference(RotationManager.makeRotation(box.center, eyes), Rotation(player.yaw, player.pitch))) {
-                val (rotation, _) = RotationManager.raytraceBox(eyes, box, range = range.toDouble(), wallsRange = 0.0) ?: continue
+            if (fov >= RotationManager.rotationDifference(
+                    RotationManager.makeRotation(box.center, eyes), player.rotation
+                )
+            ) {
+                val spot = RotationManager.raytraceBox(eyes, box, range = range.toDouble(), wallsRange = 0.0) ?: break
 
-                currentRotation = rotation
-                return@repeatable
+                targetRotation = spot.rotation
+                return@handler
             }
         }
 
-        currentRotation = null
+        targetRotation = null
     }
 
-    val mouseRotationHandler = handler<MouseRotationEvent> {
-        currentRotation?.let {
-            player.applyRotation(RotationManager.limitAngleChange(Rotation(player.yaw, player.pitch), it, 0.12f))
+    val mouseRotationHandler = handler<MouseRotationEvent> { event ->
+        targetRotation?.let {
+            val f = mc.options.mouseSensitivity.value * 0.6F.toDouble() + 0.2F.toDouble()
+            val gcd = f * f * f * 8.0
+
+            val rotation = RotationManager.limitAngleChange(player.rotation, it, 13.37f)
+
+            val (yaw, pitch) = Rotation(rotation.yaw - player.yaw, rotation.pitch - player.pitch)
+
+            event.cursorDeltaX += round(yaw / gcd) * gcd
+            event.cursorDeltaY += round(pitch / gcd) * gcd
         }
     }
 

@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.block.collideBlockIntersects
 import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
+import net.ccbluex.liquidbounce.utils.entity.box
 import net.minecraft.block.FluidBlock
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.util.shape.VoxelShapes
@@ -44,7 +45,7 @@ object ModuleLiquidWalk : Module("LiquidWalk", Category.MOVEMENT) {
             get() = modes
 
         val shapeHandler = handler<BlockShapeEvent> { event ->
-            if (event.state.material.isLiquid && !isBlockAtPosition(player.boundingBox) { it is FluidBlock } && !player.input.sneaking) {
+            if (event.state.material.isLiquid && !isBlockAtPosition(player.box) { it is FluidBlock } && !player.input.sneaking) {
                 event.shape = VoxelShapes.fullCube()
             }
         }
@@ -66,13 +67,13 @@ object ModuleLiquidWalk : Module("LiquidWalk", Category.MOVEMENT) {
         private var tick = false
 
         val shapeHandler = handler<BlockShapeEvent> { event ->
-            if (event.state.material.isLiquid && !isBlockAtPosition(player.boundingBox) { it is FluidBlock } && !player.input.sneaking) {
+            if (event.state.material.isLiquid && !isBlockAtPosition(player.box) { it is FluidBlock } && !player.input.sneaking) {
                 event.shape = VoxelShapes.fullCube()
             }
         }
 
         val repeatable = repeatable {
-            if (isBlockAtPosition(player.boundingBox) { it is FluidBlock } && !player.input.sneaking) {
+            if (isBlockAtPosition(player.box) { it is FluidBlock } && !player.input.sneaking) {
                 player.velocity.y = 0.08
             }
         }
@@ -81,11 +82,14 @@ object ModuleLiquidWalk : Module("LiquidWalk", Category.MOVEMENT) {
             val packet = event.packet
 
             if (event.origin == TransferOrigin.SEND && packet is PlayerMoveC2SPacket) {
-                val boundingBox = player.boundingBox
+                val boundingBox = player.box
                 val detectionBox = boundingBox.withMinY(boundingBox.minY - 0.5)
 
                 // todo: fix moving passable flags on edges
-                if (!player.input.sneaking && !player.isTouchingWater && standingOnWater() && !collideBlockIntersects(detectionBox) { it !is FluidBlock }) {
+                if (!player.input.sneaking && !player.isTouchingWater && standingOnWater() && !collideBlockIntersects(
+                        detectionBox
+                    ) { it !is FluidBlock }
+                ) {
                     if (tick) {
                         packet.y -= 0.001
                     }
@@ -95,7 +99,7 @@ object ModuleLiquidWalk : Module("LiquidWalk", Category.MOVEMENT) {
         }
 
         val jumpHandler = handler<PlayerJumpEvent> { event ->
-            val boundingBox = player.boundingBox
+            val boundingBox = player.box
 
             if (isBlockAtPosition(boundingBox.withMinY(boundingBox.minY - 0.01)) { it is FluidBlock }) {
                 event.cancelEvent()
@@ -108,7 +112,7 @@ object ModuleLiquidWalk : Module("LiquidWalk", Category.MOVEMENT) {
      * Check if player is standing on water
      */
     fun standingOnWater(): Boolean {
-        val boundingBox = player.boundingBox
+        val boundingBox = player.box
         val detectionBox = boundingBox.withMinY(boundingBox.minY - 0.01)
 
         return isBlockAtPosition(detectionBox) { it is FluidBlock }
