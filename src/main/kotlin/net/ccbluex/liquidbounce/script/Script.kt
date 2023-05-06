@@ -18,27 +18,51 @@
  */
 package net.ccbluex.liquidbounce.script
 
-import jdk.internal.dynalink.beans.StaticClass
-import jdk.nashorn.api.scripting.JSObject
-import jdk.nashorn.api.scripting.NashornScriptEngineFactory
-import jdk.nashorn.api.scripting.ScriptUtils
-import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.features.command.CommandManager
+import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
+import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.script.bindings.JsClient
-import net.ccbluex.liquidbounce.script.bindings.JsModule
-import net.ccbluex.liquidbounce.script.bindings.global.Chat
-import net.ccbluex.liquidbounce.script.bindings.global.Item
-import net.ccbluex.liquidbounce.script.bindings.global.Setting
+import net.ccbluex.liquidbounce.script.bindings.features.JsModule
+import net.ccbluex.liquidbounce.script.bindings.features.JsSetting
+import net.ccbluex.liquidbounce.script.bindings.globals.JsClient
+import net.ccbluex.liquidbounce.script.bindings.globals.JsItem
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
+import org.graalvm.polyglot.Context
+import org.graalvm.polyglot.HostAccess
 import java.io.File
 import java.util.function.Function
-import javax.script.ScriptEngine
 
 class Script(val scriptFile: File) {
 
-    private val scriptEngine: ScriptEngine
+    private val context: Context = Context.newBuilder("js")
+        .allowHostAccess(HostAccess.ALL) // Allow access to all Java classes
+        .allowCreateProcess(false) // Disable process creation
+        .allowCreateThread(false) // Disable thread creation
+        .allowNativeAccess(false) // Disable native access
+        .allowExperimentalOptions(true) // Allow experimental options
+        .option("js.nashorn-compat", "true") // Enable Nashorn compatibility
+        .option("js.ecmascript-version", "2022") // Enable ECMAScript 2022
+        .build().apply {
+            // Global instances
+            val jsBindings = getBindings("js")
+            jsBindings.putMember("Setting", JsSetting)
+            jsBindings.putMember("Item", JsItem)
+
+            // Direct access to CommandBuilder and ParameterBuilder required for commands
+            // todo: remove this as soon we figured out a more JS-like way to create commands
+            jsBindings.putMember("CommandBuilder", CommandBuilder)
+            jsBindings.putMember("ParameterBuilder", ParameterBuilder)
+
+            jsBindings.putMember("mc", mc)
+            jsBindings.putMember("client", JsClient)
+
+            // Global functions
+            jsBindings.putMember("registerScript", RegisterScript())
+
+        }
+
     private val scriptText: String = scriptFile.readText()
 
     // Script information
@@ -46,51 +70,46 @@ class Script(val scriptFile: File) {
     lateinit var scriptVersion: String
     lateinit var scriptAuthors: Array<String>
 
-    private var state = false
+    /**
+     * Whether the script is enabled
+     */
+    private var scriptEnabled = false
 
-    private val events = HashMap<String, JSObject>()
-
+    private val globalEvents = mutableMapOf<String, () -> Unit>()
     private val registeredModules = mutableListOf<Module>()
-    private val registeredCommands = mutableListOf<Command>()
-
-    init {
-        val engineFlags = getMagicComment("engine_flags")?.split(",")?.toTypedArray() ?: emptyArray()
-        scriptEngine = NashornScriptEngineFactory().getScriptEngine(*engineFlags)
-
-        // Global classes
-        scriptEngine.put("Chat", StaticClass.forClass(Chat::class.java))
-        scriptEngine.put("Setting", StaticClass.forClass(Setting::class.java))
-        scriptEngine.put("Item", StaticClass.forClass(Item::class.java))
-
-        // Global instances
-        scriptEngine.put("mc", mc)
-        scriptEngine.put("client", JsClient)
-
-        // Global functions
-        scriptEngine.put("registerScript", RegisterScript())
-    }
 
     /**
      * Initialization of script
      */
     fun initScript() {
-        scriptEngine.eval(scriptText)
-        callEvent("load")
+        // Evaluate script
+        context.eval("js", scriptText)
+
+        // Call load event
+        callGlobalEvent("load")
+
         logger.info("[ScriptAPI] Successfully loaded script '${scriptFile.name}'.")
     }
 
     @Suppress("UNCHECKED_CAST")
-    inner class RegisterScript : Function<JSObject, Script> {
+    inner class RegisterScript : Function<Map<String, Any>, Script> {
 
         /**
          * Global function 'registerScript' which is called to register a script.
          * @param scriptObject JavaScript object containing information about the script.
          * @return The instance of this script.
          */
-        override fun apply(scriptObject: JSObject): Script {
-            scriptName = scriptObject.getMember("name") as String
-            scriptVersion = scriptObject.getMember("version") as String
-            scriptAuthors = ScriptUtils.convert(scriptObject.getMember("authors"), Array<String>::class.java) as Array<String>
+        override fun apply(scriptObject: Map<String, Any>): Script {
+            scriptName = scriptObject["name"] as String
+            scriptVersion = scriptObject["version"] as String
+
+            val authors = scriptObject["authors"]
+            scriptAuthors = when (authors) {
+                is String -> arrayOf(authors)
+                is Array<*> -> authors as Array<String>
+                is List<*> -> (authors as List<String>).toTypedArray()
+                else -> error("Not valid authors type")
+            }
 
             return this@Script
         }
@@ -105,33 +124,29 @@ class Script(val scriptFile: File) {
      * @see JsModule
      */
     @Suppress("unused")
-    fun registerModule(moduleObject: JSObject, callback: JSObject) {
+    fun registerModule(moduleObject: Map<String, Any>, callback: (Module) -> Unit) {
         val module = JsModule(moduleObject)
         ModuleManager.addModule(module)
         registeredModules += module
-        callback.call(moduleObject, module)
+        callback(module)
     }
 
     /**
-     * Gets the value of a magic comment from the script. Used for specifying additional information about the script.
+     * Registers a new script command
      *
-     * @param name Name of the comment.
-     * @return Value of the comment.
+     * @param commandObject JavaScript object containing information about the command.
+     * @param callback JavaScript function to which the corresponding instance of [JsModule] is passed.
+     * @see JsModule
      */
-    private fun getMagicComment(name: String): String? {
-        val magicPrefix = "///"
+    @Suppress("unused")
+    fun registerCommand(commandObject: Map<String, Any>, callback: (CommandBuilder) -> Unit) {
+        val command = CommandBuilder
+            .begin(commandObject["name"] as String)
+            .alias(*((commandObject["aliases"] as? Array<*>) ?: emptyArray<String>()).map { it as String }.toTypedArray())
+            .apply { callback(this) }
+            .build()
 
-        scriptText.lines().forEach {
-            if (!it.startsWith(magicPrefix)) return null
-
-            val commentData = it.substring(magicPrefix.length).split("=", limit = 2)
-
-            if (commentData.first().trim() == name) {
-                return commentData.last().trim()
-            }
-        }
-
-        return null
+        CommandManager.addCommand(command)
     }
 
     /**
@@ -139,18 +154,20 @@ class Script(val scriptFile: File) {
      * @param eventName Name of the event.
      * @param handler JavaScript function used to handle the event.
      */
-    fun on(eventName: String, handler: JSObject) {
-        events[eventName] = handler
+    fun on(eventName: String, handler: () -> Unit) {
+        globalEvents[eventName] = handler
     }
 
     /**
      * Called when the client enables the script.
      */
     fun enable() {
-        if (state) return
+        if (scriptEnabled) {
+            return
+        }
 
-        callEvent("enable")
-        state = true
+        callGlobalEvent("enable")
+        scriptEnabled = true
     }
 
     /**
@@ -158,10 +175,12 @@ class Script(val scriptFile: File) {
      * created with this script.
      */
     fun disable() {
-        if (!state) return
+        if (!scriptEnabled) {
+            return
+        }
 
-        callEvent("disable")
-        state = false
+        callGlobalEvent("disable")
+        scriptEnabled = false
     }
 
     /**
@@ -171,16 +190,16 @@ class Script(val scriptFile: File) {
     fun import(scriptFile: String) {
         val scriptText = File(ScriptManager.scriptsRoot, scriptFile).readText()
 
-        scriptEngine.eval(scriptText)
+        context.eval("js", scriptText)
     }
 
     /**
      * Calls the handler of a registered event.
      * @param eventName Name of the event to be called.
      */
-    private fun callEvent(eventName: String) {
+    private fun callGlobalEvent(eventName: String) {
         try {
-            events[eventName]?.call(null)
+            globalEvents[eventName]?.invoke()
         } catch (throwable: Throwable) {
             logger.error("[ScriptAPI] Exception in script '$scriptName'!", throwable)
         }

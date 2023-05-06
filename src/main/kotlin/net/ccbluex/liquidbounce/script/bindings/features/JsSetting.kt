@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2021 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,20 +16,11 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.script.bindings.global
-
-import net.ccbluex.liquidbounce.utils.item.createItem
-import net.minecraft.item.ItemStack
+package net.ccbluex.liquidbounce.script.bindings.features
 
 /**
- * Object used by the script API to provide an easier way of creating items.
+ * Object used by the script API to provide an idiomatic way of creating module values.
  */
-object Item {
-
-    /**
-     * Create [ItemStack] from [arguments]
-     */
-    @JvmStatic
-    fun create(arguments: String, amount: Int): ItemStack = createItem(arguments, amount)
-
+object JsSetting {
+    // todo: add setting support
 }

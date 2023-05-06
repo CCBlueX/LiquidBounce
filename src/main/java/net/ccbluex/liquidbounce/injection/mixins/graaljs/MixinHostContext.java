@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,21 +16,23 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.script.bindings.global
 
-import net.ccbluex.liquidbounce.utils.client.chat
+package net.ccbluex.liquidbounce.injection.mixins.graaljs;
+
+import net.ccbluex.liquidbounce.utils.mappings.McMappings;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 /**
- * Object used by the script API to provide an easier way of calling chat-related methods.
+ * @author lit
  */
-object Chat {
+@Mixin(targets = "com/oracle/truffle/host/HostContext")
+public class MixinHostContext {
 
-    /**
-     * Prints a message to the chat (client-side)
-     * @param message Message to be printed
-     */
-    @Suppress("unused")
-    @JvmStatic
-    fun print(message: String) = chat(message)
+    @ModifyVariable(method = "findClassImpl", at = @At("HEAD"), argsOnly = true, remap = false)
+    private String remapClassName(String value) {
+        return McMappings.INSTANCE.remapClass(value);
+    }
 
 }

@@ -102,7 +102,7 @@ open class Module(
     open val translationBaseKey: String
         get() = "liquidbounce.module.${name.toLowerCamelCase()}"
 
-    val description: String
+    open val description: String
         get() = "$translationBaseKey.description"
 
     // Tag to be displayed on the HUD

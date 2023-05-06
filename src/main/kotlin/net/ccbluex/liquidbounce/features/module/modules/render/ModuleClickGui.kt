@@ -34,6 +34,9 @@ import org.lwjgl.glfw.GLFW
 
 object ModuleClickGui : Module("ClickGUI", Category.RENDER, bind = GLFW.GLFW_KEY_RIGHT_SHIFT, disableActivation = true) {
 
+    // Specifies whether the search bar should always be visible or only after pressing Ctrl + F.
+    val searchAlwaysOnTop by boolean("SearchAlwaysOnTop", true)
+
     override fun enable() {
         val page = ThemeManager.page("clickgui") ?: error("unable to find clickgui page in current theme")
 
