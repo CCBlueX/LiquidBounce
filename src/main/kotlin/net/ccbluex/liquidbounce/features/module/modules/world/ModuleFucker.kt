@@ -36,13 +36,11 @@ import net.minecraft.block.Blocks
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
-import net.minecraft.network.packet.s2c.play.BlockEventS2CPacket
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
-import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.RaycastContext
 
@@ -64,8 +62,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     private val visualSwing by boolean("VisualSwing", true)
     private val targets by blocks("Target", hashSetOf(Blocks.DRAGON_EGG))
     private val action by enumChoice("Action", DestroyAction.USE, DestroyAction.values())
-    private val throughWalls by boolean("ThroughWalls", false)
-    private val instant by boolean("Instant", false) // TODO: Instant option
+    private val forceImmediateBreak by boolean("ForceImmediateBreak", false)
     private val delay by int("SwitchDelay", 0, 0..20)
 
     // Rotation
@@ -73,7 +70,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
 
     private var currentTarget: DestroyerTarget? = null
 
-    val networkTickHandler = repeatable { event ->
+    val moduleRepeatable = repeatable { event ->
         if (mc.currentScreen is HandledScreen<*>) {
             wait { delay }
             return@repeatable
@@ -120,10 +117,10 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
             if (!blockPos.getState()!!.isAir) {
                 val direction = rayTraceResult.side
 
-                if (instant) {
-                    mc.networkHandler?.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, Direction.DOWN))
+                if (forceImmediateBreak) {
+                    network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, direction))
                     swingHand()
-                    network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, Direction.DOWN))
+                    network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, blockPos, direction))
                 } else {
                     if (mc.interactionManager!!.updateBlockBreakingProgress(blockPos, direction)) {
                         swingHand()
@@ -197,6 +194,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     data class DestroyerTarget(val pos: BlockPos, val action: DestroyAction)
 
     enum class DestroyAction(override val choiceName: String) : NamedChoice {
-        DESTROY("Destroy"), USE("Use")
+        DESTROY("Destroy"),
+        USE("Use")
     }
 }
