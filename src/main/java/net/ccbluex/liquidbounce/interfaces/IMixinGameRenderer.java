@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.interfaces;
 
-import net.minecraft.util.math.Matrix4f;
+import org.joml.Matrix4f;
 
 public interface IMixinGameRenderer {
 

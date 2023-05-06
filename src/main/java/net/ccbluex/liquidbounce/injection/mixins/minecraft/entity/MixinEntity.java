@@ -27,8 +27,6 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleNoPitchLim
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
-import net.minecraft.fluid.Fluid;
-import net.minecraft.tag.TagKey;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
@@ -42,9 +40,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class MixinEntity {
 
     @Shadow
-    public boolean velocityDirty;
-
-    @Shadow
     public static Vec3d movementInputToVelocity(Vec3d movementInput, float speed, float yaw) {
         return null;
     }
@@ -54,12 +49,6 @@ public abstract class MixinEntity {
 
     @Shadow
     public abstract void setVelocity(Vec3d velocity);
-
-    @Shadow
-    public abstract boolean isSprinting();
-
-    @Shadow
-    public abstract void setVelocity(double x, double y, double z);
 
     @Shadow
     public abstract double getX();
@@ -74,10 +63,12 @@ public abstract class MixinEntity {
     public abstract float getYaw();
 
     @Shadow
-    public abstract boolean isOnGround();
+    public boolean noClip;
 
     @Shadow
-    public abstract boolean isSubmergedIn(TagKey<Fluid> fluidTag);
+    public abstract boolean isOnGround();
+
+    @Shadow protected boolean submergedInWater;
 
     /**
      * Hook entity margin modification event
@@ -112,9 +103,9 @@ public abstract class MixinEntity {
         return movementInputToVelocity(movementInput, speed, yaw);
     }
 
-    @Redirect(method = "adjustMovementForCollisions(Lnet/minecraft/util/math/Vec3d;)Lnet/minecraft/util/math/Vec3d;", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/Entity;stepHeight:F"))
+    @Redirect(method = "adjustMovementForCollisions(Lnet/minecraft/util/math/Vec3d;)Lnet/minecraft/util/math/Vec3d;", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getStepHeight()F"))
     private float hookStepHeight(Entity instance) {
-        final PlayerStepEvent stepEvent = new PlayerStepEvent(instance.stepHeight);
+        final PlayerStepEvent stepEvent = new PlayerStepEvent(instance.getStepHeight());
         EventManager.INSTANCE.callEvent(stepEvent);
         return stepEvent.getHeight();
     }

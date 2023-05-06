@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -53,7 +53,10 @@ object ModuleAvoidHazards : Module("AvoidHazards", Category.MOVEMENT) {
         } else if (pressurePlates && event.state.block is AbstractPressurePlateBlock) {
             event.shape = Block.createCuboidShape(0.0, 0.0, 0.0, 16.0, 4.0, 16.0)
         } else if (magmaBlocks && event.pos.down().getBlock() is MagmaBlock && !event.state.isSideSolid(
-                world, event.pos, Direction.UP, SideShapeType.CENTER
+                world,
+                event.pos,
+                Direction.UP,
+                SideShapeType.CENTER
             )
         ) {
             event.shape = Block.createCuboidShape(0.0, 0.0, 0.0, 16.0, 4.0, 16.0)

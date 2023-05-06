@@ -69,20 +69,26 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
 
             val currentTarget = updateTarget(pos, true) ?: continue
 
-            val rotation = currentTarget.rotation.fixedSensitivity() ?: continue
+            val rotation = currentTarget.rotation.fixedSensitivity()
             val rayTraceResult = raycast(4.5, rotation) ?: return@repeatable
 
             if (rayTraceResult.type != HitResult.Type.BLOCK) {
                 continue
             }
 
-            player.networkHandler.sendPacket(PlayerMoveC2SPacket.LookAndOnGround(rotation.yaw, rotation.pitch, player.isOnGround))
+            player.networkHandler.sendPacket(
+                PlayerMoveC2SPacket.LookAndOnGround(
+                    rotation.yaw, rotation.pitch, player.isOnGround
+                )
+            )
 
             if (slot != player.inventory.selectedSlot) {
                 player.networkHandler.sendPacket(UpdateSelectedSlotC2SPacket(slot))
             }
 
-            player.networkHandler.sendPacket(PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, rayTraceResult))
+            interaction.sendSequencedPacket(world) { sequence ->
+                PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, rayTraceResult, sequence)
+            }
             val itemUsageContext = ItemUsageContext(player, Hand.MAIN_HAND, rayTraceResult)
 
             val itemStack = player.inventory.getStack(slot)

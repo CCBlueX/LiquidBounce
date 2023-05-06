@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -86,7 +86,12 @@ object ModuleESP : Module("ESP", Category.RENDER) {
                 val d = dimensions.width.toDouble() / 2.0
 
                 Box(
-                    -d, 0.0, -d, d, dimensions.height.toDouble(), d
+                    -d,
+                    0.0,
+                    -d,
+                    d,
+                    dimensions.height.toDouble(),
+                    d
                 )
             }
 
@@ -140,9 +145,11 @@ object ModuleESP : Module("ESP", Category.RENDER) {
                     return Color4b(255, 0, 0)
                 }
 
-                if (entity is PlayerEntity && FriendManager.isFriend(entity.toString())) {
+                if (entity is PlayerEntity && FriendManager.isFriend(entity.gameProfile.name)) {
                     return Color4b(0, 0, 255)
                 }
+
+                ModuleMurderMystery.getColor(entity)?.let { return it }
 
                 if (teamColor) {
                     val chars: CharArray = (entity.displayName ?: return@run).string.toCharArray()

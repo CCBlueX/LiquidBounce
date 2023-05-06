@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDankBobbing
-import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDerp
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleSkinDerp
 import net.ccbluex.liquidbounce.features.module.modules.misc.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.*
@@ -41,9 +40,7 @@ private val modules = mutableListOf<Module>()
  */
 object ModuleManager : Listenable, Iterable<Module> by modules {
 
-    init {
-        ConfigSystem.root("modules", modules)
-    }
+    val modulesConfigurable = ConfigSystem.root("modules", modules)
 
     /**
      * Handle key input for module binds
@@ -167,15 +164,27 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoFish,
             ModuleMobOwners,
             ModuleGhostHand,
-            ModuleAirJump,
             ModuleProjectilePuncher,
             ModuleAutoPot,
+            ModuleAirJump,
+            ModuleTrueSight,
+            ModuleAntiBot,
             ModuleKeepChatAfterDeath,
             ModuleOverrideTime,
             ModuleXRay,
             ModuleNoRotateSet,
             ModuleNoSlowBreak,
-            ModuleDerp,
+            ModuleCameraClip,
+            ModuleSprint,
+            ModuleReach,
+            ModulePerfectHit,
+            ModuleAutoClicker,
+            ModuleAntiVanish,
+            ModuleQuickPerspectiveSwap,
+            ModuleMurderMystery,
+            ModuleAutoDodge,
+            ModuleAutoWeapon,
+            ModuleNameCollector
         )
 
         builtin.apply {
@@ -200,5 +209,10 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
     fun autoComplete(begin: String, validator: (Module) -> Boolean = { true }): List<String> {
         return filter { it.name.startsWith(begin, true) && validator(it) }.map { it.name }
     }
+
+    /**
+     * This is being used by UltralightJS for the implementation of the ClickGUI. DO NOT REMOVE!
+     */
+    fun getCategories() = Category.values().map { it.readableName }.toTypedArray()
 
 }

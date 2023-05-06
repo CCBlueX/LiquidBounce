@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
+import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
 import net.minecraft.block.Block
@@ -66,15 +67,30 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
     private object Vanilla : Choice("Vanilla") {
 
+        val horizontalSpeed by float("Horizontal", 0.44f, 0.1f..5f)
+        val verticalSpeed by float("Vertical", 0.44f, 0.1f..5f)
+
+        val glide by float("Glide", 0.0f, -1f..1f)
+
+        val bypassVanillaCheck by boolean("BypassVanillaCheck", true)
+
         override val parent: ChoiceConfigurable
             get() = modes
 
         val repeatable = repeatable {
-            player.strafe(speed = 0.44)
+            player.strafe(speed = horizontalSpeed.toDouble())
             player.velocity.y = when {
-                player.input.jumping -> 0.31
-                player.input.sneaking -> -0.31
-                else -> 0.0
+                player.input.jumping -> verticalSpeed.toDouble()
+                player.input.sneaking -> (-verticalSpeed).toDouble()
+                else -> glide.toDouble()
+            }
+
+            // Most basic bypass for vanilla fly check
+            // This can also be done via packets, but this is easier.
+            if (bypassVanillaCheck && player.age % 40 == 0) {
+                wait(1)
+                player.velocity.y = -0.04
+                wait(1)
             }
         }
 
@@ -157,7 +173,9 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
                     }
 
                     wait(2)
-                    network.sendPacket(PlayerInteractItemC2SPacket(Hand.MAIN_HAND))
+                    interaction.sendSequencedPacket(world) { sequence ->
+                        PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence)
+                    }
 
                     if (slot != player.inventory.selectedSlot) {
                         network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
@@ -185,7 +203,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
         fun isABitAboveGround(): Boolean {
             for (y in 0..5) {
-                val boundingBox = player.boundingBox
+                val boundingBox = player.box
                 val detectionBox = boundingBox.withMinY(boundingBox.minY - y)
 
                 return isBlockAtPosition(detectionBox) { it is Block }

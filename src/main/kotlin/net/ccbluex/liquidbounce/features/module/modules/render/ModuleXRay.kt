@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,7 +35,8 @@ object ModuleXRay : Module("XRay", Category.RENDER) {
 
     // Set of blocks that will not be excluded
     val blocks by blocks(
-        "Blocks", mutableSetOf(
+        "Blocks",
+        mutableSetOf(
             // Overworld ores
             COAL_ORE,
             COPPER_ORE,
@@ -161,7 +162,7 @@ object ModuleXRay : Module("XRay", Category.RENDER) {
             DRAGON_EGG,
             FIRE,
             SPAWNER,
-            TNT,
+            TNT
         )
     )
 

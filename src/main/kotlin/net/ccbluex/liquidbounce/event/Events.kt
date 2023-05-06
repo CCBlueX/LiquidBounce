@@ -29,7 +29,7 @@ import net.minecraft.client.util.InputUtil
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
 import net.minecraft.entity.MovementType
-import net.minecraft.network.Packet
+import net.minecraft.network.packet.Packet
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.shape.VoxelShape
@@ -90,6 +90,9 @@ class KeyboardCharEvent(val window: Long, val codepoint: Int) : Event()
 
 @Nameable("inputHandle")
 class InputHandleEvent : Event()
+
+@Nameable("movementInputEvent")
+class MovementInputEvent(var forwards: Boolean, var backwards: Boolean, var left: Boolean, var right: Boolean) : Event()
 
 @Nameable("key")
 class KeyEvent(val key: InputUtil.Key, val action: Int, val mods: Int) : Event()
@@ -177,7 +180,7 @@ class FluidPushEvent : CancellableEvent()
 // Network events
 
 @Nameable("packet")
-class PacketEvent(val origin: TransferOrigin, val packet: Packet<*>) : CancellableEvent()
+class PacketEvent(val origin: TransferOrigin, val packet: Packet<*>, val original: Boolean = true) : CancellableEvent()
 
 enum class TransferOrigin {
     SEND, RECEIVE

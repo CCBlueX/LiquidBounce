@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFullBright;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
-import net.minecraft.client.option.GameOptions;
+import net.minecraft.client.option.SimpleOption;
 import net.minecraft.client.render.LightmapTextureManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -29,13 +29,20 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(LightmapTextureManager.class)
 public class MixinLightmapTextureManager {
 
-    @Redirect(method = "update(F)V", at = @At(value = "FIELD", target = "Lnet/minecraft/client/option/GameOptions;gamma:D"))
-    private double injectXRayFullBright(GameOptions instance) {
-        ModuleXRay module = ModuleXRay.INSTANCE;
-        if (module.getEnabled() && module.getFullBright() || ModuleFullBright.INSTANCE.getEnabled() && ModuleFullBright.FullBrightGamma.INSTANCE.isActive()) {
-            return Byte.MAX_VALUE;
+    @Redirect(method = "update(F)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/SimpleOption;getValue()Ljava/lang/Object;", ordinal = 1))
+    private Object injectXRayFullBright(SimpleOption option) {
+        // If fullBright is enabled, we need to return our own gamma value
+        if (ModuleFullBright.INSTANCE.getEnabled() && ModuleFullBright.FullBrightGamma.INSTANCE.isActive()) {
+            return ModuleFullBright.FullBrightGamma.INSTANCE.getGamma();
         }
 
-        return instance.gamma;
+        // Xray fullbright
+        final ModuleXRay module = ModuleXRay.INSTANCE;
+        if (!module.getEnabled() || !module.getFullBright()) {
+            return option.getValue();
+        }
+
+        // They use .floatValue() afterward on the return value, so we need to return a value which is not bigger than Float.MAX_VALUE
+        return (double) Float.MAX_VALUE;
     }
 }

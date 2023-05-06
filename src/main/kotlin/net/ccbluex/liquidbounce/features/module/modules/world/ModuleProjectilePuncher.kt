@@ -19,18 +19,19 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.event.AttackEvent
-import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
 import net.ccbluex.liquidbounce.utils.client.MC_1_8
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import net.ccbluex.liquidbounce.utils.combat.CpsScheduler
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
-import net.ccbluex.liquidbounce.utils.entity.eyesPos
+import net.ccbluex.liquidbounce.utils.entity.box
+import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
+import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.minecraft.entity.Entity
 import net.minecraft.entity.projectile.FireballEntity
@@ -62,52 +63,57 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
         targetTracker.cleanup()
     }
 
-    val repeatable = repeatable {
-        attack()
+    val tickHandler = handler<PlayerNetworkMovementTickEvent> {
+        if (it.state != EventState.PRE || player.isSpectator) {
+            return@handler
+        }
+
+        updateTarget()
     }
 
-    private fun attack() {
-        if (player.isSpectator) {
-            return
+    val repeatable = repeatable {
+        val target = targetTracker.lockedOnTarget ?: return@repeatable
+        val rotation = RotationManager.currentRotation ?: return@repeatable
+
+        val clicks = cpsTimer.clicks(condition = {
+            target.boxedDistanceTo(player) <= range && facingEnemy(
+                target, rotation, range.toDouble(), 0.0
+            )
+        }, cps)
+
+        if (clicks > 0) {
+            attackEntity(target)
         }
+    }
 
-        val squaredRange = range * range
+    private fun updateTarget() {
+        val player = mc.player ?: return
+        val world = mc.world ?: return
 
-        targetTracker.validateLock { it.squaredBoxedDistanceTo(player) <= squaredRange }
+        val rangeSquared = range * range
+
+        targetTracker.validateLock { it.squaredBoxedDistanceTo(player) <= rangeSquared }
 
         for (entity in world.entities) {
-            if (entity is FireballEntity || entity is ShulkerBulletEntity) {
-                if (entity.squaredBoxedDistanceTo(player) > squaredRange) {
-                    continue
-                }
-
-                // find best spot (and skip if no spot was found)
-                val (rotation, _) = RotationManager.raytraceBox(
-                    player.eyesPos,
-                    entity.boundingBox,
-                    range = range.toDouble(),
-                    wallsRange = 0.0
-                ) ?: continue
-
-                // lock on target tracker
-                targetTracker.lock(entity)
-
-                // aim at target
-                RotationManager.aimAt(rotation, configurable = rotations)
-                break
+            if (entity !is FireballEntity && entity !is ShulkerBulletEntity) {
+                continue
             }
-        }
 
-        val entity = targetTracker.lockedOnTarget ?: return
-        val clicks = cpsTimer.clicks(condition = { true },
-            cps
-        )
+            if (entity.squaredBoxedDistanceTo(player) > rangeSquared) {
+                continue
+            }
 
-        // There is no need for multiple clicks on one target.
-        if (clicks > 0) {
-            // Yeet away the projectile
-            attackEntity(entity)
-            targetTracker.cleanup()
+            // find best spot
+            val spot = RotationManager.raytraceBox(
+                player.eyes, entity.box, range = range.toDouble(), wallsRange = 0.0
+            ) ?: continue
+
+            // lock on target tracker
+            targetTracker.lock(entity)
+
+            // aim at target
+            RotationManager.aimAt(spot.rotation, configurable = rotations)
+            break
         }
     }
 

@@ -108,8 +108,14 @@ fun MinecraftSessionService.loginAltening(account: String) =
     login(account, LiquidBounce.CLIENT_NAME, GenEnvironments.THE_ALTENING)
 
 fun MinecraftSessionService.loginCracked(username: String): LoginResult {
-    mc.session = Session(username, MojangApi.getUUID(username), "-", Optional.empty(), Optional.empty(),
-        Session.AccountType.LEGACY)
+    mc.session = Session(
+        username,
+        MojangApi.getUUID(username),
+        "-",
+        Optional.empty(),
+        Optional.empty(),
+        Session.AccountType.LEGACY
+    )
     EventManager.callEvent(SessionEvent())
     return LoginResult.LOGGED_IN
 }

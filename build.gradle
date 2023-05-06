@@ -21,10 +21,8 @@ plugins {
     id "fabric-loom"
     id "org.jetbrains.kotlin.jvm"
     id "com.github.johnrengelman.shadow" version "7.1.2"
-    id "org.jlleitschuh.gradle.ktlint" version "11.0.0"
+    id "org.jlleitschuh.gradle.ktlint" version "11.3.2"
 }
-
-import net.fabricmc.loom.task.RemapJarTask
 
 ktlint {
     enableExperimentalRules = true
@@ -58,6 +56,7 @@ repositories {
         name = 'TerraformersMC'
         url = 'https://maven.terraformersmc.com/'
     }
+    maven { url = "https://repo.viaversion.com/" }
 }
 
 dependencies {
@@ -71,27 +70,15 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 
-    // MultiConnect API
-    modImplementation ("net.earthcomputer.multiconnect:multiconnect-api:${project.multiconnect_version}") { transitive = false }
+    modImplementation "com.viaversion:viaversion:4.7.0-23w18a-SNAPSHOT"
+    modImplementation "com.github.FlorianMichael:ViaLoadingBase:4.4.8"
 
-    /*
-        Recommended mods (on IDE)
-     */
-    // modRuntimeOnly ("net.earthcomputer.multiconnect:multiconnect:${project.multiconnect_version}") { transitive = false }
+    // Recommended mods (on IDE)
     modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
-    // modRuntime "com.github.CaffeineMC:sodium-fabric:${project.sodium_version}"
-    // modRuntimeOnly "com.github.CaffeineMC:lithium-fabric:${project.lithium_version}"
-    // modRuntime "com.github.CaffeineMC:phosphor-fabric:${project.phosphor_version}"
 
-    // Baritone
-//    modRuntime ("com.github.CCBlueX:baritone:${project.minecraft_version}-SNAPSHOT") {
-//        exclude group: "org.ow2.asm", module: "asm-debug-all"
-//        exclude group: "org.lwjgl.lwjgl", module: "lwjgl"
-//        exclude group: "org.lwjgl.lwjgl", module: "lwjgl-platform"
-//        exclude group: "net.java.jinput", module: "jinput"
-//        exclude group: "net.java.jinput", module: "jinput-platform"
-//        exclude group: "net.sf.jopt-simple", module: "jopt-simple"
-//    }
+    modRuntimeOnly "com.github.CaffeineMC:sodium-fabric:${project.sodium_version}"
+    modRuntimeOnly "com.github.CaffeineMC:lithium-fabric:${project.lithium_version}"
+    // modRuntimeOnly "com.github.CaffeineMC:phosphor-fabric:${project.phosphor_version}"
 
     // fix nullable imports
     implementation "com.google.code.findbugs:jsr305:3.0.2"
@@ -101,19 +88,28 @@ dependencies {
         exclude group: 'com.google.code.gson', module: 'gson'
     }
 
-    implementation "com.github.CCBlueX:Elixir:1.2.4"
+    implementation "com.github.CCBlueX:Elixir:1.2.6"
 
-    implementation "com.labymedia:ultralight-java-base:0.4.6"
-    implementation "com.labymedia:ultralight-java-databind:0.4.6"
-    implementation "com.labymedia:ultralight-java-gpu:0.4.6"
+    implementation "com.labymedia:ultralight-java-base:0.4.12"
+    implementation "com.labymedia:ultralight-java-databind:0.4.12"
+    implementation "com.labymedia:ultralight-java-gpu:0.4.12"
+    implementation "com.labymedia:ultralight-java-glfw-opengl-util:0.4.12"
 
-    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "org.graalvm.sdk:graal-sdk:22.3.2"
+    implementation "org.graalvm.truffle:truffle-api:22.3.2"
+    implementation "org.graalvm.js:js:22.3.2"
 
-    implementation project(":theme")
+    runtimeOnly "org.graalvm.tools:profiler:22.3.2"
+    runtimeOnly "org.graalvm.tools:chromeinspector:22.3.2"
+
+    // https://mvnrepository.com/artifact/io.netty/netty-codec-http
+    implementation 'io.netty:netty-codec-http:4.1.82.Final'
+    // https://mvnrepository.com/artifact/io.netty/netty-handler-proxy
+    implementation 'io.netty:netty-handler-proxy:4.1.82.Final'
 
     // Test libraries
 
-    testImplementation "org.junit.jupiter:junit-jupiter:5.9.1"
+    testImplementation "org.junit.jupiter:junit-jupiter:5.9.2"
 }
 
 processResources {
@@ -123,6 +119,26 @@ processResources {
         expand "version": project.version
     }
 }
+
+// The following code will include the theme into the build
+
+task makeTheme(type: Exec) {
+    workingDir file("src-theme")
+    commandLine "python", "build.py"
+    doLast {
+        println "Successfully exported theme.zip"
+    }
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDirs "src-theme/resources"
+        }
+    }
+}
+
+processResources.dependsOn makeTheme
 
 // ensure that the encoding is set to UTF-8, no matter what the system default is
 // this fixes some edge cases with special characters not displaying correctly
@@ -166,9 +182,14 @@ shadowJar {
         include(dependency('com.labymedia:ultralight-java-base'))
         include(dependency('com.labymedia:ultralight-java-databind'))
         include(dependency('com.labymedia:ultralight-java-gpu'))
+        include(dependency('com.labymedia:ultralight-java-glfw-opengl-util'))
         include(dependency('com.thealtening.api:api'))
         include(dependency('com.github.CCBlueX:Elixir'))
-        include(project(":theme"))
+        include(dependency("org.graalvm.sdk:graal-sdk:22.3.2"))
+        include(dependency("org.graalvm.truffle:truffle-api:22.3.2"))
+        include(dependency("org.graalvm.js:js:22.3.2"))
+        include(dependency('io.netty:netty-codec-http'))
+        include(dependency('io.netty:netty-handler-proxy'))
     }
 }
 
@@ -176,12 +197,9 @@ jar {
     from "LICENSE"
 }
 
-task remapShadow(type: RemapJarTask, dependsOn: shadowJar) {
-    setInput(shadowJar.archiveFile)
-    addNestedDependencies.set(remapJar.addNestedDependencies)
+remapJar {
+    inputFile = shadowJar.archiveFile
 }
-
-build.dependsOn remapShadow
 
 task copyZipInclude(type: Copy) {
     from 'zip_include/'

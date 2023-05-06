@@ -28,9 +28,9 @@ import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
+import net.minecraft.registry.Registries
 import net.minecraft.util.Formatting
 import net.minecraft.util.Identifier
-import net.minecraft.util.registry.Registry
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
@@ -55,7 +55,7 @@ object CommandXRay {
                         val identifier = Identifier.tryParse(name)
                         val displayName = identifier.toString()
 
-                        val block = Registry.BLOCK.getOrEmpty(identifier).orElseThrow {
+                        val block = Registries.BLOCK.getOrEmpty(identifier).orElseThrow {
                             throw CommandException(command.result("blockNotExists", displayName))
                         }
 
@@ -82,7 +82,7 @@ object CommandXRay {
                         val identifier = Identifier.tryParse(name)
                         val displayName = identifier.toString()
 
-                        val block = Registry.BLOCK.getOrEmpty(identifier).orElseThrow {
+                        val block = Registries.BLOCK.getOrEmpty(identifier).orElseThrow {
                             throw CommandException(command.result("blockNotExists", displayName))
                         }
 

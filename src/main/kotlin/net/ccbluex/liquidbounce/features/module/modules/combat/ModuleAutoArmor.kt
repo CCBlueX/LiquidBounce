@@ -108,12 +108,16 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
         if (!isObsolete && hotbar && !isInInventoryScreen) {
             if (slot in 36..44) {
                 network.sendPacket(UpdateSelectedSlotC2SPacket(item))
-                network.sendPacket(PlayerInteractItemC2SPacket(Hand.MAIN_HAND))
+                interaction.sendSequencedPacket(world) { sequence ->
+                    PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence)
+                }
                 network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
 
                 return true
             } else if (slot == 45) {
-                network.sendPacket(PlayerInteractItemC2SPacket(Hand.OFF_HAND))
+                interaction.sendSequencedPacket(world) { sequence ->
+                    PlayerInteractItemC2SPacket(Hand.OFF_HAND, sequence)
+                }
 
                 return true
             }

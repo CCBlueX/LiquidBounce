@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,7 +57,8 @@ object ModuleTrigger : Module("Trigger", Category.COMBAT) {
 
         if (crosshair is EntityHitResult && crosshair.entity.shouldBeAttacked()) {
             val clicks = cpsTimer.clicks(
-                condition = { (!cooldown || player.getAttackCooldownProgress(0.0f) >= 1.0f) && isWeaponSelected() }, cps
+                condition = { (!cooldown || player.getAttackCooldownProgress(0.0f) >= 1.0f) && isWeaponSelected() && !ModuleCriticals.shouldWaitForCrit() },
+                cps
             )
 
             repeat(clicks) {
@@ -103,10 +104,13 @@ object ModuleTrigger : Module("Trigger", Category.COMBAT) {
 
                 true
             }
+
             Use.STOP -> {
                 network.sendPacket(
                     PlayerActionC2SPacket(
-                        PlayerActionC2SPacket.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.DOWN
+                        PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
+                        BlockPos.ORIGIN,
+                        Direction.DOWN
                     )
                 )
                 player.stopUsingItem()
@@ -117,6 +121,7 @@ object ModuleTrigger : Module("Trigger", Category.COMBAT) {
 
                 true
             }
+
             Use.IGNORE -> false
         }
     }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,9 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.NamedChoice
-import net.ccbluex.liquidbounce.event.AttackEvent
-import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKillAura.RaycastMode.*
@@ -34,10 +32,7 @@ import net.ccbluex.liquidbounce.utils.client.protocolVersion
 import net.ccbluex.liquidbounce.utils.combat.CpsScheduler
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
-import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
-import net.ccbluex.liquidbounce.utils.entity.eyesPos
-import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
-import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
+import net.ccbluex.liquidbounce.utils.entity.*
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
@@ -147,10 +142,10 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 //        RenderEngine.enqueueForRendering(RenderEngine.CAMERA_VIEW_LAYER, renderTask)
 //    }
 
-    val repeatable = repeatable {
+    val rotationUpdateHandler = handler<PlayerNetworkMovementTickEvent> {
         // Killaura in spectator-mode is pretty useless, trust me.
-        if (player.isSpectator) {
-            return@repeatable
+        if (it.state != EventState.PRE || player.isSpectator) {
+            return@handler
         }
 
         // Make sure killaura-logic is not running while inventory is open
@@ -159,18 +154,28 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         if (isInInventoryScreen && !ignoreOpenInventory) {
             // Cleanup current target tracker
             targetTracker.cleanup()
-            return@repeatable
+            return@handler
         }
 
         // Update current target tracker to make sure you attack the best enemy
         updateEnemySelection()
+    }
+
+    val repeatable = repeatable {
+        val isInInventoryScreen = mc.currentScreen is InventoryScreen
 
         // Check if there is target to attack
         val target = targetTracker.lockedOnTarget ?: return@repeatable
         // Did you ever send a rotation before?
-        val rotation = RotationManager.serverRotation ?: return@repeatable
+        val rotation = RotationManager.currentRotation ?: return@repeatable
 
-        if (target.boxedDistanceTo(player) <= range && facingEnemy(target, range.toDouble(), rotation)) {
+        if (target.boxedDistanceTo(player) <= range && facingEnemy(
+                target,
+                rotation,
+                range.toDouble(),
+                wallRange.toDouble()
+            )
+        ) {
             // Check if between enemy and player is another entity
             val raycastedEntity = raytraceEntity(range.toDouble(), rotation, filter = {
                 when (raycast) {
@@ -236,12 +241,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                         wait(blockingTicks)
                     }
 
-                    network.sendPacket(PlayerInteractItemC2SPacket(player.activeHand))
-                }
-
-                // Make sure to reopen inventory
-                if (simulateInventoryClosing && isInInventoryScreen) {
-                    network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.OPEN_INVENTORY))
+                    interaction.sendSequencedPacket(world) { sequence ->
+                        PlayerInteractItemC2SPacket(player.activeHand, sequence)
+                    }
                 }
             }
         }
@@ -255,7 +257,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         targetTracker.validateLock { it.squaredBoxedDistanceTo(player) <= rangeSquared }
 
-        val eyes = player.eyesPos
+        val eyes = player.eyes
 
         val scanRange = if (targetTracker.maxDistanceSquared > rangeSquared) {
             ((range + scanExtraRange) * (range + scanExtraRange)).toDouble()
@@ -278,10 +280,10 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 player.x - player.prevX, player.y - player.prevY, player.z - player.prevZ
             ).multiply(predictedTicks)
 
-            val box = target.boundingBox.offset(targetPrediction)
+            val box = target.box.offset(targetPrediction)
 
-            // find best spot (and skip if no spot was found)
-            val (rotation, _) = RotationManager.raytraceBox(
+            // find best spot
+            val spot = RotationManager.raytraceBox(
                 eyes.add(playerPrediction), box, range = sqrt(scanRange), wallsRange = wallRange.toDouble()
             ) ?: continue
 
@@ -289,7 +291,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             targetTracker.lock(target)
 
             // aim at target
-            RotationManager.aimAt(rotation, configurable = rotations)
+            RotationManager.aimAt(spot.rotation, configurable = rotations)
             break
         }
     }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.entity
 
 import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.input.Input
 import net.minecraft.client.network.ClientPlayerEntity
@@ -67,7 +68,6 @@ val ClientPlayerEntity.directionYaw: Float
         return rotationYaw
     }
 
-
 val PlayerEntity.sqrtSpeed: Double
     get() = velocity.sqrtSpeed
 
@@ -102,13 +102,17 @@ fun ClientPlayerEntity.strafe(yaw: Float = directionYaw, speed: Double = sqrtSpe
 val Vec3d.sqrtSpeed: Double
     get() = sqrt(x * x + z * z)
 
-fun Vec3d.strafe(yaw: Float, speed: Double = sqrtSpeed) {
+fun Vec3d.strafe(yaw: Float, speed: Double = sqrtSpeed, strength: Double = 1.0) {
+    val prevX = x * (1.0 - strength)
+    val prevZ = z * (1.0 - strength)
+    val useSpeed = speed * strength
+
     val angle = Math.toRadians(yaw.toDouble())
-    x = -sin(angle) * speed
-    z = cos(angle) * speed
+    x = (-sin(angle) * useSpeed) + prevX
+    z = (cos(angle) * useSpeed) + prevZ
 }
 
-fun Vec3d.strafe(yaw: Float, speed: Double = sqrtSpeed, keyboardCheck: Boolean = false) {
+fun Vec3d.strafe(yaw: Float, speed: Double = sqrtSpeed, strength: Double = 1.0, keyboardCheck: Boolean = false) {
     val player = mc.player ?: return
 
     if (keyboardCheck && !player.pressingMovementButton) {
@@ -117,11 +121,11 @@ fun Vec3d.strafe(yaw: Float, speed: Double = sqrtSpeed, keyboardCheck: Boolean =
         return
     }
 
-    this.strafe(yaw, speed)
+    this.strafe(yaw, speed, strength)
 }
 
-val ClientPlayerEntity.eyesPos: Vec3d
-    get() = Vec3d(pos.x, boundingBox.minY + getEyeHeight(pose), pos.z)
+val Entity.eyes: Vec3d
+    get() = eyePos
 
 val Input.yAxisMovement: Float
     get() = when {
@@ -129,6 +133,12 @@ val Input.yAxisMovement: Float
         sneaking -> -1.0f
         else -> 0.0f
     }
+
+val Entity.rotation: Rotation
+    get() = Rotation(yaw, pitch)
+
+val Entity.box: Box
+    get() = boundingBox.expand(targetingMargin.toDouble())
 
 /**
  * Allows to calculate the distance between the current entity and [entity] from the nearest corner of the bounding box
@@ -138,8 +148,8 @@ fun Entity.boxedDistanceTo(entity: Entity): Double {
 }
 
 fun Entity.squaredBoxedDistanceTo(entity: Entity): Double {
-    val eyes = entity.getCameraPosVec(1F)
-    val pos = getNearestPoint(eyes, boundingBox)
+    val eyes = entity.eyes
+    val pos = getNearestPoint(eyes, box)
 
     val xDist = pos.x - eyes.x
     val yDist = pos.y - eyes.y
@@ -152,7 +162,7 @@ fun Entity.interpolateCurrentPosition(tickDelta: Float): Vec3 {
     return Vec3(
         this.lastRenderX + (this.x - this.lastRenderX) * tickDelta,
         this.lastRenderY + (this.y - this.lastRenderY) * tickDelta,
-        this.lastRenderZ + (this.z - this.lastRenderZ) * tickDelta,
+        this.lastRenderZ + (this.z - this.lastRenderZ) * tickDelta
     )
 }
 
@@ -166,11 +176,7 @@ fun getNearestPoint(eyes: Vec3d, box: Box): Vec3d {
 
     // It loops through every coordinate of the double arrays and picks the nearest point
     for (i in 0..2) {
-        if (origin[i] > destMaxs[i]) {
-            origin[i] = destMaxs[i]
-        } else if (origin[i] < destMins[i]) {
-            origin[i] = destMins[i]
-        }
+        origin[i] = origin[i].coerceIn(destMins[i], destMaxs[i])
     }
 
     return Vec3d(origin[0], origin[1], origin[2])

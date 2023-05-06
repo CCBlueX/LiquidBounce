@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.event.EventManager
@@ -33,11 +34,11 @@ import net.minecraft.client.network.ClientPlayNetworkHandler
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.network.ClientPlayerInteractionManager
 import net.minecraft.client.world.ClientWorld
-import net.minecraft.text.TranslatableText
+import net.minecraft.text.Text
 import org.lwjgl.glfw.GLFW
 
 /**
- * A module also called 'hack' is able to be enabled and handle events
+ * A module also called 'hack' can be enabled and handle events
  */
 open class Module(
     name: String, // name parameter in configurable
@@ -45,14 +46,8 @@ open class Module(
     bind: Int = GLFW.GLFW_KEY_UNKNOWN, // default bind
     state: Boolean = false, // default state
     @Exclude val disableActivation: Boolean = false, // disable activation
-    hide: Boolean = false, // default hide
+    hide: Boolean = false // default hide
 ) : Listenable, Configurable(name) {
-
-    open val translationBaseKey: String
-        get() = "liquidbounce.module.${name.toLowerCamelCase()}"
-
-    val description: String
-        get() = "$translationBaseKey.description"
 
     // Module options
     var enabled by boolean("Enabled", state).listen { new ->
@@ -68,6 +63,9 @@ open class Module(
             } else {
                 disable()
             }
+
+            // If successful might store configuration
+            ConfigSystem.storeConfigurable(ModuleManager.modulesConfigurable)
         }.onSuccess {
             // Save new module state when module activation is enabled
             if (disableActivation) {
@@ -75,7 +73,7 @@ open class Module(
             }
 
             notification(
-                if (new) TranslatableText("liquidbounce.generic.enabled") else TranslatableText("liquidbounce.generic.disabled"),
+                if (new) Text.translatable("liquidbounce.generic.enabled") else Text.translatable("liquidbounce.generic.disabled"),
                 this.name,
                 NotificationEvent.Severity.INFO
             )
@@ -100,6 +98,12 @@ open class Module(
 
     var bind by int("Bind", bind, 0..0)
     var hidden by boolean("Hidden", hide)
+
+    open val translationBaseKey: String
+        get() = "liquidbounce.module.${name.toLowerCamelCase()}"
+
+    open val description: String
+        get() = "$translationBaseKey.description"
 
     // Tag to be displayed on the HUD
     open val tag: String?
@@ -139,8 +143,12 @@ open class Module(
      */
     override fun handleEvents() = enabled && mc.player != null && mc.world != null
 
-    fun message(key: String, vararg args: Any): TranslatableText {
-        return TranslatableText("$translationBaseKey.messages.$key", args)
-    }
+    /**
+     * Returns if module is hidden. Hidden modules are not displayed in the module list.
+     * Used for HTML UI. DO NOT REMOVE!
+     */
+    fun isHidden() = hidden
+
+    fun message(key: String, vararg args: Any) = Text.translatable("$translationBaseKey.messages.$key", *args)
 
 }

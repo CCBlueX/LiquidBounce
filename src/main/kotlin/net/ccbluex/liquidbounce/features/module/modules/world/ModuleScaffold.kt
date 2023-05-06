@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.utils.block.canStandOn
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.StateUpdateEvent
-import net.ccbluex.liquidbounce.utils.entity.eyesPos
+import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.extensions.getFace
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
@@ -124,8 +124,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     val networkTickHandler = repeatable {
         val target = currentTarget ?: return@repeatable
 
-        val serverRotation = RotationManager.serverRotation ?: return@repeatable
-        val rayTraceResult = raycast(4.5, serverRotation) ?: return@repeatable
+        val currentRotation = RotationManager.currentRotation ?: return@repeatable
+        val rayTraceResult = raycast(4.5, currentRotation) ?: return@repeatable
 
         if (rayTraceResult.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != target.blockPos || rayTraceResult.side != target.direction || rayTraceResult.pos.y < target.minY || !isValidTarget(
                 rayTraceResult
@@ -160,7 +160,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         val result = interaction.interactBlock(
             player,
-            world,
             Hand.MAIN_HAND,
             rayTraceResult
         )
@@ -176,7 +175,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     private fun isValidTarget(rayTraceResult: BlockHitResult): Boolean {
-        val eyesPos = player.eyesPos
+        val eyesPos = player.eyes
         val hitVec = rayTraceResult.pos
 
         val diffX = hitVec.x - eyesPos.x
@@ -277,7 +276,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 )
             ) {
                 Direction.values().mapNotNull { direction ->
-                    val delta = player.eyesPos.subtract(
+                    val delta = player.eyes.subtract(
                         Vec3d.of(posToInvestigate).add(0.5, 0.5, 0.5).add(Vec3d.of(direction.vector).multiply(0.5))
                     )
 
@@ -306,7 +305,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                         return@mapNotNull null
                     }
 
-                    val delta = player.eyesPos.subtract(
+                    val delta = player.eyes.subtract(
                         Vec3d.of(currPos).add(0.5, 0.5, 0.5).add(Vec3d.of(normalVector).multiply(0.5))
                     )
 
@@ -361,7 +360,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                     currPos,
                     first.first,
                     face.first.from.y + currPos.y,
-                    RotationManager.makeRotation(face.second.add(Vec3d.of(currPos)), player.eyesPos)
+                    RotationManager.makeRotation(face.second.add(Vec3d.of(currPos)), player.eyes)
                 )
             }
         }

@@ -19,10 +19,10 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
-import net.ccbluex.liquidbounce.common.RenderingFlags;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleESP;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.render.engine.Color4b;
+import net.ccbluex.liquidbounce.render.engine.RenderingFlags;
 import net.ccbluex.liquidbounce.render.shaders.OutlineShader;
 import net.ccbluex.liquidbounce.utils.combat.CombatExtensionsKt;
 import net.minecraft.client.gl.Framebuffer;
@@ -30,8 +30,8 @@ import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.math.Matrix4f;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -48,7 +48,7 @@ public abstract class MixinWorldRenderer {
     @Shadow
     protected abstract void renderEntity(Entity entity, double cameraX, double cameraY, double cameraZ, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers);
 
-    @Inject(method = "loadEntityOutlineShader", at = @At("RETURN"))
+    @Inject(method = "loadEntityOutlinePostProcessor", at = @At("RETURN"))
     private void onLoadEntityOutlineShader(CallbackInfo info) {
         try {
             OutlineShader.INSTANCE.load();

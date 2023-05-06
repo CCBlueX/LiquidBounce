@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.entity.directionYaw
+import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.entity.yAxisMovement
 import net.ccbluex.liquidbounce.utils.math.minus
@@ -55,17 +56,17 @@ object ModuleFreeCam : Module("FreeCam", Category.RENDER) {
     private var lastPos = Vec3d.ZERO
 
     override fun enable() {
-        updatePosition(player.eyePos, lastPosBeforePos = false, increase = false)
+        updatePosition(player.eyes, lastPosBeforePos = false, increase = false)
     }
 
     val tickHandler = handler<PlayerTickEvent> {
         if (player.age < 3) {
-            updatePosition(player.eyePos, lastPosBeforePos = false, increase = false)
+            updatePosition(player.eyes, lastPosBeforePos = false, increase = false)
         }
 
         val speed = this.speed.toDouble()
 
-        val velocity = Vec3d.of(Vec3i.ZERO).apply { strafe(player.directionYaw, speed, true) }
+        val velocity = Vec3d.of(Vec3i.ZERO).apply { strafe(player.directionYaw, speed, keyboardCheck = true) }
             .withAxis(Direction.Axis.Y, player.input.yAxisMovement * speed)
 
         updatePosition(velocity, lastPosBeforePos = true, increase = true)
