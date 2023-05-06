@@ -180,7 +180,7 @@ class FluidPushEvent : CancellableEvent()
 // Network events
 
 @Nameable("packet")
-class PacketEvent(val origin: TransferOrigin, val packet: Packet<*>) : CancellableEvent()
+class PacketEvent(val origin: TransferOrigin, val packet: Packet<*>, val original: Boolean = true) : CancellableEvent()
 
 enum class TransferOrigin {
     SEND, RECEIVE

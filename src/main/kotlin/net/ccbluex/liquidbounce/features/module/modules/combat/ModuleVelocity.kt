@@ -20,15 +20,15 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.PacketEvent
-import net.ccbluex.liquidbounce.event.PlayerMoveEvent
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.entity.directionYaw
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.minecraft.network.listener.ClientPlayPacketListener
+import net.minecraft.network.packet.Packet
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
 
@@ -42,10 +42,39 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     val modes = choices("Mode", Modify) {
         arrayOf(
-            Modify,
-            Push,
-            Strafe
+            Modify, Push, Strafe
         )
+    }
+
+    object Delayed : ToggleableConfigurable(this, "Delayed", false) {
+        val ticks by intRange("Ticks", 3..6, 0..40)
+    }
+
+    init {
+        tree(Delayed)
+    }
+
+    val packetHandler = sequenceHandler<PacketEvent>(priority = 1) {
+        val packet = it.packet
+
+        if ((packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket) && it.original && Delayed.enabled) {
+            it.cancelEvent()
+
+            Delayed.ticks.random().let { ticks ->
+                if (ticks > 0) {
+                    val timeToWait = System.currentTimeMillis() + (ticks * 50L)
+
+                    waitUntil { System.currentTimeMillis() >= timeToWait }
+                }
+            }
+
+            val packetEvent = PacketEvent(TransferOrigin.RECEIVE, packet, false)
+            EventManager.callEvent(packetEvent)
+
+            if (!packetEvent.isCancelled) {
+                (packet as Packet<ClientPlayPacketListener>).apply(network)
+            }
+        }
     }
 
     /**
@@ -72,9 +101,9 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
                 }
 
                 // Modify packet according to the specified values
-                packet.velocityX *= horizontal.toInt()
-                packet.velocityY *= vertical.toInt()
-                packet.velocityZ *= horizontal.toInt()
+                packet.velocityX = (packet.velocityX * horizontal).toInt()
+                packet.velocityY = (packet.velocityY * vertical).toInt()
+                packet.velocityZ = (packet.velocityZ * horizontal).toInt()
             } else if (packet is ExplosionS2CPacket) { // Check if velocity is affected by explosion
                 // note: explosion packets are being used by hypixel to trick poorly made cheats.
 
