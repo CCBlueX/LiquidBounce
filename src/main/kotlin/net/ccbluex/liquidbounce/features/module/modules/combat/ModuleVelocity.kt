@@ -57,7 +57,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
     val packetHandler = sequenceHandler<PacketEvent>(priority = 1) {
         val packet = it.packet
 
-        if ((packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket) && it.normal && Delayed.enabled) {
+        if ((packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket) && it.original && Delayed.enabled) {
             it.cancelEvent()
 
             Delayed.ticks.random().let { ticks ->
