@@ -32,7 +32,7 @@ enum class Category(val readableName: String) {
 
     companion object {
         /**
-         * Gets an enum by it's readable name
+         * Gets an enum by its readable name
          */
         fun fromReadableName(name: String): Category? {
             return values().find { name.equals(it.name, true) }

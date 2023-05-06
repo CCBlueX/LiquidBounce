@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,12 +26,12 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.RenderEngine
-import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.engine.memory.PositionColorVertexFormat
 import net.ccbluex.liquidbounce.render.engine.memory.putVertex
 import net.ccbluex.liquidbounce.render.utils.drawBoxNew
 import net.ccbluex.liquidbounce.render.utils.drawBoxOutlineNew
 import net.ccbluex.liquidbounce.render.utils.rainbow
+import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.render.espBoxInstancedOutlineRenderTask
 import net.ccbluex.liquidbounce.utils.render.espBoxInstancedRenderTask
 import net.minecraft.entity.ItemEntity
@@ -77,11 +77,7 @@ object ModuleItemESP : Module("ItemESP", Category.RENDER) {
             instanceBufferOutline.initBuffer(filtered.size)
 
             for (entity in filtered) {
-                val pos = Vec3(
-                    entity.lastRenderX + (entity.x - entity.lastRenderX) * event.tickDelta,
-                    entity.lastRenderY + (entity.y - entity.lastRenderY) * event.tickDelta,
-                    entity.lastRenderZ + (entity.z - entity.lastRenderZ) * event.tickDelta
-                )
+                val pos = entity.interpolateCurrentPosition(event.tickDelta)
 
                 instanceBuffer.putVertex { this.position = pos; this.color = baseColor }
                 instanceBufferOutline.putVertex { this.position = pos; this.color = outlineColor }

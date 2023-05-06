@@ -1,0 +1,29 @@
+<html>
+<head>
+    <title>Account manager</title>
+    <style>
+        body {
+            background-color: #4285f4;
+        }
+    </style>
+</head>
+
+<body>
+<h1>Proxy Manager</h1>
+
+<p id="response"></p>
+
+<h2>Set proxy</h2>
+<div>
+    <input type="text" id="host" name="host" placeholder="Host"><br>
+    <input type="text" id="port" name="port" placeholder="Port"><br>
+    <input type="text" id="username" name="username" placeholder="Username"><br>
+    <input type="password" id="password" name="password" placeholder="Password"><br>
+
+    <button onclick="document.getElementById('response').innerText = client.getProxyManager().setProxy(document.getElementById('host').value, parseInt(document.getElementById('port').value), document.getElementById('username').value, document.getElementById('password').value);">Set proxy</button><br>
+    <button onclick="document.getElementById('response').innerText = client.getProxyManager().unsetProxy();">Unset proxy</button>
+</div>
+
+<button onclick="pages.open('title', screen)">Back</button>
+</body>
+</html>

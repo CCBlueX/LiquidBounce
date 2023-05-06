@@ -18,11 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
+import net.ccbluex.liquidbounce.base.ultralight.ViewOverlay
+import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
-import net.ccbluex.liquidbounce.render.ultralight.View
-import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
 
 /**
  * Module HUD
@@ -34,18 +34,18 @@ object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
     override val translationBaseKey: String
         get() = "liquidbounce.module.hud"
 
-    private var view: View? = null
+    private var viewOverlay: ViewOverlay? = null
 
     /**
      * Create new HUD view
      */
     private fun makeView() {
-        if (view != null) {
+        if (viewOverlay != null) {
             return
         }
 
         val page = ThemeManager.defaultTheme.page("hud") ?: error("unable to find hud page in current theme")
-        view = UltralightEngine.newOverlayView().apply {
+        viewOverlay = UltralightEngine.newOverlayView().apply {
             loadPage(page)
         }
     }
@@ -54,8 +54,8 @@ object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
      * Unload HUD view
      */
     private fun unloadView() {
-        view?.let { UltralightEngine.removeView(it) }
-        view = null
+        viewOverlay?.let { UltralightEngine.removeView(it) }
+        viewOverlay = null
     }
 
     override fun init() {

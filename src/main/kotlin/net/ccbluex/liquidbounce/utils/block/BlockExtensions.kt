@@ -25,7 +25,7 @@ import net.minecraft.block.SideShapeType
 import net.minecraft.util.math.*
 import kotlin.math.ceil
 
-fun Vec3d.toBlockPos() = BlockPos(this)
+fun Vec3i.toBlockPos() = BlockPos(this)
 
 fun BlockPos.getState() = mc.world?.getBlockState(this)
 
@@ -80,8 +80,9 @@ inline fun searchBlocksInRadius(radius: Float, filter: (BlockPos, BlockState) ->
                 if (!filter(blockPos, state)) {
                     continue
                 }
-                if (Vec3d.of(blockPos).squaredDistanceTo(playerPos) > radiusSquared)
+                if (Vec3d.of(blockPos).squaredDistanceTo(playerPos) > radiusSquared) {
                     continue
+                }
 
                 blocks.add(Pair(blockPos, state))
             }
@@ -101,7 +102,7 @@ fun BlockPos.canStandOn(): Boolean {
 fun isBlockAtPosition(box: Box, isCorrectBlock: (Block?) -> Boolean): Boolean {
     for (x in MathHelper.floor(box.minX) until MathHelper.floor(box.maxX) + 1) {
         for (z in MathHelper.floor(box.minZ) until MathHelper.floor(box.maxZ) + 1) {
-            val block = BlockPos(x.toDouble(), box.minY, z.toDouble()).getBlock()
+            val block = BlockPos.ofFloored(x.toDouble(), box.minY, z.toDouble()).getBlock()
 
             if (isCorrectBlock(block)) {
                 return true
@@ -118,7 +119,7 @@ fun isBlockAtPosition(box: Box, isCorrectBlock: (Block?) -> Boolean): Boolean {
 fun collideBlockIntersects(box: Box, isCorrectBlock: (Block?) -> Boolean): Boolean {
     for (x in MathHelper.floor(box.minX) until MathHelper.floor(box.maxX) + 1) {
         for (z in MathHelper.floor(box.minZ) until MathHelper.floor(box.maxZ) + 1) {
-            val blockPos = BlockPos(x.toDouble(), box.minY, z.toDouble())
+            val blockPos = BlockPos.ofFloored(x.toDouble(), box.minY, z.toDouble())
             val blockState = blockPos.getState() ?: continue
             val block = blockPos.getBlock() ?: continue
 
@@ -131,8 +132,9 @@ fun collideBlockIntersects(box: Box, isCorrectBlock: (Block?) -> Boolean): Boole
 
                 val boundingBox = shape.boundingBox
 
-                if (box.intersects(boundingBox))
+                if (box.intersects(boundingBox)) {
                     return true
+                }
             }
         }
     }

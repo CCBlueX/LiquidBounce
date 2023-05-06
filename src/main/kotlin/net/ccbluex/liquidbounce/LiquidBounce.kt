@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce
 
+import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
+import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.chat.Chat
@@ -27,8 +29,6 @@ import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.tabs.Tabs
 import net.ccbluex.liquidbounce.render.engine.RenderEngine
-import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
-import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
@@ -56,6 +56,8 @@ object LiquidBounce : Listenable {
     const val CLIENT_VERSION = "1.0.0"
     const val CLIENT_AUTHOR = "CCBlueX"
     const val CLIENT_CLOUD = "https://cloud.liquidbounce.net/LiquidBounce"
+
+    const val IN_DEVELOPMENT = true
 
     /**
      * Client logger to print out console messages
@@ -93,7 +95,12 @@ object LiquidBounce : Listenable {
             RotationManager
             FriendManager
             ProxyManager
-            Tabs
+            runCatching {
+                Class.forName("net.fabricmc.fabric.impl.itemgroup.ItemGroupHelper")
+                Tabs
+            }.onFailure {
+                logger.warn("Unable to load tabs. Are you using Fabric API?")
+            }
             Chat
 
             // Initialize the render engine
@@ -127,7 +134,7 @@ object LiquidBounce : Listenable {
      */
     val shutdownHandler = handler<ClientShutdownEvent> {
         logger.info("Shutting down client...")
-        ConfigSystem.store()
+        ConfigSystem.storeAll()
         UltralightEngine.shutdown()
 
         ChunkScanner.ChunkScannerThread.stopThread()

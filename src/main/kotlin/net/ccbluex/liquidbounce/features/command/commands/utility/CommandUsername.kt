@@ -32,7 +32,7 @@ object CommandUsername {
         return CommandBuilder
             .begin("username")
             .handler { command, _ ->
-                val username = mc.player!!.name.asString()
+                val username = mc.player!!.name.string
                 chat(regular(command.result("username", variable(username))))
                 GLFW.glfwSetClipboardString(mc.window.handle, username)
             }

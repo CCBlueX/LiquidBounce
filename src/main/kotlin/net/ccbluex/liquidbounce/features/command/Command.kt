@@ -20,7 +20,9 @@
 package net.ccbluex.liquidbounce.features.command
 
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
-import net.minecraft.text.TranslatableText
+import net.minecraft.text.MutableText
+import net.minecraft.text.Text
+import net.minecraft.text.TranslatableTextContent
 import java.util.*
 
 typealias CommandHandler = (Command, Array<Any>) -> Unit
@@ -37,8 +39,8 @@ class Command(
     val translationBaseKey: String
         get() = "liquidbounce.command.${getParentKeys(this, name)}"
 
-    val description: TranslatableText
-        get() = TranslatableText("$translationBaseKey.description")
+    val description: MutableText
+        get() = Text.translatable("$translationBaseKey.description")
 
     init {
         subcommands.forEach {
@@ -63,8 +65,8 @@ class Command(
         return if (parentName != null) getParentKeys(currentCommand.parentCommand, "$parentName.subcommand.$current") else current
     }
 
-    fun result(key: String, vararg args: Any): TranslatableText {
-        return TranslatableText("$translationBaseKey.result.$key", *args)
+    fun result(key: String, vararg args: Any): MutableText {
+        return Text.translatable("$translationBaseKey.result.$key", *args)
     }
 
     /**

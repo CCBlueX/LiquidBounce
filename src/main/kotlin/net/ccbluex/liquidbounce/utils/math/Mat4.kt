@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.utils.math
 
 import net.ccbluex.liquidbounce.render.engine.Vec4
-import net.minecraft.util.math.Matrix4f
-import net.minecraft.util.math.Quaternion
+import org.joml.Matrix4f
+import org.joml.Quaternionf
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL20
 import java.nio.FloatBuffer
@@ -47,7 +47,7 @@ class Mat4() {
     var a32 = 0f
     var a33 = 0f
 
-    constructor(quaternion: Quaternion) : this() {
+    constructor(quaternion: Quaternionf) : this() {
         val f = quaternion.x
         val g = quaternion.y
         val h = quaternion.z
@@ -74,22 +74,22 @@ class Mat4() {
     }
 
     constructor(matrix4f: Matrix4f) : this() {
-        this.a00 = matrix4f.a00
-        this.a01 = matrix4f.a01
-        this.a02 = matrix4f.a02
-        this.a03 = matrix4f.a03
-        this.a10 = matrix4f.a10
-        this.a11 = matrix4f.a11
-        this.a12 = matrix4f.a12
-        this.a13 = matrix4f.a13
-        this.a20 = matrix4f.a20
-        this.a21 = matrix4f.a21
-        this.a22 = matrix4f.a22
-        this.a23 = matrix4f.a23
-        this.a30 = matrix4f.a30
-        this.a31 = matrix4f.a31
-        this.a32 = matrix4f.a32
-        this.a33 = matrix4f.a33
+        this.a00 = matrix4f.m00()
+        this.a01 = matrix4f.m01()
+        this.a02 = matrix4f.m02()
+        this.a03 = matrix4f.m03()
+        this.a10 = matrix4f.m10()
+        this.a11 = matrix4f.m11()
+        this.a12 = matrix4f.m12()
+        this.a13 = matrix4f.m13()
+        this.a20 = matrix4f.m20()
+        this.a21 = matrix4f.m21()
+        this.a22 = matrix4f.m22()
+        this.a23 = matrix4f.m23()
+        this.a30 = matrix4f.m30()
+        this.a31 = matrix4f.m31()
+        this.a32 = matrix4f.m32()
+        this.a33 = matrix4f.m33()
     }
 
     constructor(mat4: Mat4) : this() {
@@ -225,7 +225,7 @@ $a30 $a31 $a32 $a33
         return Vec4(x, y, z, w)
     }
 
-    fun multiply(quaternion: Quaternion) {
+    fun multiply(quaternion: Quaternionf) {
         this.multiply(Mat4(quaternion))
     }
 

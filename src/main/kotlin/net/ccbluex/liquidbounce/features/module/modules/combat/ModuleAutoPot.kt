@@ -86,7 +86,9 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
 
                 // Using timer so as to avoid sword shield
                 wait(2)
-                network.sendPacket(PlayerInteractItemC2SPacket(Hand.MAIN_HAND))
+                interaction.sendSequencedPacket(world) { sequence ->
+                    PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence)
+                }
 
                 if (potHotBar != player.inventory.selectedSlot) {
                     network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
