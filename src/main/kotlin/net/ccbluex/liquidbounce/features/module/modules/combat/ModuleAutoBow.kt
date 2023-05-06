@@ -29,10 +29,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.combat.PriorityEnum
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
-import net.ccbluex.liquidbounce.utils.entity.SimulatedArrow
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
-import net.ccbluex.liquidbounce.utils.entity.eyesPos
-import net.ccbluex.liquidbounce.utils.entity.straightLinePointDistanceSquared
+import net.ccbluex.liquidbounce.utils.entity.*
 import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
@@ -79,7 +76,8 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             val lenHalf = (this.chargedRandom.endInclusive - this.chargedRandom.start) / 2.0F
             val mid = this.chargedRandom.start + lenHalf
 
-            currentChargeRandom = (mid + random.nextGaussian() * lenHalf).toInt().coerceIn(this.chargedRandom.start.toInt()..this.chargedRandom.endInclusive.toInt())
+            currentChargeRandom = (mid + random.nextGaussian() * lenHalf).toInt()
+                .coerceIn(this.chargedRandom.start.toInt()..this.chargedRandom.endInclusive.toInt())
         }
 
         fun getChargedRandom(): Int {
@@ -125,11 +123,13 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
 
             val velocity = getHypotheticalArrowVelocity(player, false)
 
-            val vX = -MathHelper.sin(yaw * (Math.PI.toFloat() / 180)) * MathHelper.cos(pitch * (Math.PI.toFloat() / 180)) * velocity
+            val vX =
+                -MathHelper.sin(yaw * (Math.PI.toFloat() / 180)) * MathHelper.cos(pitch * (Math.PI.toFloat() / 180)) * velocity
             val vY = -MathHelper.sin(pitch * (Math.PI.toFloat() / 180)) * velocity
-            val vZ = MathHelper.cos(yaw * (Math.PI.toFloat() / 180)) * MathHelper.cos(pitch * (Math.PI.toFloat() / 180)) * velocity
+            val vZ =
+                MathHelper.cos(yaw * (Math.PI.toFloat() / 180)) * MathHelper.cos(pitch * (Math.PI.toFloat() / 180)) * velocity
 
-            val arrow = SimulatedArrow(world, player.eyesPos, Vec3d(vX.toDouble(), vY.toDouble(), vZ.toDouble()), false)
+            val arrow = SimulatedArrow(world, player.eyes, Vec3d(vX.toDouble(), vY.toDouble(), vZ.toDouble()), false)
 
             val players = findAndBuildSimulatedPlayers()
 
@@ -202,13 +202,13 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
                 return@handler
             }
 
-            val eyePos = player.eyesPos
+            val eyePos = player.eyes
 
             var target: Entity? = null
             var rotation: Rotation? = null
 
             for (enemy in targetTracker.enemies()) {
-                val rot = getRotationToTarget(enemy.boundingBox.center, eyePos, enemy) ?: continue
+                val rot = getRotationToTarget(enemy.box.center, eyePos, enemy) ?: continue
 
                 target = enemy
                 rotation = rot

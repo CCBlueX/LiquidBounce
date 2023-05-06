@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
-import net.ccbluex.liquidbounce.utils.entity.eyesPos
+import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.minecraft.block.*
 import net.minecraft.client.gui.screen.ingame.HandledScreen
@@ -45,7 +45,7 @@ import net.minecraft.world.RaycastContext
  * Automatically farms stuff for you.
  */
 object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
-// TODO Fix this entire module-
+    // TODO Fix this entire module-
     private val range by float("Range", 5F, 1F..6F)
     private val throughWalls by boolean("ThroughWalls", false)
 
@@ -66,19 +66,23 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         }
 
         val curr = currentTarget ?: return@repeatable
-        val serverRotation = RotationManager.serverRotation ?: return@repeatable
+        val currentRotation = RotationManager.currentRotation ?: return@repeatable
 
         val rayTraceResult = mc.world?.raycast(
             RaycastContext(
-                player.eyesPos,
-                player.eyesPos.add(serverRotation.rotationVec.multiply(range.toDouble())),
+                player.eyes,
+                player.eyes.add(currentRotation.rotationVec.multiply(range.toDouble())),
                 RaycastContext.ShapeType.COLLIDER,
                 RaycastContext.FluidHandling.NONE,
                 player
             )
         )
 
-        if (rayTraceResult?.type != HitResult.Type.BLOCK || !isTargeted(rayTraceResult.blockPos.getState()!!, rayTraceResult.blockPos)) {
+        if (rayTraceResult?.type != HitResult.Type.BLOCK || !isTargeted(
+                rayTraceResult.blockPos.getState()!!,
+                rayTraceResult.blockPos
+            )
+        ) {
             return@repeatable
         }
 
@@ -98,7 +102,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
         val radius = range + 1
         val radiusSquared = radius * radius
-        val eyesPos = mc.player!!.eyesPos
+        val eyesPos = mc.player!!.eyes
 
         val blockToProcess = searchBlocksInCuboid(radius.toInt()) { pos, state ->
             !state.isAir && getNearestPoint(
@@ -110,7 +114,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         val (pos, state) = blockToProcess
 
         val rt = RotationManager.raytraceBlock(
-            player.eyesPos,
+            player.eyes,
             pos,
             state,
             range = range.toDouble(),
@@ -128,7 +132,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
         val raytraceResult = mc.world?.raycast(
             RaycastContext(
-                player.eyesPos,
+                player.eyes,
                 Vec3d.of(pos).add(0.5, 0.5, 0.5),
                 RaycastContext.ShapeType.COLLIDER,
                 RaycastContext.FluidHandling.NONE,

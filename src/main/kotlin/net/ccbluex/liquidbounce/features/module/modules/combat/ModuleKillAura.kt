@@ -19,9 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.NamedChoice
-import net.ccbluex.liquidbounce.event.AttackEvent
-import net.ccbluex.liquidbounce.event.EventManager
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKillAura.RaycastMode.*
@@ -39,6 +37,7 @@ import net.ccbluex.liquidbounce.utils.entity.eyesPos
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.item.openInventorySilently
+import net.ccbluex.liquidbounce.utils.entity.*
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
@@ -148,10 +147,10 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 //        RenderEngine.enqueueForRendering(RenderEngine.CAMERA_VIEW_LAYER, renderTask)
 //    }
 
-    val repeatable = repeatable {
+    val rotationUpdateHandler = handler<PlayerNetworkMovementTickEvent> {
         // Killaura in spectator-mode is pretty useless, trust me.
-        if (player.isSpectator) {
-            return@repeatable
+        if (it.state != EventState.PRE || player.isSpectator) {
+            return@handler
         }
 
         // Make sure killaura-logic is not running while inventory is open
@@ -160,18 +159,28 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         if (isInInventoryScreen && !ignoreOpenInventory) {
             // Cleanup current target tracker
             targetTracker.cleanup()
-            return@repeatable
+            return@handler
         }
 
         // Update current target tracker to make sure you attack the best enemy
         updateEnemySelection()
+    }
+
+    val repeatable = repeatable {
+        val isInInventoryScreen = mc.currentScreen is InventoryScreen
 
         // Check if there is target to attack
         val target = targetTracker.lockedOnTarget ?: return@repeatable
         // Did you ever send a rotation before?
-        val rotation = RotationManager.serverRotation ?: return@repeatable
+        val rotation = RotationManager.currentRotation ?: return@repeatable
 
-        if (target.boxedDistanceTo(player) <= range && facingEnemy(target, range.toDouble(), rotation)) {
+        if (target.boxedDistanceTo(player) <= range && facingEnemy(
+                target,
+                rotation,
+                range.toDouble(),
+                wallRange.toDouble()
+            )
+        ) {
             // Check if between enemy and player is another entity
             val raycastedEntity = raytraceEntity(range.toDouble(), rotation, filter = {
                 when (raycast) {
@@ -189,11 +198,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
             // Attack enemy according to cps and cooldown
             val clicks = cpsTimer.clicks(condition = {
-                (!cooldown || player.getAttackCooldownProgress(0.0f) >= 1.0f) && (!ModuleCriticals.shouldWaitForCrit() || raycastedEntity.velocity.lengthSquared() > 0.25 * 0.25) && (
-                    attackShielding || raycastedEntity !is PlayerEntity || player.mainHandStack.item !is AxeItem || !raycastedEntity.wouldBlockHit(
-                        player
-                    )
-                    )
+                (!cooldown || player.getAttackCooldownProgress(0.0f) >= 1.0f) && (!ModuleCriticals.shouldWaitForCrit() || raycastedEntity.velocity.lengthSquared() > 0.25 * 0.25) && (attackShielding || raycastedEntity !is PlayerEntity || player.mainHandStack.item !is AxeItem || !raycastedEntity.wouldBlockHit(
+                    player
+                ))
             }, cps)
 
             repeat(clicks) {
@@ -207,9 +214,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 if (blocking) {
                     network.sendPacket(
                         PlayerActionC2SPacket(
-                            PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
-                            BlockPos.ORIGIN,
-                            Direction.DOWN
+                            PlayerActionC2SPacket.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.DOWN
                         )
                     )
 
@@ -244,10 +249,11 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                     interaction.sendSequencedPacket(world) { sequence ->
                         PlayerInteractItemC2SPacket(player.activeHand, sequence)
                     }
-
+                    
                     if (simulateInventoryClosing && isInInventoryScreen) {
                         openInventorySilently()
                     }
+                
                 }
             }
         }
@@ -261,7 +267,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         targetTracker.validateLock { it.squaredBoxedDistanceTo(player) <= rangeSquared }
 
-        val eyes = player.eyesPos
+        val eyes = player.eyes
 
         val scanRange = if (targetTracker.maxDistanceSquared > rangeSquared) {
             ((range + scanExtraRange) * (range + scanExtraRange)).toDouble()
@@ -277,32 +283,25 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             val predictedTicks = predict.start + (predict.endInclusive - predict.start) * Math.random()
 
             val targetPrediction = Vec3d(
-                target.x - target.prevX,
-                target.y - target.prevY,
-                target.z - target.prevZ
+                target.x - target.prevX, target.y - target.prevY, target.z - target.prevZ
             ).multiply(predictedTicks)
 
             val playerPrediction = Vec3d(
-                player.x - player.prevX,
-                player.y - player.prevY,
-                player.z - player.prevZ
+                player.x - player.prevX, player.y - player.prevY, player.z - player.prevZ
             ).multiply(predictedTicks)
 
-            val box = target.boundingBox.offset(targetPrediction)
+            val box = target.box.offset(targetPrediction)
 
-            // find best spot (and skip if no spot was found)
-            val (rotation, _) = RotationManager.raytraceBox(
-                eyes.add(playerPrediction),
-                box,
-                range = sqrt(scanRange),
-                wallsRange = wallRange.toDouble()
+            // find best spot
+            val spot = RotationManager.raytraceBox(
+                eyes.add(playerPrediction), box, range = sqrt(scanRange), wallsRange = wallRange.toDouble()
             ) ?: continue
 
             // lock on target tracker
             targetTracker.lock(target)
 
             // aim at target
-            RotationManager.aimAt(rotation, configurable = rotations)
+            RotationManager.aimAt(spot.rotation, configurable = rotations)
             break
         }
     }

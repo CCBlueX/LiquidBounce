@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.render.utils.drawBoxNew
 import net.ccbluex.liquidbounce.render.utils.drawBoxSide
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.ccbluex.liquidbounce.utils.render.espBoxRenderTask
 import net.ccbluex.liquidbounce.utils.render.rect
@@ -71,7 +72,15 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
         val theWorld = mc.world ?: return@handler
 
         theWorld.entities.filter { it is ArrowEntity && !it.inGround }.forEach {
-            val landingPosition = drawTrajectoryForProjectile(it.velocity, TrajectoryInfo(0.05F, 0.3F), it.pos, world, it, Vec3(0.0, 0.0, 0.0), Color4b(255, 0, 0, 200))
+            val landingPosition = drawTrajectoryForProjectile(
+                it.velocity,
+                TrajectoryInfo(0.05F, 0.3F),
+                it.pos,
+                world,
+                it,
+                Vec3(0.0, 0.0, 0.0),
+                Color4b(255, 0, 0, 200)
+            )
 
             if (landingPosition is EntityHitResult) {
                 if (landingPosition.entity != player) {
@@ -86,7 +95,10 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
 
                 vertexFormat.rect(indexBuffer, Vec3(-10.0, -10.0, 0.0), Vec3(10.0, 10.0, 0.0), Color4b(255, 0, 0, 120))
 
-                RenderEngine.enqueueForRendering(RenderEngine.SCREEN_SPACE_LAYER, VertexFormatRenderTask(vertexFormat, PrimitiveType.Triangles, ColoredPrimitiveShader))
+                RenderEngine.enqueueForRendering(
+                    RenderEngine.SCREEN_SPACE_LAYER,
+                    VertexFormatRenderTask(vertexFormat, PrimitiveType.Triangles, ColoredPrimitiveShader)
+                )
             }
         }
 
@@ -106,7 +118,10 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
 
                 vertexFormat.rect(indexBuffer, Vec3(-2.0, -1.0, 0.0), Vec3(2.0, 1.0, 0.0), Color4b(255, 0, 0, 50))
 
-                RenderEngine.enqueueForRendering(RenderEngine.SCREEN_SPACE_LAYER, VertexFormatRenderTask(vertexFormat, PrimitiveType.Triangles, ColoredPrimitiveShader))
+                RenderEngine.enqueueForRendering(
+                    RenderEngine.SCREEN_SPACE_LAYER,
+                    VertexFormatRenderTask(vertexFormat, PrimitiveType.Triangles, ColoredPrimitiveShader)
+                )
             }
         }
 
@@ -123,7 +138,10 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                     .minByOrNull { it.center.squaredDistanceTo(landingPosition.pos) }
 
                 if (bestBB != null) {
-                    RenderEngine.enqueueForRendering(RenderEngine.CAMERA_VIEW_LAYER, espBoxRenderTask(drawBoxSide(bestBB, landingPosition.side, Color4b(0, 160, 255, 150))))
+                    RenderEngine.enqueueForRendering(
+                        RenderEngine.CAMERA_VIEW_LAYER,
+                        espBoxRenderTask(drawBoxSide(bestBB, landingPosition.side, Color4b(0, 160, 255, 150)))
+                    )
                 }
             } else if (landingPosition is EntityHitResult) {
 
@@ -131,7 +149,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                     RenderEngine.CAMERA_VIEW_LAYER,
                     espBoxRenderTask(
                         drawBoxNew(
-                            landingPosition.entity.boundingBox,
+                            landingPosition.entity.box,
                             Color4b(255, 0, 0, 100)
                         )
                     )
@@ -306,7 +324,15 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
             currTicks++
         }
 
-        RenderEngine.enqueueForRendering(RenderEngine.CAMERA_VIEW_LAYER, VertexFormatRenderTask(vertexFormat, PrimitiveType.LineStrip, ColoredPrimitiveShader, state = GlRenderState(lineWidth = 2.0f, lineSmooth = true)))
+        RenderEngine.enqueueForRendering(
+            RenderEngine.CAMERA_VIEW_LAYER,
+            VertexFormatRenderTask(
+                vertexFormat,
+                PrimitiveType.LineStrip,
+                ColoredPrimitiveShader,
+                state = GlRenderState(lineWidth = 2.0f, lineSmooth = true)
+            )
+        )
 
         return landingPosition
     }
@@ -328,6 +354,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                     motionFactor = power.coerceAtMost(1.0F) * 3.0F
                 )
             }
+
             is FishingRodItem -> {
                 return TrajectoryInfo(
                     0.04F,
@@ -335,6 +362,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                     motionSlowdown = 0.92F
                 )
             }
+
             is PotionItem -> {
                 return TrajectoryInfo(
                     0.05F,
@@ -343,6 +371,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                     pitchSubtrahend = 20.0F
                 )
             }
+
             else -> return TrajectoryInfo(0.03F, 0.25F)
         }
     }

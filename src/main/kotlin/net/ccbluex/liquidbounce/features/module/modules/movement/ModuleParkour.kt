@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.moving
 
 /**
@@ -35,9 +36,7 @@ object ModuleParkour : Module("Parkour", Category.MOVEMENT) {
     val repeatable = repeatable {
         if (player.moving && player.isOnGround && !player.isSneaking && !mc.options.sneakKey.isPressed && !mc.options.jumpKey.isPressed) {
             if (world.getBlockCollisions(
-                    player,
-                    player.boundingBox.offset(0.0, -0.5, 0.0)
-                        .expand(-0.001, 0.0, -0.001)
+                    player, player.box.offset(0.0, -0.5, 0.0).expand(-0.001, 0.0, -0.001)
                 ).count() > 0
             ) {
                 return@repeatable

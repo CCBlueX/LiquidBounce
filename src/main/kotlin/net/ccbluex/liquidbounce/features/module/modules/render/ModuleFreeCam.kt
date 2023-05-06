@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.entity.directionYaw
+import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.entity.yAxisMovement
 import net.ccbluex.liquidbounce.utils.math.minus
@@ -55,12 +56,12 @@ object ModuleFreeCam : Module("FreeCam", Category.RENDER) {
     private var lastPos = Vec3d.ZERO
 
     override fun enable() {
-        updatePosition(player.eyePos, lastPosBeforePos = false, increase = false)
+        updatePosition(player.eyes, lastPosBeforePos = false, increase = false)
     }
 
     val tickHandler = handler<PlayerTickEvent> {
         if (player.age < 3) {
-            updatePosition(player.eyePos, lastPosBeforePos = false, increase = false)
+            updatePosition(player.eyes, lastPosBeforePos = false, increase = false)
         }
 
         val speed = this.speed.toDouble()

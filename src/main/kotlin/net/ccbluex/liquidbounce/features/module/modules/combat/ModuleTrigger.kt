@@ -104,6 +104,7 @@ object ModuleTrigger : Module("Trigger", Category.COMBAT) {
 
                 true
             }
+
             Use.STOP -> {
                 interaction.stopUsingItem(player)
 
@@ -113,6 +114,7 @@ object ModuleTrigger : Module("Trigger", Category.COMBAT) {
 
                 true
             }
+
             Use.IGNORE -> false
         }
     }
