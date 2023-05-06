@@ -26,6 +26,7 @@ import net.minecraft.client.gui.screen.ingame.CreativeInventoryScreen
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.item.ItemGroup
+import net.minecraft.item.ItemGroups
 
 /**
  * InventoryMove module
@@ -44,7 +45,7 @@ object ModuleInventoryMove : Module("InventoryMove", Category.MOVEMENT) {
     private fun isInCreativeSearchField(): Boolean {
         val currentScreen = mc.currentScreen
 
-        return currentScreen is CreativeInventoryScreen && currentScreen.selectedTab == ItemGroup.SEARCH.index
+        return currentScreen is CreativeInventoryScreen && CreativeInventoryScreen.selectedTab == ItemGroups.SEARCH
     }
 
 }

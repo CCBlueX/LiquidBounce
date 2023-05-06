@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.PlayerTickEvent
-import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.entity.effect.StatusEffectInstance
@@ -44,26 +44,23 @@ object ModuleFullBright : Module("FullBright", Category.RENDER) {
         )
     )
 
-    private object FullBrightGamma : Choice("Gamma") {
+   object FullBrightGamma : Choice("Gamma") {
 
         override val parent: ChoiceConfigurable
             get() = modes
 
-        private var prevValue = 0.0
+        var gamma = 0.0
 
         override fun enable() {
-            prevValue = mc.options.gamma
+            gamma = mc.options.gamma.value
         }
 
-        val tickHandler = sequenceHandler<PlayerTickEvent> {
-            if (mc.options.gamma <= 100) {
-                mc.options.gamma++
+        val tickHandler = handler<PlayerTickEvent> {
+            if (gamma <= 100) {
+                gamma += 0.1
             }
         }
 
-        override fun disable() {
-            mc.options.gamma = prevValue
-        }
     }
 
     private object FullBrightNightVision : Choice("Night Vision") {
@@ -71,7 +68,7 @@ object ModuleFullBright : Module("FullBright", Category.RENDER) {
         override val parent: ChoiceConfigurable
             get() = modes
 
-        val tickHandler = sequenceHandler<PlayerTickEvent> {
+        val tickHandler = handler<PlayerTickEvent> {
             player.addStatusEffect(StatusEffectInstance(StatusEffects.NIGHT_VISION, 1337))
         }
 

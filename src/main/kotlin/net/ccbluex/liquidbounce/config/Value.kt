@@ -32,8 +32,8 @@ import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.minecraft.block.Block
 import net.minecraft.item.Item
+import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
-import net.minecraft.util.registry.Registry
 import java.awt.Color
 import java.util.*
 import kotlin.reflect.KProperty
@@ -49,6 +49,9 @@ open class Value<T : Any>(
     @Exclude val valueType: ValueType,
     @Exclude val listType: ListValueType = ListValueType.None
 ) {
+
+    internal val loweredName
+        get() = name.lowercase()
 
     @Exclude
     private val listeners = mutableListOf<ValueListener<T>>()
@@ -74,6 +77,9 @@ open class Value<T : Any>(
     fun get() = value
 
     fun set(t: T) { // temporary set value
+        // Do nothing if value is the same
+        if (t == value) return
+
         value = t
 
         // check if value is really accepted
@@ -138,9 +144,9 @@ open class Value<T : Any>(
             if (string.startsWith("#")) set(Color4b(Color(string.substring(1).toInt(16))) as T)
             else set(Color4b(Color(string.toInt())) as T)
         } else if (this.value is Block) {
-            set(Registry.BLOCK.get(Identifier.fromCommandInput(StringReader(string))) as T)
+            set(Registries.BLOCK.get(Identifier.fromCommandInput(StringReader(string))) as T)
         } else if (this.value is Item) {
-            set(Registry.ITEM.get(Identifier.fromCommandInput(StringReader(string))) as T)
+            set(Registries.ITEM.get(Identifier.fromCommandInput(StringReader(string))) as T)
         } else {
             throw IllegalStateException()
         }

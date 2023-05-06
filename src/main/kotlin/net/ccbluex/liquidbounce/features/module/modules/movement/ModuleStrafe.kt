@@ -30,15 +30,17 @@ import net.minecraft.entity.MovementType
 /**
  * Strafe module
  *
- * Strafe into different directions while you're mid-air.
+ * Strafe into different directions while you're midair.
  */
 object ModuleStrafe : Module("Strafe", Category.MOVEMENT) {
+
+    private var strength by float("Strength", 1f, 0.1f..1f)
 
     val moveHandler = handler<PlayerMoveEvent> { event ->
         // Might just strafe when player controls itself
         if (event.type == MovementType.SELF && player.moving) {
             val movement = event.movement
-            movement.strafe(player.directionYaw)
+            movement.strafe(player.directionYaw, strength = strength.toDouble())
         }
     }
 

@@ -29,7 +29,7 @@ import net.minecraft.client.util.InputUtil
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
 import net.minecraft.entity.MovementType
-import net.minecraft.network.Packet
+import net.minecraft.network.packet.Packet
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.shape.VoxelShape
@@ -90,6 +90,9 @@ class KeyboardCharEvent(val window: Long, val codepoint: Int) : Event()
 
 @Nameable("inputHandle")
 class InputHandleEvent : Event()
+
+@Nameable("movementInputEvent")
+class MovementInputEvent(var forwards: Boolean, var backwards: Boolean, var left: Boolean, var right: Boolean) : Event()
 
 @Nameable("key")
 class KeyEvent(val key: InputUtil.Key, val action: Int, val mods: Int) : Event()
@@ -171,6 +174,9 @@ class CancelBlockBreakingEvent : CancellableEvent()
 @Nameable("playerStep")
 class PlayerStepEvent(var height: Float) : Event()
 
+@Nameable("FluidPushEvent")
+class FluidPushEvent : CancellableEvent()
+
 // Network events
 
 @Nameable("packet")
@@ -192,22 +198,19 @@ class ClientShutdownEvent : Event()
 class ValueChangedEvent(val value: Value<*>) : Event()
 
 @Nameable("toggleModule")
-class ToggleModuleEvent(val module: Module, val newState: Boolean) : Event()
+class ToggleModuleEvent(val module: Module, val newState: Boolean, val ignoreCondition: Boolean = false) : Event()
 
 @Nameable("notification")
 class NotificationEvent(val title: String, val message: String, val severity: Severity) : Event() {
     enum class Severity {
-        INFO,
-        SUCCESS,
-        ERROR
+        INFO, SUCCESS, ERROR
     }
 }
 
 @Nameable("clientChatMessage")
 class ClientChatMessageEvent(val user: User, val message: String, val chatGroup: ChatGroup) : Event() {
     enum class ChatGroup {
-        PUBLIC_CHAT,
-        PRIVATE_CHAT
+        PUBLIC_CHAT, PRIVATE_CHAT
     }
 }
 

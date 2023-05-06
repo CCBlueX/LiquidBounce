@@ -28,7 +28,9 @@ import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayNetworkHandler
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.world.ClientWorld
-import net.minecraft.text.TranslatableText
+import net.minecraft.text.MutableText
+import net.minecraft.text.Text
+import net.minecraft.text.TranslatableTextContent
 
 /**
  * Should handle events when enabled. Allows the client-user to toggle features. (like modules)
@@ -39,8 +41,8 @@ open class ToggleableConfigurable(@Exclude val module: Module? = null, name: Str
     val translationBaseKey: String
         get() = "${module?.translationBaseKey}.value.${name.toLowerCamelCase()}"
 
-    val description: TranslatableText
-        get() = TranslatableText("$translationBaseKey.description")
+    val description: MutableText
+        get() = Text.translatable("$translationBaseKey.description")
 
     var enabled by boolean("Enabled", enabled)
 
@@ -67,8 +69,8 @@ open class ChoiceConfigurable(
     val translationBaseKey: String
         get() = "${module.translationBaseKey}.value.${name.toLowerCamelCase()}"
 
-    val description: TranslatableText
-        get() = TranslatableText("$translationBaseKey.description")
+    val description: MutableText
+        get() = Text.translatable("$translationBaseKey.description")
 
     init {
         this.choices = choicesCallback(this)
@@ -101,8 +103,8 @@ abstract class Choice(name: String) : Configurable(name), Listenable, NamedChoic
     private val translationBaseKey: String
         get() = "${this.parent.translationBaseKey}.choice.${name.toLowerCamelCase()}"
 
-    val description: TranslatableText
-        get() = TranslatableText("$translationBaseKey.description")
+    val description: MutableText
+        get() = Text.translatable("$translationBaseKey.description")
 
     override val choiceName: String
         get() = this.name

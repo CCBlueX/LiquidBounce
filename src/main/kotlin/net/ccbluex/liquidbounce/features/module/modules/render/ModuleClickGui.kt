@@ -19,11 +19,12 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
+import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.screen.EmptyScreen
-import net.ccbluex.liquidbounce.render.ultralight.UltralightEngine
-import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
+import org.lwjgl.glfw.GLFW
 
 /**
  * ClickGUI module
@@ -31,7 +32,10 @@ import net.ccbluex.liquidbounce.render.ultralight.theme.ThemeManager
  * Shows you an easy-to-use menu to toggle and configure modules.
  */
 
-object ModuleClickGui : Module("ClickGUI", Category.RENDER, disableActivation = true) {
+object ModuleClickGui : Module("ClickGUI", Category.RENDER, bind = GLFW.GLFW_KEY_RIGHT_SHIFT, disableActivation = true) {
+
+    // Specifies whether the search bar should always be visible or only after pressing Ctrl + F.
+    val searchAlwaysOnTop by boolean("SearchAlwaysOnTop", true)
 
     override fun enable() {
         val page = ThemeManager.page("clickgui") ?: error("unable to find clickgui page in current theme")

@@ -26,7 +26,8 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.screen.slot.SlotActionType
-import net.minecraft.text.TranslatableText
+import net.minecraft.text.Text
+import net.minecraft.text.TranslatableTextContent
 
 /**
  * ChestStealer module
@@ -56,7 +57,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
         if (checkTitle) {
             val titleString = screen.title.string
 
-            if (titleString != TranslatableText("container.chest").string && titleString != TranslatableText("container.chestDouble").string) {
+            if (titleString != Text.translatable("container.chest").string && titleString != Text.translatable("container.chestDouble").string) {
                 return@handler
             }
         }

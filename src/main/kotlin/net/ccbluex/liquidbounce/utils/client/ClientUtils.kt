@@ -19,14 +19,13 @@
 
 package net.ccbluex.liquidbounce.utils.client
 
+import de.florianmichael.vialoadingbase.ViaLoadingBase
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.NotificationEvent
-import net.earthcomputer.multiconnect.api.MultiConnectAPI
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.util.InputUtil
-import net.minecraft.text.BaseText
-import net.minecraft.text.LiteralText
+import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.util.Util
@@ -42,30 +41,33 @@ val logger: Logger
     get() = LiquidBounce.logger
 
 /**
- * Get current protocol version depending on Multi Connect
+ * Get current protocol version
+ *
+ * @return protocol version
  */
 val protocolVersion: Int
     get() = runCatching {
-        MultiConnectAPI.instance().protocolVersion
-    }.getOrElse { 754 }
+        ViaLoadingBase.getInstance().targetVersion.index
+    }.getOrElse { MC_1_19_4 }
 
+const val MC_1_19_4: Int = 762
 const val MC_1_8: Int = 47
 
 // Chat formatting
-private val clientPrefix = "§8[§9§l${LiquidBounce.CLIENT_NAME}§8] ".asText()
+private val clientPrefix = "§f§lLiquid§9§lBounce §8▸ §7".asText()
 
 fun dot() = regular(".")
 
-fun regular(text: BaseText) = text.styled { it.withColor(Formatting.GRAY) }
+fun regular(text: MutableText) = text.styled { it.withColor(Formatting.GRAY) }
 
 fun regular(text: String) = text.asText().styled { it.withColor(Formatting.GRAY) }
 
-fun variable(text: BaseText) = text.styled { it.withColor(Formatting.DARK_GRAY) }
+fun variable(text: MutableText) = text.styled { it.withColor(Formatting.DARK_GRAY) }
 
 fun variable(text: String) = text.asText().styled { it.withColor(Formatting.DARK_GRAY) }
 
 fun chat(vararg texts: Text, prefix: Boolean = true) {
-    val literalText = if (prefix) clientPrefix.copy() else LiteralText("")
+    val literalText = if (prefix) clientPrefix.copy() else Text.literal("")
     texts.forEach { literalText.append(it) }
 
     if (mc.player == null) {
@@ -107,7 +109,7 @@ fun keyName(keyCode: Int) = when (keyCode) {
         .split(".")
         .drop(2)
         .joinToString(separator = "_")
-        .toUpperCase()
+        .uppercase()
 }
 
 /**

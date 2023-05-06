@@ -55,7 +55,7 @@ object ModuleBugUp : Module("BugUp", Category.MOVEMENT) {
 
         val thePlayer = mc.player ?: return@repeatable
 
-        if (thePlayer.isOnGround && !BlockPos(player.pos.add(0.0, -1.0, 0.0)).getState()!!.isAir) {
+        if (thePlayer.isOnGround && !BlockPos(player.blockPos.down()).getState()!!.isAir) {
             prevX = thePlayer.prevX
             prevY = thePlayer.prevY
             prevZ = thePlayer.prevZ

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.event.EventManager
@@ -33,74 +34,76 @@ import net.minecraft.client.network.ClientPlayNetworkHandler
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.network.ClientPlayerInteractionManager
 import net.minecraft.client.world.ClientWorld
-import net.minecraft.text.TranslatableText
+import net.minecraft.text.Text
 import org.lwjgl.glfw.GLFW
 
 /**
- * A module also called 'hack' is able to be enabled and handle events
+ * A module also called 'hack' can be enabled and handle events
  */
 open class Module(
     name: String, // name parameter in configurable
-    @Exclude
-    val category: Category, // module category
+    @Exclude val category: Category, // module category
     bind: Int = GLFW.GLFW_KEY_UNKNOWN, // default bind
     state: Boolean = false, // default state
-    @Exclude
-    val disableActivation: Boolean = false, // disable activation
-    hide: Boolean = false, // default hide
+    @Exclude val disableActivation: Boolean = false, // disable activation
+    hide: Boolean = false // default hide
 ) : Listenable, Configurable(name) {
+
+    // Module options
+    var enabled by boolean("Enabled", state).listen { new ->
+        runCatching {
+            // Check if player is in-game
+            if (mc.player == null || mc.world == null) {
+                return@runCatching
+            }
+
+            // Call enable or disable function
+            if (new) {
+                enable()
+            } else {
+                disable()
+            }
+
+            // If successful might store configuration
+            ConfigSystem.storeConfigurable(ModuleManager.modulesConfigurable)
+        }.onSuccess {
+            // Save new module state when module activation is enabled
+            if (disableActivation) {
+                return@listen false
+            }
+
+            notification(
+                if (new) Text.translatable("liquidbounce.generic.enabled") else Text.translatable("liquidbounce.generic.disabled"),
+                this.name,
+                NotificationEvent.Severity.INFO
+            )
+
+            // Ignore handleEvents condition to prevent enabled modules from freezing post game load
+            val notInGame = (mc.player == null || mc.world == null) && new
+
+            // Call out module event
+            EventManager.callEvent(ToggleModuleEvent(this, new, notInGame))
+
+            // Call to choices
+            value.filterIsInstance<ChoiceConfigurable>().forEach { it.newState(new) }
+        }.onFailure {
+            // Log error
+            logger.error("Module failed to ${if (new) "enable" else "disable"}.", it)
+            // In case of an error module should stay disabled
+            throw it
+        }
+
+        new
+    }
+
+    var bind by int("Bind", bind, 0..0)
+    var hidden by boolean("Hidden", hide)
 
     open val translationBaseKey: String
         get() = "liquidbounce.module.${name.toLowerCamelCase()}"
 
-    val description: String
+    open val description: String
         get() = "$translationBaseKey.description"
-
-    // Module options
-    var enabled by boolean("Enabled", state)
-        .listen { new ->
-            runCatching {
-                // Check if player is in-game
-                if (mc.player == null || mc.world == null) {
-                    return@runCatching
-                }
-
-                // Call enable or disable function
-                if (new) {
-                    enable()
-                } else {
-                    disable()
-                }
-            }.onSuccess {
-                // Save new module state when module activation is enabled
-                if (disableActivation) {
-                    return@listen false
-                }
-
-                notification(
-                    if (new) TranslatableText("liquidbounce.generic.enabled") else TranslatableText("liquidbounce.generic.disabled"),
-                    this.name,
-                    NotificationEvent.Severity.INFO
-                )
-
-                // Call out module event
-                EventManager.callEvent(ToggleModuleEvent(this, new))
-
-                // Call to choices
-                value.filterIsInstance<ChoiceConfigurable>()
-                    .forEach { it.newState(new) }
-            }.onFailure {
-                // Log error
-                logger.error("Module failed to ${if (new) "enable" else "disable"}.", it)
-                // In case of an error module should stay disabled
-                throw it
-            }
-
-            new
-        }
-
-    var bind by int("Bind", bind, 0..0)
-    var hidden by boolean("Hidden", hide)
 
     // Tag to be displayed on the HUD
     open val tag: String?
@@ -123,25 +126,29 @@ open class Module(
     /**
      * Called when module is turned on
      */
-    open fun enable() { }
+    open fun enable() {}
 
     /**
      * Called when module is turned off
      */
-    open fun disable() { }
+    open fun disable() {}
 
     /**
      * Called when the module is added to the module manager
      */
-    open fun init() { }
+    open fun init() {}
 
     /**
      * Events should be handled when module is enabled
      */
     override fun handleEvents() = enabled && mc.player != null && mc.world != null
 
-    fun message(key: String, vararg args: Any): TranslatableText {
-        return TranslatableText("$translationBaseKey.messages.$key", args)
-    }
+    /**
+     * Returns if module is hidden. Hidden modules are not displayed in the module list.
+     * Used for HTML UI. DO NOT REMOVE!
+     */
+    fun isHidden() = hidden
+
+    fun message(key: String, vararg args: Any) = Text.translatable("$translationBaseKey.messages.$key", *args)
 
 }

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+
+        *:focus {
+            outline: none;
+        }
+
+        * {
+            cursor: default !important;
+            font-family: "Montserrat", sans-serif;
+            user-select: none;
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            color: white;
+        }
+
+        body {
+            background-image: url("img/background.png");
+            background-size: cover;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        #title {
+            text-align: left;
+            font-size: 56px;
+        }
+
+        #buttongrid {
+            display: grid;
+            top: 150px;
+            grid-auto-rows: max-content;
+            row-gap: 20px;
+        }
+
+        .wrapper {
+            position: relative;
+            height: 100%;
+            grid-gap: 30px;
+            margin: 60px;
+        }
+
+        .Button {
+            background: linear-gradient(to left, rgba(0, 0, 0, .68) 50%, #4677ff 50%);
+            background-size: 200% 100%;
+            background-position: right bottom;
+            will-change: background-position;
+            transition: background-position .2s ease-out;
+            margin-top: 30px;
+            width: 420px;
+            padding: 25px 35px;
+            border-radius: 6px;
+            align-items: center;
+            column-gap: 30px;
+            font-size: 26px;
+        }
+
+        .scale {
+            position: relative;
+            height: 100%;
+        }
+
+        @media screen and (max-width: 1366px) {
+            .scale {
+                zoom: .5;
+            }
+        }
+
+        @media screen and (max-width: 1024px) {
+            .scale {
+                zoom: .6;
+            }
+        }
+
+        @media screen and (max-height: 1000px) {
+            .scale {
+                zoom: .9;
+            }
+        }
+
+        @media screen and (max-height: 700px) {
+            .scale {
+                zoom: .6;
+            }
+        }
+
+        @media screen and (max-height: 540px) {
+            .scale {
+                zoom: .5;
+            }
+        }
+
+        Input {
+            border-radius: 6px;
+            margin-top: 10px;
+            padding: 5px;
+            border-color: white;
+            background-color: rgba(0, 0, 0, 0.68);
+            color: white;
+            border: none;
+            height: 40px;
+            width: 150px;
+        }
+
+        Button {
+            border-radius: 6px;
+            padding: 5px;
+            background-color: rgba(0, 0, 0, 0.68);
+            width: 80px;
+            height: 30px;
+            color: white;
+            border: none;
+        }
+
+        td {
+            justify-content: center;
+            text-align: center;
+            padding: 10px;
+        }
+
+        .footinit {
+            display: block;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            text-align: right;
+            height: 100px;
+            margin-bottom: 45px;
+        }
+
+        .butto {
+            height: 75px;
+            width: 150px;
+            font-size: 26px;
+            background-color: rgba(0, 0, 0, 0.68);
+            border-radius: 6px;
+            margin-right: 10px;
+            background: linear-gradient(to left, rgba(0, 0, 0, .68) 50%, #4677ff 50%);
+            background-size: 200% 100%;
+            background-position: right bottom;
+            will-change: background-position;
+            transition: background-position .2s ease-out;
+        }
+
+        .butto:hover, .Button:hover {
+            background-position: left bottom
+        }
+
+    </style>
+    <script>
+        const random = (length = 8) => {
+            // Declare all characters
+            let chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+            // Pick characers randomly
+            let str = '';
+            for (let i = 0; i < length; i++) {
+                str += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+
+            return str;
+
+        };
+    </script>
+</head>
+<body>
+<div class="scale">
+    <div class="wrapper">
+        <h1 id="title">Alt Manager</h1>
+
+        <div id="buttongrid">
+            <div class="Button">
+                <h2>Cracked Login</h2>
+                <div>
+                    <label for="username"></label><input type="text" id="username" name="username"
+                                                         placeholder="type username here..."><br>
+                    <button onclick="document.getElementById('response').innerText = client.getSessionService().loginCracked(document.getElementById('username').value);">
+                        Login
+                    </button>
+
+                    <button onclick="document.getElementById('response').innerText = client.getSessionService().loginCracked(random(16));">
+                        Random
+                    </button>
+                </div>
+            </div>
+            <div class="Button">
+                <h2>Mojang Login</h2>
+                <div>
+                    <label for="email"></label><input type="text" id="email" name="email" placeholder="email"><br>
+                    <label for="password"></label><input type="text" id="password" name="password"
+                                                         placeholder="password"><br>
+                    <button onclick="document.getElementById('response').innerText = client.getSessionService().loginMojang(document.getElementById('email').value, document.getElementById('password').value);">
+                        Login
+                    </button>
+                </div>
+            </div>
+            <div class="Button">
+                <h2>Microsoft Login</h2>
+                <div>
+                    <button onclick="client.getSessionService().loginMicrosoft();">
+                        Open login in browser
+                    </button>
+                </div>
+            </div>
+            <div class="Button">
+                <h2>Altening Login</h2>
+                <div>
+                    <label for="token"></label><input type="text" id="token" name="token" placeholder="token"><br>
+                    <button onclick="document.getElementById('response').innerText = client.getSessionService().loginAltening(document.getElementById('token').value);">
+                        Login
+                    </button>
+                    <br>
+                    <label for="apitoken"></label><input type="text" id="apitoken" name="apitoken"
+                                                         placeholder="API Token"><br>
+                    <button onclick="document.getElementById('response').innerText = client.getSessionService().loginAltening(client.getTheAltening().generateAccount(document.getElementById('apitoken').value));">
+                        Login
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer>
+        <div class="footinit">
+            <button class="butto" onclick="pages.open('title', screen)">Back</button>
+        </div>
+    </footer>
+</div>
+</body>
+</html>

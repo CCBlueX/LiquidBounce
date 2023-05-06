@@ -29,14 +29,18 @@ object MojangApi {
     fun getUUID(username: String): String {
         // TODO: Use GameProfileSerializer from authlib
 
-        // Make a http connection to Mojang API and ask for UUID of username
-        val text = HttpClient.get("https://api.mojang.com/users/profiles/minecraft/$username")
-
         // Read response content and get id from json
-        val jsonElement = JsonParser().parse(text)
+        try {
+            // Make a http connection to Mojang API and ask for UUID of username
+            val text = HttpClient.get("https://api.mojang.com/users/profiles/minecraft/$username")
 
-        if (jsonElement.isJsonObject) {
-            return jsonElement.asJsonObject.get("id").asString
+            val jsonElement = JsonParser().parse(text)
+
+            if (jsonElement.isJsonObject) {
+                return jsonElement.asJsonObject.get("id").asString
+            }
+        } catch (e: Exception) {
+            return ""
         }
         return ""
     }

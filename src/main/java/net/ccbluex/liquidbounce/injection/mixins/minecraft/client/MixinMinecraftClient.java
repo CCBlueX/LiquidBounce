@@ -19,18 +19,22 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
-import net.ccbluex.liquidbounce.common.RenderingFlags;
 import net.ccbluex.liquidbounce.event.*;
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModulePerfectHit;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
+import net.ccbluex.liquidbounce.render.engine.RenderingFlags;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ServerInfo;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.util.Window;
 import net.minecraft.entity.Entity;
+import net.minecraft.resource.InputSupplier;
 import net.minecraft.server.integrated.IntegratedServer;
+import net.minecraft.util.hit.HitResult;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -57,11 +61,17 @@ public abstract class MixinMinecraftClient {
     public abstract boolean isConnectedToRealms();
 
     @Shadow
-    @Nullable
-    private ServerInfo currentServerEntry;
+    private int itemUseCooldown;
 
     @Shadow
-    private int itemUseCooldown;
+    @Nullable
+    public ClientPlayerEntity player;
+
+    @Shadow
+    @Nullable
+    public HitResult crosshairTarget;
+
+    @Shadow public abstract @org.jetbrains.annotations.Nullable ServerInfo getCurrentServerEntry();
 
     @Inject(method = "isAmbientOcclusionEnabled()Z", at = @At("HEAD"), cancellable = true)
     private static void injectXRayFullBright(CallbackInfoReturnable<Boolean> callback) {
@@ -107,6 +117,11 @@ public abstract class MixinMinecraftClient {
         final StringBuilder titleBuilder = new StringBuilder(LiquidBounce.CLIENT_NAME);
         titleBuilder.append(" v");
         titleBuilder.append(LiquidBounce.CLIENT_VERSION);
+
+        if (LiquidBounce.IN_DEVELOPMENT) {
+            titleBuilder.append(" (dev)");
+        }
+
         titleBuilder.append(" | ");
         titleBuilder.append(SharedConstants.getGameVersion().getName());
 
@@ -118,7 +133,7 @@ public abstract class MixinMinecraftClient {
                 titleBuilder.append(I18n.translate("title.singleplayer"));
             } else if (this.isConnectedToRealms()) {
                 titleBuilder.append(I18n.translate("title.multiplayer.realms"));
-            } else if (this.server == null && (this.currentServerEntry == null || !this.currentServerEntry.isLocal())) {
+            } else if (this.server == null && (this.getCurrentServerEntry() == null || !this.getCurrentServerEntry().isLocal())) {
                 titleBuilder.append(I18n.translate("title.multiplayer.other"));
             } else {
                 titleBuilder.append(I18n.translate("title.multiplayer.lan"));
@@ -131,8 +146,8 @@ public abstract class MixinMinecraftClient {
     /**
      * Set window icon to our client icon.
      */
-    @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/Window;setIcon(Ljava/io/InputStream;Ljava/io/InputStream;)V"))
-    private void setupIcon(Window instance, InputStream icon16, InputStream icon32) {
+    @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/Window;setIcon(Lnet/minecraft/resource/InputSupplier;Lnet/minecraft/resource/InputSupplier;)V"))
+    private void setupIcon(Window instance, InputSupplier<InputStream> icon16, InputSupplier<InputStream> icon32) {
         LiquidBounce.INSTANCE.getLogger().debug("Loading client icons");
 
         // Find client icons
@@ -148,7 +163,7 @@ public abstract class MixinMinecraftClient {
         }
 
         // Load client icons
-        instance.setIcon(stream16, stream32);
+        instance.setIcon(() -> stream16, () -> stream32);
     }
 
     /**
@@ -161,8 +176,7 @@ public abstract class MixinMinecraftClient {
     private void hookScreen(Screen screen, CallbackInfo callbackInfo) {
         final ScreenEvent event = new ScreenEvent(screen);
         EventManager.INSTANCE.callEvent(event);
-        if (event.isCancelled())
-            callbackInfo.cancel();
+        if (event.isCancelled()) callbackInfo.cancel();
     }
 
     /**
@@ -195,6 +209,19 @@ public abstract class MixinMinecraftClient {
     private void injectOutlineESPFix(Entity entity, CallbackInfoReturnable<Boolean> cir) {
         if (RenderingFlags.isCurrentlyRenderingEntityOutline().get()) {
             cir.setReturnValue(true);
+        }
+    }
+
+    @Inject(method = "doAttack", at = @At("HEAD"), cancellable = true)
+    private void injectPerfectHit(CallbackInfoReturnable<Boolean> cir) {
+        if (!ModulePerfectHit.INSTANCE.getEnabled() || this.player == null || this.crosshairTarget == null) {
+            return;
+        }
+
+        float h = this.player.getAttackCooldownProgress(0.5F);
+
+        if (h <= 0.9 && this.crosshairTarget.getType() == HitResult.Type.ENTITY) {
+            cir.setReturnValue(false);
         }
     }
 

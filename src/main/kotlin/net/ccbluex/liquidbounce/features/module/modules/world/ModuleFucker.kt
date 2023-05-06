@@ -100,7 +100,6 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         if (curr.action == DestroyAction.USE) {
             if (interaction.interactBlock(
                     player,
-                    mc.world!!,
                     Hand.MAIN_HAND,
                     rayTraceResult
                 ) == ActionResult.SUCCESS

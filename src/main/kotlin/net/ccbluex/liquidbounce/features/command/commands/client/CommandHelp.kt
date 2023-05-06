@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
-import net.minecraft.text.LiteralText
+import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import kotlin.math.ceil
 import kotlin.math.roundToInt
@@ -65,7 +65,7 @@ object CommandHelp {
 
                 val iterPage = 8 * page
                 for (cmd in commands.subList(iterPage - 8, iterPage.coerceAtMost(commands.size))) {
-                    val aliases = LiteralText("")
+                    val aliases = Text.literal("")
 
                     if (cmd.aliases.isNotEmpty()) {
                         cmd.aliases.forEach { alias -> aliases.append(variable(", ")).append(regular(alias)) }
