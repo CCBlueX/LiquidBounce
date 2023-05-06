@@ -45,6 +45,12 @@ fun convertClientSlotToServerSlot(slot: Int): Int {
 // https://github.com/FlorianMichael/ViaFabricPlus/blob/602d723945d011d7cd9ca6f4ed7312d85f9bdf36/src/main/java/de/florianmichael/viafabricplus/injection/mixin/fixes/minecraft/MixinMinecraftClient.java#L118-L130
 fun openInventorySilently() {
     runCatching {
+        val isViaFabricPlusLoaded = AttributeKey.exists("viafabricplus-via-connection")
+
+        if (!isViaFabricPlusLoaded) {
+            return
+        }
+
         val localViaConnection = AttributeKey.valueOf<UserConnection>("viafabricplus-via-connection")
 
         val viaConnection = mc.networkHandler?.connection?.channel?.attr(localViaConnection)?.get() ?: return
