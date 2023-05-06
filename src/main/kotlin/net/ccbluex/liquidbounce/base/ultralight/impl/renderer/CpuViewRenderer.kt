@@ -63,7 +63,6 @@ class CpuViewRenderer : ViewRenderer {
         val height = view.height().toInt()
 
         // Prepare OpenGL for 2D textures and bind our texture
-        RenderSystem.enableTexture()
         RenderSystem.bindTexture(glTexture)
 
         val dirtyBounds = surface.dirtyBounds()
@@ -115,7 +114,7 @@ class CpuViewRenderer : ViewRenderer {
         val bufferBuilder = tessellator.buffer
         val scaleFactor = mc.window.scaleFactor.toFloat()
 
-        RenderSystem.setShader { GameRenderer.getPositionTexColorShader() }
+        RenderSystem.setShader { GameRenderer.getPositionTexColorProgram() }
         RenderSystem.setShaderTexture(0, glTexture)
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f)
         RenderSystem.enableBlend()

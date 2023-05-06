@@ -34,7 +34,7 @@ import java.util.function.Function;
 @Mixin(SignBlockEntityRenderer.class)
 public class MixinSignBlockEntityRenderer {
 
-    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/entity/SignBlockEntity;updateSign(ZLjava/util/function/Function;)[Lnet/minecraft/text/OrderedText;"))
+    @Redirect(method = "renderText", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/entity/SignBlockEntity;updateSign(ZLjava/util/function/Function;)[Lnet/minecraft/text/OrderedText;"))
     private OrderedText[] injectNoSignRender(SignBlockEntity signBlockEntity, boolean filterText, Function<Text, OrderedText> textOrderingFunction) {
         var signText = signBlockEntity.updateSign(filterText, textOrderingFunction);
 

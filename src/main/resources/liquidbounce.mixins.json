@@ -5,6 +5,8 @@
   "compatibilityLevel": "JAVA_8",
   "priority": 1337,
   "client": [
+    "graaljs.MixinHostContext",
+    "graaljs.MixinHostInteropReflect",
     "minecraft.block.MixinAbstractBlock",
     "minecraft.block.MixinBlock",
     "minecraft.block.MixinBlockView",
@@ -29,8 +31,8 @@
     "minecraft.entity.MixinLivingEntity",
     "minecraft.entity.MixinPlayerEntity",
     "minecraft.fluid.MixinFlowableFluid",
+    "minecraft.gui.MixinChatInputSuggestor",
     "minecraft.gui.MixinChatScreen",
-    "minecraft.gui.MixinCommandSuggestor",
     "minecraft.gui.MixinInGameHud",
     "minecraft.gui.MixinRealmsMainScreen",
     "minecraft.gui.MixinScreen",

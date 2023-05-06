@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.base.ultralight.hooks
 
 import net.ccbluex.liquidbounce.base.ultralight.ScreenViewOverlay
 import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
-import net.ccbluex.liquidbounce.base.ultralight.js.bindings.UltralightJsUi
+import net.ccbluex.liquidbounce.base.ultralight.js.bindings.UltralightJsPages
 import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.ScreenEvent
@@ -45,7 +45,7 @@ object UltralightScreenHook : Listenable {
         }
 
         val screen = event.screen ?: if (mc.world != null) return@handler else TitleScreen()
-        val name = UltralightJsUi.get(screen)?.name ?: return@handler
+        val name = UltralightJsPages.get(screen)?.name ?: return@handler
         val page = ThemeManager.page(name) ?: return@handler
 
         val emptyScreen = EmptyScreen()

@@ -34,6 +34,7 @@ import net.minecraft.item.ArmorItem
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.s2c.play.EntityS2CPacket
 import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket
+import net.minecraft.network.packet.s2c.play.PlayerRemoveS2CPacket
 import java.util.*
 import kotlin.math.abs
 
@@ -108,40 +109,36 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
         val botList = ArrayList<UUID>()
 
         val packetHandler = handler<PacketEvent> {
-            if (it.packet !is PlayerListS2CPacket) {
-                return@handler
-            }
+            val packet = it.packet
 
-            when (it.packet.action) {
-                PlayerListS2CPacket.Action.ADD_PLAYER -> {
-                    for (entry in it.packet.entries) {
-                        if (entry.latency < 2 || !entry.profile.properties.isEmpty || isTheSamePlayer(entry.profile)) {
-                            continue
-                        }
+            if (packet is PlayerListS2CPacket) {
+                for (entry in packet.playerAdditionEntries) {
+                    if (entry.latency < 2 || !entry.profile.properties.isEmpty || isTheSamePlayer(entry.profile)) {
+                        continue
+                    }
 
-                        if (isADuplicate(entry.profile)) {
-                            botList.add(entry.profile.id)
-                            continue
-                        }
+                    if (isADuplicate(entry.profile)) {
+                        botList.add(entry.profile.id)
+                        continue
+                    }
 
-                        suspectList.add(entry.profile.id)
+                    suspectList.add(entry.profile.id)
+                }
+            } else if (packet is PlayerRemoveS2CPacket) {
+                for (uuid in packet.profileIds) {
+                    val entry = network.playerList.find { it.profile.id == uuid } ?: continue
+
+                    if (suspectList.contains(entry.profile.id)) {
+                        suspectList.remove(entry.profile.id)
+                    }
+
+                    if (botList.contains(entry.profile.id)) {
+                        botList.remove(entry.profile.id)
                     }
                 }
-
-                PlayerListS2CPacket.Action.REMOVE_PLAYER -> {
-                    for (entry in it.packet.entries) {
-                        if (suspectList.contains(entry.profile.id)) {
-                            suspectList.remove(entry.profile.id)
-                        }
-
-                        if (botList.contains(entry.profile.id)) {
-                            botList.remove(entry.profile.id)
-                        }
-                    }
-                }
-
-                else -> {}
             }
+
+
         }
 
         val repeatable = repeatable {
@@ -217,54 +214,54 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
                 return@handler
             }
 
-            when (it.packet.action) {
-                PlayerListS2CPacket.Action.ADD_PLAYER -> {
-                    for (entry in it.packet.entries) {
-                        if (entry.latency < 2 || Matrix.isTheSamePlayer(entry.profile)) {
-                            continue
-                        }
-
-                        suspectList[entry.profile.id] = Pair(entry.latency, System.currentTimeMillis())
-                    }
-                }
-
-                PlayerListS2CPacket.Action.REMOVE_PLAYER -> {
-                    for (entry in it.packet.entries) {
-                        if (suspectList.containsKey(entry.profile.id)) {
-                            suspectList.remove(entry.profile.id)
-                        }
-
-                        if (botList.contains(entry.profile.id)) {
-                            botList.remove(entry.profile.id)
-                        }
-                    }
-                }
-
-                PlayerListS2CPacket.Action.UPDATE_LATENCY -> {
-                    for (entry in it.packet.entries) {
-                        if (!suspectList.containsKey(entry.profile.id)) {
-                            continue
-                        }
-
-                        val pingSinceJoin = suspectList.getValue(entry.profile.id).first
-
-                        val deltaPing = pingSinceJoin - entry.latency
-                        val deltaMS = System.currentTimeMillis() - suspectList.getValue(entry.profile.id).second
-
-                        /**
-                         * Intave instantly sends this packet, but some servers might lag, so it might be delayed, that's why the difference limit is 15 MS.
-                         * The less the value, the lower the chances of producing false positives, even though it's highly unlikely.
-                         */
-                        if (deltaPing == pingSinceJoin && deltaMS <= 15) {
-                            botList.add(entry.profile.id)
-                        }
-
-                        suspectList.remove(entry.profile.id)
-                    }
-                }
-
-                else -> {}
-            }
+//            when (it.packet.action) {
+//                PlayerListS2CPacket.Action.ADD_PLAYER -> {
+//                    for (entry in it.packet.entries) {
+//                        if (entry.latency < 2 || Matrix.isTheSamePlayer(entry.profile)) {
+//                            continue
+//                        }
+//
+//                        suspectList[entry.profile.id] = Pair(entry.latency, System.currentTimeMillis())
+//                    }
+//                }
+//
+//                PlayerListS2CPacket.Action.REMOVE_PLAYER -> {
+//                    for (entry in it.packet.entries) {
+//                        if (suspectList.containsKey(entry.profile.id)) {
+//                            suspectList.remove(entry.profile.id)
+//                        }
+//
+//                        if (botList.contains(entry.profile.id)) {
+//                            botList.remove(entry.profile.id)
+//                        }
+//                    }
+//                }
+//
+//                PlayerListS2CPacket.Action.UPDATE_LATENCY -> {
+//                    for (entry in it.packet.entries) {
+//                        if (!suspectList.containsKey(entry.profile.id)) {
+//                            continue
+//                        }
+//
+//                        val pingSinceJoin = suspectList.getValue(entry.profile.id).first
+//
+//                        val deltaPing = pingSinceJoin - entry.latency
+//                        val deltaMS = System.currentTimeMillis() - suspectList.getValue(entry.profile.id).second
+//
+//                        /**
+//                         * Intave instantly sends this packet, but some servers might lag, so it might be delayed, that's why the difference limit is 15 MS.
+//                         * The less the value, the lower the chances of producing false positives, even though it's highly unlikely.
+//                         */
+//                        if (deltaPing == pingSinceJoin && deltaMS <= 15) {
+//                            botList.add(entry.profile.id)
+//                        }
+//
+//                        suspectList.remove(entry.profile.id)
+//                    }
+//                }
+//
+//                else -> {}
+//            }
         }
 
     }
@@ -280,28 +277,28 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
                 return@handler
             }
 
-            when (it.packet.action) {
-                PlayerListS2CPacket.Action.ADD_PLAYER -> {
-                    for (entry in it.packet.entries) {
-                        // There are no accidents, no legit player joins with no gamemode.
-                        if (entry.gameMode != null) {
-                            continue
-                        }
-
-                        botList.add(entry.profile.id)
-                    }
-                }
-
-                PlayerListS2CPacket.Action.REMOVE_PLAYER -> {
-                    for (entry in it.packet.entries) {
-                        if (botList.contains(entry.profile.id)) {
-                            botList.remove(entry.profile.id)
-                        }
-                    }
-                }
-
-                else -> {}
-            }
+//            when (it.packet.action) {
+//                PlayerListS2CPacket.Action.ADD_PLAYER -> {
+//                    for (entry in it.packet.entries) {
+//                        // There are no accidents, no legit player joins with no gamemode.
+//                        if (entry.gameMode != null) {
+//                            continue
+//                        }
+//
+//                        botList.add(entry.profile.id)
+//                    }
+//                }
+//
+//                PlayerListS2CPacket.Action.REMOVE_PLAYER -> {
+//                    for (entry in it.packet.entries) {
+//                        if (botList.contains(entry.profile.id)) {
+//                            botList.remove(entry.profile.id)
+//                        }
+//                    }
+//                }
+//
+//                else -> {}
+//            }
         }
     }
 

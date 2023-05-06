@@ -152,6 +152,13 @@
   "liquidbounce.command.skull.result.noEmptySlot": "There are no empty slots in your inventory.",
   "liquidbounce.command.skull.result.skullGiven": "Gave you the skull of %s.",
 
+  "liquidbounce.command.enchant.description": "Enchants the currently selected item.",
+  "liquidbounce.command.enchant.parameter.enchantment.description": "Enchantment name.",
+  "liquidbounce.command.enchant.parameter.level.description": "Enchantment level.",
+  "liquidbounce.command.enchant.result.mustBeCreative": "Creative mode required!",
+  "liquidbounce.command.enchant.result.enchantmentNotExists": "Enchantment \"%s\" do not exists.",
+  "liquidbounce.command.enchant.result.enchantedItem": "Item has been enchanted with %s enchantment on the %s level.",
+
   "liquidbounce.command.position.description": "Copies your current coordinates to the clipboard.",
   "liquidbounce.command.position.result.position": "Position: %s",
 
@@ -228,6 +235,17 @@
   "liquidbounce.command.enemy.subcommand.teammates.description": "Allows you to toggle if teammates are considered to be your enemy",
   "liquidbounce.command.enemy.subcommand.teammates.result.enabled": "Teammates are now considered to be your enemy.",
   "liquidbounce.command.enemy.subcommand.teammates.result.disabled": "Teammates are no longer considered to be your enemy.",
+
+  "liquidbounce.command.config.subcommand.load.description": "Loads a configuration file.",
+  "liquidbounce.command.config.subcommand.load.parameter.name.description": "Name of the configuration file.",
+  "liquidbounce.command.config.subcommand.load.result.notFound": "Configuration file named %s does not exist.",
+  "liquidbounce.command.config.subcommand.load.result.failedToLoad": "Failed to load configuration file named %s.",
+  "liquidbounce.command.config.subcommand.load.result.loaded": "Configuration file named %s has been loaded.",
+  "liquidbounce.command.config.subcommand.create.parameter.name.description": "Name of the configuration file.",
+  "liquidbounce.command.config.subcommand.create.parameter.overwrite.description": "Overwrite existing configuration file.",
+  "liquidbounce.command.config.subcommand.create.result.failedToCreate": "Failed to create configuration file named %s.",
+  "liquidbounce.command.config.subcommand.create.result.created": "Configuration file named %s has been created.",
+  "liquidbounce.command.config.subcommand.create.result.alreadyExists": "Configuration file named %s already exists.",
 
   "liquidbounce.liquidchat.states.connecting": "Connecting to chat server...",
   "liquidbounce.liquidchat.states.connected": "Connected to chat server!",
@@ -496,5 +514,7 @@
 
   "liquidbounce.module.antiVanish.description": "Allows you to see which players are in vanish on some servers.",
   "liquidbounce.module.antiVanish.messages.staffDetected": "We have detect a vanished staff member.",
-  "liquidbounce.module.antiVanish.messages.allClear": "No vanished player was found."
+  "liquidbounce.module.antiVanish.messages.allClear": "No vanished player was found.",
+
+  "liquidbounce.module.autoWeapon.description": "Automatically selects the best weapon in your hotbar."
 }

@@ -36,16 +36,16 @@ import net.ccbluex.liquidbounce.utils.math.Mat4
 class MVPRenderTask(val renderTask: Array<RenderTask>, private val matrix: Mat4) : RenderTask() {
     override fun getBatchRenderer(): BatchRenderer? = null
 
-    override fun initRendering(level: OpenGLLevel, mvpMatrix: Mat4) {
+    override fun initRendering(mvpMatrix: Mat4) {
         val mvp = Mat4(mvpMatrix)
 
         mvp.multiply(this.matrix)
 
-        this.renderTask.first().initRendering(level, mvp)
+        this.renderTask.first().initRendering(mvp)
     }
 
-    override fun draw(level: OpenGLLevel) = renderTask.forEach { it.draw(level) }
+    override fun draw() = renderTask.forEach { it.draw() }
 
-    override fun cleanupRendering(level: OpenGLLevel) = this.renderTask.first().cleanupRendering(level)
+    override fun cleanupRendering() = this.renderTask.first().cleanupRendering()
 
 }

@@ -44,7 +44,7 @@ fun raytraceEntity(range: Double, rotation: Rotation, filter: (Entity) -> Boolea
         cameraVec,
         vec3d3,
         box,
-        { !it.isSpectator && it.collides() && filter(it) },
+        { !it.isSpectator && it.canHit() && filter(it) },
         range * range
     )
 

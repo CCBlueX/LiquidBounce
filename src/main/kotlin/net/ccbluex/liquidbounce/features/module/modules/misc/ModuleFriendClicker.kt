@@ -26,7 +26,8 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.text.TranslatableText
+import net.minecraft.text.Text
+import net.minecraft.text.TranslatableTextContent
 import net.minecraft.util.hit.EntityHitResult
 
 /**
@@ -50,7 +51,7 @@ object ModuleFriendClicker : Module("FriendClicker", Category.MISC) {
                 FriendManager.friends.remove(FriendManager.Friend(name, null))
                 notification(
                     "Friend Clicker",
-                    TranslatableText("$translationBaseKey.removedFriend", name),
+                    Text.translatable("$translationBaseKey.removedFriend", name),
                     NotificationEvent.Severity.INFO
                 )
             } else {
@@ -58,7 +59,7 @@ object ModuleFriendClicker : Module("FriendClicker", Category.MISC) {
 
                 notification(
                     "Friend Clicker",
-                    TranslatableText("$translationBaseKey.addedFriend", name),
+                    Text.translatable("$translationBaseKey.addedFriend", name),
                     NotificationEvent.Severity.INFO
                 )
             }

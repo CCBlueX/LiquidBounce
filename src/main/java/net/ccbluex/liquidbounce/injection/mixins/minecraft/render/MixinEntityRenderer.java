@@ -29,7 +29,7 @@ import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.text.Text;
-import net.minecraft.util.math.Matrix4f;
+import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -44,7 +44,7 @@ public abstract class MixinEntityRenderer<T extends Entity> {
 
     @Shadow public abstract TextRenderer getTextRenderer();
 
-    @Inject(method = "render", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "render", at = @At("HEAD"))
     private void renderMobOwners(T entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
         var ownerName = ModuleMobOwners.INSTANCE.getOwnerInfoText(entity);
 
@@ -70,7 +70,7 @@ public abstract class MixinEntityRenderer<T extends Entity> {
             float h = (float)(-textRenderer.getWidth(ownerName) / 2);
 
 //            textRenderer.draw(ownerName, h, (float) 0, 553648127, false, matrix4f, vertexConsumers, true, j, light);
-            textRenderer.draw(ownerName, h, 0, -1, false, matrix4f, vertexConsumers, true, j, light);
+            textRenderer.draw(ownerName, h, 0, -1, false, matrix4f, vertexConsumers, TextRenderer.TextLayerType.NORMAL, j, light);
 
 
             matrices.pop();

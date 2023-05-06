@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2022 CCBlueX
+ * Copyright (c) 2016 - 2023 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,32 +17,22 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.render.engine.utils
+package net.ccbluex.liquidbounce.injection.mixins.graaljs;
 
-import net.ccbluex.liquidbounce.utils.math.Mat4
-import org.lwjgl.opengl.GL11
+import net.ccbluex.liquidbounce.utils.mappings.McMappings;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 /**
- * Pushes an MVP matrix for immediate mode
+ * @author lit
  */
-fun pushMVP(mvpMatrix: Mat4) {
-    // Load the MVP matrix
-    GL11.glMatrixMode(GL11.GL_PROJECTION)
-    GL11.glPushMatrix()
-    GL11.glLoadMatrixf(mvpMatrix.toArray())
+@Mixin(targets = "com/oracle/truffle/host/HostContext")
+public class MixinHostContext {
 
-    // Reset model view matrix
-    GL11.glMatrixMode(GL11.GL_MODELVIEW)
-    GL11.glPushMatrix()
-    GL11.glLoadIdentity()
-}
+    @ModifyVariable(method = "findClassImpl", at = @At("HEAD"), argsOnly = true, remap = false)
+    private String remapClassName(String value) {
+        return McMappings.INSTANCE.remapClass(value);
+    }
 
-fun popMVP() {
-    // Load the MVP matrix
-    GL11.glMatrixMode(GL11.GL_PROJECTION)
-    GL11.glPopMatrix()
-
-    // Reset model view matrix
-    GL11.glMatrixMode(GL11.GL_MODELVIEW)
-    GL11.glPopMatrix()
 }

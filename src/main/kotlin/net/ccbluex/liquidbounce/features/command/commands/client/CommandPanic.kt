@@ -26,7 +26,8 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.minecraft.text.TranslatableText
+import net.minecraft.text.MutableText
+import net.minecraft.text.TranslatableTextContent
 
 object CommandPanic {
 
@@ -42,7 +43,7 @@ object CommandPanic {
             )
             .handler { command, args ->
                 var modules = ModuleManager.filter { it.enabled }
-                val msg: TranslatableText
+                val msg: MutableText
 
                 val type = if (args.isNotEmpty()) {
                     args[0] as String
