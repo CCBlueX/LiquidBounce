@@ -183,7 +183,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleQuickPerspectiveSwap,
             ModuleMurderMystery,
             ModuleAutoDodge,
-            ModuleAutoWeapon
+            ModuleAutoWeapon,
+            ModuleNameCollector
         )
 
         builtin.apply {
