@@ -81,7 +81,7 @@
         
         "module.antiCactus.description": "防止仙人掌伤害你.",
         
-        "module.antiFireBall.description": "自动打走火球.",
+        "module.antiFireball.description": "自动打走火球.",
         
         "module.atAllProvider.description": "当你在消息中使用'@a'时，自动提及服务器上的所有人.",
         
