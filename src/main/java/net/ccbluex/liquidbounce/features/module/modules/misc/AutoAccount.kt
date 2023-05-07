@@ -113,13 +113,13 @@ object AutoAccount : Module("AutoAccount", ModuleCategory.MISC) {
             register && "/reg" in msg -> {
                 addNotification(Notification("Trying to register."))
                 Timer().schedule(sendDelay.toLong()) {
-                    mc.thePlayer.sendChatMessage("/register $passwordValue $passwordValue")
+                    mc.thePlayer.sendChatMessage("/register $password $password")
                 }
             }
             login && "/log" in msg -> {
                 addNotification(Notification("Trying to log in."))
                 Timer().schedule(sendDelay.toLong()) {
-                    mc.thePlayer.sendChatMessage("/login $passwordValue")
+                    mc.thePlayer.sendChatMessage("/login $password")
                 }
             }
             else -> return false
