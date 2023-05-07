@@ -79,7 +79,7 @@
 
         "module.antiCactus.description": "Impede que cactos o danifiquem.",
 
-        "module.antiFireBall.description": "Automáticamente tira as bolas de fogo longe de você.",
+        "module.antiFireball.description": "Automáticamente tira as bolas de fogo longe de você.",
 
         "module.atAllProvider.description": "Menciona automaticamente todos no servidor ao usar '@a' em sua mensagem.",
 
