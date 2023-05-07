@@ -3,6 +3,8 @@
 ## Menus
 ![ClickGUI](click_gui/Canvas.png "ClickGUI")
 
+![In-game](ingame/ingame.png "In-game")
+
 ![Main Menu](main_menu/MainMenu.png "Main Menu 1")
 ![Main Menu 2](main_menu/MainMenu%20–%201.png "Main Menu 2")
 
