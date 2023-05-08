@@ -32,7 +32,7 @@ object HttpClient {
         HttpURLConnection.setFollowRedirects(true)
     }
 
-    private fun make(url: String, method: String, agent: String = DEFAULT_AGENT): HttpURLConnection {
+    private fun make(url: String, method: String, agent: String = DEFAULT_AGENT, headers: Array<Pair<String, String>> = emptyArray()): HttpURLConnection {
         val httpConnection = URL(url).openConnection() as HttpURLConnection
 
         httpConnection.requestMethod = method
@@ -41,19 +41,23 @@ object HttpClient {
 
         httpConnection.setRequestProperty("User-Agent", agent)
 
+        for ((key, value) in headers) {
+            httpConnection.setRequestProperty(key, value)
+        }
+
         httpConnection.instanceFollowRedirects = true
         httpConnection.doOutput = true
 
         return httpConnection
     }
 
-    fun request(url: String, method: String, agent: String = DEFAULT_AGENT): String {
+    fun request(url: String, method: String, agent: String = DEFAULT_AGENT, headers: Array<Pair<String, String>> = emptyArray()): String {
         val connection = make(url, method, agent)
 
         return connection.inputStream.reader().readText()
     }
 
-    fun requestStream(url: String, method: String, agent: String = DEFAULT_AGENT): InputStream {
+    fun requestStream(url: String, method: String, agent: String = DEFAULT_AGENT, headers: Array<Pair<String, String>> = emptyArray()): InputStream {
         val connection = make(url, method, agent)
 
         return connection.inputStream

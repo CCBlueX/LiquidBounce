@@ -20,9 +20,11 @@
 package net.ccbluex.liquidbounce.base.ultralight.js.bindings
 
 import com.thealtening.api.TheAltening
+import net.ccbluex.liquidbounce.api.IpInfoApi
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.*
+import net.minecraft.client.util.Session
 import java.net.InetSocketAddress
 
 /**
@@ -60,17 +62,16 @@ object UltralightJsClient {
         fun getFaceUrl() = "https://crafatar.com/avatars/${mc.session.uuid}?size=100"
 
         /**
-         * todo: Save when account was last used
+         * Get if account is premium or cracked
          */
-        fun getLastUsed() = "Never"
+        fun getAccountType() = if ((mc.session.accountType == Session.AccountType.MOJANG || mc.session.accountType == Session.AccountType.MSA) && mc.session.accessToken.isNotBlank()) "Premium" else "Cracked"
 
         /**
          * Get location of session
          *
          * This depends on the current Geo IP of the user. This might be affected by the proxy service.
-         * todo: pull from Geo IP
          */
-        fun getLocation() = "de"
+        fun getLocation() = IpInfoApi.localIpInfo.country.lowercase()
 
     }
 

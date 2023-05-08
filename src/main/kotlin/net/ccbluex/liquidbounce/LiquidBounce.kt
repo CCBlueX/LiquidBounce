@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce
 
+import net.ccbluex.liquidbounce.api.IpInfoApi
 import net.ccbluex.liquidbounce.base.ultralight.UltralightEngine
 import net.ccbluex.liquidbounce.base.ultralight.theme.ThemeManager
 import net.ccbluex.liquidbounce.config.ConfigSystem
@@ -86,6 +87,9 @@ object LiquidBounce : Listenable {
 
             ChunkScanner
             WorldChangeNotifier
+
+            // Load API data
+            IpInfoApi
 
             // Features
             ModuleManager

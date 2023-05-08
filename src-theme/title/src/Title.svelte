@@ -63,8 +63,7 @@
 
     const username = client.getSessionService().getUsername();
     const faceUrl = client.getSessionService().getFaceUrl();
-    const lastUsed = client.getSessionService().getLastUsed();
-
+    const accountType = client.getSessionService().getAccountType();
     const location = client.getSessionService().getLocation();
 </script>
 
@@ -72,7 +71,7 @@
     <div class="scale">
         <div class="wrapper">
             <Logo />
-            <Account username={username} location={location} faceUrl={faceUrl} lastUsed={lastUsed} on:proxyManagerClick={openProxyManager} on:altManagerClick={openAltManager} />
+            <Account username={username} location={location} faceUrl={faceUrl} accountType={accountType} on:proxyManagerClick={openProxyManager} on:altManagerClick={openAltManager} />
             <MainButtons>
                 <MainButton text="Singleplayer" icon="singleplayer" on:click={openSingleplayer} />
                 <MainButton text="Multiplayer" icon="multiplayer" on:click={openMultiplayer} let:hovered>

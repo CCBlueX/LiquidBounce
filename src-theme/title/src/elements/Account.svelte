@@ -5,7 +5,7 @@
     const dispatch = createEventDispatcher();
 
     export let username;
-    export let lastUsed;
+    export let accountType;
     export let location;
     export let faceUrl;
 
@@ -29,7 +29,7 @@
         </object>
     </div>
     <div class="username">{username}</div>
-    <div class="last-used">{lastUsed}</div>
+    <div class="last-used">{accountType}</div>
     <div class="change-account" on:click={handleAccountClick}>
         <img src="img/icons/pen.svg" alt="pen">
     </div>
@@ -91,10 +91,6 @@
         font-weight: medium;
         color: #8B8D90;
         font-size: 20px;
-    }
-
-    .last-used::before {
-        content: "Last Used: "
     }
 
     .head {
