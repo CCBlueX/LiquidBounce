@@ -42,7 +42,6 @@ import kotlin.math.round
 object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
 
     private val range by float("Range", 4.2f, 1f..8f)
-    private val fov by float("FOV", 26f, 0.1f..180f)
 
     private val targetTracker = tree(TargetTracker(PriorityEnum.DIRECTION))
 
@@ -66,10 +65,7 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
 
             val box = target.box
 
-            if (fov >= RotationManager.rotationDifference(
-                    RotationManager.makeRotation(box.center, eyes), player.rotation
-                )
-            ) {
+            if (targetTracker.fov >= RotationManager.rotationDifference(target)) {
                 val spot = RotationManager.raytraceBox(eyes, box, range = range.toDouble(), wallsRange = 0.0) ?: break
 
                 targetRotation = spot.rotation
