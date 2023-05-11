@@ -35,6 +35,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.Optional;
+import java.util.function.Consumer;
+
 /**
  * Custom ultralight splash screen
  */
@@ -43,7 +46,7 @@ public class MixinSplashOverlay {
 
     @Shadow @Final private MinecraftClient client;
     @Shadow @Final private ResourceReload reload;
-
+    @Shadow @Final private Consumer<Optional<Throwable>> exceptionHandler;
     private ViewOverlay viewOverlay = null;
     private boolean closing = false;
 
@@ -70,6 +73,13 @@ public class MixinSplashOverlay {
                     this.client.setOverlay(null);
 
                     UltralightEngine.INSTANCE.removeView(viewOverlay);
+                }
+
+                try {
+                    this.reload.throwException();
+                    this.exceptionHandler.accept(Optional.empty());
+                } catch (Throwable throwable) {
+                    this.exceptionHandler.accept(Optional.of(throwable));
                 }
             }
 
