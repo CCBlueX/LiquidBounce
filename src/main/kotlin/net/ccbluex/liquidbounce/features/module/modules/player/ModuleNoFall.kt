@@ -141,7 +141,7 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
 
             val item = itemForMLG ?: return@handler
 
-            SilentHotbar.selectSlotSilently(this, item, 3)
+            SilentHotbar.selectSlotSilently(this, item, 1)
 
             doPlacement(rayTraceResult)
 
