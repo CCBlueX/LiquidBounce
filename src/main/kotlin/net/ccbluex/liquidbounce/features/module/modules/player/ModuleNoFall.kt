@@ -28,8 +28,10 @@ import net.ccbluex.liquidbounce.features.module.modules.world.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raycast
+import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
+import net.minecraft.block.Blocks
 import net.minecraft.item.Item
 import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
@@ -121,6 +123,13 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
             }
 
             val collision = FallingPlayer.fromPlayer(player).findCollision(20)?.pos ?: return@handler
+
+            if (collision.getBlock() in arrayOf(
+                    Blocks.WATER, Blocks.COBWEB, Blocks.POWDER_SNOW, Blocks.HAY_BLOCK, Blocks.SLIME_BLOCK
+                )
+            ) {
+                return@handler
+            }
 
             currentTarget = ModuleScaffold.updateTarget(collision.up())
 
