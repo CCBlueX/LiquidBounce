@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
+import net.ccbluex.liquidbounce.event.WorldEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
@@ -20,6 +21,7 @@ import net.minecraft.network.play.client.C03PacketPlayer.C06PacketPlayerPosLook
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 
 object FreeCam : Module("FreeCam", ModuleCategory.RENDER) {
+
     private val speed by FloatValue("Speed", 0.8f, 0.1f..2f)
     private val fly by BoolValue("Fly", true)
     private val noClip by BoolValue("NoClip", true)
@@ -33,7 +35,9 @@ object FreeCam : Module("FreeCam", ModuleCategory.RENDER) {
     private var packetCount = 0
 
     override fun onEnable() {
-        if (mc.thePlayer == null) return
+        if (mc.thePlayer == null || mc.theWorld == null) {
+            return
+        }
 
         if (motion) {
             motionX = mc.thePlayer.motionX
@@ -51,11 +55,16 @@ object FreeCam : Module("FreeCam", ModuleCategory.RENDER) {
         fakePlayer.rotationYawHead = mc.thePlayer.rotationYawHead
         fakePlayer.copyLocationAndAnglesFrom(mc.thePlayer)
         mc.theWorld.addEntityToWorld(-1000, fakePlayer)
-        if (noClip) mc.thePlayer.noClip = true
+        if (noClip) {
+            mc.thePlayer.noClip = true
+        }
     }
 
     override fun onDisable() {
-        if (mc.thePlayer == null) return
+        if (mc.thePlayer == null || mc.theWorld == null) {
+            return
+        }
+
         mc.thePlayer.setPositionAndRotation(fakePlayer.posX, fakePlayer.posY, fakePlayer.posZ, mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)
         mc.theWorld.removeEntityFromWorld(fakePlayer.entityId)
         mc.thePlayer.motionX = motionX
@@ -65,14 +74,25 @@ object FreeCam : Module("FreeCam", ModuleCategory.RENDER) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        if (noClip) mc.thePlayer.noClip = true
+        if (noClip) {
+            mc.thePlayer.noClip = true
+        }
+
         mc.thePlayer.fallDistance = 0f
+
         if (fly) {
             mc.thePlayer.motionY = 0.0
             mc.thePlayer.motionX = 0.0
             mc.thePlayer.motionZ = 0.0
-            if (mc.gameSettings.keyBindJump.isKeyDown) mc.thePlayer.motionY += speed
-            if (mc.gameSettings.keyBindSneak.isKeyDown) mc.thePlayer.motionY -= speed
+
+            if (mc.gameSettings.keyBindJump.isKeyDown) {
+                mc.thePlayer.motionY += speed
+            }
+
+            if (mc.gameSettings.keyBindSneak.isKeyDown) {
+                mc.thePlayer.motionY -= speed
+            }
+
             strafe(speed)
         }
     }
@@ -80,6 +100,7 @@ object FreeCam : Module("FreeCam", ModuleCategory.RENDER) {
     @EventTarget
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
+
         if (c03Spoof) {
             if (packet is C03PacketPlayer && (packet.rotating || packet.isMoving)) {
                 if (packetCount >= 20) {
@@ -109,4 +130,11 @@ object FreeCam : Module("FreeCam", ModuleCategory.RENDER) {
             event.cancelEvent()
         }
     }
+
+    @EventTarget
+    fun onWorldChange(event: WorldEvent) {
+        // Disable when world changed
+        state = false
+    }
+
 }
