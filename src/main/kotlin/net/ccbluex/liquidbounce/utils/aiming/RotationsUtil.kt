@@ -25,11 +25,14 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.PlayerVelocityStrafe
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.entity.box
+import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.step
 import net.minecraft.block.BlockState
 import net.minecraft.block.ShapeContext
+import net.minecraft.entity.Entity
 import net.minecraft.util.math.*
 import org.apache.commons.lang3.RandomUtils
 import kotlin.math.abs
@@ -349,6 +352,16 @@ object RotationManager : Listenable {
      */
     fun rotationDifference(a: Rotation, b: Rotation) =
         hypot(angleDifference(a.yaw, b.yaw).toDouble(), (a.pitch - b.pitch).toDouble())
+
+    /**
+     * Calculate difference between an entity and your rotation
+     */
+    fun rotationDifference(entity: Entity): Double {
+        val player = mc.player ?: return 0.0
+        val eyes = player.eyes
+
+        return rotationDifference(makeRotation(entity.box.center, eyes), player.rotation).coerceAtMost(180.0)
+    }
 
     /**
      * Limit your rotations

@@ -23,9 +23,6 @@ import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.entity.box
-import net.ccbluex.liquidbounce.utils.entity.eyes
-import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
@@ -38,6 +35,7 @@ class TargetTracker(defaultPriority: PriorityEnum = PriorityEnum.HEALTH) : Confi
     var lockedOnTarget: Entity? = null
     var maxDistanceSquared: Double = 0.0
 
+    val fov by float("FOV", 180f, 0f..180f)
     val priority by enumChoice("Priority", defaultPriority, PriorityEnum.values())
     val lockOnTarget by boolean("LockOnTarget", false)
     val sortOut by boolean("SortOut", true)
@@ -50,17 +48,12 @@ class TargetTracker(defaultPriority: PriorityEnum = PriorityEnum.HEALTH) : Confi
         val player = mc.player ?: return emptyList()
         val world = mc.world ?: return emptyList()
 
-        var entities = world.entities.filter { it.shouldBeAttacked(enemyConf) }
+        var entities =
+            world.entities.filter { it.shouldBeAttacked(enemyConf) && fov >= RotationManager.rotationDifference(it) }
 
         entities = when (priority) {
             PriorityEnum.HEALTH -> entities.sortedBy { if (it is LivingEntity) it.health else 0f } // Sort by health
-            PriorityEnum.DIRECTION -> entities.sortedBy {
-                RotationManager.rotationDifference(
-                    RotationManager.makeRotation(
-                        it.box.center, player.eyes
-                    ), player.rotation
-                )
-            } // Sort by FOV
+            PriorityEnum.DIRECTION -> entities.sortedBy { RotationManager.rotationDifference(it) } // Sort by FOV
             PriorityEnum.AGE -> entities.sortedBy { -it.age } // Sort by existence
             PriorityEnum.DISTANCE -> entities.sortedBy { it.squaredBoxedDistanceTo(player) }  // Sort by distance
             PriorityEnum.HURT_TIME -> entities.sortedBy { if (it is LivingEntity) it.hurtTime else 0 } // Sort by hurt time
