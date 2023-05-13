@@ -45,14 +45,13 @@ Then run `python build.py` to build the theme. \
 ### Testing
 To test the theme in development, you can make use of the development server using:
 ```bash
-cd clickgui
 npm i
 npm run dev
 ```
 
 and go into LiquidBounce and open the local web server using: \
 ```
-.client ultralight show http://localhost:5000/
+.client ultralight show http://localhost:10004/clickgui/public/
 ```
 
 This will show the page and automatically updates when you make changes to the source code.

@@ -1,0 +1,27 @@
+{
+  "name": "liquidbounce-theme",
+  "version": "1.0.0",
+  "description": "Default theme of the minecraft hacked-client LiquidBounce",
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w"
+  },
+  "repository": "github:CCBlueX/LiquidBounce",
+  "author": "CCBlueX",
+  "bugs": {
+    "url": "https://github.com/CCBlueX/LiquidBounce/issues"
+  },
+  "homepage": "https://github.com/CCBlueX/LiquidBounce#readme",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.2",
+    "@rollup/plugin-terser": "^0.4.1",
+    "rollup": "^3.21.6",
+    "rollup-plugin-css-only": "^4.3.0",
+    "rollup-plugin-livereload": "^2.0.5",
+    "rollup-plugin-svelte": "^7.1.4",
+    "sass": "^1.62.1",
+    "serve-handler": "^6.1.5",
+    "svelte-preprocess": "^5.0.3"
+  }
+}
