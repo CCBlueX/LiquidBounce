@@ -4,7 +4,8 @@
 *.iws
 /.settings/
 /.gradle/
-/build/
 /out/
 /resources
+/node_modules
 /theme.zip
+*/public/build/

@@ -20,11 +20,6 @@
 import os
 import shutil
 
-# Make function that builds theme before copying it to tmp folder
-def npm_build(f):
-    print("Building theme " + f)
-    os.system("cd " + f + " && npm i && npm run build")
-
 # Delete theme.zip
 if os.path.exists("theme.zip"):
     os.remove("theme.zip")
@@ -37,14 +32,12 @@ if os.path.exists("tmp"):
 if os.path.exists("resources"):
     shutil.rmtree("resources")
 
+print("Building theme")
+os.system("npm i && npm run build")
+
 # Go through every folder and copy public folder to tmp folder with name of folder
 for folder in os.listdir("."):
     if os.path.isdir(folder):
-        # Check if theme has package.json
-        if os.path.exists(folder + "/package.json"):
-            # Build theme
-            npm_build(folder)
-        
         # Check if theme has public folder to copy
         if os.path.exists(folder + "/public"):
             # Copy theme to tmp folder
