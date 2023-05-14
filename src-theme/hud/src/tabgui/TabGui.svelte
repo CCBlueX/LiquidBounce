@@ -50,30 +50,22 @@
         switch (event.getKey().toString()) {
             case "key.keyboard.down": {
                if (activeModules.length === 0) {
-                    activeCategory =
-                        activeCategory === categories.length - 1
-                            ? 0
-                            : activeCategory + 1;
+                    activeCategory += 1;
+                    activeCategory %= categories.length;
                 } else {
-                    activeModule =
-                        activeModule === activeModules.length - 1
-                            ? 0
-                            : activeModule + 1;
+                    activeModule += 1;
+                    activeModule %= activeModules.length;
                 }
 
                 break;
             }
             case "key.keyboard.up": {
                 if (activeModules.length === 0) {
-                    activeCategory =
-                        activeCategory === 0
-                            ? categories.length - 1
-                            : activeCategory - 1;
+                    activeCategory -= 1 - categories.length;
+                    activeCategory %= categories.length;
                 } else {
-                    activeModule =
-                        activeModule === 0
-                            ? activeModules.length - 1
-                            : activeModule - 1;
+                    activeModule -= 1 - activeModules.length;
+                    activeModule %= activeModules.length;
                 }
 
                 break;
