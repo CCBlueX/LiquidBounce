@@ -22,6 +22,7 @@ import com.labymedia.ultralight.UltralightView
 import com.labymedia.ultralight.databind.context.ContextProvider
 import com.labymedia.ultralight.databind.context.ContextProviderFactory
 import com.labymedia.ultralight.javascript.JavascriptContextLock
+import com.labymedia.ultralight.javascript.JavascriptException
 import com.labymedia.ultralight.javascript.JavascriptValue
 import net.ccbluex.liquidbounce.utils.client.ThreadLock
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -33,11 +34,14 @@ import java.util.function.Consumer
 class ViewContextProvider(private val view: ThreadLock<UltralightView>) : ContextProvider {
 
     override fun syncWithJavascript(callback: Consumer<JavascriptContextLock>) {
-        runCatching {
-            view.get().lockJavascriptContext().use { lock -> callback.accept(lock) }
-        }.onFailure {
-            logger.error("An exception occurred which prevented a JavaScript action from being executed by Ultralight JS Engine.", it)
-            return@onFailure
+        view.get().lockJavascriptContext().use { lock ->
+            runCatching { callback.accept(lock) }.onFailure {
+                if (it is JavascriptException) {
+                    // We can't move this down outside the js context lock!
+                    val err = it.value.toObject()
+                    logger.error("An error occoured in javascript: $err at ${err.getProperty("stack")}")
+                }
+            }
         }
     }
 
