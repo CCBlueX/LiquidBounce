@@ -37,7 +37,7 @@
 
     let activeModules = [];
 
-    let activeModule = 0;
+    let activeModule = -1;
     let activeCategory = 0;
 
     let elCategories = document.createElement("div");
@@ -49,7 +49,7 @@
 
         switch (event.getKey().toString()) {
             case "key.keyboard.down": {
-                if (activeModules.length === 0) {
+               if (activeModules.length === 0) {
                     activeCategory =
                         activeCategory === categories.length - 1
                             ? 0
@@ -87,7 +87,7 @@
             }
             case "key.keyboard.left": {
                 activeModules = [];
-
+                activeModule = -1
                 break;
             }
             case "key.keyboard.enter": {
