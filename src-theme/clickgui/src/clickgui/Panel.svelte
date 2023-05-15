@@ -63,7 +63,10 @@
 
     function handleToggleModule(event) {
         const targetModule = event.getModule().getName();
-        modules.find(m => m.name === targetModule).enabled = event.getNewState();
+        const found = modules.find(m => m.name === targetModule);
+        if (!found) return;
+
+        found.enabled = event.getNewState();
         if (expanded) {
             renderedModules = modules;
         }

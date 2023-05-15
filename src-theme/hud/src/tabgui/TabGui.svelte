@@ -37,7 +37,7 @@
 
     let activeModules = [];
 
-    let activeModule = 0;
+    let activeModule = -1;
     let activeCategory = 0;
 
     let elCategories = document.createElement("div");
@@ -49,31 +49,23 @@
 
         switch (event.getKey().toString()) {
             case "key.keyboard.down": {
-                if (activeModules.length === 0) {
-                    activeCategory =
-                        activeCategory === categories.length - 1
-                            ? 0
-                            : activeCategory + 1;
+               if (activeModules.length === 0) {
+                    activeCategory += 1;
+                    activeCategory %= categories.length;
                 } else {
-                    activeModule =
-                        activeModule === activeModules.length - 1
-                            ? 0
-                            : activeModule + 1;
+                    activeModule += 1;
+                    activeModule %= activeModules.length;
                 }
 
                 break;
             }
             case "key.keyboard.up": {
                 if (activeModules.length === 0) {
-                    activeCategory =
-                        activeCategory === 0
-                            ? categories.length - 1
-                            : activeCategory - 1;
+                    activeCategory -= 1 - categories.length;
+                    activeCategory %= categories.length;
                 } else {
-                    activeModule =
-                        activeModule === 0
-                            ? activeModules.length - 1
-                            : activeModule - 1;
+                    activeModule -= 1 - activeModules.length;
+                    activeModule %= activeModules.length;
                 }
 
                 break;
@@ -87,7 +79,7 @@
             }
             case "key.keyboard.left": {
                 activeModules = [];
-
+                activeModule = -1
                 break;
             }
             case "key.keyboard.enter": {

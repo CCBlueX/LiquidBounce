@@ -44,7 +44,7 @@ object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
             return
         }
 
-        val page = ThemeManager.defaultTheme.page("hud") ?: error("unable to find hud page in current theme")
+        val page = ThemeManager.page("hud") ?: error("unable to find hud page in current theme")
         viewOverlay = UltralightEngine.newOverlayView().apply {
             loadPage(page)
         }
