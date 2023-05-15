@@ -67,10 +67,8 @@ object RotationUtils : MinecraftInstance(), Listenable {
         }
 
         targetRotation?.let {
-            if (!keepCurrentRotation && (it.yaw != serverRotation.yaw || it.pitch != serverRotation.pitch)) {
-                packet.yaw = it.yaw
-                packet.pitch = it.pitch
-            }
+            packet.yaw = it.yaw
+            packet.pitch = it.pitch
         }
 
         serverRotation = Rotation(packet.yaw, packet.pitch)
