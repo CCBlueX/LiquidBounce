@@ -30,6 +30,7 @@ import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
 import net.minecraft.entity.MovementType
 import net.minecraft.network.packet.Packet
+import net.minecraft.text.Text
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.shape.VoxelShape
@@ -113,6 +114,9 @@ class ScreenEvent(val screen: Screen?) : CancellableEvent()
 
 @Nameable("chatSend")
 class ChatSendEvent(val message: String) : CancellableEvent()
+
+@Nameable("chatReceive")
+class ChatReceiveEvent(val message: String, val textData: Text) : Event()
 
 @Nameable("useCooldown")
 class UseCooldownEvent(var cooldown: Int) : Event()

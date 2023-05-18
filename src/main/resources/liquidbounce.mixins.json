@@ -26,6 +26,7 @@
 	"minecraft.client.MixinNarratorManager",
 	"minecraft.client.MixinWindow",
 	"minecraft.client.MixinWorld",
+    "minecraft.client.network.message.MixinMessageHandler",
 	"minecraft.entity.MixinClientPlayerEntity",
 	"minecraft.entity.MixinEntity",
 	"minecraft.entity.MixinLivingEntity",
