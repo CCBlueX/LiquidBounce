@@ -96,7 +96,8 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
         override val parent: ChoiceConfigurable
             get() = modes
 
-        val allowMovementTicks by intRange("AllowMovementTicks", 0..1, 0..10)
+        val ticksUntilMovementBlock by intRange("TicksUntilMovementBlock", 0..1, 0..10)
+        val ticksUntilAllowedMovement by intRange("TicksUntilAllowedMovement", 0..1, 0..10)
 
         var stopMoving = false
 
@@ -109,11 +110,13 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
                 return@sequenceHandler
             }
 
+            waitTicks(ticksUntilMovementBlock.random())
+
             stopMoving = true
 
             waitUntil { !player.input.hasForwardMovement() }
 
-            waitTicks(allowMovementTicks.random())
+            waitTicks(ticksUntilAllowedMovement.random())
 
             stopMoving = false
         }
@@ -133,6 +136,10 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
 
     private suspend fun <T : Event> Sequence<T>.shouldStopSprinting(event: AttackEvent): Boolean {
         val enemy = event.enemy
+
+        if (!player.isSprinting && !player.lastSprinting) {
+            return false
+        }
 
         val doWorkaround = !player.isSprinting && player.lastSprinting
 
