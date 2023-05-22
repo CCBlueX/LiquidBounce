@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 /**
  * NoFOV module
  *
- * Disables the view bobbing effect.
+ * Changes FOV value.
  */
 
 object ModuleNoFov : Module("NoFOV", Category.RENDER) {
