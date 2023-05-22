@@ -42,7 +42,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     val modes = choices("Mode", Modify) {
         arrayOf(
-            Modify, Push, Strafe
+            Modify, Push, Strafe, AACv4
         )
     }
 
@@ -73,6 +73,22 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
             if (!packetEvent.isCancelled) {
                 (packet as Packet<ClientPlayPacketListener>).apply(network)
+            }
+        }
+    }
+
+    private object AACv4 : Choice("AACv4") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val aacV4MotionReducer by float("AACv4MotionReducer", 0.62f, 0f..1f)
+
+        val repeatable = repeatable {
+            if (player.hurtTime > 0 && !player.isOnGround){
+                val reduce = aacV4MotionReducer
+                player.velocity.x *= reduce
+                player.velocity.z *= reduce
             }
         }
     }
@@ -185,5 +201,4 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
         }
 
     }
-
 }
