@@ -150,7 +150,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }
 
         // Make sure killaura-logic is not running while inventory is open
-        val isInInventoryScreen = mc.currentScreen is InventoryScreen
+        val isInInventoryScreen = mc.currentScreen is InventoryScreen || mc.currentScreen is GenericContainerScreen
 
         if (isInInventoryScreen && !ignoreOpenInventory) {
             // Cleanup current target tracker
