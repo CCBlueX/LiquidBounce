@@ -44,8 +44,9 @@ import kotlin.math.sqrt
  * Configurable to configure the dynamic rotation engine
  */
 class RotationsConfigurable : Configurable("Rotations") {
-    val turnSpeed by curve("TurnSpeed", arrayOf(4f, 7f, 10f, 3f, 2f, 0.7f))
+    val turnSpeed by floatRange("TurnSpeed", 40f..60f, 0f..180f)
     val fixVelocity by boolean("FixVelocity", true)
+    val threshold by float("Threshold", 2f, 0f..50f)
 }
 
 /**
@@ -303,14 +304,13 @@ object RotationManager : Listenable {
         }
 
         // Update rotations
-        val turnSpeed = RandomUtils.nextFloat(60f, 80f) // todo: use config
+        val turnSpeed = RandomUtils.nextFloat(activeConfigurable!!.turnSpeed.start, activeConfigurable!!.turnSpeed.endInclusive)
 
         val playerRotation = mc.player?.rotation ?: return
 
         if (ticksUntilReset == 0 || !shouldUpdate()) {
-            val threshold = 2f // todo: might use turn speed
 
-            if (rotationDifference(currentRotation ?: serverRotation, playerRotation) < threshold) {
+            if (rotationDifference(currentRotation ?: serverRotation, playerRotation) < activeConfigurable!!.threshold) {
                 ticksUntilReset = -1
 
                 targetRotation = null
