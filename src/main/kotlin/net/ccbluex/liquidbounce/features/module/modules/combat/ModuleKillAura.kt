@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.*
 import net.ccbluex.liquidbounce.utils.item.openInventorySilently
+import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
@@ -150,7 +151,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }
 
         // Make sure killaura-logic is not running while inventory is open
-        val isInInventoryScreen = mc.currentScreen is InventoryScreen
+        val isInInventoryScreen = mc.currentScreen is InventoryScreen || mc.currentScreen is GenericContainerScreen
 
         if (isInInventoryScreen && !ignoreOpenInventory) {
             // Cleanup current target tracker
