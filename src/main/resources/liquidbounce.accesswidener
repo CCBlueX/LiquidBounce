@@ -109,3 +109,5 @@ accessible field net/minecraft/client/gui/screen/ingame/CreativeInventoryScreen 
 accessible field net/minecraft/client/gl/PostEffectProcessor passes Ljava/util/List;
 
 accessible field net/minecraft/network/ClientConnection channel Lio/netty/channel/Channel;
+
+accessible method net/minecraft/client/input/KeyboardInput getMovementMultiplier (ZZ)F

@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import net.ccbluex.liquidbounce.event.*;
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSuperKnockback;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePortalMenu;
 import net.ccbluex.liquidbounce.features.module.modules.fun.ModuleDerp;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoSlow;
@@ -219,7 +220,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
 
     @Redirect(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z"))
     private boolean hookAutoSprint(KeyBinding instance) {
-        return ModuleSprint.INSTANCE.getEnabled() || instance.isPressed();
+        return !ModuleSuperKnockback.INSTANCE.shouldBlockSprinting() && (ModuleSprint.INSTANCE.getEnabled() || instance.isPressed());
     }
 
     @Redirect(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isWalking()Z"))

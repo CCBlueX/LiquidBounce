@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.MovementInputEvent;
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSuperKnockback;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleInventoryMove;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
@@ -80,7 +81,7 @@ public class MixinKeyboardInput extends MixinInput {
         this.pressingRight = event.getRight();
     }
 
-    @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;sneaking:Z", shift = At.Shift.AFTER))
+    @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;sneaking:Z", shift = At.Shift.BEFORE))
     private void injectStrafing(boolean slowDown, float f, CallbackInfo ci) {
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         RotationManager rotationManager = RotationManager.INSTANCE;
@@ -99,6 +100,13 @@ public class MixinKeyboardInput extends MixinInput {
 
         this.movementSideways = Math.round(newX);
         this.movementForward = Math.round(newZ);
+    }
+
+    @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/option/GameOptions;sneakKey:Lnet/minecraft/client/option/KeyBinding;", shift = At.Shift.AFTER))
+    private void hookSuperKnockbackStopMoving(boolean slowDown, float f, CallbackInfo ci) {
+        if (ModuleSuperKnockback.INSTANCE.shouldStopMoving()) {
+            this.movementForward = 0.0f;
+        }
     }
 
     @Redirect(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;sneaking:Z"))
