@@ -77,6 +77,11 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
         }
     }
 
+    /**
+     *
+     * Velocity for AAC4.4.2, pretty sure, it works on other versions
+     */
+
     private object AACv4 : Choice("AACv4") {
 
         override val parent: ChoiceConfigurable
