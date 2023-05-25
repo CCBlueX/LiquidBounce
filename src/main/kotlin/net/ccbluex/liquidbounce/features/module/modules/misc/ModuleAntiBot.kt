@@ -38,7 +38,6 @@ import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket
 import net.minecraft.network.packet.s2c.play.PlayerRemoveS2CPacket
 import java.util.*
 import kotlin.math.abs
-import net.ccbluex.liquidbounce.utils.client.chat
 import kotlin.collections.ArrayList
 
 object ModuleAntiBot : Module("AntiBot", Category.MISC) {
