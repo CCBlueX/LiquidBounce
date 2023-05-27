@@ -51,7 +51,13 @@ public abstract class MixinBackgroundRenderer implements IMixinGameRenderer {
         return list.stream().filter(modifier -> {
             final StatusEffect effect = modifier.getStatusEffect();
 
-            return !(effect == StatusEffects.BLINDNESS && ModuleAntiBlind.INSTANCE.getEnabled() && ModuleAntiBlind.INSTANCE.getAntiBlind());
+            final var module = ModuleAntiBlind.INSTANCE;
+            if (!module.getEnabled()) {
+                return true;
+            }
+
+            return !((StatusEffects.BLINDNESS == effect && module.getAntiBlind()) ||
+                (StatusEffects.DARKNESS == effect && module.getAntiDarkness()));
         });
     }
 
