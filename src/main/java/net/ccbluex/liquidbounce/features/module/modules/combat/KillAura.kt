@@ -324,6 +324,12 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
             return
         }
 
+        target?.let {
+            if (mc.thePlayer.getDistanceToEntityBox(it) > range) {
+                stopBlocking()
+            }
+        }
+
         // Target
         currentTarget = target
 
