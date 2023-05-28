@@ -18,9 +18,15 @@ object Rotations : Module("Rotations", ModuleCategory.RENDER) {
 
     private val body by BoolValue("Body", true)
 
+    var prevHeadPitch = 0f
+    var headPitch = 0f
+
     @EventTarget
     fun onMotion(event: MotionEvent) {
         val thePlayer = mc.thePlayer ?: return
+
+        prevHeadPitch = headPitch
+        headPitch = serverRotation.pitch
 
         if (!shouldRotate()) {
             return
@@ -31,6 +37,10 @@ object Rotations : Module("Rotations", ModuleCategory.RENDER) {
         if (body) {
             thePlayer.renderYawOffset = thePlayer.rotationYawHead
         }
+    }
+
+    fun lerp(tickDelta: Float, old: Float, new: Float): Float {
+        return old + (new - old) * tickDelta
     }
 
     /**
