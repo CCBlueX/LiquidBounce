@@ -35,6 +35,7 @@ object AntiFireball : Module("AntiFireball", ModuleCategory.PLAYER) {
     private val delay by IntegerValue("Delay", 300, 50..1000)
     private val swing by ListValue("Swing", arrayOf("Normal", "Packet", "None"), "Normal")
     private val rotations by BoolValue("Rotations", true)
+    private val strafe by BoolValue("Strafe", false) { rotations }
 
     private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 120f, 0f..180f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minTurnSpeed)
@@ -63,7 +64,10 @@ object AntiFireball : Module("AntiFireball", ModuleCategory.PLAYER) {
             if (rotations) setTargetRotation(
                 limitAngleChange(
                     serverRotation, toRotation(nearestPoint, true), nextFloat(minTurnSpeed, maxTurnSpeed)
-                ), resetSpeed = Pair(minTurnSpeed, maxTurnSpeed), angleThresholdForReset = angleThresholdUntilReset
+                ),
+                strafe = this.strafe,
+                resetSpeed = Pair(minTurnSpeed, maxTurnSpeed),
+                angleThresholdForReset = angleThresholdUntilReset
             )
 
             sendPacket(C02PacketUseEntity(entity, ATTACK))
