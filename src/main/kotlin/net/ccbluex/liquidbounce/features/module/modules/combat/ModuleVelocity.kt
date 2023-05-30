@@ -42,7 +42,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     val modes = choices("Mode", Modify) {
         arrayOf(
-            Modify, Push, Strafe, AAC4.4.2
+            Modify, Push, Strafe, AAC442
         )
     }
 
@@ -82,16 +82,16 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
      * Velocity for AAC4.4.2, pretty sure, it works on other versions
      */
 
-    private object AAC4.4.2 : Choice("AAC4.4.2") {
+    private object AAC442 : Choice("AAC4.4.2") {
 
         override val parent: ChoiceConfigurable
             get() = modes
 
-        val aacV4MotionReducer by float("AACv4MotionReducer", 0.62f, 0f..1f)
+        val aac442MotionReducer by float("AAC4.4.2MotionReducer", 0.62f, 0f..1f)
 
         val repeatable = repeatable {
             if (player.hurtTime > 0 && !player.isOnGround){
-                val reduce = aacV4MotionReducer
+                val reduce = aac442MotionReducer
                 player.velocity.x *= reduce
                 player.velocity.z *= reduce
             }
