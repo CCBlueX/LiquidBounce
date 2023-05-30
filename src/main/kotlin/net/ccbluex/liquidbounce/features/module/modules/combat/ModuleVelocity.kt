@@ -42,7 +42,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     val modes = choices("Mode", Modify) {
         arrayOf(
-            Modify, Push, Strafe, AACv4
+            Modify, Push, Strafe, AAC4.4.2
         )
     }
 
@@ -82,7 +82,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
      * Velocity for AAC4.4.2, pretty sure, it works on other versions
      */
 
-    private object AACv4 : Choice("AACv4") {
+    private object AAC4.4.2 : Choice("AAC4.4.2") {
 
         override val parent: ChoiceConfigurable
             get() = modes
