@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.interfaces.IMixinGameRenderer;
 import net.minecraft.client.render.BackgroundRenderer;
 import net.minecraft.client.render.BackgroundRenderer.FogType;
 import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.CameraSubmersionType;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffects;
 import org.spongepowered.asm.mixin.Mixin;
@@ -38,9 +37,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static java.lang.Float.MAX_VALUE;
-import static net.minecraft.client.render.CameraSubmersionType.LAVA;
-import static net.minecraft.client.render.CameraSubmersionType.WATER;
 import static org.spongepowered.asm.mixin.injection.At.Shift.AFTER;
 
 @Mixin(BackgroundRenderer.class)
@@ -63,26 +59,32 @@ public abstract class MixinBackgroundRenderer implements IMixinGameRenderer {
 
     @Inject(method = "applyFog", at = @At(value = "INVOKE", shift = AFTER, ordinal = 0, target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderFogStart(F)V", remap = false))
     private static void injectLiquidsFog(Camera camera, FogType fogType, float viewDistance, boolean thickFog, float tickDelta, CallbackInfo callback) {
-        if (isLiquidsFogEnabled(camera)) {
-            RenderSystem.setShaderFogStart(MAX_VALUE);
-            RenderSystem.setShaderFogEnd(MAX_VALUE);
+        if (!isLiquidsFogEnabled()) {
+            return;
+        }
+
+        // Renders fog same as spectator.
+        switch (camera.getSubmersionType()) {
+            case LAVA, WATER -> RenderSystem.setShaderFogStart(-8.0F);
         }
     }
 
     @Inject(method = "applyFog", at = @At(value = "INVOKE", shift = AFTER, ordinal = 0, target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderFogEnd(F)V", remap = false))
-    private static void injectLiquidsFogUnderwater(Camera camera, FogType fogType, float viewDistance, boolean thickFog, float tickDelta, CallbackInfo info) {
-        if (isLiquidsFogEnabled(camera)) {
-            RenderSystem.setShaderFogEnd(MAX_VALUE);
+    private static void injectLiquidsFogEnd(Camera camera, FogType fogType, float viewDistance, boolean thickFog, float tickDelta, CallbackInfo info) {
+        if (!isLiquidsFogEnabled()) {
+            return;
+        }
+
+        // Renders fog same as spectator.
+        switch (camera.getSubmersionType()) {
+            case LAVA -> RenderSystem.setShaderFogEnd(viewDistance * 0.5F);
+            case WATER -> RenderSystem.setShaderFogEnd(viewDistance);
         }
     }
 
     @Unique
-    private static boolean isLiquidsFogEnabled(Camera camera) {
+    private static boolean isLiquidsFogEnabled() {
         ModuleAntiBlind module = ModuleAntiBlind.INSTANCE;
-        if (module.getEnabled() && module.getLiquidsFog()) {
-            CameraSubmersionType type = camera.getSubmersionType();
-            return LAVA == type || WATER == type;
-        }
-        return false;
+        return module.getEnabled() && module.getLiquidsFog();
     }
 }
