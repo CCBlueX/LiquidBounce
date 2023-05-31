@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.event.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.item.isNothing
 
 /**
@@ -67,7 +66,6 @@ object ModuleAutoTool : Module("AutoTool", Category.WORLD) {
         if (swapPrevious) {
             leftTime = time
         }
-        chat(inventory.mainHandStack.getMiningSpeedMultiplier(blockState).toString())
         val index = if (search) {
             val (hotbarSlot, _) = (0..8)
                 .map { Pair(it, inventory.getStack(it)) }
