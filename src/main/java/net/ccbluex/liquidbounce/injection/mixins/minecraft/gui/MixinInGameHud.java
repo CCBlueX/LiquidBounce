@@ -41,6 +41,10 @@ public class MixinInGameHud {
     @Shadow
     private static Identifier PUMPKIN_BLUR;
 
+    @Final
+    @Shadow
+    private static Identifier POWDER_SNOW_OUTLINE;
+
     /**
      * Hook render hud event at the top layer
      */
@@ -52,7 +56,16 @@ public class MixinInGameHud {
     @Inject(method = "renderOverlay", at = @At("HEAD"), cancellable = true)
     private void injectPumpkinBlur(MatrixStack matrices, Identifier texture, float opacity, CallbackInfo callback) {
         ModuleAntiBlind module = ModuleAntiBlind.INSTANCE;
-        if (module.getEnabled() && module.getPumpkinBlur() && PUMPKIN_BLUR.equals(texture)) {
+        if (!module.getEnabled()) {
+            return;
+        }
+
+        if (module.getPumpkinBlur() && PUMPKIN_BLUR.equals(texture)) {
+            callback.cancel();
+            return;
+        }
+
+        if (module.getPowerSnowFog() && POWDER_SNOW_OUTLINE.equals(texture)) {
             callback.cancel();
         }
     }
