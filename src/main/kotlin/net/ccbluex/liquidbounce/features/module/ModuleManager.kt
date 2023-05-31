@@ -187,7 +187,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoWeapon,
             ModuleNameCollector,
             ModuleDerp,
-            ModuleNoFov
+            ModuleNoFov,
+            ModuleAnimation
         )
 
         builtin.apply {
