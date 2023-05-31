@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.utils.item
 
+import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.enchantment.Enchantments
@@ -27,7 +28,19 @@ import net.minecraft.item.ItemStack
 import java.math.BigDecimal
 import java.math.RoundingMode
 
-object ArmorComparator : Comparator<ArmorPiece> {
+class ArmorConfigurable : Configurable("Enchantment factors") {
+    val PROTECTION by float("Threshold", 2f, 0f..5f)
+    val PROJECTILE_PROTECTION by float("Threshold", 2f, 0f..5f)
+    val FIRE_PROTECTION by float("Threshold", 2f, 0f..5f)
+    val BLAST_PROTECTION by float("Threshold", 2f, 0f..5f)
+    val FEATHER_FALLING by float("Threshold", 2f, 0f..5f)
+    val THORNS by float("Threshold", 2f, 0f..5f)
+    val RESPIRATION by float("Threshold", 2f, 0f..5f)
+    val AQUA_AFFINITY by float("Threshold", 2f, 0f..5f)
+    val UNBREAKING by float("Threshold", 2f, 0f..5f)
+}
+
+class ArmorComparator(private val attribute: ArmorConfigurable) : Comparator<ArmorPiece> {
     private val DAMAGE_REDUCTION_ENCHANTMENTS: Array<Enchantment> = arrayOf(
         Enchantments.PROTECTION,
         Enchantments.PROJECTILE_PROTECTION,

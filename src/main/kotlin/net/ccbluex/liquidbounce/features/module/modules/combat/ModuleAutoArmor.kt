@@ -31,6 +31,7 @@ import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.screen.slot.SlotActionType
 import net.minecraft.util.Hand
+import net.ccbluex.liquidbounce.utils.item.ArmorConfigurable
 
 /**
  * AutoArmor module
@@ -41,7 +42,11 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
 
     private val inventoryConstraints = tree(InventoryConstraintsConfigurable())
     private val hotbar by boolean("Hotbar", true)
+    val armorconfigurable = ArmorConfigurable()
 
+    init {
+        tree(armorconfigurable)
+    }
     var locked = false
 
     val repeatable = repeatable {
@@ -59,7 +64,7 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
                 else -> null
             }
         }.groupBy(ArmorPiece::entitySlotId).values.mapNotNull {
-            it.maxWithOrNull(ArmorComparator)
+            it.maxWithOrNull(ArmorComparator(armorconfigurable))
         }
 
         for (armorPiece in bestArmor) {
