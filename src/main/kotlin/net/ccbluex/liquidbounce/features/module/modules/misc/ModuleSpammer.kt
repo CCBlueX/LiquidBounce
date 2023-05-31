@@ -40,9 +40,6 @@ object ModuleSpammer : Module("Spammer", Category.MISC) {
             "LiquidBounce: FREE and OPEN-SOURCE & 100% CUSTOMIZABLE"
         )
     )
-
-
-    val spamtext by text("Spam text", "SPAM SPAM SPAM")
     private val customFormatter by boolean("CustomFormatter", false)
 
     val repeatable = repeatable {
