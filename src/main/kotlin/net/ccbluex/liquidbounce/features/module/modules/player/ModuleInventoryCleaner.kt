@@ -50,6 +50,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
 
     val maxBlocks by int("MaxBlocks", 512, 0..3000)
     val maxArrows by int("MaxArrows", 256, 0..3000)
+    val toolAsSword by boolean("ToolAsSword", true)
 
     val usefulItems = items(
         "UsefulItems", mutableListOf(
@@ -286,7 +287,9 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
                 is CrossbowItem -> WeightedCrossbowItem(stack, slotId)
                 is ArrowItem -> WeightedArrowItem(stack, slotId)
                 is ToolItem -> {
-                    items.add(WeightedSwordItem(stack, slotId))
+                    if(toolAsSword){
+                        items.add(WeightedSwordItem(stack, slotId))
+                    }
 
                     WeightedToolItem(stack, slotId)
                 }
