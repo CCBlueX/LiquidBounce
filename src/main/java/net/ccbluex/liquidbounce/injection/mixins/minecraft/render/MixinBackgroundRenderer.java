@@ -29,7 +29,6 @@ import net.minecraft.client.render.CameraSubmersionType;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffects;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -38,9 +37,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static java.lang.Float.MAX_VALUE;
-import static net.minecraft.client.render.CameraSubmersionType.LAVA;
-import static net.minecraft.client.render.CameraSubmersionType.WATER;
 import static org.spongepowered.asm.mixin.injection.At.Shift.AFTER;
 
 @Mixin(BackgroundRenderer.class)
@@ -51,32 +47,56 @@ public abstract class MixinBackgroundRenderer implements IMixinGameRenderer {
         return list.stream().filter(modifier -> {
             final StatusEffect effect = modifier.getStatusEffect();
 
-            return !(effect == StatusEffects.BLINDNESS && ModuleAntiBlind.INSTANCE.getEnabled() && ModuleAntiBlind.INSTANCE.getAntiBlind());
+            final var module = ModuleAntiBlind.INSTANCE;
+            if (!module.getEnabled()) {
+                return true;
+            }
+
+            return !((StatusEffects.BLINDNESS == effect && module.getAntiBlind()) ||
+                (StatusEffects.DARKNESS == effect && module.getAntiDarkness()));
         });
     }
 
     @Inject(method = "applyFog", at = @At(value = "INVOKE", shift = AFTER, ordinal = 0, target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderFogStart(F)V", remap = false))
     private static void injectLiquidsFog(Camera camera, FogType fogType, float viewDistance, boolean thickFog, float tickDelta, CallbackInfo callback) {
-        if (isLiquidsFogEnabled(camera)) {
-            RenderSystem.setShaderFogStart(MAX_VALUE);
-            RenderSystem.setShaderFogEnd(MAX_VALUE);
+        ModuleAntiBlind module = ModuleAntiBlind.INSTANCE;
+        if (!module.getEnabled()) {
+            return;
+        }
+
+        CameraSubmersionType type = camera.getSubmersionType();
+        if (module.getPowerSnowFog() && type == CameraSubmersionType.POWDER_SNOW) {
+            RenderSystem.setShaderFogStart(-8.0F);
+            return;
+        }
+
+        if (module.getLiquidsFog()) {
+            // Renders fog same as spectator.
+            switch (type) {
+                case LAVA, WATER -> RenderSystem.setShaderFogStart(-8.0F);
+            }
         }
     }
 
     @Inject(method = "applyFog", at = @At(value = "INVOKE", shift = AFTER, ordinal = 0, target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderFogEnd(F)V", remap = false))
-    private static void injectLiquidsFogUnderwater(Camera camera, FogType fogType, float viewDistance, boolean thickFog, float tickDelta, CallbackInfo info) {
-        if (isLiquidsFogEnabled(camera)) {
-            RenderSystem.setShaderFogEnd(MAX_VALUE);
-        }
-    }
-
-    @Unique
-    private static boolean isLiquidsFogEnabled(Camera camera) {
+    private static void injectLiquidsFogEnd(Camera camera, FogType fogType, float viewDistance, boolean thickFog, float tickDelta, CallbackInfo info) {
         ModuleAntiBlind module = ModuleAntiBlind.INSTANCE;
-        if (module.getEnabled() && module.getLiquidsFog()) {
-            CameraSubmersionType type = camera.getSubmersionType();
-            return LAVA == type || WATER == type;
+        if (!module.getEnabled()) {
+            return;
         }
-        return false;
+
+        CameraSubmersionType type = camera.getSubmersionType();
+        if (module.getPowerSnowFog() && type == CameraSubmersionType.POWDER_SNOW) {
+            RenderSystem.setShaderFogEnd(viewDistance * 0.5F);
+            return;
+        }
+
+        if (module.getLiquidsFog()) {
+            // Renders fog same as spectator.
+            switch (type) {
+                case LAVA -> RenderSystem.setShaderFogEnd(viewDistance * 0.5F);
+                case WATER -> RenderSystem.setShaderFogEnd(viewDistance);
+            }
+        }
     }
 }

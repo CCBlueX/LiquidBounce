@@ -18,10 +18,13 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFullBright;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.SimpleOption;
 import net.minecraft.client.render.LightmapTextureManager;
+import net.minecraft.entity.effect.StatusEffect;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -44,5 +47,12 @@ public class MixinLightmapTextureManager {
 
         // They use .floatValue() afterward on the return value, so we need to return a value which is not bigger than Float.MAX_VALUE
         return (double) Float.MAX_VALUE;
+    }
+
+    // Turns off blinking when the darkness effect is active.
+    @Redirect(method = "getDarknessFactor", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;hasStatusEffect(Lnet/minecraft/entity/effect/StatusEffect;)Z"))
+    private boolean injectAntiDarkness(ClientPlayerEntity instance, StatusEffect statusEffect) {
+        final var module = ModuleAntiBlind.INSTANCE;
+        return !(module.getEnabled() && module.getAntiDarkness());
     }
 }

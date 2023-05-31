@@ -42,7 +42,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     val modes = choices("Mode", Modify) {
         arrayOf(
-            Modify, Push, Strafe
+            Modify, Push, Strafe, AAC442
         )
     }
 
@@ -73,6 +73,27 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
             if (!packetEvent.isCancelled) {
                 (packet as Packet<ClientPlayPacketListener>).apply(network)
+            }
+        }
+    }
+
+    /**
+     *
+     * Velocity for AAC4.4.2, pretty sure, it works on other versions
+     */
+
+    private object AAC442 : Choice("AAC4.4.2") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val aac442MotionReducer by float("AAC4.4.2MotionReducer", 0.62f, 0f..1f)
+
+        val repeatable = repeatable {
+            if (player.hurtTime > 0 && !player.isOnGround){
+                val reduce = aac442MotionReducer
+                player.velocity.x *= reduce
+                player.velocity.z *= reduce
             }
         }
     }
@@ -185,5 +206,4 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
         }
 
     }
-
 }
