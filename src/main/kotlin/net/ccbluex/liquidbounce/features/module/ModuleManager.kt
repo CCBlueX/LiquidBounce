@@ -106,6 +106,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAntiBlind,
             ModuleTraces,
             ModuleElytraFly,
+            ModuleS,
             ModuleSpammer,
             ModuleHighJump,
             ModuleBlockBounce,
