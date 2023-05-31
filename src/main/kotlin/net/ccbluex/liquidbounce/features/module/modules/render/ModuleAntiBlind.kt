@@ -34,5 +34,6 @@ object ModuleAntiBlind : Module("AntiBlind", Category.RENDER) {
     val antiNausea by boolean("DisableNauseaEffect", true)
     val pumpkinBlur by boolean("DisablePumpkinBlur", true)
     val liquidsFog by boolean("DisableLiquidsFog", true)
+    var powerSnowFog by boolean("DisablePowderSnowFog", true)
     val fireOpacity by float("FireOpacity", 1.0F, 0.0F..1.0F)
 }
