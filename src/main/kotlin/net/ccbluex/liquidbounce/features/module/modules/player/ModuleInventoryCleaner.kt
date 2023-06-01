@@ -37,6 +37,7 @@ import net.minecraft.item.*
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.screen.slot.SlotActionType
 import net.minecraft.util.math.BlockPos
+import net.ccbluex.liquidbounce.utils.item.ArmorConfigurable
 
 /**
  * InventoryCleaner module
@@ -50,8 +51,19 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
 
     val maxBlocks by int("MaxBlocks", 512, 0..3000)
     val maxArrows by int("MaxArrows", 256, 0..3000)
+<<<<<<< Updated upstream
     val toolAsSword by boolean("ToolAsSword", true)
+=======
+<<<<<<< Updated upstream
+=======
+    val toolAsSword by boolean("ToolAsSword", true)
+    val armorconfigurable = ArmorConfigurable()
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
 
+    init {
+        tree(armorconfigurable)
+    }
     val usefulItems = items(
         "UsefulItems", mutableListOf(
             Items.WATER_BUCKET,
@@ -281,7 +293,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
 
         items.add(
             when (item) {
-                is ArmorItem -> WeightedArmorItem(stack, slotId)
+                is ArmorItem -> WeightedArmorItem(stack, slotId, armorconfigurable)
                 is SwordItem -> WeightedSwordItem(stack, slotId)
                 is BowItem -> WeightedBowItem(stack, slotId)
                 is CrossbowItem -> WeightedCrossbowItem(stack, slotId)
@@ -366,14 +378,14 @@ class WeightedPrimitiveItem(itemStack: ItemStack, slot: Int, override val catego
     override fun compareTo(other: WeightedItem): Int = COMPARATOR.compare(this, other as WeightedPrimitiveItem)
 }
 
-class WeightedArmorItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
+class WeightedArmorItem(itemStack: ItemStack, slot: Int, val armorconfigurable: ArmorConfigurable) : WeightedItem(itemStack, slot) {
     private val armorPiece = ArmorPiece(itemStack, slot)
 
     override val category: ItemCategory
         get() = ItemCategory(ItemType.ARMOR, armorPiece.entitySlotId)
 
     override fun compareTo(other: WeightedItem): Int =
-        ArmorComparator.compare(this.armorPiece, (other as WeightedArmorItem).armorPiece)
+        ArmorComparator(armorconfigurable).compare(this.armorPiece, (other as WeightedArmorItem).armorPiece)
 }
 
 class WeightedSwordItem(itemStack: ItemStack, slot: Int) : WeightedItem(itemStack, slot) {
