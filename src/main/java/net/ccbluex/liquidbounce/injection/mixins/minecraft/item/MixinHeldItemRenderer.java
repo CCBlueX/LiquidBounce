@@ -19,18 +19,16 @@ public abstract class MixinHeldItemRenderer {
     @Inject(method = "renderFirstPersonItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/math/MatrixStack;push()V", shift = At.Shift.AFTER))
     private void hookRenderFirstPersonItem(AbstractClientPlayerEntity player, float tickDelta, float pitch, Hand hand, float swingProgress, ItemStack item, float equipProgress, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
         if (ModuleAnimation.INSTANCE.getEnabled()) {
-            if (hand == Hand.MAIN_HAND && ModuleAnimation.MainHand.INSTANCE.getEnabled()) {
-                matrices.translate(ModuleAnimation.MainHand.INSTANCE.getMainHandX(), ModuleAnimation.MainHand.INSTANCE.getMainHandY(), ModuleAnimation.INSTANCE.getItemScale());
+            if (Hand.MAIN_HAND == hand && ModuleAnimation.MainHand.INSTANCE.getEnabled()) {
+                matrices.translate(ModuleAnimation.MainHand.INSTANCE.getMainHandX(), ModuleAnimation.MainHand.INSTANCE.getMainHandY(), ModuleAnimation.MainHand.INSTANCE.getMainHandItemScale());
                 matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(ModuleAnimation.MainHand.INSTANCE.getMainHandPositiveX()));
                 matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(ModuleAnimation.MainHand.INSTANCE.getMainHandPositiveY()));
                 matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(ModuleAnimation.MainHand.INSTANCE.getMainHandPositiveZ()));
-            } else {
-                if (ModuleAnimation.OffHand.INSTANCE.getEnabled()) {
-                    matrices.translate(ModuleAnimation.OffHand.INSTANCE.getOffHandX(), ModuleAnimation.OffHand.INSTANCE.getOffHandY(), ModuleAnimation.INSTANCE.getItemScale());
-                    matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(ModuleAnimation.OffHand.INSTANCE.getOffHandPositiveX()));
-                    matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(ModuleAnimation.OffHand.INSTANCE.getOffHandPositiveY()));
-                    matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(ModuleAnimation.OffHand.INSTANCE.getOffHandPositiveZ()));
-                }
+            } else if (ModuleAnimation.OffHand.INSTANCE.getEnabled()) {
+                matrices.translate(ModuleAnimation.OffHand.INSTANCE.getOffHandX(), ModuleAnimation.OffHand.INSTANCE.getOffHandY(), ModuleAnimation.OffHand.INSTANCE.getOffHandItemScale());
+                matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(ModuleAnimation.OffHand.INSTANCE.getOffHandPositiveX()));
+                matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(ModuleAnimation.OffHand.INSTANCE.getOffHandPositiveY()));
+                matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(ModuleAnimation.OffHand.INSTANCE.getOffHandPositiveZ()));
             }
         }
     }
