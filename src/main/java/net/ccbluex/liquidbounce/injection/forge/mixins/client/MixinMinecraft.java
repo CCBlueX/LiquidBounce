@@ -223,12 +223,10 @@ public abstract class MixinMinecraft {
         CPSCounter.registerClick(CPSCounter.MouseButton.RIGHT);
 
         final FastPlace fastPlace = FastPlace.INSTANCE;
-        if (!fastPlace.getState())
-            return;
+        if (!fastPlace.getState()) return;
 
         // Don't spam-click when the player isn't holding blocks
-        if (fastPlace.getOnlyBlocks()
-                && (thePlayer.getHeldItem() == null || !(thePlayer.getHeldItem().getItem() instanceof ItemBlock)))
+        if (fastPlace.getOnlyBlocks() && (thePlayer.getHeldItem() == null || !(thePlayer.getHeldItem().getItem() instanceof ItemBlock)))
             return;
 
         if (objectMouseOver != null && objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {

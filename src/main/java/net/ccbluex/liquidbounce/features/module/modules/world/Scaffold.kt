@@ -142,6 +142,8 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         override fun isSupported() = !maxTurnSpeedValue.isMinimal()
     }
 
+    private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f)
+
     // Zitter
     private val zitterMode = ListValue("Zitter", arrayOf("Off", "Teleport", "Smooth"), "Off")
     private val zitterSpeed = FloatValue("ZitterSpeed", 0.13f, 0.1f..0.3f) { zitterMode.get() == "Teleport" }
@@ -192,8 +194,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         get() = targetRotation ?: mc.thePlayer?.rotation ?: serverRotation
 
     // Extra clicks
-    private var extraClick =
-        ExtraClickInfo(randomClickDelay(extraClickMinCPS, extraClickMaxCPS), 0L, 0)
+    private var extraClick = ExtraClickInfo(randomClickDelay(extraClickMinCPS, extraClickMaxCPS), 0L, 0)
 
     // Enabling module
     override fun onEnable() {
@@ -383,7 +384,13 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         val player = mc.thePlayer ?: return
 
         if (silentRotation) {
-            setTargetRotation(rotation, ticks, strafe)
+            setTargetRotation(
+                rotation,
+                ticks,
+                strafe,
+                resetSpeed = Pair(minTurnSpeed, maxTurnSpeed),
+                angleThresholdForReset = angleThresholdUntilReset
+            )
         } else {
             rotation.fixedSensitivity().let {
                 player.rotationYaw = it.yaw
@@ -593,8 +600,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         if (counterDisplay) {
             glPushMatrix()
 
-            if (BlockOverlay.state && BlockOverlay.info && BlockOverlay.currentBlock != null)
-                glTranslatef(0f, 15f, 0f)
+            if (BlockOverlay.state && BlockOverlay.info && BlockOverlay.currentBlock != null) glTranslatef(0f, 15f, 0f)
 
             val info = "Blocks: §7$blocksAmount"
             val scaledResolution = ScaledResolution(mc)
