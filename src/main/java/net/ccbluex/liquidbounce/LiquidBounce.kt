@@ -55,7 +55,7 @@ object LiquidBounce {
     var CLIENT_VERSION_INT = CLIENT_VERSION.substring(1).toIntOrNull() ?: 0 // version format: "b<VERSION>" on legacy
     val CLIENT_COMMIT = gitInfo["git.commit.id.abbrev"]?.let { "git-$it" } ?: "unknown"
     val CLIENT_BRANCH = gitInfo["git.branch"]?.toString() ?: "unknown"
-    const val IN_DEV = false
+    const val IN_DEV = true
     const val CLIENT_CREATOR = "CCBlueX"
     const val MINECRAFT_VERSION = "1.8.9"
     const val CLIENT_CLOUD = "https://cloud.liquidbounce.net/LiquidBounce"
