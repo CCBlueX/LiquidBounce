@@ -94,7 +94,7 @@ object Tracers : Module("Tracers", ModuleCategory.RENDER) {
 
         val eyeVector = Vec3(0.0, 0.0, 1.0)
                 .rotatePitch(-thePlayer.rotationPitch.toRadians())
-                .rotateYaw(thePlayer.rotationYaw.toRadians())
+                .rotateYaw(-thePlayer.rotationYaw.toRadians())
 
         glColor(color)
 
