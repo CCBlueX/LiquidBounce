@@ -31,7 +31,7 @@ fun loadSettings(useCached: Boolean, join: Long? = null, callback: (Array<AutoSe
                         val date = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(it.date)
                         val statusDate = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(it.statusDate)
 
-                        val humanReadableDateFormat = SimpleDateFormat("dd.MM.yyyy HH:mm:ss")
+                        val humanReadableDateFormat = SimpleDateFormat()
 
                         it.date = humanReadableDateFormat.format(date)
                         it.statusDate = humanReadableDateFormat.format(statusDate)
