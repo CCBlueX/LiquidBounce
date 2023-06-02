@@ -23,6 +23,7 @@ import com.mojang.authlib.GameProfile
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.AttackEvent
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
@@ -37,6 +38,7 @@ import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket
 import net.minecraft.network.packet.s2c.play.PlayerRemoveS2CPacket
 import java.util.*
 import kotlin.math.abs
+import kotlin.collections.ArrayList
 
 object ModuleAntiBot : Module("AntiBot", Category.MISC) {
 
@@ -53,6 +55,7 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
 
         init {
             tree(InvalidGround)
+            tree(AlwaysInRadius)
         }
 
         val duplicate by boolean("Duplicate", true)
@@ -60,8 +63,27 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
         val illegalPitch by boolean("IllegalPitch", true)
         val fakeEntityID by boolean("FakeEntityID", false)
         val illegalName by boolean("IllegalName", false)
+        val needHit by boolean("NeedHit", false)
+        val health by boolean("IllegalHealth", false)
+        object AlwaysInRadius : ToggleableConfigurable(ModuleAntiBot, "AlwaysInRadius", false) {
+            val alwaysInRadiusRange by float("AlwaysInRadiusRange", 20f, 5f..30f)
+        }
 
         val invalidGroundList = mutableMapOf<Entity, Int>()
+        val hitList = ArrayList<UUID>()
+        val notAlwaysInRadius = ArrayList<UUID>()
+
+        val repeatable = repeatable {
+            for (entity in world.players) {
+                if (player.distanceTo(entity) > AlwaysInRadius.alwaysInRadiusRange && !notAlwaysInRadius.contains(entity.uuid)) {
+                    notAlwaysInRadius.add(entity.uuid)
+                }
+            }
+        }
+
+        val attackHandler = handler<AttackEvent> {
+            hitList.add(it.enemy.uuid)
+        }
 
         val packetHandler = handler<PacketEvent> {
             if (it.packet !is EntityS2CPacket || !it.packet.isPositionChanged || !InvalidGround.enabled) {
@@ -135,8 +157,6 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
                     }
                 }
             }
-
-
         }
 
         val repeatable = repeatable {
@@ -310,6 +330,8 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
 
     override fun disable() {
         Custom.invalidGroundList.clear()
+        Custom.notAlwaysInRadius.clear()
+        Custom.hitList.clear()
         Matrix.suspectList.clear()
         Matrix.botList.clear()
         IntaveHeavy.suspectList.clear()
@@ -340,12 +362,13 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
                 val isADuplicate = Custom.duplicate && isADuplicate(player.gameProfile)
                 val illegalName = Custom.illegalName && Custom.hasIllegalName(player)
                 val illegalPitch = Custom.illegalPitch && abs(player.pitch) > 90
+                val alwaysInRadius = Custom.AlwaysInRadius.enabled && !Custom.notAlwaysInRadius.contains(player.uuid)
+                val needHit = Custom.needHit && !Custom.hitList.contains(player.uuid)
+                val health = Custom.health && player.health > 20f
 
-                return noGameMode || invalidGround || fakeID || isADuplicate || illegalName || illegalPitch
+                return noGameMode || invalidGround || fakeID || isADuplicate || illegalName || illegalPitch || alwaysInRadius || needHit || health
             }
         }
-
         return false
     }
-
 }
