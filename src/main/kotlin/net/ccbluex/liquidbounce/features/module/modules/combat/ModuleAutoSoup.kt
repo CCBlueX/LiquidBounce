@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoGapple.utilizeInventory
+import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.item.InventoryConstraintsConfigurable
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
 import net.ccbluex.liquidbounce.utils.item.findInventorySlot
@@ -46,8 +47,12 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
     private val bowl by enumChoice("Bowl", BowlMode.DROP, BowlMode.values())
     private val health by int("Health", 15, 1..20)
     private val inventoryConstraints = tree(InventoryConstraintsConfigurable())
+    private val timer = Chronometer()
 
     val repeatable = repeatable {
+        if (!timer.hasElapsed()) {
+            return@repeatable
+        }
         val mushroomStewSlot = findHotbarSlot(Items.MUSHROOM_STEW)
         val bowlHotbarSlot = findHotbarSlot(Items.BOWL)
         val bowlInvSlot = findInventorySlot(Items.MUSHROOM_STEW)
@@ -90,7 +95,7 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
 
         if (player.health < health) {
             if (mushroomStewSlot != null) {
-                wait { inventoryConstraints.delay.random() }
+                timer.waitFor(inventoryConstraints.delay.random().toLong())
 
                 if (mushroomStewSlot != player.inventory.selectedSlot) {
                     network.sendPacket(UpdateSelectedSlotC2SPacket(mushroomStewSlot))

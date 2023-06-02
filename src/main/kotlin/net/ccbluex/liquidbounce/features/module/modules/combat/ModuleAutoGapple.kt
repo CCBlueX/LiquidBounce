@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.item.*
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
@@ -42,11 +43,15 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
     private val inventoryConstraints = tree(InventoryConstraintsConfigurable())
 
     private var lastSlot = -1
+    private val timer = Chronometer()
 
     val repeatable = repeatable {
         val slot = findHotbarSlot(Items.GOLDEN_APPLE)
         val invSlot = findInventorySlot(Items.GOLDEN_APPLE)
 
+        if (!timer.hasElapsed()) {
+            return@repeatable
+        }
         if (slot == null && invSlot == null || interaction.hasRidingInventory()) {
             if (lastSlot != -1) {
                 player.inventory.selectedSlot = lastSlot
@@ -58,7 +63,7 @@ object ModuleAutoGapple : Module("AutoGapple", Category.COMBAT) {
 
         if (player.health + player.absorptionAmount < health) {
             if (slot != null) {
-                wait { inventoryConstraints.delay.random() }
+                timer.waitFor(inventoryConstraints.delay.random().toLong())
 
                 if (slot != player.inventory.selectedSlot) {
                     lastSlot = player.inventory.selectedSlot

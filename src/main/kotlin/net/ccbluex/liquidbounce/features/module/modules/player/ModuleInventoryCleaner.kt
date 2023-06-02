@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoArmor
+import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.item.*
@@ -85,8 +86,10 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
     val slotItem8 by enumChoice("SlotItem-8", ItemSortChoice.BLOCK, ItemSortChoice.values())
     val slotItem9 by enumChoice("SlotItem-9", ItemSortChoice.BLOCK, ItemSortChoice.values())
 
+    private val timer = Chronometer()
+
     val repeatable = repeatable {
-        if (player.currentScreenHandler.syncId != 0 || interaction.hasRidingInventory()) {
+        if (player.currentScreenHandler.syncId != 0 || interaction.hasRidingInventory() || !timer.hasElapsed()) {
             return@repeatable
         }
 
@@ -145,7 +148,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
                         ) != true) && weightedItem.slot != hotbarSlotToFill.second
                     ) {
                         if (executeAction(weightedItem.slot, hotbarSlotToFill.second, SlotActionType.SWAP)) {
-                            wait(inventoryConstraints.delay.random())
+                            timer.waitFor(inventoryConstraints.delay.random().toLong())
 
                             return@repeatable
                         }
@@ -166,7 +169,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
             }
 
             if (executeAction(i, 1, SlotActionType.THROW)) {
-                wait(inventoryConstraints.delay.random())
+                timer.waitFor(inventoryConstraints.delay.random().toLong())
 
                 return@repeatable
             }

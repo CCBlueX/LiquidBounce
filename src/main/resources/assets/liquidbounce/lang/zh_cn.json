@@ -231,7 +231,7 @@
   "liquidbounce.module.noPitchLimit.description": "允许你不受限制的旋转视角.",
 
   "liquidbounce.module.pingSpoof.description": "自定义一个虚假的Ping值.",
-  "liquidbounce.module.pingSpoof.noSingleplayer": "无法在单人模式中开启 %s .",
+  "liquidbounce.module.pingSpoof.messages.cantEnableInSingleplayer": "无法在单人模式中开启 %s .",
 
   "liquidbounce.module.plugins.description": "允许你查看服务器的插件.",
   "liquidbounce.module.plugins.messages.timeOut": "插件查看超时.",

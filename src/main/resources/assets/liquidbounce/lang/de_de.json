@@ -205,6 +205,7 @@
   "liquidbounce.module.noPitchLimit.description": "Erlaubt es dir, deinen Kopf über die eigentlichen Grenzen hinaus zu bewegen.",
 
   "liquidbounce.module.pingSpoof.description": "Fälscht deinen Ping auf einen angegebenen Wert.",
+  "liquidbounce.module.pingSpoof.messages.cantEnableInSingleplayer": "Cannot enable %s in singleplayer.",
 
   "liquidbounce.module.portalMenu.description": "Erlaubt es dir, Menüs zu öffnen, während du in einem Portal stehst.",
 
