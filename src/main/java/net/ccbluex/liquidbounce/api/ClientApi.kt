@@ -127,25 +127,25 @@ data class AutoSettings(
  * Some might prefer RAGE to LEGIT and vice versa
  * Might add more in the future
  */
-enum class AutoSettingsType {
+enum class AutoSettingsType(val displayName: String) {
     @SerializedName("Rage")
-    RAGE,
+    RAGE("Rage"),
     @SerializedName("Legit")
-    LEGIT
+    LEGIT("Legit")
 }
 
 /**
  * Status of the settings will allow you to know when if it is bypassing or not
  */
-enum class AutoSettingsStatusType {
+enum class AutoSettingsStatusType(val displayName: String) {
     @SerializedName("NotBypassing")
-    NOT_BYPASSING,
+    NOT_BYPASSING("Not Bypassing"),
     @SerializedName("Bypassing")
-    BYPASSING,
+    BYPASSING("Bypassing"),
     @SerializedName("Undetectable")
-    UNDETECTABLE,
+    UNDETECTABLE("Undetectable"),
     @SerializedName("Unknown")
-    UNKNOWN
+    UNKNOWN("Unknown")
 }
 
 /**

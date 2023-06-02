@@ -133,11 +133,10 @@ object ClickGui : GuiScreen() {
             }.apply {
                 this.hoverText = buildString {
                     appendLine("§7Description: §e${it.description.ifBlank { "No description available" }}")
-                    appendLine("§7Type: §e${it.type.name}")
+                    appendLine("§7Type: §e${it.type.displayName}")
                     appendLine("§7Contributors: §e${it.contributors}")
-                    appendLine("§7Date: §e${it.date}")
-                    appendLine("§7Status: §e${it.statusType.name}")
-                    append("§7Status Date: §e${it.statusDate}")
+                    appendLine("§7Last updated: §e${it.date}")
+                    append("§7Status: §e${it.statusType.displayName} §a(${it.statusDate})")
                 }
             }
         } ?: emptyList()

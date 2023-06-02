@@ -66,7 +66,7 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
 
                 loadSettings(false) {
                     for (setting in it) {
-                        chat("> ${setting.name} (Last updated: ${setting.date}, Status: ${setting.statusType})")
+                        chat("> ${setting.settingId} (Last updated: ${setting.date}, Status: ${setting.statusType.displayName})")
                     }
                 }
             }
@@ -87,7 +87,7 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
                     }
 
                     if (autoSettingsList != null) {
-                        return autoSettingsList!!.filter { it.name.startsWith(args[1], true) }.map { it.name }
+                        return autoSettingsList!!.filter { it.settingId.startsWith(args[1], true) }.map { it.settingId }
                     }
                 }
                 return emptyList()
