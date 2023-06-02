@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat;
 
 import net.ccbluex.liquidbounce.event.EventTarget;
 import net.ccbluex.liquidbounce.event.Render3DEvent;
+import net.ccbluex.liquidbounce.event.TickEvent;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
 import net.ccbluex.liquidbounce.injection.implementations.IMixinItemStack;
@@ -42,26 +43,26 @@ public class AutoArmor extends Module {
     }
 
     public static final ArmorComparator ARMOR_COMPARATOR = new ArmorComparator();
-    private final IntegerValue maxDelayValue = new IntegerValue("MaxDelay", 200, 0, 400) {
+    private final IntegerValue maxTicksValue = new IntegerValue("MaxTicks", 4, 0, 10) {
         @Override
         protected Integer onChange(final Integer oldValue, final Integer newValue) {
-            final int minDelay = minDelayValue.get();
+            final int minDelay = minTicksValue.get();
 
             return newValue > minDelay ? newValue : minDelay;
         }
     };
-    private final IntegerValue minDelayValue = new IntegerValue("MinDelay", 100, 0, 400) {
+    private final IntegerValue minTicksValue = new IntegerValue("MinTicks", 2, 0, 10) {
 
         @Override
         protected Integer onChange(final Integer oldValue, final Integer newValue) {
-            final int maxDelay = maxDelayValue.get();
+            final int maxDelay = maxTicksValue.get();
 
             return newValue < maxDelay ? newValue : maxDelay;
         }
 
         @Override
         public boolean isSupported() {
-            return !maxDelayValue.isMinimal();
+            return !maxTicksValue.isMinimal();
         }
     };
 
@@ -73,7 +74,7 @@ public class AutoArmor extends Module {
         }
     };
     private final BoolValue noMoveValue = new BoolValue("NoMove", false);
-    private final IntegerValue itemDelayValue = new IntegerValue("ItemDelay", 0, 0, 5000);
+    private final IntegerValue itemTicksValue = new IntegerValue("ItemTicks", 0, 0, 20);
     private final BoolValue hotbarValue = new BoolValue("Hotbar", true);
 
     private long delay;
@@ -81,15 +82,15 @@ public class AutoArmor extends Module {
     private boolean locked = false;
 
     @EventTarget
-    public void onRender3D(final Render3DEvent event) {
-        if (!InventoryUtils.CLICK_TIMER.hasTimePassed(delay) || mc.thePlayer == null || (mc.thePlayer.openContainer != null && mc.thePlayer.openContainer.windowId != 0))
+    public void onTick(final TickEvent event) {
+        if (!InventoryUtils.CLICK_TIMER.hasTimePassed(delay * 50L) || mc.thePlayer == null || (mc.thePlayer.openContainer != null && mc.thePlayer.openContainer.windowId != 0))
             return;
 
         // Find best armor
         final Map<Integer, List<ArmorPiece>> armorPieces = IntStream.range(0, 36).filter(i -> {
             final ItemStack itemStack = mc.thePlayer.inventory.getStackInSlot(i);
 
-            return itemStack != null && itemStack.getItem() instanceof ItemArmor && (i < 9 || System.currentTimeMillis() - ((IMixinItemStack) (Object) itemStack).getItemDelay() >= itemDelayValue.get());
+            return itemStack != null && itemStack.getItem() instanceof ItemArmor && (i < 9 || System.currentTimeMillis() - ((IMixinItemStack) (Object) itemStack).getItemDelay() >= itemTicksValue.get() * 50L);
         }).mapToObj(i -> new ArmorPiece(mc.thePlayer.inventory.getStackInSlot(i), i)).collect(Collectors.groupingBy(ArmorPiece::getArmorType));
 
         final ArmorPiece[] bestArmor = new ArmorPiece[4];
@@ -143,7 +144,7 @@ public class AutoArmor extends Module {
                 new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem)
             );
 
-            delay = TimeUtils.INSTANCE.randomDelay(minDelayValue.get(), maxDelayValue.get());
+            delay = TimeUtils.INSTANCE.randomDelay(minTicksValue.get(), maxTicksValue.get());
 
             return true;
         } else if (!(noMoveValue.get() && MovementUtils.INSTANCE.isMoving()) && (!invOpenValue.get() || mc.currentScreen instanceof GuiInventory) && item != -1) {
@@ -168,7 +169,7 @@ public class AutoArmor extends Module {
                 mc.playerController.windowClick(mc.thePlayer.inventoryContainer.windowId, (isArmorSlot ? item : (item < 9 ? item + 36 : item)), 0, 1, mc.thePlayer);
             }
 
-            delay = TimeUtils.INSTANCE.randomDelay(minDelayValue.get(), maxDelayValue.get());
+            delay = TimeUtils.INSTANCE.randomDelay(minTicksValue.get(), maxTicksValue.get());
 
             if (openInventory)
                 sendPacket(new C0DPacketCloseWindow());

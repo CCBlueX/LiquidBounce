@@ -18,6 +18,7 @@ import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.Packet;
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement;
+import net.minecraft.network.play.client.C09PacketHeldItemChange;
 
 import java.util.Arrays;
 import java.util.List;
@@ -108,6 +109,9 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
 
         if (packet instanceof C08PacketPlayerBlockPlacement)
             CLICK_TIMER.reset();
+
+        if (packet instanceof C09PacketHeldItemChange && ((C09PacketHeldItemChange) packet).getSlotId() == mc.playerController.currentPlayerItem) {}
+            event.cancelEvent();
     }
 
     @Override
