@@ -40,20 +40,20 @@ object ModuleAnimation : Module("Animations", Category.RENDER) {
     }
 
     object MainHand : ToggleableConfigurable(this, "MainHand", false) {
-        val mainHandItemScale by float("MainHandItemScale", 0f, -5f..5f)
-        val mainHandX by float("MainHandX", 0f, -5f..5f)
-        val mainHandY by float("MainHandY", 0f, -5f..5f)
-        val mainHandPositiveX by float("MainHandPositiveRotationX", 0f, -50f..50f)
-        val mainHandPositiveY by float("MainHandPositiveRotationY", 0f, -50f..50f)
-        val mainHandPositiveZ by float("MainHandPositiveRotationZ", 0f, -50f..50f)
+        val mainHandItemScale by float("ItemScale", 0f, -5f..5f)
+        val mainHandX by float("X", 0f, -5f..5f)
+        val mainHandY by float("Y", 0f, -5f..5f)
+        val mainHandPositiveX by float("PositiveRotationX", 0f, -50f..50f)
+        val mainHandPositiveY by float("PositiveRotationY", 0f, -50f..50f)
+        val mainHandPositiveZ by float("PositiveRotationZ", 0f, -50f..50f)
     }
 
     object OffHand : ToggleableConfigurable(this, "OffHand", false) {
-        val offHandItemScale by float("OffHandItemScale", 0f, -5f..5f)
-        val offHandX by float("offHandX", 0f, -1f..1f)
-        val offHandY by float("offHandY", 0f, -1f..1f)
-        val OffHandPositiveX by float("OffHandPositiveRotationX", 0f, -50f..50f)
-        val OffHandPositiveY by float("OffHandPositiveRotationY", 0f, -50f..50f)
-        val OffHandPositiveZ by float("OffHandPositiveRotationZ", 0f, -50f..50f)
+        val offHandItemScale by float("ItemScale", 0f, -5f..5f)
+        val offHandX by float("X", 0f, -1f..1f)
+        val offHandY by float("Y", 0f, -1f..1f)
+        val OffHandPositiveX by float("PositiveRotationX", 0f, -50f..50f)
+        val OffHandPositiveY by float("PositiveRotationY", 0f, -50f..50f)
+        val OffHandPositiveZ by float("PositiveRotationZ", 0f, -50f..50f)
     }
 }
