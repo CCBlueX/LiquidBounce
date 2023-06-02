@@ -5,18 +5,15 @@
  */
 package net.ccbluex.liquidbounce.api
 
-import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_API
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_VERSION_INT
 import net.ccbluex.liquidbounce.LiquidBounce.IN_DEV
-import net.ccbluex.liquidbounce.file.FileManager.PRETTY_GSON
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
-import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
 import java.text.SimpleDateFormat
 import java.util.*
+import net.ccbluex.liquidbounce.api.ClientApi.requestNewestBuildEndpoint
 
-object UpdateInfo {
+object ClientUpdate {
 
     val gitInfo = Properties().also {
         val inputStream = LiquidBounce::class.java.classLoader.getResourceAsStream("git.properties")
@@ -31,7 +28,7 @@ object UpdateInfo {
     val newestVersion by lazy {
         // https://api.liquidbounce.net/api/v1/version/builds/legacy
         try {
-            PRETTY_GSON.fromJson(get("$CLIENT_API/version/newest/${gitInfo["git.branch"]}${if (IN_DEV) "" else "/release" }"), Build::class.java)
+            requestNewestBuildEndpoint(branch = LiquidBounce.CLIENT_BRANCH, release = !IN_DEV)
         } catch (e: Exception) {
             LOGGER.error("Unable to receive update information", e)
             return@lazy null
@@ -60,16 +57,3 @@ object UpdateInfo {
 
 }
 
-data class Build(@SerializedName("build_id")
-                 val buildId: Int,
-                 @SerializedName("commit_id")
-                 val commitId: String,
-                 val branch: String,
-                 @SerializedName("lb_version")
-                 val lbVersion: String,
-                 @SerializedName("mc_version")
-                 val mcVersion: String,
-                 val release: Boolean,
-                 val date: String,
-                 val message: String,
-                 val url: String)

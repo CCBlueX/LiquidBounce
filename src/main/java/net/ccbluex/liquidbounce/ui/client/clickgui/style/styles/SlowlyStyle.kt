@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles
 
+import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI
 import net.ccbluex.liquidbounce.ui.client.clickgui.Panel
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ButtonElement
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ModuleElement
@@ -37,11 +38,16 @@ object SlowlyStyle : Style() {
         font35.drawString(panel.name, xPos, panel.y + 4, Color.WHITE.rgb)
     }
 
-    override fun drawDescription(mouseX: Int, mouseY: Int, text: String) {
-        val xPos = mouseX + font35.getStringWidth(text) + 14
-        drawBorderedRect(mouseX + 9, mouseY, xPos, mouseY + font35.fontHeight + 3, 3, Color(42, 57, 79).rgb, Color(42, 57, 79).rgb)
+    override fun drawHoverText(mouseX: Int, mouseY: Int, text: String) {
+        val lines = text.lines()
 
-        font35.drawString(text, mouseX + 12, mouseY + font35.fontHeight / 2, Color.WHITE.rgb)
+        val width = lines.maxOfOrNull { font35.getStringWidth(it) + 14 } ?: return // Makes no sense to render empty lines
+        val height = (font35.fontHeight * lines.size) + 3
+
+        drawBorderedRect(mouseX + 9, mouseY, mouseX + width, mouseY + height, 3, Color(42, 57, 79).rgb, Color(42, 57, 79).rgb)
+        lines.forEachIndexed { index, text ->
+            font35.drawString(text, mouseX + 12, mouseY + 3 + (font35.fontHeight) * index, Color.WHITE.rgb)
+        }
     }
 
     override fun drawButtonElement(mouseX: Int, mouseY: Int, buttonElement: ButtonElement) {

@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.ui.client
 
 import net.ccbluex.liquidbounce.LiquidBounce.IN_DEV
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.api.UpdateInfo
+import net.ccbluex.liquidbounce.api.ClientUpdate
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
@@ -28,7 +28,7 @@ class GuiUpdate : GuiScreen() {
         drawBackground(0)
 
         if (!IN_DEV) {
-            Fonts.font35.drawCenteredString("${UpdateInfo.newestVersion?.lbVersion} got released!", width / 2f, height / 8f + 80, 0xffffff)
+            Fonts.font35.drawCenteredString("${ClientUpdate.newestVersion?.lbVersion} got released!", width / 2f, height / 8f + 80, 0xffffff)
         } else {
             Fonts.font35.drawCenteredString("New build available!", width / 2f, height / 8f + 80, 0xffffff)
         }

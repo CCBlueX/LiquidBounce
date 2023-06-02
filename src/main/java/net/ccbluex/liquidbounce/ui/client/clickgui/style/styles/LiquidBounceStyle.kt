@@ -45,11 +45,16 @@ object LiquidBounceStyle : Style() {
         }
     }
 
-    override fun drawDescription(mouseX: Int, mouseY: Int, text: String) {
-        val xPos = mouseX + font35.getStringWidth(text) + 14
-        drawBorderedRect(mouseX + 9, mouseY, xPos, mouseY + font35.fontHeight + 3, 1, Color.GRAY.rgb, Int.MIN_VALUE)
+    override fun drawHoverText(mouseX: Int, mouseY: Int, text: String) {
+        val lines = text.lines()
 
-        font35.drawString(text, mouseX + 12, mouseY + font35.fontHeight / 2, Int.MAX_VALUE)
+        val width = lines.maxOfOrNull { font35.getStringWidth(it) + 14 } ?: return // Makes no sense to render empty lines
+        val height = (font35.fontHeight * lines.size) + 3
+
+        drawBorderedRect(mouseX + 9, mouseY, mouseX + width, mouseY + height, 1, Color.GRAY.rgb, Int.MIN_VALUE)
+        lines.forEachIndexed { index, text ->
+            font35.drawString(text, mouseX + 12, mouseY + 3 + (font35.fontHeight) * index, Int.MAX_VALUE)
+        }
     }
 
     override fun drawButtonElement(mouseX: Int, mouseY: Int, buttonElement: ButtonElement) {

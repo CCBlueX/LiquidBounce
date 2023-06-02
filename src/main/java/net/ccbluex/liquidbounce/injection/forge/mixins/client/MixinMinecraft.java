@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.client;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
-import net.ccbluex.liquidbounce.api.UpdateInfo;
+import net.ccbluex.liquidbounce.api.ClientUpdate;
 import net.ccbluex.liquidbounce.event.*;
 import net.ccbluex.liquidbounce.features.module.modules.combat.AutoClicker;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.AbortBreaking;
@@ -128,7 +128,7 @@ public abstract class MixinMinecraft {
     private void afterMainScreen(CallbackInfo callbackInfo) {
         if (FileManager.INSTANCE.getFirstStart()) {
             displayGuiScreen(new GuiWelcome());
-        } else if (UpdateInfo.INSTANCE.hasUpdate()) {
+        } else if (ClientUpdate.INSTANCE.hasUpdate()) {
             displayGuiScreen(new GuiUpdate());
         }
     }

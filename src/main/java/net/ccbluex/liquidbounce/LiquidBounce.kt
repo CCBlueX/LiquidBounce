@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce
 
-import net.ccbluex.liquidbounce.api.UpdateInfo.gitInfo
+import net.ccbluex.liquidbounce.api.ClientUpdate.gitInfo
 import net.ccbluex.liquidbounce.api.loadSettings
 import net.ccbluex.liquidbounce.api.messageOfTheDay
 import net.ccbluex.liquidbounce.cape.CapeService
@@ -54,11 +54,12 @@ object LiquidBounce {
     val CLIENT_VERSION = gitInfo["git.build.version"]?.toString() ?: "unknown"
     var CLIENT_VERSION_INT = CLIENT_VERSION.substring(1).toIntOrNull() ?: 0 // version format: "b<VERSION>" on legacy
     val CLIENT_COMMIT = gitInfo["git.commit.id.abbrev"]?.let { "git-$it" } ?: "unknown"
+    val CLIENT_BRANCH = gitInfo["git.branch"]?.toString() ?: "unknown"
     const val IN_DEV = true
     const val CLIENT_CREATOR = "CCBlueX"
     const val MINECRAFT_VERSION = "1.8.9"
     const val CLIENT_CLOUD = "https://cloud.liquidbounce.net/LiquidBounce"
-    const val CLIENT_API = "https://api.liquidbounce.net/api/v1"
+
     val CLIENT_TITLE = CLIENT_NAME + " " + CLIENT_VERSION + " " + CLIENT_COMMIT + "  | " + MINECRAFT_VERSION + if (IN_DEV) " | DEVELOPMENT BUILD" else ""
 
     var isStarting = true
@@ -103,6 +104,11 @@ object LiquidBounce {
         // Load client fonts
         loadFonts()
 
+        // Load settings
+        loadSettings(false) {
+            LOGGER.info("Successfully loaded ${it.count()} settings.")
+        }
+
         // Register commands
         registerCommands()
 
@@ -138,11 +144,6 @@ object LiquidBounce {
 
         // Load alt generators
         loadActiveGenerators()
-
-        // Load settings
-        loadSettings(false) {
-            LOGGER.info("Successfully loaded ${it.count()} settings.")
-        }
 
         // Load message of the day
         messageOfTheDay?.message?.let { LOGGER.info("Message of the day: $it") }

@@ -7,6 +7,8 @@ package net.ccbluex.liquidbounce.ui.client.clickgui
 
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
+import net.ccbluex.liquidbounce.api.ClientApi
+import net.ccbluex.liquidbounce.api.autoSettingsList
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.guiColor
@@ -14,22 +16,28 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.scale
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.scrolls
 import net.ccbluex.liquidbounce.file.FileManager.clickGuiConfig
 import net.ccbluex.liquidbounce.file.FileManager.saveConfig
-import net.ccbluex.liquidbounce.ui.client.GuiClientSettings
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ButtonElement
+import net.ccbluex.liquidbounce.ui.client.clickgui.elements.Element
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ModuleElement
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.Style
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.BlackStyle
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.LiquidBounceStyle
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.SlowlyStyle
+import net.ccbluex.liquidbounce.ui.client.hud.HUD
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer.Companion.assumeNonVolatile
+import net.ccbluex.liquidbounce.utils.ClientUtils
+import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetAnimals
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetDead
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetInvisible
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetMobs
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetPlayer
+import net.ccbluex.liquidbounce.utils.SettingsUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawImage
+import net.minecraft.client.audio.PositionedSoundRecord
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.renderer.GlStateManager.disableLighting
 import net.minecraft.client.renderer.RenderHelper
@@ -37,12 +45,13 @@ import net.minecraft.util.ResourceLocation
 import org.lwjgl.input.Keyboard
 import org.lwjgl.input.Mouse
 import org.lwjgl.opengl.GL11.glScaled
+import kotlin.concurrent.thread
 import kotlin.math.roundToInt
 
 object ClickGui : GuiScreen() {
+
     val panels = mutableListOf<Panel>()
     private val hudIcon = ResourceLocation("${CLIENT_NAME.lowercase()}/custom_hud_icon.png")
-    private val settingsIcon = ResourceLocation("${CLIENT_NAME.lowercase()}/settings_icon.png")
     var style: Style = LiquidBounceStyle
     private var mouseX = 0
     private var mouseY = 0
@@ -67,75 +76,72 @@ object ClickGui : GuiScreen() {
         }
 
         yPos += 20
-        panels.add(object : Panel("Targets", 100, yPos, width, height, false) {
-            override val elements = listOf(
-                object : ButtonElement("Players") {
-                    override val color
-                        get() = if (targetPlayer) guiColor else Int.MAX_VALUE
+        panels.add(setupTargetsPanel(100, yPos, width, height))
 
-                    override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int): Boolean {
-                        if (mouseButton == 0 && isHovered(mouseX, mouseY)) {
-                            targetPlayer = !targetPlayer
-                            style.clickSound()
-                            return true
-                        }
-                        return false
-                    }
-                },
-                object : ButtonElement("Mobs") {
-                    override val color
-                        get() = if (targetMobs) guiColor else Int.MAX_VALUE
+        // Settings Panel
+        yPos += 20
+        panels.add(setupSettingsPanel(100, yPos, width, height))
+    }
 
-                    override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int): Boolean {
-                        if (mouseButton == 0 && isHovered(mouseX, mouseY)) {
-                            targetMobs = !targetMobs
-                            style.clickSound()
-                            return true
-                        }
-                        return false
-                    }
-                },
-                object : ButtonElement("Animals") {
-                    override val color
-                        get() = if (targetAnimals) guiColor else Int.MAX_VALUE
+    private fun setupTargetsPanel(xPositon: Int = 100, yPositon: Int, width: Int, height: Int) = object : Panel("Targets", xPositon, yPositon, width, height, false) {
 
-                    override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int): Boolean {
-                        if (mouseButton == 0 && isHovered(mouseX, mouseY)) {
-                            targetAnimals = !targetAnimals
-                            style.clickSound()
-                            return true
-                        }
-                        return false
-                    }
-                },
-                object : ButtonElement("Invisible") {
-                    override val color
-                        get() = if (targetInvisible) guiColor else Int.MAX_VALUE
+        override val elements = listOf(
+            ButtonElement("Players", { if (targetPlayer) guiColor else Int.MAX_VALUE }) {
+                targetPlayer = !targetPlayer
+            },
+            ButtonElement("Mobs", { if (targetMobs) guiColor else Int.MAX_VALUE }) {
+                targetMobs = !targetMobs
+            },
+            ButtonElement("Animals", { if (targetAnimals) guiColor else Int.MAX_VALUE }) {
+                targetAnimals = !targetAnimals
+            },
+            ButtonElement("Invisible", { if (targetPlayer) guiColor else Int.MAX_VALUE }) {
+                targetInvisible = !targetInvisible
+            },
+            ButtonElement("Dead", { if (targetDead) guiColor else Int.MAX_VALUE }) {
+                targetDead = !targetDead
+            },
+        )
 
-                    override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int): Boolean {
-                        if (mouseButton == 0 && isHovered(mouseX, mouseY)) {
-                            targetInvisible = !targetInvisible
-                            style.clickSound()
-                            return true
-                        }
-                        return false
-                    }
-                },
-                object : ButtonElement("Dead") {
-                    override val color
-                        get() = if (targetDead) guiColor else Int.MAX_VALUE
+    }
 
-                    override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int): Boolean {
-                        if (mouseButton == 0 && isHovered(mouseX, mouseY)) {
-                            targetDead = !targetDead
-                            style.clickSound()
-                            return true
-                        }
-                        return false
+    private fun setupSettingsPanel(xPositon: Int = 100, yPositon: Int, width: Int, height: Int) = object : Panel("Auto Settings", xPositon, yPositon, width, height, false) {
+
+        /**
+         * Auto settings list
+         */
+        override val elements = autoSettingsList?.map {
+            ButtonElement(it.name, { Integer.MAX_VALUE }) {
+                thread {
+                    runCatching {
+                        displayChatMessage("Loading settings...")
+
+                        // Load settings and apply them
+                        val settings = ClientApi.requestSettingsScript(it.settingId)
+
+                        displayChatMessage("Applying settings...")
+                        SettingsUtils.applyScript(settings)
+                    }.onSuccess {
+                        displayChatMessage("§6Settings applied successfully")
+                        HUD.addNotification(Notification("Updated Settings"))
+                        mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("random.anvil_use"), 1F))
+                    }.onFailure {
+                        ClientUtils.LOGGER.error("Failed to load settings", it)
+                        displayChatMessage("Failed to load settings: ${it.message}")
                     }
                 }
-            )
-        })
+            }.apply {
+                this.hoverText = buildString {
+                    appendLine("§7Description: §e${it.description.ifBlank { "No description available" }}")
+                    appendLine("§7Type: §e${it.type.name}")
+                    appendLine("§7Contributors: §e${it.contributors}")
+                    appendLine("§7Date: §e${it.date}")
+                    appendLine("§7Status: §e${it.statusType.name}")
+                    append("§7Status Date: §e${it.statusDate}")
+                }
+            }
+        } ?: emptyList()
+
     }
 
     override fun drawScreen(x: Int, y: Int, partialTicks: Float) {
@@ -147,7 +153,6 @@ object ClickGui : GuiScreen() {
 
         drawDefaultBackground()
         drawImage(hudIcon, 9, height - 41, 32, 32)
-        drawImage(settingsIcon, 46, height - 41, 32, 32)
 
         val scale = scale.toDouble()
         glScaled(scale, scale, scale)
@@ -158,15 +163,15 @@ object ClickGui : GuiScreen() {
         }
 
         descriptions@ for (panel in panels.reversed()) {
-            // Don't draw descriptions when hovering over a panel header.
+            // Don't draw hover text when hovering over a panel header.
             if (panel.isHovered(mouseX, mouseY))
                 break
 
             for (element in panel.elements) {
-                if (element is ModuleElement) {
-                    if (element.isVisible && element.isHovered(mouseX, mouseY) && element.y <= panel.y + panel.fade) {
-                        style.drawDescription(mouseX, mouseY, element.module.description)
-                        // Don't draw descriptions for any module elements below.
+                if (element is ButtonElement) {
+                    if (element.isVisible && element.hoverText.isNotBlank() && element.isHovered(mouseX, mouseY) && element.y <= panel.y + panel.fade) {
+                        style.drawHoverText(mouseX, mouseY, element.hoverText)
+                        // Don't draw hover text for any elements below.
                         break@descriptions
                     }
                 }
@@ -211,9 +216,6 @@ object ClickGui : GuiScreen() {
     public override fun mouseClicked(x: Int, y: Int, mouseButton: Int) {
         if (mouseButton == 0 && x in 5..50 && y in height - 50..height - 5) {
             mc.displayGuiScreen(GuiHudDesigner())
-            return
-        } else if (mouseButton == 0 && x in 42..87 && y in height - 50..height - 5) {
-            mc.displayGuiScreen(GuiClientSettings())
             return
         }
 

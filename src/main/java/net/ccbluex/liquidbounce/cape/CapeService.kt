@@ -6,7 +6,8 @@
 package net.ccbluex.liquidbounce.cape
 
 import com.google.gson.JsonParser
-import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_API
+import net.ccbluex.liquidbounce.api.ClientApi
+import net.ccbluex.liquidbounce.api.ClientApi.API_ENDPOINT
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.SessionEvent
@@ -52,7 +53,7 @@ object CapeService : Listenable, MinecraftInstance() {
      * The API URL to get all cape carriers.
      * Format: [["8f617b6abea04af58e4bd026d8fa9de8", "marco"], ...]
      */
-    private const val CAPE_CARRIERS_URL = "$CLIENT_API/cape/carriers"
+    private const val CAPE_CARRIERS_URL = "${API_ENDPOINT}/cape/carriers"
 
     /**
      * I would prefer to use CLIENT_API but due to Cloudflare causing issues with SSL and their browser integrity check,

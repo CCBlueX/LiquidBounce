@@ -5,14 +5,13 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands
 
-import com.google.gson.JsonArray
-import com.google.gson.JsonParser
-import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_CLOUD
-import net.ccbluex.liquidbounce.api.autoSettingFiles
+import net.ccbluex.liquidbounce.api.ClientApi
+import net.ccbluex.liquidbounce.api.autoSettingsList
 import net.ccbluex.liquidbounce.api.loadSettings
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.ui.client.hud.HUD.addNotification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.SettingsUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
 import kotlin.concurrent.thread
@@ -37,28 +36,26 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
                     return
                 }
 
-                // Settings url
-                val url = if (args[2].startsWith("http")) {
-                    args[2]
-                } else {
-                    "${CLIENT_CLOUD}/settings/${args[2].lowercase()}"
-                }
-
-                chat("Loading settings...")
-
                 thread {
-                    try {
+                    runCatching {
+                        chat("Loading settings...")
+
                         // Load settings and apply them
-                        val settings = get(url)
+                        val settings = if (args[2].startsWith("http")) {
+                            get(args[2])
+                        } else {
+                            ClientApi.requestSettingsScript(args[2])
+                        }
 
                         chat("Applying settings...")
-                        SettingsUtils.executeScript(settings)
+                        SettingsUtils.applyScript(settings)
+                    }.onSuccess {
                         chat("§6Settings applied successfully")
                         addNotification(Notification("Updated Settings"))
                         playEdit()
-                    } catch (exception: Exception) {
-                        exception.printStackTrace()
-                        chat("Failed to fetch auto settings.")
+                    }.onFailure {
+                        LOGGER.error("Failed to load settings", it)
+                        chat("Failed to load settings: ${it.message}")
                     }
                 }
             }
@@ -68,26 +65,29 @@ class AutoSettingsCommand : Command("autosettings", "setting", "settings", "conf
                 chat("Loading settings...")
 
                 loadSettings(false) {
-                    for (setting in it)
-                        chat("> ${setting.name} (last updated: ${setting.lastModified})")
+                    for (setting in it) {
+                        chat("> ${setting.name} (Last updated: ${setting.date}, Status: ${setting.statusType})")
+                    }
                 }
             }
         }
     }
 
     override fun tabComplete(args: Array<String>): List<String> {
-        if (args.isEmpty()) return emptyList()
+        if (args.isEmpty()) {
+            return emptyList()
+        }
 
         return when (args.size) {
             1 -> listOf("list", "load").filter { it.startsWith(args[0], true) }
             2 -> {
                 if (args[0].equals("load", true)) {
-                    if (autoSettingFiles == null) {
+                    if (autoSettingsList == null) {
                         loadSettings(true, 500) {}
                     }
 
-                    if (autoSettingFiles != null) {
-                        return autoSettingFiles!!.filter { it.name.startsWith(args[1], true) }.map { it.name }
+                    if (autoSettingsList != null) {
+                        return autoSettingsList!!.filter { it.name.startsWith(args[1], true) }.map { it.name }
                     }
                 }
                 return emptyList()
