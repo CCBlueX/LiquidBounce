@@ -9,7 +9,6 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam
-import net.ccbluex.liquidbounce.utils.InventoryUtils.sendSlotChange
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
@@ -27,6 +26,7 @@ import net.minecraft.item.ItemBlock
 import net.minecraft.item.ItemBucket
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.play.client.C09PacketHeldItemChange
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.BlockPos
 import net.minecraft.util.Vec3
@@ -105,12 +105,10 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
                         mc.thePlayer.motionY = 0.1
                         currentState = 4
                     }
-
                     4 -> {
                         mc.thePlayer.motionY = 0.1
                         currentState = 5
                     }
-
                     5 -> {
                         mc.thePlayer.motionY = 0.1
                         currentState = 1
@@ -127,12 +125,7 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
                     mc.thePlayer.motionZ = 0.0
                     mc.thePlayer.motionX = mc.thePlayer.motionZ
                     sendPackets(
-                        C04PacketPlayerPosition(
-                            mc.thePlayer.posX,
-                            mc.thePlayer.posY - 10E-4,
-                            mc.thePlayer.posZ,
-                            mc.thePlayer.onGround
-                        ),
+                        C04PacketPlayerPosition(mc.thePlayer.posX, mc.thePlayer.posY - 10E-4, mc.thePlayer.posZ, mc.thePlayer.onGround),
                         C03PacketPlayer(true)
                     )
                 }
@@ -239,7 +232,9 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
                 currentMlgItemIndex = index
                 currentMlgBlock = collision.pos
 
-                sendSlotChange(mc.thePlayer.inventory.currentItem, index)
+                if (mc.thePlayer.inventory.currentItem != index) {
+                    sendPacket(C09PacketHeldItemChange(index))
+                }
 
                 currentMlgRotation = faceBlock(collision.pos)
                 currentMlgRotation?.rotation?.toPlayer(mc.thePlayer)
@@ -254,7 +249,9 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
                     mlgTimer.reset()
                 }
             }
-            sendSlotChange(currentMlgItemIndex, mc.thePlayer.inventory.currentItem)
+            if (mc.thePlayer.inventory.currentItem != currentMlgItemIndex)
+                sendPacket(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem)
+            )
         }
     }
 

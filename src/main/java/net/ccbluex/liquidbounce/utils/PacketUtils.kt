@@ -34,11 +34,7 @@ object PacketUtils : MinecraftInstance() {
     // TODO: Remove annotations once all modules are converted to kotlin.
     @JvmStatic
     @JvmOverloads
-    fun sendPacket(packet: Packet<*>?, triggerEvent: Boolean = true) {
-        if (packet == null) {
-            return
-        }
-
+    fun sendPacket(packet: Packet<*>, triggerEvent: Boolean = true) {
         if (triggerEvent) {
             mc.netHandler?.addToSendQueue(packet)
             return
@@ -62,8 +58,8 @@ object PacketUtils : MinecraftInstance() {
 
     @JvmStatic
     @JvmOverloads
-    fun sendPackets(vararg packets: Packet<*>?, triggerEvents: Boolean = true) =
-        packets.filterNotNull().forEach { sendPacket(it, triggerEvents) }
+    fun sendPackets(vararg packets: Packet<*>, triggerEvents: Boolean = true) =
+        packets.forEach { sendPacket(it, triggerEvents) }
 
     fun handlePacket(packet: Packet<INetHandlerPlayClient>?) = packet?.processPacket(mc.netHandler)
 

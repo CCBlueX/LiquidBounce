@@ -10,7 +10,6 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.InventoryUtils
-import net.ccbluex.liquidbounce.utils.InventoryUtils.sendSlotChange
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.timer.MSTimer
@@ -20,11 +19,8 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.gui.inventory.GuiInventory
 import net.minecraft.init.Items
-import net.minecraft.network.play.client.C07PacketPlayerDigging
+import net.minecraft.network.play.client.*
 import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.DROP_ITEM
-import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
-import net.minecraft.network.play.client.C0DPacketCloseWindow
-import net.minecraft.network.play.client.C16PacketClientStatus
 import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
@@ -53,14 +49,14 @@ object AutoSoup : Module("AutoSoup", ModuleCategory.COMBAT) {
 
         if (thePlayer.health <= health && soupInHotbar != -1) {
             sendPackets(
-                sendSlotChange(mc.thePlayer.inventory.currentItem, soupInHotbar - 36),
+                C09PacketHeldItemChange(soupInHotbar - 36),
                 C08PacketPlayerBlockPlacement(thePlayer.inventory.getStackInSlot(soupInHotbar))
             )
 
             if (bowl == "Drop")
                 sendPacket(C07PacketPlayerDigging(DROP_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
 
-            sendPacket(sendSlotChange(soupInHotbar - 36, mc.thePlayer.inventory.currentItem))
+            sendPacket(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
             timer.reset()
             return
         }

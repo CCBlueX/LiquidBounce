@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat;
 
 import net.ccbluex.liquidbounce.event.EventTarget;
+import net.ccbluex.liquidbounce.event.Render3DEvent;
 import net.ccbluex.liquidbounce.event.TickEvent;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.features.module.ModuleCategory;
@@ -22,6 +23,7 @@ import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.item.ItemArmor;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement;
+import net.minecraft.network.play.client.C09PacketHeldItemChange;
 import net.minecraft.network.play.client.C0DPacketCloseWindow;
 import net.minecraft.network.play.client.C16PacketClientStatus;
 
@@ -30,21 +32,18 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import static net.ccbluex.liquidbounce.utils.InventoryUtils.sendSlotChange;
 import static net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket;
 import static net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets;
 import static net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT;
 
 public class AutoArmor extends Module {
 
+    public AutoArmor() {
+        super("AutoArmor", ModuleCategory.COMBAT);
+    }
+
     public static final ArmorComparator ARMOR_COMPARATOR = new ArmorComparator();
-    private final BoolValue invOpenValue = new BoolValue("InvOpen", false);
-    private final BoolValue simulateInventory = new BoolValue("SimulateInventory", true) {
-        @Override
-        public boolean isSupported() {
-            return !invOpenValue.get();
-        }
-    };    private final IntegerValue maxTicksValue = new IntegerValue("MaxTicks", 4, 0, 10) {
+    private final IntegerValue maxTicksValue = new IntegerValue("MaxTicks", 4, 0, 10) {
         @Override
         protected Integer onChange(final Integer oldValue, final Integer newValue) {
             final int minDelay = minTicksValue.get();
@@ -52,7 +51,7 @@ public class AutoArmor extends Module {
             return newValue > minDelay ? newValue : minDelay;
         }
     };
-    private final BoolValue noMoveValue = new BoolValue("NoMove", false);    private final IntegerValue minTicksValue = new IntegerValue("MinTicks", 2, 0, 10) {
+    private final IntegerValue minTicksValue = new IntegerValue("MinTicks", 2, 0, 10) {
 
         @Override
         protected Integer onChange(final Integer oldValue, final Integer newValue) {
@@ -66,13 +65,21 @@ public class AutoArmor extends Module {
             return !maxTicksValue.isMinimal();
         }
     };
+
+    private final BoolValue invOpenValue = new BoolValue("InvOpen", false);
+    private final BoolValue simulateInventory = new BoolValue("SimulateInventory", true) {
+        @Override
+        public boolean isSupported() {
+            return !invOpenValue.get();
+        }
+    };
+    private final BoolValue noMoveValue = new BoolValue("NoMove", false);
     private final IntegerValue itemTicksValue = new IntegerValue("ItemTicks", 0, 0, 20);
     private final BoolValue hotbarValue = new BoolValue("Hotbar", true);
+
     private long delay;
+
     private boolean locked = false;
-    public AutoArmor() {
-        super("AutoArmor", ModuleCategory.COMBAT);
-    }
 
     @EventTarget
     public void onTick(final TickEvent event) {
@@ -132,9 +139,9 @@ public class AutoArmor extends Module {
     private boolean move(int item, boolean isArmorSlot) {
         if (!isArmorSlot && item < 9 && hotbarValue.get() && !(mc.currentScreen instanceof GuiInventory)) {
             sendPackets(
-                    sendSlotChange(mc.thePlayer.inventory.currentItem, item),
-                    new C08PacketPlayerBlockPlacement(mc.thePlayer.inventoryContainer.getSlot(item).getStack()),
-                    sendSlotChange(item, mc.thePlayer.inventory.currentItem)
+                new C09PacketHeldItemChange(item),
+                new C08PacketPlayerBlockPlacement(mc.thePlayer.inventoryContainer.getSlot(item).getStack()),
+                new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem)
             );
 
             delay = TimeUtils.INSTANCE.randomDelay(minTicksValue.get(), maxTicksValue.get());
@@ -172,9 +179,5 @@ public class AutoArmor extends Module {
 
         return false;
     }
-
-
-
-
 
 }

@@ -9,10 +9,10 @@ import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speeds.SpeedMode
 import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
-import net.ccbluex.liquidbounce.utils.InventoryUtils.sendSlotChange
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.minecraft.network.play.client.C09PacketHeldItemChange
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 import net.minecraft.util.Vec3
@@ -27,7 +27,7 @@ class MineplexGround : SpeedMode("MineplexGround") {
         for (i in 36..44) {
             val itemStack = mc.thePlayer.inventory.getStackInSlot(i)
             if (itemStack != null) continue
-            sendPacket(sendSlotChange(mc.thePlayer.inventory.currentItem, i - 36))
+            sendPacket(C09PacketHeldItemChange(i - 36))
             spoofSlot = true
             break
         }
@@ -44,42 +44,17 @@ class MineplexGround : SpeedMode("MineplexGround") {
         }
         val blockPos = BlockPos(mc.thePlayer).down()
         val vec = Vec3(blockPos).addVector(0.4, 0.4, 0.4).add(Vec3(EnumFacing.UP.directionVec))
-        mc.playerController.onPlayerRightClick(
-            mc.thePlayer,
-            mc.theWorld,
-            null,
-            blockPos,
-            EnumFacing.UP,
-            Vec3(vec.xCoord * 0.4f, vec.yCoord * 0.4f, vec.zCoord * 0.4f)
-        )
+        mc.playerController.onPlayerRightClick(mc.thePlayer, mc.theWorld, null, blockPos, EnumFacing.UP, Vec3(vec.xCoord * 0.4f, vec.yCoord * 0.4f, vec.zCoord * 0.4f))
         val targetSpeed = Speed.mineplexGroundSpeed
         if (targetSpeed > speed) speed += targetSpeed / 8
         if (speed >= targetSpeed) speed = targetSpeed
         strafe(speed)
-
-        val slot = getSlot()
-
-        if (!spoofSlot && slot != -1) sendPacket(sendSlotChange(slot, mc.thePlayer.inventory.currentItem))
+        if (!spoofSlot) sendPacket(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
     }
 
     override fun onMove(event: MoveEvent) {}
     override fun onDisable() {
         speed = 0f
-
-        val slot = getSlot()
-
-        if (slot != -1) {
-            sendPacket(sendSlotChange(slot, mc.thePlayer.inventory.currentItem))
-        }
-    }
-
-    fun getSlot(): Int {
-        for (i in 36..44) {
-            val itemStack = mc.thePlayer.inventory.getStackInSlot(i)
-            if (itemStack != null) continue
-            return i - 36
-        }
-
-        return -1
+        sendPacket(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
     }
 }

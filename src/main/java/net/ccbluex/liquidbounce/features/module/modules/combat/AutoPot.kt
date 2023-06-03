@@ -12,7 +12,6 @@ import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.InventoryUtils
-import net.ccbluex.liquidbounce.utils.InventoryUtils.sendSlotChange
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.Rotation
@@ -28,6 +27,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.gui.inventory.GuiInventory
 import net.minecraft.item.ItemPotion
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
+import net.minecraft.network.play.client.C09PacketHeldItemChange
 import net.minecraft.network.play.client.C0DPacketCloseWindow
 import net.minecraft.network.play.client.C16PacketClientStatus
 import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT
@@ -76,7 +76,7 @@ object AutoPot : Module("AutoPot", ModuleCategory.COMBAT) {
                         return
 
                     potion = potionInHotbar
-                    sendPacket(sendSlotChange(mc.thePlayer.inventory.currentItem, potion - 36))
+                    sendPacket(C09PacketHeldItemChange(potion - 36))
 
                     if (thePlayer.rotationPitch <= 80F) {
                         setTargetRotation(Rotation(thePlayer.rotationYaw, nextFloat(80F, 90F)).fixedSensitivity())
@@ -103,7 +103,6 @@ object AutoPot : Module("AutoPot", ModuleCategory.COMBAT) {
                     msTimer.reset()
                 }
             }
-
             POST -> {
                 if (potion >= 0 && serverRotation.pitch >= 75F) {
                     val itemStack = thePlayer.inventoryContainer.getSlot(potion).stack
@@ -111,7 +110,7 @@ object AutoPot : Module("AutoPot", ModuleCategory.COMBAT) {
                     if (itemStack != null) {
                         sendPackets(
                             C08PacketPlayerBlockPlacement(itemStack),
-                            sendSlotChange(potion - 36, mc.thePlayer.inventory.currentItem)
+                            C09PacketHeldItemChange(thePlayer.inventory.currentItem)
                         )
 
                         msTimer.reset()
