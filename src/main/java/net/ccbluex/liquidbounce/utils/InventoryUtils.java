@@ -25,6 +25,8 @@ import java.util.List;
 
 public final class InventoryUtils extends MinecraftInstance implements Listenable {
 
+    private int slot;
+
     public static final MSTimer CLICK_TIMER = new MSTimer();
     public static final List<Block> BLOCK_BLACKLIST = Arrays.asList(
             Blocks.chest,
@@ -109,8 +111,14 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
 
         if (packet instanceof C08PacketPlayerBlockPlacement) {
             CLICK_TIMER.reset();
-        }else if (packet instanceof C09PacketHeldItemChange && ((C09PacketHeldItemChange) packet).getSlotId() == mc.playerController.currentPlayerItem) {
-            event.cancelEvent();
+        }
+
+        if (packet instanceof C09PacketHeldItemChange) {
+            if (((C09PacketHeldItemChange) packet).getSlotId() == slot) {
+                event.cancelEvent();
+            }
+
+            slot = ((C09PacketHeldItemChange) packet).getSlotId();
         }
     }
 
