@@ -107,11 +107,11 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
     public void onPacket(final PacketEvent event) {
         final Packet packet = event.getPacket();
 
-        if (packet instanceof C08PacketPlayerBlockPlacement)
+        if (packet instanceof C08PacketPlayerBlockPlacement) {
             CLICK_TIMER.reset();
-
-        if (packet instanceof C09PacketHeldItemChange && ((C09PacketHeldItemChange) packet).getSlotId() == mc.playerController.currentPlayerItem) {}
+        }else if (packet instanceof C09PacketHeldItemChange && ((C09PacketHeldItemChange) packet).getSlotId() == mc.playerController.currentPlayerItem) {
             event.cancelEvent();
+        }
     }
 
     @Override
