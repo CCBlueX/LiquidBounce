@@ -26,34 +26,13 @@ import java.util.List;
 public final class InventoryUtils extends MinecraftInstance implements Listenable {
 
     public static final MSTimer CLICK_TIMER = new MSTimer();
-    public static final List<Block> BLOCK_BLACKLIST = Arrays.asList(
-            Blocks.chest,
-            Blocks.ender_chest,
-            Blocks.trapped_chest,
-            Blocks.anvil,
-            Blocks.sand,
-            Blocks.web,
-            Blocks.torch,
-            Blocks.crafting_table,
-            Blocks.furnace,
-            Blocks.waterlily,
-            Blocks.dispenser,
-            Blocks.stone_pressure_plate,
-            Blocks.wooden_pressure_plate,
-            Blocks.noteblock,
-            Blocks.dropper,
-            Blocks.tnt,
-            Blocks.standing_banner,
-            Blocks.wall_banner,
-            Blocks.redstone_torch
-    );
+    public static final List<Block> BLOCK_BLACKLIST = Arrays.asList(Blocks.chest, Blocks.ender_chest, Blocks.trapped_chest, Blocks.anvil, Blocks.sand, Blocks.web, Blocks.torch, Blocks.crafting_table, Blocks.furnace, Blocks.waterlily, Blocks.dispenser, Blocks.stone_pressure_plate, Blocks.wooden_pressure_plate, Blocks.noteblock, Blocks.dropper, Blocks.tnt, Blocks.standing_banner, Blocks.wall_banner, Blocks.redstone_torch);
 
     public static int findItem(final int startSlot, final int endSlot, final Item item) {
         for (int i = startSlot; i < endSlot; i++) {
             final ItemStack stack = mc.thePlayer.inventoryContainer.getSlot(i).getStack();
 
-            if (stack != null && stack.getItem().equals(item))
-                return i;
+            if (stack != null && stack.getItem().equals(item)) return i;
         }
 
         return -1;
@@ -63,8 +42,7 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
         for (int i = 36; i < 45; i++) {
             final ItemStack stack = mc.thePlayer.inventoryContainer.getSlot(i).getStack();
 
-            if (stack == null)
-                return true;
+            if (stack == null) return true;
         }
 
         return false;
@@ -78,8 +56,7 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
                 final ItemBlock itemBlock = (ItemBlock) itemStack.getItem();
                 final Block block = itemBlock.getBlock();
 
-                if (block.isFullCube() && !BLOCK_BLACKLIST.contains(block) && !(block instanceof BlockBush))
-                    return i;
+                if (block.isFullCube() && !BLOCK_BLACKLIST.contains(block) && !(block instanceof BlockBush)) return i;
             }
         }
 
@@ -90,12 +67,19 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
                 final ItemBlock itemBlock = (ItemBlock) itemStack.getItem();
                 final Block block = itemBlock.getBlock();
 
-                if (!BLOCK_BLACKLIST.contains(block) && !(block instanceof BlockBush))
-                    return i;
+                if (!BLOCK_BLACKLIST.contains(block) && !(block instanceof BlockBush)) return i;
             }
         }
 
         return -1;
+    }
+
+    public static Packet<?> sendSlotChange(int original, int slot) {
+        if (original != slot) {
+            return new C09PacketHeldItemChange(slot);
+        }
+
+        return null;
     }
 
     @EventTarget
@@ -109,8 +93,6 @@ public final class InventoryUtils extends MinecraftInstance implements Listenabl
 
         if (packet instanceof C08PacketPlayerBlockPlacement) {
             CLICK_TIMER.reset();
-        }else if (packet instanceof C09PacketHeldItemChange && ((C09PacketHeldItemChange) packet).getSlotId() == mc.playerController.currentPlayerItem) {
-            event.cancelEvent();
         }
     }
 

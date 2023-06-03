@@ -22,121 +22,94 @@ import net.minecraft.entity.Entity;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemBucket;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.play.client.C09PacketHeldItemChange;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 
+import static net.ccbluex.liquidbounce.utils.InventoryUtils.sendSlotChange;
 import static net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket;
 import static net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets;
 import static net.ccbluex.liquidbounce.utils.extensions.BlockExtensionKt.*;
 import static net.minecraft.network.play.client.C03PacketPlayer.C05PacketPlayerLook;
 
 public class Ignite extends Module {
+    private final BoolValue lighterValue = new BoolValue("Lighter", true);
+    private final BoolValue lavaBucketValue = new BoolValue("Lava", true);
+    private final MSTimer msTimer = new MSTimer();
+
     public Ignite() {
         super("Ignite", ModuleCategory.COMBAT);
     }
 
-   private final BoolValue lighterValue = new BoolValue("Lighter", true);
-   private final BoolValue lavaBucketValue = new BoolValue("Lava", true);
+    @EventTarget
+    public void onUpdate(final UpdateEvent event) {
+        if (!msTimer.hasTimePassed(500)) return;
 
-   private final MSTimer msTimer = new MSTimer();
+        EntityPlayerSP thePlayer = mc.thePlayer;
+        WorldClient theWorld = mc.theWorld;
 
-   @EventTarget
-   public void onUpdate(final UpdateEvent event) {
-       if (!msTimer.hasTimePassed(500))
-           return;
+        if (thePlayer == null || theWorld == null) return;
 
-       EntityPlayerSP thePlayer = mc.thePlayer;
-       WorldClient theWorld = mc.theWorld;
+        final int lighterInHotbar = lighterValue.get() ? InventoryUtils.findItem(36, 45, Items.flint_and_steel) : -1;
+        final int lavaInHotbar = lavaBucketValue.get() ? InventoryUtils.findItem(26, 45, Items.lava_bucket) : -1;
 
-       if (thePlayer == null || theWorld == null)
-           return;
+        if (lighterInHotbar == -1 && lavaInHotbar == -1) return;
 
-       final int lighterInHotbar =
-               lighterValue.get() ? InventoryUtils.findItem(36, 45, Items.flint_and_steel) : -1;
-       final int lavaInHotbar =
-               lavaBucketValue.get() ? InventoryUtils.findItem(26, 45, Items.lava_bucket) : -1;
+        final int fireInHotbar = lighterInHotbar != -1 ? lighterInHotbar : lavaInHotbar;
 
-       if (lighterInHotbar == -1 && lavaInHotbar == -1)
-           return;
+        for (final Entity entity : theWorld.getLoadedEntityList()) {
+            if (EntityUtils.INSTANCE.isSelected(entity, true) && !entity.isBurning()) {
+                BlockPos blockPos = entity.getPosition();
 
-       final int fireInHotbar = lighterInHotbar != -1 ? lighterInHotbar : lavaInHotbar;
+                if (mc.thePlayer.getDistanceSq(blockPos) >= 22.3 || !isReplaceable(blockPos) || !(getBlock(blockPos) instanceof BlockAir))
+                    continue;
 
-       for (final Entity entity : theWorld.getLoadedEntityList()) {
-           if (EntityUtils.INSTANCE.isSelected(entity, true) && !entity.isBurning()) {
-               BlockPos blockPos = entity.getPosition();
+                RotationUtils.INSTANCE.setKeepCurrentRotation(true);
 
-               if (mc.thePlayer.getDistanceSq(blockPos) >= 22.3 ||
-                       !isReplaceable(blockPos) ||
-                       !(getBlock(blockPos) instanceof BlockAir))
-                   continue;
+                sendPacket(sendSlotChange(mc.thePlayer.inventory.currentItem, fireInHotbar - 36));
 
-               RotationUtils.INSTANCE.setKeepCurrentRotation(true);
+                final ItemStack itemStack = mc.thePlayer.inventoryContainer.getSlot(fireInHotbar).getStack();
 
-               sendPacket(new C09PacketHeldItemChange(fireInHotbar - 36));
+                if (itemStack.getItem() instanceof ItemBucket) {
+                    final double diffX = blockPos.getX() + 0.5 - mc.thePlayer.posX;
+                    final double diffY = blockPos.getY() + 0.5 - (thePlayer.getEntityBoundingBox().minY + thePlayer.getEyeHeight());
+                    final double diffZ = blockPos.getZ() + 0.5 - thePlayer.posZ;
+                    final double sqrt = Math.sqrt(diffX * diffX + diffZ * diffZ);
+                    final float yaw = MathExtensionsKt.toDegreesF(Math.atan2(diffZ, diffX)) - 90F;
+                    final float pitch = -MathExtensionsKt.toDegreesF(Math.atan2(diffY, sqrt));
 
-               final ItemStack itemStack =
-                       mc.thePlayer.inventoryContainer.getSlot(fireInHotbar).getStack();
+                    sendPacket(new C05PacketPlayerLook(mc.thePlayer.rotationYaw + MathHelper.wrapAngleTo180_float(yaw - mc.thePlayer.rotationYaw), mc.thePlayer.rotationPitch + MathHelper.wrapAngleTo180_float(pitch - mc.thePlayer.rotationPitch), mc.thePlayer.onGround));
 
-               if (itemStack.getItem() instanceof ItemBucket) {
-                   final double diffX = blockPos.getX() + 0.5 - mc.thePlayer.posX;
-                   final double diffY = blockPos.getY() + 0.5 -
-                           (thePlayer.getEntityBoundingBox().minY +
-                                   thePlayer.getEyeHeight());
-                   final double diffZ = blockPos.getZ() + 0.5 - thePlayer.posZ;
-                   final double sqrt = Math.sqrt(diffX * diffX + diffZ * diffZ);
-                   final float yaw = MathExtensionsKt.toDegreesF(Math.atan2(diffZ, diffX)) - 90F;
-                   final float pitch = -MathExtensionsKt.toDegreesF(Math.atan2(diffY, sqrt));
+                    mc.playerController.sendUseItem(thePlayer, theWorld, itemStack);
+                } else {
+                    for (final EnumFacing side : EnumFacing.values()) {
+                        final BlockPos neighbor = blockPos.offset(side);
 
-                   sendPacket(new C05PacketPlayerLook(
-                           mc.thePlayer.rotationYaw +
-                                   MathHelper.wrapAngleTo180_float(yaw - mc.thePlayer.rotationYaw),
-                           mc.thePlayer.rotationPitch +
-                                   MathHelper.wrapAngleTo180_float(pitch - mc.thePlayer.rotationPitch),
-                           mc.thePlayer.onGround));
+                        if (!canBeClicked(neighbor)) continue;
 
-                   mc.playerController.sendUseItem(thePlayer, theWorld, itemStack);
-               } else {
-                   for (final EnumFacing side : EnumFacing.values()) {
-                       final BlockPos neighbor = blockPos.offset(side);
+                        final double diffX = neighbor.getX() + 0.5 - thePlayer.posX;
+                        final double diffY = neighbor.getY() + 0.5 - (thePlayer.getEntityBoundingBox().minY + thePlayer.getEyeHeight());
+                        final double diffZ = neighbor.getZ() + 0.5 - thePlayer.posZ;
+                        final double sqrt = Math.sqrt(diffX * diffX + diffZ * diffZ);
+                        final float yaw = MathExtensionsKt.toDegreesF(Math.atan2(diffZ, diffX)) - 90F;
+                        final float pitch = -MathExtensionsKt.toDegreesF(Math.atan2(diffY, sqrt));
 
-                       if (!canBeClicked(neighbor)) continue;
+                        sendPacket(new C05PacketPlayerLook(mc.thePlayer.rotationYaw + MathHelper.wrapAngleTo180_float(yaw - mc.thePlayer.rotationYaw), mc.thePlayer.rotationPitch + MathHelper.wrapAngleTo180_float(pitch - mc.thePlayer.rotationPitch), mc.thePlayer.onGround));
 
-                       final double diffX = neighbor.getX() + 0.5 - thePlayer.posX;
-                       final double diffY = neighbor.getY() + 0.5 -
-                               (thePlayer.getEntityBoundingBox().minY +
-                                       thePlayer.getEyeHeight());
-                       final double diffZ = neighbor.getZ() + 0.5 - thePlayer.posZ;
-                       final double sqrt = Math.sqrt(diffX * diffX + diffZ * diffZ);
-                       final float yaw = MathExtensionsKt.toDegreesF(Math.atan2(diffZ, diffX)) - 90F;
-                       final float pitch = -MathExtensionsKt.toDegreesF(Math.atan2(diffY, sqrt));
+                        if (mc.playerController.onPlayerRightClick(thePlayer, theWorld, itemStack, neighbor, side.getOpposite(), new Vec3(side.getDirectionVec()))) {
+                            thePlayer.swingItem();
+                            break;
+                        }
+                    }
+                }
 
-                       sendPacket(new C05PacketPlayerLook(
-                               mc.thePlayer.rotationYaw +
-                                       MathHelper.wrapAngleTo180_float(yaw - mc.thePlayer.rotationYaw),
-                               mc.thePlayer.rotationPitch +
-                                       MathHelper.wrapAngleTo180_float(pitch - mc.thePlayer.rotationPitch),
-                               mc.thePlayer.onGround));
+                RotationUtils.INSTANCE.setKeepCurrentRotation(false);
+                sendPackets(sendSlotChange(fireInHotbar - 36, mc.thePlayer.inventory.currentItem), new C05PacketPlayerLook(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch, mc.thePlayer.onGround));
 
-                       if (mc.playerController.onPlayerRightClick(thePlayer, theWorld, itemStack, neighbor,
-                               side.getOpposite(), new Vec3(side.getDirectionVec()))) {
-                           thePlayer.swingItem();
-                           break;
-                       }
-                   }
-               }
-
-               RotationUtils.INSTANCE.setKeepCurrentRotation(false);
-               sendPackets(
-                       new C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem),
-                       new C05PacketPlayerLook(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch, mc.thePlayer.onGround)
-               );
-
-               msTimer.reset();
-               break;
-           }
-      }
-   }
+                msTimer.reset();
+                break;
+            }
+        }
+    }
 }

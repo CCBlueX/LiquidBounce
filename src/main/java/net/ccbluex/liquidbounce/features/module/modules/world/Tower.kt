@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.render.BlockOverlay
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.InventoryUtils
+import net.ccbluex.liquidbounce.utils.InventoryUtils.sendSlotChange
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.PlaceRotation
@@ -75,7 +76,9 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O) {
 
     // ConstantMotion
     private val constantMotion by FloatValue("ConstantMotion", 0.42f, 0.1f..1f) { mode == "ConstantMotion" }
-    private val constantMotionJumpGround by FloatValue("ConstantMotionJumpGround", 0.79f, 0.76f..1f) { mode == "ConstantMotion" }
+    private val constantMotionJumpGround by FloatValue(
+        "ConstantMotionJumpGround", 0.79f, 0.76f..1f
+    ) { mode == "ConstantMotion" }
 
     // Teleport
     private val teleportHeight by FloatValue("TeleportHeight", 1.15f, 0.1f..5f) { mode == "Teleport" }
@@ -115,9 +118,7 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O) {
         mc.timer.timerSpeed = 1f
         lockRotation = null
 
-        if (slot != thePlayer.inventory.currentItem) {
-            sendPacket(C09PacketHeldItemChange(thePlayer.inventory.currentItem))
-        }
+        sendSlotChange(slot, mc.thePlayer.inventory.currentItem)
     }
 
     @EventTarget
@@ -132,8 +133,7 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O) {
         val eventState = event.eventState
 
         // Force use of POST event when Packet mode is selected, it doesn't work with PRE mode
-        if (eventState.stateName == (if (mode == "Packet") "POST" else placeMode))
-            place()
+        if (eventState.stateName == (if (mode == "Packet") "POST" else placeMode)) place()
 
         if (eventState == EventState.PRE) {
             placeInfo = null
@@ -275,9 +275,7 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O) {
                 }
 
                 "Spoof", "Switch" -> {
-                    if (blockSlot - 36 != slot) {
-                        sendPacket(C09PacketHeldItemChange(blockSlot - 36))
-                    }
+                    sendSlotChange(slot, blockSlot - 36)
                 }
             }
             itemStack = thePlayer.inventoryContainer.getSlot(blockSlot).stack
@@ -294,8 +292,10 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O) {
                 sendPacket(C0APacketAnimation())
             }
         }
-        if (autoBlock == "Switch" && slot != mc.thePlayer.inventory.currentItem)
-            sendPacket(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
+
+        if (autoBlock == "Switch") {
+            sendSlotChange(slot, mc.thePlayer.inventory.currentItem)
+        }
 
         placeInfo = null
     }
@@ -356,8 +356,10 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O) {
                             continue
                         }
 
-                        if (placeRotation == null || getRotationDifference(rotation) < getRotationDifference(placeRotation.rotation))
-                            placeRotation = PlaceRotation(PlaceInfo(neighbor, facingType.opposite, hitVec), rotation)
+                        if (placeRotation == null || getRotationDifference(rotation) < getRotationDifference(
+                                placeRotation.rotation
+                            )
+                        ) placeRotation = PlaceRotation(PlaceInfo(neighbor, facingType.opposite, hitVec), rotation)
 
                         zSearch += 0.1
                     }
@@ -394,8 +396,7 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O) {
         if (counterDisplay) {
             glPushMatrix()
 
-            if (BlockOverlay.state && BlockOverlay.info && BlockOverlay.currentBlock != null)
-                glTranslatef(0f, 15f, 0f)
+            if (BlockOverlay.state && BlockOverlay.info && BlockOverlay.currentBlock != null) glTranslatef(0f, 15f, 0f)
 
             val info = "Blocks: §7$blocksAmount"
             val scaledResolution = ScaledResolution(mc)

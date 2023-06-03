@@ -10,11 +10,11 @@ import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.InventoryUtils
+import net.ccbluex.liquidbounce.utils.InventoryUtils.sendSlotChange
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.init.Items
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
-import net.minecraft.network.play.client.C09PacketHeldItemChange
 
 object KeepAlive : Module("KeepAlive", ModuleCategory.PLAYER) {
 
@@ -36,9 +36,9 @@ object KeepAlive : Module("KeepAlive", ModuleCategory.PLAYER) {
 
                     if (soupInHotbar != -1) {
                         sendPackets(
-                            C09PacketHeldItemChange(soupInHotbar - 36),
+                            sendSlotChange(thePlayer.inventory.currentItem, soupInHotbar - 36),
                             C08PacketPlayerBlockPlacement(thePlayer.inventory.getStackInSlot(soupInHotbar)),
-                            C09PacketHeldItemChange(thePlayer.inventory.currentItem)
+                            sendSlotChange(soupInHotbar - 36, thePlayer.inventory.currentItem)
                         )
                     }
                 }

@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.render.BlockOverlay
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.InventoryUtils
+import net.ccbluex.liquidbounce.utils.InventoryUtils.sendSlotChange
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
@@ -467,9 +468,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                 }
 
                 "spoof", "switch" -> {
-                    if (blockSlot - 36 != slot) {
-                        sendPacket(C09PacketHeldItemChange(blockSlot - 36))
-                    }
+                    sendPacket(sendSlotChange(slot, blockSlot - 36))
                 }
             }
             itemStack = player.inventoryContainer.getSlot(blockSlot).stack
@@ -495,9 +494,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         }
 
         if (autoBlock == "Switch") {
-            if (slot != player.inventory.currentItem) {
-                sendPacket(C09PacketHeldItemChange(player.inventory.currentItem))
-            }
+            sendSlotChange(slot, mc.thePlayer.inventory.currentItem)
         }
 
         targetPlace = null
@@ -575,9 +572,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         targetPlace = null
         mc.timer.timerSpeed = 1f
 
-        if (slot != player.inventory.currentItem) {
-            sendPacket(C09PacketHeldItemChange(player.inventory.currentItem))
-        }
+        sendSlotChange(slot, mc.thePlayer.inventory.currentItem)
     }
 
     // Entity movement event
