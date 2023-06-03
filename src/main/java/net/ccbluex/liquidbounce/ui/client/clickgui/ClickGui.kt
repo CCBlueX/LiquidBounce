@@ -95,7 +95,7 @@ object ClickGui : GuiScreen() {
             ButtonElement("Animals", { if (targetAnimals) guiColor else Int.MAX_VALUE }) {
                 targetAnimals = !targetAnimals
             },
-            ButtonElement("Invisible", { if (targetPlayer) guiColor else Int.MAX_VALUE }) {
+            ButtonElement("Invisible", { if (targetInvisible) guiColor else Int.MAX_VALUE }) {
                 targetInvisible = !targetInvisible
             },
             ButtonElement("Dead", { if (targetDead) guiColor else Int.MAX_VALUE }) {
