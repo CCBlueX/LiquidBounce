@@ -22,8 +22,6 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleChestStealer
-import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.item.*
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
@@ -45,11 +43,10 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
     private val hotbar by boolean("Hotbar", true)
 
     var locked = false
-    private val timer = Chronometer()
 
     val repeatable = repeatable {
         val player = mc.player ?: return@repeatable
-        if (player.currentScreenHandler.syncId != 0 || interaction.hasRidingInventory() || !timer.hasElapsed()) {
+        if (player.currentScreenHandler.syncId != 0 || interaction.hasRidingInventory()) {
             return@repeatable
         }
 
@@ -80,7 +77,7 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
                 )
             ) {
                 locked = true
-                timer.waitFor(inventoryConstraints.delay.random().toLong())
+                waitTicks(inventoryConstraints.delay.random())
 
                 return@repeatable
             }

@@ -86,10 +86,8 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
     val slotItem8 by enumChoice("SlotItem-8", ItemSortChoice.BLOCK, ItemSortChoice.values())
     val slotItem9 by enumChoice("SlotItem-9", ItemSortChoice.BLOCK, ItemSortChoice.values())
 
-    private val timer = Chronometer()
-
     val repeatable = repeatable {
-        if (player.currentScreenHandler.syncId != 0 || interaction.hasRidingInventory() || !timer.hasElapsed()) {
+        if (player.currentScreenHandler.syncId != 0 || interaction.hasRidingInventory()) {
             return@repeatable
         }
 
@@ -148,7 +146,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
                         ) != true) && weightedItem.slot != hotbarSlotToFill.second
                     ) {
                         if (executeAction(weightedItem.slot, hotbarSlotToFill.second, SlotActionType.SWAP)) {
-                            timer.waitFor(inventoryConstraints.delay.random().toLong())
+                            waitTicks(inventoryConstraints.delay.random())
 
                             return@repeatable
                         }
@@ -169,7 +167,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
             }
 
             if (executeAction(i, 1, SlotActionType.THROW)) {
-                timer.waitFor(inventoryConstraints.delay.random().toLong())
+                waitTicks(inventoryConstraints.delay.random())
 
                 return@repeatable
             }
