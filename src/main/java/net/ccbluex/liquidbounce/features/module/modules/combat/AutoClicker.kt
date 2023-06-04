@@ -81,5 +81,5 @@ object AutoClicker : Module("AutoClicker", ModuleCategory.COMBAT) {
         }
     }
 
-    private fun shouldAutoRightClick() = mc.thePlayer.heldItem.itemUseAction in arrayOf(EnumAction.BLOCK)
+    private fun shouldAutoRightClick() = mc.thePlayer.heldItem?.itemUseAction in arrayOf(EnumAction.BLOCK)
 }
