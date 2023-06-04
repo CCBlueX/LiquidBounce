@@ -53,7 +53,7 @@ object AutoClicker : Module("AutoClicker", ModuleCategory.COMBAT) {
         val time = System.currentTimeMillis()
 
         if (block && mc.gameSettings.keyBindAttack.isKeyDown && !mc.gameSettings.keyBindUseItem.isKeyDown) {
-            mc.gameSettings.keyBindUseItem.unpressKey()
+            mc.gameSettings.keyBindUseItem.pressTime = 0
         }
 
         if (left && mc.gameSettings.keyBindAttack.isKeyDown && shouldAutoClick && time - leftLastSwing >= leftDelay) {
