@@ -39,7 +39,8 @@ object InventoryMove : Module("InventoryMove", ModuleCategory.MOVEMENT) {
     fun onUpdate(event: UpdateEvent) {
         if (mc.currentScreen !is GuiChat && mc.currentScreen !is GuiIngameMenu && (!undetectable.get() || mc.currentScreen !is GuiContainer)) {
             for (affectedBinding in affectedBindings) {
-                affectedBinding.pressed = GameSettings.isKeyDown(affectedBinding)
+                val shouldExcept = Sprint.state && Sprint.mode == "Legit"
+                affectedBinding.pressed = if (affectedBinding == affectedBindings.last() && shouldExcept) true else GameSettings.isKeyDown(affectedBinding)
             }
         }
     }
