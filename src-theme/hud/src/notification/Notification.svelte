@@ -5,11 +5,7 @@
 </script>
 
 <div class="notification">
-  <div
-    class="icon {severity.toString().toLowerCase()} {title
-      .toString()
-      .toLowerCase()}"
-  />
+  <div class="icon {severity.toString().toLowerCase()}" />
   <div class="title">{title}</div>
   <div class="content">{content}</div>
 </div>
@@ -54,10 +50,12 @@
     }
 
     &.enabled {
+      background-color: #4dac68;
       background-image: url("../img/notification/enabled.svg");
     }
 
     &.disabled {
+      background-color: #fc4130;
       background-image: url("../img/notification/disabled.svg");
     }
   }

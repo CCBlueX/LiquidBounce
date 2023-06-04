@@ -207,7 +207,7 @@ class ToggleModuleEvent(val module: Module, val newState: Boolean, val ignoreCon
 @Nameable("notification")
 class NotificationEvent(val title: String, val message: String, val severity: Severity) : Event() {
     enum class Severity {
-        INFO, SUCCESS, ERROR
+        INFO, SUCCESS, ERROR, ENABLED, DISABLED
     }
 }
 

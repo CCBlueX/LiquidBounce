@@ -75,7 +75,7 @@ open class Module(
             notification(
                 if (new) Text.translatable("liquidbounce.generic.enabled") else Text.translatable("liquidbounce.generic.disabled"),
                 this.name,
-                if (new) NotificationEvent.Severity.SUCCESS else NotificationEvent.Severity.ERROR
+                if (new) NotificationEvent.Severity.ENABLED else NotificationEvent.Severity.DISABLED
             )
 
             // Ignore handleEvents condition to prevent enabled modules from freezing post game load
