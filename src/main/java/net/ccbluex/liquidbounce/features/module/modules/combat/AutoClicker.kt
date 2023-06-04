@@ -10,16 +10,15 @@ import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.extensions.fixedSensitivityPitch
 import net.ccbluex.liquidbounce.utils.extensions.fixedSensitivityYaw
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
-import net.ccbluex.liquidbounce.utils.timer.TickTimer
 import net.ccbluex.liquidbounce.utils.timer.TimeUtils.randomClickDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.client.settings.KeyBinding
-import net.minecraft.init.Blocks
+import net.minecraft.item.EnumAction
+import net.minecraft.util.MovingObjectPosition
 import kotlin.random.Random.Default.nextBoolean
 
 object AutoClicker : Module("AutoClicker", ModuleCategory.COMBAT) {
@@ -44,73 +43,48 @@ object AutoClicker : Module("AutoClicker", ModuleCategory.COMBAT) {
     private var leftDelay = randomClickDelay(minCPS, maxCPS)
     private var leftLastSwing = 0L
 
-    private var blockBrokenDelay = 1000L / 20 * (6 + 2) // 6 ticks and 2 more, so autoclicker
-    // won't click between breaking blocks for sure
-    private var blockLastBroken = 0L
-    private var isBreakingBlock = false
-    private var wasBreakingBlock = false
+    private val shouldAutoClick
+        get() = mc.thePlayer.capabilities.isCreativeMode || mc.objectMouseOver.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK
 
-    private val timer = TickTimer()
+    private var shouldJitter = false
 
-    // TODO: What the hell is this?
-    private fun leftCanAutoClick(currentTime: Long) =
-        !isBreakingBlock && !(
-            currentTime - blockLastBroken < blockBrokenDelay &&
-            mc.objectMouseOver != null && mc.objectMouseOver.blockPos != null && mc.theWorld != null &&
-            getBlock(mc.objectMouseOver.blockPos) != Blocks.air
-        )
+    @EventTarget
+    fun onRender3D(event: Render3DEvent) {
+        val time = System.currentTimeMillis()
 
-    private fun rightCanAutoClick() = !mc.thePlayer.isUsingItem
+        if (block && mc.gameSettings.keyBindAttack.isKeyDown && !mc.gameSettings.keyBindUseItem.isKeyDown) {
+            mc.gameSettings.keyBindUseItem.pressTime = 0
+        }
 
-    // BUG: There is no delay between breaking blocks in creative mode
-    private fun leftClick(currentTime: Long) {
-        if (left && mc.gameSettings.keyBindAttack.isKeyDown) {
-            isBreakingBlock = mc.playerController.curBlockDamageMP != 0F
-            if (!isBreakingBlock && wasBreakingBlock) {
-                blockLastBroken = currentTime
-            }
-            wasBreakingBlock = isBreakingBlock
-            if (currentTime - leftLastSwing < leftDelay || !leftCanAutoClick(currentTime)) {
-                return
-            }
-            KeyBinding.onTick(mc.gameSettings.keyBindAttack.keyCode) // Minecraft Click Handling
+        if (left && mc.gameSettings.keyBindAttack.isKeyDown && shouldAutoClick && time - leftLastSwing >= leftDelay) {
+            KeyBinding.onTick(mc.gameSettings.keyBindAttack.keyCode)
 
-            leftLastSwing = currentTime
-            blockLastBroken = 0L
+            leftLastSwing = time
             leftDelay = randomClickDelay(minCPS, maxCPS)
-        }
-    }
-
-    private fun rightClick(currentTime: Long) {
-        if (right && mc.gameSettings.keyBindUseItem.isKeyDown && currentTime - rightLastSwing >= rightDelay && rightCanAutoClick()) {
-            KeyBinding.onTick(mc.gameSettings.keyBindUseItem.keyCode) // Minecraft Click Handling
-
-            rightLastSwing = currentTime
-            rightDelay = randomClickDelay(minCPS, maxCPS)
-        }
-    }
-
-    @EventTarget
-    fun onRender(event: Render3DEvent) {
-        val currentTime = System.currentTimeMillis()
-        leftClick(currentTime)
-        rightClick(currentTime)
-    }
-
-    @EventTarget
-    fun onUpdate(event: UpdateEvent) {
-        if (jitter && ((left && mc.gameSettings.keyBindAttack.isKeyDown && leftCanAutoClick(System.currentTimeMillis()))
-                || (right && mc.gameSettings.keyBindUseItem.isKeyDown && rightCanAutoClick()))) {
-            val thePlayer = mc.thePlayer ?: return
-
-            if (nextBoolean()) thePlayer.fixedSensitivityYaw += nextFloat(-1F, 1F)
-
-            if (nextBoolean()) thePlayer.fixedSensitivityPitch += nextFloat(-1F, 1F)
-        }
-
-        if (block && timer.hasTimePassed(1) && mc.gameSettings.keyBindAttack.isKeyDown && left) {
+        } else if (block && mc.gameSettings.keyBindAttack.isKeyDown && !mc.gameSettings.keyBindUseItem.isKeyDown && shouldAutoClick && shouldAutoRightClick() && mc.gameSettings.keyBindAttack.pressTime != 0) {
             KeyBinding.onTick(mc.gameSettings.keyBindUseItem.keyCode)
         }
+
+        if (right && mc.gameSettings.keyBindUseItem.isKeyDown && time - rightLastSwing >= rightDelay) {
+            KeyBinding.onTick(mc.gameSettings.keyBindUseItem.keyCode)
+
+            rightLastSwing = time
+            rightDelay = randomClickDelay(minCPS, maxCPS)
+        }
+
+        shouldJitter =
+            !(mc.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK && mc.gameSettings.keyBindAttack.pressTime != 0)
     }
 
+    @EventTarget
+    fun onTick(event: UpdateEvent) {
+        val thePlayer = mc.thePlayer ?: return
+
+        if (jitter && ((left && mc.gameSettings.keyBindAttack.isKeyDown && shouldAutoClick && shouldJitter) || (right && mc.gameSettings.keyBindUseItem.isKeyDown && !mc.thePlayer.isUsingItem))) {
+            if (nextBoolean()) thePlayer.fixedSensitivityYaw += nextFloat(-1F, 1F)
+            if (nextBoolean()) thePlayer.fixedSensitivityPitch += nextFloat(-1F, 1F)
+        }
+    }
+
+    private fun shouldAutoRightClick() = mc.thePlayer.heldItem?.itemUseAction in arrayOf(EnumAction.BLOCK)
 }
