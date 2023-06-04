@@ -46,6 +46,8 @@ object AutoClicker : Module("AutoClicker", ModuleCategory.COMBAT) {
     private val shouldAutoClick
         get() = mc.thePlayer.capabilities.isCreativeMode || mc.objectMouseOver.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK
 
+    private var shouldJitter = false
+
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
         val time = System.currentTimeMillis()
@@ -69,13 +71,16 @@ object AutoClicker : Module("AutoClicker", ModuleCategory.COMBAT) {
             rightLastSwing = time
             rightDelay = randomClickDelay(minCPS, maxCPS)
         }
+
+        shouldJitter =
+            !(mc.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK && mc.gameSettings.keyBindAttack.pressTime != 0)
     }
 
     @EventTarget
     fun onTick(event: UpdateEvent) {
         val thePlayer = mc.thePlayer ?: return
 
-        if (jitter && ((left && mc.gameSettings.keyBindAttack.isKeyDown && shouldAutoClick) || (right && mc.gameSettings.keyBindUseItem.isKeyDown && !mc.thePlayer.isUsingItem))) {
+        if (jitter && ((left && mc.gameSettings.keyBindAttack.isKeyDown && shouldAutoClick && shouldJitter) || (right && mc.gameSettings.keyBindUseItem.isKeyDown && !mc.thePlayer.isUsingItem))) {
             if (nextBoolean()) thePlayer.fixedSensitivityYaw += nextFloat(-1F, 1F)
             if (nextBoolean()) thePlayer.fixedSensitivityPitch += nextFloat(-1F, 1F)
         }
