@@ -28,24 +28,7 @@ import net.minecraft.item.ItemStack
 import java.math.BigDecimal
 import java.math.RoundingMode
 
-<<<<<<< Updated upstream
-class ArmorConfigurable : Configurable("Enchantment factors") {
-    val PROTECTION by float("Threshold", 2f, 0f..5f)
-    val PROJECTILE_PROTECTION by float("Threshold", 2f, 0f..5f)
-    val FIRE_PROTECTION by float("Threshold", 2f, 0f..5f)
-    val BLAST_PROTECTION by float("Threshold", 2f, 0f..5f)
-    val FEATHER_FALLING by float("Threshold", 2f, 0f..5f)
-    val THORNS by float("Threshold", 2f, 0f..5f)
-    val RESPIRATION by float("Threshold", 2f, 0f..5f)
-    val AQUA_AFFINITY by float("Threshold", 2f, 0f..5f)
-    val UNBREAKING by float("Threshold", 2f, 0f..5f)
-}
 
-class ArmorComparator(private val attribute: ArmorConfigurable) : Comparator<ArmorPiece> {
-=======
-<<<<<<< Updated upstream
-object ArmorComparator : Comparator<ArmorPiece> {
-=======
 class ArmorConfigurable : Configurable("Enchantment factors") {
     val PROTECTION by float("PROTECTION", 1.5f, 0f..5f)
     val PROJECTILE_PROTECTION by float("PROJECTILE_PROTECTION", 0.4f, 0f..5f)
@@ -60,15 +43,21 @@ class ArmorConfigurable : Configurable("Enchantment factors") {
 }
 
 class ArmorComparator(private val armorconfigurable: ArmorConfigurable) : Comparator<ArmorPiece> {
->>>>>>> Stashed changes
->>>>>>> Stashed changes
+    // val FEATHER_FALLING by float("Threshold", 2f, 0f..5f)
+    // val THORNS by float("Threshold", 2f, 0f..5f)
+    // val RESPIRATION by float("Threshold", 2f, 0f..5f)
+    // val AQUA_AFFINITY by float("Threshold", 2f, 0f..5f)
+    // val UNBREAKING by float("Threshold", 2f, 0f..5f)
+    // val preferProt by boolean("preferProtetion", false)
+
+
     private val DAMAGE_REDUCTION_ENCHANTMENTS: Array<Enchantment> = arrayOf(
         Enchantments.PROTECTION,
         Enchantments.PROJECTILE_PROTECTION,
         Enchantments.FIRE_PROTECTION,
         Enchantments.BLAST_PROTECTION
     )
-    // val ENCHANTMENT_FACTORS = floatArrayOf(1.5f, 0.4f, 0.39f, 0.38f)
+    val ENCHANTMENT_FACTORS = floatArrayOf(1.5f, 0.4f, 0.39f, 0.38f)
     private val ENCHANTMENT_DAMAGE_REDUCTION_FACTOR = floatArrayOf(0.04f, 0.08f, 0.15f, 0.08f)
     private val OTHER_ENCHANTMENTS: Array<Enchantment> = arrayOf(
         Enchantments.FEATHER_FALLING,
