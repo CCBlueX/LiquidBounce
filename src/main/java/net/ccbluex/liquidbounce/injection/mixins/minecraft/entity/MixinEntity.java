@@ -34,6 +34,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Entity.class)
@@ -69,6 +70,8 @@ public abstract class MixinEntity {
     public abstract boolean isOnGround();
 
     @Shadow protected boolean submergedInWater;
+
+    @Shadow public abstract boolean hasVehicle();
 
     /**
      * Hook entity margin modification event
@@ -113,5 +116,21 @@ public abstract class MixinEntity {
     @Inject(method = "getCameraPosVec", at = @At("RETURN"), cancellable = true)
     private void hookFreeCamModifiedRaycast(float tickDelta, CallbackInfoReturnable<Vec3d> cir) {
         cir.setReturnValue(ModuleFreeCam.INSTANCE.modifyRaycast(cir.getReturnValue(), (Entity) (Object) this, tickDelta));
+    }
+
+    /**
+     * When modules that modify player's velocity are enabled while on a vehicle, the game essentially gets screwed up, making the player unable to move.
+     * <p>
+     * With this injection, the issue is solved.
+     */
+    @Inject(method = "setVelocity(Lnet/minecraft/util/math/Vec3d;)V", at = @At("HEAD"), cancellable = true)
+    private void hookVelocityDuringRidingPrevention(Vec3d velocity, CallbackInfo ci) {
+        if ((Object) this != MinecraftClient.getInstance().player) {
+            return;
+        }
+
+        if (this.hasVehicle()) {
+            ci.cancel();
+        }
     }
 }
