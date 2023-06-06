@@ -55,9 +55,9 @@ public class Ignite extends Module {
            return;
 
        final int lighterInHotbar =
-               lighterValue.get() ? InventoryUtils.findItem(36, 45, Items.flint_and_steel) : -1;
+               lighterValue.get() ? InventoryUtils.INSTANCE.findItem(36, 44, Items.flint_and_steel) : -1;
        final int lavaInHotbar =
-               lavaBucketValue.get() ? InventoryUtils.findItem(26, 45, Items.lava_bucket) : -1;
+               lavaBucketValue.get() ? InventoryUtils.INSTANCE.findItem(26, 44, Items.lava_bucket) : -1;
 
        if (lighterInHotbar == -1 && lavaInHotbar == -1)
            return;

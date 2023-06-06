@@ -373,7 +373,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         val player = mc.thePlayer ?: return
         val holdingItem = player.heldItem?.item is ItemBlock
 
-        if (!holdingItem && (autoBlock == "Off" || InventoryUtils.findAutoBlockBlock() == -1)) {
+        if (!holdingItem && (autoBlock == "Off" || InventoryUtils.findBlockInHotbar() == null)) {
             return
         }
 
@@ -392,10 +392,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                 angleThresholdForReset = angleThresholdUntilReset
             )
         } else {
-            rotation.fixedSensitivity().let {
-                player.rotationYaw = it.yaw
-                player.rotationPitch = it.pitch
-            }
+            rotation.toPlayer(player)
         }
     }
 
@@ -452,11 +449,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         var itemStack = player.heldItem
         //TODO: blacklist more blocks than only bushes
         if (itemStack == null || itemStack.item !is ItemBlock || (itemStack.item as ItemBlock).block is BlockBush || player.heldItem.stackSize <= 0) {
-            val blockSlot = InventoryUtils.findAutoBlockBlock()
-
-            if (blockSlot == -1) {
-                return
-            }
+            val blockSlot = InventoryUtils.findBlockInHotbar() ?: return
 
             when (autoBlock.lowercase()) {
                 "off" -> return
@@ -600,7 +593,8 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         if (counterDisplay) {
             glPushMatrix()
 
-            if (BlockOverlay.state && BlockOverlay.info && BlockOverlay.currentBlock != null) glTranslatef(0f, 15f, 0f)
+            if (BlockOverlay.state && BlockOverlay.info && BlockOverlay.currentBlock != null)
+                glTranslatef(0f, 15f, 0f)
 
             val info = "Blocks: §7$blocksAmount"
             val scaledResolution = ScaledResolution(mc)

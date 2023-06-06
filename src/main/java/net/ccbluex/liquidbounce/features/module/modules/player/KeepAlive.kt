@@ -32,9 +32,9 @@ object KeepAlive : Module("KeepAlive", ModuleCategory.PLAYER) {
             when (mode.lowercase()) {
                 "/heal" -> thePlayer.sendChatMessage("/heal")
                 "soup" -> {
-                    val soupInHotbar = InventoryUtils.findItem(36, 45, Items.mushroom_stew)
+                    val soupInHotbar = InventoryUtils.findItem(36, 44, Items.mushroom_stew)
 
-                    if (soupInHotbar != -1) {
+                    if (soupInHotbar != null) {
                         sendPackets(
                             C09PacketHeldItemChange(soupInHotbar - 36),
                             C08PacketPlayerBlockPlacement(thePlayer.inventory.getStackInSlot(soupInHotbar)),

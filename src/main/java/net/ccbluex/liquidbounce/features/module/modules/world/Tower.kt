@@ -140,7 +140,7 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O) {
             tickTimer.update()
 
             val update =
-                (autoBlock != "Off" && InventoryUtils.findAutoBlockBlock() != -1) || thePlayer.heldItem?.item is ItemBlock
+                (autoBlock != "Off" && InventoryUtils.findBlockInHotbar() != null) || thePlayer.heldItem?.item is ItemBlock
 
             if (update) {
                 if (!stopWhenBlockAbove.get() || getBlock(BlockPos(thePlayer).up(2)) == Blocks.air) move()
@@ -263,9 +263,7 @@ object Tower : Module("Tower", ModuleCategory.WORLD, Keyboard.KEY_O) {
         // AutoBlock
         var itemStack = thePlayer.heldItem
         if (itemStack == null || itemStack.item !is ItemBlock || (itemStack.item as ItemBlock).block is BlockBush) {
-            val blockSlot = InventoryUtils.findAutoBlockBlock()
-
-            if (blockSlot == -1) return
+            val blockSlot = InventoryUtils.findBlockInHotbar() ?: return
 
             when (autoBlock) {
                 "Off" -> return

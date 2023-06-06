@@ -52,7 +52,7 @@ object CapeService : Listenable, MinecraftInstance() {
      * The API URL to get all cape carriers.
      * Format: [["8f617b6abea04af58e4bd026d8fa9de8", "marco"], ...]
      */
-    private const val CAPE_CARRIERS_URL = "${API_ENDPOINT}/cape/carriers"
+    private const val CAPE_CARRIERS_URL = "$API_ENDPOINT/cape/carriers"
 
     /**
      * I would prefer to use CLIENT_API but due to Cloudflare causing issues with SSL and their browser integrity check,

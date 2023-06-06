@@ -45,9 +45,9 @@ object AutoSoup : Module("AutoSoup", ModuleCategory.COMBAT) {
 
         val thePlayer = mc.thePlayer ?: return
 
-        val soupInHotbar = InventoryUtils.findItem(36, 45, Items.mushroom_stew)
+        val soupInHotbar = InventoryUtils.findItem(36, 44, Items.mushroom_stew)
 
-        if (thePlayer.health <= health && soupInHotbar != -1) {
+        if (thePlayer.health <= health && soupInHotbar != null) {
             sendPackets(
                 C09PacketHeldItemChange(soupInHotbar - 36),
                 C08PacketPlayerBlockPlacement(thePlayer.inventory.getStackInSlot(soupInHotbar))
@@ -61,8 +61,8 @@ object AutoSoup : Module("AutoSoup", ModuleCategory.COMBAT) {
             return
         }
 
-        val bowlInHotbar = InventoryUtils.findItem(36, 45, Items.bowl)
-        if (bowl == "Move" && bowlInHotbar != -1) {
+        val bowlInHotbar = InventoryUtils.findItem(36, 44, Items.bowl)
+        if (bowl == "Move" && bowlInHotbar != null) {
             if (openInventory && mc.currentScreen !is GuiInventory)
                 return
 
@@ -90,9 +90,9 @@ object AutoSoup : Module("AutoSoup", ModuleCategory.COMBAT) {
             }
         }
 
-        val soupInInventory = InventoryUtils.findItem(9, 36, Items.mushroom_stew)
+        val soupInInventory = InventoryUtils.findItem(9, 35, Items.mushroom_stew)
 
-        if (soupInInventory != -1 && InventoryUtils.hasSpaceHotbar()) {
+        if (soupInInventory != null && InventoryUtils.hasSpaceHotbar()) {
             if (openInventory && mc.currentScreen !is GuiInventory)
                 return
 

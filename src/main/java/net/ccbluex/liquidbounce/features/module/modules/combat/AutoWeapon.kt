@@ -12,10 +12,9 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
-import net.ccbluex.liquidbounce.utils.item.ItemUtils
+import net.ccbluex.liquidbounce.utils.item.attackDamage
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
-import net.minecraft.enchantment.Enchantment
 import net.minecraft.item.ItemSword
 import net.minecraft.item.ItemTool
 import net.minecraft.network.play.client.C02PacketUseEntity
@@ -26,7 +25,7 @@ object AutoWeapon : Module("AutoWeapon", ModuleCategory.COMBAT) {
 
     private val spoof by BoolValue("SpoofItem", false)
     private val spoofTicks by IntegerValue("SpoofTicks", 10, 1..20) { spoof }
-    
+
     private var attackEnemy = false
 
     private var ticks = 0
@@ -46,10 +45,7 @@ object AutoWeapon : Module("AutoWeapon", ModuleCategory.COMBAT) {
             val (slot, _) = (0..8)
                 .map { it to mc.thePlayer.inventory.getStackInSlot(it) }
                 .filter { it.second != null && (it.second.item is ItemSword || it.second.item is ItemTool) }
-                .maxByOrNull {
-                    (it.second.attributeModifiers["generic.attackDamage"].first()?.amount
-                        ?: 0.0) + 1.25 * ItemUtils.getEnchantment(it.second, Enchantment.sharpness)
-                } ?: return
+                .maxByOrNull { it.second.attackDamage } ?: return
 
             if (slot == mc.thePlayer.inventory.currentItem) // If in hand no need to swap
                 return
