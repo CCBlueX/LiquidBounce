@@ -112,7 +112,7 @@ public class MixinKeyboardInput extends MixinInput {
     @Redirect(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;sneaking:Z"))
     private void injectForcedState(KeyboardInput instance, boolean value) {
         Boolean enforceEagle = TickStateManager.INSTANCE.getEnforcedState().getEnforceEagle();
-        instance.sneaking = enforceEagle != null || value;
+        instance.sneaking = enforceEagle != null ? enforceEagle : value;
     }
 
 }
