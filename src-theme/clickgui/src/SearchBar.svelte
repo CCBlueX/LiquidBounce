@@ -1,5 +1,4 @@
 <script>
-	import Module from './../../hud/src/arraylist/Module.svelte';
     export let root;
     export let modules;
 
