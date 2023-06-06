@@ -7,18 +7,20 @@ package net.ccbluex.liquidbounce.utils.block
 
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.minecraft.block.Block
+import net.minecraft.block.BlockContainer
+import net.minecraft.block.BlockFalling
+import net.minecraft.block.BlockWorkbench
+import net.minecraft.block.state.IBlockState
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.BlockPos
-import kotlin.math.floor
 
 typealias Collidable = (Block?) -> Boolean
 
 object BlockUtils : MinecraftInstance() {
-
     /**
      * Get block from [blockPos]
      */
-    fun getBlock(blockPos: BlockPos) = mc.theWorld?.getBlockState(blockPos)?.block
+    fun getBlock(blockPos: BlockPos) = getState(blockPos)?.block
 
     /**
      * Get material from [blockPos]
@@ -38,9 +40,14 @@ object BlockUtils : MinecraftInstance() {
     /**
      * Check if [blockPos] is clickable
      */
-    fun canBeClicked(blockPos: BlockPos) =
-        getBlock(blockPos)?.canCollideCheck(getState(blockPos), false) ?: false &&
-            mc.theWorld.worldBorder.contains(blockPos)
+    fun canBeClicked(blockPos: BlockPos): Boolean {
+        val state = getState(blockPos) ?: return false
+        val block = state.block
+
+        return block.canCollideCheck(state, false) && blockPos in mc.theWorld.worldBorder && !block.material.isReplaceable
+                && !block.hasTileEntity(state) && isFullBlock(blockPos, state)
+                && block !is BlockFalling && block !is BlockContainer && block !is BlockWorkbench
+    }
 
     /**
      * Get block name by [id]
@@ -50,12 +57,14 @@ object BlockUtils : MinecraftInstance() {
     /**
      * Check if block is full block
      */
-    fun isFullBlock(blockPos: BlockPos): Boolean {
-        val axisAlignedBB = getBlock(blockPos)?.getCollisionBoundingBox(mc.theWorld, blockPos, getState(blockPos)
-                ?: return false)
-                ?: return false
-        return axisAlignedBB.maxX - axisAlignedBB.minX == 1.0 && axisAlignedBB.maxY - axisAlignedBB.minY == 1.0 && axisAlignedBB.maxZ - axisAlignedBB.minZ == 1.0
+    fun isFullBlock(blockPos: BlockPos, blockState: IBlockState? = null): Boolean {
+        val state = blockState ?: getState(blockPos) ?: return false
+
+        val box = state.block.getCollisionBoundingBox(mc.theWorld, blockPos, state)
+        return box.maxX - box.minX == 1.0 && box.maxY - box.minY == 1.0 && box.maxZ - box.minZ == 1.0
     }
+
+    fun isFullBlock(block: Block) = block.blockBoundsMaxX == 1.0 && block.blockBoundsMaxY == 1.0 && block.blockBoundsMaxZ == 1.0
 
     /**
      * Get distance to center of [blockPos]
@@ -74,8 +83,7 @@ object BlockUtils : MinecraftInstance() {
         for (x in radius downTo -radius + 1) {
             for (y in radius downTo -radius + 1) {
                 for (z in radius downTo -radius + 1) {
-                    val blockPos = BlockPos(thePlayer.posX.toInt() + x, thePlayer.posY.toInt() + y,
-                            thePlayer.posZ.toInt() + z)
+                    val blockPos = BlockPos(thePlayer.posX.toInt() + x, thePlayer.posY.toInt() + y, thePlayer.posZ.toInt() + z)
                     val block = getBlock(blockPos) ?: continue
 
                     blocks[blockPos] = block
@@ -92,10 +100,8 @@ object BlockUtils : MinecraftInstance() {
     fun collideBlock(axisAlignedBB: AxisAlignedBB, collide: Collidable): Boolean {
         val thePlayer = mc.thePlayer
 
-        for (x in floor(thePlayer.entityBoundingBox.minX).toInt() until
-                floor(thePlayer.entityBoundingBox.maxX).toInt() + 1L) {
-            for (z in floor(thePlayer.entityBoundingBox.minZ).toInt() until
-                    floor(thePlayer.entityBoundingBox.maxZ).toInt() + 1) {
+        for (x in thePlayer.entityBoundingBox.minX.toInt() until thePlayer.entityBoundingBox.maxX.toInt() + 1) {
+            for (z in thePlayer.entityBoundingBox.minZ.toInt() until thePlayer.entityBoundingBox.maxZ.toInt() + 1) {
                 val block = getBlock(BlockPos(x.toDouble(), axisAlignedBB.minY, z.toDouble()))
 
                 if (!collide(block))
@@ -113,10 +119,8 @@ object BlockUtils : MinecraftInstance() {
         val thePlayer = mc.thePlayer
         val world = mc.theWorld
 
-        for (x in floor(thePlayer.entityBoundingBox.minX).toInt() until
-                floor(thePlayer.entityBoundingBox.maxX).toInt() + 1) {
-            for (z in floor(thePlayer.entityBoundingBox.minZ).toInt() until
-                    floor(thePlayer.entityBoundingBox.maxZ).toInt() + 1) {
+        for (x in thePlayer.entityBoundingBox.minX.toInt() until thePlayer.entityBoundingBox.maxX.toInt() + 1) {
+            for (z in thePlayer.entityBoundingBox.minZ.toInt() until thePlayer.entityBoundingBox.maxZ.toInt() + 1) {
                 val blockPos = BlockPos(x.toDouble(), axisAlignedBB.minY, z.toDouble())
                 val block = getBlock(blockPos)
 
