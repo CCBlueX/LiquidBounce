@@ -46,9 +46,11 @@ class ModulesConfig(file: File) : FileConfig(file) {
         val jsonObject = JsonObject()
         for (module in moduleManager.modules) {
             val jsonMod = JsonObject()
-            jsonMod.addProperty("State", module.state)
-            jsonMod.addProperty("KeyBind", module.keyBind)
-            jsonMod.addProperty("Array", module.inArray)
+            jsonMod.run {
+                addProperty("State", module.state)
+                addProperty("KeyBind", module.keyBind)
+                addProperty("Array", module.inArray)
+            }
             jsonObject[module.name] = jsonMod
         }
         file.writeText(PRETTY_GSON.toJson(jsonObject))

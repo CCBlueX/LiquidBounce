@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.features.special.ClientFixes.clientBrand
 import net.ccbluex.liquidbounce.features.special.ClientFixes.fmlFixesEnabled
 import net.ccbluex.liquidbounce.file.FileConfig
 import net.ccbluex.liquidbounce.file.FileManager.PRETTY_GSON
-import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.lang.LanguageManager.overrideLanguage
 import net.ccbluex.liquidbounce.ui.client.GuiClientConfiguration.Companion.altsLength
 import net.ccbluex.liquidbounce.ui.client.GuiClientConfiguration.Companion.enabledClientTitle
@@ -127,26 +126,32 @@ class ValuesConfig(file: File) : FileConfig(file) {
     @Throws(IOException::class)
     override fun saveConfig() {
         val jsonObject = JsonObject()
-        jsonObject.addProperty("CommandPrefix", commandManager.prefix)
-        jsonObject.addProperty("ShowRichPresence", clientRichPresence.showRichPresenceValue)
+        jsonObject.run {
+            addProperty("CommandPrefix", commandManager.prefix)
+            addProperty("ShowRichPresence", clientRichPresence.showRichPresenceValue)
+        }
 
         val jsonTargets = JsonObject()
-        jsonTargets.addProperty("TargetPlayer", targetPlayer)
-        jsonTargets.addProperty("TargetMobs", targetMobs)
-        jsonTargets.addProperty("TargetAnimals", targetAnimals)
-        jsonTargets.addProperty("TargetInvisible", targetInvisible)
-        jsonTargets.addProperty("TargetDead", targetDead)
+        jsonTargets.run {
+            addProperty("TargetPlayer", targetPlayer)
+            addProperty("TargetMobs", targetMobs)
+            addProperty("TargetAnimals", targetAnimals)
+            addProperty("TargetInvisible", targetInvisible)
+            addProperty("TargetDead", targetDead)
+        }
 
         jsonObject.add("targets", jsonTargets)
         val jsonFeatures = JsonObject()
-        jsonFeatures.addProperty("AntiForge", fmlFixesEnabled)
-        jsonFeatures.addProperty("AntiForgeFML", blockFML)
-        jsonFeatures.addProperty("AntiForgeProxy", blockProxyPacket)
-        jsonFeatures.addProperty("AntiForgePayloads", blockPayloadPackets)
-        jsonFeatures.addProperty("FixResourcePackExploit", blockResourcePackExploit)
-        jsonFeatures.addProperty("ClientBrand", clientBrand)
-        jsonFeatures.addProperty("BungeeSpoof", BungeeCordSpoof.enabled)
-        jsonFeatures.addProperty("AutoReconnectDelay", delay)
+        jsonFeatures.run {
+            addProperty("AntiForge", fmlFixesEnabled)
+            addProperty("AntiForgeFML", blockFML)
+            addProperty("AntiForgeProxy", blockProxyPacket)
+            addProperty("AntiForgePayloads", blockPayloadPackets)
+            addProperty("FixResourcePackExploit", blockResourcePackExploit)
+            addProperty("ClientBrand", clientBrand)
+            addProperty("BungeeSpoof", BungeeCordSpoof.enabled)
+            addProperty("AutoReconnectDelay", delay)
+        }
         jsonObject.add("features", jsonFeatures)
 
         val theAlteningObject = JsonObject()
@@ -162,13 +167,15 @@ class ValuesConfig(file: File) : FileConfig(file) {
         jsonObject.add("DonatorCape", capeObject)
 
         val clientObject = JsonObject()
-        clientObject.addProperty("EnabledClientTitle", enabledClientTitle)
-        clientObject.addProperty("EnabledBackground", enabledCustomBackground)
-        clientObject.addProperty("Particles", particles)
-        clientObject.addProperty("StylisedAlts", stylisedAlts)
-        clientObject.addProperty("AltsLength", altsLength)
-        clientObject.addProperty("CleanAlts", unformattedAlts)
-        clientObject.addProperty("OverrideLanguage", overrideLanguage)
+        clientObject.run {
+            addProperty("EnabledClientTitle", enabledClientTitle)
+            addProperty("EnabledBackground", enabledCustomBackground)
+            addProperty("Particles", particles)
+            addProperty("StylisedAlts", stylisedAlts)
+            addProperty("AltsLength", altsLength)
+            addProperty("CleanAlts", unformattedAlts)
+            addProperty("OverrideLanguage", overrideLanguage)
+        }
         jsonObject.add("clientConfiguration", clientObject)
 
         for (module in moduleManager.modules) {

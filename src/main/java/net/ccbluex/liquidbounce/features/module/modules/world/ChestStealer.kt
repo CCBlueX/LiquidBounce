@@ -136,7 +136,7 @@ object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD) {
                         val stack = slot.stack
 
                         if (stack != null && (!onlyItems || stack.item !is ItemBlock) && (!InventoryCleaner.state || InventoryCleaner.isUseful(stack, -1)))
-                            items.add(slot)
+                            items += slot
                     }
 
                     val randomSlot = nextInt(endExclusive = items.size)

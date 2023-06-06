@@ -20,20 +20,22 @@ class GuiMainMenu : GuiScreen() {
     override fun initGui() {
         val defaultHeight = height / 4 + 48
 
-        buttonList.add(GuiButton(100, width / 2 - 100, defaultHeight + 24, 98, 20, translationMenu("altManager")))
-        buttonList.add(GuiButton(103, width / 2 + 2, defaultHeight + 24, 98, 20, translationMenu("mods")))
-        buttonList.add(GuiButton(101, width / 2 - 100, defaultHeight + 24 * 2, 98, 20, translationMenu("serverStatus")))
-        buttonList.add(GuiButton(102, width / 2 + 2, defaultHeight + 24 * 2, 98, 20, translationMenu("configuration")))
+        buttonList.run {
+            add(GuiButton(100, width / 2 - 100, defaultHeight + 24, 98, 20, translationMenu("altManager")))
+            add(GuiButton(103, width / 2 + 2, defaultHeight + 24, 98, 20, translationMenu("mods")))
+            add(GuiButton(101, width / 2 - 100, defaultHeight + 24 * 2, 98, 20, translationMenu("serverStatus")))
+            add(GuiButton(102, width / 2 + 2, defaultHeight + 24 * 2, 98, 20, translationMenu("configuration")))
 
-        buttonList.add(GuiButton(1, width / 2 - 100, defaultHeight, 98, 20, I18n.format("menu.singleplayer")))
-        buttonList.add(GuiButton(2, width / 2 + 2, defaultHeight, 98, 20, I18n.format("menu.multiplayer")))
+            add(GuiButton(1, width / 2 - 100, defaultHeight, 98, 20, I18n.format("menu.singleplayer")))
+            add(GuiButton(2, width / 2 + 2, defaultHeight, 98, 20, I18n.format("menu.multiplayer")))
 
-        // Minecraft Realms
-        //		this.buttonList.add(new GuiButton(14, this.width / 2 - 100, j + 24 * 2, I18n.format("menu.online", new Object[0])));
+            // Minecraft Realms
+            //		this.buttonList.add(new GuiButton(14, this.width / 2 - 100, j + 24 * 2, I18n.format("menu.online", new Object[0])));
 
-        buttonList.add(GuiButton(108, width / 2 - 100, defaultHeight + 24 * 3, translationMenu("contributors")))
-        buttonList.add(GuiButton(0, width / 2 - 100, defaultHeight + 24 * 4, 98, 20, I18n.format("menu.options")))
-        buttonList.add(GuiButton(4, width / 2 + 2, defaultHeight + 24 * 4, 98, 20, I18n.format("menu.quit")))
+            add(GuiButton(108, width / 2 - 100, defaultHeight + 24 * 3, translationMenu("contributors")))
+            add(GuiButton(0, width / 2 - 100, defaultHeight + 24 * 4, 98, 20, I18n.format("menu.options")))
+            add(GuiButton(4, width / 2 + 2, defaultHeight + 24 * 4, 98, 20, I18n.format("menu.quit")))
+        }
     }
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {

@@ -72,8 +72,10 @@ class GuiMicrosoftLoginProgress(val updateStatus: (String) -> Unit, val done: ()
             LOGGER.error("Failed to start login server.", e)
         }
 
-        buttonList.add(GuiButton(0, width / 2 - 100, height / 2 + 60, "Open URL"))
-        buttonList.add(GuiButton(1, width / 2 - 100, height / 2 + 90, "Cancel"))
+        buttonList.run {
+            add(GuiButton(0, width / 2 - 100, height / 2 + 60, "Open URL"))
+            add(GuiButton(1, width / 2 - 100, height / 2 + 90, "Cancel"))
+        }
         super.initGui()
     }
 

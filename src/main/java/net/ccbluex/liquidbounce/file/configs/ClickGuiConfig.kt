@@ -72,10 +72,12 @@ class ClickGuiConfig(file: File) : FileConfig(file) {
 
         for (panel in clickGui.panels) {
             val panelObject = JsonObject()
-            panelObject.addProperty("open", panel.open)
-            panelObject.addProperty("visible", panel.isVisible)
-            panelObject.addProperty("posX", panel.x)
-            panelObject.addProperty("posY", panel.y)
+            panelObject.run {
+                addProperty("open", panel.open)
+                addProperty("visible", panel.isVisible)
+                addProperty("posX", panel.x)
+                addProperty("posY", panel.y)
+            }
             for (element in panel.elements) {
                 if (element !is ModuleElement) continue
                 val elementObject = JsonObject()

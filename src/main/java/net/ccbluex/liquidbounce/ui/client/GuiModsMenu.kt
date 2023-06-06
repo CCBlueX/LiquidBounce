@@ -18,10 +18,12 @@ import kotlin.concurrent.thread
 class GuiModsMenu(private val prevGui: GuiScreen) : GuiScreen() {
 
     override fun initGui() {
-        buttonList.add(GuiButton(0, width / 2 - 100, height / 4 + 48, "Forge Mods"))
-        buttonList.add(GuiButton(1, width / 2 - 100, height / 4 + 48 + 25, "Scripts"))
-        buttonList.add(GuiButton(2, width / 2 - 100, height / 4 + 48 + 50, "Rich Presence: ${if (clientRichPresence.showRichPresenceValue) "§aON" else "§cOFF"}"))
-        buttonList.add(GuiButton(3, width / 2 - 100, height / 4 + 48 + 75, "Back"))
+        buttonList.run {
+            add(GuiButton(0, width / 2 - 100, height / 4 + 48, "Forge Mods"))
+            add(GuiButton(1, width / 2 - 100, height / 4 + 48 + 25, "Scripts"))
+            add(GuiButton(2, width / 2 - 100, height / 4 + 48 + 50, "Rich Presence: ${if (clientRichPresence.showRichPresenceValue) "§aON" else "§cOFF"}"))
+            add(GuiButton(3, width / 2 - 100, height / 4 + 48 + 75, "Back"))
+        }
     }
 
     override fun actionPerformed(button: GuiButton) {
