@@ -22,11 +22,7 @@ import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleVelocity
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSuperKnockback
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSuperKnockback.choices
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raycast
@@ -55,6 +51,7 @@ import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import kotlin.math.abs
 import kotlin.math.absoluteValue
+
 
 /**
  * Scaffold module
@@ -102,32 +99,32 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     private val silent by boolean("Silent", true)
     var delay by intRange("Delay", 3..5, 0..40)
 
-    val swing by boolean("Swing", true)
+    private val swing by boolean("Swing", true)
     private val eagle by boolean("Eagle", true)
     val down by boolean("Down", false)
 
     // Rotation
     private val rotationsConfigurable = tree(RotationsConfigurable())
 
-    val blockFilter by blocks("BlacklistedBlocks", mutableSetOf(CAKE))
-    val minDist by float("MinDist", 0.0f, 0.0f..0.25f)
-    val speedModifier by float("SpeedModifier", 1f, 0f..3f)
+    private val blockFilter by blocks("BlacklistedBlocks", mutableSetOf(CAKE))
+    private val minDist by float("MinDist", 0.0f, 0.0f..0.25f)
+    private val speedModifier by float("SpeedModifier", 1f, 0f..3f)
 
     object Slow : ToggleableConfigurable(this, "Slow", false) {
         val slowSpeed by float("SlowSpeed", 0.6f, 0.1f..3f)
     }
 
-    val safeWalk by boolean("SafeWalk", true)
-    val sameY by boolean("SameY", false)
-    var currentTarget: Target? = null
+    private val safeWalk by boolean("SafeWalk", true)
+    private val sameY by boolean("SameY", false)
+    private var currentTarget: Target? = null
 
 
     init {
         tree(Slow)
     }
 
-    var startY = 0
-    val shouldGoDown: Boolean
+    private var startY = 0
+    private val shouldGoDown: Boolean
         get() = this.down && mc.options.sneakKey.isPressed
 
     override fun enable() {
@@ -260,7 +257,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         ) || blockFilter.contains(block)
     }
 
-    fun getTargetedPosition(): BlockPos {
+    private fun getTargetedPosition(): BlockPos {
         if (shouldGoDown) {
             return player.blockPos.add(0, -2, 0)
         }
