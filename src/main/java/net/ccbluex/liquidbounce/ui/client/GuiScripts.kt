@@ -91,7 +91,7 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
                         fileStream.close()
 
                         if ("/" !in entryName)
-                            scriptFiles.add(entryFile)
+                            scriptFiles += entryFile
                     }
 
                     scriptFiles.forEach { scriptFile -> scriptManager.loadScript(scriptFile) }

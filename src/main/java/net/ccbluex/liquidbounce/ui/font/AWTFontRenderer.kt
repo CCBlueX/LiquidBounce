@@ -66,7 +66,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
     init {
         renderBitmap(startChar, stopChar)
 
-        activeFontRenderers.add(this)
+        activeFontRenderers += this
     }
 
     /**

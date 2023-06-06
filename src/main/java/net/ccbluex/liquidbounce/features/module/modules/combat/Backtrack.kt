@@ -118,11 +118,11 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
             // Check if there is already enough data of the player
             if (backtrackData.size >= maximumCachedPositions) {
                 // Remove first data
-                backtrackData.removeAt(0)
+                backtrackData.removeFirst()
             }
 
             // Insert new data
-            backtrackData.add(BacktrackData(x, y, z, time))
+            backtrackData += BacktrackData(x, y, z, time)
         } else {
             // Create new list
             backtrackedPlayer[id] = mutableListOf(BacktrackData(x, y, z, time))

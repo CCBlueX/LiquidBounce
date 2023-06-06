@@ -17,7 +17,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.scrolls
 import net.ccbluex.liquidbounce.file.FileManager.clickGuiConfig
 import net.ccbluex.liquidbounce.file.FileManager.saveConfig
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ButtonElement
-import net.ccbluex.liquidbounce.ui.client.clickgui.elements.Element
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ModuleElement
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.Style
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.BlackStyle
@@ -68,19 +67,19 @@ object ClickGui : GuiScreen() {
         var yPos = 5
 
         for (category in ModuleCategory.values()) {
-            panels.add(object : Panel(category.displayName, 100, yPos, width, height, false) {
+            panels += object : Panel(category.displayName, 100, yPos, width, height, false) {
                 override val elements = moduleManager.modules.filter { it.category == category }.map { ModuleElement(it) }
-            })
+            }
 
             yPos += 20
         }
 
         yPos += 20
-        panels.add(setupTargetsPanel(100, yPos, width, height))
+        panels += setupTargetsPanel(100, yPos, width, height)
 
         // Settings Panel
         yPos += 20
-        panels.add(setupSettingsPanel(100, yPos, width, height))
+        panels += setupSettingsPanel(100, yPos, width, height)
     }
 
     private fun setupTargetsPanel(xPositon: Int = 100, yPositon: Int, width: Int, height: Int) = object : Panel("Targets", xPositon, yPositon, width, height, false) {
@@ -235,7 +234,7 @@ object ClickGui : GuiScreen() {
 
                 // Move dragged panel to top.
                 panels.removeAt(panels.lastIndex - index)
-                panels.add(panel)
+                panels += panel
                 return
             }
         }

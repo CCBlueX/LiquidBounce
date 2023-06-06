@@ -90,7 +90,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
     var strafe = false
     var strict = false
 
-    var speedForReset: Pair<Float, Float> = Pair(0f, 0f)
+    var speedForReset = 0f to 0f
     var angleThresholdForReset = 0f
 
     var targetRotation: Rotation? = null
@@ -403,7 +403,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         keepLength: Int = 1,
         strafe: Boolean = false,
         strict: Boolean = false,
-        resetSpeed: Pair<Float, Float> = Pair(180f, 180f),
+        resetSpeed: Pair<Float, Float> = 180f to 180f,
         angleThresholdForReset: Float = 180f
     ) {
         if (rotation.yaw.isNaN() || rotation.pitch.isNaN() || rotation.pitch > 90 || rotation.pitch < -90) return

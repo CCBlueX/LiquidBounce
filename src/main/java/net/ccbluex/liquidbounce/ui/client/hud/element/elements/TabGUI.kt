@@ -89,10 +89,10 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
             val tab = Tab(category.displayName)
 
             moduleManager.modules
-                    .filter { module: Module -> category == module.category }
-                    .forEach { e: Module -> tab.modules.add(e) }
+                    .filter { module -> category == module.category }
+                    .forEach { e -> tab.modules += e }
 
-            tabs.add(tab)
+            tabs += tab
         }
     }
 

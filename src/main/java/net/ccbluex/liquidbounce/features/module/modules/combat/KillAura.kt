@@ -473,14 +473,14 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
                 }
             }
 
-            prevTargetEntities.add(if (aac) target.entityId else currentTarget.entityId)
+            prevTargetEntities += if (aac) target.entityId else currentTarget.entityId
 
             if (target == currentTarget) this.target = null
         }
 
         if (targetMode.equals("Switch", ignoreCase = true) && attackTimer.hasTimePassed((switchDelay).toLong())) {
             if (switchDelay != 0) {
-                prevTargetEntities.add(if (aac) target.entityId else currentTarget.entityId)
+                prevTargetEntities += if (aac) target.entityId else currentTarget.entityId
                 attackTimer.reset()
             }
         }
@@ -521,7 +521,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
             val entityFov = getRotationDifference(entity)
 
             if (distance <= maxRange && (fov == 180F || entityFov <= fov) && entity.hurtTime <= hurtTime) {
-                targets.add(entity)
+                targets += entity
             }
         }
 
@@ -725,7 +725,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
                 if (aac) 10 else keepRotationTicks,
                 !(!silentRotation || rotationStrafe == "Off"),
                 rotationStrafe == "Strict",
-                Pair(minTurnSpeed, maxTurnSpeed),
+                minTurnSpeed to maxTurnSpeed,
                 angleThresholdUntilReset
             )
         } else {

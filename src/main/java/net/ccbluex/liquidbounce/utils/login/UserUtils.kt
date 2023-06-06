@@ -58,9 +58,8 @@ object UserUtils {
             return null
         }
 
-        val names = JsonParser().parse(EntityUtils.toString(response.entity)).asJsonArray
 
-        return names.get(names.size() - 1).asJsonObject.get("name").asString
+        return JsonParser().parse(EntityUtils.toString(response.entity)).asJsonArray.last().asJsonObject["name"].asString
     }
 
     /**
@@ -85,7 +84,7 @@ object UserUtils {
                 val jsonElement = JsonParser().parse(it)
 
                 if(jsonElement.isJsonObject) {
-                    return jsonElement.asJsonObject.get("id").asString
+                    return jsonElement.asJsonObject["id"].asString
                 }
             }
         } catch(ignored : Throwable) {

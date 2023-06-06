@@ -247,11 +247,11 @@ object BufferSpeed : Module("BufferSpeed", ModuleCategory.MOVEMENT) {
         get() {
             val thePlayer = mc.thePlayer
             val theWorld = mc.theWorld
-            val blocks: MutableList<BlockPos> = ArrayList()
-            blocks.add(BlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ - 0.7))
-            blocks.add(BlockPos(thePlayer.posX + 0.7, thePlayer.posY + 1, thePlayer.posZ))
-            blocks.add(BlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ + 0.7))
-            blocks.add(BlockPos(thePlayer.posX - 0.7, thePlayer.posY + 1, thePlayer.posZ))
+            val blocks = mutableListOf<BlockPos>()
+            blocks += BlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ - 0.7)
+            blocks += BlockPos(thePlayer.posX + 0.7, thePlayer.posY + 1, thePlayer.posZ)
+            blocks += BlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ + 0.7)
+            blocks += BlockPos(thePlayer.posX - 0.7, thePlayer.posY + 1, thePlayer.posZ)
             for (blockPos in blocks) {
                 val blockState = theWorld.getBlockState(blockPos)
 

@@ -22,7 +22,7 @@ object EventManager {
                 val eventTarget = method.getAnnotation(EventTarget::class.java)
 
                 val invokableEventTargets = registry.getOrDefault(eventClass, ArrayList())
-                invokableEventTargets.add(EventHook(listener, method, eventTarget))
+                invokableEventTargets += EventHook(listener, method, eventTarget)
                 registry[eventClass] = invokableEventTargets
             }
         }

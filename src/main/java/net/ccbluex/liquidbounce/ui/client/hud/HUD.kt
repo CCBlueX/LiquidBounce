@@ -93,8 +93,8 @@ object HUD : MinecraftInstance() {
             continue
 
         element.drag = true
-        elements.remove(element)
-        elements.add(element)
+        elements -= element
+        elements += element
         break
       }
     }
@@ -154,7 +154,7 @@ object HUD : MinecraftInstance() {
 
   /** Add [element] to HUD */
   fun addElement(element: Element): HUD {
-    elements.add(element)
+    elements += element
     element.updateElement()
     return this
   }

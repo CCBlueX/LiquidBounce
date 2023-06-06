@@ -39,7 +39,7 @@ object ScriptManager {
         try {
             val script = Script(scriptFile)
             script.initScript()
-            scripts.add(script)
+            scripts += script
         } catch (t: Throwable) {
             LOGGER.error("[ScriptAPI] Failed to load script '${scriptFile.name}'.", t)
         }

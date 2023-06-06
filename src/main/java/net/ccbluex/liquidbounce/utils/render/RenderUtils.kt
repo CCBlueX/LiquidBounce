@@ -26,7 +26,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 object RenderUtils : MinecraftInstance() {
-    private val glCapMap: MutableMap<Int, Boolean> = HashMap()
+    private val glCapMap = mutableMapOf<Int, Boolean>()
     private val DISPLAY_LISTS_2D = IntArray(4)
     var deltaTime = 0
 

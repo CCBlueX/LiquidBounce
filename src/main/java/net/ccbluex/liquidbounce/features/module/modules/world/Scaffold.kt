@@ -388,7 +388,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
                 rotation,
                 ticks,
                 strafe,
-                resetSpeed = Pair(minTurnSpeed, maxTurnSpeed),
+                resetSpeed = minTurnSpeed to maxTurnSpeed,
                 angleThresholdForReset = angleThresholdUntilReset
             )
         } else {

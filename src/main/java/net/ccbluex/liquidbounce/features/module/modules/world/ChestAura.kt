@@ -91,7 +91,7 @@ object ChestAura : Module("ChestAura", ModuleCategory.WORLD) {
                     else
                         sendPacket(C0APacketAnimation())
 
-                    clickedBlocks.add(currentBlock!!)
+                    clickedBlocks += currentBlock!!
                     currentBlock = null
                     timer.reset()
                 }

@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.file.FileManager.PRETTY_GSON
 import java.io.*
 
 class FriendsConfig(file: File) : FileConfig(file) {
-    val friends: MutableList<Friend> = ArrayList()
+    val friends = mutableListOf<Friend>()
 
     /**
      * Load config from file
@@ -44,7 +44,7 @@ class FriendsConfig(file: File) : FileConfig(file) {
     fun addFriend(playerName: String, alias: String = playerName): Boolean {
         if (isFriend(playerName)) return false
 
-        friends.add(Friend(playerName, alias))
+        friends += Friend(playerName, alias)
         return true
     }
 

@@ -66,7 +66,7 @@ object AntiFireball : Module("AntiFireball", ModuleCategory.PLAYER) {
                     serverRotation, toRotation(nearestPoint, true), nextFloat(minTurnSpeed, maxTurnSpeed)
                 ),
                 strafe = this.strafe,
-                resetSpeed = Pair(minTurnSpeed, maxTurnSpeed),
+                resetSpeed = minTurnSpeed to maxTurnSpeed,
                 angleThresholdForReset = angleThresholdUntilReset
             )
 

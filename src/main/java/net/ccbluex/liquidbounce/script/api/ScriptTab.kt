@@ -18,5 +18,5 @@ class ScriptTab(private val tabObject: JSObject) : CreativeTabs(tabObject.getMem
 
     override fun getTranslatedTabLabel() = tabObject.getMember("name") as String
 
-    override fun displayAllReleventItems(items: MutableList<ItemStack>) = items.forEach { items.add(it) }
+    override fun displayAllReleventItems(items: MutableList<ItemStack>) = items.forEach { items += it }
 }

@@ -37,7 +37,7 @@ object BlockESP : Module("BlockESP", ModuleCategory.RENDER) {
     private val colorBlue by IntegerValue("B", 72, 0..255) { !colorRainbow.get() }
 
     private val searchTimer = MSTimer()
-    private val posList: MutableList<BlockPos> = ArrayList()
+    private val posList = mutableListOf<BlockPos>()
     private var thread: Thread? = null
 
     @EventTarget
@@ -50,7 +50,7 @@ object BlockESP : Module("BlockESP", ModuleCategory.RENDER) {
                 return
 
             thread = Thread({
-                val blockList: MutableList<BlockPos> = ArrayList()
+                val blockList = mutableListOf<BlockPos>()
 
                 for (x in -radius until radius) {
                     for (y in radius downTo -radius + 1) {
@@ -64,7 +64,7 @@ object BlockESP : Module("BlockESP", ModuleCategory.RENDER) {
                             val blockPos = BlockPos(xPos, yPos, zPos)
                             val block = getBlock(blockPos)
 
-                            if (block == selectedBlock && blockList.size < blockLimit) blockList.add(blockPos)
+                            if (block == selectedBlock && blockList.size < blockLimit) blockList += blockPos
                         }
                     }
                 }
@@ -72,7 +72,7 @@ object BlockESP : Module("BlockESP", ModuleCategory.RENDER) {
 
                 synchronized(posList) {
                     posList.clear()
-                    posList.addAll(blockList)
+                    posList += blockList
                 }
             }, "BlockESP-BlockFinder")
 
