@@ -42,7 +42,7 @@
 </script>
 
 <div>
-    <div on:mousedown={handleToggleSettings} on:click={handleToggle} class:has-settings={settings.length > 0} class:enabled={enabled} class:expanded={expanded} class="module">{name}</div>
+    <div on:mousedown={handleToggleSettings} on:click={handleToggle} class:has-settings={settings.length > 0} class:enabled={enabled} class:expanded={expanded} class="module" id={name + "-module"}>{name}</div>
     {#if expanded}
         <div class="settings" transition:slide={{duration: 400, easing: sineInOut}}>
             {#each settings as s}
@@ -93,8 +93,12 @@
                 opacity: 1;   
             }
         }
-    }
 
+    }
+    
+    :global(.module-highlight) {
+        background-color: #4677ffa2;
+    }
 
     .settings {
         background-color: rgba(0, 0, 0, 0.36);
