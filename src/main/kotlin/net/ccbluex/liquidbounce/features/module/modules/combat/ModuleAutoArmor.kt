@@ -77,7 +77,7 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
                 )
             ) {
                 locked = true
-                wait(inventoryConstraints.delay.random())
+                wait { inventoryConstraints.delay.random() }
 
                 return@repeatable
             }

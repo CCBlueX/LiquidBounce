@@ -90,7 +90,7 @@ object ModuleAutoSoup : Module("AutoSoup", Category.COMBAT) {
 
         if (player.health < health) {
             if (mushroomStewSlot != null) {
-                wait(inventoryConstraints.delay.random())
+                wait { inventoryConstraints.delay.random() }
 
                 if (mushroomStewSlot != player.inventory.selectedSlot) {
                     network.sendPacket(UpdateSelectedSlotC2SPacket(mushroomStewSlot))
