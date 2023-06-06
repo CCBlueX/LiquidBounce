@@ -87,14 +87,6 @@ open class Sequence<T : Event>(val handler: SuspendableHandler<T>, val event: T)
         suspendCoroutine<Unit> { continuation = it }
     }
 
-    suspend fun waitTicks(ticks: Int) {
-        if (ticks > 0) {
-            val time = System.currentTimeMillis() + ticks
-
-            waitUntil { System.currentTimeMillis() >= time }
-        }
-    }
-
     internal suspend fun sync() = wait(0)
 
     suspend fun waitUntil(case: () -> Boolean) {
