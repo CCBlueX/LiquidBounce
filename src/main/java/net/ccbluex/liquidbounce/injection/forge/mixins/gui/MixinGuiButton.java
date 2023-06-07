@@ -67,7 +67,6 @@ public abstract class MixinGuiButton extends Gui {
    @Overwrite
    public void drawButton(Minecraft mc, int mouseX, int mouseY) {
       if (visible) {
-         final FontRenderer fontRenderer = mc.getLanguageManager().isCurrentLocaleUnicode() ? mc.fontRendererObj : Fonts.font35;
          hovered = (mouseX >= xPosition && mouseY >= yPosition &&
                     mouseX < xPosition + width && mouseY < yPosition + height);
          final float deltaTime = RenderUtils.INSTANCE.getDeltaTime();
@@ -100,9 +99,8 @@ public abstract class MixinGuiButton extends Gui {
 
          AWTFontRenderer.Companion.setAssumeNonVolatile(true);
 
-         fontRenderer.drawStringWithShadow(displayString,
-                 (float) ((xPosition + width / 2) -
-                         fontRenderer.getStringWidth(displayString) / 2),
+         final FontRenderer fontRenderer = Fonts.font35;
+         fontRenderer.drawStringWithShadow(displayString, (float) ((xPosition + width / 2) - fontRenderer.getStringWidth(displayString) / 2),
                  yPosition + (height - 5) / 2F, 14737632);
 
          AWTFontRenderer.Companion.setAssumeNonVolatile(false);

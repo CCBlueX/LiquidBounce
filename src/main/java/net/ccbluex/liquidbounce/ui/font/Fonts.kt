@@ -24,6 +24,7 @@ import java.util.zip.ZipInputStream
 import kotlin.io.path.inputStream
 
 object Fonts : MinecraftInstance() {
+
     @FontDetails(fontName = "Minecraft Font")
     val minecraftFont: FontRenderer = mc.fontRendererObj
 
